@@ -16,15 +16,15 @@ int main(int argc, char *argv[])
 	string err = "Syntax error...";
 
 	dicttools d[10] = {{argv[1], 0},
-					   {argv[1], 1},
-					   {argv[1], 2},
-					   {argv[1], 3},
-					   {argv[1], 4},
-					   {argv[1], 5},
-					   {argv[1], 6},
-					   {argv[1], 7},
-					   {argv[1], 8},
-					   {argv[1], 9}};
+			   {argv[1], 1},
+			   {argv[1], 2},
+			   {argv[1], 3},
+			   {argv[1], 4},
+			   {argv[1], 5},
+			   {argv[1], 6},
+			   {argv[1], 7},
+			   {argv[1], 8},
+			   {argv[1], 9}};
 
 	for(int i = 0; i < 10; i++)
 	{
