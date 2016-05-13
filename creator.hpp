@@ -1,12 +1,12 @@
 #ifndef CREATOR_HPP
 #define CREATOR_HPP
 
+#include <iostream>
 #include <fstream>
 #include <sstream>
-#include <string>
-#include <iostream>
 #include <cstdlib>
-#include <vector>
+#include <string>
+#include <array>
 #include <map>
 
 #include "tools.hpp"
@@ -18,11 +18,18 @@ class creator : public tools
 public:
 	esmtools base;
 	esmtools extd;
+
+	void writeDictAll();
+	void writeDict(int i);
+	void printDict(int i);
+
+	creator();
+	creator(const char* b);
+	creator(const char* b, const char* e);
+
+private:
 	esmtools *esm_ptr;
-	bool extd_switch;
 	array<multimap<string, string>, 10> dict;
-	vector<string> key = {"Choice", "choice", "MessageBox", "Say ", "Say,", "say ", "say,"};
-	string sep = {"^"};
 
 	void makeDictCell();
 	void makeDictGmst();
@@ -34,16 +41,6 @@ public:
 	void makeDictDial();
 	void makeDictInfo();
 	void makeDictScpt();
-
-	void makeDictAll();
-	void writeDictAll();
-	void writeDict(int i);
-	void printDict(int i);
-	string extdText();
-
-	creator();
-	creator(const char* b);
-	creator(const char* b, const char* e, bool x = 0);
 };
 
 #endif

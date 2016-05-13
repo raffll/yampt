@@ -9,13 +9,15 @@ esmtools::esmtools()
 }
 
 //----------------------------------------------------------
-esmtools::esmtools(const char* f)
+esmtools::esmtools(const char* path)
 {
-	ifstream file(f, ios::binary);
-	char buffer[16384];
+	file_name = path;
+	ifstream file(file_name, ios::binary);
+	setFileName(file_name);
 
 	if(file.good())
 	{
+		char buffer[16384];
 		size_t file_size = file.tellg();
 		file_content.reserve(file_size);
 		streamsize chars_read;
@@ -24,13 +26,18 @@ esmtools::esmtools(const char* f)
 		{
 			file_content.append(buffer, chars_read);
 		}
-		file.close();
 		is_loaded = 1;
 	}
 	else
 	{
 		is_loaded = 0;
 	}
+}
+
+//----------------------------------------------------------
+void esmtools::printStatus()
+{
+	cout << file_name << " is loaded: " << is_loaded << " with size: " << file_content.size() << endl;
 }
 
 //----------------------------------------------------------

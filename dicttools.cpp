@@ -11,17 +11,23 @@ dicttools::dicttools()
 //----------------------------------------------------------
 dicttools::dicttools(const char* path, int i)
 {
-	string line;
-	string file_name = path;
+	file_name = path;
 	file_name += "dict_" + to_string(i) + "_" + dict_name[i] + ".txt";
 	ifstream file(file_name.c_str());
+	setFileName(file_name);
 
 	if(file.good())
 	{
-		while(getline(file, line))
+		char buffer[16384];
+		size_t file_size = file.tellg();
+		file_content.reserve(file_size);
+		streamsize chars_read;
+
+		while(file.read(buffer, sizeof(buffer)), chars_read = file.gcount())
 		{
-			dict.push_back(line);
+			file_content.append(buffer, chars_read);
 		}
+		file.close();
 		is_loaded = 1;
 	}
 	else
@@ -39,14 +45,21 @@ bool dicttools::getStatus()
 //----------------------------------------------------------
 void dicttools::printStatus()
 {
-	cout << "Dict is loaded: " << is_loaded << endl;
+	cout << file_name << " is loaded: " << is_loaded << " with size: " << file_content.size() << endl;
 }
 
 //----------------------------------------------------------
 void dicttools::printDict()
 {
-	for(const auto &elem : dict)
+	cout << file_content << endl;
+}
+
+//----------------------------------------------------------
+void dicttools::parseDict()
+{
+	if(is_loaded == 1)
 	{
-		cout << elem << endl;
+
 	}
 }
+

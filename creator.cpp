@@ -7,51 +7,40 @@ using namespace std;
 creator::creator(const char* b) : base(b), extd()
 {
 	esm_ptr = &base;
-	extd_switch = 0;
 
 	if(base.getStatus() == 1)
 	{
-		makeDictAll();
-		//printDict(5);
-		writeDictAll();
-	}
-	else
-	{
-		cout << "Error opening file...";
+		makeDictCell();
+		makeDictGmst();
+		makeDictFnam();
+		makeDictDesc();
+		makeDictBook();
+		makeDictFact();
+		makeDictIndx();
+		makeDictDial();
+		makeDictInfo();
+		makeDictScpt();
 	}
 }
 
 //----------------------------------------------------------
-creator::creator(const char* b, const char* e, bool x) : base(b), extd(e)
+creator::creator(const char* b, const char* e) : base(b), extd(e)
 {
 	esm_ptr = &extd;
-	extd_switch = x;
 
 	if(base.getStatus() == 1 && extd.getStatus() == 1)
 	{
-		makeDictAll();
-		//printDict(5);
-		writeDictAll();
+		makeDictCell();
+		makeDictGmst();
+		makeDictFnam();
+		makeDictDesc();
+		makeDictBook();
+		makeDictFact();
+		makeDictIndx();
+		makeDictDial();
+		makeDictInfo();
+		makeDictScpt();
 	}
-	else
-	{
-		cout << "Error opening file...";
-	}
-}
-
-//----------------------------------------------------------
-void creator::makeDictAll()
-{
-	makeDictCell();
-	makeDictGmst();
-	makeDictFnam();
-	makeDictDesc();
-	makeDictBook();
-	makeDictFact();
-	makeDictIndx();
-	makeDictDial();
-	makeDictInfo();
-	makeDictScpt();
 }
 
 //----------------------------------------------------------
@@ -83,17 +72,6 @@ void creator::printDict(int i)
 	{
 		cout << "<h3>" << elem.first << "</h3>" << elem.second << "<hr>" << endl;
 	}
-}
-
-//----------------------------------------------------------
-string creator::extdText()
-{
-	string extd_text;
-	if(extd_switch == 1)
-	{
-		extd_text = "<hr><!--" + extd.getSecText() + "-->";
-	}
-	return extd_text;
 }
 
 //----------------------------------------------------------
@@ -175,7 +153,7 @@ void creator::makeDictFnam()
 			extd.setSecSubRec("FNAM");
 			if(!base.getPriText().empty())
 			{
-				dict[2].insert({base.getRecId() + sep + base.getPriText(), base.getSecText()});
+				dict[2].insert({base.getRecId() + inner_sep + base.getPriText(), base.getSecText()});
 			}
 		}
 	}
@@ -200,7 +178,7 @@ void creator::makeDictDesc()
 			extd.setRecContent();
 			extd.setPriSubRec("NAME");
 			extd.setSecSubRec("DESC");
-			dict[3].insert({base.getRecId() + sep + base.getPriText(), base.getSecText()});
+			dict[3].insert({base.getRecId() + inner_sep + base.getPriText(), base.getSecText()});
 		}
 	}
 }
@@ -246,7 +224,7 @@ void creator::makeDictFact()
 			//extd.setSecSubRec("RNAM");
 			for(unsigned i = 0; i < base.temp_text.size(); i++)
 			{
-				dict[5].insert({base.getPriText() + sep + to_string(i), base.temp_text[i]});
+				dict[5].insert({base.getPriText() + inner_sep + to_string(i), base.temp_text[i]});
 			}
 		}
 	}
@@ -270,7 +248,7 @@ void creator::makeDictIndx()
 			extd.setRecContent();
 			extd.setPriSubRec("INDX");
 			extd.setSecSubRec("DESC");
-			dict[6].insert({base.getRecId() + sep + base.getPriText(), base.getSecText()});
+			dict[6].insert({base.getRecId() + inner_sep + base.getPriText(), base.getSecText()});
 		}
 	}
 }
@@ -318,7 +296,7 @@ void creator::makeDictInfo()
 			//extd.setRecContent();
 			//extd.setPriSubRec("NAME");
 			//extd.setSecSubRec("DATA");
-			dial = base.dialType() + sep + base.getPriText();
+			dial = base.dialType() + inner_sep + base.getPriText();
 		}
 		if(base.getRecId() == "INFO")
 		{
@@ -328,7 +306,7 @@ void creator::makeDictInfo()
 			extd.setRecContent();
 			//extd.setPriSubRec("INAM");
 			extd.setSecSubRec("NAME");
-			dict[8].insert({dial + sep + base.getPriText(), base.getSecText()});
+			dict[8].insert({dial + inner_sep + base.getPriText(), base.getSecText()});
 		}
 	}
 }
@@ -356,7 +334,7 @@ void creator::makeDictScpt()
 				{
 					if(base.temp_text[i].find(key[j]) != string::npos)
 					{
-						dict[9].insert({base.getPriText() + sep + esm_ptr->temp_text[i], base.temp_text[i]});
+						dict[9].insert({base.getPriText() + inner_sep + esm_ptr->temp_text[i], base.temp_text[i]});
 					}
 				}
 			}
@@ -382,7 +360,7 @@ void creator::makeDictScpt()
 				{
 					if(base.temp_text[i].find(key[j]) != string::npos)
 					{
-						dict[9].insert({base.getPriText() + sep + esm_ptr->temp_text[i], base.temp_text[i]});
+						dict[9].insert({base.getPriText() + inner_sep + esm_ptr->temp_text[i], base.temp_text[i]});
 					}
 				}
 			}

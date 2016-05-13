@@ -13,61 +13,59 @@ using namespace std;
 int main(int argc, char *argv[])
 {
 	string comm;
-	string err = "Syntax error...";
+	string usage = "Usage:"
+				   "\n  -h\tPrint this message"
+				   "\n  -m\tMake dictionary: [path_to_file]"
+				   "\n    \tOptional: [path_to_file_1] [path_to_file_2]"
+				   "\n  -d\tLoad dictionary: [path_to_dict_folder]\n";
 
-	dicttools d[10] = {{argv[1], 0},
-			   {argv[1], 1},
-			   {argv[1], 2},
-			   {argv[1], 3},
-			   {argv[1], 4},
-			   {argv[1], 5},
-			   {argv[1], 6},
-			   {argv[1], 7},
-			   {argv[1], 8},
-			   {argv[1], 9}};
-
-	for(int i = 0; i < 10; i++)
-	{
-		d[i].printStatus();
-	}
-
-	/*if(argc > 1)
+	if(argc > 1)
 	{
 		comm = argv[1];
 	}
 
-	if(comm == "make" )
+	if(comm == "-h")
+	{
+		cout << usage;
+	}
+	else if(comm == "-m")
 	{
 		if(argc == 3)
 		{
 			creator c(argv[2]);
+			c.base.printStatus();
 		}
 		else if(argc == 4)
 		{
-			creator c(argv[2], argv[3], 0);
+			creator c(argv[2], argv[3]);
+			c.base.printStatus();
+			c.extd.printStatus();
 		}
 		else
 		{
-			cout << err;
+			cout << usage;
 		}
 	}
-	else if(comm == "make_extd" )
+	else if(comm == "-d")
 	{
 		if(argc == 3)
 		{
-			creator c(argv[2]);
-		}
-		else if(argc == 4)
-		{
-			creator c(argv[2], argv[3], 1);
+			dicttools d[10] = {{argv[2], 0}, {argv[2], 1}, {argv[2], 2}, {argv[2], 3}, {argv[2], 4},
+							   {argv[2], 5}, {argv[2], 6}, {argv[2], 7}, {argv[2], 8}, {argv[2], 9}};
+
+
+			for(int i = 0; i < 10; i++)
+			{
+				d[i].printStatus();
+			}
 		}
 		else
 		{
-			cout << err;
+			cout << usage;
 		}
 	}
 	else
 	{
-		cout << err;
-	}*/
+		cout << usage;
+	}
 }
