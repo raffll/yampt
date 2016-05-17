@@ -9,6 +9,7 @@ using namespace std;
 #include "esmtools.hpp"
 #include "dicttools.hpp"
 #include "creator.hpp"
+#include "merger.hpp"
 
 int main(int argc, char *argv[])
 {

@@ -4,6 +4,7 @@
 #include <array>
 
 #include "tools.hpp"
+#include "dicttools.hpp"
 
 using namespace std;
 
@@ -13,7 +14,7 @@ public:
 	merger();
 
 private:
-	array<dicttools, 10> d
+	array<dicttools, 10> dict_loaded;
 };
 
 #endif
