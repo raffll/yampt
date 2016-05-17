@@ -4,17 +4,16 @@
 #include <array>
 
 #include "tools.hpp"
-#include "dicttools.hpp"
 
 using namespace std;
 
 class merger: public tools
 {
 public:
-	merger(const char* d1, const char* d2);
+	merger();
 
 private:
-	array<dicttools, 10> dict_loaded;
+	array<dicttools, 10> d
 };
 
 #endif

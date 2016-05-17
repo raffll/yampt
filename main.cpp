@@ -9,7 +9,6 @@ using namespace std;
 #include "esmtools.hpp"
 #include "dicttools.hpp"
 #include "creator.hpp"
-#include "merger.hpp"
 
 int main(int argc, char *argv[])
 {
@@ -35,36 +34,48 @@ int main(int argc, char *argv[])
 	{
 		comm = argv[1];
 	}
-	if(comm == "--help")
+
+	if(comm == "help")
 	{
 		cout << usage;
 	}
-	else if(comm == "--make")
+	else if(comm == "make")
 	{
 		if(argc == 3)
 		{
 			creator c(argv[2]);
 			c.writeDictAll();
 		}
-	}
-	else if(comm == "--base")
-	{
-		if(argc == 4)
+		else if(argc == 4)
 		{
 			creator c(argv[2], argv[3]);
 			c.writeDictAll();
 		}
-	}
-	else if(comm == "--merge")
-	{
-		if(argc == 4)
+		else
 		{
-			merger m(argv[2], argv[3]);
+			cout << usage;
 		}
 	}
-	else if(comm == "--test")
+	else if(comm == "test")
 	{
-		//
+		if(argc == 3)
+		{
+			//dicttools d[10] = {{argv[2], 0}, {argv[2], 1}, {argv[2], 2}, {argv[2], 3}, {argv[2], 4},
+							   //{argv[2], 5}, {argv[2], 6}, {argv[2], 7}, {argv[2], 8}, {argv[2], 9}};
+
+			dicttools d;
+			d.printDict();
+			//for(int i = 0; i < 10; i++)
+			//{
+			//	d[i].printStatus();
+			//}
+			//d[0].parseDict();
+			//d[0].printDict();
+		}
+		else
+		{
+			cout << usage;
+		}
 	}
 	else
 	{
