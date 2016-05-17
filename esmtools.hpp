@@ -16,38 +16,50 @@ using namespace std;
 class esmtools : public tools
 {
 public:
-	vector<string> temp_text;
-
+	void readFile(const char* path);
 	void resetRec();
 	void setNextRec();
 	void setRecContent();
 	void setPriSubRec(const char* id);
 	void setSecSubRec(const char* id);
 
-	string getRecId();
-	string getPriId();
-	string getSecId();
-	string getPriText();
-	string getSecText();
-
-	bool getStatus();
 	void printStatus();
-
 	string dialType();
 	bool loopCheck();
 
+	string getRecId() { return rec_id; }
+	string getPriId() { return pri_id; }
+	string getSecId() { return sec_id; }
+	string getPriText() { return pri_text; }
+	string getSecText() { return sec_text; }
+	string getTmpLine(int i) { return tmp_text[i]; }
+	size_t getTmpSize() { return tmp_text.size(); }
+	bool getStatus() { return is_loaded; }
+
 	esmtools();
-	esmtools(const char* path);
 
 private:
+	bool is_loaded;
 	string file_name;
 	string file_content;
-	bool is_loaded;
-	size_t rec_beg, rec_end, pri_pos, sec_pos, rec_size, pri_size, sec_size;
-	string rec_id, pri_id, sec_id, rec_content, pri_text, sec_text;
 
-	void cutText(string *str);
-	unsigned int byteToInt(size_t pos, string *str, bool q = 0);
+	size_t rec_beg;
+	size_t rec_end;
+	size_t rec_size;
+	string rec_id;
+	string rec_content;
+
+	size_t pri_pos;
+	size_t pri_size;
+	string pri_id;
+	string pri_text;
+
+	size_t sec_pos;
+	size_t sec_size;
+	string sec_id;
+	string sec_text;
+
+	vector<string> tmp_text;
 };
 
 #endif

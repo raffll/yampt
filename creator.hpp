@@ -13,11 +13,9 @@
 
 using namespace std;
 
-class creator : public tools
+class creator : tools
 {
 public:
-	esmtools base;
-	esmtools extd;
 
 	void writeDictAll();
 	void writeDict(int i);
@@ -28,8 +26,7 @@ public:
 	creator(const char* b, const char* e);
 
 private:
-	esmtools *esm_ptr;
-	array<multimap<string, string>, 10> dict;
+	void printStatus(int i);
 
 	void makeDictCell();
 	void makeDictGmst();
@@ -41,6 +38,12 @@ private:
 	void makeDictDial();
 	void makeDictInfo();
 	void makeDictScpt();
+
+	esmtools base;
+	esmtools extd;
+	esmtools *esm_ptr;
+	int counter;
+	array<multimap<string, string>, 10> dict_out;
 };
 
 #endif
