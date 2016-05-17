@@ -11,7 +11,7 @@ using namespace std;
 class merger: public tools
 {
 public:
-	merger();
+	merger(const char* d1, const char* d2);
 
 private:
 	array<dicttools, 10> dict_loaded;

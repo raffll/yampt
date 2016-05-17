@@ -1,6 +1,6 @@
 #include "merger.hpp"
 
-merger::merger()
+merger::merger(const char* d1, const char* d2)
 {
 
 }
