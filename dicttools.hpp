@@ -20,17 +20,17 @@ public:
 	void readFile(const char* path, int i);
 	void printStatus();
 	void printDict();
-	bool validateDict(string &file_content);
-	void parseDict(string &file_content);
-
-	bool getStatus() { return is_loaded; }
+	void parseDict();
+	void validateDict();
+	bool getStatus() { return status; }
 
 	dicttools();
 
 private:
+	int status;
 	string file_name;
-	bool is_loaded;
-	int dict_number;
+	string file_content;
+
 	multimap<string, pair<size_t, string>> dict_in;
 };
 

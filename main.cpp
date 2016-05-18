@@ -20,61 +20,46 @@ int main(int argc, char *argv[])
 	tools::quiet = 0;
 
 	string comm;
-	string usage = "Usage: yampt [command] <path/to/file> <path/to/dict/dir/>"
+	string usage = "Usage: yampt [command]"
 				   "\n"
-				   "\n  --help                        Print this message."
-				   "\n  --make    [file1]             Make dictionary from esp/esm plugin."
-				   "\n  --base    [file1] [file2]     Make base dictionary from two localized esm files."
-				   "\n                                Required for original game and expansions."
-				   "\n  --merge   [dict1] [dict2]...  Merge dictionaries from paths and delete doubled records."
-				   "\n                                Required for base dictionaries."
-				   "\n  --convert [file1] [dict1]...  Convert file from dictionaries in paths.\n";
+				   "\n  --help                              Print this message."
+				   "\n  --make       [file1]                Make dictionary from esp/esm plugin."
+				   "\n  --make-base  [file1] [file2]        Make base dictionary from two localized esm files."
+				   "\n  --merge      [dict1] [dict2]...     Merge dictionaries from paths and delete doubled records."
+				   "\n  --convert    [file1]... [dict1]...  Convert plugins from dictionaries in paths.\n";
 
 	if(argc > 1)
 	{
 		comm = argv[1];
 	}
-
-	if(comm == "help")
+	if(comm == "--help")
 	{
 		cout << usage;
 	}
-	else if(comm == "make")
+	else if(comm == "--make")
 	{
 		if(argc == 3)
 		{
 			creator c(argv[2]);
 			c.writeDictAll();
 		}
-		else if(argc == 4)
+	}
+	else if(comm == "--make-base")
+	{
+		if(argc == 4)
 		{
 			creator c(argv[2], argv[3]);
 			c.writeDictAll();
 		}
-		else
-		{
-			cout << usage;
-		}
 	}
-	else if(comm == "test")
+	else if(comm == "--merge")
 	{
 		if(argc == 3)
 		{
-			//dicttools d[10] = {{argv[2], 0}, {argv[2], 1}, {argv[2], 2}, {argv[2], 3}, {argv[2], 4},
-							   //{argv[2], 5}, {argv[2], 6}, {argv[2], 7}, {argv[2], 8}, {argv[2], 9}};
-
 			dicttools d;
+			d.readFile(argv[2], 8);
+			d.parseDict();
 			d.printDict();
-			//for(int i = 0; i < 10; i++)
-			//{
-			//	d[i].printStatus();
-			//}
-			//d[0].parseDict();
-			//d[0].printDict();
-		}
-		else
-		{
-			cout << usage;
 		}
 	}
 	else

@@ -13,7 +13,7 @@ public:
 	merger();
 
 private:
-	array<dicttools, 10> d
+
 };
 
 #endif
