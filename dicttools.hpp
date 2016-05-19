@@ -17,21 +17,23 @@ using namespace std;
 class dicttools : public tools
 {
 public:
-	void readFile(const char* path, int i);
-	void printStatus();
-	void printDict();
-	void parseDict();
-	void validateDict();
-	bool getStatus() { return status; }
+	void readDictAll(const char* path);
+	void readDict(const char* path, int i);
+	void printStatus(int i);
+	void printDict(int i);
+	void parseDict(int i);
+	void validateDict(int i);
+	void validateRecLength(int i);
+	bool getStatus(int i) { return status[i]; }
 
 	dicttools();
 
 private:
-	int status;
-	string file_name;
-	string file_content;
+	array<int, 10> status = {};
+	array<string, 10> file_name;
+	array<string, 10> file_content;
 
-	multimap<string, pair<size_t, string>> dict_in;
+	array<multimap<string, pair<size_t, string>>, 10> dict;
 };
 
 #endif

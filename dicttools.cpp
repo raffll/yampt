@@ -5,68 +5,75 @@ using namespace std;
 //----------------------------------------------------------
 dicttools::dicttools()
 {
-	status = 0;
+
 }
 
 //----------------------------------------------------------
-void dicttools::readFile(const char* path, int i)
+void dicttools::readDictAll(const char* path)
 {
-	file_name = path;
-	file_name += "dict_" + to_string(i) + "_" + dict_name[i] + ".dic";
-	ifstream file(file_name.c_str());
-	cutFileName(file_name);
+	for(int i = 0; i < 10; i++)
+	{
+		readDict(path, i);
+	}
+}
+
+//----------------------------------------------------------
+void dicttools::readDict(const char* path, int i)
+{
+	file_name[i] = path;
+	file_name[i] += "dict_" + to_string(i) + "_" + dict_name[i] + ".dic";
+	ifstream file(file_name[i].c_str());
+	//cutFileName(file_name[i]);
 
 	if(file)
 	{
 		char buffer[16384];
 		size_t file_size = file.tellg();
-		file_content.reserve(file_size);
+		file_content[i].reserve(file_size);
 		streamsize chars_read;
 
 		while(file.read(buffer, sizeof(buffer)), chars_read = file.gcount())
 		{
-			file_content.append(buffer, chars_read);
+			file_content[i].append(buffer, chars_read);
 		}
-		validateDict();
-		printStatus();
+		validateDict(i);
+		printStatus(i);
+		parseDict(i);
+		validateRecLength(i);
 	}
 	else
 	{
-		status = 0;
-		printStatus();
+		status[i] = 0;
+		printStatus(i);
 	}
 }
 
 //----------------------------------------------------------
-void dicttools::printStatus()
+void dicttools::printStatus(int i)
 {
 	if(quiet == 0)
 	{
-		if(status == 1)
+		if(status[i] == 1)
 		{
-			cout << file_name << " status: OK" << endl;
+			cout << file_name[i] << " status: OK" << endl;
 		}
-		else if(status == 0)
+		else if(status[i] == 0)
 		{
-			cerr << file_name << " status: Error while loading file!" << endl;
+			cerr << file_name[i] << " status: Error while loading file!" << endl;
 		}
-		else if(status == -1)
+		else if(status[i] == -1)
 		{
-			cerr << file_name << " status: Missing separator!" << endl;
-		}
-		else
-		{
-			cerr << file_name << " status: Text too long, more than 32/512 bytes!" << endl;
+			cerr << file_name[i] << " status: Missing separator!" << endl;
 		}
 	}
 }
 
 //----------------------------------------------------------
-void dicttools::printDict()
+void dicttools::printDict(int i)
 {
-	if(status == 1)
+	if(status[i] == 1)
 	{
-		for(const auto &elem : dict_in)
+		for(const auto &elem : dict[i])
 		{
 			cout << line_sep[0] << elem.first << line_sep[1] << elem.second.second << line_sep[2] << endl;
 		}
@@ -74,7 +81,7 @@ void dicttools::printDict()
 }
 
 //----------------------------------------------------------
-void dicttools::validateDict()
+void dicttools::validateDict(int i)
 {
 	size_t pos_beg = 0;
 	size_t pos_mid = 0;
@@ -82,17 +89,17 @@ void dicttools::validateDict()
 
 	while(true)
 	{
-		pos_beg = file_content.find(line_sep[0], pos_beg);
-		pos_mid = file_content.find(line_sep[1], pos_mid);
-		pos_end = file_content.find(line_sep[2], pos_end);
+		pos_beg = file_content[i].find(line_sep[0], pos_beg);
+		pos_mid = file_content[i].find(line_sep[1], pos_mid);
+		pos_end = file_content[i].find(line_sep[2], pos_end);
 		if(pos_beg == string::npos && pos_mid == string::npos && pos_end == string::npos)
 		{
-			status = 1;
+			status[i] = 1;
 			break;
 		}
 		else if(pos_beg > pos_mid || pos_beg > pos_end || pos_mid > pos_end || pos_end == string::npos)
 		{
-			status = -1;
+			status[i] = -1;
 			break;
 		}
 		else
@@ -105,22 +112,47 @@ void dicttools::validateDict()
 }
 
 //----------------------------------------------------------
-void dicttools::parseDict()
+void dicttools::validateRecLength(int i)
 {
-	if(status == 1)
+	if(i == 2 && status[2] == 1)
+	{
+		for(const auto &elem : dict[2])
+		{
+			if(elem.second.first > 32)
+			{
+				cerr << elem.first << " <-- Text too long, more than 32 bytes! (has " << elem.second.first << ")" << endl;
+			}
+		}
+	}
+	if(i == 8 && status[8] == 1)
+	{
+		for(const auto &elem : dict[8])
+		{
+			if(elem.second.first > 512)
+			{
+				cerr << elem.first << " <-- Text too long, more than 512 bytes! (has " << elem.second.first << ")" << endl;
+			}
+		}
+	}
+}
+
+//----------------------------------------------------------
+void dicttools::parseDict(int i)
+{
+	if(status[i] == 1)
 	{
 		regex re("(<h3>)(.*?)(</h3>)((.|\n)*?)(<hr>)");
-		sregex_iterator next(file_content.begin(), file_content.end(), re);
+		sregex_iterator next(file_content[i].begin(), file_content[i].end(), re);
 		sregex_iterator end;
 		smatch m;
 
 		while(next != end)
 		{
 			m = *next;
-			dict_in.insert({m.str(2), make_pair(m.str(4).size(), m.str(4))});
+			dict[i].insert({m.str(2), make_pair(m.str(4).size(), m.str(4))});
 			next++;
 		}
-		file_content.erase();
+		file_content[i].erase();
 	}
 }
 

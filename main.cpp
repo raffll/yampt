@@ -57,9 +57,7 @@ int main(int argc, char *argv[])
 		if(argc == 3)
 		{
 			dicttools d;
-			d.readFile(argv[2], 8);
-			d.parseDict();
-			d.printDict();
+			d.readDictAll(argv[2]);
 		}
 	}
 	else

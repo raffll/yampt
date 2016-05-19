@@ -13,7 +13,7 @@ void esmtools::readFile(const char* path)
 {
 	file_name = path;
 	ifstream file(file_name, ios::binary);
-	cutFileName(file_name);
+	//cutFileName(file_name);
 
 	if(file)
 	{
