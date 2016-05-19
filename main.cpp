@@ -6,9 +6,8 @@
 using namespace std;
 
 #include "tools.hpp"
-#include "esmtools.hpp"
-#include "dicttools.hpp"
 #include "creator.hpp"
+#include "merger.hpp"
 
 int main(int argc, char *argv[])
 {
@@ -54,10 +53,13 @@ int main(int argc, char *argv[])
 	}
 	else if(comm == "--merge")
 	{
-		if(argc == 3)
+		if(argc == 4)
 		{
-			dicttools d;
-			d.readDictAll(argv[2]);
+			merger m(argv[2], argv[3]);
+		}
+		else if(argc == 5)
+		{
+			merger m(argv[2], argv[3], argv[4]);
 		}
 	}
 	else

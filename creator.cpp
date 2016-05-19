@@ -70,7 +70,7 @@ void creator::writeDict(int i)
 	ofstream file;
 	string file_name = "dict_" + to_string(i) + "_" + dict_name[i] + ".dic";
 	file.open(file_name.c_str());
-	for(const auto &elem : dict_out[i])
+	for(const auto &elem : dict[i])
 	{
 		file << line_sep[0] << elem.first << line_sep[1] << elem.second << line_sep[2] << endl;
 	}
@@ -79,7 +79,7 @@ void creator::writeDict(int i)
 //----------------------------------------------------------
 void creator::printDict(int i)
 {
-	for(const auto &elem : dict_out[i])
+	for(const auto &elem : dict[i])
 	{
 		cout << line_sep[0] << elem.first << line_sep[1] << elem.second << line_sep[2] << endl;
 	}
@@ -105,7 +105,7 @@ void creator::makeDictCell()
 			extd.setPriSubRec("NAME");
 			if(!base.getPriText().empty())
 			{
-				dict_out[0].insert({esm_ptr->getPriText(), base.getPriText()});
+				dict[0].insert({esm_ptr->getPriText(), base.getPriText()});
 				counter++;
 			}
 		}
@@ -128,7 +128,7 @@ void creator::makeDictGmst()
 			base.setSecSubRec("STRV");
 			if(!base.getSecText().empty())
 			{
-				dict_out[1].insert({base.getPriText(), base.getSecText()});
+				dict[1].insert({base.getPriText(), base.getSecText()});
 				counter++;
 			}
 		}
@@ -161,7 +161,7 @@ void creator::makeDictFnam()
 			base.setSecSubRec("FNAM");
 			if(!base.getPriText().empty())
 			{
-				dict_out[2].insert({base.getRecId() + inner_sep + base.getPriText(), base.getSecText()});
+				dict[2].insert({base.getRecId() + inner_sep + base.getPriText(), base.getSecText()});
 				counter++;
 			}
 		}
@@ -184,7 +184,7 @@ void creator::makeDictDesc()
 			base.setRecContent();
 			base.setPriSubRec("NAME");
 			base.setSecSubRec("DESC");
-			dict_out[3].insert({base.getRecId() + inner_sep + base.getPriText(), base.getSecText()});
+			dict[3].insert({base.getRecId() + inner_sep + base.getPriText(), base.getSecText()});
 			counter++;
 		}
 	}
@@ -204,7 +204,7 @@ void creator::makeDictBook()
 			base.setRecContent();
 			base.setPriSubRec("NAME");
 			base.setSecSubRec("TEXT");
-			dict_out[4].insert({base.getPriText(), base.getSecText()});
+			dict[4].insert({base.getPriText(), base.getSecText()});
 			counter++;
 		}
 	}
@@ -226,7 +226,7 @@ void creator::makeDictFact()
 			base.setSecSubRec("RNAM");
 			for(unsigned i = 0; i < base.getTmpSize(); i++)
 			{
-				dict_out[5].insert({base.getPriText() + inner_sep + to_string(i), base.getTmpLine(i)});
+				dict[5].insert({base.getPriText() + inner_sep + to_string(i), base.getTmpLine(i)});
 				counter++;
 			}
 		}
@@ -248,7 +248,7 @@ void creator::makeDictIndx()
 			base.setRecContent();
 			base.setPriSubRec("INDX");
 			base.setSecSubRec("DESC");
-			dict_out[6].insert({base.getRecId() + inner_sep + base.getPriText(), base.getSecText()});
+			dict[6].insert({base.getRecId() + inner_sep + base.getPriText(), base.getSecText()});
 			counter++;
 		}
 	}
@@ -275,7 +275,7 @@ void creator::makeDictDial()
 			extd.setSecSubRec("DATA");
 			if(base.dialType() == "T")
 			{
-				dict_out[7].insert({esm_ptr->getPriText(), base.getPriText()});
+				dict[7].insert({esm_ptr->getPriText(), base.getPriText()});
 				counter++;
 			}
 		}
@@ -304,7 +304,7 @@ void creator::makeDictInfo()
 			base.setRecContent();
 			base.setPriSubRec("INAM");
 			base.setSecSubRec("NAME");
-			dict_out[8].insert({dial + inner_sep + base.getPriText(), base.getSecText()});
+			dict[8].insert({dial + inner_sep + base.getPriText(), base.getSecText()});
 			counter++;
 		}
 	}
@@ -335,7 +335,7 @@ void creator::makeDictScpt()
 				{
 					if(base.getTmpLine(i).find(key[j]) != string::npos)
 					{
-						dict_out[9].insert({base.getPriText() + inner_sep + esm_ptr->getTmpLine(i), base.getTmpLine(i)});
+						dict[9].insert({base.getPriText() + inner_sep + esm_ptr->getTmpLine(i), base.getTmpLine(i)});
 						counter++;
 					}
 				}
@@ -362,7 +362,7 @@ void creator::makeDictScpt()
 				{
 					if(base.getTmpLine(i).find(key[j]) != string::npos)
 					{
-						dict_out[9].insert({base.getPriText() + inner_sep + esm_ptr->getTmpLine(i), base.getTmpLine(i)});
+						dict[9].insert({base.getPriText() + inner_sep + esm_ptr->getTmpLine(i), base.getTmpLine(i)});
 						counter++;
 					}
 				}

@@ -10,6 +10,7 @@
 #include <map>
 
 #include "tools.hpp"
+#include "esmtools.hpp"
 
 using namespace std;
 
@@ -43,7 +44,7 @@ private:
 	esmtools extd;
 	esmtools *esm_ptr;
 	int counter;
-	array<multimap<string, string>, 10> dict_out;
+	array<multimap<string, string>, 10> dict;
 };
 
 #endif
