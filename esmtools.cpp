@@ -5,7 +5,7 @@ using namespace std;
 //----------------------------------------------------------
 esmtools::esmtools()
 {
-	is_loaded = 0;
+	status = 0;
 }
 
 //----------------------------------------------------------
@@ -13,9 +13,9 @@ void esmtools::readFile(const char* path)
 {
 	file_name = path;
 	ifstream file(file_name, ios::binary);
-	cutFileName(file_name);
+	//cutFileName(file_name);
 
-	if(file.good())
+	if(file)
 	{
 		char buffer[16384];
 		size_t file_size = file.tellg();
@@ -26,12 +26,21 @@ void esmtools::readFile(const char* path)
 		{
 			file_content.append(buffer, chars_read);
 		}
-		is_loaded = 1;
-		printStatus();
+
+		if(file_content.substr(0, 4) == "TES3")
+		{
+			status = 1;
+			printStatus();
+		}
+		else
+		{
+			status = -1;
+			printStatus();
+		}
 	}
 	else
 	{
-		is_loaded = 0;
+		status = 0;
 		printStatus();
 	}
 }
@@ -41,13 +50,17 @@ void esmtools::printStatus()
 {
 	if(quiet == 0)
 	{
-		if(is_loaded == 1)
+		if(status == 1)
 		{
 			cout << file_name << " status: OK" << endl;
 		}
+		else if(status == 0)
+		{
+			cerr << file_name << " status: Error while loading file!" << endl;
+		}
 		else
 		{
-			cout << file_name << " status: Error while loading file!" << endl;
+			cerr << file_name << " status: This isn't TES3 file!" << endl;
 		}
 	}
 }
@@ -62,7 +75,7 @@ void esmtools::resetRec()
 //----------------------------------------------------------
 void esmtools::setNextRec()
 {
-	if(is_loaded == 1)
+	if(status == 1)
 	{
 		rec_beg = rec_end;
 		rec_id = file_content.substr(rec_beg, 4);
@@ -74,7 +87,7 @@ void esmtools::setNextRec()
 //----------------------------------------------------------
 void esmtools::setRecContent()
 {
-	if(is_loaded == 1)
+	if(status == 1)
 	{
 		rec_content = file_content.substr(rec_beg, rec_size);
 		pri_pos = 0;
@@ -85,7 +98,7 @@ void esmtools::setRecContent()
 //----------------------------------------------------------
 void esmtools::setPriSubRec(const char* id)
 {
-	if(is_loaded == 1)
+	if(status == 1)
 	{
 		pri_id = id;
 		pri_pos = rec_content.find(id);
@@ -126,7 +139,7 @@ void esmtools::setPriSubRec(const char* id)
 //----------------------------------------------------------
 void esmtools::setSecSubRec(const char* id)
 {
-	if(is_loaded == 1)
+	if(status == 1)
 	{
 		sec_id = id;
 		sec_pos = rec_content.find(id);
@@ -192,5 +205,3 @@ string esmtools::dialType()
 	int type = byteToInt(rec_content.substr(sec_pos + 8, 1));
 	return type_coll[type];
 }
-
-

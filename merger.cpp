@@ -1,11 +1,29 @@
 #include "merger.hpp"
 
-merger::merger(const char* path)
+//----------------------------------------------------------
+merger::merger()
 {
-	dicttools d[10] = {{argv[2], 0}, {argv[2], 1}, {argv[2], 2}, {argv[2], 3}, {argv[2], 4},
-					{argv[2], 5}, {argv[2], 6}, {argv[2], 7}, {argv[2], 8}, {argv[2], 9}};
-
 
 }
 
+//----------------------------------------------------------
+merger::merger(const char* path1, const char* path2)
+{
+	dict_first.readDictAll(path1);
+	dict_second.readDictAll(path2);
+}
+
+//----------------------------------------------------------
+merger::merger(const char* path1, const char* path2, const char* path3)
+{
+	dict_first.readDictAll(path1);
+	dict_second.readDictAll(path2);
+	dict_third.readDictAll(path3);
+}
+
+//----------------------------------------------------------
+void merger::mergeDict()
+{
+
+}
 

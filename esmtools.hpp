@@ -34,12 +34,12 @@ public:
 	string getSecText() { return sec_text; }
 	string getTmpLine(int i) { return tmp_text[i]; }
 	size_t getTmpSize() { return tmp_text.size(); }
-	bool getStatus() { return is_loaded; }
+	bool getStatus() { return status; }
 
 	esmtools();
 
 private:
-	bool is_loaded;
+	int status;
 	string file_name;
 	string file_content;
 

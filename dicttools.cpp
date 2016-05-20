@@ -5,81 +5,83 @@ using namespace std;
 //----------------------------------------------------------
 dicttools::dicttools()
 {
-	is_loaded = 0;
+
 }
 
 //----------------------------------------------------------
-void dicttools::readFile(const char* path, int i)
+void dicttools::readDictAll(const char* path)
 {
-	dict_number = i;
-	file_name += "dict_" + to_string(i) + "_" + dict_name[i] + ".txt";
-	string file_content;
-	ifstream file(file_name.c_str());
-	cutFileName(file_name);
+	for(int i = 0; i < 10; i++)
+	{
+		readDict(path, i);
+	}
+}
 
-	if(file.good())
+//----------------------------------------------------------
+void dicttools::readDict(const char* path, int i)
+{
+	file_name[i] = path;
+	file_name[i] += "dict_" + to_string(i) + "_" + dict_name[i] + ".dic";
+	ifstream file(file_name[i].c_str());
+	//cutFileName(file_name[i]);
+
+	if(file)
 	{
 		char buffer[16384];
 		size_t file_size = file.tellg();
-		file_content.reserve(file_size);
+		file_content[i].reserve(file_size);
 		streamsize chars_read;
 
 		while(file.read(buffer, sizeof(buffer)), chars_read = file.gcount())
 		{
-			file_content.append(buffer, chars_read);
+			file_content[i].append(buffer, chars_read);
 		}
-
-		if(validateDict(file_content) == 1)
-		{
-			parseDict(file_content);
-			is_loaded = 1;
-			cout << file_name << " is loaded: " << is_loaded << endl;
-		}
-		else
-		{
-			is_loaded = 0;
-		}
+		validateDict(i);
+		printStatus(i);
+		parseDict(i);
+		validateRecLength(i);
 	}
 	else
 	{
-		is_loaded = 0;
+		status[i] = 0;
+		printStatus(i);
 	}
 }
 
 //----------------------------------------------------------
-void dicttools::printStatus()
+void dicttools::printStatus(int i)
 {
 	if(quiet == 0)
 	{
-		if(is_loaded == 1)
+		if(status[i] == 1)
 		{
-			cout << file_name << " is loaded: " << is_loaded << endl;
+			cout << file_name[i] << " status: OK" << endl;
 		}
-		else
+		else if(status[i] == 0)
 		{
-			cout << file_name << " is damaged - missing separator!" << endl;
+			cerr << file_name[i] << " status: Error while loading file!" << endl;
+		}
+		else if(status[i] == -1)
+		{
+			cerr << file_name[i] << " status: Missing separator!" << endl;
 		}
 	}
 }
 
 //----------------------------------------------------------
-void dicttools::printDict()
+void dicttools::printDict(int i)
 {
-	for(const auto &elem : dict_in)
+	if(status[i] == 1)
 	{
-		cout << elem.first << " " << elem.second.first << " " << elem.second.second << endl;
+		for(const auto &elem : dict[i])
+		{
+			cout << line_sep[0] << elem.first << line_sep[1] << elem.second.second << line_sep[2] << endl;
+		}
 	}
 }
 
 //----------------------------------------------------------
-bool dicttools::validateDict(string &file_content)
-{
-	while(getline(file
-
-//----------------------------------------------------------
-// obsolete
-//----------------------------------------------------------
-bool dicttools::validateDict(string &file_content)
+void dicttools::validateDict(int i)
 {
 	size_t pos_beg = 0;
 	size_t pos_mid = 0;
@@ -87,20 +89,19 @@ bool dicttools::validateDict(string &file_content)
 
 	while(true)
 	{
-		pos_beg = file_content.find(line_sep[0], pos_beg);
-		pos_mid = file_content.find(line_sep[1], pos_mid);
-		pos_end = file_content.find(line_sep[2], pos_end);
+		pos_beg = file_content[i].find(line_sep[0], pos_beg);
+		pos_mid = file_content[i].find(line_sep[1], pos_mid);
+		pos_end = file_content[i].find(line_sep[2], pos_end);
 		if(pos_beg == string::npos && pos_mid == string::npos && pos_end == string::npos)
 		{
-			return true;
+			status[i] = 1;
 			break;
 		}
 		else if(pos_beg > pos_mid || pos_beg > pos_end || pos_mid > pos_end || pos_end == string::npos)
 		{
-			return false;
+			status[i] = -1;
 			break;
 		}
-
 		else
 		{
 			pos_beg++;
@@ -111,88 +112,47 @@ bool dicttools::validateDict(string &file_content)
 }
 
 //----------------------------------------------------------
-void dicttools::parseDict(string &file_content)
+void dicttools::validateRecLength(int i)
 {
-	size_t pos_beg = 0;
-	size_t pos_mid = 0;
-	size_t pos_end = 0;
-	size_t pri_size;
-	size_t sec_size;
-	string pri_text;
-	string sec_text;
-
-	if(is_loaded == 1)
+	if(i == 2 && status[2] == 1)
 	{
-		while(true)
+		for(const auto &elem : dict[2])
 		{
-			pos_beg = file_content.find(line_sep[0], pos_beg);
-			pos_mid = file_content.find(line_sep[1], pos_mid);
-			pos_end = file_content.find(line_sep[2], pos_end);
-
-			if(pos_beg == string::npos)
+			if(elem.second.first > 32)
 			{
-				break;
+				cerr << elem.first << " <-- Text too long, more than 32 bytes! (has " << elem.second.first << ")" << endl;
 			}
-			else
+		}
+	}
+	if(i == 8 && status[8] == 1)
+	{
+		for(const auto &elem : dict[8])
+		{
+			if(elem.second.first > 512)
 			{
-				pri_size = pos_mid - pos_beg - line_sep[0].size();
-				sec_size = pos_end - pos_mid - line_sep[1].size();
-				pri_text = file_content.substr(pos_beg + line_sep[0].size(), pri_size);
-				sec_text = file_content.substr(pos_mid + line_sep[1].size(), sec_size);
-
-				dict_in.insert(make_pair(pri_text, make_pair(sec_size, sec_text)));
-
-				pos_beg++;
-				pos_mid++;
-				pos_end++;
+				cerr << elem.first << " <-- Text too long, more than 512 bytes! (has " << elem.second.first << ")" << endl;
 			}
 		}
 	}
 }
 
 //----------------------------------------------------------
-/*void dicttools::parseDict()
+void dicttools::parseDict(int i)
 {
-	if(is_loaded == 1)
+	if(status[i] == 1)
 	{
-		string test = "<h3>DUPADUPA</h3>Pierwsza linia\n"
-					  "Druga linia<hr>\n"
-					  "<h3>Kasztan</h3>Pierwsza linia test\n"
-					  "Druga linia test<hr>\n";
-
-		regex re("(<h3>)(.*)(</h3>)");
-		sregex_iterator next(file_content.begin(), file_content.end(), re);
+		regex re("(<h3>)(.*?)(</h3>)((.|\n)*?)(<hr>)");
+		sregex_iterator next(file_content[i].begin(), file_content[i].end(), re);
 		sregex_iterator end;
 		smatch m;
 
 		while(next != end)
 		{
 			m = *next;
-			cout << m.str(2) << endl;
-			//dict.insert({pri_match.str(), sec_match.str()});
+			dict[i].insert({m.str(2), make_pair(m.str(4).size(), m.str(4))});
 			next++;
 		}
-
-		regex re("<(/h3)>((.|\n)*)<(hr)>");
-		sregex_iterator next(test.begin(), test.end(), re);
-		sregex_iterator end;
-		smatch m;
-
-		while(next != end)
-		{
-			m = *next;
-			for(size_t i = 0; i < m.size(); ++i)
-			{
-				cout << i << ": " << m.str(i) << endl;
-			}
-			//dict.insert({pri_match.str(), sec_match.str()});
-			next++;
-		}
-
-		//for(const auto &elem : dict)
-		//{
-		//	cout << elem.first << elem.second << endl;
-		//}
+		file_content[i].erase();
 	}
-}*/
+}
 
