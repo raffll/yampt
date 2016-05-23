@@ -21,6 +21,8 @@ protected:
 	void cutFileName(string &str);
 	void cutNullChar(string &str);
 	unsigned int byteToInt(const string &str);
+
+	typedef array<multimap<string, pair<size_t, string>>, 10> dict_t;
 };
 
 #endif

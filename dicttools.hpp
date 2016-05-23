@@ -20,9 +20,13 @@ public:
 	void readDictAll(const char* path);
 	void readDict(const char* path, int i);
 	void printDict(int i);
+	size_t getBegin(int i);
+	size_t getEnd(int i);
 	bool getStatus(int i) { return status[i]; }
 
-	dicttools();
+	dicttools() {}
+
+	dict_t dict;
 
 private:
 	void printStatus(int i);
@@ -33,8 +37,6 @@ private:
 	array<int, 10> status = {};
 	array<string, 10> file_name;
 	array<string, 10> file_content;
-
-	array<multimap<string, pair<size_t, string>>, 10> dict;
 };
 
 #endif

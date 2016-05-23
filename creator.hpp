@@ -17,7 +17,6 @@ using namespace std;
 class creator : tools
 {
 public:
-
 	void writeDictAll();
 	void writeDict(int i);
 	void printDict(int i);

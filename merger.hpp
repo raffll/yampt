@@ -12,18 +12,20 @@ using namespace std;
 class merger: public tools
 {
 public:
-	void mergeDict();
+	void mergeDict(int i);
+	void writeDict(int i);
+	void findDuplicates(int i);
 
-	merger();
-	merger(const char* path1, const char* path2);
-	merger(const char* path1, const char* path2, const char* path3);
+	merger() {}
+	merger(const char* path_1, const char* path_2);
+	merger(const char* path_1, const char* path_2, const char* path_3);
 
 private:
-	dicttools dict_first;
-	dicttools dict_second;
-	dicttools dict_third;
+	dicttools dict_1;
+	dicttools dict_2;
+	dicttools dict_3;
 
-	array<multimap<string, string>, 10> dict;
+	array<multimap<string, pair<size_t, string>>, 10> dict;
 };
 
 #endif

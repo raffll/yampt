@@ -3,12 +3,6 @@
 using namespace std;
 
 //----------------------------------------------------------
-esmtools::esmtools()
-{
-	status = 0;
-}
-
-//----------------------------------------------------------
 void esmtools::readFile(const char* path)
 {
 	file_name = path;

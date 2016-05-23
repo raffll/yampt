@@ -3,12 +3,6 @@
 using namespace std;
 
 //----------------------------------------------------------
-dicttools::dicttools()
-{
-
-}
-
-//----------------------------------------------------------
 void dicttools::readDictAll(const char* path)
 {
 	for(int i = 0; i < 10; i++)
@@ -155,4 +149,3 @@ void dicttools::parseDict(int i)
 		file_content[i].erase();
 	}
 }
-

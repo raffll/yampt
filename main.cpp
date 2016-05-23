@@ -11,11 +11,6 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
-	/*cout << "tools: " << sizeof(tools) << endl;
-	cout << "esmtools: " << sizeof(esmtools) << endl;
-	cout << "dicttools: " << sizeof(dicttools) << endl;
-	cout << "creator: " << sizeof(creator) << endl;*/
-
 	tools::quiet = 0;
 
 	string comm;
@@ -56,6 +51,9 @@ int main(int argc, char *argv[])
 		if(argc == 4)
 		{
 			merger m(argv[2], argv[3]);
+			//m.mergeDict(8);
+			//m.writeDict(8);
+			m.findDuplicates(8);
 		}
 		else if(argc == 5)
 		{

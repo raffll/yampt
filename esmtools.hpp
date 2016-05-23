@@ -36,7 +36,7 @@ public:
 	size_t getTmpSize() { return tmp_text.size(); }
 	bool getStatus() { return status; }
 
-	esmtools();
+	esmtools() : status(0) {}
 
 private:
 	int status;
