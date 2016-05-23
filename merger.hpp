@@ -18,12 +18,10 @@ public:
 
 	merger() {}
 	merger(const char* path_1, const char* path_2);
-	merger(const char* path_1, const char* path_2, const char* path_3);
 
 private:
 	dicttools dict_1;
 	dicttools dict_2;
-	dicttools dict_3;
 
 	array<multimap<string, pair<size_t, string>>, 10> dict;
 };

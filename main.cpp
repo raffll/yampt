@@ -55,10 +55,6 @@ int main(int argc, char *argv[])
 			//m.writeDict(8);
 			m.findDuplicates(8);
 		}
-		else if(argc == 5)
-		{
-			merger m(argv[2], argv[3], argv[4]);
-		}
 	}
 	else
 	{

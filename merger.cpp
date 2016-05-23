@@ -8,19 +8,10 @@ merger::merger(const char* path_1, const char* path_2)
 }
 
 //----------------------------------------------------------
-merger::merger(const char* path_1, const char* path_2, const char* path_3)
-{
-	dict_1.readDictAll(path_1);
-	dict_2.readDictAll(path_2);
-	dict_3.readDictAll(path_3);
-}
-
-//----------------------------------------------------------
 void merger::mergeDict(int i)
 {
 	dict[i].insert(dict_1.dict[i].begin(), dict_1.dict[i].end());
 	dict[i].insert(dict_2.dict[i].begin(), dict_2.dict[i].end());
-	dict[i].insert(dict_3.dict[i].begin(), dict_3.dict[i].end());
 }
 
 //----------------------------------------------------------
@@ -38,6 +29,13 @@ void merger::writeDict(int i)
 //----------------------------------------------------------
 void merger::findDuplicates(int i)
 {
+    ofstream file_1;
+    ofstream file_2;
+	string file_name_1 = "file_1_" + to_string(i) + "_" + dict_name[i] + ".log";
+    string file_name_2 = "file_2_" + to_string(i) + "_" + dict_name[i] + ".log";
+	file_1.open(file_name_1.c_str());
+	file_2.open(file_name_2.c_str());
+
 	for(auto &elem : dict_1.dict[i])
 	{
 		auto search = dict_2.dict[i].find(elem.first);
@@ -45,17 +43,11 @@ void merger::findDuplicates(int i)
 		{
 			if(search->second.second != elem.second.second)
 			{
-				cout << elem.first << " --- " << elem.second.second << endl;
-				cout << search->first << " >>> " << search->second.second << endl << endl;
+				file_1 << line_sep[0] << elem.first << line_sep[1] << elem.second.second << line_sep[2] << endl;
+				file_2 << line_sep[0] << search->first << line_sep[1] << search->second.second << line_sep[2] << endl;
 			}
 		}
 	}
+	cout << file_name_1 << " created succesfully!" << endl;
+	cout << file_name_2 << " created succesfully!" << endl;
 }
-
-//----------------------------------------------------------
-void merger::writeDuplicates(int i)
-{
-	ofstream file;
-	string file_name = "dict_" + to_string(i) + "_" + dict_name[i] + ".log";
-	file.open(file_name.c_str());
-
