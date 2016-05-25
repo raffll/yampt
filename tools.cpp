@@ -55,3 +55,35 @@ unsigned int tools::byteToInt(const string &str)
 		return number = 0;
 	}
 }
+
+//----------------------------------------------------------
+void tools::printDict(dict_t &dict)
+{
+	for(const auto &elem : dict)
+	{
+		cout << line_sep[0] << elem.first << line_sep[1] << elem.second << line_sep[2] << endl;
+	}
+}
+
+//----------------------------------------------------------
+void tools::writeDict(array<dict_t, 10> &dict)
+{
+	for(int i = 0; i < 10; i++)
+	{
+		ofstream file;
+		string file_name = "dict_" + to_string(i) + "_" + dict_name[i] + ".dic";
+		if(!dict[i].empty())
+		{
+			file.open(file_name.c_str());
+			for(const auto &elem : dict[i])
+			{
+				file << line_sep[0] << elem.first << line_sep[1] << elem.second << line_sep[2] << endl;
+			}
+		}
+		if(quiet == 0)
+		{
+			cerr << "--> Writing " << file_name << endl;
+		}
+	}
+}
+

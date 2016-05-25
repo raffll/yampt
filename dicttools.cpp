@@ -3,41 +3,35 @@
 using namespace std;
 
 //----------------------------------------------------------
-void dicttools::readDictAll(const char* path)
+void dicttools::readDict(const char* path)
 {
 	for(int i = 0; i < 10; i++)
 	{
-		readDict(path, i);
-	}
-}
+		file_path[i] = path;
+		file_path[i] += "dict_" + to_string(i) + "_" + dict_name[i] + ".dic";
+		ifstream file(file_path[i].c_str());
+		cutFileName(file_path[i]);
 
-//----------------------------------------------------------
-void dicttools::readDict(const char* path, int i)
-{
-	file_name[i] = path;
-	file_name[i] += "dict_" + to_string(i) + "_" + dict_name[i] + ".dic";
-	ifstream file(file_name[i].c_str());
-	//cutFileName(file_name[i]);
-
-	if(file)
-	{
-		char buffer[16384];
-		size_t file_size = file.tellg();
-		file_content[i].reserve(file_size);
-		streamsize chars_read;
-
-		while(file.read(buffer, sizeof(buffer)), chars_read = file.gcount())
+		if(file)
 		{
-			file_content[i].append(buffer, chars_read);
+			char buffer[16384];
+			size_t file_size = file.tellg();
+			file_content[i].reserve(file_size);
+			streamsize chars_read;
+
+			while(file.read(buffer, sizeof(buffer)), chars_read = file.gcount())
+			{
+				file_content[i].append(buffer, chars_read);
+			}
+			validateDict(i);
+			parseDict(i);
+			printStatus(i);
 		}
-		validateDict(i);
-		printStatus(i);
-		parseDict(i);
-	}
-	else
-	{
-		status[i] = 0;
-		printStatus(i);
+		else
+		{
+			status[i] = 0;
+			printStatus(i);
+		}
 	}
 }
 
@@ -48,16 +42,26 @@ void dicttools::printStatus(int i)
 	{
 		if(status[i] == 1)
 		{
-			cout << file_name[i] << " status: OK" << endl;
+			cerr << file_path[i] << " status: OK" << endl;
 		}
 		else if(status[i] == 0)
 		{
-			cerr << file_name[i] << " status: Error while loading file!" << endl;
+			cerr << file_path[i] << " status: Error while loading file!" << endl;
 		}
 		else if(status[i] == -1)
 		{
-			cerr << file_name[i] << " status: Missing separator!" << endl;
+			cerr << file_path[i] << " status: Missing separator!" << endl;
 		}
+	}
+}
+
+//----------------------------------------------------------
+void dicttools::printLog()
+{
+	if(!log.empty())
+	{
+		cerr << "Text length log: " << endl;
+		cerr << log;
 	}
 }
 
@@ -107,28 +111,23 @@ void dicttools::parseDict(int i)
 			m = *next;
 			validateRecLength(i, m.str(2), m.str(4).size());
 			dict[i].insert({m.str(2), m.str(4)});
-
 			next++;
 		}
-		file_content[i].erase();
 	}
 }
 
 //----------------------------------------------------------
 void dicttools::validateRecLength(int i, const string &str, const size_t &size)
 {
-	if(i == 2 && status[2] == 1)
+	if(quiet == 0)
 	{
-		if(size > 31)
+		if(i == 2 && status[2] == 1 && size > 31)
 		{
-			cerr << str << " <-- Text too long, more than 31 bytes! (has " << size << ")" << endl;
+			log += str + " <-- Text too long, more than 31 bytes! (has " + to_string(size) + ")" + "\n";
 		}
-	}
-	if(i == 8 && status[8] == 1)
-	{
-		if(size > 511)
+		if(i == 8 && status[8] == 1 && size > 512)
 		{
-			cerr << str << " <-- Text too long, more than 511 bytes! (has " << size << ")" << endl;
+			log += str + " <-- Text too long, more than 512 bytes! (has " + to_string(size) + ")" + "\n";
 		}
 	}
 }

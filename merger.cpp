@@ -3,64 +3,75 @@
 //----------------------------------------------------------
 merger::merger(const char* path_pri)
 {
-	dict_pri.readDictAll(path_pri);
+	printStatus(0);
+	dict_unique[0].readDict(path_pri);
+	dict_unique[0].printLog();
 }
 
 //----------------------------------------------------------
 merger::merger(const char* path_pri, const char* path_sec)
 {
-	dict_pri.readDictAll(path_pri);
-	dict_sec.readDictAll(path_sec);
+	printStatus(0);
+	dict_unique[0].readDict(path_pri);
+	dict_unique[0].printLog();
+	printStatus(1);
+	dict_unique[1].readDict(path_sec);
+	dict_unique[1].printLog();
 }
 
 //----------------------------------------------------------
-void merger::mergeDict(int i)
+void merger::printStatus(int i)
 {
-	dict_merged[i].insert(dict_pri.dict[i].begin(), dict_pri.dict[i].end());
-	dict_merged[i].insert(dict_sec.dict[i].begin(), dict_sec.dict[i].end());
-}
-
-//----------------------------------------------------------
-void merger::writeDict(int i)
-{
-	ofstream file;
-	string file_name = "dict_" + to_string(i) + "_" + dict_name[i] + ".dic";
-	file.open(file_name.c_str());
-	for(const auto &elem : dict_merged[i])
+	if(quiet == 0)
 	{
-		file << line_sep[0] << elem.first << line_sep[1] << elem.second << line_sep[2] << endl;
+		cerr << "--> Loading dict " << i << ":" << endl;
 	}
 }
 
 //----------------------------------------------------------
-void merger::writeDuplicatesAll()
+void merger::mergeDict() /*TODO*/
 {
 	for(int i = 0; i < 10; i++)
 	{
-		writeDuplicates(i);
+		dict_merged[i].insert(dict_unique[0].dict[i].begin(), dict_unique[0].dict[i].end());
+		dict_merged[i].insert(dict_unique[1].dict[i].begin(), dict_unique[1].dict[i].end());
 	}
 }
 
 //----------------------------------------------------------
-void merger::writeDuplicates(int i)
+void merger::writeMerged()
+{
+	writeDict(dict_merged);
+}
+
+//----------------------------------------------------------
+void merger::writeDiffLog()
 {
     ofstream file_pri;
     ofstream file_sec;
-	string file_name_pri = "duplicates_1_" + to_string(i) + "_" + dict_name[i] + ".dic";
-    string file_name_sec = "duplicates_2_" + to_string(i) + "_" + dict_name[i] + ".dic";
+	string file_name_pri = "diff_dict_0.dic";
+    string file_name_sec = "diff_dict_1.dic";
 	file_pri.open(file_name_pri.c_str());
 	file_sec.open(file_name_sec.c_str());
 
-	for(auto &elem : dict_pri.dict[i])
+	for(int i = 0; i < 10; i++)
 	{
-		auto search = dict_sec.dict[i].find(elem.first);
-		if(search != dict_sec.dict[i].end())
+		for(auto &elem : dict_unique[0].dict[i])
 		{
-			if(search->second != elem.second)
+			auto search = dict_unique[1].dict[i].find(elem.first);
+			if(search != dict_unique[1].dict[i].end())
 			{
-				file_pri << line_sep[0] << elem.first << line_sep[1] << elem.second << line_sep[2] << endl;
-				file_sec << line_sep[0] << search->first << line_sep[1] << search->second << line_sep[2] << endl;
+				if(search->second != elem.second)
+				{
+					file_pri << line_sep[0] << elem.first << line_sep[1] << elem.second << line_sep[2] << endl;
+					file_sec << line_sep[0] << search->first << line_sep[1] << search->second << line_sep[2] << endl;
+				}
 			}
 		}
+	}
+	if(quiet == 0)
+	{
+		cerr << "--> Writing " << file_name_pri << endl;
+		cerr << "--> Writing " << file_name_sec << endl;
 	}
 }

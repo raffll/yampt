@@ -12,19 +12,18 @@ using namespace std;
 class merger: public tools
 {
 public:
-	void mergeDict(int i);
-	void writeDict(int i);
-	void writeDuplicatesAll();
-	void writeDuplicates(int i);
+	void mergeDict();
+	void writeMerged();
+	void writeDiffLog();
 
 	merger() {}
 	merger(const char* path_pri);
 	merger(const char* path_pri, const char* path_sec);
 
 private:
-	dicttools dict_pri;
-	dicttools dict_sec;
+	void printStatus(int i);
 
+	array<dicttools, 3> dict_unique;
 	array<dict_t, 10> dict_merged;
 };
 

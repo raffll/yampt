@@ -4,9 +4,9 @@
 using namespace std;
 
 //----------------------------------------------------------
-creator::creator(const char* b)
+creator::creator(const char* path_base)
 {
-	base.readFile(b);
+	base.readFile(path_base);
 	esm_ptr = &base;
 
 	if(base.getStatus() == 1)
@@ -21,14 +21,16 @@ creator::creator(const char* b)
 		makeDictDial();
 		makeDictInfo();
 		makeDictScpt();
+
+		writeDict(dict);
 	}
 }
 
 //----------------------------------------------------------
-creator::creator(const char* b, const char* e)
+creator::creator(const char* path_base, const char* path_extd)
 {
-	base.readFile(b);
-	extd.readFile(e);
+	base.readFile(path_base);
+	extd.readFile(path_extd);
 	esm_ptr = &extd;
 
 	if(base.getStatus() == 1 && extd.getStatus() == 1)
@@ -43,6 +45,8 @@ creator::creator(const char* b, const char* e)
 		makeDictDial();
 		makeDictInfo();
 		makeDictScpt();
+
+		writeDict(dict);
 	}
 }
 
@@ -51,42 +55,10 @@ void creator::printStatus(int i)
 {
 	if(quiet == 0)
 	{
-		cout << "dict_" + to_string(i) + "_" + dict_name[i] + ".dic" << " records created: " << counter << endl;
+		cerr << "dict_" + to_string(i) + "_" + dict_name[i] + ".dic" << " records created: " << counter << endl;
 	}
 }
 
-//----------------------------------------------------------
-void creator::writeDictAll()
-{
-	for(int i = 0; i < 10; i++)
-	{
-		writeDict(i);
-	}
-}
-
-//----------------------------------------------------------
-void creator::writeDict(int i)
-{
-	ofstream file;
-	string file_name = "dict_" + to_string(i) + "_" + dict_name[i] + ".dic";
-	file.open(file_name.c_str());
-	for(const auto &elem : dict[i])
-	{
-		file << line_sep[0] << elem.first << line_sep[1] << elem.second << line_sep[2] << endl;
-	}
-}
-
-//----------------------------------------------------------
-void creator::printDict(int i)
-{
-	for(const auto &elem : dict[i])
-	{
-		cout << line_sep[0] << elem.first << line_sep[1] << elem.second << line_sep[2] << endl;
-	}
-}
-
-//----------------------------------------------------------
-// make
 //----------------------------------------------------------
 void creator::makeDictCell()
 {

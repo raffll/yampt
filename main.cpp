@@ -35,7 +35,6 @@ int main(int argc, char *argv[])
 		if(argc == 3)
 		{
 			creator c(argv[2]);
-			c.writeDictAll();
 		}
 	}
 	else if(comm == "--make-base")
@@ -43,7 +42,14 @@ int main(int argc, char *argv[])
 		if(argc == 4)
 		{
 			creator c(argv[2], argv[3]);
-			c.writeDictAll();
+		}
+	}
+	else if(comm == "--compare")
+	{
+		if(argc == 4)
+		{
+			merger m(argv[2], argv[3]);
+			m.writeDiffLog();
 		}
 	}
 	else if(comm == "--merge")
@@ -51,9 +57,17 @@ int main(int argc, char *argv[])
 		if(argc == 4)
 		{
 			merger m(argv[2], argv[3]);
-			//m.mergeDict(8);
-			//m.writeDict(8);
-			m.writeDuplicatesAll();
+			m.mergeDict();
+			m.writeMerged();
+		}
+	}
+	else if(comm == "--sort")
+	{
+		if(argc == 3)
+		{
+			merger m(argv[2]);
+			m.mergeDict();
+			m.writeMerged();
 		}
 	}
 	else

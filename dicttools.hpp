@@ -17,10 +17,8 @@ using namespace std;
 class dicttools : public tools
 {
 public:
-	void readDictAll(const char* path);
-	void readDict(const char* path, int i);
-	size_t getBegin(int i);
-	size_t getEnd(int i);
+	void readDict(const char* path);
+	void printLog();
 	bool getStatus(int i) { return status[i]; }
 
 	dicttools() {}
@@ -33,8 +31,9 @@ private:
 	void validateDict(int i);
 	void validateRecLength(int i, const string &str, const size_t &size);
 
+	string log;
 	array<int, 10> status = {};
-	array<string, 10> file_name;
+	array<string, 10> file_path;
 	array<string, 10> file_content;
 };
 

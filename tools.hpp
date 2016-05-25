@@ -1,7 +1,9 @@
 #ifndef TOOLS_HPP
 #define TOOLS_HPP
 
+#include <iostream>
 #include <string>
+#include <fstream>
 #include <sstream>
 #include <vector>
 #include <map>
@@ -18,12 +20,14 @@ public:
 	static map<int, string> type_coll;
 	static bool quiet;
 
+	typedef multimap<string, string> dict_t;
+
 protected:
 	void cutFileName(string &str);
 	void cutNullChar(string &str);
 	unsigned int byteToInt(const string &str);
-
-	typedef multimap<string, string> dict_t;
+	void printDict(dict_t &dict);
+	void writeDict(array<dict_t, 10> &dict);
 };
 
 #endif

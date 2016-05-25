@@ -5,9 +5,9 @@ using namespace std;
 //----------------------------------------------------------
 void esmtools::readFile(const char* path)
 {
-	file_name = path;
-	ifstream file(file_name, ios::binary);
-	//cutFileName(file_name);
+	file_path = path;
+	ifstream file(file_path, ios::binary);
+	cutFileName(file_path);
 
 	if(file)
 	{
@@ -46,15 +46,15 @@ void esmtools::printStatus()
 	{
 		if(status == 1)
 		{
-			cout << file_name << " status: OK" << endl;
+			cerr << "--> Loading " << file_path << " status: OK" << endl;
 		}
 		else if(status == 0)
 		{
-			cerr << file_name << " status: Error while loading file!" << endl;
+			cerr << "--> Loading " << file_path << " status: Error while loading file!" << endl;
 		}
 		else
 		{
-			cerr << file_name << " status: This isn't TES3 file!" << endl;
+			cerr << "--> Loading " << file_path << " status: This isn't TES3 file!" << endl;
 		}
 	}
 }

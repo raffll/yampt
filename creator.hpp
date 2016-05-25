@@ -17,13 +17,9 @@ using namespace std;
 class creator : public tools
 {
 public:
-	void writeDictAll();
-	void writeDict(int i);
-	void printDict(int i);
-
 	creator();
-	creator(const char* b);
-	creator(const char* b, const char* e);
+	creator(const char* path_base);
+	creator(const char* path_base, const char* path_extd);
 
 private:
 	void printStatus(int i);

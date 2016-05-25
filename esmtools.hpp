@@ -23,7 +23,6 @@ public:
 	void setPriSubRec(const char* id);
 	void setSecSubRec(const char* id);
 
-	void printStatus();
 	string dialType();
 	bool loopCheck();
 
@@ -39,8 +38,10 @@ public:
 	esmtools() : status(0) {}
 
 private:
+	void printStatus();
+
 	int status;
-	string file_name;
+	string file_path;
 	string file_content;
 
 	size_t rec_beg;
