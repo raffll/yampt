@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 			merger m(argv[2], argv[3]);
 			//m.mergeDict(8);
 			//m.writeDict(8);
-			m.findDuplicates(8);
+			m.writeDuplicatesAll();
 		}
 	}
 	else

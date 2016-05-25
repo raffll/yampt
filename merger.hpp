@@ -14,16 +14,18 @@ class merger: public tools
 public:
 	void mergeDict(int i);
 	void writeDict(int i);
-	void findDuplicates(int i);
+	void writeDuplicatesAll();
+	void writeDuplicates(int i);
 
 	merger() {}
-	merger(const char* path_1, const char* path_2);
+	merger(const char* path_pri);
+	merger(const char* path_pri, const char* path_sec);
 
 private:
-	dicttools dict_1;
-	dicttools dict_2;
+	dicttools dict_pri;
+	dicttools dict_sec;
 
-	array<multimap<string, pair<size_t, string>>, 10> dict;
+	array<dict_t, 10> dict_merged;
 };
 
 #endif

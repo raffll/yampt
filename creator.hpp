@@ -14,7 +14,7 @@
 
 using namespace std;
 
-class creator : tools
+class creator : public tools
 {
 public:
 	void writeDictAll();
@@ -43,7 +43,7 @@ private:
 	esmtools extd;
 	esmtools *esm_ptr;
 	int counter;
-	array<multimap<string, string>, 10> dict;
+	array<dict_t, 10> dict;
 };
 
 #endif

@@ -19,20 +19,19 @@ class dicttools : public tools
 public:
 	void readDictAll(const char* path);
 	void readDict(const char* path, int i);
-	void printDict(int i);
 	size_t getBegin(int i);
 	size_t getEnd(int i);
 	bool getStatus(int i) { return status[i]; }
 
 	dicttools() {}
 
-	dict_t dict;
+	array<dict_t, 10> dict;
 
 private:
 	void printStatus(int i);
 	void parseDict(int i);
 	void validateDict(int i);
-	void validateRecLength(int i);
+	void validateRecLength(int i, const string &str, const size_t &size);
 
 	array<int, 10> status = {};
 	array<string, 10> file_name;

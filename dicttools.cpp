@@ -33,7 +33,6 @@ void dicttools::readDict(const char* path, int i)
 		validateDict(i);
 		printStatus(i);
 		parseDict(i);
-		validateRecLength(i);
 	}
 	else
 	{
@@ -58,18 +57,6 @@ void dicttools::printStatus(int i)
 		else if(status[i] == -1)
 		{
 			cerr << file_name[i] << " status: Missing separator!" << endl;
-		}
-	}
-}
-
-//----------------------------------------------------------
-void dicttools::printDict(int i)
-{
-	if(status[i] == 1)
-	{
-		for(const auto &elem : dict[i])
-		{
-			cout << line_sep[0] << elem.first << line_sep[1] << elem.second.second << line_sep[2] << endl;
 		}
 	}
 }
@@ -106,31 +93,6 @@ void dicttools::validateDict(int i)
 }
 
 //----------------------------------------------------------
-void dicttools::validateRecLength(int i)
-{
-	if(i == 2 && status[2] == 1)
-	{
-		for(const auto &elem : dict[2])
-		{
-			if(elem.second.first > 32)
-			{
-				cerr << elem.first << " <-- Text too long, more than 32 bytes! (has " << elem.second.first << ")" << endl;
-			}
-		}
-	}
-	if(i == 8 && status[8] == 1)
-	{
-		for(const auto &elem : dict[8])
-		{
-			if(elem.second.first > 512)
-			{
-				cerr << elem.first << " <-- Text too long, more than 512 bytes! (has " << elem.second.first << ")" << endl;
-			}
-		}
-	}
-}
-
-//----------------------------------------------------------
 void dicttools::parseDict(int i)
 {
 	if(status[i] == 1)
@@ -143,9 +105,30 @@ void dicttools::parseDict(int i)
 		while(next != end)
 		{
 			m = *next;
-			dict[i].insert({m.str(2), make_pair(m.str(4).size(), m.str(4))});
+			validateRecLength(i, m.str(2), m.str(4).size());
+			dict[i].insert({m.str(2), m.str(4)});
+
 			next++;
 		}
 		file_content[i].erase();
+	}
+}
+
+//----------------------------------------------------------
+void dicttools::validateRecLength(int i, const string &str, const size_t &size)
+{
+	if(i == 2 && status[2] == 1)
+	{
+		if(size > 31)
+		{
+			cerr << str << " <-- Text too long, more than 31 bytes! (has " << size << ")" << endl;
+		}
+	}
+	if(i == 8 && status[8] == 1)
+	{
+		if(size > 511)
+		{
+			cerr << str << " <-- Text too long, more than 511 bytes! (has " << size << ")" << endl;
+		}
 	}
 }
