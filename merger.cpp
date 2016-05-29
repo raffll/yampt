@@ -3,32 +3,32 @@
 //----------------------------------------------------------
 merger::merger(const char* p1)
 {
-	printStatus(p1);
+	printLog(p1);
 	dict_unique[0].readDict(p1);
 }
 
 //----------------------------------------------------------
 merger::merger(const char* p1, const char* p2)
 {
-	printStatus(p1);
+	printLog(p1);
 	dict_unique[0].readDict(p1);
-	printStatus(p2);
+	printLog(p2);
 	dict_unique[1].readDict(p2);
 }
 
 //----------------------------------------------------------
 merger::merger(const char* p1, const char* p2, const char* p3)
 {
-	printStatus(p1);
+	printLog(p1);
 	dict_unique[0].readDict(p1);
-	printStatus(p2);
+	printLog(p2);
 	dict_unique[1].readDict(p2);
-	printStatus(p3);
+	printLog(p3);
 	dict_unique[2].readDict(p3);
 }
 
 //----------------------------------------------------------
-void merger::printStatus(const char * path)
+void merger::printLog(const char * path)
 {
 	cerr << "--> Loading dict from " << path << ":" << endl;
 }
@@ -40,7 +40,7 @@ void merger::mergeDict()
 	{
 		for(int i = 0; i < 10; i++)
 		{
-			for(auto &elem : dict_unique[k].dict[i])
+			for(auto &elem : dict_unique[k].getDict(i))
 			{
 				auto search = dict_merged[i].find(elem.first);
 				if(search == dict_merged[i].end())
@@ -62,19 +62,18 @@ void merger::writeMerged()
 	for(int i = 0; i < 10; i++)
 	{
 		ofstream file;
-		string file_name = "dict_" + to_string(i) + "_" + dict_name[i] + ".dic";
 		if(!dict_merged[i].empty())
 		{
-			file.open(file_name.c_str());
+			file.open(dict_name[i].c_str());
 			for(const auto &elem : dict_merged[i])
 			{
 				file << line_sep[0] << elem.first << line_sep[1] << elem.second << line_sep[2] << endl;
 			}
-			cerr << "--> Writing " << file_name << endl;
+			cerr << "--> Writing " << dict_name[i] << endl;
 		}
 		else
 		{
-			cerr << "--> Skipping " << file_name << endl;
+			cerr << "--> Skipping " << dict_name[i] << endl;
 		}
 	}
 }
@@ -82,8 +81,8 @@ void merger::writeMerged()
 //----------------------------------------------------------
 void merger::writeDiff()
 {
-    ofstream file_pri;
-    ofstream file_sec;
+	ofstream file_pri;
+	ofstream file_sec;
 	string file_name_pri = "diff_dict_0.dic";
 	string file_name_sec = "diff_dict_1.dic";
 	file_pri.open(file_name_pri.c_str());
@@ -91,10 +90,10 @@ void merger::writeDiff()
 
 	for(int i = 0; i < 10; i++)
 	{
-		for(auto &elem : dict_unique[0].dict[i])
+		for(auto &elem : dict_unique[0].getDict(i))
 		{
-			auto search = dict_unique[1].dict[i].find(elem.first);
-			if(search != dict_unique[1].dict[i].end())
+			auto search = dict_unique[1].getDict(i).find(elem.first);
+			if(search != dict_unique[1].getDict(i).end())
 			{
 				if(search->second != elem.second)
 				{

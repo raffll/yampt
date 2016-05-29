@@ -13,7 +13,7 @@
 
 using namespace std;
 
-class esmtools : public tools
+class esmtools
 {
 public:
 	void readFile(const char* path);
@@ -54,8 +54,8 @@ private:
 	void cutNullCharFromText(string &str);
 
 	int status;
-	string file_name;
-	string file_content;
+	string name;
+	string content;
 
 	size_t rec_beg;
 	size_t rec_end;

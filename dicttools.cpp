@@ -7,21 +7,21 @@ void dicttools::readDict(const char* path)
 {
 	for(int i = 0; i < 10; i++)
 	{
-		file_name[i] = path;
-		file_name[i] += "dict_" + to_string(i) + "_" + dict_name[i] + ".dic";
-		ifstream file(file_name[i].c_str());
-		file_name[i] = file_name[i].substr(file_name[i].find_last_of("\\/") + 1);
+		name[i] = path;
+		name[i] += dict_name[i];
+		ifstream file(name[i].c_str());
+		name[i] = name[i].substr(name[i].find_last_of("\\/") + 1);
 
 		if(file)
 		{
 			char buffer[16384];
-			size_t file_size = file.tellg();
-			file_content[i].reserve(file_size);
+			size_t size = file.tellg();
+			content[i].reserve(size);
 			streamsize chars_read;
 
 			while(file.read(buffer, sizeof(buffer)), chars_read = file.gcount())
 			{
-				file_content[i].append(buffer, chars_read);
+				content[i].append(buffer, chars_read);
 			}
 			parseDict(i);
 		}
@@ -38,26 +38,26 @@ void dicttools::setStatus(int i, st e)
 	switch(e)
 	{
 	case 0:
-		cerr << file_name[i] << " status: Error while loading file!" << endl;
+		cerr << name[i] << " status: Error while loading file!" << endl;
 		status[i] = 0;
 		break;
 
 	case 1:
-		cerr << file_name[i] << " status: OK" << endl;
+		cerr << name[i] << " status: OK" << endl;
 		status[i] = 1;
 		break;
 
 	case 2:
-		cerr << file_name[i] << " status: Missing separator!" << endl;
+		cerr << name[i] << " status: Missing separator!" << endl;
 		status[i] = 0;
-		dict_read[i].clear();
+		dict[i].clear();
 		break;
 
 	case 3:
-		cerr << file_name[i] << " status: Text too long!" << endl;
+		cerr << name[i] << " status: Text too long!" << endl;
 		cerr << log[i];
 		status[i] = 0;
-		dict_read[i].clear();
+		dict[i].clear();
 		break;
 	}
 }
@@ -73,9 +73,9 @@ void dicttools::parseDict(int i)
 
 	while(true)
 	{
-		pos_beg = file_content[i].find(line_sep[0], pos_beg);
-		pos_mid = file_content[i].find(line_sep[1], pos_mid);
-		pos_end = file_content[i].find(line_sep[2], pos_end);
+		pos_beg = content[i].find(line_sep[0], pos_beg);
+		pos_mid = content[i].find(line_sep[1], pos_mid);
+		pos_end = content[i].find(line_sep[2], pos_end);
 		if(pos_beg == string::npos && pos_mid == string::npos && pos_end == string::npos)
 		{
 			if(log[i].empty())
@@ -95,9 +95,9 @@ void dicttools::parseDict(int i)
 		}
 		else
 		{
-			pri_text = file_content[i].substr(pos_beg + line_sep[0].size(), pos_mid - pos_beg - line_sep[0].size());
-			sec_text = file_content[i].substr(pos_mid + line_sep[1].size(), pos_end - pos_mid - line_sep[1].size());
-			dict_read[i].insert({pri_text, sec_text});
+			pri_text = content[i].substr(pos_beg + line_sep[0].size(), pos_mid - pos_beg - line_sep[0].size());
+			sec_text = content[i].substr(pos_mid + line_sep[1].size(), pos_end - pos_mid - line_sep[1].size());
+			dict[i].insert({pri_text, sec_text});
 			validateRecLength(i, pri_text, sec_text.size());
 
 			pos_beg++;

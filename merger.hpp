@@ -9,7 +9,7 @@
 
 using namespace std;
 
-class merger: public tools
+class merger
 {
 public:
 	void mergeDict();
@@ -21,11 +21,9 @@ public:
 	merger(const char* p1, const char* p2);
 	merger(const char* p1, const char* p2, const char* p3);
 
+private:
+	void printLog(const char* path);
 	array<dict_t, 10> dict_merged;
-
-protected:
-	void printStatus(const char* path);
-
 	array<dicttools, 3> dict_unique;
 };
 

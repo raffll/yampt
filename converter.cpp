@@ -1,11 +1,24 @@
 #include "converter.hpp"
 
 //----------------------------------------------------------
-converter::converter(const char* file, const char* dict)
+converter::converter(const char* base_path, const char* dict_path)
 {
-	base.readFile(file);
-	dict_unique[0].readDict(dict);
-	mergeDict();
+	base.readFile(base_path);
+	dict.readDict(dict_path);
+
+	file_name = base_path;
+	file_name = file_name.substr(file_name.find_last_of("\\/") + 1);
+	file_suffix = file_name.substr(file_name.rfind("."));
+	file_name = file_name.substr(0, file_name.find_last_of("."));
+}
+
+//----------------------------------------------------------
+void converter::writeFile()
+{
+	ofstream file;
+	string new_name = file_name + "_conv" + file_suffix;
+	file.open(new_name);
+	file << file_content;
 }
 
 //----------------------------------------------------------
@@ -42,7 +55,8 @@ void converter::printBinary(string str)
 //----------------------------------------------------------
 void converter::convertCell()
 {
-	counter = 0;
+	int counter_conv = 0;
+	int counter_not = 0;
 	base.resetRec();
 	while(base.loopCheck())
 	{
@@ -54,28 +68,30 @@ void converter::convertCell()
 			base.setPriSubRec("NAME");
 			if(!base.getPriText().empty())
 			{
-				auto search = dict_merged[0].find(base.getPriText());
-				if(search != dict_merged[0].end())
+				auto search = dict.getDict(0).find(base.getPriText());
+				if(search != dict.getDict(0).end())
 				{
-					printBinary(current_rec);
-					cout << endl << endl;
-
 					current_rec.erase(base.getPriPos() + 4, 4);
 					current_rec.insert(base.getPriPos() + 4, intToByte(search->second.size() + 1));
 
 					current_rec.erase(base.getPriPos() + 8, base.getPriSize());
 					current_rec.insert(base.getPriPos() + 8, search->second + '\0');
 
+					current_rec.erase(4, 4);
+					current_rec.insert(4, intToByte(current_rec.size() - 16));
 
-					printBinary(current_rec);
-					cout << endl << endl;
-
-					counter++;
 					file_content.append(current_rec);
+					counter_conv++;
 				}
 			}
 		}
-
-		file_content.append(current_rec);
+		else
+		{
+			file_content.append(current_rec);
+			counter_not++;
+		}
 	}
+	cerr << "--> Converted: " << counter_conv << " records" << endl;
+	cerr << "--> Ignored: " << counter_not << " records" << endl;
 }
+

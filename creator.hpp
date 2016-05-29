@@ -14,7 +14,7 @@
 
 using namespace std;
 
-class creator : public tools
+class creator
 {
 public:
 	void makeDict();
@@ -23,10 +23,6 @@ public:
 	creator() {}
 	creator(const char* path_base);
 	creator(const char* path_base, const char* path_extd);
-
-protected:
-	esmtools base;
-	int counter;
 
 private:
 	void printLog(int i);
@@ -42,10 +38,11 @@ private:
 	void makeDictInfo();
 	void makeDictScpt();
 
+	esmtools base;
 	esmtools extd;
 	esmtools *esm_ptr;
-
-	array<dict_t, 10> dict_created;
+	int counter;
+	array<dict_t, 10> dict;
 };
 
 #endif

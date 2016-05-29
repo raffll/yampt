@@ -5,23 +5,23 @@ using namespace std;
 //----------------------------------------------------------
 void esmtools::readFile(const char* path)
 {
-	file_name = path;
-	ifstream file(file_name, ios::binary);
-	file_name = file_name.substr(file_name.find_last_of("\\/") + 1);
+	ifstream file(path, ios::binary);
+	name = path;
+	name = name.substr(name.find_last_of("\\/") + 1);
 
 	if(file)
 	{
 		char buffer[16384];
-		size_t file_size = file.tellg();
-		file_content.reserve(file_size);
+		size_t size = file.tellg();
+		content.reserve(size);
 		streamsize chars_read;
 
 		while(file.read(buffer, sizeof(buffer)), chars_read = file.gcount())
 		{
-			file_content.append(buffer, chars_read);
+			content.append(buffer, chars_read);
 		}
 
-		if(file_content.substr(0, 4) == "TES3")
+		if(content.substr(0, 4) == "TES3")
 		{
 			setStatus(loaded);
 		}
@@ -42,19 +42,19 @@ void esmtools::setStatus(st e)
 	switch(e)
 	{
 	case 0:
-		cerr << "--> Loading " << file_name << " status: Error while loading file!" << endl;
+		cerr << "--> Loading " << name << " status: Error while loading file!" << endl;
 		status = 0;
 		break;
 
 	case 1:
-		cerr << "--> Loading " << file_name << " status: OK" << endl;
+		cerr << "--> Loading " << name << " status: OK" << endl;
 		status = 1;
 		break;
 
 	case 2:
-		cerr << "--> Loading " << file_name << " status: This isn't TES3 file!" << endl;
+		cerr << "--> Loading " << name << " status: This isn't TES3 file!" << endl;
 		status = 0;
-		file_content.erase();
+		content.erase();
 		break;
 	}
 }
@@ -72,8 +72,8 @@ void esmtools::setNextRec()
 	if(status == 1)
 	{
 		rec_beg = rec_end;
-		rec_id = file_content.substr(rec_beg, 4);
-		rec_size = byteToInt(file_content.substr(rec_beg + 4, 4)) + 16;
+		rec_id = content.substr(rec_beg, 4);
+		rec_size = byteToInt(content.substr(rec_beg + 4, 4)) + 16;
 		rec_end = rec_beg + rec_size;
 	}
 }
@@ -83,7 +83,7 @@ void esmtools::setRecContent()
 {
 	if(status == 1)
 	{
-		rec_content = file_content.substr(rec_beg, rec_size);
+		rec_content = content.substr(rec_beg, rec_size);
 		pri_pos = 0;
 		sec_pos = 0;
 	}
@@ -183,7 +183,7 @@ void esmtools::setSecSubRec(const char* id)
 //----------------------------------------------------------
 bool esmtools::loopCheck()
 {
-	if(rec_end != file_content.size())
+	if(rec_end != content.size())
 	{
 		return true;
 	}

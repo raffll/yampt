@@ -9,20 +9,25 @@
 
 using namespace std;
 
-class converter: public creator, public merger
+class converter
 {
 public:
 	string intToByte(unsigned int x);
 	void printBinary(string str);
 	void convertCell();
+	void writeFile();
 
 	converter();
-	converter(const char* file, const char* dict);
+	converter(const char* base_path, const char* dict_path);
 
+private:
+	esmtools base;
+	dicttools dict;
+
+	string file_name;
+	string file_suffix;
 	string current_rec;
 	string file_content;
-private:
-
 };
 
 #endif

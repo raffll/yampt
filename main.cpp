@@ -82,9 +82,9 @@ int main(int argc, char *argv[])
 		{
 			converter m(argv[2], argv[3]);
 			m.convertCell();
+			m.writeFile();
 		}
 	}
-
 	else
 	{
 		cout << usage;
