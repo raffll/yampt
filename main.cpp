@@ -8,11 +8,10 @@ using namespace std;
 #include "tools.hpp"
 #include "creator.hpp"
 #include "merger.hpp"
+#include "converter.hpp"
 
 int main(int argc, char *argv[])
 {
-	tools::quiet = 0;
-
 	string comm;
 	string usage = "Usage: yampt [command]"
 				   "\n"
@@ -35,6 +34,8 @@ int main(int argc, char *argv[])
 		if(argc == 3)
 		{
 			creator c(argv[2]);
+			c.makeDict();
+			c.writeDict();
 		}
 	}
 	else if(comm == "--make-base")
@@ -42,6 +43,8 @@ int main(int argc, char *argv[])
 		if(argc == 4)
 		{
 			creator c(argv[2], argv[3]);
+			c.makeDict();
+			c.writeDict();
 		}
 	}
 	else if(comm == "--compare")
@@ -49,19 +52,10 @@ int main(int argc, char *argv[])
 		if(argc == 4)
 		{
 			merger m(argv[2], argv[3]);
-			m.writeDiffLog();
+			m.writeDiff();
 		}
 	}
 	else if(comm == "--merge")
-	{
-		if(argc == 4)
-		{
-			merger m(argv[2], argv[3]);
-			m.mergeDict();
-			m.writeMerged();
-		}
-	}
-	else if(comm == "--sort")
 	{
 		if(argc == 3)
 		{
@@ -69,7 +63,28 @@ int main(int argc, char *argv[])
 			m.mergeDict();
 			m.writeMerged();
 		}
+		if(argc == 4)
+		{
+			merger m(argv[2], argv[3]);
+			m.mergeDict();
+			m.writeMerged();
+		}
+		if(argc == 5)
+		{
+			merger m(argv[2], argv[3], argv[4]);
+			m.mergeDict();
+			m.writeMerged();
+		}
 	}
+	else if(comm == "--convert")
+	{
+		if(argc == 4)
+		{
+			converter m(argv[2], argv[3]);
+			m.convertCell();
+		}
+	}
+
 	else
 	{
 		cout << usage;

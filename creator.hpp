@@ -17,12 +17,19 @@ using namespace std;
 class creator : public tools
 {
 public:
-	creator();
+	void makeDict();
+	void writeDict();
+
+	creator() {}
 	creator(const char* path_base);
 	creator(const char* path_base, const char* path_extd);
 
+protected:
+	esmtools base;
+	int counter;
+
 private:
-	void printStatus(int i);
+	void printLog(int i);
 
 	void makeDictCell();
 	void makeDictGmst();
@@ -35,11 +42,10 @@ private:
 	void makeDictInfo();
 	void makeDictScpt();
 
-	esmtools base;
 	esmtools extd;
 	esmtools *esm_ptr;
-	int counter;
-	array<dict_t, 10> dict;
+
+	array<dict_t, 10> dict_created;
 };
 
 #endif

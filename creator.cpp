@@ -8,22 +8,6 @@ creator::creator(const char* path_base)
 {
 	base.readFile(path_base);
 	esm_ptr = &base;
-
-	if(base.getStatus() == 1)
-	{
-		makeDictCell();
-		makeDictGmst();
-		makeDictFnam();
-		makeDictDesc();
-		makeDictBook();
-		makeDictFact();
-		makeDictIndx();
-		makeDictDial();
-		makeDictInfo();
-		makeDictScpt();
-
-		writeDict(dict);
-	}
 }
 
 //----------------------------------------------------------
@@ -32,8 +16,12 @@ creator::creator(const char* path_base, const char* path_extd)
 	base.readFile(path_base);
 	extd.readFile(path_extd);
 	esm_ptr = &extd;
+}
 
-	if(base.getStatus() == 1 && extd.getStatus() == 1)
+//----------------------------------------------------------
+void creator::makeDict()
+{
+	if(base.getStatus() == 1 && esm_ptr->getStatus() == 1)
 	{
 		makeDictCell();
 		makeDictGmst();
@@ -45,17 +33,35 @@ creator::creator(const char* path_base, const char* path_extd)
 		makeDictDial();
 		makeDictInfo();
 		makeDictScpt();
-
-		writeDict(dict);
 	}
 }
 
 //----------------------------------------------------------
-void creator::printStatus(int i)
+void creator::printLog(int i)
 {
-	if(quiet == 0)
+	cerr << "dict_" + to_string(i) + "_" + dict_name[i] + ".dic" << " records created: " << counter << endl;
+}
+
+//----------------------------------------------------------
+void creator::writeDict()
+{
+	for(int i = 0; i < 10; i++)
 	{
-		cerr << "dict_" + to_string(i) + "_" + dict_name[i] + ".dic" << " records created: " << counter << endl;
+		ofstream file;
+		string file_name = "dict_" + to_string(i) + "_" + dict_name[i] + ".dic";
+		if(!dict_created[i].empty())
+		{
+			file.open(file_name.c_str());
+			for(const auto &elem : dict_created[i])
+			{
+				file << line_sep[0] << elem.first << line_sep[1] << elem.second << line_sep[2] << endl;
+			}
+			cerr << "--> Writing " << file_name << endl;
+		}
+		else
+		{
+			cerr << "--> Skipping " << file_name << endl;
+		}
 	}
 }
 
@@ -77,12 +83,12 @@ void creator::makeDictCell()
 			extd.setPriSubRec("NAME");
 			if(!base.getPriText().empty())
 			{
-				dict[0].insert({esm_ptr->getPriText(), base.getPriText()});
+				dict_created[0].insert({esm_ptr->getPriText(), base.getPriText()});
 				counter++;
 			}
 		}
 	}
-	printStatus(0);
+	printLog(0);
 }
 
 //----------------------------------------------------------
@@ -100,12 +106,12 @@ void creator::makeDictGmst()
 			base.setSecSubRec("STRV");
 			if(!base.getSecText().empty())
 			{
-				dict[1].insert({base.getPriText(), base.getSecText()});
+				dict_created[1].insert({base.getPriText(), base.getSecText()});
 				counter++;
 			}
 		}
 	}
-	printStatus(1);
+	printLog(1);
 }
 
 //----------------------------------------------------------
@@ -133,12 +139,12 @@ void creator::makeDictFnam()
 			base.setSecSubRec("FNAM");
 			if(!base.getPriText().empty())
 			{
-				dict[2].insert({base.getRecId() + inner_sep + base.getPriText(), base.getSecText()});
+				dict_created[2].insert({base.getRecId() + inner_sep + base.getPriText(), base.getSecText()});
 				counter++;
 			}
 		}
 	}
-	printStatus(2);
+	printLog(2);
 }
 
 //----------------------------------------------------------
@@ -156,11 +162,11 @@ void creator::makeDictDesc()
 			base.setRecContent();
 			base.setPriSubRec("NAME");
 			base.setSecSubRec("DESC");
-			dict[3].insert({base.getRecId() + inner_sep + base.getPriText(), base.getSecText()});
+			dict_created[3].insert({base.getRecId() + inner_sep + base.getPriText(), base.getSecText()});
 			counter++;
 		}
 	}
-	printStatus(3);
+	printLog(3);
 }
 
 //----------------------------------------------------------
@@ -176,11 +182,11 @@ void creator::makeDictBook()
 			base.setRecContent();
 			base.setPriSubRec("NAME");
 			base.setSecSubRec("TEXT");
-			dict[4].insert({base.getPriText(), base.getSecText()});
+			dict_created[4].insert({base.getPriText(), base.getSecText()});
 			counter++;
 		}
 	}
-	printStatus(4);
+	printLog(4);
 }
 
 //----------------------------------------------------------
@@ -198,12 +204,12 @@ void creator::makeDictFact()
 			base.setSecSubRec("RNAM");
 			for(unsigned i = 0; i < base.getTmpSize(); i++)
 			{
-				dict[5].insert({base.getPriText() + inner_sep + to_string(i), base.getTmpLine(i)});
+				dict_created[5].insert({base.getPriText() + inner_sep + to_string(i), base.getTmpLine(i)});
 				counter++;
 			}
 		}
 	}
-	printStatus(5);
+	printLog(5);
 }
 
 //----------------------------------------------------------
@@ -220,11 +226,11 @@ void creator::makeDictIndx()
 			base.setRecContent();
 			base.setPriSubRec("INDX");
 			base.setSecSubRec("DESC");
-			dict[6].insert({base.getRecId() + inner_sep + base.getPriText(), base.getSecText()});
+			dict_created[6].insert({base.getRecId() + inner_sep + base.getPriText(), base.getSecText()});
 			counter++;
 		}
 	}
-	printStatus(6);
+	printLog(6);
 }
 
 //----------------------------------------------------------
@@ -247,12 +253,12 @@ void creator::makeDictDial()
 			extd.setSecSubRec("DATA");
 			if(base.dialType() == "T")
 			{
-				dict[7].insert({esm_ptr->getPriText(), base.getPriText()});
+				dict_created[7].insert({esm_ptr->getPriText(), base.getPriText()});
 				counter++;
 			}
 		}
 	}
-	printStatus(7);
+	printLog(7);
 }
 
 //----------------------------------------------------------
@@ -276,11 +282,14 @@ void creator::makeDictInfo()
 			base.setRecContent();
 			base.setPriSubRec("INAM");
 			base.setSecSubRec("NAME");
-			dict[8].insert({dial + inner_sep + base.getPriText(), base.getSecText()});
-			counter++;
+			if(!base.getSecText().empty())
+			{
+				dict_created[8].insert({dial + inner_sep + base.getPriText(), base.getSecText()});
+				counter++;
+			}
 		}
 	}
-	printStatus(8);
+	printLog(8);
 }
 
 //----------------------------------------------------------
@@ -307,7 +316,7 @@ void creator::makeDictScpt()
 				{
 					if(base.getTmpLine(i).find(key[j]) != string::npos)
 					{
-						dict[9].insert({base.getPriText() + inner_sep + esm_ptr->getTmpLine(i), base.getTmpLine(i)});
+						dict_created[9].insert({base.getPriText() + inner_sep + esm_ptr->getTmpLine(i), base.getTmpLine(i)});
 						counter++;
 					}
 				}
@@ -334,12 +343,12 @@ void creator::makeDictScpt()
 				{
 					if(base.getTmpLine(i).find(key[j]) != string::npos)
 					{
-						dict[9].insert({base.getPriText() + inner_sep + esm_ptr->getTmpLine(i), base.getTmpLine(i)});
+						dict_created[9].insert({base.getPriText() + inner_sep + esm_ptr->getTmpLine(i), base.getTmpLine(i)});
 						counter++;
 					}
 				}
 			}
 		}
 	}
-	printStatus(9);
+	printLog(9);
 }

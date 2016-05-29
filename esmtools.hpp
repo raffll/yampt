@@ -27,21 +27,34 @@ public:
 	bool loopCheck();
 
 	string getRecId() { return rec_id; }
+	string getRecContent() { return rec_content; }
+
+	size_t getPriPos() { return pri_pos; }
+	size_t getPriSize() { return pri_size; }
 	string getPriId() { return pri_id; }
-	string getSecId() { return sec_id; }
 	string getPriText() { return pri_text; }
+
+	string getSecId() { return sec_id; }
 	string getSecText() { return sec_text; }
+	size_t getSecPos() { return sec_pos; }
+	size_t getSecSize() { return sec_size; }
+
 	string getTmpLine(int i) { return tmp_text[i]; }
 	size_t getTmpSize() { return tmp_text.size(); }
+
 	bool getStatus() { return status; }
 
 	esmtools() : status(0) {}
 
 private:
-	void printStatus();
+	enum st{not_loaded, loaded, error};
+	void setStatus(st e);
+
+	unsigned int byteToInt(const string &str);
+	void cutNullCharFromText(string &str);
 
 	int status;
-	string file_path;
+	string file_name;
 	string file_content;
 
 	size_t rec_beg;

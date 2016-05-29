@@ -7,10 +7,10 @@ void dicttools::readDict(const char* path)
 {
 	for(int i = 0; i < 10; i++)
 	{
-		file_path[i] = path;
-		file_path[i] += "dict_" + to_string(i) + "_" + dict_name[i] + ".dic";
-		ifstream file(file_path[i].c_str());
-		cutFileName(file_path[i]);
+		file_name[i] = path;
+		file_name[i] += "dict_" + to_string(i) + "_" + dict_name[i] + ".dic";
+		ifstream file(file_name[i].c_str());
+		file_name[i] = file_name[i].substr(file_name[i].find_last_of("\\/") + 1);
 
 		if(file)
 		{
@@ -23,54 +23,53 @@ void dicttools::readDict(const char* path)
 			{
 				file_content[i].append(buffer, chars_read);
 			}
-			validateDict(i);
 			parseDict(i);
-			printStatus(i);
 		}
 		else
 		{
-			status[i] = 0;
-			printStatus(i);
+			setStatus(i, not_loaded);
 		}
 	}
 }
 
 //----------------------------------------------------------
-void dicttools::printStatus(int i)
+void dicttools::setStatus(int i, st e)
 {
-	if(quiet == 0)
+	switch(e)
 	{
-		if(status[i] == 1)
-		{
-			cerr << file_path[i] << " status: OK" << endl;
-		}
-		else if(status[i] == 0)
-		{
-			cerr << file_path[i] << " status: Error while loading file!" << endl;
-		}
-		else if(status[i] == -1)
-		{
-			cerr << file_path[i] << " status: Missing separator!" << endl;
-		}
+	case 0:
+		cerr << file_name[i] << " status: Error while loading file!" << endl;
+		status[i] = 0;
+		break;
+
+	case 1:
+		cerr << file_name[i] << " status: OK" << endl;
+		status[i] = 1;
+		break;
+
+	case 2:
+		cerr << file_name[i] << " status: Missing separator!" << endl;
+		status[i] = 0;
+		dict_read[i].clear();
+		break;
+
+	case 3:
+		cerr << file_name[i] << " status: Text too long!" << endl;
+		cerr << log[i];
+		status[i] = 0;
+		dict_read[i].clear();
+		break;
 	}
 }
 
 //----------------------------------------------------------
-void dicttools::printLog()
-{
-	if(!log.empty())
-	{
-		cerr << "Text length log: " << endl;
-		cerr << log;
-	}
-}
-
-//----------------------------------------------------------
-void dicttools::validateDict(int i)
+void dicttools::parseDict(int i)
 {
 	size_t pos_beg = 0;
 	size_t pos_mid = 0;
 	size_t pos_end = 0;
+	string pri_text;
+	string sec_text;
 
 	while(true)
 	{
@@ -79,16 +78,28 @@ void dicttools::validateDict(int i)
 		pos_end = file_content[i].find(line_sep[2], pos_end);
 		if(pos_beg == string::npos && pos_mid == string::npos && pos_end == string::npos)
 		{
-			status[i] = 1;
+			if(log[i].empty())
+			{
+				setStatus(i, loaded);
+			}
+			else
+			{
+				setStatus(i, too_long);
+			}
 			break;
 		}
 		else if(pos_beg > pos_mid || pos_beg > pos_end || pos_mid > pos_end || pos_end == string::npos)
 		{
-			status[i] = -1;
+			setStatus(i, missing_sep);
 			break;
 		}
 		else
 		{
+			pri_text = file_content[i].substr(pos_beg + line_sep[0].size(), pos_mid - pos_beg - line_sep[0].size());
+			sec_text = file_content[i].substr(pos_mid + line_sep[1].size(), pos_end - pos_mid - line_sep[1].size());
+			dict_read[i].insert({pri_text, sec_text});
+			validateRecLength(i, pri_text, sec_text.size());
+
 			pos_beg++;
 			pos_mid++;
 			pos_end++;
@@ -97,37 +108,14 @@ void dicttools::validateDict(int i)
 }
 
 //----------------------------------------------------------
-void dicttools::parseDict(int i)
-{
-	if(status[i] == 1)
-	{
-		regex re("(<h3>)(.*?)(</h3>)((.|\n)*?)(<hr>)");
-		sregex_iterator next(file_content[i].begin(), file_content[i].end(), re);
-		sregex_iterator end;
-		smatch m;
-
-		while(next != end)
-		{
-			m = *next;
-			validateRecLength(i, m.str(2), m.str(4).size());
-			dict[i].insert({m.str(2), m.str(4)});
-			next++;
-		}
-	}
-}
-
-//----------------------------------------------------------
 void dicttools::validateRecLength(int i, const string &str, const size_t &size)
 {
-	if(quiet == 0)
+	if(i == 2 && size > 31)
 	{
-		if(i == 2 && status[2] == 1 && size > 31)
-		{
-			log += str + " <-- Text too long, more than 31 bytes! (has " + to_string(size) + ")" + "\n";
-		}
-		if(i == 8 && status[8] == 1 && size > 512)
-		{
-			log += str + " <-- Text too long, more than 512 bytes! (has " + to_string(size) + ")" + "\n";
-		}
+		log[2] += str + " <-- Text too long, more than 31 bytes! (has " + to_string(size) + ")\n";
+	}
+	if(i == 8 && size > 512)
+	{
+		log[8] += str + " <-- Text too long, more than 512 bytes! (has " + to_string(size) + ")\n";
 	}
 }
