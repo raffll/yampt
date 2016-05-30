@@ -16,15 +16,14 @@ public:
 	void writeMerged();
 	void writeDiff();
 
+	dict_t const& getDict(int i) const { return dict[i]; }
+
 	merger() {}
-	merger(const char* p1);
-	merger(const char* p1, const char* p2);
-	merger(const char* p1, const char* p2, const char* p3);
+	merger(vector<string>& path);
 
 private:
-	void printLog(const char* path);
-	array<dict_t, 10> dict_merged;
-	array<dicttools, 3> dict_unique;
+	vector<dicttools> dict_tool;
+	array<dict_t, 10> dict;
 };
 
 #endif

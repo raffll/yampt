@@ -13,14 +13,15 @@ using namespace std;
 int main(int argc, char *argv[])
 {
 	string comm;
-	string usage = "Usage: yampt [command]"
+	string name = argv[0];
+	string usage = "Usage: " + name + " [command]"
 				   "\n"
 				   "\n  --help                              Print this message."
-				   "\n  --make       [file1]                Make dictionary from esp/esm plugin."
-				   "\n  --make-base  [file1] [file2]        Make base dictionary from two localized esm files."
-				   "\n  --merge      [dict1] [dict2]...     Merge dictionaries from paths and delete doubled records."
-				   "\n  --convert    [file1]... [dict1]...  Convert plugins from dictionaries in paths.\n";
-
+				   "\n  --make       [file1] <file2>        Make dictionary from esp/esm plugin."
+				   "\n                                      Or make base dictionary from two localized esm files."
+				   "\n  --compare    [dict1] [dict2]        Compare two dictionaries and create log."
+				   "\n  --merge      [dict1]...				Merge dictionaries from paths and delete doubled records."
+				   "\n  --convert    [file1] [dict1]...     Convert plugin from dictionaries in paths.\n";
 	if(argc > 1)
 	{
 		comm = argv[1];
@@ -37,9 +38,6 @@ int main(int argc, char *argv[])
 			c.makeDict();
 			c.writeDict();
 		}
-	}
-	else if(comm == "--make-base")
-	{
 		if(argc == 4)
 		{
 			creator c(argv[2], argv[3]);
@@ -49,40 +47,46 @@ int main(int argc, char *argv[])
 	}
 	else if(comm == "--compare")
 	{
-		if(argc == 4)
+		if(argc > 2)
 		{
-			merger m(argv[2], argv[3]);
+			vector<string> dict_path;
+			for(int i = 2; i < argc; i++)
+			{
+				dict_path.push_back(argv[i]);
+			}
+			merger m(dict_path);
 			m.writeDiff();
 		}
 	}
 	else if(comm == "--merge")
 	{
-		if(argc == 3)
+		if(argc > 2)
 		{
-			merger m(argv[2]);
-			m.mergeDict();
-			m.writeMerged();
-		}
-		if(argc == 4)
-		{
-			merger m(argv[2], argv[3]);
-			m.mergeDict();
-			m.writeMerged();
-		}
-		if(argc == 5)
-		{
-			merger m(argv[2], argv[3], argv[4]);
+			vector<string> dict_path;
+			for(int i = 2; i < argc; i++)
+			{
+				dict_path.push_back(argv[i]);
+			}
+			merger m(dict_path);
 			m.mergeDict();
 			m.writeMerged();
 		}
 	}
 	else if(comm == "--convert")
 	{
-		if(argc == 4)
+		if(argc > 3)
 		{
-			converter m(argv[2], argv[3]);
+			vector<string> dict_path;
+			for(int i = 3; i < argc; i++)
+			{
+				dict_path.push_back(argv[i]);
+			}
+			converter m(argv[2], dict_path);
 			m.convertCell();
-			m.writeFile();
+			m.convertGmst();
+			m.convertFnam();
+			m.convertDesc();
+			m.writeEsm();
 		}
 	}
 	else

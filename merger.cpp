@@ -1,59 +1,35 @@
 #include "merger.hpp"
 
 //----------------------------------------------------------
-merger::merger(const char* p1)
+merger::merger(vector<string>& path)
 {
-	printLog(p1);
-	dict_unique[0].readDict(p1);
-}
-
-//----------------------------------------------------------
-merger::merger(const char* p1, const char* p2)
-{
-	printLog(p1);
-	dict_unique[0].readDict(p1);
-	printLog(p2);
-	dict_unique[1].readDict(p2);
-}
-
-//----------------------------------------------------------
-merger::merger(const char* p1, const char* p2, const char* p3)
-{
-	printLog(p1);
-	dict_unique[0].readDict(p1);
-	printLog(p2);
-	dict_unique[1].readDict(p2);
-	printLog(p3);
-	dict_unique[2].readDict(p3);
-}
-
-//----------------------------------------------------------
-void merger::printLog(const char * path)
-{
-	cerr << "--> Loading dict from " << path << ":" << endl;
+	for(size_t i = 0; i < path.size(); i++)
+	{
+		cerr << "--> Loading dict from " << path[i] << endl;
+		dicttools temp;
+		dict_tool.push_back(temp);
+		dict_tool[i].readDict(path[i]);
+	}
 }
 
 //----------------------------------------------------------
 void merger::mergeDict()
 {
-	for(int k = 0; k < 3; k++)
+	for(size_t k = 0; k < dict_tool.size(); k++)
 	{
 		for(int i = 0; i < 10; i++)
 		{
-			for(auto &elem : dict_unique[k].getDict(i))
+			for(auto &elem : dict_tool[k].getDict(i))
 			{
-				auto search = dict_merged[i].find(elem.first);
-				if(search == dict_merged[i].end())
+				auto search = dict[i].find(elem.first);
+				if(search == dict[i].end())
 				{
-					dict_merged[i].insert({elem.first, elem.second});
-				}
-				if(search != dict_merged[i].end())
-				{
-					//
+					dict[i].insert({elem.first, elem.second});
 				}
 			}
 		}
 	}
+	cerr << "--> Merging complete!" << endl;
 }
 
 //----------------------------------------------------------
@@ -62,10 +38,10 @@ void merger::writeMerged()
 	for(int i = 0; i < 10; i++)
 	{
 		ofstream file;
-		if(!dict_merged[i].empty())
+		if(!dict[i].empty())
 		{
-			file.open(dict_name[i].c_str());
-			for(const auto &elem : dict_merged[i])
+			file.open(dict_name[i]);
+			for(const auto &elem : dict[i])
 			{
 				file << line_sep[0] << elem.first << line_sep[1] << elem.second << line_sep[2] << endl;
 			}
@@ -85,15 +61,15 @@ void merger::writeDiff()
 	ofstream file_sec;
 	string file_name_pri = "diff_dict_0.dic";
 	string file_name_sec = "diff_dict_1.dic";
-	file_pri.open(file_name_pri.c_str());
-	file_sec.open(file_name_sec.c_str());
+	file_pri.open(file_name_pri);
+	file_sec.open(file_name_sec);
 
 	for(int i = 0; i < 10; i++)
 	{
-		for(auto &elem : dict_unique[0].getDict(i))
+		for(auto &elem : dict_tool[0].getDict(i))
 		{
-			auto search = dict_unique[1].getDict(i).find(elem.first);
-			if(search != dict_unique[1].getDict(i).end())
+			auto search = dict_tool[1].getDict(i).find(elem.first);
+			if(search != dict_tool[1].getDict(i).end())
 			{
 				if(search->second != elem.second)
 				{

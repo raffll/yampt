@@ -4,24 +4,24 @@
 using namespace std;
 
 //----------------------------------------------------------
-creator::creator(const char* path_base)
+creator::creator(string path_base)
 {
-	base.readFile(path_base);
+	base.readEsm(path_base);
 	esm_ptr = &base;
 }
 
 //----------------------------------------------------------
-creator::creator(const char* path_base, const char* path_extd)
+creator::creator(string path_base, string path_extd)
 {
-	base.readFile(path_base);
-	extd.readFile(path_extd);
+	base.readEsm(path_base);
+	extd.readEsm(path_extd);
 	esm_ptr = &extd;
 }
 
 //----------------------------------------------------------
 void creator::makeDict()
 {
-	if(base.getStatus() == 1 && esm_ptr->getStatus() == 1)
+	if(base.getEsmStatus() == 1 && esm_ptr->getEsmStatus() == 1)
 	{
 		makeDictCell();
 		makeDictGmst();
@@ -33,13 +33,8 @@ void creator::makeDict()
 		makeDictDial();
 		makeDictInfo();
 		makeDictScpt();
+		cerr << "Creating complete!" << endl;
 	}
-}
-
-//----------------------------------------------------------
-void creator::printLog(int i)
-{
-	cerr << dict_name[i] << " records created: " << counter << endl;
 }
 
 //----------------------------------------------------------
@@ -50,16 +45,16 @@ void creator::writeDict()
 		ofstream file;
 		if(!dict[i].empty())
 		{
-			file.open(dict_name[i].c_str());
+			file.open(dict_name[i]);
 			for(const auto &elem : dict[i])
 			{
 				file << line_sep[0] << elem.first << line_sep[1] << elem.second << line_sep[2] << endl;
 			}
-			cerr << "--> Writing " << dict_name[i] << endl;
+			cerr << "Writing " << dict_name[i] << endl;
 		}
 		else
 		{
-			cerr << "--> Skipping " << dict_name[i] << endl;
+			cerr << "Skipping " << dict_name[i] << endl;
 		}
 	}
 }
@@ -67,7 +62,7 @@ void creator::writeDict()
 //----------------------------------------------------------
 void creator::makeDictCell()
 {
-	counter = 0;
+	rec_counter = 0;
 	base.resetRec();
 	extd.resetRec();
 	while(base.loopCheck())
@@ -83,17 +78,17 @@ void creator::makeDictCell()
 			if(!base.getPriText().empty())
 			{
 				dict[0].insert({esm_ptr->getPriText(), base.getPriText()});
-				counter++;
+				rec_counter++;
 			}
 		}
 	}
-	printLog(0);
+	cerr << dict_name[0] << " records created: " << rec_counter << endl;
 }
 
 //----------------------------------------------------------
 void creator::makeDictGmst()
 {
-	counter = 0;
+	rec_counter = 0;
 	base.resetRec();
 	while(base.loopCheck())
 	{
@@ -106,17 +101,17 @@ void creator::makeDictGmst()
 			if(!base.getSecText().empty())
 			{
 				dict[1].insert({base.getPriText(), base.getSecText()});
-				counter++;
+				rec_counter++;
 			}
 		}
 	}
-	printLog(1);
+	cerr << dict_name[1] << " records created: " << rec_counter << endl;
 }
 
 //----------------------------------------------------------
 void creator::makeDictFnam()
 {
-	counter = 0;
+	rec_counter = 0;
 	base.resetRec();
 	while(base.loopCheck())
 	{
@@ -139,17 +134,17 @@ void creator::makeDictFnam()
 			if(!base.getPriText().empty())
 			{
 				dict[2].insert({base.getRecId() + inner_sep + base.getPriText(), base.getSecText()});
-				counter++;
+				rec_counter++;
 			}
 		}
 	}
-	printLog(2);
+	cerr << dict_name[2] << " records created: " << rec_counter << endl;
 }
 
 //----------------------------------------------------------
 void creator::makeDictDesc()
 {
-	counter = 0;
+	rec_counter = 0;
 	base.resetRec();
 	while(base.loopCheck())
 	{
@@ -162,16 +157,16 @@ void creator::makeDictDesc()
 			base.setPriSubRec("NAME");
 			base.setSecSubRec("DESC");
 			dict[3].insert({base.getRecId() + inner_sep + base.getPriText(), base.getSecText()});
-			counter++;
+			rec_counter++;
 		}
 	}
-	printLog(3);
+	cerr << dict_name[3] << " records created: " << rec_counter << endl;
 }
 
 //----------------------------------------------------------
 void creator::makeDictBook()
 {
-	counter = 0;
+	rec_counter = 0;
 	base.resetRec();
 	while(base.loopCheck())
 	{
@@ -182,16 +177,16 @@ void creator::makeDictBook()
 			base.setPriSubRec("NAME");
 			base.setSecSubRec("TEXT");
 			dict[4].insert({base.getPriText(), base.getSecText()});
-			counter++;
+			rec_counter++;
 		}
 	}
-	printLog(4);
+	cerr << dict_name[4] << " records created: " << rec_counter << endl;
 }
 
 //----------------------------------------------------------
 void creator::makeDictFact()
 {
-	counter = 0;
+	rec_counter = 0;
 	base.resetRec();
 	while(base.loopCheck())
 	{
@@ -204,17 +199,17 @@ void creator::makeDictFact()
 			for(unsigned i = 0; i < base.getTmpSize(); i++)
 			{
 				dict[5].insert({base.getPriText() + inner_sep + to_string(i), base.getTmpLine(i)});
-				counter++;
+				rec_counter++;
 			}
 		}
 	}
-	printLog(5);
+	cerr << dict_name[5] << " records created: " << rec_counter << endl;
 }
 
 //----------------------------------------------------------
 void creator::makeDictIndx()
 {
-	counter = 0;
+	rec_counter = 0;
 	base.resetRec();
 	while(base.loopCheck())
 	{
@@ -226,16 +221,16 @@ void creator::makeDictIndx()
 			base.setPriSubRec("INDX");
 			base.setSecSubRec("DESC");
 			dict[6].insert({base.getRecId() + inner_sep + base.getPriText(), base.getSecText()});
-			counter++;
+			rec_counter++;
 		}
 	}
-	printLog(6);
+	cerr << dict_name[6] << " records created: " << rec_counter << endl;
 }
 
 //----------------------------------------------------------
 void creator::makeDictDial()
 {
-	counter = 0;
+	rec_counter = 0;
 	base.resetRec();
 	extd.resetRec();
 	while(base.loopCheck())
@@ -253,17 +248,17 @@ void creator::makeDictDial()
 			if(base.dialType() == "T")
 			{
 				dict[7].insert({esm_ptr->getPriText(), base.getPriText()});
-				counter++;
+				rec_counter++;
 			}
 		}
 	}
-	printLog(7);
+	cerr << dict_name[7] << " records created: " << rec_counter << endl;
 }
 
 //----------------------------------------------------------
 void creator::makeDictInfo()
 {
-	counter = 0;
+	rec_counter = 0;
 	string dial;
 	base.resetRec();
 	while(base.loopCheck())
@@ -284,17 +279,17 @@ void creator::makeDictInfo()
 			if(!base.getSecText().empty())
 			{
 				dict[8].insert({dial + inner_sep + base.getPriText(), base.getSecText()});
-				counter++;
+				rec_counter++;
 			}
 		}
 	}
-	printLog(8);
+	cerr << dict_name[8] << " records created: " << rec_counter << endl;
 }
 
 //----------------------------------------------------------
 void creator::makeDictScpt()
 {
-	counter = 0;
+	rec_counter = 0;
 	base.resetRec();
 	extd.resetRec();
 	while(base.loopCheck())
@@ -316,7 +311,7 @@ void creator::makeDictScpt()
 					if(base.getTmpLine(i).find(key[j]) != string::npos)
 					{
 						dict[9].insert({base.getPriText() + inner_sep + esm_ptr->getTmpLine(i), base.getTmpLine(i)});
-						counter++;
+						rec_counter++;
 					}
 				}
 			}
@@ -343,11 +338,11 @@ void creator::makeDictScpt()
 					if(base.getTmpLine(i).find(key[j]) != string::npos)
 					{
 						dict[9].insert({base.getPriText() + inner_sep + esm_ptr->getTmpLine(i), base.getTmpLine(i)});
-						counter++;
+						rec_counter++;
 					}
 				}
 			}
 		}
 	}
-	printLog(9);
+	cerr << dict_name[9] << " records created: " << rec_counter << endl;
 }

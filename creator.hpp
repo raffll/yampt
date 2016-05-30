@@ -20,13 +20,13 @@ public:
 	void makeDict();
 	void writeDict();
 
+	dict_t const& getDict(int i) const { return dict[i]; }
+
 	creator() {}
-	creator(const char* path_base);
-	creator(const char* path_base, const char* path_extd);
+	creator(string path_base);
+	creator(string path_base, string path_extd);
 
 private:
-	void printLog(int i);
-
 	void makeDictCell();
 	void makeDictGmst();
 	void makeDictFnam();
@@ -41,7 +41,7 @@ private:
 	esmtools base;
 	esmtools extd;
 	esmtools *esm_ptr;
-	int counter;
+	int rec_counter;
 	array<dict_t, 10> dict;
 };
 

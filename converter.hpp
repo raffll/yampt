@@ -12,22 +12,28 @@ using namespace std;
 class converter
 {
 public:
-	string intToByte(unsigned int x);
-	void printBinary(string str);
+	void writeEsm();
+	void convertEsm();
+
 	void convertCell();
-	void writeFile();
+	void convertGmst();
+	void convertFnam();
+	void convertDesc();
 
 	converter();
-	converter(const char* base_path, const char* dict_path);
+	converter(string esm_path, vector<string> dict_path);
 
 private:
-	esmtools base;
-	dicttools dict;
+	void printConverterLog(int i);
+	string intToByte(unsigned int x);
 
-	string file_name;
-	string file_suffix;
-	string current_rec;
-	string file_content;
+	esmtools esm_tool;
+	merger dict_tool;
+
+	string esm_name_prefix;
+	string esm_name_suffix;
+
+	int conv_counter;
 };
 
 #endif
