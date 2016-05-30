@@ -6,7 +6,7 @@ using namespace std;
 void esmtools::readEsm(string path)
 {
 	ifstream file(path, ios::binary);
-	esm_name = path.substr(path.find_last_of("\\/") + 1);
+	setEsmName(path);
 
 	if(file)
 	{
@@ -56,6 +56,14 @@ void esmtools::setEsmStatus(st e)
 		esm_content.erase();
 		break;
 	}
+}
+
+//----------------------------------------------------------
+void esmtools::setEsmName(string path)
+{
+	esm_name = path.substr(path.find_last_of("\\/") + 1);
+	esm_prefix = esm_name.substr(0, esm_name.find_last_of("."));
+	esm_suffix = esm_name.substr(esm_name.rfind("."));
 }
 
 //----------------------------------------------------------

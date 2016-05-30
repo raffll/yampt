@@ -28,6 +28,9 @@ public:
 	bool loopCheck();
 
 	bool getEsmStatus() { return esm_status; }
+	string getEsmName() { return esm_name; }
+	string getEsmPrefix() { return esm_prefix; }
+	string getEsmSuffix() { return esm_suffix; }
 	string getEsmContent() { return esm_content; }
 
 	size_t getRecSize() { return rec_size; }
@@ -52,12 +55,15 @@ public:
 private:
 	enum st{not_loaded, loaded, error};
 	void setEsmStatus(st e);
+	void setEsmName(string path);
 
 	unsigned int byteToInt(const string &str);
 	void cutNullChar(string &str);
 
 	int esm_status;
 	string esm_name;
+	string esm_prefix;
+	string esm_suffix;
 	string esm_content;
 
 	size_t rec_beg;

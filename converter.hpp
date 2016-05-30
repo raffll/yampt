@@ -30,9 +30,6 @@ private:
 	esmtools esm_tool;
 	merger dict_tool;
 
-	string esm_name_prefix;
-	string esm_name_suffix;
-
 	int conv_counter;
 };
 

@@ -5,10 +5,6 @@ converter::converter(string esm_path, vector<string> dict_path) : dict_tool(dict
 {
 	esm_tool.readEsm(esm_path);
 	dict_tool.mergeDict();
-
-	string esm_name = esm_path.substr(esm_path.find_last_of("\\/") + 1);
-	esm_name_prefix = esm_name.substr(0, esm_name.find_last_of("."));
-	esm_name_suffix = esm_name.substr(esm_name.rfind("."));
 }
 
 //----------------------------------------------------------
@@ -20,8 +16,8 @@ void converter::printConverterLog(int i)
 //----------------------------------------------------------
 void converter::writeEsm()
 {
-	string esm_name = esm_name_prefix + conv_suffix + esm_name_suffix;
-    ofstream file(esm_name, ios::binary);
+	string esm_name = esm_tool.getEsmPrefix() + conv_suffix + esm_tool.getEsmSuffix();
+	ofstream file(esm_name, ios::binary);
 	file << esm_tool.getEsmContent();
 }
 
