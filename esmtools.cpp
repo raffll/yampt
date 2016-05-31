@@ -6,8 +6,6 @@ using namespace std;
 void esmtools::readEsm(string path)
 {
 	ifstream file(path, ios::binary);
-	setEsmName(path);
-
 	if(file)
 	{
 		char buffer[16384];
@@ -19,42 +17,34 @@ void esmtools::readEsm(string path)
 		{
 			esm_content.append(buffer, chars_read);
 		}
-
-		if(esm_content.substr(0, 4) == "TES3")
+		if(!esm_content.empty() && esm_content.substr(0, 4) == "TES3")
 		{
-			setEsmStatus(loaded);
+			setEsmName(path);
+			setEsmStatus(1);
 		}
 		else
 		{
-			setEsmStatus(error);
+			setEsmStatus(0);
 		}
 	}
 	else
 	{
-		setEsmStatus(not_loaded);
+		setEsmStatus(0);
 	}
 }
 
 //----------------------------------------------------------
-void esmtools::setEsmStatus(st e)
+void esmtools::setEsmStatus(bool st)
 {
-	switch(e)
+	if(st == 0)
 	{
-	case 0:
-		cerr << "Loading " << esm_name << " status: Error while loading file!" << endl;
+		cerr << "Error while loading file!" << endl;
 		esm_status = 0;
-		break;
-
-	case 1:
-		cerr << "Loading " << esm_name << " status: OK" << endl;
+	}
+	else
+	{
+		cerr << "Loading " << esm_name << "..." << endl;
 		esm_status = 1;
-		break;
-
-	case 2:
-		cerr << "Loading " << esm_name << " status: This isn't TES3 file!" << endl;
-		esm_status = 0;
-		esm_content.erase();
-		break;
 	}
 }
 

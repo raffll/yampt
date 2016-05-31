@@ -20,11 +20,9 @@ public:
 	void makeDict();
 	void writeDict();
 
-	dict_t const& getDict(int i) const { return dict[i]; }
-
 	creator() {}
-	creator(string path_base);
-	creator(string path_base, string path_extd);
+	creator(string esm_path);
+	creator(string esm_path, string ext_path);
 
 private:
 	void makeDictCell();
@@ -36,13 +34,14 @@ private:
 	void makeDictIndx();
 	void makeDictDial();
 	void makeDictInfo();
+	void makeDictBnam();
 	void makeDictScpt();
 
-	esmtools base;
-	esmtools extd;
+	esmtools esm;
+	esmtools ext;
 	esmtools *esm_ptr;
-	int rec_counter;
-	array<dict_t, 10> dict;
+	int counter;
+	dict_t dict;
 };
 
 #endif

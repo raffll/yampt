@@ -1,7 +1,7 @@
 #include "converter.hpp"
-
+/*
 //----------------------------------------------------------
-converter::converter(string esm_path, vector<string> dict_path) : dict_tool(dict_path)
+converter::converter(string esm_path, vector<string> dict_path)
 {
 	esm_tool.readEsm(esm_path);
 	dict_tool.mergeDict();
@@ -56,8 +56,8 @@ void converter::convertCell()
 			esm_tool.setPriSubRec("NAME");
 			if(!esm_tool.getPriText().empty())
 			{
-				auto search = dict_tool.getDict(0).find(esm_tool.getPriText());
-				if(search != dict_tool.getDict(0).end() && esm_tool.getPriText() != search->second)
+				auto search = dict_tool.getDict().find(esm_tool.getPriText());
+				if(search != dict_tool.getDict().end() && esm_tool.getPriText() != search->second)
 				{
 				    sec_size = search->second.size() + 1;
 					conv_rec.erase(esm_tool.getPriPos() + 4, 4);
@@ -101,8 +101,8 @@ void converter::convertGmst()
 			esm_tool.setSecSubRec("STRV");
 			if(!esm_tool.getSecText().empty())
 			{
-				auto search = dict_tool.getDict(1).find(esm_tool.getPriText());
-				if(search != dict_tool.getDict(1).end() && esm_tool.getSecText() != search->second)
+				auto search = dict_tool.getDict().find(esm_tool.getPriText());
+				if(search != dict_tool.getDict().end() && esm_tool.getSecText() != search->second)
 				{
 				    sec_size = search->second.size() + 1;
 					conv_rec.erase(esm_tool.getSecPos() + 4, 4);
@@ -156,8 +156,8 @@ void converter::convertFnam()
 			esm_tool.setSecSubRec("FNAM");
 			if(!esm_tool.getPriText().empty())
 			{
-				auto search = dict_tool.getDict(2).find(esm_tool.getRecId() + inner_sep + esm_tool.getPriText());
-				if(search != dict_tool.getDict(2).end() && esm_tool.getSecText() != search->second)
+				auto search = dict_tool.getDict().find(esm_tool.getRecId() + sep[0] + esm_tool.getPriText());
+				if(search != dict_tool.getDict().end() && esm_tool.getSecText() != search->second)
 				{
 				    sec_size = search->second.size() + 1;
 					conv_rec.erase(esm_tool.getSecPos() + 4, 4);
@@ -203,8 +203,8 @@ void converter::convertDesc()
 			esm_tool.setSecSubRec("DESC");
 			if(!esm_tool.getPriText().empty())
 			{
-				auto search = dict_tool.getDict(3).find(esm_tool.getRecId() + inner_sep + esm_tool.getPriText());
-				if(search != dict_tool.getDict(3).end() && esm_tool.getSecText() != search->second)
+				auto search = dict_tool.getDict().find(esm_tool.getRecId() + sep[0] + esm_tool.getPriText());
+				if(search != dict_tool.getDict().end() && esm_tool.getSecText() != search->second)
 				{
 				    sec_size = search->second.size() + 1;
 					conv_rec.erase(esm_tool.getSecPos() + 4, 4);
@@ -226,3 +226,4 @@ void converter::convertDesc()
 	esm_tool.setEsmContent(conv_content);
 	printConverterLog(3);
 }
+*/

@@ -50,17 +50,16 @@ public:
 	string getTmpLine(int i) { return tmp_text[i]; }
 	size_t getTmpSize() { return tmp_text.size(); }
 
-	esmtools() : esm_status(0) {}
+	esmtools() {}
 
 private:
-	enum st{not_loaded, loaded, error};
-	void setEsmStatus(st e);
+	void setEsmStatus(bool st);
 	void setEsmName(string path);
 
 	unsigned int byteToInt(const string &str);
 	void cutNullChar(string &str);
 
-	int esm_status;
+	int esm_status = {};
 	string esm_name;
 	string esm_prefix;
 	string esm_suffix;

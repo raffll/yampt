@@ -5,62 +5,57 @@ using namespace std;
 //----------------------------------------------------------
 void dicttools::readDict(string path)
 {
-	for(int i = 0; i < 10; i++)
+	ifstream file(path);
+	if(file)
 	{
-		ifstream file(path + dict_name[i]);
+		char buffer[16384];
+		size_t size = file.tellg();
+		dict_content.reserve(size);
+		streamsize chars_read;
 
-		if(file)
+		while(file.read(buffer, sizeof(buffer)), chars_read = file.gcount())
 		{
-			char buffer[16384];
-			size_t size = file.tellg();
-			dict_content[i].reserve(size);
-			streamsize chars_read;
-
-			while(file.read(buffer, sizeof(buffer)), chars_read = file.gcount())
-			{
-				dict_content[i].append(buffer, chars_read);
-			}
-			parseDict(i);
+			dict_content.append(buffer, chars_read);
+		}
+		if(!dict_content.empty())
+		{
+			setDictName(path);
+			parseDict();
 		}
 		else
 		{
-			setDictStatus(i, not_loaded);
+			setDictStatus(0);
 		}
 	}
-}
-
-//----------------------------------------------------------
-void dicttools::setDictStatus(int i, st e)
-{
-	switch(e)
+	else
 	{
-	case 0:
-		cerr << "Loading " << dict_name[i] << " status: Error while loading file!" << endl;
-		dict_status[i] = 0;
-		break;
-
-	case 1:
-		cerr << "Loading " << dict_name[i] << " status: OK" << endl;
-		dict_status[i] = 1;
-		break;
-
-	case 2:
-		cerr << "Loading " << dict_name[i] << " status: Missing separator!" << endl;
-		dict_status[i] = 0;
-		dict[i].clear();
-		break;
-
-	case 3:
-		cerr << "Loading " << dict_name[i] << " status: Text too long!" << endl;
-		cerr << dict_log[i];
-		dict_status[i] = 0;
-		dict[i].clear();
-		break;
+		setDictStatus(0);
 	}
 }
 
 //----------------------------------------------------------
-void dicttools::parseDict(int i)
+void dicttools::setDictStatus(int st)
+{
+	if(st == 0)
+	{
+		cerr << "Error while loading dictionary (wrong path or missing separator)!" << endl;
+		dict_status = 0;
+	}
+	else
+	{
+		cerr << "Loading " << dict_name << "..." << endl;
+		dict_status = 1;
+	}
+}
+
+//----------------------------------------------------------
+void dicttools::setDictName(string path)
+{
+	dict_name = path.substr(path.find_last_of("\\/") + 1);
+}
+
+//----------------------------------------------------------
+void dicttools::parseDict()
 {
 	size_t pos_beg = 0;
 	size_t pos_mid = 0;
@@ -70,32 +65,28 @@ void dicttools::parseDict(int i)
 
 	while(true)
 	{
-		pos_beg = dict_content[i].find(line_sep[0], pos_beg);
-		pos_mid = dict_content[i].find(line_sep[1], pos_mid);
-		pos_end = dict_content[i].find(line_sep[2], pos_end);
+		pos_beg = dict_content.find(sep[1], pos_beg);
+		pos_mid = dict_content.find(sep[2], pos_mid);
+		pos_end = dict_content.find(sep[3], pos_end);
 		if(pos_beg == string::npos && pos_mid == string::npos && pos_end == string::npos)
 		{
-			if(dict_log[i].empty())
-			{
-				setDictStatus(i, loaded);
-			}
-			else
-			{
-				setDictStatus(i, too_long);
-			}
+			setDictStatus(1);
 			break;
 		}
 		else if(pos_beg > pos_mid || pos_beg > pos_end || pos_mid > pos_end || pos_end == string::npos)
 		{
-			setDictStatus(i, missing_sep);
+			setDictStatus(0);
 			break;
 		}
 		else
 		{
-			pri_text = dict_content[i].substr(pos_beg + line_sep[0].size(), pos_mid - pos_beg - line_sep[0].size());
-			sec_text = dict_content[i].substr(pos_mid + line_sep[1].size(), pos_end - pos_mid - line_sep[1].size());
-			dict[i].insert({pri_text, sec_text});
-			validateRecLength(i, pri_text, sec_text.size());
+			pri_text = dict_content.substr(pos_beg + sep[1].size(), pos_mid - pos_beg - sep[1].size());
+			sec_text = dict_content.substr(pos_mid + sep[2].size(), pos_end - pos_mid - sep[2].size());
+
+			if(validateRecLength(pri_text, sec_text))
+			{
+				dict.insert({pri_text, sec_text});
+			}
 
 			pos_beg++;
 			pos_mid++;
@@ -105,14 +96,20 @@ void dicttools::parseDict(int i)
 }
 
 //----------------------------------------------------------
-void dicttools::validateRecLength(int i, const string &str, const size_t &size)
+bool dicttools::validateRecLength(const string &pri, const string &sec)
 {
-	if(i == 2 && size > 31)
+	if(pri.size() > 4 && pri.substr(0, 4) == "FNAM" && sec.size() > 31)
 	{
-		dict_log[2] += str + " <-- Text too long, more than 31 bytes! (has " + to_string(size) + ")\n";
+		dict_log += dict_name + " " + pri + ": Text too long, more than 31 bytes! (has " + to_string(sec.size()) + ")\n";
+		return 0;
 	}
-	if(i == 8 && size > 512)
+	else if(pri.size() > 4 && pri.substr(0, 4) == "INFO" && sec.size() > 512)
 	{
-		dict_log[8] += str + " <-- Text too long, more than 512 bytes! (has " + to_string(size) + ")\n";
+		dict_log += dict_name + " " + pri + ": Text too long, more than 512 bytes! (has " + to_string(sec.size()) + ")\n";
+		return 0;
+	}
+	else
+	{
+		return 1;
 	}
 }

@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 				   "\n  --make       [file1] <file2>        Make dictionary from esp/esm plugin."
 				   "\n                                      Or make base dictionary from two localized esm files."
 				   "\n  --compare    [dict1] [dict2]        Compare two dictionaries and create log."
-				   "\n  --merge      [dict1]...				Merge dictionaries from paths and delete doubled records."
+				   "\n  --merge      [dict1]...             Merge dictionaries from paths and delete doubled records."
 				   "\n  --convert    [file1] [dict1]...     Convert plugin from dictionaries in paths.\n";
 	if(argc > 1)
 	{
@@ -30,49 +30,46 @@ int main(int argc, char *argv[])
 	{
 		cout << usage;
 	}
-	else if(comm == "--make")
+	else if(comm == "--make" && argc == 3)
 	{
-		if(argc == 3)
-		{
 			creator c(argv[2]);
 			c.makeDict();
 			c.writeDict();
-		}
-		if(argc == 4)
-		{
+	}
+	else if(comm == "--make" && argc == 4)
+	{
 			creator c(argv[2], argv[3]);
 			c.makeDict();
 			c.writeDict();
-		}
 	}
-	else if(comm == "--compare")
+	else if(comm == "--compare" && argc == 4)
 	{
-		if(argc > 2)
-		{
-			vector<string> dict_path;
-			for(int i = 2; i < argc; i++)
-			{
-				dict_path.push_back(argv[i]);
-			}
-			merger m(dict_path);
+			merger m(argv[2], argv[3]);
 			m.writeDiff();
-		}
+			m.writeLog();
 	}
-	else if(comm == "--merge")
+	else if(comm == "--merge" && argc == 3)
 	{
-		if(argc > 2)
-		{
-			vector<string> dict_path;
-			for(int i = 2; i < argc; i++)
-			{
-				dict_path.push_back(argv[i]);
-			}
-			merger m(dict_path);
+			merger m(argv[2]);
 			m.mergeDict();
 			m.writeMerged();
-		}
+			m.writeLog();
 	}
-	else if(comm == "--convert")
+	else if(comm == "--merge" && argc == 4)
+	{
+			merger m(argv[2], argv[3]);
+			m.mergeDict();
+			m.writeMerged();
+			m.writeLog();
+	}
+	else if(comm == "--merge" && argc == 5)
+	{
+			merger m(argv[2], argv[3], argv[4]);
+			m.mergeDict();
+			m.writeMerged();
+			m.writeLog();
+	}
+	/*else if(comm == "--convert")
 	{
 		if(argc > 3)
 		{
@@ -88,7 +85,7 @@ int main(int argc, char *argv[])
 			m.convertDesc();
 			m.writeEsm();
 		}
-	}
+	}*/
 	else
 	{
 		cout << usage;

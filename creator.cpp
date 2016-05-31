@@ -3,24 +3,24 @@
 using namespace std;
 
 //----------------------------------------------------------
-creator::creator(string path_base)
+creator::creator(string esm_path)
 {
-	base.readEsm(path_base);
-	esm_ptr = &base;
+	esm.readEsm(esm_path);
+	esm_ptr = &esm;
 }
 
 //----------------------------------------------------------
-creator::creator(string path_base, string path_extd)
+creator::creator(string esm_path, string ext_path)
 {
-	base.readEsm(path_base);
-	extd.readEsm(path_extd);
-	esm_ptr = &extd;
+	esm.readEsm(esm_path);
+	ext.readEsm(esm_path);
+	esm_ptr = &ext;
 }
 
 //----------------------------------------------------------
 void creator::makeDict()
 {
-	if(base.getEsmStatus() == 1 && esm_ptr->getEsmStatus() == 1)
+	if(esm.getEsmStatus() == 1 && esm_ptr->getEsmStatus() == 1)
 	{
 		makeDictCell();
 		makeDictGmst();
@@ -31,6 +31,7 @@ void creator::makeDict()
 		makeDictIndx();
 		makeDictDial();
 		makeDictInfo();
+		makeDictBnam();
 		makeDictScpt();
 		cerr << "Creating complete!" << endl;
 	}
@@ -39,309 +40,309 @@ void creator::makeDict()
 //----------------------------------------------------------
 void creator::writeDict()
 {
-	for(int i = 0; i < 10; i++)
+	if(esm.getEsmStatus() == 1 && esm_ptr->getEsmStatus() == 1)
 	{
 		ofstream file;
-		if(!dict[i].empty())
+		file.open(esm.getEsmPrefix() + ".dic");
+		for(const auto &elem : dict)
 		{
-			file.open(dict_name[i]);
-			for(const auto &elem : dict[i])
-			{
-				file << line_sep[0] << elem.first << line_sep[1] << elem.second << line_sep[2] << endl;
-			}
-			cerr << "Writing " << dict_name[i] << endl;
+			file << sep[1] << elem.first << sep[2] << elem.second << sep[3] << endl;
 		}
-		else
-		{
-			cerr << "Skipping " << dict_name[i] << endl;
-		}
+		cerr << "Writing " << esm.getEsmPrefix() << ".dic..." << endl;
 	}
 }
 
 //----------------------------------------------------------
 void creator::makeDictCell()
 {
-	rec_counter = 0;
-	base.resetRec();
-	extd.resetRec();
-	while(base.loopCheck())
+	counter = 0;
+	esm.resetRec();
+	ext.resetRec();
+	while(esm.loopCheck())
 	{
-		base.setNextRec();
-		extd.setNextRec();
-		if(base.getRecId() == "CELL")
+		esm.setNextRec();
+		ext.setNextRec();
+		if(esm.getRecId() == "CELL")
 		{
-			base.setRecContent();
-			base.setPriSubRec("NAME");
-			extd.setRecContent();
-			extd.setPriSubRec("NAME");
-			if(!base.getPriText().empty())
+			esm.setRecContent();
+			esm.setPriSubRec("NAME");
+			ext.setRecContent();
+			ext.setPriSubRec("NAME");
+			if(!esm.getPriText().empty())
 			{
-				dict[0].insert({esm_ptr->getPriText(), base.getPriText()});
-				rec_counter++;
+				dict.insert({esm.getRecId() + sep[0] + esm_ptr->getPriText(), esm.getPriText()});
+				counter++;
 			}
 		}
 	}
-	cerr << dict_name[0] << " records created: " << rec_counter << endl;
+	cerr << "CELL records created: " << counter << endl;
 }
 
 //----------------------------------------------------------
 void creator::makeDictGmst()
 {
-	rec_counter = 0;
-	base.resetRec();
-	while(base.loopCheck())
+	counter = 0;
+	esm.resetRec();
+	while(esm.loopCheck())
 	{
-		base.setNextRec();
-		if(base.getRecId() == "GMST")
+		esm.setNextRec();
+		if(esm.getRecId() == "GMST")
 		{
-			base.setRecContent();
-			base.setPriSubRec("NAME");
-			base.setSecSubRec("STRV");
-			if(!base.getSecText().empty())
+			esm.setRecContent();
+			esm.setPriSubRec("NAME");
+			esm.setSecSubRec("STRV");
+			if(!esm.getSecText().empty())
 			{
-				dict[1].insert({base.getPriText(), base.getSecText()});
-				rec_counter++;
+				dict.insert({esm.getRecId() + sep[0] + esm.getPriText(), esm.getSecText()});
+				counter++;
 			}
 		}
 	}
-	cerr << dict_name[1] << " records created: " << rec_counter << endl;
+	cerr << "GMST records created: " << counter << endl;
 }
 
 //----------------------------------------------------------
 void creator::makeDictFnam()
 {
-	rec_counter = 0;
-	base.resetRec();
-	while(base.loopCheck())
+	counter = 0;
+	esm.resetRec();
+	while(esm.loopCheck())
 	{
-		base.setNextRec();
-		if(base.getRecId() == "ACTI" || base.getRecId() == "ALCH" ||
-		   base.getRecId() == "APPA" || base.getRecId() == "ARMO" ||
-		   base.getRecId() == "BOOK" || base.getRecId() == "CLAS" ||
-		   base.getRecId() == "CLOT" || base.getRecId() == "CONT" ||
-		   base.getRecId() == "CREA" || base.getRecId() == "DOOR" ||
-		   base.getRecId() == "ENCH" || base.getRecId() == "FACT" ||
-		   base.getRecId() == "INGR" || base.getRecId() == "LIGH" ||
-		   base.getRecId() == "MISC" || base.getRecId() == "NPC_" ||
-		   base.getRecId() == "PROB" || base.getRecId() == "REPA" ||
-		   base.getRecId() == "SKIL" || base.getRecId() == "SPEL" ||
-		   base.getRecId() == "WEAP")
+		esm.setNextRec();
+		if(esm.getRecId() == "ACTI" || esm.getRecId() == "ALCH" ||
+		   esm.getRecId() == "APPA" || esm.getRecId() == "ARMO" ||
+		   esm.getRecId() == "BOOK" || esm.getRecId() == "CLAS" ||
+		   esm.getRecId() == "CLOT" || esm.getRecId() == "CONT" ||
+		   esm.getRecId() == "CREA" || esm.getRecId() == "DOOR" ||
+		   esm.getRecId() == "ENCH" || esm.getRecId() == "FACT" ||
+		   esm.getRecId() == "INGR" || esm.getRecId() == "LIGH" ||
+		   esm.getRecId() == "MISC" || esm.getRecId() == "NPC_" ||
+		   esm.getRecId() == "PROB" || esm.getRecId() == "REPA" ||
+		   esm.getRecId() == "SKIL" || esm.getRecId() == "SPEL" ||
+		   esm.getRecId() == "WEAP")
 		{
-			base.setRecContent();
-			base.setPriSubRec("NAME");
-			base.setSecSubRec("FNAM");
-			if(!base.getPriText().empty())
+			esm.setRecContent();
+			esm.setPriSubRec("NAME");
+			esm.setSecSubRec("FNAM");
+			if(!esm.getPriText().empty())
 			{
-				dict[2].insert({base.getRecId() + inner_sep + base.getPriText(), base.getSecText()});
-				rec_counter++;
+				dict.insert({esm.getSecId() + sep[0] + esm.getRecId() + sep[0] + esm.getPriText(), esm.getSecText()});
+				counter++;
 			}
 		}
 	}
-	cerr << dict_name[2] << " records created: " << rec_counter << endl;
+	cerr << "FNAM records created: " << counter << endl;
 }
 
 //----------------------------------------------------------
 void creator::makeDictDesc()
 {
-	rec_counter = 0;
-	base.resetRec();
-	while(base.loopCheck())
+	counter = 0;
+	esm.resetRec();
+	while(esm.loopCheck())
 	{
-		base.setNextRec();
-		if(base.getRecId() == "CLAS" ||
-		   base.getRecId() == "RACE" ||
-		   base.getRecId() == "BSGN")
+		esm.setNextRec();
+		if(esm.getRecId() == "CLAS" ||
+		   esm.getRecId() == "RACE" ||
+		   esm.getRecId() == "BSGN")
 		{
-			base.setRecContent();
-			base.setPriSubRec("NAME");
-			base.setSecSubRec("DESC");
-			dict[3].insert({base.getRecId() + inner_sep + base.getPriText(), base.getSecText()});
-			rec_counter++;
+			esm.setRecContent();
+			esm.setPriSubRec("NAME");
+			esm.setSecSubRec("DESC");
+			dict.insert({esm.getSecId() + sep[0] + esm.getRecId() + sep[0] + esm.getPriText(), esm.getSecText()});
+			counter++;
 		}
 	}
-	cerr << dict_name[3] << " records created: " << rec_counter << endl;
+	cerr << "DESC records created: " << counter << endl;
 }
 
 //----------------------------------------------------------
 void creator::makeDictBook()
 {
-	rec_counter = 0;
-	base.resetRec();
-	while(base.loopCheck())
+	counter = 0;
+	esm.resetRec();
+	while(esm.loopCheck())
 	{
-		base.setNextRec();
-		if(base.getRecId() == "BOOK")
+		esm.setNextRec();
+		if(esm.getRecId() == "BOOK")
 		{
-			base.setRecContent();
-			base.setPriSubRec("NAME");
-			base.setSecSubRec("TEXT");
-			dict[4].insert({base.getPriText(), base.getSecText()});
-			rec_counter++;
+			esm.setRecContent();
+			esm.setPriSubRec("NAME");
+			esm.setSecSubRec("TEXT");
+			dict.insert({esm.getSecId() + sep[0] + esm.getPriText(), esm.getSecText()});
+			counter++;
 		}
 	}
-	cerr << dict_name[4] << " records created: " << rec_counter << endl;
+	cerr << "TEXT records created: " << counter << endl;
 }
 
 //----------------------------------------------------------
 void creator::makeDictFact()
 {
-	rec_counter = 0;
-	base.resetRec();
-	while(base.loopCheck())
+	counter = 0;
+	esm.resetRec();
+	while(esm.loopCheck())
 	{
-		base.setNextRec();
-		if(base.getRecId() == "FACT")
+		esm.setNextRec();
+		if(esm.getRecId() == "FACT")
 		{
-			base.setRecContent();
-			base.setPriSubRec("NAME");
-			base.setSecSubRec("RNAM");
-			for(unsigned i = 0; i < base.getTmpSize(); i++)
+			esm.setRecContent();
+			esm.setPriSubRec("NAME");
+			esm.setSecSubRec("RNAM");
+			for(size_t i = 0; i < esm.getTmpSize(); i++)
 			{
-				dict[5].insert({base.getPriText() + inner_sep + to_string(i), base.getTmpLine(i)});
-				rec_counter++;
+				dict.insert({esm.getSecId() + sep[0] + esm.getPriText() + sep[0] + to_string(i), esm.getTmpLine(i)});
+				counter++;
 			}
 		}
 	}
-	cerr << dict_name[5] << " records created: " << rec_counter << endl;
+	cerr << "RNAM records created: " << counter << endl;
 }
 
 //----------------------------------------------------------
 void creator::makeDictIndx()
 {
-	rec_counter = 0;
-	base.resetRec();
-	while(base.loopCheck())
+	counter = 0;
+	esm.resetRec();
+	while(esm.loopCheck())
 	{
-		base.setNextRec();
-		if(base.getRecId() == "SKIL" ||
-		   base.getRecId() == "MGEF")
+		esm.setNextRec();
+		if(esm.getRecId() == "SKIL" ||
+		   esm.getRecId() == "MGEF")
 		{
-			base.setRecContent();
-			base.setPriSubRec("INDX");
-			base.setSecSubRec("DESC");
-			dict[6].insert({base.getRecId() + inner_sep + base.getPriText(), base.getSecText()});
-			rec_counter++;
+			esm.setRecContent();
+			esm.setPriSubRec("INDX");
+			esm.setSecSubRec("DESC");
+			dict.insert({esm.getPriId() + sep[0] + esm.getRecId() + sep[0] + esm.getPriText(), esm.getSecText()});
+			counter++;
 		}
 	}
-	cerr << dict_name[6] << " records created: " << rec_counter << endl;
+	cerr << "INDX records created: " << counter << endl;
 }
 
 //----------------------------------------------------------
 void creator::makeDictDial()
 {
-	rec_counter = 0;
-	base.resetRec();
-	extd.resetRec();
-	while(base.loopCheck())
+	counter = 0;
+	esm.resetRec();
+	ext.resetRec();
+	while(esm.loopCheck())
 	{
-		base.setNextRec();
-		extd.setNextRec();
-		if(base.getRecId() == "DIAL")
+		esm.setNextRec();
+		ext.setNextRec();
+		if(esm.getRecId() == "DIAL")
 		{
-			base.setRecContent();
-			base.setPriSubRec("NAME");
-			base.setSecSubRec("DATA");
-			extd.setRecContent();
-			extd.setPriSubRec("NAME");
-			extd.setSecSubRec("DATA");
-			if(base.dialType() == "T")
+			esm.setRecContent();
+			esm.setPriSubRec("NAME");
+			esm.setSecSubRec("DATA");
+			ext.setRecContent();
+			ext.setPriSubRec("NAME");
+			ext.setSecSubRec("DATA");
+			if(esm.dialType() == "T")
 			{
-				dict[7].insert({esm_ptr->getPriText(), base.getPriText()});
-				rec_counter++;
+				dict.insert({esm.getRecId() + sep[0] + esm_ptr->getPriText(), esm.getPriText()});
+				counter++;
 			}
 		}
 	}
-	cerr << dict_name[7] << " records created: " << rec_counter << endl;
+	cerr << "DIAL records created: " << counter << endl;
 }
 
 //----------------------------------------------------------
 void creator::makeDictInfo()
 {
-	rec_counter = 0;
+	counter = 0;
 	string dial;
-	base.resetRec();
-	while(base.loopCheck())
+	esm.resetRec();
+	while(esm.loopCheck())
 	{
-		base.setNextRec();
-		if(base.getRecId() == "DIAL")
+		esm.setNextRec();
+		if(esm.getRecId() == "DIAL")
 		{
-			base.setRecContent();
-			base.setPriSubRec("NAME");
-			base.setSecSubRec("DATA");
-			dial = base.dialType() + inner_sep + base.getPriText();
+			esm.setRecContent();
+			esm.setPriSubRec("NAME");
+			esm.setSecSubRec("DATA");
+			dial = esm.dialType() + sep[0] + esm.getPriText();
 		}
-		if(base.getRecId() == "INFO")
+		if(esm.getRecId() == "INFO")
 		{
-			base.setRecContent();
-			base.setPriSubRec("INAM");
-			base.setSecSubRec("NAME");
-			if(!base.getSecText().empty())
+			esm.setRecContent();
+			esm.setPriSubRec("INAM");
+			esm.setSecSubRec("NAME");
+			if(!esm.getSecText().empty())
 			{
-				dict[8].insert({dial + inner_sep + base.getPriText(), base.getSecText()});
-				rec_counter++;
+				dict.insert({esm.getRecId() + sep[0] + dial + sep[0] + esm.getPriText(), esm.getSecText()});
+				counter++;
 			}
 		}
 	}
-	cerr << dict_name[8] << " records created: " << rec_counter << endl;
+	cerr << "INFO records created: " << counter << endl;
+}
+
+//----------------------------------------------------------
+void creator::makeDictBnam()
+{
+	counter = 0;
+	esm.resetRec();
+	ext.resetRec();
+	while(esm.loopCheck())
+	{
+		esm.setNextRec();
+		ext.setNextRec();
+		if(esm.getRecId() == "INFO")
+		{
+			esm.setRecContent();
+			esm.setPriSubRec("INAM");
+			esm.setSecSubRec("BNAM");
+			ext.setRecContent();
+			ext.setPriSubRec("INAM");
+			ext.setSecSubRec("BNAM");
+			for(size_t i = 0; i < esm.getTmpSize(); i++)
+			{
+				for(size_t j = 0; j < key.size(); j++)
+				{
+					if(esm.getTmpLine(i).find(key[j]) != string::npos)
+					{
+						dict.insert({esm.getSecId() + sep[0] + esm.getPriText() + sep[0] + esm_ptr->getTmpLine(i), esm.getTmpLine(i)});
+						counter++;
+					}
+				}
+			}
+		}
+	}
+	cerr << "BNAM records created: " << counter << endl;
 }
 
 //----------------------------------------------------------
 void creator::makeDictScpt()
 {
-	rec_counter = 0;
-	base.resetRec();
-	extd.resetRec();
-	while(base.loopCheck())
+	counter = 0;
+	esm.resetRec();
+	ext.resetRec();
+	while(esm.loopCheck())
 	{
-		base.setNextRec();
-		extd.setNextRec();
-		if(base.getRecId() == "INFO")
+		esm.setNextRec();
+		ext.setNextRec();
+		if(esm.getRecId() == "SCPT")
 		{
-			base.setRecContent();
-			base.setPriSubRec("INAM");
-			base.setSecSubRec("BNAM");
-			extd.setRecContent();
-			extd.setPriSubRec("INAM");
-			extd.setSecSubRec("BNAM");
-			for(unsigned i = 0; i < base.getTmpSize(); i++)
+			esm.setRecContent();
+			esm.setPriSubRec("SCHD");
+			esm.setSecSubRec("SCTX");
+			ext.setRecContent();
+			ext.setPriSubRec("SCHD");
+			ext.setSecSubRec("SCTX");
+			for(unsigned i = 0; i < esm.getTmpSize(); i++)
 			{
 				for(unsigned j = 0; j < key.size(); j++)
 				{
-					if(base.getTmpLine(i).find(key[j]) != string::npos)
+					if(esm.getTmpLine(i).find(key[j]) != string::npos)
 					{
-						dict[9].insert({base.getPriText() + inner_sep + esm_ptr->getTmpLine(i), base.getTmpLine(i)});
-						rec_counter++;
+						dict.insert({esm.getRecId() + sep[0] + esm.getPriText() + sep[0] + esm_ptr->getTmpLine(i), esm.getTmpLine(i)});
+						counter++;
 					}
 				}
 			}
 		}
 	}
-	base.resetRec();
-	extd.resetRec();
-	while(base.loopCheck())
-	{
-		base.setNextRec();
-		extd.setNextRec();
-		if(base.getRecId() == "SCPT")
-		{
-			base.setRecContent();
-			base.setPriSubRec("SCHD");
-			base.setSecSubRec("SCTX");
-			extd.setRecContent();
-			extd.setPriSubRec("SCHD");
-			extd.setSecSubRec("SCTX");
-			for(unsigned i = 0; i < base.getTmpSize(); i++)
-			{
-				for(unsigned j = 0; j < key.size(); j++)
-				{
-					if(base.getTmpLine(i).find(key[j]) != string::npos)
-					{
-						dict[9].insert({base.getPriText() + inner_sep + esm_ptr->getTmpLine(i), base.getTmpLine(i)});
-						rec_counter++;
-					}
-				}
-			}
-		}
-	}
-	cerr << dict_name[9] << " records created: " << rec_counter << endl;
+	cerr << "SCPT records created: " << counter << endl;
 }

@@ -1,84 +1,120 @@
 #include "merger.hpp"
 
 //----------------------------------------------------------
-merger::merger(vector<string>& path)
+merger::merger(string path_first)
 {
-	for(size_t i = 0; i < path.size(); i++)
+	dict[0].readDict(path_first);
+	if(dict[0].getDictStatus() == 1)
 	{
-		cerr << "--> Loading dict from " << path[i] << endl;
-		dicttools temp;
-		dict_tool.push_back(temp);
-		dict_tool[i].readDict(path[i]);
+		status = 1;
+	}
+}
+
+//----------------------------------------------------------
+merger::merger(string path_first, string path_second)
+{
+	dict[0].readDict(path_first);
+	dict[1].readDict(path_second);
+	if(dict[0].getDictStatus() == 1 && dict[1].getDictStatus() == 1)
+	{
+		status = 1;
+	}
+}
+
+//----------------------------------------------------------
+merger::merger(string path_first, string path_second, string path_third)
+{
+	dict[0].readDict(path_first);
+	dict[1].readDict(path_second);
+	dict[2].readDict(path_third);
+	if(dict[0].getDictStatus() == 1 && dict[1].getDictStatus() == 1 && dict[2].getDictStatus() == 1)
+	{
+		status = 1;
 	}
 }
 
 //----------------------------------------------------------
 void merger::mergeDict()
 {
-	for(size_t k = 0; k < dict_tool.size(); k++)
+	if(status == 1)
 	{
-		for(int i = 0; i < 10; i++)
+		for(size_t i = 0; i < dict.size(); i++)
 		{
-			for(auto &elem : dict_tool[k].getDict(i))
+			for(auto &elem : dict[i].getDict())
 			{
-				auto search = dict[i].find(elem.first);
-				if(search == dict[i].end())
+				auto search = merged.find(elem.first);
+				if(search == merged.end())
 				{
-					dict[i].insert({elem.first, elem.second});
+					merged.insert({elem.first, elem.second});
 				}
 			}
 		}
+		cerr << "Merging complete!" << endl;
 	}
-	cerr << "--> Merging complete!" << endl;
 }
 
 //----------------------------------------------------------
 void merger::writeMerged()
 {
-	for(int i = 0; i < 10; i++)
+	if(status == 1)
 	{
 		ofstream file;
-		if(!dict[i].empty())
+		file.open("Merged.dic");
+		for(const auto &elem : merged)
 		{
-			file.open(dict_name[i]);
-			for(const auto &elem : dict[i])
-			{
-				file << line_sep[0] << elem.first << line_sep[1] << elem.second << line_sep[2] << endl;
-			}
-			cerr << "--> Writing " << dict_name[i] << endl;
+			file << sep[1] << elem.first << sep[2] << elem.second << sep[3] << endl;
 		}
-		else
-		{
-			cerr << "--> Skipping " << dict_name[i] << endl;
-		}
+		cerr << "Writing Merged.dic..." << endl;
 	}
 }
 
 //----------------------------------------------------------
 void merger::writeDiff()
 {
-	ofstream file_pri;
-	ofstream file_sec;
-	string file_name_pri = "diff_dict_0.dic";
-	string file_name_sec = "diff_dict_1.dic";
-	file_pri.open(file_name_pri);
-	file_sec.open(file_name_sec);
-
-	for(int i = 0; i < 10; i++)
+	if(status == 1)
 	{
-		for(auto &elem : dict_tool[0].getDict(i))
+		ofstream file_first;
+		ofstream file_second;
+		file_first.open("Diff_" + dict[0].getDictName());
+		file_second.open("Diff_" + dict[1].getDictName());
+
+		for(auto &elem : dict[0].getDict())
 		{
-			auto search = dict_tool[1].getDict(i).find(elem.first);
-			if(search != dict_tool[1].getDict(i).end())
+			auto search = dict[1].getDict().find(elem.first);
+			if(search != dict[1].getDict().end())
 			{
 				if(search->second != elem.second)
 				{
-					file_pri << line_sep[0] << elem.first << line_sep[1] << elem.second << line_sep[2] << endl;
-					file_sec << line_sep[0] << search->first << line_sep[1] << search->second << line_sep[2] << endl;
+					file_first << sep[1] << elem.first << sep[2] << elem.second << sep[3] << endl;
+					file_second << sep[1] << search->first << sep[2] << search->second << sep[3] << endl;
 				}
 			}
 		}
+		cerr << "Writing Diff_" << dict[0].getDictName() << "..." << endl;
+		cerr << "Writing Diff_" << dict[1].getDictName() << "..." << endl;
 	}
-	cerr << "--> Writing " << file_name_pri << endl;
-	cerr << "--> Writing " << file_name_sec << endl;
+}
+
+//----------------------------------------------------------
+void merger::writeLog()
+{
+	if(status == 1)
+	{
+		string log = dict[0].getDictLog() + dict[1].getDictLog() + dict[2].getDictLog();
+		if(!log.empty())
+		{
+			ofstream file;
+			file.open("Dict.log");
+			file << log;
+			cerr << "Writing Dict.log..." << endl;
+		}
+	}
+}
+
+//----------------------------------------------------------
+void merger::convertDial()
+{
+
+
+
 }

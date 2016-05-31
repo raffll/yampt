@@ -15,15 +15,19 @@ public:
 	void mergeDict();
 	void writeMerged();
 	void writeDiff();
+	void writeLog();
 
-	dict_t const& getDict(int i) const { return dict[i]; }
+	dict_t const& getDict(int i) const { return merged; }
 
 	merger() {}
-	merger(vector<string>& path);
+	merger(string path_first);
+	merger(string path_first, string path_second);
+	merger(string path_first, string path_second, string path_third);
 
 private:
-	vector<dicttools> dict_tool;
-	array<dict_t, 10> dict;
+	array<dicttools, 3> dict;
+	bool status = {};
+	dict_t merged;
 };
 
 #endif
