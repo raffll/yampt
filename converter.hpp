@@ -25,7 +25,6 @@ public:
 	converter(string esm_path, merger &m);
 
 private:
-	void printConverterLog(int i);
 	string intToByte(unsigned int x);
 
 	esmtools esm;
