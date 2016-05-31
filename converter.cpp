@@ -22,8 +22,8 @@ string converter::intToByte(unsigned int x)
 	char bytes[4];
 	string str;
 	copy(static_cast<const char*>(static_cast<const void*>(&x)),
-		 static_cast<const char*>(static_cast<const void*>(&x)) + sizeof x,
-		 bytes);
+	     static_cast<const char*>(static_cast<const void*>(&x)) + sizeof x,
+	     bytes);
 	for(int i = 0; i < 4; i++)
 	{
 		str.push_back(bytes[i]);
@@ -54,14 +54,14 @@ void converter::convertCell()
 				auto search = dict.getDict().find(esm.getRecId() + sep[0] + esm.getPriText());
 				if(search != dict.getDict().end() && esm.getPriText() != search->second)
 				{
-				    sec_size = search->second.size() + 1;
+					sec_size = search->second.size() + 1;
 					rec_content.erase(esm.getPriPos() + 4, 4);
 					rec_content.insert(esm.getPriPos() + 4, intToByte(sec_size));
 
 					rec_content.erase(esm.getPriPos() + 8, esm.getPriSize());
 					rec_content.insert(esm.getPriPos() + 8, search->second + '\0');
 
-                    rec_size = rec_content.size() - 16;
+					rec_size = rec_content.size() - 16;
 					rec_content.erase(4, 4);
 					rec_content.insert(4, intToByte(rec_size));
 
@@ -99,14 +99,14 @@ void converter::convertGmst()
 				auto search = dict.getDict().find(esm.getRecId() + sep[0] + esm.getPriText());
 				if(search != dict.getDict().end() && esm.getSecText() != search->second)
 				{
-				    sec_size = search->second.size() + 1;
+					sec_size = search->second.size() + 1;
 					rec_content.erase(esm.getSecPos() + 4, 4);
 					rec_content.insert(esm.getSecPos() + 4, intToByte(sec_size));
 
 					rec_content.erase(esm.getSecPos() + 8, esm.getSecSize());
 					rec_content.insert(esm.getSecPos() + 8, search->second + '\0');
 
-                    rec_size = rec_content.size() - 16;
+					rec_size = rec_content.size() - 16;
 					rec_content.erase(4, 4);
 					rec_content.insert(4, intToByte(rec_size));
 
@@ -154,14 +154,14 @@ void converter::convertFnam()
 				auto search = dict.getDict().find(esm.getSecId() + sep[0] + esm.getRecId() + sep[0] + esm.getPriText());
 				if(search != dict.getDict().end() && esm.getSecText() != search->second)
 				{
-				    sec_size = search->second.size() + 1;
+					sec_size = search->second.size() + 1;
 					rec_content.erase(esm.getSecPos() + 4, 4);
 					rec_content.insert(esm.getSecPos() + 4, intToByte(sec_size));
 
 					rec_content.erase(esm.getSecPos() + 8, esm.getSecSize());
 					rec_content.insert(esm.getSecPos() + 8, search->second + '\0');
 
-                    rec_size = rec_content.size() - 16;
+					rec_size = rec_content.size() - 16;
 					rec_content.erase(4, 4);
 					rec_content.insert(4, intToByte(rec_size));
 
@@ -201,14 +201,14 @@ void converter::convertDesc()
 				auto search = dict.getDict().find(esm.getSecId() + sep[0] + esm.getRecId() + sep[0] + esm.getPriText());
 				if(search != dict.getDict().end() && esm.getSecText() != search->second)
 				{
-				    sec_size = search->second.size() + 1;
+					sec_size = search->second.size() + 1;
 					rec_content.erase(esm.getSecPos() + 4, 4);
 					rec_content.insert(esm.getSecPos() + 4, intToByte(sec_size));
 
 					rec_content.erase(esm.getSecPos() + 8, esm.getSecSize());
 					rec_content.insert(esm.getSecPos() + 8, search->second + '\0');
 
-                    rec_size = rec_content.size() - 16;
+					rec_size = rec_content.size() - 16;
 					rec_content.erase(4, 4);
 					rec_content.insert(4, intToByte(rec_size));
 

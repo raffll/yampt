@@ -303,7 +303,8 @@ void creator::makeDictBnam()
 				{
 					if(esm.getTmpLine(i).find(key[j]) != string::npos)
 					{
-						dict.insert({esm.getSecId() + sep[0] + esm.getPriText() + sep[0] + esm_ptr->getTmpLine(i), esm.getTmpLine(i)});
+						dict.insert({esm.getSecId() + sep[0] + esm.getPriText() + sep[0] + esm_ptr->getTmpLine(i),
+							     esm.getTmpLine(i)});
 						counter++;
 					}
 				}
@@ -337,7 +338,8 @@ void creator::makeDictScpt()
 				{
 					if(esm.getTmpLine(i).find(key[j]) != string::npos)
 					{
-						dict.insert({esm.getRecId() + sep[0] + esm.getPriText() + sep[0] + esm_ptr->getTmpLine(i), esm.getTmpLine(i)});
+						dict.insert({esm.getRecId() + sep[0] + esm.getPriText() + sep[0] + esm_ptr->getTmpLine(i),
+							     esm.getTmpLine(i)});
 						counter++;
 					}
 				}

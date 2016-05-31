@@ -36,8 +36,8 @@ merger::merger(string path_first, string path_second, string path_third)
 //----------------------------------------------------------
 void merger::mergeDict()
 {
-	int counter = 0;
-	int counter_not = 0;
+	int duplicate = 0;
+	int different = 0;
 
 	if(status == 1)
 	{
@@ -52,13 +52,13 @@ void merger::mergeDict()
 				}
 				else if(search != merged.end() && search->second != elem.second)
 				{
-					counter_not++;
+					different++;
 					log += "\n" + elem.first + " --- " + elem.second + "\n";
 					log += search->first + " >>> " + search->second + "\n\n";
 				}
 				else
 				{
-					counter++;
+					duplicate++;
 				}
 			}
 			if(dict[i].getDictStatus() == 1)
@@ -68,8 +68,8 @@ void merger::mergeDict()
 		}
 		cerr << "Merging complete!" << endl;
 		cerr << "Records merged: " << merged.size() << endl;
-		cerr << "Duplicate text: " << counter << endl;
-		cerr << "Different text: " << counter_not << endl;
+		cerr << "Duplicate text: " << duplicate << endl;
+		cerr << "Different text: " << different << endl;
 	}
 }
 
