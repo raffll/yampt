@@ -7,6 +7,7 @@ creator::creator(string esm_path)
 {
 	esm.readEsm(esm_path);
 	esm_ptr = &esm;
+	with_dict = 0;
 }
 
 //----------------------------------------------------------
@@ -15,6 +16,16 @@ creator::creator(string esm_path, string ext_path)
 	esm.readEsm(esm_path);
 	ext.readEsm(ext_path);
 	esm_ptr = &ext;
+	with_dict = 0;
+}
+
+//----------------------------------------------------------
+creator::creator(string esm_path, merger &m)
+{
+	esm.readEsm(esm_path);
+	esm_ptr = &esm;
+	dict = m;
+	with_dict = 1;
 }
 
 //----------------------------------------------------------
@@ -38,13 +49,65 @@ void creator::makeDict()
 }
 
 //----------------------------------------------------------
+void creator::eraseDuplicates()
+{
+	if(with_dict == 1 && esm.getEsmStatus() == 1)
+	{
+		int duplicate = 0;
+		for(auto &elem : dict.getDict())
+		{
+			auto search = created.find(elem.first);
+			if(search != created.end() && elem.second == search->second)
+			{
+				created.erase(search);
+				duplicate++;
+			}
+		}
+		cerr << "Erase duplicate records found in dictionary: " << duplicate << endl;
+	}
+}
+
+//----------------------------------------------------------
+void creator::eraseDifferent()
+{
+	if(with_dict == 1)
+	{
+		int different = 0;
+		for(auto &elem : dict.getDict())
+		{
+			auto search = created.find(elem.first);
+			if(search != created.end())
+			{
+				created.erase(search);
+				different++;
+			}
+		}
+		cerr << "Erase duplicate records with different text: " << different << endl;
+	}
+}
+
+//----------------------------------------------------------
+string creator::dialTranslator(string to_translate)
+{
+	if(with_dict == 1)
+	{
+		auto search = dict.getDict().find("DIAL" + sep[0] + to_translate);
+		if(search != dict.getDict().end())
+		{
+			return search->second;
+		}
+	}
+	return to_translate;
+}
+
+//----------------------------------------------------------
 void creator::writeDict()
 {
 	if(esm.getEsmStatus() == 1 && esm_ptr->getEsmStatus() == 1)
 	{
 		ofstream file;
 		file.open(esm.getEsmPrefix() + ".dic");
-		for(const auto &elem : dict)
+		for(const auto &elem : created)
 		{
 			file << sep[1] << elem.first << sep[2] << elem.second << sep[3] << endl;
 		}
@@ -70,7 +133,7 @@ void creator::makeDictCell()
 			ext.setPriSubRec("NAME");
 			if(!esm.getPriText().empty())
 			{
-				dict.insert({esm.getRecId() + sep[0] + esm_ptr->getPriText(), esm.getPriText()});
+				created.insert({esm.getRecId() + sep[0] + esm_ptr->getPriText(), esm.getPriText()});
 				counter++;
 			}
 		}
@@ -93,7 +156,7 @@ void creator::makeDictGmst()
 			esm.setSecSubRec("STRV");
 			if(!esm.getSecText().empty())
 			{
-				dict.insert({esm.getRecId() + sep[0] + esm.getPriText(), esm.getSecText()});
+				created.insert({esm.getRecId() + sep[0] + esm.getPriText(), esm.getSecText()});
 				counter++;
 			}
 		}
@@ -126,7 +189,7 @@ void creator::makeDictFnam()
 			esm.setSecSubRec("FNAM");
 			if(!esm.getPriText().empty())
 			{
-				dict.insert({esm.getSecId() + sep[0] + esm.getRecId() + sep[0] + esm.getPriText(), esm.getSecText()});
+				created.insert({esm.getSecId() + sep[0] + esm.getRecId() + sep[0] + esm.getPriText(), esm.getSecText()});
 				counter++;
 			}
 		}
@@ -149,7 +212,7 @@ void creator::makeDictDesc()
 			esm.setRecContent();
 			esm.setPriSubRec("NAME");
 			esm.setSecSubRec("DESC");
-			dict.insert({esm.getSecId() + sep[0] + esm.getRecId() + sep[0] + esm.getPriText(), esm.getSecText()});
+			created.insert({esm.getSecId() + sep[0] + esm.getRecId() + sep[0] + esm.getPriText(), esm.getSecText()});
 			counter++;
 		}
 	}
@@ -169,7 +232,7 @@ void creator::makeDictBook()
 			esm.setRecContent();
 			esm.setPriSubRec("NAME");
 			esm.setSecSubRec("TEXT");
-			dict.insert({esm.getSecId() + sep[0] + esm.getPriText(), esm.getSecText()});
+			created.insert({esm.getSecId() + sep[0] + esm.getPriText(), esm.getSecText()});
 			counter++;
 		}
 	}
@@ -191,7 +254,7 @@ void creator::makeDictFact()
 			esm.setSecSubRec("RNAM");
 			for(size_t i = 0; i < esm.getTmpSize(); i++)
 			{
-				dict.insert({esm.getSecId() + sep[0] + esm.getPriText() + sep[0] + to_string(i), esm.getTmpLine(i)});
+				created.insert({esm.getSecId() + sep[0] + esm.getPriText() + sep[0] + to_string(i), esm.getTmpLine(i)});
 				counter++;
 			}
 		}
@@ -213,7 +276,7 @@ void creator::makeDictIndx()
 			esm.setRecContent();
 			esm.setPriSubRec("INDX");
 			esm.setSecSubRec("DESC");
-			dict.insert({esm.getPriId() + sep[0] + esm.getRecId() + sep[0] + esm.getPriText(), esm.getSecText()});
+			created.insert({esm.getPriId() + sep[0] + esm.getRecId() + sep[0] + esm.getPriText(), esm.getSecText()});
 			counter++;
 		}
 	}
@@ -240,7 +303,7 @@ void creator::makeDictDial()
 			ext.setSecSubRec("DATA");
 			if(esm.dialType() == "T")
 			{
-				dict.insert({esm.getRecId() + sep[0] + esm_ptr->getPriText(), esm.getPriText()});
+				created.insert({esm.getRecId() + sep[0] + esm_ptr->getPriText(), esm.getPriText()});
 				counter++;
 			}
 		}
@@ -262,7 +325,7 @@ void creator::makeDictInfo()
 			esm.setRecContent();
 			esm.setPriSubRec("NAME");
 			esm.setSecSubRec("DATA");
-			dial = esm.dialType() + sep[0] + esm.getPriText();
+			dial = esm.dialType() + sep[0] + dialTranslator(esm.getPriText());
 		}
 		if(esm.getRecId() == "INFO")
 		{
@@ -271,7 +334,7 @@ void creator::makeDictInfo()
 			esm.setSecSubRec("NAME");
 			if(!esm.getSecText().empty())
 			{
-				dict.insert({esm.getRecId() + sep[0] + dial + sep[0] + esm.getPriText(), esm.getSecText()});
+				created.insert({esm.getRecId() + sep[0] + dial + sep[0] + esm.getPriText(), esm.getSecText()});
 				counter++;
 			}
 		}
@@ -303,8 +366,8 @@ void creator::makeDictBnam()
 				{
 					if(esm.getTmpLine(i).find(key[j]) != string::npos)
 					{
-						dict.insert({esm.getSecId() + sep[0] + esm.getPriText() + sep[0] + esm_ptr->getTmpLine(i),
-							     esm.getTmpLine(i)});
+						created.insert({esm.getSecId() + sep[0] + esm.getPriText() + sep[0] + esm_ptr->getTmpLine(i),
+								esm.getTmpLine(i)});
 						counter++;
 					}
 				}
@@ -338,8 +401,8 @@ void creator::makeDictScpt()
 				{
 					if(esm.getTmpLine(i).find(key[j]) != string::npos)
 					{
-						dict.insert({esm.getRecId() + sep[0] + esm.getPriText() + sep[0] + esm_ptr->getTmpLine(i),
-							     esm.getTmpLine(i)});
+						created.insert({esm.getRecId() + sep[0] + esm.getPriText() + sep[0] + esm_ptr->getTmpLine(i),
+								esm.getTmpLine(i)});
 						counter++;
 					}
 				}

@@ -11,6 +11,7 @@
 
 #include "tools.hpp"
 #include "esmtools.hpp"
+#include "merger.hpp"
 
 using namespace std;
 
@@ -19,12 +20,16 @@ class creator
 public:
 	void makeDict();
 	void writeDict();
+	void eraseDuplicates();
+	void eraseDifferent();
 
 	creator() {}
 	creator(string esm_path);
 	creator(string esm_path, string ext_path);
+	creator(string esm_path, merger &m);
 
 private:
+	string dialTranslator(string to_translate);
 	void makeDictCell();
 	void makeDictGmst();
 	void makeDictFnam();
@@ -40,8 +45,10 @@ private:
 	esmtools esm;
 	esmtools ext;
 	esmtools *esm_ptr;
+	merger dict;
+	int with_dict;
 	int counter;
-	map<string, string> dict;
+	map<string, string> created;
 };
 
 #endif

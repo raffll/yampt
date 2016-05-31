@@ -130,12 +130,3 @@ void merger::writeLog()
 		}
 	}
 }
-
-//----------------------------------------------------------
-void merger::translateDial()
-{
-	if(status == 1)
-	{
-
-	}
-}

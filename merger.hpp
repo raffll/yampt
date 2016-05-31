@@ -16,7 +16,6 @@ public:
 	void writeMerged();
 	void writeDiff();
 	void writeLog();
-	void translateDial();
 
 	map<string, string> const& getDict() const { return merged; }
 
