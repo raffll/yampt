@@ -4,6 +4,7 @@
 #include <array>
 #include <map>
 
+#include "tools.hpp"
 #include "esmtools.hpp"
 #include "merger.hpp"
 
@@ -12,8 +13,8 @@ using namespace std;
 class converter
 {
 public:
-	void writeEsm();
 	void convertEsm();
+	void writeEsm();
 
 	void convertCell();
 	void convertGmst();

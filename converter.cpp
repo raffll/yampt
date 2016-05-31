@@ -8,6 +8,16 @@ converter::converter(string esm_path, merger &m)
 }
 
 //----------------------------------------------------------
+void converter::convertEsm()
+{
+	convertCell();
+	convertGmst();
+	convertFnam();
+	convertDesc();
+	cerr << "Converting complete!" << endl;
+}
+
+//----------------------------------------------------------
 void converter::writeEsm()
 {
 	string name = esm.getEsmPrefix() + ".converted" + esm.getEsmSuffix();
