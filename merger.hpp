@@ -16,8 +16,9 @@ public:
 	void writeMerged();
 	void writeDiff();
 	void writeLog();
+	void translateDial();
 
-	dict_t const& getDict(int i) const { return merged; }
+	map<string, string> const& getDict() const { return merged; }
 
 	merger() {}
 	merger(string path_first);
@@ -27,7 +28,8 @@ public:
 private:
 	array<dicttools, 3> dict;
 	bool status = {};
-	dict_t merged;
+	map<string, string> merged;
+	string log;
 };
 
 #endif

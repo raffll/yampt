@@ -36,6 +36,9 @@ merger::merger(string path_first, string path_second, string path_third)
 //----------------------------------------------------------
 void merger::mergeDict()
 {
+	int counter = 0;
+	int counter_not = 0;
+
 	if(status == 1)
 	{
 		for(size_t i = 0; i < dict.size(); i++)
@@ -47,9 +50,26 @@ void merger::mergeDict()
 				{
 					merged.insert({elem.first, elem.second});
 				}
+				else if(search != merged.end() && search->second != elem.second)
+				{
+					counter_not++;
+					log += "\n" + elem.first + " --- " + elem.second + "\n";
+					log += search->first + " >>> " + search->second + "\n\n";
+				}
+				else
+				{
+					counter++;
+				}
+			}
+			if(dict[i].getDictStatus() == 1)
+			{
+				cerr << "Records loaded: " << dict[i].getDict().size() << endl;
 			}
 		}
 		cerr << "Merging complete!" << endl;
+		cerr << "Records merged: " << merged.size() << endl;
+		cerr << "Duplicate text: " << counter << endl;
+		cerr << "Different text: " << counter_not << endl;
 	}
 }
 
@@ -100,7 +120,7 @@ void merger::writeLog()
 {
 	if(status == 1)
 	{
-		string log = dict[0].getDictLog() + dict[1].getDictLog() + dict[2].getDictLog();
+		log += "\n\n" + dict[0].getDictLog() + dict[1].getDictLog() + dict[2].getDictLog();
 		if(!log.empty())
 		{
 			ofstream file;
@@ -112,9 +132,10 @@ void merger::writeLog()
 }
 
 //----------------------------------------------------------
-void merger::convertDial()
+void merger::translateDial()
 {
+	if(status == 1)
+	{
 
-
-
+	}
 }

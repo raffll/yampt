@@ -1,24 +1,19 @@
 #include "converter.hpp"
-/*
-//----------------------------------------------------------
-converter::converter(string esm_path, vector<string> dict_path)
-{
-	esm_tool.readEsm(esm_path);
-	dict_tool.mergeDict();
-}
 
 //----------------------------------------------------------
-void converter::printConverterLog(int i)
+converter::converter(string esm_path, merger &m)
 {
-	cerr << dict_name[i] << " records converted: " << conv_counter << endl;
+	esm.readEsm(esm_path);
+	dict = m;
 }
 
 //----------------------------------------------------------
 void converter::writeEsm()
 {
-	string esm_name = esm_tool.getEsmPrefix() + conv_suffix + esm_tool.getEsmSuffix();
-	ofstream file(esm_name, ios::binary);
-	file << esm_tool.getEsmContent();
+	string name = esm.getEsmPrefix() + ".converted" + esm.getEsmSuffix();
+	ofstream file(name, ios::binary);
+	file << esm.getEsmContent();
+	cout << "Writing " << name << "..." << endl;
 }
 
 //----------------------------------------------------------
@@ -39,191 +34,191 @@ string converter::intToByte(unsigned int x)
 //----------------------------------------------------------
 void converter::convertCell()
 {
-	string conv_rec;
-	string conv_content;
+	string rec_content;
+	string esm_content;
 	size_t sec_size = 0;
 	size_t rec_size = 0;
-	conv_counter = 0;
+	counter = 0;
 
-	esm_tool.resetRec();
-	while(esm_tool.loopCheck())
+	esm.resetRec();
+	while(esm.loopCheck())
 	{
-		esm_tool.setNextRec();
-		esm_tool.setRecContent();
-		conv_rec = esm_tool.getRecContent();
-		if(esm_tool.getRecId() == "CELL")
+		esm.setNextRec();
+		esm.setRecContent();
+		rec_content = esm.getRecContent();
+		if(esm.getRecId() == "CELL")
 		{
-			esm_tool.setPriSubRec("NAME");
-			if(!esm_tool.getPriText().empty())
+			esm.setPriSubRec("NAME");
+			if(!esm.getPriText().empty())
 			{
-				auto search = dict_tool.getDict().find(esm_tool.getPriText());
-				if(search != dict_tool.getDict().end() && esm_tool.getPriText() != search->second)
+				auto search = dict.getDict().find(esm.getRecId() + sep[0] + esm.getPriText());
+				if(search != dict.getDict().end() && esm.getPriText() != search->second)
 				{
 				    sec_size = search->second.size() + 1;
-					conv_rec.erase(esm_tool.getPriPos() + 4, 4);
-					conv_rec.insert(esm_tool.getPriPos() + 4, intToByte(sec_size));
+					rec_content.erase(esm.getPriPos() + 4, 4);
+					rec_content.insert(esm.getPriPos() + 4, intToByte(sec_size));
 
-					conv_rec.erase(esm_tool.getPriPos() + 8, esm_tool.getPriSize());
-					conv_rec.insert(esm_tool.getPriPos() + 8, search->second + '\0');
+					rec_content.erase(esm.getPriPos() + 8, esm.getPriSize());
+					rec_content.insert(esm.getPriPos() + 8, search->second + '\0');
 
-                    rec_size = conv_rec.size() - 16;
-					conv_rec.erase(4, 4);
-					conv_rec.insert(4, intToByte(rec_size));
+                    rec_size = rec_content.size() - 16;
+					rec_content.erase(4, 4);
+					rec_content.insert(4, intToByte(rec_size));
 
-					conv_counter++;
+					counter++;
 				}
 			}
 		}
-		conv_content.append(conv_rec);
+		esm_content.append(rec_content);
 	}
-	esm_tool.setEsmContent(conv_content);
-	printConverterLog(0);
+	esm.setEsmContent(esm_content);
+	cerr << "CELL records converted: " << counter << endl;
 }
 
 //----------------------------------------------------------
 void converter::convertGmst()
 {
-	string conv_rec;
-	string conv_content;
+	string rec_content;
+	string esm_content;
 	size_t sec_size = 0;
 	size_t rec_size = 0;
-	conv_counter = 0;
+	counter = 0;
 
-	esm_tool.resetRec();
-	while(esm_tool.loopCheck())
+	esm.resetRec();
+	while(esm.loopCheck())
 	{
-		esm_tool.setNextRec();
-		esm_tool.setRecContent();
-		conv_rec = esm_tool.getRecContent();
-		if(esm_tool.getRecId() == "GMST")
+		esm.setNextRec();
+		esm.setRecContent();
+		rec_content = esm.getRecContent();
+		if(esm.getRecId() == "GMST")
 		{
-			esm_tool.setPriSubRec("NAME");
-			esm_tool.setSecSubRec("STRV");
-			if(!esm_tool.getSecText().empty())
+			esm.setPriSubRec("NAME");
+			esm.setSecSubRec("STRV");
+			if(!esm.getSecText().empty())
 			{
-				auto search = dict_tool.getDict().find(esm_tool.getPriText());
-				if(search != dict_tool.getDict().end() && esm_tool.getSecText() != search->second)
+				auto search = dict.getDict().find(esm.getRecId() + sep[0] + esm.getPriText());
+				if(search != dict.getDict().end() && esm.getSecText() != search->second)
 				{
 				    sec_size = search->second.size() + 1;
-					conv_rec.erase(esm_tool.getSecPos() + 4, 4);
-					conv_rec.insert(esm_tool.getSecPos() + 4, intToByte(sec_size));
+					rec_content.erase(esm.getSecPos() + 4, 4);
+					rec_content.insert(esm.getSecPos() + 4, intToByte(sec_size));
 
-					conv_rec.erase(esm_tool.getSecPos() + 8, esm_tool.getSecSize());
-					conv_rec.insert(esm_tool.getSecPos() + 8, search->second + '\0');
+					rec_content.erase(esm.getSecPos() + 8, esm.getSecSize());
+					rec_content.insert(esm.getSecPos() + 8, search->second + '\0');
 
-                    rec_size = conv_rec.size() - 16;
-					conv_rec.erase(4, 4);
-					conv_rec.insert(4, intToByte(rec_size));
+                    rec_size = rec_content.size() - 16;
+					rec_content.erase(4, 4);
+					rec_content.insert(4, intToByte(rec_size));
 
-					conv_counter++;
+					counter++;
 				}
 			}
 		}
-		conv_content.append(conv_rec);
+		esm_content.append(rec_content);
 	}
-	esm_tool.setEsmContent(conv_content);
-	printConverterLog(1);
+	esm.setEsmContent(esm_content);
+	cerr << "GMST records converted: " << counter << endl;
 }
 
 //----------------------------------------------------------
 void converter::convertFnam()
 {
-	string conv_rec;
-	string conv_content;
+	string rec_content;
+	string esm_content;
 	size_t sec_size = 0;
 	size_t rec_size = 0;
-	conv_counter = 0;
+	counter = 0;
 
-	esm_tool.resetRec();
-	while(esm_tool.loopCheck())
+	esm.resetRec();
+	while(esm.loopCheck())
 	{
-		esm_tool.setNextRec();
-		esm_tool.setRecContent();
-		conv_rec = esm_tool.getRecContent();
-		if(esm_tool.getRecId() == "ACTI" || esm_tool.getRecId() == "ALCH" ||
-		   esm_tool.getRecId() == "APPA" || esm_tool.getRecId() == "ARMO" ||
-		   esm_tool.getRecId() == "BOOK" || esm_tool.getRecId() == "CLAS" ||
-		   esm_tool.getRecId() == "CLOT" || esm_tool.getRecId() == "CONT" ||
-		   esm_tool.getRecId() == "CREA" || esm_tool.getRecId() == "DOOR" ||
-		   esm_tool.getRecId() == "ENCH" || esm_tool.getRecId() == "FACT" ||
-		   esm_tool.getRecId() == "INGR" || esm_tool.getRecId() == "LIGH" ||
-		   esm_tool.getRecId() == "MISC" || esm_tool.getRecId() == "NPC_" ||
-		   esm_tool.getRecId() == "PROB" || esm_tool.getRecId() == "REPA" ||
-		   esm_tool.getRecId() == "SKIL" || esm_tool.getRecId() == "SPEL" ||
-		   esm_tool.getRecId() == "WEAP")
+		esm.setNextRec();
+		esm.setRecContent();
+		rec_content = esm.getRecContent();
+		if(esm.getRecId() == "ACTI" || esm.getRecId() == "ALCH" ||
+		   esm.getRecId() == "APPA" || esm.getRecId() == "ARMO" ||
+		   esm.getRecId() == "BOOK" || esm.getRecId() == "CLAS" ||
+		   esm.getRecId() == "CLOT" || esm.getRecId() == "CONT" ||
+		   esm.getRecId() == "CREA" || esm.getRecId() == "DOOR" ||
+		   esm.getRecId() == "ENCH" || esm.getRecId() == "FACT" ||
+		   esm.getRecId() == "INGR" || esm.getRecId() == "LIGH" ||
+		   esm.getRecId() == "MISC" || esm.getRecId() == "NPC_" ||
+		   esm.getRecId() == "PROB" || esm.getRecId() == "REPA" ||
+		   esm.getRecId() == "SKIL" || esm.getRecId() == "SPEL" ||
+		   esm.getRecId() == "WEAP")
 		{
-			esm_tool.setPriSubRec("NAME");
-			esm_tool.setSecSubRec("FNAM");
-			if(!esm_tool.getPriText().empty())
+			esm.setPriSubRec("NAME");
+			esm.setSecSubRec("FNAM");
+			if(!esm.getPriText().empty())
 			{
-				auto search = dict_tool.getDict().find(esm_tool.getRecId() + sep[0] + esm_tool.getPriText());
-				if(search != dict_tool.getDict().end() && esm_tool.getSecText() != search->second)
+				auto search = dict.getDict().find(esm.getSecId() + sep[0] + esm.getRecId() + sep[0] + esm.getPriText());
+				if(search != dict.getDict().end() && esm.getSecText() != search->second)
 				{
 				    sec_size = search->second.size() + 1;
-					conv_rec.erase(esm_tool.getSecPos() + 4, 4);
-					conv_rec.insert(esm_tool.getSecPos() + 4, intToByte(sec_size));
+					rec_content.erase(esm.getSecPos() + 4, 4);
+					rec_content.insert(esm.getSecPos() + 4, intToByte(sec_size));
 
-					conv_rec.erase(esm_tool.getSecPos() + 8, esm_tool.getSecSize());
-					conv_rec.insert(esm_tool.getSecPos() + 8, search->second + '\0');
+					rec_content.erase(esm.getSecPos() + 8, esm.getSecSize());
+					rec_content.insert(esm.getSecPos() + 8, search->second + '\0');
 
-                    rec_size = conv_rec.size() - 16;
-					conv_rec.erase(4, 4);
-					conv_rec.insert(4, intToByte(rec_size));
+                    rec_size = rec_content.size() - 16;
+					rec_content.erase(4, 4);
+					rec_content.insert(4, intToByte(rec_size));
 
-					conv_counter++;
+					counter++;
 				}
 			}
 		}
-		conv_content.append(conv_rec);
+		esm_content.append(rec_content);
 	}
-	esm_tool.setEsmContent(conv_content);
-	printConverterLog(2);
+	esm.setEsmContent(esm_content);
+	cerr << "FNAM records converted: " << counter << endl;
 }
 
 //----------------------------------------------------------
 void converter::convertDesc()
 {
-	string conv_rec;
-	string conv_content;
+	string rec_content;
+	string esm_content;
 	size_t sec_size = 0;
 	size_t rec_size = 0;
-	conv_counter = 0;
+	counter = 0;
 
-	esm_tool.resetRec();
-	while(esm_tool.loopCheck())
+	esm.resetRec();
+	while(esm.loopCheck())
 	{
-		esm_tool.setNextRec();
-		esm_tool.setRecContent();
-		conv_rec = esm_tool.getRecContent();
-		if(esm_tool.getRecId() == "CLAS" ||
-		   esm_tool.getRecId() == "RACE" ||
-		   esm_tool.getRecId() == "BSGN")
+		esm.setNextRec();
+		esm.setRecContent();
+		rec_content = esm.getRecContent();
+		if(esm.getRecId() == "CLAS" ||
+		   esm.getRecId() == "RACE" ||
+		   esm.getRecId() == "BSGN")
 		{
-			esm_tool.setPriSubRec("NAME");
-			esm_tool.setSecSubRec("DESC");
-			if(!esm_tool.getPriText().empty())
+			esm.setPriSubRec("NAME");
+			esm.setSecSubRec("DESC");
+			if(!esm.getPriText().empty())
 			{
-				auto search = dict_tool.getDict().find(esm_tool.getRecId() + sep[0] + esm_tool.getPriText());
-				if(search != dict_tool.getDict().end() && esm_tool.getSecText() != search->second)
+				auto search = dict.getDict().find(esm.getSecId() + sep[0] + esm.getRecId() + sep[0] + esm.getPriText());
+				if(search != dict.getDict().end() && esm.getSecText() != search->second)
 				{
 				    sec_size = search->second.size() + 1;
-					conv_rec.erase(esm_tool.getSecPos() + 4, 4);
-					conv_rec.insert(esm_tool.getSecPos() + 4, intToByte(sec_size));
+					rec_content.erase(esm.getSecPos() + 4, 4);
+					rec_content.insert(esm.getSecPos() + 4, intToByte(sec_size));
 
-					conv_rec.erase(esm_tool.getSecPos() + 8, esm_tool.getSecSize());
-					conv_rec.insert(esm_tool.getSecPos() + 8, search->second + '\0');
+					rec_content.erase(esm.getSecPos() + 8, esm.getSecSize());
+					rec_content.insert(esm.getSecPos() + 8, search->second + '\0');
 
-                    rec_size = conv_rec.size() - 16;
-					conv_rec.erase(4, 4);
-					conv_rec.insert(4, intToByte(rec_size));
+                    rec_size = rec_content.size() - 16;
+					rec_content.erase(4, 4);
+					rec_content.insert(4, intToByte(rec_size));
 
-					conv_counter++;
+					counter++;
 				}
 			}
 		}
-		conv_content.append(conv_rec);
+		esm_content.append(rec_content);
 	}
-	esm_tool.setEsmContent(conv_content);
-	printConverterLog(3);
+	esm.setEsmContent(esm_content);
+	cerr << "DESC records converted: " << counter << endl;
 }
-*/
+

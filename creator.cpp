@@ -13,7 +13,7 @@ creator::creator(string esm_path)
 creator::creator(string esm_path, string ext_path)
 {
 	esm.readEsm(esm_path);
-	ext.readEsm(esm_path);
+	ext.readEsm(ext_path);
 	esm_ptr = &ext;
 }
 

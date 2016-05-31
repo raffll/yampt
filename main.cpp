@@ -57,35 +57,29 @@ int main(int argc, char *argv[])
 	}
 	else if(comm == "--merge" && argc == 4)
 	{
-			merger m(argv[2], argv[3]);
+			merger m(argv[3], argv[2]);
 			m.mergeDict();
 			m.writeMerged();
 			m.writeLog();
 	}
 	else if(comm == "--merge" && argc == 5)
 	{
-			merger m(argv[2], argv[3], argv[4]);
+			merger m(argv[4], argv[3], argv[2]);
 			m.mergeDict();
 			m.writeMerged();
 			m.writeLog();
 	}
-	/*else if(comm == "--convert")
+	else if(comm == "--convert" && argc == 4)
 	{
-		if(argc > 3)
-		{
-			vector<string> dict_path;
-			for(int i = 3; i < argc; i++)
-			{
-				dict_path.push_back(argv[i]);
-			}
-			converter m(argv[2], dict_path);
-			m.convertCell();
-			m.convertGmst();
-			m.convertFnam();
-			m.convertDesc();
-			m.writeEsm();
-		}
-	}*/
+			merger m(argv[3]);
+			m.mergeDict();
+			converter c(argv[2], m);
+			c.convertCell();
+			c.convertGmst();
+			c.convertFnam();
+			c.convertDesc();
+			c.writeEsm();
+	}
 	else
 	{
 		cout << usage;

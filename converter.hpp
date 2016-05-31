@@ -21,16 +21,16 @@ public:
 	void convertDesc();
 
 	converter();
-	converter(string esm_path, vector<string> dict_path);
+	converter(string esm_path, merger &m);
 
 private:
 	void printConverterLog(int i);
 	string intToByte(unsigned int x);
 
-	esmtools esm_tool;
-	merger dict_tool;
+	esmtools esm;
+	merger dict;
 
-	int conv_counter;
+	int counter;
 };
 
 #endif

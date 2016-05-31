@@ -41,7 +41,7 @@ private:
 	esmtools ext;
 	esmtools *esm_ptr;
 	int counter;
-	dict_t dict;
+	map<string, string> dict;
 };
 
 #endif
