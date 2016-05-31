@@ -14,21 +14,17 @@
 
 using namespace std;
 
-class creator : tools
+class creator
 {
 public:
+	void makeDict();
+	void writeDict();
 
-	void writeDictAll();
-	void writeDict(int i);
-	void printDict(int i);
-
-	creator();
-	creator(const char* b);
-	creator(const char* b, const char* e);
+	creator() {}
+	creator(string esm_path);
+	creator(string esm_path, string ext_path);
 
 private:
-	void printStatus(int i);
-
 	void makeDictCell();
 	void makeDictGmst();
 	void makeDictFnam();
@@ -38,13 +34,14 @@ private:
 	void makeDictIndx();
 	void makeDictDial();
 	void makeDictInfo();
+	void makeDictBnam();
 	void makeDictScpt();
 
-	esmtools base;
-	esmtools extd;
+	esmtools esm;
+	esmtools ext;
 	esmtools *esm_ptr;
 	int counter;
-	array<multimap<string, string>, 10> dict;
+	map<string, string> dict;
 };
 
 #endif

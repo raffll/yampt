@@ -6,7 +6,6 @@
 #include <sstream>
 #include <iomanip>
 #include <cstdlib>
-#include <regex>
 #include <string>
 #include <map>
 
@@ -14,27 +13,28 @@
 
 using namespace std;
 
-class dicttools : public tools
+class dicttools
 {
 public:
-	void readDictAll(const char* path);
-	void readDict(const char* path, int i);
-	void printDict(int i);
-	bool getStatus(int i) { return status[i]; }
+	void readDict(string path);
+	bool getDictStatus() { return status; }
+	string getDictName() { return name; }
+	string getDictLog() { return log; }
+	map<string, string> const& getDict() const { return dict; }
 
-	dicttools();
+	dicttools() {}
 
 private:
-	void printStatus(int i);
-	void parseDict(int i);
-	void validateDict(int i);
-	void validateRecLength(int i);
+	void setDictStatus(int i);
+	void setDictName(string path);
+	void parseDict();
+	bool validateRecLength(const string &pri, const string &sec);
 
-	array<int, 10> status = {};
-	array<string, 10> file_name;
-	array<string, 10> file_content;
-
-	array<multimap<string, pair<size_t, string>>, 10> dict;
+	int status = {};
+	string name;
+	string content;
+	string log;
+	map<string, string> dict;
 };
 
 #endif

@@ -3,66 +3,57 @@
 using namespace std;
 
 //----------------------------------------------------------
-esmtools::esmtools()
+void esmtools::readEsm(string path)
 {
-	status = 0;
-}
-
-//----------------------------------------------------------
-void esmtools::readFile(const char* path)
-{
-	file_name = path;
-	ifstream file(file_name, ios::binary);
-	//cutFileName(file_name);
-
+	ifstream file(path, ios::binary);
 	if(file)
 	{
 		char buffer[16384];
-		size_t file_size = file.tellg();
-		file_content.reserve(file_size);
+		size_t size = file.tellg();
+		esm_content.reserve(size);
 		streamsize chars_read;
 
 		while(file.read(buffer, sizeof(buffer)), chars_read = file.gcount())
 		{
-			file_content.append(buffer, chars_read);
+			esm_content.append(buffer, chars_read);
 		}
-
-		if(file_content.substr(0, 4) == "TES3")
+		if(!esm_content.empty() && esm_content.substr(0, 4) == "TES3")
 		{
-			status = 1;
-			printStatus();
+			setEsmName(path);
+			setEsmStatus(1);
 		}
 		else
 		{
-			status = -1;
-			printStatus();
+			setEsmStatus(0);
 		}
 	}
 	else
 	{
-		status = 0;
-		printStatus();
+		setEsmStatus(0);
 	}
 }
 
 //----------------------------------------------------------
-void esmtools::printStatus()
+void esmtools::setEsmStatus(bool st)
 {
-	if(quiet == 0)
+	if(st == 0)
 	{
-		if(status == 1)
-		{
-			cout << file_name << " status: OK" << endl;
-		}
-		else if(status == 0)
-		{
-			cerr << file_name << " status: Error while loading file!" << endl;
-		}
-		else
-		{
-			cerr << file_name << " status: This isn't TES3 file!" << endl;
-		}
+		cerr << "Error while loading file!" << endl;
+		esm_status = 0;
 	}
+	else
+	{
+		cerr << "Loading " << esm_name << "..." << endl;
+		esm_status = 1;
+	}
+}
+
+//----------------------------------------------------------
+void esmtools::setEsmName(string path)
+{
+	esm_name = path.substr(path.find_last_of("\\/") + 1);
+	esm_prefix = esm_name.substr(0, esm_name.find_last_of("."));
+	esm_suffix = esm_name.substr(esm_name.rfind("."));
 }
 
 //----------------------------------------------------------
@@ -75,11 +66,11 @@ void esmtools::resetRec()
 //----------------------------------------------------------
 void esmtools::setNextRec()
 {
-	if(status == 1)
+	if(esm_status == 1)
 	{
 		rec_beg = rec_end;
-		rec_id = file_content.substr(rec_beg, 4);
-		rec_size = byteToInt(file_content.substr(rec_beg + 4, 4)) + 16;
+		rec_id = esm_content.substr(rec_beg, 4);
+		rec_size = byteToInt(esm_content.substr(rec_beg + 4, 4)) + 16;
 		rec_end = rec_beg + rec_size;
 	}
 }
@@ -87,18 +78,18 @@ void esmtools::setNextRec()
 //----------------------------------------------------------
 void esmtools::setRecContent()
 {
-	if(status == 1)
+	if(esm_status == 1)
 	{
-		rec_content = file_content.substr(rec_beg, rec_size);
+		rec_content = esm_content.substr(rec_beg, rec_size);
 		pri_pos = 0;
 		sec_pos = 0;
 	}
 }
 
 //----------------------------------------------------------
-void esmtools::setPriSubRec(const char* id)
+void esmtools::setPriSubRec(string id)
 {
-	if(status == 1)
+	if(esm_status == 1)
 	{
 		pri_id = id;
 		pri_pos = rec_content.find(id);
@@ -137,9 +128,9 @@ void esmtools::setPriSubRec(const char* id)
 }
 
 //----------------------------------------------------------
-void esmtools::setSecSubRec(const char* id)
+void esmtools::setSecSubRec(string id)
 {
-	if(status == 1)
+	if(esm_status == 1)
 	{
 		sec_id = id;
 		sec_pos = rec_content.find(id);
@@ -189,7 +180,7 @@ void esmtools::setSecSubRec(const char* id)
 //----------------------------------------------------------
 bool esmtools::loopCheck()
 {
-	if(rec_end != file_content.size())
+	if(rec_end != esm_content.size())
 	{
 		return true;
 	}
@@ -204,4 +195,43 @@ string esmtools::dialType()
 {
 	int type = byteToInt(rec_content.substr(sec_pos + 8, 1));
 	return type_coll[type];
+}
+
+//----------------------------------------------------------
+unsigned int esmtools::byteToInt(const string &str)
+{
+	char buffer[4];
+	unsigned char ubuffer[4];
+	unsigned int x;
+
+	str.copy(buffer, 4);
+
+	for(int i = 0; i < 4; i++)
+	{
+		ubuffer[i] = buffer[i];
+	}
+
+	if(str.size() == 4)
+	{
+		return x = (ubuffer[0] | ubuffer[1] << 8 | ubuffer[2] << 16 | ubuffer[3] << 24);
+	}
+	else if(str.size() == 1)
+	{
+		return x = ubuffer[0];
+	}
+	else
+	{
+		return x = 0;
+	}
+}
+
+//----------------------------------------------------------
+void esmtools::cutNullChar(string &str)
+{
+	size_t is_null = str.find('\0');
+	while(is_null != string::npos)
+	{
+		str.erase(is_null, 1);
+		is_null = str.find('\0');
+	}
 }

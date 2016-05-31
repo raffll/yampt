@@ -13,35 +13,57 @@
 
 using namespace std;
 
-class esmtools : public tools
+class esmtools
 {
 public:
-	void readFile(const char* path);
+	void readEsm(string path);
 	void resetRec();
 	void setNextRec();
 	void setRecContent();
-	void setPriSubRec(const char* id);
-	void setSecSubRec(const char* id);
+	void setPriSubRec(string id);
+	void setSecSubRec(string id);
+	void setEsmContent(string c) { esm_content = c; }
 
-	void printStatus();
 	string dialType();
 	bool loopCheck();
 
+	bool getEsmStatus() { return esm_status; }
+	string getEsmName() { return esm_name; }
+	string getEsmPrefix() { return esm_prefix; }
+	string getEsmSuffix() { return esm_suffix; }
+	string getEsmContent() { return esm_content; }
+
+	size_t getRecSize() { return rec_size; }
 	string getRecId() { return rec_id; }
+	string getRecContent() { return rec_content; }
+
+	size_t getPriPos() { return pri_pos; }
+	size_t getPriSize() { return pri_size; }
 	string getPriId() { return pri_id; }
-	string getSecId() { return sec_id; }
 	string getPriText() { return pri_text; }
+
+	string getSecId() { return sec_id; }
 	string getSecText() { return sec_text; }
+	size_t getSecPos() { return sec_pos; }
+	size_t getSecSize() { return sec_size; }
+
 	string getTmpLine(int i) { return tmp_text[i]; }
 	size_t getTmpSize() { return tmp_text.size(); }
-	bool getStatus() { return status; }
 
-	esmtools();
+	esmtools() {}
 
 private:
-	int status;
-	string file_name;
-	string file_content;
+	void setEsmStatus(bool st);
+	void setEsmName(string path);
+
+	unsigned int byteToInt(const string &str);
+	void cutNullChar(string &str);
+
+	int esm_status = {};
+	string esm_name;
+	string esm_prefix;
+	string esm_suffix;
+	string esm_content;
 
 	size_t rec_beg;
 	size_t rec_end;

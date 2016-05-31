@@ -3,107 +3,91 @@
 using namespace std;
 
 //----------------------------------------------------------
-dicttools::dicttools()
+void dicttools::readDict(string path)
 {
-
-}
-
-//----------------------------------------------------------
-void dicttools::readDictAll(const char* path)
-{
-	for(int i = 0; i < 10; i++)
-	{
-		readDict(path, i);
-	}
-}
-
-//----------------------------------------------------------
-void dicttools::readDict(const char* path, int i)
-{
-	file_name[i] = path;
-	file_name[i] += "dict_" + to_string(i) + "_" + dict_name[i] + ".dic";
-	ifstream file(file_name[i].c_str());
-	//cutFileName(file_name[i]);
-
+	ifstream file(path);
 	if(file)
 	{
 		char buffer[16384];
-		size_t file_size = file.tellg();
-		file_content[i].reserve(file_size);
+		size_t size = file.tellg();
+		content.reserve(size);
 		streamsize chars_read;
 
 		while(file.read(buffer, sizeof(buffer)), chars_read = file.gcount())
 		{
-			file_content[i].append(buffer, chars_read);
+			content.append(buffer, chars_read);
 		}
-		validateDict(i);
-		printStatus(i);
-		parseDict(i);
-		validateRecLength(i);
+		if(!content.empty())
+		{
+			setDictName(path);
+			parseDict();
+		}
+		else
+		{
+			setDictStatus(0);
+		}
 	}
 	else
 	{
-		status[i] = 0;
-		printStatus(i);
+		setDictStatus(0);
 	}
 }
 
 //----------------------------------------------------------
-void dicttools::printStatus(int i)
+void dicttools::setDictStatus(int st)
 {
-	if(quiet == 0)
+	if(st == 0)
 	{
-		if(status[i] == 1)
-		{
-			cout << file_name[i] << " status: OK" << endl;
-		}
-		else if(status[i] == 0)
-		{
-			cerr << file_name[i] << " status: Error while loading file!" << endl;
-		}
-		else if(status[i] == -1)
-		{
-			cerr << file_name[i] << " status: Missing separator!" << endl;
-		}
+		cerr << "Error while loading dictionary (wrong path or missing separator)!" << endl;
+		status = 0;
+	}
+	else
+	{
+		cerr << "Loading " << name << "..." << endl;
+		status = 1;
 	}
 }
 
 //----------------------------------------------------------
-void dicttools::printDict(int i)
+void dicttools::setDictName(string path)
 {
-	if(status[i] == 1)
-	{
-		for(const auto &elem : dict[i])
-		{
-			cout << line_sep[0] << elem.first << line_sep[1] << elem.second.second << line_sep[2] << endl;
-		}
-	}
+	name = path.substr(path.find_last_of("\\/") + 1);
 }
 
 //----------------------------------------------------------
-void dicttools::validateDict(int i)
+void dicttools::parseDict()
 {
 	size_t pos_beg = 0;
 	size_t pos_mid = 0;
 	size_t pos_end = 0;
+	string pri_text;
+	string sec_text;
 
 	while(true)
 	{
-		pos_beg = file_content[i].find(line_sep[0], pos_beg);
-		pos_mid = file_content[i].find(line_sep[1], pos_mid);
-		pos_end = file_content[i].find(line_sep[2], pos_end);
+		pos_beg = content.find(sep[1], pos_beg);
+		pos_mid = content.find(sep[2], pos_mid);
+		pos_end = content.find(sep[3], pos_end);
 		if(pos_beg == string::npos && pos_mid == string::npos && pos_end == string::npos)
 		{
-			status[i] = 1;
+			setDictStatus(1);
 			break;
 		}
 		else if(pos_beg > pos_mid || pos_beg > pos_end || pos_mid > pos_end || pos_end == string::npos)
 		{
-			status[i] = -1;
+			setDictStatus(0);
 			break;
 		}
 		else
 		{
+			pri_text = content.substr(pos_beg + sep[1].size(), pos_mid - pos_beg - sep[1].size());
+			sec_text = content.substr(pos_mid + sep[2].size(), pos_end - pos_mid - sep[2].size());
+
+			if(validateRecLength(pri_text, sec_text))
+			{
+				dict.insert({pri_text, sec_text});
+			}
+
 			pos_beg++;
 			pos_mid++;
 			pos_end++;
@@ -112,47 +96,20 @@ void dicttools::validateDict(int i)
 }
 
 //----------------------------------------------------------
-void dicttools::validateRecLength(int i)
+bool dicttools::validateRecLength(const string &pri, const string &sec)
 {
-	if(i == 2 && status[2] == 1)
+	if(pri.size() > 4 && pri.substr(0, 4) == "FNAM" && sec.size() > 31)
 	{
-		for(const auto &elem : dict[2])
-		{
-			if(elem.second.first > 32)
-			{
-				cerr << elem.first << " <-- Text too long, more than 32 bytes! (has " << elem.second.first << ")" << endl;
-			}
-		}
+		log += name + " " + pri + ": Text too long, more than 31 bytes! (has " + to_string(sec.size()) + ")\n";
+		return 0;
 	}
-	if(i == 8 && status[8] == 1)
+	else if(pri.size() > 4 && pri.substr(0, 4) == "INFO" && sec.size() > 512)
 	{
-		for(const auto &elem : dict[8])
-		{
-			if(elem.second.first > 512)
-			{
-				cerr << elem.first << " <-- Text too long, more than 512 bytes! (has " << elem.second.first << ")" << endl;
-			}
-		}
+		log += name + " " + pri + ": Text too long, more than 512 bytes! (has " + to_string(sec.size()) + ")\n";
+		return 0;
+	}
+	else
+	{
+		return 1;
 	}
 }
-
-//----------------------------------------------------------
-void dicttools::parseDict(int i)
-{
-	if(status[i] == 1)
-	{
-		regex re("(<h3>)(.*?)(</h3>)((.|\n)*?)(<hr>)");
-		sregex_iterator next(file_content[i].begin(), file_content[i].end(), re);
-		sregex_iterator end;
-		smatch m;
-
-		while(next != end)
-		{
-			m = *next;
-			dict[i].insert({m.str(2), make_pair(m.str(4).size(), m.str(4))});
-			next++;
-		}
-		file_content[i].erase();
-	}
-}
-

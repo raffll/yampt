@@ -8,25 +8,20 @@ using namespace std;
 #include "tools.hpp"
 #include "creator.hpp"
 #include "merger.hpp"
+#include "converter.hpp"
 
 int main(int argc, char *argv[])
 {
-	/*cout << "tools: " << sizeof(tools) << endl;
-	cout << "esmtools: " << sizeof(esmtools) << endl;
-	cout << "dicttools: " << sizeof(dicttools) << endl;
-	cout << "creator: " << sizeof(creator) << endl;*/
-
-	tools::quiet = 0;
-
 	string comm;
-	string usage = "Usage: yampt [command]"
-				   "\n"
-				   "\n  --help                              Print this message."
-				   "\n  --make       [file1]                Make dictionary from esp/esm plugin."
-				   "\n  --make-base  [file1] [file2]        Make base dictionary from two localized esm files."
-				   "\n  --merge      [dict1] [dict2]...     Merge dictionaries from paths and delete doubled records."
-				   "\n  --convert    [file1]... [dict1]...  Convert plugins from dictionaries in paths.\n";
-
+	string name = argv[0];
+	string usage = "Usage: " + name + " [command]"
+		       "\n"
+		       "\n  --help                              Print this message."
+		       "\n  --make       [file1] <file2>        Make dictionary from esp/esm plugin."
+		       "\n                                      Or make base dictionary from two localized esm files."
+		       "\n  --compare    [dict1] [dict2]        Compare two dictionaries and create differences log."
+		       "\n  --merge      [dict1]...             Merge dictionaries from paths and delete doubled records."
+		       "\n  --convert    [file1] [dict1]...     Convert plugin from dictionaries in paths.\n";
 	if(argc > 1)
 	{
 		comm = argv[1];
@@ -35,32 +30,71 @@ int main(int argc, char *argv[])
 	{
 		cout << usage;
 	}
-	else if(comm == "--make")
+	else if(comm == "--make" && argc == 3)
 	{
-		if(argc == 3)
-		{
-			creator c(argv[2]);
-			c.writeDictAll();
-		}
+		creator c(argv[2]);
+		c.makeDict();
+		c.writeDict();
 	}
-	else if(comm == "--make-base")
+	else if(comm == "--make" && argc == 4)
 	{
-		if(argc == 4)
-		{
-			creator c(argv[2], argv[3]);
-			c.writeDictAll();
-		}
+		creator c(argv[2], argv[3]);
+		c.makeDict();
+		c.writeDict();
 	}
-	else if(comm == "--merge")
+	else if(comm == "--compare" && argc == 4)
 	{
-		if(argc == 4)
-		{
-			merger m(argv[2], argv[3]);
-		}
-		else if(argc == 5)
-		{
-			merger m(argv[2], argv[3], argv[4]);
-		}
+		merger m(argv[2], argv[3]);
+		m.writeDiff();
+		m.writeLog();
+	}
+	else if(comm == "--merge" && argc == 3)
+	{
+		merger m(argv[2]);
+		m.mergeDict();
+		m.writeLog();
+		m.writeMerged();
+	}
+	else if(comm == "--merge" && argc == 4)
+	{
+		merger m(argv[3], argv[2]);
+		m.mergeDict();
+		m.writeLog();
+		m.writeMerged();
+	}
+	else if(comm == "--merge" && argc == 5)
+	{
+		merger m(argv[4], argv[3], argv[2]);
+		m.mergeDict();
+		m.writeLog();
+		m.writeMerged();
+	}
+	else if(comm == "--convert" && argc == 4)
+	{
+		merger m(argv[3]);
+		m.mergeDict();
+		m.writeLog();
+		converter c(argv[2], m);
+		c.convertEsm();
+		c.writeEsm();
+	}
+	else if(comm == "--convert" && argc == 5)
+	{
+		merger m(argv[4], argv[3]);
+		m.mergeDict();
+		m.writeLog();
+		converter c(argv[2], m);
+		c.convertEsm();
+		c.writeEsm();
+	}
+	else if(comm == "--convert" && argc == 5)
+	{
+		merger m(argv[4], argv[3]);
+		m.mergeDict();
+		m.writeLog();
+		converter c(argv[2], m);
+		c.convertEsm();
+		c.writeEsm();
 	}
 	else
 	{

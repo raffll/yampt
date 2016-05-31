@@ -9,21 +9,27 @@
 
 using namespace std;
 
-class merger: public tools
+class merger
 {
 public:
 	void mergeDict();
+	void writeMerged();
+	void writeDiff();
+	void writeLog();
+	void translateDial();
 
-	merger();
-	merger(const char* path1, const char* path2);
-	merger(const char* path1, const char* path2, const char* path3);
+	map<string, string> const& getDict() const { return merged; }
+
+	merger() {}
+	merger(string path_first);
+	merger(string path_first, string path_second);
+	merger(string path_first, string path_second, string path_third);
 
 private:
-	dicttools dict_first;
-	dicttools dict_second;
-	dicttools dict_third;
-
-	array<multimap<string, string>, 10> dict;
+	array<dicttools, 3> dict;
+	bool status = {};
+	map<string, string> merged;
+	string log;
 };
 
 #endif
