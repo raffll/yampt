@@ -53,8 +53,8 @@ void merger::mergeDict()
 				else if(search != merged.end() && search->second != elem.second)
 				{
 					different++;
-					log += "\n" + elem.first + " --- " + elem.second + "\n";
-					log += search->first + " >>> " + search->second + "\n\n";
+					log += dict[i].getDictName() + "\t" + elem.first + " --- " + elem.second + "\n";
+					log += dict[i - 1].getDictName() + "\t" + search->first + " >>> " + search->second + "\n";
 				}
 				else
 				{
@@ -66,10 +66,17 @@ void merger::mergeDict()
 				cerr << "Records loaded: " << dict[i].getDict().size() << endl;
 			}
 		}
-		cerr << "Merging complete!" << endl;
-		cerr << "Records merged: " << merged.size() << endl;
-		cerr << "Duplicate text: " << duplicate << endl;
-		cerr << "Different text: " << different << endl;
+		if(dict[1].getDictStatus() == 0 && dict[2].getDictStatus() == 0)
+		{
+			cerr << "Sorting complete!" << endl;
+		}
+		else
+		{
+			cerr << "Merging complete!" << endl;
+			cerr << "Records merged: " << merged.size() << endl;
+			cerr << "Duplicate text: " << duplicate << endl;
+			cerr << "Different text: " << different << endl;
+		}
 	}
 }
 
@@ -93,10 +100,8 @@ void merger::writeDiff()
 {
 	if(status == 1)
 	{
-		ofstream file_first;
-		ofstream file_second;
-		file_first.open("Diff_" + dict[0].getDictName());
-		file_second.open("Diff_" + dict[1].getDictName());
+		string diff_first;
+		string diff_second;
 
 		for(auto &elem : dict[0].getDict())
 		{
@@ -105,13 +110,26 @@ void merger::writeDiff()
 			{
 				if(search->second != elem.second)
 				{
-					file_first << sep[1] << elem.first << sep[2] << elem.second << sep[3] << endl;
-					file_second << sep[1] << search->first << sep[2] << search->second << sep[3] << endl;
+					diff_first += sep[1] + elem.first + sep[2] + elem.second + sep[3] + "\n";
+					diff_second += sep[1] + search->first + sep[2] + search->second + sep[3] + "\n";
 				}
 			}
 		}
-		cerr << "Writing Diff_" << dict[0].getDictName() << "..." << endl;
-		cerr << "Writing Diff_" << dict[1].getDictName() << "..." << endl;
+		if(!diff_first.empty() && !diff_second.empty())
+		{
+			ofstream file_first;
+			ofstream file_second;
+			file_first.open("Diff_" + dict[0].getDictName());
+			file_second.open("Diff_" + dict[1].getDictName());
+			file_first << diff_first;
+			file_second << diff_second;
+			cerr << "Writing Diff_" << dict[0].getDictName() << "..." << endl;
+			cerr << "Writing Diff_" << dict[1].getDictName() << "..." << endl;
+		}
+		else
+		{
+			cerr << "No differences between dictionaries!" << endl;
+		}
 	}
 }
 
@@ -120,12 +138,11 @@ void merger::writeLog()
 {
 	if(status == 1)
 	{
-		log += "\n\n" + dict[0].getDictLog() + dict[1].getDictLog() + dict[2].getDictLog();
 		if(!log.empty())
 		{
 			ofstream file;
 			file.open("Dict.log");
-			file << log;
+			file << dict[0].getDictLog() + dict[1].getDictLog() + dict[2].getDictLog() + log;
 			cerr << "Writing Dict.log..." << endl;
 		}
 	}

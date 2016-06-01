@@ -38,7 +38,7 @@ void esmtools::setEsmStatus(bool st)
 {
 	if(st == 0)
 	{
-		cerr << "Error while loading file!" << endl;
+		cerr << "Error while loading file! (wrong path or isn't TES3 plugin)" << endl;
 		esm_status = 0;
 	}
 	else
@@ -193,6 +193,7 @@ bool esmtools::loopCheck()
 //----------------------------------------------------------
 string esmtools::dialType()
 {
+	const static array<string, 5> type_coll = {"T", "V", "G", "P", "J"};
 	int type = byteToInt(rec_content.substr(sec_pos + 8, 1));
 	return type_coll[type];
 }

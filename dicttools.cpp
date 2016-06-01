@@ -100,12 +100,12 @@ bool dicttools::validateRecLength(const string &pri, const string &sec)
 {
 	if(pri.size() > 4 && pri.substr(0, 4) == "FNAM" && sec.size() > 31)
 	{
-		log += name + " " + pri + ": Text too long, more than 31 bytes! (has " + to_string(sec.size()) + ")\n";
+		log += name + "\t" + pri + " --- Text too long, more than 31 bytes! (has " + to_string(sec.size()) + ")\n";
 		return 0;
 	}
 	else if(pri.size() > 4 && pri.substr(0, 4) == "INFO" && sec.size() > 512)
 	{
-		log += name + " " + pri + ": Text too long, more than 512 bytes! (has " + to_string(sec.size()) + ")\n";
+		log += name + "\t" + pri + " --- Text too long, more than 512 bytes! (has " + to_string(sec.size()) + ")\n";
 		return 0;
 	}
 	else

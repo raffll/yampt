@@ -10,20 +10,26 @@ converter::converter(string esm_path, merger &m)
 //----------------------------------------------------------
 void converter::convertEsm()
 {
-	convertCell();
-	convertGmst();
-	convertFnam();
-	convertDesc();
-	cerr << "Converting complete!" << endl;
+	if(esm.getEsmStatus() == 1 && dict.getMergerStatus() == 1)
+	{
+		convertCell();
+		convertGmst();
+		convertFnam();
+		convertDesc();
+		cerr << "Converting complete!" << endl;
+	}
 }
 
 //----------------------------------------------------------
 void converter::writeEsm()
 {
-	string name = esm.getEsmPrefix() + ".converted" + esm.getEsmSuffix();
-	ofstream file(name, ios::binary);
-	file << esm.getEsmContent();
-	cout << "Writing " << name << "..." << endl;
+	if(esm.getEsmStatus() == 1 && dict.getMergerStatus() == 1)
+	{
+		string name = esm.getEsmPrefix() + ".converted" + esm.getEsmSuffix();
+		ofstream file(name, ios::binary);
+		file << esm.getEsmContent();
+		cout << "Writing " << name << "..." << endl;
+	}
 }
 
 //----------------------------------------------------------

@@ -22,8 +22,8 @@ int main(int argc, char *argv[])
 			"\n  --make -d  [file1] [dict1]          Make without duplicated records from dictionary in path."
 			"\n  --make -c  [file1] [dict1]          Make without converted records from dictionary in path."
 			"\n  --make -r  [file1]                  Make without dial translation. Only for diagnostic."
-			"\n  --make -b  [file1] [file2]          Make base dictionary from two localized esm files."
-			"\n                                      This is required for future translations."
+			"\n  --make -b  [file1] [file2]          Make base dictionary from two different localized esm files."
+			"\n                                      Which is required for automatic translations."
 			"\n  --compare  [dict1] [dict2]          Compare two dictionaries and create differences log."
 			"\n  --merge    [dict1] <dict2> <dict3>  Validate, merge and sort dictionaries from paths"
 			"\n                                      and delete doubled records."
@@ -51,6 +51,7 @@ int main(int argc, char *argv[])
 	else if(arg1 == "--make" && arg2 == "-b" && argc == 5)
 	{
 		creator c(argv[3], argv[4]);
+		c.compareEsm();
 		c.makeDict();
 		c.writeDict();
 	}
@@ -84,8 +85,8 @@ int main(int argc, char *argv[])
 	else if(arg1 == "--compare" && argc == 4)
 	{
 		merger m(argv[2], argv[3]);
-		m.writeDiff();
 		m.writeLog();
+		m.writeDiff();
 	}
 	else if(arg1 == "--merge" && argc == 3)
 	{

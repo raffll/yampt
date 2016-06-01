@@ -7,7 +7,6 @@ creator::creator(string esm_path)
 {
 	esm.readEsm(esm_path);
 	esm_ptr = &esm;
-	with_dict = 0;
 }
 
 //----------------------------------------------------------
@@ -16,7 +15,6 @@ creator::creator(string esm_path, string ext_path)
 	esm.readEsm(esm_path);
 	ext.readEsm(ext_path);
 	esm_ptr = &ext;
-	with_dict = 0;
 }
 
 //----------------------------------------------------------
@@ -31,7 +29,7 @@ creator::creator(string esm_path, merger &m)
 //----------------------------------------------------------
 void creator::makeDict()
 {
-	if(esm.getEsmStatus() == 1 && esm_ptr->getEsmStatus() == 1)
+	if(not_equal == 0 && esm.getEsmStatus() == 1 && esm_ptr->getEsmStatus() == 1)
 	{
 		makeDictCell();
 		makeDictGmst();
@@ -49,9 +47,36 @@ void creator::makeDict()
 }
 
 //----------------------------------------------------------
+void creator::compareEsm()
+{
+	if(esm.getEsmStatus() == 1 && ext.getEsmStatus() == 1)
+	{
+		string esm_compare;
+		string ext_compare;
+		esm.resetRec();
+		ext.resetRec();
+		while(esm.loopCheck())
+		{
+			esm.setNextRec();
+			esm_compare += esm.getRecId();
+		}
+		while(ext.loopCheck())
+		{
+			ext.setNextRec();
+			ext_compare += ext.getRecId();
+		}
+		if(esm_compare != ext_compare)
+		{
+			cerr << "They are not the same master files!" << endl;
+			not_equal = 1;
+		}
+	}
+}
+
+//----------------------------------------------------------
 void creator::eraseDuplicates()
 {
-	if(with_dict == 1 && esm.getEsmStatus() == 1)
+	if(with_dict == 1 && esm.getEsmStatus() == 1 && dict.getMergerStatus() == 1)
 	{
 		int duplicate = 0;
 		for(auto &elem : dict.getDict())
@@ -70,7 +95,7 @@ void creator::eraseDuplicates()
 //----------------------------------------------------------
 void creator::eraseDifferent()
 {
-	if(with_dict == 1)
+	if(with_dict == 1 && esm.getEsmStatus() == 1 && dict.getMergerStatus() == 1)
 	{
 		int different = 0;
 		for(auto &elem : dict.getDict())
@@ -89,7 +114,7 @@ void creator::eraseDifferent()
 //----------------------------------------------------------
 string creator::dialTranslator(string to_translate)
 {
-	if(with_dict == 1)
+	if(with_dict == 1 && esm.getEsmStatus() == 1 && dict.getMergerStatus() == 1)
 	{
 		auto search = dict.getDict().find("DIAL" + sep[0] + to_translate);
 		if(search != dict.getDict().end())
@@ -103,15 +128,22 @@ string creator::dialTranslator(string to_translate)
 //----------------------------------------------------------
 void creator::writeDict()
 {
-	if(esm.getEsmStatus() == 1 && esm_ptr->getEsmStatus() == 1)
+	if(not_equal == 0 && esm.getEsmStatus() == 1 && esm_ptr->getEsmStatus() == 1)
 	{
-		ofstream file;
-		file.open(esm.getEsmPrefix() + ".dic");
-		for(const auto &elem : created)
+		if(!created.empty())
 		{
-			file << sep[1] << elem.first << sep[2] << elem.second << sep[3] << endl;
+			ofstream file;
+			file.open(esm.getEsmPrefix() + ".dic");
+			for(const auto &elem : created)
+			{
+				file << sep[1] << elem.first << sep[2] << elem.second << sep[3] << endl;
+			}
+			cerr << "Writing " << esm.getEsmPrefix() << ".dic..." << endl;
 		}
-		cerr << "Writing " << esm.getEsmPrefix() << ".dic..." << endl;
+		else
+		{
+			cerr << "All records converted!" << endl;
+		}
 	}
 }
 

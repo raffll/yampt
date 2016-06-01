@@ -17,6 +17,7 @@ public:
 	void writeDiff();
 	void writeLog();
 
+	bool getMergerStatus() { return status; }
 	map<string, string> const& getDict() const { return merged; }
 
 	merger() {}
