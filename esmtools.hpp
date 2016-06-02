@@ -59,7 +59,7 @@ private:
 	unsigned int byteToInt(const string &str);
 	void cutNullChar(string &str);
 
-	int esm_status = {};
+	bool esm_status = {};
 	string esm_name;
 	string esm_prefix;
 	string esm_suffix;

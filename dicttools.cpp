@@ -52,6 +52,7 @@ void dicttools::setDictStatus(int st)
 void dicttools::setDictName(string path)
 {
 	name = path.substr(path.find_last_of("\\/") + 1);
+	prefix = name.substr(0, name.find_last_of("."));
 }
 
 //----------------------------------------------------------
@@ -85,7 +86,10 @@ void dicttools::parseDict()
 
 			if(validateRecLength(pri_text, sec_text))
 			{
-				dict.insert({pri_text, sec_text});
+				if(dict.insert({pri_text, sec_text}).second == 0)
+				{
+					log += name + "\t" + pri_text + " --- Duplicate record\n";
+				}
 			}
 
 			pos_beg++;
@@ -100,12 +104,12 @@ bool dicttools::validateRecLength(const string &pri, const string &sec)
 {
 	if(pri.size() > 4 && pri.substr(0, 4) == "FNAM" && sec.size() > 31)
 	{
-		log += name + "\t" + pri + " --- Text too long, more than 31 bytes! (has " + to_string(sec.size()) + ")\n";
+		log += name + "\t" + pri + " --- Text too long, more than 31 bytes (has " + to_string(sec.size()) + ")\n";
 		return 0;
 	}
 	else if(pri.size() > 4 && pri.substr(0, 4) == "INFO" && sec.size() > 512)
 	{
-		log += name + "\t" + pri + " --- Text too long, more than 512 bytes! (has " + to_string(sec.size()) + ")\n";
+		log += name + "\t" + pri + " --- Text too long, more than 512 bytes (has " + to_string(sec.size()) + ")\n";
 		return 0;
 	}
 	else

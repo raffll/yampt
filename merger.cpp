@@ -7,6 +7,7 @@ merger::merger(string path_first)
 	if(dict[0].getDictStatus() == 1)
 	{
 		status = 1;
+		name = dict[0].getDictPrefix();
 	}
 }
 
@@ -18,6 +19,7 @@ merger::merger(string path_first, string path_second)
 	if(dict[0].getDictStatus() == 1 && dict[1].getDictStatus() == 1)
 	{
 		status = 1;
+		name = dict[1].getDictPrefix() + "-" + dict[0].getDictPrefix();
 	}
 }
 
@@ -30,6 +32,7 @@ merger::merger(string path_first, string path_second, string path_third)
 	if(dict[0].getDictStatus() == 1 && dict[1].getDictStatus() == 1 && dict[2].getDictStatus() == 1)
 	{
 		status = 1;
+		name = dict[2].getDictPrefix() + "-" + dict[1].getDictPrefix() + "-" + dict[0].getDictPrefix();
 	}
 }
 
@@ -74,8 +77,8 @@ void merger::mergeDict()
 		{
 			cerr << "Merging complete!" << endl;
 			cerr << "Records merged: " << merged.size() << endl;
-			cerr << "Duplicate text: " << duplicate << endl;
-			cerr << "Different text: " << different << endl;
+			cerr << "Duplicate records not merged: " << duplicate << endl;
+			cerr << "Duplicate records with different text not merged: " << different << endl;
 		}
 	}
 }
@@ -85,13 +88,22 @@ void merger::writeMerged()
 {
 	if(status == 1)
 	{
+		string suffix;
+		if(dict[1].getDictStatus() == 0 && dict[2].getDictStatus() == 0)
+		{
+			suffix = "-Sorted.dic";
+		}
+		else
+		{
+			suffix = "-Merged.dic";
+		}
 		ofstream file;
-		file.open("Merged.dic");
+		file.open(name + suffix);
 		for(const auto &elem : merged)
 		{
 			file << sep[1] << elem.first << sep[2] << elem.second << sep[3] << endl;
 		}
-		cerr << "Writing Merged.dic..." << endl;
+		cerr << "Writing " << name << suffix << "..." << endl;
 	}
 }
 
@@ -119,12 +131,12 @@ void merger::writeDiff()
 		{
 			ofstream file_first;
 			ofstream file_second;
-			file_first.open("Diff_" + dict[0].getDictName());
-			file_second.open("Diff_" + dict[1].getDictName());
+			file_first.open("Diff-" + dict[0].getDictName());
+			file_second.open("Diff-" + dict[1].getDictName());
 			file_first << diff_first;
 			file_second << diff_second;
-			cerr << "Writing Diff_" << dict[0].getDictName() << "..." << endl;
-			cerr << "Writing Diff_" << dict[1].getDictName() << "..." << endl;
+			cerr << "Writing Diff-" << dict[0].getDictName() << "..." << endl;
+			cerr << "Writing Diff-" << dict[1].getDictName() << "..." << endl;
 		}
 		else
 		{
@@ -138,12 +150,9 @@ void merger::writeLog()
 {
 	if(status == 1)
 	{
-		if(!log.empty())
-		{
-			ofstream file;
-			file.open("Dict.log");
-			file << dict[0].getDictLog() + dict[1].getDictLog() + dict[2].getDictLog() + log;
-			cerr << "Writing Dict.log..." << endl;
-		}
+		ofstream file;
+		file.open("yampt.log");
+		file << dict[0].getDictLog() + dict[1].getDictLog() + dict[2].getDictLog() + log;
+		cerr << "Writing yampt.log..." << endl;
 	}
 }

@@ -19,8 +19,8 @@ class creator
 {
 public:
 	void makeDict();
+	void writeDict(bool after_convertion = 0);
 	void compareEsm();
-	void writeDict();
 	void eraseDuplicates();
 	void eraseDifferent();
 
@@ -47,8 +47,8 @@ private:
 	esmtools ext;
 	esmtools *esm_ptr;
 	merger dict;
+	bool status = {};
 	bool with_dict = {};
-	bool not_equal = {};
 	int counter;
 	map<string, string> created;
 };

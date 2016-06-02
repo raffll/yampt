@@ -19,6 +19,7 @@ public:
 	void readDict(string path);
 	bool getDictStatus() { return status; }
 	string getDictName() { return name; }
+	string getDictPrefix() { return prefix; }
 	string getDictLog() { return log; }
 	map<string, string> const& getDict() const { return dict; }
 
@@ -30,8 +31,9 @@ private:
 	void parseDict();
 	bool validateRecLength(const string &pri, const string &sec);
 
-	int status = {};
+	bool status = {};
 	string name;
+	string prefix;
 	string content;
 	string log;
 	map<string, string> dict;
