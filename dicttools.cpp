@@ -12,7 +12,6 @@ void dicttools::readDict(string path)
 		size_t size = file.tellg();
 		content.reserve(size);
 		streamsize chars_read;
-
 		while(file.read(buffer, sizeof(buffer)), chars_read = file.gcount())
 		{
 			content.append(buffer, chars_read);
@@ -63,7 +62,6 @@ void dicttools::parseDict()
 	size_t pos_end = 0;
 	string pri_text;
 	string sec_text;
-
 	while(true)
 	{
 		pos_beg = content.find(sep[1], pos_beg);
@@ -83,7 +81,6 @@ void dicttools::parseDict()
 		{
 			pri_text = content.substr(pos_beg + sep[1].size(), pos_mid - pos_beg - sep[1].size());
 			sec_text = content.substr(pos_mid + sep[2].size(), pos_end - pos_mid - sep[2].size());
-
 			if(validateRecLength(pri_text, sec_text))
 			{
 				if(dict.insert({pri_text, sec_text}).second == 0)
@@ -91,7 +88,6 @@ void dicttools::parseDict()
 					log += name + "\t" + pri_text + " --- Duplicate record\n";
 				}
 			}
-
 			pos_beg++;
 			pos_mid++;
 			pos_end++;
@@ -103,6 +99,11 @@ void dicttools::parseDict()
 bool dicttools::validateRecLength(const string &pri, const string &sec)
 {
 	if(pri.size() > 4 && pri.substr(0, 4) == "FNAM" && sec.size() > 31)
+	{
+		log += name + "\t" + pri + " --- Text too long, more than 31 bytes (has " + to_string(sec.size()) + ")\n";
+		return 0;
+	}
+	if(pri.size() > 4 && pri.substr(0, 4) == "FACT" && sec.size() > 31)
 	{
 		log += name + "\t" + pri + " --- Text too long, more than 31 bytes (has " + to_string(sec.size()) + ")\n";
 		return 0;

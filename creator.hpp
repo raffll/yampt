@@ -49,7 +49,6 @@ private:
 	merger dict;
 	bool status = {};
 	bool with_dict = {};
-	int counter;
 	map<string, string> created;
 };
 

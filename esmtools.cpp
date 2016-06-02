@@ -12,7 +12,6 @@ void esmtools::readEsm(string path)
 		size_t size = file.tellg();
 		esm_content.reserve(size);
 		streamsize chars_read;
-
 		while(file.read(buffer, sizeof(buffer)), chars_read = file.gcount())
 		{
 			esm_content.append(buffer, chars_read);
@@ -93,7 +92,6 @@ void esmtools::setPriSubRec(string id)
 	{
 		pri_id = id;
 		pri_pos = rec_content.find(id);
-
 		if(pri_id == "INDX")
 		{
 			int indx = byteToInt(rec_content.substr(pri_pos + 8, 4));
@@ -122,7 +120,7 @@ void esmtools::setPriSubRec(string id)
 		}
 		else
 		{
-			pri_text = "";
+			pri_text.erase();
 		}
 	}
 }
@@ -134,21 +132,7 @@ void esmtools::setSecSubRec(string id)
 	{
 		sec_id = id;
 		sec_pos = rec_content.find(id);
-
-		if(sec_id == "RNAM")
-		{
-			tmp_text.clear();
-
-			while(sec_pos != string::npos)
-			{
-				sec_size = byteToInt(rec_content.substr(sec_pos + 4, 4));
-				sec_text = rec_content.substr(sec_pos + 8, sec_size);
-				cutNullChar(sec_text);
-				tmp_text.push_back(sec_text);
-				sec_pos = rec_content.find(id, sec_pos + 4);
-			}
-		}
-		else if(sec_pos != string::npos)
+		if(sec_pos != string::npos)
 		{
 			sec_size = byteToInt(rec_content.substr(sec_pos + 4, 4));
 			sec_text = rec_content.substr(sec_pos + 8, sec_size);
@@ -156,22 +140,56 @@ void esmtools::setSecSubRec(string id)
 		}
 		else
 		{
-			sec_text = "";
+			sec_text.erase();
 		}
+	}
+}
 
-		if(sec_id == "SCTX" || sec_id == "BNAM")
+//----------------------------------------------------------
+void esmtools::setRnamColl()
+{
+	if(esm_status == 1)
+	{
+		sec_id = "RNAM";
+		sec_pos = rec_content.find(sec_id);
+		text_coll.clear();
+		while(sec_pos != string::npos)
 		{
-			string line;
-			istringstream ss(sec_text);
-			tmp_text.clear();
+			sec_size = byteToInt(rec_content.substr(sec_pos + 4, 4));
+			sec_text = rec_content.substr(sec_pos + 8, sec_size);
+			cutNullChar(sec_text);
+			text_coll.push_back(make_pair(sec_pos, sec_text));
+			sec_pos = rec_content.find(sec_id, sec_pos + 4);
+		}
+	}
+}
 
-			while(getline(ss, line))
+//----------------------------------------------------------
+void esmtools::setScptColl()
+{
+	if(esm_status == 1)
+	{
+		static vector<string> key = {"Choice", "choice", "MessageBox", "Say ", "Say,", "say ", "say,"};
+		string line;
+		size_t line_counter = 0;
+		size_t pos;
+		istringstream ss(sec_text);
+		text_coll.clear();
+		while(getline(ss, line))
+		{
+			line_counter++;
+			for(size_t i = 0; i < key.size(); i++)
 			{
-				if(line.find('\r') != string::npos)
+				pos = line.find(key[i]);
+				if(pos != string::npos)
 				{
-					line.erase(line.size() - 1);
+					if(line.find('\r') != string::npos)
+					{
+						line.erase(line.size() - 1);
+					}
+					line = line.substr(pos);
+					text_coll.push_back(make_pair(line_counter, line));
 				}
-				tmp_text.push_back(line);
 			}
 		}
 	}
@@ -193,7 +211,7 @@ bool esmtools::loopCheck()
 //----------------------------------------------------------
 string esmtools::dialType()
 {
-	const static array<string, 5> type_coll = {"T", "V", "G", "P", "J"};
+	static array<string, 5> type_coll = {"T", "V", "G", "P", "J"};
 	int type = byteToInt(rec_content.substr(sec_pos + 8, 1));
 	return type_coll[type];
 }
@@ -204,14 +222,11 @@ unsigned int esmtools::byteToInt(const string &str)
 	char buffer[4];
 	unsigned char ubuffer[4];
 	unsigned int x;
-
 	str.copy(buffer, 4);
-
 	for(int i = 0; i < 4; i++)
 	{
 		ubuffer[i] = buffer[i];
 	}
-
 	if(str.size() == 4)
 	{
 		return x = (ubuffer[0] | ubuffer[1] << 8 | ubuffer[2] << 16 | ubuffer[3] << 24);
@@ -230,9 +245,8 @@ unsigned int esmtools::byteToInt(const string &str)
 void esmtools::cutNullChar(string &str)
 {
 	size_t is_null = str.find('\0');
-	while(is_null != string::npos)
+	if(is_null != string::npos)
 	{
-		str.erase(is_null, 1);
-		is_null = str.find('\0');
+		str.erase(is_null);
 	}
 }

@@ -22,6 +22,8 @@ public:
 	void setRecContent();
 	void setPriSubRec(string id);
 	void setSecSubRec(string id);
+	void setRnamColl();
+	void setScptColl();
 	void setEsmContent(string c) { esm_content = c; }
 
 	string dialType();
@@ -42,13 +44,16 @@ public:
 	string getPriId() { return pri_id; }
 	string getPriText() { return pri_text; }
 
-	string getSecId() { return sec_id; }
-	string getSecText() { return sec_text; }
 	size_t getSecPos() { return sec_pos; }
 	size_t getSecSize() { return sec_size; }
+	string getSecId() { return sec_id; }
+	string getSecText() { return sec_text; }
 
-	string getTmpLine(int i) { return tmp_text[i]; }
-	size_t getTmpSize() { return tmp_text.size(); }
+	string getRnamText(int i) { return text_coll[i].second; }
+	size_t getRnamPos(int i) { return text_coll[i].first; }
+	string getScptText(int i) { return text_coll[i].second; }
+	string getScptPos(int i) { return to_string(text_coll[i].first); }
+	size_t getCollSize() { return text_coll.size(); }
 
 	esmtools() {}
 
@@ -81,7 +86,7 @@ private:
 	string sec_id;
 	string sec_text;
 
-	vector<string> tmp_text;
+	vector<pair<size_t, string>> text_coll;
 };
 
 #endif

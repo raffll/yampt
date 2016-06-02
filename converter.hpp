@@ -20,6 +20,8 @@ public:
 	void convertGmst();
 	void convertFnam();
 	void convertDesc();
+	void convertBook();
+	void convertFact();
 
 	converter();
 	converter(string esm_path, merger &m);
@@ -29,8 +31,6 @@ private:
 
 	esmtools esm;
 	merger dict;
-
-	int counter;
 };
 
 #endif

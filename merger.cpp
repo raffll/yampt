@@ -41,7 +41,6 @@ void merger::mergeDict()
 {
 	int duplicate = 0;
 	int different = 0;
-
 	if(status == 1)
 	{
 		for(size_t i = 0; i < dict.size(); i++)
@@ -103,7 +102,7 @@ void merger::writeMerged()
 		{
 			file << sep[1] << elem.first << sep[2] << elem.second << sep[3] << endl;
 		}
-		cerr << "Writing " << name << suffix << "..." << endl;
+		cerr << "Writing " << merged.size() << " records to " << name << suffix << "..." << endl;
 	}
 }
 
@@ -114,7 +113,6 @@ void merger::writeDiff()
 	{
 		string diff_first;
 		string diff_second;
-
 		for(auto &elem : dict[0].getDict())
 		{
 			auto search = dict[1].getDict().find(elem.first);
