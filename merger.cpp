@@ -90,11 +90,11 @@ void merger::writeMerged()
 		string suffix;
 		if(dict[1].getDictStatus() == 0 && dict[2].getDictStatus() == 0)
 		{
-			suffix = "-Sorted.dic";
+			suffix = ".sorted.dic";
 		}
 		else
 		{
-			suffix = "-Merged.dic";
+			suffix = ".merged.dic";
 		}
 		ofstream file;
 		file.open(name + suffix);
@@ -129,12 +129,12 @@ void merger::writeDiff()
 		{
 			ofstream file_first;
 			ofstream file_second;
-			file_first.open("Diff-" + dict[0].getDictName());
-			file_second.open("Diff-" + dict[1].getDictName());
+			file_first.open(dict[0].getDictPrefix() + ".diff.dic");
+			file_second.open(dict[1].getDictPrefix() + ".diff.dic");
 			file_first << diff_first;
 			file_second << diff_second;
-			cerr << "Writing Diff-" << dict[0].getDictName() << "..." << endl;
-			cerr << "Writing Diff-" << dict[1].getDictName() << "..." << endl;
+			cerr << "Writing " << dict[0].getDictPrefix() << ".diff.dic" << "..." << endl;
+			cerr << "Writing " << dict[1].getDictPrefix() << ".diff.dic" << "..." << endl;
 		}
 		else
 		{

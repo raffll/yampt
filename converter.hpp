@@ -16,19 +16,22 @@ public:
 	void convertEsm();
 	void writeEsm();
 
+	converter();
+	converter(string esm_path, merger &m);
+
+private:
+	string intToByte(unsigned int x);
 	void convertCell();
 	void convertGmst();
 	void convertFnam();
 	void convertDesc();
 	void convertBook();
 	void convertFact();
+	void convertIndx();
+	void convertDial();
+	void convertInfo();
 
-	converter();
-	converter(string esm_path, merger &m);
-
-private:
-	string intToByte(unsigned int x);
-
+	bool status = {};
 	esmtools esm;
 	merger dict;
 };

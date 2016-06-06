@@ -10,6 +10,6 @@
 
 using namespace std;
 
-const static array<string, 4> sep = {"<br>", "<h3>", "</h3>", "<hr>"};
+const static array<string, 4> sep = {"^", "<h3>", "</h3>", "<hr>"};
 
 #endif

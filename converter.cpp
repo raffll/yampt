@@ -5,12 +5,16 @@ converter::converter(string esm_path, merger &m)
 {
 	esm.readEsm(esm_path);
 	dict = m;
+	if(esm.getEsmStatus() == 1 && dict.getMergerStatus() == 1)
+	{
+		status = 1;
+	}
 }
 
 //----------------------------------------------------------
 void converter::convertEsm()
 {
-	if(esm.getEsmStatus() == 1 && dict.getMergerStatus() == 1)
+	if(status == 1)
 	{
 		convertCell();
 		convertGmst();
@@ -18,6 +22,9 @@ void converter::convertEsm()
 		convertDesc();
 		convertBook();
 		convertFact();
+		convertIndx();
+		convertDial();
+		convertInfo();
 		cerr << "Converting complete!" << endl;
 	}
 }
@@ -25,7 +32,7 @@ void converter::convertEsm()
 //----------------------------------------------------------
 void converter::writeEsm()
 {
-	if(esm.getEsmStatus() == 1 && dict.getMergerStatus() == 1)
+	if(status == 1)
 	{
 		string name = esm.getEsmPrefix() + ".converted" + esm.getEsmSuffix();
 		ofstream file(name, ios::binary);
@@ -329,3 +336,144 @@ void converter::convertFact()
 	esm.setEsmContent(esm_content);
 	cerr << "RNAM records converted: " << counter << endl;
 }
+
+//----------------------------------------------------------
+void converter::convertIndx()
+{
+	string rec_content;
+	string esm_content;
+	size_t sec_size = 0;
+	size_t rec_size = 0;
+	int counter = 0;
+	esm.resetRec();
+	while(esm.loopCheck())
+	{
+		esm.setNextRec();
+		esm.setRecContent();
+		rec_content = esm.getRecContent();
+		if(esm.getRecId() == "SKIL" ||
+		   esm.getRecId() == "MGEF")
+		{
+			esm.setPriSubRec("INDX");
+			esm.setSecSubRec("DESC");
+			if(!esm.getPriText().empty())
+			{
+				auto search = dict.getDict().find(esm.getPriId() + sep[0] + esm.getRecId() + sep[0] + esm.getPriText());
+				if(search != dict.getDict().end() && esm.getSecText() != search->second)
+				{
+					// subrecord size
+					sec_size = search->second.size() + 1;
+					rec_content.erase(esm.getSecPos() + 4, 4);
+					rec_content.insert(esm.getSecPos() + 4, intToByte(sec_size));
+					// subrecord text
+					rec_content.erase(esm.getSecPos() + 8, esm.getSecSize());
+					rec_content.insert(esm.getSecPos() + 8, search->second + '\0');
+					// record size
+					rec_size = rec_content.size() - 16;
+					rec_content.erase(4, 4);
+					rec_content.insert(4, intToByte(rec_size));
+					counter++;
+				}
+			}
+		}
+		esm_content.append(rec_content);
+	}
+	esm.setEsmContent(esm_content);
+	cerr << "INDX records converted: " << counter << endl;
+}
+
+//----------------------------------------------------------
+void converter::convertDial()
+{
+	string rec_content;
+	string esm_content;
+	size_t sec_size = 0;
+	size_t rec_size = 0;
+	int counter = 0;
+	esm.resetRec();
+	while(esm.loopCheck())
+	{
+		esm.setNextRec();
+		esm.setRecContent();
+		rec_content = esm.getRecContent();
+		if(esm.getRecId() == "DIAL")
+		{
+			esm.setPriSubRec("NAME");
+			esm.setSecSubRec("DATA");
+			if(esm.dialType() == "T")
+			{
+				auto search = dict.getDict().find(esm.getRecId() + sep[0] + esm.getPriText());
+				if(search != dict.getDict().end() && esm.getPriText() != search->second)
+				{
+					// subrecord size
+					sec_size = search->second.size() + 1;
+					rec_content.erase(esm.getPriPos() + 4, 4);
+					rec_content.insert(esm.getPriPos() + 4, intToByte(sec_size));
+					// subrecord text
+					rec_content.erase(esm.getPriPos() + 8, esm.getPriSize());
+					rec_content.insert(esm.getPriPos() + 8, search->second + '\0');
+					// record size
+					rec_size = rec_content.size() - 16;
+					rec_content.erase(4, 4);
+					rec_content.insert(4, intToByte(rec_size));
+					counter++;
+				}
+			}
+		}
+		esm_content.append(rec_content);
+	}
+	esm.setEsmContent(esm_content);
+	cerr << "DIAL records converted: " << counter << endl;
+}
+
+//----------------------------------------------------------
+void converter::convertInfo()
+{
+	string rec_content;
+	string esm_content;
+	size_t sec_size = 0;
+	size_t rec_size = 0;
+	string dial;
+	int counter = 0;
+	esm.resetRec();
+	while(esm.loopCheck())
+	{
+		esm.setNextRec();
+		esm.setRecContent();
+		rec_content = esm.getRecContent();
+		if(esm.getRecId() == "DIAL")
+		{
+			esm.setPriSubRec("NAME");
+			esm.setSecSubRec("DATA");
+			dial = esm.dialType() + sep[0] + esm.getPriText();
+		}
+		if(esm.getRecId() == "INFO")
+		{
+			esm.setPriSubRec("INAM");
+			esm.setSecSubRec("NAME");
+			if(!esm.getSecText().empty())
+			{
+				auto search = dict.getDict().find(esm.getRecId() + sep[0] + dial + sep[0] + esm.getPriText());
+				if(search != dict.getDict().end() && esm.getSecText() != search->second)
+				{
+					// subrecord size
+					sec_size = search->second.size() + 1;
+					rec_content.erase(esm.getSecPos() + 4, 4);
+					rec_content.insert(esm.getSecPos() + 4, intToByte(sec_size));
+					// subrecord text
+					rec_content.erase(esm.getSecPos() + 8, esm.getSecSize());
+					rec_content.insert(esm.getSecPos() + 8, search->second + '\0');
+					// record size
+					rec_size = rec_content.size() - 16;
+					rec_content.erase(4, 4);
+					rec_content.insert(4, intToByte(rec_size));
+					counter++;
+				}
+			}
+		}
+		esm_content.append(rec_content);
+	}
+	esm.setEsmContent(esm_content);
+	cerr << "INFO records converted: " << counter << endl;
+}
+

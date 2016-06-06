@@ -66,7 +66,7 @@ void creator::writeDict(bool after_convertion)
 		string suffix;
 		if(after_convertion == 1)
 		{
-			suffix = "-NotConverted.dic";
+			suffix = ".notconverted.dic";
 		}
 		else
 		{
@@ -438,7 +438,7 @@ void creator::makeDictBnam()
 			ext.setScptColl();
 			for(size_t i = 0; i < esm.getCollSize(); i++)
 			{
-				created.insert({esm.getSecId() + sep[0] + dial + sep[0] + esm.getPriText() + sep[0] + esm_ptr->getScptText(i),
+				created.insert({esm.getRecId() + sep[0] + dial + sep[0] + esm.getPriText() + sep[0] + esm_ptr->getScptText(i),
 						esm.getScptText(i)});
 				counter++;
 
