@@ -8,6 +8,7 @@
 #include <string>
 #include <array>
 #include <map>
+#include <algorithm>
 
 #include "tools.hpp"
 #include "esmtools.hpp"

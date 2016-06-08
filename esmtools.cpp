@@ -165,11 +165,21 @@ void esmtools::setRnamColl()
 }
 
 //----------------------------------------------------------
-void esmtools::setScptColl()
+void esmtools::setScptColl(bool key_chooser)
 {
 	if(esm_status == 1)
 	{
-		static vector<string> key = {"Choice", "choice", "MessageBox", "Say ", "Say,", "say ", "say,"};
+		static vector<string> key_bnam = {"Choice", "choice", };
+		static vector<string> key_scpt = {"MessageBox", "Say ", "Say,", "say ", "say,"};
+		vector<string> *key;
+		if(key_chooser == true)
+		{
+			key = &key_bnam;
+		}
+		else
+		{
+			key = &key_scpt;
+		}
 		string line;
 		size_t line_counter = 0;
 		size_t pos;
@@ -178,16 +188,16 @@ void esmtools::setScptColl()
 		while(getline(ss, line))
 		{
 			line_counter++;
-			for(size_t i = 0; i < key.size(); i++)
+			for(size_t i = 0; i < key->size(); i++)
 			{
-				pos = line.find(key[i]);
+				pos = line.find(key->at(i));
 				if(pos != string::npos)
 				{
 					if(line.find('\r') != string::npos)
 					{
 						line.erase(line.size() - 1);
 					}
-					line = line.substr(pos);
+					//line = line.substr(pos);
 					text_coll.push_back(make_pair(line_counter, line));
 				}
 			}

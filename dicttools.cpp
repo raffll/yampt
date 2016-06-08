@@ -5,7 +5,7 @@ using namespace std;
 //----------------------------------------------------------
 void dicttools::readDict(string path)
 {
-	ifstream file(path);
+	ifstream file(path, ios::binary);
 	if(file)
 	{
 		char buffer[16384];
@@ -85,7 +85,7 @@ void dicttools::parseDict()
 			{
 				if(dict.insert({pri_text, sec_text}).second == 0)
 				{
-					log += name + "\t" + pri_text + " --- Duplicate record\n";
+					log += name + "\t" + pri_text + " <-- Duplicate record\r\n";
 				}
 			}
 			pos_beg++;
@@ -102,12 +102,12 @@ bool dicttools::validateRecLength(const string &pri, const string &sec)
 	{
 		if((pri.substr(0, 4) == "FNAM" || pri.substr(0, 4) == "FACT") && sec.size() > 31)
 		{
-			log += name + "\t" + pri + " --- Text too long, more than 31 bytes (has " + to_string(sec.size()) + ")\n";
+			log += name + "\t" + pri + " <-- Text too long, more than 31 bytes (has " + to_string(sec.size()) + ")\r\n";
 			return 0;
 		}
 		else if(pri.substr(0, 4) == "INFO" && sec.size() > 512)
 		{
-			log += name + "\t" + pri + " --- Text too long, more than 512 bytes (has " + to_string(sec.size()) + ")\n";
+			log += name + "\t" + pri + " <-- Text too long, more than 512 bytes (has " + to_string(sec.size()) + ")\r\n";
 			return 0;
 		}
 		else
@@ -117,7 +117,7 @@ bool dicttools::validateRecLength(const string &pri, const string &sec)
 	}
 	else
 	{
-		log += name + "\t" + pri + " --- Invalid record\n";
+		log += name + "\t" + pri + " <-- Invalid record\r\n";
 		return 0;
 	}
 }

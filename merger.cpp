@@ -55,8 +55,8 @@ void merger::mergeDict()
 				else if(search != merged.end() && search->second != elem.second)
 				{
 					different++;
-					log += dict[i].getDictName() + "\t" + elem.first + " --- " + elem.second + "\n";
-					log += dict[i - 1].getDictName() + "\t" + search->first + " >>> " + search->second + "\n";
+					log += dict[i].getDictName() + "\t" + elem.first + " --- " + elem.second + "\r\n";
+					log += dict[i - 1].getDictName() + "\t" + search->first + " >>> " + search->second + "\r\n";
 				}
 				else
 				{
@@ -97,7 +97,7 @@ void merger::writeMerged()
 			suffix = ".merged.dic";
 		}
 		ofstream file;
-		file.open(name + suffix);
+		file.open(name + suffix, ios::binary);
 		for(const auto &elem : merged)
 		{
 			file << sep[1] << elem.first << sep[2] << elem.second << sep[3] << endl;
@@ -120,8 +120,8 @@ void merger::writeDiff()
 			{
 				if(search->second != elem.second)
 				{
-					diff_first += sep[1] + elem.first + sep[2] + elem.second + sep[3] + "\n";
-					diff_second += sep[1] + search->first + sep[2] + search->second + sep[3] + "\n";
+					diff_first += sep[1] + elem.first + sep[2] + elem.second + sep[3] + "\r\n";
+					diff_second += sep[1] + search->first + sep[2] + search->second + sep[3] + "\r\n";
 				}
 			}
 		}

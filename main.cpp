@@ -22,13 +22,10 @@ int main(int argc, char *argv[])
 			"\n  --make -d  [file1] [dict1]          Make without duplicated records from dictionary."
 			"\n  --make -c  [file1] [dict1]          Make without records from dictionary."
 			"\n  --make -r  [file1]                  Like \"--make -a\", but without dial translation."
-			"\n                                      Only for diagnostic."
 			"\n  --make -b  [file1] [file2]          Make base dictionary from two different localized esm files."
-			"\n                                      Which is required for automatic translations."
 			"\n  --compare  [dict1] [dict2]          Compare two dictionaries and create differences log."
-			"\n  --merge    [dict1] <dict2> <dict3>  Validate, merge, sort and delete doubled records"
-			"\n                                      from dictionaries."
-			"\n  --convert  [file1] [dict1] <dict2>  Convert plugin from dictionaries in paths."
+			"\n  --merge    [dict1] <dict2> <dict3>  Validate, merge, sort and delete doubled records."
+			"\n  --convert  [file1] [dict1] <dict2>  Convert plugin from dictionaries in paths"
 			"\n                                      and create dictionary as \"--make -c\" command.";
 	if(argc > 1)
 	{

@@ -30,6 +30,7 @@ private:
 	void convertIndx();
 	void convertDial();
 	void convertInfo();
+	void convertBnam();
 
 	bool status = {};
 	esmtools esm;

@@ -25,6 +25,7 @@ void converter::convertEsm()
 		convertIndx();
 		convertDial();
 		convertInfo();
+		convertBnam();
 		cerr << "Converting complete!" << endl;
 	}
 }
@@ -73,24 +74,24 @@ void converter::convertCell()
 		if(esm.getRecId() == "CELL")
 		{
 			esm.setPriSubRec("NAME");
-			if(!esm.getPriText().empty())
+			auto search = dict.getDict().find(esm.getRecId() + sep[0] + esm.getPriText());
+			if(search != dict.getDict().end())
 			{
-				auto search = dict.getDict().find(esm.getRecId() + sep[0] + esm.getPriText());
-				if(search != dict.getDict().end() && esm.getPriText() != search->second)
+				if(esm.getPriText() != search->second)
 				{
+					// subrecord text
+					rec_content.erase(esm.getPriPos() + 8, esm.getPriSize());
+					rec_content.insert(esm.getPriPos() + 8, search->second + '\0');
 					// subrecord size
 					sec_size = search->second.size() + 1;
 					rec_content.erase(esm.getPriPos() + 4, 4);
 					rec_content.insert(esm.getPriPos() + 4, intToByte(sec_size));
-					// subrecord text
-					rec_content.erase(esm.getPriPos() + 8, esm.getPriSize());
-					rec_content.insert(esm.getPriPos() + 8, search->second + '\0');
 					// record size
 					rec_size = rec_content.size() - 16;
 					rec_content.erase(4, 4);
 					rec_content.insert(4, intToByte(rec_size));
-					counter++;
 				}
+				counter++;
 			}
 		}
 		esm_content.append(rec_content);
@@ -117,24 +118,24 @@ void converter::convertGmst()
 		{
 			esm.setPriSubRec("NAME");
 			esm.setSecSubRec("STRV");
-			if(!esm.getSecText().empty())
+			auto search = dict.getDict().find(esm.getRecId() + sep[0] + esm.getPriText());
+			if(search != dict.getDict().end())
 			{
-				auto search = dict.getDict().find(esm.getRecId() + sep[0] + esm.getPriText());
-				if(search != dict.getDict().end() && esm.getSecText() != search->second)
+				if(esm.getSecText() != search->second)
 				{
+					// subrecord text
+					rec_content.erase(esm.getSecPos() + 8, esm.getSecSize());
+					rec_content.insert(esm.getSecPos() + 8, search->second + '\0');
 					// subrecord size
 					sec_size = search->second.size() + 1;
 					rec_content.erase(esm.getSecPos() + 4, 4);
 					rec_content.insert(esm.getSecPos() + 4, intToByte(sec_size));
-					// subrecord text
-					rec_content.erase(esm.getSecPos() + 8, esm.getSecSize());
-					rec_content.insert(esm.getSecPos() + 8, search->second + '\0');
 					// record size
 					rec_size = rec_content.size() - 16;
 					rec_content.erase(4, 4);
 					rec_content.insert(4, intToByte(rec_size));
-					counter++;
 				}
+				counter++;
 			}
 		}
 		esm_content.append(rec_content);
@@ -171,24 +172,25 @@ void converter::convertFnam()
 		{
 			esm.setPriSubRec("NAME");
 			esm.setSecSubRec("FNAM");
-			if(!esm.getPriText().empty())
+			auto search = dict.getDict().find(esm.getSecId() + sep[0] + esm.getRecId() +
+							  sep[0] + esm.getPriText());
+			if(search != dict.getDict().end())
 			{
-				auto search = dict.getDict().find(esm.getSecId() + sep[0] + esm.getRecId() + sep[0] + esm.getPriText());
-				if(search != dict.getDict().end() && esm.getSecText() != search->second)
+				if(esm.getSecText() != search->second)
 				{
+					// subrecord text
+					rec_content.erase(esm.getSecPos() + 8, esm.getSecSize());
+					rec_content.insert(esm.getSecPos() + 8, search->second + '\0');
 					// subrecord size
 					sec_size = search->second.size() + 1;
 					rec_content.erase(esm.getSecPos() + 4, 4);
 					rec_content.insert(esm.getSecPos() + 4, intToByte(sec_size));
-					// subrecord text
-					rec_content.erase(esm.getSecPos() + 8, esm.getSecSize());
-					rec_content.insert(esm.getSecPos() + 8, search->second + '\0');
 					// record size
 					rec_size = rec_content.size() - 16;
 					rec_content.erase(4, 4);
 					rec_content.insert(4, intToByte(rec_size));
-					counter++;
 				}
+				counter++;
 			}
 		}
 		esm_content.append(rec_content);
@@ -217,24 +219,25 @@ void converter::convertDesc()
 		{
 			esm.setPriSubRec("NAME");
 			esm.setSecSubRec("DESC");
-			if(!esm.getPriText().empty())
+			auto search = dict.getDict().find(esm.getSecId() + sep[0] + esm.getRecId() +
+							  sep[0] + esm.getPriText());
+			if(search != dict.getDict().end())
 			{
-				auto search = dict.getDict().find(esm.getSecId() + sep[0] + esm.getRecId() + sep[0] + esm.getPriText());
-				if(search != dict.getDict().end() && esm.getSecText() != search->second)
+				if(esm.getSecText() != search->second)
 				{
+					// subrecord text
+					rec_content.erase(esm.getSecPos() + 8, esm.getSecSize());
+					rec_content.insert(esm.getSecPos() + 8, search->second + '\0');
 					// subrecord size
 					sec_size = search->second.size() + 1;
 					rec_content.erase(esm.getSecPos() + 4, 4);
 					rec_content.insert(esm.getSecPos() + 4, intToByte(sec_size));
-					// subrecord text
-					rec_content.erase(esm.getSecPos() + 8, esm.getSecSize());
-					rec_content.insert(esm.getSecPos() + 8, search->second + '\0');
 					// record size
 					rec_size = rec_content.size() - 16;
 					rec_content.erase(4, 4);
 					rec_content.insert(4, intToByte(rec_size));
-					counter++;
 				}
+				counter++;
 			}
 		}
 		esm_content.append(rec_content);
@@ -261,24 +264,24 @@ void converter::convertBook()
 		{
 			esm.setPriSubRec("NAME");
 			esm.setSecSubRec("TEXT");
-			if(!esm.getPriText().empty())
+			auto search = dict.getDict().find(esm.getSecId() + sep[0] + esm.getPriText());
+			if(search != dict.getDict().end())
 			{
-				auto search = dict.getDict().find(esm.getSecId() + sep[0] + esm.getPriText());
-				if(search != dict.getDict().end() && esm.getSecText() != search->second)
+				if(esm.getSecText() != search->second)
 				{
+					// subrecord text
+					rec_content.erase(esm.getSecPos() + 8, esm.getSecSize());
+					rec_content.insert(esm.getSecPos() + 8, search->second + '\0');
 					// subrecord size
 					sec_size = search->second.size() + 1;
 					rec_content.erase(esm.getSecPos() + 4, 4);
 					rec_content.insert(esm.getSecPos() + 4, intToByte(sec_size));
-					// subrecord text
-					rec_content.erase(esm.getSecPos() + 8, esm.getSecSize());
-					rec_content.insert(esm.getSecPos() + 8, search->second + '\0');
 					// record size
 					rec_size = rec_content.size() - 16;
 					rec_content.erase(4, 4);
 					rec_content.insert(4, intToByte(rec_size));
-					counter++;
 				}
+				counter++;
 			}
 		}
 		esm_content.append(rec_content);
@@ -306,28 +309,29 @@ void converter::convertFact()
 		{
 			esm.setPriSubRec("NAME");
 			esm.setRnamColl();
-			if(!esm.getPriText().empty())
+			for(size_t i = 0; i < esm.getCollSize(); i++)
 			{
-				for(size_t i = 0; i < esm.getCollSize(); i++)
+				auto search = dict.getDict().find(esm.getSecId() + sep[0] + esm.getPriText() +
+								  sep[0] + to_string(i) + sep[0] + esm.getRnamText(i));
+				if(search != dict.getDict().end())
 				{
-					auto search = dict.getDict().find(esm.getSecId() + sep[0] + esm.getPriText() + sep[0] + to_string(i) + sep[0] + esm.getRnamText(i));
-					if(search != dict.getDict().end() && esm.getSecText() != search->second)
+					if(esm.getSecText() != search->second)
 					{
-						// subrecord size
-						sec_size = 32;
-						rec_content.erase(esm.getRnamPos(i) + 4, 4);
-						rec_content.insert(esm.getRnamPos(i) + 4, intToByte(sec_size));
 						// subrecord text
 						rnam_text = search->second;
 						rnam_text.resize(32);
 						rec_content.erase(esm.getRnamPos(i) + 8, esm.getSecSize());
 						rec_content.insert(esm.getRnamPos(i) + 8, rnam_text);
+						// subrecord size
+						sec_size = 32;
+						rec_content.erase(esm.getRnamPos(i) + 4, 4);
+						rec_content.insert(esm.getRnamPos(i) + 4, intToByte(sec_size));
 						// record size
 						rec_size = rec_content.size() - 16;
 						rec_content.erase(4, 4);
 						rec_content.insert(4, intToByte(rec_size));
-						counter++;
 					}
+					counter++;
 				}
 			}
 		}
@@ -356,24 +360,25 @@ void converter::convertIndx()
 		{
 			esm.setPriSubRec("INDX");
 			esm.setSecSubRec("DESC");
-			if(!esm.getPriText().empty())
+			auto search = dict.getDict().find(esm.getPriId() + sep[0] + esm.getRecId() +
+							  sep[0] + esm.getPriText());
+			if(search != dict.getDict().end())
 			{
-				auto search = dict.getDict().find(esm.getPriId() + sep[0] + esm.getRecId() + sep[0] + esm.getPriText());
-				if(search != dict.getDict().end() && esm.getSecText() != search->second)
+				if(esm.getSecText() != search->second)
 				{
+					// subrecord text
+					rec_content.erase(esm.getSecPos() + 8, esm.getSecSize());
+					rec_content.insert(esm.getSecPos() + 8, search->second + '\0');
 					// subrecord size
 					sec_size = search->second.size() + 1;
 					rec_content.erase(esm.getSecPos() + 4, 4);
 					rec_content.insert(esm.getSecPos() + 4, intToByte(sec_size));
-					// subrecord text
-					rec_content.erase(esm.getSecPos() + 8, esm.getSecSize());
-					rec_content.insert(esm.getSecPos() + 8, search->second + '\0');
 					// record size
 					rec_size = rec_content.size() - 16;
 					rec_content.erase(4, 4);
 					rec_content.insert(4, intToByte(rec_size));
-					counter++;
 				}
+				counter++;
 			}
 		}
 		esm_content.append(rec_content);
@@ -400,24 +405,24 @@ void converter::convertDial()
 		{
 			esm.setPriSubRec("NAME");
 			esm.setSecSubRec("DATA");
-			if(esm.dialType() == "T")
+			auto search = dict.getDict().find(esm.getRecId() + sep[0] + esm.getPriText());
+			if(search != dict.getDict().end())
 			{
-				auto search = dict.getDict().find(esm.getRecId() + sep[0] + esm.getPriText());
-				if(search != dict.getDict().end() && esm.getPriText() != search->second)
+				if(esm.getPriText() != search->second)
 				{
+					// subrecord text
+					rec_content.erase(esm.getPriPos() + 8, esm.getPriSize());
+					rec_content.insert(esm.getPriPos() + 8, search->second + '\0');
 					// subrecord size
 					sec_size = search->second.size() + 1;
 					rec_content.erase(esm.getPriPos() + 4, 4);
 					rec_content.insert(esm.getPriPos() + 4, intToByte(sec_size));
-					// subrecord text
-					rec_content.erase(esm.getPriPos() + 8, esm.getPriSize());
-					rec_content.insert(esm.getPriPos() + 8, search->second + '\0');
 					// record size
 					rec_size = rec_content.size() - 16;
 					rec_content.erase(4, 4);
 					rec_content.insert(4, intToByte(rec_size));
-					counter++;
 				}
+				counter++;
 			}
 		}
 		esm_content.append(rec_content);
@@ -451,24 +456,25 @@ void converter::convertInfo()
 		{
 			esm.setPriSubRec("INAM");
 			esm.setSecSubRec("NAME");
-			if(!esm.getSecText().empty())
+			auto search = dict.getDict().find(esm.getRecId() + sep[0] + dial +
+							  sep[0] + esm.getPriText());
+			if(search != dict.getDict().end())
 			{
-				auto search = dict.getDict().find(esm.getRecId() + sep[0] + dial + sep[0] + esm.getPriText());
-				if(search != dict.getDict().end() && esm.getSecText() != search->second)
+				if(esm.getSecText() != search->second)
 				{
+					// subrecord text
+					rec_content.erase(esm.getSecPos() + 8, esm.getSecSize());
+					rec_content.insert(esm.getSecPos() + 8, search->second + '\0');
 					// subrecord size
 					sec_size = search->second.size() + 1;
 					rec_content.erase(esm.getSecPos() + 4, 4);
 					rec_content.insert(esm.getSecPos() + 4, intToByte(sec_size));
-					// subrecord text
-					rec_content.erase(esm.getSecPos() + 8, esm.getSecSize());
-					rec_content.insert(esm.getSecPos() + 8, search->second + '\0');
 					// record size
 					rec_size = rec_content.size() - 16;
 					rec_content.erase(4, 4);
 					rec_content.insert(4, intToByte(rec_size));
-					counter++;
 				}
+				counter++;
 			}
 		}
 		esm_content.append(rec_content);
@@ -477,3 +483,60 @@ void converter::convertInfo()
 	cerr << "INFO records converted: " << counter << endl;
 }
 
+//----------------------------------------------------------
+void converter::convertBnam()
+{
+	string rec_content;
+	string esm_content;
+	size_t sec_size = 0;
+	size_t rec_size = 0;
+	string sec_text;
+	size_t pos_text = 0;
+	string dial;
+	int counter = 0;
+	esm.resetRec();
+	while(esm.loopCheck())
+	{
+		esm.setNextRec();
+		esm.setRecContent();
+		rec_content = esm.getRecContent();
+		if(esm.getRecId() == "DIAL")
+		{
+			esm.setPriSubRec("NAME");
+			esm.setSecSubRec("DATA");
+			dial = esm.dialType() + sep[0] + esm.getPriText();
+		}
+		if(esm.getRecId() == "INFO")
+		{
+			esm.setPriSubRec("INAM");
+			esm.setSecSubRec("BNAM");
+			esm.setScptColl(true);
+			for(size_t i = 0; i < esm.getCollSize(); i++)
+			{
+				auto search = dict.getDict().find(esm.getRecId() + sep[0] + dial + sep[0] + esm.getPriText() + sep[0] + esm.getScptText(i));
+				if(search != dict.getDict().end())
+				{
+						// subrecord text
+						sec_text = esm.getSecText();
+						pos_text = sec_text.find(esm.getScptText(i));
+						sec_text.erase(pos_text, esm.getScptText(i).size());
+						sec_text.insert(pos_text, search->second);
+						rec_content.erase(esm.getSecPos() + 8, esm.getSecSize());
+						rec_content.insert(esm.getSecPos() + 8, sec_text);
+						// subrecord size
+						sec_size = sec_text.size();
+						rec_content.erase(esm.getSecPos() + 4, 4);
+						rec_content.insert(esm.getSecPos() + 4, intToByte(sec_size));
+						// record size
+						rec_size = rec_content.size() - 16;
+						rec_content.erase(4, 4);
+						rec_content.insert(4, intToByte(rec_size));
+						counter++;
+				}
+			}
+		}
+		esm_content.append(rec_content);
+	}
+	esm.setEsmContent(esm_content);
+	cerr << "BNAM records converted: " << counter << endl;
+}

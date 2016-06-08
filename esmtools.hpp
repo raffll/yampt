@@ -23,7 +23,7 @@ public:
 	void setPriSubRec(string id);
 	void setSecSubRec(string id);
 	void setRnamColl();
-	void setScptColl();
+	void setScptColl(bool key_chooser = 0);
 	void setEsmContent(string c) { esm_content = c; }
 
 	string dialType();
