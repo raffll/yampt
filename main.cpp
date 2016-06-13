@@ -40,6 +40,11 @@ int main(int argc, char *argv[])
 	{
 		cout << usage << endl;
 	}
+	else if(arg1 == "--scripts" && argc == 3)
+	{
+		creator c(argv[2]);
+		c.writeScripts();
+	}
 	else if(arg1 == "--make" && arg2 == "-r" && argc == 4)
 	{
 		creator c(argv[3]);
@@ -61,23 +66,12 @@ int main(int argc, char *argv[])
 		c.makeDict();
 		c.writeDict();
 	}
-	else if(arg1 == "--make" && arg2 == "-d" && argc == 5)
-	{
-		merger m(argv[4]);
-		m.mergeDict();
-		creator c(argv[3], m);
-		c.makeDict();
-		c.eraseDuplicates();
-		c.writeDict();
-	}
 	else if(arg1 == "--make" && arg2 == "-c" && argc == 5)
 	{
 		merger m(argv[4]);
 		m.mergeDict();
-		creator c(argv[3], m);
+		creator c(argv[3], m, true);
 		c.makeDict();
-		c.eraseDuplicates();
-		c.eraseDifferent();
 		c.writeDict();
 	}
 	else if(arg1 == "--compare" && argc == 4)
@@ -115,11 +109,9 @@ int main(int argc, char *argv[])
 		converter c(argv[2], m);
 		c.convertEsm();
 		c.writeEsm();
-		creator r(argv[2], m);
+		creator r(argv[2], m, true);
 		r.makeDict();
-		r.eraseDuplicates();
-		r.eraseDifferent();
-		r.writeDict(true);
+		r.writeDict();
 
 	}
 	else if(arg1 == "--convert" && argc == 5)
@@ -130,11 +122,9 @@ int main(int argc, char *argv[])
 		converter c(argv[2], m);
 		c.convertEsm();
 		c.writeEsm();
-		creator r(argv[2], m);
+		creator r(argv[2], m, true);
 		r.makeDict();
-		r.eraseDuplicates();
-		r.eraseDifferent();
-		r.writeDict(true);
+		r.writeDict();
 	}
 	else
 	{

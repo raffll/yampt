@@ -1,6 +1,7 @@
 #include "esmtools.hpp"
 
 using namespace std;
+using namespace std::regex_constants;
 
 //----------------------------------------------------------
 void esmtools::readEsm(string path)
@@ -116,7 +117,7 @@ void esmtools::setPriSubRec(string id)
 		{
 			pri_size = byteToInt(rec_content.substr(pri_pos + 4, 4));
 			pri_text = rec_content.substr(pri_pos + 8, pri_size);
-			cutNullChar(pri_text);
+			eraseNullChars(pri_text);
 		}
 		else
 		{
@@ -136,7 +137,7 @@ void esmtools::setSecSubRec(string id)
 		{
 			sec_size = byteToInt(rec_content.substr(sec_pos + 4, 4));
 			sec_text = rec_content.substr(sec_pos + 8, sec_size);
-			cutNullChar(sec_text);
+			eraseNullChars(sec_text);
 		}
 		else
 		{
@@ -146,60 +147,91 @@ void esmtools::setSecSubRec(string id)
 }
 
 //----------------------------------------------------------
-void esmtools::setRnamColl()
+void esmtools::setColl(collkind e)
 {
+	//{"getpccell", "positioncell", "showmap"};
+	//"addtopic
 	if(esm_status == 1)
 	{
-		sec_id = "RNAM";
-		sec_pos = rec_content.find(sec_id);
-		text_coll.clear();
-		while(sec_pos != string::npos)
-		{
-			sec_size = byteToInt(rec_content.substr(sec_pos + 4, 4));
-			sec_text = rec_content.substr(sec_pos + 8, sec_size);
-			cutNullChar(sec_text);
-			text_coll.push_back(make_pair(sec_pos, sec_text));
-			sec_pos = rec_content.find(sec_id, sec_pos + 4);
-		}
-	}
-}
-
-//----------------------------------------------------------
-void esmtools::setScptColl(bool key_chooser)
-{
-	if(esm_status == 1)
-	{
-		static vector<string> key_bnam = {"Choice", "choice", };
-		static vector<string> key_scpt = {"MessageBox", "Say ", "Say,", "say ", "say,"};
-		vector<string> *key;
-		if(key_chooser == true)
-		{
-			key = &key_bnam;
-		}
-		else
-		{
-			key = &key_scpt;
-		}
 		string line;
-		size_t line_counter = 0;
-		size_t pos;
+		smatch found;
 		istringstream ss(sec_text);
 		text_coll.clear();
-		while(getline(ss, line))
+		switch(e)
 		{
-			line_counter++;
-			for(size_t i = 0; i < key->size(); i++)
+			case 0: // RNAM
 			{
-				pos = line.find(key->at(i));
-				if(pos != string::npos)
+				sec_id = "RNAM";
+				sec_pos = rec_content.find(sec_id);
+				while(sec_pos != string::npos)
 				{
-					if(line.find('\r') != string::npos)
-					{
-						line.erase(line.size() - 1);
-					}
-					//line = line.substr(pos);
-					text_coll.push_back(make_pair(line_counter, line));
+					sec_size = byteToInt(rec_content.substr(sec_pos + 4, 4));
+					sec_text = rec_content.substr(sec_pos + 8, sec_size);
+					eraseNullChars(sec_text);
+					text_coll.push_back(make_pair(sec_text, sec_pos));
+					sec_pos = rec_content.find(sec_id, sec_pos + 4);
 				}
+				break;
+			}
+			case 1: // SCPT
+			{
+				regex re(".*((say|messagebox).*\".*\")", icase);
+				while(getline(ss, line))
+				{
+					regex_search(line, found, re);
+					if(found[0] != "")
+					{
+						text_coll.push_back(make_pair(eraseNewLineChar(line), 1));
+					}
+					else
+					{
+						text_coll.push_back(make_pair(eraseNewLineChar(line), 0));
+					}
+				}
+				break;
+			}
+			case 2: // SCPTMESSAGE
+			{
+				regex re(".*((say|messagebox).*\".*\")", icase);
+				while(getline(ss, line))
+				{
+					regex_search(line, found, re);
+					if(found[0] != "")
+					{
+						text_coll.push_back(make_pair(eraseNewLineChar(line), 1));
+					}
+				}
+				break;
+			}
+			case 3: // BNAM
+			{
+				regex re(".*((choice).*\".*\")", icase);
+				while(getline(ss, line))
+				{
+					regex_search(line, found, re);
+					if(found[0] != "")
+					{
+						text_coll.push_back(make_pair(eraseNewLineChar(line), 1));
+					}
+					else
+					{
+						text_coll.push_back(make_pair(eraseNewLineChar(line), 0));
+					}
+				}
+				break;
+			}
+			case 4: // BNAMMESSAGE
+			{
+				regex re(".*((choice).*\".*\")", icase);
+				while(getline(ss, line))
+				{
+					regex_search(line, found, re);
+					if(found[0] != "")
+					{
+						text_coll.push_back(make_pair(eraseNewLineChar(line), 1));
+					}
+				}
+				break;
 			}
 		}
 	}
@@ -252,11 +284,21 @@ unsigned int esmtools::byteToInt(const string &str)
 }
 
 //----------------------------------------------------------
-void esmtools::cutNullChar(string &str)
+void esmtools::eraseNullChars(string &str)
 {
 	size_t is_null = str.find('\0');
 	if(is_null != string::npos)
 	{
 		str.erase(is_null);
 	}
+}
+
+//----------------------------------------------------------
+string esmtools::eraseNewLineChar(string &str)
+{
+	if(str.find('\r') != string::npos)
+	{
+		str.erase(str.size() - 1);
+	}
+	return str;
 }

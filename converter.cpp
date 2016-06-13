@@ -16,7 +16,7 @@ void converter::convertEsm()
 {
 	if(status == 1)
 	{
-		convertCell();
+		/*convertCell();
 		convertGmst();
 		convertFnam();
 		convertDesc();
@@ -24,8 +24,9 @@ void converter::convertEsm()
 		convertFact();
 		convertIndx();
 		convertDial();
-		convertInfo();
+		convertInfo();*/
 		convertBnam();
+		convertScpt();
 		cerr << "Converting complete!" << endl;
 	}
 }
@@ -35,7 +36,7 @@ void converter::writeEsm()
 {
 	if(status == 1)
 	{
-		string name = esm.getEsmPrefix() + ".converted" + esm.getEsmSuffix();
+		string name = esm.getEsmPrefix() + "-Converted" + esm.getEsmSuffix();
 		ofstream file(name, ios::binary);
 		file << esm.getEsmContent();
 		cout << "Writing " << name << "..." << endl;
@@ -308,11 +309,11 @@ void converter::convertFact()
 		if(esm.getRecId() == "FACT")
 		{
 			esm.setPriSubRec("NAME");
-			esm.setRnamColl();
+			esm.setColl(esmtools::RNAM);
 			for(size_t i = 0; i < esm.getCollSize(); i++)
 			{
 				auto search = dict.getDict().find(esm.getSecId() + sep[0] + esm.getPriText() +
-								  sep[0] + to_string(i) + sep[0] + esm.getRnamText(i));
+								  sep[0] + to_string(i) + sep[0] + esm.getColl(i).first);
 				if(search != dict.getDict().end())
 				{
 					if(esm.getSecText() != search->second)
@@ -320,12 +321,12 @@ void converter::convertFact()
 						// subrecord text
 						rnam_text = search->second;
 						rnam_text.resize(32);
-						rec_content.erase(esm.getRnamPos(i) + 8, esm.getSecSize());
-						rec_content.insert(esm.getRnamPos(i) + 8, rnam_text);
+						rec_content.erase(esm.getColl(i).second + 8, esm.getSecSize());
+						rec_content.insert(esm.getColl(i).second + 8, rnam_text);
 						// subrecord size
 						sec_size = 32;
-						rec_content.erase(esm.getRnamPos(i) + 4, 4);
-						rec_content.insert(esm.getRnamPos(i) + 4, intToByte(sec_size));
+						rec_content.erase(esm.getColl(i).second + 4, 4);
+						rec_content.insert(esm.getColl(i).second + 4, intToByte(sec_size));
 						// record size
 						rec_size = rec_content.size() - 16;
 						rec_content.erase(4, 4);
@@ -491,7 +492,7 @@ void converter::convertBnam()
 	size_t sec_size = 0;
 	size_t rec_size = 0;
 	string sec_text;
-	size_t pos_text = 0;
+	size_t line_pos = 0;
 	string dial;
 	int counter = 0;
 	esm.resetRec();
@@ -510,33 +511,89 @@ void converter::convertBnam()
 		{
 			esm.setPriSubRec("INAM");
 			esm.setSecSubRec("BNAM");
-			esm.setScptColl(true);
+			esm.setColl(esmtools::BNAM);
+			sec_text = esm.getSecText();
 			for(size_t i = 0; i < esm.getCollSize(); i++)
 			{
-				auto search = dict.getDict().find(esm.getRecId() + sep[0] + dial + sep[0] + esm.getPriText() + sep[0] + esm.getScptText(i));
-				if(search != dict.getDict().end())
+				auto search = dict.getDict().find(esm.getSecId() + sep[0] + esm.getColl(i).first);
+				line_pos = sec_text.find(esm.getColl(i).first);
+				if(search != dict.getDict().end() && line_pos != string::npos)
 				{
-						// subrecord text
-						sec_text = esm.getSecText();
-						pos_text = sec_text.find(esm.getScptText(i));
-						sec_text.erase(pos_text, esm.getScptText(i).size());
-						sec_text.insert(pos_text, search->second);
-						rec_content.erase(esm.getSecPos() + 8, esm.getSecSize());
-						rec_content.insert(esm.getSecPos() + 8, sec_text);
-						// subrecord size
-						sec_size = sec_text.size();
-						rec_content.erase(esm.getSecPos() + 4, 4);
-						rec_content.insert(esm.getSecPos() + 4, intToByte(sec_size));
-						// record size
-						rec_size = rec_content.size() - 16;
-						rec_content.erase(4, 4);
-						rec_content.insert(4, intToByte(rec_size));
-						counter++;
+					// script line
+					sec_text.erase(line_pos, esm.getColl(i).first.size());
+					sec_text.insert(line_pos, search->second);
 				}
+				// subrecord text
+				rec_content.erase(esm.getSecPos() + 8, esm.getSecSize());
+				rec_content.insert(esm.getSecPos() + 8, sec_text);
+				// subrecord size
+				sec_size = sec_text.size();
+				rec_content.erase(esm.getSecPos() + 4, 4);
+				rec_content.insert(esm.getSecPos() + 4, intToByte(sec_size));
+				// record size
+				rec_size = rec_content.size() - 16;
+				rec_content.erase(4, 4);
+				rec_content.insert(4, intToByte(rec_size));
+				counter++;
 			}
 		}
 		esm_content.append(rec_content);
 	}
 	esm.setEsmContent(esm_content);
 	cerr << "BNAM records converted: " << counter << endl;
+}
+
+//----------------------------------------------------------
+void converter::convertScpt()
+{
+	string rec_content;
+	string esm_content;
+	size_t sec_size = 0;
+	size_t rec_size = 0;
+	string sec_text;
+	size_t line_pos = 0;
+	string text;
+	int counter = 0;
+	esm.resetRec();
+	while(esm.loopCheck())
+	{
+		esm.setNextRec();
+		esm.setRecContent();
+		rec_content = esm.getRecContent();
+		if(esm.getRecId() == "SCPT")
+		{
+			esm.setPriSubRec("SCHD");
+			esm.setSecSubRec("SCTX");
+			esm.setColl(esmtools::SCPT);
+			sec_text = esm.getSecText();
+			line_pos = 0;
+			for(size_t i = 0; i < esm.getCollSize(); i++)
+			{
+				auto search = dict.getDict().find(esm.getRecId() + sep[0] + esm.getPriText() + sep[0] + esm.getColl(i).first);
+				if(search != dict.getDict().end())
+				{
+					// script line
+					text = search->second;
+					text = text.substr(text.rfind(sep[0]) + sep[0].size());
+					sec_text.erase(line_pos, esm.getColl(i).first.size());
+					sec_text.insert(line_pos, text);
+					// subrecord text
+					rec_content.erase(esm.getSecPos() + 8, esm.getSecSize());
+					rec_content.insert(esm.getSecPos() + 8, sec_text);
+					// subrecord size
+					sec_size = sec_text.size();
+					rec_content.erase(esm.getSecPos() + 4, 4);
+					rec_content.insert(esm.getSecPos() + 4, intToByte(sec_size));
+					// record size
+					rec_size = rec_content.size() - 16;
+					rec_content.erase(4, 4);
+					rec_content.insert(4, intToByte(rec_size));
+					counter++;
+				}
+			}
+		}
+		esm_content.append(rec_content);
+	}
+	esm.setEsmContent(esm_content);
+	cerr << "SCPT records converted: " << counter << endl;
 }

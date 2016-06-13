@@ -8,6 +8,8 @@
 #include <cstdlib>
 #include <string>
 #include <vector>
+#include <algorithm>
+#include <regex>
 
 #include "tools.hpp"
 
@@ -16,14 +18,15 @@ using namespace std;
 class esmtools
 {
 public:
+	enum collkind {RNAM, SCPT, SCPTMESSAGE, BNAM, BNAMMESSAGE, DIAL, CELL};
+
 	void readEsm(string path);
 	void resetRec();
 	void setNextRec();
 	void setRecContent();
 	void setPriSubRec(string id);
 	void setSecSubRec(string id);
-	void setRnamColl();
-	void setScptColl(bool key_chooser = 0);
+	void setColl(collkind e);
 	void setEsmContent(string c) { esm_content = c; }
 
 	string dialType();
@@ -49,10 +52,7 @@ public:
 	string getSecId() { return sec_id; }
 	string getSecText() { return sec_text; }
 
-	string getRnamText(int i) { return text_coll[i].second; }
-	size_t getRnamPos(int i) { return text_coll[i].first; }
-	string getScptText(int i) { return text_coll[i].second; }
-	string getScptPos(int i) { return to_string(text_coll[i].first); }
+	pair<string, size_t> getColl(int i) { return text_coll[i]; }
 	size_t getCollSize() { return text_coll.size(); }
 
 	esmtools() {}
@@ -62,7 +62,8 @@ private:
 	void setEsmName(string path);
 
 	unsigned int byteToInt(const string &str);
-	void cutNullChar(string &str);
+	void eraseNullChars(string &str);
+	string eraseNewLineChar(string &str);
 
 	bool esm_status = {};
 	string esm_name;
@@ -86,7 +87,7 @@ private:
 	string sec_id;
 	string sec_text;
 
-	vector<pair<size_t, string>> text_coll;
+	vector<pair<string, size_t>> text_coll;
 };
 
 #endif

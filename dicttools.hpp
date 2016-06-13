@@ -26,7 +26,7 @@ public:
 	dicttools() {}
 
 private:
-	void setDictStatus(int i);
+	void setDictStatus(bool st);
 	void setDictName(string path);
 	void parseDict();
 	bool validateRecLength(const string &pri, const string &sec);

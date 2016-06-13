@@ -100,7 +100,7 @@ void merger::writeMerged()
 		file.open(name + suffix, ios::binary);
 		for(const auto &elem : merged)
 		{
-			file << sep[1] << elem.first << sep[2] << elem.second << sep[3] << endl;
+			file << sep[1] << elem.first << sep[2] << elem.second << sep[3] << "\r\n";
 		}
 		cerr << "Writing " << merged.size() << " records to " << name << suffix << "..." << endl;
 	}

@@ -3,6 +3,8 @@
 
 #include <array>
 #include <map>
+#include <algorithm>
+#include <regex>
 
 #include "tools.hpp"
 #include "esmtools.hpp"
@@ -31,6 +33,7 @@ private:
 	void convertDial();
 	void convertInfo();
 	void convertBnam();
+	void convertScpt();
 
 	bool status = {};
 	esmtools esm;

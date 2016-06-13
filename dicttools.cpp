@@ -33,7 +33,7 @@ void dicttools::readDict(string path)
 }
 
 //----------------------------------------------------------
-void dicttools::setDictStatus(int st)
+void dicttools::setDictStatus(bool st)
 {
 	if(st == 0)
 	{
