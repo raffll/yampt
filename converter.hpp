@@ -23,6 +23,7 @@ public:
 
 private:
 	string intToByte(unsigned int x);
+	bool caseInsensitiveStringCmp(string lhs, string rhs);
 	void convertCell();
 	void convertGmst();
 	void convertFnam();
@@ -33,7 +34,11 @@ private:
 	void convertDial();
 	void convertInfo();
 	void convertBnam();
+	void convertDialInBnam();
+	void convertCellInBnam();
 	void convertScpt();
+	void convertDialInScpt();
+	void convertCellInScpt();
 
 	bool status = {};
 	esmtools esm;

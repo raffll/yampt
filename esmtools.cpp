@@ -149,8 +149,6 @@ void esmtools::setSecSubRec(string id)
 //----------------------------------------------------------
 void esmtools::setColl(collkind e)
 {
-	//{"getpccell", "positioncell", "showmap"};
-	//"addtopic
 	if(esm_status == 1)
 	{
 		string line;
@@ -168,7 +166,7 @@ void esmtools::setColl(collkind e)
 					sec_size = byteToInt(rec_content.substr(sec_pos + 4, 4));
 					sec_text = rec_content.substr(sec_pos + 8, sec_size);
 					eraseNullChars(sec_text);
-					text_coll.push_back(make_pair(sec_text, sec_pos));
+					text_coll.push_back(make_tuple(sec_text, true, sec_pos, 0));
 					sec_pos = rec_content.find(sec_id, sec_pos + 4);
 				}
 				break;
@@ -181,13 +179,14 @@ void esmtools::setColl(collkind e)
 					regex_search(line, found, re);
 					if(found[0] != "")
 					{
-						text_coll.push_back(make_pair(eraseNewLineChar(line), 1));
+						text_coll.push_back(make_tuple(eraseNewLineChar(line), true, 0, 0));
 					}
 					else
 					{
-						text_coll.push_back(make_pair(eraseNewLineChar(line), 0));
+						text_coll.push_back(make_tuple(eraseNewLineChar(line), false, 0, 0));
 					}
 				}
+				addLastItemEndLine();
 				break;
 			}
 			case 2: // SCPTMESSAGE
@@ -198,39 +197,80 @@ void esmtools::setColl(collkind e)
 					regex_search(line, found, re);
 					if(found[0] != "")
 					{
-						text_coll.push_back(make_pair(eraseNewLineChar(line), 1));
+						text_coll.push_back(make_tuple(eraseNewLineChar(line), true, 0, 0));
 					}
 				}
 				break;
 			}
 			case 3: // BNAM
 			{
-				regex re(".*((choice).*\".*\")", icase);
+				regex re(".*((choice|messagebox).*\".*\")", icase);
 				while(getline(ss, line))
 				{
 					regex_search(line, found, re);
 					if(found[0] != "")
 					{
-						text_coll.push_back(make_pair(eraseNewLineChar(line), 1));
+						text_coll.push_back(make_tuple(eraseNewLineChar(line), true, 0, 0));
 					}
 					else
 					{
-						text_coll.push_back(make_pair(eraseNewLineChar(line), 0));
+						text_coll.push_back(make_tuple(eraseNewLineChar(line), false, 0, 0));
 					}
 				}
+				addLastItemEndLine();
 				break;
 			}
 			case 4: // BNAMMESSAGE
 			{
-				regex re(".*((choice).*\".*\")", icase);
+				regex re(".*((choice|messagebox).*\".*\")", icase);
 				while(getline(ss, line))
 				{
 					regex_search(line, found, re);
 					if(found[0] != "")
 					{
-						text_coll.push_back(make_pair(eraseNewLineChar(line), 1));
+						text_coll.push_back(make_tuple(eraseNewLineChar(line), true, 0, 0));
 					}
 				}
+				break;
+			}
+			case 5: // DIAL
+			{
+				regex re(".*(addtopic)\\s*(.*)", icase);
+				while(getline(ss, line))
+				{
+					regex_search(line, found, re);
+					if(found[0] != "")
+					{
+						text_coll.push_back(make_tuple(eraseNewLineChar(line), true, found.position(2), found[2].str().size()));
+					}
+					else
+					{
+						text_coll.push_back(make_tuple(eraseNewLineChar(line), false, 0, 0));
+					}
+				}
+				addLastItemEndLine();
+				break;
+			}
+			case 6: // CELL
+			{
+				regex re(".*(positioncell|getpccell|aifollowcell|placeitemcell).*(\".*\")|.*(showmap)\\s*(.*)", icase);
+				while(getline(ss, line))
+				{
+					regex_search(line, found, re);
+					if(found[2] != "")
+					{
+						text_coll.push_back(make_tuple(eraseNewLineChar(line), true, found.position(2), found[2].str().size()));
+					}
+					else if(found[4] != "")
+					{
+						text_coll.push_back(make_tuple(eraseNewLineChar(line), true, found.position(4), found[4].str().size()));
+					}
+					else
+					{
+						text_coll.push_back(make_tuple(eraseNewLineChar(line), false, 0, 0));
+					}
+				}
+				addLastItemEndLine();
 				break;
 			}
 		}
@@ -300,5 +340,18 @@ string esmtools::eraseNewLineChar(string &str)
 	{
 		str.erase(str.size() - 1);
 	}
+	if(str.find('\n') != string::npos)
+	{
+		str.erase(str.size() - 1);
+	}
 	return str;
+}
+
+//----------------------------------------------------------
+void esmtools::addLastItemEndLine()
+{
+	if(!text_coll.empty() && sec_text.size() > 1 && sec_text.substr(sec_text.size() - 2) == "\r\n")
+	{
+		get<0>(text_coll[text_coll.size() - 1]).append("\r\n");
+	}
 }

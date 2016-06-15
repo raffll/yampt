@@ -52,7 +52,10 @@ public:
 	string getSecId() { return sec_id; }
 	string getSecText() { return sec_text; }
 
-	pair<string, size_t> getColl(int i) { return text_coll[i]; }
+	string getCollText(int i) { return get<0>(text_coll[i]); }
+	bool getCollTextStatus(int i) { return get<1>(text_coll[i]); }
+	size_t getCollTextPos(int i) { return get<2>(text_coll[i]); }
+	size_t getCollTextSize(int i) { return get<3>(text_coll[i]); }
 	size_t getCollSize() { return text_coll.size(); }
 
 	esmtools() {}
@@ -64,6 +67,7 @@ private:
 	unsigned int byteToInt(const string &str);
 	void eraseNullChars(string &str);
 	string eraseNewLineChar(string &str);
+	void addLastItemEndLine();
 
 	bool esm_status = {};
 	string esm_name;
@@ -87,7 +91,8 @@ private:
 	string sec_id;
 	string sec_text;
 
-	vector<pair<string, size_t>> text_coll;
+	vector<tuple<string, bool, size_t, size_t>> text_coll;
+	//vector<pair<string, <pair<size_t, size_t>>>> text_coll;
 };
 
 #endif

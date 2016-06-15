@@ -96,7 +96,7 @@ void creator::writeScripts()
 	if(status == 1)
 	{
 		ofstream file;
-		file.open(esm.getEsmPrefix() + "-Scripts.log", ios::binary);
+		file.open("Scripts-" + esm.getEsmPrefix() + ".log", ios::binary);
 		esm.resetRec();
 		while(esm.loopCheck())
 		{
@@ -106,7 +106,7 @@ void creator::writeScripts()
 				esm.setRecContent();
 				esm.setPriSubRec("SCHD");
 				esm.setSecSubRec("SCTX");
-				file << esm.getSecText() << endl;
+				file << esm.getSecText() << "\r\n----------------------------------------------------------\r\n";
 			}
 		}
 		esm.resetRec();
@@ -118,9 +118,10 @@ void creator::writeScripts()
 				esm.setRecContent();
 				esm.setPriSubRec("INAM");
 				esm.setSecSubRec("BNAM");
-				file << esm.getSecText() << endl;
+				file << esm.getSecText() << "\r\n----------------------------------------------------------\r\n";
 			}
 		}
+		cerr << "Writing Scripts-" << esm.getEsmPrefix() << ".log..." << endl;
 	}
 }
 
@@ -339,8 +340,8 @@ void creator::makeDictFact()
 			ext.setColl(esmtools::RNAM);
 			for(size_t i = 0; i < esm.getCollSize(); i++)
 			{
-				insertRecord(esm.getSecId() + sep[0] + esm.getPriText() + sep[0] + to_string(i) + sep[0] + esm_ptr->getColl(i).first,
-					     esm.getColl(i).first);
+				insertRecord(esm.getSecId() + sep[0] + esm.getPriText() + sep[0] + to_string(i) + sep[0] + esm_ptr->getCollText(i),
+					     esm.getCollText(i));
 			}
 		}
 	}
@@ -457,8 +458,8 @@ void creator::makeDictBnam()
 			ext.setColl(esmtools::BNAMMESSAGE);
 			for(size_t i = 0; i < esm.getCollSize(); i++)
 			{
-				insertRecord(esm.getSecId() + sep[0] + esm_ptr->getColl(i).first,
-					     makeGap(sep[1] + esm.getSecId()) + sep[0] + esm.getColl(i).first);
+				insertRecord(esm.getSecId() + sep[0] + esm_ptr->getCollText(i),
+					     makeGap(sep[1] + esm.getSecId()) + sep[0] + esm.getCollText(i));
 			}
 		}
 	}
@@ -487,8 +488,8 @@ void creator::makeDictScpt()
 			ext.setColl(esmtools::SCPTMESSAGE);
 			for(size_t i = 0; i < esm.getCollSize(); i++)
 			{
-				insertRecord(esm.getRecId() + sep[0] + esm_ptr->getPriText() + sep[0] + esm_ptr->getColl(i).first,
-					     makeGap(sep[1] + esm.getRecId() + sep[0] + esm.getPriText()) + sep[0] + esm.getColl(i).first);
+				insertRecord(esm.getRecId() + sep[0] + esm_ptr->getCollText(i),
+					     makeGap(sep[1] + esm.getRecId()) + sep[0] + esm.getCollText(i));
 			}
 		}
 	}
