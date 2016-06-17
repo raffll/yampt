@@ -81,7 +81,9 @@ void creator::writeDict()
 			{
 				file << sep[1] << elem.first << sep[2] << elem.second << sep[3] << "\r\n";
 			}
-			cerr << "Writing " << created.size() << " records to " << esm.getEsmPrefix() << suffix << "..." << endl;
+			cerr << "Writing " << created.size()
+			     << " records to " << esm.getEsmPrefix()
+			     << suffix << "..." << endl;
 		}
 		else
 		{
@@ -106,7 +108,8 @@ void creator::writeScripts()
 				esm.setRecContent();
 				esm.setPriSubRec("SCHD");
 				esm.setSecSubRec("SCTX");
-				file << esm.getSecText() << "\r\n----------------------------------------------------------\r\n";
+				file << esm.getSecText()
+				     << "\r\n----------------------------------------------------------\r\n";
 			}
 		}
 		esm.resetRec();
@@ -118,7 +121,8 @@ void creator::writeScripts()
 				esm.setRecContent();
 				esm.setPriSubRec("INAM");
 				esm.setSecSubRec("BNAM");
-				file << esm.getSecText() << "\r\n----------------------------------------------------------\r\n";
+				file << esm.getSecText()
+				     << "\r\n----------------------------------------------------------\r\n";
 			}
 		}
 		cerr << "Writing Scripts-" << esm.getEsmPrefix() << ".log..." << endl;
@@ -214,7 +218,8 @@ void creator::makeDictCell()
 			ext.setPriSubRec("NAME");
 			if(!esm.getPriText().empty())
 			{
-				insertRecord(esm.getRecId() + sep[0] + esm_ptr->getPriText(),
+				insertRecord(esm.getRecId() + sep[0] +
+					     esm_ptr->getPriText(),
 					     esm.getPriText());
 			}
 		}
@@ -237,7 +242,8 @@ void creator::makeDictGmst()
 			esm.setSecSubRec("STRV");
 			if(!esm.getSecText().empty())
 			{
-				insertRecord(esm.getRecId() + sep[0] + esm.getPriText(),
+				insertRecord(esm.getRecId() + sep[0] +
+					     esm.getPriText(),
 					     esm.getSecText());
 			}
 		}
@@ -270,7 +276,9 @@ void creator::makeDictFnam()
 			esm.setSecSubRec("FNAM");
 			if(!esm.getPriText().empty())
 			{
-				insertRecord(esm.getSecId() + sep[0] + esm.getRecId() + sep[0] + esm.getPriText(),
+				insertRecord(esm.getSecId() + sep[0] +
+					     esm.getRecId() + sep[0] +
+					     esm.getPriText(),
 					     esm.getSecText());
 			}
 		}
@@ -293,7 +301,9 @@ void creator::makeDictDesc()
 			esm.setRecContent();
 			esm.setPriSubRec("NAME");
 			esm.setSecSubRec("DESC");
-			insertRecord(esm.getSecId() + sep[0] + esm.getRecId() + sep[0] + esm.getPriText(),
+			insertRecord(esm.getSecId() + sep[0] +
+				     esm.getRecId() + sep[0] +
+				     esm.getPriText(),
 				     esm.getSecText());
 		}
 	}
@@ -313,7 +323,8 @@ void creator::makeDictBook()
 			esm.setRecContent();
 			esm.setPriSubRec("NAME");
 			esm.setSecSubRec("TEXT");
-			insertRecord(esm.getSecId() + sep[0] + esm.getPriText(),
+			insertRecord(esm.getSecId() + sep[0] +
+				     esm.getPriText(),
 				     esm.getSecText());
 		}
 	}
@@ -334,13 +345,16 @@ void creator::makeDictFact()
 		{
 			esm.setRecContent();
 			esm.setPriSubRec("NAME");
-			esm.setColl(esmtools::RNAM);
+			esm.setCollRnam();
 			ext.setRecContent();
 			ext.setPriSubRec("NAME");
-			ext.setColl(esmtools::RNAM);
+			ext.setCollRnam();
 			for(size_t i = 0; i < esm.getCollSize(); i++)
 			{
-				insertRecord(esm.getSecId() + sep[0] + esm.getPriText() + sep[0] + to_string(i) + sep[0] + esm_ptr->getCollText(i),
+				insertRecord(esm.getSecId() + sep[0] +
+					     esm.getPriText() + sep[0] +
+					     to_string(i) + sep[0] +
+					     esm_ptr->getCollText(i),
 					     esm.getCollText(i));
 			}
 		}
@@ -362,7 +376,9 @@ void creator::makeDictIndx()
 			esm.setRecContent();
 			esm.setPriSubRec("INDX");
 			esm.setSecSubRec("DESC");
-			insertRecord(esm.getPriId() + sep[0] + esm.getRecId() + sep[0] + esm.getPriText(),
+			insertRecord(esm.getPriId() + sep[0] +
+				     esm.getRecId() + sep[0] +
+				     esm.getPriText(),
 				     esm.getSecText());
 		}
 	}
@@ -389,7 +405,8 @@ void creator::makeDictDial()
 			ext.setSecSubRec("DATA");
 			if(esm.dialType() == "T")
 			{
-				insertRecord(esm.getRecId() + sep[0] + esm_ptr->getPriText(),
+				insertRecord(esm.getRecId() + sep[0] +
+					     esm_ptr->getPriText(),
 					     esm.getPriText());
 			}
 		}
@@ -420,7 +437,9 @@ void creator::makeDictInfo()
 			esm.setSecSubRec("NAME");
 			if(!esm.getSecText().empty())
 			{
-				insertRecord(esm.getRecId() + sep[0] + dial + sep[0] + esm.getPriText(),
+				insertRecord(esm.getRecId() + sep[0] +
+					     dial + sep[0] +
+					     esm.getPriText(),
 					     esm.getSecText());
 			}
 		}
@@ -439,27 +458,22 @@ void creator::makeDictBnam()
 	{
 		esm.setNextRec();
 		ext.setNextRec();
-		if(esm.getRecId() == "DIAL")
-		{
-			esm.setRecContent();
-			esm.setPriSubRec("NAME");
-			esm.setSecSubRec("DATA");
-			dial = esm.dialType() + sep[0] + dialTranslator(esm.getPriText());
-		}
 		if(esm.getRecId() == "INFO")
 		{
 			esm.setRecContent();
 			esm.setPriSubRec("INAM");
 			esm.setSecSubRec("BNAM");
-			esm.setColl(esmtools::BNAMMESSAGE);
+			esm.setCollMessageOnly();
 			ext.setRecContent();
 			ext.setPriSubRec("INAM");
 			ext.setSecSubRec("BNAM");
-			ext.setColl(esmtools::BNAMMESSAGE);
+			ext.setCollMessageOnly();
 			for(size_t i = 0; i < esm.getCollSize(); i++)
 			{
-				insertRecord(esm.getSecId() + sep[0] + esm_ptr->getCollText(i),
-					     makeGap(sep[1] + esm.getSecId()) + sep[0] + esm.getCollText(i));
+				insertRecord(esm.getSecId() + sep[0] +
+					     esm_ptr->getCollText(i),
+					     makeGap(sep[1] + esm.getSecId()) + sep[0] +
+					     esm.getCollText(i));
 			}
 		}
 	}
@@ -481,15 +495,17 @@ void creator::makeDictScpt()
 			esm.setRecContent();
 			esm.setPriSubRec("SCHD");
 			esm.setSecSubRec("SCTX");
-			esm.setColl(esmtools::SCPTMESSAGE);
+			esm.setCollMessageOnly();
 			ext.setRecContent();
 			ext.setPriSubRec("SCHD");
 			ext.setSecSubRec("SCTX");
-			ext.setColl(esmtools::SCPTMESSAGE);
+			ext.setCollMessageOnly();
 			for(size_t i = 0; i < esm.getCollSize(); i++)
 			{
-				insertRecord(esm.getRecId() + sep[0] + esm_ptr->getCollText(i),
-					     makeGap(sep[1] + esm.getRecId()) + sep[0] + esm.getCollText(i));
+				insertRecord(esm.getRecId() + sep[0] +
+					     esm_ptr->getCollText(i),
+					     makeGap(sep[1] + esm.getRecId()) + sep[0] +
+					     esm.getCollText(i));
 			}
 		}
 	}

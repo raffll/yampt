@@ -147,131 +147,142 @@ void esmtools::setSecSubRec(string id)
 }
 
 //----------------------------------------------------------
-void esmtools::setColl(collkind e)
+void esmtools::setCollRnam()
 {
 	if(esm_status == 1)
 	{
+		sec_id = "RNAM";
+		sec_pos = rec_content.find(sec_id);
+		text_coll.clear();
+		while(sec_pos != string::npos)
+		{
+			sec_size = byteToInt(rec_content.substr(sec_pos + 4, 4));
+			sec_text = rec_content.substr(sec_pos + 8, sec_size);
+			eraseNullChars(sec_text);
+			text_coll.push_back(make_tuple(sec_text, sec_pos, NOCHANGE, ""));
+			sec_pos = rec_content.find(sec_id, sec_pos + 4);
+		}
+	}
+}
+
+//----------------------------------------------------------
+void esmtools::setCollScript()
+{
+	if(esm_status == 1)
+	{
+		static vector<string> key_message = {"messagebox", "say ", "say,", "choice"};
+		static vector<string> key_noid = {"addtopic", "positioncell", "getpccell", "aifollowcell",
+						  "placeitemcell", "showmap"};
 		string line;
-		smatch found;
+		string line_lowercase;
+		linekind found;
+		size_t pos;
+		size_t pos_end;
+		string text;
 		istringstream ss(sec_text);
 		text_coll.clear();
-		switch(e)
+		while(getline(ss, line))
 		{
-			case 0: // RNAM
+			found = NOCHANGE;
+			eraseNewLineChar(line);
+			line_lowercase = line;
+			transform(line_lowercase.begin(), line_lowercase.end(),
+				  line_lowercase.begin(), ::tolower);
+			for(auto &elem : key_message)
 			{
-				sec_id = "RNAM";
-				sec_pos = rec_content.find(sec_id);
-				while(sec_pos != string::npos)
+				if(found == NOCHANGE)
 				{
-					sec_size = byteToInt(rec_content.substr(sec_pos + 4, 4));
-					sec_text = rec_content.substr(sec_pos + 8, sec_size);
-					eraseNullChars(sec_text);
-					text_coll.push_back(make_tuple(sec_text, true, sec_pos, 0));
-					sec_pos = rec_content.find(sec_id, sec_pos + 4);
+					pos = line_lowercase.find(elem);
+					if(pos != string::npos && line.rfind(";", pos) == string::npos)
+					{
+						found = MESSAGE;
+					}
 				}
-				break;
 			}
-			case 1: // SCPT
+			for(auto &elem : key_noid)
 			{
-				regex re(".*((say|messagebox).*\".*\")", icase);
-				while(getline(ss, line))
+				if(found == NOCHANGE)
 				{
-					regex_search(line, found, re);
-					if(found[0] != "")
+					pos = line_lowercase.find(elem);
+					if(pos != string::npos && line.rfind(";", pos) == string::npos)
 					{
-						text_coll.push_back(make_tuple(eraseNewLineChar(line), true, 0, 0));
-					}
-					else
-					{
-						text_coll.push_back(make_tuple(eraseNewLineChar(line), false, 0, 0));
+						if(elem == "addtopic")
+						{
+							found = DIAL;
+						}
+						else
+						{
+							found = CELL;
+						}
+						pos = line.find("\"", pos);
+						if(pos != string::npos)
+						{
+							pos_end = line.find("\"", pos + 1) + 1;
+							text = line.substr(pos, pos_end - pos);
+						}
+						else
+						{
+							pos = line.find(" ") + 1;
+							text = line.substr(pos);
+						}
 					}
 				}
-				addLastItemEndLine();
-				break;
 			}
-			case 2: // SCPTMESSAGE
+			if(found == MESSAGE)
 			{
-				regex re(".*((say|messagebox).*\".*\")", icase);
-				while(getline(ss, line))
-				{
-					regex_search(line, found, re);
-					if(found[0] != "")
-					{
-						text_coll.push_back(make_tuple(eraseNewLineChar(line), true, 0, 0));
-					}
-				}
-				break;
+				text_coll.push_back(make_tuple(line, 0, MESSAGE, ""));
 			}
-			case 3: // BNAM
+			else if(found == DIAL)
 			{
-				regex re(".*((choice|messagebox).*\".*\")", icase);
-				while(getline(ss, line))
-				{
-					regex_search(line, found, re);
-					if(found[0] != "")
-					{
-						text_coll.push_back(make_tuple(eraseNewLineChar(line), true, 0, 0));
-					}
-					else
-					{
-						text_coll.push_back(make_tuple(eraseNewLineChar(line), false, 0, 0));
-					}
-				}
-				addLastItemEndLine();
-				break;
+				cout << line << endl;
+				cout << pos << " " << text << endl;
+				text_coll.push_back(make_tuple(line, pos, DIAL, text));
 			}
-			case 4: // BNAMMESSAGE
+			else if(found == CELL)
 			{
-				regex re(".*((choice|messagebox).*\".*\")", icase);
-				while(getline(ss, line))
-				{
-					regex_search(line, found, re);
-					if(found[0] != "")
-					{
-						text_coll.push_back(make_tuple(eraseNewLineChar(line), true, 0, 0));
-					}
-				}
-				break;
+				cout << line << endl;
+				cout << pos << " " << text << endl;
+				text_coll.push_back(make_tuple(line, pos, CELL, text));
 			}
-			case 5: // DIAL
+			else
 			{
-				regex re(".*(addtopic)\\s*(.*)", icase);
-				while(getline(ss, line))
-				{
-					regex_search(line, found, re);
-					if(found[0] != "")
-					{
-						text_coll.push_back(make_tuple(eraseNewLineChar(line), true, found.position(2), found[2].str().size()));
-					}
-					else
-					{
-						text_coll.push_back(make_tuple(eraseNewLineChar(line), false, 0, 0));
-					}
-				}
-				addLastItemEndLine();
-				break;
+				text_coll.push_back(make_tuple(line, 0, NOCHANGE, ""));
 			}
-			case 6: // CELL
+		}
+		addLastItemEndLine();
+	}
+}
+
+//----------------------------------------------------------
+void esmtools::setCollMessageOnly()
+{
+	if(esm_status == 1)
+	{
+		static vector<string> key_scpt = {"messagebox", "say ", "say,", "choice"};
+		string line;
+		string line_lowercase;
+		linekind found;
+		size_t pos;
+		string text;
+		istringstream ss(sec_text);
+		text_coll.clear();
+		while(getline(ss, line))
+		{
+			found = NOCHANGE;
+			line_lowercase = line;
+			transform(line_lowercase.begin(), line_lowercase.end(),
+				  line_lowercase.begin(), ::tolower);
+			for(auto &elem : key_scpt)
 			{
-				regex re(".*(positioncell|getpccell|aifollowcell|placeitemcell).*(\".*\")|.*(showmap)\\s*(.*)", icase);
-				while(getline(ss, line))
+				pos = line_lowercase.find(elem);
+				if(pos != string::npos && line.rfind(";", pos) == string::npos)
 				{
-					regex_search(line, found, re);
-					if(found[2] != "")
-					{
-						text_coll.push_back(make_tuple(eraseNewLineChar(line), true, found.position(2), found[2].str().size()));
-					}
-					else if(found[4] != "")
-					{
-						text_coll.push_back(make_tuple(eraseNewLineChar(line), true, found.position(4), found[4].str().size()));
-					}
-					else
-					{
-						text_coll.push_back(make_tuple(eraseNewLineChar(line), false, 0, 0));
-					}
+					found = MESSAGE;
 				}
-				addLastItemEndLine();
-				break;
+			}
+			if(found == MESSAGE)
+			{
+				text_coll.push_back(make_tuple(eraseNewLineChar(line), 0, MESSAGE, ""));
 			}
 		}
 	}
@@ -337,10 +348,6 @@ void esmtools::eraseNullChars(string &str)
 string esmtools::eraseNewLineChar(string &str)
 {
 	if(str.find('\r') != string::npos)
-	{
-		str.erase(str.size() - 1);
-	}
-	if(str.find('\n') != string::npos)
 	{
 		str.erase(str.size() - 1);
 	}

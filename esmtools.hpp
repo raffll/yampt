@@ -18,7 +18,7 @@ using namespace std;
 class esmtools
 {
 public:
-	enum collkind {RNAM, SCPT, SCPTMESSAGE, BNAM, BNAMMESSAGE, DIAL, CELL};
+	enum linekind {NOCHANGE, MESSAGE, DIAL, CELL};
 
 	void readEsm(string path);
 	void resetRec();
@@ -26,7 +26,9 @@ public:
 	void setRecContent();
 	void setPriSubRec(string id);
 	void setSecSubRec(string id);
-	void setColl(collkind e);
+	void setCollRnam();
+	void setCollScript();
+	void setCollMessageOnly();
 	void setEsmContent(string c) { esm_content = c; }
 
 	string dialType();
@@ -53,9 +55,9 @@ public:
 	string getSecText() { return sec_text; }
 
 	string getCollText(int i) { return get<0>(text_coll[i]); }
-	bool getCollTextStatus(int i) { return get<1>(text_coll[i]); }
-	size_t getCollTextPos(int i) { return get<2>(text_coll[i]); }
-	size_t getCollTextSize(int i) { return get<3>(text_coll[i]); }
+	size_t getCollPos(int i) { return get<1>(text_coll[i]); }
+	linekind getCollKind(int i) { return get<2>(text_coll[i]); }
+	string getCollSubStr(int i) { return get<3>(text_coll[i]); }
 	size_t getCollSize() { return text_coll.size(); }
 
 	esmtools() {}
@@ -91,8 +93,7 @@ private:
 	string sec_id;
 	string sec_text;
 
-	vector<tuple<string, bool, size_t, size_t>> text_coll;
-	//vector<pair<string, <pair<size_t, size_t>>>> text_coll;
+	vector<tuple<string, size_t, linekind, string>> text_coll;
 };
 
 #endif

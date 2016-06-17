@@ -19,7 +19,8 @@ merger::merger(string path_first, string path_second)
 	if(dict[0].getDictStatus() == 1 && dict[1].getDictStatus() == 1)
 	{
 		status = 1;
-		name = dict[1].getDictPrefix() + "-" + dict[0].getDictPrefix();
+		name = dict[1].getDictPrefix() + "-" +
+		       dict[0].getDictPrefix();
 	}
 }
 
@@ -32,7 +33,9 @@ merger::merger(string path_first, string path_second, string path_third)
 	if(dict[0].getDictStatus() == 1 && dict[1].getDictStatus() == 1 && dict[2].getDictStatus() == 1)
 	{
 		status = 1;
-		name = dict[2].getDictPrefix() + "-" + dict[1].getDictPrefix() + "-" + dict[0].getDictPrefix();
+		name = dict[2].getDictPrefix() + "-" +
+		       dict[1].getDictPrefix() + "-" +
+		       dict[0].getDictPrefix();
 	}
 }
 
@@ -55,8 +58,12 @@ void merger::mergeDict()
 				else if(search != merged.end() && search->second != elem.second)
 				{
 					different++;
-					log += dict[i].getDictName() + "\t" + elem.first + " --- " + elem.second + "\r\n";
-					log += dict[i - 1].getDictName() + "\t" + search->first + " >>> " + search->second + "\r\n";
+					log += dict[i].getDictName() + "\t" +
+					       elem.first + " --- " +
+					       elem.second + "\r\n";
+					log += dict[i - 1].getDictName() + "\t" +
+					       search->first + " >>> " +
+					       search->second + "\r\n";
 				}
 				else
 				{
@@ -120,8 +127,10 @@ void merger::writeDiff()
 			{
 				if(search->second != elem.second)
 				{
-					diff_first += sep[1] + elem.first + sep[2] + elem.second + sep[3] + "\r\n";
-					diff_second += sep[1] + search->first + sep[2] + search->second + sep[3] + "\r\n";
+					diff_first += sep[1] + elem.first + sep[2] +
+						      elem.second + sep[3] + "\r\n";
+					diff_second += sep[1] + search->first + sep[2] +
+					               search->second + sep[3] + "\r\n";
 				}
 			}
 		}

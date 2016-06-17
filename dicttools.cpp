@@ -67,12 +67,17 @@ void dicttools::parseDict()
 		pos_beg = content.find(sep[1], pos_beg);
 		pos_mid = content.find(sep[2], pos_mid);
 		pos_end = content.find(sep[3], pos_end);
-		if(pos_beg == string::npos && pos_mid == string::npos && pos_end == string::npos)
+		if(pos_beg == string::npos &&
+		   pos_mid == string::npos &&
+		   pos_end == string::npos)
 		{
 			setDictStatus(1);
 			break;
 		}
-		else if(pos_beg > pos_mid || pos_beg > pos_end || pos_mid > pos_end || pos_end == string::npos)
+		else if(pos_beg > pos_mid ||
+			pos_beg > pos_end ||
+			pos_mid > pos_end ||
+			pos_end == string::npos)
 		{
 			setDictStatus(0);
 			break;
@@ -102,12 +107,16 @@ bool dicttools::validateRecLength(const string &pri, const string &sec)
 	{
 		if((pri.substr(0, 4) == "FNAM" || pri.substr(0, 4) == "FACT") && sec.size() > 31)
 		{
-			log += name + "\t" + pri + " <-- Text too long, more than 31 bytes (has " + to_string(sec.size()) + ")\r\n";
+			log += name + "\t" + pri +
+			       " <-- Text too long, more than 31 bytes (has " +
+			       to_string(sec.size()) + ")\r\n";
 			return 0;
 		}
 		else if(pri.substr(0, 4) == "INFO" && sec.size() > 512)
 		{
-			log += name + "\t" + pri + " <-- Text too long, more than 512 bytes (has " + to_string(sec.size()) + ")\r\n";
+			log += name + "\t" + pri +
+			       " <-- Text too long, more than 512 bytes (has " +
+			       to_string(sec.size()) + ")\r\n";
 			return 0;
 		}
 		else

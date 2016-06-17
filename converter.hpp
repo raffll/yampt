@@ -24,6 +24,9 @@ public:
 private:
 	string intToByte(unsigned int x);
 	bool caseInsensitiveStringCmp(string lhs, string rhs);
+	void convertRecordContent(size_t pos, size_t old_size,
+				  string new_text, size_t new_size);
+	void convertScript(int i, string id);
 	void convertCell();
 	void convertGmst();
 	void convertFnam();
@@ -34,15 +37,15 @@ private:
 	void convertDial();
 	void convertInfo();
 	void convertBnam();
-	void convertDialInBnam();
-	void convertCellInBnam();
 	void convertScpt();
-	void convertDialInScpt();
-	void convertCellInScpt();
 
 	bool status = {};
 	esmtools esm;
 	merger dict;
+	int counter;
+	string rec_content;
+	string esm_content;
+	string script_text;
 };
 
 #endif
