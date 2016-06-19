@@ -8,9 +8,11 @@
 #include <string>
 #include <array>
 #include <map>
+#include <algorithm>
 
 #include "tools.hpp"
 #include "esmtools.hpp"
+#include "merger.hpp"
 
 using namespace std;
 
@@ -19,12 +21,20 @@ class creator
 public:
 	void makeDict();
 	void writeDict();
+	void writeScripts();
+	void compareEsm();
+	void eraseDuplicates();
+	void eraseDifferent();
 
 	creator() {}
 	creator(string esm_path);
 	creator(string esm_path, string ext_path);
+	creator(string esm_path, merger &m, bool no_dupl = 0);
 
 private:
+	string dialTranslator(string to_translate);
+	string makeGap(string str);
+	void insertRecord(const string &pri, const string &sec);
 	void makeDictCell();
 	void makeDictGmst();
 	void makeDictFnam();
@@ -40,8 +50,12 @@ private:
 	esmtools esm;
 	esmtools ext;
 	esmtools *esm_ptr;
+	merger dict;
+	bool status = {};
+	bool with_dict = {};
+	bool no_duplicates = {};
 	int counter;
-	map<string, string> dict;
+	map<string, string> created;
 };
 
 #endif

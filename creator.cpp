@@ -7,6 +7,10 @@ creator::creator(string esm_path)
 {
 	esm.readEsm(esm_path);
 	esm_ptr = &esm;
+	if(esm.getEsmStatus() == 1)
+	{
+		status = 1;
+	}
 }
 
 //----------------------------------------------------------
@@ -15,12 +19,30 @@ creator::creator(string esm_path, string ext_path)
 	esm.readEsm(esm_path);
 	ext.readEsm(ext_path);
 	esm_ptr = &ext;
+	if(esm.getEsmStatus() == 1 && ext.getEsmStatus() == 1)
+	{
+		status = 1;
+	}
+}
+
+//----------------------------------------------------------
+creator::creator(string esm_path, merger &m, bool no_dupl)
+{
+	esm.readEsm(esm_path);
+	esm_ptr = &esm;
+	dict = m;
+	if(esm.getEsmStatus() == 1 && dict.getMergerStatus() == 1)
+	{
+		status = 1;
+		with_dict = 1;
+		no_duplicates = no_dupl;
+	}
 }
 
 //----------------------------------------------------------
 void creator::makeDict()
 {
-	if(esm.getEsmStatus() == 1 && esm_ptr->getEsmStatus() == 1)
+	if(status == 1)
 	{
 		makeDictCell();
 		makeDictGmst();
@@ -40,16 +62,142 @@ void creator::makeDict()
 //----------------------------------------------------------
 void creator::writeDict()
 {
-	if(esm.getEsmStatus() == 1 && esm_ptr->getEsmStatus() == 1)
+	if(status == 1)
+	{
+		string suffix;
+		if(no_duplicates == 1)
+		{
+			suffix = "-NotFoundInDict.dic";
+		}
+		else
+		{
+			suffix = ".dic";
+		}
+		if(!created.empty())
+		{
+			ofstream file;
+			file.open(esm.getEsmPrefix() + suffix, ios::binary);
+			for(const auto &elem : created)
+			{
+				file << sep[1] << elem.first << sep[2] << elem.second << sep[3] << "\r\n";
+			}
+			cerr << "Writing " << created.size()
+			     << " records to " << esm.getEsmPrefix()
+			     << suffix << "..." << endl;
+		}
+		else
+		{
+			cerr << "No records to make dictionary!" << endl;
+		}
+	}
+}
+
+//----------------------------------------------------------
+void creator::writeScripts()
+{
+	if(status == 1)
 	{
 		ofstream file;
-		file.open(esm.getEsmPrefix() + ".dic");
-		for(const auto &elem : dict)
+		file.open("Scripts-" + esm.getEsmPrefix() + ".log", ios::binary);
+		esm.resetRec();
+		while(esm.loopCheck())
 		{
-			file << sep[1] << elem.first << sep[2] << elem.second << sep[3] << endl;
+			esm.setNextRec();
+			if(esm.getRecId() == "SCPT")
+			{
+				esm.setRecContent();
+				esm.setPriSubRec("SCHD");
+				esm.setSecSubRec("SCTX");
+				file << esm.getSecText()
+				     << "\r\n----------------------------------------------------------\r\n";
+			}
 		}
-		cerr << "Writing " << esm.getEsmPrefix() << ".dic..." << endl;
+		esm.resetRec();
+		while(esm.loopCheck())
+		{
+			esm.setNextRec();
+			if(esm.getRecId() == "INFO")
+			{
+				esm.setRecContent();
+				esm.setPriSubRec("INAM");
+				esm.setSecSubRec("BNAM");
+				file << esm.getSecText()
+				     << "\r\n----------------------------------------------------------\r\n";
+			}
+		}
+		cerr << "Writing Scripts-" << esm.getEsmPrefix() << ".log..." << endl;
 	}
+}
+
+//----------------------------------------------------------
+void creator::compareEsm()
+{
+	if(status == 1)
+	{
+		string esm_compare;
+		string ext_compare;
+		esm.resetRec();
+		ext.resetRec();
+		while(esm.loopCheck())
+		{
+			esm.setNextRec();
+			esm_compare += esm.getRecId();
+		}
+		while(ext.loopCheck())
+		{
+			ext.setNextRec();
+			ext_compare += ext.getRecId();
+		}
+		if(esm_compare != ext_compare)
+		{
+			cerr << "They are not the same master files!" << endl;
+			status = 0;
+		}
+	}
+}
+
+//----------------------------------------------------------
+void creator::insertRecord(const string &pri, const string &sec)
+{
+	if(no_duplicates == 1)
+	{
+		auto search = dict.getDict().find(pri);
+		if(search == dict.getDict().end())
+		{
+			if(created.insert({pri, sec}).second == 1)
+			{
+				counter++;
+			}
+		}
+	}
+	else
+	{
+		if(created.insert({pri, sec}).second == 1)
+		{
+			counter++;
+		}
+	}
+}
+
+//----------------------------------------------------------
+string creator::dialTranslator(string to_translate)
+{
+	if(with_dict == 1)
+	{
+		auto search = dict.getDict().find("DIAL" + sep[0] + to_translate);
+		if(search != dict.getDict().end())
+		{
+			return search->second;
+		}
+	}
+	return to_translate;
+}
+
+//----------------------------------------------------------
+string creator::makeGap(string str)
+{
+	string ws(str.size(), ' ');
+	return ws = "\n" + ws;
 }
 
 //----------------------------------------------------------
@@ -70,8 +218,9 @@ void creator::makeDictCell()
 			ext.setPriSubRec("NAME");
 			if(!esm.getPriText().empty())
 			{
-				dict.insert({esm.getRecId() + sep[0] + esm_ptr->getPriText(), esm.getPriText()});
-				counter++;
+				insertRecord(esm.getRecId() + sep[0] +
+					     esm_ptr->getPriText(),
+					     esm.getPriText());
 			}
 		}
 	}
@@ -93,8 +242,9 @@ void creator::makeDictGmst()
 			esm.setSecSubRec("STRV");
 			if(!esm.getSecText().empty())
 			{
-				dict.insert({esm.getRecId() + sep[0] + esm.getPriText(), esm.getSecText()});
-				counter++;
+				insertRecord(esm.getRecId() + sep[0] +
+					     esm.getPriText(),
+					     esm.getSecText());
 			}
 		}
 	}
@@ -126,8 +276,10 @@ void creator::makeDictFnam()
 			esm.setSecSubRec("FNAM");
 			if(!esm.getPriText().empty())
 			{
-				dict.insert({esm.getSecId() + sep[0] + esm.getRecId() + sep[0] + esm.getPriText(), esm.getSecText()});
-				counter++;
+				insertRecord(esm.getSecId() + sep[0] +
+					     esm.getRecId() + sep[0] +
+					     esm.getPriText(),
+					     esm.getSecText());
 			}
 		}
 	}
@@ -149,8 +301,10 @@ void creator::makeDictDesc()
 			esm.setRecContent();
 			esm.setPriSubRec("NAME");
 			esm.setSecSubRec("DESC");
-			dict.insert({esm.getSecId() + sep[0] + esm.getRecId() + sep[0] + esm.getPriText(), esm.getSecText()});
-			counter++;
+			insertRecord(esm.getSecId() + sep[0] +
+				     esm.getRecId() + sep[0] +
+				     esm.getPriText(),
+				     esm.getSecText());
 		}
 	}
 	cerr << "DESC records created: " << counter << endl;
@@ -169,8 +323,9 @@ void creator::makeDictBook()
 			esm.setRecContent();
 			esm.setPriSubRec("NAME");
 			esm.setSecSubRec("TEXT");
-			dict.insert({esm.getSecId() + sep[0] + esm.getPriText(), esm.getSecText()});
-			counter++;
+			insertRecord(esm.getSecId() + sep[0] +
+				     esm.getPriText(),
+				     esm.getSecText());
 		}
 	}
 	cerr << "TEXT records created: " << counter << endl;
@@ -181,18 +336,26 @@ void creator::makeDictFact()
 {
 	counter = 0;
 	esm.resetRec();
+	ext.resetRec();
 	while(esm.loopCheck())
 	{
 		esm.setNextRec();
+		ext.setNextRec();
 		if(esm.getRecId() == "FACT")
 		{
 			esm.setRecContent();
 			esm.setPriSubRec("NAME");
-			esm.setSecSubRec("RNAM");
-			for(size_t i = 0; i < esm.getTmpSize(); i++)
+			esm.setCollRnam();
+			ext.setRecContent();
+			ext.setPriSubRec("NAME");
+			ext.setCollRnam();
+			for(size_t i = 0; i < esm.getCollSize(); i++)
 			{
-				dict.insert({esm.getSecId() + sep[0] + esm.getPriText() + sep[0] + to_string(i), esm.getTmpLine(i)});
-				counter++;
+				insertRecord(esm.getSecId() + sep[0] +
+					     esm.getPriText() + sep[0] +
+					     to_string(i) + sep[0] +
+					     esm_ptr->getCollText(i),
+					     esm.getCollText(i));
 			}
 		}
 	}
@@ -213,8 +376,10 @@ void creator::makeDictIndx()
 			esm.setRecContent();
 			esm.setPriSubRec("INDX");
 			esm.setSecSubRec("DESC");
-			dict.insert({esm.getPriId() + sep[0] + esm.getRecId() + sep[0] + esm.getPriText(), esm.getSecText()});
-			counter++;
+			insertRecord(esm.getPriId() + sep[0] +
+				     esm.getRecId() + sep[0] +
+				     esm.getPriText(),
+				     esm.getSecText());
 		}
 	}
 	cerr << "INDX records created: " << counter << endl;
@@ -240,8 +405,9 @@ void creator::makeDictDial()
 			ext.setSecSubRec("DATA");
 			if(esm.dialType() == "T")
 			{
-				dict.insert({esm.getRecId() + sep[0] + esm_ptr->getPriText(), esm.getPriText()});
-				counter++;
+				insertRecord(esm.getRecId() + sep[0] +
+					     esm_ptr->getPriText(),
+					     esm.getPriText());
 			}
 		}
 	}
@@ -262,7 +428,7 @@ void creator::makeDictInfo()
 			esm.setRecContent();
 			esm.setPriSubRec("NAME");
 			esm.setSecSubRec("DATA");
-			dial = esm.dialType() + sep[0] + esm.getPriText();
+			dial = esm.dialType() + sep[0] + dialTranslator(esm.getPriText());
 		}
 		if(esm.getRecId() == "INFO")
 		{
@@ -271,8 +437,10 @@ void creator::makeDictInfo()
 			esm.setSecSubRec("NAME");
 			if(!esm.getSecText().empty())
 			{
-				dict.insert({esm.getRecId() + sep[0] + dial + sep[0] + esm.getPriText(), esm.getSecText()});
-				counter++;
+				insertRecord(esm.getRecId() + sep[0] +
+					     dial + sep[0] +
+					     esm.getPriText(),
+					     esm.getSecText());
 			}
 		}
 	}
@@ -283,6 +451,7 @@ void creator::makeDictInfo()
 void creator::makeDictBnam()
 {
 	counter = 0;
+	string dial;
 	esm.resetRec();
 	ext.resetRec();
 	while(esm.loopCheck())
@@ -294,20 +463,17 @@ void creator::makeDictBnam()
 			esm.setRecContent();
 			esm.setPriSubRec("INAM");
 			esm.setSecSubRec("BNAM");
+			esm.setCollMessageOnly();
 			ext.setRecContent();
 			ext.setPriSubRec("INAM");
 			ext.setSecSubRec("BNAM");
-			for(size_t i = 0; i < esm.getTmpSize(); i++)
+			ext.setCollMessageOnly();
+			for(size_t i = 0; i < esm.getCollSize(); i++)
 			{
-				for(size_t j = 0; j < key.size(); j++)
-				{
-					if(esm.getTmpLine(i).find(key[j]) != string::npos)
-					{
-						dict.insert({esm.getSecId() + sep[0] + esm.getPriText() + sep[0] + esm_ptr->getTmpLine(i),
-							     esm.getTmpLine(i)});
-						counter++;
-					}
-				}
+				insertRecord(esm.getSecId() + sep[0] +
+					     esm_ptr->getCollText(i),
+					     makeGap(sep[1] + esm.getSecId()) + sep[0] +
+					     esm.getCollText(i));
 			}
 		}
 	}
@@ -329,20 +495,17 @@ void creator::makeDictScpt()
 			esm.setRecContent();
 			esm.setPriSubRec("SCHD");
 			esm.setSecSubRec("SCTX");
+			esm.setCollMessageOnly();
 			ext.setRecContent();
 			ext.setPriSubRec("SCHD");
 			ext.setSecSubRec("SCTX");
-			for(unsigned i = 0; i < esm.getTmpSize(); i++)
+			ext.setCollMessageOnly();
+			for(size_t i = 0; i < esm.getCollSize(); i++)
 			{
-				for(unsigned j = 0; j < key.size(); j++)
-				{
-					if(esm.getTmpLine(i).find(key[j]) != string::npos)
-					{
-						dict.insert({esm.getRecId() + sep[0] + esm.getPriText() + sep[0] + esm_ptr->getTmpLine(i),
-							     esm.getTmpLine(i)});
-						counter++;
-					}
-				}
+				insertRecord(esm.getRecId() + sep[0] +
+					     esm_ptr->getCollText(i),
+					     makeGap(sep[1] + esm.getRecId()) + sep[0] +
+					     esm.getCollText(i));
 			}
 		}
 	}

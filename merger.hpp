@@ -16,8 +16,8 @@ public:
 	void writeMerged();
 	void writeDiff();
 	void writeLog();
-	void translateDial();
 
+	bool getMergerStatus() { return status; }
 	map<string, string> const& getDict() const { return merged; }
 
 	merger() {}
@@ -26,6 +26,7 @@ public:
 	merger(string path_first, string path_second, string path_third);
 
 private:
+	string name;
 	array<dicttools, 3> dict;
 	bool status = {};
 	map<string, string> merged;

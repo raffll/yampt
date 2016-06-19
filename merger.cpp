@@ -7,6 +7,7 @@ merger::merger(string path_first)
 	if(dict[0].getDictStatus() == 1)
 	{
 		status = 1;
+		name = dict[0].getDictPrefix();
 	}
 }
 
@@ -18,6 +19,8 @@ merger::merger(string path_first, string path_second)
 	if(dict[0].getDictStatus() == 1 && dict[1].getDictStatus() == 1)
 	{
 		status = 1;
+		name = dict[1].getDictPrefix() + "-" +
+		       dict[0].getDictPrefix();
 	}
 }
 
@@ -30,15 +33,17 @@ merger::merger(string path_first, string path_second, string path_third)
 	if(dict[0].getDictStatus() == 1 && dict[1].getDictStatus() == 1 && dict[2].getDictStatus() == 1)
 	{
 		status = 1;
+		name = dict[2].getDictPrefix() + "-" +
+		       dict[1].getDictPrefix() + "-" +
+		       dict[0].getDictPrefix();
 	}
 }
 
 //----------------------------------------------------------
 void merger::mergeDict()
 {
+	int identical = 0;
 	int duplicate = 0;
-	int different = 0;
-
 	if(status == 1)
 	{
 		for(size_t i = 0; i < dict.size(); i++)
@@ -52,24 +57,31 @@ void merger::mergeDict()
 				}
 				else if(search != merged.end() && search->second != elem.second)
 				{
-					different++;
-					log += "\n" + elem.first + " --- " + elem.second + "\n";
-					log += search->first + " >>> " + search->second + "\n\n";
+					duplicate++;
+					log += dict[i].getDictName() + "\t" +
+					       elem.first + " --- " +
+					       elem.second + "\r\n";
+					log += dict[i - 1].getDictName() + "\t" +
+					       search->first + " >>> " +
+					       search->second + "\r\n";
 				}
 				else
 				{
-					duplicate++;
+					identical++;
 				}
 			}
-			if(dict[i].getDictStatus() == 1)
-			{
-				cerr << "Records loaded: " << dict[i].getDict().size() << endl;
-			}
 		}
-		cerr << "Merging complete!" << endl;
-		cerr << "Records merged: " << merged.size() << endl;
-		cerr << "Duplicate text: " << duplicate << endl;
-		cerr << "Different text: " << different << endl;
+		if(dict[1].getDictStatus() == 0 && dict[2].getDictStatus() == 0)
+		{
+			cerr << "Sorting complete!" << endl;
+		}
+		else
+		{
+			cerr << "Merging complete!" << endl;
+			cerr << "Records merged: " << merged.size() << endl;
+			cerr << "Records not merged: " << duplicate << "/" << identical
+			     << " duplicate/identical" << endl;
+		}
 	}
 }
 
@@ -78,13 +90,22 @@ void merger::writeMerged()
 {
 	if(status == 1)
 	{
+		string suffix;
+		if(dict[1].getDictStatus() == 0 && dict[2].getDictStatus() == 0)
+		{
+			suffix = "-Sorted.dic";
+		}
+		else
+		{
+			suffix = "-Merged.dic";
+		}
 		ofstream file;
-		file.open("Merged.dic");
+		file.open(name + suffix, ios::binary);
 		for(const auto &elem : merged)
 		{
-			file << sep[1] << elem.first << sep[2] << elem.second << sep[3] << endl;
+			file << sep[1] << elem.first << sep[2] << elem.second << sep[3] << "\r\n";
 		}
-		cerr << "Writing Merged.dic..." << endl;
+		cerr << "Writing " << merged.size() << " records to " << name << suffix << "..." << endl;
 	}
 }
 
@@ -93,11 +114,8 @@ void merger::writeDiff()
 {
 	if(status == 1)
 	{
-		ofstream file_first;
-		ofstream file_second;
-		file_first.open("Diff_" + dict[0].getDictName());
-		file_second.open("Diff_" + dict[1].getDictName());
-
+		string diff_first;
+		string diff_second;
 		for(auto &elem : dict[0].getDict())
 		{
 			auto search = dict[1].getDict().find(elem.first);
@@ -105,13 +123,28 @@ void merger::writeDiff()
 			{
 				if(search->second != elem.second)
 				{
-					file_first << sep[1] << elem.first << sep[2] << elem.second << sep[3] << endl;
-					file_second << sep[1] << search->first << sep[2] << search->second << sep[3] << endl;
+					diff_first += sep[1] + elem.first + sep[2] +
+						      elem.second + sep[3] + "\r\n";
+					diff_second += sep[1] + search->first + sep[2] +
+					               search->second + sep[3] + "\r\n";
 				}
 			}
 		}
-		cerr << "Writing Diff_" << dict[0].getDictName() << "..." << endl;
-		cerr << "Writing Diff_" << dict[1].getDictName() << "..." << endl;
+		if(!diff_first.empty() && !diff_second.empty())
+		{
+			ofstream file_first;
+			ofstream file_second;
+			file_first.open("Diff-" + dict[0].getDictPrefix() + ".log");
+			file_second.open("Diff-" + dict[1].getDictPrefix() + ".log");
+			file_first << diff_first;
+			file_second << diff_second;
+			cerr << "Writing " << "Diff-" << dict[0].getDictPrefix() << ".log" << "..." << endl;
+			cerr << "Writing " << "Diff-" << dict[1].getDictPrefix() << ".log" << "..." << endl;
+		}
+		else
+		{
+			cerr << "No differences between dictionaries!" << endl;
+		}
 	}
 }
 
@@ -120,22 +153,9 @@ void merger::writeLog()
 {
 	if(status == 1)
 	{
-		log += "\n\n" + dict[0].getDictLog() + dict[1].getDictLog() + dict[2].getDictLog();
-		if(!log.empty())
-		{
-			ofstream file;
-			file.open("Dict.log");
-			file << log;
-			cerr << "Writing Dict.log..." << endl;
-		}
-	}
-}
-
-//----------------------------------------------------------
-void merger::translateDial()
-{
-	if(status == 1)
-	{
-
+		ofstream file;
+		file.open("yampt.log");
+		file << dict[0].getDictLog() + dict[1].getDictLog() + dict[2].getDictLog() + log;
+		cerr << "Writing yampt.log..." << endl;
 	}
 }

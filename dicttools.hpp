@@ -19,21 +19,24 @@ public:
 	void readDict(string path);
 	bool getDictStatus() { return status; }
 	string getDictName() { return name; }
+	string getDictPrefix() { return prefix; }
 	string getDictLog() { return log; }
 	map<string, string> const& getDict() const { return dict; }
 
 	dicttools() {}
 
 private:
-	void setDictStatus(int i);
+	void setDictStatus(bool st);
 	void setDictName(string path);
 	void parseDict();
 	bool validateRecLength(const string &pri, const string &sec);
 
-	int status = {};
+	bool status = {};
 	string name;
+	string prefix;
 	string content;
 	string log;
+	int invalid;
 	map<string, string> dict;
 };
 

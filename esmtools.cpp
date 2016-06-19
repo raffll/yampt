@@ -1,6 +1,7 @@
 #include "esmtools.hpp"
 
 using namespace std;
+using namespace std::regex_constants;
 
 //----------------------------------------------------------
 void esmtools::readEsm(string path)
@@ -12,7 +13,6 @@ void esmtools::readEsm(string path)
 		size_t size = file.tellg();
 		esm_content.reserve(size);
 		streamsize chars_read;
-
 		while(file.read(buffer, sizeof(buffer)), chars_read = file.gcount())
 		{
 			esm_content.append(buffer, chars_read);
@@ -38,7 +38,7 @@ void esmtools::setEsmStatus(bool st)
 {
 	if(st == 0)
 	{
-		cerr << "Error while loading file!" << endl;
+		cerr << "Error while loading file! (wrong path or isn't TES3 plugin)" << endl;
 		esm_status = 0;
 	}
 	else
@@ -93,7 +93,6 @@ void esmtools::setPriSubRec(string id)
 	{
 		pri_id = id;
 		pri_pos = rec_content.find(id);
-
 		if(pri_id == "INDX")
 		{
 			int indx = byteToInt(rec_content.substr(pri_pos + 8, 4));
@@ -101,28 +100,15 @@ void esmtools::setPriSubRec(string id)
 			ss << std::setfill('0') << std::setw(3) << indx;
 			pri_text = ss.str();
 		}
-		else if(pri_id == "SCHD")
-		{
-			pri_size = 32;
-			pri_text = rec_content.substr(pri_pos + 8, pri_size);
-			for(unsigned i = 0; i < pri_size; i++)
-			{
-				if(pri_text.at(i) == '\0')
-				{
-					pri_text.resize(i);
-					break;
-				}
-			}
-		}
 		else if(pri_pos != string::npos)
 		{
 			pri_size = byteToInt(rec_content.substr(pri_pos + 4, 4));
 			pri_text = rec_content.substr(pri_pos + 8, pri_size);
-			cutNullChar(pri_text);
+			eraseNullChars(pri_text);
 		}
 		else
 		{
-			pri_text = "";
+			pri_text.erase();
 		}
 	}
 }
@@ -134,44 +120,152 @@ void esmtools::setSecSubRec(string id)
 	{
 		sec_id = id;
 		sec_pos = rec_content.find(id);
-
-		if(sec_id == "RNAM")
-		{
-			tmp_text.clear();
-
-			while(sec_pos != string::npos)
-			{
-				sec_size = byteToInt(rec_content.substr(sec_pos + 4, 4));
-				sec_text = rec_content.substr(sec_pos + 8, sec_size);
-				cutNullChar(sec_text);
-				tmp_text.push_back(sec_text);
-				sec_pos = rec_content.find(id, sec_pos + 4);
-			}
-		}
-		else if(sec_pos != string::npos)
+		if(sec_pos != string::npos)
 		{
 			sec_size = byteToInt(rec_content.substr(sec_pos + 4, 4));
 			sec_text = rec_content.substr(sec_pos + 8, sec_size);
-			cutNullChar(sec_text);
+			eraseNullChars(sec_text);
 		}
 		else
 		{
-			sec_text = "";
+			sec_text.erase();
 		}
+	}
+}
 
-		if(sec_id == "SCTX" || sec_id == "BNAM")
+//----------------------------------------------------------
+void esmtools::setCollRnam()
+{
+	if(esm_status == 1)
+	{
+		sec_id = "RNAM";
+		sec_pos = rec_content.find(sec_id);
+		text_coll.clear();
+		while(sec_pos != string::npos)
 		{
-			string line;
-			istringstream ss(sec_text);
-			tmp_text.clear();
+			sec_size = byteToInt(rec_content.substr(sec_pos + 4, 4));
+			sec_text = rec_content.substr(sec_pos + 8, sec_size);
+			eraseNullChars(sec_text);
+			text_coll.push_back(make_tuple(sec_text, sec_pos, NOCHANGE, ""));
+			sec_pos = rec_content.find(sec_id, sec_pos + 4);
+		}
+	}
+}
 
-			while(getline(ss, line))
+//----------------------------------------------------------
+void esmtools::setCollScript()
+{
+	if(esm_status == 1)
+	{
+		static vector<string> key_message = {"messagebox", "say ", "say,", "choice"};
+		static vector<string> key_noid = {"addtopic", "positioncell", "getpccell", "aifollowcell",
+						  "placeitemcell", "showmap"};
+		string line;
+		string line_lowercase;
+		linekind found;
+		size_t pos;
+		size_t pos_end;
+		string text;
+		istringstream ss(sec_text);
+		text_coll.clear();
+		while(getline(ss, line))
+		{
+			found = NOCHANGE;
+			eraseNewLineChar(line);
+			line_lowercase = line;
+			transform(line_lowercase.begin(), line_lowercase.end(),
+				  line_lowercase.begin(), ::tolower);
+			for(auto &elem : key_message)
 			{
-				if(line.find('\r') != string::npos)
+				if(found == NOCHANGE)
 				{
-					line.erase(line.size() - 1);
+					pos = line_lowercase.find(elem);
+					if(pos != string::npos && line.rfind(";", pos) == string::npos)
+					{
+						found = MESSAGE;
+					}
 				}
-				tmp_text.push_back(line);
+			}
+			for(auto &elem : key_noid)
+			{
+				if(found == NOCHANGE)
+				{
+					pos = line_lowercase.find(elem);
+					if(pos != string::npos && line.rfind(";", pos) == string::npos)
+					{
+						if(elem == "addtopic")
+						{
+							found = DIAL;
+						}
+						else
+						{
+							found = CELL;
+						}
+						pos = line.find("\"", pos);
+						if(pos != string::npos)
+						{
+							pos_end = line.find("\"", pos + 1) + 1;
+							text = line.substr(pos, pos_end - pos);
+						}
+						else
+						{
+							pos = line.find(" ") + 1;
+							text = line.substr(pos);
+						}
+					}
+				}
+			}
+			if(found == MESSAGE)
+			{
+				text_coll.push_back(make_tuple(line, 0, MESSAGE, ""));
+			}
+			else if(found == DIAL)
+			{
+				text_coll.push_back(make_tuple(line, pos, DIAL, text));
+			}
+			else if(found == CELL)
+			{
+				text_coll.push_back(make_tuple(line, pos, CELL, text));
+			}
+			else
+			{
+				text_coll.push_back(make_tuple(line, 0, NOCHANGE, ""));
+			}
+		}
+		addLastItemEndLine();
+	}
+}
+
+//----------------------------------------------------------
+void esmtools::setCollMessageOnly()
+{
+	if(esm_status == 1)
+	{
+		static vector<string> key_scpt = {"messagebox", "say ", "say,", "choice"};
+		string line;
+		string line_lowercase;
+		linekind found;
+		size_t pos;
+		string text;
+		istringstream ss(sec_text);
+		text_coll.clear();
+		while(getline(ss, line))
+		{
+			found = NOCHANGE;
+			line_lowercase = line;
+			transform(line_lowercase.begin(), line_lowercase.end(),
+				  line_lowercase.begin(), ::tolower);
+			for(auto &elem : key_scpt)
+			{
+				pos = line_lowercase.find(elem);
+				if(pos != string::npos && line.rfind(";", pos) == string::npos)
+				{
+					found = MESSAGE;
+				}
+			}
+			if(found == MESSAGE)
+			{
+				text_coll.push_back(make_tuple(eraseNewLineChar(line), 0, MESSAGE, ""));
 			}
 		}
 	}
@@ -193,6 +287,7 @@ bool esmtools::loopCheck()
 //----------------------------------------------------------
 string esmtools::dialType()
 {
+	static array<string, 5> type_coll = {"T", "V", "G", "P", "J"};
 	int type = byteToInt(rec_content.substr(sec_pos + 8, 1));
 	return type_coll[type];
 }
@@ -203,14 +298,11 @@ unsigned int esmtools::byteToInt(const string &str)
 	char buffer[4];
 	unsigned char ubuffer[4];
 	unsigned int x;
-
 	str.copy(buffer, 4);
-
 	for(int i = 0; i < 4; i++)
 	{
 		ubuffer[i] = buffer[i];
 	}
-
 	if(str.size() == 4)
 	{
 		return x = (ubuffer[0] | ubuffer[1] << 8 | ubuffer[2] << 16 | ubuffer[3] << 24);
@@ -226,12 +318,30 @@ unsigned int esmtools::byteToInt(const string &str)
 }
 
 //----------------------------------------------------------
-void esmtools::cutNullChar(string &str)
+void esmtools::eraseNullChars(string &str)
 {
 	size_t is_null = str.find('\0');
-	while(is_null != string::npos)
+	if(is_null != string::npos)
 	{
-		str.erase(is_null, 1);
-		is_null = str.find('\0');
+		str.erase(is_null);
+	}
+}
+
+//----------------------------------------------------------
+string esmtools::eraseNewLineChar(string &str)
+{
+	if(str.find('\r') != string::npos)
+	{
+		str.erase(str.size() - 1);
+	}
+	return str;
+}
+
+//----------------------------------------------------------
+void esmtools::addLastItemEndLine()
+{
+	if(!text_coll.empty() && sec_text.size() > 1 && sec_text.substr(sec_text.size() - 2) == "\r\n")
+	{
+		get<0>(text_coll[text_coll.size() - 1]).append("\r\n");
 	}
 }
