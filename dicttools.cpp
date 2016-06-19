@@ -43,6 +43,8 @@ void dicttools::setDictStatus(bool st)
 	else
 	{
 		cerr << "Loading " << name << "..." << endl;
+		cerr << "Records loaded: " << dict.size() << endl;
+		cerr << "Records invalid: " << invalid << endl;
 		status = 1;
 	}
 }
@@ -57,6 +59,7 @@ void dicttools::setDictName(string path)
 //----------------------------------------------------------
 void dicttools::parseDict()
 {
+	invalid = 0;
 	size_t pos_beg = 0;
 	size_t pos_mid = 0;
 	size_t pos_end = 0;
@@ -91,6 +94,7 @@ void dicttools::parseDict()
 				if(dict.insert({pri_text, sec_text}).second == 0)
 				{
 					log += name + "\t" + pri_text + " <-- Duplicate record\r\n";
+					invalid++;
 				}
 			}
 			pos_beg++;
@@ -110,6 +114,7 @@ bool dicttools::validateRecLength(const string &pri, const string &sec)
 			log += name + "\t" + pri +
 			       " <-- Text too long, more than 31 bytes (has " +
 			       to_string(sec.size()) + ")\r\n";
+			invalid++;
 			return 0;
 		}
 		else if(pri.substr(0, 4) == "INFO" && sec.size() > 512)
@@ -117,6 +122,7 @@ bool dicttools::validateRecLength(const string &pri, const string &sec)
 			log += name + "\t" + pri +
 			       " <-- Text too long, more than 512 bytes (has " +
 			       to_string(sec.size()) + ")\r\n";
+			invalid++;
 			return 0;
 		}
 		else
@@ -127,6 +133,7 @@ bool dicttools::validateRecLength(const string &pri, const string &sec)
 	else
 	{
 		log += name + "\t" + pri + " <-- Invalid record\r\n";
+		invalid++;
 		return 0;
 	}
 }

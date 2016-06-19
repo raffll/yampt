@@ -100,19 +100,6 @@ void esmtools::setPriSubRec(string id)
 			ss << std::setfill('0') << std::setw(3) << indx;
 			pri_text = ss.str();
 		}
-		else if(pri_id == "SCHD")
-		{
-			pri_size = 32;
-			pri_text = rec_content.substr(pri_pos + 8, pri_size);
-			for(unsigned i = 0; i < pri_size; i++)
-			{
-				if(pri_text.at(i) == '\0')
-				{
-					pri_text.resize(i);
-					break;
-				}
-			}
-		}
 		else if(pri_pos != string::npos)
 		{
 			pri_size = byteToInt(rec_content.substr(pri_pos + 4, 4));
@@ -234,14 +221,10 @@ void esmtools::setCollScript()
 			}
 			else if(found == DIAL)
 			{
-				cout << line << endl;
-				cout << pos << " " << text << endl;
 				text_coll.push_back(make_tuple(line, pos, DIAL, text));
 			}
 			else if(found == CELL)
 			{
-				cout << line << endl;
-				cout << pos << " " << text << endl;
 				text_coll.push_back(make_tuple(line, pos, CELL, text));
 			}
 			else

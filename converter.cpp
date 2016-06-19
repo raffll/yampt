@@ -88,7 +88,7 @@ void converter::convertRecordContent(size_t pos, size_t old_size,
 }
 
 //----------------------------------------------------------
-void converter::convertScript(int i, string id)
+void converter::convertScriptLine(int i, string id)
 {
 	bool found = 0;
 	string line = esm.getCollText(i);
@@ -533,7 +533,7 @@ void converter::convertBnam()
 			{
 				for(size_t i = 0; i < esm.getCollSize(); i++)
 				{
-					convertScript(i, "BNAM");
+					convertScriptLine(i, "BNAM");
 				}
 				script_text.erase(script_text.size() - 2);
 				convertRecordContent(esm.getSecPos(),
@@ -570,7 +570,7 @@ void converter::convertScpt()
 			{
 				for(size_t i = 0; i < esm.getCollSize(); i++)
 				{
-					convertScript(i, "SCPT");
+					convertScriptLine(i, "SCPT");
 				}
 				script_text.erase(script_text.size() - 2);
 				convertRecordContent(esm.getSecPos(),

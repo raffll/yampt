@@ -36,6 +36,7 @@ private:
 	string prefix;
 	string content;
 	string log;
+	int invalid;
 	map<string, string> dict;
 };
 

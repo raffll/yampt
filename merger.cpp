@@ -42,8 +42,8 @@ merger::merger(string path_first, string path_second, string path_third)
 //----------------------------------------------------------
 void merger::mergeDict()
 {
+	int identical = 0;
 	int duplicate = 0;
-	int different = 0;
 	if(status == 1)
 	{
 		for(size_t i = 0; i < dict.size(); i++)
@@ -57,7 +57,7 @@ void merger::mergeDict()
 				}
 				else if(search != merged.end() && search->second != elem.second)
 				{
-					different++;
+					duplicate++;
 					log += dict[i].getDictName() + "\t" +
 					       elem.first + " --- " +
 					       elem.second + "\r\n";
@@ -67,12 +67,8 @@ void merger::mergeDict()
 				}
 				else
 				{
-					duplicate++;
+					identical++;
 				}
-			}
-			if(dict[i].getDictStatus() == 1)
-			{
-				cerr << "Records loaded: " << dict[i].getDict().size() << endl;
 			}
 		}
 		if(dict[1].getDictStatus() == 0 && dict[2].getDictStatus() == 0)
@@ -83,8 +79,8 @@ void merger::mergeDict()
 		{
 			cerr << "Merging complete!" << endl;
 			cerr << "Records merged: " << merged.size() << endl;
-			cerr << "Duplicate records not merged: " << duplicate << endl;
-			cerr << "Duplicate records with different text not merged: " << different << endl;
+			cerr << "Records not merged: " << duplicate << "/" << identical
+			     << " duplicate/identical" << endl;
 		}
 	}
 }
@@ -97,11 +93,11 @@ void merger::writeMerged()
 		string suffix;
 		if(dict[1].getDictStatus() == 0 && dict[2].getDictStatus() == 0)
 		{
-			suffix = ".sorted.dic";
+			suffix = "-Sorted.dic";
 		}
 		else
 		{
-			suffix = ".merged.dic";
+			suffix = "-Merged.dic";
 		}
 		ofstream file;
 		file.open(name + suffix, ios::binary);
@@ -138,12 +134,12 @@ void merger::writeDiff()
 		{
 			ofstream file_first;
 			ofstream file_second;
-			file_first.open(dict[0].getDictPrefix() + ".diff.dic");
-			file_second.open(dict[1].getDictPrefix() + ".diff.dic");
+			file_first.open("Diff-" + dict[0].getDictPrefix() + ".log");
+			file_second.open("Diff-" + dict[1].getDictPrefix() + ".log");
 			file_first << diff_first;
 			file_second << diff_second;
-			cerr << "Writing " << dict[0].getDictPrefix() << ".diff.dic" << "..." << endl;
-			cerr << "Writing " << dict[1].getDictPrefix() << ".diff.dic" << "..." << endl;
+			cerr << "Writing " << "Diff-" << dict[0].getDictPrefix() << ".log" << "..." << endl;
+			cerr << "Writing " << "Diff-" << dict[1].getDictPrefix() << ".log" << "..." << endl;
 		}
 		else
 		{
