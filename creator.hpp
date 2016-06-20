@@ -35,17 +35,17 @@ private:
 	string dialTranslator(string to_translate);
 	string makeGap(string str);
 	void insertRecord(const string &pri, const string &sec);
-	void makeDictCell();
-	void makeDictGmst();
-	void makeDictFnam();
-	void makeDictDesc();
-	void makeDictBook();
-	void makeDictFact();
-	void makeDictIndx();
-	void makeDictDial();
-	void makeDictInfo();
-	void makeDictBnam();
-	void makeDictScpt();
+	void makeDictCELL();
+	void makeDictGMST();
+	void makeDictFNAM();
+	void makeDictDESC();
+	void makeDictTEXT();
+	void makeDictRNAM();
+	void makeDictINDX();
+	void makeDictDIAL();
+	void makeDictINFO();
+	void makeDictBNAM();
+	void makeDictSCPT();
 
 	esmtools esm;
 	esmtools ext;

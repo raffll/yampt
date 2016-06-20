@@ -5,6 +5,7 @@
 #include <map>
 #include <algorithm>
 #include <regex>
+#include <locale>
 
 #include "tools.hpp"
 #include "esmtools.hpp"
@@ -24,20 +25,24 @@ public:
 private:
 	string intToByte(unsigned int x);
 	bool caseInsensitiveStringCmp(string lhs, string rhs);
+	void printRecord();
 	void convertRecordContent(size_t pos, size_t old_size,
 				  string new_text, size_t new_size);
 	void convertScriptLine(int i, string id);
-	void convertCell();
-	void convertGmst();
-	void convertFnam();
-	void convertDesc();
-	void convertBook();
-	void convertFact();
-	void convertIndx();
-	void convertDial();
-	void convertInfo();
-	void convertBnam();
-	void convertScpt();
+	void convertCELL();
+	void convertPGRD();
+	void convertANAM();
+	void convertSCVR();
+	void convertGMST();
+	void convertFNAM();
+	void convertDESC();
+	void convertTEXT();
+	void convertRNAM();
+	void convertINDX();
+	void convertDIAL();
+	void convertINFO();
+	void convertBNAM();
+	void convertSCPT();
 
 	bool status = {};
 	esmtools esm;

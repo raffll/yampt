@@ -44,17 +44,17 @@ void creator::makeDict()
 {
 	if(status == 1)
 	{
-		makeDictCell();
-		makeDictGmst();
-		makeDictFnam();
-		makeDictDesc();
-		makeDictBook();
-		makeDictFact();
-		makeDictIndx();
-		makeDictDial();
-		makeDictInfo();
-		makeDictBnam();
-		makeDictScpt();
+		makeDictCELL();
+		makeDictGMST();
+		makeDictFNAM();
+		makeDictDESC();
+		makeDictTEXT();
+		makeDictRNAM();
+		makeDictINDX();
+		makeDictDIAL();
+		makeDictINFO();
+		makeDictBNAM();
+		makeDictSCPT();
 		cerr << "Creating complete!" << endl;
 	}
 }
@@ -100,9 +100,8 @@ void creator::writeScripts()
 		ofstream file;
 		file.open("Scripts-" + esm.getEsmPrefix() + ".log", ios::binary);
 		esm.resetRec();
-		while(esm.loopCheck())
+		while(esm.setNextRec())
 		{
-			esm.setNextRec();
 			if(esm.getRecId() == "SCPT")
 			{
 				esm.setRecContent();
@@ -113,9 +112,8 @@ void creator::writeScripts()
 			}
 		}
 		esm.resetRec();
-		while(esm.loopCheck())
+		while(esm.setNextRec())
 		{
-			esm.setNextRec();
 			if(esm.getRecId() == "INFO")
 			{
 				esm.setRecContent();
@@ -138,14 +136,12 @@ void creator::compareEsm()
 		string ext_compare;
 		esm.resetRec();
 		ext.resetRec();
-		while(esm.loopCheck())
+		while(esm.setNextRec())
 		{
-			esm.setNextRec();
 			esm_compare += esm.getRecId();
 		}
-		while(ext.loopCheck())
+		while(ext.setNextRec())
 		{
-			ext.setNextRec();
 			ext_compare += ext.getRecId();
 		}
 		if(esm_compare != ext_compare)
@@ -201,15 +197,13 @@ string creator::makeGap(string str)
 }
 
 //----------------------------------------------------------
-void creator::makeDictCell()
+void creator::makeDictCELL()
 {
 	counter = 0;
 	esm.resetRec();
 	ext.resetRec();
-	while(esm.loopCheck())
+	while(esm.setNextRec() && ext.setNextRec())
 	{
-		esm.setNextRec();
-		ext.setNextRec();
 		if(esm.getRecId() == "CELL")
 		{
 			esm.setRecContent();
@@ -228,22 +222,31 @@ void creator::makeDictCell()
 }
 
 //----------------------------------------------------------
-void creator::makeDictGmst()
+void creator::makeDictGMST()
 {
 	counter = 0;
 	esm.resetRec();
-	while(esm.loopCheck())
+	ext.resetRec();
+	while(esm.setNextRec() && ext.setNextRec())
 	{
-		esm.setNextRec();
 		if(esm.getRecId() == "GMST")
 		{
 			esm.setRecContent();
 			esm.setPriSubRec("NAME");
 			esm.setSecSubRec("STRV");
+			ext.setRecContent();
+			ext.setPriSubRec("NAME");
+			ext.setSecSubRec("STRV");
 			if(!esm.getSecText().empty())
 			{
 				insertRecord(esm.getRecId() + sep[0] +
 					     esm.getPriText(),
+					     esm.getSecText());
+			}
+			if(esm.getPriText() == "sDefaultCellname")
+			{
+				insertRecord("CELL" + sep[0] +
+					     esm_ptr->getSecText(),
 					     esm.getSecText());
 			}
 		}
@@ -252,33 +255,56 @@ void creator::makeDictGmst()
 }
 
 //----------------------------------------------------------
-void creator::makeDictFnam()
+void creator::makeDictFNAM()
 {
 	counter = 0;
 	esm.resetRec();
-	while(esm.loopCheck())
+	ext.resetRec();
+	while(esm.setNextRec() && ext.setNextRec())
 	{
-		esm.setNextRec();
-		if(esm.getRecId() == "ACTI" || esm.getRecId() == "ALCH" ||
-		   esm.getRecId() == "APPA" || esm.getRecId() == "ARMO" ||
-		   esm.getRecId() == "BOOK" || esm.getRecId() == "CLAS" ||
-		   esm.getRecId() == "CLOT" || esm.getRecId() == "CONT" ||
-		   esm.getRecId() == "CREA" || esm.getRecId() == "DOOR" ||
-		   esm.getRecId() == "ENCH" || esm.getRecId() == "FACT" ||
-		   esm.getRecId() == "INGR" || esm.getRecId() == "LIGH" ||
-		   esm.getRecId() == "MISC" || esm.getRecId() == "NPC_" ||
-		   esm.getRecId() == "PROB" || esm.getRecId() == "REPA" ||
-		   esm.getRecId() == "SKIL" || esm.getRecId() == "SPEL" ||
+		if(esm.getRecId() == "ACTI" ||
+		   esm.getRecId() == "ALCH" ||
+		   esm.getRecId() == "APPA" ||
+		   esm.getRecId() == "ARMO" ||
+		   esm.getRecId() == "BOOK" ||
+		   esm.getRecId() == "BSGN" ||
+		   esm.getRecId() == "CLAS" ||
+		   esm.getRecId() == "CLOT" ||
+		   esm.getRecId() == "CONT" ||
+		   esm.getRecId() == "CREA" ||
+		   esm.getRecId() == "DOOR" ||
+		   esm.getRecId() == "ENCH" ||
+		   esm.getRecId() == "FACT" ||
+		   esm.getRecId() == "INGR" ||
+		   esm.getRecId() == "LIGH" ||
+		   esm.getRecId() == "LOCK" ||
+		   esm.getRecId() == "MISC" ||
+		   esm.getRecId() == "NPC_" ||
+		   esm.getRecId() == "PROB" ||
+		   esm.getRecId() == "RACE" ||
+		   esm.getRecId() == "REGN" ||
+		   esm.getRecId() == "REPA" ||
+		   esm.getRecId() == "SKIL" ||
+		   esm.getRecId() == "SPEL" ||
 		   esm.getRecId() == "WEAP")
 		{
 			esm.setRecContent();
 			esm.setPriSubRec("NAME");
 			esm.setSecSubRec("FNAM");
+			ext.setRecContent();
+			ext.setPriSubRec("NAME");
+			ext.setSecSubRec("FNAM");
 			if(!esm.getPriText().empty())
 			{
 				insertRecord(esm.getSecId() + sep[0] +
 					     esm.getRecId() + sep[0] +
 					     esm.getPriText(),
+					     esm.getSecText());
+			}
+			if(esm.getRecId() == "REGN")
+			{
+				insertRecord("CELL" + sep[0] +
+					     esm_ptr->getSecText(),
 					     esm.getSecText());
 			}
 		}
@@ -287,16 +313,16 @@ void creator::makeDictFnam()
 }
 
 //----------------------------------------------------------
-void creator::makeDictDesc()
+void creator::makeDictDESC()
 {
 	counter = 0;
 	esm.resetRec();
-	while(esm.loopCheck())
+	while(esm.setNextRec())
 	{
-		esm.setNextRec();
-		if(esm.getRecId() == "CLAS" ||
-		   esm.getRecId() == "RACE" ||
-		   esm.getRecId() == "BSGN")
+		if(esm.getRecId() == "BSGN" ||
+		   esm.getRecId() == "CLAS" ||
+		   esm.getRecId() == "RACE")
+
 		{
 			esm.setRecContent();
 			esm.setPriSubRec("NAME");
@@ -311,13 +337,12 @@ void creator::makeDictDesc()
 }
 
 //----------------------------------------------------------
-void creator::makeDictBook()
+void creator::makeDictTEXT()
 {
 	counter = 0;
 	esm.resetRec();
-	while(esm.loopCheck())
+	while(esm.setNextRec())
 	{
-		esm.setNextRec();
 		if(esm.getRecId() == "BOOK")
 		{
 			esm.setRecContent();
@@ -332,30 +357,29 @@ void creator::makeDictBook()
 }
 
 //----------------------------------------------------------
-void creator::makeDictFact()
+void creator::makeDictRNAM()
 {
 	counter = 0;
+	int rnam;
 	esm.resetRec();
 	ext.resetRec();
-	while(esm.loopCheck())
+	while(esm.setNextRec() && ext.setNextRec())
 	{
-		esm.setNextRec();
-		ext.setNextRec();
 		if(esm.getRecId() == "FACT")
 		{
 			esm.setRecContent();
 			esm.setPriSubRec("NAME");
-			esm.setCollRnam();
 			ext.setRecContent();
 			ext.setPriSubRec("NAME");
-			ext.setCollRnam();
-			for(size_t i = 0; i < esm.getCollSize(); i++)
+			rnam = 0;
+			while(esm.setSecSubRec("RNAM", 4) && ext.setSecSubRec("RNAM", 4))
 			{
 				insertRecord(esm.getSecId() + sep[0] +
 					     esm.getPriText() + sep[0] +
-					     to_string(i) + sep[0] +
-					     esm_ptr->getCollText(i),
-					     esm.getCollText(i));
+					     to_string(rnam) + sep[0] +
+					     esm_ptr->getSecText(),
+					     esm.getSecText());
+				rnam++;
 			}
 		}
 	}
@@ -363,18 +387,17 @@ void creator::makeDictFact()
 }
 
 //----------------------------------------------------------
-void creator::makeDictIndx()
+void creator::makeDictINDX()
 {
 	counter = 0;
 	esm.resetRec();
-	while(esm.loopCheck())
+	while(esm.setNextRec())
 	{
-		esm.setNextRec();
 		if(esm.getRecId() == "SKIL" ||
 		   esm.getRecId() == "MGEF")
 		{
 			esm.setRecContent();
-			esm.setPriSubRec("INDX");
+			esm.setPriSubRecINDX();
 			esm.setSecSubRec("DESC");
 			insertRecord(esm.getPriId() + sep[0] +
 				     esm.getRecId() + sep[0] +
@@ -386,15 +409,13 @@ void creator::makeDictIndx()
 }
 
 //----------------------------------------------------------
-void creator::makeDictDial()
+void creator::makeDictDIAL()
 {
 	counter = 0;
 	esm.resetRec();
 	ext.resetRec();
-	while(esm.loopCheck())
+	while(esm.setNextRec() && ext.setNextRec())
 	{
-		esm.setNextRec();
-		ext.setNextRec();
 		if(esm.getRecId() == "DIAL")
 		{
 			esm.setRecContent();
@@ -415,14 +436,13 @@ void creator::makeDictDial()
 }
 
 //----------------------------------------------------------
-void creator::makeDictInfo()
+void creator::makeDictINFO()
 {
 	counter = 0;
 	string dial;
 	esm.resetRec();
-	while(esm.loopCheck())
+	while(esm.setNextRec())
 	{
-		esm.setNextRec();
 		if(esm.getRecId() == "DIAL")
 		{
 			esm.setRecContent();
@@ -448,16 +468,14 @@ void creator::makeDictInfo()
 }
 
 //----------------------------------------------------------
-void creator::makeDictBnam()
+void creator::makeDictBNAM()
 {
 	counter = 0;
 	string dial;
 	esm.resetRec();
 	ext.resetRec();
-	while(esm.loopCheck())
+	while(esm.setNextRec() && ext.setNextRec())
 	{
-		esm.setNextRec();
-		ext.setNextRec();
 		if(esm.getRecId() == "INFO")
 		{
 			esm.setRecContent();
@@ -481,15 +499,13 @@ void creator::makeDictBnam()
 }
 
 //----------------------------------------------------------
-void creator::makeDictScpt()
+void creator::makeDictSCPT()
 {
 	counter = 0;
 	esm.resetRec();
 	ext.resetRec();
-	while(esm.loopCheck())
+	while(esm.setNextRec() && ext.setNextRec())
 	{
-		esm.setNextRec();
-		ext.setNextRec();
 		if(esm.getRecId() == "SCPT")
 		{
 			esm.setRecContent();

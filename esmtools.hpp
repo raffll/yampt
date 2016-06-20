@@ -22,17 +22,16 @@ public:
 
 	void readEsm(string path);
 	void resetRec();
-	void setNextRec();
+	bool setNextRec();
 	void setRecContent();
-	void setPriSubRec(string id);
-	void setSecSubRec(string id);
-	void setCollRnam();
+	bool setPriSubRec(string id, size_t next = 0);
+	bool setSecSubRec(string id, size_t next = 0);
+	void setPriSubRecINDX();
 	void setCollScript();
 	void setCollMessageOnly();
 	void setEsmContent(string c) { esm_content = c; }
 
 	string dialType();
-	bool loopCheck();
 
 	bool getEsmStatus() { return esm_status; }
 	string getEsmName() { return esm_name; }

@@ -16,17 +16,20 @@ void converter::convertEsm()
 {
 	if(status == 1)
 	{
-		convertCell();
-		convertGmst();
-		convertFnam();
-		convertDesc();
-		convertBook();
-		convertFact();
-		convertIndx();
-		convertDial();
-		convertInfo();
-		convertBnam();
-		convertScpt();
+		convertCELL();
+		convertPGRD();
+		convertANAM();
+		convertSCVR();
+		convertGMST();
+		convertFNAM();
+		convertDESC();
+		convertTEXT();
+		convertRNAM();
+		convertINDX();
+		convertDIAL();
+		convertINFO();
+		convertBNAM();
+		convertSCPT();
 		cerr << "Converting complete!" << endl;
 	}
 }
@@ -70,6 +73,22 @@ bool converter::caseInsensitiveStringCmp(string lhs, string rhs)
 	else
 	{
 		return false;
+	}
+}
+
+//----------------------------------------------------------
+void converter::printRecord()
+{
+	for(size_t i = 0; i < rec_content.size(); i++)
+	{
+		if(isprint(rec_content.at(i)))
+		{
+			cout << rec_content.at(i);
+		}
+		else
+		{
+			cout << ".";
+		}
 	}
 }
 
@@ -157,21 +176,20 @@ void converter::convertScriptLine(int i, string id)
 }
 
 //----------------------------------------------------------
-void converter::convertCell()
+void converter::convertCELL()
 {
 	rec_content.erase();
 	esm_content.erase();
 	counter = 0;
 	esm.resetRec();
-	while(esm.loopCheck())
+	while(esm.setNextRec())
 	{
-		esm.setNextRec();
 		esm.setRecContent();
 		rec_content = esm.getRecContent();
 		if(esm.getRecId() == "CELL")
 		{
 			esm.setPriSubRec("NAME");
-			auto search = dict.getDict().find(esm.getRecId() + sep[0] +
+			auto search = dict.getDict().find("CELL" + sep[0] +
 							  esm.getPriText());
 			if(search != dict.getDict().end())
 			{
@@ -192,15 +210,108 @@ void converter::convertCell()
 }
 
 //----------------------------------------------------------
-void converter::convertGmst()
+void converter::convertPGRD()
 {
 	rec_content.erase();
 	esm_content.erase();
 	counter = 0;
 	esm.resetRec();
-	while(esm.loopCheck())
+	while(esm.setNextRec())
 	{
-		esm.setNextRec();
+		esm.setRecContent();
+		rec_content = esm.getRecContent();
+		if(esm.getRecId() == "PGRD")
+		{
+			esm.setPriSubRec("NAME");
+			auto search = dict.getDict().find("CELL" + sep[0] +
+							  esm.getPriText());
+			if(search != dict.getDict().end())
+			{
+				if(esm.getPriText() != search->second)
+				{
+					convertRecordContent(esm.getPriPos(),
+							     esm.getPriSize(),
+							     search->second + '\0',
+							     search->second.size() + 1);
+				}
+				counter++;
+			}
+		}
+		esm_content.append(rec_content);
+	}
+	esm.setEsmContent(esm_content);
+	cerr << "PGRD records converted: " << counter << endl;
+}
+
+//----------------------------------------------------------
+void converter::convertANAM()
+{
+	rec_content.erase();
+	esm_content.erase();
+	counter = 0;
+	esm.resetRec();
+	while(esm.setNextRec())
+	{
+		esm.setRecContent();
+		rec_content = esm.getRecContent();
+		if(esm.getRecId() == "INFO")
+		{
+			esm.setPriSubRec("ANAM");
+			auto search = dict.getDict().find("CELL" + sep[0] +
+							  esm.getPriText());
+			if(search != dict.getDict().end())
+			{
+				if(esm.getPriText() != search->second)
+				{
+					convertRecordContent(esm.getPriPos(),
+							     esm.getPriSize(),
+							     search->second + '\0',
+							     search->second.size() + 1);
+				}
+				counter++;
+			}
+		}
+		esm_content.append(rec_content);
+	}
+	esm.setEsmContent(esm_content);
+	cerr << "ANAM records converted: " << counter << endl;
+}
+
+//----------------------------------------------------------
+void converter::convertSCVR()
+{
+	rec_content.erase();
+	esm_content.erase();
+	counter = 0;
+	string text;
+	esm.resetRec();
+	while(esm.setNextRec())
+	{
+		esm.setRecContent();
+		rec_content = esm.getRecContent();
+		if(esm.getRecId() == "INFO")
+		{
+			esm.setSecSubRec("INAM");
+			while(esm.setPriSubRec("SCVR", 4))
+			{
+				// TODO
+			}
+		}
+		esm_content.append(rec_content);
+	}
+	esm.setEsmContent(esm_content);
+	cerr << "SCVR records converted: " << counter << endl;
+}
+
+//----------------------------------------------------------
+void converter::convertGMST()
+{
+	rec_content.erase();
+	esm_content.erase();
+	counter = 0;
+	esm.resetRec();
+	while(esm.setNextRec())
+	{
 		esm.setRecContent();
 		rec_content = esm.getRecContent();
 		if(esm.getRecId() == "GMST")
@@ -228,27 +339,40 @@ void converter::convertGmst()
 }
 
 //----------------------------------------------------------
-void converter::convertFnam()
+void converter::convertFNAM()
 {
 	rec_content.erase();
 	esm_content.erase();
 	counter = 0;
 	esm.resetRec();
-	while(esm.loopCheck())
+	while(esm.setNextRec())
 	{
-		esm.setNextRec();
 		esm.setRecContent();
 		rec_content = esm.getRecContent();
-		if(esm.getRecId() == "ACTI" || esm.getRecId() == "ALCH" ||
-		   esm.getRecId() == "APPA" || esm.getRecId() == "ARMO" ||
-		   esm.getRecId() == "BOOK" || esm.getRecId() == "CLAS" ||
-		   esm.getRecId() == "CLOT" || esm.getRecId() == "CONT" ||
-		   esm.getRecId() == "CREA" || esm.getRecId() == "DOOR" ||
-		   esm.getRecId() == "ENCH" || esm.getRecId() == "FACT" ||
-		   esm.getRecId() == "INGR" || esm.getRecId() == "LIGH" ||
-		   esm.getRecId() == "MISC" || esm.getRecId() == "NPC_" ||
-		   esm.getRecId() == "PROB" || esm.getRecId() == "REPA" ||
-		   esm.getRecId() == "SKIL" || esm.getRecId() == "SPEL" ||
+		if(esm.getRecId() == "ACTI" ||
+		   esm.getRecId() == "ALCH" ||
+		   esm.getRecId() == "APPA" ||
+		   esm.getRecId() == "ARMO" ||
+		   esm.getRecId() == "BOOK" ||
+		   esm.getRecId() == "BSGN" ||
+		   esm.getRecId() == "CLAS" ||
+		   esm.getRecId() == "CLOT" ||
+		   esm.getRecId() == "CONT" ||
+		   esm.getRecId() == "CREA" ||
+		   esm.getRecId() == "DOOR" ||
+		   esm.getRecId() == "ENCH" ||
+		   esm.getRecId() == "FACT" ||
+		   esm.getRecId() == "INGR" ||
+		   esm.getRecId() == "LIGH" ||
+		   esm.getRecId() == "LOCK" ||
+		   esm.getRecId() == "MISC" ||
+		   esm.getRecId() == "NPC_" ||
+		   esm.getRecId() == "PROB" ||
+		   esm.getRecId() == "RACE" ||
+		   esm.getRecId() == "REGN" ||
+		   esm.getRecId() == "REPA" ||
+		   esm.getRecId() == "SKIL" ||
+		   esm.getRecId() == "SPEL" ||
 		   esm.getRecId() == "WEAP")
 		{
 			esm.setPriSubRec("NAME");
@@ -275,20 +399,19 @@ void converter::convertFnam()
 }
 
 //----------------------------------------------------------
-void converter::convertDesc()
+void converter::convertDESC()
 {
 	rec_content.erase();
 	esm_content.erase();
 	counter = 0;
 	esm.resetRec();
-	while(esm.loopCheck())
+	while(esm.setNextRec())
 	{
-		esm.setNextRec();
 		esm.setRecContent();
 		rec_content = esm.getRecContent();
-		if(esm.getRecId() == "CLAS" ||
-		   esm.getRecId() == "RACE" ||
-		   esm.getRecId() == "BSGN")
+		if(esm.getRecId() == "BSGN" ||
+		   esm.getRecId() == "CLAS" ||
+		   esm.getRecId() == "RACE")
 		{
 			esm.setPriSubRec("NAME");
 			esm.setSecSubRec("DESC");
@@ -314,15 +437,14 @@ void converter::convertDesc()
 }
 
 //----------------------------------------------------------
-void converter::convertBook()
+void converter::convertTEXT()
 {
 	rec_content.erase();
 	esm_content.erase();
 	counter = 0;
 	esm.resetRec();
-	while(esm.loopCheck())
+	while(esm.setNextRec())
 	{
-		esm.setNextRec();
 		esm.setRecContent();
 		rec_content = esm.getRecContent();
 		if(esm.getRecId() == "BOOK")
@@ -350,39 +472,40 @@ void converter::convertBook()
 }
 
 //----------------------------------------------------------
-void converter::convertFact()
+void converter::convertRNAM()
 {
 	rec_content.erase();
 	esm_content.erase();
 	counter = 0;
+	int rnam;
 	string text;
 	esm.resetRec();
-	while(esm.loopCheck())
+	while(esm.setNextRec())
 	{
-		esm.setNextRec();
 		esm.setRecContent();
 		rec_content = esm.getRecContent();
 		if(esm.getRecId() == "FACT")
 		{
 			esm.setPriSubRec("NAME");
-			esm.setCollRnam();
-			for(size_t i = 0; i < esm.getCollSize(); i++)
+			rnam = 0;
+			while(esm.setSecSubRec("RNAM", 4))
 			{
 				auto search = dict.getDict().find(esm.getSecId() + sep[0] +
 								  esm.getPriText() + sep[0] +
-								  to_string(i) + sep[0] +
-								  esm.getCollText(i));
+								  to_string(rnam) + sep[0] +
+								  esm.getSecText());
 				if(search != dict.getDict().end())
 				{
 					if(esm.getSecText() != search->second)
 					{
 						text = search->second;
 						text.resize(32);
-						convertRecordContent(esm.getCollPos(i),
-								     32,
+						convertRecordContent(esm.getSecPos(),
+								     esm.getSecSize(),
 								     text,
-								     search->second.size() + 1);
+								     text.size());
 					}
+					rnam++;
 					counter++;
 				}
 			}
@@ -394,21 +517,20 @@ void converter::convertFact()
 }
 
 //----------------------------------------------------------
-void converter::convertIndx()
+void converter::convertINDX()
 {
 	rec_content.erase();
 	esm_content.erase();
 	counter = 0;
 	esm.resetRec();
-	while(esm.loopCheck())
+	while(esm.setNextRec())
 	{
-		esm.setNextRec();
 		esm.setRecContent();
 		rec_content = esm.getRecContent();
 		if(esm.getRecId() == "SKIL" ||
 		   esm.getRecId() == "MGEF")
 		{
-			esm.setPriSubRec("INDX");
+			esm.setPriSubRecINDX();
 			esm.setSecSubRec("DESC");
 			auto search = dict.getDict().find(esm.getPriId() + sep[0] +
 							  esm.getRecId() + sep[0] +
@@ -432,15 +554,14 @@ void converter::convertIndx()
 }
 
 //----------------------------------------------------------
-void converter::convertDial()
+void converter::convertDIAL()
 {
 	rec_content.erase();
 	esm_content.erase();
 	counter = 0;
 	esm.resetRec();
-	while(esm.loopCheck())
+	while(esm.setNextRec())
 	{
-		esm.setNextRec();
 		esm.setRecContent();
 		rec_content = esm.getRecContent();
 		if(esm.getRecId() == "DIAL")
@@ -468,16 +589,15 @@ void converter::convertDial()
 }
 
 //----------------------------------------------------------
-void converter::convertInfo()
+void converter::convertINFO()
 {
 	rec_content.erase();
 	esm_content.erase();
 	counter = 0;
 	string dial;
 	esm.resetRec();
-	while(esm.loopCheck())
+	while(esm.setNextRec())
 	{
-		esm.setNextRec();
 		esm.setRecContent();
 		rec_content = esm.getRecContent();
 		if(esm.getRecId() == "DIAL")
@@ -512,15 +632,14 @@ void converter::convertInfo()
 }
 
 //----------------------------------------------------------
-void converter::convertBnam()
+void converter::convertBNAM()
 {
 	rec_content.erase();
 	esm_content.erase();
 	counter = 0;
 	esm.resetRec();
-	while(esm.loopCheck())
+	while(esm.setNextRec())
 	{
-		esm.setNextRec();
 		esm.setRecContent();
 		rec_content = esm.getRecContent();
 		if(esm.getRecId() == "INFO")
@@ -549,15 +668,14 @@ void converter::convertBnam()
 }
 
 //----------------------------------------------------------
-void converter::convertScpt()
+void converter::convertSCPT()
 {
 	rec_content.erase();
 	esm_content.erase();
 	counter = 0;
 	esm.resetRec();
-	while(esm.loopCheck())
+	while(esm.setNextRec())
 	{
-		esm.setNextRec();
 		esm.setRecContent();
 		rec_content = esm.getRecContent();
 		if(esm.getRecId() == "SCPT")

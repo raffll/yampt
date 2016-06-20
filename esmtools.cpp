@@ -64,7 +64,7 @@ void esmtools::resetRec()
 }
 
 //----------------------------------------------------------
-void esmtools::setNextRec()
+bool esmtools::setNextRec()
 {
 	if(esm_status == 1)
 	{
@@ -72,6 +72,18 @@ void esmtools::setNextRec()
 		rec_id = esm_content.substr(rec_beg, 4);
 		rec_size = byteToInt(esm_content.substr(rec_beg + 4, 4)) + 16;
 		rec_end = rec_beg + rec_size;
+		if(rec_end != esm_content.size())
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	else
+	{
+		return false;
 	}
 }
 
@@ -87,68 +99,71 @@ void esmtools::setRecContent()
 }
 
 //----------------------------------------------------------
-void esmtools::setPriSubRec(string id)
+bool esmtools::setPriSubRec(string id, size_t next)
 {
 	if(esm_status == 1)
 	{
 		pri_id = id;
-		pri_pos = rec_content.find(id);
-		if(pri_id == "INDX")
-		{
-			int indx = byteToInt(rec_content.substr(pri_pos + 8, 4));
-			ostringstream ss;
-			ss << std::setfill('0') << std::setw(3) << indx;
-			pri_text = ss.str();
-		}
-		else if(pri_pos != string::npos)
+		pri_pos = rec_content.find(id, pri_pos + next);
+		if(pri_pos != string::npos)
 		{
 			pri_size = byteToInt(rec_content.substr(pri_pos + 4, 4));
 			pri_text = rec_content.substr(pri_pos + 8, pri_size);
 			eraseNullChars(pri_text);
+			return 1;
 		}
 		else
 		{
+			pri_size = 0;
 			pri_text.erase();
+			return 0;
 		}
+	}
+	else
+	{
+		return 0;
 	}
 }
 
 //----------------------------------------------------------
-void esmtools::setSecSubRec(string id)
+bool esmtools::setSecSubRec(string id, size_t next)
 {
 	if(esm_status == 1)
 	{
 		sec_id = id;
-		sec_pos = rec_content.find(id);
+		sec_pos = rec_content.find(id, sec_pos + next);
 		if(sec_pos != string::npos)
 		{
 			sec_size = byteToInt(rec_content.substr(sec_pos + 4, 4));
 			sec_text = rec_content.substr(sec_pos + 8, sec_size);
 			eraseNullChars(sec_text);
+			return 1;
 		}
 		else
 		{
+			sec_size = 0;
 			sec_text.erase();
+			return 0;
 		}
+	}
+	else
+	{
+		return 0;
 	}
 }
 
 //----------------------------------------------------------
-void esmtools::setCollRnam()
+void esmtools::setPriSubRecINDX()
 {
 	if(esm_status == 1)
 	{
-		sec_id = "RNAM";
-		sec_pos = rec_content.find(sec_id);
-		text_coll.clear();
-		while(sec_pos != string::npos)
-		{
-			sec_size = byteToInt(rec_content.substr(sec_pos + 4, 4));
-			sec_text = rec_content.substr(sec_pos + 8, sec_size);
-			eraseNullChars(sec_text);
-			text_coll.push_back(make_tuple(sec_text, sec_pos, NOCHANGE, ""));
-			sec_pos = rec_content.find(sec_id, sec_pos + 4);
-		}
+		pri_id = "INDX";
+		pri_pos = rec_content.find(pri_id);
+		int indx = byteToInt(rec_content.substr(pri_pos + 8, 4));
+		ostringstream ss;
+		ss << std::setfill('0') << std::setw(3) << indx;
+		pri_size = 0;
+		pri_text = ss.str();
 	}
 }
 
@@ -268,19 +283,6 @@ void esmtools::setCollMessageOnly()
 				text_coll.push_back(make_tuple(eraseNewLineChar(line), 0, MESSAGE, ""));
 			}
 		}
-	}
-}
-
-//----------------------------------------------------------
-bool esmtools::loopCheck()
-{
-	if(rec_end != esm_content.size())
-	{
-		return true;
-	}
-	else
-	{
-		return false;
 	}
 }
 
