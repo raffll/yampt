@@ -7,7 +7,3 @@
 ./yampt --merge Morrowind.PL.dic Tribunal.PL.dic Bloodmoon.PL.dic
 rm Morrowind.PL.dic Tribunal.PL.dic Bloodmoon.PL.dic
 mv Morrowind.PL-Tribunal.PL-Bloodmoon.PL-Merged.dic PLtoEN.dic
-
-./yampt --convert ../esm/Morrowind.ENG.esm PLtoEN.dic
-./yampt --convert ../esm/Tribunal.ENG.esm PLtoEN.dic
-./yampt --convert ../esm/Bloodmoon.ENG.esm PLtoEN.dic

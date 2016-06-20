@@ -56,7 +56,7 @@ public:
 
 	string getCollText(int i) { return get<0>(text_coll[i]); }
 	size_t getCollPos(int i) { return get<1>(text_coll[i]); }
-	linekind getCollKind(int i) { return get<2>(text_coll[i]); }
+	string getCollKind(int i) { return get<2>(text_coll[i]); }
 	string getCollSubStr(int i) { return get<3>(text_coll[i]); }
 	size_t getCollSize() { return text_coll.size(); }
 
@@ -70,6 +70,7 @@ private:
 	void eraseNullChars(string &str);
 	string eraseNewLineChar(string &str);
 	void addLastItemEndLine();
+	string extractText(string &line, size_t &pos);
 
 	bool esm_status = {};
 	string esm_name;
@@ -93,7 +94,7 @@ private:
 	string sec_id;
 	string sec_text;
 
-	vector<tuple<string, size_t, linekind, string>> text_coll;
+	vector<tuple<string, size_t, string, string>> text_coll;
 };
 
 #endif

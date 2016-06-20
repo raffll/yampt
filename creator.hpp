@@ -51,9 +51,9 @@ private:
 	esmtools ext;
 	esmtools *esm_ptr;
 	merger dict;
-	bool status = {};
-	bool with_dict = {};
-	bool no_duplicates = {};
+	bool status = 0;
+	bool with_dict = 0;
+	bool no_duplicates = 0;
 	int counter;
 	map<string, string> created;
 };

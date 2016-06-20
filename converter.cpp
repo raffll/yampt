@@ -70,27 +70,11 @@ bool converter::caseInsensitiveStringCmp(string lhs, string rhs)
 	transform(rhs.begin(), rhs.end(), rhs.begin(), ::toupper);
 	if(lhs == rhs)
 	{
-		return true;
+		return 1;
 	}
 	else
 	{
-		return false;
-	}
-}
-
-//----------------------------------------------------------
-void converter::printRecord()
-{
-	for(size_t i = 0; i < rec_content.size(); i++)
-	{
-		if(isprint(rec_content.at(i)))
-		{
-			cout << rec_content.at(i);
-		}
-		else
-		{
-			cout << ".";
-		}
+		return 0;
 	}
 }
 
@@ -114,66 +98,57 @@ void converter::convertScriptLine(int i, string id)
 	bool found = 0;
 	string line = esm.getCollText(i);
 	string text = esm.getCollSubStr(i);
-	if(esm.getCollKind(i) == esmtools::NOCHANGE)
+	if(esm.getCollKind(i) == "MESSAGE")
 	{
-		script_text += esm.getCollText(i) + "\r\n";
-	}
-	else if(esm.getCollKind(i) == esmtools::MESSAGE)
-	{
-		if(id == "BNAM")
-		{
-			text = "BNAM" + sep[0] + text;
-		}
-		else
-		{
-			text = "SCPT" + sep[0] + text;
-		}
 		auto search = dict.getDict().find(id + sep[0] + esm.getCollText(i));
 		if(search != dict.getDict().end())
 		{
 			string line = search->second;
 			line = line.substr(line.find(sep[0]) + sep[0].size());
-			script_text += line + "\r\n";
-			counter++;
-		}
-		else
-		{
-			script_text += esm.getCollText(i) + "\r\n";
-		}
-	}
-	else if(esm.getCollKind(i) == esmtools::DIAL || esm.getCollKind(i) == esmtools::CELL)
-	{
-		if(text.find("\"") == 0 && text.rfind("\"") == text.size() - 1)
-		{
-			text = text.substr(1, text.size() - 2);
-		}
-		if(esm.getCollKind(i) == esmtools::DIAL)
-		{
-			text = "DIAL" + sep[0] + text;
-		}
-		else
-		{
-			text = "CELL" + sep[0] + text;
-		}
-		for(auto &elem : dict.getDict())
-		{
-			if(caseInsensitiveStringCmp(text, elem.first) == 1)
+			found = 1;
+			if(esm.getCollText(i) != line)
 			{
-				line.erase(esm.getCollPos(i), esm.getCollSubStr(i).size());
-				line.insert(esm.getCollPos(i), "\"" + elem.second + "\"");
-				found = 1;
-				break;
+				counter++;
 			}
 		}
-		if(found == 1)
+	}
+	else if(esm.getCollKind(i) == "DIAL" || esm.getCollKind(i) == "CELL")
+	{
+		auto search = dict.getDict().find(esm.getCollKind(i) + sep[0] + text);
+		if(search != dict.getDict().end())
 		{
-			script_text += line + "\r\n";
-			counter++;
+			if(esm.getCollSubStr(i) != search->second)
+			{
+				line.erase(esm.getCollPos(i), esm.getCollSubStr(i).size() + 2);
+				line.insert(esm.getCollPos(i), "\"" + search->second + "\"");
+				counter++;
+			}
+			found = 1;
 		}
-		else
+		if(found == 0)
 		{
-			script_text += esm.getCollText(i) + "\r\n";
+			for(auto &elem : dict.getDict())
+			{
+				if(caseInsensitiveStringCmp(esm.getCollKind(i) + sep[0] + text,
+							    elem.first) == 1 &&
+				   text != elem.second)
+				{
+					line.erase(esm.getCollPos(i), esm.getCollSubStr(i).size() + 2);
+					line.insert(esm.getCollPos(i), "\"" + elem.second + "\"");
+					counter++;
+					found = 1;
+					break;
+				}
+			}
 		}
+	}
+	if(found == 1)
+	{
+		script_text += line + "\r\n";
+	}
+	else
+	{
+		script_text += esm.getCollText(i) + "\r\n";
 	}
 }
 
@@ -201,8 +176,8 @@ void converter::convertCELL()
 							     esm.getPriSize(),
 							     search->second + '\0',
 							     search->second.size() + 1);
+					counter++;
 				}
-				counter++;
 			}
 		}
 		esm_content.append(rec_content);
@@ -235,8 +210,8 @@ void converter::convertPGRD()
 							     esm.getPriSize(),
 							     search->second + '\0',
 							     search->second.size() + 1);
+					counter++;
 				}
-				counter++;
 			}
 		}
 		esm_content.append(rec_content);
@@ -269,8 +244,8 @@ void converter::convertANAM()
 							     esm.getPriSize(),
 							     search->second + '\0',
 							     search->second.size() + 1);
+					counter++;
 				}
-				counter++;
 			}
 		}
 		esm_content.append(rec_content);
@@ -301,13 +276,16 @@ void converter::convertSCVR()
 									  esm.getPriText().substr(5));
 					if(search != dict.getDict().end())
 					{
-						text = esm.getPriText().substr(0, 5) + search->second;
-						convertRecordContent(esm.getPriPos(),
-								     esm.getPriSize(),
-								     text,
-								     text.size());
-						esm.setRecContent(rec_content);
-						counter++;
+						if(esm.getPriText().substr(5) != search->second)
+						{
+							text = esm.getPriText().substr(0, 5) + search->second;
+							convertRecordContent(esm.getPriPos(),
+									     esm.getPriSize(),
+									     text,
+									     text.size());
+							esm.setRecContent(rec_content);
+							counter++;
+						}
 					}
 				}
 			}
@@ -341,12 +319,15 @@ void converter::convertDNAM()
 									  esm.getPriText());
 					if(search != dict.getDict().end())
 					{
-						convertRecordContent(esm.getPriPos(),
-								     esm.getPriSize(),
-								     search->second + '\0',
-								     search->second.size() + 1);
-						esm.setRecContent(rec_content);
-						counter++;
+						if(esm.getPriText() != search->second)
+						{
+							convertRecordContent(esm.getPriPos(),
+									     esm.getPriSize(),
+									     search->second + '\0',
+									     search->second.size() + 1);
+							esm.setRecContent(rec_content);
+							counter++;
+						}
 					}
 				}
 			}
@@ -379,12 +360,15 @@ void converter::convertCNDT()
 									  esm.getPriText());
 					if(search != dict.getDict().end())
 					{
-						convertRecordContent(esm.getPriPos(),
-								     esm.getPriSize(),
-								     search->second + '\0',
-								     search->second.size() + 1);
-						esm.setRecContent(rec_content);
-						counter++;
+						if(esm.getPriText() != search->second)
+						{
+							convertRecordContent(esm.getPriPos(),
+									     esm.getPriSize(),
+									     search->second + '\0',
+									     search->second.size() + 1);
+							esm.setRecContent(rec_content);
+							counter++;
+						}
 					}
 				}
 			}
@@ -420,8 +404,8 @@ void converter::convertGMST()
 							     esm.getSecSize(),
 							     search->second + '\0',
 							     search->second.size() + 1);
+					counter++;
 				}
-				counter++;
 			}
 		}
 		esm_content.append(rec_content);
@@ -480,8 +464,8 @@ void converter::convertFNAM()
 							     esm.getSecSize(),
 							     search->second + '\0',
 							     search->second.size() + 1);
+					counter++;
 				}
-				counter++;
 			}
 		}
 		esm_content.append(rec_content);
@@ -518,8 +502,8 @@ void converter::convertDESC()
 							     esm.getSecSize(),
 							     search->second + '\0',
 							     search->second.size() + 1);
+					counter++;
 				}
-				counter++;
 			}
 		}
 		esm_content.append(rec_content);
@@ -553,8 +537,8 @@ void converter::convertTEXT()
 							     esm.getSecSize(),
 							     search->second + '\0',
 							     search->second.size() + 1);
+					counter++;
 				}
-				counter++;
 			}
 		}
 		esm_content.append(rec_content);
@@ -597,9 +581,9 @@ void converter::convertRNAM()
 								     text,
 								     text.size());
 						esm.setRecContent(rec_content);
+						counter++;
 					}
 					rnam++;
-					counter++;
 				}
 			}
 		}
@@ -636,8 +620,8 @@ void converter::convertINDX()
 							     esm.getSecSize(),
 							     search->second + '\0',
 							     search->second.size() + 1);
+					counter++;
 				}
-				counter++;
 			}
 		}
 		esm_content.append(rec_content);
@@ -671,8 +655,8 @@ void converter::convertDIAL()
 							     esm.getPriSize(),
 							     search->second + '\0',
 							     search->second.size() + 1);
+					counter++;
 				}
-				counter++;
 			}
 		}
 		esm_content.append(rec_content);
@@ -714,8 +698,8 @@ void converter::convertINFO()
 							     esm.getSecSize(),
 							     search->second + '\0',
 							     search->second.size() + 1);
+					counter++;
 				}
-				counter++;
 			}
 		}
 		esm_content.append(rec_content);

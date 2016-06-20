@@ -117,14 +117,14 @@ bool dicttools::validateRecLength(const string &pri, const string &sec)
 			invalid++;
 			return 0;
 		}
-		else if(pri.substr(0, 4) == "INFO" && sec.size() > 512)
+		/*else if(pri.substr(0, 4) == "INFO" && sec.size() > 512)
 		{
 			log += name + "\t" + pri +
 			       " <-- Text too long, more than 512 bytes (has " +
 			       to_string(sec.size()) + ")\r\n";
 			invalid++;
 			return 0;
-		}
+		}*/
 		else
 		{
 			return 1;

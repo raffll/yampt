@@ -25,7 +25,6 @@ public:
 private:
 	string intToByte(unsigned int x);
 	bool caseInsensitiveStringCmp(string lhs, string rhs);
-	void printRecord();
 	void convertRecordContent(size_t pos, size_t old_size,
 				  string new_text, size_t new_size);
 	void convertScriptLine(int i, string id);
