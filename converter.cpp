@@ -20,6 +20,8 @@ void converter::convertEsm()
 		convertPGRD();
 		convertANAM();
 		convertSCVR();
+		convertDNAM();
+		convertCNDT();
 		convertGMST();
 		convertFNAM();
 		convertDESC();
@@ -291,16 +293,106 @@ void converter::convertSCVR()
 		rec_content = esm.getRecContent();
 		if(esm.getRecId() == "INFO")
 		{
-			esm.setSecSubRec("INAM");
 			while(esm.setPriSubRec("SCVR", 4))
 			{
-				// TODO
+				if(!esm.getPriText().empty() && esm.getPriText().substr(1, 1) == "B")
+				{
+					auto search = dict.getDict().find("CELL" + sep[0] +
+									  esm.getPriText().substr(5));
+					if(search != dict.getDict().end())
+					{
+						text = esm.getPriText().substr(0, 5) + search->second;
+						convertRecordContent(esm.getPriPos(),
+								     esm.getPriSize(),
+								     text,
+								     text.size());
+						esm.setRecContent(rec_content);
+						counter++;
+					}
+				}
 			}
 		}
 		esm_content.append(rec_content);
 	}
 	esm.setEsmContent(esm_content);
 	cerr << "SCVR records converted: " << counter << endl;
+}
+
+//----------------------------------------------------------
+void converter::convertDNAM()
+{
+	rec_content.erase();
+	esm_content.erase();
+	counter = 0;
+	string text;
+	esm.resetRec();
+	while(esm.setNextRec())
+	{
+		esm.setRecContent();
+		rec_content = esm.getRecContent();
+		if(esm.getRecId() == "CELL" ||
+		   esm.getRecId() == "NPC_")
+		{
+			while(esm.setPriSubRec("DNAM", 4))
+			{
+				if(!esm.getPriText().empty())
+				{
+					auto search = dict.getDict().find("CELL" + sep[0] +
+									  esm.getPriText());
+					if(search != dict.getDict().end())
+					{
+						convertRecordContent(esm.getPriPos(),
+								     esm.getPriSize(),
+								     search->second + '\0',
+								     search->second.size() + 1);
+						esm.setRecContent(rec_content);
+						counter++;
+					}
+				}
+			}
+		}
+		esm_content.append(rec_content);
+	}
+	esm.setEsmContent(esm_content);
+	cerr << "DNAM records converted: " << counter << endl;
+}
+
+//----------------------------------------------------------
+void converter::convertCNDT()
+{
+	rec_content.erase();
+	esm_content.erase();
+	counter = 0;
+	string text;
+	esm.resetRec();
+	while(esm.setNextRec())
+	{
+		esm.setRecContent();
+		rec_content = esm.getRecContent();
+		if(esm.getRecId() == "NPC_")
+		{
+			while(esm.setPriSubRec("CNDT", 4))
+			{
+				if(!esm.getPriText().empty())
+				{
+					auto search = dict.getDict().find("CELL" + sep[0] +
+									  esm.getPriText());
+					if(search != dict.getDict().end())
+					{
+						convertRecordContent(esm.getPriPos(),
+								     esm.getPriSize(),
+								     search->second + '\0',
+								     search->second.size() + 1);
+						esm.setRecContent(rec_content);
+						counter++;
+					}
+				}
+			}
+		}
+		esm_content.append(rec_content);
+	}
+	esm.setEsmContent(esm_content);
+	cerr << "CNDT records converted: " << counter << endl;
 }
 
 //----------------------------------------------------------
@@ -504,6 +596,7 @@ void converter::convertRNAM()
 								     esm.getSecSize(),
 								     text,
 								     text.size());
+						esm.setRecContent(rec_content);
 					}
 					rnam++;
 					counter++;

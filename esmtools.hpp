@@ -24,12 +24,13 @@ public:
 	void resetRec();
 	bool setNextRec();
 	void setRecContent();
+	void setRecContent(string c) { rec_content = c; }
+	void setEsmContent(string c) { esm_content = c; }
 	bool setPriSubRec(string id, size_t next = 0);
 	bool setSecSubRec(string id, size_t next = 0);
 	void setPriSubRecINDX();
 	void setCollScript();
 	void setCollMessageOnly();
-	void setEsmContent(string c) { esm_content = c; }
 
 	string dialType();
 

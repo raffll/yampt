@@ -33,6 +33,8 @@ private:
 	void convertPGRD();
 	void convertANAM();
 	void convertSCVR();
+	void convertDNAM();
+	void convertCNDT();
 	void convertGMST();
 	void convertFNAM();
 	void convertDESC();
