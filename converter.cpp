@@ -96,30 +96,30 @@ void converter::convertRecordContent(size_t pos, size_t old_size,
 void converter::convertScriptLine(int i, string id)
 {
 	bool found = 0;
-	string line = esm.getCollText(i);
-	string text = esm.getCollSubStr(i);
-	if(esm.getCollKind(i) == "MESSAGE")
+	string line = esm.getCollLine(i);
+	string text = esm.getCollText(i);
+	if(esm.getCollType(i) == "MESSAGE")
 	{
-		auto search = dict.getDict().find(id + sep[0] + esm.getCollText(i));
+		auto search = dict.getDict().find(id + sep[0] + esm.getCollLine(i));
 		if(search != dict.getDict().end())
 		{
 			string line = search->second;
 			line = line.substr(line.find(sep[0]) + sep[0].size());
 			found = 1;
-			if(esm.getCollText(i) != line)
+			if(esm.getCollLine(i) != line)
 			{
 				counter++;
 			}
 		}
 	}
-	else if(esm.getCollKind(i) == "DIAL" || esm.getCollKind(i) == "CELL")
+	else if(esm.getCollType(i) == "DIAL" || esm.getCollType(i) == "CELL")
 	{
-		auto search = dict.getDict().find(esm.getCollKind(i) + sep[0] + text);
+		auto search = dict.getDict().find(esm.getCollType(i) + sep[0] + text);
 		if(search != dict.getDict().end())
 		{
-			if(esm.getCollSubStr(i) != search->second)
+			if(esm.getCollText(i) != search->second)
 			{
-				line.erase(esm.getCollPos(i), esm.getCollSubStr(i).size() + 2);
+				line.erase(esm.getCollPos(i), esm.getCollText(i).size() + 2);
 				line.insert(esm.getCollPos(i), "\"" + search->second + "\"");
 				counter++;
 			}
@@ -129,11 +129,11 @@ void converter::convertScriptLine(int i, string id)
 		{
 			for(auto &elem : dict.getDict())
 			{
-				if(caseInsensitiveStringCmp(esm.getCollKind(i) + sep[0] + text,
+				if(caseInsensitiveStringCmp(esm.getCollType(i) + sep[0] + text,
 							    elem.first) == 1 &&
 				   text != elem.second)
 				{
-					line.erase(esm.getCollPos(i), esm.getCollSubStr(i).size() + 2);
+					line.erase(esm.getCollPos(i), esm.getCollText(i).size() + 2);
 					line.insert(esm.getCollPos(i), "\"" + elem.second + "\"");
 					counter++;
 					found = 1;
@@ -148,7 +148,7 @@ void converter::convertScriptLine(int i, string id)
 	}
 	else
 	{
-		script_text += esm.getCollText(i) + "\r\n";
+		script_text += esm.getCollLine(i) + "\r\n";
 	}
 }
 
@@ -568,8 +568,7 @@ void converter::convertRNAM()
 			{
 				auto search = dict.getDict().find(esm.getSecId() + sep[0] +
 								  esm.getPriText() + sep[0] +
-								  to_string(rnam) + sep[0] +
-								  esm.getSecText());
+								  to_string(rnam));
 				if(search != dict.getDict().end())
 				{
 					if(esm.getSecText() != search->second)
@@ -583,8 +582,9 @@ void converter::convertRNAM()
 						esm.setRecContent(rec_content);
 						counter++;
 					}
-					rnam++;
+
 				}
+				rnam++;
 			}
 		}
 		esm_content.append(rec_content);

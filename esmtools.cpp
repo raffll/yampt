@@ -1,7 +1,6 @@
 #include "esmtools.hpp"
 
 using namespace std;
-using namespace std::regex_constants;
 
 //----------------------------------------------------------
 void esmtools::readEsm(string path)
@@ -178,7 +177,7 @@ void esmtools::setCollScript()
 						  "placeitemcell", "showmap"};
 		string line;
 		string line_lowercase;
-		string found;
+		string type;
 		size_t pos;
 		size_t pos_end;
 		string text;
@@ -186,30 +185,30 @@ void esmtools::setCollScript()
 		text_coll.clear();
 		while(getline(ss, line))
 		{
-			found = "NOCHANGE";
+			type = "NOCHANGE";
 			eraseNewLineChar(line);
 			line_lowercase = line;
 			transform(line_lowercase.begin(), line_lowercase.end(),
 				  line_lowercase.begin(), ::tolower);
 			for(auto &elem : key_message)
 			{
-				if(found == "NOCHANGE")
+				if(type == "NOCHANGE")
 				{
 					pos = line_lowercase.find(elem);
 					if(pos != string::npos && line.rfind(";", pos) == string::npos)
 					{
-						found = "MESSAGE";
+						type = "MESSAGE";
 					}
 				}
 			}
 			for(auto &elem : key_dial)
 			{
-				if(found == "NOCHANGE")
+				if(type == "NOCHANGE")
 				{
 					pos = line_lowercase.find(elem);
 					if(pos != string::npos && line.rfind(";", pos) == string::npos)
 					{
-						found = DIAL;
+						type = "DIAL";
 						//text = extractText(line, pos);
 						pos = line.find("\"", pos);
 						if(pos != string::npos)
@@ -228,12 +227,12 @@ void esmtools::setCollScript()
 			}
 			for(auto &elem : key_cell)
 			{
-				if(found == "NOCHANGE")
+				if(type == "NOCHANGE")
 				{
 					pos = line_lowercase.find(elem);
 					if(pos != string::npos && line.rfind(";", pos) == string::npos)
 					{
-						found = "CELL";
+						type = "CELL";
 						//text = extractText(line, pos);
 						pos = line.find("\"", pos);
 						if(pos != string::npos)
@@ -250,22 +249,7 @@ void esmtools::setCollScript()
 					}
 				}
 			}
-			if(found == "MESSAGE")
-			{
-				text_coll.push_back(make_tuple(line, 0, found, ""));
-			}
-			else if(found == "DIAL")
-			{
-				text_coll.push_back(make_tuple(line, pos, found, text));
-			}
-			else if(found == "CELL")
-			{
-				text_coll.push_back(make_tuple(line, pos, found, text));
-			}
-			else
-			{
-				text_coll.push_back(make_tuple(line, 0, found, ""));
-			}
+			text_coll.push_back(make_tuple(type, line, text, pos));
 		}
 		addLastItemEndLine();
 	}
@@ -279,32 +263,32 @@ void esmtools::setCollMessageOnly()
 		static vector<string> key_message = {"messagebox", "say ", "say,", "choice"};
 		string line;
 		string line_lowercase;
-		string found;
+		string type;
 		size_t pos;
 		string text;
 		istringstream ss(sec_text);
 		text_coll.clear();
 		while(getline(ss, line))
 		{
-			found = "NOCHANGE";
+			type = "NOCHANGE";
 			eraseNewLineChar(line);
 			line_lowercase = line;
 			transform(line_lowercase.begin(), line_lowercase.end(),
 				  line_lowercase.begin(), ::tolower);
 			for(auto &elem : key_message)
 			{
-				if(found == "NOCHANGE")
+				if(type == "NOCHANGE")
 				{
 					pos = line_lowercase.find(elem);
 					if(pos != string::npos && line.rfind(";", pos) == string::npos)
 					{
-						found = "MESSAGE";
+						type = "MESSAGE";
 					}
 				}
 			}
-			if(found == "MESSAGE")
+			if(type == "MESSAGE")
 			{
-				text_coll.push_back(make_tuple(line, 0, "MESSAGE", ""));
+				text_coll.push_back(make_tuple(type, line, text, pos));
 			}
 		}
 	}
@@ -373,9 +357,21 @@ void esmtools::addLastItemEndLine()
 }
 
 //----------------------------------------------------------
-string esmtools::extractText(string &line, size_t &pos)
+pair<string, size_t> esmtools::extractText(const string &line, size_t &pos)
 {
 	string text;
-	// TODO
-	return text;
+	size_t pos_end;
+	pos = line.find("\"", pos);
+	if(pos != string::npos)
+	{
+		pos_end = line.find("\"", pos + 1) + 1;
+		text = line.substr(pos, pos_end - pos);
+		text = text.substr(1, text.size() - 2);
+	}
+	else
+	{
+		pos = line.find(" ") + 1;
+		text = line.substr(pos);
+	}
+	return make_pair(text, pos);
 }

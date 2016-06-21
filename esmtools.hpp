@@ -9,7 +9,6 @@
 #include <string>
 #include <vector>
 #include <algorithm>
-#include <regex>
 
 #include "tools.hpp"
 
@@ -18,8 +17,6 @@ using namespace std;
 class esmtools
 {
 public:
-	enum linekind {NOCHANGE, MESSAGE, DIAL, CELL};
-
 	void readEsm(string path);
 	void resetRec();
 	bool setNextRec();
@@ -54,10 +51,10 @@ public:
 	string getSecId() { return sec_id; }
 	string getSecText() { return sec_text; }
 
-	string getCollText(int i) { return get<0>(text_coll[i]); }
-	size_t getCollPos(int i) { return get<1>(text_coll[i]); }
-	string getCollKind(int i) { return get<2>(text_coll[i]); }
-	string getCollSubStr(int i) { return get<3>(text_coll[i]); }
+	string getCollType(int i) { return get<0>(text_coll[i]); }
+	string getCollLine(int i) { return get<1>(text_coll[i]); }
+	string getCollText(int i) { return get<2>(text_coll[i]); }
+	size_t getCollPos(int i) { return get<3>(text_coll[i]); }
 	size_t getCollSize() { return text_coll.size(); }
 
 	esmtools() {}
@@ -70,7 +67,7 @@ private:
 	void eraseNullChars(string &str);
 	string eraseNewLineChar(string &str);
 	void addLastItemEndLine();
-	string extractText(string &line, size_t &pos);
+	pair<string, size_t> extractText(const string &line, size_t &pos);
 
 	bool esm_status = {};
 	string esm_name;
@@ -94,7 +91,7 @@ private:
 	string sec_id;
 	string sec_text;
 
-	vector<tuple<string, size_t, string, string>> text_coll;
+	vector<tuple<string, string, string, size_t>> text_coll;
 };
 
 #endif

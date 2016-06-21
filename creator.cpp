@@ -128,6 +128,32 @@ void creator::writeScripts()
 }
 
 //----------------------------------------------------------
+void creator::writeBinary()
+{
+	if(status == 1)
+	{
+		ofstream file;
+		file.open("Binary-" + esm.getEsmPrefix() + ".log", ios::binary);
+		while(esm.setNextRec())
+		{
+			esm.setRecContent();
+			file << "\r\n----------------------------------------------------------\r\n";
+			for(size_t i = 0; i < esm.getRecContent().size(); i++)
+			{
+				if(isprint(esm.getRecContent().at(i)))
+				{
+					file << esm.getRecContent().at(i);
+				}
+				else
+				{
+					file << ".";
+				}
+			}
+		}
+	}
+}
+
+//----------------------------------------------------------
 void creator::compareEsm()
 {
 	if(status == 1)
@@ -376,8 +402,7 @@ void creator::makeDictRNAM()
 			{
 				insertRecord(esm.getSecId() + sep[0] +
 					     esm.getPriText() + sep[0] +
-					     to_string(rnam) + sep[0] +
-					     esm_ptr->getSecText(),
+					     to_string(rnam),
 					     esm.getSecText());
 				rnam++;
 			}
@@ -489,9 +514,9 @@ void creator::makeDictBNAM()
 			for(size_t i = 0; i < esm.getCollSize(); i++)
 			{
 				insertRecord(esm.getSecId() + sep[0] +
-					     esm_ptr->getCollText(i),
+					     esm_ptr->getCollLine(i),
 					     makeGap(sep[1] + esm.getSecId()) + sep[0] +
-					     esm.getCollText(i));
+					     esm.getCollLine(i));
 			}
 		}
 	}
@@ -519,9 +544,9 @@ void creator::makeDictSCPT()
 			for(size_t i = 0; i < esm.getCollSize(); i++)
 			{
 				insertRecord(esm.getRecId() + sep[0] +
-					     esm_ptr->getCollText(i),
+					     esm_ptr->getCollLine(i),
 					     makeGap(sep[1] + esm.getRecId()) + sep[0] +
-					     esm.getCollText(i));
+					     esm.getCollLine(i));
 			}
 		}
 	}

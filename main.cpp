@@ -16,17 +16,17 @@ int main(int argc, char *argv[])
 	string arg2;
 	string name = argv[0];
 	string usage = "Usage: " + name + " [command]"
-			"\n"
-			"\n  --help                              Print this message."
-			"\n  --make -a  [file1] [dict1]          Make dictionary from esp/esm plugin with all records."
-			"\n  --make -d  [file1] [dict1]          Make without duplicated records from dictionary."
-			"\n  --make -c  [file1] [dict1]          Make without records from dictionary."
-			"\n  --make -r  [file1]                  Like \"--make -a\", but without dial translation."
-			"\n  --make -b  [file1] [file2]          Make base dictionary from two different localized esm files."
-			"\n  --compare  [dict1] [dict2]          Compare two dictionaries and create differences log."
-			"\n  --merge    [dict1] <dict2> <dict3>  Validate, merge, sort and delete doubled records."
-			"\n  --convert  [file1] [dict1] <dict2>  Convert plugin from dictionaries in paths"
-			"\n                                      and create dictionary as \"--make -c\" command.";
+		       "\n"
+		       "\n  --help                              Print this message."
+		       "\n  --make -a  [file1] [dict1]          Make dictionary from esp/esm plugin with all records."
+		       "\n  --make -c  [file1] [dict1]          Make without records from dictionary."
+		       "\n  --make -r  [file1]                  Like \"--make -a\", but without dial translation."
+		       "\n  --make -b  [file1] [file2]          Make base dictionary from two different localized esm files."
+		       "\n  --compare  [dict1] [dict2]          Compare two dictionaries and create differences log."
+		       "\n  --merge    [dict1] <dict2> <dict3>  Validate, merge, sort and delete doubled records."
+		       "\n  --convert  [file1] [dict1] <dict2>  Convert plugin from dictionaries in paths"
+		       "\n                                      and create dictionary as \"--make -c\" command."
+		       "\n  --scripts  [file1] <file2>          Write all scripts content log.";
 	if(argc > 1)
 	{
 		arg1 = argv[1];
@@ -44,6 +44,18 @@ int main(int argc, char *argv[])
 	{
 		creator c(argv[2]);
 		c.writeScripts();
+	}
+	else if(arg1 == "--scripts" && argc == 4)
+	{
+		creator c1(argv[2]);
+		c1.writeScripts();
+		creator c2(argv[3]);
+		c2.writeScripts();
+	}
+	else if(arg1 == "--binary" && argc == 3)
+	{
+		creator c(argv[2]);
+		c.writeBinary();
 	}
 	else if(arg1 == "--make" && arg2 == "-r" && argc == 4)
 	{

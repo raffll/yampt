@@ -9,6 +9,7 @@
 #include <array>
 #include <map>
 #include <algorithm>
+#include <locale>
 
 #include "tools.hpp"
 #include "esmtools.hpp"
@@ -22,6 +23,7 @@ public:
 	void makeDict();
 	void writeDict();
 	void writeScripts();
+	void writeBinary();
 	void compareEsm();
 	void eraseDuplicates();
 	void eraseDifferent();

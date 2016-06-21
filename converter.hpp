@@ -4,7 +4,6 @@
 #include <array>
 #include <map>
 #include <algorithm>
-#include <regex>
 #include <locale>
 
 #include "tools.hpp"
