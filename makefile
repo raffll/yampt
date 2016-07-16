@@ -3,7 +3,7 @@ CFLAGS=-c -std=c++11 -Wall -Wextra -O2 -pedantic -D_GLIBCXX_DEBUG_PEDANTIC -D_FO
 LDFLAGS=
 SOURCES=main.cpp esmtools.cpp creator.cpp dicttools.cpp merger.cpp converter.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
-EXECUTABLE=yampt
+EXECUTABLE=../bin/yampt
 
 .PHONY: clean all
 
@@ -16,4 +16,4 @@ $(EXECUTABLE): $(OBJECTS)
 	$(CC) $(CFLAGS) $< -o $@
 
 clean:
-	rm -f *.o *.log *.dic *.esm *.esp
+	rm -f *.o *.gch

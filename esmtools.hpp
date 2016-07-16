@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <regex>
 
 #include "tools.hpp"
 
@@ -67,7 +68,7 @@ private:
 	void eraseNullChars(string &str);
 	string eraseNewLineChar(string &str);
 	void addLastItemEndLine();
-	pair<string, size_t> extractText(const string &line, size_t &pos);
+	void extractText(const string &line, string &text, size_t &pos);
 
 	bool esm_status = {};
 	string esm_name;

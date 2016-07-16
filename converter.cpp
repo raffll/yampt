@@ -103,7 +103,7 @@ void converter::convertScriptLine(int i, string id)
 		auto search = dict.getDict().find(id + sep[0] + esm.getCollLine(i));
 		if(search != dict.getDict().end())
 		{
-			string line = search->second;
+			line = search->second;
 			line = line.substr(line.find(sep[0]) + sep[0].size());
 			found = 1;
 			if(esm.getCollLine(i) != line)

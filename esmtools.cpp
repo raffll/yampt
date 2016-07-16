@@ -179,7 +179,6 @@ void esmtools::setCollScript()
 		string line_lowercase;
 		string type;
 		size_t pos;
-		size_t pos_end;
 		string text;
 		istringstream ss(sec_text);
 		text_coll.clear();
@@ -209,19 +208,7 @@ void esmtools::setCollScript()
 					if(pos != string::npos && line.rfind(";", pos) == string::npos)
 					{
 						type = "DIAL";
-						//text = extractText(line, pos);
-						pos = line.find("\"", pos);
-						if(pos != string::npos)
-						{
-							pos_end = line.find("\"", pos + 1) + 1;
-							text = line.substr(pos, pos_end - pos);
-							text = text.substr(1, text.size() - 2);
-						}
-						else
-						{
-							pos = line.find(" ") + 1;
-							text = line.substr(pos);
-						}
+						extractText(line, text, pos);
 					}
 				}
 			}
@@ -233,19 +220,8 @@ void esmtools::setCollScript()
 					if(pos != string::npos && line.rfind(";", pos) == string::npos)
 					{
 						type = "CELL";
-						//text = extractText(line, pos);
-						pos = line.find("\"", pos);
-						if(pos != string::npos)
-						{
-							pos_end = line.find("\"", pos + 1) + 1;
-							text = line.substr(pos, pos_end - pos);
-							text = text.substr(1, text.size() - 2);
-						}
-						else
-						{
-							pos = line.find(" ") + 1;
-							text = line.substr(pos);
-						}
+						extractText(line, text, pos);
+
 					}
 				}
 			}
@@ -352,14 +328,31 @@ void esmtools::addLastItemEndLine()
 {
 	if(!text_coll.empty() && sec_text.size() > 1 && sec_text.substr(sec_text.size() - 2) == "\r\n")
 	{
-		get<0>(text_coll[text_coll.size() - 1]).append("\r\n");
+		get<1>(text_coll[text_coll.size() - 1]).append("\r\n");
 	}
 }
 
 //----------------------------------------------------------
-pair<string, size_t> esmtools::extractText(const string &line, size_t &pos)
+/*void esmtools::extractText(const string &line, string &text, size_t &pos)
 {
-	string text;
+	regex re("\"(.*?)\"");
+	smatch found;
+	sregex_iterator next(line.begin(), line.end(), re);
+	sregex_iterator end;
+	while(next != end)
+	{
+		found = *next;
+		text = found[1].str();
+		pos = found.position(0);
+		next++;
+	}
+	//cout << line << endl;
+	//cout << text << " " << pos << endl;
+}*/
+
+//----------------------------------------------------------
+void esmtools::extractText(const string &line, string &text, size_t &pos)
+{
 	size_t pos_end;
 	pos = line.find("\"", pos);
 	if(pos != string::npos)
@@ -373,5 +366,4 @@ pair<string, size_t> esmtools::extractText(const string &line, size_t &pos)
 		pos = line.find(" ") + 1;
 		text = line.substr(pos);
 	}
-	return make_pair(text, pos);
 }
