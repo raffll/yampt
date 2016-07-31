@@ -1,16 +1,6 @@
 #ifndef CREATOR_HPP
 #define CREATOR_HPP
 
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <cstdlib>
-#include <string>
-#include <array>
-#include <map>
-#include <algorithm>
-#include <locale>
-
 #include "config.hpp"
 #include "esmtools.hpp"
 #include "merger.hpp"
@@ -29,14 +19,14 @@ public:
 	void eraseDifferent();
 
 	Creator() {}
-	Creator(string esm_path);
-	Creator(string esm_path, string ext_path);
-	Creator(string esm_path, Merger &m, bool no_dupl = 0);
+	Creator(std::string esm_path);
+	Creator(std::string esm_path, std::string ext_path);
+	Creator(std::string esm_path, Merger &m, bool no_dupl = 0);
 
 private:
 	string dialTranslator(string to_translate);
 	string makeGap(string str);
-	void insertRecord(const string &pri, const string &sec);
+	void insertRecord(const std::string &pri, const std::string &sec);
 	void makeDictCELL();
 	void makeDictGMST();
 	void makeDictFNAM();
@@ -57,7 +47,7 @@ private:
 	bool with_dict = 0;
 	bool no_duplicates = 0;
 	int counter;
-	map<string, string> created;
+	std::map<std::string, std::string> created;
 };
 
 #endif

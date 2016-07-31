@@ -2,25 +2,28 @@
 #define CONFIG_HPP
 
 #include <iostream>
-#include <string>
 #include <fstream>
 #include <sstream>
-#include <vector>
+#include <cstdlib>
+#include <iomanip>
+#include <string>
+#include <array>
 #include <map>
-
-using namespace std;
+#include <algorithm>
+#include <locale>
+#include <regex>
 
 class Config
 {
 public:
-	static array<string, 4> sep;
+	static std::array<std::string, 4> sep;
 
-	static string converted_path;
-	static string converted_suffix;
+	static std::string converted_path;
+	static std::string converted_suffix;
 
-	static vector<string> key_message;
-	static vector<string> key_dial;
-	static vector<string> key_cell;
+	static std::vector<std::string> key_message;
+	static std::vector<std::string> key_dial;
+	static std::vector<std::string> key_cell;
 
 	void readConfig();
 
@@ -30,9 +33,8 @@ private:
 	void setConfigStatus(bool st);
 	void parseConfig();
 
-	string content;
+	std::string content;
 	bool status;
-
 };
 
 #endif

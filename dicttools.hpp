@@ -1,27 +1,17 @@
 #ifndef DICTTOOLS_HPP
 #define DICTTOOLS_HPP
 
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <iomanip>
-#include <cstdlib>
-#include <string>
-#include <map>
-
 #include "config.hpp"
-
-using namespace std;
 
 class Dicttools
 {
 public:
-	void readDict(string path);
+	void readDict(std::string path);
 	bool getDictStatus() { return status; }
-	string getDictName() { return name; }
-	string getDictPrefix() { return prefix; }
-	string getDictLog() { return log; }
-	map<string, string> const& getDict() const { return dict; }
+	std::string getDictName() { return name; }
+	std::string getDictPrefix() { return prefix; }
+	std::string getDictLog() { return log; }
+	std::map<std::string, std::string> const& getDict() const { return dict; }
 
 	Dicttools() {}
 	Dicttools(const Dicttools& that);
@@ -29,18 +19,18 @@ public:
 	~Dicttools();
 
 private:
-	void setDictStatus(bool st, string path);
-	void setDictName(string path);
-	void parseDict(string path);
-	bool validateRecLength(const string &pri, const string &sec);
+	void setDictStatus(bool st, std::string path);
+	void setDictName(std::string path);
+	void parseDict(std::string path);
+	bool validateRecLength(const std::string &pri, const std::string &sec);
 
 	bool status = {};
-	string name;
-	string prefix;
-	string content;
-	string log;
+	std::string name;
+	std::string prefix;
+	std::string content;
+	std::string log;
 	int invalid;
-	map<string, string> dict;
+	std::map<std::string, std::string> dict;
 };
 
 #endif

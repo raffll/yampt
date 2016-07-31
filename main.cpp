@@ -1,20 +1,13 @@
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <cstdlib>
-
-using namespace std;
-
 #include "ui.hpp"
 
 int main(int argc, char *argv[])
 {
-	vector<string> arg;
+	std::vector<std::string> arg;
 	for(int i = 0; i < argc; i++)
 	{
 		arg.push_back(argv[i]);
 	}
-	string usage = "Usage: " + arg[0] + " [command]"
+	std::string usage = "Usage: " + arg[0] + " [command]"
 		       "\n"
 		       "\n  --help                               Print this message."
 		       "\n  --make-all  [file1] [dict1]          Make dictionary from esp/esm plugin with all records."
@@ -32,7 +25,7 @@ int main(int argc, char *argv[])
 	Ui ui(arg);
 	if(arg[1] == "--help")
 	{
-		cout << usage << endl;
+		std::cout << usage << endl;
 	}
 	else if(arg[1] == "--make-raw" && arg.size() == 3)
 	{
@@ -72,7 +65,7 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
-		cout << "Syntax error!" << endl;
-		cout << usage << endl;
+		std::cout << "Syntax error!" << endl;
+		std::cout << usage << endl;
 	}
 }

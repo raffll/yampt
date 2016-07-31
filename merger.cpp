@@ -1,5 +1,7 @@
 #include "merger.hpp"
 
+using namespace std;
+
 //----------------------------------------------------------
 Merger::Merger(vector<string> &path)
 {

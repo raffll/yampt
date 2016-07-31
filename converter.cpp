@@ -1,5 +1,7 @@
 #include "converter.hpp"
 
+using namespace std;
+
 //----------------------------------------------------------
 Converter::Converter(string esm_path, Merger &m)
 {

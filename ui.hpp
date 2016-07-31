@@ -1,8 +1,6 @@
 #ifndef UI_HPP
 #define UI_HPP
 
-using namespace std;
-
 #include "config.hpp"
 #include "creator.hpp"
 #include "merger.hpp"
@@ -21,11 +19,10 @@ public:
 	void writeBinaryLog();
 	void writeDifferencesLog();
 
-	Ui(vector<string> &a);
+	Ui(std::vector<std::string> &a);
 
 private:
-	vector<string> arg;
-
+	std::vector<std::string> arg;
 };
 
 #endif

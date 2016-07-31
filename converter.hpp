@@ -1,16 +1,9 @@
 #ifndef CONVERTER_HPP
 #define CONVERTER_HPP
 
-#include <array>
-#include <map>
-#include <algorithm>
-#include <locale>
-
 #include "config.hpp"
 #include "esmtools.hpp"
 #include "merger.hpp"
-
-using namespace std;
 
 class Converter
 {
@@ -20,14 +13,14 @@ public:
 	bool getConverterStatus() { return status; }
 
 	Converter();
-	Converter(string esm_path, Merger &m);
+	Converter(std::string esm_path, Merger &m);
 
 private:
-	string intToByte(unsigned int x);
-	bool caseInsensitiveStringCmp(string lhs, string rhs);
+	std::string intToByte(unsigned int x);
+	bool caseInsensitiveStringCmp(std::string lhs, std::string rhs);
 	void convertRecordContent(size_t pos, size_t old_size,
-				  string new_text, size_t new_size);
-	void convertScriptLine(int i, string id);
+				  std::string new_text, size_t new_size);
+	void convertScriptLine(int i, std::string id);
 	void convertCELL();
 	void convertPGRD();
 	void convertANAM();
@@ -49,9 +42,9 @@ private:
 	Esmtools esm;
 	Merger dict;
 	int counter;
-	string rec_content;
-	string esm_content;
-	string script_text;
+	std::string rec_content;
+	std::string esm_content;
+	std::string script_text;
 };
 
 #endif

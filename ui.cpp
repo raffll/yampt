@@ -1,5 +1,7 @@
 #include "ui.hpp"
 
+using namespace std;
+
 //----------------------------------------------------------
 Ui::Ui(vector<string> &a) : arg(a)
 {

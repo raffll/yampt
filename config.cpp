@@ -1,5 +1,7 @@
 #include "config.hpp"
 
+using namespace std;
+
 //----------------------------------------------------------
 array<string, 4> Config::sep = {"<br>", "<h3>", "</h3>", "<hr>"};
 
@@ -60,7 +62,5 @@ void Config::setConfigStatus(bool st)
 //----------------------------------------------------------
 void Config::parseConfig()
 {
-	size_t pos;
-	pos = content.find("CONVERTED_PATH");
-	pos = content.find("=");
+
 }
