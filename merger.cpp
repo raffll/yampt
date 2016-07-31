@@ -1,48 +1,38 @@
 #include "merger.hpp"
 
 //----------------------------------------------------------
-merger::merger(string path_first)
+Merger::Merger(vector<string> &path)
 {
-	dict[0].readDict(path_first);
-	if(dict[0].getDictStatus() == 1)
+	for(auto &elem : path)
 	{
-		status = 1;
+		Dicttools tmp;
+		tmp.readDict(elem);
+		dict_coll.push_back(tmp);
+	}
+	for(auto &elem : dict_coll)
+	{
+		if(elem.getDictStatus() == 1)
+		{
+			status = 1;
+		}
+		else
+		{
+			status = 0;
+			break;
+		}
 	}
 }
 
 //----------------------------------------------------------
-merger::merger(string path_first, string path_second)
-{
-	dict[0].readDict(path_first);
-	dict[1].readDict(path_second);
-	if(dict[0].getDictStatus() == 1 && dict[1].getDictStatus() == 1)
-	{
-		status = 1;
-	}
-}
-
-//----------------------------------------------------------
-merger::merger(string path_first, string path_second, string path_third)
-{
-	dict[0].readDict(path_first);
-	dict[1].readDict(path_second);
-	dict[2].readDict(path_third);
-	if(dict[0].getDictStatus() == 1 && dict[1].getDictStatus() == 1 && dict[2].getDictStatus() == 1)
-	{
-		status = 1;
-	}
-}
-
-//----------------------------------------------------------
-void merger::mergeDict()
+void Merger::mergeDict()
 {
 	int identical = 0;
 	int duplicate = 0;
 	if(status == 1)
 	{
-		for(size_t i = 0; i < dict.size(); i++)
+		for(size_t i = 0; i < dict_coll.size(); i++)
 		{
-			for(auto &elem : dict[i].getDict())
+			for(auto &elem : dict_coll[i].getDict())
 			{
 				auto search = merged.find(elem.first);
 				if(search == merged.end())
@@ -52,10 +42,10 @@ void merger::mergeDict()
 				else if(search != merged.end() && search->second != elem.second)
 				{
 					duplicate++;
-					log += dict[i].getDictName() + "\r\n" +
+					log += dict_coll[i].getDictName() + "\r\n" +
 					       elem.first + " --- " +
 					       elem.second + "\r\n";
-					log += dict[i - 1].getDictName() + "\r\n" +
+					log += dict_coll[i - 1].getDictName() + "\r\n" +
 					       search->first + " >>> " +
 					       search->second + "\r\n";
 				}
@@ -65,7 +55,7 @@ void merger::mergeDict()
 				}
 			}
 		}
-		if(dict[1].getDictStatus() == 0 && dict[2].getDictStatus() == 0)
+		if(dict_coll.size() == 1)
 		{
 			cerr << "--> Sorting complete!" << endl;
 		}
@@ -80,7 +70,7 @@ void merger::mergeDict()
 }
 
 //----------------------------------------------------------
-void merger::writeMerged()
+void Merger::writeMerged()
 {
 	if(status == 1)
 	{
@@ -89,37 +79,39 @@ void merger::writeMerged()
 		file.open(name, ios::binary);
 		for(const auto &elem : merged)
 		{
-			file << config::sep[1] << elem.first << config::sep[2] << elem.second << config::sep[3] << "\r\n";
+			file << Config::sep[1] << elem.first
+			     << Config::sep[2] << elem.second
+			     << Config::sep[3] << "\r\n";
 		}
 		cerr << "--> Writing " << merged.size() << " records to " << name << "..." << endl;
 	}
 }
 
 //----------------------------------------------------------
-void merger::writeDiff()
+void Merger::writeDiff()
 {
 	if(status == 1)
 	{
 		string diff_pri;
 		string diff_sec;
-		for(auto &elem : dict[0].getDict())
+		for(auto &elem : dict_coll[0].getDict())
 		{
-			auto search = dict[1].getDict().find(elem.first);
-			if(search != dict[1].getDict().end())
+			auto search = dict_coll[1].getDict().find(elem.first);
+			if(search != dict_coll[1].getDict().end())
 			{
 				if(search->second != elem.second)
 				{
-					diff_pri += config::sep[1] + elem.first + config::sep[2] +
-						    elem.second + config::sep[3] + "\r\n";
-					diff_sec += config::sep[1] + search->first + config::sep[2] +
-					            search->second + config::sep[3] + "\r\n";
+					diff_pri += Config::sep[1] + elem.first + Config::sep[2] +
+						    elem.second + Config::sep[3] + "\r\n";
+					diff_sec += Config::sep[1] + search->first + Config::sep[2] +
+					            search->second + Config::sep[3] + "\r\n";
 				}
 			}
 		}
 		if(!diff_pri.empty() && !diff_sec.empty())
 		{
-			string name_pri = "yampt-diff-0-" + dict[0].getDictPrefix() + ".log";
-			string name_sec = "yampt-diff-1-" + dict[1].getDictPrefix() + ".log";
+			string name_pri = "yampt-diff-0-" + dict_coll[0].getDictPrefix() + ".log";
+			string name_sec = "yampt-diff-1-" + dict_coll[1].getDictPrefix() + ".log";
 			ofstream file_pri;
 			ofstream file_sec;
 			file_pri.open(name_pri, ios::binary);
@@ -137,14 +129,18 @@ void merger::writeDiff()
 }
 
 //----------------------------------------------------------
-void merger::writeLog()
+void Merger::writeLog()
 {
 	if(status == 1)
 	{
 		string name = "yampt.log";
 		ofstream file;
 		file.open(name, ios::binary);
-		file << dict[0].getDictLog() + dict[1].getDictLog() + dict[2].getDictLog() + log;
+		for(auto &elem : dict_coll)
+		{
+			log += elem.getDictLog();
+		}
+		file << log;
 		cerr << "--> Writing " << name << "..." << endl;
 	}
 }

@@ -5,17 +5,16 @@
 
 using namespace std;
 
-#include "config.hpp"
-#include "creator.hpp"
-#include "merger.hpp"
-#include "converter.hpp"
+#include "ui.hpp"
 
 int main(int argc, char *argv[])
 {
-	string arg1;
-	string arg2;
-	string name = argv[0];
-	string usage = "Usage: " + name + " [command]"
+	vector<string> arg;
+	for(int i = 0; i < argc; i++)
+	{
+		arg.push_back(argv[i]);
+	}
+	string usage = "Usage: " + arg[0] + " [command]"
 		       "\n"
 		       "\n  --help                               Print this message."
 		       "\n  --make-all  [file1] [dict1]          Make dictionary from esp/esm plugin with all records."
@@ -28,119 +27,48 @@ int main(int argc, char *argv[])
 		       "\n                                       and create dictionary as \"--make-not\" command."
 		       "\n  --scripts   [file1] <file2>          Write scripts content log."
 		       "\n  --binary    [file1]                  Write binary log.";
-	config conf;
-	conf.readConfig();
-
-	if(argc > 1)
-	{
-		arg1 = argv[1];
-	}
-	if(argc > 2)
-	{
-		arg2 = argv[2];
-	}
-
-	if(arg1 == "--help")
+	Config config;
+	config.readConfig();
+	Ui ui(arg);
+	if(arg[1] == "--help")
 	{
 		cout << usage << endl;
 	}
-	else if(arg1 == "--scripts" && argc == 3)
+	else if(arg[1] == "--make-raw" && arg.size() == 3)
 	{
-		creator c(argv[2]);
-		c.writeScripts();
+		ui.makeDictRaw();
 	}
-	else if(arg1 == "--scripts" && argc == 4)
+	else if(arg[1] == "--make-base" && arg.size() == 4)
 	{
-		creator c1(argv[2]);
-		c1.writeScripts();
-		creator c2(argv[3]);
-		c2.writeScripts();
+		ui.makeDictBase();
 	}
-	else if(arg1 == "--binary" && argc == 3)
+	else if(arg[1] == "--make-all")
 	{
-		creator c(argv[2]);
-		c.writeBinary();
+		ui.makeDictAllRecords();
 	}
-	else if(arg1 == "--make" && arg2 == "-r" && argc == 4)
+	else if(arg[1] == "--make-not")
 	{
-		creator c(argv[3]);
-		c.makeDict();
-		c.writeDict();
+		ui.makeDictNotConverted();
 	}
-	else if(arg1 == "--make" && arg2 == "-b" && argc == 5)
+	else if(arg[1] == "--merge")
 	{
-		creator c(argv[3], argv[4]);
-		c.compareEsm();
-		c.makeDict();
-		c.writeDict();
+		ui.mergeDictionaries();
 	}
-	else if(arg1 == "--make" && arg2 == "-a" && argc == 5)
+	else if(arg[1] == "--convert")
 	{
-		merger m(argv[4]);
-		m.mergeDict();
-		creator c(argv[3], m);
-		c.makeDict();
-		c.writeDict();
+		ui.convertFile();
 	}
-	else if(arg1 == "--make" && arg2 == "-c" && argc == 5)
+	else if(arg[1] == "--scripts")
 	{
-		merger m(argv[4]);
-		m.mergeDict();
-		creator c(argv[3], m, true);
-		c.makeDict();
-		c.writeDict();
+		ui.writeScriptLog();
 	}
-	else if(arg1 == "--compare" && argc == 4)
+	else if(arg[1] == "--binary")
 	{
-		merger m(argv[2], argv[3]);
-		m.writeDiff();
-		m.writeLog();
+		ui.writeBinaryLog();
 	}
-	else if(arg1 == "--merge" && argc == 3)
+	else if(arg[1] == "--compare" && arg.size() == 4)
 	{
-		merger m(argv[2]);
-		m.mergeDict();
-		m.writeMerged();
-		m.writeLog();
-	}
-	else if(arg1 == "--merge" && argc == 4)
-	{
-		merger m(argv[3], argv[2]);
-		m.mergeDict();
-		m.writeMerged();
-		m.writeLog();
-	}
-	else if(arg1 == "--merge" && argc == 5)
-	{
-		merger m(argv[4], argv[3], argv[2]);
-		m.mergeDict();
-		m.writeMerged();
-		m.writeLog();
-	}
-	else if(arg1 == "--convert" && argc == 4)
-	{
-		merger m(argv[3]);
-		m.mergeDict();
-		m.writeLog();
-		converter c(argv[2], m);
-		c.convertEsm();
-		c.writeEsm();
-		creator r(argv[2], m, true);
-		r.makeDict();
-		r.writeDict();
-
-	}
-	else if(arg1 == "--convert" && argc == 5)
-	{
-		merger m(argv[4], argv[3]);
-		m.mergeDict();
-		m.writeLog();
-		converter c(argv[2], m);
-		c.convertEsm();
-		c.writeEsm();
-		creator r(argv[2], m, true);
-		r.makeDict();
-		r.writeDict();
+		ui.writeDifferencesLog();
 	}
 	else
 	{

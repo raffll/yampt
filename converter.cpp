@@ -1,7 +1,7 @@
 #include "converter.hpp"
 
 //----------------------------------------------------------
-converter::converter(string esm_path, merger &m)
+Converter::Converter(string esm_path, Merger &m)
 {
 	esm.readEsm(esm_path);
 	dict = m;
@@ -12,7 +12,7 @@ converter::converter(string esm_path, merger &m)
 }
 
 //----------------------------------------------------------
-void converter::convertEsm()
+void Converter::convertEsm()
 {
 	if(status == 1)
 	{
@@ -37,11 +37,11 @@ void converter::convertEsm()
 }
 
 //----------------------------------------------------------
-void converter::writeEsm()
+void Converter::writeEsm()
 {
 	if(status == 1)
 	{
-		string name = esm.getEsmPrefix() + config::converted_suffix + esm.getEsmSuffix();
+		string name = esm.getEsmPrefix() + Config::converted_suffix + esm.getEsmSuffix();
 		ofstream file(name, ios::binary);
 		file << esm.getEsmContent();
 		cerr << "--> Writing " << name << "..." << endl;
@@ -49,7 +49,7 @@ void converter::writeEsm()
 }
 
 //----------------------------------------------------------
-string converter::intToByte(unsigned int x)
+string Converter::intToByte(unsigned int x)
 {
 	char bytes[4];
 	string str;
@@ -64,7 +64,7 @@ string converter::intToByte(unsigned int x)
 }
 
 //----------------------------------------------------------
-bool converter::caseInsensitiveStringCmp(string lhs, string rhs)
+bool Converter::caseInsensitiveStringCmp(string lhs, string rhs)
 {
 	transform(lhs.begin(), lhs.end(), lhs.begin(), ::toupper);
 	transform(rhs.begin(), rhs.end(), rhs.begin(), ::toupper);
@@ -79,7 +79,7 @@ bool converter::caseInsensitiveStringCmp(string lhs, string rhs)
 }
 
 //----------------------------------------------------------
-void converter::convertRecordContent(size_t pos, size_t old_size,
+void Converter::convertRecordContent(size_t pos, size_t old_size,
 				     string new_text, size_t new_size)
 {
 	unsigned int rec_size;
@@ -93,18 +93,18 @@ void converter::convertRecordContent(size_t pos, size_t old_size,
 }
 
 //----------------------------------------------------------
-void converter::convertScriptLine(int i, string id)
+void Converter::convertScriptLine(int i, string id)
 {
 	bool found = 0;
 	string line = esm.getCollLine(i);
 	string text = esm.getCollText(i);
 	if(esm.getCollType(i) == "MESSAGE")
 	{
-		auto search = dict.getDict().find(id + config::config::sep[0] + esm.getCollLine(i));
+		auto search = dict.getDict().find(id + Config::Config::sep[0] + esm.getCollLine(i));
 		if(search != dict.getDict().end())
 		{
 			line = search->second;
-			line = line.substr(line.find(config::sep[0]) + config::sep[0].size());
+			line = line.substr(line.find(Config::sep[0]) + Config::sep[0].size());
 			found = 1;
 			if(esm.getCollLine(i) != line)
 			{
@@ -114,7 +114,7 @@ void converter::convertScriptLine(int i, string id)
 	}
 	else if(esm.getCollType(i) == "DIAL" || esm.getCollType(i) == "CELL")
 	{
-		auto search = dict.getDict().find(esm.getCollType(i) + config::sep[0] + text);
+		auto search = dict.getDict().find(esm.getCollType(i) + Config::sep[0] + text);
 		if(search != dict.getDict().end())
 		{
 			if(esm.getCollText(i) != search->second)
@@ -129,7 +129,7 @@ void converter::convertScriptLine(int i, string id)
 		{
 			for(auto &elem : dict.getDict())
 			{
-				if(caseInsensitiveStringCmp(esm.getCollType(i) + config::sep[0] + text,
+				if(caseInsensitiveStringCmp(esm.getCollType(i) + Config::sep[0] + text,
 							    elem.first) == 1 &&
 				   text != elem.second)
 				{
@@ -153,7 +153,7 @@ void converter::convertScriptLine(int i, string id)
 }
 
 //----------------------------------------------------------
-void converter::convertCELL()
+void Converter::convertCELL()
 {
 	rec_content.erase();
 	esm_content.erase();
@@ -166,7 +166,7 @@ void converter::convertCELL()
 		if(esm.getRecId() == "CELL")
 		{
 			esm.setPriSubRec("NAME");
-			auto search = dict.getDict().find("CELL" + config::sep[0] +
+			auto search = dict.getDict().find("CELL" + Config::sep[0] +
 							  esm.getPriText());
 			if(search != dict.getDict().end())
 			{
@@ -187,7 +187,7 @@ void converter::convertCELL()
 }
 
 //----------------------------------------------------------
-void converter::convertPGRD()
+void Converter::convertPGRD()
 {
 	rec_content.erase();
 	esm_content.erase();
@@ -200,7 +200,7 @@ void converter::convertPGRD()
 		if(esm.getRecId() == "PGRD")
 		{
 			esm.setPriSubRec("NAME");
-			auto search = dict.getDict().find("CELL" + config::sep[0] +
+			auto search = dict.getDict().find("CELL" + Config::sep[0] +
 							  esm.getPriText());
 			if(search != dict.getDict().end())
 			{
@@ -221,7 +221,7 @@ void converter::convertPGRD()
 }
 
 //----------------------------------------------------------
-void converter::convertANAM()
+void Converter::convertANAM()
 {
 	rec_content.erase();
 	esm_content.erase();
@@ -234,7 +234,7 @@ void converter::convertANAM()
 		if(esm.getRecId() == "INFO")
 		{
 			esm.setPriSubRec("ANAM");
-			auto search = dict.getDict().find("CELL" + config::sep[0] +
+			auto search = dict.getDict().find("CELL" + Config::sep[0] +
 							  esm.getPriText());
 			if(search != dict.getDict().end())
 			{
@@ -255,7 +255,7 @@ void converter::convertANAM()
 }
 
 //----------------------------------------------------------
-void converter::convertSCVR()
+void Converter::convertSCVR()
 {
 	rec_content.erase();
 	esm_content.erase();
@@ -272,7 +272,7 @@ void converter::convertSCVR()
 			{
 				if(!esm.getPriText().empty() && esm.getPriText().substr(1, 1) == "B")
 				{
-					auto search = dict.getDict().find("CELL" + config::sep[0] +
+					auto search = dict.getDict().find("CELL" + Config::sep[0] +
 									  esm.getPriText().substr(5));
 					if(search != dict.getDict().end())
 					{
@@ -297,7 +297,7 @@ void converter::convertSCVR()
 }
 
 //----------------------------------------------------------
-void converter::convertDNAM()
+void Converter::convertDNAM()
 {
 	rec_content.erase();
 	esm_content.erase();
@@ -315,7 +315,7 @@ void converter::convertDNAM()
 			{
 				if(!esm.getPriText().empty())
 				{
-					auto search = dict.getDict().find("CELL" + config::sep[0] +
+					auto search = dict.getDict().find("CELL" + Config::sep[0] +
 									  esm.getPriText());
 					if(search != dict.getDict().end())
 					{
@@ -339,7 +339,7 @@ void converter::convertDNAM()
 }
 
 //----------------------------------------------------------
-void converter::convertCNDT()
+void Converter::convertCNDT()
 {
 	rec_content.erase();
 	esm_content.erase();
@@ -356,7 +356,7 @@ void converter::convertCNDT()
 			{
 				if(!esm.getPriText().empty())
 				{
-					auto search = dict.getDict().find("CELL" + config::sep[0] +
+					auto search = dict.getDict().find("CELL" + Config::sep[0] +
 									  esm.getPriText());
 					if(search != dict.getDict().end())
 					{
@@ -380,7 +380,7 @@ void converter::convertCNDT()
 }
 
 //----------------------------------------------------------
-void converter::convertGMST()
+void Converter::convertGMST()
 {
 	rec_content.erase();
 	esm_content.erase();
@@ -394,7 +394,7 @@ void converter::convertGMST()
 		{
 			esm.setPriSubRec("NAME");
 			esm.setSecSubRec("STRV");
-			auto search = dict.getDict().find(esm.getRecId() + config::sep[0] +
+			auto search = dict.getDict().find(esm.getRecId() + Config::sep[0] +
 							  esm.getPriText());
 			if(search != dict.getDict().end())
 			{
@@ -415,7 +415,7 @@ void converter::convertGMST()
 }
 
 //----------------------------------------------------------
-void converter::convertFNAM()
+void Converter::convertFNAM()
 {
 	rec_content.erase();
 	esm_content.erase();
@@ -453,8 +453,8 @@ void converter::convertFNAM()
 		{
 			esm.setPriSubRec("NAME");
 			esm.setSecSubRec("FNAM");
-			auto search = dict.getDict().find(esm.getSecId() + config::sep[0] +
-							  esm.getRecId() + config::sep[0] +
+			auto search = dict.getDict().find(esm.getSecId() + Config::sep[0] +
+							  esm.getRecId() + Config::sep[0] +
 							  esm.getPriText());
 			if(search != dict.getDict().end())
 			{
@@ -475,7 +475,7 @@ void converter::convertFNAM()
 }
 
 //----------------------------------------------------------
-void converter::convertDESC()
+void Converter::convertDESC()
 {
 	rec_content.erase();
 	esm_content.erase();
@@ -491,8 +491,8 @@ void converter::convertDESC()
 		{
 			esm.setPriSubRec("NAME");
 			esm.setSecSubRec("DESC");
-			auto search = dict.getDict().find(esm.getSecId() + config::sep[0] +
-							  esm.getRecId() + config::sep[0] +
+			auto search = dict.getDict().find(esm.getSecId() + Config::sep[0] +
+							  esm.getRecId() + Config::sep[0] +
 							  esm.getPriText());
 			if(search != dict.getDict().end())
 			{
@@ -513,7 +513,7 @@ void converter::convertDESC()
 }
 
 //----------------------------------------------------------
-void converter::convertTEXT()
+void Converter::convertTEXT()
 {
 	rec_content.erase();
 	esm_content.erase();
@@ -527,7 +527,7 @@ void converter::convertTEXT()
 		{
 			esm.setPriSubRec("NAME");
 			esm.setSecSubRec("TEXT");
-			auto search = dict.getDict().find(esm.getSecId() + config::sep[0] +
+			auto search = dict.getDict().find(esm.getSecId() + Config::sep[0] +
 							  esm.getPriText());
 			if(search != dict.getDict().end())
 			{
@@ -548,7 +548,7 @@ void converter::convertTEXT()
 }
 
 //----------------------------------------------------------
-void converter::convertRNAM()
+void Converter::convertRNAM()
 {
 	rec_content.erase();
 	esm_content.erase();
@@ -566,8 +566,8 @@ void converter::convertRNAM()
 			rnam = 0;
 			while(esm.setSecSubRec("RNAM", 4))
 			{
-				auto search = dict.getDict().find(esm.getSecId() + config::sep[0] +
-								  esm.getPriText() + config::sep[0] +
+				auto search = dict.getDict().find(esm.getSecId() + Config::sep[0] +
+								  esm.getPriText() + Config::sep[0] +
 								  to_string(rnam));
 				if(search != dict.getDict().end())
 				{
@@ -594,7 +594,7 @@ void converter::convertRNAM()
 }
 
 //----------------------------------------------------------
-void converter::convertINDX()
+void Converter::convertINDX()
 {
 	rec_content.erase();
 	esm_content.erase();
@@ -609,8 +609,8 @@ void converter::convertINDX()
 		{
 			esm.setPriSubRecINDX();
 			esm.setSecSubRec("DESC");
-			auto search = dict.getDict().find(esm.getPriId() + config::sep[0] +
-							  esm.getRecId() + config::sep[0] +
+			auto search = dict.getDict().find(esm.getPriId() + Config::sep[0] +
+							  esm.getRecId() + Config::sep[0] +
 							  esm.getPriText());
 			if(search != dict.getDict().end())
 			{
@@ -631,7 +631,7 @@ void converter::convertINDX()
 }
 
 //----------------------------------------------------------
-void converter::convertDIAL()
+void Converter::convertDIAL()
 {
 	rec_content.erase();
 	esm_content.erase();
@@ -645,7 +645,7 @@ void converter::convertDIAL()
 		{
 			esm.setPriSubRec("NAME");
 			esm.setSecSubRec("DATA");
-			auto search = dict.getDict().find(esm.getRecId() + config::sep[0] +
+			auto search = dict.getDict().find(esm.getRecId() + Config::sep[0] +
 							  esm.getPriText());
 			if(search != dict.getDict().end())
 			{
@@ -666,7 +666,7 @@ void converter::convertDIAL()
 }
 
 //----------------------------------------------------------
-void converter::convertINFO()
+void Converter::convertINFO()
 {
 	rec_content.erase();
 	esm_content.erase();
@@ -681,14 +681,14 @@ void converter::convertINFO()
 		{
 			esm.setPriSubRec("NAME");
 			esm.setSecSubRec("DATA");
-			dial = esm.dialType() + config::sep[0] + esm.getPriText();
+			dial = esm.dialType() + Config::sep[0] + esm.getPriText();
 		}
 		if(esm.getRecId() == "INFO")
 		{
 			esm.setPriSubRec("INAM");
 			esm.setSecSubRec("NAME");
-			auto search = dict.getDict().find(esm.getRecId() + config::sep[0] +
-							  dial + config::sep[0] +
+			auto search = dict.getDict().find(esm.getRecId() + Config::sep[0] +
+							  dial + Config::sep[0] +
 							  esm.getPriText());
 			if(search != dict.getDict().end())
 			{
@@ -709,7 +709,7 @@ void converter::convertINFO()
 }
 
 //----------------------------------------------------------
-void converter::convertBNAM()
+void Converter::convertBNAM()
 {
 	rec_content.erase();
 	esm_content.erase();
@@ -745,7 +745,7 @@ void converter::convertBNAM()
 }
 
 //----------------------------------------------------------
-void converter::convertSCPT()
+void Converter::convertSCPT()
 {
 	rec_content.erase();
 	esm_content.erase();

@@ -10,7 +10,7 @@
 
 using namespace std;
 
-class config
+class Config
 {
 public:
 	static array<string, 4> sep;
@@ -24,10 +24,11 @@ public:
 
 	void readConfig();
 
-	config() {}
+	Config() {}
 
 private:
 	void setConfigStatus(bool st);
+	void parseConfig();
 
 	string content;
 	bool status;

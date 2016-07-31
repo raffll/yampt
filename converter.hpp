@@ -12,14 +12,15 @@
 
 using namespace std;
 
-class converter
+class Converter
 {
 public:
 	void convertEsm();
 	void writeEsm();
+	bool getConverterStatus() { return status; }
 
-	converter();
-	converter(string esm_path, merger &m);
+	Converter();
+	Converter(string esm_path, Merger &m);
 
 private:
 	string intToByte(unsigned int x);
@@ -45,8 +46,8 @@ private:
 	void convertSCPT();
 
 	bool status = {};
-	esmtools esm;
-	merger dict;
+	Esmtools esm;
+	Merger dict;
 	int counter;
 	string rec_content;
 	string esm_content;

@@ -9,7 +9,7 @@
 
 using namespace std;
 
-class merger
+class Merger
 {
 public:
 	void mergeDict();
@@ -20,13 +20,11 @@ public:
 	bool getMergerStatus() { return status; }
 	map<string, string> const& getDict() const { return merged; }
 
-	merger() {}
-	merger(string path_first);
-	merger(string path_first, string path_second);
-	merger(string path_first, string path_second, string path_third);
+	Merger() {}
+	Merger(vector<string> &path);
 
 private:
-	array<dicttools, 3> dict;
+	vector<Dicttools> dict_coll;
 	bool status = {};
 	map<string, string> merged;
 	string log;

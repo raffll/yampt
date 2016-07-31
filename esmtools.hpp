@@ -15,7 +15,7 @@
 
 using namespace std;
 
-class esmtools
+class Esmtools
 {
 public:
 	void readEsm(string path);
@@ -58,7 +58,7 @@ public:
 	size_t getCollPos(int i) { return get<3>(text_coll[i]); }
 	size_t getCollSize() { return text_coll.size(); }
 
-	esmtools() {}
+	Esmtools() {}
 
 private:
 	void setEsmStatus(bool st, string path);

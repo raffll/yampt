@@ -17,7 +17,7 @@
 
 using namespace std;
 
-class creator
+class Creator
 {
 public:
 	void makeDict();
@@ -28,10 +28,10 @@ public:
 	void eraseDuplicates();
 	void eraseDifferent();
 
-	creator() {}
-	creator(string esm_path);
-	creator(string esm_path, string ext_path);
-	creator(string esm_path, merger &m, bool no_dupl = 0);
+	Creator() {}
+	Creator(string esm_path);
+	Creator(string esm_path, string ext_path);
+	Creator(string esm_path, Merger &m, bool no_dupl = 0);
 
 private:
 	string dialTranslator(string to_translate);
@@ -49,10 +49,10 @@ private:
 	void makeDictBNAM();
 	void makeDictSCPT();
 
-	esmtools esm;
-	esmtools ext;
-	esmtools *esm_ptr;
-	merger dict;
+	Esmtools esm;
+	Esmtools ext;
+	Esmtools *esm_ptr;
+	Merger dict;
 	bool status = 0;
 	bool with_dict = 0;
 	bool no_duplicates = 0;

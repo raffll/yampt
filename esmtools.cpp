@@ -3,7 +3,7 @@
 using namespace std;
 
 //----------------------------------------------------------
-void esmtools::readEsm(string path)
+void Esmtools::readEsm(string path)
 {
 	ifstream file(path, ios::binary);
 	if(file)
@@ -33,11 +33,11 @@ void esmtools::readEsm(string path)
 }
 
 //----------------------------------------------------------
-void esmtools::setEsmStatus(bool st, string path)
+void Esmtools::setEsmStatus(bool st, string path)
 {
 	if(st == 0)
 	{
-		cerr << "--> Error while loading file! (wrong path or isn't TES3 plugin)" << endl;
+		cerr << "--> Error while loading " << path << " (wrong path or isn't TES3 plugin)!" << endl;
 		esm_status = 0;
 	}
 	else
@@ -48,7 +48,7 @@ void esmtools::setEsmStatus(bool st, string path)
 }
 
 //----------------------------------------------------------
-void esmtools::setEsmName(string path)
+void Esmtools::setEsmName(string path)
 {
 	esm_name = path.substr(path.find_last_of("\\/") + 1);
 	esm_prefix = esm_name.substr(0, esm_name.find_last_of("."));
@@ -56,14 +56,14 @@ void esmtools::setEsmName(string path)
 }
 
 //----------------------------------------------------------
-void esmtools::resetRec()
+void Esmtools::resetRec()
 {
 	rec_beg = 0;
 	rec_end = 0;
 }
 
 //----------------------------------------------------------
-bool esmtools::setNextRec()
+bool Esmtools::setNextRec()
 {
 	if(esm_status == 1)
 	{
@@ -87,7 +87,7 @@ bool esmtools::setNextRec()
 }
 
 //----------------------------------------------------------
-void esmtools::setRecContent()
+void Esmtools::setRecContent()
 {
 	if(esm_status == 1)
 	{
@@ -98,7 +98,7 @@ void esmtools::setRecContent()
 }
 
 //----------------------------------------------------------
-bool esmtools::setPriSubRec(string id, size_t next)
+bool Esmtools::setPriSubRec(string id, size_t next)
 {
 	if(esm_status == 1)
 	{
@@ -125,7 +125,7 @@ bool esmtools::setPriSubRec(string id, size_t next)
 }
 
 //----------------------------------------------------------
-bool esmtools::setSecSubRec(string id, size_t next)
+bool Esmtools::setSecSubRec(string id, size_t next)
 {
 	if(esm_status == 1)
 	{
@@ -152,7 +152,7 @@ bool esmtools::setSecSubRec(string id, size_t next)
 }
 
 //----------------------------------------------------------
-void esmtools::setPriSubRecINDX()
+void Esmtools::setPriSubRecINDX()
 {
 	if(esm_status == 1)
 	{
@@ -167,7 +167,7 @@ void esmtools::setPriSubRecINDX()
 }
 
 //----------------------------------------------------------
-void esmtools::setCollScript()
+void Esmtools::setCollScript()
 {
 	if(esm_status == 1)
 	{
@@ -185,7 +185,7 @@ void esmtools::setCollScript()
 			line_lowercase = line;
 			transform(line_lowercase.begin(), line_lowercase.end(),
 				  line_lowercase.begin(), ::tolower);
-			for(auto &elem : config::key_message)
+			for(auto &elem : Config::key_message)
 			{
 				if(type == "NOCHANGE")
 				{
@@ -196,7 +196,7 @@ void esmtools::setCollScript()
 					}
 				}
 			}
-			for(auto &elem : config::key_dial)
+			for(auto &elem : Config::key_dial)
 			{
 				if(type == "NOCHANGE")
 				{
@@ -208,7 +208,7 @@ void esmtools::setCollScript()
 					}
 				}
 			}
-			for(auto &elem : config::key_cell)
+			for(auto &elem : Config::key_cell)
 			{
 				if(type == "NOCHANGE")
 				{
@@ -228,7 +228,7 @@ void esmtools::setCollScript()
 }
 
 //----------------------------------------------------------
-void esmtools::setCollMessageOnly()
+void Esmtools::setCollMessageOnly()
 {
 	if(esm_status == 1)
 	{
@@ -246,7 +246,7 @@ void esmtools::setCollMessageOnly()
 			line_lowercase = line;
 			transform(line_lowercase.begin(), line_lowercase.end(),
 				  line_lowercase.begin(), ::tolower);
-			for(auto &elem : config::key_message)
+			for(auto &elem : Config::key_message)
 			{
 				if(type == "NOCHANGE")
 				{
@@ -266,7 +266,7 @@ void esmtools::setCollMessageOnly()
 }
 
 //----------------------------------------------------------
-string esmtools::dialType()
+string Esmtools::dialType()
 {
 	static array<string, 5> type_coll = {"T", "V", "G", "P", "J"};
 	int type = byteToInt(rec_content.substr(sec_pos + 8, 1));
@@ -274,7 +274,7 @@ string esmtools::dialType()
 }
 
 //----------------------------------------------------------
-unsigned int esmtools::byteToInt(const string &str)
+unsigned int Esmtools::byteToInt(const string &str)
 {
 	char buffer[4];
 	unsigned char ubuffer[4];
@@ -299,7 +299,7 @@ unsigned int esmtools::byteToInt(const string &str)
 }
 
 //----------------------------------------------------------
-void esmtools::eraseNullChars(string &str)
+void Esmtools::eraseNullChars(string &str)
 {
 	size_t is_null = str.find('\0');
 	if(is_null != string::npos)
@@ -309,7 +309,7 @@ void esmtools::eraseNullChars(string &str)
 }
 
 //----------------------------------------------------------
-string esmtools::eraseNewLineChar(string &str)
+string Esmtools::eraseNewLineChar(string &str)
 {
 	if(str.find('\r') != string::npos)
 	{
@@ -319,7 +319,7 @@ string esmtools::eraseNewLineChar(string &str)
 }
 
 //----------------------------------------------------------
-void esmtools::addLastItemEndLine()
+void Esmtools::addLastItemEndLine()
 {
 	if(!text_coll.empty() && sec_text.size() > 1 && sec_text.substr(sec_text.size() - 2) == "\r\n")
 	{
@@ -328,7 +328,7 @@ void esmtools::addLastItemEndLine()
 }
 
 //----------------------------------------------------------
-/*void esmtools::extractText(const string &line, string &text, size_t &pos)
+/*void Esmtools::extractText(const string &line, string &text, size_t &pos)
 {
 	regex re("\"(.*?)\"");
 	smatch found;
@@ -346,7 +346,7 @@ void esmtools::addLastItemEndLine()
 }*/
 
 //----------------------------------------------------------
-void esmtools::extractText(const string &line, string &text, size_t &pos)
+void Esmtools::extractText(const string &line, string &text, size_t &pos)
 {
 	size_t pos_end;
 	pos = line.find("\"", pos);

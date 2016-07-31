@@ -13,7 +13,7 @@
 
 using namespace std;
 
-class dicttools
+class Dicttools
 {
 public:
 	void readDict(string path);
@@ -23,7 +23,10 @@ public:
 	string getDictLog() { return log; }
 	map<string, string> const& getDict() const { return dict; }
 
-	dicttools() {}
+	Dicttools() {}
+	Dicttools(const Dicttools& that);
+	Dicttools& operator=(const Dicttools& that);
+	~Dicttools();
 
 private:
 	void setDictStatus(bool st, string path);

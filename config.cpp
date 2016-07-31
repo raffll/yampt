@@ -1,20 +1,20 @@
 #include "config.hpp"
 
 //----------------------------------------------------------
-array<string, 4> config::sep = {"<br>", "<h3>", "</h3>", "<hr>"};
+array<string, 4> Config::sep = {"<br>", "<h3>", "</h3>", "<hr>"};
 
 //----------------------------------------------------------
-string config::converted_path = "";
-string config::converted_suffix = "";
+string Config::converted_path = "";
+string Config::converted_suffix = "";
 
 //----------------------------------------------------------
-vector<string> config::key_message = {"messagebox", "say ", "say,", "choice"};
-vector<string> config::key_dial = {"addtopic"};
-vector<string> config::key_cell = {"positioncell", "getpccell", "aifollowcell",
+vector<string> Config::key_message = {"messagebox", "say ", "say,", "choice"};
+vector<string> Config::key_dial = {"addtopic"};
+vector<string> Config::key_cell = {"positioncell", "getpccell", "aifollowcell",
 				   "placeitemcell", "showmap"};
 
 //----------------------------------------------------------
-void config::readConfig()
+void Config::readConfig()
 {
 	ifstream file("yampt.cfg", ios::binary);
 	if(file)
@@ -43,7 +43,7 @@ void config::readConfig()
 }
 
 //----------------------------------------------------------
-void config::setConfigStatus(bool st)
+void Config::setConfigStatus(bool st)
 {
 	if(st == 0)
 	{
@@ -58,11 +58,9 @@ void config::setConfigStatus(bool st)
 }
 
 //----------------------------------------------------------
-void config::parseConfig()
+void Config::parseConfig()
 {
 	size_t pos;
 	pos = content.find("CONVERTED_PATH");
 	pos = content.find("=");
-
-
-
+}
