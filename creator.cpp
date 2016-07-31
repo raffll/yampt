@@ -79,7 +79,9 @@ void Creator::writeDict()
 			file.open(name, ios::binary);
 			for(const auto &elem : created)
 			{
-				file << Config::sep[1] << elem.first << Config::sep[2] << elem.second << Config::sep[3] << "\r\n";
+				file << Config::sep[1] << elem.first
+				     << Config::sep[2] << elem.second
+				     << Config::sep[3] << "\r\n";
 			}
 			cerr << "--> Writing " << created.size()
 			     << " records to " << name << "..." << endl;

@@ -115,8 +115,10 @@ void Dicttools::parseDict(string path)
 		}
 		else
 		{
-			pri_text = content.substr(pos_beg + Config::sep[1].size(), pos_mid - pos_beg - Config::sep[1].size());
-			sec_text = content.substr(pos_mid + Config::sep[2].size(), pos_end - pos_mid - Config::sep[2].size());
+			pri_text = content.substr(pos_beg + Config::sep[1].size(),
+						  pos_mid - pos_beg - Config::sep[1].size());
+			sec_text = content.substr(pos_mid + Config::sep[2].size(),
+						  pos_end - pos_mid - Config::sep[2].size());
 			if(validateRecLength(pri_text, sec_text))
 			{
 				if(dict.insert({pri_text, sec_text}).second == 0)
