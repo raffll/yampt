@@ -5,7 +5,7 @@
 
 using namespace std;
 
-#include "tools.hpp"
+#include "config.hpp"
 #include "creator.hpp"
 #include "merger.hpp"
 #include "converter.hpp"
@@ -17,16 +17,20 @@ int main(int argc, char *argv[])
 	string name = argv[0];
 	string usage = "Usage: " + name + " [command]"
 		       "\n"
-		       "\n  --help                              Print this message."
-		       "\n  --make -a  [file1] [dict1]          Make dictionary from esp/esm plugin with all records."
-		       "\n  --make -c  [file1] [dict1]          Make without records from dictionary."
-		       "\n  --make -r  [file1]                  Like \"--make -a\", but without dial translation."
-		       "\n  --make -b  [file1] [file2]          Make base dictionary from two different localized esm files."
-		       "\n  --compare  [dict1] [dict2]          Compare two dictionaries and create differences log."
-		       "\n  --merge    [dict1] <dict2> <dict3>  Validate, merge, sort and delete doubled records."
-		       "\n  --convert  [file1] [dict1] <dict2>  Convert plugin from dictionaries in paths"
-		       "\n                                      and create dictionary as \"--make -c\" command."
-		       "\n  --scripts  [file1] <file2>          Write all scripts content log.";
+		       "\n  --help                               Print this message."
+		       "\n  --make-all  [file1] [dict1]          Make dictionary from esp/esm plugin with all records."
+		       "\n  --make-not  [file1] [dict1]          Make without records from dictionary."
+		       "\n  --make-raw  [file1]                  Like \"--make-all\", but without DIAL translation."
+		       "\n  --make-base [file1] [file2]          Make base dictionary from two different localized esm files."
+		       "\n  --compare   [dict1] [dict2]          Compare two dictionaries and create differences log."
+		       "\n  --merge     [dict1] <dict2> <dict3>  Validate, merge, sort and delete doubled records."
+		       "\n  --convert   [file1] [dict1] <dict2>  Convert plugin from dictionaries in paths"
+		       "\n                                       and create dictionary as \"--make-not\" command."
+		       "\n  --scripts   [file1] <file2>          Write scripts content log."
+		       "\n  --binary    [file1]                  Write binary log.";
+	config conf;
+	conf.readConfig();
+
 	if(argc > 1)
 	{
 		arg1 = argv[1];

@@ -4,7 +4,7 @@
 #include <array>
 #include <map>
 
-#include "tools.hpp"
+#include "config.hpp"
 #include "dicttools.hpp"
 
 using namespace std;
@@ -26,7 +26,6 @@ public:
 	merger(string path_first, string path_second, string path_third);
 
 private:
-	string name;
 	array<dicttools, 3> dict;
 	bool status = {};
 	map<string, string> merged;

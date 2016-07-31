@@ -9,7 +9,7 @@
 #include <string>
 #include <map>
 
-#include "tools.hpp"
+#include "config.hpp"
 
 using namespace std;
 
@@ -26,9 +26,9 @@ public:
 	dicttools() {}
 
 private:
-	void setDictStatus(bool st);
+	void setDictStatus(bool st, string path);
 	void setDictName(string path);
-	void parseDict();
+	void parseDict(string path);
 	bool validateRecLength(const string &pri, const string &sec);
 
 	bool status = {};

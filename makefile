@@ -1,9 +1,9 @@
 CC=g++
 CFLAGS=-c -std=c++11 -Wall -Wextra -O2 -pedantic -D_GLIBCXX_DEBUG_PEDANTIC -D_FORTIFY_SOURCE=2
 LDFLAGS=
-SOURCES=main.cpp esmtools.cpp creator.cpp dicttools.cpp merger.cpp converter.cpp
+SOURCES=main.cpp esmtools.cpp creator.cpp dicttools.cpp merger.cpp converter.cpp config.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
-EXECUTABLE=../bin/yampt
+EXECUTABLE=yampt
 
 .PHONY: clean all
 
@@ -16,4 +16,4 @@ $(EXECUTABLE): $(OBJECTS)
 	$(CC) $(CFLAGS) $< -o $@
 
 clean:
-	rm -f *.o *.gch
+	rm -f *.o *.gch *.log *.dic *.esp *.esm

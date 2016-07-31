@@ -19,30 +19,30 @@ void esmtools::readEsm(string path)
 		if(!esm_content.empty() && esm_content.substr(0, 4) == "TES3")
 		{
 			setEsmName(path);
-			setEsmStatus(1);
+			setEsmStatus(1, path);
 		}
 		else
 		{
-			setEsmStatus(0);
+			setEsmStatus(0, path);
 		}
 	}
 	else
 	{
-		setEsmStatus(0);
+		setEsmStatus(0, path);
 	}
 }
 
 //----------------------------------------------------------
-void esmtools::setEsmStatus(bool st)
+void esmtools::setEsmStatus(bool st, string path)
 {
 	if(st == 0)
 	{
-		cerr << "Error while loading file! (wrong path or isn't TES3 plugin)" << endl;
+		cerr << "--> Error while loading file! (wrong path or isn't TES3 plugin)" << endl;
 		esm_status = 0;
 	}
 	else
 	{
-		cerr << "Loading " << esm_name << "..." << endl;
+		cerr << "--> Loading " << path << "..." << endl;
 		esm_status = 1;
 	}
 }
@@ -171,10 +171,6 @@ void esmtools::setCollScript()
 {
 	if(esm_status == 1)
 	{
-		static vector<string> key_message = {"messagebox", "say ", "say,", "choice"};
-		static vector<string> key_dial = {"addtopic"};
-		static vector<string> key_cell = {"positioncell", "getpccell", "aifollowcell",
-						  "placeitemcell", "showmap"};
 		string line;
 		string line_lowercase;
 		string type;
@@ -189,7 +185,7 @@ void esmtools::setCollScript()
 			line_lowercase = line;
 			transform(line_lowercase.begin(), line_lowercase.end(),
 				  line_lowercase.begin(), ::tolower);
-			for(auto &elem : key_message)
+			for(auto &elem : config::key_message)
 			{
 				if(type == "NOCHANGE")
 				{
@@ -200,7 +196,7 @@ void esmtools::setCollScript()
 					}
 				}
 			}
-			for(auto &elem : key_dial)
+			for(auto &elem : config::key_dial)
 			{
 				if(type == "NOCHANGE")
 				{
@@ -212,7 +208,7 @@ void esmtools::setCollScript()
 					}
 				}
 			}
-			for(auto &elem : key_cell)
+			for(auto &elem : config::key_cell)
 			{
 				if(type == "NOCHANGE")
 				{
@@ -236,7 +232,6 @@ void esmtools::setCollMessageOnly()
 {
 	if(esm_status == 1)
 	{
-		static vector<string> key_message = {"messagebox", "say ", "say,", "choice"};
 		string line;
 		string line_lowercase;
 		string type;
@@ -251,7 +246,7 @@ void esmtools::setCollMessageOnly()
 			line_lowercase = line;
 			transform(line_lowercase.begin(), line_lowercase.end(),
 				  line_lowercase.begin(), ::tolower);
-			for(auto &elem : key_message)
+			for(auto &elem : config::key_message)
 			{
 				if(type == "NOCHANGE")
 				{

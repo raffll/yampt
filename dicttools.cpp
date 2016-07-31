@@ -19,32 +19,32 @@ void dicttools::readDict(string path)
 		if(!content.empty())
 		{
 			setDictName(path);
-			parseDict();
+			parseDict(path);
 		}
 		else
 		{
-			setDictStatus(0);
+			setDictStatus(0, path);
 		}
 	}
 	else
 	{
-		setDictStatus(0);
+		setDictStatus(0, path);
 	}
 }
 
 //----------------------------------------------------------
-void dicttools::setDictStatus(bool st)
+void dicttools::setDictStatus(bool st, string path)
 {
 	if(st == 0)
 	{
-		cerr << "Error while loading dictionary (wrong path or missing separator)!" << endl;
+		cerr << "--> Error while loading dictionary (wrong path or missing separator)!" << endl;
 		status = 0;
 	}
 	else
 	{
-		cerr << "Loading " << name << "..." << endl;
-		cerr << "Records loaded: " << dict.size() << endl;
-		cerr << "Records invalid: " << invalid << endl;
+		cerr << "--> Loading " << path << "..." << endl;
+		cerr << "    --> Records loaded: " << dict.size() << endl;
+		cerr << "    --> Records invalid: " << invalid << endl;
 		status = 1;
 	}
 }
@@ -57,7 +57,7 @@ void dicttools::setDictName(string path)
 }
 
 //----------------------------------------------------------
-void dicttools::parseDict()
+void dicttools::parseDict(string path)
 {
 	invalid = 0;
 	size_t pos_beg = 0;
@@ -67,14 +67,14 @@ void dicttools::parseDict()
 	string sec_text;
 	while(true)
 	{
-		pos_beg = content.find(sep[1], pos_beg);
-		pos_mid = content.find(sep[2], pos_mid);
-		pos_end = content.find(sep[3], pos_end);
+		pos_beg = content.find(config::sep[1], pos_beg);
+		pos_mid = content.find(config::sep[2], pos_mid);
+		pos_end = content.find(config::sep[3], pos_end);
 		if(pos_beg == string::npos &&
 		   pos_mid == string::npos &&
 		   pos_end == string::npos)
 		{
-			setDictStatus(1);
+			setDictStatus(1, path);
 			break;
 		}
 		else if(pos_beg > pos_mid ||
@@ -82,13 +82,13 @@ void dicttools::parseDict()
 			pos_mid > pos_end ||
 			pos_end == string::npos)
 		{
-			setDictStatus(0);
+			setDictStatus(0, path);
 			break;
 		}
 		else
 		{
-			pri_text = content.substr(pos_beg + sep[1].size(), pos_mid - pos_beg - sep[1].size());
-			sec_text = content.substr(pos_mid + sep[2].size(), pos_end - pos_mid - sep[2].size());
+			pri_text = content.substr(pos_beg + config::sep[1].size(), pos_mid - pos_beg - config::sep[1].size());
+			sec_text = content.substr(pos_mid + config::sep[2].size(), pos_end - pos_mid - config::sep[2].size());
 			if(validateRecLength(pri_text, sec_text))
 			{
 				if(dict.insert({pri_text, sec_text}).second == 0)

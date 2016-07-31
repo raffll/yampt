@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <locale>
 
-#include "tools.hpp"
+#include "config.hpp"
 #include "esmtools.hpp"
 #include "merger.hpp"
 

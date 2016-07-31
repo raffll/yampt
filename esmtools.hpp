@@ -11,7 +11,7 @@
 #include <algorithm>
 #include <regex>
 
-#include "tools.hpp"
+#include "config.hpp"
 
 using namespace std;
 
@@ -61,7 +61,7 @@ public:
 	esmtools() {}
 
 private:
-	void setEsmStatus(bool st);
+	void setEsmStatus(bool st, string path);
 	void setEsmName(string path);
 
 	unsigned int byteToInt(const string &str);
