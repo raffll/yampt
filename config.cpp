@@ -6,8 +6,8 @@ using namespace std;
 array<string, 4> Config::sep = {"<br>", "<h3>", "</h3>", "<hr>"};
 
 //----------------------------------------------------------
-string Config::converted_path = "";
-string Config::converted_suffix = "";
+string Config::output_path = "";
+string Config::output_suffix = "";
 
 //----------------------------------------------------------
 vector<string> Config::key_message = {"messagebox", "say ", "say,", "choice"};
@@ -32,6 +32,8 @@ void Config::readConfig()
 		if(!content.empty())
 		{
 			setConfigStatus(1);
+			parseOutputPath();
+			parseOutputSuffix();
 		}
 		else
 		{
@@ -60,7 +62,19 @@ void Config::setConfigStatus(bool st)
 }
 
 //----------------------------------------------------------
-void Config::parseConfig()
+void Config::parseOutputPath()
 {
+	regex re("(OUTPUT_PATH=)\"(.*?)\"");
+	smatch found;
+	regex_search(content, found, re);
+	output_path = found[2].str();
+}
 
+//----------------------------------------------------------
+void Config::parseOutputSuffix()
+{
+	regex re("(OUTPUT_SUFFIX=)\"(.*?)\"");
+	smatch found;
+	regex_search(content, found, re);
+	output_suffix = found[2].str();
 }

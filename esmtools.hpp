@@ -47,6 +47,9 @@ public:
 	size_t getCollSize() { return text_coll.size(); }
 
 	Esmtools() {}
+	Esmtools(const Esmtools& that);
+	Esmtools& operator=(const Esmtools& that);
+	~Esmtools();
 
 private:
 	void setEsmStatus(bool st, std::string path);
@@ -54,8 +57,8 @@ private:
 
 	unsigned int byteToInt(const std::string &str);
 	void eraseNullChars(std::string &str);
-	std::string eraseNewLineChar(std::string &str);
-	void addLastItemEndLine();
+	std::string eraseCarriageReturnChar(std::string &str);
+	void addEndLineToLastCollItem();
 	void extractText(const std::string &line, std::string &text, size_t &pos);
 
 	bool esm_status = {};

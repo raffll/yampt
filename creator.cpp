@@ -98,7 +98,7 @@ void Creator::writeScripts()
 {
 	if(status == 1)
 	{
-		string name = "yampt-scripts-" + esm.getEsmPrefix() + ".log";
+		string name = Config::output_path + "yampt-scripts-" + esm.getEsmPrefix() + ".log";
 		ofstream file;
 		file.open(name, ios::binary);
 		esm.resetRec();
@@ -123,34 +123,6 @@ void Creator::writeScripts()
 				esm.setSecSubRec("BNAM");
 				file << esm.getSecText()
 				     << "\r\n----------------------------------------------------------\r\n";
-			}
-		}
-		cerr << "--> Writing " << name << "..." << endl;
-	}
-}
-
-//----------------------------------------------------------
-void Creator::writeBinary()
-{
-	if(status == 1)
-	{
-		string name = "yampt-binary-" + esm.getEsmPrefix() + ".log";
-		ofstream file;
-		file.open(name, ios::binary);
-		while(esm.setNextRec())
-		{
-			esm.setRecContent();
-			file << "\r\n----------------------------------------------------------\r\n";
-			for(size_t i = 0; i < esm.getRecContent().size(); i++)
-			{
-				if(isprint(esm.getRecContent().at(i)))
-				{
-					file << esm.getRecContent().at(i);
-				}
-				else
-				{
-					file << ".";
-				}
 			}
 		}
 		cerr << "--> Writing " << name << "..." << endl;

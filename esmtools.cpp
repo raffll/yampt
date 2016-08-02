@@ -3,6 +3,61 @@
 using namespace std;
 
 //----------------------------------------------------------
+Esmtools::Esmtools(const Esmtools& that) : esm_status(that.esm_status),
+					   esm_name(that.esm_name),
+					   esm_prefix(that.esm_prefix),
+					   esm_suffix(that.esm_suffix),
+					   esm_content(that.esm_content),
+					   rec_beg(that.rec_beg),
+					   rec_end(that.rec_end),
+					   rec_size(that.rec_size),
+					   rec_id(that.rec_id),
+					   rec_content(that.rec_content),
+					   pri_pos(that.pri_pos),
+					   pri_size(that.pri_size),
+					   pri_id(that.pri_id),
+					   pri_text(that.pri_text),
+					   sec_pos(that.sec_pos),
+					   sec_size(that.sec_size),
+					   sec_id(that.sec_id),
+					   sec_text(that.sec_text),
+					   text_coll(that.text_coll)
+{
+
+}
+
+//----------------------------------------------------------
+Esmtools& Esmtools::operator=(const Esmtools& that)
+{
+	esm_status = that.esm_status;
+	esm_name = that.esm_name;
+	esm_prefix = that.esm_prefix;
+	esm_suffix = that.esm_suffix;
+	esm_content = that.esm_content;
+	rec_beg = that.rec_beg;
+	rec_end = that.rec_end;
+	rec_size = that.rec_size;
+	rec_id = that.rec_id;
+	rec_content = that.rec_content;
+	pri_pos = that.pri_pos;
+	pri_size = that.pri_size;
+	pri_id = that.pri_id;
+	pri_text = that.pri_text;
+	sec_pos = that.sec_pos;
+	sec_size = that.sec_size;
+	sec_id = that.sec_id;
+	sec_text = that.sec_text;
+	text_coll = that.text_coll;
+	return *this;
+}
+
+//----------------------------------------------------------
+Esmtools::~Esmtools()
+{
+
+}
+
+//----------------------------------------------------------
 void Esmtools::readEsm(string path)
 {
 	ifstream file(path, ios::binary);
@@ -16,7 +71,7 @@ void Esmtools::readEsm(string path)
 		{
 			esm_content.append(buffer, chars_read);
 		}
-		if(!esm_content.empty() && esm_content.substr(0, 4) == "TES3")
+		if(esm_content.size() > 4 && esm_content.substr(0, 4) == "TES3")
 		{
 			setEsmName(path);
 			setEsmStatus(1, path);
@@ -160,7 +215,7 @@ void Esmtools::setPriSubRecINDX()
 		pri_pos = rec_content.find(pri_id);
 		int indx = byteToInt(rec_content.substr(pri_pos + 8, 4));
 		ostringstream ss;
-		ss << std::setfill('0') << std::setw(3) << indx;
+		ss << setfill('0') << setw(3) << indx;
 		pri_size = 0;
 		pri_text = ss.str();
 	}
@@ -181,7 +236,7 @@ void Esmtools::setCollScript()
 		while(getline(ss, line))
 		{
 			type = "NOCHANGE";
-			eraseNewLineChar(line);
+			eraseCarriageReturnChar(line);
 			line_lowercase = line;
 			transform(line_lowercase.begin(), line_lowercase.end(),
 				  line_lowercase.begin(), ::tolower);
@@ -223,7 +278,7 @@ void Esmtools::setCollScript()
 			}
 			text_coll.push_back(make_tuple(type, line, text, pos));
 		}
-		addLastItemEndLine();
+		addEndLineToLastCollItem();
 	}
 }
 
@@ -242,7 +297,7 @@ void Esmtools::setCollMessageOnly()
 		while(getline(ss, line))
 		{
 			type = "NOCHANGE";
-			eraseNewLineChar(line);
+			eraseCarriageReturnChar(line);
 			line_lowercase = line;
 			transform(line_lowercase.begin(), line_lowercase.end(),
 				  line_lowercase.begin(), ::tolower);
@@ -254,12 +309,9 @@ void Esmtools::setCollMessageOnly()
 					if(pos != string::npos && line.rfind(";", pos) == string::npos)
 					{
 						type = "MESSAGE";
+						text_coll.push_back(make_tuple(type, line, text, pos));
 					}
 				}
-			}
-			if(type == "MESSAGE")
-			{
-				text_coll.push_back(make_tuple(type, line, text, pos));
 			}
 		}
 	}
@@ -309,7 +361,7 @@ void Esmtools::eraseNullChars(string &str)
 }
 
 //----------------------------------------------------------
-string Esmtools::eraseNewLineChar(string &str)
+string Esmtools::eraseCarriageReturnChar(string &str)
 {
 	if(str.find('\r') != string::npos)
 	{
@@ -319,7 +371,7 @@ string Esmtools::eraseNewLineChar(string &str)
 }
 
 //----------------------------------------------------------
-void Esmtools::addLastItemEndLine()
+void Esmtools::addEndLineToLastCollItem()
 {
 	if(!text_coll.empty() && sec_text.size() > 1 && sec_text.substr(sec_text.size() - 2) == "\r\n")
 	{

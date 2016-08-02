@@ -94,16 +94,6 @@ void Ui::writeScriptLog()
 }
 
 //----------------------------------------------------------
-void Ui::writeBinaryLog()
-{
-	for(size_t i = 2; i < arg.size(); ++i)
-	{
-		Creator creator(arg[i]);
-		creator.writeBinary();
-	}
-}
-
-//----------------------------------------------------------
 void Ui::writeDifferencesLog()
 {
 	auto beg = arg.rbegin();

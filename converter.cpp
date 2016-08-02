@@ -43,7 +43,7 @@ void Converter::writeEsm()
 {
 	if(status == 1)
 	{
-		string name = esm.getEsmPrefix() + Config::converted_suffix + esm.getEsmSuffix();
+		string name = esm.getEsmPrefix() + Config::output_suffix + esm.getEsmSuffix();
 		ofstream file(name, ios::binary);
 		file << esm.getEsmContent();
 		cerr << "--> Writing " << name << "..." << endl;

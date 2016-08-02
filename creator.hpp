@@ -13,7 +13,6 @@ public:
 	void makeDict();
 	void writeDict();
 	void writeScripts();
-	void writeBinary();
 	void compareEsm();
 	void eraseDuplicates();
 	void eraseDifferent();

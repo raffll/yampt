@@ -18,8 +18,8 @@ class Config
 public:
 	static std::array<std::string, 4> sep;
 
-	static std::string converted_path;
-	static std::string converted_suffix;
+	static std::string output_path;
+	static std::string output_suffix;
 
 	static std::vector<std::string> key_message;
 	static std::vector<std::string> key_dial;
@@ -31,7 +31,8 @@ public:
 
 private:
 	void setConfigStatus(bool st);
-	void parseConfig();
+	void parseOutputPath();
+	void parseOutputSuffix();
 
 	std::string content;
 	bool status;
