@@ -45,6 +45,7 @@ private:
 	std::string rec_content;
 	std::string esm_content;
 	std::string script_text;
+	std::string converted_record_log;
 };
 
 #endif

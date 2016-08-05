@@ -10,7 +10,6 @@ public:
 	void mergeDict();
 	void writeMerged();
 	void writeDiff();
-	void writeLog();
 
 	bool getMergerStatus() { return status; }
 	std::map<std::string, std::string> const& getDict() const { return merged; }

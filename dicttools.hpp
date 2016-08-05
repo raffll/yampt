@@ -10,7 +10,6 @@ public:
 	bool getDictStatus() { return status; }
 	std::string getDictName() { return name; }
 	std::string getDictPrefix() { return prefix; }
-	std::string getDictLog() { return log; }
 	std::map<std::string, std::string> const& getDict() const { return dict; }
 
 	Dicttools() {}
@@ -28,8 +27,8 @@ private:
 	std::string name;
 	std::string prefix;
 	std::string content;
-	std::string log;
-	int invalid;
+	std::string invalid_record_log;
+	int invalid_record;
 	std::map<std::string, std::string> dict;
 };
 

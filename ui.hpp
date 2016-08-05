@@ -9,20 +9,17 @@
 class Ui
 {
 public:
-	void makeDictRaw();
-	void makeDictBase();
-	void makeDictAllRecords();
-	void makeDictNotConverted();
-	void mergeDictionaries();
-	void convertFile();
-	void writeScriptLog();
-	void writeBinaryLog();
-	void writeDifferencesLog();
+	void makeDictRaw(vector<string> &arg_file);
+	void makeDictBase(vector<string> &arg_file);
+	void makeDictAllRecords(vector<string> &arg_file, vector<string> &arg_dict_rev);
+	void makeDictNotConverted(vector<string> &arg_file, vector<string> &arg_dict_rev);
+	void mergeDictionaries(vector<string> &arg_dict_rev);
+	void convertFile(vector<string> &arg_file, vector<string> &arg_dict_rev);
+	void writeScriptLog(vector<string> &arg_file);
+	void writeDifferencesLog(vector<string> &arg_dict);
 
-	Ui(std::vector<std::string> &a);
+	Ui() {}
 
-private:
-	std::vector<std::string> arg;
 };
 
 #endif

@@ -5,7 +5,7 @@ using namespace std;
 //----------------------------------------------------------
 Dicttools::Dicttools(const Dicttools& that) : status(that.status), name(that.name),
 					      prefix(that.prefix), content(that.content),
-					      log(that.log), invalid(that.invalid),
+					      invalid_record(that.invalid_record),
 					      dict(that.dict)
 {
 
@@ -18,8 +18,7 @@ Dicttools& Dicttools::operator=(const Dicttools& that)
 	name = that.name;
 	prefix = that.prefix;
 	content = that.content;
-	log = that.log;
-	invalid = that.invalid;
+	invalid_record = that.invalid_record;
 	dict = that.dict;
 	return *this;
 }
@@ -65,14 +64,20 @@ void Dicttools::setDictStatus(bool st, string path)
 {
 	if(st == 0)
 	{
-		cerr << "--> Error while loading " << path << " (wrong path or missing separator)!" << endl;
+		Config::appendLog("--> Error while loading " + path + " (wrong path or missing separator)!\r\n");
 		status = 0;
 	}
 	else
 	{
-		cerr << "--> Loading " << path << "..." << endl;
-		cerr << "    --> Records loaded: " << dict.size() << endl;
-		cerr << "    --> Records invalid: " << invalid << endl;
+		Config::appendLog("--> Loading " + path + "...\r\n");
+		Config::appendLog("    --> Records loaded: " + to_string(dict.size()) + "\r\n");
+		Config::appendLog("    --> Records invalid: " + to_string(invalid_record) + "\r\n");
+		if(!invalid_record_log.empty())
+		{
+			invalid_record_log += "-----------------------------"
+					      "-----------------------------\r\n";
+			Config::appendLog(invalid_record_log, 1);
+		}
 		status = 1;
 	}
 }
@@ -87,7 +92,7 @@ void Dicttools::setDictName(string path)
 //----------------------------------------------------------
 void Dicttools::parseDict(string path)
 {
-	invalid = 0;
+	invalid_record = 0;
 	size_t pos_beg = 0;
 	size_t pos_mid = 0;
 	size_t pos_end = 0;
@@ -123,8 +128,13 @@ void Dicttools::parseDict(string path)
 			{
 				if(dict.insert({pri_text, sec_text}).second == 0)
 				{
-					log += name + "\t" + pri_text + " <-- Duplicate record\r\n";
-					invalid++;
+					invalid_record_log += "-----------------------------"
+							      "-----------------------------\r\n"
+							      "Duplicate record\r\n" +
+							      Config::sep[1] + pri_text +
+							      Config::sep[2] + sec_text +
+							      Config::sep[3] + "\r\n";
+					invalid_record++;
 				}
 			}
 			pos_beg++;
@@ -141,18 +151,26 @@ bool Dicttools::validateRecLength(const string &pri, const string &sec)
 	{
 		if((pri.substr(0, 4) == "FNAM" || pri.substr(0, 4) == "FACT") && sec.size() > 31)
 		{
-			log += name + "\t" + pri +
-			       " <-- Text too long, more than 31 bytes (has " +
-			       to_string(sec.size()) + ")\r\n";
-			invalid++;
+			invalid_record_log += "-----------------------------"
+					      "-----------------------------\r\n"
+					      "Text too long, more than 31 bytes (has " +
+					      to_string(sec.size()) + "\r\n" +
+					      Config::sep[1] + pri +
+					      Config::sep[2] + sec +
+					      Config::sep[3] + "\r\n";
+			invalid_record++;
 			return 0;
 		}
 		else if(pri.substr(0, 4) == "INFO" && sec.size() > 512)
 		{
-			log += name + "\t" + pri +
-			       " <-- Text too long, more than 512 bytes (has " +
-			       to_string(sec.size()) + ")\r\n";
-			invalid++;
+			invalid_record_log += "-----------------------------"
+					      "-----------------------------\r\n"
+					      "Text too long, more than 512 bytes (has " +
+					      to_string(sec.size()) + "\r\n" +
+					      Config::sep[1] + pri +
+					      Config::sep[2] + sec +
+					      Config::sep[3] + "\r\n";
+			invalid_record++;
 			return 0;
 		}
 		else
@@ -162,8 +180,13 @@ bool Dicttools::validateRecLength(const string &pri, const string &sec)
 	}
 	else
 	{
-		log += name + "\t" + pri + " <-- Invalid record\r\n";
-		invalid++;
+		invalid_record_log += "-----------------------------"
+				      "-----------------------------\r\n";
+				      "Invalid record" +
+				      Config::sep[1] + pri +
+				      Config::sep[2] + sec +
+				      Config::sep[3] + "\r\n";
+		invalid_record++;
 		return 0;
 	}
 }

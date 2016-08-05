@@ -3,103 +3,113 @@
 using namespace std;
 
 //----------------------------------------------------------
-Ui::Ui(vector<string> &a) : arg(a)
+void Ui::makeDictRaw(vector<string> &arg_file)
 {
-
-}
-
-//----------------------------------------------------------
-void Ui::makeDictRaw()
-{
-	Creator creator(arg[2]);
-	creator.makeDict();
-	creator.writeDict();
-}
-
-//----------------------------------------------------------
-void Ui::makeDictBase()
-{
-	Creator creator(arg[2], arg[3]);
-	creator.compareEsm();
-	creator.makeDict();
-	creator.writeDict();
-}
-
-//----------------------------------------------------------
-void Ui::makeDictAllRecords()
-{
-	auto beg = arg.rbegin();
-	auto end = arg.rend() - 3;
-	vector<string> path(beg, end);
-	Merger merger(path);
-	merger.mergeDict();
-	Creator creator(arg[2], merger);
-	creator.makeDict();
-	creator.writeDict();
-}
-
-//----------------------------------------------------------
-void Ui::makeDictNotConverted()
-{
-	auto beg = arg.rbegin();
-	auto end = arg.rend() - 3;
-	vector<string> path(beg, end);
-	Merger merger(path);
-	merger.mergeDict();
-	Creator creator(arg[2], merger, true);
-	creator.makeDict();
-	creator.writeDict();
-}
-
-//----------------------------------------------------------
-void Ui::mergeDictionaries()
-{
-	auto beg = arg.rbegin();
-	auto end = arg.rend() - 2;
-	vector<string> path(beg, end);
-	Merger merger(path);
-	merger.mergeDict();
-	merger.writeMerged();
-	merger.writeLog();
-}
-
-//----------------------------------------------------------
-void Ui::convertFile()
-{
-	auto beg = arg.rbegin();
-	auto end = arg.rend() - 3;
-	vector<string> path(beg, end);
-	Merger merger(path);
-	merger.mergeDict();
-	merger.writeLog();
-	Converter converter(arg[2], merger);
-	converter.convertEsm();
-	converter.writeEsm();
-	if(converter.getConverterStatus() == 1)
+	Config config;
+	for(size_t i = 0; i < arg_file.size(); ++i)
 	{
-		Creator creator(arg[2], merger, true);
+		Creator creator(arg_file[i]);
 		creator.makeDict();
 		creator.writeDict();
 	}
+	Config::writeLog();
 }
 
 //----------------------------------------------------------
-void Ui::writeScriptLog()
+void Ui::makeDictBase(vector<string> &arg_file)
 {
-	for(size_t i = 2; i < arg.size(); ++i)
+	Config config;
+	if(arg_file.size() == 2)
 	{
-		Creator creator(arg[i]);
+		Creator creator(arg_file[0], arg_file[1]);
+		creator.compareEsm();
+		creator.makeDict();
+		creator.writeDict();
+	}
+	Config::writeLog();
+}
+
+//----------------------------------------------------------
+void Ui::makeDictAllRecords(vector<string> &arg_file, vector<string> &arg_dict_rev)
+{
+	Config config;
+	Merger merger(arg_dict_rev);
+	merger.mergeDict();
+	for(size_t i = 0; i < arg_file.size(); ++i)
+	{
+		Creator creator(arg_file[i], merger);
+		creator.makeDict();
+		creator.writeDict();
+	}
+	Config::writeLog();
+}
+
+//----------------------------------------------------------
+void Ui::makeDictNotConverted(vector<string> &arg_file, vector<string> &arg_dict_rev)
+{
+	Config config;
+	Merger merger(arg_dict_rev);
+	merger.mergeDict();
+	for(size_t i = 0; i < arg_file.size(); ++i)
+	{
+		Creator creator(arg_file[i], merger, true);
+		creator.makeDict();
+		creator.writeDict();
+	}
+	Config::writeLog();
+}
+
+//----------------------------------------------------------
+void Ui::mergeDictionaries(vector<string> &arg_dict_rev)
+{
+	Config config;
+	Merger merger(arg_dict_rev);
+	merger.mergeDict();
+	merger.writeMerged();
+	Config::writeLog();
+}
+
+//----------------------------------------------------------
+void Ui::convertFile(vector<string> &arg_file, vector<string> &arg_dict_rev)
+{
+	Config config;
+	Merger merger(arg_dict_rev);
+	merger.mergeDict();
+	for(size_t i = 0; i < arg_file.size(); ++i)
+	{
+		Converter converter(arg_file[i], merger);
+		converter.convertEsm();
+		converter.writeEsm();
+		if(converter.getConverterStatus() == 1)
+		{
+			Creator creator(arg_file[i], merger, true);
+			creator.makeDict();
+			creator.writeDict();
+		}
+	}
+	Config::writeLog();
+}
+
+//----------------------------------------------------------
+void Ui::writeScriptLog(vector<string> &arg_file)
+{
+	Config config;
+	for(size_t i = 0; i < arg_file.size(); ++i)
+	{
+		Creator creator(arg_file[i]);
 		creator.writeScripts();
 	}
+	Config::writeLog();
 }
 
 //----------------------------------------------------------
-void Ui::writeDifferencesLog()
+void Ui::writeDifferencesLog(vector<string> &arg_dict)
 {
-	auto beg = arg.rbegin();
-	auto end = arg.rend() - 2;
-	vector<string> path(beg, end);
-	Merger merger(path);
-	merger.writeDiff();
-	merger.writeLog();
+	Config config;
+	if(arg_dict.size() == 2)
+	{
+		Merger merger(arg_dict);
+		merger.writeDiff();
+	}
+	Config::writeLog();
 }

@@ -14,8 +14,6 @@ public:
 	void writeDict();
 	void writeScripts();
 	void compareEsm();
-	void eraseDuplicates();
-	void eraseDifferent();
 
 	Creator() {}
 	Creator(std::string esm_path);

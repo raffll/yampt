@@ -3,17 +3,22 @@
 using namespace std;
 
 //----------------------------------------------------------
-array<string, 4> Config::sep = {"<br>", "<h3>", "</h3>", "<hr>"};
-
-//----------------------------------------------------------
+array<string, 4> Config::sep = {"^", "<h3>", "</h3>", "<hr>"};
+string Config::base_dictionary_path = "";
 string Config::output_path = "";
 string Config::output_suffix = "";
-
-//----------------------------------------------------------
+string Config::log = "";
+bool Config::status = 0;
 vector<string> Config::key_message = {"messagebox", "say ", "say,", "choice"};
 vector<string> Config::key_dial = {"addtopic"};
 vector<string> Config::key_cell = {"positioncell", "getpccell", "aifollowcell",
 				   "placeitemcell", "showmap"};
+
+//----------------------------------------------------------
+Config::Config()
+{
+	readConfig();
+}
 
 //----------------------------------------------------------
 void Config::readConfig()
@@ -51,14 +56,37 @@ void Config::setConfigStatus(bool st)
 {
 	if(st == 0)
 	{
-		cerr << "--> Error while loading yampt.cfg!" << endl;
+		appendLog("--> Error while loading yampt.cfg!\r\n");
 		status = 0;
 	}
 	else
 	{
-		cerr << "--> Loading yampt.cfg..." << endl;
+		appendLog("--> Loading yampt.cfg...\r\n");
 		status = 1;
 	}
+}
+
+//----------------------------------------------------------
+void Config::appendLog(string message, bool no_standard_output)
+{
+	if(no_standard_output == 0)
+	{
+		cout << message;
+		log += message;
+	}
+	else
+	{
+		log += message;
+	}
+}
+
+//----------------------------------------------------------
+void Config::writeLog()
+{
+	string name = "yampt.log";
+	ofstream file(output_path + name, ios::binary);
+	appendLog("--> Writing " + name + "...\r\n");
+	file << log;
 }
 
 //----------------------------------------------------------

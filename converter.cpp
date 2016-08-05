@@ -34,7 +34,7 @@ void Converter::convertEsm()
 		convertINFO();
 		convertBNAM();
 		convertSCPT();
-		cerr << "--> Converting complete!" << endl;
+		Config::appendLog("--> Converting complete!\r\n");
 	}
 }
 
@@ -44,9 +44,9 @@ void Converter::writeEsm()
 	if(status == 1)
 	{
 		string name = esm.getEsmPrefix() + Config::output_suffix + esm.getEsmSuffix();
-		ofstream file(name, ios::binary);
+		ofstream file(Config::output_path + name, ios::binary);
 		file << esm.getEsmContent();
-		cerr << "--> Writing " << name << "..." << endl;
+		Config::appendLog("--> Writing " + Config::output_path + name + "...\r\n");
 	}
 }
 
@@ -185,7 +185,7 @@ void Converter::convertCELL()
 		esm_content.append(rec_content);
 	}
 	esm.setEsmContent(esm_content);
-	cerr << "    --> CELL records converted: " << counter << endl;
+	Config::appendLog("    --> CELL records converted: " + to_string(counter) + "\r\n");
 }
 
 //----------------------------------------------------------
@@ -219,7 +219,7 @@ void Converter::convertPGRD()
 		esm_content.append(rec_content);
 	}
 	esm.setEsmContent(esm_content);
-	cerr << "    --> PGRD records converted: " << counter << endl;
+	Config::appendLog("    --> PGRD records converted: " + to_string(counter) + "\r\n");
 }
 
 //----------------------------------------------------------
@@ -253,7 +253,7 @@ void Converter::convertANAM()
 		esm_content.append(rec_content);
 	}
 	esm.setEsmContent(esm_content);
-	cerr << "    --> ANAM records converted: " << counter << endl;
+	Config::appendLog("    --> ANAM records converted: " + to_string(counter) + "\r\n");
 }
 
 //----------------------------------------------------------
@@ -295,7 +295,7 @@ void Converter::convertSCVR()
 		esm_content.append(rec_content);
 	}
 	esm.setEsmContent(esm_content);
-	cerr << "    --> SCVR records converted: " << counter << endl;
+	Config::appendLog("    --> SCVR records converted: " + to_string(counter) + "\r\n");
 }
 
 //----------------------------------------------------------
@@ -337,7 +337,7 @@ void Converter::convertDNAM()
 		esm_content.append(rec_content);
 	}
 	esm.setEsmContent(esm_content);
-	cerr << "    --> DNAM records converted: " << counter << endl;
+	Config::appendLog("    --> DNAM records converted: " + to_string(counter) + "\r\n");
 }
 
 //----------------------------------------------------------
@@ -378,7 +378,7 @@ void Converter::convertCNDT()
 		esm_content.append(rec_content);
 	}
 	esm.setEsmContent(esm_content);
-	cerr << "    --> CNDT records converted: " << counter << endl;
+	Config::appendLog("    --> CNDT records converted: " + to_string(counter) + "\r\n");
 }
 
 //----------------------------------------------------------
@@ -413,7 +413,7 @@ void Converter::convertGMST()
 		esm_content.append(rec_content);
 	}
 	esm.setEsmContent(esm_content);
-	cerr << "    --> GMST records converted: " << counter << endl;
+	Config::appendLog("    --> GMST records converted: " + to_string(counter) + "\r\n");
 }
 
 //----------------------------------------------------------
@@ -473,7 +473,7 @@ void Converter::convertFNAM()
 		esm_content.append(rec_content);
 	}
 	esm.setEsmContent(esm_content);
-	cerr << "    --> FNAM records converted: " << counter << endl;
+	Config::appendLog("    --> FNAM records converted: " + to_string(counter) + "\r\n");
 }
 
 //----------------------------------------------------------
@@ -511,7 +511,7 @@ void Converter::convertDESC()
 		esm_content.append(rec_content);
 	}
 	esm.setEsmContent(esm_content);
-	cerr << "    --> DESC records converted: " << counter << endl;
+	Config::appendLog("    --> DESC records converted: " + to_string(counter) + "\r\n");
 }
 
 //----------------------------------------------------------
@@ -546,7 +546,7 @@ void Converter::convertTEXT()
 		esm_content.append(rec_content);
 	}
 	esm.setEsmContent(esm_content);
-	cerr << "    --> TEXT records converted: " << counter << endl;
+	Config::appendLog("    --> TEXT records converted: " + to_string(counter) + "\r\n");
 }
 
 //----------------------------------------------------------
@@ -592,7 +592,7 @@ void Converter::convertRNAM()
 		esm_content.append(rec_content);
 	}
 	esm.setEsmContent(esm_content);
-	cerr << "    --> RNAM records converted: " << counter << endl;
+	Config::appendLog("    --> RNAM records converted: " + to_string(counter) + "\r\n");
 }
 
 //----------------------------------------------------------
@@ -629,7 +629,7 @@ void Converter::convertINDX()
 		esm_content.append(rec_content);
 	}
 	esm.setEsmContent(esm_content);
-	cerr << "    --> INDX records converted: " << counter << endl;
+	Config::appendLog("    --> INDX records converted: " + to_string(counter) + "\r\n");
 }
 
 //----------------------------------------------------------
@@ -664,7 +664,7 @@ void Converter::convertDIAL()
 		esm_content.append(rec_content);
 	}
 	esm.setEsmContent(esm_content);
-	cerr << "    --> DIAL records converted: " << counter << endl;
+	Config::appendLog("    --> DIAL records converted: " + to_string(counter) + "\r\n");
 }
 
 //----------------------------------------------------------
@@ -707,7 +707,7 @@ void Converter::convertINFO()
 		esm_content.append(rec_content);
 	}
 	esm.setEsmContent(esm_content);
-	cerr << "    --> INFO records converted: " << counter << endl;
+	Config::appendLog("    --> INFO records converted: " + to_string(counter) + "\r\n");
 }
 
 //----------------------------------------------------------
@@ -743,7 +743,7 @@ void Converter::convertBNAM()
 		esm_content.append(rec_content);
 	}
 	esm.setEsmContent(esm_content);
-	cerr << "    --> BNAM records converted: " << counter << endl;
+	Config::appendLog("    --> BNAM records converted: " + to_string(counter) + "\r\n");
 }
 
 //----------------------------------------------------------
@@ -779,5 +779,5 @@ void Converter::convertSCPT()
 		esm_content.append(rec_content);
 	}
 	esm.setEsmContent(esm_content);
-	cerr << "    --> SCPT records converted: " << counter << endl;
+	Config::appendLog("    --> SCPT records converted: " + to_string(counter) + "\r\n");
 }

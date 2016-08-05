@@ -92,12 +92,12 @@ void Esmtools::setEsmStatus(bool st, string path)
 {
 	if(st == 0)
 	{
-		cerr << "--> Error while loading " << path << " (wrong path or isn't TES3 plugin)!" << endl;
+		Config::appendLog("--> Error while loading " + path + " (wrong path or isn't TES3 plugin)!\r\n");
 		esm_status = 0;
 	}
 	else
 	{
-		cerr << "--> Loading " << path << "..." << endl;
+		Config::appendLog("--> Loading " + path + "...\r\n");
 		esm_status = 1;
 	}
 }

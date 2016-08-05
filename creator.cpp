@@ -55,7 +55,7 @@ void Creator::makeDict()
 		makeDictINFO();
 		makeDictBNAM();
 		makeDictSCPT();
-		cerr << "--> Creating complete!" << endl;
+		Config::appendLog("--> Creating complete!\r\n");
 	}
 }
 
@@ -75,20 +75,20 @@ void Creator::writeDict()
 		}
 		if(!created.empty())
 		{
-			ofstream file;
-			file.open(name, ios::binary);
+			ofstream file(Config::output_path + name, ios::binary);
 			for(const auto &elem : created)
 			{
+				file << "<!-------------------------------------------------------------->\r\n";
 				file << Config::sep[1] << elem.first
 				     << Config::sep[2] << elem.second
 				     << Config::sep[3] << "\r\n";
 			}
-			cerr << "--> Writing " << created.size()
-			     << " records to " << name << "..." << endl;
+			Config::appendLog("--> Writing " + to_string(created.size()) +
+					  " records to " + Config::output_path + name + "...\r\n");
 		}
 		else
 		{
-			cerr << "--> No records to make dictionary!" << endl;
+			Config::appendLog("--> No records to make dictionary!\r\n");
 		}
 	}
 }
@@ -98,9 +98,8 @@ void Creator::writeScripts()
 {
 	if(status == 1)
 	{
-		string name = Config::output_path + "yampt-scripts-" + esm.getEsmPrefix() + ".log";
-		ofstream file;
-		file.open(name, ios::binary);
+		string name = "yampt-scripts-" + esm.getEsmPrefix() + ".log";
+		ofstream file(Config::output_path + name, ios::binary);
 		esm.resetRec();
 		while(esm.setNextRec())
 		{
@@ -125,7 +124,7 @@ void Creator::writeScripts()
 				     << "\r\n----------------------------------------------------------\r\n";
 			}
 		}
-		cerr << "--> Writing " << name << "..." << endl;
+		Config::appendLog("--> Writing " + Config::output_path + name + "...\r\n");
 	}
 }
 
@@ -148,7 +147,7 @@ void Creator::compareEsm()
 		}
 		if(esm_compare != ext_compare)
 		{
-			cerr << "--> They are not the same master files!" << endl;
+			Config::appendLog("--> They are not the same master files!\r\n");
 			status = 0;
 		}
 	}
@@ -220,7 +219,7 @@ void Creator::makeDictCELL()
 			}
 		}
 	}
-	cerr << "    --> CELL records created: " << counter << endl;
+	Config::appendLog("    --> CELL records created: " + to_string(counter) + "\r\n");
 }
 
 //----------------------------------------------------------
@@ -253,7 +252,7 @@ void Creator::makeDictGMST()
 			}
 		}
 	}
-	cerr << "    --> GMST records created: " << counter << endl;
+	Config::appendLog("    --> GMST records created: " + to_string(counter) + "\r\n");
 }
 
 //----------------------------------------------------------
@@ -311,7 +310,7 @@ void Creator::makeDictFNAM()
 			}
 		}
 	}
-	cerr << "    --> FNAM records created: " << counter << endl;
+	Config::appendLog("    --> FNAM records created: " + to_string(counter) + "\r\n");
 }
 
 //----------------------------------------------------------
@@ -335,7 +334,7 @@ void Creator::makeDictDESC()
 				     esm.getSecText());
 		}
 	}
-	cerr << "    --> DESC records created: " << counter << endl;
+	Config::appendLog("    --> DESC records created: " + to_string(counter) + "\r\n");
 }
 
 //----------------------------------------------------------
@@ -355,7 +354,7 @@ void Creator::makeDictTEXT()
 				     esm.getSecText());
 		}
 	}
-	cerr << "    --> TEXT records created: " << counter << endl;
+	Config::appendLog("    --> TEXT records created: " + to_string(counter) + "\r\n");
 }
 
 //----------------------------------------------------------
@@ -384,7 +383,7 @@ void Creator::makeDictRNAM()
 			}
 		}
 	}
-	cerr << "    --> RNAM records created: " << counter << endl;
+	Config::appendLog("    --> RNAM records created: " + to_string(counter) + "\r\n");
 }
 
 //----------------------------------------------------------
@@ -406,7 +405,7 @@ void Creator::makeDictINDX()
 				     esm.getSecText());
 		}
 	}
-	cerr << "    --> INDX records created: " << counter << endl;
+	Config::appendLog("    --> INDX records created: " + to_string(counter) + "\r\n");
 }
 
 //----------------------------------------------------------
@@ -433,7 +432,7 @@ void Creator::makeDictDIAL()
 			}
 		}
 	}
-	cerr << "    --> DIAL records created: " << counter << endl;
+	Config::appendLog("    --> DIAL records created: " + to_string(counter) + "\r\n");
 }
 
 //----------------------------------------------------------
@@ -465,7 +464,7 @@ void Creator::makeDictINFO()
 			}
 		}
 	}
-	cerr << "    --> INFO records created: " << counter << endl;
+	Config::appendLog("    --> INFO records created: " + to_string(counter) + "\r\n");
 }
 
 //----------------------------------------------------------
@@ -496,7 +495,7 @@ void Creator::makeDictBNAM()
 			}
 		}
 	}
-	cerr << "    --> BNAM records created: " << counter << endl;
+	Config::appendLog("    --> BNAM records created: " + to_string(counter) + "\r\n");
 }
 
 //----------------------------------------------------------
@@ -526,5 +525,5 @@ void Creator::makeDictSCPT()
 			}
 		}
 	}
-	cerr << "    --> SCPT records created: " << counter << endl;
+	Config::appendLog("    --> SCPT records created: " + to_string(counter) + "\r\n");
 }
