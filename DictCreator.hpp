@@ -1,13 +1,14 @@
-#ifndef CREATOR_HPP
-#define CREATOR_HPP
+#ifndef DICTCREATOR_HPP
+#define DICTCREATOR_HPP
 
-#include "config.hpp"
-#include "esmtools.hpp"
-#include "merger.hpp"
+#include "Config.hpp"
+#include "EsmTools.hpp"
+#include "RecTools.hpp"
+#include "DictMerger.hpp"
 
 using namespace std;
 
-class Creator
+class DictCreator
 {
 public:
 	void makeDict();
@@ -15,15 +16,15 @@ public:
 	void writeScripts();
 	void compareEsm();
 
-	Creator() {}
-	Creator(std::string esm_path);
-	Creator(std::string esm_path, std::string ext_path);
-	Creator(std::string esm_path, Merger &m, bool no_dupl = 0);
+	DictCreator() {}
+	DictCreator(string esm_path);
+	DictCreator(string esm_path, string ext_path);
+	DictCreator(string esm_path, DictMerger &m, bool no_dupl = 0);
 
 private:
 	string dialTranslator(string to_translate);
 	string makeGap(string str);
-	void insertRecord(const std::string &pri, const std::string &sec);
+	void insertRecord(const string &pri_text, const string &sec_text, int dict_num);
 	void makeDictCELL();
 	void makeDictGMST();
 	void makeDictFNAM();
@@ -36,15 +37,15 @@ private:
 	void makeDictBNAM();
 	void makeDictSCPT();
 
-	Esmtools esm;
-	Esmtools ext;
-	Esmtools *esm_ptr;
-	Merger dict;
+	RecTools esm_n;
+	RecTools esm_f;
+	RecTools *esm_ptr;
+	DictMerger dict_merged;
 	bool status = 0;
 	bool with_dict = 0;
 	bool no_duplicates = 0;
 	int counter;
-	std::map<std::string, std::string> created;
+	map<string, string> dict_created;
 };
 
 #endif

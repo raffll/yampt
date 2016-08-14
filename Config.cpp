@@ -1,9 +1,10 @@
-#include "config.hpp"
+#include "Config.hpp"
 
 using namespace std;
 
 //----------------------------------------------------------
-array<string, 4> Config::sep = {"^", "<h3>", "</h3>", "<hr>"};
+vector<string> Config::sep = {"^", "<h3>", "</h3>", "<hr>"};
+string Config::sep_line = "<!-------------------------------------------------------------->\r\n";
 string Config::base_dictionary_path = "";
 string Config::output_path = "";
 string Config::output_suffix = "";

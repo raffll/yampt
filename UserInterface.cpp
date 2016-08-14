@@ -1,14 +1,51 @@
-#include "ui.hpp"
+#include "UserInterface.hpp"
 
 using namespace std;
 
 //----------------------------------------------------------
-void Ui::makeDictRaw(vector<string> &arg_file)
+UserInterface::UserInterface(vector<string> &a)
+{
+	prepareUi(a);
+}
+
+//----------------------------------------------------------
+void UserInterface::prepareUi(vector<string> &a)
+{
+	arg = a;
+	string command = "NULL";
+	for(size_t i = 0; i < arg.size(); ++i)
+	{
+		if(arg[i] == "-f")
+		{
+			command = "-f";
+		}
+		else if(arg[i] == "-d")
+		{
+			command = "-d";
+		}
+		else
+		{
+			if(command == "-f")
+			{
+				arg_file.push_back(arg[i]);
+			}
+			if(command == "-d")
+			{
+				arg_dict.push_back(arg[i]);
+			}
+		}
+	}
+	vector<string> arg_dict_rev_tmp(arg_dict.rbegin(), arg_dict.rend());
+	arg_dict_rev = arg_dict_rev_tmp;
+}
+
+//----------------------------------------------------------
+void UserInterface::makeDictRaw()
 {
 	Config config;
 	for(size_t i = 0; i < arg_file.size(); ++i)
 	{
-		Creator creator(arg_file[i]);
+		DictCreator creator(arg_file[i]);
 		creator.makeDict();
 		creator.writeDict();
 	}
@@ -16,12 +53,12 @@ void Ui::makeDictRaw(vector<string> &arg_file)
 }
 
 //----------------------------------------------------------
-void Ui::makeDictBase(vector<string> &arg_file)
+void UserInterface::makeDictBase()
 {
 	Config config;
 	if(arg_file.size() == 2)
 	{
-		Creator creator(arg_file[0], arg_file[1]);
+		DictCreator creator(arg_file[0], arg_file[1]);
 		creator.compareEsm();
 		creator.makeDict();
 		creator.writeDict();
@@ -30,14 +67,14 @@ void Ui::makeDictBase(vector<string> &arg_file)
 }
 
 //----------------------------------------------------------
-void Ui::makeDictAllRecords(vector<string> &arg_file, vector<string> &arg_dict_rev)
+void UserInterface::makeDictAll()
 {
 	Config config;
-	Merger merger(arg_dict_rev);
+	DictMerger merger(arg_dict_rev);
 	merger.mergeDict();
 	for(size_t i = 0; i < arg_file.size(); ++i)
 	{
-		Creator creator(arg_file[i], merger);
+		DictCreator creator(arg_file[i], merger);
 		creator.makeDict();
 		creator.writeDict();
 	}
@@ -45,14 +82,14 @@ void Ui::makeDictAllRecords(vector<string> &arg_file, vector<string> &arg_dict_r
 }
 
 //----------------------------------------------------------
-void Ui::makeDictNotConverted(vector<string> &arg_file, vector<string> &arg_dict_rev)
+void UserInterface::makeDictNot()
 {
 	Config config;
-	Merger merger(arg_dict_rev);
+	DictMerger merger(arg_dict_rev);
 	merger.mergeDict();
 	for(size_t i = 0; i < arg_file.size(); ++i)
 	{
-		Creator creator(arg_file[i], merger, true);
+		DictCreator creator(arg_file[i], merger, true);
 		creator.makeDict();
 		creator.writeDict();
 	}
@@ -60,56 +97,56 @@ void Ui::makeDictNotConverted(vector<string> &arg_file, vector<string> &arg_dict
 }
 
 //----------------------------------------------------------
-void Ui::mergeDictionaries(vector<string> &arg_dict_rev)
+void UserInterface::mergeDict()
 {
 	Config config;
-	Merger merger(arg_dict_rev);
+	DictMerger merger(arg_dict_rev);
 	merger.mergeDict();
-	merger.writeMerged();
+	merger.writeDict();
 	Config::writeLog();
 }
 
 //----------------------------------------------------------
-void Ui::convertFile(vector<string> &arg_file, vector<string> &arg_dict_rev)
+void UserInterface::convertEsm()
 {
 	Config config;
-	Merger merger(arg_dict_rev);
+	DictMerger merger(arg_dict_rev);
 	merger.mergeDict();
 	for(size_t i = 0; i < arg_file.size(); ++i)
 	{
-		Converter converter(arg_file[i], merger);
+		EsmConverter converter(arg_file[i], merger);
 		converter.convertEsm();
 		converter.writeEsm();
-		if(converter.getConverterStatus() == 1)
+		/*if(converter.getStatus() == 1)
 		{
-			Creator creator(arg_file[i], merger, true);
+			DictCreator creator(arg_file[i], merger, true);
 			creator.makeDict();
 			creator.writeDict();
-		}
+		}*/
 	}
 	Config::writeLog();
 }
 
 //----------------------------------------------------------
-void Ui::writeScriptLog(vector<string> &arg_file)
+void UserInterface::writeScripts()
 {
 	Config config;
 	for(size_t i = 0; i < arg_file.size(); ++i)
 	{
-		Creator creator(arg_file[i]);
+		DictCreator creator(arg_file[i]);
 		creator.writeScripts();
 	}
 	Config::writeLog();
 }
 
 //----------------------------------------------------------
-void Ui::writeDifferencesLog(vector<string> &arg_dict)
+void UserInterface::writeCompare()
 {
 	Config config;
 	if(arg_dict.size() == 2)
 	{
-		Merger merger(arg_dict);
-		merger.writeDiff();
+		DictMerger merger(arg_dict);
+		merger.writeCompare();
 	}
 	Config::writeLog();
 }
