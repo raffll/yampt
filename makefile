@@ -1,19 +1,27 @@
-CC=g++
-CFLAGS=-c -std=c++11 -Wall -Wextra -O2 -pedantic -D_GLIBCXX_DEBUG_PEDANTIC -D_FORTIFY_SOURCE=2
-LDFLAGS=
 SOURCES=Main.cpp EsmTools.cpp RecTools.cpp DictCreator.cpp DictTools.cpp DictMerger.cpp EsmConverter.cpp Config.cpp UserInterface.cpp
-OBJECTS=$(SOURCES:.cpp=.o)
 EXECUTABLE=yampt
 
-.PHONY: clean all
+CFLAGS=-c -std=c++11 -Wall -Wextra -O2 -pedantic -D_GLIBCXX_DEBUG_PEDANTIC -D_FORTIFY_SOURCE=2
+LDFLAGS=
+OBJECTS_DIR=obj/
+SOURCES_DIR=src/
+BIN_DIR=bin/
 
-all: $(SOURCES) $(EXECUTABLE)
+CC=g++
+RM=rm
 
-$(EXECUTABLE): $(OBJECTS)
-	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
+OBJECTS=$(SOURCES:.cpp=.o)
+CSOURCES=$(addprefix $(SOURCES_DIR),$(SOURCES))
+COBJECTS=$(addprefix $(OBJECTS_DIR),$(OBJECTS))
+CEXECUTABLE=$(addprefix $(BIN_DIR),$(EXECUTABLE))
 
-.cpp.o:
+all: $(CSOURCES) $(CEXECUTABLE)
+
+$(CEXECUTABLE): $(COBJECTS)
+	$(CC) $(LDFLAGS) $(COBJECTS) -o $@
+
+$(OBJECTS_DIR)%.o: $(SOURCES_DIR)%.cpp
 	$(CC) $(CFLAGS) $< -o $@
 
 clean:
-	rm -f *.o *.gch *.log *.dic *.esp *.esm
+	$(RM) $(COBJECTS)
