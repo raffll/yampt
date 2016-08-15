@@ -164,7 +164,7 @@ void RecTools::setPriINDX()
 }
 
 //----------------------------------------------------------
-void RecTools::setScptColl(string id, const string &cur_text)
+void RecTools::setSecScptColl(string id)
 {
 	if(status == 1)
 	{
@@ -173,7 +173,8 @@ void RecTools::setScptColl(string id, const string &cur_text)
 		string type;
 		size_t pos;
 		string text;
-		istringstream ss(cur_text);
+		setSec(id);
+		istringstream ss(getSecText());
 		scpt_coll.clear();
 		while(getline(ss, line))
 		{
@@ -221,8 +222,8 @@ void RecTools::setScptColl(string id, const string &cur_text)
 			scpt_coll.push_back(make_tuple(type, line, text, pos));
 		}
 		if(!scpt_coll.empty() &&
-		   cur_text.size() > 1 &&
-		   cur_text.substr(cur_text.size() - 2) == "\r\n")
+		   getSecText().size() > 1 &&
+		   getSecText().substr(getSecText().size() - 2) == "\r\n")
 		{
 			get<1>(scpt_coll[scpt_coll.size() - 1]).append("\r\n");
 		}
@@ -230,7 +231,7 @@ void RecTools::setScptColl(string id, const string &cur_text)
 }
 
 //----------------------------------------------------------
-void RecTools::setMessageCollOnly(const string &cur_text)
+void RecTools::setSecMessageColl(string id)
 {
 	if(status == 1)
 	{
@@ -239,7 +240,8 @@ void RecTools::setMessageCollOnly(const string &cur_text)
 		string type;
 		size_t pos;
 		string text;
-		istringstream ss(cur_text);
+		setSec(id);
+		istringstream ss(getSecText());
 		scpt_coll.clear();
 		while(getline(ss, line))
 		{
@@ -265,11 +267,15 @@ void RecTools::setMessageCollOnly(const string &cur_text)
 }
 
 //----------------------------------------------------------
-string RecTools::getDialType(size_t num)
+void RecTools::setSecDialType(string id)
 {
-	static array<string, 5> type_coll = {"T", "V", "G", "P", "J"};
-	int type = byteToInt(rec->substr(get<1>(sec_coll[num]) + 8, 1));
-	return type_coll[type];
+	if(status == 1)
+	{
+		setSec(id);
+		static array<string, 5> type_coll = {"T", "V", "G", "P", "J"};
+		int type = byteToInt(rec->substr(getSecPos() + 8, 1));
+		dial_type = type_coll[type];
+	}
 }
 
 //----------------------------------------------------------

@@ -110,7 +110,7 @@ void EsmConverter::convertScriptLine(int i)
 		auto search = dict.getDict(9).find("BNAM" + Config::sep[0] + esm.getScptLine(i));
 		if(search != dict.getDict(9).end())
 		{
-			line = search->second;
+			line = search->second.first;
 			line = line.substr(line.find(Config::sep[0]) + Config::sep[0].size());
 			found = 1;
 			if(esm.getScptLine(i) != line)
@@ -119,12 +119,12 @@ void EsmConverter::convertScriptLine(int i)
 			}
 		}
 	}
-	else if(esm.getScptLineType(i) == "SCPT")
+	else if(esm.getScptLineType(i) == "SCTX")
 	{
-		auto search = dict.getDict(10).find("SCPT" + Config::sep[0] + esm.getScptLine(i));
+		auto search = dict.getDict(10).find("SCTX" + Config::sep[0] + esm.getScptLine(i));
 		if(search != dict.getDict(10).end())
 		{
-			line = search->second;
+			line = search->second.first;
 			line = line.substr(line.find(Config::sep[0]) + Config::sep[0].size());
 			found = 1;
 			if(esm.getScptLine(i) != line)
@@ -140,7 +140,7 @@ void EsmConverter::convertScriptLine(int i)
 		{
 
 			line.erase(esm.getScptTextPos(i), esm.getScptText(i).size() + 2);
-			line.insert(esm.getScptTextPos(i), "\"" + search->second + "\"");
+			line.insert(esm.getScptTextPos(i), "\"" + search->second.first + "\"");
 			counter++;
 			found = 1;
 		}
@@ -151,7 +151,7 @@ void EsmConverter::convertScriptLine(int i)
 				if(caseInsensitiveStringCmp("DIAL" + Config::sep[0] + text, elem.first) == 1)
 				{
 					line.erase(esm.getScptTextPos(i), esm.getScptText(i).size() + 2);
-					line.insert(esm.getScptTextPos(i), "\"" + elem.second + "\"");
+					line.insert(esm.getScptTextPos(i), "\"" + elem.second.first + "\"");
 					counter++;
 					found = 1;
 					break;
@@ -165,7 +165,7 @@ void EsmConverter::convertScriptLine(int i)
 		if(search != dict.getDict(0).end())
 		{
 			line.erase(esm.getScptTextPos(i), esm.getScptText(i).size() + 2);
-			line.insert(esm.getScptTextPos(i), "\"" + search->second + "\"");
+			line.insert(esm.getScptTextPos(i), "\"" + search->second.first + "\"");
 			counter++;
 			found = 1;
 		}
@@ -176,7 +176,7 @@ void EsmConverter::convertScriptLine(int i)
 				if(caseInsensitiveStringCmp("CELL" + Config::sep[0] + text, elem.first) == 1)
 				{
 					line.erase(esm.getScptTextPos(i), esm.getScptText(i).size() + 2);
-					line.insert(esm.getScptTextPos(i), "\"" + elem.second + "\"");
+					line.insert(esm.getScptTextPos(i), "\"" + elem.second.first + "\"");
 					counter++;
 					found = 1;
 					break;
@@ -208,13 +208,13 @@ void EsmConverter::convertCELL()
 			auto search = dict.getDict(0).find(pri_text);
 
 			if(search != dict.getDict(0).end() &&
-			   esm.getPriText() != search->second &&
+			   esm.getPriText() != search->second.first &&
 			   !esm.getPriText().empty())
 			{
 				convertRecordContent(esm.getPriPos(),
 						     esm.getPriSize(),
-						     search->second + '\0',
-						     search->second.size() + 1,
+						     search->second.first + '\0',
+						     search->second.first.size() + 1,
 						     i);
 				counter++;
 			}
@@ -237,12 +237,12 @@ void EsmConverter::convertPGRD()
 			auto search = dict.getDict(0).find(pri_text);
 
 			if(search != dict.getDict(0).end() &&
-			   esm.getPriText() != search->second)
+			   esm.getPriText() != search->second.first)
 			{
 				convertRecordContent(esm.getPriPos(),
 						     esm.getPriSize(),
-						     search->second + '\0',
-						     search->second.size() + 1,
+						     search->second.first + '\0',
+						     search->second.first.size() + 1,
 						     i);
 				counter++;
 			}
@@ -265,13 +265,13 @@ void EsmConverter::convertANAM()
 			auto search = dict.getDict(0).find(pri_text);
 
 			if(search != dict.getDict(0).end() &&
-			   esm.getPriText() != search->second)
+			   esm.getPriText() != search->second.first)
 			{
 
 				convertRecordContent(esm.getPriPos(),
 						     esm.getPriSize(),
-						     search->second + '\0',
-						     search->second.size() + 1,
+						     search->second.first + '\0',
+						     search->second.first.size() + 1,
 						     i);
 				counter++;
 			}
@@ -300,9 +300,9 @@ void EsmConverter::convertSCVR()
 									   esm.getPriText(j).substr(5));
 
 					if(search != dict.getDict(0).end() &&
-					   esm.getPriText(j).substr(5) != search->second)
+					   esm.getPriText(j).substr(5) != search->second.first)
 					{
-						text = esm.getPriText(j).substr(0, 5) + search->second;
+						text = esm.getPriText(j).substr(0, 5) + search->second.first;
 						convertRecordContent(esm.getPriPos(j),
 								     esm.getPriSize(j),
 								     text,
@@ -338,12 +338,12 @@ void EsmConverter::convertDNAM()
 									   esm.getPriText(j));
 
 					if(search != dict.getDict(0).end() &&
-					   esm.getPriText(j) != search->second)
+					   esm.getPriText(j) != search->second.first)
 					{
 						convertRecordContent(esm.getPriPos(j),
 								     esm.getPriSize(j),
-								     search->second + '\0',
-								     search->second.size() + 1,
+								     search->second.first + '\0',
+								     search->second.first.size() + 1,
 								     i);
 						counter++;
 						esm.setPriColl("DNAM");
@@ -374,12 +374,12 @@ void EsmConverter::convertCNDT()
 									   esm.getPriText(j));
 
 					if(search != dict.getDict(0).end() &&
-					   esm.getPriText() != search->second)
+					   esm.getPriText() != search->second.first)
 					{
 						convertRecordContent(esm.getPriPos(j),
 								     esm.getPriSize(j),
-								     search->second + '\0',
-								     search->second.size() + 1,
+								     search->second.first + '\0',
+								     search->second.first.size() + 1,
 								     i);
 						counter++;
 						esm.setPriColl("CNDT");
@@ -406,12 +406,12 @@ void EsmConverter::convertGMST()
 							   esm.getPriText());
 
 			if(search != dict.getDict(1).end() &&
-			   esm.getSecText() != search->second)
+			   esm.getSecText() != search->second.first)
 			{
 				convertRecordContent(esm.getSecPos(),
 						     esm.getSecSize(),
-						     search->second + '\0',
-						     search->second.size() + 1,
+						     search->second.first + '\0',
+						     search->second.first.size() + 1,
 						     i);
 				counter++;
 			}
@@ -460,12 +460,12 @@ void EsmConverter::convertFNAM()
 							   esm.getPriText());
 
 			if(search != dict.getDict(2).end() &&
-			   esm.getSecText() != search->second)
+			   esm.getSecText() != search->second.first)
 			{
 				convertRecordContent(esm.getSecPos(),
 						     esm.getSecSize(),
-						     search->second + '\0',
-						     search->second.size() + 1,
+						     search->second.first + '\0',
+						     search->second.first.size() + 1,
 						     i);
 				counter++;
 			}
@@ -492,12 +492,12 @@ void EsmConverter::convertDESC()
 							  esm.getPriText());
 
 			if(search != dict.getDict(3).end() &&
-			   esm.getSecText() != search->second)
+			   esm.getSecText() != search->second.first)
 			{
 				convertRecordContent(esm.getSecPos(),
 						     esm.getSecSize(),
-						     search->second + '\0',
-						     search->second.size() + 1,
+						     search->second.first + '\0',
+						     search->second.first.size() + 1,
 						     i);
 				counter++;
 			}
@@ -521,12 +521,12 @@ void EsmConverter::convertTEXT()
 							   esm.getPriText());
 
 			if(search != dict.getDict(4).end() &&
-			   esm.getSecText() != search->second)
+			   esm.getSecText() != search->second.first)
 			{
 				convertRecordContent(esm.getSecPos(),
 						     esm.getSecSize(),
-						     search->second + '\0',
-						     search->second.size() + 1,
+						     search->second.first + '\0',
+						     search->second.first.size() + 1,
 						     i);
 				counter++;
 			}
@@ -554,9 +554,9 @@ void EsmConverter::convertRNAM()
 								   to_string(j));
 
 				if(search != dict.getDict(5).end() &&
-				   esm.getSecText() != search->second)
+				   esm.getSecText() != search->second.first)
 				{
-					text = search->second;
+					text = search->second.first;
 					text.resize(32);
 					convertRecordContent(esm.getSecPos(j),
 							     32,
@@ -589,12 +589,12 @@ void EsmConverter::convertINDX()
 							   esm.getPriText());
 
 			if(search != dict.getDict(6).end() &&
-			   esm.getSecText() != search->second)
+			   esm.getSecText() != search->second.first)
 			{
 				convertRecordContent(esm.getSecPos(),
 						     esm.getSecSize(),
-						     search->second + '\0',
-						     search->second.size() + 1,
+						     search->second.first + '\0',
+						     search->second.first.size() + 1,
 						     i);
 				counter++;
 			}
@@ -613,17 +613,17 @@ void EsmConverter::convertDIAL()
 		if(esm.getRecId() == "DIAL")
 		{
 			esm.setPri("NAME");
-			esm.setSec("DATA");
+			esm.setSecDialType("DATA");
 			auto search = dict.getDict(7).find(esm.getRecId() + Config::sep[0] +
 							   esm.getPriText());
 
 			if(search != dict.getDict(7).end() &&
-			   esm.getPriText() != search->second)
+			   esm.getPriText() != search->second.first)
 			{
 				convertRecordContent(esm.getPriPos(),
 						     esm.getPriSize(),
-						     search->second + '\0',
-						     search->second.size() + 1,
+						     search->second.first + '\0',
+						     search->second.first.size() + 1,
 						     i);
 				counter++;
 			}
@@ -643,7 +643,7 @@ void EsmConverter::convertINFO()
 		if(esm.getRecId() == "DIAL")
 		{
 			esm.setPri("NAME");
-			esm.setSec("DATA");
+			esm.setSecDialType("DATA");
 			dial = esm.getDialType() + Config::sep[0] + esm.getPriText();
 		}
 		if(esm.getRecId() == "INFO")
@@ -655,12 +655,12 @@ void EsmConverter::convertINFO()
 							   esm.getPriText());
 
 			if(search != dict.getDict(8).end() &&
-			   esm.getSecText() != search->second)
+			   esm.getSecText() != search->second.first)
 			{
 				convertRecordContent(esm.getSecPos(),
 						     esm.getSecSize(),
-						     search->second + '\0',
-						     search->second.size() + 1,
+						     search->second.first + '\0',
+						     search->second.first.size() + 1,
 						     i);
 				counter++;
 			}
@@ -679,8 +679,7 @@ void EsmConverter::convertBNAM()
 		if(esm.getRecId() == "INFO")
 		{
 			esm.setPri("INAM");
-			esm.setSec("BNAM");
-			esm.setScptColl("BNAM", esm.getSecText());
+			esm.setSecScptColl("BNAM");
 			script_text.erase();
 			if(esm.getScptCollSize() > 0)
 			{
@@ -710,8 +709,7 @@ void EsmConverter::convertSCPT()
 		if(esm.getRecId() == "SCPT")
 		{
 			esm.setPri("SCHD");
-			esm.setSec("SCTX");
-			esm.setScptColl("SCPT", esm.getSecText());
+			esm.setSecScptColl("SCTX");
 			script_text.erase();
 			if(esm.getScptCollSize() > 0)
 			{
@@ -728,5 +726,5 @@ void EsmConverter::convertSCPT()
 			}
 		}
 	}
-	Config::appendLog("    --> SCPT records converted: " + to_string(counter) + "\r\n");
+	Config::appendLog("    --> SCTX records converted: " + to_string(counter) + "\r\n");
 }

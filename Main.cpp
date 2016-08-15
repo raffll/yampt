@@ -10,27 +10,19 @@ int main(int argc, char *argv[])
 		arg.push_back(argv[i]);
 	}
 	string usage = "Usage: " + arg[0] + " [command]"
-			    "\n"
-			    "\n  --help                                "
-			    "Print this message."
-			    "\n  --make-all  -f [file]... -d [dict]... "
-			    "Make dictionary from esp/esm plugin with all records."
-			    "\n  --make-not  -f [file]... -d [dict]... "
-			    "Make without records from dictionary."
-			    "\n  --make-raw  -f [file]...              "
-			    "Like \"--make-all\", but without DIAL translation."
-			    "\n  --make-base -f [file_n] [file_f]      "
-			    "Make base dictionary from two different localized esm files."
-			    "\n  --compare   -d [dict] [dict]          "
-			    "Compare two dictionaries and create differences log."
-			    "\n  --merge     -d [dict]...              "
-			    "Validate, merge, sort and delete doubled records."
-			    "\n  --convert   -f [file]... -d [dict]... "
-			    "Convert plugin from dictionaries in paths"
-			    "\n                                        "
-			    "and create dictionary as \"--make-not\" command."
-			    "\n  --scripts   -f [file]...              "
-			    "Write scripts content log.";
+			"\n"
+			"\n  --help                                      Print this message."
+			"\n  --make-all  -f <file_list> -d <dict_list>   Make dictionary from esp/esm plugin with all records."
+			"\n  --make-not  -f <file_list> -d <dict_list>   Make without records from dictionary."
+			"\n  --make-raw  -f <file_list>                  Like \"--make-all\", but without DIAL translation."
+			"\n  --make-base -f [file_native] [file_foreign] Make base dictionary from two different"
+			"\n                                              localized esm files."
+			"\n  --compare   -d [dict_first] [dict_second]   Compare two dictionaries and create differences log."
+			"\n  --merge     -d <dict_list>                  Validate, merge, sort and delete doubled records."
+			"\n  --convert   -f <file_list> -d <dict_list>   Convert plugin from dictionaries in paths"
+			"\n                                              and create dictionary as \"--make-not\" command."
+			"\n  --scripts   -f <file_list>                  Write scripts content log.";
+
 	if(arg.size() > 1)
 	{
 		Config config();

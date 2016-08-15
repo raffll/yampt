@@ -58,10 +58,10 @@ void DictMerger::mergeDict()
 					auto search = dict[k].find(elem.first);
 					if(search == dict[k].end())
 					{
-						dict[k].insert({elem.first, elem.second});
+						dict[k].insert({elem.first, make_pair(elem.second, i)});
 					}
 					else if(search != dict[k].end() &&
-						search->second != elem.second)
+						search->second.first != elem.second)
 					{
 						duplicate_record++;
 						Config::appendLog(Config::sep_line, 1);
@@ -71,7 +71,7 @@ void DictMerger::mergeDict()
 								  Config::sep[2] + elem.second +
 								  Config::sep[3] + "\r\n", 1);
 						Config::appendLog(Config::sep[1] + search->first +
-								  Config::sep[2] + search->second +
+								  Config::sep[2] + search->second.first +
 								  Config::sep[3] + "\r\n", 1);
 					}
 					else
@@ -108,9 +108,9 @@ void DictMerger::writeDict()
 		{
 			for(const auto &elem : dict[i])
 			{
-				file << Config::sep_line
+				file << "<!-- " << dicttools[elem.second.second].getName() << " -->\r\n"
 				     << Config::sep[1] << elem.first
-				     << Config::sep[2] << elem.second
+				     << Config::sep[2] << elem.second.first
 				     << Config::sep[3] << "\r\n";
 			}
 		}
@@ -152,7 +152,7 @@ void DictMerger::writeCompare()
 			for(size_t i = 0; i < diff.size(); ++i)
 			{
 				name = "yampt-diff-" + to_string(i) + "-" +
-				       dicttools[i].getPrefix() + ".log";
+				       dicttools[i].getNamePrefix() + ".log";
 				ofstream file(Config::output_path + name, ios::binary);
 				file << diff[i];
 				Config::appendLog("--> Writing " + Config::output_path + name + "...\r\n");

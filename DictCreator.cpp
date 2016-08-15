@@ -163,18 +163,14 @@ void DictCreator::insertRecord(const string &pri_text, const string &sec_text, i
 		auto search = dict_merged.getDict(dict_num).find(pri_text);
 		if(search == dict_merged.getDict(dict_num).end())
 		{
-			if(dict_created.insert({pri_text, sec_text}).second == 1)
-			{
-				counter++;
-			}
+			dict_created.push_back(make_pair(pri_text, sec_text));
+			counter++;
 		}
 	}
 	else
 	{
-		if(dict_created.insert({pri_text, sec_text}).second == 1)
-		{
-			counter++;
-		}
+		dict_created.push_back(make_pair(pri_text, sec_text));
+		counter++;
 	}
 }
 
@@ -186,7 +182,7 @@ string DictCreator::dialTranslator(string to_translate)
 		auto search = dict_merged.getDict(7).find("DIAL" + Config::sep[0] + to_translate);
 		if(search != dict_merged.getDict(7).end())
 		{
-			return search->second;
+			return search->second.first;
 		}
 	}
 	return to_translate;
@@ -410,9 +406,9 @@ void DictCreator::makeDictDIAL()
 		if(esm_n.getRecId() == "DIAL")
 		{
 			esm_n.setPri("NAME");
-			esm_n.setSec("DATA");
+			esm_n.setSecDialType("DATA");
 			esm_f.setPri("NAME");
-			esm_f.setSec("DATA");
+			esm_f.setSecDialType("DATA");
 			if(esm_n.getDialType() == "T")
 			{
 				insertRecord(esm_n.getRecId() + Config::sep[0] +
@@ -436,7 +432,7 @@ void DictCreator::makeDictINFO()
 		if(esm_n.getRecId() == "DIAL")
 		{
 			esm_n.setPri("NAME");
-			esm_n.setSec("DATA");
+			esm_n.setSecDialType("DATA");
 			dial = esm_n.getDialType() + Config::sep[0] + dialTranslator(esm_n.getPriText());
 		}
 		if(esm_n.getRecId() == "INFO")
@@ -459,7 +455,6 @@ void DictCreator::makeDictINFO()
 void DictCreator::makeDictBNAM()
 {
 	counter = 0;
-	string dial;
 	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
 	{
 		esm_n.setRec(i);
@@ -467,17 +462,15 @@ void DictCreator::makeDictBNAM()
 		if(esm_n.getRecId() == "INFO")
 		{
 			esm_n.setPri("INAM");
-			esm_n.setSec("BNAM");
-			esm_n.setMessageCollOnly(esm_n.getSecText());
+			esm_n.setSecMessageColl("BNAM");
 			esm_f.setPri("INAM");
-			esm_f.setSec("BNAM");
-			esm_f.setMessageCollOnly(esm_f.getSecText());
-			for(size_t i = 0; i < esm_n.getScptCollSize(); i++)
+			esm_f.setSecMessageColl("BNAM");
+			for(size_t k = 0; k < esm_n.getScptCollSize(); k++)
 			{
 				insertRecord(esm_n.getSecId() + Config::sep[0] +
-					     esm_ptr->getScptLine(i),
+					     esm_ptr->getScptLine(k),
 					     makeGap(Config::sep[1] + esm_n.getSecId()) + Config::sep[0] +
-					     esm_n.getScptLine(i), 9);
+					     esm_n.getScptLine(k), 9);
 			}
 		}
 	}
@@ -495,19 +488,17 @@ void DictCreator::makeDictSCPT()
 		if(esm_n.getRecId() == "SCPT")
 		{
 			esm_n.setPri("SCHD");
-			esm_n.setSec("SCTX");
-			esm_n.setMessageCollOnly(esm_n.getSecText());
+			esm_n.setSecMessageColl("SCTX");
 			esm_f.setPri("SCHD");
-			esm_f.setSec("SCTX");
-			esm_f.setMessageCollOnly(esm_f.getSecText());
-			for(size_t i = 0; i < esm_n.getScptCollSize(); i++)
+			esm_f.setSecMessageColl("SCTX");
+			for(size_t k = 0; k < esm_n.getScptCollSize(); k++)
 			{
 				insertRecord(esm_n.getRecId() + Config::sep[0] +
-					     esm_ptr->getScptLine(i),
+					     esm_ptr->getScptLine(k),
 					     makeGap(Config::sep[1] + esm_n.getRecId()) + Config::sep[0] +
-					     esm_n.getScptLine(i), 10);
+					     esm_n.getScptLine(k), 10);
 			}
 		}
 	}
-	Config::appendLog("    --> SCPT records created: " + to_string(counter) + "\r\n");
+	Config::appendLog("    --> SCTX records created: " + to_string(counter) + "\r\n");
 }

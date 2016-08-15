@@ -12,15 +12,12 @@ public:
 
 	void setPri(string id);
 	void setPriColl(string id);
+	void setPriINDX();
 	void setSec(string id);
 	void setSecColl(string id);
-	void setPriINDX();
-
-	void setScptColl(string id, const string &cur_text);
-	void setMessageCollOnly(const string &cur_text);
-
-	string getDialType(size_t num = 0);
-	void printBinary(string content);
+	void setSecScptColl(string id);
+	void setSecMessageColl(string id);
+	void setSecDialType(string id);
 
 	string getRecId() { return rec_id; }
 	size_t getRecSize() { return rec_size; }
@@ -43,6 +40,9 @@ public:
 	string getScptText(size_t num) { return get<2>(scpt_coll[num]); }
 	size_t getScptTextPos(size_t num) { return get<3>(scpt_coll[num]); }
 
+	string getDialType() { return dial_type; }
+	void printBinary(string content);
+
 	RecTools();
 
 private:
@@ -63,6 +63,8 @@ private:
 	vector<tuple<size_t, size_t, string>> sec_coll;
 
 	vector<tuple<string, string, string, size_t>> scpt_coll;
+
+	string dial_type;
 };
 
 #endif

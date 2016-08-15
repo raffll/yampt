@@ -117,12 +117,12 @@ void UserInterface::convertEsm()
 		EsmConverter converter(arg_file[i], merger);
 		converter.convertEsm();
 		converter.writeEsm();
-		/*if(converter.getStatus() == 1)
+		if(converter.getStatus() == 1)
 		{
 			DictCreator creator(arg_file[i], merger, true);
 			creator.makeDict();
 			creator.writeDict();
-		}*/
+		}
 	}
 	Config::writeLog();
 }

@@ -11,7 +11,7 @@ public:
 	void readFile(string path);
 	bool getStatus() { return status; }
 	string getName() { return name; }
-	string getPrefix() { return name_prefix; }
+	string getNamePrefix() { return name_prefix; }
 	map<string, string> const& getDict(int i) const { return dict[i]; }
 
 	DictTools();

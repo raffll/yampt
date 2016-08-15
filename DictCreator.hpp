@@ -45,7 +45,7 @@ private:
 	bool with_dict = 0;
 	bool no_duplicates = 0;
 	int counter;
-	map<string, string> dict_created;
+	vector<pair<string, string>> dict_created;
 };
 
 #endif

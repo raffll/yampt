@@ -14,7 +14,7 @@ public:
 	void writeCompare();
 
 	bool getStatus() { return status; }
-	map<string, string> const& getDict(int i) const { return dict[i]; }
+	map<string, pair<string, size_t>> const& getDict(int i) const { return dict[i]; }
 
 	DictMerger();
 	DictMerger(vector<string> &path);
@@ -24,7 +24,7 @@ private:
 
 	bool status;
 	vector<DictTools> dicttools;
-	array<map<string, string>, 11> dict;
+	array<map<string, pair<string, size_t>>, 11> dict;
 };
 
 #endif
