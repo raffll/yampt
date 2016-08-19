@@ -1,4 +1,4 @@
-SOURCES=Main.cpp EsmTools.cpp RecTools.cpp DictCreator.cpp DictTools.cpp DictMerger.cpp EsmConverter.cpp Config.cpp UserInterface.cpp
+SOURCES=Main.cpp EsmTools.cpp RecTools.cpp DictCreator.cpp DictReader.cpp DictMerger.cpp EsmConverter.cpp Config.cpp UserInterface.cpp
 EXECUTABLE=yampt
 
 CFLAGS=-c -std=c++11 -Wall -Wextra -O2 -pedantic -D_GLIBCXX_DEBUG_PEDANTIC -D_FORTIFY_SOURCE=2

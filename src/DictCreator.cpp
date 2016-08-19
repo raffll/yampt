@@ -3,39 +3,49 @@
 using namespace std;
 
 //----------------------------------------------------------
-DictCreator::DictCreator(string esm_path)
+DictCreator::DictCreator(string path_n)
 {
-	esm_n.readFile(esm_path);
+	esm_n.readFile(path_n);
 	esm_ptr = &esm_n;
 	if(esm_n.getStatus() == 1)
 	{
 		status = 1;
+		suffix = ".raw.dic";
 	}
 }
 
 //----------------------------------------------------------
-DictCreator::DictCreator(string esm_path, string ext_path)
+DictCreator::DictCreator(string path_n, string path_f)
 {
-	esm_n.readFile(esm_path);
-	esm_f.readFile(ext_path);
+	esm_n.readFile(path_n);
+	esm_f.readFile(path_f);
 	esm_ptr = &esm_f;
 	if(esm_n.getStatus() == 1 && esm_f.getStatus() == 1)
 	{
 		status = 1;
+		suffix = ".base.dic";
 	}
 }
 
 //----------------------------------------------------------
-DictCreator::DictCreator(string esm_path, DictMerger &m, bool no_dupl)
+DictCreator::DictCreator(string path_n, DictMerger &m, bool no_dupl)
 {
-	esm_n.readFile(esm_path);
+	esm_n.readFile(path_n);
 	esm_ptr = &esm_n;
-	dict_merged = m;
-	if(esm_n.getStatus() == 1 && dict_merged.getStatus() == 1)
+	merger = m;
+	if(esm_n.getStatus() == 1 && merger.getStatus() == 1)
 	{
 		status = 1;
 		with_dict = 1;
 		no_duplicates = no_dupl;
+		if(no_duplicates == 1)
+		{
+			suffix = ".not.dic";
+		}
+		else
+		{
+			suffix = ".all.dic";
+		}
 	}
 }
 
@@ -55,42 +65,45 @@ void DictCreator::makeDict()
 		makeDictINFO();
 		makeDictBNAM();
 		makeDictSCPT();
-		Config::appendLog("--> Creating complete!\r\n");
+		cout << "--> Creating complete!\r\n";
 	}
 }
 
 //----------------------------------------------------------
 void DictCreator::writeDict()
 {
-	if(status == 1)
+	if(status == 1 && getSize() > 0)
 	{
-		string name;
-		if(no_duplicates == 1)
+		string name = esm_n.getNamePrefix() + suffix;
+		ofstream file(Config::output_path + name, ios::binary);
+		for(size_t i = 0; i < dict.size(); ++i)
 		{
-			name = "yampt-notconverted-" + esm_n.getNamePrefix() + ".log";
-		}
-		else
-		{
-			name = esm_n.getNamePrefix() + ".dic";
-		}
-		if(!dict_created.empty())
-		{
-			ofstream file(Config::output_path + name, ios::binary);
-			for(const auto &elem : dict_created)
+			for(const auto &elem : dict[i])
 			{
-				file << Config::sep_line
-				     << Config::sep[1] << elem.first
-				     << Config::sep[2] << elem.second
-				     << Config::sep[3] << "\r\n";
+				file << sep[4]
+				     << sep[1] << elem.first
+				     << sep[2] << elem.second
+				     << sep[3] << "\r\n";
 			}
-			Config::appendLog("--> Writing " + to_string(dict_created.size()) +
-					  " records to " + Config::output_path + name + "...\r\n");
 		}
-		else
-		{
-			Config::appendLog("--> No records to make dictionary!\r\n");
-		}
+		cout << "--> Writing " << to_string(getSize()) <<
+			" records to " << Config::output_path << name << "...\r\n";
 	}
+	else
+	{
+		cout << "--> No records to make dictionary!\r\n";
+	}
+}
+
+//----------------------------------------------------------
+size_t DictCreator::getSize()
+{
+	size_t size = 0;
+	for(auto const &elem : dict)
+	{
+		size += elem.size();
+	}
+	return size;
 }
 
 //----------------------------------------------------------
@@ -98,7 +111,7 @@ void DictCreator::writeScripts()
 {
 	if(status == 1)
 	{
-		string name = "yampt-scripts-" + esm_n.getNamePrefix() + ".log";
+		string name = esm_n.getNamePrefix() + ".scripts.log";
 		ofstream file(Config::output_path + name, ios::binary);
 		for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
 		{
@@ -107,7 +120,7 @@ void DictCreator::writeScripts()
 			{
 				esm_n.setPri("SCHD");
 				esm_n.setSec("SCTX");
-				file << esm_n.getSecText() << "\r\n" << Config::sep_line;
+				file << esm_n.getSecText() << "\r\n" << sep[4];
 			}
 		}
 		for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
@@ -117,10 +130,10 @@ void DictCreator::writeScripts()
 			{
 				esm_n.setPri("INAM");
 				esm_n.setSec("BNAM");
-				file << esm_n.getSecText() << "\r\n" << Config::sep_line;
+				file << esm_n.getSecText() << "\r\n" << sep[4];
 			}
 		}
-		Config::appendLog("--> Writing " + Config::output_path + name + "...\r\n");
+		cout << "--> Writing " << Config::output_path << name << "...\r\n";
 	}
 }
 
@@ -143,33 +156,33 @@ void DictCreator::compareEsm()
 			}
 			if(esm_compare != ext_compare)
 			{
-				Config::appendLog("--> They are not the same master files!\r\n");
+				cout << "--> They are not the same master files!\r\n";
 				status = 0;
 			}
 		}
 		else
 		{
-			Config::appendLog("--> They are not the same master files!\r\n");
+			cout << "--> They are not the same master files!\r\n";
 			status = 0;
 		}
 	}
 }
 
 //----------------------------------------------------------
-void DictCreator::insertRecord(const string &pri_text, const string &sec_text, int dict_num)
+void DictCreator::insertRecord(const string &pri_text, const string &sec_text, RecType i)
 {
 	if(no_duplicates == 1)
 	{
-		auto search = dict_merged.getDict(dict_num).find(pri_text);
-		if(search == dict_merged.getDict(dict_num).end())
+		auto search = merger.getDict()[i].find(pri_text);
+		if(search == merger.getDict()[i].end())
 		{
-			dict_created.push_back(make_pair(pri_text, sec_text));
+			dict[i].insert({pri_text, sec_text});
 			counter++;
 		}
 	}
 	else
 	{
-		dict_created.push_back(make_pair(pri_text, sec_text));
+		dict[i].insert({pri_text, sec_text});
 		counter++;
 	}
 }
@@ -179,20 +192,13 @@ string DictCreator::dialTranslator(string to_translate)
 {
 	if(with_dict == 1)
 	{
-		auto search = dict_merged.getDict(7).find("DIAL" + Config::sep[0] + to_translate);
-		if(search != dict_merged.getDict(7).end())
+		auto search = merger.getDict()[RecType::DIAL].find("DIAL" + sep[0] + to_translate);
+		if(search != merger.getDict()[RecType::DIAL].end())
 		{
-			return search->second.first;
+			return search->second;
 		}
 	}
 	return to_translate;
-}
-
-//----------------------------------------------------------
-string DictCreator::makeGap(string str)
-{
-	string ws(str.size(), ' ');
-	return ws = "\n" + ws;
 }
 
 //----------------------------------------------------------
@@ -209,13 +215,13 @@ void DictCreator::makeDictCELL()
 			esm_f.setPri("NAME");
 			if(!esm_n.getPriText().empty())
 			{
-				insertRecord(esm_n.getRecId() + Config::sep[0] +
-					     esm_ptr->getPriText(),
-					     esm_n.getPriText(), 0);
+				insertRecord("CELL" + sep[0] + esm_ptr->getPriText(),
+					     esm_n.getPriText(),
+					     RecType::CELL);
 			}
 		}
 	}
-	Config::appendLog("    --> CELL records created: " + to_string(counter) + "\r\n");
+	cout << "    --> CELL records created: " << to_string(counter) + "\r\n";
 }
 
 //----------------------------------------------------------
@@ -234,19 +240,19 @@ void DictCreator::makeDictGMST()
 			esm_f.setSec("STRV");
 			if(!esm_n.getSecText().empty())
 			{
-				insertRecord(esm_n.getRecId() + Config::sep[0] +
-					     esm_n.getPriText(),
-					     esm_n.getSecText(), 1);
+				insertRecord("GMST" + sep[0] + esm_n.getPriText(),
+					     esm_n.getSecText(),
+					     RecType::GMST);
 			}
 			if(esm_n.getPriText() == "sDefaultCellname")
 			{
-				insertRecord("CELL" + Config::sep[0] +
-					     esm_ptr->getSecText(),
-					     esm_n.getSecText(), 0);
+				insertRecord("CELL" + sep[0] + esm_ptr->getSecText(),
+					     esm_n.getSecText(),
+					     RecType::CELL);
 			}
 		}
 	}
-	Config::appendLog("    --> GMST records created: " + to_string(counter) + "\r\n");
+	cout << "    --> GMST records created: " << to_string(counter) + "\r\n";
 }
 
 //----------------------------------------------------------
@@ -289,20 +295,19 @@ void DictCreator::makeDictFNAM()
 			esm_f.setSec("FNAM");
 			if(!esm_n.getPriText().empty())
 			{
-				insertRecord(esm_n.getSecId() + Config::sep[0] +
-					     esm_n.getRecId() + Config::sep[0] +
-					     esm_n.getPriText(),
-					     esm_n.getSecText(), 2);
+				insertRecord("FNAM" + sep[0] + esm_n.getRecId() + sep[0] + esm_n.getPriText(),
+					     esm_n.getSecText(),
+					     RecType::FNAM);
 			}
 			if(esm_n.getRecId() == "REGN")
 			{
-				insertRecord("CELL" + Config::sep[0] +
-					     esm_ptr->getSecText(),
-					     esm_n.getSecText(), 0);
+				insertRecord("CELL" + sep[0] + esm_ptr->getSecText(),
+					     esm_n.getSecText(),
+					     RecType::CELL);
 			}
 		}
 	}
-	Config::appendLog("    --> FNAM records created: " + to_string(counter) + "\r\n");
+	cout << "    --> FNAM records created: " << to_string(counter) << "\r\n";
 }
 
 //----------------------------------------------------------
@@ -312,21 +317,18 @@ void DictCreator::makeDictDESC()
 	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
 	{
 		esm_n.setRec(i);
-		esm_f.setRec(i);
 		if(esm_n.getRecId() == "BSGN" ||
 		   esm_n.getRecId() == "CLAS" ||
 		   esm_n.getRecId() == "RACE")
-
 		{
 			esm_n.setPri("NAME");
 			esm_n.setSec("DESC");
-			insertRecord(esm_n.getSecId() + Config::sep[0] +
-				     esm_n.getRecId() + Config::sep[0] +
-				     esm_n.getPriText(),
-				     esm_n.getSecText(), 3);
+			insertRecord("DESC" + sep[0] + esm_n.getRecId() + sep[0] + esm_n.getPriText(),
+				     esm_n.getSecText(),
+				     RecType::DESC);
 		}
 	}
-	Config::appendLog("    --> DESC records created: " + to_string(counter) + "\r\n");
+	cout << "    --> DESC records created: " << to_string(counter) << "\r\n";
 }
 
 //----------------------------------------------------------
@@ -336,17 +338,16 @@ void DictCreator::makeDictTEXT()
 	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
 	{
 		esm_n.setRec(i);
-		esm_f.setRec(i);
 		if(esm_n.getRecId() == "BOOK")
 		{
 			esm_n.setPri("NAME");
 			esm_n.setSec("TEXT");
-			insertRecord(esm_n.getSecId() + Config::sep[0] +
-				     esm_n.getPriText(),
-				     esm_n.getSecText(), 4);
+			insertRecord("TEXT" + sep[0] + esm_n.getPriText(),
+				     esm_n.getSecText(),
+				     RecType::TEXT);
 		}
 	}
-	Config::appendLog("    --> TEXT records created: " + to_string(counter) + "\r\n");
+	cout << "    --> TEXT records created: " << to_string(counter) << "\r\n";
 }
 
 //----------------------------------------------------------
@@ -356,21 +357,19 @@ void DictCreator::makeDictRNAM()
 	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
 	{
 		esm_n.setRec(i);
-		esm_f.setRec(i);
 		if(esm_n.getRecId() == "FACT")
 		{
 			esm_n.setPri("NAME");
 			esm_n.setSecColl("RNAM");
-			for(size_t j = 0; j < esm_n.getSecCollSize(); j++)
+			for(size_t k = 0; k < esm_n.getSecColl().size(); ++k)
 			{
-				insertRecord(esm_n.getSecId() + Config::sep[0] +
-					     esm_n.getPriText() + Config::sep[0] +
-					     to_string(j),
-					     esm_n.getSecText(j), 5);
+				insertRecord("RNAM" + sep[0] + esm_n.getPriText() + sep[0] + to_string(k),
+					     esm_n.getSecText(k),
+					     RecType::RNAM);
 			}
 		}
 	}
-	Config::appendLog("    --> RNAM records created: " + to_string(counter) + "\r\n");
+	cout << "    --> RNAM records created: " << to_string(counter) << "\r\n";
 }
 
 //----------------------------------------------------------
@@ -380,19 +379,17 @@ void DictCreator::makeDictINDX()
 	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
 	{
 		esm_n.setRec(i);
-		esm_f.setRec(i);
 		if(esm_n.getRecId() == "SKIL" ||
 		   esm_n.getRecId() == "MGEF")
 		{
 			esm_n.setPriINDX();
 			esm_n.setSec("DESC");
-			insertRecord(esm_n.getPriId() + Config::sep[0] +
-				     esm_n.getRecId() + Config::sep[0] +
-				     esm_n.getPriText(),
-				     esm_n.getSecText(), 6);
+			insertRecord("INDX" + sep[0] + esm_n.getRecId() + sep[0] + esm_n.getPriText(),
+				     esm_n.getSecText(),
+				     RecType::INDX);
 		}
 	}
-	Config::appendLog("    --> INDX records created: " + to_string(counter) + "\r\n");
+	cout << "    --> INDX records created: " << to_string(counter) << "\r\n";
 }
 
 //----------------------------------------------------------
@@ -408,16 +405,15 @@ void DictCreator::makeDictDIAL()
 			esm_n.setPri("NAME");
 			esm_n.setSecDialType("DATA");
 			esm_f.setPri("NAME");
-			esm_f.setSecDialType("DATA");
 			if(esm_n.getDialType() == "T")
 			{
-				insertRecord(esm_n.getRecId() + Config::sep[0] +
-					     esm_ptr->getPriText(),
-					     esm_n.getPriText(), 7);
+				insertRecord("DIAL" + sep[0] + esm_ptr->getPriText(),
+					     esm_n.getPriText(),
+					     RecType::DIAL);
 			}
 		}
 	}
-	Config::appendLog("    --> DIAL records created: " + to_string(counter) + "\r\n");
+	cout << "    --> DIAL records created: " << to_string(counter) << "\r\n";
 }
 
 //----------------------------------------------------------
@@ -428,12 +424,11 @@ void DictCreator::makeDictINFO()
 	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
 	{
 		esm_n.setRec(i);
-		esm_f.setRec(i);
 		if(esm_n.getRecId() == "DIAL")
 		{
 			esm_n.setPri("NAME");
 			esm_n.setSecDialType("DATA");
-			dial = esm_n.getDialType() + Config::sep[0] + dialTranslator(esm_n.getPriText());
+			dial = esm_n.getDialType() + sep[0] + dialTranslator(esm_n.getPriText());
 		}
 		if(esm_n.getRecId() == "INFO")
 		{
@@ -441,14 +436,13 @@ void DictCreator::makeDictINFO()
 			esm_n.setSec("NAME");
 			if(!esm_n.getSecText().empty())
 			{
-				insertRecord(esm_n.getRecId() + Config::sep[0] +
-					     dial + Config::sep[0] +
-					     esm_n.getPriText(),
-					     esm_n.getSecText(), 8);
+				insertRecord("INFO" + sep[0] + dial + sep[0] + esm_n.getPriText(),
+					     esm_n.getSecText(),
+					     RecType::INFO);
 			}
 		}
 	}
-	Config::appendLog("    --> INFO records created: " + to_string(counter) + "\r\n");
+	cout << "    --> INFO records created: " << to_string(counter) << "\r\n";
 }
 
 //----------------------------------------------------------
@@ -461,20 +455,17 @@ void DictCreator::makeDictBNAM()
 		esm_f.setRec(i);
 		if(esm_n.getRecId() == "INFO")
 		{
-			esm_n.setPri("INAM");
 			esm_n.setSecMessageColl("BNAM");
-			esm_f.setPri("INAM");
 			esm_f.setSecMessageColl("BNAM");
-			for(size_t k = 0; k < esm_n.getScptCollSize(); k++)
+			for(size_t k = 0; k < esm_n.getScptColl().size(); ++k)
 			{
-				insertRecord(esm_n.getSecId() + Config::sep[0] +
-					     esm_ptr->getScptLine(k),
-					     makeGap(Config::sep[1] + esm_n.getSecId()) + Config::sep[0] +
-					     esm_n.getScptLine(k), 9);
+				insertRecord("BNAM" + sep[0] + esm_ptr->getScptLine(k),
+					     sep[5] + sep[0] + esm_n.getScptLine(k),
+					     RecType::BNAM);
 			}
 		}
 	}
-	Config::appendLog("    --> BNAM records created: " + to_string(counter) + "\r\n");
+	cout << "    --> BNAM records created: " << to_string(counter) << "\r\n";
 }
 
 //----------------------------------------------------------
@@ -487,18 +478,15 @@ void DictCreator::makeDictSCPT()
 		esm_f.setRec(i);
 		if(esm_n.getRecId() == "SCPT")
 		{
-			esm_n.setPri("SCHD");
 			esm_n.setSecMessageColl("SCTX");
-			esm_f.setPri("SCHD");
 			esm_f.setSecMessageColl("SCTX");
-			for(size_t k = 0; k < esm_n.getScptCollSize(); k++)
+			for(size_t k = 0; k < esm_n.getScptColl().size(); ++k)
 			{
-				insertRecord(esm_n.getRecId() + Config::sep[0] +
-					     esm_ptr->getScptLine(k),
-					     makeGap(Config::sep[1] + esm_n.getRecId()) + Config::sep[0] +
-					     esm_n.getScptLine(k), 10);
+				insertRecord("SCTX" + sep[0] + esm_ptr->getScptLine(k),
+					     sep[5] + sep[0] + esm_n.getScptLine(k),
+					     RecType::SCTX);
 			}
 		}
 	}
-	Config::appendLog("    --> SCTX records created: " + to_string(counter) + "\r\n");
+	cout << "    --> SCTX records created: " << to_string(counter) << "\r\n";
 }

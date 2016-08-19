@@ -8,7 +8,7 @@ using namespace std;
 class RecTools : public EsmTools
 {
 public:
-	void setRec(size_t num);
+	void setRec(size_t i);
 
 	void setPri(string id);
 	void setPriColl(string id);
@@ -22,23 +22,23 @@ public:
 	string getRecId() { return rec_id; }
 	size_t getRecSize() { return rec_size; }
 
-	size_t getPriCollSize() { return pri_coll.size(); }
+	vector<tuple<size_t, size_t, string>> getPriColl() { return pri_coll; }
 	string getPriId() { return pri_id; }
-	size_t getPriPos(size_t num = 0) { return get<0>(pri_coll[num]); }
-	size_t getPriSize(size_t num = 0) { return get<1>(pri_coll[num]); }
-	string getPriText(size_t num = 0) { return get<2>(pri_coll[num]); }
+	size_t getPriPos(size_t i = 0) { return get<0>(pri_coll[i]); }
+	size_t getPriSize(size_t i = 0) { return get<1>(pri_coll[i]); }
+	string getPriText(size_t i = 0) { return get<2>(pri_coll[i]); }
 
-	size_t getSecCollSize() { return sec_coll.size(); }
+	vector<tuple<size_t, size_t, string>> getSecColl() { return sec_coll; }
 	string getSecId() { return sec_id; }
-	size_t getSecPos(size_t num = 0) { return get<0>(sec_coll[num]); }
-	size_t getSecSize(size_t num = 0) { return get<1>(sec_coll[num]); }
-	string getSecText(size_t num = 0) { return get<2>(sec_coll[num]); }
+	size_t getSecPos(size_t i = 0) { return get<0>(sec_coll[i]); }
+	size_t getSecSize(size_t i = 0) { return get<1>(sec_coll[i]); }
+	string getSecText(size_t i = 0) { return get<2>(sec_coll[i]); }
 
-	size_t getScptCollSize() { return scpt_coll.size(); }
-	string getScptLineType(size_t num) { return get<0>(scpt_coll[num]); }
-	string getScptLine(size_t num) { return get<1>(scpt_coll[num]); }
-	string getScptText(size_t num) { return get<2>(scpt_coll[num]); }
-	size_t getScptTextPos(size_t num) { return get<3>(scpt_coll[num]); }
+	vector<tuple<string, string, string, size_t>> getScptColl() { return scpt_coll; }
+	string getScptLineType(size_t i) { return get<0>(scpt_coll[i]); }
+	string getScptLine(size_t i) { return get<1>(scpt_coll[i]); }
+	string getScptText(size_t i) { return get<2>(scpt_coll[i]); }
+	size_t getScptTextPos(size_t i) { return get<3>(scpt_coll[i]); }
 
 	string getDialType() { return dial_type; }
 	void printBinary(string content);

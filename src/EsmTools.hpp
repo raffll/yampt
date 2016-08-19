@@ -16,13 +16,13 @@ public:
 	string getName() { return name; }
 	string getNamePrefix() { return name_prefix; }
 	string getNameSuffix() { return name_suffix; }
+
 	vector<string> const& getRecColl() const { return rec_coll; }
-	string const& getRecContent(int i) const { return rec_coll[i]; }
 
 	EsmTools();
 
 protected:
-	unsigned int byteToInt(const string &str);
+	unsigned int convertByteArrayToInt(const string &str);
 
 	bool status;
 	vector<string> rec_coll;

@@ -17,14 +17,14 @@ public:
 	void compareEsm();
 
 	DictCreator() {}
-	DictCreator(string esm_path);
-	DictCreator(string esm_path, string ext_path);
-	DictCreator(string esm_path, DictMerger &m, bool no_dupl = 0);
+	DictCreator(string path_n);
+	DictCreator(string path_n, string path_f);
+	DictCreator(string path_n, DictMerger &m, bool no_dupl = 0);
 
 private:
+	size_t getSize();
 	string dialTranslator(string to_translate);
-	string makeGap(string str);
-	void insertRecord(const string &pri_text, const string &sec_text, int dict_num);
+	void insertRecord(const string &pri_text, const string &sec_text, RecType i);
 	void makeDictCELL();
 	void makeDictGMST();
 	void makeDictFNAM();
@@ -40,12 +40,13 @@ private:
 	RecTools esm_n;
 	RecTools esm_f;
 	RecTools *esm_ptr;
-	DictMerger dict_merged;
+	DictMerger merger;
 	bool status = 0;
 	bool with_dict = 0;
 	bool no_duplicates = 0;
 	int counter;
-	vector<pair<string, string>> dict_created;
+	string suffix;
+	array<map<string, string>, 11> dict;
 };
 
 #endif

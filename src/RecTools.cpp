@@ -9,11 +9,11 @@ RecTools::RecTools() : EsmTools()
 }
 
 //----------------------------------------------------------
-void RecTools::setRec(size_t num)
+void RecTools::setRec(size_t i)
 {
 	if(status == 1)
 	{
-		rec = &rec_coll[num];
+		rec = &rec_coll[i];
 		rec_size = rec->size();
 		rec_id = rec->substr(0, 4);
 	}
@@ -33,7 +33,7 @@ void RecTools::setPri(string id)
 		while(cur_pos != rec->size())
 		{
 			cur_id = rec->substr(cur_pos, 4);
-			cur_size = byteToInt(rec->substr(cur_pos + 4, 4));
+			cur_size = convertByteArrayToInt(rec->substr(cur_pos + 4, 4));
 			if(cur_id == pri_id)
 			{
 				cur_text = rec->substr(cur_pos + 8, cur_size);
@@ -64,7 +64,7 @@ void RecTools::setPriColl(string id)
 		while(cur_pos != rec->size())
 		{
 			cur_id = rec->substr(cur_pos, 4);
-			cur_size = byteToInt(rec->substr(cur_pos + 4, 4));
+			cur_size = convertByteArrayToInt(rec->substr(cur_pos + 4, 4));
 			if(cur_id == pri_id)
 			{
 				cur_text = rec->substr(cur_pos + 8, cur_size);
@@ -90,7 +90,7 @@ void RecTools::setSec(string id)
 		while(cur_pos != rec->size())
 		{
 			cur_id = rec->substr(cur_pos, 4);
-			cur_size = byteToInt(rec->substr(cur_pos + 4, 4));
+			cur_size = convertByteArrayToInt(rec->substr(cur_pos + 4, 4));
 			if(cur_id == sec_id)
 			{
 				cur_text = rec->substr(cur_pos + 8, cur_size);
@@ -122,7 +122,7 @@ void RecTools::setSecColl(string id)
 		while(cur_pos != rec->size())
 		{
 			cur_id = rec->substr(cur_pos, 4);
-			cur_size = byteToInt(rec->substr(cur_pos + 4, 4));
+			cur_size = convertByteArrayToInt(rec->substr(cur_pos + 4, 4));
 			if(cur_id == sec_id)
 			{
 				cur_text = rec->substr(cur_pos + 8, cur_size);
@@ -148,10 +148,10 @@ void RecTools::setPriINDX()
 		while(cur_pos != rec->size())
 		{
 			cur_id = rec->substr(cur_pos, 4);
-			cur_size = byteToInt(rec->substr(cur_pos + 4, 4));
+			cur_size = convertByteArrayToInt(rec->substr(cur_pos + 4, 4));
 			if(cur_id == pri_id)
 			{
-				int indx = byteToInt(rec->substr(cur_pos + 8, 4));
+				int indx = convertByteArrayToInt(rec->substr(cur_pos + 8, 4));
 				ostringstream ss;
 				ss << setfill('0') << setw(3) << indx;
 				cur_text = ss.str();
@@ -273,7 +273,7 @@ void RecTools::setSecDialType(string id)
 	{
 		setSec(id);
 		static array<string, 5> type_coll = {"T", "V", "G", "P", "J"};
-		int type = byteToInt(rec->substr(getSecPos() + 8, 1));
+		int type = convertByteArrayToInt(rec->substr(getSecPos() + 8, 1));
 		dial_type = type_coll[type];
 	}
 }
@@ -344,7 +344,7 @@ void RecTools::extractText(const string &line, string &text, size_t &pos)
 //----------------------------------------------------------
 void RecTools::printBinary(string content)
 {
-	cout << "\r\n" << Config::sep_line;
+	cout << "\r\n" << sep[4];
 	for(size_t i = 0; i < content.size(); i++)
 	{
 		if(isprint(content[i]))

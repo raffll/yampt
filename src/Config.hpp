@@ -16,31 +16,34 @@
 
 using namespace std;
 
+enum RecType { CELL, GMST, FNAM, DESC, TEXT, RNAM, INDX, DIAL, INFO, BNAM, SCTX };
+const vector<string> sep = {"^", "<h3>", "</h3>", "<hr>",
+			    "<!-------------------------------------------------------------->\r\n",
+			    "\r\n        "};
+
 class Config
 {
 public:
-	static vector<string> sep;
-	static string sep_line;
-	static string base_dictionary_path;
-	static string output_path;
-	static string output_suffix;
 	static vector<string> key_message;
 	static vector<string> key_dial;
 	static vector<string> key_cell;
 
-	void readConfig();
-	static void appendLog(string message, bool standard_output = 0);
-	static void writeLog();
+	static string output_path;
+	static string output_suffix;
+
+	static void appendLog(string message);
+	void writeLog();
 
 	Config();
 
 private:
-	void setConfigStatus(bool st);
-	void parseOutputPath();
-	void parseOutputSuffix();
+	void readConfig();
+	void printStatus();
+	void parseConfig(string &content);
+	void parseOutputPath(string &content);
+	void parseOutputSuffix(string &content);
 
-	string content;
-	static bool status;
+	bool status;
 	static string log;
 };
 
