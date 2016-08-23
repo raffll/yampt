@@ -85,10 +85,10 @@ bool EsmConverter::caseInsensitiveStringCmp(string lhs, string rhs)
 
 //----------------------------------------------------------
 void EsmConverter::convertRecordContent(size_t pos, size_t old_size, string new_text,
-					size_t new_size, size_t rec_num)
+					size_t new_size)
 {
 	unsigned int rec_size;
-	rec_content = esm.getRecColl()[rec_num];
+	rec_content = esm.getRecContent();
 	rec_content.erase(pos + 8, old_size);
 	rec_content.insert(pos + 8, new_text);
 	rec_content.erase(pos + 4, 4);
@@ -96,7 +96,7 @@ void EsmConverter::convertRecordContent(size_t pos, size_t old_size, string new_
 	rec_size = rec_content.size() - 16;
 	rec_content.erase(4, 4);
 	rec_content.insert(4, convertIntToByteArray(rec_size));
-	esm.setRecContent(rec_num, rec_content);
+	esm.setRecContent(rec_content);
 }
 
 //----------------------------------------------------------
@@ -216,8 +216,7 @@ void EsmConverter::convertCELL()
 				convertRecordContent(esm.getPriPos(),
 						     esm.getPriSize(),
 						     search->second + '\0',
-						     search->second.size() + 1,
-						     i);
+						     search->second.size() + 1);
 				counter++;
 			}
 		}
@@ -246,8 +245,7 @@ void EsmConverter::convertPGRD()
 				convertRecordContent(esm.getPriPos(),
 						     esm.getPriSize(),
 						     search->second + '\0',
-						     search->second.size() + 1,
-						     i);
+						     search->second.size() + 1);
 				counter++;
 			}
 		}
@@ -277,8 +275,7 @@ void EsmConverter::convertANAM()
 				convertRecordContent(esm.getPriPos(),
 						     esm.getPriSize(),
 						     search->second + '\0',
-						     search->second.size() + 1,
-						     i);
+						     search->second.size() + 1);
 				counter++;
 			}
 		}
@@ -313,8 +310,7 @@ void EsmConverter::convertSCVR()
 						convertRecordContent(esm.getPriPos(k),
 								     esm.getPriSize(k),
 								     scvr_text,
-								     scvr_text.size(),
-								     i);
+								     scvr_text.size());
 						counter++;
 						esm.setPriColl("SCVR");
 					}
@@ -350,8 +346,7 @@ void EsmConverter::convertDNAM()
 						convertRecordContent(esm.getPriPos(k),
 								     esm.getPriSize(k),
 								     search->second + '\0',
-								     search->second.size() + 1,
-								     i);
+								     search->second.size() + 1);
 						counter++;
 						esm.setPriColl("DNAM");
 					}
@@ -386,8 +381,7 @@ void EsmConverter::convertCNDT()
 						convertRecordContent(esm.getPriPos(k),
 								     esm.getPriSize(k),
 								     search->second + '\0',
-								     search->second.size() + 1,
-								     i);
+								     search->second.size() + 1);
 						counter++;
 						esm.setPriColl("CNDT");
 					}
@@ -420,8 +414,7 @@ void EsmConverter::convertGMST()
 				convertRecordContent(esm.getSecPos(),
 						     esm.getSecSize(),
 						     search->second + '\0',
-						     search->second.size() + 1,
-						     i);
+						     search->second.size() + 1);
 				counter++;
 			}
 		}
@@ -475,8 +468,7 @@ void EsmConverter::convertFNAM()
 				convertRecordContent(esm.getSecPos(),
 						     esm.getSecSize(),
 						     search->second + '\0',
-						     search->second.size() + 1,
-						     i);
+						     search->second.size() + 1);
 				counter++;
 			}
 		}
@@ -508,8 +500,7 @@ void EsmConverter::convertDESC()
 				convertRecordContent(esm.getSecPos(),
 						     esm.getSecSize(),
 						     search->second + '\0',
-						     search->second.size() + 1,
-						     i);
+						     search->second.size() + 1);
 				counter++;
 			}
 		}
@@ -539,8 +530,7 @@ void EsmConverter::convertTEXT()
 				convertRecordContent(esm.getSecPos(),
 						     esm.getSecSize(),
 						     search->second + '\0',
-						     search->second.size() + 1,
-						     i);
+						     search->second.size() + 1);
 				counter++;
 			}
 		}
@@ -574,8 +564,7 @@ void EsmConverter::convertRNAM()
 					convertRecordContent(esm.getSecPos(k),
 							     32,
 							     rnam_text,
-							     32,
-							     i);
+							     32);
 					counter++;
 					esm.setSecColl("RNAM");
 				}
@@ -608,8 +597,7 @@ void EsmConverter::convertINDX()
 				convertRecordContent(esm.getSecPos(),
 						     esm.getSecSize(),
 						     search->second + '\0',
-						     search->second.size() + 1,
-						     i);
+						     search->second.size() + 1);
 				counter++;
 			}
 		}
@@ -639,8 +627,7 @@ void EsmConverter::convertDIAL()
 				convertRecordContent(esm.getPriPos(),
 						     esm.getPriSize(),
 						     search->second + '\0',
-						     search->second.size() + 1,
-						     i);
+						     search->second.size() + 1);
 				counter++;
 			}
 		}
@@ -677,8 +664,7 @@ void EsmConverter::convertINFO()
 				convertRecordContent(esm.getSecPos(),
 						     esm.getSecSize(),
 						     search->second + '\0',
-						     search->second.size() + 1,
-						     i);
+						     search->second.size() + 1);
 				counter++;
 			}
 		}
@@ -708,8 +694,7 @@ void EsmConverter::convertBNAM()
 				convertRecordContent(esm.getSecPos(),
 						     esm.getSecSize(),
 						     script_text,
-						     script_text.size(),
-						     i);
+						     script_text.size());
 			}
 		}
 	}
@@ -738,8 +723,7 @@ void EsmConverter::convertSCPT()
 				convertRecordContent(esm.getSecPos(),
 						     esm.getSecSize(),
 						     script_text,
-						     script_text.size(),
-						     i);
+						     script_text.size());
 			}
 		}
 	}

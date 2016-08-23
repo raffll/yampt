@@ -9,6 +9,8 @@ class RecTools : public EsmTools
 {
 public:
 	void setRec(size_t i);
+	void setRecContent(string content) { *rec = content; }
+	string getRecContent() { return *rec; }
 
 	void setPri(string id);
 	void setPriColl(string id);

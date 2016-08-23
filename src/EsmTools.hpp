@@ -10,8 +10,6 @@ class EsmTools
 public:
 	void readFile(string path);
 
-	void setRecContent(size_t i, string content) { rec_coll[i] = content; }
-
 	bool getStatus() { return status; }
 	string getName() { return name; }
 	string getNamePrefix() { return name_prefix; }

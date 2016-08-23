@@ -22,7 +22,7 @@ private:
 	string convertIntToByteArray(unsigned int x);
 	bool caseInsensitiveStringCmp(string lhs, string rhs);
 	void convertRecordContent(size_t pos, size_t old_size, string new_text,
-				  size_t new_size, size_t rec_num);
+				  size_t new_size);
 	void convertScriptLine(size_t i);
 	void convertCELL();
 	void convertPGRD();
