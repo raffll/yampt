@@ -38,12 +38,12 @@ void EsmTools::printStatus(string path)
 {
 	if(status == 0)
 	{
-		Config::appendLog("--> Error while loading " + path +
-				  " (wrong path or isn't TES3 plugin)!\r\n");
+		cout << "--> Error while loading " + path +
+			" (wrong path or isn't TES3 plugin)!\r\n";
 	}
 	else
 	{
-		Config::appendLog("--> Loading " + path + "...\r\n");
+		cout << "--> Loading " + path + "...\r\n";
 	}
 }
 
@@ -66,7 +66,7 @@ void EsmTools::setRecColl(string &content)
 		while(rec_end != content.size())
 		{
 			rec_beg = rec_end;
-			rec_size = byteToInt(content.substr(rec_beg + 4, 4)) + 16;
+			rec_size = convertByteArrayToInt(content.substr(rec_beg + 4, 4)) + 16;
 			rec_end = rec_beg + rec_size;
 			rec_coll.push_back(content.substr(rec_beg, rec_size));
 		}
@@ -74,7 +74,7 @@ void EsmTools::setRecColl(string &content)
 }
 
 //----------------------------------------------------------
-unsigned int EsmTools::byteToInt(const string &str)
+unsigned int EsmTools::convertByteArrayToInt(const string &str)
 {
 	char buffer[4];
 	unsigned char ubuffer[4];

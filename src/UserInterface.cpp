@@ -49,7 +49,7 @@ void UserInterface::makeDictRaw()
 		creator.makeDict();
 		creator.writeDict();
 	}
-	Config::writeLog();
+	config.writeLog();
 }
 
 //----------------------------------------------------------
@@ -63,7 +63,7 @@ void UserInterface::makeDictBase()
 		creator.makeDict();
 		creator.writeDict();
 	}
-	Config::writeLog();
+	config.writeLog();
 }
 
 //----------------------------------------------------------
@@ -78,7 +78,7 @@ void UserInterface::makeDictAll()
 		creator.makeDict();
 		creator.writeDict();
 	}
-	Config::writeLog();
+	config.writeLog();
 }
 
 //----------------------------------------------------------
@@ -93,7 +93,7 @@ void UserInterface::makeDictNot()
 		creator.makeDict();
 		creator.writeDict();
 	}
-	Config::writeLog();
+	config.writeLog();
 }
 
 //----------------------------------------------------------
@@ -103,7 +103,7 @@ void UserInterface::mergeDict()
 	DictMerger merger(arg_dict_rev);
 	merger.mergeDict();
 	merger.writeDict();
-	Config::writeLog();
+	config.writeLog();
 }
 
 //----------------------------------------------------------
@@ -124,7 +124,7 @@ void UserInterface::convertEsm()
 			creator.writeDict();
 		}
 	}
-	Config::writeLog();
+	config.writeLog();
 }
 
 //----------------------------------------------------------
@@ -136,17 +136,5 @@ void UserInterface::writeScripts()
 		DictCreator creator(arg_file[i]);
 		creator.writeScripts();
 	}
-	Config::writeLog();
-}
-
-//----------------------------------------------------------
-void UserInterface::writeCompare()
-{
-	Config config;
-	if(arg_dict.size() == 2)
-	{
-		DictMerger merger(arg_dict);
-		merger.writeCompare();
-	}
-	Config::writeLog();
+	config.writeLog();
 }

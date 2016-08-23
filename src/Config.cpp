@@ -3,21 +3,18 @@
 using namespace std;
 
 //----------------------------------------------------------
-vector<string> Config::sep = {"^", "<h3>", "</h3>", "<hr>"};
-string Config::sep_line = "<!-------------------------------------------------------------->\r\n";
-string Config::base_dictionary_path = "";
-string Config::output_path = "";
-string Config::output_suffix = "";
-string Config::log = "";
-bool Config::status = 0;
 vector<string> Config::key_message = {"messagebox", "say ", "say,", "choice"};
 vector<string> Config::key_dial = {"addtopic"};
-vector<string> Config::key_cell = {"positioncell", "getpccell", "aifollowcell",
-				   "placeitemcell", "showmap"};
+vector<string> Config::key_cell = {"positioncell", "getpccell", "aifollowcell", "placeitemcell", "showmap"};
+
+string Config::output_path;
+string Config::output_suffix;
+string Config::log;
 
 //----------------------------------------------------------
 Config::Config()
 {
+	status = 0;
 	readConfig();
 }
 
@@ -27,6 +24,7 @@ void Config::readConfig()
 	ifstream file("yampt.cfg", ios::binary);
 	if(file)
 	{
+		string content;
 		char buffer[16384];
 		size_t size = file.tellg();
 		content.reserve(size);
@@ -37,48 +35,30 @@ void Config::readConfig()
 		}
 		if(!content.empty())
 		{
-			setConfigStatus(1);
-			parseOutputPath();
-			parseOutputSuffix();
+			status = 1;
+			parseConfig(content);
 		}
-		else
-		{
-			setConfigStatus(0);
-		}
+	}
+	printStatus();
+}
+
+//----------------------------------------------------------
+void Config::printStatus()
+{
+	if(status == 0)
+	{
+		cout << "--> Error while loading yampt.cfg!\r\n";
 	}
 	else
 	{
-		setConfigStatus(0);
+		cout << "--> Loading yampt.cfg...\r\n";
 	}
 }
 
 //----------------------------------------------------------
-void Config::setConfigStatus(bool st)
+void Config::appendLog(string message)
 {
-	if(st == 0)
-	{
-		appendLog("--> Error while loading yampt.cfg!\r\n");
-		status = 0;
-	}
-	else
-	{
-		appendLog("--> Loading yampt.cfg...\r\n");
-		status = 1;
-	}
-}
-
-//----------------------------------------------------------
-void Config::appendLog(string message, bool no_standard_output)
-{
-	if(no_standard_output == 0)
-	{
-		cout << message;
-		log += message;
-	}
-	else
-	{
-		log += message;
-	}
+	log += message;
 }
 
 //----------------------------------------------------------
@@ -86,12 +66,19 @@ void Config::writeLog()
 {
 	string name = "yampt.log";
 	ofstream file(output_path + name, ios::binary);
-	appendLog("--> Writing " + name + "...\r\n");
+	cout << "--> Writing " << name << "...\r\n";
 	file << log;
 }
 
 //----------------------------------------------------------
-void Config::parseOutputPath()
+void Config::parseConfig(string &content)
+{
+	parseOutputPath(content);
+	parseOutputSuffix(content);
+}
+
+//----------------------------------------------------------
+void Config::parseOutputPath(string &content)
 {
 	regex re("(OUTPUT_PATH=)\"(.*?)\"");
 	smatch found;
@@ -100,7 +87,7 @@ void Config::parseOutputPath()
 }
 
 //----------------------------------------------------------
-void Config::parseOutputSuffix()
+void Config::parseOutputSuffix(string &content)
 {
 	regex re("(OUTPUT_SUFFIX=)\"(.*?)\"");
 	smatch found;

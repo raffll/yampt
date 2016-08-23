@@ -60,10 +60,6 @@ int main(int argc, char *argv[])
 		{
 			ui.writeScripts();
 		}
-		else if(arg[1] == "--compare")
-		{
-			ui.writeCompare();
-		}
 		else
 		{
 			cout << "Syntax error!" << endl;

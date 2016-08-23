@@ -18,7 +18,6 @@ public:
 	void mergeDict();
 	void convertEsm();
 	void writeScripts();
-	void writeCompare();
 
 	UserInterface(vector<string> &a);
 

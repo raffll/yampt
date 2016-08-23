@@ -19,11 +19,11 @@ public:
 	EsmConverter(string path, DictMerger &m);
 
 private:
-	string intToByte(unsigned int x);
+	string convertIntToByteArray(unsigned int x);
 	bool caseInsensitiveStringCmp(string lhs, string rhs);
 	void convertRecordContent(size_t pos, size_t old_size, string new_text,
-				  size_t new_size, size_t rec_num);
-	void convertScriptLine(int i);
+				  size_t new_size);
+	void convertScriptLine(size_t i);
 	void convertCELL();
 	void convertPGRD();
 	void convertANAM();
@@ -43,11 +43,10 @@ private:
 
 	bool status;
 	RecTools esm;
-	DictMerger dict;
+	DictMerger merger;
 	int counter;
 	string rec_content;
 	string script_text;
-	string pri_text;
 };
 
 #endif
