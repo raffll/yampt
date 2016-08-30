@@ -19,6 +19,7 @@ public:
 	void convertEsm();
 	void writeScripts();
 	void writeCompare();
+	void convertDialInText();
 
 	UserInterface(vector<string> &a);
 

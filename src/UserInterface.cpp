@@ -47,7 +47,7 @@ void UserInterface::makeDictRaw()
 	{
 		DictCreator creator(arg_file[i]);
 		creator.makeDict();
-		creator.writeDict();
+		creator.writeDict(creator.getDict(), creator.getName() + ".raw.dic");
 	}
 	config.writeLog();
 }
@@ -61,7 +61,7 @@ void UserInterface::makeDictBase()
 		DictCreator creator(arg_file[0], arg_file[1]);
 		creator.compareEsm();
 		creator.makeDict();
-		creator.writeDict();
+		creator.writeDict(creator.getDict(), creator.getName() + ".base.dic");
 	}
 	config.writeLog();
 }
@@ -76,7 +76,7 @@ void UserInterface::makeDictAll()
 	{
 		DictCreator creator(arg_file[i], merger);
 		creator.makeDict();
-		creator.writeDict();
+		creator.writeDict(creator.getDict(), creator.getName() + ".all.dic");
 	}
 	config.writeLog();
 }
@@ -91,7 +91,7 @@ void UserInterface::makeDictNot()
 	{
 		DictCreator creator(arg_file[i], merger, true);
 		creator.makeDict();
-		creator.writeDict();
+		creator.writeDict(creator.getDict(), creator.getName() + ".not.dic");
 	}
 	config.writeLog();
 }
@@ -102,7 +102,7 @@ void UserInterface::mergeDict()
 	Config config;
 	DictMerger merger(arg_dict_rev);
 	merger.mergeDict();
-	merger.writeDict();
+	merger.writeDict(merger.getDict(), "Merged.dic");
 	config.writeLog();
 }
 
@@ -121,7 +121,7 @@ void UserInterface::convertEsm()
 		{
 			DictCreator creator(arg_file[i], merger, true);
 			creator.makeDict();
-			creator.writeDict();
+			creator.writeDict(creator.getDict(), creator.getName() + ".not.dic");
 		}
 	}
 	config.writeLog();
@@ -143,10 +143,18 @@ void UserInterface::writeScripts()
 void UserInterface::writeCompare()
 {
 	Config config;
-	for(size_t i = 0; i < arg_dict.size(); ++i)
-	{
-		DictMerger merger(arg_dict);
-		merger.writeCompare();
-	}
+	DictMerger merger(arg_dict);
+	merger.writeCompare();
 	config.writeLog();
 }
+
+//----------------------------------------------------------
+void UserInterface::convertDialInText()
+{
+	Config config;
+	DictMerger merger(arg_dict);
+	merger.convertDialInText();
+	merger.writeDict(merger.getDict(), "Info.dic");
+	config.writeLog();
+}
+

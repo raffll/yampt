@@ -2,10 +2,11 @@
 #define DICTREADER_HPP
 
 #include "Config.hpp"
+#include "DictTools.hpp"
 
 using namespace std;
 
-class DictReader
+class DictReader : public DictTools
 {
 public:
 	void readFile(string path);
@@ -20,7 +21,6 @@ public:
 	~DictReader();
 
 private:
-	int getSize();
 	void printStatus(string path);
 	void setName(string path);
 	bool parseDict(string &content);

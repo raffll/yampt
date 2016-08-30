@@ -77,46 +77,13 @@ void DictMerger::mergeDict()
 		else
 		{
 			cout << "--> Merging complete!\r\n";
-			cout << "    --> Records merged: " << to_string(getSize()) << "\r\n";
+			cout << "    --> Records merged: " << to_string(getSize(dict)) << "\r\n";
 			cout << "    --> Duplicate records not merged: " <<
 				to_string(duplicate_record) << "\r\n";
 			cout << "    --> Identical records not merged: " <<
 				to_string(identical_record) << "\r\n";
 		}
 	}
-}
-
-//----------------------------------------------------------
-void DictMerger::writeDict()
-{
-	if(status == 1)
-	{
-		string name = "Merged.dic";
-		ofstream file(name, ios::binary);
-		for(size_t i = 0; i < dict.size(); ++i)
-		{
-			for(const auto &elem : dict[i])
-			{
-				file << sep[4]
-				     << sep[1] << elem.first
-				     << sep[2] << elem.second
-				     << sep[3] << "\r\n";
-			}
-		}
-		cout << "--> Writing " << to_string(getSize()) <<
-			" records to " << name << "...\r\n";
-	}
-}
-
-//----------------------------------------------------------
-int DictMerger::getSize()
-{
-	int size = 0;
-	for(auto const &elem : dict)
-	{
-		size += elem.size();
-	}
-	return size;
 }
 
 //----------------------------------------------------------
@@ -160,6 +127,35 @@ void DictMerger::writeCompare()
 		else
 		{
 			cout << "--> No differences between dictionaries!\r\n";
+		}
+	}
+}
+//----------------------------------------------------------
+void DictMerger::convertDialInText()
+{
+	string sec_text;
+	size_t pos;
+	if(status == 1 && dicttools.size() == 2)
+	{
+		for(auto &elem_info : dicttools[0].getDict()[RecType::INFO])
+		{
+			sec_text = elem_info.second;
+			for(auto &elem_dial : dicttools[1].getDict()[RecType::DIAL])
+			{
+				if(elem_dial.first.substr(5) != elem_dial.second)
+				{
+					string r = "( " + elem_dial.first.substr(5) + " )";
+					regex re(r);
+					smatch found;
+					regex_search(sec_text, found, re);
+					if(!found[1].str().empty())
+					{
+						pos = found.position(1) + found[1].str().size();
+						sec_text.insert(pos, "[" + elem_dial.second + "] ");
+					}
+				}
+			}
+			dict[RecType::INFO].insert({elem_info.first, sec_text});
 		}
 	}
 }

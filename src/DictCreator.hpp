@@ -4,17 +4,20 @@
 #include "Config.hpp"
 #include "EsmReader.hpp"
 #include "EsmRecord.hpp"
+#include "DictTools.hpp"
 #include "DictMerger.hpp"
 
 using namespace std;
 
-class DictCreator
+class DictCreator : public DictTools
 {
 public:
 	void makeDict();
-	void writeDict();
 	void writeScripts();
 	void compareEsm();
+
+	string getName() { return esm_n.getNamePrefix(); }
+	array<map<string, string>, 11> const& getDict() const { return dict; }
 
 	DictCreator() {}
 	DictCreator(string path_n);
@@ -22,7 +25,6 @@ public:
 	DictCreator(string path_n, DictMerger &m, bool no_dupl = 0);
 
 private:
-	size_t getSize();
 	string dialTranslator(string to_translate);
 	void insertRecord(const string &pri_text, const string &sec_text, RecType i, bool extra = 0);
 	void makeDictCELL();

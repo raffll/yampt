@@ -64,6 +64,10 @@ int main(int argc, char *argv[])
 		{
 			ui.writeCompare();
 		}
+		else if(arg[1] == "--test")
+		{
+			ui.convertDialInText();
+		}
 		else
 		{
 			cout << "Syntax error!" << endl;

@@ -10,7 +10,6 @@ DictCreator::DictCreator(string path_n)
 	if(esm_n.getStatus() == 1)
 	{
 		status = 1;
-		suffix = ".raw.dic";
 	}
 }
 
@@ -23,7 +22,6 @@ DictCreator::DictCreator(string path_n, string path_f)
 	if(esm_n.getStatus() == 1 && esm_f.getStatus() == 1)
 	{
 		status = 1;
-		suffix = ".base.dic";
 	}
 }
 
@@ -38,14 +36,6 @@ DictCreator::DictCreator(string path_n, DictMerger &m, bool no_dupl)
 		status = 1;
 		with_dict = 1;
 		no_duplicates = no_dupl;
-		if(no_duplicates == 1)
-		{
-			suffix = ".not.dic";
-		}
-		else
-		{
-			suffix = ".all.dic";
-		}
 	}
 }
 
@@ -66,43 +56,6 @@ void DictCreator::makeDict()
 		makeDictBNAM();
 		makeDictSCPT();
 	}
-}
-
-//----------------------------------------------------------
-void DictCreator::writeDict()
-{
-	if(status == 1 && getSize() > 0)
-	{
-		string name = esm_n.getNamePrefix() + suffix;
-		ofstream file(name, ios::binary);
-		for(size_t i = 0; i < dict.size(); ++i)
-		{
-			for(const auto &elem : dict[i])
-			{
-				file << sep[4]
-				     << sep[1] << elem.first
-				     << sep[2] << elem.second
-				     << sep[3] << "\r\n";
-			}
-		}
-		cout << "--> Writing " << to_string(getSize()) <<
-			" records to " << name << "...\r\n";
-	}
-	else
-	{
-		cout << "--> No records to make dictionary!\r\n";
-	}
-}
-
-//----------------------------------------------------------
-size_t DictCreator::getSize()
-{
-	size_t size = 0;
-	for(auto const &elem : dict)
-	{
-		size += elem.size();
-	}
-	return size;
 }
 
 //----------------------------------------------------------

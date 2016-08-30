@@ -92,7 +92,7 @@ void Config::parseOutputSuffix(string &content)
 //----------------------------------------------------------
 void Config::parseAllowMoreThan512InfoString(string &content)
 {
-	regex re("(ALLOW_MORE_THAN_512_INFO_STRING=)(.*?)");
+	regex re("(ALLOW_MORE_THAN_512_INFO_STRING=)(.)");
 	smatch found;
 	regex_search(content, found, re);
 	if(found[2].str() == "1")

@@ -70,20 +70,9 @@ void DictReader::printStatus(string path)
 	else
 	{
 		cout << "--> Loading " << path << "...\r\n";
-		cout << "    --> Records loaded: " << to_string(getSize()) << "\r\n";
+		cout << "    --> Records loaded: " << to_string(getSize(dict)) << "\r\n";
 		cout << "    --> Records invalid: " << to_string(invalid_record) << "\r\n";
 	}
-}
-
-//----------------------------------------------------------
-int DictReader::getSize()
-{
-	int size = 0;
-	for(auto const &elem : dict)
-	{
-		size += elem.size();
-	}
-	return size;
 }
 
 //----------------------------------------------------------
