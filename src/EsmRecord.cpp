@@ -1,15 +1,15 @@
-#include "RecTools.hpp"
+#include "EsmRecord.hpp"
 
 using namespace std;
 
 //----------------------------------------------------------
-RecTools::RecTools() : EsmTools()
+EsmRecord::EsmRecord() : EsmReader()
 {
 
 }
 
 //----------------------------------------------------------
-void RecTools::setRec(size_t i)
+void EsmRecord::setRec(size_t i)
 {
 	if(status == 1)
 	{
@@ -20,7 +20,7 @@ void RecTools::setRec(size_t i)
 }
 
 //----------------------------------------------------------
-void RecTools::setPri(string id)
+void EsmRecord::setPri(string id)
 {
 	if(status == 1)
 	{
@@ -51,7 +51,7 @@ void RecTools::setPri(string id)
 }
 
 //----------------------------------------------------------
-void RecTools::setPriColl(string id)
+void EsmRecord::setPriColl(string id)
 {
 	if(status == 1)
 	{
@@ -77,7 +77,7 @@ void RecTools::setPriColl(string id)
 }
 
 //----------------------------------------------------------
-void RecTools::setSec(string id)
+void EsmRecord::setSec(string id)
 {
 	if(status == 1)
 	{
@@ -109,7 +109,7 @@ void RecTools::setSec(string id)
 }
 
 //----------------------------------------------------------
-void RecTools::setSecColl(string id)
+void EsmRecord::setSecColl(string id)
 {
 	if(status == 1)
 	{
@@ -135,7 +135,7 @@ void RecTools::setSecColl(string id)
 }
 
 //----------------------------------------------------------
-void RecTools::setPriINDX()
+void EsmRecord::setPriINDX()
 {
 	if(status == 1)
 	{
@@ -164,7 +164,7 @@ void RecTools::setPriINDX()
 }
 
 //----------------------------------------------------------
-void RecTools::setSecScptColl(string id)
+void EsmRecord::setSecScptColl(string id)
 {
 	if(status == 1)
 	{
@@ -231,7 +231,7 @@ void RecTools::setSecScptColl(string id)
 }
 
 //----------------------------------------------------------
-void RecTools::setSecMessageColl(string id)
+void EsmRecord::setSecMessageColl(string id)
 {
 	if(status == 1)
 	{
@@ -267,7 +267,7 @@ void RecTools::setSecMessageColl(string id)
 }
 
 //----------------------------------------------------------
-void RecTools::setSecDialType(string id)
+void EsmRecord::setSecDialType(string id)
 {
 	if(status == 1)
 	{
@@ -279,7 +279,7 @@ void RecTools::setSecDialType(string id)
 }
 
 //----------------------------------------------------------
-void RecTools::eraseNullChars(string &str)
+void EsmRecord::eraseNullChars(string &str)
 {
 	size_t is_null = str.find('\0');
 	if(is_null != string::npos)
@@ -289,7 +289,7 @@ void RecTools::eraseNullChars(string &str)
 }
 
 //----------------------------------------------------------
-void RecTools::replaceBrokenChars(string &str)
+void EsmRecord::replaceBrokenChars(string &str)
 {
 	for(size_t i = 0; i < str.size(); i++)
 	{
@@ -301,7 +301,7 @@ void RecTools::replaceBrokenChars(string &str)
 }
 
 //----------------------------------------------------------
-string RecTools::eraseCarriageReturnChar(string &str)
+string EsmRecord::eraseCarriageReturnChar(string &str)
 {
 	if(str.find('\r') != string::npos)
 	{
@@ -311,7 +311,7 @@ string RecTools::eraseCarriageReturnChar(string &str)
 }
 
 //----------------------------------------------------------
-void RecTools::extractText(const string &line, string &text, size_t &pos)
+void EsmRecord::extractText(const string &line, string &text, size_t &pos)
 {
 	if(line.find("\"", pos) != string::npos)
 	{
@@ -342,7 +342,7 @@ void RecTools::extractText(const string &line, string &text, size_t &pos)
 }
 
 //----------------------------------------------------------
-void RecTools::printBinary(string content)
+void EsmRecord::printBinary(string content)
 {
 	cout << "\r\n" << sep[4];
 	for(size_t i = 0; i < content.size(); i++)

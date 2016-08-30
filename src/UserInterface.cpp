@@ -138,3 +138,15 @@ void UserInterface::writeScripts()
 	}
 	config.writeLog();
 }
+
+//----------------------------------------------------------
+void UserInterface::writeCompare()
+{
+	Config config;
+	for(size_t i = 0; i < arg_dict.size(); ++i)
+	{
+		DictMerger merger(arg_dict);
+		merger.writeCompare();
+	}
+	config.writeLog();
+}

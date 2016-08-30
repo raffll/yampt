@@ -11,6 +11,7 @@ class DictMerger
 public:
 	void mergeDict();
 	void writeDict();
+	void writeCompare();
 
 	bool getStatus() { return status; }
 	array<map<string, string>, 11> const& getDict() const { return dict; }

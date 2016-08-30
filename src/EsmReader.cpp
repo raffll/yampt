@@ -1,15 +1,15 @@
-#include "EsmTools.hpp"
+#include "EsmReader.hpp"
 
 using namespace std;
 
 //----------------------------------------------------------
-EsmTools::EsmTools()
+EsmReader::EsmReader()
 {
 	status = 0;
 }
 
 //----------------------------------------------------------
-void EsmTools::readFile(string path)
+void EsmReader::readFile(string path)
 {
 	ifstream file(path, ios::binary);
 	if(file)
@@ -34,7 +34,7 @@ void EsmTools::readFile(string path)
 }
 
 //----------------------------------------------------------
-void EsmTools::printStatus(string path)
+void EsmReader::printStatus(string path)
 {
 	if(status == 0)
 	{
@@ -48,7 +48,7 @@ void EsmTools::printStatus(string path)
 }
 
 //----------------------------------------------------------
-void EsmTools::setName(string path)
+void EsmReader::setName(string path)
 {
 	name = path.substr(path.find_last_of("\\/") + 1);
 	name_prefix = name.substr(0, name.find_last_of("."));
@@ -56,7 +56,7 @@ void EsmTools::setName(string path)
 }
 
 //----------------------------------------------------------
-void EsmTools::setRecColl(string &content)
+void EsmReader::setRecColl(string &content)
 {
 	if(status == 1)
 	{
@@ -74,7 +74,7 @@ void EsmTools::setRecColl(string &content)
 }
 
 //----------------------------------------------------------
-unsigned int EsmTools::convertByteArrayToInt(const string &str)
+unsigned int EsmReader::convertByteArrayToInt(const string &str)
 {
 	char buffer[4];
 	unsigned char ubuffer[4];

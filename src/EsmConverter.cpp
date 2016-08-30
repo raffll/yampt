@@ -34,7 +34,6 @@ void EsmConverter::convertEsm()
 		convertINFO();
 		convertBNAM();
 		convertSCPT();
-		Config::appendLog("--> Converting complete!\r\n");
 	}
 }
 
@@ -44,12 +43,12 @@ void EsmConverter::writeEsm()
 	if(status == 1)
 	{
 		string name = esm.getNamePrefix() + Config::output_suffix + esm.getNameSuffix();
-		ofstream file(Config::output_path + name, ios::binary);
+		ofstream file(name, ios::binary);
 		for(auto &elem : esm.getRecColl())
 		{
 			file << elem;
 		}
-		cout << "--> Writing " << Config::output_path << name << "...\r\n";
+		cout << "--> Writing " << name << "...\r\n";
 	}
 }
 
@@ -111,7 +110,7 @@ void EsmConverter::convertScriptLine(size_t i)
 		if(search != merger.getDict()[RecType::BNAM].end())
 		{
 			line = search->second;
-			line = line.substr(line.find(sep[5].size()));
+			line = line.substr(line.find(sep[0]) + 1);
 			found = 1;
 			if(esm.getScptLine(i) != line)
 			{
@@ -125,7 +124,7 @@ void EsmConverter::convertScriptLine(size_t i)
 		if(search != merger.getDict()[RecType::SCTX].end())
 		{
 			line = search->second;
-			line = line.substr(line.find(sep[5].size()));
+			line = line.substr(line.find(sep[0]) + 1);
 			found = 1;
 			if(esm.getScptLine(i) != line)
 			{
@@ -280,7 +279,7 @@ void EsmConverter::convertANAM()
 			}
 		}
 	}
-	Config::appendLog("    --> ANAM records converted: " + to_string(counter) + "\r\n");
+	cout << "    --> ANAM records converted: " << to_string(counter) << "\r\n";
 }
 
 //----------------------------------------------------------

@@ -2,8 +2,8 @@
 #define DICTCREATOR_HPP
 
 #include "Config.hpp"
-#include "EsmTools.hpp"
-#include "RecTools.hpp"
+#include "EsmReader.hpp"
+#include "EsmRecord.hpp"
 #include "DictMerger.hpp"
 
 using namespace std;
@@ -24,7 +24,7 @@ public:
 private:
 	size_t getSize();
 	string dialTranslator(string to_translate);
-	void insertRecord(const string &pri_text, const string &sec_text, RecType i);
+	void insertRecord(const string &pri_text, const string &sec_text, RecType i, bool extra = 0);
 	void makeDictCELL();
 	void makeDictGMST();
 	void makeDictFNAM();
@@ -37,14 +37,15 @@ private:
 	void makeDictBNAM();
 	void makeDictSCPT();
 
-	RecTools esm_n;
-	RecTools esm_f;
-	RecTools *esm_ptr;
+	EsmRecord esm_n;
+	EsmRecord esm_f;
+	EsmRecord *esm_ptr;
 	DictMerger merger;
 	bool status = 0;
 	bool with_dict = 0;
 	bool no_duplicates = 0;
 	int counter;
+	int counter_cell;
 	string suffix;
 	array<map<string, string>, 11> dict;
 };

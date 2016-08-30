@@ -7,7 +7,7 @@ vector<string> Config::key_message = {"messagebox", "say ", "say,", "choice"};
 vector<string> Config::key_dial = {"addtopic"};
 vector<string> Config::key_cell = {"positioncell", "getpccell", "aifollowcell", "placeitemcell", "showmap"};
 
-string Config::output_path;
+bool Config::allow_more_info;
 string Config::output_suffix;
 string Config::log;
 
@@ -64,26 +64,20 @@ void Config::appendLog(string message)
 //----------------------------------------------------------
 void Config::writeLog()
 {
-	string name = "yampt.log";
-	ofstream file(output_path + name, ios::binary);
-	cout << "--> Writing " << name << "...\r\n";
-	file << log;
+	if(!log.empty())
+	{
+		string name = "yampt.log";
+		ofstream file(name, ios::binary);
+		cout << "--> Writing " << name << "...\r\n";
+		file << log;
+	}
 }
 
 //----------------------------------------------------------
 void Config::parseConfig(string &content)
 {
-	parseOutputPath(content);
 	parseOutputSuffix(content);
-}
-
-//----------------------------------------------------------
-void Config::parseOutputPath(string &content)
-{
-	regex re("(OUTPUT_PATH=)\"(.*?)\"");
-	smatch found;
-	regex_search(content, found, re);
-	output_path = found[2].str();
+	parseAllowMoreThan512InfoString(content);
 }
 
 //----------------------------------------------------------
@@ -93,4 +87,16 @@ void Config::parseOutputSuffix(string &content)
 	smatch found;
 	regex_search(content, found, re);
 	output_suffix = found[2].str();
+}
+
+//----------------------------------------------------------
+void Config::parseAllowMoreThan512InfoString(string &content)
+{
+	regex re("(ALLOW_MORE_THAN_512_INFO_STRING=)(.*?)");
+	smatch found;
+	regex_search(content, found, re);
+	if(found[2].str() == "1")
+	{
+		allow_more_info = 1;
+	}
 }

@@ -28,8 +28,8 @@ public:
 	static vector<string> key_dial;
 	static vector<string> key_cell;
 
-	static string output_path;
 	static string output_suffix;
+	static bool allow_more_info;
 
 	static void appendLog(string message);
 	void writeLog();
@@ -40,8 +40,8 @@ private:
 	void readConfig();
 	void printStatus();
 	void parseConfig(string &content);
-	void parseOutputPath(string &content);
 	void parseOutputSuffix(string &content);
+	void parseAllowMoreThan512InfoString(string &content);
 
 	bool status;
 	static string log;

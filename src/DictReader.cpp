@@ -183,11 +183,18 @@ void DictReader::insertRecord(const string &pri_text, const string &sec_text)
 		}
 		else if(pri_text.substr(0, 4) == "INFO")
 		{
-			if(sec_text.size() > 511)
+			if(Config::allow_more_info == 0)
 			{
-				appendInvalidRecordLog(pri_text, sec_text,
-						       "Text too long, more than 511 bytes (has " +
-						       to_string(sec_text.size()) + ")");
+				if(sec_text.size() > 511)
+				{
+					appendInvalidRecordLog(pri_text, sec_text,
+							       "Text too long, more than 511 bytes (has " +
+							       to_string(sec_text.size()) + ")");
+				}
+				else
+				{
+					dict[RecType::INFO].insert({pri_text, sec_text});
+				}
 			}
 			else
 			{

@@ -2,8 +2,8 @@
 #define ESMCONVERTER_HPP
 
 #include "Config.hpp"
-#include "EsmTools.hpp"
-#include "RecTools.hpp"
+#include "EsmReader.hpp"
+#include "EsmRecord.hpp"
 #include "DictMerger.hpp"
 
 using namespace std;
@@ -42,7 +42,7 @@ private:
 	void convertSCPT();
 
 	bool status;
-	RecTools esm;
+	EsmRecord esm;
 	DictMerger merger;
 	int counter;
 	string rec_content;

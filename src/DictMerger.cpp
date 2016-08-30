@@ -92,7 +92,7 @@ void DictMerger::writeDict()
 	if(status == 1)
 	{
 		string name = "Merged.dic";
-		ofstream file(Config::output_path + name, ios::binary);
+		ofstream file(name, ios::binary);
 		for(size_t i = 0; i < dict.size(); ++i)
 		{
 			for(const auto &elem : dict[i])
@@ -104,7 +104,7 @@ void DictMerger::writeDict()
 			}
 		}
 		cout << "--> Writing " << to_string(getSize()) <<
-			" records to " << Config::output_path << name << "...\r\n";
+			" records to " << name << "...\r\n";
 	}
 }
 
@@ -117,4 +117,49 @@ int DictMerger::getSize()
 		size += elem.size();
 	}
 	return size;
+}
+
+//----------------------------------------------------------
+void DictMerger::writeCompare()
+{
+	if(status == 1 && dicttools.size() == 2)
+	{
+		array<string, 2> diff;
+		for(size_t k = 0; k < 11; ++k)
+		{
+			for(auto &elem : dicttools[0].getDict()[k])
+			{
+				auto search = dicttools[1].getDict()[k].find(elem.first);
+				if(search != dicttools[1].getDict()[k].end())
+				{
+					if(search->second != elem.second)
+					{
+						diff[0] += sep[4] +
+							   sep[1] + elem.first +
+							   sep[2] + elem.second +
+							   sep[3] + "\r\n";
+						diff[1] += sep[4] +
+							   sep[1] + search->first +
+							   sep[2] + search->second +
+							   sep[3] + "\r\n";
+					}
+				}
+			}
+		}
+		if(!diff[0].empty() && !diff[1].empty())
+		{
+			string name;
+			for(size_t i = 0; i < diff.size(); ++i)
+			{
+				name = dicttools[i].getNamePrefix() + ".diff." + to_string(i) + ".log";
+				ofstream file(name, ios::binary);
+				file << diff[i];
+				cout << "--> Writing " + name + "...\r\n";
+			}
+		}
+		else
+		{
+			cout << "--> No differences between dictionaries!\r\n";
+		}
+	}
 }
