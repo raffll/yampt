@@ -16,7 +16,7 @@
 
 using namespace std;
 
-enum RecType { CELL, GMST, FNAM, DESC, TEXT, RNAM, INDX, DIAL, INFO, BNAM, SCTX };
+enum RecType { CELL, DIAL, INDX, RNAM, DESC, GMST, FNAM, INFO, BNAM, SCTX, TEXT };
 const vector<string> sep = {"^", "<h3>", "</h3>", "<hr>",
 			    "<!-------------------------------------------------------------->\r\n",
 			    "\r\n        "};

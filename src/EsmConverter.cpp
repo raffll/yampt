@@ -38,6 +38,29 @@ void EsmConverter::convertEsm()
 }
 
 //----------------------------------------------------------
+void EsmConverter::convertEsmWithDial()
+{
+	if(status == 1)
+	{
+		convertCELL();
+		convertPGRD();
+		convertANAM();
+		convertSCVR();
+		convertDNAM();
+		convertCNDT();
+		convertGMST();
+		convertFNAM();
+		convertDESC();
+		convertTEXT();
+		convertRNAM();
+		convertINDX();
+		convertDIAL();
+		convertINFOWithDIAL();
+		convertBNAM();
+		convertSCPT();
+	}
+}
+//----------------------------------------------------------
 void EsmConverter::writeEsm()
 {
 	if(status == 1)
@@ -664,6 +687,68 @@ void EsmConverter::convertINFO()
 						     esm.getSecSize(),
 						     search->second + '\0',
 						     search->second.size() + 1);
+				counter++;
+			}
+		}
+	}
+	cout << "    --> INFO records converted: " << to_string(counter) << "\r\n";
+}
+
+//----------------------------------------------------------
+void EsmConverter::convertINFOWithDIAL()
+{
+	counter = 0;
+	string pri_text;
+	string sec_text;
+	size_t pos;
+	string dial;
+	for(size_t i = 0; i < esm.getRecColl().size(); ++i)
+	{
+		esm.setRec(i);
+		if(esm.getRecId() == "DIAL")
+		{
+			esm.setPri("NAME");
+			esm.setSecDialType("DATA");
+			dial = esm.getDialType() + sep[0] + esm.getPriText();
+		}
+		if(esm.getRecId() == "INFO")
+		{
+			esm.setPri("INAM");
+			esm.setSec("NAME");
+
+			pri_text = "INFO" + sep[0] + dial + sep[0] + esm.getPriText();
+			auto search = merger.getDict()[RecType::INFO].find(pri_text);
+
+			if(search != merger.getDict()[RecType::INFO].end())
+			{
+				convertRecordContent(esm.getSecPos(),
+						     esm.getSecSize(),
+						     search->second + '\0',
+						     search->second.size() + 1);
+				counter++;
+			}
+			else if(!esm.getSecText().empty())
+			{
+				sec_text = esm.getSecText();
+				for(auto &elem : merger.getDict()[RecType::DIAL])
+				{
+					if(elem.first.substr(5) != elem.second)
+					{
+						string r = "\\b" + elem.first.substr(5) + "\\b";
+						regex re(r, regex_constants::icase);
+						smatch found;
+						regex_search(sec_text, found, re);
+						if(!found[0].str().empty())
+						{
+							pos = found.position(0) + found[0].str().size();
+							sec_text.insert(pos, " [" + elem.second + "]");
+						}
+					}
+				}
+				convertRecordContent(esm.getSecPos(),
+						     esm.getSecSize(),
+						     sec_text + '\0',
+						     sec_text.size() + 1);
 				counter++;
 			}
 		}

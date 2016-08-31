@@ -144,14 +144,14 @@ void DictMerger::convertDialInText()
 			{
 				if(elem_dial.first.substr(5) != elem_dial.second)
 				{
-					string r = "( " + elem_dial.first.substr(5) + " )";
-					regex re(r);
+					string r = "\\b" + elem_dial.first.substr(5) + "\\b";
+					regex re(r, regex_constants::icase);
 					smatch found;
 					regex_search(sec_text, found, re);
-					if(!found[1].str().empty())
+					if(!found[0].str().empty())
 					{
-						pos = found.position(1) + found[1].str().size();
-						sec_text.insert(pos, "[" + elem_dial.second + "] ");
+						pos = found.position(0) + found[0].str().size();
+						sec_text.insert(pos, " [" + elem_dial.second + "]");
 					}
 				}
 			}

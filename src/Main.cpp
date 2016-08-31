@@ -56,6 +56,10 @@ int main(int argc, char *argv[])
 		{
 			ui.convertEsm();
 		}
+		else if(arg[1] == "--convert-with-dial")
+		{
+			ui.convertEsmWithDial();
+		}
 		else if(arg[1] == "--scripts")
 		{
 			ui.writeScripts();
@@ -64,7 +68,7 @@ int main(int argc, char *argv[])
 		{
 			ui.writeCompare();
 		}
-		else if(arg[1] == "--test")
+		else if(arg[1] == "--add-dial")
 		{
 			ui.convertDialInText();
 		}

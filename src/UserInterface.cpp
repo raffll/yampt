@@ -47,7 +47,7 @@ void UserInterface::makeDictRaw()
 	{
 		DictCreator creator(arg_file[i]);
 		creator.makeDict();
-		creator.writeDict(creator.getDict(), creator.getName() + ".raw.dic");
+		creator.writeDict(creator.getDict(), creator.getName() + ".dic");
 	}
 	config.writeLog();
 }
@@ -61,7 +61,7 @@ void UserInterface::makeDictBase()
 		DictCreator creator(arg_file[0], arg_file[1]);
 		creator.compareEsm();
 		creator.makeDict();
-		creator.writeDict(creator.getDict(), creator.getName() + ".base.dic");
+		creator.writeDict(creator.getDict(), creator.getName() + ".dic");
 	}
 	config.writeLog();
 }
@@ -76,7 +76,7 @@ void UserInterface::makeDictAll()
 	{
 		DictCreator creator(arg_file[i], merger);
 		creator.makeDict();
-		creator.writeDict(creator.getDict(), creator.getName() + ".all.dic");
+		creator.writeDict(creator.getDict(), creator.getName() + ".dic");
 	}
 	config.writeLog();
 }
@@ -91,7 +91,7 @@ void UserInterface::makeDictNot()
 	{
 		DictCreator creator(arg_file[i], merger, true);
 		creator.makeDict();
-		creator.writeDict(creator.getDict(), creator.getName() + ".not.dic");
+		creator.writeDict(creator.getDict(), creator.getName() + ".dic");
 	}
 	config.writeLog();
 }
@@ -117,12 +117,21 @@ void UserInterface::convertEsm()
 		EsmConverter converter(arg_file[i], merger);
 		converter.convertEsm();
 		converter.writeEsm();
-		if(converter.getStatus() == 1)
-		{
-			DictCreator creator(arg_file[i], merger, true);
-			creator.makeDict();
-			creator.writeDict(creator.getDict(), creator.getName() + ".not.dic");
-		}
+	}
+	config.writeLog();
+}
+
+//----------------------------------------------------------
+void UserInterface::convertEsmWithDial()
+{
+	Config config;
+	DictMerger merger(arg_dict_rev);
+	merger.mergeDict();
+	for(size_t i = 0; i < arg_file.size(); ++i)
+	{
+		EsmConverter converter(arg_file[i], merger);
+		converter.convertEsmWithDial();
+		converter.writeEsm();
 	}
 	config.writeLog();
 }

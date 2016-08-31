@@ -17,6 +17,7 @@ public:
 	void makeDictNot();
 	void mergeDict();
 	void convertEsm();
+	void convertEsmWithDial();
 	void writeScripts();
 	void writeCompare();
 	void convertDialInText();
