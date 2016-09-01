@@ -3,6 +3,12 @@
 using namespace std;
 
 //----------------------------------------------------------
+DictCreator::DictCreator()
+{
+
+}
+
+//----------------------------------------------------------
 DictCreator::DictCreator(string path_n)
 {
 	esm_n.readFile(path_n);
@@ -26,7 +32,7 @@ DictCreator::DictCreator(string path_n, string path_f)
 }
 
 //----------------------------------------------------------
-DictCreator::DictCreator(string path_n, DictMerger &m, bool no_dupl)
+DictCreator::DictCreator(string path_n, DictMerger &m)
 {
 	esm_n.readFile(path_n);
 	esm_ptr = &esm_n;
@@ -35,7 +41,6 @@ DictCreator::DictCreator(string path_n, DictMerger &m, bool no_dupl)
 	{
 		status = 1;
 		with_dict = 1;
-		no_duplicates = no_dupl;
 	}
 }
 
@@ -59,76 +64,49 @@ void DictCreator::makeDict()
 }
 
 //----------------------------------------------------------
-void DictCreator::writeScripts()
-{
-	if(status == 1)
-	{
-		string name = esm_n.getNamePrefix() + ".scripts.log";
-		ofstream file(name, ios::binary);
-		for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
-		{
-			esm_n.setRec(i);
-			if(esm_n.getRecId() == "SCPT")
-			{
-				esm_n.setPri("SCHD");
-				esm_n.setSec("SCTX");
-				file << esm_n.getSecText() << "\r\n" << sep[4];
-			}
-		}
-		for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
-		{
-			esm_n.setRec(i);
-			if(esm_n.getRecId() == "INFO")
-			{
-				esm_n.setPri("INAM");
-				esm_n.setSec("BNAM");
-				file << esm_n.getSecText() << "\r\n" << sep[4];
-			}
-		}
-		cout << "--> Writing " << name << "...\r\n";
-	}
-}
-
-//----------------------------------------------------------
 void DictCreator::compareEsm()
 {
 	if(status == 1)
 	{
-		if(esm_n.getRecColl().size() == esm_f.getRecColl().size())
+		if(esm_n.getRecColl().size() != esm_f.getRecColl().size())
 		{
-			string esm_compare;
-			string ext_compare;
+			cout << "--> They are not the same master files!\r\n";
+			status = 0;
+		}
+		else
+		{
+			string esm_n_compare;
+			string esm_f_compare;
 			for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
 			{
-				esm_compare += esm_n.getRecId();
+				esm_n_compare += esm_n.getRecId();
 			}
 			for(size_t i = 0; i < esm_f.getRecColl().size(); ++i)
 			{
-				ext_compare += esm_f.getRecId();
+				esm_f_compare += esm_f.getRecId();
 			}
-			if(esm_compare != ext_compare)
+			if(esm_n_compare != esm_f_compare)
 			{
 				cout << "--> They are not the same master files!\r\n";
 				status = 0;
 			}
-		}
-		else
-		{
-			cout << "--> They are not the same master files!\r\n";
-			status = 0;
+			else
+			{
+				status = 1;
+			}
 		}
 	}
 }
 
 //----------------------------------------------------------
-void DictCreator::insertRecord(const string &pri_text, const string &sec_text, RecType i, bool extra)
+void DictCreator::insertRecord(const string &pri_text, const string &sec_text, RecType type, bool extra)
 {
 	if(no_duplicates == 1)
 	{
-		auto search = merger.getDict()[i].find(pri_text);
-		if(search == merger.getDict()[i].end())
+		auto search = merger.getDict()[type].find(pri_text);
+		if(search == merger.getDict()[type].end())
 		{
-			dict[i].insert({pri_text, sec_text});
+			dict[type].insert({pri_text, sec_text});
 			if(extra == 1)
 			{
 				counter_cell++;
@@ -141,7 +119,7 @@ void DictCreator::insertRecord(const string &pri_text, const string &sec_text, R
 	}
 	else
 	{
-		dict[i].insert({pri_text, sec_text});
+		dict[type].insert({pri_text, sec_text});
 		if(extra == 1)
 		{
 			counter_cell++;

@@ -18,9 +18,6 @@ public:
 	void mergeDict();
 	void convertEsm();
 	void convertEsmWithDial();
-	void writeScripts();
-	void writeCompare();
-	void convertDialInText();
 
 	UserInterface(vector<string> &a);
 
@@ -28,9 +25,9 @@ private:
 	void prepareUi(vector<string> &a);
 
 	vector<string> arg;
-	vector<string> arg_file;
-	vector<string> arg_dict;
-	vector<string> arg_dict_rev;
+	vector<string> path_esm;
+	vector<string> path_dict;
+	vector<string> path_dict_rev;
 };
 
 #endif

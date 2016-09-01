@@ -43,10 +43,10 @@ private:
 	void convertBNAM();
 	void convertSCPT();
 
-	bool status;
+	bool status = 0;
 	EsmRecord esm;
 	DictMerger merger;
-	int counter;
+	int counter = 0;
 	string rec_content;
 	string script_text;
 };

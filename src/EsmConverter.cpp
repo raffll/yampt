@@ -3,6 +3,12 @@
 using namespace std;
 
 //----------------------------------------------------------
+EsmConverter::EsmConverter()
+{
+
+}
+
+//----------------------------------------------------------
 EsmConverter::EsmConverter(string path, DictMerger &m)
 {
 	esm.readFile(path);
@@ -700,7 +706,9 @@ void EsmConverter::convertINFOWithDIAL()
 	counter = 0;
 	string pri_text;
 	string sec_text;
+	string sec_text_lowercase;
 	size_t pos;
+	string text;
 	string dial;
 	for(size_t i = 0; i < esm.getRecColl().size(); ++i)
 	{
@@ -721,6 +729,7 @@ void EsmConverter::convertINFOWithDIAL()
 
 			if(search != merger.getDict()[RecType::INFO].end())
 			{
+			        //sec_text = esm.getSecText() + "\r\n\r\n[" + search->second + "]\0";
 				convertRecordContent(esm.getSecPos(),
 						     esm.getSecSize(),
 						     search->second + '\0',
@@ -732,16 +741,18 @@ void EsmConverter::convertINFOWithDIAL()
 				sec_text = esm.getSecText();
 				for(auto &elem : merger.getDict()[RecType::DIAL])
 				{
-					if(elem.first.substr(5) != elem.second)
+				        text = elem.first.substr(5);
+					if(text != elem.second)
 					{
-						string r = "\\b" + elem.first.substr(5) + "\\b";
-						regex re(r, regex_constants::icase);
-						smatch found;
-						regex_search(sec_text, found, re);
-						if(!found[0].str().empty())
+					        sec_text_lowercase = sec_text;
+                                                transform(sec_text_lowercase.begin(), sec_text_lowercase.end(),
+                                                          sec_text_lowercase.begin(), ::tolower);
+					        transform(text.begin(), text.end(),
+                                                          text.begin(), ::tolower);
+                                                pos = sec_text_lowercase.find(text);
+						if(pos != string::npos)
 						{
-							pos = found.position(0) + found[0].str().size();
-							sec_text.insert(pos, " [" + elem.second + "]");
+							sec_text.insert(sec_text.size(), " [" + elem.second + "]");
 						}
 					}
 				}

@@ -43,7 +43,6 @@ public:
 	size_t getScptTextPos(size_t i) { return get<3>(scpt_coll[i]); }
 
 	string getDialType() { return dial_type; }
-	void printBinary(string content);
 
 	EsmRecord();
 

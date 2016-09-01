@@ -340,20 +340,3 @@ void EsmRecord::extractText(const string &line, string &text, size_t &pos)
 		}
 	}
 }
-
-//----------------------------------------------------------
-void EsmRecord::printBinary(string content)
-{
-	cout << "\r\n" << sep[4];
-	for(size_t i = 0; i < content.size(); i++)
-	{
-		if(isprint(content[i]))
-		{
-			cout << content[i];
-		}
-		else
-		{
-			cout << ".";
-		}
-	}
-}

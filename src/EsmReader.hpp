@@ -22,7 +22,7 @@ public:
 protected:
 	unsigned int convertByteArrayToInt(const string &str);
 
-	bool status;
+	bool status = 0;
 	vector<string> rec_coll;
 
 private:

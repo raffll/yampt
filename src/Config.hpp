@@ -24,6 +24,9 @@ const vector<string> sep = {"^", "<h3>", "</h3>", "<hr>",
 class Config
 {
 public:
+	void writeDict(const array<map<string, string>, 11> &dict, string name);
+	int getSize(const array<map<string, string>, 11> &dict);
+
 	static vector<string> key_message;
 	static vector<string> key_dial;
 	static vector<string> key_cell;

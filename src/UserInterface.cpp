@@ -5,14 +5,9 @@ using namespace std;
 //----------------------------------------------------------
 UserInterface::UserInterface(vector<string> &a)
 {
-	prepareUi(a);
-}
-
-//----------------------------------------------------------
-void UserInterface::prepareUi(vector<string> &a)
-{
 	arg = a;
-	string command = "NULL";
+	string command;
+	string usage = "TODO";
 	for(size_t i = 0; i < arg.size(); ++i)
 	{
 		if(arg[i] == "-f")
@@ -27,143 +22,146 @@ void UserInterface::prepareUi(vector<string> &a)
 		{
 			if(command == "-f")
 			{
-				arg_file.push_back(arg[i]);
+				path_esm.push_back(arg[i]);
 			}
 			if(command == "-d")
 			{
-				arg_dict.push_back(arg[i]);
+				path_dict.push_back(arg[i]);
 			}
 		}
 	}
-	vector<string> arg_dict_rev_tmp(arg_dict.rbegin(), arg_dict.rend());
-	arg_dict_rev = arg_dict_rev_tmp;
+	vector<string> path_dict_rev_tmp(path_dict.rbegin(), path_dict.rend());
+	path_dict_rev = path_dict_rev_tmp;
+
+	if(arg.size() > 1)
+	{
+		if(arg[1] == "--help")
+		{
+			cout << usage << endl;
+		}
+		else if(arg[1] == "--make-raw" && path_esm.size() > 0)
+		{
+			makeDictRaw();
+		}
+		else if(arg[1] == "--make-base" && path_esm.size() == 2)
+		{
+			makeDictBase();
+		}
+		else if(arg[1] == "--make-all" && path_esm.size() > 0)
+		{
+			makeDictAll();
+		}
+		else if(arg[1] == "--make-not" && path_esm.size() > 0)
+		{
+			makeDictNot();
+		}
+		else if(arg[1] == "--merge" && path_dict_rev.size() > 0)
+		{
+			mergeDict();
+		}
+		else if(arg[1] == "--convert" && path_esm.size() > 0 && path_dict_rev.size() > 0)
+		{
+			convertEsm();
+		}
+		else if(arg[1] == "--convert-with-dial" && path_esm.size() > 0 && path_dict_rev.size() > 0)
+		{
+			convertEsmWithDial();
+		}
+		else
+		{
+			cout << "Syntax error!" << endl;
+		}
+	}
+	else
+	{
+		cout << "Syntax error!" << endl;
+	}
 }
 
 //----------------------------------------------------------
 void UserInterface::makeDictRaw()
 {
 	Config config;
-	for(size_t i = 0; i < arg_file.size(); ++i)
+	for(size_t i = 0; i < path_esm.size(); ++i)
 	{
-		DictCreator creator(arg_file[i]);
+		DictCreator creator(path_esm[i]);
 		creator.makeDict();
-		creator.writeDict(creator.getDict(), creator.getName() + ".dic");
+		config.writeDict(creator.getDict(), creator.getName() + ".dic");
 	}
-	config.writeLog();
 }
 
 //----------------------------------------------------------
 void UserInterface::makeDictBase()
 {
 	Config config;
-	if(arg_file.size() == 2)
-	{
-		DictCreator creator(arg_file[0], arg_file[1]);
-		creator.compareEsm();
-		creator.makeDict();
-		creator.writeDict(creator.getDict(), creator.getName() + ".dic");
-	}
-	config.writeLog();
+	DictCreator creator(path_esm[0], path_esm[1]);
+	creator.compareEsm();
+	creator.makeDict();
+	config.writeDict(creator.getDict(), creator.getName() + ".dic");
 }
 
 //----------------------------------------------------------
 void UserInterface::makeDictAll()
 {
 	Config config;
-	DictMerger merger(arg_dict_rev);
+	DictMerger merger(path_dict_rev);
 	merger.mergeDict();
-	for(size_t i = 0; i < arg_file.size(); ++i)
+	for(size_t i = 0; i < path_esm.size(); ++i)
 	{
-		DictCreator creator(arg_file[i], merger);
+		DictCreator creator(path_esm[i], merger);
 		creator.makeDict();
-		creator.writeDict(creator.getDict(), creator.getName() + ".dic");
+		config.writeDict(creator.getDict(), creator.getName() + ".dic");
 	}
-	config.writeLog();
 }
 
 //----------------------------------------------------------
 void UserInterface::makeDictNot()
 {
 	Config config;
-	DictMerger merger(arg_dict_rev);
+	DictMerger merger(path_dict_rev);
 	merger.mergeDict();
-	for(size_t i = 0; i < arg_file.size(); ++i)
+	for(size_t i = 0; i < path_esm.size(); ++i)
 	{
-		DictCreator creator(arg_file[i], merger, true);
+		DictCreator creator(path_esm[i], merger);
+		creator.setNoDuplicates();
 		creator.makeDict();
-		creator.writeDict(creator.getDict(), creator.getName() + ".dic");
+		config.writeDict(creator.getDict(), creator.getName() + ".dic");
 	}
-	config.writeLog();
 }
 
 //----------------------------------------------------------
 void UserInterface::mergeDict()
 {
 	Config config;
-	DictMerger merger(arg_dict_rev);
+	DictMerger merger(path_dict_rev);
 	merger.mergeDict();
-	merger.writeDict(merger.getDict(), "Merged.dic");
-	config.writeLog();
+	config.writeDict(merger.getDict(), "Merged.dic");
 }
 
 //----------------------------------------------------------
 void UserInterface::convertEsm()
 {
 	Config config;
-	DictMerger merger(arg_dict_rev);
+	DictMerger merger(path_dict_rev);
 	merger.mergeDict();
-	for(size_t i = 0; i < arg_file.size(); ++i)
+	for(size_t i = 0; i < path_esm.size(); ++i)
 	{
-		EsmConverter converter(arg_file[i], merger);
+		EsmConverter converter(path_esm[i], merger);
 		converter.convertEsm();
 		converter.writeEsm();
 	}
-	config.writeLog();
 }
 
 //----------------------------------------------------------
 void UserInterface::convertEsmWithDial()
 {
 	Config config;
-	DictMerger merger(arg_dict_rev);
+	DictMerger merger(path_dict_rev);
 	merger.mergeDict();
-	for(size_t i = 0; i < arg_file.size(); ++i)
+	for(size_t i = 0; i < path_esm.size(); ++i)
 	{
-		EsmConverter converter(arg_file[i], merger);
+		EsmConverter converter(path_esm[i], merger);
 		converter.convertEsmWithDial();
 		converter.writeEsm();
 	}
-	config.writeLog();
 }
-
-//----------------------------------------------------------
-void UserInterface::writeScripts()
-{
-	Config config;
-	for(size_t i = 0; i < arg_file.size(); ++i)
-	{
-		DictCreator creator(arg_file[i]);
-		creator.writeScripts();
-	}
-	config.writeLog();
-}
-
-//----------------------------------------------------------
-void UserInterface::writeCompare()
-{
-	Config config;
-	DictMerger merger(arg_dict);
-	merger.writeCompare();
-	config.writeLog();
-}
-
-//----------------------------------------------------------
-void UserInterface::convertDialInText()
-{
-	Config config;
-	DictMerger merger(arg_dict);
-	merger.convertDialInText();
-	merger.writeDict(merger.getDict(), "Info.dic");
-	config.writeLog();
-}
-
