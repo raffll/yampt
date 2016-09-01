@@ -7,7 +7,29 @@ UserInterface::UserInterface(vector<string> &a)
 {
 	arg = a;
 	string command;
-	string usage = "TODO";
+	string usage = "Usage: " + arg[0] + " [command]"
+		       "\n"
+		       "\n  --help                                                Print this message."
+		       "\n  --make-raw            -f <file_list>                  Make dictionary from esp/esm"
+		       "\n                                                        plugins with all records."
+		       "\n  --make-all            -f <file_list> -d <dict_list>   Make as above, but convert"
+		       "\n                                                        INFO id with DIAL records"
+		       "\n                                                        from selected dictionaries."
+		       "\n  --make-not            -f <file_list> -d <dict_list>   Make without records from"
+		       "\n                                                        selected dictionaries."
+		       "\n  --make-base           -f [file_native] [file_foreign] Make base dictionary from"
+		       "\n                                                        native and foreign"
+		       "\n                                                        esm master files."
+		       "\n  --merge               -d <dict_list>                  Validate, merge, sort"
+		       "\n                                                        and delete doubled records."
+		       "\n  --convert             -f <file_list> -d <dict_list>   Convert plugin from"
+		       "\n                                                        selected dictionaries."
+		       "\n  --convert-with-dial   -f <file_list> -d <dict_list>   Convert plugin from"
+		       "\n                                                        selected dictionaries"
+		       "\n                                                        and add dialog topic"
+		       "\n                                                        names to end of not"
+		       "\n                                                        converted INFO strings.";
+
 	for(size_t i = 0; i < arg.size(); ++i)
 	{
 		if(arg[i] == "-f")
