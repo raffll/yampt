@@ -16,7 +16,7 @@
 
 using namespace std;
 
-enum RecType { CELL, GMST, FNAM, DESC, TEXT, RNAM, INDX, DIAL, INFO, BNAM, SCTX };
+enum RecType { CELL, DIAL, INDX, RNAM, DESC, GMST, FNAM, INFO, BNAM, SCTX, TEXT };
 const vector<string> sep = {"^", "<h3>", "</h3>", "<hr>",
 			    "<!-------------------------------------------------------------->\r\n",
 			    "\r\n        "};
@@ -24,12 +24,15 @@ const vector<string> sep = {"^", "<h3>", "</h3>", "<hr>",
 class Config
 {
 public:
-	static vector<string> key_message;
-	static vector<string> key_dial;
-	static vector<string> key_cell;
+	void writeDict(const array<map<string, string>, 11> &dict, string name);
+	int getSize(const array<map<string, string>, 11> &dict);
 
-	static string output_path;
-	static string output_suffix;
+	static vector<string> getKeyMessage() { return key_message; }
+	static vector<string> getKeyDial() { return key_dial; }
+	static vector<string> getKeyCell() { return key_cell; }
+
+	static string getOutputSuffix() { return output_suffix; }
+	static bool getAllowMoreInfo() { return allow_more_info; }
 
 	static void appendLog(string message);
 	void writeLog();
@@ -40,11 +43,19 @@ private:
 	void readConfig();
 	void printStatus();
 	void parseConfig(string &content);
-	void parseOutputPath(string &content);
 	void parseOutputSuffix(string &content);
+	void parseAllowMoreThan512InfoString(string &content);
 
-	bool status;
+	static vector<string> key_message;
+	static vector<string> key_dial;
+	static vector<string> key_cell;
+
+	static string output_suffix;
+	static bool allow_more_info;
 	static string log;
+
+	bool status = 0;
+
 };
 
 #endif

@@ -3,6 +3,12 @@
 using namespace std;
 
 //----------------------------------------------------------
+EsmConverter::EsmConverter()
+{
+
+}
+
+//----------------------------------------------------------
 EsmConverter::EsmConverter(string path, DictMerger &m)
 {
 	esm.readFile(path);
@@ -34,22 +40,44 @@ void EsmConverter::convertEsm()
 		convertINFO();
 		convertBNAM();
 		convertSCPT();
-		Config::appendLog("--> Converting complete!\r\n");
 	}
 }
 
+//----------------------------------------------------------
+void EsmConverter::convertEsmWithDIAL()
+{
+	if(status == 1)
+	{
+		convertCELL();
+		convertPGRD();
+		convertANAM();
+		convertSCVR();
+		convertDNAM();
+		convertCNDT();
+		convertGMST();
+		convertFNAM();
+		convertDESC();
+		convertTEXT();
+		convertRNAM();
+		convertINDX();
+		convertDIAL();
+		convertINFOWithDIAL();
+		convertBNAM();
+		convertSCPT();
+	}
+}
 //----------------------------------------------------------
 void EsmConverter::writeEsm()
 {
 	if(status == 1)
 	{
-		string name = esm.getNamePrefix() + Config::output_suffix + esm.getNameSuffix();
-		ofstream file(Config::output_path + name, ios::binary);
+		string name = esm.getNamePrefix() + Config::getOutputSuffix() + esm.getNameSuffix();
+		ofstream file(name, ios::binary);
 		for(auto &elem : esm.getRecColl())
 		{
 			file << elem;
 		}
-		cout << "--> Writing " << Config::output_path << name << "...\r\n";
+		cout << "--> Writing " << name << "...\r\n";
 	}
 }
 
@@ -111,7 +139,7 @@ void EsmConverter::convertScriptLine(size_t i)
 		if(search != merger.getDict()[RecType::BNAM].end())
 		{
 			line = search->second;
-			line = line.substr(line.find(sep[5].size()));
+			line = line.substr(line.find(sep[0]) + 1);
 			found = 1;
 			if(esm.getScptLine(i) != line)
 			{
@@ -125,7 +153,7 @@ void EsmConverter::convertScriptLine(size_t i)
 		if(search != merger.getDict()[RecType::SCTX].end())
 		{
 			line = search->second;
-			line = line.substr(line.find(sep[5].size()));
+			line = line.substr(line.find(sep[0]) + 1);
 			found = 1;
 			if(esm.getScptLine(i) != line)
 			{
@@ -280,7 +308,7 @@ void EsmConverter::convertANAM()
 			}
 		}
 	}
-	Config::appendLog("    --> ANAM records converted: " + to_string(counter) + "\r\n");
+	cout << "    --> ANAM records converted: " << to_string(counter) << "\r\n";
 }
 
 //----------------------------------------------------------
@@ -673,6 +701,72 @@ void EsmConverter::convertINFO()
 }
 
 //----------------------------------------------------------
+void EsmConverter::convertINFOWithDIAL()
+{
+	counter = 0;
+	string pri_text;
+	string sec_text;
+	string sec_text_lowercase;
+	size_t pos;
+	string text;
+	string dial;
+	for(size_t i = 0; i < esm.getRecColl().size(); ++i)
+	{
+		esm.setRec(i);
+		if(esm.getRecId() == "DIAL")
+		{
+			esm.setPri("NAME");
+			esm.setSecDialType("DATA");
+			dial = esm.getDialType() + sep[0] + esm.getPriText();
+		}
+		if(esm.getRecId() == "INFO")
+		{
+			esm.setPri("INAM");
+			esm.setSec("NAME");
+
+			pri_text = "INFO" + sep[0] + dial + sep[0] + esm.getPriText();
+			auto search = merger.getDict()[RecType::INFO].find(pri_text);
+
+			if(search != merger.getDict()[RecType::INFO].end())
+			{
+				convertRecordContent(esm.getSecPos(),
+						     esm.getSecSize(),
+						     search->second + '\0',
+						     search->second.size() + 1);
+				counter++;
+			}
+			else if(!esm.getSecText().empty() && dial.substr(0, 1) != "V")
+			{
+				sec_text = esm.getSecText();
+				for(auto &elem : merger.getDict()[RecType::DIAL])
+				{
+				        text = elem.first.substr(5);
+					if(text != elem.second)
+					{
+						sec_text_lowercase = sec_text;
+						transform(sec_text_lowercase.begin(), sec_text_lowercase.end(),
+							  sec_text_lowercase.begin(), ::tolower);
+						transform(text.begin(), text.end(),
+							  text.begin(), ::tolower);
+						pos = sec_text_lowercase.find(text);
+						if(pos != string::npos)
+						{
+							sec_text.insert(sec_text.size(), " [" + elem.second + "]");
+						}
+					}
+				}
+				convertRecordContent(esm.getSecPos(),
+						     esm.getSecSize(),
+						     sec_text + '\0',
+						     sec_text.size() + 1);
+				counter++;
+			}
+		}
+	}
+	cout << "    --> INFO records converted: " << to_string(counter) << "\r\n";
+}
+
+//----------------------------------------------------------
 void EsmConverter::convertBNAM()
 {
 	counter = 0;
@@ -698,7 +792,7 @@ void EsmConverter::convertBNAM()
 			}
 		}
 	}
-	cout << "    --> BNAM records converted: " << to_string(counter) << "\r\n";
+	cout << "    --> BNAM script lines converted: " << to_string(counter) << "\r\n";
 }
 
 //----------------------------------------------------------
@@ -727,5 +821,5 @@ void EsmConverter::convertSCPT()
 			}
 		}
 	}
-	cout << "    --> SCTX records converted: " << to_string(counter) << "\r\n";
+	cout << "    --> SCTX script lines converted: " << to_string(counter) << "\r\n";
 }

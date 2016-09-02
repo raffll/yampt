@@ -3,6 +3,12 @@
 using namespace std;
 
 //----------------------------------------------------------
+DictCreator::DictCreator()
+{
+
+}
+
+//----------------------------------------------------------
 DictCreator::DictCreator(string path_n)
 {
 	esm_n.readFile(path_n);
@@ -10,7 +16,6 @@ DictCreator::DictCreator(string path_n)
 	if(esm_n.getStatus() == 1)
 	{
 		status = 1;
-		suffix = ".raw.dic";
 	}
 }
 
@@ -23,12 +28,11 @@ DictCreator::DictCreator(string path_n, string path_f)
 	if(esm_n.getStatus() == 1 && esm_f.getStatus() == 1)
 	{
 		status = 1;
-		suffix = ".base.dic";
 	}
 }
 
 //----------------------------------------------------------
-DictCreator::DictCreator(string path_n, DictMerger &m, bool no_dupl)
+DictCreator::DictCreator(string path_n, DictMerger &m)
 {
 	esm_n.readFile(path_n);
 	esm_ptr = &esm_n;
@@ -37,15 +41,6 @@ DictCreator::DictCreator(string path_n, DictMerger &m, bool no_dupl)
 	{
 		status = 1;
 		with_dict = 1;
-		no_duplicates = no_dupl;
-		if(no_duplicates == 1)
-		{
-			suffix = ".not.dic";
-		}
-		else
-		{
-			suffix = ".all.dic";
-		}
 	}
 }
 
@@ -65,75 +60,6 @@ void DictCreator::makeDict()
 		makeDictINFO();
 		makeDictBNAM();
 		makeDictSCPT();
-		cout << "--> Creating complete!\r\n";
-	}
-}
-
-//----------------------------------------------------------
-void DictCreator::writeDict()
-{
-	if(status == 1 && getSize() > 0)
-	{
-		string name = esm_n.getNamePrefix() + suffix;
-		ofstream file(Config::output_path + name, ios::binary);
-		for(size_t i = 0; i < dict.size(); ++i)
-		{
-			for(const auto &elem : dict[i])
-			{
-				file << sep[4]
-				     << sep[1] << elem.first
-				     << sep[2] << elem.second
-				     << sep[3] << "\r\n";
-			}
-		}
-		cout << "--> Writing " << to_string(getSize()) <<
-			" records to " << Config::output_path << name << "...\r\n";
-	}
-	else
-	{
-		cout << "--> No records to make dictionary!\r\n";
-	}
-}
-
-//----------------------------------------------------------
-size_t DictCreator::getSize()
-{
-	size_t size = 0;
-	for(auto const &elem : dict)
-	{
-		size += elem.size();
-	}
-	return size;
-}
-
-//----------------------------------------------------------
-void DictCreator::writeScripts()
-{
-	if(status == 1)
-	{
-		string name = esm_n.getNamePrefix() + ".scripts.log";
-		ofstream file(Config::output_path + name, ios::binary);
-		for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
-		{
-			esm_n.setRec(i);
-			if(esm_n.getRecId() == "SCPT")
-			{
-				esm_n.setPri("SCHD");
-				esm_n.setSec("SCTX");
-				file << esm_n.getSecText() << "\r\n" << sep[4];
-			}
-		}
-		for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
-		{
-			esm_n.setRec(i);
-			if(esm_n.getRecId() == "INFO")
-			{
-				esm_n.setPri("INAM");
-				esm_n.setSec("BNAM");
-				file << esm_n.getSecText() << "\r\n" << sep[4];
-			}
-		}
-		cout << "--> Writing " << Config::output_path << name << "...\r\n";
 	}
 }
 
@@ -142,48 +68,70 @@ void DictCreator::compareEsm()
 {
 	if(status == 1)
 	{
-		if(esm_n.getRecColl().size() == esm_f.getRecColl().size())
+		if(esm_n.getRecColl().size() != esm_f.getRecColl().size())
 		{
-			string esm_compare;
-			string ext_compare;
+			cout << "--> They are not the same master files!\r\n";
+			status = 0;
+		}
+		else
+		{
+			string esm_n_compare;
+			string esm_f_compare;
 			for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
 			{
-				esm_compare += esm_n.getRecId();
+				esm_n_compare += esm_n.getRecId();
 			}
 			for(size_t i = 0; i < esm_f.getRecColl().size(); ++i)
 			{
-				ext_compare += esm_f.getRecId();
+				esm_f_compare += esm_f.getRecId();
 			}
-			if(esm_compare != ext_compare)
+			if(esm_n_compare != esm_f_compare)
 			{
 				cout << "--> They are not the same master files!\r\n";
 				status = 0;
 			}
-		}
-		else
-		{
-			cout << "--> They are not the same master files!\r\n";
-			status = 0;
+			else
+			{
+				status = 1;
+			}
 		}
 	}
 }
 
 //----------------------------------------------------------
-void DictCreator::insertRecord(const string &pri_text, const string &sec_text, RecType i)
+void DictCreator::insertRecord(const string &pri_text, const string &sec_text, RecType type, bool extra)
 {
 	if(no_duplicates == 1)
 	{
-		auto search = merger.getDict()[i].find(pri_text);
-		if(search == merger.getDict()[i].end())
+		auto search = merger.getDict()[type].find(pri_text);
+		if(search == merger.getDict()[type].end())
 		{
-			dict[i].insert({pri_text, sec_text});
-			counter++;
+			if(dict[type].insert({pri_text, sec_text}).second == 1)
+			{
+				if(extra == 1)
+				{
+					counter_cell++;
+				}
+				else
+				{
+					counter++;
+				}
+			}
 		}
 	}
 	else
 	{
-		dict[i].insert({pri_text, sec_text});
-		counter++;
+		if(dict[type].insert({pri_text, sec_text}).second == 1)
+		{
+			if(extra == 1)
+			{
+				counter_cell++;
+			}
+			else
+			{
+				counter++;
+			}
+		}
 	}
 }
 
@@ -228,6 +176,7 @@ void DictCreator::makeDictCELL()
 void DictCreator::makeDictGMST()
 {
 	counter = 0;
+	counter_cell = 0;
 	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
 	{
 		esm_n.setRec(i);
@@ -248,17 +197,23 @@ void DictCreator::makeDictGMST()
 			{
 				insertRecord("CELL" + sep[0] + esm_ptr->getSecText(),
 					     esm_n.getSecText(),
-					     RecType::CELL);
+					     RecType::CELL,
+					     true);
 			}
 		}
 	}
 	cout << "    --> GMST records created: " << to_string(counter) + "\r\n";
+	if(counter_cell > 0)
+	{
+		cout << "        + extra " + to_string(counter_cell) + " CELL records\r\n";
+	}
 }
 
 //----------------------------------------------------------
 void DictCreator::makeDictFNAM()
 {
 	counter = 0;
+	counter_cell = 0;
 	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
 	{
 		esm_n.setRec(i);
@@ -303,11 +258,16 @@ void DictCreator::makeDictFNAM()
 			{
 				insertRecord("CELL" + sep[0] + esm_ptr->getSecText(),
 					     esm_n.getSecText(),
-					     RecType::CELL);
+					     RecType::CELL,
+					     true);
 			}
 		}
 	}
 	cout << "    --> FNAM records created: " << to_string(counter) << "\r\n";
+	if(counter_cell > 0)
+	{
+		cout << "        + extra " + to_string(counter_cell) + " CELL records\r\n";
+	}
 }
 
 //----------------------------------------------------------
@@ -465,7 +425,7 @@ void DictCreator::makeDictBNAM()
 			}
 		}
 	}
-	cout << "    --> BNAM records created: " << to_string(counter) << "\r\n";
+	cout << "    --> BNAM script lines created: " << to_string(counter) << "\r\n";
 }
 
 //----------------------------------------------------------
@@ -488,5 +448,5 @@ void DictCreator::makeDictSCPT()
 			}
 		}
 	}
-	cout << "    --> SCTX records created: " << to_string(counter) << "\r\n";
+	cout << "    --> SCTX script lines created: " << to_string(counter) << "\r\n";
 }

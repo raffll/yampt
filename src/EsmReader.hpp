@@ -5,7 +5,7 @@
 
 using namespace std;
 
-class EsmTools
+class EsmReader
 {
 public:
 	void readFile(string path);
@@ -17,12 +17,12 @@ public:
 
 	vector<string> const& getRecColl() const { return rec_coll; }
 
-	EsmTools();
+	EsmReader();
 
 protected:
 	unsigned int convertByteArrayToInt(const string &str);
 
-	bool status;
+	bool status = 0;
 	vector<string> rec_coll;
 
 private:

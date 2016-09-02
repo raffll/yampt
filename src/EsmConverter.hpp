@@ -2,8 +2,8 @@
 #define ESMCONVERTER_HPP
 
 #include "Config.hpp"
-#include "EsmTools.hpp"
-#include "RecTools.hpp"
+#include "EsmReader.hpp"
+#include "EsmRecord.hpp"
 #include "DictMerger.hpp"
 
 using namespace std;
@@ -12,6 +12,7 @@ class EsmConverter
 {
 public:
 	void convertEsm();
+	void convertEsmWithDIAL();
 	void writeEsm();
 	bool getStatus() { return status; }
 
@@ -38,13 +39,14 @@ private:
 	void convertINDX();
 	void convertDIAL();
 	void convertINFO();
+	void convertINFOWithDIAL();
 	void convertBNAM();
 	void convertSCPT();
 
-	bool status;
-	RecTools esm;
+	bool status = 0;
+	EsmRecord esm;
 	DictMerger merger;
-	int counter;
+	int counter = 0;
 	string rec_content;
 	string script_text;
 };

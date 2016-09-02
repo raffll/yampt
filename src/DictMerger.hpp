@@ -10,19 +10,21 @@ class DictMerger
 {
 public:
 	void mergeDict();
-	void writeDict();
 
 	bool getStatus() { return status; }
+	string getLog() { return log; }
 	array<map<string, string>, 11> const& getDict() const { return dict; }
 
 	DictMerger();
 	DictMerger(vector<string> &path);
 
 private:
-	int getSize();
-
-	bool status;
-	vector<DictReader> dicttools;
+	bool status = 0;
+	int counter = 0;
+	int counter_identical = 0;
+	int counter_duplicate = 0;
+	string log;
+	vector<DictReader> dict_coll;
 	array<map<string, string>, 11> dict;
 };
 

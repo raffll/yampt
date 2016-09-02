@@ -1,11 +1,11 @@
 #ifndef RECTOOLS_HPP
 #define RECTOOLS_HPP
 
-#include "EsmTools.hpp"
+#include "EsmReader.hpp"
 
 using namespace std;
 
-class RecTools : public EsmTools
+class EsmRecord : public EsmReader
 {
 public:
 	void setRec(size_t i);
@@ -43,9 +43,8 @@ public:
 	size_t getScptTextPos(size_t i) { return get<3>(scpt_coll[i]); }
 
 	string getDialType() { return dial_type; }
-	void printBinary(string content);
 
-	RecTools();
+	EsmRecord();
 
 private:
 	void eraseNullChars(string &str);

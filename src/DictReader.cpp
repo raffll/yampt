@@ -5,15 +5,15 @@ using namespace std;
 //----------------------------------------------------------
 DictReader::DictReader()
 {
-	status = 0;
-	invalid_record = 0;
+
 }
 
 //----------------------------------------------------------
 DictReader::DictReader(const DictReader& that) : status(that.status),
 					         name(that.name),
 					         name_prefix(that.name_prefix),
-					         invalid_record(that.invalid_record),
+					         counter(that.counter),
+					         counter_invalid(that.counter_invalid),
 					         dict(that.dict)
 {
 
@@ -25,7 +25,8 @@ DictReader& DictReader::operator=(const DictReader& that)
 	status = that.status;
 	name = that.name;
 	name_prefix = that.name_prefix;
-	invalid_record = that.invalid_record;
+	counter = that.counter;
+	counter_invalid = that.counter_invalid;
 	dict = that.dict;
 	return *this;
 }
@@ -70,20 +71,9 @@ void DictReader::printStatus(string path)
 	else
 	{
 		cout << "--> Loading " << path << "...\r\n";
-		cout << "    --> Records loaded: " << to_string(getSize()) << "\r\n";
-		cout << "    --> Records invalid: " << to_string(invalid_record) << "\r\n";
+		cout << "    --> Records loaded: " << to_string(counter) << "\r\n";
+		cout << "    --> Records invalid: " << to_string(counter_invalid) << "\r\n";
 	}
-}
-
-//----------------------------------------------------------
-int DictReader::getSize()
-{
-	int size = 0;
-	for(auto const &elem : dict)
-	{
-		size += elem.size();
-	}
-	return size;
 }
 
 //----------------------------------------------------------
@@ -143,83 +133,98 @@ void DictReader::insertRecord(const string &pri_text, const string &sec_text)
 		if(pri_text.substr(0, 4) == "CELL")
 		{
 			dict[RecType::CELL].insert({pri_text, sec_text});
+			counter++;
 		}
 		else if(pri_text.substr(0, 4) == "GMST")
 		{
 			dict[RecType::GMST].insert({pri_text, sec_text});
+			counter++;
 		}
 		else if(pri_text.substr(0, 4) == "FNAM")
 		{
 			if(sec_text.size() > 31)
 			{
-				appendInvalidRecordLog(pri_text, sec_text,
-						       "Text too long, more than 31 bytes (has " +
-						       to_string(sec_text.size()) + ")");
+					log += sep[4] + "Text too long, more than 31 bytes (has " +
+							to_string(sec_text.size()) + ")" + "\r\n" +
+					       sep[1] + pri_text + sep[2] + sec_text + sep[3] + "\r\n";
+					counter_invalid++;
 			}
 			else
 			{
 				dict[RecType::FNAM].insert({pri_text, sec_text});
+				counter++;
 			}
 		}
 		else if(pri_text.substr(0, 4) == "DESC")
 		{
 			dict[RecType::DESC].insert({pri_text, sec_text});
+			counter++;
 		}
 		else if(pri_text.substr(0, 4) == "TEXT")
 		{
 			dict[RecType::TEXT].insert({pri_text, sec_text});
+			counter++;
 		}
 		else if(pri_text.substr(0, 4) == "RNAM")
 		{
 			dict[RecType::RNAM].insert({pri_text, sec_text});
+			counter++;
 		}
 		else if(pri_text.substr(0, 4) == "INDX")
 		{
 			dict[RecType::INDX].insert({pri_text, sec_text});
+			counter++;
 		}
 		else if(pri_text.substr(0, 4) == "DIAL")
 		{
 			dict[RecType::DIAL].insert({pri_text, sec_text});
+			counter++;
 		}
 		else if(pri_text.substr(0, 4) == "INFO")
 		{
-			if(sec_text.size() > 511)
+			if(Config::getAllowMoreInfo == 0)
 			{
-				appendInvalidRecordLog(pri_text, sec_text,
-						       "Text too long, more than 511 bytes (has " +
-						       to_string(sec_text.size()) + ")");
+				if(sec_text.size() > 511)
+				{
+					log += sep[4] + "Text too long, more than 511 bytes (has " +
+							to_string(sec_text.size()) + ")" + "\r\n" +
+					       sep[1] + pri_text + sep[2] + sec_text + sep[3] + "\r\n";
+					counter_invalid++;
+
+				}
+				else
+				{
+					dict[RecType::INFO].insert({pri_text, sec_text});
+					counter++;
+				}
 			}
 			else
 			{
 				dict[RecType::INFO].insert({pri_text, sec_text});
+				counter++;
 			}
 		}
 		else if(pri_text.substr(0, 4) == "BNAM")
 		{
 			dict[RecType::BNAM].insert({pri_text, sec_text});
+			counter++;
 		}
 		else if(pri_text.substr(0, 4) == "SCTX")
 		{
 			dict[RecType::SCTX].insert({pri_text, sec_text});
+			counter++;
 		}
 		else
 		{
-			appendInvalidRecordLog(pri_text, sec_text, "Invalid record");
+			log += sep[4] + "Invalid record" + "\r\n" +
+			       sep[1] + pri_text + sep[2] + sec_text + sep[3] + "\r\n";
+			counter_invalid++;
 		}
 	}
 	else
 	{
-		appendInvalidRecordLog(pri_text, sec_text, "Invalid record");
+		log += sep[4] + "Invalid record" + "\r\n" +
+		       sep[1] + pri_text + sep[2] + sec_text + sep[3] + "\r\n";
+		counter_invalid++;
 	}
 }
-
-//----------------------------------------------------------
-void DictReader::appendInvalidRecordLog(const string &pri_text, const string &sec_text, string message)
-{
-	Config::appendLog(sep[4] + message + "\r\n" +
-			  sep[1] + pri_text +
-			  sep[2] + sec_text +
-			  sep[3] + "\r\n");
-	invalid_record++;
-}
-

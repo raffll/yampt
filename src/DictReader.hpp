@@ -12,6 +12,7 @@ public:
 	bool getStatus() { return status; }
 	string getName() { return name; }
 	string getNamePrefix() { return name_prefix; }
+	string getLog() { return log; }
 	array<map<string, string>, 11> const& getDict() const { return dict; }
 
 	DictReader();
@@ -20,17 +21,17 @@ public:
 	~DictReader();
 
 private:
-	int getSize();
 	void printStatus(string path);
 	void setName(string path);
 	bool parseDict(string &content);
 	void insertRecord(const string &pri_text, const string &sec_text);
-	void appendInvalidRecordLog(const string &pri_text, const string &sec_text, string message);
 
-	bool status;
+	bool status = 0;
 	string name;
 	string name_prefix;
-	int invalid_record;
+	int counter = 0;
+	int counter_invalid = 0;
+	string log;
 	array<map<string, string>, 11> dict;
 };
 
