@@ -44,7 +44,7 @@ void EsmConverter::convertEsm()
 }
 
 //----------------------------------------------------------
-void EsmConverter::convertEsmWithDial()
+void EsmConverter::convertEsmWithDIAL()
 {
 	if(status == 1)
 	{
@@ -71,7 +71,7 @@ void EsmConverter::writeEsm()
 {
 	if(status == 1)
 	{
-		string name = esm.getNamePrefix() + Config::output_suffix + esm.getNameSuffix();
+		string name = esm.getNamePrefix() + Config::getOutputSuffix() + esm.getNameSuffix();
 		ofstream file(name, ios::binary);
 		for(auto &elem : esm.getRecColl())
 		{
@@ -729,14 +729,13 @@ void EsmConverter::convertINFOWithDIAL()
 
 			if(search != merger.getDict()[RecType::INFO].end())
 			{
-			        //sec_text = esm.getSecText() + "\r\n\r\n[" + search->second + "]\0";
 				convertRecordContent(esm.getSecPos(),
 						     esm.getSecSize(),
 						     search->second + '\0',
 						     search->second.size() + 1);
 				counter++;
 			}
-			else if(!esm.getSecText().empty())
+			else if(!esm.getSecText().empty() && dial.substr(0, 1) != "V")
 			{
 				sec_text = esm.getSecText();
 				for(auto &elem : merger.getDict()[RecType::DIAL])
@@ -744,12 +743,12 @@ void EsmConverter::convertINFOWithDIAL()
 				        text = elem.first.substr(5);
 					if(text != elem.second)
 					{
-					        sec_text_lowercase = sec_text;
-                                                transform(sec_text_lowercase.begin(), sec_text_lowercase.end(),
-                                                          sec_text_lowercase.begin(), ::tolower);
-					        transform(text.begin(), text.end(),
-                                                          text.begin(), ::tolower);
-                                                pos = sec_text_lowercase.find(text);
+						sec_text_lowercase = sec_text;
+						transform(sec_text_lowercase.begin(), sec_text_lowercase.end(),
+							  sec_text_lowercase.begin(), ::tolower);
+						transform(text.begin(), text.end(),
+							  text.begin(), ::tolower);
+						pos = sec_text_lowercase.find(text);
 						if(pos != string::npos)
 						{
 							sec_text.insert(sec_text.size(), " [" + elem.second + "]");
@@ -793,7 +792,7 @@ void EsmConverter::convertBNAM()
 			}
 		}
 	}
-	cout << "    --> BNAM records converted: " << to_string(counter) << "\r\n";
+	cout << "    --> BNAM script lines converted: " << to_string(counter) << "\r\n";
 }
 
 //----------------------------------------------------------
@@ -822,5 +821,5 @@ void EsmConverter::convertSCPT()
 			}
 		}
 	}
-	cout << "    --> SCTX records converted: " << to_string(counter) << "\r\n";
+	cout << "    --> SCTX script lines converted: " << to_string(counter) << "\r\n";
 }

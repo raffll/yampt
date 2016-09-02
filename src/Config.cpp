@@ -14,7 +14,6 @@ string Config::log;
 //----------------------------------------------------------
 Config::Config()
 {
-	status = 0;
 	readConfig();
 }
 

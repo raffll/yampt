@@ -17,7 +17,7 @@ public:
 	void makeDictNot();
 	void mergeDict();
 	void convertEsm();
-	void convertEsmWithDial();
+	void convertEsmWithDIAL();
 
 	UserInterface(vector<string> &a);
 

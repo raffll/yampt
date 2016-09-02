@@ -12,7 +12,7 @@ class EsmConverter
 {
 public:
 	void convertEsm();
-	void convertEsmWithDial();
+	void convertEsmWithDIAL();
 	void writeEsm();
 	bool getStatus() { return status; }
 

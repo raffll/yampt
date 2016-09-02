@@ -182,7 +182,7 @@ void DictReader::insertRecord(const string &pri_text, const string &sec_text)
 		}
 		else if(pri_text.substr(0, 4) == "INFO")
 		{
-			if(Config::allow_more_info == 0)
+			if(Config::getAllowMoreInfo == 0)
 			{
 				if(sec_text.size() > 511)
 				{

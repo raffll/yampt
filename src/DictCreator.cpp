@@ -106,7 +106,23 @@ void DictCreator::insertRecord(const string &pri_text, const string &sec_text, R
 		auto search = merger.getDict()[type].find(pri_text);
 		if(search == merger.getDict()[type].end())
 		{
-			dict[type].insert({pri_text, sec_text});
+			if(dict[type].insert({pri_text, sec_text}).second == 1)
+			{
+				if(extra == 1)
+				{
+					counter_cell++;
+				}
+				else
+				{
+					counter++;
+				}
+			}
+		}
+	}
+	else
+	{
+		if(dict[type].insert({pri_text, sec_text}).second == 1)
+		{
 			if(extra == 1)
 			{
 				counter_cell++;
@@ -115,18 +131,6 @@ void DictCreator::insertRecord(const string &pri_text, const string &sec_text, R
 			{
 				counter++;
 			}
-		}
-	}
-	else
-	{
-		dict[type].insert({pri_text, sec_text});
-		if(extra == 1)
-		{
-			counter_cell++;
-		}
-		else
-		{
-			counter++;
 		}
 	}
 }
@@ -421,7 +425,7 @@ void DictCreator::makeDictBNAM()
 			}
 		}
 	}
-	cout << "    --> BNAM records created: " << to_string(counter) << "\r\n";
+	cout << "    --> BNAM script lines created: " << to_string(counter) << "\r\n";
 }
 
 //----------------------------------------------------------
@@ -444,5 +448,5 @@ void DictCreator::makeDictSCPT()
 			}
 		}
 	}
-	cout << "    --> SCTX records created: " << to_string(counter) << "\r\n";
+	cout << "    --> SCTX script lines created: " << to_string(counter) << "\r\n";
 }

@@ -3,11 +3,30 @@ Yet Another Morrowind Plugin Translator
 ------------------------------
 Description
 ------------------------------
-Simple command line tool for automatic translation from one language to another. It works on cell names, gsmt strings, object names, birthsigns, class and race descriptions, book text, faction rank names, magic and skill descriptions, dialog topic names, dialog text and script lines. In one word, on all readable in-game text. It can be used for making no-esp patches as well without creating DELE records. It can also add your native dialog topic names to the end of not converted INFO strings.
+Simple command line tool for automatic translation from one language to another. It works on cell names, gsmt strings, object names, birthsigns, class and race descriptions, book text, faction rank names, magic and skill descriptions, dialog topic names, dialog text and script lines. In one word, on all readable in-game text. It can be used as well for making no-esp patches without creating DELE records. It can also add your native dialog topic names to the end of not converted INFO strings.
 
 All you need is two language version of the game (in most cases english and your native).
 
 After convertion you must recompile all scripts in TES CS!
+
+Please report all bugs, ideas and feature requests here on Nexus forums. Especially I need help with my poor english (it's one of the reason I create this).
+
+------------------------------
+Getting started
+------------------------------
+I created two batch scripts for easy start.
+In yampt-make-base.cmd you must add path to your Morrowind installations (or master files location)
+
+e.g.
+
+SET PATH_N="C:\path\to\NATIVE\Morrowind\Data Files"
+SET PATH_F="C:\path\to\ENGLISH\Morrowind\Data Files"
+
+And in yampt-convert.cmd
+
+SET PATH="C:\path\to\files\you\want\to\convert"
+
+Double click on it to run.
 
 ------------------------------
 Making base dictionary
@@ -29,11 +48,11 @@ Converting esm/esp
 ------------------------------
 Simply
 
-yampt.exe --convert -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d Merged.dic
+yampt.exe --convert -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
 
 or
 
-yampt.exe --convert-with-dial -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d Merged.dic
+yampt.exe --convert-with-dial -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
 
 if you want to add dialog topic names to not converted INFO strings. Without this, most english plugins are not playable in your native language.
 
@@ -42,20 +61,19 @@ Because of limitation of Morrowind engine, INFO string can only have 512 bytes, 
 ------------------------------
 For translators
 ------------------------------
-Making dictionary with all records from plugin.
+1. Making dictionary with all records from plugin.
 
 yampt.exe --make-raw -f "C:\path\to\Morrowind\Data Files\Plugin.esp"
 
 Use for manualy translate everything.
 
-------------------------------
-Making dictionary with all records from plugin, but with INFO id translation.
+2. Making dictionary with all records from plugin, but with INFO id translation.
 
-yampt.exe --make-all -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d Merged.dic
+yampt.exe --make-all -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
 
 Use for manualy translate everything, but with little help (don't use this dictionary to convert, first translate dialog names).
 
-e. g.
+e.g.
 
 In base dictionary:
 <h3>DIAL^skin of the pearl</h3>skóra perły<hr>
@@ -68,7 +86,7 @@ instead of
 
 <h3>INFO^T^skin of the pearl^8142170481561424883</h3>Some text<hr>
 
-Make sure that dictionary don't contains:
+Make sure that dictionary doesn't contains:
 
 <h3>DIAL^skin of the pearl</h3>skin of the pearl<hr>
 <h3>INFO^T^skóra perły^8142170481561424883</h3>Some text<hr>
@@ -82,31 +100,38 @@ In first step converter translate (or not) dialog entries, and in second it can'
 
 It can be a mess, because CELL, DIAL, BNAM and SCTX records don't have unique id.
 
-------------------------------
-Making dictionary from plugin with records they don't exist in selected dictionaries.
+3. Making dictionary from plugin with records they don't exist in selected dictionaries.
 
-yampt.exe --make-not -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d Merged.dic
+yampt.exe --make-not -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
 
 Use for manualy translate only new records that don't exist in original game.
-This option behave like --make-all, but is safe, because if you want to convert plugin you must select base dictionary as well.
+This option behave like --make-all, but is safe, because if you want to convert plugin you must also select base dictionary.
 
 ------------------------------
 At the end
 ------------------------------
-If you change something in dictionary in text editor, make sure that encoding don't change.
+1. If you change something in dictionary, make sure that text editor doesn't change encoding.
 
-------------------------------
-Dictionary format is:
+2. Dictionary format is:
 
 <h3>id</h3>text<hr>
 
 If you lose tag dictionary won't load.
 
-------------------------------
-BNAM and SCTX entries have format like this for better readability
+3. BNAM and SCTX entries have format like this for better readability
 
 <h3>SCTX^text</h3>
         ^text<hr>
 
 Don't forget of ^ character
 
+------------------------------
+Version history
+------------------------------
+0.1 alpha
+- initial release
+
+------------------------------
+Credits
+------------------------------
+It an open source program, you can get latest sources on https://github.com/raffll/yampt/tree/work

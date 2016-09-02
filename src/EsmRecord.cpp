@@ -183,7 +183,7 @@ void EsmRecord::setSecScptColl(string id)
 			line_lowercase = line;
 			transform(line_lowercase.begin(), line_lowercase.end(),
 				  line_lowercase.begin(), ::tolower);
-			for(auto &elem : Config::key_message)
+			for(auto &elem : Config::getKeyMessage())
 			{
 				if(type == "NOCHANGE")
 				{
@@ -194,7 +194,7 @@ void EsmRecord::setSecScptColl(string id)
 					}
 				}
 			}
-			for(auto &elem : Config::key_dial)
+			for(auto &elem : Config::getKeyDial())
 			{
 				if(type == "NOCHANGE")
 				{
@@ -206,7 +206,7 @@ void EsmRecord::setSecScptColl(string id)
 					}
 				}
 			}
-			for(auto &elem : Config::key_cell)
+			for(auto &elem : Config::getKeyCell())
 			{
 				if(type == "NOCHANGE")
 				{
@@ -250,7 +250,7 @@ void EsmRecord::setSecMessageColl(string id)
 			line_lowercase = line;
 			transform(line_lowercase.begin(), line_lowercase.end(),
 				  line_lowercase.begin(), ::tolower);
-			for(auto &elem : Config::key_message)
+			for(auto &elem : Config::getKeyMessage())
 			{
 				if(type == "NOCHANGE")
 				{
