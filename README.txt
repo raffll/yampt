@@ -50,11 +50,9 @@ Simply
 
 yampt.exe --convert -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
 
-or
+or if you want to add dialog topic names to not converted INFO strings. Without this, most english plugins are not playable in your native language.
 
 yampt.exe --convert-with-dial -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
-
-if you want to add dialog topic names to not converted INFO strings. Without this, most english plugins are not playable in your native language.
 
 Because of limitation of Morrowind engine, INFO string can only have 512 bytes, but more is ok in game. This can generate warnings in TES CS and records are read only.
 
