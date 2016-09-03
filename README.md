@@ -128,7 +128,7 @@ BNAM and SCTX entries have format like this for better readability
 <h3>SCTX^text</h3>
         ^text<hr>
 ```
-Don't forget of "^" character
+Don't forget of ^ character
 
 ## Version history
 
