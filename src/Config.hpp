@@ -25,6 +25,7 @@ class Config
 {
 public:
 	void writeDict(const array<map<string, string>, 11> &dict, string name);
+	void writeText(const string &text, string name);
 	int getSize(const array<map<string, string>, 11> &dict);
 
 	static vector<string> getKeyMessage() { return key_message; }
@@ -33,9 +34,7 @@ public:
 
 	static string getOutputSuffix() { return output_suffix; }
 	static bool getAllowMoreInfo() { return allow_more_info; }
-
-	static void appendLog(string message);
-	void writeLog();
+	static bool getReplaceBrokenChars() { return replace_broken_chars; }
 
 	Config();
 
@@ -45,6 +44,7 @@ private:
 	void parseConfig(string &content);
 	void parseOutputSuffix(string &content);
 	void parseAllowMoreThan512InfoString(string &content);
+	void parseReplaceBrokenChars(string &content);
 
 	static vector<string> key_message;
 	static vector<string> key_dial;
@@ -52,6 +52,7 @@ private:
 
 	static string output_suffix;
 	static bool allow_more_info;
+	static bool replace_broken_chars;
 	static string log;
 
 	bool status = 0;

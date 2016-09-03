@@ -469,7 +469,6 @@ void EsmConverter::convertFNAM()
 		   esm.getRecId() == "CONT" ||
 		   esm.getRecId() == "CREA" ||
 		   esm.getRecId() == "DOOR" ||
-		   esm.getRecId() == "ENCH" ||
 		   esm.getRecId() == "FACT" ||
 		   esm.getRecId() == "INGR" ||
 		   esm.getRecId() == "LIGH" ||

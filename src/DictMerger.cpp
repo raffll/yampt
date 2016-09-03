@@ -19,6 +19,7 @@ DictMerger::DictMerger(vector<string> &path)
 		{
 			dict_coll.push_back(reader);
 			status = 1;
+			log += reader.getLog();
 		}
 		else
 		{
@@ -50,10 +51,10 @@ void DictMerger::mergeDict()
 					{
 						counter_duplicate++;
 						log += sep[4] +
-						       dict_coll[i].getName() + " >>> " +
-						       dict_coll[i - 1].getName() + "\r\n" +
 						       sep[1] + elem.first + sep[2] + elem.second +
-						       sep[3] + "\r\n" +
+						       sep[3] +
+						       " <!-- record in " + dict_coll[i].getName() +
+						       " replaced by -->\r\n" +
 						       sep[1] + search->first + sep[2] + search->second +
 						       sep[3] + "\r\n";
 					}

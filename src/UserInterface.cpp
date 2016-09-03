@@ -28,7 +28,9 @@ UserInterface::UserInterface(vector<string> &a)
 		       "\n                                                        selected dictionaries"
 		       "\n                                                        and add dialog topic"
 		       "\n                                                        names to end of not"
-		       "\n                                                        converted INFO strings.";
+		       "\n                                                        converted INFO strings."
+		       "\n  --scripts             -f <file_list>                  Create log with raw"
+		       "\n                                                        scripts text";
 
 	for(size_t i = 0; i < arg.size(); ++i)
 	{
@@ -89,6 +91,10 @@ UserInterface::UserInterface(vector<string> &a)
 		{
 			convertEsmWithDIAL();
 		}
+		else if(arg[1] == "--scripts" && path_esm.size() > 0)
+		{
+			makeScriptText();
+		}
 		else
 		{
 			cout << "Syntax error!" << endl;
@@ -128,6 +134,7 @@ void UserInterface::makeDictAll()
 	Config config;
 	DictMerger merger(path_dict_rev);
 	merger.mergeDict();
+	config.writeText(merger.getLog(), "yampt.log");
 	for(size_t i = 0; i < path_esm.size(); ++i)
 	{
 		DictCreator creator(path_esm[i], merger);
@@ -142,6 +149,7 @@ void UserInterface::makeDictNot()
 	Config config;
 	DictMerger merger(path_dict_rev);
 	merger.mergeDict();
+	config.writeText(merger.getLog(), "yampt.log");
 	for(size_t i = 0; i < path_esm.size(); ++i)
 	{
 		DictCreator creator(path_esm[i], merger);
@@ -158,6 +166,7 @@ void UserInterface::mergeDict()
 	DictMerger merger(path_dict_rev);
 	merger.mergeDict();
 	config.writeDict(merger.getDict(), "Merged.dic");
+	config.writeText(merger.getLog(), "yampt.log");
 }
 
 //----------------------------------------------------------
@@ -166,6 +175,7 @@ void UserInterface::convertEsm()
 	Config config;
 	DictMerger merger(path_dict_rev);
 	merger.mergeDict();
+	config.writeText(merger.getLog(), "yampt.log");
 	for(size_t i = 0; i < path_esm.size(); ++i)
 	{
 		EsmConverter converter(path_esm[i], merger);
@@ -180,10 +190,23 @@ void UserInterface::convertEsmWithDIAL()
 	Config config;
 	DictMerger merger(path_dict_rev);
 	merger.mergeDict();
+	config.writeText(merger.getLog(), "yampt.log");
 	for(size_t i = 0; i < path_esm.size(); ++i)
 	{
 		EsmConverter converter(path_esm[i], merger);
 		converter.convertEsmWithDIAL();
 		converter.writeEsm();
+	}
+}
+
+//----------------------------------------------------------
+void UserInterface::makeScriptText()
+{
+	Config config;
+	for(size_t i = 0; i < path_esm.size(); ++i)
+	{
+		DictCreator creator(path_esm[i]);
+		creator.makeScriptText();
+		config.writeText(creator.getScriptText(), creator.getName() + ".scpt");
 	}
 }

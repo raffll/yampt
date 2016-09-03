@@ -12,12 +12,13 @@ class DictCreator
 {
 public:
 	void makeDict();
-	void writeScripts();
+	void makeScriptText();
 	void compareEsm();
 	void setNoDuplicates() { no_duplicates = 1; }
 
 	string getName() { return esm_n.getNamePrefix(); }
 	array<map<string, string>, 11> const& getDict() const { return dict; }
+	string getScriptText() { return raw_text; }
 
 	DictCreator();
 	DictCreator(string path_n);
@@ -49,6 +50,7 @@ private:
 	int counter;
 	int counter_cell;
 	array<map<string, string>, 11> dict;
+	string raw_text;
 };
 
 #endif
