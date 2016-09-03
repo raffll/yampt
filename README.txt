@@ -106,7 +106,7 @@ In first step converter translate (or not) dialog entries, and in second it can'
 
 It can be a mess, because CELL, DIAL, BNAM and SCTX records don't have unique id.
 
-3. Making dictionary from plugin with records they don't exist in selected dictionaries.
+3. Making dictionary from plugin with records that don't exist in selected dictionaries.
 
 yampt.exe --make-not -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
 
@@ -147,8 +147,4 @@ Version history
 - remove ENCH records from dictionary (they haven't got friendly names)
 - add aiescortcell to script keywords
 - add REPLACE_BROKEN_CHARS option
-
-------------------------------
-Credits
-------------------------------
-It's an open source program, you can get latest sources on https://github.com/raffll/yampt/tree/work
+- minor bug fixes
