@@ -52,10 +52,10 @@ void DictReader::readFile(string path)
 		{
 			content.append(buffer, chars_read);
 		}
+		setName(path);
 		if(!content.empty() && parseDict(content) == 1)
 		{
 			status = 1;
-			setName(path);
 		}
 	}
 	printStatus(path);
@@ -144,9 +144,11 @@ void DictReader::insertRecord(const string &pri_text, const string &sec_text)
 		{
 			if(sec_text.size() > 31)
 			{
-					log += sep[4] + "Text too long, more than 31 bytes (has " +
-							to_string(sec_text.size()) + ")" + "\r\n" +
-					       sep[1] + pri_text + sep[2] + sec_text + sep[3] + "\r\n";
+					log += sep[4] +
+					       sep[1] + pri_text + sep[2] + sec_text + sep[3] +
+					       " <!-- " + name +
+					       " - Text too long, more than 31 bytes (has " +
+					       to_string(sec_text.size()) + ") -->\r\n";
 					counter_invalid++;
 			}
 			else
@@ -186,11 +188,12 @@ void DictReader::insertRecord(const string &pri_text, const string &sec_text)
 			{
 				if(sec_text.size() > 511)
 				{
-					log += sep[4] + "Text too long, more than 511 bytes (has " +
-							to_string(sec_text.size()) + ")" + "\r\n" +
-					       sep[1] + pri_text + sep[2] + sec_text + sep[3] + "\r\n";
+					log += sep[4] +
+					       sep[1] + pri_text + sep[2] + sec_text + sep[3] +
+					       " <!-- " + name +
+					       " - Text too long, more than 511 bytes (has " +
+					       to_string(sec_text.size()) + ") -->\r\n";
 					counter_invalid++;
-
 				}
 				else
 				{
@@ -216,15 +219,17 @@ void DictReader::insertRecord(const string &pri_text, const string &sec_text)
 		}
 		else
 		{
-			log += sep[4] + "Invalid record" + "\r\n" +
-			       sep[1] + pri_text + sep[2] + sec_text + sep[3] + "\r\n";
+			log += sep[4] +
+			       sep[1] + pri_text + sep[2] + sec_text + sep[3] +
+			       " <!-- " + name + " - Invalid record -->\r\n";
 			counter_invalid++;
 		}
 	}
 	else
 	{
-		log += sep[4] + "Invalid record" + "\r\n" +
-		       sep[1] + pri_text + sep[2] + sec_text + sep[3] + "\r\n";
+		log += sep[4] +
+		       sep[1] + pri_text + sep[2] + sec_text + sep[3] +
+		       " <!-- " + name + " - Invalid record -->\r\n";
 		counter_invalid++;
 	}
 }

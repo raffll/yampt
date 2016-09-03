@@ -35,7 +35,7 @@ public:
 	static bool getAllowMoreInfo() { return allow_more_info; }
 
 	static void appendLog(string message);
-	void writeLog();
+	void writeText(const string &text, string name);
 
 	Config();
 

@@ -80,6 +80,17 @@ void Config::writeDict(const array<map<string, string>, 11> &dict, string name)
 }
 
 //----------------------------------------------------------
+void Config::writeText(const string &text, string name)
+{
+	if(!text.empty())
+	{
+		ofstream file(name, ios::binary);
+		cout << "--> Writing " << name << "...\r\n";
+		file << text;
+	}
+}
+
+//----------------------------------------------------------
 int Config::getSize(const array<map<string, string>, 11> &dict)
 {
 	int size = 0;
@@ -94,18 +105,6 @@ int Config::getSize(const array<map<string, string>, 11> &dict)
 void Config::appendLog(string message)
 {
 	log += message;
-}
-
-//----------------------------------------------------------
-void Config::writeLog()
-{
-	if(!log.empty())
-	{
-		string name = "yampt.log";
-		ofstream file(name, ios::binary);
-		cout << "--> Writing " << name << "...\r\n";
-		file << log;
-	}
 }
 
 //----------------------------------------------------------

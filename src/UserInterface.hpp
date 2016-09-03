@@ -18,6 +18,7 @@ public:
 	void mergeDict();
 	void convertEsm();
 	void convertEsmWithDIAL();
+	void makeScriptText();
 
 	UserInterface(vector<string> &a);
 

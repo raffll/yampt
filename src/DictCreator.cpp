@@ -150,6 +150,36 @@ string DictCreator::dialTranslator(string to_translate)
 }
 
 //----------------------------------------------------------
+void DictCreator::makeScriptText()
+{
+	if(status == 1)
+	{
+		counter = 0;
+		for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
+		{
+			esm_n.setRec(i);
+			if(esm_n.getRecId() == "SCPT")
+			{
+				esm_n.setSec("SCTX");
+				raw_text += esm_n.getSecText() + "\r\n" + sep[4];
+				counter++;
+			}
+		}
+		for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
+		{
+			esm_n.setRec(i);
+			if(esm_n.getRecId() == "INFO")
+			{
+				esm_n.setSec("BNAM");
+				raw_text += esm_n.getSecText() + "\r\n" + sep[4];
+				counter++;
+			}
+		}
+		cout << "    --> Script text count: " << to_string(counter) + "\r\n";
+	}
+}
+
+//----------------------------------------------------------
 void DictCreator::makeDictCELL()
 {
 	counter = 0;
