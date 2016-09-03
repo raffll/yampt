@@ -8,7 +8,8 @@ vector<string> Config::key_dial = {"addtopic"};
 vector<string> Config::key_cell = {"positioncell", "getpccell", "aifollowcell",
 				   "placeitemcell", "showmap", "aiescortcell"};
 
-bool Config::allow_more_info;
+bool Config::allow_more_info = 0;
+bool Config::replace_broken_chars = 0;
 string Config::output_suffix;
 string Config::log;
 
@@ -103,16 +104,11 @@ int Config::getSize(const array<map<string, string>, 11> &dict)
 }
 
 //----------------------------------------------------------
-void Config::appendLog(string message)
-{
-	log += message;
-}
-
-//----------------------------------------------------------
 void Config::parseConfig(string &content)
 {
 	parseOutputSuffix(content);
 	parseAllowMoreThan512InfoString(content);
+	parseReplaceBrokenChars(content);
 }
 
 //----------------------------------------------------------
@@ -133,5 +129,17 @@ void Config::parseAllowMoreThan512InfoString(string &content)
 	if(found[2].str() == "1")
 	{
 		allow_more_info = 1;
+	}
+}
+
+//----------------------------------------------------------
+void Config::parseReplaceBrokenChars(string &content)
+{
+	regex re("(REPLACE_BROKEN_CHARS=)(.)");
+	smatch found;
+	regex_search(content, found, re);
+	if(found[2].str() == "1")
+	{
+		replace_broken_chars = 1;
 	}
 }

@@ -113,6 +113,10 @@ yampt.exe --make-not -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.
 Use for manualy translate only new records that don't exist in original game.
 This option behave like --make-all, but is safe, because if you want to convert plugin you must also select base dictionary.
 
+4. Write log with raw scripts text.
+
+yampt.exe --scripts -f "C:\path\to\Morrowind\Data Files\Plugin.esp"
+
 ------------------------------
 At the end
 ------------------------------
@@ -139,8 +143,10 @@ Version history
 
 0.2 alpha
 - add merger log
+- add option to write raw script text log
 - remove ENCH records from dictionary (they haven't got friendly names)
 - add aiescortcell to script keywords
+- add REPLACE_BROKEN_CHARS option
 
 ------------------------------
 Credits

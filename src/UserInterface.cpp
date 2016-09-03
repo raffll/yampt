@@ -28,7 +28,9 @@ UserInterface::UserInterface(vector<string> &a)
 		       "\n                                                        selected dictionaries"
 		       "\n                                                        and add dialog topic"
 		       "\n                                                        names to end of not"
-		       "\n                                                        converted INFO strings.";
+		       "\n                                                        converted INFO strings."
+		       "\n  --scripts             -f <file_list>                  Create log with raw"
+		       "\n                                                        scripts text";
 
 	for(size_t i = 0; i < arg.size(); ++i)
 	{

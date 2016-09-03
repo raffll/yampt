@@ -94,7 +94,10 @@ void EsmRecord::setSec(string id)
 			if(cur_id == sec_id)
 			{
 				cur_text = rec->substr(cur_pos + 8, cur_size);
-				replaceBrokenChars(cur_text);
+				if(Config::getReplaceBrokenChars() == 1)
+				{
+					replaceBrokenChars(cur_text);
+				}
 				eraseNullChars(cur_text);
 				sec_coll.push_back(make_tuple(cur_pos, cur_size, cur_text));
 				break;
