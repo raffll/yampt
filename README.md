@@ -61,13 +61,13 @@ Because of limitation of Morrowind engine, INFO string can only have 512 bytes, 
 
 ## For translators
 
-1. Making dictionary with all records from plugin.
+### Making dictionary with all records from plugin.
 ```
 yampt.exe --make-raw -f "C:\path\to\Morrowind\Data Files\Plugin.esp"
 ```
 Use for manualy translate everything.
 
-2. Making dictionary with all records from plugin, but with INFO id translation.
+### Making dictionary with all records from plugin, but with INFO id translation.
 ```
 yampt.exe --make-all -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
 ```
@@ -102,28 +102,28 @@ In first step converter translate (or not) dialog entries, and in second it can'
 
 It can be a mess, because CELL, DIAL, BNAM and SCTX records don't have unique id.
 
-3. Making dictionary from plugin with records that don't exist in selected dictionaries.
+### Making dictionary from plugin with records that don't exist in selected dictionaries.
 ```
 yampt.exe --make-not -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
 ```
 Use for manualy translate only new records that don't exist in original game.
 This option behave like --make-all, but is safe, because if you want to convert plugin you must also select base dictionary.
 
-4. Write log with raw scripts text.
+### Write log with raw scripts text.
 ```
 yampt.exe --scripts -f "C:\path\to\Morrowind\Data Files\Plugin.esp"
 ```
 ## At the end
 
-1. If you change something in dictionary, make sure that text editor doesn't change encoding.
+If you change something in dictionary, make sure that text editor doesn't change encoding.
 
-2. Dictionary format is:
+Dictionary format is:
 ```
 <h3>id</h3>text<hr>
 ```
 If you lose tag dictionary won't load.
 
-3. BNAM and SCTX entries have format like this for better readability
+BNAM and SCTX entries have format like this for better readability
 ```
 <h3>SCTX^text</h3>
         ^text<hr>
