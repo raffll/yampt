@@ -5,7 +5,8 @@ using namespace std;
 //----------------------------------------------------------
 vector<string> Config::key_message = {"messagebox", "say ", "say,", "choice"};
 vector<string> Config::key_dial = {"addtopic"};
-vector<string> Config::key_cell = {"positioncell", "getpccell", "aifollowcell", "placeitemcell", "showmap"};
+vector<string> Config::key_cell = {"positioncell", "getpccell", "aifollowcell",
+				   "placeitemcell", "showmap", "aiescortcell"};
 
 bool Config::allow_more_info;
 string Config::output_suffix;

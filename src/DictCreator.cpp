@@ -259,7 +259,6 @@ void DictCreator::makeDictFNAM()
 		   esm_n.getRecId() == "CONT" ||
 		   esm_n.getRecId() == "CREA" ||
 		   esm_n.getRecId() == "DOOR" ||
-		   esm_n.getRecId() == "ENCH" ||
 		   esm_n.getRecId() == "FACT" ||
 		   esm_n.getRecId() == "INGR" ||
 		   esm_n.getRecId() == "LIGH" ||
