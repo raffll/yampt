@@ -38,7 +38,7 @@ Double click on it to run.
 This step is required for plugin automatic translation.
 ```
 yampt.exe --make-base -f "C:\path\to\NATIVE\Morrowind\Data Files\Morrowind.esm" "C:\path\to\FOREIGN\Morrowind\Data Files\Morrowind.esm"
-yampt.exe --make-base -f "C:\path\to\NATIVE\Morrowind\Data Files\Tribunal.esm" "C:\path\to\FOREIGNMorrowind\Data Files\Tribunal.esm"
+yampt.exe --make-base -f "C:\path\to\NATIVE\Morrowind\Data Files\Tribunal.esm" "C:\path\to\FOREIGN\Morrowind\Data Files\Tribunal.esm"
 yampt.exe --make-base -f "C:\path\to\NATIVE\Morrowind\Data Files\Bloodmoon.esm" "C:\path\to\FOREIGN\Morrowind\Data Files\Bloodmoon.esm"
 ```
 Now you can merge these dictionaries into one file. Important thing is order, just like in game.
@@ -142,3 +142,6 @@ Don't forget of ^ character
 - add aiescortcell to script keywords
 - add REPLACE_BROKEN_CHARS option
 - minor bug fixes
+
+0.3 alpha
+- fix exception when try to convert non existent subrecord
