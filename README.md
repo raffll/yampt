@@ -142,3 +142,6 @@ Don't forget of ^ character
 - add aiescortcell to script keywords
 - add REPLACE_BROKEN_CHARS option
 - minor bug fixes
+
+0.3 alpha
+- fix exception when try to convert non existent subrecord

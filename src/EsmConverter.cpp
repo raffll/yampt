@@ -115,16 +115,20 @@ bool EsmConverter::caseInsensitiveStringCmp(string lhs, string rhs)
 void EsmConverter::convertRecordContent(size_t pos, size_t old_size, string new_text,
 					size_t new_size)
 {
-	unsigned int rec_size;
+	size_t rec_size;
 	rec_content = esm.getRecContent();
-	rec_content.erase(pos + 8, old_size);
-	rec_content.insert(pos + 8, new_text);
-	rec_content.erase(pos + 4, 4);
-	rec_content.insert(pos + 4, convertIntToByteArray(new_size));
-	rec_size = rec_content.size() - 16;
-	rec_content.erase(4, 4);
-	rec_content.insert(4, convertIntToByteArray(rec_size));
-	esm.setRecContent(rec_content);
+
+	if(pos < rec_content.size() && pos >= 16)
+	{
+		rec_content.erase(pos + 8, old_size);
+		rec_content.insert(pos + 8, new_text);
+		rec_content.erase(pos + 4, 4);
+		rec_content.insert(pos + 4, convertIntToByteArray(new_size));
+		rec_size = rec_content.size() - 16;
+		rec_content.erase(4, 4);
+		rec_content.insert(4, convertIntToByteArray(rec_size));
+		esm.setRecContent(rec_content);
+	}
 }
 
 //----------------------------------------------------------
