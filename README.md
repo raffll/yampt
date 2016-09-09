@@ -91,22 +91,22 @@ yampt.exe --scripts -f "C:\path\to\Morrowind\Data Files\Plugin.esp"
 ```
 ## At the end
 
-If you change something in dictionary, make sure that text editor doesn't change encoding.
+- If you change something in dictionary, make sure that text editor doesn't change encoding.
 
-Dictionary format is:
+- Dictionary format is:
 ```
 <h3>id</h3>text<hr>
 ```
 If you lose tag dictionary won't load.
 
-BNAM and SCTX entries have format like this for better readability
+- BNAM and SCTX entries have format like this for better readability
 ```
 <h3>SCTX^text</h3>
         ^text<hr>
 ```
 Don't forget of ^ character
 
-Make sure that dictionary doesn't contains:
+- Make sure that dictionary doesn't contains:
 ```
 <h3>DIAL^skin of the pearl</h3>skin of the pearl<hr>
 <h3>INFO^T^skóra perły^8142170481561424883</h3>Some text<hr>
