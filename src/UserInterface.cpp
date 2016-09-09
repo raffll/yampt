@@ -91,6 +91,10 @@ UserInterface::UserInterface(vector<string> &a)
 		{
 			convertEsmWithDIAL();
 		}
+		else if(arg[1] == "--convert-safe" && path_esm.size() > 0 && path_dict_rev.size() > 0)
+		{
+			convertEsmSafe();
+		}
 		else if(arg[1] == "--scripts" && path_esm.size() > 0)
 		{
 			makeScriptText();
@@ -195,6 +199,21 @@ void UserInterface::convertEsmWithDIAL()
 	{
 		EsmConverter converter(path_esm[i], merger);
 		converter.convertEsmWithDIAL();
+		converter.writeEsm();
+	}
+}
+
+//----------------------------------------------------------
+void UserInterface::convertEsmSafe()
+{
+	Config config;
+	DictMerger merger(path_dict_rev);
+	merger.mergeDict();
+	config.writeText(merger.getLog(), "yampt.log");
+	for(size_t i = 0; i < path_esm.size(); ++i)
+	{
+		EsmConverter converter(path_esm[i], merger);
+		converter.convertEsmSafe();
 		converter.writeEsm();
 	}
 }

@@ -13,6 +13,7 @@ class EsmConverter
 public:
 	void convertEsm();
 	void convertEsmWithDIAL();
+	void convertEsmSafe();
 	void writeEsm();
 	bool getStatus() { return status; }
 
@@ -47,6 +48,7 @@ private:
 	EsmRecord esm;
 	DictMerger merger;
 	int counter = 0;
+	bool safe = 0;
 	string rec_content;
 	string script_text;
 };

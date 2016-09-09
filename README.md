@@ -53,11 +53,17 @@ Simply:
 ```
 yampt.exe --convert -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
 ```
-Or if you want to add dialog topic names to not converted INFO strings (without this, most English plugins are not playable in your native language):
+If you want to add dialog topic names to not converted INFO strings (without this, most English plugins are not playable in your native language):
 ```
 yampt.exe --convert-with-dial -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
 ```
 Because of limitation of Morrowind engine, INFO string can only have 512 bytes, but more is ok in game. This can generate warnings in TES CS and records are read only.
+
+And if you want to convert only CELL and DIAL records (with adding dialog topic names to INFO)
+```
+yampt.exe --convert-safe -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
+```
+It's useful when mod change original text in game.
 
 ## For translators
 
@@ -67,47 +73,17 @@ yampt.exe --make-raw -f "C:\path\to\Morrowind\Data Files\Plugin.esp"
 ```
 Use for manualy translate everything.
 
-### Making dictionary with all records from plugin, but with INFO id translation.
+### Making dictionary with all records from plugin, but with CELL, DIAL, BNAM, SCTX and INFO id translation.
 ```
 yampt.exe --make-all -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
 ```
-Use for manualy translate everything, but with little help (don't use this dictionary to convert, first translate dialog names).
+Use for manualy translate everything, but with little help.
 
-e.g.
-
-In base dictionary:
-```
-<h3>DIAL^skin of the pearl</h3>skóra perły<hr>
-```
-This option generate in your newly created dictionary:
-```
-<h3>DIAL^skin of the pearl</h3>skin of the pearl<hr>
-<h3>INFO^T^skóra perły^8142170481561424883</h3>Some text<hr>
-```
-instead of
-```
-<h3>INFO^T^skin of the pearl^8142170481561424883</h3>Some text<hr>
-```
-Make sure that dictionary doesn't contains:
-```
-<h3>DIAL^skin of the pearl</h3>skin of the pearl<hr>
-<h3>INFO^T^skóra perły^8142170481561424883</h3>Some text<hr>
-```
-or
-```
-<h3>DIAL^skin of the pearl</h3>skóra perły<hr>
-<h3>INFO^T^skin of the pearl^8142170481561424883</h3>Some text<hr>
-```
-In first step converter translate (or not) dialog entries, and in second it can't find corresponding INFO record.
-
-It can be a mess, because CELL, DIAL, BNAM and SCTX records don't have unique id.
-
-### Making dictionary from plugin with records that don't exist in selected dictionaries.
+### Making dictionary from plugin with records that don't exist in selected dictionaries (with INFO id translation).
 ```
 yampt.exe --make-not -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
 ```
-Use for manualy translate only new records that don't exist in original game.
-This option behave like --make-all, but is safe, because if you want to convert plugin you must also select base dictionary.
+Use for manualy translate only new records.
 
 ### Write log with raw scripts text.
 ```
@@ -130,6 +106,20 @@ BNAM and SCTX entries have format like this for better readability
 ```
 Don't forget of ^ character
 
+Make sure that dictionary doesn't contains:
+```
+<h3>DIAL^skin of the pearl</h3>skin of the pearl<hr>
+<h3>INFO^T^skóra perły^8142170481561424883</h3>Some text<hr>
+```
+or
+```
+<h3>DIAL^skin of the pearl</h3>skóra perły<hr>
+<h3>INFO^T^skin of the pearl^8142170481561424883</h3>Some text<hr>
+```
+In first step converter translate (or not) dialog entries, and in second it can't find corresponding INFO record.
+
+It can be a mess, because CELL, DIAL, BNAM and SCTX records don't have unique id.
+
 ## Version history
 
 0.1 alpha
@@ -145,3 +135,8 @@ Don't forget of ^ character
 
 0.3 alpha
 - fix exception when try to convert non existent subrecord
+
+0.4 alpha
+- fix limit of INFO string is 512 and FNAM is 32 (instead of 511 and 31)
+- rewrite --make-all command
+- add --convert-safe command

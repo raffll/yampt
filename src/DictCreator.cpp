@@ -119,6 +119,42 @@ void DictCreator::insertRecord(const string &pri_text, const string &sec_text, R
 			}
 		}
 	}
+	else if(with_dict == 1 &&
+		(type == RecType::CELL ||
+		 type == RecType::DIAL ||
+		 type == RecType::BNAM ||
+		 type == RecType::SCTX))
+	{
+		auto search = merger.getDict()[type].find(pri_text);
+		if(search != merger.getDict()[type].end())
+		{
+			if(dict[type].insert({pri_text, search->second}).second == 1)
+			{
+				if(extra == 1)
+				{
+					counter_cell++;
+				}
+				else
+				{
+					counter++;
+				}
+			}
+		}
+		else
+		{
+			if(dict[type].insert({pri_text, sec_text}).second == 1)
+			{
+				if(extra == 1)
+				{
+					counter_cell++;
+				}
+				else
+				{
+					counter++;
+				}
+			}
+		}
+	}
 	else
 	{
 		if(dict[type].insert({pri_text, sec_text}).second == 1)

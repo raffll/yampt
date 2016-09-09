@@ -142,12 +142,12 @@ void DictReader::insertRecord(const string &pri_text, const string &sec_text)
 		}
 		else if(pri_text.substr(0, 4) == "FNAM")
 		{
-			if(sec_text.size() > 31)
+			if(sec_text.size() > 32)
 			{
 					log += sep[4] +
 					       sep[1] + pri_text + sep[2] + sec_text + sep[3] +
 					       " <!-- " + name +
-					       " - Text too long, more than 31 bytes (has " +
+					       " - Text too long, more than 32 bytes (has " +
 					       to_string(sec_text.size()) + ") -->\r\n";
 					counter_invalid++;
 			}
@@ -186,12 +186,12 @@ void DictReader::insertRecord(const string &pri_text, const string &sec_text)
 		{
 			if(Config::getAllowMoreInfo() == 0)
 			{
-				if(sec_text.size() > 511)
+				if(sec_text.size() > 512)
 				{
 					log += sep[4] +
 					       sep[1] + pri_text + sep[2] + sec_text + sep[3] +
 					       " <!-- " + name +
-					       " - Text too long, more than 511 bytes (has " +
+					       " - Text too long, more than 512 bytes (has " +
 					       to_string(sec_text.size()) + ") -->\r\n";
 					counter_invalid++;
 				}
