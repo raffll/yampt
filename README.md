@@ -13,25 +13,9 @@ After convertion you must recompile all scripts in TES CS!
 ## Installation
 
 - Unpack somewhere
+- Make backup
 
 All files are created in yampt.exe directory, and program don't check if file exist, so be careful.
-
-## Getting started
-
-I created two batch scripts for easy start.
-
-In yampt-make-base.cmd you must add path to your Morrowind installations (or master files location)
-
-e.g.
-```
-SET PATH_N="C:\path\to\NATIVE\Morrowind\Data Files"
-SET PATH_F="C:\path\to\FOREIGN\Morrowind\Data Files"
-```
-And in yampt-convert.cmd
-```
-SET PATH="C:\path\to\files\you\want\to\convert"
-```
-Double click on it to run.
 
 ## Making base dictionary
 
