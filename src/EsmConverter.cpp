@@ -609,12 +609,12 @@ void EsmConverter::convertRNAM()
 				auto search = merger.getDict()[RecType::RNAM].find(pri_text);
 
 				if(search != merger.getDict()[RecType::RNAM].end() &&
-				   esm.getSecText() != search->second)
+				   esm.getSecText(k) != search->second)
 				{
 					rnam_text = search->second;
 					rnam_text.resize(32);
 					convertRecordContent(esm.getSecPos(k),
-							     32,
+							     esm.getSecSize(k),
 							     rnam_text,
 							     32);
 					counter++;

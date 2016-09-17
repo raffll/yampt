@@ -137,6 +137,7 @@ It can be a mess, because CELL, DIAL, BNAM and SCTX records don't have unique id
 - fix exception when try to convert non existent subrecord
 
 0.4 alpha
-- fix limit of INFO string is 512 and FNAM is 32 (instead of 511 and 31)
+- fix exception when RNAM record has a variable length
+- fix limit of INFO string to 512 and FNAM to 32 (instead of 511 and 31)
 - rewrite --make-all command
 - add --convert-safe command
