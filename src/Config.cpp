@@ -10,50 +10,12 @@ vector<string> Config::key_cell = {"positioncell", "getpccell", "aifollowcell",
 
 bool Config::allow_more_info = 0;
 bool Config::replace_broken_chars = 0;
-string Config::output_suffix;
 string Config::log;
 
 //----------------------------------------------------------
 Config::Config()
 {
-	readConfig();
-}
 
-//----------------------------------------------------------
-void Config::readConfig()
-{
-	ifstream file("yampt.cfg", ios::binary);
-	if(file)
-	{
-		string content;
-		char buffer[16384];
-		size_t size = file.tellg();
-		content.reserve(size);
-		streamsize chars_read;
-		while(file.read(buffer, sizeof(buffer)), chars_read = file.gcount())
-		{
-			content.append(buffer, chars_read);
-		}
-		if(!content.empty())
-		{
-			status = 1;
-			parseConfig(content);
-		}
-	}
-	printStatus();
-}
-
-//----------------------------------------------------------
-void Config::printStatus()
-{
-	if(status == 0)
-	{
-		cout << "--> Error while loading yampt.cfg!\r\n";
-	}
-	else
-	{
-		cout << "--> Loading yampt.cfg...\r\n";
-	}
 }
 
 //----------------------------------------------------------
@@ -101,45 +63,4 @@ int Config::getSize(const array<map<string, string>, 11> &dict)
 		size += elem.size();
 	}
 	return size;
-}
-
-//----------------------------------------------------------
-void Config::parseConfig(string &content)
-{
-	parseOutputSuffix(content);
-	parseAllowMoreThan512InfoString(content);
-	parseReplaceBrokenChars(content);
-}
-
-//----------------------------------------------------------
-void Config::parseOutputSuffix(string &content)
-{
-	regex re("(OUTPUT_SUFFIX=)\"(.*?)\"");
-	smatch found;
-	regex_search(content, found, re);
-	output_suffix = found[2].str();
-}
-
-//----------------------------------------------------------
-void Config::parseAllowMoreThan512InfoString(string &content)
-{
-	regex re("(ALLOW_MORE_THAN_512_INFO_STRING=)(.)");
-	smatch found;
-	regex_search(content, found, re);
-	if(found[2].str() == "1")
-	{
-		allow_more_info = 1;
-	}
-}
-
-//----------------------------------------------------------
-void Config::parseReplaceBrokenChars(string &content)
-{
-	regex re("(REPLACE_BROKEN_CHARS=)(.)");
-	smatch found;
-	regex_search(content, found, re);
-	if(found[2].str() == "1")
-	{
-		replace_broken_chars = 1;
-	}
 }

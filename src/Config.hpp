@@ -32,30 +32,23 @@ public:
 	static vector<string> getKeyDial() { return key_dial; }
 	static vector<string> getKeyCell() { return key_cell; }
 
-	static string getOutputSuffix() { return output_suffix; }
+	static void setAllowMoreInfo(bool x) { allow_more_info = x; }
+	static void setReplaceBrokenChars(bool x) { replace_broken_chars = x; }
+
 	static bool getAllowMoreInfo() { return allow_more_info; }
 	static bool getReplaceBrokenChars() { return replace_broken_chars; }
 
 	Config();
 
 private:
-	void readConfig();
-	void printStatus();
-	void parseConfig(string &content);
-	void parseOutputSuffix(string &content);
-	void parseAllowMoreThan512InfoString(string &content);
-	void parseReplaceBrokenChars(string &content);
 
 	static vector<string> key_message;
 	static vector<string> key_dial;
 	static vector<string> key_cell;
 
-	static string output_suffix;
 	static bool allow_more_info;
 	static bool replace_broken_chars;
 	static string log;
-
-	bool status = 0;
 
 };
 

@@ -33,17 +33,18 @@ Here you have one Merged.dic. This is your base dictionary.
 
 ## Converting esm/esp
 
-Simply:
+### Simply:
 ```
 yampt.exe --convert -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
 ```
-If you want to add dialog topic names to not converted INFO strings (without this, most English plugins are not playable in your native language):
+### If you want to add dialog topic names to not converted INFO strings (without this, most English plugins are not playable in your native language):
 ```
 yampt.exe --convert-with-dial -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
 ```
-Because of limitation of Morrowind engine, INFO string can only have 512 bytes, but more is ok in game. This can generate warnings in TES CS and records are read only.
+Because of limitation of Morrowind engine, INFO string can only have 512 bytes, but more is ok in game.
+This can generate warnings in TES CS and records are read only.
 
-And if you want to convert only CELL and DIAL records (with adding dialog topic names to INFO)
+### And if you want to convert only CELL and DIAL records (with adding dialog topic names to INFO)
 ```
 yampt.exe --convert-safe -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
 ```
@@ -73,24 +74,41 @@ Use for manualy translate only new records.
 ```
 yampt.exe --scripts -f "C:\path\to\Morrowind\Data Files\Plugin.esp"
 ```
+
+## Options
+
+### Add the -a switch if you want to INFO string could be more than 512 characters.
+```
+yampt.exe --convert -a -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
+```
+
+### Add the -r switch if you want to replace broken characters.
+```
+yampt.exe --make-base -r -f "C:\path\to\NATIVE\Morrowind\Data Files\Morrowind.esm" "C:\path\to\FOREIGN\Morrowind\Data Files\Morrowind.esm"
+```
+Polish version of Morrowind has few broken (not windows-1250) characters, but most text editors can handle this.
+This option replace them with "?" character.
+
+You can combine these options with all commands.
+
 ## At the end
 
-- If you change something in dictionary, make sure that text editor doesn't change encoding.
+### If you change something in dictionary, make sure that text editor doesn't change encoding.
 
-- Dictionary format is:
+### Dictionary format is:
 ```
 <h3>id</h3>text<hr>
 ```
 If you lose tag dictionary won't load.
 
-- BNAM and SCTX entries have format like this for better readability
+### BNAM and SCTX entries have format like this for better readability
 ```
 <h3>SCTX^text</h3>
         ^text<hr>
 ```
 Don't forget of ^ character
 
-- Make sure that dictionary doesn't contains:
+### Make sure that dictionary doesn't contains:
 ```
 <h3>DIAL^skin of the pearl</h3>skin of the pearl<hr>
 <h3>INFO^T^skóra perły^8142170481561424883</h3>Some text<hr>
@@ -125,3 +143,4 @@ It can be a mess, because CELL, DIAL, BNAM and SCTX records don't have unique id
 - fix limit of INFO string to 512 and FNAM to 32 (instead of 511 and 31)
 - rewrite --make-all command
 - add --convert-safe command
+- remove yampt.cfg
