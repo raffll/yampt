@@ -14,23 +14,21 @@
 #include <locale>
 #include <regex>
 
-using namespace std;
-
 enum RecType { CELL, DIAL, INDX, RNAM, DESC, GMST, FNAM, INFO, BNAM, SCTX, TEXT };
-const vector<string> sep = {"^", "<h3>", "</h3>", "<hr>",
-			    "<!-------------------------------------------------------------->\r\n",
-			    "\r\n        "};
+const std::vector<std::string> sep = {"^", "<h3>", "</h3>", "<hr>",
+				      "<!-------------------------------------------------------------->\r\n",
+				      "\r\n        "};
 
 class Config
 {
 public:
-	void writeDict(const array<map<string, string>, 11> &dict, string name);
-	void writeText(const string &text, string name);
-	int getSize(const array<map<string, string>, 11> &dict);
+	void writeDict(const std::array<std::map<std::string, std::string>, 11> &dict, std::string name);
+	void writeText(const std::string &text, std::string name);
+	int getSize(const std::array<std::map<std::string, std::string>, 11> &dict);
 
-	static vector<string> getKeyMessage() { return key_message; }
-	static vector<string> getKeyDial() { return key_dial; }
-	static vector<string> getKeyCell() { return key_cell; }
+	static std::vector<std::string> getKeyMessage() { return key_message; }
+	static std::vector<std::string> getKeyDial() { return key_dial; }
+	static std::vector<std::string> getKeyCell() { return key_cell; }
 
 	static void setAllowMoreInfo(bool x) { allow_more_info = x; }
 	static void setReplaceBrokenChars(bool x) { replace_broken_chars = x; }
@@ -42,13 +40,13 @@ public:
 
 private:
 
-	static vector<string> key_message;
-	static vector<string> key_dial;
-	static vector<string> key_cell;
+	static std::vector<std::string> key_message;
+	static std::vector<std::string> key_dial;
+	static std::vector<std::string> key_cell;
 
 	static bool allow_more_info;
 	static bool replace_broken_chars;
-	static string log;
+	static std::string log;
 
 };
 

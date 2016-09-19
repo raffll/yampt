@@ -3,17 +3,15 @@
 
 #include "Config.hpp"
 
-using namespace std;
-
 class DictReader
 {
 public:
-	void readFile(string path);
+	void readFile(std::string path);
 	bool getStatus() { return status; }
-	string getName() { return name; }
-	string getNamePrefix() { return name_prefix; }
-	string getLog() { return log; }
-	array<map<string, string>, 11> const& getDict() const { return dict; }
+	std::string getName() { return name; }
+	std::string getNamePrefix() { return name_prefix; }
+	std::string getLog() { return log; }
+	std::array<std::map<std::string, std::string>, 11> const& getDict() const { return dict; }
 
 	DictReader();
 	DictReader(const DictReader& that);
@@ -21,18 +19,18 @@ public:
 	~DictReader();
 
 private:
-	void printStatus(string path);
-	void setName(string path);
-	bool parseDict(string &content);
-	void insertRecord(const string &pri_text, const string &sec_text);
+	void printStatus(std::string path);
+	void setName(std::string path);
+	bool parseDict(std::string &content);
+	void insertRecord(const std::string &pri_text, const std::string &sec_text);
 
 	bool status = 0;
-	string name;
-	string name_prefix;
+	std::string name;
+	std::string name_prefix;
 	int counter = 0;
 	int counter_invalid = 0;
-	string log;
-	array<map<string, string>, 11> dict;
+	std::string log;
+	std::array<std::map<std::string, std::string>, 11> dict;
 };
 
 #endif

@@ -6,8 +6,6 @@
 #include "EsmRecord.hpp"
 #include "DictMerger.hpp"
 
-using namespace std;
-
 class DictCreator
 {
 public:
@@ -16,18 +14,18 @@ public:
 	void compareEsm();
 	void setNoDuplicates() { no_duplicates = 1; }
 
-	string getName() { return esm_n.getNamePrefix(); }
-	array<map<string, string>, 11> const& getDict() const { return dict; }
-	string getScriptText() { return raw_text; }
+	std::string getName() { return esm_n.getNamePrefix(); }
+	std::array<std::map<std::string, std::string>, 11> const& getDict() const { return dict; }
+	std::string getScriptText() { return raw_text; }
 
 	DictCreator();
-	DictCreator(string path_n);
-	DictCreator(string path_n, string path_f);
-	DictCreator(string path_n, DictMerger &m);
+	DictCreator(std::string path_n);
+	DictCreator(std::string path_n, std::string path_f);
+	DictCreator(std::string path_n, DictMerger &m);
 
 private:
-	string dialTranslator(string to_translate);
-	void insertRecord(const string &pri_text, const string &sec_text, RecType type, bool extra = 0);
+	std::string dialTranslator(std::string to_translate);
+	void insertRecord(const std::string &pri_text, const std::string &sec_text, RecType type, bool extra = 0);
 	void makeDictCELL();
 	void makeDictGMST();
 	void makeDictFNAM();
@@ -49,8 +47,8 @@ private:
 	bool no_duplicates = 0;
 	int counter;
 	int counter_cell;
-	array<map<string, string>, 11> dict;
-	string raw_text;
+	std::array<std::map<std::string, std::string>, 11> dict;
+	std::string raw_text;
 };
 
 #endif

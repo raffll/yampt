@@ -92,7 +92,7 @@ void EsmConverter::writeEsm()
 {
 	if(status == 1)
 	{
-		string name = esm.getNamePrefix() + esm.getNameSuffix();
+		string name = esm.getName();
 		ofstream file(name, ios::binary);
 		for(auto &elem : esm.getRecColl())
 		{
