@@ -80,3 +80,36 @@ void DictMerger::mergeDict()
 		}
 	}
 }
+
+//----------------------------------------------------------
+void DictMerger::makeDiff()
+{
+	if(status == 1 && dict_coll.size() == 2)
+	{
+		for(size_t k = 0; k < 11; ++k)
+		{
+			for(auto &elem : dict_coll[0].getDict()[k])
+			{
+				auto search = dict_coll[1].getDict()[k].find(elem.first);
+				if(search != dict_coll[1].getDict()[k].end())
+				{
+					if(search->second != elem.second)
+					{
+						diff[0] += sep[4] +
+							   sep[1] + elem.first +
+							   sep[2] + elem.second +
+							   sep[3] + "\r\n";
+						diff[1] += sep[4] +
+							   sep[1] + search->first +
+							   sep[2] + search->second +
+							   sep[3] + "\r\n";
+					}
+				}
+			}
+		}
+		if(diff[0].empty() && diff[1].empty())
+		{
+			cout << "--> No differences between dictionaries!\r\n";
+		}
+	}
+}

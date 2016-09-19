@@ -85,6 +85,10 @@ UserInterface::UserInterface(vector<string> &a)
 		{
 			makeScriptText();
 		}
+		else if(arg[1] == "--compare" && path_dict.size() == 2)
+		{
+			makeDiff();
+		}
 		else
 		{
 			cout << "Syntax error!" << endl;
@@ -214,4 +218,14 @@ void UserInterface::makeScriptText()
 		creator.makeScriptText();
 		config.writeText(creator.getScriptText(), creator.getName() + ".scpt");
 	}
+}
+
+//----------------------------------------------------------
+void UserInterface::makeDiff()
+{
+	Config config;
+	DictMerger merger(path_dict);
+	merger.makeDiff();
+	config.writeText(merger.getDiff(0), merger.getNamePrefix(0) + ".0.diff");
+	config.writeText(merger.getDiff(1), merger.getNamePrefix(1) + ".1.diff");
 }

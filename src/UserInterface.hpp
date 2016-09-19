@@ -18,6 +18,7 @@ public:
 	void convertEsmWithDIAL();
 	void convertEsmSafe();
 	void makeScriptText();
+	void makeDiff();
 
 	UserInterface(std::vector<std::string> &a);
 

@@ -39,7 +39,6 @@ public:
 	Config();
 
 private:
-
 	static std::vector<std::string> key_message;
 	static std::vector<std::string> key_dial;
 	static std::vector<std::string> key_cell;
