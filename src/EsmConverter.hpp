@@ -6,23 +6,22 @@
 #include "EsmRecord.hpp"
 #include "DictMerger.hpp"
 
-using namespace std;
-
 class EsmConverter
 {
 public:
 	void convertEsm();
 	void convertEsmWithDIAL();
+	void convertEsmSafe();
 	void writeEsm();
 	bool getStatus() { return status; }
 
 	EsmConverter();
-	EsmConverter(string path, DictMerger &m);
+	EsmConverter(std::string path, DictMerger &m);
 
 private:
-	string convertIntToByteArray(unsigned int x);
-	bool caseInsensitiveStringCmp(string lhs, string rhs);
-	void convertRecordContent(size_t pos, size_t old_size, string new_text,
+	std::string convertIntToByteArray(unsigned int x);
+	bool caseInsensitiveStringCmp(std::string lhs, std::string rhs);
+	void convertRecordContent(size_t pos, size_t old_size, std::string new_text,
 				  size_t new_size);
 	void convertScriptLine(size_t i);
 	void convertCELL();
@@ -47,8 +46,9 @@ private:
 	EsmRecord esm;
 	DictMerger merger;
 	int counter = 0;
-	string rec_content;
-	string script_text;
+	bool safe = 0;
+	std::string rec_content;
+	std::string script_text;
 };
 
 #endif

@@ -66,12 +66,33 @@ void EsmConverter::convertEsmWithDIAL()
 		convertSCPT();
 	}
 }
+
+//----------------------------------------------------------
+void EsmConverter::convertEsmSafe()
+{
+	if(status == 1)
+	{
+		safe = 1;
+
+		convertCELL();
+		convertPGRD();
+		convertANAM();
+		convertSCVR();
+		convertDNAM();
+		convertCNDT();
+		convertDIAL();
+		convertINFOWithDIAL();
+		convertBNAM();
+		convertSCPT();
+	}
+}
+
 //----------------------------------------------------------
 void EsmConverter::writeEsm()
 {
 	if(status == 1)
 	{
-		string name = esm.getNamePrefix() + Config::getOutputSuffix() + esm.getNameSuffix();
+		string name = esm.getName();
 		ofstream file(name, ios::binary);
 		for(auto &elem : esm.getRecColl())
 		{
@@ -137,7 +158,7 @@ void EsmConverter::convertScriptLine(size_t i)
 	bool found = 0;
 	string line = esm.getScptLine(i);
 	string text = esm.getScptText(i);
-	if(esm.getScptLineType(i) == "BNAM")
+	if(esm.getScptLineType(i) == "BNAM" && safe == 0)
 	{
 		auto search = merger.getDict()[RecType::BNAM].find("BNAM" + sep[0] + esm.getScptLine(i));
 		if(search != merger.getDict()[RecType::BNAM].end())
@@ -151,7 +172,7 @@ void EsmConverter::convertScriptLine(size_t i)
 			}
 		}
 	}
-	else if(esm.getScptLineType(i) == "SCTX")
+	else if(esm.getScptLineType(i) == "SCTX" && safe == 0)
 	{
 		auto search = merger.getDict()[RecType::SCTX].find("SCTX" + sep[0] + esm.getScptLine(i));
 		if(search != merger.getDict()[RecType::SCTX].end())
@@ -588,12 +609,12 @@ void EsmConverter::convertRNAM()
 				auto search = merger.getDict()[RecType::RNAM].find(pri_text);
 
 				if(search != merger.getDict()[RecType::RNAM].end() &&
-				   esm.getSecText() != search->second)
+				   esm.getSecText(k) != search->second)
 				{
 					rnam_text = search->second;
 					rnam_text.resize(32);
 					convertRecordContent(esm.getSecPos(k),
-							     32,
+							     esm.getSecSize(k),
 							     rnam_text,
 							     32);
 					counter++;
@@ -730,7 +751,7 @@ void EsmConverter::convertINFOWithDIAL()
 			pri_text = "INFO" + sep[0] + dial + sep[0] + esm.getPriText();
 			auto search = merger.getDict()[RecType::INFO].find(pri_text);
 
-			if(search != merger.getDict()[RecType::INFO].end())
+			if(search != merger.getDict()[RecType::INFO].end() && safe == 0)
 			{
 				convertRecordContent(esm.getSecPos(),
 						     esm.getSecSize(),

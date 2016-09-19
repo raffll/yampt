@@ -6,8 +6,6 @@
 #include "DictMerger.hpp"
 #include "EsmConverter.hpp"
 
-using namespace std;
-
 class UserInterface
 {
 public:
@@ -18,17 +16,18 @@ public:
 	void mergeDict();
 	void convertEsm();
 	void convertEsmWithDIAL();
+	void convertEsmSafe();
 	void makeScriptText();
 
-	UserInterface(vector<string> &a);
+	UserInterface(std::vector<std::string> &a);
 
 private:
-	void prepareUi(vector<string> &a);
+	void prepareUi(std::vector<std::string> &a);
 
-	vector<string> arg;
-	vector<string> path_esm;
-	vector<string> path_dict;
-	vector<string> path_dict_rev;
+	std::vector<std::string> arg;
+	std::vector<std::string> path_esm;
+	std::vector<std::string> path_dict;
+	std::vector<std::string> path_dict_rev;
 };
 
 #endif

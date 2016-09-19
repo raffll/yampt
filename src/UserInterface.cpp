@@ -7,50 +7,40 @@ UserInterface::UserInterface(vector<string> &a)
 {
 	arg = a;
 	string command;
-	string usage = "Usage: " + arg[0] + " [command]"
-		       "\n"
-		       "\n  --help                                                Print this message."
-		       "\n  --make-raw            -f <file_list>                  Make dictionary from esp/esm"
-		       "\n                                                        plugins with all records."
-		       "\n  --make-all            -f <file_list> -d <dict_list>   Make as above, but convert"
-		       "\n                                                        INFO id with DIAL records"
-		       "\n                                                        from selected dictionaries."
-		       "\n  --make-not            -f <file_list> -d <dict_list>   Make without records from"
-		       "\n                                                        selected dictionaries."
-		       "\n  --make-base           -f [file_native] [file_foreign] Make base dictionary from"
-		       "\n                                                        native and foreign"
-		       "\n                                                        esm master files."
-		       "\n  --merge               -d <dict_list>                  Validate, merge, sort"
-		       "\n                                                        and delete doubled records."
-		       "\n  --convert             -f <file_list> -d <dict_list>   Convert plugin from"
-		       "\n                                                        selected dictionaries."
-		       "\n  --convert-with-dial   -f <file_list> -d <dict_list>   Convert plugin from"
-		       "\n                                                        selected dictionaries"
-		       "\n                                                        and add dialog topic"
-		       "\n                                                        names to end of not"
-		       "\n                                                        converted INFO strings."
-		       "\n  --scripts             -f <file_list>                  Create log with raw"
-		       "\n                                                        scripts text";
 
-	for(size_t i = 0; i < arg.size(); ++i)
+	if(arg.size() > 1)
 	{
-		if(arg[i] == "-f")
+		for(size_t i = 2; i < arg.size(); ++i)
 		{
-			command = "-f";
-		}
-		else if(arg[i] == "-d")
-		{
-			command = "-d";
-		}
-		else
-		{
-			if(command == "-f")
+			if(arg[i] == "-a")
 			{
-				path_esm.push_back(arg[i]);
+				cout << "--> Allow more than 512 chars: enabled" << endl;
+				Config::setAllowMoreInfo(1);
+
 			}
-			if(command == "-d")
+			else if(arg[i] == "-r")
 			{
-				path_dict.push_back(arg[i]);
+				cout << "--> Replace broken chars: enabled" << endl;
+				Config::setReplaceBrokenChars(1);
+			}
+			else if(arg[i] == "-f")
+			{
+				command = "-f";
+			}
+			else if(arg[i] == "-d")
+			{
+				command = "-d";
+			}
+			else
+			{
+				if(command == "-f")
+				{
+					path_esm.push_back(arg[i]);
+				}
+				if(command == "-d")
+				{
+					path_dict.push_back(arg[i]);
+				}
 			}
 		}
 	}
@@ -59,11 +49,7 @@ UserInterface::UserInterface(vector<string> &a)
 
 	if(arg.size() > 1)
 	{
-		if(arg[1] == "--help")
-		{
-			cout << usage << endl;
-		}
-		else if(arg[1] == "--make-raw" && path_esm.size() > 0)
+		if(arg[1] == "--make-raw" && path_esm.size() > 0)
 		{
 			makeDictRaw();
 		}
@@ -90,6 +76,10 @@ UserInterface::UserInterface(vector<string> &a)
 		else if(arg[1] == "--convert-with-dial" && path_esm.size() > 0 && path_dict_rev.size() > 0)
 		{
 			convertEsmWithDIAL();
+		}
+		else if(arg[1] == "--convert-safe" && path_esm.size() > 0 && path_dict_rev.size() > 0)
+		{
+			convertEsmSafe();
 		}
 		else if(arg[1] == "--scripts" && path_esm.size() > 0)
 		{
@@ -195,6 +185,21 @@ void UserInterface::convertEsmWithDIAL()
 	{
 		EsmConverter converter(path_esm[i], merger);
 		converter.convertEsmWithDIAL();
+		converter.writeEsm();
+	}
+}
+
+//----------------------------------------------------------
+void UserInterface::convertEsmSafe()
+{
+	Config config;
+	DictMerger merger(path_dict_rev);
+	merger.mergeDict();
+	config.writeText(merger.getLog(), "yampt.log");
+	for(size_t i = 0; i < path_esm.size(); ++i)
+	{
+		EsmConverter converter(path_esm[i], merger);
+		converter.convertEsmSafe();
 		converter.writeEsm();
 	}
 }

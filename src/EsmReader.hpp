@@ -3,36 +3,34 @@
 
 #include "Config.hpp"
 
-using namespace std;
-
 class EsmReader
 {
 public:
-	void readFile(string path);
+	void readFile(std::string path);
 
 	bool getStatus() { return status; }
-	string getName() { return name; }
-	string getNamePrefix() { return name_prefix; }
-	string getNameSuffix() { return name_suffix; }
+	std::string getName() { return name; }
+	std::string getNamePrefix() { return name_prefix; }
+	std::string getNameSuffix() { return name_suffix; }
 
-	vector<string> const& getRecColl() const { return rec_coll; }
+	std::vector<std::string> const& getRecColl() const { return rec_coll; }
 
 	EsmReader();
 
 protected:
-	unsigned int convertByteArrayToInt(const string &str);
+	unsigned int convertByteArrayToInt(const std::string &str);
 
 	bool status = 0;
-	vector<string> rec_coll;
+	std::vector<std::string> rec_coll;
 
 private:
-	void printStatus(string path);
-	void setName(string path);
-	void setRecColl(string &content);
+	void printStatus(std::string path);
+	void setName(std::string path);
+	void setRecColl(std::string &content);
 
-	string name;
-	string name_prefix;
-	string name_suffix;
+	std::string name;
+	std::string name_prefix;
+	std::string name_suffix;
 
 };
 
