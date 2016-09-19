@@ -70,6 +70,11 @@ yampt.exe --make-not -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.
 ```
 Use for manualy translate only new records.
 
+### Compare two dictionaries
+```
+yampt.exe --compare -d "C:\path\to\Dict_0.dic" "C:\path\to\Dict_1.dic"
+```
+
 ### Write log with raw scripts text.
 ```
 yampt.exe --scripts -f "C:\path\to\Morrowind\Data Files\Plugin.esp"
@@ -111,11 +116,11 @@ Don't forget of ^ character
 ### Make sure that dictionary doesn't contains:
 ```
 <h3>DIAL^skin of the pearl</h3>skin of the pearl<hr>
-<h3>INFO^T^sk√≥ra per≈Çy^8142170481561424883</h3>Some text<hr>
+<h3>INFO^T^skÛra per≥y^8142170481561424883</h3>Some text<hr>
 ```
 or
 ```
-<h3>DIAL^skin of the pearl</h3>sk√≥ra per≈Çy<hr>
+<h3>DIAL^skin of the pearl</h3>skÛra per≥y<hr>
 <h3>INFO^T^skin of the pearl^8142170481561424883</h3>Some text<hr>
 ```
 In first step converter translate (or not) dialog entries, and in second it can't find corresponding INFO record.
@@ -144,3 +149,6 @@ It can be a mess, because CELL, DIAL, BNAM and SCTX records don't have unique id
 - rewrite --make-all command
 - add --convert-safe command
 - remove yampt.cfg
+
+0.5 alpha
+- add --compare command
