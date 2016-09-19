@@ -116,11 +116,11 @@ Don't forget of ^ character
 ### Make sure that dictionary doesn't contains:
 ```
 <h3>DIAL^skin of the pearl</h3>skin of the pearl<hr>
-<h3>INFO^T^skÛra per≥y^8142170481561424883</h3>Some text<hr>
+<h3>INFO^T^sk√≥ra per≈Çy^8142170481561424883</h3>Some text<hr>
 ```
 or
 ```
-<h3>DIAL^skin of the pearl</h3>skÛra per≥y<hr>
+<h3>DIAL^skin of the pearl</h3>sk√≥ra per≈Çy<hr>
 <h3>INFO^T^skin of the pearl^8142170481561424883</h3>Some text<hr>
 ```
 In first step converter translate (or not) dialog entries, and in second it can't find corresponding INFO record.
