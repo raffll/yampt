@@ -19,7 +19,7 @@ Config::Config()
 }
 
 //----------------------------------------------------------
-void Config::writeDict(const dict_t &dict, string name)
+void Config::writeDict(const array<map<string, string>, 11> &dict, string name)
 {
 	if(getSize(dict) > 0)
 	{
@@ -55,7 +55,7 @@ void Config::writeText(const string &text, string name)
 }
 
 //----------------------------------------------------------
-int Config::getSize(const dict_t &dict)
+int Config::getSize(const array<map<string, string>, 11> &dict)
 {
 	int size = 0;
 	for(auto const &elem : dict)

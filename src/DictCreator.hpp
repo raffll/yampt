@@ -10,13 +10,12 @@ class DictCreator
 {
 public:
 	void makeDict();
-	void makeStats();
 	void makeScriptText();
 	void compareEsm();
 	void setNoDuplicates() { no_duplicates = 1; }
 
 	std::string getName() { return esm_n.getNamePrefix(); }
-	dict_t const& getDict() const { return dict; }
+	std::array<std::map<std::string, std::string>, 11> const& getDict() const { return dict; }
 	std::string getScriptText() { return raw_text; }
 
 	DictCreator();
@@ -39,12 +38,6 @@ private:
 	void makeDictBNAM();
 	void makeDictSCPT();
 
-	void makeStatsARMO();
-	void makeStatsMGEF();
-	void makeStatsMISC();
-	void makeStatsWEAP();
-	void makeStatsCLOT();
-
 	EsmRecord esm_n;
 	EsmRecord esm_f;
 	EsmRecord *esm_ptr;
@@ -54,7 +47,7 @@ private:
 	bool no_duplicates = 0;
 	int counter;
 	int counter_cell;
-	dict_t dict;
+	std::array<std::map<std::string, std::string>, 11> dict;
 	std::string raw_text;
 };
 

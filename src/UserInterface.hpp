@@ -20,9 +20,6 @@ public:
 	void makeScriptText();
 	void makeDiff();
 
-	void makeStats();
-	void convertEsmStats();
-
 	UserInterface(std::vector<std::string> &a);
 
 private:

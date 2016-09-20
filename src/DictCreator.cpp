@@ -64,19 +64,6 @@ void DictCreator::makeDict()
 }
 
 //----------------------------------------------------------
-void DictCreator::makeStats()
-{
-	if(status == 1)
-	{
-		makeStatsARMO();
-		makeStatsMGEF();
-		makeStatsMISC();
-		makeStatsWEAP();
-		makeStatsCLOT();
-	}
-}
-
-//----------------------------------------------------------
 void DictCreator::compareEsm()
 {
 	if(status == 1)
@@ -527,99 +514,4 @@ void DictCreator::makeDictSCPT()
 		}
 	}
 	cout << "    --> SCTX script lines created: " << to_string(counter) << "\r\n";
-}
-
-//----------------------------------------------------------
-void DictCreator::makeStatsARMO()
-{
-	counter = 0;
-	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
-	{
-		esm_n.setRec(i);
-		if(esm_n.getRecId() == "ARMO")
-		{
-			esm_n.setPri("NAME");
-			esm_n.setSec("AODT", false);
-			insertRecord("AODT" + sep[0] + esm_n.getPriText(),
-				     esm_n.getSecText(),
-				     RecType::AODT);
-		}
-	}
-	cout << "    --> AODT records created: " << to_string(counter) << "\r\n";
-}
-
-//----------------------------------------------------------
-void DictCreator::makeStatsMGEF()
-{
-	counter = 0;
-	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
-	{
-		esm_n.setRec(i);
-		if(esm_n.getRecId() == "MGEF")
-		{
-			esm_n.setPriINDX();
-			esm_n.setSec("MEDT", false);
-			insertRecord("MEDT" + sep[0] + esm_n.getPriText(),
-				     esm_n.getSecText(),
-				     RecType::MEDT);
-		}
-	}
-	cout << "    --> MEDT records created: " << to_string(counter) << "\r\n";
-}
-
-//----------------------------------------------------------
-void DictCreator::makeStatsMISC()
-{
-	counter = 0;
-	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
-	{
-		esm_n.setRec(i);
-		if(esm_n.getRecId() == "MISC")
-		{
-			esm_n.setPri("NAME");
-			esm_n.setSec("MCDT", false);
-			insertRecord("MCDT" + sep[0] + esm_n.getPriText(),
-				     esm_n.getSecText(),
-				     RecType::MCDT);
-		}
-	}
-	cout << "    --> MCDT records created: " << to_string(counter) << "\r\n";
-}
-
-//----------------------------------------------------------
-void DictCreator::makeStatsWEAP()
-{
-	counter = 0;
-	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
-	{
-		esm_n.setRec(i);
-		if(esm_n.getRecId() == "WEAP")
-		{
-			esm_n.setPri("NAME");
-			esm_n.setSec("WPDT", false);
-			insertRecord("WPDT" + sep[0] + esm_n.getPriText(),
-				     esm_n.getSecText(),
-				     RecType::WPDT);
-		}
-	}
-	cout << "    --> WPDT records created: " << to_string(counter) << "\r\n";
-}
-
-//----------------------------------------------------------
-void DictCreator::makeStatsCLOT()
-{
-	counter = 0;
-	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
-	{
-		esm_n.setRec(i);
-		if(esm_n.getRecId() == "CLOT")
-		{
-			esm_n.setPri("NAME");
-			esm_n.setSec("CTDT", false);
-			insertRecord("CTDT" + sep[0] + esm_n.getPriText(),
-				     esm_n.getSecText(),
-				     RecType::CTDT);
-		}
-	}
-	cout << "    --> CTDT records created: " << to_string(counter) << "\r\n";
 }
