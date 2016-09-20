@@ -217,6 +217,31 @@ void DictReader::insertRecord(const string &pri_text, const string &sec_text)
 			dict[RecType::SCTX].insert({pri_text, sec_text});
 			counter++;
 		}
+		else if(pri_text.substr(0, 4) == "AODT")
+		{
+			dict[RecType::AODT].insert({pri_text, sec_text});
+			counter++;
+		}
+		else if(pri_text.substr(0, 4) == "MEDT")
+		{
+			dict[RecType::MEDT].insert({pri_text, sec_text});
+			counter++;
+		}
+		else if(pri_text.substr(0, 4) == "MCDT")
+		{
+			dict[RecType::MCDT].insert({pri_text, sec_text});
+			counter++;
+		}
+		else if(pri_text.substr(0, 4) == "WPDT")
+		{
+			dict[RecType::WPDT].insert({pri_text, sec_text});
+			counter++;
+		}
+		else if(pri_text.substr(0, 4) == "CTDT")
+		{
+			dict[RecType::CTDT].insert({pri_text, sec_text});
+			counter++;
+		}
 		else
 		{
 			log += sep[4] +

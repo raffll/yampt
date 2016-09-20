@@ -14,7 +14,7 @@ public:
 	std::string getLog() { return log; }
 	std::string getDiff(size_t i) { return diff[i]; }
 	std::string getNamePrefix(size_t i) { return dict_coll[i].getNamePrefix(); }
-	std::array<std::map<std::string, std::string>, 11> const& getDict() const { return dict; }
+	dict_t const& getDict() const { return dict; }
 
 	DictMerger();
 	DictMerger(std::vector<std::string> &path);
@@ -26,7 +26,7 @@ private:
 	int counter_duplicate = 0;
 	std::string log;
 	std::vector<DictReader> dict_coll;
-	std::array<std::map<std::string, std::string>, 11> dict;
+	dict_t dict;
 	std::array<std::string, 2> diff;
 };
 

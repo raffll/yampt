@@ -13,7 +13,7 @@ public:
 	void setPri(std::string id);
 	void setPriColl(std::string id);
 	void setPriINDX();
-	void setSec(std::string id);
+	void setSec(std::string id, bool erase_null = 1);
 	void setSecColl(std::string id);
 	void setSecScptColl(std::string id);
 	void setSecMessageColl(std::string id);

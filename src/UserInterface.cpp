@@ -65,6 +65,10 @@ UserInterface::UserInterface(vector<string> &a)
 		{
 			makeDictNot();
 		}
+		else if(arg[1] == "--make-stats" && path_esm.size() > 0)
+		{
+			makeStats();
+		}
 		else if(arg[1] == "--merge" && path_dict_rev.size() > 0)
 		{
 			mergeDict();
@@ -80,6 +84,10 @@ UserInterface::UserInterface(vector<string> &a)
 		else if(arg[1] == "--convert-safe" && path_esm.size() > 0 && path_dict_rev.size() > 0)
 		{
 			convertEsmSafe();
+		}
+		else if(arg[1] == "--convert-stats" && path_esm.size() > 0 && path_dict_rev.size() > 0)
+		{
+			convertEsmStats();
 		}
 		else if(arg[1] == "--scripts" && path_esm.size() > 0)
 		{
@@ -228,4 +236,30 @@ void UserInterface::makeDiff()
 	merger.makeDiff();
 	config.writeText(merger.getDiff(0), merger.getNamePrefix(0) + ".0.diff");
 	config.writeText(merger.getDiff(1), merger.getNamePrefix(1) + ".1.diff");
+}
+
+//----------------------------------------------------------
+void UserInterface::makeStats()
+{
+	Config config;
+	for(size_t i = 0; i < path_esm.size(); ++i)
+	{
+		DictCreator creator(path_esm[i]);
+		creator.makeStats();
+		config.writeDict(creator.getDict(), creator.getName() + ".stats");
+	}
+}
+
+//----------------------------------------------------------
+void UserInterface::convertEsmStats()
+{
+	Config config;
+	DictMerger merger(path_dict_rev);
+	merger.mergeDict();
+	for(size_t i = 0; i < path_esm.size(); ++i)
+	{
+		EsmConverter converter(path_esm[i], merger);
+		converter.convertEsmStats();
+		converter.writeEsm();
+	}
 }

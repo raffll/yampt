@@ -12,6 +12,7 @@ public:
 	void convertEsm();
 	void convertEsmWithDIAL();
 	void convertEsmSafe();
+	void convertEsmStats();
 	void writeEsm();
 	bool getStatus() { return status; }
 
@@ -41,6 +42,12 @@ private:
 	void convertINFOWithDIAL();
 	void convertBNAM();
 	void convertSCPT();
+
+	void convertStatsARMO();
+	void convertStatsMGEF();
+	void convertStatsMISC();
+	void convertStatsWEAP();
+	void convertStatsCLOT();
 
 	bool status = 0;
 	EsmRecord esm;

@@ -77,7 +77,7 @@ void EsmRecord::setPriColl(string id)
 }
 
 //----------------------------------------------------------
-void EsmRecord::setSec(string id)
+void EsmRecord::setSec(string id, bool erase_null)
 {
 	if(status == 1)
 	{
@@ -98,7 +98,10 @@ void EsmRecord::setSec(string id)
 				{
 					replaceBrokenChars(cur_text);
 				}
-				eraseNullChars(cur_text);
+				if(erase_null == 1)
+				{
+					eraseNullChars(cur_text);
+				}
 				sec_coll.push_back(make_tuple(cur_pos, cur_size, cur_text));
 				break;
 			}

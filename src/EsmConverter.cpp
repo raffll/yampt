@@ -88,6 +88,19 @@ void EsmConverter::convertEsmSafe()
 }
 
 //----------------------------------------------------------
+void EsmConverter::convertEsmStats()
+{
+	if(status == 1)
+	{
+		convertStatsARMO();
+		convertStatsMGEF();
+		convertStatsMISC();
+		convertStatsWEAP();
+		convertStatsCLOT();
+	}
+}
+
+//----------------------------------------------------------
 void EsmConverter::writeEsm()
 {
 	if(status == 1)
@@ -846,4 +859,154 @@ void EsmConverter::convertSCPT()
 		}
 	}
 	cout << "    --> SCTX script lines converted: " << to_string(counter) << "\r\n";
+}
+
+//----------------------------------------------------------
+void EsmConverter::convertStatsARMO()
+{
+	counter = 0;
+	string pri_text;
+	for(size_t i = 0; i < esm.getRecColl().size(); ++i)
+	{
+		esm.setRec(i);
+		if(esm.getRecId() == "ARMO")
+		{
+			esm.setPri("NAME");
+			esm.setSec("AODT");
+
+			pri_text = "AODT" + sep[0] + esm.getPriText();
+			auto search = merger.getDict()[RecType::AODT].find(pri_text);
+
+			if(search != merger.getDict()[RecType::AODT].end() &&
+			   esm.getSecText() != search->second)
+			{
+				convertRecordContent(esm.getSecPos(),
+						     esm.getSecSize(),
+						     search->second,
+						     search->second.size());
+				counter++;
+			}
+		}
+	}
+	cout << "    --> AODT records converted: " << to_string(counter) << "\r\n";
+}
+
+//----------------------------------------------------------
+void EsmConverter::convertStatsMGEF()
+{
+	counter = 0;
+	string pri_text;
+	for(size_t i = 0; i < esm.getRecColl().size(); ++i)
+	{
+		esm.setRec(i);
+		if(esm.getRecId() == "MGEF")
+		{
+			esm.setPriINDX();
+			esm.setSec("MEDT");
+
+			pri_text = "MEDT" + sep[0] + esm.getPriText();
+			auto search = merger.getDict()[RecType::MEDT].find(pri_text);
+
+			if(search != merger.getDict()[RecType::MEDT].end() &&
+			   esm.getSecText() != search->second)
+			{
+				convertRecordContent(esm.getSecPos(),
+						     esm.getSecSize(),
+						     search->second,
+						     search->second.size());
+				counter++;
+			}
+		}
+	}
+	cout << "    --> MEDT records converted: " << to_string(counter) << "\r\n";
+}
+
+//----------------------------------------------------------
+void EsmConverter::convertStatsMISC()
+{
+	counter = 0;
+	string pri_text;
+	for(size_t i = 0; i < esm.getRecColl().size(); ++i)
+	{
+		esm.setRec(i);
+		if(esm.getRecId() == "MISC")
+		{
+			esm.setPri("NAME");
+			esm.setSec("MCDT");
+
+			pri_text = "MCDT" + sep[0] + esm.getPriText();
+			auto search = merger.getDict()[RecType::MCDT].find(pri_text);
+
+			if(search != merger.getDict()[RecType::MCDT].end() &&
+			   esm.getSecText() != search->second)
+			{
+				convertRecordContent(esm.getSecPos(),
+						     esm.getSecSize(),
+						     search->second,
+						     search->second.size());
+				counter++;
+			}
+		}
+	}
+	cout << "    --> MCDT records converted: " << to_string(counter) << "\r\n";
+}
+
+//----------------------------------------------------------
+void EsmConverter::convertStatsWEAP()
+{
+	counter = 0;
+	string pri_text;
+	for(size_t i = 0; i < esm.getRecColl().size(); ++i)
+	{
+		esm.setRec(i);
+		if(esm.getRecId() == "WEAP")
+		{
+			esm.setPri("NAME");
+			esm.setSec("WPDT");
+
+			pri_text = "WPDT" + sep[0] + esm.getPriText();
+			auto search = merger.getDict()[RecType::WPDT].find(pri_text);
+
+			if(search != merger.getDict()[RecType::WPDT].end() &&
+			   esm.getSecText() != search->second)
+			{
+				convertRecordContent(esm.getSecPos(),
+						     esm.getSecSize(),
+						     search->second,
+						     search->second.size());
+				counter++;
+			}
+		}
+	}
+	cout << "    --> WPDT records converted: " << to_string(counter) << "\r\n";
+}
+
+//----------------------------------------------------------
+void EsmConverter::convertStatsCLOT()
+{
+	counter = 0;
+	string pri_text;
+	for(size_t i = 0; i < esm.getRecColl().size(); ++i)
+	{
+		esm.setRec(i);
+		if(esm.getRecId() == "CLOT")
+		{
+			esm.setPri("NAME");
+			esm.setSec("CTDT");
+
+			pri_text = "CTDT" + sep[0] + esm.getPriText();
+			auto search = merger.getDict()[RecType::CTDT].find(pri_text);
+
+			if(search != merger.getDict()[RecType::CTDT].end() &&
+			   esm.getSecText() != search->second)
+			{
+				convertRecordContent(esm.getSecPos(),
+						     esm.getSecSize(),
+						     search->second,
+						     search->second.size());
+				counter++;
+			}
+		}
+	}
+	cout << "    --> CTDT records converted: " << to_string(counter) << "\r\n";
 }
