@@ -11,7 +11,7 @@ EsmRecord::EsmRecord() : EsmReader()
 //----------------------------------------------------------
 void EsmRecord::setRec(size_t i)
 {
-	if(status == 1)
+	if(status == true)
 	{
 		rec = &rec_coll[i];
 		rec_size = rec->size();
@@ -22,7 +22,7 @@ void EsmRecord::setRec(size_t i)
 //----------------------------------------------------------
 void EsmRecord::setPri(string id)
 {
-	if(status == 1)
+	if(status == true)
 	{
 		size_t cur_pos = 16;
 		size_t cur_size = 0;
@@ -53,7 +53,7 @@ void EsmRecord::setPri(string id)
 //----------------------------------------------------------
 void EsmRecord::setPriColl(string id)
 {
-	if(status == 1)
+	if(status == true)
 	{
 		size_t cur_pos = 16;
 		size_t cur_size = 0;
@@ -79,7 +79,7 @@ void EsmRecord::setPriColl(string id)
 //----------------------------------------------------------
 void EsmRecord::setSec(string id)
 {
-	if(status == 1)
+	if(status == true)
 	{
 		size_t cur_pos = 16;
 		size_t cur_size = 0;
@@ -94,7 +94,7 @@ void EsmRecord::setSec(string id)
 			if(cur_id == sec_id)
 			{
 				cur_text = rec->substr(cur_pos + 8, cur_size);
-				if(Config::getReplaceBrokenChars() == 1)
+				if(replace_broken_chars == true)
 				{
 					replaceBrokenChars(cur_text);
 				}
@@ -114,7 +114,7 @@ void EsmRecord::setSec(string id)
 //----------------------------------------------------------
 void EsmRecord::setSecColl(string id)
 {
-	if(status == 1)
+	if(status == true)
 	{
 		size_t cur_pos = 16;
 		size_t cur_size = 0;
@@ -140,7 +140,7 @@ void EsmRecord::setSecColl(string id)
 //----------------------------------------------------------
 void EsmRecord::setPriINDX()
 {
-	if(status == 1)
+	if(status == true)
 	{
 		size_t cur_pos = 16;
 		size_t cur_size = 0;
@@ -169,7 +169,7 @@ void EsmRecord::setPriINDX()
 //----------------------------------------------------------
 void EsmRecord::setSecScptColl(string id)
 {
-	if(status == 1)
+	if(status == true)
 	{
 		string line;
 		string line_lowercase;
@@ -236,7 +236,7 @@ void EsmRecord::setSecScptColl(string id)
 //----------------------------------------------------------
 void EsmRecord::setSecMessageColl(string id)
 {
-	if(status == 1)
+	if(status == true)
 	{
 		string line;
 		string line_lowercase;
@@ -272,7 +272,7 @@ void EsmRecord::setSecMessageColl(string id)
 //----------------------------------------------------------
 void EsmRecord::setSecDialType(string id)
 {
-	if(status == 1)
+	if(status == true)
 	{
 		setSec(id);
 		static array<string, 5> type_coll = {"T", "V", "G", "P", "J"};

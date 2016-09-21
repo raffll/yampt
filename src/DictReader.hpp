@@ -13,7 +13,7 @@ public:
 	std::string getLog() { return log; }
 	std::array<std::map<std::string, std::string>, 11> const& getDict() const { return dict; }
 
-	DictReader();
+	DictReader(bool x);
 	DictReader(const DictReader& that);
 	DictReader& operator=(const DictReader& that);
 	~DictReader();
@@ -31,6 +31,7 @@ private:
 	int counter_invalid = 0;
 	std::string log;
 	std::array<std::map<std::string, std::string>, 11> dict;
+	bool allow_more_info = 0;
 };
 
 #endif

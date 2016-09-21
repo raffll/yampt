@@ -9,21 +9,21 @@ DictMerger::DictMerger()
 }
 
 //----------------------------------------------------------
-DictMerger::DictMerger(vector<string> &path)
+DictMerger::DictMerger(vector<string> &path, bool allow_more_info)
 {
 	for(auto &elem : path)
 	{
-		DictReader reader;
+		DictReader reader(allow_more_info);
 		reader.readFile(elem);
-		if(reader.getStatus() == 1)
+		if(reader.getStatus() == true)
 		{
 			dict_coll.push_back(reader);
-			status = 1;
+			status = true;
 			log += reader.getLog();
 		}
 		else
 		{
-			status = 0;
+			status = false;
 			break;
 		}
 	}
@@ -32,7 +32,7 @@ DictMerger::DictMerger(vector<string> &path)
 //----------------------------------------------------------
 void DictMerger::mergeDict()
 {
-	if(status == 1)
+	if(status == true)
 	{
 		for(size_t i = 0; i < dict_coll.size(); ++i)
 		{
@@ -84,7 +84,7 @@ void DictMerger::mergeDict()
 //----------------------------------------------------------
 void DictMerger::makeDiff()
 {
-	if(status == 1 && dict_coll.size() == 2)
+	if(status == true && dict_coll.size() == 2)
 	{
 		for(size_t k = 0; k < 11; ++k)
 		{

@@ -64,6 +64,7 @@ private:
 	std::vector<std::tuple<std::string, std::string, std::string, size_t>> scpt_coll;
 
 	std::string dial_type;
+	bool replace_broken_chars;
 };
 
 #endif

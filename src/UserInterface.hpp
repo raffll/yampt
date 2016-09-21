@@ -11,12 +11,9 @@ class UserInterface
 public:
 	void makeDictRaw();
 	void makeDictBase();
-	void makeDictAll();
-	void makeDictNot();
+	void makeDict();
 	void mergeDict();
 	void convertEsm();
-	void convertEsmWithDIAL();
-	void convertEsmSafe();
 	void makeScriptText();
 	void makeDiff();
 
@@ -27,8 +24,15 @@ private:
 
 	std::vector<std::string> arg;
 	std::vector<std::string> path_esm;
-	std::vector<std::string> path_dict;
-	std::vector<std::string> path_dict_rev;
+	std::vector<std::string> path_dict_n;
+	std::vector<std::string> path_dict_f;
+
+	std::map<std::string, bool> option = {{"-a", 0},
+					      {"-r", 0},
+					      {"--with-dial", 0},
+					      {"--safe", 0},
+					      {"--no-duplicates", 0}};
+	Config config;
 };
 
 #endif

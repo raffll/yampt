@@ -17,7 +17,7 @@ public:
 	std::array<std::map<std::string, std::string>, 11> const& getDict() const { return dict; }
 
 	DictMerger();
-	DictMerger(std::vector<std::string> &path);
+	DictMerger(std::vector<std::string> &path, bool a);
 
 private:
 	bool status = 0;

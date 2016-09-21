@@ -3,9 +3,9 @@
 using namespace std;
 
 //----------------------------------------------------------
-DictReader::DictReader()
+DictReader::DictReader(bool x)
 {
-
+	allow_more_info = x;
 }
 
 //----------------------------------------------------------
@@ -14,7 +14,8 @@ DictReader::DictReader(const DictReader& that) : status(that.status),
 					         name_prefix(that.name_prefix),
 					         counter(that.counter),
 					         counter_invalid(that.counter_invalid),
-					         dict(that.dict)
+					         dict(that.dict),
+					         allow_more_info(that.allow_more_info)
 {
 
 }
@@ -28,6 +29,7 @@ DictReader& DictReader::operator=(const DictReader& that)
 	counter = that.counter;
 	counter_invalid = that.counter_invalid;
 	dict = that.dict;
+	allow_more_info = that.allow_more_info;
 	return *this;
 }
 
@@ -53,9 +55,9 @@ void DictReader::readFile(string path)
 			content.append(buffer, chars_read);
 		}
 		setName(path);
-		if(!content.empty() && parseDict(content) == 1)
+		if(!content.empty() && parseDict(content) == true)
 		{
-			status = 1;
+			status = true;
 		}
 	}
 	printStatus(path);
@@ -64,7 +66,7 @@ void DictReader::readFile(string path)
 //----------------------------------------------------------
 void DictReader::printStatus(string path)
 {
-	if(status == 0)
+	if(status == false)
 	{
 		cout << "--> Error while loading " << path << " (wrong path or missing separator)!\r\n";
 	}
@@ -184,7 +186,7 @@ void DictReader::insertRecord(const string &pri_text, const string &sec_text)
 		}
 		else if(pri_text.substr(0, 4) == "INFO")
 		{
-			if(Config::getAllowMoreInfo() == 0)
+			if(allow_more_info == false)
 			{
 				if(sec_text.size() > 512)
 				{

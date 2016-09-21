@@ -13,9 +13,9 @@ DictCreator::DictCreator(string path_n)
 {
 	esm_n.readFile(path_n);
 	esm_ptr = &esm_n;
-	if(esm_n.getStatus() == 1)
+	if(esm_n.getStatus() == true)
 	{
-		status = 1;
+		status = true;
 	}
 }
 
@@ -25,9 +25,9 @@ DictCreator::DictCreator(string path_n, string path_f)
 	esm_n.readFile(path_n);
 	esm_f.readFile(path_f);
 	esm_ptr = &esm_f;
-	if(esm_n.getStatus() == 1 && esm_f.getStatus() == 1)
+	if(esm_n.getStatus() == true && esm_f.getStatus() == true)
 	{
-		status = 1;
+		status = true;
 	}
 }
 
@@ -37,17 +37,17 @@ DictCreator::DictCreator(string path_n, DictMerger &m)
 	esm_n.readFile(path_n);
 	esm_ptr = &esm_n;
 	merger = m;
-	if(esm_n.getStatus() == 1 && merger.getStatus() == 1)
+	if(esm_n.getStatus() == true && merger.getStatus() == true)
 	{
-		status = 1;
-		with_dict = 1;
+		status = true;
+		with_dict = true;
 	}
 }
 
 //----------------------------------------------------------
 void DictCreator::makeDict()
 {
-	if(status == 1)
+	if(status == true)
 	{
 		makeDictCELL();
 		makeDictGMST();
@@ -66,12 +66,12 @@ void DictCreator::makeDict()
 //----------------------------------------------------------
 void DictCreator::compareEsm()
 {
-	if(status == 1)
+	if(status == true)
 	{
 		if(esm_n.getRecColl().size() != esm_f.getRecColl().size())
 		{
 			cout << "--> They are not the same master files!\r\n";
-			status = 0;
+			status = false;
 		}
 		else
 		{
@@ -88,11 +88,11 @@ void DictCreator::compareEsm()
 			if(esm_n_compare != esm_f_compare)
 			{
 				cout << "--> They are not the same master files!\r\n";
-				status = 0;
+				status = false;
 			}
 			else
 			{
-				status = 1;
+				status = true;
 			}
 		}
 	}
@@ -101,14 +101,14 @@ void DictCreator::compareEsm()
 //----------------------------------------------------------
 void DictCreator::insertRecord(const string &pri_text, const string &sec_text, RecType type, bool extra)
 {
-	if(no_duplicates == 1)
+	if(no_duplicates == true)
 	{
 		auto search = merger.getDict()[type].find(pri_text);
 		if(search == merger.getDict()[type].end())
 		{
-			if(dict[type].insert({pri_text, sec_text}).second == 1)
+			if(dict[type].insert({pri_text, sec_text}).second == true)
 			{
-				if(extra == 1)
+				if(extra == true)
 				{
 					counter_cell++;
 				}
@@ -119,7 +119,7 @@ void DictCreator::insertRecord(const string &pri_text, const string &sec_text, R
 			}
 		}
 	}
-	else if(with_dict == 1 &&
+	else if(with_dict == true &&
 		(type == RecType::CELL ||
 		 type == RecType::DIAL ||
 		 type == RecType::BNAM ||
@@ -128,9 +128,9 @@ void DictCreator::insertRecord(const string &pri_text, const string &sec_text, R
 		auto search = merger.getDict()[type].find(pri_text);
 		if(search != merger.getDict()[type].end())
 		{
-			if(dict[type].insert({pri_text, search->second}).second == 1)
+			if(dict[type].insert({pri_text, search->second}).second == true)
 			{
-				if(extra == 1)
+				if(extra == true)
 				{
 					counter_cell++;
 				}
@@ -142,9 +142,9 @@ void DictCreator::insertRecord(const string &pri_text, const string &sec_text, R
 		}
 		else
 		{
-			if(dict[type].insert({pri_text, sec_text}).second == 1)
+			if(dict[type].insert({pri_text, sec_text}).second == true)
 			{
-				if(extra == 1)
+				if(extra == true)
 				{
 					counter_cell++;
 				}
@@ -157,9 +157,9 @@ void DictCreator::insertRecord(const string &pri_text, const string &sec_text, R
 	}
 	else
 	{
-		if(dict[type].insert({pri_text, sec_text}).second == 1)
+		if(dict[type].insert({pri_text, sec_text}).second == true)
 		{
-			if(extra == 1)
+			if(extra == true)
 			{
 				counter_cell++;
 			}
@@ -174,7 +174,7 @@ void DictCreator::insertRecord(const string &pri_text, const string &sec_text, R
 //----------------------------------------------------------
 string DictCreator::dialTranslator(string to_translate)
 {
-	if(with_dict == 1)
+	if(with_dict == true)
 	{
 		auto search = merger.getDict()[RecType::DIAL].find("DIAL" + sep[0] + to_translate);
 		if(search != merger.getDict()[RecType::DIAL].end())
@@ -188,7 +188,7 @@ string DictCreator::dialTranslator(string to_translate)
 //----------------------------------------------------------
 void DictCreator::makeScriptText()
 {
-	if(status == 1)
+	if(status == true)
 	{
 		counter = 0;
 		for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)

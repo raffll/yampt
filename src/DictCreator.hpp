@@ -12,7 +12,7 @@ public:
 	void makeDict();
 	void makeScriptText();
 	void compareEsm();
-	void setNoDuplicates() { no_duplicates = 1; }
+	void setNoDuplicates(bool x) { no_duplicates = x; }
 
 	std::string getName() { return esm_n.getNamePrefix(); }
 	std::array<std::map<std::string, std::string>, 11> const& getDict() const { return dict; }

@@ -36,7 +36,7 @@ void EsmReader::readFile(string path)
 //----------------------------------------------------------
 void EsmReader::printStatus(string path)
 {
-	if(status == 0)
+	if(status == false)
 	{
 		cout << "--> Error while loading " + path +
 			" (wrong path or isn't TES3 plugin)!\r\n";
@@ -58,7 +58,7 @@ void EsmReader::setName(string path)
 //----------------------------------------------------------
 void EsmReader::setRecColl(string &content)
 {
-	if(status == 1)
+	if(status == true)
 	{
 		size_t rec_beg = 0;
 		size_t rec_size = 0;

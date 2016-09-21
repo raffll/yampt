@@ -10,13 +10,15 @@ class EsmConverter
 {
 public:
 	void convertEsm();
-	void convertEsmWithDIAL();
-	void convertEsmSafe();
 	void writeEsm();
+
+	void setSafeConvert(bool x) { safe_convert = x; }
+	void setAddDialToInfo(bool x) { add_dial_to_info = x; }
+
 	bool getStatus() { return status; }
 
 	EsmConverter();
-	EsmConverter(std::string path, DictMerger &m);
+	EsmConverter(std::string path, DictMerger &n, DictMerger &f);
 
 private:
 	std::string convertIntToByteArray(unsigned int x);
@@ -44,9 +46,16 @@ private:
 
 	bool status = 0;
 	EsmRecord esm;
-	DictMerger merger;
+	DictMerger merger_n;
+	DictMerger merger_f;
 	int counter = 0;
-	bool safe = 0;
+	int counter_safe = 0;
+	int counter_add = 0;
+	int counter_message = 0;
+	int counter_dial = 0;
+	int counter_cell = 0;
+	bool safe_convert = 0;
+	bool add_dial_to_info = 0;
 	std::string rec_content;
 	std::string script_text;
 };

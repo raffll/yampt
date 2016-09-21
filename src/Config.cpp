@@ -8,8 +8,6 @@ vector<string> Config::key_dial = {"addtopic"};
 vector<string> Config::key_cell = {"positioncell", "getpccell", "aifollowcell",
 				   "placeitemcell", "showmap", "aiescortcell"};
 
-bool Config::allow_more_info = 0;
-bool Config::replace_broken_chars = 0;
 string Config::log;
 
 //----------------------------------------------------------
