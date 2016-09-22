@@ -1,11 +1,12 @@
 #include "DictReader.hpp"
 
 using namespace std;
+using namespace yampt;
 
 //----------------------------------------------------------
-DictReader::DictReader(bool x)
+DictReader::DictReader()
 {
-	allow_more_info = x;
+
 }
 
 //----------------------------------------------------------
@@ -14,8 +15,7 @@ DictReader::DictReader(const DictReader& that) : status(that.status),
 					         name_prefix(that.name_prefix),
 					         counter(that.counter),
 					         counter_invalid(that.counter_invalid),
-					         dict(that.dict),
-					         allow_more_info(that.allow_more_info)
+					         dict(that.dict)
 {
 
 }
@@ -29,7 +29,6 @@ DictReader& DictReader::operator=(const DictReader& that)
 	counter = that.counter;
 	counter_invalid = that.counter_invalid;
 	dict = that.dict;
-	allow_more_info = that.allow_more_info;
 	return *this;
 }
 
@@ -102,7 +101,7 @@ bool DictReader::parseDict(string &content)
 		   pos_mid == string::npos &&
 		   pos_end == string::npos)
 		{
-			return 1;
+			return true;
 			break;
 		}
 		else if(pos_beg > pos_mid ||
@@ -110,7 +109,7 @@ bool DictReader::parseDict(string &content)
 			pos_mid > pos_end ||
 			pos_end == string::npos)
 		{
-			return 0;
+			return false;
 			break;
 		}
 		else
@@ -186,7 +185,7 @@ void DictReader::insertRecord(const string &pri_text, const string &sec_text)
 		}
 		else if(pri_text.substr(0, 4) == "INFO")
 		{
-			if(allow_more_info == false)
+			if(Config::getAllowMoreInfo() == false)
 			{
 				if(sec_text.size() > 512)
 				{

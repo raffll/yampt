@@ -9,12 +9,11 @@ EsmConverter::EsmConverter()
 }
 
 //----------------------------------------------------------
-EsmConverter::EsmConverter(string path, DictMerger &n, DictMerger &f)
+EsmConverter::EsmConverter(string path, DictMerger &n)
 {
 	esm.readFile(path);
-	merger_n = n;
-	merger_f = f;
-	if(esm.getStatus() == true && merger_n.getStatus() == true)
+	merger = n;
+	if(esm.getStatus() == true && merger.getStatus() == true)
 	{
 		status = true;
 	}
@@ -56,6 +55,38 @@ void EsmConverter::writeEsm()
 			file << elem;
 		}
 		cout << "--> Writing " << name << "...\r\n";
+	}
+}
+
+void EsmConverter::setConditions(const std::string &pri_text_n,
+				 const std::string &pri_text_f,
+				 const std::string &sec_text,
+				 RecType type)
+{
+	found_n = false;
+	found_f = false;
+	equal_n = false;
+	equal_f = false;
+
+	auto search_n = merger.getDict()[type].find(pri_text_n);
+	auto search_f = merger.getDict()[type].find(pri_text_f);
+
+	if(search_n != merger.getDict()[type].end())
+	{
+		found_n = true;
+		if(sec_text == search_n->second)
+		{
+			equal_n = true;
+		}
+	}
+
+	if(search_f != merger.getDict()[type].end())
+	{
+		found_f = true;
+		if(sec_text == search_f->second)
+		{
+			equal_f = true;
+		}
 	}
 }
 
@@ -117,8 +148,8 @@ void EsmConverter::convertScriptLine(size_t i)
 	string text = esm.getScptText(i);
 	if(esm.getScptLineType(i) == "BNAM")
 	{
-		auto search_n = merger_n.getDict()[RecType::BNAM].find("BNAM" + sep[0] + esm.getScptLine(i));
-		if(search_n != merger_n.getDict()[RecType::BNAM].end())
+		auto search_n = merger.getDict()[RecType::BNAM].find("BNAM" + sep[0] + esm.getScptLine(i));
+		if(search_n != merger.getDict()[RecType::BNAM].end())
 		{
 			line = search_n->second;
 			line = line.substr(line.find(sep[0]) + 1);
@@ -131,8 +162,8 @@ void EsmConverter::convertScriptLine(size_t i)
 	}
 	else if(esm.getScptLineType(i) == "SCTX")
 	{
-		auto search_n = merger_n.getDict()[RecType::SCTX].find("SCTX" + sep[0] + esm.getScptLine(i));
-		if(search_n != merger_n.getDict()[RecType::SCTX].end())
+		auto search_n = merger.getDict()[RecType::SCTX].find("SCTX" + sep[0] + esm.getScptLine(i));
+		if(search_n != merger.getDict()[RecType::SCTX].end())
 		{
 			line = search_n->second;
 			line = line.substr(line.find(sep[0]) + 1);
@@ -145,8 +176,8 @@ void EsmConverter::convertScriptLine(size_t i)
 	}
 	else if(esm.getScptLineType(i) == "DIAL")
 	{
-		auto search_n = merger_n.getDict()[RecType::DIAL].find("DIAL" + sep[0] + text);
-		if(search_n != merger_n.getDict()[RecType::DIAL].end())
+		auto search_n = merger.getDict()[RecType::DIAL].find("DIAL" + sep[0] + text);
+		if(search_n != merger.getDict()[RecType::DIAL].end())
 		{
 			if(text != search_n->second)
 			{
@@ -158,7 +189,7 @@ void EsmConverter::convertScriptLine(size_t i)
 		}
 		if(found == false)
 		{
-			for(auto &elem : merger_n.getDict()[RecType::DIAL])
+			for(auto &elem : merger.getDict()[RecType::DIAL])
 			{
 				if(caseInsensitiveStringCmp("DIAL" + sep[0] + text, elem.first) == 1)
 				{
@@ -173,8 +204,8 @@ void EsmConverter::convertScriptLine(size_t i)
 	}
 	else if(esm.getScptLineType(i) == "CELL")
 	{
-		auto search_n = merger_n.getDict()[RecType::CELL].find("CELL" + sep[0] + text);
-		if(search_n != merger_n.getDict()[RecType::CELL].end())
+		auto search_n = merger.getDict()[RecType::CELL].find("CELL" + sep[0] + text);
+		if(search_n != merger.getDict()[RecType::CELL].end())
 		{
 			if(text != search_n->second)
 			{
@@ -186,7 +217,7 @@ void EsmConverter::convertScriptLine(size_t i)
 		}
 		if(found == false)
 		{
-			for(auto &elem : merger_n.getDict()[RecType::CELL])
+			for(auto &elem : merger.getDict()[RecType::CELL])
 			{
 				if(caseInsensitiveStringCmp("CELL" + sep[0] + text, elem.first) == 1)
 				{
@@ -223,11 +254,11 @@ void EsmConverter::convertCELL()
 			esm.setPri("NAME");
 
 			pri_text = "CELL" + sep[0] + esm.getPriText();
-			auto search_n = merger_n.getDict()[RecType::CELL].find(pri_text);
+			auto search_n = merger.getDict()[RecType::CELL].find(pri_text);
 
-			if(search_n != merger_n.getDict()[RecType::CELL].end() &&
+			if(search_n != merger.getDict()[RecType::CELL].end() &&
 			   esm.getPriText() != search_n->second &&
-			   !esm.getPriText().empty())
+			   esm.getPriStatus())
 			{
 				convertRecordContent(esm.getPriPos(),
 						     esm.getPriSize(),
@@ -253,9 +284,9 @@ void EsmConverter::convertPGRD()
 			esm.setPri("NAME");
 
 			pri_text = "CELL" + sep[0] + esm.getPriText();
-			auto search_n = merger_n.getDict()[RecType::CELL].find(pri_text);
+			auto search_n = merger.getDict()[RecType::CELL].find(pri_text);
 
-			if(search_n != merger_n.getDict()[RecType::CELL].end() &&
+			if(search_n != merger.getDict()[RecType::CELL].end() &&
 			   esm.getPriText() != search_n->second)
 			{
 				convertRecordContent(esm.getPriPos(),
@@ -282,9 +313,9 @@ void EsmConverter::convertANAM()
 			esm.setPri("ANAM");
 
 			pri_text = "CELL" + sep[0] + esm.getPriText();
-			auto search_n = merger_n.getDict()[RecType::CELL].find(pri_text);
+			auto search_n = merger.getDict()[RecType::CELL].find(pri_text);
 
-			if(search_n != merger_n.getDict()[RecType::CELL].end() &&
+			if(search_n != merger.getDict()[RecType::CELL].end() &&
 			   esm.getPriText() != search_n->second)
 			{
 				convertRecordContent(esm.getPriPos(),
@@ -303,7 +334,7 @@ void EsmConverter::convertSCVR()
 {
 	counter = 0;
 	string pri_text;
-	string scvr_text;
+	string sec_text;
 	for(size_t i = 0; i < esm.getRecColl().size(); ++i)
 	{
 		esm.setRec(i);
@@ -312,20 +343,20 @@ void EsmConverter::convertSCVR()
 			esm.setPriColl("SCVR");
 			for(size_t k = 0; k < esm.getPriColl().size(); ++k)
 			{
-				if(!esm.getPriText(k).empty() &&
+				if(esm.getPriStatus(k) &&
 				   esm.getPriText(k).substr(1, 1) == "B")
 				{
 					pri_text = "CELL" + sep[0] + esm.getPriText(k).substr(5);
-					auto search_n = merger_n.getDict()[RecType::CELL].find(pri_text);
+					auto search_n = merger.getDict()[RecType::CELL].find(pri_text);
 
-					if(search_n != merger_n.getDict()[RecType::CELL].end() &&
+					if(search_n != merger.getDict()[RecType::CELL].end() &&
 					   esm.getPriText(k).substr(5) != search_n->second)
 					{
-						scvr_text = esm.getPriText(k).substr(0, 5) + search_n->second;
+						sec_text = esm.getPriText(k).substr(0, 5) + search_n->second;
 						convertRecordContent(esm.getPriPos(k),
 								     esm.getPriSize(k),
-								     scvr_text,
-								     scvr_text.size());
+								     sec_text,
+								     sec_text.size());
 						counter++;
 						esm.setPriColl("SCVR");
 					}
@@ -350,12 +381,12 @@ void EsmConverter::convertDNAM()
 			esm.setPriColl("DNAM");
 			for(size_t k = 0; k < esm.getPriColl().size(); ++k)
 			{
-				if(!esm.getPriText(k).empty())
+				if(esm.getPriStatus(k))
 				{
 					pri_text = "CELL" + sep[0] + esm.getPriText(k);
-					auto search_n = merger_n.getDict()[RecType::CELL].find(pri_text);
+					auto search_n = merger.getDict()[RecType::CELL].find(pri_text);
 
-					if(search_n != merger_n.getDict()[RecType::CELL].end() &&
+					if(search_n != merger.getDict()[RecType::CELL].end() &&
 					   esm.getPriText(k) != search_n->second)
 					{
 						convertRecordContent(esm.getPriPos(k),
@@ -385,12 +416,12 @@ void EsmConverter::convertCNDT()
 			esm.setPriColl("CNDT");
 			for(size_t k = 0; k < esm.getPriColl().size(); ++k)
 			{
-				if(!esm.getPriText(k).empty())
+				if(esm.getPriStatus(k))
 				{
 					pri_text = "CELL" + sep[0] + esm.getPriText(k);
-					auto search_n = merger_n.getDict()[RecType::CELL].find(pri_text);
+					auto search_n = merger.getDict()[RecType::CELL].find(pri_text);
 
-					if(search_n != merger_n.getDict()[RecType::CELL].end() &&
+					if(search_n != merger.getDict()[RecType::CELL].end() &&
 					   esm.getPriText() != search_n->second)
 					{
 						convertRecordContent(esm.getPriPos(k),
@@ -412,7 +443,8 @@ void EsmConverter::convertGMST()
 {
 	counter = 0;
 	counter_safe = 0;
-	string pri_text;
+	string pri_text_n;
+	string pri_text_f;
 	for(size_t i = 0; i < esm.getRecColl().size(); ++i)
 	{
 		esm.setRec(i);
@@ -421,12 +453,13 @@ void EsmConverter::convertGMST()
 			esm.setPri("NAME");
 			esm.setSec("STRV");
 
-			pri_text = "GMST" + sep[0] + esm.getPriText();
-			auto search_n = merger_n.getDict()[RecType::GMST].find(pri_text);
-			auto search_f = merger_f.getDict()[RecType::GMST].find(pri_text);
+			pri_text_n = "GMST" + sep[0] + esm.getPriText();
+			pri_text_f = "GMST" + ext + sep[0] + esm.getPriText();
+			auto search_n = merger.getDict()[RecType::GMST].find(pri_text_n);
+			auto search_f = merger.getDict()[RecType::GMST].find(pri_text_f);
 
-			if(safe_convert == false &&
-			   search_n != merger_n.getDict()[RecType::GMST].end() &&
+			if(Config::getSafeConvert() == false &&
+			   search_n != merger.getDict()[RecType::GMST].end() &&
 			   esm.getSecText() != search_n->second)
 			{
 				convertRecordContent(esm.getSecPos(),
@@ -435,9 +468,9 @@ void EsmConverter::convertGMST()
 						     search_n->second.size() + 1);
 				counter++;
 			}
-			else if(safe_convert == true &&
-				search_f != merger_f.getDict()[RecType::GMST].end() &&
-				search_n != merger_n.getDict()[RecType::GMST].end() &&
+			else if(Config::getSafeConvert() == true &&
+				search_f != merger.getDict()[RecType::GMST].end() &&
+				search_n != merger.getDict()[RecType::GMST].end() &&
 				esm.getSecText() == search_f->second &&
 				esm.getSecText() != search_n->second)
 			{
@@ -456,7 +489,8 @@ void EsmConverter::convertGMST()
 void EsmConverter::convertFNAM()
 {
 	counter = 0;
-	string pri_text;
+	string pri_text_n;
+	string pri_text_f;
 	for(size_t i = 0; i < esm.getRecColl().size(); ++i)
 	{
 		esm.setRec(i);
@@ -488,12 +522,13 @@ void EsmConverter::convertFNAM()
 			esm.setPri("NAME");
 			esm.setSec("FNAM");
 
-			pri_text = "FNAM" + sep[0] + esm.getRecId() + sep[0] + esm.getPriText();
-			auto search_n = merger_n.getDict()[RecType::FNAM].find(pri_text);
-			auto search_f = merger_f.getDict()[RecType::FNAM].find(pri_text);
+			pri_text_n = "FNAM" + sep[0] + esm.getRecId() + sep[0] + esm.getPriText();
+			pri_text_f = "FNAM" + ext + sep[0] + esm.getRecId() + sep[0] + esm.getPriText();
+			auto search_n = merger.getDict()[RecType::FNAM].find(pri_text_n);
+			auto search_f = merger.getDict()[RecType::FNAM].find(pri_text_f);
 
-			if(safe_convert == false &&
-			   search_n != merger_n.getDict()[RecType::FNAM].end() &&
+			if(Config::getSafeConvert() == false &&
+			   search_n != merger.getDict()[RecType::FNAM].end() &&
 			   esm.getSecText() != search_n->second)
 			{
 				convertRecordContent(esm.getSecPos(),
@@ -502,9 +537,9 @@ void EsmConverter::convertFNAM()
 						     search_n->second.size() + 1);
 				counter++;
 			}
-			else if(safe_convert == true &&
-				search_f != merger_f.getDict()[RecType::FNAM].end() &&
-				search_n != merger_n.getDict()[RecType::FNAM].end() &&
+			else if(Config::getSafeConvert() == true &&
+				search_f != merger.getDict()[RecType::FNAM].end() &&
+				search_n != merger.getDict()[RecType::FNAM].end() &&
 				esm.getSecText() == search_f->second &&
 				esm.getSecText() != search_n->second)
 			{
@@ -523,7 +558,8 @@ void EsmConverter::convertFNAM()
 void EsmConverter::convertDESC()
 {
 	counter = 0;
-	string pri_text;
+	string pri_text_n;
+	string pri_text_f;
 	for(size_t i = 0; i < esm.getRecColl().size(); ++i)
 	{
 		esm.setRec(i);
@@ -534,12 +570,13 @@ void EsmConverter::convertDESC()
 			esm.setPri("NAME");
 			esm.setSec("DESC");
 
-			pri_text = "DESC" + sep[0] + esm.getRecId() + sep[0] + esm.getPriText();
-			auto search_n = merger_n.getDict()[RecType::DESC].find(pri_text);
-			auto search_f = merger_f.getDict()[RecType::DESC].find(pri_text);
+			pri_text_n = "DESC" + sep[0] + esm.getRecId() + sep[0] + esm.getPriText();
+			pri_text_f = "DESC" + ext + sep[0] + esm.getRecId() + sep[0] + esm.getPriText();
+			auto search_n = merger.getDict()[RecType::DESC].find(pri_text_n);
+			auto search_f = merger.getDict()[RecType::DESC].find(pri_text_f);
 
-			if(safe_convert == false &&
-			   search_n != merger_n.getDict()[RecType::DESC].end() &&
+			if(Config::getSafeConvert() == false &&
+			   search_n != merger.getDict()[RecType::DESC].end() &&
 			   esm.getSecText() != search_n->second)
 			{
 				convertRecordContent(esm.getSecPos(),
@@ -548,9 +585,9 @@ void EsmConverter::convertDESC()
 						     search_n->second.size() + 1);
 				counter++;
 			}
-			else if(safe_convert == true &&
-				search_f != merger_f.getDict()[RecType::DESC].end() &&
-				search_n != merger_n.getDict()[RecType::DESC].end() &&
+			else if(Config::getSafeConvert() == true &&
+				search_f != merger.getDict()[RecType::DESC].end() &&
+				search_n != merger.getDict()[RecType::DESC].end() &&
 				esm.getSecText() == search_f->second &&
 				esm.getSecText() != search_n->second)
 			{
@@ -569,7 +606,8 @@ void EsmConverter::convertDESC()
 void EsmConverter::convertTEXT()
 {
 	counter = 0;
-	string pri_text;
+	string pri_text_n;
+	string pri_text_f;
 	for(size_t i = 0; i < esm.getRecColl().size(); ++i)
 	{
 		esm.setRec(i);
@@ -578,12 +616,13 @@ void EsmConverter::convertTEXT()
 			esm.setPri("NAME");
 			esm.setSec("TEXT");
 
-			pri_text = "TEXT" + sep[0] + esm.getPriText();
-			auto search_n = merger_n.getDict()[RecType::TEXT].find(pri_text);
-			auto search_f = merger_f.getDict()[RecType::TEXT].find(pri_text);
+			pri_text_n = "TEXT" + sep[0] + esm.getPriText();
+			pri_text_f = "TEXT" + ext + sep[0] + esm.getPriText();
+			auto search_n = merger.getDict()[RecType::TEXT].find(pri_text_n);
+			auto search_f = merger.getDict()[RecType::TEXT].find(pri_text_f);
 
-			if(safe_convert == false &&
-			   search_n != merger_n.getDict()[RecType::TEXT].end() &&
+			if(Config::getSafeConvert() == false &&
+			   search_n != merger.getDict()[RecType::TEXT].end() &&
 			   esm.getSecText() != search_n->second)
 			{
 				convertRecordContent(esm.getSecPos(),
@@ -592,9 +631,9 @@ void EsmConverter::convertTEXT()
 						     search_n->second.size() + 1);
 				counter++;
 			}
-			else if(safe_convert == true &&
-				search_f != merger_f.getDict()[RecType::TEXT].end() &&
-				search_n != merger_n.getDict()[RecType::TEXT].end() &&
+			else if(Config::getSafeConvert() == true &&
+				search_f != merger.getDict()[RecType::TEXT].end() &&
+				search_n != merger.getDict()[RecType::TEXT].end() &&
 				esm.getSecText() == search_f->second &&
 				esm.getSecText() != search_n->second)
 			{
@@ -613,8 +652,9 @@ void EsmConverter::convertTEXT()
 void EsmConverter::convertRNAM()
 {
 	counter = 0;
-	string pri_text;
-	string rnam_text;
+	string pri_text_n;
+	string pri_text_f;
+	string sec_text;
 	for(size_t i = 0; i < esm.getRecColl().size(); ++i)
 	{
 		esm.setRec(i);
@@ -624,34 +664,35 @@ void EsmConverter::convertRNAM()
 			esm.setSecColl("RNAM");
 			for(size_t k = 0; k < esm.getSecColl().size(); ++k)
 			{
-				pri_text = "RNAM" + sep[0] + esm.getPriText() + sep[0] + to_string(k);
-				auto search_n = merger_n.getDict()[RecType::RNAM].find(pri_text);
-				auto search_f = merger_f.getDict()[RecType::RNAM].find(pri_text);
+				pri_text_n = "RNAM" + sep[0] + esm.getPriText() + sep[0] + to_string(k);
+				pri_text_f = "RNAM" + ext + sep[0] + esm.getPriText() + sep[0] + to_string(k);
+				auto search_n = merger.getDict()[RecType::RNAM].find(pri_text_n);
+				auto search_f = merger.getDict()[RecType::RNAM].find(pri_text_f);
 
-				if(safe_convert == false &&
-				   search_n != merger_n.getDict()[RecType::RNAM].end() &&
+				if(Config::getSafeConvert() == false &&
+				   search_n != merger.getDict()[RecType::RNAM].end() &&
 				   esm.getSecText(k) != search_n->second)
 				{
-					rnam_text = search_n->second;
-					rnam_text.resize(32);
+					sec_text = search_n->second;
+					sec_text.resize(32);
 					convertRecordContent(esm.getSecPos(k),
 							     esm.getSecSize(k),
-							     rnam_text,
+							     sec_text,
 							     32);
 					counter++;
 					esm.setSecColl("RNAM");
 				}
-				else if(safe_convert == true &&
-					search_f != merger_f.getDict()[RecType::RNAM].end() &&
-					search_n != merger_n.getDict()[RecType::RNAM].end() &&
+				else if(Config::getSafeConvert() == true &&
+					search_f != merger.getDict()[RecType::RNAM].end() &&
+					search_n != merger.getDict()[RecType::RNAM].end() &&
 					esm.getSecText(k) == search_f->second &&
 					esm.getSecText(k) != search_n->second)
 				{
-					rnam_text = search_n->second;
-					rnam_text.resize(32);
+					sec_text = search_n->second;
+					sec_text.resize(32);
 					convertRecordContent(esm.getSecPos(k),
 							     esm.getSecSize(k),
-							     rnam_text,
+							     sec_text,
 							     32);
 					counter++;
 					esm.setSecColl("RNAM");
@@ -666,7 +707,8 @@ void EsmConverter::convertRNAM()
 void EsmConverter::convertINDX()
 {
 	counter = 0;
-	string pri_text;
+	string pri_text_n;
+	string pri_text_f;
 	for(size_t i = 0; i < esm.getRecColl().size(); ++i)
 	{
 		esm.setRec(i);
@@ -676,12 +718,13 @@ void EsmConverter::convertINDX()
 			esm.setPriINDX();
 			esm.setSec("DESC");
 
-			pri_text = "INDX" + sep[0] + esm.getRecId() + sep[0] + esm.getPriText();
-			auto search_n = merger_n.getDict()[RecType::INDX].find(pri_text);
-			auto search_f = merger_f.getDict()[RecType::INDX].find(pri_text);
+			pri_text_n = "INDX" + sep[0] + esm.getRecId() + sep[0] + esm.getPriText();
+			pri_text_f = "INDX" + ext + sep[0] + esm.getRecId() + sep[0] + esm.getPriText();
+			auto search_n = merger.getDict()[RecType::INDX].find(pri_text_n);
+			auto search_f = merger.getDict()[RecType::INDX].find(pri_text_f);
 
-			if(safe_convert == false &&
-			   search_n != merger_n.getDict()[RecType::INDX].end() &&
+			if(Config::getSafeConvert() == false &&
+			   search_n != merger.getDict()[RecType::INDX].end() &&
 			   esm.getSecText() != search_n->second)
 			{
 				convertRecordContent(esm.getSecPos(),
@@ -690,9 +733,9 @@ void EsmConverter::convertINDX()
 						     search_n->second.size() + 1);
 				counter++;
 			}
-			else if(safe_convert == true &&
-				search_f != merger_f.getDict()[RecType::INDX].end() &&
-				search_n != merger_n.getDict()[RecType::INDX].end() &&
+			else if(Config::getSafeConvert() == true &&
+				search_f != merger.getDict()[RecType::INDX].end() &&
+				search_n != merger.getDict()[RecType::INDX].end() &&
 				esm.getSecText() == search_f->second &&
 				esm.getSecText() != search_n->second)
 			{
@@ -721,9 +764,9 @@ void EsmConverter::convertDIAL()
 			esm.setSecDialType("DATA");
 
 			pri_text = "DIAL" + sep[0] + esm.getPriText();
-			auto search_n = merger_n.getDict()[RecType::DIAL].find(pri_text);
+			auto search_n = merger.getDict()[RecType::DIAL].find(pri_text);
 
-			if(search_n != merger_n.getDict()[RecType::DIAL].end() &&
+			if(search_n != merger.getDict()[RecType::DIAL].end() &&
 			   esm.getPriText() != search_n->second)
 			{
 				convertRecordContent(esm.getPriPos(),
@@ -742,7 +785,8 @@ void EsmConverter::convertINFO()
 {
 	counter = 0;
 	counter_add = 0;
-	string pri_text;
+	string pri_text_n;
+	string pri_text_f;
 	string sec_text;
 	string sec_text_lowercase;
 	size_t pos;
@@ -762,12 +806,13 @@ void EsmConverter::convertINFO()
 			esm.setPri("INAM");
 			esm.setSec("NAME");
 
-			pri_text = "INFO" + sep[0] + dial + sep[0] + esm.getPriText();
-			auto search_n = merger_n.getDict()[RecType::INFO].find(pri_text);
-			auto search_f = merger_f.getDict()[RecType::INFO].find(pri_text);
+			pri_text_n = "INFO" + sep[0] + dial + sep[0] + esm.getPriText();
+			pri_text_f = "INFO" + ext + sep[0] + dial + sep[0] + esm.getPriText();
+			auto search_n = merger.getDict()[RecType::INFO].find(pri_text_n);
+			auto search_f = merger.getDict()[RecType::INFO].find(pri_text_f);
 
-			if(safe_convert == false &&
-			   search_n != merger_n.getDict()[RecType::INFO].end() &&
+			if(Config::getSafeConvert() == false &&
+			   search_n != merger.getDict()[RecType::INFO].end() &&
 			   esm.getSecText() != search_n->second)
 			{
 				convertRecordContent(esm.getSecPos(),
@@ -776,9 +821,9 @@ void EsmConverter::convertINFO()
 						     search_n->second.size() + 1);
 				counter++;
 			}
-			else if(safe_convert == true &&
-				search_f != merger_f.getDict()[RecType::INFO].end() &&
-				search_n != merger_n.getDict()[RecType::INFO].end() &&
+			else if(Config::getSafeConvert() == true &&
+				search_f != merger.getDict()[RecType::INFO].end() &&
+				search_n != merger.getDict()[RecType::INFO].end() &&
 				esm.getSecText() == search_f->second &&
 				esm.getSecText() != search_n->second)
 			{
@@ -788,12 +833,12 @@ void EsmConverter::convertINFO()
 						     search_n->second.size() + 1);
 				counter++;
 			}
-			else if(add_dial_to_info == true &&
+			else if(Config::getAddDialToInfo() == true &&
 				!esm.getSecText().empty() &&
 				dial.substr(0, 1) != "V")
 			{
 				sec_text = esm.getSecText();
-				for(auto &elem : merger_n.getDict()[RecType::DIAL])
+				for(auto &elem : merger.getDict()[RecType::DIAL])
 				{
 				        text = elem.first.substr(5);
 					if(text != elem.second)

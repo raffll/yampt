@@ -1,6 +1,7 @@
 #include "DictMerger.hpp"
 
 using namespace std;
+using namespace yampt;
 
 //----------------------------------------------------------
 DictMerger::DictMerger()
@@ -9,11 +10,11 @@ DictMerger::DictMerger()
 }
 
 //----------------------------------------------------------
-DictMerger::DictMerger(vector<string> &path, bool allow_more_info)
+DictMerger::DictMerger(vector<string> &path)
 {
 	for(auto &elem : path)
 	{
-		DictReader reader(allow_more_info);
+		DictReader reader;
 		reader.readFile(elem);
 		if(reader.getStatus() == true)
 		{
@@ -50,7 +51,7 @@ void DictMerger::mergeDict()
 						search->second != elem.second)
 					{
 						counter_duplicate++;
-						log += sep[4] +
+						log += line + "\r\n" +
 						       sep[1] + elem.first + sep[2] + elem.second +
 						       sep[3] +
 						       " <!-- record in " + dict_coll[i].getName() +
@@ -95,11 +96,11 @@ void DictMerger::makeDiff()
 				{
 					if(search->second != elem.second)
 					{
-						diff[0] += sep[4] +
+						diff[0] += line + "\r\n" +
 							   sep[1] + elem.first +
 							   sep[2] + elem.second +
 							   sep[3] + "\r\n";
-						diff[1] += sep[4] +
+						diff[1] += line + "\r\n" +
 							   sep[1] + search->first +
 							   sep[2] + search->second +
 							   sep[3] + "\r\n";

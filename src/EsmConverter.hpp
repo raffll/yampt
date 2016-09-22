@@ -12,15 +12,16 @@ public:
 	void convertEsm();
 	void writeEsm();
 
-	void setSafeConvert(bool x) { safe_convert = x; }
-	void setAddDialToInfo(bool x) { add_dial_to_info = x; }
-
 	bool getStatus() { return status; }
 
 	EsmConverter();
-	EsmConverter(std::string path, DictMerger &n, DictMerger &f);
+	EsmConverter(std::string path, DictMerger &n);
 
 private:
+	void setConditions(const std::string &pri_text_n,
+			   const std::string &pri_text_f,
+			   const std::string &sec_text,
+			   RecType type);
 	std::string convertIntToByteArray(unsigned int x);
 	bool caseInsensitiveStringCmp(std::string lhs, std::string rhs);
 	void convertRecordContent(size_t pos, size_t old_size, std::string new_text,
@@ -40,24 +41,25 @@ private:
 	void convertINDX();
 	void convertDIAL();
 	void convertINFO();
-	void convertINFOWithDIAL();
 	void convertBNAM();
 	void convertSCPT();
 
 	bool status = 0;
 	EsmRecord esm;
-	DictMerger merger_n;
-	DictMerger merger_f;
+	DictMerger merger;
 	int counter = 0;
 	int counter_safe = 0;
 	int counter_add = 0;
 	int counter_message = 0;
 	int counter_dial = 0;
 	int counter_cell = 0;
-	bool safe_convert = 0;
-	bool add_dial_to_info = 0;
 	std::string rec_content;
 	std::string script_text;
+
+	bool found_n = false;
+	bool found_f = false;
+	bool equal_n = false;
+	bool equal_f = false;
 };
 
 #endif

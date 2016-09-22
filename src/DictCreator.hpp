@@ -15,7 +15,7 @@ public:
 	void setNoDuplicates(bool x) { no_duplicates = x; }
 
 	std::string getName() { return esm_n.getNamePrefix(); }
-	std::array<std::map<std::string, std::string>, 11> const& getDict() const { return dict; }
+	yampt::dict_t const& getDict() const { return dict; }
 	std::string getScriptText() { return raw_text; }
 
 	DictCreator();
@@ -25,7 +25,10 @@ public:
 
 private:
 	std::string dialTranslator(std::string to_translate);
-	void insertRecord(const std::string &pri_text, const std::string &sec_text, RecType type, bool extra = 0);
+	void insertRecord(const std::string &pri_text,
+			  const std::string &sec_text,
+			  RecType type,
+			  bool extra = false);
 	void makeDictCELL();
 	void makeDictGMST();
 	void makeDictFNAM();
@@ -47,7 +50,7 @@ private:
 	bool no_duplicates = 0;
 	int counter;
 	int counter_cell;
-	std::array<std::map<std::string, std::string>, 11> dict;
+	yampt::dict_t dict;
 	std::string raw_text;
 };
 

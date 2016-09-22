@@ -38,13 +38,20 @@ void EsmRecord::setPri(string id)
 			{
 				cur_text = rec->substr(cur_pos + 8, cur_size);
 				eraseNullChars(cur_text);
-				pri_coll.push_back(make_tuple(cur_pos, cur_size, cur_text));
+				if(!cur_text.empty())
+				{
+					pri_coll.push_back(make_tuple(cur_pos, cur_size, cur_text, true));
+				}
+				else
+				{
+					pri_coll.push_back(make_tuple(0, 0, "", false));
+				}
 				break;
 			}
 			cur_pos += 8 + cur_size;
 			if(cur_pos == rec->size())
 			{
-				pri_coll.push_back(make_tuple(cur_pos, 0, ""));
+				pri_coll.push_back(make_tuple(0, 0, "", false));
 			}
 		}
 	}
@@ -69,7 +76,7 @@ void EsmRecord::setPriColl(string id)
 			{
 				cur_text = rec->substr(cur_pos + 8, cur_size);
 				eraseNullChars(cur_text);
-				pri_coll.push_back(make_tuple(cur_pos, cur_size, cur_text));
+				pri_coll.push_back(make_tuple(cur_pos, cur_size, cur_text, true));
 			}
 			cur_pos += 8 + cur_size;
 		}
@@ -94,18 +101,18 @@ void EsmRecord::setSec(string id)
 			if(cur_id == sec_id)
 			{
 				cur_text = rec->substr(cur_pos + 8, cur_size);
-				if(replace_broken_chars == true)
+				if(Config::getReplaceBrokenChars() == true)
 				{
 					replaceBrokenChars(cur_text);
 				}
 				eraseNullChars(cur_text);
-				sec_coll.push_back(make_tuple(cur_pos, cur_size, cur_text));
+				sec_coll.push_back(make_tuple(cur_pos, cur_size, cur_text, true));
 				break;
 			}
 			cur_pos += 8 + cur_size;
 			if(cur_pos == rec->size())
 			{
-				sec_coll.push_back(make_tuple(cur_pos, 0, ""));
+				sec_coll.push_back(make_tuple(0, 0, "", false));
 			}
 		}
 	}
@@ -130,7 +137,7 @@ void EsmRecord::setSecColl(string id)
 			{
 				cur_text = rec->substr(cur_pos + 8, cur_size);
 				eraseNullChars(cur_text);
-				sec_coll.push_back(make_tuple(cur_pos, cur_size, cur_text));
+				sec_coll.push_back(make_tuple(cur_pos, cur_size, cur_text, true));
 			}
 			cur_pos += 8 + cur_size;
 		}
@@ -158,10 +165,14 @@ void EsmRecord::setPriINDX()
 				ostringstream ss;
 				ss << setfill('0') << setw(3) << indx;
 				cur_text = ss.str();
-				pri_coll.push_back(make_tuple(cur_pos, 0, cur_text));
+				pri_coll.push_back(make_tuple(cur_pos, 0, cur_text, true));
 				break;
 			}
 			cur_pos += 8 + cur_size;
+			if(cur_pos == rec->size())
+			{
+				pri_coll.push_back(make_tuple(0, 0, "", false));
+			}
 		}
 	}
 }
@@ -186,7 +197,7 @@ void EsmRecord::setSecScptColl(string id)
 			line_lowercase = line;
 			transform(line_lowercase.begin(), line_lowercase.end(),
 				  line_lowercase.begin(), ::tolower);
-			for(auto &elem : Config::getKeyMessage())
+			for(auto &elem : key_message)
 			{
 				if(type == "NOCHANGE")
 				{
@@ -197,7 +208,7 @@ void EsmRecord::setSecScptColl(string id)
 					}
 				}
 			}
-			for(auto &elem : Config::getKeyDial())
+			for(auto &elem : key_dial)
 			{
 				if(type == "NOCHANGE")
 				{
@@ -209,7 +220,7 @@ void EsmRecord::setSecScptColl(string id)
 					}
 				}
 			}
-			for(auto &elem : Config::getKeyCell())
+			for(auto &elem : key_cell)
 			{
 				if(type == "NOCHANGE")
 				{
@@ -253,7 +264,7 @@ void EsmRecord::setSecMessageColl(string id)
 			line_lowercase = line;
 			transform(line_lowercase.begin(), line_lowercase.end(),
 				  line_lowercase.begin(), ::tolower);
-			for(auto &elem : Config::getKeyMessage())
+			for(auto &elem : key_message)
 			{
 				if(type == "NOCHANGE")
 				{

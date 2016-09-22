@@ -1,6 +1,7 @@
 #include "DictCreator.hpp"
 
 using namespace std;
+using namespace yampt;
 
 //----------------------------------------------------------
 DictCreator::DictCreator()
@@ -197,7 +198,7 @@ void DictCreator::makeScriptText()
 			if(esm_n.getRecId() == "SCPT")
 			{
 				esm_n.setSec("SCTX");
-				raw_text += esm_n.getSecText() + "\r\n" + sep[4];
+				raw_text += esm_n.getSecText() + "\r\n" + line + "\r\n";
 				counter++;
 			}
 		}
@@ -207,7 +208,7 @@ void DictCreator::makeScriptText()
 			if(esm_n.getRecId() == "INFO")
 			{
 				esm_n.setSec("BNAM");
-				raw_text += esm_n.getSecText() + "\r\n" + sep[4];
+				raw_text += esm_n.getSecText() + "\r\n" + line + "\r\n";
 				counter++;
 			}
 		}
@@ -227,7 +228,7 @@ void DictCreator::makeDictCELL()
 		{
 			esm_n.setPri("NAME");
 			esm_f.setPri("NAME");
-			if(!esm_n.getPriText().empty())
+			if(esm_n.getPriStatus())
 			{
 				insertRecord("CELL" + sep[0] + esm_ptr->getPriText(),
 					     esm_n.getPriText(),
@@ -251,13 +252,19 @@ void DictCreator::makeDictGMST()
 		{
 			esm_n.setPri("NAME");
 			esm_n.setSec("STRV");
-			esm_f.setPri("NAME");
 			esm_f.setSec("STRV");
-			if(!esm_n.getSecText().empty())
+			if(esm_n.getSecStatus())
 			{
 				insertRecord("GMST" + sep[0] + esm_n.getPriText(),
 					     esm_n.getSecText(),
 					     RecType::GMST);
+
+				if(esm_f.getStatus() == true)
+				{
+					insertRecord("GMST" + ext + sep[0] + esm_n.getPriText(),
+						     esm_f.getSecText(),
+						     RecType::GMST);
+				}
 			}
 			if(esm_n.getPriText() == "sDefaultCellname")
 			{
@@ -311,13 +318,19 @@ void DictCreator::makeDictFNAM()
 		{
 			esm_n.setPri("NAME");
 			esm_n.setSec("FNAM");
-			esm_f.setPri("NAME");
 			esm_f.setSec("FNAM");
-			if(!esm_n.getPriText().empty())
+			if(esm_n.getPriStatus())
 			{
 				insertRecord("FNAM" + sep[0] + esm_n.getRecId() + sep[0] + esm_n.getPriText(),
 					     esm_n.getSecText(),
 					     RecType::FNAM);
+
+				if(esm_f.getStatus() == true)
+				{
+					insertRecord("FNAM" + ext + sep[0] + esm_n.getRecId() + sep[0] + esm_n.getPriText(),
+						     esm_f.getSecText(),
+					             RecType::FNAM);
+				}
 			}
 			if(esm_n.getRecId() == "REGN")
 			{
@@ -342,15 +355,24 @@ void DictCreator::makeDictDESC()
 	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
 	{
 		esm_n.setRec(i);
+		esm_f.setRec(i);
 		if(esm_n.getRecId() == "BSGN" ||
 		   esm_n.getRecId() == "CLAS" ||
 		   esm_n.getRecId() == "RACE")
 		{
 			esm_n.setPri("NAME");
 			esm_n.setSec("DESC");
+			esm_f.setSec("DESC");
 			insertRecord("DESC" + sep[0] + esm_n.getRecId() + sep[0] + esm_n.getPriText(),
 				     esm_n.getSecText(),
 				     RecType::DESC);
+
+			if(esm_f.getStatus() == true)
+			{
+				insertRecord("DESC" + ext + sep[0] + esm_n.getRecId() + sep[0] + esm_n.getPriText(),
+					     esm_f.getSecText(),
+					     RecType::DESC);
+			}
 		}
 	}
 	cout << "    --> DESC records created: " << to_string(counter) << "\r\n";
@@ -363,13 +385,22 @@ void DictCreator::makeDictTEXT()
 	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
 	{
 		esm_n.setRec(i);
+		esm_f.setRec(i);
 		if(esm_n.getRecId() == "BOOK")
 		{
 			esm_n.setPri("NAME");
 			esm_n.setSec("TEXT");
+			esm_f.setSec("TEXT");
 			insertRecord("TEXT" + sep[0] + esm_n.getPriText(),
 				     esm_n.getSecText(),
 				     RecType::TEXT);
+
+			if(esm_f.getStatus() == true)
+			{
+				insertRecord("TEXT" + ext + sep[0] + esm_n.getPriText(),
+					     esm_f.getSecText(),
+					     RecType::TEXT);
+			}
 		}
 	}
 	cout << "    --> TEXT records created: " << to_string(counter) << "\r\n";
@@ -382,15 +413,24 @@ void DictCreator::makeDictRNAM()
 	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
 	{
 		esm_n.setRec(i);
+		esm_f.setRec(i);
 		if(esm_n.getRecId() == "FACT")
 		{
 			esm_n.setPri("NAME");
 			esm_n.setSecColl("RNAM");
+			esm_f.setSecColl("RNAM");
 			for(size_t k = 0; k < esm_n.getSecColl().size(); ++k)
 			{
 				insertRecord("RNAM" + sep[0] + esm_n.getPriText() + sep[0] + to_string(k),
 					     esm_n.getSecText(k),
 					     RecType::RNAM);
+
+				if(esm_f.getStatus() == true)
+				{
+					insertRecord("RNAM" + ext + sep[0] + esm_n.getPriText() + sep[0] + to_string(k),
+						     esm_f.getSecText(k),
+						     RecType::RNAM);
+				}
 			}
 		}
 	}
@@ -404,14 +444,23 @@ void DictCreator::makeDictINDX()
 	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
 	{
 		esm_n.setRec(i);
+		esm_f.setRec(i);
 		if(esm_n.getRecId() == "SKIL" ||
 		   esm_n.getRecId() == "MGEF")
 		{
 			esm_n.setPriINDX();
 			esm_n.setSec("DESC");
+			esm_f.setSec("DESC");
 			insertRecord("INDX" + sep[0] + esm_n.getRecId() + sep[0] + esm_n.getPriText(),
 				     esm_n.getSecText(),
 				     RecType::INDX);
+
+			if(esm_f.getStatus() == true)
+			{
+				insertRecord("INDX" + ext + sep[0] + esm_n.getRecId() + sep[0] + esm_n.getPriText(),
+					     esm_f.getSecText(),
+					     RecType::INDX);
+			}
 		}
 	}
 	cout << "    --> INDX records created: " << to_string(counter) << "\r\n";
@@ -449,6 +498,7 @@ void DictCreator::makeDictINFO()
 	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
 	{
 		esm_n.setRec(i);
+		esm_f.setRec(i);
 		if(esm_n.getRecId() == "DIAL")
 		{
 			esm_n.setPri("NAME");
@@ -459,11 +509,19 @@ void DictCreator::makeDictINFO()
 		{
 			esm_n.setPri("INAM");
 			esm_n.setSec("NAME");
-			if(!esm_n.getSecText().empty())
+			esm_f.setSec("NAME");
+			if(esm_n.getSecStatus())
 			{
 				insertRecord("INFO" + sep[0] + dial + sep[0] + esm_n.getPriText(),
 					     esm_n.getSecText(),
 					     RecType::INFO);
+
+				if(esm_f.getStatus() == true)
+				{
+					insertRecord("INFO" + ext + sep[0] + dial + sep[0] + esm_n.getPriText(),
+						     esm_f.getSecText(),
+					             RecType::INFO);
+				}
 			}
 		}
 	}
@@ -485,7 +543,7 @@ void DictCreator::makeDictBNAM()
 			for(size_t k = 0; k < esm_n.getScptColl().size(); ++k)
 			{
 				insertRecord("BNAM" + sep[0] + esm_ptr->getScptLine(k),
-					     sep[5] + sep[0] + esm_n.getScptLine(k),
+					     "\r\n        " + sep[0] + esm_n.getScptLine(k),
 					     RecType::BNAM);
 			}
 		}
@@ -508,7 +566,7 @@ void DictCreator::makeDictSCPT()
 			for(size_t k = 0; k < esm_n.getScptColl().size(); ++k)
 			{
 				insertRecord("SCTX" + sep[0] + esm_ptr->getScptLine(k),
-					     sep[5] + sep[0] + esm_n.getScptLine(k),
+					     "\r\n        " + sep[0] + esm_n.getScptLine(k),
 					     RecType::SCTX);
 			}
 		}

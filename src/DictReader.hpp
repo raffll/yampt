@@ -11,9 +11,9 @@ public:
 	std::string getName() { return name; }
 	std::string getNamePrefix() { return name_prefix; }
 	std::string getLog() { return log; }
-	std::array<std::map<std::string, std::string>, 11> const& getDict() const { return dict; }
+	yampt::dict_t const& getDict() const { return dict; }
 
-	DictReader(bool x);
+	DictReader();
 	DictReader(const DictReader& that);
 	DictReader& operator=(const DictReader& that);
 	~DictReader();
@@ -30,8 +30,7 @@ private:
 	int counter = 0;
 	int counter_invalid = 0;
 	std::string log;
-	std::array<std::map<std::string, std::string>, 11> dict;
-	bool allow_more_info = 0;
+	yampt::dict_t dict;
 };
 
 #endif

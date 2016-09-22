@@ -25,7 +25,7 @@ void EsmReader::readFile(string path)
 		}
 		if(content.size() > 4 && content.substr(0, 4) == "TES3")
 		{
-			status = 1;
+			status = true;
 			setName(path);
 			setRecColl(content);
 		}
