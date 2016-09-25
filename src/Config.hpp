@@ -21,9 +21,12 @@ enum RecType { CELL, DIAL, INDX, RNAM, DESC, GMST, FNAM, INFO, BNAM, SCTX, TEXT 
 
 typedef std::array<std::map<std::string, std::string>, 11> dict_t;
 
+const std::array<std::string, 5> dialog_type = {"T", "V", "G", "P", "J"};
+
 const std::vector<std::string> sep = {"^", "<h3>", "</h3>", "<hr>"};
 const std::string line = "----------------------------------------------------------";
-const std::string ext = "_EXT";
+const std::string ext = "_ORIGINAL";
+const bool NEXT = true;
 
 const std::vector<std::string> key_message = {"messagebox", "say ", "say,", "choice"};
 const std::vector<std::string> key_dial = {"addtopic"};
@@ -59,6 +62,18 @@ private:
 	static bool replace_broken_chars;
 	static bool safe_convert;
 	static bool add_dial_to_info;
+
+};
+
+class Tools
+{
+protected:
+	unsigned int convertByteArrayToInt(const std::string &str);
+	std::string convertIntToByteArray(unsigned int x);
+	bool caseInsensitiveStringCmp(std::string lhs, std::string rhs);
+	void eraseNullChars(std::string &str);
+	void replaceBrokenChars(std::string &str);
+	std::string eraseCarriageReturnChar(std::string &str);
 
 };
 

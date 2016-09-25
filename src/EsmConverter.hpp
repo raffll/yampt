@@ -6,27 +6,29 @@
 #include "EsmRecord.hpp"
 #include "DictMerger.hpp"
 
-class EsmConverter
+class EsmConverter : public Tools
 {
 public:
 	void convertEsm();
 	void writeEsm();
 
 	bool getStatus() { return status; }
+	std::string getLog() { return log_detailed; }
 
 	EsmConverter();
 	EsmConverter(std::string path, DictMerger &n);
 
 private:
-	void setConditions(const std::string &pri_text_n,
-			   const std::string &pri_text_f,
-			   const std::string &sec_text,
-			   RecType type);
-	std::string convertIntToByteArray(unsigned int x);
-	bool caseInsensitiveStringCmp(std::string lhs, std::string rhs);
-	void convertRecordContent(size_t pos, size_t old_size, std::string new_text,
-				  size_t new_size);
-	void convertScriptLine(size_t i);
+	void resetCounters();
+	void setNewFriendly(RecType type);
+	void setSafeConditions(RecType type);
+	void convertRecordContent(std::string new_text);
+	void convertScript(RecType type, std::string id);
+	void extractText(const std::string &line, std::string &text, size_t &pos);
+	void addDIALtoINFO();
+	void makeDetailedLog(std::string id, bool safe = false);
+	void printLog(std::string id);
+
 	void convertCELL();
 	void convertPGRD();
 	void convertANAM();
@@ -47,14 +49,16 @@ private:
 	bool status = 0;
 	EsmRecord esm;
 	DictMerger merger;
+
 	int counter = 0;
-	int counter_safe = 0;
-	int counter_add = 0;
-	int counter_message = 0;
-	int counter_dial = 0;
-	int counter_cell = 0;
-	std::string rec_content;
-	std::string script_text;
+
+	std::string unique_n;
+	std::string unique_f;
+	std::string new_friendly;
+	std::string new_script;
+
+	std::string log_detailed;
+	std::string result;
 
 	bool found_n = false;
 	bool found_f = false;

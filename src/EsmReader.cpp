@@ -72,28 +72,3 @@ void EsmReader::setRecColl(string &content)
 		}
 	}
 }
-
-//----------------------------------------------------------
-unsigned int EsmReader::convertByteArrayToInt(const string &str)
-{
-	char buffer[4];
-	unsigned char ubuffer[4];
-	unsigned int x;
-	str.copy(buffer, 4);
-	for(int i = 0; i < 4; i++)
-	{
-		ubuffer[i] = buffer[i];
-	}
-	if(str.size() == 4)
-	{
-		return x = (ubuffer[0] | ubuffer[1] << 8 | ubuffer[2] << 16 | ubuffer[3] << 24);
-	}
-	else if(str.size() == 1)
-	{
-		return x = ubuffer[0];
-	}
-	else
-	{
-		return x = 0;
-	}
-}

@@ -6,7 +6,7 @@
 #include "EsmRecord.hpp"
 #include "DictMerger.hpp"
 
-class DictCreator
+class DictCreator : public Tools
 {
 public:
 	void makeDict();
@@ -16,7 +16,7 @@ public:
 
 	std::string getName() { return esm_n.getNamePrefix(); }
 	yampt::dict_t const& getDict() const { return dict; }
-	std::string getScriptText() { return raw_text; }
+	std::string getScriptText() { return script_text; }
 
 	DictCreator();
 	DictCreator(std::string path_n);
@@ -29,6 +29,8 @@ private:
 			  const std::string &sec_text,
 			  RecType type,
 			  bool extra = false);
+	std::vector<std::string> makeMessageColl(const std::string &script_text);
+
 	void makeDictCELL();
 	void makeDictGMST();
 	void makeDictFNAM();
@@ -45,13 +47,21 @@ private:
 	EsmRecord esm_f;
 	EsmRecord *esm_ptr;
 	DictMerger merger;
+
 	bool status = 0;
 	bool with_dict = 0;
 	bool no_duplicates = 0;
+
 	int counter;
 	int counter_cell;
+
 	yampt::dict_t dict;
-	std::string raw_text;
+	std::string script_text;
+
+	std::vector<std::string> *message_ptr;
+	std::vector<std::string> message_n;
+	std::vector<std::string> message_f;
+
 };
 
 #endif

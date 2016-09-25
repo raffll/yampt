@@ -123,7 +123,7 @@ void UserInterface::makeDictAll()
 {
 	DictMerger merger(path_dict_n);
 	merger.mergeDict();
-	Writer::writeText(merger.getLog(), "yampt.log");
+	Writer::writeText(merger.getLog(), "yampt-merger.log");
 	for(size_t i = 0; i < path_esm.size(); ++i)
 	{
 		DictCreator creator(path_esm[i], merger);
@@ -137,7 +137,7 @@ void UserInterface::makeDictNot()
 {
 	DictMerger merger(path_dict_n);
 	merger.mergeDict();
-	Writer::writeText(merger.getLog(), "yampt.log");
+	Writer::writeText(merger.getLog(), "yampt-merger.log");
 	for(size_t i = 0; i < path_esm.size(); ++i)
 	{
 		DictCreator creator(path_esm[i], merger);
@@ -153,21 +153,24 @@ void UserInterface::mergeDict()
 	DictMerger merger(path_dict_n);
 	merger.mergeDict();
 	Writer::writeDict(merger.getDict(), "Merged.dic");
-	Writer::writeText(merger.getLog(), "yampt.log");
+	Writer::writeText(merger.getLog(), "yampt-merger.log");
 }
 
 //----------------------------------------------------------
 void UserInterface::convertEsm()
 {
+	string log;
 	DictMerger merger(path_dict_n);
 	merger.mergeDict();
-	Writer::writeText(merger.getLog(), "yampt.log");
+	Writer::writeText(merger.getLog(), "yampt-merger.log");
 	for(size_t i = 0; i < path_esm.size(); ++i)
 	{
 		EsmConverter converter(path_esm[i], merger);
 		converter.convertEsm();
 		converter.writeEsm();
+		log += converter.getLog();
 	}
+	Writer::writeText(log, "yampt-converter.log");
 }
 
 //----------------------------------------------------------
