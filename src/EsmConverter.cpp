@@ -3,16 +3,14 @@
 using namespace std;
 
 //----------------------------------------------------------
-EsmConverter::EsmConverter()
+EsmConverter::EsmConverter(string path, DictMerger &merger, bool convert_safe, bool add_dial, bool replace_broken) : esm(replace_broken)
 {
+	this->merger = &merger;
+	this->convert_safe = convert_safe;
+	this->add_dial = add_dial;
 
-}
-
-//----------------------------------------------------------
-EsmConverter::EsmConverter(string path, DictMerger &n)
-{
 	esm.readFile(path);
-	merger = n;
+
 	if(esm.getStatus() == true && merger.getStatus() == true)
 	{
 		status = true;
@@ -30,12 +28,15 @@ void EsmConverter::convertEsm()
 		convertSCVR();
 		convertDNAM();
 		convertCNDT();
-		convertGMST();
-		convertFNAM();
-		convertDESC();
-		convertTEXT();
-		convertRNAM();
-		convertINDX();
+		if(convert_safe == false)
+		{
+			convertGMST();
+			convertFNAM();
+			convertDESC();
+			convertTEXT();
+			convertRNAM();
+			convertINDX();
+		}
 		convertDIAL();
 		convertINFO();
 		convertBNAM();
@@ -65,82 +66,6 @@ void EsmConverter::resetCounters()
 }
 
 //----------------------------------------------------------
-void EsmConverter::setNewFriendly(RecType type)
-{
-	found_n = false;
-	equal_n = false;
-	result = "Not converted";
-	new_friendly = "N\\A";
-
-	auto search_n = merger.getDict()[type].find(unique_n);
-	if(search_n != merger.getDict()[type].end())
-	{
-		found_n = true;
-
-		if(esm.getFriendlyId() == "SCVR")
-		{
-			new_friendly = esm.getFriendly().substr(0, 5) + search_n->second;
-		}
-		else
-		{
-			new_friendly = search_n->second;
-		}
-
-		if(esm.getFriendly() == new_friendly)
-		{
-			equal_n = true;
-			result = "Skipped, identical as in dictionary";
-		}
-	}
-}
-
-//----------------------------------------------------------
-void EsmConverter::setSafeConditions(RecType type)
-{
-	found_f = false;
-	equal_f = false;
-
-	if(Config::getSafeConvert() == true)
-	{
-		auto search_f = merger.getDict()[type].find(unique_f);
-		if(search_f != merger.getDict()[type].end())
-		{
-			found_f = true;
-
-			if(esm.getFriendly() == search_f->second)
-			{
-				equal_f = true;
-			}
-			else
-			{
-				equal_f = false;
-				result = "Not converted, text is different from original dictionary";
-			}
-		}
-	}
-}
-
-//----------------------------------------------------------
-void EsmConverter::makeDetailedLog(string id, bool safe)
-{
-	log_detailed += "File:                        | " + esm.getName() + "\r\n" +
-			"Record:                      | " + id + " " + esm.getUnique() + "\r\n" +
-			"Found in dictionary / equal  | " + to_string(found_n) + "/" + to_string(equal_n) + "\r\n";
-	if(safe == true)
-	{
-		log_detailed += "Found in original / equal  | " + to_string(found_f) + "/" + to_string(equal_f) + "\r\n";
-	}
-	log_detailed += "Result                       | " + result + "\r\n" +
-			line + "\r\n";
-}
-
-//----------------------------------------------------------
-void EsmConverter::printLog(string id)
-{
-	cout << "    --> " << id << " records converted: " << to_string(counter) << endl;
-}
-
-//----------------------------------------------------------
 void EsmConverter::convertRecordContent(string new_text)
 {
 	size_t rec_size;
@@ -157,9 +82,233 @@ void EsmConverter::convertRecordContent(string new_text)
 		rec_content.insert(4, convertIntToByteArray(rec_size));
 		esm.setRecContent(rec_content);
 
-		result = "Converted";
+		result_ptr = &result[1];
 		counter++;
 	}
+}
+
+//----------------------------------------------------------
+void EsmConverter::setNewFriendly(string unique, yampt::r_type type)
+{
+	convert = false;
+	result_ptr = &result[0];
+	new_friendly = "N\\A";
+
+	auto search_n = merger->getDict()[type].find(unique);
+	if(search_n != merger->getDict()[type].end())
+	{
+		convert = true;
+
+		if(esm.getFriendlyId() == "SCVR")
+		{
+			new_friendly = esm.getFriendly().substr(0, 5) + search_n->second;
+		}
+		else
+		{
+			new_friendly = search_n->second;
+		}
+
+		if(esm.getFriendly() == new_friendly)
+		{
+			convert = false;
+			result_ptr = &result[2];
+		}
+	}
+}
+
+//----------------------------------------------------------
+void EsmConverter::setNewFriendlyScript(string id, yampt::r_type type)
+{
+	convert = false;
+	result_ptr = &result[0];
+	new_friendly.erase();
+
+	istringstream ss(esm.getFriendly());
+
+	while(getline(ss, s_line))
+	{
+		s_found = false;
+		eraseCarriageReturnChar(s_line);
+		s_line_lc = s_line;
+		transform(s_line_lc.begin(), s_line_lc.end(),
+			  s_line_lc.begin(), ::tolower);
+
+		for(auto const &elem : key_message)
+		{
+			if(s_found == false)
+			{
+				s_pos = s_line_lc.find(elem);
+				convertLine(id, type);
+			}
+		}
+
+		for(auto const &elem : key_dial)
+		{
+			if(s_found == false)
+			{
+				s_pos = s_line_lc.find(elem);
+				convertText("DIAL", yampt::r_type::DIAL);
+			}
+		}
+
+		for(auto const &elem : key_cell)
+		{
+			if(s_found == false)
+			{
+				s_pos = s_line_lc.find(elem);
+				convertText("CELL", yampt::r_type::CELL);
+			}
+		}
+
+		new_friendly += s_line + "\r\n";
+	}
+
+	size_t last_nl_pos = esm.getFriendly().rfind("\r\n");
+	if(last_nl_pos != esm.getFriendly().size() - 2 || last_nl_pos == string::npos)
+	{
+		new_friendly.resize(new_friendly.size() - 2);
+	}
+
+	if(esm.getFriendly() != new_friendly)
+	{
+		convert = true;
+	}
+	else
+	{
+		new_friendly = "N\\A";
+		result_ptr = &result[2];
+	}
+}
+
+//----------------------------------------------------------
+void EsmConverter::convertLine(string id, yampt::r_type type)
+{
+	if(s_pos != string::npos && s_line.rfind(";", s_pos) == string::npos)
+	{
+		auto search = merger->getDict()[type].find(id + yampt::sep[0] + s_line);
+		if(search != merger->getDict()[type].end())
+		{
+			if(s_line != search->second)
+			{
+				s_line = search->second;
+				s_line = s_line.substr(s_line.find(yampt::sep[0]) + 1);
+				s_found = true;
+			}
+		}
+	}
+}
+
+//----------------------------------------------------------
+void EsmConverter::convertText(string id, yampt::r_type type)
+{
+	if(s_pos != string::npos && s_line.rfind(";", s_pos) == string::npos)
+	{
+		extractText();
+		auto search = merger->getDict()[type].find(id + yampt::sep[0] + s_text);
+		if(search != merger->getDict()[type].end())
+		{
+			if(s_text != search->second)
+			{
+				s_line.erase(s_pos, s_text.size() + 2);
+				s_line.insert(s_pos, "\"" + search->second + "\"");
+				s_found = true;
+			}
+		}
+		else
+		{
+			for(auto &elem : merger->getDict()[type])
+			{
+				if(caseInsensitiveStringCmp(id + yampt::sep[0] + s_text, elem.first) == true)
+				{
+					s_line.erase(s_pos, s_text.size() + 2);
+					s_line.insert(s_pos, "\"" + elem.second + "\"");
+					s_found = true;
+					break;
+				}
+			}
+		}
+	}
+}
+
+//----------------------------------------------------------
+void EsmConverter::extractText()
+{
+	if(s_line.find("\"", s_pos) != string::npos)
+	{
+		regex re("\"(.*?)\"");
+		smatch found;
+		sregex_iterator next(s_line.begin(), s_line.end(), re);
+		sregex_iterator end;
+		while(next != end)
+		{
+			found = *next;
+			s_text = found[1].str();
+			s_pos = found.position(0);
+			next++;
+		}
+	}
+	else
+	{
+		size_t last_ws_pos;
+		s_pos = s_line.find(" ", s_pos);
+		s_pos = s_line.find_first_not_of(" ", s_pos);
+		s_text = s_line.substr(s_pos);
+		last_ws_pos = s_text.find_last_not_of(" \t");
+		if(last_ws_pos != string::npos)
+		{
+			s_text.erase(last_ws_pos + 1);
+		}
+	}
+}
+
+//----------------------------------------------------------
+void EsmConverter::addDIALtoINFO()
+{
+	string new_friendly_lc;
+	size_t pos;
+	string unique;
+
+	new_friendly = esm.getFriendly();
+
+	for(auto &elem : merger->getDict()[yampt::r_type::DIAL])
+	{
+		unique = elem.first.substr(5);
+		if(unique != elem.second)
+		{
+			new_friendly_lc = new_friendly;
+
+			transform(new_friendly_lc.begin(), new_friendly_lc.end(),
+				  new_friendly_lc.begin(), ::tolower);
+
+			transform(unique.begin(), unique.end(),
+				  unique.begin(), ::tolower);
+
+			pos = new_friendly_lc.find(unique);
+			if(pos != string::npos)
+			{
+				new_friendly.insert(new_friendly.size(), " [" + elem.second + "]");
+			}
+		}
+	}
+}
+
+//----------------------------------------------------------
+void EsmConverter::makeDetailedLog(string id)
+{
+	log_detailed += "File:                     | " + esm.getName() + "\r\n" +
+			"Record:                   | " + id + " " + esm.getUnique() + "\r\n"
+			"Result:                   | " + *result_ptr + "\r\n" +
+			"---\r\n" +
+			esm.getFriendly() +
+			"\r\n---\r\n" +
+			new_friendly + "\r\n" +
+			yampt::line + "\r\n";
+}
+
+//----------------------------------------------------------
+void EsmConverter::printLog(string id)
+{
+	cout << "    --> " << id << " records converted: " << to_string(counter) << endl;
 }
 
 //----------------------------------------------------------
@@ -177,10 +326,10 @@ void EsmConverter::convertCELL()
 
 			if(esm.getUniqueStatus() == true)
 			{
-				unique_n = "CELL" + sep[0] + esm.getUnique();
-				setNewFriendly(RecType::CELL);
+				setNewFriendly("CELL" + yampt::sep[0] + esm.getUnique(),
+					       yampt::r_type::CELL);
 
-				if(found_n == true && equal_n == false)
+				if(convert == true)
 				{
 					convertRecordContent(new_friendly + '\0');
 				}
@@ -204,10 +353,10 @@ void EsmConverter::convertPGRD()
 			esm.setUnique("NAME");
 			esm.setFriendly("NAME");
 
-			unique_n = "CELL" + sep[0] + esm.getUnique();
-			setNewFriendly(RecType::CELL);
+			setNewFriendly("CELL" + yampt::sep[0] + esm.getUnique(),
+				       yampt::r_type::CELL);
 
-			if(found_n == true && equal_n == false)
+			if(convert == true)
 			{
 				convertRecordContent(new_friendly + '\0');
 			}
@@ -232,10 +381,10 @@ void EsmConverter::convertANAM()
 
 			if(esm.getUniqueStatus() == true)
 			{
-				unique_n = "CELL" + sep[0] + esm.getUnique();
-				setNewFriendly(RecType::CELL);
+				setNewFriendly("CELL" + yampt::sep[0] + esm.getUnique(),
+					       yampt::r_type::CELL);
 
-				if(found_n == true && equal_n == false)
+				if(convert == true)
 				{
 					convertRecordContent(new_friendly + '\0');
 				}
@@ -263,10 +412,10 @@ void EsmConverter::convertSCVR()
 			{
 				if(esm.getFriendly().substr(1, 1) == "B")
 				{
-					unique_n = "CELL" + sep[0] + esm.getFriendly().substr(5);
-					setNewFriendly(RecType::CELL);
+					setNewFriendly("CELL" + yampt::sep[0] + esm.getFriendly().substr(5),
+						       yampt::r_type::CELL);
 
-					if(found_n == true && equal_n == false)
+					if(convert == true)
 					{
 						convertRecordContent(new_friendly);
 					}
@@ -295,10 +444,10 @@ void EsmConverter::convertDNAM()
 
 			while(esm.getFriendlyStatus() == true)
 			{
-				unique_n = "CELL" + sep[0] + esm.getFriendly();
-				setNewFriendly(RecType::CELL);
+				setNewFriendly("CELL" + yampt::sep[0] + esm.getFriendly(),
+					       yampt::r_type::CELL);
 
-				if(found_n == true && equal_n == false)
+				if(convert == true)
 				{
 					convertRecordContent(new_friendly + '\0');
 
@@ -326,10 +475,10 @@ void EsmConverter::convertCNDT()
 
 			while(esm.getFriendlyStatus() == true)
 			{
-				unique_n = "CELL" + sep[0] + esm.getFriendly();
-				setNewFriendly(RecType::CELL);
+				setNewFriendly("CELL" + yampt::sep[0] + esm.getFriendly(),
+					       yampt::r_type::CELL);
 
-				if(found_n == true && equal_n == false)
+				if(convert == true)
 				{
 					convertRecordContent(new_friendly + '\0');
 				}
@@ -356,23 +505,14 @@ void EsmConverter::convertGMST()
 
 			if(esm.getUnique().substr(0, 1) == "s")
 			{
-				unique_n = "GMST" + sep[0] + esm.getUnique();
-				unique_f = "GMST" + ext + sep[0] + esm.getUnique();
+				setNewFriendly("GMST" + yampt::sep[0] + esm.getUnique(),
+					       yampt::r_type::GMST);
 
-				setNewFriendly(RecType::GMST);
-				setSafeConditions(RecType::GMST);
-
-				if(Config::getSafeConvert() == false &&
-				   found_n == true && equal_n == false)
+				if(convert == true)
 				{
 					convertRecordContent(new_friendly + '\0');
 				}
-				else if(found_n == true && equal_n == false &&
-					found_f == true && equal_f == true)
-				{
-					convertRecordContent(new_friendly + '\0');
-				}
-				makeDetailedLog("GMST", true);
+				makeDetailedLog("GMST");
 			}
 		}
 	}
@@ -415,23 +555,14 @@ void EsmConverter::convertFNAM()
 			esm.setUnique("NAME");
 			esm.setFriendly("FNAM");
 
-			unique_n = "FNAM" + sep[0] + esm.getRecId() + sep[0] + esm.getUnique();
-			unique_f = "FNAM" + ext + sep[0] + esm.getRecId() + sep[0] + esm.getUnique();
+			setNewFriendly("FNAM" + yampt::sep[0] + esm.getRecId() + yampt::sep[0] + esm.getUnique(),
+				       yampt::r_type::FNAM);
 
-			setNewFriendly(RecType::FNAM);
-			setSafeConditions(RecType::FNAM);
-
-			if(Config::getSafeConvert() == false &&
-			   found_n == true && equal_n == false)
+			if(convert == true)
 			{
 				convertRecordContent(new_friendly + '\0');
 			}
-			else if(found_n == true && equal_n == false &&
-				found_f == true && equal_f == true)
-			{
-				convertRecordContent(new_friendly + '\0');
-			}
-			makeDetailedLog("FNAM", true);
+			makeDetailedLog("FNAM");
 		}
 	}
 	printLog("FNAM");
@@ -452,23 +583,14 @@ void EsmConverter::convertDESC()
 			esm.setUnique("NAME");
 			esm.setFriendly("DESC");
 
-			unique_n = "DESC" + sep[0] + esm.getRecId() + sep[0] + esm.getUnique();
-			unique_f = "DESC" + ext + sep[0] + esm.getRecId() + sep[0] + esm.getUnique();
+			setNewFriendly("DESC" + yampt::sep[0] + esm.getRecId() + yampt::sep[0] + esm.getUnique(),
+				       yampt::r_type::DESC);
 
-			setNewFriendly(RecType::DESC);
-			setSafeConditions(RecType::DESC);
-
-			if(Config::getSafeConvert() == false &&
-			   found_n == true && equal_n == false)
+			if(convert == true)
 			{
 				convertRecordContent(new_friendly + '\0');
 			}
-			else if(found_n == true && equal_n == false &&
-				found_f == true && equal_f == true)
-			{
-				convertRecordContent(new_friendly + '\0');
-			}
-			makeDetailedLog("DESC", true);
+			makeDetailedLog("DESC");
 		}
 	}
 	printLog("DESC");
@@ -487,23 +609,14 @@ void EsmConverter::convertTEXT()
 			esm.setUnique("NAME");
 			esm.setFriendly("TEXT");
 
-			unique_n = "TEXT" + sep[0] + esm.getUnique();
-			unique_f = "TEXT" + ext + sep[0] + esm.getUnique();
+			setNewFriendly("TEXT" + yampt::sep[0] + esm.getUnique(),
+				       yampt::r_type::TEXT);
 
-			setNewFriendly(RecType::TEXT);
-			setSafeConditions(RecType::TEXT);
-
-			if(Config::getSafeConvert() == false &&
-			   found_n == true && equal_n == false)
+			if(convert == true)
 			{
 				convertRecordContent(new_friendly + '\0');
 			}
-			else if(found_n == true && equal_n == false &&
-				found_f == true && equal_f == true)
-			{
-				convertRecordContent(new_friendly + '\0');
-			}
-			makeDetailedLog("TEXT", true);
+			makeDetailedLog("TEXT");
 		}
 	}
 	printLog("TEXT");
@@ -524,25 +637,15 @@ void EsmConverter::convertRNAM()
 
 			while(esm.getFriendlyStatus() == true)
 			{
-				unique_n = "RNAM" + sep[0] + esm.getUnique() + sep[0] + to_string(esm.getFriendlyCounter());
-				unique_f = "RNAM" + ext + sep[0] + esm.getUnique() + sep[0] + to_string(esm.getFriendlyCounter());
+				setNewFriendly("RNAM" + yampt::sep[0] + esm.getUnique() + yampt::sep[0] + to_string(esm.getFriendlyCounter()),
+					       yampt::r_type::RNAM);
 
-				setNewFriendly(RecType::RNAM);
-				setSafeConditions(RecType::RNAM);
-
-				new_friendly.resize(32);
-
-				if(Config::getSafeConvert() == false &&
-				   found_n == true && equal_n == false)
+				if(convert == true)
 				{
+					new_friendly.resize(32);
 					convertRecordContent(new_friendly);
 				}
-				else if(found_n == true && equal_n == false &&
-					found_f == true && equal_f == true)
-				{
-					convertRecordContent(new_friendly);
-				}
-				makeDetailedLog("RNAM", true);
+				makeDetailedLog("RNAM");
 				esm.setFriendly("RNAM", NEXT);
 			}
 		}
@@ -564,23 +667,14 @@ void EsmConverter::convertINDX()
 			esm.setUnique("INDX");
 			esm.setFriendly("DESC");
 
-			unique_n = "INDX" + sep[0] + esm.getRecId() + sep[0] + esm.getUnique();
-			unique_f = "INDX" + ext + sep[0] + esm.getRecId() + sep[0] + esm.getUnique();
+			setNewFriendly("INDX" + yampt::sep[0] + esm.getRecId() + yampt::sep[0] + esm.getUnique(),
+				       yampt::r_type::INDX);
 
-			setNewFriendly(RecType::INDX);
-			setSafeConditions(RecType::INDX);
-
-			if(Config::getSafeConvert() == false &&
-			   found_n == true && equal_n == false)
+			if(convert == true)
 			{
 				convertRecordContent(new_friendly + '\0');
 			}
-			else if(found_n == true && equal_n == false &&
-				found_f == true && equal_f == true)
-			{
-				convertRecordContent(new_friendly + '\0');
-			}
-			makeDetailedLog("INDX", true);
+			makeDetailedLog("INDX");
 		}
 	}
 	printLog("INDX");
@@ -599,12 +693,15 @@ void EsmConverter::convertDIAL()
 			esm.setUnique("NAME");
 			esm.setFriendly("NAME");
 
-			unique_n = "DIAL" + sep[0] + esm.getFriendly();
-			setNewFriendly(RecType::DIAL);
-
-			if(found_n == true && equal_n == false)
+			if(esm.getUnique() != "J")
 			{
-				convertRecordContent(new_friendly + '\0');
+				setNewFriendly("DIAL" + yampt::sep[0] + esm.getFriendly(),
+					       yampt::r_type::DIAL);
+
+				if(convert == true)
+				{
+					convertRecordContent(new_friendly + '\0');
+				}
 			}
 			makeDetailedLog("DIAL");
 		}
@@ -616,7 +713,7 @@ void EsmConverter::convertDIAL()
 void EsmConverter::convertINFO()
 {
 	resetCounters();
-	string dial;
+	string current_dialog;
 
 	for(size_t i = 0; i < esm.getRecColl().size(); ++i)
 	{
@@ -626,31 +723,21 @@ void EsmConverter::convertINFO()
 			esm.setUnique("DATA");
 			esm.setFriendly("NAME");
 
-			dial = esm.getUnique() + sep[0] + esm.getFriendly();
+			current_dialog = esm.getUnique() + yampt::sep[0] + esm.getFriendly();
 		}
 		if(esm.getRecId() == "INFO")
 		{
 			esm.setUnique("INAM");
 			esm.setFriendly("NAME");
 
-			unique_n = "INFO" + sep[0] + dial + sep[0] + esm.getUnique();
-			unique_f = "INFO" + ext + sep[0] + dial + sep[0] + esm.getUnique();
+			setNewFriendly("INFO" + yampt::sep[0] + current_dialog + yampt::sep[0] + esm.getUnique(),
+				       yampt::r_type::INFO);
 
-			setNewFriendly(RecType::INFO);
-			setSafeConditions(RecType::INFO);
-
-			if(Config::getSafeConvert() == false &&
-			   found_n == true && equal_n == false)
+			if(convert_safe == false && convert == true)
 			{
 				convertRecordContent(new_friendly + '\0');
 			}
-			else if(found_n == true && equal_n == false &&
-				found_f == true && equal_f == true)
-			{
-				convertRecordContent(new_friendly + '\0');
-			}
-			else if(Config::getAddDialToInfo() == true &&
-				dial.substr(0, 1) != "V")
+			else if(add_dial == true && current_dialog.substr(0, 1) != "V")
 			{
 				addDIALtoINFO();
 				convertRecordContent(new_friendly + '\0');
@@ -659,35 +746,6 @@ void EsmConverter::convertINFO()
 		}
 	}
 	printLog("INFO");
-}
-
-//----------------------------------------------------------
-void EsmConverter::addDIALtoINFO()
-{
-	string new_friendly_lc;
-	size_t pos;
-	string unique;
-
-	for(auto &elem : merger.getDict()[RecType::DIAL])
-	{
-		unique = elem.first.substr(5);
-		if(unique != elem.second)
-		{
-			new_friendly_lc = new_friendly;
-
-			transform(new_friendly_lc.begin(), new_friendly_lc.end(),
-				  new_friendly_lc.begin(), ::tolower);
-
-			transform(unique.begin(), unique.end(),
-				  unique.begin(), ::tolower);
-
-			pos = new_friendly_lc.find(unique);
-			if(pos != string::npos)
-			{
-				new_friendly.insert(new_friendly.size(), " [" + elem.second + "]");
-			}
-		}
-	}
 }
 
 //----------------------------------------------------------
@@ -700,15 +758,19 @@ void EsmConverter::convertBNAM()
 		esm.setRec(i);
 		if(esm.getRecId() == "INFO")
 		{
+			esm.setUnique("INAM");
 			esm.setFriendly("BNAM");
 
 			if(esm.getFriendlyStatus() == true)
 			{
-				convertScript(RecType::BNAM, "BNAM");
-				if(esm.getFriendly() != new_friendly)
+				setNewFriendlyScript("BNAM",
+						     yampt::r_type::BNAM);
+
+				if(convert == true)
 				{
 					convertRecordContent(new_friendly);
 				}
+				makeDetailedLog("BNAM");
 			}
 		}
 	}
@@ -725,169 +787,21 @@ void EsmConverter::convertSCPT()
 		esm.setRec(i);
 		if(esm.getRecId() == "SCPT")
 		{
+			esm.setUnique("SCHD");
 			esm.setFriendly("SCTX");
 
 			if(esm.getFriendlyStatus() == true)
 			{
-				convertScript(RecType::SCTX, "SCTX");
-				if(esm.getFriendly() != new_friendly)
+				setNewFriendlyScript("SCTX",
+						     yampt::r_type::SCTX);
+
+				if(convert == true)
 				{
 					convertRecordContent(new_friendly);
 				}
+				makeDetailedLog("SCTX");
 			}
 		}
 	}
 	printLog("SCTX");
-}
-
-//----------------------------------------------------------
-void EsmConverter::convertScript(RecType type, string id)
-{
-	if(status == true && esm.getFriendlyStatus() == true)
-	{
-		bool found;
-		string line;
-		string line_lc;
-		size_t pos;
-		string text;
-
-		new_friendly.erase();
-		istringstream ss(esm.getFriendly());
-
-		while(getline(ss, line))
-		{
-			found = false;
-			eraseCarriageReturnChar(line);
-			line_lc = line;
-			transform(line_lc.begin(), line_lc.end(),
-				  line_lc.begin(), ::tolower);
-
-			for(auto const &elem : key_message)
-			{
-				if(found == false)
-				{
-					pos = line_lc.find(elem);
-					if(pos != string::npos && line.rfind(";", pos) == string::npos)
-					{
-						auto search = merger.getDict()[type].find(id + sep[0] + line);
-						if(search != merger.getDict()[type].end())
-						{
-							if(line != search->second)
-							{
-								line = search->second;
-								line = line.substr(line.find(sep[0]) + 1);
-								found = true;
-							}
-						}
-					}
-				}
-			}
-			for(auto const &elem : key_dial)
-			{
-				if(found == false)
-				{
-					pos = line_lc.find(elem);
-					if(pos != string::npos && line.rfind(";", pos) == string::npos)
-					{
-						extractText(line, text, pos);
-						auto search = merger.getDict()[RecType::DIAL].find("DIAL" + sep[0] + text);
-						if(search != merger.getDict()[RecType::DIAL].end())
-						{
-							if(text != search->second)
-							{
-								line.erase(pos, text.size() + 2);
-								line.insert(pos, "\"" + search->second + "\"");
-								found = true;
-							}
-						}
-						if(found == false)
-						{
-							for(auto &elem : merger.getDict()[RecType::DIAL])
-							{
-								if(caseInsensitiveStringCmp("DIAL" + sep[0] + text, elem.first) == true)
-								{
-									line.erase(pos, text.size() + 2);
-									line.insert(pos, "\"" + elem.second + "\"");
-									found = true;
-									break;
-								}
-							}
-						}
-					}
-				}
-			}
-			for(auto const &elem : key_cell)
-			{
-				if(found == false)
-				{
-					pos = line_lc.find(elem);
-					if(pos != string::npos && line.rfind(";", pos) == string::npos)
-					{
-						extractText(line, text, pos);
-						auto search = merger.getDict()[RecType::CELL].find("CELL" + sep[0] + text);
-						if(search != merger.getDict()[RecType::CELL].end())
-						{
-							if(text != search->second)
-							{
-								line.erase(pos, text.size() + 2);
-								line.insert(pos, "\"" + search->second + "\"");
-								found = true;
-							}
-						}
-						if(found == false)
-						{
-							for(auto &elem : merger.getDict()[RecType::CELL])
-							{
-								if(caseInsensitiveStringCmp("CELL" + sep[0] + text, elem.first) == true)
-								{
-									line.erase(pos, text.size() + 2);
-									line.insert(pos, "\"" + elem.second + "\"");
-									found = true;
-									break;
-								}
-							}
-						}
-					}
-				}
-			}
-			new_friendly += line + "\r\n";
-		}
-
-		size_t last_nl_pos = esm.getFriendly().rfind("\r\n");
-		if(last_nl_pos != esm.getFriendly().size() - 2 || last_nl_pos == string::npos)
-		{
-			new_friendly.resize(new_friendly.size() - 2);
-		}
-	}
-}
-
-//----------------------------------------------------------
-void EsmConverter::extractText(const string &line, string &text, size_t &pos)
-{
-	if(line.find("\"", pos) != string::npos)
-	{
-		regex re("\"(.*?)\"");
-		smatch found;
-		sregex_iterator next(line.begin(), line.end(), re);
-		sregex_iterator end;
-		while(next != end)
-		{
-			found = *next;
-			text = found[1].str();
-			pos = found.position(0);
-			next++;
-		}
-	}
-	else
-	{
-		size_t last_ws_pos;
-		pos = line.find(" ", pos);
-		pos = line.find_first_not_of(" ", pos);
-		text = line.substr(pos);
-		last_ws_pos = text.find_last_not_of(" \t");
-		if(last_ws_pos != string::npos)
-		{
-			text.erase(last_ws_pos + 1);
-		}
-	}
 }

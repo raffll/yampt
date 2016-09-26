@@ -15,18 +15,22 @@ public:
 	bool getStatus() { return status; }
 	std::string getLog() { return log_detailed; }
 
-	EsmConverter();
-	EsmConverter(std::string path, DictMerger &n);
+	EsmConverter(std::string path, DictMerger &n, bool convert_safe, bool add_dial, bool replace_broken);
 
 private:
 	void resetCounters();
-	void setNewFriendly(RecType type);
-	void setSafeConditions(RecType type);
 	void convertRecordContent(std::string new_text);
-	void convertScript(RecType type, std::string id);
-	void extractText(const std::string &line, std::string &text, size_t &pos);
+
+	void setNewFriendly(std::string unique, yampt::r_type type);
+	void setNewFriendlyScript(std::string id, yampt::r_type type);
+
+	void convertLine(std::string id, yampt::r_type type);
+	void convertText(std::string id, yampt::r_type type);
+	void extractText();
+
 	void addDIALtoINFO();
-	void makeDetailedLog(std::string id, bool safe = false);
+
+	void makeDetailedLog(std::string id);
 	void printLog(std::string id);
 
 	void convertCELL();
@@ -46,24 +50,26 @@ private:
 	void convertBNAM();
 	void convertSCPT();
 
-	bool status = 0;
+	bool status = false;
 	EsmRecord esm;
-	DictMerger merger;
+	DictMerger *merger;
 
 	int counter = 0;
 
-	std::string unique_n;
-	std::string unique_f;
 	std::string new_friendly;
-	std::string new_script;
 
 	std::string log_detailed;
-	std::string result;
+	const std::string *result_ptr;
 
-	bool found_n = false;
-	bool found_f = false;
-	bool equal_n = false;
-	bool equal_f = false;
+	bool convert = false;
+	bool convert_safe = false;
+	bool add_dial = false;
+
+	bool s_found = false;
+	std::string s_line;
+	std::string s_line_lc;
+	std::string s_text;
+	size_t s_pos = 0;
 };
 
 #endif

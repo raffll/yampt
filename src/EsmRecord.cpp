@@ -3,9 +3,9 @@
 using namespace std;
 
 //----------------------------------------------------------
-EsmRecord::EsmRecord() : EsmReader()
+EsmRecord::EsmRecord(bool replace_broken) : EsmReader()
 {
-
+	this->replace_broken = replace_broken;
 }
 
 //----------------------------------------------------------
@@ -60,7 +60,7 @@ void EsmRecord::setUnique(string id)
 				}
 				else
 				{
-					unique_text = "Empty";
+					unique_text = "<Empty>";
 					unique_status = false;
 				}
 				break;
@@ -68,7 +68,7 @@ void EsmRecord::setUnique(string id)
 			cur_pos += 8 + cur_size;
 			if(cur_pos == rec->size())
 			{
-				unique_text = "Not Found";
+				unique_text = "<NotFound>";
 				unique_status = false;
 			}
 		}
@@ -105,7 +105,7 @@ bool EsmRecord::setFriendly(string id, bool next)
 			if(cur_id == friendly_id)
 			{
 				cur_text = rec->substr(cur_pos + 8, cur_size);
-				if(Config::getReplaceBrokenChars() == true)
+				if(replace_broken == true)
 				{
 					replaceBrokenChars(cur_text);
 				}
@@ -121,7 +121,7 @@ bool EsmRecord::setFriendly(string id, bool next)
 
 		if(cur_pos == rec->size())
 		{
-			friendly_text = "Not Found";
+			friendly_text = "<NotFound>";
 			friendly_pos = cur_pos;
 			friendly_size = 0;
 			friendly_status = false;

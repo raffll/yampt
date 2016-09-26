@@ -12,22 +12,20 @@ public:
 	void makeDict();
 	void makeScriptText();
 	void compareEsm();
-	void setNoDuplicates(bool x) { no_duplicates = x; }
 
 	std::string getName() { return esm_n.getNamePrefix(); }
 	yampt::dict_t const& getDict() const { return dict; }
 	std::string getScriptText() { return script_text; }
 
-	DictCreator();
-	DictCreator(std::string path_n);
-	DictCreator(std::string path_n, std::string path_f);
-	DictCreator(std::string path_n, DictMerger &m);
+	DictCreator(std::string path_n, bool replace_broken);
+	DictCreator(std::string path_n, std::string path_f, bool replace_broken);
+	DictCreator(std::string path_n, DictMerger &m, bool no_duplicates, bool replace_broken);
 
 private:
 	std::string dialTranslator(std::string to_translate);
 	void insertRecord(const std::string &pri_text,
 			  const std::string &sec_text,
-			  RecType type,
+			  yampt::r_type type,
 			  bool extra = false);
 	std::vector<std::string> makeMessageColl(const std::string &script_text);
 
@@ -46,7 +44,7 @@ private:
 	EsmRecord esm_n;
 	EsmRecord esm_f;
 	EsmRecord *esm_ptr;
-	DictMerger merger;
+	DictMerger *merger;
 
 	bool status = 0;
 	bool with_dict = 0;
@@ -61,7 +59,6 @@ private:
 	std::vector<std::string> *message_ptr;
 	std::vector<std::string> message_n;
 	std::vector<std::string> message_f;
-
 };
 
 #endif

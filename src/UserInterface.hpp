@@ -11,8 +11,7 @@ class UserInterface
 public:
 	void makeDictRaw();
 	void makeDictBase();
-	void makeDictAll();
-	void makeDictNot();
+	void makeDict();
 	void mergeDict();
 	void convertEsm();
 	void makeScriptText();
@@ -21,13 +20,17 @@ public:
 	UserInterface(std::vector<std::string> &a);
 
 private:
-	void prepareUi(std::vector<std::string> &a);
+	Writer writer;
 
 	std::vector<std::string> arg;
-	std::vector<std::string> path_esm;
-	std::vector<std::string> path_dict_n;
-	std::vector<std::string> path_dict_f;
+	std::vector<std::string> file_p;
+	std::vector<std::string> dict_p;
 
+	bool more_info = false;
+	bool replace_broken = false;
+	bool add_dial = false;
+	bool convert_safe = false;
+	bool no_duplicates = false;
 };
 
 #endif

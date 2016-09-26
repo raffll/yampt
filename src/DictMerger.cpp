@@ -1,7 +1,6 @@
 #include "DictMerger.hpp"
 
 using namespace std;
-using namespace yampt;
 
 //----------------------------------------------------------
 DictMerger::DictMerger()
@@ -10,11 +9,11 @@ DictMerger::DictMerger()
 }
 
 //----------------------------------------------------------
-DictMerger::DictMerger(vector<string> &path)
+DictMerger::DictMerger(vector<string> &path, bool more_info)
 {
 	for(auto &elem : path)
 	{
-		DictReader reader;
+		DictReader reader(more_info);
 		reader.readFile(elem);
 		if(reader.getStatus() == true)
 		{
@@ -51,13 +50,13 @@ void DictMerger::mergeDict()
 						search->second != elem.second)
 					{
 						counter_duplicate++;
-						log += line + "\r\n" +
-						       sep[1] + elem.first + sep[2] + elem.second +
-						       sep[3] +
+						log += yampt::line + "\r\n" +
+						       yampt::sep[1] + elem.first + yampt::sep[2] + elem.second +
+						       yampt::sep[3] +
 						       " <!-- record in " + dict_coll[i].getName() +
 						       " replaced by -->\r\n" +
-						       sep[1] + search->first + sep[2] + search->second +
-						       sep[3] + "\r\n";
+						       yampt::sep[1] + search->first + yampt::sep[2] + search->second +
+						       yampt::sep[3] + "\r\n";
 					}
 					else
 					{
@@ -96,14 +95,14 @@ void DictMerger::makeDiff()
 				{
 					if(search->second != elem.second)
 					{
-						diff[0] += line + "\r\n" +
-							   sep[1] + elem.first +
-							   sep[2] + elem.second +
-							   sep[3] + "\r\n";
-						diff[1] += line + "\r\n" +
-							   sep[1] + search->first +
-							   sep[2] + search->second +
-							   sep[3] + "\r\n";
+						diff[0] += yampt::line + "\r\n" +
+							   yampt::sep[1] + elem.first +
+							   yampt::sep[2] + elem.second +
+							   yampt::sep[3] + "\r\n";
+						diff[1] += yampt::line + "\r\n" +
+							   yampt::sep[1] + search->first +
+							   yampt::sep[2] + search->second +
+							   yampt::sep[3] + "\r\n";
 					}
 				}
 			}

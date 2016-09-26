@@ -1,12 +1,11 @@
 #include "DictReader.hpp"
 
 using namespace std;
-using namespace yampt;
 
 //----------------------------------------------------------
-DictReader::DictReader()
+DictReader::DictReader(bool more_info)
 {
-
+	this->more_info = more_info;
 }
 
 //----------------------------------------------------------
@@ -15,7 +14,8 @@ DictReader::DictReader(const DictReader& that) : status(that.status),
 					         name_prefix(that.name_prefix),
 					         counter(that.counter),
 					         counter_invalid(that.counter_invalid),
-					         dict(that.dict)
+					         dict(that.dict),
+					         more_info(that.more_info)
 {
 
 }
@@ -29,6 +29,7 @@ DictReader& DictReader::operator=(const DictReader& that)
 	counter = that.counter;
 	counter_invalid = that.counter_invalid;
 	dict = that.dict;
+	more_info = that.more_info;
 	return *this;
 }
 
@@ -94,9 +95,9 @@ bool DictReader::parseDict(string &content)
 	string sec_text;
 	while(true)
 	{
-		pos_beg = content.find(sep[1], pos_beg);
-		pos_mid = content.find(sep[2], pos_mid);
-		pos_end = content.find(sep[3], pos_end);
+		pos_beg = content.find(yampt::sep[1], pos_beg);
+		pos_mid = content.find(yampt::sep[2], pos_mid);
+		pos_end = content.find(yampt::sep[3], pos_end);
 		if(pos_beg == string::npos &&
 		   pos_mid == string::npos &&
 		   pos_end == string::npos)
@@ -114,10 +115,10 @@ bool DictReader::parseDict(string &content)
 		}
 		else
 		{
-			pri_text = content.substr(pos_beg + sep[1].size(),
-						  pos_mid - pos_beg - sep[1].size());
-			sec_text = content.substr(pos_mid + sep[2].size(),
-						  pos_end - pos_mid - sep[2].size());
+			pri_text = content.substr(pos_beg + yampt::sep[1].size(),
+						  pos_mid - pos_beg - yampt::sep[1].size());
+			sec_text = content.substr(pos_mid + yampt::sep[2].size(),
+						  pos_end - pos_mid - yampt::sep[2].size());
 			insertRecord(pri_text, sec_text);
 			pos_beg++;
 			pos_mid++;
@@ -133,20 +134,20 @@ void DictReader::insertRecord(const string &pri_text, const string &sec_text)
 	{
 		if(pri_text.substr(0, 4) == "CELL")
 		{
-			dict[RecType::CELL].insert({pri_text, sec_text});
+			dict[yampt::r_type::CELL].insert({pri_text, sec_text});
 			counter++;
 		}
 		else if(pri_text.substr(0, 4) == "GMST")
 		{
-			dict[RecType::GMST].insert({pri_text, sec_text});
+			dict[yampt::r_type::GMST].insert({pri_text, sec_text});
 			counter++;
 		}
 		else if(pri_text.substr(0, 4) == "FNAM")
 		{
 			if(sec_text.size() > 32)
 			{
-					log += sep[4] +
-					       sep[1] + pri_text + sep[2] + sec_text + sep[3] +
+					log += yampt::sep[4] +
+					       yampt::sep[1] + pri_text + yampt::sep[2] + sec_text + yampt::sep[3] +
 					       " <!-- " + name +
 					       " - Text too long, more than 32 bytes (has " +
 					       to_string(sec_text.size()) + ") -->\r\n";
@@ -154,43 +155,43 @@ void DictReader::insertRecord(const string &pri_text, const string &sec_text)
 			}
 			else
 			{
-				dict[RecType::FNAM].insert({pri_text, sec_text});
+				dict[yampt::r_type::FNAM].insert({pri_text, sec_text});
 				counter++;
 			}
 		}
 		else if(pri_text.substr(0, 4) == "DESC")
 		{
-			dict[RecType::DESC].insert({pri_text, sec_text});
+			dict[yampt::r_type::DESC].insert({pri_text, sec_text});
 			counter++;
 		}
 		else if(pri_text.substr(0, 4) == "TEXT")
 		{
-			dict[RecType::TEXT].insert({pri_text, sec_text});
+			dict[yampt::r_type::TEXT].insert({pri_text, sec_text});
 			counter++;
 		}
 		else if(pri_text.substr(0, 4) == "RNAM")
 		{
-			dict[RecType::RNAM].insert({pri_text, sec_text});
+			dict[yampt::r_type::RNAM].insert({pri_text, sec_text});
 			counter++;
 		}
 		else if(pri_text.substr(0, 4) == "INDX")
 		{
-			dict[RecType::INDX].insert({pri_text, sec_text});
+			dict[yampt::r_type::INDX].insert({pri_text, sec_text});
 			counter++;
 		}
 		else if(pri_text.substr(0, 4) == "DIAL")
 		{
-			dict[RecType::DIAL].insert({pri_text, sec_text});
+			dict[yampt::r_type::DIAL].insert({pri_text, sec_text});
 			counter++;
 		}
 		else if(pri_text.substr(0, 4) == "INFO")
 		{
-			if(Config::getAllowMoreInfo() == false)
+			if(more_info == false)
 			{
 				if(sec_text.size() > 512)
 				{
-					log += sep[4] +
-					       sep[1] + pri_text + sep[2] + sec_text + sep[3] +
+					log += yampt::sep[4] +
+					       yampt::sep[1] + pri_text + yampt::sep[2] + sec_text + yampt::sep[3] +
 					       " <!-- " + name +
 					       " - Text too long, more than 512 bytes (has " +
 					       to_string(sec_text.size()) + ") -->\r\n";
@@ -198,38 +199,38 @@ void DictReader::insertRecord(const string &pri_text, const string &sec_text)
 				}
 				else
 				{
-					dict[RecType::INFO].insert({pri_text, sec_text});
+					dict[yampt::r_type::INFO].insert({pri_text, sec_text});
 					counter++;
 				}
 			}
 			else
 			{
-				dict[RecType::INFO].insert({pri_text, sec_text});
+				dict[yampt::r_type::INFO].insert({pri_text, sec_text});
 				counter++;
 			}
 		}
 		else if(pri_text.substr(0, 4) == "BNAM")
 		{
-			dict[RecType::BNAM].insert({pri_text, sec_text});
+			dict[yampt::r_type::BNAM].insert({pri_text, sec_text});
 			counter++;
 		}
 		else if(pri_text.substr(0, 4) == "SCTX")
 		{
-			dict[RecType::SCTX].insert({pri_text, sec_text});
+			dict[yampt::r_type::SCTX].insert({pri_text, sec_text});
 			counter++;
 		}
 		else
 		{
-			log += sep[4] +
-			       sep[1] + pri_text + sep[2] + sec_text + sep[3] +
+			log += yampt::sep[4] +
+			       yampt::sep[1] + pri_text + yampt::sep[2] + sec_text + yampt::sep[3] +
 			       " <!-- " + name + " - Invalid record -->\r\n";
 			counter_invalid++;
 		}
 	}
 	else
 	{
-		log += sep[4] +
-		       sep[1] + pri_text + sep[2] + sec_text + sep[3] +
+		log += yampt::sep[4] +
+		       yampt::sep[1] + pri_text + yampt::sep[2] + sec_text + yampt::sep[3] +
 		       " <!-- " + name + " - Invalid record -->\r\n";
 		counter_invalid++;
 	}

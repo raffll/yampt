@@ -17,7 +17,7 @@ public:
 	yampt::dict_t const& getDict() const { return dict; }
 
 	DictMerger();
-	DictMerger(std::vector<std::string> &path);
+	DictMerger(std::vector<std::string> &path, bool more_info);
 
 private:
 	bool status = 0;

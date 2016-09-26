@@ -29,7 +29,6 @@ private:
 	std::string name;
 	std::string name_prefix;
 	std::string name_suffix;
-
 };
 
 #endif
