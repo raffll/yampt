@@ -13,13 +13,9 @@ UserInterface::UserInterface(vector<string> &a)
 	{
 		for(size_t i = 2; i < arg.size(); ++i)
 		{
-			if(arg[i] == "-a")
+			if(arg[i] == "--more-info")
 			{
 				more_info = true;
-			}
-			else if(arg[i] == "-r")
-			{
-				replace_broken = true;
 			}
 			else if(arg[i] == "--add-dial")
 			{
@@ -104,7 +100,7 @@ void UserInterface::makeDictRaw()
 {
 	for(size_t i = 0; i < file_p.size(); ++i)
 	{
-		DictCreator creator(file_p[i], replace_broken);
+		DictCreator creator(file_p[i]);
 		creator.makeDict();
 		writer.writeDict(creator.getDict(), creator.getName() + ".dic");
 	}
@@ -113,7 +109,7 @@ void UserInterface::makeDictRaw()
 //----------------------------------------------------------
 void UserInterface::makeDictBase()
 {
-	DictCreator creator(file_p[0], file_p[1], replace_broken);
+	DictCreator creator(file_p[0], file_p[1]);
 	creator.compareEsm();
 	creator.makeDict();
 	writer.writeDict(creator.getDict(), creator.getName() + ".dic");
@@ -127,7 +123,7 @@ void UserInterface::makeDict()
 	writer.writeText(merger.getLog(), "yampt-merger.log");
 	for(size_t i = 0; i < file_p.size(); ++i)
 	{
-		DictCreator creator(file_p[i], merger, no_duplicates, replace_broken);
+		DictCreator creator(file_p[i], merger, no_duplicates);
 		creator.makeDict();
 		writer.writeDict(creator.getDict(), creator.getName() + ".dic");
 	}
@@ -151,7 +147,7 @@ void UserInterface::convertEsm()
 	writer.writeText(merger.getLog(), "yampt-merger.log");
 	for(size_t i = 0; i < file_p.size(); ++i)
 	{
-		EsmConverter converter(file_p[i], merger, convert_safe, add_dial, replace_broken);
+		EsmConverter converter(file_p[i], merger, convert_safe, add_dial);
 		converter.convertEsm();
 		converter.writeEsm();
 		log += converter.getLog();
@@ -164,7 +160,7 @@ void UserInterface::makeScriptText()
 {
 	for(size_t i = 0; i < file_p.size(); ++i)
 	{
-		DictCreator creator(file_p[i], replace_broken);
+		DictCreator creator(file_p[i]);
 		creator.makeScriptText();
 		writer.writeText(creator.getScriptText(), creator.getName() + ".scpt");
 	}

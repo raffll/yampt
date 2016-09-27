@@ -3,8 +3,7 @@
 using namespace std;
 
 //----------------------------------------------------------
-DictCreator::DictCreator(string path_n, bool replace_broken) : esm_n(replace_broken),
-							       esm_f(replace_broken)
+DictCreator::DictCreator(string path_n)
 {
 	esm_ptr = &esm_n;
 	message_ptr = &message_n;
@@ -18,8 +17,7 @@ DictCreator::DictCreator(string path_n, bool replace_broken) : esm_n(replace_bro
 }
 
 //----------------------------------------------------------
-DictCreator::DictCreator(string path_n, string path_f, bool replace_broken) : esm_n(replace_broken),
-									      esm_f(replace_broken)
+DictCreator::DictCreator(string path_n, string path_f)
 {
 	esm_ptr = &esm_f;
 	message_ptr = &message_f;
@@ -34,8 +32,7 @@ DictCreator::DictCreator(string path_n, string path_f, bool replace_broken) : es
 }
 
 //----------------------------------------------------------
-DictCreator::DictCreator(string path_n, DictMerger &merger, bool no_duplicates, bool replace_broken) : esm_n(replace_broken),
-												       esm_f(replace_broken)
+DictCreator::DictCreator(string path_n, DictMerger &merger, bool no_duplicates)
 {
 	this->merger = &merger;
 	this->no_duplicates = no_duplicates;

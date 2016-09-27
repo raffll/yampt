@@ -13,9 +13,9 @@ public:
 	void writeEsm();
 
 	bool getStatus() { return status; }
-	std::string getLog() { return log_detailed; }
+	std::string getLog() { return log; }
 
-	EsmConverter(std::string path, DictMerger &n, bool convert_safe, bool add_dial, bool replace_broken);
+	EsmConverter(std::string path, DictMerger &n, bool convert_safe, bool add_dial);
 
 private:
 	void resetCounters();
@@ -30,7 +30,7 @@ private:
 
 	void addDIALtoINFO();
 
-	void makeDetailedLog(std::string id);
+	void makeLog(std::string id);
 	void printLog(std::string id);
 
 	void convertCELL();
@@ -58,7 +58,7 @@ private:
 
 	std::string new_friendly;
 
-	std::string log_detailed;
+	std::string log;
 	const std::string *result_ptr;
 
 	bool convert = false;

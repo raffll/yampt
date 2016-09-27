@@ -17,9 +17,9 @@ public:
 	yampt::dict_t const& getDict() const { return dict; }
 	std::string getScriptText() { return script_text; }
 
-	DictCreator(std::string path_n, bool replace_broken);
-	DictCreator(std::string path_n, std::string path_f, bool replace_broken);
-	DictCreator(std::string path_n, DictMerger &m, bool no_duplicates, bool replace_broken);
+	DictCreator(std::string path_n);
+	DictCreator(std::string path_n, std::string path_f);
+	DictCreator(std::string path_n, DictMerger &m, bool no_duplicates);
 
 private:
 	std::string dialTranslator(std::string to_translate);

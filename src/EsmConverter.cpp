@@ -3,7 +3,7 @@
 using namespace std;
 
 //----------------------------------------------------------
-EsmConverter::EsmConverter(string path, DictMerger &merger, bool convert_safe, bool add_dial, bool replace_broken) : esm(replace_broken)
+EsmConverter::EsmConverter(string path, DictMerger &merger, bool convert_safe, bool add_dial)
 {
 	this->merger = &merger;
 	this->convert_safe = convert_safe;
@@ -293,16 +293,16 @@ void EsmConverter::addDIALtoINFO()
 }
 
 //----------------------------------------------------------
-void EsmConverter::makeDetailedLog(string id)
+void EsmConverter::makeLog(string id)
 {
-	log_detailed += "File:                     | " + esm.getName() + "\r\n" +
-			"Record:                   | " + id + " " + esm.getUnique() + "\r\n"
-			"Result:                   | " + *result_ptr + "\r\n" +
-			"---\r\n" +
-			esm.getFriendly() +
-			"\r\n---\r\n" +
-			new_friendly + "\r\n" +
-			yampt::line + "\r\n";
+	log += "File:              | " + esm.getName() + "\r\n" +
+	       "Record:            | " + id + " " + esm.getUnique() + "\r\n" +
+	       "Result:            | " + *result_ptr +
+	       "\r\n<!---->\r\n" +
+	       esm.getFriendly() +
+	       "\r\n<!---->\r\n" +
+	       new_friendly + "\r\n" +
+	       yampt::line + "\r\n";
 }
 
 //----------------------------------------------------------
@@ -333,7 +333,7 @@ void EsmConverter::convertCELL()
 				{
 					convertRecordContent(new_friendly + '\0');
 				}
-				makeDetailedLog("CELL");
+				makeLog("CELL");
 			}
 		}
 	}
@@ -360,7 +360,7 @@ void EsmConverter::convertPGRD()
 			{
 				convertRecordContent(new_friendly + '\0');
 			}
-			makeDetailedLog("PGRD");
+			makeLog("PGRD");
 		}
 	}
 	printLog("PGRD");
@@ -388,7 +388,7 @@ void EsmConverter::convertANAM()
 				{
 					convertRecordContent(new_friendly + '\0');
 				}
-				makeDetailedLog("ANAM");
+				makeLog("ANAM");
 			}
 		}
 	}
@@ -419,7 +419,7 @@ void EsmConverter::convertSCVR()
 					{
 						convertRecordContent(new_friendly);
 					}
-					makeDetailedLog("SCVR");
+					makeLog("SCVR");
 				}
 				esm.setFriendly("SCVR", NEXT);
 			}
@@ -452,7 +452,7 @@ void EsmConverter::convertDNAM()
 					convertRecordContent(new_friendly + '\0');
 
 				}
-				makeDetailedLog("DNAM");
+				makeLog("DNAM");
 				esm.setFriendly("DNAM", NEXT);
 			}
 		}
@@ -482,7 +482,7 @@ void EsmConverter::convertCNDT()
 				{
 					convertRecordContent(new_friendly + '\0');
 				}
-				makeDetailedLog("CNDT");
+				makeLog("CNDT");
 				esm.setFriendly("CNDT", NEXT);
 			}
 		}
@@ -512,7 +512,7 @@ void EsmConverter::convertGMST()
 				{
 					convertRecordContent(new_friendly + '\0');
 				}
-				makeDetailedLog("GMST");
+				makeLog("GMST");
 			}
 		}
 	}
@@ -562,7 +562,7 @@ void EsmConverter::convertFNAM()
 			{
 				convertRecordContent(new_friendly + '\0');
 			}
-			makeDetailedLog("FNAM");
+			makeLog("FNAM");
 		}
 	}
 	printLog("FNAM");
@@ -590,7 +590,7 @@ void EsmConverter::convertDESC()
 			{
 				convertRecordContent(new_friendly + '\0');
 			}
-			makeDetailedLog("DESC");
+			makeLog("DESC");
 		}
 	}
 	printLog("DESC");
@@ -616,7 +616,7 @@ void EsmConverter::convertTEXT()
 			{
 				convertRecordContent(new_friendly + '\0');
 			}
-			makeDetailedLog("TEXT");
+			makeLog("TEXT");
 		}
 	}
 	printLog("TEXT");
@@ -645,7 +645,7 @@ void EsmConverter::convertRNAM()
 					new_friendly.resize(32);
 					convertRecordContent(new_friendly);
 				}
-				makeDetailedLog("RNAM");
+				makeLog("RNAM");
 				esm.setFriendly("RNAM", NEXT);
 			}
 		}
@@ -674,7 +674,7 @@ void EsmConverter::convertINDX()
 			{
 				convertRecordContent(new_friendly + '\0');
 			}
-			makeDetailedLog("INDX");
+			makeLog("INDX");
 		}
 	}
 	printLog("INDX");
@@ -703,7 +703,7 @@ void EsmConverter::convertDIAL()
 					convertRecordContent(new_friendly + '\0');
 				}
 			}
-			makeDetailedLog("DIAL");
+			makeLog("DIAL");
 		}
 	}
 	printLog("DIAL");
@@ -742,7 +742,7 @@ void EsmConverter::convertINFO()
 				addDIALtoINFO();
 				convertRecordContent(new_friendly + '\0');
 			}
-			makeDetailedLog("INFO");
+			makeLog("INFO");
 		}
 	}
 	printLog("INFO");
@@ -770,7 +770,7 @@ void EsmConverter::convertBNAM()
 				{
 					convertRecordContent(new_friendly);
 				}
-				makeDetailedLog("BNAM");
+				makeLog("BNAM");
 			}
 		}
 	}
@@ -799,7 +799,7 @@ void EsmConverter::convertSCPT()
 				{
 					convertRecordContent(new_friendly);
 				}
-				makeDetailedLog("SCTX");
+				makeLog("SCTX");
 			}
 		}
 	}

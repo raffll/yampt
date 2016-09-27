@@ -3,9 +3,9 @@
 using namespace std;
 
 //----------------------------------------------------------
-EsmRecord::EsmRecord(bool replace_broken) : EsmReader()
+EsmRecord::EsmRecord() : EsmReader()
 {
-	this->replace_broken = replace_broken;
+
 }
 
 //----------------------------------------------------------
@@ -105,10 +105,6 @@ bool EsmRecord::setFriendly(string id, bool next)
 			if(cur_id == friendly_id)
 			{
 				cur_text = rec->substr(cur_pos + 8, cur_size);
-				if(replace_broken == true)
-				{
-					replaceBrokenChars(cur_text);
-				}
 				eraseNullChars(cur_text);
 				friendly_text = cur_text;
 				friendly_pos = cur_pos;

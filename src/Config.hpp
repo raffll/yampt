@@ -24,7 +24,7 @@ typedef std::array<std::map<std::string, std::string>, 11> dict_t;
 const std::array<std::string, 5> dialog_type = {"T", "V", "G", "P", "J"};
 
 const std::vector<std::string> sep = {"^", "<h3>", "</h3>", "<hr>"};
-const std::string line = "----------------------------------------------------------";
+const std::string line = "<!------------------------------------------------------------>";
 const bool NEXT = true;
 
 const std::vector<std::string> key_message = {"messagebox", "say ", "say,", "choice"};

@@ -28,7 +28,7 @@ public:
 	size_t getFriendlyCounter() { return friendly_counter; }
 	bool getFriendlyStatus() { return friendly_status; }
 
-	EsmRecord(bool replace_broken);
+	EsmRecord();
 
 private:
 	std::string *rec;
@@ -46,8 +46,6 @@ private:
 	size_t friendly_size;
 	size_t friendly_counter;
 	bool friendly_status;
-
-	bool replace_broken = false;
 };
 
 #endif

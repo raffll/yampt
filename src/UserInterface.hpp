@@ -27,7 +27,6 @@ private:
 	std::vector<std::string> dict_p;
 
 	bool more_info = false;
-	bool replace_broken = false;
 	bool add_dial = false;
 	bool convert_safe = false;
 	bool no_duplicates = false;
