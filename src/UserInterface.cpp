@@ -24,6 +24,10 @@ UserInterface::UserInterface(vector<string> &a)
 			{
 				convert_safe = true;
 			}
+			else if(arg[i] == "--log")
+			{
+				make_log = true;
+			}
 			else if(arg[i] == "-f")
 			{
 				command = "-f";
@@ -58,11 +62,11 @@ UserInterface::UserInterface(vector<string> &a)
 		{
 			makeDictBase();
 		}
-		else if(arg[1] == "--make-all" && file_p.size() > 0)
+		else if(arg[1] == "--make-all" && file_p.size() > 0 && dict_p.size() > 0)
 		{
 			makeDict();
 		}
-		else if(arg[1] == "--make-not" && file_p.size() > 0)
+		else if(arg[1] == "--make-not" && file_p.size() > 0 && dict_p.size() > 0)
 		{
 			no_duplicates = true;
 			makeDict();
@@ -110,13 +114,13 @@ void UserInterface::makeDict()
 {
 	DictMerger merger(dict_p, more_info);
 	merger.mergeDict();
-	writer.writeText(merger.getLog(), "yampt-merger.log");
 	for(size_t i = 0; i < file_p.size(); ++i)
 	{
 		DictCreator creator(file_p[i], merger, no_duplicates);
 		creator.makeDict();
 		writer.writeDict(creator.getDict(), creator.getName() + ".dic");
 	}
+	writer.writeText(merger.getLog(), "yampt-merger.log", make_log);
 }
 
 //----------------------------------------------------------
@@ -125,22 +129,20 @@ void UserInterface::mergeDict()
 	DictMerger merger(dict_p, more_info);
 	merger.mergeDict();
 	writer.writeDict(merger.getDict(), "Merged.dic");
-	writer.writeText(merger.getLog(), "yampt-merger.log");
+	writer.writeText(merger.getLog(), "yampt-merger.log", make_log);
 }
 
 //----------------------------------------------------------
 void UserInterface::convertEsm()
 {
-	string log;
 	DictMerger merger(dict_p, more_info);
 	merger.mergeDict();
-	writer.writeText(merger.getLog(), "yampt-merger.log");
 	for(size_t i = 0; i < file_p.size(); ++i)
 	{
 		EsmConverter converter(file_p[i], merger, convert_safe, add_dial);
 		converter.convertEsm();
 		converter.writeEsm();
-		log += converter.getLog();
+		writer.writeText(converter.getLog(), converter.getName() + ".log", make_log);
 	}
-	writer.writeText(log, "yampt-converter.log");
+	writer.writeText(merger.getLog(), "yampt-merger.log", make_log);
 }

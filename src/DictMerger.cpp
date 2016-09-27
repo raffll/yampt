@@ -44,18 +44,18 @@ void DictMerger::mergeDict()
 					if(search == dict[k].end())
 					{
 						dict[k].insert({elem.first, elem.second});
-						counter++;
+						counter_merged++;
 					}
 					else if(search != dict[k].end() &&
 						search->second != elem.second)
 					{
 						valid_ptr = &yampt::valid[0];
 						makeLog(dict_coll[i].getName(), elem.first, elem.second, search->second);
-						counter_duplicate++;
+						counter_replaced++;
 					}
 					else
 					{
-						counter_identical++;
+						counter_skipped++;
 					}
 				}
 			}
@@ -67,12 +67,15 @@ void DictMerger::mergeDict()
 		else
 		{
 			cout << "--> Merging complete!\r\n";
-			cout << "    --> Records merged: " << to_string(counter) << "\r\n";
-			cout << "    --> Duplicate records not merged: " <<
-				to_string(counter_duplicate) << "\r\n";
-			cout << "    --> Identical records not merged: " <<
-				to_string(counter_identical) << "\r\n";
 		}
+		cout << endl
+		     << "               merged / replaced / skipped" << endl
+		     << "    --------------------------------------" << endl
+		     << "    Records"
+		     << setw(10) << to_string(counter_merged) << " / "
+		     << setw(8) << to_string(counter_replaced) << " / "
+		     << setw(7) << to_string(counter_skipped)
+		     << endl << endl;
 	}
 }
 

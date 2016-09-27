@@ -36,8 +36,10 @@ private:
 
 	const std::string *valid_ptr;
 
-	int counter = 0;
+	int counter_loaded = 0;
 	int counter_invalid = 0;
+	int counter_toolong = 0;
+	int counter_doubled = 0;
 
 	std::string log;
 	yampt::dict_t dict;

@@ -28,11 +28,14 @@ void Writer::writeDict(const yampt::dict_t &dict, string name)
 }
 
 //----------------------------------------------------------
-void Writer::writeText(const string &text, string name)
+void Writer::writeText(const string &text, string name, bool make_log)
 {
-	ofstream file(name, ios::binary);
-	cout << "--> Writing " << name << "...\r\n";
-	file << text;
+	if(make_log == true)
+	{
+		ofstream file(name, ios::binary);
+		file << text;
+		cout << "--> Writing " << name << "..." << endl;
+	}
 }
 
 //----------------------------------------------------------

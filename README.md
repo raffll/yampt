@@ -89,9 +89,17 @@ or
 ```
 yampt.exe --merge --more-info -d "Merged.dic"
 ```
+### Add the --log switch if you want to generate detailed log.
+```
+yampt.exe --convert --log -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
+```
+or
+```
+yampt.exe --merge --log -d "Merged.dic"
+```
 You can freely combine additional commands e.g.
 ```
-yampt.exe --convert --safe --add-dial --more-info -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
+yampt.exe --convert --safe --add-dial --more-info --log -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
 ```
 ## Dictionary format
 

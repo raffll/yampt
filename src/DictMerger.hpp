@@ -22,9 +22,9 @@ private:
 
 	bool status = false;
 
-	int counter = 0;
-	int counter_identical = 0;
-	int counter_duplicate = 0;
+	int counter_merged = 0;
+	int counter_skipped = 0;
+	int counter_replaced = 0;
 
 	const std::string *valid_ptr;
 

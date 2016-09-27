@@ -13,6 +13,7 @@ public:
 	void writeEsm();
 
 	bool getStatus() { return status; }
+	std::string getName() { return esm.getNamePrefix(); }
 	std::string getLog() { return log; }
 
 	EsmConverter(std::string path, DictMerger &n, bool convert_safe, bool add_dial);
@@ -54,7 +55,10 @@ private:
 	EsmRecord esm;
 	DictMerger *merger;
 
-	int counter = 0;
+	int counter_converted = 0;
+	int counter_notfound = 0;
+	int counter_skipped = 0;
+	int counter_all = 0;
 
 	std::string new_friendly;
 

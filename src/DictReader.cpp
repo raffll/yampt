@@ -12,8 +12,10 @@ DictReader::DictReader(bool more_info)
 DictReader::DictReader(const DictReader& that) : status(that.status),
 					         name(that.name),
 					         name_prefix(that.name_prefix),
-					         counter(that.counter),
+					         counter_loaded(that.counter_loaded),
 					         counter_invalid(that.counter_invalid),
+					         counter_toolong(that.counter_toolong),
+					         counter_doubled(that.counter_doubled),
 					         dict(that.dict),
 					         more_info(that.more_info)
 {
@@ -26,8 +28,10 @@ DictReader& DictReader::operator=(const DictReader& that)
 	status = that.status;
 	name = that.name;
 	name_prefix = that.name_prefix;
-	counter = that.counter;
+	counter_loaded = that.counter_loaded;
 	counter_invalid = that.counter_invalid;
+	counter_toolong = that.counter_toolong;
+	counter_doubled = that.counter_doubled;
 	dict = that.dict;
 	more_info = that.more_info;
 	return *this;
@@ -72,9 +76,15 @@ void DictReader::printStatus(string path)
 	}
 	else
 	{
-		cout << "--> Loading " << path << "...\r\n";
-		cout << "    --> Records loaded: " << to_string(counter) << "\r\n";
-		cout << "    --> Records invalid: " << to_string(counter_invalid) << "\r\n";
+		cout << "--> Loading " << path << "...\r\n" << endl
+		     << "               loaded / doubled / too long / invalid" << endl
+		     << "    ------------------------------------------------" << endl
+		     << "    Records"
+		     << setw(10) << to_string(counter_loaded) << " / "
+		     << setw(7) << to_string(counter_invalid) << " / "
+		     << setw(8) << to_string(counter_toolong) << " / "
+		     << setw(7) << to_string(counter_doubled)
+		     << endl << endl;
 	}
 }
 
@@ -153,10 +163,6 @@ void DictReader::validateRecord()
 		{
 			insertRecord(yampt::r_type::TEXT);
 		}
-		else if(id == "RNAM")
-		{
-			insertRecord(yampt::r_type::RNAM);
-		}
 		else if(id == "INDX")
 		{
 			insertRecord(yampt::r_type::INDX);
@@ -173,13 +179,26 @@ void DictReader::validateRecord()
 		{
 			insertRecord(yampt::r_type::SCTX);
 		}
+		else if(id == "RNAM")
+		{
+			if(friendly.size() > 32)
+			{
+				valid_ptr = &yampt::valid[3];
+				makeLog();
+				counter_toolong++;
+			}
+			else
+			{
+				insertRecord(yampt::r_type::RNAM);
+			}
+		}
 		else if(id == "FNAM")
 		{
 			if(friendly.size() > 32)
 			{
 				valid_ptr = &yampt::valid[3];
 				makeLog();
-				counter_invalid++;
+				counter_toolong++;
 			}
 			else
 			{
@@ -194,7 +213,7 @@ void DictReader::validateRecord()
 				{
 					valid_ptr = &yampt::valid[4];
 					makeLog();
-					counter_invalid++;
+					counter_toolong++;
 				}
 				else
 				{
@@ -226,13 +245,13 @@ void DictReader::insertRecord(yampt::r_type type)
 {
 	if(dict[type].insert({unique_key, friendly}).second == true)
 	{
-		counter++;
+		counter_loaded++;
 	}
 	else
 	{
 		valid_ptr = &yampt::valid[1];
 		makeLog();
-		counter_invalid++;
+		counter_doubled++;
 	}
 }
 

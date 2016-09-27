@@ -20,12 +20,12 @@ public:
 
 private:
 	void compareEsm();
+	void resetCounters();
 	std::string dialTranslator(std::string to_translate);
-	void insertRecord(const std::string &unique_key,
-			  const std::string &friendly,
-			  yampt::r_type type,
-			  bool extra = false);
+	void validateRecord(const std::string &unique_key, const std::string &friendly, yampt::r_type type, bool extra = false);
+	void insertRecord(const std::string &unique_key, const std::string &friendly, yampt::r_type type, bool extra);
 	std::vector<std::string> makeMessageColl(const std::string &script_text);
+	void printLog(std::string id);
 
 	void makeDictCELL();
 	void makeDictGMST();
@@ -48,8 +48,10 @@ private:
 	bool with_dict = false;
 	bool no_duplicates = false;
 
-	int counter;
+	int counter_inserted;
 	int counter_cell;
+	int counter_skipped;
+	int counter_all;
 
 	yampt::dict_t dict;
 

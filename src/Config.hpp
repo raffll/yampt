@@ -41,7 +41,7 @@ class Writer
 {
 public:
 	void writeDict(const yampt::dict_t &dict, std::string name);
-	void writeText(const std::string &text, std::string name);
+	void writeText(const std::string &text, std::string name, bool make_log);
 	int getSize(const yampt::dict_t &dict);
 };
 
