@@ -91,7 +91,7 @@ yampt.exe --convert --safe --add-dial --more-info -f "C:\path\to\Morrowind\Data 
 ```
 ## Dictionary format
 
-- Cell or region name
+#### Cell or region name
 ```
 <h3>CELL^foreign</h3>native<hr>
 ```
