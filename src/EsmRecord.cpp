@@ -45,7 +45,7 @@ void EsmRecord::setUnique(string id)
 				else if(rec_id == "DIAL" && id == "DATA")
 				{
 					int type = convertByteArrayToInt(rec->substr(cur_pos + 8, 1));
-					cur_text = dialog_type[type];
+					cur_text = yampt::dialog_type[type];
 				}
 				else
 				{

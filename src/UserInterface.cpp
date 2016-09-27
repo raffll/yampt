@@ -1,7 +1,6 @@
 #include "UserInterface.hpp"
 
 using namespace std;
-using namespace yampt;
 
 //----------------------------------------------------------
 UserInterface::UserInterface(vector<string> &a)
@@ -76,14 +75,6 @@ UserInterface::UserInterface(vector<string> &a)
 		{
 			convertEsm();
 		}
-		else if(arg[1] == "--scripts" && file_p.size() > 0)
-		{
-			makeScriptText();
-		}
-		else if(arg[1] == "--compare" && dict_p.size() == 2)
-		{
-			makeDiff();
-		}
 		else
 		{
 			cout << "Syntax error!" << endl;
@@ -110,7 +101,6 @@ void UserInterface::makeDictRaw()
 void UserInterface::makeDictBase()
 {
 	DictCreator creator(file_p[0], file_p[1]);
-	creator.compareEsm();
 	creator.makeDict();
 	writer.writeDict(creator.getDict(), creator.getName() + ".dic");
 }
@@ -153,24 +143,4 @@ void UserInterface::convertEsm()
 		log += converter.getLog();
 	}
 	writer.writeText(log, "yampt-converter.log");
-}
-
-//----------------------------------------------------------
-void UserInterface::makeScriptText()
-{
-	for(size_t i = 0; i < file_p.size(); ++i)
-	{
-		DictCreator creator(file_p[i]);
-		creator.makeScriptText();
-		writer.writeText(creator.getScriptText(), creator.getName() + ".scpt");
-	}
-}
-
-//----------------------------------------------------------
-void UserInterface::makeDiff()
-{
-	DictMerger merger(dict_p, more_info);
-	merger.makeDiff();
-	writer.writeText(merger.getDiff(0), merger.getNamePrefix(0) + ".0.diff");
-	writer.writeText(merger.getDiff(1), merger.getNamePrefix(1) + ".1.diff");
 }

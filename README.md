@@ -2,7 +2,7 @@
 
 ## Description
 
-Simple command yampt::line tool for automatic translation from one language to another. It works on cell names, gsmt strings, object names, birthsigns, class and race descriptions, book text, faction rank names, magic and skill descriptions, dialog topic names, dialog text and script lines. In one word, on all readable in-game text. It can be used as well for making no-esp patches without creating DELE records. It can also add your native dialog topic names to the end of not converted INFO strings.
+Simple command line tool for automatic translation from one language to another. It works on cell names, gsmt strings, object names, birthsigns, class and race descriptions, book text, faction rank names, magic and skill descriptions, dialog topic names, dialog text and script lines. In one word, on all readable in-game text. It can be used as well for making no-esp patches without creating DELE records. It can also add your native dialog topic names to the end of not converted INFO strings.
 
 The idea was to quickly convert an infinite number of plugins with an infinite number of combined dictionaries, with one command. To eliminate inconsistencies between files.
 
@@ -39,16 +39,18 @@ yampt.exe --convert -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.d
 ```
 ### If you want to add dialog topic names to not converted INFO strings (without this, most English plugins are not playable in your native language):
 ```
-yampt.exe --convert-with-dial -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
+yampt.exe --convert --with-dial -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
 ```
 Because of limitation of Morrowind engine, INFO string can only have 512 bytes, but more is ok in game.
 This can generate warnings in TES CS and records are read only.
 
 ### And if you want to convert only CELL and DIAL records (with adding dialog topic names to INFO)
 ```
-yampt.exe --convert-safe -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
+yampt.exe --convert --safe -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
 ```
 It's useful when mod change original text in game.
+
+you can freely combine above commands.
 
 ## For translators
 
@@ -87,17 +89,31 @@ yampt.exe --scripts -f "C:\path\to\Morrowind\Data Files\Plugin.esp"
 yampt.exe --convert -a -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
 ```
 
-### Add the -r switch if you want to replace broken characters.
+## Dictionary format
+
+### Cell and region names
 ```
-yampt.exe --make-base -r -f "C:\path\to\NATIVE\Morrowind\Data Files\Morrowind.esm" "C:\path\to\FOREIGN\Morrowind\Data Files\Morrowind.esm"
+<h3>CELL^foreign</h3>native<hr>
 ```
-Polish version of Morrowind has few broken (not windows-1250) characters, but most text editors can handle this.
-This option replace them with "?" character.
+### Dialog topic names
+```
+<h3>DIAL^foreign</h3>native<hr>
+```
+### Magic and skill descriptions
+```
+<h3>INDX^record_id^hardcoded_key</h3>native<hr>
+```
+### Faction rank names
+```
+<h3>RNAM^unique_key^number</h3>native<hr>
+```
 
-You can combine these options with all commands.
+ , , DESC, GMST, FNAM, INFO, BNAM, SCTX, TEXT
 
-## At the end
-
+### GMST
+```
+<h3>GMST^id</h3>native<hr>
+```
 ### If you change something in dictionary, make sure that text editor doesn't change encoding.
 
 ### Dictionary format is:
@@ -151,4 +167,6 @@ It can be a mess, because CELL, DIAL, BNAM and SCTX records don't have unique id
 - remove yampt.cfg
 
 0.5 alpha
-- add --compare command
+- remove --scripts command
+- remove -r command
+- add detailed converter and merger log

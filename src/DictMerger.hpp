@@ -8,11 +8,9 @@ class DictMerger
 {
 public:
 	void mergeDict();
-	void makeDiff();
 
 	bool getStatus() { return status; }
 	std::string getLog() { return log; }
-	std::string getDiff(size_t i) { return diff[i]; }
 	std::string getNamePrefix(size_t i) { return dict_coll[i].getNamePrefix(); }
 	yampt::dict_t const& getDict() const { return dict; }
 
@@ -20,14 +18,19 @@ public:
 	DictMerger(std::vector<std::string> &path, bool more_info);
 
 private:
-	bool status = 0;
+	void makeLog(const std::string name, const std::string unique_key, const std::string friendly_r, const std::string friendly_n);
+
+	bool status = false;
+
 	int counter = 0;
 	int counter_identical = 0;
 	int counter_duplicate = 0;
+
+	const std::string *valid_ptr;
+
 	std::string log;
 	std::vector<DictReader> dict_coll;
 	yampt::dict_t dict;
-	std::array<std::string, 2> diff;
 };
 
 #endif

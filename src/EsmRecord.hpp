@@ -3,8 +3,6 @@
 
 #include "EsmReader.hpp"
 
-using namespace yampt;
-
 class EsmRecord : public EsmReader
 {
 public:

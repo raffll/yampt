@@ -10,21 +10,19 @@ class DictCreator : public Tools
 {
 public:
 	void makeDict();
-	void makeScriptText();
-	void compareEsm();
 
 	std::string getName() { return esm_n.getNamePrefix(); }
 	yampt::dict_t const& getDict() const { return dict; }
-	std::string getScriptText() { return script_text; }
 
 	DictCreator(std::string path_n);
 	DictCreator(std::string path_n, std::string path_f);
 	DictCreator(std::string path_n, DictMerger &m, bool no_duplicates);
 
 private:
+	void compareEsm();
 	std::string dialTranslator(std::string to_translate);
-	void insertRecord(const std::string &pri_text,
-			  const std::string &sec_text,
+	void insertRecord(const std::string &unique_key,
+			  const std::string &friendly,
 			  yampt::r_type type,
 			  bool extra = false);
 	std::vector<std::string> makeMessageColl(const std::string &script_text);
@@ -46,15 +44,14 @@ private:
 	EsmRecord *esm_ptr;
 	DictMerger *merger;
 
-	bool status = 0;
-	bool with_dict = 0;
-	bool no_duplicates = 0;
+	bool status = false;
+	bool with_dict = false;
+	bool no_duplicates = false;
 
 	int counter;
 	int counter_cell;
 
 	yampt::dict_t dict;
-	std::string script_text;
 
 	std::vector<std::string> *message_ptr;
 	std::vector<std::string> message_n;

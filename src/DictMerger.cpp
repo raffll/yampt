@@ -49,14 +49,9 @@ void DictMerger::mergeDict()
 					else if(search != dict[k].end() &&
 						search->second != elem.second)
 					{
+						valid_ptr = &yampt::valid[0];
+						makeLog(dict_coll[i].getName(), elem.first, elem.second, search->second);
 						counter_duplicate++;
-						log += yampt::line + "\r\n" +
-						       yampt::sep[1] + elem.first + yampt::sep[2] + elem.second +
-						       yampt::sep[3] +
-						       " <!-- record in " + dict_coll[i].getName() +
-						       " replaced by -->\r\n" +
-						       yampt::sep[1] + search->first + yampt::sep[2] + search->second +
-						       yampt::sep[3] + "\r\n";
 					}
 					else
 					{
@@ -82,34 +77,14 @@ void DictMerger::mergeDict()
 }
 
 //----------------------------------------------------------
-void DictMerger::makeDiff()
+void DictMerger::makeLog(const string name, const string unique_key, const string friendly_r, const string friendly_n)
 {
-	if(status == true && dict_coll.size() == 2)
-	{
-		for(size_t k = 0; k < 11; ++k)
-		{
-			for(auto &elem : dict_coll[0].getDict()[k])
-			{
-				auto search = dict_coll[1].getDict()[k].find(elem.first);
-				if(search != dict_coll[1].getDict()[k].end())
-				{
-					if(search->second != elem.second)
-					{
-						diff[0] += yampt::line + "\r\n" +
-							   yampt::sep[1] + elem.first +
-							   yampt::sep[2] + elem.second +
-							   yampt::sep[3] + "\r\n";
-						diff[1] += yampt::line + "\r\n" +
-							   yampt::sep[1] + search->first +
-							   yampt::sep[2] + search->second +
-							   yampt::sep[3] + "\r\n";
-					}
-				}
-			}
-		}
-		if(diff[0].empty() && diff[1].empty())
-		{
-			cout << "--> No differences between dictionaries!\r\n";
-		}
-	}
+	log += "File:              | " + name + "\r\n" +
+	       "Record:            | " + unique_key + "\r\n" +
+	       "Result:            | " + *valid_ptr +
+	       "\r\n<!---->\r\n" +
+	       friendly_r +
+	       "\r\n<!---->\r\n" +
+	       friendly_n + "\r\n" +
+	       yampt::line + "\r\n";
 }

@@ -18,7 +18,7 @@ public:
 	EsmReader();
 
 protected:
-	bool status = 0;
+	bool status = false;
 	std::vector<std::string> rec_coll;
 
 private:

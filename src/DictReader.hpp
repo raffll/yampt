@@ -22,13 +22,23 @@ private:
 	void printStatus(std::string path);
 	void setName(std::string path);
 	bool parseDict(std::string &content);
-	void insertRecord(const std::string &pri_text, const std::string &sec_text);
+	void validateRecord();
+	void insertRecord(yampt::r_type type);
+	void makeLog();
 
-	bool status = 0;
+	bool status = false;
+
 	std::string name;
 	std::string name_prefix;
+
+	std::string unique_key;
+	std::string friendly;
+
+	const std::string *valid_ptr;
+
 	int counter = 0;
 	int counter_invalid = 0;
+
 	std::string log;
 	yampt::dict_t dict;
 

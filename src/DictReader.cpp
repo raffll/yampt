@@ -91,8 +91,7 @@ bool DictReader::parseDict(string &content)
 	size_t pos_beg = 0;
 	size_t pos_mid = 0;
 	size_t pos_end = 0;
-	string pri_text;
-	string sec_text;
+
 	while(true)
 	{
 		pos_beg = content.find(yampt::sep[1], pos_beg);
@@ -115,11 +114,14 @@ bool DictReader::parseDict(string &content)
 		}
 		else
 		{
-			pri_text = content.substr(pos_beg + yampt::sep[1].size(),
-						  pos_mid - pos_beg - yampt::sep[1].size());
-			sec_text = content.substr(pos_mid + yampt::sep[2].size(),
+			unique_key = content.substr(pos_beg + yampt::sep[1].size(),
+						    pos_mid - pos_beg - yampt::sep[1].size());
+
+			friendly = content.substr(pos_mid + yampt::sep[2].size(),
 						  pos_end - pos_mid - yampt::sep[2].size());
-			insertRecord(pri_text, sec_text);
+
+			validateRecord();
+
 			pos_beg++;
 			pos_mid++;
 			pos_end++;
@@ -128,110 +130,119 @@ bool DictReader::parseDict(string &content)
 }
 
 //----------------------------------------------------------
-void DictReader::insertRecord(const string &pri_text, const string &sec_text)
+void DictReader::validateRecord()
 {
-	if(pri_text.size() > 4)
+	string id;
+	if(unique_key.size() > 4)
 	{
-		if(pri_text.substr(0, 4) == "CELL")
+		id = unique_key.substr(0, 4);
+
+		if(id == "CELL")
 		{
-			dict[yampt::r_type::CELL].insert({pri_text, sec_text});
-			counter++;
+			insertRecord(yampt::r_type::CELL);
 		}
-		else if(pri_text.substr(0, 4) == "GMST")
+		else if(id == "GMST")
 		{
-			dict[yampt::r_type::GMST].insert({pri_text, sec_text});
-			counter++;
+			insertRecord(yampt::r_type::GMST);
 		}
-		else if(pri_text.substr(0, 4) == "FNAM")
+		else if(id == "DESC")
 		{
-			if(sec_text.size() > 32)
+			insertRecord(yampt::r_type::DESC);
+		}
+		else if(id == "TEXT")
+		{
+			insertRecord(yampt::r_type::TEXT);
+		}
+		else if(id == "RNAM")
+		{
+			insertRecord(yampt::r_type::RNAM);
+		}
+		else if(id == "INDX")
+		{
+			insertRecord(yampt::r_type::INDX);
+		}
+		else if(id == "DIAL")
+		{
+			insertRecord(yampt::r_type::DIAL);
+		}
+		else if(id == "BNAM")
+		{
+			insertRecord(yampt::r_type::BNAM);
+		}
+		else if(id == "SCTX")
+		{
+			insertRecord(yampt::r_type::SCTX);
+		}
+		else if(id == "FNAM")
+		{
+			if(friendly.size() > 32)
 			{
-					log += yampt::sep[4] +
-					       yampt::sep[1] + pri_text + yampt::sep[2] + sec_text + yampt::sep[3] +
-					       " <!-- " + name +
-					       " - Text too long, more than 32 bytes (has " +
-					       to_string(sec_text.size()) + ") -->\r\n";
-					counter_invalid++;
+				valid_ptr = &yampt::valid[3];
+				makeLog();
+				counter_invalid++;
 			}
 			else
 			{
-				dict[yampt::r_type::FNAM].insert({pri_text, sec_text});
-				counter++;
+				insertRecord(yampt::r_type::FNAM);
 			}
 		}
-		else if(pri_text.substr(0, 4) == "DESC")
-		{
-			dict[yampt::r_type::DESC].insert({pri_text, sec_text});
-			counter++;
-		}
-		else if(pri_text.substr(0, 4) == "TEXT")
-		{
-			dict[yampt::r_type::TEXT].insert({pri_text, sec_text});
-			counter++;
-		}
-		else if(pri_text.substr(0, 4) == "RNAM")
-		{
-			dict[yampt::r_type::RNAM].insert({pri_text, sec_text});
-			counter++;
-		}
-		else if(pri_text.substr(0, 4) == "INDX")
-		{
-			dict[yampt::r_type::INDX].insert({pri_text, sec_text});
-			counter++;
-		}
-		else if(pri_text.substr(0, 4) == "DIAL")
-		{
-			dict[yampt::r_type::DIAL].insert({pri_text, sec_text});
-			counter++;
-		}
-		else if(pri_text.substr(0, 4) == "INFO")
+		else if(id == "INFO")
 		{
 			if(more_info == false)
 			{
-				if(sec_text.size() > 512)
+				if(friendly.size() > 512)
 				{
-					log += yampt::sep[4] +
-					       yampt::sep[1] + pri_text + yampt::sep[2] + sec_text + yampt::sep[3] +
-					       " <!-- " + name +
-					       " - Text too long, more than 512 bytes (has " +
-					       to_string(sec_text.size()) + ") -->\r\n";
+					valid_ptr = &yampt::valid[4];
+					makeLog();
 					counter_invalid++;
 				}
 				else
 				{
-					dict[yampt::r_type::INFO].insert({pri_text, sec_text});
-					counter++;
+					insertRecord(yampt::r_type::INFO);
 				}
 			}
 			else
 			{
-				dict[yampt::r_type::INFO].insert({pri_text, sec_text});
-				counter++;
+				insertRecord(yampt::r_type::INFO);
 			}
-		}
-		else if(pri_text.substr(0, 4) == "BNAM")
-		{
-			dict[yampt::r_type::BNAM].insert({pri_text, sec_text});
-			counter++;
-		}
-		else if(pri_text.substr(0, 4) == "SCTX")
-		{
-			dict[yampt::r_type::SCTX].insert({pri_text, sec_text});
-			counter++;
 		}
 		else
 		{
-			log += yampt::sep[4] +
-			       yampt::sep[1] + pri_text + yampt::sep[2] + sec_text + yampt::sep[3] +
-			       " <!-- " + name + " - Invalid record -->\r\n";
+			valid_ptr = &yampt::valid[2];
+			makeLog();
 			counter_invalid++;
 		}
 	}
 	else
 	{
-		log += yampt::sep[4] +
-		       yampt::sep[1] + pri_text + yampt::sep[2] + sec_text + yampt::sep[3] +
-		       " <!-- " + name + " - Invalid record -->\r\n";
+		valid_ptr = &yampt::valid[2];
+		makeLog();
 		counter_invalid++;
 	}
+}
+
+//----------------------------------------------------------
+void DictReader::insertRecord(yampt::r_type type)
+{
+	if(dict[type].insert({unique_key, friendly}).second == true)
+	{
+		counter++;
+	}
+	else
+	{
+		valid_ptr = &yampt::valid[1];
+		makeLog();
+		counter_invalid++;
+	}
+}
+
+//----------------------------------------------------------
+void DictReader::makeLog()
+{
+	log += "File:              | " + name + "\r\n" +
+	       "Record:            | " + unique_key + "\r\n" +
+	       "Result:            | " + *valid_ptr +
+	       "\r\n<!---->\r\n" +
+	       friendly + "\r\n" +
+	       yampt::line + "\r\n";
 }

@@ -27,7 +27,7 @@ DictCreator::DictCreator(string path_n, string path_f)
 
 	if(esm_n.getStatus() == true && esm_f.getStatus() == true)
 	{
-		status = true;
+		compareEsm();
 	}
 }
 
@@ -44,8 +44,8 @@ DictCreator::DictCreator(string path_n, DictMerger &merger, bool no_duplicates)
 
 	if(esm_n.getStatus() == true && merger.getStatus() == true)
 	{
-		status = true;
 		with_dict = true;
+		status = true;
 	}
 }
 
@@ -107,14 +107,14 @@ void DictCreator::compareEsm()
 }
 
 //----------------------------------------------------------
-void DictCreator::insertRecord(const string &pri_text, const string &sec_text, yampt::r_type type, bool extra)
+void DictCreator::insertRecord(const string &unique_key, const string &friendly, yampt::r_type type, bool extra)
 {
 	if(no_duplicates == true)
 	{
-		auto search = merger->getDict()[type].find(pri_text);
+		auto search = merger->getDict()[type].find(unique_key);
 		if(search == merger->getDict()[type].end())
 		{
-			if(dict[type].insert({pri_text, sec_text}).second == true)
+			if(dict[type].insert({unique_key, friendly}).second == true)
 			{
 				if(extra == true)
 				{
@@ -133,10 +133,10 @@ void DictCreator::insertRecord(const string &pri_text, const string &sec_text, y
 		 type == yampt::r_type::BNAM ||
 		 type == yampt::r_type::SCTX))
 	{
-		auto search = merger->getDict()[type].find(pri_text);
+		auto search = merger->getDict()[type].find(unique_key);
 		if(search != merger->getDict()[type].end())
 		{
-			if(dict[type].insert({pri_text, search->second}).second == true)
+			if(dict[type].insert({unique_key, search->second}).second == true)
 			{
 				if(extra == true)
 				{
@@ -150,7 +150,7 @@ void DictCreator::insertRecord(const string &pri_text, const string &sec_text, y
 		}
 		else
 		{
-			if(dict[type].insert({pri_text, sec_text}).second == true)
+			if(dict[type].insert({unique_key, friendly}).second == true)
 			{
 				if(extra == true)
 				{
@@ -165,7 +165,7 @@ void DictCreator::insertRecord(const string &pri_text, const string &sec_text, y
 	}
 	else
 	{
-		if(dict[type].insert({pri_text, sec_text}).second == true)
+		if(dict[type].insert({unique_key, friendly}).second == true)
 		{
 			if(extra == true)
 			{
@@ -191,63 +191,6 @@ string DictCreator::dialTranslator(string to_translate)
 		}
 	}
 	return to_translate;
-}
-
-//----------------------------------------------------------
-void DictCreator::makeScriptText()
-{
-	if(status == true)
-	{
-		string dial;
-		counter = 0;
-
-		for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
-		{
-			esm_n.setRec(i);
-			if(esm_n.getRecId() == "SCPT")
-			{
-				esm_n.setUnique("SCHD");
-				esm_n.setFriendly("SCTX");
-
-				if(esm_n.getFriendlyStatus() == true)
-				{
-					script_text += yampt::line + "\r\n" +
-						       "SCTX " + esm_n.getUnique() + "\r\n" +
-						       yampt::line + "\r\n" +
-						       esm_n.getFriendly() + "\r\n";
-					counter++;
-				}
-			}
-		}
-		cout << "    --> SCTX text count: " << to_string(counter) + "\r\n";
-
-		counter = 0;
-
-		for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
-		{
-			esm_n.setRec(i);
-			if(esm_n.getRecId() == "DIAL")
-			{
-				esm_n.setUnique("NAME");
-				dial = esm_n.getUnique();
-			}
-			if(esm_n.getRecId() == "INFO")
-			{
-				esm_n.setUnique("INAM");
-				esm_n.setFriendly("BNAM");
-
-				if(esm_n.getFriendlyStatus() == true)
-				{
-					script_text += yampt::line + "\r\n" +
-						       "BNAM " + dial + " " + esm_n.getUnique() + "\r\n" +
-						       yampt::line + "\r\n" +
-						       esm_n.getFriendly() + "\r\n";
-					counter++;
-				}
-			}
-		}
-		cout << "    --> BNAM text count: " << to_string(counter) + "\r\n";
-	}
 }
 
 //----------------------------------------------------------
@@ -448,8 +391,8 @@ void DictCreator::makeDictRNAM()
 						     esm_n.getFriendly(),
 						     yampt::r_type::RNAM);
 
-					esm_n.setFriendly("RNAM", NEXT);
-					esm_f.setFriendly("RNAM", NEXT);
+					esm_n.setFriendly("RNAM", true);
+					esm_f.setFriendly("RNAM", true);
 				}
 			}
 		}
@@ -627,7 +570,7 @@ vector<string> DictCreator::makeMessageColl(const string &script_text)
 		transform(s_line_lc.begin(), s_line_lc.end(),
 			  s_line_lc.begin(), ::tolower);
 
-		for(auto const &elem : key_message)
+		for(auto const &elem : yampt::key_message)
 		{
 			if(s_found == false)
 			{

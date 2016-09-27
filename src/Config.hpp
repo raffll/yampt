@@ -25,13 +25,15 @@ const std::array<std::string, 5> dialog_type = {"T", "V", "G", "P", "J"};
 
 const std::vector<std::string> sep = {"^", "<h3>", "</h3>", "<hr>"};
 const std::string line = "<!------------------------------------------------------------>";
-const bool NEXT = true;
 
 const std::vector<std::string> key_message = {"messagebox", "say ", "say,", "choice"};
 const std::vector<std::string> key_dial = {"addtopic"};
 const std::vector<std::string> key_cell = {"positioncell", "getpccell", "aifollowcell",
 					   "placeitemcell", "showmap", "aiescortcell"};
 const std::vector<std::string> result = {"Not converted", "Converted", "Skipped"};
+const std::vector<std::string> valid = {"Replaced", "Doubled", "Invalid",
+					"Text too long, more than 32 bytes",
+					"Text too long, more than 512 bytes"};
 
 }
 
