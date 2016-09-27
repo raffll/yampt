@@ -229,9 +229,9 @@ vector<string> DictCreator::makeMessageColl(const string &script_text)
 void DictCreator::printLog(string id)
 {
 	cout << "    " << id << " "
-	     << setw(9) << to_string(counter_inserted) << " / "
+	     << setw(8) << to_string(counter_inserted) << " / "
 	     << setw(7) << to_string(counter_skipped) << " / "
-	     << setw(5) << to_string(counter_all);
+	     << setw(6) << to_string(counter_all);
 
 	if(id == "GMST" || id == "FNAM")
 	{

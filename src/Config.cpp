@@ -19,11 +19,11 @@ void Writer::writeDict(const yampt::dict_t &dict, string name)
 			}
 		}
 		cout << "--> Writing " << to_string(getSize(dict)) <<
-			" records to " << name << "...\r\n";
+			" records to " << name << "..." << endl << endl;
 	}
 	else
 	{
-		cout << "--> No records to make dictionary!\r\n";
+		cout << "--> No records to make dictionary!" << endl << endl;
 	}
 }
 
@@ -34,7 +34,7 @@ void Writer::writeText(const string &text, string name, bool make_log)
 	{
 		ofstream file(name, ios::binary);
 		file << text;
-		cout << "--> Writing " << name << "..." << endl;
+		cout << "--> Writing " << name << "..." << endl << endl;
 	}
 }
 

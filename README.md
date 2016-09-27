@@ -39,7 +39,7 @@ Above command validate, sort and remove duplicates, so you can use it with only 
 ```
 yampt.exe --merge -d Morrowind.dic
 ```
-## Converting esm/esp
+## Converting esm/esp/ess
 ```
 yampt.exe --convert -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
 ```
