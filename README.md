@@ -37,7 +37,7 @@ yampt.exe --convert -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.d
 ```
 ### If you want to add dialog topic names to not converted INFO strings
 ```
-yampt.exe --convert --with-dial -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
+yampt.exe --convert --add-dial -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
 ```
 Without this, most English plugins are not playable in your native language.
 Because of limitation of Morrowind engine, INFO string can only have 512 bytes, but more is ok in game.
@@ -48,8 +48,6 @@ This can generate warnings in TES CS and records are read only.
 yampt.exe --convert --safe -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
 ```
 It's useful when mod change original text in game.
-
-you can freely combine above commands.
 
 ## For translators
 
@@ -77,7 +75,10 @@ Use for manualy translate only new records.
 ```
 yampt.exe --convert --more-info -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
 ```
-
+You can freely combine additional commands e.g.
+```
+yampt.exe --convert --safe --add-dial --more-info -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
+```
 ## Dictionary format
 
 ### Cell or region name
