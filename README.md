@@ -91,41 +91,41 @@ yampt.exe --convert --safe --add-dial --more-info -f "C:\path\to\Morrowind\Data 
 ```
 ## Dictionary format
 
-### Cell or region name
+- Cell or region name
 ```
 <h3>CELL^foreign</h3>native<hr>
 ```
-### Dialog topic name
+- Dialog topic name
 ```
 <h3>DIAL^foreign</h3>native<hr>
 ```
-### Magic or skill description
+- Magic or skill description
 ```
 <h3>INDX^id^hardcoded_key</h3>native<hr>
 ```
 where id is MGEF or SKIL
 
-### Faction rank name
+- Faction rank name
 ```
 <h3>RNAM^key^number</h3>native<hr>
 ```
-### Birthsign, class or race description
+- Birthsign, class or race description
 ```
 <h3>DESC^id^key</h3>native<hr>
 ```
 where id is BSGN, CLAS or RACE
 
-### GMST
+- GMST
 ```
 <h3>GMST^key</h3>native<hr>
 ```
-### Object name
+- Object name
 ```
 <h3>FNAM^id^key</h3>native<hr>
 ```
 where id is ACTI, ALCH, APPA, ARMO, BOOK, BSGN, CLAS, CLOT, CONT, CREA, DOOR, FACT, INGR, LIGH, LOCK, MISC, NPC_, PROB, RACE, REGN, REPA, SKIL, SPEL or WEAP
 
-### Dialog topic
+- Dialog topic
 ```
 <h3>INFO^dialog_type^dialog_name^key</h3>native<hr>
 ```
@@ -133,23 +133,23 @@ where dialog_type is T, V, G, P or J
 
 and dialog_name is native dialog topic name
 
-### Book text
+- Book text
 ```
 <h3>TEXT^key</h3>native<hr>
 ```
-### Dialog topic script message line
+- Dialog topic script message line
 ```
 <h3>BNAM^foreign</h3>
         ^native<hr>
 ```
-### Script message line
+- Script message line
 ```
 <h3>SCTX^foreign</h3>
         ^native<hr>
 ```
 Don't forget of ^ character before native text
 
-### Tips
+## Tips
 
 - If you change something in dictionary, make sure that text editor doesn't change encoding.
 - If you lose html tag dictionary won't load.
