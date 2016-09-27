@@ -18,9 +18,9 @@ After convertion you must recompile all scripts in TES CS!
 All files are created in yampt.exe directory, and program don't check if file exist, so be careful.
 
 ## Usage
-
+```
 yampt.exe command <additional commands> -f <file list> -d <dictionary list>
-
+```
 ## Making base dictionary
 
 This step is required for plugin automatic translation.
