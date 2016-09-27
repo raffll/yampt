@@ -576,7 +576,7 @@ void EsmConverter::convertFNAM()
 			esm.setUnique("NAME");
 			esm.setFriendly("FNAM");
 
-			if(esm.getUniqueStatus() == true && esm.getFriendlyStatus() == true)
+			if(esm.getUniqueStatus() == true && esm.getFriendlyStatus() == true && esm.getUnique() != "player")
 			{
 				setNewFriendly("FNAM" + yampt::sep[0] + esm.getRecId() + yampt::sep[0] + esm.getUnique(),
 					       yampt::r_type::FNAM);

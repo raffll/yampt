@@ -284,19 +284,19 @@ void DictCreator::makeDictGMST()
 			esm_n.setFriendly("STRV");
 			esm_f.setFriendly("STRV");
 
-			if(esm_n.getUniqueStatus() == true && esm_n.getFriendlyStatus() == true)
+			if(esm_n.getUniqueStatus() == true && esm_n.getFriendlyStatus() == true && esm_n.getUnique().substr(0, 1) == "s")
 			{
 				validateRecord("GMST" + yampt::sep[0] + esm_n.getUnique(),
 					       esm_n.getFriendly(),
 					       yampt::r_type::GMST);
-			}
 
-			if(esm_n.getUnique() == "sDefaultCellname")
-			{
-				validateRecord("CELL" + yampt::sep[0] + esm_ptr->getFriendly(),
-					       esm_n.getFriendly(),
-					       yampt::r_type::CELL,
-					       true);
+                                if(esm_n.getUnique() == "sDefaultCellname")
+                                {
+                                        validateRecord("CELL" + yampt::sep[0] + esm_ptr->getFriendly(),
+                                                       esm_n.getFriendly(),
+					               yampt::r_type::CELL,
+					               true);
+                                }
 			}
 		}
 	}
@@ -341,19 +341,19 @@ void DictCreator::makeDictFNAM()
 			esm_n.setFriendly("FNAM");
 			esm_f.setFriendly("FNAM");
 
-			if(esm_n.getUniqueStatus() == true && esm_n.getFriendlyStatus() == true)
+			if(esm_n.getUniqueStatus() == true && esm_n.getFriendlyStatus() == true && esm_n.getUnique() != "player")
 			{
 				validateRecord("FNAM" + yampt::sep[0] + esm_n.getRecId() + yampt::sep[0] + esm_n.getUnique(),
 					       esm_n.getFriendly(),
 					       yampt::r_type::FNAM);
-			}
 
-			if(esm_n.getRecId() == "REGN")
-			{
-				validateRecord("CELL" + yampt::sep[0] + esm_ptr->getFriendly(),
-					       esm_n.getFriendly(),
-					       yampt::r_type::CELL,
-					       true);
+                                if(esm_n.getRecId() == "REGN")
+                                {
+                                        validateRecord("CELL" + yampt::sep[0] + esm_ptr->getFriendly(),
+                                                       esm_n.getFriendly(),
+                                                       yampt::r_type::CELL,
+                                                       true);
+                                }
 			}
 		}
 	}
