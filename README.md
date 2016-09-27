@@ -27,24 +27,23 @@ yampt.exe --make-base -f "C:\path\to\NATIVE\Morrowind\Data Files\Bloodmoon.esm" 
 ```
 Now you can merge these dictionaries into one file. Important thing is order, just like in game.
 ```
-yampt.exe --merge -f Morrowind.dic Tribunal.dic Bloodmoon.dic
+yampt.exe --merge -d Morrowind.dic Tribunal.dic Bloodmoon.dic
 ```
 Here you have one Merged.dic. This is your base dictionary.
 
 ## Converting esm/esp
-
-### Simply:
 ```
 yampt.exe --convert -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
 ```
-### If you want to add dialog topic names to not converted INFO strings (without this, most English plugins are not playable in your native language):
+### If you want to add dialog topic names to not converted INFO strings
 ```
 yampt.exe --convert --with-dial -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
 ```
+Without this, most English plugins are not playable in your native language.
 Because of limitation of Morrowind engine, INFO string can only have 512 bytes, but more is ok in game.
 This can generate warnings in TES CS and records are read only.
 
-### And if you want to convert only CELL and DIAL records (with adding dialog topic names to INFO)
+### If you want to convert only CELL and DIAL records
 ```
 yampt.exe --convert --safe -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
 ```
@@ -54,82 +53,95 @@ you can freely combine above commands.
 
 ## For translators
 
-### Making dictionary with all records from plugin.
+### Making dictionary with all records from plugin
 ```
 yampt.exe --make-raw -f "C:\path\to\Morrowind\Data Files\Plugin.esp"
 ```
 Use for manualy translate everything.
 
-### Making dictionary with all records from plugin, but with CELL, DIAL, BNAM, SCTX and INFO id translation.
+### Making dictionary with all records from plugin, but with CELL, DIAL, BNAM, SCTX and INFO dialog topic names translation
 ```
 yampt.exe --make-all -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
 ```
 Use for manualy translate everything, but with little help.
 
-### Making dictionary from plugin with records that don't exist in selected dictionaries (with INFO id translation).
+### Making dictionary from plugin with records that don't exist in selected dictionaries
 ```
 yampt.exe --make-not -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
 ```
 Use for manualy translate only new records.
 
-### Compare two dictionaries
-```
-yampt.exe --compare -d "C:\path\to\Dict_0.dic" "C:\path\to\Dict_1.dic"
-```
-
-### Write log with raw scripts text.
-```
-yampt.exe --scripts -f "C:\path\to\Morrowind\Data Files\Plugin.esp"
-```
-
 ## Options
 
-### Add the -a switch if you want to INFO string could be more than 512 characters.
+### Add the --more-info switch if you want to INFO string could be more than 512 characters.
 ```
-yampt.exe --convert -a -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
+yampt.exe --convert --more-info -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
 ```
 
 ## Dictionary format
 
-### Cell and region names
+### Cell or region name
 ```
 <h3>CELL^foreign</h3>native<hr>
 ```
-### Dialog topic names
+### Dialog topic name
 ```
 <h3>DIAL^foreign</h3>native<hr>
 ```
-### Magic and skill descriptions
+### Magic or skill description
 ```
-<h3>INDX^record_id^hardcoded_key</h3>native<hr>
+<h3>INDX^id^hardcoded_key</h3>native<hr>
 ```
-### Faction rank names
-```
-<h3>RNAM^unique_key^number</h3>native<hr>
-```
+where id is MGEF or SKIL
 
- , , DESC, GMST, FNAM, INFO, BNAM, SCTX, TEXT
+### Faction rank name
+```
+<h3>RNAM^key^number</h3>native<hr>
+```
+### Birthsign, class or race description
+```
+<h3>DESC^id^key</h3>native<hr>
+```
+where id is BSGN, CLAS or RACE
 
 ### GMST
 ```
-<h3>GMST^id</h3>native<hr>
+<h3>GMST^key</h3>native<hr>
 ```
-### If you change something in dictionary, make sure that text editor doesn't change encoding.
+### Object name
+```
+<h3>FNAM^id^key</h3>native<hr>
+```
+where id is ACTI, ALCH, APPA, ARMO, BOOK, BSGN, CLAS, CLOT, CONT, CREA, DOOR, FACT, INGR, LIGH, LOCK, MISC, NPC_, PROB, RACE, REGN, REPA, SKIL, SPEL or WEAP
 
-### Dictionary format is:
+### Dialog topic
 ```
-<h3>id</h3>text<hr>
+<h3>INFO^dialog_type^dialog_name^key</h3>native<hr>
 ```
-If you lose tag dictionary won't load.
+where dialog_type is T, V, G, P or J
+and dialog_name is native dialog topic name
 
-### BNAM and SCTX entries have format like this for better readability
+### Book text
 ```
-<h3>SCTX^text</h3>
-        ^text<hr>
+<h3>TEXT^key</h3>native<hr>
 ```
-Don't forget of ^ character
+### Dialog topic script message line
+```
+<h3>BNAM^foreign</h3>
+        ^native<hr>
+```
+### Script message line
+```
+<h3>SCTX^foreign</h3>
+        ^native<hr>
+```
+Don't forget of ^ character before native text
 
-### Make sure that dictionary doesn't contains:
+### Tips
+
+- If you change something in dictionary, make sure that text editor doesn't change encoding.
+- If you lose html tag dictionary won't load.
+- Make sure that dictionary doesn't contains:
 ```
 <h3>DIAL^skin of the pearl</h3>skin of the pearl<hr>
 <h3>INFO^T^skóra perły^8142170481561424883</h3>Some text<hr>
@@ -141,7 +153,7 @@ or
 ```
 In first step converter translate (or not) dialog entries, and in second it can't find corresponding INFO record.
 
-It can be a mess, because CELL, DIAL, BNAM and SCTX records don't have unique id.
+It can be a mess, because CELL, DIAL, BNAM and SCTX records don't have unique key.
 
 ## Version history
 
