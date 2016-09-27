@@ -35,7 +35,7 @@ yampt.exe --merge -d Morrowind.dic Tribunal.dic Bloodmoon.dic
 ```
 Here you have one Merged.dic. This is your base dictionary.
 
-Above command validate, sort and remove duplicates from dictionary so you can use it with only one dictionary:
+Above command validate, sort and remove duplicates, so you can use it with only one dictionary:
 ```
 yampt.exe --merge -d Morrowind.dic
 ```
