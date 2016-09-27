@@ -30,7 +30,10 @@ Now you can merge these dictionaries into one file. Important thing is order, ju
 yampt.exe --merge -d Morrowind.dic Tribunal.dic Bloodmoon.dic
 ```
 Here you have one Merged.dic. This is your base dictionary.
-
+Above command validate, sort and remove duplicates from dictionary so you can use it with only one dictionary
+```
+yampt.exe --merge -d Morrowind.dic
+```
 ## Converting esm/esp
 ```
 yampt.exe --convert -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
@@ -43,7 +46,7 @@ Without this, most English plugins are not playable in your native language.
 Because of limitation of Morrowind engine, INFO string can only have 512 bytes, but more is ok in game.
 This can generate warnings in TES CS and records are read only.
 
-### If you want to convert only CELL and DIAL records
+### If you want to convert only CELL, DIAL, BNAM and SCTX records
 ```
 yampt.exe --convert --safe -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
 ```
@@ -74,6 +77,10 @@ Use for manualy translate only new records.
 ### Add the --more-info switch if you want to INFO string could be more than 512 characters.
 ```
 yampt.exe --convert --more-info -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
+```
+or
+```
+yampt.exe --merge --more-info -d "Merged.dic"
 ```
 You can freely combine additional commands e.g.
 ```
@@ -153,7 +160,6 @@ or
 <h3>INFO^T^skin of the pearl^8142170481561424883</h3>Some text<hr>
 ```
 In first step converter translate (or not) dialog entries, and in second it can't find corresponding INFO record.
-
 It can be a mess, because CELL, DIAL, BNAM and SCTX records don't have unique key.
 
 ## Version history
