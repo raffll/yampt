@@ -3,9 +3,9 @@
 using namespace std;
 
 //----------------------------------------------------------
-DictReader::DictReader(bool more_info)
+DictReader::DictReader()
 {
-	this->more_info = more_info;
+
 }
 
 //----------------------------------------------------------
@@ -16,8 +16,7 @@ DictReader::DictReader(const DictReader& that) : status(that.status),
 					         counter_invalid(that.counter_invalid),
 					         counter_toolong(that.counter_toolong),
 					         counter_doubled(that.counter_doubled),
-					         dict(that.dict),
-					         more_info(that.more_info)
+					         dict(that.dict)
 {
 
 }
@@ -33,7 +32,6 @@ DictReader& DictReader::operator=(const DictReader& that)
 	counter_toolong = that.counter_toolong;
 	counter_doubled = that.counter_doubled;
 	dict = that.dict;
-	more_info = that.more_info;
 	return *this;
 }
 
@@ -166,10 +164,12 @@ void DictReader::validateRecord()
 		}
 		else if(id == "BNAM")
 		{
+			friendly = friendly.substr(friendly.find(yampt::sep[0]) + 1);
 			insertRecord(yampt::r_type::BNAM);
 		}
 		else if(id == "SCTX")
 		{
+			friendly = friendly.substr(friendly.find(yampt::sep[0]) + 1);
 			insertRecord(yampt::r_type::SCTX);
 		}
 		else if(id == "RNAM")
@@ -200,18 +200,12 @@ void DictReader::validateRecord()
 		}
 		else if(id == "INFO")
 		{
-			if(more_info == false)
+			if(friendly.size() > 512)
 			{
-				if(friendly.size() > 512)
-				{
-					valid_ptr = &yampt::valid[4];
-					makeLog();
-					counter_toolong++;
-				}
-				else
-				{
-					insertRecord(yampt::r_type::INFO);
-				}
+				valid_ptr = &yampt::valid[4];
+				makeLog();
+				counter_toolong++;
+				insertRecord(yampt::r_type::INFO);
 			}
 			else
 			{
@@ -251,9 +245,12 @@ void DictReader::insertRecord(yampt::r_type type)
 //----------------------------------------------------------
 void DictReader::makeLog()
 {
-	log += "<!-- " + *valid_ptr + " in " + name + " -->" + "\r\n" +
-	       yampt::sep[1] + unique_key + yampt::sep[2] + friendly + yampt::sep[3] + "\r\n" +
-	       yampt::line + "\r\n";
+	log += "Dictionary: " + name + "\r\n" +
+	       "Record    : " + unique_key + "\r\n" +
+	       "Result    : " + *valid_ptr + "\r\n" +
+	       "--------------------------------------------------" + "\r\n" +
+	       friendly + "\r\n" +
+	       "--------------------------------------------------" + "\r\n\r\n\r\n";
 }
 
 //----------------------------------------------------------

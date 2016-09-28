@@ -33,7 +33,7 @@ Now you can merge these dictionaries into one file. Important thing is order, ju
 ```
 yampt.exe --merge -d Morrowind.dic Tribunal.dic Bloodmoon.dic
 ```
-Here you have one Merged.dic. This is your base dictionary.
+Here you have one "yampt-merged.dic". This is your base dictionary.
 
 Above command validate, sort and remove duplicates, so you can use it with only one dictionary:
 ```
@@ -41,11 +41,11 @@ yampt.exe --merge -d Morrowind.dic
 ```
 ## Converting esm/esp/ess
 ```
-yampt.exe --convert -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
+yampt.exe --convert -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "yampt-merged.dic"
 ```
 ### If you want to add dialog topic names to not converted INFO strings
 ```
-yampt.exe --convert --add-dial -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
+yampt.exe --convert --add-dial -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "yampt-merged.dic"
 ```
 Without this, most English plugins are not playable in your native language.
 
@@ -55,7 +55,7 @@ This can generate warnings in TES CS and records are read only.
 
 ### If you want to convert only CELL, DIAL, BNAM and SCTX records
 ```
-yampt.exe --convert --safe -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
+yampt.exe --convert --safe -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "yampt-merged.dic"
 ```
 It's useful when mod change original text in game.
 
@@ -69,30 +69,16 @@ Use for manualy translate everything.
 
 ### Making dictionary with all records from plugin, but with CELL, DIAL, BNAM, SCTX and INFO dialog topic names translation
 ```
-yampt.exe --make-all -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
+yampt.exe --make-all -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "yampt-merged.dic"
 ```
 Use for manualy translate everything, but with little help.
 
 ### Making dictionary from plugin with records that don't exist in selected dictionaries
 ```
-yampt.exe --make-not -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
+yampt.exe --make-not -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "yampt-merged.dic"
 ```
 Use for manualy translate only new records.
 
-## Options
-
-### Add the --more-info switch if you want to INFO string could be more than 512 characters.
-```
-yampt.exe --convert --more-info -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
-```
-or
-```
-yampt.exe --merge --more-info -d "Merged.dic"
-```
-You can freely combine additional commands e.g.
-```
-yampt.exe --convert --safe --add-dial --more-info -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
-```
 ## Dictionary format
 
 #### Cell or region name
@@ -153,14 +139,14 @@ Don't forget of ^ character before native text.
 
 ## Best way to translate
 ```
-yampt.exe --make-all -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
+yampt.exe --make-all -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "yampt-merged.dic"
 ```
 ```
 yampt.exe --merge -d "Merged.dic" "Plugin.dic"
 ```
-Then you can check differences in "yampt-merger-log" and do some changes in "Plugin.dic".
+Then you can check differences in "yampt.log" and do some changes in "Plugin.dic".
 ```
-yampt.exe --convert -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic" "Plugin.dic"
+yampt.exe --convert -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "yampt-merged.dic" "Plugin.dic"
 ```
 In this case "Plugin.dic" have higher priority than "Merged.dic".
 

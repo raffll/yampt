@@ -15,10 +15,10 @@ public:
 	yampt::dict_t const& getDict() const { return dict; }
 
 	DictMerger();
-	DictMerger(std::vector<std::string> &path, bool more_info);
+	DictMerger(std::vector<std::string> &path);
 
 private:
-	void makeLog(const std::string name, const std::string unique_key, const std::string friendly_r, const std::string friendly_n);
+	void makeLog(const std::string name, const std::string unique_key, const std::string friendly_old, const std::string friendly_new);
 	void printLog();
 
 	bool status = false;

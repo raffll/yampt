@@ -12,11 +12,7 @@ UserInterface::UserInterface(vector<string> &a)
 	{
 		for(size_t i = 2; i < arg.size(); ++i)
 		{
-			if(arg[i] == "--more-info")
-			{
-				more_info = true;
-			}
-			else if(arg[i] == "--add-dial")
+			if(arg[i] == "--add-dial")
 			{
 				add_dial = true;
 			}
@@ -108,7 +104,7 @@ void UserInterface::makeDictBase()
 //----------------------------------------------------------
 void UserInterface::makeDict()
 {
-	DictMerger merger(dict_p, more_info);
+	DictMerger merger(dict_p);
 	merger.mergeDict();
 	for(size_t i = 0; i < file_p.size(); ++i)
 	{
@@ -122,9 +118,9 @@ void UserInterface::makeDict()
 //----------------------------------------------------------
 void UserInterface::mergeDict()
 {
-	DictMerger merger(dict_p, more_info);
+	DictMerger merger(dict_p);
 	merger.mergeDict();
-	writer.writeDict(merger.getDict(), "Merged.dic");
+	writer.writeDict(merger.getDict(), "yampt-merged.dic");
 	writer.writeText(merger.getLog(), "yampt.log");
 
 }
@@ -133,7 +129,7 @@ void UserInterface::mergeDict()
 void UserInterface::convertEsm()
 {
 	string log;
-	DictMerger merger(dict_p, more_info);
+	DictMerger merger(dict_p);
 	merger.mergeDict();
 	for(size_t i = 0; i < file_p.size(); ++i)
 	{

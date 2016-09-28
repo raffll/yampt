@@ -9,11 +9,11 @@ DictMerger::DictMerger()
 }
 
 //----------------------------------------------------------
-DictMerger::DictMerger(vector<string> &path, bool more_info)
+DictMerger::DictMerger(vector<string> &path)
 {
 	for(auto &elem : path)
 	{
-		DictReader reader(more_info);
+		DictReader reader;
 		reader.readFile(elem);
 		if(reader.getStatus() == true)
 		{
@@ -73,13 +73,16 @@ void DictMerger::mergeDict()
 }
 
 //----------------------------------------------------------
-void DictMerger::makeLog(const string name, const string unique_key, const string friendly_r, const string friendly_n)
+void DictMerger::makeLog(const string name, const string unique_key, const string friendly_old, const string friendly_new)
 {
-	log += "<!-- " + *valid_ptr + " in " + name + " -->" + "\r\n" +
-	       yampt::sep[1] + unique_key + yampt::sep[2] + friendly_r + yampt::sep[3] + "\r\n" +
-	       "<!-- >>> -->\r\n" +
-	       yampt::sep[1] + unique_key + yampt::sep[2] + friendly_n + yampt::sep[3] + "\r\n" +
-	       yampt::line + "\r\n";
+	log += "Dictionary: " + name + "\r\n" +
+	       "Record    : " + unique_key + "\r\n" +
+	       "Result    : " + *valid_ptr + "\r\n" +
+	       "--------------------------------------------------" + "\r\n" +
+	       friendly_old + "\r\n" +
+	       "--------------------------------------------------" + "\r\n" +
+	       friendly_new + "\r\n" +
+	       "--------------------------------------------------" + "\r\n\r\n\r\n";
 }
 
 //----------------------------------------------------------

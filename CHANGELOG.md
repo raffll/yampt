@@ -27,10 +27,9 @@
 	- remove --convert-safe
 	- remove --scripts
 	- remove -r
-	- add --add-dial option
-	- add --safe option
-	- rename -a to --more-info
-- add --log command (detailed converter and merger log)
-- add detailed output log
+	- remove -a
+	- add --add-dial
+	- add --safe
+- add detailed log
 - add limit of RNAM string to 32
 - creator and converter now ommit FNAM "player" record

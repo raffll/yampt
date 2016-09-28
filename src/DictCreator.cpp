@@ -566,7 +566,7 @@ void DictCreator::makeDictBNAM()
 				for(size_t k = 0; k < message_n.size(); ++k)
 				{
 					validateRecord("BNAM" + yampt::sep[0] + message_ptr->at(k),
-						       "\r\n        " + yampt::sep[0] + message_n.at(k),
+						       message_n.at(k),
 						       yampt::r_type::BNAM);
 				}
 			}
@@ -597,7 +597,7 @@ void DictCreator::makeDictSCPT()
 				for(size_t k = 0; k < message_n.size(); ++k)
 				{
 					validateRecord("SCTX" + yampt::sep[0] + message_ptr->at(k),
-						       "\r\n        " + yampt::sep[0] + message_n.at(k),
+						       message_n.at(k),
 						       yampt::r_type::SCTX);
 				}
 			}

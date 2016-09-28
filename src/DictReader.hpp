@@ -13,7 +13,7 @@ public:
 	std::string getLog() { return log; }
 	yampt::dict_t const& getDict() const { return dict; }
 
-	DictReader(bool more_info);
+	DictReader();
 	DictReader(const DictReader& that);
 	DictReader& operator=(const DictReader& that);
 	~DictReader();
@@ -44,8 +44,6 @@ private:
 
 	std::string log;
 	yampt::dict_t dict;
-
-	bool more_info = false;
 };
 
 #endif

@@ -12,10 +12,20 @@ void Writer::writeDict(const yampt::dict_t &dict, string name)
 		{
 			for(const auto &elem : dict[i])
 			{
-				file << yampt::line << "\r\n"
-				     << yampt::sep[1] << elem.first
-				     << yampt::sep[2] << elem.second
-				     << yampt::sep[3] << "\r\n";
+				if(i == yampt::r_type::BNAM || i == yampt::r_type::SCTX)
+				{
+					file << yampt::line << "\r\n"
+					     << yampt::sep[1] << elem.first
+					     << yampt::sep[2] << "\r\n        " << yampt::sep[0] << elem.second
+					     << yampt::sep[3] << "\r\n";
+				}
+				else
+				{
+					file << yampt::line << "\r\n"
+					     << yampt::sep[1] << elem.first
+					     << yampt::sep[2] << elem.second
+					     << yampt::sep[3] << "\r\n";
+				}
 			}
 		}
 		cout << "--> Writing " << to_string(getSize(dict)) <<

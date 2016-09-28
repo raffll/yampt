@@ -26,14 +26,30 @@ const std::array<std::string, 5> dialog_type = {"T", "V", "G", "P", "J"};
 const std::vector<std::string> sep = {"^", "<h3>", "</h3>", "<hr>"};
 const std::string line = "<!------------------------------------------------------------>";
 
-const std::vector<std::string> key_message = {"messagebox", "say ", "say,", "choice"};
+const std::vector<std::string> key_message = {"messagebox",
+					      "say ",
+					      "say,",
+					      "choice"};
+
 const std::vector<std::string> key_dial = {"addtopic"};
-const std::vector<std::string> key_cell = {"positioncell", "getpccell", "aifollowcell",
-					   "placeitemcell", "showmap", "aiescortcell"};
-const std::vector<std::string> result = {"not converted", "converted", "skipped", "converted (dialog added)"};
-const std::vector<std::string> valid = {"Replaced", "Doubled", "Invalid",
-					"Text too long, more than 32 bytes",
-					"Text too long, more than 512 bytes"};
+
+const std::vector<std::string> key_cell = {"positioncell",
+					   "getpccell",
+					   "aifollowcell",
+					   "placeitemcell",
+					   "showmap",
+					   "aiescortcell"};
+
+const std::vector<std::string> result = {"Not converted",
+					 "Converted",
+					 "Skipped (same text)",
+					 "Converted (dialog added)"};
+
+const std::vector<std::string> valid = {"Replaced",
+					"Doubled",
+					"Invalid record",
+					"Not loaded, text too long, more than 32 bytes",
+					"Loaded, but text have more than 512 bytes"};
 
 }
 
