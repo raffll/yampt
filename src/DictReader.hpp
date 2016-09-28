@@ -25,6 +25,7 @@ private:
 	void validateRecord();
 	void insertRecord(yampt::r_type type);
 	void makeLog();
+	void printLog();
 
 	bool status = false;
 
@@ -39,7 +40,7 @@ private:
 	int counter_loaded = 0;
 	int counter_invalid = 0;
 	int counter_toolong = 0;
-	int counter_doubled = 0;
+	int counter_skipped = 0;
 
 	std::string log;
 	yampt::dict_t dict;

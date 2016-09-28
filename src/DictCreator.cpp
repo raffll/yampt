@@ -54,9 +54,7 @@ void DictCreator::makeDict()
 {
 	if(status == true)
 	{
-		cout << endl;
-		cout << "          created / skipped /    all / extra CELL" << endl;
-		cout << "    ---------------------------------------------" << endl;
+		printLog("", true);
 		makeDictCELL();
 		makeDictGMST();
 		makeDictFNAM();
@@ -69,6 +67,33 @@ void DictCreator::makeDict()
 		makeDictBNAM();
 		makeDictSCPT();
 		cout << endl;
+	}
+}
+
+//----------------------------------------------------------
+void DictCreator::printLog(string id, bool header)
+{
+	if(header == true)
+	{
+		cout << endl;
+		cout << "          Created / Skipped /    All /     + CELL" << endl;
+		cout << "    ---------------------------------------------" << endl;
+	}
+	else
+	{
+		cout << "    " << id << " "
+		     << setw(8) << to_string(counter_inserted) << " / "
+		     << setw(7) << to_string(counter_skipped) << " / "
+		     << setw(6) << to_string(counter_all);
+
+		if(id == "GMST" || id == "FNAM")
+		{
+			cout << " / " << setw(10) << to_string(counter_cell) << endl;
+		}
+		else
+		{
+			cout << " / " << setw(10) << "N\\A" << endl;
+		}
 	}
 }
 
@@ -222,25 +247,6 @@ vector<string> DictCreator::makeMessageColl(const string &script_text)
 		}
 	}
 	return message;
-}
-
-
-//----------------------------------------------------------
-void DictCreator::printLog(string id)
-{
-	cout << "    " << id << " "
-	     << setw(8) << to_string(counter_inserted) << " / "
-	     << setw(7) << to_string(counter_skipped) << " / "
-	     << setw(6) << to_string(counter_all);
-
-	if(id == "GMST" || id == "FNAM")
-	{
-		cout << " / " << setw(10) << to_string(counter_cell) << endl;
-	}
-	else
-	{
-		cout << " / " << setw(10) << "N\\A" << endl;
-	}
 }
 
 //----------------------------------------------------------

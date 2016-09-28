@@ -25,7 +25,7 @@ private:
 	void validateRecord(const std::string &unique_key, const std::string &friendly, yampt::r_type type, bool extra = false);
 	void insertRecord(const std::string &unique_key, const std::string &friendly, yampt::r_type type, bool extra);
 	std::vector<std::string> makeMessageColl(const std::string &script_text);
-	void printLog(std::string id);
+	void printLog(std::string id, bool header = false);
 
 	void makeDictCELL();
 	void makeDictGMST();

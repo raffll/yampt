@@ -33,7 +33,7 @@ private:
 	void addDIALtoINFO();
 
 	void makeLog(std::string id);
-	void printLog(std::string id);
+	void printLog(std::string id, bool header = false);
 
 	void convertCELL();
 	void convertPGRD();

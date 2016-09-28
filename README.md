@@ -201,6 +201,16 @@ It can be a mess, because CELL, DIAL, BNAM and SCTX records don't have unique ke
 - remove yampt.cfg
 
 0.5 alpha
-- remove --scripts command
-- remove -r command
-- add detailed converter and merger log
+- redesign interface
+	- remove --convert-with-dial
+	- remove --convert-safe
+	- remove --scripts
+	- remove -r
+	- add --add-dial option
+	- add --safe option
+	- rename -a to --more-info
+- add --log command (detailed converter and merger log)
+- add detailed output log
+- add limit of RNAM string to 32
+- creator and converter now ommit FNAM "player" record
+

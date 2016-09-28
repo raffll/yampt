@@ -22,9 +22,7 @@ void EsmConverter::convertEsm()
 {
 	if(status == true)
 	{
-		cout << endl;
-		cout << "          converted / not found / skipped /   all" << endl;
-		cout << "    ---------------------------------------------" << endl;
+		printLog("", true);
 		convertCELL();
 		convertPGRD();
 		convertANAM();
@@ -45,6 +43,38 @@ void EsmConverter::convertEsm()
 		convertBNAM();
 		convertSCPT();
 		cout << endl;
+	}
+}
+
+//----------------------------------------------------------
+void EsmConverter::makeLog(string id)
+{
+	log += "File:              | " + esm.getName() + "\r\n" +
+	       "Record:            | " + id + " " + esm.getUnique() + "\r\n" +
+	       "Result:            | " + *result_ptr +
+	       "\r\n<!---->\r\n" +
+	       esm.getFriendly() +
+	       "\r\n<!---->\r\n" +
+	       new_friendly + "\r\n" +
+	       yampt::line + "\r\n";
+}
+
+//----------------------------------------------------------
+void EsmConverter::printLog(string id, bool header)
+{
+	if(header == true)
+	{
+		cout << endl;
+		cout << "          Converted / Not found / Skipped /   All" << endl;
+		cout << "    ---------------------------------------------" << endl;
+	}
+	else
+	{
+		cout << "    " << id << " "
+		     << setw(10) << to_string(counter_converted) << " / "
+		     << setw(9) << to_string(counter_notfound) << " / "
+		     << setw(7) << to_string(counter_skipped) << " / "
+		     << setw(5) << to_string(counter_all) << endl;
 	}
 }
 
@@ -347,29 +377,6 @@ void EsmConverter::addDIALtoINFO()
 			}
 		}
 	}
-}
-
-//----------------------------------------------------------
-void EsmConverter::makeLog(string id)
-{
-	log += "File:              | " + esm.getName() + "\r\n" +
-	       "Record:            | " + id + " " + esm.getUnique() + "\r\n" +
-	       "Result:            | " + *result_ptr +
-	       "\r\n<!---->\r\n" +
-	       esm.getFriendly() +
-	       "\r\n<!---->\r\n" +
-	       new_friendly + "\r\n" +
-	       yampt::line + "\r\n";
-}
-
-//----------------------------------------------------------
-void EsmConverter::printLog(string id)
-{
-	cout << "    " << id << " "
-	     << setw(10) << to_string(counter_converted) << " / "
-	     << setw(9) << to_string(counter_notfound) << " / "
-	     << setw(7) << to_string(counter_skipped) << " / "
-	     << setw(5) << to_string(counter_all) << endl;
 }
 
 //----------------------------------------------------------

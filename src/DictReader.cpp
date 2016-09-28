@@ -15,7 +15,7 @@ DictReader::DictReader(const DictReader& that) : status(that.status),
 					         counter_loaded(that.counter_loaded),
 					         counter_invalid(that.counter_invalid),
 					         counter_toolong(that.counter_toolong),
-					         counter_doubled(that.counter_doubled),
+					         counter_skipped(that.counter_skipped),
 					         dict(that.dict),
 					         more_info(that.more_info)
 {
@@ -31,7 +31,7 @@ DictReader& DictReader::operator=(const DictReader& that)
 	counter_loaded = that.counter_loaded;
 	counter_invalid = that.counter_invalid;
 	counter_toolong = that.counter_toolong;
-	counter_doubled = that.counter_doubled;
+	counter_skipped = that.counter_skipped;
 	dict = that.dict;
 	more_info = that.more_info;
 	return *this;
@@ -76,15 +76,8 @@ void DictReader::printStatus(string path)
 	}
 	else
 	{
-		cout << "--> Loading " << path << "...\r\n" << endl
-		     << "               loaded / doubled / too long / invalid" << endl
-		     << "    ------------------------------------------------" << endl
-		     << "    Records"
-		     << setw(10) << to_string(counter_loaded) << " / "
-		     << setw(7) << to_string(counter_invalid) << " / "
-		     << setw(8) << to_string(counter_toolong) << " / "
-		     << setw(7) << to_string(counter_doubled)
-		     << endl << endl;
+		cout << "--> Loading " << path << "..." << endl;
+		printLog();
 	}
 }
 
@@ -251,7 +244,7 @@ void DictReader::insertRecord(yampt::r_type type)
 	{
 		valid_ptr = &yampt::valid[1];
 		makeLog();
-		counter_doubled++;
+		counter_skipped++;
 	}
 }
 
@@ -264,4 +257,18 @@ void DictReader::makeLog()
 	       "\r\n<!---->\r\n" +
 	       friendly + "\r\n" +
 	       yampt::line + "\r\n";
+}
+
+//----------------------------------------------------------
+void DictReader::printLog()
+{
+	cout << endl
+	     << "               Loaded / Skipped / Too long / Invalid" << endl
+	     << "    ------------------------------------------------" << endl
+	     << "    Records"
+	     << setw(10) << to_string(counter_loaded) << " / "
+	     << setw(7) << to_string(counter_skipped) << " / "
+	     << setw(8) << to_string(counter_toolong) << " / "
+	     << setw(7) << to_string(counter_invalid)
+	     << endl << endl;
 }

@@ -68,14 +68,7 @@ void DictMerger::mergeDict()
 		{
 			cout << "--> Merging complete!\r\n";
 		}
-		cout << endl
-		     << "               merged / replaced / skipped" << endl
-		     << "    --------------------------------------" << endl
-		     << "    Records"
-		     << setw(10) << to_string(counter_merged) << " / "
-		     << setw(8) << to_string(counter_replaced) << " / "
-		     << setw(7) << to_string(counter_skipped)
-		     << endl << endl;
+		printLog();
 	}
 }
 
@@ -90,4 +83,17 @@ void DictMerger::makeLog(const string name, const string unique_key, const strin
 	       "\r\n<!---->\r\n" +
 	       friendly_n + "\r\n" +
 	       yampt::line + "\r\n";
+}
+
+//----------------------------------------------------------
+void DictMerger::printLog()
+{
+	cout << endl
+	     << "               Merged / Replaced / Skipped" << endl
+	     << "    --------------------------------------" << endl
+	     << "    Records"
+	     << setw(10) << to_string(counter_merged) << " / "
+	     << setw(8) << to_string(counter_replaced) << " / "
+	     << setw(7) << to_string(counter_skipped)
+	     << endl << endl;
 }
