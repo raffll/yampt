@@ -116,7 +116,7 @@ void UserInterface::makeDict()
 		creator.makeDict();
 		writer.writeDict(creator.getDict(), creator.getName() + ".dic");
 	}
-	writer.writeText(merger.getLog(), "yampt-merger.log");
+	writer.writeText(merger.getLog(), "yampt.log");
 }
 
 //----------------------------------------------------------
@@ -125,7 +125,7 @@ void UserInterface::mergeDict()
 	DictMerger merger(dict_p, more_info);
 	merger.mergeDict();
 	writer.writeDict(merger.getDict(), "Merged.dic");
-	writer.writeText(merger.getLog(), "yampt-merger.log");
+	writer.writeText(merger.getLog(), "yampt.log");
 
 }
 
@@ -142,6 +142,5 @@ void UserInterface::convertEsm()
 		converter.writeEsm();
 		log += converter.getLog();
 	}
-	writer.writeText(merger.getLog(), "yampt-merger.log");
-	writer.writeText(log, "yampt-converter.log");
+	writer.writeText(merger.getLog() + log, "yampt.log");
 }
