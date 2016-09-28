@@ -157,7 +157,7 @@ Where "dialog type" is T, V, G, P or J and "dialog name" is native dialog topic 
 <h3>SCTX^foreign</h3>
         ^native<hr>
 ```
-Don't forget of "^" character before native text.
+Don't forget of ^ character before native text.
 
 ## Best way to translate
 ```
