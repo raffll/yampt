@@ -82,32 +82,19 @@ Use for manualy translate only new records.
 ## Dictionary format
 
 ```
-<h3>CELL^foreign</h3>native<hr>                 # Cell or region name
-<h3>DIAL^foreign</h3>native<hr>                 # Dialog topic name
-<h3>INDX^id^hardcoded key</h3>native<hr>        # Magic or skill description
-<h3>RNAM^key^number</h3>native<hr>              # Faction rank name
-<h3>DESC^id^key</h3>native<hr>                  # Birthsign, class or race description
-<h3>GMST^key</h3>native<hr>                     # GMST
-<h3>FNAM^id^key</h3>native<hr>                        # Object name
-###
-```
-<h3>INFO^dialog type^dialog name^key</h3>native<hr>     # Dialog topic
-```
-Where "dialog type" is T, V, G, P or J and "dialog name" is native dialog topic name.
-
-#### Book text
-```
-<h3>TEXT^key</h3>native<hr>
-```
-#### Dialog topic script message line
-```
+<h3>CELL^foreign</h3>native<hr>                              # Cell or region name
+<h3>DIAL^foreign</h3>native<hr>                              # Dialog topic name
+<h3>INDX^id^hardcoded key</h3>native<hr>                     # Magic or skill description
+<h3>RNAM^key^number</h3>native<hr>                           # Faction rank name
+<h3>DESC^id^key</h3>native<hr>                               # Birthsign, class or race description
+<h3>GMST^key</h3>native<hr>                                  # GMST
+<h3>FNAM^id^key</h3>native<hr>                               # Object name
+<h3>INFO^dialog type^dialog name^key</h3>native<hr>          # Dialog topic
+<h3>TEXT^key</h3>native<hr>                                  # Book text
 <h3>BNAM^foreign</h3>
-        ^native<hr>
-```
-#### Script message line
-```
+        ^native<hr>                                          # Dialog topic script message line
 <h3>SCTX^foreign</h3>
-        ^native<hr>
+        ^native<hr>                                          # Script message line
 ```
 Don't forget of ^ character before native text.
 
@@ -122,7 +109,7 @@ Then you can check differences in "yampt.log" and do some changes in "Plugin.dic
 ```
 yampt.exe --convert -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "yampt-merged.dic" "Plugin.dic"
 ```
-In this case "Plugin.dic" have higher priority than "Merged.dic".
+In this case "Plugin.dic" have higher priority than "yampt-merged.dic".
 
 ## Tips
 
