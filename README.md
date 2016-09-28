@@ -79,6 +79,19 @@ yampt.exe --make-not -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.
 ```
 Use for manualy translate only new records.
 
+### Best way to translate
+```
+yampt.exe --make-all -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
+```
+```
+yampt.exe --merge -d "Merged.dic" "Plugin.dic"
+```
+Then you can check differences in "yampt-merger-log" and do some changes in "Plugin.dic".
+```
+yampt.exe --convert -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic" "Plugin.dic"
+```
+In this case "Plugin.dic" have higher priority than "Merged.dic".
+
 ## Options
 
 ### Add the --more-info switch if you want to INFO string could be more than 512 characters.
