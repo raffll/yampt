@@ -19,23 +19,20 @@ void Writer::writeDict(const yampt::dict_t &dict, string name)
 			}
 		}
 		cout << "--> Writing " << to_string(getSize(dict)) <<
-			" records to " << name << "..." << endl << endl;
+			" records to " << name << "..." << endl;
 	}
 	else
 	{
-		cout << "--> No records to make dictionary!" << endl << endl;
+		cout << "--> No records to make dictionary!" << endl;
 	}
 }
 
 //----------------------------------------------------------
-void Writer::writeText(const string &text, string name, bool make_log)
+void Writer::writeText(const string &text, string name)
 {
-	if(make_log == true)
-	{
-		ofstream file(name, ios::binary);
-		file << text;
-		cout << "--> Writing " << name << "..." << endl << endl;
-	}
+	ofstream file(name, ios::binary);
+	file << text;
+	cout << "--> Writing " << name << "..." << endl;
 }
 
 //----------------------------------------------------------
@@ -111,18 +108,6 @@ void Tools::eraseNullChars(string &str)
 	if(is_null != string::npos)
 	{
 		str.erase(is_null);
-	}
-}
-
-//----------------------------------------------------------
-void Tools::replaceBrokenChars(string &str)
-{
-	for(size_t i = 0; i < str.size(); i++)
-	{
-		if(static_cast<int>(str[i]) == -127)
-		{
-			str[i] = '?';
-		}
 	}
 }
 

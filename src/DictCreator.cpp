@@ -141,7 +141,7 @@ void DictCreator::validateRecord(const string &unique_key, const string &friendl
 		auto search = merger->getDict()[type].find(unique_key);
 		if(search != merger->getDict()[type].end())
 		{
-			insertRecord(unique_key, friendly, type, extra);
+			insertRecord(unique_key, search->second, type, extra);
 		}
 		else
 		{

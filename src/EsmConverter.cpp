@@ -3,10 +3,10 @@
 using namespace std;
 
 //----------------------------------------------------------
-EsmConverter::EsmConverter(string path, DictMerger &merger, bool convert_safe, bool add_dial)
+EsmConverter::EsmConverter(string path, DictMerger &merger, bool safe, bool add_dial)
 {
 	this->merger = &merger;
-	this->convert_safe = convert_safe;
+	this->safe = safe;
 	this->add_dial = add_dial;
 
 	esm.readFile(path);
@@ -31,7 +31,7 @@ void EsmConverter::convertEsm()
 		convertSCVR();
 		convertDNAM();
 		convertCNDT();
-		if(convert_safe == false)
+		if(safe == false)
 		{
 			convertGMST();
 			convertFNAM();
@@ -103,19 +103,59 @@ void EsmConverter::setNewFriendly(string friendly, yampt::r_type type)
 
 	counter_all++;
 
-	auto search_n = merger->getDict()[type].find(friendly);
-	if(search_n != merger->getDict()[type].end())
+	auto search = merger->getDict()[type].find(friendly);
+	if(search != merger->getDict()[type].end())
 	{
 		convert = true;
 
 		if(esm.getFriendlyId() == "SCVR")
 		{
-			new_friendly = esm.getFriendly().substr(0, 5) + search_n->second;
+			new_friendly = esm.getFriendly().substr(0, 5) + search->second;
 		}
 		else
 		{
-			new_friendly = search_n->second;
+			new_friendly = search->second;
 		}
+
+		if(esm.getFriendly() == new_friendly)
+		{
+			convert = false;
+			result_ptr = &yampt::result[2];
+			counter_skipped++;
+		}
+	}
+	else
+	{
+		counter_notfound++;
+	}
+}
+
+//----------------------------------------------------------
+void EsmConverter::setNewFriendlyINFO(string friendly, yampt::r_type type)
+{
+	convert = false;
+	result_ptr = &yampt::result[0];
+	new_friendly = "N\\A";
+
+	counter_all++;
+
+	auto search = merger->getDict()[type].find(friendly);
+	if(safe == false && search != merger->getDict()[type].end())
+	{
+		convert = true;
+		new_friendly = search->second;
+
+		if(esm.getFriendly() == new_friendly)
+		{
+			convert = false;
+			result_ptr = &yampt::result[2];
+			counter_skipped++;
+		}
+	}
+	else if(add_dial == true && esm.getRecId() == "INFO" && current_dialog.substr(0, 1) != "V")
+	{
+		convert = true;
+		addDIALtoINFO();
 
 		if(esm.getFriendly() == new_friendly)
 		{
@@ -749,7 +789,6 @@ void EsmConverter::convertDIAL()
 void EsmConverter::convertINFO()
 {
 	resetCounters();
-	string current_dialog;
 
 	for(size_t i = 0; i < esm.getRecColl().size(); ++i)
 	{
@@ -763,6 +802,10 @@ void EsmConverter::convertINFO()
 			{
 				current_dialog = esm.getUnique() + yampt::sep[0] + esm.getFriendly();
 			}
+			else
+			{
+				current_dialog = "<NotFound>";
+			}
 		}
 		if(esm.getRecId() == "INFO")
 		{
@@ -771,19 +814,11 @@ void EsmConverter::convertINFO()
 
 			if(esm.getUniqueStatus() == true && esm.getFriendlyStatus() == true)
 			{
-				if(convert_safe == false)
-				{
-					setNewFriendly("INFO" + yampt::sep[0] + current_dialog + yampt::sep[0] + esm.getUnique(),
-						       yampt::r_type::INFO);
+				setNewFriendlyINFO("INFO" + yampt::sep[0] + current_dialog + yampt::sep[0] + esm.getUnique(),
+					           yampt::r_type::INFO);
 
-					if(convert == true)
-					{
-						convertRecordContent(new_friendly + '\0');
-					}
-				}
-				else if(add_dial == true && current_dialog.substr(0, 1) != "V")
+				if(convert == true)
 				{
-					addDIALtoINFO();
 					convertRecordContent(new_friendly + '\0');
 				}
 				makeLog("INFO");

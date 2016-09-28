@@ -22,7 +22,7 @@ UserInterface::UserInterface(vector<string> &a)
 			}
 			else if(arg[i] == "--safe")
 			{
-				convert_safe = true;
+				safe = true;
 			}
 			else if(arg[i] == "--log")
 			{
@@ -120,7 +120,10 @@ void UserInterface::makeDict()
 		creator.makeDict();
 		writer.writeDict(creator.getDict(), creator.getName() + ".dic");
 	}
-	writer.writeText(merger.getLog(), "yampt-merger.log", make_log);
+	if(make_log == true)
+	{
+		writer.writeText(merger.getLog(), "yampt-merger.log");
+	}
 }
 
 //----------------------------------------------------------
@@ -129,20 +132,28 @@ void UserInterface::mergeDict()
 	DictMerger merger(dict_p, more_info);
 	merger.mergeDict();
 	writer.writeDict(merger.getDict(), "Merged.dic");
-	writer.writeText(merger.getLog(), "yampt-merger.log", make_log);
+	if(make_log == true)
+	{
+		writer.writeText(merger.getLog(), "yampt-merger.log");
+	}
 }
 
 //----------------------------------------------------------
 void UserInterface::convertEsm()
 {
+	string log;
 	DictMerger merger(dict_p, more_info);
 	merger.mergeDict();
 	for(size_t i = 0; i < file_p.size(); ++i)
 	{
-		EsmConverter converter(file_p[i], merger, convert_safe, add_dial);
+		EsmConverter converter(file_p[i], merger, safe, add_dial);
 		converter.convertEsm();
 		converter.writeEsm();
-		writer.writeText(converter.getLog(), converter.getName() + ".log", make_log);
+		log += converter.getLog();
 	}
-	writer.writeText(merger.getLog(), "yampt-merger.log", make_log);
+	if(make_log == true)
+	{
+		writer.writeText(merger.getLog(), "yampt-merger.log");
+		writer.writeText(log, "yampt-converter.log");
+	}
 }

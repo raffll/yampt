@@ -28,7 +28,7 @@ private:
 
 	bool more_info = false;
 	bool add_dial = false;
-	bool convert_safe = false;
+	bool safe = false;
 	bool no_duplicates = false;
 	bool make_log = false;
 };

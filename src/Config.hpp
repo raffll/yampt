@@ -41,7 +41,7 @@ class Writer
 {
 public:
 	void writeDict(const yampt::dict_t &dict, std::string name);
-	void writeText(const std::string &text, std::string name, bool make_log);
+	void writeText(const std::string &text, std::string name);
 	int getSize(const yampt::dict_t &dict);
 };
 
@@ -52,7 +52,6 @@ protected:
 	std::string convertIntToByteArray(unsigned int x);
 	bool caseInsensitiveStringCmp(std::string lhs, std::string rhs);
 	void eraseNullChars(std::string &str);
-	void replaceBrokenChars(std::string &str);
 	std::string eraseCarriageReturnChar(std::string &str);
 };
 

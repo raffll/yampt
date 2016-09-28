@@ -23,6 +23,7 @@ private:
 	void convertRecordContent(std::string new_text);
 
 	void setNewFriendly(std::string unique, yampt::r_type type);
+	void setNewFriendlyINFO(std::string unique, yampt::r_type type);
 	void setNewFriendlyScript(std::string id, yampt::r_type type);
 
 	void convertLine(std::string id, yampt::r_type type);
@@ -61,12 +62,13 @@ private:
 	int counter_all = 0;
 
 	std::string new_friendly;
+	std::string current_dialog;
 
 	std::string log;
 	const std::string *result_ptr;
 
 	bool convert = false;
-	bool convert_safe = false;
+	bool safe = false;
 	bool add_dial = false;
 
 	bool s_found = false;
