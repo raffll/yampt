@@ -27,7 +27,7 @@ yampt.exe --make-base -f "C:\path\to\NATIVE\Morrowind\Data Files\Bloodmoon.esm" 
 ```
 Now you can merge these dictionaries into one file. Important thing is order, just like in game.
 ```
-yampt.exe --merge -f Morrowind.dic Tribunal.dic Bloodmoon.dic
+yampt.exe --merge -d Morrowind.dic Tribunal.dic Bloodmoon.dic
 ```
 Here you have one Merged.dic. This is your base dictionary.
 
