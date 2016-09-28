@@ -105,9 +105,9 @@ yampt.exe --convert --safe --add-dial --more-info -f "C:\path\to\Morrowind\Data 
 ```
 #### Magic or skill description
 ```
-<h3>INDX^id^hardcoded_key</h3>native<hr>
+<h3>INDX^id^hardcoded key</h3>native<hr>
 ```
-Where id is MGEF or SKIL.
+Where "id" is MGEF or SKIL.
 
 #### Faction rank name
 ```
@@ -117,7 +117,7 @@ Where id is MGEF or SKIL.
 ```
 <h3>DESC^id^key</h3>native<hr>
 ```
-Where id is BSGN, CLAS or RACE.
+Where "id" is BSGN, CLAS or RACE.
 
 #### GMST
 ```
@@ -127,13 +127,13 @@ Where id is BSGN, CLAS or RACE.
 ```
 <h3>FNAM^id^key</h3>native<hr>
 ```
-Where id is ACTI, ALCH, APPA, ARMO, BOOK, BSGN, CLAS, CLOT, CONT, CREA, DOOR, FACT, INGR, LIGH, LOCK, MISC, NPC_, PROB, RACE, REGN, REPA, SKIL, SPEL or WEAP.
+Where "id" is ACTI, ALCH, APPA, ARMO, BOOK, BSGN, CLAS, CLOT, CONT, CREA, DOOR, FACT, INGR, LIGH, LOCK, MISC, NPC_, PROB, RACE, REGN, REPA, SKIL, SPEL or WEAP.
 
 #### Dialog topic
 ```
-<h3>INFO^dialog_type^dialog_name^key</h3>native<hr>
+<h3>INFO^dialog type^dialog name^key</h3>native<hr>
 ```
-Where dialog_type is T, V, G, P or J and dialog_name is native dialog topic name.
+Where "dialog type" is T, V, G, P or J and "dialog name" is native dialog topic name.
 
 #### Book text
 ```
