@@ -22,8 +22,8 @@ private:
 	void resetCounters();
 	void convertRecordContent(std::string new_text);
 
-	void setNewFriendly(std::string unique_key, yampt::r_type type);
-	void setNewFriendlyINFO(std::string unique_key, yampt::r_type type);
+	void setNewFriendly(yampt::r_type type);
+	void setNewFriendlyINFO(yampt::r_type type);
 	void setNewFriendlyScript(std::string id, yampt::r_type type);
 
 	void convertLine(std::string id, yampt::r_type type);
@@ -33,6 +33,8 @@ private:
 	void addDIALtoINFO();
 
 	void makeLog(std::string id);
+	void makeLogScriptBefore();
+	void makeLogScriptAfter();
 	void printLog(std::string id, bool header = false);
 
 	void convertCELL();
@@ -62,6 +64,7 @@ private:
 	int counter_all = 0;
 	int counter_add = 0;
 
+	std::string unique_key;
 	std::string new_friendly;
 	std::string current_dialog;
 

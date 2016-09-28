@@ -55,7 +55,7 @@ void DictMerger::mergeDict()
 					}
 					else
 					{
-						counter_skipped++;
+						counter_identical++;
 					}
 				}
 			}
@@ -75,13 +75,10 @@ void DictMerger::mergeDict()
 //----------------------------------------------------------
 void DictMerger::makeLog(const string name, const string unique_key, const string friendly_r, const string friendly_n)
 {
-	log += "File:              | " + name + "\r\n" +
-	       "Record:            | " + unique_key + "\r\n" +
-	       "Result:            | " + *valid_ptr +
-	       "\r\n<!---->\r\n" +
-	       friendly_r +
-	       "\r\n<!---->\r\n" +
-	       friendly_n + "\r\n" +
+	log += "<!-- " + *valid_ptr + " in " + name + " -->" + "\r\n" +
+	       yampt::sep[1] + unique_key + yampt::sep[2] + friendly_r + yampt::sep[3] + "\r\n" +
+	       "<!-- >>> -->\r\n" +
+	       yampt::sep[1] + unique_key + yampt::sep[2] + friendly_n + yampt::sep[3] + "\r\n" +
 	       yampt::line + "\r\n";
 }
 
@@ -89,10 +86,10 @@ void DictMerger::makeLog(const string name, const string unique_key, const strin
 void DictMerger::printLog()
 {
 	cout << endl
-	     << "    Merged / Replaced / Skipped" << endl
-	     << "    ---------------------------" << endl
+	     << "    Merged / Replaced / Identical" << endl
+	     << "    -----------------------------" << endl
 	     << setw(10) << to_string(counter_merged) << " / "
 	     << setw(8) << to_string(counter_replaced) << " / "
-	     << setw(7) << to_string(counter_skipped)
+	     << setw(9) << to_string(counter_identical)
 	     << endl << endl;
 }

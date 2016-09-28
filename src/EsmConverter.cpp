@@ -49,14 +49,24 @@ void EsmConverter::convertEsm()
 //----------------------------------------------------------
 void EsmConverter::makeLog(string id)
 {
-	log += "File:              | " + esm.getName() + "\r\n" +
-	       "Record:            | " + id + " " + esm.getUnique() + "\r\n" +
-	       "Result:            | " + *result_ptr +
-	       "\r\n---\r\n" +
-	       esm.getFriendly() +
-	       "\r\n---\r\n" +
-	       new_friendly + "\r\n" +
-	       yampt::line + "\r\n";
+	log += "<!-- " + id + " record " + *result_ptr + " in " + esm.getName() + " -->" + "\r\n" +
+	       yampt::sep[1] + unique_key + yampt::sep[2] + esm.getFriendly() + yampt::sep[3] + "\r\n" +
+	       "<!-- >>> -->\r\n" +
+	       yampt::sep[1] + unique_key + yampt::sep[2] + new_friendly + yampt::sep[3] + "\r\n\r\n";
+}
+
+//----------------------------------------------------------
+void EsmConverter::makeLogScriptBefore()
+{
+	log += "<!-- " + esm.getFriendlyId() + " " + esm.getUnique() + " script line in " + esm.getName() + " -->" + "\r\n" +
+	       s_line + "\r\n" +
+	       "<!-- >>> -->\r\n";
+}
+
+//----------------------------------------------------------
+void EsmConverter::makeLogScriptAfter()
+{
+	log += s_line + "\r\n\r\n";
 }
 
 //----------------------------------------------------------
@@ -131,7 +141,7 @@ void EsmConverter::convertRecordContent(string new_text)
 }
 
 //----------------------------------------------------------
-void EsmConverter::setNewFriendly(string unique_key, yampt::r_type type)
+void EsmConverter::setNewFriendly(yampt::r_type type)
 {
 	counter_all++;
 
@@ -171,7 +181,7 @@ void EsmConverter::setNewFriendly(string unique_key, yampt::r_type type)
 }
 
 //----------------------------------------------------------
-void EsmConverter::setNewFriendlyINFO(string unique_key, yampt::r_type type)
+void EsmConverter::setNewFriendlyINFO(yampt::r_type type)
 {
 	counter_all++;
 
@@ -292,6 +302,7 @@ void EsmConverter::convertLine(string id, yampt::r_type type)
 {
 	if(s_pos != string::npos && s_line.rfind(";", s_pos) == string::npos)
 	{
+		makeLogScriptBefore();
 		auto search = merger->getDict()[type].find(id + yampt::sep[0] + s_line);
 		if(search != merger->getDict()[type].end())
 		{
@@ -302,6 +313,7 @@ void EsmConverter::convertLine(string id, yampt::r_type type)
 				s_found = true;
 			}
 		}
+		makeLogScriptAfter();
 	}
 }
 
@@ -310,6 +322,7 @@ void EsmConverter::convertText(string id, yampt::r_type type)
 {
 	if(s_pos != string::npos && s_line.rfind(";", s_pos) == string::npos)
 	{
+		makeLogScriptBefore();
 		extractText();
 		auto search = merger->getDict()[type].find(id + yampt::sep[0] + s_text);
 		if(search != merger->getDict()[type].end())
@@ -334,6 +347,7 @@ void EsmConverter::convertText(string id, yampt::r_type type)
 				}
 			}
 		}
+		makeLogScriptAfter();
 	}
 }
 
@@ -371,7 +385,7 @@ void EsmConverter::extractText()
 //----------------------------------------------------------
 void EsmConverter::addDIALtoINFO()
 {
-	string unique_key;
+	string key;
 	string new_friendly_lc;
 	size_t pos;
 
@@ -379,18 +393,18 @@ void EsmConverter::addDIALtoINFO()
 
 	for(auto &elem : merger->getDict()[yampt::r_type::DIAL])
 	{
-		unique_key = elem.first.substr(5);
-		if(unique_key != elem.second)
+		key = elem.first.substr(5);
+		if(key != elem.second)
 		{
 			new_friendly_lc = new_friendly;
 
 			transform(new_friendly_lc.begin(), new_friendly_lc.end(),
 				  new_friendly_lc.begin(), ::tolower);
 
-			transform(unique_key.begin(), unique_key.end(),
-				  unique_key.begin(), ::tolower);
+			transform(key.begin(), key.end(),
+				  key.begin(), ::tolower);
 
-			pos = new_friendly_lc.find(unique_key);
+			pos = new_friendly_lc.find(key);
 			if(pos != string::npos)
 			{
 				new_friendly.insert(new_friendly.size(), " [" + elem.second + "]");
@@ -414,8 +428,8 @@ void EsmConverter::convertCELL()
 
 			if(esm.getUniqueStatus() == true)
 			{
-				setNewFriendly("CELL" + yampt::sep[0] + esm.getUnique(),
-					       yampt::r_type::CELL);
+				unique_key = "CELL" + yampt::sep[0] + esm.getUnique();
+				setNewFriendly(yampt::r_type::CELL);
 				makeLog("CELL");
 				if(convert == true)
 				{
@@ -440,8 +454,8 @@ void EsmConverter::convertPGRD()
 			esm.setUnique("NAME");
 			esm.setFriendly("NAME");
 
-			setNewFriendly("CELL" + yampt::sep[0] + esm.getUnique(),
-				       yampt::r_type::CELL);
+			unique_key = "CELL" + yampt::sep[0] + esm.getUnique();
+			setNewFriendly(yampt::r_type::CELL);
 			makeLog("PGRD");
 			if(convert == true)
 			{
@@ -467,8 +481,8 @@ void EsmConverter::convertANAM()
 
 			if(esm.getUniqueStatus() == true)
 			{
-				setNewFriendly("CELL" + yampt::sep[0] + esm.getUnique(),
-					       yampt::r_type::CELL);
+				unique_key = "CELL" + yampt::sep[0] + esm.getUnique();
+				setNewFriendly(yampt::r_type::CELL);
 				makeLog("ANAM");
 				if(convert == true)
 				{
@@ -497,8 +511,8 @@ void EsmConverter::convertSCVR()
 			{
 				if(esm.getFriendly().substr(1, 1) == "B")
 				{
-					setNewFriendly("CELL" + yampt::sep[0] + esm.getFriendly().substr(5),
-						       yampt::r_type::CELL);
+					unique_key = "CELL" + yampt::sep[0] + esm.getFriendly().substr(5);
+					setNewFriendly(yampt::r_type::CELL);
 					makeLog("SCVR");
 					if(convert == true)
 					{
@@ -528,8 +542,8 @@ void EsmConverter::convertDNAM()
 
 			while(esm.getFriendlyStatus() == true)
 			{
-				setNewFriendly("CELL" + yampt::sep[0] + esm.getFriendly(),
-					       yampt::r_type::CELL);
+				unique_key = "CELL" + yampt::sep[0] + esm.getFriendly();
+				setNewFriendly(yampt::r_type::CELL);
 				makeLog("DNAM");
 				if(convert == true)
 				{
@@ -558,8 +572,8 @@ void EsmConverter::convertCNDT()
 
 			while(esm.getFriendlyStatus() == true)
 			{
-				setNewFriendly("CELL" + yampt::sep[0] + esm.getFriendly(),
-					       yampt::r_type::CELL);
+				unique_key = "CELL" + yampt::sep[0] + esm.getFriendly();
+				setNewFriendly(yampt::r_type::CELL);
 				makeLog("CNDT");
 				if(convert == true)
 				{
@@ -587,8 +601,8 @@ void EsmConverter::convertGMST()
 
 			if(esm.getUniqueStatus() == true && esm.getFriendlyStatus() && esm.getUnique().substr(0, 1) == "s")
 			{
-				setNewFriendly("GMST" + yampt::sep[0] + esm.getUnique(),
-					       yampt::r_type::GMST);
+				unique_key = "GMST" + yampt::sep[0] + esm.getUnique();
+				setNewFriendly(yampt::r_type::GMST);
 				makeLog("GMST");
 				if(convert == true)
 				{
@@ -638,8 +652,8 @@ void EsmConverter::convertFNAM()
 
 			if(esm.getUniqueStatus() == true && esm.getFriendlyStatus() == true && esm.getUnique() != "player")
 			{
-				setNewFriendly("FNAM" + yampt::sep[0] + esm.getRecId() + yampt::sep[0] + esm.getUnique(),
-					       yampt::r_type::FNAM);
+				unique_key = "FNAM" + yampt::sep[0] + esm.getRecId() + yampt::sep[0] + esm.getUnique();
+				setNewFriendly(yampt::r_type::FNAM);
 				makeLog("FNAM");
 				if(convert == true)
 				{
@@ -668,8 +682,8 @@ void EsmConverter::convertDESC()
 
 			if(esm.getUniqueStatus() == true && esm.getFriendlyStatus() == true)
 			{
-				setNewFriendly("DESC" + yampt::sep[0] + esm.getRecId() + yampt::sep[0] + esm.getUnique(),
-					       yampt::r_type::DESC);
+				unique_key = "DESC" + yampt::sep[0] + esm.getRecId() + yampt::sep[0] + esm.getUnique();
+				setNewFriendly(yampt::r_type::DESC);
 				makeLog("DESC");
 				if(convert == true)
 				{
@@ -696,8 +710,8 @@ void EsmConverter::convertTEXT()
 
 			if(esm.getUniqueStatus() == true && esm.getFriendlyStatus() == true)
 			{
-				setNewFriendly("TEXT" + yampt::sep[0] + esm.getUnique(),
-					       yampt::r_type::TEXT);
+				unique_key = "TEXT" + yampt::sep[0] + esm.getUnique();
+				setNewFriendly(yampt::r_type::TEXT);
 				makeLog("TEXT");
 				if(convert == true)
 				{
@@ -726,8 +740,8 @@ void EsmConverter::convertRNAM()
 			{
 				while(esm.getFriendlyStatus() == true)
 				{
-					setNewFriendly("RNAM" + yampt::sep[0] + esm.getUnique() + yampt::sep[0] + to_string(esm.getFriendlyCounter()),
-						       yampt::r_type::RNAM);
+					unique_key = "RNAM" + yampt::sep[0] + esm.getUnique() + yampt::sep[0] + to_string(esm.getFriendlyCounter());
+					setNewFriendly(yampt::r_type::RNAM);
 					makeLog("RNAM");
 					if(convert == true)
 					{
@@ -758,8 +772,8 @@ void EsmConverter::convertINDX()
 
 			if(esm.getUniqueStatus() == true && esm.getFriendlyStatus() == true)
 			{
-				setNewFriendly("INDX" + yampt::sep[0] + esm.getRecId() + yampt::sep[0] + esm.getUnique(),
-					       yampt::r_type::INDX);
+				unique_key = "INDX" + yampt::sep[0] + esm.getRecId() + yampt::sep[0] + esm.getUnique();
+				setNewFriendly(yampt::r_type::INDX);
 				makeLog("INDX");
 				if(convert == true)
 				{
@@ -786,8 +800,8 @@ void EsmConverter::convertDIAL()
 
 			if(esm.getUnique() == "T")
 			{
-				setNewFriendly("DIAL" + yampt::sep[0] + esm.getFriendly(),
-					       yampt::r_type::DIAL);
+				unique_key = "DIAL" + yampt::sep[0] + esm.getFriendly();
+				setNewFriendly(yampt::r_type::DIAL);
 				makeLog("DIAL");
 				if(convert == true)
 				{
@@ -828,8 +842,8 @@ void EsmConverter::convertINFO()
 
 			if(esm.getUniqueStatus() == true && esm.getFriendlyStatus() == true)
 			{
-				setNewFriendlyINFO("INFO" + yampt::sep[0] + current_dialog + yampt::sep[0] + esm.getUnique(),
-					           yampt::r_type::INFO);
+				unique_key = "INFO" + yampt::sep[0] + current_dialog + yampt::sep[0] + esm.getUnique();
+				setNewFriendlyINFO(yampt::r_type::INFO);
 				makeLog("INFO");
 				if(convert == true)
 				{
@@ -856,9 +870,7 @@ void EsmConverter::convertBNAM()
 
 			if(esm.getFriendlyStatus() == true)
 			{
-				setNewFriendlyScript("BNAM",
-						     yampt::r_type::BNAM);
-				makeLog("BNAM");
+				setNewFriendlyScript("BNAM", yampt::r_type::BNAM);
 				if(convert == true)
 				{
 					convertRecordContent(new_friendly);
@@ -884,9 +896,7 @@ void EsmConverter::convertSCPT()
 
 			if(esm.getFriendlyStatus() == true)
 			{
-				setNewFriendlyScript("SCTX",
-						     yampt::r_type::SCTX);
-				makeLog("SCTX");
+				setNewFriendlyScript("SCTX", yampt::r_type::SCTX);
 				if(convert == true)
 				{
 					convertRecordContent(new_friendly);

@@ -15,7 +15,7 @@ DictReader::DictReader(const DictReader& that) : status(that.status),
 					         counter_loaded(that.counter_loaded),
 					         counter_invalid(that.counter_invalid),
 					         counter_toolong(that.counter_toolong),
-					         counter_skipped(that.counter_skipped),
+					         counter_doubled(that.counter_doubled),
 					         dict(that.dict),
 					         more_info(that.more_info)
 {
@@ -31,7 +31,7 @@ DictReader& DictReader::operator=(const DictReader& that)
 	counter_loaded = that.counter_loaded;
 	counter_invalid = that.counter_invalid;
 	counter_toolong = that.counter_toolong;
-	counter_skipped = that.counter_skipped;
+	counter_doubled = that.counter_doubled;
 	dict = that.dict;
 	more_info = that.more_info;
 	return *this;
@@ -244,18 +244,15 @@ void DictReader::insertRecord(yampt::r_type type)
 	{
 		valid_ptr = &yampt::valid[1];
 		makeLog();
-		counter_skipped++;
+		counter_doubled++;
 	}
 }
 
 //----------------------------------------------------------
 void DictReader::makeLog()
 {
-	log += "File:              | " + name + "\r\n" +
-	       "Record:            | " + unique_key + "\r\n" +
-	       "Result:            | " + *valid_ptr +
-	       "\r\n<!---->\r\n" +
-	       friendly + "\r\n" +
+	log += "<!-- " + *valid_ptr + " in " + name + " -->" + "\r\n" +
+	       yampt::sep[1] + unique_key + yampt::sep[2] + friendly + yampt::sep[3] + "\r\n" +
 	       yampt::line + "\r\n";
 }
 
@@ -263,10 +260,10 @@ void DictReader::makeLog()
 void DictReader::printLog()
 {
 	cout << endl
-	     << "    Loaded / Skipped / Too long / Invalid" << endl
+	     << "    Loaded / Doubled / Too long / Invalid" << endl
 	     << "    -------------------------------------" << endl
 	     << setw(10) << to_string(counter_loaded) << " / "
-	     << setw(7) << to_string(counter_skipped) << " / "
+	     << setw(7) << to_string(counter_doubled) << " / "
 	     << setw(8) << to_string(counter_toolong) << " / "
 	     << setw(7) << to_string(counter_invalid)
 	     << endl << endl;

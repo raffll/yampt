@@ -30,7 +30,7 @@ const std::vector<std::string> key_message = {"messagebox", "say ", "say,", "cho
 const std::vector<std::string> key_dial = {"addtopic"};
 const std::vector<std::string> key_cell = {"positioncell", "getpccell", "aifollowcell",
 					   "placeitemcell", "showmap", "aiescortcell"};
-const std::vector<std::string> result = {"Not converted", "Converted", "Skipped", "Converted (dialog added)"};
+const std::vector<std::string> result = {"not converted", "converted", "skipped", "converted (dialog added)"};
 const std::vector<std::string> valid = {"Replaced", "Doubled", "Invalid",
 					"Text too long, more than 32 bytes",
 					"Text too long, more than 512 bytes"};

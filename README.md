@@ -89,17 +89,9 @@ or
 ```
 yampt.exe --merge --more-info -d "Merged.dic"
 ```
-### Add the --log switch if you want to generate detailed log.
-```
-yampt.exe --convert --log -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
-```
-or
-```
-yampt.exe --merge --log -d "Merged.dic"
-```
 You can freely combine additional commands e.g.
 ```
-yampt.exe --convert --safe --add-dial --more-info --log -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
+yampt.exe --convert --safe --add-dial --more-info -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
 ```
 ## Dictionary format
 
@@ -164,11 +156,11 @@ Don't forget of ^ character before native text.
 yampt.exe --make-all -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic"
 ```
 ```
-yampt.exe --merge --log -d "Merged.dic" "Plugin.dic"
+yampt.exe --merge -d "Merged.dic" "Plugin.dic"
 ```
 Then you can check differences in "yampt-merger-log" and do some changes in "Plugin.dic".
 ```
-yampt.exe --convert --log -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic" "Plugin.dic"
+yampt.exe --convert -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "Merged.dic" "Plugin.dic"
 ```
 In this case "Plugin.dic" have higher priority than "Merged.dic".
 

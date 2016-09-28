@@ -24,10 +24,6 @@ UserInterface::UserInterface(vector<string> &a)
 			{
 				safe = true;
 			}
-			else if(arg[i] == "--log")
-			{
-				make_log = true;
-			}
 			else if(arg[i] == "-f")
 			{
 				command = "-f";
@@ -120,10 +116,7 @@ void UserInterface::makeDict()
 		creator.makeDict();
 		writer.writeDict(creator.getDict(), creator.getName() + ".dic");
 	}
-	if(make_log == true)
-	{
-		writer.writeText(merger.getLog(), "yampt-merger.log");
-	}
+	writer.writeText(merger.getLog(), "yampt-merger.log");
 }
 
 //----------------------------------------------------------
@@ -132,10 +125,8 @@ void UserInterface::mergeDict()
 	DictMerger merger(dict_p, more_info);
 	merger.mergeDict();
 	writer.writeDict(merger.getDict(), "Merged.dic");
-	if(make_log == true)
-	{
-		writer.writeText(merger.getLog(), "yampt-merger.log");
-	}
+	writer.writeText(merger.getLog(), "yampt-merger.log");
+
 }
 
 //----------------------------------------------------------
@@ -151,9 +142,6 @@ void UserInterface::convertEsm()
 		converter.writeEsm();
 		log += converter.getLog();
 	}
-	if(make_log == true)
-	{
-		writer.writeText(merger.getLog(), "yampt-merger.log");
-		writer.writeText(log, "yampt-converter.log");
-	}
+	writer.writeText(merger.getLog(), "yampt-merger.log");
+	writer.writeText(log, "yampt-converter.log");
 }
