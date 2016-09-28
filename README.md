@@ -81,43 +81,17 @@ Use for manualy translate only new records.
 
 ## Dictionary format
 
-#### Cell or region name
 ```
-<h3>CELL^foreign</h3>native<hr>
+<h3>CELL^foreign</h3>native<hr>                 # Cell or region name
+<h3>DIAL^foreign</h3>native<hr>                 # Dialog topic name
+<h3>INDX^id^hardcoded key</h3>native<hr>        # Magic or skill description
+<h3>RNAM^key^number</h3>native<hr>              # Faction rank name
+<h3>DESC^id^key</h3>native<hr>                  # Birthsign, class or race description
+<h3>GMST^key</h3>native<hr>                     # GMST
+<h3>FNAM^id^key</h3>native<hr>                        # Object name
+###
 ```
-#### Dialog topic name
-```
-<h3>DIAL^foreign</h3>native<hr>
-```
-#### Magic or skill description
-```
-<h3>INDX^id^hardcoded key</h3>native<hr>
-```
-Where "id" is MGEF or SKIL.
-
-#### Faction rank name
-```
-<h3>RNAM^key^number</h3>native<hr>
-```
-#### Birthsign, class or race description
-```
-<h3>DESC^id^key</h3>native<hr>
-```
-Where "id" is BSGN, CLAS or RACE.
-
-#### GMST
-```
-<h3>GMST^key</h3>native<hr>
-```
-#### Object name
-```
-<h3>FNAM^id^key</h3>native<hr>
-```
-Where "id" is ACTI, ALCH, APPA, ARMO, BOOK, BSGN, CLAS, CLOT, CONT, CREA, DOOR, FACT, INGR, LIGH, LOCK, MISC, NPC_, PROB, RACE, REGN, REPA, SKIL, SPEL or WEAP.
-
-#### Dialog topic
-```
-<h3>INFO^dialog type^dialog name^key</h3>native<hr>
+<h3>INFO^dialog type^dialog name^key</h3>native<hr>     # Dialog topic
 ```
 Where "dialog type" is T, V, G, P or J and "dialog name" is native dialog topic name.
 
