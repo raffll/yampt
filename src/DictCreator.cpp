@@ -76,23 +76,21 @@ void DictCreator::printLog(string id, bool header)
 	if(header == true)
 	{
 		cout << endl;
-		cout << "          Created / Skipped /    All /     + CELL" << endl;
-		cout << "    ---------------------------------------------" << endl;
+		cout << "          Created / Skipped /    All" << endl;
+		cout << "    --------------------------------" << endl;
 	}
 	else
 	{
 		cout << "    " << id << " "
 		     << setw(8) << to_string(counter_inserted) << " / "
 		     << setw(7) << to_string(counter_skipped) << " / "
-		     << setw(6) << to_string(counter_all);
+		     << setw(6) << to_string(counter_all) << endl;
 
 		if(id == "GMST" || id == "FNAM")
 		{
-			cout << " / " << setw(10) << to_string(counter_cell) << endl;
-		}
-		else
-		{
-			cout << " / " << setw(10) << "N\\A" << endl;
+			cout << "     + CELL" << setw(6) << to_string(counter_cell) << " / "
+			     << setw(7) << "-" << " / "
+			     << setw(6) << "-" << endl;
 		}
 	}
 }

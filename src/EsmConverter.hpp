@@ -22,8 +22,8 @@ private:
 	void resetCounters();
 	void convertRecordContent(std::string new_text);
 
-	void setNewFriendly(std::string unique, yampt::r_type type);
-	void setNewFriendlyINFO(std::string unique, yampt::r_type type);
+	void setNewFriendly(std::string unique_key, yampt::r_type type);
+	void setNewFriendlyINFO(std::string unique_key, yampt::r_type type);
 	void setNewFriendlyScript(std::string id, yampt::r_type type);
 
 	void convertLine(std::string id, yampt::r_type type);
@@ -60,6 +60,7 @@ private:
 	int counter_notfound = 0;
 	int counter_skipped = 0;
 	int counter_all = 0;
+	int counter_add = 0;
 
 	std::string new_friendly;
 	std::string current_dialog;

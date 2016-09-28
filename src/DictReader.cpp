@@ -263,9 +263,8 @@ void DictReader::makeLog()
 void DictReader::printLog()
 {
 	cout << endl
-	     << "               Loaded / Skipped / Too long / Invalid" << endl
-	     << "    ------------------------------------------------" << endl
-	     << "    Records"
+	     << "    Loaded / Skipped / Too long / Invalid" << endl
+	     << "    -------------------------------------" << endl
 	     << setw(10) << to_string(counter_loaded) << " / "
 	     << setw(7) << to_string(counter_skipped) << " / "
 	     << setw(8) << to_string(counter_toolong) << " / "

@@ -89,9 +89,8 @@ void DictMerger::makeLog(const string name, const string unique_key, const strin
 void DictMerger::printLog()
 {
 	cout << endl
-	     << "               Merged / Replaced / Skipped" << endl
-	     << "    --------------------------------------" << endl
-	     << "    Records"
+	     << "    Merged / Replaced / Skipped" << endl
+	     << "    ---------------------------" << endl
 	     << setw(10) << to_string(counter_merged) << " / "
 	     << setw(8) << to_string(counter_replaced) << " / "
 	     << setw(7) << to_string(counter_skipped)
