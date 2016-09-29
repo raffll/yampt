@@ -8,7 +8,7 @@ The idea was to quickly convert an infinite number of plugins with an infinite n
 
 All you need is two language version of the game (in most cases English and your native) or pre-made dictionaries.
 
-After convertion you must recompile all scripts in TES CS!
+After convertion you must recompile all scripts in TES CS (or MWEdit)!
 
 ## Installation
 
@@ -51,7 +51,7 @@ Without this, most English plugins are not playable in your native language.
 
 Because of limitation of Morrowind engine, INFO string can only have 512 bytes, but more is ok in game.
 
-This can generate warnings in TES CS and records are read only.
+This can generate warnings in TES CS and records are read only. MWEdit have problem with bigger strings, so don't use this option when converting MWSE plugins.
 
 ### If you want to convert only CELL, DIAL, BNAM and SCTX records
 ```
@@ -79,6 +79,12 @@ yampt.exe --make-not -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "yampt-m
 ```
 Use for manualy translate only new records.
 
+### Compare file with dictionary
+```
+yampt.exe --compare -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "yampt-merged.dic"
+```
+Then you can check differences in "yampt.log".
+
 ## Dictionary format
 
 ```
@@ -89,30 +95,14 @@ Use for manualy translate only new records.
 <h3>DESC^id^key</h3>native<hr>                               # Birthsign, class or race description
 <h3>GMST^key</h3>native<hr>                                  # GMST
 <h3>FNAM^id^key</h3>native<hr>                               # Object name
-<h3>INFO^dialog type^dialog name^key</h3>native<hr>          # Dialog topic
+<h3>INFO^dialog type^native dialog name^key</h3>native<hr>   # Dialog topic
 <h3>TEXT^key</h3>native<hr>                                  # Book text
 <h3>BNAM^foreign</h3>
         ^native<hr>                                          # Dialog topic script message line
 <h3>SCTX^foreign</h3>
         ^native<hr>                                          # Script message line
 ```
-Don't forget of ^ character before native text.
-
-## Best way to translate
-```
-yampt.exe --make-all -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "yampt-merged.dic"
-```
-```
-yampt.exe --merge -d "Merged.dic" "Plugin.dic"
-```
-Then you can check differences in "yampt.log" and do some changes in "Plugin.dic".
-```
-yampt.exe --convert -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "yampt-merged.dic" "Plugin.dic"
-```
-In this case "Plugin.dic" have higher priority than "yampt-merged.dic".
-
-## Tips
-
+- Don't forget of ^ character before native text.
 - If you change something in dictionary, make sure that text editor doesn't change encoding.
 - If you lose html tag dictionary won't load.
 - Make sure that dictionary doesn't contains:

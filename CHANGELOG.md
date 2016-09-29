@@ -30,6 +30,7 @@
 	- remove -a
 	- add --add-dial
 	- add --safe
+	- add --compare
 - add detailed log
 - add limit of RNAM string to 32
 - creator and converter now ommit FNAM "player" record

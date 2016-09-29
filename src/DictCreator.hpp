@@ -11,7 +11,8 @@ class DictCreator : public Tools
 public:
 	void makeDict();
 
-	std::string getName() { return esm_n.getNamePrefix(); }
+	std::string getName() { return esm_n.getName(); }
+	std::string getNamePrefix() { return esm_n.getNamePrefix(); }
 	yampt::dict_t const& getDict() const { return dict; }
 
 	DictCreator(std::string path_n);

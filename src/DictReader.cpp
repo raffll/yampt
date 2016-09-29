@@ -66,6 +66,12 @@ void DictReader::readFile(string path)
 }
 
 //----------------------------------------------------------
+void DictReader::loadDict(yampt::dict_t dict)
+{
+	this->dict = dict;
+}
+
+//----------------------------------------------------------
 void DictReader::printStatus(string path)
 {
 	if(status == false)
@@ -245,9 +251,7 @@ void DictReader::insertRecord(yampt::r_type type)
 //----------------------------------------------------------
 void DictReader::makeLog()
 {
-	log += "Dictionary: " + name + "\r\n" +
-	       "Record    : " + unique_key + "\r\n" +
-	       "Result    : " + *valid_ptr + "\r\n" +
+	log += "Record '" + unique_key + "' " + *valid_ptr + " in '" + name + "'\r\n" +
 	       "--------------------------------------------------" + "\r\n" +
 	       friendly + "\r\n" +
 	       "--------------------------------------------------" + "\r\n\r\n\r\n";

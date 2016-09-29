@@ -14,6 +14,7 @@ public:
 	void makeDict();
 	void mergeDict();
 	void convertEsm();
+	void compareEsm();
 
 	UserInterface(std::vector<std::string> &a);
 

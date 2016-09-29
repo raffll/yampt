@@ -71,6 +71,10 @@ UserInterface::UserInterface(vector<string> &a)
 		{
 			convertEsm();
 		}
+		else if(arg[1] == "--compare" && file_p.size() > 0 && dict_p.size() > 0)
+		{
+			compareEsm();
+		}
 		else
 		{
 			cout << "Syntax error!" << endl;
@@ -89,7 +93,7 @@ void UserInterface::makeDictRaw()
 	{
 		DictCreator creator(file_p[i]);
 		creator.makeDict();
-		writer.writeDict(creator.getDict(), creator.getName() + ".dic");
+		writer.writeDict(creator.getDict(), creator.getNamePrefix() + ".dic");
 	}
 }
 
@@ -98,39 +102,53 @@ void UserInterface::makeDictBase()
 {
 	DictCreator creator(file_p[0], file_p[1]);
 	creator.makeDict();
-	writer.writeDict(creator.getDict(), creator.getName() + ".dic");
+	writer.writeDict(creator.getDict(), creator.getNamePrefix() + ".dic");
 }
 
 //----------------------------------------------------------
 void UserInterface::makeDict()
 {
+	string log;
+
 	DictMerger merger(dict_p);
 	merger.mergeDict();
+
+	log += merger.getLog();
+
 	for(size_t i = 0; i < file_p.size(); ++i)
 	{
 		DictCreator creator(file_p[i], merger, no_duplicates);
 		creator.makeDict();
-		writer.writeDict(creator.getDict(), creator.getName() + ".dic");
+		writer.writeDict(creator.getDict(), creator.getNamePrefix() + ".dic");
 	}
-	writer.writeText(merger.getLog(), "yampt.log");
+
+	writer.writeText(log, "yampt.log");
 }
 
 //----------------------------------------------------------
 void UserInterface::mergeDict()
 {
+	string log;
+
 	DictMerger merger(dict_p);
 	merger.mergeDict();
-	writer.writeDict(merger.getDict(), "yampt-merged.dic");
-	writer.writeText(merger.getLog(), "yampt.log");
 
+	log += merger.getLog();
+
+	writer.writeDict(merger.getDict(), "yampt-merged.dic");
+	writer.writeText(log, "yampt.log");
 }
 
 //----------------------------------------------------------
 void UserInterface::convertEsm()
 {
 	string log;
+
 	DictMerger merger(dict_p);
 	merger.mergeDict();
+
+	log += merger.getLog();
+
 	for(size_t i = 0; i < file_p.size(); ++i)
 	{
 		EsmConverter converter(file_p[i], merger, safe, add_dial);
@@ -138,5 +156,28 @@ void UserInterface::convertEsm()
 		converter.writeEsm();
 		log += converter.getLog();
 	}
-	writer.writeText(merger.getLog() + log, "yampt.log");
+
+	writer.writeText(log, "yampt.log");
+}
+
+//----------------------------------------------------------
+void UserInterface::compareEsm()
+{
+	string log;
+
+	DictMerger merger(dict_p);
+	merger.mergeDict();
+
+	for(size_t i = 0; i < file_p.size(); ++i)
+	{
+		DictCreator creator(file_p[i], merger, false);
+		creator.makeDict();
+
+		DictMerger comparator(merger.getDict(), creator.getDict(), creator.getName());
+		comparator.mergeDict();
+
+		log += comparator.getLog();
+	}
+
+	writer.writeText(log, "yampt.log");
 }

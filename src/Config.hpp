@@ -40,16 +40,17 @@ const std::vector<std::string> key_cell = {"positioncell",
 					   "showmap",
 					   "aiescortcell"};
 
-const std::vector<std::string> result = {"Not converted",
-					 "Converted",
-					 "Skipped (same text)",
-					 "Converted (dialog added)"};
+const std::vector<std::string> result = {"UNCHANGED",
+					 "CONVERTED",
+					 "SKIPPED (same text)",
+					 "CONVERTED (dialog added)"};
 
-const std::vector<std::string> valid = {"Replaced",
-					"Doubled",
-					"Invalid record",
-					"Not loaded, text too long, more than 32 bytes",
-					"Loaded, but text have more than 512 bytes"};
+const std::vector<std::string> valid = {"REPLACED",
+					"DOUBLED",
+					"INVALID",
+					"INVALID (text too long, more than 32 bytes)",
+					"LOADED (but text have more than 512 bytes)",
+					"DIFFERS"};
 
 }
 

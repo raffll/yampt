@@ -3,9 +3,21 @@
 using namespace std;
 
 //----------------------------------------------------------
-DictMerger::DictMerger()
+DictMerger::DictMerger(yampt::dict_t base, yampt::dict_t to_compare, string to_compare_name)
 {
+	DictReader reader_to_compare;
+	DictReader reader_base;
 
+	reader_to_compare.loadDict(to_compare);
+	reader_base.loadDict(base);
+
+	dict_coll.push_back(reader_to_compare);
+	dict_coll.push_back(reader_base);
+
+	status = true;
+	compare = true;
+
+	this->to_compare_name = to_compare_name;
 }
 
 //----------------------------------------------------------
@@ -49,8 +61,16 @@ void DictMerger::mergeDict()
 					else if(search != dict[k].end() &&
 						search->second != elem.second)
 					{
-						valid_ptr = &yampt::valid[0];
-						makeLog(dict_coll[i].getName(), elem.first, elem.second, search->second);
+						if(compare == false)
+						{
+							valid_ptr = &yampt::valid[0];
+							makeLog(dict_coll[i].getName(), elem.first, elem.second, search->second);
+						}
+						else
+						{
+							valid_ptr = &yampt::valid[5];
+							makeLog(to_compare_name, elem.first, elem.second, search->second);
+						}
 						counter_replaced++;
 					}
 					else
@@ -75,9 +95,7 @@ void DictMerger::mergeDict()
 //----------------------------------------------------------
 void DictMerger::makeLog(const string name, const string unique_key, const string friendly_old, const string friendly_new)
 {
-	log += "Dictionary: " + name + "\r\n" +
-	       "Record    : " + unique_key + "\r\n" +
-	       "Result    : " + *valid_ptr + "\r\n" +
+	log += "Record '" + unique_key + "' " + *valid_ptr + " in '" + name + "'\r\n" +
 	       "--------------------------------------------------" + "\r\n" +
 	       friendly_old + "\r\n" +
 	       "--------------------------------------------------" + "\r\n" +
