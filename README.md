@@ -118,3 +118,32 @@ or
 In first step converter translate (or not) dialog entries, and in second it can't find corresponding INFO record.
 
 It can be a mess, because CELL, DIAL, BNAM and SCTX records don't have unique key.
+
+## Useful scripts
+```
+REM Set path to your Wrye Mash installers folder or where you keep files
+
+SET PATH=
+
+del file_list.txt
+
+for /R "%PATH%" %%f in (*.esp, *.esm, *.ess) do echo | set /p name=" "%%f" " >> file_list.txt
+
+for /f "delims=" %%x in (file_list.txt) do yampt.exe --convert --add-dial -f %%x -d "yampt-merged.dic"
+
+pause
+```
+```
+REM Set path to folders where you keep native and foreign master files
+
+SET PATH_N=
+SET PATH_F=
+
+yampt.exe --make-base -f "%PATH_N%\Morrowind.esm" "%PATH_F%\Morrowind.esm"
+yampt.exe --make-base -f "%PATH_N%\Tribunal.esm" "%PATH_F%\Tribunal.esm"
+yampt.exe --make-base -f "%PATH_N%\Bloodmoon.esm" "%PATH_F%\Bloodmoon.esm"
+
+yampt.exe --merge -d "Morrowind.dic" "Tribunal.dic" "Bloodmoon.dic"
+
+pause
+```
