@@ -76,14 +76,14 @@ void DictCreator::printLog(string id, bool header)
 	if(header == true)
 	{
 		cout << endl;
-		cout << "          Created / Skipped /    All" << endl;
+		cout << "          CREATED / DOUBLED /    ALL" << endl;
 		cout << "    --------------------------------" << endl;
 	}
 	else
 	{
 		cout << "    " << id << " "
 		     << setw(8) << to_string(counter_inserted) << " / "
-		     << setw(7) << to_string(counter_skipped) << " / "
+		     << setw(7) << to_string(counter_doubled) << " / "
 		     << setw(6) << to_string(counter_all) << endl;
 
 		if(id == "GMST" || id == "FNAM")
@@ -135,7 +135,7 @@ void DictCreator::resetCounters()
 {
 	counter_inserted = 0;
 	counter_cell = 0;
-	counter_skipped = 0;
+	counter_doubled = 0;
 	counter_all = 0;
 }
 
@@ -193,7 +193,7 @@ void DictCreator::insertRecord(const string &unique_key, const string &friendly,
 	}
 	else
 	{
-		counter_skipped++;
+		counter_doubled++;
 	}
 }
 

@@ -51,7 +51,7 @@ private:
 
 	int counter_inserted;
 	int counter_cell;
-	int counter_skipped;
+	int counter_doubled;
 	int counter_all;
 
 	yampt::dict_t dict;

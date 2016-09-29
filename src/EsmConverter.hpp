@@ -33,8 +33,7 @@ private:
 	void addDIALtoINFO();
 
 	void makeLog(std::string id);
-	void makeLogScriptBefore();
-	void makeLogScriptAfter();
+	void makeLogScript();
 	void printLog(std::string id, bool header = false);
 
 	void convertCELL();
@@ -78,6 +77,7 @@ private:
 	bool s_found = false;
 	std::string s_line;
 	std::string s_line_lc;
+	std::string s_line_new;
 	std::string s_text;
 	size_t s_pos = 0;
 };

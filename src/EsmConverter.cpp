@@ -58,18 +58,13 @@ void EsmConverter::makeLog(string id)
 }
 
 //----------------------------------------------------------
-void EsmConverter::makeLogScriptBefore()
+void EsmConverter::makeLogScript()
 {
-	log += "Record '" + unique_key + "' " + *result_ptr + " in '" + esm.getName() + "'\r\n" +
+	log += "Script line '" + unique_key + "' " + *result_ptr + " in '" + esm.getName() + "'\r\n" +
 	       "--------------------------------------------------" + "\r\n" +
 	       s_line + "\r\n" +
-	       "--------------------------------------------------" + "\r\n";
-}
-
-//----------------------------------------------------------
-void EsmConverter::makeLogScriptAfter()
-{
-	log += s_line + "\r\n" +
+	       "--------------------------------------------------" + "\r\n" +
+	       s_line_new + "\r\n" +
 	       "--------------------------------------------------" + "\r\n\r\n\r\n";
 }
 
@@ -79,23 +74,23 @@ void EsmConverter::printLog(string id, bool header)
 	if(header == true)
 	{
 		cout << endl
-		     << "          Converted / Not converted / Skipped /   All" << endl
-		     << "    -------------------------------------------------" << endl;
+		     << "          CONVERTED / UNCHANGED / SKIPPED /    ALL" << endl
+		     << "    ----------------------------------------------" << endl;
 	}
 	else
 	{
 		cout << "    " << id << " "
 		     << setw(10) << to_string(counter_converted) << " / "
-		     << setw(13) << to_string(counter_notfound) << " / "
+		     << setw(9) << to_string(counter_notfound) << " / "
 		     << setw(7) << to_string(counter_skipped) << " / "
-		     << setw(5) << to_string(counter_all) << endl;
+		     << setw(6) << to_string(counter_all) << endl;
 		if(id == "INFO" && add_dial == true)
 		{
 			cout << "    " << " + DIAL" << " "
 			     << setw(7) << to_string(counter_add) << " / "
-			     << setw(13) << "-" << " / "
+			     << setw(9) << "-" << " / "
 			     << setw(7) << "-" << " / "
-			     << setw(5) << "-" << endl;
+			     << setw(6) << "-" << endl;
 		}
 	}
 }
@@ -180,7 +175,7 @@ void EsmConverter::setNewFriendly(yampt::r_type type)
 		result_ptr = &yampt::result[0];
 		counter_notfound++;
 
-		new_friendly = "N\\A";
+		new_friendly = esm.getFriendly();
 	}
 }
 
@@ -230,7 +225,7 @@ void EsmConverter::setNewFriendlyINFO(yampt::r_type type)
 		result_ptr = &yampt::result[0];
 		counter_notfound++;
 
-		new_friendly = "N\\A";
+		new_friendly = esm.getFriendly();
 	}
 }
 
@@ -246,6 +241,7 @@ void EsmConverter::setNewFriendlyScript(string id, yampt::r_type type)
 		s_found = false;
 		eraseCarriageReturnChar(s_line);
 		s_line_lc = s_line;
+		s_line_new = s_line;
 		transform(s_line_lc.begin(), s_line_lc.end(),
 			  s_line_lc.begin(), ::tolower);
 
@@ -276,7 +272,7 @@ void EsmConverter::setNewFriendlyScript(string id, yampt::r_type type)
 			}
 		}
 
-		new_friendly += s_line + "\r\n";
+		new_friendly += s_line_new + "\r\n";
 	}
 
 	size_t last_nl_pos = esm.getFriendly().rfind("\r\n");
@@ -297,7 +293,7 @@ void EsmConverter::setNewFriendlyScript(string id, yampt::r_type type)
 		result_ptr = &yampt::result[0];
 		counter_notfound++;
 
-		new_friendly = "N\\A";
+		new_friendly = esm.getFriendly();
 	}
 }
 
@@ -306,17 +302,25 @@ void EsmConverter::convertLine(string id, yampt::r_type type)
 {
 	if(s_pos != string::npos && s_line.rfind(";", s_pos) == string::npos)
 	{
-		makeLogScriptBefore();
 		auto search = merger->getDict()[type].find(id + yampt::sep[0] + s_line);
 		if(search != merger->getDict()[type].end())
 		{
 			if(s_line != search->second)
 			{
-				s_line = search->second;
+				s_line_new = search->second;
 				s_found = true;
+				result_ptr = &yampt::result[1];
+			}
+			else
+			{
+				result_ptr = &yampt::result[2];
 			}
 		}
-		makeLogScriptAfter();
+		else
+		{
+			result_ptr = &yampt::result[0];
+		}
+		makeLogScript();
 	}
 }
 
@@ -325,32 +329,38 @@ void EsmConverter::convertText(string id, yampt::r_type type)
 {
 	if(s_pos != string::npos && s_line.rfind(";", s_pos) == string::npos)
 	{
-		makeLogScriptBefore();
 		extractText();
 		auto search = merger->getDict()[type].find(id + yampt::sep[0] + s_text);
 		if(search != merger->getDict()[type].end())
 		{
 			if(s_text != search->second)
 			{
-				s_line.erase(s_pos, s_text.size() + 2);
-				s_line.insert(s_pos, "\"" + search->second + "\"");
+				s_line_new.erase(s_pos, s_text.size() + 2);
+				s_line_new.insert(s_pos, "\"" + search->second + "\"");
 				s_found = true;
+				result_ptr = &yampt::result[1];
+			}
+			else
+			{
+				result_ptr = &yampt::result[2];
 			}
 		}
 		else
 		{
+			result_ptr = &yampt::result[0];
 			for(auto &elem : merger->getDict()[type])
 			{
 				if(caseInsensitiveStringCmp(id + yampt::sep[0] + s_text, elem.first) == true)
 				{
-					s_line.erase(s_pos, s_text.size() + 2);
-					s_line.insert(s_pos, "\"" + elem.second + "\"");
+					s_line_new.erase(s_pos, s_text.size() + 2);
+					s_line_new.insert(s_pos, "\"" + elem.second + "\"");
 					s_found = true;
+					result_ptr = &yampt::result[1];
 					break;
 				}
 			}
 		}
-		makeLogScriptAfter();
+		makeLogScript();
 	}
 }
 

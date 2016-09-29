@@ -261,7 +261,7 @@ void DictReader::makeLog()
 void DictReader::printLog()
 {
 	cout << endl
-	     << "    Loaded / Doubled / Too long / Invalid" << endl
+	     << "    LOADED / DOUBLED / TOO LONG / INVALID" << endl
 	     << "    -------------------------------------" << endl
 	     << setw(10) << to_string(counter_loaded) << " / "
 	     << setw(7) << to_string(counter_doubled) << " / "
