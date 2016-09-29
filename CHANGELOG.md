@@ -34,3 +34,4 @@
 - add detailed log
 - add limit of RNAM string to 32
 - creator and converter now ommit FNAM "player" record
+- many bug fixes
