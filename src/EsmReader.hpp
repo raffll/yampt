@@ -3,7 +3,7 @@
 
 #include "Config.hpp"
 
-class EsmReader
+class EsmReader : public Tools
 {
 public:
 	void readFile(std::string path);
@@ -18,9 +18,7 @@ public:
 	EsmReader();
 
 protected:
-	unsigned int convertByteArrayToInt(const std::string &str);
-
-	bool status = 0;
+	bool status = false;
 	std::vector<std::string> rec_coll;
 
 private:
@@ -31,7 +29,6 @@ private:
 	std::string name;
 	std::string name_prefix;
 	std::string name_suffix;
-
 };
 
 #endif

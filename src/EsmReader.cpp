@@ -25,7 +25,7 @@ void EsmReader::readFile(string path)
 		}
 		if(content.size() > 4 && content.substr(0, 4) == "TES3")
 		{
-			status = 1;
+			status = true;
 			setName(path);
 			setRecColl(content);
 		}
@@ -36,7 +36,7 @@ void EsmReader::readFile(string path)
 //----------------------------------------------------------
 void EsmReader::printStatus(string path)
 {
-	if(status == 0)
+	if(status == false)
 	{
 		cout << "--> Error while loading " + path +
 			" (wrong path or isn't TES3 plugin)!\r\n";
@@ -58,7 +58,7 @@ void EsmReader::setName(string path)
 //----------------------------------------------------------
 void EsmReader::setRecColl(string &content)
 {
-	if(status == 1)
+	if(status == true)
 	{
 		size_t rec_beg = 0;
 		size_t rec_size = 0;
@@ -70,30 +70,5 @@ void EsmReader::setRecColl(string &content)
 			rec_end = rec_beg + rec_size;
 			rec_coll.push_back(content.substr(rec_beg, rec_size));
 		}
-	}
-}
-
-//----------------------------------------------------------
-unsigned int EsmReader::convertByteArrayToInt(const string &str)
-{
-	char buffer[4];
-	unsigned char ubuffer[4];
-	unsigned int x;
-	str.copy(buffer, 4);
-	for(int i = 0; i < 4; i++)
-	{
-		ubuffer[i] = buffer[i];
-	}
-	if(str.size() == 4)
-	{
-		return x = (ubuffer[0] | ubuffer[1] << 8 | ubuffer[2] << 16 | ubuffer[3] << 24);
-	}
-	else if(str.size() == 1)
-	{
-		return x = ubuffer[0];
-	}
-	else
-	{
-		return x = 0;
 	}
 }

@@ -7,11 +7,13 @@ class DictReader
 {
 public:
 	void readFile(std::string path);
+	void loadDict(yampt::dict_t dict);
+
 	bool getStatus() { return status; }
 	std::string getName() { return name; }
 	std::string getNamePrefix() { return name_prefix; }
 	std::string getLog() { return log; }
-	std::array<std::map<std::string, std::string>, 11> const& getDict() const { return dict; }
+	yampt::dict_t const& getDict() const { return dict; }
 
 	DictReader();
 	DictReader(const DictReader& that);
@@ -22,15 +24,28 @@ private:
 	void printStatus(std::string path);
 	void setName(std::string path);
 	bool parseDict(std::string &content);
-	void insertRecord(const std::string &pri_text, const std::string &sec_text);
+	void validateRecord();
+	void insertRecord(yampt::r_type type);
+	void makeLog();
+	void printLog();
 
-	bool status = 0;
+	bool status = false;
+
 	std::string name;
 	std::string name_prefix;
-	int counter = 0;
+
+	std::string unique_key;
+	std::string friendly;
+
+	const std::string *valid_ptr;
+
+	int counter_loaded = 0;
 	int counter_invalid = 0;
+	int counter_toolong = 0;
+	int counter_doubled = 0;
+
 	std::string log;
-	std::array<std::map<std::string, std::string>, 11> dict;
+	yampt::dict_t dict;
 };
 
 #endif

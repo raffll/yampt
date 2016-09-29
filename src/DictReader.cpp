@@ -12,8 +12,10 @@ DictReader::DictReader()
 DictReader::DictReader(const DictReader& that) : status(that.status),
 					         name(that.name),
 					         name_prefix(that.name_prefix),
-					         counter(that.counter),
+					         counter_loaded(that.counter_loaded),
 					         counter_invalid(that.counter_invalid),
+					         counter_toolong(that.counter_toolong),
+					         counter_doubled(that.counter_doubled),
 					         dict(that.dict)
 {
 
@@ -25,8 +27,10 @@ DictReader& DictReader::operator=(const DictReader& that)
 	status = that.status;
 	name = that.name;
 	name_prefix = that.name_prefix;
-	counter = that.counter;
+	counter_loaded = that.counter_loaded;
 	counter_invalid = that.counter_invalid;
+	counter_toolong = that.counter_toolong;
+	counter_doubled = that.counter_doubled;
 	dict = that.dict;
 	return *this;
 }
@@ -53,26 +57,31 @@ void DictReader::readFile(string path)
 			content.append(buffer, chars_read);
 		}
 		setName(path);
-		if(!content.empty() && parseDict(content) == 1)
+		if(!content.empty() && parseDict(content) == true)
 		{
-			status = 1;
+			status = true;
 		}
 	}
 	printStatus(path);
 }
 
 //----------------------------------------------------------
+void DictReader::loadDict(yampt::dict_t dict)
+{
+	this->dict = dict;
+}
+
+//----------------------------------------------------------
 void DictReader::printStatus(string path)
 {
-	if(status == 0)
+	if(status == false)
 	{
 		cout << "--> Error while loading " << path << " (wrong path or missing separator)!\r\n";
 	}
 	else
 	{
-		cout << "--> Loading " << path << "...\r\n";
-		cout << "    --> Records loaded: " << to_string(counter) << "\r\n";
-		cout << "    --> Records invalid: " << to_string(counter_invalid) << "\r\n";
+		cout << "--> Loading " << path << "..." << endl;
+		printLog();
 	}
 }
 
@@ -89,18 +98,17 @@ bool DictReader::parseDict(string &content)
 	size_t pos_beg = 0;
 	size_t pos_mid = 0;
 	size_t pos_end = 0;
-	string pri_text;
-	string sec_text;
+
 	while(true)
 	{
-		pos_beg = content.find(sep[1], pos_beg);
-		pos_mid = content.find(sep[2], pos_mid);
-		pos_end = content.find(sep[3], pos_end);
+		pos_beg = content.find(yampt::sep[1], pos_beg);
+		pos_mid = content.find(yampt::sep[2], pos_mid);
+		pos_end = content.find(yampt::sep[3], pos_end);
 		if(pos_beg == string::npos &&
 		   pos_mid == string::npos &&
 		   pos_end == string::npos)
 		{
-			return 1;
+			return true;
 			break;
 		}
 		else if(pos_beg > pos_mid ||
@@ -108,16 +116,19 @@ bool DictReader::parseDict(string &content)
 			pos_mid > pos_end ||
 			pos_end == string::npos)
 		{
-			return 0;
+			return false;
 			break;
 		}
 		else
 		{
-			pri_text = content.substr(pos_beg + sep[1].size(),
-						  pos_mid - pos_beg - sep[1].size());
-			sec_text = content.substr(pos_mid + sep[2].size(),
-						  pos_end - pos_mid - sep[2].size());
-			insertRecord(pri_text, sec_text);
+			unique_key = content.substr(pos_beg + yampt::sep[1].size(),
+						    pos_mid - pos_beg - yampt::sep[1].size());
+
+			friendly = content.substr(pos_mid + yampt::sep[2].size(),
+						  pos_end - pos_mid - yampt::sep[2].size());
+
+			validateRecord();
+
 			pos_beg++;
 			pos_mid++;
 			pos_end++;
@@ -126,110 +137,135 @@ bool DictReader::parseDict(string &content)
 }
 
 //----------------------------------------------------------
-void DictReader::insertRecord(const string &pri_text, const string &sec_text)
+void DictReader::validateRecord()
 {
-	if(pri_text.size() > 4)
+	string id;
+	if(unique_key.size() > 4)
 	{
-		if(pri_text.substr(0, 4) == "CELL")
+		id = unique_key.substr(0, 4);
+
+		if(id == "CELL")
 		{
-			dict[RecType::CELL].insert({pri_text, sec_text});
-			counter++;
+			insertRecord(yampt::r_type::CELL);
 		}
-		else if(pri_text.substr(0, 4) == "GMST")
+		else if(id == "GMST")
 		{
-			dict[RecType::GMST].insert({pri_text, sec_text});
-			counter++;
+			insertRecord(yampt::r_type::GMST);
 		}
-		else if(pri_text.substr(0, 4) == "FNAM")
+		else if(id == "DESC")
 		{
-			if(sec_text.size() > 32)
+			insertRecord(yampt::r_type::DESC);
+		}
+		else if(id == "TEXT")
+		{
+			insertRecord(yampt::r_type::TEXT);
+		}
+		else if(id == "INDX")
+		{
+			insertRecord(yampt::r_type::INDX);
+		}
+		else if(id == "DIAL")
+		{
+			insertRecord(yampt::r_type::DIAL);
+		}
+		else if(id == "BNAM")
+		{
+			friendly = friendly.substr(friendly.find(yampt::sep[0]) + 1);
+			insertRecord(yampt::r_type::BNAM);
+		}
+		else if(id == "SCTX")
+		{
+			friendly = friendly.substr(friendly.find(yampt::sep[0]) + 1);
+			insertRecord(yampt::r_type::SCTX);
+		}
+		else if(id == "RNAM")
+		{
+			if(friendly.size() > 32)
 			{
-					log += sep[4] +
-					       sep[1] + pri_text + sep[2] + sec_text + sep[3] +
-					       " <!-- " + name +
-					       " - Text too long, more than 32 bytes (has " +
-					       to_string(sec_text.size()) + ") -->\r\n";
-					counter_invalid++;
+				valid_ptr = &yampt::valid[3];
+				makeLog();
+				counter_toolong++;
 			}
 			else
 			{
-				dict[RecType::FNAM].insert({pri_text, sec_text});
-				counter++;
+				insertRecord(yampt::r_type::RNAM);
 			}
 		}
-		else if(pri_text.substr(0, 4) == "DESC")
+		else if(id == "FNAM")
 		{
-			dict[RecType::DESC].insert({pri_text, sec_text});
-			counter++;
-		}
-		else if(pri_text.substr(0, 4) == "TEXT")
-		{
-			dict[RecType::TEXT].insert({pri_text, sec_text});
-			counter++;
-		}
-		else if(pri_text.substr(0, 4) == "RNAM")
-		{
-			dict[RecType::RNAM].insert({pri_text, sec_text});
-			counter++;
-		}
-		else if(pri_text.substr(0, 4) == "INDX")
-		{
-			dict[RecType::INDX].insert({pri_text, sec_text});
-			counter++;
-		}
-		else if(pri_text.substr(0, 4) == "DIAL")
-		{
-			dict[RecType::DIAL].insert({pri_text, sec_text});
-			counter++;
-		}
-		else if(pri_text.substr(0, 4) == "INFO")
-		{
-			if(Config::getAllowMoreInfo() == 0)
+			if(friendly.size() > 32)
 			{
-				if(sec_text.size() > 512)
-				{
-					log += sep[4] +
-					       sep[1] + pri_text + sep[2] + sec_text + sep[3] +
-					       " <!-- " + name +
-					       " - Text too long, more than 512 bytes (has " +
-					       to_string(sec_text.size()) + ") -->\r\n";
-					counter_invalid++;
-				}
-				else
-				{
-					dict[RecType::INFO].insert({pri_text, sec_text});
-					counter++;
-				}
+				valid_ptr = &yampt::valid[3];
+				makeLog();
+				counter_toolong++;
 			}
 			else
 			{
-				dict[RecType::INFO].insert({pri_text, sec_text});
-				counter++;
+				insertRecord(yampt::r_type::FNAM);
 			}
 		}
-		else if(pri_text.substr(0, 4) == "BNAM")
+		else if(id == "INFO")
 		{
-			dict[RecType::BNAM].insert({pri_text, sec_text});
-			counter++;
-		}
-		else if(pri_text.substr(0, 4) == "SCTX")
-		{
-			dict[RecType::SCTX].insert({pri_text, sec_text});
-			counter++;
+			if(friendly.size() > 512)
+			{
+				valid_ptr = &yampt::valid[4];
+				makeLog();
+				counter_toolong++;
+				insertRecord(yampt::r_type::INFO);
+			}
+			else
+			{
+				insertRecord(yampt::r_type::INFO);
+			}
 		}
 		else
 		{
-			log += sep[4] +
-			       sep[1] + pri_text + sep[2] + sec_text + sep[3] +
-			       " <!-- " + name + " - Invalid record -->\r\n";
+			valid_ptr = &yampt::valid[2];
+			makeLog();
 			counter_invalid++;
 		}
 	}
 	else
 	{
-		log += sep[4] +
-		       sep[1] + pri_text + sep[2] + sec_text + sep[3] +
-		       " <!-- " + name + " - Invalid record -->\r\n";
+		valid_ptr = &yampt::valid[2];
+		makeLog();
 		counter_invalid++;
 	}
+}
+
+//----------------------------------------------------------
+void DictReader::insertRecord(yampt::r_type type)
+{
+	if(dict[type].insert({unique_key, friendly}).second == true)
+	{
+		counter_loaded++;
+	}
+	else
+	{
+		valid_ptr = &yampt::valid[1];
+		makeLog();
+		counter_doubled++;
+	}
+}
+
+//----------------------------------------------------------
+void DictReader::makeLog()
+{
+	log += *valid_ptr + " record '" + unique_key + "' in '" + name + "'\r\n" +
+	       "---" + "\r\n" +
+	       friendly + "\r\n" +
+	       "---" + "\r\n\r\n\r\n";
+}
+
+//----------------------------------------------------------
+void DictReader::printLog()
+{
+	cout << endl
+	     << "    LOADED / DOUBLED / TOO LONG / INVALID" << endl
+	     << "    -------------------------------------" << endl
+	     << setw(10) << to_string(counter_loaded) << " / "
+	     << setw(7) << to_string(counter_doubled) << " / "
+	     << setw(8) << to_string(counter_toolong) << " / "
+	     << setw(7) << to_string(counter_invalid)
+	     << endl << endl;
 }

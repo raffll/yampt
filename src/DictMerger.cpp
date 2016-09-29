@@ -3,9 +3,21 @@
 using namespace std;
 
 //----------------------------------------------------------
-DictMerger::DictMerger()
+DictMerger::DictMerger(yampt::dict_t base, yampt::dict_t to_compare, string to_compare_name)
 {
+	DictReader reader_to_compare;
+	DictReader reader_base;
 
+	reader_to_compare.loadDict(to_compare);
+	reader_base.loadDict(base);
+
+	dict_coll.push_back(reader_to_compare);
+	dict_coll.push_back(reader_base);
+
+	status = true;
+	compare = true;
+
+	this->to_compare_name = to_compare_name;
 }
 
 //----------------------------------------------------------
@@ -15,15 +27,15 @@ DictMerger::DictMerger(vector<string> &path)
 	{
 		DictReader reader;
 		reader.readFile(elem);
-		if(reader.getStatus() == 1)
+		if(reader.getStatus() == true)
 		{
 			dict_coll.push_back(reader);
-			status = 1;
+			status = true;
 			log += reader.getLog();
 		}
 		else
 		{
-			status = 0;
+			status = false;
 			break;
 		}
 	}
@@ -32,7 +44,7 @@ DictMerger::DictMerger(vector<string> &path)
 //----------------------------------------------------------
 void DictMerger::mergeDict()
 {
-	if(status == 1)
+	if(status == true)
 	{
 		for(size_t i = 0; i < dict_coll.size(); ++i)
 		{
@@ -44,19 +56,22 @@ void DictMerger::mergeDict()
 					if(search == dict[k].end())
 					{
 						dict[k].insert({elem.first, elem.second});
-						counter++;
+						counter_merged++;
 					}
 					else if(search != dict[k].end() &&
 						search->second != elem.second)
 					{
-						counter_duplicate++;
-						log += sep[4] +
-						       sep[1] + elem.first + sep[2] + elem.second +
-						       sep[3] +
-						       " <!-- record in " + dict_coll[i].getName() +
-						       " replaced by -->\r\n" +
-						       sep[1] + search->first + sep[2] + search->second +
-						       sep[3] + "\r\n";
+						if(compare == false)
+						{
+							valid_ptr = &yampt::valid[0];
+							makeLog(dict_coll[i].getName(), elem.first, elem.second, search->second);
+						}
+						else
+						{
+							valid_ptr = &yampt::valid[5];
+							makeLog(to_compare_name, elem.first, elem.second, search->second);
+						}
+						counter_replaced++;
 					}
 					else
 					{
@@ -72,11 +87,30 @@ void DictMerger::mergeDict()
 		else
 		{
 			cout << "--> Merging complete!\r\n";
-			cout << "    --> Records merged: " << to_string(counter) << "\r\n";
-			cout << "    --> Duplicate records not merged: " <<
-				to_string(counter_duplicate) << "\r\n";
-			cout << "    --> Identical records not merged: " <<
-				to_string(counter_identical) << "\r\n";
 		}
+		printLog();
 	}
+}
+
+//----------------------------------------------------------
+void DictMerger::makeLog(const string name, const string unique_key, const string friendly_old, const string friendly_new)
+{
+	log += *valid_ptr + " record '" + unique_key + "' in '" + name + "'\r\n" +
+	       "---" + "\r\n" +
+	       friendly_old + "\r\n" +
+	       "---" + "\r\n" +
+	       friendly_new + "\r\n" +
+	       "---" + "\r\n\r\n\r\n";
+}
+
+//----------------------------------------------------------
+void DictMerger::printLog()
+{
+	cout << endl
+	     << "    MERGED / REPLACED / IDENTICAL" << endl
+	     << "    -----------------------------" << endl
+	     << setw(10) << to_string(counter_merged) << " / "
+	     << setw(8) << to_string(counter_replaced) << " / "
+	     << setw(9) << to_string(counter_identical)
+	     << endl << endl;
 }

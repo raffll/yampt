@@ -3,94 +3,115 @@
 using namespace std;
 
 //----------------------------------------------------------
-EsmConverter::EsmConverter()
+EsmConverter::EsmConverter(string path, DictMerger &merger, bool safe, bool add_dial)
 {
+	this->merger = &merger;
+	this->safe = safe;
+	this->add_dial = add_dial;
 
-}
-
-//----------------------------------------------------------
-EsmConverter::EsmConverter(string path, DictMerger &m)
-{
 	esm.readFile(path);
-	merger = m;
-	if(esm.getStatus() == 1 && merger.getStatus() == 1)
+
+	if(esm.getStatus() == true && merger.getStatus() == true)
 	{
-		status = 1;
+		status = true;
 	}
 }
 
 //----------------------------------------------------------
 void EsmConverter::convertEsm()
 {
-	if(status == 1)
+	if(status == true)
 	{
+		printLog("", true);
 		convertCELL();
 		convertPGRD();
 		convertANAM();
 		convertSCVR();
 		convertDNAM();
 		convertCNDT();
-		convertGMST();
-		convertFNAM();
-		convertDESC();
-		convertTEXT();
-		convertRNAM();
-		convertINDX();
+		if(safe == false)
+		{
+			convertGMST();
+			convertFNAM();
+			convertDESC();
+			convertTEXT();
+			convertRNAM();
+			convertINDX();
+		}
 		convertDIAL();
 		convertINFO();
 		convertBNAM();
 		convertSCPT();
+		cout << endl;
 	}
 }
 
 //----------------------------------------------------------
-void EsmConverter::convertEsmWithDIAL()
+void EsmConverter::makeLog(string id)
 {
-	if(status == 1)
-	{
-		convertCELL();
-		convertPGRD();
-		convertANAM();
-		convertSCVR();
-		convertDNAM();
-		convertCNDT();
-		convertGMST();
-		convertFNAM();
-		convertDESC();
-		convertTEXT();
-		convertRNAM();
-		convertINDX();
-		convertDIAL();
-		convertINFOWithDIAL();
-		convertBNAM();
-		convertSCPT();
-	}
+	log += *result_ptr + " record " + id + "'" + unique_key + "' in '" + esm.getName() + "'\r\n" +
+	       "---" + "\r\n" +
+	       esm.getFriendly() + "\r\n" +
+	       "---" + "\r\n" +
+	       new_friendly + "\r\n" +
+	       "---" + "\r\n\r\n\r\n";
 }
 
 //----------------------------------------------------------
-void EsmConverter::convertEsmSafe()
+void EsmConverter::makeLogScript()
 {
-	if(status == 1)
-	{
-		safe = 1;
+	log += *result_ptr + " script line '" + unique_key + "' in '" + esm.getName() + "'\r\n" +
+	       "---" + "\r\n" +
+	       s_line + "\r\n" +
+	       "---" + "\r\n" +
+	       s_line_new + "\r\n" +
+	       "---" + "\r\n\r\n\r\n";
+}
 
-		convertCELL();
-		convertPGRD();
-		convertANAM();
-		convertSCVR();
-		convertDNAM();
-		convertCNDT();
-		convertDIAL();
-		convertINFOWithDIAL();
-		convertBNAM();
-		convertSCPT();
+//----------------------------------------------------------
+void EsmConverter::printLog(string id, bool header)
+{
+	if(header == true)
+	{
+		cout << endl
+		     << "          CONVERTED / UNCHANGED / SKIPPED /    ALL" << endl
+		     << "    ----------------------------------------------" << endl;
+	}
+	else
+	{
+		if(id == "INFO" && add_dial == true)
+		{
+			if(counter_add > 0)
+			{
+				cout << endl;
+			}
+
+			cout << "    " << id << " "
+			     << setw(10) << to_string(counter_converted) << " / "
+			     << setw(9) << to_string(counter_unchanged) << " / "
+			     << setw(7) << to_string(counter_skipped) << " / "
+			     << setw(6) << to_string(counter_all) << endl
+			     << "    " << " + DIAL" << " "
+			     << setw(7) << to_string(counter_add) << " / "
+			     << setw(9) << "-" << " / "
+			     << setw(7) << "-" << " / "
+			     << setw(6) << "-" << endl;
+		}
+		else
+		{
+			cout << "    " << id << " "
+			     << setw(10) << to_string(counter_converted) << " / "
+			     << setw(9) << to_string(counter_unchanged) << " / "
+			     << setw(7) << to_string(counter_skipped) << " / "
+			     << setw(6) << to_string(counter_all) << endl;
+		}
 	}
 }
 
 //----------------------------------------------------------
 void EsmConverter::writeEsm()
 {
-	if(status == 1)
+	if(status == true)
 	{
 		string name = esm.getName();
 		ofstream file(name, ios::binary);
@@ -103,48 +124,27 @@ void EsmConverter::writeEsm()
 }
 
 //----------------------------------------------------------
-string EsmConverter::convertIntToByteArray(unsigned int x)
+void EsmConverter::resetCounters()
 {
-	char bytes[4];
-	string str;
-	copy(static_cast<const char*>(static_cast<const void*>(&x)),
-	     static_cast<const char*>(static_cast<const void*>(&x)) + sizeof x,
-	     bytes);
-	for(int i = 0; i < 4; i++)
-	{
-		str.push_back(bytes[i]);
-	}
-	return str;
+	counter_converted = 0;
+	counter_unchanged = 0;
+	counter_skipped = 0;
+	counter_all = 0;
+	counter_add = 0;
 }
 
 //----------------------------------------------------------
-bool EsmConverter::caseInsensitiveStringCmp(string lhs, string rhs)
-{
-	transform(lhs.begin(), lhs.end(), lhs.begin(), ::toupper);
-	transform(rhs.begin(), rhs.end(), rhs.begin(), ::toupper);
-	if(lhs == rhs)
-	{
-		return 1;
-	}
-	else
-	{
-		return 0;
-	}
-}
-
-//----------------------------------------------------------
-void EsmConverter::convertRecordContent(size_t pos, size_t old_size, string new_text,
-					size_t new_size)
+void EsmConverter::convertRecordContent(string new_text)
 {
 	size_t rec_size;
-	rec_content = esm.getRecContent();
+	string rec_content = esm.getRecContent();
 
-	if(pos < rec_content.size() && pos >= 16)
+	if(esm.getFriendlyStatus() == true)
 	{
-		rec_content.erase(pos + 8, old_size);
-		rec_content.insert(pos + 8, new_text);
-		rec_content.erase(pos + 4, 4);
-		rec_content.insert(pos + 4, convertIntToByteArray(new_size));
+		rec_content.erase(esm.getFriendlyPos() + 8, esm.getFriendlySize());
+		rec_content.insert(esm.getFriendlyPos() + 8, new_text);
+		rec_content.erase(esm.getFriendlyPos() + 4, 4);
+		rec_content.insert(esm.getFriendlyPos() + 4, convertIntToByteArray(new_text.size()));
 		rec_size = rec_content.size() - 16;
 		rec_content.erase(4, 4);
 		rec_content.insert(4, convertIntToByteArray(rec_size));
@@ -153,333 +153,527 @@ void EsmConverter::convertRecordContent(size_t pos, size_t old_size, string new_
 }
 
 //----------------------------------------------------------
-void EsmConverter::convertScriptLine(size_t i)
+void EsmConverter::setNewFriendly(yampt::r_type type)
 {
-	bool found = 0;
-	string line = esm.getScptLine(i);
-	string text = esm.getScptText(i);
-	if(esm.getScptLineType(i) == "BNAM" && safe == 0)
-	{
-		auto search = merger.getDict()[RecType::BNAM].find("BNAM" + sep[0] + esm.getScptLine(i));
-		if(search != merger.getDict()[RecType::BNAM].end())
-		{
-			line = search->second;
-			line = line.substr(line.find(sep[0]) + 1);
-			found = 1;
-			if(esm.getScptLine(i) != line)
-			{
-				counter++;
-			}
-		}
-	}
-	else if(esm.getScptLineType(i) == "SCTX" && safe == 0)
-	{
-		auto search = merger.getDict()[RecType::SCTX].find("SCTX" + sep[0] + esm.getScptLine(i));
-		if(search != merger.getDict()[RecType::SCTX].end())
-		{
-			line = search->second;
-			line = line.substr(line.find(sep[0]) + 1);
-			found = 1;
-			if(esm.getScptLine(i) != line)
-			{
-				counter++;
-			}
-		}
-	}
-	else if(esm.getScptLineType(i) == "DIAL")
-	{
-		auto search = merger.getDict()[RecType::DIAL].find("DIAL" + sep[0] + text);
-		if(search != merger.getDict()[RecType::DIAL].end())
-		{
+	counter_all++;
 
-			line.erase(esm.getScptTextPos(i), esm.getScptText(i).size() + 2);
-			line.insert(esm.getScptTextPos(i), "\"" + search->second + "\"");
-			counter++;
-			found = 1;
-		}
-		if(found == 0)
-		{
-			for(auto &elem : merger.getDict()[RecType::DIAL])
-			{
-				if(caseInsensitiveStringCmp("DIAL" + sep[0] + text, elem.first) == 1)
-				{
-					line.erase(esm.getScptTextPos(i), esm.getScptText(i).size() + 2);
-					line.insert(esm.getScptTextPos(i), "\"" + elem.second + "\"");
-					counter++;
-					found = 1;
-					break;
-				}
-			}
-		}
-	}
-	else if(esm.getScptLineType(i) == "CELL")
+	auto search = merger->getDict()[type].find(unique_key);
+	if(search != merger->getDict()[type].end())
 	{
-		auto search = merger.getDict()[RecType::CELL].find("CELL" + sep[0] + text);
-		if(search != merger.getDict()[RecType::CELL].end())
+		if(esm.getFriendlyId() == "SCVR")
 		{
-			line.erase(esm.getScptTextPos(i), esm.getScptText(i).size() + 2);
-			line.insert(esm.getScptTextPos(i), "\"" + search->second + "\"");
-			counter++;
-			found = 1;
+			new_friendly = esm.getFriendly().substr(0, 5) + search->second;
 		}
-		if(found == 0)
+		else
 		{
-			for(auto &elem : merger.getDict()[RecType::CELL])
-			{
-				if(caseInsensitiveStringCmp("CELL" + sep[0] + text, elem.first) == 1)
-				{
-					line.erase(esm.getScptTextPos(i), esm.getScptText(i).size() + 2);
-					line.insert(esm.getScptTextPos(i), "\"" + elem.second + "\"");
-					counter++;
-					found = 1;
-					break;
-				}
-			}
+			new_friendly = search->second;
 		}
-	}
-	if(found == 1)
-	{
-		script_text += line + "\r\n";
+
+		if(esm.getFriendly() != new_friendly)
+		{
+			convert = true;
+			result_ptr = &yampt::result[1];
+			counter_converted++;
+		}
+		else
+		{
+			convert = false;
+			result_ptr = &yampt::result[2];
+			counter_skipped++;
+		}
 	}
 	else
 	{
-		script_text += esm.getScptLine(i) + "\r\n";
+		convert = false;
+		result_ptr = &yampt::result[0];
+		counter_unchanged++;
+
+		new_friendly = "N\\A";
+	}
+}
+
+//----------------------------------------------------------
+void EsmConverter::setNewFriendlyINFO(yampt::r_type type)
+{
+	counter_all++;
+
+	auto search = merger->getDict()[type].find(unique_key);
+	if(safe == false && search != merger->getDict()[type].end())
+	{
+		new_friendly = search->second;
+
+		if(esm.getFriendly() != new_friendly)
+		{
+			convert = true;
+			result_ptr = &yampt::result[1];
+			counter_converted++;
+		}
+		else
+		{
+			convert = false;
+			result_ptr = &yampt::result[2];
+			counter_skipped++;
+		}
+	}
+	else if(add_dial == true && esm.getRecId() == "INFO" && current_dialog.substr(0, 1) != "V")
+	{
+		addDIALtoINFO();
+
+		if(esm.getFriendly() != new_friendly)
+		{
+			convert = true;
+			result_ptr = &yampt::result[3];
+			if(counter_add == 1)
+			{
+				cout << "    In progress...";
+			}
+			counter_add++;
+			if(counter_add % 200 == 0)
+			{
+				cout << "." << flush;
+			}
+		}
+		else
+		{
+			convert = false;
+			result_ptr = &yampt::result[0];
+			counter_unchanged++;
+
+			new_friendly = "N\\A";
+		}
+	}
+	else
+	{
+		convert = false;
+		result_ptr = &yampt::result[0];
+		counter_unchanged++;
+
+		new_friendly = "N\\A";
+	}
+}
+
+//----------------------------------------------------------
+void EsmConverter::setNewFriendlyScript(string id, yampt::r_type type)
+{
+	counter_all++;
+	new_friendly.erase();
+	istringstream ss(esm.getFriendly());
+
+	while(getline(ss, s_line))
+	{
+		eraseCarriageReturnChar(s_line);
+
+		s_found = false;
+		s_line_lc = s_line;
+		s_line_new = "N\\A";
+
+		transform(s_line_lc.begin(), s_line_lc.end(),
+			  s_line_lc.begin(), ::tolower);
+
+		for(auto const &elem : yampt::key_message)
+		{
+			if(s_found == false)
+			{
+				s_pos = s_line_lc.find(elem);
+				convertLine(id, type);
+			}
+		}
+
+		for(auto const &elem : yampt::key_dial)
+		{
+			if(s_found == false)
+			{
+				s_pos = s_line_lc.find(elem);
+				convertText("DIAL", yampt::r_type::DIAL);
+			}
+		}
+
+		for(auto const &elem : yampt::key_cell)
+		{
+			if(s_found == false)
+			{
+				s_pos = s_line_lc.find(elem);
+				convertText("CELL", yampt::r_type::CELL);
+			}
+		}
+
+		if(s_found == true)
+		{
+			new_friendly += s_line_new + "\r\n";
+		}
+		else
+		{
+			new_friendly += s_line + "\r\n";
+		}
+	}
+
+	size_t last_nl_pos = esm.getFriendly().rfind("\r\n");
+	if(last_nl_pos != esm.getFriendly().size() - 2 || last_nl_pos == string::npos)
+	{
+		new_friendly.resize(new_friendly.size() - 2);
+	}
+
+	if(esm.getFriendly() != new_friendly)
+	{
+		convert = true;
+		result_ptr = &yampt::result[1];
+		counter_converted++;
+	}
+	else
+	{
+		convert = false;
+		result_ptr = &yampt::result[0];
+		counter_unchanged++;
+
+		new_friendly = "N\\A";
+	}
+}
+
+//----------------------------------------------------------
+void EsmConverter::convertLine(string id, yampt::r_type type)
+{
+	if(s_pos != string::npos && s_line.rfind(";", s_pos) == string::npos)
+	{
+		auto search = merger->getDict()[type].find(id + yampt::sep[0] + s_line);
+		if(search != merger->getDict()[type].end())
+		{
+			if(s_line != search->second)
+			{
+				s_line_new = search->second;
+				s_found = true;
+				result_ptr = &yampt::result[1];
+			}
+			else
+			{
+				result_ptr = &yampt::result[2];
+			}
+		}
+		else
+		{
+			result_ptr = &yampt::result[0];
+		}
+		makeLogScript();
+	}
+}
+
+//----------------------------------------------------------
+void EsmConverter::convertText(string id, yampt::r_type type)
+{
+	if(s_pos != string::npos && s_line.rfind(";", s_pos) == string::npos)
+	{
+		extractText();
+		auto search = merger->getDict()[type].find(id + yampt::sep[0] + s_text);
+		if(search != merger->getDict()[type].end())
+		{
+			s_line_new = s_line;
+			s_line_new.erase(s_pos, s_text.size() + 2);
+			s_line_new.insert(s_pos, "\"" + search->second + "\"");
+			s_found = true;
+
+			if(s_line != s_line_new)
+			{
+				result_ptr = &yampt::result[1];
+			}
+			else
+			{
+				result_ptr = &yampt::result[2];
+			}
+		}
+		else
+		{
+			result_ptr = &yampt::result[0];
+			for(auto &elem : merger->getDict()[type])
+			{
+				if(caseInsensitiveStringCmp(id + yampt::sep[0] + s_text, elem.first) == true)
+				{
+					s_line_new = s_line;
+					s_line_new.erase(s_pos, s_text.size() + 2);
+					s_line_new.insert(s_pos, "\"" + elem.second + "\"");
+					s_found = true;
+
+					if(s_line != s_line_new)
+					{
+						result_ptr = &yampt::result[1];
+						break;
+					}
+					else
+					{
+						result_ptr = &yampt::result[2];
+						break;
+					}
+				}
+			}
+		}
+		makeLogScript();
+	}
+}
+
+//----------------------------------------------------------
+void EsmConverter::extractText()
+{
+	if(s_line.find("\"", s_pos) != string::npos)
+	{
+		regex re("\"(.*?)\"");
+		smatch found;
+		sregex_iterator next(s_line.begin(), s_line.end(), re);
+		sregex_iterator end;
+		while(next != end)
+		{
+			found = *next;
+			s_text = found[1].str();
+			s_pos = found.position(0);
+			next++;
+		}
+	}
+	else
+	{
+		size_t last_ws_pos;
+		s_pos = s_line.find(" ", s_pos);
+		s_pos = s_line.find_first_not_of(" ", s_pos);
+		s_text = s_line.substr(s_pos);
+		last_ws_pos = s_text.find_last_not_of(" \t");
+		if(last_ws_pos != string::npos)
+		{
+			s_text.erase(last_ws_pos + 1);
+		}
+	}
+}
+
+//----------------------------------------------------------
+void EsmConverter::addDIALtoINFO()
+{
+	string key;
+	string new_friendly_lc;
+	size_t pos;
+
+	new_friendly = esm.getFriendly();
+	new_friendly_lc = esm.getFriendly();
+	transform(new_friendly_lc.begin(), new_friendly_lc.end(),
+		  new_friendly_lc.begin(), ::tolower);
+
+	for(const auto &elem : merger->getDict()[yampt::r_type::DIAL])
+	{
+		key = elem.first.substr(5);
+		transform(key.begin(), key.end(),
+			  key.begin(), ::tolower);
+
+		if(key != elem.second)
+		{
+			pos = new_friendly_lc.find(key);
+			if(pos != string::npos)
+			{
+				new_friendly.insert(new_friendly.size(), " [" + elem.second + "]");
+			}
+		}
 	}
 }
 
 //----------------------------------------------------------
 void EsmConverter::convertCELL()
 {
-	counter = 0;
-	string pri_text;
+	resetCounters();
+
 	for(size_t i = 0; i < esm.getRecColl().size(); ++i)
 	{
 		esm.setRec(i);
 		if(esm.getRecId() == "CELL")
 		{
-			esm.setPri("NAME");
+			esm.setUnique("NAME");
+			esm.setFriendly("NAME");
 
-			pri_text = "CELL" + sep[0] + esm.getPriText();
-			auto search = merger.getDict()[RecType::CELL].find(pri_text);
-
-			if(search != merger.getDict()[RecType::CELL].end() &&
-			   esm.getPriText() != search->second &&
-			   !esm.getPriText().empty())
+			if(esm.getUniqueStatus() == true)
 			{
-				convertRecordContent(esm.getPriPos(),
-						     esm.getPriSize(),
-						     search->second + '\0',
-						     search->second.size() + 1);
-				counter++;
+				unique_key = "CELL" + yampt::sep[0] + esm.getUnique();
+				setNewFriendly(yampt::r_type::CELL);
+				makeLog("");
+				if(convert == true)
+				{
+					convertRecordContent(new_friendly + '\0');
+				}
 			}
 		}
 	}
-	cout << "    --> CELL records converted: " << to_string(counter) << "\r\n";
+	printLog("CELL");
 }
 
 //----------------------------------------------------------
 void EsmConverter::convertPGRD()
 {
-	counter = 0;
-	string pri_text;
+	resetCounters();
+
 	for(size_t i = 0; i < esm.getRecColl().size(); ++i)
 	{
 		esm.setRec(i);
 		if(esm.getRecId() == "PGRD")
 		{
-			esm.setPri("NAME");
+			esm.setUnique("NAME");
+			esm.setFriendly("NAME");
 
-			pri_text = "CELL" + sep[0] + esm.getPriText();
-			auto search = merger.getDict()[RecType::CELL].find(pri_text);
-
-			if(search != merger.getDict()[RecType::CELL].end() &&
-			   esm.getPriText() != search->second)
+			unique_key = "CELL" + yampt::sep[0] + esm.getUnique();
+			setNewFriendly(yampt::r_type::CELL);
+			makeLog("PGRD ");
+			if(convert == true)
 			{
-				convertRecordContent(esm.getPriPos(),
-						     esm.getPriSize(),
-						     search->second + '\0',
-						     search->second.size() + 1);
-				counter++;
+				convertRecordContent(new_friendly + '\0');
 			}
 		}
 	}
-	cout << "    --> PGRD records converted: " << to_string(counter) << "\r\n";
+	printLog("PGRD");
 }
 
 //----------------------------------------------------------
 void EsmConverter::convertANAM()
 {
-	counter = 0;
-	string pri_text;
+	resetCounters();
+
 	for(size_t i = 0; i < esm.getRecColl().size(); ++i)
 	{
 		esm.setRec(i);
 		if(esm.getRecId() == "INFO")
 		{
-			esm.setPri("ANAM");
+			esm.setUnique("ANAM");
+			esm.setFriendly("ANAM");
 
-			pri_text = "CELL" + sep[0] + esm.getPriText();
-			auto search = merger.getDict()[RecType::CELL].find(pri_text);
-
-			if(search != merger.getDict()[RecType::CELL].end() &&
-			   esm.getPriText() != search->second)
+			if(esm.getUniqueStatus() == true)
 			{
-
-				convertRecordContent(esm.getPriPos(),
-						     esm.getPriSize(),
-						     search->second + '\0',
-						     search->second.size() + 1);
-				counter++;
+				unique_key = "CELL" + yampt::sep[0] + esm.getUnique();
+				setNewFriendly(yampt::r_type::CELL);
+				makeLog("ANAM ");
+				if(convert == true)
+				{
+					convertRecordContent(new_friendly + '\0');
+				}
 			}
 		}
 	}
-	cout << "    --> ANAM records converted: " << to_string(counter) << "\r\n";
+	printLog("ANAM");
 }
 
 //----------------------------------------------------------
 void EsmConverter::convertSCVR()
 {
-	counter = 0;
-	string pri_text;
-	string scvr_text;
+	resetCounters();
+
 	for(size_t i = 0; i < esm.getRecColl().size(); ++i)
 	{
 		esm.setRec(i);
 		if(esm.getRecId() == "INFO")
 		{
-			esm.setPriColl("SCVR");
-			for(size_t k = 0; k < esm.getPriColl().size(); ++k)
-			{
-				if(!esm.getPriText(k).empty() &&
-				   esm.getPriText(k).substr(1, 1) == "B")
-				{
-					pri_text = "CELL" + sep[0] + esm.getPriText(k).substr(5);
-					auto search = merger.getDict()[RecType::CELL].find(pri_text);
+			esm.setUnique("INAM");
+			esm.setFriendly("SCVR");
 
-					if(search != merger.getDict()[RecType::CELL].end() &&
-					   esm.getPriText(k).substr(5) != search->second)
+			while(esm.getFriendlyStatus() == true)
+			{
+				if(esm.getFriendly().substr(1, 1) == "B")
+				{
+					unique_key = "CELL" + yampt::sep[0] + esm.getFriendly().substr(5);
+					setNewFriendly(yampt::r_type::CELL);
+					makeLog("SCVR ");
+					if(convert == true)
 					{
-						scvr_text = esm.getPriText(k).substr(0, 5) + search->second;
-						convertRecordContent(esm.getPriPos(k),
-								     esm.getPriSize(k),
-								     scvr_text,
-								     scvr_text.size());
-						counter++;
-						esm.setPriColl("SCVR");
+						convertRecordContent(new_friendly);
 					}
 				}
+				esm.setFriendly("SCVR", true);
 			}
 		}
 	}
-	cout << "    --> SCVR records converted: " << to_string(counter) << "\r\n";
+	printLog("SCVR");
 }
 
 //----------------------------------------------------------
 void EsmConverter::convertDNAM()
 {
-	counter = 0;
-	string pri_text;
+	resetCounters();
+
 	for(size_t i = 0; i < esm.getRecColl().size(); ++i)
 	{
 		esm.setRec(i);
 		if(esm.getRecId() == "CELL" ||
 		   esm.getRecId() == "NPC_")
 		{
-			esm.setPriColl("DNAM");
-			for(size_t k = 0; k < esm.getPriColl().size(); ++k)
-			{
-				if(!esm.getPriText(k).empty())
-				{
-					pri_text = "CELL" + sep[0] + esm.getPriText(k);
-					auto search = merger.getDict()[RecType::CELL].find(pri_text);
+			esm.setUnique("NAME");
+			esm.setFriendly("DNAM");
 
-					if(search != merger.getDict()[RecType::CELL].end() &&
-					   esm.getPriText(k) != search->second)
-					{
-						convertRecordContent(esm.getPriPos(k),
-								     esm.getPriSize(k),
-								     search->second + '\0',
-								     search->second.size() + 1);
-						counter++;
-						esm.setPriColl("DNAM");
-					}
+			while(esm.getFriendlyStatus() == true)
+			{
+				unique_key = "CELL" + yampt::sep[0] + esm.getFriendly();
+				setNewFriendly(yampt::r_type::CELL);
+				makeLog("DNAM");
+				if(convert == true)
+				{
+					convertRecordContent(new_friendly + '\0');
+
 				}
+				esm.setFriendly("DNAM", true);
 			}
 		}
 	}
-	cout << "    --> DNAM records converted: " << to_string(counter) << "\r\n";
+	printLog("DNAM");
 }
 
 //----------------------------------------------------------
 void EsmConverter::convertCNDT()
 {
-	counter = 0;
-	string pri_text;
+	resetCounters();
+
 	for(size_t i = 0; i < esm.getRecColl().size(); ++i)
 	{
 		esm.setRec(i);
 		if(esm.getRecId() == "NPC_")
 		{
-			esm.setPriColl("CNDT");
-			for(size_t k = 0; k < esm.getPriColl().size(); ++k)
-			{
-				if(!esm.getPriText(k).empty())
-				{
-					pri_text = "CELL" + sep[0] + esm.getPriText(k);
-					auto search = merger.getDict()[RecType::CELL].find(pri_text);
+			esm.setUnique("NAME");
+			esm.setFriendly("CNDT");
 
-					if(search != merger.getDict()[RecType::CELL].end() &&
-					   esm.getPriText() != search->second)
-					{
-						convertRecordContent(esm.getPriPos(k),
-								     esm.getPriSize(k),
-								     search->second + '\0',
-								     search->second.size() + 1);
-						counter++;
-						esm.setPriColl("CNDT");
-					}
+			while(esm.getFriendlyStatus() == true)
+			{
+				unique_key = "CELL" + yampt::sep[0] + esm.getFriendly();
+				setNewFriendly(yampt::r_type::CELL);
+				makeLog("CNDT ");
+				if(convert == true)
+				{
+					convertRecordContent(new_friendly + '\0');
 				}
+				esm.setFriendly("CNDT", true);
 			}
 		}
 	}
-	cout << "    --> CNDT records converted: " << to_string(counter) << "\r\n";
+	printLog("CNDT");
 }
 
 //----------------------------------------------------------
 void EsmConverter::convertGMST()
 {
-	counter = 0;
-	string pri_text;
+	resetCounters();
+
 	for(size_t i = 0; i < esm.getRecColl().size(); ++i)
 	{
 		esm.setRec(i);
 		if(esm.getRecId() == "GMST")
 		{
-			esm.setPri("NAME");
-			esm.setSec("STRV");
+			esm.setUnique("NAME");
+			esm.setFriendly("STRV");
 
-			pri_text = "GMST" + sep[0] + esm.getPriText();
-			auto search = merger.getDict()[RecType::GMST].find(pri_text);
-
-			if(search != merger.getDict()[RecType::GMST].end() &&
-			   esm.getSecText() != search->second)
+			if(esm.getUniqueStatus() == true && esm.getFriendlyStatus() && esm.getUnique().substr(0, 1) == "s")
 			{
-				convertRecordContent(esm.getSecPos(),
-						     esm.getSecSize(),
-						     search->second + '\0',
-						     search->second.size() + 1);
-				counter++;
+				unique_key = "GMST" + yampt::sep[0] + esm.getUnique();
+				setNewFriendly(yampt::r_type::GMST);
+				makeLog("");
+				if(convert == true)
+				{
+					convertRecordContent(new_friendly + '\0');
+				}
 			}
 		}
 	}
-	cout << "    --> GMST records converted: " << to_string(counter) << "\r\n";
+	printLog("GMST");
 }
 
 //----------------------------------------------------------
 void EsmConverter::convertFNAM()
 {
-	counter = 0;
-	string pri_text;
+	resetCounters();
+
 	for(size_t i = 0; i < esm.getRecColl().size(); ++i)
 	{
 		esm.setRec(i);
@@ -508,31 +702,29 @@ void EsmConverter::convertFNAM()
 		   esm.getRecId() == "SPEL" ||
 		   esm.getRecId() == "WEAP")
 		{
-			esm.setPri("NAME");
-			esm.setSec("FNAM");
+			esm.setUnique("NAME");
+			esm.setFriendly("FNAM");
 
-			pri_text = "FNAM" + sep[0] + esm.getRecId() + sep[0] + esm.getPriText();
-			auto search = merger.getDict()[RecType::FNAM].find(pri_text);
-
-			if(search != merger.getDict()[RecType::FNAM].end() &&
-			   esm.getSecText() != search->second)
+			if(esm.getUniqueStatus() == true && esm.getFriendlyStatus() == true && esm.getUnique() != "player")
 			{
-				convertRecordContent(esm.getSecPos(),
-						     esm.getSecSize(),
-						     search->second + '\0',
-						     search->second.size() + 1);
-				counter++;
+				unique_key = "FNAM" + yampt::sep[0] + esm.getRecId() + yampt::sep[0] + esm.getUnique();
+				setNewFriendly(yampt::r_type::FNAM);
+				makeLog("");
+				if(convert == true)
+				{
+					convertRecordContent(new_friendly + '\0');
+				}
 			}
 		}
 	}
-	cout << "    --> FNAM records converted: " << to_string(counter) << "\r\n";
+	printLog("FNAM");
 }
 
 //----------------------------------------------------------
 void EsmConverter::convertDESC()
 {
-	counter = 0;
-	string pri_text;
+	resetCounters();
+
 	for(size_t i = 0; i < esm.getRecColl().size(); ++i)
 	{
 		esm.setRec(i);
@@ -540,310 +732,232 @@ void EsmConverter::convertDESC()
 		   esm.getRecId() == "CLAS" ||
 		   esm.getRecId() == "RACE")
 		{
-			esm.setPri("NAME");
-			esm.setSec("DESC");
+			esm.setUnique("NAME");
+			esm.setFriendly("DESC");
 
-			pri_text = "DESC" + sep[0] + esm.getRecId() + sep[0] + esm.getPriText();
-			auto search = merger.getDict()[RecType::DESC].find(pri_text);
-
-			if(search != merger.getDict()[RecType::DESC].end() &&
-			   esm.getSecText() != search->second)
+			if(esm.getUniqueStatus() == true && esm.getFriendlyStatus() == true)
 			{
-				convertRecordContent(esm.getSecPos(),
-						     esm.getSecSize(),
-						     search->second + '\0',
-						     search->second.size() + 1);
-				counter++;
+				unique_key = "DESC" + yampt::sep[0] + esm.getRecId() + yampt::sep[0] + esm.getUnique();
+				setNewFriendly(yampt::r_type::DESC);
+				makeLog("");
+				if(convert == true)
+				{
+					convertRecordContent(new_friendly + '\0');
+				}
 			}
 		}
 	}
-	cout << "    --> DESC records converted: " << to_string(counter) << "\r\n";
+	printLog("DESC");
 }
 
 //----------------------------------------------------------
 void EsmConverter::convertTEXT()
 {
-	counter = 0;
-	string pri_text;
+	resetCounters();
+
 	for(size_t i = 0; i < esm.getRecColl().size(); ++i)
 	{
 		esm.setRec(i);
 		if(esm.getRecId() == "BOOK")
 		{
-			esm.setPri("NAME");
-			esm.setSec("TEXT");
+			esm.setUnique("NAME");
+			esm.setFriendly("TEXT");
 
-			pri_text = "TEXT" + sep[0] + esm.getPriText();
-			auto search = merger.getDict()[RecType::TEXT].find(pri_text);
-
-			if(search != merger.getDict()[RecType::TEXT].end() &&
-			   esm.getSecText() != search->second)
+			if(esm.getUniqueStatus() == true && esm.getFriendlyStatus() == true)
 			{
-				convertRecordContent(esm.getSecPos(),
-						     esm.getSecSize(),
-						     search->second + '\0',
-						     search->second.size() + 1);
-				counter++;
+				unique_key = "TEXT" + yampt::sep[0] + esm.getUnique();
+				setNewFriendly(yampt::r_type::TEXT);
+				makeLog("");
+				if(convert == true)
+				{
+					convertRecordContent(new_friendly + '\0');
+				}
 			}
 		}
 	}
-	cout << "    --> TEXT records converted: " << to_string(counter) << "\r\n";
+	printLog("TEXT");
 }
 
 //----------------------------------------------------------
 void EsmConverter::convertRNAM()
 {
-	counter = 0;
-	string pri_text;
-	string rnam_text;
+	resetCounters();
+
 	for(size_t i = 0; i < esm.getRecColl().size(); ++i)
 	{
 		esm.setRec(i);
 		if(esm.getRecId() == "FACT")
 		{
-			esm.setPri("NAME");
-			esm.setSecColl("RNAM");
-			for(size_t k = 0; k < esm.getSecColl().size(); ++k)
-			{
-				pri_text = "RNAM" + sep[0] + esm.getPriText() + sep[0] + to_string(k);
-				auto search = merger.getDict()[RecType::RNAM].find(pri_text);
+			esm.setUnique("NAME");
+			esm.setFriendly("RNAM");
 
-				if(search != merger.getDict()[RecType::RNAM].end() &&
-				   esm.getSecText(k) != search->second)
+			if(esm.getUniqueStatus() == true)
+			{
+				while(esm.getFriendlyStatus() == true)
 				{
-					rnam_text = search->second;
-					rnam_text.resize(32);
-					convertRecordContent(esm.getSecPos(k),
-							     esm.getSecSize(k),
-							     rnam_text,
-							     32);
-					counter++;
-					esm.setSecColl("RNAM");
+					unique_key = "RNAM" + yampt::sep[0] + esm.getUnique() + yampt::sep[0] + to_string(esm.getFriendlyCounter());
+					setNewFriendly(yampt::r_type::RNAM);
+					makeLog("");
+					if(convert == true)
+					{
+						new_friendly.resize(32);
+						convertRecordContent(new_friendly);
+					}
+					esm.setFriendly("RNAM", true);
 				}
 			}
 		}
 	}
-	cout << "    --> RNAM records converted: " << to_string(counter) << "\r\n";
+	printLog("RNAM");
 }
 
 //----------------------------------------------------------
 void EsmConverter::convertINDX()
 {
-	counter = 0;
-	string pri_text;
+	resetCounters();
+
 	for(size_t i = 0; i < esm.getRecColl().size(); ++i)
 	{
 		esm.setRec(i);
 		if(esm.getRecId() == "SKIL" ||
 		   esm.getRecId() == "MGEF")
 		{
-			esm.setPriINDX();
-			esm.setSec("DESC");
+			esm.setUnique("INDX");
+			esm.setFriendly("DESC");
 
-			pri_text = "INDX" + sep[0] + esm.getRecId() + sep[0] + esm.getPriText();
-			auto search = merger.getDict()[RecType::INDX].find(pri_text);
-
-			if(search != merger.getDict()[RecType::INDX].end() &&
-			   esm.getSecText() != search->second)
+			if(esm.getUniqueStatus() == true && esm.getFriendlyStatus() == true)
 			{
-				convertRecordContent(esm.getSecPos(),
-						     esm.getSecSize(),
-						     search->second + '\0',
-						     search->second.size() + 1);
-				counter++;
+				unique_key = "INDX" + yampt::sep[0] + esm.getRecId() + yampt::sep[0] + esm.getUnique();
+				setNewFriendly(yampt::r_type::INDX);
+				makeLog("");
+				if(convert == true)
+				{
+					convertRecordContent(new_friendly + '\0');
+				}
 			}
 		}
 	}
-	cout << "    --> INDX records converted: " << to_string(counter) << "\r\n";
+	printLog("INDX");
 }
 
 //----------------------------------------------------------
 void EsmConverter::convertDIAL()
 {
-	counter = 0;
-	string pri_text;
+	resetCounters();
+
 	for(size_t i = 0; i < esm.getRecColl().size(); ++i)
 	{
 		esm.setRec(i);
 		if(esm.getRecId() == "DIAL")
 		{
-			esm.setPri("NAME");
-			esm.setSecDialType("DATA");
+			esm.setUnique("DATA");
+			esm.setFriendly("NAME");
 
-			pri_text = "DIAL" + sep[0] + esm.getPriText();
-			auto search = merger.getDict()[RecType::DIAL].find(pri_text);
-
-			if(search != merger.getDict()[RecType::DIAL].end() &&
-			   esm.getPriText() != search->second)
+			if(esm.getUnique() == "T")
 			{
-				convertRecordContent(esm.getPriPos(),
-						     esm.getPriSize(),
-						     search->second + '\0',
-						     search->second.size() + 1);
-				counter++;
+				unique_key = "DIAL" + yampt::sep[0] + esm.getFriendly();
+				setNewFriendly(yampt::r_type::DIAL);
+				makeLog("");
+				if(convert == true)
+				{
+					convertRecordContent(new_friendly + '\0');
+				}
 			}
 		}
 	}
-	cout << "    --> DIAL records converted: " << to_string(counter) << "\r\n";
+	printLog("DIAL");
 }
 
 //----------------------------------------------------------
 void EsmConverter::convertINFO()
 {
-	counter = 0;
-	string pri_text;
-	string dial;
+	resetCounters();
+
 	for(size_t i = 0; i < esm.getRecColl().size(); ++i)
 	{
 		esm.setRec(i);
 		if(esm.getRecId() == "DIAL")
 		{
-			esm.setPri("NAME");
-			esm.setSecDialType("DATA");
-			dial = esm.getDialType() + sep[0] + esm.getPriText();
+			esm.setUnique("DATA");
+			esm.setFriendly("NAME");
+
+			if(esm.getUniqueStatus() == true && esm.getFriendlyStatus() == true)
+			{
+				current_dialog = esm.getUnique() + yampt::sep[0] + esm.getFriendly();
+			}
+			else
+			{
+				current_dialog = "<NotFound>";
+			}
 		}
 		if(esm.getRecId() == "INFO")
 		{
-			esm.setPri("INAM");
-			esm.setSec("NAME");
+			esm.setUnique("INAM");
+			esm.setFriendly("NAME");
 
-			pri_text = "INFO" + sep[0] + dial + sep[0] + esm.getPriText();
-			auto search = merger.getDict()[RecType::INFO].find(pri_text);
-
-			if(search != merger.getDict()[RecType::INFO].end() &&
-			   esm.getSecText() != search->second)
+			if(esm.getUniqueStatus() == true && esm.getFriendlyStatus() == true)
 			{
-				convertRecordContent(esm.getSecPos(),
-						     esm.getSecSize(),
-						     search->second + '\0',
-						     search->second.size() + 1);
-				counter++;
-			}
-		}
-	}
-	cout << "    --> INFO records converted: " << to_string(counter) << "\r\n";
-}
-
-//----------------------------------------------------------
-void EsmConverter::convertINFOWithDIAL()
-{
-	counter = 0;
-	string pri_text;
-	string sec_text;
-	string sec_text_lowercase;
-	size_t pos;
-	string text;
-	string dial;
-	for(size_t i = 0; i < esm.getRecColl().size(); ++i)
-	{
-		esm.setRec(i);
-		if(esm.getRecId() == "DIAL")
-		{
-			esm.setPri("NAME");
-			esm.setSecDialType("DATA");
-			dial = esm.getDialType() + sep[0] + esm.getPriText();
-		}
-		if(esm.getRecId() == "INFO")
-		{
-			esm.setPri("INAM");
-			esm.setSec("NAME");
-
-			pri_text = "INFO" + sep[0] + dial + sep[0] + esm.getPriText();
-			auto search = merger.getDict()[RecType::INFO].find(pri_text);
-
-			if(search != merger.getDict()[RecType::INFO].end() && safe == 0)
-			{
-				convertRecordContent(esm.getSecPos(),
-						     esm.getSecSize(),
-						     search->second + '\0',
-						     search->second.size() + 1);
-				counter++;
-			}
-			else if(!esm.getSecText().empty() && dial.substr(0, 1) != "V")
-			{
-				sec_text = esm.getSecText();
-				for(auto &elem : merger.getDict()[RecType::DIAL])
+				unique_key = "INFO" + yampt::sep[0] + current_dialog + yampt::sep[0] + esm.getUnique();
+				setNewFriendlyINFO(yampt::r_type::INFO);
+				makeLog("");
+				if(convert == true)
 				{
-				        text = elem.first.substr(5);
-					if(text != elem.second)
-					{
-						sec_text_lowercase = sec_text;
-						transform(sec_text_lowercase.begin(), sec_text_lowercase.end(),
-							  sec_text_lowercase.begin(), ::tolower);
-						transform(text.begin(), text.end(),
-							  text.begin(), ::tolower);
-						pos = sec_text_lowercase.find(text);
-						if(pos != string::npos)
-						{
-							sec_text.insert(sec_text.size(), " [" + elem.second + "]");
-						}
-					}
+					convertRecordContent(new_friendly + '\0');
 				}
-				convertRecordContent(esm.getSecPos(),
-						     esm.getSecSize(),
-						     sec_text + '\0',
-						     sec_text.size() + 1);
-				counter++;
 			}
 		}
 	}
-	cout << "    --> INFO records converted: " << to_string(counter) << "\r\n";
+	printLog("INFO");
 }
 
 //----------------------------------------------------------
 void EsmConverter::convertBNAM()
 {
-	counter = 0;
+	resetCounters();
+
 	for(size_t i = 0; i < esm.getRecColl().size(); ++i)
 	{
 		esm.setRec(i);
 		if(esm.getRecId() == "INFO")
 		{
-			esm.setSecScptColl("BNAM");
+			esm.setUnique("INAM");
+			esm.setFriendly("BNAM");
 
-			script_text.erase();
-			if(esm.getScptColl().size() > 0)
+			if(esm.getFriendlyStatus() == true)
 			{
-				for(size_t k = 0; k < esm.getScptColl().size(); ++k)
+				setNewFriendlyScript("BNAM", yampt::r_type::BNAM);
+				if(convert == true)
 				{
-					convertScriptLine(k);
+					convertRecordContent(new_friendly);
 				}
-				script_text.erase(script_text.size() - 2);
-				convertRecordContent(esm.getSecPos(),
-						     esm.getSecSize(),
-						     script_text,
-						     script_text.size());
 			}
 		}
 	}
-	cout << "    --> BNAM script lines converted: " << to_string(counter) << "\r\n";
+	printLog("BNAM");
 }
 
 //----------------------------------------------------------
 void EsmConverter::convertSCPT()
 {
-	counter = 0;
+	resetCounters();
+
 	for(size_t i = 0; i < esm.getRecColl().size(); ++i)
 	{
 		esm.setRec(i);
 		if(esm.getRecId() == "SCPT")
 		{
-			esm.setSecScptColl("SCTX");
+			esm.setUnique("SCHD");
+			esm.setFriendly("SCTX");
 
-			script_text.erase();
-			if(esm.getScptColl().size() > 0)
+			if(esm.getFriendlyStatus() == true)
 			{
-				for(size_t k = 0; k < esm.getScptColl().size(); ++k)
+				setNewFriendlyScript("SCTX", yampt::r_type::SCTX);
+				if(convert == true)
 				{
-					convertScriptLine(k);
+					convertRecordContent(new_friendly);
 				}
-				script_text.erase(script_text.size() - 2);
-				convertRecordContent(esm.getSecPos(),
-						     esm.getSecSize(),
-						     script_text,
-						     script_text.size());
 			}
 		}
 	}
-	cout << "    --> SCTX script lines converted: " << to_string(counter) << "\r\n";
+	printLog("SCTX");
 }

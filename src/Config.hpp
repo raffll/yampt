@@ -14,40 +14,62 @@
 #include <locale>
 #include <regex>
 
-enum RecType { CELL, DIAL, INDX, RNAM, DESC, GMST, FNAM, INFO, BNAM, SCTX, TEXT };
-const std::vector<std::string> sep = {"^", "<h3>", "</h3>", "<hr>",
-				      "<!-------------------------------------------------------------->\r\n",
-				      "\r\n        "};
+namespace yampt
+{
 
-class Config
+enum r_type { CELL, DIAL, INDX, RNAM, DESC, GMST, FNAM, INFO, BNAM, SCTX, TEXT };
+
+typedef std::array<std::map<std::string, std::string>, 11> dict_t;
+
+const std::array<std::string, 5> dialog_type = {"T", "V", "G", "P", "J"};
+
+const std::vector<std::string> sep = {"^", "<h3>", "</h3>", "<hr>"};
+const std::string line = "<!------------------------------------------------------------>";
+
+const std::vector<std::string> key_message = {"messagebox",
+					      "say ",
+					      "say,",
+					      "choice"};
+
+const std::vector<std::string> key_dial = {"addtopic"};
+
+const std::vector<std::string> key_cell = {"positioncell",
+					   "getpccell",
+					   "aifollowcell",
+					   "placeitemcell",
+					   "showmap",
+					   "aiescortcell"};
+
+const std::vector<std::string> result = {"UNCHANGED",
+					 "CONVERTED",
+					 "SKIPPED",
+					 "CONVERTED (dialog added)"};
+
+const std::vector<std::string> valid = {"REPLACED",
+					"DOUBLED",
+					"INVALID",
+					"INVALID (more than 32 bytes)",
+					"LOADED (but more than 512 bytes)",
+					"DIFFERENT"};
+
+}
+
+class Writer
 {
 public:
-	void writeDict(const std::array<std::map<std::string, std::string>, 11> &dict, std::string name);
+	void writeDict(const yampt::dict_t &dict, std::string name);
 	void writeText(const std::string &text, std::string name);
-	int getSize(const std::array<std::map<std::string, std::string>, 11> &dict);
+	int getSize(const yampt::dict_t &dict);
+};
 
-	static std::vector<std::string> getKeyMessage() { return key_message; }
-	static std::vector<std::string> getKeyDial() { return key_dial; }
-	static std::vector<std::string> getKeyCell() { return key_cell; }
-
-	static void setAllowMoreInfo(bool x) { allow_more_info = x; }
-	static void setReplaceBrokenChars(bool x) { replace_broken_chars = x; }
-
-	static bool getAllowMoreInfo() { return allow_more_info; }
-	static bool getReplaceBrokenChars() { return replace_broken_chars; }
-
-	Config();
-
-private:
-
-	static std::vector<std::string> key_message;
-	static std::vector<std::string> key_dial;
-	static std::vector<std::string> key_cell;
-
-	static bool allow_more_info;
-	static bool replace_broken_chars;
-	static std::string log;
-
+class Tools
+{
+protected:
+	unsigned int convertByteArrayToInt(const std::string &str);
+	std::string convertIntToByteArray(unsigned int x);
+	bool caseInsensitiveStringCmp(std::string lhs, std::string rhs);
+	void eraseNullChars(std::string &str);
+	std::string eraseCarriageReturnChar(std::string &str);
 };
 
 #endif

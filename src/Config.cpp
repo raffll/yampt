@@ -3,23 +3,7 @@
 using namespace std;
 
 //----------------------------------------------------------
-vector<string> Config::key_message = {"messagebox", "say ", "say,", "choice"};
-vector<string> Config::key_dial = {"addtopic"};
-vector<string> Config::key_cell = {"positioncell", "getpccell", "aifollowcell",
-				   "placeitemcell", "showmap", "aiescortcell"};
-
-bool Config::allow_more_info = 0;
-bool Config::replace_broken_chars = 0;
-string Config::log;
-
-//----------------------------------------------------------
-Config::Config()
-{
-
-}
-
-//----------------------------------------------------------
-void Config::writeDict(const array<map<string, string>, 11> &dict, string name)
+void Writer::writeDict(const yampt::dict_t &dict, string name)
 {
 	if(getSize(dict) > 0)
 	{
@@ -28,34 +12,41 @@ void Config::writeDict(const array<map<string, string>, 11> &dict, string name)
 		{
 			for(const auto &elem : dict[i])
 			{
-				file << sep[4]
-				     << sep[1] << elem.first
-				     << sep[2] << elem.second
-				     << sep[3] << "\r\n";
+				if(i == yampt::r_type::BNAM || i == yampt::r_type::SCTX)
+				{
+					file << yampt::line << "\r\n"
+					     << yampt::sep[1] << elem.first
+					     << yampt::sep[2] << "\r\n        " << yampt::sep[0] << elem.second
+					     << yampt::sep[3] << "\r\n";
+				}
+				else
+				{
+					file << yampt::line << "\r\n"
+					     << yampt::sep[1] << elem.first
+					     << yampt::sep[2] << elem.second
+					     << yampt::sep[3] << "\r\n";
+				}
 			}
 		}
 		cout << "--> Writing " << to_string(getSize(dict)) <<
-			" records to " << name << "...\r\n";
+			" records to " << name << "..." << endl;
 	}
 	else
 	{
-		cout << "--> No records to make dictionary!\r\n";
+		cout << "--> No records to make dictionary!" << endl;
 	}
 }
 
 //----------------------------------------------------------
-void Config::writeText(const string &text, string name)
+void Writer::writeText(const string &text, string name)
 {
-	if(!text.empty())
-	{
-		ofstream file(name, ios::binary);
-		cout << "--> Writing " << name << "...\r\n";
-		file << text;
-	}
+	ofstream file(name, ios::binary);
+	file << text;
+	cout << "--> Writing " << name << "..." << endl;
 }
 
 //----------------------------------------------------------
-int Config::getSize(const array<map<string, string>, 11> &dict)
+int Writer::getSize(const yampt::dict_t &dict)
 {
 	int size = 0;
 	for(auto const &elem : dict)
@@ -63,4 +54,79 @@ int Config::getSize(const array<map<string, string>, 11> &dict)
 		size += elem.size();
 	}
 	return size;
+}
+
+//----------------------------------------------------------
+unsigned int Tools::convertByteArrayToInt(const string &str)
+{
+	char buffer[4];
+	unsigned char ubuffer[4];
+	unsigned int x;
+	str.copy(buffer, 4);
+	for(int i = 0; i < 4; i++)
+	{
+		ubuffer[i] = buffer[i];
+	}
+	if(str.size() == 4)
+	{
+		return x = (ubuffer[0] | ubuffer[1] << 8 | ubuffer[2] << 16 | ubuffer[3] << 24);
+	}
+	else if(str.size() == 1)
+	{
+		return x = ubuffer[0];
+	}
+	else
+	{
+		return x = 0;
+	}
+}
+
+//----------------------------------------------------------
+string Tools::convertIntToByteArray(unsigned int x)
+{
+	char bytes[4];
+	string str;
+	copy(static_cast<const char*>(static_cast<const void*>(&x)),
+	     static_cast<const char*>(static_cast<const void*>(&x)) + sizeof x,
+	     bytes);
+	for(int i = 0; i < 4; i++)
+	{
+		str.push_back(bytes[i]);
+	}
+	return str;
+}
+
+//----------------------------------------------------------
+bool Tools::caseInsensitiveStringCmp(string lhs, string rhs)
+{
+	transform(lhs.begin(), lhs.end(), lhs.begin(), ::toupper);
+	transform(rhs.begin(), rhs.end(), rhs.begin(), ::toupper);
+	if(lhs == rhs)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+//----------------------------------------------------------
+void Tools::eraseNullChars(string &str)
+{
+	size_t is_null = str.find('\0');
+	if(is_null != string::npos)
+	{
+		str.erase(is_null);
+	}
+}
+
+//----------------------------------------------------------
+string Tools::eraseCarriageReturnChar(string &str)
+{
+	if(str.find('\r') != string::npos)
+	{
+		str.erase(str.size() - 1);
+	}
+	return str;
 }

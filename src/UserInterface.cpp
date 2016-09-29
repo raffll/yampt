@@ -7,21 +7,18 @@ UserInterface::UserInterface(vector<string> &a)
 {
 	arg = a;
 	string command;
-
+	std::vector<std::string> dict_p_tmp;
 	if(arg.size() > 1)
 	{
 		for(size_t i = 2; i < arg.size(); ++i)
 		{
-			if(arg[i] == "-a")
+			if(arg[i] == "--add-dial")
 			{
-				cout << "--> Allow more than 512 chars: enabled" << endl;
-				Config::setAllowMoreInfo(1);
-
+				add_dial = true;
 			}
-			else if(arg[i] == "-r")
+			else if(arg[i] == "--safe")
 			{
-				cout << "--> Replace broken chars: enabled" << endl;
-				Config::setReplaceBrokenChars(1);
+				safe = true;
 			}
 			else if(arg[i] == "-f")
 			{
@@ -35,55 +32,48 @@ UserInterface::UserInterface(vector<string> &a)
 			{
 				if(command == "-f")
 				{
-					path_esm.push_back(arg[i]);
+					file_p.push_back(arg[i]);
 				}
 				if(command == "-d")
 				{
-					path_dict.push_back(arg[i]);
+					dict_p_tmp.push_back(arg[i]);
 				}
 			}
 		}
 	}
-	vector<string> path_dict_rev_tmp(path_dict.rbegin(), path_dict.rend());
-	path_dict_rev = path_dict_rev_tmp;
+
+	dict_p.insert(dict_p.begin(), dict_p_tmp.rbegin(), dict_p_tmp.rend());
 
 	if(arg.size() > 1)
 	{
-		if(arg[1] == "--make-raw" && path_esm.size() > 0)
+		if(arg[1] == "--make-raw" && file_p.size() > 0)
 		{
 			makeDictRaw();
 		}
-		else if(arg[1] == "--make-base" && path_esm.size() == 2)
+		else if(arg[1] == "--make-base" && file_p.size() == 2)
 		{
 			makeDictBase();
 		}
-		else if(arg[1] == "--make-all" && path_esm.size() > 0)
+		else if(arg[1] == "--make-all" && file_p.size() > 0 && dict_p.size() > 0)
 		{
-			makeDictAll();
+			makeDict();
 		}
-		else if(arg[1] == "--make-not" && path_esm.size() > 0)
+		else if(arg[1] == "--make-not" && file_p.size() > 0 && dict_p.size() > 0)
 		{
-			makeDictNot();
+			no_duplicates = true;
+			makeDict();
 		}
-		else if(arg[1] == "--merge" && path_dict_rev.size() > 0)
+		else if(arg[1] == "--merge" && dict_p.size() > 0)
 		{
 			mergeDict();
 		}
-		else if(arg[1] == "--convert" && path_esm.size() > 0 && path_dict_rev.size() > 0)
+		else if(arg[1] == "--convert" && file_p.size() > 0 && dict_p.size() > 0)
 		{
 			convertEsm();
 		}
-		else if(arg[1] == "--convert-with-dial" && path_esm.size() > 0 && path_dict_rev.size() > 0)
+		else if(arg[1] == "--compare" && file_p.size() > 0 && dict_p.size() > 0)
 		{
-			convertEsmWithDIAL();
-		}
-		else if(arg[1] == "--convert-safe" && path_esm.size() > 0 && path_dict_rev.size() > 0)
-		{
-			convertEsmSafe();
-		}
-		else if(arg[1] == "--scripts" && path_esm.size() > 0)
-		{
-			makeScriptText();
+			compareEsm();
 		}
 		else
 		{
@@ -99,119 +89,95 @@ UserInterface::UserInterface(vector<string> &a)
 //----------------------------------------------------------
 void UserInterface::makeDictRaw()
 {
-	Config config;
-	for(size_t i = 0; i < path_esm.size(); ++i)
+	for(size_t i = 0; i < file_p.size(); ++i)
 	{
-		DictCreator creator(path_esm[i]);
+		DictCreator creator(file_p[i]);
 		creator.makeDict();
-		config.writeDict(creator.getDict(), creator.getName() + ".dic");
+		writer.writeDict(creator.getDict(), creator.getNamePrefix() + ".dic");
 	}
 }
 
 //----------------------------------------------------------
 void UserInterface::makeDictBase()
 {
-	Config config;
-	DictCreator creator(path_esm[0], path_esm[1]);
-	creator.compareEsm();
+	DictCreator creator(file_p[0], file_p[1]);
 	creator.makeDict();
-	config.writeDict(creator.getDict(), creator.getName() + ".dic");
+	writer.writeDict(creator.getDict(), creator.getNamePrefix() + ".dic");
 }
 
 //----------------------------------------------------------
-void UserInterface::makeDictAll()
+void UserInterface::makeDict()
 {
-	Config config;
-	DictMerger merger(path_dict_rev);
-	merger.mergeDict();
-	config.writeText(merger.getLog(), "yampt.log");
-	for(size_t i = 0; i < path_esm.size(); ++i)
-	{
-		DictCreator creator(path_esm[i], merger);
-		creator.makeDict();
-		config.writeDict(creator.getDict(), creator.getName() + ".dic");
-	}
-}
+	string log;
 
-//----------------------------------------------------------
-void UserInterface::makeDictNot()
-{
-	Config config;
-	DictMerger merger(path_dict_rev);
+	DictMerger merger(dict_p);
 	merger.mergeDict();
-	config.writeText(merger.getLog(), "yampt.log");
-	for(size_t i = 0; i < path_esm.size(); ++i)
+
+	log += merger.getLog();
+
+	for(size_t i = 0; i < file_p.size(); ++i)
 	{
-		DictCreator creator(path_esm[i], merger);
-		creator.setNoDuplicates();
+		DictCreator creator(file_p[i], merger, no_duplicates);
 		creator.makeDict();
-		config.writeDict(creator.getDict(), creator.getName() + ".dic");
+		writer.writeDict(creator.getDict(), creator.getNamePrefix() + ".dic");
 	}
+
+	writer.writeText(log, "yampt.log");
 }
 
 //----------------------------------------------------------
 void UserInterface::mergeDict()
 {
-	Config config;
-	DictMerger merger(path_dict_rev);
+	string log;
+
+	DictMerger merger(dict_p);
 	merger.mergeDict();
-	config.writeDict(merger.getDict(), "Merged.dic");
-	config.writeText(merger.getLog(), "yampt.log");
+
+	log += merger.getLog();
+
+	writer.writeDict(merger.getDict(), "yampt-merged.dic");
+	writer.writeText(log, "yampt.log");
 }
 
 //----------------------------------------------------------
 void UserInterface::convertEsm()
 {
-	Config config;
-	DictMerger merger(path_dict_rev);
+	string log;
+
+	DictMerger merger(dict_p);
 	merger.mergeDict();
-	config.writeText(merger.getLog(), "yampt.log");
-	for(size_t i = 0; i < path_esm.size(); ++i)
+
+	log += merger.getLog();
+
+	for(size_t i = 0; i < file_p.size(); ++i)
 	{
-		EsmConverter converter(path_esm[i], merger);
+		EsmConverter converter(file_p[i], merger, safe, add_dial);
 		converter.convertEsm();
 		converter.writeEsm();
+		log += converter.getLog();
 	}
+
+	writer.writeText(log, "yampt.log");
 }
 
 //----------------------------------------------------------
-void UserInterface::convertEsmWithDIAL()
+void UserInterface::compareEsm()
 {
-	Config config;
-	DictMerger merger(path_dict_rev);
+	string log;
+
+	DictMerger merger(dict_p);
 	merger.mergeDict();
-	config.writeText(merger.getLog(), "yampt.log");
-	for(size_t i = 0; i < path_esm.size(); ++i)
-	{
-		EsmConverter converter(path_esm[i], merger);
-		converter.convertEsmWithDIAL();
-		converter.writeEsm();
-	}
-}
 
-//----------------------------------------------------------
-void UserInterface::convertEsmSafe()
-{
-	Config config;
-	DictMerger merger(path_dict_rev);
-	merger.mergeDict();
-	config.writeText(merger.getLog(), "yampt.log");
-	for(size_t i = 0; i < path_esm.size(); ++i)
+	for(size_t i = 0; i < file_p.size(); ++i)
 	{
-		EsmConverter converter(path_esm[i], merger);
-		converter.convertEsmSafe();
-		converter.writeEsm();
-	}
-}
+		DictCreator creator(file_p[i], merger, false);
+		creator.makeDict();
 
-//----------------------------------------------------------
-void UserInterface::makeScriptText()
-{
-	Config config;
-	for(size_t i = 0; i < path_esm.size(); ++i)
-	{
-		DictCreator creator(path_esm[i]);
-		creator.makeScriptText();
-		config.writeText(creator.getScriptText(), creator.getName() + ".scpt");
+		DictMerger comparator(merger.getDict(), creator.getDict(), creator.getName());
+		comparator.mergeDict();
+
+		log += comparator.getLog();
 	}
+
+	writer.writeText(log, "yampt.log");
 }

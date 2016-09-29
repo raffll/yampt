@@ -6,26 +6,28 @@
 #include "EsmRecord.hpp"
 #include "DictMerger.hpp"
 
-class DictCreator
+class DictCreator : public Tools
 {
 public:
 	void makeDict();
-	void makeScriptText();
-	void compareEsm();
-	void setNoDuplicates() { no_duplicates = 1; }
 
-	std::string getName() { return esm_n.getNamePrefix(); }
-	std::array<std::map<std::string, std::string>, 11> const& getDict() const { return dict; }
-	std::string getScriptText() { return raw_text; }
+	std::string getName() { return esm_n.getName(); }
+	std::string getNamePrefix() { return esm_n.getNamePrefix(); }
+	yampt::dict_t const& getDict() const { return dict; }
 
-	DictCreator();
 	DictCreator(std::string path_n);
 	DictCreator(std::string path_n, std::string path_f);
-	DictCreator(std::string path_n, DictMerger &m);
+	DictCreator(std::string path_n, DictMerger &m, bool no_duplicates);
 
 private:
+	void compareEsm();
+	void resetCounters();
 	std::string dialTranslator(std::string to_translate);
-	void insertRecord(const std::string &pri_text, const std::string &sec_text, RecType type, bool extra = 0);
+	void validateRecord(const std::string &unique_key, const std::string &friendly, yampt::r_type type, bool extra = false);
+	void insertRecord(const std::string &unique_key, const std::string &friendly, yampt::r_type type, bool extra);
+	std::vector<std::string> makeMessageColl(const std::string &script_text);
+	void printLog(std::string id, bool header = false);
+
 	void makeDictCELL();
 	void makeDictGMST();
 	void makeDictFNAM();
@@ -41,14 +43,22 @@ private:
 	EsmRecord esm_n;
 	EsmRecord esm_f;
 	EsmRecord *esm_ptr;
-	DictMerger merger;
-	bool status = 0;
-	bool with_dict = 0;
-	bool no_duplicates = 0;
-	int counter;
+	DictMerger *merger;
+
+	bool status = false;
+	bool with_dict = false;
+	bool no_duplicates = false;
+
+	int counter_inserted;
 	int counter_cell;
-	std::array<std::map<std::string, std::string>, 11> dict;
-	std::string raw_text;
+	int counter_doubled;
+	int counter_all;
+
+	yampt::dict_t dict;
+
+	std::vector<std::string> *message_ptr;
+	std::vector<std::string> message_n;
+	std::vector<std::string> message_f;
 };
 
 #endif

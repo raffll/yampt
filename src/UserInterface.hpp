@@ -1,5 +1,5 @@
-#ifndef UI_HPP
-#define UI_HPP
+#ifndef USERINTERFACE_HPP
+#define USERINTERFACE_HPP
 
 #include "Config.hpp"
 #include "DictCreator.hpp"
@@ -11,23 +11,23 @@ class UserInterface
 public:
 	void makeDictRaw();
 	void makeDictBase();
-	void makeDictAll();
-	void makeDictNot();
+	void makeDict();
 	void mergeDict();
 	void convertEsm();
-	void convertEsmWithDIAL();
-	void convertEsmSafe();
-	void makeScriptText();
+	void compareEsm();
 
 	UserInterface(std::vector<std::string> &a);
 
 private:
-	void prepareUi(std::vector<std::string> &a);
+	Writer writer;
 
 	std::vector<std::string> arg;
-	std::vector<std::string> path_esm;
-	std::vector<std::string> path_dict;
-	std::vector<std::string> path_dict_rev;
+	std::vector<std::string> file_p;
+	std::vector<std::string> dict_p;
+
+	bool add_dial = false;
+	bool safe = false;
+	bool no_duplicates = false;
 };
 
 #endif
