@@ -49,23 +49,23 @@ void EsmConverter::convertEsm()
 //----------------------------------------------------------
 void EsmConverter::makeLog(string id)
 {
-	log += "Record " + id + "'" + unique_key + "' " + *result_ptr + " in '" + esm.getName() + "'\r\n" +
-	       "--------------------------------------------------" + "\r\n" +
+	log += *result_ptr + " record " + id + "'" + unique_key + "' in '" + esm.getName() + "'\r\n" +
+	       "---" + "\r\n" +
 	       esm.getFriendly() + "\r\n" +
-	       "--------------------------------------------------" + "\r\n" +
+	       "---" + "\r\n" +
 	       new_friendly + "\r\n" +
-	       "--------------------------------------------------" + "\r\n\r\n\r\n";
+	       "---" + "\r\n\r\n\r\n";
 }
 
 //----------------------------------------------------------
 void EsmConverter::makeLogScript()
 {
-	log += "Script line '" + unique_key + "' " + *result_ptr + " in '" + esm.getName() + "'\r\n" +
-	       "--------------------------------------------------" + "\r\n" +
+	log += *result_ptr + " script line '" + unique_key + "' in '" + esm.getName() + "'\r\n" +
+	       "---" + "\r\n" +
 	       s_line + "\r\n" +
-	       "--------------------------------------------------" + "\r\n" +
+	       "---" + "\r\n" +
 	       s_line_new + "\r\n" +
-	       "--------------------------------------------------" + "\r\n\r\n\r\n";
+	       "---" + "\r\n\r\n\r\n";
 }
 
 //----------------------------------------------------------
@@ -79,18 +79,31 @@ void EsmConverter::printLog(string id, bool header)
 	}
 	else
 	{
-		cout << "    " << id << " "
-		     << setw(10) << to_string(counter_converted) << " / "
-		     << setw(9) << to_string(counter_notfound) << " / "
-		     << setw(7) << to_string(counter_skipped) << " / "
-		     << setw(6) << to_string(counter_all) << endl;
 		if(id == "INFO" && add_dial == true)
 		{
-			cout << "    " << " + DIAL" << " "
+			if(counter_add > 0)
+			{
+				cout << endl;
+			}
+
+			cout << "    " << id << " "
+			     << setw(10) << to_string(counter_converted) << " / "
+			     << setw(9) << to_string(counter_unchanged) << " / "
+			     << setw(7) << to_string(counter_skipped) << " / "
+			     << setw(6) << to_string(counter_all) << endl
+			     << "    " << " + DIAL" << " "
 			     << setw(7) << to_string(counter_add) << " / "
 			     << setw(9) << "-" << " / "
 			     << setw(7) << "-" << " / "
 			     << setw(6) << "-" << endl;
+		}
+		else
+		{
+			cout << "    " << id << " "
+			     << setw(10) << to_string(counter_converted) << " / "
+			     << setw(9) << to_string(counter_unchanged) << " / "
+			     << setw(7) << to_string(counter_skipped) << " / "
+			     << setw(6) << to_string(counter_all) << endl;
 		}
 	}
 }
@@ -114,7 +127,7 @@ void EsmConverter::writeEsm()
 void EsmConverter::resetCounters()
 {
 	counter_converted = 0;
-	counter_notfound = 0;
+	counter_unchanged = 0;
 	counter_skipped = 0;
 	counter_all = 0;
 	counter_add = 0;
@@ -173,9 +186,9 @@ void EsmConverter::setNewFriendly(yampt::r_type type)
 	{
 		convert = false;
 		result_ptr = &yampt::result[0];
-		counter_notfound++;
+		counter_unchanged++;
 
-		new_friendly = esm.getFriendly();
+		new_friendly = "N\\A";
 	}
 }
 
@@ -210,22 +223,32 @@ void EsmConverter::setNewFriendlyINFO(yampt::r_type type)
 		{
 			convert = true;
 			result_ptr = &yampt::result[3];
+			if(counter_add == 1)
+			{
+				cout << "    In progress...";
+			}
 			counter_add++;
+			if(counter_add % 200 == 0)
+			{
+				cout << "." << flush;
+			}
 		}
 		else
 		{
 			convert = false;
-			result_ptr = &yampt::result[2];
-			counter_skipped++;
+			result_ptr = &yampt::result[0];
+			counter_unchanged++;
+
+			new_friendly = "N\\A";
 		}
 	}
 	else
 	{
 		convert = false;
 		result_ptr = &yampt::result[0];
-		counter_notfound++;
+		counter_unchanged++;
 
-		new_friendly = esm.getFriendly();
+		new_friendly = "N\\A";
 	}
 }
 
@@ -238,10 +261,12 @@ void EsmConverter::setNewFriendlyScript(string id, yampt::r_type type)
 
 	while(getline(ss, s_line))
 	{
-		s_found = false;
 		eraseCarriageReturnChar(s_line);
+
+		s_found = false;
 		s_line_lc = s_line;
-		s_line_new = s_line;
+		s_line_new = "N\\A";
+
 		transform(s_line_lc.begin(), s_line_lc.end(),
 			  s_line_lc.begin(), ::tolower);
 
@@ -272,7 +297,14 @@ void EsmConverter::setNewFriendlyScript(string id, yampt::r_type type)
 			}
 		}
 
-		new_friendly += s_line_new + "\r\n";
+		if(s_found == true)
+		{
+			new_friendly += s_line_new + "\r\n";
+		}
+		else
+		{
+			new_friendly += s_line + "\r\n";
+		}
 	}
 
 	size_t last_nl_pos = esm.getFriendly().rfind("\r\n");
@@ -291,9 +323,9 @@ void EsmConverter::setNewFriendlyScript(string id, yampt::r_type type)
 	{
 		convert = false;
 		result_ptr = &yampt::result[0];
-		counter_notfound++;
+		counter_unchanged++;
 
-		new_friendly = esm.getFriendly();
+		new_friendly = "N\\A";
 	}
 }
 
@@ -333,11 +365,13 @@ void EsmConverter::convertText(string id, yampt::r_type type)
 		auto search = merger->getDict()[type].find(id + yampt::sep[0] + s_text);
 		if(search != merger->getDict()[type].end())
 		{
-			if(s_text != search->second)
+			s_line_new = s_line;
+			s_line_new.erase(s_pos, s_text.size() + 2);
+			s_line_new.insert(s_pos, "\"" + search->second + "\"");
+			s_found = true;
+
+			if(s_line != s_line_new)
 			{
-				s_line_new.erase(s_pos, s_text.size() + 2);
-				s_line_new.insert(s_pos, "\"" + search->second + "\"");
-				s_found = true;
 				result_ptr = &yampt::result[1];
 			}
 			else
@@ -352,11 +386,21 @@ void EsmConverter::convertText(string id, yampt::r_type type)
 			{
 				if(caseInsensitiveStringCmp(id + yampt::sep[0] + s_text, elem.first) == true)
 				{
+					s_line_new = s_line;
 					s_line_new.erase(s_pos, s_text.size() + 2);
 					s_line_new.insert(s_pos, "\"" + elem.second + "\"");
 					s_found = true;
-					result_ptr = &yampt::result[1];
-					break;
+
+					if(s_line != s_line_new)
+					{
+						result_ptr = &yampt::result[1];
+						break;
+					}
+					else
+					{
+						result_ptr = &yampt::result[2];
+						break;
+					}
 				}
 			}
 		}
@@ -403,20 +447,18 @@ void EsmConverter::addDIALtoINFO()
 	size_t pos;
 
 	new_friendly = esm.getFriendly();
+	new_friendly_lc = esm.getFriendly();
+	transform(new_friendly_lc.begin(), new_friendly_lc.end(),
+		  new_friendly_lc.begin(), ::tolower);
 
-	for(auto &elem : merger->getDict()[yampt::r_type::DIAL])
+	for(const auto &elem : merger->getDict()[yampt::r_type::DIAL])
 	{
 		key = elem.first.substr(5);
+		transform(key.begin(), key.end(),
+			  key.begin(), ::tolower);
+
 		if(key != elem.second)
 		{
-			new_friendly_lc = new_friendly;
-
-			transform(new_friendly_lc.begin(), new_friendly_lc.end(),
-				  new_friendly_lc.begin(), ::tolower);
-
-			transform(key.begin(), key.end(),
-				  key.begin(), ::tolower);
-
 			pos = new_friendly_lc.find(key);
 			if(pos != string::npos)
 			{

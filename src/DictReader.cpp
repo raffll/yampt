@@ -251,10 +251,10 @@ void DictReader::insertRecord(yampt::r_type type)
 //----------------------------------------------------------
 void DictReader::makeLog()
 {
-	log += "Record '" + unique_key + "' " + *valid_ptr + " in '" + name + "'\r\n" +
-	       "--------------------------------------------------" + "\r\n" +
+	log += *valid_ptr + " record '" + unique_key + "' in '" + name + "'\r\n" +
+	       "---" + "\r\n" +
 	       friendly + "\r\n" +
-	       "--------------------------------------------------" + "\r\n\r\n\r\n";
+	       "---" + "\r\n\r\n\r\n";
 }
 
 //----------------------------------------------------------

@@ -58,7 +58,7 @@ private:
 	DictMerger *merger;
 
 	int counter_converted = 0;
-	int counter_notfound = 0;
+	int counter_unchanged = 0;
 	int counter_skipped = 0;
 	int counter_all = 0;
 	int counter_add = 0;

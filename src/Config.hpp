@@ -42,15 +42,15 @@ const std::vector<std::string> key_cell = {"positioncell",
 
 const std::vector<std::string> result = {"UNCHANGED",
 					 "CONVERTED",
-					 "SKIPPED (same text)",
+					 "SKIPPED",
 					 "CONVERTED (dialog added)"};
 
 const std::vector<std::string> valid = {"REPLACED",
 					"DOUBLED",
 					"INVALID",
-					"INVALID (text too long, more than 32 bytes)",
-					"LOADED (but text have more than 512 bytes)",
-					"DIFFERS"};
+					"INVALID (more than 32 bytes)",
+					"LOADED (but more than 512 bytes)",
+					"DIFFERENT"};
 
 }
 
