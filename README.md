@@ -43,7 +43,11 @@ Then double-click on it.
 
 To "dictionary_user" you can copy translated dictionaries from "dictionary_new" and re-run script. This folder will be merged with "NATIVE.dic" from "dictionary_base" for future convertions. Rest of the folders will be refreshed.
 
-Script also convert your native master files, so by modifying "NATIVE.dic", you can do no-esp patch. 
+Script also convert your native master files, so by modifying "NATIVE.dic" or "FOREIGN.dic", you can do no-esp patch, rename it and replace path to your files here:
+```
+SET DICT_NATIVE=%BASE%\NATIVE.dic
+SET DICT_FOREIGN=%BASE%\FOREIGN.dic
+```
 
 ## Usage
 ```
