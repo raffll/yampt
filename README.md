@@ -37,10 +37,12 @@ SET PATH_PLUGIN=C:\path\to\files
 
 Then double-click on it.
 
-- In converted_files folder you should have all converted files
-- In dictionary_base you should have two base dictionaries
-- In dictionary_new you should have NOTFOUND and CHANGED dictionaries corressponding to each of files
-- To dictionary_user you can copy translated dictionaries from dictionary_new and re-run script 
+- In "converted_files" folder you should have all converted files
+- In "dictionary_base" you should have two base dictionaries
+- In "dictionary_new" you should have NOTFOUND and CHANGED dictionaries corressponding to each of files
+- Empty "dictionary_user"
+
+To "dictionary_user" you can copy translated dictionaries from "dictionary_new" and re-run script 
 
 ## Making base dictionary
 
