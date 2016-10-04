@@ -151,7 +151,7 @@ And now
 yampt.exe --make-changed -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "FOREIGN.dic"
 ```
 
-Commands --make-not and --make-changed are all you need to fully translate plugin.
+Commands "--make-not" and "--make-changed" is all you need to fully translate plugin.
 After some translations simply type:
 ```
 yampt.exe --convert -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "NATIVE.dic" "Plugin.NOT.dic" "Plugin.CHANGED.dic"
