@@ -23,6 +23,20 @@ All files are created in yampt.exe directory, and program don't check if file ex
 ```
 yampt.exe command <additional commands> -f <file list> -d <dictionary list>
 ```
+## Easy start
+
+Open "yampt-convert.cmd" in text editor and change paths:
+```
+REM Set path to folders where you keep native and foreign master files
+SET PATH_NATIVE=C:\path\to\master\native
+SET PATH_FOREIGN=C:\path\to\master\foreign
+
+REM Set path to your Wrye Mash installers folder or where you keep files
+SET PATH_PLUGIN=C:\path\to\files
+```
+
+Then double-click on it.
+
 ## Making base dictionary
 
 This step is required for plugin automatic translation.
