@@ -2,7 +2,7 @@ REM Set path to folders where you keep native and foreign master files (Morrowin
 SET PATH_NATIVE=
 SET PATH_FOREIGN=
 
-REM Set path to your Wrye Mash installers folder or where you keep files
+REM Set path to your Wrye Mash installers folder or where you keep files (script process recursively from this path)
 SET PATH_PLUGIN=
 
 REM Skip
@@ -43,7 +43,7 @@ yampt.exe --merge -d "Morrowind.ALL.dic" "Tribunal.ALL.dic" "Bloodmoon.ALL.dic" 
 del "Morrowind.ALL.dic" "Tribunal.ALL.dic" "Bloodmoon.ALL.dic"
 move "FOREIGN.dic" %BASE%
 
-REM Convert native master files (if you change DICT_NATIVE act like patch) 
+REM Convert native master files
 for /R "%PATH_NATIVE%" %%f in (*.esm) do echo | set /p name=" "%%f" " >> master_list.txt
 for /f "delims=" %%x in (master_list.txt) do yampt.exe --convert -f %%x -d "%DICT_NATIVE%"
 
