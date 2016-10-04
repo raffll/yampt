@@ -36,10 +36,10 @@
 - creator and converter now ommit FNAM "player" record
 - many bug fixes
 
-0.6
-- minor bug fixes with counters
-- change sort to case insensitive
-- add suffix to newly created dictionary
-- add --make-changed
-- remove --compare
-- add -o option to --merge
+0.6 beta
+- minor bug fixes
+- change dictionary sorting to case insensitive
+- add suffix to newly created dictionaries
+- add --make-changed command
+- remove --compare command
+- add -o option to --merge command
