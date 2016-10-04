@@ -50,6 +50,19 @@ yampt.exe --convert -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "NATIVE.d
 ```
 yampt.exe --convert --add-dial -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "NATIVE.dic"
 ```
+Text:
+```
+Some text skin of the pearl some text.
+```
+Will be converted to:
+```
+Some text skin of the pearl some text. [skóra perły]
+```
+if in "NATIVE.dic" exist:
+```
+<h3>DIAL^skin of the pearl</h3>skóra perły<hr>
+```
+
 Without this, most English plugins with added dialogs are not playable in your native language.
 
 Because of limitation of Morrowind engine, INFO string can only have 512 bytes, but more is ok in game.
@@ -78,11 +91,11 @@ to
 
 <h3>INFO^T^skóra perły^8142170481561424883</h3>Some text<hr>
 ```
-if in "NATIVE.dic" exist 
+if in "NATIVE.dic" exist:
 ```
 <h3>DIAL^skin of the pearl</h3>skóra perły<hr>
 ```
-So you can use this way created dictionaries combined with your "NATIVE.dic"
+So you can use this way created dictionaries combined with your "NATIVE.dic".
 
 ### Making dictionary with all records from plugin, but with CELL, DIAL, BNAM, SCTX translation
 ```
