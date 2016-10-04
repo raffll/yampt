@@ -179,7 +179,6 @@ yampt.exe --convert -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "NATIVE.d
 - Don't forget of ^ character before native text in SCTX and BNAM records.
 - If you change something in dictionary, make sure that text editor doesn't change encoding.
 - If you lose html tag dictionary won't load.
-- If text contains ```<h3>, </h3> or <hr>``` tag, then they will be converted to ```<_h3>, <_/h3> or <_hr>```
 - All text outside of ```<h3></h3><hr>``` tags will be ignored
 - Make sure that dictionary doesn't contains:
 ```
