@@ -47,7 +47,7 @@ REM Convert native master files
 for /R "%PATH_NATIVE%" %%f in (*.esm) do echo | set /p name=" "%%f" " >> master_list.txt
 for /f "delims=" %%x in (master_list.txt) do yampt.exe --convert -f %%x -d "%DICT_NATIVE%"
 
-REM Make plugins user dictionaries
+REM Make user dictionaries from plugins
 for /R "%PATH_PLUGIN%" %%f in (*.esp, *.esm, *.ess) do echo | set /p name=" "%%f" " >> plugin_list.txt
 for /f "delims=" %%x in (plugin_list.txt) do yampt.exe --make-not -f %%x -d "%DICT_NATIVE%"
 for /f "delims=" %%x in (plugin_list.txt) do yampt.exe --make-changed -f %%x -d "%DICT_FOREIGN%"
