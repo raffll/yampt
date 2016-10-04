@@ -103,13 +103,11 @@ First we need second base dictionary with foreign records
 yampt.exe --make-all -f "C:\path\to\Morrowind.esm" -d "NATIVE.dic"
 yampt.exe --make-all -f "C:\path\to\Tribunal.esm" -d "NATIVE.dic"
 yampt.exe --make-all -f "C:\path\to\Bloodmoon.esm" -d "NATIVE.dic"
-```
-Optional
-```
+
+Optional for compatible plugins:
 yampt.exe --make-all -f "C:\path\to\Morrowind Patch v1.6.6_beta.esm" -d "NATIVE.dic"
-```
-```
-./yampt --merge -d "Morrowind.ALL.dic" "Tribunal.ALL.dic" "Bloodmoon.ALL.dic" "Morrowind Patch v1.6.6_beta.ALL.dic" -o "FOREIGN.dic"
+
+yampt.exe --merge -d "Morrowind.ALL.dic" "Tribunal.ALL.dic" "Bloodmoon.ALL.dic" "Morrowind Patch v1.6.6_beta.ALL.dic" -o "FOREIGN.dic"
 ```
 
 And now
