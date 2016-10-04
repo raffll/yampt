@@ -31,14 +31,15 @@ yampt.exe --make-base -f "C:\path\to\NATIVE\Morrowind\Data Files\Bloodmoon.esm" 
 ```
 Now you can merge these dictionaries into one file. Important thing is order, just like in game.
 ```
-yampt.exe --merge -d Morrowind.dic Tribunal.dic Bloodmoon.dic
+yampt.exe --merge -d Morrowind.dic Tribunal.dic Bloodmoon.dic -o NATIVE.dic
 ```
-Here you have one "yampt-merged.dic". This is your base dictionary.
+Here you have one "NATIVE.dic". This is your base dictionary.
 
 Above command validate, sort and remove duplicates, so you can use it with only one dictionary:
 ```
 yampt.exe --merge -d Morrowind.dic
 ```
+
 ## Converting esm/esp/ess
 ```
 yampt.exe --convert -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "yampt-merged.dic"
@@ -79,11 +80,28 @@ yampt.exe --make-not -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "yampt-m
 ```
 Use for manualy translate only new records.
 
-### Compare file with dictionary
+### Making dictionary with only changed text
+
+First we need second base dictionary with foreign records
 ```
-yampt.exe --compare -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "yampt-merged.dic"
+yampt.exe --make-all -f "master_en/Morrowind.esm" -d "NATIVE.dic"
+yampt.exe --make-all -f "master_en/Tribunal.esm" -d "NATIVE.dic"
+yampt.exe --make-all -f "master_en/Bloodmoon.esm" -d "NATIVE.dic"
+yampt.exe --make-all -f "plugins_en/Morrowind Patch v1.6.6_beta.esm" -d "NATIVE.dic"
+
+./yampt --merge -d "Morrowind.ALL.dic" "Tribunal.ALL.dic" "Bloodmoon.ALL.dic" "Morrowind Patch v1.6.6_beta.ALL.dic" -o "FOREIGN.dic"
 ```
-Then you can check differences in "yampt.log".
+
+And now
+```
+yampt.exe --make-changed -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "FOREIGN.dic"
+```
+
+Commands --make-not and --make-changed are all you need to fully translate plugin.
+After some translations simply type:
+```
+yampt.exe --convert -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "NATIVE.dic" "Plugin.NOT.dic" "Plugin.CHANGED.dic"
+```
 
 ## Dictionary format
 

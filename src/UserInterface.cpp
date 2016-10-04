@@ -28,6 +28,10 @@ UserInterface::UserInterface(vector<string> &a)
 			{
 				command = "-d";
 			}
+			else if(arg[i] == "-o")
+			{
+				command = "-o";
+			}
 			else
 			{
 				if(command == "-f")
@@ -38,8 +42,17 @@ UserInterface::UserInterface(vector<string> &a)
 				{
 					dict_p_tmp.push_back(arg[i]);
 				}
+				if(command == "-o")
+				{
+					output.push_back(arg[i]);
+				}
 			}
 		}
+	}
+
+	if(output.empty())
+	{
+		output.push_back("yampt-merged.dic");
 	}
 
 	dict_p.insert(dict_p.begin(), dict_p_tmp.rbegin(), dict_p_tmp.rend());
@@ -56,12 +69,15 @@ UserInterface::UserInterface(vector<string> &a)
 		}
 		else if(arg[1] == "--make-all" && file_p.size() > 0 && dict_p.size() > 0)
 		{
-			makeDict();
+			makeDictAll();
 		}
 		else if(arg[1] == "--make-not" && file_p.size() > 0 && dict_p.size() > 0)
 		{
-			no_duplicates = true;
-			makeDict();
+			makeDictNotFound();
+		}
+		else if(arg[1] == "--make-changed" && file_p.size() > 0 && dict_p.size() > 0)
+		{
+			makeDictChanged();
 		}
 		else if(arg[1] == "--merge" && dict_p.size() > 0)
 		{
@@ -70,10 +86,6 @@ UserInterface::UserInterface(vector<string> &a)
 		else if(arg[1] == "--convert" && file_p.size() > 0 && dict_p.size() > 0)
 		{
 			convertEsm();
-		}
-		else if(arg[1] == "--compare" && file_p.size() > 0 && dict_p.size() > 0)
-		{
-			compareEsm();
 		}
 		else
 		{
@@ -93,7 +105,7 @@ void UserInterface::makeDictRaw()
 	{
 		DictCreator creator(file_p[i]);
 		creator.makeDict();
-		writer.writeDict(creator.getDict(), creator.getNamePrefix() + ".dic");
+		writer.writeDict(creator.getDict(), creator.getNamePrefix() + ".RAW.dic");
 	}
 }
 
@@ -106,7 +118,7 @@ void UserInterface::makeDictBase()
 }
 
 //----------------------------------------------------------
-void UserInterface::makeDict()
+void UserInterface::makeDictAll()
 {
 	string log;
 
@@ -117,9 +129,49 @@ void UserInterface::makeDict()
 
 	for(size_t i = 0; i < file_p.size(); ++i)
 	{
-		DictCreator creator(file_p[i], merger, no_duplicates);
+		DictCreator creator(file_p[i], merger, yampt::ins_mode::ALL);
 		creator.makeDict();
-		writer.writeDict(creator.getDict(), creator.getNamePrefix() + ".dic");
+		writer.writeDict(creator.getDict(), creator.getNamePrefix() + ".ALL.dic");
+	}
+
+	writer.writeText(log, "yampt.log");
+}
+
+//----------------------------------------------------------
+void UserInterface::makeDictNotFound()
+{
+	string log;
+
+	DictMerger merger(dict_p);
+	merger.mergeDict();
+
+	log += merger.getLog();
+
+	for(size_t i = 0; i < file_p.size(); ++i)
+	{
+		DictCreator creator(file_p[i], merger, yampt::ins_mode::NOTFOUND);
+		creator.makeDict();
+		writer.writeDict(creator.getDict(), creator.getNamePrefix() + ".NOTFOUND.dic");
+	}
+
+	writer.writeText(log, "yampt.log");
+}
+
+//----------------------------------------------------------
+void UserInterface::makeDictChanged()
+{
+	string log;
+
+	DictMerger merger(dict_p);
+	merger.mergeDict();
+
+	log += merger.getLog();
+
+	for(size_t i = 0; i < file_p.size(); ++i)
+	{
+		DictCreator creator(file_p[i], merger, yampt::ins_mode::CHANGED);
+		creator.makeDict();
+		writer.writeDict(creator.getDict(), creator.getNamePrefix() + ".CHANGED.dic");
 	}
 
 	writer.writeText(log, "yampt.log");
@@ -135,7 +187,7 @@ void UserInterface::mergeDict()
 
 	log += merger.getLog();
 
-	writer.writeDict(merger.getDict(), "yampt-merged.dic");
+	writer.writeDict(merger.getDict(), output[0]);
 	writer.writeText(log, "yampt.log");
 }
 
@@ -155,28 +207,6 @@ void UserInterface::convertEsm()
 		converter.convertEsm();
 		converter.writeEsm();
 		log += converter.getLog();
-	}
-
-	writer.writeText(log, "yampt.log");
-}
-
-//----------------------------------------------------------
-void UserInterface::compareEsm()
-{
-	string log;
-
-	DictMerger merger(dict_p);
-	merger.mergeDict();
-
-	for(size_t i = 0; i < file_p.size(); ++i)
-	{
-		DictCreator creator(file_p[i], merger, false);
-		creator.makeDict();
-
-		DictMerger comparator(merger.getDict(), creator.getDict(), creator.getName());
-		comparator.mergeDict();
-
-		log += comparator.getLog();
 	}
 
 	writer.writeText(log, "yampt.log");

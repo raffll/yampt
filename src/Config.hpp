@@ -17,9 +17,43 @@
 namespace yampt
 {
 
-enum r_type { CELL, DIAL, INDX, RNAM, DESC, GMST, FNAM, INFO, BNAM, SCTX, TEXT };
+struct CaseAwareCompare
+{
+	bool operator()(const char * left, const char * right) const
+	{
+		bool tied = true;
+		bool tiebreaker = false;
+		int i;
 
-typedef std::array<std::map<std::string, std::string>, 11> dict_t;
+		for(i = 0; left[i] != 0; ++i)
+		{
+			if(right[i] == 0)
+			{
+				return false;
+			}
+			if(tolower(left[i]) != tolower(right[i]))
+			{
+				return tolower(left[i]) < tolower(right[i]);
+			}
+			if(tied && left[i] != right[i])
+			{
+				tied = false;
+				tiebreaker = left[i] < right[i];
+			}
+		}
+		return(right[i] != 0) || (!tied && tiebreaker);
+	}
+
+	bool operator()(const std::string & left, const std::string & right) const
+	{
+		return operator()(left.c_str(), right.c_str());
+	}
+};
+
+enum r_type { CELL, DIAL, INDX, RNAM, DESC, GMST, FNAM, INFO, BNAM, SCTX, TEXT };
+enum ins_mode { RAW, BASE, ALL, NOTFOUND, CHANGED };
+
+typedef std::array<std::map<std::string, std::string, CaseAwareCompare>, 11> dict_t;
 
 const std::array<std::string, 5> dialog_type = {"T", "V", "G", "P", "J"};
 
@@ -49,8 +83,7 @@ const std::vector<std::string> valid = {"REPLACED",
 					"DOUBLED",
 					"INVALID",
 					"INVALID (more than 32 bytes)",
-					"LOADED (but more than 512 bytes)",
-					"DIFFERENT"};
+					"LOADED (but more than 512 bytes)"};
 
 }
 

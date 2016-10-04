@@ -14,7 +14,7 @@ public:
 	std::string getNamePrefix(size_t i) { return dict_coll[i].getNamePrefix(); }
 	yampt::dict_t const& getDict() const { return dict; }
 
-	DictMerger(yampt::dict_t base, yampt::dict_t to_compare, std::string to_compare_name);
+	DictMerger();
 	DictMerger(std::vector<std::string> &path);
 
 private:
@@ -31,10 +31,8 @@ private:
 
 	std::string log;
 	std::vector<DictReader> dict_coll;
-	yampt::dict_t dict;
 
-	bool compare = false;
-	std::string to_compare_name;
+	yampt::dict_t dict;
 };
 
 #endif

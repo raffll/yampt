@@ -8,6 +8,8 @@ DictCreator::DictCreator(string path_n)
 	esm_ptr = &esm_n;
 	message_ptr = &message_n;
 
+	mode = yampt::ins_mode::RAW;
+
 	esm_n.readFile(path_n);
 
 	if(esm_n.getStatus() == true)
@@ -22,20 +24,22 @@ DictCreator::DictCreator(string path_n, string path_f)
 	esm_ptr = &esm_f;
 	message_ptr = &message_f;
 
+	mode = yampt::ins_mode::BASE;
+
 	esm_n.readFile(path_n);
 	esm_f.readFile(path_f);
 
 	if(esm_n.getStatus() == true && esm_f.getStatus() == true)
 	{
-		compareEsm();
+		status = compareEsm();
 	}
 }
 
 //----------------------------------------------------------
-DictCreator::DictCreator(string path_n, DictMerger &merger, bool no_duplicates)
+DictCreator::DictCreator(string path_n, DictMerger &merger, yampt::ins_mode mode)
 {
 	this->merger = &merger;
-	this->no_duplicates = no_duplicates;
+	this->mode = mode;
 
 	esm_ptr = &esm_n;
 	message_ptr = &message_n;
@@ -44,7 +48,6 @@ DictCreator::DictCreator(string path_n, DictMerger &merger, bool no_duplicates)
 
 	if(esm_n.getStatus() == true && merger.getStatus() == true)
 	{
-		with_dict = true;
 		status = true;
 	}
 }
@@ -82,26 +85,26 @@ void DictCreator::printLog(string id, bool header)
 	else
 	{
 		cout << "    " << id << " "
-		     << setw(8) << to_string(counter_inserted) << " / "
-		     << setw(7) << to_string(counter_doubled) << " / "
-		     << setw(6) << to_string(counter_all) << endl;
+		     << setw(8) << to_string(counter[0]) << " / "
+		     << setw(7) << to_string(counter[1]) << " / "
+		     << setw(6) << to_string(counter[2]) << endl;
 
 		if(id == "GMST" || id == "FNAM")
 		{
-			cout << "     + CELL" << setw(6) << to_string(counter_cell) << " / "
-			     << setw(7) << "-" << " / "
-			     << setw(6) << "-" << endl;
+			cout << "     + CELL" << setw(6) << to_string(counter_extra[0]) << " / "
+			     << setw(7) << to_string(counter_extra[1]) << " / "
+			     << setw(6) << to_string(counter_extra[2]) << endl;
 		}
 	}
 }
 
 //----------------------------------------------------------
-void DictCreator::compareEsm()
+bool DictCreator::compareEsm()
 {
 	if(esm_n.getRecColl().size() != esm_f.getRecColl().size())
 	{
 		cout << "--> They are not the same master files!\r\n";
-		status = false;
+		return false;
 	}
 	else
 	{
@@ -121,11 +124,11 @@ void DictCreator::compareEsm()
 		if(esm_n_compare != esm_f_compare)
 		{
 			cout << "--> They are not the same master files!\r\n";
-			status = false;
+			return false;
 		}
 		else
 		{
-			status = true;
+			return true;
 		}
 	}
 }
@@ -133,21 +136,51 @@ void DictCreator::compareEsm()
 //----------------------------------------------------------
 void DictCreator::resetCounters()
 {
-	counter_inserted = 0;
-	counter_cell = 0;
-	counter_doubled = 0;
-	counter_all = 0;
+	counter = {};
+	counter_extra = {};
 }
 
 //----------------------------------------------------------
 void DictCreator::validateRecord(const string &unique_key, const string &friendly, yampt::r_type type, bool extra)
 {
-	if(extra == false)
+	if(extra == true)
 	{
-		counter_all++;
+		counter_extra[2]++;
+	}
+	else
+	{
+		counter[2]++;
 	}
 
-	if(no_duplicates == true)
+	if(mode == yampt::ins_mode::RAW || mode == yampt::ins_mode::BASE)
+	{
+		insertRecord(unique_key, friendly, type, extra);
+	}
+
+	if(mode == yampt::ins_mode::ALL)
+	{
+		if(type == yampt::r_type::CELL ||
+		   type == yampt::r_type::DIAL ||
+		   type == yampt::r_type::BNAM ||
+		   type == yampt::r_type::SCTX)
+		{
+			auto search = merger->getDict()[type].find(unique_key);
+			if(search != merger->getDict()[type].end())
+			{
+				insertRecord(unique_key, search->second, type, extra);
+			}
+			else
+			{
+				insertRecord(unique_key, friendly, type, extra);
+			}
+		}
+		else
+		{
+			insertRecord(unique_key, friendly, type, extra);
+		}
+	}
+
+	if(mode == yampt::ins_mode::NOTFOUND)
 	{
 		auto search = merger->getDict()[type].find(unique_key);
 		if(search == merger->getDict()[type].end())
@@ -155,25 +188,26 @@ void DictCreator::validateRecord(const string &unique_key, const string &friendl
 			insertRecord(unique_key, friendly, type, extra);
 		}
 	}
-	else if(with_dict == true &&
-		(type == yampt::r_type::CELL ||
-		 type == yampt::r_type::DIAL ||
-		 type == yampt::r_type::BNAM ||
-		 type == yampt::r_type::SCTX))
+
+	if(mode == yampt::ins_mode::CHANGED)
 	{
-		auto search = merger->getDict()[type].find(unique_key);
-		if(search != merger->getDict()[type].end())
+		if(type == yampt::r_type::GMST ||
+		   type == yampt::r_type::FNAM ||
+		   type == yampt::r_type::DESC ||
+		   type == yampt::r_type::TEXT ||
+		   type == yampt::r_type::RNAM ||
+		   type == yampt::r_type::INDX ||
+		   type == yampt::r_type::INFO)
 		{
-			insertRecord(unique_key, search->second, type, extra);
+			auto search = merger->getDict()[type].find(unique_key);
+			if(search != merger->getDict()[type].end())
+			{
+				if(search->second != friendly)
+				{
+					insertRecord(unique_key, friendly, type, extra);
+				}
+			}
 		}
-		else
-		{
-			insertRecord(unique_key, friendly, type, extra);
-		}
-	}
-	else
-	{
-		insertRecord(unique_key, friendly, type, extra);
 	}
 }
 
@@ -184,23 +218,30 @@ void DictCreator::insertRecord(const string &unique_key, const string &friendly,
 	{
 		if(extra == true)
 		{
-			counter_cell++;
+			counter_extra[0]++;
 		}
 		else
 		{
-			counter_inserted++;
+			counter[0]++;
 		}
 	}
 	else
 	{
-		counter_doubled++;
+		if(extra == true)
+		{
+			counter_extra[1]++;
+		}
+		else
+		{
+			counter[1]++;
+		}
 	}
 }
 
 //----------------------------------------------------------
 string DictCreator::dialTranslator(string to_translate)
 {
-	if(with_dict == true)
+	if(mode == yampt::ins_mode::ALL || mode == yampt::ins_mode::NOTFOUND || mode == yampt::ins_mode::CHANGED)
 	{
 		auto search = merger->getDict()[yampt::r_type::DIAL].find("DIAL" + yampt::sep[0] + to_translate);
 		if(search != merger->getDict()[yampt::r_type::DIAL].end())
@@ -288,7 +329,9 @@ void DictCreator::makeDictGMST()
 			esm_n.setFriendly("STRV");
 			esm_f.setFriendly("STRV");
 
-			if(esm_n.getUniqueStatus() == true && esm_n.getFriendlyStatus() == true && esm_n.getUnique().substr(0, 1) == "s")
+			if(esm_n.getUniqueStatus() == true &&
+			   esm_n.getFriendlyStatus() == true &&
+			   esm_n.getUnique().substr(0, 1) == "s")
 			{
 				validateRecord("GMST" + yampt::sep[0] + esm_n.getUnique(),
 					       esm_n.getFriendly(),
