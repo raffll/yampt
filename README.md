@@ -21,11 +21,11 @@ All files are created in yampt.exe directory, and program don't check if file ex
 
 Open "yampt-convert.cmd" in text editor and change paths:
 ```
-REM Set path to folders where you keep native and foreign master files
+REM Set path to folders where you keep native and foreign master files (Morrowind.esm, Tribunal.esm and Bloodmoon.esm)
 SET PATH_NATIVE=C:\path\to\master\native
 SET PATH_FOREIGN=C:\path\to\master\foreign
 
-REM Set path to your Wrye Mash installers folder or where you keep files
+REM Set path to your Wrye Mash installers folder or where you keep files (script process recursively from this path)
 SET PATH_PLUGIN=C:\path\to\files
 ```
 
