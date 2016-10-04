@@ -73,7 +73,9 @@ Use for manualy translate everything or create no-esp patch.
 ### Following commands translate dialog topic names in INFO records e.g.
 ```
 <h3>INFO^T^skin of the pearl^8142170481561424883</h3>Some text<hr>
+
 to
+
 <h3>INFO^T^skóra perły^8142170481561424883</h3>Some text<hr>
 ```
 if in "NATIVE.dic" exist 
