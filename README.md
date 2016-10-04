@@ -10,7 +10,7 @@ The idea was to quickly convert an infinite number of plugins with an infinite n
 
 All you need is two language version of the game (in most cases English and your native) or pre-made dictionaries.
 
-After convertion you must recompile all scripts in TES CS (or MWEdit)! Simply select all plugins without selecting "active" and after recompilation save as new esp containing only scripts. 
+After convertion you must recompile all scripts in TES CS (or MWEdit)! For esm simply select all plugins without selecting "active" and after recompilation save as new esp containing only scripts. 
 
 ## Installation
 
