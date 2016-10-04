@@ -1,4 +1,4 @@
-REM Set path to folders where you keep native and foreign master files
+REM Set path to folders where you keep native and foreign master files (Morrowind.esm, Tribunal.esm and Bloodmoon.esm)
 SET PATH_NATIVE=
 SET PATH_FOREIGN=
 
