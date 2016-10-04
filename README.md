@@ -50,7 +50,7 @@ yampt.exe --convert -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "NATIVE.d
 ```
 yampt.exe --convert --add-dial -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "NATIVE.dic"
 ```
-Without this, most English plugins are not playable in your native language.
+Without this, most English plugins with added dialogs are not playable in your native language.
 
 Because of limitation of Morrowind engine, INFO string can only have 512 bytes, but more is ok in game.
 
