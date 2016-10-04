@@ -46,7 +46,7 @@ yampt.exe --merge -d Morrowind.dic
 ```
 yampt.exe --convert -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "NATIVE.dic"
 ```
-### If you want to add dialog topic names to not converted INFO strings
+### If you want to add dialog topic names to not converted INFO strings (not found in dictionary)
 ```
 yampt.exe --convert --add-dial -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "NATIVE.dic"
 ```
