@@ -42,11 +42,11 @@ yampt.exe --merge -d Morrowind.dic
 
 ## Converting esm/esp/ess
 ```
-yampt.exe --convert -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "yampt-merged.dic"
+yampt.exe --convert -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "NATIVE.dic"
 ```
 ### If you want to add dialog topic names to not converted INFO strings
 ```
-yampt.exe --convert --add-dial -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "yampt-merged.dic"
+yampt.exe --convert --add-dial -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "NATIVE.dic"
 ```
 Without this, most English plugins are not playable in your native language.
 
@@ -56,7 +56,7 @@ This can generate warnings in TES CS and records are read only. MWEdit have prob
 
 ### If you want to convert only CELL, DIAL, BNAM and SCTX records
 ```
-yampt.exe --convert --safe -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "yampt-merged.dic"
+yampt.exe --convert --safe -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "NATIVE.dic"
 ```
 It's useful when mod change original text in game.
 
@@ -70,13 +70,13 @@ Use for manualy translate everything.
 
 ### Making dictionary with all records from plugin, but with CELL, DIAL, BNAM, SCTX and INFO dialog topic names translation
 ```
-yampt.exe --make-all -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "yampt-merged.dic"
+yampt.exe --make-all -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "NATIVE.dic"
 ```
 Use for manualy translate everything, but with little help.
 
 ### Making dictionary from plugin with records that don't exist in selected dictionaries
 ```
-yampt.exe --make-not -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "yampt-merged.dic"
+yampt.exe --make-not -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "NATIVE.dic"
 ```
 Use for manualy translate only new records.
 
