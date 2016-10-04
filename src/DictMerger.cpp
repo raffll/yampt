@@ -15,17 +15,9 @@ DictMerger::DictMerger(vector<string> &path)
 	{
 		DictReader reader;
 		reader.readFile(elem);
-		if(reader.getStatus() == true)
-		{
-			dict_coll.push_back(reader);
-			status = true;
-			log += reader.getLog();
-		}
-		else
-		{
-			status = false;
-			break;
-		}
+                dict_coll.push_back(reader);
+                status = true;
+                log += reader.getLog();
 	}
 }
 
