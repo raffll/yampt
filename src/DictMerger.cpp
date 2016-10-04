@@ -3,21 +3,9 @@
 using namespace std;
 
 //----------------------------------------------------------
-DictMerger::DictMerger(yampt::dict_t base, yampt::dict_t to_compare, string to_compare_name)
+DictMerger::DictMerger()
 {
-	DictReader reader_to_compare;
-	DictReader reader_base;
 
-	reader_to_compare.loadDict(to_compare);
-	reader_base.loadDict(base);
-
-	dict_coll.push_back(reader_to_compare);
-	dict_coll.push_back(reader_base);
-
-	status = true;
-	compare = true;
-
-	this->to_compare_name = to_compare_name;
 }
 
 //----------------------------------------------------------
@@ -27,17 +15,9 @@ DictMerger::DictMerger(vector<string> &path)
 	{
 		DictReader reader;
 		reader.readFile(elem);
-		if(reader.getStatus() == true)
-		{
-			dict_coll.push_back(reader);
-			status = true;
-			log += reader.getLog();
-		}
-		else
-		{
-			status = false;
-			break;
-		}
+                dict_coll.push_back(reader);
+                status = true;
+                log += reader.getLog();
 	}
 }
 
@@ -61,16 +41,8 @@ void DictMerger::mergeDict()
 					else if(search != dict[k].end() &&
 						search->second != elem.second)
 					{
-						if(compare == false)
-						{
-							valid_ptr = &yampt::valid[0];
-							makeLog(dict_coll[i].getName(), elem.first, elem.second, search->second);
-						}
-						else
-						{
-							valid_ptr = &yampt::valid[5];
-							makeLog(to_compare_name, elem.first, elem.second, search->second);
-						}
+						valid_ptr = &yampt::valid[0];
+						makeLog(dict_coll[i].getName(), elem.first, elem.second, search->second);
 						counter_replaced++;
 					}
 					else

@@ -35,3 +35,11 @@
 - add limit of RNAM string to 32
 - creator and converter now ommit FNAM "player" record
 - many bug fixes
+
+0.6 beta
+- minor bug fixes
+- change dictionary sorting to case insensitive
+- add suffix to newly created dictionaries
+- add --make-changed command
+- remove --compare command
+- add -o option to --merge command

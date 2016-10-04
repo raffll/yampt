@@ -97,6 +97,14 @@ void EsmConverter::printLog(string id, bool header)
 			     << setw(7) << "-" << " / "
 			     << setw(6) << "-" << endl;
 		}
+		else if(id == "SCTX" || id == "BNAM")
+		{
+			cout << "    " << id << " "
+			     << setw(10) << to_string(counter_converted) << " / "
+			     << setw(9) << to_string(counter_unchanged) << " / "
+			     << setw(7) << "-" << " / "
+			     << setw(6) << to_string(counter_all) << endl;
+		}
 		else
 		{
 			cout << "    " << id << " "

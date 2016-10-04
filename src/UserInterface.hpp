@@ -11,10 +11,11 @@ class UserInterface
 public:
 	void makeDictRaw();
 	void makeDictBase();
-	void makeDict();
+	void makeDictAll();
+	void makeDictNotFound();
+	void makeDictChanged();
 	void mergeDict();
 	void convertEsm();
-	void compareEsm();
 
 	UserInterface(std::vector<std::string> &a);
 
@@ -24,10 +25,10 @@ private:
 	std::vector<std::string> arg;
 	std::vector<std::string> file_p;
 	std::vector<std::string> dict_p;
+	std::vector<std::string> output;
 
 	bool add_dial = false;
 	bool safe = false;
-	bool no_duplicates = false;
 };
 
 #endif

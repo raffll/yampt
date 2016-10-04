@@ -17,10 +17,10 @@ public:
 
 	DictCreator(std::string path_n);
 	DictCreator(std::string path_n, std::string path_f);
-	DictCreator(std::string path_n, DictMerger &m, bool no_duplicates);
+	DictCreator(std::string path_n, DictMerger &m, yampt::ins_mode mode);
 
 private:
-	void compareEsm();
+	bool compareEsm();
 	void resetCounters();
 	std::string dialTranslator(std::string to_translate);
 	void validateRecord(const std::string &unique_key, const std::string &friendly, yampt::r_type type, bool extra = false);
@@ -46,13 +46,11 @@ private:
 	DictMerger *merger;
 
 	bool status = false;
-	bool with_dict = false;
-	bool no_duplicates = false;
 
-	int counter_inserted;
-	int counter_cell;
-	int counter_doubled;
-	int counter_all;
+	yampt::ins_mode mode;
+
+	std::array<int, 3> counter;
+	std::array<int, 3> counter_extra;
 
 	yampt::dict_t dict;
 
