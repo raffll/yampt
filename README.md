@@ -19,10 +19,6 @@ After convertion you must recompile all scripts in TES CS (or MWEdit)! For esm s
 
 All files are created in yampt.exe directory, and program don't check if file exist, so be careful.
 
-## Usage
-```
-yampt.exe command <additional commands> -f <file list> -d <dictionary list>
-```
 ## Easy start
 
 Open "yampt-convert.cmd" in text editor and change paths:
@@ -42,7 +38,12 @@ Then double-click on it.
 - In "dictionary_new" you should have NOTFOUND and CHANGED dictionaries corressponding to each of files
 - Empty "dictionary_user"
 
-To "dictionary_user" you can copy translated dictionaries from "dictionary_new" and re-run script. This folder will be merged with "NATIVE.dic" in "dictionary_base" for future convertions.
+To "dictionary_user" you can copy translated dictionaries from "dictionary_new" and re-run script. This folder will be merged with "NATIVE.dic" from "dictionary_base" for future convertions.
+
+## Usage
+```
+yampt.exe command <additional commands> -f <file list> -d <dictionary list>
+```
 
 ## Making base dictionary
 
