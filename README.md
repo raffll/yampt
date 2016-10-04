@@ -41,7 +41,7 @@ Then double-click on it.
 - In "dictionary_new" you should have NOTFOUND and CHANGED dictionaries corressponding to each of files (missing ones was empty)
 - Empty "dictionary_user"
 
-To "dictionary_user" you can copy translated dictionaries from "dictionary_new" and re-run script. This folder will be merged with "NATIVE.dic" from "dictionary_base" for future convertions.
+To "dictionary_user" you can copy translated dictionaries from "dictionary_new" and re-run script. This folder will be merged with "NATIVE.dic" from "dictionary_base" for future convertions. Rest of the folders will be reset.
 
 ## Usage
 ```
