@@ -35,9 +35,9 @@ del "Morrowind.dic" "Tribunal.dic" "Bloodmoon.dic"
 move "NATIVE.dic" %BASE%
 
 REM Create new foreign dictionary
-yampt.exe --make-all -f "%PATH_FOREIGN%\Morrowind.esm" -d "base_dictionaries\NATIVE.dic"
-yampt.exe --make-all -f "%PATH_FOREIGN%\Tribunal.esm" -d "base_dictionaries\NATIVE.dic"
-yampt.exe --make-all -f "%PATH_FOREIGN%\Bloodmoon.esm" -d "base_dictionaries\NATIVE.dic"
+yampt.exe --make-all -f "%PATH_FOREIGN%\Morrowind.esm" -d "%BASE%\NATIVE.dic"
+yampt.exe --make-all -f "%PATH_FOREIGN%\Tribunal.esm" -d "%BASE%\NATIVE.dic"
+yampt.exe --make-all -f "%PATH_FOREIGN%\Bloodmoon.esm" -d "%BASE%\NATIVE.dic"
 yampt.exe --merge -d "Morrowind.ALL.dic" "Tribunal.ALL.dic" "Bloodmoon.ALL.dic" -o "FOREIGN.dic"
 
 del "Morrowind.ALL.dic" "Tribunal.ALL.dic" "Bloodmoon.ALL.dic"
