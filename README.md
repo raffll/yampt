@@ -68,9 +68,21 @@ It's useful when mod change original text in game.
 ```
 yampt.exe --make-raw -f "C:\path\to\Morrowind\Data Files\Plugin.esp"
 ```
-Use for manualy translate everything.
+Use for manualy translate everything or create no-esp patch.
 
-### Making dictionary with all records from plugin, but with CELL, DIAL, BNAM, SCTX and INFO dialog topic names translation
+### Following commands translate dialog topic names in INFO records e.g.
+```
+<h3>INFO^T^skin of the pearl^8142170481561424883</h3>Some text<hr>
+to
+<h3>INFO^T^skóra perły^8142170481561424883</h3>Some text<hr>
+```
+if in "NATIVE.dic" exist 
+```
+<h3>DIAL^skin of the pearl</h3>skóra perły<hr>
+```
+So you can use this way created dictionaries combined with your "NATIVE.dic"
+
+### Making dictionary with all records from plugin, but with CELL, DIAL, BNAM, SCTX translation
 ```
 yampt.exe --make-all -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "NATIVE.dic"
 ```
@@ -129,9 +141,9 @@ yampt.exe --convert -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "NATIVE.d
 ```
 <h3>DIAL^skin of the pearl</h3>skin of the pearl<hr>
 <h3>INFO^T^skóra perły^8142170481561424883</h3>Some text<hr>
-```
+
 or
-```
+
 <h3>DIAL^skin of the pearl</h3>skóra perły<hr>
 <h3>INFO^T^skin of the pearl^8142170481561424883</h3>Some text<hr>
 ```
