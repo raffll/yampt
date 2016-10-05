@@ -65,6 +65,29 @@ void DictMerger::mergeDict()
 }
 
 //----------------------------------------------------------
+void DictMerger::findDiff()
+{
+	if(status == 1 && dict_coll.size() == 2)
+	{
+		for(size_t type = 0; type < 11; type++)
+		{
+			for(auto &elem : dict_coll[0].getDict()[type])
+			{
+				auto search = dict_coll[1].getDict()[type].find(elem.first);
+				if(search != dict_coll[1].getDict()[type].end())
+				{
+					if(search->second != elem.second)
+					{
+						diff[0][type].insert({elem.first, elem.second});
+						diff[1][type].insert({search->first, search->second});
+					}
+				}
+			}
+		}
+	}
+}
+
+//----------------------------------------------------------
 void DictMerger::makeLog(const string name, const string unique_key, const string friendly_old, const string friendly_new)
 {
 	log += *valid_ptr + " record '" + unique_key + "' in '" + name + "'\r\n" +

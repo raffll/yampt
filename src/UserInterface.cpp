@@ -83,6 +83,10 @@ UserInterface::UserInterface(vector<string> &a)
 		{
 			mergeDict();
 		}
+		else if(arg[1] == "--find-diff" && dict_p.size() == 2)
+		{
+			findDiff();
+		}
 		else if(arg[1] == "--convert" && file_p.size() > 0 && dict_p.size() > 0)
 		{
 			convertEsm();
@@ -210,4 +214,15 @@ void UserInterface::convertEsm()
 	}
 
 	writer.writeText(log, "yampt.log");
+}
+
+//----------------------------------------------------------
+void UserInterface::findDiff()
+{
+	DictMerger merger(dict_p);
+	merger.findDiff();
+
+	writer.writeDict(merger.getDiff(0), merger.getNamePrefix(0) + ".DIFF-2.dic");
+	writer.writeDict(merger.getDiff(1), merger.getNamePrefix(1) + ".DIFF-1.dic");
+	writer.writeText(merger.getLog(), "yampt.log");
 }
