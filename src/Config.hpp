@@ -82,7 +82,7 @@ const std::vector<std::string> result = {"UNCHANGED",
 const std::vector<std::string> valid = {"REPLACED",
 					"DOUBLED",
 					"INVALID",
-					"INVALID (more than 32 bytes)",
+					"INVALID (more than 31 bytes)",
 					"LOADED (but more than 512 bytes)"};
 
 }

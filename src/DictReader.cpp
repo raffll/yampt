@@ -180,7 +180,7 @@ void DictReader::validateRecord()
 		}
 		else if(id == "RNAM")
 		{
-			if(friendly.size() > 32)
+			if(friendly.size() > 31)
 			{
 				valid_ptr = &yampt::valid[3];
 				makeLog();
@@ -193,7 +193,7 @@ void DictReader::validateRecord()
 		}
 		else if(id == "FNAM")
 		{
-			if(friendly.size() > 32)
+			if(friendly.size() > 31)
 			{
 				valid_ptr = &yampt::valid[3];
 				makeLog();
@@ -251,7 +251,12 @@ void DictReader::insertRecord(yampt::r_type type)
 //----------------------------------------------------------
 void DictReader::makeLog()
 {
-	log += *valid_ptr + " record '" + unique_key + "' in '" + name + "'\r\n" +
+	log += *valid_ptr;
+	if(valid_ptr == &yampt::valid[3])
+        {
+                log += " (has " + to_string(friendly.size()) + ")";
+        }
+	log += " record '" + unique_key + "' in '" + name + "'\r\n" +
 	       "---" + "\r\n" +
 	       friendly + "\r\n" +
 	       "---" + "\r\n\r\n\r\n";
