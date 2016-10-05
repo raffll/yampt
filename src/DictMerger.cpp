@@ -15,10 +15,10 @@ DictMerger::DictMerger(vector<string> &path)
 	{
 		DictReader reader;
 		reader.readFile(elem);
-                dict_coll.push_back(reader);
-                status = true;
-                log += reader.getLog();
+		dict_coll.push_back(reader);
+		log += reader.getLog();
 	}
+	status = true;
 }
 
 //----------------------------------------------------------

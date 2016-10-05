@@ -91,7 +91,8 @@ void DictCreator::printLog(string id, bool header)
 
 		if(id == "GMST" || id == "FNAM")
 		{
-			cout << "     + CELL" << setw(6) << to_string(counter_extra[0]) << " / "
+			cout << "     + CELL"
+			     << setw(6) << to_string(counter_extra[0]) << " / "
 			     << setw(7) << to_string(counter_extra[1]) << " / "
 			     << setw(6) << to_string(counter_extra[2]) << endl;
 		}

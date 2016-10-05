@@ -66,12 +66,6 @@ void DictReader::readFile(string path)
 }
 
 //----------------------------------------------------------
-void DictReader::loadDict(yampt::dict_t dict)
-{
-	this->dict = dict;
-}
-
-//----------------------------------------------------------
 void DictReader::printStatus(string path)
 {
 	if(status == false)
