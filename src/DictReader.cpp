@@ -257,7 +257,7 @@ void DictReader::makeLog()
 	log += *valid_ptr;
 	if(valid_ptr == &yampt::valid[3])
         {
-                log += " (has " + to_string(friendly.size()) + ")";
+                log += " (" + to_string(friendly.size()) + " bytes)";
         }
 	log += " record '" + unique_key + "' in '" + name + "'\r\n" +
 	       "---" + "\r\n" +
