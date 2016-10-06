@@ -42,6 +42,7 @@ void EsmConverter::convertEsm()
 		convertINFO();
 		convertBNAM();
 		convertSCPT();
+		convertGMDT();
 		cout << endl;
 	}
 }
@@ -968,4 +969,43 @@ void EsmConverter::convertSCPT()
 		}
 	}
 	printLog("SCTX");
+}
+
+//----------------------------------------------------------
+void EsmConverter::convertGMDT()
+{
+	resetCounters();
+	string prefix;
+	string suffix;
+
+	for(size_t i = 0; i < esm.getRecColl().size(); ++i)
+	{
+		esm.setRec(i);
+		if(esm.getRecId() == "TES3")
+		{
+			esm.setUnique("GMDT", false);
+			esm.setFriendly("GMDT", false, false);
+
+			if(esm.getUniqueStatus() == true)
+			{
+				cout << esm.getUnique() << endl;
+				unique_key = esm.getUnique().substr(24, 64);
+				eraseNullChars(unique_key);
+				unique_key = "CELL" + yampt::sep[0] + unique_key;
+
+				prefix = esm.getFriendly().substr(0, 24);
+				suffix = esm.getFriendly().substr(88);
+
+				setNewFriendly(yampt::r_type::CELL);
+				makeLog("");
+				if(convert == true)
+				{
+					new_friendly.resize(64);
+					convertRecordContent(prefix + new_friendly + suffix);
+					cout << prefix + new_friendly + suffix << endl;
+				}
+			}
+		}
+	}
+	printLog("GMDT");
 }

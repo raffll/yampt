@@ -52,6 +52,7 @@ private:
 	void convertINFO();
 	void convertBNAM();
 	void convertSCPT();
+	void convertGMDT();
 
 	bool status = false;
 	EsmRecord esm;

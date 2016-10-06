@@ -25,9 +25,7 @@ private:
 
 	bool status = false;
 
-	int counter_merged = 0;
-	int counter_identical = 0;
-	int counter_replaced = 0;
+	std::array<int, 3> counter = {};
 
 	const std::string *valid_ptr;
 

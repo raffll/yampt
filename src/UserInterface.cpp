@@ -91,6 +91,10 @@ UserInterface::UserInterface(vector<string> &a)
 		{
 			convertEsm();
 		}
+		else if(arg[1] == "--binary-dump" && file_p.size() > 0)
+		{
+			binaryDump();
+		}
 		else
 		{
 			cout << "Syntax error!" << endl;
@@ -225,4 +229,15 @@ void UserInterface::findDiff()
 	writer.writeDict(merger.getDiff(0), merger.getNamePrefix(0) + ".DIFF-2.dic");
 	writer.writeDict(merger.getDiff(1), merger.getNamePrefix(1) + ".DIFF-1.dic");
 	writer.writeText(merger.getLog(), "yampt.log");
+}
+
+//----------------------------------------------------------
+void UserInterface::binaryDump()
+{
+	for(size_t i = 0; i < file_p.size(); ++i)
+	{
+		DictCreator creator(file_p[i]);
+		creator.binaryDump();
+		writer.writeText(creator.getBinaryDump(), creator.getNamePrefix() + ".BINARY.log");
+	}
 }

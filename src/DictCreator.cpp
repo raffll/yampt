@@ -290,6 +290,18 @@ vector<string> DictCreator::makeMessageColl(const string &script_text)
 }
 
 //----------------------------------------------------------
+void DictCreator::binaryDump()
+{
+	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
+	{
+		esm_n.setRec(i);
+		esm_n.setDump();
+		dump += esm_n.getRecId() + "\r\n";
+		dump += esm_n.getDump() + "\r\n";
+	}
+}
+
+//----------------------------------------------------------
 void DictCreator::makeDictCELL()
 {
 	resetCounters();

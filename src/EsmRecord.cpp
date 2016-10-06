@@ -20,7 +20,7 @@ void EsmRecord::setRec(size_t i)
 }
 
 //----------------------------------------------------------
-void EsmRecord::setUnique(string id)
+void EsmRecord::setUnique(string id, bool erase_null)
 {
 	if(status == true)
 	{
@@ -29,10 +29,12 @@ void EsmRecord::setUnique(string id)
 		string cur_id;
 		string cur_text;
 		unique_id = id;
+
 		while(cur_pos != rec->size())
 		{
 			cur_id = rec->substr(cur_pos, 4);
 			cur_size = convertByteArrayToInt(rec->substr(cur_pos + 4, 4));
+
 			if(cur_id == unique_id)
 			{
 				if(id == "INDX")
@@ -50,7 +52,10 @@ void EsmRecord::setUnique(string id)
 				else
 				{
 					cur_text = rec->substr(cur_pos + 8, cur_size);
-					eraseNullChars(cur_text);
+					if(erase_null == true)
+					{
+						eraseNullChars(cur_text);
+					}
 				}
 
 				if(!cur_text.empty())
@@ -76,7 +81,7 @@ void EsmRecord::setUnique(string id)
 }
 
 //----------------------------------------------------------
-bool EsmRecord::setFriendly(string id, bool next)
+bool EsmRecord::setFriendly(string id, bool next, bool erase_null)
 {
 	if(status == true)
 	{
@@ -105,7 +110,10 @@ bool EsmRecord::setFriendly(string id, bool next)
 			if(cur_id == friendly_id)
 			{
 				cur_text = rec->substr(cur_pos + 8, cur_size);
-				eraseNullChars(cur_text);
+				if(erase_null == true)
+				{
+					eraseNullChars(cur_text);
+				}
 				friendly_text = cur_text;
 				friendly_pos = cur_pos;
 				friendly_size = cur_size;
@@ -125,4 +133,40 @@ bool EsmRecord::setFriendly(string id, bool next)
 		}
 	}
 	return false;
+}
+
+//----------------------------------------------------------
+void EsmRecord::setDump()
+{
+	if(status == true)
+	{
+		size_t cur_pos = 16;
+		size_t cur_size = 0;
+		string cur_id;
+		string cur_text;
+		string cur_dump;
+		dump.erase();
+
+		while(cur_pos != rec->size())
+		{
+			cur_id = rec->substr(cur_pos, 4);
+			cur_size = convertByteArrayToInt(rec->substr(cur_pos + 4, 4));
+
+			cur_text = rec->substr(cur_pos + 8, cur_size);
+			cur_dump = "    " + cur_id + " " + to_string(cur_size) + " " + cur_text;
+			for(size_t i = 0; i < cur_dump.size(); ++i)
+			{
+				if(isprint(cur_dump[i]))
+				{
+					dump += cur_dump[i];
+				}
+				else
+				{
+					dump += ".";
+				}
+			}
+			dump += "\r\n";
+			cur_pos += 8 + cur_size;
+		}
+	}
 }

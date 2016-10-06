@@ -10,8 +10,9 @@ public:
 	void setRecContent(std::string content) { *rec = content; }
 	std::string getRecContent() { return *rec; }
 
-	void setUnique(std::string id);
-	bool setFriendly(std::string id, bool next = false);
+	void setUnique(std::string id, bool erase_null = true);
+	bool setFriendly(std::string id, bool next = false, bool erase_null = true);
+	void setDump();
 
 	std::string getRecId() { return rec_id; }
 
@@ -25,6 +26,8 @@ public:
 	size_t getFriendlySize() { return friendly_size; }
 	size_t getFriendlyCounter() { return friendly_counter; }
 	bool getFriendlyStatus() { return friendly_status; }
+
+	std::string getDump() { return dump; }
 
 	EsmRecord();
 
@@ -44,6 +47,8 @@ private:
 	size_t friendly_size;
 	size_t friendly_counter;
 	bool friendly_status;
+
+	std::string dump;
 };
 
 #endif
