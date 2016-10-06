@@ -140,7 +140,16 @@ void DictReader::validateRecord()
 
 		if(id == "CELL")
 		{
-			insertRecord(yampt::r_type::CELL);
+                        if(friendly.size() > 63)
+			{
+				valid_ptr = &yampt::valid[3];
+				makeLog();
+				counter_toolong++;
+			}
+			else
+			{
+                                insertRecord(yampt::r_type::CELL);
+			}
 		}
 		else if(id == "GMST")
 		{
