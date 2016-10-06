@@ -988,7 +988,6 @@ void EsmConverter::convertGMDT()
 
 			if(esm.getUniqueStatus() == true)
 			{
-				cout << esm.getUnique() << endl;
 				unique_key = esm.getUnique().substr(24, 64);
 				eraseNullChars(unique_key);
 				unique_key = "CELL" + yampt::sep[0] + unique_key;
@@ -997,12 +996,31 @@ void EsmConverter::convertGMDT()
 				suffix = esm.getFriendly().substr(88);
 
 				setNewFriendly(yampt::r_type::CELL);
-				makeLog("");
 				if(convert == true)
 				{
 					new_friendly.resize(64);
 					convertRecordContent(prefix + new_friendly + suffix);
-					cout << prefix + new_friendly + suffix << endl;
+				}
+			}
+		}
+                if(esm.getRecId() == "GAME")
+		{
+			esm.setUnique("GMDT", false);
+			esm.setFriendly("GMDT", false, false);
+
+			if(esm.getUniqueStatus() == true)
+			{
+				unique_key = esm.getUnique().substr(0, 64);
+				eraseNullChars(unique_key);
+				unique_key = "CELL" + yampt::sep[0] + unique_key;
+
+				suffix = esm.getFriendly().substr(64);
+
+				setNewFriendly(yampt::r_type::CELL);
+				if(convert == true)
+				{
+					new_friendly.resize(64);
+					convertRecordContent(new_friendly + suffix);
 				}
 			}
 		}
