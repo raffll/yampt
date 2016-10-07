@@ -1020,7 +1020,7 @@ void EsmConverter::convertGMDT()
 				if(convert == true)
 				{
 					new_friendly.resize(64);
-					convertRecordContent(new_friendly + suffix);
+					convertRecordContent(new_friendly + suffix);ul
 				}
 			}
 		}
