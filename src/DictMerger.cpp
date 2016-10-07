@@ -95,7 +95,7 @@ void DictMerger::makeLog(const string name, const string unique_key, const strin
 	       friendly_old + "\r\n" +
 	       "---" + "\r\n" +
 	       friendly_new + "\r\n" +
-	       "---" + "\r\n\r\n\r\n";
+	       "---" + "\r\n\r\n";
 }
 
 //----------------------------------------------------------

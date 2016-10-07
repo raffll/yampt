@@ -50,12 +50,19 @@ void EsmConverter::convertEsm()
 //----------------------------------------------------------
 void EsmConverter::makeLog(string id)
 {
-	log += *result_ptr + " record " + id + "'" + unique_key + "' in '" + esm.getName() + "'\r\n" +
-	       "---" + "\r\n" +
-	       esm.getFriendly() + "\r\n" +
-	       "---" + "\r\n" +
-	       new_friendly + "\r\n" +
-	       "---" + "\r\n\r\n\r\n";
+	log += *result_ptr + " record " + id + "'" + unique_key + "' in '" + esm.getName() + "'\r\n";
+	if(result_ptr != &yampt::result[2])
+        {
+                log += "---\r\n" +
+		       esm.getFriendly() + "\r\n" +
+		       "---" + "\r\n" +
+		       new_friendly + "\r\n" +
+		       "---" + "\r\n\r\n";
+        }
+        else
+        {
+                log += "\r\n\r\n";
+        }
 }
 
 //----------------------------------------------------------
@@ -1020,7 +1027,7 @@ void EsmConverter::convertGMDT()
 				if(convert == true)
 				{
 					new_friendly.resize(64);
-					convertRecordContent(new_friendly + suffix);ul
+					convertRecordContent(new_friendly + suffix);
 				}
 			}
 		}
