@@ -43,3 +43,11 @@
 - add --make-changed command
 - remove --compare command
 - add -o option to --merge command
+
+0.7 beta
+- add GMDT convertion
+- add --binary-dump option
+- add --find-diff option
+- minor fixes
+- revert fix lenght limit FNAM back to 31 and INFO to 511
+- add lenght limit CELL to 63
