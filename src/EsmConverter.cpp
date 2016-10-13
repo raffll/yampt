@@ -50,18 +50,14 @@ void EsmConverter::convertEsm()
 //----------------------------------------------------------
 void EsmConverter::makeLog(string id)
 {
-	log += *result_ptr + " record " + id + "'" + unique_key + "' in '" + esm.getName() + "'\r\n";
+	log += *result_ptr + " " + id + "'" + unique_key + "' in '" + esm.getName() + "'\r\n";
 	if(result_ptr != &yampt::result[2])
         {
                 log += "---\r\n" +
 		       esm.getFriendly() + "\r\n" +
 		       "---" + "\r\n" +
 		       new_friendly + "\r\n" +
-		       "---" + "\r\n\r\n";
-        }
-        else
-        {
-                log += "\r\n\r\n";
+		       "---" + "\r\n";
         }
 }
 
@@ -73,7 +69,7 @@ void EsmConverter::makeLogScript()
 	       s_line + "\r\n" +
 	       "---" + "\r\n" +
 	       s_line_new + "\r\n" +
-	       "---" + "\r\n\r\n\r\n";
+	       "---" + "\r\n";
 }
 
 //----------------------------------------------------------

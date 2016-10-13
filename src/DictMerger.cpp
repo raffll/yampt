@@ -90,12 +90,12 @@ void DictMerger::findDiff()
 //----------------------------------------------------------
 void DictMerger::makeLog(const string name, const string unique_key, const string friendly_old, const string friendly_new)
 {
-	log += *valid_ptr + " record '" + unique_key + "' in '" + name + "'\r\n" +
+	log += *valid_ptr + " '" + unique_key + "' in '" + name + "'\r\n" +
 	       "---" + "\r\n" +
 	       friendly_old + "\r\n" +
 	       "---" + "\r\n" +
 	       friendly_new + "\r\n" +
-	       "---" + "\r\n\r\n";
+	       "---" + "\r\n";
 }
 
 //----------------------------------------------------------

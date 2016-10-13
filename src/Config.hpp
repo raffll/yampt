@@ -77,7 +77,7 @@ const std::vector<std::string> key_cell = {"positioncell",
 const std::vector<std::string> result = {"UNCHANGED",
 					 "CONVERTED",
 					 "SKIPPED",
-					 "CONVERTED (dialog added)"};
+					 "LINK ADDED"};
 
 const std::vector<std::string> valid = {"REPLACED",
 					"DOUBLED",
