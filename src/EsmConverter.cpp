@@ -425,6 +425,8 @@ void EsmConverter::convertText(string id, yampt::r_type type)
 //----------------------------------------------------------
 void EsmConverter::extractText()
 {
+	s_text = "<NotFound>";
+
 	if(s_line.find("\"", s_pos) != string::npos)
 	{
 		regex re("\"(.*?)\"");
@@ -452,10 +454,6 @@ void EsmConverter::extractText()
 			{
 				s_text.erase(last_ws_pos + 1);
 			}
-		}
-		else
-		{
-			s_text = "<NotFound>";
 		}
 	}
 }
