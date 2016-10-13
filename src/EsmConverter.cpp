@@ -344,7 +344,8 @@ void EsmConverter::setNewFriendlyScript(string id, yampt::r_type type)
 //----------------------------------------------------------
 void EsmConverter::convertLine(string id, yampt::r_type type)
 {
-	if(s_pos != string::npos && s_line.rfind(";", s_pos) == string::npos)
+	if(s_pos != string::npos &&
+	   s_line.rfind(";", s_pos) == string::npos)
 	{
 		auto search = merger->getDict()[type].find(id + yampt::sep[0] + s_line);
 		if(search != merger->getDict()[type].end())
@@ -371,10 +372,9 @@ void EsmConverter::convertLine(string id, yampt::r_type type)
 //----------------------------------------------------------
 void EsmConverter::convertText(string id, yampt::r_type type)
 {
-	if(s_pos != string::npos && s_line.rfind(";", s_pos) == string::npos &&
-	   (s_pos == 0 || s_line.rfind(" \t", s_pos) == s_pos - 1))
+	if(s_pos != string::npos &&
+	   s_line.rfind(";", s_pos) == string::npos)
 	{
-		cout << s_line << endl;
 		extractText();
 		auto search = merger->getDict()[type].find(id + yampt::sep[0] + s_text);
 		if(search != merger->getDict()[type].end())
@@ -444,11 +444,18 @@ void EsmConverter::extractText()
 		size_t last_ws_pos;
 		s_pos = s_line.find(" ", s_pos);
 		s_pos = s_line.find_first_not_of(" ", s_pos);
-		s_text = s_line.substr(s_pos);
-		last_ws_pos = s_text.find_last_not_of(" \t");
-		if(last_ws_pos != string::npos)
+		if(s_pos != string::npos)
 		{
-			s_text.erase(last_ws_pos + 1);
+			s_text = s_line.substr(s_pos);
+			last_ws_pos = s_text.find_last_not_of(" \t");
+			if(last_ws_pos != string::npos)
+			{
+				s_text.erase(last_ws_pos + 1);
+			}
+		}
+		else
+		{
+			s_text = "<NotFound>";
 		}
 	}
 }
