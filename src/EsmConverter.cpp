@@ -371,8 +371,10 @@ void EsmConverter::convertLine(string id, yampt::r_type type)
 //----------------------------------------------------------
 void EsmConverter::convertText(string id, yampt::r_type type)
 {
-	if(s_pos != string::npos && s_line.rfind(";", s_pos) == string::npos)
+	if(s_pos != string::npos && s_line.rfind(";", s_pos) == string::npos &&
+	   (s_pos == 0 || s_line.rfind(" \t", s_pos) == s_pos - 1))
 	{
+		cout << s_line << endl;
 		extractText();
 		auto search = merger->getDict()[type].find(id + yampt::sep[0] + s_text);
 		if(search != merger->getDict()[type].end())

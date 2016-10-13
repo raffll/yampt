@@ -51,3 +51,4 @@
 - minor fixes
 - revert fix lenght limit FNAM back to 31 and INFO to 511
 - add lenght limit CELL to 63
+- fix crash when script key is a part of longer string
