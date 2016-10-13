@@ -260,7 +260,6 @@ void DictReader::makeLog()
                 log += " (" + to_string(friendly.size()) + " bytes)";
         }
 	log += " '" + unique_key + "' in '" + name + "'\r\n" +
-	       "---" + "\r\n" +
 	       friendly + "\r\n" +
 	       "---" + "\r\n";
 }

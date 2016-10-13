@@ -48,7 +48,6 @@
 - add GMDT convertion
 - add --binary-dump option
 - add --find-diff option
-- minor fixes
-- revert fix lenght limit FNAM back to 31 and INFO to 511
-- add lenght limit CELL to 63
-- fix crash when script key is a part of longer string
+- revert length limit FNAM back to 31 and INFO to 511
+- add length limit CELL to 63
+- fix crash when script keyword is a part of longer string
