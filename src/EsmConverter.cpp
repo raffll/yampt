@@ -53,8 +53,7 @@ void EsmConverter::makeLog(string id)
 	log += *result_ptr + " " + id + "'" + unique_key + "' in '" + esm.getName() + "'\r\n";
 	if(result_ptr != &yampt::result[2])
         {
-                log += esm.getFriendly() + "\r\n" +
-		       " -->" + "\r\n" +
+                log += esm.getFriendly() + " -->" + "\r\n" +
 		       new_friendly + "\r\n" +
 		       "---" + "\r\n";
         }
@@ -64,8 +63,7 @@ void EsmConverter::makeLog(string id)
 void EsmConverter::makeLogScript()
 {
 	log += *result_ptr + " script line '" + unique_key + "' in '" + esm.getName() + "'\r\n" +
-	       s_line + "\r\n" +
-	       " -->" + "\r\n" +
+	       s_line + " -->" + "\r\n" +
 	       s_line_new + "\r\n" +
 	       "---" + "\r\n";
 }
