@@ -42,6 +42,7 @@ void EsmConverter::convertEsm()
 		convertINFO();
 		convertBNAM();
 		convertSCPT();
+		convertGMDT();
 		cout << endl;
 	}
 }
@@ -49,23 +50,22 @@ void EsmConverter::convertEsm()
 //----------------------------------------------------------
 void EsmConverter::makeLog(string id)
 {
-	log += *result_ptr + " record " + id + "'" + unique_key + "' in '" + esm.getName() + "'\r\n" +
-	       "---" + "\r\n" +
-	       esm.getFriendly() + "\r\n" +
-	       "---" + "\r\n" +
-	       new_friendly + "\r\n" +
-	       "---" + "\r\n\r\n\r\n";
+	log += *result_ptr + " " + id + "'" + unique_key + "' in '" + esm.getName() + "'\r\n";
+	if(result_ptr != &yampt::result[2])
+        {
+                log += esm.getFriendly() + " -->" + "\r\n" +
+		       new_friendly + "\r\n" +
+		       "---" + "\r\n";
+        }
 }
 
 //----------------------------------------------------------
 void EsmConverter::makeLogScript()
 {
 	log += *result_ptr + " script line '" + unique_key + "' in '" + esm.getName() + "'\r\n" +
-	       "---" + "\r\n" +
-	       s_line + "\r\n" +
-	       "---" + "\r\n" +
+	       s_line + " -->" + "\r\n" +
 	       s_line_new + "\r\n" +
-	       "---" + "\r\n\r\n\r\n";
+	       "---" + "\r\n";
 }
 
 //----------------------------------------------------------
@@ -340,7 +340,8 @@ void EsmConverter::setNewFriendlyScript(string id, yampt::r_type type)
 //----------------------------------------------------------
 void EsmConverter::convertLine(string id, yampt::r_type type)
 {
-	if(s_pos != string::npos && s_line.rfind(";", s_pos) == string::npos)
+	if(s_pos != string::npos &&
+	   s_line.rfind(";", s_pos) == string::npos)
 	{
 		auto search = merger->getDict()[type].find(id + yampt::sep[0] + s_line);
 		if(search != merger->getDict()[type].end())
@@ -367,7 +368,8 @@ void EsmConverter::convertLine(string id, yampt::r_type type)
 //----------------------------------------------------------
 void EsmConverter::convertText(string id, yampt::r_type type)
 {
-	if(s_pos != string::npos && s_line.rfind(";", s_pos) == string::npos)
+	if(s_pos != string::npos &&
+	   s_line.rfind(";", s_pos) == string::npos)
 	{
 		extractText();
 		auto search = merger->getDict()[type].find(id + yampt::sep[0] + s_text);
@@ -419,6 +421,8 @@ void EsmConverter::convertText(string id, yampt::r_type type)
 //----------------------------------------------------------
 void EsmConverter::extractText()
 {
+	s_text = "<NotFound>";
+
 	if(s_line.find("\"", s_pos) != string::npos)
 	{
 		regex re("\"(.*?)\"");
@@ -438,11 +442,14 @@ void EsmConverter::extractText()
 		size_t last_ws_pos;
 		s_pos = s_line.find(" ", s_pos);
 		s_pos = s_line.find_first_not_of(" ", s_pos);
-		s_text = s_line.substr(s_pos);
-		last_ws_pos = s_text.find_last_not_of(" \t");
-		if(last_ws_pos != string::npos)
+		if(s_pos != string::npos)
 		{
-			s_text.erase(last_ws_pos + 1);
+			s_text = s_line.substr(s_pos);
+			last_ws_pos = s_text.find_last_not_of(" \t");
+			if(last_ws_pos != string::npos)
+			{
+				s_text.erase(last_ws_pos + 1);
+			}
 		}
 	}
 }
@@ -968,4 +975,61 @@ void EsmConverter::convertSCPT()
 		}
 	}
 	printLog("SCTX");
+}
+
+//----------------------------------------------------------
+void EsmConverter::convertGMDT()
+{
+	resetCounters();
+	string prefix;
+	string suffix;
+
+	for(size_t i = 0; i < esm.getRecColl().size(); ++i)
+	{
+		esm.setRec(i);
+		if(esm.getRecId() == "TES3")
+		{
+			esm.setUnique("GMDT", false);
+			esm.setFriendly("GMDT", false, false);
+
+			if(esm.getUniqueStatus() == true)
+			{
+				unique_key = esm.getUnique().substr(24, 64);
+				eraseNullChars(unique_key);
+				unique_key = "CELL" + yampt::sep[0] + unique_key;
+
+				prefix = esm.getFriendly().substr(0, 24);
+				suffix = esm.getFriendly().substr(88);
+
+				setNewFriendly(yampt::r_type::CELL);
+				if(convert == true)
+				{
+					new_friendly.resize(64);
+					convertRecordContent(prefix + new_friendly + suffix);
+				}
+			}
+		}
+                if(esm.getRecId() == "GAME")
+		{
+			esm.setUnique("GMDT", false);
+			esm.setFriendly("GMDT", false, false);
+
+			if(esm.getUniqueStatus() == true)
+			{
+				unique_key = esm.getUnique().substr(0, 64);
+				eraseNullChars(unique_key);
+				unique_key = "CELL" + yampt::sep[0] + unique_key;
+
+				suffix = esm.getFriendly().substr(64);
+
+				setNewFriendly(yampt::r_type::CELL);
+				if(convert == true)
+				{
+					new_friendly.resize(64);
+					convertRecordContent(new_friendly + suffix);
+				}
+			}
+		}
+	}
+	printLog("GMDT");
 }

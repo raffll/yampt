@@ -91,7 +91,8 @@ void DictCreator::printLog(string id, bool header)
 
 		if(id == "GMST" || id == "FNAM")
 		{
-			cout << "     + CELL" << setw(6) << to_string(counter_extra[0]) << " / "
+			cout << "     + CELL"
+			     << setw(6) << to_string(counter_extra[0]) << " / "
 			     << setw(7) << to_string(counter_extra[1]) << " / "
 			     << setw(6) << to_string(counter_extra[2]) << endl;
 		}
@@ -286,6 +287,18 @@ vector<string> DictCreator::makeMessageColl(const string &script_text)
 		}
 	}
 	return message;
+}
+
+//----------------------------------------------------------
+void DictCreator::binaryDump()
+{
+	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
+	{
+		esm_n.setRec(i);
+		esm_n.setDump();
+		dump += esm_n.getRecId() + "\r\n";
+		dump += esm_n.getDump() + "\r\n";
+	}
 }
 
 //----------------------------------------------------------

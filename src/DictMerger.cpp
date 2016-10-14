@@ -15,10 +15,10 @@ DictMerger::DictMerger(vector<string> &path)
 	{
 		DictReader reader;
 		reader.readFile(elem);
-                dict_coll.push_back(reader);
-                status = true;
-                log += reader.getLog();
+		dict_coll.push_back(reader);
+		log += reader.getLog();
 	}
+	status = true;
 }
 
 //----------------------------------------------------------
@@ -36,18 +36,18 @@ void DictMerger::mergeDict()
 					if(search == dict[k].end())
 					{
 						dict[k].insert({elem.first, elem.second});
-						counter_merged++;
+						counter[0]++;
 					}
 					else if(search != dict[k].end() &&
 						search->second != elem.second)
 					{
 						valid_ptr = &yampt::valid[0];
 						makeLog(dict_coll[i].getName(), elem.first, elem.second, search->second);
-						counter_replaced++;
+						counter[1]++;
 					}
 					else
 					{
-						counter_identical++;
+						counter[2]++;
 					}
 				}
 			}
@@ -65,14 +65,35 @@ void DictMerger::mergeDict()
 }
 
 //----------------------------------------------------------
+void DictMerger::findDiff()
+{
+	if(status == 1 && dict_coll.size() == 2)
+	{
+		for(size_t type = 0; type < 11; type++)
+		{
+			for(auto &elem : dict_coll[0].getDict()[type])
+			{
+				auto search = dict_coll[1].getDict()[type].find(elem.first);
+				if(search != dict_coll[1].getDict()[type].end())
+				{
+					if(search->second != elem.second)
+					{
+						diff[0][type].insert({elem.first, elem.second});
+						diff[1][type].insert({search->first, search->second});
+					}
+				}
+			}
+		}
+	}
+}
+
+//----------------------------------------------------------
 void DictMerger::makeLog(const string name, const string unique_key, const string friendly_old, const string friendly_new)
 {
-	log += *valid_ptr + " record '" + unique_key + "' in '" + name + "'\r\n" +
-	       "---" + "\r\n" +
-	       friendly_old + "\r\n" +
-	       "---" + "\r\n" +
+	log += *valid_ptr + " '" + unique_key + "' in '" + name + "'\r\n" +
+	       friendly_old + " -->" + "\r\n" +
 	       friendly_new + "\r\n" +
-	       "---" + "\r\n\r\n\r\n";
+	       "---" + "\r\n";
 }
 
 //----------------------------------------------------------
@@ -81,8 +102,8 @@ void DictMerger::printLog()
 	cout << endl
 	     << "    MERGED / REPLACED / IDENTICAL" << endl
 	     << "    -----------------------------" << endl
-	     << setw(10) << to_string(counter_merged) << " / "
-	     << setw(8) << to_string(counter_replaced) << " / "
-	     << setw(9) << to_string(counter_identical)
+	     << setw(10) << to_string(counter[0]) << " / "
+	     << setw(8) << to_string(counter[1]) << " / "
+	     << setw(9) << to_string(counter[2])
 	     << endl << endl;
 }

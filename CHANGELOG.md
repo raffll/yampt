@@ -43,3 +43,11 @@
 - add --make-changed command
 - remove --compare command
 - add -o option to --merge command
+
+0.7 beta
+- add GMDT convertion
+- add --binary-dump option
+- add --find-diff option
+- revert length limit FNAM back to 31 and INFO to 511
+- add length limit CELL to 63
+- fix crash when script keyword is a part of longer string

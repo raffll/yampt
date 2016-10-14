@@ -7,7 +7,6 @@ class DictReader
 {
 public:
 	void readFile(std::string path);
-	void loadDict(yampt::dict_t dict);
 
 	bool getStatus() { return status; }
 	std::string getName() { return name; }

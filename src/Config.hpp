@@ -77,13 +77,13 @@ const std::vector<std::string> key_cell = {"positioncell",
 const std::vector<std::string> result = {"UNCHANGED",
 					 "CONVERTED",
 					 "SKIPPED",
-					 "CONVERTED (dialog added)"};
+					 "LINK ADDED"};
 
 const std::vector<std::string> valid = {"REPLACED",
 					"DOUBLED",
 					"INVALID",
-					"INVALID (more than 32 bytes)",
-					"LOADED (but more than 512 bytes)"};
+					"INVALID",
+					"LOADED"};
 
 }
 

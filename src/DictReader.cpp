@@ -66,12 +66,6 @@ void DictReader::readFile(string path)
 }
 
 //----------------------------------------------------------
-void DictReader::loadDict(yampt::dict_t dict)
-{
-	this->dict = dict;
-}
-
-//----------------------------------------------------------
 void DictReader::printStatus(string path)
 {
 	if(status == false)
@@ -146,7 +140,16 @@ void DictReader::validateRecord()
 
 		if(id == "CELL")
 		{
-			insertRecord(yampt::r_type::CELL);
+                        if(friendly.size() > 63)
+			{
+				valid_ptr = &yampt::valid[3];
+				makeLog();
+				counter_toolong++;
+			}
+			else
+			{
+                                insertRecord(yampt::r_type::CELL);
+			}
 		}
 		else if(id == "GMST")
 		{
@@ -180,7 +183,7 @@ void DictReader::validateRecord()
 		}
 		else if(id == "RNAM")
 		{
-			if(friendly.size() > 32)
+			if(friendly.size() > 31)
 			{
 				valid_ptr = &yampt::valid[3];
 				makeLog();
@@ -193,7 +196,7 @@ void DictReader::validateRecord()
 		}
 		else if(id == "FNAM")
 		{
-			if(friendly.size() > 32)
+			if(friendly.size() > 31)
 			{
 				valid_ptr = &yampt::valid[3];
 				makeLog();
@@ -251,10 +254,14 @@ void DictReader::insertRecord(yampt::r_type type)
 //----------------------------------------------------------
 void DictReader::makeLog()
 {
-	log += *valid_ptr + " record '" + unique_key + "' in '" + name + "'\r\n" +
-	       "---" + "\r\n" +
+	log += *valid_ptr;
+	if(valid_ptr == &yampt::valid[3])
+        {
+                log += " (" + to_string(friendly.size()) + " bytes)";
+        }
+	log += " '" + unique_key + "' in '" + name + "'\r\n" +
 	       friendly + "\r\n" +
-	       "---" + "\r\n\r\n\r\n";
+	       "---" + "\r\n";
 }
 
 //----------------------------------------------------------
