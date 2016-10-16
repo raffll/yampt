@@ -83,13 +83,17 @@ UserInterface::UserInterface(vector<string> &a)
 		{
 			mergeDict();
 		}
+		else if(arg[1] == "--convert" && file_p.size() > 0 && dict_p.size() > 0)
+		{
+			convertEsm();
+		}
 		else if(arg[1] == "--find-diff" && dict_p.size() == 2)
 		{
 			findDiff();
 		}
-		else if(arg[1] == "--convert" && file_p.size() > 0 && dict_p.size() > 0)
+		else if(arg[1] == "--word-list" && dict_p.size() == 1)
 		{
-			convertEsm();
+			wordList();
 		}
 		else if(arg[1] == "--binary-dump" && file_p.size() > 0)
 		{
@@ -240,4 +244,13 @@ void UserInterface::binaryDump()
 		creator.binaryDump();
 		writer.writeText(creator.getBinaryDump(), creator.getNamePrefix() + ".BINARY.log");
 	}
+}
+
+//----------------------------------------------------------
+void UserInterface::wordList()
+{
+	DictMerger merger(dict_p);
+	merger.wordList();
+
+	writer.writeText(merger.getLog(), "yampt.log");
 }

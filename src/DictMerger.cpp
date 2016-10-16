@@ -67,7 +67,7 @@ void DictMerger::mergeDict()
 //----------------------------------------------------------
 void DictMerger::findDiff()
 {
-	if(status == 1 && dict_coll.size() == 2)
+	if(status == true && dict_coll.size() == 2)
 	{
 		for(size_t type = 0; type < 11; type++)
 		{
@@ -83,6 +83,32 @@ void DictMerger::findDiff()
 					}
 				}
 			}
+		}
+	}
+}
+
+//----------------------------------------------------------
+void DictMerger::wordList()
+{
+	if(status == true)
+	{
+		string word;
+
+		for(size_t type = 0; type < 11; type++)
+		{
+			for(auto &elem : dict_coll[0].getDict()[type])
+			{
+				istringstream ss(elem.second);
+				while(getline(ss, word, ' '))
+				{
+					dict[0].insert({word, ""});
+				}
+			}
+		}
+
+		for(auto &elem : dict[0])
+		{
+			log += elem.first + "\r\n";
 		}
 	}
 }

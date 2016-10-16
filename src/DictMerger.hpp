@@ -9,6 +9,7 @@ class DictMerger
 public:
 	void mergeDict();
 	void findDiff();
+	void wordList();
 
 	bool getStatus() { return status; }
 	std::string getLog() { return log; }
