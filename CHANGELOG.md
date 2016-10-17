@@ -51,3 +51,8 @@
 - revert length limit FNAM back to 31 and INFO to 511
 - add length limit CELL to 63
 - fix crash when script keyword is a part of longer string
+
+0.8 beta
+- log fixes
+- add --word-list option
+- add --swap-records option

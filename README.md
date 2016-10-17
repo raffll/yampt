@@ -165,6 +165,28 @@ After some translations simply type:
 yampt.exe --convert -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "NATIVE.dic" "Plugin.NOT.dic" "Plugin.CHANGED.dic"
 ```
 
+## Tools
+
+### Binary dump
+```
+yampt.exe --binary-dump -f "C:\path\to\Morrowind\Data Files\Plugin.esp"
+```
+
+### Find differences between dictionaries
+```
+yampt.exe --find-diff -d "Dict_1.dic" "Dict_2.dic"
+```
+
+### Make word list
+```
+yampt.exe --word-list -d "Dict.dic"
+```
+
+### Swap key with text in CELL and DIAL records
+```
+yampt.exe --swap-records -d "Dict.dic"
+```
+
 ## Dictionary format
 
 ```
