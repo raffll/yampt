@@ -10,6 +10,7 @@ public:
 	void mergeDict();
 	void findDiff();
 	void wordList();
+	void swapRecords();
 
 	bool getStatus() { return status; }
 	std::string getLog() { return log; }

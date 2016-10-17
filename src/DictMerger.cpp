@@ -124,6 +124,38 @@ void DictMerger::wordList()
 }
 
 //----------------------------------------------------------
+void DictMerger::swapRecords()
+{
+	if(status == true)
+	{
+		string prefix;
+		string suffix;
+
+		for(size_t type = 0; type < 11; type++)
+		{
+			if(type == yampt::r_type::CELL ||
+			   type == yampt::r_type::DIAL)
+			{
+				for(auto &elem : dict_coll[0].getDict()[type])
+				{
+					prefix = elem.first.substr(0, 5);
+					suffix = elem.first.substr(5);
+
+					dict[type].insert({prefix + elem.second, suffix});
+				}
+			}
+			else
+			{
+				for(auto &elem : dict_coll[0].getDict()[type])
+				{
+					dict[type].insert({elem.first, elem.second});
+				}
+			}
+		}
+	}
+}
+
+//----------------------------------------------------------
 void DictMerger::makeLog(const string name, const string unique_key, const string friendly_old, const string friendly_new)
 {
 	log += *valid_ptr + " '" + unique_key + "' in '" + name + "'\r\n" +
