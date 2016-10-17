@@ -32,8 +32,8 @@ private:
 
 	void addDIALtoINFO();
 
-	void makeLog(std::string id);
-	void makeLogScript();
+	void makeLog(std::string key);
+	void makeLogScript(std::string key);
 	void printLog(std::string id, bool header = false);
 
 	void convertCELL();
