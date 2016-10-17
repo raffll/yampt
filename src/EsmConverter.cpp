@@ -940,6 +940,7 @@ void EsmConverter::convertBNAM()
 
 			if(esm.getFriendlyStatus() == true)
 			{
+				unique_key = "BNAM " + esm.getUnique();
 				setNewFriendlyScript("BNAM", yampt::r_type::BNAM);
 				if(convert == true)
 				{
@@ -966,6 +967,7 @@ void EsmConverter::convertSCPT()
 
 			if(esm.getFriendlyStatus() == true)
 			{
+				unique_key = "SCTX " + esm.getUnique();
 				setNewFriendlyScript("SCTX", yampt::r_type::SCTX);
 				if(convert == true)
 				{
