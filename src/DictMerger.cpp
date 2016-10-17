@@ -93,6 +93,7 @@ void DictMerger::wordList()
 	if(status == true)
 	{
 		string word;
+		string unnecessary = "'\";:?.,!()<>";
 
 		for(size_t type = 0; type < 11; type++)
 		{
@@ -101,6 +102,15 @@ void DictMerger::wordList()
 				istringstream ss(elem.second);
 				while(getline(ss, word, ' '))
 				{
+					if(word.find_first_not_of(unnecessary) != string::npos)
+					{
+						word.substr(word.find_first_not_of(unnecessary));
+					}
+
+					if(word.find_first_of(unnecessary) != string::npos)
+					{
+						word.erase(word.find_first_of(unnecessary));
+					}
 					dict[0].insert({word, ""});
 				}
 			}
