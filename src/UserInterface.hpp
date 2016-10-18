@@ -15,9 +15,12 @@ public:
 	void makeDictNotFound();
 	void makeDictChanged();
 	void mergeDict();
-	void findDiff();
 	void convertEsm();
+
 	void binaryDump();
+	void findDiff();
+	void wordList();
+	void swapRecords();
 
 	UserInterface(std::vector<std::string> &a);
 

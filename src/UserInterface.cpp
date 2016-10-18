@@ -83,10 +83,6 @@ UserInterface::UserInterface(vector<string> &a)
 		{
 			mergeDict();
 		}
-		else if(arg[1] == "--find-diff" && dict_p.size() == 2)
-		{
-			findDiff();
-		}
 		else if(arg[1] == "--convert" && file_p.size() > 0 && dict_p.size() > 0)
 		{
 			convertEsm();
@@ -94,6 +90,18 @@ UserInterface::UserInterface(vector<string> &a)
 		else if(arg[1] == "--binary-dump" && file_p.size() > 0)
 		{
 			binaryDump();
+		}
+		else if(arg[1] == "--find-diff" && dict_p.size() == 2)
+		{
+			findDiff();
+		}
+		else if(arg[1] == "--word-list" && dict_p.size() == 1)
+		{
+			wordList();
+		}
+		else if(arg[1] == "--swap-records" && dict_p.size() == 1)
+		{
+			swapRecords();
 		}
 		else
 		{
@@ -221,6 +229,17 @@ void UserInterface::convertEsm()
 }
 
 //----------------------------------------------------------
+void UserInterface::binaryDump()
+{
+	for(size_t i = 0; i < file_p.size(); ++i)
+	{
+		DictCreator creator(file_p[i]);
+		creator.binaryDump();
+		writer.writeText(creator.getBinaryDump(), creator.getNamePrefix() + ".BINARY.log");
+	}
+}
+
+//----------------------------------------------------------
 void UserInterface::findDiff()
 {
 	DictMerger merger(dict_p);
@@ -232,12 +251,19 @@ void UserInterface::findDiff()
 }
 
 //----------------------------------------------------------
-void UserInterface::binaryDump()
+void UserInterface::wordList()
 {
-	for(size_t i = 0; i < file_p.size(); ++i)
-	{
-		DictCreator creator(file_p[i]);
-		creator.binaryDump();
-		writer.writeText(creator.getBinaryDump(), creator.getNamePrefix() + ".BINARY.log");
-	}
+	DictMerger merger(dict_p);
+	merger.wordList();
+
+	writer.writeText(merger.getLog(), "yampt.log");
+}
+
+//----------------------------------------------------------
+void UserInterface::swapRecords()
+{
+	DictMerger merger(dict_p);
+	merger.swapRecords();
+
+	writer.writeDict(merger.getDict(), merger.getNamePrefix(0) + ".SWAP.dic");
 }

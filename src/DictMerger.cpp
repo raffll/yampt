@@ -67,7 +67,7 @@ void DictMerger::mergeDict()
 //----------------------------------------------------------
 void DictMerger::findDiff()
 {
-	if(status == 1 && dict_coll.size() == 2)
+	if(status == true && dict_coll.size() == 2)
 	{
 		for(size_t type = 0; type < 11; type++)
 		{
@@ -81,6 +81,74 @@ void DictMerger::findDiff()
 						diff[0][type].insert({elem.first, elem.second});
 						diff[1][type].insert({search->first, search->second});
 					}
+				}
+			}
+		}
+	}
+}
+
+//----------------------------------------------------------
+void DictMerger::wordList()
+{
+	if(status == true)
+	{
+		string word;
+		string unnecessary = "'\";:?.,!()<>";
+
+		for(size_t type = 0; type < 11; type++)
+		{
+			for(auto &elem : dict_coll[0].getDict()[type])
+			{
+				istringstream ss(elem.second);
+				while(getline(ss, word, ' '))
+				{
+					if(word.find_first_not_of(unnecessary) != string::npos)
+					{
+						word.substr(word.find_first_not_of(unnecessary));
+					}
+
+					if(word.find_first_of(unnecessary) != string::npos)
+					{
+						word.erase(word.find_first_of(unnecessary));
+					}
+					dict[0].insert({word, ""});
+				}
+			}
+		}
+
+		for(auto &elem : dict[0])
+		{
+			log += elem.first + "\r\n";
+		}
+	}
+}
+
+//----------------------------------------------------------
+void DictMerger::swapRecords()
+{
+	if(status == true)
+	{
+		string prefix;
+		string suffix;
+
+		for(size_t type = 0; type < 11; type++)
+		{
+			if(type == yampt::r_type::CELL ||
+			   type == yampt::r_type::DIAL)
+			{
+				for(auto &elem : dict_coll[0].getDict()[type])
+				{
+					prefix = elem.first.substr(0, 5);
+					suffix = elem.first.substr(5);
+
+					dict[type].insert({prefix + elem.second, suffix});
+				}
+			}
+			else
+			{
+				for(auto &elem : dict_coll[0].getDict()[type])
+				{
+					dict[type].insert({elem.first, elem.second});
 				}
 			}
 		}
