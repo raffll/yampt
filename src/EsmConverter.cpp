@@ -531,32 +531,40 @@ void EsmConverter::convertText(string id, yampt::r_type type, int num)
 void EsmConverter::extractText(int num)
 {
 	size_t list_pos;
-	string list;
+	string list_var;
 	smatch found;
 	int ctr = -1;
 
 	list_pos = line.find_first_of(" \t,", pos);
 	list_pos = line.find_first_not_of(" \t,", list_pos);
-	list = line.substr(list_pos);
+	list_var = line.substr(list_pos);
 
-	//cout << "----" << endl;
-	//cout << "Line: " << line << endl;
-	//cout << "List: " << list << endl;
+	cout << "----" << endl;
+	cout << "Line: " << line << endl;
+	cout << "List: " << list_var << endl;
 
-	regex r1("(([-[0-9][0-9]*\\.?[0-9]*)|(\".*?\")|(\\w+))");
-
-	sregex_iterator next(list.begin(), list.end(), r1);
-	sregex_iterator end;
-	while(next != end && ctr != num)
+	if(num == 0)
 	{
-		found = *next;
-		text = found[1].str();
-		pos = found.position(1) + list_pos;
+		text = list_var;
+	}
 
-		//cout << "Text " << pos << ": " << text << endl;
+	if(num == 2 || num == 4)
+	{
+		regex r1("(([\\w\\.]+)|(\".*?\"))");
 
-		next++;
-		ctr++;
+		sregex_iterator next(list_var.begin(), list_var.end(), r1);
+		sregex_iterator end;
+		while(next != end && ctr != num)
+		{
+			found = *next;
+			text = found[1].str();
+			pos = found.position(1) + list_pos;
+
+			cout << "Text " << pos << ": " << text << endl;
+
+			next++;
+			ctr++;
+		}
 	}
 
 	regex r2("\"(.*?)\"");

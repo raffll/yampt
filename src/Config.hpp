@@ -61,8 +61,7 @@ const std::vector<std::string> sep = {"^", "<h3>", "</h3>", "<hr>"};
 const std::string line = "<!------------------------------------------------------------>";
 
 const std::vector<std::string> key_message = {"messagebox",
-					      "say ",
-					      "say,",
+					      "say",
 					      "choice"};
 
 const std::vector<std::string> result = {"UNCHANGED",
