@@ -291,7 +291,8 @@ void EsmConverter::setNewFriendlyScript(string id, yampt::r_type type)
 		{
 			if(s_found == false)
 			{
-				s_pos = s_line_lc.find(elem);
+				s_pos = s_line_lc.find(elem.first);
+				s_num = elem.second;
 				convertText("DIAL", yampt::r_type::DIAL);
 			}
 		}
@@ -300,7 +301,8 @@ void EsmConverter::setNewFriendlyScript(string id, yampt::r_type type)
 		{
 			if(s_found == false)
 			{
-				s_pos = s_line_lc.find(elem);
+				s_pos = s_line_lc.find(elem.first);
+				s_num = elem.second;
 				convertText("CELL", yampt::r_type::CELL);
 			}
 		}
@@ -434,7 +436,7 @@ void EsmConverter::convertText(string id, yampt::r_type type)
 }
 
 //----------------------------------------------------------
-void EsmConverter::extractText()
+/*void EsmConverter::extractText()
 {
 	s_text = "<NotFound>";
 
@@ -467,6 +469,54 @@ void EsmConverter::extractText()
 			}
 		}
 	}
+}*/
+
+//----------------------------------------------------------
+void EsmConverter::extractText()
+{
+	s_text = "<NotFound>";
+	size_t pos_beg = s_pos;
+	size_t pos_end = 0;
+	string tmp_line;
+
+	pos_beg = s_line.find_first_of(" \t", pos_beg);
+	pos_beg = s_line.find_first_not_of(" \t", pos_beg);
+
+	pos_end = s_line.find(";");
+
+	cout << s_line << endl;
+
+	if(pos_end != string::npos)
+	{
+		tmp_line = s_line.substr(pos_beg, pos_end - pos_beg);
+	}
+	else
+	{
+		tmp_line = s_line.substr(pos_beg);
+	}
+	cout << tmp_line << endl;
+
+	/*if(tmp_line.find("\"", 0) != string::npos)
+	{
+		regex re("\"(.*?)\"");
+		smatch found;
+		sregex_iterator next(tmp_line.begin(), tmp_line.end(), re);
+		sregex_iterator end;
+		while(next != end)
+		{
+			found = *next;
+			s_text = found[1].str();
+			s_pos = found.position(1);
+			next++;
+		}
+	}*/
+	int n;
+	istringstream ss(tmp_line);
+	while(getline(ss, s_text, ' '))
+	{
+		cout << s_text << endl;
+	}
+
 }
 
 //----------------------------------------------------------

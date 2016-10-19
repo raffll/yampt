@@ -81,6 +81,7 @@ private:
 	std::string s_line_new;
 	std::string s_text;
 	size_t s_pos = 0;
+	int s_num = 0;
 };
 
 #endif
