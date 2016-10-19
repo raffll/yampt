@@ -65,16 +65,6 @@ const std::vector<std::string> key_message = {"messagebox",
 					      "say,",
 					      "choice"};
 
-const std::vector<std::pair<std::string, int>> key_dial = {{"addtopic", 0}};
-
-const std::vector<std::pair<std::string, int>> key_cell = {{"positioncell", 4},
-					   {"getpccell", 0},
-					   {"aifollowcell", 1},
-					   {"placeitemcell", 1},
-					   {"showmap", 0},
-					   {"aiescortcell", 1},
-					   {"centeroncell", 0}};
-
 const std::vector<std::string> result = {"UNCHANGED",
 					 "CONVERTED",
 					 "SKIPPED",

@@ -27,8 +27,8 @@ private:
 	void setNewFriendlyScript(std::string id, yampt::r_type type);
 
 	void convertLine(std::string id, yampt::r_type type);
-	void convertText(std::string id, yampt::r_type type);
-	void extractText();
+	void convertText(std::string id, yampt::r_type type, int num);
+	void extractText(int num);
 
 	void addDIALtoINFO();
 
@@ -71,17 +71,16 @@ private:
 	std::string log;
 	const std::string *result_ptr;
 
+	bool found_key = false;
 	bool convert = false;
 	bool safe = false;
 	bool add_dial = false;
 
-	bool s_found = false;
-	std::string s_line;
-	std::string s_line_lc;
-	std::string s_line_new;
-	std::string s_text;
-	size_t s_pos = 0;
-	int s_num = 0;
+	std::string line;
+	std::string line_new;
+	std::string text;
+	size_t pos;
+	int num;
 };
 
 #endif
