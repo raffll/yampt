@@ -376,8 +376,16 @@ void EsmConverter::convertText(string id, yampt::r_type type)
 		if(search != merger->getDict()[type].end())
 		{
 			s_line_new = s_line;
-			s_line_new.erase(s_pos, s_text.size() + 2);
-			s_line_new.insert(s_pos, "\"" + search->second + "\"");
+			s_line_new.erase(s_pos, s_text.size());
+			if(s_line_new.substr(s_pos - 1, 1) == "\"")
+			{
+				s_line_new.insert(s_pos, search->second);
+			}
+			else
+			{
+				s_line_new.insert(s_pos, "\"" + search->second + "\"");
+			}
+
 			s_found = true;
 
 			if(s_line != s_line_new)
@@ -397,8 +405,15 @@ void EsmConverter::convertText(string id, yampt::r_type type)
 				if(caseInsensitiveStringCmp(id + yampt::sep[0] + s_text, elem.first) == true)
 				{
 					s_line_new = s_line;
-					s_line_new.erase(s_pos, s_text.size() + 2);
-					s_line_new.insert(s_pos, "\"" + elem.second + "\"");
+					s_line_new.erase(s_pos, s_text.size());
+					if(s_line_new.substr(s_pos - 1, 1) == "\"")
+					{
+						s_line_new.insert(s_pos, elem.second);
+					}
+					else
+					{
+						s_line_new.insert(s_pos, "\"" + elem.second + "\"");
+					}
 					s_found = true;
 
 					if(s_line != s_line_new)
@@ -433,22 +448,22 @@ void EsmConverter::extractText()
 		{
 			found = *next;
 			s_text = found[1].str();
-			s_pos = found.position(0);
+			s_pos = found.position(1);
 			next++;
 		}
 	}
 	else
 	{
-		size_t last_ws_pos;
-		s_pos = s_line.find(" ", s_pos);
-		s_pos = s_line.find_first_not_of(" ", s_pos);
-		if(s_pos != string::npos)
+		s_pos = s_line.find_first_of(" \t", s_pos);
+		s_pos = s_line.find_first_not_of(" \t", s_pos);
+
+		istringstream ss(s_line.substr(s_pos));
+		while(getline(ss, s_text, ' '))
 		{
-			s_text = s_line.substr(s_pos);
-			last_ws_pos = s_text.find_last_not_of(" \t");
-			if(last_ws_pos != string::npos)
+			if(s_text.find_first_of("1234567890()= \t") == string::npos)
 			{
-				s_text.erase(last_ws_pos + 1);
+				s_pos = s_line.find(s_text);
+				break;
 			}
 		}
 	}
