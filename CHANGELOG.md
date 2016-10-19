@@ -56,3 +56,6 @@
 - log fixes
 - add --word-list option
 - add --swap-records option
+
+0.9 beta
+- many improvements in script parser
