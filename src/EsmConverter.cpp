@@ -283,116 +283,59 @@ void EsmConverter::setNewFriendlyScript(string id, yampt::r_type type)
 
 		for(auto const &elem : yampt::key_message)
 		{
-			/*if(found_key == false)
+			if(found_key == false)
 			{
 				pos = line_lc.find(elem);
 				convertLine(id, type);
-			}*/
-			regex re("\\b(" + elem + ")\\b");
-			regex_search(line_lc, found, re);
-
-			if(!found.empty())
-			{
-				pos = found.position(1);
-				convertLine(id, type);
 			}
 		}
 
 		if(found_key == false)
 		{
-			regex re("\\b(addtopic)\\b");
-			regex_search(line_lc, found, re);
-
-			if(!found.empty())
-			{
-				pos = found.position(1);
-				convertText("DIAL", yampt::r_type::DIAL, 0);
-			}
-
+			pos = line_lc.find("addtopic");
+			convertText("DIAL", yampt::r_type::DIAL, 0);
 		}
 
 		if(found_key == false)
 		{
-			regex re("\\b(showmap)\\b");
-			regex_search(line_lc, found, re);
-
-			if(!found.empty())
-			{
-				pos = found.position(1);
-				convertText("CELL", yampt::r_type::CELL, 0);
-			}
+			pos = line_lc.find("showmap");
+			convertText("CELL", yampt::r_type::CELL, 0);
 		}
 
 		if(found_key == false)
 		{
-			regex re("\\b(centeroncell)\\b");
-			regex_search(line_lc, found, re);
-
-			if(!found.empty())
-			{
-				pos = found.position(1);
-				convertText("CELL", yampt::r_type::CELL, 0);
-			}
+			pos = line_lc.find("centeroncell");
+			convertText("CELL", yampt::r_type::CELL, 0);
 		}
 
 		if(found_key == false)
 		{
-			regex re("\\b(getpccell)\\b");
-			regex_search(line_lc, found, re);
-
-			if(!found.empty())
-			{
-				pos = found.position(1);
-				convertText("CELL", yampt::r_type::CELL, 0);
-			}
+			pos = line_lc.find("getpccell");
+			convertText("CELL", yampt::r_type::CELL, 0);
 		}
 
 		if(found_key == false)
 		{
-			regex re("\\b(aifollowcell)\\b"); // 1
-			regex_search(line_lc, found, re);
-
-			if(!found.empty())
-			{
-				pos = found.position(1);
-				convertText("CELL", yampt::r_type::CELL, 1);
-			}
+			pos = line_lc.find("aifollowcell");
+			convertText("CELL", yampt::r_type::CELL, 1);
 		}
 
 		if(found_key == false)
 		{
-			regex re("\\b(aiescortcell)\\b"); // 1
-			regex_search(line_lc, found, re);
-
-			if(!found.empty())
-			{
-				pos = found.position(1);
-				convertText("CELL", yampt::r_type::CELL, 1);
-			}
+			pos = line_lc.find("aiescortcell)");
+			convertText("CELL", yampt::r_type::CELL, 1);
 		}
 
 		if(found_key == false)
 		{
-			regex re("\\b(placeitemcell)\\b"); // 1
-			regex_search(line_lc, found, re);
-
-			if(!found.empty())
-			{
-				pos = found.position(1);
-				convertText("CELL", yampt::r_type::CELL, 1);
-			}
+			pos = line_lc.find("placeitemcell");
+			convertText("CELL", yampt::r_type::CELL, 1);
 		}
 
 		if(found_key == false)
 		{
-			regex re("\\b(positioncell)\\b"); // 4
-			regex_search(line_lc, found, re);
-
-			if(!found.empty())
-			{
-				pos = found.position(1);
-				convertText("CELL", yampt::r_type::CELL, 4);
-			}
+			pos = line_lc.find("positioncell");
+			convertText("CELL", yampt::r_type::CELL, 4);
 		}
 
 		if(found_key == true)
@@ -537,18 +480,33 @@ void EsmConverter::extractText(int num)
 
 	list_pos = line.find_first_of(" \t,", pos);
 	list_pos = line.find_first_not_of(" \t,", list_pos);
-	list_var = line.substr(list_pos);
+	if(list_pos != string::npos)
+	{
+		list_var = line.substr(list_pos);
+	}
+	else
+	{
+		list_pos = 0;
+	}
 
-	cout << "----" << endl;
-	cout << "Line: " << line << endl;
-	cout << "List: " << list_var << endl;
+	//cout << "----" << endl;
+	//cout << "Line: " << line << endl;
+	//cout << "List: " << list_var << endl;
 
 	if(num == 0)
 	{
 		text = list_var;
+		if(text.find("=") != string::npos)
+		{
+			text.erase(text.find("="));
+		}
+		if(text.find_last_not_of(" \t") != string::npos)
+		{
+			text.erase(text.find_last_not_of(" \t") + 1);
+		}
+		pos = list_pos;
 	}
-
-	if(num == 2 || num == 4)
+	else
 	{
 		regex r1("(([\\w\\.]+)|(\".*?\"))");
 
@@ -560,7 +518,7 @@ void EsmConverter::extractText(int num)
 			text = found[1].str();
 			pos = found.position(1) + list_pos;
 
-			cout << "Text " << pos << ": " << text << endl;
+			//cout << "Var " << pos << ": " << text << endl;
 
 			next++;
 			ctr++;
@@ -575,6 +533,8 @@ void EsmConverter::extractText(int num)
 		text = found[1].str();
 		pos += 1;
 	}
+
+	//cout << "Out " << pos << ": " << text << endl;
 }
 
 //----------------------------------------------------------
