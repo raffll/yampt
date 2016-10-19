@@ -20,6 +20,10 @@ UserInterface::UserInterface(vector<string> &a)
 			{
 				safe = true;
 			}
+			else if(arg[i] == "--debug")
+			{
+				debug = true;
+			}
 			else if(arg[i] == "-f")
 			{
 				command = "-f";

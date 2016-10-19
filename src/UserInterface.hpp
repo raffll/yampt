@@ -34,6 +34,7 @@ private:
 
 	bool add_dial = false;
 	bool safe = false;
+	bool debug = false;
 };
 
 #endif

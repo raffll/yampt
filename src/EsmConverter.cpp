@@ -63,8 +63,8 @@ void EsmConverter::makeLog(string key)
 void EsmConverter::makeLogScript(string key)
 {
 	log += *result_ptr + " script line '" + key + "' in '" + esm.getName() + "'\r\n" +
-	       s_line + " -->" + "\r\n" +
-	       s_line_new + "\r\n" +
+	       line + " -->" + "\r\n" +
+	       line_new + "\r\n" +
 	       "---" + "\r\n";
 }
 
@@ -267,51 +267,84 @@ void EsmConverter::setNewFriendlyScript(string id, yampt::r_type type)
 	new_friendly.erase();
 	istringstream ss(esm.getFriendly());
 
-	while(getline(ss, s_line))
+	string line_lc;
+	smatch found;
+
+	while(getline(ss, line))
 	{
-		eraseCarriageReturnChar(s_line);
+		eraseCarriageReturnChar(line);
 
-		s_found = false;
-		s_line_lc = s_line;
-		s_line_new = "N\\A";
+		found_key = false;
+		line_lc = line;
+		line_new = "N\\A";
 
-		transform(s_line_lc.begin(), s_line_lc.end(),
-			  s_line_lc.begin(), ::tolower);
+		transform(line_lc.begin(), line_lc.end(),
+			  line_lc.begin(), ::tolower);
 
 		for(auto const &elem : yampt::key_message)
 		{
-			if(s_found == false)
+			if(found_key == false)
 			{
-				s_pos = s_line_lc.find(elem);
+				pos = line_lc.find(elem);
 				convertLine(id, type);
 			}
 		}
 
-		for(auto const &elem : yampt::key_dial)
+		if(found_key == false)
 		{
-			if(s_found == false)
-			{
-				s_pos = s_line_lc.find(elem);
-				convertText("DIAL", yampt::r_type::DIAL);
-			}
+			pos = line_lc.find("addtopic");
+			convertText("DIAL", yampt::r_type::DIAL, 0);
 		}
 
-		for(auto const &elem : yampt::key_cell)
+		if(found_key == false)
 		{
-			if(s_found == false)
-			{
-				s_pos = s_line_lc.find(elem);
-				convertText("CELL", yampt::r_type::CELL);
-			}
+			pos = line_lc.find("showmap");
+			convertText("CELL", yampt::r_type::CELL, 0);
 		}
 
-		if(s_found == true)
+		if(found_key == false)
 		{
-			new_friendly += s_line_new + "\r\n";
+			pos = line_lc.find("centeroncell");
+			convertText("CELL", yampt::r_type::CELL, 0);
+		}
+
+		if(found_key == false)
+		{
+			pos = line_lc.find("getpccell");
+			convertText("CELL", yampt::r_type::CELL, 0);
+		}
+
+		if(found_key == false)
+		{
+			pos = line_lc.find("aifollowcell");
+			convertText("CELL", yampt::r_type::CELL, 1);
+		}
+
+		if(found_key == false)
+		{
+			pos = line_lc.find("aiescortcell)");
+			convertText("CELL", yampt::r_type::CELL, 1);
+		}
+
+		if(found_key == false)
+		{
+			pos = line_lc.find("placeitemcell");
+			convertText("CELL", yampt::r_type::CELL, 1);
+		}
+
+		if(found_key == false)
+		{
+			pos = line_lc.find("positioncell");
+			convertText("CELL", yampt::r_type::CELL, 4);
+		}
+
+		if(found_key == true)
+		{
+			new_friendly += line_new + "\r\n";
 		}
 		else
 		{
-			new_friendly += s_line + "\r\n";
+			new_friendly += line + "\r\n";
 		}
 	}
 
@@ -340,16 +373,16 @@ void EsmConverter::setNewFriendlyScript(string id, yampt::r_type type)
 //----------------------------------------------------------
 void EsmConverter::convertLine(string id, yampt::r_type type)
 {
-	if(s_pos != string::npos &&
-	   s_line.rfind(";", s_pos) == string::npos)
+	if(pos != string::npos &&
+	   line.rfind(";", pos) == string::npos)
 	{
-		auto search = merger->getDict()[type].find(id + yampt::sep[0] + s_line);
+		auto search = merger->getDict()[type].find(id + yampt::sep[0] + line);
 		if(search != merger->getDict()[type].end())
 		{
-			if(s_line != search->second)
+			if(line != search->second)
 			{
-				s_line_new = search->second;
-				s_found = true;
+				line_new = search->second;
+				found_key = true;
 				result_ptr = &yampt::result[1];
 			}
 			else
@@ -366,21 +399,31 @@ void EsmConverter::convertLine(string id, yampt::r_type type)
 }
 
 //----------------------------------------------------------
-void EsmConverter::convertText(string id, yampt::r_type type)
+void EsmConverter::convertText(string id, yampt::r_type type, int num)
 {
-	if(s_pos != string::npos &&
-	   s_line.rfind(";", s_pos) == string::npos)
+	if(pos != string::npos &&
+	   line.rfind(";", pos) == string::npos)
 	{
-		extractText();
-		auto search = merger->getDict()[type].find(id + yampt::sep[0] + s_text);
+		extractText(num);
+		auto search = merger->getDict()[type].find(id + yampt::sep[0] + text);
+
 		if(search != merger->getDict()[type].end())
 		{
-			s_line_new = s_line;
-			s_line_new.erase(s_pos, s_text.size() + 2);
-			s_line_new.insert(s_pos, "\"" + search->second + "\"");
-			s_found = true;
+			line_new = line;
+			line_new.erase(pos, text.size());
 
-			if(s_line != s_line_new)
+			if(line_new.substr(pos - 1, 1) == "\"")
+			{
+				line_new.insert(pos, search->second);
+			}
+			else
+			{
+				line_new.insert(pos, "\"" + search->second + "\"");
+			}
+
+			found_key = true;
+
+			if(line != line_new)
 			{
 				result_ptr = &yampt::result[1];
 			}
@@ -394,14 +437,23 @@ void EsmConverter::convertText(string id, yampt::r_type type)
 			result_ptr = &yampt::result[0];
 			for(auto &elem : merger->getDict()[type])
 			{
-				if(caseInsensitiveStringCmp(id + yampt::sep[0] + s_text, elem.first) == true)
+				if(caseInsensitiveStringCmp(id + yampt::sep[0] + text, elem.first) == true)
 				{
-					s_line_new = s_line;
-					s_line_new.erase(s_pos, s_text.size() + 2);
-					s_line_new.insert(s_pos, "\"" + elem.second + "\"");
-					s_found = true;
+					line_new = line;
+					line_new.erase(pos, text.size());
 
-					if(s_line != s_line_new)
+					if(line_new.substr(pos - 1, 1) == "\"")
+					{
+						line_new.insert(pos, elem.second);
+					}
+					else
+					{
+						line_new.insert(pos, "\"" + elem.second + "\"");
+					}
+
+					found_key = true;
+
+					if(line != line_new)
 					{
 						result_ptr = &yampt::result[1];
 						break;
@@ -419,39 +471,70 @@ void EsmConverter::convertText(string id, yampt::r_type type)
 }
 
 //----------------------------------------------------------
-void EsmConverter::extractText()
+void EsmConverter::extractText(int num)
 {
-	s_text = "<NotFound>";
+	size_t list_pos;
+	string list_var;
+	smatch found;
+	int ctr = -1;
 
-	if(s_line.find("\"", s_pos) != string::npos)
+	list_pos = line.find_first_of(" \t,", pos);
+	list_pos = line.find_first_not_of(" \t,", list_pos);
+	if(list_pos != string::npos)
 	{
-		regex re("\"(.*?)\"");
-		smatch found;
-		sregex_iterator next(s_line.begin(), s_line.end(), re);
-		sregex_iterator end;
-		while(next != end)
-		{
-			found = *next;
-			s_text = found[1].str();
-			s_pos = found.position(0);
-			next++;
-		}
+		list_var = line.substr(list_pos);
 	}
 	else
 	{
-		size_t last_ws_pos;
-		s_pos = s_line.find(" ", s_pos);
-		s_pos = s_line.find_first_not_of(" ", s_pos);
-		if(s_pos != string::npos)
+		list_pos = 0;
+	}
+
+	//cout << "----" << endl;
+	//cout << "Line: " << line << endl;
+	//cout << "List: " << list_var << endl;
+
+	if(num == 0)
+	{
+		text = list_var;
+		if(text.find("=") != string::npos)
 		{
-			s_text = s_line.substr(s_pos);
-			last_ws_pos = s_text.find_last_not_of(" \t");
-			if(last_ws_pos != string::npos)
-			{
-				s_text.erase(last_ws_pos + 1);
-			}
+			text.erase(text.find("="));
+		}
+		if(text.find_last_not_of(" \t") != string::npos)
+		{
+			text.erase(text.find_last_not_of(" \t") + 1);
+		}
+		pos = list_pos;
+	}
+	else
+	{
+		regex r1("(([\\w\\.]+)|(\".*?\"))");
+
+		sregex_iterator next(list_var.begin(), list_var.end(), r1);
+		sregex_iterator end;
+		while(next != end && ctr != num)
+		{
+			found = *next;
+			text = found[1].str();
+			pos = found.position(1) + list_pos;
+
+			//cout << "Var " << pos << ": " << text << endl;
+
+			next++;
+			ctr++;
 		}
 	}
+
+	regex r2("\"(.*?)\"");
+	regex_search(text, found, r2);
+
+	if(!found.empty())
+	{
+		text = found[1].str();
+		pos += 1;
+	}
+
+	//cout << "Out " << pos << ": " << text << endl;
 }
 
 //----------------------------------------------------------
