@@ -282,13 +282,28 @@ void EsmConverter::setNewFriendlyScript(string id, yampt::r_type type)
 		transform(line_lc.begin(), line_lc.end(),
 			  line_lc.begin(), ::tolower);
 
-		for(auto const &elem : yampt::key_message)
+		if(found_key == false)
 		{
-			if(found_key == false)
-			{
-				pos = line_lc.find(elem);
-				convertLine(id, type);
-			}
+			pos = line_lc.find("messagebox");
+			convertLine(id, type);
+		}
+
+		if(found_key == false)
+		{
+			pos = line_lc.find("choice");
+			convertLine(id, type);
+		}
+
+		if(found_key == false)
+		{
+			pos = line_lc.find("say ");
+			convertLine(id, type, true);
+		}
+
+		if(found_key == false)
+		{
+			pos = line_lc.find("say,");
+			convertLine(id, type, true);
 		}
 
 		if(found_key == false)
@@ -312,7 +327,7 @@ void EsmConverter::setNewFriendlyScript(string id, yampt::r_type type)
 		if(found_key == false)
 		{
 			pos = line_lc.find("getpccell");
-			convertText("CELL", yampt::r_type::CELL, 0, 1);
+			convertText("CELL", yampt::r_type::CELL, 0, true);
 		}
 
 		if(found_key == false)
@@ -372,7 +387,7 @@ void EsmConverter::setNewFriendlyScript(string id, yampt::r_type type)
 }
 
 //----------------------------------------------------------
-void EsmConverter::convertLine(string id, yampt::r_type type)
+void EsmConverter::convertLine(string id, yampt::r_type type, bool say)
 {
 	if(pos != string::npos &&
 	   line.rfind(";", pos) == string::npos)
@@ -384,8 +399,8 @@ void EsmConverter::convertLine(string id, yampt::r_type type)
 			{
 				line_new = search->second;
 
-				vector<string> str_list_u = splitLine(line);
-				vector<string> str_list_f = splitLine(line_new);
+				vector<string> str_list_u = splitLine(line, say);
+				vector<string> str_list_f = splitLine(line_new, say);
 
 				if(str_list_u.size() == str_list_f.size())
 				{
@@ -607,20 +622,33 @@ void EsmConverter::extractText(int num)
 }
 
 //----------------------------------------------------------
-vector<string> EsmConverter::splitLine(string line)
+vector<string> EsmConverter::splitLine(string line, bool say)
 {
-	vector<string> list;
+	vector<string> list_vec;
+	string list_str = line.substr(pos);
+
 	smatch found;
 	regex re("\"(.*?)\"");
-	sregex_iterator next(line.begin(), line.end(), re);
+	sregex_iterator next(list_str.begin(), list_str.end(), re);
 	sregex_iterator end;
 	while(next != end)
 	{
 		found = *next;
-		list.push_back(found[1].str());
+		list_vec.push_back(found[1].str());
 		next++;
 	}
-	return list;
+
+	if(say == 1 && list_vec.size() > 0)
+	{
+		list_vec.erase(list_vec.begin());
+	}
+
+	for(auto const &elem : list_vec)
+	{
+		cout << elem << endl << endl;
+	}
+
+	return list_vec;
 }
 
 //----------------------------------------------------------

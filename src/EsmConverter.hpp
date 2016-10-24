@@ -26,10 +26,10 @@ private:
 	void setNewFriendlyINFO(yampt::r_type type);
 	void setNewFriendlyScript(std::string id, yampt::r_type type);
 
-	void convertLine(std::string id, yampt::r_type type);
-	void convertText(std::string id, yampt::r_type type, int num, bool getpccell = 0);
+	void convertLine(std::string id, yampt::r_type type, bool say = false);
+	void convertText(std::string id, yampt::r_type type, int num, bool getpccell = false);
 	void extractText(int num);
-	std::vector<std::string> splitLine(std::string line);
+	std::vector<std::string> splitLine(std::string line, bool say = false);
 
 	void addDIALtoINFO();
 
