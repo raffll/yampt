@@ -409,13 +409,26 @@ void EsmConverter::convertLine(string id, yampt::r_type type, bool say)
 						pos_c = compiled.find(str_list_u[i], pos_c);
 						if(pos_c != string::npos)
 						{
-							pos_c -= 2;
-							compiled.erase(pos_c, 2);
-							compiled.insert(pos_c, convertIntToByteArray(str_list_f[i].size()).substr(0, 2));
-							pos_c += 2;
-							compiled.erase(pos_c, str_list_u[i].size());
-							compiled.insert(pos_c, str_list_f[i]);
-							pos_c += str_list_f[i].size();
+							if(i == 0)
+							{
+								pos_c -= 2;
+								compiled.erase(pos_c, 2);
+								compiled.insert(pos_c, convertIntToByteArray(str_list_f[i].size()).substr(0, 2));
+								pos_c += 2;
+								compiled.erase(pos_c, str_list_u[i].size());
+								compiled.insert(pos_c, str_list_f[i]);
+								pos_c += str_list_f[i].size();
+							}
+							else
+							{
+								pos_c -= 1;
+								compiled.erase(pos_c, 1);
+								compiled.insert(pos_c, convertIntToByteArray(str_list_f[i].size() + 1).substr(0, 1));
+								pos_c += 1;
+								compiled.erase(pos_c, str_list_u[i].size());
+								compiled.insert(pos_c, str_list_f[i]);
+								pos_c += str_list_f[i].size();
+							}
 						}
 					}
 				}
@@ -643,10 +656,10 @@ vector<string> EsmConverter::splitLine(string line, bool say)
 		list_vec.erase(list_vec.begin());
 	}
 
-	for(auto const &elem : list_vec)
+	/*for(auto const &elem : list_vec)
 	{
 		cout << elem << endl << endl;
-	}
+	}*/
 
 	return list_vec;
 }
