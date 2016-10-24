@@ -312,7 +312,7 @@ void EsmConverter::setNewFriendlyScript(string id, yampt::r_type type)
 		if(found_key == false)
 		{
 			pos = line_lc.find("getpccell");
-			convertText("CELL", yampt::r_type::CELL, 0);
+			convertText("CELL", yampt::r_type::CELL, 0, 1);
 		}
 
 		if(found_key == false)
@@ -422,7 +422,7 @@ void EsmConverter::convertLine(string id, yampt::r_type type)
 }
 
 //----------------------------------------------------------
-void EsmConverter::convertText(string id, yampt::r_type type, int num)
+void EsmConverter::convertText(string id, yampt::r_type type, int num, bool getpccell)
 {
 	if(pos != string::npos &&
 	   line.rfind(";", pos) == string::npos)
@@ -444,7 +444,18 @@ void EsmConverter::convertText(string id, yampt::r_type type, int num)
 				pos_c += 1;
 				compiled.erase(pos_c, text.size());
 				compiled.insert(pos_c, search->second);
-				pos_c += search->second.size();
+				if(getpccell == 1)
+				{
+					size_t size = search->second.size() + 12;
+					pos_c -= 8;
+					compiled.erase(pos_c, 1);
+					compiled.insert(pos_c, convertIntToByteArray(size).substr(0, 1));
+					pos_c += size;
+				}
+				else
+				{
+					pos_c += search->second.size();
+				}
 			}
 
 			if(line_new.substr(pos - 1, 1) == "\"")
@@ -486,7 +497,18 @@ void EsmConverter::convertText(string id, yampt::r_type type, int num)
 						pos_c += 1;
 						compiled.erase(pos_c, text.size());
 						compiled.insert(pos_c, elem.second);
-						pos_c += elem.second.size();
+						if(getpccell == 1)
+						{
+							size_t size = elem.second.size() + 12;
+							pos_c -= 8;
+							compiled.erase(pos_c, 1);
+							compiled.insert(pos_c, convertIntToByteArray(size).substr(0, 1));
+							pos_c += size;
+						}
+						else
+						{
+							pos_c += elem.second.size();
+						}
 					}
 
 					if(line_new.substr(pos - 1, 1) == "\"")
