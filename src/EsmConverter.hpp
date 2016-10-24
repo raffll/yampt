@@ -82,7 +82,6 @@ private:
 	std::string text;
 	size_t pos;
 	size_t pos_c;
-	std::string size_c;
 	int num;
 };
 

@@ -417,9 +417,8 @@ void EsmConverter::convertText(string id, yampt::r_type type, int num)
 			if(pos_c != string::npos)
 			{
 				pos_c -= 1;
-				size_c = convertIntToByteArray(search->second.size()).substr(0, 1);
 				compiled.erase(pos_c, 1);
-				compiled.insert(pos_c, size_c);
+				compiled.insert(pos_c, convertIntToByteArray(search->second.size()).substr(0, 1));
 				pos_c += 1;
 				compiled.erase(pos_c, text.size());
 				compiled.insert(pos_c, search->second);
@@ -460,9 +459,8 @@ void EsmConverter::convertText(string id, yampt::r_type type, int num)
 					if(pos_c != string::npos)
 					{
 						pos_c -= 1;
-						size_c = convertIntToByteArray(elem.second.size()).substr(0, 1);
 						compiled.erase(pos_c, 1);
-						compiled.insert(pos_c, size_c);
+						compiled.insert(pos_c, convertIntToByteArray(elem.second.size()).substr(0, 1));
 						pos_c += 1;
 						compiled.erase(pos_c, text.size());
 						compiled.insert(pos_c, elem.second);
@@ -1071,12 +1069,10 @@ void EsmConverter::convertSCPT()
 		esm.setRec(i);
 		if(esm.getRecId() == "SCPT")
 		{
-			esm.setUnique("SCHD");
+			esm.setUnique("SCHD", false);
 
 			esm.setFriendly("SCDT", false, false);
 			compiled = esm.getFriendly();
-			cout << "1-----------" << endl;
-			cout << compiled << endl << endl;
 
 			esm.setFriendly("SCTX");
 
@@ -1086,10 +1082,15 @@ void EsmConverter::convertSCPT()
 				if(convert == true)
 				{
 					convertRecordContent(new_friendly);
+
 					esm.setFriendly("SCDT", false, false);
-					cout << "2-----------" << endl;
-					cout << compiled << endl << endl;
 					convertRecordContent(compiled);
+
+					esm.setFriendly("SCHD", false, false);
+					new_friendly = esm.getFriendly();
+					new_friendly.erase(44, 4);
+					new_friendly.insert(44, convertIntToByteArray(compiled.size()));
+					convertRecordContent(new_friendly);
 				}
 			}
 		}
