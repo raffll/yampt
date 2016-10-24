@@ -383,6 +383,28 @@ void EsmConverter::convertLine(string id, yampt::r_type type)
 			if(line != search->second)
 			{
 				line_new = search->second;
+
+				vector<string> str_list_u = splitLine(line);
+				vector<string> str_list_f = splitLine(line_new);
+
+				if(str_list_u.size() == str_list_f.size())
+				{
+					for(size_t i = 0; i < str_list_u.size(); i++)
+					{
+						pos_c = compiled.find(str_list_u[i], pos_c);
+						if(pos_c != string::npos)
+						{
+							pos_c -= 2;
+							compiled.erase(pos_c, 2);
+							compiled.insert(pos_c, convertIntToByteArray(str_list_f[i].size()).substr(0, 2));
+							pos_c += 2;
+							compiled.erase(pos_c, str_list_u[i].size());
+							compiled.insert(pos_c, str_list_f[i]);
+							pos_c += str_list_f[i].size();
+						}
+					}
+				}
+
 				found_key = true;
 				result_ptr = &yampt::result[1];
 			}
@@ -413,7 +435,7 @@ void EsmConverter::convertText(string id, yampt::r_type type, int num)
 			line_new = line;
 			line_new.erase(pos, text.size());
 
-			pos_c = compiled.find(text);
+			pos_c = compiled.find(text, pos_c);
 			if(pos_c != string::npos)
 			{
 				pos_c -= 1;
@@ -455,7 +477,7 @@ void EsmConverter::convertText(string id, yampt::r_type type, int num)
 					line_new = line;
 					line_new.erase(pos, text.size());
 
-					pos_c = compiled.find(text);
+					pos_c = compiled.find(text, pos_c);
 					if(pos_c != string::npos)
 					{
 						pos_c -= 1;
@@ -560,6 +582,23 @@ void EsmConverter::extractText(int num)
 	}
 
 	//cout << "Out " << pos << ": " << text << endl;
+}
+
+//----------------------------------------------------------
+vector<string> EsmConverter::splitLine(string line)
+{
+	vector<string> list;
+	smatch found;
+	regex re("\"(.*?)\"");
+	sregex_iterator next(line.begin(), line.end(), re);
+	sregex_iterator end;
+	while(next != end)
+	{
+		found = *next;
+		list.push_back(found[1].str());
+		next++;
+	}
+	return list;
 }
 
 //----------------------------------------------------------

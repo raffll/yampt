@@ -29,6 +29,7 @@ private:
 	void convertLine(std::string id, yampt::r_type type);
 	void convertText(std::string id, yampt::r_type type, int num);
 	void extractText(int num);
+	std::vector<std::string> splitLine(std::string line);
 
 	void addDIALtoINFO();
 
