@@ -269,6 +269,7 @@ void EsmConverter::setNewFriendlyScript(string id, yampt::r_type type)
 
 	string line_lc;
 	smatch found;
+	pos_c = 0;
 
 	while(getline(ss, line))
 	{
@@ -412,6 +413,19 @@ void EsmConverter::convertText(string id, yampt::r_type type, int num)
 			line_new = line;
 			line_new.erase(pos, text.size());
 
+			pos_c = compiled.find(text);
+			if(pos_c != string::npos)
+			{
+				pos_c -= 1;
+				size_c = convertIntToByteArray(search->second.size()).substr(0, 1);
+				compiled.erase(pos_c, 1);
+				compiled.insert(pos_c, size_c);
+				pos_c += 1;
+				compiled.erase(pos_c, text.size());
+				compiled.insert(pos_c, search->second);
+				pos_c += search->second.size();
+			}
+
 			if(line_new.substr(pos - 1, 1) == "\"")
 			{
 				line_new.insert(pos, search->second);
@@ -441,6 +455,19 @@ void EsmConverter::convertText(string id, yampt::r_type type, int num)
 				{
 					line_new = line;
 					line_new.erase(pos, text.size());
+
+					pos_c = compiled.find(text);
+					if(pos_c != string::npos)
+					{
+						pos_c -= 1;
+						size_c = convertIntToByteArray(elem.second.size()).substr(0, 1);
+						compiled.erase(pos_c, 1);
+						compiled.insert(pos_c, size_c);
+						pos_c += 1;
+						compiled.erase(pos_c, text.size());
+						compiled.insert(pos_c, elem.second);
+						pos_c += elem.second.size();
+					}
 
 					if(line_new.substr(pos - 1, 1) == "\"")
 					{
@@ -478,7 +505,7 @@ void EsmConverter::extractText(int num)
 	smatch found;
 	int ctr = -1;
 
-	list_pos = line.find_first_of(" \t,", pos);
+	list_pos = line.find_first_of(" \t,\"", pos);
 	list_pos = line.find_first_not_of(" \t,", list_pos);
 	if(list_pos != string::npos)
 	{
@@ -1045,6 +1072,12 @@ void EsmConverter::convertSCPT()
 		if(esm.getRecId() == "SCPT")
 		{
 			esm.setUnique("SCHD");
+
+			esm.setFriendly("SCDT", false, false);
+			compiled = esm.getFriendly();
+			cout << "1-----------" << endl;
+			cout << compiled << endl << endl;
+
 			esm.setFriendly("SCTX");
 
 			if(esm.getFriendlyStatus() == true)
@@ -1053,6 +1086,10 @@ void EsmConverter::convertSCPT()
 				if(convert == true)
 				{
 					convertRecordContent(new_friendly);
+					esm.setFriendly("SCDT", false, false);
+					cout << "2-----------" << endl;
+					cout << compiled << endl << endl;
+					convertRecordContent(compiled);
 				}
 			}
 		}

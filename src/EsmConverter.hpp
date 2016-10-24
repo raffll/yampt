@@ -67,6 +67,7 @@ private:
 	std::string unique_key;
 	std::string new_friendly;
 	std::string current_dialog;
+	std::string compiled;
 
 	std::string log;
 	const std::string *result_ptr;
@@ -80,6 +81,8 @@ private:
 	std::string line_new;
 	std::string text;
 	size_t pos;
+	size_t pos_c;
+	std::string size_c;
 	int num;
 };
 
