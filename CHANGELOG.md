@@ -59,3 +59,7 @@
 
 0.9 beta
 - many improvements in script parser
+
+0.10 beta
+- minor script parser improvement
+- add compiled script data converter

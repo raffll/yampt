@@ -10,8 +10,6 @@ Second big problem are missing hyperlinks. Program solve this by adding your nat
 
 All you need is two language version of the game (in most cases English and your native) or pre-made dictionaries.
 
-After convertion you must recompile all scripts in TES CS (or MWEdit)! For multiple plugins select all without selecting "active" and after recompilation save as new esp containing only scripts.
-
 ## Installation
 
 - Unpack somewhere
