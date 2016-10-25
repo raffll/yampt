@@ -26,9 +26,10 @@ private:
 	void setNewFriendlyINFO(yampt::r_type type);
 	void setNewFriendlyScript(std::string id, yampt::r_type type);
 
-	void convertLine(std::string id, yampt::r_type type);
-	void convertText(std::string id, yampt::r_type type, int num);
+	void convertLine(std::string id, yampt::r_type type, bool say = false);
+	void convertText(std::string id, yampt::r_type type, int num, bool getpccell = false);
 	void extractText(int num);
+	std::vector<std::string> splitLine(std::string line, bool say = false);
 
 	void addDIALtoINFO();
 
@@ -67,6 +68,7 @@ private:
 	std::string unique_key;
 	std::string new_friendly;
 	std::string current_dialog;
+	std::string compiled;
 
 	std::string log;
 	const std::string *result_ptr;
@@ -80,6 +82,7 @@ private:
 	std::string line_new;
 	std::string text;
 	size_t pos;
+	size_t pos_c;
 	int num;
 };
 

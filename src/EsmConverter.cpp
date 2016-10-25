@@ -269,6 +269,7 @@ void EsmConverter::setNewFriendlyScript(string id, yampt::r_type type)
 
 	string line_lc;
 	smatch found;
+	pos_c = 0;
 
 	while(getline(ss, line))
 	{
@@ -281,13 +282,28 @@ void EsmConverter::setNewFriendlyScript(string id, yampt::r_type type)
 		transform(line_lc.begin(), line_lc.end(),
 			  line_lc.begin(), ::tolower);
 
-		for(auto const &elem : yampt::key_message)
+		if(found_key == false)
 		{
-			if(found_key == false)
-			{
-				pos = line_lc.find(elem);
-				convertLine(id, type);
-			}
+			pos = line_lc.find("messagebox");
+			convertLine(id, type);
+		}
+
+		if(found_key == false)
+		{
+			pos = line_lc.find("choice");
+			convertLine(id, type);
+		}
+
+		if(found_key == false)
+		{
+			pos = line_lc.find("say ");
+			convertLine(id, type, true);
+		}
+
+		if(found_key == false)
+		{
+			pos = line_lc.find("say,");
+			convertLine(id, type, true);
 		}
 
 		if(found_key == false)
@@ -311,7 +327,7 @@ void EsmConverter::setNewFriendlyScript(string id, yampt::r_type type)
 		if(found_key == false)
 		{
 			pos = line_lc.find("getpccell");
-			convertText("CELL", yampt::r_type::CELL, 0);
+			convertText("CELL", yampt::r_type::CELL, 0, true);
 		}
 
 		if(found_key == false)
@@ -371,7 +387,7 @@ void EsmConverter::setNewFriendlyScript(string id, yampt::r_type type)
 }
 
 //----------------------------------------------------------
-void EsmConverter::convertLine(string id, yampt::r_type type)
+void EsmConverter::convertLine(string id, yampt::r_type type, bool say)
 {
 	if(pos != string::npos &&
 	   line.rfind(";", pos) == string::npos)
@@ -382,6 +398,41 @@ void EsmConverter::convertLine(string id, yampt::r_type type)
 			if(line != search->second)
 			{
 				line_new = search->second;
+
+				vector<string> str_list_u = splitLine(line, say);
+				vector<string> str_list_f = splitLine(line_new, say);
+
+				if(str_list_u.size() == str_list_f.size())
+				{
+					for(size_t i = 0; i < str_list_u.size(); i++)
+					{
+						pos_c = compiled.find(str_list_u[i], pos_c);
+						if(pos_c != string::npos)
+						{
+							if(i == 0)
+							{
+								pos_c -= 2;
+								compiled.erase(pos_c, 2);
+								compiled.insert(pos_c, convertIntToByteArray(str_list_f[i].size()).substr(0, 2));
+								pos_c += 2;
+								compiled.erase(pos_c, str_list_u[i].size());
+								compiled.insert(pos_c, str_list_f[i]);
+								pos_c += str_list_f[i].size();
+							}
+							else
+							{
+								pos_c -= 1;
+								compiled.erase(pos_c, 1);
+								compiled.insert(pos_c, convertIntToByteArray(str_list_f[i].size() + 1).substr(0, 1));
+								pos_c += 1;
+								compiled.erase(pos_c, str_list_u[i].size());
+								compiled.insert(pos_c, str_list_f[i]);
+								pos_c += str_list_f[i].size();
+							}
+						}
+					}
+				}
+
 				found_key = true;
 				result_ptr = &yampt::result[1];
 			}
@@ -399,7 +450,7 @@ void EsmConverter::convertLine(string id, yampt::r_type type)
 }
 
 //----------------------------------------------------------
-void EsmConverter::convertText(string id, yampt::r_type type, int num)
+void EsmConverter::convertText(string id, yampt::r_type type, int num, bool getpccell)
 {
 	if(pos != string::npos &&
 	   line.rfind(";", pos) == string::npos)
@@ -411,6 +462,29 @@ void EsmConverter::convertText(string id, yampt::r_type type, int num)
 		{
 			line_new = line;
 			line_new.erase(pos, text.size());
+
+			pos_c = compiled.find(text, pos_c);
+			if(pos_c != string::npos)
+			{
+				pos_c -= 1;
+				compiled.erase(pos_c, 1);
+				compiled.insert(pos_c, convertIntToByteArray(search->second.size()).substr(0, 1));
+				pos_c += 1;
+				compiled.erase(pos_c, text.size());
+				compiled.insert(pos_c, search->second);
+				if(getpccell == 1)
+				{
+					size_t size = search->second.size() + 12;
+					pos_c -= 8;
+					compiled.erase(pos_c, 1);
+					compiled.insert(pos_c, convertIntToByteArray(size).substr(0, 1));
+					pos_c += size;
+				}
+				else
+				{
+					pos_c += search->second.size();
+				}
+			}
 
 			if(line_new.substr(pos - 1, 1) == "\"")
 			{
@@ -441,6 +515,29 @@ void EsmConverter::convertText(string id, yampt::r_type type, int num)
 				{
 					line_new = line;
 					line_new.erase(pos, text.size());
+
+					pos_c = compiled.find(text, pos_c);
+					if(pos_c != string::npos)
+					{
+						pos_c -= 1;
+						compiled.erase(pos_c, 1);
+						compiled.insert(pos_c, convertIntToByteArray(elem.second.size()).substr(0, 1));
+						pos_c += 1;
+						compiled.erase(pos_c, text.size());
+						compiled.insert(pos_c, elem.second);
+						if(getpccell == 1)
+						{
+							size_t size = elem.second.size() + 12;
+							pos_c -= 8;
+							compiled.erase(pos_c, 1);
+							compiled.insert(pos_c, convertIntToByteArray(size).substr(0, 1));
+							pos_c += size;
+						}
+						else
+						{
+							pos_c += elem.second.size();
+						}
+					}
 
 					if(line_new.substr(pos - 1, 1) == "\"")
 					{
@@ -478,7 +575,7 @@ void EsmConverter::extractText(int num)
 	smatch found;
 	int ctr = -1;
 
-	list_pos = line.find_first_of(" \t,", pos);
+	list_pos = line.find_first_of(" \t,\"", pos);
 	list_pos = line.find_first_not_of(" \t,", list_pos);
 	if(list_pos != string::npos)
 	{
@@ -535,6 +632,36 @@ void EsmConverter::extractText(int num)
 	}
 
 	//cout << "Out " << pos << ": " << text << endl;
+}
+
+//----------------------------------------------------------
+vector<string> EsmConverter::splitLine(string line, bool say)
+{
+	vector<string> list_vec;
+	string list_str = line.substr(pos);
+
+	smatch found;
+	regex re("\"(.*?)\"");
+	sregex_iterator next(list_str.begin(), list_str.end(), re);
+	sregex_iterator end;
+	while(next != end)
+	{
+		found = *next;
+		list_vec.push_back(found[1].str());
+		next++;
+	}
+
+	if(say == 1 && list_vec.size() > 0)
+	{
+		list_vec.erase(list_vec.begin());
+	}
+
+	/*for(auto const &elem : list_vec)
+	{
+		cout << elem << endl << endl;
+	}*/
+
+	return list_vec;
 }
 
 //----------------------------------------------------------
@@ -1044,7 +1171,11 @@ void EsmConverter::convertSCPT()
 		esm.setRec(i);
 		if(esm.getRecId() == "SCPT")
 		{
-			esm.setUnique("SCHD");
+			esm.setUnique("SCHD", false);
+
+			esm.setFriendly("SCDT", false, false);
+			compiled = esm.getFriendly();
+
 			esm.setFriendly("SCTX");
 
 			if(esm.getFriendlyStatus() == true)
@@ -1052,6 +1183,15 @@ void EsmConverter::convertSCPT()
 				setNewFriendlyScript("SCTX", yampt::r_type::SCTX);
 				if(convert == true)
 				{
+					convertRecordContent(new_friendly);
+
+					esm.setFriendly("SCDT", false, false);
+					convertRecordContent(compiled);
+
+					esm.setFriendly("SCHD", false, false);
+					new_friendly = esm.getFriendly();
+					new_friendly.erase(44, 4);
+					new_friendly.insert(44, convertIntToByteArray(compiled.size()));
 					convertRecordContent(new_friendly);
 				}
 			}
