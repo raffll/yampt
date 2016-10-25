@@ -1171,7 +1171,7 @@ void EsmConverter::convertSCPT()
 		esm.setRec(i);
 		if(esm.getRecId() == "SCPT")
 		{
-			esm.setUnique("SCHD", false);
+			esm.setUnique("SCHD");
 
 			esm.setFriendly("SCDT", false, false);
 			compiled = esm.getFriendly();

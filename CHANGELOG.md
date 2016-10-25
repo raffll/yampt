@@ -63,3 +63,6 @@
 0.10 beta
 - minor script parser improvement
 - add compiled script data converter
+
+0.11 beta
+- log fixes
