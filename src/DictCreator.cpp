@@ -242,7 +242,9 @@ void DictCreator::insertRecord(const string &unique_key, const string &friendly,
 //----------------------------------------------------------
 string DictCreator::dialTranslator(string to_translate)
 {
-	if(mode == yampt::ins_mode::ALL || mode == yampt::ins_mode::NOTFOUND || mode == yampt::ins_mode::CHANGED)
+	if(mode == yampt::ins_mode::ALL ||
+	   mode == yampt::ins_mode::NOTFOUND ||
+	   mode == yampt::ins_mode::CHANGED)
 	{
 		auto search = merger->getDict()[yampt::r_type::DIAL].find("DIAL" + yampt::sep[0] + to_translate);
 		if(search != merger->getDict()[yampt::r_type::DIAL].end())
@@ -257,30 +259,31 @@ string DictCreator::dialTranslator(string to_translate)
 vector<string> DictCreator::makeMessageColl(const string &script_text)
 {
 	vector<string> message;
-	bool s_found;
-	string s_line;
-	string s_line_lc;
-	size_t s_pos;
+	bool found;
+	string line;
+	string line_lc;
+	size_t pos;
 
 	istringstream ss(script_text);
 
-	while(getline(ss, s_line))
+	while(getline(ss, line))
 	{
-		s_found = false;
-		eraseCarriageReturnChar(s_line);
-		s_line_lc = s_line;
-		transform(s_line_lc.begin(), s_line_lc.end(),
-			  s_line_lc.begin(), ::tolower);
+		found = false;
+		eraseCarriageReturnChar(line);
+		line_lc = line;
+		transform(line_lc.begin(), line_lc.end(),
+			  line_lc.begin(), ::tolower);
 
 		for(auto const &elem : yampt::key_message)
 		{
-			if(s_found == false)
+			if(found == false)
 			{
-				s_pos = s_line_lc.find(elem);
-				if(s_pos != string::npos && s_line.rfind(";", s_pos) == string::npos)
+				pos = line_lc.find(elem);
+				if(pos != string::npos &&
+				   line.rfind(";", pos) == string::npos)
 				{
-					message.push_back(s_line);
-					s_found = true;
+					message.push_back(line);
+					found = true;
 					break;
 				}
 			}
@@ -401,7 +404,9 @@ void DictCreator::makeDictFNAM()
 			esm_n.setFriendly("FNAM");
 			esm_f.setFriendly("FNAM");
 
-			if(esm_n.getUniqueStatus() == true && esm_n.getFriendlyStatus() == true && esm_n.getUnique() != "player")
+			if(esm_n.getUniqueStatus() == true &&
+			   esm_n.getFriendlyStatus() == true &&
+			   esm_n.getUnique() != "player")
 			{
 				validateRecord("FNAM" + yampt::sep[0] + esm_n.getRecId() + yampt::sep[0] + esm_n.getUnique(),
 					       esm_n.getFriendly(),
@@ -437,7 +442,8 @@ void DictCreator::makeDictDESC()
 			esm_n.setFriendly("DESC");
 			esm_f.setFriendly("DESC");
 
-			if(esm_n.getUniqueStatus() == true && esm_n.getFriendlyStatus() == true)
+			if(esm_n.getUniqueStatus() == true &&
+			   esm_n.getFriendlyStatus() == true)
 			{
 				validateRecord("DESC" + yampt::sep[0] + esm_n.getRecId() + yampt::sep[0] + esm_n.getUnique(),
 					       esm_n.getFriendly(),
@@ -463,7 +469,8 @@ void DictCreator::makeDictTEXT()
 			esm_n.setFriendly("TEXT");
 			esm_f.setFriendly("TEXT");
 
-			if(esm_n.getUniqueStatus() == true && esm_n.getFriendlyStatus() == true)
+			if(esm_n.getUniqueStatus() == true &&
+			   esm_n.getFriendlyStatus() == true)
 			{
 				validateRecord("TEXT" + yampt::sep[0] + esm_n.getUnique(),
 					       esm_n.getFriendly(),
@@ -522,7 +529,8 @@ void DictCreator::makeDictINDX()
 			esm_n.setFriendly("DESC");
 			esm_f.setFriendly("DESC");
 
-			if(esm_n.getUniqueStatus() == true && esm_n.getFriendlyStatus() == true)
+			if(esm_n.getUniqueStatus() == true &&
+			   esm_n.getFriendlyStatus() == true)
 			{
 				validateRecord("INDX" + yampt::sep[0] + esm_n.getRecId() + yampt::sep[0] + esm_n.getUnique(),
 					       esm_n.getFriendly(),
@@ -548,7 +556,9 @@ void DictCreator::makeDictDIAL()
 			esm_n.setFriendly("NAME");
 			esm_f.setFriendly("NAME");
 
-			if(esm_n.getUniqueStatus() == true && esm_n.getFriendlyStatus() == true && esm_n.getUnique() == "T")
+			if(esm_n.getUniqueStatus() == true &&
+			   esm_n.getFriendlyStatus() == true &&
+			   esm_n.getUnique() == "T")
 			{
 				validateRecord("DIAL" + yampt::sep[0] + esm_ptr->getFriendly(),
 					       esm_n.getFriendly(),
@@ -574,7 +584,8 @@ void DictCreator::makeDictINFO()
 			esm_n.setUnique("DATA");
 			esm_n.setFriendly("NAME");
 
-			if(esm_n.getUniqueStatus() == true && esm_n.getFriendlyStatus() == true)
+			if(esm_n.getUniqueStatus() == true &&
+			   esm_n.getFriendlyStatus() == true)
 			{
 				current_dialog = esm_n.getUnique() + yampt::sep[0] + dialTranslator(esm_n.getFriendly());
 			}
@@ -589,7 +600,8 @@ void DictCreator::makeDictINFO()
 			esm_n.setFriendly("NAME");
 			esm_f.setFriendly("NAME");
 
-			if(esm_n.getUniqueStatus() == true && esm_n.getFriendlyStatus() == true)
+			if(esm_n.getUniqueStatus() == true &&
+			   esm_n.getFriendlyStatus() == true)
 			{
 				validateRecord("INFO" + yampt::sep[0] + current_dialog + yampt::sep[0] + esm_n.getUnique(),
 					       esm_n.getFriendly(),

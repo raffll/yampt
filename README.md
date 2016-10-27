@@ -142,9 +142,9 @@ Use for manualy translate only new records.
 
 First we need second base dictionary with foreign records
 ```
-yampt.exe --make-all -f "C:\path\to\Morrowind.esm" -d "NATIVE.dic"
-yampt.exe --make-all -f "C:\path\to\Tribunal.esm" -d "NATIVE.dic"
-yampt.exe --make-all -f "C:\path\to\Bloodmoon.esm" -d "NATIVE.dic"
+yampt.exe --make-all -f "C:\path\to\FOREIGN\Morrowind.esm" -d "NATIVE.dic"
+yampt.exe --make-all -f "C:\path\to\FOREIGN\Tribunal.esm" -d "NATIVE.dic"
+yampt.exe --make-all -f "C:\path\to\FOREIGN\Bloodmoon.esm" -d "NATIVE.dic"
 
 Optional for compatible plugins:
 yampt.exe --make-all -f "C:\path\to\Morrowind Patch v1.6.6_beta.esm" -d "NATIVE.dic"
