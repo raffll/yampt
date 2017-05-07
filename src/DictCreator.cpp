@@ -114,11 +114,13 @@ bool DictCreator::compareEsm()
 
 		for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
 		{
+			esm_n.setRec(i);
 			esm_n_compare += esm_n.getRecId();
 		}
 
 		for(size_t i = 0; i < esm_f.getRecColl().size(); ++i)
 		{
+			esm_f.setRec(i);
 			esm_f_compare += esm_f.getRecId();
 		}
 
