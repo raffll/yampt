@@ -15,6 +15,7 @@ DictCreator::DictCreator(string path_n)
 	if(esm_n.getStatus() == true)
 	{
 		status = true;
+		basic_mode = true;
 	}
 }
 
@@ -31,7 +32,15 @@ DictCreator::DictCreator(string path_n, string path_f)
 
 	if(esm_n.getStatus() == true && esm_f.getStatus() == true)
 	{
-		status = compareEsm();
+		if(compareMasterFiles())
+		{
+			basic_mode = true;
+		}
+		else
+		{
+			basic_mode = false;
+		}
+		status = true;
 	}
 }
 
@@ -49,16 +58,33 @@ DictCreator::DictCreator(string path_n, DictMerger &merger, yampt::ins_mode mode
 	if(esm_n.getStatus() == true && merger.getStatus() == true)
 	{
 		status = true;
+		basic_mode = true;
 	}
 }
 
 //----------------------------------------------------------
 void DictCreator::makeDict()
 {
+	if(basic_mode == true)
+	{
+		makeDictBasic();
+	}
+	else
+	{
+		makeDictExtended();
+	}
+}
+
+//----------------------------------------------------------
+void DictCreator::makeDictBasic()
+{
 	if(status == true)
 	{
-		printLog("", true);
+		printLogHeader();
+
 		makeDictCELL();
+		makeDictDefaultCELL();
+		makeDictRegionCELL();
 		makeDictGMST();
 		makeDictFNAM();
 		makeDictDESC();
@@ -69,97 +95,104 @@ void DictCreator::makeDict()
 		makeDictINFO();
 		makeDictBNAM();
 		makeDictSCPT();
+
 		cout << endl;
 	}
 }
 
 //----------------------------------------------------------
-void DictCreator::printLog(string id, bool header)
+void DictCreator::makeDictExtended()
 {
-	if(header == true)
+	if(status == true)
 	{
-		cout << endl;
-		cout << "          CREATED / DOUBLED /    ALL" << endl;
-		cout << "    --------------------------------" << endl;
-	}
-	else
-	{
-		cout << "    " << id << " "
-		     << setw(8) << to_string(counter[0]) << " / "
-		     << setw(7) << to_string(counter[1]) << " / "
-		     << setw(6) << to_string(counter[2]) << endl;
+		printLogHeader();
 
-		if(id == "GMST" || id == "FNAM")
-		{
-			cout << "     + CELL"
-			     << setw(6) << to_string(counter_extra[0]) << " / "
-			     << setw(7) << to_string(counter_extra[1]) << " / "
-			     << setw(6) << to_string(counter_extra[2]) << endl;
-		}
+		makeDictCELLExtended();
+		//makeDictDefaultCELLExtended();
+		//makeDictRegionCELLExtended();
+		//makeDictGMST();
+		//makeDictFNAM();
+		//makeDictDESC();
+		//makeDictTEXT();
+		//makeDictRNAM();
+		//makeDictINDX();
+		//makeDictDIAL();
+		//makeDictDIALExtended();
+		//makeDictINFO();
+		//makeDictBNAM();
+		//makeDictSCPT();
+
+		cout << endl;
 	}
 }
 
 //----------------------------------------------------------
-bool DictCreator::compareEsm()
+void DictCreator::printLogHeader()
 {
-	if(esm_n.getRecColl().size() != esm_f.getRecColl().size())
+	cout << endl;
+	cout << "          CREATED / DOUBLED /    ALL" << endl;
+	cout << "    --------------------------------" << endl;
+}
+
+//----------------------------------------------------------
+void DictCreator::printLog(string id)
+{
+	cout << "    " << id << " "
+	     << setw(8) << to_string(counter_created) << " / "
+	     << setw(7) << to_string(counter_doubled) << " / "
+	     << setw(6) << to_string(counter_all) << endl;
+}
+
+//----------------------------------------------------------
+bool DictCreator::compareMasterFiles()
+{
+	string esm_n_compare;
+	string esm_f_compare;
+
+	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
 	{
-		cout << "--> They are not the same master files!\r\n";
+		esm_n.setRec(i);
+		esm_n_compare += esm_n.getRecId();
+	}
+
+	for(size_t i = 0; i < esm_f.getRecColl().size(); ++i)
+	{
+		esm_f.setRec(i);
+		esm_f_compare += esm_f.getRecId();
+	}
+
+	if(esm_n_compare != esm_f_compare)
+	{
+		cout << "--> Files have records in different order!" << endl;
+		cout << "--> Please be patient..." << endl;
 		return false;
 	}
 	else
 	{
-		string esm_n_compare;
-		string esm_f_compare;
-
-		for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
-		{
-			esm_n.setRec(i);
-			esm_n_compare += esm_n.getRecId();
-		}
-
-		for(size_t i = 0; i < esm_f.getRecColl().size(); ++i)
-		{
-			esm_f.setRec(i);
-			esm_f_compare += esm_f.getRecId();
-		}
-
-		if(esm_n_compare != esm_f_compare)
-		{
-			cout << "--> They are not the same master files!\r\n";
-			return false;
-		}
-		else
-		{
-			return true;
-		}
+		return true;
 	}
 }
 
 //----------------------------------------------------------
 void DictCreator::resetCounters()
 {
-	counter = {};
-	counter_extra = {};
+	counter_created = 0;
+	counter_doubled = 0;
+	counter_all = 0;
 }
 
 //----------------------------------------------------------
-void DictCreator::validateRecord(const string &unique_key, const string &friendly, yampt::r_type type, bool extra)
+void DictCreator::validateRecord(const string &unique_key, const string &friendly, yampt::r_type type)
 {
-	if(extra == true)
-	{
-		counter_extra[2]++;
-	}
-	else
-	{
-		counter[2]++;
-	}
+	counter_all++;
 
+	// Insert without special cases
 	if(mode == yampt::ins_mode::RAW || mode == yampt::ins_mode::BASE)
 	{
-		insertRecord(unique_key, friendly, type, extra);
+		insertRecord(unique_key, friendly, type);
 	}
 
+	// For CELL, DIAL, BNAM, SCTX find corresponding record in dictionary given by user
 	if(mode == yampt::ins_mode::ALL)
 	{
 		if(type == yampt::r_type::CELL ||
@@ -170,28 +203,30 @@ void DictCreator::validateRecord(const string &unique_key, const string &friendl
 			auto search = merger->getDict()[type].find(unique_key);
 			if(search != merger->getDict()[type].end())
 			{
-				insertRecord(unique_key, search->second, type, extra);
+				insertRecord(unique_key, search->second, type);
 			}
 			else
 			{
-				insertRecord(unique_key, friendly, type, extra);
+				insertRecord(unique_key, friendly, type);
 			}
 		}
 		else
 		{
-			insertRecord(unique_key, friendly, type, extra);
+			insertRecord(unique_key, friendly, type);
 		}
 	}
 
+	// Insert only ones not found in dictionary given by user
 	if(mode == yampt::ins_mode::NOTFOUND)
 	{
 		auto search = merger->getDict()[type].find(unique_key);
 		if(search == merger->getDict()[type].end())
 		{
-			insertRecord(unique_key, friendly, type, extra);
+			insertRecord(unique_key, friendly, type);
 		}
 	}
 
+	// Insert only with changed friendly text compared to dictionary given by user
 	if(mode == yampt::ins_mode::CHANGED)
 	{
 		if(type == yampt::r_type::GMST ||
@@ -207,7 +242,7 @@ void DictCreator::validateRecord(const string &unique_key, const string &friendl
 			{
 				if(search->second != friendly)
 				{
-					insertRecord(unique_key, friendly, type, extra);
+					insertRecord(unique_key, friendly, type);
 				}
 			}
 		}
@@ -215,29 +250,15 @@ void DictCreator::validateRecord(const string &unique_key, const string &friendl
 }
 
 //----------------------------------------------------------
-void DictCreator::insertRecord(const string &unique_key, const string &friendly, yampt::r_type type, bool extra)
+void DictCreator::insertRecord(const string &unique_key, const string &friendly, yampt::r_type type)
 {
 	if(dict[type].insert({unique_key, friendly}).second == true)
 	{
-		if(extra == true)
-		{
-			counter_extra[0]++;
-		}
-		else
-		{
-			counter[0]++;
-		}
+		counter_created++;
 	}
 	else
 	{
-		if(extra == true)
-		{
-			counter_extra[1]++;
-		}
-		else
-		{
-			counter[1]++;
-		}
+		counter_doubled++;
 	}
 }
 
@@ -314,18 +335,238 @@ void DictCreator::makeDictCELL()
 	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
 	{
 		esm_n.setRec(i);
-		esm_f.setRec(i);
+
 		if(esm_n.getRecId() == "CELL")
 		{
 			esm_n.setUnique("NAME");
 			esm_n.setFriendly("NAME");
+
+			esm_f.setRec(i);
 			esm_f.setFriendly("NAME");
 
-			if(esm_n.getUniqueStatus() == true)
+			if(esm_n.getUniqueStatus() &&
+			   esm_n.getFriendlyStatus() &&
+			   esm_f.getFriendlyStatus())
 			{
 				validateRecord("CELL" + yampt::sep[0] + esm_ptr->getFriendly(),
 					       esm_n.getFriendly(),
 					       yampt::r_type::CELL);
+			}
+		}
+	}
+	printLog("CELL");
+}
+
+//----------------------------------------------------------
+void DictCreator::makeDictCELLExtended()
+{
+	resetCounters();
+	string pattern;
+	string match;
+	bool found = false;
+
+	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
+	{
+		esm_n.setRec(i);
+
+		if(esm_n.getRecId() == "CELL")
+		{
+			esm_n.setUnique("NAME");
+
+			if(esm_n.getUniqueStatus())
+			{
+				found = false;
+
+				// Pattern is the combined id of all objects in cell
+				pattern = "";
+				esm_n.setFriendly("NAME", false, false);
+				while(esm_n.getFriendlyStatus())
+				{
+					esm_n.setFriendly("NAME", true, false);
+					pattern += esm_n.getFriendly();
+				}
+
+				// Search for match in every CELL record
+				for(size_t k = 0; k < esm_f.getRecColl().size(); ++k)
+				{
+					esm_f.setRec(k);
+					if(esm_f.getRecId() == "CELL")
+					{
+						match = "";
+						esm_f.setFriendly("NAME", false, false);
+						while(esm_f.getFriendlyStatus())
+						{
+							esm_f.setFriendly("NAME", true, false);
+							match += esm_f.getFriendly();
+						}
+						if(match == pattern)
+						{
+							found = true;
+							break;
+						}
+					}
+				}
+
+				esm_n.setFriendly("NAME");
+
+				if(found == true)
+				{
+					esm_f.setFriendly("NAME");
+				}
+				else
+				{
+					esm_f.setFriendly("<NotFound>");
+				}
+
+				if(esm_n.getFriendlyStatus() &&
+				   esm_f.getFriendlyStatus())
+				{
+					validateRecord("CELL" + yampt::sep[0] + esm_f.getFriendly(),
+						       esm_f.getFriendly(),
+						       yampt::r_type::CELL);
+				}
+			}
+		}
+	}
+	printLog("CELL");
+}
+
+//----------------------------------------------------------
+void DictCreator::makeDictDefaultCELL()
+{
+	resetCounters();
+
+	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
+	{
+		esm_n.setRec(i);
+
+		if(esm_n.getRecId() == "GMST")
+		{
+			esm_n.setUnique("NAME");
+			esm_n.setFriendly("STRV");
+
+			esm_f.setRec(i);
+			esm_f.setFriendly("STRV");
+
+                        if(esm_n.getUnique() == "sDefaultCellname" &&
+			   esm_n.getFriendlyStatus() &&
+			   esm_f.getFriendlyStatus())
+                        {
+				validateRecord("CELL" + yampt::sep[0] + esm_ptr->getFriendly(),
+						esm_n.getFriendly(),
+						yampt::r_type::CELL);
+                        }
+		}
+	}
+	printLog("CELL");
+}
+
+//----------------------------------------------------------
+void DictCreator::makeDictDefaultCELLExtended()
+{
+	resetCounters();
+
+	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
+	{
+		esm_n.setRec(i);
+
+		if(esm_n.getRecId() == "GMST")
+		{
+			esm_n.setUnique("NAME");
+			esm_n.setFriendly("STRV");
+
+                        if(esm_n.getUnique() == "sDefaultCellname" &&
+                           esm_n.getFriendlyStatus())
+                        {
+				for(size_t k = 0; k < esm_f.getRecColl().size(); ++k)
+				{
+					esm_f.setRec(k);
+					if(esm_f.getRecId() == "GMST")
+					{
+						esm_f.setUnique("NAME");
+						esm_f.setFriendly("STRV");
+
+						if(esm_f.getUnique() == "sDefaultCellname" &&
+						   esm_f.getFriendlyStatus())
+						{
+							validateRecord("CELL" + yampt::sep[0] + esm_f.getFriendly(),
+									esm_n.getFriendly(),
+									yampt::r_type::CELL);
+							break;
+						}
+					}
+				}
+			}
+		}
+	}
+	printLog("CELL");
+}
+
+//----------------------------------------------------------
+void DictCreator::makeDictRegionCELL()
+{
+	resetCounters();
+
+	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
+	{
+		esm_n.setRec(i);
+
+		if(esm_n.getRecId() == "REGN")
+		{
+			esm_n.setUnique("NAME");
+			esm_n.setFriendly("FNAM");
+
+			esm_f.setRec(i);
+			esm_f.setFriendly("FNAM");
+
+                        if(esm_n.getUniqueStatus() &&
+			   esm_n.getFriendlyStatus() &&
+			   esm_f.getFriendlyStatus())
+                        {
+				validateRecord("CELL" + yampt::sep[0] + esm_ptr->getFriendly(),
+						esm_n.getFriendly(),
+						yampt::r_type::CELL);
+                        }
+		}
+	}
+	printLog("CELL");
+}
+
+//----------------------------------------------------------
+void DictCreator::makeDictRegionCELLExtended()
+{
+	resetCounters();
+
+	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
+	{
+		esm_n.setRec(i);
+
+		if(esm_n.getRecId() == "REGN")
+		{
+			esm_n.setUnique("NAME");
+			esm_n.setFriendly("FNAM");
+
+                        if(esm_n.getUniqueStatus() &&
+                           esm_n.getFriendlyStatus())
+                        {
+				for(size_t k = 0; k < esm_f.getRecColl().size(); ++k)
+				{
+					esm_f.setRec(k);
+					if(esm_f.getRecId() == "REGN")
+					{
+						esm_f.setUnique("NAME");
+						esm_f.setFriendly("FNAM");
+
+						if(esm_f.getUnique() == esm_n.getUnique() &&
+						   esm_f.getFriendlyStatus())
+						{
+							validateRecord("CELL" + yampt::sep[0] + esm_f.getFriendly(),
+									esm_n.getFriendly(),
+									yampt::r_type::CELL);
+							break;
+						}
+					}
+				}
 			}
 		}
 	}
@@ -340,28 +581,19 @@ void DictCreator::makeDictGMST()
 	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
 	{
 		esm_n.setRec(i);
-		esm_f.setRec(i);
+
 		if(esm_n.getRecId() == "GMST")
 		{
 			esm_n.setUnique("NAME");
 			esm_n.setFriendly("STRV");
-			esm_f.setFriendly("STRV");
 
-			if(esm_n.getUniqueStatus() == true &&
-			   esm_n.getFriendlyStatus() == true &&
-			   esm_n.getUnique().substr(0, 1) == "s")
+			if(esm_n.getUniqueStatus() &&
+			   esm_n.getFriendlyStatus() &&
+			   esm_n.getUnique().substr(0, 1) == "s")	// Make sure is string
 			{
 				validateRecord("GMST" + yampt::sep[0] + esm_n.getUnique(),
 					       esm_n.getFriendly(),
 					       yampt::r_type::GMST);
-
-                                if(esm_n.getUnique() == "sDefaultCellname")
-                                {
-                                        validateRecord("CELL" + yampt::sep[0] + esm_ptr->getFriendly(),
-                                                       esm_n.getFriendly(),
-					               yampt::r_type::CELL,
-					               true);
-                                }
 			}
 		}
 	}
@@ -376,7 +608,7 @@ void DictCreator::makeDictFNAM()
 	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
 	{
 		esm_n.setRec(i);
-		esm_f.setRec(i);
+
 		if(esm_n.getRecId() == "ACTI" ||
 		   esm_n.getRecId() == "ALCH" ||
 		   esm_n.getRecId() == "APPA" ||
@@ -404,23 +636,14 @@ void DictCreator::makeDictFNAM()
 		{
 			esm_n.setUnique("NAME");
 			esm_n.setFriendly("FNAM");
-			esm_f.setFriendly("FNAM");
 
-			if(esm_n.getUniqueStatus() == true &&
-			   esm_n.getFriendlyStatus() == true &&
-			   esm_n.getUnique() != "player")
+			if(esm_n.getUniqueStatus() &&
+			   esm_n.getFriendlyStatus() &&
+			   esm_n.getUnique() != "player")	// Skip player name
 			{
 				validateRecord("FNAM" + yampt::sep[0] + esm_n.getRecId() + yampt::sep[0] + esm_n.getUnique(),
 					       esm_n.getFriendly(),
 					       yampt::r_type::FNAM);
-
-                                if(esm_n.getRecId() == "REGN")
-                                {
-                                        validateRecord("CELL" + yampt::sep[0] + esm_ptr->getFriendly(),
-                                                       esm_n.getFriendly(),
-                                                       yampt::r_type::CELL,
-                                                       true);
-                                }
 			}
 		}
 	}
@@ -435,17 +658,16 @@ void DictCreator::makeDictDESC()
 	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
 	{
 		esm_n.setRec(i);
-		esm_f.setRec(i);
+
 		if(esm_n.getRecId() == "BSGN" ||
 		   esm_n.getRecId() == "CLAS" ||
 		   esm_n.getRecId() == "RACE")
 		{
 			esm_n.setUnique("NAME");
 			esm_n.setFriendly("DESC");
-			esm_f.setFriendly("DESC");
 
-			if(esm_n.getUniqueStatus() == true &&
-			   esm_n.getFriendlyStatus() == true)
+			if(esm_n.getUniqueStatus() &&
+			   esm_n.getFriendlyStatus())
 			{
 				validateRecord("DESC" + yampt::sep[0] + esm_n.getRecId() + yampt::sep[0] + esm_n.getUnique(),
 					       esm_n.getFriendly(),
@@ -464,15 +686,14 @@ void DictCreator::makeDictTEXT()
 	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
 	{
 		esm_n.setRec(i);
-		esm_f.setRec(i);
+
 		if(esm_n.getRecId() == "BOOK")
 		{
 			esm_n.setUnique("NAME");
 			esm_n.setFriendly("TEXT");
-			esm_f.setFriendly("TEXT");
 
-			if(esm_n.getUniqueStatus() == true &&
-			   esm_n.getFriendlyStatus() == true)
+			if(esm_n.getUniqueStatus() &&
+			   esm_n.getFriendlyStatus())
 			{
 				validateRecord("TEXT" + yampt::sep[0] + esm_n.getUnique(),
 					       esm_n.getFriendly(),
@@ -491,23 +712,21 @@ void DictCreator::makeDictRNAM()
 	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
 	{
 		esm_n.setRec(i);
-		esm_f.setRec(i);
+
 		if(esm_n.getRecId() == "FACT")
 		{
 			esm_n.setUnique("NAME");
 			esm_n.setFriendly("RNAM");
-			esm_f.setFriendly("RNAM");
 
-			if(esm_n.getUniqueStatus() == true)
+			if(esm_n.getUniqueStatus())
 			{
-				while(esm_n.getFriendlyStatus() == true)
+				while(esm_n.getFriendlyStatus())
 				{
 					validateRecord("RNAM" + yampt::sep[0] + esm_n.getUnique() + yampt::sep[0] + to_string(esm_n.getFriendlyCounter()),
 						       esm_n.getFriendly(),
 						       yampt::r_type::RNAM);
 
 					esm_n.setFriendly("RNAM", true);
-					esm_f.setFriendly("RNAM", true);
 				}
 			}
 		}
@@ -523,16 +742,15 @@ void DictCreator::makeDictINDX()
 	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
 	{
 		esm_n.setRec(i);
-		esm_f.setRec(i);
+
 		if(esm_n.getRecId() == "SKIL" ||
 		   esm_n.getRecId() == "MGEF")
 		{
 			esm_n.setUnique("INDX");
 			esm_n.setFriendly("DESC");
-			esm_f.setFriendly("DESC");
 
-			if(esm_n.getUniqueStatus() == true &&
-			   esm_n.getFriendlyStatus() == true)
+			if(esm_n.getUniqueStatus() &&
+			   esm_n.getFriendlyStatus())
 			{
 				validateRecord("INDX" + yampt::sep[0] + esm_n.getRecId() + yampt::sep[0] + esm_n.getUnique(),
 					       esm_n.getFriendly(),
@@ -552,15 +770,16 @@ void DictCreator::makeDictDIAL()
 	{
 		esm_n.setRec(i);
 		esm_f.setRec(i);
+
 		if(esm_n.getRecId() == "DIAL")
 		{
 			esm_n.setUnique("DATA");
 			esm_n.setFriendly("NAME");
 			esm_f.setFriendly("NAME");
 
-			if(esm_n.getUniqueStatus() == true &&
-			   esm_n.getFriendlyStatus() == true &&
-			   esm_n.getUnique() == "T")
+			if(esm_n.getUnique() == "T" &&
+			   esm_n.getFriendlyStatus() &&
+			   esm_f.getFriendlyStatus())
 			{
 				validateRecord("DIAL" + yampt::sep[0] + esm_ptr->getFriendly(),
 					       esm_n.getFriendly(),
@@ -570,6 +789,26 @@ void DictCreator::makeDictDIAL()
 	}
 	printLog("DIAL");
 }
+
+//----------------------------------------------------------
+void DictCreator::makeDictDIALExtended()
+{
+	resetCounters();
+
+	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
+	{
+		esm_n.setRec(i);
+
+		if(esm_n.getRecId() == "DIAL")
+		{
+			esm_n.setUnique("DATA");
+			esm_n.setFriendly("NAME");
+
+		}
+	}
+	printLog("DIAL");
+}
+
 
 //----------------------------------------------------------
 void DictCreator::makeDictINFO()

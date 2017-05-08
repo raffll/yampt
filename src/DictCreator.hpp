@@ -22,15 +22,27 @@ public:
 	DictCreator(std::string path_n, DictMerger &m, yampt::ins_mode mode);
 
 private:
-	bool compareEsm();
+	void makeDictBasic();
+	void makeDictExtended();
+	bool compareMasterFiles();
 	void resetCounters();
 	std::string dialTranslator(std::string to_translate);
-	void validateRecord(const std::string &unique_key, const std::string &friendly, yampt::r_type type, bool extra = false);
-	void insertRecord(const std::string &unique_key, const std::string &friendly, yampt::r_type type, bool extra);
+	void validateRecord(const std::string &unique_key,
+			    const std::string &friendly,
+			    yampt::r_type type);
+	void insertRecord(const std::string &unique_key,
+			  const std::string &friendly,
+			  yampt::r_type type);
 	std::vector<std::string> makeMessageColl(const std::string &script_text);
-	void printLog(std::string id, bool header = false);
+	void printLog(std::string id);
+	void printLogHeader();
 
 	void makeDictCELL();
+	void makeDictCELLExtended();
+	void makeDictDefaultCELL();
+	void makeDictDefaultCELLExtended();
+	void makeDictRegionCELL();
+	void makeDictRegionCELLExtended();
 	void makeDictGMST();
 	void makeDictFNAM();
 	void makeDictDESC();
@@ -38,6 +50,7 @@ private:
 	void makeDictRNAM();
 	void makeDictINDX();
 	void makeDictDIAL();
+	void makeDictDIALExtended();
 	void makeDictINFO();
 	void makeDictBNAM();
 	void makeDictSCPT();
@@ -48,11 +61,13 @@ private:
 	DictMerger *merger;
 
 	bool status = false;
+	bool basic_mode = false;
 
 	yampt::ins_mode mode;
 
-	std::array<int, 3> counter;
-	std::array<int, 3> counter_extra;
+	int counter_created;
+	int counter_doubled;
+	int counter_all;
 
 	yampt::dict_t dict;
 

@@ -162,7 +162,7 @@ void EsmRecord::setDump()
 				}
 				else
 				{
-					dump += ".";
+					dump += "";
 				}
 			}
 			dump += "\r\n";

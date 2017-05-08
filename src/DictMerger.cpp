@@ -35,18 +35,21 @@ void DictMerger::mergeDict()
 					auto search = dict[k].find(elem.first);
 					if(search == dict[k].end())
 					{
+						// Not found in previous dictionary - inserted
 						dict[k].insert({elem.first, elem.second});
 						counter[0]++;
 					}
 					else if(search != dict[k].end() &&
 						search->second != elem.second)
 					{
+						// Found in previous dictionary - skipped
 						valid_ptr = &yampt::valid[0];
 						makeLog(dict_coll[i].getName(), elem.first, elem.second, search->second);
 						counter[1]++;
 					}
 					else
 					{
+						// Found in previous dictionary - identical, skipped
 						counter[2]++;
 					}
 				}
