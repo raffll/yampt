@@ -108,17 +108,16 @@ void DictCreator::makeDictExtended()
 		printLogHeader();
 
 		makeDictCELLExtended();
-		//makeDictDefaultCELLExtended();
-		//makeDictRegionCELLExtended();
-		//makeDictGMST();
-		//makeDictFNAM();
-		//makeDictDESC();
-		//makeDictTEXT();
-		//makeDictRNAM();
-		//makeDictINDX();
-		//makeDictDIAL();
-		//makeDictDIALExtended();
-		//makeDictINFO();
+		makeDictDefaultCELLExtended();
+		makeDictRegionCELLExtended();
+		makeDictGMST();
+		makeDictFNAM();
+		makeDictDESC();
+		makeDictTEXT();
+		makeDictRNAM();
+		makeDictINDX();
+		makeDictDIALExtended();
+		makeDictINFO();
 		//makeDictBNAM();
 		//makeDictSCPT();
 
@@ -380,6 +379,7 @@ void DictCreator::makeDictCELLExtended()
 				// Pattern is the combined id of all objects in cell
 				pattern = "";
 				esm_n.setFriendly("NAME", false, false);
+
 				while(esm_n.getFriendlyStatus())
 				{
 					esm_n.setFriendly("NAME", true, false);
@@ -390,15 +390,18 @@ void DictCreator::makeDictCELLExtended()
 				for(size_t k = 0; k < esm_f.getRecColl().size(); ++k)
 				{
 					esm_f.setRec(k);
+
 					if(esm_f.getRecId() == "CELL")
 					{
 						match = "";
 						esm_f.setFriendly("NAME", false, false);
+
 						while(esm_f.getFriendlyStatus())
 						{
 							esm_f.setFriendly("NAME", true, false);
 							match += esm_f.getFriendly();
 						}
+
 						if(match == pattern)
 						{
 							found = true;
@@ -421,8 +424,10 @@ void DictCreator::makeDictCELLExtended()
 				if(esm_n.getFriendlyStatus() &&
 				   esm_f.getFriendlyStatus())
 				{
+					//cout << esm_f.getFriendly() << " <<< " << esm_n.getFriendly() << endl;
+
 					validateRecord("CELL" + yampt::sep[0] + esm_f.getFriendly(),
-						       esm_f.getFriendly(),
+						       esm_n.getFriendly(),
 						       yampt::r_type::CELL);
 				}
 			}
@@ -794,6 +799,9 @@ void DictCreator::makeDictDIAL()
 void DictCreator::makeDictDIALExtended()
 {
 	resetCounters();
+	string pattern;
+	string match;
+	bool found = false;
 
 	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
 	{
@@ -802,13 +810,66 @@ void DictCreator::makeDictDIALExtended()
 		if(esm_n.getRecId() == "DIAL")
 		{
 			esm_n.setUnique("DATA");
-			esm_n.setFriendly("NAME");
 
+			if(esm_n.getUnique() == "T")
+			{
+				found = false;
+
+				// Pattern is the id of corresponding INFO string
+				esm_n.setRec(i + 1);
+				esm_n.setFriendly("INAM");
+				pattern = esm_n.getFriendly();
+				esm_n.setRec(i);
+
+				//cout << "Pattern: " << pattern << endl;
+
+				// Search for match
+				for(size_t k = 0; k < esm_f.getRecColl().size(); ++k)
+				{
+					esm_f.setRec(k);
+
+					if(esm_f.getRecId() == "DIAL")
+					{
+						esm_f.setRec(k + 1);
+						esm_f.setFriendly("INAM");
+						match = esm_f.getFriendly();
+						esm_f.setRec(k);
+
+						if(match == pattern)
+						{
+							//cout << "Match: " << match << endl;
+
+							found = true;
+							break;
+						}
+					}
+				}
+
+				esm_n.setFriendly("NAME");
+
+				if(found == true)
+				{
+					esm_f.setFriendly("NAME");
+				}
+				else
+				{
+					esm_f.setFriendly("<NotFound>");
+				}
+
+				if(esm_n.getFriendlyStatus() &&
+				   esm_f.getFriendlyStatus())
+				{
+					//cout << esm_f.getFriendly() << " <<< " << esm_n.getFriendly() << endl;
+
+					validateRecord("DIAL" + yampt::sep[0] + esm_f.getFriendly(),
+						       esm_n.getFriendly(),
+						       yampt::r_type::CELL);
+				}
+			}
 		}
 	}
 	printLog("DIAL");
 }
-
 
 //----------------------------------------------------------
 void DictCreator::makeDictINFO()
