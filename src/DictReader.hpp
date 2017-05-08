@@ -36,7 +36,7 @@ private:
 	std::string unique_key;
 	std::string friendly;
 
-	const std::string *valid_ptr;
+	const std::string *merger_log_ptr;
 
 	int counter_loaded = 0;
 	int counter_invalid = 0;

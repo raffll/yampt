@@ -257,6 +257,12 @@ void DictCreator::insertRecord(const string &unique_key, const string &friendly,
 	}
 	else
 	{
+		auto search = dict[type].find(unique_key);
+		if(friendly != search->second)
+		{
+			string temp = unique_key + "<DOUBLED>";
+			dict[type].insert({temp, friendly});
+		}
 		counter_doubled++;
 	}
 }
@@ -801,7 +807,6 @@ void DictCreator::makeDictDIALExtended()
 	resetCounters();
 	string pattern;
 	string match;
-	bool found = false;
 
 	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
 	{
@@ -813,17 +818,21 @@ void DictCreator::makeDictDIALExtended()
 
 			if(esm_n.getUnique() == "T")
 			{
-				found = false;
-
 				// Pattern is the id of corresponding INFO string
 				esm_n.setRec(i + 1);
-				esm_n.setFriendly("INAM");
+
+				esm_n.setFriendly("INAM", false, false);
 				pattern = esm_n.getFriendly();
+
+				esm_n.setFriendly("SCVR", false, false);
+				pattern += esm_n.getFriendly();
+
 				esm_n.setRec(i);
+				esm_n.setFriendly("NAME");
 
 				//cout << "Pattern: " << pattern << endl;
 
-				// Search for match
+				// Search for all match
 				for(size_t k = 0; k < esm_f.getRecColl().size(); ++k)
 				{
 					esm_f.setRec(k);
@@ -831,29 +840,23 @@ void DictCreator::makeDictDIALExtended()
 					if(esm_f.getRecId() == "DIAL")
 					{
 						esm_f.setRec(k + 1);
-						esm_f.setFriendly("INAM");
+
+						esm_f.setFriendly("INAM", false, false);
 						match = esm_f.getFriendly();
-						esm_f.setRec(k);
+
+						esm_f.setFriendly("SCVR", false, false);
+						match += esm_f.getFriendly();
 
 						if(match == pattern)
 						{
+							esm_f.setRec(k);
+							esm_f.setFriendly("NAME");
+
 							//cout << "Match: " << match << endl;
 
-							found = true;
 							break;
 						}
 					}
-				}
-
-				esm_n.setFriendly("NAME");
-
-				if(found == true)
-				{
-					esm_f.setFriendly("NAME");
-				}
-				else
-				{
-					esm_f.setFriendly("<NotFound>");
 				}
 
 				if(esm_n.getFriendlyStatus() &&
@@ -869,6 +872,8 @@ void DictCreator::makeDictDIALExtended()
 		}
 	}
 	printLog("DIAL");
+	cout << "    If any doubled records are created, please check DIAL dictionary manually!" << endl;
+	cout << "    Problematic records are marked as <DOUBLED>" << endl;
 }
 
 //----------------------------------------------------------
@@ -880,7 +885,6 @@ void DictCreator::makeDictINFO()
 	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
 	{
 		esm_n.setRec(i);
-		esm_f.setRec(i);
 
 		if(esm_n.getRecId() == "DIAL")
 		{
@@ -901,11 +905,9 @@ void DictCreator::makeDictINFO()
 		{
 			esm_n.setUnique("INAM");
 			esm_n.setFriendly("NAME");
-			esm_f.setFriendly("NAME");
 
 			if(esm_n.getUniqueStatus() &&
-			   esm_n.getFriendlyStatus() &&
-			   esm_f.getFriendlyStatus())
+			   esm_n.getFriendlyStatus())
 			{
 				validateRecord("INFO" + yampt::sep[0] + current_dialog + yampt::sep[0] + esm_n.getUnique(),
 					       esm_n.getFriendly(),
@@ -980,18 +982,20 @@ void DictCreator::makeDictBNAMExtended()
 							message_n = makeMessageColl(esm_n.getFriendly());
 							message_f = makeMessageColl(esm_f.getFriendly());
 
-							for(size_t k = 0; k < message_n.size(); ++k)
+							if(message_n.size() == message_f.size())
 							{
-								//cout << "---" << endl;
-								//cout << message_f.at(k) << endl;
-								//cout << message_n.at(k) << endl;
+								for(size_t k = 0; k < message_n.size(); ++k)
+								{
+									//cout << "---" << endl;
+									//cout << message_f.at(k) << endl;
+									//cout << message_n.at(k) << endl;
 
-								validateRecord("BNAM" + yampt::sep[0] + message_ptr->at(k),
-									       message_n.at(k),
-									       yampt::r_type::BNAM);
+									validateRecord("BNAM" + yampt::sep[0] + message_f.at(k),
+										       message_n.at(k),
+										       yampt::r_type::BNAM);
+								}
+								break;
 							}
-
-							break;
 						}
 					}
 				}
@@ -1065,18 +1069,20 @@ void DictCreator::makeDictSCPTExtended()
 							message_n = makeMessageColl(esm_n.getFriendly());
 							message_f = makeMessageColl(esm_f.getFriendly());
 
-							for(size_t k = 0; k < message_n.size(); ++k)
+							if(message_n.size() == message_f.size())
 							{
-								//cout << "---" << endl;
-								//cout << message_f.at(k) << endl;
-								//cout << message_n.at(k) << endl;
+								for(size_t k = 0; k < message_n.size(); ++k)
+								{
+									//cout << "---" << endl;
+									//cout << message_f.at(k) << endl;
+									//cout << message_n.at(k) << endl;
 
-								validateRecord("SCTX" + yampt::sep[0] + message_ptr->at(k),
-									       message_n.at(k),
-									       yampt::r_type::BNAM);
+									validateRecord("SCTX" + yampt::sep[0] + message_f.at(k),
+										       message_n.at(k),
+										       yampt::r_type::BNAM);
+								}
+								break;
 							}
-
-							break;
 						}
 					}
 				}

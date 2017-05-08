@@ -142,7 +142,7 @@ void DictReader::validateRecord()
 		{
                         if(friendly.size() > 63)
 			{
-				valid_ptr = &yampt::valid[3];
+				merger_log_ptr = &yampt::merger_log[3];
 				makeLog();
 				counter_toolong++;
 			}
@@ -185,7 +185,7 @@ void DictReader::validateRecord()
 		{
 			if(friendly.size() > 31)
 			{
-				valid_ptr = &yampt::valid[3];
+				merger_log_ptr = &yampt::merger_log[3];
 				makeLog();
 				counter_toolong++;
 			}
@@ -198,7 +198,7 @@ void DictReader::validateRecord()
 		{
 			if(friendly.size() > 31)
 			{
-				valid_ptr = &yampt::valid[3];
+				merger_log_ptr = &yampt::merger_log[3];
 				makeLog();
 				counter_toolong++;
 			}
@@ -211,7 +211,7 @@ void DictReader::validateRecord()
 		{
 			if(friendly.size() > 512)
 			{
-				valid_ptr = &yampt::valid[4];
+				merger_log_ptr = &yampt::merger_log[4];
 				makeLog();
 				counter_toolong++;
 				insertRecord(yampt::r_type::INFO);
@@ -223,14 +223,14 @@ void DictReader::validateRecord()
 		}
 		else
 		{
-			valid_ptr = &yampt::valid[2];
+			merger_log_ptr = &yampt::merger_log[2];
 			makeLog();
 			counter_invalid++;
 		}
 	}
 	else
 	{
-		valid_ptr = &yampt::valid[2];
+		merger_log_ptr = &yampt::merger_log[2];
 		makeLog();
 		counter_invalid++;
 	}
@@ -245,7 +245,7 @@ void DictReader::insertRecord(yampt::r_type type)
 	}
 	else
 	{
-		valid_ptr = &yampt::valid[1];
+		merger_log_ptr = &yampt::merger_log[1];
 		makeLog();
 		counter_doubled++;
 	}
@@ -254,8 +254,8 @@ void DictReader::insertRecord(yampt::r_type type)
 //----------------------------------------------------------
 void DictReader::makeLog()
 {
-	log += *valid_ptr;
-	if(valid_ptr == &yampt::valid[3])
+	log += *merger_log_ptr;
+	if(merger_log_ptr == &yampt::merger_log[3])
         {
                 log += " (" + to_string(friendly.size()) + " bytes)";
         }

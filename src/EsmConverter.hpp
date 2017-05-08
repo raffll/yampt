@@ -71,7 +71,7 @@ private:
 	std::string compiled;
 
 	std::string log;
-	const std::string *result_ptr;
+	const std::string *converter_log_ptr;
 
 	bool found_key = false;
 	bool convert = false;
