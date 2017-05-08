@@ -872,7 +872,7 @@ void DictCreator::makeDictDIALExtended()
 		}
 	}
 	printLog("DIAL");
-	cout << "    If any doubled records are created, please check DIAL dictionary manually!" << endl;
+	cout << "    If any doubled records was created, please check DIAL dictionary manually!" << endl;
 	cout << "    Problematic records are marked as <DOUBLED>" << endl;
 }
 
