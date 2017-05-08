@@ -53,7 +53,9 @@ private:
 	void makeDictDIALExtended();
 	void makeDictINFO();
 	void makeDictBNAM();
+	void makeDictBNAMExtended();
 	void makeDictSCPT();
+	void makeDictSCPTExtended();
 
 	EsmRecord esm_n;
 	EsmRecord esm_f;

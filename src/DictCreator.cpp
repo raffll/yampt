@@ -107,7 +107,7 @@ void DictCreator::makeDictExtended()
 	{
 		printLogHeader();
 
-		makeDictCELLExtended();
+		/*makeDictCELLExtended();
 		makeDictDefaultCELLExtended();
 		makeDictRegionCELLExtended();
 		makeDictGMST();
@@ -117,9 +117,9 @@ void DictCreator::makeDictExtended()
 		makeDictRNAM();
 		makeDictINDX();
 		makeDictDIALExtended();
-		makeDictINFO();
-		//makeDictBNAM();
-		//makeDictSCPT();
+		makeDictINFO();*/
+		makeDictBNAMExtended();
+		makeDictSCPTExtended();
 
 		cout << endl;
 	}
@@ -881,13 +881,14 @@ void DictCreator::makeDictINFO()
 	{
 		esm_n.setRec(i);
 		esm_f.setRec(i);
+
 		if(esm_n.getRecId() == "DIAL")
 		{
 			esm_n.setUnique("DATA");
 			esm_n.setFriendly("NAME");
 
-			if(esm_n.getUniqueStatus() == true &&
-			   esm_n.getFriendlyStatus() == true)
+			if(esm_n.getUniqueStatus() &&
+			   esm_n.getFriendlyStatus())
 			{
 				current_dialog = esm_n.getUnique() + yampt::sep[0] + dialTranslator(esm_n.getFriendly());
 			}
@@ -902,8 +903,9 @@ void DictCreator::makeDictINFO()
 			esm_n.setFriendly("NAME");
 			esm_f.setFriendly("NAME");
 
-			if(esm_n.getUniqueStatus() == true &&
-			   esm_n.getFriendlyStatus() == true)
+			if(esm_n.getUniqueStatus() &&
+			   esm_n.getFriendlyStatus() &&
+			   esm_f.getFriendlyStatus())
 			{
 				validateRecord("INFO" + yampt::sep[0] + current_dialog + yampt::sep[0] + esm_n.getUnique(),
 					       esm_n.getFriendly(),
@@ -923,12 +925,13 @@ void DictCreator::makeDictBNAM()
 	{
 		esm_n.setRec(i);
 		esm_f.setRec(i);
+
 		if(esm_n.getRecId() == "INFO")
 		{
 			esm_n.setFriendly("BNAM");
 			esm_f.setFriendly("BNAM");
 
-			if(esm_n.getFriendlyStatus() == true)
+			if(esm_n.getFriendlyStatus())
 			{
 				message_n = makeMessageColl(esm_n.getFriendly());
 				message_f = makeMessageColl(esm_f.getFriendly());
@@ -946,6 +949,59 @@ void DictCreator::makeDictBNAM()
 }
 
 //----------------------------------------------------------
+void DictCreator::makeDictBNAMExtended()
+{
+	resetCounters();
+
+	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
+	{
+		esm_n.setRec(i);
+
+		if(esm_n.getRecId() == "INFO")
+		{
+			esm_n.setUnique("INAM");
+			esm_n.setFriendly("BNAM");
+
+			if(esm_n.getUniqueStatus() &&
+			   esm_n.getFriendlyStatus())
+			{
+				for(size_t j = 0; j < esm_f.getRecColl().size(); ++j)
+				{
+					esm_f.setRec(j);
+
+					if(esm_f.getRecId() == "INFO")
+					{
+						esm_f.setUnique("INAM");
+						esm_f.setFriendly("BNAM");
+
+						if(esm_f.getUnique() == esm_n.getUnique() &&
+						   esm_f.getFriendlyStatus())
+						{
+							message_n = makeMessageColl(esm_n.getFriendly());
+							message_f = makeMessageColl(esm_f.getFriendly());
+
+							for(size_t k = 0; k < message_n.size(); ++k)
+							{
+								//cout << "---" << endl;
+								//cout << message_f.at(k) << endl;
+								//cout << message_n.at(k) << endl;
+
+								validateRecord("BNAM" + yampt::sep[0] + message_ptr->at(k),
+									       message_n.at(k),
+									       yampt::r_type::BNAM);
+							}
+
+							break;
+						}
+					}
+				}
+			}
+		}
+	}
+	printLog("BNAM");
+}
+
+//----------------------------------------------------------
 void DictCreator::makeDictSCPT()
 {
 	resetCounters();
@@ -954,12 +1010,13 @@ void DictCreator::makeDictSCPT()
 	{
 		esm_n.setRec(i);
 		esm_f.setRec(i);
+
 		if(esm_n.getRecId() == "SCPT")
 		{
 			esm_n.setFriendly("SCTX");
 			esm_f.setFriendly("SCTX");
 
-			if(esm_n.getFriendlyStatus() == true)
+			if(esm_n.getFriendlyStatus())
 			{
 				message_n = makeMessageColl(esm_n.getFriendly());
 				message_f = makeMessageColl(esm_f.getFriendly());
@@ -969,6 +1026,59 @@ void DictCreator::makeDictSCPT()
 					validateRecord("SCTX" + yampt::sep[0] + message_ptr->at(k),
 						       message_n.at(k),
 						       yampt::r_type::SCTX);
+				}
+			}
+		}
+	}
+	printLog("SCTX");
+}
+
+//----------------------------------------------------------
+void DictCreator::makeDictSCPTExtended()
+{
+	resetCounters();
+
+	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
+	{
+		esm_n.setRec(i);
+
+		if(esm_n.getRecId() == "SCPT")
+		{
+			esm_n.setUnique("SCHD");
+			esm_n.setFriendly("SCTX");
+
+			if(esm_n.getUniqueStatus() &&
+			   esm_n.getFriendlyStatus())
+			{
+				for(size_t j = 0; j < esm_f.getRecColl().size(); ++j)
+				{
+					esm_f.setRec(j);
+
+					if(esm_f.getRecId() == "SCPT")
+					{
+						esm_f.setUnique("SCHD");
+						esm_f.setFriendly("SCTX");
+
+						if(esm_f.getUnique() == esm_n.getUnique() &&
+						   esm_f.getFriendlyStatus())
+						{
+							message_n = makeMessageColl(esm_n.getFriendly());
+							message_f = makeMessageColl(esm_f.getFriendly());
+
+							for(size_t k = 0; k < message_n.size(); ++k)
+							{
+								//cout << "---" << endl;
+								//cout << message_f.at(k) << endl;
+								//cout << message_n.at(k) << endl;
+
+								validateRecord("SCTX" + yampt::sep[0] + message_ptr->at(k),
+									       message_n.at(k),
+									       yampt::r_type::BNAM);
+							}
+
+							break;
+						}
+					}
 				}
 			}
 		}
