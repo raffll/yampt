@@ -67,5 +67,5 @@
 0.11 beta
 - log fixes
 
-0.12
+0.12 beta
 - fix base dictionary creator when files have records in different order
