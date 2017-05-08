@@ -107,7 +107,7 @@ void DictCreator::makeDictExtended()
 	{
 		printLogHeader();
 
-		/*makeDictCELLExtended();
+		makeDictCELLExtended();
 		makeDictDefaultCELLExtended();
 		makeDictRegionCELLExtended();
 		makeDictGMST();
@@ -117,7 +117,7 @@ void DictCreator::makeDictExtended()
 		makeDictRNAM();
 		makeDictINDX();
 		makeDictDIALExtended();
-		makeDictINFO();*/
+		makeDictINFO();
 		makeDictBNAMExtended();
 		makeDictSCPTExtended();
 
