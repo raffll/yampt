@@ -50,8 +50,8 @@ void EsmConverter::convertEsm()
 //----------------------------------------------------------
 void EsmConverter::makeLog(string key)
 {
-	log += *result_ptr + " '" + key + "' in '" + esm.getName() + "'\r\n";
-	if(result_ptr != &yampt::result[2])
+	log += *converter_log_ptr + " '" + key + "' in '" + esm.getName() + "'\r\n";
+	if(converter_log_ptr != &yampt::converter_log[2])
         {
                 log += esm.getFriendly() + " -->" + "\r\n" +
 		       new_friendly + "\r\n";
@@ -62,7 +62,7 @@ void EsmConverter::makeLog(string key)
 //----------------------------------------------------------
 void EsmConverter::makeLogScript(string key)
 {
-	log += *result_ptr + " script line '" + key + "' in '" + esm.getName() + "'\r\n" +
+	log += *converter_log_ptr + " script line '" + key + "' in '" + esm.getName() + "'\r\n" +
 	       line + " -->" + "\r\n" +
 	       line_new + "\r\n" +
 	       "---" + "\r\n";
@@ -180,20 +180,20 @@ void EsmConverter::setNewFriendly(yampt::r_type type)
 		if(esm.getFriendly() != new_friendly)
 		{
 			convert = true;
-			result_ptr = &yampt::result[1];
+			converter_log_ptr = &yampt::converter_log[1];
 			counter_converted++;
 		}
 		else
 		{
 			convert = false;
-			result_ptr = &yampt::result[2];
+			converter_log_ptr = &yampt::converter_log[2];
 			counter_skipped++;
 		}
 	}
 	else
 	{
 		convert = false;
-		result_ptr = &yampt::result[0];
+		converter_log_ptr = &yampt::converter_log[0];
 		counter_unchanged++;
 
 		new_friendly = "N\\A";
@@ -213,13 +213,13 @@ void EsmConverter::setNewFriendlyINFO(yampt::r_type type)
 		if(esm.getFriendly() != new_friendly)
 		{
 			convert = true;
-			result_ptr = &yampt::result[1];
+			converter_log_ptr = &yampt::converter_log[1];
 			counter_converted++;
 		}
 		else
 		{
 			convert = false;
-			result_ptr = &yampt::result[2];
+			converter_log_ptr = &yampt::converter_log[2];
 			counter_skipped++;
 		}
 	}
@@ -230,7 +230,7 @@ void EsmConverter::setNewFriendlyINFO(yampt::r_type type)
 		if(esm.getFriendly() != new_friendly)
 		{
 			convert = true;
-			result_ptr = &yampt::result[3];
+			converter_log_ptr = &yampt::converter_log[3];
 			if(counter_add == 1)
 			{
 				cout << "    In progress...";
@@ -244,7 +244,7 @@ void EsmConverter::setNewFriendlyINFO(yampt::r_type type)
 		else
 		{
 			convert = false;
-			result_ptr = &yampt::result[0];
+			converter_log_ptr = &yampt::converter_log[0];
 			counter_unchanged++;
 
 			new_friendly = "N\\A";
@@ -253,7 +253,7 @@ void EsmConverter::setNewFriendlyINFO(yampt::r_type type)
 	else
 	{
 		convert = false;
-		result_ptr = &yampt::result[0];
+		converter_log_ptr = &yampt::converter_log[0];
 		counter_unchanged++;
 
 		new_friendly = "N\\A";
@@ -373,13 +373,13 @@ void EsmConverter::setNewFriendlyScript(string id, yampt::r_type type)
 	if(esm.getFriendly() != new_friendly)
 	{
 		convert = true;
-		result_ptr = &yampt::result[1];
+		converter_log_ptr = &yampt::converter_log[1];
 		counter_converted++;
 	}
 	else
 	{
 		convert = false;
-		result_ptr = &yampt::result[0];
+		converter_log_ptr = &yampt::converter_log[0];
 		counter_unchanged++;
 
 		new_friendly = "N\\A";
@@ -434,16 +434,16 @@ void EsmConverter::convertLine(string id, yampt::r_type type, bool say)
 				}
 
 				found_key = true;
-				result_ptr = &yampt::result[1];
+				converter_log_ptr = &yampt::converter_log[1];
 			}
 			else
 			{
-				result_ptr = &yampt::result[2];
+				converter_log_ptr = &yampt::converter_log[2];
 			}
 		}
 		else
 		{
-			result_ptr = &yampt::result[0];
+			converter_log_ptr = &yampt::converter_log[0];
 		}
 		makeLogScript(esm.getUnique());
 	}
@@ -499,16 +499,16 @@ void EsmConverter::convertText(string id, yampt::r_type type, int num, bool getp
 
 			if(line != line_new)
 			{
-				result_ptr = &yampt::result[1];
+				converter_log_ptr = &yampt::converter_log[1];
 			}
 			else
 			{
-				result_ptr = &yampt::result[2];
+				converter_log_ptr = &yampt::converter_log[2];
 			}
 		}
 		else
 		{
-			result_ptr = &yampt::result[0];
+			converter_log_ptr = &yampt::converter_log[0];
 			for(auto &elem : merger->getDict()[type])
 			{
 				if(caseInsensitiveStringCmp(id + yampt::sep[0] + text, elem.first) == true)
@@ -552,12 +552,12 @@ void EsmConverter::convertText(string id, yampt::r_type type, int num, bool getp
 
 					if(line != line_new)
 					{
-						result_ptr = &yampt::result[1];
+						converter_log_ptr = &yampt::converter_log[1];
 						break;
 					}
 					else
 					{
-						result_ptr = &yampt::result[2];
+						converter_log_ptr = &yampt::converter_log[2];
 						break;
 					}
 				}

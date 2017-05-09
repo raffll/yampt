@@ -66,3 +66,7 @@
 
 0.11 beta
 - log fixes
+
+0.12 beta
+- fix base dictionary creator when files have records in different order (e.g. German and English)
+- dictionary creator now adds duplicate records (you can choose which one is better)

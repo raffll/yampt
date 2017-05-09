@@ -22,14 +22,19 @@ public:
 	DictMerger(std::vector<std::string> &path);
 
 private:
-	void makeLog(const std::string name, const std::string unique_key, const std::string friendly_old, const std::string friendly_new);
+	void makeLog(const std::string name,
+		     const std::string unique_key,
+		     const std::string friendly_old,
+		     const std::string friendly_new);
 	void printLog();
 
 	bool status = false;
 
-	std::array<int, 3> counter = {};
+	int counter_merged = 0;
+	int counter_replaced = 0;
+	int counter_identical = 0;
 
-	const std::string *valid_ptr;
+	const std::string *merger_log_ptr;
 
 	std::string log;
 	std::vector<DictReader> dict_coll;

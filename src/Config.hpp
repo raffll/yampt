@@ -23,7 +23,7 @@ struct CaseAwareCompare
 	{
 		bool tied = true;
 		bool tiebreaker = false;
-		int i;
+        int i;
 
 		for(i = 0; left[i] != 0; ++i)
 		{
@@ -56,25 +56,11 @@ enum ins_mode { RAW, BASE, ALL, NOTFOUND, CHANGED };
 typedef std::array<std::map<std::string, std::string, CaseAwareCompare>, 11> dict_t;
 
 const std::array<std::string, 5> dialog_type = {"T", "V", "G", "P", "J"};
-
 const std::vector<std::string> sep = {"^", "<h3>", "</h3>", "<hr>"};
 const std::string line = "<!------------------------------------------------------------>";
-
-const std::vector<std::string> key_message = {"messagebox",
-					      "say ",
-					      "say,",
-					      "choice"};
-
-const std::vector<std::string> result = {"UNCHANGED",
-					 "CONVERTED",
-					 "SKIPPED",
-					 "LINK ADDED"};
-
-const std::vector<std::string> valid = {"REPLACED",
-					"DOUBLED",
-					"INVALID",
-					"INVALID",
-					"LOADED"};
+const std::vector<std::string> key_message = {"messagebox", "say ", "say,", "choice"};
+const std::vector<std::string> converter_log = {"UNCHANGED", "CONVERTED", "SKIPPED", "LINK ADDED"};
+const std::vector<std::string> merger_log = {"REPLACED", "DOUBLED", "INVALID", "INVALID", "LOADED"};
 
 }
 

@@ -4,7 +4,7 @@
 
 Simple command line tool for automatic translation from one language to another. It works on cell names, gsmt strings, object names, birthsigns, class and race descriptions, book text, faction rank names, magic and skill descriptions, dialog topic names, dialog text and script lines. In one word, on all readable in-game text. It can be used as well for making no-esp patches without creating DELE records.
 
-Because translating at least cell records is requirement to succesfully run English mod on your native Morrowind installation. The idea was to quickly convert an infinite number of plugins with an infinite number of combined dictionaries, with one command, to eliminate inconsistencies between files.
+Because translating at least cell records is requirement to succesfully run English mod on your native Morrowind installation. The idea is to quickly convert an infinite number of plugins with an infinite number of combined dictionaries, with one command, to eliminate inconsistencies between files.
 
 Second big problem are missing hyperlinks. Program solve this by adding your native dialog topic names to the end of not converted INFO strings.
 
@@ -19,7 +19,7 @@ All files are created in yampt.exe directory, and program don't check if file ex
 
 ## Easy start
 
-Open "yampt-convert.cmd" in text editor and change paths:
+Open "yampt-make-base.cmd" in text editor and change paths:
 
 Set path to folders where you keep native and foreign master files (Morrowind.esm, Tribunal.esm and Bloodmoon.esm)
 ```
@@ -27,19 +27,21 @@ SET PATH_NATIVE=C:\path\to\master\native
 SET PATH_FOREIGN=C:\path\to\master\foreign
 ```
 
+Open "yampt-convert.cmd" in text editor and change paths:
+
 Set path to your Wrye Mash installers folder or where you keep files (script process recursively from this path)
 ```
 SET PATH_PLUGIN=C:\path\to\files
 ```
 
-Then double-click on it.
+Then double-click on "yampt-make-base.cmd" first and then "yampt-convert.cmd".
 
-- In "converted_files" folder you should have all converted files
-- In "dictionary_base" you should have two base dictionaries
-- In "dictionary_new" you should have NOTFOUND and CHANGED dictionaries corressponding to each of files (missing ones was empty)
-- Empty "dictionary_user"
+- In "output" folder you should have all converted files
+- In "dict_base" you should have two base dictionaries
+- In "dict_new" you should have NOTFOUND and CHANGED dictionaries corressponding to each of files (missing ones was empty)
+- Empty "dict_user"
 
-To "dictionary_user" you can copy translated dictionaries from "dictionary_new" and re-run script. This folder will be merged with "NATIVE.dic" from "dictionary_base" for future convertions. Rest of the folders will be refreshed.
+To "dict_user" you can copy translated dictionaries from "dict_new" and re-run script. This folder will be merged with "NATIVE.dic" from "dict_base" for future convertions. Rest of the folders will be refreshed.
 
 Script also convert your native master files, so by modifying "NATIVE.dic" or "FOREIGN.dic", you can do no-esp patch, rename it and replace path to your files here:
 ```
@@ -202,6 +204,7 @@ yampt.exe --swap-records -d "Dict.dic"
 <h3>SCTX^foreign</h3>
         ^native<hr>                                          # Script message line
 ```
+
 - Don't forget of ^ character before native text in SCTX and BNAM records.
 - If you change something in dictionary, make sure that text editor doesn't change encoding.
 - If you lose html tag dictionary won't load.
