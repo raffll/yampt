@@ -384,6 +384,10 @@ void DictCreator::makeDictCELLExtended()
 
 				// Pattern is the combined id of all objects in cell
 				pattern = "";
+
+				esm_n.setFriendly("DATA", false, false);
+				pattern += esm_n.getFriendly();
+
 				esm_n.setFriendly("NAME", false, false);
 
 				while(esm_n.getFriendlyStatus())
@@ -400,6 +404,10 @@ void DictCreator::makeDictCELLExtended()
 					if(esm_f.getRecId() == "CELL")
 					{
 						match = "";
+
+						esm_f.setFriendly("DATA", false, false);
+						match += esm_f.getFriendly();
+
 						esm_f.setFriendly("NAME", false, false);
 
 						while(esm_f.getFriendlyStatus())
