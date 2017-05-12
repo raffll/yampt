@@ -35,7 +35,8 @@ private:
 
 	void makeLog(std::string key);
 	void makeLogScript(std::string key);
-	void printLog(std::string id, bool header = false);
+	void printLog(std::string id);
+	void printLogHeader();
 
 	void convertCELL();
 	void convertPGRD();

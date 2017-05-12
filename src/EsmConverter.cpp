@@ -22,7 +22,8 @@ void EsmConverter::convertEsm()
 {
 	if(status == true)
 	{
-		printLog("", true);
+		printLogHeader();
+
 		convertCELL();
 		convertPGRD();
 		convertANAM();
@@ -43,6 +44,7 @@ void EsmConverter::convertEsm()
 		convertBNAM();
 		convertSCPT();
 		convertGMDT();
+
 		cout << endl;
 	}
 }
@@ -69,50 +71,49 @@ void EsmConverter::makeLogScript(string key)
 }
 
 //----------------------------------------------------------
-void EsmConverter::printLog(string id, bool header)
+void EsmConverter::printLogHeader()
 {
-	if(header == true)
+	cout << endl
+	     << "          CONVERTED / UNCHANGED / SKIPPED /    ALL" << endl
+	     << "    ----------------------------------------------" << endl;
+}
+
+//----------------------------------------------------------
+void EsmConverter::printLog(string id)
+{
+	if(id == "INFO" && add_dial == true)
 	{
-		cout << endl
-		     << "          CONVERTED / UNCHANGED / SKIPPED /    ALL" << endl
-		     << "    ----------------------------------------------" << endl;
+		if(counter_add > 0)
+		{
+			cout << endl;
+		}
+
+		cout << "    " << id << " "
+		     << setw(10) << to_string(counter_converted) << " / "
+		     << setw(9) << to_string(counter_unchanged) << " / "
+		     << setw(7) << to_string(counter_skipped) << " / "
+		     << setw(6) << to_string(counter_all) << endl
+		     << "    " << " + DIAL" << " "
+		     << setw(7) << to_string(counter_add) << " / "
+		     << setw(9) << "-" << " / "
+		     << setw(7) << "-" << " / "
+		     << setw(6) << "-" << endl;
+	}
+	else if(id == "SCTX" || id == "BNAM")
+	{
+		cout << "    " << id << " "
+		     << setw(10) << to_string(counter_converted) << " / "
+		     << setw(9) << to_string(counter_unchanged) << " / "
+		     << setw(7) << "-" << " / "
+		     << setw(6) << to_string(counter_all) << endl;
 	}
 	else
 	{
-		if(id == "INFO" && add_dial == true)
-		{
-			if(counter_add > 0)
-			{
-				cout << endl;
-			}
-
-			cout << "    " << id << " "
-			     << setw(10) << to_string(counter_converted) << " / "
-			     << setw(9) << to_string(counter_unchanged) << " / "
-			     << setw(7) << to_string(counter_skipped) << " / "
-			     << setw(6) << to_string(counter_all) << endl
-			     << "    " << " + DIAL" << " "
-			     << setw(7) << to_string(counter_add) << " / "
-			     << setw(9) << "-" << " / "
-			     << setw(7) << "-" << " / "
-			     << setw(6) << "-" << endl;
-		}
-		else if(id == "SCTX" || id == "BNAM")
-		{
-			cout << "    " << id << " "
-			     << setw(10) << to_string(counter_converted) << " / "
-			     << setw(9) << to_string(counter_unchanged) << " / "
-			     << setw(7) << "-" << " / "
-			     << setw(6) << to_string(counter_all) << endl;
-		}
-		else
-		{
-			cout << "    " << id << " "
-			     << setw(10) << to_string(counter_converted) << " / "
-			     << setw(9) << to_string(counter_unchanged) << " / "
-			     << setw(7) << to_string(counter_skipped) << " / "
-			     << setw(6) << to_string(counter_all) << endl;
-		}
+		cout << "    " << id << " "
+		     << setw(10) << to_string(counter_converted) << " / "
+		     << setw(9) << to_string(counter_unchanged) << " / "
+		     << setw(7) << to_string(counter_skipped) << " / "
+		     << setw(6) << to_string(counter_all) << endl;
 	}
 }
 

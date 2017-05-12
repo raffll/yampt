@@ -96,7 +96,7 @@ void DictCreator::makeDictBasic()
 		makeDictBNAM();
 		makeDictSCPT();
 
-		cout << endl;
+		cout << "----------------------------------------------" << endl;
 	}
 }
 
@@ -121,24 +121,27 @@ void DictCreator::makeDictExtended()
 		makeDictBNAMExtended();
 		makeDictSCPTExtended();
 
-		cout << endl;
+		cout << "----------------------------------------------" << endl;
 	}
 }
 
 //----------------------------------------------------------
 void DictCreator::printLogHeader()
 {
-	cout << endl;
-	cout << "          CREATED / DOUBLED /    ALL" << endl;
-	cout << "    --------------------------------" << endl;
+	cout << "----------------------------------------------" << endl;
+	cout << "         Created / Doubled / Identical /   All" << endl;
+	cout << "----------------------------------------------" << endl;
 }
 
 //----------------------------------------------------------
 void DictCreator::printLog(string id)
 {
-	cout << "    " << id << " "
-	     << setw(8) << to_string(counter_created) << " / "
+	string id_text = id;
+	id_text.resize(9, ' ');
+	cout << id_text
+	     << setw(7) << to_string(counter_created) << " / "
 	     << setw(7) << to_string(counter_doubled) << " / "
+	     << setw(8) << to_string(counter_identical) << " / "
 	     << setw(6) << to_string(counter_all) << endl;
 }
 
@@ -163,7 +166,10 @@ bool DictCreator::compareMasterFiles()
 	if(esm_n_compare != esm_f_compare)
 	{
 		cout << "--> Files have records in different order!" << endl;
-		cout << "--> Please be patient..." << endl;
+		cout << "    If any doubled records was created," << endl;
+		cout <<	"    please check DIAL and CELL dictionary manually!" << endl;
+		cout << "    Problematic records are marked as <DOUBLED>." << endl;
+		cout << "    Please be patient..." << endl;
 		return false;
 	}
 	else
@@ -177,6 +183,7 @@ void DictCreator::resetCounters()
 {
 	counter_created = 0;
 	counter_doubled = 0;
+	counter_identical = 0;
 	counter_all = 0;
 }
 
@@ -261,9 +268,19 @@ void DictCreator::insertRecord(const string &unique_key, const string &friendly,
 		if(friendly != search->second)
 		{
 			string temp = unique_key + "<DOUBLED>";
-			dict[type].insert({temp, friendly});
+			if(dict[type].insert({temp, friendly}).second == true)
+			{
+				counter_doubled++;
+			}
+			else
+			{
+				counter_identical++;
+			}
 		}
-		counter_doubled++;
+		else
+		{
+			counter_identical++;
+		}
 	}
 }
 
@@ -477,7 +494,7 @@ void DictCreator::makeDictDefaultCELL()
                         }
 		}
 	}
-	printLog("CELL");
+	printLog("+ Default");
 }
 
 //----------------------------------------------------------
@@ -518,7 +535,7 @@ void DictCreator::makeDictDefaultCELLExtended()
 			}
 		}
 	}
-	printLog("CELL");
+	printLog("+ Default");
 }
 
 //----------------------------------------------------------
@@ -548,7 +565,7 @@ void DictCreator::makeDictRegionCELL()
                         }
 		}
 	}
-	printLog("CELL");
+	printLog("+ Region ");
 }
 
 //----------------------------------------------------------
@@ -589,7 +606,7 @@ void DictCreator::makeDictRegionCELLExtended()
 			}
 		}
 	}
-	printLog("CELL");
+	printLog("+ Region ");
 }
 
 //----------------------------------------------------------
@@ -880,8 +897,6 @@ void DictCreator::makeDictDIALExtended()
 		}
 	}
 	printLog("DIAL");
-	cout << "    If any doubled records was created, please check DIAL dictionary manually!" << endl;
-	cout << "    Problematic records are marked as <DOUBLED>" << endl;
 }
 
 //----------------------------------------------------------

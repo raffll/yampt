@@ -70,6 +70,7 @@ private:
 
 	int counter_created;
 	int counter_doubled;
+	int counter_identical;
 	int counter_all;
 
 	yampt::dict_t dict;
