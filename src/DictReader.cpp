@@ -188,7 +188,7 @@ void DictReader::validateRecord()
 		}
 		else if(id == "RNAM")
 		{
-			if(friendly.size() > 31)
+			if(friendly.size() > 32)
 			{
 				merger_log_ptr = &yampt::merger_log[3];
 				makeLog();
