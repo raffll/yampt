@@ -28,6 +28,8 @@ void DictMerger::mergeDict()
 	{
 		for(size_t i = 0; i < dict_coll.size(); ++i)
 		{
+			makeLogHeader(i);
+
 			for(size_t k = 0; k < dict_coll[i].getDict().size(); ++k)
 			{
 				for(auto &elem : dict_coll[i].getDict()[k])
@@ -44,7 +46,7 @@ void DictMerger::mergeDict()
 					{
 						// Found in previous dictionary - skipped
 						merger_log_ptr = &yampt::merger_log[0];
-						makeLog(dict_coll[i].getName(), elem.first, elem.second, search->second);
+						makeLog(elem.first, elem.second, search->second);
 						counter_replaced++;
 					}
 					else
@@ -159,22 +161,43 @@ void DictMerger::swapRecords()
 }
 
 //----------------------------------------------------------
-void DictMerger::makeLog(const string name, const string unique_key, const string friendly_old, const string friendly_new)
+void DictMerger::makeLogHeader(size_t i)
 {
-	log += *merger_log_ptr + " '" + unique_key + "' in '" + name + "'\r\n" +
-	       friendly_old + " -->" + "\r\n" +
-	       friendly_new + "\r\n" +
-	       "---" + "\r\n";
+	if(dict_coll.size() == 1)
+	{
+		log += "<!-- Nothing to merge... -->\r\n";
+		log += yampt::line + "\r\n";
+	}
+	else if(dict_coll.size() > 1 && i == 1)
+	{
+		log += "<!-- Merging " + dict_coll[i].getName() + " with " + dict_coll[i - 1].getName() + "... -->\r\n";
+		log += yampt::line + "\r\n";
+	}
+	else if(dict_coll.size() > 2 && i > 1)
+	{
+		log += "<!-- Merging " + dict_coll[i].getName() + " with previous dictionaries... -->\r\n";
+		log += yampt::line + "\r\n";
+	}
+}
+
+//----------------------------------------------------------
+void DictMerger::makeLog(const string unique_key, const string friendly_old, const string friendly_new)
+{
+
+	log += "<!-- " + *merger_log_ptr + " -->\r\n";
+	log += yampt::sep[1] + unique_key + yampt::sep[2] + friendly_old + yampt::sep[3] + "\r\n";
+	log += yampt::sep[1] + unique_key + yampt::sep[2] + friendly_new + yampt::sep[3] + "\r\n";
+	log += yampt::line + "\r\n";
 }
 
 //----------------------------------------------------------
 void DictMerger::printLog()
 {
-	cout << endl
-	     << "    MERGED / REPLACED / IDENTICAL" << endl
-	     << "    -----------------------------" << endl
+	cout << "---------------------------------" << endl
+	     << "    Merged / Replaced / Identical" << endl
+	     << "---------------------------------" << endl
 	     << setw(10) << to_string(counter_merged) << " / "
 	     << setw(8) << to_string(counter_replaced) << " / "
-	     << setw(9) << to_string(counter_identical)
-	     << endl << endl;
+	     << setw(9) << to_string(counter_identical) << endl
+	     << "---------------------------------" << endl;
 }

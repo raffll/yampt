@@ -400,7 +400,7 @@ void DictCreator::makeDictCELLExtended()
 			{
 				found = false;
 
-				// Pattern is the combined id of all objects in cell
+				// Pattern is the DATA and combined id of all objects in cell
 				pattern = "";
 
 				esm_n.setFriendly("DATA", false, false);

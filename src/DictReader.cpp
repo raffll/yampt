@@ -93,6 +93,8 @@ bool DictReader::parseDict(string &content)
 	size_t pos_mid = 0;
 	size_t pos_end = 0;
 
+	makeLogHeader();
+
 	while(true)
 	{
 		pos_beg = content.find(yampt::sep[1], pos_beg);
@@ -121,6 +123,8 @@ bool DictReader::parseDict(string &content)
 			friendly = content.substr(pos_mid + yampt::sep[2].size(),
 						  pos_end - pos_mid - yampt::sep[2].size());
 
+			counter_all++;
+
 			validateRecord();
 
 			pos_beg++;
@@ -134,6 +138,7 @@ bool DictReader::parseDict(string &content)
 void DictReader::validateRecord()
 {
 	string id;
+
 	if(unique_key.size() > 4)
 	{
 		id = unique_key.substr(0, 4);
@@ -213,7 +218,6 @@ void DictReader::validateRecord()
 			{
 				merger_log_ptr = &yampt::merger_log[4];
 				makeLog();
-				counter_toolong++;
 				insertRecord(yampt::r_type::INFO);
 			}
 			else
@@ -252,27 +256,35 @@ void DictReader::insertRecord(yampt::r_type type)
 }
 
 //----------------------------------------------------------
+void DictReader::makeLogHeader()
+{
+	log += "<!-- Loading " + name + "... -->\r\n";
+	log += yampt::line + "\r\n";
+}
+
+//----------------------------------------------------------
 void DictReader::makeLog()
 {
-	log += *merger_log_ptr;
-	if(merger_log_ptr == &yampt::merger_log[3])
+	log += "<!-- " + *merger_log_ptr;
+	if(merger_log_ptr == &yampt::merger_log[3] || merger_log_ptr == &yampt::merger_log[4])
         {
                 log += " (" + to_string(friendly.size()) + " bytes)";
         }
-	log += " '" + unique_key + "' in '" + name + "'\r\n" +
-	       friendly + "\r\n" +
-	       "---" + "\r\n";
+        log += " -->\r\n";
+	log += yampt::sep[1] + unique_key + yampt::sep[2] + friendly + yampt::sep[3] + "\r\n";
+	log += yampt::line + "\r\n";
 }
 
 //----------------------------------------------------------
 void DictReader::printLog()
 {
-	cout << endl
-	     << "    LOADED / DOUBLED / TOO LONG / INVALID" << endl
-	     << "    -------------------------------------" << endl
+	cout << "--------------------------------------------------" << endl
+	     << "    Loaded / Doubled / Too long / Invalid /    All" << endl
+	     << "--------------------------------------------------" << endl
 	     << setw(10) << to_string(counter_loaded) << " / "
 	     << setw(7) << to_string(counter_doubled) << " / "
 	     << setw(8) << to_string(counter_toolong) << " / "
-	     << setw(7) << to_string(counter_invalid)
-	     << endl << endl;
+	     << setw(7) << to_string(counter_invalid) << " / "
+	     << setw(6) << to_string(counter_all) << endl
+	     << "--------------------------------------------------" << endl;
 }

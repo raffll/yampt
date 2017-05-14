@@ -60,7 +60,7 @@ const std::vector<std::string> sep = {"^", "<h3>", "</h3>", "<hr>"};
 const std::string line = "<!------------------------------------------------------------>";
 const std::vector<std::string> key_message = {"messagebox", "say ", "say,", "choice"};
 const std::vector<std::string> converter_log = {"UNCHANGED", "CONVERTED", "SKIPPED", "LINK ADDED"};
-const std::vector<std::string> merger_log = {"REPLACED", "DOUBLED", "INVALID", "INVALID", "LOADED"};
+const std::vector<std::string> merger_log = {"REPLACED", "DOUBLED", "INVALID", "TOO LONG", "LOADED (but more than 512 bytes)"};
 
 }
 

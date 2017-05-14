@@ -73,3 +73,7 @@
 
 0.13 beta
 - quick fix - improved CELL match
+
+0.14 beta
+- fix dictionary creator not working sometimes
+- fix dictionary creator now add all duplicate records (e.g broken, for manual edit)
