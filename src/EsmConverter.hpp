@@ -3,7 +3,6 @@
 
 #include "Config.hpp"
 #include "EsmReader.hpp"
-#include "EsmRecord.hpp"
 #include "DictMerger.hpp"
 
 class EsmConverter : public Tools
@@ -57,7 +56,7 @@ private:
 	void convertGMDT();
 
 	bool status = false;
-	EsmRecord esm;
+	EsmReader esm;
 	DictMerger *merger;
 
 	int counter_converted = 0;

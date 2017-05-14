@@ -3,7 +3,6 @@
 
 #include "Config.hpp"
 #include "EsmReader.hpp"
-#include "EsmRecord.hpp"
 #include "DictMerger.hpp"
 
 class DictCreator : public Tools
@@ -58,9 +57,9 @@ private:
 	void makeDictSCPT();
 	void makeDictSCPTExtended();
 
-	EsmRecord esm_n;
-	EsmRecord esm_f;
-	EsmRecord *esm_ptr;
+	EsmReader esm_n;
+	EsmReader esm_f;
+	EsmReader *esm_ptr;
 	DictMerger *merger;
 
 	bool status = false;

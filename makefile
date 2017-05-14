@@ -1,4 +1,4 @@
-SOURCES=Main.cpp Config.cpp EsmReader.cpp EsmRecord.cpp DictCreator.cpp DictReader.cpp DictMerger.cpp EsmConverter.cpp UserInterface.cpp
+SOURCES=Main.cpp Config.cpp EsmReader.cpp DictCreator.cpp DictReader.cpp DictMerger.cpp EsmConverter.cpp UserInterface.cpp
 EXECUTABLE=yampt
 
 CFLAGS=-c -std=c++11 -Wall -Wextra -O2 -pedantic -fexceptions -D_GLIBCXX_DEBUG_PEDANTIC -D_FORTIFY_SOURCE=2
