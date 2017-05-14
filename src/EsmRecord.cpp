@@ -65,7 +65,7 @@ void EsmRecord::setUnique(string id, bool erase_null)
 				}
 				else
 				{
-					unique_text = "<Empty>";
+					unique_text = "<EMPTY>";
 					unique_status = false;
 				}
 				break;
@@ -73,7 +73,7 @@ void EsmRecord::setUnique(string id, bool erase_null)
 			cur_pos += 8 + cur_size;
 			if(cur_pos == rec->size())
 			{
-				unique_text = "<NotFound>";
+				unique_text = "<NOTFOUND>";
 				unique_status = false;
 			}
 		}
@@ -125,7 +125,7 @@ bool EsmRecord::setFriendly(string id, bool next, bool erase_null)
 
 		if(cur_pos == rec->size())
 		{
-			friendly_text = "<NotFound>";
+			friendly_text = "<NOTFOUND>";
 			friendly_pos = cur_pos;
 			friendly_size = 0;
 			friendly_status = false;

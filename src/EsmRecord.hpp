@@ -39,14 +39,14 @@ private:
 
 	std::string unique_id;
 	std::string unique_text;
-	bool unique_status;
+	bool unique_status = 0;
 
 	std::string friendly_id;
 	std::string friendly_text;
 	size_t friendly_pos;
 	size_t friendly_size;
 	size_t friendly_counter;
-	bool friendly_status;
+	bool friendly_status = 0;
 
 	std::string dump;
 };
