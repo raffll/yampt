@@ -1,5 +1,5 @@
-#ifndef ESMTOOLS_HPP
-#define ESMTOOLS_HPP
+#ifndef ESMREADER_HPP
+#define ESMREADER_HPP
 
 #include "Config.hpp"
 
