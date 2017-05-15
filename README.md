@@ -2,7 +2,7 @@
 
 ## Description
 
-Simple command line tool for automatic translation from one language to another. It works on cell names, gsmt strings, object names, birthsigns, class and race descriptions, book text, faction rank names, magic and skill descriptions, dialog topic names, dialog text and script lines. In one word, on all readable in-game text. It can be used as well for making no-esp patches without creating DELE records.
+Simple command line tool for automatic translation from one language to another. It works on cell names, gsmt strings, object names, birthsigns, class and race descriptions, book text, faction rank names, magic and skill descriptions, dialog topic names, dialog text, script lines and compiled script data. In one word, on all readable in-game text. It can be used as well for making no-esp patches without creating DELE records.
 
 Because translating at least cell records is requirement to succesfully run English mod on your native Morrowind installation. The idea is to quickly convert multiple plugins with multiple combined dictionaries, with one command, to eliminate inconsistencies between files.
 
