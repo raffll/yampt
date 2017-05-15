@@ -128,9 +128,9 @@ void DictCreator::makeDictExtended()
 //----------------------------------------------------------
 void DictCreator::printLogHeader()
 {
-	cout << "----------------------------------------------" << endl;
-	cout << "         Created / Doubled / Identical /   All" << endl;
-	cout << "----------------------------------------------" << endl;
+	cout << "----------------------------------------------" << endl
+	     << "         Created / Doubled / Identical /   All" << endl
+	     << "----------------------------------------------" << endl;
 }
 
 //----------------------------------------------------------
@@ -338,7 +338,7 @@ vector<string> DictCreator::makeMessageColl(const string &script_text)
 }
 
 //----------------------------------------------------------
-void DictCreator::binaryDump()
+void DictCreator::makeBinaryDump()
 {
 	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
 	{
@@ -366,8 +366,8 @@ void DictCreator::makeDictCELL()
 			esm_f.setRec(i);
 			esm_f.setFriendly("NAME");
 
-			if(esm_n.getUniqueStatus() &&
-			   esm_n.getFriendlyStatus())
+			if(esm_n.getUniqueStatus() == true &&
+			   esm_n.getFriendlyStatus() == true)
 			{
 				validateRecord("CELL" + yampt::sep[0] + esm_ptr->getFriendly(),
 					       esm_n.getFriendly(),
@@ -375,6 +375,7 @@ void DictCreator::makeDictCELL()
 			}
 		}
 	}
+
 	printLog("CELL");
 }
 
@@ -396,7 +397,7 @@ void DictCreator::makeDictCELLExtended()
 		{
 			esm_n.setUnique("NAME");
 
-			if(esm_n.getUniqueStatus())
+			if(esm_n.getUniqueStatus() == true)
 			{
 				found = false;
 
@@ -408,7 +409,7 @@ void DictCreator::makeDictCELLExtended()
 
 				esm_n.setFriendly("NAME", false, false);
 
-				while(esm_n.getFriendlyStatus())
+				while(esm_n.getFriendlyStatus() == true)
 				{
 					esm_n.setFriendly("NAME", true, false);
 					pattern += esm_n.getFriendly();
@@ -428,7 +429,7 @@ void DictCreator::makeDictCELLExtended()
 
 						esm_f.setFriendly("NAME", false, false);
 
-						while(esm_f.getFriendlyStatus())
+						while(esm_f.getFriendlyStatus() == true)
 						{
 							esm_f.setFriendly("NAME", true, false);
 							match += esm_f.getFriendly();
@@ -453,7 +454,7 @@ void DictCreator::makeDictCELLExtended()
 					esm_f.setFriendly("<NOTFOUND>");
 				}
 
-				if(esm_n.getFriendlyStatus())
+				if(esm_n.getFriendlyStatus() == true)
 				{
 					validateRecord("CELL" + yampt::sep[0] + esm_f.getFriendly(),
 						       esm_n.getFriendly(),
@@ -491,7 +492,7 @@ void DictCreator::makeDictDefaultCELL()
 			esm_f.setFriendly("STRV");
 
                         if(esm_n.getUnique() == "sDefaultCellname" &&
-			   esm_n.getFriendlyStatus())
+			   esm_n.getFriendlyStatus() == true)
                         {
 				validateRecord("CELL" + yampt::sep[0] + esm_ptr->getFriendly(),
 						esm_n.getFriendly(),
@@ -499,6 +500,7 @@ void DictCreator::makeDictDefaultCELL()
                         }
 		}
 	}
+
 	printLog("+ Default");
 }
 
@@ -517,7 +519,7 @@ void DictCreator::makeDictDefaultCELLExtended()
 			esm_n.setFriendly("STRV");
 
                         if(esm_n.getUnique() == "sDefaultCellname" &&
-                           esm_n.getFriendlyStatus())
+                           esm_n.getFriendlyStatus() == true)
                         {
 				for(size_t k = 0; k < esm_f.getRecColl().size(); ++k)
 				{
@@ -528,7 +530,7 @@ void DictCreator::makeDictDefaultCELLExtended()
 						esm_f.setFriendly("STRV");
 
 						if(esm_f.getUnique() == "sDefaultCellname" &&
-						   esm_f.getFriendlyStatus())
+						   esm_f.getFriendlyStatus() == true)
 						{
 							validateRecord("CELL" + yampt::sep[0] + esm_f.getFriendly(),
 									esm_n.getFriendly(),
@@ -540,6 +542,7 @@ void DictCreator::makeDictDefaultCELLExtended()
 			}
 		}
 	}
+
 	printLog("+ Default");
 }
 
@@ -560,8 +563,8 @@ void DictCreator::makeDictRegionCELL()
 			esm_f.setRec(i);
 			esm_f.setFriendly("FNAM");
 
-                        if(esm_n.getUniqueStatus() &&
-			   esm_n.getFriendlyStatus())
+                        if(esm_n.getUniqueStatus() == true &&
+			   esm_n.getFriendlyStatus() == true)
                         {
 				validateRecord("CELL" + yampt::sep[0] + esm_ptr->getFriendly(),
 						esm_n.getFriendly(),
@@ -569,6 +572,7 @@ void DictCreator::makeDictRegionCELL()
                         }
 		}
 	}
+
 	printLog("+ Region ");
 }
 
@@ -586,8 +590,8 @@ void DictCreator::makeDictRegionCELLExtended()
 			esm_n.setUnique("NAME");
 			esm_n.setFriendly("FNAM");
 
-                        if(esm_n.getUniqueStatus() &&
-                           esm_n.getFriendlyStatus())
+                        if(esm_n.getUniqueStatus() == true &&
+                           esm_n.getFriendlyStatus() == true)
                         {
 				for(size_t k = 0; k < esm_f.getRecColl().size(); ++k)
 				{
@@ -598,7 +602,7 @@ void DictCreator::makeDictRegionCELLExtended()
 						esm_f.setFriendly("FNAM");
 
 						if(esm_f.getUnique() == esm_n.getUnique() &&
-						   esm_f.getFriendlyStatus())
+						   esm_f.getFriendlyStatus() == true)
 						{
 							validateRecord("CELL" + yampt::sep[0] + esm_f.getFriendly(),
 									esm_n.getFriendly(),
@@ -610,6 +614,7 @@ void DictCreator::makeDictRegionCELLExtended()
 			}
 		}
 	}
+
 	printLog("+ Region ");
 }
 
@@ -627,8 +632,8 @@ void DictCreator::makeDictGMST()
 			esm_n.setUnique("NAME");
 			esm_n.setFriendly("STRV");
 
-			if(esm_n.getUniqueStatus() &&
-			   esm_n.getFriendlyStatus() &&
+			if(esm_n.getUniqueStatus() == true &&
+			   esm_n.getFriendlyStatus() == true &&
 			   esm_n.getUnique().substr(0, 1) == "s")	// Make sure is string
 			{
 				validateRecord("GMST" + yampt::sep[0] + esm_n.getUnique(),
@@ -637,6 +642,7 @@ void DictCreator::makeDictGMST()
 			}
 		}
 	}
+
 	printLog("GMST");
 }
 
@@ -677,8 +683,8 @@ void DictCreator::makeDictFNAM()
 			esm_n.setUnique("NAME");
 			esm_n.setFriendly("FNAM");
 
-			if(esm_n.getUniqueStatus() &&
-			   esm_n.getFriendlyStatus() &&
+			if(esm_n.getUniqueStatus() == true &&
+			   esm_n.getFriendlyStatus() == true &&
 			   esm_n.getUnique() != "player")	// Skip player name
 			{
 				validateRecord("FNAM" + yampt::sep[0] + esm_n.getRecId() + yampt::sep[0] + esm_n.getUnique(),
@@ -687,6 +693,7 @@ void DictCreator::makeDictFNAM()
 			}
 		}
 	}
+
 	printLog("FNAM");
 }
 
@@ -706,8 +713,8 @@ void DictCreator::makeDictDESC()
 			esm_n.setUnique("NAME");
 			esm_n.setFriendly("DESC");
 
-			if(esm_n.getUniqueStatus() &&
-			   esm_n.getFriendlyStatus())
+			if(esm_n.getUniqueStatus() == true &&
+			   esm_n.getFriendlyStatus() == true)
 			{
 				validateRecord("DESC" + yampt::sep[0] + esm_n.getRecId() + yampt::sep[0] + esm_n.getUnique(),
 					       esm_n.getFriendly(),
@@ -715,6 +722,7 @@ void DictCreator::makeDictDESC()
 			}
 		}
 	}
+
 	printLog("DESC");
 }
 
@@ -732,8 +740,8 @@ void DictCreator::makeDictTEXT()
 			esm_n.setUnique("NAME");
 			esm_n.setFriendly("TEXT");
 
-			if(esm_n.getUniqueStatus() &&
-			   esm_n.getFriendlyStatus())
+			if(esm_n.getUniqueStatus() == true &&
+			   esm_n.getFriendlyStatus() == true)
 			{
 				validateRecord("TEXT" + yampt::sep[0] + esm_n.getUnique(),
 					       esm_n.getFriendly(),
@@ -741,6 +749,7 @@ void DictCreator::makeDictTEXT()
 			}
 		}
 	}
+
 	printLog("TEXT");
 }
 
@@ -758,19 +767,20 @@ void DictCreator::makeDictRNAM()
 			esm_n.setUnique("NAME");
 			esm_n.setFriendly("RNAM");
 
-			if(esm_n.getUniqueStatus())
+			if(esm_n.getUniqueStatus() == true)
 			{
-				while(esm_n.getFriendlyStatus())
+				while(esm_n.getFriendlyStatus() == true)
 				{
 					validateRecord("RNAM" + yampt::sep[0] + esm_n.getUnique() + yampt::sep[0] + to_string(esm_n.getFriendlyCounter()),
 						       esm_n.getFriendly(),
 						       yampt::r_type::RNAM);
 
-					esm_n.setFriendly("RNAM", true);
+					esm_n.setFriendly("RNAM", true, true);
 				}
 			}
 		}
 	}
+
 	printLog("RNAM");
 }
 
@@ -789,8 +799,8 @@ void DictCreator::makeDictINDX()
 			esm_n.setUnique("INDX");
 			esm_n.setFriendly("DESC");
 
-			if(esm_n.getUniqueStatus() &&
-			   esm_n.getFriendlyStatus())
+			if(esm_n.getUniqueStatus() == true &&
+			   esm_n.getFriendlyStatus() == true)
 			{
 				validateRecord("INDX" + yampt::sep[0] + esm_n.getRecId() + yampt::sep[0] + esm_n.getUnique(),
 					       esm_n.getFriendly(),
@@ -798,6 +808,7 @@ void DictCreator::makeDictINDX()
 			}
 		}
 	}
+
 	printLog("INDX");
 }
 
@@ -818,7 +829,7 @@ void DictCreator::makeDictDIAL()
 			esm_f.setFriendly("NAME");
 
 			if(esm_n.getUnique() == "T" &&
-			   esm_n.getFriendlyStatus())
+			   esm_n.getFriendlyStatus() == true)
 			{
 				validateRecord("DIAL" + yampt::sep[0] + esm_ptr->getFriendly(),
 					       esm_n.getFriendly(),
@@ -826,6 +837,7 @@ void DictCreator::makeDictDIAL()
 			}
 		}
 	}
+
 	printLog("DIAL");
 }
 
@@ -848,7 +860,6 @@ void DictCreator::makeDictDIALExtended()
 
 			if(esm_n.getUnique() == "T")
 			{
-				// Pattern is the id of corresponding INFO string
 				esm_n.setRec(i + 1);
 
 				esm_n.setFriendly("INAM", false, false);
@@ -889,8 +900,8 @@ void DictCreator::makeDictDIALExtended()
 					}
 				}
 
-				if(esm_n.getFriendlyStatus() &&
-				   esm_f.getFriendlyStatus())
+				if(esm_n.getFriendlyStatus() == true &&
+				   esm_f.getFriendlyStatus() == true)
 				{
 					//cout << esm_f.getFriendly() << " <<< " << esm_n.getFriendly() << endl;
 
@@ -916,7 +927,7 @@ void DictCreator::makeDictDIALExtended()
 void DictCreator::makeDictINFO()
 {
 	resetCounters();
-	string current_dialog;
+	string dialog_topic;
 
 	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
 	{
@@ -927,30 +938,32 @@ void DictCreator::makeDictINFO()
 			esm_n.setUnique("DATA");
 			esm_n.setFriendly("NAME");
 
-			if(esm_n.getUniqueStatus() &&
-			   esm_n.getFriendlyStatus())
+			if(esm_n.getUniqueStatus() == true &&
+			   esm_n.getFriendlyStatus() == true)
 			{
-				current_dialog = esm_n.getUnique() + yampt::sep[0] + dialTranslator(esm_n.getFriendly());
+				dialog_topic = esm_n.getUnique() + yampt::sep[0] + dialTranslator(esm_n.getFriendly());
 			}
 			else
 			{
-				current_dialog = "<NOTFOUND>";
+				dialog_topic = "<NOTFOUND>";
 			}
 		}
+
 		if(esm_n.getRecId() == "INFO")
 		{
 			esm_n.setUnique("INAM");
 			esm_n.setFriendly("NAME");
 
-			if(esm_n.getUniqueStatus() &&
-			   esm_n.getFriendlyStatus())
+			if(esm_n.getUniqueStatus() == true &&
+			   esm_n.getFriendlyStatus() == true)
 			{
-				validateRecord("INFO" + yampt::sep[0] + current_dialog + yampt::sep[0] + esm_n.getUnique(),
+				validateRecord("INFO" + yampt::sep[0] + dialog_topic + yampt::sep[0] + esm_n.getUnique(),
 					       esm_n.getFriendly(),
 					       yampt::r_type::INFO);
 			}
 		}
 	}
+
 	printLog("INFO");
 }
 
@@ -969,7 +982,7 @@ void DictCreator::makeDictBNAM()
 			esm_n.setFriendly("BNAM");
 			esm_f.setFriendly("BNAM");
 
-			if(esm_n.getFriendlyStatus())
+			if(esm_n.getFriendlyStatus() == true)
 			{
 				message_n = makeMessageColl(esm_n.getFriendly());
 				message_f = makeMessageColl(esm_f.getFriendly());
@@ -983,6 +996,7 @@ void DictCreator::makeDictBNAM()
 			}
 		}
 	}
+
 	printLog("BNAM");
 }
 
@@ -1002,8 +1016,8 @@ void DictCreator::makeDictBNAMExtended()
 			esm_n.setUnique("INAM");
 			esm_n.setFriendly("BNAM");
 
-			if(esm_n.getUniqueStatus() &&
-			   esm_n.getFriendlyStatus())
+			if(esm_n.getUniqueStatus() == true &&
+			   esm_n.getFriendlyStatus() == true)
 			{
 				for(size_t j = 0; j < esm_f.getRecColl().size(); ++j)
 				{
@@ -1015,7 +1029,7 @@ void DictCreator::makeDictBNAMExtended()
 						esm_f.setFriendly("BNAM");
 
 						if(esm_f.getUnique() == esm_n.getUnique() &&
-						   esm_f.getFriendlyStatus())
+						   esm_f.getFriendlyStatus() == true)
 						{
 							message_n = makeMessageColl(esm_n.getFriendly());
 							message_f = makeMessageColl(esm_f.getFriendly());
@@ -1066,7 +1080,7 @@ void DictCreator::makeDictSCPT()
 			esm_n.setFriendly("SCTX");
 			esm_f.setFriendly("SCTX");
 
-			if(esm_n.getFriendlyStatus())
+			if(esm_n.getFriendlyStatus() == true)
 			{
 				message_n = makeMessageColl(esm_n.getFriendly());
 				message_f = makeMessageColl(esm_f.getFriendly());
@@ -1080,6 +1094,7 @@ void DictCreator::makeDictSCPT()
 			}
 		}
 	}
+
 	printLog("SCTX");
 }
 
@@ -1099,8 +1114,8 @@ void DictCreator::makeDictSCPTExtended()
 			esm_n.setUnique("SCHD");
 			esm_n.setFriendly("SCTX");
 
-			if(esm_n.getUniqueStatus() &&
-			   esm_n.getFriendlyStatus())
+			if(esm_n.getUniqueStatus() == true &&
+			   esm_n.getFriendlyStatus() == true)
 			{
 				for(size_t j = 0; j < esm_f.getRecColl().size(); ++j)
 				{
@@ -1112,7 +1127,7 @@ void DictCreator::makeDictSCPTExtended()
 						esm_f.setFriendly("SCTX");
 
 						if(esm_f.getUnique() == esm_n.getUnique() &&
-						   esm_f.getFriendlyStatus())
+						   esm_f.getFriendlyStatus() == true)
 						{
 							message_n = makeMessageColl(esm_n.getFriendly());
 							message_f = makeMessageColl(esm_f.getFriendly());

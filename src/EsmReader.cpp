@@ -146,7 +146,7 @@ void EsmReader::setUnique(string id, bool erase_null)
 }
 
 //----------------------------------------------------------
-bool EsmReader::setFriendly(string id, bool next, bool erase_null)
+bool EsmReader::setFriendly(string id, bool erase_null, bool next)
 {
 	if(status == true)
 	{

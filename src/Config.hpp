@@ -59,8 +59,8 @@ const std::array<std::string, 5> dialog_type = {"T", "V", "G", "P", "J"};
 const std::vector<std::string> sep = {"^", "<h3>", "</h3>", "<hr>"};
 const std::string line = "<!------------------------------------------------------------>";
 const std::vector<std::string> key_message = {"messagebox", "say ", "say,", "choice"};
-const std::vector<std::string> converter_log = {"UNCHANGED", "CONVERTED", "SKIPPED", "LINK ADDED"};
-const std::vector<std::string> merger_log = {"REPLACED", "DOUBLED", "INVALID", "TOO LONG", "LOADED (but more than 512 bytes)"};
+const std::vector<std::string> converter_log = {"Unchanged", "Converted", "Skipped, same as in dictionary", "Link added to"};
+const std::vector<std::string> merger_log = {"Replaced", "Doubled", "Invalid", "Too long", "Loaded, but more than 512 bytes"};
 
 }
 

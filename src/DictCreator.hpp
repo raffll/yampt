@@ -9,7 +9,7 @@ class DictCreator : public Tools
 {
 public:
 	void makeDict();
-	void binaryDump();
+	void makeBinaryDump();
 
 	std::string getName() { return esm_n.getName(); }
 	std::string getNamePrefix() { return esm_n.getNamePrefix(); }

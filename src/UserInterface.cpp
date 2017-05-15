@@ -238,7 +238,7 @@ void UserInterface::binaryDump()
 	for(size_t i = 0; i < file_p.size(); ++i)
 	{
 		DictCreator creator(file_p[i]);
-		creator.binaryDump();
+		creator.makeBinaryDump();
 		writer.writeText(creator.getBinaryDump(), creator.getNamePrefix() + ".BINARY.log");
 	}
 }
