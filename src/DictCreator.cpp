@@ -412,7 +412,7 @@ void DictCreator::makeDictCELLExtended()
 
 				while(esm_n.getFriendlyStatus() == true)
 				{
-					esm_n.setFriendly("NAME", true, false);
+					esm_n.setFriendly("NAME", true, true);
 					pattern += esm_n.getFriendly();
 				}
 
@@ -432,7 +432,7 @@ void DictCreator::makeDictCELLExtended()
 
 						while(esm_f.getFriendlyStatus() == true)
 						{
-							esm_f.setFriendly("NAME", true, false);
+							esm_f.setFriendly("NAME", true, true);
 							match += esm_f.getFriendly();
 						}
 
