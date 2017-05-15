@@ -22,10 +22,10 @@ public:
 	DictMerger(std::vector<std::string> &path);
 
 private:
-	void makeLog(const std::string name,
-		     const std::string unique_key,
+	void makeLog(const std::string unique_key,
 		     const std::string friendly_old,
 		     const std::string friendly_new);
+	void makeLogHeader(size_t i);
 	void printLog();
 
 	bool status = false;

@@ -3,7 +3,6 @@
 
 #include "Config.hpp"
 #include "EsmReader.hpp"
-#include "EsmRecord.hpp"
 #include "DictMerger.hpp"
 
 class EsmConverter : public Tools
@@ -22,20 +21,24 @@ private:
 	void resetCounters();
 	void convertRecordContent(std::string new_text);
 
-	void setNewFriendly(yampt::r_type type);
-	void setNewFriendlyINFO(yampt::r_type type);
-	void setNewFriendlyScript(std::string id, yampt::r_type type);
+	void setNewFriendly(yampt::rec_type type);
+	void setNewFriendlyINFO(yampt::rec_type type);
+	void setNewFriendlyScript(std::string id, yampt::rec_type type);
 
-	void convertLine(std::string id, yampt::r_type type, bool say = false);
-	void convertText(std::string id, yampt::r_type type, int num, bool getpccell = false);
+	void convertLine(std::string id, yampt::rec_type type, bool is_say_keyword = false);
+	void convertLineCompiledScriptData(bool is_say_keyword);
+	void convertText(std::string id, yampt::rec_type type, int num, bool is_getpccell_keyword = false);
+	void convertTextCompiledScriptData(std::string text_new, bool is_getpccell_keyword);
 	void extractText(int num);
-	std::vector<std::string> splitLine(std::string line, bool say = false);
+	std::vector<std::string> splitLine(std::string line, bool is_say_keyword = false);
 
 	void addDIALtoINFO();
 
+	void makeLogHeader();
 	void makeLog(std::string key);
 	void makeLogScript(std::string key);
-	void printLog(std::string id, bool header = false);
+	void printLog(std::string id);
+	void printLogHeader();
 
 	void convertCELL();
 	void convertPGRD();
@@ -56,25 +59,25 @@ private:
 	void convertGMDT();
 
 	bool status = false;
-	EsmRecord esm;
+	EsmReader esm;
 	DictMerger *merger;
 
 	int counter_converted = 0;
-	int counter_unchanged = 0;
 	int counter_skipped = 0;
+	int counter_unchanged = 0;
 	int counter_all = 0;
 	int counter_add = 0;
 
 	std::string unique_key;
 	std::string new_friendly;
-	std::string current_dialog;
-	std::string compiled;
+	std::string dialog_topic;
+	std::string compiled_data;
 
 	std::string log;
 	const std::string *converter_log_ptr;
 
 	bool found_key = false;
-	bool convert = false;
+	bool to_convert = false;
 	bool safe = false;
 	bool add_dial = false;
 

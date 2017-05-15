@@ -17,6 +17,7 @@ yampt.exe --merge -d "Morrowind.dic" "Tribunal.dic" "Bloodmoon.dic" -o "NATIVE.d
 
 del "Morrowind.dic" "Tribunal.dic" "Bloodmoon.dic"
 move "NATIVE.dic" %BASE%
+rename "yampt.log" "yampt.NATIVE.log"
 
 REM Create new foreign dictionary
 yampt.exe --make-all -f "%PATH_FOREIGN%\Morrowind.esm" -d "%BASE%\NATIVE.dic"
@@ -26,5 +27,6 @@ yampt.exe --merge -d "Morrowind.ALL.dic" "Tribunal.ALL.dic" "Bloodmoon.ALL.dic" 
 
 del "Morrowind.ALL.dic" "Tribunal.ALL.dic" "Bloodmoon.ALL.dic"
 move "FOREIGN.dic" %BASE%
+rename "yampt.log" "yampt.FOREIGN.log"
 
 pause

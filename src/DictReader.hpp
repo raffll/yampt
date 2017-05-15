@@ -24,8 +24,9 @@ private:
 	void setName(std::string path);
 	bool parseDict(std::string &content);
 	void validateRecord();
-	void insertRecord(yampt::r_type type);
+	void insertRecord(yampt::rec_type type);
 	void makeLog();
+	void makeLogHeader();
 	void printLog();
 
 	bool status = false;
@@ -42,6 +43,7 @@ private:
 	int counter_invalid = 0;
 	int counter_toolong = 0;
 	int counter_doubled = 0;
+	int counter_all = 0;
 
 	std::string log;
 	yampt::dict_t dict;

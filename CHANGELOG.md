@@ -73,3 +73,8 @@
 
 0.13 beta
 - quick fix - improved CELL match
+
+0.14 beta
+- fix dictionary creator not working sometimes
+- fix dictionary creator, now adds all duplicate records (e.g broken, for manual edit)
+- fix length limit RNAM to 32

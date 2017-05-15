@@ -50,17 +50,17 @@ struct CaseAwareCompare
 	}
 };
 
-enum r_type { CELL, DIAL, INDX, RNAM, DESC, GMST, FNAM, INFO, BNAM, SCTX, TEXT };
+enum rec_type { CELL, DIAL, INDX, RNAM, DESC, GMST, FNAM, INFO, BNAM, SCTX, TEXT };
 enum ins_mode { RAW, BASE, ALL, NOTFOUND, CHANGED };
 
 typedef std::array<std::map<std::string, std::string, CaseAwareCompare>, 11> dict_t;
 
 const std::array<std::string, 5> dialog_type = {"T", "V", "G", "P", "J"};
 const std::vector<std::string> sep = {"^", "<h3>", "</h3>", "<hr>"};
-const std::string line = "<!------------------------------------------------------------>";
+const std::string sep_line = "<!------------------------------------------------------------>";
 const std::vector<std::string> key_message = {"messagebox", "say ", "say,", "choice"};
-const std::vector<std::string> converter_log = {"UNCHANGED", "CONVERTED", "SKIPPED", "LINK ADDED"};
-const std::vector<std::string> merger_log = {"REPLACED", "DOUBLED", "INVALID", "INVALID", "LOADED"};
+const std::vector<std::string> converter_log = {"UNCHANGED", "CONVERTED", "SKIPPED", "LINK ADDED TO"};
+const std::vector<std::string> merger_log = {"REPLACED", "DOUBLED", "INVALID", "TOO lONG", "LOADED, but more than 512 bytes"};
 
 }
 
@@ -80,6 +80,7 @@ protected:
 	bool caseInsensitiveStringCmp(std::string lhs, std::string rhs);
 	void eraseNullChars(std::string &str);
 	std::string eraseCarriageReturnChar(std::string &str);
+	std::string replaceNonReadableCharWithDot(const std::string &str);
 };
 
 #endif

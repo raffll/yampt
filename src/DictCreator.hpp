@@ -3,14 +3,13 @@
 
 #include "Config.hpp"
 #include "EsmReader.hpp"
-#include "EsmRecord.hpp"
 #include "DictMerger.hpp"
 
 class DictCreator : public Tools
 {
 public:
 	void makeDict();
-	void binaryDump();
+	void makeBinaryDump();
 
 	std::string getName() { return esm_n.getName(); }
 	std::string getNamePrefix() { return esm_n.getNamePrefix(); }
@@ -29,10 +28,10 @@ private:
 	std::string dialTranslator(std::string to_translate);
 	void validateRecord(const std::string &unique_key,
 			    const std::string &friendly,
-			    yampt::r_type type);
+			    yampt::rec_type type);
 	void insertRecord(const std::string &unique_key,
 			  const std::string &friendly,
-			  yampt::r_type type);
+			  yampt::rec_type type);
 	void makeLog(const std::string unique_key, const std::string friendly);
 	std::vector<std::string> makeMessageColl(const std::string &script_text);
 	void printLog(std::string id);
@@ -58,9 +57,9 @@ private:
 	void makeDictSCPT();
 	void makeDictSCPTExtended();
 
-	EsmRecord esm_n;
-	EsmRecord esm_f;
-	EsmRecord *esm_ptr;
+	EsmReader esm_n;
+	EsmReader esm_f;
+	EsmReader *esm_ptr;
 	DictMerger *merger;
 
 	bool status = false;
@@ -70,6 +69,7 @@ private:
 
 	int counter_created;
 	int counter_doubled;
+	int counter_identical;
 	int counter_all;
 
 	yampt::dict_t dict;
