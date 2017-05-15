@@ -55,32 +55,25 @@ void EsmConverter::convertEsm()
 void EsmConverter::makeLogHeader()
 {
 	log += "<!-- Converting " + esm.getName() + "... -->\r\n";
-	log += yampt::line + "\r\n";
+	log += sep_line + "\r\n";
 }
 
 //----------------------------------------------------------
 void EsmConverter::makeLog(string key)
 {
-	log += "<!-- " + *converter_log_ptr + " '" + key + "' -->\r\n";
-	if(converter_log_ptr == &converter_log[0] || converter_log_ptr == &converter_log[2])
-        {
-  		log += esm.getFriendly() + "\r\n";
-        }
-        else
-        {
-		log += esm.getFriendly() + " <!-- >>> -->" + "\r\n";
-		log += new_friendly + "\r\n";
-	}
-	log += yampt::line + "\r\n";
+	log += "<!-- " + *converter_log_ptr + " '" + key + "' '" + esm.getName() + "' -->\r\n";
+	log += esm.getFriendly() + " <!-- >>> -->" + "\r\n";
+	log += new_friendly + "\r\n";
+	log += sep_line + "\r\n";
 }
 
 //----------------------------------------------------------
 void EsmConverter::makeLogScript(string key)
 {
-	log += "<!-- " + *converter_log_ptr + " script line '" + key + "' -->\r\n";
+	log += "<!-- " + *converter_log_ptr + " script line '" + key + "' '" + esm.getName() + "' -->\r\n";
 	log += line + " <!-- >>> -->" + "\r\n";
 	log += line_new + "\r\n";
-	log += yampt::line + "\r\n";
+	log += sep_line + "\r\n";
 }
 
 //----------------------------------------------------------
@@ -163,11 +156,18 @@ void EsmConverter::convertRecordContent(string text_new)
 		rec_content.erase(4, 4);
 		rec_content.insert(4, convertIntToByteArray(rec_size));
 		esm.setRecContent(rec_content);
+
+		counter_converted++;
+	}
+	else
+	{
+		converter_log_ptr = &converter_log[4];
+		counter_unchanged++;
 	}
 }
 
 //----------------------------------------------------------
-void EsmConverter::setNewFriendly(r_type type)
+void EsmConverter::setNewFriendly(rec_type type)
 {
 	counter_all++;
 
@@ -180,7 +180,6 @@ void EsmConverter::setNewFriendly(r_type type)
 		{
 			to_convert = true;
 			converter_log_ptr = &converter_log[1];
-			counter_converted++;
 		}
 		else
 		{
@@ -195,12 +194,12 @@ void EsmConverter::setNewFriendly(r_type type)
 		converter_log_ptr = &converter_log[0];
 		counter_unchanged++;
 
-		new_friendly = "N\\A";
+		new_friendly = "<N\\A>";
 	}
 }
 
 //----------------------------------------------------------
-void EsmConverter::setNewFriendlyINFO(r_type type)
+void EsmConverter::setNewFriendlyINFO(rec_type type)
 {
 	counter_all++;
 
@@ -213,7 +212,6 @@ void EsmConverter::setNewFriendlyINFO(r_type type)
 		{
 			to_convert = true;
 			converter_log_ptr = &converter_log[1];
-			counter_converted++;
 		}
 		else
 		{
@@ -247,7 +245,7 @@ void EsmConverter::setNewFriendlyINFO(r_type type)
 			converter_log_ptr = &converter_log[0];
 			counter_unchanged++;
 
-			new_friendly = "N\\A";
+			new_friendly = "<N\\A>";
 		}
 	}
 	else
@@ -256,7 +254,7 @@ void EsmConverter::setNewFriendlyINFO(r_type type)
 		converter_log_ptr = &converter_log[0];
 		counter_unchanged++;
 
-		new_friendly = "N\\A";
+		new_friendly = "<N\\A>";
 	}
 }
 
@@ -272,7 +270,7 @@ void EsmConverter::addDIALtoINFO()
 	transform(new_friendly_lc.begin(), new_friendly_lc.end(),
 		  new_friendly_lc.begin(), ::tolower);
 
-	for(const auto &elem : merger->getDict()[r_type::DIAL])
+	for(const auto &elem : merger->getDict()[rec_type::DIAL])
 	{
 		key = elem.first.substr(5);
 		transform(key.begin(), key.end(),
@@ -290,7 +288,7 @@ void EsmConverter::addDIALtoINFO()
 }
 
 //----------------------------------------------------------
-void EsmConverter::setNewFriendlyScript(string id, r_type type)
+void EsmConverter::setNewFriendlyScript(string id, rec_type type)
 {
 	counter_all++;
 	new_friendly.erase();
@@ -306,7 +304,7 @@ void EsmConverter::setNewFriendlyScript(string id, r_type type)
 
 		found_key = false;
 		line_lc = line;
-		line_new = "N\\A";
+		line_new = "<N\\A>";
 
 		transform(line_lc.begin(), line_lc.end(),
 			  line_lc.begin(), ::tolower);
@@ -338,49 +336,49 @@ void EsmConverter::setNewFriendlyScript(string id, r_type type)
 		if(found_key == false)
 		{
 			pos = line_lc.find("addtopic");
-			convertText("DIAL", r_type::DIAL, 0);
+			convertText("DIAL", rec_type::DIAL, 0);
 		}
 
 		if(found_key == false)
 		{
 			pos = line_lc.find("showmap");
-			convertText("CELL", r_type::CELL, 0);
+			convertText("CELL", rec_type::CELL, 0);
 		}
 
 		if(found_key == false)
 		{
 			pos = line_lc.find("centeroncell");
-			convertText("CELL", r_type::CELL, 0);
+			convertText("CELL", rec_type::CELL, 0);
 		}
 
 		if(found_key == false)
 		{
 			pos = line_lc.find("getpccell");
-			convertText("CELL", r_type::CELL, 0, true); // is_getpccell_keyword = true
+			convertText("CELL", rec_type::CELL, 0, true); // is_getpccell_keyword = true
 		}
 
 		if(found_key == false)
 		{
 			pos = line_lc.find("aifollowcell");
-			convertText("CELL", r_type::CELL, 1);
+			convertText("CELL", rec_type::CELL, 1);
 		}
 
 		if(found_key == false)
 		{
 			pos = line_lc.find("aiescortcell)");
-			convertText("CELL", r_type::CELL, 1);
+			convertText("CELL", rec_type::CELL, 1);
 		}
 
 		if(found_key == false)
 		{
 			pos = line_lc.find("placeitemcell");
-			convertText("CELL", r_type::CELL, 1);
+			convertText("CELL", rec_type::CELL, 1);
 		}
 
 		if(found_key == false)
 		{
 			pos = line_lc.find("positioncell");
-			convertText("CELL", r_type::CELL, 4);
+			convertText("CELL", rec_type::CELL, 4);
 		}
 
 		if(found_key == true)
@@ -404,7 +402,6 @@ void EsmConverter::setNewFriendlyScript(string id, r_type type)
 	{
 		to_convert = true;
 		converter_log_ptr = &converter_log[1];
-		counter_converted++;
 	}
 	else
 	{
@@ -412,12 +409,12 @@ void EsmConverter::setNewFriendlyScript(string id, r_type type)
 		converter_log_ptr = &converter_log[0];
 		counter_unchanged++;
 
-		new_friendly = "N\\A";
+		new_friendly = "<N\\A>";
 	}
 }
 
 //----------------------------------------------------------
-void EsmConverter::convertLine(string id, r_type type, bool is_say_keyword)
+void EsmConverter::convertLine(string id, rec_type type, bool is_say_keyword)
 {
 	if(pos != string::npos &&
 	   line.rfind(";", pos) == string::npos)
@@ -457,27 +454,27 @@ void EsmConverter::convertLineCompiledScriptData(bool is_say_keyword)
 	{
 		for(size_t i = 0; i < str_list_u.size(); i++)
 		{
-			pos_c = compiled.find(str_list_u[i], pos_c);
+			pos_c = compiled_data.find(str_list_u[i], pos_c);
 			if(pos_c != string::npos)
 			{
 				if(i == 0)
 				{
 					pos_c -= 2;
-					compiled.erase(pos_c, 2);
-					compiled.insert(pos_c, convertIntToByteArray(str_list_f[i].size()).substr(0, 2));
+					compiled_data.erase(pos_c, 2);
+					compiled_data.insert(pos_c, convertIntToByteArray(str_list_f[i].size()).substr(0, 2));
 					pos_c += 2;
-					compiled.erase(pos_c, str_list_u[i].size());
-					compiled.insert(pos_c, str_list_f[i]);
+					compiled_data.erase(pos_c, str_list_u[i].size());
+					compiled_data.insert(pos_c, str_list_f[i]);
 					pos_c += str_list_f[i].size();
 				}
 				else
 				{
 					pos_c -= 1;
-					compiled.erase(pos_c, 1);
-					compiled.insert(pos_c, convertIntToByteArray(str_list_f[i].size() + 1).substr(0, 1));
+					compiled_data.erase(pos_c, 1);
+					compiled_data.insert(pos_c, convertIntToByteArray(str_list_f[i].size() + 1).substr(0, 1));
 					pos_c += 1;
-					compiled.erase(pos_c, str_list_u[i].size());
-					compiled.insert(pos_c, str_list_f[i]);
+					compiled_data.erase(pos_c, str_list_u[i].size());
+					compiled_data.insert(pos_c, str_list_f[i]);
 					pos_c += str_list_f[i].size();
 				}
 			}
@@ -486,7 +483,7 @@ void EsmConverter::convertLineCompiledScriptData(bool is_say_keyword)
 }
 
 //----------------------------------------------------------
-void EsmConverter::convertText(string id, r_type type, int num, bool is_getpccell_keyword)
+void EsmConverter::convertText(string id, rec_type type, int num, bool is_getpccell_keyword)
 {
 	if(pos != string::npos &&
 	   line.rfind(";", pos) == string::npos)
@@ -565,22 +562,22 @@ void EsmConverter::convertText(string id, r_type type, int num, bool is_getpccel
 //----------------------------------------------------------
 void EsmConverter::convertTextCompiledScriptData(string text_new, bool is_getpccell_keyword)
 {
-	pos_c = compiled.find(text, pos_c);
+	pos_c = compiled_data.find(text, pos_c);
 	if(pos_c != string::npos)
 	{
 		pos_c -= 1;
-		compiled.erase(pos_c, 1);
-		compiled.insert(pos_c, convertIntToByteArray(text_new.size()).substr(0, 1));
+		compiled_data.erase(pos_c, 1);
+		compiled_data.insert(pos_c, convertIntToByteArray(text_new.size()).substr(0, 1));
 		pos_c += 1;
-		compiled.erase(pos_c, text.size());
-		compiled.insert(pos_c, text_new);
+		compiled_data.erase(pos_c, text.size());
+		compiled_data.insert(pos_c, text_new);
 
 		if(is_getpccell_keyword == true)
 		{
 			size_t size = text_new.size() + 12;
 			pos_c -= 8;
-			compiled.erase(pos_c, 1);
-			compiled.insert(pos_c, convertIntToByteArray(size).substr(0, 1));
+			compiled_data.erase(pos_c, 1);
+			compiled_data.insert(pos_c, convertIntToByteArray(size).substr(0, 1));
 			pos_c += size;
 		}
 		else
@@ -704,13 +701,14 @@ void EsmConverter::convertCELL()
 			if(esm.getUniqueStatus() == true)
 			{
 				unique_key = "CELL" + sep[0] + esm.getUnique();
-				setNewFriendly(r_type::CELL);
-				makeLog("CELL" + sep[0] + esm.getUnique());
+				setNewFriendly(rec_type::CELL);
 
 				if(to_convert == true)
 				{
 					convertRecordContent(new_friendly + '\0');
 				}
+
+				makeLog("CELL" + sep[0] + esm.getUnique());
 			}
 		}
 	}
@@ -735,13 +733,14 @@ void EsmConverter::convertPGRD()
 			if(esm.getUniqueStatus() == true)
 			{
 				unique_key = "CELL" + sep[0] + esm.getUnique();
-				setNewFriendly(r_type::CELL);
-				makeLog("PGRD " + esm.getUnique());
+				setNewFriendly(rec_type::CELL);
 
 				if(to_convert == true)
 				{
 					convertRecordContent(new_friendly + '\0');
 				}
+
+				makeLog("PGRD" + sep[0] + esm.getUnique());
 			}
 		}
 	}
@@ -766,13 +765,14 @@ void EsmConverter::convertANAM()
 			if(esm.getUniqueStatus() == true)
 			{
 				unique_key = "CELL" + sep[0] + esm.getUnique();
-				setNewFriendly(r_type::CELL);
-				makeLog("ANAM " + esm.getUnique());
+				setNewFriendly(rec_type::CELL);
 
 				if(to_convert == true)
 				{
 					convertRecordContent(new_friendly + '\0');
 				}
+
+				makeLog("ANAM" + sep[0] + esm.getUnique());
 			}
 		}
 	}
@@ -799,14 +799,15 @@ void EsmConverter::convertSCVR()
 				if(esm.getFriendly().substr(1, 1) == "B")
 				{
 					unique_key = "CELL" + sep[0] + esm.getFriendly().substr(5);
-					setNewFriendly(r_type::CELL);
+					setNewFriendly(rec_type::CELL);
 					new_friendly = esm.getFriendly().substr(0, 5) + new_friendly;
-					makeLog("SCVR " + esm.getUnique());
 
 					if(to_convert == true)
 					{
 						convertRecordContent(new_friendly);
 					}
+
+					makeLog("SCVR" + sep[0] + esm.getUnique());
 				}
 
 				esm.setFriendly("SCVR", true, true);
@@ -835,14 +836,15 @@ void EsmConverter::convertDNAM()
 			while(esm.getFriendlyStatus() == true)
 			{
 				unique_key = "CELL" + sep[0] + esm.getFriendly();
-				setNewFriendly(r_type::CELL);
-				makeLog("DNAM " + esm.getUnique());
+				setNewFriendly(rec_type::CELL);
 
 				if(to_convert == true)
 				{
 					convertRecordContent(new_friendly + '\0');
 
 				}
+
+				makeLog("DNAM" + sep[0] + esm.getUnique());
 
 				esm.setFriendly("DNAM", true, true);
 			}
@@ -869,13 +871,14 @@ void EsmConverter::convertCNDT()
 			while(esm.getFriendlyStatus() == true)
 			{
 				unique_key = "CELL" + sep[0] + esm.getFriendly();
-				setNewFriendly(r_type::CELL);
-				makeLog("CNDT " + esm.getUnique());
+				setNewFriendly(rec_type::CELL);
 
 				if(to_convert == true)
 				{
 					convertRecordContent(new_friendly + '\0');
 				}
+
+				makeLog("CNDT" + sep[0] + esm.getUnique());
 
 				esm.setFriendly("CNDT", true, true);
 			}
@@ -904,13 +907,14 @@ void EsmConverter::convertGMST()
 			   esm.getUnique().substr(0, 1) == "s")
 			{
 				unique_key = "GMST" + sep[0] + esm.getUnique();
-				setNewFriendly(r_type::GMST);
-				makeLog("GMST" + sep[0] + esm.getUnique());
+				setNewFriendly(rec_type::GMST);
 
 				if(to_convert == true)
 				{
 					convertRecordContent(new_friendly + '\0');
 				}
+
+				makeLog("GMST" + sep[0] + esm.getUnique());
 			}
 		}
 	}
@@ -960,13 +964,14 @@ void EsmConverter::convertFNAM()
 			   esm.getUnique() != "player")
 			{
 				unique_key = "FNAM" + sep[0] + esm.getRecId() + sep[0] + esm.getUnique();
-				setNewFriendly(r_type::FNAM);
-				makeLog("FNAM" + sep[0] + esm.getRecId() + sep[0] + esm.getUnique());
+				setNewFriendly(rec_type::FNAM);
 
 				if(to_convert == true)
 				{
 					convertRecordContent(new_friendly + '\0');
 				}
+
+				makeLog("FNAM" + sep[0] + esm.getRecId() + sep[0] + esm.getUnique());
 			}
 		}
 	}
@@ -994,13 +999,14 @@ void EsmConverter::convertDESC()
 			   esm.getFriendlyStatus() == true)
 			{
 				unique_key = "DESC" + sep[0] + esm.getRecId() + sep[0] + esm.getUnique();
-				setNewFriendly(r_type::DESC);
-				makeLog("DESC" + sep[0] + esm.getRecId() + sep[0] + esm.getUnique());
+				setNewFriendly(rec_type::DESC);
 
 				if(to_convert == true)
 				{
 					convertRecordContent(new_friendly + '\0');
 				}
+
+				makeLog("DESC" + sep[0] + esm.getRecId() + sep[0] + esm.getUnique());
 			}
 		}
 	}
@@ -1026,13 +1032,14 @@ void EsmConverter::convertTEXT()
 			   esm.getFriendlyStatus() == true)
 			{
 				unique_key = "TEXT" + sep[0] + esm.getUnique();
-				setNewFriendly(r_type::TEXT);
-				makeLog("TEXT" + sep[0] + esm.getUnique());
+				setNewFriendly(rec_type::TEXT);
 
 				if(to_convert == true)
 				{
 					convertRecordContent(new_friendly + '\0');
 				}
+
+				makeLog("TEXT" + sep[0] + esm.getUnique());
 			}
 		}
 	}
@@ -1059,14 +1066,15 @@ void EsmConverter::convertRNAM()
 				while(esm.getFriendlyStatus() == true)
 				{
 					unique_key = "RNAM" + sep[0] + esm.getUnique() + sep[0] + to_string(esm.getFriendlyCounter());
-					setNewFriendly(r_type::RNAM);
-					makeLog("RNAM" + sep[0] + esm.getUnique() + sep[0] + to_string(esm.getFriendlyCounter()));
+					setNewFriendly(rec_type::RNAM);
 
 					if(to_convert == true)
 					{
 						new_friendly.resize(32);
 						convertRecordContent(new_friendly);
 					}
+
+					makeLog("RNAM" + sep[0] + esm.getUnique() + sep[0] + to_string(esm.getFriendlyCounter()));
 
 					esm.setFriendly("RNAM", true, true);
 				}
@@ -1096,13 +1104,14 @@ void EsmConverter::convertINDX()
 			   esm.getFriendlyStatus() == true)
 			{
 				unique_key = "INDX" + sep[0] + esm.getRecId() + sep[0] + esm.getUnique();
-				setNewFriendly(r_type::INDX);
-				makeLog("INDX" + sep[0] + esm.getRecId() + sep[0] + esm.getUnique());
+				setNewFriendly(rec_type::INDX);
 
 				if(to_convert == true)
 				{
 					convertRecordContent(new_friendly + '\0');
 				}
+
+				makeLog("INDX" + sep[0] + esm.getRecId() + sep[0] + esm.getUnique());
 			}
 		}
 	}
@@ -1129,13 +1138,14 @@ void EsmConverter::convertDIAL()
 			   esm.getUnique() == "T")
 			{
 				unique_key = "DIAL" + sep[0] + esm.getFriendly();
-				setNewFriendly(r_type::DIAL);
-				makeLog("DIAL" + sep[0] + esm.getFriendly());
+				setNewFriendly(rec_type::DIAL);
 
 				if(to_convert == true)
 				{
 					convertRecordContent(new_friendly + '\0');
 				}
+
+				makeLog("DIAL" + sep[0] + esm.getFriendly());
 			}
 		}
 	}
@@ -1177,13 +1187,14 @@ void EsmConverter::convertINFO()
 			   esm.getFriendlyStatus() == true)
 			{
 				unique_key = "INFO" + sep[0] + dialog_topic + sep[0] + esm.getUnique();
-				setNewFriendlyINFO(r_type::INFO);
-				makeLog("INFO" + sep[0] + dialog_topic + sep[0] + esm.getUnique());
+				setNewFriendlyINFO(rec_type::INFO);
 
 				if(to_convert == true)
 				{
 					convertRecordContent(new_friendly + '\0');
 				}
+
+				makeLog("INFO" + sep[0] + dialog_topic + sep[0] + esm.getUnique());
 			}
 		}
 	}
@@ -1207,7 +1218,7 @@ void EsmConverter::convertBNAM()
 
 			if(esm.getFriendlyStatus() == true)
 			{
-				setNewFriendlyScript("BNAM", r_type::BNAM);
+				setNewFriendlyScript("BNAM", rec_type::BNAM);
 
 				if(to_convert == true)
 				{
@@ -1234,25 +1245,25 @@ void EsmConverter::convertSCPT()
 			esm.setUnique("SCHD");
 
 			esm.setFriendly("SCDT", false);
-			compiled = esm.getFriendly();
+			compiled_data = esm.getFriendly();
 
 			esm.setFriendly("SCTX");
 
 			if(esm.getFriendlyStatus() == true)
 			{
-				setNewFriendlyScript("SCTX", r_type::SCTX);
+				setNewFriendlyScript("SCTX", rec_type::SCTX);
 
 				if(to_convert == true)
 				{
 					convertRecordContent(new_friendly);
 
 					esm.setFriendly("SCDT", false);
-					convertRecordContent(compiled);
+					convertRecordContent(compiled_data);
 
 					esm.setFriendly("SCHD", false);
 					new_friendly = esm.getFriendly();
 					new_friendly.erase(44, 4);
-					new_friendly.insert(44, convertIntToByteArray(compiled.size()));
+					new_friendly.insert(44, convertIntToByteArray(compiled_data.size()));
 					convertRecordContent(new_friendly);
 				}
 			}
@@ -1287,7 +1298,7 @@ void EsmConverter::convertGMDT()
 				prefix = esm.getFriendly().substr(0, 24);
 				suffix = esm.getFriendly().substr(88);
 
-				setNewFriendly(r_type::CELL);
+				setNewFriendly(rec_type::CELL);
 
 				if(to_convert == true)
 				{
@@ -1310,7 +1321,7 @@ void EsmConverter::convertGMDT()
 
 				suffix = esm.getFriendly().substr(64);
 
-				setNewFriendly(r_type::CELL);
+				setNewFriendly(rec_type::CELL);
 
 				if(to_convert == true)
 				{

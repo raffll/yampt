@@ -1,6 +1,7 @@
 #include "DictReader.hpp"
 
 using namespace std;
+using namespace yampt;
 
 //----------------------------------------------------------
 DictReader::DictReader()
@@ -97,9 +98,9 @@ bool DictReader::parseDict(string &content)
 
 	while(true)
 	{
-		pos_beg = content.find(yampt::sep[1], pos_beg);
-		pos_mid = content.find(yampt::sep[2], pos_mid);
-		pos_end = content.find(yampt::sep[3], pos_end);
+		pos_beg = content.find(sep[1], pos_beg);
+		pos_mid = content.find(sep[2], pos_mid);
+		pos_end = content.find(sep[3], pos_end);
 		if(pos_beg == string::npos &&
 		   pos_mid == string::npos &&
 		   pos_end == string::npos)
@@ -117,11 +118,11 @@ bool DictReader::parseDict(string &content)
 		}
 		else
 		{
-			unique_key = content.substr(pos_beg + yampt::sep[1].size(),
-						    pos_mid - pos_beg - yampt::sep[1].size());
+			unique_key = content.substr(pos_beg + sep[1].size(),
+						    pos_mid - pos_beg - sep[1].size());
 
-			friendly = content.substr(pos_mid + yampt::sep[2].size(),
-						  pos_end - pos_mid - yampt::sep[2].size());
+			friendly = content.substr(pos_mid + sep[2].size(),
+						  pos_end - pos_mid - sep[2].size());
 
 			counter_all++;
 
@@ -147,101 +148,101 @@ void DictReader::validateRecord()
 		{
                         if(friendly.size() > 63)
 			{
-				merger_log_ptr = &yampt::merger_log[3];
+				merger_log_ptr = &merger_log[3];
 				makeLog();
 				counter_toolong++;
 			}
 			else
 			{
-                                insertRecord(yampt::r_type::CELL);
+                                insertRecord(rec_type::CELL);
 			}
 		}
 		else if(id == "GMST")
 		{
-			insertRecord(yampt::r_type::GMST);
+			insertRecord(rec_type::GMST);
 		}
 		else if(id == "DESC")
 		{
-			insertRecord(yampt::r_type::DESC);
+			insertRecord(rec_type::DESC);
 		}
 		else if(id == "TEXT")
 		{
-			insertRecord(yampt::r_type::TEXT);
+			insertRecord(rec_type::TEXT);
 		}
 		else if(id == "INDX")
 		{
-			insertRecord(yampt::r_type::INDX);
+			insertRecord(rec_type::INDX);
 		}
 		else if(id == "DIAL")
 		{
-			insertRecord(yampt::r_type::DIAL);
+			insertRecord(rec_type::DIAL);
 		}
 		else if(id == "BNAM")
 		{
-			friendly = friendly.substr(friendly.find(yampt::sep[0]) + 1);
-			insertRecord(yampt::r_type::BNAM);
+			friendly = friendly.substr(friendly.find(sep[0]) + 1);
+			insertRecord(rec_type::BNAM);
 		}
 		else if(id == "SCTX")
 		{
-			friendly = friendly.substr(friendly.find(yampt::sep[0]) + 1);
-			insertRecord(yampt::r_type::SCTX);
+			friendly = friendly.substr(friendly.find(sep[0]) + 1);
+			insertRecord(rec_type::SCTX);
 		}
 		else if(id == "RNAM")
 		{
 			if(friendly.size() > 32)
 			{
-				merger_log_ptr = &yampt::merger_log[3];
+				merger_log_ptr = &merger_log[3];
 				makeLog();
 				counter_toolong++;
 			}
 			else
 			{
-				insertRecord(yampt::r_type::RNAM);
+				insertRecord(rec_type::RNAM);
 			}
 		}
 		else if(id == "FNAM")
 		{
 			if(friendly.size() > 31)
 			{
-				merger_log_ptr = &yampt::merger_log[3];
+				merger_log_ptr = &merger_log[3];
 				makeLog();
 				counter_toolong++;
 			}
 			else
 			{
-				insertRecord(yampt::r_type::FNAM);
+				insertRecord(rec_type::FNAM);
 			}
 		}
 		else if(id == "INFO")
 		{
 			if(friendly.size() > 512)
 			{
-				merger_log_ptr = &yampt::merger_log[4];
+				merger_log_ptr = &merger_log[4];
 				makeLog();
-				insertRecord(yampt::r_type::INFO);
+				insertRecord(rec_type::INFO);
 			}
 			else
 			{
-				insertRecord(yampt::r_type::INFO);
+				insertRecord(rec_type::INFO);
 			}
 		}
 		else
 		{
-			merger_log_ptr = &yampt::merger_log[2];
+			merger_log_ptr = &merger_log[2];
 			makeLog();
 			counter_invalid++;
 		}
 	}
 	else
 	{
-		merger_log_ptr = &yampt::merger_log[2];
+		merger_log_ptr = &merger_log[2];
 		makeLog();
 		counter_invalid++;
 	}
 }
 
 //----------------------------------------------------------
-void DictReader::insertRecord(yampt::r_type type)
+void DictReader::insertRecord(rec_type type)
 {
 	if(dict[type].insert({unique_key, friendly}).second == true)
 	{
@@ -249,7 +250,7 @@ void DictReader::insertRecord(yampt::r_type type)
 	}
 	else
 	{
-		merger_log_ptr = &yampt::merger_log[1];
+		merger_log_ptr = &merger_log[1];
 		makeLog();
 		counter_doubled++;
 	}
@@ -259,20 +260,20 @@ void DictReader::insertRecord(yampt::r_type type)
 void DictReader::makeLogHeader()
 {
 	log += "<!-- Loading " + name + "... -->\r\n";
-	log += yampt::line + "\r\n";
+	log += sep_line + "\r\n";
 }
 
 //----------------------------------------------------------
 void DictReader::makeLog()
 {
 	log += "<!-- " + *merger_log_ptr;
-	if(merger_log_ptr == &yampt::merger_log[3] || merger_log_ptr == &yampt::merger_log[4])
+	if(merger_log_ptr == &merger_log[3] || merger_log_ptr == &merger_log[4])
         {
                 log += " (" + to_string(friendly.size()) + " bytes)";
         }
         log += " -->\r\n";
-	log += yampt::sep[1] + unique_key + yampt::sep[2] + friendly + yampt::sep[3] + "\r\n";
-	log += yampt::line + "\r\n";
+	log += sep[1] + unique_key + sep[2] + friendly + sep[3] + "\r\n";
+	log += sep_line + "\r\n";
 }
 
 //----------------------------------------------------------

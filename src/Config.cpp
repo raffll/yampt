@@ -1,9 +1,10 @@
 #include "Config.hpp"
 
 using namespace std;
+using namespace yampt;
 
 //----------------------------------------------------------
-void Writer::writeDict(const yampt::dict_t &dict, string name)
+void Writer::writeDict(const dict_t &dict, string name)
 {
 	if(getSize(dict) > 0)
 	{
@@ -12,19 +13,19 @@ void Writer::writeDict(const yampt::dict_t &dict, string name)
 		{
 			for(const auto &elem : dict[i])
 			{
-				if(i == yampt::r_type::BNAM || i == yampt::r_type::SCTX)
+				if(i == rec_type::BNAM || i == rec_type::SCTX)
 				{
-					file << yampt::line << "\r\n"
-					     << yampt::sep[1] << elem.first
-					     << yampt::sep[2] << "\r\n        " << yampt::sep[0] << elem.second
-					     << yampt::sep[3] << "\r\n";
+					file << sep_line << "\r\n"
+					     << sep[1] << elem.first
+					     << sep[2] << "\r\n        " << sep[0] << elem.second
+					     << sep[3] << "\r\n";
 				}
 				else
 				{
-					file << yampt::line << "\r\n"
-					     << yampt::sep[1] << elem.first
-					     << yampt::sep[2] << elem.second
-					     << yampt::sep[3] << "\r\n";
+					file << sep_line << "\r\n"
+					     << sep[1] << elem.first
+					     << sep[2] << elem.second
+					     << sep[3] << "\r\n";
 				}
 			}
 		}
@@ -46,7 +47,7 @@ void Writer::writeText(const string &text, string name)
 }
 
 //----------------------------------------------------------
-int Writer::getSize(const yampt::dict_t &dict)
+int Writer::getSize(const dict_t &dict)
 {
 	int size = 0;
 	for(auto const &elem : dict)
@@ -129,4 +130,22 @@ string Tools::eraseCarriageReturnChar(string &str)
 		str.erase(str.size() - 1);
 	}
 	return str;
+}
+
+//----------------------------------------------------------
+string Tools::replaceNonReadableCharWithDot(const string &str)
+{
+	string text;
+	for(size_t i = 0; i < str.size(); ++i)
+	{
+		if(isprint(str[i]))
+		{
+			text += str[i];
+		}
+		else
+		{
+			text += ".";
+		}
+	}
+	return text;
 }

@@ -1,6 +1,7 @@
 #include "UserInterface.hpp"
 
 using namespace std;
+using namespace yampt;
 
 //----------------------------------------------------------
 UserInterface::UserInterface(vector<string> &a)
@@ -19,10 +20,6 @@ UserInterface::UserInterface(vector<string> &a)
 			else if(arg[i] == "--safe")
 			{
 				safe = true;
-			}
-			else if(arg[i] == "--debug")
-			{
-				debug = true;
 			}
 			else if(arg[i] == "-f")
 			{
@@ -149,7 +146,7 @@ void UserInterface::makeDictAll()
 
 	for(size_t i = 0; i < file_p.size(); ++i)
 	{
-		DictCreator creator(file_p[i], merger, yampt::ins_mode::ALL);
+		DictCreator creator(file_p[i], merger, ins_mode::ALL);
 		creator.makeDict();
 		writer.writeDict(creator.getDict(), creator.getNamePrefix() + ".ALL.dic");
 	}
@@ -169,7 +166,7 @@ void UserInterface::makeDictNotFound()
 
 	for(size_t i = 0; i < file_p.size(); ++i)
 	{
-		DictCreator creator(file_p[i], merger, yampt::ins_mode::NOTFOUND);
+		DictCreator creator(file_p[i], merger, ins_mode::NOTFOUND);
 		creator.makeDict();
 		writer.writeDict(creator.getDict(), creator.getNamePrefix() + ".NOTFOUND.dic");
 	}
@@ -189,7 +186,7 @@ void UserInterface::makeDictChanged()
 
 	for(size_t i = 0; i < file_p.size(); ++i)
 	{
-		DictCreator creator(file_p[i], merger, yampt::ins_mode::CHANGED);
+		DictCreator creator(file_p[i], merger, ins_mode::CHANGED);
 		creator.makeDict();
 		writer.writeDict(creator.getDict(), creator.getNamePrefix() + ".CHANGED.dic");
 	}

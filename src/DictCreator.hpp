@@ -28,10 +28,10 @@ private:
 	std::string dialTranslator(std::string to_translate);
 	void validateRecord(const std::string &unique_key,
 			    const std::string &friendly,
-			    yampt::r_type type);
+			    yampt::rec_type type);
 	void insertRecord(const std::string &unique_key,
 			  const std::string &friendly,
-			  yampt::r_type type);
+			  yampt::rec_type type);
 	void makeLog(const std::string unique_key, const std::string friendly);
 	std::vector<std::string> makeMessageColl(const std::string &script_text);
 	void printLog(std::string id);

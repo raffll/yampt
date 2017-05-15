@@ -24,7 +24,7 @@ private:
 	void setName(std::string path);
 	bool parseDict(std::string &content);
 	void validateRecord();
-	void insertRecord(yampt::r_type type);
+	void insertRecord(yampt::rec_type type);
 	void makeLog();
 	void makeLogHeader();
 	void printLog();

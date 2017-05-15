@@ -1,6 +1,7 @@
 #include "DictMerger.hpp"
 
 using namespace std;
+using namespace yampt;
 
 //----------------------------------------------------------
 DictMerger::DictMerger()
@@ -45,7 +46,7 @@ void DictMerger::mergeDict()
 						search->second != elem.second)
 					{
 						// Found in previous dictionary - skipped
-						merger_log_ptr = &yampt::merger_log[0];
+						merger_log_ptr = &merger_log[0];
 						makeLog(elem.first, elem.second, search->second);
 						counter_replaced++;
 					}
@@ -57,6 +58,7 @@ void DictMerger::mergeDict()
 				}
 			}
 		}
+
 		if(dict_coll.size() == 1)
 		{
 			cout << "--> Sorting complete!\r\n";
@@ -65,6 +67,7 @@ void DictMerger::mergeDict()
 		{
 			cout << "--> Merging complete!\r\n";
 		}
+
 		printLog();
 	}
 }
@@ -97,6 +100,9 @@ void DictMerger::wordList()
 {
 	if(status == true)
 	{
+		log += "<!-- Creating word list... -->\r\n";
+		log += sep_line + "\r\n";
+
 		string word;
 		string unnecessary = "'\";:?.,!()<>";
 
@@ -138,8 +144,10 @@ void DictMerger::swapRecords()
 
 		for(size_t type = 0; type < 11; type++)
 		{
-			if(type == yampt::r_type::CELL ||
-			   type == yampt::r_type::DIAL)
+			if(type == rec_type::CELL ||
+			   type == rec_type::DIAL ||
+			   type == rec_type::BNAM ||
+			   type == rec_type::SCTX)
 			{
 				for(auto &elem : dict_coll[0].getDict()[type])
 				{
@@ -166,17 +174,17 @@ void DictMerger::makeLogHeader(size_t i)
 	if(dict_coll.size() == 1)
 	{
 		log += "<!-- Nothing to merge... -->\r\n";
-		log += yampt::line + "\r\n";
+		log += sep_line + "\r\n";
 	}
 	else if(dict_coll.size() > 1 && i == 1)
 	{
 		log += "<!-- Merging " + dict_coll[i].getName() + " with " + dict_coll[i - 1].getName() + "... -->\r\n";
-		log += yampt::line + "\r\n";
+		log += sep_line + "\r\n";
 	}
 	else if(dict_coll.size() > 2 && i > 1)
 	{
 		log += "<!-- Merging " + dict_coll[i].getName() + " with previous dictionaries... -->\r\n";
-		log += yampt::line + "\r\n";
+		log += sep_line + "\r\n";
 	}
 }
 
@@ -185,9 +193,9 @@ void DictMerger::makeLog(const string unique_key, const string friendly_old, con
 {
 
 	log += "<!-- " + *merger_log_ptr + " -->\r\n";
-	log += yampt::sep[1] + unique_key + yampt::sep[2] + friendly_old + yampt::sep[3] + "\r\n";
-	log += yampt::sep[1] + unique_key + yampt::sep[2] + friendly_new + yampt::sep[3] + "\r\n";
-	log += yampt::line + "\r\n";
+	log += sep[1] + unique_key + sep[2] + friendly_old + sep[3] + "\r\n";
+	log += sep[1] + unique_key + sep[2] + friendly_new + sep[3] + "\r\n";
+	log += sep_line + "\r\n";
 }
 
 //----------------------------------------------------------

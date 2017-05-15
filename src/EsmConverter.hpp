@@ -21,13 +21,13 @@ private:
 	void resetCounters();
 	void convertRecordContent(std::string new_text);
 
-	void setNewFriendly(yampt::r_type type);
-	void setNewFriendlyINFO(yampt::r_type type);
-	void setNewFriendlyScript(std::string id, yampt::r_type type);
+	void setNewFriendly(yampt::rec_type type);
+	void setNewFriendlyINFO(yampt::rec_type type);
+	void setNewFriendlyScript(std::string id, yampt::rec_type type);
 
-	void convertLine(std::string id, yampt::r_type type, bool is_say_keyword = false);
+	void convertLine(std::string id, yampt::rec_type type, bool is_say_keyword = false);
 	void convertLineCompiledScriptData(bool is_say_keyword);
-	void convertText(std::string id, yampt::r_type type, int num, bool is_getpccell_keyword = false);
+	void convertText(std::string id, yampt::rec_type type, int num, bool is_getpccell_keyword = false);
 	void convertTextCompiledScriptData(std::string text_new, bool is_getpccell_keyword);
 	void extractText(int num);
 	std::vector<std::string> splitLine(std::string line, bool is_say_keyword = false);
@@ -71,7 +71,7 @@ private:
 	std::string unique_key;
 	std::string new_friendly;
 	std::string dialog_topic;
-	std::string compiled;
+	std::string compiled_data;
 
 	std::string log;
 	const std::string *converter_log_ptr;

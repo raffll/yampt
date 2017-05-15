@@ -1,6 +1,7 @@
 #include "EsmReader.hpp"
 
 using namespace std;
+using namespace yampt;
 
 //----------------------------------------------------------
 EsmReader::EsmReader()
@@ -112,7 +113,7 @@ void EsmReader::setUnique(string id, bool erase_null)
 				else if(rec_id == "DIAL" && id == "DATA")
 				{
 					int type = convertByteArrayToInt(rec->substr(cur_pos + 8, 1));
-					cur_text = yampt::dialog_type[type];
+					cur_text = dialog_type[type];
 				}
 				else
 				{
@@ -227,7 +228,7 @@ void EsmReader::setDump()
 				}
 				else
 				{
-					dump += "";
+					dump += ".";
 				}
 			}
 			dump += "\r\n";
