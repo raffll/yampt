@@ -76,4 +76,5 @@
 
 0.14 beta
 - fix dictionary creator not working sometimes
-- fix dictionary creator now add all duplicate records (e.g broken, for manual edit)
+- fix dictionary creator, now adds all duplicate records (e.g broken, for manual edit)
+- add length limit RNAM to 32
