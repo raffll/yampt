@@ -17,6 +17,8 @@ DictReader::DictReader(const DictReader& that) : status(that.status),
 					         counter_invalid(that.counter_invalid),
 					         counter_toolong(that.counter_toolong),
 					         counter_doubled(that.counter_doubled),
+					         counter_all(that.counter_all),
+					         log(that.log),
 					         dict(that.dict)
 {
 
@@ -32,6 +34,8 @@ DictReader& DictReader::operator=(const DictReader& that)
 	counter_invalid = that.counter_invalid;
 	counter_toolong = that.counter_toolong;
 	counter_doubled = that.counter_doubled;
+	counter_all = that.counter_all;
+	log = that.log;
 	dict = that.dict;
 	return *this;
 }
