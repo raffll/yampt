@@ -27,7 +27,7 @@ SET PATH_NATIVE=C:\path\to\master\native
 SET PATH_FOREIGN=C:\path\to\master\foreign
 ```
 
-Then double-click on it. Now in "dict_base" you should have two base dictionaries. Please check if everything is ok, especially in CELL and DIAL records. Some records may need manually editing:
+Then double-click on it. Now in "dict_base" you should have two base dictionaries. Please check (in dictionary and log) if everything is ok, especially in CELL and DIAL records. Some records may need manually editing:
 
 ```
 <h3>CELL^<NOTFOUND><DOUBLED_2></h3>Arenim-Ahnengruft<hr>
@@ -191,7 +191,7 @@ yampt.exe --find-diff -d "Dict_1.dic" "Dict_2.dic"
 yampt.exe --word-list -d "Dict.dic"
 ```
 
-### Swap key with text in CELL and DIAL records
+### Swap key with text in CELL, DIAL, BNAM and SCTX records
 ```
 yampt.exe --swap-records -d "Dict.dic"
 ```
