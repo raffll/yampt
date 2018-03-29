@@ -50,7 +50,7 @@ UserInterface::UserInterface(std::vector<std::string> &a)
 
     if(output.empty())
     {
-        output.push_back("yampt-merged.dic");
+        output.push_back("yampt-merged.xml");
     }
 
     dict_p.insert(dict_p.begin(), dict_p_tmp.rbegin(), dict_p_tmp.rend());
@@ -119,7 +119,7 @@ void UserInterface::makeDictRaw()
     {
         DictCreator creator(file_p[i]);
         creator.makeDict();
-        writer.writeDict(creator.getDict(), creator.getNamePrefix() + ".RAW.dic");
+        writer.writeDict(creator.getDict(), creator.getNamePrefix() + ".RAW.xml");
     }
 }
 
@@ -128,7 +128,7 @@ void UserInterface::makeDictBase()
 {
     DictCreator creator(file_p[0], file_p[1]);
     creator.makeDict();
-    writer.writeDict(creator.getDict(), creator.getNamePrefix() + ".dic");
+    writer.writeDict(creator.getDict(), creator.getNamePrefix() + ".BASE.xml");
 }
 
 //----------------------------------------------------------
@@ -145,7 +145,7 @@ void UserInterface::makeDictAll()
     {
         DictCreator creator(file_p[i], merger, yampt::ins_mode::ALL);
         creator.makeDict();
-        writer.writeDict(creator.getDict(), creator.getNamePrefix() + ".ALL.dic");
+        writer.writeDict(creator.getDict(), creator.getNamePrefix() + ".ALL.xml");
     }
 
     writer.writeText(log, "yampt.log");
@@ -165,7 +165,7 @@ void UserInterface::makeDictNotFound()
     {
         DictCreator creator(file_p[i], merger, yampt::ins_mode::NOTFOUND);
         creator.makeDict();
-        writer.writeDict(creator.getDict(), creator.getNamePrefix() + ".NOTFOUND.dic");
+        writer.writeDict(creator.getDict(), creator.getNamePrefix() + ".NOTFOUND.xml");
     }
 
     writer.writeText(log, "yampt.log");
@@ -185,7 +185,7 @@ void UserInterface::makeDictChanged()
     {
         DictCreator creator(file_p[i], merger, yampt::ins_mode::CHANGED);
         creator.makeDict();
-        writer.writeDict(creator.getDict(), creator.getNamePrefix() + ".CHANGED.dic");
+        writer.writeDict(creator.getDict(), creator.getNamePrefix() + ".CHANGED.xml");
     }
 
     writer.writeText(log, "yampt.log");
@@ -243,8 +243,8 @@ void UserInterface::findDiff()
     DictMerger merger(dict_p);
     merger.findDiff();
 
-    writer.writeDict(merger.getDiff(0), merger.getNamePrefix(0) + ".DIFF-2.dic");
-    writer.writeDict(merger.getDiff(1), merger.getNamePrefix(1) + ".DIFF-1.dic");
+    writer.writeDict(merger.getDiff(0), merger.getNamePrefix(0) + ".DIFF-2.xml");
+    writer.writeDict(merger.getDiff(1), merger.getNamePrefix(1) + ".DIFF-1.xml");
     writer.writeText(merger.getLog(), "yampt.log");
 }
 
@@ -263,5 +263,5 @@ void UserInterface::swapRecords()
     DictMerger merger(dict_p);
     merger.swapRecords();
 
-    writer.writeDict(merger.getDict(), merger.getNamePrefix(0) + ".SWAP.dic");
+    writer.writeDict(merger.getDict(), merger.getNamePrefix(0) + ".SWAP.xml");
 }
