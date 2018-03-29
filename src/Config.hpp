@@ -78,8 +78,8 @@ protected:
     unsigned int convertByteArrayToInt(const std::string &str);
     std::string convertIntToByteArray(unsigned int x);
     bool caseInsensitiveStringCmp(std::string lhs, std::string rhs);
-    void eraseNullChars(std::string &str);
-    std::string eraseCarriageReturnChar(std::string &str);
+    std::string eraseNullChars(std::string str);
+    std::string eraseCarriageReturnChar(std::string str);
     std::string replaceNonReadableCharWithDot(const std::string &str);
 };
 

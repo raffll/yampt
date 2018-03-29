@@ -110,17 +110,18 @@ bool Tools::caseInsensitiveStringCmp(std::string lhs, std::string rhs)
 }
 
 //----------------------------------------------------------
-void Tools::eraseNullChars(std::string &str)
+std::string Tools::eraseNullChars(std::string str)
 {
     size_t is_null = str.find('\0');
     if(is_null != std::string::npos)
     {
         str.erase(is_null);
     }
+    return str;
 }
 
 //----------------------------------------------------------
-std::string Tools::eraseCarriageReturnChar(std::string &str)
+std::string Tools::eraseCarriageReturnChar(std::string str)
 {
     if(str.find('\r') != std::string::npos)
     {

@@ -6,29 +6,29 @@
 class EsmReader : public Tools
 {
 public:
-    void readFile(std::string path);
+    void readFile(const std::string &path);
 
     bool getStatus() { return status; }
-    std::string getName() { return name; }
+    std::string getNameFull() { return name_full; }
     std::string getNamePrefix() { return name_prefix; }
     std::string getNameSuffix() { return name_suffix; }
 
     std::vector<std::string> const& getRecColl() const { return rec_coll; }
 
-    void setRec(size_t i);
-    void setRecContent(std::string content) { *rec = content; }
-    std::string getRecContent() { return *rec; }
+    void setRecordTo(size_t i);
+    void setNewRecordContent(const std::string &content) { *rec = content; }
+    std::string getRecordContent() { return *rec; }
+    std::string getRecordId() { return rec_id; }
 
-    void setUnique(std::string id, bool erase_null = true);
-    bool setFriendly(std::string id, bool erase_null = true, bool next = false);
-
-    std::string getRecId() { return rec_id; }
-
-    std::string getUnique() { return unique_text; }
+    void setUniqueTo(const std::string id);
+    std::string getUniqueText() { return unique_text = eraseNullChars(unique_text); }
+    std::string getUniqueRaw() { return unique_text; }
     std::string getUniqueId() { return unique_id; }
     bool getUniqueStatus() { return unique_status; }
 
-    std::string getFriendly() { return friendly_text; }
+    void setFriendlyTo(const std::string id, const bool next = false);
+    std::string getFriendlyText() { return friendly_text = eraseNullChars(friendly_text); }
+    std::string getFriendlyRaw() { return friendly_text; }
     std::string getFriendlyId() { return friendly_id; }
     size_t getFriendlyPos() { return friendly_pos; }
     size_t getFriendlySize() { return friendly_size; }
@@ -38,14 +38,13 @@ public:
     EsmReader();
 
 private:
-    void printStatus(std::string path);
-    void setName(std::string path);
-    void setRecColl(std::string &content);
+    void setName(const std::string &path);
+    void setRecordColl(const std::string &content, const std::string &path);
 
     bool status = false;
     std::vector<std::string> rec_coll;
 
-    std::string name;
+    std::string name_full;
     std::string name_prefix;
     std::string name_suffix;
 

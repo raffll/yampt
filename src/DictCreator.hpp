@@ -10,7 +10,7 @@ class DictCreator : public Tools
 public:
     void makeDict();
 
-    std::string getName() { return esm_n.getName(); }
+    std::string getName() { return esm_n.getNameFull(); }
     std::string getNamePrefix() { return esm_n.getNamePrefix(); }
     yampt::dict_t const& getDict() const { return dict; }
 

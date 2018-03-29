@@ -51,15 +51,15 @@ void EsmConverter::convertEsm()
 //----------------------------------------------------------
 void EsmConverter::makeLogHeader()
 {
-    log += "<!-- Converting " + esm.getName() + "... -->\r\n";
+    log += "<!-- Converting " + esm.getNameFull() + "... -->\r\n";
     log += yampt::sep_line + "\r\n";
 }
 
 //----------------------------------------------------------
 void EsmConverter::makeLog(std::string key)
 {
-    log += "<!-- " + *converter_log_ptr + " '" + key + "' '" + esm.getName() + "' -->\r\n";
-    log += esm.getFriendly() + " <!-- >>> -->" + "\r\n";
+    log += "<!-- " + *converter_log_ptr + " '" + key + "' '" + esm.getNameFull() + "' -->\r\n";
+    log += esm.getFriendlyText() + " <!-- >>> -->" + "\r\n";
     log += new_friendly + "\r\n";
     log += yampt::sep_line + "\r\n";
 }
@@ -67,7 +67,7 @@ void EsmConverter::makeLog(std::string key)
 //----------------------------------------------------------
 void EsmConverter::makeLogScript(std::string key)
 {
-    log += "<!-- " + *converter_log_ptr + " script line '" + key + "' '" + esm.getName() + "' -->\r\n";
+    log += "<!-- " + *converter_log_ptr + " script line '" + key + "' '" + esm.getNameFull() + "' -->\r\n";
     log += line + " <!-- >>> -->" + "\r\n";
     log += line_new + "\r\n";
     log += yampt::sep_line + "\r\n";
@@ -117,7 +117,7 @@ void EsmConverter::writeEsm()
 {
     if(status == true)
     {
-        std::string name = esm.getName();
+        std::string name = esm.getNameFull();
         std::ofstream file(name, std::ios::binary);
         for(auto &elem : esm.getRecColl())
         {
@@ -141,7 +141,7 @@ void EsmConverter::resetCounters()
 void EsmConverter::convertRecordContent(std::string text_new)
 {
     size_t rec_size;
-    std::string rec_content = esm.getRecContent();
+    std::string rec_content = esm.getRecordContent();
 
     if(esm.getFriendlyStatus() == true)
     {
@@ -152,7 +152,7 @@ void EsmConverter::convertRecordContent(std::string text_new)
         rec_size = rec_content.size() - 16;
         rec_content.erase(4, 4);
         rec_content.insert(4, convertIntToByteArray(rec_size));
-        esm.setRecContent(rec_content);
+        esm.setNewRecordContent(rec_content);
 
         counter_converted++;
     }
@@ -173,7 +173,7 @@ void EsmConverter::setNewFriendly(yampt::rec_type type)
     {
         new_friendly = search->second;
 
-        if(esm.getFriendly() != new_friendly)
+        if(esm.getFriendlyText() != new_friendly)
         {
             to_convert = true;
             converter_log_ptr = &yampt::converter_log[1];
@@ -205,7 +205,7 @@ void EsmConverter::setNewFriendlyINFO(yampt::rec_type type)
     {
         new_friendly = search->second;
 
-        if(esm.getFriendly() != new_friendly)
+        if(esm.getFriendlyText() != new_friendly)
         {
             to_convert = true;
             converter_log_ptr = &yampt::converter_log[1];
@@ -217,11 +217,11 @@ void EsmConverter::setNewFriendlyINFO(yampt::rec_type type)
             counter_skipped++;
         }
     }
-    else if(add_dial == true && esm.getRecId() == "INFO" && dialog_topic.substr(0, 1) != "V")
+    else if(add_dial == true && esm.getRecordId() == "INFO" && dialog_topic.substr(0, 1) != "V")
     {
         addDIALtoINFO();
 
-        if(esm.getFriendly() != new_friendly)
+        if(esm.getFriendlyText() != new_friendly)
         {
             to_convert = true;
             converter_log_ptr = &yampt::converter_log[3];
@@ -262,8 +262,8 @@ void EsmConverter::addDIALtoINFO()
     std::string new_friendly_lc;
     size_t pos;
 
-    new_friendly = esm.getFriendly();
-    new_friendly_lc = esm.getFriendly();
+    new_friendly = esm.getFriendlyText();
+    new_friendly_lc = esm.getFriendlyText();
     transform(new_friendly_lc.begin(), new_friendly_lc.end(),
               new_friendly_lc.begin(), ::tolower);
 
@@ -289,7 +289,7 @@ void EsmConverter::setNewFriendlyScript(std::string id, yampt::rec_type type)
 {
     counter_all++;
     new_friendly.erase();
-    std::istringstream ss(esm.getFriendly());
+    std::istringstream ss(esm.getFriendlyText());
 
     std::string line_lc;
     std::smatch found;
@@ -389,13 +389,13 @@ void EsmConverter::setNewFriendlyScript(std::string id, yampt::rec_type type)
     }
 
     // Check if last 2 char are new line
-    size_t last_nl_pos = esm.getFriendly().rfind("\r\n");
-    if(last_nl_pos != esm.getFriendly().size() - 2 || last_nl_pos == std::string::npos)
+    size_t last_nl_pos = esm.getFriendlyText().rfind("\r\n");
+    if(last_nl_pos != esm.getFriendlyText().size() - 2 || last_nl_pos == std::string::npos)
     {
         new_friendly.resize(new_friendly.size() - 2);
     }
 
-    if(esm.getFriendly() != new_friendly)
+    if(esm.getFriendlyText() != new_friendly)
     {
         to_convert = true;
         converter_log_ptr = &yampt::converter_log[1];
@@ -437,7 +437,7 @@ void EsmConverter::convertLine(std::string id, yampt::rec_type type, bool is_say
         {
             converter_log_ptr = &yampt::converter_log[0];
         }
-        makeLogScript(esm.getUnique());
+        makeLogScript(esm.getUniqueText());
     }
 }
 
@@ -552,7 +552,7 @@ void EsmConverter::convertText(std::string id, yampt::rec_type type, int num, bo
                 }
             }
         }
-        makeLogScript(esm.getUnique());
+        makeLogScript(esm.getUniqueText());
     }
 }
 
@@ -688,16 +688,16 @@ void EsmConverter::convertCELL()
 
     for(size_t i = 0; i < esm.getRecColl().size(); ++i)
     {
-        esm.setRec(i);
+        esm.setRecordTo(i);
 
-        if(esm.getRecId() == "CELL")
+        if(esm.getRecordId() == "CELL")
         {
-            esm.setUnique("NAME");
-            esm.setFriendly("NAME");
+            esm.setUniqueTo("NAME");
+            esm.setFriendlyTo("NAME");
 
             if(esm.getUniqueStatus() == true)
             {
-                unique_key = "CELL" + yampt::sep[0] + esm.getUnique();
+                unique_key = "CELL" + yampt::sep[0] + esm.getUniqueText();
                 setNewFriendly(yampt::rec_type::CELL);
 
                 if(to_convert == true)
@@ -705,7 +705,7 @@ void EsmConverter::convertCELL()
                     convertRecordContent(new_friendly + '\0');
                 }
 
-                makeLog("CELL" + yampt::sep[0] + esm.getUnique());
+                makeLog("CELL" + yampt::sep[0] + esm.getUniqueText());
             }
         }
     }
@@ -720,16 +720,16 @@ void EsmConverter::convertPGRD()
 
     for(size_t i = 0; i < esm.getRecColl().size(); ++i)
     {
-        esm.setRec(i);
+        esm.setRecordTo(i);
 
-        if(esm.getRecId() == "PGRD")
+        if(esm.getRecordId() == "PGRD")
         {
-            esm.setUnique("NAME");
-            esm.setFriendly("NAME");
+            esm.setUniqueTo("NAME");
+            esm.setFriendlyTo("NAME");
 
             if(esm.getUniqueStatus() == true)
             {
-                unique_key = "CELL" + yampt::sep[0] + esm.getUnique();
+                unique_key = "CELL" + yampt::sep[0] + esm.getUniqueText();
                 setNewFriendly(yampt::rec_type::CELL);
 
                 if(to_convert == true)
@@ -737,7 +737,7 @@ void EsmConverter::convertPGRD()
                     convertRecordContent(new_friendly + '\0');
                 }
 
-                makeLog("PGRD" + yampt::sep[0] + esm.getUnique());
+                makeLog("PGRD" + yampt::sep[0] + esm.getUniqueText());
             }
         }
     }
@@ -752,16 +752,16 @@ void EsmConverter::convertANAM()
 
     for(size_t i = 0; i < esm.getRecColl().size(); ++i)
     {
-        esm.setRec(i);
+        esm.setRecordTo(i);
 
-        if(esm.getRecId() == "INFO")
+        if(esm.getRecordId() == "INFO")
         {
-            esm.setUnique("ANAM");
-            esm.setFriendly("ANAM");
+            esm.setUniqueTo("ANAM");
+            esm.setFriendlyTo("ANAM");
 
             if(esm.getUniqueStatus() == true)
             {
-                unique_key = "CELL" + yampt::sep[0] + esm.getUnique();
+                unique_key = "CELL" + yampt::sep[0] + esm.getUniqueText();
                 setNewFriendly(yampt::rec_type::CELL);
 
                 if(to_convert == true)
@@ -769,7 +769,7 @@ void EsmConverter::convertANAM()
                     convertRecordContent(new_friendly + '\0');
                 }
 
-                makeLog("ANAM" + yampt::sep[0] + esm.getUnique());
+                makeLog("ANAM" + yampt::sep[0] + esm.getUniqueText());
             }
         }
     }
@@ -784,30 +784,30 @@ void EsmConverter::convertSCVR()
 
     for(size_t i = 0; i < esm.getRecColl().size(); ++i)
     {
-        esm.setRec(i);
+        esm.setRecordTo(i);
 
-        if(esm.getRecId() == "INFO")
+        if(esm.getRecordId() == "INFO")
         {
-            esm.setUnique("INAM");
-            esm.setFriendly("SCVR");
+            esm.setUniqueTo("INAM");
+            esm.setFriendlyTo("SCVR");
 
             while(esm.getFriendlyStatus() == true)
             {
-                if(esm.getFriendly().substr(1, 1) == "B")
+                if(esm.getFriendlyText().substr(1, 1) == "B")
                 {
-                    unique_key = "CELL" + yampt::sep[0] + esm.getFriendly().substr(5);
+                    unique_key = "CELL" + yampt::sep[0] + esm.getFriendlyText().substr(5);
                     setNewFriendly(yampt::rec_type::CELL);
-                    new_friendly = esm.getFriendly().substr(0, 5) + new_friendly;
+                    new_friendly = esm.getFriendlyText().substr(0, 5) + new_friendly;
 
                     if(to_convert == true)
                     {
                         convertRecordContent(new_friendly);
                     }
 
-                    makeLog("SCVR" + yampt::sep[0] + esm.getUnique());
+                    makeLog("SCVR" + yampt::sep[0] + esm.getUniqueText());
                 }
 
-                esm.setFriendly("SCVR", true, true);
+                esm.setFriendlyTo("SCVR", true);
             }
         }
     }
@@ -822,17 +822,17 @@ void EsmConverter::convertDNAM()
 
     for(size_t i = 0; i < esm.getRecColl().size(); ++i)
     {
-        esm.setRec(i);
+        esm.setRecordTo(i);
 
-        if(esm.getRecId() == "CELL" ||
-           esm.getRecId() == "NPC_")
+        if(esm.getRecordId() == "CELL" ||
+           esm.getRecordId() == "NPC_")
         {
-            esm.setUnique("NAME");
-            esm.setFriendly("DNAM");
+            esm.setUniqueTo("NAME");
+            esm.setFriendlyTo("DNAM");
 
             while(esm.getFriendlyStatus() == true)
             {
-                unique_key = "CELL" + yampt::sep[0] + esm.getFriendly();
+                unique_key = "CELL" + yampt::sep[0] + esm.getFriendlyText();
                 setNewFriendly(yampt::rec_type::CELL);
 
                 if(to_convert == true)
@@ -841,9 +841,9 @@ void EsmConverter::convertDNAM()
 
                 }
 
-                makeLog("DNAM" + yampt::sep[0] + esm.getUnique());
+                makeLog("DNAM" + yampt::sep[0] + esm.getUniqueText());
 
-                esm.setFriendly("DNAM", true, true);
+                esm.setFriendlyTo("DNAM", true);
             }
         }
     }
@@ -858,16 +858,16 @@ void EsmConverter::convertCNDT()
 
     for(size_t i = 0; i < esm.getRecColl().size(); ++i)
     {
-        esm.setRec(i);
+        esm.setRecordTo(i);
 
-        if(esm.getRecId() == "NPC_")
+        if(esm.getRecordId() == "NPC_")
         {
-            esm.setUnique("NAME");
-            esm.setFriendly("CNDT");
+            esm.setUniqueTo("NAME");
+            esm.setFriendlyTo("CNDT");
 
             while(esm.getFriendlyStatus() == true)
             {
-                unique_key = "CELL" + yampt::sep[0] + esm.getFriendly();
+                unique_key = "CELL" + yampt::sep[0] + esm.getFriendlyText();
                 setNewFriendly(yampt::rec_type::CELL);
 
                 if(to_convert == true)
@@ -875,9 +875,9 @@ void EsmConverter::convertCNDT()
                     convertRecordContent(new_friendly + '\0');
                 }
 
-                makeLog("CNDT" + yampt::sep[0] + esm.getUnique());
+                makeLog("CNDT" + yampt::sep[0] + esm.getUniqueText());
 
-                esm.setFriendly("CNDT", true, true);
+                esm.setFriendlyTo("CNDT", true);
             }
         }
     }
@@ -892,18 +892,18 @@ void EsmConverter::convertGMST()
 
     for(size_t i = 0; i < esm.getRecColl().size(); ++i)
     {
-        esm.setRec(i);
+        esm.setRecordTo(i);
 
-        if(esm.getRecId() == "GMST")
+        if(esm.getRecordId() == "GMST")
         {
-            esm.setUnique("NAME");
-            esm.setFriendly("STRV");
+            esm.setUniqueTo("NAME");
+            esm.setFriendlyTo("STRV");
 
             if(esm.getUniqueStatus() == true &&
                esm.getFriendlyStatus() == true &&
-               esm.getUnique().substr(0, 1) == "s")
+               esm.getUniqueText().substr(0, 1) == "s")
             {
-                unique_key = "GMST" + yampt::sep[0] + esm.getUnique();
+                unique_key = "GMST" + yampt::sep[0] + esm.getUniqueText();
                 setNewFriendly(yampt::rec_type::GMST);
 
                 if(to_convert == true)
@@ -911,7 +911,7 @@ void EsmConverter::convertGMST()
                     convertRecordContent(new_friendly + '\0');
                 }
 
-                makeLog("GMST" + yampt::sep[0] + esm.getUnique());
+                makeLog("GMST" + yampt::sep[0] + esm.getUniqueText());
             }
         }
     }
@@ -926,41 +926,41 @@ void EsmConverter::convertFNAM()
 
     for(size_t i = 0; i < esm.getRecColl().size(); ++i)
     {
-        esm.setRec(i);
+        esm.setRecordTo(i);
 
-        if(esm.getRecId() == "ACTI" ||
-           esm.getRecId() == "ALCH" ||
-           esm.getRecId() == "APPA" ||
-           esm.getRecId() == "ARMO" ||
-           esm.getRecId() == "BOOK" ||
-           esm.getRecId() == "BSGN" ||
-           esm.getRecId() == "CLAS" ||
-           esm.getRecId() == "CLOT" ||
-           esm.getRecId() == "CONT" ||
-           esm.getRecId() == "CREA" ||
-           esm.getRecId() == "DOOR" ||
-           esm.getRecId() == "FACT" ||
-           esm.getRecId() == "INGR" ||
-           esm.getRecId() == "LIGH" ||
-           esm.getRecId() == "LOCK" ||
-           esm.getRecId() == "MISC" ||
-           esm.getRecId() == "NPC_" ||
-           esm.getRecId() == "PROB" ||
-           esm.getRecId() == "RACE" ||
-           esm.getRecId() == "REGN" ||
-           esm.getRecId() == "REPA" ||
-           esm.getRecId() == "SKIL" ||
-           esm.getRecId() == "SPEL" ||
-           esm.getRecId() == "WEAP")
+        if(esm.getRecordId() == "ACTI" ||
+           esm.getRecordId() == "ALCH" ||
+           esm.getRecordId() == "APPA" ||
+           esm.getRecordId() == "ARMO" ||
+           esm.getRecordId() == "BOOK" ||
+           esm.getRecordId() == "BSGN" ||
+           esm.getRecordId() == "CLAS" ||
+           esm.getRecordId() == "CLOT" ||
+           esm.getRecordId() == "CONT" ||
+           esm.getRecordId() == "CREA" ||
+           esm.getRecordId() == "DOOR" ||
+           esm.getRecordId() == "FACT" ||
+           esm.getRecordId() == "INGR" ||
+           esm.getRecordId() == "LIGH" ||
+           esm.getRecordId() == "LOCK" ||
+           esm.getRecordId() == "MISC" ||
+           esm.getRecordId() == "NPC_" ||
+           esm.getRecordId() == "PROB" ||
+           esm.getRecordId() == "RACE" ||
+           esm.getRecordId() == "REGN" ||
+           esm.getRecordId() == "REPA" ||
+           esm.getRecordId() == "SKIL" ||
+           esm.getRecordId() == "SPEL" ||
+           esm.getRecordId() == "WEAP")
         {
-            esm.setUnique("NAME");
-            esm.setFriendly("FNAM");
+            esm.setUniqueTo("NAME");
+            esm.setFriendlyTo("FNAM");
 
             if(esm.getUniqueStatus() == true &&
                esm.getFriendlyStatus() == true &&
-               esm.getUnique() != "player")
+               esm.getUniqueText() != "player")
             {
-                unique_key = "FNAM" + yampt::sep[0] + esm.getRecId() + yampt::sep[0] + esm.getUnique();
+                unique_key = "FNAM" + yampt::sep[0] + esm.getRecordId() + yampt::sep[0] + esm.getUniqueText();
                 setNewFriendly(yampt::rec_type::FNAM);
 
                 if(to_convert == true)
@@ -968,7 +968,7 @@ void EsmConverter::convertFNAM()
                     convertRecordContent(new_friendly + '\0');
                 }
 
-                makeLog("FNAM" + yampt::sep[0] + esm.getRecId() + yampt::sep[0] + esm.getUnique());
+                makeLog("FNAM" + yampt::sep[0] + esm.getRecordId() + yampt::sep[0] + esm.getUniqueText());
             }
         }
     }
@@ -983,19 +983,19 @@ void EsmConverter::convertDESC()
 
     for(size_t i = 0; i < esm.getRecColl().size(); ++i)
     {
-        esm.setRec(i);
+        esm.setRecordTo(i);
 
-        if(esm.getRecId() == "BSGN" ||
-           esm.getRecId() == "CLAS" ||
-           esm.getRecId() == "RACE")
+        if(esm.getRecordId() == "BSGN" ||
+           esm.getRecordId() == "CLAS" ||
+           esm.getRecordId() == "RACE")
         {
-            esm.setUnique("NAME");
-            esm.setFriendly("DESC");
+            esm.setUniqueTo("NAME");
+            esm.setFriendlyTo("DESC");
 
             if(esm.getUniqueStatus() == true &&
                esm.getFriendlyStatus() == true)
             {
-                unique_key = "DESC" + yampt::sep[0] + esm.getRecId() + yampt::sep[0] + esm.getUnique();
+                unique_key = "DESC" + yampt::sep[0] + esm.getRecordId() + yampt::sep[0] + esm.getUniqueText();
                 setNewFriendly(yampt::rec_type::DESC);
 
                 if(to_convert == true)
@@ -1003,7 +1003,7 @@ void EsmConverter::convertDESC()
                     convertRecordContent(new_friendly + '\0');
                 }
 
-                makeLog("DESC" + yampt::sep[0] + esm.getRecId() + yampt::sep[0] + esm.getUnique());
+                makeLog("DESC" + yampt::sep[0] + esm.getRecordId() + yampt::sep[0] + esm.getUniqueText());
             }
         }
     }
@@ -1018,17 +1018,17 @@ void EsmConverter::convertTEXT()
 
     for(size_t i = 0; i < esm.getRecColl().size(); ++i)
     {
-        esm.setRec(i);
+        esm.setRecordTo(i);
 
-        if(esm.getRecId() == "BOOK")
+        if(esm.getRecordId() == "BOOK")
         {
-            esm.setUnique("NAME");
-            esm.setFriendly("TEXT");
+            esm.setUniqueTo("NAME");
+            esm.setFriendlyTo("TEXT");
 
             if(esm.getUniqueStatus() == true &&
                esm.getFriendlyStatus() == true)
             {
-                unique_key = "TEXT" + yampt::sep[0] + esm.getUnique();
+                unique_key = "TEXT" + yampt::sep[0] + esm.getUniqueText();
                 setNewFriendly(yampt::rec_type::TEXT);
 
                 if(to_convert == true)
@@ -1036,7 +1036,7 @@ void EsmConverter::convertTEXT()
                     convertRecordContent(new_friendly + '\0');
                 }
 
-                makeLog("TEXT" + yampt::sep[0] + esm.getUnique());
+                makeLog("TEXT" + yampt::sep[0] + esm.getUniqueText());
             }
         }
     }
@@ -1051,18 +1051,18 @@ void EsmConverter::convertRNAM()
 
     for(size_t i = 0; i < esm.getRecColl().size(); ++i)
     {
-        esm.setRec(i);
+        esm.setRecordTo(i);
 
-        if(esm.getRecId() == "FACT")
+        if(esm.getRecordId() == "FACT")
         {
-            esm.setUnique("NAME");
-            esm.setFriendly("RNAM");
+            esm.setUniqueTo("NAME");
+            esm.setFriendlyTo("RNAM");
 
             if(esm.getUniqueStatus() == true)
             {
                 while(esm.getFriendlyStatus() == true)
                 {
-                    unique_key = "RNAM" + yampt::sep[0] + esm.getUnique() + yampt::sep[0] + std::to_string(esm.getFriendlyCounter());
+                    unique_key = "RNAM" + yampt::sep[0] + esm.getUniqueText() + yampt::sep[0] + std::to_string(esm.getFriendlyCounter());
                     setNewFriendly(yampt::rec_type::RNAM);
 
                     if(to_convert == true)
@@ -1071,9 +1071,9 @@ void EsmConverter::convertRNAM()
                         convertRecordContent(new_friendly);
                     }
 
-                    makeLog("RNAM" + yampt::sep[0] + esm.getUnique() + yampt::sep[0] + std::to_string(esm.getFriendlyCounter()));
+                    makeLog("RNAM" + yampt::sep[0] + esm.getUniqueText() + yampt::sep[0] + std::to_string(esm.getFriendlyCounter()));
 
-                    esm.setFriendly("RNAM", true, true);
+                    esm.setFriendlyTo("RNAM", true);
                 }
             }
         }
@@ -1089,18 +1089,18 @@ void EsmConverter::convertINDX()
 
     for(size_t i = 0; i < esm.getRecColl().size(); ++i)
     {
-        esm.setRec(i);
+        esm.setRecordTo(i);
 
-        if(esm.getRecId() == "SKIL" ||
-           esm.getRecId() == "MGEF")
+        if(esm.getRecordId() == "SKIL" ||
+           esm.getRecordId() == "MGEF")
         {
-            esm.setUnique("INDX");
-            esm.setFriendly("DESC");
+            esm.setUniqueTo("INDX");
+            esm.setFriendlyTo("DESC");
 
             if(esm.getUniqueStatus() == true &&
                esm.getFriendlyStatus() == true)
             {
-                unique_key = "INDX" + yampt::sep[0] + esm.getRecId() + yampt::sep[0] + esm.getUnique();
+                unique_key = "INDX" + yampt::sep[0] + esm.getRecordId() + yampt::sep[0] + esm.getUniqueText();
                 setNewFriendly(yampt::rec_type::INDX);
 
                 if(to_convert == true)
@@ -1108,7 +1108,7 @@ void EsmConverter::convertINDX()
                     convertRecordContent(new_friendly + '\0');
                 }
 
-                makeLog("INDX" + yampt::sep[0] + esm.getRecId() + yampt::sep[0] + esm.getUnique());
+                makeLog("INDX" + yampt::sep[0] + esm.getRecordId() + yampt::sep[0] + esm.getUniqueText());
             }
         }
     }
@@ -1123,18 +1123,18 @@ void EsmConverter::convertDIAL()
 
     for(size_t i = 0; i < esm.getRecColl().size(); ++i)
     {
-        esm.setRec(i);
+        esm.setRecordTo(i);
 
-        if(esm.getRecId() == "DIAL")
+        if(esm.getRecordId() == "DIAL")
         {
-            esm.setUnique("DATA");
-            esm.setFriendly("NAME");
+            esm.setUniqueTo("DATA");
+            esm.setFriendlyTo("NAME");
 
             if(esm.getUniqueStatus() == true &&
                esm.getFriendlyStatus() == true &&
-               esm.getUnique() == "T")
+               esm.getUniqueText() == "T")
             {
-                unique_key = "DIAL" + yampt::sep[0] + esm.getFriendly();
+                unique_key = "DIAL" + yampt::sep[0] + esm.getFriendlyText();
                 setNewFriendly(yampt::rec_type::DIAL);
 
                 if(to_convert == true)
@@ -1142,7 +1142,7 @@ void EsmConverter::convertDIAL()
                     convertRecordContent(new_friendly + '\0');
                 }
 
-                makeLog("DIAL" + yampt::sep[0] + esm.getFriendly());
+                makeLog("DIAL" + yampt::sep[0] + esm.getFriendlyText());
             }
         }
     }
@@ -1157,17 +1157,17 @@ void EsmConverter::convertINFO()
 
     for(size_t i = 0; i < esm.getRecColl().size(); ++i)
     {
-        esm.setRec(i);
+        esm.setRecordTo(i);
 
-        if(esm.getRecId() == "DIAL")
+        if(esm.getRecordId() == "DIAL")
         {
-            esm.setUnique("DATA");
-            esm.setFriendly("NAME");
+            esm.setUniqueTo("DATA");
+            esm.setFriendlyTo("NAME");
 
             if(esm.getUniqueStatus() == true &&
                esm.getFriendlyStatus() == true)
             {
-                dialog_topic = esm.getUnique() + yampt::sep[0] + esm.getFriendly();
+                dialog_topic = esm.getUniqueText() + yampt::sep[0] + esm.getFriendlyText();
             }
             else
             {
@@ -1175,15 +1175,15 @@ void EsmConverter::convertINFO()
             }
         }
 
-        if(esm.getRecId() == "INFO")
+        if(esm.getRecordId() == "INFO")
         {
-            esm.setUnique("INAM");
-            esm.setFriendly("NAME");
+            esm.setUniqueTo("INAM");
+            esm.setFriendlyTo("NAME");
 
             if(esm.getUniqueStatus() == true &&
                esm.getFriendlyStatus() == true)
             {
-                unique_key = "INFO" + yampt::sep[0] + dialog_topic + yampt::sep[0] + esm.getUnique();
+                unique_key = "INFO" + yampt::sep[0] + dialog_topic + yampt::sep[0] + esm.getUniqueText();
                 setNewFriendlyINFO(yampt::rec_type::INFO);
 
                 if(to_convert == true)
@@ -1191,7 +1191,7 @@ void EsmConverter::convertINFO()
                     convertRecordContent(new_friendly + '\0');
                 }
 
-                makeLog("INFO" + yampt::sep[0] + dialog_topic + yampt::sep[0] + esm.getUnique());
+                makeLog("INFO" + yampt::sep[0] + dialog_topic + yampt::sep[0] + esm.getUniqueText());
             }
         }
     }
@@ -1206,12 +1206,12 @@ void EsmConverter::convertBNAM()
 
     for(size_t i = 0; i < esm.getRecColl().size(); ++i)
     {
-        esm.setRec(i);
+        esm.setRecordTo(i);
 
-        if(esm.getRecId() == "INFO")
+        if(esm.getRecordId() == "INFO")
         {
-            esm.setUnique("INAM");
-            esm.setFriendly("BNAM");
+            esm.setUniqueTo("INAM");
+            esm.setFriendlyTo("BNAM");
 
             if(esm.getFriendlyStatus() == true)
             {
@@ -1235,16 +1235,16 @@ void EsmConverter::convertSCPT()
 
     for(size_t i = 0; i < esm.getRecColl().size(); ++i)
     {
-        esm.setRec(i);
+        esm.setRecordTo(i);
 
-        if(esm.getRecId() == "SCPT")
+        if(esm.getRecordId() == "SCPT")
         {
-            esm.setUnique("SCHD");
+            esm.setUniqueTo("SCHD");
 
-            esm.setFriendly("SCDT", false);
-            compiled_data = esm.getFriendly();
+            esm.setFriendlyTo("SCDT", false);
+            compiled_data = esm.getFriendlyText();
 
-            esm.setFriendly("SCTX");
+            esm.setFriendlyTo("SCTX");
 
             if(esm.getFriendlyStatus() == true)
             {
@@ -1254,11 +1254,11 @@ void EsmConverter::convertSCPT()
                 {
                     convertRecordContent(new_friendly);
 
-                    esm.setFriendly("SCDT", false);
+                    esm.setFriendlyTo("SCDT", false);
                     convertRecordContent(compiled_data);
 
-                    esm.setFriendly("SCHD", false);
-                    new_friendly = esm.getFriendly();
+                    esm.setFriendlyTo("SCHD", false);
+                    new_friendly = esm.getFriendlyText();
                     new_friendly.erase(44, 4);
                     new_friendly.insert(44, convertIntToByteArray(compiled_data.size()));
                     convertRecordContent(new_friendly);
@@ -1279,21 +1279,21 @@ void EsmConverter::convertGMDT()
 
     for(size_t i = 0; i < esm.getRecColl().size(); ++i)
     {
-        esm.setRec(i);
+        esm.setRecordTo(i);
 
-        if(esm.getRecId() == "TES3")
+        if(esm.getRecordId() == "TES3")
         {
-            esm.setUnique("GMDT", false);
-            esm.setFriendly("GMDT", false);
+            esm.setUniqueTo("GMDT");
+            esm.setFriendlyTo("GMDT");
 
             if(esm.getUniqueStatus() == true)
             {
-                unique_key = esm.getUnique().substr(24, 64);
+                unique_key = esm.getUniqueRaw().substr(24, 64);
                 eraseNullChars(unique_key);
                 unique_key = "CELL" + yampt::sep[0] + unique_key;
 
-                prefix = esm.getFriendly().substr(0, 24);
-                suffix = esm.getFriendly().substr(88);
+                prefix = esm.getFriendlyRaw().substr(0, 24);
+                suffix = esm.getFriendlyRaw().substr(88);
 
                 setNewFriendly(yampt::rec_type::CELL);
 
@@ -1305,18 +1305,18 @@ void EsmConverter::convertGMDT()
             }
         }
 
-        if(esm.getRecId() == "GAME")
+        if(esm.getRecordId() == "GAME")
         {
-            esm.setUnique("GMDT", false);
-            esm.setFriendly("GMDT", false);
+            esm.setUniqueTo("GMDT");
+            esm.setFriendlyTo("GMDT");
 
             if(esm.getUniqueStatus() == true)
             {
-                unique_key = esm.getUnique().substr(0, 64);
+                unique_key = esm.getUniqueRaw().substr(0, 64);
                 eraseNullChars(unique_key);
                 unique_key = "CELL" + yampt::sep[0] + unique_key;
 
-                suffix = esm.getFriendly().substr(64);
+                suffix = esm.getFriendlyRaw().substr(64);
 
                 setNewFriendly(yampt::rec_type::CELL);
 
