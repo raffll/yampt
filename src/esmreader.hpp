@@ -1,34 +1,34 @@
 #ifndef ESMREADER_HPP
 #define ESMREADER_HPP
 
-#include "Config.hpp"
+#include "config.hpp"
 
-class EsmReader : public Tools
+class EsmReader
 {
 public:
     void readFile(const std::string &path);
+    void setRecordTo(size_t i);
+    void setNewRecordContent(const std::string &new_rec);
+    void setUniqueTo(const std::string id, bool erase_null = true);
+    void setUniqueToINDX();
+    void setUniqueToDialogType();
+    void setFirstFriendlyTo(const std::string &id, bool erase_null = true);
+    void setNextFriendlyTo(const std::string &id, bool erase_null = true);
 
     bool getStatus() { return status; }
     std::string getNameFull() { return name_full; }
     std::string getNamePrefix() { return name_prefix; }
     std::string getNameSuffix() { return name_suffix; }
+    std::vector<std::string> const& getRecordColl() const { return rec_coll; }
 
-    std::vector<std::string> const& getRecColl() const { return rec_coll; }
-
-    void setRecordTo(size_t i);
-    void setNewRecordContent(const std::string &content) { *rec = content; }
     std::string getRecordContent() { return *rec; }
     std::string getRecordId() { return rec_id; }
 
-    void setUniqueTo(const std::string id);
-    std::string getUniqueText() { return unique_text = eraseNullChars(unique_text); }
-    std::string getUniqueRaw() { return unique_text; }
+    std::string getUniqueText() { return unique_text; }
     std::string getUniqueId() { return unique_id; }
     bool getUniqueStatus() { return unique_status; }
 
-    void setFriendlyTo(const std::string id, const bool next = false);
-    std::string getFriendlyText() { return friendly_text = eraseNullChars(friendly_text); }
-    std::string getFriendlyRaw() { return friendly_text; }
+    std::string getFriendlyText() { return friendly_text; }
     std::string getFriendlyId() { return friendly_id; }
     size_t getFriendlyPos() { return friendly_pos; }
     size_t getFriendlySize() { return friendly_size; }
@@ -41,15 +41,15 @@ private:
     void setName(const std::string &path);
     void setRecordColl(const std::string &content, const std::string &path);
 
-    bool status = false;
+    Tools tools;
     std::vector<std::string> rec_coll;
-
     std::string name_full;
     std::string name_prefix;
     std::string name_suffix;
 
-    std::string *rec;
+    bool status = false;
 
+    std::string *rec;
     size_t rec_size;
     std::string rec_id;
 
@@ -65,4 +65,4 @@ private:
     bool friendly_status = false;
 };
 
-#endif
+#endif // ESMREADER_HPP

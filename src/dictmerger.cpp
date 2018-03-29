@@ -1,4 +1,4 @@
-#include "DictMerger.hpp"
+#include "dictmerger.hpp"
 
 //----------------------------------------------------------
 DictMerger::DictMerger()
@@ -9,14 +9,14 @@ DictMerger::DictMerger()
 //----------------------------------------------------------
 DictMerger::DictMerger(std::vector<std::string> &path)
 {
-    for(auto &elem : path)
+    for(const auto &elem : path)
     {
         DictReader reader;
         reader.readFile(elem);
         dict_coll.push_back(reader);
         log += reader.getLog();
     }
-    status = true;
+    status = true; // Not used
 }
 
 //----------------------------------------------------------
@@ -26,25 +26,26 @@ void DictMerger::mergeDict()
     {
         for(size_t i = 0; i < dict_coll.size(); ++i)
         {
-            makeLogHeader(i);
-
-            for(size_t k = 0; k < dict_coll[i].getDict().size(); ++k)
+            for(size_t type = 0; type < dict.size(); ++type) // dict_t size
             {
-                for(auto &elem : dict_coll[i].getDict()[k])
+                for(auto &elem : dict_coll[i].getDict(type))
                 {
-                    auto search = dict[k].find(elem.first);
-                    if(search == dict[k].end())
+                    auto search = dict[type].find(elem.first);
+                    if(search == dict[type].end())
                     {
                         // Not found in previous dictionary - inserted
-                        dict[k].insert({elem.first, elem.second});
+                        dict[type].insert({elem.first, elem.second});
                         counter_merged++;
                     }
-                    else if(search != dict[k].end() &&
+                    else if(search != dict[type].end() &&
                             search->second != elem.second)
                     {
                         // Found in previous dictionary - skipped
-                        merger_log_ptr = &yampt::merger_log[0];
-                        makeLog(elem.first, elem.second, search->second);
+                        makeLog(yampt::type_name[type],
+                                elem.first, elem.second,
+                                search->second,
+                                "Replaced by next dictionaries",
+                                dict_coll[i].getNameFull());
                         counter_replaced++;
                     }
                     else
@@ -64,39 +65,26 @@ void DictMerger::mergeDict()
         {
             std::cout << "--> Merging complete!\r\n";
         }
-
         printLog();
     }
 }
 
 //----------------------------------------------------------
-void DictMerger::makeLogHeader(size_t i)
+void DictMerger::makeLog(const std::string &id,
+                         const std::string &unique_text,
+                         const std::string &friendly_old,
+                         const std::string &friendly_new,
+                         const std::string &comment,
+                         const std::string &name)
 {
-    if(dict_coll.size() == 1)
-    {
-        log += "<!-- Nothing to merge... -->\r\n";
-        log += yampt::sep_line + "\r\n";
-    }
-    else if(dict_coll.size() > 1 && i == 1)
-    {
-        log += "<!-- Merging " + dict_coll[i].getName() + " with " + dict_coll[i - 1].getName() + "... -->\r\n";
-        log += yampt::sep_line + "\r\n";
-    }
-    else if(dict_coll.size() > 2 && i > 1)
-    {
-        log += "<!-- Merging " + dict_coll[i].getName() + " with previous dictionaries... -->\r\n";
-        log += yampt::sep_line + "\r\n";
-    }
-}
-
-//----------------------------------------------------------
-void DictMerger::makeLog(const std::string unique_key, const std::string friendly_old, const std::string friendly_new)
-{
-
-    log += "<!-- " + *merger_log_ptr + " -->\r\n";
-    log += yampt::sep[1] + unique_key + yampt::sep[2] + friendly_old + yampt::sep[3] + "\r\n";
-    log += yampt::sep[1] + unique_key + yampt::sep[2] + friendly_new + yampt::sep[3] + "\r\n";
-    log += yampt::sep_line + "\r\n";
+    log += "<log>\r\n";
+    log += "\t<file>" + name + "</file>\r\n";
+    log += "\t<status>" + comment + "</status>\r\n";
+    log += "\t<id>" + id + "</id>\r\n";
+    log += "\t<key>" + unique_text + "</key>\r\n";
+    log += "\t<old>" + friendly_old + "</old>\r\n";
+    log += "\t<new>" + friendly_new + "</new>\r\n";
+    log += "<log>\r\n";
 }
 
 //----------------------------------------------------------

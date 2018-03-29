@@ -1,6 +1,5 @@
-#include "UserInterface.hpp"
+#include "userinterface.hpp"
 
-//----------------------------------------------------------
 int main(int argc, char *argv[])
 {
     std::vector<std::string> arg;
