@@ -17,11 +17,6 @@ public:
     void mergeDict();
     void convertEsm();
 
-    void binaryDump();
-    void findDiff();
-    void wordList();
-    void swapRecords();
-
     UserInterface(std::vector<std::string> &a);
 
 private:

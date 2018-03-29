@@ -85,22 +85,6 @@ UserInterface::UserInterface(std::vector<std::string> &a)
         {
             convertEsm();
         }
-        else if(arg[1] == "--binary-dump" && file_p.size() > 0)
-        {
-            binaryDump();
-        }
-        else if(arg[1] == "--find-diff" && dict_p.size() == 2)
-        {
-            findDiff();
-        }
-        else if(arg[1] == "--word-list" && dict_p.size() == 1)
-        {
-            wordList();
-        }
-        else if(arg[1] == "--swap-records" && dict_p.size() == 1)
-        {
-            swapRecords();
-        }
         else
         {
             std::cout << "Syntax error!" << std::endl;
@@ -224,44 +208,4 @@ void UserInterface::convertEsm()
     }
 
     writer.writeText(log, "yampt.log");
-}
-
-//----------------------------------------------------------
-void UserInterface::binaryDump()
-{
-    for(size_t i = 0; i < file_p.size(); ++i)
-    {
-        DictCreator creator(file_p[i]);
-        creator.makeBinaryDump();
-        writer.writeText(creator.getBinaryDump(), creator.getNamePrefix() + ".BINARY.log");
-    }
-}
-
-//----------------------------------------------------------
-void UserInterface::findDiff()
-{
-    DictMerger merger(dict_p);
-    merger.findDiff();
-
-    writer.writeDict(merger.getDiff(0), merger.getNamePrefix(0) + ".DIFF-2.xml");
-    writer.writeDict(merger.getDiff(1), merger.getNamePrefix(1) + ".DIFF-1.xml");
-    writer.writeText(merger.getLog(), "yampt.log");
-}
-
-//----------------------------------------------------------
-void UserInterface::wordList()
-{
-    DictMerger merger(dict_p);
-    merger.wordList();
-
-    writer.writeText(merger.getLog(), "yampt.log");
-}
-
-//----------------------------------------------------------
-void UserInterface::swapRecords()
-{
-    DictMerger merger(dict_p);
-    merger.swapRecords();
-
-    writer.writeDict(merger.getDict(), merger.getNamePrefix(0) + ".SWAP.xml");
 }

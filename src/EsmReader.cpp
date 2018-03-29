@@ -197,39 +197,3 @@ bool EsmReader::setFriendly(std::string id, bool erase_null, bool next)
     }
     return false;
 }
-
-//----------------------------------------------------------
-void EsmReader::setDump()
-{
-    if(status == true)
-    {
-        size_t cur_pos = 16;
-        size_t cur_size = 0;
-        std::string cur_id;
-        std::string cur_text;
-        std::string cur_dump;
-        dump.erase();
-
-        while(cur_pos != rec->size())
-        {
-            cur_id = rec->substr(cur_pos, 4);
-            cur_size = convertByteArrayToInt(rec->substr(cur_pos + 4, 4));
-
-            cur_text = rec->substr(cur_pos + 8, cur_size);
-            cur_dump = "    " + cur_id + " " + std::to_string(cur_size) + " " + cur_text;
-            for(size_t i = 0; i < cur_dump.size(); ++i)
-            {
-                if(isprint(cur_dump[i]))
-                {
-                    dump += cur_dump[i];
-                }
-                else
-                {
-                    dump += ".";
-                }
-            }
-            dump += "\r\n";
-            cur_pos += 8 + cur_size;
-        }
-    }
-}

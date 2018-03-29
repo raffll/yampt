@@ -36,8 +36,6 @@ public:
     size_t getFriendlyCounter() { return friendly_counter; }
     bool getFriendlyStatus() { return friendly_status; }
 
-    std::string getDump() { return dump; }
-
     EsmReader();
 
 private:
@@ -67,8 +65,6 @@ private:
     size_t friendly_size;
     size_t friendly_counter;
     bool friendly_status = false;
-
-    std::string dump;
 };
 
 #endif

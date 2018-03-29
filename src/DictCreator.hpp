@@ -9,12 +9,10 @@ class DictCreator : public Tools
 {
 public:
     void makeDict();
-    void makeBinaryDump();
 
     std::string getName() { return esm_n.getName(); }
     std::string getNamePrefix() { return esm_n.getNamePrefix(); }
     yampt::dict_t const& getDict() const { return dict; }
-    std::string getBinaryDump() { return dump; }
 
     DictCreator(std::string path_n);
     DictCreator(std::string path_n, std::string path_f);
@@ -77,8 +75,6 @@ private:
     std::vector<std::string> *message_ptr;
     std::vector<std::string> message_n;
     std::vector<std::string> message_f;
-
-    std::string dump;
 };
 
 #endif
