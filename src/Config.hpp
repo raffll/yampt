@@ -19,35 +19,35 @@ namespace yampt
 
 struct CaseAwareCompare
 {
-	bool operator()(const char * left, const char * right) const
-	{
-		bool tied = true;
-		bool tiebreaker = false;
+    bool operator()(const char * left, const char * right) const
+    {
+        bool tied = true;
+        bool tiebreaker = false;
         int i;
 
-		for(i = 0; left[i] != 0; ++i)
-		{
-			if(right[i] == 0)
-			{
-				return false;
-			}
-			if(tolower(left[i]) != tolower(right[i]))
-			{
-				return tolower(left[i]) < tolower(right[i]);
-			}
-			if(tied && left[i] != right[i])
-			{
-				tied = false;
-				tiebreaker = left[i] < right[i];
-			}
-		}
-		return(right[i] != 0) || (!tied && tiebreaker);
-	}
+        for(i = 0; left[i] != 0; ++i)
+        {
+            if(right[i] == 0)
+            {
+                return false;
+            }
+            if(tolower(left[i]) != tolower(right[i]))
+            {
+                return tolower(left[i]) < tolower(right[i]);
+            }
+            if(tied && left[i] != right[i])
+            {
+                tied = false;
+                tiebreaker = left[i] < right[i];
+            }
+        }
+        return(right[i] != 0) || (!tied && tiebreaker);
+    }
 
-	bool operator()(const std::string & left, const std::string & right) const
-	{
-		return operator()(left.c_str(), right.c_str());
-	}
+    bool operator()(const std::string & left, const std::string & right) const
+    {
+        return operator()(left.c_str(), right.c_str());
+    }
 };
 
 enum rec_type { CELL, DIAL, INDX, RNAM, DESC, GMST, FNAM, INFO, BNAM, SCTX, TEXT };
@@ -67,20 +67,20 @@ const std::vector<std::string> merger_log = {"REPLACED", "DOUBLED", "INVALID", "
 class Writer
 {
 public:
-	void writeDict(const yampt::dict_t &dict, std::string name);
-	void writeText(const std::string &text, std::string name);
-	int getSize(const yampt::dict_t &dict);
+    void writeDict(const yampt::dict_t &dict, std::string name);
+    void writeText(const std::string &text, std::string name);
+    int getSize(const yampt::dict_t &dict);
 };
 
 class Tools
 {
 protected:
-	unsigned int convertByteArrayToInt(const std::string &str);
-	std::string convertIntToByteArray(unsigned int x);
-	bool caseInsensitiveStringCmp(std::string lhs, std::string rhs);
-	void eraseNullChars(std::string &str);
-	std::string eraseCarriageReturnChar(std::string &str);
-	std::string replaceNonReadableCharWithDot(const std::string &str);
+    unsigned int convertByteArrayToInt(const std::string &str);
+    std::string convertIntToByteArray(unsigned int x);
+    bool caseInsensitiveStringCmp(std::string lhs, std::string rhs);
+    void eraseNullChars(std::string &str);
+    std::string eraseCarriageReturnChar(std::string &str);
+    std::string replaceNonReadableCharWithDot(const std::string &str);
 };
 
 #endif

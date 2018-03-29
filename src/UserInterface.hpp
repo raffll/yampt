@@ -9,32 +9,32 @@
 class UserInterface
 {
 public:
-	void makeDictRaw();
-	void makeDictBase();
-	void makeDictAll();
-	void makeDictNotFound();
-	void makeDictChanged();
-	void mergeDict();
-	void convertEsm();
+    void makeDictRaw();
+    void makeDictBase();
+    void makeDictAll();
+    void makeDictNotFound();
+    void makeDictChanged();
+    void mergeDict();
+    void convertEsm();
 
-	void binaryDump();
-	void findDiff();
-	void wordList();
-	void swapRecords();
+    void binaryDump();
+    void findDiff();
+    void wordList();
+    void swapRecords();
 
-	UserInterface(std::vector<std::string> &a);
+    UserInterface(std::vector<std::string> &a);
 
 private:
-	Writer writer;
+    Writer writer;
 
-	std::vector<std::string> arg;
-	std::vector<std::string> file_p;
-	std::vector<std::string> dict_p;
-	std::vector<std::string> output;
+    std::vector<std::string> arg;
+    std::vector<std::string> file_p;
+    std::vector<std::string> dict_p;
+    std::vector<std::string> output;
 
-	bool add_dial = false;
-	bool safe = false;
-	bool debug = false;
+    bool add_dial = false;
+    bool safe = false;
+    bool debug = false;
 };
 
 #endif
