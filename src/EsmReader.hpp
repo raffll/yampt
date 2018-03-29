@@ -21,7 +21,6 @@ public:
 
     void setUnique(std::string id, bool erase_null = true);
     bool setFriendly(std::string id, bool erase_null = true, bool next = false);
-    void setDump();
 
     std::string getRecId() { return rec_id; }
 
