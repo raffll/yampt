@@ -238,11 +238,11 @@ void DictReader::makeLog(const std::string &id,
 void DictReader::printLog()
 {
     std::cout << "---------------------------------------" << std::endl
-         << "    Loaded / Doubled / Invalid /    All" << std::endl
-         << "---------------------------------------" << std::endl
-         << std::setw(10) << std::to_string(counter_loaded) << " / "
-         << std::setw(7) << std::to_string(counter_doubled) << " / "
-         << std::setw(7) << std::to_string(counter_invalid) << " / "
-         << std::setw(6) << std::to_string(counter_all) << std::endl
-         << "---------------------------------------" << std::endl;
+              << "    Loaded / Doubled / Invalid /    All" << std::endl
+              << "---------------------------------------" << std::endl
+              << std::setw(10) << std::to_string(counter_loaded) << " / "
+              << std::setw(7) << std::to_string(counter_doubled) << " / "
+              << std::setw(7) << std::to_string(counter_invalid) << " / "
+              << std::setw(6) << std::to_string(counter_all) << std::endl
+              << "---------------------------------------" << std::endl;
 }

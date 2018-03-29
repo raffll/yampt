@@ -22,19 +22,29 @@ public:
                  const std::string &compiled_data);
 
 protected:
-    std::string convertLine(const std::string &line,
-                            const size_t pos,
-                            const bool is_say);
-    std::string convertInnerText(const std::string &line,
-                                 const size_t keyword_pos,
-                                 const int pos_in_expression,
-                                 const bool is_getpccell,
-                                 const yampt::rec_type inner_type);
+    std::string checkLine(const std::string &line,
+                          const std::string &line_lc,
+                          const std::string &keyword,
+                          const bool &is_say);
+    std::string checkLine(const std::string &line,
+                          const std::string &line_lc,
+                          const std::string &keyword,
+                          const int &pos_in_expr,
+                          const yampt::rec_type &text_type,
+                          const bool &is_getpccell);
+
+    std::string convertLine(const std::string &line);
+    std::string findText(const std::string &text,
+                         const yampt::rec_type &text_type);
+    std::string convertText(const std::string &line,
+                            const std::string &text,
+                            const size_t &text_pos,
+                            const std::string &new_text);
     void convertLineInCompiledScriptData(const std::string &line,
                                          const std::string &new_line,
                                          const bool is_say);
-    void convertInnerTextInCompiledScriptData(const std::string &inner_text,
-                                              const std::string &new_inner,
+    void convertInnerTextInCompiledScriptData(const std::string &text,
+                                              const std::string &new_text,
                                               const bool is_getpccell);
     std::pair<std::string, size_t> extractText(const std::string &line,
                                                const size_t pos,
@@ -57,7 +67,7 @@ private:
     int counter_converted;
     int counter_unchanged;
 
-    bool to_convert;
+    bool keyword_found;
 };
 
 #endif // SCRIPTPARSER_HPP

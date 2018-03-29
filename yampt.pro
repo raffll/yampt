@@ -5,14 +5,6 @@ CONFIG -= qt
 QMAKE_LFLAGS = -s -static
 
 SOURCES += \
-    src/Config.cpp \
-    src/DictCreator.cpp \
-    src/DictMerger.cpp \
-    src/DictReader.cpp \
-    src/EsmConverter.cpp \
-    src/EsmReader.cpp \
-    src/Main.cpp \
-    src/UserInterface.cpp \
     src/config.cpp \
     src/dictcreator.cpp \
     src/dictmerger.cpp \
@@ -27,13 +19,6 @@ SOURCES += \
 
 
 HEADERS += \
-    src/Config.hpp \
-    src/DictCreator.hpp \
-    src/DictMerger.hpp \
-    src/DictReader.hpp \
-    src/EsmConverter.hpp \
-    src/EsmReader.hpp \
-    src/UserInterface.hpp \
     src/config.hpp \
     src/dictcreator.hpp \
     src/dictmerger.hpp \
@@ -48,8 +33,4 @@ HEADERS += \
 DISTFILES += \
     CHANGELOG.md \
     README.md \
-    LICENSE.txt \
-    CHANGELOG.md \
-    README.md \
     LICENSE.txt
-

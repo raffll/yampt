@@ -41,92 +41,77 @@ void ScriptParser::convertScript()
     std::string line;
     std::string line_lc;
     std::string new_line;
-    size_t keyword_pos;
-
-            std::cout << " duap";
 
     while(std::getline(ss, line))
     {
-        to_convert = false;
+        keyword_found = false;
         line = tools.eraseCarriageReturnChar(line);
         line_lc = line;
+
         transform(line_lc.begin(), line_lc.end(),
                   line_lc.begin(), ::tolower);
 
-        if(to_convert == false)
+        if(keyword_found == false)
         {
-            keyword_pos = line_lc.find("messagebox");
-            new_line = convertLine(line, keyword_pos, false);
+            new_line = checkLine(line, line_lc, "messagebox", false);
         }
 
-        if(to_convert == false)
+        if(keyword_found == false)
         {
-            keyword_pos = line_lc.find("choice");
-            new_line = convertLine(line, keyword_pos, false);
+            new_line = checkLine(line, line_lc, "choice", false);
         }
 
-        if(to_convert == false)
+        if(keyword_found == false)
         {
-            keyword_pos = line_lc.find("say ");  // ugly keyword
-            new_line = convertLine(line, keyword_pos, true);
+            new_line = checkLine(line, line_lc, "say ", true);
         }
 
-        if(to_convert == false)
+        if(keyword_found == false)
         {
-            keyword_pos = line_lc.find("say,");
-            new_line = convertLine(line, keyword_pos, true);
+            new_line = checkLine(line, line_lc, "say,", true);
         }
 
-        if(to_convert == false)
+        if(keyword_found == false)
         {
-            keyword_pos = line_lc.find("addtopic");
-            new_line = convertInnerText(line, keyword_pos, 0, false, yampt::rec_type::DIAL);
+            new_line = checkLine(line, line_lc, "addtopic", 0, yampt::rec_type::DIAL, false);
         }
 
-        if(to_convert == false)
+        if(keyword_found == false)
         {
-            keyword_pos = line_lc.find("showmap");
-            new_line = convertInnerText(line, keyword_pos, 0, false, yampt::rec_type::CELL);
+            new_line = checkLine(line, line_lc, "showmap", 0, yampt::rec_type::CELL, false);
         }
 
-        if(to_convert == false)
+        if(keyword_found == false)
         {
-            keyword_pos = line_lc.find("centeroncell");
-            new_line = convertInnerText(line, keyword_pos, 0, false, yampt::rec_type::CELL);
+            new_line = checkLine(line, line_lc, "centeroncell", 0, yampt::rec_type::CELL, false);
         }
 
-        if(to_convert == false)
+        if(keyword_found == false)
         {
-            keyword_pos = line_lc.find("getpccell");
-            new_line = convertInnerText(line, keyword_pos, 0, true, yampt::rec_type::CELL);
+            new_line = checkLine(line, line_lc, "getpccell", 0, yampt::rec_type::CELL, true);
         }
 
-        if(to_convert == false)
+        if(keyword_found == false)
         {
-            keyword_pos = line_lc.find("aifollowcell");
-            new_line = convertInnerText(line, keyword_pos, 1, false, yampt::rec_type::CELL);
+            new_line = checkLine(line, line_lc, "aifollowcell", 1, yampt::rec_type::CELL, false);
         }
 
-        if(to_convert == false)
+        if(keyword_found == false)
         {
-            keyword_pos = line_lc.find("aiescortcell)");
-            new_line = convertInnerText(line, keyword_pos, 1, false, yampt::rec_type::CELL);
+            new_line = checkLine(line, line_lc, "aiescortcell", 1, yampt::rec_type::CELL, false);
         }
 
-        if(to_convert == false)
+        if(keyword_found == false)
         {
-            keyword_pos = line_lc.find("placeitemcell");
-            new_line = convertInnerText(line, keyword_pos, 1, false, yampt::rec_type::CELL);
+            new_line = checkLine(line, line_lc, "placeitemcell", 1, yampt::rec_type::CELL, false);
         }
 
-        if(to_convert == false)
+        if(keyword_found == false)
         {
-            keyword_pos = line_lc.find("positioncell");
-            new_line = convertInnerText(line, keyword_pos, 4, false, yampt::rec_type::CELL);
+            new_line = checkLine(line, line_lc, "positioncell", 4, yampt::rec_type::CELL, false);
         }
 
         new_friendly += new_line + "\r\n";
-
     }
 
     // Check if last 2 char are new line
@@ -138,103 +123,100 @@ void ScriptParser::convertScript()
 }
 
 //----------------------------------------------------------
-std::string ScriptParser::convertLine(const std::string &line,
-                                      const size_t keyword_pos,
-                                      const bool is_say)
+std::string ScriptParser::checkLine(const std::string &line,
+                                    const std::string &line_lc,
+                                    const std::string &keyword,
+                                    const bool &is_say)
 {
     std::string new_line = line;
+    size_t keyword_pos = line_lc.find(keyword);
     if(keyword_pos != std::string::npos &&
        line.rfind(";", keyword_pos) == std::string::npos)
     {
-        auto search = merger->getDict(type).find(line);
-        if(search != merger->getDict(type).end())
+        new_line = convertLine(line);
+        convertLineInCompiledScriptData(line, new_line, is_say);
+        keyword_found = true;
+    }
+    return new_line;
+}
+
+//----------------------------------------------------------
+std::string ScriptParser::checkLine(const std::string &line,
+                                    const std::string &line_lc,
+                                    const std::string &keyword,
+                                    const int &pos_in_expr,
+                                    const yampt::rec_type &text_type,
+                                    const bool &is_getpccell)
+{
+    std::string new_line = line;
+    std::pair<std::string, size_t> text;
+    std::string new_text;
+    size_t keyword_pos = line_lc.find(keyword);
+    if(keyword_pos != std::string::npos &&
+       line.rfind(";", keyword_pos) == std::string::npos)
+    {
+        text = extractText(line, keyword_pos, pos_in_expr);
+        new_text = findText(text.first, text_type);
+        new_line = convertText(line, text.first, text.second, new_text);
+        convertInnerTextInCompiledScriptData(text.first, new_text, is_getpccell);
+        keyword_found = true;
+    }
+    return new_line;
+}
+
+//----------------------------------------------------------
+std::string ScriptParser::convertLine(const std::string &line)
+{
+    std::string new_line = line;
+    auto search = merger->getDict(type).find(line);
+    if(search != merger->getDict(type).end())
+    {
+        if(line != search->second)
         {
-            if(line != search->second)
-            {
-                to_convert = true;
-                new_line = search->second;
-                convertLineInCompiledScriptData(line, new_line, is_say);
-            }
+            new_line = search->second;
         }
     }
     return new_line;
 }
 
 //----------------------------------------------------------
-std::string ScriptParser::convertInnerText(const std::string &line,
-                                           const size_t keyword_pos,
-                                           const int pos_in_expression,
-                                           const bool is_getpccell,
-                                           const yampt::rec_type inner_type)
+std::string ScriptParser::findText(const std::string &text,
+                                   const yampt::rec_type &text_type)
+{
+    // Fast search in map
+    auto search = merger->getDict(text_type).find(text);
+    if(search != merger->getDict(text_type).end())
+    {
+        return search->second;
+    }
+    else // Slow search case aware
+    {
+        for(auto &elem : merger->getDict(text_type))
+        {
+            if(tools.caseInsensitiveStringCmp(text, elem.first) == true)
+            {
+                return elem.second;
+            }
+        }
+    }
+    return text;
+}
+
+//----------------------------------------------------------
+std::string ScriptParser::convertText(const std::string &line,
+                                      const std::string &text,
+                                      const size_t &text_pos,
+                                      const std::string &new_text)
 {
     std::string new_line = line;
-    std::pair<std::string, size_t> temp = extractText(line, keyword_pos, pos_in_expression);
-    std::string inner_text = temp.first;
-    size_t inner_pos = temp.second;
-
-    if(keyword_pos != std::string::npos &&
-       line.rfind(";", keyword_pos) == std::string::npos)
+    new_line.erase(text_pos, text.size());
+    if(new_line.substr(text_pos - 1, 1) == "\"")
     {
-        // Fast search in map
-        auto search = merger->getDict(inner_type).find(inner_text);
-        if(search != merger->getDict(inner_type).end())
-        {
-            try
-            {
-                new_line.erase(inner_pos, inner_text.size());
-                convertInnerTextInCompiledScriptData(inner_text, search->second, is_getpccell);
-
-                if(new_line.substr(inner_pos - 1, 1) == "\"")
-                {
-                    new_line.insert(inner_pos, search->second);
-                }
-                else
-                {
-                    new_line.insert(inner_pos, "\"" + search->second + "\"");
-                }
-                to_convert = true;
-                return new_line;
-            }
-            catch(std::exception const& e)
-            {
-                std::cout << "--> Error in function convertInnerText()" << std::endl;
-                std::cout << line << std::endl;
-                std::cout << new_line << std::endl;
-                std::cout << "--> Exception: " << e.what() << std::endl;
-            }
-        }
-        else // Slow search case aware
-        {
-            for(auto &elem : merger->getDict(inner_type))
-            {
-                if(tools.caseInsensitiveStringCmp(inner_text, elem.first) == true)
-                {
-                    try
-                    {
-                        new_line.erase(inner_pos, inner_text.size());
-                        convertInnerTextInCompiledScriptData(inner_text, elem.second, is_getpccell);
-
-                        if(new_line.substr(inner_pos - 1, 1) == "\"")
-                        {
-                            new_line.insert(inner_pos, elem.second);
-                        }
-                        else
-                        {
-                            new_line.insert(inner_pos, "\"" + elem.second + "\"");
-                        }
-                        to_convert = true;
-                        return new_line;
-                    }
-                    catch(std::exception const& e)
-                    {
-                        std::cout << "--> Error in function convertInnerText()" << std::endl;
-                        std::cout << line << std::endl;
-                        std::cout << new_line << std::endl;
-                        std::cout << "--> Exception: " << e.what() << std::endl;
-                    }
-                }
-            }
-        }
+        new_line.insert(text_pos, new_text);
+    }
+    else
+    {
+        new_line.insert(text_pos, "\"" + new_text + "\"");
     }
     return new_line;
 }
@@ -280,23 +262,23 @@ void ScriptParser::convertLineInCompiledScriptData(const std::string &line,
 }
 
 //----------------------------------------------------------
-void ScriptParser::convertInnerTextInCompiledScriptData(const std::string &inner_text,
-                                                        const std::string &new_inner_text,
+void ScriptParser::convertInnerTextInCompiledScriptData(const std::string &text,
+                                                        const std::string &new_text,
                                                         const bool is_getpccell)
 {
-    pos_in_compiled = compiled_data.find(inner_text, pos_in_compiled);
+    pos_in_compiled = compiled_data.find(text, pos_in_compiled);
     if(pos_in_compiled != std::string::npos)
     {
         pos_in_compiled -= 1;
         compiled_data.erase(pos_in_compiled, 1);
-        compiled_data.insert(pos_in_compiled, tools.convertUIntToStringByteArray(new_inner_text.size()).substr(0, 1));
+        compiled_data.insert(pos_in_compiled, tools.convertUIntToStringByteArray(new_text.size()).substr(0, 1));
         pos_in_compiled += 1;
-        compiled_data.erase(pos_in_compiled, inner_text.size());
-        compiled_data.insert(pos_in_compiled, new_inner_text);
+        compiled_data.erase(pos_in_compiled, text.size());
+        compiled_data.insert(pos_in_compiled, new_text);
 
         if(is_getpccell == true)
         {
-            size_t size = new_inner_text.size() + 12;
+            size_t size = new_text.size() + 12;
             pos_in_compiled -= 8;
             compiled_data.erase(pos_in_compiled, 1);
             compiled_data.insert(pos_in_compiled, tools.convertUIntToStringByteArray(size).substr(0, 1));
@@ -304,7 +286,7 @@ void ScriptParser::convertInnerTextInCompiledScriptData(const std::string &inner
         }
         else
         {
-            pos_in_compiled += new_inner_text.size();
+            pos_in_compiled += new_text.size();
         }
     }
 }
@@ -317,8 +299,6 @@ std::pair<std::string, size_t> ScriptParser::extractText(const std::string &line
     size_t cur_pos = keyword_pos;
     std::string cur_text = line.substr(keyword_pos);
 
-    std::cout << cur_text << std::endl;
-
     std::smatch found;
     int ctr = -1;
 
@@ -328,7 +308,6 @@ std::pair<std::string, size_t> ScriptParser::extractText(const std::string &line
     if(cur_pos != std::string::npos)
     {
         cur_text = cur_text.substr(cur_pos);
-        std::cout << cur_text << std::endl;
     }
 
     if(pos_in_expression == 0)
