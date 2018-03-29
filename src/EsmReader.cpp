@@ -1,8 +1,5 @@
 #include "EsmReader.hpp"
 
-using namespace std;
-using namespace yampt;
-
 //----------------------------------------------------------
 EsmReader::EsmReader()
 {
@@ -10,16 +7,16 @@ EsmReader::EsmReader()
 }
 
 //----------------------------------------------------------
-void EsmReader::readFile(string path)
+void EsmReader::readFile(std::string path)
 {
-	ifstream file(path, ios::binary);
+    std::ifstream file(path, std::ios::binary);
 	if(file)
 	{
-		string content;
+        std::string content;
 		char buffer[16384];
 		size_t size = file.tellg();
 		content.reserve(size);
-		streamsize chars_read;
+        std::streamsize chars_read;
 		while(file.read(buffer, sizeof(buffer)), chars_read = file.gcount())
 		{
 			content.append(buffer, chars_read);
@@ -35,21 +32,21 @@ void EsmReader::readFile(string path)
 }
 
 //----------------------------------------------------------
-void EsmReader::printStatus(string path)
+void EsmReader::printStatus(std::string path)
 {
 	if(status == false)
 	{
-		cout << "--> Error while loading " + path +
+        std::cout << "--> Error while loading " + path +
 			" (wrong path or isn't TES3 plugin)!\r\n";
 	}
 	else
 	{
-		cout << "--> Loading " + path + "...\r\n";
+        std::cout << "--> Loading " + path + "...\r\n";
 	}
 }
 
 //----------------------------------------------------------
-void EsmReader::setName(string path)
+void EsmReader::setName(std::string path)
 {
 	name = path.substr(path.find_last_of("\\/") + 1);
 	name_prefix = name.substr(0, name.find_last_of("."));
@@ -57,7 +54,7 @@ void EsmReader::setName(string path)
 }
 
 //----------------------------------------------------------
-void EsmReader::setRecColl(string &content)
+void EsmReader::setRecColl(std::string &content)
 {
 	if(status == true)
 	{
@@ -86,14 +83,14 @@ void EsmReader::setRec(size_t i)
 }
 
 //----------------------------------------------------------
-void EsmReader::setUnique(string id, bool erase_null)
+void EsmReader::setUnique(std::string id, bool erase_null)
 {
 	if(status == true)
 	{
 		size_t cur_pos = 16;
 		size_t cur_size = 0;
-		string cur_id;
-		string cur_text;
+        std::string cur_id;
+        std::string cur_text;
 		unique_id = id;
 
 		while(cur_pos != rec->size())
@@ -106,14 +103,14 @@ void EsmReader::setUnique(string id, bool erase_null)
 				if(id == "INDX")
 				{
 					int indx = convertByteArrayToInt(rec->substr(cur_pos + 8, 4));
-					ostringstream ss;
-					ss << setfill('0') << setw(3) << indx;
+                    std::ostringstream ss;
+                    ss << std::setfill('0') << std::setw(3) << indx;
 					cur_text = ss.str();
 				}
 				else if(rec_id == "DIAL" && id == "DATA")
 				{
 					int type = convertByteArrayToInt(rec->substr(cur_pos + 8, 1));
-					cur_text = dialog_type[type];
+                    cur_text = yampt::dialog_type[type];
 				}
 				else
 				{
@@ -147,14 +144,14 @@ void EsmReader::setUnique(string id, bool erase_null)
 }
 
 //----------------------------------------------------------
-bool EsmReader::setFriendly(string id, bool erase_null, bool next)
+bool EsmReader::setFriendly(std::string id, bool erase_null, bool next)
 {
 	if(status == true)
 	{
 		size_t cur_pos = 16;
 		size_t cur_size = 0;
-		string cur_id;
-		string cur_text;
+        std::string cur_id;
+        std::string cur_text;
 		friendly_id = id;
 
 		if(next == true && friendly_status == true)
@@ -208,9 +205,9 @@ void EsmReader::setDump()
 	{
 		size_t cur_pos = 16;
 		size_t cur_size = 0;
-		string cur_id;
-		string cur_text;
-		string cur_dump;
+        std::string cur_id;
+        std::string cur_text;
+        std::string cur_dump;
 		dump.erase();
 
 		while(cur_pos != rec->size())
@@ -219,7 +216,7 @@ void EsmReader::setDump()
 			cur_size = convertByteArrayToInt(rec->substr(cur_pos + 4, 4));
 
 			cur_text = rec->substr(cur_pos + 8, cur_size);
-			cur_dump = "    " + cur_id + " " + to_string(cur_size) + " " + cur_text;
+            cur_dump = "    " + cur_id + " " + std::to_string(cur_size) + " " + cur_text;
 			for(size_t i = 0; i < cur_dump.size(); ++i)
 			{
 				if(isprint(cur_dump[i]))

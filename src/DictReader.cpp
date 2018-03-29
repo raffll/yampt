@@ -1,8 +1,5 @@
 #include "DictReader.hpp"
 
-using namespace std;
-using namespace yampt;
-
 //----------------------------------------------------------
 DictReader::DictReader()
 {
@@ -47,16 +44,16 @@ DictReader::~DictReader()
 }
 
 //----------------------------------------------------------
-void DictReader::readFile(string path)
+void DictReader::readFile(std::string path)
 {
-	ifstream file(path, ios::binary);
+    std::ifstream file(path, std::ios::binary);
 	if(file)
 	{
-		string content;
+        std::string content;
 		char buffer[16384];
 		size_t size = file.tellg();
 		content.reserve(size);
-		streamsize chars_read;
+        std::streamsize chars_read;
 		while(file.read(buffer, sizeof(buffer)), chars_read = file.gcount())
 		{
 			content.append(buffer, chars_read);
@@ -71,28 +68,28 @@ void DictReader::readFile(string path)
 }
 
 //----------------------------------------------------------
-void DictReader::printStatus(string path)
+void DictReader::printStatus(std::string path)
 {
 	if(status == false)
 	{
-		cout << "--> Error while loading " << path << " (wrong path or missing separator)!\r\n";
+        std::cout << "--> Error while loading " << path << " (wrong path or missing separator)!\r\n";
 	}
 	else
 	{
-		cout << "--> Loading " << path << "..." << endl;
+        std::cout << "--> Loading " << path << "..." << std::endl;
 		printLog();
 	}
 }
 
 //----------------------------------------------------------
-void DictReader::setName(string path)
+void DictReader::setName(std::string path)
 {
 	name = path.substr(path.find_last_of("\\/") + 1);
 	name_prefix = name.substr(0, name.find_last_of("."));
 }
 
 //----------------------------------------------------------
-bool DictReader::parseDict(string &content)
+bool DictReader::parseDict(std::string &content)
 {
 	size_t pos_beg = 0;
 	size_t pos_mid = 0;
@@ -102,12 +99,12 @@ bool DictReader::parseDict(string &content)
 
 	while(true)
 	{
-		pos_beg = content.find(sep[1], pos_beg);
-		pos_mid = content.find(sep[2], pos_mid);
-		pos_end = content.find(sep[3], pos_end);
-		if(pos_beg == string::npos &&
-		   pos_mid == string::npos &&
-		   pos_end == string::npos)
+        pos_beg = content.find(yampt::sep[1], pos_beg);
+        pos_mid = content.find(yampt::sep[2], pos_mid);
+        pos_end = content.find(yampt::sep[3], pos_end);
+        if(pos_beg == std::string::npos &&
+           pos_mid == std::string::npos &&
+           pos_end == std::string::npos)
 		{
 			return true;
 			break;
@@ -115,18 +112,18 @@ bool DictReader::parseDict(string &content)
 		else if(pos_beg > pos_mid ||
 			pos_beg > pos_end ||
 			pos_mid > pos_end ||
-			pos_end == string::npos)
+            pos_end == std::string::npos)
 		{
 			return false;
 			break;
 		}
 		else
 		{
-			unique_key = content.substr(pos_beg + sep[1].size(),
-						    pos_mid - pos_beg - sep[1].size());
+            unique_key = content.substr(pos_beg + yampt::sep[1].size(),
+                            pos_mid - pos_beg - yampt::sep[1].size());
 
-			friendly = content.substr(pos_mid + sep[2].size(),
-						  pos_end - pos_mid - sep[2].size());
+            friendly = content.substr(pos_mid + yampt::sep[2].size(),
+                          pos_end - pos_mid - yampt::sep[2].size());
 
 			counter_all++;
 
@@ -142,7 +139,7 @@ bool DictReader::parseDict(string &content)
 //----------------------------------------------------------
 void DictReader::validateRecord()
 {
-	string id;
+    std::string id;
 
 	if(unique_key.size() > 4)
 	{
@@ -152,101 +149,101 @@ void DictReader::validateRecord()
 		{
                         if(friendly.size() > 63)
 			{
-				merger_log_ptr = &merger_log[3];
+                merger_log_ptr = &yampt::merger_log[3];
 				makeLog();
 				counter_toolong++;
 			}
 			else
 			{
-                                insertRecord(rec_type::CELL);
+                                insertRecord(yampt::rec_type::CELL);
 			}
 		}
 		else if(id == "GMST")
 		{
-			insertRecord(rec_type::GMST);
+            insertRecord(yampt::rec_type::GMST);
 		}
 		else if(id == "DESC")
 		{
-			insertRecord(rec_type::DESC);
+            insertRecord(yampt::rec_type::DESC);
 		}
 		else if(id == "TEXT")
 		{
-			insertRecord(rec_type::TEXT);
+            insertRecord(yampt::rec_type::TEXT);
 		}
 		else if(id == "INDX")
 		{
-			insertRecord(rec_type::INDX);
+            insertRecord(yampt::rec_type::INDX);
 		}
 		else if(id == "DIAL")
 		{
-			insertRecord(rec_type::DIAL);
+            insertRecord(yampt::rec_type::DIAL);
 		}
 		else if(id == "BNAM")
 		{
-			friendly = friendly.substr(friendly.find(sep[0]) + 1);
-			insertRecord(rec_type::BNAM);
+            friendly = friendly.substr(friendly.find(yampt::sep[0]) + 1);
+            insertRecord(yampt::rec_type::BNAM);
 		}
 		else if(id == "SCTX")
 		{
-			friendly = friendly.substr(friendly.find(sep[0]) + 1);
-			insertRecord(rec_type::SCTX);
+            friendly = friendly.substr(friendly.find(yampt::sep[0]) + 1);
+            insertRecord(yampt::rec_type::SCTX);
 		}
 		else if(id == "RNAM")
 		{
 			if(friendly.size() > 32)
 			{
-				merger_log_ptr = &merger_log[3];
+                merger_log_ptr = &yampt::merger_log[3];
 				makeLog();
 				counter_toolong++;
 			}
 			else
 			{
-				insertRecord(rec_type::RNAM);
+                insertRecord(yampt::rec_type::RNAM);
 			}
 		}
 		else if(id == "FNAM")
 		{
 			if(friendly.size() > 31)
 			{
-				merger_log_ptr = &merger_log[3];
+                merger_log_ptr = &yampt::merger_log[3];
 				makeLog();
 				counter_toolong++;
 			}
 			else
 			{
-				insertRecord(rec_type::FNAM);
+                insertRecord(yampt::rec_type::FNAM);
 			}
 		}
 		else if(id == "INFO")
 		{
 			if(friendly.size() > 512)
 			{
-				merger_log_ptr = &merger_log[4];
+                merger_log_ptr = &yampt::merger_log[4];
 				makeLog();
-				insertRecord(rec_type::INFO);
+                insertRecord(yampt::rec_type::INFO);
 			}
 			else
 			{
-				insertRecord(rec_type::INFO);
+                insertRecord(yampt::rec_type::INFO);
 			}
 		}
 		else
 		{
-			merger_log_ptr = &merger_log[2];
+            merger_log_ptr = &yampt::merger_log[2];
 			makeLog();
 			counter_invalid++;
 		}
 	}
 	else
 	{
-		merger_log_ptr = &merger_log[2];
+        merger_log_ptr = &yampt::merger_log[2];
 		makeLog();
 		counter_invalid++;
 	}
 }
 
 //----------------------------------------------------------
-void DictReader::insertRecord(rec_type type)
+void DictReader::insertRecord(yampt::rec_type type)
 {
 	if(dict[type].insert({unique_key, friendly}).second == true)
 	{
@@ -254,7 +251,7 @@ void DictReader::insertRecord(rec_type type)
 	}
 	else
 	{
-		merger_log_ptr = &merger_log[1];
+        merger_log_ptr = &yampt::merger_log[1];
 		makeLog();
 		counter_doubled++;
 	}
@@ -264,32 +261,32 @@ void DictReader::insertRecord(rec_type type)
 void DictReader::makeLogHeader()
 {
 	log += "<!-- Loading " + name + "... -->\r\n";
-	log += sep_line + "\r\n";
+    log += yampt::sep_line + "\r\n";
 }
 
 //----------------------------------------------------------
 void DictReader::makeLog()
 {
 	log += "<!-- " + *merger_log_ptr;
-	if(merger_log_ptr == &merger_log[3] || merger_log_ptr == &merger_log[4])
+    if(merger_log_ptr == &yampt::merger_log[3] || merger_log_ptr == &yampt::merger_log[4])
         {
-                log += " (" + to_string(friendly.size()) + " bytes)";
+                log += " (" + std::to_string(friendly.size()) + " bytes)";
         }
         log += " -->\r\n";
-	log += sep[1] + unique_key + sep[2] + friendly + sep[3] + "\r\n";
-	log += sep_line + "\r\n";
+    log += yampt::sep[1] + unique_key + yampt::sep[2] + friendly + yampt::sep[3] + "\r\n";
+    log += yampt::sep_line + "\r\n";
 }
 
 //----------------------------------------------------------
 void DictReader::printLog()
 {
-	cout << "--------------------------------------------------" << endl
-	     << "    Loaded / Doubled / Too long / Invalid /    All" << endl
-	     << "--------------------------------------------------" << endl
-	     << setw(10) << to_string(counter_loaded) << " / "
-	     << setw(7) << to_string(counter_doubled) << " / "
-	     << setw(8) << to_string(counter_toolong) << " / "
-	     << setw(7) << to_string(counter_invalid) << " / "
-	     << setw(6) << to_string(counter_all) << endl
-	     << "--------------------------------------------------" << endl;
+    std::cout << "--------------------------------------------------" << std::endl
+         << "    Loaded / Doubled / Too long / Invalid /    All" << std::endl
+         << "--------------------------------------------------" << std::endl
+         << std::setw(10) << std::to_string(counter_loaded) << " / "
+         << std::setw(7) << std::to_string(counter_doubled) << " / "
+         << std::setw(8) << std::to_string(counter_toolong) << " / "
+         << std::setw(7) << std::to_string(counter_invalid) << " / "
+         << std::setw(6) << std::to_string(counter_all) << std::endl
+         << "--------------------------------------------------" << std::endl;
 }

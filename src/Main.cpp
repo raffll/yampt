@@ -1,10 +1,9 @@
 #include "UserInterface.hpp"
 
-using namespace std;
-
+//----------------------------------------------------------
 int main(int argc, char *argv[])
 {
-	vector<string> arg;
+    std::vector<std::string> arg;
 	for(int i = 0; i < argc; i++)
 	{
 		arg.push_back(argv[i]);

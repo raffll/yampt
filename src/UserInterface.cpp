@@ -1,13 +1,10 @@
 #include "UserInterface.hpp"
 
-using namespace std;
-using namespace yampt;
-
 //----------------------------------------------------------
-UserInterface::UserInterface(vector<string> &a)
+UserInterface::UserInterface(std::vector<std::string> &a)
 {
 	arg = a;
-	string command;
+    std::string command;
 	std::vector<std::string> dict_p_tmp;
 	if(arg.size() > 1)
 	{
@@ -106,12 +103,12 @@ UserInterface::UserInterface(vector<string> &a)
 		}
 		else
 		{
-			cout << "Syntax error!" << endl;
+            std::cout << "Syntax error!" << std::endl;
 		}
 	}
 	else
 	{
-		cout << "Syntax error!" << endl;
+        std::cout << "Syntax error!" << std::endl;
 	}
 }
 
@@ -137,7 +134,7 @@ void UserInterface::makeDictBase()
 //----------------------------------------------------------
 void UserInterface::makeDictAll()
 {
-	string log;
+    std::string log;
 
 	DictMerger merger(dict_p);
 	merger.mergeDict();
@@ -146,7 +143,7 @@ void UserInterface::makeDictAll()
 
 	for(size_t i = 0; i < file_p.size(); ++i)
 	{
-		DictCreator creator(file_p[i], merger, ins_mode::ALL);
+        DictCreator creator(file_p[i], merger, yampt::ins_mode::ALL);
 		creator.makeDict();
 		writer.writeDict(creator.getDict(), creator.getNamePrefix() + ".ALL.dic");
 	}
@@ -157,7 +154,7 @@ void UserInterface::makeDictAll()
 //----------------------------------------------------------
 void UserInterface::makeDictNotFound()
 {
-	string log;
+    std::string log;
 
 	DictMerger merger(dict_p);
 	merger.mergeDict();
@@ -166,7 +163,7 @@ void UserInterface::makeDictNotFound()
 
 	for(size_t i = 0; i < file_p.size(); ++i)
 	{
-		DictCreator creator(file_p[i], merger, ins_mode::NOTFOUND);
+        DictCreator creator(file_p[i], merger, yampt::ins_mode::NOTFOUND);
 		creator.makeDict();
 		writer.writeDict(creator.getDict(), creator.getNamePrefix() + ".NOTFOUND.dic");
 	}
@@ -177,7 +174,7 @@ void UserInterface::makeDictNotFound()
 //----------------------------------------------------------
 void UserInterface::makeDictChanged()
 {
-	string log;
+    std::string log;
 
 	DictMerger merger(dict_p);
 	merger.mergeDict();
@@ -186,7 +183,7 @@ void UserInterface::makeDictChanged()
 
 	for(size_t i = 0; i < file_p.size(); ++i)
 	{
-		DictCreator creator(file_p[i], merger, ins_mode::CHANGED);
+        DictCreator creator(file_p[i], merger, yampt::ins_mode::CHANGED);
 		creator.makeDict();
 		writer.writeDict(creator.getDict(), creator.getNamePrefix() + ".CHANGED.dic");
 	}
@@ -197,7 +194,7 @@ void UserInterface::makeDictChanged()
 //----------------------------------------------------------
 void UserInterface::mergeDict()
 {
-	string log;
+    std::string log;
 
 	DictMerger merger(dict_p);
 	merger.mergeDict();
@@ -211,7 +208,7 @@ void UserInterface::mergeDict()
 //----------------------------------------------------------
 void UserInterface::convertEsm()
 {
-	string log;
+    std::string log;
 
 	DictMerger merger(dict_p);
 	merger.mergeDict();

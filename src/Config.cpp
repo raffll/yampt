@@ -1,53 +1,50 @@
 #include "Config.hpp"
 
-using namespace std;
-using namespace yampt;
-
 //----------------------------------------------------------
-void Writer::writeDict(const dict_t &dict, string name)
+void Writer::writeDict(const yampt::dict_t &dict, std::string name)
 {
 	if(getSize(dict) > 0)
 	{
-		ofstream file(name, ios::binary);
+        std::ofstream file(name, std::ios::binary);
 		for(size_t i = 0; i < dict.size(); ++i)
 		{
 			for(const auto &elem : dict[i])
 			{
-				if(i == rec_type::BNAM || i == rec_type::SCTX)
+                if(i == yampt::rec_type::BNAM || i == yampt::rec_type::SCTX)
 				{
-					file << sep_line << "\r\n"
-					     << sep[1] << elem.first
-					     << sep[2] << "\r\n        " << sep[0] << elem.second
-					     << sep[3] << "\r\n";
+                    file << yampt::sep_line << "\r\n"
+                         << yampt::sep[1] << elem.first
+                         << yampt::sep[2] << "\r\n        " << yampt::sep[0] << elem.second
+                         << yampt::sep[3] << "\r\n";
 				}
 				else
 				{
-					file << sep_line << "\r\n"
-					     << sep[1] << elem.first
-					     << sep[2] << elem.second
-					     << sep[3] << "\r\n";
+                    file << yampt::sep_line << "\r\n"
+                         << yampt::sep[1] << elem.first
+                         << yampt::sep[2] << elem.second
+                         << yampt::sep[3] << "\r\n";
 				}
 			}
 		}
-		cout << "--> Writing " << to_string(getSize(dict)) <<
-			" records to " << name << "..." << endl;
+        std::cout << "--> Writing " << std::to_string(getSize(dict)) <<
+            " records to " << name << "..." << std::endl;
 	}
 	else
 	{
-		cout << "--> No records to make dictionary!" << endl;
+        std::cout << "--> No records to make dictionary!" << std::endl;
 	}
 }
 
 //----------------------------------------------------------
-void Writer::writeText(const string &text, string name)
+void Writer::writeText(const std::string &text, std::string name)
 {
-	ofstream file(name, ios::binary);
+    std::ofstream file(name, std::ios::binary);
 	file << text;
-	cout << "--> Writing " << name << "..." << endl;
+    std::cout << "--> Writing " << name << "..." << std::endl;
 }
 
 //----------------------------------------------------------
-int Writer::getSize(const dict_t &dict)
+int Writer::getSize(const yampt::dict_t &dict)
 {
 	int size = 0;
 	for(auto const &elem : dict)
@@ -58,7 +55,7 @@ int Writer::getSize(const dict_t &dict)
 }
 
 //----------------------------------------------------------
-unsigned int Tools::convertByteArrayToInt(const string &str)
+unsigned int Tools::convertByteArrayToInt(const std::string &str)
 {
 	char buffer[4];
 	unsigned char ubuffer[4];
@@ -83,11 +80,11 @@ unsigned int Tools::convertByteArrayToInt(const string &str)
 }
 
 //----------------------------------------------------------
-string Tools::convertIntToByteArray(unsigned int x)
+std::string Tools::convertIntToByteArray(unsigned int x)
 {
 	char bytes[4];
-	string str;
-	copy(static_cast<const char*>(static_cast<const void*>(&x)),
+    std::string str;
+    std::copy(static_cast<const char*>(static_cast<const void*>(&x)),
 	     static_cast<const char*>(static_cast<const void*>(&x)) + sizeof x,
 	     bytes);
 	for(int i = 0; i < 4; i++)
@@ -98,7 +95,7 @@ string Tools::convertIntToByteArray(unsigned int x)
 }
 
 //----------------------------------------------------------
-bool Tools::caseInsensitiveStringCmp(string lhs, string rhs)
+bool Tools::caseInsensitiveStringCmp(std::string lhs, std::string rhs)
 {
 	transform(lhs.begin(), lhs.end(), lhs.begin(), ::toupper);
 	transform(rhs.begin(), rhs.end(), rhs.begin(), ::toupper);
@@ -113,19 +110,19 @@ bool Tools::caseInsensitiveStringCmp(string lhs, string rhs)
 }
 
 //----------------------------------------------------------
-void Tools::eraseNullChars(string &str)
+void Tools::eraseNullChars(std::string &str)
 {
 	size_t is_null = str.find('\0');
-	if(is_null != string::npos)
+    if(is_null != std::string::npos)
 	{
 		str.erase(is_null);
 	}
 }
 
 //----------------------------------------------------------
-string Tools::eraseCarriageReturnChar(string &str)
+std::string Tools::eraseCarriageReturnChar(std::string &str)
 {
-	if(str.find('\r') != string::npos)
+    if(str.find('\r') != std::string::npos)
 	{
 		str.erase(str.size() - 1);
 	}
@@ -133,9 +130,9 @@ string Tools::eraseCarriageReturnChar(string &str)
 }
 
 //----------------------------------------------------------
-string Tools::replaceNonReadableCharWithDot(const string &str)
+std::string Tools::replaceNonReadableCharWithDot(const std::string &str)
 {
-	string text;
+    std::string text;
 	for(size_t i = 0; i < str.size(); ++i)
 	{
 		if(isprint(str[i]))

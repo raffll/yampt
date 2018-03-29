@@ -1,15 +1,12 @@
 #include "DictCreator.hpp"
 
-using namespace std;
-using namespace yampt;
-
 //----------------------------------------------------------
-DictCreator::DictCreator(string path_n)
+DictCreator::DictCreator(std::string path_n)
 {
 	esm_ptr = &esm_n;
 	message_ptr = &message_n;
 
-	mode = ins_mode::RAW;
+    mode = yampt::ins_mode::RAW;
 
 	esm_n.readFile(path_n);
 
@@ -21,12 +18,12 @@ DictCreator::DictCreator(string path_n)
 }
 
 //----------------------------------------------------------
-DictCreator::DictCreator(string path_n, string path_f)
+DictCreator::DictCreator(std::string path_n, std::string path_f)
 {
 	esm_ptr = &esm_f;
 	message_ptr = &message_f;
 
-	mode = ins_mode::BASE;
+    mode = yampt::ins_mode::BASE;
 
 	esm_n.readFile(path_n);
 	esm_f.readFile(path_f);
@@ -46,7 +43,7 @@ DictCreator::DictCreator(string path_n, string path_f)
 }
 
 //----------------------------------------------------------
-DictCreator::DictCreator(string path_n, DictMerger &merger, ins_mode mode)
+DictCreator::DictCreator(std::string path_n, DictMerger &merger, yampt::ins_mode mode)
 {
 	this->merger = &merger;
 	this->mode = mode;
@@ -97,7 +94,7 @@ void DictCreator::makeDictBasic()
 		makeDictBNAM();
 		makeDictSCPT();
 
-		cout << "----------------------------------------------" << endl;
+        std::cout << "----------------------------------------------" << std::endl;
 	}
 }
 
@@ -122,35 +119,35 @@ void DictCreator::makeDictExtended()
 		makeDictBNAMExtended();
 		makeDictSCPTExtended();
 
-		cout << "----------------------------------------------" << endl;
+        std::cout << "----------------------------------------------" << std::endl;
 	}
 }
 
 //----------------------------------------------------------
 void DictCreator::printLogHeader()
 {
-	cout << "----------------------------------------------" << endl
-	     << "         Created / Doubled / Identical /   All" << endl
-	     << "----------------------------------------------" << endl;
+    std::cout << "----------------------------------------------" << std::endl
+         << "         Created / Doubled / Identical /   All" << std::endl
+         << "----------------------------------------------" << std::endl;
 }
 
 //----------------------------------------------------------
-void DictCreator::printLog(string id)
+void DictCreator::printLog(std::string id)
 {
-	string id_text = id;
+    std::string id_text = id;
 	id_text.resize(9, ' ');
-	cout << id_text
-	     << setw(7) << to_string(counter_created) << " / "
-	     << setw(7) << to_string(counter_doubled) << " / "
-	     << setw(8) << to_string(counter_identical) << " / "
-	     << setw(6) << to_string(counter_all) << endl;
+    std::cout << id_text
+         << std::setw(7) << std::to_string(counter_created) << " / "
+         << std::setw(7) << std::to_string(counter_doubled) << " / "
+         << std::setw(8) << std::to_string(counter_identical) << " / "
+         << std::setw(6) << std::to_string(counter_all) << std::endl;
 }
 
 //----------------------------------------------------------
 bool DictCreator::compareMasterFiles()
 {
-	string esm_n_compare;
-	string esm_f_compare;
+    std::string esm_n_compare;
+    std::string esm_f_compare;
 
 	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
 	{
@@ -166,11 +163,11 @@ bool DictCreator::compareMasterFiles()
 
 	if(esm_n_compare != esm_f_compare)
 	{
-		cout << "--> Files have records in different order!" << endl;
-		cout << "    If any doubled records will be created," << endl;
-		cout <<	"    please check DIAL and CELL dictionary manually!" << endl;
-		cout << "    Problematic records are marked as DOUBLED." << endl;
-		cout << "    Please be patient..." << endl;
+        std::cout << "--> Files have records in different order!" << std::endl;
+        std::cout << "    If any doubled records will be created," << std::endl;
+        std::cout <<	"    please check DIAL and CELL dictionary manually!" << std::endl;
+        std::cout << "    Problematic records are marked as DOUBLED." << std::endl;
+        std::cout << "    Please be patient..." << std::endl;
 		return false;
 	}
 	else
@@ -189,23 +186,23 @@ void DictCreator::resetCounters()
 }
 
 //----------------------------------------------------------
-void DictCreator::validateRecord(const string &unique_key, const string &friendly, rec_type type)
+void DictCreator::validateRecord(const std::string &unique_key, const std::string &friendly, yampt::rec_type type)
 {
 	counter_all++;
 
 	// Insert without special cases
-	if(mode == ins_mode::RAW || mode == ins_mode::BASE)
+    if(mode == yampt::ins_mode::RAW || mode == yampt::ins_mode::BASE)
 	{
 		insertRecord(unique_key, friendly, type);
 	}
 
 	// For CELL, DIAL, BNAM, SCTX find corresponding record in dictionary given by user
-	if(mode == ins_mode::ALL)
+    if(mode == yampt::ins_mode::ALL)
 	{
-		if(type == rec_type::CELL ||
-		   type == rec_type::DIAL ||
-		   type == rec_type::BNAM ||
-		   type == rec_type::SCTX)
+        if(type == yampt::rec_type::CELL ||
+           type == yampt::rec_type::DIAL ||
+           type == yampt::rec_type::BNAM ||
+           type == yampt::rec_type::SCTX)
 		{
 			auto search = merger->getDict()[type].find(unique_key);
 			if(search != merger->getDict()[type].end())
@@ -224,7 +221,7 @@ void DictCreator::validateRecord(const string &unique_key, const string &friendl
 	}
 
 	// Insert only ones not found in dictionary given by user
-	if(mode == ins_mode::NOTFOUND)
+    if(mode == yampt::ins_mode::NOTFOUND)
 	{
 		auto search = merger->getDict()[type].find(unique_key);
 		if(search == merger->getDict()[type].end())
@@ -234,15 +231,15 @@ void DictCreator::validateRecord(const string &unique_key, const string &friendl
 	}
 
 	// Insert only with changed friendly text compared to dictionary given by user
-	if(mode == ins_mode::CHANGED)
+    if(mode == yampt::ins_mode::CHANGED)
 	{
-		if(type == rec_type::GMST ||
-		   type == rec_type::FNAM ||
-		   type == rec_type::DESC ||
-		   type == rec_type::TEXT ||
-		   type == rec_type::RNAM ||
-		   type == rec_type::INDX ||
-		   type == rec_type::INFO)
+        if(type == yampt::rec_type::GMST ||
+           type == yampt::rec_type::FNAM ||
+           type == yampt::rec_type::DESC ||
+           type == yampt::rec_type::TEXT ||
+           type == yampt::rec_type::RNAM ||
+           type == yampt::rec_type::INDX ||
+           type == yampt::rec_type::INFO)
 		{
 			auto search = merger->getDict()[type].find(unique_key);
 			if(search != merger->getDict()[type].end())
@@ -257,7 +254,7 @@ void DictCreator::validateRecord(const string &unique_key, const string &friendl
 }
 
 //----------------------------------------------------------
-void DictCreator::insertRecord(const string &unique_key, const string &friendly, rec_type type)
+void DictCreator::insertRecord(const std::string &unique_key, const std::string &friendly, yampt::rec_type type)
 {
 	if(dict[type].insert({unique_key, friendly}).second == true)
 	{
@@ -268,7 +265,7 @@ void DictCreator::insertRecord(const string &unique_key, const string &friendly,
 		auto search = dict[type].find(unique_key);
 		if(friendly != search->second)
 		{
-			string temp = unique_key + "<DOUBLED_" + to_string(counter_doubled + 1) + ">";
+            std::string temp = unique_key + "<DOUBLED_" + std::to_string(counter_doubled + 1) + ">";
 			if(dict[type].insert({temp, friendly}).second == true)
 			{
 				counter_doubled++;
@@ -286,14 +283,14 @@ void DictCreator::insertRecord(const string &unique_key, const string &friendly,
 }
 
 //----------------------------------------------------------
-string DictCreator::dialTranslator(string to_translate)
+std::string DictCreator::dialTranslator(std::string to_translate)
 {
-	if(mode == ins_mode::ALL ||
-	   mode == ins_mode::NOTFOUND ||
-	   mode == ins_mode::CHANGED)
+    if(mode == yampt::ins_mode::ALL ||
+       mode == yampt::ins_mode::NOTFOUND ||
+       mode == yampt::ins_mode::CHANGED)
 	{
-		auto search = merger->getDict()[rec_type::DIAL].find("DIAL" + sep[0] + to_translate);
-		if(search != merger->getDict()[rec_type::DIAL].end())
+        auto search = merger->getDict()[yampt::rec_type::DIAL].find("DIAL" + yampt::sep[0] + to_translate);
+        if(search != merger->getDict()[yampt::rec_type::DIAL].end())
 		{
 			return search->second;
 		}
@@ -302,17 +299,17 @@ string DictCreator::dialTranslator(string to_translate)
 }
 
 //----------------------------------------------------------
-vector<string> DictCreator::makeMessageColl(const string &script_text)
+std::vector<std::string> DictCreator::makeMessageColl(const std::string &script_text)
 {
-	vector<string> message;
+    std::vector<std::string> message;
 	bool found;
-	string line;
-	string line_lc;
+    std::string line;
+    std::string line_lc;
 	size_t pos;
 
-	istringstream ss(script_text);
+    std::istringstream ss(script_text);
 
-	while(getline(ss, line))
+    while(std::getline(ss, line))
 	{
 		found = false;
 		eraseCarriageReturnChar(line);
@@ -320,13 +317,13 @@ vector<string> DictCreator::makeMessageColl(const string &script_text)
 		transform(line_lc.begin(), line_lc.end(),
 			  line_lc.begin(), ::tolower);
 
-		for(auto const &elem : key_message)
+        for(auto const &elem : yampt::key_message)
 		{
 			if(found == false)
 			{
 				pos = line_lc.find(elem);
-				if(pos != string::npos &&
-				   line.rfind(";", pos) == string::npos)
+                if(pos != std::string::npos &&
+                   line.rfind(";", pos) == std::string::npos)
 				{
 					message.push_back(line);
 					found = true;
@@ -370,9 +367,9 @@ void DictCreator::makeDictCELL()
 			if(esm_n.getUniqueStatus() == true &&
 			   esm_n.getFriendlyStatus() == true)
 			{
-				validateRecord("CELL" + sep[0] + esm_ptr->getFriendly(),
+                validateRecord("CELL" + yampt::sep[0] + esm_ptr->getFriendly(),
 					       esm_n.getFriendly(),
-					       rec_type::CELL);
+                           yampt::rec_type::CELL);
 			}
 		}
 	}
@@ -384,11 +381,11 @@ void DictCreator::makeDictCELL()
 void DictCreator::makeDictCELLExtended()
 {
 	resetCounters();
-	string pattern;
-	string match;
+    std::string pattern;
+    std::string match;
 	bool found = false;
 
-	cout << "CELL in progress..." << flush;
+    std::cout << "CELL in progress..." << std::flush;
 
 	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
 	{
@@ -457,20 +454,20 @@ void DictCreator::makeDictCELLExtended()
 
 				if(esm_n.getFriendlyStatus() == true)
 				{
-					validateRecord("CELL" + sep[0] + esm_f.getFriendly(),
+                    validateRecord("CELL" + yampt::sep[0] + esm_f.getFriendly(),
 						       esm_n.getFriendly(),
-						       rec_type::CELL);
+                               yampt::rec_type::CELL);
 				}
 
 				if(counter_created % 25 == 0)
 				{
-					cout << "." << flush;
+                    std::cout << "." << std::flush;
 				}
 			}
 		}
 	}
 
-	cout << endl;
+    std::cout << std::endl;
 
 	printLog("CELL");
 }
@@ -495,9 +492,9 @@ void DictCreator::makeDictDefaultCELL()
                         if(esm_n.getUnique() == "sDefaultCellname" &&
 			   esm_n.getFriendlyStatus() == true)
                         {
-				validateRecord("CELL" + sep[0] + esm_ptr->getFriendly(),
+                validateRecord("CELL" + yampt::sep[0] + esm_ptr->getFriendly(),
 						esm_n.getFriendly(),
-						rec_type::CELL);
+                        yampt::rec_type::CELL);
                         }
 		}
 	}
@@ -533,9 +530,9 @@ void DictCreator::makeDictDefaultCELLExtended()
 						if(esm_f.getUnique() == "sDefaultCellname" &&
 						   esm_f.getFriendlyStatus() == true)
 						{
-							validateRecord("CELL" + sep[0] + esm_f.getFriendly(),
+                            validateRecord("CELL" + yampt::sep[0] + esm_f.getFriendly(),
 									esm_n.getFriendly(),
-									rec_type::CELL);
+                                    yampt::rec_type::CELL);
 							break;
 						}
 					}
@@ -567,9 +564,9 @@ void DictCreator::makeDictRegionCELL()
                         if(esm_n.getUniqueStatus() == true &&
 			   esm_n.getFriendlyStatus() == true)
                         {
-				validateRecord("CELL" + sep[0] + esm_ptr->getFriendly(),
+                validateRecord("CELL" + yampt::sep[0] + esm_ptr->getFriendly(),
 						esm_n.getFriendly(),
-						rec_type::CELL);
+                        yampt::rec_type::CELL);
                         }
 		}
 	}
@@ -605,9 +602,9 @@ void DictCreator::makeDictRegionCELLExtended()
 						if(esm_f.getUnique() == esm_n.getUnique() &&
 						   esm_f.getFriendlyStatus() == true)
 						{
-							validateRecord("CELL" + sep[0] + esm_f.getFriendly(),
+                            validateRecord("CELL" + yampt::sep[0] + esm_f.getFriendly(),
 									esm_n.getFriendly(),
-									rec_type::CELL);
+                                    yampt::rec_type::CELL);
 							break;
 						}
 					}
@@ -637,9 +634,9 @@ void DictCreator::makeDictGMST()
 			   esm_n.getFriendlyStatus() == true &&
 			   esm_n.getUnique().substr(0, 1) == "s")	// Make sure is string
 			{
-				validateRecord("GMST" + sep[0] + esm_n.getUnique(),
+                validateRecord("GMST" + yampt::sep[0] + esm_n.getUnique(),
 					       esm_n.getFriendly(),
-					       rec_type::GMST);
+                           yampt::rec_type::GMST);
 			}
 		}
 	}
@@ -688,9 +685,9 @@ void DictCreator::makeDictFNAM()
 			   esm_n.getFriendlyStatus() == true &&
 			   esm_n.getUnique() != "player")	// Skip player name
 			{
-				validateRecord("FNAM" + sep[0] + esm_n.getRecId() + sep[0] + esm_n.getUnique(),
+                validateRecord("FNAM" + yampt::sep[0] + esm_n.getRecId() + yampt::sep[0] + esm_n.getUnique(),
 					       esm_n.getFriendly(),
-					       rec_type::FNAM);
+                           yampt::rec_type::FNAM);
 			}
 		}
 	}
@@ -717,9 +714,9 @@ void DictCreator::makeDictDESC()
 			if(esm_n.getUniqueStatus() == true &&
 			   esm_n.getFriendlyStatus() == true)
 			{
-				validateRecord("DESC" + sep[0] + esm_n.getRecId() + sep[0] + esm_n.getUnique(),
+                validateRecord("DESC" + yampt::sep[0] + esm_n.getRecId() + yampt::sep[0] + esm_n.getUnique(),
 					       esm_n.getFriendly(),
-					       rec_type::DESC);
+                           yampt::rec_type::DESC);
 			}
 		}
 	}
@@ -744,9 +741,9 @@ void DictCreator::makeDictTEXT()
 			if(esm_n.getUniqueStatus() == true &&
 			   esm_n.getFriendlyStatus() == true)
 			{
-				validateRecord("TEXT" + sep[0] + esm_n.getUnique(),
+                validateRecord("TEXT" + yampt::sep[0] + esm_n.getUnique(),
 					       esm_n.getFriendly(),
-					       rec_type::TEXT);
+                           yampt::rec_type::TEXT);
 			}
 		}
 	}
@@ -772,9 +769,9 @@ void DictCreator::makeDictRNAM()
 			{
 				while(esm_n.getFriendlyStatus() == true)
 				{
-					validateRecord("RNAM" + sep[0] + esm_n.getUnique() + sep[0] + to_string(esm_n.getFriendlyCounter()),
+                    validateRecord("RNAM" + yampt::sep[0] + esm_n.getUnique() + yampt::sep[0] + std::to_string(esm_n.getFriendlyCounter()),
 						       esm_n.getFriendly(),
-						       rec_type::RNAM);
+                               yampt::rec_type::RNAM);
 
 					esm_n.setFriendly("RNAM", true, true);
 				}
@@ -803,9 +800,9 @@ void DictCreator::makeDictINDX()
 			if(esm_n.getUniqueStatus() == true &&
 			   esm_n.getFriendlyStatus() == true)
 			{
-				validateRecord("INDX" + sep[0] + esm_n.getRecId() + sep[0] + esm_n.getUnique(),
+                validateRecord("INDX" + yampt::sep[0] + esm_n.getRecId() + yampt::sep[0] + esm_n.getUnique(),
 					       esm_n.getFriendly(),
-					       rec_type::INDX);
+                           yampt::rec_type::INDX);
 			}
 		}
 	}
@@ -832,9 +829,9 @@ void DictCreator::makeDictDIAL()
 			if(esm_n.getUnique() == "T" &&
 			   esm_n.getFriendlyStatus() == true)
 			{
-				validateRecord("DIAL" + sep[0] + esm_ptr->getFriendly(),
+                validateRecord("DIAL" + yampt::sep[0] + esm_ptr->getFriendly(),
 					       esm_n.getFriendly(),
-					       rec_type::DIAL);
+                           yampt::rec_type::DIAL);
 			}
 		}
 	}
@@ -846,10 +843,10 @@ void DictCreator::makeDictDIAL()
 void DictCreator::makeDictDIALExtended()
 {
 	resetCounters();
-	string pattern;
-	string match;
+    std::string pattern;
+    std::string match;
 
-	cout << "DIAL in progress...";
+    std::cout << "DIAL in progress...";
 
 	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
 	{
@@ -872,7 +869,7 @@ void DictCreator::makeDictDIALExtended()
 				esm_n.setRec(i);
 				esm_n.setFriendly("NAME");
 
-				//cout << "Pattern: " << pattern << endl;
+                //std::cout << "Pattern: " << pattern << std::endl;
 
 				// Search for all match
 				for(size_t k = 0; k < esm_f.getRecColl().size(); ++k)
@@ -894,7 +891,7 @@ void DictCreator::makeDictDIALExtended()
 							esm_f.setRec(k);
 							esm_f.setFriendly("NAME");
 
-							//cout << "Match: " << match << endl;
+                            //std::cout << "Match: " << match << std::endl;
 
 							break;
 						}
@@ -904,22 +901,22 @@ void DictCreator::makeDictDIALExtended()
 				if(esm_n.getFriendlyStatus() == true &&
 				   esm_f.getFriendlyStatus() == true)
 				{
-					//cout << esm_f.getFriendly() << " <<< " << esm_n.getFriendly() << endl;
+                    //std::cout << esm_f.getFriendly() << " <<< " << esm_n.getFriendly() << std::endl;
 
-					validateRecord("DIAL" + sep[0] + esm_f.getFriendly(),
+                    validateRecord("DIAL" + yampt::sep[0] + esm_f.getFriendly(),
 						       esm_n.getFriendly(),
-						       rec_type::CELL);
+                               yampt::rec_type::CELL);
 				}
 
 				if(counter_created % 25 == 0)
 				{
-					cout << "." << flush;
+                    std::cout << "." << std::flush;
 				}
 			}
 		}
 	}
 
-	cout << endl;
+    std::cout << std::endl;
 
 	printLog("DIAL");
 }
@@ -928,7 +925,7 @@ void DictCreator::makeDictDIALExtended()
 void DictCreator::makeDictINFO()
 {
 	resetCounters();
-	string dialog_topic;
+    std::string dialog_topic;
 
 	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
 	{
@@ -942,7 +939,7 @@ void DictCreator::makeDictINFO()
 			if(esm_n.getUniqueStatus() == true &&
 			   esm_n.getFriendlyStatus() == true)
 			{
-				dialog_topic = esm_n.getUnique() + sep[0] + dialTranslator(esm_n.getFriendly());
+                dialog_topic = esm_n.getUnique() + yampt::sep[0] + dialTranslator(esm_n.getFriendly());
 			}
 			else
 			{
@@ -958,9 +955,9 @@ void DictCreator::makeDictINFO()
 			if(esm_n.getUniqueStatus() == true &&
 			   esm_n.getFriendlyStatus() == true)
 			{
-				validateRecord("INFO" + sep[0] + dialog_topic + sep[0] + esm_n.getUnique(),
+                validateRecord("INFO" + yampt::sep[0] + dialog_topic + yampt::sep[0] + esm_n.getUnique(),
 					       esm_n.getFriendly(),
-					       rec_type::INFO);
+                           yampt::rec_type::INFO);
 			}
 		}
 	}
@@ -990,9 +987,9 @@ void DictCreator::makeDictBNAM()
 
 				for(size_t k = 0; k < message_n.size(); ++k)
 				{
-					validateRecord("BNAM" + sep[0] + message_ptr->at(k),
+                    validateRecord("BNAM" + yampt::sep[0] + message_ptr->at(k),
 						       message_n.at(k),
-						       rec_type::BNAM);
+                               yampt::rec_type::BNAM);
 				}
 			}
 		}
@@ -1006,7 +1003,7 @@ void DictCreator::makeDictBNAMExtended()
 {
 	resetCounters();
 
-	cout << "BNAM in progress...";
+    std::cout << "BNAM in progress...";
 
 	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
 	{
@@ -1039,17 +1036,17 @@ void DictCreator::makeDictBNAMExtended()
 							{
 								for(size_t k = 0; k < message_n.size(); ++k)
 								{
-									//cout << "---" << endl;
-									//cout << message_f.at(k) << endl;
-									//cout << message_n.at(k) << endl;
+                                    //std::cout << "---" << std::endl;
+                                    //std::cout << message_f.at(k) << std::endl;
+                                    //std::cout << message_n.at(k) << std::endl;
 
-									validateRecord("BNAM" + sep[0] + message_f.at(k),
+                                    validateRecord("BNAM" + yampt::sep[0] + message_f.at(k),
 										       message_n.at(k),
-										       rec_type::BNAM);
+                                               yampt::rec_type::BNAM);
 
 									if(counter_created % 25 == 0)
 									{
-										cout << "." << flush;
+                                        std::cout << "." << std::flush;
 									}
 								}
 								break;
@@ -1061,7 +1058,7 @@ void DictCreator::makeDictBNAMExtended()
 		}
 	}
 
-	cout << endl;
+    std::cout << std::endl;
 
 	printLog("BNAM");
 }
@@ -1088,9 +1085,9 @@ void DictCreator::makeDictSCPT()
 
 				for(size_t k = 0; k < message_n.size(); ++k)
 				{
-					validateRecord("SCTX" + sep[0] + message_ptr->at(k),
+                    validateRecord("SCTX" + yampt::sep[0] + message_ptr->at(k),
 						       message_n.at(k),
-						       rec_type::SCTX);
+                               yampt::rec_type::SCTX);
 				}
 			}
 		}
@@ -1104,7 +1101,7 @@ void DictCreator::makeDictSCPTExtended()
 {
 	resetCounters();
 
-	cout << "SCTX in progress...";
+    std::cout << "SCTX in progress...";
 
 	for(size_t i = 0; i < esm_n.getRecColl().size(); ++i)
 	{
@@ -1137,17 +1134,17 @@ void DictCreator::makeDictSCPTExtended()
 							{
 								for(size_t k = 0; k < message_n.size(); ++k)
 								{
-									//cout << "---" << endl;
-									//cout << message_f.at(k) << endl;
-									//cout << message_n.at(k) << endl;
+                                    //std::cout << "---" << std::endl;
+                                    //std::cout << message_f.at(k) << std::endl;
+                                    //std::cout << message_n.at(k) << std::endl;
 
-									validateRecord("SCTX" + sep[0] + message_f.at(k),
+                                    validateRecord("SCTX" + yampt::sep[0] + message_f.at(k),
 										       message_n.at(k),
-										       rec_type::BNAM);
+                                               yampt::rec_type::BNAM);
 
 									if(counter_created % 25 == 0)
 									{
-										cout << "." << flush;
+                                        std::cout << "." << std::flush;
 									}
 								}
 								break;
@@ -1159,7 +1156,7 @@ void DictCreator::makeDictSCPTExtended()
 		}
 	}
 
-	cout << endl;
+    std::cout << std::endl;
 
 	printLog("SCTX");
 }

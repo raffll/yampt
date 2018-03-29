@@ -1,8 +1,5 @@
 #include "DictMerger.hpp"
 
-using namespace std;
-using namespace yampt;
-
 //----------------------------------------------------------
 DictMerger::DictMerger()
 {
@@ -10,7 +7,7 @@ DictMerger::DictMerger()
 }
 
 //----------------------------------------------------------
-DictMerger::DictMerger(vector<string> &path)
+DictMerger::DictMerger(std::vector<std::string> &path)
 {
 	for(auto &elem : path)
 	{
@@ -46,7 +43,7 @@ void DictMerger::mergeDict()
 						search->second != elem.second)
 					{
 						// Found in previous dictionary - skipped
-						merger_log_ptr = &merger_log[0];
+                        merger_log_ptr = &yampt::merger_log[0];
 						makeLog(elem.first, elem.second, search->second);
 						counter_replaced++;
 					}
@@ -61,11 +58,11 @@ void DictMerger::mergeDict()
 
 		if(dict_coll.size() == 1)
 		{
-			cout << "--> Sorting complete!\r\n";
+            std::cout << "--> Sorting complete!\r\n";
 		}
 		else
 		{
-			cout << "--> Merging complete!\r\n";
+            std::cout << "--> Merging complete!\r\n";
 		}
 
 		printLog();
@@ -101,24 +98,24 @@ void DictMerger::wordList()
 	if(status == true)
 	{
 		log += "<!-- Creating word list... -->\r\n";
-		log += sep_line + "\r\n";
+        log += yampt::sep_line + "\r\n";
 
-		string word;
-		string unnecessary = "'\";:?.,!()<>";
+        std::string word;
+        std::string unnecessary = "'\";:?.,!()<>";
 
 		for(size_t type = 0; type < 11; type++)
 		{
 			for(auto &elem : dict_coll[0].getDict()[type])
 			{
-				istringstream ss(elem.second);
-				while(getline(ss, word, ' '))
+                std::istringstream ss(elem.second);
+                while(std::getline(ss, word, ' '))
 				{
-					if(word.find_first_not_of(unnecessary) != string::npos)
+                    if(word.find_first_not_of(unnecessary) != std::string::npos)
 					{
 						word.substr(word.find_first_not_of(unnecessary));
 					}
 
-					if(word.find_first_of(unnecessary) != string::npos)
+                    if(word.find_first_of(unnecessary) != std::string::npos)
 					{
 						word.erase(word.find_first_of(unnecessary));
 					}
@@ -139,15 +136,15 @@ void DictMerger::swapRecords()
 {
 	if(status == true)
 	{
-		string prefix;
-		string suffix;
+        std::string prefix;
+        std::string suffix;
 
 		for(size_t type = 0; type < 11; type++)
 		{
-			if(type == rec_type::CELL ||
-			   type == rec_type::DIAL ||
-			   type == rec_type::BNAM ||
-			   type == rec_type::SCTX)
+            if(type == yampt::rec_type::CELL ||
+               type == yampt::rec_type::DIAL ||
+               type == yampt::rec_type::BNAM ||
+               type == yampt::rec_type::SCTX)
 			{
 				for(auto &elem : dict_coll[0].getDict()[type])
 				{
@@ -174,38 +171,38 @@ void DictMerger::makeLogHeader(size_t i)
 	if(dict_coll.size() == 1)
 	{
 		log += "<!-- Nothing to merge... -->\r\n";
-		log += sep_line + "\r\n";
+        log += yampt::sep_line + "\r\n";
 	}
 	else if(dict_coll.size() > 1 && i == 1)
 	{
 		log += "<!-- Merging " + dict_coll[i].getName() + " with " + dict_coll[i - 1].getName() + "... -->\r\n";
-		log += sep_line + "\r\n";
+        log += yampt::sep_line + "\r\n";
 	}
 	else if(dict_coll.size() > 2 && i > 1)
 	{
 		log += "<!-- Merging " + dict_coll[i].getName() + " with previous dictionaries... -->\r\n";
-		log += sep_line + "\r\n";
+        log += yampt::sep_line + "\r\n";
 	}
 }
 
 //----------------------------------------------------------
-void DictMerger::makeLog(const string unique_key, const string friendly_old, const string friendly_new)
+void DictMerger::makeLog(const std::string unique_key, const std::string friendly_old, const std::string friendly_new)
 {
 
 	log += "<!-- " + *merger_log_ptr + " -->\r\n";
-	log += sep[1] + unique_key + sep[2] + friendly_old + sep[3] + "\r\n";
-	log += sep[1] + unique_key + sep[2] + friendly_new + sep[3] + "\r\n";
-	log += sep_line + "\r\n";
+    log += yampt::sep[1] + unique_key + yampt::sep[2] + friendly_old + yampt::sep[3] + "\r\n";
+    log += yampt::sep[1] + unique_key + yampt::sep[2] + friendly_new + yampt::sep[3] + "\r\n";
+    log += yampt::sep_line + "\r\n";
 }
 
 //----------------------------------------------------------
 void DictMerger::printLog()
 {
-	cout << "---------------------------------" << endl
-	     << "    Merged / Replaced / Identical" << endl
-	     << "---------------------------------" << endl
-	     << setw(10) << to_string(counter_merged) << " / "
-	     << setw(8) << to_string(counter_replaced) << " / "
-	     << setw(9) << to_string(counter_identical) << endl
-	     << "---------------------------------" << endl;
+    std::cout << "---------------------------------" << std::endl
+         << "    Merged / Replaced / Identical" << std::endl
+         << "---------------------------------" << std::endl
+         << std::setw(10) << std::to_string(counter_merged) << " / "
+         << std::setw(8) << std::to_string(counter_replaced) << " / "
+         << std::setw(9) << std::to_string(counter_identical) << std::endl
+         << "---------------------------------" << std::endl;
 }

@@ -1,10 +1,7 @@
 #include "EsmConverter.hpp"
 
-using namespace std;
-using namespace yampt;
-
 //----------------------------------------------------------
-EsmConverter::EsmConverter(string path, DictMerger &merger, bool safe, bool add_dial)
+EsmConverter::EsmConverter(std::string path, DictMerger &merger, bool safe, bool add_dial)
 {
 	this->merger = &merger;
 	this->safe = safe;
@@ -47,7 +44,7 @@ void EsmConverter::convertEsm()
 		convertSCPT();
 		convertGMDT();
 
-		cout << "----------------------------------------------" << endl;
+        std::cout << "----------------------------------------------" << std::endl;
 	}
 }
 
@@ -55,63 +52,63 @@ void EsmConverter::convertEsm()
 void EsmConverter::makeLogHeader()
 {
 	log += "<!-- Converting " + esm.getName() + "... -->\r\n";
-	log += sep_line + "\r\n";
+    log += yampt::sep_line + "\r\n";
 }
 
 //----------------------------------------------------------
-void EsmConverter::makeLog(string key)
+void EsmConverter::makeLog(std::string key)
 {
 	log += "<!-- " + *converter_log_ptr + " '" + key + "' '" + esm.getName() + "' -->\r\n";
 	log += esm.getFriendly() + " <!-- >>> -->" + "\r\n";
 	log += new_friendly + "\r\n";
-	log += sep_line + "\r\n";
+    log += yampt::sep_line + "\r\n";
 }
 
 //----------------------------------------------------------
-void EsmConverter::makeLogScript(string key)
+void EsmConverter::makeLogScript(std::string key)
 {
 	log += "<!-- " + *converter_log_ptr + " script line '" + key + "' '" + esm.getName() + "' -->\r\n";
 	log += line + " <!-- >>> -->" + "\r\n";
 	log += line_new + "\r\n";
-	log += sep_line + "\r\n";
+    log += yampt::sep_line + "\r\n";
 }
 
 //----------------------------------------------------------
 void EsmConverter::printLogHeader()
 {
-	cout << "----------------------------------------------" << endl
-	     << "      Converted / Skipped / Unchanged /    All" << endl
-	     << "----------------------------------------------" << endl;
+    std::cout << "----------------------------------------------" << std::endl
+         << "      Converted / Skipped / Unchanged /    All" << std::endl
+         << "----------------------------------------------" << std::endl;
 }
 
 //----------------------------------------------------------
-void EsmConverter::printLog(string id)
+void EsmConverter::printLog(std::string id)
 {
 	if(id == "INFO" && add_dial == true)
 	{
 		if(counter_add > 0)
 		{
-			cout << endl;
+            std::cout << std::endl;
 		}
 
-		cout << id << " "
-		     << setw(10) << to_string(counter_converted) << " / "
-		     << setw(7) << to_string(counter_skipped) << " / "
-		     << setw(9) << to_string(counter_unchanged) << " / "
-		     << setw(6) << to_string(counter_all) << endl
+        std::cout << id << " "
+             << std::setw(10) << std::to_string(counter_converted) << " / "
+             << std::setw(7) << std::to_string(counter_skipped) << " / "
+             << std::setw(9) << std::to_string(counter_unchanged) << " / "
+             << std::setw(6) << std::to_string(counter_all) << std::endl
 		     << "+ Link" << " "
-		     << setw(8) << to_string(counter_add) << " / "
-		     << setw(7) << "-" << " / "
-		     << setw(9) << "-" << " / "
-		     << setw(6) << "-" << endl;
+             << std::setw(8) << std::to_string(counter_add) << " / "
+             << std::setw(7) << "-" << " / "
+             << std::setw(9) << "-" << " / "
+             << std::setw(6) << "-" << std::endl;
 	}
 	else
 	{
-		cout << id << " "
-		     << setw(10) << to_string(counter_converted) << " / "
-		     << setw(7) << to_string(counter_skipped) << " / "
-		     << setw(9) << to_string(counter_unchanged) << " / "
-		     << setw(6) << to_string(counter_all) << endl;
+        std::cout << id << " "
+             << std::setw(10) << std::to_string(counter_converted) << " / "
+             << std::setw(7) << std::to_string(counter_skipped) << " / "
+             << std::setw(9) << std::to_string(counter_unchanged) << " / "
+             << std::setw(6) << std::to_string(counter_all) << std::endl;
 	}
 }
 
@@ -120,13 +117,13 @@ void EsmConverter::writeEsm()
 {
 	if(status == true)
 	{
-		string name = esm.getName();
-		ofstream file(name, ios::binary);
+        std::string name = esm.getName();
+        std::ofstream file(name, std::ios::binary);
 		for(auto &elem : esm.getRecColl())
 		{
 			file << elem;
 		}
-		cout << "--> Writing " << name << "...\r\n";
+        std::cout << "--> Writing " << name << "...\r\n";
 	}
 }
 
@@ -141,10 +138,10 @@ void EsmConverter::resetCounters()
 }
 
 //----------------------------------------------------------
-void EsmConverter::convertRecordContent(string text_new)
+void EsmConverter::convertRecordContent(std::string text_new)
 {
 	size_t rec_size;
-	string rec_content = esm.getRecContent();
+    std::string rec_content = esm.getRecContent();
 
 	if(esm.getFriendlyStatus() == true)
 	{
@@ -161,13 +158,13 @@ void EsmConverter::convertRecordContent(string text_new)
 	}
 	else
 	{
-		converter_log_ptr = &converter_log[4];
+        converter_log_ptr = &yampt::converter_log[4];
 		counter_unchanged++;
 	}
 }
 
 //----------------------------------------------------------
-void EsmConverter::setNewFriendly(rec_type type)
+void EsmConverter::setNewFriendly(yampt::rec_type type)
 {
 	counter_all++;
 
@@ -179,19 +176,19 @@ void EsmConverter::setNewFriendly(rec_type type)
 		if(esm.getFriendly() != new_friendly)
 		{
 			to_convert = true;
-			converter_log_ptr = &converter_log[1];
+            converter_log_ptr = &yampt::converter_log[1];
 		}
 		else
 		{
 			to_convert = false;
-			converter_log_ptr = &converter_log[2];
+            converter_log_ptr = &yampt::converter_log[2];
 			counter_skipped++;
 		}
 	}
 	else
 	{
 		to_convert = false;
-		converter_log_ptr = &converter_log[0];
+        converter_log_ptr = &yampt::converter_log[0];
 		counter_unchanged++;
 
 		new_friendly = "<N\\A>";
@@ -199,7 +196,7 @@ void EsmConverter::setNewFriendly(rec_type type)
 }
 
 //----------------------------------------------------------
-void EsmConverter::setNewFriendlyINFO(rec_type type)
+void EsmConverter::setNewFriendlyINFO(yampt::rec_type type)
 {
 	counter_all++;
 
@@ -211,12 +208,12 @@ void EsmConverter::setNewFriendlyINFO(rec_type type)
 		if(esm.getFriendly() != new_friendly)
 		{
 			to_convert = true;
-			converter_log_ptr = &converter_log[1];
+            converter_log_ptr = &yampt::converter_log[1];
 		}
 		else
 		{
 			to_convert = false;
-			converter_log_ptr = &converter_log[2];
+            converter_log_ptr = &yampt::converter_log[2];
 			counter_skipped++;
 		}
 	}
@@ -227,22 +224,22 @@ void EsmConverter::setNewFriendlyINFO(rec_type type)
 		if(esm.getFriendly() != new_friendly)
 		{
 			to_convert = true;
-			converter_log_ptr = &converter_log[3];
+            converter_log_ptr = &yampt::converter_log[3];
 
 			if(counter_add == 1)
 			{
-				cout << "Adding hyperlinks to INFO strings in progress...";
+                std::cout << "Adding hyperlinks to INFO strings in progress...";
 			}
 			counter_add++;
 			if(counter_add % 200 == 0)
 			{
-				cout << "." << flush;
+                std::cout << "." << std::flush;
 			}
 		}
 		else
 		{
 			to_convert = false;
-			converter_log_ptr = &converter_log[0];
+            converter_log_ptr = &yampt::converter_log[0];
 			counter_unchanged++;
 
 			new_friendly = "<N\\A>";
@@ -251,7 +248,7 @@ void EsmConverter::setNewFriendlyINFO(rec_type type)
 	else
 	{
 		to_convert = false;
-		converter_log_ptr = &converter_log[0];
+        converter_log_ptr = &yampt::converter_log[0];
 		counter_unchanged++;
 
 		new_friendly = "<N\\A>";
@@ -261,8 +258,8 @@ void EsmConverter::setNewFriendlyINFO(rec_type type)
 //----------------------------------------------------------
 void EsmConverter::addDIALtoINFO()
 {
-	string key;
-	string new_friendly_lc;
+    std::string key;
+    std::string new_friendly_lc;
 	size_t pos;
 
 	new_friendly = esm.getFriendly();
@@ -270,7 +267,7 @@ void EsmConverter::addDIALtoINFO()
 	transform(new_friendly_lc.begin(), new_friendly_lc.end(),
 		  new_friendly_lc.begin(), ::tolower);
 
-	for(const auto &elem : merger->getDict()[rec_type::DIAL])
+    for(const auto &elem : merger->getDict()[yampt::rec_type::DIAL])
 	{
 		key = elem.first.substr(5);
 		transform(key.begin(), key.end(),
@@ -279,7 +276,7 @@ void EsmConverter::addDIALtoINFO()
 		if(key != elem.second)
 		{
 			pos = new_friendly_lc.find(key);
-			if(pos != string::npos)
+            if(pos != std::string::npos)
 			{
 				new_friendly.insert(new_friendly.size(), " [" + elem.second + "]");
 			}
@@ -288,17 +285,17 @@ void EsmConverter::addDIALtoINFO()
 }
 
 //----------------------------------------------------------
-void EsmConverter::setNewFriendlyScript(string id, rec_type type)
+void EsmConverter::setNewFriendlyScript(std::string id, yampt::rec_type type)
 {
 	counter_all++;
 	new_friendly.erase();
-	istringstream ss(esm.getFriendly());
+    std::istringstream ss(esm.getFriendly());
 
-	string line_lc;
-	smatch found;
+    std::string line_lc;
+    std::smatch found;
 	pos_c = 0;
 
-	while(getline(ss, line))
+    while(std::getline(ss, line))
 	{
 		eraseCarriageReturnChar(line);
 
@@ -336,49 +333,49 @@ void EsmConverter::setNewFriendlyScript(string id, rec_type type)
 		if(found_key == false)
 		{
 			pos = line_lc.find("addtopic");
-			convertText("DIAL", rec_type::DIAL, 0);
+            convertText("DIAL", yampt::rec_type::DIAL, 0);
 		}
 
 		if(found_key == false)
 		{
 			pos = line_lc.find("showmap");
-			convertText("CELL", rec_type::CELL, 0);
+            convertText("CELL", yampt::rec_type::CELL, 0);
 		}
 
 		if(found_key == false)
 		{
 			pos = line_lc.find("centeroncell");
-			convertText("CELL", rec_type::CELL, 0);
+            convertText("CELL", yampt::rec_type::CELL, 0);
 		}
 
 		if(found_key == false)
 		{
 			pos = line_lc.find("getpccell");
-			convertText("CELL", rec_type::CELL, 0, true); // is_getpccell_keyword = true
+            convertText("CELL", yampt::rec_type::CELL, 0, true); // is_getpccell_keyword = true
 		}
 
 		if(found_key == false)
 		{
 			pos = line_lc.find("aifollowcell");
-			convertText("CELL", rec_type::CELL, 1);
+            convertText("CELL", yampt::rec_type::CELL, 1);
 		}
 
 		if(found_key == false)
 		{
 			pos = line_lc.find("aiescortcell)");
-			convertText("CELL", rec_type::CELL, 1);
+            convertText("CELL", yampt::rec_type::CELL, 1);
 		}
 
 		if(found_key == false)
 		{
 			pos = line_lc.find("placeitemcell");
-			convertText("CELL", rec_type::CELL, 1);
+            convertText("CELL", yampt::rec_type::CELL, 1);
 		}
 
 		if(found_key == false)
 		{
 			pos = line_lc.find("positioncell");
-			convertText("CELL", rec_type::CELL, 4);
+            convertText("CELL", yampt::rec_type::CELL, 4);
 		}
 
 		if(found_key == true)
@@ -393,7 +390,7 @@ void EsmConverter::setNewFriendlyScript(string id, rec_type type)
 
 	// Check if last 2 char are new line
 	size_t last_nl_pos = esm.getFriendly().rfind("\r\n");
-	if(last_nl_pos != esm.getFriendly().size() - 2 || last_nl_pos == string::npos)
+    if(last_nl_pos != esm.getFriendly().size() - 2 || last_nl_pos == std::string::npos)
 	{
 		new_friendly.resize(new_friendly.size() - 2);
 	}
@@ -401,12 +398,12 @@ void EsmConverter::setNewFriendlyScript(string id, rec_type type)
 	if(esm.getFriendly() != new_friendly)
 	{
 		to_convert = true;
-		converter_log_ptr = &converter_log[1];
+        converter_log_ptr = &yampt::converter_log[1];
 	}
 	else
 	{
 		to_convert = false;
-		converter_log_ptr = &converter_log[0];
+        converter_log_ptr = &yampt::converter_log[0];
 		counter_unchanged++;
 
 		new_friendly = "<N\\A>";
@@ -414,12 +411,12 @@ void EsmConverter::setNewFriendlyScript(string id, rec_type type)
 }
 
 //----------------------------------------------------------
-void EsmConverter::convertLine(string id, rec_type type, bool is_say_keyword)
+void EsmConverter::convertLine(std::string id, yampt::rec_type type, bool is_say_keyword)
 {
-	if(pos != string::npos &&
-	   line.rfind(";", pos) == string::npos)
+    if(pos != std::string::npos &&
+       line.rfind(";", pos) == std::string::npos)
 	{
-		auto search = merger->getDict()[type].find(id + sep[0] + line);
+        auto search = merger->getDict()[type].find(id + yampt::sep[0] + line);
 		if(search != merger->getDict()[type].end())
 		{
 			if(line != search->second)
@@ -429,16 +426,16 @@ void EsmConverter::convertLine(string id, rec_type type, bool is_say_keyword)
 				convertLineCompiledScriptData(is_say_keyword);
 
 				found_key = true;
-				converter_log_ptr = &converter_log[1];
+                converter_log_ptr = &yampt::converter_log[1];
 			}
 			else
 			{
-				converter_log_ptr = &converter_log[2];
+                converter_log_ptr = &yampt::converter_log[2];
 			}
 		}
 		else
 		{
-			converter_log_ptr = &converter_log[0];
+            converter_log_ptr = &yampt::converter_log[0];
 		}
 		makeLogScript(esm.getUnique());
 	}
@@ -447,15 +444,15 @@ void EsmConverter::convertLine(string id, rec_type type, bool is_say_keyword)
 //----------------------------------------------------------
 void EsmConverter::convertLineCompiledScriptData(bool is_say_keyword)
 {
-	vector<string> str_list_u = splitLine(line, is_say_keyword);
-	vector<string> str_list_f = splitLine(line_new, is_say_keyword);
+    std::vector<std::string> str_list_u = splitLine(line, is_say_keyword);
+    std::vector<std::string> str_list_f = splitLine(line_new, is_say_keyword);
 
 	if(str_list_u.size() == str_list_f.size())
 	{
 		for(size_t i = 0; i < str_list_u.size(); i++)
 		{
 			pos_c = compiled_data.find(str_list_u[i], pos_c);
-			if(pos_c != string::npos)
+            if(pos_c != std::string::npos)
 			{
 				if(i == 0)
 				{
@@ -483,13 +480,13 @@ void EsmConverter::convertLineCompiledScriptData(bool is_say_keyword)
 }
 
 //----------------------------------------------------------
-void EsmConverter::convertText(string id, rec_type type, int num, bool is_getpccell_keyword)
+void EsmConverter::convertText(std::string id, yampt::rec_type type, int num, bool is_getpccell_keyword)
 {
-	if(pos != string::npos &&
-	   line.rfind(";", pos) == string::npos)
+    if(pos != std::string::npos &&
+       line.rfind(";", pos) == std::string::npos)
 	{
 		extractText(num);
-		auto search = merger->getDict()[type].find(id + sep[0] + text);
+        auto search = merger->getDict()[type].find(id + yampt::sep[0] + text);
 
 		// Fast search in map
 		if(search != merger->getDict()[type].end())
@@ -512,19 +509,19 @@ void EsmConverter::convertText(string id, rec_type type, int num, bool is_getpcc
 
 			if(line != line_new)
 			{
-				converter_log_ptr = &converter_log[1];
+                converter_log_ptr = &yampt::converter_log[1];
 			}
 			else
 			{
-				converter_log_ptr = &converter_log[2];
+                converter_log_ptr = &yampt::converter_log[2];
 			}
 		}
 		else // Slow search case aware
 		{
-			converter_log_ptr = &converter_log[0];
+            converter_log_ptr = &yampt::converter_log[0];
 			for(auto &elem : merger->getDict()[type])
 			{
-				if(caseInsensitiveStringCmp(id + sep[0] + text, elem.first) == true)
+                if(caseInsensitiveStringCmp(id + yampt::sep[0] + text, elem.first) == true)
 				{
 					line_new = line;
 					line_new.erase(pos, text.size());
@@ -544,12 +541,12 @@ void EsmConverter::convertText(string id, rec_type type, int num, bool is_getpcc
 
 					if(line != line_new)
 					{
-						converter_log_ptr = &converter_log[1];
+                        converter_log_ptr = &yampt::converter_log[1];
 						break;
 					}
 					else
 					{
-						converter_log_ptr = &converter_log[2];
+                        converter_log_ptr = &yampt::converter_log[2];
 						break;
 					}
 				}
@@ -560,10 +557,10 @@ void EsmConverter::convertText(string id, rec_type type, int num, bool is_getpcc
 }
 
 //----------------------------------------------------------
-void EsmConverter::convertTextCompiledScriptData(string text_new, bool is_getpccell_keyword)
+void EsmConverter::convertTextCompiledScriptData(std::string text_new, bool is_getpccell_keyword)
 {
 	pos_c = compiled_data.find(text, pos_c);
-	if(pos_c != string::npos)
+    if(pos_c != std::string::npos)
 	{
 		pos_c -= 1;
 		compiled_data.erase(pos_c, 1);
@@ -591,13 +588,13 @@ void EsmConverter::convertTextCompiledScriptData(string text_new, bool is_getpcc
 void EsmConverter::extractText(int num)
 {
 	size_t list_pos;
-	string list_var;
-	smatch found;
+    std::string list_var;
+    std::smatch found;
 	int ctr = -1;
 
 	list_pos = line.find_first_of(" \t,\"", pos);
 	list_pos = line.find_first_not_of(" \t,", list_pos);
-	if(list_pos != string::npos)
+    if(list_pos != std::string::npos)
 	{
 		list_var = line.substr(list_pos);
 	}
@@ -606,18 +603,18 @@ void EsmConverter::extractText(int num)
 		list_pos = 0;
 	}
 
-	//cout << "----" << endl;
-	//cout << "Line: " << line << endl;
-	//cout << "List: " << list_var << endl;
+    //std::cout << "----" << std::endl;
+    //std::cout << "Line: " << line << std::endl;
+    //std::cout << "List: " << list_var << std::endl;
 
 	if(num == 0)
 	{
 		text = list_var;
-		if(text.find("=") != string::npos)
+        if(text.find("=") != std::string::npos)
 		{
 			text.erase(text.find("="));
 		}
-		if(text.find_last_not_of(" \t") != string::npos)
+        if(text.find_last_not_of(" \t") != std::string::npos)
 		{
 			text.erase(text.find_last_not_of(" \t") + 1);
 		}
@@ -625,25 +622,25 @@ void EsmConverter::extractText(int num)
 	}
 	else
 	{
-		regex r1("(([\\w\\.]+)|(\".*?\"))");
+        std::regex r1("(([\\w\\.]+)|(\".*?\"))");
 
-		sregex_iterator next(list_var.begin(), list_var.end(), r1);
-		sregex_iterator end;
+        std::sregex_iterator next(list_var.begin(), list_var.end(), r1);
+        std::sregex_iterator end;
 		while(next != end && ctr != num)
 		{
 			found = *next;
 			text = found[1].str();
 			pos = found.position(1) + list_pos;
 
-			//cout << "Var " << pos << ": " << text << endl;
+            //std::cout << "Var " << pos << ": " << text << std::endl;
 
 			next++;
 			ctr++;
 		}
 	}
 
-	regex r2("\"(.*?)\"");
-	regex_search(text, found, r2);
+    std::regex r2("\"(.*?)\"");
+    std::regex_search(text, found, r2);
 
 	if(!found.empty())
 	{
@@ -651,19 +648,19 @@ void EsmConverter::extractText(int num)
 		pos += 1;
 	}
 
-	//cout << "Out " << pos << ": " << text << endl;
+    //std::cout << "Out " << pos << ": " << text << std::endl;
 }
 
 //----------------------------------------------------------
-vector<string> EsmConverter::splitLine(string line, bool is_say_keyword)
+std::vector<std::string> EsmConverter::splitLine(std::string line, bool is_say_keyword)
 {
-	vector<string> list_vec;
-	string list_str = line.substr(pos);
+    std::vector<std::string> list_vec;
+    std::string list_str = line.substr(pos);
 
-	smatch found;
-	regex re("\"(.*?)\"");
-	sregex_iterator next(list_str.begin(), list_str.end(), re);
-	sregex_iterator end;
+    std::smatch found;
+    std::regex re("\"(.*?)\"");
+    std::sregex_iterator next(list_str.begin(), list_str.end(), re);
+    std::sregex_iterator end;
 	while(next != end)
 	{
 		found = *next;
@@ -678,7 +675,7 @@ vector<string> EsmConverter::splitLine(string line, bool is_say_keyword)
 
 	/*for(auto const &elem : list_vec)
 	{
-		cout << elem << endl << endl;
+        std::cout << elem << endl << std::endl;
 	}*/
 
 	return list_vec;
@@ -700,15 +697,15 @@ void EsmConverter::convertCELL()
 
 			if(esm.getUniqueStatus() == true)
 			{
-				unique_key = "CELL" + sep[0] + esm.getUnique();
-				setNewFriendly(rec_type::CELL);
+                unique_key = "CELL" + yampt::sep[0] + esm.getUnique();
+                setNewFriendly(yampt::rec_type::CELL);
 
 				if(to_convert == true)
 				{
 					convertRecordContent(new_friendly + '\0');
 				}
 
-				makeLog("CELL" + sep[0] + esm.getUnique());
+                makeLog("CELL" + yampt::sep[0] + esm.getUnique());
 			}
 		}
 	}
@@ -732,15 +729,15 @@ void EsmConverter::convertPGRD()
 
 			if(esm.getUniqueStatus() == true)
 			{
-				unique_key = "CELL" + sep[0] + esm.getUnique();
-				setNewFriendly(rec_type::CELL);
+                unique_key = "CELL" + yampt::sep[0] + esm.getUnique();
+                setNewFriendly(yampt::rec_type::CELL);
 
 				if(to_convert == true)
 				{
 					convertRecordContent(new_friendly + '\0');
 				}
 
-				makeLog("PGRD" + sep[0] + esm.getUnique());
+                makeLog("PGRD" + yampt::sep[0] + esm.getUnique());
 			}
 		}
 	}
@@ -764,15 +761,15 @@ void EsmConverter::convertANAM()
 
 			if(esm.getUniqueStatus() == true)
 			{
-				unique_key = "CELL" + sep[0] + esm.getUnique();
-				setNewFriendly(rec_type::CELL);
+                unique_key = "CELL" + yampt::sep[0] + esm.getUnique();
+                setNewFriendly(yampt::rec_type::CELL);
 
 				if(to_convert == true)
 				{
 					convertRecordContent(new_friendly + '\0');
 				}
 
-				makeLog("ANAM" + sep[0] + esm.getUnique());
+                makeLog("ANAM" + yampt::sep[0] + esm.getUnique());
 			}
 		}
 	}
@@ -798,8 +795,8 @@ void EsmConverter::convertSCVR()
 			{
 				if(esm.getFriendly().substr(1, 1) == "B")
 				{
-					unique_key = "CELL" + sep[0] + esm.getFriendly().substr(5);
-					setNewFriendly(rec_type::CELL);
+                    unique_key = "CELL" + yampt::sep[0] + esm.getFriendly().substr(5);
+                    setNewFriendly(yampt::rec_type::CELL);
 					new_friendly = esm.getFriendly().substr(0, 5) + new_friendly;
 
 					if(to_convert == true)
@@ -807,7 +804,7 @@ void EsmConverter::convertSCVR()
 						convertRecordContent(new_friendly);
 					}
 
-					makeLog("SCVR" + sep[0] + esm.getUnique());
+                    makeLog("SCVR" + yampt::sep[0] + esm.getUnique());
 				}
 
 				esm.setFriendly("SCVR", true, true);
@@ -835,8 +832,8 @@ void EsmConverter::convertDNAM()
 
 			while(esm.getFriendlyStatus() == true)
 			{
-				unique_key = "CELL" + sep[0] + esm.getFriendly();
-				setNewFriendly(rec_type::CELL);
+                unique_key = "CELL" + yampt::sep[0] + esm.getFriendly();
+                setNewFriendly(yampt::rec_type::CELL);
 
 				if(to_convert == true)
 				{
@@ -844,7 +841,7 @@ void EsmConverter::convertDNAM()
 
 				}
 
-				makeLog("DNAM" + sep[0] + esm.getUnique());
+                makeLog("DNAM" + yampt::sep[0] + esm.getUnique());
 
 				esm.setFriendly("DNAM", true, true);
 			}
@@ -870,15 +867,15 @@ void EsmConverter::convertCNDT()
 
 			while(esm.getFriendlyStatus() == true)
 			{
-				unique_key = "CELL" + sep[0] + esm.getFriendly();
-				setNewFriendly(rec_type::CELL);
+                unique_key = "CELL" + yampt::sep[0] + esm.getFriendly();
+                setNewFriendly(yampt::rec_type::CELL);
 
 				if(to_convert == true)
 				{
 					convertRecordContent(new_friendly + '\0');
 				}
 
-				makeLog("CNDT" + sep[0] + esm.getUnique());
+                makeLog("CNDT" + yampt::sep[0] + esm.getUnique());
 
 				esm.setFriendly("CNDT", true, true);
 			}
@@ -906,15 +903,15 @@ void EsmConverter::convertGMST()
 			   esm.getFriendlyStatus() == true &&
 			   esm.getUnique().substr(0, 1) == "s")
 			{
-				unique_key = "GMST" + sep[0] + esm.getUnique();
-				setNewFriendly(rec_type::GMST);
+                unique_key = "GMST" + yampt::sep[0] + esm.getUnique();
+                setNewFriendly(yampt::rec_type::GMST);
 
 				if(to_convert == true)
 				{
 					convertRecordContent(new_friendly + '\0');
 				}
 
-				makeLog("GMST" + sep[0] + esm.getUnique());
+                makeLog("GMST" + yampt::sep[0] + esm.getUnique());
 			}
 		}
 	}
@@ -963,15 +960,15 @@ void EsmConverter::convertFNAM()
 			   esm.getFriendlyStatus() == true &&
 			   esm.getUnique() != "player")
 			{
-				unique_key = "FNAM" + sep[0] + esm.getRecId() + sep[0] + esm.getUnique();
-				setNewFriendly(rec_type::FNAM);
+                unique_key = "FNAM" + yampt::sep[0] + esm.getRecId() + yampt::sep[0] + esm.getUnique();
+                setNewFriendly(yampt::rec_type::FNAM);
 
 				if(to_convert == true)
 				{
 					convertRecordContent(new_friendly + '\0');
 				}
 
-				makeLog("FNAM" + sep[0] + esm.getRecId() + sep[0] + esm.getUnique());
+                makeLog("FNAM" + yampt::sep[0] + esm.getRecId() + yampt::sep[0] + esm.getUnique());
 			}
 		}
 	}
@@ -998,15 +995,15 @@ void EsmConverter::convertDESC()
 			if(esm.getUniqueStatus() == true &&
 			   esm.getFriendlyStatus() == true)
 			{
-				unique_key = "DESC" + sep[0] + esm.getRecId() + sep[0] + esm.getUnique();
-				setNewFriendly(rec_type::DESC);
+                unique_key = "DESC" + yampt::sep[0] + esm.getRecId() + yampt::sep[0] + esm.getUnique();
+                setNewFriendly(yampt::rec_type::DESC);
 
 				if(to_convert == true)
 				{
 					convertRecordContent(new_friendly + '\0');
 				}
 
-				makeLog("DESC" + sep[0] + esm.getRecId() + sep[0] + esm.getUnique());
+                makeLog("DESC" + yampt::sep[0] + esm.getRecId() + yampt::sep[0] + esm.getUnique());
 			}
 		}
 	}
@@ -1031,15 +1028,15 @@ void EsmConverter::convertTEXT()
 			if(esm.getUniqueStatus() == true &&
 			   esm.getFriendlyStatus() == true)
 			{
-				unique_key = "TEXT" + sep[0] + esm.getUnique();
-				setNewFriendly(rec_type::TEXT);
+                unique_key = "TEXT" + yampt::sep[0] + esm.getUnique();
+                setNewFriendly(yampt::rec_type::TEXT);
 
 				if(to_convert == true)
 				{
 					convertRecordContent(new_friendly + '\0');
 				}
 
-				makeLog("TEXT" + sep[0] + esm.getUnique());
+                makeLog("TEXT" + yampt::sep[0] + esm.getUnique());
 			}
 		}
 	}
@@ -1065,8 +1062,8 @@ void EsmConverter::convertRNAM()
 			{
 				while(esm.getFriendlyStatus() == true)
 				{
-					unique_key = "RNAM" + sep[0] + esm.getUnique() + sep[0] + to_string(esm.getFriendlyCounter());
-					setNewFriendly(rec_type::RNAM);
+                    unique_key = "RNAM" + yampt::sep[0] + esm.getUnique() + yampt::sep[0] + std::to_string(esm.getFriendlyCounter());
+                    setNewFriendly(yampt::rec_type::RNAM);
 
 					if(to_convert == true)
 					{
@@ -1074,7 +1071,7 @@ void EsmConverter::convertRNAM()
 						convertRecordContent(new_friendly);
 					}
 
-					makeLog("RNAM" + sep[0] + esm.getUnique() + sep[0] + to_string(esm.getFriendlyCounter()));
+                    makeLog("RNAM" + yampt::sep[0] + esm.getUnique() + yampt::sep[0] + std::to_string(esm.getFriendlyCounter()));
 
 					esm.setFriendly("RNAM", true, true);
 				}
@@ -1103,15 +1100,15 @@ void EsmConverter::convertINDX()
 			if(esm.getUniqueStatus() == true &&
 			   esm.getFriendlyStatus() == true)
 			{
-				unique_key = "INDX" + sep[0] + esm.getRecId() + sep[0] + esm.getUnique();
-				setNewFriendly(rec_type::INDX);
+                unique_key = "INDX" + yampt::sep[0] + esm.getRecId() + yampt::sep[0] + esm.getUnique();
+                setNewFriendly(yampt::rec_type::INDX);
 
 				if(to_convert == true)
 				{
 					convertRecordContent(new_friendly + '\0');
 				}
 
-				makeLog("INDX" + sep[0] + esm.getRecId() + sep[0] + esm.getUnique());
+                makeLog("INDX" + yampt::sep[0] + esm.getRecId() + yampt::sep[0] + esm.getUnique());
 			}
 		}
 	}
@@ -1137,15 +1134,15 @@ void EsmConverter::convertDIAL()
 			   esm.getFriendlyStatus() == true &&
 			   esm.getUnique() == "T")
 			{
-				unique_key = "DIAL" + sep[0] + esm.getFriendly();
-				setNewFriendly(rec_type::DIAL);
+                unique_key = "DIAL" + yampt::sep[0] + esm.getFriendly();
+                setNewFriendly(yampt::rec_type::DIAL);
 
 				if(to_convert == true)
 				{
 					convertRecordContent(new_friendly + '\0');
 				}
 
-				makeLog("DIAL" + sep[0] + esm.getFriendly());
+                makeLog("DIAL" + yampt::sep[0] + esm.getFriendly());
 			}
 		}
 	}
@@ -1170,7 +1167,7 @@ void EsmConverter::convertINFO()
 			if(esm.getUniqueStatus() == true &&
 			   esm.getFriendlyStatus() == true)
 			{
-				dialog_topic = esm.getUnique() + sep[0] + esm.getFriendly();
+                dialog_topic = esm.getUnique() + yampt::sep[0] + esm.getFriendly();
 			}
 			else
 			{
@@ -1186,15 +1183,15 @@ void EsmConverter::convertINFO()
 			if(esm.getUniqueStatus() == true &&
 			   esm.getFriendlyStatus() == true)
 			{
-				unique_key = "INFO" + sep[0] + dialog_topic + sep[0] + esm.getUnique();
-				setNewFriendlyINFO(rec_type::INFO);
+                unique_key = "INFO" + yampt::sep[0] + dialog_topic + yampt::sep[0] + esm.getUnique();
+                setNewFriendlyINFO(yampt::rec_type::INFO);
 
 				if(to_convert == true)
 				{
 					convertRecordContent(new_friendly + '\0');
 				}
 
-				makeLog("INFO" + sep[0] + dialog_topic + sep[0] + esm.getUnique());
+                makeLog("INFO" + yampt::sep[0] + dialog_topic + yampt::sep[0] + esm.getUnique());
 			}
 		}
 	}
@@ -1218,7 +1215,7 @@ void EsmConverter::convertBNAM()
 
 			if(esm.getFriendlyStatus() == true)
 			{
-				setNewFriendlyScript("BNAM", rec_type::BNAM);
+                setNewFriendlyScript("BNAM", yampt::rec_type::BNAM);
 
 				if(to_convert == true)
 				{
@@ -1251,7 +1248,7 @@ void EsmConverter::convertSCPT()
 
 			if(esm.getFriendlyStatus() == true)
 			{
-				setNewFriendlyScript("SCTX", rec_type::SCTX);
+                setNewFriendlyScript("SCTX", yampt::rec_type::SCTX);
 
 				if(to_convert == true)
 				{
@@ -1277,8 +1274,8 @@ void EsmConverter::convertSCPT()
 void EsmConverter::convertGMDT()
 {
 	resetCounters();
-	string prefix;
-	string suffix;
+    std::string prefix;
+    std::string suffix;
 
 	for(size_t i = 0; i < esm.getRecColl().size(); ++i)
 	{
@@ -1293,12 +1290,12 @@ void EsmConverter::convertGMDT()
 			{
 				unique_key = esm.getUnique().substr(24, 64);
 				eraseNullChars(unique_key);
-				unique_key = "CELL" + sep[0] + unique_key;
+                unique_key = "CELL" + yampt::sep[0] + unique_key;
 
 				prefix = esm.getFriendly().substr(0, 24);
 				suffix = esm.getFriendly().substr(88);
 
-				setNewFriendly(rec_type::CELL);
+                setNewFriendly(yampt::rec_type::CELL);
 
 				if(to_convert == true)
 				{
@@ -1317,11 +1314,11 @@ void EsmConverter::convertGMDT()
 			{
 				unique_key = esm.getUnique().substr(0, 64);
 				eraseNullChars(unique_key);
-				unique_key = "CELL" + sep[0] + unique_key;
+                unique_key = "CELL" + yampt::sep[0] + unique_key;
 
 				suffix = esm.getFriendly().substr(64);
 
-				setNewFriendly(rec_type::CELL);
+                setNewFriendly(yampt::rec_type::CELL);
 
 				if(to_convert == true)
 				{
