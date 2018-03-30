@@ -21,7 +21,7 @@ public:
                  const std::string &friendly_text,
                  const std::string &compiled_data);
 
-protected:
+private:
     std::string checkLine(const std::string &line,
                           const std::string &line_lc,
                           const std::string &keyword,
@@ -52,7 +52,6 @@ protected:
     std::vector<std::string> splitLine(const std::string &line,
                                        const bool is_say = false);
 
-private:
     yampt::rec_type type;
     DictMerger *merger;
     Tools tools;
