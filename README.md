@@ -134,5 +134,5 @@ yampt.exe --binary-dump -f "C:\path\to\Morrowind\Data Files\Plugin.esp"
 
 ### Script list
 ```
-yampt.exe --scripts -f "C:\path\to\Morrowind\Data Files\Plugin.esp"
+yampt.exe --script-list -f "C:\path\to\Morrowind\Data Files\Plugin.esp"
 ```
