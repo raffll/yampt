@@ -104,7 +104,7 @@ void UserInterface::runCommand()
         {
             makeScriptList();
         }
-        else if(arg[1] == "--test")
+        else if(arg[1] == "--test" && dict_path.size() > 0)
         {
             runTest();
         }
@@ -244,5 +244,8 @@ void UserInterface::makeScriptList()
 //----------------------------------------------------------
 void UserInterface::runTest()
 {
-    ScriptParser_Test test;
+    DictMerger merger(dict_path);
+    merger.mergeDict();
+    ScriptParserTest test(merger);
+    test.runTest();
 }

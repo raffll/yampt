@@ -297,17 +297,17 @@ std::pair<std::string, size_t> ScriptParser::extractText(const std::string &line
                                                          const int pos_in_expression)
 {
     size_t cur_pos = keyword_pos;
-    std::string cur_text = line.substr(keyword_pos);
+    std::string cur_text;
 
     std::smatch found;
     int ctr = -1;
 
     // Find begin of searched text
-    cur_pos = cur_text.find_first_of(" \t,\"", cur_pos);
-    cur_pos = cur_text.find_first_not_of(" \t,", cur_pos);
+    cur_pos = line.find_first_of(" \t,\"", cur_pos);
+    cur_pos = line.find_first_not_of(" \t,", cur_pos);
     if(cur_pos != std::string::npos)
     {
-        cur_text = cur_text.substr(cur_pos);
+        cur_text = line.substr(cur_pos);
     }
 
     if(pos_in_expression == 0)
@@ -338,7 +338,7 @@ std::pair<std::string, size_t> ScriptParser::extractText(const std::string &line
             ctr++;
         }
         cur_text = found[1].str();
-        cur_pos = found.position(1);
+        cur_pos = found.position(1) + cur_pos;
     }
 
     // Strip quotes if exist
