@@ -104,10 +104,6 @@ void UserInterface::runCommand()
         {
             makeScriptList();
         }
-        else if(arg[1] == "--test" && dict_path.size() > 0)
-        {
-            runTest();
-        }
         else
         {
             std::cout << "Syntax error!" << std::endl;
@@ -239,13 +235,4 @@ void UserInterface::makeScriptList()
         std::string text = scripts.makeScriptList();
         tools.writeText(text, scripts.getNamePrefix() + ".SCRIPTS.txt");
     }
-}
-
-//----------------------------------------------------------
-void UserInterface::runTest()
-{
-    DictMerger merger(dict_path);
-    merger.mergeDict();
-    ScriptParserTest test(merger);
-    test.runTest();
 }

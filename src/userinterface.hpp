@@ -7,8 +7,6 @@
 #include "esmconverter.hpp"
 #include "esmtools.hpp"
 
-#include "scriptparser_test.hpp"
-
 class UserInterface
 {
 public:
@@ -27,7 +25,6 @@ private:
     void convertEsm();
     void dumpFile();
     void makeScriptList();
-    void runTest();
 
     Tools tools;
 
