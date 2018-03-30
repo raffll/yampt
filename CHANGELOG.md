@@ -78,3 +78,8 @@
 - fix dictionary creator not working sometimes
 - fix dictionary creator, now adds all duplicate records (e.g broken, for manual edit)
 - fix length limit RNAM to 32
+
+0.15
+- change dictionary format to xml
+- faster and more accurate creating base dictionaries when records are in different order
+- remove unnecesary functionality
