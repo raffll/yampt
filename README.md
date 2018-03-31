@@ -14,16 +14,31 @@ All you need is two language version of the game (in most cases English and your
 
 This step is required for plugin automatic translation.
 ```
-yampt.exe --make-base -f "C:\path\to\NATIVE\Morrowind\Data Files\Morrowind.esm" "C:\path\to\FOREIGN\Morrowind\Data Files\Morrowind.esm"
-yampt.exe --make-base -f "C:\path\to\NATIVE\Morrowind\Data Files\Tribunal.esm" "C:\path\to\FOREIGN\Morrowind\Data Files\Tribunal.esm"
-yampt.exe --make-base -f "C:\path\to\NATIVE\Morrowind\Data Files\Bloodmoon.esm" "C:\path\to\FOREIGN\Morrowind\Data Files\Bloodmoon.esm"
+yampt.exe --make-base -f "C:\path\to\NATIVE\Morrowind.esm" "C:\path\to\FOREIGN\Morrowind.esm"
+yampt.exe --make-base -f "C:\path\to\NATIVE\Tribunal.esm" "C:\path\to\FOREIGN\Tribunal.esm"
+yampt.exe --make-base -f "C:\path\to\NATIVE\Bloodmoon.esm" "C:\path\to\FOREIGN\Bloodmoon.esm"
+```
+Because algorithm isn't 100% accurate some records may need manually editing:
+```
+<record>
+        <id>CELL</id>
+        <key>Arenim Ancestral Tomb</key>
+        <val>MISSING</val>
+</record>
+```
+to
+```
+<record>
+        <id>CELL</id>
+        <key>Arenim Ancestral Tomb</key>
+        <val>Arenim-Ahnengruft</val>
+</record>
 ```
 Now you can merge these dictionaries into one file. Important thing is order, just like in game.
 ```
 yampt.exe --merge -d Morrowind.BASE.xml Tribunal.BASE.xml Bloodmoon.BASE.xml -o NATIVE.xml
 ```
 Here you have one "NATIVE.xml". This is your base dictionary.
-
 Above command validate, sort and remove duplicates, so you can use it with only one dictionary:
 ```
 yampt.exe --merge -d Morrowind.xml
@@ -54,9 +69,7 @@ if in "NATIVE.xml" exist:
 <record>
 ```
 Without this, most English plugins with new dialogs are not playable in your native language.
-
 Because of limitation of Morrowind engine, INFO string can only have 512 bytes, but more is ok in game.
-
 This can generate warnings in TES CS and records are read only.
 
 ## For translators
