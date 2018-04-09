@@ -55,7 +55,7 @@ std::string EsmTools::makeScriptList()
                 scripts += esm.getFriendlyText() + "\r\n";
                 scripts += "---\r\n";
                 esm.setFirstFriendlyTo("SCDT", false);
-                scripts += esm.getFriendlyText() + "\r\n";
+                scripts += tools.replaceNonReadableCharsWithDot(esm.getFriendlyText()) + "\r\n";
                 scripts += "---\r\n";
             }
         }
