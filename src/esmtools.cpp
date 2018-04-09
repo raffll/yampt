@@ -48,9 +48,11 @@ std::string EsmTools::dumpSCDT()
             esm.setRecordTo(i);
             if(esm.getRecordId() == "SCPT")
             {
-                esm.setFirstFriendlyTo("SCDT");
+                esm.setUniqueTo("SCHD");
+                esm.setFirstFriendlyTo("SCDT", false);
                 dump += esm.getRecordId() + "\r\n";
-                dump += "    " + tools.replaceNonReadableCharsWithDot(esm.getFriendlyText());
+                dump += "    SCHD " + esm.getUniqueText() + "\r\n";
+                dump += "    SCDT " + tools.replaceNonReadableCharsWithDot(esm.getFriendlyText()) + "\r\n";
             }
         }
     }
