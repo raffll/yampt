@@ -498,7 +498,7 @@ void EsmConverter::convertDESC()
                 new_friendly = setNewFriendly(yampt::rec_type::DESC, unique_text, esm.getFriendlyText());
                 if(to_convert == true)
                 {
-                    convertRecordContent(new_friendly + '\0');
+                    convertRecordContent(new_friendly);
                 }
             }
         }
@@ -525,7 +525,7 @@ void EsmConverter::convertTEXT()
                 new_friendly = setNewFriendly(yampt::rec_type::TEXT, esm.getUniqueText(), esm.getFriendlyText());
                 if(to_convert == true)
                 {
-                    convertRecordContent(new_friendly + '\0');
+                    convertRecordContent(new_friendly);
                 }
             }
         }
@@ -588,7 +588,7 @@ void EsmConverter::convertINDX()
                 new_friendly = setNewFriendly(yampt::rec_type::INDX, unique_text, esm.getFriendlyText());
                 if(to_convert == true)
                 {
-                    convertRecordContent(new_friendly + '\0');
+                    convertRecordContent(new_friendly);
                 }
             }
         }
