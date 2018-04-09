@@ -100,6 +100,10 @@ void UserInterface::runCommand()
         {
             dumpFile();
         }
+        else if(arg[1] == "--scdt" && file_path.size() > 0)
+        {
+            dumpSCDT();
+        }
         else if(arg[1] == "--scripts" && file_path.size() > 0)
         {
             makeScriptList();
@@ -223,6 +227,17 @@ void UserInterface::dumpFile()
         EsmTools dump(file_path[i]);
         std::string text = dump.dumpFile();
         tools.writeText(text, dump.getNamePrefix() + ".DUMP.txt");
+    }
+}
+
+//----------------------------------------------------------
+void UserInterface::dumpSCDT()
+{
+    for(size_t i = 0; i < file_path.size(); ++i)
+    {
+        EsmTools dump(file_path[i]);
+        std::string text = dump.dumpSCDT();
+        tools.writeText(text, dump.getNamePrefix() + ".SCDT.txt");
     }
 }
 

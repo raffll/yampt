@@ -38,6 +38,26 @@ std::string EsmTools::dumpFile()
 }
 
 //----------------------------------------------------------
+std::string EsmTools::dumpSCDT()
+{
+    std::string dump;
+    if(esm.getStatus() == true)
+    {
+        for(size_t i = 0; i < esm.getRecordColl().size(); ++i)
+        {
+            esm.setRecordTo(i);
+            if(esm.getRecordId() == "SCPT")
+            {
+                esm.setFirstFriendlyTo("SCDT");
+                dump += esm.getRecordId() + "\r\n";
+                dump += "    " + tools.replaceNonReadableCharsWithDot(esm.getFriendlyText());
+            }
+        }
+    }
+    return dump;
+}
+
+//----------------------------------------------------------
 std::string EsmTools::makeScriptList()
 {
     std::string scripts;
