@@ -278,11 +278,26 @@ void ScriptParser::convertInnerTextInCompiledScriptData(const std::string &text,
 
         if(is_getpccell == true)
         {
-            size_t size = new_text.size() + 12;
-            pos_in_compiled -= 8;
+            // Additional GETPCCELL size byte that determines
+            // how many bytes from him to the end of expression
+            size_t end_of_expr;
+            if(compiled_data.substr(pos_in_compiled + new_text.size(), 1) != " ")
+            {
+                end_of_expr = pos_in_compiled + new_text.size();
+            }
+            else
+            {
+                end_of_expr = pos_in_compiled + new_text.size() + 5; // +5 because of " == 1"
+
+            }
+
+            // Find that byte
+            pos_in_compiled = compiled_data.rfind('X', pos_in_compiled) - 2;
+            size_t expr_size = end_of_expr - pos_in_compiled;
+
             compiled_data.erase(pos_in_compiled, 1);
-            compiled_data.insert(pos_in_compiled, tools.convertUIntToStringByteArray(size).substr(0, 1));
-            pos_in_compiled += size;
+            compiled_data.insert(pos_in_compiled, tools.convertUIntToStringByteArray(expr_size).substr(0, 1));
+            pos_in_compiled += expr_size;
         }
         else
         {
