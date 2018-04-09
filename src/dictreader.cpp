@@ -8,8 +8,7 @@ DictReader::DictReader()
 
 //----------------------------------------------------------
 DictReader::DictReader(const DictReader& that)
-    :
-      name_full(that.name_full),
+    : name_full(that.name_full),
       name_prefix(that.name_prefix),
       dict(that.dict),
       log(that.log),
