@@ -288,7 +288,6 @@ void ScriptParser::convertInnerTextInCompiledScriptData(const std::string &text,
             else
             {
                 end_of_expr = pos_in_compiled + new_text.size() + 5; // +5 because of " == 1"
-
             }
 
             // Find that byte
