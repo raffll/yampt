@@ -8,7 +8,6 @@ class EsmTools
 {
 public:
     std::string dumpFile();
-    std::string dumpSCDT();
     std::string makeScriptList();
 
     std::string getNamePrefix() { return esm.getNamePrefix(); }

@@ -24,7 +24,6 @@ private:
     void mergeDict();
     void convertEsm();
     void dumpFile();
-    void dumpSCDT();
     void makeScriptList();
 
     Tools tools;

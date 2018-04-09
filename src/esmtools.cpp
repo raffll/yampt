@@ -38,28 +38,6 @@ std::string EsmTools::dumpFile()
 }
 
 //----------------------------------------------------------
-std::string EsmTools::dumpSCDT()
-{
-    std::string dump;
-    if(esm.getStatus() == true)
-    {
-        for(size_t i = 0; i < esm.getRecordColl().size(); ++i)
-        {
-            esm.setRecordTo(i);
-            if(esm.getRecordId() == "SCPT")
-            {
-                esm.setUniqueTo("SCHD");
-                esm.setFirstFriendlyTo("SCDT", false);
-                dump += esm.getRecordId() + "\r\n";
-                dump += "    SCHD " + esm.getUniqueText() + "\r\n";
-                dump += "    SCDT " + tools.replaceNonReadableCharsWithDot(esm.getFriendlyText()) + "\r\n";
-            }
-        }
-    }
-    return dump;
-}
-
-//----------------------------------------------------------
 std::string EsmTools::makeScriptList()
 {
     std::string scripts;
@@ -71,9 +49,12 @@ std::string EsmTools::makeScriptList()
             if(esm.getRecordId() == "SCPT")
             {
                 esm.setUniqueTo("SCHD");
-                esm.setFirstFriendlyTo("SCTX");
                 scripts += esm.getUniqueText() + "\r\n";
                 scripts += "---\r\n";
+                esm.setFirstFriendlyTo("SCTX");
+                scripts += esm.getFriendlyText() + "\r\n";
+                scripts += "---\r\n";
+                esm.setFirstFriendlyTo("SCDT", false);
                 scripts += esm.getFriendlyText() + "\r\n";
                 scripts += "---\r\n";
             }
