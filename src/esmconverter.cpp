@@ -414,7 +414,7 @@ void EsmConverter::convertGMST()
                 new_friendly = setNewFriendly(yampt::rec_type::GMST, esm.getUniqueText(), esm.getFriendlyText());
                 if(to_convert == true)
                 {
-                    convertRecordContent(new_friendly + '\0');
+                    convertRecordContent(new_friendly);
                 }
             }
         }
@@ -656,7 +656,7 @@ void EsmConverter::convertINFO()
                 new_friendly = setNewFriendly(yampt::rec_type::INFO, unique_text, esm.getFriendlyText(), dialog_topic);
                 if(to_convert == true)
                 {
-                    convertRecordContent(new_friendly + '\0');
+                    convertRecordContent(new_friendly);
                 }
             }
         }
