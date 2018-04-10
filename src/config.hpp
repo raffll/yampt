@@ -67,9 +67,12 @@ const std::vector<std::string> keyword = {"messagebox", "say ", "say,", "choice"
 class Tools
 {
 public:
-    void writeDict(const yampt::dict_t &dict, const std::string &name);
-    void writeText(const std::string &text, const std::string &name);
-    void writeFile(const std::vector<std::string> &rec_coll, const std::string &name);
+    void writeDict(const yampt::dict_t &dict,
+                   const std::string &name);
+    void writeText(const std::string &text,
+                   const std::string &name);
+    void writeFile(const std::vector<std::string> &rec_coll,
+                   const std::string &name);
     int getNumberOfElementsInDict(const yampt::dict_t &dict);
     unsigned int convertStringByteArrayToUInt(const std::string &str);
     std::string convertUIntToStringByteArray(const unsigned int x);

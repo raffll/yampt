@@ -51,7 +51,7 @@ void EsmConverter::printLogHeader()
 }
 
 //----------------------------------------------------------
-void EsmConverter::printLogLine(yampt::rec_type type)
+void EsmConverter::printLogLine(const yampt::rec_type type)
 {
     if(type == yampt::rec_type::INFO &&
        add_dial == true)
@@ -112,7 +112,7 @@ void EsmConverter::convertRecordContent(const std::string &new_friendly)
 }
 
 //----------------------------------------------------------
-std::string EsmConverter::setNewFriendly(yampt::rec_type type,
+std::string EsmConverter::setNewFriendly(const yampt::rec_type type,
                                          const std::string &unique_text,
                                          const std::string &friendly_text,
                                          const std::string &dialog_topic)

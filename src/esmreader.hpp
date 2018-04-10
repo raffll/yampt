@@ -39,7 +39,8 @@ public:
 
 private:
     void setName(const std::string &path);
-    void setRecordColl(const std::string &content, const std::string &path);
+    void setRecordColl(const std::string &content,
+                       const std::string &path);
 
     Tools tools;
     std::vector<std::string> rec_coll;

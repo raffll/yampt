@@ -21,10 +21,6 @@ void UserInterface::parseCommandLine()
             {
                 add_dial = true;
             }
-            else if(arg[i] == "-l")
-            {
-                ext_log = true;
-            }
             else if(arg[i] == "-f")
             {
                 command = "-f";
@@ -57,7 +53,7 @@ void UserInterface::parseCommandLine()
 
     if(output.empty())
     {
-        output = "yampt_merged.xml";
+        output = "Merged.xml";
     }
 
     dict_path.insert(dict_path.begin(), dict_path_reverse.rbegin(), dict_path_reverse.rend());

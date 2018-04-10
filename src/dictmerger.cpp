@@ -7,7 +7,7 @@ DictMerger::DictMerger()
 }
 
 //----------------------------------------------------------
-DictMerger::DictMerger(std::vector<std::string> &path)
+DictMerger::DictMerger(const std::vector<std::string> &path)
 {
     for(const auto &elem : path)
     {

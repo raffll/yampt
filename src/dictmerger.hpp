@@ -17,7 +17,7 @@ public:
     yampt::inner_dict_t const& getDict(size_t type) const { return dict[type]; }
 
     DictMerger();
-    DictMerger(std::vector<std::string> &path);
+    DictMerger(const std::vector<std::string> &path);
 
 private:
     void makeLog(const std::string &id,

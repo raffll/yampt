@@ -203,7 +203,7 @@ void DictReader::validateRecord(const std::string &id,
 }
 
 //----------------------------------------------------------
-void DictReader::insertRecord(yampt::rec_type type,
+void DictReader::insertRecord(const yampt::rec_type type,
                               const std::string &unique_text,
                               const std::string &friendly_text)
 {

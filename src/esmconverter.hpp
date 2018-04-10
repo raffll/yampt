@@ -22,7 +22,7 @@ public:
 private:
     void resetCounters();
     void convertRecordContent(const std::string &new_friendly);
-    std::string setNewFriendly(yampt::rec_type type,
+    std::string setNewFriendly(const yampt::rec_type type,
                                const std::string &unique_text,
                                const std::string &friendly_text,
                                const std::string &dialog_topic = "");
@@ -33,7 +33,7 @@ private:
     void setToConvertFlag(const std::string &friendly_text,
                           const std::string &new_friendly);
 
-    void printLogLine(yampt::rec_type type);
+    void printLogLine(const yampt::rec_type type);
     void printLogHeader();
 
     void convertCELL();

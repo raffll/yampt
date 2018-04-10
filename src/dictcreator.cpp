@@ -1,7 +1,7 @@
 #include "dictcreator.hpp"
 
 //----------------------------------------------------------
-DictCreator::DictCreator(std::string path_n)
+DictCreator::DictCreator(const std::string &path_n)
     : esm_ptr(&esm_n),
       message_ptr(&message_n),
       mode(yampt::ins_mode::RAW)
@@ -15,8 +15,8 @@ DictCreator::DictCreator(std::string path_n)
 }
 
 //----------------------------------------------------------
-DictCreator::DictCreator(std::string path_n,
-                         std::string path_f)
+DictCreator::DictCreator(const std::string &path_n,
+                         const std::string &path_f)
     : esm_ptr(&esm_f),
       message_ptr(&message_f),
       mode(yampt::ins_mode::BASE)
@@ -39,9 +39,9 @@ DictCreator::DictCreator(std::string path_n,
 }
 
 //----------------------------------------------------------
-DictCreator::DictCreator(std::string path_n,
+DictCreator::DictCreator(const std::string &path_n,
                          DictMerger &merger,
-                         yampt::ins_mode mode)
+                         const yampt::ins_mode mode)
     : esm_ptr(&esm_n),
       merger(&merger),
       message_ptr(&message_n),
@@ -126,7 +126,7 @@ void DictCreator::printLogHeader()
 }
 
 //----------------------------------------------------------
-void DictCreator::printLog(yampt::rec_type type)
+void DictCreator::printLog(const yampt::rec_type type)
 {
     std::string id = yampt::type_name[type];
 

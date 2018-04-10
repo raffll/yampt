@@ -14,12 +14,12 @@ public:
     std::string getNamePrefix() { return esm_n.getNamePrefix(); }
     yampt::dict_t const& getDict() const { return dict; }
 
-    DictCreator(std::string path_n);
-    DictCreator(std::string path_n,
-                std::string path_f);
-    DictCreator(std::string path_n,
+    DictCreator(const std::string &path_n);
+    DictCreator(const std::string &path_n,
+                const std::string &path_f);
+    DictCreator(const std::string &path_n,
                 DictMerger &merger,
-                yampt::ins_mode mode);
+                const yampt::ins_mode mode);
 
 private:
     void makeDictBasic();
@@ -35,7 +35,7 @@ private:
                       const yampt::rec_type type);
     std::vector<std::string> makeMessageColl(const std::string &new_friendly);
 
-    void printLog(yampt::rec_type type);
+    void printLog(const yampt::rec_type type);
     void printLogHeader();
 
     void makeDictCELL();

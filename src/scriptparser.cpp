@@ -126,7 +126,7 @@ void ScriptParser::convertScript()
 std::string ScriptParser::checkLine(const std::string &line,
                                     const std::string &line_lc,
                                     const std::string &keyword,
-                                    const bool &is_say)
+                                    const bool is_say)
 {
     std::string new_line = line;
     size_t keyword_pos = line_lc.find(keyword);
@@ -144,9 +144,9 @@ std::string ScriptParser::checkLine(const std::string &line,
 std::string ScriptParser::checkLine(const std::string &line,
                                     const std::string &line_lc,
                                     const std::string &keyword,
-                                    const int &pos_in_expr,
-                                    const yampt::rec_type &text_type,
-                                    const bool &is_getpccell)
+                                    const int pos_in_expr,
+                                    const yampt::rec_type text_type,
+                                    const bool is_getpccell)
 {
     std::string new_line = line;
     std::pair<std::string, size_t> text;
@@ -181,7 +181,7 @@ std::string ScriptParser::convertLine(const std::string &line)
 
 //----------------------------------------------------------
 std::string ScriptParser::findText(const std::string &text,
-                                   const yampt::rec_type &text_type)
+                                   const yampt::rec_type text_type)
 {
     // Fast search in map
     auto search = merger->getDict(text_type).find(text);
@@ -205,7 +205,7 @@ std::string ScriptParser::findText(const std::string &text,
 //----------------------------------------------------------
 std::string ScriptParser::convertText(const std::string &line,
                                       const std::string &text,
-                                      const size_t &text_pos,
+                                      const size_t text_pos,
                                       const std::string &new_text)
 {
     std::string new_line = line;

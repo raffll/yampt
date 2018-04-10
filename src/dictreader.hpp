@@ -23,10 +23,18 @@ public:
 
 private:
     void setName(const std::string &path);
-    void parseDict(const std::string &content, const std::string &path);
-    void validateRecord(const std::string &id, const std::string &unique_text, const std::string &friendly_text);
-    void insertRecord(yampt::rec_type type, const std::string &unique_text, const std::string &friendly_text);
-    void makeLog(const std::string &id, const std::string &unique_text, const std::string &friendly_text, const std::string &comment);
+    void parseDict(const std::string &content,
+                   const std::string &path);
+    void validateRecord(const std::string &id,
+                        const std::string &unique_text,
+                        const std::string &friendly_text);
+    void insertRecord(const yampt::rec_type type,
+                      const std::string &unique_text,
+                      const std::string &friendly_text);
+    void makeLog(const std::string &id,
+                 const std::string &unique_text,
+                 const std::string &friendly_text,
+                 const std::string &comment);
     void makeLogHeader();
     void printLog();
 
