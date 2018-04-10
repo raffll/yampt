@@ -92,11 +92,11 @@ void UserInterface::runCommand()
         {
             convertEsm();
         }
-        else if(arg[1] == "--dump" && file_path.size() > 0)
+        else if(arg[1] == "--binary-dump" && file_path.size() > 0)
         {
             dumpFile();
         }
-        else if(arg[1] == "--scripts" && file_path.size() > 0)
+        else if(arg[1] == "--script-list" && file_path.size() > 0)
         {
             makeScriptList();
         }
