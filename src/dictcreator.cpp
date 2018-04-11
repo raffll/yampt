@@ -74,7 +74,6 @@ void DictCreator::makeDictBasic()
 {
     if(status == true)
     {
-        printLogHeader();
         makeDictCELL();
         makeDictCELLWilderness();
         makeDictCELLRegion();
@@ -88,7 +87,6 @@ void DictCreator::makeDictBasic()
         makeDictINFO();
         makeDictBNAM();
         makeDictSCPT();
-        std::cout << "----------------------------------------------" << std::endl;
     }
 }
 
@@ -97,9 +95,6 @@ void DictCreator::makeDictExtended()
 {
     if(status == true)
     {
-        std::cout << "--> Missing CELL and DIAL records needs to be added manually!" << std::endl;
-        std::cout << "    Check dictionary for \"MISSING\" keyword!" << std::endl;
-        printLogHeader();
         makeDictCELLExtended();
         makeDictCELLExtendedWilderness();
         makeDictCELLExtendedRegion();
@@ -113,16 +108,7 @@ void DictCreator::makeDictExtended()
         makeDictINFO();
         makeDictBNAMExtended();
         makeDictSCPTExtended();
-        std::cout << "----------------------------------------------" << std::endl;
     }
-}
-
-//----------------------------------------------------------
-void DictCreator::printLogHeader()
-{
-    std::cout << "-----------------------------------------------" << std::endl
-              << "          Created / Missing / Identical /   All" << std::endl
-              << "-----------------------------------------------" << std::endl;
 }
 
 //----------------------------------------------------------
@@ -198,7 +184,8 @@ void DictCreator::validateRecord(const std::string &unique_text,
     counter_all++;
 
     // Insert without special cases
-    if(mode == yampt::ins_mode::RAW || mode == yampt::ins_mode::BASE)
+    if(mode == yampt::ins_mode::RAW ||
+       mode == yampt::ins_mode::BASE)
     {
         insertRecord(unique_text, friendly_text, type);
     }

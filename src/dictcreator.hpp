@@ -10,6 +10,7 @@ class DictCreator
 public:
     void makeDict();
 
+    bool getStatus() { return status; }
     std::string getNameFull() { return esm_n.getNameFull(); }
     std::string getNamePrefix() { return esm_n.getNamePrefix(); }
     yampt::dict_t const& getDict() const { return dict; }
@@ -79,7 +80,7 @@ private:
 
     bool status = false;
     bool basic_mode = false;
-    yampt::ins_mode mode;
+    const yampt::ins_mode mode;
 
     int counter_created;
     int counter_missing;
