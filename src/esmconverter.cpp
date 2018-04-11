@@ -132,11 +132,15 @@ std::string EsmConverter::setNewFriendly(const yampt::rec_type type,
 }
 
 //----------------------------------------------------------
-std::string EsmConverter::setNewScriptBNAM(const std::string &friendly_text)
+std::string EsmConverter::setNewScriptBNAM(const std::string &prefix,
+                                           const std::string &friendly_text)
 {
     counter_all++;
     std::string new_friendly;
-    ScriptParser parser(yampt::rec_type::BNAM, *merger, friendly_text);
+    ScriptParser parser(yampt::rec_type::BNAM,
+                        *merger,
+                        prefix,
+                        friendly_text);
     parser.convertScript();
     new_friendly = parser.getNewFriendly();
     setToConvertFlag(friendly_text, new_friendly);
@@ -144,7 +148,8 @@ std::string EsmConverter::setNewScriptBNAM(const std::string &friendly_text)
 }
 
 //----------------------------------------------------------
-std::pair<std::string, std::string> EsmConverter::setNewScriptSCPT(const std::string &friendly_text,
+std::pair<std::string, std::string> EsmConverter::setNewScriptSCPT(const std::string &prefix,
+                                                                   const std::string &friendly_text,
                                                                    const std::string &compiled_data)
 {
     counter_all++;
@@ -152,6 +157,7 @@ std::pair<std::string, std::string> EsmConverter::setNewScriptSCPT(const std::st
     std::string new_compiled;
     ScriptParser parser(yampt::rec_type::SCTX,
                         *merger,
+                        prefix,
                         friendly_text,
                         compiled_data);
     parser.convertScript();
@@ -688,6 +694,7 @@ void EsmConverter::convertINFO()
 //----------------------------------------------------------
 void EsmConverter::convertBNAM()
 {
+    std::string prefix;
     std::string new_friendly;
 
     resetCounters();
@@ -701,7 +708,8 @@ void EsmConverter::convertBNAM()
             if(esm.getUniqueStatus() == true &&
                esm.getFriendlyStatus() == true)
             {
-                new_friendly = setNewScriptBNAM(esm.getFriendlyText());
+                prefix = yampt::sep[7] + esm.getUniqueText() + yampt::sep[8];
+                new_friendly = setNewScriptBNAM(prefix, esm.getFriendlyText());
                 if(to_convert == true)
                 {
                     convertRecordContent(new_friendly);
@@ -715,6 +723,7 @@ void EsmConverter::convertBNAM()
 //----------------------------------------------------------
 void EsmConverter::convertSCPT()
 {
+    std::string prefix;
     std::string friendly_text;
     std::string compiled_data;
     std::pair<std::string, std::string> new_script;
@@ -739,7 +748,8 @@ void EsmConverter::convertSCPT()
             }
             if(esm.getUniqueStatus() == true)
             {
-                new_script = setNewScriptSCPT(friendly_text, compiled_data);
+                prefix = yampt::sep[7] + esm.getUniqueText() + yampt::sep[8];
+                new_script = setNewScriptSCPT(prefix, friendly_text, compiled_data);
                 if(to_convert == true)
                 {
                     esm.setFirstFriendlyTo("SCTX");

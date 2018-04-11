@@ -9,9 +9,11 @@ ScriptParser::ScriptParser()
 //----------------------------------------------------------
 ScriptParser::ScriptParser(const yampt::rec_type type,
                            DictMerger &merger,
+                           const std::string &prefix,
                            const std::string &friendly_text)
     : type(type),
       merger(&merger),
+      prefix(prefix),
       friendly_text(friendly_text),
       pos_in_compiled(0)
 {
@@ -21,10 +23,12 @@ ScriptParser::ScriptParser(const yampt::rec_type type,
 //----------------------------------------------------------
 ScriptParser::ScriptParser(const yampt::rec_type type,
                            DictMerger &merger,
+                           const std::string &prefix,
                            const std::string &friendly_text,
                            const std::string &compiled_data)
     : type(type),
       merger(&merger),
+      prefix(prefix),
       friendly_text(friendly_text),
       compiled_data(compiled_data),
       pos_in_compiled(0)
@@ -152,16 +156,16 @@ std::string ScriptParser::checkLine(const std::string &line,
                                     const bool is_getpccell)
 {
     std::string new_line = line;
-    std::pair<std::string, size_t> text;
+    std::pair<std::string, size_t> text_and_pos;
     std::string new_text;
     size_t keyword_pos = line_lc.find(keyword);
     if(keyword_pos != std::string::npos &&
        line.rfind(";", keyword_pos) == std::string::npos)
     {
-        text = extractText(line, keyword_pos, pos_in_expr);
-        new_text = findText(text.first, text_type);
-        new_line = convertText(line, text.first, text.second, new_text);
-        convertInnerTextInCompiledScriptData(text.first, new_text, is_getpccell);
+        text_and_pos = extractText(line, keyword_pos, pos_in_expr);
+        new_text = findText(text_and_pos.first, text_type);
+        new_line = convertText(line, text_and_pos.first, text_and_pos.second, new_text);
+        convertInnerTextInCompiledScriptData(text_and_pos.first, new_text, is_getpccell);
         keyword_found = true;
     }
     return new_line;
@@ -171,12 +175,12 @@ std::string ScriptParser::checkLine(const std::string &line,
 std::string ScriptParser::convertLine(const std::string &line)
 {
     std::string new_line = line;
-    auto search = merger->getDict(type).find(line);
+    auto search = merger->getDict(type).find(prefix + line);
     if(search != merger->getDict(type).end())
     {
-        if(line != search->second)
+        if(line != search->second.substr(prefix.size()))
         {
-            new_line = search->second;
+            new_line = search->second.substr(prefix.size());
         }
     }
     return new_line;

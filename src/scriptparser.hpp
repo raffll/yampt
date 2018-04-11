@@ -15,9 +15,11 @@ public:
     ScriptParser();
     ScriptParser(const yampt::rec_type type,
                  DictMerger &merger,
+                 const std::string &prefix,
                  const std::string &friendly_text);
     ScriptParser(const yampt::rec_type type,
                  DictMerger &merger,
+                 const std::string &prefix,
                  const std::string &friendly_text,
                  const std::string &compiled_data);
 
@@ -56,7 +58,8 @@ private:
     DictMerger *merger;
     Tools tools;
 
-    std::string friendly_text;
+    const std::string prefix;
+    const std::string friendly_text;
     std::string new_friendly;
 
     std::string compiled_data;

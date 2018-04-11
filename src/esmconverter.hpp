@@ -26,8 +26,10 @@ private:
                                const std::string &unique_text,
                                const std::string &friendly_text,
                                const std::string &dialog_topic = "");
-    std::string setNewScriptBNAM(const std::string &friendly_text);
-    std::pair<std::string, std::string> setNewScriptSCPT(const std::string &friendly_text,
+    std::string setNewScriptBNAM(const std::string &prefix,
+                                 const std::string &friendly_text);
+    std::pair<std::string, std::string> setNewScriptSCPT(const std::string &prefix,
+                                                         const std::string &friendly_text,
                                                          const std::string &compiled_data);
     std::string addDialogTopicsToNotConvertedINFOStrings(const std::string &friendly_text);
     void setToConvertFlag(const std::string &friendly_text,
