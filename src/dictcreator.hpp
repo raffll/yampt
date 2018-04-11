@@ -36,8 +36,7 @@ private:
                       const yampt::rec_type type);
     std::vector<std::string> makeMessageColl(const std::string &new_friendly);
 
-    void printLog(const yampt::rec_type type);
-    void printLogHeader();
+    void printLogLine(const yampt::rec_type type);
 
     void makeDictCELL();
     void makeDictCELLExtended();

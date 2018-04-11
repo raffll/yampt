@@ -34,7 +34,6 @@ private:
                           const std::string &new_friendly);
 
     void printLogLine(const yampt::rec_type type);
-    void printLogHeader();
 
     void convertCELL();
     void convertPGRD();

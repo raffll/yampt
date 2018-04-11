@@ -112,7 +112,7 @@ void DictCreator::makeDictExtended()
 }
 
 //----------------------------------------------------------
-void DictCreator::printLog(const yampt::rec_type type)
+void DictCreator::printLogLine(const yampt::rec_type type)
 {
     std::string id = yampt::type_name[type];
 
@@ -354,7 +354,7 @@ void DictCreator::makeDictCELL()
             }
         }
     }
-    printLog(yampt::rec_type::CELL);
+    printLogLine(yampt::rec_type::CELL);
 }
 
 //----------------------------------------------------------
@@ -407,7 +407,7 @@ void DictCreator::makeDictCELLExtended()
         }
     }
 
-    printLog(yampt::rec_type::CELL);
+    printLogLine(yampt::rec_type::CELL);
 }
 
 //----------------------------------------------------------
@@ -494,7 +494,7 @@ void DictCreator::makeDictCELLWilderness()
             }
         }
     }
-    printLog(yampt::rec_type::Wilderness);
+    printLogLine(yampt::rec_type::Wilderness);
 }
 
 //----------------------------------------------------------
@@ -531,7 +531,7 @@ void DictCreator::makeDictCELLExtendedWilderness()
             }
         }
     }
-    printLog(yampt::rec_type::Wilderness);
+    printLogLine(yampt::rec_type::Wilderness);
 }
 
 //----------------------------------------------------------
@@ -559,7 +559,7 @@ void DictCreator::makeDictCELLRegion()
             }
         }
     }
-    printLog(yampt::rec_type::Region);
+    printLogLine(yampt::rec_type::Region);
 }
 
 //----------------------------------------------------------
@@ -596,7 +596,7 @@ void DictCreator::makeDictCELLExtendedRegion()
             }
         }
     }
-    printLog(yampt::rec_type::Region);
+    printLogLine(yampt::rec_type::Region);
 }
 
 //----------------------------------------------------------
@@ -620,7 +620,7 @@ void DictCreator::makeDictGMST()
             }
         }
     }
-    printLog(yampt::rec_type::GMST);
+    printLogLine(yampt::rec_type::GMST);
 }
 
 //----------------------------------------------------------
@@ -667,7 +667,7 @@ void DictCreator::makeDictFNAM()
             }
         }
     }
-    printLog(yampt::rec_type::FNAM);
+    printLogLine(yampt::rec_type::FNAM);
 }
 
 //----------------------------------------------------------
@@ -692,7 +692,7 @@ void DictCreator::makeDictDESC()
             }
         }
     }
-    printLog(yampt::rec_type::DESC);
+    printLogLine(yampt::rec_type::DESC);
 }
 
 //----------------------------------------------------------
@@ -715,7 +715,7 @@ void DictCreator::makeDictTEXT()
             }
         }
     }
-    printLog(yampt::rec_type::TEXT);
+    printLogLine(yampt::rec_type::TEXT);
 }
 
 //----------------------------------------------------------
@@ -742,7 +742,7 @@ void DictCreator::makeDictRNAM()
             }
         }
     }
-    printLog(yampt::rec_type::RNAM);
+    printLogLine(yampt::rec_type::RNAM);
 }
 
 //----------------------------------------------------------
@@ -766,7 +766,7 @@ void DictCreator::makeDictINDX()
             }
         }
     }
-    printLog(yampt::rec_type::INDX);
+    printLogLine(yampt::rec_type::INDX);
 }
 
 //----------------------------------------------------------
@@ -794,7 +794,7 @@ void DictCreator::makeDictDIAL()
             }
         }
     }
-    printLog(yampt::rec_type::DIAL);
+    printLogLine(yampt::rec_type::DIAL);
 }
 
 //----------------------------------------------------------
@@ -846,7 +846,7 @@ void DictCreator::makeDictDIALExtended()
         }
     }
 
-    printLog(yampt::rec_type::DIAL);
+    printLogLine(yampt::rec_type::DIAL);
 }
 
 //----------------------------------------------------------
@@ -934,7 +934,7 @@ void DictCreator::makeDictINFO()
             }
         }
     }
-    printLog(yampt::rec_type::INFO);
+    printLogLine(yampt::rec_type::INFO);
 }
 
 //----------------------------------------------------------
@@ -975,7 +975,7 @@ void DictCreator::makeDictBNAM()
             }
         }
     }
-    printLog(yampt::rec_type::BNAM);
+    printLogLine(yampt::rec_type::BNAM);
 }
 
 //----------------------------------------------------------
@@ -1014,7 +1014,7 @@ void DictCreator::makeDictBNAMExtended()
             }
         }
     }
-    printLog(yampt::rec_type::BNAM);
+    printLogLine(yampt::rec_type::BNAM);
 }
 
 //----------------------------------------------------------
@@ -1093,7 +1093,7 @@ void DictCreator::makeDictSCPT()
             }
         }
     }
-    printLog(yampt::rec_type::SCTX);
+    printLogLine(yampt::rec_type::SCTX);
 }
 
 //----------------------------------------------------------
@@ -1132,7 +1132,7 @@ void DictCreator::makeDictSCPTExtended()
             }
         }
     }
-    printLog(yampt::rec_type::SCTX);
+    printLogLine(yampt::rec_type::SCTX);
 }
 
 //----------------------------------------------------------

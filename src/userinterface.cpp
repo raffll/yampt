@@ -236,25 +236,34 @@ void UserInterface::convertEsm()
     DictMerger merger(dict_path);
     merger.mergeDict();
     log += merger.getLog();
+    tools.writeText(log, "yampt.log");
+
     for(size_t i = 0; i < file_path.size(); ++i)
     {
         EsmConverter converter(file_path[i], merger, add_dial);
-        converter.convertEsm();
         if(converter.getStatus() == true)
         {
+            std::cout << "--> Start converting file!" << std::endl;
+            std::cout << "----------------------------------------------" << std::endl
+                      << "      Converted / Skipped / Unchanged /    All" << std::endl
+                      << "----------------------------------------------" << std::endl;
+            converter.convertEsm();
+            std::cout << "----------------------------------------------" << std::endl;
             tools.writeFile(converter.getRecordColl(), converter.getNameFull());
         }
     }
-    tools.writeText(log, "yampt.log");
 }
 
 //----------------------------------------------------------
 void UserInterface::dumpFile()
 {
+    std::string text;
     for(size_t i = 0; i < file_path.size(); ++i)
     {
         EsmTools dump(file_path[i]);
-        std::string text = dump.dumpFile();
+        std::cout << "--> Start creating file dump!" << std::endl;
+        text = dump.dumpFile();
+        std::cout << "----------------------------------------------" << std::endl;
         tools.writeText(text, dump.getNamePrefix() + ".DUMP.txt");
     }
 }
@@ -262,10 +271,13 @@ void UserInterface::dumpFile()
 //----------------------------------------------------------
 void UserInterface::makeScriptList()
 {
+    std::string text;
     for(size_t i = 0; i < file_path.size(); ++i)
     {
-        EsmTools scripts(file_path[i]);
-        std::string text = scripts.makeScriptList();
-        tools.writeText(text, scripts.getNamePrefix() + ".SCRIPTS.txt");
+        EsmTools dump(file_path[i]);
+        std::cout << "--> Start creating script list!" << std::endl;
+        text = dump.makeScriptList();
+        std::cout << "----------------------------------------------" << std::endl;
+        tools.writeText(text, dump.getNamePrefix() + ".SCRIPTS.txt");
     }
 }

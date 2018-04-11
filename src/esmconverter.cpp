@@ -20,7 +20,6 @@ void EsmConverter::convertEsm()
 {
     if(status == true)
     {
-        printLogHeader();
         convertCELL();
         convertPGRD();
         convertANAM();
@@ -38,16 +37,7 @@ void EsmConverter::convertEsm()
         convertBNAM();
         convertSCPT();
         convertGMDT();
-        std::cout << "----------------------------------------------" << std::endl;
     }
-}
-
-//----------------------------------------------------------
-void EsmConverter::printLogHeader()
-{
-    std::cout << "----------------------------------------------" << std::endl
-              << "      Converted / Skipped / Unchanged /    All" << std::endl
-              << "----------------------------------------------" << std::endl;
 }
 
 //----------------------------------------------------------
