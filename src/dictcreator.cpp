@@ -172,6 +172,7 @@ void DictCreator::resetCounters()
 {
     counter_created = 0;
     counter_missing = 0;
+    counter_doubled = 0;
     counter_identical = 0;
     counter_all = 0;
 }
@@ -261,9 +262,10 @@ void DictCreator::insertRecord(const std::string &unique_text,
         auto search = dict[type].find(unique_text);
         if(friendly_text != search->second)
         {
-            if(dict[type].insert({unique_text + "_DOUBLED_" + std::to_string(counter_created), friendly_text}).second == true)
+            std::string unique_current = unique_text + yampt::err[0] + "DOUBLED_" + std::to_string(counter_doubled) + yampt::err[1];
+            if(dict[type].insert({unique_current, friendly_text}).second == true)
             {
-                counter_created++;
+                counter_doubled++;
             }
             else
             {
@@ -389,8 +391,8 @@ void DictCreator::makeDictCELLExtended()
             if(esm_f.getFriendlyStatus() == true)
             {
                 validateRecord(esm_f.getFriendlyText(),
-                               "MISSING",
-                               yampt::rec_type::CELL);
+                               yampt::err[0] + "MISSING" + yampt::err[1],
+                        yampt::rec_type::CELL);
             }
         }
     }
@@ -828,8 +830,8 @@ void DictCreator::makeDictDIALExtended()
             if(esm_f.getFriendlyStatus() == true)
             {
                 validateRecord(esm_f.getFriendlyText(),
-                               "MISSING",
-                               yampt::rec_type::DIAL);
+                               yampt::err[0] + "MISSING" + yampt::err[1],
+                        yampt::rec_type::DIAL);
             }
         }
     }
@@ -928,21 +930,23 @@ void DictCreator::makeDictINFO()
 //----------------------------------------------------------
 void DictCreator::makeDictBNAM()
 {
+    std::string dialog_topic;
+
     resetCounters();
     for(size_t i = 0; i < esm_n.getRecordColl().size(); ++i)
     {
         esm_n.setRecordTo(i);
         if(esm_n.getRecordId() == "INFO")
         {
-            //esm_n.setUniqueTo("INAM");
+            esm_n.setUniqueTo("INAM");
             esm_n.setFirstFriendlyTo("BNAM");
             esm_ptr->setRecordTo(i);
-            //esm_ptr->setUniqueTo("INAM");
+            esm_ptr->setUniqueTo("INAM");
             esm_ptr->setFirstFriendlyTo("BNAM");
 
-            if(//esm_n.getUniqueStatus() == true &&
+            if(esm_n.getUniqueStatus() == true &&
                esm_n.getFriendlyStatus() == true &&
-               //esm_ptr->getUniqueStatus() == true &&
+               esm_ptr->getUniqueStatus() == true &&
                esm_ptr->getFriendlyStatus() == true)
             {
                 message_n = makeMessageColl(esm_n.getFriendlyText());
@@ -951,9 +955,9 @@ void DictCreator::makeDictBNAM()
                 {
                     for(size_t k = 0; k < message_n.size(); ++k)
                     {
-                        validateRecord(message_ptr->at(k),
-                                       message_n.at(k),
-                                       yampt::rec_type::BNAM);
+                        validateRecord(yampt::sep[7] + esm_ptr->getUniqueText() + yampt::sep[8] + message_ptr->at(k),
+                                yampt::sep[7] + esm_n.getUniqueText() + yampt::sep[8] + message_n.at(k),
+                                yampt::rec_type::BNAM);
                     }
                 }
                 else
@@ -982,10 +986,14 @@ void DictCreator::makeDictBNAMExtended()
         if(search != match_coll.end())
         {
             esm_n.setRecordTo(search->second);
+            esm_n.setUniqueTo("INAM");
             esm_n.setFirstFriendlyTo("BNAM");
             esm_f.setRecordTo(pattern_coll[i].second);
+            esm_f.setUniqueTo("INAM");
             esm_f.setFirstFriendlyTo("BNAM");
-            if(esm_n.getFriendlyStatus() == true &&
+            if(esm_n.getUniqueStatus() == true &&
+               esm_n.getFriendlyStatus() == true &&
+               esm_f.getUniqueStatus() == true &&
                esm_f.getFriendlyStatus() == true)
             {
                 message_n = makeMessageColl(esm_n.getFriendlyText());
@@ -994,9 +1002,9 @@ void DictCreator::makeDictBNAMExtended()
                 {
                     for(size_t k = 0; k < message_n.size(); ++k)
                     {
-                        validateRecord(message_f.at(k),
-                                       message_n.at(k),
-                                       yampt::rec_type::BNAM);
+                        validateRecord(yampt::sep[7] + esm_f.getUniqueText() + yampt::sep[8] + message_f.at(k),
+                                yampt::sep[7] + esm_f.getUniqueText() + yampt::sep[8] + message_n.at(k),
+                                yampt::rec_type::BNAM);
                     }
                 }
             }
@@ -1056,15 +1064,15 @@ void DictCreator::makeDictSCPT()
         esm_n.setRecordTo(i);
         if(esm_n.getRecordId() == "SCPT")
         {
-            //esm_n.setUniqueTo("SCHD");
+            esm_n.setUniqueTo("SCHD");
             esm_n.setFirstFriendlyTo("SCTX");
             esm_ptr->setRecordTo(i);
-            //esm_ptr->setUniqueTo("SCHD");
+            esm_ptr->setUniqueTo("SCHD");
             esm_ptr->setFirstFriendlyTo("SCTX");
 
-            if(//esm_n.getUniqueStatus() == true &&
+            if(esm_n.getUniqueStatus() == true &&
                esm_n.getFriendlyStatus() == true &&
-               //esm_ptr->getUniqueStatus() == true &&
+               esm_ptr->getUniqueStatus() == true &&
                esm_ptr->getFriendlyStatus() == true)
             {
                 message_n = makeMessageColl(esm_n.getFriendlyText());
@@ -1073,9 +1081,9 @@ void DictCreator::makeDictSCPT()
                 {
                     for(size_t k = 0; k < message_n.size(); ++k)
                     {
-                        validateRecord(message_ptr->at(k),
-                                       message_n.at(k),
-                                       yampt::rec_type::SCTX);
+                        validateRecord(yampt::sep[7] + esm_ptr->getUniqueText() + yampt::sep[8] + message_ptr->at(k),
+                                yampt::sep[7] + esm_n.getUniqueText() + yampt::sep[8] + message_n.at(k),
+                                yampt::rec_type::SCTX);
                     }
                 }
             }
@@ -1100,10 +1108,14 @@ void DictCreator::makeDictSCPTExtended()
         if(search != match_coll.end())
         {
             esm_n.setRecordTo(search->second);
+            esm_n.setUniqueTo("SCHD");
             esm_n.setFirstFriendlyTo("SCTX");
             esm_f.setRecordTo(pattern_coll[i].second);
+            esm_f.setUniqueTo("SCHD");
             esm_f.setFirstFriendlyTo("SCTX");
-            if(esm_n.getFriendlyStatus() == true &&
+            if(esm_n.getUniqueStatus() == true &&
+               esm_n.getFriendlyStatus() == true &&
+               esm_f.getUniqueStatus() == true &&
                esm_f.getFriendlyStatus() == true)
             {
                 message_n = makeMessageColl(esm_n.getFriendlyText());
@@ -1112,9 +1124,9 @@ void DictCreator::makeDictSCPTExtended()
                 {
                     for(size_t k = 0; k < message_n.size(); ++k)
                     {
-                        validateRecord(message_f.at(k),
-                                       message_n.at(k),
-                                       yampt::rec_type::SCTX);
+                        validateRecord(yampt::sep[7] + esm_f.getUniqueText() + yampt::sep[8] + message_f.at(k),
+                                yampt::sep[7] + esm_n.getUniqueText() + yampt::sep[8] + message_n.at(k),
+                                yampt::rec_type::SCTX);
                     }
                 }
             }

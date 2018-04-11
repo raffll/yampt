@@ -83,6 +83,7 @@ private:
 
     int counter_created;
     int counter_missing;
+    int counter_doubled;
     int counter_identical;
     int counter_all;
 };
