@@ -58,7 +58,7 @@ private:
     Tools tools;
 
     bool status = false;
-    bool add_dial = false;
+    const bool add_dial = false;
 
     int counter_converted = 0;
     int counter_skipped = 0;

@@ -87,7 +87,8 @@ void EsmConverter::convertRecordContent(const std::string &new_friendly)
         rec_content.erase(esm.getFriendlyPos() + 8, esm.getFriendlySize());
         rec_content.insert(esm.getFriendlyPos() + 8, new_friendly);
         rec_content.erase(esm.getFriendlyPos() + 4, 4);
-        rec_content.insert(esm.getFriendlyPos() + 4, tools.convertUIntToStringByteArray(new_friendly.size()));
+        rec_content.insert(esm.getFriendlyPos() + 4,
+                           tools.convertUIntToStringByteArray(new_friendly.size()));
         rec_size = rec_content.size() - 16;
         rec_content.erase(4, 4);
         rec_content.insert(4, tools.convertUIntToStringByteArray(rec_size));
@@ -149,7 +150,10 @@ std::pair<std::string, std::string> EsmConverter::setNewScriptSCPT(const std::st
     counter_all++;
     std::string new_friendly;
     std::string new_compiled;
-    ScriptParser parser(yampt::rec_type::SCTX, *merger, friendly_text, compiled_data);
+    ScriptParser parser(yampt::rec_type::SCTX,
+                        *merger,
+                        friendly_text,
+                        compiled_data);
     parser.convertScript();
     new_friendly = parser.getNewFriendly();
     new_compiled = parser.getNewCompiled();
@@ -221,7 +225,9 @@ void EsmConverter::convertCELL()
             if(esm.getUniqueStatus() == true &&
                esm.getFriendlyStatus() == true)
             {
-                new_friendly = setNewFriendly(yampt::rec_type::CELL, esm.getUniqueText(), esm.getFriendlyText());
+                new_friendly = setNewFriendly(yampt::rec_type::CELL,
+                                              esm.getUniqueText(),
+                                              esm.getFriendlyText());
                 if(to_convert == true)
                 {
                     convertRecordContent(new_friendly + '\0');
@@ -248,7 +254,9 @@ void EsmConverter::convertPGRD()
             if(esm.getUniqueStatus() == true &&
                esm.getFriendlyStatus() == true)
             {
-                new_friendly = setNewFriendly(yampt::rec_type::CELL, esm.getUniqueText(), esm.getFriendlyText());
+                new_friendly = setNewFriendly(yampt::rec_type::CELL,
+                                              esm.getUniqueText(),
+                                              esm.getFriendlyText());
                 if(to_convert == true)
                 {
                     convertRecordContent(new_friendly + '\0');
@@ -275,7 +283,9 @@ void EsmConverter::convertANAM()
             if(esm.getUniqueStatus() == true &&
                esm.getFriendlyStatus() == true)
             {
-                new_friendly = setNewFriendly(yampt::rec_type::CELL, esm.getUniqueText(), esm.getFriendlyText());
+                new_friendly = setNewFriendly(yampt::rec_type::CELL,
+                                              esm.getUniqueText(),
+                                              esm.getFriendlyText());
                 if(to_convert == true)
                 {
                     convertRecordContent(new_friendly + '\0');
@@ -340,7 +350,9 @@ void EsmConverter::convertDNAM()
             {
                 while(esm.getFriendlyStatus() == true)
                 {
-                    new_friendly = setNewFriendly(yampt::rec_type::CELL, esm.getFriendlyText(), esm.getFriendlyText());
+                    new_friendly = setNewFriendly(yampt::rec_type::CELL,
+                                                  esm.getFriendlyText(),
+                                                  esm.getFriendlyText());
                     if(to_convert == true)
                     {
                         convertRecordContent(new_friendly + '\0');
@@ -371,7 +383,9 @@ void EsmConverter::convertCNDT()
             {
                 while(esm.getFriendlyStatus() == true)
                 {
-                    new_friendly = setNewFriendly(yampt::rec_type::CELL, esm.getFriendlyText(), esm.getFriendlyText());
+                    new_friendly = setNewFriendly(yampt::rec_type::CELL,
+                                                  esm.getFriendlyText(),
+                                                  esm.getFriendlyText());
                     if(to_convert == true)
                     {
                         convertRecordContent(new_friendly + '\0');
@@ -401,7 +415,9 @@ void EsmConverter::convertGMST()
                esm.getFriendlyStatus() == true &&
                esm.getUniqueText().substr(0, 1) == "s")
             {
-                new_friendly = setNewFriendly(yampt::rec_type::GMST, esm.getUniqueText(), esm.getFriendlyText());
+                new_friendly = setNewFriendly(yampt::rec_type::GMST,
+                                              esm.getUniqueText(),
+                                              esm.getFriendlyText());
                 if(to_convert == true)
                 {
                     convertRecordContent(new_friendly);
@@ -454,7 +470,9 @@ void EsmConverter::convertFNAM()
                esm.getUniqueText() != "player")
             {
                 unique_text = esm.getRecordId() + yampt::sep[0] + esm.getUniqueText();
-                new_friendly = setNewFriendly(yampt::rec_type::FNAM, unique_text, esm.getFriendlyText());
+                new_friendly = setNewFriendly(yampt::rec_type::FNAM,
+                                              unique_text,
+                                              esm.getFriendlyText());
                 if(to_convert == true)
                 {
                     convertRecordContent(new_friendly + '\0');
@@ -485,7 +503,9 @@ void EsmConverter::convertDESC()
                esm.getFriendlyStatus() == true)
             {
                 unique_text = esm.getRecordId() + yampt::sep[0] + esm.getUniqueText();
-                new_friendly = setNewFriendly(yampt::rec_type::DESC, unique_text, esm.getFriendlyText());
+                new_friendly = setNewFriendly(yampt::rec_type::DESC,
+                                              unique_text,
+                                              esm.getFriendlyText());
                 if(to_convert == true)
                 {
                     convertRecordContent(new_friendly);
@@ -512,7 +532,9 @@ void EsmConverter::convertTEXT()
             if(esm.getUniqueStatus() == true &&
                esm.getFriendlyStatus() == true)
             {
-                new_friendly = setNewFriendly(yampt::rec_type::TEXT, esm.getUniqueText(), esm.getFriendlyText());
+                new_friendly = setNewFriendly(yampt::rec_type::TEXT,
+                                              esm.getUniqueText(),
+                                              esm.getFriendlyText());
                 if(to_convert == true)
                 {
                     convertRecordContent(new_friendly);
@@ -542,7 +564,9 @@ void EsmConverter::convertRNAM()
                 while(esm.getFriendlyStatus() == true)
                 {
                     unique_text = esm.getUniqueText() + yampt::sep[0] + std::to_string(esm.getFriendlyCounter());
-                    new_friendly = setNewFriendly(yampt::rec_type::RNAM, unique_text, esm.getFriendlyText());
+                    new_friendly = setNewFriendly(yampt::rec_type::RNAM,
+                                                  unique_text,
+                                                  esm.getFriendlyText());
                     if(to_convert == true)
                     {
                         new_friendly.resize(32);
@@ -575,7 +599,9 @@ void EsmConverter::convertINDX()
                esm.getFriendlyStatus() == true)
             {
                 unique_text = esm.getRecordId() + yampt::sep[0] + esm.getUniqueText();
-                new_friendly = setNewFriendly(yampt::rec_type::INDX, unique_text, esm.getFriendlyText());
+                new_friendly = setNewFriendly(yampt::rec_type::INDX,
+                                              unique_text,
+                                              esm.getFriendlyText());
                 if(to_convert == true)
                 {
                     convertRecordContent(new_friendly);
@@ -603,7 +629,9 @@ void EsmConverter::convertDIAL()
                esm.getFriendlyStatus() == true &&
                esm.getUniqueText() == "T")
             {
-                new_friendly = setNewFriendly(yampt::rec_type::DIAL, esm.getFriendlyText(), esm.getFriendlyText());
+                new_friendly = setNewFriendly(yampt::rec_type::DIAL,
+                                              esm.getFriendlyText(),
+                                              esm.getFriendlyText());
                 if(to_convert == true)
                 {
                     convertRecordContent(new_friendly + '\0');
@@ -643,7 +671,10 @@ void EsmConverter::convertINFO()
                esm.getFriendlyStatus() == true)
             {
                 unique_text = dialog_topic + yampt::sep[0] + esm.getUniqueText();
-                new_friendly = setNewFriendly(yampt::rec_type::INFO, unique_text, esm.getFriendlyText(), dialog_topic);
+                new_friendly = setNewFriendly(yampt::rec_type::INFO,
+                                              unique_text,
+                                              esm.getFriendlyText(),
+                                              dialog_topic);
                 if(to_convert == true)
                 {
                     convertRecordContent(new_friendly);
@@ -750,7 +781,9 @@ void EsmConverter::convertGMDT()
                 friendly_text = tools.eraseNullChars(friendly_text);
                 prefix = esm.getFriendlyText().substr(0, 24);
                 suffix = esm.getFriendlyText().substr(88);
-                new_friendly = setNewFriendly(yampt::rec_type::CELL, friendly_text, friendly_text);
+                new_friendly = setNewFriendly(yampt::rec_type::CELL,
+                                              friendly_text,
+                                              friendly_text);
                 if(to_convert == true)
                 {
                     new_friendly.resize(64);
@@ -767,7 +800,9 @@ void EsmConverter::convertGMDT()
                 friendly_text = esm.getUniqueText().substr(0, 64);
                 friendly_text = tools.eraseNullChars(friendly_text);
                 suffix = esm.getFriendlyText().substr(64);
-                new_friendly = setNewFriendly(yampt::rec_type::CELL, friendly_text, friendly_text);
+                new_friendly = setNewFriendly(yampt::rec_type::CELL,
+                                              friendly_text,
+                                              friendly_text);
                 if(to_convert == true)
                 {
                     new_friendly.resize(64);
