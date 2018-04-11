@@ -296,37 +296,25 @@ std::string DictCreator::dialTranslator(std::string to_translate)
 //----------------------------------------------------------
 std::vector<std::string> DictCreator::makeMessageColl(const std::string &new_friendly)
 {
-    std::vector<std::string> message;
-    bool found;
+    std::vector<std::string> message_coll;
     std::string line;
-    std::string line_lc;
-    size_t pos;
     std::istringstream ss(new_friendly);
+    std::smatch found;
 
     while(std::getline(ss, line))
     {
-        found = false;
         line = tools.eraseCarriageReturnChar(line);
-        line_lc = line;
-        transform(line_lc.begin(), line_lc.end(),
-                  line_lc.begin(), ::tolower);
-
-        for(auto const &elem : yampt::keyword)
+        for(auto const &elem : yampt::keyword_list)
         {
-            if(found == false)
+            std::regex re(elem, std::regex::icase);
+            std::regex_search(line, found, re);
+            if(!found.empty())
             {
-                pos = line_lc.find(elem);
-                if(pos != std::string::npos &&
-                   line.rfind(";", pos) == std::string::npos)
-                {
-                    message.push_back(line);
-                    found = true;
-                    break;
-                }
+                message_coll.push_back(line);
             }
         }
     }
-    return message;
+    return message_coll;
 }
 
 //----------------------------------------------------------

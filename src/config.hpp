@@ -60,7 +60,7 @@ const std::vector<std::string> type_name { "CELL", "DIAL", "INDX", "RNAM", "DESC
                                            "Wilderness", "Region", "PGRD", "ANAM", "SCVR", "DNAM", "CNDT", "GMDT" };
 const std::array<std::string, 5> dialog_type = { "T", "V", "G", "P", "J" };
 const std::vector<std::string> sep = { "^", "<_id>", "</_id>", "<key>", "</key>", "<val>", "</val>" };
-const std::vector<std::string> keyword = { "messagebox", "say ", "say,", "choice" };
+const std::vector<std::string> keyword_list = { "\\b(messagebox.*?\")\\b", "\\b(choice.*?\")\\b", "\\b(say.*?\")\\b", };
 
 }
 
