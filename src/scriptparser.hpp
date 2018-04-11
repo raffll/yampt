@@ -23,7 +23,6 @@ public:
 
 private:
     std::string checkLine(const std::string &line,
-                          const std::string &line_lc,
                           const std::string &keyword,
                           const bool is_say);
     std::string checkLine(const std::string &line,
@@ -41,6 +40,7 @@ private:
                             const std::string &new_text);
     void convertLineInCompiledScriptData(const std::string &line,
                                          const std::string &new_line,
+                                         const size_t keyword_pos,
                                          const bool is_say);
     void convertInnerTextInCompiledScriptData(const std::string &text,
                                               const std::string &new_text,
@@ -49,6 +49,7 @@ private:
                                                const size_t keyword_pos,
                                                const int pos_in_expression);
     std::vector<std::string> splitLine(const std::string &line,
+                                       const size_t keyword_pos,
                                        const bool is_say);
 
     yampt::rec_type type;

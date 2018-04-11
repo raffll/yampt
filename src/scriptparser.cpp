@@ -53,22 +53,17 @@ void ScriptParser::convertScript()
 
         if(keyword_found == false)
         {
-            new_line = checkLine(line, line_lc, "messagebox", false);
+            new_line = checkLine(line, "\\b(messagebox.*?\")\\b", false);
         }
 
         if(keyword_found == false)
         {
-            new_line = checkLine(line, line_lc, "choice", false);
+            new_line = checkLine(line, "\\b(choice.*?\")\\b", false);
         }
 
         if(keyword_found == false)
         {
-            new_line = checkLine(line, line_lc, "say ", true);
-        }
-
-        if(keyword_found == false)
-        {
-            new_line = checkLine(line, line_lc, "say,", true);
+            new_line = checkLine(line, "\\b(say.*?\")\\b", true);
         }
 
         if(keyword_found == false)
@@ -124,17 +119,24 @@ void ScriptParser::convertScript()
 
 //----------------------------------------------------------
 std::string ScriptParser::checkLine(const std::string &line,
-                                    const std::string &line_lc,
                                     const std::string &keyword,
                                     const bool is_say)
 {
     std::string new_line = line;
-    size_t keyword_pos = line_lc.find(keyword);
+    std::smatch found;
+    size_t keyword_pos = std::string::npos;
+    std::regex re(keyword, std::regex::icase);
+    std::regex_search(line, found, re);
+    if(!found.empty())
+    {
+        keyword_pos = found.position(1);
+    }
+
     if(keyword_pos != std::string::npos &&
        line.rfind(";", keyword_pos) == std::string::npos)
     {
         new_line = convertLine(line);
-        convertLineInCompiledScriptData(line, new_line, is_say);
+        convertLineInCompiledScriptData(line, new_line, keyword_pos, is_say);
         keyword_found = true;
     }
     return new_line;
@@ -224,10 +226,11 @@ std::string ScriptParser::convertText(const std::string &line,
 //----------------------------------------------------------
 void ScriptParser::convertLineInCompiledScriptData(const std::string &line,
                                                    const std::string &new_line,
+                                                   const size_t keyword_pos,
                                                    const bool is_say)
 {
-    std::vector<std::string> splitted_line = splitLine(line, is_say);
-    std::vector<std::string> splitted_new_line = splitLine(new_line, is_say);
+    std::vector<std::string> splitted_line = splitLine(line, keyword_pos, is_say);
+    std::vector<std::string> splitted_new_line = splitLine(new_line, keyword_pos, is_say);
 
     if(splitted_line.size() == splitted_new_line.size())
     {
@@ -278,7 +281,7 @@ void ScriptParser::convertInnerTextInCompiledScriptData(const std::string &text,
 
         if(is_getpccell == true)
         {
-            // Additional GETPCCELL size byte that determines
+            // Additional GETPCCELL size byte determines
             // how many bytes from him to the end of expression
             size_t end_of_expr;
             if(compiled_data.substr(pos_in_compiled + new_text.size(), 1) != " ")
@@ -326,14 +329,15 @@ std::pair<std::string, size_t> ScriptParser::extractText(const std::string &line
 
     if(pos_in_expression == 0)
     {
-        // Not all searched texts are in quotes
-        // Find end of searched text if it is in GETPCCELL
-        if(cur_text.find("=") != std::string::npos)
+        /* Find end of searched text if keyword is GETPCCELL
+        if(cur_text.find(" =") != std::string::npos ||
+           cur_text.find(" !") != std::string::npos )
         {
             cur_text.erase(cur_text.find("="));
-        }
+        }*/
 
-        // Find end of searched text if it is in ADDTOPIC, SHOWMAP, CENTERONCELL
+        // Not all searched texts are in quotes
+        // Find end of searched text if keyword is ADDTOPIC, SHOWMAP, CENTERONCELL
         if(cur_text.find_last_not_of(" \t") != std::string::npos)
         {
             cur_text.erase(cur_text.find_last_not_of(" \t") + 1);
@@ -369,12 +373,15 @@ std::pair<std::string, size_t> ScriptParser::extractText(const std::string &line
 
 //----------------------------------------------------------
 std::vector<std::string> ScriptParser::splitLine(const std::string &line,
+                                                 const size_t keyword_pos,
                                                  const bool is_say)
 {
+    // We only need parameters after keyword
+    std::string cur_line = line.substr(keyword_pos);
     std::vector<std::string> splitted_line;
     std::smatch found;
     std::regex re("\"(.*?)\"");
-    std::sregex_iterator next(line.begin(), line.end(), re);
+    std::sregex_iterator next(cur_line.begin(), cur_line.end(), re);
     std::sregex_iterator end;
     while(next != end)
     {
@@ -384,6 +391,7 @@ std::vector<std::string> ScriptParser::splitLine(const std::string &line,
     }
 
     // Special case if SAY keyword
+    // First parameter is sound file name, so we don't need it
     if(is_say == true && splitted_line.size() > 0)
     {
         splitted_line.erase(splitted_line.begin());
