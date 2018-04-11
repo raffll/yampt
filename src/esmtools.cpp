@@ -46,6 +46,15 @@ std::string EsmTools::makeScriptList()
         for(size_t i = 0; i < esm.getRecordColl().size(); ++i)
         {
             esm.setRecordTo(i);
+            if(esm.getRecordId() == "INFO")
+            {
+                esm.setUniqueTo("INAM");
+                scripts += esm.getUniqueText() + "\r\n";
+                scripts += "---\r\n";
+                esm.setFirstFriendlyTo("BNAM");
+                scripts += esm.getFriendlyText() + "\r\n";
+                scripts += "---\r\n";
+            }
             if(esm.getRecordId() == "SCPT")
             {
                 esm.setUniqueTo("SCHD");
