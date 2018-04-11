@@ -61,7 +61,7 @@ const std::vector<std::string> type_name { "CELL", "DIAL", "INDX", "RNAM", "DESC
 const std::array<std::string, 5> dialog_type = { "T", "V", "G", "P", "J" };
 const std::vector<std::string> sep = { "^", "<_id>", "</_id>", "<key>", "</key>", "<val>", "</val>", "<rec name=\"", "\"/>" };
 const std::vector<std::string> err = { "<err name=\"", "\"/>" };
-const std::vector<std::string> keyword_list = { "\\b(messagebox.*?\")\\b", "\\b(choice.*?\")\\b", "\\b(say.*?\")\\b", };
+const std::vector<std::string> keyword_list = { "messagebox", "choice", "say ", "say," };
 
 }
 

@@ -300,20 +300,28 @@ std::vector<std::string> DictCreator::makeMessageColl(const std::string &new_fri
 {
     std::vector<std::string> message_coll;
     std::string line;
+    std::string line_lc;
     std::istringstream ss(new_friendly);
-    std::smatch found;
+    size_t keyword_pos;
 
     while(std::getline(ss, line))
     {
+        std::set<size_t> keyword_pos_coll;
         line = tools.eraseCarriageReturnChar(line);
-        for(auto const &elem : yampt::keyword_list)
+        line_lc = line;
+        transform(line_lc.begin(), line_lc.end(),
+                  line_lc.begin(), ::tolower);
+
+        for(size_t i = 0; i < yampt::keyword_list.size(); ++i)
         {
-            std::regex re(elem, std::regex::icase);
-            std::regex_search(line, found, re);
-            if(!found.empty())
-            {
-                message_coll.push_back(line);
-            }
+            keyword_pos = line_lc.find(yampt::keyword_list[i]);
+            keyword_pos_coll.insert(keyword_pos);
+        }
+
+        if(*keyword_pos_coll.begin() != std::string::npos &&
+           line.rfind(";", *keyword_pos_coll.begin()) == std::string::npos)
+        {
+            message_coll.push_back(line);
         }
     }
     return message_coll;

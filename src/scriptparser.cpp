@@ -57,17 +57,7 @@ void ScriptParser::convertScript()
 
         if(keyword_found == false)
         {
-            new_line = checkLine(line, "\\b(messagebox.*?\")\\b", false);
-        }
-
-        if(keyword_found == false)
-        {
-            new_line = checkLine(line, "\\b(choice.*?\")\\b", false);
-        }
-
-        if(keyword_found == false)
-        {
-            new_line = checkLine(line, "\\b(say.*?\")\\b", true);
+            new_line = checkLine(line, line_lc);
         }
 
         if(keyword_found == false)
@@ -123,27 +113,39 @@ void ScriptParser::convertScript()
 
 //----------------------------------------------------------
 std::string ScriptParser::checkLine(const std::string &line,
-                                    const std::string &keyword,
-                                    const bool is_say)
+                                    const std::string &line_lc)
 {
     std::string new_line = line;
-    std::smatch found;
-    size_t keyword_pos = std::string::npos;
+    std::map<size_t, std::string> keyword_pos_coll;
+    std::string keyword;
+    size_t keyword_pos;
 
-    std::regex re(keyword, std::regex::icase);
-    std::regex_search(line, found, re);
-    if(!found.empty())
+    for(size_t i = 0; i < yampt::keyword_list.size(); ++i)
     {
-        keyword_pos = found.position(1);
+        keyword_pos = line_lc.find(yampt::keyword_list[i]);
+        keyword_pos_coll.insert({keyword_pos, yampt::keyword_list[i]});
     }
+
+    keyword = keyword_pos_coll.begin()->second;
+    keyword_pos = keyword_pos_coll.begin()->first;
 
     if(keyword_pos != std::string::npos &&
        line.rfind(";", keyword_pos) == std::string::npos)
     {
         new_line = convertLine(line);
-        convertLineInCompiledScriptData(line, new_line, keyword_pos, is_say);
+        if(keyword == "say " ||
+           keyword == "say,")
+        {
+            convertLineInCompiledScriptData(line, new_line, keyword_pos, true);
+        }
+        else if(keyword == "messagebox" ||
+                keyword == "choice")
+        {
+            convertLineInCompiledScriptData(line, new_line, keyword_pos, false);
+        }
         keyword_found = true;
     }
+
     return new_line;
 }
 
@@ -151,21 +153,21 @@ std::string ScriptParser::checkLine(const std::string &line,
 std::string ScriptParser::checkLine(const std::string &line,
                                     const std::string &line_lc,
                                     const std::string &keyword,
-                                    const int pos_in_expr,
+                                    const int pos_in_expression,
                                     const yampt::rec_type text_type,
                                     const bool is_getpccell)
 {
     std::string new_line = line;
-    std::pair<std::string, size_t> text_and_pos;
+    std::pair<std::string, size_t> extracted;
     std::string new_text;
     size_t keyword_pos = line_lc.find(keyword);
     if(keyword_pos != std::string::npos &&
        line.rfind(";", keyword_pos) == std::string::npos)
     {
-        text_and_pos = extractText(line, keyword_pos, pos_in_expr);
-        new_text = findText(text_and_pos.first, text_type);
-        new_line = convertText(line, text_and_pos.first, text_and_pos.second, new_text);
-        convertInnerTextInCompiledScriptData(text_and_pos.first, new_text, is_getpccell);
+        extracted = extractText(line, keyword_pos, pos_in_expression);
+        new_text = findText(extracted.first, text_type);
+        new_line = convertText(line, extracted.first, extracted.second, new_text);
+        convertInnerTextInCompiledScriptData(extracted.first, new_text, is_getpccell);
         keyword_found = true;
     }
     return new_line;
@@ -351,7 +353,7 @@ std::pair<std::string, size_t> ScriptParser::extractText(const std::string &line
     else
     {
         // Usually all searched texts are in quotes, but other variables don't
-        std::regex r1("(([\\w\\.]+)|(\".*?\"))");
+        std::regex r1("(([\\w\\.]+)|(\".*?\"))", std::regex::optimize);
         std::sregex_iterator next(cur_text.begin(), cur_text.end(), r1);
         std::sregex_iterator end;
         while(next != end && ctr != pos_in_expression)
@@ -365,7 +367,7 @@ std::pair<std::string, size_t> ScriptParser::extractText(const std::string &line
     }
 
     // Strip quotes if exist
-    std::regex r2("\"(.*?)\"");
+    std::regex r2("\"(.*?)\"", std::regex::optimize);
     std::regex_search(cur_text, found, r2);
     if(!found.empty())
     {
@@ -385,7 +387,7 @@ std::vector<std::string> ScriptParser::splitLine(const std::string &line,
     std::string cur_line = line.substr(keyword_pos);
     std::vector<std::string> splitted_line;
     std::smatch found;
-    std::regex re("\"(.*?)\"");
+    std::regex re("\"(.*?)\"", std::regex::optimize);
     std::sregex_iterator next(cur_line.begin(), cur_line.end(), re);
     std::sregex_iterator end;
     while(next != end)

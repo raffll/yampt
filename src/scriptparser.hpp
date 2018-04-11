@@ -25,8 +25,7 @@ public:
 
 private:
     std::string checkLine(const std::string &line,
-                          const std::string &keyword,
-                          const bool is_say);
+                          const std::string &line_lc);
     std::string checkLine(const std::string &line,
                           const std::string &line_lc,
                           const std::string &keyword,
