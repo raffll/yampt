@@ -98,7 +98,7 @@ void EsmReader::setNewRecordContent(const std::string &new_rec)
 
 //----------------------------------------------------------
 void EsmReader::setUniqueTo(const std::string id,
-                            bool erase_null)
+                            const bool erase_null)
 {
     if(status == true)
     {
@@ -256,7 +256,7 @@ void EsmReader::setUniqueToDialogType()
 
 //----------------------------------------------------------
 void EsmReader::setFirstFriendlyTo(const std::string &id,
-                                   bool erase_null)
+                                   const bool erase_null)
 {
     if(status == true)
     {
@@ -312,7 +312,7 @@ void EsmReader::setFirstFriendlyTo(const std::string &id,
 
 //----------------------------------------------------------
 void EsmReader::setNextFriendlyTo(const std::string &id,
-                                  bool erase_null)
+                                  const bool erase_null)
 {
     if(status == true &&
        friendly_status == true)

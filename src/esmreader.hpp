@@ -9,11 +9,14 @@ public:
     void readFile(const std::string &path);
     void setRecordTo(size_t i);
     void setNewRecordContent(const std::string &new_rec);
-    void setUniqueTo(const std::string id, bool erase_null = true);
+    void setUniqueTo(const std::string id,
+                     const bool erase_null = true);
     void setUniqueToINDX();
     void setUniqueToDialogType();
-    void setFirstFriendlyTo(const std::string &id, bool erase_null = true);
-    void setNextFriendlyTo(const std::string &id, bool erase_null = true);
+    void setFirstFriendlyTo(const std::string &id,
+                            const bool erase_null = true);
+    void setNextFriendlyTo(const std::string &id,
+                           const bool erase_null = true);
 
     bool getStatus() { return status; }
     std::string getNameFull() { return name_full; }
