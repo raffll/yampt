@@ -125,6 +125,7 @@ std::string ScriptParser::checkLine(const std::string &line,
     std::string new_line = line;
     std::smatch found;
     size_t keyword_pos = std::string::npos;
+
     std::regex re(keyword, std::regex::icase);
     std::regex_search(line, found, re);
     if(!found.empty())
@@ -295,7 +296,7 @@ void ScriptParser::convertInnerTextInCompiledScriptData(const std::string &text,
 
             // Find that byte
             pos_in_compiled = compiled_data.rfind('X', pos_in_compiled) - 2;
-            size_t expr_size = end_of_expr - pos_in_compiled;
+            size_t expr_size = end_of_expr - pos_in_compiled - 1;
 
             compiled_data.erase(pos_in_compiled, 1);
             compiled_data.insert(pos_in_compiled, tools.convertUIntToStringByteArray(expr_size).substr(0, 1));
