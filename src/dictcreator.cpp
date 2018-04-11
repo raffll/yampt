@@ -261,7 +261,7 @@ void DictCreator::insertRecord(const std::string &unique_text,
         auto search = dict[type].find(unique_text);
         if(friendly_text != search->second)
         {
-            if(dict[type].insert({unique_text + "_DOUBLED", friendly_text}).second == true)
+            if(dict[type].insert({unique_text + "_DOUBLED_" + std::to_string(counter_created), friendly_text}).second == true)
             {
                 counter_created++;
             }
