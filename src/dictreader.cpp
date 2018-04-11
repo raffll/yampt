@@ -82,8 +82,8 @@ void DictReader::parseDict(const std::string &content,
         std::string friendly_text;
         size_t pos_beg;
         size_t pos_end;
-
-        std::regex re("<id>(.*?)</id>\\s*<key>(.*?)</key>");
+        std::string re_str = yampt::sep[1] + "(.*?)" + yampt::sep[2] + "\\s*" + yampt::sep[3] + "(.*?)" + yampt::sep[4];
+        std::regex re(re_str);
         std::smatch found;
         std::sregex_iterator next(content.begin(), content.end(), re);
         std::sregex_iterator end;
@@ -92,8 +92,8 @@ void DictReader::parseDict(const std::string &content,
             found = *next;
 
             // no multiline in regex :(
-            pos_beg = content.find("<val>", found.position(2)) + 5;
-            pos_end = content.find("</val>", pos_beg);
+            pos_beg = content.find(yampt::sep[5], found.position(2)) + yampt::sep[5].size();
+            pos_end = content.find(yampt::sep[6], pos_beg);
             friendly_text = content.substr(pos_beg, pos_end - pos_beg);
 
             validateRecord(found[1].str(), found[2].str(), friendly_text);

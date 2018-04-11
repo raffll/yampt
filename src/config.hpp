@@ -58,9 +58,9 @@ typedef std::array<std::map<std::string, std::string>, 11> dict_t;
 typedef std::map<std::string, std::string> inner_dict_t;
 const std::vector<std::string> type_name { "CELL", "DIAL", "INDX", "RNAM", "DESC", "GMST", "FNAM", "INFO", "TEXT", "BNAM", "SCTX",
                                            "Wilderness", "Region", "PGRD", "ANAM", "SCVR", "DNAM", "CNDT", "GMDT" };
-const std::array<std::string, 5> dialog_type = {"T", "V", "G", "P", "J"};
-const std::vector<std::string> sep = {"^"};
-const std::vector<std::string> keyword = {"messagebox", "say ", "say,", "choice"};
+const std::array<std::string, 5> dialog_type = { "T", "V", "G", "P", "J" };
+const std::vector<std::string> sep = { "^", "<_id>", "</_id>", "<key>", "</key>", "<val>", "</val>" };
+const std::vector<std::string> keyword = { "messagebox", "say ", "say,", "choice" };
 
 }
 

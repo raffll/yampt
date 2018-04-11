@@ -11,9 +11,9 @@ void Tools::writeDict(const yampt::dict_t &dict, const std::string &name)
             for(const auto &elem : dict[i])
             {
                 file << "<record>\r\n"
-                     << "\t<id>" << yampt::type_name[i] << "</id>\r\n"
-                     << "\t<key>" << elem.first << "</key>\r\n"
-                     << "\t<val>" << elem.second << "</val>\r\n"
+                     << "\t" << yampt::sep[1] << yampt::type_name[i] << yampt::sep[2] << "\r\n"
+                     << "\t" << yampt::sep[3] << elem.first << yampt::sep[4] << "\r\n"
+                     << "\t" << yampt::sep[5] << elem.second << yampt::sep[6] << "\r\n"
                      << "</record>\r\n";
             }
         }
