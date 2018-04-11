@@ -54,8 +54,8 @@ struct CaseAwareCompare
 enum rec_type { CELL, DIAL, INDX, RNAM, DESC, GMST, FNAM, INFO, TEXT, BNAM, SCTX,
                 Wilderness, Region, PGRD, ANAM, SCVR, DNAM, CNDT, GMDT };
 enum ins_mode { RAW, BASE, ALL, NOTFOUND, CHANGED };
-typedef std::array<std::map<std::string, std::string, CaseAwareCompare>, 11> dict_t;
-typedef std::map<std::string, std::string, CaseAwareCompare> inner_dict_t;
+typedef std::array<std::map<std::string, std::string>, 11> dict_t;
+typedef std::map<std::string, std::string> inner_dict_t;
 const std::vector<std::string> type_name { "CELL", "DIAL", "INDX", "RNAM", "DESC", "GMST", "FNAM", "INFO", "TEXT", "BNAM", "SCTX",
                                            "Wilderness", "Region", "PGRD", "ANAM", "SCVR", "DNAM", "CNDT", "GMDT" };
 const std::array<std::string, 5> dialog_type = {"T", "V", "G", "P", "J"};
