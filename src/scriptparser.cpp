@@ -51,7 +51,6 @@ void ScriptParser::convertScript()
         keyword_found = false;
         line = tools.eraseCarriageReturnChar(line);
         line_lc = line;
-
         transform(line_lc.begin(), line_lc.end(),
                   line_lc.begin(), ::tolower);
 
@@ -164,9 +163,9 @@ std::string ScriptParser::checkLine(const std::string &line,
     if(keyword_pos != std::string::npos &&
        line.rfind(";", keyword_pos) == std::string::npos)
     {
-        extracted = extractText(line, keyword_pos, pos_in_expression);
-        new_text = findText(extracted.first, text_type);
-        new_line = convertText(line, extracted.first, extracted.second, new_text);
+        extracted = extractInnerTextFromLine(line, keyword_pos, pos_in_expression);
+        new_text = findInnerTextInDict(extracted.first, text_type);
+        new_line = convertInnerTextInLine(line, extracted.first, extracted.second, new_text);
         convertInnerTextInCompiledScriptData(extracted.first, new_text, is_getpccell);
         keyword_found = true;
     }
@@ -189,8 +188,8 @@ std::string ScriptParser::convertLine(const std::string &line)
 }
 
 //----------------------------------------------------------
-std::string ScriptParser::findText(const std::string &text,
-                                   const yampt::rec_type text_type)
+std::string ScriptParser::findInnerTextInDict(const std::string &text,
+                                              const yampt::rec_type text_type)
 {
     // Fast search in map
     auto search = merger->getDict(text_type).find(text);
@@ -212,10 +211,10 @@ std::string ScriptParser::findText(const std::string &text,
 }
 
 //----------------------------------------------------------
-std::string ScriptParser::convertText(const std::string &line,
-                                      const std::string &text,
-                                      const size_t text_pos,
-                                      const std::string &new_text)
+std::string ScriptParser::convertInnerTextInLine(const std::string &line,
+                                                 const std::string &text,
+                                                 const size_t text_pos,
+                                                 const std::string &new_text)
 {
     std::string new_line = line;
     new_line.erase(text_pos, text.size());
@@ -316,9 +315,9 @@ void ScriptParser::convertInnerTextInCompiledScriptData(const std::string &text,
 }
 
 //----------------------------------------------------------
-std::pair<std::string, size_t> ScriptParser::extractText(const std::string &line,
-                                                         const size_t keyword_pos,
-                                                         const int pos_in_expression)
+std::pair<std::string, size_t> ScriptParser::extractInnerTextFromLine(const std::string &line,
+                                                                      const size_t keyword_pos,
+                                                                      const int pos_in_expression)
 {
     size_t cur_pos = keyword_pos;
     std::string cur_text;

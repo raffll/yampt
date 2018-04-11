@@ -33,9 +33,9 @@ private:
                           const yampt::rec_type text_type,
                           const bool is_getpccell);
     std::string convertLine(const std::string &line);
-    std::string findText(const std::string &text,
+    std::string findInnerTextInDict(const std::string &text,
                          const yampt::rec_type text_type);
-    std::string convertText(const std::string &line,
+    std::string convertInnerTextInLine(const std::string &line,
                             const std::string &text,
                             const size_t text_pos,
                             const std::string &new_text);
@@ -46,7 +46,7 @@ private:
     void convertInnerTextInCompiledScriptData(const std::string &text,
                                               const std::string &new_text,
                                               const bool is_getpccell);
-    std::pair<std::string, size_t> extractText(const std::string &line,
+    std::pair<std::string, size_t> extractInnerTextFromLine(const std::string &line,
                                                const size_t keyword_pos,
                                                const int pos_in_expression);
     std::vector<std::string> splitLine(const std::string &line,
