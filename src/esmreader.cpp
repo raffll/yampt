@@ -142,7 +142,7 @@ void EsmReader::setUniqueTo(const std::string id,
             // If end of record reached
             if(cur_pos == rec->size())
             {
-                unique_text = "Unique id not found!";
+                unique_text = "Unique id " + unique_id + " not found!";
                 unique_status = false;
             }
         }
@@ -191,7 +191,7 @@ void EsmReader::setUniqueToINDX()
             // If end of record reached
             if(cur_pos == rec->size())
             {
-                unique_text = "Unique id not found!";
+                unique_text = "Unique id " + unique_id + " not found!";
                 unique_status = false;
             }
         }
@@ -239,7 +239,7 @@ void EsmReader::setUniqueToDialogType()
             // If end of record reached
             if(cur_pos == rec->size())
             {
-                unique_text = "Unique id not found!";
+                unique_text = "Unique id " + unique_id + " not found!";
                 unique_status = false;
             }
         }
@@ -293,7 +293,7 @@ void EsmReader::setFirstFriendlyTo(const std::string &id,
             // If end of record reached
             if(cur_pos == rec->size())
             {
-                friendly_text = "Friendly id not found!";
+                friendly_text = "Friendly id " + friendly_id + " not found!";
                 friendly_pos = cur_pos;
                 friendly_size = 0;
                 friendly_status = false;
@@ -354,7 +354,7 @@ void EsmReader::setNextFriendlyTo(const std::string &id,
             // If end of record reached
             if(cur_pos == rec->size())
             {
-                friendly_text = "Friendly id not found!";
+                friendly_text = "Friendly id " + friendly_id + " not found!";
                 friendly_pos = cur_pos;
                 friendly_size = 0;
                 friendly_status = false;
