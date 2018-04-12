@@ -15,6 +15,14 @@
 //#include <locale>
 #include <regex>
 
+#define DEBUG
+
+#ifdef DEBUG
+#define DEBUG_MSG(str) std::cout << str << std::endl;
+#else
+#define DEBUG_MSG(str)
+#endif
+
 namespace yampt
 {
 
