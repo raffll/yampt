@@ -64,11 +64,7 @@ private:
     std::string compiled_data;
     size_t pos_in_compiled;
 
-    int counter_all;
-    int counter_converted;
-    int counter_unchanged;
-
-    bool keyword_found;
+    bool is_done;
 };
 
 #endif // SCRIPTPARSER_HPP

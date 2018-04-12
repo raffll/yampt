@@ -39,8 +39,6 @@ ScriptParser::ScriptParser(const yampt::rec_type type,
 //----------------------------------------------------------
 void ScriptParser::convertScript()
 {
-    counter_all++;
-    new_friendly.erase();
     std::istringstream ss(friendly_text);
     std::string line;
     std::string line_lc;
@@ -48,61 +46,52 @@ void ScriptParser::convertScript()
 
     while(std::getline(ss, line))
     {
-        keyword_found = false;
+        is_done = false;
         line = tools.eraseCarriageReturnChar(line);
         line_lc = line;
         transform(line_lc.begin(), line_lc.end(),
                   line_lc.begin(), ::tolower);
 
-        if(keyword_found == false)
+        if(is_done == false)
         {
             new_line = checkLine(line, line_lc);
         }
-
-        if(keyword_found == false)
+        if(is_done == false)
         {
             new_line = checkLine(line, line_lc, "addtopic", 0, yampt::rec_type::DIAL, false);
         }
-
-        if(keyword_found == false)
+        if(is_done == false)
         {
             new_line = checkLine(line, line_lc, "showmap", 0, yampt::rec_type::CELL, false);
         }
-
-        if(keyword_found == false)
+        if(is_done == false)
         {
             new_line = checkLine(line, line_lc, "centeroncell", 0, yampt::rec_type::CELL, false);
         }
-
-        if(keyword_found == false)
+        if(is_done == false)
         {
             new_line = checkLine(line, line_lc, "getpccell", 0, yampt::rec_type::CELL, true);
         }
-
-        if(keyword_found == false)
+        if(is_done == false)
         {
             new_line = checkLine(line, line_lc, "aifollowcell", 1, yampt::rec_type::CELL, false);
         }
-
-        if(keyword_found == false)
+        if(is_done == false)
         {
             new_line = checkLine(line, line_lc, "aiescortcell", 1, yampt::rec_type::CELL, false);
         }
-
-        if(keyword_found == false)
+        if(is_done == false)
         {
             new_line = checkLine(line, line_lc, "placeitemcell", 1, yampt::rec_type::CELL, false);
         }
-
-        if(keyword_found == false)
+        if(is_done == false)
         {
             new_line = checkLine(line, line_lc, "positioncell", 4, yampt::rec_type::CELL, false);
         }
-
         new_friendly += new_line + "\r\n";
     }
 
-    // Check if last 2 char are new line
+    // Check if last 2 chars are newline and strip then if necessary
     size_t last_nl_pos = friendly_text.rfind("\r\n");
     if(last_nl_pos != friendly_text.size() - 2 || last_nl_pos == std::string::npos)
     {
@@ -119,6 +108,7 @@ std::string ScriptParser::checkLine(const std::string &line,
     std::string keyword;
     size_t keyword_pos;
 
+    // Create keyword collection from first to last occurrence in line
     for(size_t i = 0; i < yampt::keyword_list.size(); ++i)
     {
         keyword_pos = line_lc.find(yampt::keyword_list[i]);
@@ -142,7 +132,7 @@ std::string ScriptParser::checkLine(const std::string &line,
         {
             convertLineInCompiledScriptData(line, new_line, keyword_pos, false);
         }
-        keyword_found = true;
+        is_done = true;
     }
 
     return new_line;
@@ -167,7 +157,7 @@ std::string ScriptParser::checkLine(const std::string &line,
         new_text = findInnerTextInDict(extracted.first, text_type);
         new_line = convertInnerTextInLine(line, extracted.first, extracted.second, new_text);
         convertInnerTextInCompiledScriptData(extracted.first, new_text, is_getpccell);
-        keyword_found = true;
+        is_done = true;
     }
     return new_line;
 }
