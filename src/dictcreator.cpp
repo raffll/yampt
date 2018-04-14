@@ -963,8 +963,8 @@ void DictCreator::makeDictBNAM()
                 {
                     for(size_t k = 0; k < message_n.size(); ++k)
                     {
-                        validateRecord(yampt::sep[7] + esm_ptr->getUniqueText() + yampt::sep[8] + message_ptr->at(k),
-                                yampt::sep[7] + esm_n.getUniqueText() + yampt::sep[8] + message_n.at(k),
+                        validateRecord(esm_ptr->getUniqueText() + yampt::sep[0] + message_ptr->at(k),
+                                esm_n.getUniqueText() + yampt::sep[0] + message_n.at(k),
                                 yampt::rec_type::BNAM);
                     }
                 }
@@ -1010,8 +1010,8 @@ void DictCreator::makeDictBNAMExtended()
                 {
                     for(size_t k = 0; k < message_n.size(); ++k)
                     {
-                        validateRecord(yampt::sep[7] + esm_f.getUniqueText() + yampt::sep[8] + message_f.at(k),
-                                yampt::sep[7] + esm_f.getUniqueText() + yampt::sep[8] + message_n.at(k),
+                        validateRecord(esm_f.getUniqueText() + yampt::sep[0] + message_f.at(k),
+                                esm_f.getUniqueText() + yampt::sep[0] + message_n.at(k),
                                 yampt::rec_type::BNAM);
                     }
                 }
@@ -1089,8 +1089,8 @@ void DictCreator::makeDictSCPT()
                 {
                     for(size_t k = 0; k < message_n.size(); ++k)
                     {
-                        validateRecord(yampt::sep[7] + esm_ptr->getUniqueText() + yampt::sep[8] + message_ptr->at(k),
-                                yampt::sep[7] + esm_n.getUniqueText() + yampt::sep[8] + message_n.at(k),
+                        validateRecord(esm_ptr->getUniqueText() + yampt::sep[0] + message_ptr->at(k),
+                                esm_n.getUniqueText() + yampt::sep[0] + message_n.at(k),
                                 yampt::rec_type::SCTX);
                     }
                 }
@@ -1132,8 +1132,8 @@ void DictCreator::makeDictSCPTExtended()
                 {
                     for(size_t k = 0; k < message_n.size(); ++k)
                     {
-                        validateRecord(yampt::sep[7] + esm_f.getUniqueText() + yampt::sep[8] + message_f.at(k),
-                                yampt::sep[7] + esm_n.getUniqueText() + yampt::sep[8] + message_n.at(k),
+                        validateRecord(esm_f.getUniqueText() + yampt::sep[0] + message_f.at(k),
+                                esm_n.getUniqueText() + yampt::sep[0] + message_n.at(k),
                                 yampt::rec_type::SCTX);
                     }
                 }
