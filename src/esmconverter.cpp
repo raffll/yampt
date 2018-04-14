@@ -708,7 +708,7 @@ void EsmConverter::convertBNAM()
             if(esm.getUniqueStatus() == true &&
                esm.getFriendlyStatus() == true)
             {
-                prefix = yampt::sep[7] + esm.getUniqueText() + yampt::sep[8];
+                prefix = esm.getUniqueText() + yampt::sep[0];
                 new_friendly = setNewScriptBNAM(prefix, esm.getFriendlyText());
                 if(to_convert == true)
                 {
@@ -748,7 +748,7 @@ void EsmConverter::convertSCPT()
             }
             if(esm.getUniqueStatus() == true)
             {
-                prefix = yampt::sep[7] + esm.getUniqueText() + yampt::sep[8];
+                prefix = esm.getUniqueText() + yampt::sep[0];
                 new_script = setNewScriptSCPT(prefix, friendly_text, compiled_data);
                 if(to_convert == true)
                 {
