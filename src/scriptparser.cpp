@@ -54,10 +54,6 @@ void ScriptParser::convertScript()
 
         if(is_done == false)
         {
-            new_line = checkLine(line, line_lc);
-        }
-        if(is_done == false)
-        {
             new_line = checkLine(line, line_lc, "addtopic", 0, yampt::rec_type::DIAL, false);
         }
         if(is_done == false)
@@ -87,6 +83,10 @@ void ScriptParser::convertScript()
         if(is_done == false)
         {
             new_line = checkLine(line, line_lc, "positioncell", 4, yampt::rec_type::CELL, false);
+        }
+        if(is_done == false)
+        {
+            new_line = checkLine(line, line_lc);
         }
         new_friendly += new_line + "\r\n";
     }
@@ -153,9 +153,14 @@ std::string ScriptParser::checkLine(const std::string &line,
     if(keyword_pos != std::string::npos &&
        line.rfind(";", keyword_pos) == std::string::npos)
     {
+        DEBUG_MSG("---");
+        DEBUG_MSG("Old line: " << line);
+        DEBUG_MSG("Extraction:");
         extracted = extractInnerTextFromLine(line, keyword_pos, pos_in_expression);
         new_text = findInnerTextInDict(extracted.first, text_type);
+        DEBUG_MSG("Found: " << new_text);
         new_line = convertInnerTextInLine(line, extracted.first, extracted.second, new_text);
+        DEBUG_MSG("New line: " << new_line);
         convertInnerTextInCompiledScriptData(extracted.first, new_text, is_getpccell);
         is_done = true;
     }
@@ -323,6 +328,8 @@ std::pair<std::string, size_t> ScriptParser::extractInnerTextFromLine(const std:
         cur_text = line.substr(cur_pos);
     }
 
+    DEBUG_MSG("\tStep 1: " << cur_text);
+
     if(pos_in_expression == 0)
     {
         /* Find end of searched text if keyword is GETPCCELL
@@ -355,6 +362,8 @@ std::pair<std::string, size_t> ScriptParser::extractInnerTextFromLine(const std:
         cur_pos = found.position(1) + cur_pos;
     }
 
+    DEBUG_MSG("\tStep 2: " << cur_text);
+
     // Strip quotes if exist
     std::regex r2("\"(.*?)\"", std::regex::optimize);
     std::regex_search(cur_text, found, r2);
@@ -363,6 +372,8 @@ std::pair<std::string, size_t> ScriptParser::extractInnerTextFromLine(const std:
         cur_text = found[1].str();
         cur_pos += 1;
     }
+
+    DEBUG_MSG("\tStep 3: " << cur_text);
 
     return std::make_pair(cur_text, cur_pos);
 }
