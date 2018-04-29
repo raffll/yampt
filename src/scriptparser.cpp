@@ -91,7 +91,7 @@ void ScriptParser::convertScript()
         new_friendly += new_line + "\r\n";
     }
 
-    // Check if last 2 chars are newline and strip then if necessary
+    // Check if last 2 chars are newline and strip them if necessary
     size_t last_nl_pos = friendly_text.rfind("\r\n");
     if(last_nl_pos != friendly_text.size() - 2 || last_nl_pos == std::string::npos)
     {
