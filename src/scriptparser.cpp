@@ -162,7 +162,12 @@ std::string ScriptParser::checkLine(const std::string &line,
         DEBUG_MSG("Found: " << new_text);
         new_line = convertInnerTextInLine(line, extracted.first, extracted.second, new_text);
         DEBUG_MSG("New line: " << new_line);
-        convertInnerTextInCompiledScriptData(extracted.first, new_text, is_getpccell);
+
+        // Convert script data only if extracted text is valid
+        if(extracted.second != std::string::npos)
+        {
+            convertInnerTextInCompiledScriptData(extracted.first, new_text, is_getpccell);
+        }
         is_done = true;
     }
     return new_line;
