@@ -44,7 +44,6 @@ Now you can merge these dictionaries into one file. Important thing is order, ju
 yampt.exe --merge -d Morrowind.BASE.xml Tribunal.BASE.xml Bloodmoon.BASE.xml -o NATIVE.xml
 ```
 Here you have one "NATIVE.xml". This is your base dictionary.
-
 Merge command validate, sort and remove duplicates, so you can use it with only one dictionary:
 ```
 yampt.exe --merge -d Morrowind.xml
@@ -90,7 +89,8 @@ yampt.exe --make-raw -f "C:\path\to\Plugin.esp"
 ```
 Use for manualy translate everything or create no-esp patch.
 
-### Following commands translate dialog topic names in INFO keys e.g.
+### Following commands translate dialog topic names in INFO keys 
+e.g.:
 ```
 <record>
     <_id>INFO</_id>
@@ -115,9 +115,7 @@ if in "NATIVE.xml" exist:
 <record>
 ```
 This is important because converter in first step convert DIAL record and then corresponding INFO records.
-
 It could be a mess because CELL, DIAL, BNAM, SCTX records don't have unique keys.
-
 With help of your base dictionary, you can create plugin dictionary with these records already translated.
 
 ### Making dictionary with all records from plugin, but with CELL, DIAL, BNAM, SCTX translation
@@ -150,7 +148,6 @@ yampt.exe --make-changed -f "C:\path\to\Plugin.esp" -d "FOR_FIND_CHANGED.xml"
 ### Finally
 
 Commands "--make-not" and "--make-changed" is all you need to fully translate plugin.
-
 After some translations simply type:
 ```
 yampt.exe --convert -f "C:\path\to\Plugin.esp" -d "NATIVE.xml" "Plugin.NOTFOUND.xml" "Plugin.CHANGED.xml"
