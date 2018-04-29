@@ -2,15 +2,18 @@
 
 ## Description
 
-Simple command line tool for automatic translation from one language to another. It works on cell names, gsmt strings, object names, birthsigns, class and race descriptions, book text, faction rank names, magic and skill descriptions, dialog topic names, dialog text, script lines and compiled script data. In one word, on all readable in-game text. It can be used as well for making no-esp patches without creating DELE records.
+Simple command line tool for automatic translation from one language to another. It works on cell names, game settings, object names, birthsigns, class and race descriptions, book text, faction rank names, magic and skill descriptions, dialog topic names, dialog text, script lines and compiled script data. In one word, on all readable in-game text.
 
 ## Features
 
-Because translating at least cell records is requirement to succesfully run English mod on your native Morrowind installation. The idea is to quickly convert multiple plugins with multiple combined dictionaries, with one command, to eliminate inconsistencies between files.
+- Convert multiple plugins with multiple combined dictionaries to eliminate inconsistencies between files.
+- Add your native dialog topic names to the end of not converted INFO strings, because without missing hyperlinks mods with lots of text don't work correctly.
+- All you need to start are two language versions of the game (in most cases English and your native) or pre-made dictionaries.
 
-Second big problem are missing hyperlinks. Program solve this by adding your native dialog topic names to the end of not converted INFO strings.
-
-All you need is two language version of the game (in most cases English and your native) or pre-made dictionaries.
+## Usage
+```
+yampt.exe [command] -f <plugin list> -d <dictionary list>
+```
 
 ## Making base dictionary
 
@@ -23,15 +26,15 @@ yampt.exe --make-base -f "C:\path\to\NATIVE\Bloodmoon.esm" "C:\path\to\FOREIGN\B
 Because algorithm isn't 100% accurate some records may need manually editing:
 ```
 <record>
-        <id>CELL</id>
+        <_id>CELL</_id>
         <key>Arenim Ancestral Tomb</key>
         <val>MISSING</val>
 </record>
 ```
-to
+to:
 ```
 <record>
-        <id>CELL</id>
+        <_id>CELL</_id>
         <key>Arenim Ancestral Tomb</key>
         <val>Arenim-Ahnengruft</val>
 </record>
@@ -41,20 +44,20 @@ Now you can merge these dictionaries into one file. Important thing is order, ju
 yampt.exe --merge -d Morrowind.BASE.xml Tribunal.BASE.xml Bloodmoon.BASE.xml -o NATIVE.xml
 ```
 Here you have one "NATIVE.xml". This is your base dictionary.
-Above command validate, sort and remove duplicates, so you can use it with only one dictionary:
+Merge command validate, sort and remove duplicates, so you can use it with only one dictionary:
 ```
 yampt.exe --merge -d Morrowind.xml
 ```
 
 ## Converting esm/esp/ess
 ```
-yampt.exe --convert -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "NATIVE.xml"
+yampt.exe --convert -f "C:\path\to\Plugin.esp" -d "NATIVE.xml"
 ```
-### If you want to add dialog topic names to not converted INFO strings (not found in dictionary)
+### If you want to add dialog topic names to not converted INFO strings (not found in dictionary) just add -a switch
 ```
-yampt.exe --convert -a -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "NATIVE.xml"
+yampt.exe --convert -a -f "C:\path\to\Plugin.esp" -d "NATIVE.xml"
 ```
-Text:
+Then text:
 ```
 Some text skin of the pearl some text.
 ```
@@ -71,29 +74,31 @@ if in "NATIVE.xml" exist:
 <record>
 ```
 Without this, most English plugins with new dialogs are not playable in your native language.
-Because of limitation of Morrowind engine, INFO string can only have 512 bytes, but more is ok in game.
-This can generate warnings in TES CS and records are read only.
 
+#### Warning
+```
+This can generate warnings in TES CS and those records are read only, but it is ok in game. You can ignore them.
+```
 ## For translators
 
 ### Making dictionary with all records from plugin
 ```
-yampt.exe --make-raw -f "C:\path\to\Morrowind\Data Files\Plugin.esp"
+yampt.exe --make-raw -f "C:\path\to\Plugin.esp"
 ```
 Use for manualy translate everything or create no-esp patch.
 
-### Following commands translate dialog topic names in INFO records e.g.
+### Following commands translate dialog topic names in INFO keys e.g.
 ```
 <record>
-    <id>INFO</id>
+    <_id>INFO</_id>
     <key>T^skin of the pearl^8142170481561424883</key>
     <val>Some text</val>
 <record>
 ```
-to
+to:
 ```
 <record>
-    <id>INFO</id>
+    <_id>INFO</_id>
     <key>T^skóra perły^8142170481561424883</key>
     <val>Some text</val>
 <record>
@@ -106,48 +111,53 @@ if in "NATIVE.xml" exist:
     <val>skóra perły</val>
 <record>
 ```
-This is important because converter in first step convert DIAL record and then corresponding INFO records
+This is important because converter in first step convert DIAL record and then corresponding INFO records.
+It could be a mess because CELL, DIAL, BNAM, SCTX records don't have unique keys.
+With help of your base dictionary, you can create plugin dictionary with these records translated.
 
 ### Making dictionary with all records from plugin, but with CELL, DIAL, BNAM, SCTX translation
 ```
-yampt.exe --make-all -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "NATIVE.xml"
+yampt.exe --make-all -f "C:\path\to\Plugin.esp" -d "NATIVE.xml"
 ```
-Use for manualy translate everything.
+Use for manualy translate everything with little help.
 
 ### Making dictionary from plugin with records that don't exist in selected dictionaries
 ```
-yampt.exe --make-not -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "NATIVE.xml"
+yampt.exe --make-not -f "C:\path\to\Plugin.esp" -d "NATIVE.xml"
 ```
-Use for manualy translate only new records.
+Use for manualy translate only new records (added in plugin).
 
 ### Making dictionary with only changed text
 
-First we need second base dictionary with foreign records
+First we need second base dictionary with your native keys, but foreign values in INFO records.
 ```
 yampt.exe --make-all -f "C:\path\to\FOREIGN\Morrowind.esm" -d "NATIVE.xml"
 yampt.exe --make-all -f "C:\path\to\FOREIGN\Tribunal.esm" -d "NATIVE.xml"
 yampt.exe --make-all -f "C:\path\to\FOREIGN\Bloodmoon.esm" -d "NATIVE.xml"
 
-yampt.exe --merge -d "Morrowind.ALL.xml" "Tribunal.ALL.xml" "Bloodmoon.ALL.xml" -o "FOREIGN.xml"
+yampt.exe --merge -d "Morrowind.ALL.xml" "Tribunal.ALL.xml" "Bloodmoon.ALL.xml" -o "FOR_FIND_CHANGED.xml"
 ```
-And now
+And now:
 ```
-yampt.exe --make-changed -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "FOREIGN.xml"
+yampt.exe --make-changed -f "C:\path\to\Plugin.esp" -d "FOR_FIND_CHANGED.xml"
 ```
+
+### Finally
+
 Commands "--make-not" and "--make-changed" is all you need to fully translate plugin.
 After some translations simply type:
 ```
-yampt.exe --convert -f "C:\path\to\Morrowind\Data Files\Plugin.esp" -d "NATIVE.xml" "Plugin.NOTFOUND.xml" "Plugin.CHANGED.xml"
+yampt.exe --convert -f "C:\path\to\Plugin.esp" -d "NATIVE.xml" "Plugin.NOTFOUND.xml" "Plugin.CHANGED.xml"
 ```
 
 ## Tools
 
 ### Binary dump
 ```
-yampt.exe --binary-dump -f "C:\path\to\Morrowind\Data Files\Plugin.esp"
+yampt.exe --binary-dump -f "C:\path\to\Plugin.esp"
 ```
 
 ### Script list
 ```
-yampt.exe --script-list -f "C:\path\to\Morrowind\Data Files\Plugin.esp"
+yampt.exe --script-list -f "C:\path\to\Plugin.esp"
 ```
