@@ -8,6 +8,7 @@ Simple command line tool for automatic translation from one language to another.
 
 - Convert multiple plugins with multiple combined dictionaries to eliminate inconsistencies between files.
 - Add your native dialog topic names to the end of not converted INFO strings, because without missing hyperlinks mods with lots of text don't work correctly.
+- Convert compiled script data, so you don't need to recompile scripts in TES CS.
 - All you need to start are two language versions of the game (in most cases English and your native) or pre-made dictionaries.
 
 ## Usage
