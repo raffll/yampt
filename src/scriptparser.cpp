@@ -324,7 +324,7 @@ std::pair<std::string, size_t> ScriptParser::extractInnerTextFromLine(const std:
     std::smatch found;
     int ctr = -1;
 
-    // Find begin of searched text
+    // Find begin of searched inner text
     cur_pos = line.find_first_of(" \t,\"", cur_pos);
     cur_pos = line.find_first_not_of(" \t,", cur_pos);
     if(cur_pos != std::string::npos)
@@ -335,7 +335,7 @@ std::pair<std::string, size_t> ScriptParser::extractInnerTextFromLine(const std:
     {
         // If begin of searched text not found
         // or keyword was found inside other string
-        // e.g. name of script
+        // e.g. name of the script
         cur_text = "Inner text not found!";
     }
 
@@ -344,6 +344,7 @@ std::pair<std::string, size_t> ScriptParser::extractInnerTextFromLine(const std:
     if(pos_in_expression == 0)
     {
         // Find end of searched text if keyword is not in quotes
+        // Strip whitespaces
         if(cur_text.find_last_not_of(" \t") != std::string::npos)
         {
             cur_text.erase(cur_text.find_last_not_of(" \t") + 1);
