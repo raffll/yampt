@@ -26,17 +26,17 @@ yampt.exe --make-base -f "C:\path\to\NATIVE\Bloodmoon.esm" "C:\path\to\FOREIGN\B
 Because algorithm isn't 100% accurate some records may need manually editing:
 ```
 <record>
-        <_id>CELL</_id>
-        <key>Arenim Ancestral Tomb</key>
-        <val>MISSING</val>
+    <_id>CELL</_id>
+    <key>Arenim Ancestral Tomb</key>
+    <val>MISSING</val>
 </record>
 ```
 to:
 ```
 <record>
-        <_id>CELL</_id>
-        <key>Arenim Ancestral Tomb</key>
-        <val>Arenim-Ahnengruft</val>
+    <_id>CELL</_id>
+    <key>Arenim Ancestral Tomb</key>
+    <val>Arenim-Ahnengruft</val>
 </record>
 ```
 Now you can merge these dictionaries into one file. Important thing is order, just like in game.
@@ -53,7 +53,9 @@ yampt.exe --merge -d Morrowind.xml
 ```
 yampt.exe --convert -f "C:\path\to\Plugin.esp" -d "NATIVE.xml"
 ```
-### If you want to add dialog topic names to not converted INFO strings (not found in dictionary) just add -a switch
+### If you want to add dialog topic names to not converted INFO strings
+
+Just add -a switch:
 ```
 yampt.exe --convert -a -f "C:\path\to\Plugin.esp" -d "NATIVE.xml"
 ```
@@ -68,7 +70,7 @@ Some text skin of the pearl some text. [skóra perły]
 if in "NATIVE.xml" exist:
 ```
 <record>
-    <id>DIAL</id>
+    <_id>DIAL</_id>
     <key>skin of the pearl</key>
     <val>skóra perły</val>
 <record>
@@ -76,9 +78,9 @@ if in "NATIVE.xml" exist:
 Without this, most English plugins with new dialogs are not playable in your native language.
 
 #### Warning
-```
+
 This can generate warnings in TES CS and those records are read only, but it is ok in game. You can ignore them.
-```
+
 ## For translators
 
 ### Making dictionary with all records from plugin
@@ -106,7 +108,7 @@ to:
 if in "NATIVE.xml" exist:
 ```
 <record>
-    <id>DIAL</id>
+    <_id>DIAL</_id>
     <key>skin of the pearl</key>
     <val>skóra perły</val>
 <record>
