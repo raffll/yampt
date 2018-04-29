@@ -77,7 +77,7 @@ if in "NATIVE.xml" exist:
 ```
 Without this, most English plugins with new dialogs are not playable in your native language.
 
-#### Warning
+#### Warning!
 
 This can generate warnings in TES CS and those records are read only, but it is ok in game. You can ignore them.
 
