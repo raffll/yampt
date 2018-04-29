@@ -292,20 +292,24 @@ void ScriptParser::convertInnerTextInCompiledScriptData(const std::string &text,
         if(is_getpccell == true)
         {
             // Additional GETPCCELL size byte determines
-            // how many bytes from him to the end of expression
+            // how many bytes from that byte to the end of expression
             size_t end_of_expr;
+            size_t expr_size;
+
             if(compiled_data.substr(pos_in_compiled + new_text.size(), 1) != " ")
             {
+                // If expression ends exactly when inner text ends
                 end_of_expr = pos_in_compiled + new_text.size();
+                pos_in_compiled = compiled_data.rfind('X', pos_in_compiled) - 2;
+                expr_size = end_of_expr - pos_in_compiled;
             }
             else
             {
-                end_of_expr = pos_in_compiled + new_text.size() + 5; // +5 because of " == 1"
+                // If expression ends with equals or inequal signs
+                end_of_expr = pos_in_compiled + new_text.size() + 5; // +5 because of " == 1" size
+                pos_in_compiled = compiled_data.rfind('X', pos_in_compiled) - 2;
+                expr_size = end_of_expr - pos_in_compiled - 1;
             }
-
-            // Find that byte
-            pos_in_compiled = compiled_data.rfind('X', pos_in_compiled) - 2;
-            size_t expr_size = end_of_expr - pos_in_compiled - 1;
 
             compiled_data.erase(pos_in_compiled, 1);
             compiled_data.insert(pos_in_compiled, tools.convertUIntToStringByteArray(expr_size).substr(0, 1));

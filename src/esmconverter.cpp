@@ -80,26 +80,17 @@ void EsmConverter::resetCounters()
 //----------------------------------------------------------
 void EsmConverter::convertRecordContent(const std::string &new_friendly)
 {
-    try
-    {
-        size_t rec_size;
-        std::string rec_content = esm.getRecordContent();
-        rec_content.erase(esm.getFriendlyPos() + 8, esm.getFriendlySize());
-        rec_content.insert(esm.getFriendlyPos() + 8, new_friendly);
-        rec_content.erase(esm.getFriendlyPos() + 4, 4);
-        rec_content.insert(esm.getFriendlyPos() + 4,
-                           tools.convertUIntToStringByteArray(new_friendly.size()));
-        rec_size = rec_content.size() - 16;
-        rec_content.erase(4, 4);
-        rec_content.insert(4, tools.convertUIntToStringByteArray(rec_size));
-        esm.setNewRecordContent(rec_content);
-    }
-    catch(std::exception const& e)
-    {
-        std::cout << "--> Error in function convertRecordContent() (possibly broken file or record)!" << std::endl;
-        std::cout << "--> Exception: " << e.what() << std::endl;
-        status = false;
-    }
+    size_t rec_size;
+    std::string rec_content = esm.getRecordContent();
+    rec_content.erase(esm.getFriendlyPos() + 8, esm.getFriendlySize());
+    rec_content.insert(esm.getFriendlyPos() + 8, new_friendly);
+    rec_content.erase(esm.getFriendlyPos() + 4, 4);
+    rec_content.insert(esm.getFriendlyPos() + 4,
+                       tools.convertUIntToStringByteArray(new_friendly.size()));
+    rec_size = rec_content.size() - 16;
+    rec_content.erase(4, 4);
+    rec_content.insert(4, tools.convertUIntToStringByteArray(rec_size));
+    esm.setNewRecordContent(rec_content);
 }
 
 //----------------------------------------------------------
