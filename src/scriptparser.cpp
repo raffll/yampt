@@ -150,6 +150,7 @@ std::string ScriptParser::checkLine(const std::string &line,
     std::pair<std::string, size_t> extracted;
     std::string new_text;
     size_t keyword_pos = line_lc.find(keyword);
+
     if(keyword_pos != std::string::npos &&
        line.rfind(";", keyword_pos) == std::string::npos)
     {
@@ -212,14 +213,17 @@ std::string ScriptParser::convertInnerTextInLine(const std::string &line,
                                                  const std::string &new_text)
 {
     std::string new_line = line;
-    new_line.erase(text_pos, text.size());
-    if(new_line.substr(text_pos - 1, 1) == "\"")
+    if(text_pos != std::string::npos)
     {
-        new_line.insert(text_pos, new_text);
-    }
-    else
-    {
-        new_line.insert(text_pos, "\"" + new_text + "\"");
+        new_line.erase(text_pos, text.size());
+        if(new_line.substr(text_pos - 1, 1) == "\"")
+        {
+            new_line.insert(text_pos, new_text);
+        }
+        else
+        {
+            new_line.insert(text_pos, "\"" + new_text + "\"");
+        }
     }
     return new_line;
 }
@@ -327,20 +331,19 @@ std::pair<std::string, size_t> ScriptParser::extractInnerTextFromLine(const std:
     {
         cur_text = line.substr(cur_pos);
     }
+    else
+    {
+        // If begin of searched text not found
+        // or keyword was found inside other string
+        // e.g. name of script
+        cur_text = "Inner text not found!";
+    }
 
     DEBUG_MSG("\tStep 1: " << cur_text);
 
     if(pos_in_expression == 0)
     {
-        /* Find end of searched text if keyword is GETPCCELL
-        if(cur_text.find(" =") != std::string::npos ||
-           cur_text.find(" !") != std::string::npos )
-        {
-            cur_text.erase(cur_text.find("="));
-        }*/
-
-        // Not all searched texts are in quotes
-        // Find end of searched text if keyword is ADDTOPIC, SHOWMAP, CENTERONCELL
+        // Find end of searched text if keyword is not in quotes
         if(cur_text.find_last_not_of(" \t") != std::string::npos)
         {
             cur_text.erase(cur_text.find_last_not_of(" \t") + 1);
