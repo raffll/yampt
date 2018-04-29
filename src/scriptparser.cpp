@@ -54,10 +54,6 @@ void ScriptParser::convertScript()
 
         if(is_done == false)
         {
-            new_line = checkLine(line, line_lc);
-        }
-        if(is_done == false)
-        {
             new_line = checkLine(line, line_lc, "addtopic", 0, yampt::rec_type::DIAL, false);
         }
         if(is_done == false)
@@ -88,10 +84,14 @@ void ScriptParser::convertScript()
         {
             new_line = checkLine(line, line_lc, "positioncell", 4, yampt::rec_type::CELL, false);
         }
+        if(is_done == false)
+        {
+            new_line = checkLine(line, line_lc);
+        }
         new_friendly += new_line + "\r\n";
     }
 
-    // Check if last 2 chars are newline and strip then if necessary
+    // Check if last 2 chars are newline and strip them if necessary
     size_t last_nl_pos = friendly_text.rfind("\r\n");
     if(last_nl_pos != friendly_text.size() - 2 || last_nl_pos == std::string::npos)
     {
@@ -150,12 +150,18 @@ std::string ScriptParser::checkLine(const std::string &line,
     std::pair<std::string, size_t> extracted;
     std::string new_text;
     size_t keyword_pos = line_lc.find(keyword);
+
     if(keyword_pos != std::string::npos &&
        line.rfind(";", keyword_pos) == std::string::npos)
     {
+        DEBUG_MSG("---");
+        DEBUG_MSG("Old line: " << line);
+        DEBUG_MSG("Extraction:");
         extracted = extractInnerTextFromLine(line, keyword_pos, pos_in_expression);
         new_text = findInnerTextInDict(extracted.first, text_type);
+        DEBUG_MSG("Found: " << new_text);
         new_line = convertInnerTextInLine(line, extracted.first, extracted.second, new_text);
+        DEBUG_MSG("New line: " << new_line);
         convertInnerTextInCompiledScriptData(extracted.first, new_text, is_getpccell);
         is_done = true;
     }
@@ -207,14 +213,17 @@ std::string ScriptParser::convertInnerTextInLine(const std::string &line,
                                                  const std::string &new_text)
 {
     std::string new_line = line;
-    new_line.erase(text_pos, text.size());
-    if(new_line.substr(text_pos - 1, 1) == "\"")
+    if(text_pos != std::string::npos)
     {
-        new_line.insert(text_pos, new_text);
-    }
-    else
-    {
-        new_line.insert(text_pos, "\"" + new_text + "\"");
+        new_line.erase(text_pos, text.size());
+        if(new_line.substr(text_pos - 1, 1) == "\"")
+        {
+            new_line.insert(text_pos, new_text);
+        }
+        else
+        {
+            new_line.insert(text_pos, "\"" + new_text + "\"");
+        }
     }
     return new_line;
 }
@@ -315,25 +324,27 @@ std::pair<std::string, size_t> ScriptParser::extractInnerTextFromLine(const std:
     std::smatch found;
     int ctr = -1;
 
-    // Find begin of searched text
+    // Find begin of searched inner text
     cur_pos = line.find_first_of(" \t,\"", cur_pos);
     cur_pos = line.find_first_not_of(" \t,", cur_pos);
     if(cur_pos != std::string::npos)
     {
         cur_text = line.substr(cur_pos);
     }
+    else
+    {
+        // If begin of searched text not found
+        // or keyword was found inside other string
+        // e.g. name of the script
+        cur_text = "Inner text not found!";
+    }
+
+    DEBUG_MSG("\tStep 1: " << cur_text);
 
     if(pos_in_expression == 0)
     {
-        /* Find end of searched text if keyword is GETPCCELL
-        if(cur_text.find(" =") != std::string::npos ||
-           cur_text.find(" !") != std::string::npos )
-        {
-            cur_text.erase(cur_text.find("="));
-        }*/
-
-        // Not all searched texts are in quotes
-        // Find end of searched text if keyword is ADDTOPIC, SHOWMAP, CENTERONCELL
+        // Find end of searched text if keyword is not in quotes
+        // Strip whitespaces
         if(cur_text.find_last_not_of(" \t") != std::string::npos)
         {
             cur_text.erase(cur_text.find_last_not_of(" \t") + 1);
@@ -355,6 +366,8 @@ std::pair<std::string, size_t> ScriptParser::extractInnerTextFromLine(const std:
         cur_pos = found.position(1) + cur_pos;
     }
 
+    DEBUG_MSG("\tStep 2: " << cur_text);
+
     // Strip quotes if exist
     std::regex r2("\"(.*?)\"", std::regex::optimize);
     std::regex_search(cur_text, found, r2);
@@ -363,6 +376,8 @@ std::pair<std::string, size_t> ScriptParser::extractInnerTextFromLine(const std:
         cur_text = found[1].str();
         cur_pos += 1;
     }
+
+    DEBUG_MSG("\tStep 3: " << cur_text);
 
     return std::make_pair(cur_text, cur_pos);
 }
