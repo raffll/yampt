@@ -16,6 +16,7 @@ public:
     std::string getNameFull() { return esm.getNameFull(); }
     std::string getNamePrefix() { return esm.getNamePrefix(); }
     std::string getNameSuffix() { return esm.getNameSuffix(); }
+    std::time_t getTime() { return esm.getTime(); }
     std::vector<std::string> getRecordColl() { return esm.getRecordColl(); }
 
     EsmConverter(std::string path, DictMerger &merger, bool add_dial, std::string suffix);

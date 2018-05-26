@@ -4,6 +4,10 @@ CONFIG -= app_bundle
 CONFIG -= qt
 QMAKE_LFLAGS = -s -static
 
+LIBS += \
+    -lboost_system \
+    -lboost_filesystem
+
 SOURCES += \
     src/config.cpp \
     src/dictcreator.cpp \

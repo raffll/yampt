@@ -264,6 +264,7 @@ void UserInterface::convertEsm()
             converter.convertEsm();
             std::cout << "----------------------------------------------" << std::endl;
             tools.writeFile(converter.getRecordColl(), converter.getNamePrefix() + suffix + converter.getNameSuffix());
+            boost::filesystem::last_write_time(converter.getNamePrefix() + suffix + converter.getNameSuffix(), converter.getTime());
         }
     }
     std::cout << std::endl;
