@@ -33,6 +33,10 @@ void UserInterface::parseCommandLine()
             {
                 command = "-o";
             }
+            else if(arg[i] == "-s")
+            {
+                command = "-s";
+            }
             else
             {
                 if(command == "-f")
@@ -46,6 +50,10 @@ void UserInterface::parseCommandLine()
                 if(command == "-o")
                 {
                     output = arg[i];
+                }
+                if(command == "-s")
+                {
+                    suffix = arg[i];
                 }
             }
         }
@@ -247,7 +255,7 @@ void UserInterface::convertEsm()
     tools.writeText(log, "yampt.log");
     for(size_t i = 0; i < file_path.size(); ++i)
     {
-        EsmConverter converter(file_path[i], merger, add_dial);
+        EsmConverter converter(file_path[i], merger, add_dial, suffix);
         if(converter.getStatus() == true)
         {
             std::cout << "----------------------------------------------" << std::endl
@@ -255,7 +263,7 @@ void UserInterface::convertEsm()
                       << "----------------------------------------------" << std::endl;
             converter.convertEsm();
             std::cout << "----------------------------------------------" << std::endl;
-            tools.writeFile(converter.getRecordColl(), converter.getNameFull());
+            tools.writeFile(converter.getRecordColl(), converter.getNamePrefix() + suffix + converter.getNameSuffix());
         }
     }
     std::cout << std::endl;

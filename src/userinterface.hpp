@@ -36,6 +36,7 @@ private:
     std::vector<std::string> file_path;
     std::vector<std::string> dict_path;
     std::string output;
+    std::string suffix;
 };
 
 #endif // USERINTERFACE_HPP

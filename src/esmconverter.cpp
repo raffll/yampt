@@ -3,9 +3,11 @@
 //----------------------------------------------------------
 EsmConverter::EsmConverter(std::string path,
                            DictMerger &merger,
-                           bool add_dial)
+                           bool add_dial,
+                           std::string suffix)
     : merger(&merger),
-      add_dial(add_dial)
+      add_dial(add_dial),
+      suffix(suffix)
 {
     esm.readFile(path);
     if(esm.getStatus() == true &&
@@ -20,6 +22,7 @@ void EsmConverter::convertEsm()
 {
     if(status == true)
     {
+        convertMAST();
         convertCELL();
         convertPGRD();
         convertANAM();
@@ -204,6 +207,30 @@ std::string EsmConverter::addDialogTopicsToNotConvertedINFOStrings(const std::st
         }
     }
     return new_friendly;
+}
+
+//----------------------------------------------------------
+void EsmConverter::convertMAST()
+{
+    std::string master_prefix;
+    std::string master_suffix;
+
+    resetCounters();
+    for(size_t i = 0; i < esm.getRecordColl().size(); ++i)
+    {
+        esm.setRecordTo(i);
+        if(esm.getRecordId() == "TES3")
+        {
+            esm.setFirstFriendlyTo("MAST");
+            while(esm.getFriendlyStatus() == true)
+            {
+                master_prefix = esm.getFriendlyText().substr(0, esm.getFriendlyText().find_last_of("."));
+                master_suffix = esm.getFriendlyText().substr(esm.getFriendlyText().rfind("."));
+                convertRecordContent(master_prefix + suffix + master_suffix + '\0');
+                esm.setNextFriendlyTo("MAST");
+            }
+        }
+    }
 }
 
 //----------------------------------------------------------
