@@ -39,7 +39,7 @@ void EsmConverter::convertEsm()
         convertINFO();
         convertBNAM();
         convertSCPT();
-        convertGMDT();
+        //convertGMDT();
     }
 }
 
@@ -789,7 +789,7 @@ void EsmConverter::convertSCPT()
 }
 
 //----------------------------------------------------------
-void EsmConverter::convertGMDT()
+/*void EsmConverter::convertGMDT()
 {
     std::string friendly_text;
     std::string prefix;
@@ -840,4 +840,4 @@ void EsmConverter::convertGMDT()
         }
     }
     printLogLine(yampt::rec_type::GMDT);
-}
+}*/

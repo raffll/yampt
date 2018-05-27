@@ -56,7 +56,7 @@ private:
     void convertINFO();
     void convertBNAM();
     void convertSCPT();
-    void convertGMDT();
+    //void convertGMDT();
 
     EsmReader esm;
     DictMerger *merger;
