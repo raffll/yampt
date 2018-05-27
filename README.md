@@ -10,7 +10,7 @@ Simple command line tool for automatic translation from one language to another.
 - Add your native dialog topic names to the end of not converted INFO strings, because without missing hyperlinks mods with lots of text don't work correctly.
 - Convert compiled script data, so you don't need to recompile scripts in TES CS.
 - You can add suffix to converted files, if you convert them all (including master), to create different (e.g. translated) plugin tree.
-- Converted doesn't change file modify time to keep original plugin sorting.
+- Converter doesn't change file modify time to keep original plugin sorting.
 - All you need to start are two language versions of the game (in most cases English and your native) or pre-made dictionaries.
 
 ## Usage
@@ -57,15 +57,17 @@ yampt.exe --merge -d Morrowind.xml
 yampt.exe --convert -f "C:\path\to\Plugin.esp" -d "NATIVE.xml"
 ```
 ### If you want to add suffix to converted files
+
+Add "-s" switch:
 ```
 yampt.exe --convert -f "C:\path\to\Plugin.esp" -d "NATIVE.xml" -s ".SUFFIX"
 ```
-This option creates file named "Plugin.SUFFIX.esp" and if it was dependent on Morrowind.esm, now it is dependent on Morrowind.SUFFIX.esm.
+This option creates file named "Plugin.SUFFIX.esp" and if it was dependent on "Morrowind.esm", now it is dependent on "Morrowind.SUFFIX.esm".
 So you can create entire secondary tree of translated plugins.
 
 ### If you want to add dialog topic names to not converted INFO strings
 
-Just add -a switch:
+Add "-a" switch:
 ```
 yampt.exe --convert -a -f "C:\path\to\Plugin.esp" -d "NATIVE.xml"
 ```
