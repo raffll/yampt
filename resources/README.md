@@ -60,8 +60,11 @@ Whatever option you choose, "yampt-convert-vanilla.cmd" creates:
 #### "dict_new" folder contains:
 
 CHANGED.xml dictionaries with changed text in comparison with original, previously created "NATIVE_for_find_changed_only.xml".
+
 NOTFOUND.xml dictionaries with text not found in any dictionary, e.g. new text added by plugin.
+
 This dictionary is refreshed every time you run script.
+
 You can now translate this files and copy them to:
 
 #### "dict_user" folder 
