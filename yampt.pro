@@ -27,17 +27,6 @@ SOURCES += \
     src/main.cpp \
     src/scriptparser.cpp \
     src/userinterface.cpp \
-    src/config.cpp \
-    src/dictcreator.cpp \
-    src/dictmerger.cpp \
-    src/dictreader.cpp \
-    src/esmconverter.cpp \
-    src/esmreader.cpp \
-    src/esmtools.cpp \
-    src/main.cpp \
-    src/scriptparser.cpp \
-    src/userinterface.cpp
-
 
 HEADERS += \
     src/config.hpp \
@@ -49,15 +38,6 @@ HEADERS += \
     src/esmtools.hpp \
     src/scriptparser.hpp \
     src/userinterface.hpp \
-    src/config.hpp \
-    src/dictcreator.hpp \
-    src/dictmerger.hpp \
-    src/dictreader.hpp \
-    src/esmconverter.hpp \
-    src/esmreader.hpp \
-    src/esmtools.hpp \
-    src/scriptparser.hpp \
-    src/userinterface.hpp
 
 DISTFILES += \
     CHANGELOG.md \
