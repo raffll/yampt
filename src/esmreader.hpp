@@ -22,6 +22,7 @@ public:
     std::string getNameFull() { return name_full; }
     std::string getNamePrefix() { return name_prefix; }
     std::string getNameSuffix() { return name_suffix; }
+    std::time_t getTime() { return time; }
     std::vector<std::string> const& getRecordColl() const { return rec_coll; }
 
     std::string getRecordContent() { return *rec; }
@@ -42,6 +43,7 @@ public:
 
 private:
     void setName(const std::string &path);
+    void setTime(const std::string &path);
     void setRecordColl(const std::string &content,
                        const std::string &path);
 
@@ -50,6 +52,7 @@ private:
     std::string name_full;
     std::string name_prefix;
     std::string name_suffix;
+    std::time_t time;
 
     bool status = false;
 

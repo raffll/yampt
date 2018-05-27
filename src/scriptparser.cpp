@@ -119,9 +119,13 @@ std::string ScriptParser::checkLine(const std::string &line,
     keyword_pos = keyword_pos_coll.begin()->first;
 
     if(keyword_pos != std::string::npos &&
-       line.rfind(";", keyword_pos) == std::string::npos)
+       line.rfind(";", keyword_pos) == std::string::npos &&
+       line.find("\"", keyword_pos) != std::string::npos) // Convert only if message line is valid
     {
+        DEBUG_MSG("---");
+        DEBUG_MSG("Old line: " << line);
         new_line = convertLine(line);
+        DEBUG_MSG("New line: " << new_line);
         if(keyword == "say " ||
            keyword == "say,")
         {
@@ -158,14 +162,14 @@ std::string ScriptParser::checkLine(const std::string &line,
         DEBUG_MSG("Old line: " << line);
         DEBUG_MSG("Extraction:");
         extracted = extractInnerTextFromLine(line, keyword_pos, pos_in_expression);
-        new_text = findInnerTextInDict(extracted.first, text_type);
-        DEBUG_MSG("Found: " << new_text);
-        new_line = convertInnerTextInLine(line, extracted.first, extracted.second, new_text);
-        DEBUG_MSG("New line: " << new_line);
 
-        // Convert script data only if extracted text is valid
+        // Convert only if extracted text is valid
         if(extracted.second != std::string::npos)
         {
+            new_text = findInnerTextInDict(extracted.first, text_type);
+            DEBUG_MSG("Found: " << new_text);
+            new_line = convertInnerTextInLine(line, extracted.first, extracted.second, new_text);
+            DEBUG_MSG("New line: " << new_line);
             convertInnerTextInCompiledScriptData(extracted.first, new_text, is_getpccell);
         }
         is_done = true;
@@ -218,17 +222,14 @@ std::string ScriptParser::convertInnerTextInLine(const std::string &line,
                                                  const std::string &new_text)
 {
     std::string new_line = line;
-    if(text_pos != std::string::npos)
+    new_line.erase(text_pos, text.size());
+    if(new_line.substr(text_pos - 1, 1) == "\"")
     {
-        new_line.erase(text_pos, text.size());
-        if(new_line.substr(text_pos - 1, 1) == "\"")
-        {
-            new_line.insert(text_pos, new_text);
-        }
-        else
-        {
-            new_line.insert(text_pos, "\"" + new_text + "\"");
-        }
+        new_line.insert(text_pos, new_text);
+    }
+    else
+    {
+        new_line.insert(text_pos, "\"" + new_text + "\"");
     }
     return new_line;
 }

@@ -39,6 +39,12 @@ void EsmReader::setName(const std::string &path)
 }
 
 //----------------------------------------------------------
+void EsmReader::setTime(const std::string &path)
+{
+    time = boost::filesystem::last_write_time(path);
+}
+
+//----------------------------------------------------------
 void EsmReader::setRecordColl(const std::string &content,
                               const std::string &path)
 {
@@ -56,8 +62,9 @@ void EsmReader::setRecordColl(const std::string &content,
                 rec_end = rec_beg + rec_size;
                 rec_coll.push_back(content.substr(rec_beg, rec_size));
             }
-            std::cout << "--> Loading " + path + "..." << std::endl;
             setName(path);
+            setTime(path);
+            std::cout << "--> Loading " + path + "..." << std::endl;
             status = true;
         }
         catch(std::exception const& e)

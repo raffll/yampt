@@ -15,9 +15,11 @@ public:
     bool getStatus() { return status; }
     std::string getNameFull() { return esm.getNameFull(); }
     std::string getNamePrefix() { return esm.getNamePrefix(); }
+    std::string getNameSuffix() { return esm.getNameSuffix(); }
+    std::time_t getTime() { return esm.getTime(); }
     std::vector<std::string> getRecordColl() { return esm.getRecordColl(); }
 
-    EsmConverter(std::string path, DictMerger &merger, bool add_dial);
+    EsmConverter(std::string path, DictMerger &merger, bool add_dial, std::string suffix);
 
 private:
     void resetCounters();
@@ -37,6 +39,7 @@ private:
 
     void printLogLine(const yampt::rec_type type);
 
+    void convertMAST();
     void convertCELL();
     void convertPGRD();
     void convertANAM();
@@ -53,7 +56,7 @@ private:
     void convertINFO();
     void convertBNAM();
     void convertSCPT();
-    void convertGMDT();
+    //void convertGMDT();
 
     EsmReader esm;
     DictMerger *merger;
@@ -61,6 +64,7 @@ private:
 
     bool status = false;
     const bool add_dial = false;
+    const std::string suffix;
 
     int counter_converted = 0;
     int counter_skipped = 0;
