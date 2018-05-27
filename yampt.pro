@@ -28,7 +28,6 @@ SOURCES += \
     src/scriptparser.cpp \
     src/userinterface.cpp
 
-
 HEADERS += \
     src/config.hpp \
     src/dictcreator.hpp \
@@ -43,4 +42,13 @@ HEADERS += \
 DISTFILES += \
     CHANGELOG.md \
     README.md \
-    LICENSE.txt
+    LICENSE.txt \
+    CHANGELOG.md \
+    README.md \
+    resources/yampt-convert-vanilla.cmd \
+    resources/yampt-make-base.cmd \
+    LICENSE.txt \
+    resources/README.md
+
+SUBDIRS += \
+    yampt.pro
