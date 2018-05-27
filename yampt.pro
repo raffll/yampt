@@ -26,7 +26,7 @@ SOURCES += \
     src/esmtools.cpp \
     src/main.cpp \
     src/scriptparser.cpp \
-    src/userinterface.cpp \
+    src/userinterface.cpp
 
 HEADERS += \
     src/config.hpp \
@@ -37,7 +37,7 @@ HEADERS += \
     src/esmreader.hpp \
     src/esmtools.hpp \
     src/scriptparser.hpp \
-    src/userinterface.hpp \
+    src/userinterface.hpp
 
 DISTFILES += \
     CHANGELOG.md \
