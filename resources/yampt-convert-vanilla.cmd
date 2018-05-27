@@ -34,10 +34,6 @@ REM Convert files
 for /f "delims=" %%x in (plg.txt) do ( yampt.exe --convert -a -f %%x -d "%DICT_N%" "%USER%\*.xml" -s "%SUFFIX%" )
 	
 REM Clean
-del "Morrowind.CHANGED.xml"
-del "Tribunal.CHANGED.xml"
-del "Bloodmoon.CHANGED.xml"
-
 move "*.CHANGED.xml" "%_NEW%"
 move "*.NOTFOUND.xml" "%_NEW%"
 move /Y "*.esm" "%OUTPUT%"

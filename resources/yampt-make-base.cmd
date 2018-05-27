@@ -26,6 +26,6 @@ yampt.exe --merge -d "Morrowind.ALL.xml" "Tribunal.ALL.xml" "Bloodmoon.ALL.xml" 
 
 del "Morrowind.ALL.xml" "Tribunal.ALL.xml" "Bloodmoon.ALL.xml"
 move "NATIVE_for_find_changed_only.xml" "%BASE%"
-rename "yampt.log" "NATIVE_for_find_changed_only.log"
+rename "yampt.log" "yampt.NATIVE_for_find_changed_only.log"
 
 pause
