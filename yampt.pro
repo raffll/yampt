@@ -26,10 +26,29 @@ SOURCES += \
     src/esmtools.cpp \
     src/main.cpp \
     src/scriptparser.cpp \
+    src/userinterface.cpp \
+    src/config.cpp \
+    src/dictcreator.cpp \
+    src/dictmerger.cpp \
+    src/dictreader.cpp \
+    src/esmconverter.cpp \
+    src/esmreader.cpp \
+    src/esmtools.cpp \
+    src/main.cpp \
+    src/scriptparser.cpp \
     src/userinterface.cpp
 
 
 HEADERS += \
+    src/config.hpp \
+    src/dictcreator.hpp \
+    src/dictmerger.hpp \
+    src/dictreader.hpp \
+    src/esmconverter.hpp \
+    src/esmreader.hpp \
+    src/esmtools.hpp \
+    src/scriptparser.hpp \
+    src/userinterface.hpp \
     src/config.hpp \
     src/dictcreator.hpp \
     src/dictmerger.hpp \
@@ -43,4 +62,12 @@ HEADERS += \
 DISTFILES += \
     CHANGELOG.md \
     README.md \
+    LICENSE.txt \
+    CHANGELOG.md \
+    README.md \
+    resources/yampt-convert-vanilla.cmd \
+    resources/yampt-make-base.cmd \
     LICENSE.txt
+
+SUBDIRS += \
+    yampt.pro
