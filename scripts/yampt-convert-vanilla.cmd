@@ -1,0 +1,48 @@
+SET _INPUT=input
+SET OUTPUT=output
+
+REM Optional
+SET SUFFIX=
+
+SET BASE=dict_base
+SET USER=dict_user
+SET _NEW=dict_new
+
+REM Change path to base dictionaries
+SET DICT_N=%BASE%\NATIVE.xml
+SET DICT_F=%BASE%\NATIVE_for_find_changed_only.xml
+
+REM ############### DON'T EDIT ###############
+
+REM Prepare
+mkdir %_INPUT%
+mkdir %OUTPUT%
+mkdir %BASE%
+mkdir %USER%
+mkdir %_NEW%
+
+del /f /q "%_NEW%"\*
+del /f /q "%OUTPUT%"\*"%SUFFIX%".esm
+del /f /q "%OUTPUT%"\*"%SUFFIX%".esp
+for /R "%_INPUT%" %%f in (*.esp, *.esm) do echo | set /p name=" "%%f" " >> plg.txt
+
+REM Make user dictionaries
+for /f "delims=" %%x in (plg.txt) do ( yampt.exe --make-not -f %%x -d "%DICT_N%" )
+for /f "delims=" %%x in (plg.txt) do ( yampt.exe --make-changed -f %%x -d "%DICT_F%" )
+
+REM Convert files
+for /f "delims=" %%x in (plg.txt) do ( yampt.exe --convert -a -f %%x -d "%DICT_N%" "%USER%\*.xml" -s "%SUFFIX%" )
+	
+REM Clean
+del "Morrowind.CHANGED.xml"
+del "Tribunal.CHANGED.xml"
+del "Bloodmoon.CHANGED.xml"
+
+move "*.CHANGED.xml" "%_NEW%"
+move "*.NOTFOUND.xml" "%_NEW%"
+move /Y "*.esm" "%OUTPUT%"
+move /Y "*.esp" "%OUTPUT%"
+
+del plg.txt
+
+pause
