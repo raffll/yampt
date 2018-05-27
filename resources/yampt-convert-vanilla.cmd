@@ -22,8 +22,6 @@ mkdir %USER%
 mkdir %_NEW%
 
 del /f /q "%_NEW%"\*
-del /f /q "%OUTPUT%"\*"%SUFFIX%".esm
-del /f /q "%OUTPUT%"\*"%SUFFIX%".esp
 for /R "%_INPUT%" %%f in (*.esp, *.esm) do echo | set /p name=" "%%f" " >> plg.txt
 
 REM Make user dictionaries
