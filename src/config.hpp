@@ -90,6 +90,9 @@ public:
     std::string eraseNullChars(std::string &str);
     std::string eraseCarriageReturnChar(std::string &str);
     std::string replaceNonReadableCharsWithDot(const std::string &str);
+    std::string addDialogTopicsToINFOStrings(yampt::inner_dict_t dict,
+                                             const std::string &friendly_text,
+                                             bool extended);
 };
 
 #endif // CONFIG_HPP

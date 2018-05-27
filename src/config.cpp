@@ -149,3 +149,43 @@ std::string Tools::replaceNonReadableCharsWithDot(const std::string &str)
     }
     return text;
 }
+
+//----------------------------------------------------------
+std::string Tools::addDialogTopicsToINFOStrings(yampt::inner_dict_t dict,
+                                                const std::string &friendly_text,
+                                                bool extended)
+{
+    std::string unique_text_lc;
+    std::string new_friendly;
+    std::string new_friendly_lc;
+    size_t pos;
+
+    new_friendly = friendly_text;
+    new_friendly_lc = friendly_text;
+    transform(new_friendly_lc.begin(), new_friendly_lc.end(),
+              new_friendly_lc.begin(), ::tolower);
+
+    for(const auto &elem : dict)
+    {
+        unique_text_lc = elem.first;
+        transform(unique_text_lc.begin(), unique_text_lc.end(),
+                  unique_text_lc.begin(), ::tolower);
+
+        if(unique_text_lc != elem.second)
+        {
+            pos = new_friendly_lc.find(unique_text_lc);
+            if(pos != std::string::npos)
+            {
+                if(extended == false)
+                {
+                    new_friendly.insert(new_friendly.size(), " [" + elem.second + "]");
+                }
+                else
+                {
+                    new_friendly.insert(new_friendly.size(), " [" + elem.first + " -> " + elem.second + "]");
+                }
+            }
+        }
+    }
+    return new_friendly;
+}
