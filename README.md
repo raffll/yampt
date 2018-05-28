@@ -150,11 +150,11 @@ First we need second base dictionary with your native keys, but foreign values i
     yampt.exe --make-all -f "C:\path\to\FOREIGN\Tribunal.esm" -d "NATIVE.xml"
     yampt.exe --make-all -f "C:\path\to\FOREIGN\Bloodmoon.esm" -d "NATIVE.xml"
 
-    yampt.exe --merge -d "Morrowind.ALL.xml" "Tribunal.ALL.xml" "Bloodmoon.ALL.xml" -o "FOR_FIND_CHANGED_ONLY.xml"
+    yampt.exe --merge -d "Morrowind.ALL.xml" "Tribunal.ALL.xml" "Bloodmoon.ALL.xml" -o "NATIVE_for_find_changed_only.xml"
 
 And now:
 
-    yampt.exe --make-changed -f "C:\path\to\Plugin.esp" -d "FOR_FIND_CHANGED_ONLY.xml"
+    yampt.exe --make-changed -f "C:\path\to\Plugin.esp" -d "NATIVE_for_find_changed_only.xml"
 
 
 ### Finally
@@ -174,4 +174,3 @@ Commands "--make-not" and "--make-changed" is all you need to fully translate pl
 ### Script list
 
     yampt.exe --script-list -f "C:\path\to\Plugin.esp"
-

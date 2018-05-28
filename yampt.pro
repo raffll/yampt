@@ -44,9 +44,10 @@ DISTFILES += \
     README.md \
     LICENSE.txt \
     resources/README.md \
-    resources/yampt-convert-vanilla.cmd \
-    resources/yampt-make-base.cmd \
-    resources/yampt-make-base.sh
+    resources/yampt-convert-template.cmd \
+    resources/yampt-make-base-template.cmd \
+    resources/HOW-TO-START.md \
+    resources/yampt-make-base-template.sh
 
 SUBDIRS += \
     yampt.pro
