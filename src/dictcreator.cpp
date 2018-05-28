@@ -212,15 +212,7 @@ void DictCreator::validateRecord(const std::string &unique_text,
         }
         else
         {
-            if(type == yampt::rec_type::INFO)
-            {
-                new_friendly = tools.addDialogTopicsToINFOStrings(merger->getDict(yampt::rec_type::DIAL), friendly_text, true);
-                insertRecord(unique_text, new_friendly, type);
-            }
-            else
-            {
-                insertRecord(unique_text, friendly_text, type);
-            }
+            insertRecord(unique_text, friendly_text, type);
         }
     }
 
