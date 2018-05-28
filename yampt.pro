@@ -43,12 +43,9 @@ DISTFILES += \
     CHANGELOG.md \
     README.md \
     LICENSE.txt \
-    CHANGELOG.md \
-    README.md \
+    resources/README.md \
     resources/yampt-convert-vanilla.cmd \
     resources/yampt-make-base.cmd \
-    LICENSE.txt \
-    resources/README.md \
     resources/yampt-make-base.sh
 
 SUBDIRS += \
