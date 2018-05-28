@@ -114,7 +114,7 @@ std::string EsmConverter::setNewFriendly(const yampt::rec_type type,
             add_dial == true &&
             dialog_topic.substr(0, 1) != "V")
     {
-        new_friendly = addDialogTopicsToNotConvertedINFOStrings(friendly_text);
+        new_friendly = tools.addDialogTopicsToINFOStrings(merger->getDict(yampt::rec_type::DIAL), friendly_text, false);
         setToConvertFlag(friendly_text, new_friendly);
     }
     else
@@ -175,38 +175,6 @@ void EsmConverter::setToConvertFlag(const std::string &friendly_text,
         to_convert = false;
         counter_skipped++;
     }
-}
-
-//----------------------------------------------------------
-std::string EsmConverter::addDialogTopicsToNotConvertedINFOStrings(const std::string &friendly_text)
-{
-    counter_added++;
-    std::string unique_text;
-    std::string new_friendly;
-    std::string new_friendly_lc;
-    size_t pos;
-
-    new_friendly = friendly_text;
-    new_friendly_lc = friendly_text;
-    transform(new_friendly_lc.begin(), new_friendly_lc.end(),
-              new_friendly_lc.begin(), ::tolower);
-
-    for(const auto &elem : merger->getDict(yampt::rec_type::DIAL))
-    {
-        unique_text = elem.first;
-        transform(unique_text.begin(), unique_text.end(),
-                  unique_text.begin(), ::tolower);
-
-        if(unique_text != elem.second)
-        {
-            pos = new_friendly_lc.find(unique_text);
-            if(pos != std::string::npos)
-            {
-                new_friendly.insert(new_friendly.size(), " [" + elem.second + "]");
-            }
-        }
-    }
-    return new_friendly;
 }
 
 //----------------------------------------------------------

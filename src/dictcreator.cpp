@@ -183,6 +183,7 @@ void DictCreator::validateRecord(const std::string &unique_text,
                                  const yampt::rec_type type)
 {
     counter_all++;
+    std::string new_friendly;
 
     // Insert without special cases
     if(mode == yampt::ins_mode::RAW ||
@@ -221,7 +222,15 @@ void DictCreator::validateRecord(const std::string &unique_text,
         auto search = merger->getDict(type).find(unique_text);
         if(search == merger->getDict(type).end())
         {
-            insertRecord(unique_text, friendly_text, type);
+            if(type == yampt::rec_type::INFO)
+            {
+                new_friendly = tools.addDialogTopicsToINFOStrings(merger->getDict(yampt::rec_type::DIAL), friendly_text, true);
+                insertRecord(unique_text, new_friendly, type);
+            }
+            else
+            {
+                insertRecord(unique_text, friendly_text, type);
+            }
         }
     }
 
@@ -241,7 +250,15 @@ void DictCreator::validateRecord(const std::string &unique_text,
             {
                 if(search->second != friendly_text)
                 {
-                    insertRecord(unique_text, friendly_text, type);
+                    if(type == yampt::rec_type::INFO)
+                    {
+                        new_friendly = tools.addDialogTopicsToINFOStrings(merger->getDict(yampt::rec_type::DIAL), friendly_text, true);
+                        insertRecord(unique_text, new_friendly, type);
+                    }
+                    else
+                    {
+                        insertRecord(unique_text, friendly_text, type);
+                    }
                 }
             }
         }

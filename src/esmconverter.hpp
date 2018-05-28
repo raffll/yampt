@@ -33,7 +33,6 @@ private:
     std::pair<std::string, std::string> setNewScriptSCPT(const std::string &prefix,
                                                          const std::string &friendly_text,
                                                          const std::string &compiled_data);
-    std::string addDialogTopicsToNotConvertedINFOStrings(const std::string &friendly_text);
     void setToConvertFlag(const std::string &friendly_text,
                           const std::string &new_friendly);
 
