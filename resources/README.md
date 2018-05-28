@@ -15,7 +15,7 @@ to path where you keep native and foreign master files (e.g. Morrowind.esm, Trib
     SET _NATIVE=C:\path\to\native
     SET FOREIGN=c:\path\to\foreign
 
-Then double-click on script. This creates your base dictionaries in folder "dict_base".
+Then double-click on script. This creates your base dictionaries in folder "dict\_base".
 
 ## Converting multiple files at once
 
@@ -57,14 +57,14 @@ This option search for all esp and esm files in "Data Files" folder and copy con
 
 Whatever option you choose, "yampt-convert-vanilla.cmd" creates:
 
-#### "dict_new" folder contains:
+#### "dict\_new" folder contains:
 
-- CHANGED.xml dictionaries with changed text in comparison with original, previously created "NATIVE_for_find_changed_only.xml".
+- CHANGED.xml dictionaries with changed text in comparison with original, previously created "NATIVE\_for\_find\_changed\_only.xml".
 - NOTFOUND.xml dictionaries with text not found in any dictionary, e.g. new text added by plugin.
 
 This folder is refreshed every time you run script.
 You can now translate this files and copy them to:
 
-#### "dict_user" folder 
+#### "dict\_user" folder
 
 Dictionaries in this folder are combined with base dictionary during next convertion.
