@@ -7,7 +7,7 @@ SET BASE=dict_base
 REM ############### DON'T EDIT ###############
 
 REM Prepare
-mkdir %BASE%
+mkdir "%BASE%"
 
 REM Create new native dictionaries
 yampt.exe --make-base -f "%_NATIVE%\Morrowind.esm" "%FOREIGN%\Morrowind.esm"

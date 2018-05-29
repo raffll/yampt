@@ -43,7 +43,6 @@ DISTFILES += \
     CHANGELOG.md \
     README.md \
     LICENSE.txt \
-    resources/README.md \
     resources/yampt-convert-template.cmd \
     resources/yampt-make-base-template.cmd \
     resources/HOW-TO-START.md \
