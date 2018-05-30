@@ -46,7 +46,7 @@ void EsmConverter::convertEsm()
 //----------------------------------------------------------
 void EsmConverter::printLogLine(const yampt::rec_type type)
 {
-    if(type == yampt::rec_type::INFO &&
+    /*if(type == yampt::rec_type::INFO &&
        add_dial == true)
     {
         std::cout << yampt::type_name[type] << " "
@@ -61,13 +61,13 @@ void EsmConverter::printLogLine(const yampt::rec_type type)
                   << std::setw(6) << "-" << std::endl;
     }
     else
-    {
+    {*/
         std::cout << yampt::type_name[type] << " "
                   << std::setw(10) << std::to_string(counter_converted) << " / "
                   << std::setw(7) << std::to_string(counter_skipped) << " / "
                   << std::setw(9) << std::to_string(counter_unchanged) << " / "
                   << std::setw(6) << std::to_string(counter_all) << std::endl;
-    }
+    //}
 }
 
 //----------------------------------------------------------
