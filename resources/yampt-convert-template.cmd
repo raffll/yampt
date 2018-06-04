@@ -15,11 +15,11 @@ SET DICT_F=%BASE%\NATIVE_for_find_changed_only.xml
 REM ############### DON'T EDIT ###############
 
 REM Prepare
-mkdir %_INPUT%
-mkdir %OUTPUT%
-mkdir %BASE%
-mkdir %USER%
-mkdir %_NEW%
+mkdir "%_INPUT%"
+mkdir "%OUTPUT%"
+mkdir "%BASE%"
+mkdir "%USER%"
+mkdir "%_NEW%"
 
 del /f /q "%_NEW%"\*
 for /R "%_INPUT%" %%f in (*.esp, *.esm) do echo | set /p name=" "%%f" " >> plg.txt
