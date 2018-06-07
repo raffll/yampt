@@ -62,11 +62,11 @@ void EsmConverter::printLogLine(const yampt::rec_type type)
     }
     else
     {*/
-        std::cout << yampt::type_name[type] << " "
-                  << std::setw(10) << std::to_string(counter_converted) << " / "
-                  << std::setw(7) << std::to_string(counter_skipped) << " / "
-                  << std::setw(9) << std::to_string(counter_unchanged) << " / "
-                  << std::setw(6) << std::to_string(counter_all) << std::endl;
+    std::cout << yampt::type_name[type] << " "
+              << std::setw(10) << std::to_string(counter_converted) << " / "
+              << std::setw(7) << std::to_string(counter_skipped) << " / "
+              << std::setw(9) << std::to_string(counter_unchanged) << " / "
+              << std::setw(6) << std::to_string(counter_all) << std::endl;
     //}
 }
 
@@ -94,6 +94,21 @@ void EsmConverter::convertRecordContent(const std::string &new_friendly)
     rec_content.erase(4, 4);
     rec_content.insert(4, tools.convertUIntToStringByteArray(rec_size));
     esm.setNewRecordContent(rec_content);
+}
+
+//----------------------------------------------------------
+std::string EsmConverter::addNullTerminatorIfEmpty(const std::string &new_friendly)
+{
+    std::string result;
+    if(new_friendly == "")
+    {
+        result = '\0';
+    }
+    else
+    {
+        result = new_friendly;
+    }
+    return result;
 }
 
 //----------------------------------------------------------
@@ -222,6 +237,8 @@ void EsmConverter::convertCELL()
                                               esm.getFriendlyText());
                 if(to_convert == true)
                 {
+                    // Null terminated
+                    // Can't be empty
                     convertRecordContent(new_friendly + '\0');
                 }
             }
@@ -313,6 +330,7 @@ void EsmConverter::convertSCVR()
                         new_friendly = esm.getFriendlyText().substr(0, 5) + new_friendly;
                         if(to_convert == true)
                         {
+                            // Not null terminated
                             convertRecordContent(new_friendly);
                         }
                     }
@@ -348,7 +366,6 @@ void EsmConverter::convertDNAM()
                     if(to_convert == true)
                     {
                         convertRecordContent(new_friendly + '\0');
-
                     }
                     esm.setNextFriendlyTo("DNAM");
                 }
@@ -412,7 +429,8 @@ void EsmConverter::convertGMST()
                                               esm.getFriendlyText());
                 if(to_convert == true)
                 {
-                    convertRecordContent(new_friendly);
+                    // Null terminated only if empty
+                    convertRecordContent(addNullTerminatorIfEmpty(new_friendly));
                 }
             }
         }
@@ -430,30 +448,18 @@ void EsmConverter::convertFNAM()
     for(size_t i = 0; i < esm.getRecordColl().size(); ++i)
     {
         esm.setRecordTo(i);
-        if(esm.getRecordId() == "ACTI" ||
-           esm.getRecordId() == "ALCH" ||
-           esm.getRecordId() == "APPA" ||
-           esm.getRecordId() == "ARMO" ||
-           esm.getRecordId() == "BOOK" ||
-           esm.getRecordId() == "BSGN" ||
-           esm.getRecordId() == "CLAS" ||
-           esm.getRecordId() == "CLOT" ||
-           esm.getRecordId() == "CONT" ||
-           esm.getRecordId() == "CREA" ||
-           esm.getRecordId() == "DOOR" ||
-           esm.getRecordId() == "FACT" ||
-           esm.getRecordId() == "INGR" ||
-           esm.getRecordId() == "LIGH" ||
-           esm.getRecordId() == "LOCK" ||
-           esm.getRecordId() == "MISC" ||
-           esm.getRecordId() == "NPC_" ||
-           esm.getRecordId() == "PROB" ||
-           esm.getRecordId() == "RACE" ||
-           esm.getRecordId() == "REGN" ||
-           esm.getRecordId() == "REPA" ||
-           esm.getRecordId() == "SKIL" ||
-           esm.getRecordId() == "SPEL" ||
-           esm.getRecordId() == "WEAP")
+        if(esm.getRecordId() == "ACTI" || esm.getRecordId() == "ALCH" ||
+           esm.getRecordId() == "APPA" || esm.getRecordId() == "ARMO" ||
+           esm.getRecordId() == "BOOK" || esm.getRecordId() == "BSGN" ||
+           esm.getRecordId() == "CLAS" || esm.getRecordId() == "CLOT" ||
+           esm.getRecordId() == "CONT" || esm.getRecordId() == "CREA" ||
+           esm.getRecordId() == "DOOR" || esm.getRecordId() == "FACT" ||
+           esm.getRecordId() == "INGR" || esm.getRecordId() == "LIGH" ||
+           esm.getRecordId() == "LOCK" || esm.getRecordId() == "MISC" ||
+           esm.getRecordId() == "NPC_" || esm.getRecordId() == "PROB" ||
+           esm.getRecordId() == "RACE" || esm.getRecordId() == "REGN" ||
+           esm.getRecordId() == "REPA" || esm.getRecordId() == "SKIL" ||
+           esm.getRecordId() == "SPEL" || esm.getRecordId() == "WEAP")
         {
             esm.setUniqueTo("NAME");
             esm.setFirstFriendlyTo("FNAM");
@@ -467,6 +473,8 @@ void EsmConverter::convertFNAM()
                                               esm.getFriendlyText());
                 if(to_convert == true)
                 {
+                    // Null terminated
+                    // Don't exist if empty
                     convertRecordContent(new_friendly + '\0');
                 }
             }
@@ -500,7 +508,19 @@ void EsmConverter::convertDESC()
                                               esm.getFriendlyText());
                 if(to_convert == true)
                 {
-                    convertRecordContent(new_friendly);
+                    if(esm.getRecordId() == "BSGN")
+                    {
+                        // Null terminated
+                        // Don't exist if empty
+                        convertRecordContent(new_friendly + '\0');
+                    }
+                    if(esm.getRecordId() == "CLAS" ||
+                       esm.getRecordId() == "RACE")
+                    {
+                        // Not null terminated
+                        // Don't exist if empty
+                        convertRecordContent(addNullTerminatorIfEmpty(new_friendly));
+                    }
                 }
             }
         }
@@ -529,7 +549,9 @@ void EsmConverter::convertTEXT()
                                               esm.getFriendlyText());
                 if(to_convert == true)
                 {
-                    convertRecordContent(new_friendly);
+                    // Not null terminated
+                    // Don't exist if empty
+                    convertRecordContent(addNullTerminatorIfEmpty(new_friendly));
                 }
             }
         }
@@ -561,6 +583,7 @@ void EsmConverter::convertRNAM()
                                                   esm.getFriendlyText());
                     if(to_convert == true)
                     {
+                        // Null terminated up to 32
                         new_friendly.resize(32);
                         convertRecordContent(new_friendly);
                     }
@@ -596,7 +619,9 @@ void EsmConverter::convertINDX()
                                               esm.getFriendlyText());
                 if(to_convert == true)
                 {
-                    convertRecordContent(new_friendly);
+                    // Not null terminated
+                    // Don't exist if empty
+                    convertRecordContent(addNullTerminatorIfEmpty(new_friendly));
                 }
             }
         }
@@ -626,6 +651,7 @@ void EsmConverter::convertDIAL()
                                               esm.getFriendlyText());
                 if(to_convert == true)
                 {
+                    // Null terminated
                     convertRecordContent(new_friendly + '\0');
                 }
             }
@@ -669,7 +695,9 @@ void EsmConverter::convertINFO()
                                               dialog_topic);
                 if(to_convert == true)
                 {
-                    convertRecordContent(new_friendly);
+                    // Not null terminated
+                    // Don't exist if empty
+                    convertRecordContent(addNullTerminatorIfEmpty(new_friendly));
                 }
             }
         }

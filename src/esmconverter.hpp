@@ -24,6 +24,7 @@ public:
 private:
     void resetCounters();
     void convertRecordContent(const std::string &new_friendly);
+    std::string addNullTerminatorIfEmpty(const std::string &new_friendly);
     std::string setNewFriendly(const yampt::rec_type type,
                                const std::string &unique_text,
                                const std::string &friendly_text,
