@@ -592,7 +592,7 @@ void EsmConverter::convertRNAM()
             }
         }
     }
-    printLogLine(yampt::rec_type::TEXT);
+    printLogLine(yampt::rec_type::RNAM);
 }
 
 //----------------------------------------------------------
