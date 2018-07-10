@@ -2,7 +2,10 @@
 
 ## Description
 
-Simple command line tool for automatic translation from one language to another. It works on cell names, game settings, object names, birthsigns, class and race descriptions, book text, faction rank names, magic and skill descriptions, dialog topic names, dialog text, script lines and compiled script data. In one word, on all readable in-game text.
+Simple command line tool for automatic translation from one language to another.
+It works on cell names, game settings, object names, birthsigns, class and race descriptions,
+book text, faction rank names, magic and skill descriptions, dialog topic names, dialog text, script lines and compiled script data.
+In one word, on all readable in-game text.
 
 ## Features
 
@@ -62,7 +65,8 @@ Add "-s" switch:
 
     yampt.exe --convert -f "C:\path\to\Plugin.esp" -d "NATIVE.xml" -s ".SUFFIX"
 
-This option creates file named "Plugin.SUFFIX.esp" and if it was dependent on "Morrowind.esm", now it is dependent on "Morrowind.SUFFIX.esm".
+This option creates file named "Plugin.SUFFIX.esp" and if it was dependent on "Morrowind.esm",
+now it is dependent on "Morrowind.SUFFIX.esm".
 So you can create entire secondary tree of translated plugins.
 
 ### If you want to add dialog topic names to not converted INFO strings
@@ -91,7 +95,8 @@ Without this, most English plugins with new dialogs are not playable in your nat
 
 #### Warning!
 
-This can generate warnings in TES CS and those records are read only, but it is ok in game. You can ignore them.
+If INFO text exceeds 512 characters, this could generate warnings in TES CS and those records are read only, but it is ok in game.
+You can ignore them.
 
 ## For translators
 
