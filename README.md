@@ -95,7 +95,7 @@ Without this, most English plugins with new dialogs are not playable in your nat
 
 #### Warning!
 
-If INFO text exceeds 512 characters, this could generate warnings in TES CS and those records are read only, but it is ok in game.
+If INFO text exceeds 512 characters, this could generate warnings in TES CS and those records will be read only, but it is ok in game.
 You can ignore them.
 
 ## For translators
