@@ -22,7 +22,7 @@ mkdir "%USER%"
 mkdir "%_NEW%"
 
 del /f /q "%_NEW%"\*
-for /R "%_INPUT%" %%f in (*.esp, *.esm, *.ESP, *.ESM) do echo | set /p name=" "%%f" " >> plg.txt
+for /R "%_INPUT%" %%f in (*.esp, *.esm) do echo | set /p name=" "%%f" " >> plg.txt
 
 REM Make user dictionaries
 for /f "delims=" %%x in (plg.txt) do ( yampt.exe --make-not -f %%x -d "%DICT_N%" )
@@ -36,8 +36,6 @@ move "*.CHANGED.xml" "%_NEW%"
 move "*.NOTFOUND.xml" "%_NEW%"
 move /Y "*.esm" "%OUTPUT%"
 move /Y "*.esp" "%OUTPUT%"
-move /Y "*.ESM" "%OUTPUT%"
-move /Y "*.ESP" "%OUTPUT%"
 
 del plg.txt
 
