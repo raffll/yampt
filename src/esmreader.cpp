@@ -36,12 +36,10 @@ std::string EsmReader::readFile(const std::string &path)
         {
             content.append(buffer, chars_read);
         }
-        is_loaded = true;
     }
     else
     {
         std::cout << "--> Error loading \"" + path + "\" (wrong path)!" << std::endl;
-        is_loaded = false;
     }
     return content;
 }
@@ -50,8 +48,7 @@ std::string EsmReader::readFile(const std::string &path)
 void EsmReader::splitFileIntoRecordColl(const std::string &content,
                                         const std::string &path)
 {
-    if(is_loaded == true &&
-       content.size() > 4 &&
+    if(content.size() > 4 &&
        content.substr(0, 4) == "TES3")
     {
         try
