@@ -23,7 +23,7 @@ std::string EsmTools::dumpFile()
 
             esm.setRecordTo(i);
             rec = esm.getRecordContent();
-            dump += esm.getRecordId() + "\r\n";
+            dump += esm.getRecordId() + " [No. " + std::to_string(i) + "]\r\n";
             while(cur_pos != rec.size())
             {
                 cur_id = rec.substr(cur_pos, 4);
