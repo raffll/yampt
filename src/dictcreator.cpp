@@ -2,12 +2,12 @@
 
 //----------------------------------------------------------
 DictCreator::DictCreator(const std::string &path_n)
-    : esm_ptr(&esm_n),
+    : esm_n(path_n),
+      esm_ptr(&esm_n),
       message_ptr(&message_n),
       mode(yampt::ins_mode::RAW)
 {
-    esm_n.readFile(path_n);
-    if(esm_n.getStatus() == true)
+    if(esm_n.getIsLoaded() == true)
     {
         status = true;
         basic_mode = true;
@@ -17,14 +17,14 @@ DictCreator::DictCreator(const std::string &path_n)
 //----------------------------------------------------------
 DictCreator::DictCreator(const std::string &path_n,
                          const std::string &path_f)
-    : esm_ptr(&esm_f),
+    : esm_n(path_n),
+      esm_f(path_f),
+      esm_ptr(&esm_f),
       message_ptr(&message_f),
       mode(yampt::ins_mode::BASE)
 {
-    esm_n.readFile(path_n);
-    esm_f.readFile(path_f);
-    if(esm_n.getStatus() == true &&
-       esm_f.getStatus() == true)
+    if(esm_n.getIsLoaded() == true &&
+       esm_f.getIsLoaded() == true)
     {
         if(compareMasterFiles() == true)
         {
@@ -42,13 +42,13 @@ DictCreator::DictCreator(const std::string &path_n,
 DictCreator::DictCreator(const std::string &path_n,
                          DictMerger &merger,
                          const yampt::ins_mode mode)
-    : esm_ptr(&esm_n),
+    : esm_n(path_n),
+      esm_ptr(&esm_n),
       merger(&merger),
       message_ptr(&message_n),
       mode(mode)
 {
-    esm_n.readFile(path_n);
-    if(esm_n.getStatus() == true &&
+    if(esm_n.getIsLoaded() == true &&
        this->merger->getStatus() == true)
     {
         status = true;
@@ -770,7 +770,7 @@ void DictCreator::makeDictINDX()
         if(esm_n.getRecordId() == "SKIL" ||
            esm_n.getRecordId() == "MGEF")
         {
-            esm_n.setUniqueToINDX();
+            esm_n.setUniqueTo("INDX");
             esm_n.setFirstFriendlyTo("DESC");
             if(esm_n.getUniqueStatus() == true &&
                esm_n.getFriendlyStatus() == true)
@@ -793,10 +793,10 @@ void DictCreator::makeDictDIAL()
         esm_n.setRecordTo(i);
         if(esm_n.getRecordId() == "DIAL")
         {
-            esm_n.setUniqueToDialogType();
+            esm_n.setUniqueTo("DATA");
             esm_n.setFirstFriendlyTo("NAME");
             esm_ptr->setRecordTo(i);
-            esm_ptr->setUniqueToDialogType();
+            esm_ptr->setUniqueTo("DATA");
             esm_ptr->setFirstFriendlyTo("NAME");
             if(esm_n.getUniqueText() == "T" &&
                esm_n.getFriendlyStatus() == true &&
@@ -874,7 +874,7 @@ std::vector<std::tuple<std::string, size_t, bool>> DictCreator::makeDictDIALExte
         esm_f.setRecordTo(i);
         if(esm_f.getRecordId() == "DIAL")
         {
-            esm_f.setUniqueToDialogType();
+            esm_f.setUniqueTo("DATA");
             if(esm_f.getUniqueText() == "T")
             {
                 pattern.erase();
@@ -900,7 +900,7 @@ std::map<std::string, size_t> DictCreator::makeDictDIALExtendedMatch()
         esm_n.setRecordTo(i);
         if(esm_n.getRecordId() == "DIAL")
         {
-            esm_n.setUniqueToDialogType();
+            esm_n.setUniqueTo("DATA");
             if(esm_n.getUniqueText() == "T")
             {
                 match.erase();
@@ -927,7 +927,7 @@ void DictCreator::makeDictINFO()
         esm_n.setRecordTo(i);
         if(esm_n.getRecordId() == "DIAL")
         {
-            esm_n.setUniqueToDialogType();
+            esm_n.setUniqueTo("DATA");
             esm_n.setFirstFriendlyTo("NAME");
             if(esm_n.getUniqueStatus() == true &&
                esm_n.getFriendlyStatus() == true)
