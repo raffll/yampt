@@ -53,13 +53,13 @@ private:
                         std::string &cur_text,
                         bool erase_null);
     void caseForDialogType(std::size_t &cur_pos,
-                             std::string &cur_text);
+                           std::string &cur_text);
     void caseForINDX(std::size_t &cur_pos,
-                       std::string &cur_text);
+                     std::string &cur_text);
     void caseForDefault(std::size_t &cur_pos,
-                          std::size_t &cur_size,
-                          std::string &cur_text,
-                          bool erase_null);
+                        std::size_t &cur_size,
+                        std::string &cur_text,
+                        bool erase_null);
     void uniqueIfEndOfRecordReached(std::size_t &cur_pos);
 
     void friendlyMainLoop(std::size_t &cur_pos,

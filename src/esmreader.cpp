@@ -177,7 +177,7 @@ void EsmReader::uniqueMainLoop(std::size_t &cur_pos,
 
 //----------------------------------------------------------
 void EsmReader::caseForDialogType(std::size_t &cur_pos,
-                                    std::string &cur_text)
+                                  std::string &cur_text)
 {
     size_t type = tools.convertStringByteArrayToUInt(rec->substr(cur_pos + 8, 1));
     cur_text = yampt::dialog_type[type];
@@ -187,7 +187,7 @@ void EsmReader::caseForDialogType(std::size_t &cur_pos,
 
 //----------------------------------------------------------
 void EsmReader::caseForINDX(std::size_t &cur_pos,
-                              std::string &cur_text)
+                            std::string &cur_text)
 {
     size_t indx = tools.convertStringByteArrayToUInt(rec->substr(cur_pos + 8, 4));
     std::ostringstream ss;
@@ -199,9 +199,9 @@ void EsmReader::caseForINDX(std::size_t &cur_pos,
 
 //----------------------------------------------------------
 void EsmReader::caseForDefault(std::size_t &cur_pos,
-                                 std::size_t &cur_size,
-                                 std::string &cur_text,
-                                 bool erase_null)
+                               std::size_t &cur_size,
+                               std::string &cur_text,
+                               bool erase_null)
 {
     cur_text = rec->substr(cur_pos + 8, cur_size);
     if(erase_null == true)
