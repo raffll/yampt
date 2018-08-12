@@ -1,12 +1,7 @@
-#define CATCH_CONFIG_MAIN
 #include <catch2/catch.hpp>
+#include "../src/config.hpp"
 
 using namespace std;
-
-#define private public
-
-#include "../src/config.hpp"
-#include "../src/esmreader.hpp"
 
 TEST_CASE("Tools::convertStringByteArrayToUInt")
 {
@@ -67,14 +62,4 @@ TEST_CASE("Tools::addDialogTopicsToINFOStrings")
     text = "Some text CLANFEAR some text";
     REQUIRE(tools.addDialogTopicsToINFOStrings(dict, text, false) ==
             "Some text CLANFEAR some text [postrach klanów]");
-}
-
-TEST_CASE("EsmReader::setName()")
-{
-    EsmReader esm;
-    esm.is_loaded = true;
-    esm.setName("/path/to/Morrowind.esm");
-    REQUIRE(esm.name_full == "Morrowind.esm");
-    REQUIRE(esm.name_prefix == "Morrowind");
-    REQUIRE(esm.name_suffix == ".esm");
 }
