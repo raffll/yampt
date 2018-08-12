@@ -1,20 +1,12 @@
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch.hpp>
 
+using namespace std;
+
 #define private public
 
 #include "../src/config.hpp"
 #include "../src/esmreader.hpp"
-
-TEST_CASE("EsmReader::setName()")
-{
-    EsmReader esmreader;
-    esmreader.is_loaded = true;
-    esmreader.setName("/path/to/Morrowind.esm");
-    REQUIRE(esmreader.name_full == "Morrowind.esm");
-    REQUIRE(esmreader.name_prefix == "Morrowind");
-    REQUIRE(esmreader.name_suffix == ".esm");
-}
 
 TEST_CASE("Tools::convertStringByteArrayToUInt")
 {
@@ -40,9 +32,15 @@ TEST_CASE("Tools::caseInsensitiveStringCmp")
 TEST_CASE("Tools::eraseNullChars")
 {
     Tools tools;
-    std::string dead = "DEAD\0\0\0\0";
+    std::string dead;
+
+    dead = "DEAD";
+    dead.resize(8);
     REQUIRE(tools.eraseNullChars(dead) == "DEAD");
-    dead = "DEAD\0\0BEEF\0\0";
+
+    dead = "DEAD";
+    dead.resize(8);
+    dead += "BEEF";
     REQUIRE(tools.eraseNullChars(dead) == "DEAD");
 }
 
@@ -58,11 +56,25 @@ TEST_CASE("Tools::addDialogTopicsToINFOStrings")
     Tools tools;
     yampt::inner_dict_t dict;
     dict.insert({"clanfear", "postrach klanów"});
-    std::string text = "Sone text clanfear some text";
+    std::string text;
+
+    text = "Some text clanfear some text";
     REQUIRE(tools.addDialogTopicsToINFOStrings(dict, text, false) ==
-            "Sone text clanfear some text [postrach klanów]");
-    REQUIRE(tools.addDialogTopicsToINFOStrings(dict, text, false) ==
-            "Sone text CLANFEAR some text [postrach klanów]");
+            "Some text clanfear some text [postrach klanów]");
     REQUIRE(tools.addDialogTopicsToINFOStrings(dict, text, true) ==
-            "Sone text clanfear some text [clanfear -> postrach klanów]");
+            "Some text clanfear some text [clanfear -> postrach klanów]");
+
+    text = "Some text CLANFEAR some text";
+    REQUIRE(tools.addDialogTopicsToINFOStrings(dict, text, false) ==
+            "Some text CLANFEAR some text [postrach klanów]");
+}
+
+TEST_CASE("EsmReader::setName()")
+{
+    EsmReader esm;
+    esm.is_loaded = true;
+    esm.setName("/path/to/Morrowind.esm");
+    REQUIRE(esm.name_full == "Morrowind.esm");
+    REQUIRE(esm.name_prefix == "Morrowind");
+    REQUIRE(esm.name_suffix == ".esm");
 }
