@@ -354,10 +354,10 @@ void EsmConverter::convertDNAM()
         if(esm.getRecordId() == "CELL" ||
            esm.getRecordId() == "NPC_")
         {
-            esm.setUniqueTo("NAME");
+            //esm.setUniqueTo("NAME");
             esm.setFirstFriendlyTo("DNAM");
-            if(esm.getUniqueStatus() == true)
-            {
+            //if(esm.getUniqueStatus() == true)
+            //{
                 while(esm.getFriendlyStatus() == true)
                 {
                     new_friendly = setNewFriendly(yampt::rec_type::CELL,
@@ -369,7 +369,7 @@ void EsmConverter::convertDNAM()
                     }
                     esm.setNextFriendlyTo("DNAM");
                 }
-            }
+            //}
         }
     }
     printLogLine(yampt::rec_type::DNAM);
