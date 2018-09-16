@@ -1,9 +1,13 @@
 #include "dictreader.hpp"
 
 //----------------------------------------------------------
-DictReader::DictReader()
+DictReader::DictReader(const std::string &path) :
+    is_loaded(false)
 {
-
+    std::string content = readFile(path);
+    parseDict(content, path);
+    setName(path);
+    printLog();
 }
 
 //----------------------------------------------------------
@@ -11,8 +15,7 @@ DictReader::DictReader(const DictReader& that)
     : name_full(that.name_full),
       name_prefix(that.name_prefix),
       dict(that.dict),
-      log(that.log),
-      status(that.status),
+      is_loaded(that.is_loaded),
       counter_loaded(that.counter_loaded),
       counter_invalid(that.counter_invalid),
       counter_doubled(that.counter_doubled),
@@ -27,8 +30,7 @@ DictReader& DictReader::operator=(const DictReader& that)
     name_full = that.name_full;
     name_prefix = that.name_prefix;
     dict = that.dict;
-    log = that.log;
-    status = that.status;
+    is_loaded = that.is_loaded;
     counter_loaded = that.counter_loaded;
     counter_invalid = that.counter_invalid;
     counter_doubled = that.counter_doubled;
@@ -43,12 +45,12 @@ DictReader::~DictReader()
 }
 
 //----------------------------------------------------------
-void DictReader::readFile(const std::string &path)
+std::string DictReader::readFile(const std::string &path)
 {
+    std::string content;
     std::ifstream file(path, std::ios::binary);
     if(file)
     {
-        std::string content;
         char buffer[16384];
         size_t size = file.tellg();
         content.reserve(size);
@@ -57,13 +59,12 @@ void DictReader::readFile(const std::string &path)
         {
             content.append(buffer, chars_read);
         }
-        parseDict(content, path);
     }
     else
     {
-        std::cout << "--> Error while loading " + path + " (wrong path)!" << std::endl;
-        status = false;
+        std::cout << "--> Error loading \"" + path + "\" (wrong path)!" << std::endl;
     }
+    return content;
 }
 
 //----------------------------------------------------------
@@ -100,16 +101,14 @@ void DictReader::parseDict(const std::string &content,
             counter_all++;
             next++;
         }
-        std::cout << "--> Loading " + path + "..." << std::endl;
-        printLog();
-        setName(path);
-        status = true;
+        std::cout << "--> Loading \"" + path + "\"..." << std::endl;
+        is_loaded = true;
     }
     catch(std::exception const& e)
     {
-        std::cout << "--> Error in function parseDict() (possibly broken dictionary)!" << std::endl;
+        std::cout << "--> Error loading \"" + path + "\" (possibly broken dictionary)!" << std::endl;
         std::cout << "--> Exception: " << e.what() << std::endl;
-        status = false;
+        is_loaded = false;
     }
 }
 
@@ -221,16 +220,10 @@ void DictReader::insertRecord(const yampt::rec_type type,
 //----------------------------------------------------------
 void DictReader::makeLog(const std::string &id,
                          const std::string &unique_text,
-                         const std::string &friendly_text,
                          const std::string &comment)
 {
-    log += "<log>\r\n";
-    log += "\t<file>" + name_full + "</file>\r\n";
-    log += "\t<status>" + comment + "</status>\r\n";
-    log += "\t<id>" + id + "</id>\r\n";
-    log += "\t<key>" + unique_text + "</key>\r\n";
-    log += "\t<val>" + friendly_text + "</val>\r\n";
-    log += "<log>\r\n";
+    std::string log;
+    std::cerr << "Warning! " << id << ": " << unique_text << " --> " << comment << std::endl;
 }
 
 //----------------------------------------------------------

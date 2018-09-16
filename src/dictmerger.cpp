@@ -11,10 +11,8 @@ DictMerger::DictMerger(const std::vector<std::string> &path)
 {
     for(const auto &elem : path)
     {
-        DictReader reader;
-        reader.readFile(elem);
+        DictReader reader(elem);
         dict_coll.push_back(reader);
-        log += reader.getLog();
     }
     status = true; // Not used
 }
