@@ -168,8 +168,6 @@ void UserInterface::makeDictAll()
     std::string log;
     std::cout << "--> Start creating dictionary with all records!" << std::endl;
     DictMerger merger(dict_path);
-    merger.mergeDict();
-    log += merger.getLog();
     tools.writeText(log, "yampt.log");
     for(size_t i = 0; i < file_path.size(); ++i)
     {
@@ -191,8 +189,6 @@ void UserInterface::makeDictNotFound()
     std::string log;
     std::cout << "--> Start creating dictionary with not found records!" << std::endl;
     DictMerger merger(dict_path);
-    merger.mergeDict();
-    log += merger.getLog();
     tools.writeText(log, "yampt.log");
     for(size_t i = 0; i < file_path.size(); ++i)
     {
@@ -214,8 +210,6 @@ void UserInterface::makeDictChanged()
     std::string log;
     std::cout << "--> Start creating dictionary with changed records!" << std::endl;
     DictMerger merger(dict_path);
-    merger.mergeDict();
-    log += merger.getLog();
     tools.writeText(log, "yampt.log");
     for(size_t i = 0; i < file_path.size(); ++i)
     {
@@ -237,8 +231,6 @@ void UserInterface::mergeDict()
     std::string log;
     std::cout << "--> Start merging dictionaries!" << std::endl;
     DictMerger merger(dict_path);
-    merger.mergeDict();
-    log += merger.getLog();
     tools.writeDict(merger.getDict(), output);
     tools.writeText(log, "yampt.log");
     std::cout << std::endl;
@@ -250,8 +242,6 @@ void UserInterface::convertEsm()
     std::string log;
     std::cout << "--> Start converting file!" << std::endl;
     DictMerger merger(dict_path);
-    merger.mergeDict();
-    log += merger.getLog();
     tools.writeText(log, "yampt.log");
     for(size_t i = 0; i < file_path.size(); ++i)
     {

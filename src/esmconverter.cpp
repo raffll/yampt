@@ -10,8 +10,7 @@ EsmConverter::EsmConverter(std::string path,
       add_dial(add_dial),
       suffix(suffix)
 {
-    if(esm.isLoaded() == true &&
-       this->merger->getStatus() == true)
+    if(esm.isLoaded() == true)
     {
         status = true;
     }

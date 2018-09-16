@@ -48,8 +48,7 @@ DictCreator::DictCreator(const std::string &path_n,
       message_ptr(&message_n),
       mode(mode)
 {
-    if(esm_n.isLoaded() == true &&
-       this->merger->getStatus() == true)
+    if(esm_n.isLoaded() == true)
     {
         status = true;
         basic_mode = true;
