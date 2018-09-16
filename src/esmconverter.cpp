@@ -5,12 +5,12 @@ EsmConverter::EsmConverter(std::string path,
                            DictMerger &merger,
                            bool add_dial,
                            std::string suffix)
-    : merger(&merger),
+    : esm(path),
+      merger(&merger),
       add_dial(add_dial),
       suffix(suffix)
 {
-    esm.readFile(path);
-    if(esm.getStatus() == true &&
+    if(esm.getIsLoaded() == true &&
        this->merger->getStatus() == true)
     {
         status = true;
@@ -93,7 +93,7 @@ void EsmConverter::convertRecordContent(const std::string &new_friendly)
     rec_size = rec_content.size() - 16;
     rec_content.erase(4, 4);
     rec_content.insert(4, tools.convertUIntToStringByteArray(rec_size));
-    esm.setNewRecordContent(rec_content);
+    esm.replaceRecordContent(rec_content);
 }
 
 //----------------------------------------------------------
@@ -608,7 +608,7 @@ void EsmConverter::convertINDX()
         if(esm.getRecordId() == "SKIL" ||
            esm.getRecordId() == "MGEF")
         {
-            esm.setUniqueToINDX();
+            esm.setUniqueTo("INDX");
             esm.setFirstFriendlyTo("DESC");
             if(esm.getUniqueStatus() == true &&
                esm.getFriendlyStatus() == true)
@@ -640,7 +640,7 @@ void EsmConverter::convertDIAL()
         esm.setRecordTo(i);
         if(esm.getRecordId() == "DIAL")
         {
-            esm.setUniqueToDialogType();
+            esm.setUniqueTo("DATA");
             esm.setFirstFriendlyTo("NAME");
             if(esm.getUniqueStatus() == true &&
                esm.getFriendlyStatus() == true &&
@@ -673,7 +673,7 @@ void EsmConverter::convertINFO()
         esm.setRecordTo(i);
         if(esm.getRecordId() == "DIAL")
         {
-            esm.setUniqueToDialogType();
+            esm.setUniqueTo("DATA");
             esm.setFirstFriendlyTo("NAME");
             if(esm.getUniqueStatus() == true &&
                esm.getFriendlyStatus() == true)

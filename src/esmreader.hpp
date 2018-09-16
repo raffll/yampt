@@ -6,19 +6,17 @@
 class EsmReader
 {
 public:
-    void readFile(const std::string &path);
     void setRecordTo(size_t i);
-    void setNewRecordContent(const std::string &new_rec);
+    void replaceRecordContent(const std::string &new_rec);
+
     void setUniqueTo(const std::string id,
                      const bool erase_null = true);
-    void setUniqueToINDX();
-    void setUniqueToDialogType();
     void setFirstFriendlyTo(const std::string &id,
                             const bool erase_null = true);
     void setNextFriendlyTo(const std::string &id,
                            const bool erase_null = true);
 
-    bool getStatus() { return status; }
+    bool getIsLoaded() { return is_loaded; }
     std::string getNameFull() { return name_full; }
     std::string getNamePrefix() { return name_prefix; }
     std::string getNameSuffix() { return name_suffix; }
@@ -40,12 +38,38 @@ public:
     bool getFriendlyStatus() { return friendly_status; }
 
     EsmReader();
+    EsmReader(const std::string &path);
 
 private:
+    std::string readFile(const std::string &path);
+    void splitFileIntoRecordColl(const std::string &content,
+                                 const std::string &path);
     void setName(const std::string &path);
     void setTime(const std::string &path);
-    void setRecordColl(const std::string &content,
-                       const std::string &path);
+
+    void uniqueMainLoop(std::size_t &cur_pos,
+                        std::size_t &cur_size,
+                        std::string &cur_id,
+                        std::string &cur_text,
+                        bool erase_null);
+    void caseForDialogType(std::size_t &cur_pos,
+                             std::string &cur_text);
+    void caseForINDX(std::size_t &cur_pos,
+                       std::string &cur_text);
+    void caseForDefault(std::size_t &cur_pos,
+                          std::size_t &cur_size,
+                          std::string &cur_text,
+                          bool erase_null);
+    void uniqueIfEndOfRecordReached(std::size_t &cur_pos);
+
+    void friendlyMainLoop(std::size_t &cur_pos,
+                          std::size_t &cur_size,
+                          std::string &cur_id,
+                          std::string &cur_text,
+                          bool erase_null);
+    void friendlyIfEndOfRecordReached(std::size_t &cur_pos);
+
+    void handleException(const std::exception &e);
 
     Tools tools;
     std::vector<std::string> rec_coll;
@@ -54,7 +78,7 @@ private:
     std::string name_suffix;
     std::time_t time;
 
-    bool status = false;
+    bool is_loaded;
 
     std::string *rec;
     size_t rec_size;
@@ -62,14 +86,14 @@ private:
 
     std::string unique_id;
     std::string unique_text;
-    bool unique_status = false;
+    bool unique_status;
 
     std::string friendly_id;
     std::string friendly_text;
     size_t friendly_pos;
     size_t friendly_size;
     size_t friendly_counter;
-    bool friendly_status = false;
+    bool friendly_status;
 };
 
 #endif // ESMREADER_HPP

@@ -43,10 +43,10 @@ DISTFILES += \
     CHANGELOG.md \
     README.md \
     LICENSE.txt \
-    resources/yampt-convert-template.cmd \
-    resources/yampt-make-base-template.cmd \
-    resources/HOW-TO-START.md \
-    resources/yampt-make-base-template.sh
+    res/yampt-make-base-template.sh \
+    res/HOW-TO-START.md \
+    res/yampt-convert-template.cmd \
+    res/yampt-make-base-template.cmd
 
 SUBDIRS += \
     yampt.pro

@@ -2,15 +2,16 @@
 
 //----------------------------------------------------------
 EsmTools::EsmTools(const std::string &path)
+    : esm(path)
 {
-    esm.readFile(path);
+
 }
 
 //----------------------------------------------------------
 std::string EsmTools::dumpFile()
 {
     std::string dump;
-    if(esm.getStatus() == true)
+    if(esm.getIsLoaded() == true)
     {
         for(size_t i = 0; i < esm.getRecordColl().size(); ++i)
         {
@@ -22,7 +23,7 @@ std::string EsmTools::dumpFile()
 
             esm.setRecordTo(i);
             rec = esm.getRecordContent();
-            dump += esm.getRecordId() + "\r\n";
+            dump += esm.getRecordId() + " [No. " + std::to_string(i) + "]\r\n";
             while(cur_pos != rec.size())
             {
                 cur_id = rec.substr(cur_pos, 4);
@@ -43,7 +44,7 @@ std::string EsmTools::makeScriptList()
     std::string scripts;
     std::string compiled;
     std::map<std::string, std::pair<std::string, std::string>> scripts_coll;
-    if(esm.getStatus() == true)
+    if(esm.getIsLoaded() == true)
     {
         for(size_t i = 0; i < esm.getRecordColl().size(); ++i)
         {
