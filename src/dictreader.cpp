@@ -7,7 +7,7 @@ DictReader::DictReader(const std::string &path) :
     std::string content = readFile(path);
     parseDict(content, path);
     setName(path);
-    printLog();
+    printSummaryLog();
 }
 
 //----------------------------------------------------------
@@ -121,7 +121,7 @@ void DictReader::validateRecord(const std::string &id,
     {
         if(friendly_text.size() > 63)
         {
-            makeLog(id, unique_text, friendly_text, "Too long, more than 63 bytes!");
+            printWarningLog(id, unique_text, "Too long, more than 63 bytes!");
             counter_invalid++;
         }
         else
@@ -161,7 +161,7 @@ void DictReader::validateRecord(const std::string &id,
     {
         if(friendly_text.size() > 32)
         {
-            makeLog(id, unique_text, friendly_text, "Too long, more than 32 bytes!");
+            printWarningLog(id, unique_text, "Too long, more than 32 bytes!");
             counter_invalid++;
         }
         else
@@ -173,7 +173,7 @@ void DictReader::validateRecord(const std::string &id,
     {
         if(friendly_text.size() > 31)
         {
-            makeLog(id, unique_text, friendly_text, "Too long, more than 31 bytes!");
+            printWarningLog(id, unique_text, "Too long, more than 31 bytes!");
             counter_invalid++;
         }
         else
@@ -185,7 +185,7 @@ void DictReader::validateRecord(const std::string &id,
     {
         if(friendly_text.size() > 512)
         {
-            makeLog(id, unique_text, friendly_text, "Ok, but more than 512 bytes!");
+            printWarningLog(id, unique_text, "Ok, but more than 512 bytes!");
             insertRecord(yampt::rec_type::INFO, unique_text, friendly_text);
         }
         else
@@ -195,7 +195,7 @@ void DictReader::validateRecord(const std::string &id,
     }
     else
     {
-        makeLog(id, unique_text, friendly_text, "Invalid record!");
+        printWarningLog(id, unique_text, "Invalid record!");
         counter_invalid++;
     }
 
@@ -212,22 +212,21 @@ void DictReader::insertRecord(const yampt::rec_type type,
     }
     else
     {
-        makeLog(yampt::type_name[type], unique_text, friendly_text, "Doubled record!");
+        printWarningLog(yampt::type_name[type], unique_text, "Doubled record!");
         counter_doubled++;
     }
 }
 
 //----------------------------------------------------------
-void DictReader::makeLog(const std::string &id,
-                         const std::string &unique_text,
-                         const std::string &comment)
+void DictReader::printWarningLog(const std::string &id,
+                                 const std::string &unique_text,
+                                 const std::string &comment)
 {
-    std::string log;
     std::cerr << "Warning! " << id << ": " << unique_text << " --> " << comment << std::endl;
 }
 
 //----------------------------------------------------------
-void DictReader::printLog()
+void DictReader::printSummaryLog()
 {
     std::cout << "---------------------------------------" << std::endl
               << "    Loaded / Doubled / Invalid /    All" << std::endl

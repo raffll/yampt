@@ -30,10 +30,10 @@ private:
     void insertRecord(const yampt::rec_type type,
                       const std::string &unique_text,
                       const std::string &friendly_text);
-    void makeLog(const std::string &id,
-                 const std::string &unique_text,
-                 const std::string &comment);
-    void printLog();
+    void printWarningLog(const std::string &id,
+                         const std::string &unique_text,
+                         const std::string &comment);
+    void printSummaryLog();
 
     std::string name_full;
     std::string name_prefix;
