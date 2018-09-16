@@ -109,4 +109,3 @@ TEST_CASE("Set next friendly")
     REQUIRE(esm.getFriendlyPos() == (16 + 16 + 28 + 40));
     REQUIRE(esm.getFriendlySize() == 32);
 }
-

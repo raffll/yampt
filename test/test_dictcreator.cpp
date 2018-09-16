@@ -5,7 +5,3 @@
 
 using namespace std;
 
-/*TEST_CASE("Creating raw dictionary")
-{
-
-}*/
