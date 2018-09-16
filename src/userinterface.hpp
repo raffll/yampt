@@ -26,8 +26,6 @@ private:
     void dumpFile();
     void makeScriptList();
 
-    void printMakeDictHeader();
-
     Tools tools;
 
     bool add_dial = false;

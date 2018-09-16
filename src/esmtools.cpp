@@ -52,15 +52,15 @@ std::string EsmTools::makeScriptList()
             if(esm.getRecordId() == "INFO")
             {
                 esm.setUniqueTo("INAM");
-                esm.setFirstFriendlyTo("BNAM");
+                esm.setFriendlyTo("BNAM");
                 scripts_coll.insert({esm.getUniqueText(), make_pair(esm.getFriendlyText(), "")});
             }
             if(esm.getRecordId() == "SCPT")
             {
                 esm.setUniqueTo("SCHD");
-                esm.setFirstFriendlyTo("SCDT", false);
+                esm.setFriendlyTo("SCDT", false);
                 compiled = tools.replaceNonReadableCharsWithDot(esm.getFriendlyText());
-                esm.setFirstFriendlyTo("SCTX");
+                esm.setFriendlyTo("SCTX");
                 scripts_coll.insert({esm.getUniqueText(), make_pair(esm.getFriendlyText(), compiled)});
             }
         }

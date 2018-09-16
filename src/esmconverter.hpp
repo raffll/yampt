@@ -9,9 +9,6 @@
 class EsmConverter
 {
 public:
-    void convertEsm();
-    void writeEsm();
-
     bool getStatus() { return status; }
     std::string getNameFull() { return esm.getNameFull(); }
     std::string getNamePrefix() { return esm.getNamePrefix(); }
@@ -22,6 +19,7 @@ public:
     EsmConverter(std::string path, DictMerger &merger, bool add_dial, std::string suffix);
 
 private:
+    void convertEsm();
     void resetCounters();
     void convertRecordContent(const std::string &new_friendly);
     std::string addNullTerminatorIfEmpty(const std::string &new_friendly);

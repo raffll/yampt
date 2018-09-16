@@ -4,6 +4,7 @@
 DictReader::DictReader(const std::string &path) :
     is_loaded(false)
 {
+    std::cout << "--> Loading \"" + path + "\"..." << std::endl;
     std::string content = readFile(path);
     parseDict(content, path);
     setName(path);
@@ -101,7 +102,6 @@ void DictReader::parseDict(const std::string &content,
             counter_all++;
             next++;
         }
-        std::cout << "--> Loading \"" + path + "\"..." << std::endl;
         is_loaded = true;
     }
     catch(std::exception const& e)

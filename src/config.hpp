@@ -63,6 +63,8 @@ struct CaseAwareCompare
 enum rec_type { CELL, DIAL, INDX, RNAM, DESC, GMST, FNAM, INFO, TEXT, BNAM, SCTX,
                 Wilderness, Region, PGRD, ANAM, SCVR, DNAM, CNDT, GMDT };
 enum ins_mode { RAW, BASE, ALL, NOTFOUND, CHANGED };
+enum subrec_status { VALID, INVALID, EMPTY };
+
 typedef std::array<std::map<std::string, std::string>, 11> dict_t;
 typedef std::map<std::string, std::string> inner_dict_t;
 const std::vector<std::string> type_name { "CELL", "DIAL", "INDX", "RNAM", "DESC", "GMST", "FNAM", "INFO", "TEXT", "BNAM", "SCTX",

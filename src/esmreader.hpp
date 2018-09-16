@@ -11,8 +11,8 @@ public:
 
     void setUniqueTo(const std::string id,
                      const bool erase_null = true);
-    void setFirstFriendlyTo(const std::string &id,
-                            const bool erase_null = true);
+    void setFriendlyTo(const std::string &id,
+                       const bool erase_null = true);
     void setNextFriendlyTo(const std::string &id,
                            const bool erase_null = true);
 
@@ -28,14 +28,14 @@ public:
 
     std::string getUniqueText() { return unique_text; }
     std::string getUniqueId() { return unique_id; }
-    bool getUniqueStatus() { return unique_status; }
+    bool isUniqueExist() { return unique_exist; }
 
     std::string getFriendlyText() { return friendly_text; }
     std::string getFriendlyId() { return friendly_id; }
     size_t getFriendlyPos() { return friendly_pos; }
     size_t getFriendlySize() { return friendly_size; }
     size_t getFriendlyCounter() { return friendly_counter; }
-    bool getFriendlyStatus() { return friendly_status; }
+    bool isFriendlyExist() { return friendly_exist; }
 
     EsmReader();
     EsmReader(const std::string &path);
@@ -55,6 +55,9 @@ private:
     void caseForDialogType(std::size_t &cur_pos,
                            std::string &cur_text);
     void caseForINDX(std::size_t &cur_pos,
+                     std::string &cur_text);
+    void caseForCELL(std::size_t &cur_pos,
+                     std::size_t &cur_size,
                      std::string &cur_text);
     void caseForDefault(std::size_t &cur_pos,
                         std::size_t &cur_size,
@@ -77,7 +80,6 @@ private:
     std::string name_prefix;
     std::string name_suffix;
     std::time_t time;
-
     bool is_loaded;
 
     std::string *rec;
@@ -86,14 +88,14 @@ private:
 
     std::string unique_id;
     std::string unique_text;
-    bool unique_status;
+    bool unique_exist;
 
     std::string friendly_id;
     std::string friendly_text;
     size_t friendly_pos;
     size_t friendly_size;
     size_t friendly_counter;
-    bool friendly_status;
+    bool friendly_exist;
 };
 
 #endif // ESMREADER_HPP
