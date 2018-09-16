@@ -8,12 +8,14 @@
 class DictCreator
 {
 public:
-    void makeDict();
-
     bool getStatus() { return status; }
+
     std::string getNameFull() { return esm_n.getNameFull(); }
     std::string getNamePrefix() { return esm_n.getNamePrefix(); }
+
     yampt::dict_t const& getDict() const { return dict; }
+    yampt::inner_dict_t const& getDict(yampt::rec_type type) const { return dict[type]; }
+    yampt::inner_dict_t const& getDict(size_t type) const { return dict[type]; }
 
     DictCreator(const std::string &path_n);
     DictCreator(const std::string &path_n,
@@ -23,6 +25,7 @@ public:
                 const yampt::ins_mode mode);
 
 private:
+    void makeDict();
     void makeDictBasic();
     void makeDictExtended();
     bool compareMasterFiles();

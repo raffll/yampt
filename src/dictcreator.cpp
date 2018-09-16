@@ -352,7 +352,7 @@ void DictCreator::makeDictCELL()
         esm_n.setRecordTo(i);
         if(esm_n.getRecordId() == "CELL")
         {
-            esm_n.setUniqueTo("NAME"); // For Check, because unique text can't be empty
+            esm_n.setUniqueTo("NAME"); // For check, because unique text can't be empty
             esm_n.setFirstFriendlyTo("NAME");
             esm_ptr->setRecordTo(i);
             esm_ptr->setUniqueTo("NAME");

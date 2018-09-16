@@ -18,10 +18,13 @@ win32 {
 SOURCES += \
     ../src/esmreader.cpp \
     ../src/config.cpp \
+    ../src/dictcreator.cpp \
     test_main.cpp \
     test_tools.cpp \
-    test_esmreader.cpp
+    test_esmreader.cpp \
+    test_dictcreator.cpp
 
 HEADERS += \
     ../src/esmreader.hpp \
-    ../src/config.hpp
+    ../src/config.hpp \
+    ../src/dictcreator.hpp
