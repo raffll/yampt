@@ -7,7 +7,7 @@ DictCreator::DictCreator(const std::string &path_n)
       message_ptr(&message_n),
       mode(yampt::ins_mode::RAW)
 {
-    if(esm_n.getIsLoaded() == true)
+    if(esm_n.isLoaded() == true)
     {
         status = true;
         basic_mode = true;
@@ -23,8 +23,8 @@ DictCreator::DictCreator(const std::string &path_n,
       message_ptr(&message_f),
       mode(yampt::ins_mode::BASE)
 {
-    if(esm_n.getIsLoaded() == true &&
-       esm_f.getIsLoaded() == true)
+    if(esm_n.isLoaded() == true &&
+       esm_f.isLoaded() == true)
     {
         if(compareMasterFiles() == true)
         {
@@ -48,7 +48,7 @@ DictCreator::DictCreator(const std::string &path_n,
       message_ptr(&message_n),
       mode(mode)
 {
-    if(esm_n.getIsLoaded() == true &&
+    if(esm_n.isLoaded() == true &&
        this->merger->getStatus() == true)
     {
         status = true;

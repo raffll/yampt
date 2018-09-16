@@ -16,7 +16,7 @@ public:
     void setNextFriendlyTo(const std::string &id,
                            const bool erase_null = true);
 
-    bool getIsLoaded() { return is_loaded; }
+    bool isLoaded() { return is_loaded; }
     std::string getNameFull() { return name_full; }
     std::string getNamePrefix() { return name_prefix; }
     std::string getNameSuffix() { return name_suffix; }

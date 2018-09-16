@@ -8,7 +8,7 @@ static EsmReader esm("Morrowind.esm");
 
 TEST_CASE("Loading Morrowind.esm")
 {
-    REQUIRE(esm.getIsLoaded() == true);
+    REQUIRE(esm.isLoaded() == true);
     REQUIRE(esm.getNameFull() == "Morrowind.esm");
     REQUIRE(esm.getNamePrefix() == "Morrowind");
     REQUIRE(esm.getNameSuffix() == ".esm");
