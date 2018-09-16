@@ -6,7 +6,7 @@ using namespace std;
 
 static EsmReader esm("Morrowind.esm");
 
-TEST_CASE("loading Morrowind.esm")
+TEST_CASE("Loading Morrowind.esm")
 {
     REQUIRE(esm.getIsLoaded() == true);
     REQUIRE(esm.getNameFull() == "Morrowind.esm");
@@ -14,7 +14,7 @@ TEST_CASE("loading Morrowind.esm")
     REQUIRE(esm.getNameSuffix() == ".esm");
 }
 
-TEST_CASE("default case in set unique not found")
+TEST_CASE("Default case in set unique not found")
 {
     esm.setRecordTo(0);
     esm.setUniqueTo("TEST");
@@ -23,7 +23,7 @@ TEST_CASE("default case in set unique not found")
     REQUIRE(esm.getUniqueText() == "Unique id TEST not found!");
 }
 
-TEST_CASE("default case in set unique with empty subrecord")
+TEST_CASE("Default case in set unique with empty subrecord")
 {
     esm.setRecordTo(16955); // Region CELL with empty NAME
     esm.setUniqueTo("NAME");
@@ -32,7 +32,7 @@ TEST_CASE("default case in set unique with empty subrecord")
     REQUIRE(esm.getUniqueText() == "Unique text is empty!");
 }
 
-TEST_CASE("default case in set unique")
+TEST_CASE("Default case in set unique")
 {
     esm.setRecordTo(22075); // Regular CELL
     esm.setUniqueTo("NAME");
@@ -50,7 +50,7 @@ TEST_CASE("INDX case in set unique")
     REQUIRE(esm.getUniqueText() == "000");
 }
 
-TEST_CASE("dialog type case in set unique")
+TEST_CASE("Dialog type case in set unique")
 {
     esm.setRecordTo(22245); // DIAL with one byte DATA dialog type
     esm.setUniqueTo("DATA");
@@ -59,7 +59,7 @@ TEST_CASE("dialog type case in set unique")
     REQUIRE(esm.getUniqueText() == "J");
 }
 
-TEST_CASE("set first friendly not found")
+TEST_CASE("Set first friendly not found")
 {
     esm.setRecordTo(0);
     esm.setFirstFriendlyTo("TEST");
@@ -70,7 +70,7 @@ TEST_CASE("set first friendly not found")
     REQUIRE(esm.getFriendlySize() == 0);
 }
 
-TEST_CASE("set first friendly")
+TEST_CASE("Set first friendly")
 {
     /*
        (16) FACT............
@@ -89,7 +89,7 @@ TEST_CASE("set first friendly")
     REQUIRE(esm.getFriendlySize() == 32);
 }
 
-TEST_CASE("set next friendly")
+TEST_CASE("Set next friendly")
 {
     /*
        (16) FACT............

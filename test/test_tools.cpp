@@ -3,7 +3,7 @@
 
 using namespace std;
 
-TEST_CASE("Tools::convertStringByteArrayToUInt")
+TEST_CASE("Convert string byte array to uint")
 {
     Tools tools;
     REQUIRE(tools.convertStringByteArrayToUInt("DEAD") == 1145128260);
@@ -11,20 +11,20 @@ TEST_CASE("Tools::convertStringByteArrayToUInt")
     REQUIRE(tools.convertStringByteArrayToUInt("D") == 68);
 }
 
-TEST_CASE("Tools::convertUIntToStringByteArray")
+TEST_CASE("Convert uint to string byte array")
 {
     Tools tools;
     REQUIRE(tools.convertUIntToStringByteArray(1145128260) == "DEAD");
 }
 
-TEST_CASE("Tools::caseInsensitiveStringCmp")
+TEST_CASE("Case insensitive string comparison")
 {
     Tools tools;
     REQUIRE(tools.caseInsensitiveStringCmp("DEAD", "dead") == true);
     REQUIRE(tools.caseInsensitiveStringCmp("DEAD", "BEEF") == false);
 }
 
-TEST_CASE("Tools::eraseNullChars")
+TEST_CASE("Erase null chars")
 {
     Tools tools;
     std::string dead;
@@ -39,14 +39,14 @@ TEST_CASE("Tools::eraseNullChars")
     REQUIRE(tools.eraseNullChars(dead) == "DEAD");
 }
 
-TEST_CASE("Tools::eraseCarriageReturnChar")
+TEST_CASE("Erase CR Char")
 {
     Tools tools;
     std::string dead = "DEAD\r";
     REQUIRE(tools.eraseCarriageReturnChar(dead) == "DEAD");
 }
 
-TEST_CASE("Tools::addDialogTopicsToINFOStrings")
+TEST_CASE("Add dialog topics to INFO strings")
 {
     Tools tools;
     yampt::inner_dict_t dict;
