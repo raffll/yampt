@@ -913,7 +913,6 @@ void DictCreator::makeDictCELLExtendedAddMissing()
                 validateRecord(esm_f.getFriendlyText(),
                                yampt::err[0] + "MISSING" + yampt::err[1],
                         yampt::rec_type::CELL);
-                std::cerr << "Warning! " << esm_f.getRecordId() << ": " << esm_f.getFriendlyText() << " --> MISSING" << std::endl;
             }
         }
     }
@@ -955,8 +954,7 @@ void DictCreator::makeDictDIALExtended()
 //----------------------------------------------------------
 void DictCreator::makeDictDIALExtendedForeignColl()
 {
-    std::string pattern;
-    std::vector<std::tuple<std::string, size_t, bool>> pattern_coll;
+    foreign_coll.clear();
     for(size_t i = 0; i < esm_f.getRecordColl().size(); ++i)
     {
         esm_f.setRecordTo(i);
@@ -965,7 +963,7 @@ void DictCreator::makeDictDIALExtendedForeignColl()
             esm_f.setUniqueTo("DATA");
             if(esm_f.getUniqueText() == "T")
             {
-                pattern_coll.push_back(make_tuple(makeDictDIALExtendedPattern(esm_f, i), i, false));
+                foreign_coll.push_back(make_tuple(makeDictDIALExtendedPattern(esm_f, i), i, false));
             }
         }
     }
@@ -1015,7 +1013,7 @@ void DictCreator::makeDictDIALExtendedAddMissing()
             {
                 validateRecord(esm_f.getFriendlyText(),
                                yampt::err[0] + "MISSING" + yampt::err[1],
-                        yampt::rec_type::CELL);
+                        yampt::rec_type::DIAL);
             }
         }
     }
