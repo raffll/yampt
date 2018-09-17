@@ -165,10 +165,6 @@ void EsmReader::uniqueMainLoop(std::size_t &cur_pos,
             {
                 caseForINDX(cur_pos, cur_text);
             }
-            else if(unique_id == "NAME" && rec_id == "CELL")
-            {
-                caseForCELL(cur_pos, cur_size, cur_text);
-            }
             else
             {
                 caseForDefault(cur_pos, cur_size, cur_text, erase_null);
@@ -199,18 +195,6 @@ void EsmReader::caseForINDX(std::size_t &cur_pos,
     cur_text = ss.str();
     unique_text = cur_text;
     unique_exist = true;
-}
-
-//----------------------------------------------------------
-void EsmReader::caseForCELL(std::size_t &cur_pos,
-                            std::size_t &cur_size,
-                            std::string &cur_text)
-{
-    caseForDefault(cur_pos, cur_size, cur_text, true);
-    if(unique_text.empty())
-    {
-        unique_exist = false;
-    }
 }
 
 //----------------------------------------------------------

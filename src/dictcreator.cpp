@@ -44,7 +44,6 @@ DictCreator::DictCreator(const std::string &path_n,
       esm_ptr(&esm_n),
       merger(&merger),
       message_ptr(&message_n),
-      basic_mode(false),
       mode(mode)
 {
     if(esm_n.isLoaded() == true)
@@ -296,7 +295,8 @@ void DictCreator::insertRecordToDict(const std::string &unique_text,
         auto search = dict[type].find(unique_text);
         if(friendly_text != search->second)
         {
-            std::string unique_current = unique_text + yampt::err[0] + "DOUBLED_" + std::to_string(counter_doubled) + yampt::err[1];
+            std::string unique_current = unique_text + yampt::err[0] + "DOUBLED_" +
+                                         std::to_string(counter_doubled) + yampt::err[1];
             if(dict[type].insert({unique_current, friendly_text}).second == true)
             {
                 counter_doubled++;
@@ -370,15 +370,13 @@ void DictCreator::makeDictCELL()
         esm_n.setRecordTo(i);
         if(esm_n.getRecordId() == "CELL")
         {
-            esm_n.setUniqueTo("NAME");
             esm_n.setFriendlyTo("NAME");
             esm_ptr->setRecordTo(i);
-            esm_ptr->setUniqueTo("NAME");
             esm_ptr->setFriendlyTo("NAME");
-            if(esm_n.isUniqueExist() == true &&
-               esm_n.isFriendlyExist() == true &&
-               esm_ptr->isUniqueExist() == true &&
-               esm_ptr->isFriendlyExist() == true)
+            if(esm_n.isFriendlyValid() == true &&
+               esm_n.getFriendlyText() != "" &&
+               esm_ptr->isFriendlyValid() == true &&
+               esm_ptr->getFriendlyText() != "")
             {
                 validateRecord(esm_ptr->getFriendlyText(),
                                esm_n.getFriendlyText(),
@@ -388,8 +386,6 @@ void DictCreator::makeDictCELL()
     }
     printLogLine(yampt::rec_type::CELL);
 }
-
-
 
 //----------------------------------------------------------
 void DictCreator::makeDictCELLWilderness()
@@ -406,9 +402,9 @@ void DictCreator::makeDictCELLWilderness()
             esm_ptr->setUniqueTo("NAME");
             esm_ptr->setFriendlyTo("STRV");
             if(esm_n.getUniqueText() == "sDefaultCellname" &&
-               esm_n.isFriendlyExist() == true &&
+               esm_n.isFriendlyValid() == true &&
                esm_ptr->getUniqueText() == "sDefaultCellname" &&
-               esm_ptr->isFriendlyExist() == true)
+               esm_ptr->isFriendlyValid() == true)
             {
                 validateRecord(esm_ptr->getFriendlyText(),
                                esm_n.getFriendlyText(),
@@ -431,7 +427,7 @@ void DictCreator::makeDictCELLWildernessExtended()
             esm_n.setUniqueTo("NAME");
             esm_n.setFriendlyTo("STRV");
             if(esm_n.getUniqueText() == "sDefaultCellname" &&
-               esm_n.isFriendlyExist() == true)
+               esm_n.isFriendlyValid() == true)
             {
                 for(size_t k = 0; k < esm_f.getRecordColl().size(); ++k)
                 {
@@ -441,7 +437,7 @@ void DictCreator::makeDictCELLWildernessExtended()
                         esm_f.setUniqueTo("NAME");
                         esm_f.setFriendlyTo("STRV");
                         if(esm_f.getUniqueText() == "sDefaultCellname" &&
-                           esm_f.isFriendlyExist() == true)
+                           esm_f.isFriendlyValid() == true)
                         {
                             validateRecord(esm_f.getFriendlyText(),
                                            esm_n.getFriendlyText(),
@@ -465,15 +461,11 @@ void DictCreator::makeDictCELLRegion()
         esm_n.setRecordTo(i);
         if(esm_n.getRecordId() == "REGN")
         {
-            //esm_n.setUnique("NAME");
             esm_n.setFriendlyTo("FNAM");
             esm_ptr->setRecordTo(i);
-            //esm_ptr->setUnique("NAME");
             esm_ptr->setFriendlyTo("FNAM");
-            if(//esm_n.getUniqueStatus() == true &&
-               esm_n.isFriendlyExist() == true &&
-               //esm_ptr->getUniqueStatus() == true &&
-               esm_ptr->isFriendlyExist() == true)
+            if(esm_n.isFriendlyValid() == true &&
+               esm_ptr->isFriendlyValid() == true)
             {
                 validateRecord(esm_ptr->getFriendlyText(),
                                esm_n.getFriendlyText(),
@@ -495,8 +487,8 @@ void DictCreator::makeDictCELLRegionExtended()
         {
             esm_n.setUniqueTo("NAME");
             esm_n.setFriendlyTo("FNAM");
-            if(esm_n.isUniqueExist() == true &&
-               esm_n.isFriendlyExist() == true)
+            if(esm_n.isUniqueValid() == true &&
+               esm_n.isFriendlyValid() == true)
             {
                 for(size_t k = 0; k < esm_f.getRecordColl().size(); ++k)
                 {
@@ -506,7 +498,7 @@ void DictCreator::makeDictCELLRegionExtended()
                         esm_f.setUniqueTo("NAME");
                         esm_f.setFriendlyTo("FNAM");
                         if(esm_f.getUniqueText() == esm_n.getUniqueText() &&
-                           esm_f.isFriendlyExist() == true)
+                           esm_f.isFriendlyValid() == true)
                         {
                             validateRecord(esm_f.getFriendlyText(),
                                            esm_n.getFriendlyText(),
@@ -532,8 +524,8 @@ void DictCreator::makeDictGMST()
         {
             esm_n.setUniqueTo("NAME");
             esm_n.setFriendlyTo("STRV");
-            if(esm_n.isUniqueExist() == true &&
-               esm_n.isFriendlyExist() == true &&
+            if(esm_n.isUniqueValid() == true &&
+               esm_n.isFriendlyValid() == true &&
                esm_n.getUniqueText().substr(0, 1) == "s") // Make sure is string
             {
                 validateRecord(esm_n.getUniqueText(),
@@ -567,8 +559,8 @@ void DictCreator::makeDictFNAM()
         {
             esm_n.setUniqueTo("NAME");
             esm_n.setFriendlyTo("FNAM");
-            if(esm_n.isUniqueExist() == true &&
-               esm_n.isFriendlyExist() == true &&
+            if(esm_n.isUniqueValid() == true &&
+               esm_n.isFriendlyValid() == true &&
                esm_n.getUniqueText() != "player") // Skip player name
             {
                 validateRecord(esm_n.getRecordId() + yampt::sep[0] + esm_n.getUniqueText(),
@@ -593,8 +585,8 @@ void DictCreator::makeDictDESC()
         {
             esm_n.setUniqueTo("NAME");
             esm_n.setFriendlyTo("DESC");
-            if(esm_n.isUniqueExist() == true &&
-               esm_n.isFriendlyExist() == true)
+            if(esm_n.isUniqueValid() == true &&
+               esm_n.isFriendlyValid() == true)
             {
                 validateRecord(esm_n.getRecordId() + yampt::sep[0] + esm_n.getUniqueText(),
                         esm_n.getFriendlyText(),
@@ -616,8 +608,8 @@ void DictCreator::makeDictTEXT()
         {
             esm_n.setUniqueTo("NAME");
             esm_n.setFriendlyTo("TEXT");
-            if(esm_n.isUniqueExist() == true &&
-               esm_n.isFriendlyExist() == true)
+            if(esm_n.isUniqueValid() == true &&
+               esm_n.isFriendlyValid() == true)
             {
                 validateRecord(esm_n.getUniqueText(),
                                esm_n.getFriendlyText(),
@@ -639,11 +631,11 @@ void DictCreator::makeDictRNAM()
         {
             esm_n.setUniqueTo("NAME");
             esm_n.setFriendlyTo("RNAM");
-            if(esm_n.isUniqueExist() == true)
+            if(esm_n.isUniqueValid() == true)
             {
-                while(esm_n.isFriendlyExist() == true)
+                while(esm_n.isFriendlyValid() == true)
                 {
-                    validateRecord(esm_n.getUniqueText() + yampt::sep[0] + std::to_string(esm_n.getFriendlyCounter()),
+                    validateRecord(esm_n.getUniqueText() + yampt::sep[0] + esm_n.getFriendlyCounter(),
                             esm_n.getFriendlyText(),
                             yampt::rec_type::RNAM);
 
@@ -667,8 +659,8 @@ void DictCreator::makeDictINDX()
         {
             esm_n.setUniqueTo("INDX");
             esm_n.setFriendlyTo("DESC");
-            if(esm_n.isUniqueExist() == true &&
-               esm_n.isFriendlyExist() == true)
+            if(esm_n.isUniqueValid() == true &&
+               esm_n.isFriendlyValid() == true)
             {
                 validateRecord(esm_n.getRecordId() + yampt::sep[0] + esm_n.getUniqueText(),
                         esm_n.getFriendlyText(),
@@ -694,9 +686,9 @@ void DictCreator::makeDictDIAL()
             esm_ptr->setUniqueTo("DATA");
             esm_ptr->setFriendlyTo("NAME");
             if(esm_n.getUniqueText() == "T" &&
-               esm_n.isFriendlyExist() == true &&
+               esm_n.isFriendlyValid() == true &&
                esm_ptr->getUniqueText() == "T" &&
-               esm_ptr->isFriendlyExist() == true)
+               esm_ptr->isFriendlyValid() == true)
             {
                 validateRecord(esm_ptr->getFriendlyText(),
                                esm_n.getFriendlyText(),
@@ -712,7 +704,6 @@ void DictCreator::makeDictDIAL()
 void DictCreator::makeDictINFO()
 {
     std::string dialog_topic;
-
     resetCounters();
     for(size_t i = 0; i < esm_n.getRecordColl().size(); ++i)
     {
@@ -721,20 +712,19 @@ void DictCreator::makeDictINFO()
         {
             esm_n.setUniqueTo("DATA");
             esm_n.setFriendlyTo("NAME");
-            if(esm_n.isUniqueExist() == true &&
-               esm_n.isFriendlyExist() == true)
+            if(esm_n.isUniqueValid() == true &&
+               esm_n.isFriendlyValid() == true)
             {
                 dialog_topic = esm_n.getUniqueText() + yampt::sep[0] +
                                translateDialogTopicsInDictId(esm_n.getFriendlyText());
             }
         }
-
         if(esm_n.getRecordId() == "INFO")
         {
             esm_n.setUniqueTo("INAM");
             esm_n.setFriendlyTo("NAME");
-            if(esm_n.isUniqueExist() == true &&
-               esm_n.isFriendlyExist() == true)
+            if(esm_n.isUniqueValid() == true &&
+               esm_n.isFriendlyValid() == true)
             {
                 validateRecord(dialog_topic + yampt::sep[0] + esm_n.getUniqueText(),
                         esm_n.getFriendlyText(),
@@ -748,8 +738,6 @@ void DictCreator::makeDictINFO()
 //----------------------------------------------------------
 void DictCreator::makeDictBNAM()
 {
-    std::string dialog_topic;
-
     resetCounters();
     for(size_t i = 0; i < esm_n.getRecordColl().size(); ++i)
     {
@@ -762,10 +750,10 @@ void DictCreator::makeDictBNAM()
             esm_ptr->setUniqueTo("INAM");
             esm_ptr->setFriendlyTo("BNAM");
 
-            if(esm_n.isUniqueExist() == true &&
-               esm_n.isFriendlyExist() == true &&
-               esm_ptr->isUniqueExist() == true &&
-               esm_ptr->isFriendlyExist() == true)
+            if(esm_n.isUniqueValid() == true &&
+               esm_n.isFriendlyValid() == true &&
+               esm_ptr->isUniqueValid() == true &&
+               esm_ptr->isFriendlyValid() == true)
             {
                 message_n = makeScriptMessagesColl(esm_n.getFriendlyText());
                 *message_ptr = makeScriptMessagesColl(esm_ptr->getFriendlyText());
@@ -777,10 +765,6 @@ void DictCreator::makeDictBNAM()
                                 esm_n.getUniqueText() + yampt::sep[0] + message_n.at(k),
                                 yampt::rec_type::BNAM);
                     }
-                }
-                else
-                {
-                    // Missing?
                 }
             }
         }
@@ -803,10 +787,10 @@ void DictCreator::makeDictSCPT()
             esm_ptr->setUniqueTo("SCHD");
             esm_ptr->setFriendlyTo("SCTX");
 
-            if(esm_n.isUniqueExist() == true &&
-               esm_n.isFriendlyExist() == true &&
-               esm_ptr->isUniqueExist() == true &&
-               esm_ptr->isFriendlyExist() == true)
+            if(esm_n.isUniqueValid() == true &&
+               esm_n.isFriendlyValid() == true &&
+               esm_ptr->isUniqueValid() == true &&
+               esm_ptr->isFriendlyValid() == true)
             {
                 message_n = makeScriptMessagesColl(esm_n.getFriendlyText());
                 *message_ptr = makeScriptMessagesColl(esm_ptr->getFriendlyText());
@@ -828,169 +812,148 @@ void DictCreator::makeDictSCPT()
 //----------------------------------------------------------
 void DictCreator::makeDictCELLExtended()
 {
-    std::vector<std::tuple<std::string, size_t, bool>> pattern_coll;
-    std::map<std::string, size_t> match_coll;
-
-    pattern_coll = makeDictCELLExtendedPattern();
-    match_coll = makeDictCELLExtendedMatch();
-
+    makeDictCELLExtendedForeignColl();
+    makeDictCELLExtendedNativeColl();
     resetCounters();
-    for(size_t i = 0; i < pattern_coll.size(); ++i)
+    for(size_t i = 0; i < foreign_coll.size(); ++i)
     {
-        auto search = match_coll.find(std::get<0>(pattern_coll[i]));
-        if(search != match_coll.end())
+        auto search = native_coll.find(std::get<0>(foreign_coll[i]));
+        if(search != native_coll.end())
         {
             esm_n.setRecordTo(search->second);
             esm_n.setFriendlyTo("NAME");
-            esm_f.setRecordTo(std::get<1>(pattern_coll[i]));
+            esm_f.setRecordTo(std::get<1>(foreign_coll[i]));
             esm_f.setFriendlyTo("NAME");
-            if(esm_n.isFriendlyExist() == true &&
-               esm_f.isFriendlyExist() == true)
+            if(esm_n.isFriendlyValid() == true &&
+               esm_n.getFriendlyText() != "" &&
+               esm_f.isFriendlyValid() == true &&
+               esm_f.getFriendlyText() != "")
             {
                 validateRecord(esm_f.getFriendlyText(),
                                esm_n.getFriendlyText(),
                                yampt::rec_type::CELL);
             }
-            std::get<2>(pattern_coll[i]) = true;
+            std::get<2>(foreign_coll[i]) = true;
         }
         else
         {
             counter_missing++;
         }
     }
-
-    // Add missing records to dictionary
-    for(size_t i = 0; i < pattern_coll.size(); ++i)
-    {
-        if(std::get<2>(pattern_coll[i]) == false)
-        {
-            esm_f.setRecordTo(std::get<1>(pattern_coll[i]));
-            esm_f.setFriendlyTo("NAME");
-            if(esm_f.isFriendlyExist() == true)
-            {
-                validateRecord(esm_f.getFriendlyText(),
-                               yampt::err[0] + "MISSING" + yampt::err[1],
-                        yampt::rec_type::CELL);
-            }
-        }
-    }
-
+    makeDictCELLExtendedAddMissing();
     printLogLine(yampt::rec_type::CELL);
 }
 
 //----------------------------------------------------------
-std::vector<std::tuple<std::string, size_t, bool>> DictCreator::makeDictCELLExtendedPattern()
+void DictCreator::makeDictCELLExtendedForeignColl()
 {
-    std::string pattern;
-    std::vector<std::tuple<std::string, size_t, bool>> pattern_coll;
+    foreign_coll.clear();
     for(size_t i = 0; i < esm_f.getRecordColl().size(); ++i)
     {
         esm_f.setRecordTo(i);
         if(esm_f.getRecordId() == "CELL")
         {
-            esm_f.setUniqueTo("NAME");
-            if(esm_f.isUniqueExist() == true)
+            esm_f.setFriendlyTo("NAME");
+            if(esm_f.isFriendlyValid() == true &&
+               esm_f.getFriendlyText() != "")
             {
-                // Pattern is the DATA and combined id of all objects in cell
-                pattern.erase();
-                esm_f.setFriendlyTo("DATA", false);
-                pattern += esm_f.getFriendlyText();
-                esm_f.setFriendlyTo("NAME", false); // Skipped
-                while(esm_f.isFriendlyExist() == true)
-                {
-                    esm_f.setNextFriendlyTo("NAME", false);
-                    pattern += esm_f.getFriendlyText();
-                }
-                pattern_coll.push_back(make_tuple(pattern, i, false));
+                foreign_coll.push_back(make_tuple(makeDictCELLExtendedPattern(esm_f), i, false));
             }
         }
     }
-    return pattern_coll;
 }
 
 //----------------------------------------------------------
-std::map<std::string, size_t> DictCreator::makeDictCELLExtendedMatch()
+void DictCreator::makeDictCELLExtendedNativeColl()
 {
-    std::string match;
-    std::map<std::string, size_t> match_coll;
+    native_coll.clear();
     for(size_t i = 0; i < esm_n.getRecordColl().size(); ++i)
     {
         esm_n.setRecordTo(i);
         if(esm_n.getRecordId() == "CELL")
         {
-            esm_n.setUniqueTo("NAME");
-            if(esm_n.isUniqueExist() == true)
+            esm_n.setFriendlyTo("NAME");
+            if(esm_n.isFriendlyValid() == true &&
+               esm_n.getFriendlyText() != "")
             {
-                match.erase();
-                esm_n.setFriendlyTo("DATA", false);
-                match += esm_n.getFriendlyText();
-                esm_n.setFriendlyTo("NAME", false);
-                while(esm_n.isFriendlyExist() == true)
-                {
-                    esm_n.setNextFriendlyTo("NAME", false);
-                    match += esm_n.getFriendlyText();
-                }
-                match_coll.insert({match, i});
+                native_coll.insert({makeDictCELLExtendedPattern(esm_n), i});
             }
         }
     }
-    return match_coll;
+}
+
+//----------------------------------------------------------
+std::string DictCreator::makeDictCELLExtendedPattern(EsmReader &esm_cur)
+{
+    std::string pattern;
+    // Pattern is the DATA and combined id of all objects in cell
+    esm_cur.setFriendlyTo("DATA", false);
+    pattern += esm_cur.getFriendlyText();
+    esm_cur.setFriendlyTo("NAME", false);
+    while(esm_cur.isFriendlyValid() == true)
+    {
+        esm_cur.setNextFriendlyTo("NAME", false);
+        pattern += esm_cur.getFriendlyText();
+    }
+    return pattern;
+}
+
+//----------------------------------------------------------
+void DictCreator::makeDictCELLExtendedAddMissing()
+{
+    for(size_t i = 0; i < foreign_coll.size(); ++i)
+    {
+        if(std::get<2>(foreign_coll[i]) == false)
+        {
+            esm_f.setRecordTo(std::get<1>(foreign_coll[i]));
+            esm_f.setFriendlyTo("NAME");
+            if(esm_f.isFriendlyValid() == true &&
+               esm_f.getFriendlyText() != "")
+            {
+                validateRecord(esm_f.getFriendlyText(),
+                               yampt::err[0] + "MISSING" + yampt::err[1],
+                        yampt::rec_type::CELL);
+                std::cerr << "Warning! " << esm_f.getRecordId() << ": " << esm_f.getFriendlyText() << " --> MISSING" << std::endl;
+            }
+        }
+    }
 }
 
 //----------------------------------------------------------
 void DictCreator::makeDictDIALExtended()
 {
-    std::vector<std::tuple<std::string, size_t, bool>> pattern_coll;
-    std::map<std::string, size_t> match_coll;
-
-    pattern_coll = makeDictDIALExtendedPattern();
-    match_coll = makeDictDIALExtendedMatch();
-
+    makeDictDIALExtendedForeignColl();
+    makeDictDIALExtendedNativeColl();
     resetCounters();
-    for(size_t i = 0; i < pattern_coll.size(); ++i)
+    for(size_t i = 0; i < foreign_coll.size(); ++i)
     {
-        auto search = match_coll.find(std::get<0>(pattern_coll[i]));
-        if(search != match_coll.end())
+        auto search = native_coll.find(std::get<0>(foreign_coll[i]));
+        if(search != native_coll.end())
         {
             esm_n.setRecordTo(search->second);
             esm_n.setFriendlyTo("NAME");
-            esm_f.setRecordTo(std::get<1>(pattern_coll[i]));
+            esm_f.setRecordTo(std::get<1>(foreign_coll[i]));
             esm_f.setFriendlyTo("NAME");
-            if(esm_n.isFriendlyExist() == true &&
-               esm_f.isFriendlyExist() == true)
+            if(esm_n.isFriendlyValid() == true &&
+               esm_f.isFriendlyValid() == true)
             {
                 validateRecord(esm_f.getFriendlyText(),
                                esm_n.getFriendlyText(),
                                yampt::rec_type::DIAL);
             }
-            std::get<2>(pattern_coll[i]) = true;
+            std::get<2>(foreign_coll[i]) = true;
         }
         else
         {
             counter_missing++;
         }
     }
-
-    for(size_t i = 0; i < pattern_coll.size(); ++i)
-    {
-        if(std::get<2>(pattern_coll[i]) == false)
-        {
-            esm_f.setRecordTo(std::get<1>(pattern_coll[i]));
-            esm_f.setFriendlyTo("NAME");
-            if(esm_f.isFriendlyExist() == true)
-            {
-                validateRecord(esm_f.getFriendlyText(),
-                               yampt::err[0] + "MISSING" + yampt::err[1],
-                        yampt::rec_type::DIAL);
-            }
-        }
-    }
-
+    makeDictDIALExtendedAddMissing();
     printLogLine(yampt::rec_type::DIAL);
 }
 
 //----------------------------------------------------------
-std::vector<std::tuple<std::string, size_t, bool>> DictCreator::makeDictDIALExtendedPattern()
+void DictCreator::makeDictDIALExtendedForeignColl()
 {
     std::string pattern;
     std::vector<std::tuple<std::string, size_t, bool>> pattern_coll;
@@ -1002,24 +965,16 @@ std::vector<std::tuple<std::string, size_t, bool>> DictCreator::makeDictDIALExte
             esm_f.setUniqueTo("DATA");
             if(esm_f.getUniqueText() == "T")
             {
-                pattern.erase();
-                esm_f.setRecordTo(i + 1);
-                esm_f.setFriendlyTo("INAM", false);
-                pattern += esm_f.getFriendlyText();
-                esm_f.setFriendlyTo("SCVR", false);
-                pattern += esm_f.getFriendlyText();
-                pattern_coll.push_back(make_tuple(pattern, i, false));
+                pattern_coll.push_back(make_tuple(makeDictDIALExtendedPattern(esm_f, i), i, false));
             }
         }
     }
-    return pattern_coll;
 }
 
 //----------------------------------------------------------
-std::map<std::string, size_t> DictCreator::makeDictDIALExtendedMatch()
+void DictCreator::makeDictDIALExtendedNativeColl()
 {
-    std::string match;
-    std::map<std::string, size_t> match_coll;
+    native_coll.clear();
     for(size_t i = 0; i < esm_n.getRecordColl().size(); ++i)
     {
         esm_n.setRecordTo(i);
@@ -1028,44 +983,65 @@ std::map<std::string, size_t> DictCreator::makeDictDIALExtendedMatch()
             esm_n.setUniqueTo("DATA");
             if(esm_n.getUniqueText() == "T")
             {
-                match.erase();
-                esm_n.setRecordTo(i + 1);
-                esm_n.setFriendlyTo("INAM", false);
-                match += esm_n.getFriendlyText();
-                esm_n.setFriendlyTo("SCVR", false);
-                match += esm_n.getFriendlyText();
-                match_coll.insert({match, i});
+                native_coll.insert({makeDictDIALExtendedPattern(esm_n, i), i});
             }
         }
     }
-    return match_coll;
+}
+
+//----------------------------------------------------------
+std::string DictCreator::makeDictDIALExtendedPattern(EsmReader &esm_cur, size_t i)
+{
+    std::string pattern;
+    // Pattern is the INAM and SCVR from next INFO record
+    esm_cur.setRecordTo(i + 1);
+    esm_cur.setFriendlyTo("INAM", false);
+    pattern += esm_cur.getFriendlyText();
+    esm_cur.setFriendlyTo("SCVR", false);
+    pattern += esm_cur.getFriendlyText();
+    return pattern;
+}
+
+//----------------------------------------------------------
+void DictCreator::makeDictDIALExtendedAddMissing()
+{
+    for(size_t i = 0; i < foreign_coll.size(); ++i)
+    {
+        if(std::get<2>(foreign_coll[i]) == false)
+        {
+            esm_f.setRecordTo(std::get<1>(foreign_coll[i]));
+            esm_f.setFriendlyTo("NAME");
+            if(esm_f.isFriendlyValid() == true)
+            {
+                validateRecord(esm_f.getFriendlyText(),
+                               yampt::err[0] + "MISSING" + yampt::err[1],
+                        yampt::rec_type::CELL);
+            }
+        }
+    }
 }
 
 //----------------------------------------------------------
 void DictCreator::makeDictBNAMExtended()
 {
-    std::vector<std::pair<std::string, size_t>> pattern_coll;
-    std::map<std::string, size_t> match_coll;
-
-    pattern_coll = makeDictBNAMExtendedPattern();
-    match_coll = makeDictBNAMExtendedMatch();
-
+    makeDictBNAMExtendedForeignColl();
+    makeDictBNAMExtendedNativeColl();
     resetCounters();
-    for(size_t i = 0; i < pattern_coll.size(); ++i)
+    for(size_t i = 0; i < foreign_coll_script.size(); ++i)
     {
-        auto search = match_coll.find(pattern_coll[i].first);
-        if(search != match_coll.end())
+        auto search = native_coll.find(foreign_coll_script[i].first);
+        if(search != native_coll.end())
         {
             esm_n.setRecordTo(search->second);
             esm_n.setUniqueTo("INAM");
             esm_n.setFriendlyTo("BNAM");
-            esm_f.setRecordTo(pattern_coll[i].second);
+            esm_f.setRecordTo(foreign_coll_script[i].second);
             esm_f.setUniqueTo("INAM");
             esm_f.setFriendlyTo("BNAM");
-            if(esm_n.isUniqueExist() == true &&
-               esm_n.isFriendlyExist() == true &&
-               esm_f.isUniqueExist() == true &&
-               esm_f.isFriendlyExist() == true)
+            if(esm_n.isUniqueValid() == true &&
+               esm_n.isFriendlyValid() == true &&
+               esm_f.isUniqueValid() == true &&
+               esm_f.isFriendlyValid() == true)
             {
                 message_n = makeScriptMessagesColl(esm_n.getFriendlyText());
                 message_f = makeScriptMessagesColl(esm_f.getFriendlyText());
@@ -1085,72 +1061,62 @@ void DictCreator::makeDictBNAMExtended()
 }
 
 //----------------------------------------------------------
-std::vector<std::pair<std::string, size_t>> DictCreator::makeDictBNAMExtendedPattern()
+void DictCreator::makeDictBNAMExtendedForeignColl()
 {
-    std::string pattern;
-    std::vector<std::pair<std::string, size_t>> pattern_coll;
+    foreign_coll_script.clear();
     for(size_t i = 0; i < esm_f.getRecordColl().size(); ++i)
     {
         esm_f.setRecordTo(i);
         if(esm_f.getRecordId() == "INFO")
         {
             esm_f.setUniqueTo("INAM");
-            if(esm_f.isUniqueExist() == true)
+            if(esm_f.isUniqueValid() == true)
             {
-                pattern = esm_f.getUniqueText();
-                pattern_coll.push_back(make_pair(pattern, i));
+                foreign_coll_script.push_back(make_pair(esm_f.getUniqueText(), i));
             }
         }
     }
-    return pattern_coll;
 }
 
 //----------------------------------------------------------
-std::map<std::string, size_t> DictCreator::makeDictBNAMExtendedMatch()
+void DictCreator::makeDictBNAMExtendedNativeColl()
 {
-    std::string match;
-    std::map<std::string, size_t> match_coll;
+    native_coll.clear();
     for(size_t i = 0; i < esm_n.getRecordColl().size(); ++i)
     {
         esm_n.setRecordTo(i);
         if(esm_n.getRecordId() == "INFO")
         {
             esm_n.setUniqueTo("INAM");
-            if(esm_n.isUniqueExist() == true)
+            if(esm_n.isUniqueValid() == true)
             {
-                match = esm_n.getUniqueText();
-                match_coll.insert({match, i});
+                native_coll.insert({esm_n.getUniqueText(), i});
             }
         }
     }
-    return match_coll;
 }
 
 //----------------------------------------------------------
 void DictCreator::makeDictSCPTExtended()
 {
-    std::vector<std::pair<std::string, size_t>> pattern_coll;
-    std::map<std::string, size_t> match_coll;
-
-    pattern_coll = makeDictSCPTExtendedPattern();
-    match_coll = makeDictSCPTExtendedMatch();
-
+    makeDictSCPTExtendedForeignColl();
+    makeDictSCPTExtendedNativeColl();
     resetCounters();
-    for(size_t i = 0; i < pattern_coll.size(); ++i)
+    for(size_t i = 0; i < foreign_coll_script.size(); ++i)
     {
-        auto search = match_coll.find(pattern_coll[i].first);
-        if(search != match_coll.end())
+        auto search = native_coll.find(foreign_coll_script[i].first);
+        if(search != native_coll.end())
         {
             esm_n.setRecordTo(search->second);
             esm_n.setUniqueTo("SCHD");
             esm_n.setFriendlyTo("SCTX");
-            esm_f.setRecordTo(pattern_coll[i].second);
+            esm_f.setRecordTo(foreign_coll_script[i].second);
             esm_f.setUniqueTo("SCHD");
             esm_f.setFriendlyTo("SCTX");
-            if(esm_n.isUniqueExist() == true &&
-               esm_n.isFriendlyExist() == true &&
-               esm_f.isUniqueExist() == true &&
-               esm_f.isFriendlyExist() == true)
+            if(esm_n.isUniqueValid() == true &&
+               esm_n.isFriendlyValid() == true &&
+               esm_f.isUniqueValid() == true &&
+               esm_f.isFriendlyValid() == true)
             {
                 message_n = makeScriptMessagesColl(esm_n.getFriendlyText());
                 message_f = makeScriptMessagesColl(esm_f.getFriendlyText());
@@ -1170,43 +1136,37 @@ void DictCreator::makeDictSCPTExtended()
 }
 
 //----------------------------------------------------------
-std::vector<std::pair<std::string, size_t>> DictCreator::makeDictSCPTExtendedPattern()
+void DictCreator::makeDictSCPTExtendedForeignColl()
 {
-    std::string pattern;
-    std::vector<std::pair<std::string, size_t>> pattern_coll;
+    foreign_coll_script.clear();
     for(size_t i = 0; i < esm_f.getRecordColl().size(); ++i)
     {
         esm_f.setRecordTo(i);
         if(esm_f.getRecordId() == "SCPT")
         {
             esm_f.setUniqueTo("SCHD");
-            if(esm_f.isUniqueExist() == true)
+            if(esm_f.isUniqueValid() == true)
             {
-                pattern = esm_f.getUniqueText();
-                pattern_coll.push_back(make_pair(pattern, i));
+                foreign_coll_script.push_back(make_pair(esm_f.getUniqueText(), i));
             }
         }
     }
-    return pattern_coll;
 }
 
 //----------------------------------------------------------
-std::map<std::string, size_t> DictCreator::makeDictSCPTExtendedMatch()
+void DictCreator::makeDictSCPTExtendedNativeColl()
 {
-    std::string match;
-    std::map<std::string, size_t> match_coll;
+    native_coll.clear();
     for(size_t i = 0; i < esm_n.getRecordColl().size(); ++i)
     {
         esm_n.setRecordTo(i);
         if(esm_n.getRecordId() == "SCPT")
         {
             esm_n.setUniqueTo("SCHD");
-            if(esm_n.isUniqueExist() == true)
+            if(esm_n.isUniqueValid() == true)
             {
-                match = esm_n.getUniqueText();
-                match_coll.insert({match, i});
+                native_coll.insert({esm_n.getUniqueText(), i});
             }
         }
     }
-    return match_coll;
 }

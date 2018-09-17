@@ -4,11 +4,11 @@
 EsmConverter::EsmConverter(std::string path,
                            DictMerger &merger,
                            bool add_dial,
-                           std::string suffix)
+                           std::string file_suffix)
     : esm(path),
       merger(&merger),
       add_dial(add_dial),
-      suffix(suffix)
+      file_suffix(file_suffix)
 {
     if(esm.isLoaded() == true)
     {
@@ -111,7 +111,9 @@ std::string EsmConverter::setNewFriendly(const yampt::rec_type type,
             add_dial == true &&
             dialog_topic.substr(0, 1) != "V")
     {
-        new_friendly = tools.addDialogTopicsToINFOStrings(merger->getDict(yampt::rec_type::DIAL), friendly_text, false);
+        new_friendly = tools.addDialogTopicsToINFOStrings(merger->getDict(yampt::rec_type::DIAL),
+                                                          friendly_text,
+                                                          false);
         setToConvertFlag(friendly_text, new_friendly);
     }
     else
@@ -179,7 +181,6 @@ void EsmConverter::convertMAST()
 {
     std::string master_prefix;
     std::string master_suffix;
-
     resetCounters();
     for(size_t i = 0; i < esm.getRecordColl().size(); ++i)
     {
@@ -187,11 +188,11 @@ void EsmConverter::convertMAST()
         if(esm.getRecordId() == "TES3")
         {
             esm.setFriendlyTo("MAST");
-            while(esm.isFriendlyExist() == true)
+            while(esm.isFriendlyValid() == true)
             {
                 master_prefix = esm.getFriendlyText().substr(0, esm.getFriendlyText().find_last_of("."));
                 master_suffix = esm.getFriendlyText().substr(esm.getFriendlyText().rfind("."));
-                convertRecordContent(master_prefix + suffix + master_suffix + '\0');
+                convertRecordContent(master_prefix + file_suffix + master_suffix + '\0');
                 esm.setNextFriendlyTo("MAST");
             }
         }
@@ -202,20 +203,18 @@ void EsmConverter::convertMAST()
 void EsmConverter::convertCELL()
 {
     std::string new_friendly;
-
     resetCounters();
     for(size_t i = 0; i < esm.getRecordColl().size(); ++i)
     {
         esm.setRecordTo(i);
         if(esm.getRecordId() == "CELL")
         {
-            esm.setUniqueTo("NAME");
             esm.setFriendlyTo("NAME");
-            if(esm.isUniqueExist() == true &&
-               esm.isFriendlyExist() == true)
+            if(esm.isFriendlyValid() == true &&
+               esm.getFriendlyText() != "") // Is named cell
             {
                 new_friendly = setNewFriendly(yampt::rec_type::CELL,
-                                              esm.getUniqueText(),
+                                              esm.getFriendlyText(),
                                               esm.getFriendlyText());
                 if(to_convert == true)
                 {
@@ -233,20 +232,18 @@ void EsmConverter::convertCELL()
 void EsmConverter::convertPGRD()
 {
     std::string new_friendly;
-
     resetCounters();
     for(size_t i = 0; i < esm.getRecordColl().size(); ++i)
     {
         esm.setRecordTo(i);
         if(esm.getRecordId() == "PGRD")
         {
-            esm.setUniqueTo("NAME");
             esm.setFriendlyTo("NAME");
-            if(esm.isUniqueExist() == true &&
-               esm.isFriendlyExist() == true)
+            if(esm.isFriendlyValid() == true &&
+               esm.getFriendlyText() != "")
             {
                 new_friendly = setNewFriendly(yampt::rec_type::CELL,
-                                              esm.getUniqueText(),
+                                              esm.getFriendlyText(),
                                               esm.getFriendlyText());
                 if(to_convert == true)
                 {
@@ -262,20 +259,18 @@ void EsmConverter::convertPGRD()
 void EsmConverter::convertANAM()
 {
     std::string new_friendly;
-
     resetCounters();
     for(size_t i = 0; i < esm.getRecordColl().size(); ++i)
     {
         esm.setRecordTo(i);
         if(esm.getRecordId() == "INFO")
         {
-            esm.setUniqueTo("ANAM");
             esm.setFriendlyTo("ANAM");
-            if(esm.isUniqueExist() == true &&
-               esm.isFriendlyExist() == true)
+            if(esm.isFriendlyValid() == true &&
+               esm.getFriendlyText() != "")
             {
                 new_friendly = setNewFriendly(yampt::rec_type::CELL,
-                                              esm.getUniqueText(),
+                                              esm.getFriendlyText(),
                                               esm.getFriendlyText());
                 if(to_convert == true)
                 {
@@ -291,33 +286,28 @@ void EsmConverter::convertANAM()
 void EsmConverter::convertSCVR()
 {
     std::string new_friendly;
-
     resetCounters();
     for(size_t i = 0; i < esm.getRecordColl().size(); ++i)
     {
         esm.setRecordTo(i);
         if(esm.getRecordId() == "INFO")
         {
-            esm.setUniqueTo("INAM");
             esm.setFriendlyTo("SCVR");
-            if(esm.isUniqueExist() == true)
+            while(esm.isFriendlyValid() == true)
             {
-                while(esm.isFriendlyExist() == true)
+                if(esm.getFriendlyText().substr(1, 1) == "B")
                 {
-                    if(esm.getFriendlyText().substr(1, 1) == "B")
+                    new_friendly = setNewFriendly(yampt::rec_type::CELL,
+                                                  esm.getFriendlyText().substr(5),
+                                                  esm.getFriendlyText().substr(5));
+                    new_friendly = esm.getFriendlyText().substr(0, 5) + new_friendly;
+                    if(to_convert == true)
                     {
-                        new_friendly = setNewFriendly(yampt::rec_type::CELL,
-                                                      esm.getFriendlyText().substr(5),
-                                                      esm.getFriendlyText().substr(5));
-                        new_friendly = esm.getFriendlyText().substr(0, 5) + new_friendly;
-                        if(to_convert == true)
-                        {
-                            // Not null terminated
-                            convertRecordContent(new_friendly);
-                        }
+                        // Not null terminated
+                        convertRecordContent(new_friendly);
                     }
-                    esm.setNextFriendlyTo("SCVR");
                 }
+                esm.setNextFriendlyTo("SCVR");
             }
         }
     }
@@ -336,11 +326,8 @@ void EsmConverter::convertDNAM()
         if(esm.getRecordId() == "CELL" ||
            esm.getRecordId() == "NPC_")
         {
-            //esm.setUniqueTo("NAME");
             esm.setFriendlyTo("DNAM");
-            //if(esm.getUniqueStatus() == true)
-            //{
-            while(esm.isFriendlyExist() == true)
+            while(esm.isFriendlyValid() == true)
             {
                 new_friendly = setNewFriendly(yampt::rec_type::CELL,
                                               esm.getFriendlyText(),
@@ -351,7 +338,6 @@ void EsmConverter::convertDNAM()
                 }
                 esm.setNextFriendlyTo("DNAM");
             }
-            //}
         }
     }
     printLogLine(yampt::rec_type::DNAM);
@@ -361,28 +347,23 @@ void EsmConverter::convertDNAM()
 void EsmConverter::convertCNDT()
 {
     std::string new_friendly;
-
     resetCounters();
     for(size_t i = 0; i < esm.getRecordColl().size(); ++i)
     {
         esm.setRecordTo(i);
         if(esm.getRecordId() == "NPC_")
         {
-            esm.setUniqueTo("NAME");
             esm.setFriendlyTo("CNDT");
-            if(esm.isUniqueExist() == true)
+            while(esm.isFriendlyValid() == true)
             {
-                while(esm.isFriendlyExist() == true)
+                new_friendly = setNewFriendly(yampt::rec_type::CELL,
+                                              esm.getFriendlyText(),
+                                              esm.getFriendlyText());
+                if(to_convert == true)
                 {
-                    new_friendly = setNewFriendly(yampt::rec_type::CELL,
-                                                  esm.getFriendlyText(),
-                                                  esm.getFriendlyText());
-                    if(to_convert == true)
-                    {
-                        convertRecordContent(new_friendly + '\0');
-                    }
-                    esm.setNextFriendlyTo("CNDT");
+                    convertRecordContent(new_friendly + '\0');
                 }
+                esm.setNextFriendlyTo("CNDT");
             }
         }
     }
@@ -393,7 +374,6 @@ void EsmConverter::convertCNDT()
 void EsmConverter::convertGMST()
 {
     std::string new_friendly;
-
     resetCounters();
     for(size_t i = 0; i < esm.getRecordColl().size(); ++i)
     {
@@ -402,8 +382,8 @@ void EsmConverter::convertGMST()
         {
             esm.setUniqueTo("NAME");
             esm.setFriendlyTo("STRV");
-            if(esm.isUniqueExist() == true &&
-               esm.isFriendlyExist() == true &&
+            if(esm.isUniqueValid() == true &&
+               esm.isFriendlyValid() == true &&
                esm.getUniqueText().substr(0, 1) == "s")
             {
                 new_friendly = setNewFriendly(yampt::rec_type::GMST,
@@ -423,9 +403,7 @@ void EsmConverter::convertGMST()
 //----------------------------------------------------------
 void EsmConverter::convertFNAM()
 {
-    std::string unique_text;
     std::string new_friendly;
-
     resetCounters();
     for(size_t i = 0; i < esm.getRecordColl().size(); ++i)
     {
@@ -445,14 +423,13 @@ void EsmConverter::convertFNAM()
         {
             esm.setUniqueTo("NAME");
             esm.setFriendlyTo("FNAM");
-            if(esm.isUniqueExist() == true &&
-               esm.isFriendlyExist() == true &&
+            if(esm.isUniqueValid() == true &&
+               esm.isFriendlyValid() == true &&
                esm.getUniqueText() != "player")
             {
-                unique_text = esm.getRecordId() + yampt::sep[0] + esm.getUniqueText();
                 new_friendly = setNewFriendly(yampt::rec_type::FNAM,
-                                              unique_text,
-                                              esm.getFriendlyText());
+                                              esm.getRecordId() + yampt::sep[0] + esm.getUniqueText(),
+                        esm.getFriendlyText());
                 if(to_convert == true)
                 {
                     // Null terminated
@@ -468,9 +445,7 @@ void EsmConverter::convertFNAM()
 //----------------------------------------------------------
 void EsmConverter::convertDESC()
 {
-    std::string unique_text;
     std::string new_friendly;
-
     resetCounters();
     for(size_t i = 0; i < esm.getRecordColl().size(); ++i)
     {
@@ -481,13 +456,12 @@ void EsmConverter::convertDESC()
         {
             esm.setUniqueTo("NAME");
             esm.setFriendlyTo("DESC");
-            if(esm.isUniqueExist() == true &&
-               esm.isFriendlyExist() == true)
+            if(esm.isUniqueValid() == true &&
+               esm.isFriendlyValid() == true)
             {
-                unique_text = esm.getRecordId() + yampt::sep[0] + esm.getUniqueText();
                 new_friendly = setNewFriendly(yampt::rec_type::DESC,
-                                              unique_text,
-                                              esm.getFriendlyText());
+                                              esm.getRecordId() + yampt::sep[0] + esm.getUniqueText(),
+                        esm.getFriendlyText());
                 if(to_convert == true)
                 {
                     if(esm.getRecordId() == "BSGN")
@@ -514,7 +488,6 @@ void EsmConverter::convertDESC()
 void EsmConverter::convertTEXT()
 {
     std::string new_friendly;
-
     resetCounters();
     for(size_t i = 0; i < esm.getRecordColl().size(); ++i)
     {
@@ -523,8 +496,8 @@ void EsmConverter::convertTEXT()
         {
             esm.setUniqueTo("NAME");
             esm.setFriendlyTo("TEXT");
-            if(esm.isUniqueExist() == true &&
-               esm.isFriendlyExist() == true)
+            if(esm.isUniqueValid() == true &&
+               esm.isFriendlyValid() == true)
             {
                 new_friendly = setNewFriendly(yampt::rec_type::TEXT,
                                               esm.getUniqueText(),
@@ -544,9 +517,7 @@ void EsmConverter::convertTEXT()
 //----------------------------------------------------------
 void EsmConverter::convertRNAM()
 {
-    std::string unique_text;
     std::string new_friendly;
-
     resetCounters();
     for(size_t i = 0; i < esm.getRecordColl().size(); ++i)
     {
@@ -555,14 +526,13 @@ void EsmConverter::convertRNAM()
         {
             esm.setUniqueTo("NAME");
             esm.setFriendlyTo("RNAM");
-            if(esm.isUniqueExist() == true)
+            if(esm.isUniqueValid() == true)
             {
-                while(esm.isFriendlyExist() == true)
+                while(esm.isFriendlyValid() == true)
                 {
-                    unique_text = esm.getUniqueText() + yampt::sep[0] + std::to_string(esm.getFriendlyCounter());
                     new_friendly = setNewFriendly(yampt::rec_type::RNAM,
-                                                  unique_text,
-                                                  esm.getFriendlyText());
+                                                  esm.getUniqueText() + yampt::sep[0] + esm.getFriendlyCounter(),
+                            esm.getFriendlyText());
                     if(to_convert == true)
                     {
                         // Null terminated up to 32
@@ -580,9 +550,7 @@ void EsmConverter::convertRNAM()
 //----------------------------------------------------------
 void EsmConverter::convertINDX()
 {
-    std::string unique_text;
     std::string new_friendly;
-
     resetCounters();
     for(size_t i = 0; i < esm.getRecordColl().size(); ++i)
     {
@@ -592,13 +560,12 @@ void EsmConverter::convertINDX()
         {
             esm.setUniqueTo("INDX");
             esm.setFriendlyTo("DESC");
-            if(esm.isUniqueExist() == true &&
-               esm.isFriendlyExist() == true)
+            if(esm.isUniqueValid() == true &&
+               esm.isFriendlyValid() == true)
             {
-                unique_text = esm.getRecordId() + yampt::sep[0] + esm.getUniqueText();
                 new_friendly = setNewFriendly(yampt::rec_type::INDX,
-                                              unique_text,
-                                              esm.getFriendlyText());
+                                              esm.getRecordId() + yampt::sep[0] + esm.getUniqueText(),
+                        esm.getFriendlyText());
                 if(to_convert == true)
                 {
                     // Not null terminated
@@ -615,7 +582,6 @@ void EsmConverter::convertINDX()
 void EsmConverter::convertDIAL()
 {
     std::string new_friendly;
-
     resetCounters();
     for(size_t i = 0; i < esm.getRecordColl().size(); ++i)
     {
@@ -624,8 +590,8 @@ void EsmConverter::convertDIAL()
         {
             esm.setUniqueTo("DATA");
             esm.setFriendlyTo("NAME");
-            if(esm.isUniqueExist() == true &&
-               esm.isFriendlyExist() == true &&
+            if(esm.isUniqueValid() == true &&
+               esm.isFriendlyValid() == true &&
                esm.getUniqueText() == "T")
             {
                 new_friendly = setNewFriendly(yampt::rec_type::DIAL,
@@ -645,10 +611,8 @@ void EsmConverter::convertDIAL()
 //----------------------------------------------------------
 void EsmConverter::convertINFO()
 {
-    std::string unique_text;
     std::string new_friendly;
     std::string dialog_topic;
-
     resetCounters();
     for(size_t i = 0; i < esm.getRecordColl().size(); ++i)
     {
@@ -657,8 +621,8 @@ void EsmConverter::convertINFO()
         {
             esm.setUniqueTo("DATA");
             esm.setFriendlyTo("NAME");
-            if(esm.isUniqueExist() == true &&
-               esm.isFriendlyExist() == true)
+            if(esm.isUniqueValid() == true &&
+               esm.isFriendlyValid() == true)
             {
                 dialog_topic = esm.getUniqueText() + yampt::sep[0] + esm.getFriendlyText();
             }
@@ -667,14 +631,13 @@ void EsmConverter::convertINFO()
         {
             esm.setUniqueTo("INAM");
             esm.setFriendlyTo("NAME");
-            if(esm.isUniqueExist() == true &&
-               esm.isFriendlyExist() == true)
+            if(esm.isUniqueValid() == true &&
+               esm.isFriendlyValid() == true)
             {
-                unique_text = dialog_topic + yampt::sep[0] + esm.getUniqueText();
                 new_friendly = setNewFriendly(yampt::rec_type::INFO,
-                                              unique_text,
-                                              esm.getFriendlyText(),
-                                              dialog_topic);
+                                              dialog_topic + yampt::sep[0] + esm.getUniqueText(),
+                        esm.getFriendlyText(),
+                        dialog_topic);
                 if(to_convert == true)
                 {
                     // Not null terminated
@@ -692,7 +655,6 @@ void EsmConverter::convertBNAM()
 {
     std::string prefix;
     std::string new_friendly;
-
     resetCounters();
     for(size_t i = 0; i < esm.getRecordColl().size(); ++i)
     {
@@ -701,8 +663,8 @@ void EsmConverter::convertBNAM()
         {
             esm.setUniqueTo("INAM");
             esm.setFriendlyTo("BNAM");
-            if(esm.isUniqueExist() == true &&
-               esm.isFriendlyExist() == true)
+            if(esm.isUniqueValid() == true &&
+               esm.isFriendlyValid() == true)
             {
                 prefix = esm.getUniqueText() + yampt::sep[0];
                 new_friendly = setNewScriptBNAM(prefix, esm.getFriendlyText());
@@ -733,16 +695,16 @@ void EsmConverter::convertSCPT()
         {
             esm.setUniqueTo("SCHD");
             esm.setFriendlyTo("SCDT", false);
-            if(esm.isFriendlyExist() == true)
+            if(esm.isFriendlyValid() == true)
             {
                 compiled_data = esm.getFriendlyText();
             }
             esm.setFriendlyTo("SCTX");
-            if(esm.isFriendlyExist() == true)
+            if(esm.isFriendlyValid() == true)
             {
                 friendly_text = esm.getFriendlyText();
             }
-            if(esm.isUniqueExist() == true)
+            if(esm.isUniqueValid() == true)
             {
                 prefix = esm.getUniqueText() + yampt::sep[0];
                 new_script = setNewScriptSCPT(prefix, friendly_text, compiled_data);

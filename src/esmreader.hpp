@@ -28,14 +28,14 @@ public:
 
     std::string getUniqueText() { return unique_text; }
     std::string getUniqueId() { return unique_id; }
-    bool isUniqueExist() { return unique_exist; }
+    bool isUniqueValid() { return unique_exist; }
 
     std::string getFriendlyText() { return friendly_text; }
     std::string getFriendlyId() { return friendly_id; }
     size_t getFriendlyPos() { return friendly_pos; }
     size_t getFriendlySize() { return friendly_size; }
-    size_t getFriendlyCounter() { return friendly_counter; }
-    bool isFriendlyExist() { return friendly_exist; }
+    std::string getFriendlyCounter() { return std::to_string(friendly_counter); }
+    bool isFriendlyValid() { return friendly_exist; }
 
     EsmReader();
     EsmReader(const std::string &path);
@@ -55,9 +55,6 @@ private:
     void caseForDialogType(std::size_t &cur_pos,
                            std::string &cur_text);
     void caseForINDX(std::size_t &cur_pos,
-                     std::string &cur_text);
-    void caseForCELL(std::size_t &cur_pos,
-                     std::size_t &cur_size,
                      std::string &cur_text);
     void caseForDefault(std::size_t &cur_pos,
                         std::size_t &cur_size,

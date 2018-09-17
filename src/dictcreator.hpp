@@ -66,17 +66,24 @@ private:
     void makeDictSCPT();
 
     void makeDictCELLExtended();
-    std::vector<std::tuple<std::string, size_t, bool> > makeDictCELLExtendedPattern();
-    std::map<std::string, size_t> makeDictCELLExtendedMatch();
+    void makeDictCELLExtendedForeignColl();
+    void makeDictCELLExtendedNativeColl();
+    std::string makeDictCELLExtendedPattern(EsmReader &esm_cur);
+    void makeDictCELLExtendedAddMissing();
+
     void makeDictDIALExtended();
-    std::vector<std::tuple<std::string, size_t, bool> > makeDictDIALExtendedPattern();
-    std::map<std::string, size_t> makeDictDIALExtendedMatch();
+    void makeDictDIALExtendedForeignColl();
+    void makeDictDIALExtendedNativeColl();
+    std::string makeDictDIALExtendedPattern(EsmReader &esm_cur, size_t i);
+    void makeDictDIALExtendedAddMissing();
+
     void makeDictBNAMExtended();
-    std::vector<std::pair<std::string, size_t> > makeDictBNAMExtendedPattern();
-    std::map<std::string, size_t> makeDictBNAMExtendedMatch();
+    void makeDictBNAMExtendedForeignColl();
+    void makeDictBNAMExtendedNativeColl();
+
     void makeDictSCPTExtended();
-    std::vector<std::pair<std::string, size_t> > makeDictSCPTExtendedPattern();
-    std::map<std::string, size_t> makeDictSCPTExtendedMatch();
+    void makeDictSCPTExtendedForeignColl();
+    void makeDictSCPTExtendedNativeColl();
 
     EsmReader esm_n;
     EsmReader esm_f;
@@ -89,8 +96,6 @@ private:
     std::vector<std::string> message_n;
     std::vector<std::string> message_f;
 
-    bool status;
-    bool basic_mode;
     const yampt::ins_mode mode;
 
     int counter_created;
@@ -98,6 +103,10 @@ private:
     int counter_doubled;
     int counter_identical;
     int counter_all;
+
+    std::vector<std::tuple<std::string, size_t, bool>> foreign_coll;
+    std::vector<std::pair<std::string, size_t>> foreign_coll_script;
+    std::map<std::string, size_t> native_coll;
 };
 
 #endif // DICTCREATOR_HPP
