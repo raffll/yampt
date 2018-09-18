@@ -11,8 +11,8 @@ public:
     std::string getNamePrefix() { return name_prefix; }
 
     yampt::dict_t const& getDict() const { return dict; }
-    yampt::inner_dict_t const& getDict(yampt::rec_type type) const { return dict[type]; }
-    yampt::inner_dict_t const& getDict(size_t type) const { return dict[type]; }
+    yampt::single_dict_t const& getDict(yampt::rec_type type) const { return dict[type]; }
+    yampt::single_dict_t const& getDict(size_t type) const { return dict[type]; }
 
     DictReader(const std::string &path);
     DictReader(const DictReader& that);
@@ -20,7 +20,6 @@ public:
     ~DictReader();
 
 private:
-    std::string readFile(const std::string &path);
     void parseDict(const std::string &content,
                    const std::string &path);
     void setName(const std::string &path);
@@ -38,6 +37,7 @@ private:
     std::string name_full;
     std::string name_prefix;
     yampt::dict_t dict;
+    Tools tools;
 
     bool is_loaded;
 

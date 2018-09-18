@@ -4,9 +4,9 @@
 
 using namespace std;
 
-static EsmReader esm("Morrowind.esm");
+static EsmReader esm("master/en/Morrowind.esm");
 
-TEST_CASE("Loading Morrowind.esm")
+TEST_CASE("Loading and parsing plugin file")
 {
     REQUIRE(esm.isLoaded() == true);
     REQUIRE(esm.getNameFull() == "Morrowind.esm");
@@ -14,7 +14,7 @@ TEST_CASE("Loading Morrowind.esm")
     REQUIRE(esm.getNameSuffix() == ".esm");
 }
 
-TEST_CASE("Default case in set unique when not found")
+TEST_CASE("Set unique, default case, not found")
 {
     esm.setRecordTo(0);
     esm.setUniqueTo("TEST");
@@ -23,7 +23,7 @@ TEST_CASE("Default case in set unique when not found")
     REQUIRE(esm.getUniqueText() == "Unique id TEST not found!");
 }
 
-TEST_CASE("CELL case in set unique with empty subrecord")
+TEST_CASE("Set unique, default case, empty text")
 {
     esm.setRecordTo(16955); // Region CELL with empty NAME
     esm.setUniqueTo("NAME");
@@ -32,7 +32,7 @@ TEST_CASE("CELL case in set unique with empty subrecord")
     REQUIRE(esm.getUniqueText() == "");
 }
 
-TEST_CASE("Default case in set unique")
+TEST_CASE("Set unique, default case")
 {
     esm.setRecordTo(22075); // Regular CELL
     esm.setUniqueTo("NAME");
@@ -41,7 +41,7 @@ TEST_CASE("Default case in set unique")
     REQUIRE(esm.getUniqueText() == "Zergonipal, Shrine");
 }
 
-TEST_CASE("INDX case in set unique")
+TEST_CASE("Set unique, INDX case")
 {
     esm.setRecordTo(2062); // SKIL with INDX instead of NAME
     esm.setUniqueTo("INDX");
@@ -50,7 +50,7 @@ TEST_CASE("INDX case in set unique")
     REQUIRE(esm.getUniqueText() == "000");
 }
 
-TEST_CASE("Dialog type case in set unique")
+TEST_CASE("Set unique, dialog type case")
 {
     esm.setRecordTo(22245); // DIAL with one byte DATA dialog type
     esm.setUniqueTo("DATA");
@@ -59,7 +59,7 @@ TEST_CASE("Dialog type case in set unique")
     REQUIRE(esm.getUniqueText() == "J");
 }
 
-TEST_CASE("Set first friendly when not found")
+TEST_CASE("Set friendly, not found")
 {
     esm.setRecordTo(0);
     esm.setFriendlyTo("TEST");
@@ -70,7 +70,7 @@ TEST_CASE("Set first friendly when not found")
     REQUIRE(esm.getFriendlySize() == 0);
 }
 
-TEST_CASE("Set first friendly")
+TEST_CASE("Set friendly")
 {
     /*
        (16) FACT............
@@ -85,11 +85,12 @@ TEST_CASE("Set first friendly")
     REQUIRE(esm.getFriendlyId() == "RNAM");
     REQUIRE(esm.isFriendlyValid() == true);
     REQUIRE(esm.getFriendlyText() == "Hireling");
+    REQUIRE(esm.getFriendlyWithNull().size() == 32);
     REQUIRE(esm.getFriendlyPos() == (16 + 16 + 28));
     REQUIRE(esm.getFriendlySize() == 32);
 }
 
-TEST_CASE("Set next friendly")
+TEST_CASE("Set friendly, next")
 {
     /*
        (16) FACT............
@@ -105,6 +106,7 @@ TEST_CASE("Set next friendly")
     esm.setNextFriendlyTo("RNAM");
     REQUIRE(esm.getFriendlyId() == "RNAM");
     REQUIRE(esm.isFriendlyValid() == true);
+    REQUIRE(esm.getFriendlyWithNull().size() == 32);
     REQUIRE(esm.getFriendlyText() == "Retainer");
     REQUIRE(esm.getFriendlyPos() == (16 + 16 + 28 + 40));
     REQUIRE(esm.getFriendlySize() == 32);

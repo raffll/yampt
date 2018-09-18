@@ -694,10 +694,10 @@ void EsmConverter::convertSCPT()
         if(esm.getRecordId() == "SCPT")
         {
             esm.setUniqueTo("SCHD");
-            esm.setFriendlyTo("SCDT", false);
+            esm.setFriendlyTo("SCDT");
             if(esm.isFriendlyValid() == true)
             {
-                compiled_data = esm.getFriendlyText();
+                compiled_data = esm.getFriendlyWithNull();
             }
             esm.setFriendlyTo("SCTX");
             if(esm.isFriendlyValid() == true)
@@ -712,12 +712,12 @@ void EsmConverter::convertSCPT()
                 {
                     esm.setFriendlyTo("SCTX");
                     convertRecordContent(new_script.first);
-                    esm.setFriendlyTo("SCDT", false);
+                    esm.setFriendlyTo("SCDT");
                     convertRecordContent(new_script.second);
 
                     // Compiled script data size in script name
-                    esm.setFriendlyTo("SCHD", false);
-                    new_header = esm.getFriendlyText();
+                    esm.setFriendlyTo("SCHD");
+                    new_header = esm.getFriendlyWithNull();
                     new_header.erase(44, 4);
                     new_header.insert(44, tools.convertUIntToStringByteArray(new_script.second.size()));
                     convertRecordContent(new_header);

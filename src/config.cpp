@@ -1,6 +1,29 @@
 #include "config.hpp"
 
 //----------------------------------------------------------
+std::string Tools::readFile(const std::string &path)
+{
+    std::string content;
+    std::ifstream file(path, std::ios::binary);
+    if(file)
+    {
+        char buffer[16384];
+        size_t size = file.tellg();
+        content.reserve(size);
+        std::streamsize chars_read;
+        while(file.read(buffer, sizeof(buffer)), chars_read = file.gcount())
+        {
+            content.append(buffer, chars_read);
+        }
+    }
+    else
+    {
+        std::cout << "--> Error loading \"" + path + "\" (wrong path)!" << std::endl;
+    }
+    return content;
+}
+
+//----------------------------------------------------------
 void Tools::writeDict(const yampt::dict_t &dict, const std::string &name)
 {
     if(getNumberOfElementsInDict(dict) > 0)
@@ -18,7 +41,7 @@ void Tools::writeDict(const yampt::dict_t &dict, const std::string &name)
             }
         }
         std::cout << "--> Writing " << std::to_string(getNumberOfElementsInDict(dict)) <<
-                     " records to " << name << "..." << std::endl;
+                     " records to \"" << name << "\"..." << std::endl;
     }
     else
     {
@@ -31,7 +54,7 @@ void Tools::writeText(const std::string &text, const std::string &name)
 {
     std::ofstream file(name, std::ios::binary);
     file << text;
-    std::cout << "--> Writing " << name << "..." << std::endl;
+    std::cout << "--> Writing \"" << name << "\"..." << std::endl;
 }
 
 //----------------------------------------------------------
@@ -42,7 +65,7 @@ void Tools::writeFile(const std::vector<std::string> &rec_coll, const std::strin
     {
         file << elem;
     }
-    std::cout << "--> Writing " << name << "..." << std::endl;
+    std::cout << "--> Writing \"" << name << "\"..." << std::endl;
 }
 
 //----------------------------------------------------------
@@ -112,7 +135,7 @@ bool Tools::caseInsensitiveStringCmp(std::string lhs, std::string rhs)
 }
 
 //----------------------------------------------------------
-std::string Tools::eraseNullChars(std::string &str)
+std::string Tools::eraseNullChars(std::string str)
 {
     size_t is_null = str.find('\0');
     if(is_null != std::string::npos)
@@ -123,7 +146,7 @@ std::string Tools::eraseNullChars(std::string &str)
 }
 
 //----------------------------------------------------------
-std::string Tools::eraseCarriageReturnChar(std::string &str)
+std::string Tools::eraseCarriageReturnChar(std::string str)
 {
     if(str.find('\r') != std::string::npos)
     {
@@ -151,7 +174,7 @@ std::string Tools::replaceNonReadableCharsWithDot(const std::string &str)
 }
 
 //----------------------------------------------------------
-std::string Tools::addDialogTopicsToINFOStrings(yampt::inner_dict_t dict,
+std::string Tools::addDialogTopicsToINFOStrings(yampt::single_dict_t dict,
                                                 const std::string &friendly_text,
                                                 bool extended)
 {

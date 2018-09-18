@@ -9,12 +9,9 @@ public:
     void setRecordTo(size_t i);
     void replaceRecordContent(const std::string &new_rec);
 
-    void setUniqueTo(const std::string id,
-                     const bool erase_null = true);
-    void setFriendlyTo(const std::string &id,
-                       const bool erase_null = true);
-    void setNextFriendlyTo(const std::string &id,
-                           const bool erase_null = true);
+    void setUniqueTo(const std::string &id);
+    void setFriendlyTo(const std::string &id);
+    void setNextFriendlyTo(const std::string &id);
 
     bool isLoaded() { return is_loaded; }
     std::string getNameFull() { return name_full; }
@@ -26,11 +23,13 @@ public:
     std::string getRecordContent() { return *rec; }
     std::string getRecordId() { return rec_id; }
 
-    std::string getUniqueText() { return unique_text; }
+    std::string getUniqueWithNull() { return unique_text; }
+    std::string getUniqueText() { return tools.eraseNullChars(unique_text); }
     std::string getUniqueId() { return unique_id; }
     bool isUniqueValid() { return unique_exist; }
 
-    std::string getFriendlyText() { return friendly_text; }
+    std::string getFriendlyWithNull() { return friendly_text; }
+    std::string getFriendlyText() { return tools.eraseNullChars(friendly_text); }
     std::string getFriendlyId() { return friendly_id; }
     size_t getFriendlyPos() { return friendly_pos; }
     size_t getFriendlySize() { return friendly_size; }
@@ -41,7 +40,6 @@ public:
     EsmReader(const std::string &path);
 
 private:
-    std::string readFile(const std::string &path);
     void splitFileIntoRecordColl(const std::string &content,
                                  const std::string &path);
     void setName(const std::string &path);
@@ -50,23 +48,20 @@ private:
     void uniqueMainLoop(std::size_t &cur_pos,
                         std::size_t &cur_size,
                         std::string &cur_id,
-                        std::string &cur_text,
-                        bool erase_null);
+                        std::string &cur_text);
     void caseForDialogType(std::size_t &cur_pos,
                            std::string &cur_text);
     void caseForINDX(std::size_t &cur_pos,
                      std::string &cur_text);
     void caseForDefault(std::size_t &cur_pos,
                         std::size_t &cur_size,
-                        std::string &cur_text,
-                        bool erase_null);
+                        std::string &cur_text);
     void uniqueIfEndOfRecordReached(std::size_t &cur_pos);
 
     void friendlyMainLoop(std::size_t &cur_pos,
                           std::size_t &cur_size,
                           std::string &cur_id,
-                          std::string &cur_text,
-                          bool erase_null);
+                          std::string &cur_text);
     void friendlyIfEndOfRecordReached(std::size_t &cur_pos);
 
     void handleException(const std::exception &e);

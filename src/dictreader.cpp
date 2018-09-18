@@ -5,7 +5,7 @@ DictReader::DictReader(const std::string &path) :
     is_loaded(false)
 {
     std::cout << "--> Loading \"" + path + "\"..." << std::endl;
-    std::string content = readFile(path);
+    std::string content = tools.readFile(path);
     parseDict(content, path);
     setName(path);
     printSummaryLog();
@@ -43,29 +43,6 @@ DictReader& DictReader::operator=(const DictReader& that)
 DictReader::~DictReader()
 {
 
-}
-
-//----------------------------------------------------------
-std::string DictReader::readFile(const std::string &path)
-{
-    std::string content;
-    std::ifstream file(path, std::ios::binary);
-    if(file)
-    {
-        char buffer[16384];
-        size_t size = file.tellg();
-        content.reserve(size);
-        std::streamsize chars_read;
-        while(file.read(buffer, sizeof(buffer)), chars_read = file.gcount())
-        {
-            content.append(buffer, chars_read);
-        }
-    }
-    else
-    {
-        std::cout << "--> Error loading \"" + path + "\" (wrong path)!" << std::endl;
-    }
-    return content;
 }
 
 //----------------------------------------------------------

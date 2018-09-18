@@ -16,33 +16,10 @@ EsmReader::EsmReader(const std::string &path)
       friendly_exist(false)
 {
     std::cout << "--> Loading \"" + path + "\"..." << std::endl;
-    std::string content = readFile(path);
+    std::string content = tools.readFile(path);
     splitFileIntoRecordColl(content, path);
     setName(path);
     setTime(path);
-}
-
-//----------------------------------------------------------
-std::string EsmReader::readFile(const std::string &path)
-{
-    std::string content;
-    std::ifstream file(path, std::ios::binary);
-    if(file)
-    {
-        char buffer[16384];
-        size_t size = file.tellg();
-        content.reserve(size);
-        std::streamsize chars_read;
-        while(file.read(buffer, sizeof(buffer)), chars_read = file.gcount())
-        {
-            content.append(buffer, chars_read);
-        }
-    }
-    else
-    {
-        std::cout << "--> Error loading \"" + path + "\" (wrong path)!" << std::endl;
-    }
-    return content;
 }
 
 //----------------------------------------------------------
@@ -121,8 +98,7 @@ void EsmReader::replaceRecordContent(const std::string &new_rec)
 }
 
 //----------------------------------------------------------
-void EsmReader::setUniqueTo(const std::string id,
-                            const bool erase_null)
+void EsmReader::setUniqueTo(const std::string &id)
 {
     if(is_loaded == true)
     {
@@ -134,7 +110,7 @@ void EsmReader::setUniqueTo(const std::string id,
 
         try
         {
-            uniqueMainLoop(cur_pos, cur_size, cur_id, cur_text, erase_null);
+            uniqueMainLoop(cur_pos, cur_size, cur_id, cur_text);
             uniqueIfEndOfRecordReached(cur_pos);
         }
         catch(std::exception const& e)
@@ -148,8 +124,7 @@ void EsmReader::setUniqueTo(const std::string id,
 void EsmReader::uniqueMainLoop(std::size_t &cur_pos,
                                std::size_t &cur_size,
                                std::string &cur_id,
-                               std::string &cur_text,
-                               bool erase_null)
+                               std::string &cur_text)
 {
     while(cur_pos != rec->size())
     {
@@ -167,7 +142,7 @@ void EsmReader::uniqueMainLoop(std::size_t &cur_pos,
             }
             else
             {
-                caseForDefault(cur_pos, cur_size, cur_text, erase_null);
+                caseForDefault(cur_pos, cur_size, cur_text);
             }
             break;
         }
@@ -200,14 +175,9 @@ void EsmReader::caseForINDX(std::size_t &cur_pos,
 //----------------------------------------------------------
 void EsmReader::caseForDefault(std::size_t &cur_pos,
                                std::size_t &cur_size,
-                               std::string &cur_text,
-                               bool erase_null)
+                               std::string &cur_text)
 {
     cur_text = rec->substr(cur_pos + 8, cur_size);
-    if(erase_null == true)
-    {
-        cur_text = tools.eraseNullChars(cur_text);
-    }
     unique_text = cur_text;
     unique_exist = true;
 }
@@ -223,8 +193,7 @@ void EsmReader::uniqueIfEndOfRecordReached(std::size_t &cur_pos)
 }
 
 //----------------------------------------------------------
-void EsmReader::setFriendlyTo(const std::string &id,
-                              const bool erase_null)
+void EsmReader::setFriendlyTo(const std::string &id)
 {
     if(is_loaded == true)
     {
@@ -237,7 +206,7 @@ void EsmReader::setFriendlyTo(const std::string &id,
 
         try
         {
-            friendlyMainLoop(cur_pos, cur_size, cur_id, cur_text, erase_null);
+            friendlyMainLoop(cur_pos, cur_size, cur_id, cur_text);
             friendlyIfEndOfRecordReached(cur_pos);
         }
         catch(std::exception const& e)
@@ -248,8 +217,7 @@ void EsmReader::setFriendlyTo(const std::string &id,
 }
 
 //----------------------------------------------------------
-void EsmReader::setNextFriendlyTo(const std::string &id,
-                                  const bool erase_null)
+void EsmReader::setNextFriendlyTo(const std::string &id)
 {
     if(is_loaded == true &&
        friendly_exist == true)
@@ -267,7 +235,7 @@ void EsmReader::setNextFriendlyTo(const std::string &id,
 
         try
         {
-            friendlyMainLoop(cur_pos, cur_size, cur_id, cur_text, erase_null);
+            friendlyMainLoop(cur_pos, cur_size, cur_id, cur_text);
             friendlyIfEndOfRecordReached(cur_pos);
         }
         catch(std::exception const& e)
@@ -281,8 +249,7 @@ void EsmReader::setNextFriendlyTo(const std::string &id,
 void EsmReader::friendlyMainLoop(std::size_t &cur_pos,
                                  std::size_t &cur_size,
                                  std::string &cur_id,
-                                 std::string &cur_text,
-                                 bool erase_null)
+                                 std::string &cur_text)
 {
     while(cur_pos != rec->size())
     {
@@ -291,10 +258,6 @@ void EsmReader::friendlyMainLoop(std::size_t &cur_pos,
         if(cur_id == friendly_id)
         {
             cur_text = rec->substr(cur_pos + 8, cur_size);
-            if(erase_null == true)
-            {
-                cur_text = tools.eraseNullChars(cur_text);
-            }
             friendly_text = cur_text;
             friendly_pos = cur_pos;
             friendly_size = cur_size;

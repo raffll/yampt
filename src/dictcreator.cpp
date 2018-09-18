@@ -108,8 +108,8 @@ void DictCreator::printLogLine(const yampt::rec_type type)
     {
         id = "+ " + id;
     }
-    id.resize(12, ' ');
 
+    id.resize(12, ' ');
     std::cout << id
               << std::setw(5) << std::to_string(counter_created) << " / ";
 
@@ -588,7 +588,9 @@ void DictCreator::makeDictDESC()
             if(esm_n.isUniqueValid() == true &&
                esm_n.isFriendlyValid() == true)
             {
-                validateRecord(esm_n.getRecordId() + yampt::sep[0] + esm_n.getUniqueText(),
+                validateRecord(esm_n.getRecordId() +
+                               yampt::sep[0] +
+                        esm_n.getUniqueText(),
                         esm_n.getFriendlyText(),
                         yampt::rec_type::DESC);
             }
@@ -887,13 +889,13 @@ std::string DictCreator::makeDictCELLExtendedPattern(EsmReader &esm_cur)
 {
     std::string pattern;
     // Pattern is the DATA and combined id of all objects in cell
-    esm_cur.setFriendlyTo("DATA", false);
-    pattern += esm_cur.getFriendlyText();
-    esm_cur.setFriendlyTo("NAME", false);
+    esm_cur.setFriendlyTo("DATA");
+    pattern += esm_cur.getFriendlyWithNull();
+    esm_cur.setFriendlyTo("NAME");
     while(esm_cur.isFriendlyValid() == true)
     {
-        esm_cur.setNextFriendlyTo("NAME", false);
-        pattern += esm_cur.getFriendlyText();
+        esm_cur.setNextFriendlyTo("NAME");
+        pattern += esm_cur.getFriendlyWithNull();
     }
     return pattern;
 }
@@ -993,10 +995,10 @@ std::string DictCreator::makeDictDIALExtendedPattern(EsmReader &esm_cur, size_t 
     std::string pattern;
     // Pattern is the INAM and SCVR from next INFO record
     esm_cur.setRecordTo(i + 1);
-    esm_cur.setFriendlyTo("INAM", false);
-    pattern += esm_cur.getFriendlyText();
-    esm_cur.setFriendlyTo("SCVR", false);
-    pattern += esm_cur.getFriendlyText();
+    esm_cur.setFriendlyTo("INAM");
+    pattern += esm_cur.getFriendlyWithNull();
+    esm_cur.setFriendlyTo("SCVR");
+    pattern += esm_cur.getFriendlyWithNull();
     return pattern;
 }
 

@@ -10,8 +10,8 @@ public:
     std::string getNamePrefix(size_t i) { return dict_coll[i].getNamePrefix(); }
 
     yampt::dict_t const& getDict() const { return dict; }
-    yampt::inner_dict_t const& getDict(yampt::rec_type type) const { return dict[type]; }
-    yampt::inner_dict_t const& getDict(size_t type) const { return dict[type]; }
+    yampt::single_dict_t const& getDict(yampt::rec_type type) const { return dict[type]; }
+    yampt::single_dict_t const& getDict(size_t type) const { return dict[type]; }
 
     DictMerger();
     DictMerger(const std::vector<std::string> &path);
