@@ -48,7 +48,7 @@ DictCreator::DictCreator(const std::string &path_n,
 {
     if(esm_n.isLoaded() == true)
     {
-        makeDictExtended();
+        makeDictBasic();
     }
 }
 
