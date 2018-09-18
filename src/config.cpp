@@ -213,3 +213,15 @@ std::string Tools::addDialogTopicsToINFOStrings(yampt::single_dict_t dict,
     }
     return new_friendly;
 }
+
+//----------------------------------------------------------
+void Tools::addLog(const std::string log)
+{
+    this->log += log + "\r\n";
+}
+
+//----------------------------------------------------------
+void Tools::clearLog()
+{
+    log.clear();
+}

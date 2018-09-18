@@ -101,6 +101,12 @@ public:
     std::string addDialogTopicsToINFOStrings(yampt::single_dict_t dict,
                                              const std::string &friendly_text,
                                              bool extended);
+    void addLog(const std::string log);
+    void clearLog();
+    std::string getLog() { return log; }
+
+private:
+    std::string log;
 };
 
 #endif // CONFIG_HPP

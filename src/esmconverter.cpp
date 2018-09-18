@@ -133,8 +133,8 @@ std::string EsmConverter::setNewScriptBNAM(const std::string &prefix,
     ScriptParser parser(yampt::rec_type::BNAM,
                         *merger,
                         prefix,
-                        friendly_text);
-    parser.convertScript();
+                        friendly_text,
+                        "");
     new_friendly = parser.getNewFriendly();
     setToConvertFlag(friendly_text, new_friendly);
     return new_friendly;
@@ -153,7 +153,6 @@ std::pair<std::string, std::string> EsmConverter::setNewScriptSCPT(const std::st
                         prefix,
                         friendly_text,
                         compiled_data);
-    parser.convertScript();
     new_friendly = parser.getNewFriendly();
     new_compiled = parser.getNewCompiled();
     setToConvertFlag(friendly_text, new_friendly);

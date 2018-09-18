@@ -10,20 +10,6 @@ ScriptParser::ScriptParser()
 ScriptParser::ScriptParser(const yampt::rec_type type,
                            DictMerger &merger,
                            const std::string &prefix,
-                           const std::string &friendly_text)
-    : type(type),
-      merger(&merger),
-      prefix(prefix),
-      friendly_text(friendly_text),
-      pos_in_compiled(0)
-{
-
-}
-
-//----------------------------------------------------------
-ScriptParser::ScriptParser(const yampt::rec_type type,
-                           DictMerger &merger,
-                           const std::string &prefix,
                            const std::string &friendly_text,
                            const std::string &compiled_data)
     : type(type),
@@ -33,7 +19,7 @@ ScriptParser::ScriptParser(const yampt::rec_type type,
       compiled_data(compiled_data),
       pos_in_compiled(0)
 {
-
+    convertScript();
 }
 
 //----------------------------------------------------------

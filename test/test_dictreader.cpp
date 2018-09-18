@@ -6,5 +6,5 @@ using namespace std;
 
 TEST_CASE("Parse dict")
 {
-    DictReader reader()
+    //DictReader reader()
 }

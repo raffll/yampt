@@ -55,9 +55,7 @@ DictCreator::DictCreator(const std::string &path_n,
 //----------------------------------------------------------
 void DictCreator::makeDictBasic()
 {
-    std::cout << "-----------------------------------------------" << std::endl
-              << "          Created / Missing / Identical /   All" << std::endl
-              << "-----------------------------------------------" << std::endl;
+    printLogHeader();
     makeDictCELL();
     makeDictCELLWilderness();
     makeDictCELLRegion();
@@ -71,15 +69,13 @@ void DictCreator::makeDictBasic()
     makeDictINFO();
     makeDictBNAM();
     makeDictSCPT();
-    std::cout << "-----------------------------------------------" << std::endl;
+    printLogSummary();
 }
 
 //----------------------------------------------------------
 void DictCreator::makeDictExtended()
 {
-    std::cout << "-----------------------------------------------" << std::endl
-              << "          Created / Missing / Identical /   All" << std::endl
-              << "-----------------------------------------------" << std::endl;
+    printLogHeader();
     makeDictCELLExtended();
     makeDictCELLWildernessExtended();
     makeDictCELLRegionExtended();
@@ -93,9 +89,34 @@ void DictCreator::makeDictExtended()
     makeDictINFO();
     makeDictBNAMExtended();
     makeDictSCPTExtended();
-    std::cout << "-----------------------------------------------" << std::endl;
-    std::cout << "--> Check dictionary for \"MISSING\" keyword!" << std::endl;
-    std::cout << "    Missing CELL and DIAL records needs to be added manually!" << std::endl;
+    printLogSummary();
+}
+
+//----------------------------------------------------------
+void DictCreator::printLogHeader()
+{
+    std::cout << "-----------------------------------------------" << std::endl
+              << "          Created / Missing / Identical /   All" << std::endl
+              << "-----------------------------------------------" << std::endl;
+}
+
+//----------------------------------------------------------
+void DictCreator::printLogSummary()
+{
+    std::string log = tools.getLog();
+    if(log.empty())
+    {
+        std::cout << "-----------------------------------------------" << std::endl;
+    }
+    else
+    {
+        std::cout << "-----------------------------------------------" << std::endl
+                  << log
+                  << "-----------------------------------------------" << std::endl
+                  << "--> Check dictionary for \"MISSING\" keyword!" << std::endl
+                  << "    Missing CELL and DIAL records needs to be added manually!" << std::endl;
+        tools.clearLog();
+    }
 }
 
 //----------------------------------------------------------
@@ -297,14 +318,10 @@ void DictCreator::insertRecordToDict(const std::string &unique_text,
         {
             std::string unique_current = unique_text + yampt::err[0] + "DOUBLED_" +
                                          std::to_string(counter_doubled) + yampt::err[1];
-            if(dict[type].insert({unique_current, friendly_text}).second == true)
-            {
-                counter_doubled++;
-            }
-            else
-            {
-                counter_identical++;
-            }
+            dict[type].insert({unique_current, friendly_text});
+            counter_doubled++;
+            counter_created++;
+            tools.addLog("Doubled " + yampt::type_name[type] + ": " + unique_text);
         }
         else
         {
@@ -915,6 +932,7 @@ void DictCreator::makeDictCELLExtendedAddMissing()
                 validateRecord(esm_f.getFriendlyText(),
                                yampt::err[0] + "MISSING" + yampt::err[1],
                         yampt::rec_type::CELL);
+                tools.addLog("Missing CELL: " + esm_f.getFriendlyText());
             }
         }
     }
@@ -1016,6 +1034,7 @@ void DictCreator::makeDictDIALExtendedAddMissing()
                 validateRecord(esm_f.getFriendlyText(),
                                yampt::err[0] + "MISSING" + yampt::err[1],
                         yampt::rec_type::DIAL);
+                tools.addLog("Missing DIAL: " + esm_f.getFriendlyText());
             }
         }
     }
