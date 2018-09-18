@@ -97,7 +97,7 @@ void DictReader::validateRecord(const std::string &id,
     {
         if(friendly_text.size() > 63)
         {
-            printWarningLog(id, unique_text, "Too long, more than 63 bytes!");
+            tools.addLog("Too long, more than 63 bytes in " + id + ": " + unique_text);
             counter_invalid++;
         }
         else
@@ -137,7 +137,7 @@ void DictReader::validateRecord(const std::string &id,
     {
         if(friendly_text.size() > 32)
         {
-            printWarningLog(id, unique_text, "Too long, more than 32 bytes!");
+            tools.addLog("Too long, more than 32 bytes in " + id + ": " + unique_text);
             counter_invalid++;
         }
         else
@@ -149,7 +149,7 @@ void DictReader::validateRecord(const std::string &id,
     {
         if(friendly_text.size() > 31)
         {
-            printWarningLog(id, unique_text, "Too long, more than 31 bytes!");
+            tools.addLog("Too long, more than 31 bytes in " + id + ": " + unique_text);
             counter_invalid++;
         }
         else
@@ -161,7 +161,7 @@ void DictReader::validateRecord(const std::string &id,
     {
         if(friendly_text.size() > 512)
         {
-            printWarningLog(id, unique_text, "Ok, but more than 512 bytes!");
+            tools.addLog("Ok, but more than 512 bytes in " + id + ": " + unique_text);
             insertRecord(yampt::rec_type::INFO, unique_text, friendly_text);
         }
         else
@@ -171,7 +171,7 @@ void DictReader::validateRecord(const std::string &id,
     }
     else
     {
-        printWarningLog(id, unique_text, "Invalid record!");
+        tools.addLog("Invalid id " + id + ": " + unique_text);
         counter_invalid++;
     }
 
@@ -188,17 +188,9 @@ void DictReader::insertRecord(const yampt::rec_type type,
     }
     else
     {
-        printWarningLog(yampt::type_name[type], unique_text, "Doubled record!");
+        tools.addLog("Doubled " + yampt::type_name[type] + ": " + unique_text);
         counter_doubled++;
     }
-}
-
-//----------------------------------------------------------
-void DictReader::printWarningLog(const std::string &id,
-                                 const std::string &unique_text,
-                                 const std::string &comment)
-{
-    std::cerr << "Warning! " << id << ": " << unique_text << " --> " << comment << std::endl;
 }
 
 //----------------------------------------------------------
@@ -212,4 +204,10 @@ void DictReader::printSummaryLog()
               << std::setw(7) << std::to_string(counter_invalid) << " / "
               << std::setw(6) << std::to_string(counter_all) << std::endl
               << "---------------------------------------" << std::endl;
+    if(!tools.getLog().empty())
+    {
+        std::cout << tools.getLog()
+                  << "---------------------------------------" << std::endl;
+        tools.clearLog();
+    }
 }

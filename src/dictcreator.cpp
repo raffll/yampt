@@ -103,15 +103,14 @@ void DictCreator::printLogHeader()
 //----------------------------------------------------------
 void DictCreator::printLogSummary()
 {
-    std::string log = tools.getLog();
-    if(log.empty())
+    if(tools.getLog().empty())
     {
         std::cout << "-----------------------------------------------" << std::endl;
     }
     else
     {
         std::cout << "-----------------------------------------------" << std::endl
-                  << log
+                  << tools.getLog()
                   << "-----------------------------------------------" << std::endl
                   << "--> Check dictionary for \"MISSING\" keyword!" << std::endl
                   << "    Missing CELL and DIAL records needs to be added manually!" << std::endl;
