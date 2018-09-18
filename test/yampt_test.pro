@@ -19,12 +19,15 @@ SOURCES += \
     ../src/esmreader.cpp \
     ../src/config.cpp \
     ../src/dictcreator.cpp \
+    ../src/dictreader.cpp \
     test_main.cpp \
     test_tools.cpp \
     test_esmreader.cpp \
-    test_dictcreator.cpp
+    test_dictcreator.cpp \
+    test_dictreader.cpp
 
 HEADERS += \
     ../src/esmreader.hpp \
     ../src/config.hpp \
-    ../src/dictcreator.hpp
+    ../src/dictcreator.hpp \
+    ../src/dictreader.hpp

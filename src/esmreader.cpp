@@ -15,7 +15,6 @@ EsmReader::EsmReader(const std::string &path)
       unique_exist(false),
       friendly_exist(false)
 {
-    std::cout << "--> Loading \"" + path + "\"..." << std::endl;
     std::string content = tools.readFile(path);
     splitFileIntoRecordColl(content, path);
     setName(path);
@@ -45,14 +44,14 @@ void EsmReader::splitFileIntoRecordColl(const std::string &content,
         }
         catch(std::exception const& e)
         {
-            std::cout << "--> Error loading \"" + path + "\" (possibly broken file or record)!" << std::endl;
+            std::cout << "--> Error parsing \"" + path + "\" (possibly broken file or record)!" << std::endl;
             std::cout << "--> Exception: " << e.what() << std::endl;
             is_loaded = false;
         }
     }
     else
     {
-        std::cout << "--> Error loading \"" + path + "\" (isn't TES3 plugin)!" << std::endl;
+        std::cout << "--> Error parsing \"" + path + "\" (isn't TES3 plugin)!" << std::endl;
         is_loaded = false;
     }
 }

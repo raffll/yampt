@@ -4,7 +4,6 @@
 DictReader::DictReader(const std::string &path) :
     is_loaded(false)
 {
-    std::cout << "--> Loading \"" + path + "\"..." << std::endl;
     std::string content = tools.readFile(path);
     parseDict(content, path);
     setName(path);
@@ -83,7 +82,7 @@ void DictReader::parseDict(const std::string &content,
     }
     catch(std::exception const& e)
     {
-        std::cout << "--> Error loading \"" + path + "\" (possibly broken dictionary)!" << std::endl;
+        std::cout << "--> Error parsing \"" + path + "\" (possibly broken dictionary)!" << std::endl;
         std::cout << "--> Exception: " << e.what() << std::endl;
         is_loaded = false;
     }

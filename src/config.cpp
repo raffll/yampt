@@ -7,6 +7,7 @@ std::string Tools::readFile(const std::string &path)
     std::ifstream file(path, std::ios::binary);
     if(file)
     {
+        std::cout << "--> Loading \"" + path + "\"..." << std::endl;
         char buffer[16384];
         size_t size = file.tellg();
         content.reserve(size);
