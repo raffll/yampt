@@ -19,6 +19,14 @@ DictMerger::DictMerger(const std::vector<std::string> &path)
 }
 
 //----------------------------------------------------------
+void DictMerger::addRecord(const yampt::rec_type type,
+                           const std::string &unique_text,
+                           const std::string &friendly_text)
+{
+    dict[type].insert({unique_text, friendly_text});
+}
+
+//----------------------------------------------------------
 void DictMerger::mergeDict()
 {
     for(size_t i = 0; i < dict_coll.size(); ++i)

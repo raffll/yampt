@@ -19,6 +19,7 @@ public:
 
 private:
     void convertScript();
+    void stripLastNewLineChars();
     std::string checkLine(const std::string &line,
                           const std::string &line_lc);
     std::string checkLine(const std::string &line,

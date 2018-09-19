@@ -5,7 +5,7 @@
 
 using namespace std;
 
-TEST_CASE("Create raw")
+TEST_CASE("Create raw", "[!hide]")
 {
     DictCreator esm("master/en/Morrowind.esm");
     REQUIRE(esm.getDict(yampt::rec_type::CELL).begin()->first == "Abaelun Mine");
@@ -30,7 +30,7 @@ TEST_CASE("Create raw")
     REQUIRE(esm.getDict(yampt::rec_type::SCTX).begin()->first == esm.getDict(yampt::rec_type::SCTX).begin()->second);
 }
 
-TEST_CASE("Create base, same record order")
+TEST_CASE("Create base, same record order", "[!hide]")
 {
     DictCreator esm("master/pl/Morrowind.esm", "master/en/Morrowind.esm");
     auto search = esm.getDict(yampt::rec_type::CELL).find("Abaelun Mine");
@@ -45,7 +45,7 @@ TEST_CASE("Create base, same record order")
     REQUIRE(search == esm.getDict(yampt::rec_type::INFO).end());
 }
 
-TEST_CASE("Create base, different record order")
+TEST_CASE("Create base, different record order", "[!hide]")
 {
     DictCreator esm("master/de/Morrowind.esm", "master/en/Morrowind.esm");
     auto search = esm.getDict(yampt::rec_type::CELL).find("Abaelun Mine");

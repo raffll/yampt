@@ -105,7 +105,7 @@ std::string EsmConverter::setNewFriendly(const yampt::rec_type type,
     if(search != merger->getDict(type).end())
     {
         new_friendly = search->second;
-        setToConvertFlag(friendly_text, new_friendly);
+        checkIfIdentical(friendly_text, new_friendly);
     }
     else if(type == yampt::rec_type::INFO &&
             add_dial == true &&
@@ -114,7 +114,7 @@ std::string EsmConverter::setNewFriendly(const yampt::rec_type type,
         new_friendly = tools.addDialogTopicsToINFOStrings(merger->getDict(yampt::rec_type::DIAL),
                                                           friendly_text,
                                                           false);
-        setToConvertFlag(friendly_text, new_friendly);
+        checkIfIdentical(friendly_text, new_friendly);
     }
     else
     {
@@ -125,42 +125,27 @@ std::string EsmConverter::setNewFriendly(const yampt::rec_type type,
 }
 
 //----------------------------------------------------------
-std::string EsmConverter::setNewScriptBNAM(const std::string &prefix,
-                                           const std::string &friendly_text)
-{
-    counter_all++;
-    std::string new_friendly;
-    ScriptParser parser(yampt::rec_type::BNAM,
-                        *merger,
-                        prefix,
-                        friendly_text,
-                        "");
-    new_friendly = parser.getNewFriendly();
-    setToConvertFlag(friendly_text, new_friendly);
-    return new_friendly;
-}
-
-//----------------------------------------------------------
-std::pair<std::string, std::string> EsmConverter::setNewScriptSCPT(const std::string &prefix,
-                                                                   const std::string &friendly_text,
-                                                                   const std::string &compiled_data)
+std::pair<std::string, std::string> EsmConverter::setNewScript(const yampt::rec_type type,
+                                                               const std::string &line_prefix,
+                                                               const std::string &friendly_text,
+                                                               const std::string &compiled_data)
 {
     counter_all++;
     std::string new_friendly;
     std::string new_compiled;
-    ScriptParser parser(yampt::rec_type::SCTX,
+    ScriptParser parser(type,
                         *merger,
-                        prefix,
+                        line_prefix,
                         friendly_text,
                         compiled_data);
     new_friendly = parser.getNewFriendly();
     new_compiled = parser.getNewCompiled();
-    setToConvertFlag(friendly_text, new_friendly);
+    checkIfIdentical(friendly_text, new_friendly);
     return make_pair(new_friendly, new_compiled);
 }
 
 //----------------------------------------------------------
-void EsmConverter::setToConvertFlag(const std::string &friendly_text,
+void EsmConverter::checkIfIdentical(const std::string &friendly_text,
                                     const std::string &new_friendly)
 {
     if(new_friendly != friendly_text)
@@ -652,8 +637,7 @@ void EsmConverter::convertINFO()
 //----------------------------------------------------------
 void EsmConverter::convertBNAM()
 {
-    std::string prefix;
-    std::string new_friendly;
+    std::pair<std::string, std::string> new_script;
     resetCounters();
     for(size_t i = 0; i < esm.getRecordColl().size(); ++i)
     {
@@ -665,11 +649,13 @@ void EsmConverter::convertBNAM()
             if(esm.isUniqueValid() == true &&
                esm.isFriendlyValid() == true)
             {
-                prefix = esm.getUniqueText() + yampt::sep[0];
-                new_friendly = setNewScriptBNAM(prefix, esm.getFriendlyText());
+                new_script = setNewScript(yampt::rec_type::BNAM,
+                                          esm.getUniqueText() + yampt::sep[0],
+                        esm.getFriendlyText(),
+                        "");
                 if(to_convert == true)
                 {
-                    convertRecordContent(new_friendly);
+                    convertRecordContent(new_script.first);
                 }
             }
         }
@@ -680,8 +666,6 @@ void EsmConverter::convertBNAM()
 //----------------------------------------------------------
 void EsmConverter::convertSCPT()
 {
-    std::string prefix;
-    std::string friendly_text;
     std::string compiled_data;
     std::pair<std::string, std::string> new_script;
     std::string new_header;
@@ -698,15 +682,18 @@ void EsmConverter::convertSCPT()
             {
                 compiled_data = esm.getFriendlyWithNull();
             }
-            esm.setFriendlyTo("SCTX");
-            if(esm.isFriendlyValid() == true)
+            else
             {
-                friendly_text = esm.getFriendlyText();
+                compiled_data.clear();
             }
-            if(esm.isUniqueValid() == true)
+            esm.setFriendlyTo("SCTX");
+            if(esm.isUniqueValid() == true &&
+               esm.isFriendlyValid() == true)
             {
-                prefix = esm.getUniqueText() + yampt::sep[0];
-                new_script = setNewScriptSCPT(prefix, friendly_text, compiled_data);
+                new_script = setNewScript(yampt::rec_type::SCTX,
+                                          esm.getUniqueText() + yampt::sep[0],
+                        esm.getFriendlyText(),
+                        compiled_data);
                 if(to_convert == true)
                 {
                     esm.setFriendlyTo("SCTX");

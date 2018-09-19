@@ -16,6 +16,10 @@ public:
     DictMerger();
     DictMerger(const std::vector<std::string> &path);
 
+    void addRecord(const yampt::rec_type type,
+                   const std::string &unique_text,
+                   const std::string &friendly_text);
+
 private:
     void mergeDict();
     void printSummaryLog();

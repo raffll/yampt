@@ -20,6 +20,7 @@ SOURCES += \
     ../src/config.cpp \
     ../src/dictcreator.cpp \
     ../src/dictreader.cpp \
+    ../src/dictmerger.cpp \
     ../src/scriptparser.cpp \
     test_main.cpp \
     test_tools.cpp \
@@ -33,4 +34,5 @@ HEADERS += \
     ../src/config.hpp \
     ../src/dictcreator.hpp \
     ../src/dictreader.hpp \
+    ../src/dictmerger.hpp \
     ../src/scriptparser.hpp
