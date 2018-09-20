@@ -5,6 +5,25 @@
 
 using namespace std;
 
+TEST_CASE("Say keyword")
+{
+    DictMerger merger;
+    merger.addRecord(yampt::rec_type::BNAM, "prefix^\"Test\"->Say \"Test.wav\" \"Test\"", "prefix^\"Test\"->Say \"Test.wav\" \"Result\"");
+    vector<std::pair<std::string, std::string>> lines;
+    lines.push_back(make_pair("\"Test\"->Say \"Test.wav\" \"Test\"", "\"Test\"->Say \"Test.wav\" \"Result\""));
+
+    for(size_t i = 0; i < lines.size(); ++i)
+    {
+        ScriptParser parser(yampt::rec_type::BNAM,
+                            merger,
+                            "prefix",
+                            lines[i].first,
+                            "");
+
+        REQUIRE(parser.getNewFriendly() == lines[i].second);
+    }
+}
+
 TEST_CASE("AddTopic keyword")
 {
     DictMerger merger;
