@@ -8,3 +8,7 @@
     - [feature] creator now adds hyperlinks to created dictionaries
     - [feature] remove unnecessary functionality
     - [bug] various fixes in script parser
+
+    0.16
+    - [feature] remove log file, all errors are now displayed in console
+    - [feature] add -a switch to creator, if you want to add hiperlinks to NOTFOUND and CHANGED dictionaries
