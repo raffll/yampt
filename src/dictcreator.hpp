@@ -20,7 +20,8 @@ public:
                 const std::string &path_f);
     DictCreator(const std::string &path_n,
                 DictMerger &merger,
-                const yampt::ins_mode mode);
+                const yampt::ins_mode mode,
+                const bool add_dial);
 
 private:
     void makeDictBasic();
@@ -99,6 +100,7 @@ private:
     std::vector<std::string> message_f;
 
     const yampt::ins_mode mode;
+    const bool add_dial;
 
     int counter_created;
     int counter_missing;

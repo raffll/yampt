@@ -5,7 +5,8 @@ DictCreator::DictCreator(const std::string &path_n)
     : esm_n(path_n),
       esm_ptr(&esm_n),
       message_ptr(&message_n),
-      mode(yampt::ins_mode::RAW)
+      mode(yampt::ins_mode::RAW),
+      add_dial(false)
 {
     if(esm_n.isLoaded() == true)
     {
@@ -20,7 +21,8 @@ DictCreator::DictCreator(const std::string &path_n,
       esm_f(path_f),
       esm_ptr(&esm_f),
       message_ptr(&message_f),
-      mode(yampt::ins_mode::BASE)
+      mode(yampt::ins_mode::BASE),
+      add_dial(false)
 {
     if(esm_n.isLoaded() == true &&
        esm_f.isLoaded() == true)
@@ -39,12 +41,14 @@ DictCreator::DictCreator(const std::string &path_n,
 //----------------------------------------------------------
 DictCreator::DictCreator(const std::string &path_n,
                          DictMerger &merger,
-                         const yampt::ins_mode mode)
+                         const yampt::ins_mode mode,
+                         const bool add_dial)
     : esm_n(path_n),
       esm_ptr(&esm_n),
       merger(&merger),
       message_ptr(&message_n),
-      mode(mode)
+      mode(mode),
+      add_dial(add_dial)
 {
     if(esm_n.isLoaded() == true)
     {
@@ -252,7 +256,8 @@ void DictCreator::validateRecordForModeNOT(const std::string &unique_text,
     auto search = merger->getDict(type).find(unique_text);
     if(search == merger->getDict(type).end())
     {
-        if(type == yampt::rec_type::INFO)
+        if(type == yampt::rec_type::INFO &&
+           add_dial == true)
         {
             new_friendly = tools.addDialogTopicsToINFOStrings(merger->getDict(yampt::rec_type::DIAL),
                                                               friendly_text,
@@ -285,7 +290,8 @@ void DictCreator::validateRecordForModeCHANGED(const std::string &unique_text,
         {
             if(search->second != friendly_text)
             {
-                if(type == yampt::rec_type::INFO)
+                if(type == yampt::rec_type::INFO &&
+                   add_dial == true)
                 {
                     new_friendly = tools.addDialogTopicsToINFOStrings(merger->getDict(yampt::rec_type::DIAL),
                                                                       friendly_text,
