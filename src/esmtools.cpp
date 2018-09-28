@@ -11,7 +11,7 @@ EsmTools::EsmTools(const std::string &path)
 std::string EsmTools::dumpFile()
 {
     std::string dump;
-    if(esm.getIsLoaded() == true)
+    if(esm.isLoaded() == true)
     {
         for(size_t i = 0; i < esm.getRecordColl().size(); ++i)
         {
@@ -44,7 +44,7 @@ std::string EsmTools::makeScriptList()
     std::string scripts;
     std::string compiled;
     std::map<std::string, std::pair<std::string, std::string>> scripts_coll;
-    if(esm.getIsLoaded() == true)
+    if(esm.isLoaded() == true)
     {
         for(size_t i = 0; i < esm.getRecordColl().size(); ++i)
         {
@@ -52,15 +52,15 @@ std::string EsmTools::makeScriptList()
             if(esm.getRecordId() == "INFO")
             {
                 esm.setUniqueTo("INAM");
-                esm.setFirstFriendlyTo("BNAM");
+                esm.setFriendlyTo("BNAM");
                 scripts_coll.insert({esm.getUniqueText(), make_pair(esm.getFriendlyText(), "")});
             }
             if(esm.getRecordId() == "SCPT")
             {
                 esm.setUniqueTo("SCHD");
-                esm.setFirstFriendlyTo("SCDT", false);
-                compiled = tools.replaceNonReadableCharsWithDot(esm.getFriendlyText());
-                esm.setFirstFriendlyTo("SCTX");
+                esm.setFriendlyTo("SCDT");
+                compiled = tools.replaceNonReadableCharsWithDot(esm.getFriendlyWithNull());
+                esm.setFriendlyTo("SCTX");
                 scripts_coll.insert({esm.getUniqueText(), make_pair(esm.getFriendlyText(), compiled)});
             }
         }

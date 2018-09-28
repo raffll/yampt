@@ -1,9 +1,13 @@
 #include "dictreader.hpp"
 
 //----------------------------------------------------------
-DictReader::DictReader()
+DictReader::DictReader(const std::string &path) :
+    is_loaded(false)
 {
-
+    std::string content = tools.readFile(path);
+    parseDict(content, path);
+    setName(path);
+    printSummaryLog();
 }
 
 //----------------------------------------------------------
@@ -11,8 +15,7 @@ DictReader::DictReader(const DictReader& that)
     : name_full(that.name_full),
       name_prefix(that.name_prefix),
       dict(that.dict),
-      log(that.log),
-      status(that.status),
+      is_loaded(that.is_loaded),
       counter_loaded(that.counter_loaded),
       counter_invalid(that.counter_invalid),
       counter_doubled(that.counter_doubled),
@@ -27,8 +30,7 @@ DictReader& DictReader::operator=(const DictReader& that)
     name_full = that.name_full;
     name_prefix = that.name_prefix;
     dict = that.dict;
-    log = that.log;
-    status = that.status;
+    is_loaded = that.is_loaded;
     counter_loaded = that.counter_loaded;
     counter_invalid = that.counter_invalid;
     counter_doubled = that.counter_doubled;
@@ -40,30 +42,6 @@ DictReader& DictReader::operator=(const DictReader& that)
 DictReader::~DictReader()
 {
 
-}
-
-//----------------------------------------------------------
-void DictReader::readFile(const std::string &path)
-{
-    std::ifstream file(path, std::ios::binary);
-    if(file)
-    {
-        std::string content;
-        char buffer[16384];
-        size_t size = file.tellg();
-        content.reserve(size);
-        std::streamsize chars_read;
-        while(file.read(buffer, sizeof(buffer)), chars_read = file.gcount())
-        {
-            content.append(buffer, chars_read);
-        }
-        parseDict(content, path);
-    }
-    else
-    {
-        std::cout << "--> Error while loading " + path + " (wrong path)!" << std::endl;
-        status = false;
-    }
 }
 
 //----------------------------------------------------------
@@ -100,16 +78,13 @@ void DictReader::parseDict(const std::string &content,
             counter_all++;
             next++;
         }
-        std::cout << "--> Loading " + path + "..." << std::endl;
-        printLog();
-        setName(path);
-        status = true;
+        is_loaded = true;
     }
     catch(std::exception const& e)
     {
-        std::cout << "--> Error in function parseDict() (possibly broken dictionary)!" << std::endl;
+        std::cout << "--> Error parsing \"" + path + "\" (possibly broken dictionary)!" << std::endl;
         std::cout << "--> Exception: " << e.what() << std::endl;
-        status = false;
+        is_loaded = false;
     }
 }
 
@@ -122,7 +97,7 @@ void DictReader::validateRecord(const std::string &id,
     {
         if(friendly_text.size() > 63)
         {
-            makeLog(id, unique_text, friendly_text, "Too long, more than 63 bytes!");
+            tools.addLog("Too long, more than 63 bytes in " + id + ": " + unique_text);
             counter_invalid++;
         }
         else
@@ -162,7 +137,7 @@ void DictReader::validateRecord(const std::string &id,
     {
         if(friendly_text.size() > 32)
         {
-            makeLog(id, unique_text, friendly_text, "Too long, more than 32 bytes!");
+            tools.addLog("Too long, more than 32 bytes in " + id + ": " + unique_text);
             counter_invalid++;
         }
         else
@@ -174,7 +149,7 @@ void DictReader::validateRecord(const std::string &id,
     {
         if(friendly_text.size() > 31)
         {
-            makeLog(id, unique_text, friendly_text, "Too long, more than 31 bytes!");
+            tools.addLog("Too long, more than 31 bytes in " + id + ": " + unique_text);
             counter_invalid++;
         }
         else
@@ -186,7 +161,7 @@ void DictReader::validateRecord(const std::string &id,
     {
         if(friendly_text.size() > 512)
         {
-            makeLog(id, unique_text, friendly_text, "Ok, but more than 512 bytes!");
+            tools.addLog("Ok, but more than 512 bytes in " + id + ": " + unique_text);
             insertRecord(yampt::rec_type::INFO, unique_text, friendly_text);
         }
         else
@@ -196,7 +171,7 @@ void DictReader::validateRecord(const std::string &id,
     }
     else
     {
-        makeLog(id, unique_text, friendly_text, "Invalid record!");
+        tools.addLog("Invalid id " + id + ": " + unique_text);
         counter_invalid++;
     }
 
@@ -213,28 +188,13 @@ void DictReader::insertRecord(const yampt::rec_type type,
     }
     else
     {
-        makeLog(yampt::type_name[type], unique_text, friendly_text, "Doubled record!");
+        tools.addLog("Doubled " + yampt::type_name[type] + ": " + unique_text);
         counter_doubled++;
     }
 }
 
 //----------------------------------------------------------
-void DictReader::makeLog(const std::string &id,
-                         const std::string &unique_text,
-                         const std::string &friendly_text,
-                         const std::string &comment)
-{
-    log += "<log>\r\n";
-    log += "\t<file>" + name_full + "</file>\r\n";
-    log += "\t<status>" + comment + "</status>\r\n";
-    log += "\t<id>" + id + "</id>\r\n";
-    log += "\t<key>" + unique_text + "</key>\r\n";
-    log += "\t<val>" + friendly_text + "</val>\r\n";
-    log += "<log>\r\n";
-}
-
-//----------------------------------------------------------
-void DictReader::printLog()
+void DictReader::printSummaryLog()
 {
     std::cout << "---------------------------------------" << std::endl
               << "    Loaded / Doubled / Invalid /    All" << std::endl
@@ -244,4 +204,10 @@ void DictReader::printLog()
               << std::setw(7) << std::to_string(counter_invalid) << " / "
               << std::setw(6) << std::to_string(counter_all) << std::endl
               << "---------------------------------------" << std::endl;
+    if(!tools.getLog().empty())
+    {
+        std::cout << tools.getLog()
+                  << "---------------------------------------" << std::endl;
+        tools.clearLog();
+    }
 }

@@ -1,4 +1,5 @@
 TEMPLATE = app
+TARGET = yampt_test
 CONFIG += console c++11
 CONFIG -= app_bundle
 CONFIG -= qt
@@ -18,10 +19,21 @@ win32 {
 SOURCES += \
     ../src/esmreader.cpp \
     ../src/config.cpp \
+    ../src/dictcreator.cpp \
+    ../src/dictreader.cpp \
+    ../src/dictmerger.cpp \
+    ../src/scriptparser.cpp \
     test_main.cpp \
     test_tools.cpp \
-    test_esmreader.cpp
+    test_esmreader.cpp \
+    test_dictcreator.cpp \
+    test_dictreader.cpp \
+    test_scriptparser.cpp
 
 HEADERS += \
     ../src/esmreader.hpp \
-    ../src/config.hpp
+    ../src/config.hpp \
+    ../src/dictcreator.hpp \
+    ../src/dictreader.hpp \
+    ../src/dictmerger.hpp \
+    ../src/scriptparser.hpp

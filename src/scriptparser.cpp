@@ -10,20 +10,6 @@ ScriptParser::ScriptParser()
 ScriptParser::ScriptParser(const yampt::rec_type type,
                            DictMerger &merger,
                            const std::string &prefix,
-                           const std::string &friendly_text)
-    : type(type),
-      merger(&merger),
-      prefix(prefix),
-      friendly_text(friendly_text),
-      pos_in_compiled(0)
-{
-
-}
-
-//----------------------------------------------------------
-ScriptParser::ScriptParser(const yampt::rec_type type,
-                           DictMerger &merger,
-                           const std::string &prefix,
                            const std::string &friendly_text,
                            const std::string &compiled_data)
     : type(type),
@@ -33,7 +19,8 @@ ScriptParser::ScriptParser(const yampt::rec_type type,
       compiled_data(compiled_data),
       pos_in_compiled(0)
 {
-
+    convertScript();
+    stripLastNewLineChars();
 }
 
 //----------------------------------------------------------
@@ -90,10 +77,15 @@ void ScriptParser::convertScript()
         }
         new_friendly += new_line + "\r\n";
     }
+}
 
+//----------------------------------------------------------
+void ScriptParser::stripLastNewLineChars()
+{
     // Check if last 2 chars are newline and strip them if necessary
     size_t last_nl_pos = friendly_text.rfind("\r\n");
-    if(last_nl_pos != friendly_text.size() - 2 || last_nl_pos == std::string::npos)
+    if(last_nl_pos != friendly_text.size() - 2 ||
+       last_nl_pos == std::string::npos)
     {
         new_friendly.resize(new_friendly.size() - 2);
     }

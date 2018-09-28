@@ -7,8 +7,6 @@
 class ScriptParser
 {
 public:
-    void convertScript();
-
     std::string getNewFriendly() { return new_friendly; }
     std::string getNewCompiled() { return compiled_data; }
 
@@ -16,14 +14,12 @@ public:
     ScriptParser(const yampt::rec_type type,
                  DictMerger &merger,
                  const std::string &prefix,
-                 const std::string &friendly_text);
-    ScriptParser(const yampt::rec_type type,
-                 DictMerger &merger,
-                 const std::string &prefix,
                  const std::string &friendly_text,
                  const std::string &compiled_data);
 
 private:
+    void convertScript();
+    void stripLastNewLineChars();
     std::string checkLine(const std::string &line,
                           const std::string &line_lc);
     std::string checkLine(const std::string &line,

@@ -120,180 +120,95 @@ void UserInterface::runCommand()
 }
 
 //----------------------------------------------------------
-void UserInterface::printMakeDictHeader()
-{
-    std::cout << "-----------------------------------------------" << std::endl
-              << "          Created / Missing / Identical /   All" << std::endl
-              << "-----------------------------------------------" << std::endl;
-}
-
-//----------------------------------------------------------
 void UserInterface::makeDictRaw()
 {
-    std::cout << "--> Start creating raw dictionary!" << std::endl;
     for(size_t i = 0; i < file_path.size(); ++i)
     {
         DictCreator creator(file_path[i]);
-        if(creator.getStatus() == true)
-        {
-            printMakeDictHeader();
-            creator.makeDict();
-            std::cout << "-----------------------------------------------" << std::endl;
-            tools.writeDict(creator.getDict(), creator.getNamePrefix() + ".RAW.xml");
-        }
+        tools.writeDict(creator.getDict(), creator.getNamePrefix() + ".RAW.xml");
     }
-    std::cout << std::endl;
 }
 
 //----------------------------------------------------------
 void UserInterface::makeDictBase()
 {
-    std::cout << "--> Start creating base dictionary!" << std::endl;
     DictCreator creator(file_path[0], file_path[1]);
-    if(creator.getStatus() == true)
-    {
-        printMakeDictHeader();
-        creator.makeDict();
-        std::cout << "-----------------------------------------------" << std::endl;
-        std::cout << "--> Check dictionary for \"MISSING\" keyword!" << std::endl;
-        std::cout << "    Missing CELL and DIAL records needs to be added manually!" << std::endl;
-        tools.writeDict(creator.getDict(), creator.getNamePrefix() + ".BASE.xml");
-    }
-    std::cout << std::endl;
+    tools.writeDict(creator.getDict(), creator.getNamePrefix() + ".BASE.xml");
 }
 
 //----------------------------------------------------------
 void UserInterface::makeDictAll()
 {
-    std::string log;
-    std::cout << "--> Start creating dictionary with all records!" << std::endl;
     DictMerger merger(dict_path);
-    merger.mergeDict();
-    log += merger.getLog();
-    tools.writeText(log, "yampt.log");
     for(size_t i = 0; i < file_path.size(); ++i)
     {
-        DictCreator creator(file_path[i], merger, yampt::ins_mode::ALL);
-        if(creator.getStatus() == true)
-        {
-            printMakeDictHeader();
-            creator.makeDict();
-            std::cout << "-----------------------------------------------" << std::endl;
-            tools.writeDict(creator.getDict(), creator.getNamePrefix() + ".ALL.xml");
-        }
+        DictCreator creator(file_path[i], merger, yampt::ins_mode::ALL, false);
+        tools.writeDict(creator.getDict(), creator.getNamePrefix() + ".ALL.xml");
     }
-    std::cout << std::endl;
 }
 
 //----------------------------------------------------------
 void UserInterface::makeDictNotFound()
 {
-    std::string log;
-    std::cout << "--> Start creating dictionary with not found records!" << std::endl;
     DictMerger merger(dict_path);
-    merger.mergeDict();
-    log += merger.getLog();
-    tools.writeText(log, "yampt.log");
     for(size_t i = 0; i < file_path.size(); ++i)
     {
-        DictCreator creator(file_path[i], merger, yampt::ins_mode::NOTFOUND);
-        if(creator.getStatus() == true)
-        {
-            printMakeDictHeader();
-            creator.makeDict();
-            std::cout << "-----------------------------------------------" << std::endl;
-            tools.writeDict(creator.getDict(), creator.getNamePrefix() + ".NOTFOUND.xml");
-        }
+        DictCreator creator(file_path[i], merger, yampt::ins_mode::NOTFOUND, add_dial);
+        tools.writeDict(creator.getDict(), creator.getNamePrefix() + ".NOTFOUND.xml");
     }
-    std::cout << std::endl;
 }
 
 //----------------------------------------------------------
 void UserInterface::makeDictChanged()
 {
-    std::string log;
-    std::cout << "--> Start creating dictionary with changed records!" << std::endl;
     DictMerger merger(dict_path);
-    merger.mergeDict();
-    log += merger.getLog();
-    tools.writeText(log, "yampt.log");
     for(size_t i = 0; i < file_path.size(); ++i)
     {
-        DictCreator creator(file_path[i], merger, yampt::ins_mode::CHANGED);
-        if(creator.getStatus() == true)
-        {
-            printMakeDictHeader();
-            creator.makeDict();
-            std::cout << "-----------------------------------------------" << std::endl;
-            tools.writeDict(creator.getDict(), creator.getNamePrefix() + ".CHANGED.xml");
-        }
+        DictCreator creator(file_path[i], merger, yampt::ins_mode::CHANGED, add_dial);
+        tools.writeDict(creator.getDict(), creator.getNamePrefix() + ".CHANGED.xml");
     }
-    std::cout << std::endl;
 }
 
 //----------------------------------------------------------
 void UserInterface::mergeDict()
 {
-    std::string log;
-    std::cout << "--> Start merging dictionaries!" << std::endl;
     DictMerger merger(dict_path);
-    merger.mergeDict();
-    log += merger.getLog();
     tools.writeDict(merger.getDict(), output);
-    tools.writeText(log, "yampt.log");
-    std::cout << std::endl;
 }
 
 //----------------------------------------------------------
 void UserInterface::convertEsm()
 {
-    std::string log;
-    std::cout << "--> Start converting file!" << std::endl;
     DictMerger merger(dict_path);
-    merger.mergeDict();
-    log += merger.getLog();
-    tools.writeText(log, "yampt.log");
     for(size_t i = 0; i < file_path.size(); ++i)
     {
         EsmConverter converter(file_path[i], merger, add_dial, suffix);
-        if(converter.getStatus() == true)
-        {
-            std::cout << "----------------------------------------------" << std::endl
-                      << "      Converted / Skipped / Unchanged /    All" << std::endl
-                      << "----------------------------------------------" << std::endl;
-            converter.convertEsm();
-            std::cout << "----------------------------------------------" << std::endl;
-            tools.writeFile(converter.getRecordColl(), converter.getNamePrefix() + suffix + converter.getNameSuffix());
-            boost::filesystem::last_write_time(converter.getNamePrefix() + suffix + converter.getNameSuffix(), converter.getTime());
-        }
+        tools.writeFile(converter.getRecordColl(), converter.getNamePrefix() + suffix + converter.getNameSuffix());
+        boost::filesystem::last_write_time(converter.getNamePrefix() + suffix + converter.getNameSuffix(),
+                                           converter.getTime());
     }
-    std::cout << std::endl;
 }
 
 //----------------------------------------------------------
 void UserInterface::dumpFile()
 {
     std::string text;
-    std::cout << "--> Start creating file dump!" << std::endl;
     for(size_t i = 0; i < file_path.size(); ++i)
     {
         EsmTools dump(file_path[i]);
         text = dump.dumpFile();
         tools.writeText(text, dump.getNamePrefix() + ".DUMP.txt");
     }
-    std::cout << std::endl;
 }
 
 //----------------------------------------------------------
 void UserInterface::makeScriptList()
 {
     std::string text;
-    std::cout << "--> Start creating script list!" << std::endl;
     for(size_t i = 0; i < file_path.size(); ++i)
     {
         EsmTools dump(file_path[i]);
         text = dump.makeScriptList();
         tools.writeText(text, dump.getNamePrefix() + ".SCRIPTS.txt");
     }
-    std::cout << std::endl;
 }

@@ -60,13 +60,20 @@ struct CaseAwareCompare
     }
 };
 
-enum rec_type { CELL, DIAL, INDX, RNAM, DESC, GMST, FNAM, INFO, TEXT, BNAM, SCTX,
-                Wilderness, Region, PGRD, ANAM, SCVR, DNAM, CNDT, GMDT };
+enum rec_type { CELL, DIAL, INDX, RNAM, DESC,
+                GMST, FNAM, INFO, TEXT, BNAM,
+                SCTX, Wilderness, Region, PGRD,
+                ANAM, SCVR, DNAM, CNDT, GMDT };
+const std::vector<std::string> type_name { "CELL", "DIAL", "INDX", "RNAM", "DESC",
+                                           "GMST", "FNAM", "INFO", "TEXT", "BNAM",
+                                           "SCTX", "Wilderness", "Region", "PGRD",
+                                           "ANAM", "SCVR", "DNAM", "CNDT", "GMDT" };
+
 enum ins_mode { RAW, BASE, ALL, NOTFOUND, CHANGED };
+
 typedef std::array<std::map<std::string, std::string>, 11> dict_t;
-typedef std::map<std::string, std::string> inner_dict_t;
-const std::vector<std::string> type_name { "CELL", "DIAL", "INDX", "RNAM", "DESC", "GMST", "FNAM", "INFO", "TEXT", "BNAM", "SCTX",
-                                           "Wilderness", "Region", "PGRD", "ANAM", "SCVR", "DNAM", "CNDT", "GMDT" };
+typedef std::map<std::string, std::string> single_dict_t;
+
 const std::array<std::string, 5> dialog_type = { "T", "V", "G", "P", "J" };
 const std::vector<std::string> sep = { "^", "<_id>", "</_id>", "<key>", "</key>", "<val>", "</val>", "<rec name=\"", "\"/>" };
 const std::vector<std::string> err = { "<err name=\"", "\"/>" };
@@ -77,6 +84,7 @@ const std::vector<std::string> keyword_list = { "messagebox", "choice", "say ", 
 class Tools
 {
 public:
+    std::string readFile(const std::string &path);
     void writeDict(const yampt::dict_t &dict,
                    const std::string &name);
     void writeText(const std::string &text,
@@ -87,12 +95,18 @@ public:
     unsigned int convertStringByteArrayToUInt(const std::string &str);
     std::string convertUIntToStringByteArray(const unsigned int x);
     bool caseInsensitiveStringCmp(std::string lhs, std::string rhs);
-    std::string eraseNullChars(std::string &str);
-    std::string eraseCarriageReturnChar(std::string &str);
+    std::string eraseNullChars(std::string str);
+    std::string eraseCarriageReturnChar(std::string str);
     std::string replaceNonReadableCharsWithDot(const std::string &str);
-    std::string addDialogTopicsToINFOStrings(yampt::inner_dict_t dict,
+    std::string addDialogTopicsToINFOStrings(yampt::single_dict_t dict,
                                              const std::string &friendly_text,
                                              bool extended);
+    void addLog(const std::string log);
+    void clearLog();
+    std::string getLog() { return log; }
+
+private:
+    std::string log;
 };
 
 #endif // CONFIG_HPP

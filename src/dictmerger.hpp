@@ -7,32 +7,25 @@
 class DictMerger
 {
 public:
-    void mergeDict();
-
-    bool getStatus() { return status; }
-    std::string getLog() { return log; }
     std::string getNamePrefix(size_t i) { return dict_coll[i].getNamePrefix(); }
+
     yampt::dict_t const& getDict() const { return dict; }
-    yampt::inner_dict_t const& getDict(yampt::rec_type type) const { return dict[type]; }
-    yampt::inner_dict_t const& getDict(size_t type) const { return dict[type]; }
+    yampt::single_dict_t const& getDict(yampt::rec_type type) const { return dict[type]; }
+    yampt::single_dict_t const& getDict(size_t type) const { return dict[type]; }
 
     DictMerger();
     DictMerger(const std::vector<std::string> &path);
 
+    void addRecord(const yampt::rec_type type,
+                   const std::string &unique_text,
+                   const std::string &friendly_text);
+
 private:
-    void makeLog(const std::string &id,
-                 const std::string &unique_text,
-                 const std::string &friendly_old,
-                 const std::string &friendly_new,
-                 const std::string &comment,
-                 const std::string &name);
-    void printLog();
+    void mergeDict();
+    void printSummaryLog();
 
     std::vector<DictReader> dict_coll;
     yampt::dict_t dict;
-    std::string log;
-
-    bool status = false;
 
     int counter_merged = 0;
     int counter_replaced = 0;

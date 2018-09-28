@@ -8,44 +8,55 @@
 class DictCreator
 {
 public:
-    void makeDict();
-
-    bool getStatus() { return status; }
     std::string getNameFull() { return esm_n.getNameFull(); }
     std::string getNamePrefix() { return esm_n.getNamePrefix(); }
+
     yampt::dict_t const& getDict() const { return dict; }
+    yampt::single_dict_t const& getDict(yampt::rec_type type) const { return dict[type]; }
+    yampt::single_dict_t const& getDict(size_t type) const { return dict[type]; }
 
     DictCreator(const std::string &path_n);
     DictCreator(const std::string &path_n,
                 const std::string &path_f);
     DictCreator(const std::string &path_n,
                 DictMerger &merger,
-                const yampt::ins_mode mode);
+                const yampt::ins_mode mode,
+                const bool add_dial);
 
 private:
     void makeDictBasic();
     void makeDictExtended();
-    bool compareMasterFiles();
+    bool areMastersHaveRecordsInSameOrder();
     void resetCounters();
-    std::string dialTranslator(std::string to_translate);
+    std::string translateDialogTopicsInDictId(std::string to_translate);
+
     void validateRecord(const std::string &unique_text,
                         const std::string &friendly_text,
                         const yampt::rec_type type);
-    void insertRecord(const std::string &unique_text,
-                      const std::string &friendly_text,
-                      const yampt::rec_type type);
-    std::vector<std::string> makeMessageColl(const std::string &new_friendly);
+    void validateRecordForModeALL(const std::string &unique_text,
+                                  const std::string &friendly_text,
+                                  const yampt::rec_type type);
+    void validateRecordForModeNOT(const std::string &unique_text,
+                                  const std::string &friendly_text,
+                                  const yampt::rec_type type);
+    void validateRecordForModeCHANGED(const std::string &unique_text,
+                                      const std::string &friendly_text,
+                                      const yampt::rec_type type);
 
+    void insertRecordToDict(const std::string &unique_text,
+                            const std::string &friendly_text,
+                            const yampt::rec_type type);
+    std::vector<std::string> makeScriptMessagesColl(const std::string &new_friendly);
+
+    void printLogHeader();
+    void printLogSummary();
     void printLogLine(const yampt::rec_type type);
 
     void makeDictCELL();
-    void makeDictCELLExtended();
-    std::vector<std::tuple<std::string, size_t, bool> > makeDictCELLExtendedPattern();
-    std::map<std::string, size_t> makeDictCELLExtendedMatch();
     void makeDictCELLWilderness();
-    void makeDictCELLExtendedWilderness();
+    void makeDictCELLWildernessExtended();
     void makeDictCELLRegion();
-    void makeDictCELLExtendedRegion();
+    void makeDictCELLRegionExtended();
     void makeDictGMST();
     void makeDictFNAM();
     void makeDictDESC();
@@ -53,18 +64,29 @@ private:
     void makeDictRNAM();
     void makeDictINDX();
     void makeDictDIAL();
-    void makeDictDIALExtended();
-    std::vector<std::tuple<std::string, size_t, bool> > makeDictDIALExtendedPattern();
-    std::map<std::string, size_t> makeDictDIALExtendedMatch();
     void makeDictINFO();
     void makeDictBNAM();
-    void makeDictBNAMExtended();
-    std::vector<std::pair<std::string, size_t> > makeDictBNAMExtendedPattern();
-    std::map<std::string, size_t> makeDictBNAMExtendedMatch();
     void makeDictSCPT();
+
+    void makeDictCELLExtended();
+    void makeDictCELLExtendedForeignColl();
+    void makeDictCELLExtendedNativeColl();
+    std::string makeDictCELLExtendedPattern(EsmReader &esm_cur);
+    void makeDictCELLExtendedAddMissing();
+
+    void makeDictDIALExtended();
+    void makeDictDIALExtendedForeignColl();
+    void makeDictDIALExtendedNativeColl();
+    std::string makeDictDIALExtendedPattern(EsmReader &esm_cur, size_t i);
+    void makeDictDIALExtendedAddMissing();
+
+    void makeDictBNAMExtended();
+    void makeDictBNAMExtendedForeignColl();
+    void makeDictBNAMExtendedNativeColl();
+
     void makeDictSCPTExtended();
-    std::vector<std::pair<std::string, size_t> > makeDictSCPTExtendedPattern();
-    std::map<std::string, size_t> makeDictSCPTExtendedMatch();
+    void makeDictSCPTExtendedForeignColl();
+    void makeDictSCPTExtendedNativeColl();
 
     EsmReader esm_n;
     EsmReader esm_f;
@@ -77,15 +99,18 @@ private:
     std::vector<std::string> message_n;
     std::vector<std::string> message_f;
 
-    bool status = false;
-    bool basic_mode = false;
     const yampt::ins_mode mode;
+    const bool add_dial;
 
     int counter_created;
     int counter_missing;
     int counter_doubled;
     int counter_identical;
     int counter_all;
+
+    std::vector<std::tuple<std::string, size_t, bool>> foreign_coll;
+    std::vector<std::pair<std::string, size_t>> foreign_coll_script;
+    std::map<std::string, size_t> native_coll;
 };
 
 #endif // DICTCREATOR_HPP
