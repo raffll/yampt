@@ -7,7 +7,8 @@ DictMerger::DictMerger()
 }
 
 //----------------------------------------------------------
-DictMerger::DictMerger(const std::vector<std::string> &path)
+DictMerger::DictMerger(const std::vector<std::string> &path,
+                       bool ext_log)
 {
     for(const auto &elem : path)
     {
@@ -15,6 +16,12 @@ DictMerger::DictMerger(const std::vector<std::string> &path)
         dict_coll.push_back(reader);
     }
     mergeDict();
+    if(ext_log == true)
+    {
+        findDuplicateFriendlyText(yampt::rec_type::CELL);
+        findDuplicateFriendlyText(yampt::rec_type::DIAL);
+        findUnusedINFO();
+    }
     printSummaryLog();
 }
 
@@ -68,6 +75,54 @@ void DictMerger::mergeDict()
 }
 
 //----------------------------------------------------------
+void DictMerger::findDuplicateFriendlyText(yampt::rec_type type)
+{
+    std::set<std::string> test_set;
+    std::string test;
+    for(const auto &elem : dict[type])
+    {
+        test = elem.second;
+        transform(test.begin(), test.end(),
+                  test.begin(), ::tolower);
+        if(test_set.insert(test).second == false)
+        {
+            tools.addLog("Duplicate value in " + yampt::type_name[type] + ": " + elem.second);
+        }
+    }
+}
+
+//----------------------------------------------------------
+void DictMerger::findUnusedINFO()
+{
+    std::string test;
+    bool found;
+    size_t beg;
+    size_t end;
+    for(const auto &info : dict[yampt::rec_type::INFO])
+    {
+        found = false;
+        test = info.first;
+        if(test.size() > 1 && test.substr(0, 1) == "T")
+        {
+            beg = test.find("^") + 1;
+            end = test.find_last_of("^");
+            test = test.substr(beg, end - beg);
+            for(const auto &dial : dict[yampt::rec_type::DIAL])
+            {
+                if(test == dial.second)
+                {
+                    found = true;
+                }
+            }
+            if(found == false)
+            {
+                tools.addLog("Unused INFO record: " + info.first);
+            }
+        }
+    }
+}
+
+//----------------------------------------------------------
 void DictMerger::printSummaryLog()
 {
     std::cout << "---------------------------------" << std::endl
@@ -77,4 +132,10 @@ void DictMerger::printSummaryLog()
               << std::setw(8) << std::to_string(counter_replaced) << " / "
               << std::setw(9) << std::to_string(counter_identical) << std::endl
               << "---------------------------------" << std::endl;
+    if(!tools.getLog().empty())
+    {
+        std::cout << tools.getLog()
+                  << "---------------------------------" << std::endl;
+        tools.clearLog();
+    }
 }
