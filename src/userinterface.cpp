@@ -21,6 +21,10 @@ void UserInterface::parseCommandLine()
             {
                 add_dial = true;
             }
+            else if(arg[i] == "-l")
+            {
+                ext_log = true;
+            }
             else if(arg[i] == "-f")
             {
                 command = "-f";
@@ -139,7 +143,7 @@ void UserInterface::makeDictBase()
 //----------------------------------------------------------
 void UserInterface::makeDictAll()
 {
-    DictMerger merger(dict_path);
+    DictMerger merger(dict_path, ext_log);
     for(size_t i = 0; i < file_path.size(); ++i)
     {
         DictCreator creator(file_path[i], merger, yampt::ins_mode::ALL, false);
@@ -150,7 +154,7 @@ void UserInterface::makeDictAll()
 //----------------------------------------------------------
 void UserInterface::makeDictNotFound()
 {
-    DictMerger merger(dict_path);
+    DictMerger merger(dict_path, ext_log);
     for(size_t i = 0; i < file_path.size(); ++i)
     {
         DictCreator creator(file_path[i], merger, yampt::ins_mode::NOTFOUND, add_dial);
@@ -161,7 +165,7 @@ void UserInterface::makeDictNotFound()
 //----------------------------------------------------------
 void UserInterface::makeDictChanged()
 {
-    DictMerger merger(dict_path);
+    DictMerger merger(dict_path, ext_log);
     for(size_t i = 0; i < file_path.size(); ++i)
     {
         DictCreator creator(file_path[i], merger, yampt::ins_mode::CHANGED, add_dial);
@@ -172,14 +176,14 @@ void UserInterface::makeDictChanged()
 //----------------------------------------------------------
 void UserInterface::mergeDict()
 {
-    DictMerger merger(dict_path);
+    DictMerger merger(dict_path, ext_log);
     tools.writeDict(merger.getDict(), output);
 }
 
 //----------------------------------------------------------
 void UserInterface::convertEsm()
 {
-    DictMerger merger(dict_path);
+    DictMerger merger(dict_path, ext_log);
     for(size_t i = 0; i < file_path.size(); ++i)
     {
         EsmConverter converter(file_path[i], merger, add_dial, suffix);

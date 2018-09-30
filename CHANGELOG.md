@@ -1,5 +1,8 @@
 ## Version history
 
+    0.17
+    - [feature] add -l switch to merger, if you want to find unused INFO records and duplicate CELL and DIAL values
+
     0.16
     - [feature] remove log file, all errors are now displayed in console
     - [feature] add -a switch to creator, if you want to add hiperlinks to NOTFOUND and CHANGED dictionaries

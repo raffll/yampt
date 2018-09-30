@@ -14,7 +14,8 @@ public:
     yampt::single_dict_t const& getDict(size_t type) const { return dict[type]; }
 
     DictMerger();
-    DictMerger(const std::vector<std::string> &path);
+    DictMerger(const std::vector<std::string> &path,
+               bool ext_log);
 
     void addRecord(const yampt::rec_type type,
                    const std::string &unique_text,
@@ -22,8 +23,11 @@ public:
 
 private:
     void mergeDict();
+    void findDuplicateFriendlyText(yampt::rec_type type);
+    void findUnusedINFO();
     void printSummaryLog();
 
+    Tools tools;
     std::vector<DictReader> dict_coll;
     yampt::dict_t dict;
 
