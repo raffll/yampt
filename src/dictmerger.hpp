@@ -30,6 +30,7 @@ private:
     Tools tools;
     std::vector<DictReader> dict_coll;
     yampt::dict_t dict;
+    bool ext_log;
 
     int counter_merged = 0;
     int counter_replaced = 0;
