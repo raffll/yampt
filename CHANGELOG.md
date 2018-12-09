@@ -1,5 +1,8 @@
 ## Version history
 
+    0.18
+    - [feature] -l switch now display "Identical" and "Replaced" records when merging dictionaries
+
     0.17
     - [feature] add -l switch to merger, if you want to find unused INFO records and duplicate CELL and DIAL values
 

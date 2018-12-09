@@ -1,42 +1,32 @@
+@echo off
+
 SET _INPUT=input
 SET OUTPUT=output
-
-REM Optional
 SET SUFFIX=
 
 SET BASE=dict_base
 SET USER=dict_user
 SET _NEW=dict_new
 
-REM Change path to base dictionaries
 SET DICT_N=%BASE%\NATIVE.xml
-SET DICT_F=%BASE%\NATIVE_for_find_changed_only.xml
 
 REM ############### DON'T EDIT ###############
 
-REM Prepare
-mkdir "%_INPUT%"
-mkdir "%OUTPUT%"
-mkdir "%BASE%"
-mkdir "%USER%"
-mkdir "%_NEW%"
+mkdir "%_INPUT%" >nul 2>&1
+mkdir "%OUTPUT%" >nul 2>&1
+mkdir "%BASE%" >nul 2>&1
+mkdir "%USER%" >nul 2>&1
+mkdir "%_NEW%" >nul 2>&1
 
-del /f /q "%_NEW%"\*
-for /R "%_INPUT%" %%f in (*.esp, *.esm) do echo | set /p name=" "%%f" " >> plg.txt
+del tmp1.txt >nul 2>&1
+del /f "%OUTPUT%\*%SUFFIX%*" >nul 2>&1
 
-REM Make user dictionaries
-for /f "delims=" %%x in (plg.txt) do ( yampt.exe --make-not -f %%x -d "%DICT_N%" )
-for /f "delims=" %%x in (plg.txt) do ( yampt.exe --make-changed -f %%x -d "%DICT_F%" )
+for /r "%_INPUT%" %%f in (*.esp, *.esm) do ( echo | set /p name=" "%%f" " ) >> tmp1.txt
+for /f "delims=" %%x in (tmp1.txt) do ( yampt.exe --convert -a -f %%x -d "%DICT_N%" %USER%\*.xml -s "%SUFFIX%" )
 
-REM Convert files
-for /f "delims=" %%x in (plg.txt) do ( yampt.exe --convert -a -f %%x -d "%DICT_N%" "%USER%\*.xml" -s "%SUFFIX%" )
-	
-REM Clean
-move "*.CHANGED.xml" "%_NEW%"
-move "*.NOTFOUND.xml" "%_NEW%"
-move /Y "*.esm" "%OUTPUT%"
-move /Y "*.esp" "%OUTPUT%"
+del tmp1.txt >nul 2>&1
 
-del plg.txt
+move /y "*.esm" "%OUTPUT%" >nul 2>&1
+move /y "*.esp" "%OUTPUT%" >nul 2>&1
 
 pause
