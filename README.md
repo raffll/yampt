@@ -185,4 +185,4 @@ and after some translations simply type:
 
 ### Extended log
 
-You could add "-l" switch to display additional info about records in loaded dictionaries
+You could add "-l" switch to display additional info about records in loaded (merged) dictionaries.

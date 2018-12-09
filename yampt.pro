@@ -9,7 +9,7 @@ DISTFILES += \
     resources/yampt-convert-template.cmd \
     resources/yampt-make-base-template.cmd \
     resources/yampt-make-user-template.cmd \
-    resources/yampt-generate-report.cmd
+    resources/yampt-generate-report-template.cmd
 
 SUBDIRS += \
     src/yampt_cli.pro \
