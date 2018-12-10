@@ -6,7 +6,6 @@ SET SUFFIX=
 
 SET BASE=dict_base
 SET USER=dict_user
-SET _NEW=dict_new
 
 SET DICT_N=%BASE%\NATIVE.xml
 
@@ -16,7 +15,6 @@ mkdir "%_INPUT%" >nul 2>&1
 mkdir "%OUTPUT%" >nul 2>&1
 mkdir "%BASE%" >nul 2>&1
 mkdir "%USER%" >nul 2>&1
-mkdir "%_NEW%" >nul 2>&1
 
 del tmp1.txt >nul 2>&1
 del /f "%OUTPUT%\*%SUFFIX%*" >nul 2>&1
