@@ -9,6 +9,7 @@ DictMerger::DictMerger()
 //----------------------------------------------------------
 DictMerger::DictMerger(const std::vector<std::string> &path,
                        bool ext_log)
+    : ext_log(ext_log)
 {
     for(const auto &elem : path)
     {
@@ -53,11 +54,19 @@ void DictMerger::mergeDict()
                         search->second != elem.second)
                 {
                     // Found in previous dictionary - skipped
+                    if(ext_log == true)
+                    {
+                        tools.addLog("Replaced record in " + yampt::type_name[type] + ": " + elem.first);
+                    }
                     counter_replaced++;
                 }
                 else
                 {
                     // Found in previous dictionary - identical, skipped
+                    if(ext_log == true)
+                    {
+                        tools.addLog("Identical record in " + yampt::type_name[type] + ": " + elem.first);
+                    }
                     counter_identical++;
                 }
             }

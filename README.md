@@ -4,22 +4,25 @@
 
 Simple command line tool for automatic translation from one language to another.
 It works on cell names, game settings, object names, birthsigns, class and race descriptions,
-book text, faction rank names, magic and skill descriptions, dialog topic names, dialog text, script lines and compiled script data.
+book text, faction rank names, magic and skill descriptions, dialog topic names, dialog text,
+script lines and compiled script data.
 In one word, on all readable in-game text.
 
 ## Features
 
 - Convert multiple plugins with multiple combined dictionaries to eliminate inconsistencies between files.
-- Add your native dialog topic names to the end of not converted INFO strings, because without missing hyperlinks mods with lots of text don't work correctly.
+- Add your native dialog topic names to the end of not converted INFO strings,
+because without missing hyperlinks mods with lots of text don't work correctly.
 - Convert compiled script data, so you don't need to recompile scripts in TES CS.
-- You can add suffix to converted files, if you convert them all (including master), to create different (e.g. translated) plugin tree.
+- You can add suffix to converted files, if you convert them all (including master),
+to create different plugin tree.
 - Converter doesn't change file modify time to keep original plugin sorting.
-- All you need to start are two language versions of the game (in most cases English and your native) or pre-made dictionaries.
+- All you need to start are two language versions of the game (in most cases English and your native)
+or pre-made dictionaries.
 
 ## Usage
 
     yampt.exe [command] -f <plugin list> -d <dictionary list>
-
 
 ## Making base dictionary
 
@@ -53,7 +56,6 @@ Here you have one "NATIVE.xml". This is your base dictionary.
 Merge command validate, sort and remove duplicates, so you can use it with only one dictionary:
 
     yampt.exe --merge -d Morrowind.xml
-
 
 ## Converting esm/esp/omwgame/omwaddon
 
@@ -92,10 +94,12 @@ if in "NATIVE.xml" exist:
     <record>
 
 Without this, most English plugins with new dialogs are not playable in your native language.
+Switch "-a" also works with "--make-not" and "--make-changed" commands.
 
 #### Warning!
 
-If INFO text exceeds 512 characters, this could generate warnings in TES CS and those records will be read only, but it is ok in game.
+If INFO text exceeds 512 characters, this could generate warnings in TES CS
+and those records will be read only, but it is ok in game.
 You can ignore them.
 
 ## For translators
@@ -106,7 +110,8 @@ You can ignore them.
 
 Use for manualy translate everything or create no-esp patch.
 
-### Following commands translate dialog topic names in INFO keys 
+### Following commands translate dialog topic names in INFO keys
+
 e.g.:
 
     <record>
@@ -161,13 +166,12 @@ And now:
 
     yampt.exe --make-changed -f "C:\path\to\Plugin.esp" -d "NATIVE_for_find_changed_only.xml"
 
-
 ### Finally
 
-Commands "--make-not" and "--make-changed" is all you need to fully translate plugin and after some translations simply type:
+Commands "--make-not" and "--make-changed" is all you need to fully translate plugin
+and after some translations simply type:
 
     yampt.exe --convert -f "C:\path\to\Plugin.esp" -d "NATIVE.xml" "Plugin.NOTFOUND.xml" "Plugin.CHANGED.xml"
-
 
 ## Tools
 
@@ -175,7 +179,10 @@ Commands "--make-not" and "--make-changed" is all you need to fully translate pl
 
     yampt.exe --binary-dump -f "C:\path\to\Plugin.esp"
 
-
 ### Script list
 
     yampt.exe --script-list -f "C:\path\to\Plugin.esp"
+
+### Extended log
+
+You could add "-l" switch to display additional info about records in loaded (merged) dictionaries.
