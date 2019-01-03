@@ -30,6 +30,7 @@ private:
 
     bool add_dial = false;
     bool ext_log = false;
+    bool safe = false;
 
     std::vector<std::string> arg;
     std::vector<std::string> file_path;

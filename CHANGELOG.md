@@ -1,5 +1,8 @@
 ## Version history
 
+    0.19
+    - [feature] add --safe switch in converter to convert only DIAL, CELL, BNAM and SCTX records
+
     0.18
     - [feature] -l switch now display "Identical" and "Replaced" records when merging dictionaries
 
