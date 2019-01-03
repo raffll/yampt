@@ -4,15 +4,20 @@
 EsmConverter::EsmConverter(std::string path,
                            DictMerger &merger,
                            bool add_dial,
-                           std::string file_suffix)
+                           std::string file_suffix,
+                           bool safe)
     : esm(path),
       merger(&merger),
       add_dial(add_dial),
       file_suffix(file_suffix)
 {
-    if(esm.isLoaded() == true)
+    if(esm.isLoaded() == true && safe == false)
     {
         convertEsm();
+    }
+    else
+    {
+        convertEsmSafe();
     }
 }
 
@@ -37,6 +42,25 @@ void EsmConverter::convertEsm()
     convertINDX();
     convertDIAL();
     convertINFO();
+    convertBNAM();
+    convertSCPT();
+    std::cout << "----------------------------------------------" << std::endl;
+}
+
+//----------------------------------------------------------
+void EsmConverter::convertEsmSafe()
+{
+    std::cout << "----------------------------------------------" << std::endl
+              << "      Converted / Skipped / Unchanged /    All" << std::endl
+              << "----------------------------------------------" << std::endl;
+    convertMAST();
+    convertCELL();
+    convertPGRD();
+    convertANAM();
+    convertSCVR();
+    convertDNAM();
+    convertCNDT();
+    convertDIAL();
     convertBNAM();
     convertSCPT();
     std::cout << "----------------------------------------------" << std::endl;

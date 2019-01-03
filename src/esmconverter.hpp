@@ -15,10 +15,11 @@ public:
     std::time_t getTime() { return esm.getTime(); }
     std::vector<std::string> getRecordColl() { return esm.getRecordColl(); }
 
-    EsmConverter(std::string path, DictMerger &merger, bool add_dial, std::string file_suffix);
+    EsmConverter(std::string path, DictMerger &merger, bool add_dial, std::string file_suffix, bool safe);
 
 private:
     void convertEsm();
+    void convertEsmSafe();
     void resetCounters();
     void convertRecordContent(const std::string &new_friendly);
     std::string addNullTerminatorIfEmpty(const std::string &new_friendly);

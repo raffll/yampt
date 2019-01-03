@@ -13,8 +13,8 @@ unix {
 
 win32 {
     LIBS += \
-        /usr/i686-w64-mingw32/lib/libboost_system-mt.a \
-        /usr/i686-w64-mingw32/lib/libboost_filesystem-mt.a
+        /usr/i686-w64-mingw32/lib/libboost_system.a \
+        /usr/i686-w64-mingw32/lib/libboost_filesystem.a
 }
 
 SOURCES += \
