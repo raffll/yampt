@@ -11,9 +11,11 @@ unix {
 }
 
 win32 {
+    INCLUDEPATH += "C:\boost\include\boost-1_70"
+    LIBS += -L"C:\boost\lib"
     LIBS += \
-        /usr/i686-w64-mingw32/lib/libboost_system-mt.a \
-        /usr/i686-w64-mingw32/lib/libboost_filesystem-mt.a
+        "C:\boost\lib\libboost_system-mgw73-mt-x64-1_70.a" \
+        "C:\boost\lib\libboost_filesystem-mgw73-mt-x64-1_70.a"
 }
 
 SOURCES += \
@@ -31,6 +33,7 @@ SOURCES += \
     test_scriptparser.cpp
 
 HEADERS += \
+    catch.hpp \
     ../src/esmreader.hpp \
     ../src/config.hpp \
     ../src/dictcreator.hpp \

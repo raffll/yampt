@@ -1,4 +1,4 @@
-#include <catch2/catch.hpp>
+#include "catch.hpp"
 #include "../src/config.hpp"
 #include "../src/esmreader.hpp"
 
