@@ -118,15 +118,18 @@ std::string ScriptParser::checkLine(const std::string &line,
         DEBUG_MSG("Old line: " << line);
         new_line = convertLine(line);
         DEBUG_MSG("New line: " << new_line);
-        if(keyword == "say " ||
-           keyword == "say,")
+        if (!compiled_data.empty())
         {
-            convertLineInCompiledScriptData(line, new_line, keyword_pos, true);
-        }
-        else if(keyword == "messagebox" ||
+            if (keyword == "say " ||
+                keyword == "say,")
+            {
+                convertLineInCompiledScriptData(line, new_line, keyword_pos, true);
+            }
+            else if (keyword == "messagebox" ||
                 keyword == "choice")
-        {
-            convertLineInCompiledScriptData(line, new_line, keyword_pos, false);
+            {
+                convertLineInCompiledScriptData(line, new_line, keyword_pos, false);
+            }
         }
         is_done = true;
     }
@@ -162,7 +165,10 @@ std::string ScriptParser::checkLine(const std::string &line,
             DEBUG_MSG("Found: " << new_text);
             new_line = convertInnerTextInLine(line, extracted.first, extracted.second, new_text);
             DEBUG_MSG("New line: " << new_line);
-            convertInnerTextInCompiledScriptData(extracted.first, new_text, is_getpccell);
+            if (!compiled_data.empty())
+            {
+                convertInnerTextInCompiledScriptData(extracted.first, new_text, is_getpccell);
+            }
         }
         is_done = true;
     }
