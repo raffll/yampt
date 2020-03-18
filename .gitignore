@@ -1,0 +1,5 @@
+packages/*
+.vs/*
+yampt/x64/*
+yampt.unit_tests/x64/*
+*.user
