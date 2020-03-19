@@ -3,16 +3,15 @@
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
-namespace yamptunittests
+namespace yampt_unit_tests
 {
 
-TEST_CLASS(yamptunittests)
+TEST_CLASS(ScriptParser)
 {
 public:
-
-    TEST_METHOD(TestMethod1)
+    TEST_METHOD(GetPCCell)
     {
-
+        Assert::IsTrue(true);
     }
 };
 
