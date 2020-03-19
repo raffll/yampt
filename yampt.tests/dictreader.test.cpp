@@ -1,6 +1,6 @@
 #include "catch.hpp"
-#include "../src/config.hpp"
-#include "../src/dictreader.hpp"
+#include "../yampt/config.hpp"
+#include "../yampt/dictreader.hpp"
 
 using namespace std;
 

@@ -1,7 +1,7 @@
 #include "catch.hpp"
-#include "../src/config.hpp"
-#include "../src/esmreader.hpp"
-#include "../src/dictcreator.hpp"
+#include "../yampt/config.hpp"
+#include "../yampt/esmreader.hpp"
+#include "../yampt/dictcreator.hpp"
 
 using namespace std;
 

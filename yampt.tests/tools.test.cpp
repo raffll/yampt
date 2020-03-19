@@ -1,5 +1,5 @@
 #include "catch.hpp"
-#include "../src/config.hpp"
+#include "../yampt/config.hpp"
 
 using namespace std;
 

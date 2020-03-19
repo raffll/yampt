@@ -1,6 +1,6 @@
 #include "catch.hpp"
-#include "../src/config.hpp"
-#include "../src/esmreader.hpp"
+#include "../yampt/config.hpp"
+#include "../yampt/esmreader.hpp"
 
 using namespace std;
 
