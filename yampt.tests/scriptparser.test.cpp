@@ -17,7 +17,7 @@ TEST_CASE("Say keyword")
     items.push_back({ R"("Test"->Say "Test.wav" "Input")", R"("Test"->Say "Test.wav" "Expected")" });
     items.push_back({ R"(Test->Say "Test.wav" "Input")", R"(Test->Say "Test.wav" "Expected")" });
     items.push_back({ R"("Choice"->Say "Test.wav" "Input")", R"("Choice"->Say "Test.wav" "Expected")" });
-    items.push_back({ R"(Choice->Say "Test.wav" "Input")", R"(Choices->Say "Test.wav" "Expected")" });
+    items.push_back({ R"(Choice->Say "Test.wav" "Input")", R"(Choice->Say "Test.wav" "Expected")" });
 
     DictMerger merger;
     for (const auto & item : items)
