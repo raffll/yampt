@@ -35,17 +35,17 @@ struct CaseAwareCompare
         bool tiebreaker = false;
         int i;
 
-        for(i = 0; left[i] != 0; ++i)
+        for (i = 0; left[i] != 0; ++i)
         {
-            if(right[i] == 0)
+            if (right[i] == 0)
             {
                 return false;
             }
-            if(tolower(left[i]) != tolower(right[i]))
+            if (tolower(left[i]) != tolower(right[i]))
             {
                 return tolower(left[i]) < tolower(right[i]);
             }
-            if(tied && left[i] != right[i])
+            if (tied && left[i] != right[i])
             {
                 tied = false;
                 tiebreaker = left[i] < right[i];
@@ -60,14 +60,21 @@ struct CaseAwareCompare
     }
 };
 
-enum rec_type { CELL, DIAL, INDX, RNAM, DESC,
-                GMST, FNAM, INFO, TEXT, BNAM,
-                SCTX, Wilderness, Region, PGRD,
-                ANAM, SCVR, DNAM, CNDT, GMDT };
-const std::vector<std::string> type_name { "CELL", "DIAL", "INDX", "RNAM", "DESC",
-                                           "GMST", "FNAM", "INFO", "TEXT", "BNAM",
-                                           "SCTX", "Wilderness", "Region", "PGRD",
-                                           "ANAM", "SCVR", "DNAM", "CNDT", "GMDT" };
+enum rec_type
+{
+    CELL, DIAL, INDX, RNAM, DESC,
+    GMST, FNAM, INFO, TEXT, BNAM,
+    SCTX, Wilderness, Region, PGRD,
+    ANAM, SCVR, DNAM, CNDT, GMDT
+};
+
+const std::vector<std::string> type_name
+{
+    "CELL", "DIAL", "INDX", "RNAM", "DESC",
+    "GMST", "FNAM", "INFO", "TEXT", "BNAM",
+    "SCTX", "Wilderness", "Region", "PGRD",
+    "ANAM", "SCVR", "DNAM", "CNDT", "GMDT"
+};
 
 enum ins_mode { RAW, BASE, ALL, NOTFOUND, CHANGED };
 
@@ -84,23 +91,27 @@ const std::vector<std::string> keyword_list = { "messagebox", "choice", "say ", 
 class Tools
 {
 public:
-    std::string readFile(const std::string &path);
-    void writeDict(const yampt::dict_t &dict,
-                   const std::string &name);
-    void writeText(const std::string &text,
-                   const std::string &name);
-    void writeFile(const std::vector<std::string> &rec_coll,
-                   const std::string &name);
-    int getNumberOfElementsInDict(const yampt::dict_t &dict);
-    unsigned int convertStringByteArrayToUInt(const std::string &str);
+    std::string readFile(const std::string & path);
+    void writeDict(
+        const yampt::dict_t & dict,
+        const std::string & name);
+    void writeText(
+        const std::string & text,
+        const std::string & name);
+    void writeFile(
+        const std::vector<std::string> & rec_coll,
+        const std::string & name);
+    int getNumberOfElementsInDict(const yampt::dict_t & dict);
+    unsigned int convertStringByteArrayToUInt(const std::string & str);
     std::string convertUIntToStringByteArray(const unsigned int x);
     bool caseInsensitiveStringCmp(std::string lhs, std::string rhs);
     std::string eraseNullChars(std::string str);
     std::string eraseCarriageReturnChar(std::string str);
-    std::string replaceNonReadableCharsWithDot(const std::string &str);
-    std::string addDialogTopicsToINFOStrings(yampt::single_dict_t dict,
-                                             const std::string &friendly_text,
-                                             bool extended);
+    std::string replaceNonReadableCharsWithDot(const std::string & str);
+    std::string addDialogTopicsToINFOStrings(
+        yampt::single_dict_t dict,
+        const std::string & friendly_text,
+        bool extended);
     void addLog(const std::string log);
     void clearLog();
     std::string getLog() { return log; }
