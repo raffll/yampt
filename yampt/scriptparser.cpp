@@ -8,7 +8,7 @@ ScriptParser::ScriptParser()
 
 //----------------------------------------------------------
 ScriptParser::ScriptParser(
-    const yampt::rec_type type,
+    const Tools::rec_type type,
     DictMerger & merger,
     const std::string & prefix,
     const std::string & friendly_text,
@@ -43,35 +43,35 @@ void ScriptParser::convertScript()
 
         if (is_done == false)
         {
-            new_line = checkLine(line, line_lc, "addtopic", 0, yampt::rec_type::DIAL, false);
+            new_line = checkLine(line, line_lc, "addtopic", 0, Tools::rec_type::DIAL, false);
         }
         if (is_done == false)
         {
-            new_line = checkLine(line, line_lc, "showmap", 0, yampt::rec_type::CELL, false);
+            new_line = checkLine(line, line_lc, "showmap", 0, Tools::rec_type::CELL, false);
         }
         if (is_done == false)
         {
-            new_line = checkLine(line, line_lc, "centeroncell", 0, yampt::rec_type::CELL, false);
+            new_line = checkLine(line, line_lc, "centeroncell", 0, Tools::rec_type::CELL, false);
         }
         if (is_done == false)
         {
-            new_line = checkLine(line, line_lc, "getpccell", 0, yampt::rec_type::CELL, true);
+            new_line = checkLine(line, line_lc, "getpccell", 0, Tools::rec_type::CELL, true);
         }
         if (is_done == false)
         {
-            new_line = checkLine(line, line_lc, "aifollowcell", 1, yampt::rec_type::CELL, false);
+            new_line = checkLine(line, line_lc, "aifollowcell", 1, Tools::rec_type::CELL, false);
         }
         if (is_done == false)
         {
-            new_line = checkLine(line, line_lc, "aiescortcell", 1, yampt::rec_type::CELL, false);
+            new_line = checkLine(line, line_lc, "aiescortcell", 1, Tools::rec_type::CELL, false);
         }
         if (is_done == false)
         {
-            new_line = checkLine(line, line_lc, "placeitemcell", 1, yampt::rec_type::CELL, false);
+            new_line = checkLine(line, line_lc, "placeitemcell", 1, Tools::rec_type::CELL, false);
         }
         if (is_done == false)
         {
-            new_line = checkLine(line, line_lc, "positioncell", 4, yampt::rec_type::CELL, false);
+            new_line = checkLine(line, line_lc, "positioncell", 4, Tools::rec_type::CELL, false);
         }
         if (is_done == false)
         {
@@ -104,10 +104,10 @@ std::string ScriptParser::checkLine(
     size_t keyword_pos;
 
     // Create keyword collection from first to last occurrence in line
-    for (size_t i = 0; i < yampt::keyword_list.size(); ++i)
+    for (size_t i = 0; i < Tools::keyword_list.size(); ++i)
     {
-        keyword_pos = line_lc.find(yampt::keyword_list[i]);
-        keyword_pos_coll.insert({ keyword_pos, yampt::keyword_list[i] });
+        keyword_pos = line_lc.find(Tools::keyword_list[i]);
+        keyword_pos_coll.insert({ keyword_pos, Tools::keyword_list[i] });
     }
 
     keyword = keyword_pos_coll.begin()->second;
@@ -146,7 +146,7 @@ std::string ScriptParser::checkLine(
     const std::string & line_lc,
     const std::string & keyword,
     const int pos_in_expression,
-    const yampt::rec_type text_type,
+    const Tools::rec_type text_type,
     const bool is_getpccell)
 {
     std::string new_line = line;
@@ -197,7 +197,7 @@ std::string ScriptParser::convertLine(const std::string & line)
 //----------------------------------------------------------
 std::string ScriptParser::findInnerTextInDict(
     const std::string & text,
-    const yampt::rec_type text_type)
+    const Tools::rec_type text_type)
 {
     // Fast search in map
     auto search = merger->getDict(text_type).find(text);

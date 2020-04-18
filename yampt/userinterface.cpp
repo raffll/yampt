@@ -150,7 +150,7 @@ void UserInterface::makeDictAll()
     DictMerger merger(dict_path, ext_log);
     for(size_t i = 0; i < file_path.size(); ++i)
     {
-        DictCreator creator(file_path[i], merger, yampt::ins_mode::ALL, false);
+        DictCreator creator(file_path[i], merger, Tools::ins_mode::ALL, false);
         tools.writeDict(creator.getDict(), creator.getNamePrefix() + ".ALL.xml");
     }
 }
@@ -161,7 +161,7 @@ void UserInterface::makeDictNotFound()
     DictMerger merger(dict_path, ext_log);
     for(size_t i = 0; i < file_path.size(); ++i)
     {
-        DictCreator creator(file_path[i], merger, yampt::ins_mode::NOTFOUND, add_dial);
+        DictCreator creator(file_path[i], merger, Tools::ins_mode::NOTFOUND, add_dial);
         tools.writeDict(creator.getDict(), creator.getNamePrefix() + ".NOTFOUND.xml");
     }
 }
@@ -172,7 +172,7 @@ void UserInterface::makeDictChanged()
     DictMerger merger(dict_path, ext_log);
     for(size_t i = 0; i < file_path.size(); ++i)
     {
-        DictCreator creator(file_path[i], merger, yampt::ins_mode::CHANGED, add_dial);
+        DictCreator creator(file_path[i], merger, Tools::ins_mode::CHANGED, add_dial);
         tools.writeDict(creator.getDict(), creator.getNamePrefix() + ".CHANGED.xml");
     }
 }

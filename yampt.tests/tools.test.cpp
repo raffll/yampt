@@ -51,7 +51,7 @@ TEST_CASE("Erase only last \r char")
 
 TEST_CASE("Add dialog topics to INFO strings")
 {
-    yampt::single_dict_t dict;
+    Tools::single_dict_t dict;
     dict.insert({"clanfear", "postrach klanów"});
     text = "Some text clanfear some text";
     REQUIRE(tools.addDialogTopicsToINFOStrings(dict, text, false) ==

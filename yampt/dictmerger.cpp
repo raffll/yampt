@@ -19,15 +19,15 @@ DictMerger::DictMerger(const std::vector<std::string> &path,
     mergeDict();
     if(ext_log == true)
     {
-        findDuplicateFriendlyText(yampt::rec_type::CELL);
-        findDuplicateFriendlyText(yampt::rec_type::DIAL);
+        findDuplicateFriendlyText(Tools::rec_type::CELL);
+        findDuplicateFriendlyText(Tools::rec_type::DIAL);
         findUnusedINFO();
     }
     printSummaryLog();
 }
 
 //----------------------------------------------------------
-void DictMerger::addRecord(const yampt::rec_type type,
+void DictMerger::addRecord(const Tools::rec_type type,
                            const std::string &unique_text,
                            const std::string &friendly_text)
 {
@@ -56,7 +56,7 @@ void DictMerger::mergeDict()
                     // Found in previous dictionary - skipped
                     if(ext_log == true)
                     {
-                        tools.addLog("Replaced record in " + yampt::type_name[type] + ": " + elem.first);
+                        tools.addLog("Replaced record in " + Tools::type_name[type] + ": " + elem.first);
                     }
                     counter_replaced++;
                 }
@@ -65,7 +65,7 @@ void DictMerger::mergeDict()
                     // Found in previous dictionary - identical, skipped
                     if(ext_log == true)
                     {
-                        tools.addLog("Identical record in " + yampt::type_name[type] + ": " + elem.first);
+                        tools.addLog("Identical record in " + Tools::type_name[type] + ": " + elem.first);
                     }
                     counter_identical++;
                 }
@@ -84,7 +84,7 @@ void DictMerger::mergeDict()
 }
 
 //----------------------------------------------------------
-void DictMerger::findDuplicateFriendlyText(yampt::rec_type type)
+void DictMerger::findDuplicateFriendlyText(Tools::rec_type type)
 {
     std::set<std::string> test_set;
     std::string test;
@@ -95,7 +95,7 @@ void DictMerger::findDuplicateFriendlyText(yampt::rec_type type)
                   test.begin(), ::tolower);
         if(test_set.insert(test).second == false)
         {
-            tools.addLog("Duplicate value in " + yampt::type_name[type] + ": " + elem.second);
+            tools.addLog("Duplicate value in " + Tools::type_name[type] + ": " + elem.second);
         }
     }
 }
@@ -107,7 +107,7 @@ void DictMerger::findUnusedINFO()
     bool found;
     size_t beg;
     size_t end;
-    for(const auto &info : dict[yampt::rec_type::INFO])
+    for(const auto &info : dict[Tools::rec_type::INFO])
     {
         found = false;
         test = info.first;
@@ -116,7 +116,7 @@ void DictMerger::findUnusedINFO()
             beg = test.find("^") + 1;
             end = test.find_last_of("^");
             test = test.substr(beg, end - beg);
-            for(const auto &dial : dict[yampt::rec_type::DIAL])
+            for(const auto &dial : dict[Tools::rec_type::DIAL])
             {
                 if(test == dial.second)
                 {

@@ -60,7 +60,7 @@ void DictReader::parseDict(const std::string &content,
         std::string friendly_text;
         size_t pos_beg;
         size_t pos_end;
-        std::string re_str = yampt::sep[1] + "(.*?)" + yampt::sep[2] + "\\s*" + yampt::sep[3] + "(.*?)" + yampt::sep[4];
+        std::string re_str = Tools::sep[1] + "(.*?)" + Tools::sep[2] + "\\s*" + Tools::sep[3] + "(.*?)" + Tools::sep[4];
         std::regex re(re_str);
         std::smatch found;
         std::sregex_iterator next(content.begin(), content.end(), re);
@@ -70,8 +70,8 @@ void DictReader::parseDict(const std::string &content,
             found = *next;
 
             // no multiline in regex :(
-            pos_beg = content.find(yampt::sep[5], found.position(2)) + yampt::sep[5].size();
-            pos_end = content.find(yampt::sep[6], pos_beg);
+            pos_beg = content.find(Tools::sep[5], found.position(2)) + Tools::sep[5].size();
+            pos_end = content.find(Tools::sep[6], pos_beg);
             friendly_text = content.substr(pos_beg, pos_end - pos_beg);
 
             validateRecord(found[1].str(), found[2].str(), friendly_text);
@@ -102,36 +102,36 @@ void DictReader::validateRecord(const std::string &id,
         }
         else
         {
-            insertRecord(yampt::rec_type::CELL, unique_text, friendly_text);
+            insertRecord(Tools::rec_type::CELL, unique_text, friendly_text);
         }
     }
     else if(id == "GMST")
     {
-        insertRecord(yampt::rec_type::GMST, unique_text, friendly_text);
+        insertRecord(Tools::rec_type::GMST, unique_text, friendly_text);
     }
     else if(id == "DESC")
     {
-        insertRecord(yampt::rec_type::DESC, unique_text, friendly_text);
+        insertRecord(Tools::rec_type::DESC, unique_text, friendly_text);
     }
     else if(id == "TEXT")
     {
-        insertRecord(yampt::rec_type::TEXT, unique_text, friendly_text);
+        insertRecord(Tools::rec_type::TEXT, unique_text, friendly_text);
     }
     else if(id == "INDX")
     {
-        insertRecord(yampt::rec_type::INDX, unique_text, friendly_text);
+        insertRecord(Tools::rec_type::INDX, unique_text, friendly_text);
     }
     else if(id == "DIAL")
     {
-        insertRecord(yampt::rec_type::DIAL, unique_text, friendly_text);
+        insertRecord(Tools::rec_type::DIAL, unique_text, friendly_text);
     }
     else if(id == "BNAM")
     {
-        insertRecord(yampt::rec_type::BNAM, unique_text, friendly_text);
+        insertRecord(Tools::rec_type::BNAM, unique_text, friendly_text);
     }
     else if(id == "SCTX")
     {
-        insertRecord(yampt::rec_type::SCTX, unique_text, friendly_text);
+        insertRecord(Tools::rec_type::SCTX, unique_text, friendly_text);
     }
     else if(id == "RNAM")
     {
@@ -142,7 +142,7 @@ void DictReader::validateRecord(const std::string &id,
         }
         else
         {
-            insertRecord(yampt::rec_type::RNAM, unique_text, friendly_text);
+            insertRecord(Tools::rec_type::RNAM, unique_text, friendly_text);
         }
     }
     else if(id == "FNAM")
@@ -154,7 +154,7 @@ void DictReader::validateRecord(const std::string &id,
         }
         else
         {
-            insertRecord(yampt::rec_type::FNAM, unique_text, friendly_text);
+            insertRecord(Tools::rec_type::FNAM, unique_text, friendly_text);
         }
     }
     else if(id == "INFO")
@@ -162,11 +162,11 @@ void DictReader::validateRecord(const std::string &id,
         if(friendly_text.size() > 512)
         {
             tools.addLog("Ok, but more than 512 bytes in " + id + ": " + unique_text);
-            insertRecord(yampt::rec_type::INFO, unique_text, friendly_text);
+            insertRecord(Tools::rec_type::INFO, unique_text, friendly_text);
         }
         else
         {
-            insertRecord(yampt::rec_type::INFO, unique_text, friendly_text);
+            insertRecord(Tools::rec_type::INFO, unique_text, friendly_text);
         }
     }
     else
@@ -178,7 +178,7 @@ void DictReader::validateRecord(const std::string &id,
 }
 
 //----------------------------------------------------------
-void DictReader::insertRecord(const yampt::rec_type type,
+void DictReader::insertRecord(const Tools::rec_type type,
                               const std::string &unique_text,
                               const std::string &friendly_text)
 {
@@ -188,7 +188,7 @@ void DictReader::insertRecord(const yampt::rec_type type,
     }
     else
     {
-        tools.addLog("Doubled " + yampt::type_name[type] + ": " + unique_text);
+        tools.addLog("Doubled " + Tools::type_name[type] + ": " + unique_text);
         counter_doubled++;
     }
 }

@@ -10,9 +10,9 @@ public:
     std::string getNameFull() { return name_full; }
     std::string getNamePrefix() { return name_prefix; }
 
-    yampt::dict_t const& getDict() const { return dict; }
-    yampt::single_dict_t const& getDict(yampt::rec_type type) const { return dict[type]; }
-    yampt::single_dict_t const& getDict(size_t type) const { return dict[type]; }
+    Tools::dict_t const& getDict() const { return dict; }
+    Tools::single_dict_t const& getDict(Tools::rec_type type) const { return dict[type]; }
+    Tools::single_dict_t const& getDict(size_t type) const { return dict[type]; }
 
     DictReader(const std::string &path);
     DictReader(const DictReader& that);
@@ -26,7 +26,7 @@ private:
     void validateRecord(const std::string &id,
                         const std::string &unique_text,
                         const std::string &friendly_text);
-    void insertRecord(const yampt::rec_type type,
+    void insertRecord(const Tools::rec_type type,
                       const std::string &unique_text,
                       const std::string &friendly_text);
     void printWarningLog(const std::string &id,
@@ -36,7 +36,7 @@ private:
 
     std::string name_full;
     std::string name_prefix;
-    yampt::dict_t dict;
+    Tools::dict_t dict;
     Tools tools;
 
     bool is_loaded;

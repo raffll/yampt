@@ -1,5 +1,18 @@
 #include "config.hpp"
 
+const std::vector<std::string> Tools::type_name
+{
+    "CELL", "DIAL", "INDX", "RNAM", "DESC",
+    "GMST", "FNAM", "INFO", "TEXT", "BNAM",
+    "SCTX", "Wilderness", "Region", "PGRD",
+    "ANAM", "SCVR", "DNAM", "CNDT", "GMDT"
+};
+
+const std::array<std::string, 5> Tools::dialog_type { "T", "V", "G", "P", "J" };
+const std::vector<std::string> Tools::sep { "^", "<_id>", "</_id>", "<key>", "</key>", "<val>", "</val>", "<rec name=\"", "\"/>" };
+const std::vector<std::string> Tools::err { "<err name=\"", "\"/>" };
+const std::vector<std::string> Tools::keyword_list { "messagebox", "choice", "say ", "say," };
+
 //----------------------------------------------------------
 std::string Tools::readFile(const std::string & path)
 {
@@ -25,7 +38,7 @@ std::string Tools::readFile(const std::string & path)
 }
 
 //----------------------------------------------------------
-void Tools::writeDict(const yampt::dict_t & dict, const std::string & name)
+void Tools::writeDict(const dict_t & dict, const std::string & name)
 {
     if (getNumberOfElementsInDict(dict) > 0)
     {
@@ -35,9 +48,9 @@ void Tools::writeDict(const yampt::dict_t & dict, const std::string & name)
             for (const auto & elem : dict[i])
             {
                 file << "<record>\r\n"
-                    << "\t" << yampt::sep[1] << yampt::type_name[i] << yampt::sep[2] << "\r\n"
-                    << "\t" << yampt::sep[3] << elem.first << yampt::sep[4] << "\r\n"
-                    << "\t" << yampt::sep[5] << elem.second << yampt::sep[6] << "\r\n"
+                    << "\t" << sep[1] << type_name[i] << sep[2] << "\r\n"
+                    << "\t" << sep[3] << elem.first << sep[4] << "\r\n"
+                    << "\t" << sep[5] << elem.second << sep[6] << "\r\n"
                     << "</record>\r\n";
             }
         }
@@ -70,7 +83,7 @@ void Tools::writeFile(const std::vector<std::string> & rec_coll, const std::stri
 }
 
 //----------------------------------------------------------
-int Tools::getNumberOfElementsInDict(const yampt::dict_t & dict)
+int Tools::getNumberOfElementsInDict(const dict_t & dict)
 {
     int size = 0;
     for (auto const & elem : dict)
@@ -176,7 +189,7 @@ std::string Tools::replaceNonReadableCharsWithDot(const std::string & str)
 
 //----------------------------------------------------------
 std::string Tools::addDialogTopicsToINFOStrings(
-    yampt::single_dict_t dict,
+    single_dict_t dict,
     const std::string & friendly_text,
     bool extended)
 {

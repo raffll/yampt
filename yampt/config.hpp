@@ -4,7 +4,6 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-//#include <cctype>
 #include <iomanip>
 #include <string>
 #include <vector>
@@ -12,7 +11,6 @@
 #include <map>
 #include <set>
 #include <algorithm>
-//#include <locale>
 #include <regex>
 #include <ctime>
 
@@ -24,73 +22,26 @@
 #define DEBUG_MSG(str)
 #endif
 
-namespace yampt
-{
-
-struct CaseAwareCompare
-{
-    bool operator()(const char * left, const char * right) const
-    {
-        bool tied = true;
-        bool tiebreaker = false;
-        int i;
-
-        for (i = 0; left[i] != 0; ++i)
-        {
-            if (right[i] == 0)
-            {
-                return false;
-            }
-            if (tolower(left[i]) != tolower(right[i]))
-            {
-                return tolower(left[i]) < tolower(right[i]);
-            }
-            if (tied && left[i] != right[i])
-            {
-                tied = false;
-                tiebreaker = left[i] < right[i];
-            }
-        }
-        return(right[i] != 0) || (!tied && tiebreaker);
-    }
-
-    bool operator()(const std::string & left, const std::string & right) const
-    {
-        return operator()(left.c_str(), right.c_str());
-    }
-};
-
-enum rec_type
-{
-    CELL, DIAL, INDX, RNAM, DESC,
-    GMST, FNAM, INFO, TEXT, BNAM,
-    SCTX, Wilderness, Region, PGRD,
-    ANAM, SCVR, DNAM, CNDT, GMDT
-};
-
-const std::vector<std::string> type_name
-{
-    "CELL", "DIAL", "INDX", "RNAM", "DESC",
-    "GMST", "FNAM", "INFO", "TEXT", "BNAM",
-    "SCTX", "Wilderness", "Region", "PGRD",
-    "ANAM", "SCVR", "DNAM", "CNDT", "GMDT"
-};
-
-enum ins_mode { RAW, BASE, ALL, NOTFOUND, CHANGED };
-
-typedef std::array<std::map<std::string, std::string>, 11> dict_t;
-typedef std::map<std::string, std::string> single_dict_t;
-
-const std::array<std::string, 5> dialog_type = { "T", "V", "G", "P", "J" };
-const std::vector<std::string> sep = { "^", "<_id>", "</_id>", "<key>", "</key>", "<val>", "</val>", "<rec name=\"", "\"/>" };
-const std::vector<std::string> err = { "<err name=\"", "\"/>" };
-const std::vector<std::string> keyword_list = { "messagebox", "choice", "say ", "say," };
-
-}
-
 class Tools
 {
 public:
+    enum rec_type
+    {
+        CELL, DIAL, INDX, RNAM, DESC,
+        GMST, FNAM, INFO, TEXT, BNAM,
+        SCTX, Wilderness, Region, PGRD,
+        ANAM, SCVR, DNAM, CNDT, GMDT
+    };
+
+    enum ins_mode
+    {
+        RAW,
+        BASE,
+        ALL,
+        NOTFOUND,
+        CHANGED
+    };
+
     enum class safe_mode
     {
         heuristic,
@@ -98,25 +49,34 @@ public:
         disabled
     };
 
-    std::string readFile(const std::string & path);
-    void writeDict(
-        const yampt::dict_t & dict,
+    using dict_t = std::array<std::map<std::string, std::string>, 11>;
+    using single_dict_t = std::map<std::string, std::string>;
+
+    static const std::vector<std::string> type_name;
+    static const std::array<std::string, 5> dialog_type;
+    static const std::vector<std::string> sep;
+    static const std::vector<std::string> err;
+    static const std::vector<std::string> keyword_list;
+
+    static std::string readFile(const std::string & path);
+    static void writeDict(
+        const dict_t & dict,
         const std::string & name);
-    void writeText(
+    static void writeText(
         const std::string & text,
         const std::string & name);
-    void writeFile(
+    static void writeFile(
         const std::vector<std::string> & rec_coll,
         const std::string & name);
-    int getNumberOfElementsInDict(const yampt::dict_t & dict);
-    unsigned int convertStringByteArrayToUInt(const std::string & str);
-    std::string convertUIntToStringByteArray(const unsigned int x);
-    bool caseInsensitiveStringCmp(std::string lhs, std::string rhs);
-    std::string eraseNullChars(std::string str);
-    std::string eraseCarriageReturnChar(std::string str);
-    std::string replaceNonReadableCharsWithDot(const std::string & str);
-    std::string addDialogTopicsToINFOStrings(
-        yampt::single_dict_t dict,
+    static int getNumberOfElementsInDict(const dict_t & dict);
+    static unsigned int convertStringByteArrayToUInt(const std::string & str);
+    static std::string convertUIntToStringByteArray(const unsigned int x);
+    static bool caseInsensitiveStringCmp(std::string lhs, std::string rhs);
+    static std::string eraseNullChars(std::string str);
+    static std::string eraseCarriageReturnChar(std::string str);
+    static std::string replaceNonReadableCharsWithDot(const std::string & str);
+    static std::string addDialogTopicsToINFOStrings(
+        single_dict_t dict,
         const std::string & friendly_text,
         bool extended);
     void addLog(const std::string log);

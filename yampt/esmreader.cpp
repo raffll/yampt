@@ -154,7 +154,7 @@ void EsmReader::caseForDialogType(std::size_t &cur_pos,
                                   std::string &cur_text)
 {
     size_t type = tools.convertStringByteArrayToUInt(rec->substr(cur_pos + 8, 1));
-    cur_text = yampt::dialog_type[type];
+    cur_text = Tools::dialog_type[type];
     unique_text = cur_text;
     unique_exist = true;
 }

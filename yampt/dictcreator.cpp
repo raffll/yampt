@@ -5,7 +5,7 @@ DictCreator::DictCreator(const std::string &path_n)
     : esm_n(path_n),
       esm_ptr(&esm_n),
       message_ptr(&message_n),
-      mode(yampt::ins_mode::RAW),
+      mode(Tools::ins_mode::RAW),
       add_dial(false)
 {
     if(esm_n.isLoaded() == true)
@@ -21,7 +21,7 @@ DictCreator::DictCreator(const std::string &path_n,
       esm_f(path_f),
       esm_ptr(&esm_f),
       message_ptr(&message_f),
-      mode(yampt::ins_mode::BASE),
+      mode(Tools::ins_mode::BASE),
       add_dial(false)
 {
     if(esm_n.isLoaded() == true &&
@@ -41,7 +41,7 @@ DictCreator::DictCreator(const std::string &path_n,
 //----------------------------------------------------------
 DictCreator::DictCreator(const std::string &path_n,
                          DictMerger &merger,
-                         const yampt::ins_mode mode,
+                         const Tools::ins_mode mode,
                          const bool add_dial)
     : esm_n(path_n),
       esm_ptr(&esm_n),
@@ -123,12 +123,12 @@ void DictCreator::printLogSummary()
 }
 
 //----------------------------------------------------------
-void DictCreator::printLogLine(const yampt::rec_type type)
+void DictCreator::printLogLine(const Tools::rec_type type)
 {
-    std::string id = yampt::type_name[type];
+    std::string id = Tools::type_name[type];
 
-    if(type == yampt::rec_type::Wilderness ||
-       type == yampt::rec_type::Region)
+    if(type == Tools::rec_type::Wilderness ||
+       type == Tools::rec_type::Region)
     {
         id = "+ " + id;
     }
@@ -137,8 +137,8 @@ void DictCreator::printLogLine(const yampt::rec_type type)
     std::cout << id
               << std::setw(5) << std::to_string(counter_created) << " / ";
 
-    if(type == yampt::rec_type::CELL ||
-       type == yampt::rec_type::DIAL)
+    if(type == Tools::rec_type::CELL ||
+       type == Tools::rec_type::DIAL)
     {
         std::cout << std::setw(7) << std::to_string(counter_missing) << " / ";
     }
@@ -191,31 +191,31 @@ void DictCreator::resetCounters()
 //----------------------------------------------------------
 void DictCreator::validateRecord(const std::string &unique_text,
                                  const std::string &friendly_text,
-                                 const yampt::rec_type type)
+                                 const Tools::rec_type type)
 {
     counter_all++;
 
     // Insert without special cases
-    if(mode == yampt::ins_mode::RAW ||
-       mode == yampt::ins_mode::BASE)
+    if(mode == Tools::ins_mode::RAW ||
+       mode == Tools::ins_mode::BASE)
     {
         insertRecordToDict(unique_text, friendly_text, type);
     }
 
     // For CELL, DIAL, BNAM, SCTX find corresponding record in dictionary given by user
-    if(mode == yampt::ins_mode::ALL)
+    if(mode == Tools::ins_mode::ALL)
     {
         validateRecordForModeALL(unique_text, friendly_text, type);
     }
 
     // Insert only ones not found in dictionary given by user
-    if(mode == yampt::ins_mode::NOTFOUND)
+    if(mode == Tools::ins_mode::NOTFOUND)
     {
         validateRecordForModeNOT(unique_text, friendly_text, type);
     }
 
     // Insert only with changed friendly text compared to dictionary given by user
-    if(mode == yampt::ins_mode::CHANGED)
+    if(mode == Tools::ins_mode::CHANGED)
     {
         validateRecordForModeCHANGED(unique_text, friendly_text, type);
     }
@@ -224,12 +224,12 @@ void DictCreator::validateRecord(const std::string &unique_text,
 //----------------------------------------------------------
 void DictCreator::validateRecordForModeALL(const std::string &unique_text,
                                            const std::string &friendly_text,
-                                           const yampt::rec_type type)
+                                           const Tools::rec_type type)
 {
-    if(type == yampt::rec_type::CELL ||
-       type == yampt::rec_type::DIAL ||
-       type == yampt::rec_type::BNAM ||
-       type == yampt::rec_type::SCTX)
+    if(type == Tools::rec_type::CELL ||
+       type == Tools::rec_type::DIAL ||
+       type == Tools::rec_type::BNAM ||
+       type == Tools::rec_type::SCTX)
     {
         auto search = merger->getDict(type).find(unique_text);
         if(search != merger->getDict(type).end())
@@ -250,16 +250,16 @@ void DictCreator::validateRecordForModeALL(const std::string &unique_text,
 //----------------------------------------------------------
 void DictCreator::validateRecordForModeNOT(const std::string &unique_text,
                                            const std::string &friendly_text,
-                                           const yampt::rec_type type)
+                                           const Tools::rec_type type)
 {
     std::string new_friendly;
     auto search = merger->getDict(type).find(unique_text);
     if(search == merger->getDict(type).end())
     {
-        if(type == yampt::rec_type::INFO &&
+        if(type == Tools::rec_type::INFO &&
            add_dial == true)
         {
-            new_friendly = tools.addDialogTopicsToINFOStrings(merger->getDict(yampt::rec_type::DIAL),
+            new_friendly = tools.addDialogTopicsToINFOStrings(merger->getDict(Tools::rec_type::DIAL),
                                                               friendly_text,
                                                               true);
             insertRecordToDict(unique_text, new_friendly, type);
@@ -274,26 +274,26 @@ void DictCreator::validateRecordForModeNOT(const std::string &unique_text,
 //----------------------------------------------------------
 void DictCreator::validateRecordForModeCHANGED(const std::string &unique_text,
                                                const std::string &friendly_text,
-                                               const yampt::rec_type type)
+                                               const Tools::rec_type type)
 {
     std::string new_friendly;
-    if(type == yampt::rec_type::GMST ||
-       type == yampt::rec_type::FNAM ||
-       type == yampt::rec_type::DESC ||
-       type == yampt::rec_type::TEXT ||
-       type == yampt::rec_type::RNAM ||
-       type == yampt::rec_type::INDX ||
-       type == yampt::rec_type::INFO)
+    if(type == Tools::rec_type::GMST ||
+       type == Tools::rec_type::FNAM ||
+       type == Tools::rec_type::DESC ||
+       type == Tools::rec_type::TEXT ||
+       type == Tools::rec_type::RNAM ||
+       type == Tools::rec_type::INDX ||
+       type == Tools::rec_type::INFO)
     {
         auto search = merger->getDict(type).find(unique_text);
         if(search != merger->getDict(type).end())
         {
             if(search->second != friendly_text)
             {
-                if(type == yampt::rec_type::INFO &&
+                if(type == Tools::rec_type::INFO &&
                    add_dial == true)
                 {
-                    new_friendly = tools.addDialogTopicsToINFOStrings(merger->getDict(yampt::rec_type::DIAL),
+                    new_friendly = tools.addDialogTopicsToINFOStrings(merger->getDict(Tools::rec_type::DIAL),
                                                                       friendly_text,
                                                                       true);
                     insertRecordToDict(unique_text, new_friendly, type);
@@ -310,7 +310,7 @@ void DictCreator::validateRecordForModeCHANGED(const std::string &unique_text,
 //----------------------------------------------------------
 void DictCreator::insertRecordToDict(const std::string &unique_text,
                                      const std::string &friendly_text,
-                                     const yampt::rec_type type)
+                                     const Tools::rec_type type)
 {
     if(dict[type].insert({unique_text, friendly_text}).second == true)
     {
@@ -321,12 +321,12 @@ void DictCreator::insertRecordToDict(const std::string &unique_text,
         auto search = dict[type].find(unique_text);
         if(friendly_text != search->second)
         {
-            std::string unique_current = unique_text + yampt::err[0] + "DOUBLED_" +
-                                         std::to_string(counter_doubled) + yampt::err[1];
+            std::string unique_current = unique_text + Tools::err[0] + "DOUBLED_" +
+                                         std::to_string(counter_doubled) + Tools::err[1];
             dict[type].insert({unique_current, friendly_text});
             counter_doubled++;
             counter_created++;
-            tools.addLog("Doubled " + yampt::type_name[type] + ": " + unique_text);
+            tools.addLog("Doubled " + Tools::type_name[type] + ": " + unique_text);
         }
         else
         {
@@ -338,12 +338,12 @@ void DictCreator::insertRecordToDict(const std::string &unique_text,
 //----------------------------------------------------------
 std::string DictCreator::translateDialogTopicsInDictId(std::string to_translate)
 {
-    if(mode == yampt::ins_mode::ALL ||
-       mode == yampt::ins_mode::NOTFOUND ||
-       mode == yampt::ins_mode::CHANGED)
+    if(mode == Tools::ins_mode::ALL ||
+       mode == Tools::ins_mode::NOTFOUND ||
+       mode == Tools::ins_mode::CHANGED)
     {
-        auto search = merger->getDict(yampt::rec_type::DIAL).find(to_translate);
-        if(search != merger->getDict(yampt::rec_type::DIAL).end())
+        auto search = merger->getDict(Tools::rec_type::DIAL).find(to_translate);
+        if(search != merger->getDict(Tools::rec_type::DIAL).end())
         {
             return search->second;
         }
@@ -368,9 +368,9 @@ std::vector<std::string> DictCreator::makeScriptMessagesColl(const std::string &
         transform(line_lc.begin(), line_lc.end(),
                   line_lc.begin(), ::tolower);
 
-        for(size_t i = 0; i < yampt::keyword_list.size(); ++i)
+        for(size_t i = 0; i < Tools::keyword_list.size(); ++i)
         {
-            keyword_pos = line_lc.find(yampt::keyword_list[i]);
+            keyword_pos = line_lc.find(Tools::keyword_list[i]);
             keyword_pos_coll.insert(keyword_pos);
         }
 
@@ -402,11 +402,11 @@ void DictCreator::makeDictCELL()
             {
                 validateRecord(esm_ptr->getFriendlyText(),
                                esm_n.getFriendlyText(),
-                               yampt::rec_type::CELL);
+                               Tools::rec_type::CELL);
             }
         }
     }
-    printLogLine(yampt::rec_type::CELL);
+    printLogLine(Tools::rec_type::CELL);
 }
 
 //----------------------------------------------------------
@@ -430,11 +430,11 @@ void DictCreator::makeDictCELLWilderness()
             {
                 validateRecord(esm_ptr->getFriendlyText(),
                                esm_n.getFriendlyText(),
-                               yampt::rec_type::CELL);
+                               Tools::rec_type::CELL);
             }
         }
     }
-    printLogLine(yampt::rec_type::Wilderness);
+    printLogLine(Tools::rec_type::Wilderness);
 }
 
 //----------------------------------------------------------
@@ -463,7 +463,7 @@ void DictCreator::makeDictCELLWildernessExtended()
                         {
                             validateRecord(esm_f.getFriendlyText(),
                                            esm_n.getFriendlyText(),
-                                           yampt::rec_type::CELL);
+                                           Tools::rec_type::CELL);
                             break;
                         }
                     }
@@ -471,7 +471,7 @@ void DictCreator::makeDictCELLWildernessExtended()
             }
         }
     }
-    printLogLine(yampt::rec_type::Wilderness);
+    printLogLine(Tools::rec_type::Wilderness);
 }
 
 //----------------------------------------------------------
@@ -491,11 +491,11 @@ void DictCreator::makeDictCELLRegion()
             {
                 validateRecord(esm_ptr->getFriendlyText(),
                                esm_n.getFriendlyText(),
-                               yampt::rec_type::CELL);
+                               Tools::rec_type::CELL);
             }
         }
     }
-    printLogLine(yampt::rec_type::Region);
+    printLogLine(Tools::rec_type::Region);
 }
 
 //----------------------------------------------------------
@@ -524,7 +524,7 @@ void DictCreator::makeDictCELLRegionExtended()
                         {
                             validateRecord(esm_f.getFriendlyText(),
                                            esm_n.getFriendlyText(),
-                                           yampt::rec_type::CELL);
+                                           Tools::rec_type::CELL);
                             break;
                         }
                     }
@@ -532,7 +532,7 @@ void DictCreator::makeDictCELLRegionExtended()
             }
         }
     }
-    printLogLine(yampt::rec_type::Region);
+    printLogLine(Tools::rec_type::Region);
 }
 
 //----------------------------------------------------------
@@ -552,11 +552,11 @@ void DictCreator::makeDictGMST()
             {
                 validateRecord(esm_n.getUniqueText(),
                                esm_n.getFriendlyText(),
-                               yampt::rec_type::GMST);
+                               Tools::rec_type::GMST);
             }
         }
     }
-    printLogLine(yampt::rec_type::GMST);
+    printLogLine(Tools::rec_type::GMST);
 }
 
 //----------------------------------------------------------
@@ -585,13 +585,13 @@ void DictCreator::makeDictFNAM()
                esm_n.isFriendlyValid() == true &&
                esm_n.getUniqueText() != "player") // Skip player name
             {
-                validateRecord(esm_n.getRecordId() + yampt::sep[0] + esm_n.getUniqueText(),
+                validateRecord(esm_n.getRecordId() + Tools::sep[0] + esm_n.getUniqueText(),
                         esm_n.getFriendlyText(),
-                        yampt::rec_type::FNAM);
+                        Tools::rec_type::FNAM);
             }
         }
     }
-    printLogLine(yampt::rec_type::FNAM);
+    printLogLine(Tools::rec_type::FNAM);
 }
 
 //----------------------------------------------------------
@@ -611,14 +611,14 @@ void DictCreator::makeDictDESC()
                esm_n.isFriendlyValid() == true)
             {
                 validateRecord(esm_n.getRecordId() +
-                               yampt::sep[0] +
+                               Tools::sep[0] +
                         esm_n.getUniqueText(),
                         esm_n.getFriendlyText(),
-                        yampt::rec_type::DESC);
+                        Tools::rec_type::DESC);
             }
         }
     }
-    printLogLine(yampt::rec_type::DESC);
+    printLogLine(Tools::rec_type::DESC);
 }
 
 //----------------------------------------------------------
@@ -637,11 +637,11 @@ void DictCreator::makeDictTEXT()
             {
                 validateRecord(esm_n.getUniqueText(),
                                esm_n.getFriendlyText(),
-                               yampt::rec_type::TEXT);
+                               Tools::rec_type::TEXT);
             }
         }
     }
-    printLogLine(yampt::rec_type::TEXT);
+    printLogLine(Tools::rec_type::TEXT);
 }
 
 //----------------------------------------------------------
@@ -659,16 +659,16 @@ void DictCreator::makeDictRNAM()
             {
                 while(esm_n.isFriendlyValid() == true)
                 {
-                    validateRecord(esm_n.getUniqueText() + yampt::sep[0] + esm_n.getFriendlyCounter(),
+                    validateRecord(esm_n.getUniqueText() + Tools::sep[0] + esm_n.getFriendlyCounter(),
                             esm_n.getFriendlyText(),
-                            yampt::rec_type::RNAM);
+                            Tools::rec_type::RNAM);
 
                     esm_n.setNextFriendlyTo("RNAM");
                 }
             }
         }
     }
-    printLogLine(yampt::rec_type::RNAM);
+    printLogLine(Tools::rec_type::RNAM);
 }
 
 //----------------------------------------------------------
@@ -686,13 +686,13 @@ void DictCreator::makeDictINDX()
             if(esm_n.isUniqueValid() == true &&
                esm_n.isFriendlyValid() == true)
             {
-                validateRecord(esm_n.getRecordId() + yampt::sep[0] + esm_n.getUniqueText(),
+                validateRecord(esm_n.getRecordId() + Tools::sep[0] + esm_n.getUniqueText(),
                         esm_n.getFriendlyText(),
-                        yampt::rec_type::INDX);
+                        Tools::rec_type::INDX);
             }
         }
     }
-    printLogLine(yampt::rec_type::INDX);
+    printLogLine(Tools::rec_type::INDX);
 }
 
 //----------------------------------------------------------
@@ -716,11 +716,11 @@ void DictCreator::makeDictDIAL()
             {
                 validateRecord(esm_ptr->getFriendlyText(),
                                esm_n.getFriendlyText(),
-                               yampt::rec_type::DIAL);
+                               Tools::rec_type::DIAL);
             }
         }
     }
-    printLogLine(yampt::rec_type::DIAL);
+    printLogLine(Tools::rec_type::DIAL);
 }
 
 
@@ -739,7 +739,7 @@ void DictCreator::makeDictINFO()
             if(esm_n.isUniqueValid() == true &&
                esm_n.isFriendlyValid() == true)
             {
-                dialog_topic = esm_n.getUniqueText() + yampt::sep[0] +
+                dialog_topic = esm_n.getUniqueText() + Tools::sep[0] +
                                translateDialogTopicsInDictId(esm_n.getFriendlyText());
             }
         }
@@ -750,13 +750,13 @@ void DictCreator::makeDictINFO()
             if(esm_n.isUniqueValid() == true &&
                esm_n.isFriendlyValid() == true)
             {
-                validateRecord(dialog_topic + yampt::sep[0] + esm_n.getUniqueText(),
+                validateRecord(dialog_topic + Tools::sep[0] + esm_n.getUniqueText(),
                         esm_n.getFriendlyText(),
-                        yampt::rec_type::INFO);
+                        Tools::rec_type::INFO);
             }
         }
     }
-    printLogLine(yampt::rec_type::INFO);
+    printLogLine(Tools::rec_type::INFO);
 }
 
 //----------------------------------------------------------
@@ -785,15 +785,15 @@ void DictCreator::makeDictBNAM()
                 {
                     for(size_t k = 0; k < message_n.size(); ++k)
                     {
-                        validateRecord(esm_ptr->getUniqueText() + yampt::sep[0] + message_ptr->at(k),
-                                esm_n.getUniqueText() + yampt::sep[0] + message_n.at(k),
-                                yampt::rec_type::BNAM);
+                        validateRecord(esm_ptr->getUniqueText() + Tools::sep[0] + message_ptr->at(k),
+                                esm_n.getUniqueText() + Tools::sep[0] + message_n.at(k),
+                                Tools::rec_type::BNAM);
                     }
                 }
             }
         }
     }
-    printLogLine(yampt::rec_type::BNAM);
+    printLogLine(Tools::rec_type::BNAM);
 }
 
 //----------------------------------------------------------
@@ -822,15 +822,15 @@ void DictCreator::makeDictSCPT()
                 {
                     for(size_t k = 0; k < message_n.size(); ++k)
                     {
-                        validateRecord(esm_ptr->getUniqueText() + yampt::sep[0] + message_ptr->at(k),
-                                esm_n.getUniqueText() + yampt::sep[0] + message_n.at(k),
-                                yampt::rec_type::SCTX);
+                        validateRecord(esm_ptr->getUniqueText() + Tools::sep[0] + message_ptr->at(k),
+                                esm_n.getUniqueText() + Tools::sep[0] + message_n.at(k),
+                                Tools::rec_type::SCTX);
                     }
                 }
             }
         }
     }
-    printLogLine(yampt::rec_type::SCTX);
+    printLogLine(Tools::rec_type::SCTX);
 }
 
 //----------------------------------------------------------
@@ -855,7 +855,7 @@ void DictCreator::makeDictCELLExtended()
             {
                 validateRecord(esm_f.getFriendlyText(),
                                esm_n.getFriendlyText(),
-                               yampt::rec_type::CELL);
+                               Tools::rec_type::CELL);
             }
             std::get<2>(foreign_coll[i]) = true;
         }
@@ -865,7 +865,7 @@ void DictCreator::makeDictCELLExtended()
         }
     }
     makeDictCELLExtendedAddMissing();
-    printLogLine(yampt::rec_type::CELL);
+    printLogLine(Tools::rec_type::CELL);
 }
 
 //----------------------------------------------------------
@@ -935,8 +935,8 @@ void DictCreator::makeDictCELLExtendedAddMissing()
                esm_f.getFriendlyText() != "")
             {
                 validateRecord(esm_f.getFriendlyText(),
-                               yampt::err[0] + "MISSING" + yampt::err[1],
-                        yampt::rec_type::CELL);
+                               Tools::err[0] + "MISSING" + Tools::err[1],
+                        Tools::rec_type::CELL);
                 tools.addLog("Missing CELL: " + esm_f.getFriendlyText());
             }
         }
@@ -963,7 +963,7 @@ void DictCreator::makeDictDIALExtended()
             {
                 validateRecord(esm_f.getFriendlyText(),
                                esm_n.getFriendlyText(),
-                               yampt::rec_type::DIAL);
+                               Tools::rec_type::DIAL);
             }
             std::get<2>(foreign_coll[i]) = true;
         }
@@ -973,7 +973,7 @@ void DictCreator::makeDictDIALExtended()
         }
     }
     makeDictDIALExtendedAddMissing();
-    printLogLine(yampt::rec_type::DIAL);
+    printLogLine(Tools::rec_type::DIAL);
 }
 
 //----------------------------------------------------------
@@ -1037,8 +1037,8 @@ void DictCreator::makeDictDIALExtendedAddMissing()
             if(esm_f.isFriendlyValid() == true)
             {
                 validateRecord(esm_f.getFriendlyText(),
-                               yampt::err[0] + "MISSING" + yampt::err[1],
-                        yampt::rec_type::DIAL);
+                               Tools::err[0] + "MISSING" + Tools::err[1],
+                        Tools::rec_type::DIAL);
                 tools.addLog("Missing DIAL: " + esm_f.getFriendlyText());
             }
         }
@@ -1073,15 +1073,15 @@ void DictCreator::makeDictBNAMExtended()
                 {
                     for(size_t k = 0; k < message_n.size(); ++k)
                     {
-                        validateRecord(esm_f.getUniqueText() + yampt::sep[0] + message_f.at(k),
-                                esm_f.getUniqueText() + yampt::sep[0] + message_n.at(k),
-                                yampt::rec_type::BNAM);
+                        validateRecord(esm_f.getUniqueText() + Tools::sep[0] + message_f.at(k),
+                                esm_f.getUniqueText() + Tools::sep[0] + message_n.at(k),
+                                Tools::rec_type::BNAM);
                     }
                 }
             }
         }
     }
-    printLogLine(yampt::rec_type::BNAM);
+    printLogLine(Tools::rec_type::BNAM);
 }
 
 //----------------------------------------------------------
@@ -1148,15 +1148,15 @@ void DictCreator::makeDictSCPTExtended()
                 {
                     for(size_t k = 0; k < message_n.size(); ++k)
                     {
-                        validateRecord(esm_f.getUniqueText() + yampt::sep[0] + message_f.at(k),
-                                esm_n.getUniqueText() + yampt::sep[0] + message_n.at(k),
-                                yampt::rec_type::SCTX);
+                        validateRecord(esm_f.getUniqueText() + Tools::sep[0] + message_f.at(k),
+                                esm_n.getUniqueText() + Tools::sep[0] + message_n.at(k),
+                                Tools::rec_type::SCTX);
                     }
                 }
             }
         }
     }
-    printLogLine(yampt::rec_type::SCTX);
+    printLogLine(Tools::rec_type::SCTX);
 }
 
 //----------------------------------------------------------

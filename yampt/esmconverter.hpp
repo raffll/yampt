@@ -22,19 +22,19 @@ private:
     void convertRecordContent(const std::string & new_friendly);
     std::string addNullTerminatorIfEmpty(const std::string & new_friendly);
     std::string setNewFriendly(
-        const yampt::rec_type type,
+        const Tools::rec_type type,
         const std::string & unique_text,
         const std::string & friendly_text,
         const std::string & dialog_topic = "");
     std::pair<std::string, std::string> setNewScript(
-        const yampt::rec_type type,
+        const Tools::rec_type type,
         const std::string & prefix,
         const std::string & friendly_text,
         const std::string & compiled_data);
     void checkIfIdentical(
         const std::string & friendly_text,
         const std::string & new_friendly);
-    void printLogLine(const yampt::rec_type type);
+    void printLogLine(const Tools::rec_type type);
     void convertMAST();
     void convertCELL();
     void convertPGRD();
