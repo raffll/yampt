@@ -11,7 +11,7 @@ public:
     std::string getNamePrefix() { return name_prefix; }
 
     Tools::dict_t const& getDict() const { return dict; }
-    Tools::single_dict_t const& getDict(Tools::rec_type type) const { return dict[type]; }
+    Tools::single_dict_t const& getDict(Tools::RecType type) const { return dict[type]; }
     Tools::single_dict_t const& getDict(size_t type) const { return dict[type]; }
 
     DictReader(const std::string &path);
@@ -26,7 +26,7 @@ private:
     void validateRecord(const std::string &id,
                         const std::string &unique_text,
                         const std::string &friendly_text);
-    void insertRecord(const Tools::rec_type type,
+    void insertRecord(const Tools::RecType type,
                       const std::string &unique_text,
                       const std::string &friendly_text);
     void printWarningLog(const std::string &id,

@@ -6,14 +6,14 @@ const std::vector<std::string> Tools::type_name
 {
     "CELL", "DIAL", "INDX", "RNAM", "DESC",
     "GMST", "FNAM", "INFO", "TEXT", "BNAM",
-    "SCTX", "Wilderness", "Region", "PGRD",
+    "SCTX", "+ Wilderness", "+ Region", "PGRD",
     "ANAM", "SCVR", "DNAM", "CNDT", "GMDT"
 };
 
 const std::vector<std::string> Tools::dialog_type { "T", "V", "G", "P", "J" };
 const std::vector<std::string> Tools::sep { "^", "<_id>", "</_id>", "<key>", "</key>", "<val>", "</val>", "<rec name=\"", "\"/>" };
 const std::vector<std::string> Tools::err { "<err name=\"", "\"/>" };
-const std::vector<std::string> Tools::keyword_list { "messagebox", "choice", "say ", "say," };
+const std::vector<std::string> Tools::keywords { "messagebox", "choice", "say ", "say," };
 
 //----------------------------------------------------------
 std::string Tools::readFile(const std::string & path)
@@ -233,8 +233,8 @@ std::string Tools::addDialogTopicsToINFOStrings(
 //----------------------------------------------------------
 void Tools::addLog(const std::string & entry)
 {
-    std::cout << entry << std::endl;
-    log += entry + "\r\n";
+    std::cout << entry;
+    log += entry;
 }
 
 //----------------------------------------------------------

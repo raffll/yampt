@@ -12,7 +12,7 @@ public:
     std::string getNamePrefix() { return esm.getNamePrefix(); }
     std::string getNameSuffix() { return esm.getNameSuffix(); }
     std::time_t getTime() { return esm.getTime(); }
-    std::vector<std::string> getRecordColl() { return esm.getRecordColl(); }
+    std::vector<std::string> getRecordColl() { return esm.getRecords(); }
 
     EsmConverter(std::string path, DictMerger & merger, bool add_dial, std::string file_suffix, Tools::safe_mode safe_mode);
 
@@ -22,19 +22,19 @@ private:
     void convertRecordContent(const std::string & new_friendly);
     std::string addNullTerminatorIfEmpty(const std::string & new_friendly);
     std::string setNewFriendly(
-        const Tools::rec_type type,
+        const Tools::RecType type,
         const std::string & unique_text,
         const std::string & friendly_text,
         const std::string & dialog_topic = "");
     std::pair<std::string, std::string> setNewScript(
-        const Tools::rec_type type,
+        const Tools::RecType type,
         const std::string & prefix,
         const std::string & friendly_text,
         const std::string & compiled_data);
     void checkIfIdentical(
         const std::string & friendly_text,
         const std::string & new_friendly);
-    void printLogLine(const Tools::rec_type type);
+    void printLogLine(const Tools::RecType type);
     void convertMAST();
     void convertCELL();
     void convertPGRD();

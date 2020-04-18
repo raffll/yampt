@@ -18,7 +18,7 @@ public:
     std::string getNamePrefix() { return name_prefix; }
     std::string getNameSuffix() { return name_suffix; }
     std::time_t getTime() { return time; }
-    std::vector<std::string> const& getRecordColl() const { return rec_coll; }
+    std::vector<std::string> const& getRecords() const { return rec_coll; }
 
     std::string getRecordContent() { return *rec; }
     std::string getRecordId() { return rec_id; }

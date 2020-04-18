@@ -13,7 +13,7 @@ std::string EsmTools::dumpFile()
     std::string dump;
     if (esm.isLoaded() == true)
     {
-        for (size_t i = 0; i < esm.getRecordColl().size(); ++i)
+        for (size_t i = 0; i < esm.getRecords().size(); ++i)
         {
             size_t cur_pos = 16;
             size_t cur_size = 0;
@@ -46,7 +46,7 @@ std::string EsmTools::makeScriptList()
     std::map<std::string, std::pair<std::string, std::string>> scripts_coll;
     if (esm.isLoaded() == true)
     {
-        for (size_t i = 0; i < esm.getRecordColl().size(); ++i)
+        for (size_t i = 0; i < esm.getRecords().size(); ++i)
         {
             esm.setRecordTo(i);
             if (esm.getRecordId() == "INFO")
@@ -78,7 +78,7 @@ std::string EsmTools::makeScriptList()
 bool EsmTools::findChar(EsmReader & esm)
 {
     std::string dump;
-    for (size_t i = 0; i < esm.getRecordColl().size(); ++i)
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.setRecordTo(i);
         if (esm.getRecordId() == "INFO")

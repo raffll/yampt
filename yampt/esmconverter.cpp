@@ -65,7 +65,7 @@ void EsmConverter::convertEsm(const bool safe)
 }
 
 //----------------------------------------------------------
-void EsmConverter::printLogLine(const Tools::rec_type type)
+void EsmConverter::printLogLine(const Tools::RecType type)
 {
     std::cout << Tools::type_name[type] << " "
         << std::setw(10) << std::to_string(counter_converted) << " / "
@@ -116,7 +116,7 @@ std::string EsmConverter::addNullTerminatorIfEmpty(const std::string & new_frien
 }
 
 //----------------------------------------------------------
-std::string EsmConverter::setNewFriendly(const Tools::rec_type type,
+std::string EsmConverter::setNewFriendly(const Tools::RecType type,
                                          const std::string & unique_text,
                                          const std::string & friendly_text,
                                          const std::string & dialog_topic)
@@ -129,11 +129,11 @@ std::string EsmConverter::setNewFriendly(const Tools::rec_type type,
         new_friendly = search->second;
         checkIfIdentical(friendly_text, new_friendly);
     }
-    else if (type == Tools::rec_type::INFO &&
+    else if (type == Tools::RecType::INFO &&
              add_dial == true &&
              dialog_topic.substr(0, 1) != "V")
     {
-        new_friendly = tools.addDialogTopicsToINFOStrings(merger->getDict(Tools::rec_type::DIAL),
+        new_friendly = tools.addDialogTopicsToINFOStrings(merger->getDict(Tools::RecType::DIAL),
                                                           friendly_text,
                                                           false);
         checkIfIdentical(friendly_text, new_friendly);
@@ -147,7 +147,7 @@ std::string EsmConverter::setNewFriendly(const Tools::rec_type type,
 }
 
 //----------------------------------------------------------
-std::pair<std::string, std::string> EsmConverter::setNewScript(const Tools::rec_type type,
+std::pair<std::string, std::string> EsmConverter::setNewScript(const Tools::RecType type,
                                                                const std::string & line_prefix,
                                                                const std::string & friendly_text,
                                                                const std::string & compiled_data)
@@ -188,7 +188,7 @@ void EsmConverter::convertMAST()
     std::string master_prefix;
     std::string master_suffix;
     resetCounters();
-    for (size_t i = 0; i < esm.getRecordColl().size(); ++i)
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.setRecordTo(i);
         if (esm.getRecordId() == "TES3")
@@ -210,7 +210,7 @@ void EsmConverter::convertCELL()
 {
     std::string new_friendly;
     resetCounters();
-    for (size_t i = 0; i < esm.getRecordColl().size(); ++i)
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.setRecordTo(i);
         if (esm.getRecordId() == "CELL")
@@ -219,7 +219,7 @@ void EsmConverter::convertCELL()
             if (esm.isFriendlyValid() == true &&
                 esm.getFriendlyText() != "") // Is named cell
             {
-                new_friendly = setNewFriendly(Tools::rec_type::CELL,
+                new_friendly = setNewFriendly(Tools::RecType::CELL,
                                               esm.getFriendlyText(),
                                               esm.getFriendlyText());
                 if (to_convert == true)
@@ -231,7 +231,7 @@ void EsmConverter::convertCELL()
             }
         }
     }
-    printLogLine(Tools::rec_type::CELL);
+    printLogLine(Tools::RecType::CELL);
 }
 
 //----------------------------------------------------------
@@ -239,7 +239,7 @@ void EsmConverter::convertPGRD()
 {
     std::string new_friendly;
     resetCounters();
-    for (size_t i = 0; i < esm.getRecordColl().size(); ++i)
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.setRecordTo(i);
         if (esm.getRecordId() == "PGRD")
@@ -248,7 +248,7 @@ void EsmConverter::convertPGRD()
             if (esm.isFriendlyValid() == true &&
                 esm.getFriendlyText() != "")
             {
-                new_friendly = setNewFriendly(Tools::rec_type::CELL,
+                new_friendly = setNewFriendly(Tools::RecType::CELL,
                                               esm.getFriendlyText(),
                                               esm.getFriendlyText());
                 if (to_convert == true)
@@ -258,7 +258,7 @@ void EsmConverter::convertPGRD()
             }
         }
     }
-    printLogLine(Tools::rec_type::PGRD);
+    printLogLine(Tools::RecType::PGRD);
 }
 
 //----------------------------------------------------------
@@ -266,7 +266,7 @@ void EsmConverter::convertANAM()
 {
     std::string new_friendly;
     resetCounters();
-    for (size_t i = 0; i < esm.getRecordColl().size(); ++i)
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.setRecordTo(i);
         if (esm.getRecordId() == "INFO")
@@ -275,7 +275,7 @@ void EsmConverter::convertANAM()
             if (esm.isFriendlyValid() == true &&
                 esm.getFriendlyText() != "")
             {
-                new_friendly = setNewFriendly(Tools::rec_type::CELL,
+                new_friendly = setNewFriendly(Tools::RecType::CELL,
                                               esm.getFriendlyText(),
                                               esm.getFriendlyText());
                 if (to_convert == true)
@@ -285,7 +285,7 @@ void EsmConverter::convertANAM()
             }
         }
     }
-    printLogLine(Tools::rec_type::ANAM);
+    printLogLine(Tools::RecType::ANAM);
 }
 
 //----------------------------------------------------------
@@ -293,7 +293,7 @@ void EsmConverter::convertSCVR()
 {
     std::string new_friendly;
     resetCounters();
-    for (size_t i = 0; i < esm.getRecordColl().size(); ++i)
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.setRecordTo(i);
         if (esm.getRecordId() == "INFO")
@@ -303,7 +303,7 @@ void EsmConverter::convertSCVR()
             {
                 if (esm.getFriendlyText().substr(1, 1) == "B")
                 {
-                    new_friendly = setNewFriendly(Tools::rec_type::CELL,
+                    new_friendly = setNewFriendly(Tools::RecType::CELL,
                                                   esm.getFriendlyText().substr(5),
                                                   esm.getFriendlyText().substr(5));
                     new_friendly = esm.getFriendlyText().substr(0, 5) + new_friendly;
@@ -317,7 +317,7 @@ void EsmConverter::convertSCVR()
             }
         }
     }
-    printLogLine(Tools::rec_type::SCVR);
+    printLogLine(Tools::RecType::SCVR);
 }
 
 //----------------------------------------------------------
@@ -326,7 +326,7 @@ void EsmConverter::convertDNAM()
     std::string new_friendly;
 
     resetCounters();
-    for (size_t i = 0; i < esm.getRecordColl().size(); ++i)
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.setRecordTo(i);
         if (esm.getRecordId() == "CELL" ||
@@ -335,7 +335,7 @@ void EsmConverter::convertDNAM()
             esm.setFriendlyTo("DNAM");
             while (esm.isFriendlyValid() == true)
             {
-                new_friendly = setNewFriendly(Tools::rec_type::CELL,
+                new_friendly = setNewFriendly(Tools::RecType::CELL,
                                               esm.getFriendlyText(),
                                               esm.getFriendlyText());
                 if (to_convert == true)
@@ -346,7 +346,7 @@ void EsmConverter::convertDNAM()
             }
         }
     }
-    printLogLine(Tools::rec_type::DNAM);
+    printLogLine(Tools::RecType::DNAM);
 }
 
 //----------------------------------------------------------
@@ -354,7 +354,7 @@ void EsmConverter::convertCNDT()
 {
     std::string new_friendly;
     resetCounters();
-    for (size_t i = 0; i < esm.getRecordColl().size(); ++i)
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.setRecordTo(i);
         if (esm.getRecordId() == "NPC_")
@@ -362,7 +362,7 @@ void EsmConverter::convertCNDT()
             esm.setFriendlyTo("CNDT");
             while (esm.isFriendlyValid() == true)
             {
-                new_friendly = setNewFriendly(Tools::rec_type::CELL,
+                new_friendly = setNewFriendly(Tools::RecType::CELL,
                                               esm.getFriendlyText(),
                                               esm.getFriendlyText());
                 if (to_convert == true)
@@ -373,7 +373,7 @@ void EsmConverter::convertCNDT()
             }
         }
     }
-    printLogLine(Tools::rec_type::CNDT);
+    printLogLine(Tools::RecType::CNDT);
 }
 
 //----------------------------------------------------------
@@ -381,7 +381,7 @@ void EsmConverter::convertGMST()
 {
     std::string new_friendly;
     resetCounters();
-    for (size_t i = 0; i < esm.getRecordColl().size(); ++i)
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.setRecordTo(i);
         if (esm.getRecordId() == "GMST")
@@ -392,7 +392,7 @@ void EsmConverter::convertGMST()
                 esm.isFriendlyValid() == true &&
                 esm.getUniqueText().substr(0, 1) == "s")
             {
-                new_friendly = setNewFriendly(Tools::rec_type::GMST,
+                new_friendly = setNewFriendly(Tools::RecType::GMST,
                                               esm.getUniqueText(),
                                               esm.getFriendlyText());
                 if (to_convert == true)
@@ -403,7 +403,7 @@ void EsmConverter::convertGMST()
             }
         }
     }
-    printLogLine(Tools::rec_type::GMST);
+    printLogLine(Tools::RecType::GMST);
 }
 
 //----------------------------------------------------------
@@ -411,7 +411,7 @@ void EsmConverter::convertFNAM()
 {
     std::string new_friendly;
     resetCounters();
-    for (size_t i = 0; i < esm.getRecordColl().size(); ++i)
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.setRecordTo(i);
         if (esm.getRecordId() == "ACTI" || esm.getRecordId() == "ALCH" ||
@@ -433,7 +433,7 @@ void EsmConverter::convertFNAM()
                 esm.isFriendlyValid() == true &&
                 esm.getUniqueText() != "player")
             {
-                new_friendly = setNewFriendly(Tools::rec_type::FNAM,
+                new_friendly = setNewFriendly(Tools::RecType::FNAM,
                                               esm.getRecordId() + Tools::sep[0] + esm.getUniqueText(),
                                               esm.getFriendlyText());
                 if (to_convert == true)
@@ -445,7 +445,7 @@ void EsmConverter::convertFNAM()
             }
         }
     }
-    printLogLine(Tools::rec_type::FNAM);
+    printLogLine(Tools::RecType::FNAM);
 }
 
 //----------------------------------------------------------
@@ -453,7 +453,7 @@ void EsmConverter::convertDESC()
 {
     std::string new_friendly;
     resetCounters();
-    for (size_t i = 0; i < esm.getRecordColl().size(); ++i)
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.setRecordTo(i);
         if (esm.getRecordId() == "BSGN" ||
@@ -465,7 +465,7 @@ void EsmConverter::convertDESC()
             if (esm.isUniqueValid() == true &&
                 esm.isFriendlyValid() == true)
             {
-                new_friendly = setNewFriendly(Tools::rec_type::DESC,
+                new_friendly = setNewFriendly(Tools::RecType::DESC,
                                               esm.getRecordId() + Tools::sep[0] + esm.getUniqueText(),
                                               esm.getFriendlyText());
                 if (to_convert == true)
@@ -487,7 +487,7 @@ void EsmConverter::convertDESC()
             }
         }
     }
-    printLogLine(Tools::rec_type::DESC);
+    printLogLine(Tools::RecType::DESC);
 }
 
 //----------------------------------------------------------
@@ -495,7 +495,7 @@ void EsmConverter::convertTEXT()
 {
     std::string new_friendly;
     resetCounters();
-    for (size_t i = 0; i < esm.getRecordColl().size(); ++i)
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.setRecordTo(i);
         if (esm.getRecordId() == "BOOK")
@@ -505,7 +505,7 @@ void EsmConverter::convertTEXT()
             if (esm.isUniqueValid() == true &&
                 esm.isFriendlyValid() == true)
             {
-                new_friendly = setNewFriendly(Tools::rec_type::TEXT,
+                new_friendly = setNewFriendly(Tools::RecType::TEXT,
                                               esm.getUniqueText(),
                                               esm.getFriendlyText());
                 if (to_convert == true)
@@ -517,7 +517,7 @@ void EsmConverter::convertTEXT()
             }
         }
     }
-    printLogLine(Tools::rec_type::TEXT);
+    printLogLine(Tools::RecType::TEXT);
 }
 
 //----------------------------------------------------------
@@ -525,7 +525,7 @@ void EsmConverter::convertRNAM()
 {
     std::string new_friendly;
     resetCounters();
-    for (size_t i = 0; i < esm.getRecordColl().size(); ++i)
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.setRecordTo(i);
         if (esm.getRecordId() == "FACT")
@@ -536,7 +536,7 @@ void EsmConverter::convertRNAM()
             {
                 while (esm.isFriendlyValid() == true)
                 {
-                    new_friendly = setNewFriendly(Tools::rec_type::RNAM,
+                    new_friendly = setNewFriendly(Tools::RecType::RNAM,
                                                   esm.getUniqueText() + Tools::sep[0] + esm.getFriendlyCounter(),
                                                   esm.getFriendlyText());
                     if (to_convert == true)
@@ -550,7 +550,7 @@ void EsmConverter::convertRNAM()
             }
         }
     }
-    printLogLine(Tools::rec_type::RNAM);
+    printLogLine(Tools::RecType::RNAM);
 }
 
 //----------------------------------------------------------
@@ -558,7 +558,7 @@ void EsmConverter::convertINDX()
 {
     std::string new_friendly;
     resetCounters();
-    for (size_t i = 0; i < esm.getRecordColl().size(); ++i)
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.setRecordTo(i);
         if (esm.getRecordId() == "SKIL" ||
@@ -569,7 +569,7 @@ void EsmConverter::convertINDX()
             if (esm.isUniqueValid() == true &&
                 esm.isFriendlyValid() == true)
             {
-                new_friendly = setNewFriendly(Tools::rec_type::INDX,
+                new_friendly = setNewFriendly(Tools::RecType::INDX,
                                               esm.getRecordId() + Tools::sep[0] + esm.getUniqueText(),
                                               esm.getFriendlyText());
                 if (to_convert == true)
@@ -581,7 +581,7 @@ void EsmConverter::convertINDX()
             }
         }
     }
-    printLogLine(Tools::rec_type::INDX);
+    printLogLine(Tools::RecType::INDX);
 }
 
 //----------------------------------------------------------
@@ -589,7 +589,7 @@ void EsmConverter::convertDIAL()
 {
     std::string new_friendly;
     resetCounters();
-    for (size_t i = 0; i < esm.getRecordColl().size(); ++i)
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.setRecordTo(i);
         if (esm.getRecordId() == "DIAL")
@@ -600,7 +600,7 @@ void EsmConverter::convertDIAL()
                 esm.isFriendlyValid() == true &&
                 esm.getUniqueText() == "T")
             {
-                new_friendly = setNewFriendly(Tools::rec_type::DIAL,
+                new_friendly = setNewFriendly(Tools::RecType::DIAL,
                                               esm.getFriendlyText(),
                                               esm.getFriendlyText());
                 if (to_convert == true)
@@ -611,7 +611,7 @@ void EsmConverter::convertDIAL()
             }
         }
     }
-    printLogLine(Tools::rec_type::DIAL);
+    printLogLine(Tools::RecType::DIAL);
 }
 
 //----------------------------------------------------------
@@ -620,7 +620,7 @@ void EsmConverter::convertINFO()
     std::string new_friendly;
     std::string dialog_topic;
     resetCounters();
-    for (size_t i = 0; i < esm.getRecordColl().size(); ++i)
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.setRecordTo(i);
         if (esm.getRecordId() == "DIAL")
@@ -640,7 +640,7 @@ void EsmConverter::convertINFO()
             if (esm.isUniqueValid() == true &&
                 esm.isFriendlyValid() == true)
             {
-                new_friendly = setNewFriendly(Tools::rec_type::INFO,
+                new_friendly = setNewFriendly(Tools::RecType::INFO,
                                               dialog_topic + Tools::sep[0] + esm.getUniqueText(),
                                               esm.getFriendlyText(),
                                               dialog_topic);
@@ -653,7 +653,7 @@ void EsmConverter::convertINFO()
             }
         }
     }
-    printLogLine(Tools::rec_type::INFO);
+    printLogLine(Tools::RecType::INFO);
 }
 
 //----------------------------------------------------------
@@ -661,7 +661,7 @@ void EsmConverter::convertBNAM()
 {
     std::pair<std::string, std::string> new_script;
     resetCounters();
-    for (size_t i = 0; i < esm.getRecordColl().size(); ++i)
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.setRecordTo(i);
         if (esm.getRecordId() == "INFO")
@@ -671,7 +671,7 @@ void EsmConverter::convertBNAM()
             if (esm.isUniqueValid() == true &&
                 esm.isFriendlyValid() == true)
             {
-                new_script = setNewScript(Tools::rec_type::BNAM,
+                new_script = setNewScript(Tools::RecType::BNAM,
                                           esm.getUniqueText() + Tools::sep[0],
                                           esm.getFriendlyText(),
                                           "");
@@ -682,7 +682,7 @@ void EsmConverter::convertBNAM()
             }
         }
     }
-    printLogLine(Tools::rec_type::BNAM);
+    printLogLine(Tools::RecType::BNAM);
 }
 
 //----------------------------------------------------------
@@ -693,7 +693,7 @@ void EsmConverter::convertSCPT()
     std::string new_header;
 
     resetCounters();
-    for (size_t i = 0; i < esm.getRecordColl().size(); ++i)
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.setRecordTo(i);
         if (esm.getRecordId() == "SCPT")
@@ -712,7 +712,7 @@ void EsmConverter::convertSCPT()
             if (esm.isUniqueValid() == true &&
                 esm.isFriendlyValid() == true)
             {
-                new_script = setNewScript(Tools::rec_type::SCTX,
+                new_script = setNewScript(Tools::RecType::SCTX,
                                           esm.getUniqueText() + Tools::sep[0],
                                           esm.getFriendlyText(),
                                           compiled_data);
@@ -733,5 +733,5 @@ void EsmConverter::convertSCPT()
             }
         }
     }
-    printLogLine(Tools::rec_type::SCTX);
+    printLogLine(Tools::RecType::SCTX);
 }

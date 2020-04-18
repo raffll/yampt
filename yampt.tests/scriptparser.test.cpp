@@ -21,12 +21,12 @@ TEST_CASE("Say keyword")
 
     DictMerger merger;
     for (const auto & item : items)
-        merger.addRecord(Tools::rec_type::SCTX, item.input, item.expected);
+        merger.addRecord(Tools::RecType::SCTX, item.input, item.expected);
 
     for (const auto & item : items)
     {
         ScriptParser parser(
-            Tools::rec_type::SCTX,
+            Tools::RecType::SCTX,
             merger,
             "",
             item.input,
@@ -39,7 +39,7 @@ TEST_CASE("Say keyword")
 TEST_CASE("AddTopic keyword")
 {
     DictMerger merger;
-    merger.addRecord(Tools::rec_type::DIAL, "Test Test", "Result Result");
+    merger.addRecord(Tools::RecType::DIAL, "Test Test", "Result Result");
     vector<std::pair<std::string, std::string>> lines;
     lines.push_back(make_pair("AddTopic \"Test Test\"", "AddTopic \"Result Result\""));
     lines.push_back(make_pair("AddTopic \"Test Test\" ", "AddTopic \"Result Result\" "));
@@ -56,7 +56,7 @@ TEST_CASE("AddTopic keyword")
 
     for (size_t i = 0; i < lines.size(); ++i)
     {
-        ScriptParser parser(Tools::rec_type::BNAM,
+        ScriptParser parser(Tools::RecType::BNAM,
             merger,
             "prefix",
             lines[i].first,
@@ -69,14 +69,14 @@ TEST_CASE("AddTopic keyword")
 TEST_CASE("GetPCCell keyword")
 {
     DictMerger merger;
-    merger.addRecord(Tools::rec_type::CELL, "Test Test", "Result Result");
+    merger.addRecord(Tools::RecType::CELL, "Test Test", "Result Result");
     vector<std::pair<std::string, std::string>> lines;
     lines.push_back(make_pair("if ( GetPCCell \"Test Test\" == 1 )", "if ( GetPCCell \"Result Result\" == 1 )"));
     lines.push_back(make_pair("if ( GetPCCell \"Test Test\" )", "if ( GetPCCell \"Result Result\" )"));
 
     for (size_t i = 0; i < lines.size(); ++i)
     {
-        ScriptParser parser(Tools::rec_type::BNAM,
+        ScriptParser parser(Tools::RecType::BNAM,
             merger,
             "prefix",
             lines[i].first,
@@ -89,14 +89,14 @@ TEST_CASE("GetPCCell keyword")
 TEST_CASE("GetPCCell keyword, invalid")
 {
     DictMerger merger;
-    merger.addRecord(Tools::rec_type::CELL, "Test Test", "Result Result");
+    merger.addRecord(Tools::RecType::CELL, "Test Test", "Result Result");
     vector<std::pair<std::string, std::string>> lines;
     lines.push_back(make_pair("if ( GetPCCell Test Test == 1 )", "if ( GetPCCell \"Result Result\" == 1 )"));
     lines.push_back(make_pair("if ( GetPCCell Test Test )", "if ( GetPCCell \"Result Result\" )"));
 
     for (size_t i = 0; i < lines.size(); ++i)
     {
-        ScriptParser parser(Tools::rec_type::BNAM,
+        ScriptParser parser(Tools::RecType::BNAM,
             merger,
             "prefix",
             lines[i].first,

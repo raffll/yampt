@@ -25,7 +25,7 @@
 class Tools
 {
 public:
-    enum rec_type
+    enum RecType
     {
         CELL, DIAL, INDX, RNAM, DESC,
         GMST, FNAM, INFO, TEXT, BNAM,
@@ -33,7 +33,7 @@ public:
         ANAM, SCVR, DNAM, CNDT, GMDT
     };
 
-    enum ins_mode
+    enum CreatorMode
     {
         RAW,
         BASE,
@@ -56,7 +56,7 @@ public:
     static const std::vector<std::string> dialog_type;
     static const std::vector<std::string> sep;
     static const std::vector<std::string> err;
-    static const std::vector<std::string> keyword_list;
+    static const std::vector<std::string> keywords;
 
     static std::string readFile(const std::string & path);
     static void writeDict(
