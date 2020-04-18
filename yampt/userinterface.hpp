@@ -30,7 +30,7 @@ private:
 
     bool add_dial = false;
     bool ext_log = false;
-    bool safe = false;
+    Tools::safe_mode safe_mode = Tools::safe_mode::disabled;
 
     std::vector<std::string> arg;
     std::vector<std::string> file_path;

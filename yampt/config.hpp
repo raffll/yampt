@@ -53,7 +53,7 @@ public:
     using single_dict_t = std::map<std::string, std::string>;
 
     static const std::vector<std::string> type_name;
-    static const std::array<std::string, 5> dialog_type;
+    static const std::vector<std::string> dialog_type;
     static const std::vector<std::string> sep;
     static const std::vector<std::string> err;
     static const std::vector<std::string> keyword_list;
