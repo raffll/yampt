@@ -91,6 +91,13 @@ const std::vector<std::string> keyword_list = { "messagebox", "choice", "say ", 
 class Tools
 {
 public:
+    enum class safe_mode
+    {
+        heuristic,
+        enabled,
+        disabled
+    };
+
     std::string readFile(const std::string & path);
     void writeDict(
         const yampt::dict_t & dict,

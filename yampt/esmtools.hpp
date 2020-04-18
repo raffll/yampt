@@ -9,6 +9,7 @@ class EsmTools
 public:
     std::string dumpFile();
     std::string makeScriptList();
+    static bool findChar(EsmReader & esm);
 
     std::string getNamePrefix() { return esm.getNamePrefix(); }
 
@@ -17,6 +18,8 @@ public:
 private:
     EsmReader esm;
     Tools tools;
+
+    static bool findChar(const std::string & friendly_text);
 };
 
 #endif // ESMTOOLS_HPP

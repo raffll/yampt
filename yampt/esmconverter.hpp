@@ -4,7 +4,6 @@
 #include "config.hpp"
 #include "esmreader.hpp"
 #include "dictmerger.hpp"
-#include "scriptparser.hpp"
 
 class EsmConverter
 {
@@ -15,27 +14,27 @@ public:
     std::time_t getTime() { return esm.getTime(); }
     std::vector<std::string> getRecordColl() { return esm.getRecordColl(); }
 
-    EsmConverter(std::string path, DictMerger &merger, bool add_dial, std::string file_suffix, bool safe);
+    EsmConverter(std::string path, DictMerger & merger, bool add_dial, std::string file_suffix, Tools::safe_mode safe_mode);
 
 private:
-    void convertEsm();
-    void convertEsmSafe();
+    void convertEsm(const bool safe);
     void resetCounters();
-    void convertRecordContent(const std::string &new_friendly);
-    std::string addNullTerminatorIfEmpty(const std::string &new_friendly);
-    std::string setNewFriendly(const yampt::rec_type type,
-                               const std::string &unique_text,
-                               const std::string &friendly_text,
-                               const std::string &dialog_topic = "");
-    std::pair<std::string, std::string> setNewScript(const yampt::rec_type type,
-                                                     const std::string &prefix,
-                                                     const std::string &friendly_text,
-                                                     const std::string &compiled_data);
-    void checkIfIdentical(const std::string &friendly_text,
-                          const std::string &new_friendly);
-
+    void convertRecordContent(const std::string & new_friendly);
+    std::string addNullTerminatorIfEmpty(const std::string & new_friendly);
+    std::string setNewFriendly(
+        const yampt::rec_type type,
+        const std::string & unique_text,
+        const std::string & friendly_text,
+        const std::string & dialog_topic = "");
+    std::pair<std::string, std::string> setNewScript(
+        const yampt::rec_type type,
+        const std::string & prefix,
+        const std::string & friendly_text,
+        const std::string & compiled_data);
+    void checkIfIdentical(
+        const std::string & friendly_text,
+        const std::string & new_friendly);
     void printLogLine(const yampt::rec_type type);
-
     void convertMAST();
     void convertCELL();
     void convertPGRD();
@@ -55,7 +54,7 @@ private:
     void convertSCPT();
 
     EsmReader esm;
-    DictMerger *merger;
+    DictMerger * merger;
     Tools tools;
 
     const bool add_dial;
