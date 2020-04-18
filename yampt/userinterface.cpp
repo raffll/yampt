@@ -1,7 +1,7 @@
 #include "userinterface.hpp"
 
 //----------------------------------------------------------
-UserInterface::UserInterface(std::vector<std::string> &arg)
+UserInterface::UserInterface(std::vector<std::string> & arg)
     : arg(arg)
 {
     parseCommandLine();
@@ -13,19 +13,19 @@ void UserInterface::parseCommandLine()
 {
     std::string command;
     std::vector<std::string> dict_path_reverse;
-    if(arg.size() > 1)
+    if (arg.size() > 1)
     {
-        for(size_t i = 2; i < arg.size(); ++i)
+        for (size_t i = 2; i < arg.size(); ++i)
         {
-            if(arg[i] == "-a")
+            if (arg[i] == "-a")
             {
                 add_dial = true;
             }
-            else if(arg[i] == "-l")
+            else if (arg[i] == "-l")
             {
                 ext_log = true;
             }
-            else if(arg[i] == "--safe")
+            else if (arg[i] == "--safe")
             {
                 safe_mode = Tools::safe_mode::enabled;
             }
@@ -33,37 +33,37 @@ void UserInterface::parseCommandLine()
             {
                 safe_mode = Tools::safe_mode::heuristic;
             }
-            else if(arg[i] == "-f")
+            else if (arg[i] == "-f")
             {
                 command = "-f";
             }
-            else if(arg[i] == "-d")
+            else if (arg[i] == "-d")
             {
                 command = "-d";
             }
-            else if(arg[i] == "-o")
+            else if (arg[i] == "-o")
             {
                 command = "-o";
             }
-            else if(arg[i] == "-s")
+            else if (arg[i] == "-s")
             {
                 command = "-s";
             }
             else
             {
-                if(command == "-f")
+                if (command == "-f")
                 {
                     file_path.push_back(arg[i]);
                 }
-                if(command == "-d")
+                if (command == "-d")
                 {
                     dict_path_reverse.push_back(arg[i]);
                 }
-                if(command == "-o")
+                if (command == "-o")
                 {
                     output = arg[i];
                 }
-                if(command == "-s")
+                if (command == "-s")
                 {
                     suffix = arg[i];
                 }
@@ -71,7 +71,7 @@ void UserInterface::parseCommandLine()
         }
     }
 
-    if(output.empty())
+    if (output.empty())
     {
         output = "Merged.xml";
     }
@@ -82,41 +82,41 @@ void UserInterface::parseCommandLine()
 //----------------------------------------------------------
 void UserInterface::runCommand()
 {
-    if(arg.size() > 1)
+    if (arg.size() > 1)
     {
-        if(arg[1] == "--make-raw" && file_path.size() > 0)
+        if (arg[1] == "--make-raw" && file_path.size() > 0)
         {
             makeDictRaw();
         }
-        else if(arg[1] == "--make-base" && file_path.size() == 2)
+        else if (arg[1] == "--make-base" && file_path.size() == 2)
         {
             makeDictBase();
         }
-        else if(arg[1] == "--make-all" && file_path.size() > 0 && dict_path.size() > 0)
+        else if (arg[1] == "--make-all" && file_path.size() > 0 && dict_path.size() > 0)
         {
             makeDictAll();
         }
-        else if(arg[1] == "--make-not" && file_path.size() > 0 && dict_path.size() > 0)
+        else if (arg[1] == "--make-not" && file_path.size() > 0 && dict_path.size() > 0)
         {
             makeDictNotFound();
         }
-        else if(arg[1] == "--make-changed" && file_path.size() > 0 && dict_path.size() > 0)
+        else if (arg[1] == "--make-changed" && file_path.size() > 0 && dict_path.size() > 0)
         {
             makeDictChanged();
         }
-        else if(arg[1] == "--merge" && dict_path.size() > 0)
+        else if (arg[1] == "--merge" && dict_path.size() > 0)
         {
             mergeDict();
         }
-        else if(arg[1] == "--convert" && file_path.size() > 0 && dict_path.size() > 0)
+        else if (arg[1] == "--convert" && file_path.size() > 0 && dict_path.size() > 0)
         {
             convertEsm();
         }
-        else if(arg[1] == "--binary-dump" && file_path.size() > 0)
+        else if (arg[1] == "--binary-dump" && file_path.size() > 0)
         {
             dumpFile();
         }
-        else if(arg[1] == "--script-list" && file_path.size() > 0)
+        else if (arg[1] == "--script-list" && file_path.size() > 0)
         {
             makeScriptList();
         }
@@ -134,7 +134,7 @@ void UserInterface::runCommand()
 //----------------------------------------------------------
 void UserInterface::makeDictRaw()
 {
-    for(size_t i = 0; i < file_path.size(); ++i)
+    for (size_t i = 0; i < file_path.size(); ++i)
     {
         DictCreator creator(file_path[i]);
         tools.writeDict(creator.getDict(), creator.getNamePrefix() + ".RAW.xml");
@@ -152,7 +152,7 @@ void UserInterface::makeDictBase()
 void UserInterface::makeDictAll()
 {
     DictMerger merger(dict_path, ext_log);
-    for(size_t i = 0; i < file_path.size(); ++i)
+    for (size_t i = 0; i < file_path.size(); ++i)
     {
         DictCreator creator(file_path[i], merger, Tools::CreatorMode::ALL, false);
         tools.writeDict(creator.getDict(), creator.getNamePrefix() + ".ALL.xml");
@@ -163,7 +163,7 @@ void UserInterface::makeDictAll()
 void UserInterface::makeDictNotFound()
 {
     DictMerger merger(dict_path, ext_log);
-    for(size_t i = 0; i < file_path.size(); ++i)
+    for (size_t i = 0; i < file_path.size(); ++i)
     {
         DictCreator creator(file_path[i], merger, Tools::CreatorMode::NOTFOUND, add_dial);
         tools.writeDict(creator.getDict(), creator.getNamePrefix() + ".NOTFOUND.xml");
@@ -174,7 +174,7 @@ void UserInterface::makeDictNotFound()
 void UserInterface::makeDictChanged()
 {
     DictMerger merger(dict_path, ext_log);
-    for(size_t i = 0; i < file_path.size(); ++i)
+    for (size_t i = 0; i < file_path.size(); ++i)
     {
         DictCreator creator(file_path[i], merger, Tools::CreatorMode::CHANGED, add_dial);
         tools.writeDict(creator.getDict(), creator.getNamePrefix() + ".CHANGED.xml");
@@ -192,7 +192,7 @@ void UserInterface::mergeDict()
 void UserInterface::convertEsm()
 {
     DictMerger merger(dict_path, ext_log);
-    for(size_t i = 0; i < file_path.size(); ++i)
+    for (size_t i = 0; i < file_path.size(); ++i)
     {
         EsmConverter converter(file_path[i], merger, add_dial, suffix, safe_mode);
         tools.writeFile(converter.getRecordColl(), converter.getNamePrefix() + suffix + converter.getNameSuffix());
@@ -205,7 +205,7 @@ void UserInterface::convertEsm()
 void UserInterface::dumpFile()
 {
     std::string text;
-    for(size_t i = 0; i < file_path.size(); ++i)
+    for (size_t i = 0; i < file_path.size(); ++i)
     {
         EsmTools dump(file_path[i]);
         text = dump.dumpFile();
@@ -217,7 +217,7 @@ void UserInterface::dumpFile()
 void UserInterface::makeScriptList()
 {
     std::string text;
-    for(size_t i = 0; i < file_path.size(); ++i)
+    for (size_t i = 0; i < file_path.size(); ++i)
     {
         EsmTools dump(file_path[i]);
         text = dump.makeScriptList();

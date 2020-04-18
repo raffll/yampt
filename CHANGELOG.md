@@ -1,5 +1,9 @@
 ## Version history
 
+	0.20
+	- [feature] add --safe-auto switch in converter to convert only DIAL, CELL, BNAM and SCTX records according to detected special characters in plugin (works only Polish vs English)
+	- [bug] fix crash when trying to convert compiled script data in BNAM
+
     0.19
     - [feature] add --safe switch in converter to convert only DIAL, CELL, BNAM and SCTX records
 

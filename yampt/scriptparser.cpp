@@ -39,7 +39,7 @@ void ScriptParser::convertScript()
         line = tools.eraseCarriageReturnChar(line);
         line_lc = line;
         transform(line_lc.begin(), line_lc.end(),
-            line_lc.begin(), ::tolower);
+                  line_lc.begin(), ::tolower);
 
         if (is_done == false)
         {
@@ -129,7 +129,7 @@ std::string ScriptParser::checkLine(
                 convertLineInCompiledScriptData(line, new_line, keyword_pos, true);
             }
             else if (keyword == "messagebox" ||
-                keyword == "choice")
+                     keyword == "choice")
             {
                 convertLineInCompiledScriptData(line, new_line, keyword_pos, false);
             }

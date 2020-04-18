@@ -22,7 +22,7 @@ std::string Tools::readFile(const std::string & path)
     std::ifstream file(path, std::ios::binary);
     if (file)
     {
-        std::cout << "--> Loading \"" + path + "\"..." << std::endl;
+        addLog("--> Loading \"" + path + "\"...\r\n");
         char buffer[16384];
         size_t size = file.tellg();
         content.reserve(size);
@@ -34,7 +34,7 @@ std::string Tools::readFile(const std::string & path)
     }
     else
     {
-        std::cout << "--> Error loading \"" + path + "\" (wrong path)!" << std::endl;
+        addLog("--> Error loading \"" + path + "\" (wrong path)!\r\n");
     }
     return content;
 }
@@ -49,19 +49,20 @@ void Tools::writeDict(const dict_t & dict, const std::string & name)
         {
             for (const auto & elem : dict[i])
             {
-                file << "<record>\r\n"
+                file
+                    << "<record>\r\n"
                     << "\t" << sep[1] << type_name[i] << sep[2] << "\r\n"
                     << "\t" << sep[3] << elem.first << sep[4] << "\r\n"
                     << "\t" << sep[5] << elem.second << sep[6] << "\r\n"
                     << "</record>\r\n";
             }
         }
-        std::cout << "--> Writing " << std::to_string(getNumberOfElementsInDict(dict)) <<
-            " records to \"" << name << "\"..." << std::endl;
+        addLog("--> Writing " + std::to_string(getNumberOfElementsInDict(dict))
+               + " records to \"" + name + "\"...\r\n");
     }
     else
     {
-        std::cout << "--> No records to make dictionary!" << std::endl;
+        addLog("--> No records to make dictionary!\r\n");
     }
 }
 
@@ -70,7 +71,7 @@ void Tools::writeText(const std::string & text, const std::string & name)
 {
     std::ofstream file(name, std::ios::binary);
     file << text;
-    std::cout << "--> Writing \"" << name << "\"..." << std::endl;
+    addLog("--> Writing \"" + name + "\"...\r\n");
 }
 
 //----------------------------------------------------------
@@ -81,7 +82,7 @@ void Tools::writeFile(const std::vector<std::string> & rec_coll, const std::stri
     {
         file << elem;
     }
-    std::cout << "--> Writing \"" << name << "\"..." << std::endl;
+    addLog("--> Writing \"" + name + "\"...\r\n");
 }
 
 //----------------------------------------------------------
@@ -98,6 +99,8 @@ int Tools::getNumberOfElementsInDict(const dict_t & dict)
 //----------------------------------------------------------
 unsigned int Tools::convertStringByteArrayToUInt(const std::string & str)
 {
+    assert(str.size() == 4 || str.size() == 1);
+
     char buffer[4];
     unsigned char ubuffer[4];
     unsigned int x;
@@ -106,18 +109,18 @@ unsigned int Tools::convertStringByteArrayToUInt(const std::string & str)
     {
         ubuffer[i] = buffer[i];
     }
+
     if (str.size() == 4)
     {
         return x = (ubuffer[0] | ubuffer[1] << 8 | ubuffer[2] << 16 | ubuffer[3] << 24);
     }
-    else if (str.size() == 1)
+
+    if (str.size() == 1)
     {
         return x = ubuffer[0];
     }
-    else
-    {
-        return x = 0;
-    }
+
+    return 0;
 }
 
 //----------------------------------------------------------
@@ -140,14 +143,7 @@ bool Tools::caseInsensitiveStringCmp(std::string lhs, std::string rhs)
 {
     transform(lhs.begin(), lhs.end(), lhs.begin(), ::toupper);
     transform(rhs.begin(), rhs.end(), rhs.begin(), ::toupper);
-    if (lhs == rhs)
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    return lhs == rhs;
 }
 
 //----------------------------------------------------------

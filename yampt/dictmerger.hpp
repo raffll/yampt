@@ -9,17 +9,19 @@ class DictMerger
 public:
     std::string getNamePrefix(size_t i) { return dict_coll[i].getNamePrefix(); }
 
-    Tools::dict_t const& getDict() const { return dict; }
-    Tools::single_dict_t const& getDict(Tools::RecType type) const { return dict[type]; }
-    Tools::single_dict_t const& getDict(size_t type) const { return dict[type]; }
+    Tools::dict_t const & getDict() const { return dict; }
+    Tools::single_dict_t const & getDict(Tools::RecType type) const { return dict[type]; }
+    Tools::single_dict_t const & getDict(size_t type) const { return dict[type]; }
 
-    DictMerger();
-    DictMerger(const std::vector<std::string> &path,
-               bool ext_log);
+    DictMerger() = default;
+    DictMerger(
+        const std::vector<std::string> & path,
+        bool ext_log);
 
-    void addRecord(const Tools::RecType type,
-                   const std::string &unique_text,
-                   const std::string &friendly_text);
+    void addRecord(
+        const Tools::RecType type,
+        const std::string & unique_text,
+        const std::string & friendly_text);
 
 private:
     void mergeDict();
@@ -27,7 +29,6 @@ private:
     void findUnusedINFO();
     void printSummaryLog();
 
-    Tools tools;
     std::vector<DictReader> dict_coll;
     Tools::dict_t dict;
     bool ext_log;

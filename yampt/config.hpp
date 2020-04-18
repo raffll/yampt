@@ -17,7 +17,7 @@
 #include <boost/filesystem/operations.hpp>
 
 #ifdef DEBUG
-#define DEBUG_MSG(str) std::cout << str << std::endl;
+#define DEBUG_MSG(str) addLog(str)
 #else
 #define DEBUG_MSG(str)
 #endif
