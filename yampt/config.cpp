@@ -1,5 +1,7 @@
 #include "config.hpp"
 
+std::string Tools::log;
+
 const std::vector<std::string> Tools::type_name
 {
     "CELL", "DIAL", "INDX", "RNAM", "DESC",
@@ -229,9 +231,10 @@ std::string Tools::addDialogTopicsToINFOStrings(
 }
 
 //----------------------------------------------------------
-void Tools::addLog(const std::string log)
+void Tools::addLog(const std::string & entry)
 {
-    this->log += log + "\r\n";
+    std::cout << entry << std::endl;
+    log += entry + "\r\n";
 }
 
 //----------------------------------------------------------

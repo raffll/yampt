@@ -22,7 +22,7 @@ EsmConverter::EsmConverter(
         {
             safe = EsmTools::findChar(esm);
             if (safe)
-                std::cout << "Polish characters detected! Safe conversion!\r\n";
+                Tools::addLog("--> Polish characters detected! Safe conversion!");
         }
 
         if (safe_mode == Tools::safe_mode::enabled)
