@@ -11,7 +11,7 @@ public:
     std::string getNewCompiled() { return compiled_data; }
 
     ScriptParser();
-    ScriptParser(const Tools::rec_type type,
+    ScriptParser(const Tools::RecType type,
                  DictMerger &merger,
                  const std::string &prefix,
                  const std::string &friendly_text,
@@ -26,11 +26,11 @@ private:
                           const std::string &line_lc,
                           const std::string &keyword,
                           const int pos_in_expr,
-                          const Tools::rec_type text_type,
+                          const Tools::RecType text_type,
                           const bool is_getpccell);
     std::string convertLine(const std::string &line);
     std::string findInnerTextInDict(const std::string &text,
-                         const Tools::rec_type text_type);
+                         const Tools::RecType text_type);
     std::string convertInnerTextInLine(const std::string &line,
                             const std::string &text,
                             const size_t text_pos,
@@ -49,7 +49,7 @@ private:
                                        const size_t keyword_pos,
                                        const bool is_say);
 
-    Tools::rec_type type;
+    Tools::RecType type;
     DictMerger *merger;
     Tools tools;
 

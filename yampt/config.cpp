@@ -6,7 +6,7 @@ const std::vector<std::string> Tools::type_name
 {
     "CELL", "DIAL", "INDX", "RNAM", "DESC",
     "GMST", "FNAM", "INFO", "TEXT", "BNAM",
-    "SCTX", "Wilderness", "Region", "PGRD",
+    "SCTX", "+ Wilderness", "+ Region", "PGRD",
     "ANAM", "SCVR", "DNAM", "CNDT", "GMDT"
 };
 
@@ -233,8 +233,8 @@ std::string Tools::addDialogTopicsToINFOStrings(
 //----------------------------------------------------------
 void Tools::addLog(const std::string & entry)
 {
-    std::cout << entry << std::endl;
-    log += entry + "\r\n";
+    std::cout << entry;
+    log += entry;
 }
 
 //----------------------------------------------------------

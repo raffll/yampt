@@ -102,36 +102,36 @@ void DictReader::validateRecord(const std::string &id,
         }
         else
         {
-            insertRecord(Tools::rec_type::CELL, unique_text, friendly_text);
+            insertRecord(Tools::RecType::CELL, unique_text, friendly_text);
         }
     }
     else if(id == "GMST")
     {
-        insertRecord(Tools::rec_type::GMST, unique_text, friendly_text);
+        insertRecord(Tools::RecType::GMST, unique_text, friendly_text);
     }
     else if(id == "DESC")
     {
-        insertRecord(Tools::rec_type::DESC, unique_text, friendly_text);
+        insertRecord(Tools::RecType::DESC, unique_text, friendly_text);
     }
     else if(id == "TEXT")
     {
-        insertRecord(Tools::rec_type::TEXT, unique_text, friendly_text);
+        insertRecord(Tools::RecType::TEXT, unique_text, friendly_text);
     }
     else if(id == "INDX")
     {
-        insertRecord(Tools::rec_type::INDX, unique_text, friendly_text);
+        insertRecord(Tools::RecType::INDX, unique_text, friendly_text);
     }
     else if(id == "DIAL")
     {
-        insertRecord(Tools::rec_type::DIAL, unique_text, friendly_text);
+        insertRecord(Tools::RecType::DIAL, unique_text, friendly_text);
     }
     else if(id == "BNAM")
     {
-        insertRecord(Tools::rec_type::BNAM, unique_text, friendly_text);
+        insertRecord(Tools::RecType::BNAM, unique_text, friendly_text);
     }
     else if(id == "SCTX")
     {
-        insertRecord(Tools::rec_type::SCTX, unique_text, friendly_text);
+        insertRecord(Tools::RecType::SCTX, unique_text, friendly_text);
     }
     else if(id == "RNAM")
     {
@@ -142,7 +142,7 @@ void DictReader::validateRecord(const std::string &id,
         }
         else
         {
-            insertRecord(Tools::rec_type::RNAM, unique_text, friendly_text);
+            insertRecord(Tools::RecType::RNAM, unique_text, friendly_text);
         }
     }
     else if(id == "FNAM")
@@ -154,7 +154,7 @@ void DictReader::validateRecord(const std::string &id,
         }
         else
         {
-            insertRecord(Tools::rec_type::FNAM, unique_text, friendly_text);
+            insertRecord(Tools::RecType::FNAM, unique_text, friendly_text);
         }
     }
     else if(id == "INFO")
@@ -162,11 +162,11 @@ void DictReader::validateRecord(const std::string &id,
         if(friendly_text.size() > 512)
         {
             tools.addLog("Ok, but more than 512 bytes in " + id + ": " + unique_text);
-            insertRecord(Tools::rec_type::INFO, unique_text, friendly_text);
+            insertRecord(Tools::RecType::INFO, unique_text, friendly_text);
         }
         else
         {
-            insertRecord(Tools::rec_type::INFO, unique_text, friendly_text);
+            insertRecord(Tools::RecType::INFO, unique_text, friendly_text);
         }
     }
     else
@@ -178,7 +178,7 @@ void DictReader::validateRecord(const std::string &id,
 }
 
 //----------------------------------------------------------
-void DictReader::insertRecord(const Tools::rec_type type,
+void DictReader::insertRecord(const Tools::RecType type,
                               const std::string &unique_text,
                               const std::string &friendly_text)
 {

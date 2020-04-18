@@ -10,20 +10,20 @@ public:
     std::string getNamePrefix(size_t i) { return dict_coll[i].getNamePrefix(); }
 
     Tools::dict_t const& getDict() const { return dict; }
-    Tools::single_dict_t const& getDict(Tools::rec_type type) const { return dict[type]; }
+    Tools::single_dict_t const& getDict(Tools::RecType type) const { return dict[type]; }
     Tools::single_dict_t const& getDict(size_t type) const { return dict[type]; }
 
     DictMerger();
     DictMerger(const std::vector<std::string> &path,
                bool ext_log);
 
-    void addRecord(const Tools::rec_type type,
+    void addRecord(const Tools::RecType type,
                    const std::string &unique_text,
                    const std::string &friendly_text);
 
 private:
     void mergeDict();
-    void findDuplicateFriendlyText(Tools::rec_type type);
+    void findDuplicateFriendlyText(Tools::RecType type);
     void findUnusedINFO();
     void printSummaryLog();
 

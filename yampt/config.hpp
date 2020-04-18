@@ -25,7 +25,7 @@
 class Tools
 {
 public:
-    enum rec_type
+    enum RecType
     {
         CELL, DIAL, INDX, RNAM, DESC,
         GMST, FNAM, INFO, TEXT, BNAM,
@@ -33,7 +33,7 @@ public:
         ANAM, SCVR, DNAM, CNDT, GMDT
     };
 
-    enum ins_mode
+    enum CreatorMode
     {
         RAW,
         BASE,
