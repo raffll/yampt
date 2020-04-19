@@ -16,7 +16,7 @@ EsmConverter::EsmConverter(
     , file_suffix(file_suffix)
 {
     if (add_hyperlinks)
-        this->add_hyperlinks = EsmTools::findChar(esm);
+        this->add_hyperlinks = !EsmTools::findChar(esm);
 
     if (esm.isLoaded())
         convertEsm(safe);
@@ -48,6 +48,10 @@ void EsmConverter::convertEsm(const bool safe)
         convertTEXT();
         convertRNAM();
         convertINDX();
+
+        if (add_hyperlinks)
+            Tools::addLog("Adding hyperlinks...\r\n");
+
         convertINFO();
     }
 
