@@ -1,7 +1,8 @@
 #ifndef DICTMERGER_HPP
 #define DICTMERGER_HPP
 
-#include "config.hpp"
+#include "includes.hpp"
+#include "tools.hpp"
 #include "dictreader.hpp"
 
 class DictMerger
@@ -14,9 +15,7 @@ public:
     Tools::single_dict_t const & getDict(size_t type) const { return dict[type]; }
 
     DictMerger() = default;
-    DictMerger(
-        const std::vector<std::string> & path,
-        bool ext_log);
+    DictMerger(const std::vector<std::string> & path);
 
     void addRecord(
         const Tools::RecType type,

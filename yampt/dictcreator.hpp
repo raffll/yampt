@@ -1,7 +1,8 @@
 #ifndef DICTCREATOR_HPP
 #define DICTCREATOR_HPP
 
-#include "config.hpp"
+#include "includes.hpp"
+#include "tools.hpp"
 #include "esmreader.hpp"
 #include "dictmerger.hpp"
 

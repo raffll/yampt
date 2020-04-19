@@ -1,16 +1,13 @@
 #ifndef USERINTERFACE_HPP
 #define USERINTERFACE_HPP
 
-#include "config.hpp"
-#include "dictcreator.hpp"
-#include "dictmerger.hpp"
-#include "esmconverter.hpp"
-#include "esmtools.hpp"
+#include "includes.hpp"
+#include "tools.hpp"
 
 class UserInterface
 {
 public:
-    UserInterface(std::vector<std::string> &arg);
+    UserInterface(std::vector<std::string> & arg);
 
 private:
     void parseCommandLine();
@@ -26,9 +23,8 @@ private:
     void dumpFile();
     void makeScriptList();
 
-    bool add_dial = false;
-    bool ext_log = false;
-    Tools::safe_mode safe_mode = Tools::safe_mode::disabled;
+    bool add_hyperlinks = false;
+    Tools::SafeMode safe_mode = Tools::SafeMode::OFF;
 
     std::vector<std::string> arg;
     std::vector<std::string> file_path;

@@ -150,12 +150,12 @@
     <ClInclude Include="catch.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\yampt\config.cpp" />
     <ClCompile Include="..\yampt\dictcreator.cpp" />
     <ClCompile Include="..\yampt\dictmerger.cpp" />
     <ClCompile Include="..\yampt\dictreader.cpp" />
     <ClCompile Include="..\yampt\esmreader.cpp" />
     <ClCompile Include="..\yampt\scriptparser.cpp" />
+    <ClCompile Include="..\yampt\tools.cpp" />
     <ClCompile Include="dictcreator.test.cpp" />
     <ClCompile Include="dictreader.test.cpp" />
     <ClCompile Include="esmreader.test.cpp" />

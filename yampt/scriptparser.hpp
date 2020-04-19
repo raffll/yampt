@@ -1,7 +1,8 @@
 #ifndef SCRIPTPARSER_HPP
 #define SCRIPTPARSER_HPP
 
-#include "config.hpp"
+#include "includes.hpp"
+#include "tools.hpp"
 #include "dictmerger.hpp"
 
 class ScriptParser

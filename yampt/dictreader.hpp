@@ -1,7 +1,8 @@
 #ifndef DICTREADER_HPP
 #define DICTREADER_HPP
 
-#include "config.hpp"
+#include "includes.hpp"
+#include "tools.hpp"
 
 class DictReader
 {

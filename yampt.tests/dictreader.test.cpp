@@ -1,5 +1,5 @@
 #include "catch.hpp"
-#include "../yampt/config.hpp"
+#include "../yampt/tools.hpp"
 #include "../yampt/dictreader.hpp"
 
 using namespace std;

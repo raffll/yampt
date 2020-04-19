@@ -1,5 +1,5 @@
 #include "catch.hpp"
-#include "../yampt/config.hpp"
+#include "../yampt/tools.hpp"
 
 TEST_CASE("Convert string byte array to uint")
 {

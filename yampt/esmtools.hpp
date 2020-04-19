@@ -1,7 +1,7 @@
 #ifndef ESMTOOLS_HPP
 #define ESMTOOLS_HPP
 
-#include "config.hpp"
+#include "includes.hpp"
 #include "esmreader.hpp"
 
 class EsmTools

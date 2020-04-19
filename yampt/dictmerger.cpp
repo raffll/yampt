@@ -1,10 +1,7 @@
 #include "dictmerger.hpp"
 
 //----------------------------------------------------------
-DictMerger::DictMerger(
-    const std::vector<std::string> & path,
-    bool ext_log
-)
+DictMerger::DictMerger(const std::vector<std::string> & path)
     : ext_log(ext_log)
 {
     for (const auto & elem : path)

@@ -1,4 +1,8 @@
 #include "userinterface.hpp"
+#include "dictcreator.hpp"
+#include "dictmerger.hpp"
+#include "esmconverter.hpp"
+#include "esmtools.hpp"
 
 //----------------------------------------------------------
 UserInterface::UserInterface(std::vector<std::string> & arg)
@@ -19,19 +23,15 @@ void UserInterface::parseCommandLine()
         {
             if (arg[i] == "-a")
             {
-                add_dial = true;
-            }
-            else if (arg[i] == "-l")
-            {
-                ext_log = true;
+                add_hyperlinks = true;
             }
             else if (arg[i] == "--safe")
             {
-                safe_mode = Tools::safe_mode::enabled;
+                safe_mode = Tools::SafeMode::ON;
             }
             else if (arg[i] == "--safe-auto")
             {
-                safe_mode = Tools::safe_mode::heuristic;
+                safe_mode = Tools::SafeMode::HEURISTIC;
             }
             else if (arg[i] == "-f")
             {
@@ -151,7 +151,7 @@ void UserInterface::makeDictBase()
 //----------------------------------------------------------
 void UserInterface::makeDictAll()
 {
-    DictMerger merger(dict_path, ext_log);
+    DictMerger merger(dict_path);
     for (size_t i = 0; i < file_path.size(); ++i)
     {
         DictCreator creator(file_path[i], merger, Tools::CreatorMode::ALL, false);
@@ -162,10 +162,10 @@ void UserInterface::makeDictAll()
 //----------------------------------------------------------
 void UserInterface::makeDictNotFound()
 {
-    DictMerger merger(dict_path, ext_log);
+    DictMerger merger(dict_path);
     for (size_t i = 0; i < file_path.size(); ++i)
     {
-        DictCreator creator(file_path[i], merger, Tools::CreatorMode::NOTFOUND, add_dial);
+        DictCreator creator(file_path[i], merger, Tools::CreatorMode::NOTFOUND, add_hyperlinks);
         Tools::writeDict(creator.getDict(), creator.getNamePrefix() + ".NOTFOUND.xml");
     }
 }
@@ -173,10 +173,10 @@ void UserInterface::makeDictNotFound()
 //----------------------------------------------------------
 void UserInterface::makeDictChanged()
 {
-    DictMerger merger(dict_path, ext_log);
+    DictMerger merger(dict_path);
     for (size_t i = 0; i < file_path.size(); ++i)
     {
-        DictCreator creator(file_path[i], merger, Tools::CreatorMode::CHANGED, add_dial);
+        DictCreator creator(file_path[i], merger, Tools::CreatorMode::CHANGED, add_hyperlinks);
         Tools::writeDict(creator.getDict(), creator.getNamePrefix() + ".CHANGED.xml");
     }
 }
@@ -184,17 +184,17 @@ void UserInterface::makeDictChanged()
 //----------------------------------------------------------
 void UserInterface::mergeDict()
 {
-    DictMerger merger(dict_path, ext_log);
+    DictMerger merger(dict_path);
     Tools::writeDict(merger.getDict(), output);
 }
 
 //----------------------------------------------------------
 void UserInterface::convertEsm()
 {
-    DictMerger merger(dict_path, ext_log);
+    DictMerger merger(dict_path);
     for (size_t i = 0; i < file_path.size(); ++i)
     {
-        EsmConverter converter(file_path[i], merger, add_dial, suffix, safe_mode);
+        EsmConverter converter(file_path[i], merger, add_hyperlinks, suffix, safe_mode);
         Tools::writeFile(converter.getRecordColl(), converter.getNamePrefix() + suffix + converter.getNameSuffix());
         boost::filesystem::last_write_time(converter.getNamePrefix() + suffix + converter.getNameSuffix(),
                                            converter.getTime());

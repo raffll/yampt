@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="config.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="dictcreator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -33,9 +30,6 @@
     <ClCompile Include="esmreader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="esmTools::cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="scriptparser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -45,11 +39,14 @@
     <ClCompile Include="userinterface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="tools.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="esmtools.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="config.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="dictcreator.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -65,13 +62,19 @@
     <ClInclude Include="esmreader.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="esmTools::hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="scriptparser.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="userinterface.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="includes.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tools.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="esmtools.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

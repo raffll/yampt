@@ -1,7 +1,8 @@
 #ifndef ESMREADER_HPP
 #define ESMREADER_HPP
 
-#include "config.hpp"
+#include "includes.hpp"
+#include "tools.hpp"
 
 class EsmReader
 {

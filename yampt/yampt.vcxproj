@@ -139,7 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="config.cpp" />
+    <ClCompile Include="tools.cpp" />
     <ClCompile Include="dictcreator.cpp" />
     <ClCompile Include="dictmerger.cpp" />
     <ClCompile Include="dictreader.cpp" />
@@ -151,13 +151,14 @@
     <ClCompile Include="userinterface.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="config.hpp" />
+    <ClInclude Include="tools.hpp" />
     <ClInclude Include="dictcreator.hpp" />
     <ClInclude Include="dictmerger.hpp" />
     <ClInclude Include="dictreader.hpp" />
     <ClInclude Include="esmconverter.hpp" />
     <ClInclude Include="esmreader.hpp" />
     <ClInclude Include="esmtools.hpp" />
+    <ClInclude Include="includes.hpp" />
     <ClInclude Include="scriptparser.hpp" />
     <ClInclude Include="userinterface.hpp" />
   </ItemGroup>

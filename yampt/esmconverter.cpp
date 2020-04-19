@@ -8,24 +8,24 @@ EsmConverter::EsmConverter(
     DictMerger & merger,
     bool add_dial,
     std::string file_suffix,
-    Tools::safe_mode safe_mode
+    Tools::SafeMode safe_mode
 )
     : esm(path)
     , merger(&merger)
-    , add_dial(add_dial)
+    , add_hyperlinks(add_dial)
     , file_suffix(file_suffix)
 {
     if (esm.isLoaded())
     {
         bool safe = false;
-        if (safe_mode == Tools::safe_mode::heuristic)
+        if (safe_mode == Tools::SafeMode::HEURISTIC)
         {
             safe = EsmTools::findChar(esm);
             if (safe)
                 Tools::addLog("--> Polish characters detected! Safe conversion!");
         }
 
-        if (safe_mode == Tools::safe_mode::enabled)
+        if (safe_mode == Tools::SafeMode::ON)
             safe = true;
 
         convertEsm(safe);
@@ -120,10 +120,11 @@ std::string EsmConverter::addNullTerminatorIfEmpty(const std::string & new_frien
 }
 
 //----------------------------------------------------------
-std::string EsmConverter::setNewFriendly(const Tools::RecType type,
-                                         const std::string & unique_text,
-                                         const std::string & friendly_text,
-                                         const std::string & dialog_topic)
+std::string EsmConverter::setNewFriendly(
+    const Tools::RecType type,
+    const std::string & unique_text,
+    const std::string & friendly_text,
+    const std::string & dialog_topic)
 {
     counter_all++;
     std::string new_friendly;
@@ -134,12 +135,13 @@ std::string EsmConverter::setNewFriendly(const Tools::RecType type,
         checkIfIdentical(friendly_text, new_friendly);
     }
     else if (type == Tools::RecType::INFO &&
-             add_dial == true &&
+             add_hyperlinks &&
              dialog_topic.substr(0, 1) != "V")
     {
-        new_friendly = Tools::addDialogTopicsToINFOStrings(merger->getDict(Tools::RecType::DIAL),
-                                                          friendly_text,
-                                                          false);
+        new_friendly = Tools::addDialogTopicsToINFOStrings(
+            merger->getDict(Tools::RecType::DIAL),
+            friendly_text,
+            false);
         checkIfIdentical(friendly_text, new_friendly);
     }
     else
@@ -151,19 +153,21 @@ std::string EsmConverter::setNewFriendly(const Tools::RecType type,
 }
 
 //----------------------------------------------------------
-std::pair<std::string, std::string> EsmConverter::setNewScript(const Tools::RecType type,
-                                                               const std::string & line_prefix,
-                                                               const std::string & friendly_text,
-                                                               const std::string & compiled_data)
+std::pair<std::string, std::string> EsmConverter::setNewScript(
+    const Tools::RecType type,
+    const std::string & line_prefix,
+    const std::string & friendly_text,
+    const std::string & compiled_data)
 {
     counter_all++;
     std::string new_friendly;
     std::string new_compiled;
-    ScriptParser parser(type,
-                        *merger,
-                        line_prefix,
-                        friendly_text,
-                        compiled_data);
+    ScriptParser parser(
+        type,
+        *merger,
+        line_prefix,
+        friendly_text,
+        compiled_data);
     new_friendly = parser.getNewFriendly();
     new_compiled = parser.getNewCompiled();
     checkIfIdentical(friendly_text, new_friendly);
@@ -171,8 +175,9 @@ std::pair<std::string, std::string> EsmConverter::setNewScript(const Tools::RecT
 }
 
 //----------------------------------------------------------
-void EsmConverter::checkIfIdentical(const std::string & friendly_text,
-                                    const std::string & new_friendly)
+void EsmConverter::checkIfIdentical(
+    const std::string & friendly_text,
+    const std::string & new_friendly)
 {
     if (new_friendly != friendly_text)
     {
@@ -198,7 +203,7 @@ void EsmConverter::convertMAST()
         if (esm.getRecordId() == "TES3")
         {
             esm.setFriendlyTo("MAST");
-            while (esm.isFriendlyValid() == true)
+            while (esm.isFriendlyValid())
             {
                 master_prefix = esm.getFriendlyText().substr(0, esm.getFriendlyText().find_last_of("."));
                 master_suffix = esm.getFriendlyText().substr(esm.getFriendlyText().rfind("."));
@@ -220,7 +225,7 @@ void EsmConverter::convertCELL()
         if (esm.getRecordId() == "CELL")
         {
             esm.setFriendlyTo("NAME");
-            if (esm.isFriendlyValid() == true &&
+            if (esm.isFriendlyValid() &&
                 esm.getFriendlyText() != "") // Is named cell
             {
                 new_friendly = setNewFriendly(Tools::RecType::CELL,
@@ -704,7 +709,7 @@ void EsmConverter::convertSCPT()
         {
             esm.setUniqueTo("SCHD");
             esm.setFriendlyTo("SCDT");
-            if (esm.isFriendlyValid() == true)
+            if (esm.isFriendlyValid())
             {
                 compiled_data = esm.getFriendlyWithNull();
             }
@@ -713,13 +718,15 @@ void EsmConverter::convertSCPT()
                 compiled_data.clear();
             }
             esm.setFriendlyTo("SCTX");
-            if (esm.isUniqueValid() == true &&
-                esm.isFriendlyValid() == true)
+            if (esm.isUniqueValid() &&
+                esm.isFriendlyValid())
             {
-                new_script = setNewScript(Tools::RecType::SCTX,
-                                          esm.getUniqueText() + Tools::sep[0],
-                                          esm.getFriendlyText(),
-                                          compiled_data);
+                new_script = setNewScript(
+                    Tools::RecType::SCTX,
+                    esm.getUniqueText() + Tools::sep[0],
+                    esm.getFriendlyText(),
+                    compiled_data);
+
                 if (to_convert == true)
                 {
                     esm.setFriendlyTo("SCTX");

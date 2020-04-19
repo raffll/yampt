@@ -1,5 +1,5 @@
 #include "catch.hpp"
-#include "../yampt/config.hpp"
+#include "../yampt/tools.hpp"
 #include "../yampt/esmreader.hpp"
 
 using namespace std;
