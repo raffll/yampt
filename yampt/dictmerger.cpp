@@ -53,19 +53,13 @@ void DictMerger::mergeDict()
                          search->second != elem.second)
                 {
                     // Found in previous dictionary - skipped
-                    //if (ext_log == true)
-                    //{
                     Tools::addLog("Replaced record in " + Tools::type_name[type] + ": " + elem.first + "\r\n");
-                    //}
                     counter_replaced++;
                 }
                 else
                 {
                     // Found in previous dictionary - identical, skipped
-                    //if (ext_log == true)
-                    //{
-                    Tools::addLog("Identical record in " + Tools::type_name[type] + ": " + elem.first + "\r\n");
-                    //}
+                    // Tools::addLog("Identical record in " + Tools::type_name[type] + ": " + elem.first + "\r\n");
                     counter_identical++;
                 }
             }

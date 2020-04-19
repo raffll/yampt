@@ -1,21 +1,9 @@
 #include "esmreader.hpp"
 
 //----------------------------------------------------------
-EsmReader::EsmReader()
-    : is_loaded(false)
-    , unique_exist(false)
-    , friendly_exist(false)
-{
-
-}
-
-//----------------------------------------------------------
 EsmReader::EsmReader(const std::string & path)
-    : is_loaded(false)
-    , unique_exist(false)
-    , friendly_exist(false)
 {
-    std::string content = tools.readFile(path);
+    std::string content = Tools::readFile(path);
     splitFileIntoRecordColl(content, path);
     setName(path);
     setTime(path);
@@ -37,7 +25,7 @@ void EsmReader::splitFileIntoRecordColl(
             while (rec_end != content.size())
             {
                 rec_beg = rec_end;
-                rec_size = tools.convertStringByteArrayToUInt(content.substr(rec_beg + 4, 4)) + 16;
+                rec_size = Tools::convertStringByteArrayToUInt(content.substr(rec_beg + 4, 4)) + 16;
                 rec_end = rec_beg + rec_size;
                 rec_coll.push_back(content.substr(rec_beg, rec_size));
             }
@@ -52,7 +40,7 @@ void EsmReader::splitFileIntoRecordColl(
     }
     else
     {
-        std::cout << "--> Error parsing \"" + path + "\" (isn't TES3 plugin)!" << std::endl;
+        Tools::addLog("--> Error parsing \"" + path + "\" (isn't TES3 plugin)!\r\n");
         is_loaded = false;
     }
 }
@@ -60,7 +48,7 @@ void EsmReader::splitFileIntoRecordColl(
 //----------------------------------------------------------
 void EsmReader::setName(const std::string & path)
 {
-    if (is_loaded == true)
+    if (is_loaded)
     {
         name_full = path.substr(path.find_last_of("\\/") + 1);
         name_prefix = name_full.substr(0, name_full.find_last_of("."));
@@ -71,7 +59,7 @@ void EsmReader::setName(const std::string & path)
 //----------------------------------------------------------
 void EsmReader::setTime(const std::string & path)
 {
-    if (is_loaded == true)
+    if (is_loaded)
     {
         time = boost::filesystem::last_write_time(path);
     }
@@ -80,7 +68,7 @@ void EsmReader::setTime(const std::string & path)
 //----------------------------------------------------------
 void EsmReader::setRecordTo(size_t i)
 {
-    if (is_loaded == true)
+    if (is_loaded)
     {
         rec = &rec_coll[i];
         rec_size = rec->size();
@@ -91,7 +79,7 @@ void EsmReader::setRecordTo(size_t i)
 //----------------------------------------------------------
 void EsmReader::replaceRecordContent(const std::string & new_rec)
 {
-    if (is_loaded == true)
+    if (is_loaded)
     {
         *rec = new_rec;
     }
@@ -100,7 +88,7 @@ void EsmReader::replaceRecordContent(const std::string & new_rec)
 //----------------------------------------------------------
 void EsmReader::setUniqueTo(const std::string & id)
 {
-    if (is_loaded == true)
+    if (is_loaded)
     {
         size_t cur_pos = 16;
         size_t cur_size = 0;
@@ -113,7 +101,7 @@ void EsmReader::setUniqueTo(const std::string & id)
             uniqueMainLoop(cur_pos, cur_size, cur_id, cur_text);
             uniqueIfEndOfRecordReached(cur_pos);
         }
-        catch (std::exception const & e)
+        catch (const std::exception & e)
         {
             handleException(e);
         }
@@ -121,15 +109,16 @@ void EsmReader::setUniqueTo(const std::string & id)
 }
 
 //----------------------------------------------------------
-void EsmReader::uniqueMainLoop(std::size_t & cur_pos,
-                               std::size_t & cur_size,
-                               std::string & cur_id,
-                               std::string & cur_text)
+void EsmReader::uniqueMainLoop(
+    std::size_t & cur_pos,
+    std::size_t & cur_size,
+    std::string & cur_id,
+    std::string & cur_text)
 {
     while (cur_pos != rec->size())
     {
         cur_id = rec->substr(cur_pos, 4);
-        cur_size = tools.convertStringByteArrayToUInt(rec->substr(cur_pos + 4, 4));
+        cur_size = Tools::convertStringByteArrayToUInt(rec->substr(cur_pos + 4, 4));
         if (cur_id == unique_id)
         {
             if (unique_id == "DATA" && rec_id == "DIAL")
@@ -151,20 +140,22 @@ void EsmReader::uniqueMainLoop(std::size_t & cur_pos,
 }
 
 //----------------------------------------------------------
-void EsmReader::caseForDialogType(std::size_t & cur_pos,
-                                  std::string & cur_text)
+void EsmReader::caseForDialogType(
+    std::size_t & cur_pos,
+    std::string & cur_text)
 {
-    size_t type = tools.convertStringByteArrayToUInt(rec->substr(cur_pos + 8, 1));
+    size_t type = Tools::convertStringByteArrayToUInt(rec->substr(cur_pos + 8, 1));
     cur_text = Tools::dialog_type[type];
     unique_text = cur_text;
     unique_exist = true;
 }
 
 //----------------------------------------------------------
-void EsmReader::caseForINDX(std::size_t & cur_pos,
-                            std::string & cur_text)
+void EsmReader::caseForINDX(
+    std::size_t & cur_pos,
+    std::string & cur_text)
 {
-    size_t indx = tools.convertStringByteArrayToUInt(rec->substr(cur_pos + 8, 4));
+    size_t indx = Tools::convertStringByteArrayToUInt(rec->substr(cur_pos + 8, 4));
     std::ostringstream ss;
     ss << std::setfill('0') << std::setw(3) << indx;
     cur_text = ss.str();
@@ -173,9 +164,10 @@ void EsmReader::caseForINDX(std::size_t & cur_pos,
 }
 
 //----------------------------------------------------------
-void EsmReader::caseForDefault(std::size_t & cur_pos,
-                               std::size_t & cur_size,
-                               std::string & cur_text)
+void EsmReader::caseForDefault(
+    std::size_t & cur_pos,
+    std::size_t & cur_size,
+    std::string & cur_text)
 {
     cur_text = rec->substr(cur_pos + 8, cur_size);
     unique_text = cur_text;
@@ -195,7 +187,7 @@ void EsmReader::uniqueIfEndOfRecordReached(std::size_t & cur_pos)
 //----------------------------------------------------------
 void EsmReader::setFriendlyTo(const std::string & id)
 {
-    if (is_loaded == true)
+    if (is_loaded)
     {
         size_t cur_pos = 16;
         size_t cur_size = 0;
@@ -209,7 +201,7 @@ void EsmReader::setFriendlyTo(const std::string & id)
             friendlyMainLoop(cur_pos, cur_size, cur_id, cur_text);
             friendlyIfEndOfRecordReached(cur_pos);
         }
-        catch (std::exception const & e)
+        catch (const std::exception & e)
         {
             handleException(e);
         }
@@ -219,8 +211,7 @@ void EsmReader::setFriendlyTo(const std::string & id)
 //----------------------------------------------------------
 void EsmReader::setNextFriendlyTo(const std::string & id)
 {
-    if (is_loaded == true &&
-        friendly_exist == true)
+    if (is_loaded && friendly_exist)
     {
         size_t cur_pos;
         size_t cur_size;
@@ -229,7 +220,7 @@ void EsmReader::setNextFriendlyTo(const std::string & id)
         friendly_id = id;
 
         cur_pos = friendly_pos;
-        cur_size = tools.convertStringByteArrayToUInt(rec->substr(cur_pos + 4, 4));
+        cur_size = Tools::convertStringByteArrayToUInt(rec->substr(cur_pos + 4, 4));
         cur_pos += 8 + cur_size;
         friendly_counter++;
 
@@ -238,7 +229,7 @@ void EsmReader::setNextFriendlyTo(const std::string & id)
             friendlyMainLoop(cur_pos, cur_size, cur_id, cur_text);
             friendlyIfEndOfRecordReached(cur_pos);
         }
-        catch (std::exception const & e)
+        catch (const std::exception & e)
         {
             handleException(e);
         }
@@ -246,15 +237,16 @@ void EsmReader::setNextFriendlyTo(const std::string & id)
 }
 
 //----------------------------------------------------------
-void EsmReader::friendlyMainLoop(std::size_t & cur_pos,
-                                 std::size_t & cur_size,
-                                 std::string & cur_id,
-                                 std::string & cur_text)
+void EsmReader::friendlyMainLoop(
+    std::size_t & cur_pos,
+    std::size_t & cur_size,
+    std::string & cur_id,
+    std::string & cur_text)
 {
     while (cur_pos != rec->size())
     {
         cur_id = rec->substr(cur_pos, 4);
-        cur_size = tools.convertStringByteArrayToUInt(rec->substr(cur_pos + 4, 4));
+        cur_size = Tools::convertStringByteArrayToUInt(rec->substr(cur_pos + 4, 4));
         if (cur_id == friendly_id)
         {
             cur_text = rec->substr(cur_pos + 8, cur_size);
@@ -281,11 +273,11 @@ void EsmReader::friendlyIfEndOfRecordReached(std::size_t & cur_pos)
 }
 
 //----------------------------------------------------------
-void EsmReader::handleException(std::exception const & e)
+void EsmReader::handleException(const std::exception & e)
 {
-    std::string cur_rec = tools.replaceNonReadableCharsWithDot(*rec);
-    std::cout << "--> Error in function (possibly broken record)!" << std::endl;
-    std::cout << cur_rec << std::endl;
-    std::cout << "--> Exception: " << e.what() << std::endl;
+    std::string cur_rec = Tools::replaceNonReadableCharsWithDot(*rec);
+    Tools::addLog("--> Error in function (possibly broken record)!\r\n");
+    Tools::addLog(cur_rec + "\r\n");
+    Tools::addLog("--> Exception: " + std::string(e.what()) + "\r\n");
     is_loaded = false;
 }
