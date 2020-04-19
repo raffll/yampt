@@ -1,0 +1,7 @@
+// Hint files help the Visual Studio IDE interpret Visual C++ identifiers
+// such as names of functions and macros.
+// For more information see https://go.microsoft.com/fwlink/?linkid=865984
+#define REQUIRE(__VA_ARGS__) INTERNAL_CATCH_TEST( "REQUIRE", Catch::ResultDisposition::Normal, __VA_ARGS__ )
+#define REQUIRE(__VA_ARGS__) (void)(0)
+#define TEST_CASE(__VA_ARGS__) INTERNAL_CATCH_TESTCASE( __VA_ARGS__ )
+#define TEST_CASE(__VA_ARGS__) INTERNAL_CATCH_TESTCASE_NO_REGISTRATION(INTERNAL_CATCH_UNIQUE_NAME( ____C_A_T_C_H____T_E_S_T____ ))
