@@ -37,6 +37,8 @@ public:
     std::string getFriendlyCounter() { return std::to_string(friendly_counter); }
     bool isFriendlyValid() { return friendly_exist; }
 
+    Tools::Encoding detectEncoding();
+
     EsmReader() = default;
     EsmReader(const std::string & path);
 
@@ -72,6 +74,8 @@ private:
     void friendlyIfEndOfRecordReached(std::size_t & cur_pos);
 
     void handleException(const std::exception & e);
+
+    bool detectWindows1250Encoding(const std::string & friendly_text);
 
     std::vector<std::string> rec_coll;
     std::string name_full;

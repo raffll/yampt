@@ -23,6 +23,12 @@ public:
         CHANGED
     };
 
+    enum class Encoding
+    {
+        WINDOWS_1252,
+        WINDOWS_1250
+    };
+
     using single_dict_t = std::map<std::string, std::string>;
     using dict_t = std::array<single_dict_t, 11>;
 
@@ -53,8 +59,9 @@ public:
         single_dict_t dict,
         const std::string & friendly_text,
         bool extended);
-    static void addLog(const std::string & entry);
-    static void clearLog();
+    static void addLog(
+        const std::string & entry,
+        const bool silent = false);
     static std::string getLog() { return log; }
 
 private:

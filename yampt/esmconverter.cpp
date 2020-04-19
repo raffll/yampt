@@ -15,8 +15,13 @@ EsmConverter::EsmConverter(
     , add_hyperlinks(add_hyperlinks)
     , file_suffix(file_suffix)
 {
-    if (add_hyperlinks)
-        this->add_hyperlinks = !EsmTools::findChar(esm);
+    encoding = esm.detectEncoding();
+
+    if (encoding == Tools::Encoding::WINDOWS_1250)
+    {
+        Tools::addLog("--> Windows-1250 encoding detected!\r\n");
+        this->add_hyperlinks = false;
+    }
 
     if (esm.isLoaded())
         convertEsm(safe);
@@ -126,7 +131,7 @@ std::string EsmConverter::setNewFriendly(
     if (search != merger->getDict(type).end())
     {
         new_friendly = search->second;
-        checkIfIdentical(friendly_text, new_friendly);
+        checkIfIdentical(type, friendly_text, new_friendly);
     }
     else if (type == Tools::RecType::INFO &&
              add_hyperlinks &&
@@ -136,7 +141,7 @@ std::string EsmConverter::setNewFriendly(
             merger->getDict(Tools::RecType::DIAL),
             friendly_text,
             false);
-        checkIfIdentical(friendly_text, new_friendly);
+        checkIfIdentical(type, friendly_text, new_friendly);
     }
     else
     {
@@ -164,18 +169,30 @@ std::pair<std::string, std::string> EsmConverter::setNewScript(
         compiled_data);
     new_friendly = parser.getNewFriendly();
     new_compiled = parser.getNewCompiled();
-    checkIfIdentical(friendly_text, new_friendly);
+    checkIfIdentical(type, friendly_text, new_friendly);
     return make_pair(new_friendly, new_compiled);
 }
 
 //----------------------------------------------------------
 void EsmConverter::checkIfIdentical(
+    const Tools::RecType type,
     const std::string & friendly_text,
     const std::string & new_friendly)
 {
     if (new_friendly != friendly_text)
     {
         to_convert = true;
+
+        if (encoding == Tools::Encoding::WINDOWS_1250 &&
+            (type == Tools::RecType::INFO ||
+             type == Tools::RecType::FNAM) &&
+            new_friendly.size() != friendly_text.size())
+        {
+            Tools::addLog("---\r\n", true);
+            Tools::addLog("<<< " + friendly_text + "\r\n", true);
+            Tools::addLog(">>> " + new_friendly + "\r\n", true);
+        }
+
         counter_converted++;
     }
     else

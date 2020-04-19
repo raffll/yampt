@@ -1,4 +1,4 @@
-#include "esmreader.hpp"
+﻿#include "esmreader.hpp"
 
 //----------------------------------------------------------
 EsmReader::EsmReader(const std::string & path)
@@ -280,4 +280,46 @@ void EsmReader::handleException(const std::exception & e)
     Tools::addLog(cur_rec + "\r\n");
     Tools::addLog("--> Exception: " + std::string(e.what()) + "\r\n");
     is_loaded = false;
+}
+
+//----------------------------------------------------------
+Tools::Encoding EsmReader::detectEncoding()
+{
+    for (size_t i = 0; i < getRecords().size(); ++i)
+    {
+        setRecordTo(i);
+        if (getRecordId() == "INFO")
+            setFriendlyTo("NAME");
+
+        if (detectWindows1250Encoding(getFriendlyText()))
+            return Tools::Encoding::WINDOWS_1250;
+    }
+    return Tools::Encoding::WINDOWS_1252;
+}
+
+//----------------------------------------------------------
+bool EsmReader::detectWindows1250Encoding(const std::string & friendly_text)
+{
+    // 156 œ ś
+    // 159 Ÿ ź
+    // 179 ³ ł
+    // 185 ¹ ą
+    // 191 ¿ ż
+    // 230 æ ć
+    // 234 ê ę
+    // 241 ñ ń
+    // 243 ó ó <- found in Tamriel Rebuilt
+
+    std::ostringstream ss;
+    ss
+        << static_cast<char>(156)
+        << static_cast<char>(159)
+        << static_cast<char>(179)
+        << static_cast<char>(185)
+        << static_cast<char>(191)
+        << static_cast<char>(230)
+        << static_cast<char>(234)
+        << static_cast<char>(241);
+
+    return friendly_text.find_first_of(ss.str()) != std::string::npos;
 }

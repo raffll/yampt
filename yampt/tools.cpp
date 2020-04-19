@@ -229,14 +229,12 @@ std::string Tools::addDialogTopicsToINFOStrings(
 }
 
 //----------------------------------------------------------
-void Tools::addLog(const std::string & entry)
+void Tools::addLog(
+    const std::string & entry,
+    const bool silent)
 {
-    std::cout << entry;
+    if (!silent)
+        std::cout << entry;
+    
     log += entry;
-}
-
-//----------------------------------------------------------
-void Tools::clearLog()
-{
-    log.clear();
 }

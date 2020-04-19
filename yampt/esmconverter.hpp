@@ -38,6 +38,7 @@ private:
         const std::string & friendly_text,
         const std::string & compiled_data);
     void checkIfIdentical(
+        const Tools::RecType type,
         const std::string & friendly_text,
         const std::string & new_friendly);
     void printLogLine(const Tools::RecType type);
@@ -72,6 +73,8 @@ private:
     int counter_added = 0;
 
     bool to_convert;
+
+    Tools::Encoding encoding;
 };
 
 #endif // ESMCONVERTER_HPP
