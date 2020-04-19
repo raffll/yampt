@@ -112,14 +112,14 @@ private:
     int counter_identical = 0;
     int counter_all = 0;
 
-    struct pattern
+    struct Pattern
     {
         std::string str;
         size_t pos;
         bool missing;
     };
 
-    std::vector<pattern> patterns_f;
+    std::vector<Pattern> patterns_f;
     std::map<std::string, size_t> patterns_n;
 };
 

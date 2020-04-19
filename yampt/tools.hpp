@@ -50,7 +50,7 @@ public:
         const std::vector<std::string> & rec_coll,
         const std::string & name);
     static size_t getNumberOfElementsInDict(const dict_t & dict);
-    static unsigned int convertStringByteArrayToUInt(const std::string & str);
+    static size_t convertStringByteArrayToUInt(const std::string & str);
     static std::string convertUIntToStringByteArray(const size_t size);
     static bool caseInsensitiveStringCmp(std::string lhs, std::string rhs);
     static std::string eraseNullChars(std::string str);

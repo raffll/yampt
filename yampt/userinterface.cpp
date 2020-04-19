@@ -21,7 +21,7 @@ void UserInterface::parseCommandLine()
     {
         for (size_t i = 2; i < arg.size(); ++i)
         {
-            if (arg[i] == "-a")
+            if (arg[i] == "--add-hyperlinks")
             {
                 add_hyperlinks = true;
             }

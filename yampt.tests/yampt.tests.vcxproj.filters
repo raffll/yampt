@@ -13,49 +13,41 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\yampt">
+      <UniqueIdentifier>{5c30878f-bb6d-41b8-b9e6-ff684ed490e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\yampt">
+      <UniqueIdentifier>{a028f827-48ac-4fa1-a175-00b93e7717ba}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="cpp.hint" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="catch.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\yampt\config.hpp">
+      <Filter>Header Files\yampt</Filter>
+    </ClInclude>
     <ClInclude Include="..\yampt\dictcreator.hpp">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\yampt</Filter>
     </ClInclude>
     <ClInclude Include="..\yampt\dictmerger.hpp">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\yampt</Filter>
     </ClInclude>
     <ClInclude Include="..\yampt\dictreader.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\yampt\scriptparser.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\yampt\config.hpp">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\yampt</Filter>
     </ClInclude>
     <ClInclude Include="..\yampt\esmreader.hpp">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\yampt\scriptparser.hpp">
+      <Filter>Header Files\yampt</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\yampt\dictcreator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\dictmerger.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\dictreader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\scriptparser.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\esmreader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="dictcreator.test.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -74,8 +66,23 @@
     <ClCompile Include="tools.test.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\yampt\dictcreator.cpp">
+      <Filter>Source Files\yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\yampt\dictmerger.cpp">
+      <Filter>Source Files\yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\yampt\dictreader.cpp">
+      <Filter>Source Files\yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\yampt\esmreader.cpp">
+      <Filter>Source Files\yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\yampt\scriptparser.cpp">
+      <Filter>Source Files\yampt</Filter>
+    </ClCompile>
     <ClCompile Include="..\yampt\tools.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\yampt</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

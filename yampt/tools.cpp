@@ -97,7 +97,7 @@ size_t Tools::getNumberOfElementsInDict(const dict_t & dict)
 }
 
 //----------------------------------------------------------
-unsigned int Tools::convertStringByteArrayToUInt(const std::string & str)
+size_t Tools::convertStringByteArrayToUInt(const std::string & str)
 {
     assert(str.size() == 4 || str.size() == 1);
 
