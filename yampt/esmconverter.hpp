@@ -15,7 +15,12 @@ public:
     std::time_t getTime() { return esm.getTime(); }
     std::vector<std::string> getRecordColl() { return esm.getRecords(); }
 
-    EsmConverter(std::string path, DictMerger & merger, bool add_dial, std::string file_suffix, Tools::SafeMode safe_mode);
+    EsmConverter(
+        const std::string & path,
+        const DictMerger & merger,
+        const bool add_hyperlinks,
+        const std::string file_suffix,
+        const bool safe);
 
 private:
     void convertEsm(const bool safe);
@@ -55,9 +60,9 @@ private:
     void convertSCPT();
 
     EsmReader esm;
-    DictMerger * merger;
+    const DictMerger * merger;
 
-    const bool add_hyperlinks;
+    bool add_hyperlinks;
     const std::string file_suffix;
 
     int counter_converted = 0;

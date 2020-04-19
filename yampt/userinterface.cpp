@@ -27,11 +27,7 @@ void UserInterface::parseCommandLine()
             }
             else if (arg[i] == "--safe")
             {
-                safe_mode = Tools::SafeMode::ON;
-            }
-            else if (arg[i] == "--safe-auto")
-            {
-                safe_mode = Tools::SafeMode::HEURISTIC;
+                safe = true;
             }
             else if (arg[i] == "-f")
             {
@@ -194,7 +190,7 @@ void UserInterface::convertEsm()
     DictMerger merger(dict_path);
     for (size_t i = 0; i < file_path.size(); ++i)
     {
-        EsmConverter converter(file_path[i], merger, add_hyperlinks, suffix, safe_mode);
+        EsmConverter converter(file_path[i], merger, add_hyperlinks, suffix, safe);
         Tools::writeFile(converter.getRecordColl(), converter.getNamePrefix() + suffix + converter.getNameSuffix());
         boost::filesystem::last_write_time(converter.getNamePrefix() + suffix + converter.getNameSuffix(),
                                            converter.getTime());

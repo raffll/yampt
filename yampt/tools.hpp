@@ -23,13 +23,6 @@ public:
         CHANGED
     };
 
-    enum class SafeMode
-    {
-        HEURISTIC,
-        ON,
-        OFF
-    };
-
     using single_dict_t = std::map<std::string, std::string>;
     using dict_t = std::array<single_dict_t, 11>;
 

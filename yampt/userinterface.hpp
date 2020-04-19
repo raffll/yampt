@@ -24,7 +24,7 @@ private:
     void makeScriptList();
 
     bool add_hyperlinks = false;
-    Tools::SafeMode safe_mode = Tools::SafeMode::OFF;
+    bool safe = false;
 
     std::vector<std::string> arg;
     std::vector<std::string> file_path;

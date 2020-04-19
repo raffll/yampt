@@ -4,32 +4,22 @@
 
 //----------------------------------------------------------
 EsmConverter::EsmConverter(
-    std::string path,
-    DictMerger & merger,
-    bool add_dial,
-    std::string file_suffix,
-    Tools::SafeMode safe_mode
+    const std::string & path,
+    const DictMerger & merger,
+    const bool add_hyperlinks,
+    const std::string file_suffix,
+    const bool safe
 )
     : esm(path)
     , merger(&merger)
-    , add_hyperlinks(add_dial)
+    , add_hyperlinks(add_hyperlinks)
     , file_suffix(file_suffix)
 {
+    if (add_hyperlinks)
+        this->add_hyperlinks = EsmTools::findChar(esm);
+
     if (esm.isLoaded())
-    {
-        bool safe = false;
-        if (safe_mode == Tools::SafeMode::HEURISTIC)
-        {
-            safe = EsmTools::findChar(esm);
-            if (safe)
-                Tools::addLog("--> Polish characters detected! Safe conversion!");
-        }
-
-        if (safe_mode == Tools::SafeMode::ON)
-            safe = true;
-
         convertEsm(safe);
-    }
 }
 
 //----------------------------------------------------------

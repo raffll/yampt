@@ -9,7 +9,7 @@ ScriptParser::ScriptParser()
 //----------------------------------------------------------
 ScriptParser::ScriptParser(
     const Tools::RecType type,
-    DictMerger & merger,
+    const DictMerger & merger,
     const std::string & prefix,
     const std::string & friendly_text,
     const std::string & compiled_data

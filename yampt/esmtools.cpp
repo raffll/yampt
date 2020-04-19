@@ -83,14 +83,6 @@ bool EsmTools::findChar(EsmReader & esm)
         esm.setRecordTo(i);
         if (esm.getRecordId() == "INFO")
             esm.setFriendlyTo("NAME");
-        if (esm.getRecordId() == "BOOK")
-            esm.setFriendlyTo("TEXT");
-
-        //esm.getRecordId() != "GMST" &&
-        //esm.getRecordId() != "FNAM" &&
-        //esm.getRecordId() != "DESC" &&
-        //esm.getRecordId() != "RNAM" &&
-        //esm.getRecordId() != "INDX")
 
         if (findChar(esm.getFriendlyText()))
             return true;
