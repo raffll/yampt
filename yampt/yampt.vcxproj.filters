@@ -33,7 +33,7 @@
     <ClCompile Include="esmreader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="esmtools.cpp">
+    <ClCompile Include="esmTools::cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="scriptparser.cpp">
@@ -65,7 +65,7 @@
     <ClInclude Include="esmreader.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="esmtools.hpp">
+    <ClInclude Include="esmTools::hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="scriptparser.hpp">

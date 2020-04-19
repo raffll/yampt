@@ -3,8 +3,6 @@
 #include "../yampt/esmreader.hpp"
 #include "../yampt/dictcreator.hpp"
 
-using namespace std;
-
 TEST_CASE("Create raw", "[.]")
 {
     DictCreator esm("master/en/Morrowind.esm");

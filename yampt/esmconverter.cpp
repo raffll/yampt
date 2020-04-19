@@ -35,9 +35,10 @@ EsmConverter::EsmConverter(
 //----------------------------------------------------------
 void EsmConverter::convertEsm(const bool safe)
 {
-    std::cout << "----------------------------------------------" << std::endl
-        << "      Converted / Skipped / Unchanged /    All" << std::endl
-        << "----------------------------------------------" << std::endl;
+    Tools::addLog("----------------------------------------------\r\n"
+                  "      Converted / Skipped / Unchanged /    All\r\n"
+                  "----------------------------------------------\r\n");
+
     convertMAST();
     convertCELL();
     convertPGRD();
@@ -45,6 +46,10 @@ void EsmConverter::convertEsm(const bool safe)
     convertSCVR();
     convertDNAM();
     convertCNDT();
+    convertDIAL();
+    convertBNAM();
+    convertSCPT();
+
     if (!safe)
     {
         convertGMST();
@@ -53,25 +58,24 @@ void EsmConverter::convertEsm(const bool safe)
         convertTEXT();
         convertRNAM();
         convertINDX();
-    }
-    convertDIAL();
-    if (!safe)
-    {
         convertINFO();
     }
-    convertBNAM();
-    convertSCPT();
-    std::cout << "----------------------------------------------" << std::endl;
+
+    Tools::addLog("----------------------------------------------\r\n");
 }
 
 //----------------------------------------------------------
 void EsmConverter::printLogLine(const Tools::RecType type)
 {
-    std::cout << Tools::type_name[type] << " "
+    std::ostringstream ss;
+    ss
+        << Tools::type_name[type] << " "
         << std::setw(10) << std::to_string(counter_converted) << " / "
         << std::setw(7) << std::to_string(counter_skipped) << " / "
         << std::setw(9) << std::to_string(counter_unchanged) << " / "
         << std::setw(6) << std::to_string(counter_all) << std::endl;
+
+    Tools::addLog(ss.str());
 }
 
 //----------------------------------------------------------
@@ -93,10 +97,10 @@ void EsmConverter::convertRecordContent(const std::string & new_friendly)
     rec_content.insert(esm.getFriendlyPos() + 8, new_friendly);
     rec_content.erase(esm.getFriendlyPos() + 4, 4);
     rec_content.insert(esm.getFriendlyPos() + 4,
-                       tools.convertUIntToStringByteArray(new_friendly.size()));
+                       Tools::convertUIntToStringByteArray(new_friendly.size()));
     rec_size = rec_content.size() - 16;
     rec_content.erase(4, 4);
-    rec_content.insert(4, tools.convertUIntToStringByteArray(rec_size));
+    rec_content.insert(4, Tools::convertUIntToStringByteArray(rec_size));
     esm.replaceRecordContent(rec_content);
 }
 
@@ -133,7 +137,7 @@ std::string EsmConverter::setNewFriendly(const Tools::RecType type,
              add_dial == true &&
              dialog_topic.substr(0, 1) != "V")
     {
-        new_friendly = tools.addDialogTopicsToINFOStrings(merger->getDict(Tools::RecType::DIAL),
+        new_friendly = Tools::addDialogTopicsToINFOStrings(merger->getDict(Tools::RecType::DIAL),
                                                           friendly_text,
                                                           false);
         checkIfIdentical(friendly_text, new_friendly);
@@ -727,7 +731,7 @@ void EsmConverter::convertSCPT()
                     esm.setFriendlyTo("SCHD");
                     new_header = esm.getFriendlyWithNull();
                     new_header.erase(44, 4);
-                    new_header.insert(44, tools.convertUIntToStringByteArray(new_script.second.size()));
+                    new_header.insert(44, Tools::convertUIntToStringByteArray(new_script.second.size()));
                     convertRecordContent(new_header);
                 }
             }

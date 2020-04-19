@@ -55,7 +55,6 @@ private:
 
     EsmReader esm;
     DictMerger * merger;
-    Tools tools;
 
     const bool add_dial;
     const std::string file_suffix;

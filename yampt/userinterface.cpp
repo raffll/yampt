@@ -122,12 +122,12 @@ void UserInterface::runCommand()
         }
         else
         {
-            std::cout << "Syntax error!" << std::endl;
+            Tools::addLog("Syntax error!\r\n");
         }
     }
     else
     {
-        std::cout << "Syntax error!" << std::endl;
+        Tools::addLog("Syntax error!\r\n");
     }
 }
 
@@ -137,7 +137,7 @@ void UserInterface::makeDictRaw()
     for (size_t i = 0; i < file_path.size(); ++i)
     {
         DictCreator creator(file_path[i]);
-        tools.writeDict(creator.getDict(), creator.getNamePrefix() + ".RAW.xml");
+        Tools::writeDict(creator.getDict(), creator.getNamePrefix() + ".RAW.xml");
     }
 }
 
@@ -145,7 +145,7 @@ void UserInterface::makeDictRaw()
 void UserInterface::makeDictBase()
 {
     DictCreator creator(file_path[0], file_path[1]);
-    tools.writeDict(creator.getDict(), creator.getNamePrefix() + ".BASE.xml");
+    Tools::writeDict(creator.getDict(), creator.getNamePrefix() + ".BASE.xml");
 }
 
 //----------------------------------------------------------
@@ -155,7 +155,7 @@ void UserInterface::makeDictAll()
     for (size_t i = 0; i < file_path.size(); ++i)
     {
         DictCreator creator(file_path[i], merger, Tools::CreatorMode::ALL, false);
-        tools.writeDict(creator.getDict(), creator.getNamePrefix() + ".ALL.xml");
+        Tools::writeDict(creator.getDict(), creator.getNamePrefix() + ".ALL.xml");
     }
 }
 
@@ -166,7 +166,7 @@ void UserInterface::makeDictNotFound()
     for (size_t i = 0; i < file_path.size(); ++i)
     {
         DictCreator creator(file_path[i], merger, Tools::CreatorMode::NOTFOUND, add_dial);
-        tools.writeDict(creator.getDict(), creator.getNamePrefix() + ".NOTFOUND.xml");
+        Tools::writeDict(creator.getDict(), creator.getNamePrefix() + ".NOTFOUND.xml");
     }
 }
 
@@ -177,7 +177,7 @@ void UserInterface::makeDictChanged()
     for (size_t i = 0; i < file_path.size(); ++i)
     {
         DictCreator creator(file_path[i], merger, Tools::CreatorMode::CHANGED, add_dial);
-        tools.writeDict(creator.getDict(), creator.getNamePrefix() + ".CHANGED.xml");
+        Tools::writeDict(creator.getDict(), creator.getNamePrefix() + ".CHANGED.xml");
     }
 }
 
@@ -185,7 +185,7 @@ void UserInterface::makeDictChanged()
 void UserInterface::mergeDict()
 {
     DictMerger merger(dict_path, ext_log);
-    tools.writeDict(merger.getDict(), output);
+    Tools::writeDict(merger.getDict(), output);
 }
 
 //----------------------------------------------------------
@@ -195,7 +195,7 @@ void UserInterface::convertEsm()
     for (size_t i = 0; i < file_path.size(); ++i)
     {
         EsmConverter converter(file_path[i], merger, add_dial, suffix, safe_mode);
-        tools.writeFile(converter.getRecordColl(), converter.getNamePrefix() + suffix + converter.getNameSuffix());
+        Tools::writeFile(converter.getRecordColl(), converter.getNamePrefix() + suffix + converter.getNameSuffix());
         boost::filesystem::last_write_time(converter.getNamePrefix() + suffix + converter.getNameSuffix(),
                                            converter.getTime());
     }
@@ -209,7 +209,7 @@ void UserInterface::dumpFile()
     {
         EsmTools dump(file_path[i]);
         text = dump.dumpFile();
-        tools.writeText(text, dump.getNamePrefix() + ".DUMP.txt");
+        Tools::writeText(text, dump.getNamePrefix() + ".DUMP.txt");
     }
 }
 
@@ -221,6 +221,6 @@ void UserInterface::makeScriptList()
     {
         EsmTools dump(file_path[i]);
         text = dump.makeScriptList();
-        tools.writeText(text, dump.getNamePrefix() + ".SCRIPTS.txt");
+        Tools::writeText(text, dump.getNamePrefix() + ".SCRIPTS.txt");
     }
 }

@@ -13,6 +13,6 @@ int main(int argc, char * argv[])
     }
     catch (...)
     {
-        std::cout << "Unknown error!" << std::endl;
+        Tools::addLog("Unknown error!\r\n");
     }
 }

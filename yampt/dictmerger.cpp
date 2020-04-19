@@ -17,10 +17,7 @@ DictMerger::DictMerger(
 
     findDuplicateFriendlyText(Tools::RecType::CELL);
     findDuplicateFriendlyText(Tools::RecType::DIAL);
-    if (ext_log == true)
-    {
-        findUnusedINFO();
-    }
+    findUnusedINFO();
     printSummaryLog();
 }
 
@@ -128,7 +125,7 @@ void DictMerger::findUnusedINFO()
 void DictMerger::printSummaryLog()
 {
     std::ostringstream ss;
-    ss 
+    ss
         << "---------------------------------" << std::endl
         << "    Merged / Replaced / Identical" << std::endl
         << "---------------------------------" << std::endl

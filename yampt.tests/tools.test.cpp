@@ -1,65 +1,63 @@
 #include "catch.hpp"
 #include "../yampt/config.hpp"
 
-using namespace std;
-
-static Tools tools;
-static string text;
-
 TEST_CASE("Convert string byte array to uint")
 {
-    REQUIRE(tools.convertStringByteArrayToUInt("DEAD") == 1145128260);
+    std::string text = "DEAD";
+    REQUIRE(Tools::convertStringByteArrayToUInt(text) == 1145128260);
     text = "D";
-    REQUIRE(tools.convertStringByteArrayToUInt(text) == 68);
-    for(int i = 0; i < 3; ++i)
+    REQUIRE(Tools::convertStringByteArrayToUInt(text) == 68);
+    for (int i = 0; i < 3; ++i)
     {
         text += '\0';
     }
     REQUIRE(text.size() == 4);
-    REQUIRE(tools.convertStringByteArrayToUInt(text) == 68);
+    REQUIRE(Tools::convertStringByteArrayToUInt(text) == 68);
 }
 
 TEST_CASE("Convert uint to string byte array")
 {
-    REQUIRE(tools.convertUIntToStringByteArray(1145128260) == "DEAD");
+    REQUIRE(Tools::convertUIntToStringByteArray(1145128260) == "DEAD");
 }
 
 TEST_CASE("Case insensitive string comparison")
 {
-    REQUIRE(tools.caseInsensitiveStringCmp("DEAD", "dead") == true);
-    REQUIRE(tools.caseInsensitiveStringCmp("DEAD", "BEEF") == false);
+    REQUIRE(Tools::caseInsensitiveStringCmp("DEAD", "dead") == true);
+    REQUIRE(Tools::caseInsensitiveStringCmp("DEAD", "BEEF") == false);
 }
 
 TEST_CASE("Erase null chars from first found")
 {
-    text = "DEAD";
+    std::string text = "DEAD";
     text.resize(8);
-    REQUIRE(tools.eraseNullChars(text) == "DEAD");
+    REQUIRE(Tools::eraseNullChars(text) == "DEAD");
     text = "DEAD";
     text.resize(8);
     text += "BEEF";
-    REQUIRE(tools.eraseNullChars(text) == "DEAD");
+    REQUIRE(Tools::eraseNullChars(text) == "DEAD");
 }
 
 TEST_CASE("Erase only last \r char")
 {
-    text = "DEAD\r";
-    REQUIRE(tools.eraseCarriageReturnChar(text) == "DEAD");
+    std::string text = "DEAD\r";
+    REQUIRE(Tools::eraseCarriageReturnChar(text) == "DEAD");
     text = "DE\rAD\r";
-    REQUIRE(tools.eraseCarriageReturnChar(text) == "DE\rAD");
+    REQUIRE(Tools::eraseCarriageReturnChar(text) == "DE\rAD");
 }
 
 TEST_CASE("Add dialog topics to INFO strings")
 {
+    std::string text;
     Tools::single_dict_t dict;
-    dict.insert({"clanfear", "postrach klanów"});
+    dict.insert({ "clanfear", "postrach klanów" });
+
     text = "Some text clanfear some text";
-    REQUIRE(tools.addDialogTopicsToINFOStrings(dict, text, false) ==
+    REQUIRE(Tools::addDialogTopicsToINFOStrings(dict, text, false) ==
             "Some text clanfear some text [postrach klanów]");
-    REQUIRE(tools.addDialogTopicsToINFOStrings(dict, text, true) ==
+    REQUIRE(Tools::addDialogTopicsToINFOStrings(dict, text, true) ==
             "Some text clanfear some text [clanfear -> postrach klanów]");
 
     text = "Some text CLANFEAR some text";
-    REQUIRE(tools.addDialogTopicsToINFOStrings(dict, text, false) ==
+    REQUIRE(Tools::addDialogTopicsToINFOStrings(dict, text, false) ==
             "Some text CLANFEAR some text [postrach klanów]");
 }

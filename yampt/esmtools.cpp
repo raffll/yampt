@@ -27,9 +27,9 @@ std::string EsmTools::dumpFile()
             while (cur_pos != rec.size())
             {
                 cur_id = rec.substr(cur_pos, 4);
-                cur_size = tools.convertStringByteArrayToUInt(rec.substr(cur_pos + 4, 4));
+                cur_size = Tools::convertStringByteArrayToUInt(rec.substr(cur_pos + 4, 4));
                 cur_text = rec.substr(cur_pos + 8, cur_size);
-                cur_text = tools.replaceNonReadableCharsWithDot(cur_text);
+                cur_text = Tools::replaceNonReadableCharsWithDot(cur_text);
                 dump += "    " + cur_id + " " + std::to_string(cur_size) + " " + cur_text + "\r\n";
                 cur_pos += 8 + cur_size;
             }
@@ -59,7 +59,7 @@ std::string EsmTools::makeScriptList()
             {
                 esm.setUniqueTo("SCHD");
                 esm.setFriendlyTo("SCDT");
-                compiled = tools.replaceNonReadableCharsWithDot(esm.getFriendlyWithNull());
+                compiled = Tools::replaceNonReadableCharsWithDot(esm.getFriendlyWithNull());
                 esm.setFriendlyTo("SCTX");
                 scripts_coll.insert({ esm.getUniqueText(), make_pair(esm.getFriendlyText(), compiled) });
             }

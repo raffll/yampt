@@ -17,7 +17,6 @@ public:
 
 private:
     EsmReader esm;
-    Tools tools;
 
     static bool findChar(const std::string & friendly_text);
 };

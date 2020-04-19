@@ -36,7 +36,7 @@ void ScriptParser::convertScript()
     while (std::getline(ss, line))
     {
         is_done = false;
-        line = tools.eraseCarriageReturnChar(line);
+        line = Tools::eraseCarriageReturnChar(line);
         line_lc = line;
         transform(line_lc.begin(), line_lc.end(),
                   line_lc.begin(), ::tolower);
@@ -209,7 +209,7 @@ std::string ScriptParser::findInnerTextInDict(
     {
         for (auto & elem : merger->getDict(text_type))
         {
-            if (tools.caseInsensitiveStringCmp(text, elem.first) == true)
+            if (Tools::caseInsensitiveStringCmp(text, elem.first) == true)
             {
                 return elem.second;
             }
@@ -259,7 +259,7 @@ void ScriptParser::convertLineInCompiledScriptData(
                 {
                     pos_in_compiled -= 2;
                     compiled_data.erase(pos_in_compiled, 2);
-                    compiled_data.insert(pos_in_compiled, tools.convertUIntToStringByteArray(splitted_new_line[i].size()).substr(0, 2));
+                    compiled_data.insert(pos_in_compiled, Tools::convertUIntToStringByteArray(splitted_new_line[i].size()).substr(0, 2));
                     pos_in_compiled += 2;
                     compiled_data.erase(pos_in_compiled, splitted_line[i].size());
                     compiled_data.insert(pos_in_compiled, splitted_new_line[i]);
@@ -269,7 +269,7 @@ void ScriptParser::convertLineInCompiledScriptData(
                 {
                     pos_in_compiled -= 1;
                     compiled_data.erase(pos_in_compiled, 1);
-                    compiled_data.insert(pos_in_compiled, tools.convertUIntToStringByteArray(splitted_new_line[i].size() + 1).substr(0, 1));
+                    compiled_data.insert(pos_in_compiled, Tools::convertUIntToStringByteArray(splitted_new_line[i].size() + 1).substr(0, 1));
                     pos_in_compiled += 1;
                     compiled_data.erase(pos_in_compiled, splitted_line[i].size());
                     compiled_data.insert(pos_in_compiled, splitted_new_line[i]);
@@ -291,7 +291,7 @@ void ScriptParser::convertInnerTextInCompiledScriptData(
     {
         pos_in_compiled -= 1;
         compiled_data.erase(pos_in_compiled, 1);
-        compiled_data.insert(pos_in_compiled, tools.convertUIntToStringByteArray(new_text.size()).substr(0, 1));
+        compiled_data.insert(pos_in_compiled, Tools::convertUIntToStringByteArray(new_text.size()).substr(0, 1));
         pos_in_compiled += 1;
         compiled_data.erase(pos_in_compiled, text.size());
         compiled_data.insert(pos_in_compiled, new_text);
@@ -319,7 +319,7 @@ void ScriptParser::convertInnerTextInCompiledScriptData(
             }
 
             compiled_data.erase(pos_in_compiled, 1);
-            compiled_data.insert(pos_in_compiled, tools.convertUIntToStringByteArray(expr_size).substr(0, 1));
+            compiled_data.insert(pos_in_compiled, Tools::convertUIntToStringByteArray(expr_size).substr(0, 1));
             pos_in_compiled += expr_size;
         }
         else

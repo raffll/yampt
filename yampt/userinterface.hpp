@@ -26,8 +26,6 @@ private:
     void dumpFile();
     void makeScriptList();
 
-    Tools tools;
-
     bool add_dial = false;
     bool ext_log = false;
     Tools::safe_mode safe_mode = Tools::safe_mode::disabled;
