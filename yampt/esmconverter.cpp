@@ -184,9 +184,12 @@ void EsmConverter::checkIfIdentical(
         to_convert = true;
 
         if (encoding == Tools::Encoding::WINDOWS_1250 &&
-            (type == Tools::RecType::INFO ||
-             type == Tools::RecType::FNAM) &&
-            new_friendly.size() != friendly_text.size())
+            (type == Tools::RecType::GMST ||
+             type == Tools::RecType::FNAM ||
+             type == Tools::RecType::DESC ||
+             type == Tools::RecType::TEXT ||
+             type == Tools::RecType::RNAM ||
+             type == Tools::RecType::INDX))
         {
             Tools::addLog("---\r\n", true);
             Tools::addLog("<<< " + friendly_text + "\r\n", true);

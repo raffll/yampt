@@ -1,6 +1,13 @@
+TODO
+- [bug] fix broken compiled script data if searched text was found before its desired position
+- [bug] fix broken convertion of getpccell without quotes
+- [bug] prevent info string length exceed 1000 characters while adding hyperlinks
+- [feature] add gender annotation to info records when creating notfound and changed dictionaries
+
 0.20
 - [feature] remove -l switch and always display extended log
-- [feature] change -a switch to --add-hyperlinks and don't add hyperlinks if special characters are detected in plugin (only works for Polish)
+- [feature] change -a switch to --add-hyperlinks
+- [feature] try to detect encoding based on characters used in plugin and disable adding hyperlinks if esp encoding match destination encoding
 - [feature] restore log file
 - [bug] fix crash when trying to convert compiled script data in BNAM
 

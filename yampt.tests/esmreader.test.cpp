@@ -4,7 +4,7 @@
 
 using namespace std;
 
-TEST_CASE("Loading and parsing plugin file", "[.]")
+TEST_CASE("Loading and parsing plugin file", "[i]")
 {
     EsmReader esm("master/en/Morrowind.esm");
     REQUIRE(esm.isLoaded() == true);
@@ -13,7 +13,7 @@ TEST_CASE("Loading and parsing plugin file", "[.]")
     REQUIRE(esm.getNameSuffix() == ".esm");
 }
 
-TEST_CASE("Set unique, default case, not found", "[.]")
+TEST_CASE("Set unique, default case, not found", "[i]")
 {
     EsmReader esm("master/en/Morrowind.esm");
     esm.setRecordTo(0);
@@ -23,7 +23,7 @@ TEST_CASE("Set unique, default case, not found", "[.]")
     REQUIRE(esm.getUniqueText() == "Unique id TEST not found!");
 }
 
-TEST_CASE("Set unique, default case, empty text", "[.]")
+TEST_CASE("Set unique, default case, empty text", "[i]")
 {
     EsmReader esm("master/en/Morrowind.esm");
     esm.setRecordTo(16955); // Region CELL with empty NAME
@@ -33,7 +33,7 @@ TEST_CASE("Set unique, default case, empty text", "[.]")
     REQUIRE(esm.getUniqueText() == "");
 }
 
-TEST_CASE("Set unique, default case", "[.]")
+TEST_CASE("Set unique, default case", "[i]")
 {
     EsmReader esm("master/en/Morrowind.esm");
     esm.setRecordTo(22075); // Regular CELL
@@ -43,7 +43,7 @@ TEST_CASE("Set unique, default case", "[.]")
     REQUIRE(esm.getUniqueText() == "Zergonipal, Shrine");
 }
 
-TEST_CASE("Set unique, INDX case", "[.]")
+TEST_CASE("Set unique, INDX case", "[i]")
 {
     EsmReader esm("master/en/Morrowind.esm");
     esm.setRecordTo(2062); // SKIL with INDX instead of NAME
@@ -53,7 +53,7 @@ TEST_CASE("Set unique, INDX case", "[.]")
     REQUIRE(esm.getUniqueText() == "000");
 }
 
-TEST_CASE("Set unique, dialog type case", "[.]")
+TEST_CASE("Set unique, dialog type case", "[i]")
 {
     EsmReader esm("master/en/Morrowind.esm");
     esm.setRecordTo(22245); // DIAL with one byte DATA dialog type
@@ -63,7 +63,7 @@ TEST_CASE("Set unique, dialog type case", "[.]")
     REQUIRE(esm.getUniqueText() == "J");
 }
 
-TEST_CASE("Set friendly, not found", "[.]")
+TEST_CASE("Set friendly, not found", "[i]")
 {
     EsmReader esm("master/en/Morrowind.esm");
     esm.setRecordTo(0);
@@ -75,7 +75,7 @@ TEST_CASE("Set friendly, not found", "[.]")
     REQUIRE(esm.getFriendlySize() == 0);
 }
 
-TEST_CASE("Set friendly", "[.]")
+TEST_CASE("Set friendly", "[i]")
 {
     /*
        (16) FACT............
@@ -96,7 +96,7 @@ TEST_CASE("Set friendly", "[.]")
     REQUIRE(esm.getFriendlySize() == 32);
 }
 
-TEST_CASE("Set friendly, next", "[.]")
+TEST_CASE("Set friendly, next", "[i]")
 {
     /*
        (16) FACT............

@@ -1,7 +1,7 @@
 #include "catch.hpp"
 #include "../yampt/tools.hpp"
 
-TEST_CASE("Convert string byte array to uint")
+TEST_CASE("Convert string byte array to uint", "[u]")
 {
     std::string text = "DEAD";
     REQUIRE(Tools::convertStringByteArrayToUInt(text) == 1145128260);
@@ -15,18 +15,18 @@ TEST_CASE("Convert string byte array to uint")
     REQUIRE(Tools::convertStringByteArrayToUInt(text) == 68);
 }
 
-TEST_CASE("Convert uint to string byte array")
+TEST_CASE("Convert uint to string byte array", "[u]")
 {
     REQUIRE(Tools::convertUIntToStringByteArray(1145128260) == "DEAD");
 }
 
-TEST_CASE("Case insensitive string comparison")
+TEST_CASE("Case insensitive string comparison", "[u]")
 {
     REQUIRE(Tools::caseInsensitiveStringCmp("DEAD", "dead") == true);
     REQUIRE(Tools::caseInsensitiveStringCmp("DEAD", "BEEF") == false);
 }
 
-TEST_CASE("Erase null chars from first found")
+TEST_CASE("Erase null chars from first found", "[u]")
 {
     std::string text = "DEAD";
     text.resize(8);
@@ -37,7 +37,7 @@ TEST_CASE("Erase null chars from first found")
     REQUIRE(Tools::eraseNullChars(text) == "DEAD");
 }
 
-TEST_CASE("Erase only last \r char")
+TEST_CASE("Erase only last \r char", "[u]")
 {
     std::string text = "DEAD\r";
     REQUIRE(Tools::eraseCarriageReturnChar(text) == "DEAD");
@@ -45,7 +45,7 @@ TEST_CASE("Erase only last \r char")
     REQUIRE(Tools::eraseCarriageReturnChar(text) == "DE\rAD");
 }
 
-TEST_CASE("Add dialog topics to INFO strings")
+TEST_CASE("Add dialog topics to INFO strings", "[u]")
 {
     std::string text;
     Tools::single_dict_t dict;

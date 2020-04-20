@@ -11,7 +11,7 @@ struct Item
     std::string expected;
 };
 
-TEST_CASE("Say keyword")
+TEST_CASE("Say keyword", "[u]")
 {
     std::vector<Item> items;
     items.push_back({ R"("Test"->Say "Test.wav" "Input")", R"("Test"->Say "Test.wav" "Expected")" });
@@ -36,7 +36,7 @@ TEST_CASE("Say keyword")
     }
 }
 
-TEST_CASE("AddTopic keyword")
+TEST_CASE("AddTopic keyword", "[u]")
 {
     DictMerger merger;
     merger.addRecord(Tools::RecType::DIAL, "Test Test", "Result Result");
@@ -66,7 +66,7 @@ TEST_CASE("AddTopic keyword")
     }
 }
 
-TEST_CASE("GetPCCell keyword")
+TEST_CASE("GetPCCell keyword", "[u]")
 {
     DictMerger merger;
     merger.addRecord(Tools::RecType::CELL, "Test Test", "Result Result");
@@ -86,7 +86,7 @@ TEST_CASE("GetPCCell keyword")
     }
 }
 
-TEST_CASE("GetPCCell keyword, invalid")
+TEST_CASE("GetPCCell keyword, invalid", "[u]")
 {
     DictMerger merger;
     merger.addRecord(Tools::RecType::CELL, "Test Test", "Result Result");
