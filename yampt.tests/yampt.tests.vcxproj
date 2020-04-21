@@ -142,12 +142,12 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\yampt\config.hpp" />
     <ClInclude Include="..\yampt\dictcreator.hpp" />
     <ClInclude Include="..\yampt\dictmerger.hpp" />
     <ClInclude Include="..\yampt\dictreader.hpp" />
     <ClInclude Include="..\yampt\esmreader.hpp" />
     <ClInclude Include="..\yampt\scriptparser.hpp" />
+    <ClInclude Include="..\yampt\tools.hpp" />
     <ClInclude Include="catch.hpp" />
   </ItemGroup>
   <ItemGroup>
@@ -157,12 +157,12 @@
     <ClCompile Include="..\yampt\esmreader.cpp" />
     <ClCompile Include="..\yampt\scriptparser.cpp" />
     <ClCompile Include="..\yampt\tools.cpp" />
-    <ClCompile Include="dictcreator.test.cpp" />
-    <ClCompile Include="dictreader.test.cpp" />
-    <ClCompile Include="esmreader.test.cpp" />
-    <ClCompile Include="main.test.cpp" />
-    <ClCompile Include="scriptparser.test.cpp" />
-    <ClCompile Include="tools.test.cpp" />
+    <ClCompile Include="tests.dictcreator.cpp" />
+    <ClCompile Include="tests.dictreader.cpp" />
+    <ClCompile Include="tests.esmreader.cpp" />
+    <ClCompile Include="tests.main.cpp" />
+    <ClCompile Include="tests.scriptparser.cpp" />
+    <ClCompile Include="tests.tools.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

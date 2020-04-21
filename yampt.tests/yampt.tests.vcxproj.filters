@@ -1,23 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
-    <Filter Include="Source Files\yampt">
+    <Filter Include="yampt">
       <UniqueIdentifier>{5c30878f-bb6d-41b8-b9e6-ff684ed490e8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\yampt">
-      <UniqueIdentifier>{a028f827-48ac-4fa1-a175-00b93e7717ba}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -25,64 +10,50 @@
     <None Include="cpp.hint" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="catch.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\yampt\config.hpp">
-      <Filter>Header Files\yampt</Filter>
-    </ClInclude>
+    <ClInclude Include="catch.hpp" />
     <ClInclude Include="..\yampt\dictcreator.hpp">
-      <Filter>Header Files\yampt</Filter>
+      <Filter>yampt</Filter>
     </ClInclude>
     <ClInclude Include="..\yampt\dictmerger.hpp">
-      <Filter>Header Files\yampt</Filter>
+      <Filter>yampt</Filter>
     </ClInclude>
     <ClInclude Include="..\yampt\dictreader.hpp">
-      <Filter>Header Files\yampt</Filter>
+      <Filter>yampt</Filter>
     </ClInclude>
     <ClInclude Include="..\yampt\esmreader.hpp">
-      <Filter>Header Files\yampt</Filter>
+      <Filter>yampt</Filter>
     </ClInclude>
     <ClInclude Include="..\yampt\scriptparser.hpp">
-      <Filter>Header Files\yampt</Filter>
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\yampt\tools.hpp">
+      <Filter>yampt</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="dictcreator.test.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dictreader.test.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="esmreader.test.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="main.test.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="scriptparser.test.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="tools.test.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\yampt\dictcreator.cpp">
-      <Filter>Source Files\yampt</Filter>
+      <Filter>yampt</Filter>
     </ClCompile>
     <ClCompile Include="..\yampt\dictmerger.cpp">
-      <Filter>Source Files\yampt</Filter>
+      <Filter>yampt</Filter>
     </ClCompile>
     <ClCompile Include="..\yampt\dictreader.cpp">
-      <Filter>Source Files\yampt</Filter>
+      <Filter>yampt</Filter>
     </ClCompile>
     <ClCompile Include="..\yampt\esmreader.cpp">
-      <Filter>Source Files\yampt</Filter>
+      <Filter>yampt</Filter>
     </ClCompile>
     <ClCompile Include="..\yampt\scriptparser.cpp">
-      <Filter>Source Files\yampt</Filter>
+      <Filter>yampt</Filter>
     </ClCompile>
     <ClCompile Include="..\yampt\tools.cpp">
-      <Filter>Source Files\yampt</Filter>
+      <Filter>yampt</Filter>
     </ClCompile>
+    <ClCompile Include="tests.dictreader.cpp" />
+    <ClCompile Include="tests.dictcreator.cpp" />
+    <ClCompile Include="tests.main.cpp" />
+    <ClCompile Include="tests.scriptparser.cpp" />
+    <ClCompile Include="tests.tools.cpp" />
+    <ClCompile Include="tests.esmreader.cpp" />
   </ItemGroup>
 </Project>

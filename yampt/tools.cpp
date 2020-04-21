@@ -160,7 +160,7 @@ std::string Tools::eraseNullChars(std::string str)
 }
 
 //----------------------------------------------------------
-std::string Tools::eraseCarriageReturnChar(std::string str)
+std::string Tools::trimCR(std::string str)
 {
     if (str.find('\r') != std::string::npos)
     {
@@ -188,7 +188,7 @@ std::string Tools::replaceNonReadableCharsWithDot(const std::string & str)
 }
 
 //----------------------------------------------------------
-std::string Tools::addDialogTopicsToINFOStrings(
+std::string Tools::addHyperlinks(
     single_dict_t dict,
     const std::string & friendly_text,
     bool extended)

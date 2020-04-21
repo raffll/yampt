@@ -224,7 +224,7 @@ void DictCreator::validateRecordForModeNOT(
 
     if (type == Tools::RecType::INFO && add_hyperlinks)
     {
-        new_friendly = Tools::addDialogTopicsToINFOStrings(
+        new_friendly = Tools::addHyperlinks(
             merger->getDict(Tools::RecType::DIAL),
             friendly_text,
             true);
@@ -256,7 +256,7 @@ void DictCreator::validateRecordForModeCHANGED(
 
     if (type == Tools::RecType::INFO && add_hyperlinks)
     {
-        new_friendly = Tools::addDialogTopicsToINFOStrings(
+        new_friendly = Tools::addHyperlinks(
             merger->getDict(Tools::RecType::DIAL),
             friendly_text,
             true);
@@ -324,7 +324,7 @@ std::vector<std::string> DictCreator::makeScriptMessages(const std::string & new
         size_t keyword_pos;
         std::set<size_t> keyword_pos_coll;
 
-        line = Tools::eraseCarriageReturnChar(line);
+        line = Tools::trimCR(line);
         line_lc = line;
         transform(line_lc.begin(), line_lc.end(),
                   line_lc.begin(), ::tolower);

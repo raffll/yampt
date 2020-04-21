@@ -53,9 +53,9 @@ public:
     static std::string convertUIntToStringByteArray(const size_t size);
     static bool caseInsensitiveStringCmp(std::string lhs, std::string rhs);
     static std::string eraseNullChars(std::string str);
-    static std::string eraseCarriageReturnChar(std::string str);
+    static std::string trimCR(std::string str);
     static std::string replaceNonReadableCharsWithDot(const std::string & str);
-    static std::string addDialogTopicsToINFOStrings(
+    static std::string addHyperlinks(
         single_dict_t dict,
         const std::string & friendly_text,
         bool extended);

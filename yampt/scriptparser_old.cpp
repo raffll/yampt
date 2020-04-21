@@ -36,7 +36,7 @@ void ScriptParserOld::convertScript()
     while (std::getline(ss, line))
     {
         is_done = false;
-        line = Tools::eraseCarriageReturnChar(line);
+        line = Tools::trimCR(line);
         line_lc = line;
         transform(line_lc.begin(), line_lc.end(),
                   line_lc.begin(), ::tolower);

@@ -1,5 +1,5 @@
 #include "esmconverter.hpp"
-#include "scriptparser.hpp"
+#include "scriptparser_old.hpp"
 #include "esmtools.hpp"
 
 //----------------------------------------------------------
@@ -137,7 +137,7 @@ std::string EsmConverter::setNewFriendly(
              add_hyperlinks &&
              dialog_topic.substr(0, 1) != "V")
     {
-        new_friendly = Tools::addDialogTopicsToINFOStrings(
+        new_friendly = Tools::addHyperlinks(
             merger->getDict(Tools::RecType::DIAL),
             friendly_text,
             false);
@@ -161,7 +161,7 @@ std::pair<std::string, std::string> EsmConverter::setNewScript(
     counter_all++;
     std::string new_friendly;
     std::string new_compiled;
-    ScriptParser parser(
+    ScriptParserOld parser(
         type,
         *merger,
         line_prefix,

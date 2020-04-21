@@ -139,6 +139,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="scriptparser.cpp" />
+    <ClCompile Include="scriptparser_old.cpp" />
     <ClCompile Include="tools.cpp" />
     <ClCompile Include="dictcreator.cpp" />
     <ClCompile Include="dictmerger.cpp" />
@@ -147,10 +149,11 @@
     <ClCompile Include="esmreader.cpp" />
     <ClCompile Include="esmtools.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="scriptparser.cpp" />
     <ClCompile Include="userinterface.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="scriptparser.hpp" />
+    <ClInclude Include="scriptparser_old.hpp" />
     <ClInclude Include="tools.hpp" />
     <ClInclude Include="dictcreator.hpp" />
     <ClInclude Include="dictmerger.hpp" />
@@ -159,7 +162,6 @@
     <ClInclude Include="esmreader.hpp" />
     <ClInclude Include="esmtools.hpp" />
     <ClInclude Include="includes.hpp" />
-    <ClInclude Include="scriptparser.hpp" />
     <ClInclude Include="userinterface.hpp" />
   </ItemGroup>
   <ItemGroup>

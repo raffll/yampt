@@ -1,5 +1,5 @@
-#ifndef SCRIPTPARSER_HPP
-#define SCRIPTPARSER_HPP
+#ifndef SCRIPTPARSER_OLD_HPP
+#define SCRIPTPARSER_OLD_HPP
 
 #include "includes.hpp"
 #include "tools.hpp"

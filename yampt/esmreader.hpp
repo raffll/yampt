@@ -81,7 +81,7 @@ private:
     std::string name_full;
     std::string name_prefix;
     std::string name_suffix;
-    std::time_t time;
+    std::time_t time = 0;
     bool is_loaded = false;
 
     std::string * rec = nullptr;
