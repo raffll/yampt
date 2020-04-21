@@ -1,4 +1,5 @@
 TODO
+- [bug] fix broken convertion of getpccell without quotes
 - [bug] fix broken compiled script data if searched text was found before its desired position
 - [bug] prevent info string length exceed 1000 characters while adding hyperlinks
 - [feature] add gender annotation to info records when creating notfound and changed dictionaries
@@ -9,7 +10,6 @@ TODO
 - [feature] try to detect encoding based on characters used in plugin and disable adding hyperlinks if esp encoding match destination encoding
 - [feature] restore log file
 - [bug] fix crash when trying to convert compiled script data in BNAM
-- [bug] fix broken convertion of getpccell without quotes
 
 0.19
 - [feature] add --safe switch in converter to convert only DIAL, CELL, BNAM and SCTX records

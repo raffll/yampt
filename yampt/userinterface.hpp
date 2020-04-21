@@ -31,6 +31,8 @@ private:
     std::vector<std::string> dict_path;
     std::string output;
     std::string suffix;
+
+    Tools::Encoding encoding = Tools::Encoding::UNKNOWN;
 };
 
 #endif // USERINTERFACE_HPP

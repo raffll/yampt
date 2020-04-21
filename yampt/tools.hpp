@@ -25,7 +25,7 @@ public:
 
     enum class Encoding
     {
-        WINDOWS_1252,
+        UNKNOWN,
         WINDOWS_1250
     };
 

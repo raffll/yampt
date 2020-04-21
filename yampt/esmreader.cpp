@@ -294,7 +294,7 @@ Tools::Encoding EsmReader::detectEncoding()
         if (detectWindows1250Encoding(getFriendlyText()))
             return Tools::Encoding::WINDOWS_1250;
     }
-    return Tools::Encoding::WINDOWS_1252;
+    return Tools::Encoding::UNKNOWN;
 }
 
 //----------------------------------------------------------

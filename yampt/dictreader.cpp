@@ -5,9 +5,12 @@ DictReader::DictReader(const std::string & path)
     : is_loaded(false)
 {
     std::string content = Tools::readFile(path);
-    parseDict(content, path);
-    setName(path);
-    printSummaryLog();
+    if (!content.empty())
+    {
+        parseDict(content, path);
+        setName(path);
+        printSummaryLog();
+    }
 }
 
 //----------------------------------------------------------

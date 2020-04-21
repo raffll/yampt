@@ -19,8 +19,9 @@ public:
         const std::string & path,
         const DictMerger & merger,
         const bool add_hyperlinks,
-        const std::string file_suffix,
-        const bool safe);
+        const bool safe,
+        const std::string & file_suffix,
+        const Tools::Encoding encoding);
 
 private:
     void convertEsm(const bool safe);
@@ -74,7 +75,7 @@ private:
 
     bool to_convert = false;
 
-    Tools::Encoding encoding;
+    Tools::Encoding esm_encoding;
 };
 
 #endif // ESMCONVERTER_HPP

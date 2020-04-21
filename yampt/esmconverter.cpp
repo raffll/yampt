@@ -7,20 +7,23 @@ EsmConverter::EsmConverter(
     const std::string & path,
     const DictMerger & merger,
     const bool add_hyperlinks,
-    const std::string file_suffix,
-    const bool safe
+    const bool safe,
+    const std::string & file_suffix,
+    const Tools::Encoding encoding
 )
     : esm(path)
     , merger(&merger)
     , add_hyperlinks(add_hyperlinks)
     , file_suffix(file_suffix)
 {
-    encoding = esm.detectEncoding();
-
     if (encoding == Tools::Encoding::WINDOWS_1250)
     {
-        Tools::addLog("--> Windows-1250 encoding detected!\r\n");
-        this->add_hyperlinks = false;
+        esm_encoding = esm.detectEncoding();
+        if (esm_encoding == Tools::Encoding::WINDOWS_1250)
+        {
+            Tools::addLog("--> Windows-1250 encoding detected!\r\n");
+            this->add_hyperlinks = false;
+        }
     }
 
     if (esm.isLoaded())
@@ -55,7 +58,10 @@ void EsmConverter::convertEsm(const bool safe)
         convertINDX();
 
         if (add_hyperlinks)
+        {
+            Tools::addLog("---\r\n", true);
             Tools::addLog("Adding hyperlinks...\r\n");
+        }
 
         convertINFO();
     }
@@ -74,6 +80,7 @@ void EsmConverter::printLogLine(const Tools::RecType type)
         << std::setw(9) << std::to_string(counter_unchanged) << " / "
         << std::setw(6) << std::to_string(counter_all) << std::endl;
 
+    Tools::addLog("---\r\n", true);
     Tools::addLog(ss.str());
 }
 
@@ -183,17 +190,17 @@ void EsmConverter::checkIfIdentical(
     {
         to_convert = true;
 
-        if (encoding == Tools::Encoding::WINDOWS_1250 &&
-            (type == Tools::RecType::GMST ||
-             type == Tools::RecType::FNAM ||
-             type == Tools::RecType::DESC ||
-             type == Tools::RecType::TEXT ||
-             type == Tools::RecType::RNAM ||
-             type == Tools::RecType::INDX))
+        if (type == Tools::RecType::GMST ||
+            type == Tools::RecType::FNAM ||
+            type == Tools::RecType::DESC ||
+            //type == Tools::RecType::TEXT ||
+            type == Tools::RecType::RNAM ||
+            type == Tools::RecType::INDX ||
+            type == Tools::RecType::INFO)
         {
             Tools::addLog("---\r\n", true);
-            Tools::addLog("<<< " + friendly_text + "\r\n", true);
-            Tools::addLog(">>> " + new_friendly + "\r\n", true);
+            Tools::addLog(Tools::type_name[type] + " <<< " + friendly_text + "\r\n", true);
+            Tools::addLog(Tools::type_name[type] + " >>> " + new_friendly + "\r\n", true);
         }
 
         counter_converted++;
