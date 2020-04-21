@@ -748,7 +748,7 @@ void DictCreator::makeDictBNAM()
             esm_ptr->isFriendlyValid())
         {
             message_n = makeScriptMessages(esm_n.getFriendlyText());
-            message_ptr = &makeScriptMessages(esm_ptr->getFriendlyText());
+            *message_ptr = makeScriptMessages(esm_ptr->getFriendlyText());
             if (message_n.size() == message_ptr->size())
             {
                 for (size_t k = 0; k < message_n.size(); ++k)
@@ -786,7 +786,7 @@ void DictCreator::makeDictSCPT()
             esm_ptr->isFriendlyValid())
         {
             message_n = makeScriptMessages(esm_n.getFriendlyText());
-            message_ptr = &makeScriptMessages(esm_ptr->getFriendlyText());
+            *message_ptr = makeScriptMessages(esm_ptr->getFriendlyText());
             if (message_n.size() == message_ptr->size())
             {
                 for (size_t k = 0; k < message_n.size(); ++k)

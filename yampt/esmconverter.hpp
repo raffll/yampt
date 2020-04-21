@@ -72,7 +72,7 @@ private:
     int counter_all = 0;
     int counter_added = 0;
 
-    bool to_convert;
+    bool to_convert = false;
 
     Tools::Encoding encoding;
 };
