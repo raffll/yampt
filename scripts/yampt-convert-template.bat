@@ -20,7 +20,7 @@ del tmp1.txt >nul 2>&1
 del /f "%OUTPUT%\*%SUFFIX%*" >nul 2>&1
 
 for /r "%_INPUT%" %%f in (*.esp, *.esm) do ( echo | set /p name=" "%%f" " ) >> tmp1.txt
-for /f "delims=" %%x in (tmp1.txt) do ( yampt.exe --convert -a -f %%x -d "%DICT_N%" %USER%\*.xml -s "%SUFFIX%" )
+for /f "delims=" %%x in (tmp1.txt) do ( yampt.exe --convert --add-hyperlinks -f %%x -d "%DICT_N%" %USER%\*.xml -s "%SUFFIX%" )
 
 del tmp1.txt >nul 2>&1
 

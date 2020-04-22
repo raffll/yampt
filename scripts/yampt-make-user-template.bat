@@ -22,8 +22,8 @@ del /f "%_NEW%\*.xml" >nul 2>&1
 
 for /r "%_INPUT%" %%f in (*.esp, *.esm) do echo %%f >> tmp1.txt
 for /f "delims=" %%x in (tmp1.txt) do ( echo | set /p name=" "%%x" " ) >> tmp2.txt
-for /f "delims=" %%x in (tmp2.txt) do ( yampt.exe --make-not -a -f %%x -d "%DICT_N%" )
-for /f "delims=" %%x in (tmp2.txt) do ( yampt.exe --make-changed -a -f %%x -d "%DICT_F%" )
+for /f "delims=" %%x in (tmp2.txt) do ( yampt.exe --make-not --add-hyperlinks -f %%x -d "%DICT_N%" )
+for /f "delims=" %%x in (tmp2.txt) do ( yampt.exe --make-changed --add-hyperlinks -f %%x -d "%DICT_F%" )
 
 del tmp1.txt >nul 2>&1
 del tmp2.txt >nul 2>&1
