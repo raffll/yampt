@@ -14,6 +14,22 @@ Simple command line tool for automatic translation from one language to another.
 
 ## Usage
 
+### Dictionaries
+
+Dictionaries are stored in pseudo xml files to keep original text intact. They are divided into several parts:
+
+CELL - cell names
+DIAL - dialog topics
+BNAM - script line belonging to dialog (INFO string)
+SCPT - script line
+GMST - game settings
+FNAM - object names (weapons, armors, book names, etc.)
+DESC - birthsigns, class and race descriptions
+TEXT - book content
+RNAM - faction ranks
+INDX - magic and skill descriptions
+INFO - dialogs
+
 ### Making base dictionary
 
 This step is required for plugin automatic translation.

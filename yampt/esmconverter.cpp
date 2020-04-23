@@ -1,5 +1,5 @@
 #include "esmconverter.hpp"
-#include "scriptparser_old.hpp"
+#include "scriptparser.hpp"
 #include "esmtools.hpp"
 
 //----------------------------------------------------------
@@ -34,7 +34,7 @@ EsmConverter::EsmConverter(
 void EsmConverter::convertEsm(const bool safe)
 {
     Tools::addLog("----------------------------------------------\r\n"
-                  "      Converted / Skipped / Unchanged /    All\r\n"
+                  "      Converted / Identical / Unchanged /    All\r\n"
                   "----------------------------------------------\r\n");
 
     convertMAST();
@@ -76,7 +76,7 @@ void EsmConverter::printLogLine(const Tools::RecType type)
     ss
         << Tools::type_name[type] << " "
         << std::setw(10) << std::to_string(counter_converted) << " / "
-        << std::setw(7) << std::to_string(counter_skipped) << " / "
+        << std::setw(9) << std::to_string(counter_identical) << " / "
         << std::setw(9) << std::to_string(counter_unchanged) << " / "
         << std::setw(6) << std::to_string(counter_all) << std::endl;
 
@@ -88,7 +88,7 @@ void EsmConverter::printLogLine(const Tools::RecType type)
 void EsmConverter::resetCounters()
 {
     counter_converted = 0;
-    counter_skipped = 0;
+    counter_identical = 0;
     counter_unchanged = 0;
     counter_all = 0;
     counter_added = 0;
@@ -168,7 +168,7 @@ std::pair<std::string, std::string> EsmConverter::setNewScript(
     counter_all++;
     std::string new_friendly;
     std::string new_compiled;
-    ScriptParserOld parser(
+    ScriptParser parser(
         type,
         *merger,
         line_prefix,
@@ -208,7 +208,7 @@ void EsmConverter::checkIfIdentical(
     else
     {
         to_convert = false;
-        counter_skipped++;
+        counter_identical++;
     }
 }
 

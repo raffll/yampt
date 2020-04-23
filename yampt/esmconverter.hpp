@@ -68,7 +68,7 @@ private:
     const std::string file_suffix;
 
     int counter_converted = 0;
-    int counter_skipped = 0;
+    int counter_identical = 0;
     int counter_unchanged = 0;
     int counter_all = 0;
     int counter_added = 0;
