@@ -42,8 +42,9 @@ TEST_CASE("script parser, cell keywords", "[u]")
 {
     vector<std::pair<std::string, std::string>> lines
     {
-        { R"(if ( GetPCCell, "Test Test" == 1 ))", R"(if ( GetPCCell, "Result Result" == 1 ))" },
-        { R"(if ( GetPCCell, Test == 1 ))", R"(if ( GetPCCell, Result == 1 ))" },
+        { R"(if ( GetPCCell "Test Test" == 1 ))", R"(if ( GetPCCell "Result Result" == 1 ))" },
+        { R"(if ( GetPCCell Test == 1 ))", R"(if ( GetPCCell Result == 1 ))" },
+        { R"(if ( GetPCCell Test ))", R"(if ( GetPCCell Result ))" },
         { R"("NPC"->AiFollowCell Player "Test" 0 0 0 0 0)", R"("NPC"->AiFollowCell Player "Result" 0 0 0 0 0)" },
         { R"(PositionCell, 0.0, 0, 0, 0, "Test")", R"(PositionCell, 0.0, 0, 0, 0, "Result")" }
     };

@@ -117,10 +117,10 @@ std::string ScriptParser::checkLine(
         line.rfind(";", keyword_pos) == std::string::npos &&
         line.find("\"", keyword_pos) != std::string::npos) // Convert only if message line is valid
     {
-        Tools::addLog("---\r\n");
-        Tools::addLog("Old line: " + line + "\r\n");
+        Tools::addLog("---\r\n", true);
+        Tools::addLog("Old line: " + line + "\r\n", true);
         new_line = convertLine(line);
-        Tools::addLog("New line: " + new_line + "\r\n");
+        Tools::addLog("New line: " + new_line + "\r\n", true);
         if (!compiled_data.empty())
         {
             if (keyword == "say " ||
@@ -157,18 +157,18 @@ std::string ScriptParser::checkLine(
     if (keyword_pos != std::string::npos &&
         line.rfind(";", keyword_pos) == std::string::npos)
     {
-        Tools::addLog("---\r\n");
-        Tools::addLog("Old line: " + line + "\r\n");
-        Tools::addLog("Extraction:\r\n");
+        Tools::addLog("---\r\n", true);
+        Tools::addLog("Old line: " + line + "\r\n", true);
+        Tools::addLog("Extraction:\r\n", true);
         extracted = extractInnerTextFromLine(line, keyword_pos, pos_in_expression);
 
         // Convert only if extracted text is valid
         if (extracted.second != std::string::npos)
         {
             new_text = findInnerTextInDict(extracted.first, text_type);
-            Tools::addLog("Found: " + new_text + "\r\n");
+            Tools::addLog("Found: " + new_text + "\r\n", true);
             new_line = convertInnerTextInLine(line, extracted.first, extracted.second, new_text);
-            Tools::addLog("New line: " + new_line + "\r\n");
+            Tools::addLog("New line: " + new_line + "\r\n", true);
             if (!compiled_data.empty())
             {
                 convertInnerTextInCompiledScriptData(extracted.first, new_text, is_getpccell);
@@ -356,7 +356,7 @@ std::pair<std::string, size_t> ScriptParser::extractInnerTextFromLine(
         cur_text = "Inner text not found!";
     }
 
-    Tools::addLog("\tStep 1: " + cur_text + "\r\n");
+    Tools::addLog("\tStep 1: " + cur_text + "\r\n", true);
 
     if (pos_in_expression == 0)
     {
@@ -383,7 +383,7 @@ std::pair<std::string, size_t> ScriptParser::extractInnerTextFromLine(
         cur_pos = found.position(1) + cur_pos;
     }
 
-    Tools::addLog("\tStep 2: " + cur_text + "\r\n");
+    Tools::addLog("\tStep 2: " + cur_text + "\r\n", true);
 
     // Strip quotes if exist
     std::regex r2("\"(.*?)\"", std::regex::optimize);
@@ -394,7 +394,7 @@ std::pair<std::string, size_t> ScriptParser::extractInnerTextFromLine(
         cur_pos += 1;
     }
 
-    Tools::addLog("\tStep 3: " + cur_text + "\r\n");
+    Tools::addLog("\tStep 3: " + cur_text + "\r\n", true);
 
     return std::make_pair(cur_text, cur_pos);
 }
