@@ -1,16 +1,13 @@
 @echo off
 
 set DATA=..\Data Files
+
+REM ############### DON'T EDIT ###############
+
 set BASE=dict_base
 set USER=dict_user
 set DICT_N=%BASE%\ENtoPL_plpatch.xml
 set SUFFIX= (plpatch)
-
-REM ############### DON'T EDIT ###############
-
-mkdir "%DATA%" >nul 2>&1
-mkdir "%BASE%" >nul 2>&1
-mkdir "%USER%" >nul 2>&1
 
 del /f "%DATA%\*%SUFFIX%*" >nul 2>&1
 

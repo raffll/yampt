@@ -1,19 +1,16 @@
 @echo off
 
-SET _NATIVE=
-SET FOREIGN=
-
-SET NAME=NATIVE
-
-SET BASE=dict_base
+set NATIVE=
+set FOREIGN=
 
 REM ############### DON'T EDIT ###############
 
-mkdir "%BASE%" >nul 2>&1
+set NAME=NATIVE
+set BASE=dict_base
 
-yampt.exe --make-base -f "%_NATIVE%\Morrowind.esm" "%FOREIGN%\Morrowind.esm"
-yampt.exe --make-base -f "%_NATIVE%\Tribunal.esm" "%FOREIGN%\Tribunal.esm"
-yampt.exe --make-base -f "%_NATIVE%\Bloodmoon.esm" "%FOREIGN%\Bloodmoon.esm"
+yampt.exe --make-base -f "%NATIVE%\Morrowind.esm" "%FOREIGN%\Morrowind.esm"
+yampt.exe --make-base -f "%NATIVE%\Tribunal.esm" "%FOREIGN%\Tribunal.esm"
+yampt.exe --make-base -f "%NATIVE%\Bloodmoon.esm" "%FOREIGN%\Bloodmoon.esm"
 yampt.exe --merge -d "Morrowind.BASE.xml" "Tribunal.BASE.xml" "Bloodmoon.BASE.xml" -o "%NAME%.xml"
 
 del "Morrowind.BASE.xml" "Tribunal.BASE.xml" "Bloodmoon.BASE.xml" >nul 2>&1

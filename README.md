@@ -191,13 +191,13 @@ Make sure *yampt.exe* and all *bat* scripts are in the same directory and this d
 
 In file *yampt-make-base-template.bat* change lines:
 
-    SET _NATIVE=
-    SET FOREIGN=
+    set NATIVE=
+    set FOREIGN=
 
 to path where you keep native and foreign master files (e.g. Morrowind.esm, Tribunal.esm, Bloodmoon.esm)
 
-    SET _NATIVE=C:\path\to\native
-    SET FOREIGN=C:\path\to\foreign
+    set NATIVE=C:\path\to\native
+    set FOREIGN=C:\path\to\foreign
 
 Then double-click on script. This creates your base dictionaries in folder *dict\_base*.
 
