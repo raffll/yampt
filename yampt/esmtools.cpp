@@ -59,7 +59,7 @@ std::string EsmTools::makeScriptList()
             {
                 esm.setUniqueTo("SCHD");
                 esm.setFriendlyTo("SCDT");
-                compiled = Tools::replaceNonReadableCharsWithDot(esm.getFriendlyWithNull());
+                compiled = esm.getFriendlyWithNull();
                 esm.setFriendlyTo("SCTX");
                 scripts_coll.insert({ esm.getUniqueText(), make_pair(esm.getFriendlyText(), compiled) });
             }

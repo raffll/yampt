@@ -10,7 +10,7 @@
     <ClCompile Include="esmtools.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="tools.cpp" />
-    <ClCompile Include="scriptparser.cpp" />
+    <ClCompile Include="scriptparser_ex.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="userinterface.hpp" />
@@ -22,7 +22,7 @@
     <ClInclude Include="esmtools.hpp" />
     <ClInclude Include="includes.hpp" />
     <ClInclude Include="tools.hpp" />
-    <ClInclude Include="scriptparser.hpp" />
+    <ClInclude Include="scriptparser_ex.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\packages.config" />

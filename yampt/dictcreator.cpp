@@ -85,16 +85,11 @@ void DictCreator::makeDict(const bool same_order)
     makeDictINDX();
     makeDictINFO();
 
-    if (same_order)
-    {
-        Tools::addLog("-----------------------------------------------\r\n");
-    }
-    else
-    {
+    if (!same_order)
         Tools::addLog("--> Check dictionary for \"MISSING\" keyword!\r\n"
-                      "    Missing CELL and DIAL records needs to be added manually!\r\n"
-                      "-----------------------------------------------\r\n");
-    }
+                      "    Missing CELL and DIAL records needs to be added manually!\r\n");
+
+    Tools::addLog("-----------------------------------------------\r\n");
 }
 
 //----------------------------------------------------------
@@ -321,13 +316,13 @@ std::vector<std::string> DictCreator::makeScriptMessages(const std::string & new
 
     while (std::getline(ss, line))
     {
-        size_t keyword_pos;
-        std::set<size_t> keyword_pos_coll;
-
         line = Tools::trimCR(line);
         line_lc = line;
         transform(line_lc.begin(), line_lc.end(),
                   line_lc.begin(), ::tolower);
+
+        size_t keyword_pos;
+        std::set<size_t> keyword_pos_coll;
 
         for (const auto & keyword : Tools::keywords)
         {
@@ -338,7 +333,8 @@ std::vector<std::string> DictCreator::makeScriptMessages(const std::string & new
         keyword_pos = *keyword_pos_coll.begin();
 
         if (keyword_pos != std::string::npos &&
-            line.rfind(";", keyword_pos) == std::string::npos)
+            line.rfind(";", keyword_pos) == std::string::npos &&
+            line.find("\"", keyword_pos) != std::string::npos)
         {
             messages.push_back(line);
         }

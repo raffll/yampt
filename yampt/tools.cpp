@@ -13,7 +13,7 @@ const std::vector<std::string> Tools::type_name
 const std::vector<std::string> Tools::dialog_type { "T", "V", "G", "P", "J" };
 const std::vector<std::string> Tools::sep { "^", "<_id>", "</_id>", "<key>", "</key>", "<val>", "</val>", "<rec name=\"", "\"/>" };
 const std::vector<std::string> Tools::err { "<err name=\"", "\"/>" };
-const std::vector<std::string> Tools::keywords { "messagebox", "choice", "say ", "say," };
+const std::vector<std::string> Tools::keywords { "messagebox", "choice", "say" };
 
 //----------------------------------------------------------
 std::string Tools::readFile(const std::string & path)

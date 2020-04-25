@@ -23,10 +23,10 @@
     <ClInclude Include="..\yampt\esmreader.hpp">
       <Filter>yampt</Filter>
     </ClInclude>
-    <ClInclude Include="..\yampt\scriptparser.hpp">
+    <ClInclude Include="..\yampt\tools.hpp">
       <Filter>yampt</Filter>
     </ClInclude>
-    <ClInclude Include="..\yampt\tools.hpp">
+    <ClInclude Include="..\yampt\scriptparser_ex.hpp">
       <Filter>yampt</Filter>
     </ClInclude>
   </ItemGroup>
@@ -43,9 +43,6 @@
     <ClCompile Include="..\yampt\esmreader.cpp">
       <Filter>yampt</Filter>
     </ClCompile>
-    <ClCompile Include="..\yampt\scriptparser.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
     <ClCompile Include="..\yampt\tools.cpp">
       <Filter>yampt</Filter>
     </ClCompile>
@@ -55,5 +52,8 @@
     <ClCompile Include="tests.scriptparser.cpp" />
     <ClCompile Include="tests.tools.cpp" />
     <ClCompile Include="tests.esmreader.cpp" />
+    <ClCompile Include="..\yampt\scriptparser_ex.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

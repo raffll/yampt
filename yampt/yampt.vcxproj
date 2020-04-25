@@ -139,7 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="scriptparser.cpp" />
+    <ClCompile Include="scriptparser_ex.cpp" />
     <ClCompile Include="tools.cpp" />
     <ClCompile Include="dictcreator.cpp" />
     <ClCompile Include="dictmerger.cpp" />
@@ -151,7 +151,7 @@
     <ClCompile Include="userinterface.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="scriptparser.hpp" />
+    <ClInclude Include="scriptparser_ex.hpp" />
     <ClInclude Include="tools.hpp" />
     <ClInclude Include="dictcreator.hpp" />
     <ClInclude Include="dictmerger.hpp" />

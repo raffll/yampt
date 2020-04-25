@@ -1,5 +1,5 @@
 #include "esmconverter.hpp"
-#include "scriptparser.hpp"
+#include "scriptparser_ex.hpp"
 #include "esmtools.hpp"
 
 //----------------------------------------------------------
