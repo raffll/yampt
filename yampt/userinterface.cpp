@@ -195,9 +195,12 @@ void UserInterface::convertEsm()
     for (size_t i = 0; i < file_path.size(); ++i)
     {
         EsmConverter converter(file_path[i], merger, add_hyperlinks, safe, suffix, encoding);
-        Tools::writeFile(converter.getRecordColl(), converter.getNamePrefix() + suffix + converter.getNameSuffix());
-        boost::filesystem::last_write_time(converter.getNamePrefix() + suffix + converter.getNameSuffix(),
-                                           converter.getTime());
+        if (converter.isLoaded())
+        {
+            Tools::writeFile(converter.getRecordColl(), converter.getNamePrefix() + suffix + converter.getNameSuffix());
+            boost::filesystem::last_write_time(converter.getNamePrefix() + suffix + converter.getNameSuffix(),
+                                               converter.getTime());
+        }
     }
 }
 

@@ -195,18 +195,18 @@ void EsmConverter::checkIfIdentical(
     {
         to_convert = true;
 
-        if (type == Tools::RecType::GMST ||
-            type == Tools::RecType::FNAM ||
-            type == Tools::RecType::DESC ||
-            //type == Tools::RecType::TEXT ||
-            type == Tools::RecType::RNAM ||
-            type == Tools::RecType::INDX ||
-            type == Tools::RecType::INFO)
-        {
-            Tools::addLog("---\r\n", true);
-            Tools::addLog(Tools::type_name[type] + " <<< " + friendly_text + "\r\n", true);
-            Tools::addLog(Tools::type_name[type] + " >>> " + new_friendly + "\r\n", true);
-        }
+        //if (type == Tools::RecType::GMST ||
+        //    type == Tools::RecType::FNAM ||
+        //    type == Tools::RecType::DESC ||
+        //    //type == Tools::RecType::TEXT ||
+        //    type == Tools::RecType::RNAM ||
+        //    type == Tools::RecType::INDX ||
+        //    type == Tools::RecType::INFO)
+        //{
+        //    Tools::addLog("---\r\n", true);
+        //    Tools::addLog(Tools::type_name[type] + " <<< " + friendly_text + "\r\n", true);
+        //    Tools::addLog(Tools::type_name[type] + " >>> " + new_friendly + "\r\n", true);
+        //}
 
         counter_converted++;
     }

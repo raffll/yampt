@@ -36,32 +36,41 @@ void ScriptParser::convertScript()
         transform(line_lc.begin(), line_lc.end(),
                   line_lc.begin(), ::tolower);
 
-        if (!is_done)
-            convertLine("addtopic", 0, Tools::RecType::DIAL);
+        try
+        {
+            if (!is_done)
+                convertLine("addtopic", 0, Tools::RecType::DIAL);
 
-        if (!is_done)
-            convertLine("showmap", 0, Tools::RecType::CELL);
+            if (!is_done)
+                convertLine("showmap", 0, Tools::RecType::CELL);
 
-        if (!is_done)
-            convertLine("centeroncell", 0, Tools::RecType::CELL);
+            if (!is_done)
+                convertLine("centeroncell", 0, Tools::RecType::CELL);
 
-        if (!is_done)
-            convertLine("getpccell", 0, Tools::RecType::CELL);
+            if (!is_done)
+                convertLine("getpccell", 0, Tools::RecType::CELL);
 
-        if (!is_done)
-            convertLine("aifollowcell", 1, Tools::RecType::CELL);
+            if (!is_done)
+                convertLine("aifollowcell", 1, Tools::RecType::CELL);
 
-        if (!is_done)
-            convertLine("aiescortcell", 1, Tools::RecType::CELL);
+            if (!is_done)
+                convertLine("aiescortcell", 1, Tools::RecType::CELL);
 
-        if (!is_done)
-            convertLine("placeitemcell", 1, Tools::RecType::CELL);
+            if (!is_done)
+                convertLine("placeitemcell", 1, Tools::RecType::CELL);
 
-        if (!is_done)
-            convertLine("positioncell", 4, Tools::RecType::CELL);
+            if (!is_done)
+                convertLine("positioncell", 4, Tools::RecType::CELL);
 
-        if (!is_done)
-            convertLine();
+            if (!is_done)
+                convertLine();
+        }
+        catch (...)
+        {
+            Tools::addLog("---\r\n", true);
+            Tools::addLog(Tools::type_name[type] + ": error in line!\r\n");
+            Tools::addLog(Tools::type_name[type] + ": " + line + "\r\n");
+        }
 
         new_friendly += new_line + "\r\n";
     }

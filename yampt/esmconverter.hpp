@@ -9,6 +9,7 @@
 class EsmConverter
 {
 public:
+    bool isLoaded() { return esm.isLoaded(); }
     std::string getNameFull() { return esm.getNameFull(); }
     std::string getNamePrefix() { return esm.getNamePrefix(); }
     std::string getNameSuffix() { return esm.getNameSuffix(); }
