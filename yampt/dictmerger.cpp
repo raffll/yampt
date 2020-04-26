@@ -47,13 +47,12 @@ void DictMerger::mergeDict()
                          search->second != elem.second)
                 {
                     // Found in previous dictionary - skipped
-                    Tools::addLog("Replaced record in " + Tools::type_name[type] + ": " + elem.first + "\r\n");
+                    Tools::addLog(Tools::type_name[type] + ": replaced record " + elem.first + "\r\n");
                     counter_replaced++;
                 }
                 else
                 {
                     // Found in previous dictionary - identical, skipped
-                    // Tools::addLog("Identical record in " + Tools::type_name[type] + ": " + elem.first + "\r\n");
                     counter_identical++;
                 }
             }
@@ -82,7 +81,7 @@ void DictMerger::findDuplicateFriendlyText(Tools::RecType type)
                   test.begin(), ::tolower);
         if (test_set.insert(test).second == false)
         {
-            Tools::addLog("Duplicate value in " + Tools::type_name[type] + ": " + elem.second + "\r\n");
+            Tools::addLog(Tools::type_name[type] + ": duplicate value in " + elem.second + "\r\n");
         }
     }
 }
@@ -110,9 +109,10 @@ void DictMerger::findUnusedINFO()
                     found = true;
                 }
             }
-            if (found == false)
+
+            if (!found)
             {
-                Tools::addLog("Unused INFO record: " + info.first + "\r\n");
+                Tools::addLog("INFO: unused record " + info.first + "\r\n");
             }
         }
     }

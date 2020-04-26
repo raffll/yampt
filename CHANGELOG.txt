@@ -1,7 +1,6 @@
 TODO
-- [bug] fix broken compiled script data if searched text was found before its desired position
-- [bug] prevent info string length exceed 1000 characters while adding hyperlinks
 - [feature] add gender annotation to info records when creating notfound and changed dictionaries
+- [feature] add glossary dictionary
 
 0.20
 - [feature] remove -l switch and always display extended log
@@ -11,6 +10,8 @@ TODO
 - [bug] fix scripts sometimes not expanding wildcards
 - [bug] fix crash when trying to convert compiled script data in BNAM
 - [bug] fix broken convertion of getpccell without quotes
+- [bug] fix broken compiled script data if searched text was found before its desired position
+- [bug] prevent info string length exceed 1024 characters while adding hyperlinks
 
 0.19
 - [feature] add --safe switch in converter to convert only DIAL, CELL, BNAM and SCTX records

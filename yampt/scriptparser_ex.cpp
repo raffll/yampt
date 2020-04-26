@@ -10,7 +10,7 @@ ScriptParser::ScriptParser(
 )
     : type(type)
     , merger(&merger)
-    , prefix(prefix)
+    , script_name(prefix)
     , friendly_text(friendly_text)
     , new_compiled(new_compiled)
 {
@@ -102,7 +102,7 @@ void ScriptParser::convertLine(
 void ScriptParser::trimLine()
 {
     Tools::addLog("---\r\n", true);
-    Tools::addLog("Line <<< " + line + "\r\n", true);
+    Tools::addLog(Tools::type_name[type] + " <<< " + line + "\r\n", true);
 
     old_text = line.substr(pos);
 
@@ -176,7 +176,7 @@ void ScriptParser::insertNewText()
     new_line.erase(pos, old_text.size());
     new_line.insert(pos, new_text);
 
-    Tools::addLog("Line >>> " + new_line + "\r\n", true);
+    Tools::addLog(Tools::type_name[type] + " >>> " + new_line + "\r\n", true);
 }
 
 //----------------------------------------------------------
@@ -185,9 +185,23 @@ void ScriptParser::convertTextInCompiled(const bool is_getpccell)
     if (type != Tools::RecType::SCTX)
         return;
 
-    pos_c = new_compiled.find(old_text, pos_c);
+    if (line == R"( 	"TR_m2_q_29_1_refugee"->PositionCell, 613, -544, 1191, 5, "Nekrom, Schronisko Œw. Aralora")")
+        int i = 5;
 
-    // TODO: make sure found is valid
+    pos_c = new_compiled.find(old_text, pos_c);
+    size_t old_size = Tools::convertStringByteArrayToUInt(new_compiled.substr(pos_c - 1, 1));
+    // WTF! Sometimes old text can be null terminated
+    while (old_size != old_text.size() && old_size != old_text.size() + 1)
+    {
+        Tools::addLog("---\r\n", true);
+        Tools::addLog(
+            Tools::type_name[type] + ": " + 
+            std::to_string(old_size) + " != " + std::to_string(old_text.size()) + " " + 
+            old_text + " false positive in " + script_name + "\r\n", true);
+        pos_c += old_text.size();
+        pos_c = new_compiled.find(old_text, pos_c);
+        old_size = Tools::convertStringByteArrayToUInt(new_compiled.substr(pos_c - 1, 1));
+    }
 
     if (pos_c != std::string::npos)
     {
@@ -265,18 +279,18 @@ void ScriptParser::findKeyword()
 void ScriptParser::findNewMessage()
 {
     Tools::addLog("---\r\n", true);
-    Tools::addLog("Line <<< " + line + "\r\n", true);
+    Tools::addLog(Tools::type_name[type] + " <<< " + line + "\r\n", true);
 
-    auto search = merger->getDict(type).find(prefix + line);
+    auto search = merger->getDict(type).find(script_name + line);
     if (search != merger->getDict(type).end())
     {
-        if (line != search->second.substr(prefix.size()))
+        if (line != search->second.substr(script_name.size()))
         {
-            new_line = search->second.substr(prefix.size());
+            new_line = search->second.substr(script_name.size());
         }
     }
 
-    Tools::addLog("Line >>>" + new_line + "\r\n", true);
+    Tools::addLog(Tools::type_name[type] + " >>> " + new_line + "\r\n", true);
 }
 
 //----------------------------------------------------------

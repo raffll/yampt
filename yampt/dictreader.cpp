@@ -96,7 +96,7 @@ void DictReader::validateRecord(
     {
         if (friendly_text.size() > 63)
         {
-            Tools::addLog("Too long, more than 63 bytes in " + id + ": " + unique_text + "\r\n");
+            Tools::addLog(id + ": invalid, more than 63 bytes in " + unique_text + "\r\n");
             counter_invalid++;
         }
         else
@@ -136,7 +136,7 @@ void DictReader::validateRecord(
     {
         if (friendly_text.size() > 32)
         {
-            Tools::addLog("Too long, more than 32 bytes in " + id + ": " + unique_text + "\r\n");
+            Tools::addLog(id + ": invalid, more than 32 bytes in " + unique_text + "\r\n");
             counter_invalid++;
         }
         else
@@ -148,7 +148,7 @@ void DictReader::validateRecord(
     {
         if (friendly_text.size() > 31)
         {
-            Tools::addLog("Too long, more than 31 bytes in " + id + ": " + unique_text + "\r\n");
+            Tools::addLog(id + ": invalid, more than 31 bytes in " + unique_text + "\r\n");
             counter_invalid++;
         }
         else
@@ -158,9 +158,14 @@ void DictReader::validateRecord(
     }
     else if (id == "INFO")
     {
-        if (friendly_text.size() > 512)
+        if (friendly_text.size() > 1024)
         {
-            Tools::addLog("Ok, but more than 512 bytes in " + id + ": " + unique_text + "\r\n");
+            Tools::addLog(id + ": invalid, more than 1024 bytes in " + unique_text + "\r\n");
+            counter_invalid++;
+        }
+        else if (friendly_text.size() > 512)
+        {
+            Tools::addLog(id + ": ok, but more than 512 bytes in " + unique_text + "\r\n", true);
             insertRecord(Tools::RecType::INFO, unique_text, friendly_text);
         }
         else
@@ -170,7 +175,7 @@ void DictReader::validateRecord(
     }
     else
     {
-        Tools::addLog("Invalid id " + id + ": " + unique_text + "\r\n");
+        Tools::addLog(id + ": invalid id in" + unique_text + "\r\n");
         counter_invalid++;
     }
 
@@ -188,7 +193,7 @@ void DictReader::insertRecord(
     }
     else
     {
-        Tools::addLog("Doubled " + Tools::type_name[type] + ": " + unique_text + "\r\n");
+        Tools::addLog(Tools::type_name[type] + ": doubled " + unique_text + "\r\n");
         counter_doubled++;
     }
 }

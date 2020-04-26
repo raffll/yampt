@@ -40,7 +40,7 @@ private:
 
     const Tools::RecType type;
     const DictMerger * merger;
-    const std::string prefix;
+    const std::string script_name;
     const std::string friendly_text;
 
     std::string new_friendly;

@@ -292,7 +292,11 @@ Tools::Encoding EsmReader::detectEncoding()
             setFriendlyTo("NAME");
 
         if (detectWindows1250Encoding(getFriendlyText()))
+        {
+            Tools::addLog("--> Windows-1250 encoding detected!\r\n");
+            Tools::addLog("INFO: " + getFriendlyText() + "\r\n", true);
             return Tools::Encoding::WINDOWS_1250;
+        }
     }
     return Tools::Encoding::UNKNOWN;
 }

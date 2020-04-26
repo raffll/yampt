@@ -21,7 +21,6 @@ EsmConverter::EsmConverter(
         esm_encoding = esm.detectEncoding();
         if (esm_encoding == Tools::Encoding::WINDOWS_1250)
         {
-            Tools::addLog("--> Windows-1250 encoding detected!\r\n");
             this->add_hyperlinks = false;
         }
     }
@@ -148,7 +147,13 @@ std::string EsmConverter::setNewFriendly(
             merger->getDict(Tools::RecType::DIAL),
             friendly_text,
             false);
+
         checkIfIdentical(type, friendly_text, new_friendly);
+
+        if (new_friendly.size() > 1024)
+        {
+            new_friendly.resize(1024);
+        }
     }
     else
     {
