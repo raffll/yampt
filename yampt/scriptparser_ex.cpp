@@ -182,11 +182,8 @@ void ScriptParser::insertNewText()
 //----------------------------------------------------------
 void ScriptParser::convertTextInCompiled(const bool is_getpccell)
 {
-    if (type != Tools::RecType::SCTX)
+    if (type != Tools::RecType::SCTX || new_compiled.empty())
         return;
-
-    if (line == R"( 	"TR_m2_q_29_1_refugee"->PositionCell, 613, -544, 1191, 5, "Nekrom, Schronisko Œw. Aralora")")
-        int i = 5;
 
     pos_c = new_compiled.find(old_text, pos_c);
     size_t old_size = Tools::convertStringByteArrayToUInt(new_compiled.substr(pos_c - 1, 1));
@@ -195,53 +192,53 @@ void ScriptParser::convertTextInCompiled(const bool is_getpccell)
     {
         Tools::addLog("---\r\n", true);
         Tools::addLog(
-            Tools::type_name[type] + ": " + 
-            std::to_string(old_size) + " != " + std::to_string(old_text.size()) + " " + 
+            Tools::type_name[type] + ": " +
+            std::to_string(old_size) + " != " + std::to_string(old_text.size()) + " " +
             old_text + " false positive in " + script_name + "\r\n", true);
         pos_c += old_text.size();
         pos_c = new_compiled.find(old_text, pos_c);
         old_size = Tools::convertStringByteArrayToUInt(new_compiled.substr(pos_c - 1, 1));
     }
 
-    if (pos_c != std::string::npos)
+    if (pos_c == std::string::npos)
+        return;
+
+    pos_c -= 1;
+    new_compiled.erase(pos_c, 1);
+    new_compiled.insert(pos_c, Tools::convertUIntToStringByteArray(new_text.size()).substr(0, 1));
+    pos_c += 1;
+    new_compiled.erase(pos_c, old_text.size());
+    new_compiled.insert(pos_c, new_text);
+
+    if (is_getpccell)
     {
-        pos_c -= 1;
-        new_compiled.erase(pos_c, 1);
-        new_compiled.insert(pos_c, Tools::convertUIntToStringByteArray(new_text.size()).substr(0, 1));
-        pos_c += 1;
-        new_compiled.erase(pos_c, old_text.size());
-        new_compiled.insert(pos_c, new_text);
+        // Additional getpccell size byte determines
+        // how many bytes from that byte to the end of expression
+        size_t end_of_expr;
+        size_t expr_size;
 
-        if (is_getpccell)
+        if (new_compiled.substr(pos_c + new_text.size(), 1) != " ")
         {
-            // Additional getpccell size byte determines
-            // how many bytes from that byte to the end of expression
-            size_t end_of_expr;
-            size_t expr_size;
-
-            if (new_compiled.substr(pos_c + new_text.size(), 1) != " ")
-            {
-                // If expression ends exactly when inner text ends
-                end_of_expr = pos_c + new_text.size();
-                pos_c = new_compiled.rfind('X', pos_c) - 2;
-                expr_size = end_of_expr - pos_c;
-            }
-            else
-            {
-                // If expression ends with equals or inequal signs
-                end_of_expr = pos_c + new_text.size() + 5; // + 5 because of equation " == 1" size
-                pos_c = new_compiled.rfind('X', pos_c) - 2;
-                expr_size = end_of_expr - pos_c - 1;
-            }
-
-            new_compiled.erase(pos_c, 1);
-            new_compiled.insert(pos_c, Tools::convertUIntToStringByteArray(expr_size).substr(0, 1));
-            pos_c += expr_size;
+            // If expression ends exactly when inner text ends
+            end_of_expr = pos_c + new_text.size();
+            pos_c = new_compiled.rfind('X', pos_c) - 2;
+            expr_size = end_of_expr - pos_c;
         }
         else
         {
-            pos_c += new_text.size();
+            // If expression ends with equals or inequal signs
+            end_of_expr = pos_c + new_text.size() + 5; // + 5 because of equation " == 1" size
+            pos_c = new_compiled.rfind('X', pos_c) - 2;
+            expr_size = end_of_expr - pos_c - 1;
         }
+
+        new_compiled.erase(pos_c, 1);
+        new_compiled.insert(pos_c, Tools::convertUIntToStringByteArray(expr_size).substr(0, 1));
+        pos_c += expr_size;
+    }
+    else
+    {
+        pos_c += new_text.size();
     }
 }
 
@@ -257,7 +254,7 @@ void ScriptParser::convertLine()
 
     findNewMessage();
     convertMessageInCompiled();
- 
+
     is_done = true;
 }
 
@@ -296,7 +293,7 @@ void ScriptParser::findNewMessage()
 //----------------------------------------------------------
 void ScriptParser::convertMessageInCompiled()
 {
-    if (type != Tools::RecType::SCTX)
+    if (type != Tools::RecType::SCTX || new_compiled.empty())
         return;
 
     std::vector<std::string> splitted_line = splitLine(line);
@@ -310,6 +307,21 @@ void ScriptParser::convertMessageInCompiled()
         pos_c = new_compiled.find(splitted_line[i], pos_c);
         if (pos_c == std::string::npos)
             return;
+
+        if (splitted_line[i] == splitted_new_line[i])
+        {
+            pos_c += splitted_line[i].size();
+            continue;
+        }
+
+        if (splitted_line[i] == " " || splitted_line[i] == "\t")
+        {
+            Tools::addLog("---\r\n", true);
+            Tools::addLog(Tools::type_name[type] + ": " + line + "\r\n", true);
+            Tools::addLog(
+                Tools::type_name[type] + ": message is one whitespace character in " + script_name + "\r\n", true);
+            continue;
+        }
 
         if (i == 0)
         {

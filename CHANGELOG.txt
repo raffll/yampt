@@ -12,6 +12,7 @@ TODO
 - [bug] fix broken convertion of getpccell without quotes
 - [bug] fix broken compiled script data if searched text was found before its desired position
 - [bug] prevent info string length exceed 1024 characters while adding hyperlinks
+- [bug] fix broken compiled script data if message is one whitespace character
 
 0.19
 - [feature] add --safe switch in converter to convert only DIAL, CELL, BNAM and SCTX records

@@ -38,11 +38,11 @@ This step is required for plugin automatic translation.
     yampt.exe --make-base -f "C:\path\to\NATIVE\Tribunal.esm" "C:\path\to\FOREIGN\Tribunal.esm"
     yampt.exe --make-base -f "C:\path\to\NATIVE\Bloodmoon.esm" "C:\path\to\FOREIGN\Bloodmoon.esm"
 
-Now you can merge these dictionaries into one file. Important thing is order, just like in game.
+Now you can merge these dictionaries into one file using **--merge** command. Important thing is order, just like in game.
 
     yampt.exe --merge -d "Morrowind.BASE.xml" "Tribunal.BASE.xml" "Bloodmoon.BASE.xml" -o "NATIVE.xml"
 
-Here you have one *NATIVE.xml*. This is your base dictionary. Merge command validate, sort and remove duplicates, so you can use it with only one dictionary:
+Here you have one **NATIVE.xml**. This is your base dictionary. Merge command validate, sort and remove duplicates, so you can use it with only one dictionary:
 
     yampt.exe --merge -d "Morrowind.xml"
 
@@ -68,7 +68,7 @@ to:
 
 ### If you want to add dialog topic names to not converted INFO strings
 
-Add *--add-hyperlinks* switch:
+Add **--add-hyperlinks** switch:
 
     yampt.exe --convert --add-hyperlinks -f "C:\path\to\Plugin.esp" -d "NATIVE.xml"
 
@@ -176,7 +176,7 @@ Commands *--make-not* and *--make-changed* is all you need to fully translate pl
 
 ### If you want to add suffix to converted files
 
-Add --suffix switch:
+Add **--suffix** switch:
 
     yampt.exe --convert -f "C:\path\to\Plugin.esp" -d "NATIVE.xml" -s ".SUFFIX"
 

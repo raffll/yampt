@@ -32,9 +32,9 @@ EsmConverter::EsmConverter(
 //----------------------------------------------------------
 void EsmConverter::convertEsm(const bool safe)
 {
-    Tools::addLog("----------------------------------------------\r\n"
+    Tools::addLog("------------------------------------------------\r\n"
                   "      Converted / Identical / Unchanged /    All\r\n"
-                  "----------------------------------------------\r\n");
+                  "------------------------------------------------\r\n");
 
     convertMAST();
     convertCELL();
@@ -65,7 +65,7 @@ void EsmConverter::convertEsm(const bool safe)
         convertINFO();
     }
 
-    Tools::addLog("----------------------------------------------\r\n");
+    Tools::addLog("------------------------------------------------\r\n");
 }
 
 //----------------------------------------------------------
