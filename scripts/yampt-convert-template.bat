@@ -15,7 +15,7 @@ for %%x in ("%USER%\*.xml") do set DICT_U=!DICT_U! "%%x"
 set DICT_U=%DICT_U:~1%
 
 set ESM=
-for %%f in ("%DATA%\*.esp", "%DATA%\*.esm") do set ESM=!ESM! "%%f"
+for %%f in ("%INPUT%\*.esp", "%INPUT%\*.esm") do set ESM=!ESM! "%%f"
 set ESM=%ESM:~1%
 
 yampt.exe --convert --add-hyperlinks -f %ESM% -d "%DICT_N%" %DICT_U%
