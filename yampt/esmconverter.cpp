@@ -58,7 +58,6 @@ void EsmConverter::convertEsm(const bool safe)
 
         if (add_hyperlinks)
         {
-            Tools::addLog("---\r\n", true);
             Tools::addLog("Adding hyperlinks...\r\n");
         }
 

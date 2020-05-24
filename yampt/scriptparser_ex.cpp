@@ -69,7 +69,6 @@ void ScriptParser::convertScript()
         }
         catch (...)
         {
-            Tools::addLog("---\r\n", true);
             Tools::addLog("Error: unknown!\r\n");
             Tools::addLog("Line: " + line + "\r\n");
         }
@@ -200,7 +199,6 @@ void ScriptParser::convertTextInCompiled(const bool is_getpccell)
 
     if (new_compiled.empty())
     {
-        Tools::addLog("---\r\n", true);
         Tools::addLog("Error: SCDT is empty\r\n", true);
         return;
     }
@@ -208,7 +206,6 @@ void ScriptParser::convertTextInCompiled(const bool is_getpccell)
     pos_c = new_compiled.find(old_text, pos_c);
     if (pos_c == std::string::npos)
     {
-        Tools::addLog("---\r\n", true);
         Tools::addLog("Error: not found in SCDT\r\n", true);
         return;
     }
@@ -217,7 +214,6 @@ void ScriptParser::convertTextInCompiled(const bool is_getpccell)
     // WTF! Sometimes old text can be null terminated
     while (old_size != old_text.size() && old_size != old_text.size() + 1)
     {
-        Tools::addLog("---\r\n", true);
         Tools::addLog(
             "Warning: " +
             std::to_string(old_size) + " != " + std::to_string(old_text.size()) + " " +
@@ -227,7 +223,6 @@ void ScriptParser::convertTextInCompiled(const bool is_getpccell)
         pos_c = new_compiled.find(old_text, pos_c);
         if (pos_c == std::string::npos)
         {
-            Tools::addLog("---\r\n", true);
             Tools::addLog("Error: not found in SCDT\r\n", true);
             return;
         }
@@ -331,7 +326,6 @@ void ScriptParser::convertMessageInCompiled()
 
     if (new_compiled.empty())
     {
-        Tools::addLog("---\r\n", true);
         Tools::addLog("Error: SCDT is empty\r\n", true);
         return;
     }
@@ -341,7 +335,6 @@ void ScriptParser::convertMessageInCompiled()
 
     if (splitted_line.size() != splitted_new_line.size())
     {
-        Tools::addLog("---\r\n", true);
         Tools::addLog("Error: incompatible messages\r\n", true);
         return;
     }
@@ -351,14 +344,12 @@ void ScriptParser::convertMessageInCompiled()
         pos_c = new_compiled.find(splitted_line[i], pos_c);
         if (pos_c == std::string::npos)
         {
-            Tools::addLog("---\r\n", true);
             Tools::addLog("Error: message not found in SCDT\r\n", true);
             return;
         }
 
         if (splitted_line[i] == splitted_new_line[i])
         {
-            Tools::addLog("---\r\n", true);
             Tools::addLog("Warning: message skipped in SCDT\r\n", true);
             pos_c += splitted_line[i].size();
             continue;
@@ -366,7 +357,6 @@ void ScriptParser::convertMessageInCompiled()
 
         if (splitted_line[i] == " " || splitted_line[i] == "\t")
         {
-            Tools::addLog("---\r\n", true);
             Tools::addLog("Error: message is one whitespace character\r\n", true);
             return;
         }

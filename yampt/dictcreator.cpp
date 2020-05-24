@@ -86,7 +86,6 @@ void DictCreator::makeDict(const bool same_order)
 
     if (add_hyperlinks)
     {
-        Tools::addLog("---\r\n", true);
         Tools::addLog("Adding hyperlinks...\r\n");
     }
 
