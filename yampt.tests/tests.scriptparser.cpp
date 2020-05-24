@@ -31,6 +31,7 @@ TEST_CASE("script parser, dial keywords", "[u]")
             Tools::RecType::BNAM,
             merger,
             "",
+            "",
             line.first,
             "");
 
@@ -59,6 +60,7 @@ TEST_CASE("script parser, cell keywords", "[u]")
             Tools::RecType::BNAM,
             merger,
             "",
+            "",
             line.first,
             "");
 
@@ -84,6 +86,7 @@ TEST_CASE("script parser, messages", "[u]")
         ScriptParser parser(
             Tools::RecType::BNAM,
             merger,
+            "",
             "",
             line.first,
             "");

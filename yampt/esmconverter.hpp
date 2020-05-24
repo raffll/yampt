@@ -36,7 +36,7 @@ private:
         const std::string & dialog_topic = "");
     std::pair<std::string, std::string> setNewScript(
         const Tools::RecType type,
-        const std::string & prefix,
+        const std::string & script_name,
         const std::string & friendly_text,
         const std::string & compiled_data);
     void checkIfIdentical(

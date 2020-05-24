@@ -47,7 +47,7 @@ void DictMerger::mergeDict()
                          search->second != elem.second)
                 {
                     // Found in previous dictionary - skipped
-                    Tools::addLog(Tools::type_name[type] + ": replaced record " + elem.first + "\r\n");
+                    Tools::addLog("Warning: replaced " + Tools::type_name[type] + " record " + elem.first + "\r\n");
                     counter_replaced++;
                 }
                 else
@@ -81,7 +81,7 @@ void DictMerger::findDuplicateFriendlyText(Tools::RecType type)
                   test.begin(), ::tolower);
         if (test_set.insert(test).second == false)
         {
-            Tools::addLog(Tools::type_name[type] + ": duplicate value in " + elem.second + "\r\n");
+            Tools::addLog("Warning: duplicate " + Tools::type_name[type] + " value " + elem.second + "\r\n");
         }
     }
 }
@@ -112,7 +112,7 @@ void DictMerger::findUnusedINFO()
 
             if (!found)
             {
-                Tools::addLog("INFO: unused record " + info.first + "\r\n");
+                Tools::addLog("Warning: dialog topic not found " + info.first + "\r\n");
             }
         }
     }

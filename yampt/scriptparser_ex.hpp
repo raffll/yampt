@@ -16,7 +16,8 @@ public:
     ScriptParser(
         const Tools::RecType type,
         const DictMerger & merger,
-        const std::string & prefix,
+        const std::string & script_name,
+        const std::string & file_name,
         const std::string & friendly_text,
         const std::string & compiled_data);
 
@@ -41,6 +42,7 @@ private:
     const Tools::RecType type;
     const DictMerger * merger;
     const std::string script_name;
+    const std::string file_name;
     const std::string friendly_text;
 
     std::string new_friendly;

@@ -79,7 +79,6 @@ void EsmConverter::printLogLine(const Tools::RecType type)
         << std::setw(9) << std::to_string(counter_unchanged) << " / "
         << std::setw(6) << std::to_string(counter_all) << std::endl;
 
-    Tools::addLog("---\r\n", true);
     Tools::addLog(ss.str());
 }
 
@@ -166,7 +165,7 @@ std::string EsmConverter::setNewFriendly(
 //----------------------------------------------------------
 std::pair<std::string, std::string> EsmConverter::setNewScript(
     const Tools::RecType type,
-    const std::string & line_prefix,
+    const std::string & script_name,
     const std::string & friendly_text,
     const std::string & compiled_data)
 {
@@ -176,7 +175,8 @@ std::pair<std::string, std::string> EsmConverter::setNewScript(
     ScriptParser parser(
         type,
         *merger,
-        line_prefix,
+        script_name,
+        getNameFull(),
         friendly_text,
         compiled_data);
     new_friendly = parser.getNewFriendly();
@@ -736,7 +736,7 @@ void EsmConverter::convertBNAM()
             {
                 new_script = setNewScript(
                     Tools::RecType::BNAM,
-                    esm.getUniqueText() + Tools::sep[0],
+                    esm.getUniqueText(),
                     esm.getFriendlyText(),
                     "");
 
@@ -747,6 +747,7 @@ void EsmConverter::convertBNAM()
             }
         }
     }
+    Tools::addLog("---\r\n", true);
     printLogLine(Tools::RecType::BNAM);
 }
 
@@ -779,7 +780,7 @@ void EsmConverter::convertSCPT()
             {
                 new_script = setNewScript(
                     Tools::RecType::SCTX,
-                    esm.getUniqueText() + Tools::sep[0],
+                    esm.getUniqueText(),
                     esm.getFriendlyText(),
                     compiled_data);
 
@@ -800,5 +801,6 @@ void EsmConverter::convertSCPT()
             }
         }
     }
+    Tools::addLog("---\r\n", true);
     printLogLine(Tools::RecType::SCTX);
 }

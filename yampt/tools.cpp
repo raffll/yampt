@@ -209,20 +209,20 @@ std::string Tools::addHyperlinks(
         transform(unique_text_lc.begin(), unique_text_lc.end(),
                   unique_text_lc.begin(), ::tolower);
 
-        if (unique_text_lc != elem.second)
+        if (unique_text_lc == elem.second)
+            continue;
+
+        pos = new_friendly_lc.find(unique_text_lc);
+        if (pos == std::string::npos)
+            continue;
+
+        if (!extended)
         {
-            pos = new_friendly_lc.find(unique_text_lc);
-            if (pos != std::string::npos)
-            {
-                if (extended == false)
-                {
-                    new_friendly.insert(new_friendly.size(), " [" + elem.second + "]");
-                }
-                else
-                {
-                    new_friendly.insert(new_friendly.size(), " [" + elem.first + " -> " + elem.second + "]");
-                }
-            }
+            new_friendly.insert(new_friendly.size(), " [" + elem.second + "]");
+        }
+        else
+        {
+            new_friendly.insert(new_friendly.size(), " [" + elem.first + " -> " + elem.second + "]");
         }
     }
     return new_friendly;
@@ -235,6 +235,6 @@ void Tools::addLog(
 {
     if (!silent)
         std::cout << entry;
-    
+
     log += entry;
 }

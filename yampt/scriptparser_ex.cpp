@@ -4,13 +4,15 @@
 ScriptParser::ScriptParser(
     const Tools::RecType type,
     const DictMerger & merger,
-    const std::string & prefix,
+    const std::string & script_name,
+    const std::string & file_name,
     const std::string & friendly_text,
     const std::string & new_compiled
 )
     : type(type)
     , merger(&merger)
-    , script_name(prefix)
+    , script_name(script_name)
+    , file_name(file_name)
     , friendly_text(friendly_text)
     , new_compiled(new_compiled)
 {
@@ -68,8 +70,8 @@ void ScriptParser::convertScript()
         catch (...)
         {
             Tools::addLog("---\r\n", true);
-            Tools::addLog(Tools::type_name[type] + ": error in line!\r\n");
-            Tools::addLog(Tools::type_name[type] + ": " + line + "\r\n");
+            Tools::addLog("Error: unknown!\r\n");
+            Tools::addLog("Line: " + line + "\r\n");
         }
 
         new_friendly += new_line + "\r\n";
@@ -111,17 +113,19 @@ void ScriptParser::convertLine(
 void ScriptParser::trimLine()
 {
     Tools::addLog("---\r\n", true);
-    Tools::addLog(Tools::type_name[type] + " <<< " + line + "\r\n", true);
+    Tools::addLog(file_name + "\r\n", true);
+    Tools::addLog(script_name + "\r\n", true);
+    Tools::addLog("<<< " + line + "\r\n", true);
 
     old_text = line.substr(pos);
 
-    Tools::addLog("Step 1: " + old_text + "\r\n", true);
+    Tools::addLog("1: " + old_text + "\r\n", true);
 }
 
 //----------------------------------------------------------
 void ScriptParser::extractText(const int pos_in_expression)
 {
-    std::regex r1("([\\w\\.]+|\".*?\")", std::regex::optimize);
+    std::regex r1("([\\w\\.\\-]+|\".*?\")", std::regex::optimize);
     std::sregex_iterator next(old_text.begin(), old_text.end(), r1);
     std::sregex_iterator end;
     std::smatch found;
@@ -137,7 +141,7 @@ void ScriptParser::extractText(const int pos_in_expression)
     old_text = found[1].str();
     pos += found.position(1);
 
-    Tools::addLog("Step 2: " + old_text + "\r\n", true);
+    Tools::addLog("2: " + old_text + "\r\n", true);
 }
 
 //----------------------------------------------------------
@@ -152,7 +156,7 @@ void ScriptParser::removeQuotes()
         pos += 1;
     }
 
-    Tools::addLog("Step 3: " + old_text + "\r\n", true);
+    Tools::addLog("3: " + old_text + "\r\n", true);
 }
 
 //----------------------------------------------------------
@@ -176,7 +180,7 @@ void ScriptParser::findNewText(const Tools::RecType text_type)
         }
     }
 
-    Tools::addLog("Step 4: " + new_text + "\r\n", true);
+    Tools::addLog("4: " + new_text + "\r\n", true);
 }
 
 //----------------------------------------------------------
@@ -185,32 +189,50 @@ void ScriptParser::insertNewText()
     new_line.erase(pos, old_text.size());
     new_line.insert(pos, new_text);
 
-    Tools::addLog(Tools::type_name[type] + " >>> " + new_line + "\r\n", true);
+    Tools::addLog(">>> " + new_line + "\r\n", true);
 }
 
 //----------------------------------------------------------
 void ScriptParser::convertTextInCompiled(const bool is_getpccell)
 {
-    if (type != Tools::RecType::SCTX || new_compiled.empty())
+    if (type != Tools::RecType::SCTX)
         return;
 
+    if (new_compiled.empty())
+    {
+        Tools::addLog("---\r\n", true);
+        Tools::addLog("Error: SCDT is empty\r\n", true);
+        return;
+    }
+
     pos_c = new_compiled.find(old_text, pos_c);
+    if (pos_c == std::string::npos)
+    {
+        Tools::addLog("---\r\n", true);
+        Tools::addLog("Error: not found in SCDT\r\n", true);
+        return;
+    }
     size_t old_size = Tools::convertStringByteArrayToUInt(new_compiled.substr(pos_c - 1, 1));
+
     // WTF! Sometimes old text can be null terminated
     while (old_size != old_text.size() && old_size != old_text.size() + 1)
     {
         Tools::addLog("---\r\n", true);
         Tools::addLog(
-            Tools::type_name[type] + ": " +
+            "Warning: " +
             std::to_string(old_size) + " != " + std::to_string(old_text.size()) + " " +
             old_text + " false positive in " + script_name + "\r\n", true);
         pos_c += old_text.size();
+
         pos_c = new_compiled.find(old_text, pos_c);
+        if (pos_c == std::string::npos)
+        {
+            Tools::addLog("---\r\n", true);
+            Tools::addLog("Error: not found in SCDT\r\n", true);
+            return;
+        }
         old_size = Tools::convertStringByteArrayToUInt(new_compiled.substr(pos_c - 1, 1));
     }
-
-    if (pos_c == std::string::npos)
-        return;
 
     pos_c -= 1;
     new_compiled.erase(pos_c, 1);
@@ -285,40 +307,59 @@ void ScriptParser::findKeyword()
 void ScriptParser::findNewMessage()
 {
     Tools::addLog("---\r\n", true);
-    Tools::addLog(Tools::type_name[type] + " <<< " + line + "\r\n", true);
+    Tools::addLog(file_name + "\r\n", true);
+    Tools::addLog(script_name + "\r\n", true);
+    Tools::addLog("<<< " + line + "\r\n", true);
 
-    auto search = merger->getDict(type).find(script_name + line);
+    auto search = merger->getDict(type).find(script_name + Tools::sep[0] + line);
     if (search != merger->getDict(type).end())
     {
-        if (line != search->second.substr(script_name.size()))
+        if (line != search->second.substr(script_name.size() + 1))
         {
-            new_line = search->second.substr(script_name.size());
+            new_line = search->second.substr(script_name.size() + 1);
         }
     }
 
-    Tools::addLog(Tools::type_name[type] + " >>> " + new_line + "\r\n", true);
+    Tools::addLog(">>> " + new_line + "\r\n", true);
 }
 
 //----------------------------------------------------------
 void ScriptParser::convertMessageInCompiled()
 {
-    if (type != Tools::RecType::SCTX || new_compiled.empty())
+    if (type != Tools::RecType::SCTX)
         return;
+
+    if (new_compiled.empty())
+    {
+        Tools::addLog("---\r\n", true);
+        Tools::addLog("Error: SCDT is empty\r\n", true);
+        return;
+    }
 
     std::vector<std::string> splitted_line = splitLine(line);
     std::vector<std::string> splitted_new_line = splitLine(new_line);
 
     if (splitted_line.size() != splitted_new_line.size())
+    {
+        Tools::addLog("---\r\n", true);
+        Tools::addLog("Error: incompatible messages\r\n", true);
         return;
+    }
 
     for (size_t i = 0; i < splitted_line.size(); i++)
     {
         pos_c = new_compiled.find(splitted_line[i], pos_c);
         if (pos_c == std::string::npos)
+        {
+            Tools::addLog("---\r\n", true);
+            Tools::addLog("Error: message not found in SCDT\r\n", true);
             return;
+        }
 
         if (splitted_line[i] == splitted_new_line[i])
         {
+            Tools::addLog("---\r\n", true);
+            Tools::addLog("Warning: message skipped in SCDT\r\n", true);
             pos_c += splitted_line[i].size();
             continue;
         }
@@ -326,10 +367,8 @@ void ScriptParser::convertMessageInCompiled()
         if (splitted_line[i] == " " || splitted_line[i] == "\t")
         {
             Tools::addLog("---\r\n", true);
-            Tools::addLog(Tools::type_name[type] + ": " + line + "\r\n", true);
-            Tools::addLog(
-                Tools::type_name[type] + ": message is one whitespace character in " + script_name + "\r\n", true);
-            continue;
+            Tools::addLog("Error: message is one whitespace character\r\n", true);
+            return;
         }
 
         if (i == 0)
