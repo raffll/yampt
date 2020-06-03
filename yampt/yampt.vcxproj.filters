@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="userinterface.cpp" />
+    <ClCompile Include="dictcreator.cpp" />
+    <ClCompile Include="dictmerger.cpp" />
+    <ClCompile Include="dictreader.cpp" />
+    <ClCompile Include="esmconverter.cpp" />
+    <ClCompile Include="esmreader.cpp" />
+    <ClCompile Include="esmtools.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="tools.cpp" />
+    <ClCompile Include="scriptparser_ex.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="userinterface.hpp" />
+    <ClInclude Include="dictcreator.hpp" />
+    <ClInclude Include="dictmerger.hpp" />
+    <ClInclude Include="dictreader.hpp" />
+    <ClInclude Include="esmconverter.hpp" />
+    <ClInclude Include="esmreader.hpp" />
+    <ClInclude Include="esmtools.hpp" />
+    <ClInclude Include="includes.hpp" />
+    <ClInclude Include="tools.hpp" />
+    <ClInclude Include="scriptparser_ex.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\packages.config" />
+  </ItemGroup>
+</Project>

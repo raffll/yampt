@@ -1,0 +1,4 @@
+packages/
+.vs/
+x64/
+*.user

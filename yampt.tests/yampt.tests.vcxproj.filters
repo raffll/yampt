@@ -1,0 +1,59 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="yampt">
+      <UniqueIdentifier>{5c30878f-bb6d-41b8-b9e6-ff684ed490e8}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+    <None Include="cpp.hint" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="catch.hpp" />
+    <ClInclude Include="..\yampt\dictcreator.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\yampt\dictmerger.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\yampt\dictreader.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\yampt\esmreader.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\yampt\tools.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\yampt\scriptparser_ex.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\yampt\dictcreator.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\yampt\dictmerger.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\yampt\dictreader.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\yampt\esmreader.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\yampt\tools.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="tests.dictreader.cpp" />
+    <ClCompile Include="tests.dictcreator.cpp" />
+    <ClCompile Include="tests.main.cpp" />
+    <ClCompile Include="tests.scriptparser.cpp" />
+    <ClCompile Include="tests.tools.cpp" />
+    <ClCompile Include="tests.esmreader.cpp" />
+    <ClCompile Include="..\yampt\scriptparser_ex.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
