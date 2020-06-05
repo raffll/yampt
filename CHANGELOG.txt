@@ -3,7 +3,7 @@ TODO
 - [feature] add glossary dictionary
 - [bug] fix comments treated as message
 - [bug] fix xpositioncell from mwse recognized as positioncell
-- [bug] fix regex don't recognize windows-1250 ¹ as a valid char
+- [bug] fix regex don't recognize windows-1250 'Ä…' as a valid char
 
 0.20
 - [feature] remove -l switch and always display extended log
