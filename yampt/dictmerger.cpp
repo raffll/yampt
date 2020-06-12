@@ -1,13 +1,14 @@
 #include "dictmerger.hpp"
 
 //----------------------------------------------------------
-DictMerger::DictMerger(const std::vector<std::string> & path)
-    : ext_log(ext_log)
+DictMerger::DictMerger(const std::vector<std::string> & paths)
 {
-    for (const auto & elem : path)
+    dict = Tools::initializeDict();
+
+    for (const auto & path : paths)
     {
-        DictReader reader(elem);
-        dict_coll.push_back(reader);
+        DictReader reader(path);
+        readers.push_back(reader);
     }
 
     mergeDict();
@@ -24,30 +25,32 @@ void DictMerger::addRecord(
     const std::string & unique_text,
     const std::string & friendly_text)
 {
-    dict[type].insert({ unique_text, friendly_text });
+    dict.at(type).insert({ unique_text, friendly_text });
 }
 
 //----------------------------------------------------------
 void DictMerger::mergeDict()
 {
-    for (size_t i = 0; i < dict_coll.size(); ++i)
+    for (const auto & reader : readers)
     {
-        for (size_t type = 0; type < dict.size(); ++type)
+        for (const auto & chapter : reader.getDict())
         {
-            for (auto & elem : dict_coll[i].getDict(type))
+            for (const auto & elem : chapter.second)
             {
-                auto search = dict[type].find(elem.first);
-                if (search == dict[type].end())
+                const auto & type = chapter.first;
+
+                auto search = dict.at(type).find(elem.first);
+                if (search == dict.at(type).end())
                 {
                     // Not found in previous dictionary - inserted
-                    dict[type].insert({ elem.first, elem.second });
+                    dict.at(type).insert({ elem.first, elem.second });
                     counter_merged++;
                 }
-                else if (search != dict[type].end() &&
+                else if (search != dict.at(type).end() &&
                          search->second != elem.second)
                 {
                     // Found in previous dictionary - skipped
-                    Tools::addLog("Warning: replaced " + Tools::type_name[type] + " record " + elem.first + "\r\n");
+                    Tools::addLog("Warning: replaced " + Tools::getTypeName(type) + " record " + elem.first + "\r\n");
                     counter_replaced++;
                 }
                 else
@@ -59,7 +62,7 @@ void DictMerger::mergeDict()
         }
     }
 
-    if (dict_coll.size() == 1)
+    if (readers.size() == 1)
     {
         Tools::addLog("--> Sorting complete!\r\n");
     }
@@ -81,7 +84,7 @@ void DictMerger::findDuplicateFriendlyText(Tools::RecType type)
                   test.begin(), ::tolower);
         if (test_set.insert(test).second == false)
         {
-            Tools::addLog("Warning: duplicate " + Tools::type_name[type] + " value " + elem.second + "\r\n");
+            Tools::addLog("Warning: duplicate " + Tools::getTypeName(type) + " value " + elem.second + "\r\n");
         }
     }
 }

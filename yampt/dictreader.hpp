@@ -10,10 +10,7 @@ public:
     bool isLoaded() { return is_loaded; }
     std::string getNameFull() { return name_full; }
     std::string getNamePrefix() { return name_prefix; }
-
-    Tools::dict_t const & getDict() const { return dict; }
-    Tools::single_dict_t const & getDict(Tools::RecType type) const { return dict[type]; }
-    Tools::single_dict_t const & getDict(size_t type) const { return dict[type]; }
+    Tools::Dict const & getDict() const { return dict; }
 
     DictReader(const std::string & path);
     DictReader(const DictReader & that);
@@ -37,9 +34,9 @@ private:
 
     std::string name_full;
     std::string name_prefix;
-    Tools::dict_t dict;
+    Tools::Dict dict;
 
-    bool is_loaded;
+    bool is_loaded = false;
 
     int counter_loaded = 0;
     int counter_invalid = 0;

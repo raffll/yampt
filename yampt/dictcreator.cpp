@@ -10,6 +10,8 @@ DictCreator::DictCreator(
     , mode(Tools::CreatorMode::RAW)
     , add_hyperlinks(false)
 {
+    dict = Tools::initializeDict();
+
     if (esm_n.isLoaded())
         makeDict(true);
 }
@@ -26,6 +28,8 @@ DictCreator::DictCreator(
     , mode(Tools::CreatorMode::BASE)
     , add_hyperlinks(false)
 {
+    dict = Tools::initializeDict();
+
     if (esm_n.isLoaded() &&
         esm_f.isLoaded())
     {
@@ -47,6 +51,8 @@ DictCreator::DictCreator(
     , mode(mode)
     , add_hyperlinks(add_hyperlinks)
 {
+    dict = Tools::initializeDict();
+
     if (esm_n.isLoaded())
         makeDict(true);
 }
@@ -101,7 +107,7 @@ void DictCreator::makeDict(const bool same_order)
 //----------------------------------------------------------
 void DictCreator::printLogLine(const Tools::RecType type)
 {
-    std::string id = Tools::type_name[type];
+    std::string id = Tools::getTypeName(type);
     id.resize(12, ' ');
 
     std::ostringstream ss;
@@ -201,8 +207,8 @@ void DictCreator::validateRecordForModeALL(
         type == Tools::RecType::BNAM ||
         type == Tools::RecType::SCTX)
     {
-        auto search = merger->getDict(type).find(unique_text);
-        if (search != merger->getDict(type).end())
+        auto search = merger->getDict().at(type).find(unique_text);
+        if (search != merger->getDict().at(type).end())
         {
             new_friendly = search->second;
         }
@@ -219,14 +225,14 @@ void DictCreator::validateRecordForModeNOT(
 {
     auto new_friendly = friendly_text;
 
-    auto search = merger->getDict(type).find(unique_text);
-    if (search != merger->getDict(type).end())
+    auto search = merger->getDict().at(type).find(unique_text);
+    if (search != merger->getDict().at(type).end())
         return;
 
     if (type == Tools::RecType::INFO && add_hyperlinks)
     {
         new_friendly = Tools::addHyperlinks(
-            merger->getDict(Tools::RecType::DIAL),
+            merger->getDict().at(Tools::RecType::DIAL),
             friendly_text,
             true);
     }
@@ -248,8 +254,8 @@ void DictCreator::validateRecordForModeCHANGED(
         type == Tools::RecType::SCTX)
         return;
 
-    auto search = merger->getDict(type).find(unique_text);
-    if (search == merger->getDict(type).end())
+    auto search = merger->getDict().at(type).find(unique_text);
+    if (search == merger->getDict().at(type).end())
         return;
 
     if (search->second == friendly_text)
@@ -258,7 +264,7 @@ void DictCreator::validateRecordForModeCHANGED(
     if (type == Tools::RecType::INFO && add_hyperlinks)
     {
         new_friendly = Tools::addHyperlinks(
-            merger->getDict(Tools::RecType::DIAL),
+            merger->getDict().at(Tools::RecType::DIAL),
             friendly_text,
             true);
     }
@@ -287,7 +293,7 @@ void DictCreator::insertRecordToDict(
             dict[type].insert({ new_unique, friendly_text });
             counter_doubled++;
             counter_created++;
-            Tools::addLog("Doubled " + Tools::type_name[type] + ": " + unique_text + "\r\n");
+            Tools::addLog("Doubled " + Tools::getTypeName(type) + ": " + unique_text + "\r\n");
         }
         else
         {
@@ -303,8 +309,8 @@ std::string DictCreator::translateDialogTopicsInDictId(std::string to_translate)
         mode == Tools::CreatorMode::NOTFOUND ||
         mode == Tools::CreatorMode::CHANGED)
     {
-        auto search = merger->getDict(Tools::RecType::DIAL).find(to_translate);
-        if (search != merger->getDict(Tools::RecType::DIAL).end())
+        auto search = merger->getDict().at(Tools::RecType::DIAL).find(to_translate);
+        if (search != merger->getDict().at(Tools::RecType::DIAL).end())
         {
             return search->second;
         }

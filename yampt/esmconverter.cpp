@@ -72,7 +72,7 @@ void EsmConverter::printLogLine(const Tools::RecType type)
 {
     std::ostringstream ss;
     ss
-        << Tools::type_name[type] << " "
+        << Tools::getTypeName(type) << " "
         << std::setw(10) << std::to_string(counter_converted) << " / "
         << std::setw(9) << std::to_string(counter_identical) << " / "
         << std::setw(9) << std::to_string(counter_unchanged) << " / "
@@ -131,8 +131,8 @@ std::string EsmConverter::setNewFriendly(
 {
     counter_all++;
     std::string new_friendly;
-    auto search = merger->getDict(type).find(unique_text);
-    if (search != merger->getDict(type).end())
+    auto search = merger->getDict().at(type).find(unique_text);
+    if (search != merger->getDict().at(type).end())
     {
         new_friendly = search->second;
         checkIfIdentical(type, friendly_text, new_friendly);
@@ -142,7 +142,7 @@ std::string EsmConverter::setNewFriendly(
              dialog_topic.substr(0, 1) != "V")
     {
         new_friendly = Tools::addHyperlinks(
-            merger->getDict(Tools::RecType::DIAL),
+            merger->getDict().at(Tools::RecType::DIAL),
             friendly_text,
             false);
 
@@ -193,20 +193,6 @@ void EsmConverter::checkIfIdentical(
     if (new_friendly != friendly_text)
     {
         to_convert = true;
-
-        //if (type == Tools::RecType::GMST ||
-        //    type == Tools::RecType::FNAM ||
-        //    type == Tools::RecType::DESC ||
-        //    //type == Tools::RecType::TEXT ||
-        //    type == Tools::RecType::RNAM ||
-        //    type == Tools::RecType::INDX ||
-        //    type == Tools::RecType::INFO)
-        //{
-        //    Tools::addLog("---\r\n", true);
-        //    Tools::addLog(Tools::type_name[type] + " <<< " + friendly_text + "\r\n", true);
-        //    Tools::addLog(Tools::type_name[type] + " >>> " + new_friendly + "\r\n", true);
-        //}
-
         counter_converted++;
     }
     else

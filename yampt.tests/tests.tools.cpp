@@ -48,7 +48,7 @@ TEST_CASE("Erase only last \r char", "[u]")
 TEST_CASE("Add dialog topics to INFO strings", "[u]")
 {
     std::string text;
-    Tools::single_dict_t dict;
+    Tools::Chapter dict;
     dict.insert({ "clanfear", "postrach klanów" });
 
     text = "Some text clanfear some text";

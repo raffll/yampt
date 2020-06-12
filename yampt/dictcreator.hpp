@@ -11,10 +11,7 @@ class DictCreator
 public:
     std::string getNameFull() { return esm_n.getNameFull(); }
     std::string getNamePrefix() { return esm_n.getNamePrefix(); }
-
-    Tools::dict_t const & getDict() const { return dict; }
-    Tools::single_dict_t const & getDict(Tools::RecType type) const { return dict[type]; }
-    Tools::single_dict_t const & getDict(size_t type) const { return dict[type]; }
+    Tools::Dict const & getDict() const { return dict; }
 
     DictCreator(const std::string & path_n);
     DictCreator(
@@ -97,7 +94,7 @@ private:
     EsmReader esm_f;
     EsmReader * esm_ptr;
     const DictMerger * merger;
-    Tools::dict_t dict;
+    Tools::Dict dict;
 
     std::vector<std::string> * message_ptr;
     std::vector<std::string> message_n;

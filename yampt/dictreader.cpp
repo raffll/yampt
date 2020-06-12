@@ -2,8 +2,9 @@
 
 //----------------------------------------------------------
 DictReader::DictReader(const std::string & path)
-    : is_loaded(false)
 {
+    dict = Tools::initializeDict();
+
     std::string content = Tools::readFile(path);
     if (!content.empty())
     {
@@ -193,7 +194,7 @@ void DictReader::insertRecord(
     }
     else
     {
-        Tools::addLog(Tools::type_name[type] + ": doubled " + unique_text + "\r\n");
+        Tools::addLog(Tools::getTypeName(type) + ": doubled " + unique_text + "\r\n");
         counter_doubled++;
     }
 }

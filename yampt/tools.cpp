@@ -2,14 +2,6 @@
 
 std::string Tools::log;
 
-const std::vector<std::string> Tools::type_name
-{
-    "CELL", "DIAL", "INDX", "RNAM", "DESC",
-    "GMST", "FNAM", "INFO", "TEXT", "BNAM",
-    "SCTX", "+ Wilderness", "+ Region", "PGRD",
-    "ANAM", "SCVR", "DNAM", "CNDT", "GMDT"
-};
-
 const std::vector<std::string> Tools::dialog_type { "T", "V", "G", "P", "J" };
 const std::vector<std::string> Tools::sep { "^", "<_id>", "</_id>", "<key>", "</key>", "<val>", "</val>", "<rec name=\"", "\"/>" };
 const std::vector<std::string> Tools::err { "<err name=\"", "\"/>" };
@@ -40,18 +32,20 @@ std::string Tools::readFile(const std::string & path)
 }
 
 //----------------------------------------------------------
-void Tools::writeDict(const dict_t & dict, const std::string & name)
+void Tools::writeDict(const Dict & dict, const std::string & name)
 {
     if (getNumberOfElementsInDict(dict) > 0)
     {
         std::ofstream file(name, std::ios::binary);
-        for (size_t i = 0; i < dict.size(); ++i)
+        for (const auto & chapter : dict)
         {
-            for (const auto & elem : dict[i])
+            for (const auto & elem : chapter.second)
             {
+                const auto & type = chapter.first;
+
                 file
                     << "<record>\r\n"
-                    << "\t" << sep[1] << type_name[i] << sep[2] << "\r\n"
+                    << "\t" << sep[1] << Tools::getTypeName(type) << sep[2] << "\r\n"
                     << "\t" << sep[3] << elem.first << sep[4] << "\r\n"
                     << "\t" << sep[5] << elem.second << sep[6] << "\r\n"
                     << "</record>\r\n";
@@ -86,12 +80,12 @@ void Tools::writeFile(const std::vector<std::string> & rec_coll, const std::stri
 }
 
 //----------------------------------------------------------
-size_t Tools::getNumberOfElementsInDict(const dict_t & dict)
+size_t Tools::getNumberOfElementsInDict(const Dict & dict)
 {
     size_t size = 0;
-    for (auto const & elem : dict)
+    for (const auto & chapter : dict)
     {
-        size += elem.size();
+        size += chapter.second.size();
     }
     return size;
 }
@@ -189,7 +183,7 @@ std::string Tools::replaceNonReadableCharsWithDot(const std::string & str)
 
 //----------------------------------------------------------
 std::string Tools::addHyperlinks(
-    single_dict_t dict,
+    Chapter chapter,
     const std::string & friendly_text,
     bool extended)
 {
@@ -203,7 +197,7 @@ std::string Tools::addHyperlinks(
     transform(new_friendly_lc.begin(), new_friendly_lc.end(),
               new_friendly_lc.begin(), ::tolower);
 
-    for (const auto & elem : dict)
+    for (const auto & elem : chapter)
     {
         unique_text_lc = elem.first;
         transform(unique_text_lc.begin(), unique_text_lc.end(),
@@ -237,4 +231,40 @@ void Tools::addLog(
         std::cout << entry;
 
     log += entry;
+}
+
+//----------------------------------------------------------
+Tools::Dict Tools::initializeDict()
+{
+    return
+    {
+        { Tools::RecType::CELL, {} },
+        { Tools::RecType::DIAL, {} },
+        { Tools::RecType::INDX, {} },
+        { Tools::RecType::RNAM, {} },
+        { Tools::RecType::DESC, {} },
+        { Tools::RecType::GMST, {} },
+        { Tools::RecType::FNAM, {} },
+        { Tools::RecType::INFO, {} },
+        { Tools::RecType::TEXT, {} },
+        { Tools::RecType::BNAM, {} },
+        { Tools::RecType::SCTX, {} },
+
+        { Tools::RecType::Glossary, {} },
+        { Tools::RecType::Annotation, {} }
+    };
+}
+
+//----------------------------------------------------------
+std::string Tools::getTypeName(Tools::RecType type)
+{
+    static const std::vector<std::string> type_name
+    {
+        "CELL", "DIAL", "INDX", "RNAM", "DESC",
+        "GMST", "FNAM", "INFO", "TEXT", "BNAM",
+        "SCTX", "+ Wilderness", "+ Region", "PGRD",
+        "ANAM", "SCVR", "DNAM", "CNDT", "GMDT"
+    };
+
+    return type_name.at(static_cast<int>(type));
 }

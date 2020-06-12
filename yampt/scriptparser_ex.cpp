@@ -162,14 +162,14 @@ void ScriptParser::removeQuotes()
 void ScriptParser::findNewText(const Tools::RecType text_type)
 {
     new_text = old_text;
-    auto search = merger->getDict(text_type).find(old_text);
-    if (search != merger->getDict(text_type).end())
+    auto search = merger->getDict().at(text_type).find(old_text);
+    if (search != merger->getDict().at(text_type).end())
     {
         new_text = search->second;
     }
     else
     {
-        for (const auto & elem : merger->getDict(text_type))
+        for (const auto & elem : merger->getDict().at(text_type))
         {
             if (Tools::caseInsensitiveStringCmp(old_text, elem.first))
             {
@@ -306,8 +306,8 @@ void ScriptParser::findNewMessage()
     Tools::addLog(script_name + "\r\n", true);
     Tools::addLog("<<< " + line + "\r\n", true);
 
-    auto search = merger->getDict(type).find(script_name + Tools::sep[0] + line);
-    if (search != merger->getDict(type).end())
+    auto search = merger->getDict().at(type).find(script_name + Tools::sep[0] + line);
+    if (search != merger->getDict().at(type).end())
     {
         if (line != search->second.substr(script_name.size() + 1))
         {
