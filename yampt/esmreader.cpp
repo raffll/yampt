@@ -4,7 +4,10 @@
 EsmReader::EsmReader(const std::string & path)
 {
     std::string content = Tools::readFile(path);
-    splitFileIntoRecordColl(content, path);
+
+    if (!content.empty())
+        splitFileIntoRecordColl(content, path);
+
     setName(path);
     setTime(path);
 }
