@@ -24,18 +24,18 @@ public:
     std::string getRecordContent() { return *rec; }
     std::string getRecordId() { return rec_id; }
 
-    std::string getUniqueWithNull() { return unique_text; }
-    std::string getUniqueText() { return Tools::eraseNullChars(unique_text); }
-    std::string getUniqueId() { return unique_id; }
-    bool isUniqueValid() { return unique_exist; }
+    std::string getUniqueWithNull() { return unique.text; }
+    std::string getUniqueText() { return Tools::eraseNullChars(unique.text); }
+    std::string getUniqueId() { return unique.id; }
+    bool isUniqueValid() { return unique.exist; }
 
-    std::string getFriendlyWithNull() { return friendly_text; }
-    std::string getFriendlyText() { return Tools::eraseNullChars(friendly_text); }
-    std::string getFriendlyId() { return friendly_id; }
-    size_t getFriendlyPos() { return friendly_pos; }
-    size_t getFriendlySize() { return friendly_size; }
-    std::string getFriendlyCounter() { return std::to_string(friendly_counter); }
-    bool isFriendlyValid() { return friendly_exist; }
+    std::string getFriendlyWithNull() { return friendly.text; }
+    std::string getFriendlyText() { return Tools::eraseNullChars(friendly.text); }
+    std::string getFriendlyId() { return friendly.id; }
+    size_t getFriendlyPos() { return friendly.pos; }
+    size_t getFriendlySize() { return friendly.size; }
+    std::string getFriendlyCounter() { return std::to_string(friendly.counter); }
+    bool isFriendlyValid() { return friendly.exist; }
 
     Tools::Encoding detectEncoding();
 
@@ -43,6 +43,16 @@ public:
     EsmReader(const std::string & path);
 
 private:
+    struct SubRecord
+    {
+        std::string id;
+        std::string text;
+        size_t pos = 0;
+        size_t size = 0;
+        size_t counter = 0;
+        bool exist = false;
+    };
+
     void splitFileIntoRecordColl(
         const std::string & content,
         const std::string & path);
@@ -64,14 +74,16 @@ private:
         std::size_t & cur_pos,
         std::size_t & cur_size,
         std::string & cur_text);
-    void uniqueIfEndOfRecordReached(std::size_t & cur_pos);
 
     void friendlyMainLoop(
         std::size_t & cur_pos,
         std::size_t & cur_size,
         std::string & cur_id,
         std::string & cur_text);
-    void friendlyIfEndOfRecordReached(std::size_t & cur_pos);
+
+    void ifEndOfRecordReached(
+        std::size_t & cur_pos,
+        EsmReader::SubRecord & subrecord);
 
     void handleException(const std::exception & e);
 
@@ -88,16 +100,8 @@ private:
     size_t rec_size = 0;
     std::string rec_id;
 
-    std::string unique_id;
-    std::string unique_text;
-    bool unique_exist = false;
-
-    std::string friendly_id;
-    std::string friendly_text;
-    size_t friendly_pos = 0;
-    size_t friendly_size = 0;
-    size_t friendly_counter = 0;
-    bool friendly_exist = false;
+    SubRecord unique;
+    SubRecord friendly;
 };
 
 #endif // ESMREADER_HPP
