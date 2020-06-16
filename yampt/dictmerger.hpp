@@ -16,8 +16,8 @@ public:
 
     void addRecord(
         const Tools::RecType type,
-        const std::string & unique_text,
-        const std::string & friendly_text);
+        const std::string & key_text,
+        const std::string & val_text);
 
 private:
     void mergeDict();

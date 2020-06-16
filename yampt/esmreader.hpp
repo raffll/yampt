@@ -7,12 +7,12 @@
 class EsmReader
 {
 public:
-    void setRecordTo(size_t i);
+    void setRecord(size_t i);
     void replaceRecordContent(const std::string & new_rec);
 
-    void setUniqueTo(const std::string & id);
-    void setFriendlyTo(const std::string & id);
-    void setNextFriendlyTo(const std::string & id);
+    void setKey(const std::string & id);
+    void setValue(const std::string & id);
+    void setNextValue(const std::string & id);
 
     bool isLoaded() { return is_loaded; }
     std::string getNameFull() { return name_full; }
@@ -24,18 +24,18 @@ public:
     std::string getRecordContent() { return *rec; }
     std::string getRecordId() { return rec_id; }
 
-    std::string getUniqueWithNull() { return unique.text; }
-    std::string getUniqueText() { return Tools::eraseNullChars(unique.text); }
-    std::string getUniqueId() { return unique.id; }
-    bool isUniqueValid() { return unique.exist; }
+    std::string getUniqueWithNull() { return key.text; }
+    std::string getUniqueText() { return Tools::eraseNullChars(key.text); }
+    std::string getUniqueId() { return key.id; }
+    bool isUniqueValid() { return key.exist; }
 
-    std::string getFriendlyWithNull() { return friendly.text; }
-    std::string getFriendlyText() { return Tools::eraseNullChars(friendly.text); }
-    std::string getFriendlyId() { return friendly.id; }
-    size_t getFriendlyPos() { return friendly.pos; }
-    size_t getFriendlySize() { return friendly.size; }
-    std::string getFriendlyCounter() { return std::to_string(friendly.counter); }
-    bool isFriendlyValid() { return friendly.exist; }
+    std::string getFriendlyWithNull() { return value.text; }
+    std::string getFriendlyText() { return Tools::eraseNullChars(value.text); }
+    std::string getFriendlyId() { return value.id; }
+    size_t getFriendlyPos() { return value.pos; }
+    size_t getFriendlySize() { return value.size; }
+    std::string getFriendlyCounter() { return std::to_string(value.counter); }
+    bool isFriendlyValid() { return value.exist; }
 
     Tools::Encoding detectEncoding();
 
@@ -87,7 +87,7 @@ private:
 
     void handleException(const std::exception & e);
 
-    bool detectWindows1250Encoding(const std::string & friendly_text);
+    bool detectWindows1250Encoding(const std::string & val_text);
 
     std::vector<std::string> rec_coll;
     std::string name_full;
@@ -100,8 +100,8 @@ private:
     size_t rec_size = 0;
     std::string rec_id;
 
-    SubRecord unique;
-    SubRecord friendly;
+    SubRecord key;
+    SubRecord value;
 };
 
 #endif // ESMREADER_HPP

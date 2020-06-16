@@ -31,17 +31,17 @@ private:
     std::string addNullTerminatorIfEmpty(const std::string & new_friendly);
     std::string setNewFriendly(
         const Tools::RecType type,
-        const std::string & unique_text,
-        const std::string & friendly_text,
+        const std::string & key_text,
+        const std::string & val_text,
         const std::string & dialog_topic = "");
     std::pair<std::string, std::string> setNewScript(
         const Tools::RecType type,
         const std::string & script_name,
-        const std::string & friendly_text,
+        const std::string & val_text,
         const std::string & compiled_data);
     void checkIfIdentical(
         const Tools::RecType type,
-        const std::string & friendly_text,
+        const std::string & val_text,
         const std::string & new_friendly);
     void printLogLine(const Tools::RecType type);
     void convertMAST();

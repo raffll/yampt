@@ -21,7 +21,7 @@ std::string EsmTools::dumpFile()
             std::string cur_text;
             std::string rec;
 
-            esm.setRecordTo(i);
+            esm.setRecord(i);
             rec = esm.getRecordContent();
             dump += esm.getRecordId() + " [No. " + std::to_string(i) + "]\r\n";
             while (cur_pos != rec.size())
@@ -48,19 +48,19 @@ std::string EsmTools::makeScriptList()
     {
         for (size_t i = 0; i < esm.getRecords().size(); ++i)
         {
-            esm.setRecordTo(i);
+            esm.setRecord(i);
             if (esm.getRecordId() == "INFO")
             {
-                esm.setUniqueTo("INAM");
-                esm.setFriendlyTo("BNAM");
+                esm.setKey("INAM");
+                esm.setValue("BNAM");
                 scripts_coll.insert({ esm.getUniqueText(), make_pair(esm.getFriendlyText(), "") });
             }
             if (esm.getRecordId() == "SCPT")
             {
-                esm.setUniqueTo("SCHD");
-                esm.setFriendlyTo("SCDT");
+                esm.setKey("SCHD");
+                esm.setValue("SCDT");
                 compiled = esm.getFriendlyWithNull();
-                esm.setFriendlyTo("SCTX");
+                esm.setValue("SCTX");
                 scripts_coll.insert({ esm.getUniqueText(), make_pair(esm.getFriendlyText(), compiled) });
             }
         }
