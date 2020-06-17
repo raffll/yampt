@@ -51,7 +51,6 @@ public:
     using Chapter = std::map<std::string, std::string>;
     using Dict = std::map<RecType, Chapter>;
 
-
     static const std::vector<std::string> dialog_type;
     static const std::vector<std::string> sep;
     static const std::vector<std::string> err;

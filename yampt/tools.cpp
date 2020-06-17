@@ -260,10 +260,29 @@ std::string Tools::getTypeName(Tools::RecType type)
 {
     static const std::vector<std::string> type_name
     {
-        "CELL", "DIAL", "INDX", "RNAM", "DESC",
-        "GMST", "FNAM", "INFO", "TEXT", "BNAM",
-        "SCTX", "+ Wilderness", "+ Region", "PGRD",
-        "ANAM", "SCVR", "DNAM", "CNDT", "GMDT"
+        "CELL",
+        "DIAL",
+        "INDX",
+        "RNAM",
+        "DESC",
+        "GMST",
+        "FNAM",
+        "INFO",
+        "TEXT",
+        "BNAM",
+        "SCTX",
+
+        "Glossary",
+        "Annotation",
+
+        "+ Wilderness",
+        "+ Region",
+        "PGRD",
+        "ANAM",
+        "SCVR",
+        "DNAM",
+        "CNDT",
+        "GMDT"
     };
 
     return type_name.at(static_cast<int>(type));
