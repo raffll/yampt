@@ -69,7 +69,7 @@ void EsmReader::setTime(const std::string & path)
 }
 
 //----------------------------------------------------------
-void EsmReader::setRecordTo(size_t i)
+void EsmReader::setRecord(size_t i)
 {
     if (is_loaded)
     {
@@ -89,7 +89,7 @@ void EsmReader::replaceRecordContent(const std::string & new_rec)
 }
 
 //----------------------------------------------------------
-void EsmReader::setUniqueTo(const std::string & id)
+void EsmReader::setKey(const std::string & id)
 {
     if (is_loaded)
     {
@@ -97,12 +97,12 @@ void EsmReader::setUniqueTo(const std::string & id)
         size_t cur_size = 0;
         std::string cur_id;
         std::string cur_text;
-        unique_id = id;
+        key.id = id;
 
         try
         {
             uniqueMainLoop(cur_pos, cur_size, cur_id, cur_text);
-            uniqueIfEndOfRecordReached(cur_pos);
+            ifEndOfRecordReached(cur_pos, key);
         }
         catch (const std::exception & e)
         {
@@ -122,13 +122,13 @@ void EsmReader::uniqueMainLoop(
     {
         cur_id = rec->substr(cur_pos, 4);
         cur_size = Tools::convertStringByteArrayToUInt(rec->substr(cur_pos + 4, 4));
-        if (cur_id == unique_id)
+        if (cur_id == key.id)
         {
-            if (unique_id == "DATA" && rec_id == "DIAL")
+            if (key.id == "DATA" && rec_id == "DIAL")
             {
                 caseForDialogType(cur_pos, cur_text);
             }
-            else if (unique_id == "INDX")
+            else if (key.id == "INDX")
             {
                 caseForINDX(cur_pos, cur_text);
             }
@@ -149,8 +149,8 @@ void EsmReader::caseForDialogType(
 {
     size_t type = Tools::convertStringByteArrayToUInt(rec->substr(cur_pos + 8, 1));
     cur_text = Tools::dialog_type[type];
-    unique_text = cur_text;
-    unique_exist = true;
+    key.text = cur_text;
+    key.exist = true;
 }
 
 //----------------------------------------------------------
@@ -162,8 +162,8 @@ void EsmReader::caseForINDX(
     std::ostringstream ss;
     ss << std::setfill('0') << std::setw(3) << indx;
     cur_text = ss.str();
-    unique_text = cur_text;
-    unique_exist = true;
+    key.text = cur_text;
+    key.exist = true;
 }
 
 //----------------------------------------------------------
@@ -173,22 +173,12 @@ void EsmReader::caseForDefault(
     std::string & cur_text)
 {
     cur_text = rec->substr(cur_pos + 8, cur_size);
-    unique_text = cur_text;
-    unique_exist = true;
+    key.text = cur_text;
+    key.exist = true;
 }
 
 //----------------------------------------------------------
-void EsmReader::uniqueIfEndOfRecordReached(std::size_t & cur_pos)
-{
-    if (cur_pos == rec->size())
-    {
-        unique_text = "Unique id " + unique_id + " not found!";
-        unique_exist = false;
-    }
-}
-
-//----------------------------------------------------------
-void EsmReader::setFriendlyTo(const std::string & id)
+void EsmReader::setValue(const std::string & id)
 {
     if (is_loaded)
     {
@@ -196,13 +186,13 @@ void EsmReader::setFriendlyTo(const std::string & id)
         size_t cur_size = 0;
         std::string cur_id;
         std::string cur_text;
-        friendly_id = id;
-        friendly_counter = 0;
+        value.id = id;
+        value.counter = 0;
 
         try
         {
             friendlyMainLoop(cur_pos, cur_size, cur_id, cur_text);
-            friendlyIfEndOfRecordReached(cur_pos);
+            ifEndOfRecordReached(cur_pos, value);
         }
         catch (const std::exception & e)
         {
@@ -212,25 +202,25 @@ void EsmReader::setFriendlyTo(const std::string & id)
 }
 
 //----------------------------------------------------------
-void EsmReader::setNextFriendlyTo(const std::string & id)
+void EsmReader::setNextValue(const std::string & id)
 {
-    if (is_loaded && friendly_exist)
+    if (is_loaded && value.exist)
     {
         size_t cur_pos;
         size_t cur_size;
         std::string cur_id;
         std::string cur_text;
-        friendly_id = id;
+        value.id = id;
 
-        cur_pos = friendly_pos;
+        cur_pos = value.pos;
         cur_size = Tools::convertStringByteArrayToUInt(rec->substr(cur_pos + 4, 4));
         cur_pos += 8 + cur_size;
-        friendly_counter++;
+        value.counter++;
 
         try
         {
             friendlyMainLoop(cur_pos, cur_size, cur_id, cur_text);
-            friendlyIfEndOfRecordReached(cur_pos);
+            ifEndOfRecordReached(cur_pos, value);
         }
         catch (const std::exception & e)
         {
@@ -250,13 +240,13 @@ void EsmReader::friendlyMainLoop(
     {
         cur_id = rec->substr(cur_pos, 4);
         cur_size = Tools::convertStringByteArrayToUInt(rec->substr(cur_pos + 4, 4));
-        if (cur_id == friendly_id)
+        if (cur_id == value.id)
         {
             cur_text = rec->substr(cur_pos + 8, cur_size);
-            friendly_text = cur_text;
-            friendly_pos = cur_pos;
-            friendly_size = cur_size;
-            friendly_exist = true;
+            value.text = cur_text;
+            value.pos = cur_pos;
+            value.size = cur_size;
+            value.exist = true;
             break;
         }
         cur_pos += 8 + cur_size;
@@ -264,14 +254,16 @@ void EsmReader::friendlyMainLoop(
 }
 
 //----------------------------------------------------------
-void EsmReader::friendlyIfEndOfRecordReached(std::size_t & cur_pos)
+void EsmReader::ifEndOfRecordReached(
+    std::size_t & cur_pos,
+    EsmReader::SubRecord & subrecord)
 {
     if (cur_pos == rec->size())
     {
-        friendly_text = "Friendly id " + friendly_id + " not found!";
-        friendly_pos = cur_pos;
-        friendly_size = 0;
-        friendly_exist = false;
+        subrecord.text = "";
+        subrecord.pos = cur_pos;
+        subrecord.size = 0;
+        subrecord.exist = false;
     }
 }
 
@@ -290,9 +282,9 @@ Tools::Encoding EsmReader::detectEncoding()
 {
     for (size_t i = 0; i < getRecords().size(); ++i)
     {
-        setRecordTo(i);
+        setRecord(i);
         if (getRecordId() == "INFO")
-            setFriendlyTo("NAME");
+            setValue("NAME");
 
         if (detectWindows1250Encoding(getFriendlyText()))
         {
@@ -305,7 +297,7 @@ Tools::Encoding EsmReader::detectEncoding()
 }
 
 //----------------------------------------------------------
-bool EsmReader::detectWindows1250Encoding(const std::string & friendly_text)
+bool EsmReader::detectWindows1250Encoding(const std::string & val_text)
 {
     // 156 œ ś
     // 159 Ÿ ź
@@ -328,5 +320,5 @@ bool EsmReader::detectWindows1250Encoding(const std::string & friendly_text)
         << static_cast<char>(234)
         << static_cast<char>(241);
 
-    return friendly_text.find_first_of(ss.str()) != std::string::npos;
+    return val_text.find_first_of(ss.str()) != std::string::npos;
 }

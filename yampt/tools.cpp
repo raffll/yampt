@@ -184,29 +184,29 @@ std::string Tools::replaceNonReadableCharsWithDot(const std::string & str)
 //----------------------------------------------------------
 std::string Tools::addHyperlinks(
     Chapter chapter,
-    const std::string & friendly_text,
+    const std::string & val_text,
     bool extended)
 {
-    std::string unique_text_lc;
+    std::string key_text_lc;
     std::string new_friendly;
     std::string new_friendly_lc;
     size_t pos;
 
-    new_friendly = friendly_text;
-    new_friendly_lc = friendly_text;
+    new_friendly = val_text;
+    new_friendly_lc = val_text;
     transform(new_friendly_lc.begin(), new_friendly_lc.end(),
               new_friendly_lc.begin(), ::tolower);
 
     for (const auto & elem : chapter)
     {
-        unique_text_lc = elem.first;
-        transform(unique_text_lc.begin(), unique_text_lc.end(),
-                  unique_text_lc.begin(), ::tolower);
+        key_text_lc = elem.first;
+        transform(key_text_lc.begin(), key_text_lc.end(),
+                  key_text_lc.begin(), ::tolower);
 
-        if (unique_text_lc == elem.second)
+        if (key_text_lc == elem.second)
             continue;
 
-        pos = new_friendly_lc.find(unique_text_lc);
+        pos = new_friendly_lc.find(key_text_lc);
         if (pos == std::string::npos)
             continue;
 

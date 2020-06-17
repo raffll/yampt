@@ -28,28 +28,11 @@ private:
     bool isSameOrder();
     void resetCounters();
     std::string translateDialogTopicsInDictId(std::string to_translate);
-
-    void validateRecord(
-        const std::string & unique_text,
-        const std::string & friendly_text,
-        const Tools::RecType type);
-    void validateRecordForModeALL(
-        const std::string & unique_text,
-        const std::string & friendly_text,
-        const Tools::RecType type);
-    void validateRecordForModeNOT(
-        const std::string & unique_text,
-        const std::string & friendly_text,
-        const Tools::RecType type);
-    void validateRecordForModeCHANGED(
-        const std::string & unique_text,
-        const std::string & friendly_text,
-        const Tools::RecType type);
-
-    void insertRecordToDict(
-        const std::string & unique_text,
-        const std::string & friendly_text,
-        const Tools::RecType type);
+    void validateRecord();
+    void validateRecordForModeALL();
+    void validateRecordForModeNOT();
+    void validateRecordForModeCHANGED();
+    void insertRecordToDict();
     std::vector<std::string> makeScriptMessages(const std::string & new_friendly);
 
     void printLogLine(const Tools::RecType type);
@@ -95,6 +78,10 @@ private:
     EsmReader * esm_ptr;
     const DictMerger * merger;
     Tools::Dict dict;
+
+    std::string key_text;
+    std::string val_text;
+    Tools::RecType type;
 
     std::vector<std::string> * message_ptr;
     std::vector<std::string> message_n;

@@ -24,12 +24,12 @@ private:
     void setName(const std::string & path);
     void validateRecord(
         const std::string & id,
-        const std::string & unique_text,
-        const std::string & friendly_text);
+        const std::string & key_text,
+        const std::string & val_text);
     void insertRecord(
         const Tools::RecType type,
-        const std::string & unique_text,
-        const std::string & friendly_text);
+        const std::string & key_text,
+        const std::string & val_text);
     void printSummaryLog();
 
     std::string name_full;

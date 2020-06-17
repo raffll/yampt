@@ -22,10 +22,10 @@ DictMerger::DictMerger(const std::vector<std::string> & paths)
 //----------------------------------------------------------
 void DictMerger::addRecord(
     const Tools::RecType type,
-    const std::string & unique_text,
-    const std::string & friendly_text)
+    const std::string & key_text,
+    const std::string & val_text)
 {
-    dict.at(type).insert({ unique_text, friendly_text });
+    dict.at(type).insert({ key_text, val_text });
 }
 
 //----------------------------------------------------------

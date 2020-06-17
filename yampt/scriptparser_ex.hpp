@@ -18,7 +18,7 @@ public:
         const DictMerger & merger,
         const std::string & script_name,
         const std::string & file_name,
-        const std::string & friendly_text,
+        const std::string & val_text,
         const std::string & compiled_data);
 
 private:
@@ -43,7 +43,7 @@ private:
     const DictMerger * merger;
     const std::string script_name;
     const std::string file_name;
-    const std::string friendly_text;
+    const std::string val_text;
 
     std::string new_friendly;
     std::string new_compiled;

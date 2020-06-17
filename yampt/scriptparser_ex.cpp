@@ -6,14 +6,14 @@ ScriptParser::ScriptParser(
     const DictMerger & merger,
     const std::string & script_name,
     const std::string & file_name,
-    const std::string & friendly_text,
+    const std::string & val_text,
     const std::string & new_compiled
 )
     : type(type)
     , merger(&merger)
     , script_name(script_name)
     , file_name(file_name)
-    , friendly_text(friendly_text)
+    , val_text(val_text)
     , new_compiled(new_compiled)
 {
     convertScript();
@@ -22,7 +22,7 @@ ScriptParser::ScriptParser(
 //----------------------------------------------------------
 void ScriptParser::convertScript()
 {
-    std::istringstream ss(friendly_text);
+    std::istringstream ss(val_text);
 
     while (std::getline(ss, line))
     {
@@ -419,8 +419,8 @@ std::vector<std::string> ScriptParser::splitLine(
 void ScriptParser::trimLastNewLineChars()
 {
     // Check if last 2 chars are newline and strip them if necessary
-    size_t last_nl_pos = friendly_text.rfind("\r\n");
-    if (last_nl_pos != friendly_text.size() - 2 ||
+    size_t last_nl_pos = val_text.rfind("\r\n");
+    if (last_nl_pos != val_text.size() - 2 ||
         last_nl_pos == std::string::npos)
     {
         new_friendly.resize(new_friendly.size() - 2);
