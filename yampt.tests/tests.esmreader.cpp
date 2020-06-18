@@ -16,63 +16,63 @@ TEST_CASE("Loading and parsing plugin file", "[i]")
 TEST_CASE("Set unique, default case, not found", "[i]")
 {
     EsmReader esm("master/en/Morrowind.esm");
-    esm.setRecord(0);
+    esm.selectRecord(0);
     esm.setKey("TEST");
-    REQUIRE(esm.getUniqueId() == "TEST");
-    REQUIRE(esm.isUniqueValid() == false);
-    REQUIRE(esm.getUniqueText() == "Unique id TEST not found!");
+    REQUIRE(esm.getKey().id == "TEST");
+    REQUIRE(esm.getKey().exist == false);
+    REQUIRE(esm.getKey().text == "Unique id TEST not found!");
 }
 
 TEST_CASE("Set unique, default case, empty text", "[i]")
 {
     EsmReader esm("master/en/Morrowind.esm");
-    esm.setRecord(16955); // Region CELL with empty NAME
+    esm.selectRecord(16955); // Region CELL with empty NAME
     esm.setKey("NAME");
-    REQUIRE(esm.getUniqueId() == "NAME");
-    REQUIRE(esm.isUniqueValid() == true);
-    REQUIRE(esm.getUniqueText() == "");
+    REQUIRE(esm.getKey().id == "NAME");
+    REQUIRE(esm.getKey().exist == true);
+    REQUIRE(esm.getKey().text == "");
 }
 
 TEST_CASE("Set unique, default case", "[i]")
 {
     EsmReader esm("master/en/Morrowind.esm");
-    esm.setRecord(22075); // Regular CELL
+    esm.selectRecord(22075); // Regular CELL
     esm.setKey("NAME");
-    REQUIRE(esm.getUniqueId() == "NAME");
-    REQUIRE(esm.isUniqueValid() == true);
-    REQUIRE(esm.getUniqueText() == "Zergonipal, Shrine");
+    REQUIRE(esm.getKey().id == "NAME");
+    REQUIRE(esm.getKey().exist == true);
+    REQUIRE(esm.getKey().text == "Zergonipal, Shrine");
 }
 
 TEST_CASE("Set unique, INDX case", "[i]")
 {
     EsmReader esm("master/en/Morrowind.esm");
-    esm.setRecord(2062); // SKIL with INDX instead of NAME
+    esm.selectRecord(2062); // SKIL with INDX instead of NAME
     esm.setKey("INDX");
-    REQUIRE(esm.getUniqueId() == "INDX");
-    REQUIRE(esm.isUniqueValid() == true);
-    REQUIRE(esm.getUniqueText() == "000");
+    REQUIRE(esm.getKey().id == "INDX");
+    REQUIRE(esm.getKey().exist == true);
+    REQUIRE(esm.getKey().text == "000");
 }
 
 TEST_CASE("Set unique, dialog type case", "[i]")
 {
     EsmReader esm("master/en/Morrowind.esm");
-    esm.setRecord(22245); // DIAL with one byte DATA dialog type
+    esm.selectRecord(22245); // DIAL with one byte DATA dialog type
     esm.setKey("DATA");
-    REQUIRE(esm.getUniqueId() == "DATA");
-    REQUIRE(esm.isUniqueValid() == true);
-    REQUIRE(esm.getUniqueText() == "J");
+    REQUIRE(esm.getKey().id == "DATA");
+    REQUIRE(esm.getKey().exist == true);
+    REQUIRE(esm.getKey().text == "J");
 }
 
 TEST_CASE("Set friendly, not found", "[i]")
 {
     EsmReader esm("master/en/Morrowind.esm");
-    esm.setRecord(0);
+    esm.selectRecord(0);
     esm.setValue("TEST");
-    REQUIRE(esm.getFriendlyId() == "TEST");
-    REQUIRE(esm.isFriendlyValid() == false);
-    REQUIRE(esm.getFriendlyText() == "Friendly id TEST not found!");
-    REQUIRE(esm.getFriendlyPos() == esm.getRecordContent().size());
-    REQUIRE(esm.getFriendlySize() == 0);
+    REQUIRE(esm.getValue().id == "TEST");
+    REQUIRE(esm.getValue().exist == false);
+    REQUIRE(esm.getValue().text == "Friendly id TEST not found!");
+    REQUIRE(esm.getValue().pos == esm.getRecordContent().size());
+    REQUIRE(esm.getValue().size == 0);
 }
 
 TEST_CASE("Set friendly", "[i]")
@@ -86,14 +86,14 @@ TEST_CASE("Set friendly", "[i]")
     */
 
     EsmReader esm("master/en/Morrowind.esm");
-    esm.setRecord(1600); // RNAM
+    esm.selectRecord(1600); // RNAM
     esm.setValue("RNAM");
-    REQUIRE(esm.getFriendlyId() == "RNAM");
-    REQUIRE(esm.isFriendlyValid() == true);
-    REQUIRE(esm.getFriendlyText() == "Hireling");
-    REQUIRE(esm.getFriendlyWithNull().size() == 32);
-    REQUIRE(esm.getFriendlyPos() == (16 + 16 + 28));
-    REQUIRE(esm.getFriendlySize() == 32);
+    REQUIRE(esm.getValue().id == "RNAM");
+    REQUIRE(esm.getValue().exist == true);
+    REQUIRE(esm.getValue().text == "Hireling");
+    REQUIRE(esm.getValue().content.size() == 32);
+    REQUIRE(esm.getValue().pos == (16 + 16 + 28));
+    REQUIRE(esm.getValue().size == 32);
 }
 
 TEST_CASE("Set friendly, next", "[i]")
@@ -108,13 +108,13 @@ TEST_CASE("Set friendly, next", "[i]")
     */
 
     EsmReader esm("master/en/Morrowind.esm");
-    esm.setRecord(1600); // RNAM
+    esm.selectRecord(1600); // RNAM
     esm.setValue("RNAM");
     esm.setNextValue("RNAM");
-    REQUIRE(esm.getFriendlyId() == "RNAM");
-    REQUIRE(esm.isFriendlyValid() == true);
-    REQUIRE(esm.getFriendlyWithNull().size() == 32);
-    REQUIRE(esm.getFriendlyText() == "Retainer");
-    REQUIRE(esm.getFriendlyPos() == (16 + 16 + 28 + 40));
-    REQUIRE(esm.getFriendlySize() == 32);
+    REQUIRE(esm.getValue().id == "RNAM");
+    REQUIRE(esm.getValue().exist == true);
+    REQUIRE(esm.getValue().content.size() == 32);
+    REQUIRE(esm.getValue().text == "Retainer");
+    REQUIRE(esm.getValue().pos == (16 + 16 + 28 + 40));
+    REQUIRE(esm.getValue().size == 32);
 }

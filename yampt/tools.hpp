@@ -51,7 +51,6 @@ public:
     using Chapter = std::map<std::string, std::string>;
     using Dict = std::map<RecType, Chapter>;
 
-    static const std::vector<std::string> dialog_type;
     static const std::vector<std::string> sep;
     static const std::vector<std::string> err;
     static const std::vector<std::string> keywords;
@@ -83,6 +82,8 @@ public:
     static std::string getLog() { return log; }
     static Dict initializeDict();
     static std::string getTypeName(Tools::RecType type);
+    static std::string getDialogType(const std::string & content);
+    static std::string getINDX(const std::string & content);
 
 private:
     static std::string log;

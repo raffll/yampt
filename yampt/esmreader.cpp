@@ -6,14 +6,14 @@ EsmReader::EsmReader(const std::string & path)
     std::string content = Tools::readFile(path);
 
     if (!content.empty())
-        splitFileIntoRecordColl(content, path);
+        splitFile(content, path);
 
     setName(path);
     setTime(path);
 }
 
 //----------------------------------------------------------
-void EsmReader::splitFileIntoRecordColl(
+void EsmReader::splitFile(
     const std::string & content,
     const std::string & path)
 {
@@ -30,7 +30,7 @@ void EsmReader::splitFileIntoRecordColl(
                 rec_beg = rec_end;
                 rec_size = Tools::convertStringByteArrayToUInt(content.substr(rec_beg + 4, 4)) + 16;
                 rec_end = rec_beg + rec_size;
-                rec_coll.push_back(content.substr(rec_beg, rec_size));
+                records.push_back(content.substr(rec_beg, rec_size));
             }
             is_loaded = true;
         }
@@ -69,18 +69,18 @@ void EsmReader::setTime(const std::string & path)
 }
 
 //----------------------------------------------------------
-void EsmReader::setRecord(size_t i)
+void EsmReader::selectRecord(size_t i)
 {
     if (is_loaded)
     {
-        rec = &rec_coll[i];
+        rec = &records[i];
         rec_size = rec->size();
         rec_id = rec->substr(0, 4);
     }
 }
 
 //----------------------------------------------------------
-void EsmReader::replaceRecordContent(const std::string & new_rec)
+void EsmReader::replaceRecord(const std::string & new_rec)
 {
     if (is_loaded)
     {
@@ -101,7 +101,7 @@ void EsmReader::setKey(const std::string & id)
 
         try
         {
-            uniqueMainLoop(cur_pos, cur_size, cur_id, cur_text);
+            mainLoop(cur_pos, cur_size, cur_id, cur_text, key);
             ifEndOfRecordReached(cur_pos, key);
         }
         catch (const std::exception & e)
@@ -109,72 +109,6 @@ void EsmReader::setKey(const std::string & id)
             handleException(e);
         }
     }
-}
-
-//----------------------------------------------------------
-void EsmReader::uniqueMainLoop(
-    std::size_t & cur_pos,
-    std::size_t & cur_size,
-    std::string & cur_id,
-    std::string & cur_text)
-{
-    while (cur_pos != rec->size())
-    {
-        cur_id = rec->substr(cur_pos, 4);
-        cur_size = Tools::convertStringByteArrayToUInt(rec->substr(cur_pos + 4, 4));
-        if (cur_id == key.id)
-        {
-            if (key.id == "DATA" && rec_id == "DIAL")
-            {
-                caseForDialogType(cur_pos, cur_text);
-            }
-            else if (key.id == "INDX")
-            {
-                caseForINDX(cur_pos, cur_text);
-            }
-            else
-            {
-                caseForDefault(cur_pos, cur_size, cur_text);
-            }
-            break;
-        }
-        cur_pos += 8 + cur_size;
-    }
-}
-
-//----------------------------------------------------------
-void EsmReader::caseForDialogType(
-    std::size_t & cur_pos,
-    std::string & cur_text)
-{
-    size_t type = Tools::convertStringByteArrayToUInt(rec->substr(cur_pos + 8, 1));
-    cur_text = Tools::dialog_type[type];
-    key.text = cur_text;
-    key.exist = true;
-}
-
-//----------------------------------------------------------
-void EsmReader::caseForINDX(
-    std::size_t & cur_pos,
-    std::string & cur_text)
-{
-    size_t indx = Tools::convertStringByteArrayToUInt(rec->substr(cur_pos + 8, 4));
-    std::ostringstream ss;
-    ss << std::setfill('0') << std::setw(3) << indx;
-    cur_text = ss.str();
-    key.text = cur_text;
-    key.exist = true;
-}
-
-//----------------------------------------------------------
-void EsmReader::caseForDefault(
-    std::size_t & cur_pos,
-    std::size_t & cur_size,
-    std::string & cur_text)
-{
-    cur_text = rec->substr(cur_pos + 8, cur_size);
-    key.text = cur_text;
-    key.exist = true;
 }
 
 //----------------------------------------------------------
@@ -191,7 +125,7 @@ void EsmReader::setValue(const std::string & id)
 
         try
         {
-            friendlyMainLoop(cur_pos, cur_size, cur_id, cur_text);
+            mainLoop(cur_pos, cur_size, cur_id, cur_text, value);
             ifEndOfRecordReached(cur_pos, value);
         }
         catch (const std::exception & e)
@@ -219,7 +153,7 @@ void EsmReader::setNextValue(const std::string & id)
 
         try
         {
-            friendlyMainLoop(cur_pos, cur_size, cur_id, cur_text);
+            mainLoop(cur_pos, cur_size, cur_id, cur_text, value);
             ifEndOfRecordReached(cur_pos, value);
         }
         catch (const std::exception & e)
@@ -230,11 +164,12 @@ void EsmReader::setNextValue(const std::string & id)
 }
 
 //----------------------------------------------------------
-void EsmReader::friendlyMainLoop(
+void EsmReader::mainLoop(
     std::size_t & cur_pos,
     std::size_t & cur_size,
     std::string & cur_id,
-    std::string & cur_text)
+    std::string & cur_text,
+    EsmReader::SubRecord & subrecord)
 {
     while (cur_pos != rec->size())
     {
@@ -243,10 +178,11 @@ void EsmReader::friendlyMainLoop(
         if (cur_id == value.id)
         {
             cur_text = rec->substr(cur_pos + 8, cur_size);
-            value.text = cur_text;
-            value.pos = cur_pos;
-            value.size = cur_size;
-            value.exist = true;
+            subrecord.content = cur_text;
+            subrecord.text = Tools::eraseNullChars(subrecord.content);
+            subrecord.pos = cur_pos;
+            subrecord.size = cur_size;
+            subrecord.exist = true;
             break;
         }
         cur_pos += 8 + cur_size;
@@ -260,7 +196,7 @@ void EsmReader::ifEndOfRecordReached(
 {
     if (cur_pos == rec->size())
     {
-        subrecord.text = "";
+        subrecord.content = "";
         subrecord.pos = cur_pos;
         subrecord.size = 0;
         subrecord.exist = false;
@@ -282,14 +218,14 @@ Tools::Encoding EsmReader::detectEncoding()
 {
     for (size_t i = 0; i < getRecords().size(); ++i)
     {
-        setRecord(i);
+        selectRecord(i);
         if (getRecordId() == "INFO")
             setValue("NAME");
 
-        if (detectWindows1250Encoding(getFriendlyText()))
+        if (detectWindows1250Encoding(getValue().text))
         {
             Tools::addLog("--> Windows-1250 encoding detected!\r\n");
-            Tools::addLog("INFO: " + getFriendlyText() + "\r\n", true);
+            Tools::addLog("INFO: " + getValue().text + "\r\n", true);
             return Tools::Encoding::WINDOWS_1250;
         }
     }

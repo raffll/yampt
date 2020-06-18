@@ -2,7 +2,6 @@
 
 std::string Tools::log;
 
-const std::vector<std::string> Tools::dialog_type { "T", "V", "G", "P", "J" };
 const std::vector<std::string> Tools::sep { "^", "<_id>", "</_id>", "<key>", "</key>", "<val>", "</val>", "<rec name=\"", "\"/>" };
 const std::vector<std::string> Tools::err { "<err name=\"", "\"/>" };
 const std::vector<std::string> Tools::keywords { "messagebox", "choice", "say" };
@@ -286,4 +285,21 @@ std::string Tools::getTypeName(Tools::RecType type)
     };
 
     return type_name.at(static_cast<int>(type));
+}
+
+//----------------------------------------------------------
+std::string Tools::getDialogType(const std::string & content)
+{
+    static const std::vector<std::string> dialog_type { "T", "V", "G", "P", "J" };
+    size_t type = Tools::convertStringByteArrayToUInt(content);
+    return dialog_type[type];
+}
+
+//----------------------------------------------------------
+std::string Tools::getINDX(const std::string & content)
+{
+    size_t indx = Tools::convertStringByteArrayToUInt(content);
+    std::ostringstream ss;
+    ss << std::setfill('0') << std::setw(3) << indx;
+    return ss.str();
 }
