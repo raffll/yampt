@@ -34,16 +34,19 @@ TEST_CASE("Create base, same record order", "[i]")
     auto search = esm.getDict().at(Tools::RecType::CELL).find("Abaelun Mine");
     REQUIRE(search != esm.getDict().at(Tools::RecType::CELL).end());
     REQUIRE(search->second == "Kopalnia Abaelun");
+
     search = esm.getDict().at(Tools::RecType::DIAL).find("Abebaal Egg Mine");
     REQUIRE(search != esm.getDict().at(Tools::RecType::DIAL).end());
     REQUIRE(search->second == "kopalnia jaj Abebaal");
+
     search = esm.getDict().at(Tools::RecType::INFO).find("T^kopalnia jaj Abebaal^3253555431180022526");
     REQUIRE(search != esm.getDict().at(Tools::RecType::INFO).end());
+
     search = esm.getDict().at(Tools::RecType::INFO).find("T^Abebaal Egg Mine^3253555431180022526");
     REQUIRE(search == esm.getDict().at(Tools::RecType::INFO).end());
 }
 
-TEST_CASE("Create base, different record order", "[ii]")
+TEST_CASE("Create base, different record order", "[i]")
 {
     DictCreator esm("master/de/Morrowind.esm", "master/en/Morrowind.esm");
 
@@ -58,8 +61,4 @@ TEST_CASE("Create base, different record order", "[ii]")
     search = esm.getDict().at(Tools::RecType::DIAL).find("Abebaal Egg Mine");
     REQUIRE(search != esm.getDict().at(Tools::RecType::DIAL).end());
     REQUIRE(search->second == "Eiermine Abebaal");
-
-    //search = esm.getDict().at(Tools::RecType::DIAL).find("Aesliip");
-    //REQUIRE(search != esm.getDict().at(Tools::RecType::DIAL).end());
-    //REQUIRE(search->second == "Aesliip");
 }

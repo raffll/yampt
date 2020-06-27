@@ -107,22 +107,22 @@ void DictCreator::makeDict(const bool same_order)
 //----------------------------------------------------------
 bool DictCreator::isSameOrder()
 {
-    std::string ids_n;
-    std::string ids_f;
+    std::string ids;
+    std::string ids_ext;
 
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        ids_n += esm.getRecordId();
+        ids += esm.getRecordId();
     }
 
     for (size_t i = 0; i < esm_ext.getRecords().size(); ++i)
     {
         esm_ext.selectRecord(i);
-        ids_f += esm_ext.getRecordId();
+        ids_ext += esm_ext.getRecordId();
     }
 
-    return ids_n == ids_f;
+    return ids == ids_ext;
 }
 
 //----------------------------------------------------------

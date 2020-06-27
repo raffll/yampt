@@ -50,7 +50,7 @@ TEST_CASE("Set key, INDX case", "[i]")
     esm.setKey("INDX");
     REQUIRE(esm.getKey().id == "INDX");
     REQUIRE(esm.getKey().exist == true);
-    REQUIRE(Tools::getINDX(esm.getKey().text) == "000");
+    REQUIRE(Tools::getINDX(esm.getKey().content) == "000");
 }
 
 TEST_CASE("Set key, dialog type case", "[i]")
@@ -60,7 +60,7 @@ TEST_CASE("Set key, dialog type case", "[i]")
     esm.setKey("DATA");
     REQUIRE(esm.getKey().id == "DATA");
     REQUIRE(esm.getKey().exist == true);
-    REQUIRE(Tools::getDialogType(esm.getKey().text) == "J");
+    REQUIRE(Tools::getDialogType(esm.getKey().content) == "J");
 }
 
 TEST_CASE("Set value, not found", "[i]")
