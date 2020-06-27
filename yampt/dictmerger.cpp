@@ -1,6 +1,12 @@
 #include "dictmerger.hpp"
 
 //----------------------------------------------------------
+DictMerger::DictMerger()
+{
+    dict = Tools::initializeDict();
+}
+
+//----------------------------------------------------------
 DictMerger::DictMerger(const std::vector<std::string> & paths)
 {
     dict = Tools::initializeDict();

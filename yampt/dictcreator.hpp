@@ -9,8 +9,8 @@
 class DictCreator
 {
 public:
-    std::string getNameFull() { return esm_n.getNameFull(); }
-    std::string getNamePrefix() { return esm_n.getNamePrefix(); }
+    std::string getNameFull() { return esm.getNameFull(); }
+    std::string getNamePrefix() { return esm.getNamePrefix(); }
     Tools::Dict const & getDict() const { return dict; }
 
     DictCreator(const std::string & path_n);
@@ -73,8 +73,8 @@ private:
     void makeDictSCPTExtendedForeignColl();
     void makeDictSCPTExtendedNativeColl();
 
-    EsmReader esm_n;
-    EsmReader esm_f;
+    EsmReader esm;
+    EsmReader esm_ext;
     EsmReader * esm_ptr;
     const DictMerger * merger;
     Tools::Dict dict;
@@ -83,9 +83,9 @@ private:
     std::string val_text;
     Tools::RecType type;
 
+    std::vector<std::string> message;
+    std::vector<std::string> message_ext;
     std::vector<std::string> * message_ptr;
-    std::vector<std::string> message_n;
-    std::vector<std::string> message_f;
 
     const Tools::CreatorMode mode;
     const bool add_hyperlinks;
@@ -103,8 +103,8 @@ private:
         bool missing;
     };
 
-    std::vector<Pattern> patterns_f;
-    std::map<std::string, size_t> patterns_n;
+    std::vector<Pattern> patterns_ext;
+    std::map<std::string, size_t> patterns;
 };
 
 #endif // DICTCREATOR_HPP

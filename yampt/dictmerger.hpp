@@ -11,7 +11,7 @@ public:
     std::string getNamePrefix(size_t i) { return readers[i].getNamePrefix(); }
     Tools::Dict const & getDict() const { return dict; }
 
-    DictMerger() = default;
+    DictMerger();
     DictMerger(const std::vector<std::string> & paths);
 
     void addRecord(

@@ -69,7 +69,7 @@ void ScriptParser::convertScript()
         }
         catch (...)
         {
-            Tools::addLog("Error: unknown!\r\n");
+            Tools::addLog("Error: unknown in script parser!\r\n");
             Tools::addLog("Line: " + line + "\r\n");
         }
 
@@ -124,7 +124,7 @@ void ScriptParser::trimLine()
 //----------------------------------------------------------
 void ScriptParser::extractText(const int pos_in_expression)
 {
-    std::regex r1("([\\w\\.\\-\\185]+|\".*?\")", std::regex::optimize);
+    std::regex r1("([\\w\\.\\-\\xD1]+|\".*?\")", std::regex::optimize);
     std::sregex_iterator next(old_text.begin(), old_text.end(), r1);
     std::sregex_iterator end;
     std::smatch found;

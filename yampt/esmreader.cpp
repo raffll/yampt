@@ -76,6 +76,8 @@ void EsmReader::selectRecord(size_t i)
         rec = &records[i];
         rec_size = rec->size();
         rec_id = rec->substr(0, 4);
+        key = {};
+        value = {};
     }
 }
 

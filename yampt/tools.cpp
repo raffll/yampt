@@ -102,6 +102,12 @@ size_t Tools::getNumberOfElementsInDict(const Dict & dict)
 //----------------------------------------------------------
 size_t Tools::convertStringByteArrayToUInt(const std::string & str)
 {
+    if (str.size() != 4 && str.size() != 1)
+    {
+
+        int jump = 5;
+    }
+
     assert(str.size() == 4 || str.size() == 1);
 
     char buffer[4];
@@ -123,7 +129,7 @@ size_t Tools::convertStringByteArrayToUInt(const std::string & str)
         return x = ubuffer[0];
     }
 
-    return 0;
+    return std::string::npos;
 }
 
 //----------------------------------------------------------
