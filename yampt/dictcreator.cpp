@@ -179,7 +179,6 @@ void DictCreator::makeDictCELLWilderness()
             type = Tools::RecType::CELL;
             validateRecord();
         }
-
     }
     printLogLine(Tools::RecType::Wilderness);
 }
@@ -247,7 +246,6 @@ void DictCreator::makeDictCELLRegion()
             type = Tools::RecType::CELL;
             validateRecord();
         }
-
     }
     printLogLine(Tools::RecType::Region);
 }
@@ -314,7 +312,6 @@ void DictCreator::makeDictGMST()
             type = Tools::RecType::GMST;
             validateRecord();
         }
-
     }
     printLogLine(Tools::RecType::GMST);
 }
@@ -464,7 +461,7 @@ void DictCreator::makeDictINDX()
             if (esm_n.getKey().exist &&
                 esm_n.getValue().exist)
             {
-                key_text = esm_n.getRecordId() + Tools::sep[0] + esm_n.getKey().text;
+                key_text = esm_n.getRecordId() + Tools::sep[0] + Tools::getINDX(esm_n.getKey().content);
                 val_text = esm_n.getValue().text;
                 type = Tools::RecType::INDX;
                 validateRecord();
@@ -490,9 +487,9 @@ void DictCreator::makeDictDIAL()
         esm_ptr->setKey("DATA");
         esm_ptr->setValue("NAME");
 
-        if (esm_n.getKey().text == "T" &&
+        if (Tools::getDialogType(esm_n.getKey().content) == "T" &&
             esm_n.getValue().exist &&
-            esm_ptr->getKey().text == "T" &&
+            Tools::getDialogType(esm_ptr->getKey().content) == "T" &&
             esm_ptr->getValue().exist)
         {
             key_text = esm_ptr->getValue().text;
@@ -507,7 +504,7 @@ void DictCreator::makeDictDIAL()
 //----------------------------------------------------------
 void DictCreator::makeDictINFO()
 {
-    std::string dialog_topic;
+    std::string key_prefix;
     resetCounters();
     for (size_t i = 0; i < esm_n.getRecords().size(); ++i)
     {
@@ -520,8 +517,8 @@ void DictCreator::makeDictINFO()
             if (esm_n.getKey().exist &&
                 esm_n.getValue().exist)
             {
-                dialog_topic = esm_n.getKey().text + Tools::sep[0] +
-                    translateDialogTopicsInDictId(esm_n.getValue().text);
+                key_prefix = Tools::getDialogType(esm_n.getKey().content) + Tools::sep[0] +
+                    translateDialogTopic(esm_n.getValue().text);
             }
         }
         if (esm_n.getRecordId() == "INFO")
@@ -532,7 +529,7 @@ void DictCreator::makeDictINFO()
             if (esm_n.getKey().exist &&
                 esm_n.getValue().exist)
             {
-                key_text = dialog_topic + Tools::sep[0] + esm_n.getKey().text;
+                key_text = key_prefix + Tools::sep[0] + esm_n.getKey().text;
                 val_text = esm_n.getValue().text;
                 type = Tools::RecType::INFO;
                 validateRecord();
@@ -604,15 +601,16 @@ void DictCreator::makeDictSCPT()
         {
             message_n = makeScriptMessages(esm_n.getValue().text);
             *message_ptr = makeScriptMessages(esm_ptr->getValue().text);
-            if (message_n.size() == message_ptr->size())
+
+            if (message_n.size() != message_ptr->size())
+                continue;
+
+            for (size_t k = 0; k < message_n.size(); ++k)
             {
-                for (size_t k = 0; k < message_n.size(); ++k)
-                {
-                    key_text = esm_ptr->getKey().text + Tools::sep[0] + message_ptr->at(k);
-                    val_text = esm_n.getKey().text + Tools::sep[0] + message_n.at(k);
-                    type = Tools::RecType::SCTX;
-                    validateRecord();
-                }
+                key_text = esm_ptr->getKey().text + Tools::sep[0] + message_ptr->at(k);
+                val_text = esm_n.getKey().text + Tools::sep[0] + message_n.at(k);
+                type = Tools::RecType::SCTX;
+                validateRecord();
             }
         }
     }
@@ -664,14 +662,14 @@ void DictCreator::makeDictCELLExtendedForeignColl()
     for (size_t i = 0; i < esm_f.getRecords().size(); ++i)
     {
         esm_f.selectRecord(i);
-        if (esm_f.getRecordId() == "CELL")
+        if (esm_f.getRecordId() != "CELL")
+            continue;
+
+        esm_f.setValue("NAME");
+        if (esm_f.getValue().exist &&
+            esm_f.getValue().text != "")
         {
-            esm_f.setValue("NAME");
-            if (esm_f.getValue().exist &&
-                esm_f.getValue().text != "")
-            {
-                patterns_f.push_back({ makeDictCELLExtendedPattern(esm_f), i, false });
-            }
+            patterns_f.push_back({ makeDictCELLExtendedPattern(esm_f), i, false });
         }
     }
 }
@@ -683,14 +681,14 @@ void DictCreator::makeDictCELLExtendedNativeColl()
     for (size_t i = 0; i < esm_n.getRecords().size(); ++i)
     {
         esm_n.selectRecord(i);
-        if (esm_n.getRecordId() == "CELL")
+        if (esm_n.getRecordId() != "CELL")
+            continue;
+
+        esm_n.setValue("NAME");
+        if (esm_n.getValue().exist &&
+            esm_n.getValue().text != "")
         {
-            esm_n.setValue("NAME");
-            if (esm_n.getValue().exist &&
-                esm_n.getValue().text != "")
-            {
-                patterns_n.insert({ makeDictCELLExtendedPattern(esm_n), i });
-            }
+            patterns_n.insert({ makeDictCELLExtendedPattern(esm_n), i });
         }
     }
 }
@@ -717,20 +715,20 @@ void DictCreator::makeDictCELLExtendedAddMissing()
 {
     for (size_t i = 0; i < patterns_f.size(); ++i)
     {
-        if (patterns_f[i].missing)
-        {
-            esm_f.selectRecord(patterns_f[i].pos);
-            esm_f.setValue("NAME");
+        if (!patterns_f[i].missing)
+            continue;
 
-            if (esm_f.getValue().exist &&
-                esm_f.getValue().text != "")
-            {
-                key_text = esm_f.getValue().text;
-                val_text = Tools::err[0] + "MISSING" + Tools::err[1];
-                type = Tools::RecType::CELL;
-                validateRecord();
-                Tools::addLog("Missing CELL: " + esm_f.getValue().text + "\r\n");
-            }
+        esm_f.selectRecord(patterns_f[i].pos);
+        esm_f.setValue("NAME");
+
+        if (esm_f.getValue().exist &&
+            esm_f.getValue().text != "")
+        {
+            key_text = esm_f.getValue().text;
+            val_text = Tools::err[0] + "MISSING" + Tools::err[1];
+            type = Tools::RecType::CELL;
+            validateRecord();
+            Tools::addLog("Missing CELL: " + esm_f.getValue().text + "\r\n");
         }
     }
 }
@@ -778,13 +776,13 @@ void DictCreator::makeDictDIALExtendedForeignColl()
     for (size_t i = 0; i < esm_f.getRecords().size(); ++i)
     {
         esm_f.selectRecord(i);
-        if (esm_f.getRecordId() == "DIAL")
+        if (esm_f.getRecordId() != "DIAL")
+            continue;
+
+        esm_f.setKey("DATA");
+        if (Tools::getDialogType(esm_f.getKey().content) == "T")
         {
-            esm_f.setKey("DATA");
-            if (esm_f.getKey().text == "T")
-            {
-                patterns_f.push_back({ makeDictDIALExtendedPattern(esm_f, i), i, false });
-            }
+            patterns_f.push_back({ makeDictDIALExtendedPattern(esm_f, i), i, false });
         }
     }
 }
@@ -796,13 +794,13 @@ void DictCreator::makeDictDIALExtendedNativeColl()
     for (size_t i = 0; i < esm_n.getRecords().size(); ++i)
     {
         esm_n.selectRecord(i);
-        if (esm_n.getRecordId() == "DIAL")
+        if (esm_n.getRecordId() != "DIAL")
+            continue;
+
+        esm_n.setKey("DATA");
+        if (Tools::getDialogType(esm_f.getKey().content) == "T")
         {
-            esm_n.setKey("DATA");
-            if (esm_n.getKey().text == "T")
-            {
-                patterns_n.insert({ makeDictDIALExtendedPattern(esm_n, i), i });
-            }
+            patterns_n.insert({ makeDictDIALExtendedPattern(esm_n, i), i });
         }
     }
 }
@@ -826,20 +824,20 @@ void DictCreator::makeDictDIALExtendedAddMissing()
 {
     for (size_t i = 0; i < patterns_f.size(); ++i)
     {
-        if (patterns_f[i].missing)
-        {
-            esm_f.selectRecord(patterns_f[i].pos);
-            esm_f.setValue("NAME");
+        if (!patterns_f[i].missing)
+            continue;
 
-            if (esm_f.getValue().exist)
-            {
-                key_text = esm_f.getValue().text;
-                val_text = Tools::err[0] + "MISSING" + Tools::err[1];
-                type = Tools::RecType::DIAL;
-                validateRecord();
-                Tools::addLog("Missing DIAL: " + esm_f.getValue().text + "\r\n");
-            }
-        }
+        esm_f.selectRecord(patterns_f[i].pos);
+        esm_f.setValue("NAME");
+
+        if (!esm_f.getValue().exist)
+            continue;
+
+        key_text = esm_f.getValue().text;
+        val_text = Tools::err[0] + "MISSING" + Tools::err[1];
+        type = Tools::RecType::DIAL;
+        validateRecord();
+        Tools::addLog("Missing DIAL: " + esm_f.getValue().text + "\r\n");
     }
 }
 
@@ -853,32 +851,33 @@ void DictCreator::makeDictBNAMExtended()
     for (size_t i = 0; i < patterns_f.size(); ++i)
     {
         auto search = patterns_n.find(patterns_f[i].str);
-        if (search != patterns_n.end())
-        {
-            esm_n.selectRecord(search->second);
-            esm_n.setKey("INAM");
-            esm_n.setValue("BNAM");
-            esm_f.selectRecord(patterns_f[i].pos);
-            esm_f.setKey("INAM");
-            esm_f.setValue("BNAM");
+        if (search == patterns_n.end())
+            continue;
 
-            if (esm_n.getKey().exist &&
-                esm_n.getValue().exist &&
-                esm_f.getKey().exist &&
-                esm_f.getValue().exist)
+        esm_n.selectRecord(search->second);
+        esm_n.setKey("INAM");
+        esm_n.setValue("BNAM");
+        esm_f.selectRecord(patterns_f[i].pos);
+        esm_f.setKey("INAM");
+        esm_f.setValue("BNAM");
+
+        if (esm_n.getKey().exist &&
+            esm_n.getValue().exist &&
+            esm_f.getKey().exist &&
+            esm_f.getValue().exist)
+        {
+            message_n = makeScriptMessages(esm_n.getValue().text);
+            message_f = makeScriptMessages(esm_f.getValue().text);
+
+            if (message_n.size() != message_f.size())
+                continue;
+
+            for (size_t k = 0; k < message_n.size(); ++k)
             {
-                message_n = makeScriptMessages(esm_n.getValue().text);
-                message_f = makeScriptMessages(esm_f.getValue().text);
-                if (message_n.size() == message_f.size())
-                {
-                    for (size_t k = 0; k < message_n.size(); ++k)
-                    {
-                        key_text = esm_f.getKey().text + Tools::sep[0] + message_f.at(k);
-                        val_text = esm_f.getKey().text + Tools::sep[0] + message_n.at(k);
-                        type = Tools::RecType::BNAM;
-                        validateRecord();
-                    }
-                }
+                key_text = esm_f.getKey().text + Tools::sep[0] + message_f.at(k);
+                val_text = esm_f.getKey().text + Tools::sep[0] + message_n.at(k);
+                type = Tools::RecType::BNAM;
+                validateRecord();
             }
         }
     }
@@ -892,14 +891,14 @@ void DictCreator::makeDictBNAMExtendedForeignColl()
     for (size_t i = 0; i < esm_f.getRecords().size(); ++i)
     {
         esm_f.selectRecord(i);
-        if (esm_f.getRecordId() == "INFO")
-        {
-            esm_f.setKey("INAM");
-            if (esm_f.getKey().exist)
-            {
-                patterns_f.push_back({ esm_f.getKey().text, i, false });
-            }
-        }
+        if (esm_f.getRecordId() != "INFO")
+            continue;
+
+        esm_f.setKey("INAM");
+        if (!esm_f.getKey().exist)
+            continue;
+
+        patterns_f.push_back({ esm_f.getKey().text, i, false });
     }
 }
 
@@ -910,14 +909,14 @@ void DictCreator::makeDictBNAMExtendedNativeColl()
     for (size_t i = 0; i < esm_n.getRecords().size(); ++i)
     {
         esm_n.selectRecord(i);
-        if (esm_n.getRecordId() == "INFO")
-        {
-            esm_n.setKey("INAM");
-            if (esm_n.getKey().exist)
-            {
-                patterns_n.insert({ esm_n.getKey().text, i });
-            }
-        }
+        if (esm_n.getRecordId() != "INFO")
+            continue;
+
+        esm_n.setKey("INAM");
+        if (!esm_n.getKey().exist)
+            continue;
+
+        patterns_n.insert({ esm_n.getKey().text, i });
     }
 }
 
@@ -931,32 +930,33 @@ void DictCreator::makeDictSCPTExtended()
     for (size_t i = 0; i < patterns_f.size(); ++i)
     {
         auto search = patterns_n.find(patterns_f[i].str);
-        if (search != patterns_n.end())
-        {
-            esm_n.selectRecord(search->second);
-            esm_n.setKey("SCHD");
-            esm_n.setValue("SCTX");
-            esm_f.selectRecord(patterns_f[i].pos);
-            esm_f.setKey("SCHD");
-            esm_f.setValue("SCTX");
+        if (search == patterns_n.end())
+            continue;
 
-            if (esm_n.getKey().exist &&
-                esm_n.getValue().exist &&
-                esm_f.getKey().exist &&
-                esm_f.getValue().exist)
+        esm_n.selectRecord(search->second);
+        esm_n.setKey("SCHD");
+        esm_n.setValue("SCTX");
+        esm_f.selectRecord(patterns_f[i].pos);
+        esm_f.setKey("SCHD");
+        esm_f.setValue("SCTX");
+
+        if (esm_n.getKey().exist &&
+            esm_n.getValue().exist &&
+            esm_f.getKey().exist &&
+            esm_f.getValue().exist)
+        {
+            message_n = makeScriptMessages(esm_n.getValue().text);
+            message_f = makeScriptMessages(esm_f.getValue().text);
+
+            if (message_n.size() != message_f.size())
+                continue;
+
+            for (size_t k = 0; k < message_n.size(); ++k)
             {
-                message_n = makeScriptMessages(esm_n.getValue().text);
-                message_f = makeScriptMessages(esm_f.getValue().text);
-                if (message_n.size() == message_f.size())
-                {
-                    for (size_t k = 0; k < message_n.size(); ++k)
-                    {
-                        key_text = esm_f.getKey().text + Tools::sep[0] + message_f.at(k);
-                        val_text = esm_n.getKey().text + Tools::sep[0] + message_n.at(k);
-                        type = Tools::RecType::SCTX;
-                        validateRecord();
-                    }
-                }
+                key_text = esm_f.getKey().text + Tools::sep[0] + message_f.at(k);
+                val_text = esm_n.getKey().text + Tools::sep[0] + message_n.at(k);
+                type = Tools::RecType::SCTX;
+                validateRecord();
             }
         }
     }
@@ -970,14 +970,14 @@ void DictCreator::makeDictSCPTExtendedForeignColl()
     for (size_t i = 0; i < esm_f.getRecords().size(); ++i)
     {
         esm_f.selectRecord(i);
-        if (esm_f.getRecordId() == "SCPT")
-        {
-            esm_f.setKey("SCHD");
-            if (esm_f.getKey().exist)
-            {
-                patterns_f.push_back({ esm_f.getKey().text, i , false });
-            }
-        }
+        if (esm_f.getRecordId() != "SCPT")
+            continue;
+
+        esm_f.setKey("SCHD");
+        if (!esm_f.getKey().exist)
+            continue;
+
+        patterns_f.push_back({ esm_f.getKey().text, i , false });
     }
 }
 
@@ -988,14 +988,14 @@ void DictCreator::makeDictSCPTExtendedNativeColl()
     for (size_t i = 0; i < esm_n.getRecords().size(); ++i)
     {
         esm_n.selectRecord(i);
-        if (esm_n.getRecordId() == "SCPT")
-        {
-            esm_n.setKey("SCHD");
-            if (esm_n.getKey().exist)
-            {
-                patterns_n.insert({ esm_n.getKey().text, i });
-            }
-        }
+        if (esm_n.getRecordId() != "SCPT")
+            continue;
+
+        esm_n.setKey("SCHD");
+        if (!esm_n.getKey().exist)
+            continue;
+
+        patterns_n.insert({ esm_n.getKey().text, i });
     }
 }
 
@@ -1063,10 +1063,12 @@ void DictCreator::validateRecordForModeNOT()
 
     if (type == Tools::RecType::INFO && add_hyperlinks)
     {
-        val_text = Tools::addHyperlinks(
+        std::string annotation = "Hyperlinks:" + Tools::addHyperlinks(
             merger->getDict().at(Tools::RecType::DIAL),
             val_text,
             true);
+
+        dict.at(Tools::RecType::Annotation).insert({ key_text, annotation });
     }
 
     insertRecordToDict();
@@ -1090,10 +1092,12 @@ void DictCreator::validateRecordForModeCHANGED()
 
     if (type == Tools::RecType::INFO && add_hyperlinks)
     {
-        val_text = Tools::addHyperlinks(
+        std::string annotation = "Hyperlinks:" + Tools::addHyperlinks(
             merger->getDict().at(Tools::RecType::DIAL),
             val_text,
             true);
+
+        dict.at(Tools::RecType::Annotation).insert({ key_text, annotation });
     }
 
     insertRecordToDict();
@@ -1116,7 +1120,7 @@ void DictCreator::insertRecordToDict()
                 key_text + Tools::err[0] + "DOUBLED_" +
                 std::to_string(counter_doubled) + Tools::err[1];
 
-            dict[type].insert({ new_unique, val_text });
+            dict.at(type).insert({ new_unique, val_text });
             counter_doubled++;
             counter_created++;
             Tools::addLog("Doubled " + Tools::getTypeName(type) + ": " + key_text + "\r\n");
@@ -1154,7 +1158,7 @@ void DictCreator::printLogLine(const Tools::RecType type)
 }
 
 //----------------------------------------------------------
-std::string DictCreator::translateDialogTopicsInDictId(std::string to_translate)
+std::string DictCreator::translateDialogTopic(std::string to_translate)
 {
     if (mode == Tools::CreatorMode::ALL ||
         mode == Tools::CreatorMode::NOTFOUND ||

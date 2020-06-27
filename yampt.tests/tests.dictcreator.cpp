@@ -23,7 +23,7 @@ TEST_CASE("Create raw", "[i]")
     REQUIRE(esm.getDict().at(Tools::RecType::INFO).begin()->first == "G^Greeting 0^1046442603030210731");
     REQUIRE(esm.getDict().at(Tools::RecType::INFO).begin()->second == "I've heard you've got a price on your head, %PCRank. For a small fee, I can take care of that.");
     REQUIRE(esm.getDict().at(Tools::RecType::TEXT).begin()->first == "BookSkill_Acrobatics2");
-    REQUIRE(esm.getDict().at(Tools::RecType::TEXT).begin()->second.size() == 8459);
+    REQUIRE(esm.getDict().at(Tools::RecType::TEXT).begin()->second.size() == 10305);
     REQUIRE(esm.getDict().at(Tools::RecType::BNAM).begin()->first == esm.getDict().at(Tools::RecType::BNAM).begin()->second);
     REQUIRE(esm.getDict().at(Tools::RecType::SCTX).begin()->first == esm.getDict().at(Tools::RecType::SCTX).begin()->second);
 }

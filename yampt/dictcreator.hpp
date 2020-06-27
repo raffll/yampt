@@ -27,7 +27,7 @@ private:
     void makeDict(const bool same_order);
     bool isSameOrder();
     void resetCounters();
-    std::string translateDialogTopicsInDictId(std::string to_translate);
+    std::string translateDialogTopic(std::string to_translate);
     void validateRecord();
     void validateRecordForModeALL();
     void validateRecordForModeNOT();

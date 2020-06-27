@@ -92,15 +92,16 @@ void EsmConverter::resetCounters()
 }
 
 //----------------------------------------------------------
-void EsmConverter::convertRecordContent(const std::string & new_friendly)
+void EsmConverter::convertRecordContent(const std::string & new_text)
 {
     size_t rec_size;
     std::string rec_content = esm.getRecordContent();
     rec_content.erase(esm.getValue().pos + 8, esm.getValue().size);
-    rec_content.insert(esm.getValue().pos + 8, new_friendly);
+    rec_content.insert(esm.getValue().pos + 8, new_text);
     rec_content.erase(esm.getValue().pos + 4, 4);
-    rec_content.insert(esm.getValue().pos + 4,
-                       Tools::convertUIntToStringByteArray(new_friendly.size()));
+    rec_content.insert(
+        esm.getValue().pos + 4,
+        Tools::convertUIntToStringByteArray(new_text.size()));
     rec_size = rec_content.size() - 16;
     rec_content.erase(4, 4);
     rec_content.insert(4, Tools::convertUIntToStringByteArray(rec_size));
@@ -108,16 +109,16 @@ void EsmConverter::convertRecordContent(const std::string & new_friendly)
 }
 
 //----------------------------------------------------------
-std::string EsmConverter::addNullTerminatorIfEmpty(const std::string & new_friendly)
+std::string EsmConverter::addNullTerminatorIfEmpty(const std::string & new_text)
 {
     std::string result;
-    if (new_friendly == "")
+    if (new_text == "")
     {
         result = '\0';
     }
     else
     {
-        result = new_friendly;
+        result = new_text;
     }
     return result;
 }
@@ -222,7 +223,6 @@ void EsmConverter::convertMAST()
             convertRecordContent(master_prefix + file_suffix + master_suffix + '\0');
             esm.setNextValue("MAST");
         }
-
     }
 }
 

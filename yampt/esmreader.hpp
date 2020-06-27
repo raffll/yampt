@@ -55,9 +55,6 @@ private:
         std::string & cur_id,
         std::string & cur_text,
         EsmReader::SubRecord & subrecord);
-    void ifEndOfRecordReached(
-        std::size_t & cur_pos,
-        EsmReader::SubRecord & subrecord);
     void handleException(const std::exception & e);
     bool detectWindows1250Encoding(const std::string & text);
 

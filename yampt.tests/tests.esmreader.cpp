@@ -13,17 +13,17 @@ TEST_CASE("Loading and parsing plugin file", "[i]")
     REQUIRE(esm.getNameSuffix() == ".esm");
 }
 
-TEST_CASE("Set unique, default case, not found", "[i]")
+TEST_CASE("Set key, not found", "[i]")
 {
     EsmReader esm("master/en/Morrowind.esm");
     esm.selectRecord(0);
     esm.setKey("TEST");
     REQUIRE(esm.getKey().id == "TEST");
     REQUIRE(esm.getKey().exist == false);
-    REQUIRE(esm.getKey().text == "Unique id TEST not found!");
+    REQUIRE(esm.getKey().text == "");
 }
 
-TEST_CASE("Set unique, default case, empty text", "[i]")
+TEST_CASE("Set key, empty text", "[i]")
 {
     EsmReader esm("master/en/Morrowind.esm");
     esm.selectRecord(16955); // Region CELL with empty NAME
@@ -33,7 +33,7 @@ TEST_CASE("Set unique, default case, empty text", "[i]")
     REQUIRE(esm.getKey().text == "");
 }
 
-TEST_CASE("Set unique, default case", "[i]")
+TEST_CASE("Set key", "[i]")
 {
     EsmReader esm("master/en/Morrowind.esm");
     esm.selectRecord(22075); // Regular CELL
@@ -43,34 +43,34 @@ TEST_CASE("Set unique, default case", "[i]")
     REQUIRE(esm.getKey().text == "Zergonipal, Shrine");
 }
 
-TEST_CASE("Set unique, INDX case", "[i]")
+TEST_CASE("Set key, INDX case", "[i]")
 {
     EsmReader esm("master/en/Morrowind.esm");
     esm.selectRecord(2062); // SKIL with INDX instead of NAME
     esm.setKey("INDX");
     REQUIRE(esm.getKey().id == "INDX");
     REQUIRE(esm.getKey().exist == true);
-    REQUIRE(esm.getKey().text == "000");
+    REQUIRE(Tools::getINDX(esm.getKey().text) == "000");
 }
 
-TEST_CASE("Set unique, dialog type case", "[i]")
+TEST_CASE("Set key, dialog type case", "[i]")
 {
     EsmReader esm("master/en/Morrowind.esm");
     esm.selectRecord(22245); // DIAL with one byte DATA dialog type
     esm.setKey("DATA");
     REQUIRE(esm.getKey().id == "DATA");
     REQUIRE(esm.getKey().exist == true);
-    REQUIRE(esm.getKey().text == "J");
+    REQUIRE(Tools::getDialogType(esm.getKey().text) == "J");
 }
 
-TEST_CASE("Set friendly, not found", "[i]")
+TEST_CASE("Set value, not found", "[i]")
 {
     EsmReader esm("master/en/Morrowind.esm");
     esm.selectRecord(0);
     esm.setValue("TEST");
     REQUIRE(esm.getValue().id == "TEST");
     REQUIRE(esm.getValue().exist == false);
-    REQUIRE(esm.getValue().text == "Friendly id TEST not found!");
+    REQUIRE(esm.getValue().text == "");
     REQUIRE(esm.getValue().pos == esm.getRecordContent().size());
     REQUIRE(esm.getValue().size == 0);
 }

@@ -102,7 +102,6 @@ void EsmReader::setKey(const std::string & id)
         try
         {
             mainLoop(cur_pos, cur_size, cur_id, cur_text, key);
-            ifEndOfRecordReached(cur_pos, key);
         }
         catch (const std::exception & e)
         {
@@ -126,7 +125,6 @@ void EsmReader::setValue(const std::string & id)
         try
         {
             mainLoop(cur_pos, cur_size, cur_id, cur_text, value);
-            ifEndOfRecordReached(cur_pos, value);
         }
         catch (const std::exception & e)
         {
@@ -154,7 +152,6 @@ void EsmReader::setNextValue(const std::string & id)
         try
         {
             mainLoop(cur_pos, cur_size, cur_id, cur_text, value);
-            ifEndOfRecordReached(cur_pos, value);
         }
         catch (const std::exception & e)
         {
@@ -175,7 +172,7 @@ void EsmReader::mainLoop(
     {
         cur_id = rec->substr(cur_pos, 4);
         cur_size = Tools::convertStringByteArrayToUInt(rec->substr(cur_pos + 4, 4));
-        if (cur_id == value.id)
+        if (cur_id == subrecord.id)
         {
             cur_text = rec->substr(cur_pos + 8, cur_size);
             subrecord.content = cur_text;
@@ -187,16 +184,11 @@ void EsmReader::mainLoop(
         }
         cur_pos += 8 + cur_size;
     }
-}
 
-//----------------------------------------------------------
-void EsmReader::ifEndOfRecordReached(
-    std::size_t & cur_pos,
-    EsmReader::SubRecord & subrecord)
-{
     if (cur_pos == rec->size())
     {
         subrecord.content = "";
+        subrecord.text = "";
         subrecord.pos = cur_pos;
         subrecord.size = 0;
         subrecord.exist = false;

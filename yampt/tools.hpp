@@ -73,7 +73,7 @@ public:
     static std::string trimCR(std::string str);
     static std::string replaceNonReadableCharsWithDot(const std::string & str);
     static std::string addHyperlinks(
-        Chapter dict,
+        const Chapter & chapter,
         const std::string & val_text,
         bool extended);
     static void addLog(

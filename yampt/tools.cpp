@@ -46,8 +46,18 @@ void Tools::writeDict(const Dict & dict, const std::string & name)
                     << "<record>\r\n"
                     << "\t" << sep[1] << Tools::getTypeName(type) << sep[2] << "\r\n"
                     << "\t" << sep[3] << elem.first << sep[4] << "\r\n"
-                    << "\t" << sep[5] << elem.second << sep[6] << "\r\n"
-                    << "</record>\r\n";
+                    << "\t" << sep[5] << elem.second << sep[6] << "\r\n";
+
+                if (type == Tools::RecType::INFO)
+                {
+                    auto search = dict.at(Tools::RecType::Annotation).find(elem.first);
+                    if (search != dict.at(Tools::RecType::Annotation).end())
+                    {
+                        file << "\t" << "<!-- " << search->second << " -->" << "\r\n";
+                    }
+                }
+
+                file << "</record>\r\n";
             }
         }
         addLog("--> Writing " + std::to_string(getNumberOfElementsInDict(dict))
@@ -182,19 +192,18 @@ std::string Tools::replaceNonReadableCharsWithDot(const std::string & str)
 
 //----------------------------------------------------------
 std::string Tools::addHyperlinks(
-    Chapter chapter,
+    const Chapter & chapter,
     const std::string & val_text,
     bool extended)
 {
+    std::string result;
     std::string key_text_lc;
-    std::string new_friendly;
-    std::string new_friendly_lc;
+    std::string val_text_lc;
     size_t pos;
 
-    new_friendly = val_text;
-    new_friendly_lc = val_text;
-    transform(new_friendly_lc.begin(), new_friendly_lc.end(),
-              new_friendly_lc.begin(), ::tolower);
+    val_text_lc = val_text;
+    transform(val_text_lc.begin(), val_text_lc.end(),
+              val_text_lc.begin(), ::tolower);
 
     for (const auto & elem : chapter)
     {
@@ -205,20 +214,20 @@ std::string Tools::addHyperlinks(
         if (key_text_lc == elem.second)
             continue;
 
-        pos = new_friendly_lc.find(key_text_lc);
+        pos = val_text_lc.find(key_text_lc);
         if (pos == std::string::npos)
             continue;
 
         if (!extended)
         {
-            new_friendly.insert(new_friendly.size(), " [" + elem.second + "]");
+            result.insert(result.size(), " [" + elem.second + "]");
         }
         else
         {
-            new_friendly.insert(new_friendly.size(), " [" + elem.first + " -> " + elem.second + "]");
+            result.insert(result.size(), " [" + elem.first + " -> " + elem.second + "]");
         }
     }
-    return new_friendly;
+    return result;
 }
 
 //----------------------------------------------------------
@@ -291,8 +300,8 @@ std::string Tools::getTypeName(Tools::RecType type)
 std::string Tools::getDialogType(const std::string & content)
 {
     static const std::vector<std::string> dialog_type { "T", "V", "G", "P", "J" };
-    size_t type = Tools::convertStringByteArrayToUInt(content);
-    return dialog_type[type];
+    size_t type = Tools::convertStringByteArrayToUInt(content.substr(0, 1));
+    return dialog_type.at(type);
 }
 
 //----------------------------------------------------------
