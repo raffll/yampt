@@ -533,6 +533,7 @@ void DictCreator::makeDictINFO()
                 val_text = esm.getValue().text;
                 type = Tools::RecType::INFO;
 
+                if (mode == Tools::CreatorMode::NOTFOUND || mode == Tools::CreatorMode::CHANGED)
                 {
                     std::string gender = "N\\A";
                     esm.setValue("ONAM");
@@ -549,9 +550,9 @@ void DictCreator::makeDictINFO()
 
                         esm.setValue("FLAG");
                         if ((Tools::convertStringByteArrayToUInt(esm.getValue().content) & 0x0001) != 0)
-                            gender = "F";
+                            gender = "Female";
                         else
-                            gender = "M";
+                            gender = "Male";
                     }
                     dict.at(Tools::RecType::Gender).insert({ key_text, gender });
                 }
