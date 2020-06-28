@@ -32,6 +32,7 @@ private:
     void validateRecordForModeALL();
     void validateRecordForModeNOT();
     void validateRecordForModeCHANGED();
+    void addAnnotations();
     void insertRecordToDict();
     std::vector<std::string> makeScriptMessages(const std::string & new_friendly);
 

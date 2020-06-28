@@ -533,6 +533,39 @@ void DictCreator::makeDictINFO()
                 val_text = esm.getValue().text;
                 type = Tools::RecType::INFO;
                 validateRecord();
+
+                {
+                    std::string gender = "N\\A";
+                    esm.setValue("ONAM");
+                    for (size_t k = 0; k < esm.getRecords().size(); ++k)
+                    {
+                        esm.selectRecord(k);
+                        if (esm.getRecordId() != "NPC_")
+                            continue;
+
+                      //  if ()
+
+                      //  esm.setValue("FLAG");
+
+                      //  /* FLAG = NPC Flags (4 bytes, long)
+		                    //0x0001 = Female
+		                    //0x0002 = Essential
+		                    //0x0004 = Respawn
+		                    //0x0008 = None?
+		                    //0x0010 = Autocalc
+		                    //0x0400 = Blood Skel
+		                    //0x0800 = Blood Metal */
+
+                      //  // If ((num & Filter.First) != 0 && (num & Filter.Third) != 0) {
+                      //  // Console.WriteLine("First and third bits are set.");
+
+                      //  if ((Tools::convertStringByteArrayToUInt(esm.getValue().content) & 0x0001) != 0)
+                      //  {
+                      //      // Female
+                      //      dict.at(Tools::RecType::Gender).insert({ key_text, val_text })
+                      //  }
+                    }
+                }
             }
         }
     }
@@ -1061,16 +1094,7 @@ void DictCreator::validateRecordForModeNOT()
     if (search != merger->getDict().at(type).end())
         return;
 
-    if (type == Tools::RecType::INFO && add_hyperlinks)
-    {
-        std::string annotation = "Hyperlinks:" + Tools::addHyperlinks(
-            merger->getDict().at(Tools::RecType::DIAL),
-            val_text,
-            true);
-
-        dict.at(Tools::RecType::Annotation).insert({ key_text, annotation });
-    }
-
+    addAnnotations();
     insertRecordToDict();
 }
 
@@ -1090,17 +1114,29 @@ void DictCreator::validateRecordForModeCHANGED()
     if (search->second == val_text)
         return;
 
+    addAnnotations();
+    insertRecordToDict();
+}
+
+//----------------------------------------------------------
+void DictCreator::addAnnotations()
+{
     if (type == Tools::RecType::INFO && add_hyperlinks)
     {
-        std::string annotation = "Hyperlinks:" + Tools::addHyperlinks(
+        std::string annotations = "Hyperlinks:" + Tools::addHyperlinks(
             merger->getDict().at(Tools::RecType::DIAL),
             val_text,
             true);
 
-        dict.at(Tools::RecType::Annotation).insert({ key_text, annotation });
-    }
+        annotations += "\r\n\t     Glossary:" + Tools::addHyperlinks(
+            merger->getDict().at(Tools::RecType::Glossary),
+            val_text,
+            true);
 
-    insertRecordToDict();
+        annotations += "\r\n\t     Speaker: " + Tools::addGender();
+
+        dict.at(Tools::RecType::Annotations).insert({ key_text, annotations });
+    }
 }
 
 //----------------------------------------------------------

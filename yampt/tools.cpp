@@ -38,10 +38,12 @@ void Tools::writeDict(const Dict & dict, const std::string & name)
         std::ofstream file(name, std::ios::binary);
         for (const auto & chapter : dict)
         {
+            const auto & type = chapter.first;
+            if (type == Tools::RecType::Annotations || type == Tools::RecType::Glossary)
+                continue;
+
             for (const auto & elem : chapter.second)
             {
-                const auto & type = chapter.first;
-
                 file
                     << "<record>\r\n"
                     << "\t" << sep[1] << Tools::getTypeName(type) << sep[2] << "\r\n"
@@ -50,10 +52,10 @@ void Tools::writeDict(const Dict & dict, const std::string & name)
 
                 if (type == Tools::RecType::INFO)
                 {
-                    auto search = dict.at(Tools::RecType::Annotation).find(elem.first);
-                    if (search != dict.at(Tools::RecType::Annotation).end())
+                    auto search = dict.at(Tools::RecType::Annotations).find(elem.first);
+                    if (search != dict.at(Tools::RecType::Annotations).end())
                     {
-                        file << "\t" << "<!-- " << search->second << " -->" << "\r\n";
+                        file << "\t" << "<!-- " << search->second << " -->" << "\r\n";;
                     }
                 }
 
@@ -265,7 +267,8 @@ Tools::Dict Tools::initializeDict()
         { Tools::RecType::SCTX, {} },
 
         { Tools::RecType::Glossary, {} },
-        { Tools::RecType::Annotation, {} }
+        { Tools::RecType::Annotations, {} },
+        { Tools::RecType::Gender, {} },
     };
 }
 
@@ -288,6 +291,7 @@ std::string Tools::getTypeName(Tools::RecType type)
 
         "Glossary",
         "Annotation",
+        "Gender",
 
         "+ Wilderness",
         "+ Region",
@@ -317,4 +321,9 @@ std::string Tools::getINDX(const std::string & content)
     std::ostringstream ss;
     ss << std::setfill('0') << std::setw(3) << indx;
     return ss.str();
+}
+
+std::string Tools::addGender()
+{
+    return "";
 }

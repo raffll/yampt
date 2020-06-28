@@ -127,7 +127,7 @@ void UserInterface::runCommand()
     }
     else
     {
-        Tools::addLog("yampt v0.20\r\n");
+        Tools::addLog("yampt v0.21\r\n");
     }
 }
 
