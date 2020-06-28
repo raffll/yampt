@@ -39,7 +39,9 @@ void Tools::writeDict(const Dict & dict, const std::string & name)
         for (const auto & chapter : dict)
         {
             const auto & type = chapter.first;
-            if (type == Tools::RecType::Annotations || type == Tools::RecType::Glossary)
+            if (type == Tools::RecType::Annotations ||
+                type == Tools::RecType::Glossary ||
+                type == Tools::RecType::Gender)
                 continue;
 
             for (const auto & elem : chapter.second)

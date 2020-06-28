@@ -532,40 +532,31 @@ void DictCreator::makeDictINFO()
                 key_text = key_prefix + Tools::sep[0] + esm.getKey().text;
                 val_text = esm.getValue().text;
                 type = Tools::RecType::INFO;
-                validateRecord();
 
                 {
                     std::string gender = "N\\A";
                     esm.setValue("ONAM");
+                    auto npc = esm.getValue().content;
                     for (size_t k = 0; k < esm.getRecords().size(); ++k)
                     {
                         esm.selectRecord(k);
                         if (esm.getRecordId() != "NPC_")
                             continue;
 
-                      //  if ()
+                        esm.setValue("NAME");
+                        if (esm.getValue().content != npc)
+                            continue;
 
-                      //  esm.setValue("FLAG");
-
-                      //  /* FLAG = NPC Flags (4 bytes, long)
-		                    //0x0001 = Female
-		                    //0x0002 = Essential
-		                    //0x0004 = Respawn
-		                    //0x0008 = None?
-		                    //0x0010 = Autocalc
-		                    //0x0400 = Blood Skel
-		                    //0x0800 = Blood Metal */
-
-                      //  // If ((num & Filter.First) != 0 && (num & Filter.Third) != 0) {
-                      //  // Console.WriteLine("First and third bits are set.");
-
-                      //  if ((Tools::convertStringByteArrayToUInt(esm.getValue().content) & 0x0001) != 0)
-                      //  {
-                      //      // Female
-                      //      dict.at(Tools::RecType::Gender).insert({ key_text, val_text })
-                      //  }
+                        esm.setValue("FLAG");
+                        if ((Tools::convertStringByteArrayToUInt(esm.getValue().content) & 0x0001) != 0)
+                            gender = "F";
+                        else
+                            gender = "M";
                     }
+                    dict.at(Tools::RecType::Gender).insert({ key_text, gender });
                 }
+
+                validateRecord();
             }
         }
     }
@@ -1133,7 +1124,11 @@ void DictCreator::addAnnotations()
             val_text,
             true);
 
-        annotations += "\r\n\t     Speaker: " + Tools::addGender();
+        auto search = dict.at(Tools::RecType::Gender).find(key_text);
+        if (search != dict.at(Tools::RecType::Gender).end())
+        {
+            annotations += "\r\n\t     Speaker: " + search->second;
+        }
 
         dict.at(Tools::RecType::Annotations).insert({ key_text, annotations });
     }

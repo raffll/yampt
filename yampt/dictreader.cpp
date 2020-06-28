@@ -174,6 +174,10 @@ void DictReader::validateRecord(
             insertRecord(Tools::RecType::INFO, key_text, val_text);
         }
     }
+    else if (id == "Glossary")
+    {
+        insertRecord(Tools::RecType::Glossary, key_text, val_text);
+    }
     else
     {
         Tools::addLog(id + ": invalid id in" + key_text + "\r\n");
