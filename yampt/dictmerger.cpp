@@ -19,8 +19,8 @@ DictMerger::DictMerger(const std::vector<std::string> & paths)
 
     mergeDict();
 
-    findDuplicateFriendlyText(Tools::RecType::CELL);
-    findDuplicateFriendlyText(Tools::RecType::DIAL);
+    findDuplicateValues(Tools::RecType::CELL);
+    findDuplicateValues(Tools::RecType::DIAL);
     findUnusedINFO();
     printSummaryLog();
 }
@@ -79,19 +79,20 @@ void DictMerger::mergeDict()
 }
 
 //----------------------------------------------------------
-void DictMerger::findDuplicateFriendlyText(Tools::RecType type)
+void DictMerger::findDuplicateValues(Tools::RecType type)
 {
-    std::set<std::string> test_set;
-    std::string test;
-    for (const auto & elem : dict[type])
+    std::set<std::string> val_texts;
+    std::string val_text_lc;
+    for (const auto & elem : dict.at(type))
     {
-        test = elem.second;
-        transform(test.begin(), test.end(),
-                  test.begin(), ::tolower);
-        if (test_set.insert(test).second == false)
-        {
-            Tools::addLog("Warning: duplicate " + Tools::getTypeName(type) + " value " + elem.second + "\r\n");
-        }
+        val_text_lc = elem.second;
+        transform(val_text_lc.begin(), val_text_lc.end(),
+                  val_text_lc.begin(), ::tolower);
+
+        if (val_texts.insert(val_text_lc).second)
+            continue;
+
+        Tools::addLog("Warning: duplicate " + Tools::getTypeName(type) + " value " + elem.second + "\r\n");
     }
 }
 

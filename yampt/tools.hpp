@@ -85,7 +85,6 @@ public:
     static std::string getTypeName(Tools::RecType type);
     static std::string getDialogType(const std::string & content);
     static std::string getINDX(const std::string & content);
-    static std::string addGender();
 
 private:
     static std::string log;

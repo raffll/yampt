@@ -106,12 +106,6 @@ size_t Tools::getNumberOfElementsInDict(const Dict & dict)
 //----------------------------------------------------------
 size_t Tools::convertStringByteArrayToUInt(const std::string & str)
 {
-    if (str.size() != 4 && str.size() != 1)
-    {
-
-        int jump = 5;
-    }
-
     assert(str.size() == 4 || str.size() == 1);
 
     char buffer[4];
@@ -277,7 +271,7 @@ Tools::Dict Tools::initializeDict()
 //----------------------------------------------------------
 std::string Tools::getTypeName(Tools::RecType type)
 {
-    static const std::vector<std::string> type_name
+    static const std::vector<std::string> name
     {
         "CELL",
         "DIAL",
@@ -305,7 +299,7 @@ std::string Tools::getTypeName(Tools::RecType type)
         "GMDT"
     };
 
-    return type_name.at(static_cast<int>(type));
+    return name.at(static_cast<int>(type));
 }
 
 //----------------------------------------------------------
@@ -323,9 +317,4 @@ std::string Tools::getINDX(const std::string & content)
     std::ostringstream ss;
     ss << std::setfill('0') << std::setw(3) << indx;
     return ss.str();
-}
-
-std::string Tools::addGender()
-{
-    return "";
 }
