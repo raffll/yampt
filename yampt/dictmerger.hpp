@@ -21,7 +21,7 @@ public:
 
 private:
     void mergeDict();
-    void findDuplicateFriendlyText(Tools::RecType type);
+    void findDuplicateValues(Tools::RecType type);
     void findUnusedINFO();
     void printSummaryLog();
 
