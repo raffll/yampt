@@ -146,7 +146,7 @@
     <ClInclude Include="..\yampt\dictmerger.hpp" />
     <ClInclude Include="..\yampt\dictreader.hpp" />
     <ClInclude Include="..\yampt\esmreader.hpp" />
-    <ClInclude Include="..\yampt\scriptparser_ex.hpp" />
+    <ClInclude Include="..\yampt\scriptparser.hpp" />
     <ClInclude Include="..\yampt\tools.hpp" />
     <ClInclude Include="catch.hpp" />
   </ItemGroup>
@@ -155,7 +155,7 @@
     <ClCompile Include="..\yampt\dictmerger.cpp" />
     <ClCompile Include="..\yampt\dictreader.cpp" />
     <ClCompile Include="..\yampt\esmreader.cpp" />
-    <ClCompile Include="..\yampt\scriptparser_ex.cpp" />
+    <ClCompile Include="..\yampt\scriptparser.cpp" />
     <ClCompile Include="..\yampt\tools.cpp" />
     <ClCompile Include="tests.dictcreator.cpp" />
     <ClCompile Include="tests.dictreader.cpp" />

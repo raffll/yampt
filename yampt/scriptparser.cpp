@@ -1,417 +1,403 @@
 #include "scriptparser.hpp"
 
 //----------------------------------------------------------
-ScriptParser::ScriptParser()
-{
-
-}
-
-//----------------------------------------------------------
 ScriptParser::ScriptParser(
     const Tools::RecType type,
     const DictMerger & merger,
-    const std::string & prefix,
-    const std::string & friendly_text,
-    const std::string & compiled_data
+    const std::string & script_name,
+    const std::string & file_name,
+    const std::string & val_text,
+    const std::string & new_compiled
 )
     : type(type)
     , merger(&merger)
-    , prefix(prefix)
-    , friendly_text(friendly_text)
-    , compiled_data(compiled_data)
-    , pos_in_compiled(0)
+    , script_name(script_name)
+    , file_name(file_name)
+    , val_text(val_text)
+    , new_compiled(new_compiled)
 {
     convertScript();
-    stripLastNewLineChars();
 }
 
 //----------------------------------------------------------
 void ScriptParser::convertScript()
 {
-    std::istringstream ss(friendly_text);
-    std::string line;
-    std::string line_lc;
-    std::string new_line;
+    std::istringstream ss(val_text);
 
     while (std::getline(ss, line))
     {
         is_done = false;
         line = Tools::trimCR(line);
         line_lc = line;
+        new_line = line;
+        new_text.erase();
+        pos = 0;
+        keyword_pos = 0;
+        keyword.erase();
+
         transform(line_lc.begin(), line_lc.end(),
                   line_lc.begin(), ::tolower);
 
-        if (is_done == false)
+        try
         {
-            new_line = checkLine(line, line_lc, "addtopic", 0, Tools::RecType::DIAL, false);
+            if (!is_done)
+                convertLine("addtopic", 0, Tools::RecType::DIAL);
+
+            if (!is_done)
+                convertLine("showmap", 0, Tools::RecType::CELL);
+
+            if (!is_done)
+                convertLine("centeroncell", 0, Tools::RecType::CELL);
+
+            if (!is_done)
+                convertLine("getpccell", 0, Tools::RecType::CELL);
+
+            if (!is_done)
+                convertLine("aifollowcell", 1, Tools::RecType::CELL);
+
+            if (!is_done)
+                convertLine("aiescortcell", 1, Tools::RecType::CELL);
+
+            if (!is_done)
+                convertLine("placeitemcell", 1, Tools::RecType::CELL);
+
+            if (!is_done)
+                convertLine("positioncell", 4, Tools::RecType::CELL);
+
+            if (!is_done)
+                convertLine();
         }
-        if (is_done == false)
+        catch (...)
         {
-            new_line = checkLine(line, line_lc, "showmap", 0, Tools::RecType::CELL, false);
+            Tools::addLog("Error: unknown in script parser!\r\n");
+            Tools::addLog("Line: " + line + "\r\n");
         }
-        if (is_done == false)
-        {
-            new_line = checkLine(line, line_lc, "centeroncell", 0, Tools::RecType::CELL, false);
-        }
-        if (is_done == false)
-        {
-            new_line = checkLine(line, line_lc, "getpccell", 0, Tools::RecType::CELL, true);
-        }
-        if (is_done == false)
-        {
-            new_line = checkLine(line, line_lc, "aifollowcell", 1, Tools::RecType::CELL, false);
-        }
-        if (is_done == false)
-        {
-            new_line = checkLine(line, line_lc, "aiescortcell", 1, Tools::RecType::CELL, false);
-        }
-        if (is_done == false)
-        {
-            new_line = checkLine(line, line_lc, "placeitemcell", 1, Tools::RecType::CELL, false);
-        }
-        if (is_done == false)
-        {
-            new_line = checkLine(line, line_lc, "positioncell", 4, Tools::RecType::CELL, false);
-        }
-        if (is_done == false)
-        {
-            new_line = checkLine(line, line_lc);
-        }
+
         new_friendly += new_line + "\r\n";
     }
+
+    trimLastNewLineChars();
 }
 
 //----------------------------------------------------------
-void ScriptParser::stripLastNewLineChars()
-{
-    // Check if last 2 chars are newline and strip them if necessary
-    size_t last_nl_pos = friendly_text.rfind("\r\n");
-    if (last_nl_pos != friendly_text.size() - 2 ||
-        last_nl_pos == std::string::npos)
-    {
-        new_friendly.resize(new_friendly.size() - 2);
-    }
-}
-
-//----------------------------------------------------------
-std::string ScriptParser::checkLine(
-    const std::string & line,
-    const std::string & line_lc)
-{
-    std::string new_line = line;
-    std::map<size_t, std::string> keyword_pos_coll;
-    std::string keyword;
-    size_t keyword_pos;
-
-    // Create keyword collection from first to last occurrence in line
-    for (size_t i = 0; i < Tools::keywords.size(); ++i)
-    {
-        keyword_pos = line_lc.find(Tools::keywords[i]);
-        keyword_pos_coll.insert({ keyword_pos, Tools::keywords[i] });
-    }
-
-    keyword = keyword_pos_coll.begin()->second;
-    keyword_pos = keyword_pos_coll.begin()->first;
-
-    if (keyword_pos != std::string::npos &&
-        line.rfind(";", keyword_pos) == std::string::npos &&
-        line.find("\"", keyword_pos) != std::string::npos) // Convert only if message line is valid
-    {
-        Tools::addLog("---\r\n", true);
-        Tools::addLog("Old line: " + line + "\r\n", true);
-        new_line = convertLine(line);
-        Tools::addLog("New line: " + new_line + "\r\n", true);
-        if (!compiled_data.empty())
-        {
-            if (keyword == "say " ||
-                keyword == "say,")
-            {
-                convertLineInCompiledScriptData(line, new_line, keyword_pos, true);
-            }
-            else if (keyword == "messagebox" ||
-                     keyword == "choice")
-            {
-                convertLineInCompiledScriptData(line, new_line, keyword_pos, false);
-            }
-        }
-        is_done = true;
-    }
-
-    return new_line;
-}
-
-//----------------------------------------------------------
-std::string ScriptParser::checkLine(
-    const std::string & line,
-    const std::string & line_lc,
+void ScriptParser::convertLine(
     const std::string & keyword,
     const int pos_in_expression,
-    const Tools::RecType text_type,
-    const bool is_getpccell)
-{
-    std::string new_line = line;
-    std::pair<std::string, size_t> extracted;
-    std::string new_text;
-    size_t keyword_pos = line_lc.find(keyword);
-
-    if (keyword_pos != std::string::npos &&
-        line.rfind(";", keyword_pos) == std::string::npos)
-    {
-        Tools::addLog("---\r\n", true);
-        Tools::addLog("Old line: " + line + "\r\n", true);
-        Tools::addLog("Extraction:\r\n", true);
-        extracted = extractInnerTextFromLine(line, keyword_pos, pos_in_expression);
-
-        // Convert only if extracted text is valid
-        if (extracted.second != std::string::npos)
-        {
-            new_text = findInnerTextInDict(extracted.first, text_type);
-            Tools::addLog("Found: " + new_text + "\r\n", true);
-            new_line = convertInnerTextInLine(line, extracted.first, extracted.second, new_text);
-            Tools::addLog("New line: " + new_line + "\r\n", true);
-            if (!compiled_data.empty())
-            {
-                convertInnerTextInCompiledScriptData(extracted.first, new_text, is_getpccell);
-            }
-        }
-        is_done = true;
-    }
-    return new_line;
-}
-
-//----------------------------------------------------------
-std::string ScriptParser::convertLine(const std::string & line)
-{
-    std::string new_line = line;
-    auto search = merger->getDict(type).find(prefix + line);
-    if (search != merger->getDict(type).end())
-    {
-        if (line != search->second.substr(prefix.size()))
-        {
-            new_line = search->second.substr(prefix.size());
-        }
-    }
-    return new_line;
-}
-
-//----------------------------------------------------------
-std::string ScriptParser::findInnerTextInDict(
-    const std::string & text,
     const Tools::RecType text_type)
 {
-    // Fast search in map
-    auto search = merger->getDict(text_type).find(text);
-    if (search != merger->getDict(text_type).end())
-    {
-        return search->second;
-    }
-    else // Slow search case aware
-    {
-        for (auto & elem : merger->getDict(text_type))
-        {
-            if (Tools::caseInsensitiveStringCmp(text, elem.first) == true)
-            {
-                return elem.second;
-            }
-        }
-    }
-    return text;
+    pos = line_lc.find(keyword);
+
+    if (pos == std::string::npos ||
+        line.rfind(";", pos) != std::string::npos)
+        return;
+
+    pos = line.find_first_of(" \t,\"", pos);
+    pos = line.find_first_not_of(" \t,", pos);
+    if (pos == std::string::npos)
+        return;
+
+    trimLine();
+    extractText(pos_in_expression);
+    removeQuotes();
+    findNewText(text_type);
+    insertNewText();
+
+    const auto is_getpccell = keyword == "getpccell" ? true : false;
+    convertTextInCompiled(is_getpccell);
+
+    is_done = true;
 }
 
 //----------------------------------------------------------
-std::string ScriptParser::convertInnerTextInLine(
-    const std::string & line,
-    const std::string & text,
-    const size_t text_pos,
-    const std::string & new_text)
+void ScriptParser::trimLine()
 {
-    std::string new_line = line;
-    new_line.erase(text_pos, text.size());
-    if (new_line.substr(text_pos - 1, 1) == "\"")
+    Tools::addLog("---\r\n", true);
+    Tools::addLog(file_name + "\r\n", true);
+    Tools::addLog(script_name + "\r\n", true);
+    Tools::addLog("<<< " + line + "\r\n", true);
+
+    old_text = line.substr(pos);
+
+    Tools::addLog("1: " + old_text + "\r\n", true);
+}
+
+//----------------------------------------------------------
+void ScriptParser::extractText(const int pos_in_expression)
+{
+    std::regex r1("([\\w\\.\\-\\xD1]+|\".*?\")", std::regex::optimize);
+    std::sregex_iterator next(old_text.begin(), old_text.end(), r1);
+    std::sregex_iterator end;
+    std::smatch found;
+
+    int ctr = -1;
+    while (next != end && ctr != pos_in_expression)
     {
-        new_line.insert(text_pos, new_text);
+        found = *next;
+        next++;
+        ctr++;
+    }
+
+    old_text = found[1].str();
+    pos += found.position(1);
+
+    Tools::addLog("2: " + old_text + "\r\n", true);
+}
+
+//----------------------------------------------------------
+void ScriptParser::removeQuotes()
+{
+    std::regex r2("\"(.*?)\"", std::regex::optimize);
+    std::smatch found;
+    std::regex_search(old_text, found, r2);
+    if (!found.empty())
+    {
+        old_text = found[1].str();
+        pos += 1;
+    }
+
+    Tools::addLog("3: " + old_text + "\r\n", true);
+}
+
+//----------------------------------------------------------
+void ScriptParser::findNewText(const Tools::RecType text_type)
+{
+    new_text = old_text;
+    auto search = merger->getDict().at(text_type).find(old_text);
+    if (search != merger->getDict().at(text_type).end())
+    {
+        new_text = search->second;
     }
     else
     {
-        new_line.insert(text_pos, "\"" + new_text + "\"");
-    }
-    return new_line;
-}
-
-//----------------------------------------------------------
-void ScriptParser::convertLineInCompiledScriptData(
-    const std::string & line,
-    const std::string & new_line,
-    const size_t keyword_pos,
-    const bool is_say)
-{
-    std::vector<std::string> splitted_line = splitLine(line, keyword_pos, is_say);
-    std::vector<std::string> splitted_new_line = splitLine(new_line, keyword_pos, is_say);
-
-    if (splitted_line.size() == splitted_new_line.size())
-    {
-        for (size_t i = 0; i < splitted_line.size(); i++)
+        for (const auto & elem : merger->getDict().at(text_type))
         {
-            pos_in_compiled = compiled_data.find(splitted_line[i], pos_in_compiled);
-            if (pos_in_compiled != std::string::npos)
+            if (Tools::caseInsensitiveStringCmp(old_text, elem.first))
             {
-                if (i == 0)
-                {
-                    pos_in_compiled -= 2;
-                    compiled_data.erase(pos_in_compiled, 2);
-                    compiled_data.insert(pos_in_compiled, Tools::convertUIntToStringByteArray(splitted_new_line[i].size()).substr(0, 2));
-                    pos_in_compiled += 2;
-                    compiled_data.erase(pos_in_compiled, splitted_line[i].size());
-                    compiled_data.insert(pos_in_compiled, splitted_new_line[i]);
-                    pos_in_compiled += splitted_new_line[i].size();
-                }
-                else
-                {
-                    pos_in_compiled -= 1;
-                    compiled_data.erase(pos_in_compiled, 1);
-                    compiled_data.insert(pos_in_compiled, Tools::convertUIntToStringByteArray(splitted_new_line[i].size() + 1).substr(0, 1));
-                    pos_in_compiled += 1;
-                    compiled_data.erase(pos_in_compiled, splitted_line[i].size());
-                    compiled_data.insert(pos_in_compiled, splitted_new_line[i]);
-                    pos_in_compiled += splitted_new_line[i].size();
-                }
+                new_text = elem.second;
+                break;
             }
         }
     }
+
+    Tools::addLog("4: " + new_text + "\r\n", true);
 }
 
 //----------------------------------------------------------
-void ScriptParser::convertInnerTextInCompiledScriptData(
-    const std::string & text,
-    const std::string & new_text,
-    const bool is_getpccell)
+void ScriptParser::insertNewText()
 {
-    pos_in_compiled = compiled_data.find(text, pos_in_compiled);
-    if (pos_in_compiled != std::string::npos)
+    new_line.erase(pos, old_text.size());
+    new_line.insert(pos, new_text);
+
+    Tools::addLog(">>> " + new_line + "\r\n", true);
+}
+
+//----------------------------------------------------------
+void ScriptParser::convertTextInCompiled(const bool is_getpccell)
+{
+    if (type != Tools::RecType::SCTX)
+        return;
+
+    if (new_compiled.empty())
     {
-        pos_in_compiled -= 1;
-        compiled_data.erase(pos_in_compiled, 1);
-        compiled_data.insert(pos_in_compiled, Tools::convertUIntToStringByteArray(new_text.size()).substr(0, 1));
-        pos_in_compiled += 1;
-        compiled_data.erase(pos_in_compiled, text.size());
-        compiled_data.insert(pos_in_compiled, new_text);
+        Tools::addLog("Error: SCDT is empty\r\n", true);
+        return;
+    }
 
-        if (is_getpccell == true)
+    pos_c = new_compiled.find(old_text, pos_c);
+    if (pos_c == std::string::npos)
+    {
+        Tools::addLog("Error: not found in SCDT\r\n", true);
+        return;
+    }
+    size_t old_size = Tools::convertStringByteArrayToUInt(new_compiled.substr(pos_c - 1, 1));
+
+    // WTF! Sometimes old text can be null terminated
+    while (old_size != old_text.size() && old_size != old_text.size() + 1)
+    {
+        Tools::addLog(
+            "Warning: " +
+            std::to_string(old_size) + " != " + std::to_string(old_text.size()) + " " +
+            old_text + " false positive in " + script_name + "\r\n", true);
+        pos_c += old_text.size();
+
+        pos_c = new_compiled.find(old_text, pos_c);
+        if (pos_c == std::string::npos)
         {
-            // Additional GETPCCELL size byte determines
-            // how many bytes from that byte to the end of expression
-            size_t end_of_expr;
-            size_t expr_size;
+            Tools::addLog("Error: not found in SCDT\r\n", true);
+            return;
+        }
+        old_size = Tools::convertStringByteArrayToUInt(new_compiled.substr(pos_c - 1, 1));
+    }
 
-            if (compiled_data.substr(pos_in_compiled + new_text.size(), 1) != " ")
-            {
-                // If expression ends exactly when inner text ends
-                end_of_expr = pos_in_compiled + new_text.size();
-                pos_in_compiled = compiled_data.rfind('X', pos_in_compiled) - 2;
-                expr_size = end_of_expr - pos_in_compiled;
-            }
-            else
-            {
-                // If expression ends with equals or inequal signs
-                end_of_expr = pos_in_compiled + new_text.size() + 5; // +5 because of " == 1" size
-                pos_in_compiled = compiled_data.rfind('X', pos_in_compiled) - 2;
-                expr_size = end_of_expr - pos_in_compiled - 1;
-            }
+    pos_c -= 1;
+    new_compiled.erase(pos_c, 1);
+    new_compiled.insert(pos_c, Tools::convertUIntToStringByteArray(new_text.size()).substr(0, 1));
+    pos_c += 1;
+    new_compiled.erase(pos_c, old_text.size());
+    new_compiled.insert(pos_c, new_text);
 
-            compiled_data.erase(pos_in_compiled, 1);
-            compiled_data.insert(pos_in_compiled, Tools::convertUIntToStringByteArray(expr_size).substr(0, 1));
-            pos_in_compiled += expr_size;
+    if (is_getpccell)
+    {
+        // Additional getpccell size byte determines
+        // how many bytes from that byte to the end of expression
+        size_t end_of_expr;
+        size_t expr_size;
+
+        if (new_compiled.substr(pos_c + new_text.size(), 1) != " ")
+        {
+            // If expression ends exactly when inner text ends
+            end_of_expr = pos_c + new_text.size();
+            pos_c = new_compiled.rfind('X', pos_c) - 2;
+            expr_size = end_of_expr - pos_c;
         }
         else
         {
-            pos_in_compiled += new_text.size();
+            // If expression ends with equals or inequal signs
+            end_of_expr = pos_c + new_text.size() + 5; // + 5 because of equation " == 1" size
+            pos_c = new_compiled.rfind('X', pos_c) - 2;
+            expr_size = end_of_expr - pos_c - 1;
         }
+
+        new_compiled.erase(pos_c, 1);
+        new_compiled.insert(pos_c, Tools::convertUIntToStringByteArray(expr_size).substr(0, 1));
+        pos_c += expr_size;
+    }
+    else
+    {
+        pos_c += new_text.size();
     }
 }
 
 //----------------------------------------------------------
-std::pair<std::string, size_t> ScriptParser::extractInnerTextFromLine(
-    const std::string & line,
-    const size_t keyword_pos,
-    const int pos_in_expression)
+void ScriptParser::convertLine()
 {
-    size_t cur_pos = keyword_pos;
-    std::string cur_text;
+    findKeyword();
 
-    std::smatch found;
-    int ctr = -1;
+    if (keyword_pos == std::string::npos ||
+        line.rfind(";", keyword_pos) != std::string::npos ||
+        line.find("\"", keyword_pos) == std::string::npos)
+        return;
 
-    // Find begin of searched inner text
-    cur_pos = line.find_first_of(" \t,\"", cur_pos);
-    cur_pos = line.find_first_not_of(" \t,", cur_pos);
-    if (cur_pos != std::string::npos)
+    findNewMessage();
+    convertMessageInCompiled();
+
+    is_done = true;
+}
+
+//----------------------------------------------------------
+void ScriptParser::findKeyword()
+{
+    std::map<size_t, std::string> keyword_pos_coll;
+    for (const auto & keyword : Tools::keywords)
     {
-        cur_text = line.substr(cur_pos);
+        keyword_pos = line_lc.find(keyword);
+        keyword_pos_coll.insert({ keyword_pos, keyword });
     }
-    else
-    {
-        // If begin of searched text not found
-        // or keyword was found inside other string
-        // e.g. name of the script
-        cur_text = "Inner text not found!";
-    }
 
-    Tools::addLog("\tStep 1: " + cur_text + "\r\n", true);
+    keyword_pos = keyword_pos_coll.begin()->first;
+    keyword = keyword_pos_coll.begin()->second;
+}
 
-    if (pos_in_expression == 0)
+//----------------------------------------------------------
+void ScriptParser::findNewMessage()
+{
+    Tools::addLog("---\r\n", true);
+    Tools::addLog(file_name + "\r\n", true);
+    Tools::addLog(script_name + "\r\n", true);
+    Tools::addLog("<<< " + line + "\r\n", true);
+
+    auto search = merger->getDict().at(type).find(script_name + Tools::sep[0] + line);
+    if (search != merger->getDict().at(type).end())
     {
-        // Find end of searched text if keyword is not in quotes
-        // Strip whitespaces
-        if (cur_text.find_last_not_of(" \t") != std::string::npos)
+        if (line != search->second.substr(script_name.size() + 1))
         {
-            cur_text.erase(cur_text.find_last_not_of(" \t") + 1);
+            new_line = search->second.substr(script_name.size() + 1);
         }
     }
-    else
+
+    Tools::addLog(">>> " + new_line + "\r\n", true);
+}
+
+//----------------------------------------------------------
+void ScriptParser::convertMessageInCompiled()
+{
+    if (type != Tools::RecType::SCTX)
+        return;
+
+    if (new_compiled.empty())
     {
-        // Usually all searched texts are in quotes, but other variables don't
-        std::regex r1("(([\\w\\.]+)|(\".*?\"))", std::regex::optimize);
-        std::sregex_iterator next(cur_text.begin(), cur_text.end(), r1);
-        std::sregex_iterator end;
-        while (next != end && ctr != pos_in_expression)
+        Tools::addLog("Error: SCDT is empty\r\n", true);
+        return;
+    }
+
+    std::vector<std::string> splitted_line = splitLine(line);
+    std::vector<std::string> splitted_new_line = splitLine(new_line);
+
+    if (splitted_line.size() != splitted_new_line.size())
+    {
+        Tools::addLog("Error: incompatible messages\r\n", true);
+        return;
+    }
+
+    for (size_t i = 0; i < splitted_line.size(); i++)
+    {
+        pos_c = new_compiled.find(splitted_line[i], pos_c);
+        if (pos_c == std::string::npos)
         {
-            found = *next;
-            next++;
-            ctr++;
+            Tools::addLog("Error: message not found in SCDT\r\n", true);
+            return;
         }
-        cur_text = found[1].str();
-        cur_pos = found.position(1) + cur_pos;
+
+        if (splitted_line[i] == splitted_new_line[i])
+        {
+            Tools::addLog("Warning: message skipped in SCDT\r\n", true);
+            pos_c += splitted_line[i].size();
+            continue;
+        }
+
+        if (splitted_line[i] == " " || splitted_line[i] == "\t")
+        {
+            Tools::addLog("Error: message is one whitespace character\r\n", true);
+            return;
+        }
+
+        if (i == 0)
+        {
+            pos_c -= 2;
+            new_compiled.erase(pos_c, 2);
+            new_compiled.insert(
+                pos_c,
+                Tools::convertUIntToStringByteArray(splitted_new_line[i].size()).substr(0, 2));
+            pos_c += 2;
+            new_compiled.erase(pos_c, splitted_line[i].size());
+            new_compiled.insert(pos_c, splitted_new_line[i]);
+            pos_c += splitted_new_line[i].size();
+        }
+        else
+        {
+            pos_c -= 1;
+            new_compiled.erase(pos_c, 1);
+            new_compiled.insert(
+                pos_c,
+                Tools::convertUIntToStringByteArray(splitted_new_line[i].size() + 1).substr(0, 1));
+            pos_c += 1;
+            new_compiled.erase(pos_c, splitted_line[i].size());
+            new_compiled.insert(pos_c, splitted_new_line[i]);
+            pos_c += splitted_new_line[i].size();
+        }
     }
-
-    Tools::addLog("\tStep 2: " + cur_text + "\r\n", true);
-
-    // Strip quotes if exist
-    std::regex r2("\"(.*?)\"", std::regex::optimize);
-    std::regex_search(cur_text, found, r2);
-    if (!found.empty())
-    {
-        cur_text = found[1].str();
-        cur_pos += 1;
-    }
-
-    Tools::addLog("\tStep 3: " + cur_text + "\r\n", true);
-
-    return std::make_pair(cur_text, cur_pos);
 }
 
 //----------------------------------------------------------
 std::vector<std::string> ScriptParser::splitLine(
-    const std::string & line,
-    const size_t keyword_pos,
-    const bool is_say)
+    const std::string cur_line) const
 {
-    // We only need parameters after keyword
-    std::string cur_line = line.substr(keyword_pos);
+    const std::string cur_line_tr = cur_line.substr(keyword_pos);
     std::vector<std::string> splitted_line;
-    std::smatch found;
     std::regex re("\"(.*?)\"", std::regex::optimize);
-    std::sregex_iterator next(cur_line.begin(), cur_line.end(), re);
+    std::sregex_iterator next(cur_line_tr.begin(), cur_line_tr.end(), re);
     std::sregex_iterator end;
+    std::smatch found;
     while (next != end)
     {
         found = *next;
@@ -419,12 +405,24 @@ std::vector<std::string> ScriptParser::splitLine(
         next++;
     }
 
-    // Special case if SAY keyword
+    // Special case if say keyword
     // First parameter is sound file name, so we don't need it
-    if (is_say == true && splitted_line.size() > 0)
+    if (keyword == "say" && splitted_line.size() > 0)
     {
         splitted_line.erase(splitted_line.begin());
     }
 
     return splitted_line;
+}
+
+//----------------------------------------------------------
+void ScriptParser::trimLastNewLineChars()
+{
+    // Check if last 2 chars are newline and strip them if necessary
+    size_t last_nl_pos = val_text.rfind("\r\n");
+    if (last_nl_pos != val_text.size() - 2 ||
+        last_nl_pos == std::string::npos)
+    {
+        new_friendly.resize(new_friendly.size() - 2);
+    }
 }

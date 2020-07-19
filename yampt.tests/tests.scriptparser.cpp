@@ -1,7 +1,7 @@
 #include "catch.hpp"
 #include "../yampt/tools.hpp"
 #include "../yampt/dictmerger.hpp"
-#include "../yampt/scriptparser_ex.hpp"
+#include "../yampt/scriptparser.hpp"
 
 using namespace std;
 
