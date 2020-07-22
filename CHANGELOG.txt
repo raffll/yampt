@@ -3,7 +3,7 @@ TODO
 - [bug] fix xpositioncell from mwse recognized as positioncell
 
 0.21
-- [feature] add gender annotation to info records when creating notfound and changed dictionaries
+- [feature] add gender annotation to info records when creating NOTFOUND and CHANGED dictionaries
 - [feature] add glossary dictionary
 - [bug] fix regex don't recognize windows-1250 'ą' as a valid char
 

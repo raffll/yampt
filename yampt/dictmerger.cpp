@@ -81,15 +81,15 @@ void DictMerger::mergeDict()
 //----------------------------------------------------------
 void DictMerger::findDuplicateValues(Tools::RecType type)
 {
-    std::set<std::string> val_texts;
-    std::string val_text_lc;
+    std::set<std::string> texts;
+    std::string text_lc;
     for (const auto & elem : dict.at(type))
     {
-        val_text_lc = elem.second;
-        transform(val_text_lc.begin(), val_text_lc.end(),
-                  val_text_lc.begin(), ::tolower);
+        text_lc = elem.second;
+        transform(text_lc.begin(), text_lc.end(),
+                  text_lc.begin(), ::tolower);
 
-        if (val_texts.insert(val_text_lc).second)
+        if (texts.insert(text_lc).second)
             continue;
 
         Tools::addLog("Warning: duplicate " + Tools::getTypeName(type) + " value " + elem.second + "\r\n");
@@ -99,31 +99,32 @@ void DictMerger::findDuplicateValues(Tools::RecType type)
 //----------------------------------------------------------
 void DictMerger::findUnusedINFO()
 {
-    std::string test;
+    std::string text;
     bool found;
     size_t beg;
     size_t end;
-    for (const auto & info : dict[Tools::RecType::INFO])
+    for (const auto & info : dict.at(Tools::RecType::INFO))
     {
         found = false;
-        test = info.first;
-        if (test.size() > 1 && test.substr(0, 1) == "T")
-        {
-            beg = test.find("^") + 1;
-            end = test.find_last_of("^");
-            test = test.substr(beg, end - beg);
-            for (const auto & dial : dict[Tools::RecType::DIAL])
-            {
-                if (test == dial.second)
-                {
-                    found = true;
-                }
-            }
+        text = info.first;
+        if (text.size() < 1 || text.substr(0, 1) != "T")
+            continue;
 
-            if (!found)
-            {
-                Tools::addLog("Warning: dialog topic not found " + info.first + "\r\n");
-            }
+        beg = text.find("^") + 1;
+        end = text.find_last_of("^");
+        text = text.substr(beg, end - beg);
+
+        for (const auto & dial : dict.at(Tools::RecType::DIAL))
+        {
+            if (text != dial.second)
+                continue;
+
+            found = true;
+        }
+
+        if (!found)
+        {
+            Tools::addLog("Warning: dialog topic not found " + info.first + "\r\n");
         }
     }
 }
