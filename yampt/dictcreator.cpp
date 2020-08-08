@@ -1147,12 +1147,11 @@ void DictCreator::insertRecordToDict()
         auto search = dict.at(type).find(key_text);
         if (val_text != search->second)
         {
-            // TODO
-            auto new_unique =
+            key_text =
                 key_text + Tools::err[0] + "DOUBLED_" +
                 std::to_string(counter_doubled) + Tools::err[1];
 
-            dict.at(type).insert({ new_unique, val_text });
+            dict.at(type).insert({ key_text, val_text });
             counter_doubled++;
             counter_created++;
             Tools::addLog("Doubled " + Tools::getTypeName(type) + ": " + key_text + "\r\n");

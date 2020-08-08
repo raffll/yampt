@@ -76,7 +76,7 @@ private:
 
     bool to_convert = false;
 
-    Tools::Encoding esm_encoding;
+    Tools::Encoding esm_encoding = Tools::Encoding::UNKNOWN;
 };
 
 #endif // ESMCONVERTER_HPP

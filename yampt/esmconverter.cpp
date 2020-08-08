@@ -142,7 +142,7 @@ std::string EsmConverter::setNewFriendly(
              add_hyperlinks &&
              dialog_topic.substr(0, 1) != "V")
     {
-        new_friendly = Tools::addHyperlinks(
+        new_friendly = val_text + Tools::addHyperlinks(
             merger->getDict().at(Tools::RecType::DIAL),
             val_text,
             false);
