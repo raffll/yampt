@@ -22,14 +22,13 @@ private:
         const std::string & content,
         const std::string & path);
     void setName(const std::string & path);
-    void validateRecord(
-        const std::string & id,
-        const std::string & key_text,
-        const std::string & val_text);
+    void validateRecord();
     void insertRecord(
-        const Tools::RecType type,
-        const std::string & key_text,
-        const std::string & val_text);
+        const Tools::RecType type);
+    void insertCELL();
+    void insertRNAM();
+    void insertFNAM();
+    void insertINFO();
     void printSummaryLog();
 
     std::string name_full;
@@ -42,6 +41,10 @@ private:
     int counter_invalid = 0;
     int counter_doubled = 0;
     int counter_all = 0;
+
+    std::string type_name;
+    std::string key_text;
+    std::string val_text;
 };
 
 #endif // DICTREADER_HPP

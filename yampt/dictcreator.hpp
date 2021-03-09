@@ -21,7 +21,7 @@ public:
         const std::string & path_n,
         const DictMerger & merger,
         const Tools::CreatorMode mode,
-        const bool add_dial);
+        const bool add_hyperlinks);
 
 private:
     void makeDict(const bool same_order);
@@ -34,8 +34,8 @@ private:
     void validateRecordForModeCHANGED();
     void addAnnotations();
     void insertRecordToDict();
-    std::vector<std::string> makeScriptMessages(const std::string & new_friendly);
-
+    std::vector<std::string> makeScriptMessages(const std::string & script_text);
+    void addGenderAnnotations();
     void printLogLine(const Tools::RecType type);
 
     void makeDictCELL();

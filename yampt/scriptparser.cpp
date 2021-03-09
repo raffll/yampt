@@ -6,15 +6,15 @@ ScriptParser::ScriptParser(
     const DictMerger & merger,
     const std::string & script_name,
     const std::string & file_name,
-    const std::string & val_text,
-    const std::string & new_compiled
+    const std::string & old_script,
+    const std::string & old_schd
 )
     : type(type)
     , merger(&merger)
     , script_name(script_name)
     , file_name(file_name)
-    , val_text(val_text)
-    , new_compiled(new_compiled)
+    , old_script(old_script)
+    , new_schd(old_schd)
 {
     convertScript();
 }
@@ -22,7 +22,7 @@ ScriptParser::ScriptParser(
 //----------------------------------------------------------
 void ScriptParser::convertScript()
 {
-    std::istringstream ss(val_text);
+    std::istringstream ss(old_script);
 
     while (std::getline(ss, line))
     {
@@ -73,7 +73,7 @@ void ScriptParser::convertScript()
             Tools::addLog("Line: " + line + "\r\n");
         }
 
-        new_friendly += new_line + "\r\n";
+        new_script += new_line + "\r\n";
     }
 
     trimLastNewLineChars();
@@ -197,19 +197,19 @@ void ScriptParser::convertTextInCompiled(const bool is_getpccell)
     if (type != Tools::RecType::SCTX)
         return;
 
-    if (new_compiled.empty())
+    if (new_schd.empty())
     {
         Tools::addLog("Error: SCDT is empty\r\n", true);
         return;
     }
 
-    pos_c = new_compiled.find(old_text, pos_c);
+    pos_c = new_schd.find(old_text, pos_c);
     if (pos_c == std::string::npos)
     {
         Tools::addLog("Error: not found in SCDT\r\n", true);
         return;
     }
-    size_t old_size = Tools::convertStringByteArrayToUInt(new_compiled.substr(pos_c - 1, 1));
+    size_t old_size = Tools::convertStringByteArrayToUInt(new_schd.substr(pos_c - 1, 1));
 
     // WTF! Sometimes old text can be null terminated
     while (old_size != old_text.size() && old_size != old_text.size() + 1)
@@ -220,21 +220,21 @@ void ScriptParser::convertTextInCompiled(const bool is_getpccell)
             old_text + " false positive in " + script_name + "\r\n", true);
         pos_c += old_text.size();
 
-        pos_c = new_compiled.find(old_text, pos_c);
+        pos_c = new_schd.find(old_text, pos_c);
         if (pos_c == std::string::npos)
         {
             Tools::addLog("Error: not found in SCDT\r\n", true);
             return;
         }
-        old_size = Tools::convertStringByteArrayToUInt(new_compiled.substr(pos_c - 1, 1));
+        old_size = Tools::convertStringByteArrayToUInt(new_schd.substr(pos_c - 1, 1));
     }
 
     pos_c -= 1;
-    new_compiled.erase(pos_c, 1);
-    new_compiled.insert(pos_c, Tools::convertUIntToStringByteArray(new_text.size()).substr(0, 1));
+    new_schd.erase(pos_c, 1);
+    new_schd.insert(pos_c, Tools::convertUIntToStringByteArray(new_text.size()).substr(0, 1));
     pos_c += 1;
-    new_compiled.erase(pos_c, old_text.size());
-    new_compiled.insert(pos_c, new_text);
+    new_schd.erase(pos_c, old_text.size());
+    new_schd.insert(pos_c, new_text);
 
     if (is_getpccell)
     {
@@ -243,23 +243,23 @@ void ScriptParser::convertTextInCompiled(const bool is_getpccell)
         size_t end_of_expr;
         size_t expr_size;
 
-        if (new_compiled.substr(pos_c + new_text.size(), 1) != " ")
+        if (new_schd.substr(pos_c + new_text.size(), 1) != " ")
         {
             // If expression ends exactly when inner text ends
             end_of_expr = pos_c + new_text.size();
-            pos_c = new_compiled.rfind('X', pos_c) - 2;
+            pos_c = new_schd.rfind('X', pos_c) - 2;
             expr_size = end_of_expr - pos_c;
         }
         else
         {
             // If expression ends with equals or inequal signs
             end_of_expr = pos_c + new_text.size() + 5; // + 5 because of equation " == 1" size
-            pos_c = new_compiled.rfind('X', pos_c) - 2;
+            pos_c = new_schd.rfind('X', pos_c) - 2;
             expr_size = end_of_expr - pos_c - 1;
         }
 
-        new_compiled.erase(pos_c, 1);
-        new_compiled.insert(pos_c, Tools::convertUIntToStringByteArray(expr_size).substr(0, 1));
+        new_schd.erase(pos_c, 1);
+        new_schd.insert(pos_c, Tools::convertUIntToStringByteArray(expr_size).substr(0, 1));
         pos_c += expr_size;
     }
     else
@@ -324,7 +324,7 @@ void ScriptParser::convertMessageInCompiled()
     if (type != Tools::RecType::SCTX)
         return;
 
-    if (new_compiled.empty())
+    if (new_schd.empty())
     {
         Tools::addLog("Error: SCDT is empty\r\n", true);
         return;
@@ -341,7 +341,7 @@ void ScriptParser::convertMessageInCompiled()
 
     for (size_t i = 0; i < splitted_line.size(); i++)
     {
-        pos_c = new_compiled.find(splitted_line[i], pos_c);
+        pos_c = new_schd.find(splitted_line[i], pos_c);
         if (pos_c == std::string::npos)
         {
             Tools::addLog("Error: message not found in SCDT\r\n", true);
@@ -364,25 +364,25 @@ void ScriptParser::convertMessageInCompiled()
         if (i == 0)
         {
             pos_c -= 2;
-            new_compiled.erase(pos_c, 2);
-            new_compiled.insert(
+            new_schd.erase(pos_c, 2);
+            new_schd.insert(
                 pos_c,
                 Tools::convertUIntToStringByteArray(splitted_new_line[i].size()).substr(0, 2));
             pos_c += 2;
-            new_compiled.erase(pos_c, splitted_line[i].size());
-            new_compiled.insert(pos_c, splitted_new_line[i]);
+            new_schd.erase(pos_c, splitted_line[i].size());
+            new_schd.insert(pos_c, splitted_new_line[i]);
             pos_c += splitted_new_line[i].size();
         }
         else
         {
             pos_c -= 1;
-            new_compiled.erase(pos_c, 1);
-            new_compiled.insert(
+            new_schd.erase(pos_c, 1);
+            new_schd.insert(
                 pos_c,
                 Tools::convertUIntToStringByteArray(splitted_new_line[i].size() + 1).substr(0, 1));
             pos_c += 1;
-            new_compiled.erase(pos_c, splitted_line[i].size());
-            new_compiled.insert(pos_c, splitted_new_line[i]);
+            new_schd.erase(pos_c, splitted_line[i].size());
+            new_schd.insert(pos_c, splitted_new_line[i]);
             pos_c += splitted_new_line[i].size();
         }
     }
@@ -419,10 +419,10 @@ std::vector<std::string> ScriptParser::splitLine(
 void ScriptParser::trimLastNewLineChars()
 {
     // Check if last 2 chars are newline and strip them if necessary
-    size_t last_nl_pos = val_text.rfind("\r\n");
-    if (last_nl_pos != val_text.size() - 2 ||
+    size_t last_nl_pos = old_script.rfind("\r\n");
+    if (last_nl_pos != old_script.size() - 2 ||
         last_nl_pos == std::string::npos)
     {
-        new_friendly.resize(new_friendly.size() - 2);
+        new_script.resize(new_script.size() - 2);
     }
 }

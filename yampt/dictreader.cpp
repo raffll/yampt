@@ -56,7 +56,6 @@ void DictReader::parseDict(
 {
     try
     {
-        std::string val_text;
         size_t pos_beg;
         size_t pos_end;
         std::string re_str = Tools::sep[1] + "(.*?)" + Tools::sep[2] + "\\s*" + Tools::sep[3] + "(.*?)" + Tools::sep[4];
@@ -73,7 +72,10 @@ void DictReader::parseDict(
             pos_end = content.find(Tools::sep[6], pos_beg);
             val_text = content.substr(pos_beg, pos_end - pos_beg);
 
-            validateRecord(found[1].str(), found[2].str(), val_text);
+            type_name = found[1].str();
+            key_text = found[2].str();
+
+            validateRecord();
             counter_all++;
             next++;
         }
@@ -88,109 +90,66 @@ void DictReader::parseDict(
 }
 
 //----------------------------------------------------------
-void DictReader::validateRecord(
-    const std::string & id,
-    const std::string & key_text,
-    const std::string & val_text)
+void DictReader::validateRecord()
 {
-    if (id == "CELL")
+    if (type_name == "CELL")
     {
-        if (val_text.size() > 63)
-        {
-            Tools::addLog(id + ": invalid, more than 63 bytes in " + key_text + "\r\n");
-            counter_invalid++;
-        }
-        else
-        {
-            insertRecord(Tools::RecType::CELL, key_text, val_text);
-        }
+        insertCELL();
     }
-    else if (id == "GMST")
+    else if (type_name == "GMST")
     {
-        insertRecord(Tools::RecType::GMST, key_text, val_text);
+        insertRecord(Tools::RecType::GMST);
     }
-    else if (id == "DESC")
+    else if (type_name == "DESC")
     {
-        insertRecord(Tools::RecType::DESC, key_text, val_text);
+        insertRecord(Tools::RecType::DESC);
     }
-    else if (id == "TEXT")
+    else if (type_name == "TEXT")
     {
-        insertRecord(Tools::RecType::TEXT, key_text, val_text);
+        insertRecord(Tools::RecType::TEXT);
     }
-    else if (id == "INDX")
+    else if (type_name == "INDX")
     {
-        insertRecord(Tools::RecType::INDX, key_text, val_text);
+        insertRecord(Tools::RecType::INDX);
     }
-    else if (id == "DIAL")
+    else if (type_name == "DIAL")
     {
-        insertRecord(Tools::RecType::DIAL, key_text, val_text);
+        insertRecord(Tools::RecType::DIAL);
     }
-    else if (id == "BNAM")
+    else if (type_name == "BNAM")
     {
-        insertRecord(Tools::RecType::BNAM, key_text, val_text);
+        insertRecord(Tools::RecType::BNAM);
     }
-    else if (id == "SCTX")
+    else if (type_name == "SCTX")
     {
-        insertRecord(Tools::RecType::SCTX, key_text, val_text);
+        insertRecord(Tools::RecType::SCTX);
     }
-    else if (id == "RNAM")
+    else if (type_name == "RNAM")
     {
-        if (val_text.size() > 32)
-        {
-            Tools::addLog(id + ": invalid, more than 32 bytes in " + key_text + "\r\n");
-            counter_invalid++;
-        }
-        else
-        {
-            insertRecord(Tools::RecType::RNAM, key_text, val_text);
-        }
+        insertRNAM();
     }
-    else if (id == "FNAM")
+    else if (type_name == "FNAM")
     {
-        if (val_text.size() > 31)
-        {
-            Tools::addLog(id + ": invalid, more than 31 bytes in " + key_text + "\r\n");
-            counter_invalid++;
-        }
-        else
-        {
-            insertRecord(Tools::RecType::FNAM, key_text, val_text);
-        }
+        insertFNAM();
     }
-    else if (id == "INFO")
+    else if (type_name == "INFO")
     {
-        if (val_text.size() > 1024)
-        {
-            Tools::addLog(id + ": invalid, more than 1024 bytes in " + key_text + "\r\n");
-            counter_invalid++;
-        }
-        else if (val_text.size() > 512)
-        {
-            Tools::addLog(id + ": ok, but more than 512 bytes in " + key_text + "\r\n", true);
-            insertRecord(Tools::RecType::INFO, key_text, val_text);
-        }
-        else
-        {
-            insertRecord(Tools::RecType::INFO, key_text, val_text);
-        }
+        insertINFO();
     }
-    else if (id == "Glossary")
+    else if (type_name == "Glossary")
     {
-        insertRecord(Tools::RecType::Glossary, key_text, val_text);
+        insertRecord(Tools::RecType::Glossary);
     }
     else
     {
-        Tools::addLog(id + ": invalid id in" + key_text + "\r\n");
+        Tools::addLog(type_name + ": invalid id in" + key_text + "\r\n");
         counter_invalid++;
     }
-
 }
 
 //----------------------------------------------------------
 void DictReader::insertRecord(
-    const Tools::RecType type,
-    const std::string & key_text,
-    const std::string & val_text)
+    const Tools::RecType type)
 {
     if (dict[type].insert({ key_text, val_text }).second)
     {
@@ -218,4 +177,61 @@ void DictReader::printSummaryLog()
         << "---------------------------------------" << std::endl;
 
     Tools::addLog(ss.str());
+}
+
+void DictReader::insertCELL()
+{
+    if (val_text.size() > 63)
+    {
+        Tools::addLog(type_name + ": invalid, more than 63 bytes in " + key_text + "\r\n");
+        counter_invalid++;
+    }
+    else
+    {
+        insertRecord(Tools::RecType::CELL);
+    }
+}
+
+void DictReader::insertRNAM()
+{
+    if (val_text.size() > 32)
+    {
+        Tools::addLog(type_name + ": invalid, more than 32 bytes in " + key_text + "\r\n");
+        counter_invalid++;
+    }
+    else
+    {
+        insertRecord(Tools::RecType::RNAM);
+    }
+}
+
+void DictReader::insertFNAM()
+{
+    if (val_text.size() > 31)
+    {
+        Tools::addLog(type_name + ": invalid, more than 31 bytes in " + key_text + "\r\n");
+        counter_invalid++;
+    }
+    else
+    {
+        insertRecord(Tools::RecType::FNAM);
+    }
+}
+
+void DictReader::insertINFO()
+{
+    if (val_text.size() > 1024)
+    {
+        Tools::addLog(type_name + ": invalid, more than 1024 bytes in " + key_text + "\r\n");
+        counter_invalid++;
+    }
+    else if (val_text.size() > 512)
+    {
+        Tools::addLog(type_name + ": valid, but more than 512 bytes in " + key_text + "\r\n", true);
+        insertRecord(Tools::RecType::INFO);
+    }
+    else
+    {
+        insertRecord(Tools::RecType::INFO);
+    }
 }

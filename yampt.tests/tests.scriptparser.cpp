@@ -35,7 +35,7 @@ TEST_CASE("script parser, dial keywords", "[u]")
             line.first,
             "");
 
-        REQUIRE(parser.getNewFriendly() == line.second);
+        REQUIRE(parser.getNewScript() == line.second);
     }
 }
 
@@ -64,7 +64,7 @@ TEST_CASE("script parser, cell keywords", "[u]")
             line.first,
             "");
 
-        REQUIRE(parser.getNewFriendly() == line.second);
+        REQUIRE(parser.getNewScript() == line.second);
     }
 }
 
@@ -91,6 +91,6 @@ TEST_CASE("script parser, messages", "[u]")
             line.first,
             "");
 
-        REQUIRE(parser.getNewFriendly() == line.second);
+        REQUIRE(parser.getNewScript() == line.second);
     }
 }

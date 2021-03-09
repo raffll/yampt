@@ -168,11 +168,11 @@ Commands *--make-not* and *--make-changed* is all you need to fully translate pl
 
 ### Dump plugin content
 
-    yampt.exe --binary-dump -f "C:\path\to\Plugin.esp"
+    yampt.exe --dump -f "C:\path\to\Plugin.esp"
 
 ### Create list of scripts
 
-    yampt.exe --script-list -f "C:\path\to\Plugin.esp"
+    yampt.exe --scripts -f "C:\path\to\Plugin.esp"
 
 ### If you want to add suffix to converted files
 
