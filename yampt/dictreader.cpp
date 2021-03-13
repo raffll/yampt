@@ -179,6 +179,7 @@ void DictReader::printSummaryLog()
     Tools::addLog(ss.str());
 }
 
+//----------------------------------------------------------
 void DictReader::insertCELL()
 {
     if (val_text.size() > 63)
@@ -192,6 +193,7 @@ void DictReader::insertCELL()
     }
 }
 
+//----------------------------------------------------------
 void DictReader::insertRNAM()
 {
     if (val_text.size() > 32)
@@ -205,6 +207,7 @@ void DictReader::insertRNAM()
     }
 }
 
+//----------------------------------------------------------
 void DictReader::insertFNAM()
 {
     if (val_text.size() > 31)
@@ -218,6 +221,7 @@ void DictReader::insertFNAM()
     }
 }
 
+//----------------------------------------------------------
 void DictReader::insertINFO()
 {
     if (val_text.size() > 1024)

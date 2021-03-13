@@ -29,7 +29,7 @@ public:
         PGRD,
         ANAM,
         SCVR,
-        DNAM, 
+        DNAM,
         CNDT,
         GMDT
     };

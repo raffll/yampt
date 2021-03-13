@@ -11,7 +11,7 @@ public:
     void convertScript();
 
     std::string getNewScript() { return new_script; }
-    std::string getNewSCHD() { return new_schd; }
+    std::string getNewSCDT() { return new_SCDT; }
 
     ScriptParser(
         const Tools::RecType type,
@@ -19,7 +19,7 @@ public:
         const std::string & script_name,
         const std::string & file_name,
         const std::string & old_script,
-        const std::string & old_schd = "");
+        const std::string & old_SCDT = "");
 
 private:
     void convertLine(
@@ -46,7 +46,7 @@ private:
     const std::string old_script;
 
     std::string new_script;
-    std::string new_schd;
+    std::string new_SCDT;
 
     bool is_done = false;
     std::string line;
