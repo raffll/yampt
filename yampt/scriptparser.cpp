@@ -350,7 +350,6 @@ void ScriptParser::convertMessageInCompiled()
 
         if (splitted_line[i] == splitted_new_line[i])
         {
-            Tools::addLog("Warning: message is the same as in SCDT\r\n", true);
             pos_c += splitted_line[i].size();
             continue;
         }

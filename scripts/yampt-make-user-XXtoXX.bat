@@ -1,13 +1,14 @@
 @echo off
 
+set DICT_N=%BASE%\XXtoXX.xml
+set DICT_F=%BASE%\XXtoXX_for_find_changed_only.xml
+
 REM ############### DON'T EDIT ###############
 
 set INPUT=input
 set OUTPUT=output
 set BASE=dict_base
 set NEW=dict_new
-set DICT_N=%BASE%\NATIVE.xml
-set DICT_F=%BASE%\NATIVE_for_find_changed_only.xml
 set GLOS=%BASE%\Glossary.xml
 
 del /f "%NEW%\*.xml" >nul 2>&1

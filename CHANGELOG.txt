@@ -1,7 +1,3 @@
-TODO
-- [bug] fix comments treated as message
-- [bug] fix xpositioncell from mwse recognized as positioncell
-
 0.21
 - [feature] add gender annotation to info records when creating NOTFOUND and CHANGED dictionaries
 - [feature] add glossary dictionary

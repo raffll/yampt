@@ -493,7 +493,7 @@ void EsmConverter::convertINDX()
             if (esm.getKey().exist &&
                 esm.getValue().exist)
             {
-                key_text = esm.getRecordId() + Tools::sep[0] + esm.getKey().text;
+                key_text = esm.getRecordId() + Tools::sep[0] + Tools::getINDX(esm.getKey().content);
                 val_text = esm.getValue().text;
                 setNewText();
 
