@@ -19,9 +19,9 @@ move "%NAME%.xml" "%BASE%"
 yampt.exe --make-all -f "%FOREIGN%\Morrowind.esm" -d "%BASE%\%NAME%.xml"
 yampt.exe --make-all -f "%FOREIGN%\Tribunal.esm" -d "%BASE%\%NAME%.xml"
 yampt.exe --make-all -f "%FOREIGN%\Bloodmoon.esm" -d "%BASE%\%NAME%.xml"
-yampt.exe --merge -d "Morrowind.ALL.xml" "Tribunal.ALL.xml" "Bloodmoon.ALL.xml" -o "%NAME%_for_find_changed_only.xml"
+yampt.exe --merge -d "Morrowind.ALL.xml" "Tribunal.ALL.xml" "Bloodmoon.ALL.xml" -o "%NAME%_H.xml"
 
 del "Morrowind.ALL.xml" "Tribunal.ALL.xml" "Bloodmoon.ALL.xml" >nul 2>&1
-move "%NAME%_for_find_changed_only.xml" "%BASE%"
+move "%NAME%_H.xml" "%BASE%"
 
 pause

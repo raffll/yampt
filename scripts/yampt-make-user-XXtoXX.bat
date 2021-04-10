@@ -1,7 +1,7 @@
 @echo off
 
 set DICT_N=%BASE%\XXtoXX.xml
-set DICT_F=%BASE%\XXtoXX_for_find_changed_only.xml
+set DICT_F=%BASE%\XXtoXX_H.xml
 
 REM ############### DON'T EDIT ###############
 

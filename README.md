@@ -59,12 +59,12 @@ set NAME=ENtoPL
 3. Edit **yampt-make-user-XXtoXX.cmd** and **yampt-convert-XXtoXX.bat** to match your new base dictionary:
 ```
 set DICT_N=%BASE%\XXtoXX.xml
-set DICT_F=%BASE%\XXtoXX_for_find_changed_only.xml
+set DICT_F=%BASE%\XXtoXX_H.xml
 ```
 to
 ```
 set DICT_N=%BASE%\ENtoPL.xml
-set DICT_F=%BASE%\ENtoPL_for_find_changed_only.xml
+set DICT_F=%BASE%\ENtoPL_H.xml
 ```
 4. Open dictionary and find any **MISSING** keywords. **You have to manually correct them.**
 
@@ -180,9 +180,9 @@ yampt.exe --make-all -f "C:\path\to\EN\Tribunal.esm" -d "ENtoPL.xml"
 yampt.exe --make-all -f "C:\path\to\EN\Bloodmoon.esm" -d "ENtoPL.xml"
 ```
 ```
-yampt.exe --merge -d "Morrowind.ALL.xml" "Tribunal.ALL.xml" "Bloodmoon.ALL.xml" -o "ENtoPL_for_find_changed_only.xml"
+yampt.exe --merge -d "Morrowind.ALL.xml" "Tribunal.ALL.xml" "Bloodmoon.ALL.xml" -o "ENtoPL_H.xml"
 ```
 and finally:
 ```
-yampt.exe --make-changed -f "C:\path\to\Plugin.esp" -d "ENtoPL_for_find_changed_only.xml"
+yampt.exe --make-changed -f "C:\path\to\Plugin.esp" -d "ENtoPL_H.xml"
 ```
