@@ -11,8 +11,6 @@ set SUFFIX= (plpatch)
 
 del /f "%DATA%\*%SUFFIX%*" >nul 2>&1
 
-ren "%DATA%\Morrowind.esm.bak" Morrowind.esm
-
 setlocal enabledelayedexpansion enableextensions
 
 set DICT_U=
@@ -23,9 +21,7 @@ set ESM=
 for %%f in ("%DATA%\*.esp", "%DATA%\*.esm") do set ESM=!ESM! "%%f"
 set ESM=%ESM:~1%
 
-yampt.exe --convert --add-hyperlinks --windows-1250 -f %ESM% -d "%DICT_N%" %DICT_U% -s "%SUFFIX%"
-
-ren "%DATA%\Morrowind.esm" Morrowind.esm.bak
+yampt.exe --convert --add-hyperlinks -f %ESM% -d "%DICT_N%" %DICT_U% -s "%SUFFIX%"
 
 move /y "*.esm" "%DATA%" >nul 2>&1
 move /y "*.esp" "%DATA%" >nul 2>&1
