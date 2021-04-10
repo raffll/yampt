@@ -2,8 +2,9 @@
 
 //----------------------------------------------------------
 DictReader::DictReader(const std::string & path)
-    : is_loaded(false)
 {
+    dict = Tools::initializeDict();
+
     std::string content = Tools::readFile(path);
     if (!content.empty())
     {
@@ -55,7 +56,6 @@ void DictReader::parseDict(
 {
     try
     {
-        std::string friendly_text;
         size_t pos_beg;
         size_t pos_end;
         std::string re_str = Tools::sep[1] + "(.*?)" + Tools::sep[2] + "\\s*" + Tools::sep[3] + "(.*?)" + Tools::sep[4];
@@ -70,9 +70,12 @@ void DictReader::parseDict(
             // no multiline in regex :(
             pos_beg = content.find(Tools::sep[5], found.position(2)) + Tools::sep[5].size();
             pos_end = content.find(Tools::sep[6], pos_beg);
-            friendly_text = content.substr(pos_beg, pos_end - pos_beg);
+            val_text = content.substr(pos_beg, pos_end - pos_beg);
 
-            validateRecord(found[1].str(), found[2].str(), friendly_text);
+            type_name = found[1].str();
+            key_text = found[2].str();
+
+            validateRecord();
             counter_all++;
             next++;
         }
@@ -87,113 +90,74 @@ void DictReader::parseDict(
 }
 
 //----------------------------------------------------------
-void DictReader::validateRecord(
-    const std::string & id,
-    const std::string & unique_text,
-    const std::string & friendly_text)
+void DictReader::validateRecord()
 {
-    if (id == "CELL")
+    if (type_name == "CELL")
     {
-        if (friendly_text.size() > 63)
-        {
-            Tools::addLog(id + ": invalid, more than 63 bytes in " + unique_text + "\r\n");
-            counter_invalid++;
-        }
-        else
-        {
-            insertRecord(Tools::RecType::CELL, unique_text, friendly_text);
-        }
+        insertCELL();
     }
-    else if (id == "GMST")
+    else if (type_name == "GMST")
     {
-        insertRecord(Tools::RecType::GMST, unique_text, friendly_text);
+        insertRecord(Tools::RecType::GMST);
     }
-    else if (id == "DESC")
+    else if (type_name == "DESC")
     {
-        insertRecord(Tools::RecType::DESC, unique_text, friendly_text);
+        insertRecord(Tools::RecType::DESC);
     }
-    else if (id == "TEXT")
+    else if (type_name == "TEXT")
     {
-        insertRecord(Tools::RecType::TEXT, unique_text, friendly_text);
+        insertRecord(Tools::RecType::TEXT);
     }
-    else if (id == "INDX")
+    else if (type_name == "INDX")
     {
-        insertRecord(Tools::RecType::INDX, unique_text, friendly_text);
+        insertRecord(Tools::RecType::INDX);
     }
-    else if (id == "DIAL")
+    else if (type_name == "DIAL")
     {
-        insertRecord(Tools::RecType::DIAL, unique_text, friendly_text);
+        insertRecord(Tools::RecType::DIAL);
     }
-    else if (id == "BNAM")
+    else if (type_name == "BNAM")
     {
-        insertRecord(Tools::RecType::BNAM, unique_text, friendly_text);
+        insertRecord(Tools::RecType::BNAM);
     }
-    else if (id == "SCTX")
+    else if (type_name == "SCTX")
     {
-        insertRecord(Tools::RecType::SCTX, unique_text, friendly_text);
+        insertRecord(Tools::RecType::SCTX);
     }
-    else if (id == "RNAM")
+    else if (type_name == "RNAM")
     {
-        if (friendly_text.size() > 32)
-        {
-            Tools::addLog(id + ": invalid, more than 32 bytes in " + unique_text + "\r\n");
-            counter_invalid++;
-        }
-        else
-        {
-            insertRecord(Tools::RecType::RNAM, unique_text, friendly_text);
-        }
+        insertRNAM();
     }
-    else if (id == "FNAM")
+    else if (type_name == "FNAM")
     {
-        if (friendly_text.size() > 31)
-        {
-            Tools::addLog(id + ": invalid, more than 31 bytes in " + unique_text + "\r\n");
-            counter_invalid++;
-        }
-        else
-        {
-            insertRecord(Tools::RecType::FNAM, unique_text, friendly_text);
-        }
+        insertFNAM();
     }
-    else if (id == "INFO")
+    else if (type_name == "INFO")
     {
-        if (friendly_text.size() > 1024)
-        {
-            Tools::addLog(id + ": invalid, more than 1024 bytes in " + unique_text + "\r\n");
-            counter_invalid++;
-        }
-        else if (friendly_text.size() > 512)
-        {
-            Tools::addLog(id + ": ok, but more than 512 bytes in " + unique_text + "\r\n", true);
-            insertRecord(Tools::RecType::INFO, unique_text, friendly_text);
-        }
-        else
-        {
-            insertRecord(Tools::RecType::INFO, unique_text, friendly_text);
-        }
+        insertINFO();
+    }
+    else if (type_name == "Glossary")
+    {
+        insertRecord(Tools::RecType::Glossary);
     }
     else
     {
-        Tools::addLog(id + ": invalid id in" + unique_text + "\r\n");
+        Tools::addLog(type_name + ": invalid id in" + key_text + "\r\n");
         counter_invalid++;
     }
-
 }
 
 //----------------------------------------------------------
 void DictReader::insertRecord(
-    const Tools::RecType type,
-    const std::string & unique_text,
-    const std::string & friendly_text)
+    const Tools::RecType type)
 {
-    if (dict[type].insert({ unique_text, friendly_text }).second)
+    if (dict[type].insert({ key_text, val_text }).second)
     {
         counter_loaded++;
     }
     else
     {
-        Tools::addLog(Tools::type_name[type] + ": doubled " + unique_text + "\r\n");
+        Tools::addLog(Tools::getTypeName(type) + ": doubled " + key_text + "\r\n");
         counter_doubled++;
     }
 }
@@ -213,4 +177,65 @@ void DictReader::printSummaryLog()
         << "---------------------------------------" << std::endl;
 
     Tools::addLog(ss.str());
+}
+
+//----------------------------------------------------------
+void DictReader::insertCELL()
+{
+    if (val_text.size() > 63)
+    {
+        Tools::addLog(type_name + ": invalid, more than 63 bytes in " + key_text + "\r\n");
+        counter_invalid++;
+    }
+    else
+    {
+        insertRecord(Tools::RecType::CELL);
+    }
+}
+
+//----------------------------------------------------------
+void DictReader::insertRNAM()
+{
+    if (val_text.size() > 32)
+    {
+        Tools::addLog(type_name + ": invalid, more than 32 bytes in " + key_text + "\r\n");
+        counter_invalid++;
+    }
+    else
+    {
+        insertRecord(Tools::RecType::RNAM);
+    }
+}
+
+//----------------------------------------------------------
+void DictReader::insertFNAM()
+{
+    if (val_text.size() > 31)
+    {
+        Tools::addLog(type_name + ": invalid, more than 31 bytes in " + key_text + "\r\n");
+        counter_invalid++;
+    }
+    else
+    {
+        insertRecord(Tools::RecType::FNAM);
+    }
+}
+
+//----------------------------------------------------------
+void DictReader::insertINFO()
+{
+    if (val_text.size() > 1024)
+    {
+        Tools::addLog(type_name + ": invalid, more than 1024 bytes in " + key_text + "\r\n");
+        counter_invalid++;
+    }
+    else if (val_text.size() > 512)
+    {
+        Tools::addLog(type_name + ": valid, but more than 512 bytes in " + key_text + "\r\n", true);
+        insertRecord(Tools::RecType::INFO);
+    }
+    else
+    {
+        insertRecord(Tools::RecType::INFO);
+    }
 }

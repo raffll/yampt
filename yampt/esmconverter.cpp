@@ -1,5 +1,5 @@
 #include "esmconverter.hpp"
-#include "scriptparser_ex.hpp"
+#include "scriptparser.hpp"
 #include "esmtools.hpp"
 
 //----------------------------------------------------------
@@ -32,9 +32,10 @@ EsmConverter::EsmConverter(
 //----------------------------------------------------------
 void EsmConverter::convertEsm(const bool safe)
 {
-    Tools::addLog("------------------------------------------------\r\n"
-                  "      Converted / Identical / Unchanged /    All\r\n"
-                  "------------------------------------------------\r\n");
+    Tools::addLog(
+        "------------------------------------------------\r\n"
+        "      Converted / Identical / Unchanged /    All\r\n"
+        "------------------------------------------------\r\n");
 
     convertMAST();
     convertCELL();
@@ -68,17 +69,638 @@ void EsmConverter::convertEsm(const bool safe)
 }
 
 //----------------------------------------------------------
-void EsmConverter::printLogLine(const Tools::RecType type)
+void EsmConverter::convertMAST()
 {
-    std::ostringstream ss;
-    ss
-        << Tools::type_name[type] << " "
-        << std::setw(10) << std::to_string(counter_converted) << " / "
-        << std::setw(9) << std::to_string(counter_identical) << " / "
-        << std::setw(9) << std::to_string(counter_unchanged) << " / "
-        << std::setw(6) << std::to_string(counter_all) << std::endl;
+    std::string master_prefix;
+    std::string master_suffix;
+    resetCounters();
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
+    {
+        esm.selectRecord(i);
+        if (esm.getRecordId() != "TES3")
+            continue;
 
-    Tools::addLog(ss.str());
+        esm.setValue("MAST");
+        while (esm.getValue().exist)
+        {
+            master_prefix = esm.getValue().text.substr(0, esm.getValue().text.find_last_of("."));
+            master_suffix = esm.getValue().text.substr(esm.getValue().text.rfind("."));
+            new_text = master_prefix + file_suffix + master_suffix + '\0';
+            convertRecordContent();
+            esm.setNextValue("MAST");
+        }
+    }
+}
+
+//----------------------------------------------------------
+void EsmConverter::convertCELL()
+{
+    resetCounters();
+    type = Tools::RecType::CELL;
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
+    {
+        esm.selectRecord(i);
+        if (esm.getRecordId() != "CELL")
+            continue;
+
+        esm.setValue("NAME");
+        if (esm.getValue().exist &&
+            esm.getValue().text != "")
+        {
+            key_text = esm.getValue().text;
+            val_text = esm.getValue().text;
+            setNewText();
+
+            if (!ready)
+                continue;
+
+            /* null terminated, can't be empty */
+            new_text += '\0';
+            convertRecordContent();
+        }
+    }
+    printLogLine(Tools::RecType::CELL);
+}
+
+//----------------------------------------------------------
+void EsmConverter::convertPGRD()
+{
+    resetCounters();
+    type = Tools::RecType::CELL;
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
+    {
+        esm.selectRecord(i);
+        if (esm.getRecordId() != "PGRD")
+            continue;
+
+        esm.setValue("NAME");
+        if (esm.getValue().exist &&
+            esm.getValue().text != "")
+        {
+            key_text = esm.getValue().text;
+            val_text = esm.getValue().text;
+            setNewText();
+
+            if (!ready)
+                continue;
+
+            new_text += '\0';
+            convertRecordContent();
+        }
+    }
+    printLogLine(Tools::RecType::PGRD);
+}
+
+//----------------------------------------------------------
+void EsmConverter::convertANAM()
+{
+    resetCounters();
+    type = Tools::RecType::CELL;
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
+    {
+        esm.selectRecord(i);
+        if (esm.getRecordId() != "INFO")
+            continue;
+
+        esm.setValue("ANAM");
+        if (esm.getValue().exist &&
+            esm.getValue().text != "")
+        {
+            key_text = esm.getValue().text;
+            val_text = esm.getValue().text;
+            setNewText();
+
+            if (!ready)
+                continue;
+
+            new_text += '\0';
+            convertRecordContent();
+        }
+    }
+    printLogLine(Tools::RecType::ANAM);
+}
+
+//----------------------------------------------------------
+void EsmConverter::convertSCVR()
+{
+    resetCounters();
+    type = Tools::RecType::CELL;
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
+    {
+        esm.selectRecord(i);
+        if (esm.getRecordId() != "INFO")
+            continue;
+
+        esm.setValue("SCVR");
+        while (esm.getValue().exist)
+        {
+            /* possible exceptions */
+            if (esm.getValue().text.substr(1, 1) == "B")
+            {
+                key_text = esm.getValue().text.substr(5);
+                val_text = esm.getValue().text.substr(5);
+                setNewText();
+
+                if (ready)
+                {
+                    /* not null terminated */
+                    new_text = esm.getValue().text.substr(0, 5) + new_text;
+                    convertRecordContent();
+                }
+            }
+            esm.setNextValue("SCVR");
+        }
+    }
+    printLogLine(Tools::RecType::SCVR);
+}
+
+//----------------------------------------------------------
+void EsmConverter::convertDNAM()
+{
+    resetCounters();
+    type = Tools::RecType::CELL;
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
+    {
+        esm.selectRecord(i);
+        if (esm.getRecordId() == "CELL" ||
+            esm.getRecordId() == "NPC_")
+        {
+            esm.setValue("DNAM");
+            while (esm.getValue().exist)
+            {
+                key_text = esm.getValue().text;
+                val_text = esm.getValue().text;
+                setNewText();
+
+                if (ready)
+                {
+                    new_text += '\0';
+                    convertRecordContent();
+                }
+
+                esm.setNextValue("DNAM");
+            }
+        }
+    }
+    printLogLine(Tools::RecType::DNAM);
+}
+
+//----------------------------------------------------------
+void EsmConverter::convertCNDT()
+{
+    resetCounters();
+    type = Tools::RecType::CELL;
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
+    {
+        esm.selectRecord(i);
+        if (esm.getRecordId() != "NPC_")
+            continue;
+
+        esm.setValue("CNDT");
+        while (esm.getValue().exist)
+        {
+            key_text = esm.getValue().text;
+            val_text = esm.getValue().text;
+            setNewText();
+
+            if (ready)
+            {
+                new_text += '\0';
+                convertRecordContent();
+            }
+
+            esm.setNextValue("CNDT");
+        }
+    }
+    printLogLine(Tools::RecType::CNDT);
+}
+
+//----------------------------------------------------------
+void EsmConverter::convertGMST()
+{
+    resetCounters();
+    type = Tools::RecType::GMST;
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
+    {
+        esm.selectRecord(i);
+        if (esm.getRecordId() != "GMST")
+            continue;
+
+        esm.setKey("NAME");
+        esm.setValue("STRV");
+
+        if (esm.getKey().exist &&
+            esm.getValue().exist &&
+            esm.getKey().text.substr(0, 1) == "s") /* possible exception */
+        {
+            key_text = esm.getKey().text;
+            val_text = esm.getValue().text;
+            setNewText();
+
+            if (!ready)
+                continue;
+
+            /* null terminated only if empty */
+            addNullTerminatorIfEmpty();
+            convertRecordContent();
+        }
+    }
+    printLogLine(Tools::RecType::GMST);
+}
+
+//----------------------------------------------------------
+void EsmConverter::convertFNAM()
+{
+    resetCounters();
+    type = Tools::RecType::FNAM;
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
+    {
+        esm.selectRecord(i);
+        if (esm.getRecordId() == "ACTI" ||
+            esm.getRecordId() == "ALCH" ||
+            esm.getRecordId() == "APPA" ||
+            esm.getRecordId() == "ARMO" ||
+            esm.getRecordId() == "BOOK" ||
+            esm.getRecordId() == "BSGN" ||
+            esm.getRecordId() == "CLAS" ||
+            esm.getRecordId() == "CLOT" ||
+            esm.getRecordId() == "CONT" ||
+            esm.getRecordId() == "CREA" ||
+            esm.getRecordId() == "DOOR" ||
+            esm.getRecordId() == "FACT" ||
+            esm.getRecordId() == "INGR" ||
+            esm.getRecordId() == "LIGH" ||
+            esm.getRecordId() == "LOCK" ||
+            esm.getRecordId() == "MISC" ||
+            esm.getRecordId() == "NPC_" ||
+            esm.getRecordId() == "PROB" ||
+            esm.getRecordId() == "RACE" ||
+            esm.getRecordId() == "REGN" ||
+            esm.getRecordId() == "REPA" ||
+            esm.getRecordId() == "SKIL" ||
+            esm.getRecordId() == "SPEL" ||
+            esm.getRecordId() == "WEAP")
+        {
+            esm.setKey("NAME");
+            esm.setValue("FNAM");
+
+            if (esm.getKey().exist &&
+                esm.getValue().exist &&
+                esm.getKey().text != "player")
+            {
+                key_text = esm.getRecordId() + Tools::sep[0] + esm.getKey().text;
+                val_text = esm.getValue().text;
+                setNewText();
+
+                if (!ready)
+                    continue;
+
+                /* null terminated, don't exist if empty */
+                new_text += '\0';
+                convertRecordContent();
+            }
+        }
+    }
+    printLogLine(Tools::RecType::FNAM);
+}
+
+//----------------------------------------------------------
+void EsmConverter::convertDESC()
+{
+    resetCounters();
+    type = Tools::RecType::DESC;
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
+    {
+        esm.selectRecord(i);
+        if (esm.getRecordId() == "BSGN" ||
+            esm.getRecordId() == "CLAS" ||
+            esm.getRecordId() == "RACE")
+        {
+            esm.setKey("NAME");
+            esm.setValue("DESC");
+
+            if (esm.getKey().exist &&
+                esm.getValue().exist)
+            {
+                key_text = esm.getRecordId() + Tools::sep[0] + esm.getKey().text;
+                val_text = esm.getValue().text;
+                setNewText();
+
+                if (!ready)
+                    continue;
+
+                if (esm.getRecordId() == "BSGN")
+                {
+                    /* null terminated, don't exist if empty */
+                    new_text += '\0';
+                    convertRecordContent();
+                }
+
+                if (esm.getRecordId() == "CLAS" ||
+                    esm.getRecordId() == "RACE")
+                {
+                    /* not null terminated, don't exist if empty */
+                    addNullTerminatorIfEmpty();
+                    convertRecordContent();
+                }
+            }
+        }
+    }
+    printLogLine(Tools::RecType::DESC);
+}
+
+//----------------------------------------------------------
+void EsmConverter::convertTEXT()
+{
+    resetCounters();
+    type = Tools::RecType::TEXT;
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
+    {
+        esm.selectRecord(i);
+        if (esm.getRecordId() != "BOOK")
+            continue;
+
+        esm.setKey("NAME");
+        esm.setValue("TEXT");
+
+        if (esm.getKey().exist &&
+            esm.getValue().exist)
+        {
+            key_text = esm.getKey().text;
+            val_text = esm.getValue().text;
+            setNewText();
+
+            if (!ready)
+                continue;
+
+            /* not null terminated, don't exist if empty */
+            addNullTerminatorIfEmpty();
+            convertRecordContent();
+        }
+    }
+    printLogLine(Tools::RecType::TEXT);
+}
+
+//----------------------------------------------------------
+void EsmConverter::convertRNAM()
+{
+    resetCounters();
+    type = Tools::RecType::RNAM;
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
+    {
+        esm.selectRecord(i);
+        if (esm.getRecordId() != "FACT")
+            continue;
+
+        esm.setKey("NAME");
+        esm.setValue("RNAM");
+
+        if (!esm.getKey().exist)
+            continue;
+
+        while (esm.getValue().exist)
+        {
+            key_text = esm.getKey().text + Tools::sep[0] + std::to_string(esm.getValue().counter);
+            val_text = esm.getValue().text;
+            setNewText();
+
+            if (ready)
+            {
+                /* null terminated up to 32 */
+                new_text.resize(32);
+                convertRecordContent();
+            }
+            esm.setNextValue("RNAM");
+        }
+    }
+    printLogLine(Tools::RecType::RNAM);
+}
+
+//----------------------------------------------------------
+void EsmConverter::convertINDX()
+{
+    resetCounters();
+    type = Tools::RecType::INDX;
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
+    {
+        esm.selectRecord(i);
+        if (esm.getRecordId() == "SKIL" ||
+            esm.getRecordId() == "MGEF")
+        {
+            esm.setKey("INDX");
+            esm.setValue("DESC");
+
+            if (esm.getKey().exist &&
+                esm.getValue().exist)
+            {
+                key_text = esm.getRecordId() + Tools::sep[0] + Tools::getINDX(esm.getKey().content);
+                val_text = esm.getValue().text;
+                setNewText();
+
+                if (!ready)
+                    continue;
+
+                /* not null terminated, don't exist if empty */
+                addNullTerminatorIfEmpty();
+                convertRecordContent();
+            }
+        }
+    }
+    printLogLine(Tools::RecType::INDX);
+}
+
+//----------------------------------------------------------
+void EsmConverter::convertDIAL()
+{
+    resetCounters();
+    type = Tools::RecType::DIAL;
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
+    {
+        esm.selectRecord(i);
+        if (esm.getRecordId() != "DIAL")
+            continue;
+
+        esm.setKey("DATA");
+        esm.setValue("NAME");
+
+        if (Tools::getDialogType(esm.getKey().content) == "T" &&
+            esm.getValue().exist)
+        {
+            key_text = esm.getValue().text;
+            val_text = esm.getValue().text;
+            setNewText();
+
+            if (!ready)
+                continue;
+
+            /* null terminated */
+            new_text += '\0';
+            convertRecordContent();
+        }
+    }
+    printLogLine(Tools::RecType::DIAL);
+}
+
+//----------------------------------------------------------
+void EsmConverter::convertINFO()
+{
+    std::string key_prefix;
+    resetCounters();
+    type = Tools::RecType::INFO;
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
+    {
+        esm.selectRecord(i);
+        if (esm.getRecordId() == "DIAL")
+        {
+            esm.setKey("DATA");
+            esm.setValue("NAME");
+
+            if (esm.getKey().exist &&
+                esm.getValue().exist)
+            {
+                key_prefix = Tools::getDialogType(esm.getKey().content) + Tools::sep[0] + esm.getValue().text;
+            }
+        }
+
+        if (esm.getRecordId() == "INFO")
+        {
+            esm.setKey("INAM");
+            esm.setValue("NAME");
+
+            if (esm.getKey().exist &&
+                esm.getValue().exist)
+            {
+                key_text = key_prefix + Tools::sep[0] + esm.getKey().text;
+                val_text = esm.getValue().text;
+                setNewText(key_prefix);
+
+                if (ready)
+                {
+                    /* not null terminated, don't exist if empty */
+                    addNullTerminatorIfEmpty();
+                    convertRecordContent();
+                }
+            }
+        }
+    }
+    printLogLine(Tools::RecType::INFO);
+}
+
+//----------------------------------------------------------
+void EsmConverter::convertBNAM()
+{
+    resetCounters();
+    type = Tools::RecType::BNAM;
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
+    {
+        esm.selectRecord(i);
+        if (esm.getRecordId() != "INFO")
+            continue;
+
+        esm.setKey("INAM");
+        esm.setValue("BNAM");
+
+        if (esm.getKey().exist &&
+            esm.getValue().exist)
+        {
+            key_text = esm.getKey().text;
+            val_text = esm.getValue().text;
+
+            const auto & script_name = key_text;
+            const auto & file_name = getNameFull();
+            const auto & old_script = val_text;
+
+            counter_all++;
+            ScriptParser parser(
+                type,
+                *merger,
+                script_name,
+                file_name,
+                old_script);
+
+            new_text = parser.getNewScript();
+            checkIfIdentical();
+
+            if (!ready)
+                continue;
+
+            convertRecordContent();
+        }
+    }
+    Tools::addLog("---\r\n", true);
+    printLogLine(Tools::RecType::BNAM);
+}
+
+//----------------------------------------------------------
+void EsmConverter::convertSCPT()
+{
+    std::string old_SCDT;
+    resetCounters();
+    type = Tools::RecType::SCTX;
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
+    {
+        esm.selectRecord(i);
+        if (esm.getRecordId() != "SCPT")
+            continue;
+
+        esm.setValue("SCDT");
+        if (esm.getValue().exist)
+        {
+            old_SCDT = esm.getValue().content;
+        }
+        else
+        {
+            old_SCDT.clear();
+        }
+
+        esm.setKey("SCHD");
+        esm.setValue("SCTX");
+        if (esm.getKey().exist &&
+            esm.getValue().exist)
+        {
+            key_text = esm.getKey().text;
+            val_text = esm.getValue().text;
+
+            const auto & script_name = key_text;
+            const auto & file_name = getNameFull();
+            const auto & old_script = val_text;
+
+            counter_all++;
+            ScriptParser parser(
+                type,
+                *merger,
+                script_name,
+                file_name,
+                old_script,
+                old_SCDT);
+
+            new_text = parser.getNewScript();
+            checkIfIdentical();
+
+            if (!ready)
+                continue;
+
+            convertRecordContent();
+
+            {
+                /* compiled script data */
+                esm.setValue("SCDT");
+                new_text = parser.getNewSCDT();
+                convertRecordContent();
+            }
+
+            {
+                /* compiled script data size in script name */
+                esm.setValue("SCHD");
+                new_text = esm.getValue().content;
+                new_text.erase(44, 4);
+                new_text.insert(44, Tools::convertUIntToStringByteArray(parser.getNewSCDT().size()));
+                convertRecordContent();
+            }
+        }
+    }
+    Tools::addLog("---\r\n", true);
+    printLogLine(Tools::RecType::SCTX);
 }
 
 //----------------------------------------------------------
@@ -92,714 +714,88 @@ void EsmConverter::resetCounters()
 }
 
 //----------------------------------------------------------
-void EsmConverter::convertRecordContent(const std::string & new_friendly)
-{
-    size_t rec_size;
-    std::string rec_content = esm.getRecordContent();
-    rec_content.erase(esm.getFriendlyPos() + 8, esm.getFriendlySize());
-    rec_content.insert(esm.getFriendlyPos() + 8, new_friendly);
-    rec_content.erase(esm.getFriendlyPos() + 4, 4);
-    rec_content.insert(esm.getFriendlyPos() + 4,
-                       Tools::convertUIntToStringByteArray(new_friendly.size()));
-    rec_size = rec_content.size() - 16;
-    rec_content.erase(4, 4);
-    rec_content.insert(4, Tools::convertUIntToStringByteArray(rec_size));
-    esm.replaceRecordContent(rec_content);
-}
-
-//----------------------------------------------------------
-std::string EsmConverter::addNullTerminatorIfEmpty(const std::string & new_friendly)
-{
-    std::string result;
-    if (new_friendly == "")
-    {
-        result = '\0';
-    }
-    else
-    {
-        result = new_friendly;
-    }
-    return result;
-}
-
-//----------------------------------------------------------
-std::string EsmConverter::setNewFriendly(
-    const Tools::RecType type,
-    const std::string & unique_text,
-    const std::string & friendly_text,
-    const std::string & dialog_topic)
+void EsmConverter::setNewText(const std::string & prefix)
 {
     counter_all++;
-    std::string new_friendly;
-    auto search = merger->getDict(type).find(unique_text);
-    if (search != merger->getDict(type).end())
+    new_text.clear();
+    auto search = merger->getDict().at(type).find(key_text);
+    if (search != merger->getDict().at(type).end())
     {
-        new_friendly = search->second;
-        checkIfIdentical(type, friendly_text, new_friendly);
+        new_text = search->second;
+        checkIfIdentical();
     }
-    else if (type == Tools::RecType::INFO &&
-             add_hyperlinks &&
-             dialog_topic.substr(0, 1) != "V")
+    else if (
+        type == Tools::RecType::INFO &&
+        add_hyperlinks &&
+        prefix.substr(0, 1) != "V")
     {
-        new_friendly = Tools::addHyperlinks(
-            merger->getDict(Tools::RecType::DIAL),
-            friendly_text,
-            false);
+        new_text = val_text + Tools::addHyperlinks(merger->getDict().at(Tools::RecType::DIAL),
+                                                   val_text,
+                                                   false);
 
-        checkIfIdentical(type, friendly_text, new_friendly);
+        checkIfIdentical();
 
-        if (new_friendly.size() > 1024)
+        if (new_text.size() > 1024)
         {
-            new_friendly.resize(1024);
+            new_text.resize(1024);
         }
     }
     else
     {
-        to_convert = false;
+        ready = false;
         counter_unchanged++;
     }
-    return new_friendly;
 }
 
 //----------------------------------------------------------
-std::pair<std::string, std::string> EsmConverter::setNewScript(
-    const Tools::RecType type,
-    const std::string & script_name,
-    const std::string & friendly_text,
-    const std::string & compiled_data)
+void EsmConverter::checkIfIdentical()
 {
-    counter_all++;
-    std::string new_friendly;
-    std::string new_compiled;
-    ScriptParser parser(
-        type,
-        *merger,
-        script_name,
-        getNameFull(),
-        friendly_text,
-        compiled_data);
-    new_friendly = parser.getNewFriendly();
-    new_compiled = parser.getNewCompiled();
-    checkIfIdentical(type, friendly_text, new_friendly);
-    return make_pair(new_friendly, new_compiled);
-}
-
-//----------------------------------------------------------
-void EsmConverter::checkIfIdentical(
-    const Tools::RecType type,
-    const std::string & friendly_text,
-    const std::string & new_friendly)
-{
-    if (new_friendly != friendly_text)
+    if (new_text != val_text)
     {
-        to_convert = true;
-
-        //if (type == Tools::RecType::GMST ||
-        //    type == Tools::RecType::FNAM ||
-        //    type == Tools::RecType::DESC ||
-        //    //type == Tools::RecType::TEXT ||
-        //    type == Tools::RecType::RNAM ||
-        //    type == Tools::RecType::INDX ||
-        //    type == Tools::RecType::INFO)
-        //{
-        //    Tools::addLog("---\r\n", true);
-        //    Tools::addLog(Tools::type_name[type] + " <<< " + friendly_text + "\r\n", true);
-        //    Tools::addLog(Tools::type_name[type] + " >>> " + new_friendly + "\r\n", true);
-        //}
-
+        ready = true;
         counter_converted++;
     }
     else
     {
-        to_convert = false;
+        ready = false;
         counter_identical++;
     }
 }
 
 //----------------------------------------------------------
-void EsmConverter::convertMAST()
+void EsmConverter::addNullTerminatorIfEmpty()
 {
-    std::string master_prefix;
-    std::string master_suffix;
-    resetCounters();
-    for (size_t i = 0; i < esm.getRecords().size(); ++i)
-    {
-        esm.setRecordTo(i);
-        if (esm.getRecordId() == "TES3")
-        {
-            esm.setFriendlyTo("MAST");
-            while (esm.isFriendlyValid())
-            {
-                master_prefix = esm.getFriendlyText().substr(0, esm.getFriendlyText().find_last_of("."));
-                master_suffix = esm.getFriendlyText().substr(esm.getFriendlyText().rfind("."));
-                convertRecordContent(master_prefix + file_suffix + master_suffix + '\0');
-                esm.setNextFriendlyTo("MAST");
-            }
-        }
-    }
+    if (new_text.empty())
+        new_text = '\0';
 }
 
 //----------------------------------------------------------
-void EsmConverter::convertCELL()
+void EsmConverter::convertRecordContent()
 {
-    std::string new_friendly;
-    resetCounters();
-    for (size_t i = 0; i < esm.getRecords().size(); ++i)
-    {
-        esm.setRecordTo(i);
-        if (esm.getRecordId() == "CELL")
-        {
-            esm.setFriendlyTo("NAME");
-            if (esm.isFriendlyValid() &&
-                esm.getFriendlyText() != "")
-            {
-                new_friendly = setNewFriendly(
-                    Tools::RecType::CELL,
-                    esm.getFriendlyText(),
-                    esm.getFriendlyText());
-
-                if (to_convert)
-                {
-                    // Null terminated
-                    // Can't be empty
-                    convertRecordContent(new_friendly + '\0');
-                }
-            }
-        }
-    }
-    printLogLine(Tools::RecType::CELL);
+    size_t rec_size;
+    std::string rec_content = esm.getRecordContent();
+    rec_content.erase(esm.getValue().pos + 8, esm.getValue().size);
+    rec_content.insert(esm.getValue().pos + 8, new_text);
+    rec_content.erase(esm.getValue().pos + 4, 4);
+    rec_content.insert(
+        esm.getValue().pos + 4,
+        Tools::convertUIntToStringByteArray(new_text.size()));
+    rec_size = rec_content.size() - 16;
+    rec_content.erase(4, 4);
+    rec_content.insert(4, Tools::convertUIntToStringByteArray(rec_size));
+    esm.replaceRecord(rec_content);
 }
 
 //----------------------------------------------------------
-void EsmConverter::convertPGRD()
+void EsmConverter::printLogLine(const Tools::RecType type)
 {
-    std::string new_friendly;
-    resetCounters();
-    for (size_t i = 0; i < esm.getRecords().size(); ++i)
-    {
-        esm.setRecordTo(i);
-        if (esm.getRecordId() == "PGRD")
-        {
-            esm.setFriendlyTo("NAME");
-            if (esm.isFriendlyValid() &&
-                esm.getFriendlyText() != "")
-            {
-                new_friendly = setNewFriendly(
-                    Tools::RecType::CELL,
-                    esm.getFriendlyText(),
-                    esm.getFriendlyText());
+    std::ostringstream ss;
+    ss
+        << Tools::getTypeName(type) << " "
+        << std::setw(10) << std::to_string(counter_converted) << " / "
+        << std::setw(9) << std::to_string(counter_identical) << " / "
+        << std::setw(9) << std::to_string(counter_unchanged) << " / "
+        << std::setw(6) << std::to_string(counter_all) << std::endl;
 
-                if (to_convert)
-                {
-                    convertRecordContent(new_friendly + '\0');
-                }
-            }
-        }
-    }
-    printLogLine(Tools::RecType::PGRD);
-}
-
-//----------------------------------------------------------
-void EsmConverter::convertANAM()
-{
-    std::string new_friendly;
-    resetCounters();
-    for (size_t i = 0; i < esm.getRecords().size(); ++i)
-    {
-        esm.setRecordTo(i);
-        if (esm.getRecordId() == "INFO")
-        {
-            esm.setFriendlyTo("ANAM");
-            if (esm.isFriendlyValid() &&
-                esm.getFriendlyText() != "")
-            {
-                new_friendly = setNewFriendly(
-                    Tools::RecType::CELL,
-                    esm.getFriendlyText(),
-                    esm.getFriendlyText());
-
-                if (to_convert)
-                {
-                    convertRecordContent(new_friendly + '\0');
-                }
-            }
-        }
-    }
-    printLogLine(Tools::RecType::ANAM);
-}
-
-//----------------------------------------------------------
-void EsmConverter::convertSCVR()
-{
-    std::string new_friendly;
-    resetCounters();
-    for (size_t i = 0; i < esm.getRecords().size(); ++i)
-    {
-        esm.setRecordTo(i);
-        if (esm.getRecordId() == "INFO")
-        {
-            esm.setFriendlyTo("SCVR");
-            while (esm.isFriendlyValid())
-            {
-                if (esm.getFriendlyText().substr(1, 1) == "B")
-                {
-                    new_friendly = setNewFriendly(
-                        Tools::RecType::CELL,
-                        esm.getFriendlyText().substr(5),
-                        esm.getFriendlyText().substr(5));
-                    new_friendly = esm.getFriendlyText().substr(0, 5) + new_friendly;
-
-                    if (to_convert)
-                    {
-                        // Not null terminated
-                        convertRecordContent(new_friendly);
-                    }
-                }
-                esm.setNextFriendlyTo("SCVR");
-            }
-        }
-    }
-    printLogLine(Tools::RecType::SCVR);
-}
-
-//----------------------------------------------------------
-void EsmConverter::convertDNAM()
-{
-    std::string new_friendly;
-
-    resetCounters();
-    for (size_t i = 0; i < esm.getRecords().size(); ++i)
-    {
-        esm.setRecordTo(i);
-        if (esm.getRecordId() == "CELL" ||
-            esm.getRecordId() == "NPC_")
-        {
-            esm.setFriendlyTo("DNAM");
-            while (esm.isFriendlyValid())
-            {
-                new_friendly = setNewFriendly(
-                    Tools::RecType::CELL,
-                    esm.getFriendlyText(),
-                    esm.getFriendlyText());
-
-                if (to_convert)
-                {
-                    convertRecordContent(new_friendly + '\0');
-                }
-                esm.setNextFriendlyTo("DNAM");
-            }
-        }
-    }
-    printLogLine(Tools::RecType::DNAM);
-}
-
-//----------------------------------------------------------
-void EsmConverter::convertCNDT()
-{
-    std::string new_friendly;
-    resetCounters();
-    for (size_t i = 0; i < esm.getRecords().size(); ++i)
-    {
-        esm.setRecordTo(i);
-        if (esm.getRecordId() == "NPC_")
-        {
-            esm.setFriendlyTo("CNDT");
-            while (esm.isFriendlyValid())
-            {
-                new_friendly = setNewFriendly(
-                    Tools::RecType::CELL,
-                    esm.getFriendlyText(),
-                    esm.getFriendlyText());
-
-                if (to_convert)
-                {
-                    convertRecordContent(new_friendly + '\0');
-                }
-                esm.setNextFriendlyTo("CNDT");
-            }
-        }
-    }
-    printLogLine(Tools::RecType::CNDT);
-}
-
-//----------------------------------------------------------
-void EsmConverter::convertGMST()
-{
-    std::string new_friendly;
-    resetCounters();
-    for (size_t i = 0; i < esm.getRecords().size(); ++i)
-    {
-        esm.setRecordTo(i);
-        if (esm.getRecordId() == "GMST")
-        {
-            esm.setUniqueTo("NAME");
-            esm.setFriendlyTo("STRV");
-            if (esm.isUniqueValid() &&
-                esm.isFriendlyValid() &&
-                esm.getUniqueText().substr(0, 1) == "s")
-            {
-                new_friendly = setNewFriendly(
-                    Tools::RecType::GMST,
-                    esm.getUniqueText(),
-                    esm.getFriendlyText());
-
-                if (to_convert)
-                {
-                    // Null terminated only if empty
-                    convertRecordContent(addNullTerminatorIfEmpty(new_friendly));
-                }
-            }
-        }
-    }
-    printLogLine(Tools::RecType::GMST);
-}
-
-//----------------------------------------------------------
-void EsmConverter::convertFNAM()
-{
-    std::string new_friendly;
-    resetCounters();
-    for (size_t i = 0; i < esm.getRecords().size(); ++i)
-    {
-        esm.setRecordTo(i);
-        if (esm.getRecordId() == "ACTI" || esm.getRecordId() == "ALCH" ||
-            esm.getRecordId() == "APPA" || esm.getRecordId() == "ARMO" ||
-            esm.getRecordId() == "BOOK" || esm.getRecordId() == "BSGN" ||
-            esm.getRecordId() == "CLAS" || esm.getRecordId() == "CLOT" ||
-            esm.getRecordId() == "CONT" || esm.getRecordId() == "CREA" ||
-            esm.getRecordId() == "DOOR" || esm.getRecordId() == "FACT" ||
-            esm.getRecordId() == "INGR" || esm.getRecordId() == "LIGH" ||
-            esm.getRecordId() == "LOCK" || esm.getRecordId() == "MISC" ||
-            esm.getRecordId() == "NPC_" || esm.getRecordId() == "PROB" ||
-            esm.getRecordId() == "RACE" || esm.getRecordId() == "REGN" ||
-            esm.getRecordId() == "REPA" || esm.getRecordId() == "SKIL" ||
-            esm.getRecordId() == "SPEL" || esm.getRecordId() == "WEAP")
-        {
-            esm.setUniqueTo("NAME");
-            esm.setFriendlyTo("FNAM");
-            if (esm.isUniqueValid() &&
-                esm.isFriendlyValid() &&
-                esm.getUniqueText() != "player")
-            {
-                new_friendly = setNewFriendly(
-                    Tools::RecType::FNAM,
-                    esm.getRecordId() + Tools::sep[0] + esm.getUniqueText(),
-                    esm.getFriendlyText());
-
-                if (to_convert)
-                {
-                    // Null terminated
-                    // Don't exist if empty
-                    convertRecordContent(new_friendly + '\0');
-                }
-            }
-        }
-    }
-    printLogLine(Tools::RecType::FNAM);
-}
-
-//----------------------------------------------------------
-void EsmConverter::convertDESC()
-{
-    std::string new_friendly;
-    resetCounters();
-    for (size_t i = 0; i < esm.getRecords().size(); ++i)
-    {
-        esm.setRecordTo(i);
-        if (esm.getRecordId() == "BSGN" ||
-            esm.getRecordId() == "CLAS" ||
-            esm.getRecordId() == "RACE")
-        {
-            esm.setUniqueTo("NAME");
-            esm.setFriendlyTo("DESC");
-            if (esm.isUniqueValid() &&
-                esm.isFriendlyValid())
-            {
-                new_friendly = setNewFriendly(
-                    Tools::RecType::DESC,
-                    esm.getRecordId() + Tools::sep[0] + esm.getUniqueText(),
-                    esm.getFriendlyText());
-
-                if (to_convert)
-                {
-                    if (esm.getRecordId() == "BSGN")
-                    {
-                        // Null terminated
-                        // Don't exist if empty
-                        convertRecordContent(new_friendly + '\0');
-                    }
-                    if (esm.getRecordId() == "CLAS" ||
-                        esm.getRecordId() == "RACE")
-                    {
-                        // Not null terminated
-                        // Don't exist if empty
-                        convertRecordContent(addNullTerminatorIfEmpty(new_friendly));
-                    }
-                }
-            }
-        }
-    }
-    printLogLine(Tools::RecType::DESC);
-}
-
-//----------------------------------------------------------
-void EsmConverter::convertTEXT()
-{
-    std::string new_friendly;
-    resetCounters();
-    for (size_t i = 0; i < esm.getRecords().size(); ++i)
-    {
-        esm.setRecordTo(i);
-        if (esm.getRecordId() == "BOOK")
-        {
-            esm.setUniqueTo("NAME");
-            esm.setFriendlyTo("TEXT");
-            if (esm.isUniqueValid() &&
-                esm.isFriendlyValid())
-            {
-                new_friendly = setNewFriendly(
-                    Tools::RecType::TEXT,
-                    esm.getUniqueText(),
-                    esm.getFriendlyText());
-
-                if (to_convert)
-                {
-                    // Not null terminated
-                    // Don't exist if empty
-                    convertRecordContent(addNullTerminatorIfEmpty(new_friendly));
-                }
-            }
-        }
-    }
-    printLogLine(Tools::RecType::TEXT);
-}
-
-//----------------------------------------------------------
-void EsmConverter::convertRNAM()
-{
-    std::string new_friendly;
-    resetCounters();
-    for (size_t i = 0; i < esm.getRecords().size(); ++i)
-    {
-        esm.setRecordTo(i);
-        if (esm.getRecordId() == "FACT")
-        {
-            esm.setUniqueTo("NAME");
-            esm.setFriendlyTo("RNAM");
-            if (esm.isUniqueValid())
-            {
-                while (esm.isFriendlyValid())
-                {
-                    new_friendly = setNewFriendly(
-                        Tools::RecType::RNAM,
-                        esm.getUniqueText() + Tools::sep[0] + esm.getFriendlyCounter(),
-                        esm.getFriendlyText());
-
-                    if (to_convert)
-                    {
-                        // Null terminated up to 32
-                        new_friendly.resize(32);
-                        convertRecordContent(new_friendly);
-                    }
-                    esm.setNextFriendlyTo("RNAM");
-                }
-            }
-        }
-    }
-    printLogLine(Tools::RecType::RNAM);
-}
-
-//----------------------------------------------------------
-void EsmConverter::convertINDX()
-{
-    std::string new_friendly;
-    resetCounters();
-    for (size_t i = 0; i < esm.getRecords().size(); ++i)
-    {
-        esm.setRecordTo(i);
-        if (esm.getRecordId() == "SKIL" ||
-            esm.getRecordId() == "MGEF")
-        {
-            esm.setUniqueTo("INDX");
-            esm.setFriendlyTo("DESC");
-            if (esm.isUniqueValid() &&
-                esm.isFriendlyValid())
-            {
-                new_friendly = setNewFriendly(
-                    Tools::RecType::INDX,
-                    esm.getRecordId() + Tools::sep[0] + esm.getUniqueText(),
-                    esm.getFriendlyText());
-
-                if (to_convert)
-                {
-                    // Not null terminated
-                    // Don't exist if empty
-                    convertRecordContent(addNullTerminatorIfEmpty(new_friendly));
-                }
-            }
-        }
-    }
-    printLogLine(Tools::RecType::INDX);
-}
-
-//----------------------------------------------------------
-void EsmConverter::convertDIAL()
-{
-    std::string new_friendly;
-    resetCounters();
-    for (size_t i = 0; i < esm.getRecords().size(); ++i)
-    {
-        esm.setRecordTo(i);
-        if (esm.getRecordId() == "DIAL")
-        {
-            esm.setUniqueTo("DATA");
-            esm.setFriendlyTo("NAME");
-            if (esm.isUniqueValid() &&
-                esm.isFriendlyValid() &&
-                esm.getUniqueText() == "T")
-            {
-                new_friendly = setNewFriendly(
-                    Tools::RecType::DIAL,
-                    esm.getFriendlyText(),
-                    esm.getFriendlyText());
-
-                if (to_convert)
-                {
-                    // Null terminated
-                    convertRecordContent(new_friendly + '\0');
-                }
-            }
-        }
-    }
-    printLogLine(Tools::RecType::DIAL);
-}
-
-//----------------------------------------------------------
-void EsmConverter::convertINFO()
-{
-    std::string new_friendly;
-    std::string dialog_topic;
-    resetCounters();
-    for (size_t i = 0; i < esm.getRecords().size(); ++i)
-    {
-        esm.setRecordTo(i);
-        if (esm.getRecordId() == "DIAL")
-        {
-            esm.setUniqueTo("DATA");
-            esm.setFriendlyTo("NAME");
-            if (esm.isUniqueValid() &&
-                esm.isFriendlyValid())
-            {
-                dialog_topic = esm.getUniqueText() + Tools::sep[0] + esm.getFriendlyText();
-            }
-        }
-        if (esm.getRecordId() == "INFO")
-        {
-            esm.setUniqueTo("INAM");
-            esm.setFriendlyTo("NAME");
-            if (esm.isUniqueValid() &&
-                esm.isFriendlyValid())
-            {
-                new_friendly = setNewFriendly(
-                    Tools::RecType::INFO,
-                    dialog_topic + Tools::sep[0] + esm.getUniqueText(),
-                    esm.getFriendlyText(),
-                    dialog_topic);
-
-                if (to_convert)
-                {
-                    // Not null terminated
-                    // Don't exist if empty
-                    convertRecordContent(addNullTerminatorIfEmpty(new_friendly));
-                }
-            }
-        }
-    }
-    printLogLine(Tools::RecType::INFO);
-}
-
-//----------------------------------------------------------
-void EsmConverter::convertBNAM()
-{
-    std::pair<std::string, std::string> new_script;
-    resetCounters();
-    for (size_t i = 0; i < esm.getRecords().size(); ++i)
-    {
-        esm.setRecordTo(i);
-        if (esm.getRecordId() == "INFO")
-        {
-            esm.setUniqueTo("INAM");
-            esm.setFriendlyTo("BNAM");
-            if (esm.isUniqueValid() &&
-                esm.isFriendlyValid())
-            {
-                new_script = setNewScript(
-                    Tools::RecType::BNAM,
-                    esm.getUniqueText(),
-                    esm.getFriendlyText(),
-                    "");
-
-                if (to_convert)
-                {
-                    convertRecordContent(new_script.first);
-                }
-            }
-        }
-    }
-    Tools::addLog("---\r\n", true);
-    printLogLine(Tools::RecType::BNAM);
-}
-
-//----------------------------------------------------------
-void EsmConverter::convertSCPT()
-{
-    std::string compiled_data;
-    std::pair<std::string, std::string> new_script;
-    std::string new_header;
-
-    resetCounters();
-    for (size_t i = 0; i < esm.getRecords().size(); ++i)
-    {
-        esm.setRecordTo(i);
-        if (esm.getRecordId() == "SCPT")
-        {
-            esm.setUniqueTo("SCHD");
-            esm.setFriendlyTo("SCDT");
-            if (esm.isFriendlyValid())
-            {
-                compiled_data = esm.getFriendlyWithNull();
-            }
-            else
-            {
-                compiled_data.clear();
-            }
-            esm.setFriendlyTo("SCTX");
-            if (esm.isUniqueValid() &&
-                esm.isFriendlyValid())
-            {
-                new_script = setNewScript(
-                    Tools::RecType::SCTX,
-                    esm.getUniqueText(),
-                    esm.getFriendlyText(),
-                    compiled_data);
-
-                if (to_convert)
-                {
-                    esm.setFriendlyTo("SCTX");
-                    convertRecordContent(new_script.first);
-                    esm.setFriendlyTo("SCDT");
-                    convertRecordContent(new_script.second);
-
-                    // Compiled script data size in script name
-                    esm.setFriendlyTo("SCHD");
-                    new_header = esm.getFriendlyWithNull();
-                    new_header.erase(44, 4);
-                    new_header.insert(44, Tools::convertUIntToStringByteArray(new_script.second.size()));
-                    convertRecordContent(new_header);
-                }
-            }
-        }
-    }
-    Tools::addLog("---\r\n", true);
-    printLogLine(Tools::RecType::SCTX);
+    Tools::addLog(ss.str());
 }

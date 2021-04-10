@@ -1,12 +1,13 @@
 @echo off
 
+set DICT_N=%BASE%\XXtoXX.xml
+
 REM ############### DON'T EDIT ###############
 
 set INPUT=input
 set OUTPUT=output
 set BASE=dict_base
 set USER=dict_user
-set DICT_N=%BASE%\NATIVE.xml
 
 setlocal enabledelayedexpansion enableextensions
 

@@ -27,22 +27,10 @@ public:
 private:
     void convertEsm(const bool safe);
     void resetCounters();
-    void convertRecordContent(const std::string & new_friendly);
-    std::string addNullTerminatorIfEmpty(const std::string & new_friendly);
-    std::string setNewFriendly(
-        const Tools::RecType type,
-        const std::string & unique_text,
-        const std::string & friendly_text,
-        const std::string & dialog_topic = "");
-    std::pair<std::string, std::string> setNewScript(
-        const Tools::RecType type,
-        const std::string & script_name,
-        const std::string & friendly_text,
-        const std::string & compiled_data);
-    void checkIfIdentical(
-        const Tools::RecType type,
-        const std::string & friendly_text,
-        const std::string & new_friendly);
+    void convertRecordContent();
+    void addNullTerminatorIfEmpty();
+    void setNewText(const std::string & prefix = "");
+    void checkIfIdentical();
     void printLogLine(const Tools::RecType type);
     void convertMAST();
     void convertCELL();
@@ -74,9 +62,15 @@ private:
     int counter_all = 0;
     int counter_added = 0;
 
-    bool to_convert = false;
+    bool ready = false;
 
-    Tools::Encoding esm_encoding;
+    Tools::Encoding esm_encoding = Tools::Encoding::UNKNOWN;
+
+    std::string key_text;
+    std::string val_text;
+    Tools::RecType type;
+
+    std::string new_text;
 };
 
 #endif // ESMCONVERTER_HPP

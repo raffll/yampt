@@ -8,29 +8,25 @@
 class DictMerger
 {
 public:
-    std::string getNamePrefix(size_t i) { return dict_coll[i].getNamePrefix(); }
+    std::string getNamePrefix(size_t i) { return readers[i].getNamePrefix(); }
+    Tools::Dict const & getDict() const { return dict; }
 
-    Tools::dict_t const & getDict() const { return dict; }
-    Tools::single_dict_t const & getDict(Tools::RecType type) const { return dict[type]; }
-    Tools::single_dict_t const & getDict(size_t type) const { return dict[type]; }
-
-    DictMerger() = default;
-    DictMerger(const std::vector<std::string> & path);
+    DictMerger();
+    DictMerger(const std::vector<std::string> & paths);
 
     void addRecord(
         const Tools::RecType type,
-        const std::string & unique_text,
-        const std::string & friendly_text);
+        const std::string & key_text,
+        const std::string & val_text);
 
 private:
     void mergeDict();
-    void findDuplicateFriendlyText(Tools::RecType type);
+    void findDuplicateValues(Tools::RecType type);
     void findUnusedINFO();
     void printSummaryLog();
 
-    std::vector<DictReader> dict_coll;
-    Tools::dict_t dict;
-    bool ext_log;
+    std::vector<DictReader> readers;
+    Tools::Dict dict;
 
     int counter_merged = 0;
     int counter_replaced = 0;

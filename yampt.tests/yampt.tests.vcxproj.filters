@@ -26,7 +26,7 @@
     <ClInclude Include="..\yampt\tools.hpp">
       <Filter>yampt</Filter>
     </ClInclude>
-    <ClInclude Include="..\yampt\scriptparser_ex.hpp">
+    <ClInclude Include="..\yampt\scriptparser.hpp">
       <Filter>yampt</Filter>
     </ClInclude>
   </ItemGroup>
@@ -52,7 +52,7 @@
     <ClCompile Include="tests.scriptparser.cpp" />
     <ClCompile Include="tests.tools.cpp" />
     <ClCompile Include="tests.esmreader.cpp" />
-    <ClCompile Include="..\yampt\scriptparser_ex.cpp">
+    <ClCompile Include="..\yampt\scriptparser.cpp">
       <Filter>yampt</Filter>
     </ClCompile>
   </ItemGroup>

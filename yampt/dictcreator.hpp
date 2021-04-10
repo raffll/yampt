@@ -9,12 +9,9 @@
 class DictCreator
 {
 public:
-    std::string getNameFull() { return esm_n.getNameFull(); }
-    std::string getNamePrefix() { return esm_n.getNamePrefix(); }
-
-    Tools::dict_t const & getDict() const { return dict; }
-    Tools::single_dict_t const & getDict(Tools::RecType type) const { return dict[type]; }
-    Tools::single_dict_t const & getDict(size_t type) const { return dict[type]; }
+    std::string getNameFull() { return esm.getNameFull(); }
+    std::string getNamePrefix() { return esm.getNamePrefix(); }
+    Tools::Dict const & getDict() const { return dict; }
 
     DictCreator(const std::string & path_n);
     DictCreator(
@@ -24,37 +21,21 @@ public:
         const std::string & path_n,
         const DictMerger & merger,
         const Tools::CreatorMode mode,
-        const bool add_dial);
+        const bool add_hyperlinks);
 
 private:
     void makeDict(const bool same_order);
     bool isSameOrder();
     void resetCounters();
-    std::string translateDialogTopicsInDictId(std::string to_translate);
-
-    void validateRecord(
-        const std::string & unique_text,
-        const std::string & friendly_text,
-        const Tools::RecType type);
-    void validateRecordForModeALL(
-        const std::string & unique_text,
-        const std::string & friendly_text,
-        const Tools::RecType type);
-    void validateRecordForModeNOT(
-        const std::string & unique_text,
-        const std::string & friendly_text,
-        const Tools::RecType type);
-    void validateRecordForModeCHANGED(
-        const std::string & unique_text,
-        const std::string & friendly_text,
-        const Tools::RecType type);
-
-    void insertRecordToDict(
-        const std::string & unique_text,
-        const std::string & friendly_text,
-        const Tools::RecType type);
-    std::vector<std::string> makeScriptMessages(const std::string & new_friendly);
-
+    std::string translateDialogTopic(std::string to_translate);
+    void validateRecord();
+    void validateRecordForModeALL();
+    void validateRecordForModeNOT();
+    void validateRecordForModeCHANGED();
+    void addAnnotations();
+    void insertRecordToDict();
+    std::vector<std::string> makeScriptMessages(const std::string & script_text);
+    void addGenderAnnotations();
     void printLogLine(const Tools::RecType type);
 
     void makeDictCELL();
@@ -93,15 +74,19 @@ private:
     void makeDictSCPTExtendedForeignColl();
     void makeDictSCPTExtendedNativeColl();
 
-    EsmReader esm_n;
-    EsmReader esm_f;
+    EsmReader esm;
+    EsmReader esm_ext;
     EsmReader * esm_ptr;
     const DictMerger * merger;
-    Tools::dict_t dict;
+    Tools::Dict dict;
 
+    std::string key_text;
+    std::string val_text;
+    Tools::RecType type;
+
+    std::vector<std::string> message;
+    std::vector<std::string> message_ext;
     std::vector<std::string> * message_ptr;
-    std::vector<std::string> message_n;
-    std::vector<std::string> message_f;
 
     const Tools::CreatorMode mode;
     const bool add_hyperlinks;
@@ -119,8 +104,8 @@ private:
         bool missing;
     };
 
-    std::vector<Pattern> patterns_f;
-    std::map<std::string, size_t> patterns_n;
+    std::vector<Pattern> patterns_ext;
+    std::map<std::string, size_t> patterns;
 };
 
 #endif // DICTCREATOR_HPP

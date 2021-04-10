@@ -1,19 +1,26 @@
 #include "dictmerger.hpp"
 
 //----------------------------------------------------------
-DictMerger::DictMerger(const std::vector<std::string> & path)
-    : ext_log(ext_log)
+DictMerger::DictMerger()
 {
-    for (const auto & elem : path)
+    dict = Tools::initializeDict();
+}
+
+//----------------------------------------------------------
+DictMerger::DictMerger(const std::vector<std::string> & paths)
+{
+    dict = Tools::initializeDict();
+
+    for (const auto & path : paths)
     {
-        DictReader reader(elem);
-        dict_coll.push_back(reader);
+        DictReader reader(path);
+        readers.push_back(reader);
     }
 
     mergeDict();
 
-    findDuplicateFriendlyText(Tools::RecType::CELL);
-    findDuplicateFriendlyText(Tools::RecType::DIAL);
+    findDuplicateValues(Tools::RecType::CELL);
+    findDuplicateValues(Tools::RecType::DIAL);
     findUnusedINFO();
     printSummaryLog();
 }
@@ -21,33 +28,35 @@ DictMerger::DictMerger(const std::vector<std::string> & path)
 //----------------------------------------------------------
 void DictMerger::addRecord(
     const Tools::RecType type,
-    const std::string & unique_text,
-    const std::string & friendly_text)
+    const std::string & key_text,
+    const std::string & val_text)
 {
-    dict[type].insert({ unique_text, friendly_text });
+    dict.at(type).insert({ key_text, val_text });
 }
 
 //----------------------------------------------------------
 void DictMerger::mergeDict()
 {
-    for (size_t i = 0; i < dict_coll.size(); ++i)
+    for (const auto & reader : readers)
     {
-        for (size_t type = 0; type < dict.size(); ++type)
+        for (const auto & chapter : reader.getDict())
         {
-            for (auto & elem : dict_coll[i].getDict(type))
+            for (const auto & elem : chapter.second)
             {
-                auto search = dict[type].find(elem.first);
-                if (search == dict[type].end())
+                const auto & type = chapter.first;
+
+                auto search = dict.at(type).find(elem.first);
+                if (search == dict.at(type).end())
                 {
                     // Not found in previous dictionary - inserted
-                    dict[type].insert({ elem.first, elem.second });
+                    dict.at(type).insert({ elem.first, elem.second });
                     counter_merged++;
                 }
-                else if (search != dict[type].end() &&
+                else if (search != dict.at(type).end() &&
                          search->second != elem.second)
                 {
                     // Found in previous dictionary - skipped
-                    Tools::addLog("Warning: replaced " + Tools::type_name[type] + " record " + elem.first + "\r\n");
+                    Tools::addLog("Warning: replaced " + Tools::getTypeName(type) + " record " + elem.first + "\r\n");
                     counter_replaced++;
                 }
                 else
@@ -59,61 +68,57 @@ void DictMerger::mergeDict()
         }
     }
 
-    if (dict_coll.size() == 1)
-    {
-        Tools::addLog("--> Sorting complete!\r\n");
-    }
-    else
-    {
-        Tools::addLog("--> Merging complete!\r\n");
-    }
+    Tools::addLog("--> Merging complete!\r\n");
 }
 
 //----------------------------------------------------------
-void DictMerger::findDuplicateFriendlyText(Tools::RecType type)
+void DictMerger::findDuplicateValues(Tools::RecType type)
 {
-    std::set<std::string> test_set;
-    std::string test;
-    for (const auto & elem : dict[type])
+    std::set<std::string> texts;
+    std::string text_lc;
+    for (const auto & elem : dict.at(type))
     {
-        test = elem.second;
-        transform(test.begin(), test.end(),
-                  test.begin(), ::tolower);
-        if (test_set.insert(test).second == false)
-        {
-            Tools::addLog("Warning: duplicate " + Tools::type_name[type] + " value " + elem.second + "\r\n");
-        }
+        text_lc = elem.second;
+        transform(
+            text_lc.begin(), text_lc.end(),
+            text_lc.begin(), ::tolower);
+
+        if (texts.insert(text_lc).second)
+            continue;
+
+        Tools::addLog("Warning: duplicate " + Tools::getTypeName(type) + " value " + elem.second + "\r\n");
     }
 }
 
 //----------------------------------------------------------
 void DictMerger::findUnusedINFO()
 {
-    std::string test;
+    std::string text;
     bool found;
     size_t beg;
     size_t end;
-    for (const auto & info : dict[Tools::RecType::INFO])
+    for (const auto & info : dict.at(Tools::RecType::INFO))
     {
         found = false;
-        test = info.first;
-        if (test.size() > 1 && test.substr(0, 1) == "T")
-        {
-            beg = test.find("^") + 1;
-            end = test.find_last_of("^");
-            test = test.substr(beg, end - beg);
-            for (const auto & dial : dict[Tools::RecType::DIAL])
-            {
-                if (test == dial.second)
-                {
-                    found = true;
-                }
-            }
+        text = info.first;
+        if (text.size() < 1 || text.substr(0, 1) != "T")
+            continue;
 
-            if (!found)
-            {
-                Tools::addLog("Warning: dialog topic not found " + info.first + "\r\n");
-            }
+        beg = text.find("^") + 1;
+        end = text.find_last_of("^");
+        text = text.substr(beg, end - beg);
+
+        for (const auto & dial : dict.at(Tools::RecType::DIAL))
+        {
+            if (text != dial.second)
+                continue;
+
+            found = true;
+        }
+
+        if (!found)
+        {
+            Tools::addLog("Warning: dialog topic not found " + info.first + "\r\n");
         }
     }
 }

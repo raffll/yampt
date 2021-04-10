@@ -1,5 +1,5 @@
-#ifndef SCRIPTPARSER_HPP
-#define SCRIPTPARSER_HPP
+#ifndef SCRIPTPARSER_EX_HPP
+#define SCRIPTPARSER_EX_HPP
 
 #include "includes.hpp"
 #include "tools.hpp"
@@ -8,68 +8,56 @@
 class ScriptParser
 {
 public:
-    std::string getNewFriendly() { return new_friendly; }
-    std::string getNewCompiled() { return compiled_data; }
+    void convertScript();
 
-    ScriptParser();
+    std::string getNewScript() { return new_script; }
+    std::string getNewSCDT() { return new_SCDT; }
+
     ScriptParser(
         const Tools::RecType type,
         const DictMerger & merger,
-        const std::string & prefix,
-        const std::string & friendly_text,
-        const std::string & compiled_data);
+        const std::string & script_name,
+        const std::string & file_name,
+        const std::string & old_script,
+        const std::string & old_SCDT = "");
 
 private:
-    void convertScript();
-    void stripLastNewLineChars();
-    std::string checkLine(
-        const std::string & line,
-        const std::string & line_lc);
-    std::string checkLine(
-        const std::string & line,
-        const std::string & line_lc,
+    void convertLine(
         const std::string & keyword,
-        const int pos_in_expr,
-        const Tools::RecType text_type,
-        const bool is_getpccell);
-    std::string convertLine(const std::string & line);
-    std::string findInnerTextInDict(
-        const std::string & text,
-        const Tools::RecType text_type);
-    std::string convertInnerTextInLine(
-        const std::string & line,
-        const std::string & text,
-        const size_t text_pos,
-        const std::string & new_text);
-    void convertLineInCompiledScriptData(
-        const std::string & line,
-        const std::string & new_line,
-        const size_t keyword_pos,
-        const bool is_say);
-    void convertInnerTextInCompiledScriptData(
-        const std::string & text,
-        const std::string & new_text,
-        const bool is_getpccell);
-    std::pair<std::string, size_t> extractInnerTextFromLine(
-        const std::string & line,
-        const size_t keyword_pos,
-        const int pos_in_expression);
-    std::vector<std::string> splitLine(
-        const std::string & line,
-        const size_t keyword_pos,
-        const bool is_say);
+        const int pos_in_expression,
+        const Tools::RecType type);
+    void trimLine();
+    void extractText(const int pos_in_expression);
+    void removeQuotes();
+    void findNewText(const Tools::RecType text_type);
+    void insertNewText();
+    void convertTextInCompiled(const bool is_getpccell);
+    void convertLine();
+    void findKeyword();
+    void findNewMessage();
+    void convertMessageInCompiled();
+    std::vector<std::string> splitLine(const std::string line) const;
+    void trimLastNewLineChars();
 
-    Tools::RecType type;
+    const Tools::RecType type;
     const DictMerger * merger;
+    const std::string script_name;
+    const std::string file_name;
+    const std::string old_script;
 
-    const std::string prefix;
-    const std::string friendly_text;
-    std::string new_friendly;
+    std::string new_script;
+    std::string new_SCDT;
 
-    std::string compiled_data;
-    size_t pos_in_compiled;
-
-    bool is_done;
+    bool is_done = false;
+    std::string line;
+    std::string line_lc;
+    std::string old_text;
+    std::string new_line;
+    std::string new_text;
+    size_t pos = 0;
+    size_t pos_c = 0;
+    size_t keyword_pos = 0;
+    std::string keyword;
 };
 
-#endif // SCRIPTPARSER_HPP
+#endif // SCRIPTPARSER_EX_HPP

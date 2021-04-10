@@ -1,7 +1,7 @@
 #include "catch.hpp"
 #include "../yampt/tools.hpp"
 #include "../yampt/dictmerger.hpp"
-#include "../yampt/scriptparser_ex.hpp"
+#include "../yampt/scriptparser.hpp"
 
 using namespace std;
 
@@ -35,7 +35,7 @@ TEST_CASE("script parser, dial keywords", "[u]")
             line.first,
             "");
 
-        REQUIRE(parser.getNewFriendly() == line.second);
+        REQUIRE(parser.getNewScript() == line.second);
     }
 }
 
@@ -64,7 +64,7 @@ TEST_CASE("script parser, cell keywords", "[u]")
             line.first,
             "");
 
-        REQUIRE(parser.getNewFriendly() == line.second);
+        REQUIRE(parser.getNewScript() == line.second);
     }
 }
 
@@ -91,6 +91,6 @@ TEST_CASE("script parser, messages", "[u]")
             line.first,
             "");
 
-        REQUIRE(parser.getNewFriendly() == line.second);
+        REQUIRE(parser.getNewScript() == line.second);
     }
 }

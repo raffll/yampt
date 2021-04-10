@@ -48,16 +48,13 @@ TEST_CASE("Erase only last \r char", "[u]")
 TEST_CASE("Add dialog topics to INFO strings", "[u]")
 {
     std::string text;
-    Tools::single_dict_t dict;
+    Tools::Chapter dict;
     dict.insert({ "clanfear", "postrach klanów" });
 
     text = "Some text clanfear some text";
-    REQUIRE(Tools::addHyperlinks(dict, text, false) ==
-            "Some text clanfear some text [postrach klanów]");
-    REQUIRE(Tools::addHyperlinks(dict, text, true) ==
-            "Some text clanfear some text [clanfear -> postrach klanów]");
+    REQUIRE(Tools::addHyperlinks(dict, text, false) == " [postrach klanów]");
+    REQUIRE(Tools::addHyperlinks(dict, text, true) == " [clanfear -> postrach klanów]");
 
     text = "Some text CLANFEAR some text";
-    REQUIRE(Tools::addHyperlinks(dict, text, false) ==
-            "Some text CLANFEAR some text [postrach klanów]");
+    REQUIRE(Tools::addHyperlinks(dict, text, false) == " [postrach klanów]");
 }

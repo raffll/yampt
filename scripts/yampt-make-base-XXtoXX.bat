@@ -2,10 +2,10 @@
 
 set NATIVE=
 set FOREIGN=
+set NAME=XXtoXX
 
 REM ############### DON'T EDIT ###############
 
-set NAME=NATIVE
 set BASE=dict_base
 
 yampt.exe --make-base -f "%NATIVE%\Morrowind.esm" "%FOREIGN%\Morrowind.esm"
