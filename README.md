@@ -58,13 +58,13 @@ set NAME=ENtoPL
 2. Run the script. This creates your base dictionaries in **dict\_base** folder.
 3. Edit **yampt-make-user-XXtoXX.cmd** and **yampt-convert-XXtoXX.bat** to match your new base dictionary:
 ```
-set DICT_N=%BASE%\XXtoXX.xml
-set DICT_F=%BASE%\XXtoXX_H.xml
+set DICT_N=XXtoXX.xml
+set DICT_F=XXtoXX_H.xml
 ```
 to
 ```
-set DICT_N=%BASE%\ENtoPL.xml
-set DICT_F=%BASE%\ENtoPL_H.xml
+set DICT_N=ENtoPL.xml
+set DICT_F=ENtoPL_H.xml
 ```
 4. Open dictionary and find any **MISSING** keywords. **You have to manually correct them.**
 
