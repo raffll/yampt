@@ -1,6 +1,6 @@
 @echo off
 
-set DICT_N=%BASE%\XXtoXX.xml
+set DICT_N=XXtoXX.xml
 
 REM ############### DON'T EDIT ###############
 
@@ -19,7 +19,7 @@ set ESM=
 for %%f in ("%INPUT%\*.esp", "%INPUT%\*.esm") do set ESM=!ESM! "%%f"
 set ESM=%ESM:~1%
 
-yampt.exe --convert --add-hyperlinks -f %ESM% -d "%DICT_N%" %DICT_U%
+yampt.exe --convert --add-hyperlinks -f %ESM% -d "%BASE%\%DICT_N%" %DICT_U%
 
 move /y "*.esm" "%OUTPUT%" >nul 2>&1
 move /y "*.esp" "%OUTPUT%" >nul 2>&1
