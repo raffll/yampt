@@ -1220,7 +1220,7 @@ void DictCreator::addGenderAnnotations()
 {
     if (mode == Tools::CreatorMode::NOTFOUND || mode == Tools::CreatorMode::CHANGED)
     {
-        std::string gender = "N\\A";
+        std::string gender = "";
         esm.setValue("ONAM");
         auto npc = esm.getValue().content;
         for (size_t k = 0; k < esm.getRecords().size(); ++k)
@@ -1235,9 +1235,9 @@ void DictCreator::addGenderAnnotations()
 
             esm.setValue("FLAG");
             if ((Tools::convertStringByteArrayToUInt(esm.getValue().content) & 0x0001) != 0)
-                gender = "Female";
+                gender = "F";
             else
-                gender = "Male";
+                gender = "M";
         }
         dict.at(Tools::RecType::Gender).insert({ key_text, gender });
     }

@@ -627,7 +627,7 @@ void EsmConverter::convertBNAM()
             convertRecordContent();
         }
     }
-    Tools::addLog("---\r\n", true);
+    Tools::addLog("\r\n\r\n", true);
     printLogLine(Tools::RecType::BNAM);
 }
 
@@ -699,7 +699,7 @@ void EsmConverter::convertSCPT()
             }
         }
     }
-    Tools::addLog("---\r\n", true);
+    Tools::addLog("\r\n\r\n", true);
     printLogLine(Tools::RecType::SCTX);
 }
 
