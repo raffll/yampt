@@ -36,14 +36,17 @@ private:
     void findKeyword();
     void findNewMessage();
     void convertMessageInCompiled();
-    std::vector<std::string> splitLine(const std::string line) const;
+    std::vector<std::string> splitLine(const std::string & cur_line) const;
     void trimLastNewLineChars();
+    void dumpError();
+    void ReplaceVerticalLinesByNewLine(std::string & message);
 
     const Tools::RecType type;
     const DictMerger * merger;
     const std::string script_name;
     const std::string file_name;
     const std::string old_script;
+    const std::string old_SCDT;
 
     std::string new_script;
     std::string new_SCDT;

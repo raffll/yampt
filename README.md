@@ -17,7 +17,7 @@ Simple command line tool for automatic translation from one language to another.
 **All examples below are for Polish version of the game**
 
 1. Make sure **yampt.exe** and all **.bat scripts** are in the same directory and this directory doesn't contain any esm, esp, or xml files!
-2. Pick one of the language e.g. ENtoDE means the script converts from English to German.
+2. Pick one of the language, e.g. ENtoDE means the script converts from English to German.
 3. Copy all original foreign plugins you want to translate to folder **input**.
 
 ### Creating user dictionaries
