@@ -13,7 +13,8 @@ public:
     std::string getNamePrefix() { return esm.getNamePrefix(); }
     Tools::Dict const & getDict() const { return dict; }
 
-    DictCreator(const std::string & path_n);
+    DictCreator(
+        const std::string & path_n);
     DictCreator(
         const std::string & path_n,
         const std::string & path_f);
@@ -32,10 +33,9 @@ private:
     void validateRecordForModeALL();
     void validateRecordForModeNOT();
     void validateRecordForModeCHANGED();
-    void addAnnotations();
+    void makeAnnotations();
     void insertRecordToDict();
     std::vector<std::string> makeScriptMessages(const std::string & script_text);
-    void addGenderAnnotations();
     void printLogLine(const Tools::RecType type);
 
     void makeDictCELL();
@@ -53,6 +53,7 @@ private:
     void makeDictINFO();
     void makeDictBNAM();
     void makeDictSCPT();
+    void makeDictSpeakerNAME();
 
     void makeDictCELLExtended();
     void makeDictCELLExtendedForeignColl();
@@ -77,7 +78,7 @@ private:
     EsmReader esm;
     EsmReader esm_ext;
     EsmReader * esm_ptr;
-    const DictMerger * merger;
+    const DictMerger & merger;
     Tools::Dict dict;
 
     std::string key_text;

@@ -9,6 +9,7 @@ DictCreator::DictCreator(
     , message_ptr(&message)
     , mode(Tools::CreatorMode::RAW)
     , add_hyperlinks(false)
+    , merger(DictMerger())
 {
     dict = Tools::initializeDict();
 
@@ -27,6 +28,7 @@ DictCreator::DictCreator(
     , message_ptr(&message_ext)
     , mode(Tools::CreatorMode::BASE)
     , add_hyperlinks(false)
+    , merger(DictMerger())
 {
     dict = Tools::initializeDict();
 
@@ -46,7 +48,7 @@ DictCreator::DictCreator(
 )
     : esm(path_n)
     , esm_ptr(&esm)
-    , merger(&merger)
+    , merger(merger)
     , message_ptr(&message)
     , mode(mode)
     , add_hyperlinks(add_hyperlinks)
@@ -95,6 +97,7 @@ void DictCreator::makeDict(const bool same_order)
         Tools::addLog("Adding annotations...\r\n");
     }
 
+    makeDictSpeakerNAME();
     makeDictINFO();
 
     if (!same_order)
@@ -502,11 +505,41 @@ void DictCreator::makeDictDIAL()
 }
 
 //----------------------------------------------------------
+void DictCreator::makeDictSpeakerNAME()
+{
+    resetCounters();
+    type = Tools::RecType::SpeakerNAME;
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
+    {
+        esm.selectRecord(i);
+        if (esm.getRecordId() != "NPC_")
+            continue;
+
+        esm.setKey("NAME");
+        esm.setValue("FLAG");
+
+        if (esm.getKey().exist &&
+            esm.getValue().exist)
+        {
+            key_text = esm.getKey().text;
+            val_text.clear();
+
+            if ((Tools::convertStringByteArrayToUInt(esm.getValue().content) & 0x0001) != 0)
+                val_text = "F";
+            else
+                val_text = "M";
+
+            validateRecord();
+        }
+    }
+    printLogLine(Tools::RecType::SpeakerNAME);
+}
+
+//----------------------------------------------------------
 void DictCreator::makeDictINFO()
 {
     std::string key_prefix;
     resetCounters();
-    type = Tools::RecType::INFO;
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
@@ -533,8 +566,33 @@ void DictCreator::makeDictINFO()
             {
                 key_text = key_prefix + Tools::sep[0] + esm.getKey().text;
                 val_text = esm.getValue().text;
-                addGenderAnnotations();
+                type = Tools::RecType::INFO;
                 validateRecord();
+
+                /* make dict SpeakerINFO */
+                {
+                    esm.setValue("ONAM");
+
+                    if (esm.getValue().exist)
+                    {
+                        val_text.clear();
+
+                        auto search_merger = merger.getDict().at(Tools::RecType::SpeakerNAME).find(esm.getValue().text);
+                        if (search_merger != merger.getDict().at(Tools::RecType::SpeakerNAME).end())
+                        {
+                            val_text = search_merger->second;
+                        }
+
+                        auto search_esm = dict.at(Tools::RecType::SpeakerNAME).find(esm.getValue().text);
+                        if (search_esm != dict.at(Tools::RecType::SpeakerNAME).end())
+                        {
+                            val_text = search_esm->second;
+                        }
+
+                        type = Tools::RecType::SpeakerINFO;
+                        validateRecord();
+                    }
+                }
             }
         }
     }
@@ -1044,8 +1102,8 @@ void DictCreator::validateRecordForModeALL()
         type == Tools::RecType::BNAM ||
         type == Tools::RecType::SCTX)
     {
-        auto search = merger->getDict().at(type).find(key_text);
-        if (search != merger->getDict().at(type).end())
+        auto search = merger.getDict().at(type).find(key_text);
+        if (search != merger.getDict().at(type).end())
         {
             val_text = search->second;
         }
@@ -1057,11 +1115,11 @@ void DictCreator::validateRecordForModeALL()
 //----------------------------------------------------------
 void DictCreator::validateRecordForModeNOT()
 {
-    auto search = merger->getDict().at(type).find(key_text);
-    if (search != merger->getDict().at(type).end())
+    auto search = merger.getDict().at(type).find(key_text);
+    if (search != merger.getDict().at(type).end())
         return;
 
-    addAnnotations();
+    makeAnnotations();
     insertRecordToDict();
 }
 
@@ -1074,40 +1132,53 @@ void DictCreator::validateRecordForModeCHANGED()
         type == Tools::RecType::SCTX)
         return;
 
-    auto search = merger->getDict().at(type).find(key_text);
-    if (search == merger->getDict().at(type).end())
+    auto search = merger.getDict().at(type).find(key_text);
+    if (search == merger.getDict().at(type).end())
         return;
 
     if (search->second == val_text)
         return;
 
-    addAnnotations();
+    makeAnnotations();
     insertRecordToDict();
 }
 
 //----------------------------------------------------------
-void DictCreator::addAnnotations()
+void DictCreator::makeAnnotations()
 {
-    if (type == Tools::RecType::INFO && add_hyperlinks)
+    if (type != Tools::RecType::INFO)
+        return;
+
+    std::string annotations;
+
+    annotations += "\r\nHyperlinks 1:" + Tools::addHyperlinks(
+        merger.getDict().at(Tools::RecType::DIAL),
+        val_text,
+        true);
+
+    annotations += "\r\nHyperlinks 2:" + Tools::addHyperlinks(
+        dict.at(Tools::RecType::DIAL),
+        val_text,
+        true);
+
+    annotations += "\r\nGlossary:" + Tools::addHyperlinks(
+        merger.getDict().at(Tools::RecType::Glossary),
+        val_text,
+        true);
+
+    auto search_merger = merger.getDict().at(Tools::RecType::SpeakerINFO).find(key_text);
+    if (search_merger != merger.getDict().at(Tools::RecType::SpeakerINFO).end())
     {
-        std::string annotations = "Hyperlinks:" + Tools::addHyperlinks(
-            merger->getDict().at(Tools::RecType::DIAL),
-            val_text,
-            true);
-
-        annotations += "\r\n\t     Glossary:" + Tools::addHyperlinks(
-            merger->getDict().at(Tools::RecType::Glossary),
-            val_text,
-            true);
-
-        auto search = dict.at(Tools::RecType::Gender).find(key_text);
-        if (search != dict.at(Tools::RecType::Gender).end())
-        {
-            annotations += "\r\n\t     Speaker: " + search->second;
-        }
-
-        dict.at(Tools::RecType::Annotations).insert({ key_text, annotations });
+        annotations += "\r\nSpeaker 1: " + search_merger->second;
     }
+
+    auto search_esm = dict.at(Tools::RecType::SpeakerINFO).find(key_text);
+    if (search_esm != dict.at(Tools::RecType::SpeakerINFO).end())
+    {
+        annotations += "\r\nSpeaker 2: " + search_esm->second;
+    }
+
+    dict.at(Tools::RecType::Annotations).insert({ key_text, annotations });
 }
 
 //----------------------------------------------------------
@@ -1170,8 +1241,8 @@ std::string DictCreator::translateDialogTopic(std::string to_translate)
         mode == Tools::CreatorMode::NOTFOUND ||
         mode == Tools::CreatorMode::CHANGED)
     {
-        auto search = merger->getDict().at(Tools::RecType::DIAL).find(to_translate);
-        if (search != merger->getDict().at(Tools::RecType::DIAL).end())
+        auto search = merger.getDict().at(Tools::RecType::DIAL).find(to_translate);
+        if (search != merger.getDict().at(Tools::RecType::DIAL).end())
         {
             return search->second;
         }
@@ -1213,32 +1284,4 @@ std::vector<std::string> DictCreator::makeScriptMessages(const std::string & scr
         }
     }
     return messages;
-}
-
-//----------------------------------------------------------
-void DictCreator::addGenderAnnotations()
-{
-    if (mode == Tools::CreatorMode::NOTFOUND || mode == Tools::CreatorMode::CHANGED)
-    {
-        std::string gender = "";
-        esm.setValue("ONAM");
-        auto npc = esm.getValue().content;
-        for (size_t k = 0; k < esm.getRecords().size(); ++k)
-        {
-            esm.selectRecord(k);
-            if (esm.getRecordId() != "NPC_")
-                continue;
-
-            esm.setValue("NAME");
-            if (esm.getValue().content != npc)
-                continue;
-
-            esm.setValue("FLAG");
-            if ((Tools::convertStringByteArrayToUInt(esm.getValue().content) & 0x0001) != 0)
-                gender = "F";
-            else
-                gender = "M";
-        }
-        dict.at(Tools::RecType::Gender).insert({ key_text, gender });
-    }
 }

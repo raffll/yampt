@@ -165,7 +165,7 @@ void UserInterface::makeDictNotFound()
     DictMerger merger(dict_path);
     for (size_t i = 0; i < file_path.size(); ++i)
     {
-        DictCreator creator(file_path[i], merger, Tools::CreatorMode::NOTFOUND, add_hyperlinks);
+        DictCreator creator(file_path[i], merger, Tools::CreatorMode::NOTFOUND, true);
         Tools::writeDict(creator.getDict(), creator.getNamePrefix() + ".NOTFOUND.xml");
     }
 }
@@ -176,7 +176,7 @@ void UserInterface::makeDictChanged()
     DictMerger merger(dict_path);
     for (size_t i = 0; i < file_path.size(); ++i)
     {
-        DictCreator creator(file_path[i], merger, Tools::CreatorMode::CHANGED, add_hyperlinks);
+        DictCreator creator(file_path[i], merger, Tools::CreatorMode::CHANGED, true);
         Tools::writeDict(creator.getDict(), creator.getNamePrefix() + ".CHANGED.xml");
     }
 }

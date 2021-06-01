@@ -1,3 +1,9 @@
+0.22
+- [bug] ommit variables containing keywords (e.g. addtopicOnce)
+- [bug] convert | in message line into new line in SCDT
+- [bug] don't parse script after "end"
+- [bug] fix comment treated as a message line
+
 0.21
 - [feature] add gender annotation to info records when creating NOTFOUND and CHANGED dictionaries
 - [feature] add glossary dictionary

@@ -140,6 +140,14 @@ void DictReader::validateRecord()
     {
         insertRecord(Tools::RecType::Glossary);
     }
+    else if (type_name == "SpeakerNAME")
+    {
+        insertRecord(Tools::RecType::SpeakerNAME);
+    }
+    else if (type_name == "SpeakerINFO")
+    {
+        insertRecord(Tools::RecType::SpeakerINFO);
+    }
     else
     {
         Tools::addLog(type_name + ": invalid id in" + key_text + "\r\n");
