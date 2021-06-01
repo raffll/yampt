@@ -263,8 +263,7 @@ Tools::Dict Tools::initializeDict()
         { Tools::RecType::SCTX, {} },
 
         { Tools::RecType::Glossary, {} },
-        { Tools::RecType::SpeakerNAME, {} },
-        { Tools::RecType::SpeakerINFO, {} },
+        { Tools::RecType::NPC_FLAG, {} },
 
         { Tools::RecType::Annotations, {} },
     };
@@ -298,8 +297,7 @@ std::string Tools::getTypeName(Tools::RecType type)
     case Tools::RecType::Region: return "+ Region";
 
     case Tools::RecType::Glossary: return "Glossary";
-    case Tools::RecType::SpeakerNAME: return "SpeakerNAME";
-    case Tools::RecType::SpeakerINFO: return "SpeakerINFO";
+    case Tools::RecType::NPC_FLAG: return "NPC_FLAG";
 
     case Tools::RecType::Annotations: return "Annotations";
     }

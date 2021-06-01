@@ -140,13 +140,9 @@ void DictReader::validateRecord()
     {
         insertRecord(Tools::RecType::Glossary);
     }
-    else if (type_name == "SpeakerNAME")
+    else if (type_name == "NPC_FLAG")
     {
-        insertRecord(Tools::RecType::SpeakerNAME);
-    }
-    else if (type_name == "SpeakerINFO")
-    {
-        insertRecord(Tools::RecType::SpeakerINFO);
+        insertRecord(Tools::RecType::NPC_FLAG);
     }
     else
     {

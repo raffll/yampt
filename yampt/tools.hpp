@@ -31,8 +31,7 @@ public:
         Region,
 
         Glossary,
-        SpeakerNAME,
-        SpeakerINFO,
+        NPC_FLAG,
 
         Annotations,
     };
