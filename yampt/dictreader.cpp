@@ -140,6 +140,10 @@ void DictReader::validateRecord()
     {
         insertRecord(Tools::RecType::Glossary);
     }
+    else if (type_name == "NPC_FLAG")
+    {
+        insertRecord(Tools::RecType::NPC_FLAG);
+    }
     else
     {
         Tools::addLog(type_name + ": invalid id in" + key_text + "\r\n");

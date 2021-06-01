@@ -13,89 +13,24 @@ public:
     std::string getNamePrefix() { return esm.getNamePrefix(); }
     Tools::Dict const & getDict() const { return dict; }
 
-    DictCreator(const std::string & path_n);
     DictCreator(
-        const std::string & path_n,
-        const std::string & path_f);
+        const std::string & path);
     DictCreator(
-        const std::string & path_n,
+        const std::string & path,
+        const std::string & path_ext);
+    DictCreator(
+        const std::string & path,
         const DictMerger & merger,
-        const Tools::CreatorMode mode,
-        const bool add_hyperlinks);
+        const Tools::CreatorMode mode);
 
 private:
-    void makeDict(const bool same_order);
-    bool isSameOrder();
-    void resetCounters();
-    std::string translateDialogTopic(std::string to_translate);
-    void validateRecord();
-    void validateRecordForModeALL();
-    void validateRecordForModeNOT();
-    void validateRecordForModeCHANGED();
-    void addAnnotations();
-    void insertRecordToDict();
-    std::vector<std::string> makeScriptMessages(const std::string & script_text);
-    void addGenderAnnotations();
-    void printLogLine(const Tools::RecType type);
-
-    void makeDictCELL();
-    void makeDictCELLWilderness();
-    void makeDictCELLWildernessExtended();
-    void makeDictCELLRegion();
-    void makeDictCELLRegionExtended();
-    void makeDictGMST();
-    void makeDictFNAM();
-    void makeDictDESC();
-    void makeDictTEXT();
-    void makeDictRNAM();
-    void makeDictINDX();
-    void makeDictDIAL();
-    void makeDictINFO();
-    void makeDictBNAM();
-    void makeDictSCPT();
-
-    void makeDictCELLExtended();
-    void makeDictCELLExtendedForeignColl();
-    void makeDictCELLExtendedNativeColl();
-    std::string makeDictCELLExtendedPattern(EsmReader & esm_cur);
-    void makeDictCELLExtendedAddMissing();
-
-    void makeDictDIALExtended();
-    void makeDictDIALExtendedForeignColl();
-    void makeDictDIALExtendedNativeColl();
-    std::string makeDictDIALExtendedPattern(EsmReader & esm_cur, size_t i);
-    void makeDictDIALExtendedAddMissing();
-
-    void makeDictBNAMExtended();
-    void makeDictBNAMExtendedForeignColl();
-    void makeDictBNAMExtendedNativeColl();
-
-    void makeDictSCPTExtended();
-    void makeDictSCPTExtendedForeignColl();
-    void makeDictSCPTExtendedNativeColl();
-
-    EsmReader esm;
-    EsmReader esm_ext;
-    EsmReader * esm_ptr;
-    const DictMerger * merger;
-    Tools::Dict dict;
-
-    std::string key_text;
-    std::string val_text;
-    Tools::RecType type;
-
-    std::vector<std::string> message;
-    std::vector<std::string> message_ext;
-    std::vector<std::string> * message_ptr;
-
-    const Tools::CreatorMode mode;
-    const bool add_hyperlinks;
-
-    int counter_created = 0;
-    int counter_missing = 0;
-    int counter_doubled = 0;
-    int counter_identical = 0;
-    int counter_all = 0;
+    struct Entry
+    {
+        const std::string & key_text;
+        const std::string & val_text;
+        const Tools::RecType type;
+        const std::string npc_text;
+    };
 
     struct Pattern
     {
@@ -104,8 +39,71 @@ private:
         bool missing;
     };
 
-    std::vector<Pattern> patterns_ext;
-    std::map<std::string, size_t> patterns;
+    using PatternsExt = std::vector<Pattern>;
+    using Patterns = std::map<std::string, size_t>;
+
+    void makeDict(const bool same_order);
+    bool isSameOrder();
+    void resetCounters();
+    std::string translateDialogTopic(std::string to_translate);
+    void validateEntry(const Entry & entry);
+    void validateRecordForModeALL(const Entry & entry);
+    void validateRecordForModeNOT(const Entry & entry);
+    void validateRecordForModeCHANGED(const Entry & entry);
+    void makeAnnotations(const Entry & entry);
+    void insertRecordToDict(const Entry & entry);
+    std::vector<std::string> makeScriptMessages(const std::string & script_text);
+    void printLogLine(const Tools::RecType type);
+
+    void makeDictCELL();
+    void makeDictCELL_Wilderness();
+    void makeDictCELL_Unordered_Wilderness();
+    void makeDictCELL_Region();
+    void makeDictCELL_Unordered_Region();
+    void makeDictGMST();
+    void makeDictFNAM();
+    void makeDictDESC();
+    void makeDictTEXT();
+    void makeDictRNAM();
+    void makeDictINDX();
+    void makeDictDIAL();
+    void makeDictNPC_FLAG();
+    void makeDictINFO();
+    void makeDictBNAM();
+    void makeDictSCPT();
+
+    void makeDictCELL_Unordered();
+    PatternsExt makeDictCELL_Unordered_PatternsExt();
+    Patterns makeDictCELL_Unordered_Patterns();
+    std::string makeDictCELL_Unordered_Pattern(EsmReader & esm_cur);
+    void makeDictCELL_Unordered_AddMissing(const PatternsExt & patterns_ext);
+
+    void makeDictDIAL_Unordered();
+    PatternsExt makeDictDIAL_Unordered_PatternsExt();
+    Patterns makeDictDIAL_Unordered_Patterns();
+    std::string makeDictDIAL_Unordered_Pattern(EsmReader & esm_cur, size_t i);
+    void makeDictDIAL_Unordered_AddMissing(const PatternsExt & patterns_ext);
+
+    void makeDictBNAM_Unordered();
+    PatternsExt makeDictBNAM_Unordered_PatternsExt();
+    Patterns makeDictBNAM_Unordered_Patterns();
+
+    void makeDictSCPT_Unordered();
+    PatternsExt makeDictSCPT_Unordered_PatternsExt();
+    Patterns makeDictSCPT_Unordered_Patterns();
+
+    EsmReader esm;
+    EsmReader esm_ext;
+    EsmReader & esm_ref;
+    const DictMerger & merger;
+    const Tools::CreatorMode mode;
+    Tools::Dict dict;
+
+    int counter_created = 0;
+    int counter_missing = 0;
+    int counter_doubled = 0;
+    int counter_identical = 0;
+    int counter_all = 0;
 };
 
 #endif // DICTCREATOR_HPP

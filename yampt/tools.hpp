@@ -20,18 +20,20 @@ public:
         BNAM,
         SCTX,
 
-        Glossary,
-        Annotations,
-        Gender,
-
-        Wilderness,
-        Region,
         PGRD,
         ANAM,
         SCVR,
         DNAM,
         CNDT,
-        GMDT
+        GMDT,
+
+        Wilderness,
+        Region,
+
+        Glossary,
+        NPC_FLAG,
+
+        Annotations,
     };
 
     enum class CreatorMode

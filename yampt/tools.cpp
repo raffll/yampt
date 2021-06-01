@@ -33,44 +33,41 @@ std::string Tools::readFile(const std::string & path)
 //----------------------------------------------------------
 void Tools::writeDict(const Dict & dict, const std::string & name)
 {
-    if (getNumberOfElementsInDict(dict) > 0)
-    {
-        std::ofstream file(name, std::ios::binary);
-        for (const auto & chapter : dict)
-        {
-            const auto & type = chapter.first;
-            if (type == Tools::RecType::Annotations ||
-                type == Tools::RecType::Glossary ||
-                type == Tools::RecType::Gender)
-                continue;
-
-            for (const auto & elem : chapter.second)
-            {
-                file
-                    << "<record>\r\n"
-                    << "\t" << sep[1] << Tools::getTypeName(type) << sep[2] << "\r\n"
-                    << "\t" << sep[3] << elem.first << sep[4] << "\r\n"
-                    << "\t" << sep[5] << elem.second << sep[6] << "\r\n";
-
-                if (type == Tools::RecType::INFO)
-                {
-                    auto search = dict.at(Tools::RecType::Annotations).find(elem.first);
-                    if (search != dict.at(Tools::RecType::Annotations).end())
-                    {
-                        file << "\t" << "<!-- " << search->second << " -->" << "\r\n";;
-                    }
-                }
-
-                file << "</record>\r\n";
-            }
-        }
-        addLog("--> Writing " + std::to_string(getNumberOfElementsInDict(dict))
-               + " records to \"" + name + "\"...\r\n");
-    }
-    else
+    if (getNumberOfElementsInDict(dict) == 0)
     {
         addLog("--> No records to make dictionary!\r\n");
+        return;
     }
+
+    std::ofstream file(name, std::ios::binary);
+    for (const auto & chapter : dict)
+    {
+        const auto & type = chapter.first;
+        if (type == Tools::RecType::Annotations)
+            continue;
+
+        for (const auto & elem : chapter.second)
+        {
+            file
+                << "<record>\r\n"
+                << "\t" << sep[1] << Tools::getTypeName(type) << sep[2] << "\r\n"
+                << "\t" << sep[3] << elem.first << sep[4] << "\r\n"
+                << "\t" << sep[5] << elem.second << sep[6] << "\r\n";
+
+            if (type == Tools::RecType::INFO)
+            {
+                auto search = dict.at(Tools::RecType::Annotations).find(elem.first);
+                if (search != dict.at(Tools::RecType::Annotations).end())
+                {
+                    file << "\t" << "<!--" << search->second << "\r\n\t-->" << "\r\n";;
+                }
+            }
+
+            file << "</record>\r\n";
+        }
+    }
+    addLog("--> Writing " + std::to_string(getNumberOfElementsInDict(dict))
+           + " records to \"" + name + "\"...\r\n");
 }
 
 //----------------------------------------------------------
@@ -98,6 +95,9 @@ size_t Tools::getNumberOfElementsInDict(const Dict & dict)
     size_t size = 0;
     for (const auto & chapter : dict)
     {
+        if (chapter.first == Tools::RecType::Annotations)
+            continue;
+
         size += chapter.second.size();
     }
     return size;
@@ -263,43 +263,44 @@ Tools::Dict Tools::initializeDict()
         { Tools::RecType::SCTX, {} },
 
         { Tools::RecType::Glossary, {} },
+        { Tools::RecType::NPC_FLAG, {} },
+
         { Tools::RecType::Annotations, {} },
-        { Tools::RecType::Gender, {} },
     };
 }
 
 //----------------------------------------------------------
 std::string Tools::getTypeName(Tools::RecType type)
 {
-    static const std::vector<std::string> name
+    switch (type)
     {
-        "CELL",
-        "DIAL",
-        "INDX",
-        "RNAM",
-        "DESC",
-        "GMST",
-        "FNAM",
-        "INFO",
-        "TEXT",
-        "BNAM",
-        "SCTX",
+    case Tools::RecType::CELL: return "CELL";
+    case Tools::RecType::DIAL: return "DIAL";
+    case Tools::RecType::INDX: return "INDX";
+    case Tools::RecType::RNAM: return "RNAM";
+    case Tools::RecType::DESC: return "DESC";
+    case Tools::RecType::GMST: return "GMST";
+    case Tools::RecType::FNAM: return "FNAM";
+    case Tools::RecType::INFO: return "INFO";
+    case Tools::RecType::TEXT: return "TEXT";
+    case Tools::RecType::BNAM: return "BNAM";
+    case Tools::RecType::SCTX: return "SCTX";
 
-        "Glossary",
-        "Annotation",
-        "Gender",
+    case Tools::RecType::PGRD: return "PGRD";
+    case Tools::RecType::ANAM: return "ANAM";
+    case Tools::RecType::SCVR: return "SCVR";
+    case Tools::RecType::DNAM: return "DNAM";
+    case Tools::RecType::CNDT: return "CNDT";
+    case Tools::RecType::GMDT: return "GMDT";
 
-        "+ Wilderness",
-        "+ Region",
-        "PGRD",
-        "ANAM",
-        "SCVR",
-        "DNAM",
-        "CNDT",
-        "GMDT"
-    };
+    case Tools::RecType::Wilderness: return "+ Wilderness";
+    case Tools::RecType::Region: return "+ Region";
 
-    return name.at(static_cast<int>(type));
+    case Tools::RecType::Glossary: return "Glossary";
+    case Tools::RecType::NPC_FLAG: return "NPC_FLAG";
+
+    case Tools::RecType::Annotations: return "Annotations";
+    }
 }
 
 //----------------------------------------------------------
