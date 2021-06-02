@@ -18,7 +18,6 @@ DictMerger::DictMerger(const std::vector<std::string> & paths)
     }
 
     mergeDict();
-
     findDuplicateValues(Tools::RecType::CELL);
     findDuplicateValues(Tools::RecType::DIAL);
     findUnusedINFO();
@@ -75,10 +74,9 @@ void DictMerger::mergeDict()
 void DictMerger::findDuplicateValues(Tools::RecType type)
 {
     std::set<std::string> texts;
-    std::string text_lc;
     for (const auto & elem : dict.at(type))
     {
-        text_lc = elem.second;
+        std::string text_lc = elem.second;
         transform(
             text_lc.begin(), text_lc.end(),
             text_lc.begin(), ::tolower);
@@ -93,19 +91,15 @@ void DictMerger::findDuplicateValues(Tools::RecType type)
 //----------------------------------------------------------
 void DictMerger::findUnusedINFO()
 {
-    std::string text;
-    bool found;
-    size_t beg;
-    size_t end;
     for (const auto & info : dict.at(Tools::RecType::INFO))
     {
-        found = false;
-        text = info.first;
+        bool found = false;
+        std::string text = info.first;
         if (text.size() < 1 || text.substr(0, 1) != "T")
             continue;
 
-        beg = text.find("^") + 1;
-        end = text.find_last_of("^");
+        size_t beg = text.find("^") + 1;
+        size_t end = text.find_last_of("^");
         text = text.substr(beg, end - beg);
 
         for (const auto & dial : dict.at(Tools::RecType::DIAL))

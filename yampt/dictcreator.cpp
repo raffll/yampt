@@ -87,6 +87,9 @@ void DictCreator::makeDict(const bool same_order)
     makeDictNPC_FLAG();
     makeDictINFO();
 
+    if (mode == Tools::CreatorMode::BASE)
+        makeDictFNAM_Glossary();
+
     if (!same_order)
         Tools::addLog("--> Check dictionary for \"MISSING\" keyword!\r\n"
                       "    Missing CELL and DIAL records needs to be added manually!\r\n");
@@ -113,23 +116,6 @@ bool DictCreator::isSameOrder()
     }
 
     return ids == ids_ext;
-}
-
-//----------------------------------------------------------
-static bool ValidateSubRecord(
-    const EsmReader::SubRecord & key,
-    const EsmReader::SubRecord & value,
-    const Tools::RecType type)
-{
-    switch (type)
-    {
-    case Tools::RecType::CELL:
-        return
-            key.exist &&
-            key.text != "" &&
-            value.exist &&
-            value.text != "";
-    }
 }
 
 //----------------------------------------------------------
@@ -322,45 +308,82 @@ void DictCreator::makeDictFNAM()
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (esm.getRecordId() == "ACTI" ||
-            esm.getRecordId() == "ALCH" ||
-            esm.getRecordId() == "APPA" ||
-            esm.getRecordId() == "ARMO" ||
-            esm.getRecordId() == "BOOK" ||
-            esm.getRecordId() == "BSGN" ||
-            esm.getRecordId() == "CLAS" ||
-            esm.getRecordId() == "CLOT" ||
-            esm.getRecordId() == "CONT" ||
-            esm.getRecordId() == "CREA" ||
-            esm.getRecordId() == "DOOR" ||
-            esm.getRecordId() == "FACT" ||
-            esm.getRecordId() == "INGR" ||
-            esm.getRecordId() == "LIGH" ||
-            esm.getRecordId() == "LOCK" ||
-            esm.getRecordId() == "MISC" ||
-            esm.getRecordId() == "NPC_" ||
-            esm.getRecordId() == "PROB" ||
-            esm.getRecordId() == "RACE" ||
-            esm.getRecordId() == "REGN" ||
-            esm.getRecordId() == "REPA" ||
-            esm.getRecordId() == "SKIL" ||
-            esm.getRecordId() == "SPEL" ||
-            esm.getRecordId() == "WEAP")
+        if (!isFNAM(esm.getRecordId()))
+            continue;
+
+        esm.setKey("NAME");
+        esm.setValue("FNAM");
+        if (esm.getKey().exist &&
+            esm.getValue().exist &&
+            esm.getKey().text != "player")
         {
-            esm.setKey("NAME");
-            esm.setValue("FNAM");
-            if (esm.getKey().exist &&
-                esm.getValue().exist &&
-                esm.getKey().text != "player")
-            {
-                const auto & key_text = esm.getRecordId() + Tools::sep[0] + esm.getKey().text;
-                const auto & val_text = esm.getValue().text;
-                const auto & type = Tools::RecType::FNAM;
-                validateEntry({ key_text, val_text, type });
-            }
+            const auto & key_text = esm.getRecordId() + Tools::sep[0] + esm.getKey().text;
+            const auto & val_text = esm.getValue().text;
+            const auto & type = Tools::RecType::FNAM;
+            validateEntry({ key_text, val_text, type });
         }
     }
     printLogLine(Tools::RecType::FNAM);
+}
+
+//----------------------------------------------------------
+bool DictCreator::isFNAM(const std::string & rec_id)
+{
+    return (rec_id == "ACTI" || rec_id == "ALCH" ||
+            rec_id == "APPA" || rec_id == "ARMO" ||
+            rec_id == "BOOK" || rec_id == "BSGN" ||
+            rec_id == "CLAS" || rec_id == "CLOT" ||
+            rec_id == "CONT" || rec_id == "CREA" ||
+            rec_id == "DOOR" || rec_id == "FACT" ||
+            rec_id == "INGR" || rec_id == "LIGH" ||
+            rec_id == "LOCK" || rec_id == "MISC" ||
+            rec_id == "NPC_" || rec_id == "PROB" ||
+            rec_id == "RACE" || rec_id == "REGN" ||
+            rec_id == "REPA" || rec_id == "SKIL" ||
+            rec_id == "SPEL" || rec_id == "WEAP");
+}
+
+//----------------------------------------------------------
+void DictCreator::makeDictFNAM_Glossary()
+{
+    resetCounters();
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
+    {
+        esm.selectRecord(i);
+        if (!isFNAM(esm.getRecordId()))
+            continue;
+
+        esm.setKey("NAME");
+        esm.setValue("FNAM");
+        if (esm.getKey().exist &&
+            esm.getValue().exist &&
+            esm.getValue().text != "")
+        {
+            for (size_t k = 0; k < esm_ext.getRecords().size(); ++k)
+            {
+                esm_ext.selectRecord(k);
+                if (esm_ext.getRecordId() != esm.getRecordId())
+                    continue;
+
+                esm_ext.setKey("NAME");
+                esm_ext.setValue("FNAM");
+                if (esm_ext.getKey().text == esm.getKey().text &&
+                    esm_ext.getValue().exist &&
+                    esm_ext.getValue().text != "")
+                {
+                    const auto & key_text = esm_ext.getValue().text;
+                    const auto & val_text =
+                        esm.getValue().text + " "
+                        + esm.getRecordId() + Tools::sep[0]
+                        + esm.getKey().text;
+                    const auto & type = Tools::RecType::Glossary;
+                    validateEntry({ key_text, val_text, type });
+                    break;
+                }
+            }
+        }
+    }
+    printLogLine(Tools::RecType::Glossary);
 }
 
 //----------------------------------------------------------

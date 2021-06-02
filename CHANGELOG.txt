@@ -1,4 +1,8 @@
 0.22
+- [feature] hiperlinks annotations from base dictionary and currently processed esp
+- [feature] gender annotations from base dictionary and currently processed esp
+- [feature] create hyperlinks annotations only from the start of the word
+- [feature] FNAM glossary
 - [bug] ommit variables containing keywords (e.g. addtopicOnce)
 - [bug] convert | in message line into new line in SCDT
 - [bug] don't parse script after "end"

@@ -71,6 +71,8 @@ private:
     void makeDictINFO();
     void makeDictBNAM();
     void makeDictSCPT();
+    void makeDictFNAM_Glossary();
+    bool isFNAM(const std::string & rec_id);
 
     void makeDictCELL_Unordered();
     PatternsExt makeDictCELL_Unordered_PatternsExt();

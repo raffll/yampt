@@ -197,38 +197,44 @@ std::string Tools::replaceNonReadableCharsWithDot(const std::string & str)
 //----------------------------------------------------------
 std::string Tools::addHyperlinks(
     const Chapter & chapter,
-    const std::string & val_text,
+    const std::string & source,
     bool extended)
 {
+    size_t pos = 0;
     std::string result;
-    std::string key_text_lc;
-    std::string val_text_lc;
-    size_t pos;
-
-    val_text_lc = val_text;
-    transform(val_text_lc.begin(), val_text_lc.end(),
-              val_text_lc.begin(), ::tolower);
+    auto source_lc = source;
+    transform(source_lc.begin(), source_lc.end(),
+              source_lc.begin(), ::tolower);
 
     for (const auto & elem : chapter)
     {
-        key_text_lc = elem.first;
+        const auto & key_text = elem.first;
+        const auto & val_text = elem.second;
+        auto key_text_lc = elem.first;
         transform(key_text_lc.begin(), key_text_lc.end(),
                   key_text_lc.begin(), ::tolower);
 
-        if (key_text_lc == elem.second)
-            continue;
-
-        pos = val_text_lc.find(key_text_lc);
+        pos = source_lc.find(key_text_lc);
         if (pos == std::string::npos)
             continue;
 
+        if (pos != 0)
+        {
+            auto ch = source_lc.substr(pos - 1, 1);
+            if (std::isalpha(ch[0]) != 0)
+            {
+                pos += 1;
+                continue;
+            }
+        }
+
         if (!extended)
         {
-            result.insert(result.size(), " [" + elem.second + "]");
+            result.insert(result.size(), " [" + val_text + "]");
         }
         else
         {
-            result.insert(result.size(), " [" + elem.first + " -> " + elem.second + "]");
+            result.insert(result.size(), " [" + key_text + " -> " + val_text + "]");
         }
     }
     return result;
