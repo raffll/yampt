@@ -77,7 +77,7 @@ public:
     static std::string replaceNonReadableCharsWithDot(const std::string & str);
     static std::string addHyperlinks(
         const Chapter & chapter,
-        const std::string & val_text,
+        const std::string & source,
         bool extended);
     static void addLog(
         const std::string & entry,
