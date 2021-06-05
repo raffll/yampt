@@ -12,13 +12,13 @@ TEST_CASE("script parser, dial keywords", "[u]")
         { R"(AddTopic "Test")", R"(AddTopic "Result")" },
         { R"(AddTopic "Test Test")", R"(AddTopic "Result Result")" },
         { R"(AddTopic Test)", R"(AddTopic Result)" },
-        { R"(AddTopic Test Test)", R"(AddTopic Result Test)" }, // need to check if possible
+        { R"(AddTopic Test Test)", R"(AddTopic Result Test)" }, /* need to check if possible */
         { R"(;AddTopic "Test")", R"(;AddTopic "Test")" },
         { R"(Player->AddTopic "Test")", R"(Player->AddTopic "Result")" },
         { R"(AddTopic)", R"(AddTopic)" },
         { R"(Begin AddTopicScript)", R"(Begin AddTopicScript)" },
         { R"(AddTopicNPC->AddTopic "Test")", R"(AddTopicNPC->AddTopic "Result")" },
-        //{ R"("AddTopic NPC"->AddTopic "Test")", R"("AddTopic NPC"->AddTopic "Result")" }
+        { R"("AddTopic NPC"->AddTopic "Test")", R"("AddTopic NPC"->AddTopic "Result")" }
     };
 
     DictMerger merger;

@@ -15,7 +15,7 @@ int main(int argc, char * argv[])
     }
     catch (...)
     {
-        Tools::addLog("Unknown error!\r\n");
+        Tools::addLog("UNKNOWN error!\r\n");
     }
 
     Tools::writeText(Tools::getLog(), "yampt.log");

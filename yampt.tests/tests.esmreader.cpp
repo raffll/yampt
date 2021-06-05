@@ -4,78 +4,78 @@
 
 using namespace std;
 
-TEST_CASE("Loading and parsing plugin file", "[i]")
+TEST_CASE("loading and parsing plugin file", "[i]")
 {
     EsmReader esm("master/en/Morrowind.esm");
     REQUIRE(esm.isLoaded() == true);
-    REQUIRE(esm.getNameFull() == "Morrowind.esm");
-    REQUIRE(esm.getNamePrefix() == "Morrowind");
-    REQUIRE(esm.getNameSuffix() == ".esm");
+    REQUIRE(esm.getName().full == "Morrowind.esm");
+    REQUIRE(esm.getName().prefix == "Morrowind");
+    REQUIRE(esm.getName().suffix == ".esm");
 }
 
-TEST_CASE("Set key, not found", "[i]")
+TEST_CASE("set key, not found", "[i]")
 {
     EsmReader esm("master/en/Morrowind.esm");
     esm.selectRecord(0);
     esm.setKey("TEST");
     REQUIRE(esm.getKey().id == "TEST");
     REQUIRE(esm.getKey().exist == false);
-    REQUIRE(esm.getKey().text == "");
+    REQUIRE(esm.getKey().text == "N/A");
 }
 
-TEST_CASE("Set key, empty text", "[i]")
+TEST_CASE("set key, empty text", "[i]")
 {
     EsmReader esm("master/en/Morrowind.esm");
-    esm.selectRecord(16955); // Region CELL with empty NAME
+    esm.selectRecord(16955); /* region CELL with empty NAME */
     esm.setKey("NAME");
     REQUIRE(esm.getKey().id == "NAME");
     REQUIRE(esm.getKey().exist == true);
     REQUIRE(esm.getKey().text == "");
 }
 
-TEST_CASE("Set key", "[i]")
+TEST_CASE("set key", "[i]")
 {
     EsmReader esm("master/en/Morrowind.esm");
-    esm.selectRecord(22075); // Regular CELL
+    esm.selectRecord(22075); /* regular CELL */
     esm.setKey("NAME");
     REQUIRE(esm.getKey().id == "NAME");
     REQUIRE(esm.getKey().exist == true);
     REQUIRE(esm.getKey().text == "Zergonipal, Shrine");
 }
 
-TEST_CASE("Set key, INDX case", "[i]")
+TEST_CASE("set key, INDX case", "[i]")
 {
     EsmReader esm("master/en/Morrowind.esm");
-    esm.selectRecord(2062); // SKIL with INDX instead of NAME
+    esm.selectRecord(2062); /* SKIL with INDX instead of NAME */
     esm.setKey("INDX");
     REQUIRE(esm.getKey().id == "INDX");
     REQUIRE(esm.getKey().exist == true);
     REQUIRE(Tools::getINDX(esm.getKey().content) == "000");
 }
 
-TEST_CASE("Set key, dialog type case", "[i]")
+TEST_CASE("set key, dialog type case", "[i]")
 {
     EsmReader esm("master/en/Morrowind.esm");
-    esm.selectRecord(22245); // DIAL with one byte DATA dialog type
+    esm.selectRecord(22245); /* DIAL with one byte DATA dialog type */
     esm.setKey("DATA");
     REQUIRE(esm.getKey().id == "DATA");
     REQUIRE(esm.getKey().exist == true);
     REQUIRE(Tools::getDialogType(esm.getKey().content) == "J");
 }
 
-TEST_CASE("Set value, not found", "[i]")
+TEST_CASE("set value, not found", "[i]")
 {
     EsmReader esm("master/en/Morrowind.esm");
     esm.selectRecord(0);
     esm.setValue("TEST");
     REQUIRE(esm.getValue().id == "TEST");
     REQUIRE(esm.getValue().exist == false);
-    REQUIRE(esm.getValue().text == "");
+    REQUIRE(esm.getValue().text == "N/A");
     REQUIRE(esm.getValue().pos == esm.getRecordContent().size());
     REQUIRE(esm.getValue().size == 0);
 }
 
-TEST_CASE("Set friendly", "[i]")
+TEST_CASE("set value", "[i]")
 {
     /*
        (16) FACT............
@@ -86,7 +86,7 @@ TEST_CASE("Set friendly", "[i]")
     */
 
     EsmReader esm("master/en/Morrowind.esm");
-    esm.selectRecord(1600); // RNAM
+    esm.selectRecord(1600); /* RNAM */
     esm.setValue("RNAM");
     REQUIRE(esm.getValue().id == "RNAM");
     REQUIRE(esm.getValue().exist == true);
@@ -96,7 +96,7 @@ TEST_CASE("Set friendly", "[i]")
     REQUIRE(esm.getValue().size == 32);
 }
 
-TEST_CASE("Set friendly, next", "[i]")
+TEST_CASE("set value, next", "[i]")
 {
     /*
        (16) FACT............
@@ -108,7 +108,7 @@ TEST_CASE("Set friendly, next", "[i]")
     */
 
     EsmReader esm("master/en/Morrowind.esm");
-    esm.selectRecord(1600); // RNAM
+    esm.selectRecord(1600); /* RNAM */
     esm.setValue("RNAM");
     esm.setNextValue("RNAM");
     REQUIRE(esm.getValue().id == "RNAM");

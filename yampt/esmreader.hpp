@@ -14,15 +14,13 @@ public:
     void setValue(const std::string & id);
     void setNextValue(const std::string & id);
 
-    bool isLoaded() { return is_loaded; }
-    std::string getNameFull() { return name_full; }
-    std::string getNamePrefix() { return name_prefix; }
-    std::string getNameSuffix() { return name_suffix; }
-    std::time_t getTime() { return time; }
-    std::vector<std::string> const & getRecords() const { return records; }
+    const auto & isLoaded() { return is_loaded; }
+    const auto & getName() { return name; }
+    const auto & getTime() { return time; }
+    const auto & getRecords() const { return records; }
 
-    std::string getRecordContent() { return *rec; }
-    std::string getRecordId() { return rec_id; }
+    const auto & getRecordContent() { return *rec; }
+    const auto & getRecordId() { return rec_id; }
 
     struct SubRecord
     {
@@ -35,10 +33,8 @@ public:
         bool exist = false;
     };
 
-    const SubRecord & getKey() { return key; }
-    const SubRecord & getValue() { return value; }
-
-    Tools::Encoding detectEncoding();
+    const auto & getKey() { return key; }
+    const auto & getValue() { return value; }
 
     EsmReader() = default;
     EsmReader(const std::string & path);
@@ -47,7 +43,6 @@ private:
     void splitFile(
         const std::string & content,
         const std::string & path);
-    void setName(const std::string & path);
     void setTime(const std::string & path);
     void mainLoop(
         std::size_t & cur_pos,
@@ -56,12 +51,9 @@ private:
         std::string & cur_text,
         EsmReader::SubRecord & subrecord);
     void handleException(const std::exception & e);
-    bool detectWindows1250Encoding(const std::string & text);
 
     std::vector<std::string> records;
-    std::string name_full;
-    std::string name_prefix;
-    std::string name_suffix;
+    Tools::Name name;
     std::time_t time = 0;
     bool is_loaded = false;
 

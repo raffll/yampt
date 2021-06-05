@@ -9,9 +9,8 @@
 class DictCreator
 {
 public:
-    std::string getNameFull() { return esm.getNameFull(); }
-    std::string getNamePrefix() { return esm.getNamePrefix(); }
-    Tools::Dict const & getDict() const { return dict; }
+    const auto & getName() { return esm.getName(); }
+    const auto & getDict() const { return dict; }
 
     DictCreator(
         const std::string & path);
@@ -24,14 +23,6 @@ public:
         const Tools::CreatorMode mode);
 
 private:
-    struct Entry
-    {
-        const std::string & key_text;
-        const std::string & val_text;
-        const Tools::RecType type;
-        const std::string npc_text;
-    };
-
     struct Pattern
     {
         std::string str;
@@ -46,20 +37,20 @@ private:
     bool isSameOrder();
     void resetCounters();
     std::string translateDialogTopic(std::string to_translate);
-    void validateEntry(const Entry & entry);
-    void validateRecordForModeALL(const Entry & entry);
-    void validateRecordForModeNOT(const Entry & entry);
-    void validateRecordForModeCHANGED(const Entry & entry);
-    void makeAnnotations(const Entry & entry);
-    void insertRecordToDict(const Entry & entry);
+    void validateEntry(const Tools::Entry & entry);
+    void validateRecordForModeALL(const Tools::Entry & entry);
+    void validateRecordForModeNOT(const Tools::Entry & entry);
+    void validateRecordForModeCHANGED(const Tools::Entry & entry);
+    void makeAnnotations(const Tools::Entry & entry);
+    void insertRecordToDict(const Tools::Entry & entry);
     std::vector<std::string> makeScriptMessages(const std::string & script_text);
     void printLogLine(const Tools::RecType type);
 
     void makeDictCELL();
-    void makeDictCELL_Wilderness();
-    void makeDictCELL_Unordered_Wilderness();
-    void makeDictCELL_Region();
-    void makeDictCELL_Unordered_Region();
+    void makeDictCELL_Default();
+    void makeDictCELL_Unordered_Default();
+    void makeDictCELL_REGN();
+    void makeDictCELL_Unordered_REGN();
     void makeDictGMST();
     void makeDictFNAM();
     void makeDictDESC();
@@ -87,11 +78,12 @@ private:
     void makeDictDIAL_Unordered_AddMissing(const PatternsExt & patterns_ext);
 
     void makeDictBNAM_Unordered();
-    PatternsExt makeDictBNAM_Unordered_PatternsExt();
+    PatternsExt makeDict_Unordered_PatternsExt(
+        const std::string & rec_id,
+        const std::string & key_id);
     Patterns makeDictBNAM_Unordered_Patterns();
 
     void makeDictSCPT_Unordered();
-    PatternsExt makeDictSCPT_Unordered_PatternsExt();
     Patterns makeDictSCPT_Unordered_Patterns();
 
     EsmReader esm;

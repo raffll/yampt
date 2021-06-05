@@ -8,8 +8,8 @@
 class DictMerger
 {
 public:
-    std::string getNamePrefix(size_t i) { return readers[i].getNamePrefix(); }
-    Tools::Dict const & getDict() const { return dict; }
+    const auto & getName(size_t i) { return readers[i].getName(); }
+    const auto & getDict() const { return dict; }
 
     DictMerger();
     DictMerger(const std::vector<std::string> & paths);

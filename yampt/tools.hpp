@@ -27,13 +27,14 @@ public:
         CNDT,
         GMDT,
 
-        Wilderness,
-        Region,
+        Default,
+        REGN,
 
         Glossary,
         NPC_FLAG,
 
         Annotations,
+        Unknown,
     };
 
     enum class CreatorMode
@@ -53,6 +54,28 @@ public:
 
     using Chapter = std::map<std::string, std::string>;
     using Dict = std::map<RecType, Chapter>;
+
+    struct Entry
+    {
+        const std::string & key_text;
+        const std::string & val_text;
+        const Tools::RecType & type;
+        const std::string optional;
+    };
+
+    struct Name
+    {
+        std::string full;
+        std::string prefix;
+        std::string suffix;
+
+        void setName(const std::string & path)
+        {
+            full = path.substr(path.find_last_of("\\/") + 1);
+            prefix = full.substr(0, full.find_last_of("."));
+            suffix = full.substr(full.rfind("."));
+        }
+    };
 
     static const std::vector<std::string> sep;
     static const std::vector<std::string> err;
@@ -78,13 +101,14 @@ public:
     static std::string addHyperlinks(
         const Chapter & chapter,
         const std::string & source,
-        bool extended);
+        const bool extended);
     static void addLog(
         const std::string & entry,
         const bool silent = false);
     static std::string getLog() { return log; }
     static Dict initializeDict();
-    static std::string getTypeName(Tools::RecType type);
+    static std::string type2Str(Tools::RecType type);
+    static RecType str2Type(const std::string & str);
     static std::string getDialogType(const std::string & content);
     static std::string getINDX(const std::string & content);
 

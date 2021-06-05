@@ -20,11 +20,8 @@ private:
     void makeDictChanged();
     void mergeDict();
     void convertEsm();
-    void dumpFile();
-    void makeScriptList();
 
     bool add_hyperlinks = false;
-    bool safe = false;
 
     std::vector<std::string> arg;
     std::vector<std::string> file_path;
