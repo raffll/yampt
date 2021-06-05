@@ -2,7 +2,6 @@
 #include "dictcreator.hpp"
 #include "dictmerger.hpp"
 #include "esmconverter.hpp"
-#include "esmtools.hpp"
 
 //----------------------------------------------------------
 UserInterface::UserInterface(std::vector<std::string> & arg)
@@ -24,10 +23,6 @@ void UserInterface::parseCommandLine()
             if (arg[i] == "--add-hyperlinks")
             {
                 add_hyperlinks = true;
-            }
-            else if (arg[i] == "--safe")
-            {
-                safe = true;
             }
             else if (arg[i] == "--windows-1250")
             {
@@ -112,14 +107,6 @@ void UserInterface::runCommand()
         {
             convertEsm();
         }
-        else if (arg[1] == "--dump" && file_path.size() > 0)
-        {
-            dumpFile();
-        }
-        else if (arg[1] == "--scripts" && file_path.size() > 0)
-        {
-            makeScriptList();
-        }
         else
         {
             Tools::addLog("Syntax error!\r\n");
@@ -127,7 +114,7 @@ void UserInterface::runCommand()
     }
     else
     {
-        Tools::addLog("yampt v0.21\r\n");
+        Tools::addLog("yampt v0.22\r\n");
     }
 }
 
@@ -137,7 +124,7 @@ void UserInterface::makeDictRaw()
     for (size_t i = 0; i < file_path.size(); ++i)
     {
         DictCreator creator(file_path[i]);
-        Tools::writeDict(creator.getDict(), creator.getNamePrefix() + ".RAW.xml");
+        Tools::writeDict(creator.getDict(), creator.getName().prefix + ".RAW.xml");
     }
 }
 
@@ -145,7 +132,7 @@ void UserInterface::makeDictRaw()
 void UserInterface::makeDictBase()
 {
     DictCreator creator(file_path[0], file_path[1]);
-    Tools::writeDict(creator.getDict(), creator.getNamePrefix() + ".BASE.xml");
+    Tools::writeDict(creator.getDict(), creator.getName().prefix + ".BASE.xml");
 }
 
 //----------------------------------------------------------
@@ -155,7 +142,7 @@ void UserInterface::makeDictAll()
     for (size_t i = 0; i < file_path.size(); ++i)
     {
         DictCreator creator(file_path[i], merger, Tools::CreatorMode::ALL);
-        Tools::writeDict(creator.getDict(), creator.getNamePrefix() + ".ALL.xml");
+        Tools::writeDict(creator.getDict(), creator.getName().prefix + ".ALL.xml");
     }
 }
 
@@ -166,7 +153,7 @@ void UserInterface::makeDictNotFound()
     for (size_t i = 0; i < file_path.size(); ++i)
     {
         DictCreator creator(file_path[i], merger, Tools::CreatorMode::NOTFOUND);
-        Tools::writeDict(creator.getDict(), creator.getNamePrefix() + ".NOTFOUND.xml");
+        Tools::writeDict(creator.getDict(), creator.getName().prefix + ".NOTFOUND.xml");
     }
 }
 
@@ -177,7 +164,7 @@ void UserInterface::makeDictChanged()
     for (size_t i = 0; i < file_path.size(); ++i)
     {
         DictCreator creator(file_path[i], merger, Tools::CreatorMode::CHANGED);
-        Tools::writeDict(creator.getDict(), creator.getNamePrefix() + ".CHANGED.xml");
+        Tools::writeDict(creator.getDict(), creator.getName().prefix + ".CHANGED.xml");
     }
 }
 
@@ -194,36 +181,12 @@ void UserInterface::convertEsm()
     DictMerger merger(dict_path);
     for (size_t i = 0; i < file_path.size(); ++i)
     {
-        EsmConverter converter(file_path[i], merger, add_hyperlinks, safe, suffix, encoding);
+        EsmConverter converter(file_path[i], merger, add_hyperlinks, suffix, encoding);
         if (converter.isLoaded())
         {
-            Tools::writeFile(converter.getRecordColl(), converter.getNamePrefix() + suffix + converter.getNameSuffix());
-            boost::filesystem::last_write_time(converter.getNamePrefix() + suffix + converter.getNameSuffix(),
+            Tools::writeFile(converter.getRecordColl(), converter.getName().prefix + suffix + converter.getName().suffix);
+            boost::filesystem::last_write_time(converter.getName().prefix + suffix + converter.getName().suffix,
                                                converter.getTime());
         }
-    }
-}
-
-//----------------------------------------------------------
-void UserInterface::dumpFile()
-{
-    std::string text;
-    for (size_t i = 0; i < file_path.size(); ++i)
-    {
-        EsmTools dump(file_path[i]);
-        text = dump.dumpFile();
-        Tools::writeText(text, dump.getNamePrefix() + ".DUMP.txt");
-    }
-}
-
-//----------------------------------------------------------
-void UserInterface::makeScriptList()
-{
-    std::string text;
-    for (size_t i = 0; i < file_path.size(); ++i)
-    {
-        EsmTools dump(file_path[i]);
-        text = dump.makeScriptList();
-        Tools::writeText(text, dump.getNamePrefix() + ".SCRIPTS.txt");
     }
 }

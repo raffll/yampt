@@ -146,7 +146,6 @@
     <ClCompile Include="dictreader.cpp" />
     <ClCompile Include="esmconverter.cpp" />
     <ClCompile Include="esmreader.cpp" />
-    <ClCompile Include="esmtools.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="userinterface.cpp" />
   </ItemGroup>
@@ -158,7 +157,6 @@
     <ClInclude Include="dictreader.hpp" />
     <ClInclude Include="esmconverter.hpp" />
     <ClInclude Include="esmreader.hpp" />
-    <ClInclude Include="esmtools.hpp" />
     <ClInclude Include="includes.hpp" />
     <ClInclude Include="userinterface.hpp" />
   </ItemGroup>

@@ -43,24 +43,23 @@ void DictMerger::mergeDict()
             for (const auto & elem : chapter.second)
             {
                 const auto & type = chapter.first;
-
                 auto search = dict.at(type).find(elem.first);
                 if (search == dict.at(type).end())
                 {
-                    // Not found in previous dictionary - inserted
+                    /* not found in previous dictionary - inserted */
                     dict.at(type).insert({ elem.first, elem.second });
                     counter_merged++;
                 }
                 else if (search != dict.at(type).end() &&
                          search->second != elem.second)
                 {
-                    // Found in previous dictionary - skipped
-                    Tools::addLog("Warning: replaced " + Tools::getTypeName(type) + " record " + elem.first + "\r\n");
+                    /* found in previous dictionary - skipped */
+                    Tools::addLog("Warning: replaced " + Tools::type2Str(type) + " record " + elem.first + "\r\n");
                     counter_replaced++;
                 }
                 else
                 {
-                    // Found in previous dictionary - identical, skipped
+                    /* found in previous dictionary - identical, skipped */
                     counter_identical++;
                 }
             }
@@ -84,7 +83,7 @@ void DictMerger::findDuplicateValues(Tools::RecType type)
         if (texts.insert(text_lc).second)
             continue;
 
-        Tools::addLog("Warning: duplicate " + Tools::getTypeName(type) + " value " + elem.second + "\r\n");
+        Tools::addLog("Warning: duplicate " + Tools::type2Str(type) + " value " + elem.second + "\r\n");
     }
 }
 

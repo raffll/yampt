@@ -7,10 +7,9 @@
 class DictReader
 {
 public:
-    bool isLoaded() { return is_loaded; }
-    std::string getNameFull() { return name_full; }
-    std::string getNamePrefix() { return name_prefix; }
-    Tools::Dict const & getDict() const { return dict; }
+    const auto & isLoaded() { return is_loaded; }
+    const auto & getName() { return name; }
+    const auto & getDict() const { return dict; }
 
     DictReader(const std::string & path);
     DictReader(const DictReader & that);
@@ -21,18 +20,15 @@ private:
     void parseDict(
         const std::string & content,
         const std::string & path);
-    void setName(const std::string & path);
-    void validateRecord();
-    void insertRecord(
-        const Tools::RecType type);
-    void insertCELL();
-    void insertRNAM();
-    void insertFNAM();
-    void insertINFO();
+    void validateEntry(const Tools::Entry & entry);
+    void insertRecord(const Tools::Entry & entry);
+    void insertCELL(const Tools::Entry & entry);
+    void insertRNAM(const Tools::Entry & entry);
+    void insertFNAM(const Tools::Entry & entry);
+    void insertINFO(const Tools::Entry & entry);
     void printSummaryLog();
 
-    std::string name_full;
-    std::string name_prefix;
+    Tools::Name name;
     Tools::Dict dict;
 
     bool is_loaded = false;
@@ -41,10 +37,6 @@ private:
     int counter_invalid = 0;
     int counter_doubled = 0;
     int counter_all = 0;
-
-    std::string type_name;
-    std::string key_text;
-    std::string val_text;
 };
 
 #endif // DICTREADER_HPP

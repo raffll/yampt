@@ -3,7 +3,7 @@
 #include "../yampt/esmreader.hpp"
 #include "../yampt/dictcreator.hpp"
 
-TEST_CASE("Create raw", "[i]")
+TEST_CASE("create raw", "[i]")
 {
     DictCreator esm("master/en/Morrowind.esm");
     REQUIRE(esm.getDict().at(Tools::RecType::CELL).begin()->first == "Abaelun Mine");
@@ -28,7 +28,7 @@ TEST_CASE("Create raw", "[i]")
     REQUIRE(esm.getDict().at(Tools::RecType::SCTX).begin()->first == esm.getDict().at(Tools::RecType::SCTX).begin()->second);
 }
 
-TEST_CASE("Create base, same record order", "[i]")
+TEST_CASE("create base, same record order", "[i]")
 {
     DictCreator esm("master/pl/Morrowind.esm", "master/en/Morrowind.esm");
     auto search = esm.getDict().at(Tools::RecType::CELL).find("Abaelun Mine");
@@ -46,7 +46,7 @@ TEST_CASE("Create base, same record order", "[i]")
     REQUIRE(search == esm.getDict().at(Tools::RecType::INFO).end());
 }
 
-TEST_CASE("Create base, different record order", "[i]")
+TEST_CASE("create base, different record order", "[i]")
 {
     DictCreator esm("master/de/Morrowind.esm", "master/en/Morrowind.esm");
 

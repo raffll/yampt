@@ -8,7 +8,7 @@ EsmReader::EsmReader(const std::string & path)
     if (!content.empty())
         splitFile(content, path);
 
-    setName(path);
+    name.setName(path);
     setTime(path);
 }
 
@@ -45,17 +45,6 @@ void EsmReader::splitFile(
     {
         Tools::addLog("--> Error parsing \"" + path + "\" (isn't TES3 plugin)!\r\n");
         is_loaded = false;
-    }
-}
-
-//----------------------------------------------------------
-void EsmReader::setName(const std::string & path)
-{
-    if (is_loaded)
-    {
-        name_full = path.substr(path.find_last_of("\\/") + 1);
-        name_prefix = name_full.substr(0, name_full.find_last_of("."));
-        name_suffix = name_full.substr(name_full.rfind("."));
     }
 }
 
@@ -189,8 +178,8 @@ void EsmReader::mainLoop(
 
     if (cur_pos == rec->size())
     {
-        subrecord.content = "";
-        subrecord.text = "";
+        subrecord.content = "N/A";
+        subrecord.text = "N/A";
         subrecord.pos = cur_pos;
         subrecord.size = 0;
         subrecord.exist = false;
@@ -205,50 +194,4 @@ void EsmReader::handleException(const std::exception & e)
     Tools::addLog(cur_rec + "\r\n");
     Tools::addLog("--> Exception: " + std::string(e.what()) + "\r\n");
     is_loaded = false;
-}
-
-//----------------------------------------------------------
-Tools::Encoding EsmReader::detectEncoding()
-{
-    for (size_t i = 0; i < getRecords().size(); ++i)
-    {
-        selectRecord(i);
-        if (getRecordId() == "INFO")
-            setValue("NAME");
-
-        if (detectWindows1250Encoding(getValue().text))
-        {
-            Tools::addLog("--> Windows-1250 encoding detected!\r\n");
-            Tools::addLog("INFO: " + getValue().text + "\r\n", true);
-            return Tools::Encoding::WINDOWS_1250;
-        }
-    }
-    return Tools::Encoding::UNKNOWN;
-}
-
-//----------------------------------------------------------
-bool EsmReader::detectWindows1250Encoding(const std::string & val_text)
-{
-    // 156 œ ś
-    // 159 Ÿ ź
-    // 179 ³ ł
-    // 185 ¹ ą
-    // 191 ¿ ż
-    // 230 æ ć
-    // 234 ê ę
-    // 241 ñ ń
-    // 243 ó ó <- found in Tamriel Rebuilt
-
-    std::ostringstream ss;
-    ss
-        << static_cast<char>(156)
-        << static_cast<char>(159)
-        << static_cast<char>(179)
-        << static_cast<char>(185)
-        << static_cast<char>(191)
-        << static_cast<char>(230)
-        << static_cast<char>(234)
-        << static_cast<char>(241);
-
-    return val_text.find_first_of(ss.str()) != std::string::npos;
 }

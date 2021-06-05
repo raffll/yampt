@@ -7,7 +7,6 @@
     <ClCompile Include="dictreader.cpp" />
     <ClCompile Include="esmconverter.cpp" />
     <ClCompile Include="esmreader.cpp" />
-    <ClCompile Include="esmtools.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="tools.cpp" />
     <ClCompile Include="scriptparser.cpp" />
@@ -19,7 +18,6 @@
     <ClInclude Include="dictreader.hpp" />
     <ClInclude Include="esmconverter.hpp" />
     <ClInclude Include="esmreader.hpp" />
-    <ClInclude Include="esmtools.hpp" />
     <ClInclude Include="includes.hpp" />
     <ClInclude Include="tools.hpp" />
     <ClInclude Include="scriptparser.hpp" />

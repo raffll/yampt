@@ -61,6 +61,7 @@ private:
     size_t pos_c = 0;
     size_t keyword_pos = 0;
     std::string keyword;
+    bool error = false;
 };
 
 #endif // SCRIPTPARSER_EX_HPP

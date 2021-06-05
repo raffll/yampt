@@ -37,6 +37,7 @@ void ScriptParser::convertScript()
         pos = 0;
         keyword_pos = 0;
         keyword.erase();
+        error = false;
 
         transform(line_lc.begin(), line_lc.end(),
                   line_lc.begin(), ::tolower);
@@ -82,9 +83,12 @@ void ScriptParser::convertScript()
             {
                 Tools::addLog("Error: unknown error in script parser!\r\n");
                 Tools::addLog("Line: " + line + "\r\n");
-                dumpError();
+                error = true;
             }
         }
+
+        if (error)
+            dumpError();
 
         new_script += new_line + "\r\n";
     }
@@ -203,6 +207,11 @@ void ScriptParser::findNewText(const Tools::RecType text_type)
     }
 
     Tools::addLog("4: " + new_text + "\r\n", true);
+    if (new_text.size() < 2)
+    {
+        Tools::addLog("Error: result is too short\r\n", true);
+        error = true;
+    }
 }
 
 //----------------------------------------------------------
@@ -223,7 +232,7 @@ void ScriptParser::convertTextInCompiled(const bool is_getpccell)
     if (new_SCDT.empty())
     {
         Tools::addLog("Error: SCDT is empty\r\n", true);
-        dumpError();
+        error = true;
         return;
     }
 
@@ -231,7 +240,7 @@ void ScriptParser::convertTextInCompiled(const bool is_getpccell)
     if (pos_c == std::string::npos)
     {
         Tools::addLog("Error: not found in SCDT\r\n", true);
-        dumpError();
+        error = true;
         return;
     }
 
@@ -244,6 +253,7 @@ void ScriptParser::convertTextInCompiled(const bool is_getpccell)
             "Warning: " +
             std::to_string(old_size) + " != " + std::to_string(old_text.size()) + " " +
             old_text + " false positive in " + script_name + "\r\n", true);
+        error = true;
 
         pos_c += old_text.size();
         pos_c = new_SCDT.find(old_text, pos_c);
@@ -251,7 +261,7 @@ void ScriptParser::convertTextInCompiled(const bool is_getpccell)
         if (pos_c == std::string::npos)
         {
             Tools::addLog("Error: not found in SCDT\r\n", true);
-            dumpError();
+            error = true;
             return;
         }
 
@@ -305,7 +315,7 @@ void ScriptParser::convertLine()
 
     if (keyword_pos == std::string::npos)
         return;
-    
+
     if (line.rfind(";", keyword_pos) != std::string::npos)
         return;
 
@@ -361,7 +371,7 @@ void ScriptParser::convertMessageInCompiled()
     if (new_SCDT.empty())
     {
         Tools::addLog("Error: SCDT is empty\r\n", true);
-        dumpError();
+        error = true;
         return;
     }
 
@@ -371,7 +381,7 @@ void ScriptParser::convertMessageInCompiled()
     if (splitted_line.size() != splitted_new_line.size())
     {
         Tools::addLog("Error: incompatible messages\r\n", true);
-        dumpError();
+        error = true;
         return;
     }
 
@@ -384,7 +394,7 @@ void ScriptParser::convertMessageInCompiled()
         if (pos_c == std::string::npos)
         {
             Tools::addLog("Error: message not found in SCDT\r\n", true);
-            dumpError();
+            error = true;
             return;
         }
 
@@ -397,7 +407,7 @@ void ScriptParser::convertMessageInCompiled()
         if (splitted_line[i] == " " || splitted_line[i] == "\t")
         {
             Tools::addLog("Error: message is one whitespace character\r\n", true);
-            dumpError();
+            error = true;
             return;
         }
 
@@ -475,11 +485,14 @@ void ScriptParser::trimLastNewLineChars()
 //----------------------------------------------------------
 void ScriptParser::dumpError()
 {
-    Tools::addLog("\r\n", true);
-    Tools::addLog(Tools::replaceNonReadableCharsWithDot(old_SCDT), true);
-    Tools::addLog("\r\n\r\n", true);
-    Tools::addLog(Tools::replaceNonReadableCharsWithDot(new_SCDT), true);
-    Tools::addLog("\r\n\r\n----------------------------------------------------------\r\n", true);
+    if (type == Tools::RecType::SCTX)
+    {
+        Tools::addLog("----------------------------------------------------------\r\n", true);
+        Tools::addLog(Tools::replaceNonReadableCharsWithDot(old_SCDT), true);
+        Tools::addLog("\r\n----------------------------------------------------------\r\n", true);
+        Tools::addLog(Tools::replaceNonReadableCharsWithDot(new_SCDT), true);
+    }
+    Tools::addLog("\r\n----------------------------------------------------------\r\n", true);
     Tools::addLog(old_script, true);
     Tools::addLog("\r\n----------------------------------------------------------\r\n", true);
 }

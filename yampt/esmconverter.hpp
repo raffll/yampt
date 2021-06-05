@@ -9,28 +9,30 @@
 class EsmConverter
 {
 public:
-    bool isLoaded() { return esm.isLoaded(); }
-    std::string getNameFull() { return esm.getNameFull(); }
-    std::string getNamePrefix() { return esm.getNamePrefix(); }
-    std::string getNameSuffix() { return esm.getNameSuffix(); }
-    std::time_t getTime() { return esm.getTime(); }
-    std::vector<std::string> getRecordColl() { return esm.getRecords(); }
+    const auto & isLoaded() { return esm.isLoaded(); }
+    const auto & getName() { return esm.getName(); }
+    const auto & getTime() { return esm.getTime(); }
+    const auto & getRecordColl() { return esm.getRecords(); }
 
     EsmConverter(
         const std::string & path,
         const DictMerger & merger,
         const bool add_hyperlinks,
-        const bool safe,
         const std::string & file_suffix,
         const Tools::Encoding encoding);
 
 private:
-    void convertEsm(const bool safe);
+    void convertEsm();
     void resetCounters();
-    void convertRecordContent();
-    void addNullTerminatorIfEmpty();
-    void setNewText(const std::string & prefix = "");
-    void checkIfIdentical();
+    void convertRecordContent(const std::string & new_text);
+    void addNullTerminatorIfEmpty(
+        std::string & new_text);
+    bool makeNewText(
+        const Tools::Entry & entry,
+        std::string & new_text);
+    bool isIdentical(
+        const std::string & old_text,
+        const std::string & new_text);
     void printLogLine(const Tools::RecType type);
     void convertMAST();
     void convertCELL();
@@ -49,9 +51,14 @@ private:
     void convertINFO();
     void convertBNAM();
     void convertSCPT();
+    void convertGMDT();
+
+    Tools::Encoding detectEncoding();
+    bool detectWindows1250Encoding(
+        const std::string & text);
 
     EsmReader esm;
-    const DictMerger * merger;
+    const DictMerger & merger;
 
     bool add_hyperlinks;
     const std::string file_suffix;
@@ -62,15 +69,7 @@ private:
     int counter_all = 0;
     int counter_added = 0;
 
-    bool ready = false;
-
     Tools::Encoding esm_encoding = Tools::Encoding::UNKNOWN;
-
-    std::string key_text;
-    std::string val_text;
-    Tools::RecType type;
-
-    std::string new_text;
 };
 
 #endif // ESMCONVERTER_HPP

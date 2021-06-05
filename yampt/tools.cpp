@@ -1,6 +1,7 @@
 #include "tools.hpp"
 
-std::string Tools::log;
+std::string Tools::log1;
+std::string Tools::log2;
 
 const std::vector<std::string> Tools::sep { "^", "<_id>", "</_id>", "<key>", "</key>", "<val>", "</val>", "<rec name=\"", "\"/>" };
 const std::vector<std::string> Tools::err { "<err name=\"", "\"/>" };
@@ -50,7 +51,7 @@ void Tools::writeDict(const Dict & dict, const std::string & name)
         {
             file
                 << "<record>\r\n"
-                << "\t" << sep[1] << Tools::getTypeName(type) << sep[2] << "\r\n"
+                << "\t" << sep[1] << Tools::type2Str(type) << sep[2] << "\r\n"
                 << "\t" << sep[3] << elem.first << sep[4] << "\r\n"
                 << "\t" << sep[5] << elem.second << sep[6] << "\r\n";
 
@@ -198,7 +199,7 @@ std::string Tools::replaceNonReadableCharsWithDot(const std::string & str)
 std::string Tools::addHyperlinks(
     const Chapter & chapter,
     const std::string & source,
-    bool extended)
+    const bool extended)
 {
     size_t pos = 0;
     std::string result;
@@ -246,9 +247,12 @@ void Tools::addLog(
     const bool silent)
 {
     if (!silent)
+    {
         std::cout << entry;
-
-    log += entry;
+        log1 += entry;
+    }
+    else
+        log2 += entry;
 }
 
 //----------------------------------------------------------
@@ -276,37 +280,66 @@ Tools::Dict Tools::initializeDict()
 }
 
 //----------------------------------------------------------
-std::string Tools::getTypeName(Tools::RecType type)
+std::string Tools::type2Str(Tools::RecType type)
 {
     switch (type)
     {
-    case Tools::RecType::CELL: return "CELL";
-    case Tools::RecType::DIAL: return "DIAL";
-    case Tools::RecType::INDX: return "INDX";
-    case Tools::RecType::RNAM: return "RNAM";
-    case Tools::RecType::DESC: return "DESC";
-    case Tools::RecType::GMST: return "GMST";
-    case Tools::RecType::FNAM: return "FNAM";
-    case Tools::RecType::INFO: return "INFO";
-    case Tools::RecType::TEXT: return "TEXT";
-    case Tools::RecType::BNAM: return "BNAM";
-    case Tools::RecType::SCTX: return "SCTX";
+        case Tools::RecType::CELL: return "CELL";
+        case Tools::RecType::DIAL: return "DIAL";
+        case Tools::RecType::INDX: return "INDX";
+        case Tools::RecType::RNAM: return "RNAM";
+        case Tools::RecType::DESC: return "DESC";
+        case Tools::RecType::GMST: return "GMST";
+        case Tools::RecType::FNAM: return "FNAM";
+        case Tools::RecType::INFO: return "INFO";
+        case Tools::RecType::TEXT: return "TEXT";
+        case Tools::RecType::BNAM: return "BNAM";
+        case Tools::RecType::SCTX: return "SCTX";
 
-    case Tools::RecType::PGRD: return "PGRD";
-    case Tools::RecType::ANAM: return "ANAM";
-    case Tools::RecType::SCVR: return "SCVR";
-    case Tools::RecType::DNAM: return "DNAM";
-    case Tools::RecType::CNDT: return "CNDT";
-    case Tools::RecType::GMDT: return "GMDT";
+        case Tools::RecType::PGRD: return "PGRD";
+        case Tools::RecType::ANAM: return "ANAM";
+        case Tools::RecType::SCVR: return "SCVR";
+        case Tools::RecType::DNAM: return "DNAM";
+        case Tools::RecType::CNDT: return "CNDT";
+        case Tools::RecType::GMDT: return "GMDT";
 
-    case Tools::RecType::Wilderness: return "+ Wilderness";
-    case Tools::RecType::Region: return "+ Region";
+        case Tools::RecType::Default: return "+ Default";
+        case Tools::RecType::REGN: return "+ REGN";
 
-    case Tools::RecType::Glossary: return "Glossary";
-    case Tools::RecType::NPC_FLAG: return "NPC_FLAG";
+        case Tools::RecType::Glossary: return "Glossary";
+        case Tools::RecType::NPC_FLAG: return "NPC_FLAG";
 
-    case Tools::RecType::Annotations: return "Annotations";
+        case Tools::RecType::Annotations: return "Annotations";
+
+        default: return "N/A";
     }
+}
+
+//----------------------------------------------------------
+Tools::RecType Tools::str2Type(const std::string & str)
+{
+    std::map<std::string, Tools::RecType> str2type
+    {
+        { "CELL", Tools::RecType::CELL },
+        { "DIAL", Tools::RecType::DIAL },
+        { "INDX", Tools::RecType::INDX },
+        { "RNAM", Tools::RecType::RNAM },
+        { "DESC", Tools::RecType::DESC },
+        { "GMST", Tools::RecType::GMST },
+        { "FNAM", Tools::RecType::FNAM },
+        { "INFO", Tools::RecType::INFO },
+        { "TEXT", Tools::RecType::TEXT },
+        { "BNAM", Tools::RecType::BNAM },
+        { "SCTX", Tools::RecType::SCTX },
+        { "Glossary",Tools::RecType::Glossary },
+        { "NPC_FLAG", Tools::RecType::NPC_FLAG },
+    };
+
+    auto search = str2type.find(str);
+    if (search != str2type.end())
+        return search->second;
+    else
+        return Tools::RecType::Unknown;
 }
 
 //----------------------------------------------------------
