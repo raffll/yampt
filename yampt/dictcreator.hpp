@@ -63,7 +63,6 @@ private:
     void makeDictBNAM();
     void makeDictSCPT();
     void makeDictFNAM_Glossary();
-    bool isFNAM(const std::string & rec_id);
 
     void makeDictCELL_Unordered();
     PatternsExt makeDictCELL_Unordered_PatternsExt();
@@ -77,14 +76,17 @@ private:
     std::string makeDictDIAL_Unordered_Pattern(EsmReader & esm_cur, size_t i);
     void makeDictDIAL_Unordered_AddMissing(const PatternsExt & patterns_ext);
 
-    void makeDictBNAM_Unordered();
-    PatternsExt makeDict_Unordered_PatternsExt(
-        const std::string & rec_id,
-        const std::string & key_id);
-    Patterns makeDictBNAM_Unordered_Patterns();
+    struct IDs
+    {
+        const std::string & rec_id;
+        const std::string & key_id;
+        const std::string & val_id;
+        const Tools::RecType type;
+    };
 
-    void makeDictSCPT_Unordered();
-    Patterns makeDictSCPT_Unordered_Patterns();
+    void makeDictScript_Unordered(const IDs & ids);
+    PatternsExt makeDict_Unordered_PatternsExt(const IDs & ids);
+    Patterns makeDict_Unordered_Patterns(const IDs & ids);
 
     EsmReader esm;
     EsmReader esm_ext;

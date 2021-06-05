@@ -358,3 +358,20 @@ std::string Tools::getINDX(const std::string & content)
     ss << std::setfill('0') << std::setw(3) << indx;
     return ss.str();
 }
+
+//----------------------------------------------------------
+bool Tools::isFNAM(const std::string & rec_id)
+{
+    return (rec_id == "ACTI" || rec_id == "ALCH" ||
+            rec_id == "APPA" || rec_id == "ARMO" ||
+            rec_id == "BOOK" || rec_id == "BSGN" ||
+            rec_id == "CLAS" || rec_id == "CLOT" ||
+            rec_id == "CONT" || rec_id == "CREA" ||
+            rec_id == "DOOR" || rec_id == "FACT" ||
+            rec_id == "INGR" || rec_id == "LIGH" ||
+            rec_id == "LOCK" || rec_id == "MISC" ||
+            rec_id == "NPC_" || rec_id == "PROB" ||
+            rec_id == "RACE" || rec_id == "REGN" ||
+            rec_id == "REPA" || rec_id == "SKIL" ||
+            rec_id == "SPEL" || rec_id == "WEAP");
+}

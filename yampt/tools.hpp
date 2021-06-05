@@ -111,6 +111,7 @@ public:
     static RecType str2Type(const std::string & str);
     static std::string getDialogType(const std::string & content);
     static std::string getINDX(const std::string & content);
+    static bool isFNAM(const std::string & rec_id);
 
 private:
     static std::string log1;
