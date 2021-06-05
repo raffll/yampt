@@ -105,7 +105,7 @@ public:
     static void addLog(
         const std::string & entry,
         const bool silent = false);
-    static std::string getLog() { return log; }
+    static std::string getLog() { return log1 + log2; }
     static Dict initializeDict();
     static std::string type2Str(Tools::RecType type);
     static RecType str2Type(const std::string & str);
@@ -113,7 +113,8 @@ public:
     static std::string getINDX(const std::string & content);
 
 private:
-    static std::string log;
+    static std::string log1;
+    static std::string log2;
 };
 
 #endif // TOOLS_HPP

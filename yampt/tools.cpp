@@ -1,6 +1,7 @@
 #include "tools.hpp"
 
-std::string Tools::log;
+std::string Tools::log1;
+std::string Tools::log2;
 
 const std::vector<std::string> Tools::sep { "^", "<_id>", "</_id>", "<key>", "</key>", "<val>", "</val>", "<rec name=\"", "\"/>" };
 const std::vector<std::string> Tools::err { "<err name=\"", "\"/>" };
@@ -246,9 +247,12 @@ void Tools::addLog(
     const bool silent)
 {
     if (!silent)
+    {
         std::cout << entry;
-
-    log += entry;
+        log1 += entry;
+    }
+    else
+        log2 += entry;
 }
 
 //----------------------------------------------------------
