@@ -33,6 +33,14 @@ private:
     using PatternsExt = std::vector<Pattern>;
     using Patterns = std::map<std::string, size_t>;
 
+    struct IDs
+    {
+        const std::string & rec_id;
+        const std::string & key_id;
+        const std::string & val_id;
+        const Tools::RecType type;
+    };
+
     void makeDict(const bool same_order);
     bool isSameOrder();
     void resetCounters();
@@ -60,8 +68,7 @@ private:
     void makeDictDIAL();
     void makeDictNPC_FLAG();
     void makeDictINFO();
-    void makeDictBNAM();
-    void makeDictSCPT();
+    void makeDictScript(const IDs & ids);
     void makeDictFNAM_Glossary();
 
     void makeDictCELL_Unordered();
@@ -75,14 +82,6 @@ private:
     Patterns makeDictDIAL_Unordered_Patterns();
     std::string makeDictDIAL_Unordered_Pattern(EsmReader & esm_cur, size_t i);
     void makeDictDIAL_Unordered_AddMissing(const PatternsExt & patterns_ext);
-
-    struct IDs
-    {
-        const std::string & rec_id;
-        const std::string & key_id;
-        const std::string & val_id;
-        const Tools::RecType type;
-    };
 
     void makeDictScript_Unordered(const IDs & ids);
     PatternsExt makeDict_Unordered_PatternsExt(const IDs & ids);

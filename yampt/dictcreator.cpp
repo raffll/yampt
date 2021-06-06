@@ -65,8 +65,8 @@ void DictCreator::makeDict(const bool same_order)
         makeDictCELL_Default();
         makeDictCELL_REGN();
         makeDictDIAL();
-        makeDictBNAM();
-        makeDictSCPT();
+        makeDictScript({ "INFO", "INAM", "BNAM", Tools::RecType::BNAM });
+        makeDictScript({ "SCPT", "SCHD", "SCTX", Tools::RecType::SCTX });
     }
     else
     {
@@ -569,20 +569,20 @@ void DictCreator::makeDictINFO()
 }
 
 //----------------------------------------------------------
-void DictCreator::makeDictBNAM()
+void DictCreator::makeDictScript(const IDs & ids)
 {
     resetCounters();
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (esm.getRecordId() != "INFO")
+        if (esm.getRecordId() != ids.rec_id)
             continue;
 
-        esm.setKey("INAM");
-        esm.setValue("BNAM");
+        esm.setKey(ids.key_id);
+        esm.setValue(ids.val_id);
         esm_ref.selectRecord(i);
-        esm_ref.setKey("INAM");
-        esm_ref.setValue("BNAM");
+        esm_ref.setKey(ids.key_id);
+        esm_ref.setValue(ids.val_id);
         if (esm.getKey().exist &&
             esm.getValue().exist &&
             esm_ref.getKey().exist &&
@@ -597,49 +597,11 @@ void DictCreator::makeDictBNAM()
             {
                 const auto & key_text = esm_ref.getKey().text + Tools::sep[0] + message_ext.at(k);
                 const auto & val_text = esm.getKey().text + Tools::sep[0] + message.at(k);
-                const auto & type = Tools::RecType::BNAM;
-                validateEntry({ key_text, val_text, type });
+                validateEntry({ key_text, val_text, ids.type });
             }
         }
     }
-    printLogLine(Tools::RecType::BNAM);
-}
-
-//----------------------------------------------------------
-void DictCreator::makeDictSCPT()
-{
-    resetCounters();
-    for (size_t i = 0; i < esm.getRecords().size(); ++i)
-    {
-        esm.selectRecord(i);
-        if (esm.getRecordId() != "SCPT")
-            continue;
-
-        esm.setKey("SCHD");
-        esm.setValue("SCTX");
-        esm_ref.selectRecord(i);
-        esm_ref.setKey("SCHD");
-        esm_ref.setValue("SCTX");
-        if (esm.getKey().exist &&
-            esm.getValue().exist &&
-            esm_ref.getKey().exist &&
-            esm_ref.getValue().exist)
-        {
-            const auto & message = makeScriptMessages(esm.getValue().text);
-            const auto & message_ext = makeScriptMessages(esm_ref.getValue().text);
-            if (message.size() != message_ext.size())
-                continue;
-
-            for (size_t k = 0; k < message.size(); ++k)
-            {
-                const auto & key_text = esm_ref.getKey().text + Tools::sep[0] + message_ext.at(k);
-                const auto & val_text = esm.getKey().text + Tools::sep[0] + message.at(k);
-                const auto & type = Tools::RecType::SCTX;
-                validateEntry({ key_text, val_text, type });
-            }
-        }
-    }
-    printLogLine(Tools::RecType::SCTX);
+    printLogLine(ids.type);
 }
 
 //----------------------------------------------------------
