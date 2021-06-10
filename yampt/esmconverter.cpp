@@ -51,6 +51,7 @@ void EsmConverter::convertEsm()
     convertTEXT();
     convertRNAM();
     convertINDX();
+    convertGMDT();
 
     if (add_hyperlinks)
     {
@@ -98,11 +99,11 @@ void EsmConverter::convertGMDT()
             {
                 const auto & prefix = esm.getValue().content.substr(0, 24);
                 const auto & suffix = esm.getValue().content.substr(88);
-                const auto & key_text = esm.getValue().content.substr(24, 64);
-                const auto & val_text = key_text;
-                const auto & type = Tools::RecType::GMDT;
+                auto val_text = esm.getValue().content.substr(24, 64);
+                val_text = Tools::eraseNullChars(val_text);
+                const auto & type = Tools::RecType::CELL;
                 std::string new_text;
-                if (!makeNewText({ key_text, val_text, type }, new_text))
+                if (!makeNewText({ val_text, val_text, type }, new_text))
                     continue;
 
                 new_text.resize(64);
@@ -110,29 +111,25 @@ void EsmConverter::convertGMDT()
             }
         }
 
-    //    if (esm.getRecId() == "GAME")
-    //    {
-    //        esm.setUnique("GMDT", false);
-    //        esm.setFriendly("GMDT", false, false);
+        if (esm.getRecordId() == "GAME")
+        {
+            esm.setValue("GMDT");
+            if (esm.getValue().exist)
+            {
+                const auto & suffix = esm.getValue().content.substr(64);
+                auto val_text = esm.getValue().content.substr(0, 64);
+                val_text = Tools::eraseNullChars(val_text);
+                const auto & type = Tools::RecType::CELL;
+                std::string new_text;
+                if (!makeNewText({ val_text, val_text, type }, new_text))
+                    continue;
 
-    //        if (esm.getUniqueStatus() == true)
-    //        {
-    //            unique_key = esm.getUnique().substr(0, 64);
-    //            eraseNullChars(unique_key);
-    //            unique_key = "CELL" + yampt::sep[0] + unique_key;
-
-    //            suffix = esm.getFriendly().substr(64);
-
-    //            setNewFriendly(yampt::r_type::CELL);
-    //            if (convert == true)
-    //            {
-    //                new_friendly.resize(64);
-    //                convertRecordContent(new_friendly + suffix);
-    //            }
-    //        }
-    //    }
+                new_text.resize(64);
+                convertRecordContent(new_text + suffix);
+            }
+        }
     }
-    //printLog("GMDT");
+    printLogLine(Tools::RecType::GMDT);
 }
 
 //----------------------------------------------------------

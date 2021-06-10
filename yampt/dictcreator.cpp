@@ -975,6 +975,9 @@ void DictCreator::validateRecordForModeNOT(const Tools::Entry & entry)
     if (search != merger.getDict().at(entry.type).end())
         return;
 
+    if (entry.type == Tools::RecType::FNAM && entry.val_text.empty())
+        return;
+
     makeAnnotations(entry);
     insertRecordToDict(entry);
 }
@@ -993,6 +996,9 @@ void DictCreator::validateRecordForModeCHANGED(const Tools::Entry & entry)
         return;
 
     if (search->second == entry.val_text)
+        return;
+
+    if (entry.type == Tools::RecType::FNAM && entry.val_text.empty())
         return;
 
     makeAnnotations(entry);
