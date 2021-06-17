@@ -80,12 +80,34 @@ void Tools::writeText(const std::string & text, const std::string & name)
 }
 
 //----------------------------------------------------------
-void Tools::writeFile(const std::vector<std::string> & rec_coll, const std::string & name)
+void Tools::writeFile(
+    const std::vector<Record> & records,
+    const std::string & name)
 {
     std::ofstream file(name, std::ios::binary);
-    for (auto & elem : rec_coll)
+    for (const auto & record : records)
     {
-        file << elem;
+        file << record.content;
+    }
+    addLog("--> Writing \"" + name + "\"...\r\n");
+}
+
+//----------------------------------------------------------
+void Tools::createFile(
+    const std::vector<Record> & records,
+    const std::string & name)
+{
+    std::ofstream file(name, std::ios::binary);
+    for (size_t i = 0; i < records.size(); ++i)
+    {
+        const auto & record = records.at(i);
+        if (record.id == "TES3")
+            file << record.content;
+
+        if (!record.modified)
+            continue;
+        else
+            file << record.content;
     }
     addLog("--> Writing \"" + name + "\"...\r\n");
 }

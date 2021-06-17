@@ -20,12 +20,13 @@ private:
     void makeDictChanged();
     void mergeDict();
     void convertEsm();
+    void createEsm();
 
     bool add_hyperlinks = false;
 
-    std::vector<std::string> arg;
-    std::vector<std::string> file_path;
-    std::vector<std::string> dict_path;
+    std::vector<std::string> args;
+    std::vector<std::string> file_paths;
+    std::vector<std::string> dict_paths;
     std::string output;
     std::string suffix;
 

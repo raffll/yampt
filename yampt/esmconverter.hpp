@@ -12,7 +12,7 @@ public:
     const auto & isLoaded() { return esm.isLoaded(); }
     const auto & getName() { return esm.getName(); }
     const auto & getTime() { return esm.getTime(); }
-    const auto & getRecordColl() { return esm.getRecords(); }
+    const auto & getRecords() { return esm.getRecords(); }
 
     EsmConverter(
         const std::string & path,
