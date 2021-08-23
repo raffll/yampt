@@ -8,7 +8,8 @@ class EsmReader
 {
 public:
     void selectRecord(size_t i);
-    void replaceRecord(const std::string & new_rec);
+    void replaceRecord(const std::string & content);
+    void setModified(size_t i);
 
     void setKey(const std::string & id);
     void setValue(const std::string & id);
@@ -19,8 +20,7 @@ public:
     const auto & getTime() { return time; }
     const auto & getRecords() const { return records; }
 
-    const auto & getRecordContent() { return *rec; }
-    const auto & getRecordId() { return rec_id; }
+    const auto & getRecord() { return *rec; }
 
     struct SubRecord
     {
@@ -52,14 +52,12 @@ private:
         EsmReader::SubRecord & subrecord);
     void handleException(const std::exception & e);
 
-    std::vector<std::string> records;
+    std::vector<Tools::Record> records;
     Tools::Name name;
     std::time_t time = 0;
     bool is_loaded = false;
 
-    std::string * rec = nullptr;
-    size_t rec_size = 0;
-    std::string rec_id;
+    Tools::Record * rec = nullptr;
 
     SubRecord key;
     SubRecord value;

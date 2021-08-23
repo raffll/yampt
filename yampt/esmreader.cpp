@@ -30,7 +30,11 @@ void EsmReader::splitFile(
                 rec_beg = rec_end;
                 rec_size = Tools::convertStringByteArrayToUInt(content.substr(rec_beg + 4, 4)) + 16;
                 rec_end = rec_beg + rec_size;
-                records.push_back(content.substr(rec_beg, rec_size));
+
+                const auto & cnt = content.substr(rec_beg, rec_size);
+                const auto & size = cnt.size();
+                const auto & id = cnt.substr(0, 4);
+                records.push_back({ id, cnt, size, false });
             }
             is_loaded = true;
         }
@@ -62,20 +66,29 @@ void EsmReader::selectRecord(size_t i)
 {
     if (is_loaded)
     {
-        rec = &records[i];
-        rec_size = rec->size();
-        rec_id = rec->substr(0, 4);
+        rec = &records.at(i);
         key = {};
         value = {};
     }
 }
 
 //----------------------------------------------------------
-void EsmReader::replaceRecord(const std::string & new_rec)
+void EsmReader::replaceRecord(const std::string & content)
 {
     if (is_loaded)
     {
-        *rec = new_rec;
+        rec->content = content;
+        rec->modified = true;
+        rec->size = content.size();
+    }
+}
+
+//----------------------------------------------------------
+void EsmReader::setModified(size_t i)
+{
+    if (is_loaded)
+    {
+        records.at(i).modified = true;
     }
 }
 
@@ -136,7 +149,7 @@ void EsmReader::setNextValue(const std::string & id)
         value.id = id;
 
         cur_pos = value.pos;
-        cur_size = Tools::convertStringByteArrayToUInt(rec->substr(cur_pos + 4, 4));
+        cur_size = Tools::convertStringByteArrayToUInt(rec->content.substr(cur_pos + 4, 4));
         cur_pos += 8 + cur_size;
         value.counter++;
 
@@ -159,13 +172,13 @@ void EsmReader::mainLoop(
     std::string & cur_text,
     EsmReader::SubRecord & subrecord)
 {
-    while (cur_pos != rec->size())
+    while (cur_pos != rec->content.size())
     {
-        cur_id = rec->substr(cur_pos, 4);
-        cur_size = Tools::convertStringByteArrayToUInt(rec->substr(cur_pos + 4, 4));
+        cur_id = rec->content.substr(cur_pos, 4);
+        cur_size = Tools::convertStringByteArrayToUInt(rec->content.substr(cur_pos + 4, 4));
         if (cur_id == subrecord.id)
         {
-            cur_text = rec->substr(cur_pos + 8, cur_size);
+            cur_text = rec->content.substr(cur_pos + 8, cur_size);
             subrecord.content = cur_text;
             subrecord.text = Tools::eraseNullChars(subrecord.content);
             subrecord.pos = cur_pos;
@@ -176,7 +189,7 @@ void EsmReader::mainLoop(
         cur_pos += 8 + cur_size;
     }
 
-    if (cur_pos == rec->size())
+    if (cur_pos == rec->content.size())
     {
         subrecord.content = "N/A";
         subrecord.text = "N/A";
@@ -189,7 +202,7 @@ void EsmReader::mainLoop(
 //----------------------------------------------------------
 void EsmReader::handleException(const std::exception & e)
 {
-    std::string cur_rec = Tools::replaceNonReadableCharsWithDot(*rec);
+    std::string cur_rec = Tools::replaceNonReadableCharsWithDot(rec->content);
     Tools::addLog("--> Error in function (possibly broken record)!\r\n");
     Tools::addLog(cur_rec + "\r\n");
     Tools::addLog("--> Exception: " + std::string(e.what()) + "\r\n");

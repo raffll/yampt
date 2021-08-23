@@ -61,11 +61,10 @@ void DictReader::parseDict(
             // no multiline in regex :(
             pos_beg = content.find(Tools::sep[5], found.position(2)) + Tools::sep[5].size();
             pos_end = content.find(Tools::sep[6], pos_beg);
-            const auto & val_text = content.substr(pos_beg, pos_end - pos_beg);
-
-            const auto & type = Tools::str2Type(found[1].str());
+            
             const auto & key_text = found[2].str();
-
+            const auto & val_text = content.substr(pos_beg, pos_end - pos_beg);
+            const auto & type = Tools::str2Type(found[1].str());
             validateEntry({ key_text, val_text, type });
             counter_all++;
             next++;

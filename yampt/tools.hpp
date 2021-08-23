@@ -57,24 +57,32 @@ public:
 
     struct Entry
     {
-        const std::string & key_text;
-        const std::string & val_text;
-        const Tools::RecType & type;
+        const std::string key_text;
+        const std::string val_text;
+        const Tools::RecType type;
         const std::string optional;
     };
 
     struct Name
     {
         std::string full;
-        std::string prefix;
-        std::string suffix;
+        std::string name;
+        std::string ext;
 
         void setName(const std::string & path)
         {
             full = path.substr(path.find_last_of("\\/") + 1);
-            prefix = full.substr(0, full.find_last_of("."));
-            suffix = full.substr(full.rfind("."));
+            name = full.substr(0, full.find_last_of("."));
+            ext = full.substr(full.rfind("."));
         }
+    };
+
+    struct Record
+    {
+        const std::string id;
+        std::string content;
+        size_t size = 0;
+        bool modified = false;
     };
 
     static const std::vector<std::string> sep;
@@ -89,7 +97,10 @@ public:
         const std::string & text,
         const std::string & name);
     static void writeFile(
-        const std::vector<std::string> & rec_coll,
+        const std::vector<Record> & records,
+        const std::string & name);
+    static void createFile(
+        const std::vector<Record> & records,
         const std::string & name);
     static size_t getNumberOfElementsInDict(const Dict & dict);
     static size_t convertStringByteArrayToUInt(const std::string & str);
@@ -111,6 +122,7 @@ public:
     static RecType str2Type(const std::string & str);
     static std::string getDialogType(const std::string & content);
     static std::string getINDX(const std::string & content);
+    static bool isFNAM(const std::string & rec_id);
 
 private:
     static std::string log1;

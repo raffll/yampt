@@ -9,8 +9,8 @@ TEST_CASE("loading and parsing plugin file", "[i]")
     EsmReader esm("master/en/Morrowind.esm");
     REQUIRE(esm.isLoaded() == true);
     REQUIRE(esm.getName().full == "Morrowind.esm");
-    REQUIRE(esm.getName().prefix == "Morrowind");
-    REQUIRE(esm.getName().suffix == ".esm");
+    REQUIRE(esm.getName().name == "Morrowind");
+    REQUIRE(esm.getName().ext == ".esm");
 }
 
 TEST_CASE("set key, not found", "[i]")
@@ -71,7 +71,7 @@ TEST_CASE("set value, not found", "[i]")
     REQUIRE(esm.getValue().id == "TEST");
     REQUIRE(esm.getValue().exist == false);
     REQUIRE(esm.getValue().text == "N/A");
-    REQUIRE(esm.getValue().pos == esm.getRecordContent().size());
+    REQUIRE(esm.getValue().pos == esm.getRecord().content.size());
     REQUIRE(esm.getValue().size == 0);
 }
 

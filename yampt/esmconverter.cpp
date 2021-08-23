@@ -51,6 +51,7 @@ void EsmConverter::convertEsm()
     convertTEXT();
     convertRNAM();
     convertINDX();
+    convertGMDT();
 
     if (add_hyperlinks)
     {
@@ -69,7 +70,7 @@ void EsmConverter::convertMAST()
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (esm.getRecordId() != "TES3")
+        if (esm.getRecord().id != "TES3")
             continue;
 
         esm.setValue("MAST");
@@ -85,53 +86,51 @@ void EsmConverter::convertMAST()
 }
 
 //----------------------------------------------------------
-//void EsmConverter::convertGMDT()
-//{
-//    resetCounters();
-//    for (size_t i = 0; i < esm.getRecords().size(); ++i)
-//    {
-//        esm.selectRecord(i);
-//        if (esm.getRecordId() == "TES3")
-//        {
-//            esm.setValue("GMDT");
-//            if (esm.getValue().exist)
-//            {
-//                const auto & prefix = esm.getValue().content.substr(0, 24);
-//                const auto & suffix = esm.getValue().content.substr(88);
-//                const auto & new_text = "CELL" + Tools::sep[0] + esm.getValue().content.substr(24, 64);
-//
-//                setNewFriendly(yampt::r_type::CELL);
-//                if (convert == true)
-//                {
-//                    new_friendly.resize(64);
-//                    convertRecordContent(prefix + new_friendly + suffix);
-//                }
-//            }
-//        }
-//        if (esm.getRecId() == "GAME")
-//        {
-//            esm.setUnique("GMDT", false);
-//            esm.setFriendly("GMDT", false, false);
-//
-//            if (esm.getUniqueStatus() == true)
-//            {
-//                unique_key = esm.getUnique().substr(0, 64);
-//                eraseNullChars(unique_key);
-//                unique_key = "CELL" + yampt::sep[0] + unique_key;
-//
-//                suffix = esm.getFriendly().substr(64);
-//
-//                setNewFriendly(yampt::r_type::CELL);
-//                if (convert == true)
-//                {
-//                    new_friendly.resize(64);
-//                    convertRecordContent(new_friendly + suffix);
-//                }
-//            }
-//        }
-//    }
-//    printLog("GMDT");
-//}
+void EsmConverter::convertGMDT()
+{
+    resetCounters();
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
+    {
+        esm.selectRecord(i);
+        if (esm.getRecord().id == "TES3")
+        {
+            esm.setValue("GMDT");
+            if (esm.getValue().exist)
+            {
+                const auto & prefix = esm.getValue().content.substr(0, 24);
+                const auto & suffix = esm.getValue().content.substr(88);
+                auto val_text = esm.getValue().content.substr(24, 64);
+                val_text = Tools::eraseNullChars(val_text);
+                const auto & type = Tools::RecType::CELL;
+                std::string new_text;
+                if (!makeNewText({ val_text, val_text, type }, new_text))
+                    continue;
+
+                new_text.resize(64);
+                convertRecordContent(prefix + new_text + suffix);
+            }
+        }
+
+        if (esm.getRecord().id == "GAME")
+        {
+            esm.setValue("GMDT");
+            if (esm.getValue().exist)
+            {
+                const auto & suffix = esm.getValue().content.substr(64);
+                auto val_text = esm.getValue().content.substr(0, 64);
+                val_text = Tools::eraseNullChars(val_text);
+                const auto & type = Tools::RecType::CELL;
+                std::string new_text;
+                if (!makeNewText({ val_text, val_text, type }, new_text))
+                    continue;
+
+                new_text.resize(64);
+                convertRecordContent(new_text + suffix);
+            }
+        }
+    }
+    printLogLine(Tools::RecType::GMDT);
+}
 
 //----------------------------------------------------------
 void EsmConverter::convertCELL()
@@ -141,7 +140,7 @@ void EsmConverter::convertCELL()
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (esm.getRecordId() != "CELL")
+        if (esm.getRecord().id != "CELL")
             continue;
 
         esm.setValue("NAME");
@@ -170,7 +169,7 @@ void EsmConverter::convertPGRD()
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (esm.getRecordId() != "PGRD")
+        if (esm.getRecord().id != "PGRD")
             continue;
 
         esm.setValue("NAME");
@@ -197,7 +196,7 @@ void EsmConverter::convertANAM()
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (esm.getRecordId() != "INFO")
+        if (esm.getRecord().id != "INFO")
             continue;
 
         esm.setValue("ANAM");
@@ -226,7 +225,7 @@ void EsmConverter::convertSCVR()
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (esm.getRecordId() != "INFO")
+        if (esm.getRecord().id != "INFO")
             continue;
 
         esm.setValue("SCVR");
@@ -259,8 +258,8 @@ void EsmConverter::convertDNAM()
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (esm.getRecordId() == "CELL" ||
-            esm.getRecordId() == "NPC_")
+        if (esm.getRecord().id == "CELL" ||
+            esm.getRecord().id == "NPC_")
         {
             esm.setValue("DNAM");
             while (esm.getValue().exist)
@@ -288,7 +287,7 @@ void EsmConverter::convertCNDT()
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (esm.getRecordId() != "NPC_")
+        if (esm.getRecord().id != "NPC_")
             continue;
 
         esm.setValue("CNDT");
@@ -316,12 +315,11 @@ void EsmConverter::convertGMST()
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (esm.getRecordId() != "GMST")
+        if (esm.getRecord().id != "GMST")
             continue;
 
         esm.setKey("NAME");
         esm.setValue("STRV");
-
         if (esm.getKey().exist &&
             esm.getValue().exist &&
             esm.getKey().text.substr(0, 1) == "s") /* possible exception */
@@ -348,47 +346,24 @@ void EsmConverter::convertFNAM()
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (esm.getRecordId() == "ACTI" ||
-            esm.getRecordId() == "ALCH" ||
-            esm.getRecordId() == "APPA" ||
-            esm.getRecordId() == "ARMO" ||
-            esm.getRecordId() == "BOOK" ||
-            esm.getRecordId() == "BSGN" ||
-            esm.getRecordId() == "CLAS" ||
-            esm.getRecordId() == "CLOT" ||
-            esm.getRecordId() == "CONT" ||
-            esm.getRecordId() == "CREA" ||
-            esm.getRecordId() == "DOOR" ||
-            esm.getRecordId() == "FACT" ||
-            esm.getRecordId() == "INGR" ||
-            esm.getRecordId() == "LIGH" ||
-            esm.getRecordId() == "LOCK" ||
-            esm.getRecordId() == "MISC" ||
-            esm.getRecordId() == "NPC_" ||
-            esm.getRecordId() == "PROB" ||
-            esm.getRecordId() == "RACE" ||
-            esm.getRecordId() == "REGN" ||
-            esm.getRecordId() == "REPA" ||
-            esm.getRecordId() == "SKIL" ||
-            esm.getRecordId() == "SPEL" ||
-            esm.getRecordId() == "WEAP")
-        {
-            esm.setKey("NAME");
-            esm.setValue("FNAM");
-            if (esm.getKey().exist &&
-                esm.getValue().exist &&
-                esm.getKey().text != "player")
-            {
-                const auto & key_text = esm.getRecordId() + Tools::sep[0] + esm.getKey().text;
-                const auto & val_text = esm.getValue().text;
-                std::string new_text;
-                if (!makeNewText({ key_text, val_text, type }, new_text))
-                    continue;
+        if (!Tools::isFNAM(esm.getRecord().id))
+            continue;
 
-                /* null terminated, don't exist if empty */
-                new_text += '\0';
-                convertRecordContent(new_text);
-            }
+        esm.setKey("NAME");
+        esm.setValue("FNAM");
+        if (esm.getKey().exist &&
+            esm.getValue().exist &&
+            esm.getKey().text != "player")
+        {
+            const auto & key_text = esm.getRecord().id + Tools::sep[0] + esm.getKey().text;
+            const auto & val_text = esm.getValue().text;
+            std::string new_text;
+            if (!makeNewText({ key_text, val_text, type }, new_text))
+                continue;
+
+            /* null terminated, don't exist if empty */
+            new_text += '\0';
+            convertRecordContent(new_text);
         }
     }
     printLogLine(Tools::RecType::FNAM);
@@ -402,30 +377,30 @@ void EsmConverter::convertDESC()
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (esm.getRecordId() == "BSGN" ||
-            esm.getRecordId() == "CLAS" ||
-            esm.getRecordId() == "RACE")
+        if (esm.getRecord().id == "BSGN" ||
+            esm.getRecord().id == "CLAS" ||
+            esm.getRecord().id == "RACE")
         {
             esm.setKey("NAME");
             esm.setValue("DESC");
             if (esm.getKey().exist &&
                 esm.getValue().exist)
             {
-                const auto & key_text = esm.getRecordId() + Tools::sep[0] + esm.getKey().text;
+                const auto & key_text = esm.getRecord().id + Tools::sep[0] + esm.getKey().text;
                 const auto & val_text = esm.getValue().text;
                 std::string new_text;
                 if (!makeNewText({ key_text, val_text, type }, new_text))
                     continue;
 
-                if (esm.getRecordId() == "BSGN")
+                if (esm.getRecord().id == "BSGN")
                 {
                     /* null terminated, don't exist if empty */
                     new_text += '\0';
                     convertRecordContent(new_text);
                 }
 
-                if (esm.getRecordId() == "CLAS" ||
-                    esm.getRecordId() == "RACE")
+                if (esm.getRecord().id == "CLAS" ||
+                    esm.getRecord().id == "RACE")
                 {
                     /* not null terminated, don't exist if empty */
                     addNullTerminatorIfEmpty(new_text);
@@ -445,7 +420,7 @@ void EsmConverter::convertTEXT()
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (esm.getRecordId() != "BOOK")
+        if (esm.getRecord().id != "BOOK")
             continue;
 
         esm.setKey("NAME");
@@ -475,7 +450,7 @@ void EsmConverter::convertRNAM()
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (esm.getRecordId() != "FACT")
+        if (esm.getRecord().id != "FACT")
             continue;
 
         esm.setKey("NAME");
@@ -508,15 +483,15 @@ void EsmConverter::convertINDX()
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (esm.getRecordId() == "SKIL" ||
-            esm.getRecordId() == "MGEF")
+        if (esm.getRecord().id == "SKIL" ||
+            esm.getRecord().id == "MGEF")
         {
             esm.setKey("INDX");
             esm.setValue("DESC");
             if (esm.getKey().exist &&
                 esm.getValue().exist)
             {
-                const auto & key_text = esm.getRecordId() + Tools::sep[0] + Tools::getINDX(esm.getKey().content);
+                const auto & key_text = esm.getRecord().id + Tools::sep[0] + Tools::getINDX(esm.getKey().content);
                 const auto & val_text = esm.getValue().text;
                 std::string new_text;
                 if (!makeNewText({ key_text, val_text, type }, new_text))
@@ -539,7 +514,7 @@ void EsmConverter::convertDIAL()
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (esm.getRecordId() != "DIAL")
+        if (esm.getRecord().id != "DIAL")
             continue;
 
         esm.setKey("DATA");
@@ -565,12 +540,13 @@ void EsmConverter::convertDIAL()
 void EsmConverter::convertINFO()
 {
     std::string key_prefix;
+    size_t dial_index = 0;
     resetCounters();
     const auto & type = Tools::RecType::INFO;
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (esm.getRecordId() == "DIAL")
+        if (esm.getRecord().id == "DIAL")
         {
             esm.setKey("DATA");
             esm.setValue("NAME");
@@ -578,10 +554,11 @@ void EsmConverter::convertINFO()
                 esm.getValue().exist)
             {
                 key_prefix = Tools::getDialogType(esm.getKey().content) + Tools::sep[0] + esm.getValue().text;
+                dial_index = i;
             }
         }
 
-        if (esm.getRecordId() == "INFO")
+        if (esm.getRecord().id == "INFO")
         {
             esm.setKey("INAM");
             esm.setValue("NAME");
@@ -596,6 +573,7 @@ void EsmConverter::convertINFO()
                     /* not null terminated, don't exist if empty */
                     addNullTerminatorIfEmpty(new_text);
                     convertRecordContent(new_text);
+                    esm.setModified(dial_index);
                 }
             }
         }
@@ -611,7 +589,7 @@ void EsmConverter::convertBNAM()
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (esm.getRecordId() != "INFO")
+        if (esm.getRecord().id != "INFO")
             continue;
 
         esm.setKey("INAM");
@@ -653,7 +631,7 @@ void EsmConverter::convertSCPT()
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (esm.getRecordId() != "SCPT")
+        if (esm.getRecord().id != "SCPT")
             continue;
 
         esm.setValue("SCDT");
@@ -782,7 +760,7 @@ void EsmConverter::addNullTerminatorIfEmpty(
 void EsmConverter::convertRecordContent(const std::string & new_text)
 {
     size_t rec_size;
-    std::string rec_content = esm.getRecordContent();
+    std::string rec_content = esm.getRecord().content;
     rec_content.erase(esm.getValue().pos + 8, esm.getValue().size);
     rec_content.insert(esm.getValue().pos + 8, new_text);
     rec_content.erase(esm.getValue().pos + 4, 4);
@@ -816,7 +794,7 @@ Tools::Encoding EsmConverter::detectEncoding()
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (esm.getRecordId() == "INFO")
+        if (esm.getRecord().id == "INFO")
             esm.setValue("NAME");
 
         if (detectWindows1250Encoding(esm.getValue().text))

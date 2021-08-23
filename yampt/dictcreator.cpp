@@ -65,8 +65,8 @@ void DictCreator::makeDict(const bool same_order)
         makeDictCELL_Default();
         makeDictCELL_REGN();
         makeDictDIAL();
-        makeDictBNAM();
-        makeDictSCPT();
+        makeDictScript({ "INFO", "INAM", "BNAM", Tools::RecType::BNAM });
+        makeDictScript({ "SCPT", "SCHD", "SCTX", Tools::RecType::SCTX });
     }
     else
     {
@@ -74,8 +74,8 @@ void DictCreator::makeDict(const bool same_order)
         makeDictCELL_Unordered_Default();
         makeDictCELL_Unordered_REGN();
         makeDictDIAL_Unordered();
-        makeDictBNAM_Unordered();
-        makeDictSCPT_Unordered();
+        makeDictScript_Unordered({ "INFO", "INAM", "BNAM", Tools::RecType::BNAM });
+        makeDictScript_Unordered({ "SCPT", "SCHD", "SCTX", Tools::RecType::SCTX });
     }
 
     makeDictGMST();
@@ -106,13 +106,13 @@ bool DictCreator::isSameOrder()
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        ids += esm.getRecordId();
+        ids += esm.getRecord().id;
     }
 
     for (size_t i = 0; i < esm_ext.getRecords().size(); ++i)
     {
         esm_ext.selectRecord(i);
-        ids_ext += esm_ext.getRecordId();
+        ids_ext += esm_ext.getRecord().id;
     }
 
     return ids == ids_ext;
@@ -125,7 +125,7 @@ void DictCreator::makeDictCELL()
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (esm.getRecordId() != "CELL")
+        if (esm.getRecord().id != "CELL")
             continue;
 
         esm.setValue("NAME");
@@ -152,7 +152,7 @@ void DictCreator::makeDictCELL_Default()
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (esm.getRecordId() != "GMST")
+        if (esm.getRecord().id != "GMST")
             continue;
 
         esm.setKey("NAME");
@@ -181,7 +181,7 @@ void DictCreator::makeDictCELL_Unordered_Default()
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (esm.getRecordId() != "GMST")
+        if (esm.getRecord().id != "GMST")
             continue;
 
         esm.setKey("NAME");
@@ -192,7 +192,7 @@ void DictCreator::makeDictCELL_Unordered_Default()
             for (size_t k = 0; k < esm_ext.getRecords().size(); ++k)
             {
                 esm_ext.selectRecord(k);
-                if (esm_ext.getRecordId() != "GMST")
+                if (esm_ext.getRecord().id != "GMST")
                     continue;
 
                 esm_ext.setKey("NAME");
@@ -220,7 +220,7 @@ void DictCreator::makeDictCELL_REGN()
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (esm.getRecordId() != "REGN")
+        if (esm.getRecord().id != "REGN")
             continue;
 
         esm.setValue("FNAM");
@@ -245,7 +245,7 @@ void DictCreator::makeDictCELL_Unordered_REGN()
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (esm.getRecordId() != "REGN")
+        if (esm.getRecord().id != "REGN")
             continue;
 
         esm.setKey("NAME");
@@ -256,7 +256,7 @@ void DictCreator::makeDictCELL_Unordered_REGN()
             for (size_t k = 0; k < esm_ext.getRecords().size(); ++k)
             {
                 esm_ext.selectRecord(k);
-                if (esm_ext.getRecordId() != "REGN")
+                if (esm_ext.getRecord().id != "REGN")
                     continue;
 
                 esm_ext.setKey("NAME");
@@ -283,7 +283,7 @@ void DictCreator::makeDictGMST()
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (esm.getRecordId() != "GMST")
+        if (esm.getRecord().id != "GMST")
             continue;
 
         esm.setKey("NAME");
@@ -308,7 +308,7 @@ void DictCreator::makeDictFNAM()
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (!isFNAM(esm.getRecordId()))
+        if (!Tools::isFNAM(esm.getRecord().id))
             continue;
 
         esm.setKey("NAME");
@@ -317,7 +317,7 @@ void DictCreator::makeDictFNAM()
             esm.getValue().exist &&
             esm.getKey().text != "player")
         {
-            const auto & key_text = esm.getRecordId() + Tools::sep[0] + esm.getKey().text;
+            const auto & key_text = esm.getRecord().id + Tools::sep[0] + esm.getKey().text;
             const auto & val_text = esm.getValue().text;
             const auto & type = Tools::RecType::FNAM;
             validateEntry({ key_text, val_text, type });
@@ -327,30 +327,13 @@ void DictCreator::makeDictFNAM()
 }
 
 //----------------------------------------------------------
-bool DictCreator::isFNAM(const std::string & rec_id)
-{
-    return (rec_id == "ACTI" || rec_id == "ALCH" ||
-            rec_id == "APPA" || rec_id == "ARMO" ||
-            rec_id == "BOOK" || rec_id == "BSGN" ||
-            rec_id == "CLAS" || rec_id == "CLOT" ||
-            rec_id == "CONT" || rec_id == "CREA" ||
-            rec_id == "DOOR" || rec_id == "FACT" ||
-            rec_id == "INGR" || rec_id == "LIGH" ||
-            rec_id == "LOCK" || rec_id == "MISC" ||
-            rec_id == "NPC_" || rec_id == "PROB" ||
-            rec_id == "RACE" || rec_id == "REGN" ||
-            rec_id == "REPA" || rec_id == "SKIL" ||
-            rec_id == "SPEL" || rec_id == "WEAP");
-}
-
-//----------------------------------------------------------
 void DictCreator::makeDictFNAM_Glossary()
 {
     resetCounters();
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (!isFNAM(esm.getRecordId()))
+        if (!Tools::isFNAM(esm.getRecord().id))
             continue;
 
         esm.setKey("NAME");
@@ -362,7 +345,7 @@ void DictCreator::makeDictFNAM_Glossary()
             for (size_t k = 0; k < esm_ext.getRecords().size(); ++k)
             {
                 esm_ext.selectRecord(k);
-                if (esm_ext.getRecordId() != esm.getRecordId())
+                if (esm_ext.getRecord().id != esm.getRecord().id)
                     continue;
 
                 esm_ext.setKey("NAME");
@@ -374,7 +357,7 @@ void DictCreator::makeDictFNAM_Glossary()
                     const auto & key_text = esm_ext.getValue().text;
                     const auto & val_text =
                         esm.getValue().text + " "
-                        + esm.getRecordId() + Tools::sep[0]
+                        + esm.getRecord().id + Tools::sep[0]
                         + esm.getKey().text;
                     const auto & type = Tools::RecType::Glossary;
                     validateEntry({ key_text, val_text, type });
@@ -393,16 +376,16 @@ void DictCreator::makeDictDESC()
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (esm.getRecordId() == "BSGN" ||
-            esm.getRecordId() == "CLAS" ||
-            esm.getRecordId() == "RACE")
+        if (esm.getRecord().id == "BSGN" ||
+            esm.getRecord().id == "CLAS" ||
+            esm.getRecord().id == "RACE")
         {
             esm.setKey("NAME");
             esm.setValue("DESC");
             if (esm.getKey().exist &&
                 esm.getValue().exist)
             {
-                const auto & key_text = esm.getRecordId() + Tools::sep[0] + esm.getKey().text;
+                const auto & key_text = esm.getRecord().id + Tools::sep[0] + esm.getKey().text;
                 const auto & val_text = esm.getValue().text;
                 const auto & type = Tools::RecType::DESC;
                 validateEntry({ key_text, val_text, type });
@@ -419,7 +402,7 @@ void DictCreator::makeDictTEXT()
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (esm.getRecordId() != "BOOK")
+        if (esm.getRecord().id != "BOOK")
             continue;
 
         esm.setKey("NAME");
@@ -443,7 +426,7 @@ void DictCreator::makeDictRNAM()
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (esm.getRecordId() != "FACT")
+        if (esm.getRecord().id != "FACT")
             continue;
 
         esm.setKey("NAME");
@@ -470,15 +453,15 @@ void DictCreator::makeDictINDX()
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (esm.getRecordId() == "SKIL" ||
-            esm.getRecordId() == "MGEF")
+        if (esm.getRecord().id == "SKIL" ||
+            esm.getRecord().id == "MGEF")
         {
             esm.setKey("INDX");
             esm.setValue("DESC");
             if (esm.getKey().exist &&
                 esm.getValue().exist)
             {
-                const auto & key_text = esm.getRecordId() + Tools::sep[0] + Tools::getINDX(esm.getKey().content);
+                const auto & key_text = esm.getRecord().id + Tools::sep[0] + Tools::getINDX(esm.getKey().content);
                 const auto & val_text = esm.getValue().text;
                 const auto & type = Tools::RecType::INDX;
                 validateEntry({ key_text, val_text, type });
@@ -495,7 +478,7 @@ void DictCreator::makeDictDIAL()
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (esm.getRecordId() != "DIAL")
+        if (esm.getRecord().id != "DIAL")
             continue;
 
         esm.setKey("DATA");
@@ -524,7 +507,7 @@ void DictCreator::makeDictNPC_FLAG()
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (esm.getRecordId() != "NPC_")
+        if (esm.getRecord().id != "NPC_")
             continue;
 
         esm.setKey("NAME");
@@ -551,7 +534,7 @@ void DictCreator::makeDictINFO()
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (esm.getRecordId() == "DIAL")
+        if (esm.getRecord().id == "DIAL")
         {
             esm.setKey("DATA");
             esm.setValue("NAME");
@@ -563,7 +546,7 @@ void DictCreator::makeDictINFO()
             }
         }
 
-        if (esm.getRecordId() == "INFO")
+        if (esm.getRecord().id == "INFO")
         {
             esm.setKey("INAM");
             if (!esm.getKey().exist)
@@ -586,20 +569,20 @@ void DictCreator::makeDictINFO()
 }
 
 //----------------------------------------------------------
-void DictCreator::makeDictBNAM()
+void DictCreator::makeDictScript(const IDs & ids)
 {
     resetCounters();
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (esm.getRecordId() != "INFO")
+        if (esm.getRecord().id != ids.rec_id)
             continue;
 
-        esm.setKey("INAM");
-        esm.setValue("BNAM");
+        esm.setKey(ids.key_id);
+        esm.setValue(ids.val_id);
         esm_ref.selectRecord(i);
-        esm_ref.setKey("INAM");
-        esm_ref.setValue("BNAM");
+        esm_ref.setKey(ids.key_id);
+        esm_ref.setValue(ids.val_id);
         if (esm.getKey().exist &&
             esm.getValue().exist &&
             esm_ref.getKey().exist &&
@@ -614,49 +597,11 @@ void DictCreator::makeDictBNAM()
             {
                 const auto & key_text = esm_ref.getKey().text + Tools::sep[0] + message_ext.at(k);
                 const auto & val_text = esm.getKey().text + Tools::sep[0] + message.at(k);
-                const auto & type = Tools::RecType::BNAM;
-                validateEntry({ key_text, val_text, type });
+                validateEntry({ key_text, val_text, ids.type });
             }
         }
     }
-    printLogLine(Tools::RecType::BNAM);
-}
-
-//----------------------------------------------------------
-void DictCreator::makeDictSCPT()
-{
-    resetCounters();
-    for (size_t i = 0; i < esm.getRecords().size(); ++i)
-    {
-        esm.selectRecord(i);
-        if (esm.getRecordId() != "SCPT")
-            continue;
-
-        esm.setKey("SCHD");
-        esm.setValue("SCTX");
-        esm_ref.selectRecord(i);
-        esm_ref.setKey("SCHD");
-        esm_ref.setValue("SCTX");
-        if (esm.getKey().exist &&
-            esm.getValue().exist &&
-            esm_ref.getKey().exist &&
-            esm_ref.getValue().exist)
-        {
-            const auto & message = makeScriptMessages(esm.getValue().text);
-            const auto & message_ext = makeScriptMessages(esm_ref.getValue().text);
-            if (message.size() != message_ext.size())
-                continue;
-
-            for (size_t k = 0; k < message.size(); ++k)
-            {
-                const auto & key_text = esm_ref.getKey().text + Tools::sep[0] + message_ext.at(k);
-                const auto & val_text = esm.getKey().text + Tools::sep[0] + message.at(k);
-                const auto & type = Tools::RecType::SCTX;
-                validateEntry({ key_text, val_text, type });
-            }
-        }
-    }
-    printLogLine(Tools::RecType::SCTX);
+    printLogLine(ids.type);
 }
 
 //----------------------------------------------------------
@@ -697,85 +642,6 @@ void DictCreator::makeDictCELL_Unordered()
 }
 
 //----------------------------------------------------------
-DictCreator::PatternsExt DictCreator::makeDictCELL_Unordered_PatternsExt()
-{
-    PatternsExt patterns_ext;
-    for (size_t i = 0; i < esm_ext.getRecords().size(); ++i)
-    {
-        esm_ext.selectRecord(i);
-        if (esm_ext.getRecordId() != "CELL")
-            continue;
-
-        esm_ext.setValue("NAME");
-        if (esm_ext.getValue().exist &&
-            esm_ext.getValue().text != "")
-        {
-            patterns_ext.push_back({ makeDictCELL_Unordered_Pattern(esm_ext), i, false });
-        }
-    }
-    return patterns_ext;
-}
-
-//----------------------------------------------------------
-DictCreator::Patterns DictCreator::makeDictCELL_Unordered_Patterns()
-{
-    Patterns patterns;
-    for (size_t i = 0; i < esm.getRecords().size(); ++i)
-    {
-        esm.selectRecord(i);
-        if (esm.getRecordId() != "CELL")
-            continue;
-
-        esm.setValue("NAME");
-        if (esm.getValue().exist &&
-            esm.getValue().text != "")
-        {
-            patterns.insert({ makeDictCELL_Unordered_Pattern(esm), i });
-        }
-    }
-    return patterns;
-}
-
-//----------------------------------------------------------
-std::string DictCreator::makeDictCELL_Unordered_Pattern(EsmReader & esm_cur)
-{
-    /* pattern is the DATA and combined ids of all objects in a cell */
-
-    std::string pattern;
-    esm_cur.setValue("DATA");
-    pattern += esm_cur.getValue().content;
-    esm_cur.setValue("NAME");
-    while (esm_cur.getValue().exist)
-    {
-        esm_cur.setNextValue("NAME");
-        pattern += esm_cur.getValue().content;
-    }
-    return pattern;
-}
-
-//----------------------------------------------------------
-void DictCreator::makeDictCELL_Unordered_AddMissing(const PatternsExt & patterns_ext)
-{
-    for (size_t i = 0; i < patterns_ext.size(); ++i)
-    {
-        if (!patterns_ext[i].missing)
-            continue;
-
-        esm_ext.selectRecord(patterns_ext[i].pos);
-        esm_ext.setValue("NAME");
-        if (esm_ext.getValue().exist &&
-            esm_ext.getValue().text != "")
-        {
-            const auto & key_text = esm_ext.getValue().text;
-            const auto & val_text = Tools::err[0] + "MISSING" + Tools::err[1];
-            const auto & type = Tools::RecType::CELL;
-            validateEntry({ key_text, val_text, type });
-            Tools::addLog("Missing CELL: " + esm_ext.getValue().text + "\r\n");
-        }
-    }
-}
-
-//----------------------------------------------------------
 void DictCreator::makeDictDIAL_Unordered()
 {
     auto patterns_ext = makeDictDIAL_Unordered_PatternsExt();
@@ -811,13 +677,33 @@ void DictCreator::makeDictDIAL_Unordered()
 }
 
 //----------------------------------------------------------
+DictCreator::PatternsExt DictCreator::makeDictCELL_Unordered_PatternsExt()
+{
+    PatternsExt patterns_ext;
+    for (size_t i = 0; i < esm_ext.getRecords().size(); ++i)
+    {
+        esm_ext.selectRecord(i);
+        if (esm_ext.getRecord().id != "CELL")
+            continue;
+
+        esm_ext.setValue("NAME");
+        if (esm_ext.getValue().exist &&
+            esm_ext.getValue().text != "")
+        {
+            patterns_ext.push_back({ makeDictCELL_Unordered_Pattern(esm_ext), i, false });
+        }
+    }
+    return patterns_ext;
+}
+
+//----------------------------------------------------------
 DictCreator::PatternsExt DictCreator::makeDictDIAL_Unordered_PatternsExt()
 {
     PatternsExt patterns_ext;
     for (size_t i = 0; i < esm_ext.getRecords().size(); ++i)
     {
         esm_ext.selectRecord(i);
-        if (esm_ext.getRecordId() != "DIAL")
+        if (esm_ext.getRecord().id != "DIAL")
             continue;
 
         esm_ext.setKey("DATA");
@@ -830,13 +716,33 @@ DictCreator::PatternsExt DictCreator::makeDictDIAL_Unordered_PatternsExt()
 }
 
 //----------------------------------------------------------
+DictCreator::Patterns DictCreator::makeDictCELL_Unordered_Patterns()
+{
+    Patterns patterns;
+    for (size_t i = 0; i < esm.getRecords().size(); ++i)
+    {
+        esm.selectRecord(i);
+        if (esm.getRecord().id != "CELL")
+            continue;
+
+        esm.setValue("NAME");
+        if (esm.getValue().exist &&
+            esm.getValue().text != "")
+        {
+            patterns.insert({ makeDictCELL_Unordered_Pattern(esm), i });
+        }
+    }
+    return patterns;
+}
+
+//----------------------------------------------------------
 DictCreator::Patterns DictCreator::makeDictDIAL_Unordered_Patterns()
 {
     Patterns patterns;
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (esm.getRecordId() != "DIAL")
+        if (esm.getRecord().id != "DIAL")
             continue;
 
         esm.setKey("DATA");
@@ -849,10 +755,25 @@ DictCreator::Patterns DictCreator::makeDictDIAL_Unordered_Patterns()
 }
 
 //----------------------------------------------------------
+std::string DictCreator::makeDictCELL_Unordered_Pattern(EsmReader & esm_cur)
+{
+    /* pattern is the DATA and combined ids of all objects in a cell */
+    std::string pattern;
+    esm_cur.setValue("DATA");
+    pattern += esm_cur.getValue().content;
+    esm_cur.setValue("NAME");
+    while (esm_cur.getValue().exist)
+    {
+        esm_cur.setNextValue("NAME");
+        pattern += esm_cur.getValue().content;
+    }
+    return pattern;
+}
+
+//----------------------------------------------------------
 std::string DictCreator::makeDictDIAL_Unordered_Pattern(EsmReader & esm_cur, size_t i)
 {
     /* pattern is the INAM and SCVR from next INFO record */
-
     std::string pattern;
     esm_cur.selectRecord(i + 1);
     esm_cur.setValue("INAM");
@@ -860,6 +781,30 @@ std::string DictCreator::makeDictDIAL_Unordered_Pattern(EsmReader & esm_cur, siz
     esm_cur.setValue("SCVR");
     pattern += esm_cur.getValue().content;
     return pattern;
+}
+
+//----------------------------------------------------------
+void DictCreator::makeDictCELL_Unordered_AddMissing(const PatternsExt & patterns_ext)
+{
+    for (size_t i = 0; i < patterns_ext.size(); ++i)
+    {
+        if (!patterns_ext[i].missing)
+            continue;
+
+        esm_ext.selectRecord(patterns_ext[i].pos);
+        esm_ext.setValue("NAME");
+        if (!esm_ext.getValue().exist)
+            continue;
+
+        if (esm_ext.getValue().text == "")
+            continue;
+
+        const auto & key_text = esm_ext.getValue().text;
+        const auto & val_text = Tools::err[0] + "MISSING" + Tools::err[1];
+        const auto & type = Tools::RecType::CELL;
+        validateEntry({ key_text, val_text, type });
+        Tools::addLog("Missing CELL: " + esm_ext.getValue().text + "\r\n");
+    }
 }
 
 //----------------------------------------------------------
@@ -884,51 +829,16 @@ void DictCreator::makeDictDIAL_Unordered_AddMissing(const PatternsExt & patterns
 }
 
 //----------------------------------------------------------
-void DictCreator::makeDictBNAM_Unordered()
+static void isValid()
 {
-    auto patterns_ext = makeDict_Unordered_PatternsExt("INFO", "INAM");
-    const auto & patterns = makeDictBNAM_Unordered_Patterns();
 
-    resetCounters();
-    for (size_t i = 0; i < patterns_ext.size(); ++i)
-    {
-        auto search = patterns.find(patterns_ext[i].str);
-        if (search == patterns.end())
-            continue;
-
-        esm.selectRecord(search->second);
-        esm.setKey("INAM");
-        esm.setValue("BNAM");
-        esm_ext.selectRecord(patterns_ext[i].pos);
-        esm_ext.setKey("INAM");
-        esm_ext.setValue("BNAM");
-        if (esm.getKey().exist &&
-            esm.getValue().exist &&
-            esm_ext.getKey().exist &&
-            esm_ext.getValue().exist)
-        {
-            const auto & message = makeScriptMessages(esm.getValue().text);
-            const auto & message_ext = makeScriptMessages(esm_ext.getValue().text);
-            if (message.size() != message_ext.size())
-                continue;
-
-            for (size_t k = 0; k < message.size(); ++k)
-            {
-                const auto & key_text = esm_ext.getKey().text + Tools::sep[0] + message_ext.at(k);
-                const auto & val_text = esm_ext.getKey().text + Tools::sep[0] + message.at(k);
-                const auto & type = Tools::RecType::BNAM;
-                validateEntry({ key_text, val_text, type });
-            }
-        }
-    }
-    printLogLine(Tools::RecType::BNAM);
 }
 
 //----------------------------------------------------------
-void DictCreator::makeDictSCPT_Unordered()
+void DictCreator::makeDictScript_Unordered(const IDs & ids)
 {
-    auto patterns_ext = makeDict_Unordered_PatternsExt("SCPT", "SCHD");
-    const auto & patterns = makeDictSCPT_Unordered_Patterns();
+    auto patterns_ext = makeDict_Unordered_PatternsExt(ids);
+    const auto & patterns = makeDict_Unordered_Patterns(ids);
 
     resetCounters();
     for (size_t i = 0; i < patterns_ext.size(); ++i)
@@ -938,11 +848,11 @@ void DictCreator::makeDictSCPT_Unordered()
             continue;
 
         esm.selectRecord(search->second);
-        esm.setKey("SCHD");
-        esm.setValue("SCTX");
+        esm.setKey(ids.key_id);
+        esm.setValue(ids.val_id);
         esm_ext.selectRecord(patterns_ext[i].pos);
-        esm_ext.setKey("SCHD");
-        esm_ext.setValue("SCTX");
+        esm_ext.setKey(ids.key_id);
+        esm_ext.setValue(ids.val_id);
         if (esm.getKey().exist &&
             esm.getValue().exist &&
             esm_ext.getKey().exist &&
@@ -957,27 +867,24 @@ void DictCreator::makeDictSCPT_Unordered()
             {
                 const auto & key_text = esm_ext.getKey().text + Tools::sep[0] + message_ext.at(k);
                 const auto & val_text = esm.getKey().text + Tools::sep[0] + message.at(k);
-                const auto & type = Tools::RecType::SCTX;
-                validateEntry({ key_text, val_text, type });
+                validateEntry({ key_text, val_text, ids.type });
             }
         }
     }
-    printLogLine(Tools::RecType::SCTX);
+    printLogLine(ids.type);
 }
 
 //----------------------------------------------------------
-DictCreator::PatternsExt DictCreator::makeDict_Unordered_PatternsExt(
-    const std::string & rec_id,
-    const std::string & key_id)
+DictCreator::PatternsExt DictCreator::makeDict_Unordered_PatternsExt(const IDs & ids)
 {
     PatternsExt patterns_ext;
     for (size_t i = 0; i < esm_ext.getRecords().size(); ++i)
     {
         esm_ext.selectRecord(i);
-        if (esm_ext.getRecordId() != rec_id)
+        if (esm_ext.getRecord().id != ids.rec_id)
             continue;
 
-        esm_ext.setKey(key_id);
+        esm_ext.setKey(ids.key_id);
         if (!esm_ext.getKey().exist)
             continue;
 
@@ -987,35 +894,16 @@ DictCreator::PatternsExt DictCreator::makeDict_Unordered_PatternsExt(
 }
 
 //----------------------------------------------------------
-DictCreator::Patterns DictCreator::makeDictBNAM_Unordered_Patterns()
+DictCreator::Patterns DictCreator::makeDict_Unordered_Patterns(const IDs & ids)
 {
     Patterns patterns;
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (esm.getRecordId() != "INFO")
+        if (esm.getRecord().id != ids.rec_id)
             continue;
 
-        esm.setKey("INAM");
-        if (!esm.getKey().exist)
-            continue;
-
-        patterns.insert({ esm.getKey().text, i });
-    }
-    return patterns;
-}
-
-//----------------------------------------------------------
-DictCreator::Patterns DictCreator::makeDictSCPT_Unordered_Patterns()
-{
-    Patterns patterns;
-    for (size_t i = 0; i < esm.getRecords().size(); ++i)
-    {
-        esm.selectRecord(i);
-        if (esm.getRecordId() != "SCPT")
-            continue;
-
-        esm.setKey("SCHD");
+        esm.setKey(ids.key_id);
         if (!esm.getKey().exist)
             continue;
 
@@ -1087,6 +975,9 @@ void DictCreator::validateRecordForModeNOT(const Tools::Entry & entry)
     if (search != merger.getDict().at(entry.type).end())
         return;
 
+    if (entry.type == Tools::RecType::FNAM && entry.val_text.empty())
+        return;
+
     makeAnnotations(entry);
     insertRecordToDict(entry);
 }
@@ -1105,6 +996,9 @@ void DictCreator::validateRecordForModeCHANGED(const Tools::Entry & entry)
         return;
 
     if (search->second == entry.val_text)
+        return;
+
+    if (entry.type == Tools::RecType::FNAM && entry.val_text.empty())
         return;
 
     makeAnnotations(entry);
@@ -1187,11 +1081,11 @@ void DictCreator::insertRecordToDict(const Tools::Entry & entry)
 //----------------------------------------------------------
 void DictCreator::printLogLine(const Tools::RecType type)
 {
-    std::string type_name = Tools::type2Str(type);
-    type_name.resize(12, ' ');
+    std::string type_str = Tools::type2Str(type);
+    type_str.resize(12, ' ');
 
     std::ostringstream ss;
-    ss << type_name << std::setw(5) << std::to_string(counter_created) << " / ";
+    ss << type_str << std::setw(5) << std::to_string(counter_created) << " / ";
 
     if (type == Tools::RecType::CELL ||
         type == Tools::RecType::DIAL)

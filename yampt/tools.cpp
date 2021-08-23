@@ -80,12 +80,34 @@ void Tools::writeText(const std::string & text, const std::string & name)
 }
 
 //----------------------------------------------------------
-void Tools::writeFile(const std::vector<std::string> & rec_coll, const std::string & name)
+void Tools::writeFile(
+    const std::vector<Record> & records,
+    const std::string & name)
 {
     std::ofstream file(name, std::ios::binary);
-    for (auto & elem : rec_coll)
+    for (const auto & record : records)
     {
-        file << elem;
+        file << record.content;
+    }
+    addLog("--> Writing \"" + name + "\"...\r\n");
+}
+
+//----------------------------------------------------------
+void Tools::createFile(
+    const std::vector<Record> & records,
+    const std::string & name)
+{
+    std::ofstream file(name, std::ios::binary);
+    for (size_t i = 0; i < records.size(); ++i)
+    {
+        const auto & record = records.at(i);
+        if (record.id == "TES3")
+            file << record.content;
+
+        if (!record.modified)
+            continue;
+        else
+            file << record.content;
     }
     addLog("--> Writing \"" + name + "\"...\r\n");
 }
@@ -357,4 +379,21 @@ std::string Tools::getINDX(const std::string & content)
     std::ostringstream ss;
     ss << std::setfill('0') << std::setw(3) << indx;
     return ss.str();
+}
+
+//----------------------------------------------------------
+bool Tools::isFNAM(const std::string & rec_id)
+{
+    return (rec_id == "ACTI" || rec_id == "ALCH" ||
+            rec_id == "APPA" || rec_id == "ARMO" ||
+            rec_id == "BOOK" || rec_id == "BSGN" ||
+            rec_id == "CLAS" || rec_id == "CLOT" ||
+            rec_id == "CONT" || rec_id == "CREA" ||
+            rec_id == "DOOR" || rec_id == "FACT" ||
+            rec_id == "INGR" || rec_id == "LIGH" ||
+            rec_id == "LOCK" || rec_id == "MISC" ||
+            rec_id == "NPC_" || rec_id == "PROB" ||
+            rec_id == "RACE" || rec_id == "REGN" ||
+            rec_id == "REPA" || rec_id == "SKIL" ||
+            rec_id == "SPEL" || rec_id == "WEAP");
 }
