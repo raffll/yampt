@@ -7,12 +7,14 @@ EsmConverter::EsmConverter(
     const DictMerger & merger,
     const bool add_hyperlinks,
     const std::string & file_suffix,
-    const Tools::Encoding encoding
+    const Tools::Encoding encoding,
+    const bool create_mast
 )
     : esm(path)
     , merger(merger)
     , add_hyperlinks(add_hyperlinks)
     , file_suffix(file_suffix)
+    , create_mast(create_mast)
 {
     if (encoding == Tools::Encoding::WINDOWS_1250)
     {
@@ -35,7 +37,12 @@ void EsmConverter::convertEsm()
         "      Converted / Identical / Unchanged /    All\r\n"
         "------------------------------------------------\r\n");
 
-    convertMAST();
+    if (!file_suffix.empty())
+        convertMAST();
+
+    if (create_mast)
+        createMAST();
+
     convertCELL();
     convertPGRD();
     convertANAM();
@@ -51,7 +58,6 @@ void EsmConverter::convertEsm()
     convertTEXT();
     convertRNAM();
     convertINDX();
-    convertGMDT();
 
     if (add_hyperlinks)
     {
@@ -59,6 +65,7 @@ void EsmConverter::convertEsm()
     }
 
     convertINFO();
+    //convertGMDT();
 
     Tools::addLog("------------------------------------------------\r\n");
 }
@@ -66,23 +73,41 @@ void EsmConverter::convertEsm()
 //----------------------------------------------------------
 void EsmConverter::convertMAST()
 {
-    resetCounters();
-    for (size_t i = 0; i < esm.getRecords().size(); ++i)
-    {
-        esm.selectRecord(i);
-        if (esm.getRecord().id != "TES3")
-            continue;
+    esm.selectRecord(0);
+    if (esm.getRecord().id != "TES3")
+        return;
 
-        esm.setValue("MAST");
-        while (esm.getValue().exist)
-        {
-            const auto & prefix = esm.getValue().text.substr(0, esm.getValue().text.find_last_of("."));
-            const auto & suffix = esm.getValue().text.substr(esm.getValue().text.rfind("."));
-            const auto & new_text = prefix + file_suffix + suffix + '\0';
-            convertRecordContent(new_text);
-            esm.setNextValue("MAST");
-        }
+    esm.setValue("MAST");
+    while (esm.getValue().exist)
+    {
+        const auto & prefix = esm.getValue().text.substr(0, esm.getValue().text.find_last_of("."));
+        const auto & suffix = esm.getValue().text.substr(esm.getValue().text.rfind("."));
+        const auto & new_text = prefix + file_suffix + suffix + '\0';
+        convertRecordContent(new_text);
+        esm.setNextValue("MAST");
     }
+}
+
+//----------------------------------------------------------
+void EsmConverter::createMAST()
+{
+    esm.selectRecord(0);
+    if (esm.getRecord().id != "TES3")
+        return;
+
+    std::string rec_content = esm.getRecord().content;
+    std::string mast = getName().full + '\0';
+    rec_content += "MAST" + Tools::convertUIntToStringByteArray(mast.size()) + mast;
+    std::string data;
+    data.resize(8);
+    rec_content += "DATA" + Tools::convertUIntToStringByteArray(data.size()) + data;
+
+    size_t rec_size = rec_content.size() - 16;
+    rec_content.erase(4, 4);
+    rec_content.insert(4, Tools::convertUIntToStringByteArray(rec_size));
+    esm.replaceRecord(rec_content);
+
+    Tools::addLog("Creating new header...\r\n");
 }
 
 //----------------------------------------------------------
@@ -193,6 +218,7 @@ void EsmConverter::convertPGRD()
 void EsmConverter::convertANAM()
 {
     resetCounters();
+    const auto & type = Tools::RecType::CELL;
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
@@ -205,7 +231,6 @@ void EsmConverter::convertANAM()
         {
             const auto & key_text = esm.getValue().text;
             const auto & val_text = esm.getValue().text;
-            const auto & type = Tools::RecType::CELL;
             std::string new_text;
             if (!makeNewText({ key_text, val_text, type }, new_text))
                 continue;
@@ -541,6 +566,7 @@ void EsmConverter::convertINFO()
 {
     std::string key_prefix;
     size_t dial_index = 0;
+
     resetCounters();
     const auto & type = Tools::RecType::INFO;
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
@@ -584,39 +610,53 @@ void EsmConverter::convertINFO()
 //----------------------------------------------------------
 void EsmConverter::convertBNAM()
 {
+    size_t dial_index = 0;
+
     resetCounters();
     const auto & type = Tools::RecType::BNAM;
     for (size_t i = 0; i < esm.getRecords().size(); ++i)
     {
         esm.selectRecord(i);
-        if (esm.getRecord().id != "INFO")
-            continue;
-
-        esm.setKey("INAM");
-        esm.setValue("BNAM");
-        if (esm.getKey().exist &&
-            esm.getValue().exist)
+        if (esm.getRecord().id == "DIAL")
         {
-            const auto & key_text = esm.getKey().text;
-            const auto & val_text = esm.getValue().text;
+            esm.setKey("DATA");
+            esm.setValue("NAME");
+            if (esm.getKey().exist &&
+                esm.getValue().exist)
+            {
+                dial_index = i;
+            }
+        }
 
-            const auto & script_name = key_text;
-            const auto & file_name = getName().full;
-            const auto & old_script = val_text;
+        if (esm.getRecord().id == "INFO")
+        {
+            esm.setKey("INAM");
+            esm.setValue("BNAM");
+            if (esm.getKey().exist &&
+                esm.getValue().exist)
+            {
+                const auto & key_text = esm.getKey().text;
+                const auto & val_text = esm.getValue().text;
 
-            counter_all++;
-            ScriptParser parser(
-                type,
-                merger,
-                script_name,
-                file_name,
-                old_script);
+                const auto & script_name = key_text;
+                const auto & file_name = getName().full;
+                const auto & old_script = val_text;
 
-            std::string new_text = parser.getNewScript();
-            if (isIdentical(val_text, new_text))
-                continue;
+                counter_all++;
+                ScriptParser parser(
+                    type,
+                    merger,
+                    script_name,
+                    file_name,
+                    old_script);
 
-            convertRecordContent(new_text);
+                std::string new_text = parser.getNewScript();
+                if (isIdentical(val_text, new_text))
+                    continue;
+
+                convertRecordContent(new_text);
+                esm.setModified(dial_index);
+            }
         }
     }
     printLogLine(Tools::RecType::BNAM);
@@ -759,7 +799,6 @@ void EsmConverter::addNullTerminatorIfEmpty(
 //----------------------------------------------------------
 void EsmConverter::convertRecordContent(const std::string & new_text)
 {
-    size_t rec_size;
     std::string rec_content = esm.getRecord().content;
     rec_content.erase(esm.getValue().pos + 8, esm.getValue().size);
     rec_content.insert(esm.getValue().pos + 8, new_text);
@@ -767,7 +806,7 @@ void EsmConverter::convertRecordContent(const std::string & new_text)
     rec_content.insert(
         esm.getValue().pos + 4,
         Tools::convertUIntToStringByteArray(new_text.size()));
-    rec_size = rec_content.size() - 16;
+    size_t rec_size = rec_content.size() - 16;
     rec_content.erase(4, 4);
     rec_content.insert(4, Tools::convertUIntToStringByteArray(rec_size));
     esm.replaceRecord(rec_content);

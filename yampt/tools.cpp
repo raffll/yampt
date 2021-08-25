@@ -101,9 +101,6 @@ void Tools::createFile(
     for (size_t i = 0; i < records.size(); ++i)
     {
         const auto & record = records.at(i);
-        if (record.id == "TES3")
-            file << record.content;
-
         if (!record.modified)
             continue;
         else
@@ -205,7 +202,9 @@ std::string Tools::replaceNonReadableCharsWithDot(const std::string & str)
     std::string text;
     for (size_t i = 0; i < str.size(); ++i)
     {
-        if (isprint(str[i]))
+        if ((static_cast<int>(str[i]) >= 0 &&
+             static_cast<int>(str[i]) <= 255) &&
+            std::isprint(str[i]))
         {
             text += str[i];
         }

@@ -19,7 +19,8 @@ public:
         const DictMerger & merger,
         const bool add_hyperlinks,
         const std::string & file_suffix,
-        const Tools::Encoding encoding);
+        const Tools::Encoding encoding,
+        const bool create_mast);
 
 private:
     void convertEsm();
@@ -35,6 +36,7 @@ private:
         const std::string & new_text);
     void printLogLine(const Tools::RecType type);
     void convertMAST();
+    void createMAST();
     void convertCELL();
     void convertPGRD();
     void convertANAM();
@@ -62,6 +64,7 @@ private:
 
     bool add_hyperlinks;
     const std::string file_suffix;
+    const bool create_mast;
 
     int counter_converted = 0;
     int counter_identical = 0;

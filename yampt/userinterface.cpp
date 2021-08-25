@@ -185,7 +185,7 @@ void UserInterface::convertEsm()
     DictMerger merger(dict_paths);
     for (const auto & file_path : file_paths)
     {
-        EsmConverter converter(file_path, merger, add_hyperlinks, suffix, encoding);
+        EsmConverter converter(file_path, merger, add_hyperlinks, suffix, encoding, false);
         if (converter.isLoaded())
         {
             const auto & name = converter.getName().name + suffix + converter.getName().ext;
@@ -201,12 +201,12 @@ void UserInterface::createEsm()
     DictMerger merger(dict_paths);
     for (const auto & file_path : file_paths)
     {
-        EsmConverter converter(file_path, merger, add_hyperlinks, suffix, encoding);
+        EsmConverter converter(file_path, merger, add_hyperlinks, suffix, encoding, true);
         if (converter.isLoaded())
         {
-            const auto & name = converter.getName().name + suffix + converter.getName().ext;
+            const auto & name = converter.getName().name + ".CREATED" + converter.getName().ext;
             Tools::createFile(converter.getRecords(), name);
-            boost::filesystem::last_write_time(name, converter.getTime());
+            boost::filesystem::last_write_time(name, converter.getTime() + 1);
         }
     }
 }
