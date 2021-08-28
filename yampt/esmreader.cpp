@@ -208,3 +208,15 @@ void EsmReader::handleException(const std::exception & e)
     Tools::addLog("--> Exception: " + std::string(e.what()) + "\r\n");
     is_loaded = false;
 }
+
+//----------------------------------------------------------
+size_t EsmReader::getModifiedCount()
+{
+    size_t count = 0;
+    for (const auto & record : records)
+    {
+        if (record.modified)
+            count++;
+    }
+    return count;
+}

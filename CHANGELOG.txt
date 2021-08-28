@@ -1,3 +1,8 @@
+0.23
+- [feature] create esm/esp files from dictionaries
+- [feature] add annotations to ALL dictionary
+- [feature] add annotations to all types of records
+
 0.22
 - [feature] hiperlinks annotations from base dictionary and currently processed esp
 - [feature] gender annotations from base dictionary and currently processed esp

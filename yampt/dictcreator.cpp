@@ -39,12 +39,14 @@ DictCreator::DictCreator(
 DictCreator::DictCreator(
     const std::string & path,
     const DictMerger & merger,
-    const Tools::CreatorMode mode
+    const Tools::CreatorMode mode,
+    const bool disable_annotations
 )
     : esm(path)
     , esm_ref(esm)
     , merger(merger)
     , mode(mode)
+    , disable_annotations(disable_annotations)
 {
     dict = Tools::initializeDict();
 
@@ -370,6 +372,12 @@ void DictCreator::makeDictFNAM_Glossary()
 }
 
 //----------------------------------------------------------
+void DictCreator::makeDictINFO_Glossary()
+{
+    // TODO
+}
+
+//----------------------------------------------------------
 void DictCreator::makeDictDESC()
 {
     resetCounters();
@@ -560,7 +568,19 @@ void DictCreator::makeDictINFO()
                 continue;
 
             const auto & key_text = key_prefix + Tools::sep[0] + esm.getKey().text;
-            const auto & val_text = esm.getValue().text;
+            auto val_text = esm.getValue().text;
+
+            if (!disable_annotations &&
+                (mode == Tools::CreatorMode::ALL ||
+                 mode == Tools::CreatorMode::NOTFOUND ||
+                 mode == Tools::CreatorMode::CHANGED))
+            {
+                val_text += Tools::addAnnotations(
+                    merger.getDict().at(Tools::RecType::DIAL),
+                    val_text,
+                    false);
+            }
+
             const auto & type = Tools::RecType::INFO;
             validateEntry({ key_text, val_text, type, npc_text });
         }
@@ -965,6 +985,7 @@ void DictCreator::validateRecordForModeALL(const Tools::Entry & entry)
         }
     }
 
+    makeAnnotations(entry);
     insertRecordToDict({ entry.key_text, val_text, entry.type });
 }
 
@@ -1008,44 +1029,47 @@ void DictCreator::validateRecordForModeCHANGED(const Tools::Entry & entry)
 //----------------------------------------------------------
 void DictCreator::makeAnnotations(const Tools::Entry & entry)
 {
-    if (entry.type != Tools::RecType::INFO)
+    if (disable_annotations)
         return;
 
     std::string annotations;
 
-    annotations += "\r\nHyperlinks 1:";
-    annotations += Tools::addHyperlinks(
-        merger.getDict().at(Tools::RecType::DIAL),
-        entry.val_text,
-        true);
-
-    annotations += "\r\nHyperlinks 2:";
-    annotations += Tools::addHyperlinks(
-        dict.at(Tools::RecType::DIAL),
-        entry.val_text,
-        false);
-
-    annotations += "\r\nGlossary:";
-    annotations += Tools::addHyperlinks(
+    annotations += "\r\n\tGlossary:";
+    annotations += Tools::addAnnotations(
         merger.getDict().at(Tools::RecType::Glossary),
         entry.val_text,
         true);
 
-    std::string npc_flag;
-    auto search_merger = merger.getDict().at(Tools::RecType::NPC_FLAG).find(entry.optional);
-    if (search_merger != merger.getDict().at(Tools::RecType::NPC_FLAG).end())
+    if (entry.type == Tools::RecType::INFO)
     {
-        npc_flag = search_merger->second;
-    }
+        annotations += "\r\n\tHyperlinks 1:";
+        annotations += Tools::addAnnotations(
+            merger.getDict().at(Tools::RecType::DIAL),
+            entry.val_text,
+            true);
 
-    auto search_dict = dict.at(Tools::RecType::NPC_FLAG).find(entry.optional);
-    if (search_dict != dict.at(Tools::RecType::NPC_FLAG).end())
-    {
-        npc_flag = search_dict->second;
-    }
+        annotations += "\r\n\tHyperlinks 2:";
+        annotations += Tools::addAnnotations(
+            dict.at(Tools::RecType::DIAL),
+            entry.val_text,
+            false);
 
-    annotations += "\r\nSpeaker: ";
-    annotations += npc_flag;
+        std::string npc_flag;
+        auto search_merger = merger.getDict().at(Tools::RecType::NPC_FLAG).find(entry.optional);
+        if (search_merger != merger.getDict().at(Tools::RecType::NPC_FLAG).end())
+        {
+            npc_flag = search_merger->second;
+        }
+
+        auto search_dict = dict.at(Tools::RecType::NPC_FLAG).find(entry.optional);
+        if (search_dict != dict.at(Tools::RecType::NPC_FLAG).end())
+        {
+            npc_flag = search_dict->second;
+        }
+
+        annotations += "\r\n\tSpeaker: ";
+        annotations += npc_flag;
+    }
 
     dict.at(Tools::RecType::Annotations).insert({ entry.key_text, annotations });
 }

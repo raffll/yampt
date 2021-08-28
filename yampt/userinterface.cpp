@@ -24,6 +24,10 @@ void UserInterface::parseCommandLine()
             {
                 add_hyperlinks = true;
             }
+            else if (args[i] == "--disable-annotations")
+            {
+                disable_annotations = true;
+            }
             else if (args[i] == "--windows-1250")
             {
                 encoding = Tools::Encoding::WINDOWS_1250;
@@ -118,7 +122,7 @@ void UserInterface::runCommand()
     }
     else
     {
-        Tools::addLog("yampt v0.22\r\n");
+        Tools::addLog("yampt v0.23\r\n");
     }
 }
 
@@ -145,7 +149,7 @@ void UserInterface::makeDictAll()
     DictMerger merger(dict_paths);
     for (size_t i = 0; i < file_paths.size(); ++i)
     {
-        DictCreator creator(file_paths[i], merger, Tools::CreatorMode::ALL);
+        DictCreator creator(file_paths[i], merger, Tools::CreatorMode::ALL, disable_annotations);
         Tools::writeDict(creator.getDict(), creator.getName().name + ".ALL.xml");
     }
 }

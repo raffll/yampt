@@ -21,6 +21,7 @@ public:
     const auto & getRecords() const { return records; }
 
     const auto & getRecord() { return *rec; }
+    size_t getModifiedCount();
 
     struct SubRecord
     {

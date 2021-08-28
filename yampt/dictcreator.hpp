@@ -20,7 +20,8 @@ public:
     DictCreator(
         const std::string & path,
         const DictMerger & merger,
-        const Tools::CreatorMode mode);
+        const Tools::CreatorMode mode,
+        const bool disable_annotations = false);
 
 private:
     struct Pattern
@@ -70,6 +71,7 @@ private:
     void makeDictINFO();
     void makeDictScript(const IDs & ids);
     void makeDictFNAM_Glossary();
+    void makeDictINFO_Glossary();
 
     void makeDictCELL_Unordered();
     PatternsExt makeDictCELL_Unordered_PatternsExt();
@@ -93,6 +95,7 @@ private:
     const DictMerger & merger;
     const Tools::CreatorMode mode;
     Tools::Dict dict;
+    const bool disable_annotations = false;
 
     int counter_created = 0;
     int counter_missing = 0;

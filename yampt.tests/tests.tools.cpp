@@ -52,9 +52,9 @@ TEST_CASE("add dialog topics to INFO strings", "[u]")
     dict.insert({ "clanfear", "postrach klanów" });
 
     text = "some text clanfear some text";
-    REQUIRE(Tools::addHyperlinks(dict, text, false) == " [postrach klanów]");
-    REQUIRE(Tools::addHyperlinks(dict, text, true) == " [clanfear -> postrach klanów]");
+    REQUIRE(Tools::addAnnotations(dict, text, false) == " [postrach klanów]");
+    REQUIRE(Tools::addAnnotations(dict, text, true) == " [clanfear -> postrach klanów]");
 
     text = "some text CLANFEAR some text";
-    REQUIRE(Tools::addHyperlinks(dict, text, false) == " [postrach klanów]");
+    REQUIRE(Tools::addAnnotations(dict, text, false) == " [postrach klanów]");
 }

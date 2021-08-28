@@ -20,7 +20,7 @@ public:
         const bool add_hyperlinks,
         const std::string & file_suffix,
         const Tools::Encoding encoding,
-        const bool create_mast);
+        const bool create_header);
 
 private:
     void convertEsm();
@@ -36,7 +36,7 @@ private:
         const std::string & new_text);
     void printLogLine(const Tools::RecType type);
     void convertMAST();
-    void createMAST();
+    void createHeader();
     void convertCELL();
     void convertPGRD();
     void convertANAM();
@@ -64,7 +64,7 @@ private:
 
     bool add_hyperlinks;
     const std::string file_suffix;
-    const bool create_mast;
+    const bool create_header;
 
     int counter_converted = 0;
     int counter_identical = 0;

@@ -19,8 +19,8 @@ set ESM=
 for %%f in ("%INPUT%\*.esp", "%INPUT%\*.esm") do set ESM=!ESM! "%%f"
 set ESM=%ESM:~1%
 
-yampt.exe --make-not --add-hyperlinks -f %ESM% -d "%BASE%\%DICT_N%" "%GLOS%"
-yampt.exe --make-changed --add-hyperlinks -f %ESM% -d "%BASE%\%DICT_F%" "%GLOS%"
+yampt.exe --make-not -f %ESM% -d "%BASE%\%DICT_N%" "%GLOS%"
+yampt.exe --make-changed -f %ESM% -d "%BASE%\%DICT_F%" "%GLOS%"
 
 move /y "*.CHANGED.xml" "%NEW%" >nul 2>&1
 move /y "*.NOTFOUND.xml" "%NEW%" >nul 2>&1

@@ -23,6 +23,7 @@ private:
     void createEsm();
 
     bool add_hyperlinks = false;
+    bool disable_annotations = false;
 
     std::vector<std::string> args;
     std::vector<std::string> file_paths;

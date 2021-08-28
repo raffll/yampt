@@ -58,7 +58,7 @@ public:
     struct Entry
     {
         const std::string key_text;
-        const std::string val_text;
+        std::string val_text;
         const Tools::RecType type;
         const std::string optional;
     };
@@ -109,7 +109,7 @@ public:
     static std::string eraseNullChars(std::string str);
     static std::string trimCR(std::string str);
     static std::string replaceNonReadableCharsWithDot(const std::string & str);
-    static std::string addHyperlinks(
+    static std::string addAnnotations(
         const Chapter & chapter,
         const std::string & source,
         const bool extended);

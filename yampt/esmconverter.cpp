@@ -8,13 +8,13 @@ EsmConverter::EsmConverter(
     const bool add_hyperlinks,
     const std::string & file_suffix,
     const Tools::Encoding encoding,
-    const bool create_mast
+    const bool create_header
 )
     : esm(path)
     , merger(merger)
     , add_hyperlinks(add_hyperlinks)
     , file_suffix(file_suffix)
-    , create_mast(create_mast)
+    , create_header(create_header)
 {
     if (encoding == Tools::Encoding::WINDOWS_1250)
     {
@@ -40,9 +40,6 @@ void EsmConverter::convertEsm()
     if (!file_suffix.empty())
         convertMAST();
 
-    if (create_mast)
-        createMAST();
-
     convertCELL();
     convertPGRD();
     convertANAM();
@@ -67,6 +64,9 @@ void EsmConverter::convertEsm()
     convertINFO();
     //convertGMDT();
 
+    if (create_header)
+        createHeader();
+
     Tools::addLog("------------------------------------------------\r\n");
 }
 
@@ -89,11 +89,30 @@ void EsmConverter::convertMAST()
 }
 
 //----------------------------------------------------------
-void EsmConverter::createMAST()
+void EsmConverter::createHeader()
 {
     esm.selectRecord(0);
     if (esm.getRecord().id != "TES3")
         return;
+
+    esm.setValue("HEDR");
+    std::string hedr = esm.getValue().content;
+    std::string version = hedr.substr(0, 4);
+    std::string type = hedr.substr(4, 4);
+    std::string author = hedr.substr(8, 32);
+    std::string description = hedr.substr(40, 256);
+    std::string rec_num = hedr.substr(296, 4);
+
+    author.clear();
+    author.resize(32);
+    description.clear();
+    description.resize(256);
+
+    size_t num = esm.getModifiedCount();
+    rec_num = Tools::convertUIntToStringByteArray(num);
+
+    hedr = version + type + author + description + rec_num;
+    convertRecordContent(hedr);
 
     std::string rec_content = esm.getRecord().content;
     std::string mast = getName().full + '\0';
@@ -759,7 +778,7 @@ bool EsmConverter::makeNewText(
         add_hyperlinks &&
         entry.optional.substr(0, 1) != "V")
     {
-        new_text = entry.val_text + Tools::addHyperlinks(
+        new_text = entry.val_text + Tools::addAnnotations(
             merger.getDict().at(Tools::RecType::DIAL),
             entry.val_text,
             false);

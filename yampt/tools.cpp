@@ -55,13 +55,10 @@ void Tools::writeDict(const Dict & dict, const std::string & name)
                 << "\t" << sep[3] << elem.first << sep[4] << "\r\n"
                 << "\t" << sep[5] << elem.second << sep[6] << "\r\n";
 
-            if (type == Tools::RecType::INFO)
+            auto search = dict.at(Tools::RecType::Annotations).find(elem.first);
+            if (search != dict.at(Tools::RecType::Annotations).end())
             {
-                auto search = dict.at(Tools::RecType::Annotations).find(elem.first);
-                if (search != dict.at(Tools::RecType::Annotations).end())
-                {
-                    file << "\t" << "<!--" << search->second << "\r\n\t-->" << "\r\n";;
-                }
+                file << "\t" << "<!--" << search->second << "\r\n\t-->" << "\r\n";;
             }
 
             file << "</record>\r\n";
@@ -217,7 +214,7 @@ std::string Tools::replaceNonReadableCharsWithDot(const std::string & str)
 }
 
 //----------------------------------------------------------
-std::string Tools::addHyperlinks(
+std::string Tools::addAnnotations(
     const Chapter & chapter,
     const std::string & source,
     const bool extended)
