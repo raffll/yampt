@@ -372,12 +372,6 @@ void DictCreator::makeDictFNAM_Glossary()
 }
 
 //----------------------------------------------------------
-void DictCreator::makeDictINFO_Glossary()
-{
-    // TODO
-}
-
-//----------------------------------------------------------
 void DictCreator::makeDictDESC()
 {
     resetCounters();
@@ -571,6 +565,7 @@ void DictCreator::makeDictINFO()
             auto val_text = esm.getValue().text;
 
             if (!disable_annotations &&
+                key_prefix.substr(0, 1) != "V" &&
                 (mode == Tools::CreatorMode::ALL ||
                  mode == Tools::CreatorMode::NOTFOUND ||
                  mode == Tools::CreatorMode::CHANGED))
@@ -579,6 +574,9 @@ void DictCreator::makeDictINFO()
                     merger.getDict().at(Tools::RecType::DIAL),
                     val_text,
                     false);
+
+                if (val_text.size() > 1024)
+                    val_text.resize(1024);
             }
 
             const auto & type = Tools::RecType::INFO;
@@ -846,12 +844,6 @@ void DictCreator::makeDictDIAL_Unordered_AddMissing(const PatternsExt & patterns
         validateEntry({ key_text, val_text, type });
         Tools::addLog("Missing DIAL: " + esm_ext.getValue().text + "\r\n");
     }
-}
-
-//----------------------------------------------------------
-static void isValid()
-{
-
 }
 
 //----------------------------------------------------------

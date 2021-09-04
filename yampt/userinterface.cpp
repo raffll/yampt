@@ -70,11 +70,6 @@ void UserInterface::parseCommandLine()
         }
     }
 
-    if (output.empty())
-    {
-        output = "Merged.xml";
-    }
-
     dict_paths.insert(dict_paths.begin(), dict_path_reverse.rbegin(), dict_path_reverse.rend());
 }
 
@@ -122,7 +117,7 @@ void UserInterface::runCommand()
     }
     else
     {
-        Tools::addLog("yampt v0.23\r\n");
+        Tools::addLog("yampt v0.23.1\r\n");
     }
 }
 

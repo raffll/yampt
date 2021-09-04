@@ -58,7 +58,10 @@ void Tools::writeDict(const Dict & dict, const std::string & name)
             auto search = dict.at(Tools::RecType::Annotations).find(elem.first);
             if (search != dict.at(Tools::RecType::Annotations).end())
             {
-                file << "\t" << "<!--" << search->second << "\r\n\t-->" << "\r\n";;
+                if (!search->second.empty())
+                {
+                    file << "\t" << "<!--" << search->second << "\r\n\t-->" << "\r\n";
+                }
             }
 
             file << "</record>\r\n";

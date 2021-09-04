@@ -28,7 +28,7 @@ private:
     std::vector<std::string> args;
     std::vector<std::string> file_paths;
     std::vector<std::string> dict_paths;
-    std::string output;
+    std::string output = "MERGED.xml";
     std::string suffix;
 
     Tools::Encoding encoding = Tools::Encoding::UNKNOWN;
