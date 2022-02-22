@@ -1,3 +1,6 @@
+0.24
+- [feature] ability to enable/disable hyperlinks and annotations
+
 0.23
 - [feature] create esm/esp files from dictionaries
 - [feature] add annotations to ALL dictionary

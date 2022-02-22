@@ -22,11 +22,11 @@ void UserInterface::parseCommandLine()
         {
             if (args[i] == "--add-hyperlinks")
             {
-                add_hyperlinks = true;
+                annotations.add_hyperlinks = true;
             }
-            else if (args[i] == "--disable-annotations")
+            else if (args[i] == "--add-annotations")
             {
-                disable_annotations = true;
+                annotations.add_annotation = true;
             }
             else if (args[i] == "--windows-1250")
             {
@@ -117,7 +117,7 @@ void UserInterface::runCommand()
     }
     else
     {
-        Tools::addLog("yampt v0.23.1\r\n");
+        Tools::addLog("yampt v0.24\r\n");
     }
 }
 
@@ -144,7 +144,7 @@ void UserInterface::makeDictAll()
     DictMerger merger(dict_paths);
     for (size_t i = 0; i < file_paths.size(); ++i)
     {
-        DictCreator creator(file_paths[i], merger, Tools::CreatorMode::ALL, disable_annotations);
+        DictCreator creator(file_paths[i], merger, Tools::CreatorMode::ALL, annotations);
         Tools::writeDict(creator.getDict(), creator.getName().name + ".ALL.xml");
     }
 }
@@ -155,7 +155,7 @@ void UserInterface::makeDictNotFound()
     DictMerger merger(dict_paths);
     for (size_t i = 0; i < file_paths.size(); ++i)
     {
-        DictCreator creator(file_paths[i], merger, Tools::CreatorMode::NOTFOUND);
+        DictCreator creator(file_paths[i], merger, Tools::CreatorMode::NOTFOUND, annotations);
         Tools::writeDict(creator.getDict(), creator.getName().name + ".NOTFOUND.xml");
     }
 }
@@ -166,7 +166,7 @@ void UserInterface::makeDictChanged()
     DictMerger merger(dict_paths);
     for (size_t i = 0; i < file_paths.size(); ++i)
     {
-        DictCreator creator(file_paths[i], merger, Tools::CreatorMode::CHANGED);
+        DictCreator creator(file_paths[i], merger, Tools::CreatorMode::CHANGED, annotations);
         Tools::writeDict(creator.getDict(), creator.getName().name + ".CHANGED.xml");
     }
 }
@@ -184,7 +184,7 @@ void UserInterface::convertEsm()
     DictMerger merger(dict_paths);
     for (const auto & file_path : file_paths)
     {
-        EsmConverter converter(file_path, merger, add_hyperlinks, suffix, encoding, false);
+        EsmConverter converter(file_path, merger, annotations.add_hyperlinks, suffix, encoding, false);
         if (converter.isLoaded())
         {
             const auto & name = converter.getName().name + suffix + converter.getName().ext;
@@ -200,7 +200,7 @@ void UserInterface::createEsm()
     DictMerger merger(dict_paths);
     for (const auto & file_path : file_paths)
     {
-        EsmConverter converter(file_path, merger, add_hyperlinks, suffix, encoding, true);
+        EsmConverter converter(file_path, merger, annotations.add_hyperlinks, suffix, encoding, true);
         if (converter.isLoaded())
         {
             const auto & name = converter.getName().name + ".CREATED" + converter.getName().ext;

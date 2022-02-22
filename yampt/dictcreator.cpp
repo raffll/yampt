@@ -40,13 +40,13 @@ DictCreator::DictCreator(
     const std::string & path,
     const DictMerger & merger,
     const Tools::CreatorMode mode,
-    const bool disable_annotations
+    Tools::Annotations annotations
 )
     : esm(path)
     , esm_ref(esm)
     , merger(merger)
     , mode(mode)
-    , disable_annotations(disable_annotations)
+    , annotations(annotations)
 {
     dict = Tools::initializeDict();
 
@@ -564,7 +564,7 @@ void DictCreator::makeDictINFO()
             const auto & key_text = key_prefix + Tools::sep[0] + esm.getKey().text;
             auto val_text = esm.getValue().text;
 
-            if (!disable_annotations &&
+            if (annotations.add_hyperlinks &&
                 key_prefix.substr(0, 1) != "V" &&
                 (mode == Tools::CreatorMode::ALL ||
                  mode == Tools::CreatorMode::NOTFOUND ||
@@ -1021,27 +1021,27 @@ void DictCreator::validateRecordForModeCHANGED(const Tools::Entry & entry)
 //----------------------------------------------------------
 void DictCreator::makeAnnotations(const Tools::Entry & entry)
 {
-    if (disable_annotations)
+    if (!annotations.add_annotation)
         return;
 
-    std::string annotations;
+    std::string annotations_str;
 
-    annotations += "\r\n\tGlossary:";
-    annotations += Tools::addAnnotations(
+    annotations_str += "\r\n\tGlossary:";
+    annotations_str += Tools::addAnnotations(
         merger.getDict().at(Tools::RecType::Glossary),
         entry.val_text,
         true);
 
     if (entry.type == Tools::RecType::INFO)
     {
-        annotations += "\r\n\tHyperlinks 1:";
-        annotations += Tools::addAnnotations(
+        annotations_str += "\r\n\tHyperlinks 1:";
+        annotations_str += Tools::addAnnotations(
             merger.getDict().at(Tools::RecType::DIAL),
             entry.val_text,
             true);
 
-        annotations += "\r\n\tHyperlinks 2:";
-        annotations += Tools::addAnnotations(
+        annotations_str += "\r\n\tHyperlinks 2:";
+        annotations_str += Tools::addAnnotations(
             dict.at(Tools::RecType::DIAL),
             entry.val_text,
             false);
@@ -1059,11 +1059,11 @@ void DictCreator::makeAnnotations(const Tools::Entry & entry)
             npc_flag = search_dict->second;
         }
 
-        annotations += "\r\n\tSpeaker: ";
-        annotations += npc_flag;
+        annotations_str += "\r\n\tSpeaker: ";
+        annotations_str += npc_flag;
     }
 
-    dict.at(Tools::RecType::Annotations).insert({ entry.key_text, annotations });
+    dict.at(Tools::RecType::Annotations).insert({ entry.key_text, annotations_str });
 }
 
 //----------------------------------------------------------
@@ -1085,7 +1085,8 @@ void DictCreator::insertRecordToDict(const Tools::Entry & entry)
             dict.at(entry.type).insert({ key_text, entry.val_text });
             counter_doubled++;
             counter_created++;
-            Tools::addLog("Warning: Doubled " + Tools::type2Str(entry.type) + ": " + entry.key_text + "\r\n");
+            if (entry.type != Tools::RecType::Glossary)
+                Tools::addLog("Warning: Doubled " + Tools::type2Str(entry.type) + ": " + entry.key_text + "\r\n");
         }
         else
         {

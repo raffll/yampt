@@ -85,6 +85,12 @@ public:
         bool modified = false;
     };
 
+    struct Annotations
+    {
+        bool add_hyperlinks = false;
+        bool add_annotation = false;
+    };
+
     static const std::vector<std::string> sep;
     static const std::vector<std::string> err;
     static const std::vector<std::string> keywords;

@@ -21,7 +21,7 @@ public:
         const std::string & path,
         const DictMerger & merger,
         const Tools::CreatorMode mode,
-        const bool disable_annotations = false);
+        Tools::Annotations annotations);
 
 private:
     struct Pattern
@@ -95,7 +95,7 @@ private:
     const DictMerger & merger;
     const Tools::CreatorMode mode;
     Tools::Dict dict;
-    const bool disable_annotations = false;
+    Tools::Annotations annotations;
 
     int counter_created = 0;
     int counter_missing = 0;

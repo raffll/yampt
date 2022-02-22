@@ -1,6 +1,7 @@
 packages/
-.vs/
+build/
 x64/
+.vs/
+!build/make.sh
 *.user
-build/yampt/
-build/yampt.zip
+

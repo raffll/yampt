@@ -54,7 +54,8 @@ void DictMerger::mergeDict()
                          search->second != elem.second)
                 {
                     /* found in previous dictionary - skipped */
-                    Tools::addLog("Warning: replaced " + Tools::type2Str(type) + " record " + elem.first + "\r\n");
+                    if (type != Tools::RecType::Glossary)
+                        Tools::addLog("Warning: replaced " + Tools::type2Str(type) + " record " + elem.first + "\r\n");
                     counter_replaced++;
                 }
                 else
