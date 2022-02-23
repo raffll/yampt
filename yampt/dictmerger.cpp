@@ -9,6 +9,7 @@ DictMerger::DictMerger()
 //----------------------------------------------------------
 DictMerger::DictMerger(const std::vector<std::string> & paths)
 {
+    Tools::addLog("-> Start merging dictionaries...\r\n");
     dict = Tools::initializeDict();
 
     for (const auto & path : paths)
@@ -22,6 +23,7 @@ DictMerger::DictMerger(const std::vector<std::string> & paths)
     findDuplicateValues(Tools::RecType::DIAL);
     findUnusedINFO();
     printSummaryLog();
+    Tools::addLog("-> Done!\r\n");
 }
 
 //----------------------------------------------------------

@@ -134,8 +134,11 @@ void UserInterface::makeDictRaw()
 //----------------------------------------------------------
 void UserInterface::makeDictBase()
 {
+    Tools::addLog("-> Start making \"BASE\" dictionary...\r\n");
     DictCreator creator(file_paths[0], file_paths[1]);
-    Tools::writeDict(creator.getDict(), creator.getName().name + ".BASE.xml");
+    Tools::writeDict(creator.getDict(), creator.getName().name + ".BASE.xml", Tools::Save::BASE);
+    Tools::writeDict(creator.getDict(), creator.getName().name + ".GLOS.xml", Tools::Save::GLOS);
+    Tools::addLog("-> Done!\r\n");
 }
 
 //----------------------------------------------------------
@@ -144,8 +147,10 @@ void UserInterface::makeDictAll()
     DictMerger merger(dict_paths);
     for (size_t i = 0; i < file_paths.size(); ++i)
     {
+        Tools::addLog("-> Start making \"ALL\" dictionary...\r\n");
         DictCreator creator(file_paths[i], merger, Tools::CreatorMode::ALL, annotations);
         Tools::writeDict(creator.getDict(), creator.getName().name + ".ALL.xml");
+        Tools::addLog("-> Done!\r\n");
     }
 }
 
@@ -155,8 +160,10 @@ void UserInterface::makeDictNotFound()
     DictMerger merger(dict_paths);
     for (size_t i = 0; i < file_paths.size(); ++i)
     {
+        Tools::addLog("-> Start making \"NOTFOUND\" dictionary...\r\n");
         DictCreator creator(file_paths[i], merger, Tools::CreatorMode::NOTFOUND, annotations);
         Tools::writeDict(creator.getDict(), creator.getName().name + ".NOTFOUND.xml");
+        Tools::addLog("-> Done!\r\n");
     }
 }
 
@@ -166,8 +173,10 @@ void UserInterface::makeDictChanged()
     DictMerger merger(dict_paths);
     for (size_t i = 0; i < file_paths.size(); ++i)
     {
+        Tools::addLog("-> Start making \"CHANGED\" dictionary...\r\n");
         DictCreator creator(file_paths[i], merger, Tools::CreatorMode::CHANGED, annotations);
         Tools::writeDict(creator.getDict(), creator.getName().name + ".CHANGED.xml");
+        Tools::addLog("-> Done!\r\n");
     }
 }
 
@@ -184,6 +193,7 @@ void UserInterface::convertEsm()
     DictMerger merger(dict_paths);
     for (const auto & file_path : file_paths)
     {
+        Tools::addLog("-> Start plugin convertion...\r\n");
         EsmConverter converter(file_path, merger, annotations.add_hyperlinks, suffix, encoding, false);
         if (converter.isLoaded())
         {
@@ -191,6 +201,7 @@ void UserInterface::convertEsm()
             Tools::writeFile(converter.getRecords(), name);
             boost::filesystem::last_write_time(name, converter.getTime());
         }
+        Tools::addLog("-> Done!\r\n");
     }
 }
 
@@ -200,6 +211,7 @@ void UserInterface::createEsm()
     DictMerger merger(dict_paths);
     for (const auto & file_path : file_paths)
     {
+        Tools::addLog("-> Start plugin creation...\r\n");
         EsmConverter converter(file_path, merger, annotations.add_hyperlinks, suffix, encoding, true);
         if (converter.isLoaded())
         {
@@ -207,5 +219,6 @@ void UserInterface::createEsm()
             Tools::createFile(converter.getRecords(), name);
             boost::filesystem::last_write_time(name, converter.getTime() + 1);
         }
+        Tools::addLog("-> Done!\r\n");
     }
 }

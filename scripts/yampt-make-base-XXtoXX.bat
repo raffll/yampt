@@ -12,9 +12,12 @@ yampt.exe --make-base -f "%NATIVE%\Morrowind.esm" "%FOREIGN%\Morrowind.esm"
 yampt.exe --make-base -f "%NATIVE%\Tribunal.esm" "%FOREIGN%\Tribunal.esm"
 yampt.exe --make-base -f "%NATIVE%\Bloodmoon.esm" "%FOREIGN%\Bloodmoon.esm"
 yampt.exe --merge -d "Morrowind.BASE.xml" "Tribunal.BASE.xml" "Bloodmoon.BASE.xml" -o "%NAME%.xml"
+yampt.exe --merge -d "Morrowind.GLOS.xml" "Tribunal.GLOS.xml" "Bloodmoon.GLOS.xml" -o "%NAME%_G.xml"
 
 del "Morrowind.BASE.xml" "Tribunal.BASE.xml" "Bloodmoon.BASE.xml" >nul 2>&1
+del "Morrowind.GLOS.xml" "Tribunal.GLOS.xml" "Bloodmoon.GLOS.xml" >nul 2>&1
 move "%NAME%.xml" "%BASE%"
+move "%NAME%_G.xml" "%BASE%"
 
 yampt.exe --make-all -f "%FOREIGN%\Morrowind.esm" -d "%BASE%\%NAME%.xml"
 yampt.exe --make-all -f "%FOREIGN%\Tribunal.esm" -d "%BASE%\%NAME%.xml"
@@ -24,4 +27,6 @@ yampt.exe --merge -d "Morrowind.ALL.xml" "Tribunal.ALL.xml" "Bloodmoon.ALL.xml" 
 del "Morrowind.ALL.xml" "Tribunal.ALL.xml" "Bloodmoon.ALL.xml" >nul 2>&1
 move "%NAME%_H.xml" "%BASE%"
 
+if "%1"=="nopause" goto start
 pause
+:start

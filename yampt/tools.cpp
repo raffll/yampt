@@ -32,7 +32,10 @@ std::string Tools::readFile(const std::string & path)
 }
 
 //----------------------------------------------------------
-void Tools::writeDict(const Dict & dict, const std::string & name)
+void Tools::writeDict(
+    const Dict & dict,
+    const std::string & name,
+    Save save)
 {
     if (getNumberOfElementsInDict(dict) == 0)
     {
@@ -44,8 +47,24 @@ void Tools::writeDict(const Dict & dict, const std::string & name)
     for (const auto & chapter : dict)
     {
         const auto & type = chapter.first;
-        if (type == Tools::RecType::Annotations)
-            continue;
+        if (save == Save::EVERYTHING)
+        {
+            if (type == Tools::RecType::Annotations)
+                continue;
+        }
+
+        if (save == Save::GLOS)
+        {
+            if (type != Tools::RecType::Glossary)
+                continue;
+        }
+
+        if (save == Save::BASE)
+        {
+            if (type == Tools::RecType::Glossary ||
+                type == Tools::RecType::Annotations)
+                continue;
+        }
 
         for (const auto & elem : chapter.second)
         {

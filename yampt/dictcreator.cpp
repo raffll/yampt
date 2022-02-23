@@ -1037,14 +1037,11 @@ void DictCreator::makeAnnotations(
 
     std::string annotations_str;
 
-    if (entry.type == Tools::RecType::INFO)
+    if (mode == Tools::CreatorMode::CHANGED && !org_text.empty())
     {
-        if (!org_text.empty())
-        {
-            annotations_str += "\r\n\t<val>";
-            annotations_str += org_text;
-            annotations_str += "</val>";
-        }
+        annotations_str += "\r\n\t<org>";
+        annotations_str += org_text;
+        annotations_str += "</org>\r\n";
     }
 
     if (true)

@@ -1,19 +1,19 @@
 #!/bin/bash
 
-NAME=yampt
-BASE="$NAME/dict_base"
-USER="$NAME/dict_user"
-NEW="$NAME/dict_new"
-IN="$NAME/input"
-OUT="$NAME/output"
-SCPT="$NAME/scripts"
+NAME="yampt"
+BASE="dict_base"
+USER="dict_user"
+NEW="dict_new"
+IN="input"
+OUT="output"
+SCPT="scripts"
 
-DIR="../"
-MASTER="../../../master"
-PL="$MASTER/pl"
-DE="$MASTER/de"
-EN="$MASTER/en"
-FR="$MASTER/fr"
+DEV="../"
+MST="../master"
+PL="$MST/pl"
+DE="$MST/de"
+EN="$MST/en"
+FR="$MST/fr"
 
 if [ -e "$NAME" ]; then
 	rm -rv "$NAME"
@@ -21,50 +21,53 @@ if [ -e "$NAME" ]; then
 fi
 
 mkdir "$NAME"
-mkdir "$BASE"
-mkdir "$USER"
-mkdir "$NEW"
-mkdir "$IN"
-mkdir "$OUT"
-mkdir "$SCPT"
+mkdir "$NAME/$BASE"
+mkdir "$NAME/$USER"
+mkdir "$NAME/$NEW"
+mkdir "$NAME/$IN"
+mkdir "$NAME/$OUT"
+mkdir "$NAME/$SCPT"
 
-cp "$DIR/x64/Release/yampt.exe" "$NAME"
-cp "$DIR/CHANGELOG.txt" "$NAME"
-cp "$DIR/README.md" "$NAME"
-cp "$DIR/scripts/"*.bat "$SCPT"
+cp "$DEV/x64/Release/yampt.exe" "$NAME"
+cp "$DEV/CHANGELOG.txt" "$NAME"
+cp "$DEV/README.md" "$NAME"
+cp "$DEV/scripts/"*.bat "$NAME/$SCPT"
 
 ### PL
 DICT=ENtoPL
-cp "$SCPT/yampt-convert-XXtoXX.bat" "$NAME/yampt-convert-${DICT}.bat"
+
+cp "$NAME/$SCPT/yampt-make-base-XXtoXX.bat" "$NAME/yampt-make-base-${DICT}.bat"
+sed -i "s|NATIVE=|NATIVE=$PL|g" "$NAME/yampt-make-base-${DICT}.bat"
+sed -i "s|FOREIGN=|FOREIGN=$EN|g" "$NAME/yampt-make-base-${DICT}.bat"
+sed -i "s|XXtoXX|$DICT|g" "$NAME/yampt-make-base-${DICT}.bat"
+
+cp "$NAME/$SCPT/yampt-convert-XXtoXX.bat" "$NAME/yampt-convert-${DICT}.bat"
 sed -i "s|XXtoXX|$DICT|g" "$NAME/yampt-convert-${DICT}.bat"
 
-cp "$SCPT/yampt-make-user-XXtoXX.bat" "$NAME/yampt-make-user-${DICT}.bat"
-sed -i "s|XXtoXX|$DICT|g" "$NAME/yampt-make-user-${DICT}.bat"
+OPT=
 
-cp "$SCPT/yampt-make-user-XXtoXX-with-annotations.bat" "$NAME/yampt-make-user-${DICT}-with-annotations.bat"
-sed -i "s|XXtoXX|$DICT|g" "$NAME/yampt-make-user-${DICT}-with-annotations.bat"
+cp "$NAME/$SCPT/yampt-make-user-XXtoXX.bat" "$NAME/yampt-make-user-${DICT}${OPT}.bat"
+sed -i "s|XXtoXX|$DICT|g" "$NAME/yampt-make-user-${DICT}${OPT}.bat"
+sed -i "s|COMMANDS=|COMMANDS=${OPT}|g" "$NAME/yampt-make-user-${DICT}${OPT}.bat"
 
-cp "$SCPT/yampt-make-user-XXtoXX-with-both.bat" "$NAME/yampt-make-user-${DICT}-with-both.bat"
-sed -i "s|XXtoXX|$DICT|g" "$NAME/yampt-make-user-${DICT}-with-both.bat"
+OPT=--add-annotations
 
-cp "$SCPT/yampt-make-user-XXtoXX-with-hyperlinks.bat" "$NAME/yampt-make-user-${DICT}-with-hyperlinks.bat"
-sed -i "s|XXtoXX|$DICT|g" "$NAME/yampt-make-user-${DICT}-with-hyperlinks.bat"
+cp "$NAME/$SCPT/yampt-make-user-XXtoXX.bat" "$NAME/yampt-make-user-${DICT}${OPT}.bat"
+sed -i "s|XXtoXX|$DICT|g" "$NAME/yampt-make-user-${DICT}${OPT}.bat"
+sed -i "s|COMMANDS=|COMMANDS=${OPT}|g" "$NAME/yampt-make-user-${DICT}${OPT}.bat"
 
-###
-"$NAME/yampt.exe" --make-base -f "$PL/Morrowind.esm" "$EN/Morrowind.esm"
-"$NAME/yampt.exe" --make-base -f "$PL/Tribunal.esm" "$EN/Tribunal.esm"
-"$NAME/yampt.exe" --make-base -f "$PL/Bloodmoon.esm" "$EN/Bloodmoon.esm"
-"$NAME/yampt.exe" --merge -d "Morrowind.BASE.xml" "Tribunal.BASE.xml" "Bloodmoon.BASE.xml" -o "${DICT}.xml"
-rm "Morrowind.BASE.xml" "Tribunal.BASE.xml" "Bloodmoon.BASE.xml"
-mv "${DICT}.xml" "$BASE"
+OPT=--add-hyperlinks
 
-"$NAME/yampt.exe" --make-all -f "$EN/Morrowind.esm" -d "$BASE/${DICT}.xml"
-"$NAME/yampt.exe" --make-all -f "$EN/Tribunal.esm" -d "$BASE/${DICT}.xml"
-"$NAME/yampt.exe" --make-all -f "$EN/Bloodmoon.esm" -d "$BASE/${DICT}.xml"
-"$NAME/yampt.exe" --merge -d "Morrowind.ALL.xml" "Tribunal.ALL.xml" "Bloodmoon.ALL.xml" -o "${DICT}_H.xml"
-rm "Morrowind.ALL.xml" "Tribunal.ALL.xml" "Bloodmoon.ALL.xml"
-mv "${DICT}_H.xml" "$BASE"
+cp "$NAME/$SCPT/yampt-make-user-XXtoXX.bat" "$NAME/yampt-make-user-${DICT}${OPT}.bat"
+sed -i "s|XXtoXX|$DICT|g" "$NAME/yampt-make-user-${DICT}${OPT}.bat"
+sed -i "s|COMMANDS=|COMMANDS=${OPT}|g" "$NAME/yampt-make-user-${DICT}${OPT}.bat"
 
 ###
-rm "yampt.log"
+cd $NAME
+cmd.exe /c "yampt-make-base-${DICT}.bat" nopause
+rm "yampt-make-base-${DICT}.bat"
+cd ..
+
+###
+rm "$NAME/yampt.log"
 zip -r "$NAME.zip" "$NAME"

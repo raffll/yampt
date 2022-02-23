@@ -30,8 +30,8 @@ public:
         Default,
         REGN,
 
-        Glossary,
         NPC_FLAG,
+        Glossary,
 
         Annotations,
         Unknown,
@@ -91,6 +91,13 @@ public:
         bool add_annotation = false;
     };
 
+    enum class Save
+    {
+        EVERYTHING,
+        BASE,
+        GLOS
+    };
+
     static const std::vector<std::string> sep;
     static const std::vector<std::string> err;
     static const std::vector<std::string> keywords;
@@ -98,7 +105,8 @@ public:
     static std::string readFile(const std::string & path);
     static void writeDict(
         const Dict & dict,
-        const std::string & name);
+        const std::string & name,
+        Save save = Save::EVERYTHING);
     static void writeText(
         const std::string & text,
         const std::string & name);
