@@ -352,7 +352,7 @@ Tools::RecType Tools::str2Type(const std::string & str)
         { "TEXT", Tools::RecType::TEXT },
         { "BNAM", Tools::RecType::BNAM },
         { "SCTX", Tools::RecType::SCTX },
-        { "Glossary",Tools::RecType::Glossary },
+        { "Glossary", Tools::RecType::Glossary },
         { "NPC_FLAG", Tools::RecType::NPC_FLAG },
     };
 

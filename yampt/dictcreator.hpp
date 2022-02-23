@@ -50,7 +50,11 @@ private:
     void validateRecordForModeALL(const Tools::Entry & entry);
     void validateRecordForModeNOT(const Tools::Entry & entry);
     void validateRecordForModeCHANGED(const Tools::Entry & entry);
-    void makeAnnotations(const Tools::Entry & entry);
+    std::string addHyperlinks(
+        const Tools::Entry & entry);
+    void makeAnnotations(
+        const Tools::Entry & entry,
+        const std::string & org_text = "");
     void insertRecordToDict(const Tools::Entry & entry);
     std::vector<std::string> makeScriptMessages(const std::string & script_text);
     void printLogLine(const Tools::RecType type);
