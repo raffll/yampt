@@ -124,11 +124,13 @@ void UserInterface::runCommand()
 //----------------------------------------------------------
 void UserInterface::makeDictRaw()
 {
+    Tools::addLog("-> Start making \"RAW\" dictionaries...\r\n");
     for (size_t i = 0; i < file_paths.size(); ++i)
     {
         DictCreator creator(file_paths[i]);
         Tools::writeDict(creator.getDict(), creator.getName().name + ".RAW.xml");
     }
+    Tools::addLog("-> Done!\r\n");
 }
 
 //----------------------------------------------------------
@@ -144,56 +146,58 @@ void UserInterface::makeDictBase()
 //----------------------------------------------------------
 void UserInterface::makeDictAll()
 {
+    Tools::addLog("-> Start making \"ALL\" dictionaries...\r\n");
     DictMerger merger(dict_paths);
     for (size_t i = 0; i < file_paths.size(); ++i)
     {
-        Tools::addLog("-> Start making \"ALL\" dictionary...\r\n");
         DictCreator creator(file_paths[i], merger, Tools::CreatorMode::ALL, annotations);
         Tools::writeDict(creator.getDict(), creator.getName().name + ".ALL.xml");
-        Tools::addLog("-> Done!\r\n");
     }
+    Tools::addLog("-> Done!\r\n");
 }
 
 //----------------------------------------------------------
 void UserInterface::makeDictNotFound()
 {
+    Tools::addLog("-> Start making \"NOTFOUND\" dictionaries...\r\n");
     DictMerger merger(dict_paths);
     for (size_t i = 0; i < file_paths.size(); ++i)
     {
-        Tools::addLog("-> Start making \"NOTFOUND\" dictionary...\r\n");
         DictCreator creator(file_paths[i], merger, Tools::CreatorMode::NOTFOUND, annotations);
         Tools::writeDict(creator.getDict(), creator.getName().name + ".NOTFOUND.xml");
-        Tools::addLog("-> Done!\r\n");
     }
+    Tools::addLog("-> Done!\r\n");
 }
 
 //----------------------------------------------------------
 void UserInterface::makeDictChanged()
 {
+    Tools::addLog("-> Start making \"CHANGED\" dictionaries...\r\n");
     DictMerger merger(dict_paths);
     for (size_t i = 0; i < file_paths.size(); ++i)
     {
-        Tools::addLog("-> Start making \"CHANGED\" dictionary...\r\n");
         DictCreator creator(file_paths[i], merger, Tools::CreatorMode::CHANGED, annotations);
         Tools::writeDict(creator.getDict(), creator.getName().name + ".CHANGED.xml");
-        Tools::addLog("-> Done!\r\n");
     }
+    Tools::addLog("-> Done!\r\n");
 }
 
 //----------------------------------------------------------
 void UserInterface::mergeDict()
 {
+    Tools::addLog("-> Start merging dictionaries...\r\n");
     DictMerger merger(dict_paths);
     Tools::writeDict(merger.getDict(), output);
+    Tools::addLog("-> Done!\r\n");
 }
 
 //----------------------------------------------------------
 void UserInterface::convertEsm()
 {
+    Tools::addLog("-> Start converting plugins...\r\n");
     DictMerger merger(dict_paths);
     for (const auto & file_path : file_paths)
     {
-        Tools::addLog("-> Start plugin convertion...\r\n");
         EsmConverter converter(file_path, merger, annotations.add_hyperlinks, suffix, encoding, false);
         if (converter.isLoaded())
         {
@@ -201,17 +205,17 @@ void UserInterface::convertEsm()
             Tools::writeFile(converter.getRecords(), name);
             boost::filesystem::last_write_time(name, converter.getTime());
         }
-        Tools::addLog("-> Done!\r\n");
     }
+    Tools::addLog("-> Done!\r\n");
 }
 
 //----------------------------------------------------------
 void UserInterface::createEsm()
 {
+    Tools::addLog("-> Start creating plugins...\r\n");
     DictMerger merger(dict_paths);
     for (const auto & file_path : file_paths)
     {
-        Tools::addLog("-> Start plugin creation...\r\n");
         EsmConverter converter(file_path, merger, annotations.add_hyperlinks, suffix, encoding, true);
         if (converter.isLoaded())
         {
@@ -219,6 +223,6 @@ void UserInterface::createEsm()
             Tools::createFile(converter.getRecords(), name);
             boost::filesystem::last_write_time(name, converter.getTime() + 1);
         }
-        Tools::addLog("-> Done!\r\n");
     }
+    Tools::addLog("-> Done!\r\n");
 }
