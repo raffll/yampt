@@ -1,6 +1,7 @@
 0.24
 - [feature] ability to enable/disable hyperlinks and annotations
 - [feature] add original text to CHANGED dictionary annotations
+- [feature] separate glossary from base dictionary
 
 0.23
 - [feature] create esm/esp files from dictionaries
