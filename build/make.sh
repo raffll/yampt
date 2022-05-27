@@ -9,8 +9,9 @@ OUT="output"
 SCPT="scripts"
 
 DEV="../"
-MST="../master"
+MST="../../../../!master"
 PL="$MST/pl"
+PL_PATCH="$MST/pl_plpatch"
 DE="$MST/de"
 EN="$MST/en"
 FR="$MST/fr"
@@ -44,26 +45,31 @@ sed -i "s|XXtoXX|$DICT|g" "$NAME/yampt-make-base-${DICT}.bat"
 cp "$NAME/$SCPT/yampt-convert-XXtoXX.bat" "$NAME/yampt-convert-${DICT}.bat"
 sed -i "s|XXtoXX|$DICT|g" "$NAME/yampt-convert-${DICT}.bat"
 
-OPT=
+cp "$NAME/$SCPT/yampt-make-user-XXtoXX.bat" "$NAME/yampt-make-user-${DICT}.bat"
+sed -i "s|XXtoXX|$DICT|g" "$NAME/yampt-make-user-${DICT}.bat"
+sed -i "s|COMMANDS=|COMMANDS=--add-annotations --add-hyperlinks|g" "$NAME/yampt-make-user-${DICT}.bat"
 
-cp "$NAME/$SCPT/yampt-make-user-XXtoXX.bat" "$NAME/yampt-make-user-${DICT}${OPT}.bat"
-sed -i "s|XXtoXX|$DICT|g" "$NAME/yampt-make-user-${DICT}${OPT}.bat"
-sed -i "s|COMMANDS=|COMMANDS=${OPT}|g" "$NAME/yampt-make-user-${DICT}${OPT}.bat"
+cd "$NAME"
+cmd.exe /c "yampt-make-base-${DICT}.bat" nopause
+rm "yampt-make-base-${DICT}.bat"
+cd ..
 
-OPT=--add-annotations
+### PL_plpatch
+DICT=ENtoPL_plpatch
 
-cp "$NAME/$SCPT/yampt-make-user-XXtoXX.bat" "$NAME/yampt-make-user-${DICT}${OPT}.bat"
-sed -i "s|XXtoXX|$DICT|g" "$NAME/yampt-make-user-${DICT}${OPT}.bat"
-sed -i "s|COMMANDS=|COMMANDS=${OPT}|g" "$NAME/yampt-make-user-${DICT}${OPT}.bat"
+cp "$NAME/$SCPT/yampt-make-base-XXtoXX.bat" "$NAME/yampt-make-base-${DICT}.bat"
+sed -i "s|NATIVE=|NATIVE=$PL_PATCH|g" "$NAME/yampt-make-base-${DICT}.bat"
+sed -i "s|FOREIGN=|FOREIGN=$EN|g" "$NAME/yampt-make-base-${DICT}.bat"
+sed -i "s|XXtoXX|$DICT|g" "$NAME/yampt-make-base-${DICT}.bat"
 
-OPT=--add-hyperlinks
+cp "$NAME/$SCPT/yampt-convert-XXtoXX.bat" "$NAME/yampt-convert-${DICT}.bat"
+sed -i "s|XXtoXX|$DICT|g" "$NAME/yampt-convert-${DICT}.bat"
 
-cp "$NAME/$SCPT/yampt-make-user-XXtoXX.bat" "$NAME/yampt-make-user-${DICT}${OPT}.bat"
-sed -i "s|XXtoXX|$DICT|g" "$NAME/yampt-make-user-${DICT}${OPT}.bat"
-sed -i "s|COMMANDS=|COMMANDS=${OPT}|g" "$NAME/yampt-make-user-${DICT}${OPT}.bat"
+cp "$NAME/$SCPT/yampt-make-user-XXtoXX.bat" "$NAME/yampt-make-user-${DICT}.bat"
+sed -i "s|XXtoXX|$DICT|g" "$NAME/yampt-make-user-${DICT}.bat"
+sed -i "s|COMMANDS=|COMMANDS=--add-annotations --add-hyperlinks|g" "$NAME/yampt-make-user-${DICT}.bat"
 
-###
-cd $NAME
+cd "$NAME"
 cmd.exe /c "yampt-make-base-${DICT}.bat" nopause
 rm "yampt-make-base-${DICT}.bat"
 cd ..

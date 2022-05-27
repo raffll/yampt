@@ -776,7 +776,7 @@ bool EsmConverter::makeNewText(
     else if (
         entry.type == Tools::RecType::INFO &&
         add_hyperlinks &&
-        entry.optional.substr(0, 1) != "V")
+        entry.key_text.substr(0, 1) != "V")
     {
         new_text = entry.val_text + Tools::addAnnotations(
             merger.getDict().at(Tools::RecType::DIAL),

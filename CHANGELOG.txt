@@ -1,3 +1,6 @@
+0.25
+- [bug] prevent adding hyperlinks to "Voice" type INFO
+
 0.24
 - [feature] ability to enable/disable hyperlinks and annotations
 - [feature] add original text to CHANGED dictionary annotations
