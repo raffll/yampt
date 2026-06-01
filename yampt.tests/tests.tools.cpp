@@ -45,18 +45,68 @@ TEST_CASE("erase only last \\r char", "[u]")
     REQUIRE(Tools::trimCR(text) == "DE\rAD");
 }
 
-TEST_CASE("add dialog topics to INFO strings", "[u]")
+TEST_CASE("Chapter::insert", "[u]")
 {
-    std::string text;
-    Tools::Chapter dict;
-    dict.insert({ "clanfear", "postrach klanów" });
+    Tools::Chapter chapter;
 
-    text = "some text clanfear some text";
-    REQUIRE(Tools::addAnnotations(dict, text, false) == " [postrach klanów]");
-    REQUIRE(Tools::addAnnotations(dict, text, true) == " [clanfear -> postrach klanów]");
+    SECTION("inserting a new entry returns true")
+    {
+        bool result = chapter.insert({ "key1", "orig1", "trans1", "untranslated" });
+        REQUIRE(result == true);
+    }
 
-    text = "some text CLANFEAR some text";
-    REQUIRE(Tools::addAnnotations(dict, text, false) == " [postrach klanów]");
+    SECTION("inserting duplicate id returns false")
+    {
+        chapter.insert({ "key1", "orig1", "trans1", "untranslated" });
+        bool result = chapter.insert({ "key1", "orig2", "trans2", "translated" });
+        REQUIRE(result == false);
+    }
+}
+
+TEST_CASE("Chapter::find", "[u]")
+{
+    Tools::Chapter chapter;
+    chapter.insert({ "key1", "orig1", "trans1", "untranslated" });
+
+    SECTION("finding existing id returns non-null pointer with correct data")
+    {
+        auto * entry = chapter.find("key1");
+        REQUIRE(entry != nullptr);
+        REQUIRE(entry->id == "key1");
+        REQUIRE(entry->original == "orig1");
+        REQUIRE(entry->translation == "trans1");
+        REQUIRE(entry->status == "untranslated");
+    }
+
+    SECTION("finding non-existent id returns nullptr")
+    {
+        auto * entry = chapter.find("no_such_key");
+        REQUIRE(entry == nullptr);
+    }
+}
+
+TEST_CASE("Chapter::size", "[u]")
+{
+    Tools::Chapter chapter;
+    REQUIRE(chapter.size() == 0);
+
+    chapter.insert({ "key1", "orig1", "trans1", "untranslated" });
+    REQUIRE(chapter.size() == 1);
+
+    chapter.insert({ "key2", "orig2", "trans2", "translated" });
+    REQUIRE(chapter.size() == 2);
+
+    chapter.insert({ "key1", "dup", "dup", "dup" });
+    REQUIRE(chapter.size() == 2);
+}
+
+TEST_CASE("Chapter::empty", "[u]")
+{
+    Tools::Chapter chapter;
+    REQUIRE(chapter.empty() == true);
+
+    chapter.insert({ "key1", "orig1", "trans1", "untranslated" });
+    REQUIRE(chapter.empty() == false);
 }
 
 TEST_CASE("type2Str and str2Type round-trip", "[u]")
@@ -235,25 +285,6 @@ TEST_CASE("replaceNonReadableCharsWithDot property: all bytes", "[u]")
     }
 }
 
-TEST_CASE("addAnnotations edge cases", "[u]")
-{
-    SECTION("substring of longer word does not match")
-    {
-        Tools::Chapter dict;
-        dict.insert({ "clan", "klan" });
-        std::string text = "aclanfear";
-        REQUIRE(Tools::addAnnotations(dict, text, false) == "");
-    }
-
-    SECTION("no match returns empty string")
-    {
-        Tools::Chapter dict;
-        dict.insert({ "clanfear", "postrach klanów" });
-        std::string text = "some other text";
-        REQUIRE(Tools::addAnnotations(dict, text, false) == "");
-    }
-}
-
 TEST_CASE("initializeDict has all expected keys", "[u]")
 {
     Tools::Dict dict = Tools::initializeDict();
@@ -271,7 +302,8 @@ TEST_CASE("initializeDict has all expected keys", "[u]")
     REQUIRE(dict.count(Tools::RecType::SCTX) == 1);
     REQUIRE(dict.count(Tools::RecType::Glossary) == 1);
     REQUIRE(dict.count(Tools::RecType::NPC_FLAG) == 1);
-    REQUIRE(dict.count(Tools::RecType::Annotations) == 1);
+
+    REQUIRE(dict.size() == 13);
 }
 
 TEST_CASE("initializeDict all chapters empty", "[u]")
@@ -292,23 +324,21 @@ TEST_CASE("getNumberOfElementsInDict zero for empty dict", "[u]")
     REQUIRE(Tools::getNumberOfElementsInDict(dict) == 0);
 }
 
-TEST_CASE("getNumberOfElementsInDict excludes Annotations", "[u]")
+TEST_CASE("getNumberOfElementsInDict counts inserted entries", "[u]")
 {
     Tools::Dict dict = Tools::initializeDict();
-    dict.at(Tools::RecType::Annotations).insert({ "key1", "val1" });
-    dict.at(Tools::RecType::Annotations).insert({ "key2", "val2" });
-    REQUIRE(Tools::getNumberOfElementsInDict(dict) == 0);
+    dict.at(Tools::RecType::CELL).insert({ "Balmora", "Balmora", "Balmora", "translated" });
+    dict.at(Tools::RecType::CELL).insert({ "Vivec", "Vivec", "Vivec", "translated" });
+    dict.at(Tools::RecType::DIAL).insert({ "clanfear", "clanfear", "postrach klanów", "translated" });
+    REQUIRE(Tools::getNumberOfElementsInDict(dict) == 3);
 }
 
 TEST_CASE("getNumberOfElementsInDict correct total", "[u]")
 {
-    // Validates: Requirements 5.5
-    // Property 6: Element Count Equals Sum of Non-Annotations Entries
     Tools::Dict dict = Tools::initializeDict();
-    dict.at(Tools::RecType::CELL).insert({ "Balmora", "Balmora" });
-    dict.at(Tools::RecType::CELL).insert({ "Vivec", "Vivec" });
-    dict.at(Tools::RecType::DIAL).insert({ "clanfear", "postrach klanów" });
-    dict.at(Tools::RecType::INFO).insert({ "info_key", "info_val" });
-    dict.at(Tools::RecType::Annotations).insert({ "Balmora", "[annotation]" });
+    dict.at(Tools::RecType::CELL).insert({ "Balmora", "Balmora", "Balmora", "translated" });
+    dict.at(Tools::RecType::CELL).insert({ "Vivec", "Vivec", "Vivec", "translated" });
+    dict.at(Tools::RecType::DIAL).insert({ "clanfear", "clanfear", "postrach klanów", "translated" });
+    dict.at(Tools::RecType::INFO).insert({ "info_key", "info_orig", "info_val", "untranslated" });
     REQUIRE(Tools::getNumberOfElementsInDict(dict) == 4);
 }

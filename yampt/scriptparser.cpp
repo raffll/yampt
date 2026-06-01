@@ -1,4 +1,5 @@
 #include "scriptparser.hpp"
+#include <regex>
 
 //----------------------------------------------------------
 ScriptParser::ScriptParser(
@@ -43,7 +44,7 @@ void ScriptParser::convertScript()
                   line_lc.begin(), ::tolower);
 
         if (line_lc == "end" ||
-            line_lc.size() > 3 && line_lc.substr(0, 4) == "end ")
+            (line_lc.size() > 3 && line_lc.substr(0, 4) == "end "))
         {
             is_end = true;
         }
@@ -100,19 +101,31 @@ void ScriptParser::convertLine(
     const int pos_in_expression,
     const Tools::RecType text_type)
 {
-    pos = line_lc.find(keyword);
+    auto isWordChar = [](char c) {
+        return std::isalnum(static_cast<unsigned char>(c)) || c == '_';
+    };
 
-    if (pos == std::string::npos)
-        return;
+    size_t search_from = 0;
+    while (true)
+    {
+        pos = line_lc.find(keyword, search_from);
+        if (pos == std::string::npos)
+            return;
+
+        if (pos > 0 && isWordChar(line_lc[pos - 1]))
+        {
+            search_from = pos + 1;
+            continue;
+        }
+        if (pos + keyword.size() < line_lc.size() && isWordChar(line_lc[pos + keyword.size()]))
+        {
+            search_from = pos + 1;
+            continue;
+        }
+        break;
+    }
 
     if (line.size() == keyword.size())
-        return;
-
-    std::string s = "\\b" + keyword + "\\b";
-    std::regex r(s, std::regex::optimize);
-    std::smatch found;
-    std::regex_search(line_lc, found, r);
-    if (found.empty())
         return;
 
     if (line.rfind(";", pos) != std::string::npos)
@@ -189,18 +202,18 @@ void ScriptParser::removeQuotes()
 void ScriptParser::findNewText(const Tools::RecType text_type)
 {
     new_text = old_text;
-    auto search = merger->getDict().at(text_type).find(old_text);
-    if (search != merger->getDict().at(text_type).end())
+    auto * search = merger->getDict().at(text_type).find(old_text);
+    if (search)
     {
-        new_text = search->second;
+        new_text = search->new_text;
     }
     else
     {
-        for (const auto & elem : merger->getDict().at(text_type))
+        for (const auto & elem : merger->getDict().at(text_type).records)
         {
-            if (Tools::caseInsensitiveStringCmp(old_text, elem.first))
+            if (Tools::caseInsensitiveStringCmp(old_text, elem.key_text))
             {
-                new_text = elem.second;
+                new_text = elem.new_text;
                 break;
             }
         }
@@ -292,8 +305,9 @@ void ScriptParser::convertTextInCompiled(const bool is_getpccell)
         else
         {
             /* if expression ends with equals or inequal signs */
-            /* +5 because of equation " == 1" size */
-            end_of_expr = pos_c + new_text.size() + 5;
+            end_of_expr = pos_c + new_text.size();
+            while (end_of_expr < new_SCDT.size() && new_SCDT[end_of_expr] != '\0')
+                end_of_expr++;
             pos_c = new_SCDT.rfind('X', pos_c) - 2;
             expr_size = end_of_expr - pos_c - 1;
         }
@@ -350,12 +364,12 @@ void ScriptParser::findNewMessage()
     Tools::addLog(script_name + "\r\n", true);
     Tools::addLog("<<< " + line + "\r\n", true);
 
-    auto search = merger->getDict().at(type).find(script_name + Tools::sep[0] + line);
-    if (search != merger->getDict().at(type).end())
+    auto * search = merger->getDict().at(type).find(script_name + "^" + line);
+    if (search)
     {
-        if (line != search->second.substr(script_name.size() + 1))
+        if (line != search->new_text.substr(script_name.size() + 1))
         {
-            new_line = search->second.substr(script_name.size() + 1);
+            new_line = search->new_text.substr(script_name.size() + 1);
         }
     }
 

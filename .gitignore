@@ -5,3 +5,4 @@ x64/
 !build/make.sh
 *.user
 *.log
+/master

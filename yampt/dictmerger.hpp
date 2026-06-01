@@ -1,5 +1,4 @@
-#ifndef DICTMERGER_HPP
-#define DICTMERGER_HPP
+#pragma once
 
 #include "includes.hpp"
 #include "tools.hpp"
@@ -33,5 +32,3 @@ private:
     int counter_identical = 0;
     int counter_all = 0;
 };
-
-#endif // DICTMERGER_HPP

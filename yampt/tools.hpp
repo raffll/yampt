@@ -1,5 +1,4 @@
-#ifndef TOOLS_HPP
-#define TOOLS_HPP
+#pragma once
 
 #include "includes.hpp"
 
@@ -33,17 +32,12 @@ public:
         NPC_FLAG,
         Glossary,
 
-        Annotations,
         Unknown,
     };
 
     enum class CreatorMode
     {
-        RAW,
-        BASE,
-        ALL,
-        NOTFOUND,
-        CHANGED
+        BASE
     };
 
     enum class Encoding
@@ -52,15 +46,44 @@ public:
         WINDOWS_1250
     };
 
-    using Chapter = std::map<std::string, std::string>;
+    struct RecordEntry
+    {
+        std::string key_text;
+        std::string old_text;
+        std::string new_text;
+        std::string status;
+    };
+
+    struct Chapter
+    {
+        std::vector<RecordEntry> records;
+        std::unordered_map<std::string, size_t> index;
+
+        bool insert(const RecordEntry & entry);
+        RecordEntry * find(const std::string & id);
+        const RecordEntry * find(const std::string & id) const;
+        size_t size() const { return records.size(); }
+        bool empty() const { return records.empty(); }
+    };
+
     using Dict = std::map<RecType, Chapter>;
+
+    struct Status
+    {
+        static constexpr const char * untranslated = "untranslated";
+        static constexpr const char * translated = "translated";
+        static constexpr const char * auto_identical = "auto_identical";
+        static constexpr const char * auto_heuristic = "auto_heuristic";
+        static constexpr const char * changed = "changed";
+        static constexpr const char * has_errors = "has_errors";
+    };
 
     struct Entry
     {
         const std::string key_text;
         std::string val_text;
         const Tools::RecType type;
-        const std::string optional;
+        const std::string optional = "";
     };
 
     struct Name
@@ -85,28 +108,9 @@ public:
         bool modified = false;
     };
 
-    struct Annotations
-    {
-        bool add_hyperlinks = false;
-        bool add_annotation = false;
-    };
-
-    enum class Save
-    {
-        EVERYTHING,
-        BASE,
-        GLOS
-    };
-
-    static const std::vector<std::string> sep;
-    static const std::vector<std::string> err;
     static const std::vector<std::string> keywords;
 
     static std::string readFile(const std::string & path);
-    static void writeDict(
-        const Dict & dict,
-        const std::string & name,
-        Save save = Save::EVERYTHING);
     static void writeText(
         const std::string & text,
         const std::string & name);
@@ -123,14 +127,12 @@ public:
     static std::string eraseNullChars(std::string str);
     static std::string trimCR(std::string str);
     static std::string replaceNonReadableCharsWithDot(const std::string & str);
-    static std::string addAnnotations(
-        const Chapter & chapter,
-        const std::string & source,
-        const bool extended);
     static void addLog(
         const std::string & entry,
         const bool silent = false);
     static std::string getLog() { return log1 + log2; }
+    static bool hasError() { return error_flag; }
+    static void resetLog();
     static Dict initializeDict();
     static std::string type2Str(Tools::RecType type);
     static RecType str2Type(const std::string & str);
@@ -141,6 +143,5 @@ public:
 private:
     static std::string log1;
     static std::string log2;
+    static bool error_flag;
 };
-
-#endif // TOOLS_HPP

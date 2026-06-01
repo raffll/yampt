@@ -1,6 +1,8 @@
 #include "userinterface.hpp"
 #include "dictcreator.hpp"
 #include "dictmerger.hpp"
+#include "dictreader.hpp"
+#include "dictwriter.hpp"
 #include "esmconverter.hpp"
 
 //----------------------------------------------------------
@@ -20,15 +22,7 @@ void UserInterface::parseCommandLine()
     {
         for (size_t i = 2; i < args.size(); ++i)
         {
-            if (args[i] == "--add-hyperlinks")
-            {
-                annotations.add_hyperlinks = true;
-            }
-            else if (args[i] == "--add-annotations")
-            {
-                annotations.add_annotation = true;
-            }
-            else if (args[i] == "--windows-1250")
+            if (args[i] == "--windows-1250")
             {
                 encoding = Tools::Encoding::WINDOWS_1250;
             }
@@ -78,25 +72,13 @@ void UserInterface::runCommand()
 {
     if (args.size() > 1)
     {
-        if (args[1] == "--make-raw" && file_paths.size() > 0)
+        if (args[1] == "--make" && file_paths.size() > 0)
         {
-            makeDictRaw();
+            makeDict();
         }
         else if (args[1] == "--make-base" && file_paths.size() == 2)
         {
             makeDictBase();
-        }
-        else if (args[1] == "--make-all" && file_paths.size() > 0 && dict_paths.size() > 0)
-        {
-            makeDictAll();
-        }
-        else if (args[1] == "--make-not" && file_paths.size() > 0 && dict_paths.size() > 0)
-        {
-            makeDictNotFound();
-        }
-        else if (args[1] == "--make-changed" && file_paths.size() > 0 && dict_paths.size() > 0)
-        {
-            makeDictChanged();
         }
         else if (args[1] == "--merge" && dict_paths.size() > 0)
         {
@@ -122,14 +104,39 @@ void UserInterface::runCommand()
 }
 
 //----------------------------------------------------------
-void UserInterface::makeDictRaw()
+void UserInterface::makeDict()
 {
-    Tools::addLog("-> Start making \"RAW\" dictionaries...\r\n");
+    Tools::addLog("-> Start making dictionaries...\r\n");
+
+    const Tools::Dict * base_dict = nullptr;
+    Tools::Dict base_dict_storage;
+    if (dict_paths.size() > 0)
+    {
+        DictReader reader(dict_paths[0]);
+        if (reader.isLoaded())
+        {
+            base_dict_storage = reader.getDict();
+            base_dict = &base_dict_storage;
+        }
+    }
+
     for (size_t i = 0; i < file_paths.size(); ++i)
     {
-        DictCreator creator(file_paths[i]);
-        Tools::writeDict(creator.getDict(), creator.getName().name + ".RAW.xml");
+        DictCreator creator(file_paths[i], base_dict);
+
+        std::string out_path;
+        if (!output.empty())
+        {
+            out_path = output;
+        }
+        else
+        {
+            out_path = creator.getName().name + ".json";
+        }
+
+        DictWriter::write(creator.getDict(), out_path);
     }
+
     Tools::addLog("-> Done!\r\n");
 }
 
@@ -138,56 +145,37 @@ void UserInterface::makeDictBase()
 {
     Tools::addLog("-> Start making \"BASE\" dictionary...\r\n");
     DictCreator creator(file_paths[0], file_paths[1]);
-    Tools::writeDict(creator.getDict(), creator.getName().name + ".BASE.xml", Tools::Save::BASE);
-    Tools::writeDict(creator.getDict(), creator.getName().name + ".GLOS.xml", Tools::Save::GLOS);
-    Tools::addLog("-> Done!\r\n");
-}
-
-//----------------------------------------------------------
-void UserInterface::makeDictAll()
-{
-    Tools::addLog("-> Start making \"ALL\" dictionaries...\r\n");
-    DictMerger merger(dict_paths);
-    for (size_t i = 0; i < file_paths.size(); ++i)
-    {
-        DictCreator creator(file_paths[i], merger, Tools::CreatorMode::ALL, annotations);
-        Tools::writeDict(creator.getDict(), creator.getName().name + ".ALL.xml");
-    }
-    Tools::addLog("-> Done!\r\n");
-}
-
-//----------------------------------------------------------
-void UserInterface::makeDictNotFound()
-{
-    Tools::addLog("-> Start making \"NOTFOUND\" dictionaries...\r\n");
-    DictMerger merger(dict_paths);
-    for (size_t i = 0; i < file_paths.size(); ++i)
-    {
-        DictCreator creator(file_paths[i], merger, Tools::CreatorMode::NOTFOUND, annotations);
-        Tools::writeDict(creator.getDict(), creator.getName().name + ".NOTFOUND.xml");
-    }
-    Tools::addLog("-> Done!\r\n");
-}
-
-//----------------------------------------------------------
-void UserInterface::makeDictChanged()
-{
-    Tools::addLog("-> Start making \"CHANGED\" dictionaries...\r\n");
-    DictMerger merger(dict_paths);
-    for (size_t i = 0; i < file_paths.size(); ++i)
-    {
-        DictCreator creator(file_paths[i], merger, Tools::CreatorMode::CHANGED, annotations);
-        Tools::writeDict(creator.getDict(), creator.getName().name + ".CHANGED.xml");
-    }
+    DictWriter::write(creator.getDict(), creator.getName().name + ".BASE.json");
     Tools::addLog("-> Done!\r\n");
 }
 
 //----------------------------------------------------------
 void UserInterface::mergeDict()
 {
+    if (output.empty())
+    {
+        Tools::addLog("Error: --merge requires -o <output_path>\r\n");
+        return;
+    }
+
+    for (const auto & path : dict_paths)
+    {
+        const auto ext_pos = path.rfind('.');
+        if (ext_pos != std::string::npos)
+        {
+            std::string ext = path.substr(ext_pos);
+            for (auto & c : ext) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+            if (ext == ".xml")
+            {
+                Tools::addLog("Error: .xml dictionary files are no longer supported: " + path + "\r\n");
+                return;
+            }
+        }
+    }
+
     Tools::addLog("-> Start merging dictionaries...\r\n");
     DictMerger merger(dict_paths);
-    Tools::writeDict(merger.getDict(), output);
+    DictWriter::write(merger.getDict(), output);
     Tools::addLog("-> Done!\r\n");
 }
 
@@ -198,12 +186,12 @@ void UserInterface::convertEsm()
     DictMerger merger(dict_paths);
     for (const auto & file_path : file_paths)
     {
-        EsmConverter converter(file_path, merger, annotations.add_hyperlinks, suffix, encoding, false);
+        EsmConverter converter(file_path, merger, false, suffix, encoding, false);
         if (converter.isLoaded())
         {
             const auto & name = converter.getName().name + suffix + converter.getName().ext;
             Tools::writeFile(converter.getRecords(), name);
-            boost::filesystem::last_write_time(name, converter.getTime());
+            std::filesystem::last_write_time(name, converter.getTime());
         }
     }
     Tools::addLog("-> Done!\r\n");
@@ -216,12 +204,12 @@ void UserInterface::createEsm()
     DictMerger merger(dict_paths);
     for (const auto & file_path : file_paths)
     {
-        EsmConverter converter(file_path, merger, annotations.add_hyperlinks, suffix, encoding, true);
+        EsmConverter converter(file_path, merger, false, suffix, encoding, true);
         if (converter.isLoaded())
         {
             const auto & name = converter.getName().name + ".CREATED" + converter.getName().ext;
             Tools::createFile(converter.getRecords(), name);
-            boost::filesystem::last_write_time(name, converter.getTime() + 1);
+            std::filesystem::last_write_time(name, converter.getTime() + std::chrono::seconds(1));
         }
     }
     Tools::addLog("-> Done!\r\n");

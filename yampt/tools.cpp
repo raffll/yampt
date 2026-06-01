@@ -2,10 +2,39 @@
 
 std::string Tools::log1;
 std::string Tools::log2;
+bool Tools::error_flag = false;
 
-const std::vector<std::string> Tools::sep { "^", "<_id>", "</_id>", "<key>", "</key>", "<val>", "</val>", "<rec name=\"", "\"/>" };
-const std::vector<std::string> Tools::err { "<err name=\"", "\"/>" };
 const std::vector<std::string> Tools::keywords { "messagebox", "choice", "say" };
+
+//----------------------------------------------------------
+bool Tools::Chapter::insert(const RecordEntry & entry)
+{
+    auto it = index.find(entry.key_text);
+    if (it != index.end())
+        return false;
+
+    index[entry.key_text] = records.size();
+    records.push_back(entry);
+    return true;
+}
+
+//----------------------------------------------------------
+Tools::RecordEntry * Tools::Chapter::find(const std::string & id)
+{
+    auto it = index.find(id);
+    if (it == index.end())
+        return nullptr;
+    return &records[it->second];
+}
+
+//----------------------------------------------------------
+const Tools::RecordEntry * Tools::Chapter::find(const std::string & id) const
+{
+    auto it = index.find(id);
+    if (it == index.end())
+        return nullptr;
+    return &records[it->second];
+}
 
 //----------------------------------------------------------
 std::string Tools::readFile(const std::string & path)
@@ -16,8 +45,9 @@ std::string Tools::readFile(const std::string & path)
     {
         addLog("--> Loading \"" + path + "\"...\r\n");
         char buffer[16384];
-        size_t size = file.tellg();
-        content.reserve(size);
+        file.seekg(0, std::ios::end);
+        content.reserve(static_cast<size_t>(file.tellg()));
+        file.seekg(0, std::ios::beg);
         std::streamsize chars_read;
         while (file.read(buffer, sizeof(buffer)), chars_read = file.gcount())
         {
@@ -29,65 +59,6 @@ std::string Tools::readFile(const std::string & path)
         addLog("--> Error loading \"" + path + "\" (wrong path)!\r\n");
     }
     return content;
-}
-
-//----------------------------------------------------------
-void Tools::writeDict(
-    const Dict & dict,
-    const std::string & name,
-    Save save)
-{
-    if (getNumberOfElementsInDict(dict) == 0)
-    {
-        addLog("--> No records to make dictionary!\r\n");
-        return;
-    }
-
-    std::ofstream file(name, std::ios::binary);
-    for (const auto & chapter : dict)
-    {
-        const auto & type = chapter.first;
-        if (save == Save::EVERYTHING)
-        {
-            if (type == Tools::RecType::Annotations)
-                continue;
-        }
-
-        if (save == Save::GLOS)
-        {
-            if (type != Tools::RecType::Glossary)
-                continue;
-        }
-
-        if (save == Save::BASE)
-        {
-            if (type == Tools::RecType::Glossary ||
-                type == Tools::RecType::Annotations)
-                continue;
-        }
-
-        for (const auto & elem : chapter.second)
-        {
-            file
-                << "<record>\r\n"
-                << "\t" << sep[1] << Tools::type2Str(type) << sep[2] << "\r\n"
-                << "\t" << sep[3] << elem.first << sep[4] << "\r\n"
-                << "\t" << sep[5] << elem.second << sep[6] << "\r\n";
-
-            auto search = dict.at(Tools::RecType::Annotations).find(elem.first);
-            if (search != dict.at(Tools::RecType::Annotations).end())
-            {
-                if (!search->second.empty())
-                {
-                    file << "\t" << "<!--" << search->second << "\r\n\t-->" << "\r\n";
-                }
-            }
-
-            file << "</record>\r\n";
-        }
-    }
-    addLog("--> Writing " + std::to_string(getNumberOfElementsInDict(dict))
-           + " records to \"" + name + "\"...\r\n");
 }
 
 //----------------------------------------------------------
@@ -134,9 +105,6 @@ size_t Tools::getNumberOfElementsInDict(const Dict & dict)
     size_t size = 0;
     for (const auto & chapter : dict)
     {
-        if (chapter.first == Tools::RecType::Annotations)
-            continue;
-
         size += chapter.second.size();
     }
     return size;
@@ -147,10 +115,10 @@ size_t Tools::convertStringByteArrayToUInt(const std::string & str)
 {
     assert(str.size() == 4 || str.size() == 1);
 
-    char buffer[4];
+    char buffer[4] = {};
     unsigned char ubuffer[4];
     unsigned int x;
-    str.copy(buffer, 4);
+    str.copy(buffer, str.size());
     for (int i = 0; i < 4; i++)
     {
         ubuffer[i] = buffer[i];
@@ -208,9 +176,9 @@ std::string Tools::eraseNullChars(std::string str)
 //----------------------------------------------------------
 std::string Tools::trimCR(std::string str)
 {
-    if (str.find('\r') != std::string::npos)
+    if (!str.empty() && str.back() == '\r')
     {
-        str.erase(str.size() - 1);
+        str.pop_back();
     }
     return str;
 }
@@ -221,9 +189,7 @@ std::string Tools::replaceNonReadableCharsWithDot(const std::string & str)
     std::string text;
     for (size_t i = 0; i < str.size(); ++i)
     {
-        if ((static_cast<int>(str[i]) >= 0 &&
-             static_cast<int>(str[i]) <= 255) &&
-            std::isprint(str[i]))
+        if (std::isprint(static_cast<unsigned char>(str[i])))
         {
             text += str[i];
         }
@@ -236,56 +202,15 @@ std::string Tools::replaceNonReadableCharsWithDot(const std::string & str)
 }
 
 //----------------------------------------------------------
-std::string Tools::addAnnotations(
-    const Chapter & chapter,
-    const std::string & source,
-    const bool extended)
-{
-    size_t pos = 0;
-    std::string result;
-    auto source_lc = source;
-    transform(source_lc.begin(), source_lc.end(),
-              source_lc.begin(), ::tolower);
-
-    for (const auto & elem : chapter)
-    {
-        const auto & key_text = elem.first;
-        const auto & val_text = elem.second;
-        auto key_text_lc = elem.first;
-        transform(key_text_lc.begin(), key_text_lc.end(),
-                  key_text_lc.begin(), ::tolower);
-
-        pos = source_lc.find(key_text_lc);
-        if (pos == std::string::npos)
-            continue;
-
-        if (pos != 0)
-        {
-            auto ch = source_lc.substr(pos - 1, 1);
-            if (std::isalpha(ch[0]) != 0)
-            {
-                pos += 1;
-                continue;
-            }
-        }
-
-        if (!extended)
-        {
-            result.insert(result.size(), " [" + val_text + "]");
-        }
-        else
-        {
-            result.insert(result.size(), " [" + key_text + " -> " + val_text + "]");
-        }
-    }
-    return result;
-}
-
-//----------------------------------------------------------
 void Tools::addLog(
     const std::string & entry,
     const bool silent)
 {
+    if (entry.find("--> Error") == 0)
+    {
+        error_flag = true;
+    }
+
     if (!silent)
     {
         std::cout << entry;
@@ -293,6 +218,14 @@ void Tools::addLog(
     }
     else
         log2 += entry;
+}
+
+//----------------------------------------------------------
+void Tools::resetLog()
+{
+    log1.clear();
+    log2.clear();
+    error_flag = false;
 }
 
 //----------------------------------------------------------
@@ -311,11 +244,8 @@ Tools::Dict Tools::initializeDict()
         { Tools::RecType::TEXT, {} },
         { Tools::RecType::BNAM, {} },
         { Tools::RecType::SCTX, {} },
-
         { Tools::RecType::Glossary, {} },
         { Tools::RecType::NPC_FLAG, {} },
-
-        { Tools::RecType::Annotations, {} },
     };
 }
 
@@ -348,8 +278,6 @@ std::string Tools::type2Str(Tools::RecType type)
 
         case Tools::RecType::Glossary: return "Glossary";
         case Tools::RecType::NPC_FLAG: return "NPC_FLAG";
-
-        case Tools::RecType::Annotations: return "Annotations";
 
         default: return "N/A";
     }

@@ -1,15 +1,35 @@
 #define CATCH_CONFIG_RUNNER
 #include "catch.hpp"
 
+#include <iostream>
+#include <string>
+
+std::string g_masterPath;
+
 int main(int argc, char * argv[])
 {
     Catch::Session session;
 
-    if (argc == 1)
+    using namespace Catch::clara;
+    auto cli = session.cli()
+        | Opt(g_masterPath, "path")
+            ["--master-path"]
+            ("Path to master directory with ESM files (required)");
+
+    session.cli(cli);
+
+    int ret = session.applyCommandLine(argc, argv);
+    if (ret != 0)
+        return ret;
+
+    if (g_masterPath.empty())
     {
-        const char * default_argv[] = { argv[0], "[u]" };
-        return session.run(2, default_argv);
+        std::cerr << "Error: --master-path is required\n";
+        return 1;
     }
 
-    return session.run(argc, argv);
+    if (g_masterPath.back() != '/' && g_masterPath.back() != '\\')
+        g_masterPath += '/';
+
+    return session.run();
 }

@@ -1,10 +1,8 @@
-#ifndef DICTCREATOR_HPP
-#define DICTCREATOR_HPP
+#pragma once
 
 #include "includes.hpp"
 #include "tools.hpp"
 #include "esmreader.hpp"
-#include "dictmerger.hpp"
 
 class DictCreator
 {
@@ -13,15 +11,12 @@ public:
     const auto & getDict() const { return dict; }
 
     DictCreator(
-        const std::string & path);
+        const std::string & plugin_path,
+        const Tools::Dict * base_dict = nullptr);
+
     DictCreator(
         const std::string & path,
         const std::string & path_ext);
-    DictCreator(
-        const std::string & path,
-        const DictMerger & merger,
-        const Tools::CreatorMode mode,
-        Tools::Annotations annotations);
 
 private:
     struct Pattern
@@ -42,28 +37,19 @@ private:
         const Tools::RecType type;
     };
 
-    void makeDict(const bool same_order);
+    void makeDictForMake();
+    void makeDictForBase(const bool same_order);
     bool isSameOrder();
     void resetCounters();
     std::string translateDialogTopic(std::string to_translate);
-    void validateEntry(const Tools::Entry & entry);
-    void validateRecordForModeALL(const Tools::Entry & entry);
-    void validateRecordForModeNOT(const Tools::Entry & entry);
-    void validateRecordForModeCHANGED(const Tools::Entry & entry);
-    std::string addHyperlinks(
-        const Tools::Entry & entry);
-    void makeAnnotations(
-        const Tools::Entry & entry,
-        const std::string & org_text = "");
-    void insertRecordToDict(const Tools::Entry & entry);
+    void insertRecord(const std::string & id, const std::string & original, Tools::RecType type);
+    void insertRecordToDict(const std::string & id, const std::string & text, Tools::RecType type);
     std::vector<std::string> makeScriptMessages(const std::string & script_text);
     void printLogLine(const Tools::RecType type);
 
     void makeDictCELL();
     void makeDictCELL_Default();
-    void makeDictCELL_Unordered_Default();
     void makeDictCELL_REGN();
-    void makeDictCELL_Unordered_REGN();
     void makeDictGMST();
     void makeDictFNAM();
     void makeDictDESC();
@@ -75,9 +61,10 @@ private:
     void makeDictINFO();
     void makeDictScript(const IDs & ids);
     void makeDictFNAM_Glossary();
-    void makeDictINFO_Glossary();
 
     void makeDictCELL_Unordered();
+    void makeDictCELL_Unordered_Default();
+    void makeDictCELL_Unordered_REGN();
     PatternsExt makeDictCELL_Unordered_PatternsExt();
     Patterns makeDictCELL_Unordered_Patterns();
     std::string makeDictCELL_Unordered_Pattern(EsmReader & esm_cur);
@@ -96,10 +83,9 @@ private:
     EsmReader esm;
     EsmReader esm_ext;
     EsmReader & esm_ref;
-    const DictMerger & merger;
-    const Tools::CreatorMode mode;
+    const Tools::Dict * base_dict = nullptr;
     Tools::Dict dict;
-    Tools::Annotations annotations;
+    bool is_make_mode = false;
 
     int counter_created = 0;
     int counter_missing = 0;
@@ -107,5 +93,3 @@ private:
     int counter_identical = 0;
     int counter_all = 0;
 };
-
-#endif // DICTCREATOR_HPP

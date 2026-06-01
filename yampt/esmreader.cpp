@@ -31,6 +31,14 @@ void EsmReader::splitFile(
                 rec_size = Tools::convertStringByteArrayToUInt(content.substr(rec_beg + 4, 4)) + 16;
                 rec_end = rec_beg + rec_size;
 
+                if (rec_end > content.size())
+                {
+                    Tools::addLog("--> Warning: record at offset " + std::to_string(rec_beg)
+                                  + " declares size " + std::to_string(rec_size)
+                                  + " which exceeds file size. Stopping.\r\n");
+                    break;
+                }
+
                 const auto & cnt = content.substr(rec_beg, rec_size);
                 const auto & size = cnt.size();
                 const auto & id = cnt.substr(0, 4);
@@ -57,7 +65,7 @@ void EsmReader::setTime(const std::string & path)
 {
     if (is_loaded)
     {
-        time = boost::filesystem::last_write_time(path);
+        time = std::filesystem::last_write_time(path);
     }
 }
 
@@ -174,8 +182,14 @@ void EsmReader::mainLoop(
 {
     while (cur_pos != rec->content.size())
     {
+        if (cur_pos + 8 > rec->content.size())
+            break;
         cur_id = rec->content.substr(cur_pos, 4);
         cur_size = Tools::convertStringByteArrayToUInt(rec->content.substr(cur_pos + 4, 4));
+        if (cur_size == 0)
+            break;
+        if (cur_pos + 8 + cur_size > rec->content.size())
+            break;
         if (cur_id == subrecord.id)
         {
             cur_text = rec->content.substr(cur_pos + 8, cur_size);

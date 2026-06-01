@@ -399,7 +399,7 @@ void EsmConverter::convertFNAM()
             esm.getValue().exist &&
             esm.getKey().text != "player")
         {
-            const auto & key_text = esm.getRecord().id + Tools::sep[0] + esm.getKey().text;
+            const auto & key_text = esm.getRecord().id + "^" + esm.getKey().text;
             const auto & val_text = esm.getValue().text;
             std::string new_text;
             if (!makeNewText({ key_text, val_text, type }, new_text))
@@ -430,7 +430,7 @@ void EsmConverter::convertDESC()
             if (esm.getKey().exist &&
                 esm.getValue().exist)
             {
-                const auto & key_text = esm.getRecord().id + Tools::sep[0] + esm.getKey().text;
+                const auto & key_text = esm.getRecord().id + "^" + esm.getKey().text;
                 const auto & val_text = esm.getValue().text;
                 std::string new_text;
                 if (!makeNewText({ key_text, val_text, type }, new_text))
@@ -504,7 +504,7 @@ void EsmConverter::convertRNAM()
 
         while (esm.getValue().exist)
         {
-            const auto & key_text = esm.getKey().text + Tools::sep[0] + std::to_string(esm.getValue().counter);
+            const auto & key_text = esm.getKey().text + "^" + std::to_string(esm.getValue().counter);
             const auto & val_text = esm.getValue().text;
             std::string new_text;
             if (makeNewText({ key_text, val_text, type }, new_text))
@@ -535,7 +535,7 @@ void EsmConverter::convertINDX()
             if (esm.getKey().exist &&
                 esm.getValue().exist)
             {
-                const auto & key_text = esm.getRecord().id + Tools::sep[0] + Tools::getINDX(esm.getKey().content);
+                const auto & key_text = esm.getRecord().id + "^" + Tools::getINDX(esm.getKey().content);
                 const auto & val_text = esm.getValue().text;
                 std::string new_text;
                 if (!makeNewText({ key_text, val_text, type }, new_text))
@@ -598,7 +598,7 @@ void EsmConverter::convertINFO()
             if (esm.getKey().exist &&
                 esm.getValue().exist)
             {
-                key_prefix = Tools::getDialogType(esm.getKey().content) + Tools::sep[0] + esm.getValue().text;
+                key_prefix = Tools::getDialogType(esm.getKey().content) + "^" + esm.getValue().text;
                 dial_index = i;
             }
         }
@@ -610,7 +610,7 @@ void EsmConverter::convertINFO()
             if (esm.getKey().exist &&
                 esm.getValue().exist)
             {
-                const auto & key_text = key_prefix + Tools::sep[0] + esm.getKey().text;
+                const auto & key_text = key_prefix + "^" + esm.getKey().text;
                 const auto & val_text = esm.getValue().text;
                 std::string new_text;
                 if (makeNewText({ key_text, val_text, type }, new_text))
@@ -767,25 +767,10 @@ bool EsmConverter::makeNewText(
 {
     counter_all++;
     new_text.clear();
-    auto search = merger.getDict().at(entry.type).find(entry.key_text);
-    if (search != merger.getDict().at(entry.type).end())
+    auto * found = merger.getDict().at(entry.type).find(entry.key_text);
+    if (found)
     {
-        new_text = search->second;
-        return !isIdentical(entry.val_text, new_text);
-    }
-    else if (
-        entry.type == Tools::RecType::INFO &&
-        add_hyperlinks &&
-        entry.key_text.substr(0, 1) != "V")
-    {
-        new_text = entry.val_text + Tools::addAnnotations(
-            merger.getDict().at(Tools::RecType::DIAL),
-            entry.val_text,
-            false);
-
-        if (new_text.size() > 1024)
-            new_text.resize(1024);
-
+        new_text = found->new_text;
         return !isIdentical(entry.val_text, new_text);
     }
 

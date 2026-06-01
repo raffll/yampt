@@ -13,10 +13,15 @@ int main(int argc, char * argv[])
         }
         UserInterface ui(arg);
     }
+    catch (const std::exception & e)
+    {
+        Tools::addLog("Error: " + std::string(e.what()) + "\r\n");
+    }
     catch (...)
     {
         Tools::addLog("UNKNOWN error!\r\n");
     }
 
     Tools::writeText(Tools::getLog(), "yampt.log");
+    return Tools::hasError() ? 1 : 0;
 }

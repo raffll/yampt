@@ -186,3 +186,43 @@ and finally:
 ```
 yampt.exe --make-changed -f "C:\path\to\Plugin.esp" -d "ENtoPL_H.xml"
 ```
+
+---
+## Command Reference
+
+### Commands
+
+| Command | Arguments | Description |
+|---------|-----------|-------------|
+| `--make-raw` | `-f <file...>` | Extract all translatable text from plugins into a RAW dictionary |
+| `--make-base` | `-f <native> <foreign>` | Create a base dictionary from two language versions of the same file |
+| `--make-all` | `-f <file...> -d <dict...>` | Create a full dictionary with CELL/DIAL/BNAM/SCTX translated from dictionaries |
+| `--make-not` | `-f <file...> -d <dict...>` | Create a dictionary containing only entries not found in the provided dictionaries |
+| `--make-changed` | `-f <file...> -d <dict...>` | Create a dictionary containing only entries that differ from the provided dictionaries |
+| `--merge` | `-d <dict...> [-o <output>]` | Merge multiple dictionaries into one (first-wins precedence) |
+| `--convert` | `-f <file...> -d <dict...>` | Apply translation from dictionaries to plugins |
+| `--create` | `-f <file...> -d <dict...>` | Create a new plugin containing only modified records |
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `--add-hyperlinks` | Append native dialog topic names as hyperlinks at the end of untranslated dialog entries |
+| `--add-annotations` | Append extended annotations to dictionary entries |
+| `--windows-1250` | Use Windows-1250 encoding for output files |
+| `-s <suffix>` | Set output filename suffix for `--convert` (default: no suffix, file is overwritten in place) |
+| `-o <output>` | Set output filename for `--merge` |
+
+### Usage Examples
+
+```
+yampt.exe --make-raw -f "Plugin.esp"
+yampt.exe --make-base -f "PL\Morrowind.esm" "EN\Morrowind.esm"
+yampt.exe --make-all -f "Plugin.esp" -d "ENtoPL.xml"
+yampt.exe --make-not -f "Plugin.esp" -d "ENtoPL.xml" "glossary.xml"
+yampt.exe --make-changed -f "Plugin.esp" -d "ENtoPL_H.xml"
+yampt.exe --merge -d "dict1.xml" "dict2.xml" "dict3.xml" -o "MERGED.xml"
+yampt.exe --convert --add-hyperlinks -f "Plugin.esp" -d "ENtoPL.xml"
+yampt.exe --convert -f "Plugin.esp" -d "ENtoPL.xml" -s "_translated"
+yampt.exe --create -f "Plugin.esp" -d "ENtoPL.xml"
+```

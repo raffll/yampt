@@ -1,5 +1,4 @@
-#ifndef ESMREADER_HPP
-#define ESMREADER_HPP
+#pragma once
 
 #include "includes.hpp"
 #include "tools.hpp"
@@ -55,7 +54,7 @@ private:
 
     std::vector<Tools::Record> records;
     Tools::Name name;
-    std::time_t time = 0;
+    std::filesystem::file_time_type time;
     bool is_loaded = false;
 
     Tools::Record * rec = nullptr;
@@ -63,5 +62,3 @@ private:
     SubRecord key;
     SubRecord value;
 };
-
-#endif // ESMREADER_HPP

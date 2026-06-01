@@ -1,5 +1,4 @@
-#ifndef USERINTERFACE_HPP
-#define USERINTERFACE_HPP
+#pragma once
 
 #include "includes.hpp"
 #include "tools.hpp"
@@ -13,24 +12,17 @@ private:
     void parseCommandLine();
     void runCommand();
 
-    void makeDictRaw();
+    void makeDict();
     void makeDictBase();
-    void makeDictAll();
-    void makeDictNotFound();
-    void makeDictChanged();
     void mergeDict();
     void convertEsm();
     void createEsm();
 
-    Tools::Annotations annotations;
-
     std::vector<std::string> args;
     std::vector<std::string> file_paths;
     std::vector<std::string> dict_paths;
-    std::string output = "MERGED.xml";
+    std::string output;
     std::string suffix;
 
     Tools::Encoding encoding = Tools::Encoding::UNKNOWN;
 };
-
-#endif // USERINTERFACE_HPP

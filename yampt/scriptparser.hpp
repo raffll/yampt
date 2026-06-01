@@ -1,5 +1,4 @@
-#ifndef SCRIPTPARSER_EX_HPP
-#define SCRIPTPARSER_EX_HPP
+#pragma once
 
 #include "includes.hpp"
 #include "tools.hpp"
@@ -63,5 +62,3 @@ private:
     std::string keyword;
     bool error = false;
 };
-
-#endif // SCRIPTPARSER_EX_HPP

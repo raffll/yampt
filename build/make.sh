@@ -1,79 +1,59 @@
 #!/bin/bash
 
+cd "$(dirname "$0")"
+
 NAME="yampt"
 BASE="dict_base"
 USER="dict_user"
 NEW="dict_new"
 IN="input"
 OUT="output"
-SCPT="scripts"
 
-DEV="../"
-MST="../../../../!master"
+DEV=".."
+MST="$DEV/master"
 PL="$MST/pl"
 PL_PATCH="$MST/pl_plpatch"
-DE="$MST/de"
 EN="$MST/en"
-FR="$MST/fr"
+
+YAMPT="$NAME/yampt.exe"
 
 if [ -e "$NAME" ]; then
-	rm -rv "$NAME"
-	rm -v "$NAME.zip"
+	rm -rf "$NAME"/*
+	rm -f "$NAME.zip"
+else
+	mkdir "$NAME"
 fi
 
-mkdir "$NAME"
-mkdir "$NAME/$BASE"
-mkdir "$NAME/$USER"
-mkdir "$NAME/$NEW"
-mkdir "$NAME/$IN"
-mkdir "$NAME/$OUT"
-mkdir "$NAME/$SCPT"
+mkdir -p "$NAME/$BASE"
+mkdir -p "$NAME/$USER"
+mkdir -p "$NAME/$NEW"
+mkdir -p "$NAME/$IN"
+mkdir -p "$NAME/$OUT"
 
 cp "$DEV/x64/Release/yampt.exe" "$NAME"
 cp "$DEV/CHANGELOG.txt" "$NAME"
 cp "$DEV/README.md" "$NAME"
-cp "$DEV/scripts/"*.bat "$NAME/$SCPT"
 
-### PL
+### PL — ENtoPL
 DICT=ENtoPL
 
-cp "$NAME/$SCPT/yampt-make-base-XXtoXX.bat" "$NAME/yampt-make-base-${DICT}.bat"
-sed -i "s|NATIVE=|NATIVE=$PL|g" "$NAME/yampt-make-base-${DICT}.bat"
-sed -i "s|FOREIGN=|FOREIGN=$EN|g" "$NAME/yampt-make-base-${DICT}.bat"
-sed -i "s|XXtoXX|$DICT|g" "$NAME/yampt-make-base-${DICT}.bat"
+"$YAMPT" --make-base -f "$PL/Morrowind.esm" "$EN/Morrowind.esm"
+"$YAMPT" --make-base -f "$PL/Tribunal.esm" "$EN/Tribunal.esm"
+"$YAMPT" --make-base -f "$PL/Bloodmoon.esm" "$EN/Bloodmoon.esm"
+"$YAMPT" --merge -d "Morrowind.BASE.json" "Tribunal.BASE.json" "Bloodmoon.BASE.json" -o "$NAME/$BASE/${DICT}.json"
 
-cp "$NAME/$SCPT/yampt-convert-XXtoXX.bat" "$NAME/yampt-convert-${DICT}.bat"
-sed -i "s|XXtoXX|$DICT|g" "$NAME/yampt-convert-${DICT}.bat"
+mv -f "Morrowind.BASE.json" "$NAME/$BASE/Morrowind.BASE.json"
+mv -f "Tribunal.BASE.json" "$NAME/$BASE/Tribunal.BASE.json"
+mv -f "Bloodmoon.BASE.json" "$NAME/$BASE/Bloodmoon.BASE.json"
 
-cp "$NAME/$SCPT/yampt-make-user-XXtoXX.bat" "$NAME/yampt-make-user-${DICT}.bat"
-sed -i "s|XXtoXX|$DICT|g" "$NAME/yampt-make-user-${DICT}.bat"
-sed -i "s|COMMANDS=|COMMANDS=--add-annotations --add-hyperlinks|g" "$NAME/yampt-make-user-${DICT}.bat"
-
-cd "$NAME"
-cmd.exe /c "yampt-make-base-${DICT}.bat" nopause
-rm "yampt-make-base-${DICT}.bat"
-cd ..
-
-### PL_plpatch
+### PL_plpatch — ENtoPL_plpatch
 DICT=ENtoPL_plpatch
 
-cp "$NAME/$SCPT/yampt-make-base-XXtoXX.bat" "$NAME/yampt-make-base-${DICT}.bat"
-sed -i "s|NATIVE=|NATIVE=$PL_PATCH|g" "$NAME/yampt-make-base-${DICT}.bat"
-sed -i "s|FOREIGN=|FOREIGN=$EN|g" "$NAME/yampt-make-base-${DICT}.bat"
-sed -i "s|XXtoXX|$DICT|g" "$NAME/yampt-make-base-${DICT}.bat"
-
-cp "$NAME/$SCPT/yampt-convert-XXtoXX.bat" "$NAME/yampt-convert-${DICT}.bat"
-sed -i "s|XXtoXX|$DICT|g" "$NAME/yampt-convert-${DICT}.bat"
-
-cp "$NAME/$SCPT/yampt-make-user-XXtoXX.bat" "$NAME/yampt-make-user-${DICT}.bat"
-sed -i "s|XXtoXX|$DICT|g" "$NAME/yampt-make-user-${DICT}.bat"
-sed -i "s|COMMANDS=|COMMANDS=--add-annotations --add-hyperlinks|g" "$NAME/yampt-make-user-${DICT}.bat"
-
-cd "$NAME"
-cmd.exe /c "yampt-make-base-${DICT}.bat" nopause
-rm "yampt-make-base-${DICT}.bat"
-cd ..
+"$YAMPT" --make-base -f "$PL_PATCH/Morrowind.esm" "$EN/Morrowind.esm"
+"$YAMPT" --make-base -f "$PL_PATCH/Tribunal.esm" "$EN/Tribunal.esm"
+"$YAMPT" --make-base -f "$PL_PATCH/Bloodmoon.esm" "$EN/Bloodmoon.esm"
+"$YAMPT" --merge -d "Morrowind.BASE.json" "Tribunal.BASE.json" "Bloodmoon.BASE.json" -o "$NAME/$BASE/${DICT}.json"
 
 ###
-rm "$NAME/yampt.log"
-zip -r "$NAME.zip" "$NAME"
+rm -f "$NAME/yampt.log"
+powershell.exe -NoProfile -Command "Compress-Archive -Path '$NAME' -DestinationPath '$NAME.zip' -Force"

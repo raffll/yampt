@@ -1,5 +1,4 @@
-#ifndef ESMCONVERTER_HPP
-#define ESMCONVERTER_HPP
+#pragma once
 
 #include "includes.hpp"
 #include "tools.hpp"
@@ -74,5 +73,3 @@ private:
 
     Tools::Encoding esm_encoding = Tools::Encoding::UNKNOWN;
 };
-
-#endif // ESMCONVERTER_HPP
