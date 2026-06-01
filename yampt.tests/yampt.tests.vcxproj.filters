@@ -6,7 +6,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
     <None Include="cpp.hint" />
   </ItemGroup>
   <ItemGroup>
@@ -29,6 +28,8 @@
     <ClInclude Include="..\yampt\scriptparser.hpp">
       <Filter>yampt</Filter>
     </ClInclude>
+    <ClInclude Include="..\yampt\dictwriter.hpp" />
+    <ClInclude Include="..\yampt\esmconverter.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\yampt\dictcreator.cpp">
@@ -56,5 +57,9 @@
     <ClCompile Include="..\yampt\scriptparser.cpp">
       <Filter>yampt</Filter>
     </ClCompile>
+    <ClCompile Include="..\yampt\dictwriter.cpp" />
+    <ClCompile Include="..\yampt\esmconverter.cpp" />
+    <ClCompile Include="tests.dictwriter.cpp" />
+    <ClCompile Include="tests.esmconverter.cpp" />
   </ItemGroup>
 </Project>

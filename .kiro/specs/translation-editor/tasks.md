@@ -4,34 +4,34 @@
 
 Create the `yampt.gui` project within the existing Visual Studio solution with Dear ImGui + SDL2 + OpenGL3 backend, producing a minimal window that compiles and links.
 
-- [ ] Create `yampt.gui/` directory with `yampt.gui.vcxproj` and `.filters` file
-- [ ] Add the project to `yampt.sln`
-- [ ] Add Dear ImGui source files (core + SDL2 + OpenGL3 backends) to the project
-- [ ] Add SDL2 dependency via vcpkg (update `vcpkg.json`)
-- [ ] Create `yampt.gui/main.cpp` with SDL2 window creation, ImGui context init, and a render loop that shows an empty window titled "yampt.gui"
-- [ ] Configure project to reference yampt's existing source files (`tools.cpp`, `dictreader.cpp`, `dictwriter.cpp`, `dictmerger.cpp`) as shared items or via a static lib
-- [ ] Verify the project builds with the v143 toolset (x64 Debug and Release)
+- [x] Create `yampt.gui/` directory with `yampt.gui.vcxproj` and `.filters` file
+- [x] Add the project to `yampt.sln`
+- [x] Add Dear ImGui source files (core + SDL2 + OpenGL3 backends) to the project
+- [x] Add SDL2 dependency via vcpkg (update `vcpkg.json`)
+- [x] Create `yampt.gui/main.cpp` with SDL2 window creation, ImGui context init, and a render loop that shows an empty window titled "yampt.gui"
+- [x] Configure project to reference yampt's existing source files (`tools.cpp`, `dictreader.cpp`, `dictwriter.cpp`, `dictmerger.cpp`) as shared items or via a static lib
+- [x] Verify the project builds with the v143 toolset (x64 Debug and Release)
 
 ## Task 2: Editor Application Shell and Config Persistence
 
 Implement `editor_app_t` with the frame loop structure, menu bar, and `editor_config_t` for persisting settings to `yampt_gui.ini`.
 
-- [ ] Create `yampt.gui/editor_app.hpp` and `yampt.gui/editor_app.cpp` with `init()`, `frame()`, `shutdown()`, `wants_quit()`
-- [ ] Implement `render_menu_bar()` with File menu (Open User Dict, Open Source Dict, Save, Save As, Exit) and View menu (placeholder)
-- [ ] Create `yampt.gui/editor_config.hpp` and `yampt.gui/editor_config.cpp` with `load()`/`save()` using ImGui INI-style format
-- [ ] Persist and restore `split_ratio`, `column_widths`, `last_user_dict_path`, `last_source_dict_path`
-- [ ] Wire the quit confirmation (unsaved changes prompt) into `wants_quit()`
+- [x] Create `yampt.gui/editor_app.hpp` and `yampt.gui/editor_app.cpp` with `init()`, `frame()`, `shutdown()`, `wants_quit()`
+- [x] Implement `render_menu_bar()` with File menu (Open User Dict, Open Source Dict, Save, Save As, Exit) and View menu (placeholder)
+- [x] Create `yampt.gui/editor_config.hpp` and `yampt.gui/editor_config.cpp` with `load()`/`save()` using ImGui INI-style format
+- [x] Persist and restore `split_ratio`, `column_widths`, `last_user_dict_path`, `last_source_dict_path`
+- [x] Wire the quit confirmation (unsaved changes prompt) into `wants_quit()`
 
 ## Task 3: Editor State and Dictionary Loading
 
 Implement `editor_state_t` that wraps dictionary loading/saving using the existing `dict_reader_t` and `dict_writer_t` classes.
 
-- [ ] Create `yampt.gui/editor_state.hpp` and `yampt.gui/editor_state.cpp`
-- [ ] Implement `load_user_dict(path)` — detect format by extension, parse via `dict_reader_t`, populate internal `dict_t`
-- [ ] Implement `load_source_dict(path)` — same parsing, stored as read-only
-- [ ] Implement `save_user_dict()` and `save_user_dict_as(path)` — write via `dict_writer_t`, preserve encoding and format
-- [ ] Implement `has_unsaved_changes()` and `mark_modified()` tracking
-- [ ] Wire File menu actions to `editor_state_t` methods with native file dialogs (via `tinyfiledialogs` or Win32 `GetOpenFileName`)
+- [x] Create `yampt.gui/editor_state.hpp` and `yampt.gui/editor_state.cpp`
+- [x] Implement `load_user_dict(path)` — detect format by extension, parse via `dict_reader_t`, populate internal `dict_t`
+- [x] Implement `load_source_dict(path)` — same parsing, stored as read-only
+- [x] Implement `save_user_dict()` and `save_user_dict_as(path)` — write via `dict_writer_t`, preserve encoding and format
+- [x] Implement `has_unsaved_changes()` and `mark_modified()` tracking
+- [x] Wire File menu actions to `editor_state_t` methods with native file dialogs (via `tinyfiledialogs` or Win32 `GetOpenFileName`)
 
 ## Task 4: Two-Panel Layout with Resizable Splitter
 

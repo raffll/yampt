@@ -1,5 +1,7 @@
 {
   "name": "yampt",
   "version": "0.25",
-  "dependencies": []
+  "dependencies": [
+    "sdl2"
+  ]
 }

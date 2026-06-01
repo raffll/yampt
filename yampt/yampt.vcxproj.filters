@@ -10,6 +10,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="tools.cpp" />
     <ClCompile Include="scriptparser.cpp" />
+    <ClCompile Include="dictwriter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="userinterface.hpp" />
@@ -21,8 +22,6 @@
     <ClInclude Include="includes.hpp" />
     <ClInclude Include="tools.hpp" />
     <ClInclude Include="scriptparser.hpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\packages.config" />
+    <ClInclude Include="dictwriter.hpp" />
   </ItemGroup>
 </Project>
