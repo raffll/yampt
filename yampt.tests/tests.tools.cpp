@@ -4,50 +4,50 @@
 TEST_CASE("convert string byte array to uint", "[u]")
 {
     std::string text = "DEAD";
-    REQUIRE(Tools::convertStringByteArrayToUInt(text) == 1145128260);
+    REQUIRE(tools_t::convertStringByteArrayToUInt(text) == 1145128260);
     text = "D";
-    REQUIRE(Tools::convertStringByteArrayToUInt(text) == 68);
+    REQUIRE(tools_t::convertStringByteArrayToUInt(text) == 68);
     for (int i = 0; i < 3; ++i)
     {
         text += '\0';
     }
     REQUIRE(text.size() == 4);
-    REQUIRE(Tools::convertStringByteArrayToUInt(text) == 68);
+    REQUIRE(tools_t::convertStringByteArrayToUInt(text) == 68);
 }
 
 TEST_CASE("convert uint to string byte array", "[u]")
 {
-    REQUIRE(Tools::convertUIntToStringByteArray(1145128260) == "DEAD");
+    REQUIRE(tools_t::convertUIntToStringByteArray(1145128260) == "DEAD");
 }
 
 TEST_CASE("case insensitive string comparison", "[u]")
 {
-    REQUIRE(Tools::caseInsensitiveStringCmp("DEAD", "dead") == true);
-    REQUIRE(Tools::caseInsensitiveStringCmp("DEAD", "BEEF") == false);
+    REQUIRE(tools_t::caseInsensitiveStringCmp("DEAD", "dead") == true);
+    REQUIRE(tools_t::caseInsensitiveStringCmp("DEAD", "BEEF") == false);
 }
 
 TEST_CASE("erase null chars from first found", "[u]")
 {
     std::string text = "DEAD";
     text.resize(8);
-    REQUIRE(Tools::eraseNullChars(text) == "DEAD");
+    REQUIRE(tools_t::eraseNullChars(text) == "DEAD");
     text = "DEAD";
     text.resize(8);
     text += "BEEF";
-    REQUIRE(Tools::eraseNullChars(text) == "DEAD");
+    REQUIRE(tools_t::eraseNullChars(text) == "DEAD");
 }
 
 TEST_CASE("erase only last \\r char", "[u]")
 {
     std::string text = "DEAD\r";
-    REQUIRE(Tools::trimCR(text) == "DEAD");
+    REQUIRE(tools_t::trimCR(text) == "DEAD");
     text = "DE\rAD\r";
-    REQUIRE(Tools::trimCR(text) == "DE\rAD");
+    REQUIRE(tools_t::trimCR(text) == "DE\rAD");
 }
 
 TEST_CASE("Chapter::insert", "[u]")
 {
-    Tools::Chapter chapter;
+    tools_t::Chapter chapter;
 
     SECTION("inserting a new entry returns true")
     {
@@ -65,7 +65,7 @@ TEST_CASE("Chapter::insert", "[u]")
 
 TEST_CASE("Chapter::find", "[u]")
 {
-    Tools::Chapter chapter;
+    tools_t::Chapter chapter;
     chapter.insert({ "key1", "orig1", "trans1", "untranslated" });
 
     SECTION("finding existing id returns non-null pointer with correct data")
@@ -87,7 +87,7 @@ TEST_CASE("Chapter::find", "[u]")
 
 TEST_CASE("Chapter::size", "[u]")
 {
-    Tools::Chapter chapter;
+    tools_t::Chapter chapter;
     REQUIRE(chapter.size() == 0);
 
     chapter.insert({ "key1", "orig1", "trans1", "untranslated" });
@@ -102,7 +102,7 @@ TEST_CASE("Chapter::size", "[u]")
 
 TEST_CASE("Chapter::empty", "[u]")
 {
-    Tools::Chapter chapter;
+    tools_t::Chapter chapter;
     REQUIRE(chapter.empty() == true);
 
     chapter.insert({ "key1", "orig1", "trans1", "untranslated" });
@@ -111,58 +111,58 @@ TEST_CASE("Chapter::empty", "[u]")
 
 TEST_CASE("type2Str and str2Type round-trip", "[u]")
 {
-    const std::vector<Tools::RecType> defined_types
+    const std::vector<tools_t::rec_type_t> defined_types
     {
-        Tools::RecType::CELL,
-        Tools::RecType::DIAL,
-        Tools::RecType::INDX,
-        Tools::RecType::RNAM,
-        Tools::RecType::DESC,
-        Tools::RecType::GMST,
-        Tools::RecType::FNAM,
-        Tools::RecType::INFO,
-        Tools::RecType::TEXT,
-        Tools::RecType::BNAM,
-        Tools::RecType::SCTX,
-        Tools::RecType::Glossary,
-        Tools::RecType::NPC_FLAG,
+        tools_t::rec_type_t::CELL,
+        tools_t::rec_type_t::DIAL,
+        tools_t::rec_type_t::INDX,
+        tools_t::rec_type_t::RNAM,
+        tools_t::rec_type_t::DESC,
+        tools_t::rec_type_t::GMST,
+        tools_t::rec_type_t::FNAM,
+        tools_t::rec_type_t::INFO,
+        tools_t::rec_type_t::TEXT,
+        tools_t::rec_type_t::BNAM,
+        tools_t::rec_type_t::SCTX,
+        tools_t::rec_type_t::Glossary,
+        tools_t::rec_type_t::NPC_FLAG,
     };
 
     for (const auto & type : defined_types)
     {
-        REQUIRE(Tools::str2Type(Tools::type2Str(type)) == type);
+        REQUIRE(tools_t::str2Type(tools_t::type2Str(type)) == type);
     }
 
     SECTION("str2Type returns Unknown for unrecognized string")
     {
-        REQUIRE(Tools::str2Type("XYZZY") == Tools::RecType::Unknown);
-        REQUIRE(Tools::str2Type("") == Tools::RecType::Unknown);
-        REQUIRE(Tools::str2Type("cell") == Tools::RecType::Unknown);
+        REQUIRE(tools_t::str2Type("XYZZY") == tools_t::rec_type_t::Unknown);
+        REQUIRE(tools_t::str2Type("") == tools_t::rec_type_t::Unknown);
+        REQUIRE(tools_t::str2Type("cell") == tools_t::rec_type_t::Unknown);
     }
 }
 
 TEST_CASE("getDialogType all values", "[u]")
 {
-    REQUIRE(Tools::getDialogType(std::string(1, '\x00')) == "T");
-    REQUIRE(Tools::getDialogType(std::string(1, '\x01')) == "V");
-    REQUIRE(Tools::getDialogType(std::string(1, '\x02')) == "G");
-    REQUIRE(Tools::getDialogType(std::string(1, '\x03')) == "P");
-    REQUIRE(Tools::getDialogType(std::string(1, '\x04')) == "J");
+    REQUIRE(tools_t::getDialogType(std::string(1, '\x00')) == "T");
+    REQUIRE(tools_t::getDialogType(std::string(1, '\x01')) == "V");
+    REQUIRE(tools_t::getDialogType(std::string(1, '\x02')) == "G");
+    REQUIRE(tools_t::getDialogType(std::string(1, '\x03')) == "P");
+    REQUIRE(tools_t::getDialogType(std::string(1, '\x04')) == "J");
 }
 
 TEST_CASE("getINDX zero-padded output", "[u]")
 {
     // 4-byte little-endian encoding of 1 → "001"
-    std::string one = Tools::convertUIntToStringByteArray(1);
-    REQUIRE(Tools::getINDX(one) == "001");
+    std::string one = tools_t::convertUIntToStringByteArray(1);
+    REQUIRE(tools_t::getINDX(one) == "001");
 
     // 4-byte little-endian encoding of 42 → "042"
-    std::string fortytwo = Tools::convertUIntToStringByteArray(42);
-    REQUIRE(Tools::getINDX(fortytwo) == "042");
+    std::string fortytwo = tools_t::convertUIntToStringByteArray(42);
+    REQUIRE(tools_t::getINDX(fortytwo) == "042");
 
     // 4-byte little-endian encoding of 255 → "255"
-    std::string twofiftyfive = Tools::convertUIntToStringByteArray(255);
-    REQUIRE(Tools::getINDX(twofiftyfive) == "255");
+    std::string twofiftyfive = tools_t::convertUIntToStringByteArray(255);
+    REQUIRE(tools_t::getINDX(twofiftyfive) == "255");
 }
 
 TEST_CASE("isFNAM true IDs", "[u]")
@@ -179,15 +179,15 @@ TEST_CASE("isFNAM true IDs", "[u]")
 
     for (const auto & id : true_ids)
     {
-        REQUIRE(Tools::isFNAM(id) == true);
+        REQUIRE(tools_t::isFNAM(id) == true);
     }
 }
 
 TEST_CASE("isFNAM false IDs", "[u]")
 {
-    REQUIRE(Tools::isFNAM("CELL") == false);
-    REQUIRE(Tools::isFNAM("INFO") == false);
-    REQUIRE(Tools::isFNAM("DIAL") == false);
+    REQUIRE(tools_t::isFNAM("CELL") == false);
+    REQUIRE(tools_t::isFNAM("INFO") == false);
+    REQUIRE(tools_t::isFNAM("DIAL") == false);
 }
 
 TEST_CASE("byte conversion round-trip", "[u]")
@@ -214,18 +214,18 @@ TEST_CASE("byte conversion round-trip", "[u]")
     };
     for (unsigned int x : values)
     {
-        REQUIRE(Tools::convertStringByteArrayToUInt(Tools::convertUIntToStringByteArray(x)) == x);
+        REQUIRE(tools_t::convertStringByteArrayToUInt(tools_t::convertUIntToStringByteArray(x)) == x);
     }
 }
 
 TEST_CASE("trimCR, no CR present", "[u]")
 {
     std::string text = "DEAD";
-    REQUIRE(Tools::trimCR(text) == "DEAD");
+    REQUIRE(tools_t::trimCR(text) == "DEAD");
     text = "";
-    REQUIRE(Tools::trimCR(text) == "");
+    REQUIRE(tools_t::trimCR(text) == "");
     text = "no carriage return here";
-    REQUIRE(Tools::trimCR(text) == "no carriage return here");
+    REQUIRE(tools_t::trimCR(text) == "no carriage return here");
 }
 
 TEST_CASE("replace non-readable chars with dot", "[u]")
@@ -237,14 +237,14 @@ TEST_CASE("replace non-readable chars with dot", "[u]")
         {
             printable += static_cast<char>(c);
         }
-        REQUIRE(Tools::replaceNonReadableCharsWithDot(printable) == printable);
+        REQUIRE(tools_t::replaceNonReadableCharsWithDot(printable) == printable);
     }
 
     SECTION("non-printable bytes are replaced with dot")
     {
         std::string input = "\x01\x1F\x7F\x80\xFF";
         std::string expected = ".....";
-        REQUIRE(Tools::replaceNonReadableCharsWithDot(input) == expected);
+        REQUIRE(tools_t::replaceNonReadableCharsWithDot(input) == expected);
     }
 }
 
@@ -255,7 +255,7 @@ TEST_CASE("replaceNonReadableCharsWithDot property: printable chars preserved", 
     for (int c = 32; c <= 126; ++c)
     {
         std::string single(1, static_cast<char>(c));
-        REQUIRE(Tools::replaceNonReadableCharsWithDot(single) == single);
+        REQUIRE(tools_t::replaceNonReadableCharsWithDot(single) == single);
     }
 
     std::string all_printable;
@@ -263,7 +263,7 @@ TEST_CASE("replaceNonReadableCharsWithDot property: printable chars preserved", 
     {
         all_printable += static_cast<char>(c);
     }
-    REQUIRE(Tools::replaceNonReadableCharsWithDot(all_printable) == all_printable);
+    REQUIRE(tools_t::replaceNonReadableCharsWithDot(all_printable) == all_printable);
 }
 
 TEST_CASE("replaceNonReadableCharsWithDot property: all bytes", "[u]")
@@ -273,7 +273,7 @@ TEST_CASE("replaceNonReadableCharsWithDot property: all bytes", "[u]")
     for (int i = 0; i <= 255; ++i)
     {
         std::string single(1, static_cast<char>(i));
-        std::string result = Tools::replaceNonReadableCharsWithDot(single);
+        std::string result = tools_t::replaceNonReadableCharsWithDot(single);
         if (std::isprint(static_cast<unsigned char>(i)))
         {
             REQUIRE(result == single);
@@ -287,21 +287,21 @@ TEST_CASE("replaceNonReadableCharsWithDot property: all bytes", "[u]")
 
 TEST_CASE("initializeDict has all expected keys", "[u]")
 {
-    Tools::Dict dict = Tools::initializeDict();
+    tools_t::dict_t dict = tools_t::initializeDict();
 
-    REQUIRE(dict.count(Tools::RecType::CELL) == 1);
-    REQUIRE(dict.count(Tools::RecType::DIAL) == 1);
-    REQUIRE(dict.count(Tools::RecType::INDX) == 1);
-    REQUIRE(dict.count(Tools::RecType::RNAM) == 1);
-    REQUIRE(dict.count(Tools::RecType::DESC) == 1);
-    REQUIRE(dict.count(Tools::RecType::GMST) == 1);
-    REQUIRE(dict.count(Tools::RecType::FNAM) == 1);
-    REQUIRE(dict.count(Tools::RecType::INFO) == 1);
-    REQUIRE(dict.count(Tools::RecType::TEXT) == 1);
-    REQUIRE(dict.count(Tools::RecType::BNAM) == 1);
-    REQUIRE(dict.count(Tools::RecType::SCTX) == 1);
-    REQUIRE(dict.count(Tools::RecType::Glossary) == 1);
-    REQUIRE(dict.count(Tools::RecType::NPC_FLAG) == 1);
+    REQUIRE(dict.count(tools_t::rec_type_t::CELL) == 1);
+    REQUIRE(dict.count(tools_t::rec_type_t::DIAL) == 1);
+    REQUIRE(dict.count(tools_t::rec_type_t::INDX) == 1);
+    REQUIRE(dict.count(tools_t::rec_type_t::RNAM) == 1);
+    REQUIRE(dict.count(tools_t::rec_type_t::DESC) == 1);
+    REQUIRE(dict.count(tools_t::rec_type_t::GMST) == 1);
+    REQUIRE(dict.count(tools_t::rec_type_t::FNAM) == 1);
+    REQUIRE(dict.count(tools_t::rec_type_t::INFO) == 1);
+    REQUIRE(dict.count(tools_t::rec_type_t::TEXT) == 1);
+    REQUIRE(dict.count(tools_t::rec_type_t::BNAM) == 1);
+    REQUIRE(dict.count(tools_t::rec_type_t::SCTX) == 1);
+    REQUIRE(dict.count(tools_t::rec_type_t::Glossary) == 1);
+    REQUIRE(dict.count(tools_t::rec_type_t::NPC_FLAG) == 1);
 
     REQUIRE(dict.size() == 13);
 }
@@ -309,8 +309,8 @@ TEST_CASE("initializeDict has all expected keys", "[u]")
 TEST_CASE("initializeDict all chapters empty", "[u]")
 {
     // Validates: Requirements 5.2
-    // Property 5: Fresh Dict Has All Chapters Empty
-    Tools::Dict dict = Tools::initializeDict();
+    // Property 5: Fresh dict_t Has All Chapters Empty
+    tools_t::dict_t dict = tools_t::initializeDict();
 
     for (const auto & chapter : dict)
     {
@@ -320,25 +320,25 @@ TEST_CASE("initializeDict all chapters empty", "[u]")
 
 TEST_CASE("getNumberOfElementsInDict zero for empty dict", "[u]")
 {
-    Tools::Dict dict = Tools::initializeDict();
-    REQUIRE(Tools::getNumberOfElementsInDict(dict) == 0);
+    tools_t::dict_t dict = tools_t::initializeDict();
+    REQUIRE(tools_t::getNumberOfElementsInDict(dict) == 0);
 }
 
 TEST_CASE("getNumberOfElementsInDict counts inserted entries", "[u]")
 {
-    Tools::Dict dict = Tools::initializeDict();
-    dict.at(Tools::RecType::CELL).insert({ "Balmora", "Balmora", "Balmora", "translated" });
-    dict.at(Tools::RecType::CELL).insert({ "Vivec", "Vivec", "Vivec", "translated" });
-    dict.at(Tools::RecType::DIAL).insert({ "clanfear", "clanfear", "postrach klanów", "translated" });
-    REQUIRE(Tools::getNumberOfElementsInDict(dict) == 3);
+    tools_t::dict_t dict = tools_t::initializeDict();
+    dict.at(tools_t::rec_type_t::CELL).insert({ "Balmora", "Balmora", "Balmora", "translated" });
+    dict.at(tools_t::rec_type_t::CELL).insert({ "Vivec", "Vivec", "Vivec", "translated" });
+    dict.at(tools_t::rec_type_t::DIAL).insert({ "clanfear", "clanfear", "postrach klanów", "translated" });
+    REQUIRE(tools_t::getNumberOfElementsInDict(dict) == 3);
 }
 
 TEST_CASE("getNumberOfElementsInDict correct total", "[u]")
 {
-    Tools::Dict dict = Tools::initializeDict();
-    dict.at(Tools::RecType::CELL).insert({ "Balmora", "Balmora", "Balmora", "translated" });
-    dict.at(Tools::RecType::CELL).insert({ "Vivec", "Vivec", "Vivec", "translated" });
-    dict.at(Tools::RecType::DIAL).insert({ "clanfear", "clanfear", "postrach klanów", "translated" });
-    dict.at(Tools::RecType::INFO).insert({ "info_key", "info_orig", "info_val", "untranslated" });
-    REQUIRE(Tools::getNumberOfElementsInDict(dict) == 4);
+    tools_t::dict_t dict = tools_t::initializeDict();
+    dict.at(tools_t::rec_type_t::CELL).insert({ "Balmora", "Balmora", "Balmora", "translated" });
+    dict.at(tools_t::rec_type_t::CELL).insert({ "Vivec", "Vivec", "Vivec", "translated" });
+    dict.at(tools_t::rec_type_t::DIAL).insert({ "clanfear", "clanfear", "postrach klanów", "translated" });
+    dict.at(tools_t::rec_type_t::INFO).insert({ "info_key", "info_orig", "info_val", "untranslated" });
+    REQUIRE(tools_t::getNumberOfElementsInDict(dict) == 4);
 }

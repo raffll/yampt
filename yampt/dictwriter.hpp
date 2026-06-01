@@ -5,5 +5,5 @@
 class DictWriter
 {
 public:
-    static void write(const Tools::Dict & dict, const std::string & path);
+    static void write(const tools_t::dict_t & dict, const std::string & path);
 };

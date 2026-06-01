@@ -23,7 +23,7 @@ TEST_CASE("DictWriter empty dict produces valid JSON object", "[dictwriter]")
 {
     const string path = "temp_test_writer_empty.json";
 
-    Tools::Dict dict = Tools::initializeDict();
+    tools_t::dict_t dict = tools_t::initializeDict();
     DictWriter::write(dict, path);
 
     string content = readTempFile(path);
@@ -36,8 +36,8 @@ TEST_CASE("DictWriter single record serialization", "[dictwriter]")
 {
     const string path = "temp_test_writer_single.json";
 
-    Tools::Dict dict = Tools::initializeDict();
-    dict[Tools::RecType::CELL].insert({"Seyda Neen", "Seyda Neen", "Sejda Neen", "translated"});
+    tools_t::dict_t dict = tools_t::initializeDict();
+    dict[tools_t::rec_type_t::CELL].insert({"Seyda Neen", "Seyda Neen", "Sejda Neen", "translated"});
 
     DictWriter::write(dict, path);
 
@@ -61,8 +61,8 @@ TEST_CASE("DictWriter skips empty chapters", "[dictwriter]")
 {
     const string path = "temp_test_writer_skip.json";
 
-    Tools::Dict dict = Tools::initializeDict();
-    dict[Tools::RecType::INFO].insert({"topic^Hello", "Hello", "Cześć", "translated"});
+    tools_t::dict_t dict = tools_t::initializeDict();
+    dict[tools_t::rec_type_t::INFO].insert({"topic^Hello", "Hello", "Cześć", "translated"});
 
     DictWriter::write(dict, path);
 
@@ -85,13 +85,13 @@ TEST_CASE("DictWriter round-trip with DictReader", "[dictwriter]")
 {
     const string path = "temp_test_writer_roundtrip.json";
 
-    Tools::Dict dict = Tools::initializeDict();
-    dict[Tools::RecType::CELL].insert({"Balmora", "Balmora", "Balmora", "auto_identical"});
-    dict[Tools::RecType::CELL].insert({"Vivec", "Vivec", "Vivec PL", "translated"});
-    dict[Tools::RecType::INFO].insert({"greeting^Hello traveler", "Hello traveler", "Witaj wędrowcze", "translated"});
-    dict[Tools::RecType::INFO].insert({"farewell^Goodbye", "Goodbye", "", "untranslated"});
-    dict[Tools::RecType::FNAM].insert({"iron_sword^Iron Sword", "Iron Sword", "Żelazny Miecz", "translated"});
-    dict[Tools::RecType::GMST].insert({"sHealth", "Health", "Zdrowie", "translated"});
+    tools_t::dict_t dict = tools_t::initializeDict();
+    dict[tools_t::rec_type_t::CELL].insert({"Balmora", "Balmora", "Balmora", "auto_identical"});
+    dict[tools_t::rec_type_t::CELL].insert({"Vivec", "Vivec", "Vivec PL", "translated"});
+    dict[tools_t::rec_type_t::INFO].insert({"greeting^Hello traveler", "Hello traveler", "Witaj wędrowcze", "translated"});
+    dict[tools_t::rec_type_t::INFO].insert({"farewell^Goodbye", "Goodbye", "", "untranslated"});
+    dict[tools_t::rec_type_t::FNAM].insert({"iron_sword^Iron Sword", "Iron Sword", "Żelazny Miecz", "translated"});
+    dict[tools_t::rec_type_t::GMST].insert({"sHealth", "Health", "Zdrowie", "translated"});
 
     DictWriter::write(dict, path);
 
@@ -100,33 +100,33 @@ TEST_CASE("DictWriter round-trip with DictReader", "[dictwriter]")
 
     const auto & loaded = reader.getDict();
 
-    auto * cell1 = loaded.at(Tools::RecType::CELL).find("Balmora");
+    auto * cell1 = loaded.at(tools_t::rec_type_t::CELL).find("Balmora");
     REQUIRE(cell1 != nullptr);
     REQUIRE(cell1->key_text == "Balmora");
     REQUIRE(cell1->old_text == "Balmora");
     REQUIRE(cell1->new_text == "Balmora");
     REQUIRE(cell1->status == "auto_identical");
 
-    auto * cell2 = loaded.at(Tools::RecType::CELL).find("Vivec");
+    auto * cell2 = loaded.at(tools_t::rec_type_t::CELL).find("Vivec");
     REQUIRE(cell2 != nullptr);
     REQUIRE(cell2->new_text == "Vivec PL");
     REQUIRE(cell2->status == "translated");
 
-    auto * info1 = loaded.at(Tools::RecType::INFO).find("greeting^Hello traveler");
+    auto * info1 = loaded.at(tools_t::rec_type_t::INFO).find("greeting^Hello traveler");
     REQUIRE(info1 != nullptr);
     REQUIRE(info1->old_text == "Hello traveler");
     REQUIRE(info1->new_text == "Witaj wędrowcze");
 
-    auto * info2 = loaded.at(Tools::RecType::INFO).find("farewell^Goodbye");
+    auto * info2 = loaded.at(tools_t::rec_type_t::INFO).find("farewell^Goodbye");
     REQUIRE(info2 != nullptr);
     REQUIRE(info2->new_text == "");
     REQUIRE(info2->status == "untranslated");
 
-    auto * fnam = loaded.at(Tools::RecType::FNAM).find("iron_sword^Iron Sword");
+    auto * fnam = loaded.at(tools_t::rec_type_t::FNAM).find("iron_sword^Iron Sword");
     REQUIRE(fnam != nullptr);
     REQUIRE(fnam->new_text == "Żelazny Miecz");
 
-    auto * gmst = loaded.at(Tools::RecType::GMST).find("sHealth");
+    auto * gmst = loaded.at(tools_t::rec_type_t::GMST).find("sHealth");
     REQUIRE(gmst != nullptr);
     REQUIRE(gmst->new_text == "Zdrowie");
 
@@ -137,20 +137,20 @@ TEST_CASE("DictWriter special characters preserved", "[dictwriter]")
 {
     const string path = "temp_test_writer_special.json";
 
-    Tools::Dict dict = Tools::initializeDict();
-    dict[Tools::RecType::INFO].insert({
+    tools_t::dict_t dict = tools_t::initializeDict();
+    dict[tools_t::rec_type_t::INFO].insert({
         "topic^He said \"hello\"",
         "He said \"hello\"",
         "She said \"goodbye\"",
         "translated"
     });
-    dict[Tools::RecType::INFO].insert({
+    dict[tools_t::rec_type_t::INFO].insert({
         "topic^Path: C:\\Games\\Morrowind",
         "Path: C:\\Games\\Morrowind",
         "Path: C:\\Gry\\Morrowind",
         "translated"
     });
-    dict[Tools::RecType::INFO].insert({
+    dict[tools_t::rec_type_t::INFO].insert({
         "topic^Line1\nLine2",
         "Line1\nLine2",
         "Linia1\nLinia2",
@@ -164,16 +164,16 @@ TEST_CASE("DictWriter special characters preserved", "[dictwriter]")
 
     const auto & loaded = reader.getDict();
 
-    auto * quotes = loaded.at(Tools::RecType::INFO).find("topic^He said \"hello\"");
+    auto * quotes = loaded.at(tools_t::rec_type_t::INFO).find("topic^He said \"hello\"");
     REQUIRE(quotes != nullptr);
     REQUIRE(quotes->old_text == "He said \"hello\"");
     REQUIRE(quotes->new_text == "She said \"goodbye\"");
 
-    auto * backslash = loaded.at(Tools::RecType::INFO).find("topic^Path: C:\\Games\\Morrowind");
+    auto * backslash = loaded.at(tools_t::rec_type_t::INFO).find("topic^Path: C:\\Games\\Morrowind");
     REQUIRE(backslash != nullptr);
     REQUIRE(backslash->new_text == "Path: C:\\Gry\\Morrowind");
 
-    auto * newline = loaded.at(Tools::RecType::INFO).find("topic^Line1\nLine2");
+    auto * newline = loaded.at(tools_t::rec_type_t::INFO).find("topic^Line1\nLine2");
     REQUIRE(newline != nullptr);
     REQUIRE(newline->new_text == "Linia1\nLinia2");
 

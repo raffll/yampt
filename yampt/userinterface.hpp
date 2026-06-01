@@ -12,8 +12,8 @@ private:
     void parseCommandLine();
     void runCommand();
 
-    void makeDict();
-    void makeDictBase();
+    void make_dict_();
+    void make_dict_Base();
     void mergeDict();
     void convertEsm();
     void createEsm();
@@ -24,5 +24,5 @@ private:
     std::string output;
     std::string suffix;
 
-    Tools::Encoding encoding = Tools::Encoding::UNKNOWN;
+    tools_t::Encoding encoding = tools_t::Encoding::UNKNOWN;
 };

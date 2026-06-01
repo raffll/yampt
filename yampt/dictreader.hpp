@@ -14,9 +14,9 @@ public:
 
 private:
     void parseJson(const std::string & content, const std::string & path);
-    void validateEntry(Tools::RecordEntry & entry, Tools::RecType type);
+    void validateEntry(tools_t::RecordEntry & entry, tools_t::rec_type_t type);
 
-    Tools::Name name;
-    Tools::Dict dict;
+    tools_t::Name name;
+    tools_t::dict_t dict;
     bool is_loaded = false;
 };

@@ -22,13 +22,13 @@ TEST_CASE("script parser, dial keywords", "[u]")
     };
 
     DictMerger merger;
-    merger.addRecord(Tools::RecType::DIAL, "Test", "Result");
-    merger.addRecord(Tools::RecType::DIAL, "Test Test", "Result Result");
+    merger.addRecord(tools_t::rec_type_t::DIAL, "Test", "Result");
+    merger.addRecord(tools_t::rec_type_t::DIAL, "Test Test", "Result Result");
 
     for (const auto & line : lines)
     {
         ScriptParser parser(
-            Tools::RecType::BNAM,
+            tools_t::rec_type_t::BNAM,
             merger,
             "",
             "",
@@ -42,33 +42,33 @@ TEST_CASE("script parser, dial keywords", "[u]")
 TEST_CASE("script parser, AddTopic no-match", "[u]")
 {
     DictMerger merger;
-    merger.addRecord(Tools::RecType::DIAL, "SomeTopic", "SomeResult");
+    merger.addRecord(tools_t::rec_type_t::DIAL, "SomeTopic", "SomeResult");
 
     SECTION("quoted argument not in dict is unchanged")
     {
         string input = "AddTopic \"OtherTopic\"";
-        ScriptParser parser(Tools::RecType::BNAM, merger, "", "", input, "");
+        ScriptParser parser(tools_t::rec_type_t::BNAM, merger, "", "", input, "");
         REQUIRE(parser.getNewScript() == input);
     }
 
     SECTION("unquoted argument not in dict is unchanged")
     {
         string input = "AddTopic OtherTopic";
-        ScriptParser parser(Tools::RecType::BNAM, merger, "", "", input, "");
+        ScriptParser parser(tools_t::rec_type_t::BNAM, merger, "", "", input, "");
         REQUIRE(parser.getNewScript() == input);
     }
 
     SECTION("comment line with AddTopic is unchanged")
     {
         string input = "; AddTopic \"SomeTopic\"";
-        ScriptParser parser(Tools::RecType::BNAM, merger, "", "", input, "");
+        ScriptParser parser(tools_t::rec_type_t::BNAM, merger, "", "", input, "");
         REQUIRE(parser.getNewScript() == input);
     }
 
     SECTION("identifier containing AddTopic is unchanged")
     {
         string input = "Begin AddTopicScript";
-        ScriptParser parser(Tools::RecType::BNAM, merger, "", "", input, "");
+        ScriptParser parser(tools_t::rec_type_t::BNAM, merger, "", "", input, "");
         REQUIRE(parser.getNewScript() == input);
     }
 }
@@ -85,13 +85,13 @@ TEST_CASE("script parser, cell keywords", "[u]")
     };
 
     DictMerger merger;
-    merger.addRecord(Tools::RecType::CELL, "Test", "Result");
-    merger.addRecord(Tools::RecType::CELL, "Test Test", "Result Result");
+    merger.addRecord(tools_t::rec_type_t::CELL, "Test", "Result");
+    merger.addRecord(tools_t::rec_type_t::CELL, "Test Test", "Result Result");
 
     for (const auto & line : lines)
     {
         ScriptParser parser(
-            Tools::RecType::BNAM,
+            tools_t::rec_type_t::BNAM,
             merger,
             "",
             "",
@@ -116,13 +116,13 @@ TEST_CASE("script parser, messages", "[u]")
     {
         const std::string key = "^" + line.first;
         const std::string val = "^" + line.second;
-        merger.addRecord(Tools::RecType::BNAM, key, val);
+        merger.addRecord(tools_t::rec_type_t::BNAM, key, val);
     }
 
     for (const auto & line : lines)
     {
         ScriptParser parser(
-            Tools::RecType::BNAM,
+            tools_t::rec_type_t::BNAM,
             merger,
             "",
             "",
@@ -143,10 +143,10 @@ TEST_CASE("script parser, MessageBox replacement", "[u]")
     const std::string value = script_name + "^" + expected_line;
 
     DictMerger merger;
-    merger.addRecord(Tools::RecType::BNAM, key, value);
+    merger.addRecord(tools_t::rec_type_t::BNAM, key, value);
 
     ScriptParser parser(
-        Tools::RecType::BNAM,
+        tools_t::rec_type_t::BNAM,
         merger,
         script_name,
         "",
@@ -159,7 +159,7 @@ TEST_CASE("script parser, MessageBox replacement", "[u]")
 TEST_CASE("script parser, end keyword stops processing", "[u]")
 {
     DictMerger merger;
-    merger.addRecord(Tools::RecType::DIAL, "Test", "Result");
+    merger.addRecord(tools_t::rec_type_t::DIAL, "Test", "Result");
 
     const std::string input =
         "AddTopic \"Test\"\r\n"
@@ -171,15 +171,15 @@ TEST_CASE("script parser, end keyword stops processing", "[u]")
         "end\r\n"
         "AddTopic \"Test\"";
 
-    ScriptParser parser(Tools::RecType::BNAM, merger, "", "", input, "");
+    ScriptParser parser(tools_t::rec_type_t::BNAM, merger, "", "", input, "");
     REQUIRE(parser.getNewScript() == expected);
 }
 
 TEST_CASE("script parser, multi-line script", "[u]")
 {
     DictMerger merger;
-    merger.addRecord(Tools::RecType::DIAL, "Test", "Result");
-    merger.addRecord(Tools::RecType::DIAL, "Test Test", "Result Result");
+    merger.addRecord(tools_t::rec_type_t::DIAL, "Test", "Result");
+    merger.addRecord(tools_t::rec_type_t::DIAL, "Test Test", "Result Result");
 
     const std::string input =
         "AddTopic \"Test\"\r\n"
@@ -189,19 +189,19 @@ TEST_CASE("script parser, multi-line script", "[u]")
         "AddTopic \"Result\"\r\n"
         "AddTopic \"Result Result\"";
 
-    ScriptParser parser(Tools::RecType::BNAM, merger, "", "", input, "");
+    ScriptParser parser(tools_t::rec_type_t::BNAM, merger, "", "", input, "");
     REQUIRE(parser.getNewScript() == expected);
 }
 
 TEST_CASE("script parser, trailing CRLF not appended", "[u]")
 {
     DictMerger merger;
-    merger.addRecord(Tools::RecType::DIAL, "Test", "Result");
+    merger.addRecord(tools_t::rec_type_t::DIAL, "Test", "Result");
 
     SECTION("input ending with CRLF preserves exactly one trailing CRLF")
     {
         const std::string input = "AddTopic \"Test\"\r\n";
-        ScriptParser parser(Tools::RecType::BNAM, merger, "", "", input, "");
+        ScriptParser parser(tools_t::rec_type_t::BNAM, merger, "", "", input, "");
         const std::string output = parser.getNewScript();
         REQUIRE(output.size() >= 2);
         REQUIRE(output.substr(output.size() - 2) == "\r\n");
@@ -214,7 +214,7 @@ TEST_CASE("script parser, trailing CRLF not appended", "[u]")
     SECTION("input not ending with CRLF produces output not ending with CRLF")
     {
         const std::string input = "AddTopic \"Test\"";
-        ScriptParser parser(Tools::RecType::BNAM, merger, "", "", input, "");
+        ScriptParser parser(tools_t::rec_type_t::BNAM, merger, "", "", input, "");
         const std::string output = parser.getNewScript();
         REQUIRE(output.size() >= 2);
         REQUIRE(output.substr(output.size() - 2) != "\r\n");

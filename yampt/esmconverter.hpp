@@ -18,7 +18,7 @@ public:
         const DictMerger & merger,
         const bool add_hyperlinks,
         const std::string & file_suffix,
-        const Tools::Encoding encoding,
+        const tools_t::Encoding encoding,
         const bool create_header);
 
 private:
@@ -28,12 +28,12 @@ private:
     void addNullTerminatorIfEmpty(
         std::string & new_text);
     bool makeNewText(
-        const Tools::Entry & entry,
+        const tools_t::Entry & entry,
         std::string & new_text);
     bool isIdentical(
         const std::string & old_text,
         const std::string & new_text);
-    void printLogLine(const Tools::RecType type);
+    void printLogLine(const tools_t::rec_type_t type);
     void convertMAST();
     void createHeader();
     void convertCELL();
@@ -54,7 +54,7 @@ private:
     void convertSCPT();
     void convertGMDT();
 
-    Tools::Encoding detectEncoding();
+    tools_t::Encoding detectEncoding();
     bool detectWindows1250Encoding(
         const std::string & text);
 
@@ -71,5 +71,5 @@ private:
     int counter_all = 0;
     int counter_added = 0;
 
-    Tools::Encoding esm_encoding = Tools::Encoding::UNKNOWN;
+    tools_t::Encoding esm_encoding = tools_t::Encoding::UNKNOWN;
 };

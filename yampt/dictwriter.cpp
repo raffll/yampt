@@ -32,14 +32,14 @@ static std::string escapeJson(const std::string & s)
     return result;
 }
 
-void DictWriter::write(const Tools::Dict & dict, const std::string & path)
+void DictWriter::write(const tools_t::dict_t & dict, const std::string & path)
 {
-    Tools::addLog("--> Writing \"" + path + "\"...\r\n");
+    tools_t::addLog("--> Writing \"" + path + "\"...\r\n");
 
     std::ofstream file(path, std::ios::binary);
     if (!file.is_open())
     {
-        Tools::addLog("--> Error: cannot open \"" + path + "\" for writing!\r\n");
+        tools_t::addLog("--> Error: cannot open \"" + path + "\" for writing!\r\n");
         return;
     }
 
@@ -55,7 +55,7 @@ void DictWriter::write(const Tools::Dict & dict, const std::string & path)
             file << ",\n";
         first_chapter = false;
 
-        file << "  \"" << Tools::type2Str(type) << "\": [\n";
+        file << "  \"" << tools_t::type2Str(type) << "\": [\n";
 
         for (size_t i = 0; i < chapter.records.size(); ++i)
         {
@@ -85,5 +85,5 @@ void DictWriter::write(const Tools::Dict & dict, const std::string & path)
     file << "\n}\n";
     file.close();
 
-    Tools::addLog("--> Done writing \"" + path + "\"\r\n");
+    tools_t::addLog("--> Done writing \"" + path + "\"\r\n");
 }

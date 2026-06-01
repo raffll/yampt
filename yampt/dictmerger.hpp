@@ -14,18 +14,18 @@ public:
     DictMerger(const std::vector<std::string> & paths);
 
     void addRecord(
-        const Tools::RecType type,
+        const tools_t::rec_type_t type,
         const std::string & key_text,
         const std::string & val_text);
 
 private:
     void mergeDict();
-    void findDuplicateValues(Tools::RecType type);
+    void findDuplicateValues(tools_t::rec_type_t type);
     void findUnusedINFO();
     void printSummaryLog();
 
     std::vector<DictReader> readers;
-    Tools::Dict dict;
+    tools_t::dict_t dict;
 
     int counter_merged = 0;
     int counter_replaced = 0;

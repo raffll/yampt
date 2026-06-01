@@ -52,12 +52,12 @@ private:
         EsmReader::SubRecord & subrecord);
     void handleException(const std::exception & e);
 
-    std::vector<Tools::Record> records;
-    Tools::Name name;
+    std::vector<tools_t::Record> records;
+    tools_t::Name name;
     std::filesystem::file_time_type time;
     bool is_loaded = false;
 
-    Tools::Record * rec = nullptr;
+    tools_t::Record * rec = nullptr;
 
     SubRecord key;
     SubRecord value;

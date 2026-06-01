@@ -13,7 +13,7 @@ public:
     std::string getNewSCDT() { return new_SCDT; }
 
     ScriptParser(
-        const Tools::RecType type,
+        const tools_t::rec_type_t type,
         const DictMerger & merger,
         const std::string & script_name,
         const std::string & file_name,
@@ -24,11 +24,11 @@ private:
     void convertLine(
         const std::string & keyword,
         const int pos_in_expression,
-        const Tools::RecType type);
+        const tools_t::rec_type_t type);
     void trimLine();
     void extractText(const int pos_in_expression);
     void removeQuotes();
-    void findNewText(const Tools::RecType text_type);
+    void findNewText(const tools_t::rec_type_t text_type);
     void insertNewText();
     void convertTextInCompiled(const bool is_getpccell);
     void convertLine();
@@ -40,7 +40,7 @@ private:
     void dumpError();
     void ReplaceVerticalLinesByNewLine(std::string & message);
 
-    const Tools::RecType type;
+    const tools_t::rec_type_t type;
     const DictMerger * merger;
     const std::string script_name;
     const std::string file_name;

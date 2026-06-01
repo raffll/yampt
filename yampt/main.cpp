@@ -15,13 +15,13 @@ int main(int argc, char * argv[])
     }
     catch (const std::exception & e)
     {
-        Tools::addLog("Error: " + std::string(e.what()) + "\r\n");
+        tools_t::addLog("Error: " + std::string(e.what()) + "\r\n");
     }
     catch (...)
     {
-        Tools::addLog("UNKNOWN error!\r\n");
+        tools_t::addLog("UNKNOWN error!\r\n");
     }
 
-    Tools::writeText(Tools::getLog(), "yampt.log");
-    return Tools::hasError() ? 1 : 0;
+    tools_t::writeText(tools_t::getLog(), "yampt.log");
+    return tools_t::hasError() ? 1 : 0;
 }

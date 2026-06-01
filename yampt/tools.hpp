@@ -2,10 +2,10 @@
 
 #include "includes.hpp"
 
-class Tools
+class tools_t
 {
 public:
-    enum class RecType
+    enum class rec_type_t
     {
         CELL,
         DIAL,
@@ -66,7 +66,7 @@ public:
         bool empty() const { return records.empty(); }
     };
 
-    using Dict = std::map<RecType, Chapter>;
+    using dict_t = std::map<rec_type_t, Chapter>;
 
     struct Status
     {
@@ -82,7 +82,7 @@ public:
     {
         const std::string key_text;
         std::string val_text;
-        const Tools::RecType type;
+        const tools_t::rec_type_t type;
         const std::string optional = "";
     };
 
@@ -120,7 +120,7 @@ public:
     static void createFile(
         const std::vector<Record> & records,
         const std::string & name);
-    static size_t getNumberOfElementsInDict(const Dict & dict);
+    static size_t getNumberOfElementsInDict(const dict_t & dict);
     static size_t convertStringByteArrayToUInt(const std::string & str);
     static std::string convertUIntToStringByteArray(const size_t size);
     static bool caseInsensitiveStringCmp(std::string lhs, std::string rhs);
@@ -133,9 +133,9 @@ public:
     static std::string getLog() { return log1 + log2; }
     static bool hasError() { return error_flag; }
     static void resetLog();
-    static Dict initializeDict();
-    static std::string type2Str(Tools::RecType type);
-    static RecType str2Type(const std::string & str);
+    static dict_t initializeDict();
+    static std::string type2Str(tools_t::rec_type_t type);
+    static rec_type_t str2Type(const std::string & str);
     static std::string getDialogType(const std::string & content);
     static std::string getINDX(const std::string & content);
     static bool isFNAM(const std::string & rec_id);

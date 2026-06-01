@@ -2,9 +2,9 @@
 
 DictReader::DictReader(const std::string & path)
 {
-    dict = Tools::initializeDict();
+    dict = tools_t::initializeDict();
 
-    std::string content = Tools::readFile(path);
+    std::string content = tools_t::readFile(path);
     if (!content.empty())
     {
         parseJson(content, path);
@@ -21,8 +21,8 @@ void DictReader::parseJson(const std::string & content, const std::string & path
     }
     catch (const nlohmann::json::parse_error & e)
     {
-        Tools::addLog("--> Error parsing \"" + path + "\"!\r\n");
-        Tools::addLog("--> " + std::string(e.what()) + "\r\n");
+        tools_t::addLog("--> Error parsing \"" + path + "\"!\r\n");
+        tools_t::addLog("--> " + std::string(e.what()) + "\r\n");
         is_loaded = false;
         return;
     }
@@ -30,11 +30,11 @@ void DictReader::parseJson(const std::string & content, const std::string & path
     for (auto it = root.begin(); it != root.end(); ++it)
     {
         const std::string & type_str = it.key();
-        Tools::RecType type = Tools::str2Type(type_str);
+        tools_t::rec_type_t type = tools_t::str2Type(type_str);
 
-        if (type == Tools::RecType::Unknown)
+        if (type == tools_t::rec_type_t::Unknown)
         {
-            Tools::addLog("Warning: unknown RecType \"" + type_str + "\", skipping chapter\r\n");
+            tools_t::addLog("Warning: unknown rec_type_t \"" + type_str + "\", skipping chapter\r\n");
             continue;
         }
 
@@ -43,11 +43,11 @@ void DictReader::parseJson(const std::string & content, const std::string & path
         {
             if (!record_json.contains("id"))
             {
-                Tools::addLog("Warning: record missing \"id\" field in chapter " + type_str + ", skipping\r\n");
+                tools_t::addLog("Warning: record missing \"id\" field in chapter " + type_str + ", skipping\r\n");
                 continue;
             }
 
-            Tools::RecordEntry entry;
+            tools_t::RecordEntry entry;
             entry.key_text = record_json.value("id", "");
             entry.old_text = record_json.value("old", "");
             entry.new_text = record_json.value("new", "");
@@ -60,34 +60,34 @@ void DictReader::parseJson(const std::string & content, const std::string & path
     is_loaded = true;
 }
 
-void DictReader::validateEntry(Tools::RecordEntry & entry, Tools::RecType type)
+void DictReader::validateEntry(tools_t::RecordEntry & entry, tools_t::rec_type_t type)
 {
-    if (type == Tools::RecType::CELL && entry.new_text.size() > 63)
+    if (type == tools_t::rec_type_t::CELL && entry.new_text.size() > 63)
     {
-        Tools::addLog(Tools::type2Str(type) + ": invalid, more than 63 bytes in " + entry.key_text + "\r\n");
+        tools_t::addLog(tools_t::type2Str(type) + ": invalid, more than 63 bytes in " + entry.key_text + "\r\n");
         return;
     }
 
-    if (type == Tools::RecType::RNAM && entry.new_text.size() > 32)
+    if (type == tools_t::rec_type_t::RNAM && entry.new_text.size() > 32)
     {
-        Tools::addLog(Tools::type2Str(type) + ": invalid, more than 32 bytes in " + entry.key_text + "\r\n");
+        tools_t::addLog(tools_t::type2Str(type) + ": invalid, more than 32 bytes in " + entry.key_text + "\r\n");
         return;
     }
 
-    if (type == Tools::RecType::FNAM && entry.new_text.size() > 31)
+    if (type == tools_t::rec_type_t::FNAM && entry.new_text.size() > 31)
     {
-        Tools::addLog(Tools::type2Str(type) + ": invalid, more than 31 bytes in " + entry.key_text + "\r\n");
+        tools_t::addLog(tools_t::type2Str(type) + ": invalid, more than 31 bytes in " + entry.key_text + "\r\n");
         return;
     }
 
-    if (type == Tools::RecType::INFO && entry.new_text.size() > 1024)
+    if (type == tools_t::rec_type_t::INFO && entry.new_text.size() > 1024)
     {
-        Tools::addLog(Tools::type2Str(type) + ": invalid, more than 1024 bytes in " + entry.key_text + "\r\n");
+        tools_t::addLog(tools_t::type2Str(type) + ": invalid, more than 1024 bytes in " + entry.key_text + "\r\n");
         return;
     }
 
     if (!dict.at(type).insert(entry))
     {
-        Tools::addLog(Tools::type2Str(type) + ": doubled " + entry.key_text + "\r\n");
+        tools_t::addLog(tools_t::type2Str(type) + ": doubled " + entry.key_text + "\r\n");
     }
 }

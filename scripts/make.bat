@@ -5,8 +5,8 @@ set NATIVE=master\pl\Morrowind.esm
 set FOREIGN=master\en\Morrowind.esm
 
 %EXE% --make-base -f "%NATIVE%" "%FOREIGN%"
-%EXE% --make -f "%NATIVE%"
+%EXE% --make -f "%FOREIGN%"
 
-if "%1"=="nopause" goto end
+if "%~1"=="nopause" goto end
 pause
 :end

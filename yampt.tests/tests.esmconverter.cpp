@@ -10,13 +10,13 @@ using namespace std;
 
 static std::string makeSubrecord(const std::string & id, const std::string & data)
 {
-    return id + Tools::convertUIntToStringByteArray(data.size()) + data;
+    return id + tools_t::convertUIntToStringByteArray(data.size()) + data;
 }
 
 static std::string makeRecord(const std::string & id, const std::string & subrecords)
 {
     std::string flags(8, '\0');
-    std::string size_bytes = Tools::convertUIntToStringByteArray(subrecords.size() + 8);
+    std::string size_bytes = tools_t::convertUIntToStringByteArray(subrecords.size() + 8);
     return id + size_bytes + flags + subrecords;
 }
 
@@ -48,7 +48,7 @@ static void removeTempFile(const std::string & path)
 
 TEST_CASE("EsmConverter applies FNAM translation to NPC record", "[i]")
 {
-    Tools::resetLog();
+    tools_t::resetLog();
 
     const std::string esm_path = "temp_esmconv_fnam.esm";
     const std::string dict_path = "temp_esmconv_fnam.yml";
@@ -68,7 +68,7 @@ TEST_CASE("EsmConverter applies FNAM translation to NPC record", "[i]")
     df.close();
 
     DictMerger merger({ dict_path });
-    EsmConverter converter(esm_path, merger, false, "", Tools::Encoding::UNKNOWN, false);
+    EsmConverter converter(esm_path, merger, false, "", tools_t::Encoding::UNKNOWN, false);
 
     REQUIRE(converter.isLoaded());
 
@@ -83,7 +83,7 @@ TEST_CASE("EsmConverter applies FNAM translation to NPC record", "[i]")
     size_t fnam_pos = npc_record.content.find("FNAM");
     REQUIRE(fnam_pos != std::string::npos);
 
-    size_t fnam_data_size = Tools::convertStringByteArrayToUInt(
+    size_t fnam_data_size = tools_t::convertStringByteArrayToUInt(
         npc_record.content.substr(fnam_pos + 4, 4));
     std::string fnam_data = npc_record.content.substr(fnam_pos + 8, fnam_data_size);
     REQUIRE(fnam_data == expected_fnam);
@@ -94,7 +94,7 @@ TEST_CASE("EsmConverter applies FNAM translation to NPC record", "[i]")
 
 TEST_CASE("EsmConverter recalculates record size after FNAM replacement", "[i]")
 {
-    Tools::resetLog();
+    tools_t::resetLog();
 
     const std::string esm_path = "temp_esmconv_size.esm";
     const std::string dict_path = "temp_esmconv_size.yml";
@@ -114,14 +114,14 @@ TEST_CASE("EsmConverter recalculates record size after FNAM replacement", "[i]")
     df.close();
 
     DictMerger merger({ dict_path });
-    EsmConverter converter(esm_path, merger, false, "", Tools::Encoding::UNKNOWN, false);
+    EsmConverter converter(esm_path, merger, false, "", tools_t::Encoding::UNKNOWN, false);
 
     REQUIRE(converter.isLoaded());
 
     const auto & records = converter.getRecords();
     const auto & npc_record = records[1];
 
-    size_t stored_size = Tools::convertStringByteArrayToUInt(npc_record.content.substr(4, 4));
+    size_t stored_size = tools_t::convertStringByteArrayToUInt(npc_record.content.substr(4, 4));
     size_t expected_size = npc_record.content.size() - 16;
     REQUIRE(stored_size == expected_size);
 
@@ -133,7 +133,7 @@ TEST_CASE("EsmConverter recalculates record size after FNAM replacement", "[i]")
 
 TEST_CASE("EsmConverter preserves null-termination for FNAM after replacement", "[i]")
 {
-    Tools::resetLog();
+    tools_t::resetLog();
 
     const std::string esm_path = "temp_esmconv_null.esm";
     const std::string dict_path = "temp_esmconv_null.yml";
@@ -153,7 +153,7 @@ TEST_CASE("EsmConverter preserves null-termination for FNAM after replacement", 
     df.close();
 
     DictMerger merger({ dict_path });
-    EsmConverter converter(esm_path, merger, false, "", Tools::Encoding::UNKNOWN, false);
+    EsmConverter converter(esm_path, merger, false, "", tools_t::Encoding::UNKNOWN, false);
 
     REQUIRE(converter.isLoaded());
 
@@ -163,7 +163,7 @@ TEST_CASE("EsmConverter preserves null-termination for FNAM after replacement", 
     size_t fnam_pos = npc_record.content.find("FNAM");
     REQUIRE(fnam_pos != std::string::npos);
 
-    size_t fnam_data_size = Tools::convertStringByteArrayToUInt(
+    size_t fnam_data_size = tools_t::convertStringByteArrayToUInt(
         npc_record.content.substr(fnam_pos + 4, 4));
     std::string fnam_data = npc_record.content.substr(fnam_pos + 8, fnam_data_size);
 

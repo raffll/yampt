@@ -1,9 +1,9 @@
 ﻿#include "esmreader.hpp"
 
-//----------------------------------------------------------
+
 EsmReader::EsmReader(const std::string & path)
 {
-    std::string content = Tools::readFile(path);
+    std::string content = tools_t::readFile(path);
 
     if (!content.empty())
         splitFile(content, path);
@@ -12,7 +12,7 @@ EsmReader::EsmReader(const std::string & path)
     setTime(path);
 }
 
-//----------------------------------------------------------
+
 void EsmReader::splitFile(
     const std::string & content,
     const std::string & path)
@@ -28,12 +28,12 @@ void EsmReader::splitFile(
             while (rec_end != content.size())
             {
                 rec_beg = rec_end;
-                rec_size = Tools::convertStringByteArrayToUInt(content.substr(rec_beg + 4, 4)) + 16;
+                rec_size = tools_t::convertStringByteArrayToUInt(content.substr(rec_beg + 4, 4)) + 16;
                 rec_end = rec_beg + rec_size;
 
                 if (rec_end > content.size())
                 {
-                    Tools::addLog("--> Warning: record at offset " + std::to_string(rec_beg)
+                    tools_t::addLog("--> Warning: record at offset " + std::to_string(rec_beg)
                                   + " declares size " + std::to_string(rec_size)
                                   + " which exceeds file size. Stopping.\r\n");
                     break;
@@ -48,19 +48,19 @@ void EsmReader::splitFile(
         }
         catch (const std::exception & e)
         {
-            Tools::addLog("--> Error parsing \"" + path + "\" (possibly broken file or record)!\r\n");
-            Tools::addLog("--> Exception: " + std::string(e.what()) + "\r\n");
+            tools_t::addLog("--> Error parsing \"" + path + "\" (possibly broken file or record)!\r\n");
+            tools_t::addLog("--> Exception: " + std::string(e.what()) + "\r\n");
             is_loaded = false;
         }
     }
     else
     {
-        Tools::addLog("--> Error parsing \"" + path + "\" (isn't TES3 plugin)!\r\n");
+        tools_t::addLog("--> Error parsing \"" + path + "\" (isn't TES3 plugin)!\r\n");
         is_loaded = false;
     }
 }
 
-//----------------------------------------------------------
+
 void EsmReader::setTime(const std::string & path)
 {
     if (is_loaded)
@@ -69,7 +69,7 @@ void EsmReader::setTime(const std::string & path)
     }
 }
 
-//----------------------------------------------------------
+
 void EsmReader::selectRecord(size_t i)
 {
     if (is_loaded)
@@ -80,7 +80,7 @@ void EsmReader::selectRecord(size_t i)
     }
 }
 
-//----------------------------------------------------------
+
 void EsmReader::replaceRecord(const std::string & content)
 {
     if (is_loaded)
@@ -91,7 +91,7 @@ void EsmReader::replaceRecord(const std::string & content)
     }
 }
 
-//----------------------------------------------------------
+
 void EsmReader::setModified(size_t i)
 {
     if (is_loaded)
@@ -100,7 +100,7 @@ void EsmReader::setModified(size_t i)
     }
 }
 
-//----------------------------------------------------------
+
 void EsmReader::setKey(const std::string & id)
 {
     if (is_loaded)
@@ -122,7 +122,7 @@ void EsmReader::setKey(const std::string & id)
     }
 }
 
-//----------------------------------------------------------
+
 void EsmReader::setValue(const std::string & id)
 {
     if (is_loaded)
@@ -145,7 +145,7 @@ void EsmReader::setValue(const std::string & id)
     }
 }
 
-//----------------------------------------------------------
+
 void EsmReader::setNextValue(const std::string & id)
 {
     if (is_loaded && value.exist)
@@ -157,7 +157,7 @@ void EsmReader::setNextValue(const std::string & id)
         value.id = id;
 
         cur_pos = value.pos;
-        cur_size = Tools::convertStringByteArrayToUInt(rec->content.substr(cur_pos + 4, 4));
+        cur_size = tools_t::convertStringByteArrayToUInt(rec->content.substr(cur_pos + 4, 4));
         cur_pos += 8 + cur_size;
         value.counter++;
 
@@ -172,7 +172,7 @@ void EsmReader::setNextValue(const std::string & id)
     }
 }
 
-//----------------------------------------------------------
+
 void EsmReader::mainLoop(
     std::size_t & cur_pos,
     std::size_t & cur_size,
@@ -185,7 +185,7 @@ void EsmReader::mainLoop(
         if (cur_pos + 8 > rec->content.size())
             break;
         cur_id = rec->content.substr(cur_pos, 4);
-        cur_size = Tools::convertStringByteArrayToUInt(rec->content.substr(cur_pos + 4, 4));
+        cur_size = tools_t::convertStringByteArrayToUInt(rec->content.substr(cur_pos + 4, 4));
         if (cur_size == 0)
             break;
         if (cur_pos + 8 + cur_size > rec->content.size())
@@ -194,7 +194,7 @@ void EsmReader::mainLoop(
         {
             cur_text = rec->content.substr(cur_pos + 8, cur_size);
             subrecord.content = cur_text;
-            subrecord.text = Tools::eraseNullChars(subrecord.content);
+            subrecord.text = tools_t::eraseNullChars(subrecord.content);
             subrecord.pos = cur_pos;
             subrecord.size = cur_size;
             subrecord.exist = true;
@@ -213,17 +213,17 @@ void EsmReader::mainLoop(
     }
 }
 
-//----------------------------------------------------------
+
 void EsmReader::handleException(const std::exception & e)
 {
-    std::string cur_rec = Tools::replaceNonReadableCharsWithDot(rec->content);
-    Tools::addLog("--> Error in function (possibly broken record)!\r\n");
-    Tools::addLog(cur_rec + "\r\n");
-    Tools::addLog("--> Exception: " + std::string(e.what()) + "\r\n");
+    std::string cur_rec = tools_t::replaceNonReadableCharsWithDot(rec->content);
+    tools_t::addLog("--> Error in function (possibly broken record)!\r\n");
+    tools_t::addLog(cur_rec + "\r\n");
+    tools_t::addLog("--> Exception: " + std::string(e.what()) + "\r\n");
     is_loaded = false;
 }
 
-//----------------------------------------------------------
+
 size_t EsmReader::getModifiedCount()
 {
     size_t count = 0;

@@ -48,13 +48,13 @@ TEST_CASE("DictReader valid JSON parsing", "[dictreader]")
 
     REQUIRE(reader.isLoaded() == true);
 
-    auto * cell_entry = reader.getDict().at(Tools::RecType::CELL).find("Balmora");
+    auto * cell_entry = reader.getDict().at(tools_t::rec_type_t::CELL).find("Balmora");
     REQUIRE(cell_entry != nullptr);
     REQUIRE(cell_entry->new_text == "Balmora_PL");
     REQUIRE(cell_entry->old_text == "Balmora");
     REQUIRE(cell_entry->status == "translated");
 
-    auto * info_entry = reader.getDict().at(Tools::RecType::INFO).find("topic^Hello there, traveler.");
+    auto * info_entry = reader.getDict().at(tools_t::rec_type_t::INFO).find("topic^Hello there, traveler.");
     REQUIRE(info_entry != nullptr);
     REQUIRE(info_entry->new_text == "Witaj, wedrowcze.");
 
@@ -83,22 +83,22 @@ TEST_CASE("DictReader duplicate id keeps first", "[dictreader]")
 
     writeTempDict(path, content);
 
-    Tools::resetLog();
+    tools_t::resetLog();
     DictReader reader(path);
 
     REQUIRE(reader.isLoaded() == true);
-    REQUIRE(reader.getDict().at(Tools::RecType::CELL).size() == 1);
+    REQUIRE(reader.getDict().at(tools_t::rec_type_t::CELL).size() == 1);
 
-    auto * entry = reader.getDict().at(Tools::RecType::CELL).find("Vivec");
+    auto * entry = reader.getDict().at(tools_t::rec_type_t::CELL).find("Vivec");
     REQUIRE(entry != nullptr);
     REQUIRE(entry->new_text == "First");
 
-    REQUIRE(Tools::getLog().find("doubled") != string::npos);
+    REQUIRE(tools_t::getLog().find("doubled") != string::npos);
 
     removeTempFile(path);
 }
 
-TEST_CASE("DictReader unknown RecType is skipped", "[dictreader]")
+TEST_CASE("DictReader unknown rec_type_t is skipped", "[dictreader]")
 {
     const string path = "temp_test_bogus.json";
     const string content = R"({
@@ -122,16 +122,16 @@ TEST_CASE("DictReader unknown RecType is skipped", "[dictreader]")
 
     writeTempDict(path, content);
 
-    Tools::resetLog();
+    tools_t::resetLog();
     DictReader reader(path);
 
     REQUIRE(reader.isLoaded() == true);
 
-    auto * cell_entry = reader.getDict().at(Tools::RecType::CELL).find("Ald-ruhn");
+    auto * cell_entry = reader.getDict().at(tools_t::rec_type_t::CELL).find("Ald-ruhn");
     REQUIRE(cell_entry != nullptr);
     REQUIRE(cell_entry->new_text == "Ald-ruhn_PL");
 
-    REQUIRE(Tools::getLog().find("unknown RecType") != string::npos);
+    REQUIRE(tools_t::getLog().find("unknown rec_type_t") != string::npos);
 
     removeTempFile(path);
 }
@@ -147,7 +147,7 @@ TEST_CASE("DictReader byte limits", "[dictreader]")
         writeTempDict(path, content);
 
         DictReader reader(path);
-        REQUIRE(reader.getDict().at(Tools::RecType::CELL).find("TestCell") == nullptr);
+        REQUIRE(reader.getDict().at(tools_t::rec_type_t::CELL).find("TestCell") == nullptr);
 
         removeTempFile(path);
     }
@@ -159,7 +159,7 @@ TEST_CASE("DictReader byte limits", "[dictreader]")
         writeTempDict(path, content);
 
         DictReader reader(path);
-        REQUIRE(reader.getDict().at(Tools::RecType::RNAM).find("TestRnam") == nullptr);
+        REQUIRE(reader.getDict().at(tools_t::rec_type_t::RNAM).find("TestRnam") == nullptr);
 
         removeTempFile(path);
     }
@@ -171,7 +171,7 @@ TEST_CASE("DictReader byte limits", "[dictreader]")
         writeTempDict(path, content);
 
         DictReader reader(path);
-        REQUIRE(reader.getDict().at(Tools::RecType::FNAM).find("TestFnam") == nullptr);
+        REQUIRE(reader.getDict().at(tools_t::rec_type_t::FNAM).find("TestFnam") == nullptr);
 
         removeTempFile(path);
     }
@@ -183,7 +183,7 @@ TEST_CASE("DictReader byte limits", "[dictreader]")
         writeTempDict(path, content);
 
         DictReader reader(path);
-        REQUIRE(reader.getDict().at(Tools::RecType::INFO).find("TestInfo") == nullptr);
+        REQUIRE(reader.getDict().at(tools_t::rec_type_t::INFO).find("TestInfo") == nullptr);
 
         removeTempFile(path);
     }
@@ -195,7 +195,7 @@ TEST_CASE("DictReader byte limits", "[dictreader]")
         writeTempDict(path, content);
 
         DictReader reader(path);
-        auto * entry = reader.getDict().at(Tools::RecType::INFO).find("TestInfoOk");
+        auto * entry = reader.getDict().at(tools_t::rec_type_t::INFO).find("TestInfoOk");
         REQUIRE(entry != nullptr);
         REQUIRE(entry->new_text.size() == 1024);
 
@@ -238,17 +238,17 @@ TEST_CASE("DictReader missing id field", "[dictreader]")
 
     writeTempDict(path, content);
 
-    Tools::resetLog();
+    tools_t::resetLog();
     DictReader reader(path);
 
     REQUIRE(reader.isLoaded() == true);
-    REQUIRE(reader.getDict().at(Tools::RecType::CELL).find("NoIdCell") == nullptr);
+    REQUIRE(reader.getDict().at(tools_t::rec_type_t::CELL).find("NoIdCell") == nullptr);
 
-    auto * valid = reader.getDict().at(Tools::RecType::CELL).find("ValidCell");
+    auto * valid = reader.getDict().at(tools_t::rec_type_t::CELL).find("ValidCell");
     REQUIRE(valid != nullptr);
     REQUIRE(valid->new_text == "ValidTranslation");
 
-    REQUIRE(Tools::getLog().find("missing") != string::npos);
+    REQUIRE(tools_t::getLog().find("missing") != string::npos);
 
     removeTempFile(path);
 }
@@ -257,28 +257,28 @@ TEST_CASE("DictReader round-trip with DictWriter", "[dictreader]")
 {
     const string path = "temp_test_roundtrip.json";
 
-    Tools::Dict dict = Tools::initializeDict();
+    tools_t::dict_t dict = tools_t::initializeDict();
 
-    Tools::RecordEntry cell_entry;
+    tools_t::RecordEntry cell_entry;
     cell_entry.key_text = "Seyda Neen";
     cell_entry.old_text = "Seyda Neen";
     cell_entry.new_text = "Sejda Neen";
     cell_entry.status = "translated";
-    dict.at(Tools::RecType::CELL).insert(cell_entry);
+    dict.at(tools_t::rec_type_t::CELL).insert(cell_entry);
 
-    Tools::RecordEntry info_entry;
+    tools_t::RecordEntry info_entry;
     info_entry.key_text = "topic^Greetings, traveler.";
     info_entry.old_text = "Greetings, traveler.";
     info_entry.new_text = "Witaj, wedrowcze.";
     info_entry.status = "translated";
-    dict.at(Tools::RecType::INFO).insert(info_entry);
+    dict.at(tools_t::rec_type_t::INFO).insert(info_entry);
 
-    Tools::RecordEntry gmst_entry;
+    tools_t::RecordEntry gmst_entry;
     gmst_entry.key_text = "sLevelUp";
     gmst_entry.old_text = "Level Up";
     gmst_entry.new_text = "";
     gmst_entry.status = "untranslated";
-    dict.at(Tools::RecType::GMST).insert(gmst_entry);
+    dict.at(tools_t::rec_type_t::GMST).insert(gmst_entry);
 
     DictWriter::write(dict, path);
 
@@ -286,19 +286,19 @@ TEST_CASE("DictReader round-trip with DictWriter", "[dictreader]")
 
     REQUIRE(reader.isLoaded() == true);
 
-    auto * cell = reader.getDict().at(Tools::RecType::CELL).find("Seyda Neen");
+    auto * cell = reader.getDict().at(tools_t::rec_type_t::CELL).find("Seyda Neen");
     REQUIRE(cell != nullptr);
     REQUIRE(cell->old_text == "Seyda Neen");
     REQUIRE(cell->new_text == "Sejda Neen");
     REQUIRE(cell->status == "translated");
 
-    auto * info = reader.getDict().at(Tools::RecType::INFO).find("topic^Greetings, traveler.");
+    auto * info = reader.getDict().at(tools_t::rec_type_t::INFO).find("topic^Greetings, traveler.");
     REQUIRE(info != nullptr);
     REQUIRE(info->old_text == "Greetings, traveler.");
     REQUIRE(info->new_text == "Witaj, wedrowcze.");
     REQUIRE(info->status == "translated");
 
-    auto * gmst = reader.getDict().at(Tools::RecType::GMST).find("sLevelUp");
+    auto * gmst = reader.getDict().at(tools_t::rec_type_t::GMST).find("sLevelUp");
     REQUIRE(gmst != nullptr);
     REQUIRE(gmst->old_text == "Level Up");
     REQUIRE(gmst->new_text == "");

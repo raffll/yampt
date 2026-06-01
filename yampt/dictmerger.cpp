@@ -1,15 +1,15 @@
 #include "dictmerger.hpp"
 
-//----------------------------------------------------------
+
 DictMerger::DictMerger()
 {
-    dict = Tools::initializeDict();
+    dict = tools_t::initializeDict();
 }
 
-//----------------------------------------------------------
+
 DictMerger::DictMerger(const std::vector<std::string> & paths)
 {
-    dict = Tools::initializeDict();
+    dict = tools_t::initializeDict();
 
     for (const auto & path : paths)
     {
@@ -18,25 +18,25 @@ DictMerger::DictMerger(const std::vector<std::string> & paths)
     }
 
     mergeDict();
-    findDuplicateValues(Tools::RecType::CELL);
-    findDuplicateValues(Tools::RecType::DIAL);
+    findDuplicateValues(tools_t::rec_type_t::CELL);
+    findDuplicateValues(tools_t::rec_type_t::DIAL);
     findUnusedINFO();
     printSummaryLog();
 }
 
-//----------------------------------------------------------
+
 void DictMerger::addRecord(
-    const Tools::RecType type,
+    const tools_t::rec_type_t type,
     const std::string & key_text,
     const std::string & val_text)
 {
-    Tools::RecordEntry entry;
+    tools_t::RecordEntry entry;
     entry.key_text = key_text;
     entry.new_text = val_text;
     dict.at(type).insert(entry);
 }
 
-//----------------------------------------------------------
+
 void DictMerger::mergeDict()
 {
     for (const auto & reader : readers)
@@ -54,8 +54,8 @@ void DictMerger::mergeDict()
                 }
                 else if (existing->new_text != entry.new_text)
                 {
-                    if (type != Tools::RecType::Glossary)
-                        Tools::addLog("Warning: replaced " + Tools::type2Str(type) + " record " + entry.key_text + "\r\n");
+                    if (type != tools_t::rec_type_t::Glossary)
+                        tools_t::addLog("Warning: replaced " + tools_t::type2Str(type) + " record " + entry.key_text + "\r\n");
                     counter_replaced++;
                 }
                 else
@@ -66,11 +66,11 @@ void DictMerger::mergeDict()
         }
     }
 
-    Tools::addLog("--> Merging complete!\r\n");
+    tools_t::addLog("--> Merging complete!\r\n");
 }
 
-//----------------------------------------------------------
-void DictMerger::findDuplicateValues(Tools::RecType type)
+
+void DictMerger::findDuplicateValues(tools_t::rec_type_t type)
 {
     std::set<std::string> texts;
     for (const auto & entry : dict.at(type).records)
@@ -83,14 +83,14 @@ void DictMerger::findDuplicateValues(Tools::RecType type)
         if (texts.insert(text_lc).second)
             continue;
 
-        Tools::addLog("Warning: duplicate " + Tools::type2Str(type) + " value " + entry.new_text + "\r\n");
+        tools_t::addLog("Warning: duplicate " + tools_t::type2Str(type) + " value " + entry.new_text + "\r\n");
     }
 }
 
-//----------------------------------------------------------
+
 void DictMerger::findUnusedINFO()
 {
-    for (const auto & info : dict.at(Tools::RecType::INFO).records)
+    for (const auto & info : dict.at(tools_t::rec_type_t::INFO).records)
     {
         bool found = false;
         std::string text = info.key_text;
@@ -101,7 +101,7 @@ void DictMerger::findUnusedINFO()
         size_t end = text.find_last_of("^");
         text = text.substr(beg, end - beg);
 
-        for (const auto & dial : dict.at(Tools::RecType::DIAL).records)
+        for (const auto & dial : dict.at(tools_t::rec_type_t::DIAL).records)
         {
             if (text != dial.new_text)
                 continue;
@@ -111,12 +111,12 @@ void DictMerger::findUnusedINFO()
 
         if (!found)
         {
-            Tools::addLog("Warning: dialog topic not found " + info.key_text + "\r\n");
+            tools_t::addLog("Warning: dialog topic not found " + info.key_text + "\r\n");
         }
     }
 }
 
-//----------------------------------------------------------
+
 void DictMerger::printSummaryLog()
 {
     std::ostringstream ss;
@@ -129,5 +129,5 @@ void DictMerger::printSummaryLog()
         << std::setw(9) << std::to_string(counter_identical) << std::endl
         << "---------------------------------" << std::endl;
 
-    Tools::addLog(ss.str());
+    tools_t::addLog(ss.str());
 }
