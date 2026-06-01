@@ -3,6 +3,13 @@
 
 int main(int argc, char * argv[])
 {
-    int result = Catch::Session().run(argc, argv);
-    return result;
+    Catch::Session session;
+
+    if (argc == 1)
+    {
+        const char * default_argv[] = { argv[0], "[u]" };
+        return session.run(2, default_argv);
+    }
+
+    return session.run(argc, argv);
 }

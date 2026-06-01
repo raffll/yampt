@@ -158,6 +158,7 @@
     <ClCompile Include="..\yampt\scriptparser.cpp" />
     <ClCompile Include="..\yampt\tools.cpp" />
     <ClCompile Include="tests.dictcreator.cpp" />
+    <ClCompile Include="tests.dictmerger.cpp" />
     <ClCompile Include="tests.dictreader.cpp" />
     <ClCompile Include="tests.esmreader.cpp" />
     <ClCompile Include="tests.main.cpp" />

@@ -47,6 +47,7 @@
       <Filter>yampt</Filter>
     </ClCompile>
     <ClCompile Include="tests.dictreader.cpp" />
+    <ClCompile Include="tests.dictmerger.cpp" />
     <ClCompile Include="tests.dictcreator.cpp" />
     <ClCompile Include="tests.main.cpp" />
     <ClCompile Include="tests.scriptparser.cpp" />

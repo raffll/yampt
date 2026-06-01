@@ -118,3 +118,30 @@ TEST_CASE("set value, next", "[i]")
     REQUIRE(esm.getValue().pos == (16 + 16 + 28 + 40));
     REQUIRE(esm.getValue().size == 32);
 }
+
+TEST_CASE("setModified increments count", "[i]")
+{
+    EsmReader esm("master/en/Morrowind.esm");
+    REQUIRE(esm.isLoaded() == true);
+    size_t before = esm.getModifiedCount();
+    esm.setModified(0);
+    REQUIRE(esm.getModifiedCount() == before + 1);
+}
+
+TEST_CASE("loading non-existent file", "[i]")
+{
+    EsmReader esm("this/path/does/not/exist.esm");
+    REQUIRE(esm.isLoaded() == false);
+}
+
+TEST_CASE("loading non-TES3 file", "[i]")
+{
+    const std::string temp_path = "temp_not_tes3.esm";
+    {
+        std::ofstream f(temp_path, std::ios::binary);
+        f << "XXXX\x00\x00\x00\x00not a tes3 file";
+    }
+    EsmReader esm(temp_path);
+    REQUIRE(esm.isLoaded() == false);
+    std::remove(temp_path.c_str());
+}
