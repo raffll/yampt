@@ -37,13 +37,12 @@ private:
         const Tools::RecType type;
     };
 
-    void makeDictForMake();
-    void makeDictForBase(const bool same_order);
-    bool isSameOrder();
+    void makeDict();
+    void buildIndexes();
     void resetCounters();
     std::string translateDialogTopic(std::string to_translate);
-    void insertRecord(const std::string & id, const std::string & original, Tools::RecType type);
-    void insertRecordToDict(const std::string & id, const std::string & text, Tools::RecType type);
+    void insertEntry(const std::string & id, const std::string & old_text,
+                     const std::string & new_text, Tools::RecType type);
     std::vector<std::string> makeScriptMessages(const std::string & script_text);
     void printLogLine(const Tools::RecType type);
 
@@ -92,4 +91,13 @@ private:
     int counter_doubled = 0;
     int counter_identical = 0;
     int counter_all = 0;
+
+    std::unordered_map<std::string, size_t> gmst_index;
+    std::unordered_map<std::string, size_t> fnam_index;
+    std::unordered_map<std::string, size_t> desc_index;
+    std::unordered_map<std::string, size_t> text_index;
+    std::unordered_map<std::string, size_t> rnam_index;
+    std::unordered_map<std::string, size_t> indx_index;
+    std::unordered_map<std::string, size_t> npc_flag_index;
+    std::unordered_map<std::string, size_t> info_index;
 };

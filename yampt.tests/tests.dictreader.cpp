@@ -27,16 +27,16 @@ TEST_CASE("DictReader valid JSON parsing", "[dictreader]")
   "CELL": [
     {
       "id": "Balmora",
-      "original": "Balmora",
-      "translation": "Balmora_PL",
+      "old": "Balmora",
+      "new": "Balmora_PL",
       "status": "translated"
     }
   ],
   "INFO": [
     {
       "id": "topic^Hello there, traveler.",
-      "original": "Hello there, traveler.",
-      "translation": "Witaj, wedrowcze.",
+      "old": "Hello there, traveler.",
+      "new": "Witaj, wedrowcze.",
       "status": "translated"
     }
   ]
@@ -50,13 +50,13 @@ TEST_CASE("DictReader valid JSON parsing", "[dictreader]")
 
     auto * cell_entry = reader.getDict().at(Tools::RecType::CELL).find("Balmora");
     REQUIRE(cell_entry != nullptr);
-    REQUIRE(cell_entry->translation == "Balmora_PL");
-    REQUIRE(cell_entry->original == "Balmora");
+    REQUIRE(cell_entry->new_text == "Balmora_PL");
+    REQUIRE(cell_entry->old_text == "Balmora");
     REQUIRE(cell_entry->status == "translated");
 
     auto * info_entry = reader.getDict().at(Tools::RecType::INFO).find("topic^Hello there, traveler.");
     REQUIRE(info_entry != nullptr);
-    REQUIRE(info_entry->translation == "Witaj, wedrowcze.");
+    REQUIRE(info_entry->new_text == "Witaj, wedrowcze.");
 
     removeTempFile(path);
 }
@@ -68,14 +68,14 @@ TEST_CASE("DictReader duplicate id keeps first", "[dictreader]")
   "CELL": [
     {
       "id": "Vivec",
-      "original": "Vivec",
-      "translation": "First",
+      "old": "Vivec",
+      "new": "First",
       "status": "translated"
     },
     {
       "id": "Vivec",
-      "original": "Vivec",
-      "translation": "Second",
+      "old": "Vivec",
+      "new": "Second",
       "status": "translated"
     }
   ]
@@ -91,7 +91,7 @@ TEST_CASE("DictReader duplicate id keeps first", "[dictreader]")
 
     auto * entry = reader.getDict().at(Tools::RecType::CELL).find("Vivec");
     REQUIRE(entry != nullptr);
-    REQUIRE(entry->translation == "First");
+    REQUIRE(entry->new_text == "First");
 
     REQUIRE(Tools::getLog().find("doubled") != string::npos);
 
@@ -105,16 +105,16 @@ TEST_CASE("DictReader unknown RecType is skipped", "[dictreader]")
   "BOGUS": [
     {
       "id": "SomeKey",
-      "original": "SomeOriginal",
-      "translation": "SomeTranslation",
+      "old": "SomeOriginal",
+      "new": "SomeTranslation",
       "status": "translated"
     }
   ],
   "CELL": [
     {
       "id": "Ald-ruhn",
-      "original": "Ald-ruhn",
-      "translation": "Ald-ruhn_PL",
+      "old": "Ald-ruhn",
+      "new": "Ald-ruhn_PL",
       "status": "translated"
     }
   ]
@@ -129,7 +129,7 @@ TEST_CASE("DictReader unknown RecType is skipped", "[dictreader]")
 
     auto * cell_entry = reader.getDict().at(Tools::RecType::CELL).find("Ald-ruhn");
     REQUIRE(cell_entry != nullptr);
-    REQUIRE(cell_entry->translation == "Ald-ruhn_PL");
+    REQUIRE(cell_entry->new_text == "Ald-ruhn_PL");
 
     REQUIRE(Tools::getLog().find("unknown RecType") != string::npos);
 
@@ -143,7 +143,7 @@ TEST_CASE("DictReader byte limits", "[dictreader]")
     SECTION("CELL > 63 bytes rejected")
     {
         string long_val(64, 'A');
-        string content = R"({"CELL": [{"id": "TestCell", "original": "x", "translation": ")" + long_val + R"(", "status": "translated"}]})";
+        string content = R"({"CELL": [{"id": "TestCell", "old": "x", "new": ")" + long_val + R"(", "status": "translated"}]})";
         writeTempDict(path, content);
 
         DictReader reader(path);
@@ -155,7 +155,7 @@ TEST_CASE("DictReader byte limits", "[dictreader]")
     SECTION("RNAM > 32 bytes rejected")
     {
         string long_val(33, 'B');
-        string content = R"({"RNAM": [{"id": "TestRnam", "original": "x", "translation": ")" + long_val + R"(", "status": "translated"}]})";
+        string content = R"({"RNAM": [{"id": "TestRnam", "old": "x", "new": ")" + long_val + R"(", "status": "translated"}]})";
         writeTempDict(path, content);
 
         DictReader reader(path);
@@ -167,7 +167,7 @@ TEST_CASE("DictReader byte limits", "[dictreader]")
     SECTION("FNAM > 31 bytes rejected")
     {
         string long_val(32, 'C');
-        string content = R"({"FNAM": [{"id": "TestFnam", "original": "x", "translation": ")" + long_val + R"(", "status": "translated"}]})";
+        string content = R"({"FNAM": [{"id": "TestFnam", "old": "x", "new": ")" + long_val + R"(", "status": "translated"}]})";
         writeTempDict(path, content);
 
         DictReader reader(path);
@@ -179,7 +179,7 @@ TEST_CASE("DictReader byte limits", "[dictreader]")
     SECTION("INFO > 1024 bytes rejected")
     {
         string long_val(1025, 'D');
-        string content = R"({"INFO": [{"id": "TestInfo", "original": "x", "translation": ")" + long_val + R"(", "status": "translated"}]})";
+        string content = R"({"INFO": [{"id": "TestInfo", "old": "x", "new": ")" + long_val + R"(", "status": "translated"}]})";
         writeTempDict(path, content);
 
         DictReader reader(path);
@@ -191,13 +191,13 @@ TEST_CASE("DictReader byte limits", "[dictreader]")
     SECTION("INFO at exactly 1024 bytes accepted")
     {
         string exact_val(1024, 'E');
-        string content = R"({"INFO": [{"id": "TestInfoOk", "original": "x", "translation": ")" + exact_val + R"(", "status": "translated"}]})";
+        string content = R"({"INFO": [{"id": "TestInfoOk", "old": "x", "new": ")" + exact_val + R"(", "status": "translated"}]})";
         writeTempDict(path, content);
 
         DictReader reader(path);
         auto * entry = reader.getDict().at(Tools::RecType::INFO).find("TestInfoOk");
         REQUIRE(entry != nullptr);
-        REQUIRE(entry->translation.size() == 1024);
+        REQUIRE(entry->new_text.size() == 1024);
 
         removeTempFile(path);
     }
@@ -223,14 +223,14 @@ TEST_CASE("DictReader missing id field", "[dictreader]")
     const string content = R"({
   "CELL": [
     {
-      "original": "NoIdCell",
-      "translation": "NoIdTranslation",
+      "old": "NoIdCell",
+      "new": "NoIdTranslation",
       "status": "translated"
     },
     {
       "id": "ValidCell",
-      "original": "ValidCell",
-      "translation": "ValidTranslation",
+      "old": "ValidCell",
+      "new": "ValidTranslation",
       "status": "translated"
     }
   ]
@@ -246,7 +246,7 @@ TEST_CASE("DictReader missing id field", "[dictreader]")
 
     auto * valid = reader.getDict().at(Tools::RecType::CELL).find("ValidCell");
     REQUIRE(valid != nullptr);
-    REQUIRE(valid->translation == "ValidTranslation");
+    REQUIRE(valid->new_text == "ValidTranslation");
 
     REQUIRE(Tools::getLog().find("missing") != string::npos);
 
@@ -260,23 +260,23 @@ TEST_CASE("DictReader round-trip with DictWriter", "[dictreader]")
     Tools::Dict dict = Tools::initializeDict();
 
     Tools::RecordEntry cell_entry;
-    cell_entry.id = "Seyda Neen";
-    cell_entry.original = "Seyda Neen";
-    cell_entry.translation = "Sejda Neen";
+    cell_entry.key_text = "Seyda Neen";
+    cell_entry.old_text = "Seyda Neen";
+    cell_entry.new_text = "Sejda Neen";
     cell_entry.status = "translated";
     dict.at(Tools::RecType::CELL).insert(cell_entry);
 
     Tools::RecordEntry info_entry;
-    info_entry.id = "topic^Greetings, traveler.";
-    info_entry.original = "Greetings, traveler.";
-    info_entry.translation = "Witaj, wedrowcze.";
+    info_entry.key_text = "topic^Greetings, traveler.";
+    info_entry.old_text = "Greetings, traveler.";
+    info_entry.new_text = "Witaj, wedrowcze.";
     info_entry.status = "translated";
     dict.at(Tools::RecType::INFO).insert(info_entry);
 
     Tools::RecordEntry gmst_entry;
-    gmst_entry.id = "sLevelUp";
-    gmst_entry.original = "Level Up";
-    gmst_entry.translation = "";
+    gmst_entry.key_text = "sLevelUp";
+    gmst_entry.old_text = "Level Up";
+    gmst_entry.new_text = "";
     gmst_entry.status = "untranslated";
     dict.at(Tools::RecType::GMST).insert(gmst_entry);
 
@@ -288,20 +288,20 @@ TEST_CASE("DictReader round-trip with DictWriter", "[dictreader]")
 
     auto * cell = reader.getDict().at(Tools::RecType::CELL).find("Seyda Neen");
     REQUIRE(cell != nullptr);
-    REQUIRE(cell->original == "Seyda Neen");
-    REQUIRE(cell->translation == "Sejda Neen");
+    REQUIRE(cell->old_text == "Seyda Neen");
+    REQUIRE(cell->new_text == "Sejda Neen");
     REQUIRE(cell->status == "translated");
 
     auto * info = reader.getDict().at(Tools::RecType::INFO).find("topic^Greetings, traveler.");
     REQUIRE(info != nullptr);
-    REQUIRE(info->original == "Greetings, traveler.");
-    REQUIRE(info->translation == "Witaj, wedrowcze.");
+    REQUIRE(info->old_text == "Greetings, traveler.");
+    REQUIRE(info->new_text == "Witaj, wedrowcze.");
     REQUIRE(info->status == "translated");
 
     auto * gmst = reader.getDict().at(Tools::RecType::GMST).find("sLevelUp");
     REQUIRE(gmst != nullptr);
-    REQUIRE(gmst->original == "Level Up");
-    REQUIRE(gmst->translation == "");
+    REQUIRE(gmst->old_text == "Level Up");
+    REQUIRE(gmst->new_text == "");
     REQUIRE(gmst->status == "untranslated");
 
     removeTempFile(path);

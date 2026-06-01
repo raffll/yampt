@@ -72,9 +72,9 @@ TEST_CASE("Chapter::find", "[u]")
     {
         auto * entry = chapter.find("key1");
         REQUIRE(entry != nullptr);
-        REQUIRE(entry->id == "key1");
-        REQUIRE(entry->original == "orig1");
-        REQUIRE(entry->translation == "trans1");
+        REQUIRE(entry->key_text == "key1");
+        REQUIRE(entry->old_text == "orig1");
+        REQUIRE(entry->new_text == "trans1");
         REQUIRE(entry->status == "untranslated");
     }
 

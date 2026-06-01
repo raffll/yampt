@@ -23,7 +23,7 @@ TEST_CASE("DictMerger addRecord inserts entry", "[u]")
     const auto & dict = merger.getDict();
     const auto * entry = dict.at(Tools::RecType::CELL).find("Balmora");
     REQUIRE(entry != nullptr);
-    REQUIRE(entry->translation == "BalmoraTrans");
+    REQUIRE(entry->new_text == "BalmoraTrans");
 }
 
 TEST_CASE("DictMerger merge first-wins precedence", "[i]")
@@ -36,21 +36,21 @@ TEST_CASE("DictMerger merge first-wins precedence", "[i]")
     writeTempDict(path1,
         "{\n"
         "  \"CELL\": [\n"
-        "    { \"id\": \"Balmora\", \"original\": \"\", \"translation\": \"FirstValue\", \"status\": \"translated\" }\n"
+        "    { \"id\": \"Balmora\", \"old\": \"\", \"new\": \"FirstValue\", \"status\": \"translated\" }\n"
         "  ]\n"
         "}\n");
 
     writeTempDict(path2,
         "{\n"
         "  \"CELL\": [\n"
-        "    { \"id\": \"Balmora\", \"original\": \"\", \"translation\": \"SecondValue\", \"status\": \"translated\" }\n"
+        "    { \"id\": \"Balmora\", \"old\": \"\", \"new\": \"SecondValue\", \"status\": \"translated\" }\n"
         "  ]\n"
         "}\n");
 
     DictMerger merger({ path1, path2 });
     const auto * entry = merger.getDict().at(Tools::RecType::CELL).find("Balmora");
     REQUIRE(entry != nullptr);
-    REQUIRE(entry->translation == "FirstValue");
+    REQUIRE(entry->new_text == "FirstValue");
 
     removeTempFile(path1);
     removeTempFile(path2);
@@ -66,21 +66,21 @@ TEST_CASE("DictMerger key only in second dict", "[i]")
     writeTempDict(path1,
         "{\n"
         "  \"CELL\": [\n"
-        "    { \"id\": \"Vivec\", \"original\": \"\", \"translation\": \"VivecTrans\", \"status\": \"translated\" }\n"
+        "    { \"id\": \"Vivec\", \"old\": \"\", \"new\": \"VivecTrans\", \"status\": \"translated\" }\n"
         "  ]\n"
         "}\n");
 
     writeTempDict(path2,
         "{\n"
         "  \"CELL\": [\n"
-        "    { \"id\": \"Balmora\", \"original\": \"\", \"translation\": \"BalmoraTrans\", \"status\": \"translated\" }\n"
+        "    { \"id\": \"Balmora\", \"old\": \"\", \"new\": \"BalmoraTrans\", \"status\": \"translated\" }\n"
         "  ]\n"
         "}\n");
 
     DictMerger merger({ path1, path2 });
     const auto * entry = merger.getDict().at(Tools::RecType::CELL).find("Balmora");
     REQUIRE(entry != nullptr);
-    REQUIRE(entry->translation == "BalmoraTrans");
+    REQUIRE(entry->new_text == "BalmoraTrans");
 
     removeTempFile(path1);
     removeTempFile(path2);
@@ -96,14 +96,14 @@ TEST_CASE("DictMerger identical values", "[i]")
     writeTempDict(path1,
         "{\n"
         "  \"CELL\": [\n"
-        "    { \"id\": \"Balmora\", \"original\": \"\", \"translation\": \"Balmora\", \"status\": \"translated\" }\n"
+        "    { \"id\": \"Balmora\", \"old\": \"\", \"new\": \"Balmora\", \"status\": \"translated\" }\n"
         "  ]\n"
         "}\n");
 
     writeTempDict(path2,
         "{\n"
         "  \"CELL\": [\n"
-        "    { \"id\": \"Balmora\", \"original\": \"\", \"translation\": \"Balmora\", \"status\": \"translated\" }\n"
+        "    { \"id\": \"Balmora\", \"old\": \"\", \"new\": \"Balmora\", \"status\": \"translated\" }\n"
         "  ]\n"
         "}\n");
 
@@ -111,7 +111,7 @@ TEST_CASE("DictMerger identical values", "[i]")
     const auto & chapter = merger.getDict().at(Tools::RecType::CELL);
     const auto * entry = chapter.find("Balmora");
     REQUIRE(entry != nullptr);
-    REQUIRE(entry->translation == "Balmora");
+    REQUIRE(entry->new_text == "Balmora");
     REQUIRE(chapter.size() == 1);
 
     removeTempFile(path1);
@@ -127,8 +127,8 @@ TEST_CASE("DictMerger duplicate values warning", "[i]")
     writeTempDict(path1,
         "{\n"
         "  \"CELL\": [\n"
-        "    { \"id\": \"Balmora, Guild of Fighters\", \"original\": \"\", \"translation\": \"Balmora\", \"status\": \"translated\" },\n"
-        "    { \"id\": \"Balmora, Guild of Mages\", \"original\": \"\", \"translation\": \"Balmora\", \"status\": \"translated\" }\n"
+        "    { \"id\": \"Balmora, Guild of Fighters\", \"old\": \"\", \"new\": \"Balmora\", \"status\": \"translated\" },\n"
+        "    { \"id\": \"Balmora, Guild of Mages\", \"old\": \"\", \"new\": \"Balmora\", \"status\": \"translated\" }\n"
         "  ]\n"
         "}\n");
 

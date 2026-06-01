@@ -50,8 +50,8 @@ TEST_CASE("DictWriter single record serialization", "[dictwriter]")
 
     auto & obj = root["CELL"][0];
     REQUIRE(obj["id"] == "Seyda Neen");
-    REQUIRE(obj["original"] == "Seyda Neen");
-    REQUIRE(obj["translation"] == "Sejda Neen");
+    REQUIRE(obj["old"] == "Seyda Neen");
+    REQUIRE(obj["new"] == "Sejda Neen");
     REQUIRE(obj["status"] == "translated");
 
     removeTempFile(path);
@@ -102,33 +102,33 @@ TEST_CASE("DictWriter round-trip with DictReader", "[dictwriter]")
 
     auto * cell1 = loaded.at(Tools::RecType::CELL).find("Balmora");
     REQUIRE(cell1 != nullptr);
-    REQUIRE(cell1->id == "Balmora");
-    REQUIRE(cell1->original == "Balmora");
-    REQUIRE(cell1->translation == "Balmora");
+    REQUIRE(cell1->key_text == "Balmora");
+    REQUIRE(cell1->old_text == "Balmora");
+    REQUIRE(cell1->new_text == "Balmora");
     REQUIRE(cell1->status == "auto_identical");
 
     auto * cell2 = loaded.at(Tools::RecType::CELL).find("Vivec");
     REQUIRE(cell2 != nullptr);
-    REQUIRE(cell2->translation == "Vivec PL");
+    REQUIRE(cell2->new_text == "Vivec PL");
     REQUIRE(cell2->status == "translated");
 
     auto * info1 = loaded.at(Tools::RecType::INFO).find("greeting^Hello traveler");
     REQUIRE(info1 != nullptr);
-    REQUIRE(info1->original == "Hello traveler");
-    REQUIRE(info1->translation == "Witaj wędrowcze");
+    REQUIRE(info1->old_text == "Hello traveler");
+    REQUIRE(info1->new_text == "Witaj wędrowcze");
 
     auto * info2 = loaded.at(Tools::RecType::INFO).find("farewell^Goodbye");
     REQUIRE(info2 != nullptr);
-    REQUIRE(info2->translation == "");
+    REQUIRE(info2->new_text == "");
     REQUIRE(info2->status == "untranslated");
 
     auto * fnam = loaded.at(Tools::RecType::FNAM).find("iron_sword^Iron Sword");
     REQUIRE(fnam != nullptr);
-    REQUIRE(fnam->translation == "Żelazny Miecz");
+    REQUIRE(fnam->new_text == "Żelazny Miecz");
 
     auto * gmst = loaded.at(Tools::RecType::GMST).find("sHealth");
     REQUIRE(gmst != nullptr);
-    REQUIRE(gmst->translation == "Zdrowie");
+    REQUIRE(gmst->new_text == "Zdrowie");
 
     removeTempFile(path);
 }
@@ -166,16 +166,16 @@ TEST_CASE("DictWriter special characters preserved", "[dictwriter]")
 
     auto * quotes = loaded.at(Tools::RecType::INFO).find("topic^He said \"hello\"");
     REQUIRE(quotes != nullptr);
-    REQUIRE(quotes->original == "He said \"hello\"");
-    REQUIRE(quotes->translation == "She said \"goodbye\"");
+    REQUIRE(quotes->old_text == "He said \"hello\"");
+    REQUIRE(quotes->new_text == "She said \"goodbye\"");
 
     auto * backslash = loaded.at(Tools::RecType::INFO).find("topic^Path: C:\\Games\\Morrowind");
     REQUIRE(backslash != nullptr);
-    REQUIRE(backslash->translation == "Path: C:\\Gry\\Morrowind");
+    REQUIRE(backslash->new_text == "Path: C:\\Gry\\Morrowind");
 
     auto * newline = loaded.at(Tools::RecType::INFO).find("topic^Line1\nLine2");
     REQUIRE(newline != nullptr);
-    REQUIRE(newline->translation == "Linia1\nLinia2");
+    REQUIRE(newline->new_text == "Linia1\nLinia2");
 
     removeTempFile(path);
 }
