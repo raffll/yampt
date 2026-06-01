@@ -58,7 +58,7 @@ private:
     bool detectWindows1250Encoding(
         const std::string & text);
 
-    EsmReader esm;
+    esm_reader_t esm;
     const DictMerger & merger;
 
     bool add_hyperlinks;

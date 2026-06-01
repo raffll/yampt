@@ -3,7 +3,7 @@
 #include "includes.hpp"
 #include "tools.hpp"
 
-class EsmReader
+class esm_reader_t
 {
 public:
     void selectRecord(size_t i);
@@ -36,8 +36,8 @@ public:
     const auto & getKey() { return key; }
     const auto & getValue() { return value; }
 
-    EsmReader() = default;
-    EsmReader(const std::string & path);
+    esm_reader_t() = default;
+    esm_reader_t(const std::string & path);
 
 private:
     void splitFile(
@@ -49,7 +49,7 @@ private:
         std::size_t & cur_size,
         std::string & cur_id,
         std::string & cur_text,
-        EsmReader::SubRecord & subrecord);
+        esm_reader_t::SubRecord & subrecord);
     void handleException(const std::exception & e);
 
     std::vector<tools_t::Record> records;

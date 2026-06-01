@@ -239,7 +239,7 @@ Alternatives considered:
 8. THE Editor SHALL support loading a Glossary dictionary (containing FNAM-derived name translations) as an additional reference source for annotations
 9. THE Editor SHALL support loading an NPC_FLAG dictionary (containing NPC gender flags) as an additional reference source for speaker annotations
 
-### Requirement 15a: Enchanted Item Indicator for FNAM Records
+### Requirement 18: Enchanted Item Indicator for FNAM Records
 
 **User Story:** As a translator, I want to see whether an item whose name I'm translating is enchanted, so that I can apply the appropriate naming convention (e.g. adding a prefix or suffix indicating magic).
 

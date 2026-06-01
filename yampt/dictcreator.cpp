@@ -1,6 +1,5 @@
 #include "dictcreator.hpp"
 
-
 dict_creator_t::dict_creator_t(
 	const std::string & plugin_path,
 	const tools_t::dict_t * base_dict
@@ -50,7 +49,7 @@ void dict_creator_t::make_dict()
 	make_dict_TEXT();
 	make_dict_RNAM();
 	make_dict_INDX();
-	make_dict_NPC_FLAG();
+	make_dict_FLAG();
 	make_dict_INFO();
 
 	if (is_make_mode)
@@ -232,7 +231,7 @@ void dict_creator_t::build_indexes()
 			esm_ref.setKey("NAME");
 			if (!esm_ref.getKey().exist)
 				continue;
-			npc_flag_index.insert({ esm_ref.getKey().text, i });
+			flag_index.insert({ esm_ref.getKey().text, i });
 			continue;
 		}
 
@@ -633,7 +632,7 @@ void dict_creator_t::make_dict_DIAL()
 }
 
 
-void dict_creator_t::make_dict_NPC_FLAG()
+void dict_creator_t::make_dict_FLAG()
 {
 	reset_counters();
 	for (size_t i = 0; i < esm.getRecords().size(); ++i)
@@ -653,8 +652,8 @@ void dict_creator_t::make_dict_NPC_FLAG()
 			? "F" : "M";
 
 		std::string old_text;
-		auto search = npc_flag_index.find(id);
-		if (search != npc_flag_index.end())
+		auto search = flag_index.find(id);
+		if (search != flag_index.end())
 		{
 			esm_ref.selectRecord(search->second);
 			esm_ref.setValue("FLAG");
@@ -897,7 +896,7 @@ dict_creator_t::patterns dict_creator_t::make_dict_DIAL_Unordered_Patterns()
 }
 
 
-std::string dict_creator_t::make_dict_CELL_Unordered_Pattern(EsmReader & esm_cur)
+std::string dict_creator_t::make_dict_CELL_Unordered_Pattern(esm_reader_t & esm_cur)
 {
 	std::string pattern;
 	esm_cur.setValue("DATA");
@@ -912,7 +911,7 @@ std::string dict_creator_t::make_dict_CELL_Unordered_Pattern(EsmReader & esm_cur
 }
 
 
-std::string dict_creator_t::make_dict_DIAL_Unordered_Pattern(EsmReader & esm_cur, size_t i)
+std::string dict_creator_t::make_dict_DIAL_Unordered_Pattern(esm_reader_t & esm_cur, size_t i)
 {
 	std::string pattern;
 	esm_cur.selectRecord(i + 1);

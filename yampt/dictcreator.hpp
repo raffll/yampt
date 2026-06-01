@@ -56,7 +56,7 @@ private:
     void make_dict_RNAM();
     void make_dict_INDX();
     void make_dict_DIAL();
-    void make_dict_NPC_FLAG();
+    void make_dict_FLAG();
     void make_dict_INFO();
     void make_dict_script(const ids & ids);
     void make_dict_FNAM_glossary();
@@ -66,22 +66,22 @@ private:
     void make_dict_CELL_Unordered_REGN();
     patterns_ext_t make_dict_CELL_Unordered_PatternsExt();
     patterns make_dict_CELL_Unordered_Patterns();
-    std::string make_dict_CELL_Unordered_Pattern(EsmReader & esm_cur);
+    std::string make_dict_CELL_Unordered_Pattern(esm_reader_t & esm_cur);
     void make_dict_CELL_Unordered_AddMissing(const patterns_ext_t & patterns_ext);
 
     void make_dict_DIAL_Unordered();
     patterns_ext_t make_dict_DIAL_Unordered_PatternsExt();
     patterns make_dict_DIAL_Unordered_Patterns();
-    std::string make_dict_DIAL_Unordered_Pattern(EsmReader & esm_cur, size_t i);
+    std::string make_dict_DIAL_Unordered_Pattern(esm_reader_t & esm_cur, size_t i);
     void make_dict_DIAL_Unordered_AddMissing(const patterns_ext_t & patterns_ext);
 
     void make_dict_Script_Unordered(const ids & ids);
     patterns_ext_t make_dict__Unordered_PatternsExt(const ids & ids);
     patterns make_dict__Unordered_Patterns(const ids & ids);
 
-    EsmReader esm;
-    EsmReader esm_ext;
-    EsmReader & esm_ref;
+    esm_reader_t esm;
+    esm_reader_t esm_ext;
+    esm_reader_t & esm_ref;
     const tools_t::dict_t * base_dict = nullptr;
     tools_t::dict_t dict;
     bool is_make_mode = false;
@@ -98,6 +98,6 @@ private:
     std::unordered_map<std::string, size_t> text_index;
     std::unordered_map<std::string, size_t> rnam_index;
     std::unordered_map<std::string, size_t> indx_index;
-    std::unordered_map<std::string, size_t> npc_flag_index;
+    std::unordered_map<std::string, size_t> flag_index;
     std::unordered_map<std::string, size_t> info_index;
 };

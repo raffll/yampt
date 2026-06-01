@@ -1,7 +1,7 @@
 ﻿#include "esmreader.hpp"
 
 
-EsmReader::EsmReader(const std::string & path)
+esm_reader_t::esm_reader_t(const std::string & path)
 {
     std::string content = tools_t::readFile(path);
 
@@ -13,7 +13,7 @@ EsmReader::EsmReader(const std::string & path)
 }
 
 
-void EsmReader::splitFile(
+void esm_reader_t::splitFile(
     const std::string & content,
     const std::string & path)
 {
@@ -61,7 +61,7 @@ void EsmReader::splitFile(
 }
 
 
-void EsmReader::setTime(const std::string & path)
+void esm_reader_t::setTime(const std::string & path)
 {
     if (is_loaded)
     {
@@ -70,7 +70,7 @@ void EsmReader::setTime(const std::string & path)
 }
 
 
-void EsmReader::selectRecord(size_t i)
+void esm_reader_t::selectRecord(size_t i)
 {
     if (is_loaded)
     {
@@ -81,7 +81,7 @@ void EsmReader::selectRecord(size_t i)
 }
 
 
-void EsmReader::replaceRecord(const std::string & content)
+void esm_reader_t::replaceRecord(const std::string & content)
 {
     if (is_loaded)
     {
@@ -92,7 +92,7 @@ void EsmReader::replaceRecord(const std::string & content)
 }
 
 
-void EsmReader::setModified(size_t i)
+void esm_reader_t::setModified(size_t i)
 {
     if (is_loaded)
     {
@@ -101,7 +101,7 @@ void EsmReader::setModified(size_t i)
 }
 
 
-void EsmReader::setKey(const std::string & id)
+void esm_reader_t::setKey(const std::string & id)
 {
     if (is_loaded)
     {
@@ -123,7 +123,7 @@ void EsmReader::setKey(const std::string & id)
 }
 
 
-void EsmReader::setValue(const std::string & id)
+void esm_reader_t::setValue(const std::string & id)
 {
     if (is_loaded)
     {
@@ -146,7 +146,7 @@ void EsmReader::setValue(const std::string & id)
 }
 
 
-void EsmReader::setNextValue(const std::string & id)
+void esm_reader_t::setNextValue(const std::string & id)
 {
     if (is_loaded && value.exist)
     {
@@ -173,12 +173,12 @@ void EsmReader::setNextValue(const std::string & id)
 }
 
 
-void EsmReader::mainLoop(
+void esm_reader_t::mainLoop(
     std::size_t & cur_pos,
     std::size_t & cur_size,
     std::string & cur_id,
     std::string & cur_text,
-    EsmReader::SubRecord & subrecord)
+    esm_reader_t::SubRecord & subrecord)
 {
     while (cur_pos != rec->content.size())
     {
@@ -214,7 +214,7 @@ void EsmReader::mainLoop(
 }
 
 
-void EsmReader::handleException(const std::exception & e)
+void esm_reader_t::handleException(const std::exception & e)
 {
     std::string cur_rec = tools_t::replaceNonReadableCharsWithDot(rec->content);
     tools_t::addLog("--> Error in function (possibly broken record)!\r\n");
@@ -224,7 +224,7 @@ void EsmReader::handleException(const std::exception & e)
 }
 
 
-size_t EsmReader::getModifiedCount()
+size_t esm_reader_t::getModifiedCount()
 {
     size_t count = 0;
     for (const auto & record : records)
