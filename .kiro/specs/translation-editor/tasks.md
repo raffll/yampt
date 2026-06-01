@@ -37,47 +37,47 @@ Implement `editor_state_t` that wraps dictionary loading/saving using the existi
 
 Implement the side-by-side panel layout with a draggable vertical splitter.
 
-- [ ] In `editor_app_t::render_panels()`, create two ImGui child windows side by side using `split_ratio`
-- [ ] Implement splitter drag logic (invisible button between panels that adjusts `split_ratio` on drag)
-- [ ] Ensure both panels maintain proportional sizing on window resize
-- [ ] Store `split_ratio` in `editor_config_t` for persistence
+- [x] In `editor_app_t::render_panels()`, create two ImGui child windows side by side using `split_ratio`
+- [x] Implement splitter drag logic (invisible button between panels that adjusts `split_ratio` on drag)
+- [x] Ensure both panels maintain proportional sizing on window resize
+- [x] Store `split_ratio` in `editor_config_t` for persistence
 
 ## Task 5: Table-Based Record Display (Left Panel)
 
 Render the user dictionary as a scrollable table with resizable columns in the left panel.
 
-- [ ] Use `ImGui::BeginTable` with columns: ID, Original Text, Translated Text, Status
-- [ ] Implement `ImGuiTableFlags_Resizable` for column width dragging
-- [ ] Use `ImGuiListClipper` for virtualized scrolling (only render visible rows)
-- [ ] Display record type as a prefix in the ID column (e.g. `CELL: Balmora`)
-- [ ] Display total record count and current scroll position in the panel header
-- [ ] Persist column widths in `editor_config_t`
+- [x] Use `ImGui::BeginTable` with columns: ID, Original Text, Translated Text, Status
+- [x] Implement `ImGuiTableFlags_Resizable` for column width dragging
+- [x] Use `ImGuiListClipper` for virtualized scrolling (only render visible rows)
+- [x] Display record type as a prefix in the ID column (e.g. `CELL: Balmora`)
+- [x] Display total record count and current scroll position in the panel header
+- [x] Persist column widths in `editor_config_t`
 
 ## Task 6: Table-Based Record Display (Right Panel)
 
 Render the source dictionary as a read-only scrollable table in the right panel, mirroring the left panel layout.
 
-- [ ] Reuse the same table rendering logic as Task 5 but with all fields read-only
-- [ ] Apply a slightly different background tint to distinguish from the editable panel
-- [ ] Implement independent vertical scrolling from the left panel
+- [x] Reuse the same table rendering logic as Task 5 but with all fields read-only
+- [x] Apply a slightly different background tint to distinguish from the editable panel
+- [x] Implement independent vertical scrolling from the left panel
 
 ## Task 7: Record Matching and Synchronized Scrolling
 
 Match records between panels by type+key and synchronize selection.
 
-- [ ] Build a lookup map from `(rec_type_t, key)` → row index for both panels
-- [ ] When the user selects a row in one panel, scroll the other panel to the matching record
-- [ ] Display empty placeholder rows in the right panel for records that exist only in the left panel
-- [ ] Highlight the matched record pair with a subtle selection color
+- [x] Build a lookup map from `(rec_type_t, key)` → row index for both panels
+- [x] When the user selects a row in one panel, scroll the other panel to the matching record
+- [x] Display empty placeholder rows in the right panel for records that exist only in the left panel
+- [x] Highlight the matched record pair with a subtle selection color
 
 ## Task 8: Inline Editing of Translation Values
 
 Enable editing Value fields in the left panel table.
 
-- [ ] On double-click of a Value cell, activate `ImGui::InputText` (single-line) or `ImGui::InputTextMultiline` (for TEXT/INFO types)
-- [ ] Confirm edit on Enter (single-line) or Ctrl+Enter (multi-line); cancel on Escape
-- [ ] On confirm, update the record in `editor_state_t`, call `mark_modified()`, and record in history
-- [ ] Auto-set status to `"translated"` when a value is manually edited
+- [x] On double-click of a Value cell, activate `ImGui::InputText` (single-line) or `ImGui::InputTextMultiline` (for TEXT/INFO types)
+- [x] Confirm edit on Enter (single-line) or Ctrl+Enter (multi-line); cancel on Escape
+- [x] On confirm, update the record in `editor_state_t`, call `mark_modified()`, and record in history
+- [x] Auto-set status to `"translated"` when a value is manually edited
 
 ## Task 9: Record Type Filtering
 
