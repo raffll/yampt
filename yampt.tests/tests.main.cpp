@@ -12,7 +12,7 @@ int main(int argc, char * argv[])
 
 	using namespace Catch::clara;
 	auto cli = session.cli() |
-	           Opt(g_master_path, "path")["--master-path"]("Path to master directory with ESM files (required)");
+	           Opt(g_master_path, "path")["--master-path"]("Path to master directory with ESM files");
 
 	session.cli(cli);
 
@@ -21,10 +21,7 @@ int main(int argc, char * argv[])
 		return ret;
 
 	if (g_master_path.empty())
-	{
-		std::cerr << "Error: --master-path is required\n";
-		return 1;
-	}
+		g_master_path = "C:/Users/rafal/OneDrive/OMEN/Morrowind/master/";
 
 	if (g_master_path.back() != '/' && g_master_path.back() != '\\')
 		g_master_path += '/';

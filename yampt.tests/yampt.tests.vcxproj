@@ -173,12 +173,8 @@
     <ClCompile Include="..\yampt\esm_reader.cpp" />
     <ClCompile Include="..\yampt\script_parser.cpp" />
     <ClCompile Include="..\yampt\tools.cpp" />
-    <ClCompile Include="tests.dict_creator.cpp" />
     <ClCompile Include="tests.dict_merger.cpp" />
-    <ClCompile Include="tests.dict_reader.cpp" />
-    <ClCompile Include="tests.dict_writer.cpp" />
-    <ClCompile Include="tests.esm_converter.cpp" />
-    <ClCompile Include="tests.esm_reader.cpp" />
+    <ClCompile Include="tests.integration.cpp" />
     <ClCompile Include="tests.main.cpp" />
     <ClCompile Include="tests.script_parser.cpp" />
     <ClCompile Include="tests.tools.cpp" />
