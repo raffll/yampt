@@ -93,6 +93,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -106,6 +107,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -121,6 +123,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -138,6 +141,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -150,33 +154,33 @@
     <None Include="cpp.hint" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\yampt\dictcreator.hpp" />
-    <ClInclude Include="..\yampt\dictmerger.hpp" />
-    <ClInclude Include="..\yampt\dictreader.hpp" />
-    <ClInclude Include="..\yampt\dictwriter.hpp" />
-    <ClInclude Include="..\yampt\esmconverter.hpp" />
-    <ClInclude Include="..\yampt\esmreader.hpp" />
-    <ClInclude Include="..\yampt\scriptparser.hpp" />
+    <ClInclude Include="..\yampt\dict_creator.hpp" />
+    <ClInclude Include="..\yampt\dict_merger.hpp" />
+    <ClInclude Include="..\yampt\dict_reader.hpp" />
+    <ClInclude Include="..\yampt\dict_writer.hpp" />
+    <ClInclude Include="..\yampt\esm_converter.hpp" />
+    <ClInclude Include="..\yampt\esm_reader.hpp" />
+    <ClInclude Include="..\yampt\script_parser.hpp" />
     <ClInclude Include="..\yampt\tools.hpp" />
-    <ClInclude Include="catch.hpp" />
+    <ClInclude Include="..\external\catch.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\yampt\dictcreator.cpp" />
-    <ClCompile Include="..\yampt\dictmerger.cpp" />
-    <ClCompile Include="..\yampt\dictreader.cpp" />
-    <ClCompile Include="..\yampt\dictwriter.cpp" />
-    <ClCompile Include="..\yampt\esmconverter.cpp" />
-    <ClCompile Include="..\yampt\esmreader.cpp" />
-    <ClCompile Include="..\yampt\scriptparser.cpp" />
+    <ClCompile Include="..\yampt\dict_creator.cpp" />
+    <ClCompile Include="..\yampt\dict_merger.cpp" />
+    <ClCompile Include="..\yampt\dict_reader.cpp" />
+    <ClCompile Include="..\yampt\dict_writer.cpp" />
+    <ClCompile Include="..\yampt\esm_converter.cpp" />
+    <ClCompile Include="..\yampt\esm_reader.cpp" />
+    <ClCompile Include="..\yampt\script_parser.cpp" />
     <ClCompile Include="..\yampt\tools.cpp" />
-    <ClCompile Include="tests.dictcreator.cpp" />
-    <ClCompile Include="tests.dictmerger.cpp" />
-    <ClCompile Include="tests.dictreader.cpp" />
-    <ClCompile Include="tests.dictwriter.cpp" />
-    <ClCompile Include="tests.esmconverter.cpp" />
-    <ClCompile Include="tests.esmreader.cpp" />
+    <ClCompile Include="tests.dict_creator.cpp" />
+    <ClCompile Include="tests.dict_merger.cpp" />
+    <ClCompile Include="tests.dict_reader.cpp" />
+    <ClCompile Include="tests.dict_writer.cpp" />
+    <ClCompile Include="tests.esm_converter.cpp" />
+    <ClCompile Include="tests.esm_reader.cpp" />
     <ClCompile Include="tests.main.cpp" />
-    <ClCompile Include="tests.scriptparser.cpp" />
+    <ClCompile Include="tests.script_parser.cpp" />
     <ClCompile Include="tests.tools.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

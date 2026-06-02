@@ -91,6 +91,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -104,6 +105,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -119,6 +121,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -137,6 +140,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(SolutionDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -146,28 +150,28 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="scriptparser.cpp" />
+    <ClCompile Include="script_parser.cpp" />
     <ClCompile Include="tools.cpp" />
-    <ClCompile Include="dictcreator.cpp" />
-    <ClCompile Include="dictmerger.cpp" />
-    <ClCompile Include="dictreader.cpp" />
-    <ClCompile Include="dictwriter.cpp" />
-    <ClCompile Include="esmconverter.cpp" />
-    <ClCompile Include="esmreader.cpp" />
+    <ClCompile Include="dict_creator.cpp" />
+    <ClCompile Include="dict_merger.cpp" />
+    <ClCompile Include="dict_reader.cpp" />
+    <ClCompile Include="dict_writer.cpp" />
+    <ClCompile Include="esm_converter.cpp" />
+    <ClCompile Include="esm_reader.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="userinterface.cpp" />
+    <ClCompile Include="user_interface.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="scriptparser.hpp" />
+    <ClInclude Include="script_parser.hpp" />
     <ClInclude Include="tools.hpp" />
-    <ClInclude Include="dictcreator.hpp" />
-    <ClInclude Include="dictmerger.hpp" />
-    <ClInclude Include="dictreader.hpp" />
-    <ClInclude Include="dictwriter.hpp" />
-    <ClInclude Include="esmconverter.hpp" />
-    <ClInclude Include="esmreader.hpp" />
+    <ClInclude Include="dict_creator.hpp" />
+    <ClInclude Include="dict_merger.hpp" />
+    <ClInclude Include="dict_reader.hpp" />
+    <ClInclude Include="dict_writer.hpp" />
+    <ClInclude Include="esm_converter.hpp" />
+    <ClInclude Include="esm_reader.hpp" />
     <ClInclude Include="includes.hpp" />
-    <ClInclude Include="userinterface.hpp" />
+    <ClInclude Include="user_interface.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -5,143 +5,152 @@
 class tools_t
 {
 public:
-    enum class rec_type_t
-    {
-        CELL,
-        DIAL,
-        INDX,
-        RNAM,
-        DESC,
-        GMST,
-        FNAM,
-        INFO,
-        TEXT,
-        BNAM,
-        SCTX,
+	enum class rec_type_t
+	{
+		cell,
+		dial,
+		indx,
+		rnam,
+		desc,
+		gmst,
+		fnam,
+		info,
+		text,
+		bnam,
+		sctx,
 
-        PGRD,
-        ANAM,
-        SCVR,
-        DNAM,
-        CNDT,
-        GMDT,
+		pgrd,
+		anam,
+		scvr,
+		dnam,
+		cndt,
+		gmdt,
 
-        Default,
-        REGN,
+		default_val,
+		regn,
 
-        NPC_FLAG,
-        Glossary,
+		npc_flag,
+		glossary,
 
-        Unknown,
-    };
+		unknown,
+	};
 
-    enum class CreatorMode
-    {
-        BASE
-    };
+	enum class creator_mode_t
+	{
+		base
+	};
 
-    enum class Encoding
-    {
-        UNKNOWN,
-        WINDOWS_1250
-    };
+	enum class encoding_t
+	{
+		unknown,
+		windows_1250
+	};
 
-    struct RecordEntry
-    {
-        std::string key_text;
-        std::string old_text;
-        std::string new_text;
-        std::string status;
-    };
+	struct record_entry_t
+	{
+		std::string key_text;
+		std::string old_text;
+		std::string new_text;
+		std::string status;
+	};
 
-    struct Chapter
-    {
-        std::vector<RecordEntry> records;
-        std::unordered_map<std::string, size_t> index;
+	struct chapter_t
+	{
+		std::vector<record_entry_t> records;
+		std::unordered_map<std::string, size_t> index;
 
-        bool insert(const RecordEntry & entry);
-        RecordEntry * find(const std::string & id);
-        const RecordEntry * find(const std::string & id) const;
-        size_t size() const { return records.size(); }
-        bool empty() const { return records.empty(); }
-    };
+		bool insert(const record_entry_t & entry);
+		record_entry_t * find(const std::string & id);
+		const record_entry_t * find(const std::string & id) const;
 
-    using dict_t = std::map<rec_type_t, Chapter>;
+		size_t size() const
+		{
+			return records.size();
+		}
 
-    struct Status
-    {
-        static constexpr const char * untranslated = "untranslated";
-        static constexpr const char * translated = "translated";
-        static constexpr const char * auto_identical = "auto_identical";
-        static constexpr const char * auto_heuristic = "auto_heuristic";
-        static constexpr const char * changed = "changed";
-        static constexpr const char * has_errors = "has_errors";
-    };
+		bool empty() const
+		{
+			return records.empty();
+		}
+	};
 
-    struct Entry
-    {
-        const std::string key_text;
-        std::string val_text;
-        const tools_t::rec_type_t type;
-        const std::string optional = "";
-    };
+	using dict_t = std::map<rec_type_t, chapter_t>;
 
-    struct Name
-    {
-        std::string full;
-        std::string name;
-        std::string ext;
+	struct status_t
+	{
+		static constexpr const char * untranslated = "untranslated";
+		static constexpr const char * translated = "translated";
+		static constexpr const char * auto_identical = "auto_identical";
+		static constexpr const char * auto_heuristic = "auto_heuristic";
+		static constexpr const char * changed = "changed";
+		static constexpr const char * has_errors = "has_errors";
+	};
 
-        void setName(const std::string & path)
-        {
-            full = path.substr(path.find_last_of("\\/") + 1);
-            name = full.substr(0, full.find_last_of("."));
-            ext = full.substr(full.rfind("."));
-        }
-    };
+	struct entry_t
+	{
+		const std::string key_text;
+		std::string val_text;
+		const tools_t::rec_type_t type;
+		const std::string optional = "";
+	};
 
-    struct Record
-    {
-        const std::string id;
-        std::string content;
-        size_t size = 0;
-        bool modified = false;
-    };
+	struct name_t
+	{
+		std::string full;
+		std::string name;
+		std::string ext;
 
-    static const std::vector<std::string> keywords;
+		void set_name(const std::string & path)
+		{
+			full = path.substr(path.find_last_of("\\/") + 1);
+			name = full.substr(0, full.find_last_of("."));
+			ext = full.substr(full.rfind("."));
+		}
+	};
 
-    static std::string readFile(const std::string & path);
-    static void writeText(
-        const std::string & text,
-        const std::string & name);
-    static void writeFile(
-        const std::vector<Record> & records,
-        const std::string & name);
-    static void createFile(
-        const std::vector<Record> & records,
-        const std::string & name);
-    static size_t getNumberOfElementsInDict(const dict_t & dict);
-    static size_t convertStringByteArrayToUInt(const std::string & str);
-    static std::string convertUIntToStringByteArray(const size_t size);
-    static bool caseInsensitiveStringCmp(std::string lhs, std::string rhs);
-    static std::string eraseNullChars(std::string str);
-    static std::string trimCR(std::string str);
-    static std::string replaceNonReadableCharsWithDot(const std::string & str);
-    static void addLog(
-        const std::string & entry,
-        const bool silent = false);
-    static std::string getLog() { return log1 + log2; }
-    static bool hasError() { return error_flag; }
-    static void resetLog();
-    static dict_t initializeDict();
-    static std::string type2Str(tools_t::rec_type_t type);
-    static rec_type_t str2Type(const std::string & str);
-    static std::string getDialogType(const std::string & content);
-    static std::string getINDX(const std::string & content);
-    static bool isFNAM(const std::string & rec_id);
+	struct record_t
+	{
+		const std::string id;
+		std::string content;
+		size_t size = 0;
+		bool modified = false;
+	};
+
+	static const std::vector<std::string> keywords;
+
+	static std::string read_file(const std::string & path);
+	static void write_text(const std::string & text, const std::string & name);
+	static void write_file(const std::vector<record_t> & records, const std::string & name);
+	static void create_file(const std::vector<record_t> & records, const std::string & name);
+	static size_t get_number_of_elements_in_dict(const dict_t & dict);
+	static size_t convert_string_byte_array_to_uint(const std::string & str);
+	static std::string convert_uint_to_string_byte_array(const size_t size);
+	static bool case_insensitive_string_cmp(std::string lhs, std::string rhs);
+	static std::string erase_null_chars(std::string str);
+	static std::string trim_cr(std::string str);
+	static std::string replace_non_readable_chars_with_dot(const std::string & str);
+	static void add_log(const std::string & entry, const bool silent = false);
+
+	static std::string get_log()
+	{
+		return log1 + log2;
+	}
+
+	static bool has_error()
+	{
+		return error_flag;
+	}
+
+	static void reset_log();
+	static dict_t initialize_dict();
+	static std::string type_to_str(tools_t::rec_type_t type);
+	static rec_type_t str_to_type(const std::string & str);
+	static std::string get_dialog_type(const std::string & content);
+	static std::string get_indx(const std::string & content);
+	static bool is_fnam(const std::string & rec_id);
 
 private:
-    static std::string log1;
-    static std::string log2;
-    static bool error_flag;
+	static std::string log1;
+	static std::string log2;
+	static bool error_flag;
 };

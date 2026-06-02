@@ -5,10 +5,6 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx</Extensions>
     </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx</Extensions>
-    </Filter>
     <Filter Include="imgui">
       <UniqueIdentifier>{B1C3D4E5-F6A7-8901-BCDE-F12345678901}</UniqueIdentifier>
     </Filter>
@@ -23,99 +19,126 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="imgui\imgui.cpp">
+    <ClCompile Include="..\external\imgui\imgui.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="imgui\imgui_demo.cpp">
+    <ClCompile Include="..\external\imgui\imgui_demo.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="imgui\imgui_draw.cpp">
+    <ClCompile Include="..\external\imgui\imgui_draw.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="imgui\imgui_tables.cpp">
+    <ClCompile Include="..\external\imgui\imgui_tables.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="imgui\imgui_widgets.cpp">
+    <ClCompile Include="..\external\imgui\imgui_widgets.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="imgui\backends\imgui_impl_sdl2.cpp">
+    <ClCompile Include="..\external\imgui\backends\imgui_impl_sdl2.cpp">
       <Filter>imgui\backends</Filter>
     </ClCompile>
-    <ClCompile Include="imgui\backends\imgui_impl_opengl3.cpp">
+    <ClCompile Include="..\external\imgui\backends\imgui_impl_opengl3.cpp">
       <Filter>imgui\backends</Filter>
     </ClCompile>
     <ClCompile Include="..\yampt\tools.cpp">
       <Filter>yampt (shared)</Filter>
     </ClCompile>
-    <ClCompile Include="..\yampt\dictreader.cpp">
+    <ClCompile Include="..\yampt\dict_reader.cpp">
       <Filter>yampt (shared)</Filter>
     </ClCompile>
-    <ClCompile Include="..\yampt\dictwriter.cpp">
+    <ClCompile Include="..\yampt\dict_writer.cpp">
       <Filter>yampt (shared)</Filter>
     </ClCompile>
-    <ClCompile Include="..\yampt\dictmerger.cpp">
+    <ClCompile Include="..\yampt\dict_merger.cpp">
       <Filter>yampt (shared)</Filter>
     </ClCompile>
-    <ClCompile Include="..\yampt\dictcreator.cpp">
+    <ClCompile Include="..\yampt\dict_creator.cpp">
       <Filter>yampt (shared)</Filter>
     </ClCompile>
-    <ClCompile Include="..\yampt\esmreader.cpp">
+    <ClCompile Include="..\yampt\esm_reader.cpp">
       <Filter>yampt (shared)</Filter>
     </ClCompile>
-    <ClCompile Include="..\yampt\esmconverter.cpp">
+    <ClCompile Include="..\yampt\esm_converter.cpp">
       <Filter>yampt (shared)</Filter>
     </ClCompile>
-    <ClCompile Include="..\yampt\scriptparser.cpp">
+    <ClCompile Include="..\yampt\script_parser.cpp">
       <Filter>yampt (shared)</Filter>
+    </ClCompile>
+    <ClCompile Include="editor_app.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor_config.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor_state.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="search_manager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="validation_manager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="history_manager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="syntax_highlighter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="annotation_manager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="base_dict_manager.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="imgui\imgui.h">
+    <ClInclude Include="..\external\imgui\imgui.h">
       <Filter>imgui</Filter>
     </ClInclude>
-    <ClInclude Include="imgui\imconfig.h">
+    <ClInclude Include="..\external\imgui\imconfig.h">
       <Filter>imgui</Filter>
     </ClInclude>
-    <ClInclude Include="imgui\imgui_internal.h">
+    <ClInclude Include="..\external\imgui\imgui_internal.h">
       <Filter>imgui</Filter>
     </ClInclude>
-    <ClInclude Include="imgui\imstb_rectpack.h">
+    <ClInclude Include="..\external\imgui\imstb_rectpack.h">
       <Filter>imgui</Filter>
     </ClInclude>
-    <ClInclude Include="imgui\imstb_textedit.h">
+    <ClInclude Include="..\external\imgui\imstb_textedit.h">
       <Filter>imgui</Filter>
     </ClInclude>
-    <ClInclude Include="imgui\imstb_truetype.h">
+    <ClInclude Include="..\external\imgui\imstb_truetype.h">
       <Filter>imgui</Filter>
     </ClInclude>
-    <ClInclude Include="imgui\backends\imgui_impl_sdl2.h">
+    <ClInclude Include="..\external\imgui\backends\imgui_impl_sdl2.h">
       <Filter>imgui\backends</Filter>
     </ClInclude>
-    <ClInclude Include="imgui\backends\imgui_impl_opengl3.h">
+    <ClInclude Include="..\external\imgui\backends\imgui_impl_opengl3.h">
       <Filter>imgui\backends</Filter>
     </ClInclude>
     <ClInclude Include="..\yampt\tools.hpp">
       <Filter>yampt (shared)</Filter>
     </ClInclude>
-    <ClInclude Include="..\yampt\dictreader.hpp">
+    <ClInclude Include="..\yampt\dict_reader.hpp">
       <Filter>yampt (shared)</Filter>
     </ClInclude>
-    <ClInclude Include="..\yampt\dictwriter.hpp">
+    <ClInclude Include="..\yampt\dict_writer.hpp">
       <Filter>yampt (shared)</Filter>
     </ClInclude>
-    <ClInclude Include="..\yampt\dictmerger.hpp">
+    <ClInclude Include="..\yampt\dict_merger.hpp">
       <Filter>yampt (shared)</Filter>
     </ClInclude>
-    <ClInclude Include="..\yampt\dictcreator.hpp">
+    <ClInclude Include="..\yampt\dict_creator.hpp">
       <Filter>yampt (shared)</Filter>
     </ClInclude>
-    <ClInclude Include="..\yampt\esmreader.hpp">
+    <ClInclude Include="..\yampt\esm_reader.hpp">
       <Filter>yampt (shared)</Filter>
     </ClInclude>
-    <ClInclude Include="..\yampt\esmconverter.hpp">
+    <ClInclude Include="..\yampt\esm_converter.hpp">
       <Filter>yampt (shared)</Filter>
     </ClInclude>
-    <ClInclude Include="..\yampt\scriptparser.hpp">
+    <ClInclude Include="..\yampt\script_parser.hpp">
       <Filter>yampt (shared)</Filter>
     </ClInclude>
     <ClInclude Include="..\yampt\includes.hpp">

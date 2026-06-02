@@ -92,7 +92,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)imgui;$(ProjectDir)imgui\backends;$(SolutionDir)vcpkg_installed\$(VcpkgTriplet)\include\SDL2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)external\imgui;$(SolutionDir)external\imgui\backends;$(SolutionDir)vcpkg_installed\$(VcpkgTriplet)\include\SDL2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -107,7 +107,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)imgui;$(ProjectDir)imgui\backends;$(SolutionDir)vcpkg_installed\$(VcpkgTriplet)\include\SDL2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)external\imgui;$(SolutionDir)external\imgui\backends;$(SolutionDir)vcpkg_installed\$(VcpkgTriplet)\include\SDL2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -124,7 +124,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)imgui;$(ProjectDir)imgui\backends;$(SolutionDir)vcpkg_installed\$(VcpkgTriplet)\include\SDL2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)external\imgui;$(SolutionDir)external\imgui\backends;$(SolutionDir)vcpkg_installed\$(VcpkgTriplet)\include\SDL2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -144,7 +144,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir)imgui;$(ProjectDir)imgui\backends;$(SolutionDir)vcpkg_installed\$(VcpkgTriplet)\include\SDL2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)external\imgui;$(SolutionDir)external\imgui\backends;$(SolutionDir)vcpkg_installed\$(VcpkgTriplet)\include\SDL2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -159,21 +159,21 @@
     <ClCompile Include="editor_app.cpp" />
     <ClCompile Include="editor_config.cpp" />
     <ClCompile Include="editor_state.cpp" />
-    <ClCompile Include="imgui\imgui.cpp" />
-    <ClCompile Include="imgui\imgui_demo.cpp" />
-    <ClCompile Include="imgui\imgui_draw.cpp" />
-    <ClCompile Include="imgui\imgui_tables.cpp" />
-    <ClCompile Include="imgui\imgui_widgets.cpp" />
-    <ClCompile Include="imgui\backends\imgui_impl_sdl2.cpp" />
-    <ClCompile Include="imgui\backends\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="..\external\imgui\imgui.cpp" />
+    <ClCompile Include="..\external\imgui\imgui_demo.cpp" />
+    <ClCompile Include="..\external\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\external\imgui\imgui_tables.cpp" />
+    <ClCompile Include="..\external\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="..\external\imgui\backends\imgui_impl_sdl2.cpp" />
+    <ClCompile Include="..\external\imgui\backends\imgui_impl_opengl3.cpp" />
     <ClCompile Include="..\yampt\tools.cpp" />
-    <ClCompile Include="..\yampt\dictreader.cpp" />
-    <ClCompile Include="..\yampt\dictwriter.cpp" />
-    <ClCompile Include="..\yampt\dictmerger.cpp" />
-    <ClCompile Include="..\yampt\dictcreator.cpp" />
-    <ClCompile Include="..\yampt\esmreader.cpp" />
-    <ClCompile Include="..\yampt\esmconverter.cpp" />
-    <ClCompile Include="..\yampt\scriptparser.cpp" />
+    <ClCompile Include="..\yampt\dict_reader.cpp" />
+    <ClCompile Include="..\yampt\dict_writer.cpp" />
+    <ClCompile Include="..\yampt\dict_merger.cpp" />
+    <ClCompile Include="..\yampt\dict_creator.cpp" />
+    <ClCompile Include="..\yampt\esm_reader.cpp" />
+    <ClCompile Include="..\yampt\esm_converter.cpp" />
+    <ClCompile Include="..\yampt\script_parser.cpp" />
     <ClCompile Include="search_manager.cpp" />
     <ClCompile Include="validation_manager.cpp" />
     <ClCompile Include="history_manager.cpp" />
@@ -182,33 +182,23 @@
     <ClCompile Include="base_dict_manager.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="editor_app.hpp" />
-    <ClInclude Include="editor_config.hpp" />
-    <ClInclude Include="editor_state.hpp" />
-    <ClInclude Include="imgui\imgui.h" />
-    <ClInclude Include="imgui\imconfig.h" />
-    <ClInclude Include="imgui\imgui_internal.h" />
-    <ClInclude Include="imgui\imstb_rectpack.h" />
-    <ClInclude Include="imgui\imstb_textedit.h" />
-    <ClInclude Include="imgui\imstb_truetype.h" />
-    <ClInclude Include="imgui\backends\imgui_impl_sdl2.h" />
-    <ClInclude Include="imgui\backends\imgui_impl_opengl3.h" />
+    <ClInclude Include="..\external\imgui\imgui.h" />
+    <ClInclude Include="..\external\imgui\imconfig.h" />
+    <ClInclude Include="..\external\imgui\imgui_internal.h" />
+    <ClInclude Include="..\external\imgui\imstb_rectpack.h" />
+    <ClInclude Include="..\external\imgui\imstb_textedit.h" />
+    <ClInclude Include="..\external\imgui\imstb_truetype.h" />
+    <ClInclude Include="..\external\imgui\backends\imgui_impl_sdl2.h" />
+    <ClInclude Include="..\external\imgui\backends\imgui_impl_opengl3.h" />
     <ClInclude Include="..\yampt\tools.hpp" />
-    <ClInclude Include="..\yampt\dictreader.hpp" />
-    <ClInclude Include="..\yampt\dictwriter.hpp" />
-    <ClInclude Include="..\yampt\dictmerger.hpp" />
-    <ClInclude Include="..\yampt\dictcreator.hpp" />
-    <ClInclude Include="..\yampt\esmreader.hpp" />
-    <ClInclude Include="..\yampt\esmconverter.hpp" />
-    <ClInclude Include="..\yampt\scriptparser.hpp" />
+    <ClInclude Include="..\yampt\dict_reader.hpp" />
+    <ClInclude Include="..\yampt\dict_writer.hpp" />
+    <ClInclude Include="..\yampt\dict_merger.hpp" />
+    <ClInclude Include="..\yampt\dict_creator.hpp" />
+    <ClInclude Include="..\yampt\esm_reader.hpp" />
+    <ClInclude Include="..\yampt\esm_converter.hpp" />
+    <ClInclude Include="..\yampt\script_parser.hpp" />
     <ClInclude Include="..\yampt\includes.hpp" />
-    <ClInclude Include="search_manager.hpp" />
-    <ClInclude Include="validation_manager.hpp" />
-    <ClInclude Include="history_manager.hpp" />
-    <ClInclude Include="status_colors.hpp" />
-    <ClInclude Include="syntax_highlighter.hpp" />
-    <ClInclude Include="annotation_manager.hpp" />
-    <ClInclude Include="base_dict_manager.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
