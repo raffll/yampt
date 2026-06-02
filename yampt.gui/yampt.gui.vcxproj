@@ -174,6 +174,12 @@
     <ClCompile Include="..\yampt\esmreader.cpp" />
     <ClCompile Include="..\yampt\esmconverter.cpp" />
     <ClCompile Include="..\yampt\scriptparser.cpp" />
+    <ClCompile Include="search_manager.cpp" />
+    <ClCompile Include="validation_manager.cpp" />
+    <ClCompile Include="history_manager.cpp" />
+    <ClCompile Include="syntax_highlighter.cpp" />
+    <ClCompile Include="annotation_manager.cpp" />
+    <ClCompile Include="base_dict_manager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="editor_app.hpp" />
@@ -196,6 +202,13 @@
     <ClInclude Include="..\yampt\esmconverter.hpp" />
     <ClInclude Include="..\yampt\scriptparser.hpp" />
     <ClInclude Include="..\yampt\includes.hpp" />
+    <ClInclude Include="search_manager.hpp" />
+    <ClInclude Include="validation_manager.hpp" />
+    <ClInclude Include="history_manager.hpp" />
+    <ClInclude Include="status_colors.hpp" />
+    <ClInclude Include="syntax_highlighter.hpp" />
+    <ClInclude Include="annotation_manager.hpp" />
+    <ClInclude Include="base_dict_manager.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

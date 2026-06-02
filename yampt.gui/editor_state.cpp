@@ -51,6 +51,11 @@ tools_t::dict_t & editor_state_t::get_user_dict()
     return user_dict_;
 }
 
+const tools_t::dict_t & editor_state_t::get_user_dict() const
+{
+    return user_dict_;
+}
+
 const tools_t::dict_t & editor_state_t::get_source_dict() const
 {
     return source_dict_;

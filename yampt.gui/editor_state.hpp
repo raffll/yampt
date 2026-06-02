@@ -21,6 +21,7 @@ public:
     bool save_user_dict_as(const std::string & path);
 
     tools_t::dict_t & get_user_dict();
+    const tools_t::dict_t & get_user_dict() const;
     const tools_t::dict_t & get_source_dict() const;
 
     const std::string & get_user_path() const;
