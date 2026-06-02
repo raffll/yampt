@@ -57,6 +57,7 @@ private:
 	int editing_row_ = -1;
 	std::vector<char> edit_buffer_;
 	bool edit_multiline_ = false;
+	bool edit_focus_pending_ = false;
 
 	int spell_ctx_row_ = -1;
 	std::string spell_ctx_word_;
@@ -122,6 +123,7 @@ private:
 	void render_main_panel();
 	void render_status_bar();
 	void render_bottom_panel();
+	void render_editor_tab();
 	void render_annotations_tab();
 	void render_history_tab();
 	void render_annotations_panel();

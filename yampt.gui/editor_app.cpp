@@ -57,6 +57,21 @@ void editor_app_t::frame()
 
 	rebuild_row_data();
 
+	const ImGuiViewport * viewport = ImGui::GetMainViewport();
+	ImGui::SetNextWindowPos(viewport->WorkPos);
+	ImGui::SetNextWindowSize(viewport->WorkSize);
+
+	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse |
+	                                ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+	                                ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus |
+	                                ImGuiWindowFlags_MenuBar;
+
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(4.0f, 4.0f));
+	ImGui::Begin("##MainWindow", nullptr, window_flags);
+	ImGui::PopStyleVar(3);
+
 	render_menu_bar();
 	render_toolbar();
 	render_status_summary_bar();
@@ -112,6 +127,8 @@ void editor_app_t::frame()
 
 	render_status_bar();
 	render_dialogs();
+
+	ImGui::End();
 }
 
 void editor_app_t::shutdown()
@@ -187,7 +204,7 @@ void editor_app_t::rebuild_row_data()
 
 void editor_app_t::render_menu_bar()
 {
-	if (!ImGui::BeginMainMenuBar())
+	if (!ImGui::BeginMenuBar())
 		return;
 
 	if (ImGui::BeginMenu("File"))
@@ -327,7 +344,7 @@ void editor_app_t::render_menu_bar()
 		ImGui::EndMenu();
 	}
 
-	ImGui::EndMainMenuBar();
+	ImGui::EndMenuBar();
 }
 
 void editor_app_t::render_toolbar()
@@ -824,6 +841,7 @@ void editor_app_t::render_main_panel()
 					editing_row_ = -1;
 				}
 				selected_row = i;
+				selected_row_left_ = i;
 			}
 
 			bool double_clicked = ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
@@ -858,130 +876,10 @@ void editor_app_t::render_main_panel()
 			}
 
 			ImGui::TableSetColumnIndex(1);
-			if (row_ref.type == tools_t::rec_type_t::sctx || row_ref.type == tools_t::rec_type_t::text)
-				render_text_with_syntax(entry.old_text, row_ref.type);
-			else if (row_ref.type == tools_t::rec_type_t::info)
-				render_text_with_topic_highlights(entry.old_text);
-			else
-				ImGui::TextUnformatted(entry.old_text.c_str());
+			ImGui::TextUnformatted(entry.old_text.c_str());
 
 			ImGui::TableSetColumnIndex(2);
-
-			if (editing_row_ == i)
-			{
-				ImGui::PushItemWidth(-1);
-				bool commit = false;
-				bool cancel = false;
-
-				if (edit_multiline_)
-				{
-					ImGui::InputTextMultiline(
-					    "##edit",
-					    edit_buffer_.data(),
-					    edit_buffer_.size(),
-					    ImVec2(-1, row_height * 4),
-					    ImGuiInputTextFlags_AllowTabInput);
-
-					if (ImGui::IsKeyPressed(ImGuiKey_Enter) && ImGui::GetIO().KeyCtrl)
-						commit = true;
-					if (ImGui::IsKeyPressed(ImGuiKey_Escape))
-						cancel = true;
-				}
-				else
-				{
-					if (ImGui::InputText(
-					        "##edit", edit_buffer_.data(), edit_buffer_.size(), ImGuiInputTextFlags_EnterReturnsTrue))
-						commit = true;
-					if (ImGui::IsKeyPressed(ImGuiKey_Escape))
-						cancel = true;
-				}
-
-				if (commit)
-				{
-					std::string new_value(edit_buffer_.data());
-					if (new_value != entry.new_text)
-					{
-						auto & dict = state_.get_user_dict();
-						auto mit = dict.find(row_ref.type);
-						if (mit != dict.end() && row_ref.record_index < mit->second.records.size())
-						{
-							auto & rec = mit->second.records[row_ref.record_index];
-							history_.record_change(row_ref.type, rec.key_text, rec.new_text, new_value);
-							rec.new_text = new_value;
-							rec.status = tools_t::status_t::translated;
-							auto vr = validation_.validate(row_ref.type, new_value);
-							if (vr.level == validation_level_t::error)
-								rec.status = tools_t::status_t::has_errors;
-							state_.mark_modified(row_ref.type, row_ref.record_index);
-							if (row_ref.type == tools_t::rec_type_t::dial)
-								annotations_mgr_.rebuild(state_, base_dicts_.get_merged_dict());
-						}
-					}
-					editing_row_ = -1;
-				}
-
-				if (cancel)
-					editing_row_ = -1;
-
-				ImGui::PopItemWidth();
-			}
-			else
-			{
-				if (row_ref.type == tools_t::rec_type_t::sctx || row_ref.type == tools_t::rec_type_t::text)
-					render_text_with_syntax(entry.new_text, row_ref.type);
-				else if (row_ref.type == tools_t::rec_type_t::info)
-					render_text_with_topic_highlights(entry.new_text);
-				else
-					render_translation_with_spellcheck(entry.new_text, i);
-
-				if (ImGui::BeginPopup("##spell_popup"))
-				{
-					if (!spell_ctx_word_.empty())
-					{
-						auto suggestions = spell_checker_.suggest(spell_ctx_word_);
-						for (size_t si = 0; si < suggestions.size() && si < 8; ++si)
-						{
-							if (ImGui::MenuItem(suggestions[si].c_str()))
-							{
-								auto & dict = state_.get_user_dict();
-								auto mit = dict.find(row_ref.type);
-								if (mit != dict.end() && row_ref.record_index < mit->second.records.size())
-								{
-									auto & rec = mit->second.records[row_ref.record_index];
-									std::string new_text = rec.new_text.substr(0, spell_ctx_start_) +
-									                       suggestions[si] +
-									                       rec.new_text.substr(spell_ctx_end_);
-									history_.record_change(row_ref.type, rec.key_text, rec.new_text, new_text);
-									rec.new_text = new_text;
-									state_.mark_modified(row_ref.type, row_ref.record_index);
-								}
-								spell_ctx_word_.clear();
-							}
-						}
-						if (!suggestions.empty())
-							ImGui::Separator();
-						if (ImGui::MenuItem("Add to dictionary"))
-						{
-							spell_checker_.add_to_user_dict(spell_ctx_word_);
-							spell_ctx_word_.clear();
-						}
-					}
-					ImGui::EndPopup();
-				}
-
-				if (double_clicked)
-				{
-					editing_row_ = i;
-					edit_multiline_ =
-					    (row_ref.type == tools_t::rec_type_t::text || row_ref.type == tools_t::rec_type_t::info);
-					edit_buffer_.resize(EDIT_BUFFER_SIZE);
-					std::fill(edit_buffer_.begin(), edit_buffer_.end(), '\0');
-					size_t copy_len = entry.new_text.size();
-					if (copy_len > EDIT_BUFFER_SIZE - 1)
-						copy_len = EDIT_BUFFER_SIZE - 1;
-					std::copy_n(entry.new_text.begin(), copy_len, edit_buffer_.begin());
-				}
-			}
+			ImGui::TextUnformatted(entry.new_text.c_str());
 
 			ImGui::TableSetColumnIndex(3);
 			ImVec4 status_color = get_status_color(entry.status);
@@ -1490,51 +1388,60 @@ void editor_app_t::render_text_with_topic_highlights(const std::string & text)
 
 	if (annotations.empty())
 	{
-		ImGui::TextUnformatted(text.c_str());
+		ImGui::TextWrapped("%s", text.c_str());
 		return;
 	}
 
-	std::sort(
-	    annotations.begin(),
-	    annotations.end(),
-	    [](const annotation_t & a, const annotation_t & b) { return a.start < b.start; });
+	ImVec2 start_pos = ImGui::GetCursorScreenPos();
+	float wrap_width = ImGui::GetContentRegionAvail().x;
 
-	ImVec4 topic_color(0.3f, 0.5f, 0.8f, 1.0f);
-	size_t pos = 0;
-	bool first_segment = true;
+	ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + wrap_width);
+	ImGui::TextUnformatted(text.c_str());
+	ImGui::PopTextWrapPos();
+
+	ImDrawList * draw_list = ImGui::GetWindowDrawList();
+	ImU32 highlight_color = IM_COL32(70, 130, 200, 60);
+	ImFont * font = ImGui::GetFont();
+	float font_size = ImGui::GetFontSize();
 
 	for (const auto & ann : annotations)
 	{
-		if (ann.start < pos)
+		if (ann.start >= text.size() || ann.end > text.size())
 			continue;
 
-		if (ann.start > pos)
+		const char * text_start = text.c_str();
+		const char * text_end = text.c_str() + text.size();
+		const char * word_start = text.c_str() + ann.start;
+		const char * word_end = text.c_str() + ann.end;
+
+		float line_x = start_pos.x;
+		float line_y = start_pos.y;
+		const char * line_start = text_start;
+		const char * s = text_start;
+
+		while (s < word_start)
 		{
-			if (!first_segment)
-				ImGui::SameLine(0, 0);
-			ImGui::TextUnformatted(text.c_str() + pos, text.c_str() + ann.start);
-			first_segment = false;
+			const char * line_end = font->CalcWordWrapPositionA(font_size / font->FontSize, s, text_end, wrap_width);
+			if (line_end == s)
+				++line_end;
+
+			if (word_start >= s && word_start < line_end)
+				break;
+
+			line_start = line_end;
+			while (line_start < text_end && (*line_start == ' ' || *line_start == '\n'))
+				++line_start;
+			s = line_start;
+			line_y += font_size;
 		}
 
-		if (!first_segment)
-			ImGui::SameLine(0, 0);
+		float word_offset_x = font->CalcTextSizeA(font_size, FLT_MAX, 0.0f, s, word_start).x;
+		float word_width = font->CalcTextSizeA(font_size, FLT_MAX, 0.0f, word_start, word_end).x;
 
-		ImGui::PushStyleColor(ImGuiCol_Text, topic_color);
-		ImGui::TextUnformatted(text.c_str() + ann.start, text.c_str() + ann.end);
-		ImGui::PopStyleColor();
+		ImVec2 rect_min(start_pos.x + word_offset_x, line_y);
+		ImVec2 rect_max(start_pos.x + word_offset_x + word_width, line_y + font_size);
 
-		if (ImGui::IsItemHovered())
-			ImGui::SetTooltip("%s", ann.new_text.c_str());
-
-		first_segment = false;
-		pos = ann.end;
-	}
-
-	if (pos < text.size())
-	{
-		if (!first_segment)
-			ImGui::SameLine(0, 0);
-		ImGui::TextUnformatted(text.c_str() + pos, text.c_str() + text.size());
+		draw_list->AddRectFilled(rect_min, rect_max, highlight_color);
 	}
 }
 
@@ -1659,10 +1566,20 @@ void editor_app_t::render_bottom_panel()
 		return;
 	}
 
-	if (ImGui::BeginTabItem("Annotations"))
+	if (ImGui::BeginTabItem("Editor"))
 	{
 		active_bottom_tab_ = 0;
-		if (selected_row_left_ < 0 || selected_row_left_ >= static_cast<int>(left_rows_.size()))
+		if (selected_row_ < 0 || selected_row_ >= static_cast<int>(left_rows_.size()))
+			ImGui::TextDisabled("No record selected");
+		else
+			render_editor_tab();
+		ImGui::EndTabItem();
+	}
+
+	if (ImGui::BeginTabItem("Annotations"))
+	{
+		active_bottom_tab_ = 1;
+		if (selected_row_ < 0 || selected_row_ >= static_cast<int>(left_rows_.size()))
 			ImGui::TextDisabled("No record selected");
 		else
 			render_annotations_tab();
@@ -1671,8 +1588,8 @@ void editor_app_t::render_bottom_panel()
 
 	if (ImGui::BeginTabItem("History"))
 	{
-		active_bottom_tab_ = 1;
-		if (selected_row_left_ < 0 || selected_row_left_ >= static_cast<int>(left_rows_.size()))
+		active_bottom_tab_ = 2;
+		if (selected_row_ < 0 || selected_row_ >= static_cast<int>(left_rows_.size()))
 			ImGui::TextDisabled("No record selected");
 		else
 			render_history_tab();
@@ -1683,9 +1600,71 @@ void editor_app_t::render_bottom_panel()
 	ImGui::EndChild();
 }
 
+void editor_app_t::render_editor_tab()
+{
+	const auto & row = left_rows_[selected_row_];
+	auto it = state_.get_user_dict().find(row.type);
+	if (it == state_.get_user_dict().end() || row.record_index >= it->second.records.size())
+		return;
+
+	auto & entry = it->second.records[row.record_index];
+	float panel_width = ImGui::GetContentRegionAvail().x * 0.5f - 4.0f;
+	float panel_height = ImGui::GetContentRegionAvail().y;
+
+	ImGui::BeginChild("##editor_original", ImVec2(panel_width, panel_height), ImGuiChildFlags_Borders);
+	ImGui::TextDisabled("Original");
+	ImGui::Separator();
+	render_text_with_topic_highlights(entry.old_text);
+	ImGui::EndChild();
+
+	ImGui::SameLine();
+
+	ImGui::BeginChild("##editor_translation", ImVec2(0, panel_height), ImGuiChildFlags_Borders);
+	ImGui::TextDisabled("Translation");
+	ImGui::Separator();
+
+	if (editing_row_ != selected_row_)
+	{
+		editing_row_ = selected_row_;
+		edit_buffer_.resize(EDIT_BUFFER_SIZE);
+		std::fill(edit_buffer_.begin(), edit_buffer_.end(), '\0');
+		size_t copy_len = entry.new_text.size();
+		if (copy_len > EDIT_BUFFER_SIZE - 1)
+			copy_len = EDIT_BUFFER_SIZE - 1;
+		std::copy_n(entry.new_text.begin(), copy_len, edit_buffer_.begin());
+	}
+
+	float input_height = ImGui::GetContentRegionAvail().y;
+	bool changed = ImGui::InputTextMultiline(
+	    "##editor_input",
+	    edit_buffer_.data(),
+	    edit_buffer_.size(),
+	    ImVec2(-1, input_height),
+	    ImGuiInputTextFlags_NoHorizontalScroll);
+
+	if (changed)
+	{
+		std::string new_value(edit_buffer_.data());
+		if (new_value != entry.new_text)
+		{
+			history_.record_change(row.type, entry.key_text, entry.new_text, new_value);
+			entry.new_text = new_value;
+			entry.status = tools_t::status_t::translated;
+			auto vr = validation_.validate(row.type, new_value);
+			if (vr.level == validation_level_t::error)
+				entry.status = tools_t::status_t::has_errors;
+			state_.mark_modified(row.type, row.record_index);
+			if (row.type == tools_t::rec_type_t::dial)
+				annotations_mgr_.rebuild(state_, base_dicts_.get_merged_dict());
+		}
+	}
+
+	ImGui::EndChild();
+}
+
 void editor_app_t::render_annotations_tab()
 {
-	const auto & row = left_rows_[selected_row_left_];
+	const auto & row = left_rows_[selected_row_];
 	auto it = state_.get_user_dict().find(row.type);
 	if (it == state_.get_user_dict().end() || row.record_index >= it->second.records.size())
 		return;
@@ -1780,7 +1759,7 @@ void editor_app_t::render_annotations_tab()
 
 void editor_app_t::render_history_tab()
 {
-	const auto & row = left_rows_[selected_row_left_];
+	const auto & row = left_rows_[selected_row_];
 	auto it = state_.get_user_dict().find(row.type);
 	if (it == state_.get_user_dict().end() || row.record_index >= it->second.records.size())
 		return;
@@ -1847,7 +1826,7 @@ void editor_app_t::render_annotations_panel()
 		return;
 	}
 
-	const auto & row = left_rows_[selected_row_left_];
+	const auto & row = left_rows_[selected_row_];
 	auto it = state_.get_user_dict().find(row.type);
 	if (it == state_.get_user_dict().end() || row.record_index >= it->second.records.size())
 	{
@@ -2013,7 +1992,7 @@ void editor_app_t::render_history_panel()
 		return;
 	}
 
-	const auto & row = left_rows_[selected_row_left_];
+	const auto & row = left_rows_[selected_row_];
 	auto it = state_.get_user_dict().find(row.type);
 	if (it == state_.get_user_dict().end() || row.record_index >= it->second.records.size())
 	{
