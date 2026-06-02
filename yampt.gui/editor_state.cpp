@@ -61,9 +61,19 @@ const tools_t::dict_t & editor_state_t::get_source_dict() const
 	return source_dict_;
 }
 
+tools_t::dict_t & editor_state_t::get_source_dict()
+{
+	return source_dict_;
+}
+
 const std::string & editor_state_t::get_user_path() const
 {
 	return user_path_;
+}
+
+const std::string & editor_state_t::get_source_path() const
+{
+	return source_path_;
 }
 
 bool editor_state_t::has_unsaved_changes() const

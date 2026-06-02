@@ -180,6 +180,8 @@
     <ClCompile Include="syntax_highlighter.cpp" />
     <ClCompile Include="annotation_manager.cpp" />
     <ClCompile Include="base_dict_manager.cpp" />
+    <ClCompile Include="encoding_utils.cpp" />
+    <ClCompile Include="spell_checker.cpp" />
     <ClCompile Include="..\external\yyjson.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CompileAsC</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CompileAsC</CompileAs>

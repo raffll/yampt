@@ -2,6 +2,7 @@
   "name": "yampt",
   "version": "0.25",
   "dependencies": [
-    "sdl2"
+    "sdl2",
+    "hunspell"
   ]
 }

@@ -51,7 +51,7 @@ void editor_config_t::load(const std::string & path)
 		{
 			if (key == "SplitRatio")
 			{
-				split_ratio = std::stof(value);
+				try { split_ratio = std::stof(value); } catch (...) {}
 			}
 			else if (key == "ColumnWidths")
 			{
@@ -62,10 +62,36 @@ void editor_config_t::load(const std::string & path)
 					auto comma = value.find(',', pos);
 					std::string token =
 					    (comma == std::string::npos) ? value.substr(pos) : value.substr(pos, comma - pos);
-					column_widths[idx] = std::stof(trim(token));
+					try { column_widths[idx] = std::stof(trim(token)); } catch (...) {}
 					++idx;
 					pos = (comma == std::string::npos) ? value.size() : comma + 1;
 				}
+			}
+			else if (key == "SidebarWidth")
+			{
+				try { sidebar_width = std::stof(value); } catch (...) {}
+			}
+			else if (key == "BottomHeight")
+			{
+				try { bottom_height = std::stof(value); } catch (...) {}
+			}
+			else if (key == "SidebarVisible")
+			{
+				sidebar_visible = (value != "0");
+			}
+			else if (key == "BottomVisible")
+			{
+				bottom_visible = (value != "0");
+			}
+			else if (key == "EncodingIndex")
+			{
+				try
+				{
+					int idx = std::stoi(value);
+					if (idx >= 0 && idx <= 2)
+						encoding_index = idx;
+				}
+				catch (...) {}
 			}
 			else if (key == "SpellCheckAff")
 			{
@@ -115,6 +141,11 @@ void editor_config_t::save(const std::string & path) const
 		file << column_widths[i];
 	}
 	file << "\n";
+	file << "SidebarWidth=" << sidebar_width << "\n";
+	file << "BottomHeight=" << bottom_height << "\n";
+	file << "SidebarVisible=" << (sidebar_visible ? "1" : "0") << "\n";
+	file << "BottomVisible=" << (bottom_visible ? "1" : "0") << "\n";
+	file << "EncodingIndex=" << encoding_index << "\n";
 
 	if (!spell_check_aff.empty())
 		file << "SpellCheckAff=" << spell_check_aff << "\n";

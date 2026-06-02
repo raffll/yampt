@@ -17,4 +17,10 @@ public:
 	std::string spell_check_dic;
 	std::string last_user_dict_path;
 	std::string last_source_dict_path;
+
+	float sidebar_width = 250.0f;
+	float bottom_height = 200.0f;
+	bool sidebar_visible = true;
+	bool bottom_visible = true;
+	int encoding_index = 2;
 };

@@ -25,7 +25,7 @@ int main(int, char **)
 	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
 	auto window_flags =
-	    static_cast<SDL_WindowFlags>(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
+	    static_cast<SDL_WindowFlags>(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED);
 	SDL_Window * window =
 	    SDL_CreateWindow("yampt.gui", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
 	if (!window)
@@ -34,6 +34,8 @@ int main(int, char **)
 		SDL_Quit();
 		return 1;
 	}
+	SDL_SetWindowBordered(window, SDL_TRUE);
+	SDL_SetWindowMinimumSize(window, 800, 600);
 
 	SDL_GLContext gl_context = SDL_GL_CreateContext(window);
 	SDL_GL_MakeCurrent(window, gl_context);
@@ -44,7 +46,7 @@ int main(int, char **)
 	ImGuiIO & io = ImGui::GetIO();
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
-	ImGui::StyleColorsDark();
+	ImGui::StyleColorsLight();
 
 	ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
 	ImGui_ImplOpenGL3_Init(glsl_version);
@@ -77,7 +79,7 @@ int main(int, char **)
 
 		ImGui::Render();
 		glViewport(0, 0, static_cast<int>(io.DisplaySize.x), static_cast<int>(io.DisplaySize.y));
-		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClearColor(0.94f, 0.94f, 0.94f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		SDL_GL_SwapWindow(window);

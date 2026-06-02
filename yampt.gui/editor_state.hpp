@@ -22,9 +22,11 @@ public:
 
 	tools_t::dict_t & get_user_dict();
 	const tools_t::dict_t & get_user_dict() const;
+	tools_t::dict_t & get_source_dict();
 	const tools_t::dict_t & get_source_dict() const;
 
 	const std::string & get_user_path() const;
+	const std::string & get_source_path() const;
 	bool has_unsaved_changes() const;
 	void mark_modified(tools_t::rec_type_t type, size_t index);
 

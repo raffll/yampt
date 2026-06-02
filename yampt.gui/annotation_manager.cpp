@@ -16,24 +16,28 @@ bool annotation_manager_t::is_alpha(char c)
 	return isalpha(static_cast<unsigned char>(c)) != 0;
 }
 
-void annotation_manager_t::rebuild(const editor_state_t & state)
+void annotation_manager_t::rebuild(const editor_state_t & state, const tools_t::dict_t & base_dict)
 {
 	dial_topics_.clear();
 
-	const auto & dict = state.get_user_dict();
-	auto it = dict.find(tools_t::rec_type_t::dial);
-	if (it == dict.end())
-		return;
-
-	const auto & chapter = it->second;
-	for (const auto & entry : chapter.records)
+	auto collect_dial = [&](const tools_t::dict_t & dict)
 	{
-		if (entry.key_text.empty())
-			continue;
+		auto it = dict.find(tools_t::rec_type_t::dial);
+		if (it == dict.end())
+			return;
 
-		std::string key_lower = to_lower(entry.key_text);
-		dial_topics_.emplace_back(std::move(key_lower), entry.new_text);
-	}
+		for (const auto & entry : it->second.records)
+		{
+			if (entry.key_text.empty())
+				continue;
+
+			std::string key_lower = to_lower(entry.key_text);
+			dial_topics_.emplace_back(std::move(key_lower), entry.new_text);
+		}
+	};
+
+	collect_dial(base_dict);
+	collect_dial(state.get_user_dict());
 
 	std::sort(
 	    dial_topics_.begin(),

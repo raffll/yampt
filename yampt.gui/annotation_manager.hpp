@@ -27,7 +27,7 @@ struct annotation_t
 class annotation_manager_t
 {
 public:
-	void rebuild(const editor_state_t & state);
+	void rebuild(const editor_state_t & state, const tools_t::dict_t & base_dict);
 	std::vector<annotation_t> annotate(const std::string & text, tools_t::rec_type_t type) const;
 
 	void load_glossary(const std::string & path);
