@@ -195,7 +195,9 @@ void dict_creator_t::build_indexes()
 			continue;
 		while (esm_ref.get_value().exist)
 		{
-			rnam_index.insert({ esm_ref.get_key().text + "^" + std::to_string(esm_ref.get_value().counter), esm_ref.get_value().text });
+			rnam_index.insert(
+			    { esm_ref.get_key().text + "^" + std::to_string(esm_ref.get_value().counter),
+			      esm_ref.get_value().text });
 			esm_ref.set_next_value("RNAM");
 		}
 	}

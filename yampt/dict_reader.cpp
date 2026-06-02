@@ -1,4 +1,5 @@
 #include "dict_reader.hpp"
+#include "json_reader.hpp"
 
 dict_reader_t::dict_reader_t(const std::string & path)
 {
@@ -14,48 +15,50 @@ dict_reader_t::dict_reader_t(const std::string & path)
 
 void dict_reader_t::parse_json(const std::string & content, const std::string & path)
 {
-	nlohmann::json root;
-	try
-	{
-		root = nlohmann::json::parse(content);
-	}
-	catch (const nlohmann::json::parse_error & e)
+	json_reader_t reader;
+	if (!reader.parse(content.data(), content.size(), true))
 	{
 		tools_t::add_log("[error] parsing \"" + path + "\"\r\n");
-		tools_t::add_log("[error] " + std::string(e.what()) + "\r\n");
+		tools_t::add_log("[error] " + reader.get_error() + "\r\n");
 		loaded_ = false;
 		return;
 	}
 
-	for (auto it = root.begin(); it != root.end(); ++it)
+	yyjson_val * root = reader.root();
+
+	json_reader_t::foreach_obj(
+	    root,
+	    [&](const char * key_str, size_t key_len, yyjson_val * arr)
 	{
-		const std::string & type_str = it.key();
+		std::string type_str(key_str, key_len);
 		tools_t::rec_type_t type = tools_t::str_to_type(type_str);
 
 		if (type == tools_t::rec_type_t::unknown)
 		{
 			tools_t::add_log("[warn] unknown rec_type_t \"" + type_str + "\", skipping chapter\r\n");
-			continue;
+			return;
 		}
 
-		const auto & records_array = it.value();
-		for (const auto & record_json : records_array)
+		json_reader_t::foreach_arr(
+		    arr,
+		    [&](size_t, yyjson_val * record)
 		{
-			if (!record_json.contains("key"))
+			std::string key_text = json_reader_t::get_string(record, "key", "");
+			if (key_text.empty())
 			{
 				tools_t::add_log("[warn] record missing \"key\" field in chapter " + type_str + ", skipping\r\n");
-				continue;
+				return;
 			}
 
 			tools_t::record_entry_t entry;
-			entry.key_text = record_json.value("key", "");
-			entry.old_text = record_json.value("old", "");
-			entry.new_text = record_json.value("new", "");
-			entry.status = record_json.value("status", "");
+			entry.key_text = std::move(key_text);
+			entry.old_text = json_reader_t::get_string(record, "old", "");
+			entry.new_text = json_reader_t::get_string(record, "new", "");
+			entry.status = json_reader_t::get_string(record, "status", "");
 
 			validate_entry(entry, type);
-		}
-	}
+		});
+	});
 
 	loaded_ = true;
 }

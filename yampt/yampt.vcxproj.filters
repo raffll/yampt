@@ -11,6 +11,7 @@
     <ClCompile Include="tools.cpp" />
     <ClCompile Include="script_parser.cpp" />
     <ClCompile Include="dict_writer.cpp" />
+    <ClCompile Include="..\external\yyjson.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="user_interface.hpp" />
@@ -20,8 +21,10 @@
     <ClInclude Include="esm_converter.hpp" />
     <ClInclude Include="esm_reader.hpp" />
     <ClInclude Include="includes.hpp" />
+    <ClInclude Include="json_reader.hpp" />
     <ClInclude Include="tools.hpp" />
     <ClInclude Include="script_parser.hpp" />
     <ClInclude Include="dict_writer.hpp" />
+    <ClInclude Include="..\external\yyjson.h" />
   </ItemGroup>
 </Project>

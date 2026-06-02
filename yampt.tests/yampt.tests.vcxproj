@@ -160,9 +160,11 @@
     <ClInclude Include="..\yampt\dict_writer.hpp" />
     <ClInclude Include="..\yampt\esm_converter.hpp" />
     <ClInclude Include="..\yampt\esm_reader.hpp" />
+    <ClInclude Include="..\yampt\json_reader.hpp" />
     <ClInclude Include="..\yampt\script_parser.hpp" />
     <ClInclude Include="..\yampt\tools.hpp" />
     <ClInclude Include="..\external\catch.hpp" />
+    <ClInclude Include="..\external\yyjson.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\yampt\dict_creator.cpp" />
@@ -173,6 +175,12 @@
     <ClCompile Include="..\yampt\esm_reader.cpp" />
     <ClCompile Include="..\yampt\script_parser.cpp" />
     <ClCompile Include="..\yampt\tools.cpp" />
+    <ClCompile Include="..\external\yyjson.c">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsC</CompileAs>
+    </ClCompile>
     <ClCompile Include="tests.dict_merger.cpp" />
     <ClCompile Include="tests.integration.cpp" />
     <ClCompile Include="tests.main.cpp" />

@@ -11,8 +11,7 @@ int main(int argc, char * argv[])
 	Catch::Session session;
 
 	using namespace Catch::clara;
-	auto cli = session.cli() |
-	           Opt(g_master_path, "path")["--master-path"]("Path to master directory with ESM files");
+	auto cli = session.cli() | Opt(g_master_path, "path")["--master-path"]("Path to master directory with ESM files");
 
 	session.cli(cli);
 

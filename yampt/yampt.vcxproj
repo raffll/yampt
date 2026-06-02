@@ -160,6 +160,12 @@
     <ClCompile Include="esm_reader.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="user_interface.cpp" />
+    <ClCompile Include="..\external\yyjson.c">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsC</CompileAs>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="script_parser.hpp" />
@@ -171,7 +177,9 @@
     <ClInclude Include="esm_converter.hpp" />
     <ClInclude Include="esm_reader.hpp" />
     <ClInclude Include="includes.hpp" />
+    <ClInclude Include="json_reader.hpp" />
     <ClInclude Include="user_interface.hpp" />
+    <ClInclude Include="..\external\yyjson.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

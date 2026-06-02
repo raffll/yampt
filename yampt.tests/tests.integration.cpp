@@ -23,7 +23,7 @@ TEST_CASE("cleanup test output directory", "[i]")
 
 TEST_CASE("make EN, no base dict", "[i]")
 {
-	for (const auto & name : {"Morrowind", "Tribunal", "Bloodmoon"})
+	for (const auto & name : { "Morrowind", "Tribunal", "Bloodmoon" })
 	{
 		dict_creator_t creator(g_master_path + "en/" + name + ".esm");
 		const auto & dict = creator.get_dict();
@@ -44,11 +44,9 @@ TEST_CASE("make EN, no base dict", "[i]")
 
 TEST_CASE("make-base EN to PL", "[i]")
 {
-	for (const auto & name : {"Morrowind", "Tribunal", "Bloodmoon"})
+	for (const auto & name : { "Morrowind", "Tribunal", "Bloodmoon" })
 	{
-		dict_creator_t creator(
-		    g_master_path + "pl/" + name + ".esm",
-		    g_master_path + "en/" + name + ".esm");
+		dict_creator_t creator(g_master_path + "pl/" + name + ".esm", g_master_path + "en/" + name + ".esm");
 		const auto & dict = creator.get_dict();
 
 		auto total = tools_t::get_number_of_elements_in_dict(dict);
@@ -83,11 +81,9 @@ TEST_CASE("make-base EN to PL", "[i]")
 
 TEST_CASE("make-base EN to DE", "[i]")
 {
-	for (const auto & name : {"Morrowind", "Tribunal", "Bloodmoon"})
+	for (const auto & name : { "Morrowind", "Tribunal", "Bloodmoon" })
 	{
-		dict_creator_t creator(
-		    g_master_path + "de/" + name + ".esm",
-		    g_master_path + "en/" + name + ".esm");
+		dict_creator_t creator(g_master_path + "de/" + name + ".esm", g_master_path + "en/" + name + ".esm");
 		const auto & dict = creator.get_dict();
 
 		auto total = tools_t::get_number_of_elements_in_dict(dict);
@@ -122,11 +118,12 @@ TEST_CASE("make-base EN to DE", "[i]")
 
 TEST_CASE("merge EN to PL", "[i]")
 {
-	dict_merger_t merger({
-	    test_dir + "/Morrowind_en_pl.json",
-	    test_dir + "/Tribunal_en_pl.json",
-	    test_dir + "/Bloodmoon_en_pl.json",
-	});
+	dict_merger_t merger(
+	    {
+	        test_dir + "/Morrowind_en_pl.json",
+	        test_dir + "/Tribunal_en_pl.json",
+	        test_dir + "/Bloodmoon_en_pl.json",
+	    });
 	const auto & dict = merger.get_dict();
 
 	auto total = tools_t::get_number_of_elements_in_dict(dict);
