@@ -135,84 +135,99 @@ void dict_creator_t::make_dict_cell_unordered_regn()
 
 void dict_creator_t::build_indexes()
 {
-	std::string info_prefix;
+	for (size_t i = 0; i < esm_ref.get_records().size(); ++i)
+	{
+		esm_ref.select_record(i);
+		if (esm_ref.get_record().id != "GMST")
+			continue;
+		esm_ref.set_key("NAME");
+		if (!esm_ref.get_key().exist)
+			continue;
+		if (esm_ref.get_key().text.substr(0, 1) != "s")
+			continue;
+		gmst_index.insert({ esm_ref.get_key().text, i });
+	}
+
+	for (size_t i = 0; i < esm_ref.get_records().size(); ++i)
+	{
+		esm_ref.select_record(i);
+		if (!tools_t::is_fnam(esm_ref.get_record().id))
+			continue;
+		esm_ref.set_key("NAME");
+		if (!esm_ref.get_key().exist)
+			continue;
+		if (esm_ref.get_key().text == "player")
+			continue;
+		fnam_index.insert({ esm_ref.get_record().id + "^" + esm_ref.get_key().text, i });
+	}
 
 	for (size_t i = 0; i < esm_ref.get_records().size(); ++i)
 	{
 		esm_ref.select_record(i);
 		const auto & rec_id = esm_ref.get_record().id;
-
-		if (rec_id == "GMST")
-		{
-			esm_ref.set_key("NAME");
-			if (!esm_ref.get_key().exist)
-				continue;
-			if (esm_ref.get_key().text.substr(0, 1) != "s")
-				continue;
-			gmst_index.insert({ esm_ref.get_key().text, i });
+		if (rec_id != "BSGN" && rec_id != "CLAS" && rec_id != "RACE")
 			continue;
-		}
-
-		if (tools_t::is_fnam(rec_id))
-		{
-			esm_ref.set_key("NAME");
-			if (!esm_ref.get_key().exist)
-				continue;
-			if (esm_ref.get_key().text == "player")
-				continue;
-			fnam_index.insert({ rec_id + "^" + esm_ref.get_key().text, i });
+		esm_ref.set_key("NAME");
+		if (!esm_ref.get_key().exist)
 			continue;
-		}
+		desc_index.insert({ rec_id + "^" + esm_ref.get_key().text, i });
+	}
 
-		if (rec_id == "BSGN" || rec_id == "CLAS" || rec_id == "RACE")
-		{
-			esm_ref.set_key("NAME");
-			if (!esm_ref.get_key().exist)
-				continue;
-			desc_index.insert({ rec_id + "^" + esm_ref.get_key().text, i });
+	for (size_t i = 0; i < esm_ref.get_records().size(); ++i)
+	{
+		esm_ref.select_record(i);
+		if (esm_ref.get_record().id != "BOOK")
 			continue;
-		}
+		esm_ref.set_key("NAME");
+		if (!esm_ref.get_key().exist)
+			continue;
+		text_index.insert({ esm_ref.get_key().text, i });
+	}
 
-		if (rec_id == "BOOK")
-		{
-			esm_ref.set_key("NAME");
-			if (!esm_ref.get_key().exist)
-				continue;
-			text_index.insert({ esm_ref.get_key().text, i });
+	for (size_t i = 0; i < esm_ref.get_records().size(); ++i)
+	{
+		esm_ref.select_record(i);
+		if (esm_ref.get_record().id != "FACT")
 			continue;
+		esm_ref.set_key("NAME");
+		esm_ref.set_value("RNAM");
+		if (!esm_ref.get_key().exist)
+			continue;
+		while (esm_ref.get_value().exist)
+		{
+			rnam_index.insert({ esm_ref.get_key().text + "^" + std::to_string(esm_ref.get_value().counter), esm_ref.get_value().text });
+			esm_ref.set_next_value("RNAM");
 		}
+	}
 
-		if (rec_id == "FACT")
-		{
-			esm_ref.set_key("NAME");
-			esm_ref.set_value("RNAM");
-			if (!esm_ref.get_key().exist)
-				continue;
-			while (esm_ref.get_value().exist)
-			{
-				rnam_index.insert({ esm_ref.get_key().text + "^" + std::to_string(esm_ref.get_value().counter), i });
-				esm_ref.set_next_value("RNAM");
-			}
+	for (size_t i = 0; i < esm_ref.get_records().size(); ++i)
+	{
+		esm_ref.select_record(i);
+		const auto & rec_id = esm_ref.get_record().id;
+		if (rec_id != "SKIL" && rec_id != "MGEF")
 			continue;
-		}
+		esm_ref.set_key("INDX");
+		if (!esm_ref.get_key().exist)
+			continue;
+		indx_index.insert({ rec_id + "^" + tools_t::get_indx(esm_ref.get_key().content), i });
+	}
 
-		if (rec_id == "SKIL" || rec_id == "MGEF")
-		{
-			esm_ref.set_key("INDX");
-			if (!esm_ref.get_key().exist)
-				continue;
-			indx_index.insert({ rec_id + "^" + tools_t::get_indx(esm_ref.get_key().content), i });
+	for (size_t i = 0; i < esm_ref.get_records().size(); ++i)
+	{
+		esm_ref.select_record(i);
+		if (esm_ref.get_record().id != "NPC_")
 			continue;
-		}
+		esm_ref.set_key("NAME");
+		if (!esm_ref.get_key().exist)
+			continue;
+		flag_index.insert({ esm_ref.get_key().text, i });
+	}
 
-		if (rec_id == "NPC_")
-		{
-			esm_ref.set_key("NAME");
-			if (!esm_ref.get_key().exist)
-				continue;
-			flag_index.insert({ esm_ref.get_key().text, i });
-			continue;
-		}
+	std::string info_prefix;
+	for (size_t i = 0; i < esm_ref.get_records().size(); ++i)
+	{
+		esm_ref.select_record(i);
+		const auto & rec_id = esm_ref.get_record().id;
 
 		if (rec_id == "DIAL")
 		{
@@ -510,15 +525,7 @@ void dict_creator_t::make_dict_rnam()
 			auto search = rnam_index.find(key_text);
 			if (search != rnam_index.end())
 			{
-				esm_ref.select_record(search->second);
-				esm_ref.set_key("NAME");
-				esm_ref.set_value("RNAM");
-				while (esm_ref.get_value().exist && esm_ref.get_value().counter != esm.get_value().counter)
-					esm_ref.set_next_value("RNAM");
-				if (esm_ref.get_value().exist)
-					old_text = esm_ref.get_value().text;
-				else
-					old_text = new_text;
+				old_text = search->second;
 			}
 			else
 			{

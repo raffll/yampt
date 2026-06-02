@@ -102,7 +102,7 @@ private:
 	std::unordered_map<std::string, size_t> fnam_index;
 	std::unordered_map<std::string, size_t> desc_index;
 	std::unordered_map<std::string, size_t> text_index;
-	std::unordered_map<std::string, size_t> rnam_index;
+	std::unordered_map<std::string, std::string> rnam_index;
 	std::unordered_map<std::string, size_t> indx_index;
 	std::unordered_map<std::string, size_t> flag_index;
 	std::unordered_map<std::string, size_t> info_index;
