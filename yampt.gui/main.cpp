@@ -51,6 +51,14 @@ int main(int, char **)
 	ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
 	ImGui_ImplOpenGL3_Init(glsl_version);
 
+	static const ImWchar glyph_ranges[] = {
+		0x0020, 0x00FF,
+		0x0100, 0x024F,
+		0x0400, 0x04FF,
+		0,
+	};
+	io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\segoeui.ttf", 16.0f, nullptr, glyph_ranges);
+
 	editor_app_t app;
 	app.init(window);
 
