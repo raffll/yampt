@@ -66,8 +66,6 @@ private:
 	size_t spell_ctx_start_ = 0;
 	size_t spell_ctx_end_ = 0;
 
-	bool show_base_dict_config_ = false;
-
 	std::set<tools_t::rec_type_t> type_filter_ = {
 		tools_t::rec_type_t::cell, tools_t::rec_type_t::dial, tools_t::rec_type_t::info, tools_t::rec_type_t::fnam,
 		tools_t::rec_type_t::text, tools_t::rec_type_t::gmst, tools_t::rec_type_t::desc, tools_t::rec_type_t::rnam,
@@ -147,7 +145,6 @@ private:
 	void render_history_panel();
 	void render_dialogs();
 	void render_quit_dialog();
-	void render_base_dict_config();
 
 	std::string get_exe_directory() const;
 

@@ -126,7 +126,7 @@ void editor_config_t::load(const std::string & path)
 		}
 		else if (section == "Recent")
 		{
-			if (key == "UserDict")
+			if (key == "UserDict" || starts_with(key, "UserDict"))
 				last_user_dict_path = value;
 			else if (key == "SourceDict")
 				last_source_dict_path = value;

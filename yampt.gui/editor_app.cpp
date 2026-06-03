@@ -331,8 +331,6 @@ void editor_app_t::render_menu_bar()
 		ImGui::Separator();
 		ImGui::MenuItem("Annotations", nullptr, &show_annotations_);
 		ImGui::MenuItem("History", nullptr, &show_history_);
-		ImGui::Separator();
-		ImGui::MenuItem("Base Dictionary Config", nullptr, &show_base_dict_config_);
 		ImGui::EndMenu();
 	}
 
@@ -564,34 +562,67 @@ void editor_app_t::render_sidebar()
 			ImGui::SetTooltip("%s", user_path.c_str());
 	}
 
-	if (!config_.base_dict_paths.empty())
+	ImGui::Spacing();
+	ImGui::Separator();
+	ImGui::TextUnformatted("Base Dictionaries");
+	ImGui::Separator();
+
+	for (int i = 0; i < static_cast<int>(config_.base_dict_paths.size()); ++i)
 	{
-		std::string label = "Base Dict (" + std::to_string(config_.base_dict_paths.size()) + " files)";
-		bool is_selected = (selected_dict_ == selected_dict_t::base);
-		if (ImGui::Selectable(label.c_str(), is_selected))
-		{
-			save_current_filters();
-			selected_dict_ = selected_dict_t::base;
-			restore_filters_for(selected_dict_t::base);
-			selected_row_ = -1;
-			selected_row_left_ = -1;
-			scroll_to_row_ = -1;
-			editing_row_ = -1;
-			editing_type_ = tools_t::rec_type_t::unknown;
-			edit_focus_pending_ = false;
-			reload_base_dicts();
-		}
+		const auto & p = config_.base_dict_paths[i];
+		auto slash = p.find_last_of("\\/");
+		std::string short_name = (slash != std::string::npos) ? p.substr(slash + 1) : p;
+
+		ImGui::PushID(i);
+		ImGui::TextUnformatted(short_name.c_str());
 		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("%s", p.c_str());
+
+		if (ImGui::BeginPopupContextItem("##base_ctx"))
 		{
-			std::string tip;
-			for (const auto & p : config_.base_dict_paths)
+			if (ImGui::MenuItem("Move Up") && i > 0)
 			{
-				if (!tip.empty())
-					tip += "\n";
-				tip += p;
+				std::swap(config_.base_dict_paths[i], config_.base_dict_paths[i - 1]);
+				reload_base_dicts();
+				annotations_mgr_.rebuild(state_, merged_base_dict_);
+				config_.save(config_path_);
 			}
-			ImGui::SetTooltip("%s", tip.c_str());
+			if (ImGui::MenuItem("Move Down") && i < static_cast<int>(config_.base_dict_paths.size()) - 1)
+			{
+				std::swap(config_.base_dict_paths[i], config_.base_dict_paths[i + 1]);
+				reload_base_dicts();
+				annotations_mgr_.rebuild(state_, merged_base_dict_);
+				config_.save(config_path_);
+			}
+			if (ImGui::MenuItem("Remove"))
+			{
+				config_.base_dict_paths.erase(config_.base_dict_paths.begin() + i);
+				reload_base_dicts();
+				annotations_mgr_.rebuild(state_, merged_base_dict_);
+				config_.save(config_path_);
+			}
+			ImGui::EndPopup();
 		}
+		ImGui::PopID();
+	}
+
+	if (ImGui::SmallButton("Add..."))
+	{
+		auto path = show_open_file_dialog("Add Base Dictionary");
+		if (!path.empty())
+		{
+			config_.base_dict_paths.push_back(path);
+			reload_base_dicts();
+			annotations_mgr_.rebuild(state_, merged_base_dict_);
+			config_.save(config_path_);
+		}
+	}
+	ImGui::SameLine();
+	if (ImGui::SmallButton("Reload"))
+	{
+		reload_base_dicts();
+		annotations_mgr_.rebuild(state_, merged_base_dict_);
+		config_.save(config_path_);
 	}
 
 	const auto & source_path = state_.get_source_path();
@@ -2363,9 +2394,6 @@ void editor_app_t::render_dialogs()
 {
 	if (show_quit_dialog_)
 		render_quit_dialog();
-
-	if (show_base_dict_config_)
-		render_base_dict_config();
 }
 
 void editor_app_t::render_quit_dialog()
@@ -2416,74 +2444,6 @@ void editor_app_t::render_quit_dialog()
 	}
 
 	ImGui::EndPopup();
-}
-
-void editor_app_t::render_base_dict_config()
-{
-	ImGui::SetNextWindowSize(ImVec2(500, 350), ImGuiCond_FirstUseEver);
-
-	if (!ImGui::Begin("Base Dictionary Configuration", &show_base_dict_config_))
-	{
-		ImGui::End();
-		return;
-	}
-
-	ImGui::Text("Base dictionary paths (first-wins merge order):");
-	ImGui::Separator();
-
-	int to_remove = -1;
-	int to_move_up = -1;
-	int to_move_down = -1;
-
-	for (int i = 0; i < static_cast<int>(config_.base_dict_paths.size()); ++i)
-	{
-		ImGui::PushID(i);
-
-		ImGui::TextUnformatted(config_.base_dict_paths[i].c_str());
-
-		ImGui::SameLine();
-		if (ImGui::SmallButton("Up") && i > 0)
-			to_move_up = i;
-
-		ImGui::SameLine();
-		if (ImGui::SmallButton("Down") && i < static_cast<int>(config_.base_dict_paths.size()) - 1)
-			to_move_down = i;
-
-		ImGui::SameLine();
-		if (ImGui::SmallButton("Remove"))
-			to_remove = i;
-
-		ImGui::PopID();
-	}
-
-	if (to_move_up >= 0)
-		std::swap(config_.base_dict_paths[to_move_up], config_.base_dict_paths[to_move_up - 1]);
-
-	if (to_move_down >= 0)
-		std::swap(config_.base_dict_paths[to_move_down], config_.base_dict_paths[to_move_down + 1]);
-
-	if (to_remove >= 0)
-		config_.base_dict_paths.erase(config_.base_dict_paths.begin() + to_remove);
-
-	ImGui::Separator();
-
-	if (ImGui::Button("Add..."))
-	{
-		auto path = show_open_file_dialog("Add Base Dictionary");
-		if (!path.empty())
-			config_.base_dict_paths.push_back(path);
-	}
-
-	ImGui::SameLine();
-
-	if (ImGui::Button("Reload"))
-	{
-		reload_base_dicts();
-		annotations_mgr_.rebuild(state_, merged_base_dict_);
-		config_.save(config_path_);
-	}
-
-	ImGui::End();
 }
 
 std::string editor_app_t::show_open_file_dialog(const char * title) const
