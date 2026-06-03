@@ -5,6 +5,7 @@
 #include "imgui.h"
 #include "status_colors.hpp"
 #include "../yampt/dict_merger.hpp"
+#include "../yampt/wrapping_text_widget.hpp"
 
 #include <algorithm>
 #include <array>
@@ -571,10 +572,6 @@ void editor_app_t::render_sidebar()
 			scroll_to_row_ = -1;
 			editing_row_ = -1;
 		}
-			selected_row_ = -1;
-			scroll_to_row_ = -1;
-			editing_row_ = -1;
-		}
 		if (ImGui::IsItemHovered())
 			ImGui::SetTooltip("%s", source_path.c_str());
 	}
@@ -847,15 +844,12 @@ void editor_app_t::render_main_panel()
 			if (ImGui::Selectable(
 			        id_text.c_str(),
 			        is_selected,
-			        ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowDoubleClick,
+			        ImGuiSelectableFlags_SpanAllColumns,
 			        ImVec2(0, 0)))
 			{
 				selected_row = i;
 				selected_row_left_ = i;
 			}
-
-			bool double_clicked = ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
-			(void)double_clicked;
 
 			if (is_editable && ImGui::BeginPopupContextItem("##row_ctx"))
 			{
@@ -887,14 +881,10 @@ void editor_app_t::render_main_panel()
 			}
 
 			ImGui::TableSetColumnIndex(1);
-			ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x);
 			ImGui::TextUnformatted(entry.old_text.c_str());
-			ImGui::PopTextWrapPos();
 
 			ImGui::TableSetColumnIndex(2);
-			ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x);
 			ImGui::TextUnformatted(entry.new_text.c_str());
-			ImGui::PopTextWrapPos();
 
 			ImGui::TableSetColumnIndex(3);
 			ImVec4 status_color = get_status_color(entry.status);
@@ -1684,18 +1674,32 @@ void editor_app_t::render_editor_tab()
 		return;
 
 	const auto & entry = it->second.records[row.record_index];
-	float panel_width = ImGui::GetContentRegionAvail().x * 0.5f - 4.0f;
+	float available_width = ImGui::GetContentRegionAvail().x;
+	float splitter_width = 6.0f;
+	float left_width = available_width * split_ratio_ - splitter_width * 0.5f;
+	float right_width = available_width - left_width - splitter_width;
 	float panel_height = ImGui::GetContentRegionAvail().y;
 
-	ImGui::BeginChild("##editor_original", ImVec2(panel_width, panel_height), ImGuiChildFlags_Borders);
+	ImGui::BeginChild("##editor_original", ImVec2(left_width, panel_height), ImGuiChildFlags_Borders);
 	ImGui::TextDisabled("Original");
 	ImGui::Separator();
 	render_text_with_topic_highlights(entry.old_text);
 	ImGui::EndChild();
 
 	ImGui::SameLine();
+	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+	ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
+	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.6f, 0.6f, 0.6f, 0.1f));
+	ImGui::Button("##editor_splitter", ImVec2(splitter_width, panel_height));
+	ImGui::PopStyleColor(3);
+	if (ImGui::IsItemActive())
+		split_ratio_ += ImGui::GetIO().MouseDelta.x / available_width;
+	if (ImGui::IsItemHovered() || ImGui::IsItemActive())
+		ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+	split_ratio_ = std::clamp(split_ratio_, 0.2f, 0.8f);
+	ImGui::SameLine();
 
-	ImGui::BeginChild("##editor_translation", ImVec2(0, panel_height), ImGuiChildFlags_Borders);
+	ImGui::BeginChild("##editor_translation", ImVec2(right_width, panel_height), ImGuiChildFlags_Borders);
 	ImGui::TextDisabled("Translation");
 	ImGui::Separator();
 
@@ -1742,30 +1746,43 @@ void editor_app_t::render_editor_tab()
 		if (copy_len > EDIT_BUFFER_SIZE - 1)
 			copy_len = EDIT_BUFFER_SIZE - 1;
 		std::copy_n(mutable_entry.new_text.begin(), copy_len, edit_buffer_.begin());
+		edit_focus_pending_ = false;
 	}
 
 	float input_height = ImGui::GetContentRegionAvail().y;
-	bool changed = ImGui::InputTextMultiline(
-	    "##editor_input",
-	    edit_buffer_.data(),
-	    edit_buffer_.size(),
-	    ImVec2(-1, input_height),
-	    ImGuiInputTextFlags_NoHorizontalScroll);
 
-	if (changed)
+	if (!edit_focus_pending_)
 	{
-		std::string new_value(edit_buffer_.data());
-		if (new_value != mutable_entry.new_text)
+		ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x);
+		ImGui::TextUnformatted(mutable_entry.new_text.c_str());
+		ImGui::PopTextWrapPos();
+
+		if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
+			edit_focus_pending_ = true;
+	}
+	else
+	{
+		bool changed = wrapping_text_widget(
+		    "##editor_input",
+		    edit_buffer_.data(),
+		    edit_buffer_.size(),
+		    ImVec2(-1, input_height));
+
+		if (changed)
 		{
-			history_.record_change(row.type, mutable_entry.key_text, mutable_entry.new_text, new_value);
-			mutable_entry.new_text = new_value;
-			mutable_entry.status = tools_t::status_t::in_progress;
-			auto vr = validation_.validate(row.type, new_value);
-			if (vr.level == validation_level_t::error)
-				mutable_entry.status = tools_t::status_t::has_errors;
-			state_.mark_modified(row.type, row.record_index);
-			if (row.type == tools_t::rec_type_t::dial)
-				annotations_mgr_.rebuild(state_, merged_base_dict_);
+			std::string new_value(edit_buffer_.data());
+			if (new_value != mutable_entry.new_text)
+			{
+				history_.record_change(row.type, mutable_entry.key_text, mutable_entry.new_text, new_value);
+				mutable_entry.new_text = new_value;
+				mutable_entry.status = tools_t::status_t::in_progress;
+				auto vr = validation_.validate(row.type, new_value);
+				if (vr.level == validation_level_t::error)
+					mutable_entry.status = tools_t::status_t::has_errors;
+				state_.mark_modified(row.type, row.record_index);
+				if (row.type == tools_t::rec_type_t::dial)
+					annotations_mgr_.rebuild(state_, merged_base_dict_);
+			}
 		}
 	}
 

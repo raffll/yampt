@@ -3,6 +3,7 @@
   "version": "0.25",
   "dependencies": [
     "sdl2",
-    "hunspell"
+    "hunspell",
+    "rapidcheck"
   ]
 }

@@ -11,3 +11,6 @@ x64/
 /yampt.gui/imgui
 /.kiro/specs
 *.ini
+yampt.gui/yampt_log.txt
+yampt.gui/imgui.ini
+yampt.gui/imgui.ini
