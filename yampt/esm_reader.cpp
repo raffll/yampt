@@ -29,7 +29,7 @@ void esm_reader_t::split_file(const std::string & content, const std::string & p
 				if (rec_end > content.size())
 				{
 					tools_t::add_log(
-					    "[warn] record at offset " + std::to_string(rec_beg) + " declares size " +
+					    "[warning] record at offset " + std::to_string(rec_beg) + " declares size " +
 					    std::to_string(rec_size) + " which exceeds file size, stopping\r\n");
 					break;
 				}

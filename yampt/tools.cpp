@@ -198,6 +198,10 @@ void tools_t::add_log(const std::string & entry, const bool silent)
 	}
 	else
 		log2 += entry;
+
+	static std::ofstream log_file("yampt_log.txt", std::ios::app);
+	if (log_file.is_open())
+		log_file << entry;
 }
 
 void tools_t::reset_log()
@@ -210,11 +214,10 @@ void tools_t::reset_log()
 tools_t::dict_t tools_t::initialize_dict()
 {
 	return {
-		{ tools_t::rec_type_t::cell, {} },     { tools_t::rec_type_t::dial, {} }, { tools_t::rec_type_t::indx, {} },
-		{ tools_t::rec_type_t::rnam, {} },     { tools_t::rec_type_t::desc, {} }, { tools_t::rec_type_t::gmst, {} },
-		{ tools_t::rec_type_t::fnam, {} },     { tools_t::rec_type_t::info, {} }, { tools_t::rec_type_t::text, {} },
-		{ tools_t::rec_type_t::bnam, {} },     { tools_t::rec_type_t::sctx, {} }, { tools_t::rec_type_t::glossary, {} },
-		{ tools_t::rec_type_t::npc_flag, {} },
+		{ tools_t::rec_type_t::cell, {} }, { tools_t::rec_type_t::dial, {} }, { tools_t::rec_type_t::indx, {} },
+		{ tools_t::rec_type_t::rnam, {} }, { tools_t::rec_type_t::desc, {} }, { tools_t::rec_type_t::gmst, {} },
+		{ tools_t::rec_type_t::fnam, {} }, { tools_t::rec_type_t::info, {} }, { tools_t::rec_type_t::text, {} },
+		{ tools_t::rec_type_t::bnam, {} }, { tools_t::rec_type_t::sctx, {} },
 	};
 }
 
@@ -263,11 +266,6 @@ std::string tools_t::type_to_str(tools_t::rec_type_t type)
 	case tools_t::rec_type_t::regn:
 		return "+ REGN";
 
-	case tools_t::rec_type_t::glossary:
-		return "Glossary";
-	case tools_t::rec_type_t::npc_flag:
-		return "NPC_FLAG";
-
 	default:
 		return "N/A";
 	}
@@ -276,13 +274,12 @@ std::string tools_t::type_to_str(tools_t::rec_type_t type)
 tools_t::rec_type_t tools_t::str_to_type(const std::string & str)
 {
 	std::map<std::string, tools_t::rec_type_t> str2type {
-		{ "CELL", tools_t::rec_type_t::cell },         { "DIAL", tools_t::rec_type_t::dial },
-		{ "INDX", tools_t::rec_type_t::indx },         { "RNAM", tools_t::rec_type_t::rnam },
-		{ "DESC", tools_t::rec_type_t::desc },         { "GMST", tools_t::rec_type_t::gmst },
-		{ "FNAM", tools_t::rec_type_t::fnam },         { "INFO", tools_t::rec_type_t::info },
-		{ "TEXT", tools_t::rec_type_t::text },         { "BNAM", tools_t::rec_type_t::bnam },
-		{ "SCTX", tools_t::rec_type_t::sctx },         { "Glossary", tools_t::rec_type_t::glossary },
-		{ "NPC_FLAG", tools_t::rec_type_t::npc_flag },
+		{ "CELL", tools_t::rec_type_t::cell }, { "DIAL", tools_t::rec_type_t::dial },
+		{ "INDX", tools_t::rec_type_t::indx }, { "RNAM", tools_t::rec_type_t::rnam },
+		{ "DESC", tools_t::rec_type_t::desc }, { "GMST", tools_t::rec_type_t::gmst },
+		{ "FNAM", tools_t::rec_type_t::fnam }, { "INFO", tools_t::rec_type_t::info },
+		{ "TEXT", tools_t::rec_type_t::text }, { "BNAM", tools_t::rec_type_t::bnam },
+		{ "SCTX", tools_t::rec_type_t::sctx },
 	};
 
 	auto search = str2type.find(str);
@@ -290,6 +287,21 @@ tools_t::rec_type_t tools_t::str_to_type(const std::string & str)
 		return search->second;
 	else
 		return tools_t::rec_type_t::unknown;
+}
+
+std::string tools_t::encoding_to_str(tools_t::encoding_t encoding)
+{
+	switch (encoding)
+	{
+	case tools_t::encoding_t::windows_1250:
+		return "windows-1250";
+	case tools_t::encoding_t::windows_1251:
+		return "windows-1251";
+	case tools_t::encoding_t::windows_1252:
+		return "windows-1252";
+	default:
+		return "windows-1252";
+	}
 }
 
 std::string tools_t::get_dialog_type(const std::string & content)

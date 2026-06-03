@@ -93,6 +93,15 @@ void editor_config_t::load(const std::string & path)
 				}
 				catch (...) {}
 			}
+			else if (key == "SelectedDict")
+			{
+				if (value == "base")
+					selected_dict = selected_dict_t::base;
+				else if (value == "source")
+					selected_dict = selected_dict_t::source;
+				else
+					selected_dict = selected_dict_t::user;
+			}
 			else if (key == "SpellCheckAff")
 			{
 				spell_check_aff = value;
@@ -146,6 +155,13 @@ void editor_config_t::save(const std::string & path) const
 	file << "SidebarVisible=" << (sidebar_visible ? "1" : "0") << "\n";
 	file << "BottomVisible=" << (bottom_visible ? "1" : "0") << "\n";
 	file << "EncodingIndex=" << encoding_index << "\n";
+
+	if (selected_dict == selected_dict_t::base)
+		file << "SelectedDict=base\n";
+	else if (selected_dict == selected_dict_t::source)
+		file << "SelectedDict=source\n";
+	else
+		file << "SelectedDict=user\n";
 
 	if (!spell_check_aff.empty())
 		file << "SpellCheckAff=" << spell_check_aff << "\n";

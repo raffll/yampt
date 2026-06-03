@@ -4,9 +4,11 @@
 #include "encoding_utils.hpp"
 #include "imgui.h"
 #include "status_colors.hpp"
+#include "../yampt/dict_merger.hpp"
 
 #include <algorithm>
 #include <array>
+#include <cctype>
 
 #include <Windows.h>
 #include <commdlg.h>
@@ -36,12 +38,12 @@ void editor_app_t::init(SDL_Window * window)
 	sidebar_visible_ = config_.sidebar_visible;
 	bottom_visible_ = config_.bottom_visible;
 	encoding_index_ = config_.encoding_index;
+	selected_dict_ = config_.selected_dict;
 
 	if (!config_.base_dict_paths.empty())
 	{
-		base_dicts_.set_paths(config_.base_dict_paths);
-		base_dicts_.reload();
-		annotations_mgr_.rebuild(state_, base_dicts_.get_merged_dict());
+		reload_base_dicts();
+		annotations_mgr_.rebuild(state_, merged_base_dict_);
 	}
 
 	if (!config_.spell_check_aff.empty() && !config_.spell_check_dic.empty())
@@ -139,6 +141,7 @@ void editor_app_t::shutdown()
 	config_.sidebar_visible = sidebar_visible_;
 	config_.bottom_visible = bottom_visible_;
 	config_.encoding_index = encoding_index_;
+	config_.selected_dict = selected_dict_;
 	config_.save(config_path_);
 }
 
@@ -167,16 +170,26 @@ void editor_app_t::rebuild_row_data()
 	left_lookup_.clear();
 	right_lookup_.clear();
 
+	const auto & active_dict = (selected_dict_ == selected_dict_t::base)    ? merged_base_dict_
+	                           : (selected_dict_ == selected_dict_t::source) ? state_.get_source_dict()
+	                                                                         : state_.get_user_dict();
+
 	int idx = 0;
-	for (const auto & [type, chapter] : state_.get_user_dict())
+	for (const auto & [type, chapter] : active_dict)
 	{
 		if (type_filter_.count(type) == 0)
 			continue;
 
 		for (size_t i = 0; i < chapter.records.size(); ++i)
 		{
-			if (!status_filter_.empty() && status_filter_.count(chapter.records[i].status) == 0)
-				continue;
+			if (!status_filter_.empty())
+			{
+				const auto & s = chapter.records[i].status;
+				bool match = s.empty() ? status_filter_.count("untranslated") > 0
+				                       : status_filter_.count(s) > 0;
+				if (!match)
+					continue;
+			}
 
 			left_rows_.push_back({ type, i });
 			left_lookup_[make_lookup_key(type, chapter.records[i].key_text)] = idx;
@@ -192,8 +205,14 @@ void editor_app_t::rebuild_row_data()
 
 		for (size_t i = 0; i < chapter.records.size(); ++i)
 		{
-			if (!status_filter_.empty() && status_filter_.count(chapter.records[i].status) == 0)
-				continue;
+			if (!status_filter_.empty())
+			{
+				const auto & s = chapter.records[i].status;
+				bool match = s.empty() ? status_filter_.count("untranslated") > 0
+				                       : status_filter_.count(s) > 0;
+				if (!match)
+					continue;
+			}
 
 			right_rows_.push_back({ type, i });
 			right_lookup_[make_lookup_key(type, chapter.records[i].key_text)] = idx;
@@ -216,7 +235,7 @@ void editor_app_t::render_menu_bar()
 			{
 				state_.load_user_dict(path);
 				decode_dict_from_codepage(state_.get_user_dict(), active_codepage());
-				annotations_mgr_.rebuild(state_, base_dicts_.get_merged_dict());
+				annotations_mgr_.rebuild(state_, merged_base_dict_);
 				selected_row_left_ = -1;
 				selected_row_right_ = -1;
 				editing_row_ = -1;
@@ -230,7 +249,7 @@ void editor_app_t::render_menu_bar()
 			{
 				state_.load_source_dict(path);
 				decode_dict_from_codepage(state_.get_source_dict(), active_codepage());
-				annotations_mgr_.rebuild(state_, base_dicts_.get_merged_dict());
+				annotations_mgr_.rebuild(state_, merged_base_dict_);
 				selected_row_left_ = -1;
 				selected_row_right_ = -1;
 			}
@@ -260,13 +279,6 @@ void editor_app_t::render_menu_bar()
 		}
 
 		ImGui::Separator();
-
-		if (ImGui::MenuItem("Load Glossary..."))
-		{
-			auto path = show_open_file_dialog("Load Glossary Dictionary");
-			if (!path.empty())
-				annotations_mgr_.load_glossary(path);
-		}
 
 		if (ImGui::MenuItem("Load NPC Flags..."))
 		{
@@ -304,46 +316,6 @@ void editor_app_t::render_menu_bar()
 		ImGui::EndMenu();
 	}
 
-	if (ImGui::BeginMenu("Tools"))
-	{
-		if (ImGui::MenuItem("Auto-translate from Base"))
-		{
-			auto r = base_dicts_.auto_translate_from_base(state_);
-			last_auto_result_ = r;
-			last_auto_result_title_ = "Auto-translate from Base";
-			show_auto_translate_result_ = true;
-			rebuild_row_data();
-		}
-
-		if (ImGui::MenuItem("Auto-translate Identical"))
-		{
-			auto r = base_dicts_.auto_translate_identical(state_);
-			last_auto_result_ = r;
-			last_auto_result_title_ = "Auto-translate Identical";
-			show_auto_translate_result_ = true;
-			rebuild_row_data();
-		}
-
-		if (ImGui::MenuItem("Auto-translate Heuristic"))
-		{
-			auto r = base_dicts_.auto_translate_heuristic(state_);
-			last_auto_result_ = r;
-			last_auto_result_title_ = "Auto-translate Heuristic";
-			show_auto_translate_result_ = true;
-			rebuild_row_data();
-		}
-
-		ImGui::Separator();
-
-		if (ImGui::MenuItem("Detect Changed in Base"))
-		{
-			base_dicts_.detect_changed(state_);
-			rebuild_row_data();
-		}
-
-		ImGui::EndMenu();
-	}
-
 	ImGui::EndMenuBar();
 }
 
@@ -367,9 +339,11 @@ void editor_app_t::render_toolbar()
 		bool active = type_filter_.count(type) > 0;
 
 		size_t count = 0;
-		auto & dict = state_.get_user_dict();
-		auto it = dict.find(type);
-		if (it != dict.end())
+		const auto & toolbar_dict = (selected_dict_ == selected_dict_t::base)    ? merged_base_dict_
+		                            : (selected_dict_ == selected_dict_t::source) ? state_.get_source_dict()
+		                                                                          : state_.get_user_dict();
+		auto it = toolbar_dict.find(type);
+		if (it != toolbar_dict.end())
 			count = it->second.records.size();
 
 		std::string label = tools_t::type_to_str(type) + " (" + std::to_string(count) + ")";
@@ -466,7 +440,7 @@ void editor_app_t::render_toolbar()
 		{
 			last_replace_count_ = search_.replace_all(state_, std::string(replace_buffer_.data()));
 			search_.find_all(state_, type_filter_);
-			annotations_mgr_.rebuild(state_, base_dicts_.get_merged_dict());
+			annotations_mgr_.rebuild(state_, merged_base_dict_);
 			rebuild_row_data();
 		}
 	}
@@ -509,7 +483,7 @@ void editor_app_t::render_toolbar()
 					encoding_index_ = i;
 					reencode_dict(state_.get_user_dict(), old_cp, new_cp);
 					reencode_dict(state_.get_source_dict(), old_cp, new_cp);
-					annotations_mgr_.rebuild(state_, base_dicts_.get_merged_dict());
+					annotations_mgr_.rebuild(state_, merged_base_dict_);
 					rebuild_row_data();
 				}
 			}
@@ -532,53 +506,77 @@ void editor_app_t::render_sidebar()
 	ImGui::TextUnformatted("Dictionaries");
 	ImGui::Separator();
 
-	ImGui::TextDisabled("Base:");
-	if (config_.base_dict_paths.empty())
+	const auto & user_path = state_.get_user_path();
 	{
-		ImGui::TextDisabled("  (none loaded)");
-	}
-	else
-	{
-		for (const auto & path : config_.base_dict_paths)
+		std::string label = "User Dict";
+		if (!user_path.empty())
 		{
-			auto pos = path.find_last_of("\\/");
-			std::string name = (pos != std::string::npos) ? path.substr(pos + 1) : path;
-			ImGui::Selectable(name.c_str(), false, ImGuiSelectableFlags_None);
-			if (ImGui::IsItemHovered())
-				ImGui::SetTooltip("%s", path.c_str());
+			auto pos = user_path.find_last_of("\\/");
+			label += ": " + ((pos != std::string::npos) ? user_path.substr(pos + 1) : user_path);
+		}
+		bool is_selected = (selected_dict_ == selected_dict_t::user);
+		if (ImGui::Selectable(label.c_str(), is_selected))
+		{
+			save_current_filters();
+			selected_dict_ = selected_dict_t::user;
+			restore_filters_for(selected_dict_t::user);
+			selected_row_ = -1;
+			scroll_to_row_ = -1;
+			editing_row_ = -1;
+		}
+		if (!user_path.empty() && ImGui::IsItemHovered())
+			ImGui::SetTooltip("%s", user_path.c_str());
+	}
+
+	if (!config_.base_dict_paths.empty())
+	{
+		std::string label = "Base Dict (" + std::to_string(config_.base_dict_paths.size()) + " files)";
+		bool is_selected = (selected_dict_ == selected_dict_t::base);
+		if (ImGui::Selectable(label.c_str(), is_selected))
+		{
+			save_current_filters();
+			selected_dict_ = selected_dict_t::base;
+			restore_filters_for(selected_dict_t::base);
+			selected_row_ = -1;
+			scroll_to_row_ = -1;
+			editing_row_ = -1;
+			reload_base_dicts();
+		}
+		if (ImGui::IsItemHovered())
+		{
+			std::string tip;
+			for (const auto & p : config_.base_dict_paths)
+			{
+				if (!tip.empty())
+					tip += "\n";
+				tip += p;
+			}
+			ImGui::SetTooltip("%s", tip.c_str());
 		}
 	}
 
-	ImGui::Spacing();
-	ImGui::TextDisabled("Source:");
 	const auto & source_path = state_.get_source_path();
-	if (source_path.empty())
+	if (!source_path.empty())
 	{
-		ImGui::TextDisabled("  (not loaded)");
-	}
-	else
-	{
+		std::string label = "Source Dict";
 		auto pos = source_path.find_last_of("\\/");
-		std::string name = (pos != std::string::npos) ? source_path.substr(pos + 1) : source_path;
-		ImGui::Selectable(name.c_str(), false, ImGuiSelectableFlags_None);
+		label += ": " + ((pos != std::string::npos) ? source_path.substr(pos + 1) : source_path);
+		bool is_selected = (selected_dict_ == selected_dict_t::source);
+		if (ImGui::Selectable(label.c_str(), is_selected))
+		{
+			save_current_filters();
+			selected_dict_ = selected_dict_t::source;
+			restore_filters_for(selected_dict_t::source);
+			selected_row_ = -1;
+			scroll_to_row_ = -1;
+			editing_row_ = -1;
+		}
+			selected_row_ = -1;
+			scroll_to_row_ = -1;
+			editing_row_ = -1;
+		}
 		if (ImGui::IsItemHovered())
 			ImGui::SetTooltip("%s", source_path.c_str());
-	}
-
-	ImGui::Spacing();
-	ImGui::TextDisabled("User:");
-	const auto & user_path = state_.get_user_path();
-	if (user_path.empty())
-	{
-		ImGui::TextDisabled("  (not loaded)");
-	}
-	else
-	{
-		auto pos = user_path.find_last_of("\\/");
-		std::string name = (pos != std::string::npos) ? user_path.substr(pos + 1) : user_path;
-		ImGui::Selectable(name.c_str(), false, ImGuiSelectableFlags_None);
-		if (ImGui::IsItemHovered())
-			ImGui::SetTooltip("%s", user_path.c_str());
 	}
 
 	ImGui::Spacing();
@@ -586,7 +584,9 @@ void editor_app_t::render_sidebar()
 	ImGui::TextUnformatted("Record Types");
 	ImGui::Separator();
 
-	const auto & dict = state_.get_user_dict();
+	const auto & dict = (selected_dict_ == selected_dict_t::base)    ? merged_base_dict_
+	                    : (selected_dict_ == selected_dict_t::source) ? state_.get_source_dict()
+	                                                                  : state_.get_user_dict();
 	for (auto type : all_types_)
 	{
 		auto it = dict.find(type);
@@ -618,22 +618,40 @@ void editor_app_t::render_sidebar()
 
 void editor_app_t::render_status_summary_bar()
 {
-	static const char * status_names[] = { "",          "translated", "auto_identical", "auto_heuristic",
-		                                   "validated", "changed",    "has_errors" };
-	static const char * status_labels[] = { "Untranslated", "Translated", "Auto Identical", "Auto Heuristic",
-		                                    "Validated",    "Changed",    "Has Errors" };
-	static constexpr size_t status_count = 7;
+	static const char * status_names[] = {
+		"untranslated",    "missing",          "duplicate",       "matched_by_coords",
+		"matched_by_info", "matched_by_name",  "wilderness",      "region",
+		"auto_identical",  "auto_base",        "auto_translated", "auto_heuristic",
+		"auto_changed",    "in_progress",      "translated",      "has_errors"
+	};
+	static const char * status_labels[] = {
+		"Untranslated",    "Missing",          "Duplicate",       "Matched Coords",
+		"Matched Info",    "Matched Name",     "Wilderness",      "Region",
+		"Auto Identical",  "Auto Base",        "Auto Translated", "Auto Heuristic",
+		"Auto Changed",    "In Progress",      "Translated",      "Has Errors"
+	};
+	static constexpr size_t status_count = 16;
 
 	int counts[status_count] = {};
 
-	for (const auto & [type, chapter] : state_.get_user_dict())
+	const auto & active_dict = (selected_dict_ == selected_dict_t::base)    ? merged_base_dict_
+	                           : (selected_dict_ == selected_dict_t::source) ? state_.get_source_dict()
+	                                                                         : state_.get_user_dict();
+
+	for (const auto & [type, chapter] : active_dict)
 	{
 		if (type_filter_.count(type) == 0)
 			continue;
 
 		for (size_t i = 0; i < chapter.records.size(); ++i)
 		{
-			const auto & status = chapter.records[i].status;
+			const std::string & status = chapter.records[i].status;
+
+			if (status.empty())
+			{
+				++counts[0];
+				continue;
+			}
 
 			for (size_t j = 0; j < status_count; ++j)
 			{
@@ -745,9 +763,24 @@ void editor_app_t::render_main_panel()
 {
 	ImGui::BeginChild("MainPanel", ImVec2(0, 0), ImGuiChildFlags_Borders);
 
+	bool is_editable = (selected_dict_ == selected_dict_t::user);
+
+	const auto & active_dict = (selected_dict_ == selected_dict_t::base)    ? merged_base_dict_
+	                           : (selected_dict_ == selected_dict_t::source) ? state_.get_source_dict()
+	                                                                         : state_.get_user_dict();
+
 	const auto & rows = left_rows_;
 	int & selected_row = selected_row_;
 	int & scroll_to_row = scroll_to_row_;
+
+	if (!is_editable)
+	{
+		const char * mode_label = (selected_dict_ == selected_dict_t::base) ? "[Read-Only: Base Dict]"
+		                                                                    : "[Read-Only: Source Dict]";
+		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.7f, 0.7f, 0.3f, 1.0f));
+		ImGui::TextUnformatted(mode_label);
+		ImGui::PopStyleColor();
+	}
 
 	const ImGuiTableFlags flags = ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg |
 	                              ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV;
@@ -783,8 +816,8 @@ void editor_app_t::render_main_panel()
 		for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; ++i)
 		{
 			const auto & row_ref = rows[i];
-			auto it = state_.get_user_dict().find(row_ref.type);
-			if (it == state_.get_user_dict().end())
+			auto it = active_dict.find(row_ref.type);
+			if (it == active_dict.end())
 				continue;
 			if (row_ref.record_index >= it->second.records.size())
 				continue;
@@ -801,7 +834,7 @@ void editor_app_t::render_main_panel()
 			}
 
 			ImGui::TableSetColumnIndex(0);
-			if (history_.is_modified_this_session(row_ref.type, entry.key_text))
+			if (is_editable && history_.is_modified_this_session(row_ref.type, entry.key_text))
 			{
 				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.6f, 0.0f, 1.0f));
 				ImGui::TextUnformatted("\xe2\x97\x8f ");
@@ -817,41 +850,19 @@ void editor_app_t::render_main_panel()
 			        ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowDoubleClick,
 			        ImVec2(0, 0)))
 			{
-				if (editing_row_ >= 0 && editing_row_ != i)
-				{
-					std::string committed(edit_buffer_.data());
-					const auto & erow = rows[editing_row_];
-					auto eit = state_.get_user_dict().find(erow.type);
-					if (eit != state_.get_user_dict().end() && erow.record_index < eit->second.records.size())
-					{
-						auto & erec = eit->second.records[erow.record_index];
-						if (committed != erec.new_text)
-						{
-							history_.record_change(erow.type, erec.key_text, erec.new_text, committed);
-							erec.new_text = committed;
-							erec.status = tools_t::status_t::translated;
-							auto vr = validation_.validate(erow.type, committed);
-							if (vr.level == validation_level_t::error)
-								erec.status = tools_t::status_t::has_errors;
-							state_.mark_modified(erow.type, erow.record_index);
-							if (erow.type == tools_t::rec_type_t::dial)
-								annotations_mgr_.rebuild(state_, base_dicts_.get_merged_dict());
-						}
-					}
-					editing_row_ = -1;
-				}
 				selected_row = i;
 				selected_row_left_ = i;
 			}
 
 			bool double_clicked = ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
+			(void)double_clicked;
 
-			if (ImGui::BeginPopupContextItem("##row_ctx"))
+			if (is_editable && ImGui::BeginPopupContextItem("##row_ctx"))
 			{
 				if (ImGui::BeginMenu("Set Status"))
 				{
-					static const char * ctx_status_names[] = { "", "translated", "validated", "changed" };
-					static const char * ctx_status_labels[] = { "Untranslated", "Translated", "Validated", "Changed" };
+					static const char * ctx_status_names[] = { "untranslated", "in_progress", "translated", "has_errors" };
+					static const char * ctx_status_labels[] = { "Untranslated", "In Progress", "Translated", "Has Errors" };
 
 					for (int s = 0; s < 4; ++s)
 					{
@@ -876,42 +887,53 @@ void editor_app_t::render_main_panel()
 			}
 
 			ImGui::TableSetColumnIndex(1);
+			ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x);
 			ImGui::TextUnformatted(entry.old_text.c_str());
+			ImGui::PopTextWrapPos();
 
 			ImGui::TableSetColumnIndex(2);
+			ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x);
 			ImGui::TextUnformatted(entry.new_text.c_str());
+			ImGui::PopTextWrapPos();
 
 			ImGui::TableSetColumnIndex(3);
 			ImVec4 status_color = get_status_color(entry.status);
 			ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, ImGui::ColorConvertFloat4ToU32(status_color));
 
 			std::string status_label = entry.status.empty() ? "(none)" : entry.status;
-			if (ImGui::Selectable(status_label.c_str(), false, ImGuiSelectableFlags_None))
-				ImGui::OpenPopup("##status_popup");
-
-			if (ImGui::BeginPopup("##status_popup"))
+			if (is_editable)
 			{
-				static const char * popup_status_names[] = { "", "translated", "validated", "changed" };
-				static const char * popup_status_labels[] = { "Untranslated", "Translated", "Validated", "Changed" };
+				if (ImGui::Selectable(status_label.c_str(), false, ImGuiSelectableFlags_None))
+					ImGui::OpenPopup("##status_popup");
 
-				for (int s = 0; s < 4; ++s)
+				if (ImGui::BeginPopup("##status_popup"))
 				{
-					if (ImGui::Selectable(popup_status_labels[s]))
+					static const char * popup_status_names[] = { "untranslated", "in_progress", "translated", "has_errors" };
+					static const char * popup_status_labels[] = { "Untranslated", "In Progress", "Translated", "Has Errors" };
+
+					for (int s = 0; s < 4; ++s)
 					{
-						auto mit = state_.get_user_dict().find(row_ref.type);
-						if (mit != state_.get_user_dict().end() &&
-						    row_ref.record_index < mit->second.records.size())
+						if (ImGui::Selectable(popup_status_labels[s]))
 						{
-							auto & rec = mit->second.records[row_ref.record_index];
-							std::string old_status = rec.status;
-							rec.status = popup_status_names[s];
-							state_.mark_modified(row_ref.type, row_ref.record_index);
-							history_.record_change(
-							    row_ref.type, entry.key_text, old_status, rec.status);
+							auto mit = state_.get_user_dict().find(row_ref.type);
+							if (mit != state_.get_user_dict().end() &&
+							    row_ref.record_index < mit->second.records.size())
+							{
+								auto & rec = mit->second.records[row_ref.record_index];
+								std::string old_status = rec.status;
+								rec.status = popup_status_names[s];
+								state_.mark_modified(row_ref.type, row_ref.record_index);
+								history_.record_change(
+								    row_ref.type, entry.key_text, old_status, rec.status);
+							}
 						}
 					}
+					ImGui::EndPopup();
 				}
-				ImGui::EndPopup();
+			}
+			else
+			{
+				ImGui::TextUnformatted(status_label.c_str());
 			}
 
 			ImGui::TableSetColumnIndex(4);
@@ -1077,22 +1099,17 @@ void editor_app_t::render_dict_table(
 
 						if (ImGui::MenuItem("Set Untranslated"))
 						{
-							rec.status = "";
+							rec.status = tools_t::status_t::untranslated;
+							state_.mark_modified(row_ref.type, row_ref.record_index);
+						}
+						if (ImGui::MenuItem("Set In Progress"))
+						{
+							rec.status = tools_t::status_t::in_progress;
 							state_.mark_modified(row_ref.type, row_ref.record_index);
 						}
 						if (ImGui::MenuItem("Set Translated"))
 						{
 							rec.status = tools_t::status_t::translated;
-							state_.mark_modified(row_ref.type, row_ref.record_index);
-						}
-						if (ImGui::MenuItem("Set Validated"))
-						{
-							rec.status = "validated";
-							state_.mark_modified(row_ref.type, row_ref.record_index);
-						}
-						if (ImGui::MenuItem("Set Changed"))
-						{
-							rec.status = tools_t::status_t::changed;
 							state_.mark_modified(row_ref.type, row_ref.record_index);
 						}
 
@@ -1102,6 +1119,7 @@ void editor_app_t::render_dict_table(
 			}
 
 			ImGui::TableSetColumnIndex(1);
+			ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x);
 			if (search_.get_matches().empty())
 			{
 				if (row_ref.type == tools_t::rec_type_t::sctx || row_ref.type == tools_t::rec_type_t::text)
@@ -1113,10 +1131,11 @@ void editor_app_t::render_dict_table(
 			}
 			else
 				render_text_with_highlights(entry.old_text, row_ref.type, row_ref.record_index, true);
+			ImGui::PopTextWrapPos();
 
 			ImGui::TableSetColumnIndex(2);
 
-			bool is_editing = is_left_panel && mutable_dict && (editing_row_ == i);
+			bool is_editing = false;
 
 			if (is_editing)
 			{
@@ -1155,13 +1174,13 @@ void editor_app_t::render_dict_table(
 					{
 						auto & rec = mit->second.records[row_ref.record_index];
 						rec.new_text = new_value;
-						rec.status = tools_t::status_t::translated;
+						rec.status = tools_t::status_t::in_progress;
 						auto vr = validation_.validate(row_ref.type, new_value);
 						if (vr.level == validation_level_t::error)
 							rec.status = tools_t::status_t::has_errors;
 						state_.mark_modified(row_ref.type, row_ref.record_index);
 						if (row_ref.type == tools_t::rec_type_t::dial)
-							annotations_mgr_.rebuild(state_, base_dicts_.get_merged_dict());
+							annotations_mgr_.rebuild(state_, merged_base_dict_);
 					}
 					editing_row_ = -1;
 				}
@@ -1173,6 +1192,7 @@ void editor_app_t::render_dict_table(
 			}
 			else
 			{
+				ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x);
 				if (search_.get_matches().empty())
 				{
 					if (row_ref.type == tools_t::rec_type_t::sctx || row_ref.type == tools_t::rec_type_t::text)
@@ -1184,19 +1204,7 @@ void editor_app_t::render_dict_table(
 				}
 				else
 					render_text_with_highlights(entry.new_text, row_ref.type, row_ref.record_index, false);
-
-				if (double_clicked && is_left_panel && mutable_dict)
-				{
-					editing_row_ = i;
-					edit_multiline_ =
-					    (row_ref.type == tools_t::rec_type_t::text || row_ref.type == tools_t::rec_type_t::info);
-					edit_buffer_.resize(EDIT_BUFFER_SIZE);
-					std::fill(edit_buffer_.begin(), edit_buffer_.end(), '\0');
-					size_t copy_len = entry.new_text.size();
-					if (copy_len > EDIT_BUFFER_SIZE - 1)
-						copy_len = EDIT_BUFFER_SIZE - 1;
-					std::copy_n(entry.new_text.begin(), copy_len, edit_buffer_.begin());
-				}
+				ImGui::PopTextWrapPos();
 			}
 
 			ImGui::TableSetColumnIndex(3);
@@ -1280,12 +1288,18 @@ void editor_app_t::render_text_with_highlights(
 	    relevant.end(),
 	    [](const search_match_t * a, const search_match_t * b) { return a->char_start < b->char_start; });
 
+	ImVec2 start_pos = ImGui::GetCursorScreenPos();
+	float wrap_width = ImGui::GetContentRegionAvail().x;
+
+	ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + wrap_width);
+	ImGui::TextUnformatted(text.c_str());
+	ImGui::PopTextWrapPos();
+
 	ImDrawList * draw_list = ImGui::GetWindowDrawList();
 	ImVec4 highlight_color(1.0f, 0.9f, 0.2f, 0.4f);
 	ImU32 highlight_u32 = ImGui::ColorConvertFloat4ToU32(highlight_color);
-
-	size_t pos = 0;
-	bool first_segment = true;
+	ImFont * font = ImGui::GetFont();
+	float font_size = ImGui::GetFontSize();
 
 	for (const auto * m : relevant)
 	{
@@ -1296,36 +1310,79 @@ void editor_app_t::render_text_with_highlights(
 			start = text.size();
 		if (end > text.size())
 			end = text.size();
-		if (start < pos)
-			start = pos;
 		if (end <= start)
 			continue;
 
-		if (start > pos)
+		const char * text_start = text.c_str();
+
+		float line_x = start_pos.x;
+		float line_y = start_pos.y;
+		const char * line_start = text_start;
+
+		for (const char * p = text_start; p < text_start + start;)
 		{
-			if (!first_segment)
-				ImGui::SameLine(0, 0);
-			ImGui::TextUnformatted(text.c_str() + pos, text.c_str() + start);
-			first_segment = false;
+			if (*p == '\n')
+			{
+				line_y += ImGui::GetTextLineHeightWithSpacing();
+				line_x = start_pos.x;
+				++p;
+				line_start = p;
+				continue;
+			}
+
+			float char_width = font->CalcTextSizeA(font_size, FLT_MAX, -1.0f, p, p + 1).x;
+			if (line_x + char_width > start_pos.x + wrap_width && p > line_start)
+			{
+				line_y += ImGui::GetTextLineHeightWithSpacing();
+				line_x = start_pos.x;
+				line_start = p;
+			}
+			line_x += char_width;
+			++p;
 		}
 
-		if (!first_segment)
-			ImGui::SameLine(0, 0);
+		float rect_x = line_x;
+		float rect_y = line_y;
 
-		ImVec2 cursor = ImGui::GetCursorScreenPos();
-		ImVec2 text_size = ImGui::CalcTextSize(text.c_str() + start, text.c_str() + end);
-		draw_list->AddRectFilled(cursor, ImVec2(cursor.x + text_size.x, cursor.y + text_size.y), highlight_u32);
-		ImGui::TextUnformatted(text.c_str() + start, text.c_str() + end);
-		first_segment = false;
+		for (const char * p = text_start + start; p < text_start + end;)
+		{
+			if (*p == '\n')
+			{
+				if (line_x > rect_x)
+					draw_list->AddRectFilled(
+					    ImVec2(rect_x, rect_y),
+					    ImVec2(line_x, rect_y + ImGui::GetTextLineHeight()),
+					    highlight_u32);
+				line_y += ImGui::GetTextLineHeightWithSpacing();
+				line_x = start_pos.x;
+				rect_x = start_pos.x;
+				rect_y = line_y;
+				++p;
+				line_start = p;
+				continue;
+			}
 
-		pos = end;
-	}
+			float char_width = font->CalcTextSizeA(font_size, FLT_MAX, -1.0f, p, p + 1).x;
+			if (line_x + char_width > start_pos.x + wrap_width && p > line_start)
+			{
+				draw_list->AddRectFilled(
+				    ImVec2(rect_x, rect_y),
+				    ImVec2(line_x, rect_y + ImGui::GetTextLineHeight()),
+				    highlight_u32);
+				line_y += ImGui::GetTextLineHeightWithSpacing();
+				line_x = start_pos.x;
+				rect_x = start_pos.x;
+				rect_y = line_y;
+				line_start = p;
+			}
+			line_x += char_width;
+			++p;
+		}
 
-	if (pos < text.size())
-	{
-		if (!first_segment)
-			ImGui::SameLine(0, 0);
-		ImGui::TextUnformatted(text.c_str() + pos, text.c_str() + text.size());
+		draw_list->AddRectFilled(
+		    ImVec2(rect_x, rect_y),
+		    ImVec2(line_x, rect_y + ImGui::GetTextLineHeight()),
+		    highlight_u32);
 	}
 }
 
@@ -1335,9 +1392,13 @@ void editor_app_t::render_text_with_syntax(const std::string & text, tools_t::re
 
 	if (tokens.empty())
 	{
+		ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x);
 		ImGui::TextUnformatted(text.c_str());
+		ImGui::PopTextWrapPos();
 		return;
 	}
+
+	ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x);
 
 	bool first_segment = true;
 
@@ -1380,6 +1441,8 @@ void editor_app_t::render_text_with_syntax(const std::string & text, tools_t::re
 
 		first_segment = false;
 	}
+
+	ImGui::PopTextWrapPos();
 }
 
 void editor_app_t::render_text_with_topic_highlights(const std::string & text)
@@ -1596,6 +1659,13 @@ void editor_app_t::render_bottom_panel()
 		ImGui::EndTabItem();
 	}
 
+	if (ImGui::BeginTabItem("Speaker"))
+	{
+		active_bottom_tab_ = 3;
+		render_speaker_tab();
+		ImGui::EndTabItem();
+	}
+
 	ImGui::EndTabBar();
 	ImGui::EndChild();
 }
@@ -1603,11 +1673,17 @@ void editor_app_t::render_bottom_panel()
 void editor_app_t::render_editor_tab()
 {
 	const auto & row = left_rows_[selected_row_];
-	auto it = state_.get_user_dict().find(row.type);
-	if (it == state_.get_user_dict().end() || row.record_index >= it->second.records.size())
+
+	const auto & active_dict = (selected_dict_ == selected_dict_t::base)    ? merged_base_dict_
+	                           : (selected_dict_ == selected_dict_t::source) ? state_.get_source_dict()
+	                                                                         : state_.get_user_dict();
+	bool is_editable = (selected_dict_ == selected_dict_t::user);
+
+	auto it = active_dict.find(row.type);
+	if (it == active_dict.end() || row.record_index >= it->second.records.size())
 		return;
 
-	auto & entry = it->second.records[row.record_index];
+	const auto & entry = it->second.records[row.record_index];
 	float panel_width = ImGui::GetContentRegionAvail().x * 0.5f - 4.0f;
 	float panel_height = ImGui::GetContentRegionAvail().y;
 
@@ -1623,15 +1699,49 @@ void editor_app_t::render_editor_tab()
 	ImGui::TextDisabled("Translation");
 	ImGui::Separator();
 
+	if (!is_editable)
+	{
+		ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x);
+		ImGui::TextUnformatted(entry.new_text.c_str());
+		ImGui::PopTextWrapPos();
+		ImGui::EndChild();
+		return;
+	}
+
+	auto & mutable_entry = state_.get_user_dict().find(row.type)->second.records[row.record_index];
+
 	if (editing_row_ != selected_row_)
 	{
+		if (editing_row_ >= 0 && editing_row_ < static_cast<int>(left_rows_.size()))
+		{
+			std::string committed(edit_buffer_.data());
+			const auto & prev_row = left_rows_[editing_row_];
+			auto prev_it = state_.get_user_dict().find(prev_row.type);
+			if (prev_it != state_.get_user_dict().end() && prev_row.record_index < prev_it->second.records.size())
+			{
+				auto & prev_entry = prev_it->second.records[prev_row.record_index];
+				if (committed != prev_entry.new_text)
+				{
+					history_.record_change(prev_row.type, prev_entry.key_text, prev_entry.new_text, committed);
+					prev_entry.new_text = committed;
+					prev_entry.status = tools_t::status_t::in_progress;
+					auto vr = validation_.validate(prev_row.type, committed);
+					if (vr.level == validation_level_t::error)
+						prev_entry.status = tools_t::status_t::has_errors;
+					state_.mark_modified(prev_row.type, prev_row.record_index);
+					if (prev_row.type == tools_t::rec_type_t::dial)
+						annotations_mgr_.rebuild(state_, merged_base_dict_);
+				}
+			}
+		}
+
 		editing_row_ = selected_row_;
 		edit_buffer_.resize(EDIT_BUFFER_SIZE);
 		std::fill(edit_buffer_.begin(), edit_buffer_.end(), '\0');
-		size_t copy_len = entry.new_text.size();
+		size_t copy_len = mutable_entry.new_text.size();
 		if (copy_len > EDIT_BUFFER_SIZE - 1)
 			copy_len = EDIT_BUFFER_SIZE - 1;
-		std::copy_n(entry.new_text.begin(), copy_len, edit_buffer_.begin());
+		std::copy_n(mutable_entry.new_text.begin(), copy_len, edit_buffer_.begin());
 	}
 
 	float input_height = ImGui::GetContentRegionAvail().y;
@@ -1645,17 +1755,17 @@ void editor_app_t::render_editor_tab()
 	if (changed)
 	{
 		std::string new_value(edit_buffer_.data());
-		if (new_value != entry.new_text)
+		if (new_value != mutable_entry.new_text)
 		{
-			history_.record_change(row.type, entry.key_text, entry.new_text, new_value);
-			entry.new_text = new_value;
-			entry.status = tools_t::status_t::translated;
+			history_.record_change(row.type, mutable_entry.key_text, mutable_entry.new_text, new_value);
+			mutable_entry.new_text = new_value;
+			mutable_entry.status = tools_t::status_t::in_progress;
 			auto vr = validation_.validate(row.type, new_value);
 			if (vr.level == validation_level_t::error)
-				entry.status = tools_t::status_t::has_errors;
+				mutable_entry.status = tools_t::status_t::has_errors;
 			state_.mark_modified(row.type, row.record_index);
 			if (row.type == tools_t::rec_type_t::dial)
-				annotations_mgr_.rebuild(state_, base_dicts_.get_merged_dict());
+				annotations_mgr_.rebuild(state_, merged_base_dict_);
 		}
 	}
 
@@ -1665,8 +1775,13 @@ void editor_app_t::render_editor_tab()
 void editor_app_t::render_annotations_tab()
 {
 	const auto & row = left_rows_[selected_row_];
-	auto it = state_.get_user_dict().find(row.type);
-	if (it == state_.get_user_dict().end() || row.record_index >= it->second.records.size())
+
+	const auto & active_dict = (selected_dict_ == selected_dict_t::base)    ? merged_base_dict_
+	                           : (selected_dict_ == selected_dict_t::source) ? state_.get_source_dict()
+	                                                                         : state_.get_user_dict();
+
+	auto it = active_dict.find(row.type);
+	if (it == active_dict.end() || row.record_index >= it->second.records.size())
 		return;
 
 	const auto & entry = it->second.records[row.record_index];
@@ -1680,7 +1795,7 @@ void editor_app_t::render_annotations_tab()
 		ImGui::Separator();
 	}
 
-	const auto & base_dict = base_dicts_.get_merged_dict();
+	const auto & base_dict = merged_base_dict_;
 	auto base_it = base_dict.find(row.type);
 	if (base_it != base_dict.end())
 	{
@@ -1760,8 +1875,13 @@ void editor_app_t::render_annotations_tab()
 void editor_app_t::render_history_tab()
 {
 	const auto & row = left_rows_[selected_row_];
-	auto it = state_.get_user_dict().find(row.type);
-	if (it == state_.get_user_dict().end() || row.record_index >= it->second.records.size())
+
+	const auto & active_dict = (selected_dict_ == selected_dict_t::base)    ? merged_base_dict_
+	                           : (selected_dict_ == selected_dict_t::source) ? state_.get_source_dict()
+	                                                                         : state_.get_user_dict();
+
+	auto it = active_dict.find(row.type);
+	if (it == active_dict.end() || row.record_index >= it->second.records.size())
 		return;
 
 	const auto & entry = it->second.records[row.record_index];
@@ -1773,6 +1893,8 @@ void editor_app_t::render_history_tab()
 		return;
 	}
 
+	bool is_editable = (selected_dict_ == selected_dict_t::user);
+
 	ImGui::BeginChild("HistoryScroll", ImVec2(0, 0), ImGuiChildFlags_None);
 
 	for (size_t ri = 0; ri < history.size(); ++ri)
@@ -1781,13 +1903,16 @@ void editor_app_t::render_history_tab()
 		ImGui::PushID(static_cast<int>(i));
 
 		ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "%s", history[i].timestamp.c_str());
-		ImGui::SameLine();
-		if (ImGui::SmallButton("Revert"))
+		if (is_editable)
 		{
-			history_.revert(state_, row.type, entry.key_text, i);
-			rebuild_row_data();
-			ImGui::PopID();
-			break;
+			ImGui::SameLine();
+			if (ImGui::SmallButton("Revert"))
+			{
+				history_.revert(state_, row.type, entry.key_text, i);
+				rebuild_row_data();
+				ImGui::PopID();
+				break;
+			}
 		}
 
 		std::string prev = history[i].value;
@@ -1812,6 +1937,116 @@ void editor_app_t::render_history_tab()
 	ImGui::EndChild();
 }
 
+void editor_app_t::render_speaker_tab()
+{
+	const auto & dict = (selected_dict_ == selected_dict_t::base)    ? merged_base_dict_
+	                    : (selected_dict_ == selected_dict_t::source) ? state_.get_source_dict()
+	                                                                  : state_.get_user_dict();
+	auto it = dict.find(tools_t::rec_type_t::info);
+	if (it == dict.end() || it->second.records.empty())
+	{
+		ImGui::TextDisabled("No info records loaded");
+		return;
+	}
+
+	ImGui::SetNextItemWidth(200.0f);
+	ImGui::InputText("##speaker_filter", speaker_filter_buffer_.data(), speaker_filter_buffer_.size());
+	ImGui::SameLine();
+	ImGui::TextDisabled("Filter");
+
+	const ImGuiTableFlags flags = ImGuiTableFlags_Sortable | ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollY |
+	                              ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV;
+
+	if (!ImGui::BeginTable("##speaker_table", 3, flags, ImVec2(0, ImGui::GetContentRegionAvail().y)))
+		return;
+
+	ImGui::TableSetupScrollFreeze(0, 1);
+	ImGui::TableSetupColumn("Speaker ID", ImGuiTableColumnFlags_DefaultSort);
+	ImGui::TableSetupColumn("Speaker Name");
+	ImGui::TableSetupColumn("Gender", ImGuiTableColumnFlags_WidthFixed, 60.0f);
+	ImGui::TableHeadersRow();
+
+	struct speaker_row_t
+	{
+		const std::string * speaker;
+		const std::string * speaker_name;
+		const std::string * gender;
+	};
+
+	std::vector<speaker_row_t> visible_rows;
+	visible_rows.reserve(it->second.records.size());
+
+	std::string filter_text(speaker_filter_buffer_.data());
+	for (auto & c : filter_text)
+		c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+
+	for (const auto & entry : it->second.records)
+	{
+		if (entry.speaker.empty() && entry.speaker_name.empty() && entry.gender.empty())
+			continue;
+
+		if (!filter_text.empty())
+		{
+			auto lower = [](const std::string & s)
+			{
+				std::string r = s;
+				for (auto & c : r)
+					c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+				return r;
+			};
+
+			if (lower(entry.speaker).find(filter_text) == std::string::npos &&
+			    lower(entry.speaker_name).find(filter_text) == std::string::npos &&
+			    lower(entry.gender).find(filter_text) == std::string::npos)
+				continue;
+		}
+
+		visible_rows.push_back({&entry.speaker, &entry.speaker_name, &entry.gender});
+	}
+
+	ImGuiTableSortSpecs * sort_specs = ImGui::TableGetSortSpecs();
+	if (sort_specs != nullptr && sort_specs->SpecsDirty && sort_specs->SpecsCount > 0)
+	{
+		const auto & spec = sort_specs->Specs[0];
+		bool ascending = (spec.SortDirection == ImGuiSortDirection_Ascending);
+		int col = spec.ColumnIndex;
+
+		std::sort(visible_rows.begin(), visible_rows.end(),
+		    [col, ascending](const speaker_row_t & a, const speaker_row_t & b)
+		    {
+			    const std::string * va = col == 0 ? a.speaker : (col == 1 ? a.speaker_name : a.gender);
+			    const std::string * vb = col == 0 ? b.speaker : (col == 1 ? b.speaker_name : b.gender);
+			    int cmp = va->compare(*vb);
+			    return ascending ? (cmp < 0) : (cmp > 0);
+		    });
+
+		sort_specs->SpecsDirty = false;
+	}
+
+	ImGuiListClipper clipper;
+	clipper.Begin(static_cast<int>(visible_rows.size()));
+
+	while (clipper.Step())
+	{
+		for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; ++i)
+		{
+			const auto & row = visible_rows[i];
+			ImGui::TableNextRow();
+
+			ImGui::TableSetColumnIndex(0);
+			ImGui::TextUnformatted(row.speaker->c_str());
+
+			ImGui::TableSetColumnIndex(1);
+			ImGui::TextUnformatted(row.speaker_name->c_str());
+
+			ImGui::TableSetColumnIndex(2);
+			ImGui::TextUnformatted(row.gender->c_str());
+		}
+	}
+
+	ImGui::EndTable();
+}
+
 void editor_app_t::render_annotations_panel()
 {
 	ImGui::BeginChild("AnnotationsPanel", ImVec2(0, 180), ImGuiChildFlags_Borders);
@@ -1827,8 +2062,13 @@ void editor_app_t::render_annotations_panel()
 	}
 
 	const auto & row = left_rows_[selected_row_];
-	auto it = state_.get_user_dict().find(row.type);
-	if (it == state_.get_user_dict().end() || row.record_index >= it->second.records.size())
+
+	const auto & active_dict = (selected_dict_ == selected_dict_t::base)    ? merged_base_dict_
+	                           : (selected_dict_ == selected_dict_t::source) ? state_.get_source_dict()
+	                                                                         : state_.get_user_dict();
+
+	auto it = active_dict.find(row.type);
+	if (it == active_dict.end() || row.record_index >= it->second.records.size())
 	{
 		ImGui::EndChild();
 		return;
@@ -1845,7 +2085,7 @@ void editor_app_t::render_annotations_panel()
 		ImGui::Separator();
 	}
 
-	const auto & base_dict = base_dicts_.get_merged_dict();
+	const auto & base_dict = merged_base_dict_;
 	auto base_it = base_dict.find(row.type);
 	if (base_it != base_dict.end())
 	{
@@ -1859,7 +2099,7 @@ void editor_app_t::render_annotations_panel()
 		}
 	}
 
-	if (entry.status == tools_t::status_t::changed && base_it != base_dict.end())
+	if (entry.status == tools_t::status_t::auto_changed && base_it != base_dict.end())
 	{
 		const auto * base_entry = base_it->second.find(entry.key_text);
 		if (base_entry != nullptr)
@@ -1893,7 +2133,7 @@ void editor_app_t::render_annotations_panel()
 		}
 	}
 
-	auto fuzzy = base_dicts_.find_fuzzy_matches(entry.old_text, row.type);
+	auto fuzzy = find_fuzzy_matches(entry.old_text, row.type);
 	if (!fuzzy.empty())
 	{
 		ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.3f, 1.0f), "Fuzzy matches:");
@@ -1993,8 +2233,13 @@ void editor_app_t::render_history_panel()
 	}
 
 	const auto & row = left_rows_[selected_row_];
-	auto it = state_.get_user_dict().find(row.type);
-	if (it == state_.get_user_dict().end() || row.record_index >= it->second.records.size())
+
+	const auto & active_dict = (selected_dict_ == selected_dict_t::base)    ? merged_base_dict_
+	                           : (selected_dict_ == selected_dict_t::source) ? state_.get_source_dict()
+	                                                                         : state_.get_user_dict();
+
+	auto it = active_dict.find(row.type);
+	if (it == active_dict.end() || row.record_index >= it->second.records.size())
 	{
 		ImGui::EndChild();
 		return;
@@ -2022,18 +2267,21 @@ void editor_app_t::render_history_panel()
 
 		if (ImGui::Selectable(label.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick))
 		{
-			if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+			if (selected_dict_ == selected_dict_t::user && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 			{
 				history_.revert(state_, row.type, entry.key_text, i);
 				rebuild_row_data();
 			}
 		}
 
-		ImGui::SameLine();
-		if (ImGui::SmallButton("Revert"))
+		if (selected_dict_ == selected_dict_t::user)
 		{
-			history_.revert(state_, row.type, entry.key_text, i);
-			rebuild_row_data();
+			ImGui::SameLine();
+			if (ImGui::SmallButton("Revert"))
+			{
+				history_.revert(state_, row.type, entry.key_text, i);
+				rebuild_row_data();
+			}
 		}
 
 		ImGui::PopID();
@@ -2052,9 +2300,6 @@ void editor_app_t::render_dialogs()
 
 	if (show_base_dict_config_)
 		render_base_dict_config();
-
-	if (show_auto_translate_result_)
-		render_auto_translate_result_dialog();
 }
 
 void editor_app_t::render_quit_dialog()
@@ -2200,45 +2445,12 @@ void editor_app_t::render_base_dict_config()
 
 	if (ImGui::Button("Reload"))
 	{
-		base_dicts_.set_paths(config_.base_dict_paths);
-		base_dicts_.reload();
-		annotations_mgr_.rebuild(state_, base_dicts_.get_merged_dict());
+		reload_base_dicts();
+		annotations_mgr_.rebuild(state_, merged_base_dict_);
 		config_.save(config_path_);
 	}
 
 	ImGui::End();
-}
-
-void editor_app_t::render_auto_translate_result_dialog()
-{
-	ImGui::OpenPopup("Auto-translate Result");
-
-	ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-	ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-
-	if (!ImGui::BeginPopupModal("Auto-translate Result", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
-		return;
-
-	ImGui::Text("%s", last_auto_result_title_.c_str());
-	ImGui::Separator();
-
-	std::string translated_str = "Translated: " + std::to_string(last_auto_result_.translated);
-	std::string no_match_str = "Skipped (no match): " + std::to_string(last_auto_result_.skipped_no_match);
-	std::string changed_str = "Skipped (text changed): " + std::to_string(last_auto_result_.skipped_text_changed);
-
-	ImGui::TextUnformatted(translated_str.c_str());
-	ImGui::TextUnformatted(no_match_str.c_str());
-	ImGui::TextUnformatted(changed_str.c_str());
-
-	ImGui::Separator();
-
-	if (ImGui::Button("OK", ImVec2(120, 0)))
-	{
-		show_auto_translate_result_ = false;
-		ImGui::CloseCurrentPopup();
-	}
-
-	ImGui::EndPopup();
 }
 
 std::string editor_app_t::show_open_file_dialog(const char * title) const
@@ -2437,4 +2649,108 @@ void editor_app_t::render_splitter_vertical(float & width, float min_w, float ma
 		ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
 
 	ImGui::SameLine();
+}
+
+
+void editor_app_t::reload_base_dicts()
+{
+	merged_base_dict_ = tools_t::initialize_dict();
+
+	if (config_.base_dict_paths.empty())
+		return;
+
+	dict_merger_t merger(config_.base_dict_paths);
+	merged_base_dict_ = merger.get_dict();
+}
+
+void editor_app_t::save_current_filters()
+{
+	int idx = static_cast<int>(selected_dict_);
+	filter_per_dict_[idx].status_filter = status_filter_;
+	filter_per_dict_[idx].type_filter = type_filter_;
+	filter_per_dict_[idx].sidebar_active_type = sidebar_active_type_;
+}
+
+void editor_app_t::restore_filters_for(selected_dict_t dict)
+{
+	int idx = static_cast<int>(dict);
+	status_filter_ = filter_per_dict_[idx].status_filter;
+	type_filter_ = filter_per_dict_[idx].type_filter;
+	sidebar_active_type_ = filter_per_dict_[idx].sidebar_active_type;
+}
+
+static size_t levenshtein_distance(const std::string & a, const std::string & b)
+{
+	size_t m = a.size();
+	size_t n = b.size();
+
+	if (m == 0)
+		return n;
+	if (n == 0)
+		return m;
+
+	std::vector<size_t> prev(n + 1);
+	std::vector<size_t> curr(n + 1);
+
+	for (size_t j = 0; j <= n; ++j)
+		prev[j] = j;
+
+	for (size_t i = 1; i <= m; ++i)
+	{
+		curr[0] = i;
+		for (size_t j = 1; j <= n; ++j)
+		{
+			size_t cost = (a[i - 1] == b[j - 1]) ? 0 : 1;
+			curr[j] = std::min({ curr[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost });
+		}
+		std::swap(prev, curr);
+	}
+
+	return prev[n];
+}
+
+std::vector<editor_app_t::fuzzy_match_t> editor_app_t::find_fuzzy_matches(
+    const std::string & text,
+    tools_t::rec_type_t type,
+    size_t max_results) const
+{
+	std::vector<fuzzy_match_t> matches;
+
+	if (text.empty())
+		return matches;
+
+	auto it = merged_base_dict_.find(type);
+	if (it == merged_base_dict_.end())
+		return matches;
+
+	for (const auto & entry : it->second.records)
+	{
+		if (entry.old_text.empty())
+			continue;
+		if (entry.old_text == text)
+			continue;
+
+		size_t max_len = std::max(text.size(), entry.old_text.size());
+		size_t dist = levenshtein_distance(text, entry.old_text);
+		float similarity = 1.0f - static_cast<float>(dist) / static_cast<float>(max_len);
+
+		if (similarity < 0.5f)
+			continue;
+
+		fuzzy_match_t match;
+		match.matched_key = entry.key_text;
+		match.matched_value = entry.new_text;
+		match.similarity = similarity;
+		matches.push_back(match);
+	}
+
+	std::sort(
+	    matches.begin(),
+	    matches.end(),
+	    [](const fuzzy_match_t & a, const fuzzy_match_t & b) { return a.similarity > b.similarity; });
+
+	if (matches.size() > max_results)
+		matches.resize(max_results);
+
+	return matches;
 }

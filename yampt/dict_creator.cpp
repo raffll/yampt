@@ -29,6 +29,7 @@ dict_creator_t::dict_creator_t(const std::string & path, const std::string & pat
 void dict_creator_t::make_dict()
 {
 	build_indexes();
+	build_text_match_index();
 
 	make_dict_gmst();
 	make_dict_fnam();
@@ -36,7 +37,6 @@ void dict_creator_t::make_dict()
 	make_dict_text();
 	make_dict_rnam();
 	make_dict_indx();
-	make_dict_flag();
 	make_dict_info();
 
 	if (is_make_mode)
@@ -50,17 +50,13 @@ void dict_creator_t::make_dict()
 	}
 	else
 	{
-		make_dict_cell_unordered();
+		make_dict_cell_unordered_exterior();
+		make_dict_cell_unordered_interior();
 		make_dict_cell_unordered_default();
 		make_dict_cell_unordered_regn();
 		make_dict_dial_unordered();
 		make_dict_script_unordered({ "INFO", "INAM", "BNAM", tools_t::rec_type_t::bnam });
 		make_dict_script_unordered({ "SCPT", "SCHD", "SCTX", tools_t::rec_type_t::sctx });
-		make_dict_fnam_glossary();
-
-		tools_t::add_log(
-		    "[warn] check dictionary for \"MISSING\" keyword\r\n"
-		    "    missing CELL and DIAL records need to be added manually\r\n");
 	}
 }
 
@@ -90,6 +86,11 @@ void dict_creator_t::make_dict_cell_unordered_default()
 					const auto & key_text = esm_ref.get_value().text;
 					const auto & val_text = esm.get_value().text;
 					insert_entry(key_text, key_text, val_text, tools_t::rec_type_t::cell);
+
+					auto * entry = dict.at(tools_t::rec_type_t::cell).find(key_text);
+					if (entry)
+						entry->status = tools_t::status_t::wilderness;
+
 					break;
 				}
 			}
@@ -125,6 +126,11 @@ void dict_creator_t::make_dict_cell_unordered_regn()
 					const auto & key_text = esm_ref.get_value().text;
 					const auto & val_text = esm.get_value().text;
 					insert_entry(key_text, key_text, val_text, tools_t::rec_type_t::cell);
+
+					auto * entry = dict.at(tools_t::rec_type_t::cell).find(key_text);
+					if (entry)
+						entry->status = tools_t::status_t::region;
+
 					break;
 				}
 			}
@@ -222,7 +228,7 @@ void dict_creator_t::build_indexes()
 		esm_ref.set_key("NAME");
 		if (!esm_ref.get_key().exist)
 			continue;
-		flag_index.insert({ esm_ref.get_key().text, i });
+		npc_index.insert({ esm_ref.get_key().text, i });
 	}
 
 	std::string info_prefix;
@@ -392,49 +398,7 @@ void dict_creator_t::make_dict_fnam()
 	print_log_line(tools_t::rec_type_t::fnam);
 }
 
-void dict_creator_t::make_dict_fnam_glossary()
-{
-	std::unordered_map<std::string, size_t> ext_index;
-	for (size_t k = 0; k < esm_ref.get_records().size(); ++k)
-	{
-		esm_ref.select_record(k);
-		if (!tools_t::is_fnam(esm_ref.get_record().id))
-			continue;
 
-		esm_ref.set_key("NAME");
-		if (!esm_ref.get_key().exist)
-			continue;
-
-		ext_index.insert({ esm_ref.get_record().id + "^" + esm_ref.get_key().text, k });
-	}
-
-	reset_counters();
-	for (size_t i = 0; i < esm.get_records().size(); ++i)
-	{
-		esm.select_record(i);
-		if (!tools_t::is_fnam(esm.get_record().id))
-			continue;
-
-		esm.set_key("NAME");
-		esm.set_value("FNAM");
-		if (esm.get_key().exist && esm.get_value().exist && esm.get_value().text != "")
-		{
-			auto search = ext_index.find(esm.get_record().id + "^" + esm.get_key().text);
-			if (search == ext_index.end())
-				continue;
-
-			esm_ref.select_record(search->second);
-			esm_ref.set_value("FNAM");
-			if (esm_ref.get_value().exist && esm_ref.get_value().text != "")
-			{
-				const auto & key_text = esm_ref.get_value().text;
-				const auto & val_text = esm.get_value().text + " " + esm.get_record().id + "^" + esm.get_key().text;
-				insert_entry(key_text, key_text, val_text, tools_t::rec_type_t::glossary);
-			}
-		}
-	}
-	print_log_line(tools_t::rec_type_t::glossary);
-}
 
 void dict_creator_t::make_dict_desc()
 {
@@ -604,44 +568,6 @@ void dict_creator_t::make_dict_dial()
 	print_log_line(tools_t::rec_type_t::dial);
 }
 
-void dict_creator_t::make_dict_flag()
-{
-	reset_counters();
-	for (size_t i = 0; i < esm.get_records().size(); ++i)
-	{
-		esm.select_record(i);
-		if (esm.get_record().id != "NPC_")
-			continue;
-
-		esm.set_key("NAME");
-		esm.set_value("FLAG");
-		if (!esm.get_key().exist || !esm.get_value().exist)
-			continue;
-
-		const auto & key_text = esm.get_key().text;
-		const auto & new_text =
-		    ((tools_t::convert_string_byte_array_to_uint(esm.get_value().content) & 0x0001) != 0) ? "F" : "M";
-
-		std::string old_text;
-		auto search = flag_index.find(key_text);
-		if (search != flag_index.end())
-		{
-			esm_ref.select_record(search->second);
-			esm_ref.set_key("NAME");
-			esm_ref.set_value("FLAG");
-			old_text =
-			    ((tools_t::convert_string_byte_array_to_uint(esm_ref.get_value().content) & 0x0001) != 0) ? "F" : "M";
-		}
-		else
-		{
-			old_text = new_text;
-		}
-
-		insert_entry(key_text, old_text, new_text, tools_t::rec_type_t::npc_flag);
-	}
-	print_log_line(tools_t::rec_type_t::npc_flag);
-}
-
 void dict_creator_t::make_dict_info()
 {
 	std::string key_prefix;
@@ -690,6 +616,36 @@ void dict_creator_t::make_dict_info()
 		}
 
 		insert_entry(key_text, old_text, new_text, tools_t::rec_type_t::info);
+
+		esm.select_record(i);
+		esm.set_value("ANAM");
+		if (!esm.get_value().exist || esm.get_value().text.empty())
+			continue;
+
+		const auto & speaker_id = esm.get_value().text;
+		auto npc_search = npc_index.find(speaker_id);
+		if (npc_search == npc_index.end())
+			continue;
+
+		esm_ref.select_record(npc_search->second);
+		esm_ref.set_key("FNAM");
+		esm_ref.set_value("FLAG");
+
+		std::string speaker_name;
+		if (esm_ref.get_key().exist)
+			speaker_name = esm_ref.get_key().text;
+
+		std::string gender;
+		if (esm_ref.get_value().exist)
+			gender = ((tools_t::convert_string_byte_array_to_uint(esm_ref.get_value().content) & 0x0001) != 0) ? "F" : "M";
+
+		auto * entry = dict.at(tools_t::rec_type_t::info).find(key_text);
+		if (!entry)
+			continue;
+
+		entry->speaker = speaker_id;
+		entry->speaker_name = speaker_name;
+		entry->gender = gender;
 	}
 	print_log_line(tools_t::rec_type_t::info);
 }
@@ -718,36 +674,238 @@ void dict_creator_t::make_dict_script(const ids & ids)
 	print_log_line(ids.type);
 }
 
-void dict_creator_t::make_dict_cell_unordered()
+bool dict_creator_t::is_interior_cell(const std::string & data_content)
 {
-	auto patterns_ext = make_dict_cell_unordered_patterns_ext();
-	const auto & patterns = make_dict_cell_unordered_patterns();
+	if (data_content.size() < 4)
+		return false;
 
-	reset_counters();
-	for (size_t i = 0; i < patterns_ext.size(); ++i)
+	unsigned char flags_byte = static_cast<unsigned char>(data_content[0]);
+	return (flags_byte & 0x01) != 0;
+}
+
+std::string dict_creator_t::make_exterior_coord_key(const std::string & data_content)
+{
+	if (data_content.size() < 12)
+		return "";
+
+	return data_content.substr(4, 8);
+}
+
+dict_creator_t::door_index_t dict_creator_t::build_door_index(esm_reader_t & esm_src)
+{
+	door_index_t index;
+
+	for (size_t i = 0; i < esm_src.get_records().size(); ++i)
 	{
-		auto search = patterns.find(patterns_ext[i].str);
-		if (search != patterns.end())
+		esm_src.select_record(i);
+		if (esm_src.get_record().id != "CELL")
+			continue;
+
+		const auto & content = esm_src.get_record().content;
+		size_t pos = 16;
+
+		std::string last_dodt;
+
+		while (pos + 8 <= content.size())
 		{
-			esm.select_record(search->second);
-			esm.set_value("NAME");
-			esm_ref.select_record(patterns_ext[i].pos);
-			esm_ref.set_value("NAME");
-			if (esm.get_value().exist && esm.get_value().text != "" && esm_ref.get_value().exist &&
-			    esm_ref.get_value().text != "")
+			std::string sub_id = content.substr(pos, 4);
+			size_t sub_size = tools_t::convert_string_byte_array_to_uint(content.substr(pos + 4, 4));
+			if (sub_size == 0)
+				break;
+			if (pos + 8 + sub_size > content.size())
+				break;
+
+			if (sub_id == "DODT" && sub_size >= 12)
 			{
-				const auto & key_text = esm_ref.get_value().text;
-				const auto & val_text = esm.get_value().text;
-				insert_entry(key_text, key_text, val_text, tools_t::rec_type_t::cell);
+				last_dodt = content.substr(pos + 8, 12);
 			}
-		}
-		else
-		{
-			patterns_ext[i].missing = true;
-			counter_missing++;
+			else if (sub_id == "DNAM" && !last_dodt.empty())
+			{
+				std::string dest_cell = content.substr(pos + 8, sub_size);
+				size_t null_pos = dest_cell.find('\0');
+				if (null_pos != std::string::npos)
+					dest_cell = dest_cell.substr(0, null_pos);
+
+				if (!dest_cell.empty())
+					index.insert({ dest_cell, last_dodt });
+
+				last_dodt.clear();
+			}
+			else
+			{
+				if (sub_id != "DODT")
+					last_dodt.clear();
+			}
+
+			pos += 8 + sub_size;
 		}
 	}
-	make_dict_cell_unordered_add_missing(patterns_ext);
+
+	return index;
+}
+
+void dict_creator_t::make_dict_cell_unordered_exterior()
+{
+	std::unordered_map<std::string, size_t> esm_index;
+
+	for (size_t i = 0; i < esm.get_records().size(); ++i)
+	{
+		esm.select_record(i);
+		if (esm.get_record().id != "CELL")
+			continue;
+
+		esm.set_value("NAME");
+		if (!esm.get_value().exist || esm.get_value().text.empty())
+			continue;
+
+		esm.set_value("DATA");
+		if (!esm.get_value().exist)
+			continue;
+
+		if (is_interior_cell(esm.get_value().content))
+			continue;
+
+		auto coord_key = make_exterior_coord_key(esm.get_value().content);
+		if (!coord_key.empty())
+			esm_index.insert({ coord_key, i });
+	}
+
+	std::vector<std::pair<size_t, std::string>> missing_cells;
+
+	reset_counters();
+	for (size_t i = 0; i < esm_ref.get_records().size(); ++i)
+	{
+		esm_ref.select_record(i);
+		if (esm_ref.get_record().id != "CELL")
+			continue;
+
+		esm_ref.set_value("NAME");
+		if (!esm_ref.get_value().exist || esm_ref.get_value().text.empty())
+			continue;
+
+		const auto ref_cell_name = esm_ref.get_value().text;
+
+		esm_ref.set_value("DATA");
+		if (!esm_ref.get_value().exist)
+		{
+			missing_cells.push_back({ i, ref_cell_name });
+			counter_missing++;
+			continue;
+		}
+
+		if (is_interior_cell(esm_ref.get_value().content))
+			continue;
+
+		auto coord_key = make_exterior_coord_key(esm_ref.get_value().content);
+		if (coord_key.empty())
+		{
+			missing_cells.push_back({ i, ref_cell_name });
+			counter_missing++;
+			continue;
+		}
+
+		auto match_it = esm_index.find(coord_key);
+		if (match_it == esm_index.end())
+		{
+			missing_cells.push_back({ i, ref_cell_name });
+			counter_missing++;
+			continue;
+		}
+
+		esm.select_record(match_it->second);
+		esm.set_value("NAME");
+		const auto & val_text = esm.get_value().text;
+		insert_entry(ref_cell_name, ref_cell_name, val_text, tools_t::rec_type_t::cell);
+
+		auto * entry = dict.at(tools_t::rec_type_t::cell).find(ref_cell_name);
+		if (entry && entry->status.empty())
+			entry->status = tools_t::status_t::matched_by_coords;
+	}
+
+	make_dict_cell_unordered_add_missing(missing_cells);
+	print_log_line(tools_t::rec_type_t::cell);
+}
+
+void dict_creator_t::make_dict_cell_unordered_interior()
+{
+	auto door_index_ext = build_door_index(esm_ref);
+	auto door_index_esm = build_door_index(esm);
+
+	std::unordered_map<std::string, size_t> esm_index;
+
+	for (size_t i = 0; i < esm.get_records().size(); ++i)
+	{
+		esm.select_record(i);
+		if (esm.get_record().id != "CELL")
+			continue;
+
+		esm.set_value("NAME");
+		if (!esm.get_value().exist || esm.get_value().text.empty())
+			continue;
+
+		const auto cell_name = esm.get_value().text;
+
+		esm.set_value("DATA");
+		if (!esm.get_value().exist)
+			continue;
+
+		if (!is_interior_cell(esm.get_value().content))
+			continue;
+
+		auto door_it = door_index_esm.find(cell_name);
+		if (door_it != door_index_esm.end())
+			esm_index.insert({ door_it->second, i });
+	}
+
+	std::vector<std::pair<size_t, std::string>> missing_cells;
+
+	reset_counters();
+	for (size_t i = 0; i < esm_ref.get_records().size(); ++i)
+	{
+		esm_ref.select_record(i);
+		if (esm_ref.get_record().id != "CELL")
+			continue;
+
+		esm_ref.set_value("NAME");
+		if (!esm_ref.get_value().exist || esm_ref.get_value().text.empty())
+			continue;
+
+		const auto ref_cell_name = esm_ref.get_value().text;
+
+		esm_ref.set_value("DATA");
+		if (!esm_ref.get_value().exist)
+			continue;
+
+		if (!is_interior_cell(esm_ref.get_value().content))
+			continue;
+
+		auto door_it = door_index_ext.find(ref_cell_name);
+		if (door_it == door_index_ext.end())
+		{
+			missing_cells.push_back({ i, ref_cell_name });
+			counter_missing++;
+			continue;
+		}
+
+		auto match_it = esm_index.find(door_it->second);
+		if (match_it == esm_index.end())
+		{
+			missing_cells.push_back({ i, ref_cell_name });
+			counter_missing++;
+			continue;
+		}
+
+		esm.select_record(match_it->second);
+		esm.set_value("NAME");
+		const auto & val_text = esm.get_value().text;
+		insert_entry(ref_cell_name, ref_cell_name, val_text, tools_t::rec_type_t::cell);
+
+		auto * entry = dict.at(tools_t::rec_type_t::cell).find(ref_cell_name);
+		if (entry && entry->status.empty())
+			entry->status = tools_t::status_t::matched_by_coords;
+	}
+
+	make_dict_cell_unordered_add_missing(missing_cells);
 	print_log_line(tools_t::rec_type_t::cell);
 }
 
@@ -771,6 +929,10 @@ void dict_creator_t::make_dict_dial_unordered()
 				const auto & key_text = esm_ref.get_value().text;
 				const auto & val_text = esm.get_value().text;
 				insert_entry(key_text, key_text, val_text, tools_t::rec_type_t::dial);
+
+				auto * entry = dict.at(tools_t::rec_type_t::dial).find(key_text);
+				if (entry && entry->status.empty())
+					entry->status = tools_t::status_t::matched_by_info;
 			}
 		}
 		else
@@ -781,24 +943,6 @@ void dict_creator_t::make_dict_dial_unordered()
 	}
 	make_dict_dial_unordered_add_missing(patterns_ext);
 	print_log_line(tools_t::rec_type_t::dial);
-}
-
-dict_creator_t::patterns_ext_t dict_creator_t::make_dict_cell_unordered_patterns_ext()
-{
-	patterns_ext_t patterns_ext;
-	for (size_t i = 0; i < esm_ref.get_records().size(); ++i)
-	{
-		esm_ref.select_record(i);
-		if (esm_ref.get_record().id != "CELL")
-			continue;
-
-		esm_ref.set_value("NAME");
-		if (esm_ref.get_value().exist && esm_ref.get_value().text != "")
-		{
-			patterns_ext.push_back({ make_dict_cell_unordered_pattern(esm_ref), i, false });
-		}
-	}
-	return patterns_ext;
 }
 
 dict_creator_t::patterns_ext_t dict_creator_t::make_dict_dial_unordered_patterns_ext()
@@ -819,24 +963,6 @@ dict_creator_t::patterns_ext_t dict_creator_t::make_dict_dial_unordered_patterns
 	return patterns_ext;
 }
 
-dict_creator_t::patterns dict_creator_t::make_dict_cell_unordered_patterns()
-{
-	patterns patterns;
-	for (size_t i = 0; i < esm.get_records().size(); ++i)
-	{
-		esm.select_record(i);
-		if (esm.get_record().id != "CELL")
-			continue;
-
-		esm.set_value("NAME");
-		if (esm.get_value().exist && esm.get_value().text != "")
-		{
-			patterns.insert({ make_dict_cell_unordered_pattern(esm), i });
-		}
-	}
-	return patterns;
-}
-
 dict_creator_t::patterns dict_creator_t::make_dict_dial_unordered_patterns()
 {
 	patterns patterns;
@@ -855,20 +981,6 @@ dict_creator_t::patterns dict_creator_t::make_dict_dial_unordered_patterns()
 	return patterns;
 }
 
-std::string dict_creator_t::make_dict_cell_unordered_pattern(esm_reader_t & esm_cur)
-{
-	std::string pattern;
-	esm_cur.set_value("DATA");
-	pattern += esm_cur.get_value().content;
-	esm_cur.set_value("NAME");
-	while (esm_cur.get_value().exist)
-	{
-		esm_cur.set_next_value("NAME");
-		pattern += esm_cur.get_value().content;
-	}
-	return pattern;
-}
-
 std::string dict_creator_t::make_dict_dial_unordered_pattern(esm_reader_t & esm_cur, size_t i)
 {
 	std::string pattern;
@@ -880,25 +992,17 @@ std::string dict_creator_t::make_dict_dial_unordered_pattern(esm_reader_t & esm_
 	return pattern;
 }
 
-void dict_creator_t::make_dict_cell_unordered_add_missing(const patterns_ext_t & patterns_ext)
+void dict_creator_t::make_dict_cell_unordered_add_missing(const std::vector<std::pair<size_t, std::string>> & missing_cells)
 {
-	for (size_t i = 0; i < patterns_ext.size(); ++i)
+	for (const auto & [rec_index, cell_name] : missing_cells)
 	{
-		if (!patterns_ext[i].missing)
-			continue;
+		insert_entry(cell_name, cell_name, cell_name, tools_t::rec_type_t::cell);
 
-		esm_ref.select_record(patterns_ext[i].pos);
-		esm_ref.set_value("NAME");
-		if (!esm_ref.get_value().exist)
-			continue;
+		auto * entry = dict.at(tools_t::rec_type_t::cell).find(cell_name);
+		if (entry)
+			entry->status = tools_t::status_t::missing;
 
-		if (esm_ref.get_value().text == "")
-			continue;
-
-		const auto & key_text = esm_ref.get_value().text;
-		const auto & val_text = "MISSING";
-		insert_entry(key_text, key_text, val_text, tools_t::rec_type_t::cell);
-		tools_t::add_log("missing CELL: " + esm_ref.get_value().text + "\r\n");
+		tools_t::add_log("[warning] missing CELL: " + cell_name + "\r\n");
 	}
 }
 
@@ -915,9 +1019,13 @@ void dict_creator_t::make_dict_dial_unordered_add_missing(const patterns_ext_t &
 			continue;
 
 		const auto & key_text = esm_ref.get_value().text;
-		const auto & val_text = "MISSING";
-		insert_entry(key_text, key_text, val_text, tools_t::rec_type_t::dial);
-		tools_t::add_log("missing DIAL: " + esm_ref.get_value().text + "\r\n");
+		insert_entry(key_text, key_text, key_text, tools_t::rec_type_t::dial);
+
+		auto * entry = dict.at(tools_t::rec_type_t::dial).find(key_text);
+		if (entry)
+			entry->status = tools_t::status_t::missing;
+
+		tools_t::add_log("[warning] missing DIAL: " + esm_ref.get_value().text + "\r\n");
 	}
 }
 
@@ -951,6 +1059,10 @@ void dict_creator_t::make_dict_script_unordered(const ids & ids)
 				const auto & key_text = esm_ref.get_key().text + "^" + message_ext.at(k);
 				const auto & val_text = esm.get_key().text + "^" + message.at(k);
 				insert_entry(key_text, key_text, val_text, ids.type);
+
+				auto * entry = dict.at(ids.type).find(key_text);
+				if (entry && entry->status.empty())
+					entry->status = tools_t::status_t::matched_by_name;
 			}
 		}
 	}
@@ -1002,6 +1114,97 @@ void dict_creator_t::reset_counters()
 	counter_all = 0;
 }
 
+static bool is_number_or_punct(char c)
+{
+	return (c >= '0' && c <= '9') || c == '.' || c == ',' || c == '-' || c == ':' || c == ';' || c == '!' || c == '?';
+}
+
+bool dict_creator_t::differs_only_in_numbers_or_punct(const std::string & a, const std::string & b)
+{
+	if (a.size() != b.size())
+		return false;
+
+	bool has_difference = false;
+
+	for (size_t i = 0; i < a.size(); ++i)
+	{
+		if (a[i] == b[i])
+			continue;
+
+		if (!is_number_or_punct(a[i]) && !is_number_or_punct(b[i]))
+			return false;
+
+		has_difference = true;
+	}
+
+	return has_difference;
+}
+
+std::string dict_creator_t::adapt_translation(
+    const std::string & source,
+    const std::string & matched_source,
+    const std::string & matched_translation)
+{
+	if (source.size() != matched_source.size())
+		return matched_translation;
+
+	std::string result = matched_translation;
+
+	for (size_t i = 0; i < source.size() && i < matched_source.size(); ++i)
+	{
+		if (source[i] == matched_source[i])
+			continue;
+
+		size_t search_start = 0;
+		auto pos = result.find(matched_source[i], search_start);
+		bool replaced = false;
+
+		while (pos != std::string::npos)
+		{
+			if (is_number_or_punct(result[pos]))
+			{
+				result[pos] = source[i];
+				replaced = true;
+				break;
+			}
+
+			search_start = pos + 1;
+			pos = result.find(matched_source[i], search_start);
+		}
+
+		if (!replaced)
+		{
+			for (size_t j = 0; j < result.size(); ++j)
+			{
+				if (result[j] != matched_source[i])
+					continue;
+				result[j] = source[i];
+				break;
+			}
+		}
+	}
+
+	return result;
+}
+
+void dict_creator_t::build_text_match_index()
+{
+	text_match_index_.clear();
+
+	if (!base_dict)
+		return;
+
+	for (const auto & [type, chapter] : *base_dict)
+	{
+		for (const auto & entry : chapter.records)
+		{
+			if (entry.old_text.empty())
+				continue;
+			text_match_index_[entry.old_text].push_back(&entry);
+		}
+	}
+}
+
 void dict_creator_t::insert_entry(
     const std::string & key_text,
     const std::string & old_text,
@@ -1014,36 +1217,129 @@ void dict_creator_t::insert_entry(
 	entry.key_text = key_text;
 	entry.old_text = old_text;
 
-	if (is_make_mode)
+	if (!is_make_mode)
 	{
-		if (!base_dict)
+		entry.new_text = new_text;
+		entry.status = "";
+
+		if (dict.at(type).insert(entry))
 		{
-			entry.new_text = old_text;
-			entry.status = tools_t::status_t::untranslated;
-			if (dict.at(type).insert(entry))
-				counter_created++;
-			else
-				counter_identical++;
+			counter_created++;
 			return;
 		}
 
-		auto it = base_dict->find(type);
-		if (it == base_dict->end())
+		auto * existing = dict.at(type).find(key_text);
+		if (existing != nullptr && existing->new_text != new_text)
 		{
-			entry.new_text = old_text;
-			entry.status = tools_t::status_t::untranslated;
-			if (dict.at(type).insert(entry))
-				counter_created++;
-			else
-				counter_identical++;
-			return;
+			tools_t::record_entry_t doubled_entry;
+			doubled_entry.key_text = key_text + "^DUP_" + std::to_string(counter_doubled);
+			doubled_entry.old_text = old_text;
+			doubled_entry.new_text = new_text;
+			doubled_entry.status = tools_t::status_t::duplicate;
+			dict.at(type).insert(doubled_entry);
+			counter_doubled++;
+			counter_created++;
+			tools_t::add_log("[warning] doubled " + tools_t::type_to_str(type) + ": " + key_text + "\r\n");
+		}
+		else
+		{
+			counter_identical++;
+		}
+		return;
+	}
+
+	if (!base_dict)
+	{
+		entry.new_text = old_text;
+		entry.status = tools_t::status_t::untranslated;
+		if (dict.at(type).insert(entry))
+			counter_created++;
+		else
+			counter_identical++;
+		return;
+	}
+
+	auto it = base_dict->find(type);
+	if (it == base_dict->end())
+	{
+		entry.new_text = old_text;
+		entry.status = tools_t::status_t::untranslated;
+		if (dict.at(type).insert(entry))
+			counter_created++;
+		else
+			counter_identical++;
+		return;
+	}
+
+	const auto * base_entry = it->second.find(key_text);
+
+	if (base_entry && base_entry->old_text == old_text && base_entry->new_text == old_text)
+	{
+		entry.new_text = old_text;
+		entry.status = tools_t::status_t::auto_identical;
+		if (dict.at(type).insert(entry))
+			counter_created++;
+		else
+			counter_identical++;
+		return;
+	}
+
+	if (base_entry && base_entry->old_text == old_text && base_entry->new_text != old_text)
+	{
+		entry.new_text = base_entry->new_text;
+		entry.status = tools_t::status_t::auto_base;
+		if (dict.at(type).insert(entry))
+			counter_created++;
+		else
+			counter_identical++;
+		return;
+	}
+
+	if (!base_entry)
+	{
+		auto text_it = text_match_index_.find(old_text);
+		if (text_it != text_match_index_.end())
+		{
+			const tools_t::record_entry_t * translated_match = nullptr;
+			int match_count = 0;
+			for (const auto * candidate : text_it->second)
+			{
+				if (candidate->new_text == candidate->old_text)
+					continue;
+				translated_match = candidate;
+				++match_count;
+				if (match_count > 1)
+					break;
+			}
+
+			if (match_count == 1 && translated_match)
+			{
+				entry.new_text = translated_match->new_text;
+				entry.status = tools_t::status_t::auto_translated;
+				if (dict.at(type).insert(entry))
+					counter_created++;
+				else
+					counter_identical++;
+				return;
+			}
 		}
 
-		const auto * base_entry = it->second.find(key_text);
-		if (!base_entry)
+		entry.new_text = old_text;
+		entry.status = tools_t::status_t::untranslated;
+		if (dict.at(type).insert(entry))
+			counter_created++;
+		else
+			counter_identical++;
+		return;
+	}
+
+	if (base_entry->old_text != old_text)
+	{
+		if (differs_only_in_numbers_or_punct(old_text, base_entry->old_text))
 		{
-			entry.new_text = old_text;
-			entry.status = tools_t::status_t::untranslated;
+			std::string adapted = adapt_translation(old_text, base_entry->old_text, base_entry->new_text);
+			entry.new_text = adapted;
+			entry.status = tools_t::status_t::auto_heuristic;
 			if (dict.at(type).insert(entry))
 				counter_created++;
 			else
@@ -1052,18 +1348,7 @@ void dict_creator_t::insert_entry(
 		}
 
 		entry.new_text = base_entry->new_text;
-		if (base_entry->old_text == old_text)
-		{
-			if (old_text == base_entry->new_text)
-				entry.status = tools_t::status_t::auto_identical;
-			else
-				entry.status = tools_t::status_t::translated;
-		}
-		else
-		{
-			entry.status = tools_t::status_t::changed;
-		}
-
+		entry.status = tools_t::status_t::auto_changed;
 		if (dict.at(type).insert(entry))
 			counter_created++;
 		else
@@ -1071,45 +1356,26 @@ void dict_creator_t::insert_entry(
 		return;
 	}
 
-	entry.new_text = new_text;
-	entry.status = "";
-
+	entry.new_text = old_text;
+	entry.status = tools_t::status_t::untranslated;
 	if (dict.at(type).insert(entry))
-	{
 		counter_created++;
-		return;
-	}
-
-	auto * existing = dict.at(type).find(key_text);
-	if (existing != nullptr && existing->new_text != new_text)
-	{
-		tools_t::record_entry_t doubled_entry;
-		doubled_entry.key_text = key_text + "^DOUBLED_" + std::to_string(counter_doubled);
-		doubled_entry.old_text = old_text;
-		doubled_entry.new_text = new_text;
-		doubled_entry.status = "";
-		dict.at(type).insert(doubled_entry);
-		counter_doubled++;
-		counter_created++;
-		if (type != tools_t::rec_type_t::glossary)
-			tools_t::add_log("[warn] doubled " + tools_t::type_to_str(type) + ": " + key_text + "\r\n");
-	}
 	else
-	{
 		counter_identical++;
-	}
 }
 
 void dict_creator_t::print_log_line(const tools_t::rec_type_t type)
 {
-	std::string line = tools_t::type_to_str(type) + ": created=" + std::to_string(counter_created);
+	std::string line = "[info] " + tools_t::type_to_str(type) + ": created=" + std::to_string(counter_created);
 
 	if (type == tools_t::rec_type_t::cell || type == tools_t::rec_type_t::dial)
-	{
 		line += ", missing=" + std::to_string(counter_missing);
-	}
 
 	line += ", identical=" + std::to_string(counter_identical);
+
+	if (counter_doubled > 0)
+		line += ", duplicate=" + std::to_string(counter_doubled);
+
 	line += ", total=" + std::to_string(counter_all);
 	line += "\r\n";
 

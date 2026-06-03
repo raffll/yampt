@@ -54,7 +54,11 @@ int main(int, char **)
 	static const ImWchar glyph_ranges[] = {
 		0x0020, 0x00FF,
 		0x0100, 0x024F,
+		0x02B0, 0x02FF,
 		0x0400, 0x04FF,
+		0x2000, 0x206F,
+		0x20A0, 0x20CF,
+		0x2100, 0x214F,
 		0,
 	};
 	io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\segoeui.ttf", 16.0f, nullptr, glyph_ranges);

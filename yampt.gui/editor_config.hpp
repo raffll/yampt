@@ -4,6 +4,13 @@
 #include <string>
 #include <vector>
 
+enum class selected_dict_t
+{
+	user,
+	base,
+	source
+};
+
 class editor_config_t
 {
 public:
@@ -23,4 +30,5 @@ public:
 	bool sidebar_visible = true;
 	bool bottom_visible = true;
 	int encoding_index = 2;
+	selected_dict_t selected_dict = selected_dict_t::user;
 };

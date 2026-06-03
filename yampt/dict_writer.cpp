@@ -46,7 +46,10 @@ static std::string escape_json(const std::string & s)
 	return result;
 }
 
-void dict_writer_t::write(const tools_t::dict_t & dict, const std::string & path)
+void dict_writer_t::write(
+    const tools_t::dict_t & dict,
+    const std::string & path,
+    tools_t::encoding_t encoding)
 {
 	tools_t::add_log("[info] writing \"" + path + "\"\r\n");
 
@@ -58,6 +61,10 @@ void dict_writer_t::write(const tools_t::dict_t & dict, const std::string & path
 	}
 
 	file << "{\n";
+
+	std::string encoding_str = tools_t::encoding_to_str(encoding);
+	file << "  \"encoding\": \"" << encoding_str << "\",\n";
+
 	bool first_chapter = true;
 
 	for (const auto & [type, chapter] : dict)
@@ -71,6 +78,8 @@ void dict_writer_t::write(const tools_t::dict_t & dict, const std::string & path
 
 		file << "  \"" << tools_t::type_to_str(type) << "\": [\n";
 
+		bool is_info = (type == tools_t::rec_type_t::info);
+
 		for (size_t i = 0; i < chapter.records.size(); ++i)
 		{
 			const auto & entry = chapter.records[i];
@@ -78,15 +87,33 @@ void dict_writer_t::write(const tools_t::dict_t & dict, const std::string & path
 			file << "      \"key\": \"" << escape_json(entry.key_text) << "\",\n";
 			file << "      \"old\": \"" << escape_json(entry.old_text) << "\",\n";
 			file << "      \"new\": \"" << escape_json(entry.new_text) << "\"";
+
 			if (!entry.status.empty())
 			{
 				file << ",\n";
-				file << "      \"status\": \"" << escape_json(entry.status) << "\"\n";
+				file << "      \"status\": \"" << escape_json(entry.status) << "\"";
 			}
-			else
+
+			if (is_info)
 			{
-				file << "\n";
+				if (!entry.speaker.empty())
+				{
+					file << ",\n";
+					file << "      \"speaker\": \"" << escape_json(entry.speaker) << "\"";
+				}
+				if (!entry.speaker_name.empty())
+				{
+					file << ",\n";
+					file << "      \"speaker_name\": \"" << escape_json(entry.speaker_name) << "\"";
+				}
+				if (!entry.gender.empty())
+				{
+					file << ",\n";
+					file << "      \"gender\": \"" << escape_json(entry.gender) << "\"";
+				}
 			}
+
+			file << "\n";
 			file << "    }";
 			if (i + 1 < chapter.records.size())
 				file << ",";

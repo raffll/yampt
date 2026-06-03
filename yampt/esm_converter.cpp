@@ -765,7 +765,7 @@ tools_t::encoding_t esm_converter_t::detect_encoding()
 
 		if (detect_windows_1250_encoding(esm.get_value().text))
 		{
-			tools_t::add_log("[warn] windows-1250 encoding detected\r\n");
+			tools_t::add_log("[warning] windows-1250 encoding detected\r\n");
 			tools_t::add_log(esm.get_value().text + "\r\n", true);
 			return tools_t::encoding_t::windows_1250;
 		}

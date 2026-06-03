@@ -249,7 +249,7 @@ void script_parser_t::convert_text_in_compiled(const bool is_getpccell)
 	while (old_size != old_text.size() && old_size != old_text.size() + 1)
 	{
 		tools_t::add_log(
-		    "[warn] " + std::to_string(old_size) + " != " + std::to_string(old_text.size()) + " " + old_text +
+		    "[warning] " + std::to_string(old_size) + " != " + std::to_string(old_text.size()) + " " + old_text +
 		        " false positive in " + script_name + "\r\n",
 		    true);
 		error = true;

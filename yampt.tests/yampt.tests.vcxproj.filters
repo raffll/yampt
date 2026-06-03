@@ -48,9 +48,14 @@
       <Filter>yampt</Filter>
     </ClCompile>
     <ClCompile Include="tests.dictmerger.cpp" />
+    <ClCompile Include="tests.dict_creator.cpp" />
+    <ClCompile Include="tests.dict_merger.cpp" />
+    <ClCompile Include="tests.dict_reader.cpp" />
+    <ClCompile Include="tests.dict_writer.cpp" />
     <ClCompile Include="tests.integration.cpp" />
     <ClCompile Include="tests.main.cpp" />
     <ClCompile Include="tests.scriptparser.cpp" />
+    <ClCompile Include="tests.script_parser.cpp" />
     <ClCompile Include="tests.tools.cpp" />
     <ClCompile Include="..\yampt\scriptparser.cpp">
       <Filter>yampt</Filter>

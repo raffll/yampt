@@ -1,7 +1,6 @@
 #pragma once
 
 #include "annotation_manager.hpp"
-#include "base_dict_manager.hpp"
 #include "editor_config.hpp"
 #include "editor_state.hpp"
 #include "encoding_utils.hpp"
@@ -42,6 +41,7 @@ private:
 	int encoding_index_ = 2;
 	bool show_history_ = false;
 	bool show_annotations_ = true;
+	selected_dict_t selected_dict_ = selected_dict_t::user;
 
 	bool quit_requested_ = false;
 	bool show_quit_dialog_ = false;
@@ -68,9 +68,6 @@ private:
 	int goto_row_value_ = 0;
 
 	bool show_base_dict_config_ = false;
-	bool show_auto_translate_result_ = false;
-	auto_translate_result_t last_auto_result_;
-	std::string last_auto_result_title_;
 
 	std::set<tools_t::rec_type_t> type_filter_ = {
 		tools_t::rec_type_t::cell, tools_t::rec_type_t::dial, tools_t::rec_type_t::info, tools_t::rec_type_t::fnam,
@@ -88,14 +85,33 @@ private:
 
 	std::set<std::string> status_filter_;
 
+	struct dict_filter_state_t
+	{
+		std::set<std::string> status_filter;
+		std::set<tools_t::rec_type_t> type_filter = {
+			tools_t::rec_type_t::cell, tools_t::rec_type_t::dial, tools_t::rec_type_t::info,
+			tools_t::rec_type_t::fnam, tools_t::rec_type_t::text, tools_t::rec_type_t::gmst,
+			tools_t::rec_type_t::desc, tools_t::rec_type_t::rnam, tools_t::rec_type_t::indx,
+			tools_t::rec_type_t::bnam, tools_t::rec_type_t::sctx,
+		};
+		tools_t::rec_type_t sidebar_active_type = tools_t::rec_type_t::unknown;
+	};
+
+	dict_filter_state_t filter_per_dict_[3];
+
+	void save_current_filters();
+	void restore_filters_for(selected_dict_t dict);
+
 	search_manager_t search_;
 	history_manager_t history_;
 	syntax_highlighter_t syntax_;
 	annotation_manager_t annotations_mgr_;
-	base_dict_manager_t base_dicts_;
+	tools_t::dict_t merged_base_dict_;
 	spell_checker_t spell_checker_;
 	std::array<char, 256> search_buffer_ = {};
 	bool search_case_sensitive_ = false;
+
+	std::array<char, 256> speaker_filter_buffer_ = {};
 
 	std::array<char, 256> replace_buffer_ = {};
 	bool show_replace_ = false;
@@ -126,13 +142,13 @@ private:
 	void render_editor_tab();
 	void render_annotations_tab();
 	void render_history_tab();
+	void render_speaker_tab();
 	void render_annotations_panel();
 	void render_history_panel();
 	void render_dialogs();
 	void render_quit_dialog();
 	void render_goto_dialog();
 	void render_base_dict_config();
-	void render_auto_translate_result_dialog();
 
 	std::string get_exe_directory() const;
 
@@ -165,4 +181,18 @@ private:
 	codepage_t active_codepage() const;
 	void save_user_dict_encoded();
 	void save_user_dict_as_encoded(const std::string & path);
+
+	void reload_base_dicts();
+
+	struct fuzzy_match_t
+	{
+		std::string matched_key;
+		std::string matched_value;
+		float similarity = 0.0f;
+	};
+
+	std::vector<fuzzy_match_t> find_fuzzy_matches(
+	    const std::string & text,
+	    tools_t::rec_type_t type,
+	    size_t max_results = 5) const;
 };

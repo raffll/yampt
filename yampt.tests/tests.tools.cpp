@@ -112,11 +112,10 @@ TEST_CASE("Chapter::empty", "[u]")
 TEST_CASE("type_to_str and str_to_type round-trip", "[u]")
 {
 	const std::vector<tools_t::rec_type_t> defined_types {
-		tools_t::rec_type_t::cell,     tools_t::rec_type_t::dial, tools_t::rec_type_t::indx,
-		tools_t::rec_type_t::rnam,     tools_t::rec_type_t::desc, tools_t::rec_type_t::gmst,
-		tools_t::rec_type_t::fnam,     tools_t::rec_type_t::info, tools_t::rec_type_t::text,
-		tools_t::rec_type_t::bnam,     tools_t::rec_type_t::sctx, tools_t::rec_type_t::glossary,
-		tools_t::rec_type_t::npc_flag,
+		tools_t::rec_type_t::cell, tools_t::rec_type_t::dial, tools_t::rec_type_t::indx,
+		tools_t::rec_type_t::rnam, tools_t::rec_type_t::desc, tools_t::rec_type_t::gmst,
+		tools_t::rec_type_t::fnam, tools_t::rec_type_t::info, tools_t::rec_type_t::text,
+		tools_t::rec_type_t::bnam, tools_t::rec_type_t::sctx,
 	};
 
 	for (const auto & type : defined_types)
@@ -277,10 +276,8 @@ TEST_CASE("initialize_dict has all expected keys", "[u]")
 	REQUIRE(dict.count(tools_t::rec_type_t::text) == 1);
 	REQUIRE(dict.count(tools_t::rec_type_t::bnam) == 1);
 	REQUIRE(dict.count(tools_t::rec_type_t::sctx) == 1);
-	REQUIRE(dict.count(tools_t::rec_type_t::glossary) == 1);
-	REQUIRE(dict.count(tools_t::rec_type_t::npc_flag) == 1);
 
-	REQUIRE(dict.size() == 13);
+	REQUIRE(dict.size() == 11);
 }
 
 TEST_CASE("initialize_dict all chapters empty", "[u]")
@@ -318,4 +315,84 @@ TEST_CASE("get_number_of_elements_in_dict correct total", "[u]")
 	dict.at(tools_t::rec_type_t::dial).insert({ "clanfear", "clanfear", "postrach klanów", "translated" });
 	dict.at(tools_t::rec_type_t::info).insert({ "info_key", "info_orig", "info_val", "untranslated" });
 	REQUIRE(tools_t::get_number_of_elements_in_dict(dict) == 4);
+}
+
+TEST_CASE("status_t constants are distinct non-empty strings", "[u]")
+{
+	std::vector<std::string> all_statuses {
+		tools_t::status_t::missing,
+		tools_t::status_t::duplicate,
+		tools_t::status_t::matched_by_coords,
+		tools_t::status_t::matched_by_info,
+		tools_t::status_t::matched_by_name,
+		tools_t::status_t::wilderness,
+		tools_t::status_t::region,
+		tools_t::status_t::auto_identical,
+		tools_t::status_t::auto_base,
+		tools_t::status_t::auto_translated,
+		tools_t::status_t::auto_heuristic,
+		tools_t::status_t::auto_changed,
+		tools_t::status_t::untranslated,
+		tools_t::status_t::in_progress,
+		tools_t::status_t::translated,
+		tools_t::status_t::has_errors,
+	};
+
+	REQUIRE(all_statuses.size() == 16);
+
+	for (const auto & s : all_statuses)
+	{
+		REQUIRE_FALSE(s.empty());
+	}
+
+	std::set<std::string> unique_set(all_statuses.begin(), all_statuses.end());
+	REQUIRE(unique_set.size() == all_statuses.size());
+}
+
+TEST_CASE("record_entry_t speaker fields default to empty", "[u]")
+{
+	tools_t::record_entry_t entry { "key", "old", "new", "untranslated" };
+	REQUIRE(entry.speaker.empty());
+	REQUIRE(entry.speaker_name.empty());
+	REQUIRE(entry.gender.empty());
+}
+
+TEST_CASE("record_entry_t with speaker fields", "[u]")
+{
+	tools_t::record_entry_t entry { "key", "old", "new", "auto_base", "npc_id", "Fargoth", "M" };
+	REQUIRE(entry.speaker == "npc_id");
+	REQUIRE(entry.speaker_name == "Fargoth");
+	REQUIRE(entry.gender == "M");
+}
+
+TEST_CASE("Chapter::insert with speaker fields", "[u]")
+{
+	tools_t::chapter_t chapter;
+	bool result = chapter.insert({ "info_1", "Hello", "Cześć", "translated", "fargoth", "Fargoth", "M" });
+	REQUIRE(result == true);
+
+	auto * entry = chapter.find("info_1");
+	REQUIRE(entry != nullptr);
+	REQUIRE(entry->speaker == "fargoth");
+	REQUIRE(entry->speaker_name == "Fargoth");
+	REQUIRE(entry->gender == "M");
+}
+
+TEST_CASE("encoding_to_str covers all encoding values", "[u]")
+{
+	REQUIRE(tools_t::encoding_to_str(tools_t::encoding_t::windows_1250) == "windows-1250");
+	REQUIRE(tools_t::encoding_to_str(tools_t::encoding_t::windows_1251) == "windows-1251");
+	REQUIRE(tools_t::encoding_to_str(tools_t::encoding_t::windows_1252) == "windows-1252");
+	REQUIRE(tools_t::encoding_to_str(tools_t::encoding_t::unknown) == "windows-1252");
+}
+
+TEST_CASE("initialize_dict does not contain npc_flag or glossary", "[u]")
+{
+	tools_t::dict_t dict = tools_t::initialize_dict();
+	for (const auto & chapter : dict)
+	{
+		REQUIRE(chapter.first != tools_t::rec_type_t::pgrd);
+		REQUIRE(chapter.first != tools_t::rec_type_t::anam);
+		REQUIRE(chapter.first != tools_t::rec_type_t::unknown);
+	}
 }

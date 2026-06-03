@@ -50,9 +50,8 @@ void dict_merger_t::merge_dict()
 				}
 				else if (existing->new_text != entry.new_text)
 				{
-					if (type != tools_t::rec_type_t::glossary)
-						tools_t::add_log(
-						    "[warn] replaced " + tools_t::type_to_str(type) + " record " + entry.key_text + "\r\n");
+					tools_t::add_log(
+					    "[warning] replaced " + tools_t::type_to_str(type) + " record " + entry.key_text + "\r\n");
 					counter_replaced++;
 				}
 				else
@@ -77,7 +76,7 @@ void dict_merger_t::find_duplicate_values(tools_t::rec_type_t type)
 		if (texts.insert(text_lc).second)
 			continue;
 
-		tools_t::add_log("[warn] duplicate " + tools_t::type_to_str(type) + " value " + entry.new_text + "\r\n");
+		tools_t::add_log("[warning] duplicate " + tools_t::type_to_str(type) + " value " + entry.new_text + "\r\n");
 	}
 }
 
@@ -104,7 +103,7 @@ void dict_merger_t::find_unused_info()
 
 		if (!found)
 		{
-			tools_t::add_log("[warn] dialog topic not found " + info.key_text + "\r\n");
+			tools_t::add_log("[warning] dialog topic not found " + info.key_text + "\r\n");
 		}
 	}
 }

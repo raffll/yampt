@@ -30,7 +30,6 @@ public:
 	void rebuild(const editor_state_t & state, const tools_t::dict_t & base_dict);
 	std::vector<annotation_t> annotate(const std::string & text, tools_t::rec_type_t type) const;
 
-	void load_glossary(const std::string & path);
 	void load_npc_flags(const std::string & path);
 	void load_enchantments(const std::string & path);
 

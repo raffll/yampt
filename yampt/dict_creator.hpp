@@ -42,6 +42,7 @@ private:
 
 	void make_dict();
 	void build_indexes();
+	void build_text_match_index();
 	void reset_counters();
 	std::string translate_dialog_topic(std::string to_translate);
 	void insert_entry(
@@ -51,6 +52,12 @@ private:
 	    tools_t::rec_type_t type);
 	std::vector<std::string> make_script_messages(const std::string & script_text);
 	void print_log_line(const tools_t::rec_type_t type);
+
+	static bool differs_only_in_numbers_or_punct(const std::string & a, const std::string & b);
+	static std::string adapt_translation(
+	    const std::string & source,
+	    const std::string & matched_source,
+	    const std::string & matched_translation);
 
 	void make_dict_cell();
 	void make_dict_cell_default();
@@ -62,18 +69,19 @@ private:
 	void make_dict_rnam();
 	void make_dict_indx();
 	void make_dict_dial();
-	void make_dict_flag();
 	void make_dict_info();
 	void make_dict_script(const ids & ids);
-	void make_dict_fnam_glossary();
 
-	void make_dict_cell_unordered();
+	void make_dict_cell_unordered_exterior();
+	void make_dict_cell_unordered_interior();
 	void make_dict_cell_unordered_default();
 	void make_dict_cell_unordered_regn();
-	patterns_ext_t make_dict_cell_unordered_patterns_ext();
-	patterns make_dict_cell_unordered_patterns();
-	std::string make_dict_cell_unordered_pattern(esm_reader_t & esm_cur);
-	void make_dict_cell_unordered_add_missing(const patterns_ext_t & patterns_ext);
+	void make_dict_cell_unordered_add_missing(const std::vector<std::pair<size_t, std::string>> & missing_cells);
+
+	static bool is_interior_cell(const std::string & data_content);
+	static std::string make_exterior_coord_key(const std::string & data_content);
+	using door_index_t = std::unordered_map<std::string, std::string>;
+	door_index_t build_door_index(esm_reader_t & esm_src);
 
 	void make_dict_dial_unordered();
 	patterns_ext_t make_dict_dial_unordered_patterns_ext();
@@ -104,6 +112,7 @@ private:
 	std::unordered_map<std::string, size_t> text_index;
 	std::unordered_map<std::string, std::string> rnam_index;
 	std::unordered_map<std::string, size_t> indx_index;
-	std::unordered_map<std::string, size_t> flag_index;
+	std::unordered_map<std::string, size_t> npc_index;
 	std::unordered_map<std::string, size_t> info_index;
+	std::unordered_map<std::string, std::vector<const tools_t::record_entry_t *>> text_match_index_;
 };

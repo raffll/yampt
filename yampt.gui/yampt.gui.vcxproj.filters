@@ -88,9 +88,6 @@
     <ClCompile Include="annotation_manager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="base_dict_manager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\external\imgui\imgui.h">
