@@ -157,7 +157,6 @@ public:
 	static dict_t initialize_dict();
 	static std::string type_to_str(tools_t::rec_type_t type);
 	static rec_type_t str_to_type(const std::string & str);
-	static std::string encoding_to_str(tools_t::encoding_t encoding);
 	static std::string get_dialog_type(const std::string & content);
 	static std::string get_indx(const std::string & content);
 	static bool is_fnam(const std::string & rec_id);

@@ -289,21 +289,6 @@ tools_t::rec_type_t tools_t::str_to_type(const std::string & str)
 		return tools_t::rec_type_t::unknown;
 }
 
-std::string tools_t::encoding_to_str(tools_t::encoding_t encoding)
-{
-	switch (encoding)
-	{
-	case tools_t::encoding_t::windows_1250:
-		return "windows-1250";
-	case tools_t::encoding_t::windows_1251:
-		return "windows-1251";
-	case tools_t::encoding_t::windows_1252:
-		return "windows-1252";
-	default:
-		return "windows-1252";
-	}
-}
-
 std::string tools_t::get_dialog_type(const std::string & content)
 {
 	static const std::vector<std::string> dialog_type { "T", "V", "G", "P", "J" };

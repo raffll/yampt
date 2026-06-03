@@ -378,14 +378,6 @@ TEST_CASE("Chapter::insert with speaker fields", "[u]")
 	REQUIRE(entry->gender == "M");
 }
 
-TEST_CASE("encoding_to_str covers all encoding values", "[u]")
-{
-	REQUIRE(tools_t::encoding_to_str(tools_t::encoding_t::windows_1250) == "windows-1250");
-	REQUIRE(tools_t::encoding_to_str(tools_t::encoding_t::windows_1251) == "windows-1251");
-	REQUIRE(tools_t::encoding_to_str(tools_t::encoding_t::windows_1252) == "windows-1252");
-	REQUIRE(tools_t::encoding_to_str(tools_t::encoding_t::unknown) == "windows-1252");
-}
-
 TEST_CASE("initialize_dict does not contain npc_flag or glossary", "[u]")
 {
 	tools_t::dict_t dict = tools_t::initialize_dict();

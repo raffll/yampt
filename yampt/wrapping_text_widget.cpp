@@ -120,8 +120,15 @@ int hit_test(const widget_state_t& state, const char* buf, float local_x, float 
 	int line_start = state.line_starts[line_idx];
 	int line_end = (line_idx + 1 < line_count) ? state.line_starts[line_idx + 1] : buf_len;
 
+	int visual_end = line_end;
+	if (line_idx + 1 < line_count)
+	{
+		while (visual_end > line_start && (buf[visual_end - 1] == '\n' || buf[visual_end - 1] == '\r'))
+			--visual_end;
+	}
+
 	float prev_x = 0.0f;
-	for (int i = line_start; i < line_end; ++i)
+	for (int i = line_start; i < visual_end; ++i)
 	{
 		float cur_x = font->CalcTextSizeA(font_size, FLT_MAX, -1.0f, buf + line_start, buf + i + 1).x;
 		float mid = (prev_x + cur_x) * 0.5f;
@@ -132,7 +139,7 @@ int hit_test(const widget_state_t& state, const char* buf, float local_x, float 
 		prev_x = cur_x;
 	}
 
-	return line_end;
+	return visual_end;
 }
 
 int find_prev_word_start(const char* buf, int pos)
@@ -392,6 +399,26 @@ static bool handle_text_editing(widget_state_t& state, char* buf, size_t buf_siz
 	bool has_selection = sel_min != sel_max;
 
 	ImGuiIO& io = ImGui::GetIO();
+
+	if (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter))
+	{
+		if (has_selection)
+		{
+			delete_range(buf, sel_min, sel_max);
+			state.cursor_pos = sel_min;
+			buf_len = static_cast<int>(strlen(buf));
+			has_selection = false;
+		}
+
+		const char* newline = "\r\n";
+		int inserted = insert_text(buf, buf_size, state.cursor_pos, newline, 2);
+		state.cursor_pos += inserted;
+		buf_len = static_cast<int>(strlen(buf));
+		state.select_start = state.cursor_pos;
+		state.select_end = state.cursor_pos;
+		modified = true;
+	}
+
 	for (int i = 0; i < io.InputQueueCharacters.Size; ++i)
 	{
 		ImWchar ch = io.InputQueueCharacters[i];
@@ -432,8 +459,11 @@ static bool handle_text_editing(widget_state_t& state, char* buf, size_t buf_siz
 		}
 		else if (state.cursor_pos > 0)
 		{
-			delete_range(buf, state.cursor_pos - 1, state.cursor_pos);
-			state.cursor_pos--;
+			int del_start = state.cursor_pos - 1;
+			if (del_start > 0 && buf[del_start - 1] == '\r' && buf[del_start] == '\n')
+				del_start--;
+			delete_range(buf, del_start, state.cursor_pos);
+			state.cursor_pos = del_start;
 			state.select_start = state.cursor_pos;
 			state.select_end = state.cursor_pos;
 			modified = true;
@@ -457,7 +487,10 @@ static bool handle_text_editing(widget_state_t& state, char* buf, size_t buf_siz
 		}
 		else if (state.cursor_pos < buf_len)
 		{
-			delete_range(buf, state.cursor_pos, state.cursor_pos + 1);
+			int del_end = state.cursor_pos + 1;
+			if (buf[state.cursor_pos] == '\r' && del_end < buf_len && buf[del_end] == '\n')
+				del_end++;
+			delete_range(buf, state.cursor_pos, del_end);
 			state.select_start = state.cursor_pos;
 			state.select_end = state.cursor_pos;
 			modified = true;
@@ -586,9 +619,21 @@ void render_scrollbar(ImDrawList* draw_list, const ImVec2& widget_pos, const ImV
 	draw_list->AddRectFilled(ImVec2(track_x, thumb_y), ImVec2(track_x + scrollbar_width, thumb_y + thumb_height), thumb_color, 3.0f);
 }
 
-bool wrapping_text_widget(const char* label, char* buf, size_t buf_size, const ImVec2& size)
+static std::unordered_map<ImGuiID, widget_state_t>& get_state_map()
 {
 	static std::unordered_map<ImGuiID, widget_state_t> state_map;
+	return state_map;
+}
+
+void reset_wrapping_text_widget(const char* label)
+{
+	ImGuiID id = ImGui::GetID(label);
+	get_state_map().erase(id);
+}
+
+bool wrapping_text_widget(const char* label, char* buf, size_t buf_size, const ImVec2& size)
+{
+	auto& state_map = get_state_map();
 
 	ImVec2 avail = ImGui::GetContentRegionAvail();
 	float w = (size.x <= 0.0f) ? avail.x : size.x;
@@ -629,7 +674,11 @@ bool wrapping_text_widget(const char* label, char* buf, size_t buf_size, const I
 	}
 
 	int line_count = static_cast<int>(state.line_starts.size());
-	scroll_to_cursor(state, h, line_height);
+	if (state.cursor_pos != state.prev_cursor_pos)
+	{
+		scroll_to_cursor(state, h, line_height);
+		state.prev_cursor_pos = state.cursor_pos;
+	}
 	handle_scrolling(state, h, line_height, line_count, hovered);
 
 	state.cursor_anim_timer += ImGui::GetIO().DeltaTime;

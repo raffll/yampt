@@ -16,35 +16,6 @@ TEST_CASE("dict_writer setup", "[u][writer]")
 	REQUIRE(fs::is_directory(writer_test_dir));
 }
 
-TEST_CASE("dict_writer writes encoding metadata", "[u][writer]")
-{
-	tools_t::dict_t dict = tools_t::initialize_dict();
-	dict.at(tools_t::rec_type_t::cell).insert({ "Test", "Test", "Test", "untranslated" });
-
-	auto path = writer_test_dir + "/encoding_1250.json";
-	dict_writer_t::write(dict, path, tools_t::encoding_t::windows_1250);
-	REQUIRE(fs::exists(path));
-	REQUIRE(fs::file_size(path) > 0);
-
-	std::ifstream file(path, std::ios::binary);
-	std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-	REQUIRE(content.find("windows-1250") != std::string::npos);
-}
-
-TEST_CASE("dict_writer writes encoding metadata windows-1251", "[u][writer]")
-{
-	tools_t::dict_t dict = tools_t::initialize_dict();
-	dict.at(tools_t::rec_type_t::cell).insert({ "Test", "Test", "Test", "untranslated" });
-
-	auto path = writer_test_dir + "/encoding_1251.json";
-	dict_writer_t::write(dict, path, tools_t::encoding_t::windows_1251);
-	REQUIRE(fs::exists(path));
-
-	std::ifstream file(path, std::ios::binary);
-	std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-	REQUIRE(content.find("windows-1251") != std::string::npos);
-}
-
 TEST_CASE("dict_writer serializes speaker fields when present", "[u][writer]")
 {
 	tools_t::dict_t dict = tools_t::initialize_dict();
@@ -99,16 +70,16 @@ TEST_CASE("dict_writer persists all status values", "[u][writer]")
 	REQUIRE(content.find("has_errors") != std::string::npos);
 }
 
-TEST_CASE("dict_writer with default encoding uses windows-1252", "[u][writer]")
+TEST_CASE("dict_writer does not write encoding field", "[u][writer]")
 {
 	tools_t::dict_t dict = tools_t::initialize_dict();
 	dict.at(tools_t::rec_type_t::cell).insert({ "Test", "Test", "Test", "untranslated" });
 
-	auto path = writer_test_dir + "/default_encoding.json";
+	auto path = writer_test_dir + "/no_encoding.json";
 	dict_writer_t::write(dict, path);
 	REQUIRE(fs::exists(path));
 
 	std::ifstream file(path, std::ios::binary);
 	std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-	REQUIRE(content.find("windows-1252") != std::string::npos);
+	REQUIRE(content.find("encoding") == std::string::npos);
 }

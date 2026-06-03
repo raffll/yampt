@@ -118,20 +118,6 @@ TEST_CASE("dict_reader parses speaker fields from info entries", "[u][reader]")
 	REQUIRE(no_speaker->gender.empty());
 }
 
-TEST_CASE("dict_reader reads encoding metadata", "[u][reader]")
-{
-	tools_t::dict_t dict = tools_t::initialize_dict();
-	dict.at(tools_t::rec_type_t::cell).insert({ "Test", "Test", "Test", "untranslated" });
-
-	auto path = reader_test_dir + "/encoding_test.json";
-	dict_writer_t::write(dict, path, tools_t::encoding_t::windows_1250);
-	REQUIRE(fs::exists(path));
-
-	dict_reader_t reader(path);
-	REQUIRE(reader.is_loaded());
-	REQUIRE(reader.get_encoding() == "windows-1250");
-}
-
 TEST_CASE("dict_reader skips legacy npc_flag chapter", "[u][reader]")
 {
 	std::string json_content = R"({
@@ -167,7 +153,7 @@ TEST_CASE("dict_reader write-read round trip preserves all fields", "[u][reader]
 	    { "cell_rt", "Balmora, Guild of Fighters", "Balmora, Gildia Wojowników", "matched_by_coords" });
 
 	auto path = reader_test_dir + "/round_trip.json";
-	dict_writer_t::write(dict, path, tools_t::encoding_t::windows_1250);
+	dict_writer_t::write(dict, path);
 
 	dict_reader_t reader(path);
 	REQUIRE(reader.is_loaded());

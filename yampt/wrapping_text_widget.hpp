@@ -14,9 +14,11 @@ struct widget_state_t
 	int last_buf_len = 0;
 	float cursor_anim_timer = 0.0f;
 	bool is_active = false;
+	int prev_cursor_pos = -1;
 };
 
 bool wrapping_text_widget(const char* label, char* buf, size_t buf_size, const ImVec2& size = ImVec2(0, 0));
+void reset_wrapping_text_widget(const char* label);
 
 void recalculate_layout(widget_state_t& state, const char* buf, int buf_len, float wrap_width, ImFont* font, float font_size);
 int find_line_for_offset(const widget_state_t& state, int byte_offset);

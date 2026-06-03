@@ -26,8 +26,6 @@ void dict_reader_t::parse_json(const std::string & content, const std::string & 
 
 	yyjson_val * root = reader.root();
 
-	encoding_ = json_reader_t::get_string(root, "encoding", "");
-
 	json_reader_t::foreach_obj(
 	    root,
 	    [&](const char * key_str, size_t key_len, yyjson_val * arr)

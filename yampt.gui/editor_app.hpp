@@ -55,6 +55,8 @@ private:
 	int scroll_to_row_right_ = -1;
 
 	int editing_row_ = -1;
+	tools_t::rec_type_t editing_type_ = tools_t::rec_type_t::unknown;
+	size_t editing_record_index_ = 0;
 	std::vector<char> edit_buffer_;
 	bool edit_multiline_ = false;
 	bool edit_focus_pending_ = false;
@@ -63,9 +65,6 @@ private:
 	std::string spell_ctx_word_;
 	size_t spell_ctx_start_ = 0;
 	size_t spell_ctx_end_ = 0;
-
-	bool show_goto_dialog_ = false;
-	int goto_row_value_ = 0;
 
 	bool show_base_dict_config_ = false;
 
@@ -84,6 +83,11 @@ private:
 	tools_t::rec_type_t sidebar_active_type_ = tools_t::rec_type_t::unknown;
 
 	std::set<std::string> status_filter_;
+	std::set<std::string> saved_status_filter_;
+	bool status_filter_solo_ = false;
+
+	std::set<tools_t::rec_type_t> saved_type_filter_;
+	bool type_filter_solo_ = false;
 
 	struct dict_filter_state_t
 	{
@@ -112,10 +116,6 @@ private:
 	bool search_case_sensitive_ = false;
 
 	std::array<char, 256> speaker_filter_buffer_ = {};
-
-	std::array<char, 256> replace_buffer_ = {};
-	bool show_replace_ = false;
-	size_t last_replace_count_ = 0;
 
 	struct row_ref_t
 	{
@@ -147,7 +147,6 @@ private:
 	void render_history_panel();
 	void render_dialogs();
 	void render_quit_dialog();
-	void render_goto_dialog();
 	void render_base_dict_config();
 
 	std::string get_exe_directory() const;

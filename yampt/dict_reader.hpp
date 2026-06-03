@@ -23,17 +23,11 @@ public:
 		return dict;
 	}
 
-	const auto & get_encoding() const
-	{
-		return encoding_;
-	}
-
 private:
 	void parse_json(const std::string & content, const std::string & path);
 	void validate_entry(tools_t::record_entry_t & entry, tools_t::rec_type_t type);
 
 	tools_t::name_t name;
 	tools_t::dict_t dict;
-	std::string encoding_;
 	bool loaded_ = false;
 };

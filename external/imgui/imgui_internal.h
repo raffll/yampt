@@ -1146,6 +1146,7 @@ struct IMGUI_API ImGuiInputTextState
     bool                    WantReloadUserBuf;      // force a reload of user buf so it may be modified externally. may be automatic in future version.
     int                     ReloadSelectionStart;
     int                     ReloadSelectionEnd;
+    float                   WrapWidth;              // word-wrap width for multiline (0 = no wrap)
 
     ImGuiInputTextState();
     ~ImGuiInputTextState();

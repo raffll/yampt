@@ -48,8 +48,7 @@ static std::string escape_json(const std::string & s)
 
 void dict_writer_t::write(
     const tools_t::dict_t & dict,
-    const std::string & path,
-    tools_t::encoding_t encoding)
+    const std::string & path)
 {
 	tools_t::add_log("[info] writing \"" + path + "\"\r\n");
 
@@ -61,9 +60,6 @@ void dict_writer_t::write(
 	}
 
 	file << "{\n";
-
-	std::string encoding_str = tools_t::encoding_to_str(encoding);
-	file << "  \"encoding\": \"" << encoding_str << "\",\n";
 
 	bool first_chapter = true;
 

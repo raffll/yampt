@@ -5,7 +5,6 @@
 #include "imgui.h"
 #include "status_colors.hpp"
 #include "../yampt/dict_merger.hpp"
-#include "../yampt/wrapping_text_widget.hpp"
 
 #include <algorithm>
 #include <array>
@@ -47,8 +46,19 @@ void editor_app_t::init(SDL_Window * window)
 		annotations_mgr_.rebuild(state_, merged_base_dict_);
 	}
 
+	if (!config_.last_user_dict_path.empty())
+	{
+		if (state_.load_user_dict(config_.last_user_dict_path))
+		{
+			decode_dict_from_codepage(state_.get_user_dict(), active_codepage());
+			annotations_mgr_.rebuild(state_, merged_base_dict_);
+		}
+	}
+
 	if (!config_.spell_check_aff.empty() && !config_.spell_check_dic.empty())
 		spell_checker_.load(config_.spell_check_aff, config_.spell_check_dic);
+
+	rebuild_row_data();
 }
 
 void editor_app_t::frame()
@@ -58,8 +68,6 @@ void editor_app_t::frame()
 		title += " *";
 	SDL_SetWindowTitle(window_, title.c_str());
 
-	rebuild_row_data();
-
 	const ImGuiViewport * viewport = ImGui::GetMainViewport();
 	ImGui::SetNextWindowPos(viewport->WorkPos);
 	ImGui::SetNextWindowSize(viewport->WorkSize);
@@ -67,7 +75,8 @@ void editor_app_t::frame()
 	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse |
 	                                ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
 	                                ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus |
-	                                ImGuiWindowFlags_MenuBar;
+	                                ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollbar |
+	                                ImGuiWindowFlags_NoScrollWithMouse;
 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
@@ -92,7 +101,9 @@ void editor_app_t::frame()
 	if (bottom_visible_)
 		bottom_height_ = clamp_bottom_height(bottom_height_, panel_area_height);
 
-	ImGui::BeginChild("PanelArea", ImVec2(0, panel_area_height), ImGuiChildFlags_None);
+	ImGui::BeginChild(
+	    "PanelArea", ImVec2(0, panel_area_height), ImGuiChildFlags_None,
+	    ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 
 	if (sidebar_visible_)
 	{
@@ -113,7 +124,9 @@ void editor_app_t::frame()
 			main_panel_height = 100.0f;
 	}
 
-	ImGui::BeginChild("MainPanelArea", ImVec2(0, main_panel_height), ImGuiChildFlags_None);
+	ImGui::BeginChild(
+	    "MainPanelArea", ImVec2(0, main_panel_height), ImGuiChildFlags_None,
+	    ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 	render_main_panel();
 	ImGui::EndChild();
 
@@ -143,6 +156,8 @@ void editor_app_t::shutdown()
 	config_.bottom_visible = bottom_visible_;
 	config_.encoding_index = encoding_index_;
 	config_.selected_dict = selected_dict_;
+	config_.last_user_dict_path = state_.get_user_path();
+	config_.last_source_dict_path = state_.get_source_path();
 	config_.save(config_path_);
 }
 
@@ -240,6 +255,9 @@ void editor_app_t::render_menu_bar()
 				selected_row_left_ = -1;
 				selected_row_right_ = -1;
 				editing_row_ = -1;
+				editing_type_ = tools_t::rec_type_t::unknown;
+				edit_focus_pending_ = false;
+				rebuild_row_data();
 			}
 		}
 
@@ -253,6 +271,7 @@ void editor_app_t::render_menu_bar()
 				annotations_mgr_.rebuild(state_, merged_base_dict_);
 				selected_row_left_ = -1;
 				selected_row_right_ = -1;
+				rebuild_row_data();
 			}
 		}
 
@@ -328,35 +347,8 @@ void editor_app_t::render_toolbar()
 		tools_t::rec_type_t::indx, tools_t::rec_type_t::bnam, tools_t::rec_type_t::sctx,
 	};
 
-	float toolbar_height = show_replace_ ? 80.0f : 55.0f;
+	float toolbar_height = 52.0f;
 	ImGui::BeginChild("Toolbar", ImVec2(0, toolbar_height), ImGuiChildFlags_None);
-
-	for (size_t i = 0; i < std::size(filter_types); ++i)
-	{
-		if (i > 0)
-			ImGui::SameLine();
-
-		auto type = filter_types[i];
-		bool active = type_filter_.count(type) > 0;
-
-		size_t count = 0;
-		const auto & toolbar_dict = (selected_dict_ == selected_dict_t::base)    ? merged_base_dict_
-		                            : (selected_dict_ == selected_dict_t::source) ? state_.get_source_dict()
-		                                                                          : state_.get_user_dict();
-		auto it = toolbar_dict.find(type);
-		if (it != toolbar_dict.end())
-			count = it->second.records.size();
-
-		std::string label = tools_t::type_to_str(type) + " (" + std::to_string(count) + ")";
-
-		if (ImGui::Checkbox(label.c_str(), &active))
-		{
-			if (active)
-				type_filter_.insert(type);
-			else
-				type_filter_.erase(type);
-		}
-	}
 
 	ImGui::SetNextItemWidth(200.0f);
 	if (ImGui::InputText("Search", search_buffer_.data(), search_buffer_.size()))
@@ -380,6 +372,105 @@ void editor_app_t::render_toolbar()
 		ImGui::TextUnformatted(match_info.c_str());
 	}
 
+	ImGui::SameLine();
+	ImGui::SetNextItemWidth(220.0f);
+	const char * encoding_preview = codepage_name(supported_codepages[encoding_index_]);
+	if (ImGui::BeginCombo("Encoding", encoding_preview))
+	{
+		for (int i = 0; i < static_cast<int>(std::size(supported_codepages)); ++i)
+		{
+			bool is_selected = (i == encoding_index_);
+			if (ImGui::Selectable(codepage_name(supported_codepages[i]), is_selected))
+			{
+				if (i != encoding_index_)
+				{
+					codepage_t old_cp = supported_codepages[encoding_index_];
+					codepage_t new_cp = supported_codepages[i];
+					encoding_index_ = i;
+					reencode_dict(state_.get_user_dict(), old_cp, new_cp);
+					reencode_dict(state_.get_source_dict(), old_cp, new_cp);
+					reencode_dict(merged_base_dict_, old_cp, new_cp);
+					annotations_mgr_.rebuild(state_, merged_base_dict_);
+					rebuild_row_data();
+					config_.encoding_index = encoding_index_;
+					config_.save(config_path_);
+				}
+			}
+			if (is_selected)
+				ImGui::SetItemDefaultFocus();
+		}
+		ImGui::EndCombo();
+	}
+
+	for (size_t i = 0; i < std::size(filter_types); ++i)
+	{
+		if (i > 0)
+			ImGui::SameLine();
+
+		auto type = filter_types[i];
+		bool is_active = type_filter_.count(type) > 0;
+
+		size_t count = 0;
+		const auto & toolbar_dict = (selected_dict_ == selected_dict_t::base)    ? merged_base_dict_
+		                            : (selected_dict_ == selected_dict_t::source) ? state_.get_source_dict()
+		                                                                          : state_.get_user_dict();
+		auto it = toolbar_dict.find(type);
+		if (it != toolbar_dict.end())
+			count = it->second.records.size();
+
+		std::string label = tools_t::type_to_str(type) + " (" + std::to_string(count) + ")";
+
+		if (is_active)
+		{
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 0.4f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.5f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.26f, 0.59f, 0.98f, 0.6f));
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.26f, 0.59f, 0.98f, 0.6f));
+			ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0f);
+		}
+		else
+		{
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.1f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.26f, 0.59f, 0.98f, 0.2f));
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.4f, 0.4f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.5f, 0.5f, 0.5f, 0.5f));
+			ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+		}
+
+		ImGui::SmallButton(label.c_str());
+		ImGui::PopStyleVar(1);
+		ImGui::PopStyleColor(5);
+
+		if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
+		{
+			if (type_filter_solo_ && type_filter_.size() == 1 && type_filter_.count(type) > 0)
+			{
+				type_filter_ = saved_type_filter_;
+				type_filter_solo_ = false;
+			}
+			else
+			{
+				saved_type_filter_ = type_filter_;
+				type_filter_.clear();
+				type_filter_.insert(type);
+				type_filter_solo_ = true;
+			}
+			rebuild_row_data();
+		}
+
+		if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+		{
+			if (is_active)
+				type_filter_.erase(type);
+			else
+				type_filter_.insert(type);
+			type_filter_solo_ = false;
+			rebuild_row_data();
+		}
+	}
+
 	bool navigate_next = ImGui::IsKeyPressed(ImGuiKey_F3) && !ImGui::GetIO().KeyShift;
 	bool navigate_prev = ImGui::IsKeyPressed(ImGuiKey_F3) && ImGui::GetIO().KeyShift;
 
@@ -395,6 +486,7 @@ void editor_app_t::render_toolbar()
 				{
 					scroll_to_row_left_ = i;
 					selected_row_left_ = i;
+					selected_row_ = i;
 					break;
 				}
 			}
@@ -413,44 +505,11 @@ void editor_app_t::render_toolbar()
 				{
 					scroll_to_row_left_ = i;
 					selected_row_left_ = i;
+					selected_row_ = i;
 					break;
 				}
 			}
 		}
-	}
-
-	if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_H))
-	{
-		show_replace_ = !show_replace_;
-	}
-
-	if (show_replace_)
-	{
-		ImGui::SetNextItemWidth(200.0f);
-		bool replace_enter = ImGui::InputText(
-		    "Replace", replace_buffer_.data(), replace_buffer_.size(), ImGuiInputTextFlags_EnterReturnsTrue);
-		ImGui::SameLine();
-		if (ImGui::Button("Replace") || replace_enter)
-		{
-			search_.replace_current(state_, std::string(replace_buffer_.data()));
-			search_.find_all(state_, type_filter_);
-			search_.next_match();
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("Replace All"))
-		{
-			last_replace_count_ = search_.replace_all(state_, std::string(replace_buffer_.data()));
-			search_.find_all(state_, type_filter_);
-			annotations_mgr_.rebuild(state_, merged_base_dict_);
-			rebuild_row_data();
-		}
-	}
-
-	if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_G))
-	{
-		show_goto_dialog_ = true;
-		goto_row_value_ = selected_row_left_ >= 0 ? selected_row_left_ + 1 : 1;
-		ImGui::OpenPopup("Go to Row");
 	}
 
 	if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_S))
@@ -465,33 +524,6 @@ void editor_app_t::render_toolbar()
 		{
 			save_user_dict_encoded();
 		}
-	}
-
-	ImGui::SameLine();
-	ImGui::SetNextItemWidth(220.0f);
-	const char * encoding_preview = codepage_name(supported_codepages[encoding_index_]);
-	if (ImGui::BeginCombo("Encoding", encoding_preview))
-	{
-		for (int i = 0; i < static_cast<int>(std::size(supported_codepages)); ++i)
-		{
-			bool is_selected = (i == encoding_index_);
-			if (ImGui::Selectable(codepage_name(supported_codepages[i]), is_selected))
-			{
-				if (i != encoding_index_)
-				{
-					codepage_t old_cp = supported_codepages[encoding_index_];
-					codepage_t new_cp = supported_codepages[i];
-					encoding_index_ = i;
-					reencode_dict(state_.get_user_dict(), old_cp, new_cp);
-					reencode_dict(state_.get_source_dict(), old_cp, new_cp);
-					annotations_mgr_.rebuild(state_, merged_base_dict_);
-					rebuild_row_data();
-				}
-			}
-			if (is_selected)
-				ImGui::SetItemDefaultFocus();
-		}
-		ImGui::EndCombo();
 	}
 
 	ImGui::EndChild();
@@ -522,8 +554,11 @@ void editor_app_t::render_sidebar()
 			selected_dict_ = selected_dict_t::user;
 			restore_filters_for(selected_dict_t::user);
 			selected_row_ = -1;
+			selected_row_left_ = -1;
 			scroll_to_row_ = -1;
 			editing_row_ = -1;
+			editing_type_ = tools_t::rec_type_t::unknown;
+			edit_focus_pending_ = false;
 		}
 		if (!user_path.empty() && ImGui::IsItemHovered())
 			ImGui::SetTooltip("%s", user_path.c_str());
@@ -539,8 +574,11 @@ void editor_app_t::render_sidebar()
 			selected_dict_ = selected_dict_t::base;
 			restore_filters_for(selected_dict_t::base);
 			selected_row_ = -1;
+			selected_row_left_ = -1;
 			scroll_to_row_ = -1;
 			editing_row_ = -1;
+			editing_type_ = tools_t::rec_type_t::unknown;
+			edit_focus_pending_ = false;
 			reload_base_dicts();
 		}
 		if (ImGui::IsItemHovered())
@@ -569,45 +607,14 @@ void editor_app_t::render_sidebar()
 			selected_dict_ = selected_dict_t::source;
 			restore_filters_for(selected_dict_t::source);
 			selected_row_ = -1;
+			selected_row_left_ = -1;
 			scroll_to_row_ = -1;
 			editing_row_ = -1;
+			editing_type_ = tools_t::rec_type_t::unknown;
+			edit_focus_pending_ = false;
 		}
 		if (ImGui::IsItemHovered())
 			ImGui::SetTooltip("%s", source_path.c_str());
-	}
-
-	ImGui::Spacing();
-	ImGui::Separator();
-	ImGui::TextUnformatted("Record Types");
-	ImGui::Separator();
-
-	const auto & dict = (selected_dict_ == selected_dict_t::base)    ? merged_base_dict_
-	                    : (selected_dict_ == selected_dict_t::source) ? state_.get_source_dict()
-	                                                                  : state_.get_user_dict();
-	for (auto type : all_types_)
-	{
-		auto it = dict.find(type);
-		size_t count = (it != dict.end()) ? it->second.records.size() : 0;
-
-		std::string label = tools_t::type_to_str(type) + " (" + std::to_string(count) + ")";
-		bool is_active = (sidebar_active_type_ == type);
-
-		if (ImGui::Selectable(label.c_str(), is_active))
-		{
-			if (is_active)
-			{
-				sidebar_active_type_ = tools_t::rec_type_t::unknown;
-				type_filter_.clear();
-				for (auto t : all_types_)
-					type_filter_.insert(t);
-			}
-			else
-			{
-				sidebar_active_type_ = type;
-				type_filter_.clear();
-				type_filter_.insert(type);
-			}
-		}
 	}
 
 	ImGui::EndChild();
@@ -673,24 +680,47 @@ void editor_app_t::render_status_summary_bar()
 			ImGui::SameLine();
 		first = false;
 
+		bool is_active = status_filter_.empty() || status_filter_.count(status_names[i]) > 0;
+
 		ImVec4 color = get_status_color(status_names[i]);
-		ImGui::PushStyleColor(ImGuiCol_Button, color);
-		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, color);
-		ImGui::PushStyleColor(ImGuiCol_ButtonActive, color);
-		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
+		if (is_active)
+		{
+			ImGui::PushStyleColor(ImGuiCol_Button, color);
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, color);
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, color);
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_Border, color);
+			ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0f);
+		}
+		else
+		{
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(color.x, color.y, color.z, 0.2f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(color.x, color.y, color.z, 0.3f));
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.4f, 0.4f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_Border, color);
+			ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+		}
 
 		std::string label = std::string(status_labels[i]) + ": " + std::to_string(counts[i]);
 		ImGui::SmallButton(label.c_str());
+		ImGui::PopStyleVar(1);
+		ImGui::PopStyleColor(5);
 
 		if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
 		{
 			std::string status = status_names[i];
-			if (status_filter_.size() == 1 && status_filter_.count(status) > 0)
-				status_filter_.clear();
+			if (status_filter_solo_ && status_filter_.size() == 1 && status_filter_.count(status) > 0)
+			{
+				status_filter_ = saved_status_filter_;
+				status_filter_solo_ = false;
+			}
 			else
 			{
+				saved_status_filter_ = status_filter_;
 				status_filter_.clear();
 				status_filter_.insert(status);
+				status_filter_solo_ = true;
 			}
 			rebuild_row_data();
 		}
@@ -706,16 +736,19 @@ void editor_app_t::render_status_summary_bar()
 						status_filter_.insert(status_names[j]);
 				}
 			}
-			else
+			else if (status_filter_.count(status) > 0)
 			{
 				status_filter_.erase(status);
 				if (status_filter_.empty())
 					status_filter_.clear();
 			}
+			else
+			{
+				status_filter_.insert(status);
+			}
+			status_filter_solo_ = false;
 			rebuild_row_data();
 		}
-
-		ImGui::PopStyleColor(4);
 	}
 
 	if (!first)
@@ -881,10 +914,20 @@ void editor_app_t::render_main_panel()
 			}
 
 			ImGui::TableSetColumnIndex(1);
-			ImGui::TextUnformatted(entry.old_text.c_str());
+			{
+				const char * end = entry.old_text.c_str();
+				while (*end && *end != '\r' && *end != '\n')
+					++end;
+				ImGui::TextUnformatted(entry.old_text.c_str(), end);
+			}
 
 			ImGui::TableSetColumnIndex(2);
-			ImGui::TextUnformatted(entry.new_text.c_str());
+			{
+				const char * end = entry.new_text.c_str();
+				while (*end && *end != '\r' && *end != '\n')
+					++end;
+				ImGui::TextUnformatted(entry.new_text.c_str(), end);
+			}
 
 			ImGui::TableSetColumnIndex(3);
 			ImVec4 status_color = get_status_color(entry.status);
@@ -1049,6 +1092,8 @@ void editor_app_t::render_dict_table(
 			        ImVec2(0, 0)))
 			{
 				selected_row = i;
+				if (is_left_panel)
+					selected_row_ = i;
 
 				std::string lk = make_lookup_key(row_ref.type, entry.key_text);
 				if (is_left_panel)
@@ -1067,6 +1112,7 @@ void editor_app_t::render_dict_table(
 					{
 						scroll_to_row_left_ = found->second;
 						selected_row_left_ = found->second;
+						selected_row_ = found->second;
 					}
 				}
 			}
@@ -1173,10 +1219,14 @@ void editor_app_t::render_dict_table(
 							annotations_mgr_.rebuild(state_, merged_base_dict_);
 					}
 					editing_row_ = -1;
+					editing_type_ = tools_t::rec_type_t::unknown;
 				}
 
 				if (cancel)
+				{
 					editing_row_ = -1;
+					editing_type_ = tools_t::rec_type_t::unknown;
+				}
 
 				ImGui::PopItemWidth();
 			}
@@ -1591,15 +1641,6 @@ void editor_app_t::render_status_bar()
 {
 	ImGui::BeginChild("StatusBar", ImVec2(0, 25), ImGuiChildFlags_None);
 
-	if (last_replace_count_ > 0)
-	{
-		std::string msg = "Replaced " + std::to_string(last_replace_count_) + " occurrence(s)";
-		ImGui::TextUnformatted(msg.c_str());
-		ImGui::SameLine();
-		ImGui::Spacing();
-		ImGui::SameLine();
-	}
-
 	std::string info = "Records: " + std::to_string(left_rows_.size());
 	ImGui::TextUnformatted(info.c_str());
 
@@ -1714,75 +1755,86 @@ void editor_app_t::render_editor_tab()
 
 	auto & mutable_entry = state_.get_user_dict().find(row.type)->second.records[row.record_index];
 
-	if (editing_row_ != selected_row_)
+	bool same_record = (editing_row_ == selected_row_
+	    && editing_type_ == row.type
+	    && editing_record_index_ == row.record_index);
+
+	if (!same_record)
 	{
-		if (editing_row_ >= 0 && editing_row_ < static_cast<int>(left_rows_.size()))
+		if (editing_row_ >= 0 && editing_type_ != tools_t::rec_type_t::unknown)
 		{
 			std::string committed(edit_buffer_.data());
-			const auto & prev_row = left_rows_[editing_row_];
-			auto prev_it = state_.get_user_dict().find(prev_row.type);
-			if (prev_it != state_.get_user_dict().end() && prev_row.record_index < prev_it->second.records.size())
+			auto prev_it = state_.get_user_dict().find(editing_type_);
+			if (prev_it != state_.get_user_dict().end() && editing_record_index_ < prev_it->second.records.size())
 			{
-				auto & prev_entry = prev_it->second.records[prev_row.record_index];
+				auto & prev_entry = prev_it->second.records[editing_record_index_];
 				if (committed != prev_entry.new_text)
 				{
-					history_.record_change(prev_row.type, prev_entry.key_text, prev_entry.new_text, committed);
+					history_.record_change(editing_type_, prev_entry.key_text, prev_entry.new_text, committed);
 					prev_entry.new_text = committed;
 					prev_entry.status = tools_t::status_t::in_progress;
-					auto vr = validation_.validate(prev_row.type, committed);
+					auto vr = validation_.validate(editing_type_, committed);
 					if (vr.level == validation_level_t::error)
 						prev_entry.status = tools_t::status_t::has_errors;
-					state_.mark_modified(prev_row.type, prev_row.record_index);
-					if (prev_row.type == tools_t::rec_type_t::dial)
+					state_.mark_modified(editing_type_, editing_record_index_);
+					if (editing_type_ == tools_t::rec_type_t::dial)
 						annotations_mgr_.rebuild(state_, merged_base_dict_);
 				}
 			}
 		}
 
 		editing_row_ = selected_row_;
+		editing_type_ = row.type;
+		editing_record_index_ = row.record_index;
 		edit_buffer_.resize(EDIT_BUFFER_SIZE);
 		std::fill(edit_buffer_.begin(), edit_buffer_.end(), '\0');
-		size_t copy_len = mutable_entry.new_text.size();
+		std::string buf_text;
+		buf_text.reserve(mutable_entry.new_text.size());
+		for (size_t ci = 0; ci < mutable_entry.new_text.size(); ++ci)
+		{
+			if (mutable_entry.new_text[ci] == '\r' && ci + 1 < mutable_entry.new_text.size() && mutable_entry.new_text[ci + 1] == '\n')
+				continue;
+			buf_text += mutable_entry.new_text[ci];
+		}
+		size_t copy_len = buf_text.size();
 		if (copy_len > EDIT_BUFFER_SIZE - 1)
 			copy_len = EDIT_BUFFER_SIZE - 1;
-		std::copy_n(mutable_entry.new_text.begin(), copy_len, edit_buffer_.begin());
-		edit_focus_pending_ = false;
+		std::copy_n(buf_text.begin(), copy_len, edit_buffer_.begin());
 	}
 
 	float input_height = ImGui::GetContentRegionAvail().y;
 
-	if (!edit_focus_pending_)
-	{
-		ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x);
-		ImGui::TextUnformatted(mutable_entry.new_text.c_str());
-		ImGui::PopTextWrapPos();
+	ImGuiInputTextFlags input_flags = ImGuiInputTextFlags_AllowTabInput;
+	bool changed = ImGui::InputTextMultiline(
+	    "##editor_input",
+	    edit_buffer_.data(),
+	    edit_buffer_.size(),
+	    ImVec2(-1, input_height),
+	    input_flags);
 
-		if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
-			edit_focus_pending_ = true;
-	}
-	else
+	if (changed)
 	{
-		bool changed = wrapping_text_widget(
-		    "##editor_input",
-		    edit_buffer_.data(),
-		    edit_buffer_.size(),
-		    ImVec2(-1, input_height));
-
-		if (changed)
+		std::string new_value(edit_buffer_.data());
+		std::string normalized;
+		normalized.reserve(new_value.size());
+		for (size_t i = 0; i < new_value.size(); ++i)
 		{
-			std::string new_value(edit_buffer_.data());
-			if (new_value != mutable_entry.new_text)
-			{
-				history_.record_change(row.type, mutable_entry.key_text, mutable_entry.new_text, new_value);
-				mutable_entry.new_text = new_value;
-				mutable_entry.status = tools_t::status_t::in_progress;
-				auto vr = validation_.validate(row.type, new_value);
-				if (vr.level == validation_level_t::error)
-					mutable_entry.status = tools_t::status_t::has_errors;
-				state_.mark_modified(row.type, row.record_index);
-				if (row.type == tools_t::rec_type_t::dial)
-					annotations_mgr_.rebuild(state_, merged_base_dict_);
-			}
+			if (new_value[i] == '\n' && (i == 0 || new_value[i - 1] != '\r'))
+				normalized += "\r\n";
+			else
+				normalized += new_value[i];
+		}
+		if (normalized != mutable_entry.new_text)
+		{
+			history_.record_change(row.type, mutable_entry.key_text, mutable_entry.new_text, normalized);
+			mutable_entry.new_text = normalized;
+			mutable_entry.status = tools_t::status_t::in_progress;
+			auto vr = validation_.validate(row.type, normalized);
+			if (vr.level == validation_level_t::error)
+				mutable_entry.status = tools_t::status_t::has_errors;
+			state_.mark_modified(row.type, row.record_index);
+			if (row.type == tools_t::rec_type_t::dial)
+				annotations_mgr_.rebuild(state_, merged_base_dict_);
 		}
 	}
 
@@ -2312,9 +2364,6 @@ void editor_app_t::render_dialogs()
 	if (show_quit_dialog_)
 		render_quit_dialog();
 
-	if (show_goto_dialog_)
-		render_goto_dialog();
-
 	if (show_base_dict_config_)
 		render_base_dict_config();
 }
@@ -2363,39 +2412,6 @@ void editor_app_t::render_quit_dialog()
 	if (ImGui::Button("Cancel", ImVec2(120, 0)))
 	{
 		show_quit_dialog_ = false;
-		ImGui::CloseCurrentPopup();
-	}
-
-	ImGui::EndPopup();
-}
-
-void editor_app_t::render_goto_dialog()
-{
-	ImGui::OpenPopup("Go to Row");
-
-	ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-	ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-
-	if (!ImGui::BeginPopupModal("Go to Row", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
-		return;
-
-	ImGui::InputInt("Row", &goto_row_value_);
-
-	if (ImGui::Button("OK", ImVec2(120, 0)) || ImGui::IsKeyPressed(ImGuiKey_Enter))
-	{
-		int max_row = static_cast<int>(left_rows_.size());
-		int target = std::clamp(goto_row_value_, 1, std::max(max_row, 1)) - 1;
-		scroll_to_row_left_ = target;
-		selected_row_left_ = target;
-		show_goto_dialog_ = false;
-		ImGui::CloseCurrentPopup();
-	}
-
-	ImGui::SameLine();
-
-	if (ImGui::Button("Cancel", ImVec2(120, 0)) || ImGui::IsKeyPressed(ImGuiKey_Escape))
-	{
-		show_goto_dialog_ = false;
 		ImGui::CloseCurrentPopup();
 	}
 
@@ -2678,6 +2694,7 @@ void editor_app_t::reload_base_dicts()
 
 	dict_merger_t merger(config_.base_dict_paths);
 	merged_base_dict_ = merger.get_dict();
+	decode_dict_from_codepage(merged_base_dict_, active_codepage());
 }
 
 void editor_app_t::save_current_filters()
