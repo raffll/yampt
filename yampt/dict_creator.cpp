@@ -340,6 +340,7 @@ void dict_creator_t::make_dict_gmst()
 		if (search != gmst_index.end())
 		{
 			esm_ref.select_record(search->second);
+			esm_ref.set_key("NAME");
 			esm_ref.set_value("STRV");
 			old_text = esm_ref.get_value().text;
 		}
@@ -377,6 +378,7 @@ void dict_creator_t::make_dict_fnam()
 		if (search != fnam_index.end())
 		{
 			esm_ref.select_record(search->second);
+			esm_ref.set_key("NAME");
 			esm_ref.set_value("FNAM");
 			old_text = esm_ref.get_value().text;
 		}
@@ -456,6 +458,7 @@ void dict_creator_t::make_dict_desc()
 		if (search != desc_index.end())
 		{
 			esm_ref.select_record(search->second);
+			esm_ref.set_key("NAME");
 			esm_ref.set_value("DESC");
 			old_text = esm_ref.get_value().text;
 		}
@@ -491,6 +494,7 @@ void dict_creator_t::make_dict_text()
 		if (search != text_index.end())
 		{
 			esm_ref.select_record(search->second);
+			esm_ref.set_key("NAME");
 			esm_ref.set_value("TEXT");
 			old_text = esm_ref.get_value().text;
 		}
@@ -563,6 +567,7 @@ void dict_creator_t::make_dict_indx()
 		if (search != indx_index.end())
 		{
 			esm_ref.select_record(search->second);
+			esm_ref.set_key("INDX");
 			esm_ref.set_value("DESC");
 			old_text = esm_ref.get_value().text;
 		}
@@ -622,6 +627,7 @@ void dict_creator_t::make_dict_flag()
 		if (search != flag_index.end())
 		{
 			esm_ref.select_record(search->second);
+			esm_ref.set_key("NAME");
 			esm_ref.set_value("FLAG");
 			old_text =
 			    ((tools_t::convert_string_byte_array_to_uint(esm_ref.get_value().content) & 0x0001) != 0) ? "F" : "M";
@@ -674,6 +680,7 @@ void dict_creator_t::make_dict_info()
 		if (search != info_index.end())
 		{
 			esm_ref.select_record(search->second);
+			esm_ref.set_key("INAM");
 			esm_ref.set_value("NAME");
 			old_text = esm_ref.get_value().text;
 		}

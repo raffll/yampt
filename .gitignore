@@ -10,3 +10,4 @@ x64/
 /vcpkg_installed
 /yampt.gui/imgui
 /.kiro/specs
+*.ini

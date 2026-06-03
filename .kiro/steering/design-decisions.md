@@ -25,3 +25,7 @@ MSVC's `std::regex` implementation is orders of magnitude slower than `string::f
 - Token extraction: character-class loops with `isalnum`, `_`, `.`, `-`
 
 This applies to new code AND to fixes for existing code. When fixing a bug that currently uses regex, replace the regex with find-based logic — do not "improve" the regex.
+
+## esm_ref Is Always esm or esm_ext
+
+`esm_ref` is a reference that points to either `esm` (in `--make` mode) or `esm_ext` (in `--make-base` mode). Both `esm` and `esm_ext` are always set and valid when the creator runs. Do not add null checks, optional wrappers, or validity guards around `esm_ref` usage.
