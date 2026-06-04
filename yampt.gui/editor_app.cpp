@@ -4,7 +4,6 @@
 #include "encoding_utils.hpp"
 #include "imgui.h"
 #include "status_colors.hpp"
-#include "../yampt/dict_merger.hpp"
 
 #include <algorithm>
 #include <array>
@@ -12,6 +11,8 @@
 
 #include <Windows.h>
 #include <commdlg.h>
+#include <Richedit.h>
+#include <SDL_syswm.h>
 
 static constexpr size_t EDIT_BUFFER_SIZE = 8192;
 
@@ -38,33 +39,44 @@ void editor_app_t::init(SDL_Window * window)
 	sidebar_visible_ = config_.sidebar_visible;
 	bottom_visible_ = config_.bottom_visible;
 	encoding_index_ = config_.encoding_index;
-	selected_dict_ = config_.selected_dict;
 
-	if (!config_.base_dict_paths.empty())
+	for (const auto & path : config_.user_dict_paths)
 	{
-		reload_base_dicts();
-		annotations_mgr_.rebuild(state_, merged_base_dict_);
+		int idx = workspace_.load_dict(path, dict_kind_t::user);
+		if (idx < 0)
+			tools_t::add_log("[warn] cannot load user dict: \"" + path + "\"\r\n");
+		else
+			decode_dict_from_codepage(workspace_.get_slot(idx)->data, active_codepage());
 	}
 
-	if (!config_.last_user_dict_path.empty())
+	for (const auto & path : config_.base_dict_paths)
 	{
-		if (state_.load_user_dict(config_.last_user_dict_path))
-		{
-			decode_dict_from_codepage(state_.get_user_dict(), active_codepage());
-			annotations_mgr_.rebuild(state_, merged_base_dict_);
-		}
+		int idx = workspace_.load_dict(path, dict_kind_t::base);
+		if (idx < 0)
+			tools_t::add_log("[warn] cannot load base dict: \"" + path + "\"\r\n");
+		else
+			decode_dict_from_codepage(workspace_.get_slot(idx)->data, active_codepage());
 	}
+
+	if (config_.active_dict_index >= 0 && config_.active_dict_index < workspace_.slot_count())
+		workspace_.set_active(config_.active_dict_index);
 
 	if (!config_.spell_check_aff.empty() && !config_.spell_check_dic.empty())
 		spell_checker_.load(config_.spell_check_aff, config_.spell_check_dic);
 
+	SDL_SysWMinfo wm_info = {};
+	SDL_VERSION(&wm_info.version);
+	SDL_GetWindowWMInfo(window_, &wm_info);
+	create_richedit(wm_info.info.win.window);
+
+	rebuild_annotations();
 	rebuild_row_data();
 }
 
 void editor_app_t::frame()
 {
 	std::string title = "yampt.gui";
-	if (state_.has_unsaved_changes())
+	if (workspace_.has_any_unsaved())
 		title += " *";
 	SDL_SetWindowTitle(window_, title.c_str());
 
@@ -120,8 +132,8 @@ void editor_app_t::frame()
 	{
 		float splitter_height = 6.0f;
 		main_panel_height -= (bottom_height_ + splitter_height);
-		if (main_panel_height < 100.0f)
-			main_panel_height = 100.0f;
+		if (main_panel_height < 30.0f)
+			main_panel_height = 30.0f;
 	}
 
 	ImGui::BeginChild(
@@ -133,7 +145,7 @@ void editor_app_t::frame()
 	if (bottom_visible_)
 	{
 		float max_h = clamp_bottom_height(panel_area_height, panel_area_height);
-		render_splitter_horizontal(bottom_height_, 100.0f, max_h);
+		render_splitter_horizontal(bottom_height_, 50.0f, max_h);
 		render_bottom_panel();
 	}
 
@@ -149,15 +161,33 @@ void editor_app_t::frame()
 
 void editor_app_t::shutdown()
 {
+	if (richedit_hwnd_)
+	{
+		DestroyWindow(richedit_hwnd_);
+		richedit_hwnd_ = nullptr;
+	}
+
 	config_.split_ratio = split_ratio_;
 	config_.sidebar_width = sidebar_width_;
 	config_.bottom_height = bottom_height_;
 	config_.sidebar_visible = sidebar_visible_;
 	config_.bottom_visible = bottom_visible_;
 	config_.encoding_index = encoding_index_;
-	config_.selected_dict = selected_dict_;
-	config_.last_user_dict_path = state_.get_user_path();
-	config_.last_source_dict_path = state_.get_source_path();
+
+	config_.user_dict_paths.clear();
+	config_.base_dict_paths.clear();
+	for (int i = 0; i < workspace_.slot_count(); ++i)
+	{
+		const auto * slot = workspace_.get_slot(i);
+		if (!slot)
+			continue;
+		if (workspace_.is_user_slot(i))
+			config_.user_dict_paths.push_back(slot->path);
+		else if (workspace_.is_base_slot(i))
+			config_.base_dict_paths.push_back(slot->path);
+	}
+	config_.active_dict_index = workspace_.get_active_index();
+
 	config_.save(config_path_);
 }
 
@@ -168,7 +198,7 @@ bool editor_app_t::wants_quit() const
 
 void editor_app_t::request_quit()
 {
-	if (state_.has_unsaved_changes())
+	if (workspace_.has_any_unsaved())
 		show_quit_dialog_ = true;
 	else
 		quit_requested_ = true;
@@ -179,19 +209,34 @@ std::string editor_app_t::make_lookup_key(tools_t::rec_type_t type, const std::s
 	return std::to_string(static_cast<int>(type)) + "|" + key;
 }
 
+void editor_app_t::rebuild_annotations()
+{
+	std::vector<dict_source_t> sources;
+	for (int i = 0; i < workspace_.slot_count(); ++i)
+	{
+		const auto * slot = workspace_.get_slot(i);
+		if (!slot)
+			continue;
+		auto pos = slot->path.find_last_of("\\/");
+		std::string name = (pos != std::string::npos) ? slot->path.substr(pos + 1) : slot->path;
+		sources.push_back({ &slot->data, name });
+	}
+	annotations_mgr_.rebuild(sources);
+}
+
 void editor_app_t::rebuild_row_data()
 {
 	left_rows_.clear();
-	right_rows_.clear();
 	left_lookup_.clear();
-	right_lookup_.clear();
 
-	const auto & active_dict = (selected_dict_ == selected_dict_t::base)    ? merged_base_dict_
-	                           : (selected_dict_ == selected_dict_t::source) ? state_.get_source_dict()
-	                                                                         : state_.get_user_dict();
+	auto * slot = workspace_.get_active_slot();
+	if (!slot)
+		return;
+
+	const auto & dict = slot->data;
 
 	int idx = 0;
-	for (const auto & [type, chapter] : active_dict)
+	for (const auto & [type, chapter] : dict)
 	{
 		if (type_filter_.count(type) == 0)
 			continue;
@@ -212,29 +257,6 @@ void editor_app_t::rebuild_row_data()
 			++idx;
 		}
 	}
-
-	idx = 0;
-	for (const auto & [type, chapter] : state_.get_source_dict())
-	{
-		if (type_filter_.count(type) == 0)
-			continue;
-
-		for (size_t i = 0; i < chapter.records.size(); ++i)
-		{
-			if (!status_filter_.empty())
-			{
-				const auto & s = chapter.records[i].status;
-				bool match = s.empty() ? status_filter_.count("untranslated") > 0
-				                       : status_filter_.count(s) > 0;
-				if (!match)
-					continue;
-			}
-
-			right_rows_.push_back({ type, i });
-			right_lookup_[make_lookup_key(type, chapter.records[i].key_text)] = idx;
-			++idx;
-		}
-	}
 }
 
 void editor_app_t::render_menu_bar()
@@ -249,28 +271,26 @@ void editor_app_t::render_menu_bar()
 			auto path = show_open_file_dialog("Open User Dictionary");
 			if (!path.empty())
 			{
-				state_.load_user_dict(path);
-				decode_dict_from_codepage(state_.get_user_dict(), active_codepage());
-				annotations_mgr_.rebuild(state_, merged_base_dict_);
-				selected_row_left_ = -1;
-				selected_row_right_ = -1;
-				editing_row_ = -1;
-				editing_type_ = tools_t::rec_type_t::unknown;
-				edit_focus_pending_ = false;
+				int prev_count = workspace_.slot_count();
+				int idx = workspace_.load_dict(path, dict_kind_t::user);
+				if (idx >= 0 && workspace_.slot_count() > prev_count)
+					decode_dict_from_codepage(workspace_.get_slot(idx)->data, active_codepage());
+				auto * active_slot = workspace_.get_active_slot();
+				if (active_slot)
+					rebuild_annotations();
 				rebuild_row_data();
 			}
 		}
 
-		if (ImGui::MenuItem("Open Source Dict..."))
+		if (ImGui::MenuItem("Open Base Dict..."))
 		{
-			auto path = show_open_file_dialog("Open Source Dictionary");
+			auto path = show_open_file_dialog("Open Base Dictionary");
 			if (!path.empty())
 			{
-				state_.load_source_dict(path);
-				decode_dict_from_codepage(state_.get_source_dict(), active_codepage());
-				annotations_mgr_.rebuild(state_, merged_base_dict_);
-				selected_row_left_ = -1;
-				selected_row_right_ = -1;
+				int prev_count = workspace_.slot_count();
+				int idx = workspace_.load_dict(path, dict_kind_t::base);
+				if (idx >= 0 && workspace_.slot_count() > prev_count)
+					decode_dict_from_codepage(workspace_.get_slot(idx)->data, active_codepage());
 				rebuild_row_data();
 			}
 		}
@@ -279,39 +299,24 @@ void editor_app_t::render_menu_bar()
 
 		if (ImGui::MenuItem("Save", "Ctrl+S"))
 		{
-			if (state_.get_user_path().empty())
-			{
-				auto path = show_save_file_dialog("Save User Dictionary");
-				if (!path.empty())
-					save_user_dict_as_encoded(path);
-			}
-			else
-			{
-				save_user_dict_encoded();
-			}
+			commit_richedit_text();
+			save_user_dict_encoded();
 		}
 
 		if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S"))
 		{
 			auto path = show_save_file_dialog("Save User Dictionary As");
 			if (!path.empty())
+			{
+				commit_richedit_text();
 				save_user_dict_as_encoded(path);
+			}
 		}
 
-		ImGui::Separator();
-
-		if (ImGui::MenuItem("Load NPC Flags..."))
+		if (ImGui::MenuItem("Save All"))
 		{
-			auto path = show_open_file_dialog("Load NPC Flags Dictionary");
-			if (!path.empty())
-				annotations_mgr_.load_npc_flags(path);
-		}
-
-		if (ImGui::MenuItem("Load Enchantment Dict..."))
-		{
-			auto path = show_open_file_dialog("Load Enchantment Dictionary");
-			if (!path.empty())
-				annotations_mgr_.load_enchantments(path);
+			commit_richedit_text();
+			save_all_encoded();
 		}
 
 		ImGui::Separator();
@@ -328,9 +333,6 @@ void editor_app_t::render_menu_bar()
 	{
 		ImGui::MenuItem("Sidebar", nullptr, &sidebar_visible_);
 		ImGui::MenuItem("Bottom Panel", nullptr, &bottom_visible_);
-		ImGui::Separator();
-		ImGui::MenuItem("Annotations", nullptr, &show_annotations_);
-		ImGui::MenuItem("History", nullptr, &show_history_);
 		ImGui::EndMenu();
 	}
 
@@ -352,14 +354,18 @@ void editor_app_t::render_toolbar()
 	if (ImGui::InputText("Search", search_buffer_.data(), search_buffer_.size()))
 	{
 		search_.set_query(search_buffer_.data(), search_case_sensitive_);
-		search_.find_all(state_, type_filter_);
+		auto * search_slot = workspace_.get_active_slot();
+		if (search_slot)
+			search_.find_all(search_slot->data, type_filter_);
 	}
 
 	ImGui::SameLine();
 	if (ImGui::Checkbox("Case sensitive", &search_case_sensitive_))
 	{
 		search_.set_query(search_buffer_.data(), search_case_sensitive_);
-		search_.find_all(state_, type_filter_);
+		auto * search_slot = workspace_.get_active_slot();
+		if (search_slot)
+			search_.find_all(search_slot->data, type_filter_);
 	}
 
 	if (!search_.get_matches().empty())
@@ -385,10 +391,12 @@ void editor_app_t::render_toolbar()
 					codepage_t old_cp = supported_codepages[encoding_index_];
 					codepage_t new_cp = supported_codepages[i];
 					encoding_index_ = i;
-					reencode_dict(state_.get_user_dict(), old_cp, new_cp);
-					reencode_dict(state_.get_source_dict(), old_cp, new_cp);
-					reencode_dict(merged_base_dict_, old_cp, new_cp);
-					annotations_mgr_.rebuild(state_, merged_base_dict_);
+					auto * enc_slot = workspace_.get_active_slot();
+					if (enc_slot)
+					{
+						reencode_dict(enc_slot->data, old_cp, new_cp);
+						rebuild_annotations();
+					}
 					rebuild_row_data();
 					config_.encoding_index = encoding_index_;
 					config_.save(config_path_);
@@ -409,12 +417,13 @@ void editor_app_t::render_toolbar()
 		bool is_active = type_filter_.count(type) > 0;
 
 		size_t count = 0;
-		const auto & toolbar_dict = (selected_dict_ == selected_dict_t::base)    ? merged_base_dict_
-		                            : (selected_dict_ == selected_dict_t::source) ? state_.get_source_dict()
-		                                                                          : state_.get_user_dict();
-		auto it = toolbar_dict.find(type);
-		if (it != toolbar_dict.end())
-			count = it->second.records.size();
+		auto * toolbar_slot = workspace_.get_active_slot();
+		if (toolbar_slot)
+		{
+			auto it = toolbar_slot->data.find(type);
+			if (it != toolbar_slot->data.end())
+				count = it->second.records.size();
+		}
 
 		std::string label = tools_t::type_to_str(type) + " (" + std::to_string(count) + ")";
 
@@ -512,16 +521,8 @@ void editor_app_t::render_toolbar()
 
 	if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_S))
 	{
-		if (state_.get_user_path().empty())
-		{
-			auto path = show_save_file_dialog("Save User Dictionary");
-			if (!path.empty())
-				save_user_dict_as_encoded(path);
-		}
-		else
-		{
-			save_user_dict_encoded();
-		}
+		commit_richedit_text();
+		save_user_dict_encoded();
 	}
 
 	ImGui::EndChild();
@@ -534,118 +535,100 @@ void editor_app_t::render_sidebar()
 
 	ImGui::BeginChild("Sidebar", ImVec2(sidebar_width_, 0), ImGuiChildFlags_Borders);
 
-	ImGui::TextUnformatted("Dictionaries");
-	ImGui::Separator();
+	int active_index = workspace_.get_active_index();
 
-	const auto & user_path = state_.get_user_path();
+	ImGui::SeparatorText("User Dicts");
+
+	for (int i = 0; i < workspace_.slot_count(); ++i)
 	{
-		std::string label = "User Dict";
-		if (!user_path.empty())
-		{
-			auto pos = user_path.find_last_of("\\/");
-			label += ": " + ((pos != std::string::npos) ? user_path.substr(pos + 1) : user_path);
-		}
-		bool is_selected = (selected_dict_ == selected_dict_t::user);
-		if (ImGui::Selectable(label.c_str(), is_selected))
-		{
-			save_current_filters();
-			selected_dict_ = selected_dict_t::user;
-			restore_filters_for(selected_dict_t::user);
-			selected_row_ = -1;
-			selected_row_left_ = -1;
-			scroll_to_row_ = -1;
-			editing_row_ = -1;
-			editing_type_ = tools_t::rec_type_t::unknown;
-			edit_focus_pending_ = false;
-		}
-		if (!user_path.empty() && ImGui::IsItemHovered())
-			ImGui::SetTooltip("%s", user_path.c_str());
-	}
+		if (!workspace_.is_user_slot(i))
+			continue;
 
-	ImGui::Spacing();
-	ImGui::Separator();
-	ImGui::TextUnformatted("Base Dictionaries");
-	ImGui::Separator();
+		const auto * slot = workspace_.get_slot(i);
+		if (!slot)
+			continue;
 
-	for (int i = 0; i < static_cast<int>(config_.base_dict_paths.size()); ++i)
-	{
-		const auto & p = config_.base_dict_paths[i];
-		auto slash = p.find_last_of("\\/");
-		std::string short_name = (slash != std::string::npos) ? p.substr(slash + 1) : p;
+		const auto & path = slot->path;
+		auto pos = path.find_last_of("\\/");
+		std::string filename = (pos != std::string::npos) ? path.substr(pos + 1) : path;
+
+		std::string label = slot->dirty ? "* " + filename : filename;
 
 		ImGui::PushID(i);
-		ImGui::TextUnformatted(short_name.c_str());
-		if (ImGui::IsItemHovered())
-			ImGui::SetTooltip("%s", p.c_str());
-
-		if (ImGui::BeginPopupContextItem("##base_ctx"))
+		if (ImGui::Selectable(label.c_str(), i == active_index))
 		{
-			if (ImGui::MenuItem("Move Up") && i > 0)
+			workspace_.set_active(i);
+			rebuild_annotations();
+			rebuild_row_data();
+		}
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("%s", path.c_str());
+
+		if (ImGui::BeginPopupContextItem())
+		{
+			if (ImGui::MenuItem("Save"))
+				save_slot_encoded(i);
+			if (ImGui::MenuItem("Save As..."))
 			{
-				std::swap(config_.base_dict_paths[i], config_.base_dict_paths[i - 1]);
-				reload_base_dicts();
-				annotations_mgr_.rebuild(state_, merged_base_dict_);
-				config_.save(config_path_);
+				auto save_path = show_save_file_dialog("Save Dictionary As");
+				if (!save_path.empty())
+					save_slot_as_encoded(i, save_path);
 			}
-			if (ImGui::MenuItem("Move Down") && i < static_cast<int>(config_.base_dict_paths.size()) - 1)
+			if (ImGui::MenuItem("Unload"))
 			{
-				std::swap(config_.base_dict_paths[i], config_.base_dict_paths[i + 1]);
-				reload_base_dicts();
-				annotations_mgr_.rebuild(state_, merged_base_dict_);
-				config_.save(config_path_);
-			}
-			if (ImGui::MenuItem("Remove"))
-			{
-				config_.base_dict_paths.erase(config_.base_dict_paths.begin() + i);
-				reload_base_dicts();
-				annotations_mgr_.rebuild(state_, merged_base_dict_);
-				config_.save(config_path_);
+				if (slot->dirty)
+				{
+					pending_unload_index_ = i;
+					show_unload_confirm_ = true;
+				}
+				else
+				{
+					workspace_.unload_dict(i);
+					rebuild_row_data();
+				}
 			}
 			ImGui::EndPopup();
 		}
+
 		ImGui::PopID();
 	}
 
-	if (ImGui::SmallButton("Add..."))
-	{
-		auto path = show_open_file_dialog("Add Base Dictionary");
-		if (!path.empty())
-		{
-			config_.base_dict_paths.push_back(path);
-			reload_base_dicts();
-			annotations_mgr_.rebuild(state_, merged_base_dict_);
-			config_.save(config_path_);
-		}
-	}
-	ImGui::SameLine();
-	if (ImGui::SmallButton("Reload"))
-	{
-		reload_base_dicts();
-		annotations_mgr_.rebuild(state_, merged_base_dict_);
-		config_.save(config_path_);
-	}
+	ImGui::SeparatorText("Base Dicts");
 
-	const auto & source_path = state_.get_source_path();
-	if (!source_path.empty())
+	for (int i = 0; i < workspace_.slot_count(); ++i)
 	{
-		std::string label = "Source Dict";
-		auto pos = source_path.find_last_of("\\/");
-		label += ": " + ((pos != std::string::npos) ? source_path.substr(pos + 1) : source_path);
-		bool is_selected = (selected_dict_ == selected_dict_t::source);
-		if (ImGui::Selectable(label.c_str(), is_selected))
+		if (!workspace_.is_base_slot(i))
+			continue;
+
+		const auto * slot = workspace_.get_slot(i);
+		if (!slot)
+			continue;
+
+		const auto & path = slot->path;
+		auto pos = path.find_last_of("\\/");
+		std::string filename = (pos != std::string::npos) ? path.substr(pos + 1) : path;
+
+		ImGui::PushID(i);
+		if (ImGui::Selectable(filename.c_str(), i == active_index))
 		{
-			save_current_filters();
-			selected_dict_ = selected_dict_t::source;
-			restore_filters_for(selected_dict_t::source);
-			selected_row_ = -1;
-			selected_row_left_ = -1;
-			scroll_to_row_ = -1;
-			editing_row_ = -1;
-			editing_type_ = tools_t::rec_type_t::unknown;
-			edit_focus_pending_ = false;
+			workspace_.set_active(i);
+			rebuild_annotations();
+			rebuild_row_data();
 		}
 		if (ImGui::IsItemHovered())
-			ImGui::SetTooltip("%s", source_path.c_str());
+			ImGui::SetTooltip("%s", path.c_str());
+
+		if (ImGui::BeginPopupContextItem())
+		{
+			if (ImGui::MenuItem("Remove"))
+			{
+				workspace_.unload_dict(i);
+				rebuild_row_data();
+			}
+			ImGui::EndPopup();
+		}
+
+		ImGui::PopID();
 	}
 
 	ImGui::EndChild();
@@ -669,31 +652,32 @@ void editor_app_t::render_status_summary_bar()
 
 	int counts[status_count] = {};
 
-	const auto & active_dict = (selected_dict_ == selected_dict_t::base)    ? merged_base_dict_
-	                           : (selected_dict_ == selected_dict_t::source) ? state_.get_source_dict()
-	                                                                         : state_.get_user_dict();
+	auto * summary_slot = workspace_.get_active_slot();
 
-	for (const auto & [type, chapter] : active_dict)
+	if (summary_slot)
 	{
-		if (type_filter_.count(type) == 0)
-			continue;
-
-		for (size_t i = 0; i < chapter.records.size(); ++i)
+		for (const auto & [type, chapter] : summary_slot->data)
 		{
-			const std::string & status = chapter.records[i].status;
-
-			if (status.empty())
-			{
-				++counts[0];
+			if (type_filter_.count(type) == 0)
 				continue;
-			}
 
-			for (size_t j = 0; j < status_count; ++j)
+			for (size_t i = 0; i < chapter.records.size(); ++i)
 			{
-				if (status == status_names[j])
+				const std::string & status = chapter.records[i].status;
+
+				if (status.empty())
 				{
-					++counts[j];
-					break;
+					++counts[0];
+					continue;
+				}
+
+				for (size_t j = 0; j < status_count; ++j)
+				{
+					if (status == status_names[j])
+					{
+						++counts[j];
+						break;
+					}
 				}
 			}
 		}
@@ -791,57 +775,25 @@ void editor_app_t::render_status_summary_bar()
 	ImGui::EndChild();
 }
 
-void editor_app_t::render_panels()
-{
-	auto available = ImGui::GetContentRegionAvail();
-	float splitter_width = 4.0f;
-	float left_width = available.x * split_ratio_;
-	float right_width = available.x * (1.0f - split_ratio_) - splitter_width;
-
-	ImGui::BeginChild("LeftPanel", ImVec2(left_width, available.y), ImGuiChildFlags_Borders);
-	render_dict_table("##left_table", state_.get_user_dict(), &state_.get_user_dict(), true);
-	ImGui::EndChild();
-
-	ImGui::SameLine();
-
-	ImGui::Button("##splitter", ImVec2(splitter_width, available.y));
-	if (ImGui::IsItemActive())
-		split_ratio_ += ImGui::GetIO().MouseDelta.x / available.x;
-	if (ImGui::IsItemHovered() || ImGui::IsItemActive())
-		ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
-	split_ratio_ = std::clamp(split_ratio_, 0.1f, 0.9f);
-
-	ImGui::SameLine();
-
-	ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.14f, 0.14f, 0.16f, 1.0f));
-	ImGui::BeginChild("RightPanel", ImVec2(right_width, available.y), ImGuiChildFlags_Borders);
-	render_dict_table("##right_table", state_.get_source_dict(), nullptr, false);
-	ImGui::EndChild();
-	ImGui::PopStyleColor();
-}
-
 void editor_app_t::render_main_panel()
 {
 	ImGui::BeginChild("MainPanel", ImVec2(0, 0), ImGuiChildFlags_Borders);
 
-	bool is_editable = (selected_dict_ == selected_dict_t::user);
+	auto * slot = workspace_.get_active_slot();
+	if (!slot)
+	{
+		ImGui::TextDisabled("No dictionary loaded");
+		ImGui::EndChild();
+		return;
+	}
 
-	const auto & active_dict = (selected_dict_ == selected_dict_t::base)    ? merged_base_dict_
-	                           : (selected_dict_ == selected_dict_t::source) ? state_.get_source_dict()
-	                                                                         : state_.get_user_dict();
+	bool is_editable = workspace_.is_user_slot(workspace_.get_active_index());
+
+	const auto & active_dict = slot->data;
 
 	const auto & rows = left_rows_;
 	int & selected_row = selected_row_;
 	int & scroll_to_row = scroll_to_row_;
-
-	if (!is_editable)
-	{
-		const char * mode_label = (selected_dict_ == selected_dict_t::base) ? "[Read-Only: Base Dict]"
-		                                                                    : "[Read-Only: Source Dict]";
-		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.7f, 0.7f, 0.3f, 1.0f));
-		ImGui::TextUnformatted(mode_label);
-		ImGui::PopStyleColor();
-	}
 
 	const ImGuiTableFlags flags = ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg |
 	                              ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV;
@@ -926,14 +878,15 @@ void editor_app_t::render_main_panel()
 					{
 						if (ImGui::MenuItem(ctx_status_labels[s]))
 						{
-							auto mit = state_.get_user_dict().find(row_ref.type);
-							if (mit != state_.get_user_dict().end() &&
+							auto mit = slot->data.find(row_ref.type);
+							if (mit != slot->data.end() &&
 							    row_ref.record_index < mit->second.records.size())
 							{
 								auto & rec = mit->second.records[row_ref.record_index];
 								std::string old_status = rec.status;
 								rec.status = ctx_status_names[s];
-								state_.mark_modified(row_ref.type, row_ref.record_index);
+								slot->dirty = true;
+								slot->modified_records.insert({ row_ref.type, row_ref.record_index });
 								history_.record_change(
 								    row_ref.type, entry.key_text, old_status, rec.status);
 							}
@@ -979,14 +932,15 @@ void editor_app_t::render_main_panel()
 					{
 						if (ImGui::Selectable(popup_status_labels[s]))
 						{
-							auto mit = state_.get_user_dict().find(row_ref.type);
-							if (mit != state_.get_user_dict().end() &&
+							auto mit = slot->data.find(row_ref.type);
+							if (mit != slot->data.end() &&
 							    row_ref.record_index < mit->second.records.size())
 							{
 								auto & rec = mit->second.records[row_ref.record_index];
 								std::string old_status = rec.status;
 								rec.status = popup_status_names[s];
-								state_.mark_modified(row_ref.type, row_ref.record_index);
+								slot->dirty = true;
+								slot->modified_records.insert({ row_ref.type, row_ref.record_index });
 								history_.record_change(
 								    row_ref.type, entry.key_text, old_status, rec.status);
 							}
@@ -1042,290 +996,6 @@ void editor_app_t::render_main_panel()
 
 	ImGui::EndTable();
 	ImGui::EndChild();
-}
-
-void editor_app_t::render_dict_table(
-    const char * table_id,
-    const tools_t::dict_t & dict,
-    tools_t::dict_t * mutable_dict,
-    bool is_left_panel)
-{
-	const auto & rows = is_left_panel ? left_rows_ : right_rows_;
-	int & selected_row = is_left_panel ? selected_row_left_ : selected_row_right_;
-	int & scroll_to_row = is_left_panel ? scroll_to_row_left_ : scroll_to_row_right_;
-
-	ImGui::Text("Records: %d", static_cast<int>(rows.size()));
-	ImGui::Separator();
-
-	const ImGuiTableFlags flags = ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg |
-	                              ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV;
-
-	if (!ImGui::BeginTable(table_id, 5, flags))
-		return;
-
-	ImGui::TableSetupScrollFreeze(0, 1);
-	ImGui::TableSetupColumn("ID", ImGuiTableColumnFlags_WidthFixed, config_.column_widths[0]);
-	ImGui::TableSetupColumn("Original", ImGuiTableColumnFlags_WidthStretch);
-	ImGui::TableSetupColumn("Translation", ImGuiTableColumnFlags_WidthStretch);
-	ImGui::TableSetupColumn("Status", ImGuiTableColumnFlags_WidthFixed, config_.column_widths[3]);
-	ImGui::TableSetupColumn("##validation", ImGuiTableColumnFlags_WidthFixed, 24.0f);
-	ImGui::TableHeadersRow();
-
-	float row_height = ImGui::GetTextLineHeightWithSpacing();
-
-	if (scroll_to_row >= 0 && scroll_to_row < static_cast<int>(rows.size()))
-	{
-		float target_y = scroll_to_row * row_height;
-		ImGui::SetScrollY(target_y);
-		scroll_to_row = -1;
-	}
-
-	ImGuiListClipper clipper;
-	clipper.Begin(static_cast<int>(rows.size()));
-
-	while (clipper.Step())
-	{
-		for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; ++i)
-		{
-			const auto & row_ref = rows[i];
-			auto it = dict.find(row_ref.type);
-			if (it == dict.end())
-				continue;
-			if (row_ref.record_index >= it->second.records.size())
-				continue;
-
-			const auto & entry = it->second.records[row_ref.record_index];
-
-			ImGui::TableNextRow();
-
-			bool is_selected = (i == selected_row);
-			if (is_selected)
-			{
-				ImU32 highlight_color = IM_COL32(50, 80, 130, 100);
-				ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg1, highlight_color);
-			}
-
-			ImGui::TableSetColumnIndex(0);
-			if (is_left_panel && history_.is_modified_this_session(row_ref.type, entry.key_text))
-			{
-				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.6f, 0.0f, 1.0f));
-				ImGui::TextUnformatted("\xe2\x97\x8f ");
-				ImGui::PopStyleColor();
-				ImGui::SameLine(0, 0);
-			}
-			std::string id_text = tools_t::type_to_str(row_ref.type) + ": " + entry.key_text;
-			ImGui::PushID(i);
-
-			if (ImGui::Selectable(
-			        id_text.c_str(),
-			        is_selected,
-			        ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowDoubleClick,
-			        ImVec2(0, 0)))
-			{
-				selected_row = i;
-				if (is_left_panel)
-					selected_row_ = i;
-
-				std::string lk = make_lookup_key(row_ref.type, entry.key_text);
-				if (is_left_panel)
-				{
-					auto found = right_lookup_.find(lk);
-					if (found != right_lookup_.end())
-					{
-						scroll_to_row_right_ = found->second;
-						selected_row_right_ = found->second;
-					}
-				}
-				else
-				{
-					auto found = left_lookup_.find(lk);
-					if (found != left_lookup_.end())
-					{
-						scroll_to_row_left_ = found->second;
-						selected_row_left_ = found->second;
-						selected_row_ = found->second;
-					}
-				}
-			}
-
-			bool double_clicked = ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
-
-			if (is_left_panel && mutable_dict)
-			{
-				std::string ctx_id = "##ctx_" + std::to_string(i);
-				if (ImGui::BeginPopupContextItem(ctx_id.c_str()))
-				{
-					auto mit = mutable_dict->find(row_ref.type);
-					if (mit == mutable_dict->end() || row_ref.record_index >= mit->second.records.size())
-					{
-						ImGui::EndPopup();
-					}
-					else
-					{
-						auto & rec = mit->second.records[row_ref.record_index];
-
-						if (ImGui::MenuItem("Set Untranslated"))
-						{
-							rec.status = tools_t::status_t::untranslated;
-							state_.mark_modified(row_ref.type, row_ref.record_index);
-						}
-						if (ImGui::MenuItem("Set In Progress"))
-						{
-							rec.status = tools_t::status_t::in_progress;
-							state_.mark_modified(row_ref.type, row_ref.record_index);
-						}
-						if (ImGui::MenuItem("Set Translated"))
-						{
-							rec.status = tools_t::status_t::translated;
-							state_.mark_modified(row_ref.type, row_ref.record_index);
-						}
-
-						ImGui::EndPopup();
-					}
-				}
-			}
-
-			ImGui::TableSetColumnIndex(1);
-			ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x);
-			if (search_.get_matches().empty())
-			{
-				if (row_ref.type == tools_t::rec_type_t::sctx || row_ref.type == tools_t::rec_type_t::text)
-					render_text_with_syntax(entry.old_text, row_ref.type);
-				else if (row_ref.type == tools_t::rec_type_t::info)
-					render_text_with_topic_highlights(entry.old_text);
-				else
-					ImGui::TextUnformatted(entry.old_text.c_str());
-			}
-			else
-				render_text_with_highlights(entry.old_text, row_ref.type, row_ref.record_index, true);
-			ImGui::PopTextWrapPos();
-
-			ImGui::TableSetColumnIndex(2);
-
-			bool is_editing = false;
-
-			if (is_editing)
-			{
-				ImGui::PushItemWidth(-1);
-				bool commit = false;
-				bool cancel = false;
-
-				if (edit_multiline_)
-				{
-					ImGui::InputTextMultiline(
-					    "##edit",
-					    edit_buffer_.data(),
-					    edit_buffer_.size(),
-					    ImVec2(-1, row_height * 4),
-					    ImGuiInputTextFlags_AllowTabInput);
-
-					if (ImGui::IsKeyPressed(ImGuiKey_Enter) && ImGui::GetIO().KeyCtrl)
-						commit = true;
-					if (ImGui::IsKeyPressed(ImGuiKey_Escape))
-						cancel = true;
-				}
-				else
-				{
-					if (ImGui::InputText(
-					        "##edit", edit_buffer_.data(), edit_buffer_.size(), ImGuiInputTextFlags_EnterReturnsTrue))
-						commit = true;
-					if (ImGui::IsKeyPressed(ImGuiKey_Escape))
-						cancel = true;
-				}
-
-				if (commit)
-				{
-					std::string new_value(edit_buffer_.data());
-					auto mit = mutable_dict->find(row_ref.type);
-					if (mit != mutable_dict->end() && row_ref.record_index < mit->second.records.size())
-					{
-						auto & rec = mit->second.records[row_ref.record_index];
-						rec.new_text = new_value;
-						rec.status = tools_t::status_t::in_progress;
-						auto vr = validation_.validate(row_ref.type, new_value);
-						if (vr.level == validation_level_t::error)
-							rec.status = tools_t::status_t::has_errors;
-						state_.mark_modified(row_ref.type, row_ref.record_index);
-						if (row_ref.type == tools_t::rec_type_t::dial)
-							annotations_mgr_.rebuild(state_, merged_base_dict_);
-					}
-					editing_row_ = -1;
-					editing_type_ = tools_t::rec_type_t::unknown;
-				}
-
-				if (cancel)
-				{
-					editing_row_ = -1;
-					editing_type_ = tools_t::rec_type_t::unknown;
-				}
-
-				ImGui::PopItemWidth();
-			}
-			else
-			{
-				ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x);
-				if (search_.get_matches().empty())
-				{
-					if (row_ref.type == tools_t::rec_type_t::sctx || row_ref.type == tools_t::rec_type_t::text)
-						render_text_with_syntax(entry.new_text, row_ref.type);
-					else if (row_ref.type == tools_t::rec_type_t::info)
-						render_text_with_topic_highlights(entry.new_text);
-					else
-						ImGui::TextUnformatted(entry.new_text.c_str());
-				}
-				else
-					render_text_with_highlights(entry.new_text, row_ref.type, row_ref.record_index, false);
-				ImGui::PopTextWrapPos();
-			}
-
-			ImGui::TableSetColumnIndex(3);
-			ImVec4 status_color = get_status_color(entry.status);
-			ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, ImGui::ColorConvertFloat4ToU32(status_color));
-			ImGui::TextUnformatted(entry.status.c_str());
-
-			ImGui::TableSetColumnIndex(4);
-			if (row_ref.type == tools_t::rec_type_t::fnam && annotations_mgr_.has_enchantment(entry.key_text))
-			{
-				ImGui::TextUnformatted("\xe2\x9a\xa1");
-				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip("%s", annotations_mgr_.get_enchantment(entry.key_text).c_str());
-			}
-			else
-			{
-				auto result = validation_.validate(row_ref.type, entry.new_text);
-				if (result.level == validation_level_t::caution)
-				{
-					ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.8f, 0.0f, 1.0f));
-					ImGui::TextUnformatted("\xe2\x9a\xa0");
-					ImGui::PopStyleColor();
-					if (ImGui::IsItemHovered())
-					{
-						std::string tip =
-						    std::to_string(result.byte_count) + " / " + std::to_string(result.limit) + " bytes";
-						ImGui::SetTooltip("%s", tip.c_str());
-					}
-				}
-				else if (result.level == validation_level_t::error)
-				{
-					ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.2f, 0.2f, 1.0f));
-					ImGui::TextUnformatted("\xe2\x9b\x94");
-					ImGui::PopStyleColor();
-					if (ImGui::IsItemHovered())
-					{
-						std::string tip = std::to_string(result.byte_count) + " / " + std::to_string(result.limit) +
-						                  " bytes (OVER LIMIT)";
-						ImGui::SetTooltip("%s", tip.c_str());
-					}
-				}
-			}
-
-			ImGui::PopID();
-		}
-	}
-
-	if (is_left_panel) {}
-
-	ImGui::EndTable();
 }
 
 void editor_app_t::render_text_with_highlights(
@@ -1681,23 +1351,42 @@ void editor_app_t::render_status_bar()
 void editor_app_t::render_bottom_panel()
 {
 	if (!bottom_visible_)
+	{
+		if (richedit_visible_ && richedit_hwnd_)
+		{
+			ShowWindow(richedit_hwnd_, SW_HIDE);
+			richedit_visible_ = false;
+		}
 		return;
+	}
 
 	ImGui::BeginChild("BottomPanel", ImVec2(0, bottom_height_), ImGuiChildFlags_Borders);
 
 	if (!ImGui::BeginTabBar("BottomTabs"))
 	{
+		if (richedit_visible_ && richedit_hwnd_)
+		{
+			ShowWindow(richedit_hwnd_, SW_HIDE);
+			richedit_visible_ = false;
+		}
 		ImGui::EndChild();
 		return;
 	}
 
+	bool editor_tab_active = false;
+
 	if (ImGui::BeginTabItem("Editor"))
 	{
 		active_bottom_tab_ = 0;
+		editor_tab_active = true;
 		if (selected_row_ < 0 || selected_row_ >= static_cast<int>(left_rows_.size()))
+		{
 			ImGui::TextDisabled("No record selected");
+		}
 		else
+		{
 			render_editor_tab();
+		}
 		ImGui::EndTabItem();
 	}
 
@@ -1729,6 +1418,22 @@ void editor_app_t::render_bottom_panel()
 	}
 
 	ImGui::EndTabBar();
+
+	if (!editor_tab_active && richedit_visible_ && richedit_hwnd_)
+	{
+		ShowWindow(richedit_hwnd_, SW_HIDE);
+		richedit_visible_ = false;
+	}
+
+	if (editor_tab_active && (selected_row_ < 0 || selected_row_ >= static_cast<int>(left_rows_.size())))
+	{
+		if (richedit_visible_ && richedit_hwnd_)
+		{
+			ShowWindow(richedit_hwnd_, SW_HIDE);
+			richedit_visible_ = false;
+		}
+	}
+
 	ImGui::EndChild();
 }
 
@@ -1736,10 +1441,12 @@ void editor_app_t::render_editor_tab()
 {
 	const auto & row = left_rows_[selected_row_];
 
-	const auto & active_dict = (selected_dict_ == selected_dict_t::base)    ? merged_base_dict_
-	                           : (selected_dict_ == selected_dict_t::source) ? state_.get_source_dict()
-	                                                                         : state_.get_user_dict();
-	bool is_editable = (selected_dict_ == selected_dict_t::user);
+	auto * slot = workspace_.get_active_slot();
+	if (!slot)
+		return;
+
+	const auto & active_dict = slot->data;
+	bool is_editable = workspace_.is_user_slot(workspace_.get_active_index());
 
 	auto it = active_dict.find(row.type);
 	if (it == active_dict.end() || row.record_index >= it->second.records.size())
@@ -1749,13 +1456,16 @@ void editor_app_t::render_editor_tab()
 	float available_width = ImGui::GetContentRegionAvail().x;
 	float splitter_width = 6.0f;
 	float left_width = available_width * split_ratio_ - splitter_width * 0.5f;
-	float right_width = available_width - left_width - splitter_width;
+	float right_width = available_width - left_width - splitter_width - 16.0f;
 	float panel_height = ImGui::GetContentRegionAvail().y;
 
 	ImGui::BeginChild("##editor_original", ImVec2(left_width, panel_height), ImGuiChildFlags_Borders);
 	ImGui::TextDisabled("Original");
 	ImGui::Separator();
-	render_text_with_topic_highlights(entry.old_text);
+	if (row.type == tools_t::rec_type_t::info)
+		render_text_with_topic_highlights(entry.old_text);
+	else
+		ImGui::TextWrapped("%s", entry.old_text.c_str());
 	ImGui::EndChild();
 
 	ImGui::SameLine();
@@ -1775,17 +1485,6 @@ void editor_app_t::render_editor_tab()
 	ImGui::TextDisabled("Translation");
 	ImGui::Separator();
 
-	if (!is_editable)
-	{
-		ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x);
-		ImGui::TextUnformatted(entry.new_text.c_str());
-		ImGui::PopTextWrapPos();
-		ImGui::EndChild();
-		return;
-	}
-
-	auto & mutable_entry = state_.get_user_dict().find(row.type)->second.records[row.record_index];
-
 	bool same_record = (editing_row_ == selected_row_
 	    && editing_type_ == row.type
 	    && editing_record_index_ == row.record_index);
@@ -1793,81 +1492,24 @@ void editor_app_t::render_editor_tab()
 	if (!same_record)
 	{
 		if (editing_row_ >= 0 && editing_type_ != tools_t::rec_type_t::unknown)
-		{
-			std::string committed(edit_buffer_.data());
-			auto prev_it = state_.get_user_dict().find(editing_type_);
-			if (prev_it != state_.get_user_dict().end() && editing_record_index_ < prev_it->second.records.size())
-			{
-				auto & prev_entry = prev_it->second.records[editing_record_index_];
-				if (committed != prev_entry.new_text)
-				{
-					history_.record_change(editing_type_, prev_entry.key_text, prev_entry.new_text, committed);
-					prev_entry.new_text = committed;
-					prev_entry.status = tools_t::status_t::in_progress;
-					auto vr = validation_.validate(editing_type_, committed);
-					if (vr.level == validation_level_t::error)
-						prev_entry.status = tools_t::status_t::has_errors;
-					state_.mark_modified(editing_type_, editing_record_index_);
-					if (editing_type_ == tools_t::rec_type_t::dial)
-						annotations_mgr_.rebuild(state_, merged_base_dict_);
-				}
-			}
-		}
+			commit_richedit_text();
 
 		editing_row_ = selected_row_;
 		editing_type_ = row.type;
 		editing_record_index_ = row.record_index;
-		edit_buffer_.resize(EDIT_BUFFER_SIZE);
-		std::fill(edit_buffer_.begin(), edit_buffer_.end(), '\0');
-		std::string buf_text;
-		buf_text.reserve(mutable_entry.new_text.size());
-		for (size_t ci = 0; ci < mutable_entry.new_text.size(); ++ci)
-		{
-			if (mutable_entry.new_text[ci] == '\r' && ci + 1 < mutable_entry.new_text.size() && mutable_entry.new_text[ci + 1] == '\n')
-				continue;
-			buf_text += mutable_entry.new_text[ci];
-		}
-		size_t copy_len = buf_text.size();
-		if (copy_len > EDIT_BUFFER_SIZE - 1)
-			copy_len = EDIT_BUFFER_SIZE - 1;
-		std::copy_n(buf_text.begin(), copy_len, edit_buffer_.begin());
+
+		richedit_ignore_change_ = true;
+		set_richedit_text(entry.new_text);
+		richedit_ignore_change_ = false;
 	}
 
-	float input_height = ImGui::GetContentRegionAvail().y;
+	SendMessageA(richedit_hwnd_, EM_SETREADONLY, is_editable ? FALSE : TRUE, 0);
 
-	ImGuiInputTextFlags input_flags = ImGuiInputTextFlags_AllowTabInput;
-	bool changed = ImGui::InputTextMultiline(
-	    "##editor_input",
-	    edit_buffer_.data(),
-	    edit_buffer_.size(),
-	    ImVec2(-1, input_height),
-	    input_flags);
+	ImVec2 cursor_pos = ImGui::GetCursorScreenPos();
+	ImVec2 region = ImGui::GetContentRegionAvail();
+	position_richedit(cursor_pos.x, cursor_pos.y, region.x, region.y);
 
-	if (changed)
-	{
-		std::string new_value(edit_buffer_.data());
-		std::string normalized;
-		normalized.reserve(new_value.size());
-		for (size_t i = 0; i < new_value.size(); ++i)
-		{
-			if (new_value[i] == '\n' && (i == 0 || new_value[i - 1] != '\r'))
-				normalized += "\r\n";
-			else
-				normalized += new_value[i];
-		}
-		if (normalized != mutable_entry.new_text)
-		{
-			history_.record_change(row.type, mutable_entry.key_text, mutable_entry.new_text, normalized);
-			mutable_entry.new_text = normalized;
-			mutable_entry.status = tools_t::status_t::in_progress;
-			auto vr = validation_.validate(row.type, normalized);
-			if (vr.level == validation_level_t::error)
-				mutable_entry.status = tools_t::status_t::has_errors;
-			state_.mark_modified(row.type, row.record_index);
-			if (row.type == tools_t::rec_type_t::dial)
-				annotations_mgr_.rebuild(state_, merged_base_dict_);
-		}
-	}
+	ImGui::Dummy(region);
 
 	ImGui::EndChild();
 }
@@ -1876,9 +1518,11 @@ void editor_app_t::render_annotations_tab()
 {
 	const auto & row = left_rows_[selected_row_];
 
-	const auto & active_dict = (selected_dict_ == selected_dict_t::base)    ? merged_base_dict_
-	                           : (selected_dict_ == selected_dict_t::source) ? state_.get_source_dict()
-	                                                                         : state_.get_user_dict();
+	auto * slot = workspace_.get_active_slot();
+	if (!slot)
+		return;
+
+	const auto & active_dict = slot->data;
 
 	auto it = active_dict.find(row.type);
 	if (it == active_dict.end() || row.record_index >= it->second.records.size())
@@ -1895,7 +1539,8 @@ void editor_app_t::render_annotations_tab()
 		ImGui::Separator();
 	}
 
-	const auto & base_dict = merged_base_dict_;
+	static const tools_t::dict_t empty_base_dict;
+	const auto & base_dict = empty_base_dict;
 	auto base_it = base_dict.find(row.type);
 	if (base_it != base_dict.end())
 	{
@@ -1934,11 +1579,16 @@ void editor_app_t::render_annotations_tab()
 		if (!hyperlinks.empty())
 		{
 			ImGui::TextColored(ImVec4(0.3f, 0.5f, 0.8f, 1.0f), "Hyperlinks");
-			for (const auto * ann : hyperlinks)
+			for (int hi = 0; hi < static_cast<int>(hyperlinks.size()); ++hi)
 			{
+				const auto * ann = hyperlinks[hi];
+				ImGui::PushID(hi);
 				std::string label = ann->old_text + " -> " + ann->new_text;
+				if (!ann->source.empty())
+					label += "  [" + ann->source + "]";
 				if (ImGui::Selectable(label.c_str()))
 					ImGui::SetClipboardText(ann->new_text.c_str());
+				ImGui::PopID();
 			}
 			ImGui::Separator();
 		}
@@ -1946,11 +1596,16 @@ void editor_app_t::render_annotations_tab()
 		if (!glossary.empty())
 		{
 			ImGui::TextColored(ImVec4(0.6f, 0.8f, 0.4f, 1.0f), "Glossary");
-			for (const auto * ann : glossary)
+			for (int gi = 0; gi < static_cast<int>(glossary.size()); ++gi)
 			{
+				const auto * ann = glossary[gi];
+				ImGui::PushID(1000 + gi);
 				std::string label = ann->old_text + " -> " + ann->new_text;
+				if (!ann->source.empty())
+					label += "  [" + ann->source + "]";
 				if (ImGui::Selectable(label.c_str()))
 					ImGui::SetClipboardText(ann->new_text.c_str());
+				ImGui::PopID();
 			}
 			ImGui::Separator();
 		}
@@ -1976,9 +1631,11 @@ void editor_app_t::render_history_tab()
 {
 	const auto & row = left_rows_[selected_row_];
 
-	const auto & active_dict = (selected_dict_ == selected_dict_t::base)    ? merged_base_dict_
-	                           : (selected_dict_ == selected_dict_t::source) ? state_.get_source_dict()
-	                                                                         : state_.get_user_dict();
+	auto * slot = workspace_.get_active_slot();
+	if (!slot)
+		return;
+
+	const auto & active_dict = slot->data;
 
 	auto it = active_dict.find(row.type);
 	if (it == active_dict.end() || row.record_index >= it->second.records.size())
@@ -1993,7 +1650,7 @@ void editor_app_t::render_history_tab()
 		return;
 	}
 
-	bool is_editable = (selected_dict_ == selected_dict_t::user);
+	bool is_editable = workspace_.is_user_slot(workspace_.get_active_index());
 
 	ImGui::BeginChild("HistoryScroll", ImVec2(0, 0), ImGuiChildFlags_None);
 
@@ -2008,7 +1665,7 @@ void editor_app_t::render_history_tab()
 			ImGui::SameLine();
 			if (ImGui::SmallButton("Revert"))
 			{
-				history_.revert(state_, row.type, entry.key_text, i);
+				history_.revert(*slot, row.type, entry.key_text, i);
 				rebuild_row_data();
 				ImGui::PopID();
 				break;
@@ -2039,9 +1696,14 @@ void editor_app_t::render_history_tab()
 
 void editor_app_t::render_speaker_tab()
 {
-	const auto & dict = (selected_dict_ == selected_dict_t::base)    ? merged_base_dict_
-	                    : (selected_dict_ == selected_dict_t::source) ? state_.get_source_dict()
-	                                                                  : state_.get_user_dict();
+	auto * speaker_slot = workspace_.get_active_slot();
+	if (!speaker_slot)
+	{
+		ImGui::TextDisabled("No info records loaded");
+		return;
+	}
+
+	const auto & dict = speaker_slot->data;
 	auto it = dict.find(tools_t::rec_type_t::info);
 	if (it == dict.end() || it->second.records.empty())
 	{
@@ -2163,9 +1825,14 @@ void editor_app_t::render_annotations_panel()
 
 	const auto & row = left_rows_[selected_row_];
 
-	const auto & active_dict = (selected_dict_ == selected_dict_t::base)    ? merged_base_dict_
-	                           : (selected_dict_ == selected_dict_t::source) ? state_.get_source_dict()
-	                                                                         : state_.get_user_dict();
+	auto * ann_slot = workspace_.get_active_slot();
+	if (!ann_slot)
+	{
+		ImGui::EndChild();
+		return;
+	}
+
+	const auto & active_dict = ann_slot->data;
 
 	auto it = active_dict.find(row.type);
 	if (it == active_dict.end() || row.record_index >= it->second.records.size())
@@ -2185,7 +1852,8 @@ void editor_app_t::render_annotations_panel()
 		ImGui::Separator();
 	}
 
-	const auto & base_dict = merged_base_dict_;
+	static const tools_t::dict_t empty_base_dict;
+	const auto & base_dict = empty_base_dict;
 	auto base_it = base_dict.find(row.type);
 	if (base_it != base_dict.end())
 	{
@@ -2334,9 +2002,14 @@ void editor_app_t::render_history_panel()
 
 	const auto & row = left_rows_[selected_row_];
 
-	const auto & active_dict = (selected_dict_ == selected_dict_t::base)    ? merged_base_dict_
-	                           : (selected_dict_ == selected_dict_t::source) ? state_.get_source_dict()
-	                                                                         : state_.get_user_dict();
+	auto * hist_slot = workspace_.get_active_slot();
+	if (!hist_slot)
+	{
+		ImGui::EndChild();
+		return;
+	}
+
+	const auto & active_dict = hist_slot->data;
 
 	auto it = active_dict.find(row.type);
 	if (it == active_dict.end() || row.record_index >= it->second.records.size())
@@ -2367,21 +2040,18 @@ void editor_app_t::render_history_panel()
 
 		if (ImGui::Selectable(label.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick))
 		{
-			if (selected_dict_ == selected_dict_t::user && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+			if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 			{
-				history_.revert(state_, row.type, entry.key_text, i);
+				history_.revert(*hist_slot, row.type, entry.key_text, i);
 				rebuild_row_data();
 			}
 		}
 
-		if (selected_dict_ == selected_dict_t::user)
+		ImGui::SameLine();
+		if (ImGui::SmallButton("Revert"))
 		{
-			ImGui::SameLine();
-			if (ImGui::SmallButton("Revert"))
-			{
-				history_.revert(state_, row.type, entry.key_text, i);
-				rebuild_row_data();
-			}
+			history_.revert(*hist_slot, row.type, entry.key_text, i);
+			rebuild_row_data();
 		}
 
 		ImGui::PopID();
@@ -2394,6 +2064,8 @@ void editor_app_t::render_dialogs()
 {
 	if (show_quit_dialog_)
 		render_quit_dialog();
+	if (show_unload_confirm_)
+		render_unload_confirm_dialog();
 }
 
 void editor_app_t::render_quit_dialog()
@@ -2407,20 +2079,26 @@ void editor_app_t::render_quit_dialog()
 		return;
 
 	ImGui::Text("You have unsaved changes. What would you like to do?");
+	ImGui::Spacing();
+
+	for (int i = 0; i < workspace_.slot_count(); ++i)
+	{
+		if (!workspace_.is_user_slot(i))
+			continue;
+		const auto * slot = workspace_.get_slot(i);
+		if (!slot || !slot->dirty)
+			continue;
+		auto pos = slot->path.find_last_of("\\/");
+		std::string filename = (pos != std::string::npos) ? slot->path.substr(pos + 1) : slot->path;
+		ImGui::BulletText("%s", filename.c_str());
+	}
+
 	ImGui::Separator();
 
 	if (ImGui::Button("Save", ImVec2(120, 0)))
 	{
-		if (state_.get_user_path().empty())
-		{
-			auto path = show_save_file_dialog("Save User Dictionary");
-			if (!path.empty())
-				save_user_dict_as_encoded(path);
-		}
-		else
-		{
-			save_user_dict_encoded();
-		}
+		commit_richedit_text();
+		save_all_encoded();
 		quit_requested_ = true;
 		show_quit_dialog_ = false;
 		ImGui::CloseCurrentPopup();
@@ -2440,6 +2118,43 @@ void editor_app_t::render_quit_dialog()
 	if (ImGui::Button("Cancel", ImVec2(120, 0)))
 	{
 		show_quit_dialog_ = false;
+		ImGui::CloseCurrentPopup();
+	}
+
+	ImGui::EndPopup();
+}
+
+void editor_app_t::render_unload_confirm_dialog()
+{
+	ImGui::OpenPopup("Confirm Unload");
+
+	ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+	ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+	if (!ImGui::BeginPopupModal("Confirm Unload", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+		return;
+
+	ImGui::Text("Dictionary has unsaved changes. Unload anyway?");
+	ImGui::Separator();
+
+	if (ImGui::Button("Yes", ImVec2(120, 0)))
+	{
+		if (pending_unload_index_ >= 0)
+		{
+			workspace_.unload_dict(pending_unload_index_);
+			rebuild_row_data();
+		}
+		pending_unload_index_ = -1;
+		show_unload_confirm_ = false;
+		ImGui::CloseCurrentPopup();
+	}
+
+	ImGui::SameLine();
+
+	if (ImGui::Button("No", ImVec2(120, 0)))
+	{
+		pending_unload_index_ = -1;
+		show_unload_confirm_ = false;
 		ImGui::CloseCurrentPopup();
 	}
 
@@ -2485,6 +2200,111 @@ std::string editor_app_t::show_save_file_dialog(const char * title) const
 	return std::string(filename);
 }
 
+void editor_app_t::create_richedit(HWND parent)
+{
+	LoadLibraryA("Msftedit.dll");
+
+	richedit_hwnd_ = CreateWindowExA(
+	    0, "RICHEDIT50W", "",
+	    WS_CHILD | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN | ES_NOHIDESEL,
+	    0, 0, 100, 100,
+	    parent, nullptr, GetModuleHandle(nullptr), nullptr);
+
+	SendMessageA(richedit_hwnd_, EM_SETTARGETDEVICE, 0, 0);
+	SendMessageA(richedit_hwnd_, EM_SETBKGNDCOLOR, 0, RGB(255, 255, 255));
+	SendMessageA(richedit_hwnd_, EM_SETEVENTMASK, 0, ENM_CHANGE);
+	SendMessageA(richedit_hwnd_, EM_SETLIMITTEXT, 0x100000, 0);
+
+	CHARFORMATA cf = {};
+	cf.cbSize = sizeof(cf);
+	cf.dwMask = CFM_FACE | CFM_SIZE | CFM_COLOR;
+	cf.yHeight = 200;
+	cf.crTextColor = RGB(0, 0, 0);
+	strcpy_s(cf.szFaceName, "Consolas");
+	SendMessageA(richedit_hwnd_, EM_SETCHARFORMAT, SCF_ALL, (LPARAM)&cf);
+}
+
+void editor_app_t::position_richedit(float screen_x, float screen_y, float width, float height)
+{
+	if (!richedit_hwnd_)
+		return;
+
+	float adjusted_width = width;
+
+	bool should_show = (adjusted_width > 10.0f && height > 10.0f);
+
+	if (should_show)
+	{
+		SetWindowPos(richedit_hwnd_, HWND_TOP,
+		    static_cast<int>(screen_x), static_cast<int>(screen_y),
+		    static_cast<int>(adjusted_width), static_cast<int>(height),
+		    SWP_NOACTIVATE | SWP_SHOWWINDOW);
+		richedit_visible_ = true;
+	}
+	else if (richedit_visible_)
+	{
+		ShowWindow(richedit_hwnd_, SW_HIDE);
+		richedit_visible_ = false;
+	}
+}
+
+void editor_app_t::set_richedit_text(const std::string & text)
+{
+	if (!richedit_hwnd_)
+		return;
+
+	int wlen = MultiByteToWideChar(CP_UTF8, 0, text.c_str(), static_cast<int>(text.size()), nullptr, 0);
+	std::wstring wtext(wlen, L'\0');
+	MultiByteToWideChar(CP_UTF8, 0, text.c_str(), static_cast<int>(text.size()), wtext.data(), wlen);
+	SetWindowTextW(richedit_hwnd_, wtext.c_str());
+}
+
+std::string editor_app_t::get_richedit_text() const
+{
+	if (!richedit_hwnd_)
+		return {};
+
+	int wlen = GetWindowTextLengthW(richedit_hwnd_);
+	if (wlen <= 0)
+		return {};
+
+	std::wstring wtext(wlen, L'\0');
+	GetWindowTextW(richedit_hwnd_, wtext.data(), wlen + 1);
+
+	int len = WideCharToMultiByte(CP_UTF8, 0, wtext.c_str(), wlen, nullptr, 0, nullptr, nullptr);
+	std::string result(len, '\0');
+	WideCharToMultiByte(CP_UTF8, 0, wtext.c_str(), wlen, result.data(), len, nullptr, nullptr);
+	return result;
+}
+
+void editor_app_t::commit_richedit_text()
+{
+	auto * slot = workspace_.get_active_slot();
+	if (!slot)
+		return;
+
+	if (!workspace_.is_user_slot(workspace_.get_active_index()))
+		return;
+
+	auto prev_it = slot->data.find(editing_type_);
+	if (prev_it == slot->data.end() || editing_record_index_ >= prev_it->second.records.size())
+		return;
+
+	std::string new_text = get_richedit_text();
+	auto & prev_entry = prev_it->second.records[editing_record_index_];
+	if (new_text == prev_entry.new_text)
+		return;
+
+	history_.record_change(editing_type_, prev_entry.key_text, prev_entry.new_text, new_text);
+	prev_entry.new_text = new_text;
+	prev_entry.status = tools_t::status_t::in_progress;
+	auto vr = validation_.validate(editing_type_, new_text);
+	if (vr.level == validation_level_t::error)
+		prev_entry.status = tools_t::status_t::has_errors;
+	slot->dirty = true;
+	slot->modified_records.insert({ editing_type_, editing_record_index_ });
+}
+
 void editor_app_t::render_splitter_horizontal(float & height, float min_h, float max_h)
 {
 	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
@@ -2518,15 +2338,11 @@ float editor_app_t::clamp_sidebar_width(float requested, float window_width) con
 
 float editor_app_t::clamp_bottom_height(float requested, float available_height) const
 {
-	constexpr float min_bottom = 100.0f;
-	constexpr float max_ratio = 0.5f;
-	constexpr float min_main = 100.0f;
+	constexpr float min_bottom = 50.0f;
+	constexpr float min_main = 30.0f;
 
-	float max_bottom = available_height * max_ratio;
-	float absolute_max = available_height - min_main;
-	float effective_max = std::min(max_bottom, absolute_max);
-
-	return std::clamp(requested, min_bottom, effective_max);
+	float max_bottom = available_height - min_main;
+	return std::clamp(requested, min_bottom, max_bottom);
 }
 
 void editor_app_t::reencode_dict(tools_t::dict_t & dict, codepage_t old_cp, codepage_t new_cp)
@@ -2575,8 +2391,12 @@ codepage_t editor_app_t::active_codepage() const
 
 void editor_app_t::save_user_dict_encoded()
 {
+	auto * slot = workspace_.get_active_slot();
+	if (!slot)
+		return;
+
 	codepage_t cp = active_codepage();
-	auto & dict = state_.get_user_dict();
+	auto & dict = slot->data;
 	for (auto & [type, chapter] : dict)
 	{
 		for (auto & entry : chapter.records)
@@ -2587,7 +2407,7 @@ void editor_app_t::save_user_dict_encoded()
 		}
 	}
 
-	state_.save_user_dict();
+	workspace_.save_dict(workspace_.get_active_index());
 
 	for (auto & [type, chapter] : dict)
 	{
@@ -2602,8 +2422,12 @@ void editor_app_t::save_user_dict_encoded()
 
 void editor_app_t::save_user_dict_as_encoded(const std::string & path)
 {
+	auto * slot = workspace_.get_active_slot();
+	if (!slot)
+		return;
+
 	codepage_t cp = active_codepage();
-	auto & dict = state_.get_user_dict();
+	auto & dict = slot->data;
 	for (auto & [type, chapter] : dict)
 	{
 		for (auto & entry : chapter.records)
@@ -2614,7 +2438,7 @@ void editor_app_t::save_user_dict_as_encoded(const std::string & path)
 		}
 	}
 
-	state_.save_user_dict_as(path);
+	workspace_.save_dict_as(workspace_.get_active_index(), path);
 
 	for (auto & [type, chapter] : dict)
 	{
@@ -2623,6 +2447,104 @@ void editor_app_t::save_user_dict_as_encoded(const std::string & path)
 			entry.key_text = decode_to_utf8(entry.key_text, cp);
 			entry.old_text = decode_to_utf8(entry.old_text, cp);
 			entry.new_text = decode_to_utf8(entry.new_text, cp);
+		}
+	}
+}
+
+void editor_app_t::save_slot_encoded(int slot_index)
+{
+	auto * slot = workspace_.get_slot(slot_index);
+	if (!slot)
+		return;
+
+	codepage_t cp = active_codepage();
+	auto & dict = slot->data;
+	for (auto & [type, chapter] : dict)
+	{
+		for (auto & entry : chapter.records)
+		{
+			entry.key_text = encode_from_utf8(entry.key_text, cp);
+			entry.old_text = encode_from_utf8(entry.old_text, cp);
+			entry.new_text = encode_from_utf8(entry.new_text, cp);
+		}
+	}
+
+	workspace_.save_dict(slot_index);
+
+	for (auto & [type, chapter] : dict)
+	{
+		for (auto & entry : chapter.records)
+		{
+			entry.key_text = decode_to_utf8(entry.key_text, cp);
+			entry.old_text = decode_to_utf8(entry.old_text, cp);
+			entry.new_text = decode_to_utf8(entry.new_text, cp);
+		}
+	}
+}
+
+void editor_app_t::save_slot_as_encoded(int slot_index, const std::string & path)
+{
+	auto * slot = workspace_.get_slot(slot_index);
+	if (!slot)
+		return;
+
+	codepage_t cp = active_codepage();
+	auto & dict = slot->data;
+	for (auto & [type, chapter] : dict)
+	{
+		for (auto & entry : chapter.records)
+		{
+			entry.key_text = encode_from_utf8(entry.key_text, cp);
+			entry.old_text = encode_from_utf8(entry.old_text, cp);
+			entry.new_text = encode_from_utf8(entry.new_text, cp);
+		}
+	}
+
+	workspace_.save_dict_as(slot_index, path);
+
+	for (auto & [type, chapter] : dict)
+	{
+		for (auto & entry : chapter.records)
+		{
+			entry.key_text = decode_to_utf8(entry.key_text, cp);
+			entry.old_text = decode_to_utf8(entry.old_text, cp);
+			entry.new_text = decode_to_utf8(entry.new_text, cp);
+		}
+	}
+}
+
+void editor_app_t::save_all_encoded()
+{
+	codepage_t cp = active_codepage();
+	for (int i = 0; i < workspace_.slot_count(); ++i)
+	{
+		if (!workspace_.is_user_slot(i))
+			continue;
+		auto * slot = workspace_.get_slot(i);
+		if (!slot || !slot->dirty)
+			continue;
+
+		auto & dict = slot->data;
+		for (auto & [type, chapter] : dict)
+		{
+			for (auto & entry : chapter.records)
+			{
+				entry.key_text = encode_from_utf8(entry.key_text, cp);
+				entry.old_text = encode_from_utf8(entry.old_text, cp);
+				entry.new_text = encode_from_utf8(entry.new_text, cp);
+			}
+		}
+
+		workspace_.save_dict(i);
+
+		for (auto & [type, chapter] : dict)
+		{
+			for (auto & entry : chapter.records)
+			{
+				entry.key_text = decode_to_utf8(entry.key_text, cp);
+				entry.old_text = decode_to_utf8(entry.old_text, cp);
+				entry.new_text = decode_to_utf8(entry.new_text, cp);
+			}
 		}
 	}
 }
@@ -2642,35 +2564,6 @@ void editor_app_t::render_splitter_vertical(float & width, float min_w, float ma
 		ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
 
 	ImGui::SameLine();
-}
-
-
-void editor_app_t::reload_base_dicts()
-{
-	merged_base_dict_ = tools_t::initialize_dict();
-
-	if (config_.base_dict_paths.empty())
-		return;
-
-	dict_merger_t merger(config_.base_dict_paths);
-	merged_base_dict_ = merger.get_dict();
-	decode_dict_from_codepage(merged_base_dict_, active_codepage());
-}
-
-void editor_app_t::save_current_filters()
-{
-	int idx = static_cast<int>(selected_dict_);
-	filter_per_dict_[idx].status_filter = status_filter_;
-	filter_per_dict_[idx].type_filter = type_filter_;
-	filter_per_dict_[idx].sidebar_active_type = sidebar_active_type_;
-}
-
-void editor_app_t::restore_filters_for(selected_dict_t dict)
-{
-	int idx = static_cast<int>(dict);
-	status_filter_ = filter_per_dict_[idx].status_filter;
-	type_filter_ = filter_per_dict_[idx].type_filter;
-	sidebar_active_type_ = filter_per_dict_[idx].sidebar_active_type;
 }
 
 static size_t levenshtein_distance(const std::string & a, const std::string & b)
@@ -2713,8 +2606,9 @@ std::vector<editor_app_t::fuzzy_match_t> editor_app_t::find_fuzzy_matches(
 	if (text.empty())
 		return matches;
 
-	auto it = merged_base_dict_.find(type);
-	if (it == merged_base_dict_.end())
+	static const tools_t::dict_t empty_base_dict;
+	auto it = empty_base_dict.find(type);
+	if (it == empty_base_dict.end())
 		return matches;
 
 	for (const auto & entry : it->second.records)

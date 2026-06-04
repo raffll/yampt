@@ -1,5 +1,5 @@
 #include "history_manager.hpp"
-#include "editor_state.hpp"
+#include "dict_workspace.hpp"
 #include "json.hpp"
 #include <chrono>
 #include <ctime>
@@ -45,7 +45,7 @@ std::vector<history_entry_t> history_manager_t::get_history(tools_t::rec_type_t 
 }
 
 void history_manager_t::revert(
-    editor_state_t & state,
+    dict_slot_t & slot,
     tools_t::rec_type_t type,
     const std::string & key,
     size_t history_index)
@@ -59,7 +59,7 @@ void history_manager_t::revert(
 		return;
 
 	const auto & entry = it->second[history_index];
-	auto & dict = state.get_user_dict();
+	auto & dict = slot.data;
 	auto type_it = dict.find(type);
 	if (type_it == dict.end())
 		return;
@@ -73,7 +73,10 @@ void history_manager_t::revert(
 
 	auto index_it = type_it->second.index.find(key);
 	if (index_it != type_it->second.index.end())
-		state.mark_modified(type, index_it->second);
+	{
+		slot.dirty = true;
+		slot.modified_records.insert({ type, index_it->second });
+	}
 
 	record_change(type, key, current_value, entry.value);
 }

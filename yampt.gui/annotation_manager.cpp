@@ -1,5 +1,4 @@
 #include "annotation_manager.hpp"
-#include "editor_state.hpp"
 #include "../yampt/dict_reader.hpp"
 #include <algorithm>
 
@@ -16,89 +15,63 @@ bool annotation_manager_t::is_alpha(char c)
 	return isalpha(static_cast<unsigned char>(c)) != 0;
 }
 
-void annotation_manager_t::rebuild(const editor_state_t & state, const tools_t::dict_t & base_dict)
+void annotation_manager_t::rebuild(const std::vector<dict_source_t> & sources)
 {
 	dial_topics_.clear();
+	glossary_terms_.clear();
 
-	std::unordered_map<std::string, std::string> topic_map;
+	std::unordered_map<std::string, topic_entry_t> topic_map;
+	std::unordered_map<std::string, topic_entry_t> glossary_map;
 
-	auto base_it = base_dict.find(tools_t::rec_type_t::dial);
-	if (base_it != base_dict.end())
+	for (const auto & src : sources)
 	{
-		for (const auto & entry : base_it->second.records)
-		{
-			if (entry.key_text.empty())
-				continue;
+		if (!src.dict)
+			continue;
 
-			topic_map[to_lower(entry.key_text)] = entry.new_text;
+		auto dial_it = src.dict->find(tools_t::rec_type_t::dial);
+		if (dial_it != src.dict->end())
+		{
+			for (const auto & entry : dial_it->second.records)
+			{
+				if (entry.key_text.empty())
+					continue;
+
+				std::string key_lower = to_lower(entry.key_text);
+				if (topic_map.count(key_lower) == 0)
+					topic_map[key_lower] = { key_lower, entry.new_text, src.name };
+			}
 		}
-	}
 
-	const auto & user_dict = state.get_user_dict();
-	auto user_it = user_dict.find(tools_t::rec_type_t::dial);
-	if (user_it != user_dict.end())
-	{
-		for (const auto & entry : user_it->second.records)
+		auto fnam_it = src.dict->find(tools_t::rec_type_t::fnam);
+		if (fnam_it != src.dict->end())
 		{
-			if (entry.key_text.empty())
-				continue;
+			for (const auto & entry : fnam_it->second.records)
+			{
+				if (entry.old_text.empty())
+					continue;
+				if (entry.old_text == entry.new_text)
+					continue;
 
-			if (entry.status != tools_t::status_t::translated)
-				continue;
-
-			topic_map[to_lower(entry.key_text)] = entry.new_text;
+				std::string key_lower = to_lower(entry.old_text);
+				if (glossary_map.count(key_lower) == 0)
+					glossary_map[key_lower] = { key_lower, entry.new_text, src.name };
+			}
 		}
 	}
 
 	dial_topics_.reserve(topic_map.size());
-	for (auto & [key, value] : topic_map)
-		dial_topics_.emplace_back(std::move(key), std::move(value));
+	for (auto & [key, entry] : topic_map)
+		dial_topics_.push_back(std::move(entry));
 
-	std::sort(
-	    dial_topics_.begin(),
-	    dial_topics_.end(),
-	    [](const auto & a, const auto & b) { return a.first.size() > b.first.size(); });
-
-	glossary_terms_.clear();
-
-	std::unordered_map<std::string, std::pair<std::string, std::string>> glossary_map;
-
-	auto base_fnam_it = base_dict.find(tools_t::rec_type_t::fnam);
-	if (base_fnam_it != base_dict.end())
-	{
-		for (const auto & entry : base_fnam_it->second.records)
-		{
-			if (entry.old_text.empty())
-				continue;
-			if (entry.old_text == entry.new_text)
-				continue;
-			glossary_map[entry.key_text] = {to_lower(entry.old_text), entry.new_text};
-		}
-	}
-
-	auto user_fnam_it = user_dict.find(tools_t::rec_type_t::fnam);
-	if (user_fnam_it != user_dict.end())
-	{
-		for (const auto & entry : user_fnam_it->second.records)
-		{
-			if (entry.status != tools_t::status_t::translated)
-				continue;
-			if (entry.old_text.empty())
-				continue;
-			if (entry.old_text == entry.new_text)
-				continue;
-			glossary_map[entry.key_text] = {to_lower(entry.old_text), entry.new_text};
-		}
-	}
+	std::sort(dial_topics_.begin(), dial_topics_.end(),
+	    [](const topic_entry_t & a, const topic_entry_t & b) { return a.key_lower.size() > b.key_lower.size(); });
 
 	glossary_terms_.reserve(glossary_map.size());
-	for (auto & [key, pair] : glossary_map)
-		glossary_terms_.emplace_back(std::move(pair.first), std::move(pair.second));
+	for (auto & [key, entry] : glossary_map)
+		glossary_terms_.push_back(std::move(entry));
 
-	std::sort(
-	    glossary_terms_.begin(),
-	    glossary_terms_.end(),
-	    [](const auto & a, const auto & b) { return a.first.size() > b.first.size(); });
+	std::sort(glossary_terms_.begin(), glossary_terms_.end(),
+	    [](const topic_entry_t & a, const topic_entry_t & b) { return a.key_lower.size() > b.key_lower.size(); });
 }
 
 std::vector<annotation_t> annotation_manager_t::annotate(const std::string & text, tools_t::rec_type_t type) const
@@ -144,33 +117,34 @@ std::vector<annotation_t> annotation_manager_t::annotate(const std::string & tex
 void annotation_manager_t::find_matches(
     const std::string & text_lower,
     const std::string & text_original,
-    const std::vector<std::pair<std::string, std::string>> & terms,
+    const std::vector<topic_entry_t> & terms,
     annotation_t::kind_t kind,
     std::vector<annotation_t> & results) const
 {
-	for (const auto & [term, translated] : terms)
+	for (const auto & term : terms)
 	{
-		if (term.empty())
+		if (term.key_lower.empty())
 			continue;
 
 		size_t pos = 0;
-		while ((pos = text_lower.find(term, pos)) != std::string::npos)
+		while ((pos = text_lower.find(term.key_lower, pos)) != std::string::npos)
 		{
 			if (pos > 0 && is_alpha(text_lower[pos - 1]))
 			{
-				pos += term.size();
+				pos += term.key_lower.size();
 				continue;
 			}
 
 			annotation_t ann;
 			ann.start = pos;
-			ann.end = pos + term.size();
+			ann.end = pos + term.key_lower.size();
 			ann.kind = kind;
-			ann.old_text = text_original.substr(pos, term.size());
-			ann.new_text = translated;
+			ann.old_text = text_original.substr(pos, term.key_lower.size());
+			ann.new_text = term.new_text;
+			ann.source = term.source;
 			results.push_back(std::move(ann));
 
-			pos += term.size();
+			pos += term.key_lower.size();
 		}
 	}
 }

@@ -13,4 +13,4 @@ x64/
 *.ini
 yampt.gui/yampt_log.txt
 yampt.gui/imgui.ini
-yampt.gui/imgui.ini
+yampt_log*

@@ -5,8 +5,6 @@
 #include <string>
 #include <vector>
 
-class editor_state_t;
-
 struct search_match_t
 {
 	tools_t::rec_type_t type;
@@ -20,12 +18,10 @@ class search_manager_t
 {
 public:
 	void set_query(const std::string & text, bool case_sensitive);
-	void find_all(const editor_state_t & state, const std::set<tools_t::rec_type_t> & type_filter);
+	void find_all(const tools_t::dict_t & dict, const std::set<tools_t::rec_type_t> & type_filter);
 	const search_match_t * current_match() const;
 	void next_match();
 	void prev_match();
-	void replace_current(editor_state_t & state, const std::string & replacement);
-	size_t replace_all(editor_state_t & state, const std::string & replacement);
 
 	const std::vector<search_match_t> & get_matches() const;
 	size_t current_index() const;

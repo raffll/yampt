@@ -163,7 +163,6 @@
     <ClInclude Include="..\yampt\json_reader.hpp" />
     <ClInclude Include="..\yampt\script_parser.hpp" />
     <ClInclude Include="..\yampt\tools.hpp" />
-    <ClInclude Include="..\yampt\wrapping_text_widget.hpp" />
     <ClInclude Include="..\external\catch.hpp" />
     <ClInclude Include="..\external\yyjson.h" />
   </ItemGroup>
@@ -176,7 +175,6 @@
     <ClCompile Include="..\yampt\esm_reader.cpp" />
     <ClCompile Include="..\yampt\script_parser.cpp" />
     <ClCompile Include="..\yampt\tools.cpp" />
-    <ClCompile Include="..\yampt\wrapping_text_widget.cpp" />
     <ClCompile Include="..\external\imgui\imgui.cpp" />
     <ClCompile Include="..\external\imgui\imgui_draw.cpp" />
     <ClCompile Include="..\external\imgui\imgui_tables.cpp" />
@@ -195,7 +193,6 @@
     <ClCompile Include="tests.main.cpp" />
     <ClCompile Include="tests.script_parser.cpp" />
     <ClCompile Include="tests.tools.cpp" />
-    <ClCompile Include="tests.wrapping_text_widget.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

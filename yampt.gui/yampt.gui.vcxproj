@@ -158,7 +158,6 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="editor_app.cpp" />
     <ClCompile Include="editor_config.cpp" />
-    <ClCompile Include="editor_state.cpp" />
     <ClCompile Include="..\external\imgui\imgui.cpp" />
     <ClCompile Include="..\external\imgui\imgui_demo.cpp" />
     <ClCompile Include="..\external\imgui\imgui_draw.cpp" />
@@ -169,12 +168,11 @@
     <ClCompile Include="..\yampt\tools.cpp" />
     <ClCompile Include="..\yampt\dict_reader.cpp" />
     <ClCompile Include="..\yampt\dict_writer.cpp" />
-    <ClCompile Include="..\yampt\dict_merger.cpp" />
     <ClCompile Include="..\yampt\dict_creator.cpp" />
     <ClCompile Include="..\yampt\esm_reader.cpp" />
     <ClCompile Include="..\yampt\esm_converter.cpp" />
     <ClCompile Include="..\yampt\script_parser.cpp" />
-    <ClCompile Include="..\yampt\wrapping_text_widget.cpp" />
+    <ClCompile Include="dict_workspace.cpp" />
     <ClCompile Include="search_manager.cpp" />
     <ClCompile Include="validation_manager.cpp" />
     <ClCompile Include="history_manager.cpp" />
@@ -198,10 +196,10 @@
     <ClInclude Include="..\external\imgui\imstb_truetype.h" />
     <ClInclude Include="..\external\imgui\backends\imgui_impl_sdl2.h" />
     <ClInclude Include="..\external\imgui\backends\imgui_impl_opengl3.h" />
+    <ClInclude Include="dict_workspace.hpp" />
     <ClInclude Include="..\yampt\tools.hpp" />
     <ClInclude Include="..\yampt\dict_reader.hpp" />
     <ClInclude Include="..\yampt\dict_writer.hpp" />
-    <ClInclude Include="..\yampt\dict_merger.hpp" />
     <ClInclude Include="..\yampt\dict_creator.hpp" />
     <ClInclude Include="..\yampt\esm_reader.hpp" />
     <ClInclude Include="..\yampt\esm_converter.hpp" />

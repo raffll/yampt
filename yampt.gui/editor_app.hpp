@@ -1,8 +1,8 @@
 #pragma once
 
 #include "annotation_manager.hpp"
+#include "dict_workspace.hpp"
 #include "editor_config.hpp"
-#include "editor_state.hpp"
 #include "encoding_utils.hpp"
 #include "history_manager.hpp"
 #include "search_manager.hpp"
@@ -15,6 +15,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <Windows.h>
 
 class editor_app_t
 {
@@ -29,7 +30,7 @@ private:
 	SDL_Window * window_ = nullptr;
 	editor_config_t config_;
 	std::string config_path_;
-	editor_state_t state_;
+	dict_workspace_t workspace_;
 	validation_manager_t validation_;
 
 	float split_ratio_ = 0.5f;
@@ -39,20 +40,17 @@ private:
 	bool bottom_visible_ = true;
 	int active_bottom_tab_ = 0;
 	int encoding_index_ = 2;
-	bool show_history_ = false;
-	bool show_annotations_ = true;
-	selected_dict_t selected_dict_ = selected_dict_t::user;
 
 	bool quit_requested_ = false;
 	bool show_quit_dialog_ = false;
+	bool show_unload_confirm_ = false;
+	int pending_unload_index_ = -1;
 
 	int selected_row_ = -1;
 	int scroll_to_row_ = -1;
 
 	int selected_row_left_ = -1;
-	int selected_row_right_ = -1;
 	int scroll_to_row_left_ = -1;
-	int scroll_to_row_right_ = -1;
 
 	int editing_row_ = -1;
 	tools_t::rec_type_t editing_type_ = tools_t::rec_type_t::unknown;
@@ -87,29 +85,14 @@ private:
 	std::set<tools_t::rec_type_t> saved_type_filter_;
 	bool type_filter_solo_ = false;
 
-	struct dict_filter_state_t
-	{
-		std::set<std::string> status_filter;
-		std::set<tools_t::rec_type_t> type_filter = {
-			tools_t::rec_type_t::cell, tools_t::rec_type_t::dial, tools_t::rec_type_t::info,
-			tools_t::rec_type_t::fnam, tools_t::rec_type_t::text, tools_t::rec_type_t::gmst,
-			tools_t::rec_type_t::desc, tools_t::rec_type_t::rnam, tools_t::rec_type_t::indx,
-			tools_t::rec_type_t::bnam, tools_t::rec_type_t::sctx,
-		};
-		tools_t::rec_type_t sidebar_active_type = tools_t::rec_type_t::unknown;
-	};
-
-	dict_filter_state_t filter_per_dict_[3];
-
-	void save_current_filters();
-	void restore_filters_for(selected_dict_t dict);
-
 	search_manager_t search_;
 	history_manager_t history_;
 	syntax_highlighter_t syntax_;
 	annotation_manager_t annotations_mgr_;
-	tools_t::dict_t merged_base_dict_;
 	spell_checker_t spell_checker_;
+	HWND richedit_hwnd_ = nullptr;
+	bool richedit_visible_ = false;
+	bool richedit_ignore_change_ = false;
 	std::array<char, 256> search_buffer_ = {};
 	bool search_case_sensitive_ = false;
 
@@ -122,18 +105,16 @@ private:
 	};
 
 	std::vector<row_ref_t> left_rows_;
-	std::vector<row_ref_t> right_rows_;
 	std::unordered_map<std::string, int> left_lookup_;
-	std::unordered_map<std::string, int> right_lookup_;
 
 	void rebuild_row_data();
+	void rebuild_annotations();
 	static std::string make_lookup_key(tools_t::rec_type_t type, const std::string & key);
 
 	void render_menu_bar();
 	void render_toolbar();
 	void render_sidebar();
 	void render_status_summary_bar();
-	void render_panels();
 	void render_main_panel();
 	void render_status_bar();
 	void render_bottom_panel();
@@ -145,14 +126,9 @@ private:
 	void render_history_panel();
 	void render_dialogs();
 	void render_quit_dialog();
+	void render_unload_confirm_dialog();
 
 	std::string get_exe_directory() const;
-
-	void render_dict_table(
-	    const char * table_id,
-	    const tools_t::dict_t & dict,
-	    tools_t::dict_t * mutable_dict,
-	    bool is_left_panel);
 
 	void render_text_with_highlights(
 	    const std::string & text,
@@ -166,6 +142,12 @@ private:
 	std::string show_open_file_dialog(const char * title) const;
 	std::string show_save_file_dialog(const char * title) const;
 
+	void create_richedit(HWND parent);
+	void position_richedit(float screen_x, float screen_y, float width, float height);
+	void set_richedit_text(const std::string & text);
+	std::string get_richedit_text() const;
+	void commit_richedit_text();
+
 	void render_splitter_vertical(float & width, float min_w, float max_w);
 	void render_splitter_horizontal(float & height, float min_h, float max_h);
 
@@ -177,8 +159,9 @@ private:
 	codepage_t active_codepage() const;
 	void save_user_dict_encoded();
 	void save_user_dict_as_encoded(const std::string & path);
-
-	void reload_base_dicts();
+	void save_slot_encoded(int slot_index);
+	void save_slot_as_encoded(int slot_index, const std::string & path);
+	void save_all_encoded();
 
 	struct fuzzy_match_t
 	{

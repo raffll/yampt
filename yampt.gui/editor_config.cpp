@@ -1,6 +1,5 @@
 #include "editor_config.hpp"
 #include <fstream>
-#include <sstream>
 
 static std::string trim(const std::string & s)
 {
@@ -26,7 +25,6 @@ void editor_config_t::load(const std::string & path)
 
 	std::string section;
 	std::string line;
-	int base_dict_count = 0;
 
 	while (std::getline(file, line))
 	{
@@ -47,25 +45,43 @@ void editor_config_t::load(const std::string & path)
 		std::string key = trim(line.substr(0, eq_pos));
 		std::string value = trim(line.substr(eq_pos + 1));
 
-		if (section == "Editor")
+		if (section == "UserDicts")
 		{
-			if (key == "SplitRatio")
+			if (key == "Count")
+			{
+				int count = 0;
+				try { count = std::stoi(value); } catch (...) {}
+				user_dict_paths.clear();
+				user_dict_paths.reserve(count);
+			}
+			else if (starts_with(key, "Path"))
+			{
+				user_dict_paths.push_back(value);
+			}
+		}
+		else if (section == "BaseDicts")
+		{
+			if (key == "Count")
+			{
+				int count = 0;
+				try { count = std::stoi(value); } catch (...) {}
+				base_dict_paths.clear();
+				base_dict_paths.reserve(count);
+			}
+			else if (starts_with(key, "Path"))
+			{
+				base_dict_paths.push_back(value);
+			}
+		}
+		else if (section == "Editor")
+		{
+			if (key == "ActiveDictIndex")
+			{
+				try { active_dict_index = std::stoi(value); } catch (...) {}
+			}
+			else if (key == "SplitRatio")
 			{
 				try { split_ratio = std::stof(value); } catch (...) {}
-			}
-			else if (key == "ColumnWidths")
-			{
-				size_t idx = 0;
-				size_t pos = 0;
-				while (idx < column_widths.size() && pos < value.size())
-				{
-					auto comma = value.find(',', pos);
-					std::string token =
-					    (comma == std::string::npos) ? value.substr(pos) : value.substr(pos, comma - pos);
-					try { column_widths[idx] = std::stof(trim(token)); } catch (...) {}
-					++idx;
-					pos = (comma == std::string::npos) ? value.size() : comma + 1;
-				}
 			}
 			else if (key == "SidebarWidth")
 			{
@@ -93,43 +109,23 @@ void editor_config_t::load(const std::string & path)
 				}
 				catch (...) {}
 			}
-			else if (key == "SelectedDict")
+			else if (starts_with(key, "Column"))
 			{
-				if (value == "base")
-					selected_dict = selected_dict_t::base;
-				else if (value == "source")
-					selected_dict = selected_dict_t::source;
-				else
-					selected_dict = selected_dict_t::user;
+				try
+				{
+					int col_idx = std::stoi(key.substr(6));
+					if (col_idx >= 0 && col_idx < static_cast<int>(column_widths.size()))
+						column_widths[col_idx] = std::stof(value);
+				}
+				catch (...) {}
 			}
-			else if (key == "SpellCheckAff")
-			{
+		}
+		else if (section == "SpellCheck")
+		{
+			if (key == "AffPath")
 				spell_check_aff = value;
-			}
-			else if (key == "SpellCheckDic")
-			{
+			else if (key == "DicPath")
 				spell_check_dic = value;
-			}
-		}
-		else if (section == "BaseDicts")
-		{
-			if (key == "Count")
-			{
-				base_dict_count = std::stoi(value);
-				base_dict_paths.clear();
-				base_dict_paths.reserve(base_dict_count);
-			}
-			else if (starts_with(key, "Path"))
-			{
-				base_dict_paths.push_back(value);
-			}
-		}
-		else if (section == "Recent")
-		{
-			if (key == "UserDict" || starts_with(key, "UserDict"))
-				last_user_dict_path = value;
-			else if (key == "SourceDict")
-				last_source_dict_path = value;
 		}
 	}
 }
@@ -140,42 +136,33 @@ void editor_config_t::save(const std::string & path) const
 	if (!file.is_open())
 		return;
 
-	file << "[Editor]\n";
-	file << "SplitRatio=" << split_ratio << "\n";
-	file << "ColumnWidths=";
-	for (size_t i = 0; i < column_widths.size(); ++i)
-	{
-		if (i > 0)
-			file << ",";
-		file << column_widths[i];
-	}
-	file << "\n";
-	file << "SidebarWidth=" << sidebar_width << "\n";
-	file << "BottomHeight=" << bottom_height << "\n";
-	file << "SidebarVisible=" << (sidebar_visible ? "1" : "0") << "\n";
-	file << "BottomVisible=" << (bottom_visible ? "1" : "0") << "\n";
-	file << "EncodingIndex=" << encoding_index << "\n";
-
-	if (selected_dict == selected_dict_t::base)
-		file << "SelectedDict=base\n";
-	else if (selected_dict == selected_dict_t::source)
-		file << "SelectedDict=source\n";
-	else
-		file << "SelectedDict=user\n";
-
-	if (!spell_check_aff.empty())
-		file << "SpellCheckAff=" << spell_check_aff << "\n";
-	if (!spell_check_dic.empty())
-		file << "SpellCheckDic=" << spell_check_dic << "\n";
+	file << "[UserDicts]\n";
+	file << "Count=" << user_dict_paths.size() << "\n";
+	for (size_t i = 0; i < user_dict_paths.size(); ++i)
+		file << "Path" << i << "=" << user_dict_paths[i] << "\n";
 
 	file << "\n[BaseDicts]\n";
 	file << "Count=" << base_dict_paths.size() << "\n";
 	for (size_t i = 0; i < base_dict_paths.size(); ++i)
 		file << "Path" << i << "=" << base_dict_paths[i] << "\n";
 
-	file << "\n[Recent]\n";
-	if (!last_user_dict_path.empty())
-		file << "UserDict=" << last_user_dict_path << "\n";
-	if (!last_source_dict_path.empty())
-		file << "SourceDict=" << last_source_dict_path << "\n";
+	file << "\n[Editor]\n";
+	file << "ActiveDictIndex=" << active_dict_index << "\n";
+	file << "SplitRatio=" << split_ratio << "\n";
+	file << "SidebarWidth=" << sidebar_width << "\n";
+	file << "BottomHeight=" << bottom_height << "\n";
+	file << "SidebarVisible=" << (sidebar_visible ? "1" : "0") << "\n";
+	file << "BottomVisible=" << (bottom_visible ? "1" : "0") << "\n";
+	file << "EncodingIndex=" << encoding_index << "\n";
+	for (size_t i = 0; i < column_widths.size(); ++i)
+		file << "Column" << i << "=" << column_widths[i] << "\n";
+
+	if (!spell_check_aff.empty() || !spell_check_dic.empty())
+	{
+		file << "\n[SpellCheck]\n";
+		if (!spell_check_aff.empty())
+			file << "AffPath=" << spell_check_aff << "\n";
+		if (!spell_check_dic.empty())
+			file << "DicPath=" << spell_check_dic << "\n";
+	}
 }

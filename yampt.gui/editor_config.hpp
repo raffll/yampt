@@ -4,13 +4,6 @@
 #include <string>
 #include <vector>
 
-enum class selected_dict_t
-{
-	user,
-	base,
-	source
-};
-
 class editor_config_t
 {
 public:
@@ -19,16 +12,15 @@ public:
 
 	float split_ratio = 0.5f;
 	std::array<float, 4> column_widths = { 150.f, 300.f, 300.f, 80.f };
+	std::vector<std::string> user_dict_paths;
 	std::vector<std::string> base_dict_paths;
 	std::string spell_check_aff;
 	std::string spell_check_dic;
-	std::string last_user_dict_path;
-	std::string last_source_dict_path;
 
 	float sidebar_width = 250.0f;
 	float bottom_height = 200.0f;
 	bool sidebar_visible = true;
 	bool bottom_visible = true;
 	int encoding_index = 2;
-	selected_dict_t selected_dict = selected_dict_t::user;
+	int active_dict_index = -1;
 };

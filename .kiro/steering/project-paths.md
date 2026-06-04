@@ -38,6 +38,10 @@ yampt/
 └── packages.config         # NuGet manifest (to be removed)
 ```
 
+## External Dependencies — Read Only
+
+NEVER modify files directly in the `external/` folder. These are upstream third-party sources and must remain byte-for-byte identical to their original releases. You can only add new files/folders or remove them entirely. If a library needs patching, do it via wrapper code in the project source files or `imconfig.h` overrides.
+
 ## Build
 
 Visual Studio (v143 toolset). Open `yampt.sln` and build. Output: `x64/Debug/yampt.exe`.

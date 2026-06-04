@@ -1,5 +1,4 @@
 #include "search_manager.hpp"
-#include "editor_state.hpp"
 
 static std::string to_lower(const std::string & str)
 {
@@ -17,7 +16,7 @@ void search_manager_t::set_query(const std::string & text, bool case_sensitive)
 	current_ = 0;
 }
 
-void search_manager_t::find_all(const editor_state_t & state, const std::set<tools_t::rec_type_t> & type_filter)
+void search_manager_t::find_all(const tools_t::dict_t & dict, const std::set<tools_t::rec_type_t> & type_filter)
 {
 	matches_.clear();
 	current_ = 0;
@@ -26,7 +25,6 @@ void search_manager_t::find_all(const editor_state_t & state, const std::set<too
 		return;
 
 	const std::string search_term = case_sensitive_ ? query_ : to_lower(query_);
-	const auto & dict = state.get_user_dict();
 
 	for (const auto & [type, chapter] : dict)
 	{
@@ -87,56 +85,6 @@ void search_manager_t::prev_match()
 	if (matches_.empty())
 		return;
 	current_ = (current_ == 0) ? matches_.size() - 1 : current_ - 1;
-}
-
-void search_manager_t::replace_current(editor_state_t & state, const std::string & replacement)
-{
-	if (matches_.empty())
-		return;
-
-	const auto & match = matches_[current_];
-	if (match.in_key)
-		return;
-
-	auto & dict = state.get_user_dict();
-	auto it = dict.find(match.type);
-	if (it == dict.end())
-		return;
-
-	if (match.record_index >= it->second.records.size())
-		return;
-
-	auto & record = it->second.records[match.record_index];
-	record.new_text.replace(match.char_start, match.char_end - match.char_start, replacement);
-	state.mark_modified(match.type, match.record_index);
-}
-
-size_t search_manager_t::replace_all(editor_state_t & state, const std::string & replacement)
-{
-	size_t count = 0;
-	auto & dict = state.get_user_dict();
-
-	for (auto it = matches_.rbegin(); it != matches_.rend(); ++it)
-	{
-		if (it->in_key)
-			continue;
-
-		auto dict_it = dict.find(it->type);
-		if (dict_it == dict.end())
-			continue;
-
-		if (it->record_index >= dict_it->second.records.size())
-			continue;
-
-		auto & record = dict_it->second.records[it->record_index];
-		record.new_text.replace(it->char_start, it->char_end - it->char_start, replacement);
-		state.mark_modified(it->type, it->record_index);
-		++count;
-	}
-
-	matches_.clear();
-	current_ = 0;
-	return count;
 }
 
 const std::vector<search_match_t> & search_manager_t::get_matches() const

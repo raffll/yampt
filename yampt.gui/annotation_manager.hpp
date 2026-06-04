@@ -5,8 +5,6 @@
 #include <unordered_map>
 #include <vector>
 
-class editor_state_t;
-
 struct annotation_t
 {
 	size_t start;
@@ -22,12 +20,19 @@ struct annotation_t
 	kind_t kind;
 	std::string old_text;
 	std::string new_text;
+	std::string source;
+};
+
+struct dict_source_t
+{
+	const tools_t::dict_t * dict;
+	std::string name;
 };
 
 class annotation_manager_t
 {
 public:
-	void rebuild(const editor_state_t & state, const tools_t::dict_t & base_dict);
+	void rebuild(const std::vector<dict_source_t> & sources);
 	std::vector<annotation_t> annotate(const std::string & text, tools_t::rec_type_t type) const;
 
 	void load_npc_flags(const std::string & path);
@@ -38,8 +43,15 @@ public:
 	bool has_enchantment(const std::string & key) const;
 
 private:
-	std::vector<std::pair<std::string, std::string>> dial_topics_;
-	std::vector<std::pair<std::string, std::string>> glossary_terms_;
+	struct topic_entry_t
+	{
+		std::string key_lower;
+		std::string new_text;
+		std::string source;
+	};
+
+	std::vector<topic_entry_t> dial_topics_;
+	std::vector<topic_entry_t> glossary_terms_;
 	std::unordered_map<std::string, std::string> npc_flags_;
 	std::unordered_map<std::string, std::string> enchantments_;
 
@@ -49,7 +61,7 @@ private:
 	void find_matches(
 	    const std::string & text_lower,
 	    const std::string & text_original,
-	    const std::vector<std::pair<std::string, std::string>> & terms,
+	    const std::vector<topic_entry_t> & terms,
 	    annotation_t::kind_t kind,
 	    std::vector<annotation_t> & results) const;
 };
