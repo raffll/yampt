@@ -822,7 +822,7 @@ void editor_app_t::render_main_panel()
 	const ImGuiTableFlags flags = ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg |
 	                              ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV | ImGuiTableFlags_Sortable;
 
-	if (!ImGui::BeginTable("##main_table", 5, flags))
+	if (!ImGui::BeginTable("##main_table", 6, flags))
 	{
 		ImGui::EndChild();
 		return;
@@ -830,7 +830,8 @@ void editor_app_t::render_main_panel()
 
 	ImGui::TableSetupScrollFreeze(0, 1);
 	ImGui::TableSetupColumn(
-	    "ID", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_DefaultSort, config_.column_widths[0]);
+	    "Type", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_DefaultSort, 50.0f);
+	ImGui::TableSetupColumn("Key", ImGuiTableColumnFlags_WidthFixed, config_.column_widths[0]);
 	ImGui::TableSetupColumn("Original", ImGuiTableColumnFlags_WidthStretch);
 	ImGui::TableSetupColumn("Translation", ImGuiTableColumnFlags_WidthStretch);
 	ImGui::TableSetupColumn("Status", ImGuiTableColumnFlags_WidthFixed, config_.column_widths[3]);
@@ -860,12 +861,18 @@ void editor_app_t::render_main_panel()
 
 			int cmp = 0;
 			if (col == 0)
-				cmp = ea.key_text.compare(eb.key_text);
+			{
+				std::string ta = tools_t::type_to_str(a.type);
+				std::string tb = tools_t::type_to_str(b.type);
+				cmp = ta.compare(tb);
+			}
 			else if (col == 1)
-				cmp = ea.old_text.compare(eb.old_text);
+				cmp = ea.key_text.compare(eb.key_text);
 			else if (col == 2)
-				cmp = ea.new_text.compare(eb.new_text);
+				cmp = ea.old_text.compare(eb.old_text);
 			else if (col == 3)
+				cmp = ea.new_text.compare(eb.new_text);
+			else if (col == 4)
 				cmp = ea.status.compare(eb.status);
 
 			return ascending ? (cmp < 0) : (cmp > 0);
@@ -925,10 +932,9 @@ void editor_app_t::render_main_panel()
 				ImGui::PopStyleColor();
 				ImGui::SameLine(0, 0);
 			}
-			std::string id_text = tools_t::type_to_str(row_ref.type) + ": " + entry.key_text;
 			ImGui::PushID(i);
 
-			if (ImGui::Selectable(id_text.c_str(), is_selected, ImGuiSelectableFlags_SpanAllColumns, ImVec2(0, 0)))
+			if (ImGui::Selectable(tools_t::type_to_str(row_ref.type).c_str(), is_selected, ImGuiSelectableFlags_SpanAllColumns, ImVec2(0, 0)))
 			{
 				selected_row = i;
 				selected_row_left_ = i;
@@ -967,6 +973,9 @@ void editor_app_t::render_main_panel()
 			}
 
 			ImGui::TableSetColumnIndex(1);
+			ImGui::TextUnformatted(entry.key_text.c_str());
+
+			ImGui::TableSetColumnIndex(2);
 			{
 				const char * end = entry.old_text.c_str();
 				while (*end && *end != '\r' && *end != '\n')
@@ -974,7 +983,7 @@ void editor_app_t::render_main_panel()
 				ImGui::TextUnformatted(entry.old_text.c_str(), end);
 			}
 
-			ImGui::TableSetColumnIndex(2);
+			ImGui::TableSetColumnIndex(3);
 			{
 				const char * end = entry.new_text.c_str();
 				while (*end && *end != '\r' && *end != '\n')
@@ -982,7 +991,7 @@ void editor_app_t::render_main_panel()
 				ImGui::TextUnformatted(entry.new_text.c_str(), end);
 			}
 
-			ImGui::TableSetColumnIndex(3);
+			ImGui::TableSetColumnIndex(4);
 			ImVec4 status_color = get_status_color(entry.status);
 			ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, ImGui::ColorConvertFloat4ToU32(status_color));
 
@@ -1025,7 +1034,7 @@ void editor_app_t::render_main_panel()
 				ImGui::TextUnformatted(status_label.c_str());
 			}
 
-			ImGui::TableSetColumnIndex(4);
+			ImGui::TableSetColumnIndex(5);
 			if (row_ref.type == tools_t::rec_type_t::fnam && annotations_mgr_.has_enchantment(entry.key_text))
 			{
 				ImGui::TextUnformatted("\xe2\x9a\xa1");
