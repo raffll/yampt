@@ -2,65 +2,94 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="yampt">
-      <UniqueIdentifier>{5c30878f-bb6d-41b8-b9e6-ff684ed490e8}</UniqueIdentifier>
+      <UniqueIdentifier>{C1000001-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external">
+      <UniqueIdentifier>{C1000002-0000-0000-0000-000000000002}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external\imgui">
+      <UniqueIdentifier>{C1000003-0000-0000-0000-000000000003}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="cpp.hint" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="catch.hpp" />
-    <ClInclude Include="..\yampt\dictcreator.hpp">
-      <Filter>yampt</Filter>
-    </ClInclude>
-    <ClInclude Include="..\yampt\dictmerger.hpp">
-      <Filter>yampt</Filter>
-    </ClInclude>
-    <ClInclude Include="..\yampt\dictreader.hpp">
-      <Filter>yampt</Filter>
-    </ClInclude>
-    <ClInclude Include="..\yampt\esmreader.hpp">
-      <Filter>yampt</Filter>
-    </ClInclude>
-    <ClInclude Include="..\yampt\tools.hpp">
-      <Filter>yampt</Filter>
-    </ClInclude>
-    <ClInclude Include="..\yampt\scriptparser.hpp">
-      <Filter>yampt</Filter>
-    </ClInclude>
-    <ClInclude Include="..\yampt\dictwriter.hpp" />
-    <ClInclude Include="..\yampt\esmconverter.hpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\yampt\dictcreator.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\dictmerger.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\dictreader.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\esmreader.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
+    <ClCompile Include="tests.main.cpp" />
+    <ClCompile Include="tests.tools.cpp" />
+    <ClCompile Include="tests.dict_reader.cpp" />
+    <ClCompile Include="tests.dict_writer.cpp" />
+    <ClCompile Include="tests.dict_merger.cpp" />
+    <ClCompile Include="tests.dict_creator.cpp" />
+    <ClCompile Include="tests.integration.cpp" />
+    <ClCompile Include="tests.script_parser.cpp" />
     <ClCompile Include="..\yampt\tools.cpp">
       <Filter>yampt</Filter>
     </ClCompile>
-    <ClCompile Include="tests.dictmerger.cpp" />
-    <ClCompile Include="tests.dict_creator.cpp" />
-    <ClCompile Include="tests.dict_merger.cpp" />
-    <ClCompile Include="tests.dict_reader.cpp" />
-    <ClCompile Include="tests.dict_writer.cpp" />
-    <ClCompile Include="tests.integration.cpp" />
-    <ClCompile Include="tests.main.cpp" />
-    <ClCompile Include="tests.scriptparser.cpp" />
-    <ClCompile Include="tests.script_parser.cpp" />
-    <ClCompile Include="tests.tools.cpp" />
-    <ClCompile Include="..\yampt\scriptparser.cpp">
+    <ClCompile Include="..\yampt\dict_reader.cpp">
       <Filter>yampt</Filter>
     </ClCompile>
-    <ClCompile Include="..\yampt\dictwriter.cpp" />
-    <ClCompile Include="..\yampt\esmconverter.cpp" />
+    <ClCompile Include="..\yampt\dict_writer.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\yampt\dict_merger.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\yampt\dict_creator.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\yampt\esm_reader.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\yampt\script_parser.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\external\imgui\imgui.cpp">
+      <Filter>external\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\external\imgui\imgui_draw.cpp">
+      <Filter>external\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\external\imgui\imgui_tables.cpp">
+      <Filter>external\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\external\imgui\imgui_widgets.cpp">
+      <Filter>external\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\external\yyjson.c">
+      <Filter>external</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\yampt\tools.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\yampt\dict_reader.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\yampt\dict_writer.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\yampt\dict_merger.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\yampt\dict_creator.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\yampt\esm_reader.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\yampt\esm_converter.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\yampt\script_parser.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\yampt\json_reader.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\catch.hpp">
+      <Filter>external</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\yyjson.h">
+      <Filter>external</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

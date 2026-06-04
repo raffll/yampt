@@ -42,6 +42,17 @@ yampt/
 
 NEVER modify files directly in the `external/` folder. These are upstream third-party sources and must remain byte-for-byte identical to their original releases. You can only add new files/folders or remove them entirely. If a library needs patching, do it via wrapper code in the project source files or `imconfig.h` overrides.
 
+## Solution Filters
+
+vcxproj.filters must follow this structure:
+- **Root (no filter)** — project's own source files (files in the same directory as the vcxproj)
+- **yampt** — files referenced from `../yampt/`
+- **external** — files from `../external/` (yyjson, catch)
+- **external\imgui** — imgui core files
+- **external\imgui\backends** — SDL2/OpenGL3 backend files
+
+Never use default VS filters like "Source Files", "Header Files", or "Resource Files".
+
 ## Build
 
 Visual Studio (v143 toolset). Open `yampt.sln` and build. Output: `x64/Debug/yampt.exe`.

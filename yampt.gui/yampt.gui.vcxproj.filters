@@ -1,145 +1,132 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx</Extensions>
+    <Filter Include="yampt">
+      <UniqueIdentifier>{A1000001-0000-0000-0000-000000000001}</UniqueIdentifier>
     </Filter>
-    <Filter Include="imgui">
-      <UniqueIdentifier>{B1C3D4E5-F6A7-8901-BCDE-F12345678901}</UniqueIdentifier>
+    <Filter Include="external">
+      <UniqueIdentifier>{A1000002-0000-0000-0000-000000000002}</UniqueIdentifier>
     </Filter>
-    <Filter Include="imgui\backends">
-      <UniqueIdentifier>{C2D3E4F5-A6B7-8901-CDEF-123456789012}</UniqueIdentifier>
+    <Filter Include="external\imgui">
+      <UniqueIdentifier>{A1000003-0000-0000-0000-000000000003}</UniqueIdentifier>
     </Filter>
-    <Filter Include="yampt (shared)">
-      <UniqueIdentifier>{D3E4F5A6-B7C8-9012-DEFA-234567890123}</UniqueIdentifier>
+    <Filter Include="external\imgui\backends">
+      <UniqueIdentifier>{A1000004-0000-0000-0000-000000000004}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\external\imgui\imgui.cpp">
-      <Filter>imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\external\imgui\imgui_demo.cpp">
-      <Filter>imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\external\imgui\imgui_draw.cpp">
-      <Filter>imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\external\imgui\imgui_tables.cpp">
-      <Filter>imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\external\imgui\imgui_widgets.cpp">
-      <Filter>imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\external\imgui\backends\imgui_impl_sdl2.cpp">
-      <Filter>imgui\backends</Filter>
-    </ClCompile>
-    <ClCompile Include="..\external\imgui\backends\imgui_impl_opengl3.cpp">
-      <Filter>imgui\backends</Filter>
-    </ClCompile>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="editor_app.cpp" />
+    <ClCompile Include="editor_config.cpp" />
+    <ClCompile Include="dict_workspace.cpp" />
+    <ClCompile Include="search_manager.cpp" />
+    <ClCompile Include="validation_manager.cpp" />
+    <ClCompile Include="history_manager.cpp" />
+    <ClCompile Include="syntax_highlighter.cpp" />
+    <ClCompile Include="annotation_manager.cpp" />
+    <ClCompile Include="encoding_utils.cpp" />
+    <ClCompile Include="spell_checker.cpp" />
     <ClCompile Include="..\yampt\tools.cpp">
-      <Filter>yampt (shared)</Filter>
+      <Filter>yampt</Filter>
     </ClCompile>
     <ClCompile Include="..\yampt\dict_reader.cpp">
-      <Filter>yampt (shared)</Filter>
+      <Filter>yampt</Filter>
     </ClCompile>
     <ClCompile Include="..\yampt\dict_writer.cpp">
-      <Filter>yampt (shared)</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\dict_merger.cpp">
-      <Filter>yampt (shared)</Filter>
+      <Filter>yampt</Filter>
     </ClCompile>
     <ClCompile Include="..\yampt\dict_creator.cpp">
-      <Filter>yampt (shared)</Filter>
+      <Filter>yampt</Filter>
     </ClCompile>
     <ClCompile Include="..\yampt\esm_reader.cpp">
-      <Filter>yampt (shared)</Filter>
+      <Filter>yampt</Filter>
     </ClCompile>
     <ClCompile Include="..\yampt\esm_converter.cpp">
-      <Filter>yampt (shared)</Filter>
+      <Filter>yampt</Filter>
     </ClCompile>
     <ClCompile Include="..\yampt\script_parser.cpp">
-      <Filter>yampt (shared)</Filter>
+      <Filter>yampt</Filter>
     </ClCompile>
-    <ClCompile Include="editor_app.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\external\imgui\imgui.cpp">
+      <Filter>external\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="editor_config.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\external\imgui\imgui_demo.cpp">
+      <Filter>external\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="editor_state.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\external\imgui\imgui_draw.cpp">
+      <Filter>external\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="search_manager.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\external\imgui\imgui_tables.cpp">
+      <Filter>external\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="validation_manager.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\external\imgui\imgui_widgets.cpp">
+      <Filter>external\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="history_manager.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\external\imgui\backends\imgui_impl_sdl2.cpp">
+      <Filter>external\imgui\backends</Filter>
     </ClCompile>
-    <ClCompile Include="syntax_highlighter.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\external\imgui\backends\imgui_impl_opengl3.cpp">
+      <Filter>external\imgui\backends</Filter>
     </ClCompile>
-    <ClCompile Include="annotation_manager.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\external\yyjson.c">
+      <Filter>external</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\external\imgui\imgui.h">
-      <Filter>imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\imgui\imconfig.h">
-      <Filter>imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\imgui\imgui_internal.h">
-      <Filter>imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\imgui\imstb_rectpack.h">
-      <Filter>imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\imgui\imstb_textedit.h">
-      <Filter>imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\imgui\imstb_truetype.h">
-      <Filter>imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\imgui\backends\imgui_impl_sdl2.h">
-      <Filter>imgui\backends</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\imgui\backends\imgui_impl_opengl3.h">
-      <Filter>imgui\backends</Filter>
-    </ClInclude>
+    <ClInclude Include="dict_workspace.hpp" />
     <ClInclude Include="..\yampt\tools.hpp">
-      <Filter>yampt (shared)</Filter>
+      <Filter>yampt</Filter>
     </ClInclude>
     <ClInclude Include="..\yampt\dict_reader.hpp">
-      <Filter>yampt (shared)</Filter>
+      <Filter>yampt</Filter>
     </ClInclude>
     <ClInclude Include="..\yampt\dict_writer.hpp">
-      <Filter>yampt (shared)</Filter>
-    </ClInclude>
-    <ClInclude Include="..\yampt\dict_merger.hpp">
-      <Filter>yampt (shared)</Filter>
+      <Filter>yampt</Filter>
     </ClInclude>
     <ClInclude Include="..\yampt\dict_creator.hpp">
-      <Filter>yampt (shared)</Filter>
+      <Filter>yampt</Filter>
     </ClInclude>
     <ClInclude Include="..\yampt\esm_reader.hpp">
-      <Filter>yampt (shared)</Filter>
+      <Filter>yampt</Filter>
     </ClInclude>
     <ClInclude Include="..\yampt\esm_converter.hpp">
-      <Filter>yampt (shared)</Filter>
+      <Filter>yampt</Filter>
     </ClInclude>
     <ClInclude Include="..\yampt\script_parser.hpp">
-      <Filter>yampt (shared)</Filter>
+      <Filter>yampt</Filter>
     </ClInclude>
     <ClInclude Include="..\yampt\includes.hpp">
-      <Filter>yampt (shared)</Filter>
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\yampt\json_reader.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\imgui\imgui.h">
+      <Filter>external\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\imgui\imconfig.h">
+      <Filter>external\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\imgui\imgui_internal.h">
+      <Filter>external\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\imgui\imstb_rectpack.h">
+      <Filter>external\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\imgui\imstb_textedit.h">
+      <Filter>external\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\imgui\imstb_truetype.h">
+      <Filter>external\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\imgui\backends\imgui_impl_sdl2.h">
+      <Filter>external\imgui\backends</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\imgui\backends\imgui_impl_opengl3.h">
+      <Filter>external\imgui\backends</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\yyjson.h">
+      <Filter>external</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

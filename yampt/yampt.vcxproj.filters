@@ -1,30 +1,39 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="user_interface.cpp" />
+    <Filter Include="external">
+      <UniqueIdentifier>{B1000001-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="tools.cpp" />
     <ClCompile Include="dict_creator.cpp" />
     <ClCompile Include="dict_merger.cpp" />
     <ClCompile Include="dict_reader.cpp" />
+    <ClCompile Include="dict_writer.cpp" />
     <ClCompile Include="esm_converter.cpp" />
     <ClCompile Include="esm_reader.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="tools.cpp" />
     <ClCompile Include="script_parser.cpp" />
-    <ClCompile Include="dict_writer.cpp" />
-    <ClCompile Include="..\external\yyjson.c" />
+    <ClCompile Include="user_interface.cpp" />
+    <ClCompile Include="..\external\yyjson.c">
+      <Filter>external</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="user_interface.hpp" />
+    <ClInclude Include="tools.hpp" />
     <ClInclude Include="dict_creator.hpp" />
     <ClInclude Include="dict_merger.hpp" />
     <ClInclude Include="dict_reader.hpp" />
+    <ClInclude Include="dict_writer.hpp" />
     <ClInclude Include="esm_converter.hpp" />
     <ClInclude Include="esm_reader.hpp" />
+    <ClInclude Include="script_parser.hpp" />
     <ClInclude Include="includes.hpp" />
     <ClInclude Include="json_reader.hpp" />
-    <ClInclude Include="tools.hpp" />
-    <ClInclude Include="script_parser.hpp" />
-    <ClInclude Include="dict_writer.hpp" />
-    <ClInclude Include="..\external\yyjson.h" />
+    <ClInclude Include="user_interface.hpp" />
+    <ClInclude Include="..\external\yyjson.h">
+      <Filter>external</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
