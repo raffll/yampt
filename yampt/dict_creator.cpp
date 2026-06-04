@@ -41,9 +41,10 @@ void dict_creator_t::make_dict()
 
 	if (is_make_mode)
 	{
-		make_dict_cell();
-		make_dict_cell_default();
-		make_dict_cell_regn();
+		make_dict_cell_unordered_exterior();
+		make_dict_cell_unordered_interior();
+		make_dict_cell_unordered_default();
+		make_dict_cell_unordered_regn();
 		make_dict_dial();
 		make_dict_script({ "INFO", "INAM", "BNAM", tools_t::rec_type_t::bnam });
 		make_dict_script({ "SCPT", "SCHD", "SCTX", tools_t::rec_type_t::sctx });
@@ -87,9 +88,12 @@ void dict_creator_t::make_dict_cell_unordered_default()
 					const auto & val_text = esm.get_value().text;
 					insert_entry(key_text, key_text, val_text, tools_t::rec_type_t::cell);
 
-					auto * entry = dict.at(tools_t::rec_type_t::cell).find(key_text);
-					if (entry)
-						entry->status = tools_t::status_t::wilderness;
+					if (!is_make_mode)
+					{
+						auto * entry = dict.at(tools_t::rec_type_t::cell).find(key_text);
+						if (entry)
+							entry->status = tools_t::status_t::wilderness;
+					}
 
 					break;
 				}
@@ -127,9 +131,12 @@ void dict_creator_t::make_dict_cell_unordered_regn()
 					const auto & val_text = esm.get_value().text;
 					insert_entry(key_text, key_text, val_text, tools_t::rec_type_t::cell);
 
-					auto * entry = dict.at(tools_t::rec_type_t::cell).find(key_text);
-					if (entry)
-						entry->status = tools_t::status_t::region;
+					if (!is_make_mode)
+					{
+						auto * entry = dict.at(tools_t::rec_type_t::cell).find(key_text);
+						if (entry)
+							entry->status = tools_t::status_t::region;
+					}
 
 					break;
 				}
@@ -257,69 +264,6 @@ void dict_creator_t::build_indexes()
 			continue;
 		}
 	}
-}
-
-void dict_creator_t::make_dict_cell()
-{
-	reset_counters();
-	for (size_t i = 0; i < esm.get_records().size(); ++i)
-	{
-		esm.select_record(i);
-		if (esm.get_record().id != "CELL")
-			continue;
-
-		esm.set_value("NAME");
-		if (!esm.get_value().exist || esm.get_value().text.empty())
-			continue;
-
-		const auto & key_text = esm.get_value().text;
-		const auto & old_text = esm.get_value().text;
-		insert_entry(key_text, old_text, "", tools_t::rec_type_t::cell);
-	}
-	print_log_line(tools_t::rec_type_t::cell);
-}
-
-void dict_creator_t::make_dict_cell_default()
-{
-	reset_counters();
-	for (size_t i = 0; i < esm.get_records().size(); ++i)
-	{
-		esm.select_record(i);
-		if (esm.get_record().id != "GMST")
-			continue;
-
-		esm.set_key("NAME");
-		esm.set_value("STRV");
-		if (esm.get_key().text != "sDefaultCellname")
-			continue;
-		if (!esm.get_value().exist)
-			continue;
-
-		const auto & key_text = esm.get_value().text;
-		const auto & old_text = esm.get_value().text;
-		insert_entry(key_text, old_text, "", tools_t::rec_type_t::cell);
-	}
-	print_log_line(tools_t::rec_type_t::default_val);
-}
-
-void dict_creator_t::make_dict_cell_regn()
-{
-	reset_counters();
-	for (size_t i = 0; i < esm.get_records().size(); ++i)
-	{
-		esm.select_record(i);
-		if (esm.get_record().id != "REGN")
-			continue;
-
-		esm.set_value("FNAM");
-		if (!esm.get_value().exist)
-			continue;
-
-		const auto & key_text = esm.get_value().text;
-		const auto & old_text = esm.get_value().text;
-		insert_entry(key_text, old_text, "", tools_t::rec_type_t::cell);
-	}
-	print_log_line(tools_t::rec_type_t::regn);
 }
 
 void dict_creator_t::make_dict_gmst()
@@ -781,6 +725,104 @@ std::string dict_creator_t::make_dodt_key_text(const std::string & fingerprint)
 	return result;
 }
 
+dict_creator_t::refs_index_t dict_creator_t::build_refs_index(esm_reader_t & esm_src)
+{
+	refs_index_t index;
+
+	for (size_t i = 0; i < esm_src.get_records().size(); ++i)
+	{
+		esm_src.select_record(i);
+		if (esm_src.get_record().id != "CELL")
+			continue;
+
+		esm_src.set_value("DATA");
+		if (!esm_src.get_value().exist)
+			continue;
+
+		if (!is_interior_cell(esm_src.get_value().content))
+			continue;
+
+		auto fingerprint = make_refs_fingerprint(esm_src);
+		if (fingerprint.empty())
+			continue;
+
+		index.insert({ fingerprint, i });
+	}
+
+	return index;
+}
+
+std::string dict_creator_t::make_refs_fingerprint(esm_reader_t & esm_src)
+{
+	const auto & content = esm_src.get_record().content;
+	size_t pos = 16;
+
+	std::vector<std::string> ref_ids;
+	bool in_persistent = false;
+
+	while (pos + 8 <= content.size())
+	{
+		std::string sub_id = content.substr(pos, 4);
+		size_t sub_size = tools_t::convert_string_byte_array_to_uint(content.substr(pos + 4, 4));
+		if (sub_size == 0)
+			break;
+		if (pos + 8 + sub_size > content.size())
+			break;
+
+		if (sub_id == "FRMR")
+			in_persistent = true;
+
+		if (sub_id == "NAME" && in_persistent && sub_size > 0)
+		{
+			std::string obj_id = content.substr(pos + 8, sub_size);
+			size_t null_pos = obj_id.find('\0');
+			if (null_pos != std::string::npos)
+				obj_id = obj_id.substr(0, null_pos);
+			if (!obj_id.empty())
+				ref_ids.push_back(obj_id);
+			in_persistent = false;
+		}
+
+		pos += 8 + sub_size;
+	}
+
+	if (ref_ids.empty())
+		return {};
+
+	std::sort(ref_ids.begin(), ref_ids.end());
+	std::string fingerprint;
+	for (const auto & id : ref_ids)
+	{
+		fingerprint += id;
+		fingerprint += '\0';
+	}
+
+	return fingerprint;
+}
+
+std::string dict_creator_t::make_refs_key_text(const std::string & fingerprint)
+{
+	std::string result = "REFS[";
+	bool first = true;
+
+	size_t start = 0;
+	while (start < fingerprint.size())
+	{
+		size_t end = fingerprint.find('\0', start);
+		if (end == std::string::npos)
+			end = fingerprint.size();
+
+		if (!first)
+			result += ',';
+		result += fingerprint.substr(start, end - start);
+		first = false;
+		start = end + 1;
+	}
+
+	result += ']';
+	return result;
+}
+
 void dict_creator_t::make_dict_cell_unordered_exterior()
 {
 	std::unordered_map<std::string, size_t> esm_index;
@@ -854,9 +896,12 @@ void dict_creator_t::make_dict_cell_unordered_exterior()
 		const auto & val_text = esm.get_value().text;
 		insert_entry(coord_key, ref_cell_name, val_text, tools_t::rec_type_t::cell);
 
-		auto * entry = dict.at(tools_t::rec_type_t::cell).find(coord_key);
-		if (entry && entry->status.empty())
-			entry->status = tools_t::status_t::matched_by_coords;
+		if (!is_make_mode)
+		{
+			auto * entry = dict.at(tools_t::rec_type_t::cell).find(coord_key);
+			if (entry && entry->status.empty())
+				entry->status = tools_t::status_t::matched_by_coords;
+		}
 	}
 
 	make_dict_cell_unordered_add_missing(missing_cells);
@@ -866,6 +911,7 @@ void dict_creator_t::make_dict_cell_unordered_exterior()
 void dict_creator_t::make_dict_cell_unordered_interior()
 {
 	auto door_index_esm = build_door_index(esm);
+	auto refs_index_esm = build_refs_index(esm);
 
 	std::vector<std::pair<size_t, std::string>> missing_cells;
 
@@ -890,30 +936,51 @@ void dict_creator_t::make_dict_cell_unordered_interior()
 			continue;
 
 		auto fingerprint = make_dodt_fingerprint(esm_ref);
-		if (fingerprint.empty())
+		if (!fingerprint.empty())
 		{
-			missing_cells.push_back({ i, ref_cell_name });
-			counter_missing++;
-			continue;
+			auto match_it = door_index_esm.find(fingerprint);
+			if (match_it != door_index_esm.end())
+			{
+				esm.select_record(match_it->second);
+				esm.set_value("NAME");
+				const auto & val_text = esm.get_value().text;
+				auto key_text = make_dodt_key_text(fingerprint);
+				insert_entry(key_text, ref_cell_name, val_text, tools_t::rec_type_t::cell);
+
+				if (!is_make_mode)
+				{
+					auto * entry = dict.at(tools_t::rec_type_t::cell).find(key_text);
+					if (entry && entry->status.empty())
+						entry->status = tools_t::status_t::matched_by_coords;
+				}
+				continue;
+			}
 		}
 
-		auto match_it = door_index_esm.find(fingerprint);
-		if (match_it == door_index_esm.end())
+		auto refs_fp = make_refs_fingerprint(esm_ref);
+		if (!refs_fp.empty())
 		{
-			missing_cells.push_back({ i, ref_cell_name });
-			counter_missing++;
-			continue;
+			auto match_it = refs_index_esm.find(refs_fp);
+			if (match_it != refs_index_esm.end())
+			{
+				esm.select_record(match_it->second);
+				esm.set_value("NAME");
+				const auto & val_text = esm.get_value().text;
+				auto key_text = make_refs_key_text(refs_fp);
+				insert_entry(key_text, ref_cell_name, val_text, tools_t::rec_type_t::cell);
+
+				if (!is_make_mode)
+				{
+					auto * entry = dict.at(tools_t::rec_type_t::cell).find(key_text);
+					if (entry && entry->status.empty())
+						entry->status = tools_t::status_t::matched_by_coords;
+				}
+				continue;
+			}
 		}
 
-		esm.select_record(match_it->second);
-		esm.set_value("NAME");
-		const auto & val_text = esm.get_value().text;
-		auto key_text = make_dodt_key_text(fingerprint);
-		insert_entry(key_text, ref_cell_name, val_text, tools_t::rec_type_t::cell);
-
-		auto * entry = dict.at(tools_t::rec_type_t::cell).find(key_text);
-		if (entry && entry->status.empty())
-			entry->status = tools_t::status_t::matched_by_coords;
+		missing_cells.push_back({ i, ref_cell_name });
+		counter_missing++;
 	}
 
 	make_dict_cell_unordered_add_missing(missing_cells);
@@ -1010,11 +1077,14 @@ void dict_creator_t::make_dict_cell_unordered_add_missing(
 	{
 		insert_entry(cell_name, cell_name, cell_name, tools_t::rec_type_t::cell);
 
-		auto * entry = dict.at(tools_t::rec_type_t::cell).find(cell_name);
-		if (entry)
-			entry->status = tools_t::status_t::missing;
+		if (!is_make_mode)
+		{
+			auto * entry = dict.at(tools_t::rec_type_t::cell).find(cell_name);
+			if (entry)
+				entry->status = tools_t::status_t::missing;
 
-		tools_t::add_log("[warning] missing CELL: " + cell_name + "\r\n");
+			tools_t::add_log("[warning] missing CELL: " + cell_name + "\r\n");
+		}
 	}
 }
 

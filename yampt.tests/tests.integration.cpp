@@ -163,8 +163,9 @@ TEST_CASE("make EN with base dict", "[i]")
 	REQUIRE(total > 0);
 
 	const auto & cell_chapter = dict.at(tools_t::rec_type_t::cell);
-	const auto * entry = cell_chapter.find("Abaelun Mine");
+	const auto * entry = find_by_new_text(cell_chapter, "Kopalnia Abaelun");
 	REQUIRE(entry != nullptr);
+	REQUIRE(entry->old_text == "Abaelun Mine");
 	REQUIRE(entry->status != tools_t::status_t::untranslated);
 
 	auto output = test_dir + "/Morrowind_en_with_base.json";

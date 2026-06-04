@@ -59,9 +59,12 @@ private:
 	    const std::string & matched_source,
 	    const std::string & matched_translation);
 
-	void make_dict_cell();
-	void make_dict_cell_default();
-	void make_dict_cell_regn();
+	void make_dict_cell_unordered_exterior();
+	void make_dict_cell_unordered_interior();
+	void make_dict_cell_unordered_default();
+	void make_dict_cell_unordered_regn();
+	void make_dict_cell_unordered_add_missing(const std::vector<std::pair<size_t, std::string>> & missing_cells);
+
 	void make_dict_gmst();
 	void make_dict_fnam();
 	void make_dict_desc();
@@ -72,18 +75,16 @@ private:
 	void make_dict_info();
 	void make_dict_script(const ids & ids);
 
-	void make_dict_cell_unordered_exterior();
-	void make_dict_cell_unordered_interior();
-	void make_dict_cell_unordered_default();
-	void make_dict_cell_unordered_regn();
-	void make_dict_cell_unordered_add_missing(const std::vector<std::pair<size_t, std::string>> & missing_cells);
-
 	static bool is_interior_cell(const std::string & data_content);
 	static std::string make_exterior_coord_key(const std::string & data_content);
 	using door_index_t = std::unordered_map<std::string, size_t>;
+	using refs_index_t = std::unordered_map<std::string, size_t>;
 	door_index_t build_door_index(esm_reader_t & esm_src);
+	refs_index_t build_refs_index(esm_reader_t & esm_src);
 	static std::string make_dodt_fingerprint(esm_reader_t & esm_src);
 	static std::string make_dodt_key_text(const std::string & fingerprint);
+	static std::string make_refs_fingerprint(esm_reader_t & esm_src);
+	static std::string make_refs_key_text(const std::string & fingerprint);
 
 	void make_dict_dial_unordered();
 	patterns_ext_t make_dict_dial_unordered_patterns_ext();

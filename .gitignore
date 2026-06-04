@@ -14,3 +14,4 @@ x64/
 yampt.gui/yampt_log.txt
 yampt.gui/imgui.ini
 yampt_log*
+/scripts
