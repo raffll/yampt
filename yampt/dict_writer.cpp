@@ -46,9 +46,7 @@ static std::string escape_json(const std::string & s)
 	return result;
 }
 
-void dict_writer_t::write(
-    const tools_t::dict_t & dict,
-    const std::string & path)
+void dict_writer_t::write(const tools_t::dict_t & dict, const std::string & path)
 {
 	tools_t::add_log("[info] writing \"" + path + "\"\r\n");
 

@@ -277,7 +277,7 @@ void script_parser_t::convert_text_in_compiled(const bool is_getpccell)
 	if (is_getpccell)
 	{
 		/* additional getpccell size byte determines
-           how many bytes from that byte to the end of expression
+		   how many bytes from that byte to the end of expression
 		 */
 		size_t end_of_expr;
 		size_t expr_size;

@@ -63,14 +63,18 @@ void annotation_manager_t::rebuild(const std::vector<dict_source_t> & sources)
 	for (auto & [key, entry] : topic_map)
 		dial_topics_.push_back(std::move(entry));
 
-	std::sort(dial_topics_.begin(), dial_topics_.end(),
+	std::sort(
+	    dial_topics_.begin(),
+	    dial_topics_.end(),
 	    [](const topic_entry_t & a, const topic_entry_t & b) { return a.key_lower.size() > b.key_lower.size(); });
 
 	glossary_terms_.reserve(glossary_map.size());
 	for (auto & [key, entry] : glossary_map)
 		glossary_terms_.push_back(std::move(entry));
 
-	std::sort(glossary_terms_.begin(), glossary_terms_.end(),
+	std::sort(
+	    glossary_terms_.begin(),
+	    glossary_terms_.end(),
 	    [](const topic_entry_t & a, const topic_entry_t & b) { return a.key_lower.size() > b.key_lower.size(); });
 }
 
@@ -150,8 +154,7 @@ void annotation_manager_t::find_matches(
 }
 
 void annotation_manager_t::load_npc_flags(const std::string &)
-{
-}
+{}
 
 const std::string & annotation_manager_t::get_speaker_gender(const std::string & npc_id) const
 {

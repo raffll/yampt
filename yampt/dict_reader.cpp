@@ -106,7 +106,8 @@ void dict_reader_t::validate_entry(tools_t::record_entry_t & entry, tools_t::rec
 	if (type == tools_t::rec_type_t::info && entry.new_text.size() > 1024)
 	{
 		tools_t::add_log(
-		    "[warning] " + tools_t::type_to_str(type) + ": invalid, more than 1024 bytes in " + entry.key_text + "\r\n");
+		    "[warning] " + tools_t::type_to_str(type) + ": invalid, more than 1024 bytes in " + entry.key_text +
+		    "\r\n");
 		return;
 	}
 

@@ -398,8 +398,6 @@ void dict_creator_t::make_dict_fnam()
 	print_log_line(tools_t::rec_type_t::fnam);
 }
 
-
-
 void dict_creator_t::make_dict_desc()
 {
 	reset_counters();
@@ -637,7 +635,8 @@ void dict_creator_t::make_dict_info()
 
 		std::string gender;
 		if (esm_ref.get_value().exist)
-			gender = ((tools_t::convert_string_byte_array_to_uint(esm_ref.get_value().content) & 0x0001) != 0) ? "F" : "M";
+			gender =
+			    ((tools_t::convert_string_byte_array_to_uint(esm_ref.get_value().content) & 0x0001) != 0) ? "F" : "M";
 
 		auto * entry = dict.at(tools_t::rec_type_t::info).find(key_text);
 		if (!entry)
@@ -992,7 +991,8 @@ std::string dict_creator_t::make_dict_dial_unordered_pattern(esm_reader_t & esm_
 	return pattern;
 }
 
-void dict_creator_t::make_dict_cell_unordered_add_missing(const std::vector<std::pair<size_t, std::string>> & missing_cells)
+void dict_creator_t::make_dict_cell_unordered_add_missing(
+    const std::vector<std::pair<size_t, std::string>> & missing_cells)
 {
 	for (const auto & [rec_index, cell_name] : missing_cells)
 	{

@@ -10,9 +10,8 @@ struct spell_checker_t::impl_t
 };
 
 spell_checker_t::spell_checker_t()
-	: impl_(std::make_unique<impl_t>())
-{
-}
+    : impl_(std::make_unique<impl_t>())
+{}
 
 spell_checker_t::~spell_checker_t() = default;
 
@@ -127,7 +126,7 @@ bool spell_checker_t::is_excluded(const std::string & word) const
 		for (size_t i = 0; i < word.size(); ++i)
 		{
 			if (std::tolower(static_cast<unsigned char>(excluded[i])) !=
-				std::tolower(static_cast<unsigned char>(word[i])))
+			    std::tolower(static_cast<unsigned char>(word[i])))
 			{
 				match = false;
 				break;
@@ -152,7 +151,7 @@ bool spell_checker_t::is_mwscript_keyword(const std::string & word) const
 		for (size_t i = 0; i < word.size(); ++i)
 		{
 			if (std::tolower(static_cast<unsigned char>(keyword[i])) !=
-				std::tolower(static_cast<unsigned char>(word[i])))
+			    std::tolower(static_cast<unsigned char>(word[i])))
 			{
 				match = false;
 				break;

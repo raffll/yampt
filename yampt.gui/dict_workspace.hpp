@@ -9,23 +9,19 @@
 struct filter_state_t
 {
 	std::set<tools_t::rec_type_t> type_filter = {
-		tools_t::rec_type_t::cell,
-		tools_t::rec_type_t::dial,
-		tools_t::rec_type_t::info,
-		tools_t::rec_type_t::fnam,
-		tools_t::rec_type_t::text,
-		tools_t::rec_type_t::gmst,
-		tools_t::rec_type_t::desc,
-		tools_t::rec_type_t::rnam,
-		tools_t::rec_type_t::indx,
-		tools_t::rec_type_t::bnam,
-		tools_t::rec_type_t::sctx,
+		tools_t::rec_type_t::cell, tools_t::rec_type_t::dial, tools_t::rec_type_t::info, tools_t::rec_type_t::fnam,
+		tools_t::rec_type_t::text, tools_t::rec_type_t::gmst, tools_t::rec_type_t::desc, tools_t::rec_type_t::rnam,
+		tools_t::rec_type_t::indx, tools_t::rec_type_t::bnam, tools_t::rec_type_t::sctx,
 	};
 	std::set<std::string> status_filter;
 	tools_t::rec_type_t sidebar_active_type = tools_t::rec_type_t::unknown;
 };
 
-enum class dict_kind_t { user, base };
+enum class dict_kind_t
+{
+	user,
+	base
+};
 
 struct dict_slot_t
 {

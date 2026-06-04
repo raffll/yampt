@@ -112,10 +112,9 @@ TEST_CASE("Chapter::empty", "[u]")
 TEST_CASE("type_to_str and str_to_type round-trip", "[u]")
 {
 	const std::vector<tools_t::rec_type_t> defined_types {
-		tools_t::rec_type_t::cell, tools_t::rec_type_t::dial, tools_t::rec_type_t::indx,
-		tools_t::rec_type_t::rnam, tools_t::rec_type_t::desc, tools_t::rec_type_t::gmst,
-		tools_t::rec_type_t::fnam, tools_t::rec_type_t::info, tools_t::rec_type_t::text,
-		tools_t::rec_type_t::bnam, tools_t::rec_type_t::sctx,
+		tools_t::rec_type_t::cell, tools_t::rec_type_t::dial, tools_t::rec_type_t::indx, tools_t::rec_type_t::rnam,
+		tools_t::rec_type_t::desc, tools_t::rec_type_t::gmst, tools_t::rec_type_t::fnam, tools_t::rec_type_t::info,
+		tools_t::rec_type_t::text, tools_t::rec_type_t::bnam, tools_t::rec_type_t::sctx,
 	};
 
 	for (const auto & type : defined_types)
@@ -320,21 +319,11 @@ TEST_CASE("get_number_of_elements_in_dict correct total", "[u]")
 TEST_CASE("status_t constants are distinct non-empty strings", "[u]")
 {
 	std::vector<std::string> all_statuses {
-		tools_t::status_t::missing,
-		tools_t::status_t::duplicate,
-		tools_t::status_t::matched_by_coords,
-		tools_t::status_t::matched_by_info,
-		tools_t::status_t::matched_by_name,
-		tools_t::status_t::wilderness,
-		tools_t::status_t::region,
-		tools_t::status_t::auto_identical,
-		tools_t::status_t::auto_base,
-		tools_t::status_t::auto_translated,
-		tools_t::status_t::auto_heuristic,
-		tools_t::status_t::auto_changed,
-		tools_t::status_t::untranslated,
-		tools_t::status_t::in_progress,
-		tools_t::status_t::translated,
+		tools_t::status_t::missing,         tools_t::status_t::duplicate,       tools_t::status_t::matched_by_coords,
+		tools_t::status_t::matched_by_info, tools_t::status_t::matched_by_name, tools_t::status_t::wilderness,
+		tools_t::status_t::region,          tools_t::status_t::auto_identical,  tools_t::status_t::auto_base,
+		tools_t::status_t::auto_translated, tools_t::status_t::auto_heuristic,  tools_t::status_t::auto_changed,
+		tools_t::status_t::untranslated,    tools_t::status_t::in_progress,     tools_t::status_t::translated,
 		tools_t::status_t::has_errors,
 	};
 

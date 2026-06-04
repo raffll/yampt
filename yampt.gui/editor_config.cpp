@@ -50,7 +50,12 @@ void editor_config_t::load(const std::string & path)
 			if (key == "Count")
 			{
 				int count = 0;
-				try { count = std::stoi(value); } catch (...) {}
+				try
+				{
+					count = std::stoi(value);
+				}
+				catch (...)
+				{}
 				user_dict_paths.clear();
 				user_dict_paths.reserve(count);
 			}
@@ -64,7 +69,12 @@ void editor_config_t::load(const std::string & path)
 			if (key == "Count")
 			{
 				int count = 0;
-				try { count = std::stoi(value); } catch (...) {}
+				try
+				{
+					count = std::stoi(value);
+				}
+				catch (...)
+				{}
 				base_dict_paths.clear();
 				base_dict_paths.reserve(count);
 			}
@@ -77,19 +87,39 @@ void editor_config_t::load(const std::string & path)
 		{
 			if (key == "ActiveDictIndex")
 			{
-				try { active_dict_index = std::stoi(value); } catch (...) {}
+				try
+				{
+					active_dict_index = std::stoi(value);
+				}
+				catch (...)
+				{}
 			}
 			else if (key == "SplitRatio")
 			{
-				try { split_ratio = std::stof(value); } catch (...) {}
+				try
+				{
+					split_ratio = std::stof(value);
+				}
+				catch (...)
+				{}
 			}
 			else if (key == "SidebarWidth")
 			{
-				try { sidebar_width = std::stof(value); } catch (...) {}
+				try
+				{
+					sidebar_width = std::stof(value);
+				}
+				catch (...)
+				{}
 			}
 			else if (key == "BottomHeight")
 			{
-				try { bottom_height = std::stof(value); } catch (...) {}
+				try
+				{
+					bottom_height = std::stof(value);
+				}
+				catch (...)
+				{}
 			}
 			else if (key == "SidebarVisible")
 			{
@@ -107,7 +137,8 @@ void editor_config_t::load(const std::string & path)
 					if (idx >= 0 && idx <= 2)
 						encoding_index = idx;
 				}
-				catch (...) {}
+				catch (...)
+				{}
 			}
 			else if (starts_with(key, "Column"))
 			{
@@ -117,7 +148,8 @@ void editor_config_t::load(const std::string & path)
 					if (col_idx >= 0 && col_idx < static_cast<int>(column_widths.size()))
 						column_widths[col_idx] = std::stof(value);
 				}
-				catch (...) {}
+				catch (...)
+				{}
 			}
 		}
 		else if (section == "SpellCheck")

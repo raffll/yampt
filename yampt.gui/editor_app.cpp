@@ -84,11 +84,10 @@ void editor_app_t::frame()
 	ImGui::SetNextWindowPos(viewport->WorkPos);
 	ImGui::SetNextWindowSize(viewport->WorkSize);
 
-	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse |
-	                                ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
-	                                ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus |
-	                                ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollbar |
-	                                ImGuiWindowFlags_NoScrollWithMouse;
+	ImGuiWindowFlags window_flags =
+	    ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
+	    ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus |
+	    ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
@@ -114,7 +113,9 @@ void editor_app_t::frame()
 		bottom_height_ = clamp_bottom_height(bottom_height_, panel_area_height);
 
 	ImGui::BeginChild(
-	    "PanelArea", ImVec2(0, panel_area_height), ImGuiChildFlags_None,
+	    "PanelArea",
+	    ImVec2(0, panel_area_height),
+	    ImGuiChildFlags_None,
 	    ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 
 	if (sidebar_visible_)
@@ -137,7 +138,9 @@ void editor_app_t::frame()
 	}
 
 	ImGui::BeginChild(
-	    "MainPanelArea", ImVec2(0, main_panel_height), ImGuiChildFlags_None,
+	    "MainPanelArea",
+	    ImVec2(0, main_panel_height),
+	    ImGuiChildFlags_None,
 	    ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 	render_main_panel();
 	ImGui::EndChild();
@@ -246,8 +249,7 @@ void editor_app_t::rebuild_row_data()
 			if (!status_filter_.empty())
 			{
 				const auto & s = chapter.records[i].status;
-				bool match = s.empty() ? status_filter_.count("untranslated") > 0
-				                       : status_filter_.count(s) > 0;
+				bool match = s.empty() ? status_filter_.count("untranslated") > 0 : status_filter_.count(s) > 0;
 				if (!match)
 					continue;
 			}
@@ -636,18 +638,14 @@ void editor_app_t::render_sidebar()
 
 void editor_app_t::render_status_summary_bar()
 {
-	static const char * status_names[] = {
-		"untranslated",    "missing",          "duplicate",       "matched_by_coords",
-		"matched_by_info", "matched_by_name",  "wilderness",      "region",
-		"auto_identical",  "auto_base",        "auto_translated", "auto_heuristic",
-		"auto_changed",    "in_progress",      "translated",      "has_errors"
-	};
-	static const char * status_labels[] = {
-		"Untranslated",    "Missing",          "Duplicate",       "Matched Coords",
-		"Matched Info",    "Matched Name",     "Wilderness",      "Region",
-		"Auto Identical",  "Auto Base",        "Auto Translated", "Auto Heuristic",
-		"Auto Changed",    "In Progress",      "Translated",      "Has Errors"
-	};
+	static const char * status_names[] = { "untranslated",    "missing",         "duplicate",       "matched_by_coords",
+		                                   "matched_by_info", "matched_by_name", "wilderness",      "region",
+		                                   "auto_identical",  "auto_base",       "auto_translated", "auto_heuristic",
+		                                   "auto_changed",    "in_progress",     "translated",      "has_errors" };
+	static const char * status_labels[] = { "Untranslated",   "Missing",      "Duplicate",       "Matched Coords",
+		                                    "Matched Info",   "Matched Name", "Wilderness",      "Region",
+		                                    "Auto Identical", "Auto Base",    "Auto Translated", "Auto Heuristic",
+		                                    "Auto Changed",   "In Progress",  "Translated",      "Has Errors" };
 	static constexpr size_t status_count = 16;
 
 	int counts[status_count] = {};
@@ -857,11 +855,7 @@ void editor_app_t::render_main_panel()
 			std::string id_text = tools_t::type_to_str(row_ref.type) + ": " + entry.key_text;
 			ImGui::PushID(i);
 
-			if (ImGui::Selectable(
-			        id_text.c_str(),
-			        is_selected,
-			        ImGuiSelectableFlags_SpanAllColumns,
-			        ImVec2(0, 0)))
+			if (ImGui::Selectable(id_text.c_str(), is_selected, ImGuiSelectableFlags_SpanAllColumns, ImVec2(0, 0)))
 			{
 				selected_row = i;
 				selected_row_left_ = i;
@@ -871,24 +865,26 @@ void editor_app_t::render_main_panel()
 			{
 				if (ImGui::BeginMenu("Set Status"))
 				{
-					static const char * ctx_status_names[] = { "untranslated", "in_progress", "translated", "has_errors" };
-					static const char * ctx_status_labels[] = { "Untranslated", "In Progress", "Translated", "Has Errors" };
+					static const char * ctx_status_names[] = {
+						"untranslated", "in_progress", "translated", "has_errors"
+					};
+					static const char * ctx_status_labels[] = {
+						"Untranslated", "In Progress", "Translated", "Has Errors"
+					};
 
 					for (int s = 0; s < 4; ++s)
 					{
 						if (ImGui::MenuItem(ctx_status_labels[s]))
 						{
 							auto mit = slot->data.find(row_ref.type);
-							if (mit != slot->data.end() &&
-							    row_ref.record_index < mit->second.records.size())
+							if (mit != slot->data.end() && row_ref.record_index < mit->second.records.size())
 							{
 								auto & rec = mit->second.records[row_ref.record_index];
 								std::string old_status = rec.status;
 								rec.status = ctx_status_names[s];
 								slot->dirty = true;
 								slot->modified_records.insert({ row_ref.type, row_ref.record_index });
-								history_.record_change(
-								    row_ref.type, entry.key_text, old_status, rec.status);
+								history_.record_change(row_ref.type, entry.key_text, old_status, rec.status);
 							}
 						}
 					}
@@ -925,24 +921,26 @@ void editor_app_t::render_main_panel()
 
 				if (ImGui::BeginPopup("##status_popup"))
 				{
-					static const char * popup_status_names[] = { "untranslated", "in_progress", "translated", "has_errors" };
-					static const char * popup_status_labels[] = { "Untranslated", "In Progress", "Translated", "Has Errors" };
+					static const char * popup_status_names[] = {
+						"untranslated", "in_progress", "translated", "has_errors"
+					};
+					static const char * popup_status_labels[] = {
+						"Untranslated", "In Progress", "Translated", "Has Errors"
+					};
 
 					for (int s = 0; s < 4; ++s)
 					{
 						if (ImGui::Selectable(popup_status_labels[s]))
 						{
 							auto mit = slot->data.find(row_ref.type);
-							if (mit != slot->data.end() &&
-							    row_ref.record_index < mit->second.records.size())
+							if (mit != slot->data.end() && row_ref.record_index < mit->second.records.size())
 							{
 								auto & rec = mit->second.records[row_ref.record_index];
 								std::string old_status = rec.status;
 								rec.status = popup_status_names[s];
 								slot->dirty = true;
 								slot->modified_records.insert({ row_ref.type, row_ref.record_index });
-								history_.record_change(
-								    row_ref.type, entry.key_text, old_status, rec.status);
+								history_.record_change(row_ref.type, entry.key_text, old_status, rec.status);
 							}
 						}
 					}
@@ -1091,9 +1089,7 @@ void editor_app_t::render_text_with_highlights(
 			{
 				if (line_x > rect_x)
 					draw_list->AddRectFilled(
-					    ImVec2(rect_x, rect_y),
-					    ImVec2(line_x, rect_y + ImGui::GetTextLineHeight()),
-					    highlight_u32);
+					    ImVec2(rect_x, rect_y), ImVec2(line_x, rect_y + ImGui::GetTextLineHeight()), highlight_u32);
 				line_y += ImGui::GetTextLineHeightWithSpacing();
 				line_x = start_pos.x;
 				rect_x = start_pos.x;
@@ -1107,9 +1103,7 @@ void editor_app_t::render_text_with_highlights(
 			if (line_x + char_width > start_pos.x + wrap_width && p > line_start)
 			{
 				draw_list->AddRectFilled(
-				    ImVec2(rect_x, rect_y),
-				    ImVec2(line_x, rect_y + ImGui::GetTextLineHeight()),
-				    highlight_u32);
+				    ImVec2(rect_x, rect_y), ImVec2(line_x, rect_y + ImGui::GetTextLineHeight()), highlight_u32);
 				line_y += ImGui::GetTextLineHeightWithSpacing();
 				line_x = start_pos.x;
 				rect_x = start_pos.x;
@@ -1121,9 +1115,7 @@ void editor_app_t::render_text_with_highlights(
 		}
 
 		draw_list->AddRectFilled(
-		    ImVec2(rect_x, rect_y),
-		    ImVec2(line_x, rect_y + ImGui::GetTextLineHeight()),
-		    highlight_u32);
+		    ImVec2(rect_x, rect_y), ImVec2(line_x, rect_y + ImGui::GetTextLineHeight()), highlight_u32);
 	}
 }
 
@@ -1308,11 +1300,7 @@ void editor_app_t::render_translation_with_spellcheck(const std::string & text, 
 			float y_offset = ((static_cast<int>((x - cursor.x) / wave_period)) % 2 == 0) ? -wave_height : wave_height;
 
 			draw_list->AddBezierQuadratic(
-			    ImVec2(x, base_y),
-			    ImVec2(mid_x, base_y + y_offset),
-			    ImVec2(next_x, base_y),
-			    underline_color,
-			    1.5f);
+			    ImVec2(x, base_y), ImVec2(mid_x, base_y + y_offset), ImVec2(next_x, base_y), underline_color, 1.5f);
 
 			x = next_x;
 		}
@@ -1485,9 +1473,8 @@ void editor_app_t::render_editor_tab()
 	ImGui::TextDisabled("Translation");
 	ImGui::Separator();
 
-	bool same_record = (editing_row_ == selected_row_
-	    && editing_type_ == row.type
-	    && editing_record_index_ == row.record_index);
+	bool same_record =
+	    (editing_row_ == selected_row_ && editing_type_ == row.type && editing_record_index_ == row.record_index);
 
 	if (!same_record)
 	{
@@ -1763,7 +1750,7 @@ void editor_app_t::render_speaker_tab()
 				continue;
 		}
 
-		visible_rows.push_back({&entry.speaker, &entry.speaker_name, &entry.gender});
+		visible_rows.push_back({ &entry.speaker, &entry.speaker_name, &entry.gender });
 	}
 
 	ImGuiTableSortSpecs * sort_specs = ImGui::TableGetSortSpecs();
@@ -1773,14 +1760,16 @@ void editor_app_t::render_speaker_tab()
 		bool ascending = (spec.SortDirection == ImGuiSortDirection_Ascending);
 		int col = spec.ColumnIndex;
 
-		std::sort(visible_rows.begin(), visible_rows.end(),
+		std::sort(
+		    visible_rows.begin(),
+		    visible_rows.end(),
 		    [col, ascending](const speaker_row_t & a, const speaker_row_t & b)
-		    {
-			    const std::string * va = col == 0 ? a.speaker : (col == 1 ? a.speaker_name : a.gender);
-			    const std::string * vb = col == 0 ? b.speaker : (col == 1 ? b.speaker_name : b.gender);
-			    int cmp = va->compare(*vb);
-			    return ascending ? (cmp < 0) : (cmp > 0);
-		    });
+		{
+			const std::string * va = col == 0 ? a.speaker : (col == 1 ? a.speaker_name : a.gender);
+			const std::string * vb = col == 0 ? b.speaker : (col == 1 ? b.speaker_name : b.gender);
+			int cmp = va->compare(*vb);
+			return ascending ? (cmp < 0) : (cmp > 0);
+		});
 
 		sort_specs->SpecsDirty = false;
 	}
@@ -2205,10 +2194,18 @@ void editor_app_t::create_richedit(HWND parent)
 	LoadLibraryA("Msftedit.dll");
 
 	richedit_hwnd_ = CreateWindowExA(
-	    0, "RICHEDIT50W", "",
+	    0,
+	    "RICHEDIT50W",
+	    "",
 	    WS_CHILD | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN | ES_NOHIDESEL,
-	    0, 0, 100, 100,
-	    parent, nullptr, GetModuleHandle(nullptr), nullptr);
+	    0,
+	    0,
+	    100,
+	    100,
+	    parent,
+	    nullptr,
+	    GetModuleHandle(nullptr),
+	    nullptr);
 
 	SendMessageA(richedit_hwnd_, EM_SETTARGETDEVICE, 0, 0);
 	SendMessageA(richedit_hwnd_, EM_SETBKGNDCOLOR, 0, RGB(255, 255, 255));
@@ -2235,9 +2232,13 @@ void editor_app_t::position_richedit(float screen_x, float screen_y, float width
 
 	if (should_show)
 	{
-		SetWindowPos(richedit_hwnd_, HWND_TOP,
-		    static_cast<int>(screen_x), static_cast<int>(screen_y),
-		    static_cast<int>(adjusted_width), static_cast<int>(height),
+		SetWindowPos(
+		    richedit_hwnd_,
+		    HWND_TOP,
+		    static_cast<int>(screen_x),
+		    static_cast<int>(screen_y),
+		    static_cast<int>(adjusted_width),
+		    static_cast<int>(height),
 		    SWP_NOACTIVATE | SWP_SHOWWINDOW);
 		richedit_visible_ = true;
 	}

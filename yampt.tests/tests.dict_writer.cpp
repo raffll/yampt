@@ -19,8 +19,7 @@ TEST_CASE("dict_writer setup", "[u][writer]")
 TEST_CASE("dict_writer serializes speaker fields when present", "[u][writer]")
 {
 	tools_t::dict_t dict = tools_t::initialize_dict();
-	dict.at(tools_t::rec_type_t::info).insert(
-	    { "info_1", "Hello", "Cześć", "translated", "fargoth", "Fargoth", "M" });
+	dict.at(tools_t::rec_type_t::info).insert({ "info_1", "Hello", "Cześć", "translated", "fargoth", "Fargoth", "M" });
 
 	auto path = writer_test_dir + "/speaker_present.json";
 	dict_writer_t::write(dict, path);
@@ -36,8 +35,7 @@ TEST_CASE("dict_writer serializes speaker fields when present", "[u][writer]")
 TEST_CASE("dict_writer omits speaker fields when empty", "[u][writer]")
 {
 	tools_t::dict_t dict = tools_t::initialize_dict();
-	dict.at(tools_t::rec_type_t::info).insert(
-	    { "info_no_spk", "Hello", "Cześć", "translated", "", "", "" });
+	dict.at(tools_t::rec_type_t::info).insert({ "info_no_spk", "Hello", "Cześć", "translated", "", "", "" });
 
 	auto path = writer_test_dir + "/speaker_empty.json";
 	dict_writer_t::write(dict, path);

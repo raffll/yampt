@@ -24,8 +24,7 @@ int main(int, char **)
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
-	auto window_flags =
-	    static_cast<SDL_WindowFlags>(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED);
+	auto window_flags = static_cast<SDL_WindowFlags>(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED);
 	SDL_Window * window =
 	    SDL_CreateWindow("yampt.gui", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
 	if (!window)
@@ -52,14 +51,8 @@ int main(int, char **)
 	ImGui_ImplOpenGL3_Init(glsl_version);
 
 	static const ImWchar glyph_ranges[] = {
-		0x0020, 0x00FF,
-		0x0100, 0x024F,
-		0x02B0, 0x02FF,
-		0x0400, 0x04FF,
-		0x2000, 0x206F,
-		0x20A0, 0x20CF,
-		0x2100, 0x214F,
-		0,
+		0x0020, 0x00FF, 0x0100, 0x024F, 0x02B0, 0x02FF, 0x0400, 0x04FF,
+		0x2000, 0x206F, 0x20A0, 0x20CF, 0x2100, 0x214F, 0,
 	};
 	io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\segoeui.ttf", 16.0f, nullptr, glyph_ranges);
 
