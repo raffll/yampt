@@ -36,6 +36,7 @@ private:
 	float split_ratio_ = 0.5f;
 	float sidebar_width_ = 250.0f;
 	float bottom_height_ = 200.0f;
+	float info_height_ = 150.0f;
 	bool sidebar_visible_ = true;
 	bool bottom_visible_ = true;
 	int active_bottom_tab_ = 0;
@@ -118,6 +119,7 @@ private:
 	void render_main_panel();
 	void render_status_bar();
 	void render_bottom_panel();
+	void render_info_panel();
 	void render_editor_tab();
 	void render_annotations_tab();
 	void render_history_tab();

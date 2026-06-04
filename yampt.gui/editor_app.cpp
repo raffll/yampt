@@ -1351,39 +1351,47 @@ void editor_app_t::render_bottom_panel()
 		return;
 	}
 
-	ImGui::BeginChild("BottomPanel", ImVec2(0, bottom_height_), ImGuiChildFlags_Borders);
+	float total_height = bottom_height_;
+	float splitter_h = 6.0f;
+	float editor_height = total_height - info_height_ - splitter_h;
+	if (editor_height < 50.0f)
+		editor_height = 50.0f;
 
-	if (!ImGui::BeginTabBar("BottomTabs"))
+	ImGui::BeginChild("EditorPanel", ImVec2(0, editor_height), ImGuiChildFlags_Borders);
+	if (selected_row_ < 0 || selected_row_ >= static_cast<int>(left_rows_.size()))
 	{
+		ImGui::TextDisabled("No record selected");
 		if (richedit_visible_ && richedit_hwnd_)
 		{
 			ShowWindow(richedit_hwnd_, SW_HIDE);
 			richedit_visible_ = false;
 		}
+	}
+	else
+	{
+		render_editor_tab();
+	}
+	ImGui::EndChild();
+
+	ImGui::PushID("info_splitter");
+	render_splitter_horizontal(info_height_, 50.0f, total_height - 80.0f);
+	ImGui::PopID();
+
+	render_info_panel();
+}
+
+void editor_app_t::render_info_panel()
+{
+	ImGui::BeginChild("InfoPanel", ImVec2(0, info_height_), ImGuiChildFlags_Borders);
+
+	if (!ImGui::BeginTabBar("InfoTabs"))
+	{
 		ImGui::EndChild();
 		return;
 	}
 
-	bool editor_tab_active = false;
-
-	if (ImGui::BeginTabItem("Editor"))
-	{
-		active_bottom_tab_ = 0;
-		editor_tab_active = true;
-		if (selected_row_ < 0 || selected_row_ >= static_cast<int>(left_rows_.size()))
-		{
-			ImGui::TextDisabled("No record selected");
-		}
-		else
-		{
-			render_editor_tab();
-		}
-		ImGui::EndTabItem();
-	}
-
 	if (ImGui::BeginTabItem("Annotations"))
 	{
-		active_bottom_tab_ = 1;
 		if (selected_row_ < 0 || selected_row_ >= static_cast<int>(left_rows_.size()))
 			ImGui::TextDisabled("No record selected");
 		else
@@ -1393,7 +1401,6 @@ void editor_app_t::render_bottom_panel()
 
 	if (ImGui::BeginTabItem("History"))
 	{
-		active_bottom_tab_ = 2;
 		if (selected_row_ < 0 || selected_row_ >= static_cast<int>(left_rows_.size()))
 			ImGui::TextDisabled("No record selected");
 		else
@@ -1403,28 +1410,11 @@ void editor_app_t::render_bottom_panel()
 
 	if (ImGui::BeginTabItem("Speaker"))
 	{
-		active_bottom_tab_ = 3;
 		render_speaker_tab();
 		ImGui::EndTabItem();
 	}
 
 	ImGui::EndTabBar();
-
-	if (!editor_tab_active && richedit_visible_ && richedit_hwnd_)
-	{
-		ShowWindow(richedit_hwnd_, SW_HIDE);
-		richedit_visible_ = false;
-	}
-
-	if (editor_tab_active && (selected_row_ < 0 || selected_row_ >= static_cast<int>(left_rows_.size())))
-	{
-		if (richedit_visible_ && richedit_hwnd_)
-		{
-			ShowWindow(richedit_hwnd_, SW_HIDE);
-			richedit_visible_ = false;
-		}
-	}
-
 	ImGui::EndChild();
 }
 
