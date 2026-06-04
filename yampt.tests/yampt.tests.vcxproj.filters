@@ -56,6 +56,9 @@
     <ClCompile Include="..\external\yyjson.c">
       <Filter>external</Filter>
     </ClCompile>
+    <ClCompile Include="..\yampt\esm_converter.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\yampt\tools.hpp">
@@ -91,5 +94,8 @@
     <ClInclude Include="..\external\yyjson.h">
       <Filter>external</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cpp.hint" />
   </ItemGroup>
 </Project>
