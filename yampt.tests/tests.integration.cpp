@@ -127,6 +127,62 @@ TEST_CASE("make-base EN to DE", "[i]")
 	}
 }
 
+TEST_CASE("make-base EN to FR", "[i]")
+{
+	for (const auto & name : { "Morrowind", "Tribunal", "Bloodmoon" })
+	{
+		dict_creator_t creator(g_master_path + "fr/" + name + ".esm", g_master_path + "en/" + name + ".esm");
+		const auto & dict = creator.get_dict();
+
+		auto total = tools_t::get_number_of_elements_in_dict(dict);
+		REQUIRE(total > 0);
+
+		const auto & cell_chapter = dict.at(tools_t::rec_type_t::cell);
+		REQUIRE_FALSE(cell_chapter.empty());
+
+		bool found_translated = false;
+		for (const auto & entry : cell_chapter.records)
+		{
+			if (!entry.new_text.empty())
+			{
+				found_translated = true;
+				break;
+			}
+		}
+		REQUIRE(found_translated);
+
+		auto output = test_dir + "/" + name + "_en_fr.json";
+		dict_writer_t::write(dict, output);
+		REQUIRE(fs::exists(output));
+	}
+}
+
+TEST_CASE("log missing and duplicate cells to file", "[i]")
+{
+	std::ofstream missing_log("tests/missing_cells.txt");
+	std::ofstream dup_log("tests/duplicate_cells.txt");
+
+	for (const auto & lang : { "pl", "de", "fr" })
+	{
+		for (const auto & name : { "Morrowind", "Tribunal", "Bloodmoon" })
+		{
+			dict_creator_t creator(
+			    g_master_path + lang + "/" + name + ".esm",
+			    g_master_path + "en/" + name + ".esm");
+			const auto & dict = creator.get_dict();
+			const auto & cell_chapter = dict.at(tools_t::rec_type_t::cell);
+
+			for (const auto & entry : cell_chapter.records)
+			{
+				if (entry.status == tools_t::status_t::missing)
+					missing_log << lang << "/" << name << ": " << entry.old_text << "\n";
+				if (entry.status == tools_t::status_t::duplicate)
+					dup_log << lang << "/" << name << ": " << entry.key_text << " | old=" << entry.old_text << " | new=" << entry.new_text << "\n";
+			}
+		}
+	}
+}
+
 TEST_CASE("merge EN to PL", "[i]")
 {
 	dict_merger_t merger(

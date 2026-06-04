@@ -640,9 +640,9 @@ std::string dict_creator_t::make_exterior_coord_key(const std::string & data_con
 	return "GRID[" + std::to_string(grid_x) + "," + std::to_string(grid_y) + "]";
 }
 
-dict_creator_t::door_index_t dict_creator_t::build_door_index(esm_reader_t & esm_src)
+dict_creator_t::cell_index_t dict_creator_t::build_cell_index(esm_reader_t & esm_src, std::set<std::string> & duplicates)
 {
-	door_index_t index;
+	cell_index_t index;
 
 	for (size_t i = 0; i < esm_src.get_records().size(); ++i)
 	{
@@ -657,28 +657,31 @@ dict_creator_t::door_index_t dict_creator_t::build_door_index(esm_reader_t & esm
 		if (!is_interior_cell(esm_src.get_value().content))
 			continue;
 
-		auto fingerprint = make_dodt_fingerprint(esm_src);
+		auto fingerprint = make_cell_fingerprint(esm_src);
 		if (fingerprint.empty())
 			continue;
 
 		auto result = index.insert({ fingerprint, i });
 		if (!result.second)
 		{
+			duplicates.insert(fingerprint);
 			esm_src.set_value("NAME");
 			std::string cell_name = esm_src.get_value().exist ? esm_src.get_value().text : "<unnamed>";
-			tools_t::add_log("[warning] door index: duplicate fingerprint in CELL \"" + cell_name + "\"\r\n");
+			tools_t::add_log("[warning] cell index: duplicate fingerprint in CELL \"" + cell_name + "\"\r\n");
 		}
 	}
 
 	return index;
 }
 
-std::string dict_creator_t::make_dodt_fingerprint(esm_reader_t & esm_src)
+std::string dict_creator_t::make_cell_fingerprint(esm_reader_t & esm_src)
 {
 	const auto & content = esm_src.get_record().content;
 	size_t pos = 16;
 
 	std::vector<std::string> dodts;
+	std::vector<std::string> ref_ids;
+	bool after_frmr = false;
 
 	while (pos + 8 <= content.size())
 	{
@@ -692,87 +695,9 @@ std::string dict_creator_t::make_dodt_fingerprint(esm_reader_t & esm_src)
 		if (sub_id == "DODT" && sub_size >= 12)
 			dodts.push_back(content.substr(pos + 8, 12));
 
-		pos += 8 + sub_size;
-	}
-
-	if (dodts.empty())
-		return {};
-
-	std::sort(dodts.begin(), dodts.end());
-	std::string fingerprint;
-	for (const auto & d : dodts)
-		fingerprint += d;
-
-	return fingerprint;
-}
-
-std::string dict_creator_t::make_dodt_key_text(const std::string & fingerprint)
-{
-	std::string result = "DODT";
-
-	for (size_t i = 0; i + 12 <= fingerprint.size(); i += 12)
-	{
-		float fx, fy, fz;
-		std::memcpy(&fx, fingerprint.data() + i, 4);
-		std::memcpy(&fy, fingerprint.data() + i + 4, 4);
-		std::memcpy(&fz, fingerprint.data() + i + 8, 4);
-
-		result += "[" + std::to_string(static_cast<int>(fx)) + ","
-		              + std::to_string(static_cast<int>(fy)) + ","
-		              + std::to_string(static_cast<int>(fz)) + "]";
-	}
-
-	return result;
-}
-
-dict_creator_t::refs_index_t dict_creator_t::build_refs_index(esm_reader_t & esm_src)
-{
-	refs_index_t index;
-
-	for (size_t i = 0; i < esm_src.get_records().size(); ++i)
-	{
-		esm_src.select_record(i);
-		if (esm_src.get_record().id != "CELL")
-			continue;
-
-		esm_src.set_value("DATA");
-		if (!esm_src.get_value().exist)
-			continue;
-
-		if (!is_interior_cell(esm_src.get_value().content))
-			continue;
-
-		auto fingerprint = make_refs_fingerprint(esm_src);
-		if (fingerprint.empty())
-			continue;
-
-		index.insert({ fingerprint, i });
-	}
-
-	return index;
-}
-
-std::string dict_creator_t::make_refs_fingerprint(esm_reader_t & esm_src)
-{
-	const auto & content = esm_src.get_record().content;
-	size_t pos = 16;
-
-	std::vector<std::string> ref_ids;
-	bool in_persistent = false;
-
-	while (pos + 8 <= content.size())
-	{
-		std::string sub_id = content.substr(pos, 4);
-		size_t sub_size = tools_t::convert_string_byte_array_to_uint(content.substr(pos + 4, 4));
-		if (sub_size == 0)
-			break;
-		if (pos + 8 + sub_size > content.size())
-			break;
-
 		if (sub_id == "FRMR")
-			in_persistent = true;
-
-		if (sub_id == "NAME" && in_persistent && sub_size > 0)
+			after_frmr = true;
+		else if (sub_id == "NAME" && after_frmr && sub_size > 0)
 		{
 			std::string obj_id = content.substr(pos + 8, sub_size);
 			size_t null_pos = obj_id.find('\0');
@@ -780,47 +705,42 @@ std::string dict_creator_t::make_refs_fingerprint(esm_reader_t & esm_src)
 				obj_id = obj_id.substr(0, null_pos);
 			if (!obj_id.empty())
 				ref_ids.push_back(obj_id);
-			in_persistent = false;
+			after_frmr = false;
 		}
 
 		pos += 8 + sub_size;
 	}
 
-	if (ref_ids.empty())
+	if (dodts.empty() && ref_ids.empty())
 		return {};
 
+	std::sort(dodts.begin(), dodts.end());
 	std::sort(ref_ids.begin(), ref_ids.end());
+
 	std::string fingerprint;
+	for (const auto & d : dodts)
+		fingerprint += d;
+	fingerprint += '\x01';
 	for (const auto & id : ref_ids)
 	{
 		fingerprint += id;
 		fingerprint += '\0';
 	}
-
 	return fingerprint;
 }
 
-std::string dict_creator_t::make_refs_key_text(const std::string & fingerprint)
+std::string dict_creator_t::make_cell_key_text(const std::string & fingerprint)
 {
-	std::string result = "REFS[";
-	bool first = true;
-
-	size_t start = 0;
-	while (start < fingerprint.size())
+	uint64_t hash = 14695981039346656037ULL;
+	for (unsigned char c : fingerprint)
 	{
-		size_t end = fingerprint.find('\0', start);
-		if (end == std::string::npos)
-			end = fingerprint.size();
-
-		if (!first)
-			result += ',';
-		result += fingerprint.substr(start, end - start);
-		first = false;
-		start = end + 1;
+		hash ^= c;
+		hash *= 1099511628211ULL;
 	}
 
-	result += ']';
-	return result;
+	char buf[17];
+	std::snprintf(buf, sizeof(buf), "%016llx", static_cast<unsigned long long>(hash));
+	return "CELL^" + std::string(buf);
 }
 
 void dict_creator_t::make_dict_cell_unordered_exterior()
@@ -910,9 +830,11 @@ void dict_creator_t::make_dict_cell_unordered_exterior()
 
 void dict_creator_t::make_dict_cell_unordered_interior()
 {
-	auto door_index_esm = build_door_index(esm);
-	auto refs_index_esm = build_refs_index(esm);
+	std::set<std::string> duplicates;
+	auto cell_index_esm = build_cell_index(esm, duplicates);
 
+	std::unordered_map<std::string, int> dup_counter;
+	std::set<size_t> matched_native_records;
 	std::vector<std::pair<size_t, std::string>> missing_cells;
 
 	reset_counters();
@@ -935,56 +857,217 @@ void dict_creator_t::make_dict_cell_unordered_interior()
 		if (!is_interior_cell(esm_ref.get_value().content))
 			continue;
 
-		auto fingerprint = make_dodt_fingerprint(esm_ref);
-		if (!fingerprint.empty())
+		auto fingerprint = make_cell_fingerprint(esm_ref);
+		if (fingerprint.empty())
 		{
-			auto match_it = door_index_esm.find(fingerprint);
-			if (match_it != door_index_esm.end())
-			{
-				esm.select_record(match_it->second);
-				esm.set_value("NAME");
-				const auto & val_text = esm.get_value().text;
-				auto key_text = make_dodt_key_text(fingerprint);
-				insert_entry(key_text, ref_cell_name, val_text, tools_t::rec_type_t::cell);
-
-				if (!is_make_mode)
-				{
-					auto * entry = dict.at(tools_t::rec_type_t::cell).find(key_text);
-					if (entry && entry->status.empty())
-						entry->status = tools_t::status_t::matched_by_coords;
-				}
-				continue;
-			}
+			missing_cells.push_back({ i, ref_cell_name });
+			counter_missing++;
+			continue;
 		}
 
-		auto refs_fp = make_refs_fingerprint(esm_ref);
-		if (!refs_fp.empty())
+		auto match_it = cell_index_esm.find(fingerprint);
+		if (match_it == cell_index_esm.end())
 		{
-			auto match_it = refs_index_esm.find(refs_fp);
-			if (match_it != refs_index_esm.end())
-			{
-				esm.select_record(match_it->second);
-				esm.set_value("NAME");
-				const auto & val_text = esm.get_value().text;
-				auto key_text = make_refs_key_text(refs_fp);
-				insert_entry(key_text, ref_cell_name, val_text, tools_t::rec_type_t::cell);
-
-				if (!is_make_mode)
-				{
-					auto * entry = dict.at(tools_t::rec_type_t::cell).find(key_text);
-					if (entry && entry->status.empty())
-						entry->status = tools_t::status_t::matched_by_coords;
-				}
-				continue;
-			}
+			missing_cells.push_back({ i, ref_cell_name });
+			counter_missing++;
+			continue;
 		}
 
-		missing_cells.push_back({ i, ref_cell_name });
-		counter_missing++;
+		esm.select_record(match_it->second);
+		esm.set_value("NAME");
+		const auto & val_text = esm.get_value().text;
+
+		auto key_text = make_cell_key_text(fingerprint);
+		if (duplicates.count(fingerprint))
+		{
+			key_text += "^DUP_" + std::to_string(dup_counter[fingerprint]++);
+			insert_entry(key_text, ref_cell_name, ref_cell_name, tools_t::rec_type_t::cell);
+
+			auto * entry = dict.at(tools_t::rec_type_t::cell).find(key_text);
+			if (entry)
+				entry->status = tools_t::status_t::duplicate;
+			continue;
+		}
+
+		matched_native_records.insert(match_it->second);
+		insert_entry(key_text, ref_cell_name, val_text, tools_t::rec_type_t::cell);
+
+		if (!is_make_mode)
+		{
+			auto * entry = dict.at(tools_t::rec_type_t::cell).find(key_text);
+			if (entry && entry->status.empty())
+				entry->status = tools_t::status_t::matched_by_coords;
+		}
 	}
 
+	make_dict_cell_unordered_interior_heuristic(missing_cells, matched_native_records);
 	make_dict_cell_unordered_add_missing(missing_cells);
 	print_log_line(tools_t::rec_type_t::cell);
+}
+
+static std::vector<std::string> split_words(const std::string & name)
+{
+	std::vector<std::string> words;
+	std::string word;
+	for (char c : name)
+	{
+		if (std::isalnum(static_cast<unsigned char>(c)))
+			word += static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+		else
+		{
+			if (!word.empty())
+			{
+				words.push_back(word);
+				word.clear();
+			}
+		}
+	}
+	if (!word.empty())
+		words.push_back(word);
+	return words;
+}
+
+static int count_shared_words(const std::vector<std::string> & a, const std::vector<std::string> & b)
+{
+	int count = 0;
+	for (const auto & w : a)
+	{
+		for (const auto & w2 : b)
+		{
+			if (w == w2)
+			{
+				count++;
+				break;
+			}
+		}
+	}
+	return count;
+}
+
+void dict_creator_t::make_dict_cell_unordered_interior_heuristic(
+    std::vector<std::pair<size_t, std::string>> & missing_cells,
+    const std::set<size_t> & matched_native_records)
+{
+	std::ofstream log("heuristic_log.txt", std::ios::app);
+
+	std::vector<std::pair<size_t, std::string>> native_cells;
+
+	for (size_t i = 0; i < esm.get_records().size(); ++i)
+	{
+		if (matched_native_records.count(i))
+			continue;
+
+		esm.select_record(i);
+		if (esm.get_record().id != "CELL")
+			continue;
+
+		esm.set_value("DATA");
+		if (!esm.get_value().exist)
+			continue;
+
+		if (!is_interior_cell(esm.get_value().content))
+			continue;
+
+		esm.set_value("NAME");
+		if (!esm.get_value().exist || esm.get_value().text.empty())
+			continue;
+
+		native_cells.push_back({ i, esm.get_value().text });
+	}
+
+	log << "=== HEURISTIC START ===\n";
+	log << "Foreign missing: " << missing_cells.size() << "\n";
+	log << "Native unmatched: " << native_cells.size() << "\n\n";
+
+	std::set<size_t> matched_native;
+	std::set<size_t> matched_foreign;
+
+	int iteration = 0;
+	bool progress = true;
+	while (progress)
+	{
+		progress = false;
+		iteration++;
+		for (size_t fi = 0; fi < missing_cells.size(); ++fi)
+		{
+			if (matched_foreign.count(fi))
+				continue;
+
+			auto ref_words = split_words(missing_cells[fi].second);
+			int best_score = 0;
+			int best_count = 0;
+			size_t best_ni = 0;
+			std::string best_name;
+
+			for (size_t ni = 0; ni < native_cells.size(); ++ni)
+			{
+				if (matched_native.count(ni))
+					continue;
+
+				auto esm_words = split_words(native_cells[ni].second);
+				int score = count_shared_words(ref_words, esm_words);
+				if (score > best_score)
+				{
+					best_score = score;
+					best_count = 1;
+					best_ni = ni;
+					best_name = native_cells[ni].second;
+				}
+				else if (score == best_score && score > 0)
+				{
+					best_count++;
+				}
+			}
+
+			if (best_score > 0 && best_count == 1)
+			{
+				matched_foreign.insert(fi);
+				matched_native.insert(best_ni);
+
+				log << "[MATCH iter=" << iteration << " score=" << best_score << "] \""
+				    << missing_cells[fi].second << "\" -> \"" << best_name << "\"\n";
+
+				auto key_text = "CELL_H^" + missing_cells[fi].second;
+				insert_entry(key_text, missing_cells[fi].second, best_name, tools_t::rec_type_t::cell);
+
+				if (!is_make_mode)
+				{
+					auto * entry = dict.at(tools_t::rec_type_t::cell).find(key_text);
+					if (entry && entry->status.empty())
+						entry->status = tools_t::status_t::matched_by_coords;
+				}
+				progress = true;
+			}
+			else if (best_score > 0 && best_count > 1)
+			{
+				log << "[TIE iter=" << iteration << " score=" << best_score << " count=" << best_count << "] \""
+				    << missing_cells[fi].second << "\"\n";
+			}
+		}
+	}
+
+	log << "\n--- UNMATCHED FOREIGN ---\n";
+	for (size_t fi = 0; fi < missing_cells.size(); ++fi)
+	{
+		if (!matched_foreign.count(fi))
+			log << "  " << missing_cells[fi].second << "\n";
+	}
+
+	log << "\n--- UNMATCHED NATIVE ---\n";
+	for (size_t ni = 0; ni < native_cells.size(); ++ni)
+	{
+		if (!matched_native.count(ni))
+			log << "  " << native_cells[ni].second << "\n";
+	}
+	log << "\n";
+
+	std::vector<std::pair<size_t, std::string>> still_missing;
+	for (size_t fi = 0; fi < missing_cells.size(); ++fi)
+	{
+		if (!matched_foreign.count(fi))
+			still_missing.push_back(missing_cells[fi]);
+	}
+	missing_cells = std::move(still_missing);
 }
 
 void dict_creator_t::make_dict_dial_unordered()

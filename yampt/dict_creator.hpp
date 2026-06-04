@@ -77,14 +77,13 @@ private:
 
 	static bool is_interior_cell(const std::string & data_content);
 	static std::string make_exterior_coord_key(const std::string & data_content);
-	using door_index_t = std::unordered_map<std::string, size_t>;
-	using refs_index_t = std::unordered_map<std::string, size_t>;
-	door_index_t build_door_index(esm_reader_t & esm_src);
-	refs_index_t build_refs_index(esm_reader_t & esm_src);
-	static std::string make_dodt_fingerprint(esm_reader_t & esm_src);
-	static std::string make_dodt_key_text(const std::string & fingerprint);
-	static std::string make_refs_fingerprint(esm_reader_t & esm_src);
-	static std::string make_refs_key_text(const std::string & fingerprint);
+	using cell_index_t = std::unordered_map<std::string, size_t>;
+	cell_index_t build_cell_index(esm_reader_t & esm_src, std::set<std::string> & duplicates);
+	static std::string make_cell_fingerprint(esm_reader_t & esm_src);
+	static std::string make_cell_key_text(const std::string & fingerprint);
+	void make_dict_cell_unordered_interior_heuristic(
+	    std::vector<std::pair<size_t, std::string>> & missing_cells,
+	    const std::set<size_t> & matched_native_records);
 
 	void make_dict_dial_unordered();
 	patterns_ext_t make_dict_dial_unordered_patterns_ext();
