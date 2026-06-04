@@ -1217,7 +1217,7 @@ void editor_app_t::render_text_with_topic_highlights(const std::string & text)
 
 		while (s < word_start)
 		{
-			const char * line_end = font->CalcWordWrapPositionA(font_size / font->FontSize, s, text_end, wrap_width);
+			const char * line_end = font->CalcWordWrapPositionA(1.0f, s, text_end, wrap_width);
 			if (line_end == s)
 				++line_end;
 
@@ -1565,11 +1565,18 @@ void editor_app_t::render_annotations_tab()
 
 		if (!hyperlinks.empty())
 		{
+			std::sort(hyperlinks.begin(), hyperlinks.end(),
+			    [](const annotation_t * a, const annotation_t * b) { return a->source < b->source; });
+
 			ImGui::TextColored(ImVec4(0.3f, 0.5f, 0.8f, 1.0f), "Hyperlinks");
-			for (int hi = 0; hi < static_cast<int>(hyperlinks.size()); ++hi)
+			std::set<std::string> seen_hyperlinks;
+			int hi = 0;
+			for (const auto * ann : hyperlinks)
 			{
-				const auto * ann = hyperlinks[hi];
-				ImGui::PushID(hi);
+				std::string key = ann->old_text + "|" + ann->new_text + "|" + ann->source;
+				if (!seen_hyperlinks.insert(key).second)
+					continue;
+				ImGui::PushID(hi++);
 				std::string label = ann->old_text + " -> " + ann->new_text;
 				if (!ann->source.empty())
 					label += "  [" + ann->source + "]";
@@ -1582,11 +1589,18 @@ void editor_app_t::render_annotations_tab()
 
 		if (!glossary.empty())
 		{
+			std::sort(glossary.begin(), glossary.end(),
+			    [](const annotation_t * a, const annotation_t * b) { return a->source < b->source; });
+
 			ImGui::TextColored(ImVec4(0.6f, 0.8f, 0.4f, 1.0f), "Glossary");
-			for (int gi = 0; gi < static_cast<int>(glossary.size()); ++gi)
+			std::set<std::string> seen_glossary;
+			int gi = 0;
+			for (const auto * ann : glossary)
 			{
-				const auto * ann = glossary[gi];
-				ImGui::PushID(1000 + gi);
+				std::string key = ann->old_text + "|" + ann->new_text + "|" + ann->source;
+				if (!seen_glossary.insert(key).second)
+					continue;
+				ImGui::PushID(1000 + gi++);
 				std::string label = ann->old_text + " -> " + ann->new_text;
 				if (!ann->source.empty())
 					label += "  [" + ann->source + "]";
