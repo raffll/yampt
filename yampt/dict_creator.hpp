@@ -4,6 +4,8 @@
 #include "tools.hpp"
 #include "esm_reader.hpp"
 
+class translation_engine_t;
+
 class dict_creator_t
 {
 public:
@@ -19,7 +21,7 @@ public:
 
 	dict_creator_t(const std::string & plugin_path, const tools_t::dict_t * base_dict = nullptr);
 
-	dict_creator_t(const std::string & path, const std::string & path_ext);
+	dict_creator_t(const std::string & path, const std::string & path_ext, translation_engine_t * translation_engine = nullptr);
 
 private:
 	struct pattern_t
@@ -101,6 +103,7 @@ private:
 	const tools_t::dict_t * base_dict = nullptr;
 	tools_t::dict_t dict;
 	bool is_make_mode = false;
+	translation_engine_t * translation_engine_ = nullptr;
 
 	int counter_created = 0;
 	int counter_missing = 0;

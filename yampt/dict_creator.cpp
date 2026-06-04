@@ -1,4 +1,5 @@
 #include "dict_creator.hpp"
+#include "translation_engine.hpp"
 
 dict_creator_t::dict_creator_t(const std::string & plugin_path, const tools_t::dict_t * base_dict)
     : esm(plugin_path)
@@ -12,11 +13,12 @@ dict_creator_t::dict_creator_t(const std::string & plugin_path, const tools_t::d
 		make_dict();
 }
 
-dict_creator_t::dict_creator_t(const std::string & path, const std::string & path_ext)
+dict_creator_t::dict_creator_t(const std::string & path, const std::string & path_ext, translation_engine_t * translation_engine)
     : esm(path)
     , esm_ext(path_ext)
     , esm_ref(esm_ext)
     , is_make_mode(false)
+    , translation_engine_(translation_engine)
 {
 	dict = tools_t::initialize_dict();
 
@@ -977,7 +979,12 @@ void dict_creator_t::make_dict_cell_unordered_interior_heuristic(
 
 	log << "=== HEURISTIC START ===\n";
 	log << "Foreign missing: " << missing_cells.size() << "\n";
-	log << "Native unmatched: " << native_cells.size() << "\n\n";
+	log << "Native unmatched: " << native_cells.size() << "\n";
+	if (translation_engine_ && translation_engine_->is_loaded())
+		log << "Translation engine: active\n";
+	else
+		log << "Translation engine: inactive (fallback to original names)\n";
+	log << "\n";
 
 	std::set<size_t> matched_native;
 	std::set<size_t> matched_foreign;
@@ -993,7 +1000,25 @@ void dict_creator_t::make_dict_cell_unordered_interior_heuristic(
 			if (matched_foreign.count(fi))
 				continue;
 
-			auto ref_words = split_words(missing_cells[fi].second);
+			const auto & foreign_name = missing_cells[fi].second;
+			std::vector<std::string> compare_words;
+			bool used_translation = false;
+			std::string translated_text;
+
+			if (translation_engine_ && translation_engine_->is_loaded())
+			{
+				auto result = translation_engine_->translate(foreign_name);
+				if (result.success)
+				{
+					translated_text = result.text;
+					compare_words = split_words(translated_text);
+					used_translation = true;
+				}
+			}
+
+			if (!used_translation)
+				compare_words = split_words(foreign_name);
+
 			int best_score = 0;
 			int best_count = 0;
 			size_t best_ni = 0;
@@ -1005,7 +1030,7 @@ void dict_creator_t::make_dict_cell_unordered_interior_heuristic(
 					continue;
 
 				auto esm_words = split_words(native_cells[ni].second);
-				int score = count_shared_words(ref_words, esm_words);
+				int score = count_shared_words(compare_words, esm_words);
 				if (score > best_score)
 				{
 					best_score = score;
@@ -1024,11 +1049,19 @@ void dict_creator_t::make_dict_cell_unordered_interior_heuristic(
 				matched_foreign.insert(fi);
 				matched_native.insert(best_ni);
 
-				log << "[MATCH iter=" << iteration << " score=" << best_score << "] \""
-				    << missing_cells[fi].second << "\" -> \"" << best_name << "\"\n";
+				if (used_translation)
+				{
+					log << "[TRANSLATE iter=" << iteration << " score=" << best_score << "] \""
+					    << foreign_name << "\" => \"" << translated_text << "\" -> \"" << best_name << "\"\n";
+				}
+				else
+				{
+					log << "[MATCH iter=" << iteration << " score=" << best_score << "] \""
+					    << foreign_name << "\" -> \"" << best_name << "\"\n";
+				}
 
-				auto key_text = "CELL_H^" + missing_cells[fi].second;
-				insert_entry(key_text, missing_cells[fi].second, best_name, tools_t::rec_type_t::cell);
+				auto key_text = "CELL_H^" + foreign_name;
+				insert_entry(key_text, foreign_name, best_name, tools_t::rec_type_t::cell);
 
 				if (!is_make_mode)
 				{
@@ -1041,7 +1074,7 @@ void dict_creator_t::make_dict_cell_unordered_interior_heuristic(
 			else if (best_score > 0 && best_count > 1)
 			{
 				log << "[TIE iter=" << iteration << " score=" << best_score << " count=" << best_count << "] \""
-				    << missing_cells[fi].second << "\"\n";
+				    << foreign_name << "\"\n";
 			}
 		}
 	}

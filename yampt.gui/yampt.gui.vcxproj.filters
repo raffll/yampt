@@ -26,6 +26,9 @@
     <ClCompile Include="annotation_manager.cpp" />
     <ClCompile Include="encoding_utils.cpp" />
     <ClCompile Include="spell_checker.cpp" />
+    <ClCompile Include="..\yampt\translation_engine.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
     <ClCompile Include="..\yampt\tools.cpp">
       <Filter>yampt</Filter>
     </ClCompile>
@@ -74,6 +77,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dict_workspace.hpp" />
+    <ClInclude Include="..\yampt\translation_engine.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
     <ClInclude Include="..\yampt\tools.hpp">
       <Filter>yampt</Filter>
     </ClInclude>
