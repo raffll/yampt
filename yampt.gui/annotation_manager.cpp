@@ -106,7 +106,8 @@ std::vector<annotation_t> annotation_manager_t::annotate(const std::string & tex
 	return results;
 }
 
-std::vector<annotation_t> annotation_manager_t::annotate_translated(const std::string & text, tools_t::rec_type_t type) const
+std::vector<annotation_t> annotation_manager_t::annotate_translated(const std::string & text, tools_t::rec_type_t type)
+    const
 {
 	std::vector<annotation_t> results;
 

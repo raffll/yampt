@@ -829,7 +829,8 @@ void editor_app_t::render_main_panel()
 	}
 
 	ImGui::TableSetupScrollFreeze(0, 1);
-	ImGui::TableSetupColumn("ID", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_DefaultSort, config_.column_widths[0]);
+	ImGui::TableSetupColumn(
+	    "ID", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_DefaultSort, config_.column_widths[0]);
 	ImGui::TableSetupColumn("Original", ImGuiTableColumnFlags_WidthStretch);
 	ImGui::TableSetupColumn("Translation", ImGuiTableColumnFlags_WidthStretch);
 	ImGui::TableSetupColumn("Status", ImGuiTableColumnFlags_WidthFixed, config_.column_widths[3]);
@@ -843,37 +844,40 @@ void editor_app_t::render_main_panel()
 		bool ascending = (spec.SortDirection == ImGuiSortDirection_Ascending);
 		int col = spec.ColumnIndex;
 
-		std::sort(left_rows_.begin(), left_rows_.end(),
+		std::sort(
+		    left_rows_.begin(),
+		    left_rows_.end(),
 		    [&](const row_ref_t & a, const row_ref_t & b)
-		    {
-			    auto it_a = active_dict.find(a.type);
-			    auto it_b = active_dict.find(b.type);
-			    if (it_a == active_dict.end() || it_b == active_dict.end())
-				    return false;
-			    if (a.record_index >= it_a->second.records.size() || b.record_index >= it_b->second.records.size())
-				    return false;
-			    const auto & ea = it_a->second.records[a.record_index];
-			    const auto & eb = it_b->second.records[b.record_index];
+		{
+			auto it_a = active_dict.find(a.type);
+			auto it_b = active_dict.find(b.type);
+			if (it_a == active_dict.end() || it_b == active_dict.end())
+				return false;
+			if (a.record_index >= it_a->second.records.size() || b.record_index >= it_b->second.records.size())
+				return false;
+			const auto & ea = it_a->second.records[a.record_index];
+			const auto & eb = it_b->second.records[b.record_index];
 
-			    int cmp = 0;
-			    if (col == 0)
-				    cmp = ea.key_text.compare(eb.key_text);
-			    else if (col == 1)
-				    cmp = ea.old_text.compare(eb.old_text);
-			    else if (col == 2)
-				    cmp = ea.new_text.compare(eb.new_text);
-			    else if (col == 3)
-				    cmp = ea.status.compare(eb.status);
+			int cmp = 0;
+			if (col == 0)
+				cmp = ea.key_text.compare(eb.key_text);
+			else if (col == 1)
+				cmp = ea.old_text.compare(eb.old_text);
+			else if (col == 2)
+				cmp = ea.new_text.compare(eb.new_text);
+			else if (col == 3)
+				cmp = ea.status.compare(eb.status);
 
-			    return ascending ? (cmp < 0) : (cmp > 0);
-		    });
+			return ascending ? (cmp < 0) : (cmp > 0);
+		});
 
 		left_lookup_.clear();
 		for (int i = 0; i < static_cast<int>(left_rows_.size()); ++i)
 		{
 			auto it2 = active_dict.find(left_rows_[i].type);
 			if (it2 != active_dict.end() && left_rows_[i].record_index < it2->second.records.size())
-				left_lookup_[make_lookup_key(left_rows_[i].type, it2->second.records[left_rows_[i].record_index].key_text)] = i;
+				left_lookup_[make_lookup_key(
+				    left_rows_[i].type, it2->second.records[left_rows_[i].record_index].key_text)] = i;
 		}
 
 		sort_specs->SpecsDirty = false;
@@ -1648,13 +1652,15 @@ void editor_app_t::render_annotations_tab()
 
 		if (!hyperlinks.empty())
 		{
-			std::sort(hyperlinks.begin(), hyperlinks.end(),
+			std::sort(
+			    hyperlinks.begin(),
+			    hyperlinks.end(),
 			    [](const annotation_t * a, const annotation_t * b)
-			    {
-				    if (a->source != b->source)
-					    return a->source < b->source;
-				    return a->old_text < b->old_text;
-			    });
+			{
+				if (a->source != b->source)
+					return a->source < b->source;
+				return a->old_text < b->old_text;
+			});
 
 			ImGui::TextColored(ImVec4(0.3f, 0.5f, 0.8f, 1.0f), "Hyperlinks");
 			std::set<std::string> seen_hyperlinks;
@@ -1675,13 +1681,15 @@ void editor_app_t::render_annotations_tab()
 
 		if (!glossary.empty())
 		{
-			std::sort(glossary.begin(), glossary.end(),
+			std::sort(
+			    glossary.begin(),
+			    glossary.end(),
 			    [](const annotation_t * a, const annotation_t * b)
-			    {
-				    if (a->source != b->source)
-					    return a->source < b->source;
-				    return a->old_text < b->old_text;
-			    });
+			{
+				if (a->source != b->source)
+					return a->source < b->source;
+				return a->old_text < b->old_text;
+			});
 
 			ImGui::TextColored(ImVec4(0.6f, 0.8f, 0.4f, 1.0f), "Glossary");
 			std::set<std::string> seen_glossary;
@@ -2409,7 +2417,10 @@ void editor_app_t::commit_richedit_text()
 	slot->modified_records.insert({ editing_type_, editing_record_index_ });
 }
 
-void editor_app_t::highlight_richedit_hyperlinks(const std::string & text, tools_t::rec_type_t type, const std::string & original_text)
+void editor_app_t::highlight_richedit_hyperlinks(
+    const std::string & text,
+    tools_t::rec_type_t type,
+    const std::string & original_text)
 {
 	if (!richedit_hwnd_)
 		return;
@@ -2438,7 +2449,7 @@ void editor_app_t::highlight_richedit_hyperlinks(const std::string & text, tools
 		return;
 
 	std::string clean = text;
-	for (size_t i = 0; i < clean.size(); )
+	for (size_t i = 0; i < clean.size();)
 	{
 		if (clean[i] == '\r' && i + 1 < clean.size() && clean[i + 1] == '\n')
 		{
@@ -2454,20 +2465,27 @@ void editor_app_t::highlight_richedit_hyperlinks(const std::string & text, tools
 
 	std::vector<int> byte_to_wchar(clean.size() + 1, 0);
 	int wchar_pos = 0;
-	for (size_t i = 0; i < clean.size(); )
+	for (size_t i = 0; i < clean.size();)
 	{
 		byte_to_wchar[i] = wchar_pos;
 		unsigned char c = static_cast<unsigned char>(clean[i]);
 		int char_len = 1;
-		if (c >= 0xF0) char_len = 4;
-		else if (c >= 0xE0) char_len = 3;
-		else if (c >= 0xC0) char_len = 2;
+		if (c >= 0xF0)
+			char_len = 4;
+		else if (c >= 0xE0)
+			char_len = 3;
+		else if (c >= 0xC0)
+			char_len = 2;
 
 		unsigned int codepoint = 0;
-		if (char_len == 1) codepoint = c;
-		else if (char_len == 2) codepoint = c & 0x1F;
-		else if (char_len == 3) codepoint = c & 0x0F;
-		else codepoint = c & 0x07;
+		if (char_len == 1)
+			codepoint = c;
+		else if (char_len == 2)
+			codepoint = c & 0x1F;
+		else if (char_len == 3)
+			codepoint = c & 0x0F;
+		else
+			codepoint = c & 0x07;
 
 		for (int j = 1; j < char_len && i + j < clean.size(); ++j)
 		{
