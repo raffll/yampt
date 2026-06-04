@@ -1196,7 +1196,8 @@ void editor_app_t::render_text_with_topic_highlights(const std::string & text)
 	ImGui::PopTextWrapPos();
 
 	ImDrawList * draw_list = ImGui::GetWindowDrawList();
-	ImU32 highlight_color = IM_COL32(70, 130, 200, 60);
+	ImU32 hyperlink_color = IM_COL32(70, 130, 200, 60);
+	ImU32 glossary_color = IM_COL32(70, 180, 70, 60);
 	ImFont * font = ImGui::GetFont();
 	float font_size = ImGui::GetFontSize();
 
@@ -1204,6 +1205,8 @@ void editor_app_t::render_text_with_topic_highlights(const std::string & text)
 	{
 		if (ann.start >= text.size() || ann.end > text.size())
 			continue;
+
+		ImU32 color = (ann.kind == annotation_t::glossary_term) ? glossary_color : hyperlink_color;
 
 		const char * text_start = text.c_str();
 		const char * text_end = text.c_str() + text.size();
@@ -1237,7 +1240,7 @@ void editor_app_t::render_text_with_topic_highlights(const std::string & text)
 		ImVec2 rect_min(start_pos.x + word_offset_x, line_y);
 		ImVec2 rect_max(start_pos.x + word_offset_x + word_width, line_y + font_size);
 
-		draw_list->AddRectFilled(rect_min, rect_max, highlight_color);
+		draw_list->AddRectFilled(rect_min, rect_max, color);
 	}
 }
 
@@ -1561,6 +1564,8 @@ void editor_app_t::render_annotations_tab()
 		{
 			if (ann.kind == annotation_t::dial_topic)
 				hyperlinks.push_back(&ann);
+			else if (ann.kind == annotation_t::glossary_term)
+				glossary.push_back(&ann);
 		}
 
 		if (!hyperlinks.empty())
