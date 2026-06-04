@@ -34,6 +34,7 @@ class annotation_manager_t
 public:
 	void rebuild(const std::vector<dict_source_t> & sources);
 	std::vector<annotation_t> annotate(const std::string & text, tools_t::rec_type_t type) const;
+	std::vector<annotation_t> annotate_translated(const std::string & text, tools_t::rec_type_t type) const;
 
 	void load_npc_flags(const std::string & path);
 	void load_enchantments(const std::string & path);

@@ -46,6 +46,7 @@ private:
 	bool show_quit_dialog_ = false;
 	bool show_unload_confirm_ = false;
 	int pending_unload_index_ = -1;
+	bool show_whitespace_ = false;
 
 	int selected_row_ = -1;
 	int scroll_to_row_ = -1;
@@ -149,6 +150,7 @@ private:
 	void set_richedit_text(const std::string & text);
 	std::string get_richedit_text() const;
 	void commit_richedit_text();
+	void highlight_richedit_hyperlinks(const std::string & text, tools_t::rec_type_t type, const std::string & original_text);
 
 	void render_splitter_vertical(float & width, float min_w, float max_w);
 	void render_splitter_horizontal(float & height, float min_h, float max_h);

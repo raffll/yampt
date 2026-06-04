@@ -527,6 +527,26 @@ void editor_app_t::render_toolbar()
 		save_user_dict_encoded();
 	}
 
+	if (ImGui::IsKeyPressed(ImGuiKey_F5) || (GetAsyncKeyState(VK_F5) & 1))
+	{
+		if (selected_row_ >= 0 && selected_row_ < static_cast<int>(left_rows_.size()))
+		{
+			const auto & f5_row = left_rows_[selected_row_];
+			auto * f5_slot = workspace_.get_active_slot();
+			if (f5_slot)
+			{
+				auto f5_it = f5_slot->data.find(f5_row.type);
+				if (f5_it != f5_slot->data.end() && f5_row.record_index < f5_it->second.records.size())
+				{
+					const auto & f5_entry = f5_it->second.records[f5_row.record_index];
+					std::string current_text = get_richedit_text();
+					set_richedit_text(current_text);
+					highlight_richedit_hyperlinks(current_text, f5_row.type, f5_entry.old_text);
+				}
+			}
+		}
+	}
+
 	ImGui::EndChild();
 }
 
@@ -1244,9 +1264,18 @@ void editor_app_t::render_text_with_topic_highlights(const std::string & text)
 	ImFont * font = ImGui::GetFont();
 	float font_size = ImGui::GetFontSize();
 
+	std::unordered_map<std::string, int> topic_counts;
+
 	for (const auto & ann : annotations)
 	{
 		if (ann.start >= text.size() || ann.end > text.size())
+			continue;
+
+		std::string key_lower = ann.old_text;
+		for (auto & c : key_lower)
+			c = static_cast<char>(tolower(static_cast<unsigned char>(c)));
+
+		if (++topic_counts[key_lower] > 1)
 			continue;
 
 		ImU32 color = (ann.kind == annotation_t::glossary_term) ? glossary_color : hyperlink_color;
@@ -1523,6 +1552,8 @@ void editor_app_t::render_editor_tab()
 
 		richedit_ignore_change_ = true;
 		set_richedit_text(entry.new_text);
+		if (row.type == tools_t::rec_type_t::info)
+			highlight_richedit_hyperlinks(entry.new_text, row.type, entry.old_text);
 		richedit_ignore_change_ = false;
 	}
 
@@ -1604,7 +1635,12 @@ void editor_app_t::render_annotations_tab()
 		if (!hyperlinks.empty())
 		{
 			std::sort(hyperlinks.begin(), hyperlinks.end(),
-			    [](const annotation_t * a, const annotation_t * b) { return a->source < b->source; });
+			    [](const annotation_t * a, const annotation_t * b)
+			    {
+				    if (a->source != b->source)
+					    return a->source < b->source;
+				    return a->old_text < b->old_text;
+			    });
 
 			ImGui::TextColored(ImVec4(0.3f, 0.5f, 0.8f, 1.0f), "Hyperlinks");
 			std::set<std::string> seen_hyperlinks;
@@ -1615,9 +1651,7 @@ void editor_app_t::render_annotations_tab()
 				if (!seen_hyperlinks.insert(key).second)
 					continue;
 				ImGui::PushID(hi++);
-				std::string label = ann->old_text + " -> " + ann->new_text;
-				if (!ann->source.empty())
-					label += "  [" + ann->source + "]";
+				std::string label = "[" + ann->source + "] " + ann->old_text + " -> " + ann->new_text;
 				if (ImGui::Selectable(label.c_str()))
 					ImGui::SetClipboardText(ann->new_text.c_str());
 				ImGui::PopID();
@@ -1628,7 +1662,12 @@ void editor_app_t::render_annotations_tab()
 		if (!glossary.empty())
 		{
 			std::sort(glossary.begin(), glossary.end(),
-			    [](const annotation_t * a, const annotation_t * b) { return a->source < b->source; });
+			    [](const annotation_t * a, const annotation_t * b)
+			    {
+				    if (a->source != b->source)
+					    return a->source < b->source;
+				    return a->old_text < b->old_text;
+			    });
 
 			ImGui::TextColored(ImVec4(0.6f, 0.8f, 0.4f, 1.0f), "Glossary");
 			std::set<std::string> seen_glossary;
@@ -1639,9 +1678,7 @@ void editor_app_t::render_annotations_tab()
 				if (!seen_glossary.insert(key).second)
 					continue;
 				ImGui::PushID(1000 + gi++);
-				std::string label = ann->old_text + " -> " + ann->new_text;
-				if (!ann->source.empty())
-					label += "  [" + ann->source + "]";
+				std::string label = "[" + ann->source + "] " + ann->old_text + " -> " + ann->new_text;
 				if (ImGui::Selectable(label.c_str()))
 					ImGui::SetClipboardText(ann->new_text.c_str());
 				ImGui::PopID();
@@ -2356,6 +2393,111 @@ void editor_app_t::commit_richedit_text()
 		prev_entry.status = tools_t::status_t::has_errors;
 	slot->dirty = true;
 	slot->modified_records.insert({ editing_type_, editing_record_index_ });
+}
+
+void editor_app_t::highlight_richedit_hyperlinks(const std::string & text, tools_t::rec_type_t type, const std::string & original_text)
+{
+	if (!richedit_hwnd_)
+		return;
+
+	if (type != tools_t::rec_type_t::info)
+		return;
+
+	auto original_annotations = annotations_mgr_.annotate(original_text, type);
+	if (original_annotations.empty())
+		return;
+
+	std::set<std::string> new_texts_to_highlight;
+	for (const auto & ann : original_annotations)
+	{
+		if (ann.kind != annotation_t::dial_topic)
+			continue;
+		if (ann.new_text.empty())
+			continue;
+		std::string new_lower = ann.new_text;
+		for (auto & c : new_lower)
+			c = static_cast<char>(tolower(static_cast<unsigned char>(c)));
+		new_texts_to_highlight.insert(new_lower);
+	}
+
+	if (new_texts_to_highlight.empty())
+		return;
+
+	std::string clean = text;
+	for (size_t i = 0; i < clean.size(); )
+	{
+		if (clean[i] == '\r' && i + 1 < clean.size() && clean[i + 1] == '\n')
+		{
+			clean.erase(i, 1);
+			continue;
+		}
+		++i;
+	}
+
+	std::string clean_lower = clean;
+	for (auto & c : clean_lower)
+		c = static_cast<char>(tolower(static_cast<unsigned char>(c)));
+
+	std::vector<int> byte_to_wchar(clean.size() + 1, 0);
+	int wchar_pos = 0;
+	for (size_t i = 0; i < clean.size(); )
+	{
+		byte_to_wchar[i] = wchar_pos;
+		unsigned char c = static_cast<unsigned char>(clean[i]);
+		int char_len = 1;
+		if (c >= 0xF0) char_len = 4;
+		else if (c >= 0xE0) char_len = 3;
+		else if (c >= 0xC0) char_len = 2;
+
+		unsigned int codepoint = 0;
+		if (char_len == 1) codepoint = c;
+		else if (char_len == 2) codepoint = c & 0x1F;
+		else if (char_len == 3) codepoint = c & 0x0F;
+		else codepoint = c & 0x07;
+
+		for (int j = 1; j < char_len && i + j < clean.size(); ++j)
+		{
+			byte_to_wchar[i + j] = wchar_pos;
+			codepoint = (codepoint << 6) | (static_cast<unsigned char>(clean[i + j]) & 0x3F);
+		}
+
+		wchar_pos += (codepoint > 0xFFFF) ? 2 : 1;
+		i += char_len;
+	}
+	byte_to_wchar[clean.size()] = wchar_pos;
+
+	SendMessageA(richedit_hwnd_, WM_SETREDRAW, FALSE, 0);
+
+	CHARRANGE orig_sel;
+	SendMessageA(richedit_hwnd_, EM_EXGETSEL, 0, (LPARAM)&orig_sel);
+
+	for (const auto & new_lower : new_texts_to_highlight)
+	{
+		size_t pos = 0;
+		int count = 0;
+		while ((pos = clean_lower.find(new_lower, pos)) != std::string::npos && count < 3)
+		{
+			size_t end_pos = pos + new_lower.size();
+
+			CHARRANGE range;
+			range.cpMin = byte_to_wchar[pos];
+			range.cpMax = byte_to_wchar[end_pos];
+			SendMessageA(richedit_hwnd_, EM_EXSETSEL, 0, (LPARAM)&range);
+
+			CHARFORMAT2A cf = {};
+			cf.cbSize = sizeof(cf);
+			cf.dwMask = CFM_BACKCOLOR;
+			cf.crBackColor = RGB(200, 220, 255);
+			SendMessageA(richedit_hwnd_, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
+
+			pos = end_pos;
+			++count;
+		}
+	}
+
+	SendMessageA(richedit_hwnd_, EM_EXSETSEL, 0, (LPARAM)&orig_sel);
+	SendMessageA(richedit_hwnd_, WM_SETREDRAW, TRUE, 0);
+	InvalidateRect(richedit_hwnd_, nullptr, TRUE);
 }
 
 void editor_app_t::render_splitter_horizontal(float & height, float min_h, float max_h)

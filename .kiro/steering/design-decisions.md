@@ -29,3 +29,9 @@ This applies to new code AND to fixes for existing code. When fixing a bug that 
 ## esm_ref Is Always esm or esm_ext
 
 `esm_ref` is a reference that points to either `esm` (in `--make` mode) or `esm_ext` (in `--make-base` mode). Both `esm` and `esm_ext` are always set and valid when the creator runs. Do not add null checks, optional wrappers, or validity guards around `esm_ref` usage.
+
+## Use old_text for Records Without Unique IDs
+
+For record types that don't have a unique composite ID (CELL, DIAL, SCTX, BNAM), always use `old_text` as the lookup/matching key — not `key_text`. The `old_text` field contains the original game text and is stable across dictionaries.
+
+All other record types (INFO, FNAM, GMST, RNAM, DESC, INDX, TEXT) have unique `key_text` values and can use `key_text` for lookups.

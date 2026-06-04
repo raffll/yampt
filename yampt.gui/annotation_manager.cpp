@@ -1,6 +1,7 @@
 #include "annotation_manager.hpp"
 #include "../yampt/dict_reader.hpp"
 #include <algorithm>
+#include <set>
 
 std::string annotation_manager_t::to_lower(const std::string & str)
 {
@@ -30,10 +31,10 @@ void annotation_manager_t::rebuild(const std::vector<dict_source_t> & sources)
 		{
 			for (const auto & entry : dial_it->second.records)
 			{
-				if (entry.key_text.empty())
+				if (entry.old_text.empty())
 					continue;
 
-				std::string key_lower = to_lower(entry.key_text);
+				std::string key_lower = to_lower(entry.old_text);
 				dial_topics_.push_back({ key_lower, entry.new_text, src.name });
 			}
 		}
@@ -100,6 +101,54 @@ std::vector<annotation_t> annotation_manager_t::annotate(const std::string & tex
 		}
 		if (!overlaps)
 			results.push_back(std::move(ann));
+	}
+
+	return results;
+}
+
+std::vector<annotation_t> annotation_manager_t::annotate_translated(const std::string & text, tools_t::rec_type_t type) const
+{
+	std::vector<annotation_t> results;
+
+	if (type != tools_t::rec_type_t::info)
+		return results;
+
+	if (text.empty())
+		return results;
+
+	std::string text_lower = to_lower(text);
+
+	std::set<std::string> seen;
+
+	for (const auto & topic : dial_topics_)
+	{
+		if (topic.new_text.empty())
+			continue;
+
+		std::string new_lower = to_lower(topic.new_text);
+		if (!seen.insert(new_lower).second)
+			continue;
+
+		size_t pos = 0;
+		while ((pos = text_lower.find(new_lower, pos)) != std::string::npos)
+		{
+			if (pos > 0 && is_alpha(text_lower[pos - 1]))
+			{
+				pos += new_lower.size();
+				continue;
+			}
+
+			annotation_t ann;
+			ann.start = pos;
+			ann.end = pos + new_lower.size();
+			ann.kind = annotation_t::dial_topic;
+			ann.old_text = text.substr(pos, new_lower.size());
+			ann.new_text = topic.new_text;
+			ann.source = topic.source;
+			results.push_back(std::move(ann));
+
+			pos += new_lower.size();
+		}
 	}
 
 	return results;
