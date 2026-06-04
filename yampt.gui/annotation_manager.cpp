@@ -20,9 +20,6 @@ void annotation_manager_t::rebuild(const std::vector<dict_source_t> & sources)
 	dial_topics_.clear();
 	glossary_terms_.clear();
 
-	std::unordered_map<std::string, topic_entry_t> topic_map;
-	std::unordered_map<std::string, topic_entry_t> glossary_map;
-
 	for (const auto & src : sources)
 	{
 		if (!src.dict)
@@ -37,8 +34,7 @@ void annotation_manager_t::rebuild(const std::vector<dict_source_t> & sources)
 					continue;
 
 				std::string key_lower = to_lower(entry.key_text);
-				if (topic_map.count(key_lower) == 0)
-					topic_map[key_lower] = { key_lower, entry.new_text, src.name };
+				dial_topics_.push_back({ key_lower, entry.new_text, src.name });
 			}
 		}
 
@@ -53,24 +49,15 @@ void annotation_manager_t::rebuild(const std::vector<dict_source_t> & sources)
 					continue;
 
 				std::string key_lower = to_lower(entry.old_text);
-				if (glossary_map.count(key_lower) == 0)
-					glossary_map[key_lower] = { key_lower, entry.new_text, src.name };
+				glossary_terms_.push_back({ key_lower, entry.new_text, src.name });
 			}
 		}
 	}
-
-	dial_topics_.reserve(topic_map.size());
-	for (auto & [key, entry] : topic_map)
-		dial_topics_.push_back(std::move(entry));
 
 	std::sort(
 	    dial_topics_.begin(),
 	    dial_topics_.end(),
 	    [](const topic_entry_t & a, const topic_entry_t & b) { return a.key_lower.size() > b.key_lower.size(); });
-
-	glossary_terms_.reserve(glossary_map.size());
-	for (auto & [key, entry] : glossary_map)
-		glossary_terms_.push_back(std::move(entry));
 
 	std::sort(
 	    glossary_terms_.begin(),

@@ -794,7 +794,7 @@ void editor_app_t::render_main_panel()
 	int & scroll_to_row = scroll_to_row_;
 
 	const ImGuiTableFlags flags = ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg |
-	                              ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV;
+	                              ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV | ImGuiTableFlags_Sortable;
 
 	if (!ImGui::BeginTable("##main_table", 5, flags))
 	{
@@ -803,12 +803,55 @@ void editor_app_t::render_main_panel()
 	}
 
 	ImGui::TableSetupScrollFreeze(0, 1);
-	ImGui::TableSetupColumn("ID", ImGuiTableColumnFlags_WidthFixed, config_.column_widths[0]);
+	ImGui::TableSetupColumn("ID", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_DefaultSort, config_.column_widths[0]);
 	ImGui::TableSetupColumn("Original", ImGuiTableColumnFlags_WidthStretch);
 	ImGui::TableSetupColumn("Translation", ImGuiTableColumnFlags_WidthStretch);
 	ImGui::TableSetupColumn("Status", ImGuiTableColumnFlags_WidthFixed, config_.column_widths[3]);
-	ImGui::TableSetupColumn("##validation", ImGuiTableColumnFlags_WidthFixed, 24.0f);
+	ImGui::TableSetupColumn("##validation", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoSort, 24.0f);
 	ImGui::TableHeadersRow();
+
+	ImGuiTableSortSpecs * sort_specs = ImGui::TableGetSortSpecs();
+	if (sort_specs != nullptr && sort_specs->SpecsDirty && sort_specs->SpecsCount > 0)
+	{
+		const auto & spec = sort_specs->Specs[0];
+		bool ascending = (spec.SortDirection == ImGuiSortDirection_Ascending);
+		int col = spec.ColumnIndex;
+
+		std::sort(left_rows_.begin(), left_rows_.end(),
+		    [&](const row_ref_t & a, const row_ref_t & b)
+		    {
+			    auto it_a = active_dict.find(a.type);
+			    auto it_b = active_dict.find(b.type);
+			    if (it_a == active_dict.end() || it_b == active_dict.end())
+				    return false;
+			    if (a.record_index >= it_a->second.records.size() || b.record_index >= it_b->second.records.size())
+				    return false;
+			    const auto & ea = it_a->second.records[a.record_index];
+			    const auto & eb = it_b->second.records[b.record_index];
+
+			    int cmp = 0;
+			    if (col == 0)
+				    cmp = ea.key_text.compare(eb.key_text);
+			    else if (col == 1)
+				    cmp = ea.old_text.compare(eb.old_text);
+			    else if (col == 2)
+				    cmp = ea.new_text.compare(eb.new_text);
+			    else if (col == 3)
+				    cmp = ea.status.compare(eb.status);
+
+			    return ascending ? (cmp < 0) : (cmp > 0);
+		    });
+
+		left_lookup_.clear();
+		for (int i = 0; i < static_cast<int>(left_rows_.size()); ++i)
+		{
+			auto it2 = active_dict.find(left_rows_[i].type);
+			if (it2 != active_dict.end() && left_rows_[i].record_index < it2->second.records.size())
+				left_lookup_[make_lookup_key(left_rows_[i].type, it2->second.records[left_rows_[i].record_index].key_text)] = i;
+		}
+
+		sort_specs->SpecsDirty = false;
+	}
 
 	float row_height = ImGui::GetTextLineHeightWithSpacing();
 
@@ -1568,7 +1611,7 @@ void editor_app_t::render_annotations_tab()
 			int hi = 0;
 			for (const auto * ann : hyperlinks)
 			{
-				std::string key = ann->old_text + "|" + ann->new_text + "|" + ann->source;
+				std::string key = ann->old_text + "|" + ann->new_text;
 				if (!seen_hyperlinks.insert(key).second)
 					continue;
 				ImGui::PushID(hi++);
@@ -1592,7 +1635,7 @@ void editor_app_t::render_annotations_tab()
 			int gi = 0;
 			for (const auto * ann : glossary)
 			{
-				std::string key = ann->old_text + "|" + ann->new_text + "|" + ann->source;
+				std::string key = ann->old_text + "|" + ann->new_text;
 				if (!seen_glossary.insert(key).second)
 					continue;
 				ImGui::PushID(1000 + gi++);
