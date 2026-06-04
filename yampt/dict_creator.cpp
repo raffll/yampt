@@ -375,6 +375,8 @@ void dict_creator_t::make_dict_fnam()
 			continue;
 		if (esm.get_key().text == "player")
 			continue;
+		if (esm.get_value().text.empty())
+			continue;
 
 		const auto & key_text = esm.get_record().id + "^" + esm.get_key().text;
 		const auto & new_text = esm.get_value().text;
@@ -616,7 +618,7 @@ void dict_creator_t::make_dict_info()
 		insert_entry(key_text, old_text, new_text, tools_t::rec_type_t::info);
 
 		esm.select_record(i);
-		esm.set_value("ANAM");
+		esm.set_value("ONAM");
 		if (!esm.get_value().exist || esm.get_value().text.empty())
 			continue;
 
@@ -687,7 +689,11 @@ std::string dict_creator_t::make_exterior_coord_key(const std::string & data_con
 	if (data_content.size() < 12)
 		return "";
 
-	return data_content.substr(4, 8);
+	int32_t grid_x, grid_y;
+	std::memcpy(&grid_x, data_content.data() + 4, 4);
+	std::memcpy(&grid_y, data_content.data() + 8, 4);
+
+	return "GRID[" + std::to_string(grid_x) + "," + std::to_string(grid_y) + "]";
 }
 
 dict_creator_t::door_index_t dict_creator_t::build_door_index(esm_reader_t & esm_src)
@@ -700,47 +706,79 @@ dict_creator_t::door_index_t dict_creator_t::build_door_index(esm_reader_t & esm
 		if (esm_src.get_record().id != "CELL")
 			continue;
 
-		const auto & content = esm_src.get_record().content;
-		size_t pos = 16;
+		esm_src.set_value("DATA");
+		if (!esm_src.get_value().exist)
+			continue;
 
-		std::string last_dodt;
+		if (!is_interior_cell(esm_src.get_value().content))
+			continue;
 
-		while (pos + 8 <= content.size())
+		auto fingerprint = make_dodt_fingerprint(esm_src);
+		if (fingerprint.empty())
+			continue;
+
+		auto result = index.insert({ fingerprint, i });
+		if (!result.second)
 		{
-			std::string sub_id = content.substr(pos, 4);
-			size_t sub_size = tools_t::convert_string_byte_array_to_uint(content.substr(pos + 4, 4));
-			if (sub_size == 0)
-				break;
-			if (pos + 8 + sub_size > content.size())
-				break;
-
-			if (sub_id == "DODT" && sub_size >= 12)
-			{
-				last_dodt = content.substr(pos + 8, 12);
-			}
-			else if (sub_id == "DNAM" && !last_dodt.empty())
-			{
-				std::string dest_cell = content.substr(pos + 8, sub_size);
-				size_t null_pos = dest_cell.find('\0');
-				if (null_pos != std::string::npos)
-					dest_cell = dest_cell.substr(0, null_pos);
-
-				if (!dest_cell.empty())
-					index.insert({ dest_cell, last_dodt });
-
-				last_dodt.clear();
-			}
-			else
-			{
-				if (sub_id != "DODT")
-					last_dodt.clear();
-			}
-
-			pos += 8 + sub_size;
+			esm_src.set_value("NAME");
+			std::string cell_name = esm_src.get_value().exist ? esm_src.get_value().text : "<unnamed>";
+			tools_t::add_log("[warning] door index: duplicate fingerprint in CELL \"" + cell_name + "\"\r\n");
 		}
 	}
 
 	return index;
+}
+
+std::string dict_creator_t::make_dodt_fingerprint(esm_reader_t & esm_src)
+{
+	const auto & content = esm_src.get_record().content;
+	size_t pos = 16;
+
+	std::vector<std::string> dodts;
+
+	while (pos + 8 <= content.size())
+	{
+		std::string sub_id = content.substr(pos, 4);
+		size_t sub_size = tools_t::convert_string_byte_array_to_uint(content.substr(pos + 4, 4));
+		if (sub_size == 0)
+			break;
+		if (pos + 8 + sub_size > content.size())
+			break;
+
+		if (sub_id == "DODT" && sub_size >= 12)
+			dodts.push_back(content.substr(pos + 8, 12));
+
+		pos += 8 + sub_size;
+	}
+
+	if (dodts.empty())
+		return {};
+
+	std::sort(dodts.begin(), dodts.end());
+	std::string fingerprint;
+	for (const auto & d : dodts)
+		fingerprint += d;
+
+	return fingerprint;
+}
+
+std::string dict_creator_t::make_dodt_key_text(const std::string & fingerprint)
+{
+	std::string result = "DODT";
+
+	for (size_t i = 0; i + 12 <= fingerprint.size(); i += 12)
+	{
+		float fx, fy, fz;
+		std::memcpy(&fx, fingerprint.data() + i, 4);
+		std::memcpy(&fy, fingerprint.data() + i + 4, 4);
+		std::memcpy(&fz, fingerprint.data() + i + 8, 4);
+
+		result += "[" + std::to_string(static_cast<int>(fx)) + ","
+		              + std::to_string(static_cast<int>(fy)) + ","
+		              + std::to_string(static_cast<int>(fz)) + "]";
+	}
+
+	return result;
 }
 
 void dict_creator_t::make_dict_cell_unordered_exterior()
@@ -814,9 +852,9 @@ void dict_creator_t::make_dict_cell_unordered_exterior()
 		esm.select_record(match_it->second);
 		esm.set_value("NAME");
 		const auto & val_text = esm.get_value().text;
-		insert_entry(ref_cell_name, ref_cell_name, val_text, tools_t::rec_type_t::cell);
+		insert_entry(coord_key, ref_cell_name, val_text, tools_t::rec_type_t::cell);
 
-		auto * entry = dict.at(tools_t::rec_type_t::cell).find(ref_cell_name);
+		auto * entry = dict.at(tools_t::rec_type_t::cell).find(coord_key);
 		if (entry && entry->status.empty())
 			entry->status = tools_t::status_t::matched_by_coords;
 	}
@@ -827,34 +865,7 @@ void dict_creator_t::make_dict_cell_unordered_exterior()
 
 void dict_creator_t::make_dict_cell_unordered_interior()
 {
-	auto door_index_ext = build_door_index(esm_ref);
 	auto door_index_esm = build_door_index(esm);
-
-	std::unordered_map<std::string, size_t> esm_index;
-
-	for (size_t i = 0; i < esm.get_records().size(); ++i)
-	{
-		esm.select_record(i);
-		if (esm.get_record().id != "CELL")
-			continue;
-
-		esm.set_value("NAME");
-		if (!esm.get_value().exist || esm.get_value().text.empty())
-			continue;
-
-		const auto cell_name = esm.get_value().text;
-
-		esm.set_value("DATA");
-		if (!esm.get_value().exist)
-			continue;
-
-		if (!is_interior_cell(esm.get_value().content))
-			continue;
-
-		auto door_it = door_index_esm.find(cell_name);
-		if (door_it != door_index_esm.end())
-			esm_index.insert({ door_it->second, i });
-	}
 
 	std::vector<std::pair<size_t, std::string>> missing_cells;
 
@@ -878,16 +889,16 @@ void dict_creator_t::make_dict_cell_unordered_interior()
 		if (!is_interior_cell(esm_ref.get_value().content))
 			continue;
 
-		auto door_it = door_index_ext.find(ref_cell_name);
-		if (door_it == door_index_ext.end())
+		auto fingerprint = make_dodt_fingerprint(esm_ref);
+		if (fingerprint.empty())
 		{
 			missing_cells.push_back({ i, ref_cell_name });
 			counter_missing++;
 			continue;
 		}
 
-		auto match_it = esm_index.find(door_it->second);
-		if (match_it == esm_index.end())
+		auto match_it = door_index_esm.find(fingerprint);
+		if (match_it == door_index_esm.end())
 		{
 			missing_cells.push_back({ i, ref_cell_name });
 			counter_missing++;
@@ -897,9 +908,10 @@ void dict_creator_t::make_dict_cell_unordered_interior()
 		esm.select_record(match_it->second);
 		esm.set_value("NAME");
 		const auto & val_text = esm.get_value().text;
-		insert_entry(ref_cell_name, ref_cell_name, val_text, tools_t::rec_type_t::cell);
+		auto key_text = make_dodt_key_text(fingerprint);
+		insert_entry(key_text, ref_cell_name, val_text, tools_t::rec_type_t::cell);
 
-		auto * entry = dict.at(tools_t::rec_type_t::cell).find(ref_cell_name);
+		auto * entry = dict.at(tools_t::rec_type_t::cell).find(key_text);
 		if (entry && entry->status.empty())
 			entry->status = tools_t::status_t::matched_by_coords;
 	}

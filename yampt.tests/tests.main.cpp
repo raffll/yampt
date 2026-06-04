@@ -20,7 +20,7 @@ int main(int argc, char * argv[])
 		return ret;
 
 	if (g_master_path.empty())
-		g_master_path = "C:/Users/rafal/OneDrive/OMEN/Morrowind/master/";
+		g_master_path = "C:/OMEN/Morrowind/master/";
 
 	if (g_master_path.back() != '/' && g_master_path.back() != '\\')
 		g_master_path += '/';

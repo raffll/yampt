@@ -12,5 +12,6 @@
 #include <set>
 #include <algorithm>
 #include <cassert>
+#include <cstring>
 #include <filesystem>
 #include <chrono>

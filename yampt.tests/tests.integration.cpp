@@ -14,6 +14,17 @@ namespace fs = std::filesystem;
 
 static const std::string test_dir = "tests";
 
+static const tools_t::record_entry_t * find_by_new_text(
+    const tools_t::chapter_t & chapter, const std::string & text)
+{
+	for (const auto & entry : chapter.records)
+	{
+		if (entry.new_text == text)
+			return &entry;
+	}
+	return nullptr;
+}
+
 TEST_CASE("cleanup test output directory", "[i]")
 {
 	fs::remove_all(test_dir);
@@ -68,9 +79,9 @@ TEST_CASE("make-base EN to PL", "[i]")
 
 		if (std::string(name) == "Morrowind")
 		{
-			const auto * entry = cell_chapter.find("Abaelun Mine");
+			const auto * entry = find_by_new_text(cell_chapter, "Kopalnia Abaelun");
 			REQUIRE(entry != nullptr);
-			REQUIRE(entry->new_text == "Kopalnia Abaelun");
+			REQUIRE(entry->old_text == "Abaelun Mine");
 		}
 
 		auto output = test_dir + "/" + name + "_en_pl.json";
@@ -105,9 +116,9 @@ TEST_CASE("make-base EN to DE", "[i]")
 
 		if (std::string(name) == "Morrowind")
 		{
-			const auto * entry = cell_chapter.find("Abaelun Mine");
+			const auto * entry = find_by_new_text(cell_chapter, "Abaelun-Mine");
 			REQUIRE(entry != nullptr);
-			REQUIRE(entry->new_text == "Abaelun-Mine");
+			REQUIRE(entry->old_text == "Abaelun Mine");
 		}
 
 		auto output = test_dir + "/" + name + "_en_de.json";
@@ -132,7 +143,7 @@ TEST_CASE("merge EN to PL", "[i]")
 	const auto & cell_chapter = dict.at(tools_t::rec_type_t::cell);
 	REQUIRE_FALSE(cell_chapter.empty());
 
-	const auto * morrowind_entry = cell_chapter.find("Abaelun Mine");
+	const auto * morrowind_entry = find_by_new_text(cell_chapter, "Kopalnia Abaelun");
 	REQUIRE(morrowind_entry != nullptr);
 
 	auto output = test_dir + "/Merged_en_pl.json";

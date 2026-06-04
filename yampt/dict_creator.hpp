@@ -80,8 +80,10 @@ private:
 
 	static bool is_interior_cell(const std::string & data_content);
 	static std::string make_exterior_coord_key(const std::string & data_content);
-	using door_index_t = std::unordered_map<std::string, std::string>;
+	using door_index_t = std::unordered_map<std::string, size_t>;
 	door_index_t build_door_index(esm_reader_t & esm_src);
+	static std::string make_dodt_fingerprint(esm_reader_t & esm_src);
+	static std::string make_dodt_key_text(const std::string & fingerprint);
 
 	void make_dict_dial_unordered();
 	patterns_ext_t make_dict_dial_unordered_patterns_ext();

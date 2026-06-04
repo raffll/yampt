@@ -198,10 +198,6 @@ void tools_t::add_log(const std::string & entry, const bool silent)
 	}
 	else
 		log2 += entry;
-
-	static std::ofstream log_file("yampt_log.txt", std::ios::app);
-	if (log_file.is_open())
-		log_file << entry;
 }
 
 void tools_t::reset_log()

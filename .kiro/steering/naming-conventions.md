@@ -64,7 +64,7 @@ tools_t::add_log("-----------------------------------------------\r\n"
 All log messages use a unified prefix scheme:
 
 - `[error]` — unrecoverable errors (file not found, parse failure)
-- `[warn]` — non-fatal issues (duplicate record, replaced value)
+- `[warning]` — non-fatal issues (duplicate record, replaced value)
 - `[info]` — progress and status (loading, writing, done)
 - No prefix — data lines (counter summaries, debug traces)
 
@@ -78,7 +78,7 @@ Rules:
 // Good
 tools_t::add_log("[info] loading \"Morrowind.esm\"\r\n");
 tools_t::add_log("[error] cannot open \"file.esp\" for writing\r\n");
-tools_t::add_log("[warn] duplicate CELL record: Balmora\r\n");
+tools_t::add_log("[warning] duplicate CELL record: Balmora\r\n");
 
 // Bad
 tools_t::add_log("--> Loading \"Morrowind.esm\"...\r\n");
