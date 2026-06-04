@@ -539,9 +539,15 @@ void editor_app_t::render_toolbar()
 				if (f5_it != f5_slot->data.end() && f5_row.record_index < f5_it->second.records.size())
 				{
 					const auto & f5_entry = f5_it->second.records[f5_row.record_index];
+
+					CHARRANGE saved_sel;
+					SendMessageA(richedit_hwnd_, EM_EXGETSEL, 0, (LPARAM)&saved_sel);
+
 					std::string current_text = get_richedit_text();
 					set_richedit_text(current_text);
 					highlight_richedit_hyperlinks(current_text, f5_row.type, f5_entry.old_text);
+
+					SendMessageA(richedit_hwnd_, EM_EXSETSEL, 0, (LPARAM)&saved_sel);
 				}
 			}
 		}
