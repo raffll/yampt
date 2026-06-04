@@ -1264,19 +1264,27 @@ void editor_app_t::render_text_with_topic_highlights(const std::string & text)
 	ImFont * font = ImGui::GetFont();
 	float font_size = ImGui::GetFontSize();
 
-	std::unordered_map<std::string, int> topic_counts;
+	std::vector<int> highlight_count(text.size(), 0);
 
 	for (const auto & ann : annotations)
 	{
 		if (ann.start >= text.size() || ann.end > text.size())
 			continue;
 
-		std::string key_lower = ann.old_text;
-		for (auto & c : key_lower)
-			c = static_cast<char>(tolower(static_cast<unsigned char>(c)));
-
-		if (++topic_counts[key_lower] > 1)
+		bool overlaps = false;
+		for (size_t i = ann.start; i < ann.end; ++i)
+		{
+			if (highlight_count[i] >= 3)
+			{
+				overlaps = true;
+				break;
+			}
+		}
+		if (overlaps)
 			continue;
+
+		for (size_t i = ann.start; i < ann.end; ++i)
+			++highlight_count[i];
 
 		ImU32 color = (ann.kind == annotation_t::glossary_term) ? glossary_color : hyperlink_color;
 
@@ -2474,8 +2482,7 @@ void editor_app_t::highlight_richedit_hyperlinks(const std::string & text, tools
 	for (const auto & new_lower : new_texts_to_highlight)
 	{
 		size_t pos = 0;
-		int count = 0;
-		while ((pos = clean_lower.find(new_lower, pos)) != std::string::npos && count < 3)
+		while ((pos = clean_lower.find(new_lower, pos)) != std::string::npos)
 		{
 			size_t end_pos = pos + new_lower.size();
 
@@ -2491,7 +2498,6 @@ void editor_app_t::highlight_richedit_hyperlinks(const std::string & text, tools
 			SendMessageA(richedit_hwnd_, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
 
 			pos = end_pos;
-			++count;
 		}
 	}
 
