@@ -1,4 +1,5 @@
 #include "translation_engine.hpp"
+#include "tools.hpp"
 #include <ctranslate2/translator.h>
 #include <sentencepiece_processor.h>
 #include <filesystem>
@@ -18,7 +19,11 @@ translation_engine_t::translation_engine_t()
     : impl_(std::make_unique<impl_t>())
 {}
 
-translation_engine_t::~translation_engine_t() = default;
+translation_engine_t::~translation_engine_t()
+{
+	if (impl_)
+		impl_->translator.release();
+}
 
 translation_engine_t::translation_engine_t(translation_engine_t &&) noexcept = default;
 translation_engine_t & translation_engine_t::operator=(translation_engine_t &&) noexcept = default;
@@ -28,6 +33,8 @@ bool translation_engine_t::load(const std::string & model_pack_path)
 	unload();
 
 	namespace fs = std::filesystem;
+
+	tools_t::add_log("[info] loading translation model \"" + model_pack_path + "\"\r\n");
 
 	if (!fs::exists(model_pack_path))
 		return false;
@@ -88,12 +95,13 @@ bool translation_engine_t::load(const std::string & model_pack_path)
 		std::getline(f, impl_->target_prefix);
 	}
 
+	tools_t::add_log("[info] translation model loaded\r\n");
 	return true;
 }
 
 void translation_engine_t::unload()
 {
-	impl_->translator.reset();
+	impl_->translator.release();
 	impl_->source_spm.reset();
 	impl_->target_spm.reset();
 	impl_->source_lang.clear();

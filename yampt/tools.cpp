@@ -211,8 +211,10 @@ void tools_t::add_log(const std::string & entry, const bool silent)
 		error_flag = true;
 	}
 
-	std::cout << entry;
 	log1 += entry;
+
+	if (!silent)
+		std::cout << entry;
 }
 
 void tools_t::reset_log()
