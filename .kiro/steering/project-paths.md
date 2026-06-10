@@ -110,6 +110,28 @@ Log filenames match their corresponding JSON filenames (e.g. `logs/de/Morrowind_
 - Do not assert on `missing_count` or `heuristic_matches` — the logs capture this information. Tests only verify that output is produced and basic sanity (total > 0, cells non-empty).
 - Tests that depend on previous output (merge, make-with-base) read from `tests/json/`.
 
+## Cell Heuristic Matching — Log Format
+
+When the translation engine is active, unmatched interior cells go through heuristic matching. The log shows:
+
+```
+[TRANSLATE iter=1 orig=2 model=1] "Abaelun Mine" -> "Mine d'Abaelun"
+[TIE-SAME iter=1 orig=1 model=3 count=2] "Some Cell" -> "Native Cell"
+[TIE iter=2 orig=0 model=1 count=3] "Unresolved Cell"
+```
+
+Score breakdown:
+- `orig` — number of words from the **original English name** that appear in the native cell name. Only matters for proper nouns that survive unchanged across languages (Abaelun, Dagoth, Arkngthand). Safety net for when the model fails.
+- `model` — number of words from the **translation engine output** that appear in the native cell name. This is the primary signal. The engine translates "Hall of Centrifuge" → "Halle der Zentrifuge", which matches the German native cell directly.
+
+`model` is more important than `orig`. A high `model` score means the translation quality was good and found real target-language matches. A high `orig` with low `model` means the engine produced garbage but a proper noun saved the match.
+
+Log tags:
+- `[EXACT]` — foreign name == native name (identical string, no translation needed)
+- `[TRANSLATE]` — unique best match found via translation + word overlap
+- `[TIE-SAME]` — multiple native cells tied on score but all have the same name (resolved)
+- `[TIE]` — unresolved tie, cell skipped this iteration (may resolve in later iterations as candidates shrink)
+
 ## Kiro Helper Scripts
 
 When Kiro needs to run analysis on the codebase (e.g. parsing Morrowind.json for data), write a temporary Python script to a temp file, execute it, then delete it. Use PowerShell to invoke Python:

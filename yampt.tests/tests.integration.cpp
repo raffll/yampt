@@ -52,7 +52,10 @@ static const tools_t::record_entry_t * find_by_new_text(const tools_t::chapter_t
 TEST_CASE("cleanup test output directory", "[i]")
 {
 	fs::remove_all(test_dir);
-	fs::create_directories(json_dir);
+	fs::create_directories(json_dir + "/en");
+	fs::create_directories(json_dir + "/pl");
+	fs::create_directories(json_dir + "/de");
+	fs::create_directories(json_dir + "/fr");
 	fs::create_directories(logs_dir + "/en");
 	fs::create_directories(logs_dir + "/pl");
 	fs::create_directories(logs_dir + "/de");
@@ -75,7 +78,7 @@ TEST_CASE("make EN, no base dict", "[i]")
 		REQUIRE_FALSE(dict.at(tools_t::rec_type_t::dial).empty());
 		REQUIRE_FALSE(dict.at(tools_t::rec_type_t::info).empty());
 
-		auto output = json_dir + "/" + name + "_en.json";
+		auto output = json_dir + "/en/" + name + "_en.json";
 		dict_writer_t::write(dict, output);
 		REQUIRE(fs::exists(output));
 		REQUIRE(fs::file_size(output) > 0);
@@ -112,7 +115,7 @@ TEST_CASE("make-base EN to PL with translation engine", "[i]")
 			REQUIRE(entry->old_text == "Abaelun Mine");
 		}
 
-		auto output = json_dir + "/" + name + "_en_pl.json";
+		auto output = json_dir + "/pl/" + name + "_en_pl.json";
 		dict_writer_t::write(dict, output);
 		REQUIRE(fs::exists(output));
 
@@ -148,7 +151,7 @@ TEST_CASE("make-base EN to DE with translation engine", "[i]")
 			REQUIRE(entry->old_text == "Abaelun Mine");
 		}
 
-		auto output = json_dir + "/" + name + "_en_de.json";
+		auto output = json_dir + "/de/" + name + "_en_de.json";
 		dict_writer_t::write(dict, output);
 		REQUIRE(fs::exists(output));
 
@@ -177,7 +180,7 @@ TEST_CASE("make-base EN to FR with translation engine", "[i]")
 		const auto & cell_chapter = dict.at(tools_t::rec_type_t::cell);
 		REQUIRE_FALSE(cell_chapter.empty());
 
-		auto output = json_dir + "/" + name + "_en_fr.json";
+		auto output = json_dir + "/fr/" + name + "_en_fr.json";
 		dict_writer_t::write(dict, output);
 		REQUIRE(fs::exists(output));
 
@@ -189,9 +192,9 @@ TEST_CASE("merge EN to PL", "[i]")
 {
 	dict_merger_t merger(
 	    {
-	        json_dir + "/Morrowind_en_pl.json",
-	        json_dir + "/Tribunal_en_pl.json",
-	        json_dir + "/Bloodmoon_en_pl.json",
+	        json_dir + "/pl/Morrowind_en_pl.json",
+	        json_dir + "/pl/Tribunal_en_pl.json",
+	        json_dir + "/pl/Bloodmoon_en_pl.json",
 	    });
 	const auto & dict = merger.get_dict();
 
@@ -204,7 +207,7 @@ TEST_CASE("merge EN to PL", "[i]")
 	const auto * morrowind_entry = find_by_new_text(cell_chapter, "Kopalnia Abaelun");
 	REQUIRE(morrowind_entry != nullptr);
 
-	auto output = json_dir + "/Merged_en_pl.json";
+	auto output = json_dir + "/pl/Merged_en_pl.json";
 	dict_writer_t::write(dict, output);
 	REQUIRE(fs::exists(output));
 	flush_log("pl", "Merged_en_pl");
@@ -212,7 +215,7 @@ TEST_CASE("merge EN to PL", "[i]")
 
 TEST_CASE("make EN with base dict", "[i]")
 {
-	dict_reader_t reader(json_dir + "/Morrowind_en_pl.json");
+	dict_reader_t reader(json_dir + "/pl/Morrowind_en_pl.json");
 	REQUIRE(reader.is_loaded());
 
 	dict_creator_t creator(g_master_path + "en/Morrowind.esm", &reader.get_dict());
@@ -227,7 +230,7 @@ TEST_CASE("make EN with base dict", "[i]")
 	REQUIRE(entry->old_text == "Abaelun Mine");
 	REQUIRE(entry->status != tools_t::status_t::untranslated);
 
-	auto output = json_dir + "/Morrowind_en_with_base.json";
+	auto output = json_dir + "/en/Morrowind_en_with_base.json";
 	dict_writer_t::write(dict, output);
 	REQUIRE(fs::exists(output));
 	flush_log("en", "Morrowind_en_with_base");

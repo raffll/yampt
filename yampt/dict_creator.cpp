@@ -1046,10 +1046,24 @@ void dict_creator_t::make_dict_cell_interior_heuristic(
 				continue;
 
 			translated_text = result.text;
-			compare_words = split_words(translated_text);
+			auto translated_words = split_words(translated_text);
+			auto original_words = split_words(foreign_name);
+			compare_words = translated_words;
+			for (const auto & w : original_words)
+			{
+				bool found = false;
+				for (const auto & cw : compare_words)
+				{
+					if (cw == w) { found = true; break; }
+				}
+				if (!found)
+					compare_words.push_back(w);
+			}
 			used_translation = true;
 
 			int best_score = 0;
+			int best_score_orig = 0;
+			int best_score_model = 0;
 			int best_count = 0;
 			size_t best_ni = 0;
 			std::string best_name;
@@ -1060,10 +1074,14 @@ void dict_creator_t::make_dict_cell_interior_heuristic(
 					continue;
 
 				auto esm_words = split_words(native_cells[ni].second);
+				int score_orig = count_shared_words(original_words, esm_words);
+				int score_model = count_shared_words(translated_words, esm_words);
 				int score = count_shared_words(compare_words, esm_words);
 				if (score > best_score)
 				{
 					best_score = score;
+					best_score_orig = score_orig;
+					best_score_model = score_model;
 					best_count = 1;
 					best_ni = ni;
 					best_name = native_cells[ni].second;
@@ -1097,7 +1115,9 @@ void dict_creator_t::make_dict_cell_interior_heuristic(
 				{
 					resolved = true;
 					tools_t::add_log(
-					    "[TIE-SAME iter=" + std::to_string(iteration) + " score=" + std::to_string(best_score) +
+					    "[TIE-SAME iter=" + std::to_string(iteration) +
+					        " orig=" + std::to_string(best_score_orig) +
+					        " model=" + std::to_string(best_score_model) +
 					        " count=" + std::to_string(best_count) + "] \"" + foreign_name + "\" -> \"" + best_name +
 					        "\"\r\n",
 					    true);
@@ -1112,7 +1132,9 @@ void dict_creator_t::make_dict_cell_interior_heuristic(
 				if (!resolved)
 				{
 					tools_t::add_log(
-					    "[TRANSLATE iter=" + std::to_string(iteration) + " score=" + std::to_string(best_score) +
+					    "[TRANSLATE iter=" + std::to_string(iteration) +
+					        " orig=" + std::to_string(best_score_orig) +
+					        " model=" + std::to_string(best_score_model) +
 					        "] \"" + foreign_name + "\" -> \"" + best_name + "\"\r\n",
 					    true);
 				}
@@ -1132,7 +1154,9 @@ void dict_creator_t::make_dict_cell_interior_heuristic(
 			else if (best_score > 0 && best_count > 1 && !resolved)
 			{
 				tools_t::add_log(
-				    "[TIE iter=" + std::to_string(iteration) + " score=" + std::to_string(best_score) +
+				    "[TIE iter=" + std::to_string(iteration) +
+				        " orig=" + std::to_string(best_score_orig) +
+				        " model=" + std::to_string(best_score_model) +
 				        " count=" + std::to_string(best_count) + "] \"" + foreign_name + "\"\r\n",
 				    true);
 			}
