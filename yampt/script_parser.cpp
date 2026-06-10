@@ -190,16 +190,33 @@ void script_parser_t::remove_quotes()
 void script_parser_t::find_new_text(const tools_t::rec_type_t text_type)
 {
 	new_text = old_text;
-	auto * search = merger->get_dict().at(text_type).find(old_text);
+
+	const tools_t::record_entry_t * search = nullptr;
+	if (text_type == tools_t::rec_type_t::cell)
+		search = merger->get_dict().at(text_type).find_by_old_text(old_text);
+	else
+		search = merger->get_dict().at(text_type).find(old_text);
+
 	if (search)
 	{
 		new_text = search->new_text;
+	}
+	else if (text_type != tools_t::rec_type_t::cell)
+	{
+		for (const auto & elem : merger->get_dict().at(text_type).records)
+		{
+			if (tools_t::case_insensitive_string_cmp(old_text, elem.key_text))
+			{
+				new_text = elem.new_text;
+				break;
+			}
+		}
 	}
 	else
 	{
 		for (const auto & elem : merger->get_dict().at(text_type).records)
 		{
-			if (tools_t::case_insensitive_string_cmp(old_text, elem.key_text))
+			if (tools_t::case_insensitive_string_cmp(old_text, elem.old_text))
 			{
 				new_text = elem.new_text;
 				break;

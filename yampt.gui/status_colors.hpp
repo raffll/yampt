@@ -13,6 +13,10 @@ inline ImVec4 get_status_color(const std::string & status)
 		return ImVec4(0.95f, 0.9f, 0.4f, 1.0f);
 	if (status == "matched_by_coords")
 		return ImVec4(0.4f, 0.8f, 0.8f, 1.0f);
+	if (status == "matched_by_fingerprint")
+		return ImVec4(0.4f, 0.75f, 0.85f, 1.0f);
+	if (status == "matched_by_heuristic")
+		return ImVec4(0.6f, 0.7f, 0.9f, 1.0f);
 	if (status == "matched_by_info")
 		return ImVec4(0.45f, 0.85f, 0.75f, 1.0f);
 	if (status == "matched_by_name")

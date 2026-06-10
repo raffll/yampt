@@ -23,6 +23,7 @@ private:
 	std::vector<std::string> dict_paths;
 	std::string output;
 	std::string suffix;
+	std::string translate_model_path;
 
 	tools_t::encoding_t encoding = tools_t::encoding_t::unknown;
 };

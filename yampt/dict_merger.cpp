@@ -29,6 +29,7 @@ void dict_merger_t::add_record(
 {
 	tools_t::record_entry_t entry;
 	entry.key_text = key_text;
+	entry.old_text = key_text;
 	entry.new_text = val_text;
 	dict.at(type).insert(entry);
 }

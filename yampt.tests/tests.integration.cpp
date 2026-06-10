@@ -5,6 +5,7 @@
 #include "../yampt/dict_writer.hpp"
 #include "../yampt/dict_reader.hpp"
 #include "../yampt/dict_merger.hpp"
+#include "../yampt/translation_engine.hpp"
 
 #include <filesystem>
 
@@ -227,4 +228,149 @@ TEST_CASE("make EN with base dict", "[i]")
 	auto output = test_dir + "/Morrowind_en_with_base.json";
 	dict_writer_t::write(dict, output);
 	REQUIRE(fs::exists(output));
+}
+
+TEST_CASE("make-base EN to DE with translation engine", "[i]")
+{
+	translation_engine_t engine;
+	bool loaded = engine.load("../../models/en-de");
+	if (!loaded)
+	{
+		WARN("Skipping: models/en-de not found");
+		return;
+	}
+
+	dict_creator_t creator(
+	    g_master_path + "de/Morrowind.esm",
+	    g_master_path + "en/Morrowind.esm",
+	    &engine);
+	const auto & dict = creator.get_dict();
+
+	const auto & cell_chapter = dict.at(tools_t::rec_type_t::cell);
+	REQUIRE_FALSE(cell_chapter.empty());
+
+	int heuristic_matches = 0;
+	for (const auto & entry : cell_chapter.records)
+	{
+		if (entry.status == tools_t::status_t::matched_by_heuristic ||
+		    entry.status == tools_t::status_t::matched_by_name)
+			heuristic_matches++;
+	}
+
+	CAPTURE(heuristic_matches);
+	REQUIRE(heuristic_matches > 0);
+
+	auto output = test_dir + "/Morrowind_en_de_translated.json";
+	dict_writer_t::write(dict, output);
+	REQUIRE(fs::exists(output));
+}
+
+TEST_CASE("make-base EN to PL with translation engine", "[i]")
+{
+	translation_engine_t engine;
+	bool loaded = engine.load("../../models/en-pl");
+	if (!loaded)
+	{
+		WARN("Skipping: models/en-pl not found");
+		return;
+	}
+
+	dict_creator_t creator(
+	    g_master_path + "pl/Morrowind.esm",
+	    g_master_path + "en/Morrowind.esm",
+	    &engine);
+	const auto & dict = creator.get_dict();
+
+	const auto & cell_chapter = dict.at(tools_t::rec_type_t::cell);
+	REQUIRE_FALSE(cell_chapter.empty());
+
+	int heuristic_matches = 0;
+	for (const auto & entry : cell_chapter.records)
+	{
+		if (entry.status == tools_t::status_t::matched_by_heuristic ||
+		    entry.status == tools_t::status_t::matched_by_name)
+			heuristic_matches++;
+	}
+
+	CAPTURE(heuristic_matches);
+	REQUIRE(heuristic_matches > 0);
+
+	auto output = test_dir + "/Morrowind_en_pl_translated.json";
+	dict_writer_t::write(dict, output);
+	REQUIRE(fs::exists(output));
+}
+
+TEST_CASE("make-base EN to FR with translation engine", "[i]")
+{
+	translation_engine_t engine;
+	bool loaded = engine.load("../../models/en-fr");
+	if (!loaded)
+	{
+		WARN("Skipping: models/en-fr not found");
+		return;
+	}
+
+	dict_creator_t creator(
+	    g_master_path + "fr/Morrowind.esm",
+	    g_master_path + "en/Morrowind.esm",
+	    &engine);
+	const auto & dict = creator.get_dict();
+
+	const auto & cell_chapter = dict.at(tools_t::rec_type_t::cell);
+	REQUIRE_FALSE(cell_chapter.empty());
+
+	int heuristic_matches = 0;
+	for (const auto & entry : cell_chapter.records)
+	{
+		if (entry.status == tools_t::status_t::matched_by_heuristic ||
+		    entry.status == tools_t::status_t::matched_by_name)
+			heuristic_matches++;
+	}
+
+	CAPTURE(heuristic_matches);
+	REQUIRE(heuristic_matches > 0);
+
+	auto output = test_dir + "/Morrowind_en_fr_translated.json";
+	dict_writer_t::write(dict, output);
+	REQUIRE(fs::exists(output));
+}
+
+TEST_CASE("log missing cells with translation engine", "[i]")
+{
+	std::ofstream log("tests/missing_cells_translated.txt");
+
+	struct model_info
+	{
+		const char * lang;
+		const char * model_path;
+	};
+
+	model_info models[] = {
+	    { "de", "../../models/en-de" },
+	    { "pl", "../../models/en-pl" },
+	    { "fr", "../../models/en-fr" },
+	};
+
+	for (const auto & m : models)
+	{
+		translation_engine_t engine;
+		if (!engine.load(m.model_path))
+			continue;
+
+		for (const auto & name : { "Morrowind", "Tribunal", "Bloodmoon" })
+		{
+			dict_creator_t creator(
+			    g_master_path + m.lang + "/" + name + ".esm",
+			    g_master_path + "en/" + name + ".esm",
+			    &engine);
+			const auto & dict = creator.get_dict();
+			const auto & cell_chapter = dict.at(tools_t::rec_type_t::cell);
+
+			for (const auto & entry : cell_chapter.records)
+			{
+				if (entry.status == tools_t::status_t::missing)
+					log << m.lang << "/" << name << ": " << entry.old_text << "\n";
+			}
+		}
+	}
 }

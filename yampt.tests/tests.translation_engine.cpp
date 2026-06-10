@@ -3,12 +3,14 @@
 
 #include <iostream>
 
+static const char * model_path = "../../models/en-de";
+
 TEST_CASE("translation_engine loads en-de model", "[i]")
 {
 	translation_engine_t engine;
 	REQUIRE_FALSE(engine.is_loaded());
 
-	bool loaded = engine.load("models/en-de");
+	bool loaded = engine.load(model_path);
 	REQUIRE(loaded);
 	REQUIRE(engine.is_loaded());
 	REQUIRE(engine.source_language() == "en");
@@ -18,7 +20,7 @@ TEST_CASE("translation_engine loads en-de model", "[i]")
 TEST_CASE("translation_engine translates test strings", "[i]")
 {
 	translation_engine_t engine;
-	REQUIRE(engine.load("models/en-de"));
+	REQUIRE(engine.load(model_path));
 
 	SECTION("Guild of Mages")
 	{
@@ -48,6 +50,13 @@ TEST_CASE("translation_engine translates test strings", "[i]")
 		REQUIRE(result.success);
 		REQUIRE_FALSE(result.text.empty());
 		std::cout << "[en-de] \"Hall of Centrifuge\" -> \"" << result.text << "\"\n";
+	}
+
+	SECTION("empty string")
+	{
+		auto result = engine.translate("");
+		REQUIRE(result.success);
+		REQUIRE(result.text.empty());
 	}
 }
 

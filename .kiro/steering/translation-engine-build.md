@@ -1,51 +1,117 @@
-# Translation Engine Build — Findings
+# Translation Engine Build
 
-## VS 18 (Visual Studio 2026) STL Bug
+## Quick Reproduction (From Scratch)
 
-VS 18 introduced internal STL dispatch symbols that cannot be resolved at link time:
+1. **Clone CTranslate2** into `external/CTranslate2/` with submodules
+2. **Build CTranslate2**:
+   ```powershell
+   $cmake = "C:\OMEN\Morrowind\vcpkg\downloads\tools\cmake-4.3.2-windows\cmake-4.3.2-windows-x86_64\bin\cmake.exe"
+   cd external/CTranslate2
+   & $cmake -S . -B build -G "Visual Studio 18 2026" -A x64 -DWITH_MKL=OFF -DWITH_CUDA=OFF -DWITH_CUDNN=OFF -DWITH_DNNL=OFF -DWITH_OPENBLAS=OFF -DWITH_RUY=ON -DBUILD_CLI=OFF -DBUILD_TESTS=OFF -DOPENMP_RUNTIME=NONE
+   & $cmake --build build --config Release
+   ```
+3. **vcpkg install** — just build the solution in VS, vcpkg manifest mode restores packages automatically using the `x64-windows-v143` triplet
+4. **Download models**:
+   ```powershell
+   python -m pip install torch transformers ctranslate2 huggingface_hub sentencepiece
+   python download_models.py
+   ```
+5. **Copy DLL**: `copy external\CTranslate2\build\Release\ctranslate2.dll x64\Release\`
+6. **Build solution** in VS (Release x64)
+7. **Run** from repo root (so `models/` relative path works)
+
+## VS 18 STL Bug (Root Cause of All Build Issues)
+
+VS 18 (Visual Studio 2026) introduced internal STL dispatch symbols that cannot be resolved at link time:
 - `__std_rotate`
 - `__std_find_first_not_of_trivial_pos_1`
 
-These symbols are called by abseil (a sentencepiece dependency) but do not exist in any linkable `.lib` file — not in `msvcprt.lib` (/MD), not in `libcpmt.lib` (/MT), not in `stl_asan.lib`. This is a confirmed VS 18 toolchain bug that affects any library using `std::rotate` or `std::string::find_first_not_of` through abseil.
+These are called by abseil (a sentencepiece dependency). They don't exist in any linkable `.lib`. This is a VS 18 toolchain bug.
 
-## SentencePiece 0.2.x Requires Abseil
+## Solution: Custom vcpkg Triplet with v143 Toolset
 
-SentencePiece v0.2.0+ has a hard dependency on abseil for logging, hashing, and string operations. There is no build flag to disable it. The `SPM_USE_BUILTIN_PROTOBUF=ON` flag only removes the external protobuf dependency — abseil remains required.
+Force vcpkg to compile all packages using the v143 toolset (MSVC 14.44) instead of v144 (VS 18). The v143 STL doesn't have the broken dispatch symbols.
 
-## Approaches Attempted (All Failed)
+Files:
+- `triplets/x64-windows-v143.cmake` — `VCPKG_PLATFORM_TOOLSET v143`, dynamic CRT
+- `vcpkg-configuration.json` — `"overlay-triplets": ["./triplets"]`
+- All vcxprojs: `<VcpkgTriplet>x64-windows-v143</VcpkgTriplet>`
+- SDL2 include hardcoded: `$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\SDL2`
+- vcpkg auto-links sentencepiece + abseil — no manual lib listing needed
+- Do NOT add abseil libs manually. Do NOT add sentencepiece.lib manually. vcpkg handles it.
+- Do NOT set RuntimeLibrary to MultiThreaded. Keep default (/MD).
 
-1. **vcpkg sentencepiece** — abseil from vcpkg triggers `__std_find_first_not_of_trivial_pos_1` and `__std_rotate` unresolved externals.
-2. **Source build sentencepiece + abseil** — same symbols missing. Even though both are compiled with the same VS 18 compiler, the STL internal symbols don't exist anywhere to link against.
-3. **Force-linking libcpmt.lib** — causes MD/MT runtime mismatch errors (libcpmt is static CRT, project uses dynamic CRT).
-4. **Switching to /MT (static CRT)** — matches libcpmt but vcpkg's other deps (SDL2, hunspell) are built with /MD, causing the opposite mismatch.
-5. **x64-windows-static vcpkg triplet** — would work but abseil still has the missing STL symbols regardless of CRT choice.
+## CTranslate2
 
-## Blocked
+- Source at `external/CTranslate2/`
+- Built separately via CMake (VS 18 2026 generator, Release, Ruy backend)
+- Produces `ctranslate2.dll` + `ctranslate2.lib` at `external/CTranslate2/build/Release/`
+- Must copy `ctranslate2.dll` to output dir (`x64/Debug/` or `x64/Release/`) for runtime
+- Include paths: `$(SolutionDir)external\CTranslate2\include` and `$(SolutionDir)external\CTranslate2\build`
+- Link: `ctranslate2.lib` with lib dir `$(SolutionDir)external\CTranslate2\build\Release`
 
-The translation engine integration is blocked until one of:
-- Microsoft ships a VS 18 update that resolves `__std_rotate` and `__std_find_first_not_of_trivial_pos_1`
-- SentencePiece releases a version without abseil dependency
-- An alternative tokenizer (not sentencepiece) is used
+## Model Download
 
-## What Works
+Prerequisites:
+```powershell
+python -m pip install torch transformers ctranslate2 huggingface_hub sentencepiece
+```
 
-- CTranslate2 compiles and links fine (source build with Ruy backend, no external deps beyond what's in its submodules)
-- SentencePiece's own source code compiles fine — only the abseil portion fails at link time
-- The `translation_engine.hpp/cpp` code is correct and ready
-- The `dict_creator` integration code is correct and ready
+Model repos:
+- EN→DE: `Helsinki-NLP/opus-mt-en-de`
+- EN→PL: `gsarti/opus-mt-tc-en-pl` (not Helsinki-NLP — `opus-mt-en-pl` doesn't exist as standalone)
+- EN→FR: `Helsinki-NLP/opus-mt-en-fr`
 
-## Current State of vcxproj Files
+Script `download_models.py` in repo root:
+```python
+import ctranslate2
+import os
+from huggingface_hub import hf_hub_download
 
-The vcxproj files have been heavily modified during debugging. They need to be reverted to a working state before proceeding with any alternative approach. Key changes that should be reverted:
-- `libcpmt.lib` in AdditionalDependencies — causes MT/MD mismatch
-- The massive abseil lib list — not needed if sentencepiece is removed
-- `sentencepiece` removed from vcpkg.json — correct, don't re-add it
-- `external/sentencepiece/` directory — can be deleted if unused
-- RuntimeLibrary changes — should match original project settings
+models = [
+    ("en-de", "Helsinki-NLP/opus-mt-en-de"),
+    ("en-pl", "gsarti/opus-mt-tc-en-pl"),
+    ("en-fr", "Helsinki-NLP/opus-mt-en-fr"),
+]
 
-## Recommended Next Steps
+for lang_pair, repo in models:
+    base_dir = f"models/{lang_pair}"
+    model_dir = f"{base_dir}/model"
+    os.makedirs(base_dir, exist_ok=True)
+    converter = ctranslate2.converters.TransformersConverter(repo)
+    converter.convert(model_dir, quantization="int8", force=True)
+    hf_hub_download(repo, "source.spm", local_dir=base_dir)
+    hf_hub_download(repo, "target.spm", local_dir=base_dir)
+```
 
-1. Revert vcxproj files to pre-sentencepiece state (keep CTranslate2 and translation_engine code)
-2. Stub out `sentencepiece_processor.h` usage with a compile-time `#ifdef HAS_SENTENCEPIECE` guard
-3. Wait for VS 18 fix, or switch to VS 17 2022 for the sentencepiece/abseil build
-4. Alternative: use CTranslate2's built-in tokenization if available, bypassing sentencepiece entirely
+Run: `python download_models.py`
+
+Conversion notes:
+- Do NOT use `OpusMTConverter` — it expects Marian format (`decoder.yml`), HuggingFace models use transformers format
+- Do NOT use `--model_name` CLI flag — newer ctranslate2 changed to `--model_dir` and expects local path
+- Use `TransformersConverter` Python API directly — it downloads + converts in one step
+
+Expected structure:
+```
+models/
+├── en-de/
+│   ├── model/       (CTranslate2 model.bin + config)
+│   ├── source.spm
+│   └── target.spm
+├── en-pl/
+└── en-fr/
+```
+
+## Runtime
+
+- `ctranslate2.dll` must be next to the exe
+- `models/` directory must be relative to working directory (or exe location)
+- If `translation_engine_t::load()` is not called or model is missing, dict_creator falls back to word-overlap heuristic (original behavior)
+
+## What NOT to Do
+
+- Do NOT use vcpkg's default `x64-windows` triplet — abseil triggers VS 18 STL bug
+- Do NOT add `sentencepiece` to `external/` and build from source — same abseil issue
+- Do NOT mix `/MT` and `/MD` — causes RuntimeLibrary mismatch with vcpkg deps
+- Do NOT add abseil .lib files manually to AdditionalDependencies
+- Do NOT use `libcpmt.lib` as a workaround

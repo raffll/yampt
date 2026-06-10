@@ -4,6 +4,7 @@
 #include "dict_reader.hpp"
 #include "dict_writer.hpp"
 #include "esm_converter.hpp"
+#include "translation_engine.hpp"
 
 user_interface_t::user_interface_t(std::vector<std::string> & arg)
     : args(arg)
@@ -40,6 +41,10 @@ void user_interface_t::parse_command_line()
 			{
 				command = "-s";
 			}
+			else if (args[i] == "--translate")
+			{
+				command = "--translate";
+			}
 			else
 			{
 				if (command == "-f")
@@ -57,6 +62,10 @@ void user_interface_t::parse_command_line()
 				if (command == "-s")
 				{
 					suffix = args[i];
+				}
+				if (command == "--translate")
+				{
+					translate_model_path = args[i];
 				}
 			}
 		}
@@ -139,7 +148,24 @@ void user_interface_t::make_dict_()
 void user_interface_t::make_dict_base()
 {
 	tools_t::add_log("[info] making \"BASE\" dictionary\r\n");
-	dict_creator_t creator(file_paths[0], file_paths[1]);
+
+	translation_engine_t engine;
+	translation_engine_t * engine_ptr = nullptr;
+
+	if (!translate_model_path.empty())
+	{
+		if (engine.load(translate_model_path))
+		{
+			tools_t::add_log("[info] translation engine loaded: " + engine.source_language() + " -> " + engine.target_language() + "\r\n");
+			engine_ptr = &engine;
+		}
+		else
+		{
+			tools_t::add_log("[warning] failed to load translation model from \"" + translate_model_path + "\"\r\n");
+		}
+	}
+
+	dict_creator_t creator(file_paths[0], file_paths[1], engine_ptr);
 	dict_writer_t::write(creator.get_dict(), creator.get_name().name + ".BASE.json");
 	tools_t::add_log("[info] done\r\n");
 }

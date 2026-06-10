@@ -86,9 +86,10 @@ void dict_creator_t::make_dict_cell_unordered_default()
 				esm_ref.set_value("STRV");
 				if (esm_ref.get_key().text == "sDefaultCellname" && esm_ref.get_value().exist)
 				{
-					const auto & key_text = esm_ref.get_value().text;
-					const auto & val_text = esm.get_value().text;
-					insert_entry(key_text, key_text, val_text, tools_t::rec_type_t::cell);
+					const auto & old_text = esm_ref.get_value().text;
+					const auto & new_text = esm.get_value().text;
+					const auto key_text = make_cell_key_text(old_text);
+					insert_entry(key_text, old_text, new_text, tools_t::rec_type_t::cell);
 
 					if (!is_make_mode)
 					{
@@ -129,9 +130,10 @@ void dict_creator_t::make_dict_cell_unordered_regn()
 				esm_ref.set_value("FNAM");
 				if (esm_ref.get_key().text == esm.get_key().text && esm_ref.get_value().exist)
 				{
-					const auto & key_text = esm_ref.get_value().text;
-					const auto & val_text = esm.get_value().text;
-					insert_entry(key_text, key_text, val_text, tools_t::rec_type_t::cell);
+					const auto & old_text = esm_ref.get_value().text;
+					const auto & new_text = esm.get_value().text;
+					const auto key_text = make_cell_key_text(old_text);
+					insert_entry(key_text, old_text, new_text, tools_t::rec_type_t::cell);
 
 					if (!is_make_mode)
 					{
@@ -742,7 +744,7 @@ std::string dict_creator_t::make_cell_key_text(const std::string & fingerprint)
 
 	char buf[17];
 	std::snprintf(buf, sizeof(buf), "%016llx", static_cast<unsigned long long>(hash));
-	return "CELL^" + std::string(buf);
+	return std::string(buf);
 }
 
 void dict_creator_t::make_dict_cell_unordered_exterior()
@@ -816,11 +818,12 @@ void dict_creator_t::make_dict_cell_unordered_exterior()
 		esm.select_record(match_it->second);
 		esm.set_value("NAME");
 		const auto & val_text = esm.get_value().text;
-		insert_entry(coord_key, ref_cell_name, val_text, tools_t::rec_type_t::cell);
+		const auto key_text = make_cell_key_text(coord_key);
+		insert_entry(key_text, ref_cell_name, val_text, tools_t::rec_type_t::cell);
 
 		if (!is_make_mode)
 		{
-			auto * entry = dict.at(tools_t::rec_type_t::cell).find(coord_key);
+			auto * entry = dict.at(tools_t::rec_type_t::cell).find(key_text);
 			if (entry && entry->status.empty())
 				entry->status = tools_t::status_t::matched_by_coords;
 		}
@@ -898,7 +901,7 @@ void dict_creator_t::make_dict_cell_unordered_interior()
 		{
 			auto * entry = dict.at(tools_t::rec_type_t::cell).find(key_text);
 			if (entry && entry->status.empty())
-				entry->status = tools_t::status_t::matched_by_coords;
+				entry->status = tools_t::status_t::matched_by_fingerprint;
 		}
 	}
 
@@ -983,11 +986,40 @@ void dict_creator_t::make_dict_cell_unordered_interior_heuristic(
 	if (translation_engine_ && translation_engine_->is_loaded())
 		log << "Translation engine: active\n";
 	else
-		log << "Translation engine: inactive (fallback to original names)\n";
+		log << "Translation engine: inactive (heuristic skipped)\n";
 	log << "\n";
 
 	std::set<size_t> matched_native;
 	std::set<size_t> matched_foreign;
+
+	for (size_t fi = 0; fi < missing_cells.size(); ++fi)
+	{
+		const auto & foreign_name = missing_cells[fi].second;
+		for (size_t ni = 0; ni < native_cells.size(); ++ni)
+		{
+			if (matched_native.count(ni))
+				continue;
+
+			if (native_cells[ni].second == foreign_name)
+			{
+				matched_foreign.insert(fi);
+				matched_native.insert(ni);
+
+				log << "[EXACT] \"" << foreign_name << "\"\n";
+
+				auto key_text = make_cell_key_text(foreign_name);
+				insert_entry(key_text, foreign_name, foreign_name, tools_t::rec_type_t::cell);
+
+				if (!is_make_mode)
+				{
+					auto * entry = dict.at(tools_t::rec_type_t::cell).find(key_text);
+					if (entry && entry->status.empty())
+						entry->status = tools_t::status_t::matched_by_name;
+				}
+				break;
+			}
+		}
+	}
 
 	int iteration = 0;
 	bool progress = true;
@@ -1005,19 +1037,16 @@ void dict_creator_t::make_dict_cell_unordered_interior_heuristic(
 			bool used_translation = false;
 			std::string translated_text;
 
-			if (translation_engine_ && translation_engine_->is_loaded())
-			{
-				auto result = translation_engine_->translate(foreign_name);
-				if (result.success)
-				{
-					translated_text = result.text;
-					compare_words = split_words(translated_text);
-					used_translation = true;
-				}
-			}
+			if (!translation_engine_ || !translation_engine_->is_loaded())
+				continue;
 
-			if (!used_translation)
-				compare_words = split_words(foreign_name);
+			auto result = translation_engine_->translate(foreign_name);
+			if (!result.success)
+				continue;
+
+			translated_text = result.text;
+			compare_words = split_words(translated_text);
+			used_translation = true;
 
 			int best_score = 0;
 			int best_count = 0;
@@ -1044,34 +1073,56 @@ void dict_creator_t::make_dict_cell_unordered_interior_heuristic(
 				}
 			}
 
-			if (best_score > 0 && best_count == 1)
+			bool resolved = false;
+
+			if (best_score > 0 && best_count > 1)
+			{
+				bool all_same_name = true;
+				for (size_t ni = 0; ni < native_cells.size(); ++ni)
+				{
+					if (matched_native.count(ni))
+						continue;
+
+					auto esm_words = split_words(native_cells[ni].second);
+					int score = count_shared_words(compare_words, esm_words);
+					if (score == best_score && native_cells[ni].second != best_name)
+					{
+						all_same_name = false;
+						break;
+					}
+				}
+
+				if (all_same_name)
+				{
+					resolved = true;
+					log << "[TIE-SAME iter=" << iteration << " score=" << best_score << " count=" << best_count << "] \""
+					    << foreign_name << "\" -> \"" << best_name << "\"\n";
+				}
+			}
+
+			if (best_score > 0 && (best_count == 1 || resolved))
 			{
 				matched_foreign.insert(fi);
 				matched_native.insert(best_ni);
 
-				if (used_translation)
+				if (!resolved)
 				{
 					log << "[TRANSLATE iter=" << iteration << " score=" << best_score << "] \""
 					    << foreign_name << "\" => \"" << translated_text << "\" -> \"" << best_name << "\"\n";
 				}
-				else
-				{
-					log << "[MATCH iter=" << iteration << " score=" << best_score << "] \""
-					    << foreign_name << "\" -> \"" << best_name << "\"\n";
-				}
 
-				auto key_text = "CELL_H^" + foreign_name;
+				auto key_text = make_cell_key_text(foreign_name);
 				insert_entry(key_text, foreign_name, best_name, tools_t::rec_type_t::cell);
 
 				if (!is_make_mode)
 				{
 					auto * entry = dict.at(tools_t::rec_type_t::cell).find(key_text);
 					if (entry && entry->status.empty())
-						entry->status = tools_t::status_t::matched_by_coords;
+						entry->status = resolved ? tools_t::status_t::matched_by_name : tools_t::status_t::matched_by_heuristic;
 				}
 				progress = true;
 			}
-			else if (best_score > 0 && best_count > 1)
+			else if (best_score > 0 && best_count > 1 && !resolved)
 			{
 				log << "[TIE iter=" << iteration << " score=" << best_score << " count=" << best_count << "] \""
 				    << foreign_name << "\"\n";
@@ -1191,11 +1242,12 @@ void dict_creator_t::make_dict_cell_unordered_add_missing(
 {
 	for (const auto & [rec_index, cell_name] : missing_cells)
 	{
-		insert_entry(cell_name, cell_name, cell_name, tools_t::rec_type_t::cell);
+		const auto key_text = make_cell_key_text(cell_name);
+		insert_entry(key_text, cell_name, cell_name, tools_t::rec_type_t::cell);
 
 		if (!is_make_mode)
 		{
-			auto * entry = dict.at(tools_t::rec_type_t::cell).find(cell_name);
+			auto * entry = dict.at(tools_t::rec_type_t::cell).find(key_text);
 			if (entry)
 				entry->status = tools_t::status_t::missing;
 

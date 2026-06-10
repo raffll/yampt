@@ -12,8 +12,13 @@ bool tools_t::chapter_t::insert(const record_entry_t & entry)
 	if (it != index.end())
 		return false;
 
-	index[entry.key_text] = records.size();
+	size_t pos = records.size();
+	index[entry.key_text] = pos;
 	records.push_back(entry);
+
+	if (!entry.old_text.empty())
+		old_text_index.insert({ entry.old_text, pos });
+
 	return true;
 }
 
@@ -29,6 +34,22 @@ const tools_t::record_entry_t * tools_t::chapter_t::find(const std::string & id)
 {
 	auto it = index.find(id);
 	if (it == index.end())
+		return nullptr;
+	return &records[it->second];
+}
+
+tools_t::record_entry_t * tools_t::chapter_t::find_by_old_text(const std::string & old_text)
+{
+	auto it = old_text_index.find(old_text);
+	if (it == old_text_index.end())
+		return nullptr;
+	return &records[it->second];
+}
+
+const tools_t::record_entry_t * tools_t::chapter_t::find_by_old_text(const std::string & old_text) const
+{
+	auto it = old_text_index.find(old_text);
+	if (it == old_text_index.end())
 		return nullptr;
 	return &records[it->second];
 }

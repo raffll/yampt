@@ -2,6 +2,7 @@
 #include <ctranslate2/translator.h>
 #include <sentencepiece_processor.h>
 #include <filesystem>
+#include <fstream>
 
 struct translation_engine_t::impl_t
 {
@@ -10,6 +11,7 @@ struct translation_engine_t::impl_t
 	std::unique_ptr<sentencepiece::SentencePieceProcessor> target_spm;
 	std::string source_lang;
 	std::string target_lang;
+	std::string target_prefix;
 };
 
 translation_engine_t::translation_engine_t()
@@ -79,6 +81,13 @@ bool translation_engine_t::load(const std::string & model_pack_path)
 		impl_->target_lang = dir_name.substr(sep + 1);
 	}
 
+	auto prefix_path = fs::path(model_pack_path) / "target_prefix.txt";
+	if (fs::exists(prefix_path))
+	{
+		std::ifstream f(prefix_path);
+		std::getline(f, impl_->target_prefix);
+	}
+
 	return true;
 }
 
@@ -118,6 +127,9 @@ translation_result_t translation_engine_t::translate(const std::string & text) c
 	{
 		std::vector<std::string> tokens;
 		impl_->source_spm->Encode(text, &tokens);
+
+		if (!impl_->target_prefix.empty())
+			tokens.insert(tokens.begin(), impl_->target_prefix);
 
 		auto results = impl_->translator->translate_batch({ tokens });
 

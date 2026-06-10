@@ -60,10 +60,13 @@ public:
 	{
 		std::vector<record_entry_t> records;
 		std::unordered_map<std::string, size_t> index;
+		std::unordered_map<std::string, size_t> old_text_index;
 
 		bool insert(const record_entry_t & entry);
 		record_entry_t * find(const std::string & id);
 		const record_entry_t * find(const std::string & id) const;
+		record_entry_t * find_by_old_text(const std::string & old_text);
+		const record_entry_t * find_by_old_text(const std::string & old_text) const;
 
 		size_t size() const
 		{
@@ -83,6 +86,8 @@ public:
 		static constexpr const char * missing = "missing";
 		static constexpr const char * duplicate = "duplicate";
 		static constexpr const char * matched_by_coords = "matched_by_coords";
+		static constexpr const char * matched_by_fingerprint = "matched_by_fingerprint";
+		static constexpr const char * matched_by_heuristic = "matched_by_heuristic";
 		static constexpr const char * matched_by_info = "matched_by_info";
 		static constexpr const char * matched_by_name = "matched_by_name";
 		static constexpr const char * wilderness = "wilderness";

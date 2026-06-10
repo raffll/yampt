@@ -35,3 +35,18 @@ This applies to new code AND to fixes for existing code. When fixing a bug that 
 For record types that don't have a unique composite ID (CELL, DIAL, SCTX, BNAM), always use `old_text` as the lookup/matching key — not `key_text`. The `old_text` field contains the original game text and is stable across dictionaries.
 
 All other record types (INFO, FNAM, GMST, RNAM, DESC, INDX, TEXT) have unique `key_text` values and can use `key_text` for lookups.
+
+## CELL Keys Are Always Hashes
+
+All CELL dictionary entries use a 16-char hex FNV-1a hash as `key_text`, regardless of how the cell was matched:
+
+- **Exterior cells**: hash of `GRID[x,y]` coordinate string
+- **Interior cells (fingerprint)**: hash of the cell fingerprint (sorted DODTs + sorted ref IDs)
+- **Heuristic/name-matched cells**: hash of the foreign cell name
+- **Default (wilderness)**: hash of the `sDefaultCellname` value
+- **Region names**: hash of the FNAM display name
+- **Missing/unmatched**: hash of the cell name
+
+The `key_text` is never used for lookup during conversion. The converter and script parser use `find_by_old_text()` — a secondary index on `old_text` (first-wins) — to find cell translations by the cell name text encountered in the ESM.
+
+The `chapter_t::old_text_index` is populated on `insert()` and only stores the first entry for a given `old_text`. This means if multiple cells share the same foreign name, only the first inserted one is found by `find_by_old_text()`. This matches the original first-wins behavior.

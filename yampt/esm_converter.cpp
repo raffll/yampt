@@ -703,7 +703,13 @@ bool esm_converter_t::make_new_text(const tools_t::entry_t & entry, std::string 
 {
 	counter_all++;
 	new_text.clear();
-	auto * found = merger.get_dict().at(entry.type).find(entry.key_text);
+
+	const tools_t::record_entry_t * found = nullptr;
+	if (entry.type == tools_t::rec_type_t::cell)
+		found = merger.get_dict().at(entry.type).find_by_old_text(entry.val_text);
+	else
+		found = merger.get_dict().at(entry.type).find(entry.key_text);
+
 	if (found)
 	{
 		new_text = found->new_text;
