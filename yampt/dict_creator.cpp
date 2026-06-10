@@ -1054,7 +1054,11 @@ void dict_creator_t::make_dict_cell_interior_heuristic(
 				bool found = false;
 				for (const auto & cw : compare_words)
 				{
-					if (cw == w) { found = true; break; }
+					if (cw == w)
+					{
+						found = true;
+						break;
+					}
 				}
 				if (!found)
 					compare_words.push_back(w);
@@ -1115,11 +1119,9 @@ void dict_creator_t::make_dict_cell_interior_heuristic(
 				{
 					resolved = true;
 					tools_t::add_log(
-					    "[TIE-SAME iter=" + std::to_string(iteration) +
-					        " orig=" + std::to_string(best_score_orig) +
-					        " model=" + std::to_string(best_score_model) +
-					        " count=" + std::to_string(best_count) + "] \"" + foreign_name + "\" -> \"" + best_name +
-					        "\"\r\n",
+					    "[TIE-SAME iter=" + std::to_string(iteration) + " orig=" + std::to_string(best_score_orig) +
+					        " model=" + std::to_string(best_score_model) + " count=" + std::to_string(best_count) +
+					        "] \"" + foreign_name + "\" -> \"" + best_name + "\"\r\n",
 					    true);
 				}
 			}
@@ -1132,10 +1134,9 @@ void dict_creator_t::make_dict_cell_interior_heuristic(
 				if (!resolved)
 				{
 					tools_t::add_log(
-					    "[TRANSLATE iter=" + std::to_string(iteration) +
-					        " orig=" + std::to_string(best_score_orig) +
-					        " model=" + std::to_string(best_score_model) +
-					        "] \"" + foreign_name + "\" -> \"" + best_name + "\"\r\n",
+					    "[TRANSLATE iter=" + std::to_string(iteration) + " orig=" + std::to_string(best_score_orig) +
+					        " model=" + std::to_string(best_score_model) + "] \"" + foreign_name + "\" -> \"" +
+					        best_name + "\"\r\n",
 					    true);
 				}
 
@@ -1154,10 +1155,9 @@ void dict_creator_t::make_dict_cell_interior_heuristic(
 			else if (best_score > 0 && best_count > 1 && !resolved)
 			{
 				tools_t::add_log(
-				    "[TIE iter=" + std::to_string(iteration) +
-				        " orig=" + std::to_string(best_score_orig) +
-				        " model=" + std::to_string(best_score_model) +
-				        " count=" + std::to_string(best_count) + "] \"" + foreign_name + "\"\r\n",
+				    "[TIE iter=" + std::to_string(iteration) + " orig=" + std::to_string(best_score_orig) +
+				        " model=" + std::to_string(best_score_model) + " count=" + std::to_string(best_count) + "] \"" +
+				        foreign_name + "\"\r\n",
 				    true);
 			}
 		}
