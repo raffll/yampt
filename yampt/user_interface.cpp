@@ -156,7 +156,9 @@ void user_interface_t::make_dict_base()
 	{
 		if (engine.load(translate_model_path))
 		{
-			tools_t::add_log("[info] translation engine loaded: " + engine.source_language() + " -> " + engine.target_language() + "\r\n");
+			tools_t::add_log(
+			    "[info] translation engine loaded: " + engine.source_language() + " -> " + engine.target_language() +
+			    "\r\n");
 			engine_ptr = &engine;
 		}
 		else

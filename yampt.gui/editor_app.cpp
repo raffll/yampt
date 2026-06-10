@@ -664,18 +664,18 @@ void editor_app_t::render_sidebar()
 
 void editor_app_t::render_status_summary_bar()
 {
-	static const char * status_names[] = { "untranslated",           "missing",              "duplicate",
-		                                   "matched_by_coords",      "matched_by_fingerprint","matched_by_heuristic",
-		                                   "matched_by_info",        "matched_by_name",      "wilderness",
-		                                   "region",                 "auto_identical",        "auto_base",
-		                                   "auto_translated",        "auto_heuristic",       "auto_changed",
-		                                   "in_progress",            "translated",           "has_errors" };
-	static const char * status_labels[] = { "Untranslated",          "Missing",              "Duplicate",
-		                                    "Matched Coords",        "Matched Fingerprint",  "Matched Heuristic",
-		                                    "Matched Info",          "Matched Name",         "Wilderness",
-		                                    "Region",                "Auto Identical",       "Auto Base",
-		                                    "Auto Translated",       "Auto Heuristic",       "Auto Changed",
-		                                    "In Progress",           "Translated",           "Has Errors" };
+	static const char * status_names[] = {
+		"untranslated",         "missing",         "duplicate",       "matched_by_coords", "matched_by_fingerprint",
+		"matched_by_heuristic", "matched_by_info", "matched_by_name", "wilderness",        "region",
+		"auto_identical",       "auto_base",       "auto_translated", "auto_heuristic",    "auto_changed",
+		"in_progress",          "translated",      "has_errors"
+	};
+	static const char * status_labels[] = {
+		"Untranslated",      "Missing",      "Duplicate",       "Matched Coords", "Matched Fingerprint",
+		"Matched Heuristic", "Matched Info", "Matched Name",    "Wilderness",     "Region",
+		"Auto Identical",    "Auto Base",    "Auto Translated", "Auto Heuristic", "Auto Changed",
+		"In Progress",       "Translated",   "Has Errors"
+	};
 	static constexpr size_t status_count = 18;
 
 	int counts[status_count] = {};
@@ -833,8 +833,7 @@ void editor_app_t::render_main_panel()
 	}
 
 	ImGui::TableSetupScrollFreeze(0, 1);
-	ImGui::TableSetupColumn(
-	    "Type", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_DefaultSort, 50.0f);
+	ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_DefaultSort, 50.0f);
 	ImGui::TableSetupColumn("Key", ImGuiTableColumnFlags_WidthFixed, config_.column_widths[0]);
 	ImGui::TableSetupColumn("Original", ImGuiTableColumnFlags_WidthStretch);
 	ImGui::TableSetupColumn("Translation", ImGuiTableColumnFlags_WidthStretch);
@@ -938,7 +937,11 @@ void editor_app_t::render_main_panel()
 			}
 			ImGui::PushID(i);
 
-			if (ImGui::Selectable(tools_t::type_to_str(row_ref.type).c_str(), is_selected, ImGuiSelectableFlags_SpanAllColumns, ImVec2(0, 0)))
+			if (ImGui::Selectable(
+			        tools_t::type_to_str(row_ref.type).c_str(),
+			        is_selected,
+			        ImGuiSelectableFlags_SpanAllColumns,
+			        ImVec2(0, 0)))
 			{
 				selected_row = i;
 				selected_row_left_ = i;

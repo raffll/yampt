@@ -274,9 +274,9 @@ std::string tools_t::type_to_str(tools_t::rec_type_t type)
 		return "GMDT";
 
 	case tools_t::rec_type_t::default_val:
-		return "+ Default";
+		return "CELL";
 	case tools_t::rec_type_t::regn:
-		return "+ REGN";
+		return "REGN";
 
 	default:
 		return "N/A";

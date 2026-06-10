@@ -21,7 +21,10 @@ public:
 
 	dict_creator_t(const std::string & plugin_path, const tools_t::dict_t * base_dict = nullptr);
 
-	dict_creator_t(const std::string & path, const std::string & path_ext, translation_engine_t * translation_engine = nullptr);
+	dict_creator_t(
+	    const std::string & path,
+	    const std::string & path_ext,
+	    translation_engine_t * translation_engine = nullptr);
 
 private:
 	struct pattern_t
@@ -61,11 +64,11 @@ private:
 	    const std::string & matched_source,
 	    const std::string & matched_translation);
 
-	void make_dict_cell_unordered_exterior();
-	void make_dict_cell_unordered_interior();
-	void make_dict_cell_unordered_default();
-	void make_dict_cell_unordered_regn();
-	void make_dict_cell_unordered_add_missing(const std::vector<std::pair<size_t, std::string>> & missing_cells);
+	void make_dict_cell_exterior();
+	void make_dict_cell_interior();
+	void make_dict_cell_default();
+	void make_dict_cell_regn();
+	void make_dict_cell_add_missing(const std::vector<std::pair<size_t, std::string>> & missing_cells);
 
 	void make_dict_gmst();
 	void make_dict_fnam();
@@ -83,7 +86,7 @@ private:
 	cell_index_t build_cell_index(esm_reader_t & esm_src, std::set<std::string> & duplicates);
 	static std::string make_cell_fingerprint(esm_reader_t & esm_src);
 	static std::string make_cell_key_text(const std::string & fingerprint);
-	void make_dict_cell_unordered_interior_heuristic(
+	void make_dict_cell_interior_heuristic(
 	    std::vector<std::pair<size_t, std::string>> & missing_cells,
 	    const std::set<size_t> & matched_native_records);
 

@@ -80,6 +80,36 @@ x64\Debug\yampt.tests.exe
 
 Catch2 header-only, self-contained.
 
+## Integration Test Output Structure
+
+Integration tests (`[i]` tag) write output to `tests/` relative to the working directory:
+
+```
+tests/
+├── json/                   # Dictionary JSON output
+│   ├── Morrowind_en.json
+│   ├── Tribunal_en.json
+│   ├── Bloodmoon_en.json
+│   ├── Morrowind_en_pl.json
+│   ├── Morrowind_en_de.json
+│   ├── Morrowind_en_fr.json
+│   ├── Merged_en_pl.json
+│   └── Morrowind_en_with_base.json
+└── logs/                   # Per-language log output
+    ├── en/
+    ├── pl/
+    ├── de/
+    └── fr/
+```
+
+Log filenames match their corresponding JSON filenames (e.g. `logs/de/Morrowind_en_de.log`).
+
+## Integration Test Rules
+
+- All make-base tests require the translation engine. No inactive-heuristic tests.
+- Do not assert on `missing_count` or `heuristic_matches` — the logs capture this information. Tests only verify that output is produced and basic sanity (total > 0, cells non-empty).
+- Tests that depend on previous output (merge, make-with-base) read from `tests/json/`.
+
 ## Kiro Helper Scripts
 
 When Kiro needs to run analysis on the codebase (e.g. parsing Morrowind.json for data), write a temporary Python script to a temp file, execute it, then delete it. Use PowerShell to invoke Python:

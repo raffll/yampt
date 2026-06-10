@@ -70,9 +70,7 @@ bool translation_engine_t::load(const std::string & model_pack_path)
 		}
 
 		impl_->translator = std::make_unique<ctranslate2::Translator>(
-			model_dir.string(),
-			ctranslate2::Device::CPU,
-			ctranslate2::ComputeType::DEFAULT);
+		    model_dir.string(), ctranslate2::Device::CPU, ctranslate2::ComputeType::DEFAULT);
 	}
 	catch (...)
 	{

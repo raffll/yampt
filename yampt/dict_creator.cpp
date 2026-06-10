@@ -13,7 +13,10 @@ dict_creator_t::dict_creator_t(const std::string & plugin_path, const tools_t::d
 		make_dict();
 }
 
-dict_creator_t::dict_creator_t(const std::string & path, const std::string & path_ext, translation_engine_t * translation_engine)
+dict_creator_t::dict_creator_t(
+    const std::string & path,
+    const std::string & path_ext,
+    translation_engine_t * translation_engine)
     : esm(path)
     , esm_ext(path_ext)
     , esm_ref(esm_ext)
@@ -41,29 +44,26 @@ void dict_creator_t::make_dict()
 	make_dict_indx();
 	make_dict_info();
 
+	make_dict_cell_exterior();
+	make_dict_cell_interior();
+	make_dict_cell_default();
+	make_dict_cell_regn();
+
 	if (is_make_mode)
 	{
-		make_dict_cell_unordered_exterior();
-		make_dict_cell_unordered_interior();
-		make_dict_cell_unordered_default();
-		make_dict_cell_unordered_regn();
 		make_dict_dial();
 		make_dict_script({ "INFO", "INAM", "BNAM", tools_t::rec_type_t::bnam });
 		make_dict_script({ "SCPT", "SCHD", "SCTX", tools_t::rec_type_t::sctx });
 	}
 	else
 	{
-		make_dict_cell_unordered_exterior();
-		make_dict_cell_unordered_interior();
-		make_dict_cell_unordered_default();
-		make_dict_cell_unordered_regn();
 		make_dict_dial_unordered();
 		make_dict_script_unordered({ "INFO", "INAM", "BNAM", tools_t::rec_type_t::bnam });
 		make_dict_script_unordered({ "SCPT", "SCHD", "SCTX", tools_t::rec_type_t::sctx });
 	}
 }
 
-void dict_creator_t::make_dict_cell_unordered_default()
+void dict_creator_t::make_dict_cell_default()
 {
 	reset_counters();
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
@@ -104,10 +104,10 @@ void dict_creator_t::make_dict_cell_unordered_default()
 			break;
 		}
 	}
-	print_log_line(tools_t::rec_type_t::default_val);
+	print_log_line(tools_t::rec_type_t::cell);
 }
 
-void dict_creator_t::make_dict_cell_unordered_regn()
+void dict_creator_t::make_dict_cell_regn()
 {
 	reset_counters();
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
@@ -147,7 +147,7 @@ void dict_creator_t::make_dict_cell_unordered_regn()
 			}
 		}
 	}
-	print_log_line(tools_t::rec_type_t::regn);
+	print_log_line(tools_t::rec_type_t::cell);
 }
 
 void dict_creator_t::build_indexes()
@@ -644,7 +644,9 @@ std::string dict_creator_t::make_exterior_coord_key(const std::string & data_con
 	return "GRID[" + std::to_string(grid_x) + "," + std::to_string(grid_y) + "]";
 }
 
-dict_creator_t::cell_index_t dict_creator_t::build_cell_index(esm_reader_t & esm_src, std::set<std::string> & duplicates)
+dict_creator_t::cell_index_t dict_creator_t::build_cell_index(
+    esm_reader_t & esm_src,
+    std::set<std::string> & duplicates)
 {
 	cell_index_t index;
 
@@ -747,7 +749,7 @@ std::string dict_creator_t::make_cell_key_text(const std::string & fingerprint)
 	return std::string(buf);
 }
 
-void dict_creator_t::make_dict_cell_unordered_exterior()
+void dict_creator_t::make_dict_cell_exterior()
 {
 	std::unordered_map<std::string, size_t> esm_index;
 
@@ -829,11 +831,11 @@ void dict_creator_t::make_dict_cell_unordered_exterior()
 		}
 	}
 
-	make_dict_cell_unordered_add_missing(missing_cells);
+	make_dict_cell_add_missing(missing_cells);
 	print_log_line(tools_t::rec_type_t::cell);
 }
 
-void dict_creator_t::make_dict_cell_unordered_interior()
+void dict_creator_t::make_dict_cell_interior()
 {
 	std::set<std::string> duplicates;
 	auto cell_index_esm = build_cell_index(esm, duplicates);
@@ -905,8 +907,8 @@ void dict_creator_t::make_dict_cell_unordered_interior()
 		}
 	}
 
-	make_dict_cell_unordered_interior_heuristic(missing_cells, matched_native_records);
-	make_dict_cell_unordered_add_missing(missing_cells);
+	make_dict_cell_interior_heuristic(missing_cells, matched_native_records);
+	make_dict_cell_add_missing(missing_cells);
 	print_log_line(tools_t::rec_type_t::cell);
 }
 
@@ -949,7 +951,7 @@ static int count_shared_words(const std::vector<std::string> & a, const std::vec
 	return count;
 }
 
-void dict_creator_t::make_dict_cell_unordered_interior_heuristic(
+void dict_creator_t::make_dict_cell_interior_heuristic(
     std::vector<std::pair<size_t, std::string>> & missing_cells,
     const std::set<size_t> & matched_native_records)
 {
@@ -988,6 +990,7 @@ void dict_creator_t::make_dict_cell_unordered_interior_heuristic(
 
 	std::set<size_t> matched_native;
 	std::set<size_t> matched_foreign;
+	std::set<std::string> matched_native_names;
 
 	for (size_t fi = 0; fi < missing_cells.size(); ++fi)
 	{
@@ -1001,6 +1004,7 @@ void dict_creator_t::make_dict_cell_unordered_interior_heuristic(
 			{
 				matched_foreign.insert(fi);
 				matched_native.insert(ni);
+				matched_native_names.insert(foreign_name);
 
 				tools_t::add_log("[EXACT] \"" + foreign_name + "\"\r\n", true);
 
@@ -1092,9 +1096,11 @@ void dict_creator_t::make_dict_cell_unordered_interior_heuristic(
 				if (all_same_name)
 				{
 					resolved = true;
-					tools_t::add_log("[TIE-SAME iter=" + std::to_string(iteration) + " score=" +
-					    std::to_string(best_score) + " count=" + std::to_string(best_count) + "] \"" +
-					    foreign_name + "\" -> \"" + best_name + "\"\r\n", true);
+					tools_t::add_log(
+					    "[TIE-SAME iter=" + std::to_string(iteration) + " score=" + std::to_string(best_score) +
+					        " count=" + std::to_string(best_count) + "] \"" + foreign_name + "\" -> \"" + best_name +
+					        "\"\r\n",
+					    true);
 				}
 			}
 
@@ -1105,9 +1111,10 @@ void dict_creator_t::make_dict_cell_unordered_interior_heuristic(
 
 				if (!resolved)
 				{
-					tools_t::add_log("[TRANSLATE iter=" + std::to_string(iteration) + " score=" +
-					    std::to_string(best_score) + "] \"" + foreign_name + "\" => \"" +
-					    translated_text + "\" -> \"" + best_name + "\"\r\n", true);
+					tools_t::add_log(
+					    "[TRANSLATE iter=" + std::to_string(iteration) + " score=" + std::to_string(best_score) +
+					        "] \"" + foreign_name + "\" -> \"" + best_name + "\"\r\n",
+					    true);
 				}
 
 				auto key_text = make_cell_key_text(foreign_name);
@@ -1117,15 +1124,17 @@ void dict_creator_t::make_dict_cell_unordered_interior_heuristic(
 				{
 					auto * entry = dict.at(tools_t::rec_type_t::cell).find(key_text);
 					if (entry && entry->status.empty())
-						entry->status = resolved ? tools_t::status_t::matched_by_name : tools_t::status_t::matched_by_heuristic;
+						entry->status =
+						    resolved ? tools_t::status_t::matched_by_name : tools_t::status_t::matched_by_heuristic;
 				}
 				progress = true;
 			}
 			else if (best_score > 0 && best_count > 1 && !resolved)
 			{
-				tools_t::add_log("[TIE iter=" + std::to_string(iteration) + " score=" +
-				    std::to_string(best_score) + " count=" + std::to_string(best_count) + "] \"" +
-				    foreign_name + "\"\r\n", true);
+				tools_t::add_log(
+				    "[TIE iter=" + std::to_string(iteration) + " score=" + std::to_string(best_score) +
+				        " count=" + std::to_string(best_count) + "] \"" + foreign_name + "\"\r\n",
+				    true);
 			}
 		}
 	}
@@ -1140,7 +1149,7 @@ void dict_creator_t::make_dict_cell_unordered_interior_heuristic(
 	tools_t::add_log("--- UNMATCHED NATIVE ---\r\n", true);
 	for (size_t ni = 0; ni < native_cells.size(); ++ni)
 	{
-		if (!matched_native.count(ni))
+		if (!matched_native.count(ni) && !matched_native_names.count(native_cells[ni].second))
 			tools_t::add_log("  " + native_cells[ni].second + "\r\n", true);
 	}
 
@@ -1236,8 +1245,7 @@ std::string dict_creator_t::make_dict_dial_unordered_pattern(esm_reader_t & esm_
 	return pattern;
 }
 
-void dict_creator_t::make_dict_cell_unordered_add_missing(
-    const std::vector<std::pair<size_t, std::string>> & missing_cells)
+void dict_creator_t::make_dict_cell_add_missing(const std::vector<std::pair<size_t, std::string>> & missing_cells)
 {
 	for (const auto & [rec_index, cell_name] : missing_cells)
 	{
