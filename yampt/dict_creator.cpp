@@ -953,8 +953,6 @@ void dict_creator_t::make_dict_cell_unordered_interior_heuristic(
     std::vector<std::pair<size_t, std::string>> & missing_cells,
     const std::set<size_t> & matched_native_records)
 {
-	std::ofstream log("heuristic_log.txt", std::ios::app);
-
 	std::vector<std::pair<size_t, std::string>> native_cells;
 
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
@@ -980,14 +978,13 @@ void dict_creator_t::make_dict_cell_unordered_interior_heuristic(
 		native_cells.push_back({ i, esm.get_value().text });
 	}
 
-	log << "=== HEURISTIC START ===\n";
-	log << "Foreign missing: " << missing_cells.size() << "\n";
-	log << "Native unmatched: " << native_cells.size() << "\n";
+	tools_t::add_log("=== HEURISTIC START ===\r\n", true);
+	tools_t::add_log("Foreign missing: " + std::to_string(missing_cells.size()) + "\r\n", true);
+	tools_t::add_log("Native unmatched: " + std::to_string(native_cells.size()) + "\r\n", true);
 	if (translation_engine_ && translation_engine_->is_loaded())
-		log << "Translation engine: active\n";
+		tools_t::add_log("Translation engine: active\r\n", true);
 	else
-		log << "Translation engine: inactive (heuristic skipped)\n";
-	log << "\n";
+		tools_t::add_log("Translation engine: inactive (heuristic skipped)\r\n", true);
 
 	std::set<size_t> matched_native;
 	std::set<size_t> matched_foreign;
@@ -1005,7 +1002,7 @@ void dict_creator_t::make_dict_cell_unordered_interior_heuristic(
 				matched_foreign.insert(fi);
 				matched_native.insert(ni);
 
-				log << "[EXACT] \"" << foreign_name << "\"\n";
+				tools_t::add_log("[EXACT] \"" + foreign_name + "\"\r\n", true);
 
 				auto key_text = make_cell_key_text(foreign_name);
 				insert_entry(key_text, foreign_name, foreign_name, tools_t::rec_type_t::cell);
@@ -1095,8 +1092,9 @@ void dict_creator_t::make_dict_cell_unordered_interior_heuristic(
 				if (all_same_name)
 				{
 					resolved = true;
-					log << "[TIE-SAME iter=" << iteration << " score=" << best_score << " count=" << best_count << "] \""
-					    << foreign_name << "\" -> \"" << best_name << "\"\n";
+					tools_t::add_log("[TIE-SAME iter=" + std::to_string(iteration) + " score=" +
+					    std::to_string(best_score) + " count=" + std::to_string(best_count) + "] \"" +
+					    foreign_name + "\" -> \"" + best_name + "\"\r\n", true);
 				}
 			}
 
@@ -1107,8 +1105,9 @@ void dict_creator_t::make_dict_cell_unordered_interior_heuristic(
 
 				if (!resolved)
 				{
-					log << "[TRANSLATE iter=" << iteration << " score=" << best_score << "] \""
-					    << foreign_name << "\" => \"" << translated_text << "\" -> \"" << best_name << "\"\n";
+					tools_t::add_log("[TRANSLATE iter=" + std::to_string(iteration) + " score=" +
+					    std::to_string(best_score) + "] \"" + foreign_name + "\" => \"" +
+					    translated_text + "\" -> \"" + best_name + "\"\r\n", true);
 				}
 
 				auto key_text = make_cell_key_text(foreign_name);
@@ -1124,26 +1123,26 @@ void dict_creator_t::make_dict_cell_unordered_interior_heuristic(
 			}
 			else if (best_score > 0 && best_count > 1 && !resolved)
 			{
-				log << "[TIE iter=" << iteration << " score=" << best_score << " count=" << best_count << "] \""
-				    << foreign_name << "\"\n";
+				tools_t::add_log("[TIE iter=" + std::to_string(iteration) + " score=" +
+				    std::to_string(best_score) + " count=" + std::to_string(best_count) + "] \"" +
+				    foreign_name + "\"\r\n", true);
 			}
 		}
 	}
 
-	log << "\n--- UNMATCHED FOREIGN ---\n";
+	tools_t::add_log("--- UNMATCHED FOREIGN ---\r\n", true);
 	for (size_t fi = 0; fi < missing_cells.size(); ++fi)
 	{
 		if (!matched_foreign.count(fi))
-			log << "  " << missing_cells[fi].second << "\n";
+			tools_t::add_log("  " + missing_cells[fi].second + "\r\n", true);
 	}
 
-	log << "\n--- UNMATCHED NATIVE ---\n";
+	tools_t::add_log("--- UNMATCHED NATIVE ---\r\n", true);
 	for (size_t ni = 0; ni < native_cells.size(); ++ni)
 	{
 		if (!matched_native.count(ni))
-			log << "  " << native_cells[ni].second << "\n";
+			tools_t::add_log("  " + native_cells[ni].second + "\r\n", true);
 	}
-	log << "\n";
 
 	std::vector<std::pair<size_t, std::string>> still_missing;
 	for (size_t fi = 0; fi < missing_cells.size(); ++fi)

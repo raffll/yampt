@@ -22,6 +22,22 @@ int main(int argc, char * argv[])
 		tools_t::add_log("[error] unknown error\r\n");
 	}
 
-	tools_t::write_text(tools_t::get_log(), "yampt.log");
+	auto exe_dir = std::filesystem::path(argv[0]).parent_path();
+	if (exe_dir.empty())
+		exe_dir = std::filesystem::current_path();
+
+	auto now = std::chrono::system_clock::now();
+	auto time = std::chrono::system_clock::to_time_t(now);
+	std::tm tm{};
+#ifdef _WIN32
+	localtime_s(&tm, &time);
+#else
+	localtime_r(&time, &tm);
+#endif
+	char time_str[32];
+	std::strftime(time_str, sizeof(time_str), "%Y%m%d_%H%M%S", &tm);
+	auto log_path = exe_dir / (std::string("yampt_") + time_str + ".log");
+
+	tools_t::write_text(tools_t::get_log(), log_path.string());
 	return tools_t::has_error() ? 1 : 0;
 }

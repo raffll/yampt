@@ -12,3 +12,4 @@ x64/
 *.log
 *.ini
 /models
+/yampt.tests/tests

@@ -15,6 +15,26 @@ namespace fs = std::filesystem;
 
 static const std::string test_dir = "tests";
 
+static int log_counter = 0;
+
+static void flush_log(const std::string & test_name)
+{
+	auto log = tools_t::get_log();
+	if (log.empty())
+		return;
+
+	std::string safe_name = test_name;
+	for (auto & c : safe_name)
+	{
+		if (c == ' ' || c == '/' || c == '\\' || c == ':' || c == '*' || c == '?' || c == '"' || c == '<' || c == '>' || c == '|')
+			c = '_';
+	}
+
+	auto path = test_dir + "/" + std::to_string(++log_counter) + "_" + safe_name + ".log";
+	tools_t::write_text(log, path);
+	tools_t::reset_log();
+}
+
 static const tools_t::record_entry_t * find_by_new_text(
     const tools_t::chapter_t & chapter, const std::string & text)
 {
@@ -31,6 +51,7 @@ TEST_CASE("cleanup test output directory", "[i]")
 	fs::remove_all(test_dir);
 	fs::create_directories(test_dir);
 	REQUIRE(fs::is_directory(test_dir));
+	flush_log("cleanup");
 }
 
 TEST_CASE("make EN, no base dict", "[i]")
@@ -52,6 +73,7 @@ TEST_CASE("make EN, no base dict", "[i]")
 		REQUIRE(fs::exists(output));
 		REQUIRE(fs::file_size(output) > 0);
 	}
+	flush_log("make_EN_no_base_dict");
 }
 
 TEST_CASE("make-base EN to PL", "[i]")
@@ -89,6 +111,7 @@ TEST_CASE("make-base EN to PL", "[i]")
 		dict_writer_t::write(dict, output);
 		REQUIRE(fs::exists(output));
 	}
+	flush_log("make-base_EN_to_PL");
 }
 
 TEST_CASE("make-base EN to DE", "[i]")
@@ -126,6 +149,7 @@ TEST_CASE("make-base EN to DE", "[i]")
 		dict_writer_t::write(dict, output);
 		REQUIRE(fs::exists(output));
 	}
+	flush_log("make-base_EN_to_DE");
 }
 
 TEST_CASE("make-base EN to FR", "[i]")
@@ -156,13 +180,11 @@ TEST_CASE("make-base EN to FR", "[i]")
 		dict_writer_t::write(dict, output);
 		REQUIRE(fs::exists(output));
 	}
+	flush_log("make-base_EN_to_FR");
 }
 
 TEST_CASE("log missing and duplicate cells to file", "[i]")
 {
-	std::ofstream missing_log("tests/missing_cells.txt");
-	std::ofstream dup_log("tests/duplicate_cells.txt");
-
 	for (const auto & lang : { "pl", "de", "fr" })
 	{
 		for (const auto & name : { "Morrowind", "Tribunal", "Bloodmoon" })
@@ -176,12 +198,13 @@ TEST_CASE("log missing and duplicate cells to file", "[i]")
 			for (const auto & entry : cell_chapter.records)
 			{
 				if (entry.status == tools_t::status_t::missing)
-					missing_log << lang << "/" << name << ": " << entry.old_text << "\n";
+					tools_t::add_log("[missing] " + std::string(lang) + "/" + name + ": " + entry.old_text + "\r\n", true);
 				if (entry.status == tools_t::status_t::duplicate)
-					dup_log << lang << "/" << name << ": " << entry.key_text << " | old=" << entry.old_text << " | new=" << entry.new_text << "\n";
+					tools_t::add_log("[duplicate] " + std::string(lang) + "/" + name + ": " + entry.key_text + " | old=" + entry.old_text + " | new=" + entry.new_text + "\r\n", true);
 			}
 		}
 	}
+	flush_log("missing_and_duplicate_cells");
 }
 
 TEST_CASE("merge EN to PL", "[i]")
@@ -206,6 +229,7 @@ TEST_CASE("merge EN to PL", "[i]")
 	auto output = test_dir + "/Merged_en_pl.json";
 	dict_writer_t::write(dict, output);
 	REQUIRE(fs::exists(output));
+	flush_log("merge_EN_to_PL");
 }
 
 TEST_CASE("make EN with base dict", "[i]")
@@ -228,6 +252,7 @@ TEST_CASE("make EN with base dict", "[i]")
 	auto output = test_dir + "/Morrowind_en_with_base.json";
 	dict_writer_t::write(dict, output);
 	REQUIRE(fs::exists(output));
+	flush_log("make_EN_with_base_dict");
 }
 
 TEST_CASE("make-base EN to DE with translation engine", "[i]")
@@ -263,6 +288,7 @@ TEST_CASE("make-base EN to DE with translation engine", "[i]")
 	auto output = test_dir + "/Morrowind_en_de_translated.json";
 	dict_writer_t::write(dict, output);
 	REQUIRE(fs::exists(output));
+	flush_log("make-base_EN_to_DE_translated");
 }
 
 TEST_CASE("make-base EN to PL with translation engine", "[i]")
@@ -298,6 +324,7 @@ TEST_CASE("make-base EN to PL with translation engine", "[i]")
 	auto output = test_dir + "/Morrowind_en_pl_translated.json";
 	dict_writer_t::write(dict, output);
 	REQUIRE(fs::exists(output));
+	flush_log("make-base_EN_to_PL_translated");
 }
 
 TEST_CASE("make-base EN to FR with translation engine", "[i]")
@@ -333,12 +360,11 @@ TEST_CASE("make-base EN to FR with translation engine", "[i]")
 	auto output = test_dir + "/Morrowind_en_fr_translated.json";
 	dict_writer_t::write(dict, output);
 	REQUIRE(fs::exists(output));
+	flush_log("make-base_EN_to_FR_translated");
 }
 
 TEST_CASE("log missing cells with translation engine", "[i]")
 {
-	std::ofstream log("tests/missing_cells_translated.txt");
-
 	struct model_info
 	{
 		const char * lang;
@@ -369,8 +395,9 @@ TEST_CASE("log missing cells with translation engine", "[i]")
 			for (const auto & entry : cell_chapter.records)
 			{
 				if (entry.status == tools_t::status_t::missing)
-					log << m.lang << "/" << name << ": " << entry.old_text << "\n";
+					tools_t::add_log("[missing] " + std::string(m.lang) + "/" + name + ": " + entry.old_text + "\r\n", true);
 			}
 		}
 	}
+	flush_log("missing_cells_translated");
 }

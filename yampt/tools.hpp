@@ -150,7 +150,7 @@ public:
 
 	static std::string get_log()
 	{
-		return log1 + log2;
+		return log1;
 	}
 
 	static bool has_error()
@@ -168,6 +168,5 @@ public:
 
 private:
 	static std::string log1;
-	static std::string log2;
 	static bool error_flag;
 };

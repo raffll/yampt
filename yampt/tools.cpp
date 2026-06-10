@@ -1,7 +1,6 @@
 #include "tools.hpp"
 
 std::string tools_t::log1;
-std::string tools_t::log2;
 bool tools_t::error_flag = false;
 
 const std::vector<std::string> tools_t::keywords { "messagebox", "choice", "say" };
@@ -207,24 +206,18 @@ std::string tools_t::replace_non_readable_chars_with_dot(const std::string & str
 
 void tools_t::add_log(const std::string & entry, const bool silent)
 {
-	if (!silent && entry.find("[error]") == 0)
+	if (entry.find("[error]") == 0)
 	{
 		error_flag = true;
 	}
 
-	if (!silent)
-	{
-		std::cout << entry;
-		log1 += entry;
-	}
-	else
-		log2 += entry;
+	std::cout << entry;
+	log1 += entry;
 }
 
 void tools_t::reset_log()
 {
 	log1.clear();
-	log2.clear();
 	error_flag = false;
 }
 
