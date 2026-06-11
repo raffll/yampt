@@ -99,6 +99,8 @@ void editor_app_t::frame()
 	render_menu_bar();
 	render_toolbar();
 	render_status_summary_bar();
+	render_dial_type_bar();
+	render_fnam_type_bar();
 
 	auto available = ImGui::GetContentRegionAvail();
 	float status_bar_height = 25.0f;
@@ -259,6 +261,50 @@ void editor_app_t::rebuild_row_data()
 					continue;
 			}
 
+			if ((type == tools_t::rec_type_t::info || type == tools_t::rec_type_t::bnam) &&
+			    dial_type_filter_.size() < 5)
+			{
+				const auto & key = chapter.records[i].key_text;
+				if (!key.empty() && dial_type_filter_.count(key[0]) == 0)
+					continue;
+			}
+
+			if (type == tools_t::rec_type_t::fnam && fnam_type_filter_.size() < 24)
+			{
+				const auto & key = chapter.records[i].key_text;
+				auto caret = key.find('^');
+				if (caret != std::string::npos)
+				{
+					auto prefix = key.substr(0, caret);
+					if (fnam_type_filter_.count(prefix) == 0)
+						continue;
+				}
+			}
+
+			if (type == tools_t::rec_type_t::desc && desc_type_filter_.size() < 3)
+			{
+				const auto & key = chapter.records[i].key_text;
+				auto caret = key.find('^');
+				if (caret != std::string::npos)
+				{
+					auto prefix = key.substr(0, caret);
+					if (desc_type_filter_.count(prefix) == 0)
+						continue;
+				}
+			}
+
+			if (type == tools_t::rec_type_t::indx && indx_type_filter_.size() < 2)
+			{
+				const auto & key = chapter.records[i].key_text;
+				auto caret = key.find('^');
+				if (caret != std::string::npos)
+				{
+					auto prefix = key.substr(0, caret);
+					if (indx_type_filter_.count(prefix) == 0)
+						continue;
+				}
+			}
+
 			if (!query.empty())
 			{
 				const auto & rec = chapter.records[i];
@@ -382,7 +428,7 @@ void editor_app_t::render_toolbar()
 		tools_t::rec_type_t::indx, tools_t::rec_type_t::bnam, tools_t::rec_type_t::sctx,
 	};
 
-	float toolbar_height = 52.0f;
+	float toolbar_height = 48.0f;
 	ImGui::BeginChild("Toolbar", ImVec2(0, toolbar_height), ImGuiChildFlags_None);
 
 	ImGui::SetNextItemWidth(200.0f);
@@ -563,7 +609,11 @@ void editor_app_t::render_toolbar()
 
 					std::string current_text = get_richedit_text();
 					set_richedit_text(current_text);
-					highlight_richedit_hyperlinks(current_text, f5_row.type, f5_entry.old_text);
+					if (f5_row.type == tools_t::rec_type_t::info)
+						highlight_richedit_hyperlinks(current_text, f5_row.type, f5_entry.old_text);
+					else if (f5_row.type == tools_t::rec_type_t::sctx || f5_row.type == tools_t::rec_type_t::bnam ||
+					         f5_row.type == tools_t::rec_type_t::text)
+						highlight_richedit_syntax(current_text, f5_row.type);
 
 					SendMessageA(richedit_hwnd_, EM_EXSETSEL, 0, (LPARAM)&saved_sel);
 				}
@@ -771,7 +821,7 @@ void editor_app_t::render_status_summary_bar()
 		}
 	}
 
-	ImGui::BeginChild("StatusSummary", ImVec2(0, 25), ImGuiChildFlags_None);
+	ImGui::BeginChild("StatusSummary", ImVec2(0, 20), ImGuiChildFlags_None);
 
 	{
 		bool all_statuses_active = status_filter_.empty();
@@ -909,6 +959,299 @@ void editor_app_t::render_status_summary_bar()
 	ImGui::SameLine();
 	std::string total = "Total: " + std::to_string(static_cast<int>(left_rows_.size()));
 	ImGui::TextUnformatted(total.c_str());
+
+	ImGui::EndChild();
+}
+
+void editor_app_t::render_dial_type_bar()
+{
+	bool any_dial = type_filter_solo_ &&
+	               (type_filter_.count(tools_t::rec_type_t::info) > 0 ||
+	                type_filter_.count(tools_t::rec_type_t::bnam) > 0);
+	bool any_desc = type_filter_solo_ && type_filter_.count(tools_t::rec_type_t::desc) > 0;
+	bool any_indx = type_filter_solo_ && type_filter_.count(tools_t::rec_type_t::indx) > 0;
+
+	if (!any_dial && !any_desc && !any_indx)
+		return;
+
+	static const char dial_types[] = { 'T', 'V', 'G', 'P', 'J' };
+	static const char * dial_labels[] = { "Topics", "Voice", "Greetings", "Persuasion", "Journal" };
+	static const char * desc_types[] = { "BSGN", "CLAS", "RACE" };
+	static const char * desc_labels[] = { "Birthsigns", "Classes", "Races" };
+	static const char * indx_types[] = { "SKIL", "MGEF" };
+	static const char * indx_labels[] = { "Skills", "Magic Effects" };
+
+	ImGui::BeginChild("DialTypeBar", ImVec2(0, 20), ImGuiChildFlags_None);
+
+	if (any_dial)
+	{
+		for (int i = 0; i < 5; ++i)
+		{
+			if (i > 0)
+				ImGui::SameLine();
+			bool is_active = dial_type_filter_.count(dial_types[i]) > 0;
+
+			if (is_active)
+			{
+				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 0.4f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.5f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.26f, 0.59f, 0.98f, 0.6f));
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
+				ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.26f, 0.59f, 0.98f, 0.6f));
+				ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0f);
+			}
+			else
+			{
+				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.1f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.26f, 0.59f, 0.98f, 0.2f));
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.4f, 0.4f, 1.0f));
+				ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.5f, 0.5f, 0.5f, 0.5f));
+				ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+			}
+			ImGui::SmallButton(dial_labels[i]);
+			ImGui::PopStyleVar(1);
+			ImGui::PopStyleColor(5);
+
+			if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
+			{
+				if (dial_type_filter_.size() == 1 && dial_type_filter_.count(dial_types[i]) > 0)
+					dial_type_filter_ = { 'T', 'V', 'G', 'P', 'J' };
+				else
+				{
+					dial_type_filter_.clear();
+					dial_type_filter_.insert(dial_types[i]);
+				}
+				rebuild_row_data();
+			}
+
+			if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+			{
+				if (is_active)
+					dial_type_filter_.erase(dial_types[i]);
+				else
+					dial_type_filter_.insert(dial_types[i]);
+				rebuild_row_data();
+			}
+		}
+	}
+
+	if (any_desc)
+	{
+		for (int i = 0; i < 3; ++i)
+		{
+			if (i > 0)
+				ImGui::SameLine();
+			bool is_active = desc_type_filter_.count(desc_types[i]) > 0;
+
+			if (is_active)
+			{
+				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 0.4f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.5f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.26f, 0.59f, 0.98f, 0.6f));
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
+				ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.26f, 0.59f, 0.98f, 0.6f));
+				ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0f);
+			}
+			else
+			{
+				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.1f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.26f, 0.59f, 0.98f, 0.2f));
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.4f, 0.4f, 1.0f));
+				ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.5f, 0.5f, 0.5f, 0.5f));
+				ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+			}
+			ImGui::SmallButton(desc_labels[i]);
+			ImGui::PopStyleVar(1);
+			ImGui::PopStyleColor(5);
+
+			if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
+			{
+				if (desc_type_filter_.size() == 1 && desc_type_filter_.count(desc_types[i]) > 0)
+					desc_type_filter_ = { "BSGN", "CLAS", "RACE" };
+				else
+				{
+					desc_type_filter_.clear();
+					desc_type_filter_.insert(desc_types[i]);
+				}
+				rebuild_row_data();
+			}
+
+			if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+			{
+				if (is_active)
+					desc_type_filter_.erase(desc_types[i]);
+				else
+					desc_type_filter_.insert(desc_types[i]);
+				rebuild_row_data();
+			}
+		}
+	}
+
+	if (any_indx)
+	{
+		for (int i = 0; i < 2; ++i)
+		{
+			if (i > 0)
+				ImGui::SameLine();
+			bool is_active = indx_type_filter_.count(indx_types[i]) > 0;
+
+			if (is_active)
+			{
+				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 0.4f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.5f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.26f, 0.59f, 0.98f, 0.6f));
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
+				ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.26f, 0.59f, 0.98f, 0.6f));
+				ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0f);
+			}
+			else
+			{
+				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.1f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.26f, 0.59f, 0.98f, 0.2f));
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.4f, 0.4f, 1.0f));
+				ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.5f, 0.5f, 0.5f, 0.5f));
+				ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+			}
+			ImGui::SmallButton(indx_labels[i]);
+			ImGui::PopStyleVar(1);
+			ImGui::PopStyleColor(5);
+
+			if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
+			{
+				if (indx_type_filter_.size() == 1 && indx_type_filter_.count(indx_types[i]) > 0)
+					indx_type_filter_ = { "SKIL", "MGEF" };
+				else
+				{
+					indx_type_filter_.clear();
+					indx_type_filter_.insert(indx_types[i]);
+				}
+				rebuild_row_data();
+			}
+
+			if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+			{
+				if (is_active)
+					indx_type_filter_.erase(indx_types[i]);
+				else
+					indx_type_filter_.insert(indx_types[i]);
+				rebuild_row_data();
+			}
+		}
+	}
+
+	ImGui::EndChild();
+}
+
+void editor_app_t::render_fnam_type_bar()
+{
+	if (!type_filter_solo_ || type_filter_.count(tools_t::rec_type_t::fnam) == 0)
+		return;
+
+	static const char * fnam_types[] = {
+		"ACTI", "ALCH", "APPA", "ARMO", "BOOK", "BSGN", "CLAS", "CLOT", "CONT", "CREA", "DOOR", "FACT",
+		"INGR", "LIGH", "LOCK", "MISC", "NPC_", "PROB", "RACE", "REGN", "REPA", "SKIL", "SPEL", "WEAP",
+	};
+	static const char * fnam_labels[] = {
+		"Activators", "Potions",   "Apparatus", "Armor",    "Books",   "Birthsigns", "Classes",   "Clothing",
+		"Containers", "Creatures", "Doors",     "Factions", "Ingred.", "Lights",     "Lockpicks", "Misc",
+		"NPCs",       "Probes",    "Races",     "Regions",  "Repairs", "Skills",     "Spells",    "Weapons",
+	};
+	static constexpr size_t fnam_count = 24;
+
+	ImGui::BeginChild("FnamTypeBar", ImVec2(0, 20), ImGuiChildFlags_None);
+
+	{
+		bool all_active = (fnam_type_filter_.size() == fnam_count);
+		if (all_active)
+		{
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 0.4f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.5f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.26f, 0.59f, 0.98f, 0.6f));
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.26f, 0.59f, 0.98f, 0.6f));
+			ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0f);
+		}
+		else
+		{
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.1f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.26f, 0.59f, 0.98f, 0.2f));
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.4f, 0.4f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.5f, 0.5f, 0.5f, 0.5f));
+			ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+		}
+		ImGui::SmallButton("All");
+		ImGui::PopStyleVar(1);
+		ImGui::PopStyleColor(5);
+		if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
+		{
+			if (all_active)
+				fnam_type_filter_.clear();
+			else
+			{
+				fnam_type_filter_.clear();
+				for (size_t j = 0; j < fnam_count; ++j)
+					fnam_type_filter_.insert(fnam_types[j]);
+			}
+			rebuild_row_data();
+		}
+	}
+
+	for (size_t i = 0; i < fnam_count; ++i)
+	{
+		ImGui::SameLine();
+		bool is_active = fnam_type_filter_.count(fnam_types[i]) > 0;
+
+		if (is_active)
+		{
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 0.4f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.5f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.26f, 0.59f, 0.98f, 0.6f));
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.26f, 0.59f, 0.98f, 0.6f));
+			ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0f);
+		}
+		else
+		{
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.1f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.26f, 0.59f, 0.98f, 0.2f));
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.4f, 0.4f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.5f, 0.5f, 0.5f, 0.5f));
+			ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+		}
+		ImGui::SmallButton(fnam_labels[i]);
+		ImGui::PopStyleVar(1);
+		ImGui::PopStyleColor(5);
+
+		if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
+		{
+			if (fnam_type_filter_.size() == 1 && fnam_type_filter_.count(fnam_types[i]) > 0)
+			{
+				fnam_type_filter_.clear();
+				for (size_t j = 0; j < fnam_count; ++j)
+					fnam_type_filter_.insert(fnam_types[j]);
+			}
+			else
+			{
+				fnam_type_filter_.clear();
+				fnam_type_filter_.insert(fnam_types[i]);
+			}
+			rebuild_row_data();
+		}
+
+		if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+		{
+			if (is_active)
+				fnam_type_filter_.erase(fnam_types[i]);
+			else
+				fnam_type_filter_.insert(fnam_types[i]);
+			rebuild_row_data();
+		}
+	}
 
 	ImGui::EndChild();
 }
@@ -2475,6 +2818,13 @@ void editor_app_t::highlight_richedit_syntax(const std::string & text, tools_t::
 	{
 		byte_to_wchar[i] = wchar_pos;
 		unsigned char c = static_cast<unsigned char>(text[i]);
+
+		if (c == '\n' && i > 0 && text[i - 1] == '\r')
+		{
+			i++;
+			continue;
+		}
+
 		int char_len = 1;
 		if (c >= 0xF0)
 			char_len = 4;
@@ -2532,7 +2882,7 @@ void editor_app_t::highlight_richedit_syntax(const std::string & text, tools_t::
 			color = RGB(200, 150, 50);
 			break;
 		case token_type_t::html_tag:
-			color = RGB(128, 128, 150);
+			color = RGB(140, 40, 50);
 			break;
 		default:
 			continue;

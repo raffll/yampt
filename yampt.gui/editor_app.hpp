@@ -84,6 +84,14 @@ private:
 	std::set<std::string> saved_status_filter_;
 	bool status_filter_solo_ = false;
 
+	std::set<char> dial_type_filter_ = { 'T', 'V', 'G', 'P', 'J' };
+	std::set<std::string> fnam_type_filter_ = {
+		"ACTI", "ALCH", "APPA", "ARMO", "BOOK", "BSGN", "CLAS", "CLOT", "CONT", "CREA", "DOOR", "FACT",
+		"INGR", "LIGH", "LOCK", "MISC", "NPC_", "PROB", "RACE", "REGN", "REPA", "SKIL", "SPEL", "WEAP",
+	};
+	std::set<std::string> desc_type_filter_ = { "BSGN", "CLAS", "RACE" };
+	std::set<std::string> indx_type_filter_ = { "SKIL", "MGEF" };
+
 	std::set<tools_t::rec_type_t> saved_type_filter_;
 	bool type_filter_solo_ = false;
 
@@ -115,6 +123,8 @@ private:
 	void render_toolbar();
 	void render_sidebar();
 	void render_status_summary_bar();
+	void render_dial_type_bar();
+	void render_fnam_type_bar();
 	void render_main_panel();
 	void render_status_bar();
 	void render_bottom_panel();
