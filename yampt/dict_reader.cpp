@@ -35,12 +35,6 @@ void dict_reader_t::parse_json(const std::string & content, const std::string & 
 		if (type_str == "encoding")
 			return;
 
-		if (type_str == "npc_flag" || type_str == "NPC_FLAG")
-		{
-			tools_t::add_log("[warning] legacy npc_flag chapter in \"" + path + "\", skipping\r\n");
-			return;
-		}
-
 		tools_t::rec_type_t type = tools_t::str_to_type(type_str);
 
 		if (type == tools_t::rec_type_t::unknown)

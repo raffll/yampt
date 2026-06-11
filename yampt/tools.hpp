@@ -93,6 +93,7 @@ public:
 		static constexpr const char * region = "region";
 		static constexpr const char * missing = "missing";
 		static constexpr const char * duplicate = "duplicate";
+		static constexpr const char * mismatch = "mismatch";
 		static constexpr const char * error = "error";
 
 		// single_with_base mode

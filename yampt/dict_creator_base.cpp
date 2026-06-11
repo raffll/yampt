@@ -395,10 +395,11 @@ void dict_creator_t::make_dict_base_sctx()
 		auto search = schd_index.find(script_name);
 		if (search == schd_index.end())
 		{
+			tools_t::add_log("[warning] SCTX not found: \"" + script_name + "\"\r\n");
 			for (const auto & msg : native_messages)
 			{
 				const auto key_text = script_name + "^" + msg;
-				insert_entry_base(key_text, "", msg, tools_t::rec_type_t::sctx, tools_t::status_t::error);
+				insert_entry_base(key_text, "", msg, tools_t::rec_type_t::sctx, tools_t::status_t::mismatch);
 			}
 			continue;
 		}
@@ -408,10 +409,11 @@ void dict_creator_t::make_dict_base_sctx()
 		esm_ref.set_value("SCTX");
 		if (!esm_ref.get_value().exist)
 		{
+			tools_t::add_log("[warning] SCTX not found: \"" + script_name + "\"\r\n");
 			for (const auto & msg : native_messages)
 			{
 				const auto key_text = script_name + "^" + msg;
-				insert_entry_base(key_text, "", msg, tools_t::rec_type_t::sctx, tools_t::status_t::error);
+				insert_entry_base(key_text, "", msg, tools_t::rec_type_t::sctx, tools_t::status_t::mismatch);
 			}
 			continue;
 		}
@@ -428,7 +430,7 @@ void dict_creator_t::make_dict_base_sctx()
 			for (const auto & msg : foreign_messages)
 			{
 				const auto key_text = script_name + "^" + msg;
-				insert_entry_base(key_text, msg, msg, tools_t::rec_type_t::sctx, tools_t::status_t::error);
+				insert_entry_base(key_text, msg, msg, tools_t::rec_type_t::sctx, tools_t::status_t::mismatch);
 			}
 			continue;
 		}
@@ -491,10 +493,11 @@ void dict_creator_t::make_dict_base_bnam()
 		auto search = info_index.find(info_key);
 		if (search == info_index.end())
 		{
+			tools_t::add_log("[warning] BNAM not found: \"" + info_key + "\"\r\n");
 			for (const auto & msg : native_messages)
 			{
 				const auto key_text = info_key + "^" + msg;
-				insert_entry_base(key_text, "", msg, tools_t::rec_type_t::bnam, tools_t::status_t::missing);
+				insert_entry_base(key_text, "", msg, tools_t::rec_type_t::bnam, tools_t::status_t::mismatch);
 			}
 			continue;
 		}
@@ -503,10 +506,11 @@ void dict_creator_t::make_dict_base_bnam()
 		esm_ref.set_value("BNAM");
 		if (!esm_ref.get_value().exist || esm_ref.get_value().text.empty())
 		{
+			tools_t::add_log("[warning] BNAM not found: \"" + info_key + "\"\r\n");
 			for (const auto & msg : native_messages)
 			{
 				const auto key_text = info_key + "^" + msg;
-				insert_entry_base(key_text, "", msg, tools_t::rec_type_t::bnam, tools_t::status_t::error);
+				insert_entry_base(key_text, "", msg, tools_t::rec_type_t::bnam, tools_t::status_t::mismatch);
 			}
 			continue;
 		}
@@ -515,10 +519,11 @@ void dict_creator_t::make_dict_base_bnam()
 
 		if (native_messages.size() != foreign_messages.size())
 		{
+			tools_t::add_log("[warning] BNAM line count mismatch: \"" + info_key + "\"\r\n");
 			for (const auto & msg : foreign_messages)
 			{
 				const auto key_text = info_key + "^" + msg;
-				insert_entry_base(key_text, msg, msg, tools_t::rec_type_t::bnam, tools_t::status_t::error);
+				insert_entry_base(key_text, msg, msg, tools_t::rec_type_t::bnam, tools_t::status_t::mismatch);
 			}
 			continue;
 		}

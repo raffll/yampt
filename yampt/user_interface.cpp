@@ -142,7 +142,7 @@ void user_interface_t::make_dict_()
 		dict_writer_t::write(creator.get_dict(), out_path);
 	}
 
-	tools_t::add_log("[info] done\r\n");
+	tools_t::add_log("[info] done!\r\n");
 }
 
 void user_interface_t::make_dict_base()
@@ -169,7 +169,7 @@ void user_interface_t::make_dict_base()
 
 	dict_creator_t creator(file_paths[0], file_paths[1], engine_ptr);
 	dict_writer_t::write(creator.get_dict(), creator.get_name().name + ".BASE.json");
-	tools_t::add_log("[info] done\r\n");
+	tools_t::add_log("[info] done!\r\n");
 }
 
 void user_interface_t::merge_dict()
@@ -199,7 +199,7 @@ void user_interface_t::merge_dict()
 	tools_t::add_log("[info] merging dictionaries\r\n");
 	dict_merger_t merger(dict_paths);
 	dict_writer_t::write(merger.get_dict(), output);
-	tools_t::add_log("[info] done\r\n");
+	tools_t::add_log("[info] done!\r\n");
 }
 
 void user_interface_t::convert_esm()
@@ -216,7 +216,7 @@ void user_interface_t::convert_esm()
 			std::filesystem::last_write_time(name, converter.get_time());
 		}
 	}
-	tools_t::add_log("[info] done\r\n");
+	tools_t::add_log("[info] done!\r\n");
 }
 
 void user_interface_t::create_esm()
@@ -233,5 +233,5 @@ void user_interface_t::create_esm()
 			std::filesystem::last_write_time(name, converter.get_time() + std::chrono::seconds(1));
 		}
 	}
-	tools_t::add_log("[info] done\r\n");
+	tools_t::add_log("[info] done!\r\n");
 }

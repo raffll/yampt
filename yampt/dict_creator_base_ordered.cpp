@@ -172,7 +172,8 @@ void dict_creator_t::process_rnam_ordered(size_t i)
 		}
 		else
 		{
-			insert_entry_base(key_text, "", new_text, tools_t::rec_type_t::rnam, tools_t::status_t::error);
+			tools_t::add_log("[warning] RNAM count mismatch: \"" + esm.get_key().text + "\"\r\n");
+			insert_entry_base(key_text, "", new_text, tools_t::rec_type_t::rnam, tools_t::status_t::mismatch);
 		}
 
 		esm.set_next_value("RNAM");
@@ -313,8 +314,9 @@ void dict_creator_t::process_sctx_ordered(size_t i)
 	esm_ref.set_value("SCTX");
 	if (!esm_ref.get_value().exist)
 	{
+		tools_t::add_log("[warning] SCTX not found: \"" + script_name + "\"\r\n");
 		for (const auto & msg : native_messages)
-			insert_entry_base(script_name + "^" + msg, "", msg, tools_t::rec_type_t::sctx, tools_t::status_t::error);
+			insert_entry_base(script_name + "^" + msg, "", msg, tools_t::rec_type_t::sctx, tools_t::status_t::mismatch);
 		return;
 	}
 
@@ -324,7 +326,7 @@ void dict_creator_t::process_sctx_ordered(size_t i)
 	{
 		tools_t::add_log("[warning] SCTX line count mismatch: \"" + script_name + "\"\r\n");
 		for (const auto & msg : foreign_messages)
-			insert_entry_base(script_name + "^" + msg, msg, msg, tools_t::rec_type_t::sctx, tools_t::status_t::error);
+			insert_entry_base(script_name + "^" + msg, msg, msg, tools_t::rec_type_t::sctx, tools_t::status_t::mismatch);
 		return;
 	}
 
@@ -355,10 +357,12 @@ void dict_creator_t::process_bnam_ordered(
 	esm_ref.set_value("BNAM");
 	if (!esm_ref.get_value().exist || esm_ref.get_value().text.empty())
 	{
+		const auto info_key = dial_type + "^" + dial_foreign_name + "^" + info_inam;
+		tools_t::add_log("[warning] BNAM not found: \"" + info_key + "\"\r\n");
 		for (const auto & msg : native_messages)
 		{
 			const auto key_text = dial_type + "^" + dial_foreign_name + "^" + info_inam + "^" + msg;
-			insert_entry_base(key_text, "", msg, tools_t::rec_type_t::bnam, tools_t::status_t::error);
+			insert_entry_base(key_text, "", msg, tools_t::rec_type_t::bnam, tools_t::status_t::mismatch);
 		}
 		return;
 	}
@@ -367,10 +371,12 @@ void dict_creator_t::process_bnam_ordered(
 
 	if (native_messages.size() != foreign_messages.size())
 	{
+		const auto info_key = dial_type + "^" + dial_foreign_name + "^" + info_inam;
+		tools_t::add_log("[warning] BNAM line count mismatch: \"" + info_key + "\"\r\n");
 		for (const auto & msg : foreign_messages)
 		{
 			const auto key_text = dial_type + "^" + dial_foreign_name + "^" + info_inam + "^" + msg;
-			insert_entry_base(key_text, msg, msg, tools_t::rec_type_t::bnam, tools_t::status_t::error);
+			insert_entry_base(key_text, msg, msg, tools_t::rec_type_t::bnam, tools_t::status_t::mismatch);
 		}
 		return;
 	}

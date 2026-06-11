@@ -471,9 +471,9 @@ void dict_creator_t::insert_entry_single_with_base(
 		return;
 	}
 
-	if (base_entry->status == tools_t::status_t::error)
+	if (base_entry->status == tools_t::status_t::mismatch)
 	{
-		insert_with_status(key_text, old_text, base_entry->new_text, type, tools_t::status_t::error);
+		insert_with_status(key_text, old_text, base_entry->new_text, type, tools_t::status_t::mismatch);
 		return;
 	}
 

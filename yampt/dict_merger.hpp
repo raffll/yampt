@@ -24,15 +24,13 @@ public:
 
 private:
 	void merge_dict();
-	void find_duplicate_values(tools_t::rec_type_t type);
-	void find_unused_info();
 	void print_summary_log();
 
 	std::vector<dict_reader_t> readers;
 	tools_t::dict_t dict;
 
 	int counter_merged = 0;
-	int counter_replaced = 0;
+	int counter_rejected = 0;
 	int counter_identical = 0;
 	int counter_all = 0;
 };
