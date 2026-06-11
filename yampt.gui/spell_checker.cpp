@@ -83,15 +83,24 @@ std::vector<spell_match_t> spell_checker_t::find_misspelled(const std::string & 
 	size_t i = 0;
 	while (i < text.size())
 	{
-		if (!std::isalnum(static_cast<unsigned char>(text[i])) && text[i] != '\'')
+		unsigned char c = static_cast<unsigned char>(text[i]);
+
+		bool is_word_char = std::isalnum(c) || c == '\'' || c >= 0x80;
+		if (!is_word_char)
 		{
 			++i;
 			continue;
 		}
 
 		size_t start = i;
-		while (i < text.size() && (std::isalnum(static_cast<unsigned char>(text[i])) || text[i] == '\''))
-			++i;
+		while (i < text.size())
+		{
+			unsigned char ch = static_cast<unsigned char>(text[i]);
+			if (std::isalnum(ch) || ch == '\'' || ch >= 0x80)
+				++i;
+			else
+				break;
+		}
 
 		size_t end = i;
 

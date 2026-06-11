@@ -44,19 +44,21 @@ void editor_app_t::init(SDL_Window * window)
 
 	for (const auto & path : config_.user_dict_paths)
 	{
+		int prev_count = workspace_.slot_count();
 		int idx = workspace_.load_dict(path, dict_kind_t::user);
 		if (idx < 0)
 			tools_t::add_log("[warn] cannot load user dict: \"" + path + "\"\r\n");
-		else
+		else if (workspace_.slot_count() > prev_count)
 			decode_dict_from_codepage(workspace_.get_slot(idx)->data, active_codepage());
 	}
 
 	for (const auto & path : config_.base_dict_paths)
 	{
+		int prev_count = workspace_.slot_count();
 		int idx = workspace_.load_dict(path, dict_kind_t::base);
 		if (idx < 0)
 			tools_t::add_log("[warn] cannot load base dict: \"" + path + "\"\r\n");
-		else
+		else if (workspace_.slot_count() > prev_count)
 			decode_dict_from_codepage(workspace_.get_slot(idx)->data, active_codepage());
 	}
 
@@ -84,8 +86,6 @@ void editor_app_t::init(SDL_Window * window)
 		}
 
 		spell_lang_index_ = config_.spell_lang_index;
-		if (spell_lang_index_ >= 0 && spell_lang_index_ < static_cast<int>(spell_langs_.size()))
-			spell_checker_.load(spell_langs_[spell_lang_index_].aff_path, spell_langs_[spell_lang_index_].dic_path);
 	}
 
 	SDL_SysWMinfo wm_info = {};
@@ -95,6 +95,9 @@ void editor_app_t::init(SDL_Window * window)
 
 	rebuild_annotations();
 	rebuild_row_data();
+
+	if (spell_lang_index_ >= 0 && spell_lang_index_ < static_cast<int>(spell_langs_.size()))
+		spell_checker_.load(spell_langs_[spell_lang_index_].aff_path, spell_langs_[spell_lang_index_].dic_path);
 }
 
 void editor_app_t::frame()
@@ -205,6 +208,7 @@ void editor_app_t::shutdown()
 	config_.bottom_visible = bottom_visible_;
 	config_.encoding_index = encoding_index_;
 	config_.spell_lang_index = spell_lang_index_;
+	config_.user_dict_paths.clear();
 	config_.base_dict_paths.clear();
 	for (int i = 0; i < workspace_.slot_count(); ++i)
 	{
@@ -528,6 +532,21 @@ void editor_app_t::render_toolbar()
 				spell_checker_ = spell_checker_t();
 				config_.spell_lang_index = -1;
 				config_.save(config_path_);
+				if (selected_row_ >= 0 && selected_row_ < static_cast<int>(left_rows_.size()))
+				{
+					const auto & row = left_rows_[selected_row_];
+					auto * sl = workspace_.get_active_slot();
+					if (sl)
+					{
+						auto it = sl->data.find(row.type);
+						if (it != sl->data.end() && row.record_index < it->second.records.size())
+						{
+							richedit_ignore_change_ = true;
+							set_richedit_text(it->second.records[row.record_index].new_text);
+							richedit_ignore_change_ = false;
+						}
+					}
+				}
 			}
 			for (int si = 0; si < static_cast<int>(spell_langs_.size()); ++si)
 			{
@@ -538,6 +557,28 @@ void editor_app_t::render_toolbar()
 					spell_checker_.load(spell_langs_[si].aff_path, spell_langs_[si].dic_path);
 					config_.spell_lang_index = si;
 					config_.save(config_path_);
+					if (selected_row_ >= 0 && selected_row_ < static_cast<int>(left_rows_.size()))
+					{
+						const auto & row = left_rows_[selected_row_];
+						auto * sl = workspace_.get_active_slot();
+						if (sl)
+						{
+							auto it = sl->data.find(row.type);
+							if (it != sl->data.end() && row.record_index < it->second.records.size())
+							{
+								const auto & entry = it->second.records[row.record_index];
+								richedit_ignore_change_ = true;
+								set_richedit_text(entry.new_text);
+								if (row.type == tools_t::rec_type_t::info)
+									highlight_richedit_hyperlinks(entry.new_text, row.type, entry.old_text);
+								else if (row.type == tools_t::rec_type_t::sctx || row.type == tools_t::rec_type_t::bnam ||
+								         row.type == tools_t::rec_type_t::text)
+									highlight_richedit_syntax(entry.new_text, row.type);
+								highlight_richedit_spelling(entry.new_text);
+								richedit_ignore_change_ = false;
+							}
+						}
+					}
 				}
 				if (is_selected)
 					ImGui::SetItemDefaultFocus();
