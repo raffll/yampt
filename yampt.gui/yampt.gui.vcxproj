@@ -227,4 +227,11 @@
     </ItemGroup>
     <Copy SourceFiles="@(VcpkgDlls)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
   </Target>
+  <Target Name="CopyDictionaries" AfterTargets="Build">
+    <MakeDir Directories="$(OutDir)dictionaries" />
+    <ItemGroup>
+      <DictFiles Include="$(ProjectDir)dictionaries\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(DictFiles)" DestinationFolder="$(OutDir)dictionaries" SkipUnchangedFiles="true" />
+  </Target>
 </Project>

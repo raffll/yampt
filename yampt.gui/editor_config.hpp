@@ -16,6 +16,7 @@ public:
 	std::vector<std::string> base_dict_paths;
 	std::string spell_check_aff;
 	std::string spell_check_dic;
+	int spell_lang_index = -1;
 
 	float sidebar_width = 250.0f;
 	float bottom_height = 200.0f;

@@ -344,5 +344,5 @@ bool tools_t::is_fnam(const std::string & rec_id)
 	    rec_id == "BSGN" || rec_id == "CLAS" || rec_id == "CLOT" || rec_id == "CONT" || rec_id == "CREA" ||
 	    rec_id == "DOOR" || rec_id == "FACT" || rec_id == "INGR" || rec_id == "LIGH" || rec_id == "LOCK" ||
 	    rec_id == "MISC" || rec_id == "NPC_" || rec_id == "PROB" || rec_id == "RACE" || rec_id == "REGN" ||
-	    rec_id == "REPA" || rec_id == "SKIL" || rec_id == "SPEL" || rec_id == "WEAP");
+	    rec_id == "REPA" || rec_id == "SPEL" || rec_id == "WEAP");
 }

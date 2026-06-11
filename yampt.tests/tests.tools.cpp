@@ -158,7 +158,7 @@ TEST_CASE("is_fnam true IDs", "[u]")
 {
 	const std::vector<std::string> true_ids {
 		"ACTI", "ALCH", "APPA", "ARMO", "BOOK", "BSGN", "CLAS", "CLOT", "CONT", "CREA", "DOOR", "FACT",
-		"INGR", "LIGH", "LOCK", "MISC", "NPC_", "PROB", "RACE", "REGN", "REPA", "SKIL", "SPEL", "WEAP",
+		"INGR", "LIGH", "LOCK", "MISC", "NPC_", "PROB", "RACE", "REGN", "REPA", "SPEL", "WEAP",
 	};
 
 	for (const auto & id : true_ids)

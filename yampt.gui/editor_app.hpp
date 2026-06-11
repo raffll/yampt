@@ -87,7 +87,7 @@ private:
 	std::set<char> dial_type_filter_ = { 'T', 'V', 'G', 'P', 'J' };
 	std::set<std::string> fnam_type_filter_ = {
 		"ACTI", "ALCH", "APPA", "ARMO", "BOOK", "BSGN", "CLAS", "CLOT", "CONT", "CREA", "DOOR", "FACT",
-		"INGR", "LIGH", "LOCK", "MISC", "NPC_", "PROB", "RACE", "REGN", "REPA", "SKIL", "SPEL", "WEAP",
+		"INGR", "LIGH", "LOCK", "MISC", "NPC_", "PROB", "RACE", "REGN", "REPA", "SPEL", "WEAP",
 	};
 	std::set<std::string> desc_type_filter_ = { "BSGN", "CLAS", "RACE" };
 	std::set<std::string> indx_type_filter_ = { "SKIL", "MGEF" };
@@ -100,6 +100,15 @@ private:
 	syntax_highlighter_t syntax_;
 	annotation_manager_t annotations_mgr_;
 	spell_checker_t spell_checker_;
+
+	struct spell_lang_t
+	{
+		std::string name;
+		std::string aff_path;
+		std::string dic_path;
+	};
+	std::vector<spell_lang_t> spell_langs_;
+	int spell_lang_index_ = -1;
 	HWND richedit_hwnd_ = nullptr;
 	bool richedit_visible_ = false;
 	bool richedit_ignore_change_ = false;
@@ -161,6 +170,7 @@ private:
 	    tools_t::rec_type_t type,
 	    const std::string & original_text);
 	void highlight_richedit_syntax(const std::string & text, tools_t::rec_type_t type);
+	void highlight_richedit_spelling(const std::string & text);
 
 	void render_splitter_vertical(float & width, float min_w, float max_w);
 	void render_splitter_horizontal(float & height, float min_h, float max_h);

@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <filesystem>
 
 #include <Windows.h>
 #include <commdlg.h>
@@ -62,8 +63,30 @@ void editor_app_t::init(SDL_Window * window)
 	if (config_.active_dict_index >= 0 && config_.active_dict_index < workspace_.slot_count())
 		workspace_.set_active(config_.active_dict_index);
 
-	if (!config_.spell_check_aff.empty() && !config_.spell_check_dic.empty())
-		spell_checker_.load(config_.spell_check_aff, config_.spell_check_dic);
+	{
+		auto dict_dir = get_exe_directory() + "\\dictionaries";
+		if (std::filesystem::is_directory(dict_dir))
+		{
+			for (const auto & entry : std::filesystem::directory_iterator(dict_dir))
+			{
+				if (!entry.is_regular_file())
+					continue;
+				auto path = entry.path();
+				if (path.extension() != ".aff")
+					continue;
+				auto dic_path = path;
+				dic_path.replace_extension(".dic");
+				if (!std::filesystem::exists(dic_path))
+					continue;
+				auto stem = path.stem().string();
+				spell_langs_.push_back({ stem, path.string(), dic_path.string() });
+			}
+		}
+
+		spell_lang_index_ = config_.spell_lang_index;
+		if (spell_lang_index_ >= 0 && spell_lang_index_ < static_cast<int>(spell_langs_.size()))
+			spell_checker_.load(spell_langs_[spell_lang_index_].aff_path, spell_langs_[spell_lang_index_].dic_path);
+	}
 
 	SDL_SysWMinfo wm_info = {};
 	SDL_VERSION(&wm_info.version);
@@ -99,6 +122,7 @@ void editor_app_t::frame()
 	render_menu_bar();
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4.0f, 1.0f));
 	render_toolbar();
+	ImGui::Spacing();
 	render_status_summary_bar();
 	render_dial_type_bar();
 	ImGui::PopStyleVar();
@@ -180,8 +204,7 @@ void editor_app_t::shutdown()
 	config_.sidebar_visible = sidebar_visible_;
 	config_.bottom_visible = bottom_visible_;
 	config_.encoding_index = encoding_index_;
-
-	config_.user_dict_paths.clear();
+	config_.spell_lang_index = spell_lang_index_;
 	config_.base_dict_paths.clear();
 	for (int i = 0; i < workspace_.slot_count(); ++i)
 	{
@@ -430,25 +453,34 @@ void editor_app_t::render_toolbar()
 		tools_t::rec_type_t::indx, tools_t::rec_type_t::bnam, tools_t::rec_type_t::sctx,
 	};
 
-	float toolbar_height = 42.0f;
+	float toolbar_height = 48.0f;
 	ImGui::BeginChild("Toolbar", ImVec2(0, toolbar_height), ImGuiChildFlags_None);
 
+	ImGui::AlignTextToFramePadding();
+	ImGui::TextUnformatted("Search:");
+	ImGui::SameLine();
 	ImGui::SetNextItemWidth(200.0f);
-	if (ImGui::InputText("Search", search_buffer_.data(), search_buffer_.size()))
+	if (ImGui::InputText("##search", search_buffer_.data(), search_buffer_.size()))
 	{
 		rebuild_row_data();
 	}
 
 	ImGui::SameLine();
-	if (ImGui::Checkbox("Case sensitive", &search_case_sensitive_))
+	ImGui::AlignTextToFramePadding();
+	ImGui::TextUnformatted("Case:");
+	ImGui::SameLine();
+	if (ImGui::Checkbox("##case", &search_case_sensitive_))
 	{
 		rebuild_row_data();
 	}
 
+	ImGui::SameLine(0, 8.0f);
+	ImGui::AlignTextToFramePadding();
+	ImGui::TextUnformatted("Encoding:");
 	ImGui::SameLine();
-	ImGui::SetNextItemWidth(220.0f);
+	ImGui::SetNextItemWidth(250.0f);
 	const char * encoding_preview = codepage_name(supported_codepages[encoding_index_]);
-	if (ImGui::BeginCombo("Encoding", encoding_preview))
+	if (ImGui::BeginCombo("##encoding", encoding_preview))
 	{
 		for (int i = 0; i < static_cast<int>(std::size(supported_codepages)); ++i)
 		{
@@ -477,6 +509,44 @@ void editor_app_t::render_toolbar()
 		}
 		ImGui::EndCombo();
 	}
+
+	if (!spell_langs_.empty())
+	{
+		ImGui::SameLine(0, 8.0f);
+		ImGui::AlignTextToFramePadding();
+		ImGui::TextUnformatted("Spelling:");
+		ImGui::SameLine();
+		ImGui::SetNextItemWidth(120.0f);
+		const char * spell_preview = (spell_lang_index_ >= 0 && spell_lang_index_ < static_cast<int>(spell_langs_.size()))
+		                                 ? spell_langs_[spell_lang_index_].name.c_str()
+		                                 : "None";
+		if (ImGui::BeginCombo("##spelling", spell_preview))
+		{
+			if (ImGui::Selectable("None", spell_lang_index_ < 0))
+			{
+				spell_lang_index_ = -1;
+				spell_checker_ = spell_checker_t();
+				config_.spell_lang_index = -1;
+				config_.save(config_path_);
+			}
+			for (int si = 0; si < static_cast<int>(spell_langs_.size()); ++si)
+			{
+				bool is_selected = (si == spell_lang_index_);
+				if (ImGui::Selectable(spell_langs_[si].name.c_str(), is_selected))
+				{
+					spell_lang_index_ = si;
+					spell_checker_.load(spell_langs_[si].aff_path, spell_langs_[si].dic_path);
+					config_.spell_lang_index = si;
+					config_.save(config_path_);
+				}
+				if (is_selected)
+					ImGui::SetItemDefaultFocus();
+			}
+			ImGui::EndCombo();
+		}
+	}
+
+	ImGui::Dummy(ImVec2(0, 4.0f));
 
 	{
 		bool all_active = (type_filter_.size() == std::size(filter_types));
@@ -1150,14 +1220,14 @@ void editor_app_t::render_dial_type_bar()
 	{
 		static const char * fnam_types_arr[] = {
 			"ACTI", "ALCH", "APPA", "ARMO", "BOOK", "BSGN", "CLAS", "CLOT", "CONT", "CREA", "DOOR", "FACT",
-			"INGR", "LIGH", "LOCK", "MISC", "NPC_", "PROB", "RACE", "REGN", "REPA", "SKIL", "SPEL", "WEAP",
+			"INGR", "LIGH", "LOCK", "MISC", "NPC_", "PROB", "RACE", "REGN", "REPA", "SPEL", "WEAP",
 		};
 		static const char * fnam_labels_arr[] = {
 			"Activators", "Potions",   "Apparatus", "Armor",    "Books",   "Birthsigns", "Classes",   "Clothing",
 			"Containers", "Creatures", "Doors",     "Factions", "Ingred.", "Lights",     "Lockpicks", "Misc",
-			"NPCs",       "Probes",    "Races",     "Regions",  "Repairs", "Skills",     "Spells",    "Weapons",
+			"NPCs",       "Probes",    "Races",     "Regions",  "Repairs", "Spells",     "Weapons",
 		};
-		static constexpr size_t fnam_count_arr = 24;
+		static constexpr size_t fnam_count_arr = 23;
 
 		for (size_t i = 0; i < fnam_count_arr; ++i)
 		{
@@ -1943,6 +2013,7 @@ void editor_app_t::render_editor_tab()
 		else if (row.type == tools_t::rec_type_t::sctx || row.type == tools_t::rec_type_t::bnam ||
 		         row.type == tools_t::rec_type_t::text)
 			highlight_richedit_syntax(entry.new_text, row.type);
+		highlight_richedit_spelling(entry.new_text);
 		richedit_ignore_change_ = false;
 	}
 
@@ -2859,6 +2930,86 @@ void editor_app_t::highlight_richedit_syntax(const std::string & text, tools_t::
 		cf.dwMask = CFM_COLOR;
 		cf.dwEffects = 0;
 		cf.crTextColor = color;
+		SendMessageA(richedit_hwnd_, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
+	}
+
+	SendMessageA(richedit_hwnd_, EM_EXSETSEL, 0, (LPARAM)&orig_sel);
+	SendMessageA(richedit_hwnd_, WM_SETREDRAW, TRUE, 0);
+	InvalidateRect(richedit_hwnd_, nullptr, TRUE);
+}
+
+void editor_app_t::highlight_richedit_spelling(const std::string & text)
+{
+	if (!richedit_hwnd_ || !spell_checker_.is_loaded())
+		return;
+
+	auto misspelled = spell_checker_.find_misspelled(text);
+	if (misspelled.empty())
+		return;
+
+	std::vector<int> byte_to_wchar(text.size() + 1, 0);
+	int wchar_pos = 0;
+	for (size_t i = 0; i < text.size();)
+	{
+		byte_to_wchar[i] = wchar_pos;
+		unsigned char c = static_cast<unsigned char>(text[i]);
+
+		if (c == '\n' && i > 0 && text[i - 1] == '\r')
+		{
+			i++;
+			continue;
+		}
+
+		int char_len = 1;
+		if (c >= 0xF0)
+			char_len = 4;
+		else if (c >= 0xE0)
+			char_len = 3;
+		else if (c >= 0xC0)
+			char_len = 2;
+
+		unsigned int codepoint = 0;
+		if (char_len == 1)
+			codepoint = c;
+		else if (char_len == 2)
+			codepoint = c & 0x1F;
+		else if (char_len == 3)
+			codepoint = c & 0x0F;
+		else
+			codepoint = c & 0x07;
+
+		for (int j = 1; j < char_len && i + j < text.size(); ++j)
+		{
+			byte_to_wchar[i + j] = wchar_pos;
+			codepoint = (codepoint << 6) | (static_cast<unsigned char>(text[i + j]) & 0x3F);
+		}
+
+		wchar_pos += (codepoint > 0xFFFF) ? 2 : 1;
+		i += char_len;
+	}
+	byte_to_wchar[text.size()] = wchar_pos;
+
+	SendMessageA(richedit_hwnd_, WM_SETREDRAW, FALSE, 0);
+
+	CHARRANGE orig_sel;
+	SendMessageA(richedit_hwnd_, EM_EXGETSEL, 0, (LPARAM)&orig_sel);
+
+	for (const auto & match : misspelled)
+	{
+		if (match.start >= text.size() || match.end > text.size())
+			continue;
+
+		CHARRANGE range;
+		range.cpMin = byte_to_wchar[match.start];
+		range.cpMax = byte_to_wchar[match.end];
+		SendMessageA(richedit_hwnd_, EM_EXSETSEL, 0, (LPARAM)&range);
+
+		CHARFORMAT2A cf = {};
+		cf.cbSize = sizeof(cf);
+		cf.dwMask = CFM_UNDERLINETYPE | CFM_UNDERLINE;
+		cf.dwEffects = CFE_UNDERLINE;
+		cf.bUnderlineType = CFU_UNDERLINEWAVE;
+		cf.bUnderlineColor = 0x06;
 		SendMessageA(richedit_hwnd_, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
 	}
 

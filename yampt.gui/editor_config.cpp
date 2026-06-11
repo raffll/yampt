@@ -158,6 +158,15 @@ void editor_config_t::load(const std::string & path)
 				spell_check_aff = value;
 			else if (key == "DicPath")
 				spell_check_dic = value;
+			else if (key == "LangIndex")
+			{
+				try
+				{
+					spell_lang_index = std::stoi(value);
+				}
+				catch (...)
+				{}
+			}
 		}
 	}
 }
@@ -189,12 +198,13 @@ void editor_config_t::save(const std::string & path) const
 	for (size_t i = 0; i < column_widths.size(); ++i)
 		file << "Column" << i << "=" << column_widths[i] << "\n";
 
-	if (!spell_check_aff.empty() || !spell_check_dic.empty())
+	if (!spell_check_aff.empty() || !spell_check_dic.empty() || spell_lang_index >= 0)
 	{
 		file << "\n[SpellCheck]\n";
 		if (!spell_check_aff.empty())
 			file << "AffPath=" << spell_check_aff << "\n";
 		if (!spell_check_dic.empty())
 			file << "DicPath=" << spell_check_dic << "\n";
+		file << "LangIndex=" << spell_lang_index << "\n";
 	}
 }
