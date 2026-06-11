@@ -9,6 +9,9 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="tools.cpp" />
     <ClCompile Include="dict_creator.cpp" />
+    <ClCompile Include="dict_creator_single.cpp" />
+    <ClCompile Include="dict_creator_base.cpp" />
+    <ClCompile Include="dict_creator_base_ordered.cpp" />
     <ClCompile Include="dict_merger.cpp" />
     <ClCompile Include="dict_reader.cpp" />
     <ClCompile Include="dict_writer.cpp" />

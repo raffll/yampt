@@ -9,7 +9,13 @@ class translation_engine_t;
 class dict_creator_t
 {
 public:
-	enum class mode_t { single, base, single_with_base };
+	enum class mode_t
+	{
+		single,
+		base,
+		base_ordered,
+		single_with_base
+	};
 
 	const auto & get_name()
 	{
@@ -56,6 +62,27 @@ private:
 	void make_dict_base_dial();
 	void make_dict_base_cell();
 
+	void make_dict_base_ordered();
+	void build_dial_map_ordered();
+
+	void process_gmst_ordered(size_t i);
+	void process_fnam_ordered(size_t i);
+	void process_desc_ordered(size_t i);
+	void process_text_ordered(size_t i);
+	void process_rnam_ordered(size_t i);
+	void process_indx_ordered(size_t i);
+	void process_dial_ordered(size_t i, std::string & dial_type, std::string & dial_foreign_name);
+	void process_info_ordered(size_t i, const std::string & dial_type, const std::string & dial_foreign_name);
+	void process_sctx_ordered(size_t i);
+	void process_bnam_ordered(
+	    size_t i,
+	    const std::string & dial_type,
+	    const std::string & dial_foreign_name,
+	    const std::string & info_inam);
+	void process_cell_ordered(size_t i);
+	void process_cell_default_ordered();
+	void process_cell_region_ordered();
+
 	void build_gmst_index();
 	void build_fnam_index();
 	void build_desc_index();
@@ -83,20 +110,14 @@ private:
 	    const std::string & new_text,
 	    tools_t::rec_type_t type);
 
-	void insert_as_untranslated(
-	    const std::string & key_text,
-	    const std::string & old_text,
-	    tools_t::rec_type_t type);
+	void insert_as_untranslated(const std::string & key_text, const std::string & old_text, tools_t::rec_type_t type);
 	void insert_with_status(
 	    const std::string & key_text,
 	    const std::string & old_text,
 	    const std::string & new_text,
 	    tools_t::rec_type_t type,
 	    const char * status);
-	void insert_via_text_match(
-	    const std::string & key_text,
-	    const std::string & old_text,
-	    tools_t::rec_type_t type);
+	void insert_via_text_match(const std::string & key_text, const std::string & old_text, tools_t::rec_type_t type);
 
 	std::vector<std::string> make_script_messages(const std::string & script_text);
 	void print_log_line(const tools_t::rec_type_t type);

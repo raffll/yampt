@@ -22,8 +22,7 @@ TEST_CASE("dict_reader parses all new status values", "[u][reader]")
 
 	dict.at(tools_t::rec_type_t::cell).insert({ "cell_1", "Balmora", "Balmora", tools_t::status_t::missing });
 	dict.at(tools_t::rec_type_t::cell).insert({ "cell_2", "Vivec", "Vivec", tools_t::status_t::duplicate });
-	dict.at(tools_t::rec_type_t::cell)
-	    .insert({ "cell_3", "Ald-ruhn", "Ald-ruhn", tools_t::status_t::coords });
+	dict.at(tools_t::rec_type_t::cell).insert({ "cell_3", "Ald-ruhn", "Ald-ruhn", tools_t::status_t::coords });
 	dict.at(tools_t::rec_type_t::cell)
 	    .insert({ "cell_4", "Sadrith Mora", "Sadrith Mora", tools_t::status_t::wilderness });
 	dict.at(tools_t::rec_type_t::cell).insert({ "cell_5", "Gnisis", "Gnisis", tools_t::status_t::region });
@@ -89,10 +88,8 @@ TEST_CASE("dict_reader parses speaker fields from info entries", "[u][reader]")
 {
 	tools_t::dict_t dict = tools_t::initialize_dict();
 
-	dict.at(tools_t::rec_type_t::info)
-	    .insert({ "info_speaker", "Hello there", "Witaj", "translated", "Fargoth", "M" });
-	dict.at(tools_t::rec_type_t::info)
-	    .insert({ "info_no_speaker", "Goodbye", "Do widzenia", "translated", "", "" });
+	dict.at(tools_t::rec_type_t::info).insert({ "info_speaker", "Hello there", "Witaj", "translated", "Fargoth", "M" });
+	dict.at(tools_t::rec_type_t::info).insert({ "info_no_speaker", "Goodbye", "Do widzenia", "translated", "", "" });
 
 	auto path = reader_test_dir + "/speaker_fields.json";
 	dict_writer_t::write(dict, path);
@@ -144,8 +141,7 @@ TEST_CASE("dict_reader write-read round trip preserves all fields", "[u][reader]
 	tools_t::dict_t dict = tools_t::initialize_dict();
 
 	dict.at(tools_t::rec_type_t::info)
-	    .insert(
-	        { "info_rt", "Hello adventurer", "Witaj wędrowcze", "translated", "Caius Cosades", "M" });
+	    .insert({ "info_rt", "Hello adventurer", "Witaj wędrowcze", "translated", "Caius Cosades", "M" });
 	dict.at(tools_t::rec_type_t::cell)
 	    .insert({ "cell_rt", "Balmora, Guild of Fighters", "Balmora, Gildia Wojowników", "coords" });
 

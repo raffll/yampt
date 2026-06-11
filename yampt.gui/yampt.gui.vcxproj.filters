@@ -41,6 +41,15 @@
     <ClCompile Include="..\yampt\dict_creator.cpp">
       <Filter>yampt</Filter>
     </ClCompile>
+    <ClCompile Include="..\yampt\dict_creator_single.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\yampt\dict_creator_base.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\yampt\dict_creator_base_ordered.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
     <ClCompile Include="..\yampt\esm_reader.cpp">
       <Filter>yampt</Filter>
     </ClCompile>

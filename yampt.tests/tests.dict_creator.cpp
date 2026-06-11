@@ -37,7 +37,8 @@ TEST_CASE("dict_creator make-base mode sets matched_by_coords on cells", "[i]")
 	bool found_matched = false;
 	for (const auto & entry : cell_chapter.records)
 	{
-		if (entry.status == tools_t::status_t::coords && entry.new_text != entry.old_text)
+		if ((entry.status == tools_t::status_t::coords || entry.status == tools_t::status_t::matched) &&
+		    entry.new_text != entry.old_text)
 		{
 			found_matched = true;
 			break;

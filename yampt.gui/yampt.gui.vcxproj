@@ -173,6 +173,9 @@
     <ClCompile Include="..\yampt\dict_reader.cpp" />
     <ClCompile Include="..\yampt\dict_writer.cpp" />
     <ClCompile Include="..\yampt\dict_creator.cpp" />
+    <ClCompile Include="..\yampt\dict_creator_single.cpp" />
+    <ClCompile Include="..\yampt\dict_creator_base.cpp" />
+    <ClCompile Include="..\yampt\dict_creator_base_ordered.cpp" />
     <ClCompile Include="..\yampt\esm_reader.cpp" />
     <ClCompile Include="..\yampt\esm_converter.cpp" />
     <ClCompile Include="..\yampt\script_parser.cpp" />

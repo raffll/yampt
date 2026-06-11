@@ -664,18 +664,14 @@ void editor_app_t::render_sidebar()
 
 void editor_app_t::render_status_summary_bar()
 {
-	static const char * status_names[] = {
-		"untranslated", "missing",      "duplicate", "coords",      "fingerprint",
-		"heuristic",    "info",         "exact",     "wilderness",  "region",
-		"matched",      "error",        "identical", "translated",  "reused",
-		"adapted",      "changed"
-	};
-	static const char * status_labels[] = {
-		"Untranslated", "Missing",      "Duplicate", "Coords",      "Fingerprint",
-		"Heuristic",    "Info",         "Exact",     "Wilderness",  "Region",
-		"Matched",      "Error",        "Identical", "Translated",  "Reused",
-		"Adapted",      "Changed"
-	};
+	static const char * status_names[] = { "untranslated", "missing", "duplicate", "coords",     "fingerprint",
+		                                   "heuristic",    "info",    "exact",     "wilderness", "region",
+		                                   "matched",      "error",   "identical", "translated", "reused",
+		                                   "adapted",      "changed" };
+	static const char * status_labels[] = { "Untranslated", "Missing", "Duplicate", "Coords",     "Fingerprint",
+		                                    "Heuristic",    "Info",    "Exact",     "Wilderness", "Region",
+		                                    "Matched",      "Error",   "Identical", "Translated", "Reused",
+		                                    "Adapted",      "Changed" };
 	static constexpr size_t status_count = 17;
 
 	int counts[status_count] = {};
@@ -951,12 +947,8 @@ void editor_app_t::render_main_panel()
 			{
 				if (ImGui::BeginMenu("Set Status"))
 				{
-					static const char * ctx_status_names[] = {
-						"untranslated", "translated", "error"
-					};
-					static const char * ctx_status_labels[] = {
-						"Untranslated", "Translated", "Error"
-					};
+					static const char * ctx_status_names[] = { "untranslated", "translated", "error" };
+					static const char * ctx_status_labels[] = { "Untranslated", "Translated", "Error" };
 
 					for (int s = 0; s < 3; ++s)
 					{
@@ -1010,12 +1002,8 @@ void editor_app_t::render_main_panel()
 
 				if (ImGui::BeginPopup("##status_popup"))
 				{
-					static const char * popup_status_names[] = {
-						"untranslated", "translated", "error"
-					};
-					static const char * popup_status_labels[] = {
-						"Untranslated", "Translated", "Error"
-					};
+					static const char * popup_status_names[] = { "untranslated", "translated", "error" };
+					static const char * popup_status_labels[] = { "Untranslated", "Translated", "Error" };
 
 					for (int s = 0; s < 3; ++s)
 					{
