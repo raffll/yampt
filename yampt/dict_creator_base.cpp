@@ -98,7 +98,6 @@ void dict_creator_t::make_dict_base_gmst()
 			insert_entry_base(key_text, "", new_text, tools_t::rec_type_t::gmst, tools_t::status_t::missing);
 		}
 	}
-	print_log_line(tools_t::rec_type_t::gmst);
 }
 
 void dict_creator_t::make_dict_base_fnam()
@@ -138,7 +137,6 @@ void dict_creator_t::make_dict_base_fnam()
 			insert_entry_base(key_text, "", new_text, tools_t::rec_type_t::fnam, tools_t::status_t::missing);
 		}
 	}
-	print_log_line(tools_t::rec_type_t::fnam);
 }
 
 void dict_creator_t::make_dict_base_desc()
@@ -173,7 +171,6 @@ void dict_creator_t::make_dict_base_desc()
 			insert_entry_base(key_text, "", new_text, tools_t::rec_type_t::desc, tools_t::status_t::missing);
 		}
 	}
-	print_log_line(tools_t::rec_type_t::desc);
 }
 
 void dict_creator_t::make_dict_base_text()
@@ -207,7 +204,6 @@ void dict_creator_t::make_dict_base_text()
 			insert_entry_base(key_text, "", new_text, tools_t::rec_type_t::text, tools_t::status_t::missing);
 		}
 	}
-	print_log_line(tools_t::rec_type_t::text);
 }
 
 void dict_creator_t::make_dict_base_rnam()
@@ -243,7 +239,6 @@ void dict_creator_t::make_dict_base_rnam()
 			esm.set_next_value("RNAM");
 		}
 	}
-	print_log_line(tools_t::rec_type_t::rnam);
 }
 
 void dict_creator_t::make_dict_base_indx()
@@ -278,7 +273,6 @@ void dict_creator_t::make_dict_base_indx()
 			insert_entry_base(key_text, "", new_text, tools_t::rec_type_t::indx, tools_t::status_t::missing);
 		}
 	}
-	print_log_line(tools_t::rec_type_t::indx);
 }
 
 void dict_creator_t::make_dict_base_info()
@@ -364,7 +358,6 @@ void dict_creator_t::make_dict_base_info()
 		entry->speaker_name = speaker_name;
 		entry->gender = gender;
 	}
-	print_log_line(tools_t::rec_type_t::info);
 }
 
 void dict_creator_t::make_dict_base_sctx()
@@ -448,7 +441,6 @@ void dict_creator_t::make_dict_base_sctx()
 			insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::sctx, tools_t::status_t::matched);
 		}
 	}
-	print_log_line(tools_t::rec_type_t::sctx);
 }
 
 void dict_creator_t::make_dict_base_bnam()
@@ -539,7 +531,6 @@ void dict_creator_t::make_dict_base_bnam()
 			insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::bnam, tools_t::status_t::matched);
 		}
 	}
-	print_log_line(tools_t::rec_type_t::bnam);
 }
 
 void dict_creator_t::make_dict_base_dial()
@@ -633,10 +624,11 @@ void dict_creator_t::make_dict_base_dial()
 		{
 			insert_entry_base(
 			    entry.name, entry.name, entry.name, tools_t::rec_type_t::dial, tools_t::status_t::missing);
-			tools_t::add_log("[warning] missing DIAL: " + entry.name + "\r\n");
 		}
 
-		print_log_line(tools_t::rec_type_t::dial);
+		for (const auto & entry : unmatched_foreign)
+			tools_t::add_log("[warning] missing DIAL: " + entry.name + "\r\n");
+
 		return;
 	}
 
@@ -839,7 +831,6 @@ void dict_creator_t::make_dict_base_dial()
 		tools_t::add_log("  " + name + "\r\n", true);
 
 		insert_entry_base(name, name, name, tools_t::rec_type_t::dial, tools_t::status_t::missing);
-		tools_t::add_log("[warning] missing DIAL: " + name + "\r\n");
 	}
 
 	tools_t::add_log("--- UNMATCHED NATIVE DIAL ---\r\n", true);
@@ -849,7 +840,13 @@ void dict_creator_t::make_dict_base_dial()
 			tools_t::add_log("  " + native_candidates[ni].name + "\r\n", true);
 	}
 
-	print_log_line(tools_t::rec_type_t::dial);
+	for (size_t fi = 0; fi < unmatched_foreign.size(); ++fi)
+	{
+		if (matched_foreign_idx.count(fi))
+			continue;
+
+		tools_t::add_log("[warning] missing DIAL: " + unmatched_foreign[fi].name + "\r\n");
+	}
 }
 
 void dict_creator_t::make_dict_base_cell()
@@ -894,7 +891,6 @@ void dict_creator_t::make_dict_cell_default()
 			break;
 		}
 	}
-	print_log_line(tools_t::rec_type_t::cell);
 }
 
 void dict_creator_t::make_dict_cell_region()
@@ -930,7 +926,6 @@ void dict_creator_t::make_dict_cell_region()
 			}
 		}
 	}
-	print_log_line(tools_t::rec_type_t::cell);
 }
 
 void dict_creator_t::build_gmst_index()
@@ -1317,7 +1312,6 @@ void dict_creator_t::make_dict_cell_exterior()
 	}
 
 	make_dict_cell_add_missing(missing_cells);
-	print_log_line(tools_t::rec_type_t::cell);
 }
 
 void dict_creator_t::make_dict_cell_interior()
@@ -1384,7 +1378,6 @@ void dict_creator_t::make_dict_cell_interior()
 
 	make_dict_cell_interior_heuristic(missing_cells, matched_native_records);
 	make_dict_cell_add_missing(missing_cells);
-	print_log_line(tools_t::rec_type_t::cell);
 }
 
 void dict_creator_t::make_dict_cell_interior_heuristic(

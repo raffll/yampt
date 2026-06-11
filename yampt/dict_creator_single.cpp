@@ -1,4 +1,4 @@
-#include "dict_creator.hpp"
+﻿#include "dict_creator.hpp"
 
 void dict_creator_t::make_dict_single()
 {
@@ -43,7 +43,7 @@ void dict_creator_t::make_dict_single_gmst()
 		else
 			insert_entry_single(key_text, text, text, tools_t::rec_type_t::gmst);
 	}
-	print_log_line(tools_t::rec_type_t::gmst);
+
 }
 
 void dict_creator_t::make_dict_single_fnam()
@@ -74,7 +74,7 @@ void dict_creator_t::make_dict_single_fnam()
 		else
 			insert_entry_single(key_text, text, text, tools_t::rec_type_t::fnam);
 	}
-	print_log_line(tools_t::rec_type_t::fnam);
+
 }
 
 void dict_creator_t::make_dict_single_desc()
@@ -100,7 +100,7 @@ void dict_creator_t::make_dict_single_desc()
 		else
 			insert_entry_single(key_text, text, text, tools_t::rec_type_t::desc);
 	}
-	print_log_line(tools_t::rec_type_t::desc);
+
 }
 
 void dict_creator_t::make_dict_single_text()
@@ -125,7 +125,7 @@ void dict_creator_t::make_dict_single_text()
 		else
 			insert_entry_single(key_text, text, text, tools_t::rec_type_t::text);
 	}
-	print_log_line(tools_t::rec_type_t::text);
+
 }
 
 void dict_creator_t::make_dict_single_rnam()
@@ -155,7 +155,7 @@ void dict_creator_t::make_dict_single_rnam()
 			esm.set_next_value("RNAM");
 		}
 	}
-	print_log_line(tools_t::rec_type_t::rnam);
+
 }
 
 void dict_creator_t::make_dict_single_indx()
@@ -181,7 +181,7 @@ void dict_creator_t::make_dict_single_indx()
 		else
 			insert_entry_single(key_text, text, text, tools_t::rec_type_t::indx);
 	}
-	print_log_line(tools_t::rec_type_t::indx);
+
 }
 
 void dict_creator_t::make_dict_single_info()
@@ -249,7 +249,7 @@ void dict_creator_t::make_dict_single_info()
 		entry->speaker_name = speaker_name;
 		entry->gender = gender;
 	}
-	print_log_line(tools_t::rec_type_t::info);
+
 }
 
 void dict_creator_t::make_dict_single_sctx()
@@ -280,7 +280,7 @@ void dict_creator_t::make_dict_single_sctx()
 				insert_entry_single(key_text, old_text, old_text, tools_t::rec_type_t::sctx);
 		}
 	}
-	print_log_line(tools_t::rec_type_t::sctx);
+
 }
 
 void dict_creator_t::make_dict_single_bnam()
@@ -331,7 +331,7 @@ void dict_creator_t::make_dict_single_bnam()
 				insert_entry_single(key_text, old_text, old_text, tools_t::rec_type_t::bnam);
 		}
 	}
-	print_log_line(tools_t::rec_type_t::bnam);
+
 }
 
 void dict_creator_t::make_dict_single_dial()
@@ -358,7 +358,7 @@ void dict_creator_t::make_dict_single_dial()
 		else
 			insert_entry_single(text, text, text, tools_t::rec_type_t::dial);
 	}
-	print_log_line(tools_t::rec_type_t::dial);
+
 }
 
 void dict_creator_t::make_dict_single_cell()
@@ -381,7 +381,7 @@ void dict_creator_t::make_dict_single_cell()
 		else
 			insert_entry_single(text, text, text, tools_t::rec_type_t::cell);
 	}
-	print_log_line(tools_t::rec_type_t::cell);
+
 }
 
 void dict_creator_t::build_text_match_index()

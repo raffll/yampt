@@ -126,7 +126,6 @@ private:
 	void insert_via_text_match(const std::string & key_text, const std::string & old_text, tools_t::rec_type_t type);
 
 	std::vector<std::string> make_script_messages(const std::string & script_text);
-	void print_log_line(const tools_t::rec_type_t type);
 
 	static bool differs_only_in_numbers_or_punct(const std::string & a, const std::string & b);
 	static std::string adapt_translation(

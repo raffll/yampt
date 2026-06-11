@@ -40,13 +40,13 @@ dict_creator_t::dict_creator_t(
 		if (native_ids == foreign_ids)
 		{
 			mode = mode_t::base_ordered;
-			tools_t::add_log("[info] record order: identical, using base_ordered\r\n");
+			tools_t::add_log("[info] record order: identical\r\n");
 			make_dict_base_ordered();
 		}
 		else
 		{
 			mode = mode_t::base;
-			tools_t::add_log("[info] record order: different, using base\r\n");
+			tools_t::add_log("[info] record order: different\r\n");
 			make_dict_base();
 		}
 	}
@@ -167,24 +167,6 @@ void dict_creator_t::insert_duplicate(
 	counter_doubled++;
 	counter_created++;
 	tools_t::add_log("[warning] doubled " + tools_t::type_to_str(type) + ": " + key_text + "\r\n");
-}
-
-void dict_creator_t::print_log_line(const tools_t::rec_type_t type)
-{
-	std::string line = "[info] " + tools_t::type_to_str(type) + ": created=" + std::to_string(counter_created);
-
-	if (type == tools_t::rec_type_t::cell || type == tools_t::rec_type_t::dial)
-		line += ", missing=" + std::to_string(counter_missing);
-
-	line += ", identical=" + std::to_string(counter_identical);
-
-	if (counter_doubled > 0)
-		line += ", duplicate=" + std::to_string(counter_doubled);
-
-	line += ", total=" + std::to_string(counter_all);
-	line += "\r\n";
-
-	tools_t::add_log(line);
 }
 
 std::vector<std::string> dict_creator_t::make_script_messages(const std::string & script_text)

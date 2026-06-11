@@ -198,7 +198,6 @@
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsC</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsC</CompileAs>
     </ClCompile>
-    <ClCompile Include="tests.dict_creator.cpp" />
     <ClCompile Include="tests.dict_merger.cpp" />
     <ClCompile Include="tests.dict_reader.cpp" />
     <ClCompile Include="tests.dict_writer.cpp" />
