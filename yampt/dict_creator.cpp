@@ -151,6 +151,24 @@ std::string dict_creator_t::adapt_translation(
 	return result;
 }
 
+void dict_creator_t::insert_duplicate(
+    const std::string & key_text,
+    const std::string & old_text,
+    const std::string & new_text,
+    tools_t::rec_type_t type,
+    const char * status)
+{
+	tools_t::record_entry_t dup_entry;
+	dup_entry.key_text = key_text + "^DUP_" + std::to_string(counter_doubled);
+	dup_entry.old_text = old_text;
+	dup_entry.new_text = new_text;
+	dup_entry.status = status;
+	dict.at(type).insert(dup_entry);
+	counter_doubled++;
+	counter_created++;
+	tools_t::add_log("[warning] doubled " + tools_t::type_to_str(type) + ": " + key_text + "\r\n");
+}
+
 void dict_creator_t::print_log_line(const tools_t::rec_type_t type)
 {
 	std::string line = "[info] " + tools_t::type_to_str(type) + ": created=" + std::to_string(counter_created);

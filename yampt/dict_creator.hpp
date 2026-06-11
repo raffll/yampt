@@ -117,6 +117,12 @@ private:
 	    const std::string & new_text,
 	    tools_t::rec_type_t type,
 	    const char * status);
+	void insert_duplicate(
+	    const std::string & key_text,
+	    const std::string & old_text,
+	    const std::string & new_text,
+	    tools_t::rec_type_t type,
+	    const char * status);
 	void insert_via_text_match(const std::string & key_text, const std::string & old_text, tools_t::rec_type_t type);
 
 	std::vector<std::string> make_script_messages(const std::string & script_text);

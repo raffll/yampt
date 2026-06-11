@@ -50,3 +50,14 @@ All CELL dictionary entries use a 16-char hex FNV-1a hash as `key_text`, regardl
 The `key_text` is never used for lookup during conversion. The converter and script parser use `find_by_old_text()` — a secondary index on `old_text` (first-wins) — to find cell translations by the cell name text encountered in the ESM.
 
 The `chapter_t::old_text_index` is populated on `insert()` and only stores the first entry for a given `old_text`. This means if multiple cells share the same foreign name, only the first inserted one is found by `find_by_old_text()`. This matches the original first-wins behavior.
+
+## dict_creator Source File Split
+
+The `dict_creator_t` class is split across multiple `.cpp` files:
+
+- `dict_creator.cpp` — shared helpers used by multiple modes (constructors, `reset_counters`, `insert_duplicate`, `print_log_line`, `make_script_messages`, `differs_only_in_numbers_or_punct`, `adapt_translation`)
+- `dict_creator_single.cpp` — single-file mode logic (`make_dict_single`, `insert_entry_single`, `insert_entry_single_with_base`, `insert_as_untranslated`, `insert_with_status`, `insert_via_text_match`)
+- `dict_creator_base.cpp` — base mode logic (`make_dict_base`, `insert_entry_base`, cell matching, DIAL matching)
+- `dict_creator_base_ordered.cpp` — ordered base mode logic (`make_dict_base_ordered`)
+
+Rule: if a member function is called from more than one `.cpp` file, it belongs in `dict_creator.cpp`. Mode-specific functions stay in their respective files.

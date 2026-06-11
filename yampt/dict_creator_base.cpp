@@ -1634,10 +1634,6 @@ void dict_creator_t::insert_entry_base(
 	{
 		if (existing->old_text == old_text && existing->new_text == new_text)
 			return;
-
-		counter_doubled++;
-		tools_t::add_log("[warning] doubled " + tools_t::type_to_str(type) + ": " + key_text + "\r\n");
-		return;
 	}
 
 	tools_t::record_entry_t entry;
@@ -1652,13 +1648,5 @@ void dict_creator_t::insert_entry_base(
 		return;
 	}
 
-	tools_t::record_entry_t dup_entry;
-	dup_entry.key_text = key_text + "^DUP_" + std::to_string(counter_doubled);
-	dup_entry.old_text = old_text;
-	dup_entry.new_text = new_text;
-	dup_entry.status = tools_t::status_t::duplicate;
-	dict.at(type).insert(dup_entry);
-	counter_doubled++;
-	counter_created++;
-	tools_t::add_log("[warning] doubled " + tools_t::type_to_str(type) + ": " + key_text + "\r\n");
+	insert_duplicate(key_text, old_text, new_text, type, tools_t::status_t::duplicate);
 }

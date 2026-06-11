@@ -420,10 +420,6 @@ void dict_creator_t::insert_entry_single(
 	{
 		if (existing->old_text == old_text && existing->new_text == new_text)
 			return;
-
-		counter_doubled++;
-		tools_t::add_log("[warning] doubled " + tools_t::type_to_str(type) + ": " + key_text + "\r\n");
-		return;
 	}
 
 	tools_t::record_entry_t entry;
@@ -438,15 +434,7 @@ void dict_creator_t::insert_entry_single(
 		return;
 	}
 
-	tools_t::record_entry_t dup_entry;
-	dup_entry.key_text = key_text + "^DUP_" + std::to_string(counter_doubled);
-	dup_entry.old_text = old_text;
-	dup_entry.new_text = new_text;
-	dup_entry.status = tools_t::status_t::untranslated;
-	dict.at(type).insert(dup_entry);
-	counter_doubled++;
-	counter_created++;
-	tools_t::add_log("[warning] doubled " + tools_t::type_to_str(type) + ": " + key_text + "\r\n");
+	insert_duplicate(key_text, old_text, new_text, type, tools_t::status_t::untranslated);
 }
 
 void dict_creator_t::insert_entry_single_with_base(
@@ -466,10 +454,6 @@ void dict_creator_t::insert_entry_single_with_base(
 	{
 		if (existing->old_text == old_text && existing->new_text == new_text)
 			return;
-
-		counter_doubled++;
-		tools_t::add_log("[warning] doubled " + tools_t::type_to_str(type) + ": " + key_text + "\r\n");
-		return;
 	}
 
 	auto it = base_dict->find(type);
@@ -527,9 +511,12 @@ void dict_creator_t::insert_as_untranslated(
 	entry.status = tools_t::status_t::untranslated;
 
 	if (dict.at(type).insert(entry))
+	{
 		counter_created++;
-	else
-		counter_identical++;
+		return;
+	}
+
+	insert_duplicate(key_text, old_text, old_text, type, tools_t::status_t::untranslated);
 }
 
 void dict_creator_t::insert_with_status(
@@ -546,9 +533,12 @@ void dict_creator_t::insert_with_status(
 	entry.status = status;
 
 	if (dict.at(type).insert(entry))
+	{
 		counter_created++;
-	else
-		counter_identical++;
+		return;
+	}
+
+	insert_duplicate(key_text, old_text, new_text, type, status);
 }
 
 void dict_creator_t::insert_via_text_match(
