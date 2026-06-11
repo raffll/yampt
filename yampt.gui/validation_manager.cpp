@@ -1,8 +1,14 @@
 #include "validation_manager.hpp"
 
-validation_result_t validation_manager_t::validate(tools_t::rec_type_t type, const std::string & value) const
+void validation_manager_t::set_codepage(codepage_t cp)
 {
-	const size_t byte_count = value.size();
+	codepage_ = cp;
+}
+
+validation_result_t validation_manager_t::validate(tools_t::rec_type_t type, const std::string & utf8_value) const
+{
+	const auto encoded = encode_from_utf8(utf8_value, codepage_);
+	const size_t byte_count = encoded.size();
 
 	if (type == tools_t::rec_type_t::cell)
 	{

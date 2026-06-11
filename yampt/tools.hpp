@@ -53,6 +53,7 @@ public:
 		std::string status;
 		std::string speaker_name;
 		std::string gender;
+		std::string enchantment;
 	};
 
 	struct chapter_t
@@ -103,6 +104,7 @@ public:
 		static constexpr const char * changed = "changed";
 		static constexpr const char * reused = "reused";
 		static constexpr const char * untranslated = "untranslated";
+		static constexpr const char * in_progress = "in_progress";
 	};
 
 	struct entry_t

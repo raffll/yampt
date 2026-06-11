@@ -39,6 +39,7 @@ void editor_app_t::init(SDL_Window * window)
 	sidebar_visible_ = config_.sidebar_visible;
 	bottom_visible_ = config_.bottom_visible;
 	encoding_index_ = config_.encoding_index;
+	validation_.set_codepage(supported_codepages[encoding_index_]);
 
 	for (const auto & path : config_.user_dict_paths)
 	{
@@ -237,6 +238,10 @@ void editor_app_t::rebuild_row_data()
 		return;
 
 	const auto & dict = slot->data;
+	std::string query(search_buffer_.data());
+	std::string query_lc = query;
+	if (!search_case_sensitive_)
+		std::transform(query_lc.begin(), query_lc.end(), query_lc.begin(), ::tolower);
 
 	int idx = 0;
 	for (const auto & [type, chapter] : dict)
@@ -251,6 +256,34 @@ void editor_app_t::rebuild_row_data()
 				const auto & s = chapter.records[i].status;
 				bool match = s.empty() ? status_filter_.count("untranslated") > 0 : status_filter_.count(s) > 0;
 				if (!match)
+					continue;
+			}
+
+			if (!query.empty())
+			{
+				const auto & rec = chapter.records[i];
+				bool found = false;
+
+				if (search_case_sensitive_)
+				{
+					found = rec.key_text.find(query) != std::string::npos ||
+					        rec.old_text.find(query) != std::string::npos ||
+					        rec.new_text.find(query) != std::string::npos;
+				}
+				else
+				{
+					std::string key_lc = rec.key_text;
+					std::string old_lc = rec.old_text;
+					std::string new_lc = rec.new_text;
+					std::transform(key_lc.begin(), key_lc.end(), key_lc.begin(), ::tolower);
+					std::transform(old_lc.begin(), old_lc.end(), old_lc.begin(), ::tolower);
+					std::transform(new_lc.begin(), new_lc.end(), new_lc.begin(), ::tolower);
+					found = key_lc.find(query_lc) != std::string::npos ||
+					        old_lc.find(query_lc) != std::string::npos ||
+					        new_lc.find(query_lc) != std::string::npos;
+				}
+
+				if (!found)
 					continue;
 			}
 
@@ -355,27 +388,13 @@ void editor_app_t::render_toolbar()
 	ImGui::SetNextItemWidth(200.0f);
 	if (ImGui::InputText("Search", search_buffer_.data(), search_buffer_.size()))
 	{
-		search_.set_query(search_buffer_.data(), search_case_sensitive_);
-		auto * search_slot = workspace_.get_active_slot();
-		if (search_slot)
-			search_.find_all(search_slot->data, type_filter_);
+		rebuild_row_data();
 	}
 
 	ImGui::SameLine();
 	if (ImGui::Checkbox("Case sensitive", &search_case_sensitive_))
 	{
-		search_.set_query(search_buffer_.data(), search_case_sensitive_);
-		auto * search_slot = workspace_.get_active_slot();
-		if (search_slot)
-			search_.find_all(search_slot->data, type_filter_);
-	}
-
-	if (!search_.get_matches().empty())
-	{
-		ImGui::SameLine();
-		std::string match_info =
-		    std::to_string(search_.current_index() + 1) + "/" + std::to_string(search_.get_matches().size());
-		ImGui::TextUnformatted(match_info.c_str());
+		rebuild_row_data();
 	}
 
 	ImGui::SameLine();
@@ -393,6 +412,7 @@ void editor_app_t::render_toolbar()
 					codepage_t old_cp = supported_codepages[encoding_index_];
 					codepage_t new_cp = supported_codepages[i];
 					encoding_index_ = i;
+					validation_.set_codepage(new_cp);
 					auto * enc_slot = workspace_.get_active_slot();
 					if (enc_slot)
 					{
@@ -410,10 +430,49 @@ void editor_app_t::render_toolbar()
 		ImGui::EndCombo();
 	}
 
+	{
+		bool all_active = (type_filter_.size() == std::size(filter_types));
+		if (all_active)
+		{
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 0.4f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.5f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.26f, 0.59f, 0.98f, 0.6f));
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.26f, 0.59f, 0.98f, 0.6f));
+			ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0f);
+		}
+		else
+		{
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.1f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.26f, 0.59f, 0.98f, 0.2f));
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.4f, 0.4f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.5f, 0.5f, 0.5f, 0.5f));
+			ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+		}
+		ImGui::SmallButton("All");
+		ImGui::PopStyleVar(1);
+		ImGui::PopStyleColor(5);
+		if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
+		{
+			if (all_active)
+			{
+				type_filter_.clear();
+			}
+			else
+			{
+				type_filter_.clear();
+				for (auto t : filter_types)
+					type_filter_.insert(t);
+			}
+			type_filter_solo_ = false;
+			rebuild_row_data();
+		}
+	}
+
 	for (size_t i = 0; i < std::size(filter_types); ++i)
 	{
-		if (i > 0)
-			ImGui::SameLine();
+		ImGui::SameLine();
 
 		auto type = filter_types[i];
 		bool is_active = type_filter_.count(type) > 0;
@@ -427,7 +486,7 @@ void editor_app_t::render_toolbar()
 				count = it->second.records.size();
 		}
 
-		std::string label = tools_t::type_to_str(type) + " (" + std::to_string(count) + ")";
+		std::string label = std::string(get_type_display_name(type)) + " (" + std::to_string(count) + ")";
 
 		if (is_active)
 		{
@@ -477,47 +536,6 @@ void editor_app_t::render_toolbar()
 				type_filter_.insert(type);
 			type_filter_solo_ = false;
 			rebuild_row_data();
-		}
-	}
-
-	bool navigate_next = ImGui::IsKeyPressed(ImGuiKey_F3) && !ImGui::GetIO().KeyShift;
-	bool navigate_prev = ImGui::IsKeyPressed(ImGuiKey_F3) && ImGui::GetIO().KeyShift;
-
-	if (navigate_next && !search_.get_matches().empty())
-	{
-		search_.next_match();
-		const auto * match = search_.current_match();
-		if (match)
-		{
-			for (int i = 0; i < static_cast<int>(left_rows_.size()); ++i)
-			{
-				if (left_rows_[i].type == match->type && left_rows_[i].record_index == match->record_index)
-				{
-					scroll_to_row_left_ = i;
-					selected_row_left_ = i;
-					selected_row_ = i;
-					break;
-				}
-			}
-		}
-	}
-
-	if (navigate_prev && !search_.get_matches().empty())
-	{
-		search_.prev_match();
-		const auto * match = search_.current_match();
-		if (match)
-		{
-			for (int i = 0; i < static_cast<int>(left_rows_.size()); ++i)
-			{
-				if (left_rows_[i].type == match->type && left_rows_[i].record_index == match->record_index)
-				{
-					scroll_to_row_left_ = i;
-					selected_row_left_ = i;
-					selected_row_ = i;
-					break;
-				}
-			}
 		}
 	}
 
@@ -585,7 +603,30 @@ void editor_app_t::render_sidebar()
 		ImGui::PushID(i);
 		if (ImGui::Selectable(label.c_str(), i == active_index))
 		{
+			if (editing_row_ >= 0)
+				commit_richedit_text();
+			editing_row_ = -1;
+			editing_type_ = tools_t::rec_type_t::unknown;
+			editing_record_index_ = 0;
+			selected_row_ = -1;
+			selected_row_left_ = -1;
+
+			auto * old_slot = workspace_.get_active_slot();
+			if (old_slot)
+			{
+				old_slot->filters.type_filter = type_filter_;
+				old_slot->filters.status_filter = status_filter_;
+			}
+
 			workspace_.set_active(i);
+
+			auto * new_slot = workspace_.get_active_slot();
+			if (new_slot)
+			{
+				type_filter_ = new_slot->filters.type_filter;
+				status_filter_ = new_slot->filters.status_filter;
+			}
+
 			rebuild_annotations();
 			rebuild_row_data();
 		}
@@ -639,7 +680,30 @@ void editor_app_t::render_sidebar()
 		ImGui::PushID(i);
 		if (ImGui::Selectable(filename.c_str(), i == active_index))
 		{
+			if (editing_row_ >= 0)
+				commit_richedit_text();
+			editing_row_ = -1;
+			editing_type_ = tools_t::rec_type_t::unknown;
+			editing_record_index_ = 0;
+			selected_row_ = -1;
+			selected_row_left_ = -1;
+
+			auto * old_slot = workspace_.get_active_slot();
+			if (old_slot)
+			{
+				old_slot->filters.type_filter = type_filter_;
+				old_slot->filters.status_filter = status_filter_;
+			}
+
 			workspace_.set_active(i);
+
+			auto * new_slot = workspace_.get_active_slot();
+			if (new_slot)
+			{
+				type_filter_ = new_slot->filters.type_filter;
+				status_filter_ = new_slot->filters.status_filter;
+			}
+
 			rebuild_annotations();
 			rebuild_row_data();
 		}
@@ -667,12 +731,12 @@ void editor_app_t::render_status_summary_bar()
 	static const char * status_names[] = { "untranslated", "missing", "duplicate", "coords",     "fingerprint",
 		                                   "heuristic",    "info",    "exact",     "wilderness", "region",
 		                                   "matched",      "error",   "identical", "translated", "reused",
-		                                   "adapted",      "changed" };
-	static const char * status_labels[] = { "Untranslated", "Missing", "Duplicate", "Coords",     "Fingerprint",
-		                                    "Heuristic",    "Info",    "Exact",     "Wilderness", "Region",
-		                                    "Matched",      "Error",   "Identical", "Translated", "Reused",
-		                                    "Adapted",      "Changed" };
-	static constexpr size_t status_count = 17;
+		                                   "adapted",      "changed", "in_progress" };
+	static const char * status_labels[] = { "Untranslated", "Missing", "Duplicate", "Coords",      "Fingerprint",
+		                                    "Heuristic",    "Info",    "Exact",     "Wilderness",  "Region",
+		                                    "Matched",      "Error",   "Identical", "Translated",  "Reused",
+		                                    "Adapted",      "Changed", "In Progress" };
+	static constexpr size_t status_count = 18;
 
 	int counts[status_count] = {};
 
@@ -709,15 +773,67 @@ void editor_app_t::render_status_summary_bar()
 
 	ImGui::BeginChild("StatusSummary", ImVec2(0, 25), ImGuiChildFlags_None);
 
-	bool first = true;
+	{
+		bool all_statuses_active = status_filter_.empty();
+		if (!all_statuses_active)
+		{
+			bool all_visible_selected = true;
+			for (size_t i = 0; i < status_count; ++i)
+			{
+				if (counts[i] > 0 && status_filter_.count(status_names[i]) == 0)
+				{
+					all_visible_selected = false;
+					break;
+				}
+			}
+			if (all_visible_selected && !status_filter_.empty())
+			{
+				status_filter_.clear();
+				all_statuses_active = true;
+			}
+		}
+		if (all_statuses_active)
+		{
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 0.4f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.5f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.26f, 0.59f, 0.98f, 0.6f));
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.26f, 0.59f, 0.98f, 0.6f));
+			ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0f);
+		}
+		else
+		{
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.1f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.26f, 0.59f, 0.98f, 0.2f));
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.4f, 0.4f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.5f, 0.5f, 0.5f, 0.5f));
+			ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+		}
+		ImGui::SmallButton("All");
+		ImGui::PopStyleVar(1);
+		ImGui::PopStyleColor(5);
+		if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
+		{
+			if (all_statuses_active)
+			{
+				status_filter_.insert("__none__");
+			}
+			else
+			{
+				status_filter_.clear();
+			}
+			status_filter_solo_ = false;
+			rebuild_row_data();
+		}
+	}
+
 	for (size_t i = 0; i < status_count; ++i)
 	{
 		if (counts[i] == 0)
 			continue;
 
-		if (!first)
-			ImGui::SameLine();
-		first = false;
+		ImGui::SameLine();
 
 		bool is_active = status_filter_.empty() || status_filter_.count(status_names[i]) > 0;
 
@@ -790,9 +906,7 @@ void editor_app_t::render_status_summary_bar()
 		}
 	}
 
-	if (!first)
-		ImGui::SameLine();
-
+	ImGui::SameLine();
 	std::string total = "Total: " + std::to_string(static_cast<int>(left_rows_.size()));
 	ImGui::TextUnformatted(total.c_str());
 
@@ -822,7 +936,7 @@ void editor_app_t::render_main_panel()
 	const ImGuiTableFlags flags = ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg |
 	                              ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV | ImGuiTableFlags_Sortable;
 
-	if (!ImGui::BeginTable("##main_table", 6, flags))
+	if (!ImGui::BeginTable("##main_table", 5, flags))
 	{
 		ImGui::EndChild();
 		return;
@@ -834,7 +948,6 @@ void editor_app_t::render_main_panel()
 	ImGui::TableSetupColumn("Original", ImGuiTableColumnFlags_WidthStretch);
 	ImGui::TableSetupColumn("Translation", ImGuiTableColumnFlags_WidthStretch);
 	ImGui::TableSetupColumn("Status", ImGuiTableColumnFlags_WidthFixed, config_.column_widths[3]);
-	ImGui::TableSetupColumn("##validation", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoSort, 24.0f);
 	ImGui::TableHeadersRow();
 
 	ImGuiTableSortSpecs * sort_specs = ImGui::TableGetSortSpecs();
@@ -924,13 +1037,6 @@ void editor_app_t::render_main_panel()
 			}
 
 			ImGui::TableSetColumnIndex(0);
-			if (is_editable && history_.is_modified_this_session(row_ref.type, entry.key_text))
-			{
-				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.6f, 0.0f, 1.0f));
-				ImGui::TextUnformatted("\xe2\x97\x8f ");
-				ImGui::PopStyleColor();
-				ImGui::SameLine(0, 0);
-			}
 			ImGui::PushID(i);
 
 			if (ImGui::Selectable(
@@ -945,6 +1051,9 @@ void editor_app_t::render_main_panel()
 
 			if (is_editable && ImGui::BeginPopupContextItem("##row_ctx"))
 			{
+				auto vr = validation_.validate(row_ref.type, entry.new_text);
+				bool limit_exceeded = (vr.level == validation_level_t::error);
+
 				if (ImGui::BeginMenu("Set Status"))
 				{
 					static const char * ctx_status_names[] = { "untranslated", "translated", "error" };
@@ -952,6 +1061,10 @@ void editor_app_t::render_main_panel()
 
 					for (int s = 0; s < 3; ++s)
 					{
+						bool disabled = limit_exceeded && std::string(ctx_status_names[s]) != "error";
+						if (disabled)
+							ImGui::BeginDisabled();
+
 						if (ImGui::MenuItem(ctx_status_labels[s]))
 						{
 							auto mit = slot->data.find(row_ref.type);
@@ -965,6 +1078,9 @@ void editor_app_t::render_main_panel()
 								history_.record_change(row_ref.type, entry.key_text, old_status, rec.status);
 							}
 						}
+
+						if (disabled)
+							ImGui::EndDisabled();
 					}
 					ImGui::EndMenu();
 				}
@@ -994,76 +1110,8 @@ void editor_app_t::render_main_panel()
 			ImVec4 status_color = get_status_color(entry.status);
 			ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, ImGui::ColorConvertFloat4ToU32(status_color));
 
-			std::string status_label = entry.status.empty() ? "(none)" : entry.status;
-			if (is_editable)
-			{
-				if (ImGui::Selectable(status_label.c_str(), false, ImGuiSelectableFlags_None))
-					ImGui::OpenPopup("##status_popup");
-
-				if (ImGui::BeginPopup("##status_popup"))
-				{
-					static const char * popup_status_names[] = { "untranslated", "translated", "error" };
-					static const char * popup_status_labels[] = { "Untranslated", "Translated", "Error" };
-
-					for (int s = 0; s < 3; ++s)
-					{
-						if (ImGui::Selectable(popup_status_labels[s]))
-						{
-							auto mit = slot->data.find(row_ref.type);
-							if (mit != slot->data.end() && row_ref.record_index < mit->second.records.size())
-							{
-								auto & rec = mit->second.records[row_ref.record_index];
-								std::string old_status = rec.status;
-								rec.status = popup_status_names[s];
-								slot->dirty = true;
-								slot->modified_records.insert({ row_ref.type, row_ref.record_index });
-								history_.record_change(row_ref.type, entry.key_text, old_status, rec.status);
-							}
-						}
-					}
-					ImGui::EndPopup();
-				}
-			}
-			else
-			{
-				ImGui::TextUnformatted(status_label.c_str());
-			}
-
-			ImGui::TableSetColumnIndex(5);
-			if (row_ref.type == tools_t::rec_type_t::fnam && annotations_mgr_.has_enchantment(entry.key_text))
-			{
-				ImGui::TextUnformatted("\xe2\x9a\xa1");
-				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip("%s", annotations_mgr_.get_enchantment(entry.key_text).c_str());
-			}
-			else
-			{
-				auto result = validation_.validate(row_ref.type, entry.new_text);
-				if (result.level == validation_level_t::caution)
-				{
-					ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.8f, 0.0f, 1.0f));
-					ImGui::TextUnformatted("\xe2\x9a\xa0");
-					ImGui::PopStyleColor();
-					if (ImGui::IsItemHovered())
-					{
-						std::string tip =
-						    std::to_string(result.byte_count) + " / " + std::to_string(result.limit) + " bytes";
-						ImGui::SetTooltip("%s", tip.c_str());
-					}
-				}
-				else if (result.level == validation_level_t::error)
-				{
-					ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.2f, 0.2f, 1.0f));
-					ImGui::TextUnformatted("\xe2\x9b\x94");
-					ImGui::PopStyleColor();
-					if (ImGui::IsItemHovered())
-					{
-						std::string tip = std::to_string(result.byte_count) + " / " + std::to_string(result.limit) +
-						                  " bytes (OVER LIMIT)";
-						ImGui::SetTooltip("%s", tip.c_str());
-					}
-				}
-			}
+			const char * status_label = get_status_display_name(entry.status);
+			ImGui::TextUnformatted(status_label);
 
 			ImGui::PopID();
 		}
@@ -1202,15 +1250,9 @@ void editor_app_t::render_text_with_syntax(const std::string & text, tools_t::re
 
 	if (tokens.empty())
 	{
-		ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x);
-		ImGui::TextUnformatted(text.c_str());
-		ImGui::PopTextWrapPos();
+		ImGui::TextWrapped("%s", text.c_str());
 		return;
 	}
-
-	ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x);
-
-	bool first_segment = true;
 
 	for (const auto & token : tokens)
 	{
@@ -1218,41 +1260,65 @@ void editor_app_t::render_text_with_syntax(const std::string & text, tools_t::re
 			continue;
 
 		size_t end = std::min(token.end, text.size());
+		const char * seg_start = text.c_str() + token.start;
+		const char * seg_end = text.c_str() + end;
 
-		if (!first_segment)
-			ImGui::SameLine(0, 0);
+		bool need_same_line = (token.start > 0 && text[token.start - 1] != '\n');
 
-		switch (token.type)
+		const char * p = seg_start;
+		while (p < seg_end)
 		{
-		case token_type_t::mwscript_function:
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.7f, 1.0f, 1.0f));
-			ImGui::TextUnformatted(text.c_str() + token.start, text.c_str() + end);
-			ImGui::PopStyleColor();
-			break;
-		case token_type_t::mwscript_comment:
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
-			ImGui::TextUnformatted(text.c_str() + token.start, text.c_str() + end);
-			ImGui::PopStyleColor();
-			break;
-		case token_type_t::mwscript_string:
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.8f, 0.6f, 0.2f, 1.0f));
-			ImGui::TextUnformatted(text.c_str() + token.start, text.c_str() + end);
-			ImGui::PopStyleColor();
-			break;
-		case token_type_t::html_tag:
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.6f, 1.0f));
-			ImGui::TextUnformatted(text.c_str() + token.start, text.c_str() + end);
-			ImGui::PopStyleColor();
-			break;
-		default:
-			ImGui::TextUnformatted(text.c_str() + token.start, text.c_str() + end);
-			break;
+			const char * nl = p;
+			while (nl < seg_end && *nl != '\n')
+				++nl;
+
+			if (nl > p)
+			{
+				if (need_same_line)
+					ImGui::SameLine(0, 0);
+
+				switch (token.type)
+				{
+				case token_type_t::mwscript_function:
+					ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.7f, 1.0f, 1.0f));
+					ImGui::TextUnformatted(p, nl);
+					ImGui::PopStyleColor();
+					break;
+				case token_type_t::mwscript_comment:
+					ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+					ImGui::TextUnformatted(p, nl);
+					ImGui::PopStyleColor();
+					break;
+				case token_type_t::mwscript_string:
+					ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.8f, 0.6f, 0.2f, 1.0f));
+					ImGui::TextUnformatted(p, nl);
+					ImGui::PopStyleColor();
+					break;
+				case token_type_t::html_tag:
+					ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.6f, 1.0f));
+					ImGui::TextUnformatted(p, nl);
+					ImGui::PopStyleColor();
+					break;
+				default:
+					ImGui::TextUnformatted(p, nl);
+					break;
+				}
+			}
+
+			if (nl < seg_end && *nl == '\n')
+			{
+				ImGui::NewLine();
+				need_same_line = false;
+				p = nl + 1;
+			}
+			else
+			{
+				need_same_line = true;
+				p = nl;
+				break;
+			}
 		}
-
-		first_segment = false;
 	}
-
-	ImGui::PopTextWrapPos();
 }
 
 void editor_app_t::render_text_with_topic_highlights(const std::string & text)
@@ -1502,12 +1568,6 @@ void editor_app_t::render_info_panel()
 		ImGui::EndTabItem();
 	}
 
-	if (ImGui::BeginTabItem("Speaker"))
-	{
-		render_speaker_tab();
-		ImGui::EndTabItem();
-	}
-
 	ImGui::EndTabBar();
 	ImGui::EndChild();
 }
@@ -1576,6 +1636,9 @@ void editor_app_t::render_editor_tab()
 		set_richedit_text(entry.new_text);
 		if (row.type == tools_t::rec_type_t::info)
 			highlight_richedit_hyperlinks(entry.new_text, row.type, entry.old_text);
+		else if (row.type == tools_t::rec_type_t::sctx || row.type == tools_t::rec_type_t::bnam ||
+		         row.type == tools_t::rec_type_t::text)
+			highlight_richedit_syntax(entry.new_text, row.type);
 		richedit_ignore_change_ = false;
 	}
 
@@ -1606,32 +1669,27 @@ void editor_app_t::render_annotations_tab()
 
 	const auto & entry = it->second.records[row.record_index];
 
-	if (row.type == tools_t::rec_type_t::fnam && annotations_mgr_.has_enchantment(entry.key_text))
+	if (row.type == tools_t::rec_type_t::fnam && !entry.enchantment.empty())
 	{
-		ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.0f, 1.0f), "\xe2\x9a\xa1 Enchantment");
-		const auto & ench_name = annotations_mgr_.get_enchantment(entry.key_text);
+		ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.0f, 1.0f), "Enchantment:");
 		ImGui::SameLine();
-		ImGui::TextUnformatted(ench_name.c_str());
+		ImGui::TextUnformatted(entry.enchantment.c_str());
 		ImGui::Separator();
-	}
-
-	static const tools_t::dict_t empty_base_dict;
-	const auto & base_dict = empty_base_dict;
-	auto base_it = base_dict.find(row.type);
-	if (base_it != base_dict.end())
-	{
-		const auto * base_entry = base_it->second.find(entry.key_text);
-		if (base_entry != nullptr && !base_entry->new_text.empty())
-		{
-			ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.6f, 1.0f), "Base proposal:");
-			ImGui::SameLine();
-			ImGui::TextUnformatted(base_entry->new_text.c_str());
-			ImGui::Separator();
-		}
 	}
 
 	if (row.type == tools_t::rec_type_t::info)
 	{
+		if (!entry.speaker_name.empty())
+		{
+			ImGui::TextColored(ImVec4(0.8f, 0.6f, 0.9f, 1.0f), "Speaker:");
+			ImGui::SameLine();
+			std::string speaker_label = entry.speaker_name;
+			if (!entry.gender.empty())
+				speaker_label += " (" + entry.gender + ")";
+			ImGui::TextUnformatted(speaker_label.c_str());
+			ImGui::Separator();
+		}
+
 		auto annotations_new = annotations_mgr_.annotate(entry.new_text, row.type);
 		auto annotations_old = annotations_mgr_.annotate(entry.old_text, row.type);
 
@@ -1711,21 +1769,6 @@ void editor_app_t::render_annotations_tab()
 			}
 			ImGui::Separator();
 		}
-
-		auto key_parts = entry.key_text;
-		auto sep_pos = key_parts.find('^');
-		if (sep_pos != std::string::npos)
-		{
-			std::string npc_id = key_parts.substr(sep_pos + 1);
-			const auto & gender = annotations_mgr_.get_speaker_gender(npc_id);
-			if (!gender.empty())
-			{
-				ImGui::TextColored(ImVec4(0.8f, 0.6f, 0.9f, 1.0f), "Speaker");
-				ImGui::SameLine();
-				std::string speaker_label = npc_id + " (" + gender + ")";
-				ImGui::TextUnformatted(speaker_label.c_str());
-			}
-		}
 	}
 }
 
@@ -1794,117 +1837,6 @@ void editor_app_t::render_history_tab()
 	}
 
 	ImGui::EndChild();
-}
-
-void editor_app_t::render_speaker_tab()
-{
-	auto * speaker_slot = workspace_.get_active_slot();
-	if (!speaker_slot)
-	{
-		ImGui::TextDisabled("No info records loaded");
-		return;
-	}
-
-	const auto & dict = speaker_slot->data;
-	auto it = dict.find(tools_t::rec_type_t::info);
-	if (it == dict.end() || it->second.records.empty())
-	{
-		ImGui::TextDisabled("No info records loaded");
-		return;
-	}
-
-	ImGui::SetNextItemWidth(200.0f);
-	ImGui::InputText("##speaker_filter", speaker_filter_buffer_.data(), speaker_filter_buffer_.size());
-	ImGui::SameLine();
-	ImGui::TextDisabled("Filter");
-
-	const ImGuiTableFlags flags = ImGuiTableFlags_Sortable | ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollY |
-	                              ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV;
-
-	if (!ImGui::BeginTable("##speaker_table", 2, flags, ImVec2(0, ImGui::GetContentRegionAvail().y)))
-		return;
-
-	ImGui::TableSetupScrollFreeze(0, 1);
-	ImGui::TableSetupColumn("Speaker Name", ImGuiTableColumnFlags_DefaultSort);
-	ImGui::TableSetupColumn("Gender", ImGuiTableColumnFlags_WidthFixed, 60.0f);
-	ImGui::TableHeadersRow();
-
-	struct speaker_row_t
-	{
-		const std::string * speaker_name;
-		const std::string * gender;
-	};
-
-	std::vector<speaker_row_t> visible_rows;
-	visible_rows.reserve(it->second.records.size());
-
-	std::string filter_text(speaker_filter_buffer_.data());
-	for (auto & c : filter_text)
-		c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-
-	for (const auto & entry : it->second.records)
-	{
-		if (entry.speaker_name.empty() && entry.gender.empty())
-			continue;
-
-		if (!filter_text.empty())
-		{
-			auto lower = [](const std::string & s)
-			{
-				std::string r = s;
-				for (auto & c : r)
-					c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-				return r;
-			};
-
-			if (lower(entry.speaker_name).find(filter_text) == std::string::npos &&
-			    lower(entry.gender).find(filter_text) == std::string::npos)
-				continue;
-		}
-
-		visible_rows.push_back({ &entry.speaker_name, &entry.gender });
-	}
-
-	ImGuiTableSortSpecs * sort_specs = ImGui::TableGetSortSpecs();
-	if (sort_specs != nullptr && sort_specs->SpecsDirty && sort_specs->SpecsCount > 0)
-	{
-		const auto & spec = sort_specs->Specs[0];
-		bool ascending = (spec.SortDirection == ImGuiSortDirection_Ascending);
-		int col = spec.ColumnIndex;
-
-		std::sort(
-		    visible_rows.begin(),
-		    visible_rows.end(),
-		    [col, ascending](const speaker_row_t & a, const speaker_row_t & b)
-		{
-			const std::string * va = col == 0 ? a.speaker_name : a.gender;
-			const std::string * vb = col == 0 ? b.speaker_name : b.gender;
-			int cmp = va->compare(*vb);
-			return ascending ? (cmp < 0) : (cmp > 0);
-		});
-
-		sort_specs->SpecsDirty = false;
-	}
-
-	ImGuiListClipper clipper;
-	clipper.Begin(static_cast<int>(visible_rows.size()));
-
-	while (clipper.Step())
-	{
-		for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; ++i)
-		{
-			const auto & row = visible_rows[i];
-			ImGui::TableNextRow();
-
-			ImGui::TableSetColumnIndex(0);
-			ImGui::TextUnformatted(row.speaker_name->c_str());
-
-			ImGui::TableSetColumnIndex(1);
-			ImGui::TextUnformatted(row.gender->c_str());
-		}
-	}
-
-	ImGui::EndTable();
 }
 
 void editor_app_t::render_annotations_panel()
@@ -2337,7 +2269,7 @@ void editor_app_t::position_richedit(float screen_x, float screen_y, float width
 
 	float adjusted_width = width;
 
-	bool should_show = (adjusted_width > 10.0f && height > 10.0f);
+	bool should_show = (adjusted_width > 10.0f && height > 20.0f);
 
 	if (should_show)
 	{
@@ -2407,7 +2339,7 @@ void editor_app_t::commit_richedit_text()
 
 	history_.record_change(editing_type_, prev_entry.key_text, prev_entry.new_text, new_text);
 	prev_entry.new_text = new_text;
-	prev_entry.status = tools_t::status_t::translated;
+	prev_entry.status = tools_t::status_t::in_progress;
 	auto vr = validation_.validate(editing_type_, new_text);
 	if (vr.level == validation_level_t::error)
 		prev_entry.status = tools_t::status_t::error;
@@ -2521,6 +2453,102 @@ void editor_app_t::highlight_richedit_hyperlinks(
 
 			pos = end_pos;
 		}
+	}
+
+	SendMessageA(richedit_hwnd_, EM_EXSETSEL, 0, (LPARAM)&orig_sel);
+	SendMessageA(richedit_hwnd_, WM_SETREDRAW, TRUE, 0);
+	InvalidateRect(richedit_hwnd_, nullptr, TRUE);
+}
+
+void editor_app_t::highlight_richedit_syntax(const std::string & text, tools_t::rec_type_t type)
+{
+	if (!richedit_hwnd_)
+		return;
+
+	auto tokens = syntax_.tokenize(text, type);
+	if (tokens.empty())
+		return;
+
+	std::vector<int> byte_to_wchar(text.size() + 1, 0);
+	int wchar_pos = 0;
+	for (size_t i = 0; i < text.size();)
+	{
+		byte_to_wchar[i] = wchar_pos;
+		unsigned char c = static_cast<unsigned char>(text[i]);
+		int char_len = 1;
+		if (c >= 0xF0)
+			char_len = 4;
+		else if (c >= 0xE0)
+			char_len = 3;
+		else if (c >= 0xC0)
+			char_len = 2;
+
+		unsigned int codepoint = 0;
+		if (char_len == 1)
+			codepoint = c;
+		else if (char_len == 2)
+			codepoint = c & 0x1F;
+		else if (char_len == 3)
+			codepoint = c & 0x0F;
+		else
+			codepoint = c & 0x07;
+
+		for (int j = 1; j < char_len && i + j < text.size(); ++j)
+		{
+			byte_to_wchar[i + j] = wchar_pos;
+			codepoint = (codepoint << 6) | (static_cast<unsigned char>(text[i + j]) & 0x3F);
+		}
+
+		wchar_pos += (codepoint > 0xFFFF) ? 2 : 1;
+		i += char_len;
+	}
+	byte_to_wchar[text.size()] = wchar_pos;
+
+	SendMessageA(richedit_hwnd_, WM_SETREDRAW, FALSE, 0);
+
+	CHARRANGE orig_sel;
+	SendMessageA(richedit_hwnd_, EM_EXGETSEL, 0, (LPARAM)&orig_sel);
+
+	for (const auto & token : tokens)
+	{
+		if (token.type == token_type_t::normal)
+			continue;
+
+		if (token.start >= token.end || token.start >= text.size())
+			continue;
+
+		size_t end = std::min(token.end, text.size());
+
+		COLORREF color = RGB(255, 255, 255);
+		switch (token.type)
+		{
+		case token_type_t::mwscript_function:
+			color = RGB(100, 180, 255);
+			break;
+		case token_type_t::mwscript_comment:
+			color = RGB(128, 128, 128);
+			break;
+		case token_type_t::mwscript_string:
+			color = RGB(200, 150, 50);
+			break;
+		case token_type_t::html_tag:
+			color = RGB(128, 128, 150);
+			break;
+		default:
+			continue;
+		}
+
+		CHARRANGE range;
+		range.cpMin = byte_to_wchar[token.start];
+		range.cpMax = byte_to_wchar[end];
+		SendMessageA(richedit_hwnd_, EM_EXSETSEL, 0, (LPARAM)&range);
+
+		CHARFORMAT2A cf = {};
+		cf.cbSize = sizeof(cf);
+		cf.dwMask = CFM_COLOR;
+		cf.dwEffects = 0;
+		cf.crTextColor = color;
+		SendMessageA(richedit_hwnd_, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
 	}
 
 	SendMessageA(richedit_hwnd_, EM_EXSETSEL, 0, (LPARAM)&orig_sel);

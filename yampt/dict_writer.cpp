@@ -73,6 +73,7 @@ void dict_writer_t::write(const tools_t::dict_t & dict, const std::string & path
 		file << "  \"" << tools_t::type_to_str(type) << "\": [\n";
 
 		bool is_info = (type == tools_t::rec_type_t::info);
+		bool is_fnam = (type == tools_t::rec_type_t::fnam);
 
 		for (size_t i = 0; i < chapter.records.size(); ++i)
 		{
@@ -97,6 +98,12 @@ void dict_writer_t::write(const tools_t::dict_t & dict, const std::string & path
 					file << ",\n";
 					file << "      \"gender\": \"" << escape_json(entry.gender) << "\"";
 				}
+			}
+
+			if (is_fnam && !entry.enchantment.empty())
+			{
+				file << ",\n";
+				file << "      \"enchantment\": \"" << escape_json(entry.enchantment) << "\"";
 			}
 
 			file << "\n";

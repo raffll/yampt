@@ -72,6 +72,11 @@ void dict_reader_t::parse_json(const std::string & content, const std::string & 
 				entry.gender = json_reader_t::get_string(record, "gender", "");
 			}
 
+			if (type == tools_t::rec_type_t::fnam)
+			{
+				entry.enchantment = json_reader_t::get_string(record, "enchantment", "");
+			}
+
 			validate_entry(entry, type);
 		});
 	});

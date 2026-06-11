@@ -3,6 +3,7 @@
 #include <string>
 
 #include "../yampt/tools.hpp"
+#include "encoding_utils.hpp"
 
 enum class validation_level_t
 {
@@ -21,5 +22,9 @@ struct validation_result_t
 class validation_manager_t
 {
 public:
-	validation_result_t validate(tools_t::rec_type_t type, const std::string & value) const;
+	validation_result_t validate(tools_t::rec_type_t type, const std::string & utf8_value) const;
+	void set_codepage(codepage_t cp);
+
+private:
+	codepage_t codepage_ = codepage_t::windows_1252;
 };

@@ -98,8 +98,6 @@ private:
 	std::array<char, 256> search_buffer_ = {};
 	bool search_case_sensitive_ = false;
 
-	std::array<char, 256> speaker_filter_buffer_ = {};
-
 	struct row_ref_t
 	{
 		tools_t::rec_type_t type;
@@ -124,7 +122,6 @@ private:
 	void render_editor_tab();
 	void render_annotations_tab();
 	void render_history_tab();
-	void render_speaker_tab();
 	void render_annotations_panel();
 	void render_history_panel();
 	void render_dialogs();
@@ -154,6 +151,7 @@ private:
 	    const std::string & text,
 	    tools_t::rec_type_t type,
 	    const std::string & original_text);
+	void highlight_richedit_syntax(const std::string & text, tools_t::rec_type_t type);
 
 	void render_splitter_vertical(float & width, float min_w, float max_w);
 	void render_splitter_horizontal(float & height, float min_h, float max_h);
