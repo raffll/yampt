@@ -14,6 +14,7 @@ struct filter_state_t
 		tools_t::rec_type_t::indx, tools_t::rec_type_t::bnam, tools_t::rec_type_t::sctx,
 	};
 	std::set<std::string> status_filter;
+	bool type_filter_solo = false;
 	tools_t::rec_type_t sidebar_active_type = tools_t::rec_type_t::unknown;
 };
 

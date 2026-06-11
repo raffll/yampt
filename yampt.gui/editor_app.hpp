@@ -124,7 +124,6 @@ private:
 	void render_sidebar();
 	void render_status_summary_bar();
 	void render_dial_type_bar();
-	void render_fnam_type_bar();
 	void render_main_panel();
 	void render_status_bar();
 	void render_bottom_panel();
