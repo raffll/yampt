@@ -28,12 +28,21 @@ void dict_creator_t::make_dict_base_ordered()
 			process_text_ordered(i);
 		else if (rec_id == "FACT")
 			process_rnam_ordered(i);
-		else if (tools_t::is_fnam(rec_id))
-			process_fnam_ordered(i);
 		else if (rec_id == "BSGN" || rec_id == "CLAS" || rec_id == "RACE")
 			process_desc_ordered(i);
 		else if (rec_id == "SKIL" || rec_id == "MGEF")
 			process_indx_ordered(i);
+	}
+
+	for (size_t i = 0; i < esm.get_records().size(); ++i)
+	{
+		esm.select_record(i);
+		esm_ref.select_record(i);
+
+		if (!tools_t::is_fnam(esm.get_record().id))
+			continue;
+
+		process_fnam_ordered(i);
 	}
 
 	process_cell_default_ordered();
@@ -333,7 +342,7 @@ void dict_creator_t::process_sctx_ordered(size_t i)
 
 	for (size_t k = 0; k < native_messages.size(); ++k)
 		insert_entry_base(
-		    script_name + "^" + native_messages[k],
+		    script_name + "^" + foreign_messages[k],
 		    foreign_messages[k],
 		    native_messages[k],
 		    tools_t::rec_type_t::sctx,
@@ -384,7 +393,7 @@ void dict_creator_t::process_bnam_ordered(
 
 	for (size_t k = 0; k < native_messages.size(); ++k)
 	{
-		const auto key_text = dial_type + "^" + dial_foreign_name + "^" + info_inam + "^" + native_messages[k];
+		const auto key_text = dial_type + "^" + dial_foreign_name + "^" + info_inam + "^" + foreign_messages[k];
 		const auto & old_text = foreign_messages[k];
 		const auto & new_text = native_messages[k];
 		insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::bnam, tools_t::status_t::matched);

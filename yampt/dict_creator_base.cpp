@@ -437,7 +437,7 @@ void dict_creator_t::make_dict_base_sctx()
 
 		for (size_t k = 0; k < native_messages.size(); ++k)
 		{
-			const auto key_text = script_name + "^" + native_messages[k];
+			const auto key_text = script_name + "^" + foreign_messages[k];
 			const auto & old_text = foreign_messages[k];
 			const auto & new_text = native_messages[k];
 			insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::sctx, tools_t::status_t::matched);
@@ -530,7 +530,7 @@ void dict_creator_t::make_dict_base_bnam()
 
 		for (size_t k = 0; k < native_messages.size(); ++k)
 		{
-			const auto key_text = info_key + "^" + native_messages[k];
+			const auto key_text = info_key + "^" + foreign_messages[k];
 			const auto & old_text = foreign_messages[k];
 			const auto & new_text = native_messages[k];
 			insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::bnam, tools_t::status_t::matched);
