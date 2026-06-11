@@ -319,15 +319,15 @@ TEST_CASE("get_number_of_elements_in_dict correct total", "[u]")
 TEST_CASE("status_t constants are distinct non-empty strings", "[u]")
 {
 	std::vector<std::string> all_statuses {
-		tools_t::status_t::missing,         tools_t::status_t::duplicate,       tools_t::status_t::matched_by_coords,
-		tools_t::status_t::matched_by_info, tools_t::status_t::matched_by_name, tools_t::status_t::wilderness,
-		tools_t::status_t::region,          tools_t::status_t::auto_identical,  tools_t::status_t::auto_base,
-		tools_t::status_t::auto_translated, tools_t::status_t::auto_heuristic,  tools_t::status_t::auto_changed,
-		tools_t::status_t::untranslated,    tools_t::status_t::in_progress,     tools_t::status_t::translated,
-		tools_t::status_t::has_errors,
+		tools_t::status_t::matched,     tools_t::status_t::fingerprint, tools_t::status_t::coords,
+		tools_t::status_t::heuristic,   tools_t::status_t::exact,       tools_t::status_t::info,
+		tools_t::status_t::wilderness,  tools_t::status_t::region,      tools_t::status_t::missing,
+		tools_t::status_t::duplicate,   tools_t::status_t::error,       tools_t::status_t::identical,
+		tools_t::status_t::translated,  tools_t::status_t::adapted,     tools_t::status_t::changed,
+		tools_t::status_t::reused,      tools_t::status_t::untranslated,
 	};
 
-	REQUIRE(all_statuses.size() == 16);
+	REQUIRE(all_statuses.size() == 17);
 
 	for (const auto & s : all_statuses)
 	{
@@ -341,15 +341,13 @@ TEST_CASE("status_t constants are distinct non-empty strings", "[u]")
 TEST_CASE("record_entry_t speaker fields default to empty", "[u]")
 {
 	tools_t::record_entry_t entry { "key", "old", "new", "untranslated" };
-	REQUIRE(entry.speaker.empty());
 	REQUIRE(entry.speaker_name.empty());
 	REQUIRE(entry.gender.empty());
 }
 
 TEST_CASE("record_entry_t with speaker fields", "[u]")
 {
-	tools_t::record_entry_t entry { "key", "old", "new", "auto_base", "npc_id", "Fargoth", "M" };
-	REQUIRE(entry.speaker == "npc_id");
+	tools_t::record_entry_t entry { "key", "old", "new", "translated", "Fargoth", "M" };
 	REQUIRE(entry.speaker_name == "Fargoth");
 	REQUIRE(entry.gender == "M");
 }
@@ -357,12 +355,11 @@ TEST_CASE("record_entry_t with speaker fields", "[u]")
 TEST_CASE("Chapter::insert with speaker fields", "[u]")
 {
 	tools_t::chapter_t chapter;
-	bool result = chapter.insert({ "info_1", "Hello", "Cześć", "translated", "fargoth", "Fargoth", "M" });
+	bool result = chapter.insert({ "info_1", "Hello", "Cześć", "translated", "Fargoth", "M" });
 	REQUIRE(result == true);
 
 	auto * entry = chapter.find("info_1");
 	REQUIRE(entry != nullptr);
-	REQUIRE(entry->speaker == "fargoth");
 	REQUIRE(entry->speaker_name == "Fargoth");
 	REQUIRE(entry->gender == "M");
 }

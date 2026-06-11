@@ -51,7 +51,6 @@ public:
 		std::string old_text;
 		std::string new_text;
 		std::string status;
-		std::string speaker;
 		std::string speaker_name;
 		std::string gender;
 	};
@@ -83,24 +82,26 @@ public:
 
 	struct status_t
 	{
-		static constexpr const char * missing = "missing";
-		static constexpr const char * duplicate = "duplicate";
-		static constexpr const char * matched_by_coords = "matched_by_coords";
-		static constexpr const char * matched_by_fingerprint = "matched_by_fingerprint";
-		static constexpr const char * matched_by_heuristic = "matched_by_heuristic";
-		static constexpr const char * matched_by_info = "matched_by_info";
-		static constexpr const char * matched_by_name = "matched_by_name";
+		// base mode
+		static constexpr const char * matched = "matched";
+		static constexpr const char * fingerprint = "fingerprint";
+		static constexpr const char * coords = "coords";
+		static constexpr const char * heuristic = "heuristic";
+		static constexpr const char * exact = "exact";
+		static constexpr const char * info = "info";
 		static constexpr const char * wilderness = "wilderness";
 		static constexpr const char * region = "region";
-		static constexpr const char * auto_identical = "auto_identical";
-		static constexpr const char * auto_base = "auto_base";
-		static constexpr const char * auto_translated = "auto_translated";
-		static constexpr const char * auto_heuristic = "auto_heuristic";
-		static constexpr const char * auto_changed = "auto_changed";
-		static constexpr const char * untranslated = "untranslated";
-		static constexpr const char * in_progress = "in_progress";
+		static constexpr const char * missing = "missing";
+		static constexpr const char * duplicate = "duplicate";
+		static constexpr const char * error = "error";
+
+		// single_with_base mode
+		static constexpr const char * identical = "identical";
 		static constexpr const char * translated = "translated";
-		static constexpr const char * has_errors = "has_errors";
+		static constexpr const char * adapted = "adapted";
+		static constexpr const char * changed = "changed";
+		static constexpr const char * reused = "reused";
+		static constexpr const char * untranslated = "untranslated";
 	};
 
 	struct entry_t

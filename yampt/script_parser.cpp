@@ -191,11 +191,7 @@ void script_parser_t::find_new_text(const tools_t::rec_type_t text_type)
 {
 	new_text = old_text;
 
-	const tools_t::record_entry_t * search = nullptr;
-	if (text_type == tools_t::rec_type_t::cell)
-		search = merger->get_dict().at(text_type).find_by_old_text(old_text);
-	else
-		search = merger->get_dict().at(text_type).find(old_text);
+	const auto * search = merger->get_dict().at(text_type).find(old_text);
 
 	if (search)
 	{

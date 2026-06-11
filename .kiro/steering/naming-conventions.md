@@ -98,3 +98,20 @@ class script_parser_t { ... };
 struct filter_state_t { ... };
 enum class record_type_t { cell, dial, info, fnam, text };
 ```
+
+## `const auto &` by Default
+
+Always use `const auto &` for local variables unless you explicitly need a copy. Only omit `const` or `&` when mutation or ownership transfer is intended.
+
+```cpp
+// Good
+const auto & key_text = esm.get_key().text;
+const auto & dict = creator.get_dict();
+
+// Good — explicit copy needed
+auto copy = original_string;
+copy += "_suffix";
+
+// Bad — unnecessary copy
+auto key_text = esm.get_key().text;
+```

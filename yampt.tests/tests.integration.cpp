@@ -112,6 +112,7 @@ TEST_CASE("make-base EN to PL with translation engine", "[i]")
 		{
 			const auto * entry = find_by_new_text(cell_chapter, "Kopalnia Abaelun");
 			REQUIRE(entry != nullptr);
+			REQUIRE(entry->key_text == entry->old_text);
 			REQUIRE(entry->old_text == "Abaelun Mine");
 		}
 
@@ -148,6 +149,7 @@ TEST_CASE("make-base EN to DE with translation engine", "[i]")
 		{
 			const auto * entry = find_by_new_text(cell_chapter, "Abaelun-Mine");
 			REQUIRE(entry != nullptr);
+			REQUIRE(entry->key_text == entry->old_text);
 			REQUIRE(entry->old_text == "Abaelun Mine");
 		}
 
@@ -227,6 +229,7 @@ TEST_CASE("make EN with base dict", "[i]")
 	const auto & cell_chapter = dict.at(tools_t::rec_type_t::cell);
 	const auto * entry = find_by_new_text(cell_chapter, "Kopalnia Abaelun");
 	REQUIRE(entry != nullptr);
+	REQUIRE(entry->key_text == entry->old_text);
 	REQUIRE(entry->old_text == "Abaelun Mine");
 	REQUIRE(entry->status != tools_t::status_t::untranslated);
 

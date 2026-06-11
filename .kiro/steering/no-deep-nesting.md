@@ -2,6 +2,8 @@
 
 Never write deeply nested `if` blocks. Use early returns, `continue`, and `break` to flatten logic.
 
+Always add a blank line after `continue`, `return`, or `break` — unless it's the last statement in the block.
+
 Bad:
 ```cpp
 if (base_dict)
@@ -38,4 +40,28 @@ if (entry->original != original)
     return;
 
 // flat logic here
+```
+
+Bad (no blank line after continue):
+```cpp
+if (!esm.get_key().exist)
+    continue;
+if (esm.get_key().text != "sDefaultCellname")
+    continue;
+```
+
+Good:
+```cpp
+if (!esm.get_key().exist)
+    continue;
+
+if (esm.get_key().text != "sDefaultCellname")
+    continue;
+```
+
+Exception — last statement in block needs no blank line:
+```cpp
+if (!esm.get_value().exist)
+    continue;
+}
 ```

@@ -82,19 +82,11 @@ void dict_writer_t::write(const tools_t::dict_t & dict, const std::string & path
 			file << "      \"old\": \"" << escape_json(entry.old_text) << "\",\n";
 			file << "      \"new\": \"" << escape_json(entry.new_text) << "\"";
 
-			if (!entry.status.empty())
-			{
-				file << ",\n";
-				file << "      \"status\": \"" << escape_json(entry.status) << "\"";
-			}
+			file << ",\n";
+			file << "      \"status\": \"" << escape_json(entry.status) << "\"";
 
 			if (is_info)
 			{
-				if (!entry.speaker.empty())
-				{
-					file << ",\n";
-					file << "      \"speaker\": \"" << escape_json(entry.speaker) << "\"";
-				}
 				if (!entry.speaker_name.empty())
 				{
 					file << ",\n";

@@ -68,7 +68,6 @@ void dict_reader_t::parse_json(const std::string & content, const std::string & 
 
 			if (type == tools_t::rec_type_t::info)
 			{
-				entry.speaker = json_reader_t::get_string(record, "speaker", "");
 				entry.speaker_name = json_reader_t::get_string(record, "speaker_name", "");
 				entry.gender = json_reader_t::get_string(record, "gender", "");
 			}

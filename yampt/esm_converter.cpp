@@ -32,15 +32,6 @@ void esm_converter_t::convert_esm()
 	if (!file_suffix.empty())
 		convert_mast();
 
-	convert_cell();
-	convert_pgrd();
-	convert_anam();
-	convert_scvr();
-	convert_dnam();
-	convert_cndt();
-	convert_dial();
-	convert_bnam();
-	convert_scpt();
 	convert_gmst();
 	convert_fnam();
 	convert_desc();
@@ -54,6 +45,15 @@ void esm_converter_t::convert_esm()
 	}
 
 	convert_info();
+	convert_bnam();
+	convert_scpt();
+	convert_cell();
+	convert_pgrd();
+	convert_anam();
+	convert_scvr();
+	convert_dnam();
+	convert_cndt();
+	convert_dial();
 	// convert_gmdt();
 
 	if (create_header)
@@ -704,11 +704,7 @@ bool esm_converter_t::make_new_text(const tools_t::entry_t & entry, std::string 
 	counter_all++;
 	new_text.clear();
 
-	const tools_t::record_entry_t * found = nullptr;
-	if (entry.type == tools_t::rec_type_t::cell)
-		found = merger.get_dict().at(entry.type).find_by_old_text(entry.val_text);
-	else
-		found = merger.get_dict().at(entry.type).find(entry.key_text);
+	const auto * found = merger.get_dict().at(entry.type).find(entry.key_text);
 
 	if (found)
 	{

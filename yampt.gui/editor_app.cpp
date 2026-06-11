@@ -665,18 +665,18 @@ void editor_app_t::render_sidebar()
 void editor_app_t::render_status_summary_bar()
 {
 	static const char * status_names[] = {
-		"untranslated",         "missing",         "duplicate",       "matched_by_coords", "matched_by_fingerprint",
-		"matched_by_heuristic", "matched_by_info", "matched_by_name", "wilderness",        "region",
-		"auto_identical",       "auto_base",       "auto_translated", "auto_heuristic",    "auto_changed",
-		"in_progress",          "translated",      "has_errors"
+		"untranslated", "missing",      "duplicate", "coords",      "fingerprint",
+		"heuristic",    "info",         "exact",     "wilderness",  "region",
+		"matched",      "error",        "identical", "translated",  "reused",
+		"adapted",      "changed"
 	};
 	static const char * status_labels[] = {
-		"Untranslated",      "Missing",      "Duplicate",       "Matched Coords", "Matched Fingerprint",
-		"Matched Heuristic", "Matched Info", "Matched Name",    "Wilderness",     "Region",
-		"Auto Identical",    "Auto Base",    "Auto Translated", "Auto Heuristic", "Auto Changed",
-		"In Progress",       "Translated",   "Has Errors"
+		"Untranslated", "Missing",      "Duplicate", "Coords",      "Fingerprint",
+		"Heuristic",    "Info",         "Exact",     "Wilderness",  "Region",
+		"Matched",      "Error",        "Identical", "Translated",  "Reused",
+		"Adapted",      "Changed"
 	};
-	static constexpr size_t status_count = 18;
+	static constexpr size_t status_count = 17;
 
 	int counts[status_count] = {};
 
@@ -952,13 +952,13 @@ void editor_app_t::render_main_panel()
 				if (ImGui::BeginMenu("Set Status"))
 				{
 					static const char * ctx_status_names[] = {
-						"untranslated", "in_progress", "translated", "has_errors"
+						"untranslated", "translated", "error"
 					};
 					static const char * ctx_status_labels[] = {
-						"Untranslated", "In Progress", "Translated", "Has Errors"
+						"Untranslated", "Translated", "Error"
 					};
 
-					for (int s = 0; s < 4; ++s)
+					for (int s = 0; s < 3; ++s)
 					{
 						if (ImGui::MenuItem(ctx_status_labels[s]))
 						{
@@ -1011,13 +1011,13 @@ void editor_app_t::render_main_panel()
 				if (ImGui::BeginPopup("##status_popup"))
 				{
 					static const char * popup_status_names[] = {
-						"untranslated", "in_progress", "translated", "has_errors"
+						"untranslated", "translated", "error"
 					};
 					static const char * popup_status_labels[] = {
-						"Untranslated", "In Progress", "Translated", "Has Errors"
+						"Untranslated", "Translated", "Error"
 					};
 
-					for (int s = 0; s < 4; ++s)
+					for (int s = 0; s < 3; ++s)
 					{
 						if (ImGui::Selectable(popup_status_labels[s]))
 						{
@@ -1833,18 +1833,16 @@ void editor_app_t::render_speaker_tab()
 	const ImGuiTableFlags flags = ImGuiTableFlags_Sortable | ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollY |
 	                              ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV;
 
-	if (!ImGui::BeginTable("##speaker_table", 3, flags, ImVec2(0, ImGui::GetContentRegionAvail().y)))
+	if (!ImGui::BeginTable("##speaker_table", 2, flags, ImVec2(0, ImGui::GetContentRegionAvail().y)))
 		return;
 
 	ImGui::TableSetupScrollFreeze(0, 1);
-	ImGui::TableSetupColumn("Speaker ID", ImGuiTableColumnFlags_DefaultSort);
-	ImGui::TableSetupColumn("Speaker Name");
+	ImGui::TableSetupColumn("Speaker Name", ImGuiTableColumnFlags_DefaultSort);
 	ImGui::TableSetupColumn("Gender", ImGuiTableColumnFlags_WidthFixed, 60.0f);
 	ImGui::TableHeadersRow();
 
 	struct speaker_row_t
 	{
-		const std::string * speaker;
 		const std::string * speaker_name;
 		const std::string * gender;
 	};
@@ -1858,7 +1856,7 @@ void editor_app_t::render_speaker_tab()
 
 	for (const auto & entry : it->second.records)
 	{
-		if (entry.speaker.empty() && entry.speaker_name.empty() && entry.gender.empty())
+		if (entry.speaker_name.empty() && entry.gender.empty())
 			continue;
 
 		if (!filter_text.empty())
@@ -1871,13 +1869,12 @@ void editor_app_t::render_speaker_tab()
 				return r;
 			};
 
-			if (lower(entry.speaker).find(filter_text) == std::string::npos &&
-			    lower(entry.speaker_name).find(filter_text) == std::string::npos &&
+			if (lower(entry.speaker_name).find(filter_text) == std::string::npos &&
 			    lower(entry.gender).find(filter_text) == std::string::npos)
 				continue;
 		}
 
-		visible_rows.push_back({ &entry.speaker, &entry.speaker_name, &entry.gender });
+		visible_rows.push_back({ &entry.speaker_name, &entry.gender });
 	}
 
 	ImGuiTableSortSpecs * sort_specs = ImGui::TableGetSortSpecs();
@@ -1892,8 +1889,8 @@ void editor_app_t::render_speaker_tab()
 		    visible_rows.end(),
 		    [col, ascending](const speaker_row_t & a, const speaker_row_t & b)
 		{
-			const std::string * va = col == 0 ? a.speaker : (col == 1 ? a.speaker_name : a.gender);
-			const std::string * vb = col == 0 ? b.speaker : (col == 1 ? b.speaker_name : b.gender);
+			const std::string * va = col == 0 ? a.speaker_name : a.gender;
+			const std::string * vb = col == 0 ? b.speaker_name : b.gender;
 			int cmp = va->compare(*vb);
 			return ascending ? (cmp < 0) : (cmp > 0);
 		});
@@ -1912,12 +1909,9 @@ void editor_app_t::render_speaker_tab()
 			ImGui::TableNextRow();
 
 			ImGui::TableSetColumnIndex(0);
-			ImGui::TextUnformatted(row.speaker->c_str());
-
-			ImGui::TableSetColumnIndex(1);
 			ImGui::TextUnformatted(row.speaker_name->c_str());
 
-			ImGui::TableSetColumnIndex(2);
+			ImGui::TableSetColumnIndex(1);
 			ImGui::TextUnformatted(row.gender->c_str());
 		}
 	}
@@ -1983,7 +1977,7 @@ void editor_app_t::render_annotations_panel()
 		}
 	}
 
-	if (entry.status == tools_t::status_t::auto_changed && base_it != base_dict.end())
+	if (entry.status == tools_t::status_t::changed && base_it != base_dict.end())
 	{
 		const auto * base_entry = base_it->second.find(entry.key_text);
 		if (base_entry != nullptr)
@@ -2425,10 +2419,10 @@ void editor_app_t::commit_richedit_text()
 
 	history_.record_change(editing_type_, prev_entry.key_text, prev_entry.new_text, new_text);
 	prev_entry.new_text = new_text;
-	prev_entry.status = tools_t::status_t::in_progress;
+	prev_entry.status = tools_t::status_t::translated;
 	auto vr = validation_.validate(editing_type_, new_text);
 	if (vr.level == validation_level_t::error)
-		prev_entry.status = tools_t::status_t::has_errors;
+		prev_entry.status = tools_t::status_t::error;
 	slot->dirty = true;
 	slot->modified_records.insert({ editing_type_, editing_record_index_ });
 }

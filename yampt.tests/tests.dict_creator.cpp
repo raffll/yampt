@@ -21,6 +21,7 @@ TEST_CASE("dict_creator make mode without base dict sets untranslated", "[i]")
 	for (const auto & entry : cell_chapter.records)
 	{
 		REQUIRE(entry.status == tools_t::status_t::untranslated);
+		REQUIRE(entry.key_text == entry.old_text);
 		REQUIRE(entry.new_text == entry.old_text);
 	}
 }
@@ -36,7 +37,7 @@ TEST_CASE("dict_creator make-base mode sets matched_by_coords on cells", "[i]")
 	bool found_matched = false;
 	for (const auto & entry : cell_chapter.records)
 	{
-		if (entry.status == tools_t::status_t::matched_by_coords && entry.new_text != entry.old_text)
+		if (entry.status == tools_t::status_t::coords && entry.new_text != entry.old_text)
 		{
 			found_matched = true;
 			break;
@@ -54,6 +55,8 @@ TEST_CASE("dict_creator make-base mode sets missing for unmatched cells", "[i]")
 
 	for (const auto & entry : cell_chapter.records)
 	{
+		REQUIRE(entry.key_text == entry.old_text);
+
 		if (entry.status == tools_t::status_t::missing)
 		{
 			REQUIRE(entry.new_text == entry.old_text);
@@ -146,10 +149,9 @@ TEST_CASE("dict_creator make-base mode populates speaker fields on info records"
 	bool found_speaker = false;
 	for (const auto & entry : info_chapter.records)
 	{
-		if (!entry.speaker.empty())
+		if (!entry.speaker_name.empty())
 		{
 			found_speaker = true;
-			REQUIRE_FALSE(entry.speaker_name.empty());
 			REQUIRE((entry.gender == "M" || entry.gender == "F"));
 			break;
 		}
@@ -170,7 +172,7 @@ TEST_CASE("dict_creator make mode with base dict assigns auto_base", "[i]")
 	{
 		for (const auto & entry : chapter.records)
 		{
-			if (entry.status == tools_t::status_t::auto_base)
+			if (entry.status == tools_t::status_t::translated)
 			{
 				found_auto_base = true;
 				REQUIRE(entry.new_text != entry.old_text);
@@ -196,7 +198,7 @@ TEST_CASE("dict_creator make mode with base dict assigns auto_identical", "[i]")
 	{
 		for (const auto & entry : chapter.records)
 		{
-			if (entry.status == tools_t::status_t::auto_identical)
+			if (entry.status == tools_t::status_t::identical)
 			{
 				found_auto_identical = true;
 				REQUIRE(entry.new_text == entry.old_text);
@@ -232,6 +234,56 @@ TEST_CASE("dict_creator make mode new_text is never empty", "[i]")
 		{
 			INFO("type=" << tools_t::type_to_str(type) << " key=" << entry.key_text);
 			REQUIRE_FALSE(entry.new_text.empty());
+		}
+	}
+}
+
+TEST_CASE("dict_creator CELL key_text equals old_text in all modes", "[i]")
+{
+	SECTION("single mode")
+	{
+		dict_creator_t creator(g_master_path + "en/Morrowind.esm");
+		const auto & dict = creator.get_dict();
+
+		for (const auto & entry : dict.at(tools_t::rec_type_t::cell).records)
+		{
+			REQUIRE(entry.key_text == entry.old_text);
+		}
+	}
+
+	SECTION("base mode")
+	{
+		dict_creator_t creator(g_master_path + "pl/Morrowind.esm", g_master_path + "en/Morrowind.esm");
+		const auto & dict = creator.get_dict();
+
+		for (const auto & entry : dict.at(tools_t::rec_type_t::cell).records)
+		{
+			REQUIRE(entry.key_text == entry.old_text);
+		}
+	}
+}
+
+TEST_CASE("dict_creator DIAL key_text equals old_text in all modes", "[i]")
+{
+	SECTION("single mode")
+	{
+		dict_creator_t creator(g_master_path + "en/Morrowind.esm");
+		const auto & dict = creator.get_dict();
+
+		for (const auto & entry : dict.at(tools_t::rec_type_t::dial).records)
+		{
+			REQUIRE(entry.key_text == entry.old_text);
+		}
+	}
+
+	SECTION("base mode")
+	{
+		dict_creator_t creator(g_master_path + "pl/Morrowind.esm", g_master_path + "en/Morrowind.esm");
+		const auto & dict = creator.get_dict();
+
+		for (const auto & entry : dict.at(tools_t::rec_type_t::dial).records)
+		{
+			REQUIRE(entry.key_text == entry.old_text);
 		}
 	}
 }
