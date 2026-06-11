@@ -67,7 +67,7 @@ private:
 	void make_dict_cell_exterior();
 	void make_dict_cell_interior();
 	void make_dict_cell_default();
-	void make_dict_cell_regn();
+	void make_dict_cell_region();
 	void make_dict_cell_add_missing(const std::vector<std::pair<size_t, std::string>> & missing_cells);
 
 	void make_dict_gmst();
