@@ -60,6 +60,12 @@ void dict_reader_t::parse_json(const std::string & content, const std::string & 
 			entry.new_text = json_reader_t::get_string(record, "new", "");
 			entry.status = json_reader_t::get_string(record, "status", "");
 
+			if (entry.old_text.empty() && type != tools_t::rec_type_t::gmst)
+				tools_t::add_log("[warning] empty \"old\" field in " + type_str + ": " + entry.key_text + "\r\n", true);
+
+			if (entry.new_text.empty() && type != tools_t::rec_type_t::gmst)
+				tools_t::add_log("[warning] empty \"new\" field in " + type_str + ": " + entry.key_text + "\r\n", true);
+
 			if (type == tools_t::rec_type_t::info)
 			{
 				entry.speaker_name = json_reader_t::get_string(record, "speaker_name", "");

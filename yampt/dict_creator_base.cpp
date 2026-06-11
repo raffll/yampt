@@ -1297,6 +1297,7 @@ void dict_creator_t::make_dict_cell_exterior()
 		auto coord_key = make_exterior_coord_key(esm_ref.get_value().content);
 		if (coord_key.empty())
 		{
+			tools_t::add_log("[warning] malformed DATA in exterior cell: \"" + ref_cell_name + "\"\r\n", true);
 			missing_cells.push_back({ i, ref_cell_name });
 			counter_missing++;
 			continue;
@@ -1349,6 +1350,7 @@ void dict_creator_t::make_dict_cell_interior()
 		auto fingerprint = make_cell_fingerprint(esm_ref);
 		if (fingerprint.empty())
 		{
+			tools_t::add_log("[warning] empty fingerprint for interior cell: \"" + ref_cell_name + "\"\r\n", true);
 			missing_cells.push_back({ i, ref_cell_name });
 			counter_missing++;
 			continue;

@@ -62,7 +62,13 @@ std::string tools_t::read_file(const std::string & path)
 		add_log("[info] loading \"" + path + "\"\r\n");
 		char buffer[16384];
 		file.seekg(0, std::ios::end);
-		content.reserve(static_cast<size_t>(file.tellg()));
+		auto file_size = file.tellg();
+		if (file_size == 0)
+		{
+			add_log("[warning] file is empty: \"" + path + "\"\r\n");
+			return content;
+		}
+		content.reserve(static_cast<size_t>(file_size));
 		file.seekg(0, std::ios::beg);
 		std::streamsize chars_read;
 		while (file.read(buffer, sizeof(buffer)), chars_read = file.gcount())
@@ -80,6 +86,11 @@ std::string tools_t::read_file(const std::string & path)
 void tools_t::write_text(const std::string & text, const std::string & name)
 {
 	std::ofstream file(name, std::ios::binary);
+	if (!file.is_open())
+	{
+		add_log("[error] cannot open \"" + name + "\" for writing\r\n");
+		return;
+	}
 	file << text;
 	add_log("[info] writing \"" + name + "\"\r\n");
 }
@@ -87,6 +98,11 @@ void tools_t::write_text(const std::string & text, const std::string & name)
 void tools_t::write_file(const std::vector<record_t> & records, const std::string & name)
 {
 	std::ofstream file(name, std::ios::binary);
+	if (!file.is_open())
+	{
+		add_log("[error] cannot open \"" + name + "\" for writing\r\n");
+		return;
+	}
 	for (const auto & record : records)
 	{
 		file << record.content;
@@ -97,6 +113,11 @@ void tools_t::write_file(const std::vector<record_t> & records, const std::strin
 void tools_t::create_file(const std::vector<record_t> & records, const std::string & name)
 {
 	std::ofstream file(name, std::ios::binary);
+	if (!file.is_open())
+	{
+		add_log("[error] cannot open \"" + name + "\" for writing\r\n");
+		return;
+	}
 	for (size_t i = 0; i < records.size(); ++i)
 	{
 		const auto & record = records.at(i);

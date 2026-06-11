@@ -100,7 +100,7 @@ void user_interface_t::run_command()
 		}
 		else
 		{
-			tools_t::add_log("[error] syntax error\r\n");
+			tools_t::add_log("[error] syntax error!\r\n");
 		}
 	}
 	else
@@ -111,7 +111,7 @@ void user_interface_t::run_command()
 
 void user_interface_t::make_dict_()
 {
-	tools_t::add_log("[info] making dictionaries\r\n");
+	tools_t::add_log("[info] making dictionaries...\r\n");
 
 	const tools_t::dict_t * base_dict = nullptr;
 	tools_t::dict_t base_dict_storage;
@@ -122,6 +122,10 @@ void user_interface_t::make_dict_()
 		{
 			base_dict_storage = reader.get_dict();
 			base_dict = &base_dict_storage;
+		}
+		else
+		{
+			tools_t::add_log("[warning] base dictionary could not be loaded, proceeding without it\r\n");
 		}
 	}
 
@@ -147,7 +151,7 @@ void user_interface_t::make_dict_()
 
 void user_interface_t::make_dict_base()
 {
-	tools_t::add_log("[info] making \"BASE\" dictionary\r\n");
+	tools_t::add_log("[info] making base dictionary...\r\n");
 
 	translation_engine_t engine;
 	translation_engine_t * engine_ptr = nullptr;
@@ -196,7 +200,7 @@ void user_interface_t::merge_dict()
 		}
 	}
 
-	tools_t::add_log("[info] merging dictionaries\r\n");
+	tools_t::add_log("[info] merging dictionaries...\r\n");
 	dict_merger_t merger(dict_paths);
 	dict_writer_t::write(merger.get_dict(), output);
 	tools_t::add_log("[info] done!\r\n");
@@ -204,7 +208,7 @@ void user_interface_t::merge_dict()
 
 void user_interface_t::convert_esm()
 {
-	tools_t::add_log("[info] converting plugins\r\n");
+	tools_t::add_log("[info] converting plugins...\r\n");
 	dict_merger_t merger(dict_paths);
 	for (const auto & file_path : file_paths)
 	{
@@ -215,13 +219,17 @@ void user_interface_t::convert_esm()
 			tools_t::write_file(converter.get_records(), name);
 			std::filesystem::last_write_time(name, converter.get_time());
 		}
+		else
+		{
+			tools_t::add_log("[warning] skipping \"" + file_path + "\" (failed to load)\r\n");
+		}
 	}
 	tools_t::add_log("[info] done!\r\n");
 }
 
 void user_interface_t::create_esm()
 {
-	tools_t::add_log("[info] creating plugins\r\n");
+	tools_t::add_log("[info] creating plugins...\r\n");
 	dict_merger_t merger(dict_paths);
 	for (const auto & file_path : file_paths)
 	{
@@ -231,6 +239,10 @@ void user_interface_t::create_esm()
 			const auto & name = converter.get_name().name + ".CREATED" + converter.get_name().ext;
 			tools_t::create_file(converter.get_records(), name);
 			std::filesystem::last_write_time(name, converter.get_time() + std::chrono::seconds(1));
+		}
+		else
+		{
+			tools_t::add_log("[warning] skipping \"" + file_path + "\" (failed to load)\r\n");
 		}
 	}
 	tools_t::add_log("[info] done!\r\n");

@@ -713,6 +713,7 @@ bool esm_converter_t::make_new_text(const tools_t::entry_t & entry, std::string 
 	}
 
 	counter_unchanged++;
+	tools_t::add_log("[warning] unchanged " + tools_t::type_to_str(entry.type) + ": " + entry.key_text + "\r\n", true);
 	return false;
 }
 

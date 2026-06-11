@@ -112,5 +112,7 @@ void dict_writer_t::write(const tools_t::dict_t & dict, const std::string & path
 	file << "\n}\n";
 	file.close();
 
-	tools_t::add_log("[info] done writing \"" + path + "\"\r\n");
+	tools_t::add_log(
+	    "[info] done writing \"" + path + "\" (" +
+	    std::to_string(tools_t::get_number_of_elements_in_dict(dict)) + " entries)\r\n");
 }
