@@ -86,29 +86,48 @@ Integration tests (`[i]` tag) write output to `tests/` relative to the working d
 
 ```
 tests/
-├── json/                   # Dictionary JSON output
+├── en/
 │   ├── Morrowind_en.json
+│   ├── Morrowind_en.log
 │   ├── Tribunal_en.json
+│   ├── Tribunal_en.log
 │   ├── Bloodmoon_en.json
+│   ├── Bloodmoon_en.log
+│   ├── Morrowind_en_with_base.json
+│   └── Morrowind_en_with_base.log
+├── pl/
 │   ├── Morrowind_en_pl.json
-│   ├── Morrowind_en_de.json
-│   ├── Morrowind_en_fr.json
+│   ├── Morrowind_en_pl.log
+│   ├── Tribunal_en_pl.json
+│   ├── Tribunal_en_pl.log
+│   ├── Bloodmoon_en_pl.json
+│   ├── Bloodmoon_en_pl.log
 │   ├── Merged_en_pl.json
-│   └── Morrowind_en_with_base.json
-└── logs/                   # Per-language log output
-    ├── en/
-    ├── pl/
-    ├── de/
-    └── fr/
+│   └── Merged_en_pl.log
+├── de/
+│   ├── Morrowind_en_de.json
+│   ├── Morrowind_en_de.log
+│   └── ...
+└── fr/
+    ├── Morrowind_en_fr.json
+    ├── Morrowind_en_fr.log
+    └── ...
 ```
 
-Log filenames match their corresponding JSON filenames (e.g. `logs/de/Morrowind_en_de.log`).
+JSON and log files live side-by-side in the same language folder. Log filenames match their corresponding JSON filenames (same base name, `.log` extension).
 
 ## Integration Test Rules
 
 - All make-base tests require the translation engine. No inactive-heuristic tests.
 - Do not assert on `missing_count` or `heuristic_matches` — the logs capture this information. Tests only verify that output is produced and basic sanity (total > 0, cells non-empty).
-- Tests that depend on previous output (merge, make-with-base) read from `tests/json/`.
+- Tests that depend on previous output (merge, make-with-base) read from `tests/`.
+
+## Unit Test Rules
+
+- Unit tests (`[u]` tag) are purely in-memory. They must never create, write, or read files on disk.
+- All file I/O testing (write-read round trips, JSON serialization, dict_writer output) belongs in integration tests (`[i]` tag).
+- Unit tests verify logic only: data structure operations, string manipulation, parsing from in-memory strings, algorithm correctness.
+- Never create or modify integration tests. Only the user writes and maintains integration tests.
 
 ## Cell Heuristic Matching — Log Format
 

@@ -326,7 +326,8 @@ void dict_creator_t::process_sctx_ordered(size_t i)
 	{
 		tools_t::add_log("[warning] SCTX line count mismatch: \"" + script_name + "\"\r\n");
 		for (const auto & msg : foreign_messages)
-			insert_entry_base(script_name + "^" + msg, msg, msg, tools_t::rec_type_t::sctx, tools_t::status_t::mismatch);
+			insert_entry_base(
+			    script_name + "^" + msg, msg, msg, tools_t::rec_type_t::sctx, tools_t::status_t::mismatch);
 		return;
 	}
 
