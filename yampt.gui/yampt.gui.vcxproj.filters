@@ -7,16 +7,10 @@
     <Filter Include="external">
       <UniqueIdentifier>{A1000002-0000-0000-0000-000000000002}</UniqueIdentifier>
     </Filter>
-    <Filter Include="external\imgui">
-      <UniqueIdentifier>{A1000003-0000-0000-0000-000000000003}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="external\imgui\backends">
-      <UniqueIdentifier>{A1000004-0000-0000-0000-000000000004}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="editor_app.cpp" />
+    <ClCompile Include="main_window.cpp" />
     <ClCompile Include="editor_config.cpp" />
     <ClCompile Include="dict_workspace.cpp" />
     <ClCompile Include="search_manager.cpp" />
@@ -24,8 +18,23 @@
     <ClCompile Include="history_manager.cpp" />
     <ClCompile Include="syntax_highlighter.cpp" />
     <ClCompile Include="annotation_manager.cpp" />
+    <ClCompile Include="annotation_highlighter.cpp" />
     <ClCompile Include="encoding_utils.cpp" />
     <ClCompile Include="spell_checker.cpp" />
+    <ClCompile Include="spell_check_highlighter.cpp" />
+    <ClCompile Include="spell_context_menu.cpp" />
+    <ClCompile Include="filter_bar.cpp" />
+    <ClCompile Include="status_filter_bar.cpp" />
+    <ClCompile Include="editor_panel.cpp" />
+    <ClCompile Include="record_table_model.cpp" />
+    <ClCompile Include="record_table_view.cpp" />
+    <ClCompile Include="validation_indicator.cpp" />
+    <ClCompile Include="mwscript_highlighter.cpp" />
+    <ClCompile Include="hyperlink_highlighter.cpp" />
+    <ClCompile Include="book_preview.cpp" />
+    <ClCompile Include="sidebar_widget.cpp" />
+    <ClCompile Include="annotations_panel.cpp" />
+    <ClCompile Include="history_panel.cpp" />
     <ClCompile Include="..\yampt\translation_engine.cpp">
       <Filter>yampt</Filter>
     </ClCompile>
@@ -59,33 +68,13 @@
     <ClCompile Include="..\yampt\script_parser.cpp">
       <Filter>yampt</Filter>
     </ClCompile>
-    <ClCompile Include="..\external\imgui\imgui.cpp">
-      <Filter>external\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\external\imgui\imgui_demo.cpp">
-      <Filter>external\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\external\imgui\imgui_draw.cpp">
-      <Filter>external\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\external\imgui\imgui_tables.cpp">
-      <Filter>external\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\external\imgui\imgui_widgets.cpp">
-      <Filter>external\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\external\imgui\backends\imgui_impl_sdl2.cpp">
-      <Filter>external\imgui\backends</Filter>
-    </ClCompile>
-    <ClCompile Include="..\external\imgui\backends\imgui_impl_opengl3.cpp">
-      <Filter>external\imgui\backends</Filter>
-    </ClCompile>
     <ClCompile Include="..\external\yyjson.c">
       <Filter>external</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dict_workspace.hpp" />
+    <ClInclude Include="spell_context_menu.hpp" />
     <ClInclude Include="..\yampt\translation_engine.hpp">
       <Filter>yampt</Filter>
     </ClInclude>
@@ -116,32 +105,25 @@
     <ClInclude Include="..\yampt\json_reader.hpp">
       <Filter>yampt</Filter>
     </ClInclude>
-    <ClInclude Include="..\external\imgui\imgui.h">
-      <Filter>external\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\imgui\imconfig.h">
-      <Filter>external\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\imgui\imgui_internal.h">
-      <Filter>external\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\imgui\imstb_rectpack.h">
-      <Filter>external\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\imgui\imstb_textedit.h">
-      <Filter>external\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\imgui\imstb_truetype.h">
-      <Filter>external\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\imgui\backends\imgui_impl_sdl2.h">
-      <Filter>external\imgui\backends</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\imgui\backends\imgui_impl_opengl3.h">
-      <Filter>external\imgui\backends</Filter>
-    </ClInclude>
     <ClInclude Include="..\external\yyjson.h">
       <Filter>external</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="main_window.hpp" />
+    <CustomBuild Include="editor_panel.hpp" />
+    <CustomBuild Include="filter_bar.hpp" />
+    <CustomBuild Include="status_filter_bar.hpp" />
+    <CustomBuild Include="record_table_model.hpp" />
+    <CustomBuild Include="record_table_view.hpp" />
+    <CustomBuild Include="spell_check_highlighter.hpp" />
+    <CustomBuild Include="annotation_highlighter.hpp" />
+    <CustomBuild Include="validation_indicator.hpp" />
+    <CustomBuild Include="mwscript_highlighter.hpp" />
+    <CustomBuild Include="hyperlink_highlighter.hpp" />
+    <CustomBuild Include="book_preview.hpp" />
+    <CustomBuild Include="sidebar_widget.hpp" />
+    <CustomBuild Include="annotations_panel.hpp" />
+    <CustomBuild Include="history_panel.hpp" />
   </ItemGroup>
 </Project>

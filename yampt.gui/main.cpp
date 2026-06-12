@@ -1,104 +1,27 @@
-#define SDL_MAIN_HANDLED
-#include "editor_app.hpp"
-#include "imgui.h"
-#include "imgui_impl_sdl2.h"
-#include "imgui_impl_opengl3.h"
-#include <SDL.h>
-#include <SDL_opengl.h>
-#include <cstdio>
+#include "main_window.hpp"
 
-int main(int, char **)
+#include <QApplication>
+#include <QStyleFactory>
+
+int main(int argc, char * argv[])
 {
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0)
-	{
-		std::printf("SDL_Init error: %s\n", SDL_GetError());
-		return 1;
-	}
+    QApplication app(argc, argv);
+    app.setStyle(QStyleFactory::create("Fusion"));
 
-	const char * glsl_version = "#version 130";
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+    QPalette palette;
+    palette.setColor(QPalette::Window, QColor(240, 240, 240));
+    palette.setColor(QPalette::WindowText, Qt::black);
+    palette.setColor(QPalette::Base, Qt::white);
+    palette.setColor(QPalette::AlternateBase, QColor(245, 245, 245));
+    palette.setColor(QPalette::Text, Qt::black);
+    palette.setColor(QPalette::Button, QColor(240, 240, 240));
+    palette.setColor(QPalette::ButtonText, Qt::black);
+    palette.setColor(QPalette::Highlight, QColor(70, 130, 200));
+    palette.setColor(QPalette::HighlightedText, Qt::white);
+    app.setPalette(palette);
 
-	auto window_flags = static_cast<SDL_WindowFlags>(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED);
-	SDL_Window * window =
-	    SDL_CreateWindow("yampt.gui", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
-	if (!window)
-	{
-		std::printf("SDL_CreateWindow error: %s\n", SDL_GetError());
-		SDL_Quit();
-		return 1;
-	}
-	SDL_SetWindowBordered(window, SDL_TRUE);
-	SDL_SetWindowMinimumSize(window, 800, 600);
+    main_window_t window;
+    window.show();
 
-	SDL_GLContext gl_context = SDL_GL_CreateContext(window);
-	SDL_GL_MakeCurrent(window, gl_context);
-	SDL_GL_SetSwapInterval(1);
-
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGuiIO & io = ImGui::GetIO();
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-
-	ImGui::StyleColorsLight();
-
-	ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
-	ImGui_ImplOpenGL3_Init(glsl_version);
-
-	static const ImWchar glyph_ranges[] = {
-		0x0020, 0x00FF, 0x0100, 0x024F, 0x02B0, 0x02FF, 0x0400, 0x04FF,
-		0x2000, 0x206F, 0x20A0, 0x20CF, 0x2100, 0x214F, 0,
-	};
-	io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\segoeui.ttf", 16.0f, nullptr, glyph_ranges);
-
-	editor_app_t app;
-	app.init(window);
-
-	bool running = true;
-	while (running)
-	{
-		SDL_Event event;
-		while (SDL_PollEvent(&event))
-		{
-			ImGui_ImplSDL2_ProcessEvent(&event);
-			if (event.type == SDL_QUIT)
-				app.request_quit();
-			if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE &&
-			    event.window.windowID == SDL_GetWindowID(window))
-				app.request_quit();
-		}
-
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplSDL2_NewFrame();
-		ImGui::NewFrame();
-
-		app.frame();
-
-		if (app.wants_quit())
-			running = false;
-
-		ImGui::Render();
-		glViewport(0, 0, static_cast<int>(io.DisplaySize.x), static_cast<int>(io.DisplaySize.y));
-		glClearColor(0.94f, 0.94f, 0.94f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-		SDL_GL_SwapWindow(window);
-	}
-
-	app.shutdown();
-
-	ImGui_ImplOpenGL3_Shutdown();
-	ImGui_ImplSDL2_Shutdown();
-	ImGui::DestroyContext();
-
-	SDL_GL_DeleteContext(gl_context);
-	SDL_DestroyWindow(window);
-	SDL_Quit();
-
-	return 0;
+    return app.exec();
 }

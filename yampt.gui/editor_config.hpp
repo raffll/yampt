@@ -29,4 +29,5 @@ public:
 	int window_y = -1;
 	int window_w = 1280;
 	int window_h = 720;
+	bool window_maximized = false;
 };

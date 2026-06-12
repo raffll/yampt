@@ -57,6 +57,7 @@ public:
 	bool has_any_unsaved() const;
 
 	const std::vector<dict_slot_t> & slots() const;
+	const std::vector<dict_slot_t> & get_all_slots() const { return slots_; }
 
 private:
 	std::vector<dict_slot_t> slots_;

@@ -1,0 +1,1166 @@
+#include "main_window.hpp"
+#include "annotation_highlighter.hpp"
+#include "annotations_panel.hpp"
+#include "book_preview.hpp"
+#include "editor_panel.hpp"
+#include "filter_bar.hpp"
+#include "history_panel.hpp"
+#include "hyperlink_highlighter.hpp"
+#include "mwscript_highlighter.hpp"
+#include "record_table_view.hpp"
+#include "sidebar_widget.hpp"
+#include "spell_check_highlighter.hpp"
+#include "spell_context_menu.hpp"
+#include "status_filter_bar.hpp"
+#include "validation_indicator.hpp"
+
+#include <QAction>
+#include <QCheckBox>
+#include <QCloseEvent>
+#include <QComboBox>
+#include <QCoreApplication>
+#include <QDir>
+#include <QFileDialog>
+#include <QLabel>
+#include <QLineEdit>
+#include <QMenu>
+#include <QMenuBar>
+#include <QMessageBox>
+#include <QSplitter>
+#include <QStatusBar>
+#include <QTabWidget>
+#include <QTextDocument>
+#include <QTextEdit>
+#include <QTextOption>
+#include <QToolBar>
+#include <QVBoxLayout>
+
+#include <algorithm>
+
+main_window_t::main_window_t(QWidget * parent)
+    : QMainWindow(parent)
+{
+    setWindowTitle("yampt.gui");
+    resize(1280, 720);
+    setMinimumSize(800, 600);
+
+    type_filter_ = {
+        tools_t::rec_type_t::cell, tools_t::rec_type_t::dial, tools_t::rec_type_t::info,
+        tools_t::rec_type_t::fnam, tools_t::rec_type_t::text, tools_t::rec_type_t::gmst,
+        tools_t::rec_type_t::desc, tools_t::rec_type_t::rnam, tools_t::rec_type_t::indx,
+        tools_t::rec_type_t::bnam, tools_t::rec_type_t::sctx,
+    };
+
+    auto * file_menu = menuBar()->addMenu("&File");
+
+    open_action_ = new QAction("&Open", this);
+    open_action_->setShortcut(QKeySequence("Ctrl+O"));
+    file_menu->addAction(open_action_);
+
+    open_base_action_ = new QAction("Open &Base...", this);
+    file_menu->addAction(open_base_action_);
+
+    save_action_ = new QAction("&Save", this);
+    save_action_->setShortcut(QKeySequence("Ctrl+S"));
+    file_menu->addAction(save_action_);
+
+    save_all_action_ = new QAction("Save &All", this);
+    file_menu->addAction(save_all_action_);
+
+    file_menu->addSeparator();
+
+    auto * quit_action = new QAction("&Quit", this);
+    quit_action->setShortcut(QKeySequence("Alt+F4"));
+    file_menu->addAction(quit_action);
+
+    auto * view_menu = menuBar()->addMenu("&View");
+
+    sidebar_toggle_ = new QAction("Toggle &Sidebar", this);
+    sidebar_toggle_->setCheckable(true);
+    sidebar_toggle_->setChecked(true);
+    view_menu->addAction(sidebar_toggle_);
+
+    bottom_panel_toggle_ = new QAction("Toggle &Bottom Panel", this);
+    bottom_panel_toggle_->setCheckable(true);
+    bottom_panel_toggle_->setChecked(true);
+    view_menu->addAction(bottom_panel_toggle_);
+
+    whitespace_toggle_ = new QAction("Show &Whitespace", this);
+    whitespace_toggle_->setCheckable(true);
+    whitespace_toggle_->setChecked(false);
+    view_menu->addAction(whitespace_toggle_);
+
+    auto * toolbar = new QToolBar(this);
+    toolbar->setMovable(false);
+
+    toolbar->addWidget(new QLabel("Search:", this));
+    search_field_ = new QLineEdit(this);
+    search_field_->setPlaceholderText("Search...");
+    toolbar->addWidget(search_field_);
+
+    case_sensitive_check_ = new QCheckBox("Aa", this);
+    toolbar->addWidget(case_sensitive_check_);
+
+    toolbar->addSeparator();
+
+    toolbar->addWidget(new QLabel("Encoding:", this));
+    encoding_combo_ = new QComboBox(this);
+    encoding_combo_->addItem("Windows-1250");
+    encoding_combo_->addItem("Windows-1251");
+    encoding_combo_->addItem("Windows-1252");
+    toolbar->addWidget(encoding_combo_);
+
+    toolbar->addSeparator();
+
+    toolbar->addWidget(new QLabel("Spelling:", this));
+    spell_lang_combo_ = new QComboBox(this);
+    spell_lang_combo_->addItem("None");
+    toolbar->addWidget(spell_lang_combo_);
+
+    addToolBar(toolbar);
+
+    find_action_ = new QAction(this);
+    find_action_->setShortcut(QKeySequence("Ctrl+F"));
+    addAction(find_action_);
+
+    next_search_action_ = new QAction(this);
+    next_search_action_->setShortcut(QKeySequence("F3"));
+    addAction(next_search_action_);
+
+    prev_search_action_ = new QAction(this);
+    prev_search_action_->setShortcut(QKeySequence("Shift+F3"));
+    addAction(prev_search_action_);
+
+    refresh_action_ = new QAction(this);
+    refresh_action_->setShortcut(QKeySequence("F5"));
+    addAction(refresh_action_);
+
+    escape_action_ = new QAction(this);
+    escape_action_->setShortcut(QKeySequence("Escape"));
+    addAction(escape_action_);
+
+    auto * central_widget = new QWidget(this);
+    auto * central_layout = new QVBoxLayout(central_widget);
+    central_layout->setContentsMargins(0, 0, 0, 0);
+    central_layout->setSpacing(0);
+
+    filter_bar_ = new filter_bar_t(central_widget);
+    status_filter_bar_ = new status_filter_bar_t(central_widget);
+    central_layout->addWidget(filter_bar_);
+    central_layout->addWidget(status_filter_bar_);
+    central_layout->addSpacing(4);
+
+    central_splitter_ = new QSplitter(Qt::Horizontal, central_widget);
+    central_layout->addWidget(central_splitter_, 1);
+
+    setCentralWidget(central_widget);
+
+    left_splitter_ = new QSplitter(Qt::Vertical, central_splitter_);
+    sidebar_ = new sidebar_widget_t(left_splitter_);
+    left_splitter_->addWidget(sidebar_);
+
+    info_tabs_ = new QTabWidget(left_splitter_);
+    annotations_panel_ = new annotations_panel_t(info_tabs_);
+    history_panel_ = new history_panel_t(info_tabs_);
+    info_tabs_->addTab(annotations_panel_, "Annotations");
+    info_tabs_->addTab(history_panel_, "History");
+    left_splitter_->addWidget(info_tabs_);
+
+    right_splitter_ = new QSplitter(Qt::Vertical, central_splitter_);
+
+    auto * right_top_widget = new QWidget(right_splitter_);
+    auto * right_top_layout = new QVBoxLayout(right_top_widget);
+    right_top_layout->setContentsMargins(0, 0, 0, 0);
+    right_top_layout->setSpacing(0);
+
+    record_tabs_ = new QTabWidget(right_top_widget);
+    table_model_ = new record_table_model_t(this);
+    table_view_ = new record_table_view_t(record_tabs_);
+    table_view_->setModel(table_model_);
+    book_preview_ = new book_preview_t(record_tabs_);
+    record_tabs_->addTab(table_view_, "Records");
+    record_tabs_->addTab(book_preview_, "Book Preview");
+    right_top_layout->addWidget(record_tabs_, 1);
+
+    right_splitter_->addWidget(right_top_widget);
+
+    editor_panel_ = new editor_panel_t(right_splitter_);
+    right_splitter_->addWidget(editor_panel_);
+
+    validation_indicator_ = new validation_indicator_t(this);
+    statusBar()->addPermanentWidget(validation_indicator_);
+
+    central_splitter_->addWidget(left_splitter_);
+    central_splitter_->addWidget(right_splitter_);
+    central_splitter_->setSizes({250, 1030});
+
+    syntax_hl_original_ = new mwscript_highlighter_t(editor_panel_->original_view()->document());
+    spell_hl_ = new spell_check_highlighter_t(editor_panel_->translation_editor()->document());
+
+    spell_menu_ = new spell_context_menu_t(&spell_checker_, spell_hl_);
+
+    connect(sidebar_toggle_, &QAction::toggled, left_splitter_, &QWidget::setVisible);
+    connect(bottom_panel_toggle_, &QAction::toggled, editor_panel_, &QWidget::setVisible);
+    connect(whitespace_toggle_, &QAction::toggled, this, &main_window_t::on_whitespace_toggled);
+
+    connect(open_action_, &QAction::triggered, this, &main_window_t::on_open_user_dict);
+    connect(open_base_action_, &QAction::triggered, this, &main_window_t::on_open_base_dict);
+    connect(save_action_, &QAction::triggered, this, &main_window_t::on_save);
+    connect(save_all_action_, &QAction::triggered, this, &main_window_t::on_save_all);
+    connect(quit_action, &QAction::triggered, this, &QWidget::close);
+    connect(find_action_, &QAction::triggered, this, &main_window_t::on_find);
+    connect(next_search_action_, &QAction::triggered, this, &main_window_t::on_next_search);
+    connect(prev_search_action_, &QAction::triggered, this, &main_window_t::on_prev_search);
+    connect(refresh_action_, &QAction::triggered, this, &main_window_t::on_refresh);
+    connect(escape_action_, &QAction::triggered, this, &main_window_t::on_escape);
+
+    connect(search_field_, &QLineEdit::textChanged, this, &main_window_t::on_search_changed);
+    connect(case_sensitive_check_, &QCheckBox::checkStateChanged, this, [this]() { on_case_sensitive_changed(0); });
+    connect(encoding_combo_, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &main_window_t::on_encoding_changed);
+    connect(spell_lang_combo_, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &main_window_t::on_spell_lang_changed);
+
+    connect(sidebar_, &sidebar_widget_t::slot_clicked, this, &main_window_t::on_slot_clicked);
+    connect(sidebar_, &sidebar_widget_t::save_requested, this, [this](int index) {
+        workspace_.save_dict(index);
+        if (!workspace_.has_any_unsaved())
+            set_dirty(false);
+        rebuild_sidebar();
+    });
+    connect(sidebar_, &sidebar_widget_t::unload_requested, this, &main_window_t::on_unload_slot);
+
+    connect(table_view_, &record_table_view_t::row_selected, this, &main_window_t::on_row_selected);
+    connect(table_view_, &record_table_view_t::status_change_requested, this, [this](int row, const QString & new_status) {
+        auto * row_data = table_model_->row_at(row);
+        if (!row_data)
+            return;
+
+        auto * slot = workspace_.get_active_slot();
+        if (!slot)
+            return;
+
+        auto it = slot->data.find(row_data->type);
+        if (it == slot->data.end())
+            return;
+
+        if (row_data->chapter_index >= it->second.records.size())
+            return;
+
+        it->second.records[row_data->chapter_index].status = new_status.toStdString();
+        slot->dirty = true;
+        set_dirty(true);
+        rebuild_table();
+    });
+
+    connect(editor_panel_, &editor_panel_t::text_changed, this, &main_window_t::on_translation_changed);
+
+    connect(filter_bar_, &filter_bar_t::filters_changed, this, &main_window_t::on_filters_changed);
+    connect(status_filter_bar_, &status_filter_bar_t::filters_changed, this, &main_window_t::on_status_filters_changed);
+
+    connect(history_panel_, &history_panel_t::revert_requested, this, [this](size_t history_index) {
+        if (current_row_ < 0)
+            return;
+
+        const auto * row_data = table_model_->row_at(current_row_);
+        if (!row_data)
+            return;
+
+        auto * slot = workspace_.get_active_slot();
+        if (!slot)
+            return;
+
+        history_manager_.revert(*slot, row_data->type, row_data->key_text, history_index);
+        slot->dirty = true;
+        set_dirty(true);
+        rebuild_table();
+        load_record(current_row_);
+    });
+
+    scan_spell_dictionaries();
+    load_config();
+}
+
+void main_window_t::set_dirty(bool dirty)
+{
+    if (dirty_ == dirty)
+        return;
+
+    dirty_ = dirty;
+    setWindowTitle(dirty_ ? "yampt.gui *" : "yampt.gui");
+}
+
+void main_window_t::on_save()
+{
+    commit_current_edit();
+
+    int active = workspace_.get_active_index();
+    if (active < 0)
+        return;
+
+    if (!workspace_.is_user_slot(active))
+        return;
+
+    workspace_.save_dict(active);
+    rebuild_sidebar();
+
+    if (!workspace_.has_any_unsaved())
+        set_dirty(false);
+}
+
+void main_window_t::on_save_all()
+{
+    commit_current_edit();
+
+    workspace_.save_all_dirty();
+    rebuild_sidebar();
+
+    if (!workspace_.has_any_unsaved())
+        set_dirty(false);
+}
+
+void main_window_t::on_open()
+{
+    on_open_user_dict();
+}
+
+void main_window_t::on_open_user_dict()
+{
+    const auto path = QFileDialog::getOpenFileName(
+        this, "Open User Dict", "", "Dictionary Files (*.json *.xml);;All Files (*.*)");
+
+    if (path.isEmpty())
+        return;
+
+    int old_count = workspace_.slot_count();
+    workspace_.load_dict(path.toStdString(), dict_kind_t::user);
+
+    if (workspace_.slot_count() > old_count)
+    {
+        auto * new_slot = workspace_.get_slot(workspace_.slot_count() - 1);
+        if (new_slot)
+        {
+            for (auto & [type, chapter] : new_slot->data)
+            {
+                for (auto & entry : chapter.records)
+                {
+                    entry.key_text = decode_to_utf8(entry.key_text, current_codepage_);
+                    entry.old_text = decode_to_utf8(entry.old_text, current_codepage_);
+                    entry.new_text = decode_to_utf8(entry.new_text, current_codepage_);
+                }
+            }
+        }
+
+        std::vector<dict_source_t> sources;
+        for (const auto & dict_slot : workspace_.get_all_slots())
+            sources.push_back({&dict_slot.data, dict_slot.path});
+        annotation_manager_.rebuild(sources);
+    }
+
+    rebuild_sidebar();
+    rebuild_table();
+}
+
+void main_window_t::on_open_base_dict()
+{
+    const auto path = QFileDialog::getOpenFileName(
+        this, "Open Base Dict", "", "Dictionary Files (*.json *.xml);;All Files (*.*)");
+
+    if (path.isEmpty())
+        return;
+
+    int old_count = workspace_.slot_count();
+    workspace_.load_dict(path.toStdString(), dict_kind_t::base);
+
+    if (workspace_.slot_count() > old_count)
+    {
+        auto * new_slot = workspace_.get_slot(workspace_.slot_count() - 1);
+        if (new_slot)
+        {
+            for (auto & [type, chapter] : new_slot->data)
+            {
+                for (auto & entry : chapter.records)
+                {
+                    entry.key_text = decode_to_utf8(entry.key_text, current_codepage_);
+                    entry.old_text = decode_to_utf8(entry.old_text, current_codepage_);
+                    entry.new_text = decode_to_utf8(entry.new_text, current_codepage_);
+                }
+            }
+        }
+
+        std::vector<dict_source_t> sources;
+        for (const auto & dict_slot : workspace_.get_all_slots())
+            sources.push_back({&dict_slot.data, dict_slot.path});
+        annotation_manager_.rebuild(sources);
+    }
+
+    rebuild_sidebar();
+    rebuild_table();
+}
+
+void main_window_t::on_unload_slot(int index)
+{
+    auto * slot = workspace_.get_slot(index);
+    if (!slot)
+        return;
+
+    if (slot->dirty)
+    {
+        auto answer = QMessageBox::question(
+            this, "Unsaved Changes",
+            "This dictionary has unsaved changes. Save before unloading?",
+            QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+
+        if (answer == QMessageBox::Cancel)
+            return;
+
+        if (answer == QMessageBox::Save)
+            workspace_.save_dict(index);
+    }
+
+    workspace_.unload_dict(index);
+
+    std::vector<dict_source_t> sources;
+    for (const auto & dict_slot_ref : workspace_.get_all_slots())
+        sources.push_back({&dict_slot_ref.data, dict_slot_ref.path});
+    annotation_manager_.rebuild(sources);
+
+    rebuild_sidebar();
+    rebuild_table();
+}
+
+void main_window_t::on_find()
+{
+    search_field_->setFocus();
+    search_field_->selectAll();
+}
+
+void main_window_t::on_next_search()
+{
+    if (search_query_.isEmpty())
+        return;
+
+    if (!table_model_)
+        return;
+
+    const int count = table_model_->rowCount();
+    if (count == 0)
+        return;
+
+    const bool case_sensitive = case_sensitive_check_->isChecked();
+    const auto query = case_sensitive ? search_query_ : search_query_.toLower();
+
+    for (int i = 1; i <= count; ++i)
+    {
+        const int row = (current_row_ + i) % count;
+        const auto * data = table_model_->row_at(row);
+        if (!data)
+            continue;
+
+        auto key = QString::fromStdString(data->key_text);
+        auto old_t = QString::fromStdString(data->old_text);
+        auto new_t = QString::fromStdString(data->new_text);
+
+        if (!case_sensitive)
+        {
+            key = key.toLower();
+            old_t = old_t.toLower();
+            new_t = new_t.toLower();
+        }
+
+        if (key.contains(query) || old_t.contains(query) || new_t.contains(query))
+        {
+            on_row_selected(row);
+            return;
+        }
+    }
+}
+
+void main_window_t::on_prev_search()
+{
+    if (search_query_.isEmpty())
+        return;
+
+    if (!table_model_)
+        return;
+
+    const int count = table_model_->rowCount();
+    if (count == 0)
+        return;
+
+    const bool case_sensitive = case_sensitive_check_->isChecked();
+    const auto query = case_sensitive ? search_query_ : search_query_.toLower();
+
+    for (int i = 1; i <= count; ++i)
+    {
+        const int row = (current_row_ - i + count) % count;
+        const auto * data = table_model_->row_at(row);
+        if (!data)
+            continue;
+
+        auto key = QString::fromStdString(data->key_text);
+        auto old_t = QString::fromStdString(data->old_text);
+        auto new_t = QString::fromStdString(data->new_text);
+
+        if (!case_sensitive)
+        {
+            key = key.toLower();
+            old_t = old_t.toLower();
+            new_t = new_t.toLower();
+        }
+
+        if (key.contains(query) || old_t.contains(query) || new_t.contains(query))
+        {
+            on_row_selected(row);
+            return;
+        }
+    }
+}
+
+void main_window_t::on_refresh()
+{
+    if (current_row_ < 0)
+        return;
+
+    load_record(current_row_);
+}
+
+void main_window_t::on_escape()
+{
+    if (!search_field_->text().isEmpty())
+        search_field_->clear();
+}
+
+void main_window_t::on_slot_clicked(int slot_index)
+{
+    if (slot_index == workspace_.get_active_index())
+        return;
+
+    commit_current_edit();
+
+    auto * old_slot = workspace_.get_active_slot();
+    if (old_slot)
+    {
+        old_slot->filters.type_filter = type_filter_;
+        old_slot->filters.status_filter = status_filter_;
+        old_slot->filters.type_filter_solo = type_filter_solo_;
+    }
+
+    workspace_.set_active(slot_index);
+
+    auto * new_slot = workspace_.get_active_slot();
+    if (new_slot)
+    {
+        type_filter_ = new_slot->filters.type_filter;
+        status_filter_ = new_slot->filters.status_filter;
+        type_filter_solo_ = new_slot->filters.type_filter_solo;
+    }
+
+    filter_bar_->set_filter_state(type_filter_, type_filter_solo_, tools_t::rec_type_t::unknown);
+    status_filter_bar_->set_filter_state(status_filter_);
+
+    rebuild_table();
+    sidebar_->set_active_slot(slot_index);
+}
+
+void main_window_t::on_search_changed(const QString & text)
+{
+    search_query_ = text;
+    rebuild_table();
+}
+
+void main_window_t::on_case_sensitive_changed(int /*state*/)
+{
+    rebuild_table();
+}
+
+void main_window_t::on_filters_changed()
+{
+    type_filter_ = filter_bar_->get_active_types();
+    type_filter_solo_ = filter_bar_->is_solo();
+    rebuild_table();
+}
+
+void main_window_t::on_status_filters_changed()
+{
+    status_filter_ = status_filter_bar_->get_active_statuses();
+    rebuild_table();
+}
+
+void main_window_t::rebuild_table()
+{
+    if (!table_model_)
+        return;
+
+    const auto * slot = workspace_.get_active_slot();
+    if (!slot)
+    {
+        table_model_->rebuild({});
+        return;
+    }
+
+    const bool case_sensitive = case_sensitive_check_ && case_sensitive_check_->isChecked();
+    const auto query_lower = search_query_.toLower();
+
+    const auto active_sub_types = filter_bar_->get_active_sub_types();
+    const bool has_sub_type_filter = filter_bar_->is_solo() && !active_sub_types.empty();
+
+    static const std::map<std::string, std::string> sub_type_to_prefix = {
+        {"Topic", "T"}, {"Voice", "V"}, {"Greeting", "G"}, {"Persuasion", "P"}, {"Journal", "J"},
+    };
+
+    std::vector<table_row_t> rows;
+    std::map<tools_t::rec_type_t, size_t> type_counts;
+    std::map<std::string, size_t> status_counts;
+
+    for (const auto & [type, chapter] : slot->data)
+    {
+        for (size_t i = 0; i < chapter.records.size(); ++i)
+        {
+            const auto & entry = chapter.records[i];
+            type_counts[type]++;
+            status_counts[entry.status]++;
+
+            if (!type_filter_.empty() && type_filter_.count(type) == 0)
+                continue;
+
+            if (has_sub_type_filter && (type == tools_t::rec_type_t::info || type == tools_t::rec_type_t::bnam))
+            {
+                bool sub_match = false;
+                auto caret_pos = entry.key_text.find('^');
+                if (caret_pos != std::string::npos && caret_pos > 0)
+                {
+                    auto prefix = entry.key_text.substr(0, caret_pos);
+                    for (const auto & sub : active_sub_types)
+                    {
+                        auto it = sub_type_to_prefix.find(sub);
+                        if (it != sub_type_to_prefix.end() && it->second == prefix)
+                        {
+                            sub_match = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!sub_match)
+                    continue;
+            }
+
+            if (!status_filter_.empty() && status_filter_.count(entry.status) == 0)
+                continue;
+
+            if (!search_query_.isEmpty())
+            {
+                bool match = false;
+
+                if (case_sensitive)
+                {
+                    const auto q = search_query_.toStdString();
+                    match = entry.key_text.find(q) != std::string::npos ||
+                            entry.old_text.find(q) != std::string::npos ||
+                            entry.new_text.find(q) != std::string::npos;
+                }
+                else
+                {
+                    const auto q = query_lower.toStdString();
+                    auto contains = [&](const std::string & text)
+                    {
+                        std::string lower = text;
+                        std::transform(lower.begin(), lower.end(), lower.begin(),
+                            [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+                        return lower.find(q) != std::string::npos;
+                    };
+                    match = contains(entry.key_text) || contains(entry.old_text) || contains(entry.new_text);
+                }
+
+                if (!match)
+                    continue;
+            }
+
+            rows.push_back({type, entry.key_text, entry.old_text, entry.new_text, entry.status, i});
+        }
+    }
+
+    table_model_->rebuild(std::move(rows));
+    current_row_ = -1;
+
+    filter_bar_->update_counts(type_counts);
+    status_filter_bar_->update_counts(status_counts);
+}
+
+void main_window_t::on_row_selected(int row)
+{
+    if (row == current_row_)
+        return;
+
+    commit_current_edit();
+    load_record(row);
+}
+
+void main_window_t::on_translation_changed()
+{
+    if (loading_record_)
+        return;
+
+    set_dirty(true);
+    update_validation();
+}
+
+void main_window_t::commit_current_edit()
+{
+    if (current_row_ < 0)
+        return;
+
+    if (loading_record_)
+        return;
+
+    if (!editor_panel_)
+        return;
+
+    const auto & current_text = editor_panel_->translation_editor()->toPlainText();
+    if (current_text == loaded_text_)
+        return;
+
+    const auto * row_data = table_model_->row_at(current_row_);
+    if (!row_data)
+        return;
+
+    auto * slot = workspace_.get_active_slot();
+    if (!slot)
+        return;
+
+    auto it = slot->data.find(row_data->type);
+    if (it == slot->data.end())
+        return;
+
+    if (row_data->chapter_index >= it->second.records.size())
+        return;
+
+    const auto new_text_str = current_text.toStdString();
+    history_manager_.record_change(row_data->type, row_data->key_text, loaded_text_.toStdString(), new_text_str);
+
+    it->second.records[row_data->chapter_index].new_text = new_text_str;
+    it->second.records[row_data->chapter_index].status = "in_progress";
+    slot->dirty = true;
+    slot->modified_records.insert({row_data->type, row_data->chapter_index});
+    set_dirty(true);
+
+    table_model_->update_row(current_row_, new_text_str, "in_progress");
+    loaded_text_ = current_text;
+    rebuild_sidebar();
+
+    std::map<std::string, size_t> status_counts;
+    for (const auto & [type, chapter] : slot->data)
+    {
+        for (const auto & rec : chapter.records)
+            status_counts[rec.status]++;
+    }
+    status_filter_bar_->update_counts(status_counts);
+}
+
+void main_window_t::load_record(int row)
+{
+    loading_record_ = true;
+
+    if (!table_model_ || !editor_panel_)
+    {
+        current_row_ = -1;
+        loading_record_ = false;
+        return;
+    }
+
+    const auto * row_data = table_model_->row_at(row);
+    if (!row_data)
+    {
+        editor_panel_->original_view()->clear();
+        editor_panel_->translation_editor()->clear();
+        validation_indicator_->clear();
+        annotations_panel_->clear();
+        history_panel_->clear();
+        book_preview_->clear();
+        current_row_ = -1;
+        loading_record_ = false;
+        return;
+    }
+
+    editor_panel_->original_view()->setPlainText(QString::fromStdString(row_data->old_text));
+    editor_panel_->translation_editor()->setPlainText(QString::fromStdString(row_data->new_text));
+
+    const bool is_base = workspace_.is_base_slot(workspace_.get_active_index());
+    editor_panel_->translation_editor()->setReadOnly(is_base);
+
+    syntax_hl_original_->set_record_type(row_data->type);
+
+    const auto validation_result = validation_manager_.validate(row_data->type, row_data->new_text);
+    validation_indicator_->update_validation(validation_result);
+
+    if (row_data->type == tools_t::rec_type_t::text)
+        book_preview_->set_html(row_data->new_text);
+    else
+        book_preview_->clear();
+
+    const auto annotations = annotation_manager_.annotate(row_data->old_text, row_data->type);
+
+    std::string speaker_name;
+    std::string gender_str;
+    std::string enchantment_str;
+
+    auto * active_slot = workspace_.get_active_slot();
+    if (active_slot)
+    {
+        auto it = active_slot->data.find(row_data->type);
+        if (it != active_slot->data.end() && row_data->chapter_index < it->second.records.size())
+        {
+            const auto & entry = it->second.records[row_data->chapter_index];
+            speaker_name = entry.speaker_name;
+            gender_str = entry.gender;
+            enchantment_str = entry.enchantment;
+        }
+    }
+
+    annotations_panel_->update_annotations(annotations, speaker_name, gender_str, enchantment_str);
+
+    QList<QTextEdit::ExtraSelection> extra_selections;
+    const auto translation_text = QString::fromStdString(row_data->new_text).toLower();
+    for (const auto & ann : annotations)
+    {
+        if (ann.new_text.empty())
+            continue;
+
+        const auto term = QString::fromStdString(ann.new_text).toLower();
+        int pos = 0;
+        while ((pos = translation_text.indexOf(term, pos)) != -1)
+        {
+            QTextEdit::ExtraSelection sel;
+            sel.format.setBackground(QColor(200, 220, 255));
+            sel.cursor = editor_panel_->translation_editor()->textCursor();
+            sel.cursor.setPosition(pos);
+            sel.cursor.setPosition(pos + term.length(), QTextCursor::KeepAnchor);
+            extra_selections.append(sel);
+            pos += term.length();
+        }
+    }
+    editor_panel_->translation_editor()->setExtraSelections(extra_selections);
+
+    const auto history = history_manager_.get_history(row_data->type, row_data->key_text);
+    history_panel_->update_history(history, !is_base);
+
+    loaded_text_ = QString::fromStdString(row_data->new_text);
+    current_row_ = row;
+    loading_record_ = false;
+}
+
+void main_window_t::on_whitespace_toggled(bool checked)
+{
+    if (!editor_panel_)
+        return;
+
+    QTextOption opt;
+    if (checked)
+        opt.setFlags(QTextOption::ShowTabsAndSpaces);
+
+    editor_panel_->original_view()->document()->setDefaultTextOption(opt);
+    editor_panel_->translation_editor()->document()->setDefaultTextOption(opt);
+}
+
+void main_window_t::on_encoding_changed(int index)
+{
+    constexpr codepage_t codepages[] = {
+        codepage_t::windows_1250,
+        codepage_t::windows_1251,
+        codepage_t::windows_1252,
+    };
+
+    if (index < 0 || index >= static_cast<int>(std::size(codepages)))
+        return;
+
+    const auto new_codepage = codepages[index];
+    if (new_codepage == current_codepage_)
+        return;
+
+    const auto old_codepage = current_codepage_;
+    current_codepage_ = new_codepage;
+
+    for (int i = 0; i < workspace_.slot_count(); ++i)
+    {
+        auto * slot = workspace_.get_slot(i);
+        if (!slot)
+            continue;
+
+        for (auto & [type, chapter] : slot->data)
+        {
+            for (auto & entry : chapter.records)
+            {
+                const auto raw = encode_from_utf8(entry.old_text, old_codepage);
+                entry.old_text = decode_to_utf8(raw, new_codepage);
+
+                const auto raw_new = encode_from_utf8(entry.new_text, old_codepage);
+                entry.new_text = decode_to_utf8(raw_new, new_codepage);
+
+                const auto raw_key = encode_from_utf8(entry.key_text, old_codepage);
+                entry.key_text = decode_to_utf8(raw_key, new_codepage);
+            }
+        }
+    }
+
+    validation_manager_.set_codepage(new_codepage);
+    rebuild_table();
+}
+
+void main_window_t::rebuild_sidebar()
+{
+    std::vector<std::string> user_names;
+    std::vector<std::string> user_paths;
+    std::vector<bool> user_dirty;
+    std::vector<std::string> base_names;
+    std::vector<std::string> base_paths;
+
+    for (int i = 0; i < workspace_.slot_count(); ++i)
+    {
+        const auto * slot = workspace_.get_slot(i);
+        if (!slot)
+            continue;
+
+        auto filename = slot->path;
+        auto sep = filename.find_last_of("/\\");
+        if (sep != std::string::npos)
+            filename = filename.substr(sep + 1);
+
+        if (workspace_.is_user_slot(i))
+        {
+            user_names.push_back(filename);
+            user_paths.push_back(slot->path);
+            user_dirty.push_back(slot->dirty);
+        }
+        else
+        {
+            base_names.push_back(filename);
+            base_paths.push_back(slot->path);
+        }
+    }
+
+    sidebar_->rebuild(user_names, user_paths, user_dirty, base_names, base_paths);
+    sidebar_->set_active_slot(workspace_.get_active_index());
+}
+
+void main_window_t::update_annotations()
+{
+    if (current_row_ < 0)
+        return;
+
+    const auto * row_data = table_model_->row_at(current_row_);
+    if (!row_data)
+        return;
+
+    const auto annotations = annotation_manager_.annotate(row_data->old_text, row_data->type);
+
+    std::string speaker_name;
+    std::string gender_str;
+    std::string enchantment_str;
+
+    auto * active_slot = workspace_.get_active_slot();
+    if (active_slot)
+    {
+        auto it = active_slot->data.find(row_data->type);
+        if (it != active_slot->data.end() && row_data->chapter_index < it->second.records.size())
+        {
+            const auto & entry = it->second.records[row_data->chapter_index];
+            speaker_name = entry.speaker_name;
+            gender_str = entry.gender;
+            enchantment_str = entry.enchantment;
+        }
+    }
+
+    annotations_panel_->update_annotations(annotations, speaker_name, gender_str, enchantment_str);
+}
+
+void main_window_t::update_validation()
+{
+    if (current_row_ < 0)
+        return;
+
+    const auto * row_data = table_model_->row_at(current_row_);
+    if (!row_data)
+        return;
+
+    const auto current_text = editor_panel_->translation_editor()->toPlainText().toStdString();
+    const auto result = validation_manager_.validate(row_data->type, current_text);
+    validation_indicator_->update_validation(result);
+}
+
+void main_window_t::scan_spell_dictionaries()
+{
+    const auto app_dir = QCoreApplication::applicationDirPath();
+    QDir dict_dir(app_dir + "/dictionaries");
+
+    if (!dict_dir.exists())
+        return;
+
+    const auto aff_files = dict_dir.entryList({"*.aff"}, QDir::Files);
+    for (const auto & aff_file : aff_files)
+    {
+        auto base_name = aff_file;
+        base_name.chop(4);
+
+        const auto dic_path = dict_dir.filePath(base_name + ".dic");
+        if (!QFile::exists(dic_path))
+            continue;
+
+        spell_lang_combo_->addItem(base_name);
+    }
+}
+
+void main_window_t::on_spell_lang_changed(int index)
+{
+    if (index <= 0)
+    {
+        spell_hl_->set_spell_checker(nullptr);
+        return;
+    }
+
+    const auto lang_name = spell_lang_combo_->itemText(index);
+    const auto app_dir = QCoreApplication::applicationDirPath();
+    const auto aff_path = app_dir + "/dictionaries/" + lang_name + ".aff";
+    const auto dic_path = app_dir + "/dictionaries/" + lang_name + ".dic";
+
+    if (!spell_checker_.load(aff_path.toStdString(), dic_path.toStdString()))
+        return;
+
+    spell_hl_->set_spell_checker(&spell_checker_);
+}
+
+void main_window_t::load_config()
+{
+    const auto path = QCoreApplication::applicationDirPath() + "/yampt_gui.ini";
+    config_.load(path.toStdString());
+
+    move(config_.window_x, config_.window_y);
+    resize(config_.window_w, config_.window_h);
+
+    if (config_.window_maximized)
+        showMaximized();
+
+    encoding_combo_->setCurrentIndex(config_.encoding_index);
+
+    constexpr codepage_t codepages_table[] = {
+        codepage_t::windows_1250,
+        codepage_t::windows_1251,
+        codepage_t::windows_1252,
+    };
+    if (config_.encoding_index >= 0 && config_.encoding_index < 3)
+        current_codepage_ = codepages_table[config_.encoding_index];
+
+    sidebar_toggle_->setChecked(config_.sidebar_visible);
+    bottom_panel_toggle_->setChecked(config_.bottom_visible);
+
+    if (config_.split_ratio > 0.0f)
+        editor_panel_->set_split_ratio(config_.split_ratio);
+
+    std::vector<int> col_widths;
+    for (auto w : config_.column_widths)
+        col_widths.push_back(static_cast<int>(w));
+    table_view_->set_column_widths(col_widths);
+
+    for (const auto & p : config_.user_dict_paths)
+        workspace_.load_dict(p, dict_kind_t::user);
+
+    for (const auto & p : config_.base_dict_paths)
+        workspace_.load_dict(p, dict_kind_t::base);
+
+    for (int i = 0; i < workspace_.slot_count(); ++i)
+    {
+        auto * s = workspace_.get_slot(i);
+        if (!s)
+            continue;
+
+        for (auto & [type, chapter] : s->data)
+        {
+            for (auto & entry : chapter.records)
+            {
+                entry.key_text = decode_to_utf8(entry.key_text, current_codepage_);
+                entry.old_text = decode_to_utf8(entry.old_text, current_codepage_);
+                entry.new_text = decode_to_utf8(entry.new_text, current_codepage_);
+            }
+        }
+    }
+
+    if (config_.active_dict_index >= 0 && config_.active_dict_index < workspace_.slot_count())
+        workspace_.set_active(config_.active_dict_index);
+
+    if (workspace_.slot_count() > 0)
+    {
+        std::vector<dict_source_t> sources;
+        for (const auto & dict_slot : workspace_.get_all_slots())
+            sources.push_back({&dict_slot.data, dict_slot.path});
+        annotation_manager_.rebuild(sources);
+    }
+
+    rebuild_sidebar();
+    rebuild_table();
+
+    if (config_.spell_lang_index > 0 && config_.spell_lang_index < spell_lang_combo_->count())
+        spell_lang_combo_->setCurrentIndex(config_.spell_lang_index);
+}
+
+void main_window_t::save_config()
+{
+    config_.window_x = pos().x();
+    config_.window_y = pos().y();
+    config_.window_w = size().width();
+    config_.window_h = size().height();
+    config_.window_maximized = isMaximized();
+
+    config_.encoding_index = encoding_combo_->currentIndex();
+    config_.spell_lang_index = spell_lang_combo_->currentIndex();
+
+    config_.sidebar_visible = sidebar_toggle_->isChecked();
+    config_.bottom_visible = bottom_panel_toggle_->isChecked();
+
+    config_.split_ratio = static_cast<float>(editor_panel_->get_split_ratio());
+
+    const auto col_widths = table_view_->get_column_widths();
+    for (size_t i = 0; i < col_widths.size() && i < config_.column_widths.size(); ++i)
+        config_.column_widths[i] = static_cast<float>(col_widths[i]);
+
+    config_.active_dict_index = workspace_.get_active_index();
+
+    config_.user_dict_paths.clear();
+    config_.base_dict_paths.clear();
+
+    for (int i = 0; i < workspace_.slot_count(); ++i)
+    {
+        const auto * slot = workspace_.get_slot(i);
+        if (!slot)
+            continue;
+
+        if (workspace_.is_user_slot(i))
+            config_.user_dict_paths.push_back(slot->path);
+        else
+            config_.base_dict_paths.push_back(slot->path);
+    }
+
+    const auto path = QCoreApplication::applicationDirPath() + "/yampt_gui.ini";
+    config_.save(path.toStdString());
+}
+
+void main_window_t::closeEvent(QCloseEvent * event)
+{
+    if (workspace_.has_any_unsaved())
+    {
+        auto answer = QMessageBox::question(
+            this, "Unsaved Changes",
+            "You have unsaved dictionary changes. What would you like to do?",
+            QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+
+        if (answer == QMessageBox::Cancel)
+        {
+            event->ignore();
+            return;
+        }
+
+        if (answer == QMessageBox::Save)
+            workspace_.save_all_dirty();
+    }
+
+    commit_current_edit();
+    save_config();
+    QMainWindow::closeEvent(event);
+}

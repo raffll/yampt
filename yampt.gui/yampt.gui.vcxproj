@@ -86,19 +86,23 @@
     <VcpkgEnableManifest>true</VcpkgEnableManifest>
     <VcpkgTriplet Condition="'$(Platform)'=='x64'">x64-windows-v143</VcpkgTriplet>
   </PropertyGroup>
+  <PropertyGroup Label="QtToolsPath">
+    <QtToolsPath>$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows\tools\Qt6\bin</QtToolsPath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_SILENCE_CXX23_DENORM_DEPRECATION_WARNING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;_SILENCE_CXX23_DENORM_DEPRECATION_WARNING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\SDL2;$(SolutionDir)external\imgui;$(SolutionDir)external\imgui\backends;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ctranslate2.lib;opengl32.lib;comdlg32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ctranslate2.lib;comdlg32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)external\CTranslate2\build\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -106,15 +110,16 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_SILENCE_CXX23_DENORM_DEPRECATION_WARNING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;_SILENCE_CXX23_DENORM_DEPRECATION_WARNING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\SDL2;$(SolutionDir)external\imgui;$(SolutionDir)external\imgui\backends;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ctranslate2.lib;opengl32.lib;comdlg32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ctranslate2.lib;comdlg32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)external\CTranslate2\build\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -124,17 +129,18 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;_SILENCE_CXX23_DENORM_DEPRECATION_WARNING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;_SILENCE_CXX23_DENORM_DEPRECATION_WARNING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\SDL2;$(SolutionDir)external\imgui;$(SolutionDir)external\imgui\backends;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ctranslate2.lib;opengl32.lib;comdlg32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ctranslate2.lib;comdlg32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)external\CTranslate2\build\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -144,31 +150,25 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;_SILENCE_CXX23_DENORM_DEPRECATION_WARNING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;_SILENCE_CXX23_DENORM_DEPRECATION_WARNING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\SDL2;$(SolutionDir)external\imgui;$(SolutionDir)external\imgui\backends;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ctranslate2.lib;opengl32.lib;comdlg32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ctranslate2.lib;comdlg32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)external\CTranslate2\build\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="editor_app.cpp" />
+    <ClCompile Include="main_window.cpp" />
     <ClCompile Include="editor_config.cpp" />
-    <ClCompile Include="..\external\imgui\imgui.cpp" />
-    <ClCompile Include="..\external\imgui\imgui_demo.cpp" />
-    <ClCompile Include="..\external\imgui\imgui_draw.cpp" />
-    <ClCompile Include="..\external\imgui\imgui_tables.cpp" />
-    <ClCompile Include="..\external\imgui\imgui_widgets.cpp" />
-    <ClCompile Include="..\external\imgui\backends\imgui_impl_sdl2.cpp" />
-    <ClCompile Include="..\external\imgui\backends\imgui_impl_opengl3.cpp" />
     <ClCompile Include="..\yampt\tools.cpp" />
     <ClCompile Include="..\yampt\dict_reader.cpp" />
     <ClCompile Include="..\yampt\dict_writer.cpp" />
@@ -185,8 +185,23 @@
     <ClCompile Include="history_manager.cpp" />
     <ClCompile Include="syntax_highlighter.cpp" />
     <ClCompile Include="annotation_manager.cpp" />
+    <ClCompile Include="annotation_highlighter.cpp" />
     <ClCompile Include="encoding_utils.cpp" />
     <ClCompile Include="spell_checker.cpp" />
+    <ClCompile Include="spell_check_highlighter.cpp" />
+    <ClCompile Include="spell_context_menu.cpp" />
+    <ClCompile Include="hyperlink_highlighter.cpp" />
+    <ClCompile Include="filter_bar.cpp" />
+    <ClCompile Include="status_filter_bar.cpp" />
+    <ClCompile Include="editor_panel.cpp" />
+    <ClCompile Include="record_table_model.cpp" />
+    <ClCompile Include="record_table_view.cpp" />
+    <ClCompile Include="validation_indicator.cpp" />
+    <ClCompile Include="mwscript_highlighter.cpp" />
+    <ClCompile Include="book_preview.cpp" />
+    <ClCompile Include="sidebar_widget.cpp" />
+    <ClCompile Include="annotations_panel.cpp" />
+    <ClCompile Include="history_panel.cpp" />
     <ClCompile Include="..\yampt\translation_engine.cpp" />
     <ClCompile Include="..\external\yyjson.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CompileAsC</CompileAs>
@@ -196,15 +211,8 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\external\imgui\imgui.h" />
-    <ClInclude Include="..\external\imgui\imconfig.h" />
-    <ClInclude Include="..\external\imgui\imgui_internal.h" />
-    <ClInclude Include="..\external\imgui\imstb_rectpack.h" />
-    <ClInclude Include="..\external\imgui\imstb_textedit.h" />
-    <ClInclude Include="..\external\imgui\imstb_truetype.h" />
-    <ClInclude Include="..\external\imgui\backends\imgui_impl_sdl2.h" />
-    <ClInclude Include="..\external\imgui\backends\imgui_impl_opengl3.h" />
     <ClInclude Include="dict_workspace.hpp" />
+    <ClInclude Include="spell_context_menu.hpp" />
     <ClInclude Include="..\yampt\tools.hpp" />
     <ClInclude Include="..\yampt\dict_reader.hpp" />
     <ClInclude Include="..\yampt\dict_writer.hpp" />
@@ -216,6 +224,145 @@
     <ClInclude Include="..\yampt\json_reader.hpp" />
     <ClInclude Include="..\yampt\translation_engine.hpp" />
     <ClInclude Include="..\external\yyjson.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="main_window.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+    <CustomBuild Include="record_table_model.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+    <CustomBuild Include="editor_panel.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+    <CustomBuild Include="filter_bar.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+    <CustomBuild Include="status_filter_bar.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+    <CustomBuild Include="record_table_view.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+    <CustomBuild Include="spell_check_highlighter.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+    <CustomBuild Include="validation_indicator.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+    <CustomBuild Include="annotation_highlighter.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+    <CustomBuild Include="mwscript_highlighter.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+    <CustomBuild Include="hyperlink_highlighter.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+    <CustomBuild Include="book_preview.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+    <CustomBuild Include="sidebar_widget.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+    <CustomBuild Include="annotations_panel.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+    <CustomBuild Include="history_panel.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(IntDir)moc_main_window.cpp">
+      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_main_window.cpp')">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(IntDir)moc_record_table_model.cpp">
+      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_record_table_model.cpp')">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(IntDir)moc_editor_panel.cpp">
+      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_editor_panel.cpp')">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(IntDir)moc_filter_bar.cpp">
+      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_filter_bar.cpp')">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(IntDir)moc_status_filter_bar.cpp">
+      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_status_filter_bar.cpp')">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(IntDir)moc_record_table_view.cpp">
+      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_record_table_view.cpp')">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(IntDir)moc_spell_check_highlighter.cpp">
+      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_spell_check_highlighter.cpp')">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(IntDir)moc_validation_indicator.cpp">
+      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_validation_indicator.cpp')">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(IntDir)moc_annotation_highlighter.cpp">
+      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_annotation_highlighter.cpp')">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(IntDir)moc_mwscript_highlighter.cpp">
+      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_mwscript_highlighter.cpp')">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(IntDir)moc_hyperlink_highlighter.cpp">
+      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_hyperlink_highlighter.cpp')">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(IntDir)moc_book_preview.cpp">
+      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_book_preview.cpp')">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(IntDir)moc_sidebar_widget.cpp">
+      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_sidebar_widget.cpp')">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(IntDir)moc_annotations_panel.cpp">
+      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_annotations_panel.cpp')">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(IntDir)moc_history_panel.cpp">
+      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_history_panel.cpp')">true</ExcludedFromBuild>
+    </ClCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
@@ -233,5 +380,12 @@
       <DictFiles Include="$(ProjectDir)dictionaries\*.*" />
     </ItemGroup>
     <Copy SourceFiles="@(DictFiles)" DestinationFolder="$(OutDir)dictionaries" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="CopyQtPlugins" AfterTargets="Build">
+    <MakeDir Directories="$(OutDir)platforms" />
+    <ItemGroup>
+      <QtPlatformPlugins Include="$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\Qt6\plugins\platforms\*.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(QtPlatformPlugins)" DestinationFolder="$(OutDir)platforms" SkipUnchangedFiles="true" />
   </Target>
 </Project>

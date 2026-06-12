@@ -185,6 +185,10 @@ void editor_config_t::load(const std::string & path)
 				catch (...)
 				{}
 			}
+			else if (key == "WindowMaximized")
+			{
+				window_maximized = (value != "0");
+			}
 			else if (starts_with(key, "Column"))
 			{
 				try
@@ -245,6 +249,7 @@ void editor_config_t::save(const std::string & path) const
 	file << "WindowY=" << window_y << "\n";
 	file << "WindowW=" << window_w << "\n";
 	file << "WindowH=" << window_h << "\n";
+	file << "WindowMaximized=" << (window_maximized ? "1" : "0") << "\n";
 	for (size_t i = 0; i < column_widths.size(); ++i)
 		file << "Column" << i << "=" << column_widths[i] << "\n";
 
