@@ -171,7 +171,8 @@ void script_parser_t::extract_text(const int pos_in_expression)
 	{
 		tools_t::add_log(
 		    "[warning] extract_text: expected parameter at position " + std::to_string(pos_in_expression) +
-		    " but only found " + std::to_string(ctr + 1) + " token(s) in: " + old_text + "\r\n", true);
+		        " but only found " + std::to_string(ctr + 1) + " token(s) in: " + old_text + "\r\n",
+		    true);
 		error = true;
 		return;
 	}

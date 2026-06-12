@@ -107,6 +107,7 @@ private:
 		std::string aff_path;
 		std::string dic_path;
 	};
+
 	std::vector<spell_lang_t> spell_langs_;
 	int spell_lang_index_ = -1;
 	HWND richedit_hwnd_ = nullptr;

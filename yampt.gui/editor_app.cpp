@@ -184,7 +184,10 @@ void editor_app_t::frame()
 
 	if (sidebar_visible_)
 	{
-		ImGui::BeginChild("SidebarArea", ImVec2(sidebar_width_, 0), ImGuiChildFlags_None,
+		ImGui::BeginChild(
+		    "SidebarArea",
+		    ImVec2(sidebar_width_, 0),
+		    ImGuiChildFlags_None,
 		    ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 
 		float sidebar_height = ImGui::GetContentRegionAvail().y;
@@ -197,7 +200,10 @@ void editor_app_t::frame()
 				sidebar_top_height = 50.0f;
 		}
 
-		ImGui::BeginChild("SidebarTop", ImVec2(0, sidebar_top_height), ImGuiChildFlags_None,
+		ImGui::BeginChild(
+		    "SidebarTop",
+		    ImVec2(0, sidebar_top_height),
+		    ImGuiChildFlags_None,
 		    ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 		render_sidebar();
 		ImGui::EndChild();
@@ -382,8 +388,7 @@ void editor_app_t::rebuild_row_data()
 					continue;
 			}
 
-			if (type_filter_solo_ &&
-			    (type == tools_t::rec_type_t::info || type == tools_t::rec_type_t::bnam) &&
+			if (type_filter_solo_ && (type == tools_t::rec_type_t::info || type == tools_t::rec_type_t::bnam) &&
 			    dial_type_filter_.size() < 5)
 			{
 				const auto & key = chapter.records[i].key_text;
@@ -446,8 +451,7 @@ void editor_app_t::rebuild_row_data()
 					std::transform(key_lc.begin(), key_lc.end(), key_lc.begin(), ::tolower);
 					std::transform(old_lc.begin(), old_lc.end(), old_lc.begin(), ::tolower);
 					std::transform(new_lc.begin(), new_lc.end(), new_lc.begin(), ::tolower);
-					found = key_lc.find(query_lc) != std::string::npos ||
-					        old_lc.find(query_lc) != std::string::npos ||
+					found = key_lc.find(query_lc) != std::string::npos || old_lc.find(query_lc) != std::string::npos ||
 					        new_lc.find(query_lc) != std::string::npos;
 				}
 
@@ -614,9 +618,10 @@ void editor_app_t::render_toolbar()
 		ImGui::TextUnformatted("Spelling:");
 		ImGui::SameLine();
 		ImGui::SetNextItemWidth(120.0f);
-		const char * spell_preview = (spell_lang_index_ >= 0 && spell_lang_index_ < static_cast<int>(spell_langs_.size()))
-		                                 ? spell_langs_[spell_lang_index_].name.c_str()
-		                                 : "None";
+		const char * spell_preview =
+		    (spell_lang_index_ >= 0 && spell_lang_index_ < static_cast<int>(spell_langs_.size()))
+		        ? spell_langs_[spell_lang_index_].name.c_str()
+		        : "None";
 		if (ImGui::BeginCombo("##spelling", spell_preview))
 		{
 			if (ImGui::Selectable("None", spell_lang_index_ < 0))
@@ -639,8 +644,9 @@ void editor_app_t::render_toolbar()
 							set_richedit_text(entry.new_text);
 							if (row.type == tools_t::rec_type_t::info)
 								highlight_richedit_hyperlinks(entry.new_text, row.type, entry.old_text);
-							else if (row.type == tools_t::rec_type_t::sctx || row.type == tools_t::rec_type_t::bnam ||
-							         row.type == tools_t::rec_type_t::text)
+							else if (
+							    row.type == tools_t::rec_type_t::sctx || row.type == tools_t::rec_type_t::bnam ||
+							    row.type == tools_t::rec_type_t::text)
 								highlight_richedit_syntax(entry.new_text, row.type);
 							richedit_ignore_change_ = false;
 						}
@@ -670,8 +676,9 @@ void editor_app_t::render_toolbar()
 								set_richedit_text(entry.new_text);
 								if (row.type == tools_t::rec_type_t::info)
 									highlight_richedit_hyperlinks(entry.new_text, row.type, entry.old_text);
-								else if (row.type == tools_t::rec_type_t::sctx || row.type == tools_t::rec_type_t::bnam ||
-								         row.type == tools_t::rec_type_t::text)
+								else if (
+								    row.type == tools_t::rec_type_t::sctx || row.type == tools_t::rec_type_t::bnam ||
+								    row.type == tools_t::rec_type_t::text)
 									highlight_richedit_syntax(entry.new_text, row.type);
 								highlight_richedit_spelling(entry.new_text);
 								richedit_ignore_change_ = false;
@@ -823,8 +830,9 @@ void editor_app_t::render_toolbar()
 					set_richedit_text(current_text);
 					if (f5_row.type == tools_t::rec_type_t::info)
 						highlight_richedit_hyperlinks(current_text, f5_row.type, f5_entry.old_text);
-					else if (f5_row.type == tools_t::rec_type_t::sctx || f5_row.type == tools_t::rec_type_t::bnam ||
-					         f5_row.type == tools_t::rec_type_t::text)
+					else if (
+					    f5_row.type == tools_t::rec_type_t::sctx || f5_row.type == tools_t::rec_type_t::bnam ||
+					    f5_row.type == tools_t::rec_type_t::text)
 						highlight_richedit_syntax(current_text, f5_row.type);
 
 					SendMessageA(richedit_hwnd_, EM_EXSETSEL, 0, (LPARAM)&saved_sel);
@@ -994,13 +1002,13 @@ void editor_app_t::render_sidebar()
 
 void editor_app_t::render_status_summary_bar()
 {
-	static const char * status_names[] = { "untranslated", "missing", "duplicate", "coords",     "fingerprint",
-		                                   "heuristic",    "info",    "exact",     "wilderness", "region",
-		                                   "matched",      "error",   "identical", "translated", "reused",
+	static const char * status_names[] = { "untranslated", "missing", "duplicate",  "coords",     "fingerprint",
+		                                   "heuristic",    "info",    "exact",      "wilderness", "region",
+		                                   "matched",      "error",   "identical",  "translated", "reused",
 		                                   "adapted",      "changed", "in_progress" };
-	static const char * status_labels[] = { "Untranslated", "Missing", "Duplicate", "Coords",      "Fingerprint",
-		                                    "Heuristic",    "Info",    "Exact",     "Wilderness",  "Region",
-		                                    "Matched",      "Error",   "Identical", "Translated",  "Reused",
+	static const char * status_labels[] = { "Untranslated", "Missing", "Duplicate",  "Coords",     "Fingerprint",
+		                                    "Heuristic",    "Info",    "Exact",      "Wilderness", "Region",
+		                                    "Matched",      "Error",   "Identical",  "Translated", "Reused",
 		                                    "Adapted",      "Changed", "In Progress" };
 	static constexpr size_t status_count = 18;
 
@@ -1181,9 +1189,8 @@ void editor_app_t::render_status_summary_bar()
 
 void editor_app_t::render_dial_type_bar()
 {
-	bool any_dial = type_filter_solo_ &&
-	               (type_filter_.count(tools_t::rec_type_t::info) > 0 ||
-	                type_filter_.count(tools_t::rec_type_t::bnam) > 0);
+	bool any_dial = type_filter_solo_ && (type_filter_.count(tools_t::rec_type_t::info) > 0 ||
+	                                      type_filter_.count(tools_t::rec_type_t::bnam) > 0);
 	bool any_desc = type_filter_solo_ && type_filter_.count(tools_t::rec_type_t::desc) > 0;
 	bool any_indx = type_filter_solo_ && type_filter_.count(tools_t::rec_type_t::indx) > 0;
 	bool any_fnam = type_filter_solo_ && type_filter_.count(tools_t::rec_type_t::fnam) > 0;
@@ -2112,15 +2119,17 @@ void editor_app_t::render_editor_tab()
 	ImGui::TextDisabled("Original");
 	ImGui::Separator();
 
-	bool same_original = (editing_row_ == selected_row_ && editing_type_ == row.type &&
-	                       editing_record_index_ == row.record_index);
+	bool same_original =
+	    (editing_row_ == selected_row_ && editing_type_ == row.type && editing_record_index_ == row.record_index);
 
 	if (!same_original && richedit_original_hwnd_)
 	{
 		HWND prev_focus = GetFocus();
-		int wlen_orig = MultiByteToWideChar(CP_UTF8, 0, entry.old_text.c_str(), static_cast<int>(entry.old_text.size()), nullptr, 0);
+		int wlen_orig = MultiByteToWideChar(
+		    CP_UTF8, 0, entry.old_text.c_str(), static_cast<int>(entry.old_text.size()), nullptr, 0);
 		std::wstring wtext_orig(wlen_orig, L'\0');
-		MultiByteToWideChar(CP_UTF8, 0, entry.old_text.c_str(), static_cast<int>(entry.old_text.size()), wtext_orig.data(), wlen_orig);
+		MultiByteToWideChar(
+		    CP_UTF8, 0, entry.old_text.c_str(), static_cast<int>(entry.old_text.size()), wtext_orig.data(), wlen_orig);
 		SetWindowTextW(richedit_original_hwnd_, wtext_orig.c_str());
 		if (prev_focus && prev_focus != richedit_original_hwnd_)
 			SetFocus(prev_focus);
@@ -2137,12 +2146,24 @@ void editor_app_t::render_editor_tab()
 				{
 					b2w[bi] = wp;
 					unsigned char c = static_cast<unsigned char>(entry.old_text[bi]);
-					if (c == '\n' && bi > 0 && entry.old_text[bi - 1] == '\r') { bi++; continue; }
+					if (c == '\n' && bi > 0 && entry.old_text[bi - 1] == '\r')
+					{
+						bi++;
+						continue;
+					}
 					int cl = 1;
-					if (c >= 0xF0) cl = 4; else if (c >= 0xE0) cl = 3; else if (c >= 0xC0) cl = 2;
+					if (c >= 0xF0)
+						cl = 4;
+					else if (c >= 0xE0)
+						cl = 3;
+					else if (c >= 0xC0)
+						cl = 2;
 					unsigned int cp = (cl == 1) ? c : (cl == 2) ? (c & 0x1F) : (cl == 3) ? (c & 0x0F) : (c & 0x07);
 					for (int j = 1; j < cl && bi + j < entry.old_text.size(); ++j)
-					{ b2w[bi + j] = wp; cp = (cp << 6) | (static_cast<unsigned char>(entry.old_text[bi + j]) & 0x3F); }
+					{
+						b2w[bi + j] = wp;
+						cp = (cp << 6) | (static_cast<unsigned char>(entry.old_text[bi + j]) & 0x3F);
+					}
 					wp += (cp > 0xFFFF) ? 2 : 1;
 					bi += cl;
 				}
@@ -2153,16 +2174,28 @@ void editor_app_t::render_editor_tab()
 				SendMessageA(richedit_original_hwnd_, EM_EXGETSEL, 0, (LPARAM)&orig_sel_o);
 				for (const auto & token : tokens)
 				{
-					if (token.type == token_type_t::normal) continue;
-					if (token.start >= token.end || token.start >= entry.old_text.size()) continue;
+					if (token.type == token_type_t::normal)
+						continue;
+					if (token.start >= token.end || token.start >= entry.old_text.size())
+						continue;
 					size_t end = std::min(token.end, entry.old_text.size());
 					COLORREF color = RGB(0, 0, 0);
-					switch (token.type) {
-					case token_type_t::mwscript_function: color = RGB(100, 180, 255); break;
-					case token_type_t::mwscript_comment: color = RGB(128, 128, 128); break;
-					case token_type_t::mwscript_string: color = RGB(200, 150, 50); break;
-					case token_type_t::html_tag: color = RGB(140, 40, 50); break;
-					default: continue;
+					switch (token.type)
+					{
+					case token_type_t::mwscript_function:
+						color = RGB(100, 180, 255);
+						break;
+					case token_type_t::mwscript_comment:
+						color = RGB(128, 128, 128);
+						break;
+					case token_type_t::mwscript_string:
+						color = RGB(200, 150, 50);
+						break;
+					case token_type_t::html_tag:
+						color = RGB(140, 40, 50);
+						break;
+					default:
+						continue;
 					}
 					CHARRANGE range;
 					range.cpMin = b2w[token.start];
@@ -2197,9 +2230,13 @@ void editor_app_t::render_editor_tab()
 				flags |= SWP_NOZORDER;
 			else
 				flags |= SWP_SHOWWINDOW;
-			SetWindowPos(richedit_original_hwnd_, HWND_TOP,
-			    static_cast<int>(orig_cursor.x), static_cast<int>(orig_cursor.y),
-			    static_cast<int>(ow), static_cast<int>(oh),
+			SetWindowPos(
+			    richedit_original_hwnd_,
+			    HWND_TOP,
+			    static_cast<int>(orig_cursor.x),
+			    static_cast<int>(orig_cursor.y),
+			    static_cast<int>(ow),
+			    static_cast<int>(oh),
 			    flags);
 			if (!richedit_original_visible_)
 				ShowWindow(richedit_original_hwnd_, SW_SHOWNOACTIVATE);
@@ -2248,8 +2285,9 @@ void editor_app_t::render_editor_tab()
 		set_richedit_text(entry.new_text);
 		if (row.type == tools_t::rec_type_t::info)
 			highlight_richedit_hyperlinks(entry.new_text, row.type, entry.old_text);
-		else if (row.type == tools_t::rec_type_t::sctx || row.type == tools_t::rec_type_t::bnam ||
-		         row.type == tools_t::rec_type_t::text)
+		else if (
+		    row.type == tools_t::rec_type_t::sctx || row.type == tools_t::rec_type_t::bnam ||
+		    row.type == tools_t::rec_type_t::text)
 			highlight_richedit_syntax(entry.new_text, row.type);
 		highlight_richedit_spelling(entry.new_text);
 		richedit_ignore_change_ = false;

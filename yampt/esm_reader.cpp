@@ -173,7 +173,8 @@ void esm_reader_t::main_loop(
 		{
 			tools_t::add_log(
 			    "[warning] truncated sub-record header at offset " + std::to_string(cur_pos) + " in " + rec->id +
-			    " record\r\n", true);
+			        " record\r\n",
+			    true);
 			break;
 		}
 		cur_id = rec->content.substr(cur_pos, 4);
@@ -182,14 +183,16 @@ void esm_reader_t::main_loop(
 		{
 			tools_t::add_log(
 			    "[warning] zero-size sub-record \"" + cur_id + "\" at offset " + std::to_string(cur_pos) + " in " +
-			    rec->id + " record\r\n", true);
+			        rec->id + " record\r\n",
+			    true);
 			break;
 		}
 		if (cur_pos + 8 + cur_size > rec->content.size())
 		{
 			tools_t::add_log(
-			    "[warning] sub-record \"" + cur_id + "\" at offset " + std::to_string(cur_pos) + " exceeds record size in " +
-			    rec->id + " record\r\n", true);
+			    "[warning] sub-record \"" + cur_id + "\" at offset " + std::to_string(cur_pos) +
+			        " exceeds record size in " + rec->id + " record\r\n",
+			    true);
 			break;
 		}
 		if (cur_id == subrecord.id)

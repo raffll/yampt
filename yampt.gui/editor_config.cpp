@@ -151,19 +151,39 @@ void editor_config_t::load(const std::string & path)
 			}
 			else if (key == "WindowX")
 			{
-				try { window_x = std::stoi(value); } catch (...) {}
+				try
+				{
+					window_x = std::stoi(value);
+				}
+				catch (...)
+				{}
 			}
 			else if (key == "WindowY")
 			{
-				try { window_y = std::stoi(value); } catch (...) {}
+				try
+				{
+					window_y = std::stoi(value);
+				}
+				catch (...)
+				{}
 			}
 			else if (key == "WindowW")
 			{
-				try { window_w = std::stoi(value); } catch (...) {}
+				try
+				{
+					window_w = std::stoi(value);
+				}
+				catch (...)
+				{}
 			}
 			else if (key == "WindowH")
 			{
-				try { window_h = std::stoi(value); } catch (...) {}
+				try
+				{
+					window_h = std::stoi(value);
+				}
+				catch (...)
+				{}
 			}
 			else if (starts_with(key, "Column"))
 			{
