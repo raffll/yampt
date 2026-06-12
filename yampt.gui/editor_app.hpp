@@ -110,7 +110,9 @@ private:
 	std::vector<spell_lang_t> spell_langs_;
 	int spell_lang_index_ = -1;
 	HWND richedit_hwnd_ = nullptr;
+	HWND richedit_original_hwnd_ = nullptr;
 	bool richedit_visible_ = false;
+	bool richedit_original_visible_ = false;
 	bool richedit_ignore_change_ = false;
 	std::array<char, 256> search_buffer_ = {};
 	bool search_case_sensitive_ = false;

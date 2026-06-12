@@ -140,6 +140,22 @@ void editor_config_t::load(const std::string & path)
 				catch (...)
 				{}
 			}
+			else if (key == "WindowX")
+			{
+				try { window_x = std::stoi(value); } catch (...) {}
+			}
+			else if (key == "WindowY")
+			{
+				try { window_y = std::stoi(value); } catch (...) {}
+			}
+			else if (key == "WindowW")
+			{
+				try { window_w = std::stoi(value); } catch (...) {}
+			}
+			else if (key == "WindowH")
+			{
+				try { window_h = std::stoi(value); } catch (...) {}
+			}
 			else if (starts_with(key, "Column"))
 			{
 				try
@@ -195,6 +211,10 @@ void editor_config_t::save(const std::string & path) const
 	file << "SidebarVisible=" << (sidebar_visible ? "1" : "0") << "\n";
 	file << "BottomVisible=" << (bottom_visible ? "1" : "0") << "\n";
 	file << "EncodingIndex=" << encoding_index << "\n";
+	file << "WindowX=" << window_x << "\n";
+	file << "WindowY=" << window_y << "\n";
+	file << "WindowW=" << window_w << "\n";
+	file << "WindowH=" << window_h << "\n";
 	for (size_t i = 0; i < column_widths.size(); ++i)
 		file << "Column" << i << "=" << column_widths[i] << "\n";
 

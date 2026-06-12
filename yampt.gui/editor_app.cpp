@@ -35,6 +35,13 @@ void editor_app_t::init(SDL_Window * window)
 	config_.load(config_path_);
 	split_ratio_ = config_.split_ratio;
 
+	if (config_.window_x >= 0 && config_.window_y >= 0)
+	{
+		SDL_RestoreWindow(window_);
+		SDL_SetWindowPosition(window_, config_.window_x, config_.window_y);
+		SDL_SetWindowSize(window_, config_.window_w, config_.window_h);
+	}
+
 	sidebar_width_ = config_.sidebar_width;
 	bottom_height_ = config_.bottom_height;
 	sidebar_visible_ = config_.sidebar_visible;
@@ -102,6 +109,27 @@ void editor_app_t::init(SDL_Window * window)
 
 void editor_app_t::frame()
 {
+	if (SDL_GetWindowFlags(window_) & SDL_WINDOW_MINIMIZED)
+	{
+		if (richedit_visible_ && richedit_hwnd_)
+		{
+			ShowWindow(richedit_hwnd_, SW_HIDE);
+			richedit_visible_ = false;
+		}
+		if (richedit_original_visible_ && richedit_original_hwnd_)
+		{
+			ShowWindow(richedit_original_hwnd_, SW_HIDE);
+			richedit_original_visible_ = false;
+		}
+		return;
+	}
+
+	if (richedit_hwnd_ && GetFocus() == richedit_hwnd_)
+	{
+		if (ImGui::GetIO().WantTextInput)
+			SetFocus(GetParent(richedit_hwnd_));
+	}
+
 	std::string title = "yampt.gui";
 	if (workspace_.has_any_unsaved())
 		title += " *";
@@ -151,7 +179,34 @@ void editor_app_t::frame()
 
 	if (sidebar_visible_)
 	{
+		ImGui::BeginChild("SidebarArea", ImVec2(sidebar_width_, 0), ImGuiChildFlags_None,
+		    ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+
+		float sidebar_height = ImGui::GetContentRegionAvail().y;
+		float sidebar_top_height = sidebar_height;
+		if (bottom_visible_)
+		{
+			float splitter_h = 6.0f;
+			sidebar_top_height -= (info_height_ + splitter_h);
+			if (sidebar_top_height < 50.0f)
+				sidebar_top_height = 50.0f;
+		}
+
+		ImGui::BeginChild("SidebarTop", ImVec2(0, sidebar_top_height), ImGuiChildFlags_None,
+		    ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 		render_sidebar();
+		ImGui::EndChild();
+
+		if (bottom_visible_)
+		{
+			float max_h = clamp_bottom_height(sidebar_height, sidebar_height);
+			ImGui::PushID("sidebar_bottom_splitter");
+			render_splitter_horizontal(info_height_, 50.0f, max_h);
+			ImGui::PopID();
+			render_info_panel();
+		}
+
+		ImGui::EndChild();
 
 		float max_w = clamp_sidebar_width(window_width, window_width);
 		render_splitter_vertical(sidebar_width_, 150.0f, max_w);
@@ -159,14 +214,12 @@ void editor_app_t::frame()
 
 	ImGui::BeginGroup();
 
-	float main_panel_height = ImGui::GetContentRegionAvail().y;
-	if (bottom_visible_)
-	{
-		float splitter_height = 6.0f;
-		main_panel_height -= (bottom_height_ + splitter_height);
-		if (main_panel_height < 30.0f)
-			main_panel_height = 30.0f;
-	}
+	float right_height = ImGui::GetContentRegionAvail().y;
+	float splitter_h = 6.0f;
+	float editor_h = bottom_height_;
+	float main_panel_height = right_height - editor_h - splitter_h;
+	if (main_panel_height < 50.0f)
+		main_panel_height = 50.0f;
 
 	ImGui::BeginChild(
 	    "MainPanelArea",
@@ -176,12 +229,33 @@ void editor_app_t::frame()
 	render_main_panel();
 	ImGui::EndChild();
 
-	if (bottom_visible_)
 	{
-		float max_h = clamp_bottom_height(panel_area_height, panel_area_height);
+		float max_h = clamp_bottom_height(right_height, right_height);
+		ImGui::PushID("editor_splitter");
 		render_splitter_horizontal(bottom_height_, 50.0f, max_h);
-		render_bottom_panel();
+		ImGui::PopID();
 	}
+
+	ImGui::BeginChild("EditorPanel", ImVec2(0, 0), ImGuiChildFlags_Borders);
+	if (selected_row_ < 0 || selected_row_ >= static_cast<int>(left_rows_.size()))
+	{
+		ImGui::TextDisabled("No record selected");
+		if (richedit_visible_ && richedit_hwnd_)
+		{
+			ShowWindow(richedit_hwnd_, SW_HIDE);
+			richedit_visible_ = false;
+		}
+		if (richedit_original_visible_ && richedit_original_hwnd_)
+		{
+			ShowWindow(richedit_original_hwnd_, SW_HIDE);
+			richedit_original_visible_ = false;
+		}
+	}
+	else
+	{
+		render_editor_tab();
+	}
+	ImGui::EndChild();
 
 	ImGui::EndGroup();
 
@@ -201,6 +275,12 @@ void editor_app_t::shutdown()
 		richedit_hwnd_ = nullptr;
 	}
 
+	if (richedit_original_hwnd_)
+	{
+		DestroyWindow(richedit_original_hwnd_);
+		richedit_original_hwnd_ = nullptr;
+	}
+
 	config_.split_ratio = split_ratio_;
 	config_.sidebar_width = sidebar_width_;
 	config_.bottom_height = bottom_height_;
@@ -208,6 +288,14 @@ void editor_app_t::shutdown()
 	config_.bottom_visible = bottom_visible_;
 	config_.encoding_index = encoding_index_;
 	config_.spell_lang_index = spell_lang_index_;
+
+	int wx, wy, ww, wh;
+	SDL_GetWindowPosition(window_, &wx, &wy);
+	SDL_GetWindowSize(window_, &ww, &wh);
+	config_.window_x = wx;
+	config_.window_y = wy;
+	config_.window_w = ww;
+	config_.window_h = wh;
 	config_.user_dict_paths.clear();
 	config_.base_dict_paths.clear();
 	for (int i = 0; i < workspace_.slot_count(); ++i)
@@ -251,8 +339,7 @@ void editor_app_t::rebuild_annotations()
 		const auto * slot = workspace_.get_slot(i);
 		if (!slot)
 			continue;
-		auto pos = slot->path.find_last_of("\\/");
-		std::string name = (pos != std::string::npos) ? slot->path.substr(pos + 1) : slot->path;
+		std::string name = workspace_.is_user_slot(i) ? "user" : "base";
 		sources.push_back({ &slot->data, name });
 	}
 	annotations_mgr_.rebuild(sources);
@@ -541,8 +628,14 @@ void editor_app_t::render_toolbar()
 						auto it = sl->data.find(row.type);
 						if (it != sl->data.end() && row.record_index < it->second.records.size())
 						{
+							const auto & entry = it->second.records[row.record_index];
 							richedit_ignore_change_ = true;
-							set_richedit_text(it->second.records[row.record_index].new_text);
+							set_richedit_text(entry.new_text);
+							if (row.type == tools_t::rec_type_t::info)
+								highlight_richedit_hyperlinks(entry.new_text, row.type, entry.old_text);
+							else if (row.type == tools_t::rec_type_t::sctx || row.type == tools_t::rec_type_t::bnam ||
+							         row.type == tools_t::rec_type_t::text)
+								highlight_richedit_syntax(entry.new_text, row.type);
 							richedit_ignore_change_ = false;
 						}
 					}
@@ -742,7 +835,7 @@ void editor_app_t::render_sidebar()
 	if (!sidebar_visible_)
 		return;
 
-	ImGui::BeginChild("Sidebar", ImVec2(sidebar_width_, 0), ImGuiChildFlags_Borders);
+	ImGui::BeginChild("Sidebar", ImVec2(0, 0), ImGuiChildFlags_Borders);
 
 	int active_index = workspace_.get_active_index();
 
@@ -2012,10 +2105,103 @@ void editor_app_t::render_editor_tab()
 	ImGui::BeginChild("##editor_original", ImVec2(left_width, panel_height), ImGuiChildFlags_Borders);
 	ImGui::TextDisabled("Original");
 	ImGui::Separator();
-	if (row.type == tools_t::rec_type_t::info)
-		render_text_with_topic_highlights(entry.old_text);
-	else
-		ImGui::TextWrapped("%s", entry.old_text.c_str());
+
+	bool same_original = (editing_row_ == selected_row_ && editing_type_ == row.type &&
+	                       editing_record_index_ == row.record_index);
+
+	if (!same_original && richedit_original_hwnd_)
+	{
+		HWND prev_focus = GetFocus();
+		int wlen_orig = MultiByteToWideChar(CP_UTF8, 0, entry.old_text.c_str(), static_cast<int>(entry.old_text.size()), nullptr, 0);
+		std::wstring wtext_orig(wlen_orig, L'\0');
+		MultiByteToWideChar(CP_UTF8, 0, entry.old_text.c_str(), static_cast<int>(entry.old_text.size()), wtext_orig.data(), wlen_orig);
+		SetWindowTextW(richedit_original_hwnd_, wtext_orig.c_str());
+		if (prev_focus && prev_focus != richedit_original_hwnd_)
+			SetFocus(prev_focus);
+
+		if (row.type == tools_t::rec_type_t::sctx || row.type == tools_t::rec_type_t::bnam ||
+		    row.type == tools_t::rec_type_t::text)
+		{
+			auto tokens = syntax_.tokenize(entry.old_text, row.type);
+			if (!tokens.empty())
+			{
+				std::vector<int> b2w(entry.old_text.size() + 1, 0);
+				int wp = 0;
+				for (size_t bi = 0; bi < entry.old_text.size();)
+				{
+					b2w[bi] = wp;
+					unsigned char c = static_cast<unsigned char>(entry.old_text[bi]);
+					if (c == '\n' && bi > 0 && entry.old_text[bi - 1] == '\r') { bi++; continue; }
+					int cl = 1;
+					if (c >= 0xF0) cl = 4; else if (c >= 0xE0) cl = 3; else if (c >= 0xC0) cl = 2;
+					unsigned int cp = (cl == 1) ? c : (cl == 2) ? (c & 0x1F) : (cl == 3) ? (c & 0x0F) : (c & 0x07);
+					for (int j = 1; j < cl && bi + j < entry.old_text.size(); ++j)
+					{ b2w[bi + j] = wp; cp = (cp << 6) | (static_cast<unsigned char>(entry.old_text[bi + j]) & 0x3F); }
+					wp += (cp > 0xFFFF) ? 2 : 1;
+					bi += cl;
+				}
+				b2w[entry.old_text.size()] = wp;
+
+				SendMessageA(richedit_original_hwnd_, WM_SETREDRAW, FALSE, 0);
+				CHARRANGE orig_sel_o;
+				SendMessageA(richedit_original_hwnd_, EM_EXGETSEL, 0, (LPARAM)&orig_sel_o);
+				for (const auto & token : tokens)
+				{
+					if (token.type == token_type_t::normal) continue;
+					if (token.start >= token.end || token.start >= entry.old_text.size()) continue;
+					size_t end = std::min(token.end, entry.old_text.size());
+					COLORREF color = RGB(0, 0, 0);
+					switch (token.type) {
+					case token_type_t::mwscript_function: color = RGB(100, 180, 255); break;
+					case token_type_t::mwscript_comment: color = RGB(128, 128, 128); break;
+					case token_type_t::mwscript_string: color = RGB(200, 150, 50); break;
+					case token_type_t::html_tag: color = RGB(140, 40, 50); break;
+					default: continue;
+					}
+					CHARRANGE range;
+					range.cpMin = b2w[token.start];
+					range.cpMax = b2w[end];
+					SendMessageA(richedit_original_hwnd_, EM_EXSETSEL, 0, (LPARAM)&range);
+					CHARFORMAT2A cf2 = {};
+					cf2.cbSize = sizeof(cf2);
+					cf2.dwMask = CFM_COLOR;
+					cf2.dwEffects = 0;
+					cf2.crTextColor = color;
+					SendMessageA(richedit_original_hwnd_, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf2);
+				}
+				SendMessageA(richedit_original_hwnd_, EM_EXSETSEL, 0, (LPARAM)&orig_sel_o);
+				SendMessageA(richedit_original_hwnd_, WM_SETREDRAW, TRUE, 0);
+				InvalidateRect(richedit_original_hwnd_, nullptr, TRUE);
+			}
+		}
+	}
+
+	ImVec2 orig_cursor = ImGui::GetCursorScreenPos();
+	ImVec2 orig_region = ImGui::GetContentRegionAvail();
+
+	if (richedit_original_hwnd_)
+	{
+		float ow = orig_region.x;
+		float oh = orig_region.y;
+		bool should_show_orig = (ow > 10.0f && oh > 20.0f);
+		if (should_show_orig)
+		{
+			SetWindowPos(richedit_original_hwnd_, HWND_TOP,
+			    static_cast<int>(orig_cursor.x), static_cast<int>(orig_cursor.y),
+			    static_cast<int>(ow), static_cast<int>(oh),
+			    SWP_NOACTIVATE | (richedit_original_visible_ ? 0 : SWP_SHOWWINDOW));
+			if (!richedit_original_visible_)
+				ShowWindow(richedit_original_hwnd_, SW_SHOWNOACTIVATE);
+			richedit_original_visible_ = true;
+		}
+		else if (richedit_original_visible_)
+		{
+			ShowWindow(richedit_original_hwnd_, SW_HIDE);
+			richedit_original_visible_ = false;
+		}
+	}
+
+	ImGui::Dummy(orig_region);
 	ImGui::EndChild();
 
 	ImGui::SameLine();
@@ -2672,10 +2858,38 @@ void editor_app_t::create_richedit(HWND parent)
 	CHARFORMATA cf = {};
 	cf.cbSize = sizeof(cf);
 	cf.dwMask = CFM_FACE | CFM_SIZE | CFM_COLOR;
-	cf.yHeight = 200;
+	cf.yHeight = 160;
 	cf.crTextColor = RGB(0, 0, 0);
-	strcpy_s(cf.szFaceName, "Consolas");
+	strcpy_s(cf.szFaceName, "Segoe UI");
 	SendMessageA(richedit_hwnd_, EM_SETCHARFORMAT, SCF_ALL, (LPARAM)&cf);
+
+	PARAFORMAT2 pf = {};
+	pf.cbSize = sizeof(pf);
+	pf.dwMask = PFM_TABSTOPS;
+	pf.cTabCount = 32;
+	for (int t = 0; t < 32; ++t)
+		pf.rgxTabs[t] = (t + 1) * 320;
+	SendMessageA(richedit_hwnd_, EM_SETPARAFORMAT, 0, (LPARAM)&pf);
+
+	richedit_original_hwnd_ = CreateWindowExA(
+	    0,
+	    "RICHEDIT50W",
+	    "",
+	    WS_CHILD | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | ES_NOHIDESEL,
+	    0,
+	    0,
+	    100,
+	    100,
+	    parent,
+	    nullptr,
+	    GetModuleHandle(nullptr),
+	    nullptr);
+
+	SendMessageA(richedit_original_hwnd_, EM_SETTARGETDEVICE, 0, 0);
+	SendMessageA(richedit_original_hwnd_, EM_SETBKGNDCOLOR, 0, RGB(245, 245, 245));
+	SendMessageA(richedit_original_hwnd_, EM_SETLIMITTEXT, 0x100000, 0);
+	SendMessageA(richedit_original_hwnd_, EM_SETCHARFORMAT, SCF_ALL, (LPARAM)&cf);
+	SendMessageA(richedit_original_hwnd_, EM_SETPARAFORMAT, 0, (LPARAM)&pf);
 }
 
 void editor_app_t::position_richedit(float screen_x, float screen_y, float width, float height)
@@ -2696,7 +2910,9 @@ void editor_app_t::position_richedit(float screen_x, float screen_y, float width
 		    static_cast<int>(screen_y),
 		    static_cast<int>(adjusted_width),
 		    static_cast<int>(height),
-		    SWP_NOACTIVATE | SWP_SHOWWINDOW);
+		    SWP_NOACTIVATE | (richedit_visible_ ? 0 : SWP_SHOWWINDOW));
+		if (!richedit_visible_)
+			ShowWindow(richedit_hwnd_, SW_SHOWNOACTIVATE);
 		richedit_visible_ = true;
 	}
 	else if (richedit_visible_)
@@ -2711,10 +2927,13 @@ void editor_app_t::set_richedit_text(const std::string & text)
 	if (!richedit_hwnd_)
 		return;
 
+	HWND prev_focus = GetFocus();
 	int wlen = MultiByteToWideChar(CP_UTF8, 0, text.c_str(), static_cast<int>(text.size()), nullptr, 0);
 	std::wstring wtext(wlen, L'\0');
 	MultiByteToWideChar(CP_UTF8, 0, text.c_str(), static_cast<int>(text.size()), wtext.data(), wlen);
 	SetWindowTextW(richedit_hwnd_, wtext.c_str());
+	if (prev_focus && prev_focus != richedit_hwnd_)
+		SetFocus(prev_focus);
 }
 
 std::string editor_app_t::get_richedit_text() const
