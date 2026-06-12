@@ -44,6 +44,7 @@ void editor_app_t::init(SDL_Window * window)
 
 	sidebar_width_ = config_.sidebar_width;
 	bottom_height_ = config_.bottom_height;
+	info_height_ = config_.info_height;
 	sidebar_visible_ = config_.sidebar_visible;
 	bottom_visible_ = config_.bottom_visible;
 	encoding_index_ = config_.encoding_index;
@@ -98,7 +99,11 @@ void editor_app_t::init(SDL_Window * window)
 	SDL_SysWMinfo wm_info = {};
 	SDL_VERSION(&wm_info.version);
 	SDL_GetWindowWMInfo(window_, &wm_info);
-	create_richedit(wm_info.info.win.window);
+
+	HWND hwnd = wm_info.info.win.window;
+	SetWindowLongA(hwnd, GWL_STYLE, GetWindowLongA(hwnd, GWL_STYLE) | WS_CLIPCHILDREN);
+
+	create_richedit(hwnd);
 
 	rebuild_annotations();
 	rebuild_row_data();
@@ -284,6 +289,7 @@ void editor_app_t::shutdown()
 	config_.split_ratio = split_ratio_;
 	config_.sidebar_width = sidebar_width_;
 	config_.bottom_height = bottom_height_;
+	config_.info_height = info_height_;
 	config_.sidebar_visible = sidebar_visible_;
 	config_.bottom_visible = bottom_visible_;
 	config_.encoding_index = encoding_index_;
@@ -2186,10 +2192,15 @@ void editor_app_t::render_editor_tab()
 		bool should_show_orig = (ow > 10.0f && oh > 20.0f);
 		if (should_show_orig)
 		{
+			UINT flags = SWP_NOACTIVATE;
+			if (richedit_original_visible_)
+				flags |= SWP_NOZORDER;
+			else
+				flags |= SWP_SHOWWINDOW;
 			SetWindowPos(richedit_original_hwnd_, HWND_TOP,
 			    static_cast<int>(orig_cursor.x), static_cast<int>(orig_cursor.y),
 			    static_cast<int>(ow), static_cast<int>(oh),
-			    SWP_NOACTIVATE | (richedit_original_visible_ ? 0 : SWP_SHOWWINDOW));
+			    flags);
 			if (!richedit_original_visible_)
 				ShowWindow(richedit_original_hwnd_, SW_SHOWNOACTIVATE);
 			richedit_original_visible_ = true;
@@ -2903,6 +2914,11 @@ void editor_app_t::position_richedit(float screen_x, float screen_y, float width
 
 	if (should_show)
 	{
+		UINT flags = SWP_NOACTIVATE;
+		if (richedit_visible_)
+			flags |= SWP_NOZORDER;
+		else
+			flags |= SWP_SHOWWINDOW;
 		SetWindowPos(
 		    richedit_hwnd_,
 		    HWND_TOP,
@@ -2910,7 +2926,7 @@ void editor_app_t::position_richedit(float screen_x, float screen_y, float width
 		    static_cast<int>(screen_y),
 		    static_cast<int>(adjusted_width),
 		    static_cast<int>(height),
-		    SWP_NOACTIVATE | (richedit_visible_ ? 0 : SWP_SHOWWINDOW));
+		    flags);
 		if (!richedit_visible_)
 			ShowWindow(richedit_hwnd_, SW_SHOWNOACTIVATE);
 		richedit_visible_ = true;

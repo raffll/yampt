@@ -121,6 +121,15 @@ void editor_config_t::load(const std::string & path)
 				catch (...)
 				{}
 			}
+			else if (key == "InfoHeight")
+			{
+				try
+				{
+					info_height = std::stof(value);
+				}
+				catch (...)
+				{}
+			}
 			else if (key == "SidebarVisible")
 			{
 				sidebar_visible = (value != "0");
@@ -208,6 +217,7 @@ void editor_config_t::save(const std::string & path) const
 	file << "SplitRatio=" << split_ratio << "\n";
 	file << "SidebarWidth=" << sidebar_width << "\n";
 	file << "BottomHeight=" << bottom_height << "\n";
+	file << "InfoHeight=" << info_height << "\n";
 	file << "SidebarVisible=" << (sidebar_visible ? "1" : "0") << "\n";
 	file << "BottomVisible=" << (bottom_visible ? "1" : "0") << "\n";
 	file << "EncodingIndex=" << encoding_index << "\n";

@@ -20,6 +20,7 @@ public:
 
 	float sidebar_width = 250.0f;
 	float bottom_height = 200.0f;
+	float info_height = 150.0f;
 	bool sidebar_visible = true;
 	bool bottom_visible = true;
 	int encoding_index = 2;
