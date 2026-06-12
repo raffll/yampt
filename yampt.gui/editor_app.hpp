@@ -47,6 +47,7 @@ private:
 	bool show_unload_confirm_ = false;
 	int pending_unload_index_ = -1;
 	bool show_whitespace_ = false;
+	bool show_book_preview_ = false;
 
 	int selected_row_ = -1;
 	int scroll_to_row_ = -1;
@@ -148,6 +149,7 @@ private:
 	void render_dialogs();
 	void render_quit_dialog();
 	void render_unload_confirm_dialog();
+	void render_book_preview();
 
 	std::string get_exe_directory() const;
 

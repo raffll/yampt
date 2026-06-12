@@ -237,7 +237,22 @@ void editor_app_t::frame()
 	    ImVec2(0, main_panel_height),
 	    ImGuiChildFlags_None,
 	    ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-	render_main_panel();
+
+	if (ImGui::BeginTabBar("MainTabs"))
+	{
+		if (ImGui::BeginTabItem("Records"))
+		{
+			render_main_panel();
+			ImGui::EndTabItem();
+		}
+		if (ImGui::BeginTabItem("Book Preview"))
+		{
+			render_book_preview();
+			ImGui::EndTabItem();
+		}
+		ImGui::EndTabBar();
+	}
+
 	ImGui::EndChild();
 
 	{
@@ -3330,6 +3345,191 @@ void editor_app_t::highlight_richedit_spelling(const std::string & text)
 	SendMessageA(richedit_hwnd_, EM_EXSETSEL, 0, (LPARAM)&orig_sel);
 	SendMessageA(richedit_hwnd_, WM_SETREDRAW, TRUE, 0);
 	InvalidateRect(richedit_hwnd_, nullptr, TRUE);
+}
+
+void editor_app_t::render_book_preview()
+{
+	ImGui::BeginChild("BookPreview", ImVec2(0, 0), ImGuiChildFlags_Borders, ImGuiWindowFlags_HorizontalScrollbar);
+
+	if (selected_row_ < 0 || selected_row_ >= static_cast<int>(left_rows_.size()))
+	{
+		ImGui::TextDisabled("No record selected");
+		ImGui::EndChild();
+		return;
+	}
+
+	const auto & row = left_rows_[selected_row_];
+	if (row.type != tools_t::rec_type_t::text)
+	{
+		ImGui::TextDisabled("Select a book record");
+		ImGui::EndChild();
+		return;
+	}
+
+	auto * slot = workspace_.get_active_slot();
+	if (!slot)
+	{
+		ImGui::EndChild();
+		return;
+	}
+
+	auto it = slot->data.find(row.type);
+	if (it == slot->data.end() || row.record_index >= it->second.records.size())
+	{
+		ImGui::EndChild();
+		return;
+	}
+
+	const auto & text = it->second.records[row.record_index].new_text;
+
+	float wrap_width = ImGui::GetContentRegionAvail().x;
+	ImVec4 default_color = ImGui::GetStyleColorVec4(ImGuiCol_Text);
+
+	struct line_segment_t
+	{
+		std::string text;
+		ImVec4 color;
+	};
+
+	struct line_t
+	{
+		std::vector<line_segment_t> segments;
+		int align = 0;
+	};
+
+	std::vector<line_t> lines;
+	lines.push_back({});
+
+	ImVec4 current_color = default_color;
+	int current_align = 0;
+
+	size_t pos = 0;
+	while (pos < text.size())
+	{
+		if (text[pos] == '<')
+		{
+			size_t close = text.find('>', pos);
+			if (close == std::string::npos)
+				break;
+			std::string tag = text.substr(pos + 1, close - pos - 1);
+			std::string tag_lower = tag;
+			for (auto & c : tag_lower)
+				c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+
+			if (tag_lower == "br" || tag_lower == "br/" || tag_lower == "br /")
+			{
+				lines.back().align = current_align;
+				lines.push_back({});
+			}
+			else if (tag_lower.substr(0, 3) == "div")
+			{
+				if (tag_lower.find("center") != std::string::npos)
+					current_align = 1;
+				else if (tag_lower.find("right") != std::string::npos)
+					current_align = 2;
+				else
+					current_align = 0;
+			}
+			else if (tag_lower == "/div")
+			{
+				current_align = 0;
+			}
+			else if (tag_lower.substr(0, 4) == "font")
+			{
+				auto cp = tag_lower.find("color=");
+				if (cp != std::string::npos)
+				{
+					auto qs = tag.find('"', cp);
+					if (qs != std::string::npos)
+					{
+						auto qe = tag.find('"', qs + 1);
+						if (qe != std::string::npos)
+						{
+							std::string hex = tag.substr(qs + 1, qe - qs - 1);
+							if (hex.size() == 6)
+							{
+								try
+								{
+									unsigned int r = std::stoul(hex.substr(0, 2), nullptr, 16);
+									unsigned int g = std::stoul(hex.substr(2, 2), nullptr, 16);
+									unsigned int b = std::stoul(hex.substr(4, 2), nullptr, 16);
+									current_color = ImVec4(r / 255.0f, g / 255.0f, b / 255.0f, 1.0f);
+								}
+								catch (...)
+								{}
+							}
+						}
+					}
+				}
+			}
+			else if (tag_lower == "/font")
+			{
+				current_color = default_color;
+			}
+
+			pos = close + 1;
+			continue;
+		}
+
+		size_t next_tag = text.find('<', pos);
+		if (next_tag == std::string::npos)
+			next_tag = text.size();
+		std::string segment = text.substr(pos, next_tag - pos);
+		std::string clean;
+		for (char ch : segment)
+		{
+			if (ch != '\n' && ch != '\r')
+				clean += ch;
+		}
+		if (!clean.empty())
+			lines.back().segments.push_back({ clean, current_color });
+		pos = next_tag;
+	}
+	if (!lines.empty())
+		lines.back().align = current_align;
+
+	ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + wrap_width);
+	for (const auto & line : lines)
+	{
+		std::string full_line;
+		for (const auto & seg : line.segments)
+			full_line += seg.text;
+
+		if (full_line.empty())
+		{
+			ImGui::TextUnformatted("");
+			continue;
+		}
+
+		if (line.align == 1)
+		{
+			float tw = ImGui::CalcTextSize(full_line.c_str()).x;
+			if (tw < wrap_width)
+				ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (wrap_width - tw) * 0.5f);
+		}
+		else if (line.align == 2)
+		{
+			float tw = ImGui::CalcTextSize(full_line.c_str()).x;
+			if (tw < wrap_width)
+				ImGui::SetCursorPosX(ImGui::GetCursorPosX() + wrap_width - tw);
+		}
+
+		if (line.segments.size() == 1)
+		{
+			ImGui::PushStyleColor(ImGuiCol_Text, line.segments[0].color);
+			ImGui::TextWrapped("%s", line.segments[0].text.c_str());
+			ImGui::PopStyleColor();
+		}
+		else
+		{
+			ImGui::PushStyleColor(ImGuiCol_Text, line.segments[0].color);
+			ImGui::TextWrapped("%s", full_line.c_str());
+			ImGui::PopStyleColor();
+		}
+	}
+	ImGui::PopTextWrapPos();
+
+	ImGui::EndChild();
 }
 
 void editor_app_t::render_splitter_horizontal(float & height, float min_h, float max_h)
