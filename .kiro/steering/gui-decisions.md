@@ -39,3 +39,18 @@ Sub-type filter bars (dialogue types, FNAM types, description types, index types
 ## Spell Checker Word Tokenization
 
 Bytes >= 0x80 must be treated as word characters in `find_misspelled`. UTF-8 multi-byte sequences (Polish ą, ę, ś, etc.) would otherwise split words at diacritics, causing false positives.
+
+## RichEdit Flickering — Unsolved
+
+The RichEdit controls flicker when selecting text or during frame redraws. Attempted fixes that did NOT help:
+- `SWP_NOZORDER` on subsequent `SetWindowPos` calls (only set z-order on first show)
+- `WS_CLIPCHILDREN` on the parent SDL/HWND window
+- `SW_SHOWNOACTIVATE` instead of `SWP_SHOWWINDOW`
+
+The root cause is likely the OpenGL/ImGui render loop painting the area behind the RichEdit every frame before Windows composites the child window on top. This is a fundamental limitation of mixing Win32 child controls with an OpenGL rendering loop. Possible future solutions:
+- Double-buffered RichEdit (not natively supported)
+- Render RichEdit to a bitmap and draw it as an ImGui texture
+- Replace RichEdit entirely with a custom ImGui text editor widget
+- Use `WS_EX_COMPOSITED` on the parent (may conflict with OpenGL)
+
+Do NOT attempt more `SetWindowPos` flag combinations — they have all been tried.
