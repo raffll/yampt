@@ -93,10 +93,10 @@ private:
     void update_validation();
     void scan_spell_dictionaries();
     void on_spell_lang_changed(int index);
-    void update_plugin_sidebar();
     void detect_plugin_info(plugin_slot_t & slot);
     void scan_workspace();
     std::vector<dict_selection_dialog_t::dict_entry_t> build_dict_entries(const std::string & workspace_folder = {}) const;
+    void ensure_dicts_loaded(const std::vector<std::string> & paths);
     tools_t::encoding_t get_current_tools_encoding() const;
 
     QAction * save_action_ = nullptr;

@@ -43,6 +43,8 @@
 
 #include <algorithm>
 #include <filesystem>
+#include <set>
+#include <set>
 
 main_window_t::main_window_t(QWidget * parent)
     : QMainWindow(parent)
@@ -287,7 +289,12 @@ main_window_t::main_window_t(QWidget * parent)
         }
 
         int old_count = workspace_.slot_count();
-        workspace_.load_dict(path, dict_kind_t::user);
+
+        auto kind = dict_kind_t::user;
+        if (path.find("_BASE_") != std::string::npos)
+            kind = dict_kind_t::base;
+
+        workspace_.load_dict(path, kind);
 
         if (workspace_.slot_count() <= old_count)
             return;
@@ -302,6 +309,8 @@ main_window_t::main_window_t(QWidget * parent)
                     entry.key_text = decode_to_utf8(entry.key_text, current_codepage_);
                     entry.old_text = decode_to_utf8(entry.old_text, current_codepage_);
                     entry.new_text = decode_to_utf8(entry.new_text, current_codepage_);
+                    if (!entry.adapted_from.empty())
+                        entry.adapted_from = decode_to_utf8(entry.adapted_from, current_codepage_);
                 }
             }
         }
@@ -441,6 +450,8 @@ void main_window_t::on_open_user_dict()
                     entry.key_text = decode_to_utf8(entry.key_text, current_codepage_);
                     entry.old_text = decode_to_utf8(entry.old_text, current_codepage_);
                     entry.new_text = decode_to_utf8(entry.new_text, current_codepage_);
+                    if (!entry.adapted_from.empty())
+                        entry.adapted_from = decode_to_utf8(entry.adapted_from, current_codepage_);
                 }
             }
         }
@@ -478,6 +489,8 @@ void main_window_t::on_open_base_dict()
                     entry.key_text = decode_to_utf8(entry.key_text, current_codepage_);
                     entry.old_text = decode_to_utf8(entry.old_text, current_codepage_);
                     entry.new_text = decode_to_utf8(entry.new_text, current_codepage_);
+                    if (!entry.adapted_from.empty())
+                        entry.adapted_from = decode_to_utf8(entry.adapted_from, current_codepage_);
                 }
             }
         }
@@ -631,28 +644,7 @@ void main_window_t::on_slot_clicked(int slot_index)
         return;
 
     commit_current_edit();
-
-    auto * old_slot = workspace_.get_active_slot();
-    if (old_slot)
-    {
-        old_slot->filters.type_filter = type_filter_;
-        old_slot->filters.status_filter = status_filter_;
-        old_slot->filters.type_filter_solo = type_filter_solo_;
-    }
-
     workspace_.set_active(slot_index);
-
-    auto * new_slot = workspace_.get_active_slot();
-    if (new_slot)
-    {
-        type_filter_ = new_slot->filters.type_filter;
-        status_filter_ = new_slot->filters.status_filter;
-        type_filter_solo_ = new_slot->filters.type_filter_solo;
-    }
-
-    filter_bar_->set_filter_state(type_filter_, type_filter_solo_, tools_t::rec_type_t::unknown);
-    status_filter_bar_->set_filter_state(status_filter_);
-
     rebuild_table();
     sidebar_->set_active_slot(slot_index);
 }
@@ -983,6 +975,7 @@ void main_window_t::load_record(int row)
     std::string speaker_name;
     std::string gender_str;
     std::string enchantment_str;
+    std::string adapted_from_str;
 
     auto * active_slot = workspace_.get_active_slot();
     if (active_slot)
@@ -994,10 +987,25 @@ void main_window_t::load_record(int row)
             speaker_name = entry.speaker_name;
             gender_str = entry.gender;
             enchantment_str = entry.enchantment;
+            adapted_from_str = entry.adapted_from;
         }
     }
 
     annotations_panel_->update_annotations(annotations, speaker_name, gender_str, enchantment_str);
+
+    if ((row_data->status == "adapted" || row_data->status == "changed") && !adapted_from_str.empty())
+    {
+        editor_panel_->set_adapted_from(adapted_from_str);
+
+        if (row_data->status == "adapted")
+            editor_panel_->highlight_adapted_diff(row_data->new_text, adapted_from_str, false);
+        else
+            editor_panel_->highlight_adapted_diff(row_data->old_text, adapted_from_str, true);
+    }
+    else
+    {
+        editor_panel_->clear_adapted_from();
+    }
 
     struct highlight_t
     {
@@ -1103,7 +1111,7 @@ void main_window_t::load_record(int row)
     const auto history = history_manager_.get_history(row_data->type, row_data->key_text);
     history_panel_->update_history(history, !is_base);
 
-    loaded_text_ = QString::fromStdString(row_data->new_text);
+    loaded_text_ = editor_panel_->translation_editor()->toPlainText();
     current_row_ = row;
     loading_record_ = false;
 }
@@ -1157,6 +1165,12 @@ void main_window_t::on_encoding_changed(int index)
 
                 const auto raw_key = encode_from_utf8(entry.key_text, old_codepage);
                 entry.key_text = decode_to_utf8(raw_key, new_codepage);
+
+                if (!entry.adapted_from.empty())
+                {
+                    const auto raw_af = encode_from_utf8(entry.adapted_from, old_codepage);
+                    entry.adapted_from = decode_to_utf8(raw_af, new_codepage);
+                }
             }
         }
     }
@@ -1169,11 +1183,7 @@ void main_window_t::rebuild_sidebar()
 {
     const auto workspace_dir = QCoreApplication::applicationDirPath().toStdString() + "/workspace/";
 
-    std::vector<std::string> user_names;
-    std::vector<std::string> user_paths;
-    std::vector<bool> user_dirty;
-    std::vector<std::string> base_names;
-    std::vector<std::string> base_paths;
+    std::vector<loaded_item_t> items;
 
     for (int i = 0; i < workspace_.slot_count(); ++i)
     {
@@ -1189,20 +1199,38 @@ void main_window_t::rebuild_sidebar()
         if (sep != std::string::npos)
             filename = filename.substr(sep + 1);
 
-        if (workspace_.is_user_slot(i))
-        {
-            user_names.push_back(filename);
-            user_paths.push_back(slot->path);
-            user_dirty.push_back(slot->dirty);
-        }
-        else
-        {
-            base_names.push_back(filename);
-            base_paths.push_back(slot->path);
-        }
+        loaded_item_t item;
+        item.display_name = filename;
+        item.path = slot->path;
+        item.is_plugin = false;
+        item.is_base = workspace_.is_base_slot(i);
+        item.is_dirty = slot->dirty;
+        item.slot_index = i;
+        item.plugin_index = -1;
+        items.push_back(item);
     }
 
-    sidebar_->rebuild(user_names, user_paths, user_dirty, base_names, base_paths);
+    for (int i = 0; i < static_cast<int>(plugin_slots_.size()); ++i)
+    {
+        const auto & slot = plugin_slots_[i];
+        auto sep = slot.path.find_last_of("/\\");
+        auto filename = sep != std::string::npos ? slot.path.substr(sep + 1) : slot.path;
+
+        if (!slot.language.empty())
+            filename += " [" + slot.language + "]";
+
+        loaded_item_t item;
+        item.display_name = filename;
+        item.path = slot.path;
+        item.is_plugin = true;
+        item.is_base = false;
+        item.is_dirty = false;
+        item.slot_index = -1;
+        item.plugin_index = i;
+        items.push_back(item);
+    }
+
+    sidebar_->set_loaded_items(items);
     sidebar_->set_active_slot(workspace_.get_active_index());
 }
 
@@ -1343,6 +1371,8 @@ void main_window_t::load_config()
                 entry.key_text = decode_to_utf8(entry.key_text, current_codepage_);
                 entry.old_text = decode_to_utf8(entry.old_text, current_codepage_);
                 entry.new_text = decode_to_utf8(entry.new_text, current_codepage_);
+                    if (!entry.adapted_from.empty())
+                        entry.adapted_from = decode_to_utf8(entry.adapted_from, current_codepage_);
             }
         }
     }
@@ -1371,7 +1401,7 @@ void main_window_t::load_config()
         detect_plugin_info(slot);
         plugin_slots_.push_back(std::move(slot));
     }
-    update_plugin_sidebar();
+    rebuild_sidebar();
     scan_workspace();
 
     if (config_.spell_lang_index > 0 && config_.spell_lang_index < spell_lang_combo_->count())
@@ -1444,7 +1474,7 @@ void main_window_t::on_load_plugin()
         plugin_slots_.push_back(std::move(slot));
     }
 
-    update_plugin_sidebar();
+    rebuild_sidebar();
 }
 
 void main_window_t::on_plugin_operation(int plugin_index, plugin_op_t op)
@@ -1509,6 +1539,7 @@ void main_window_t::on_plugin_operation(int plugin_index, plugin_op_t op)
         if (selected.empty())
             return;
 
+        ensure_dicts_loaded(selected);
         dict_merger_t merger(selected);
         result = executor_.make_dict_with_base(plugin_path, merger.get_dict(), encoding);
         break;
@@ -1595,6 +1626,7 @@ void main_window_t::on_plugin_operation(int plugin_index, plugin_op_t op)
         if (selected.empty())
             return;
 
+        ensure_dicts_loaded(selected);
         result = executor_.convert(plugin_path, selected, encoding);
         break;
     }
@@ -1609,6 +1641,8 @@ void main_window_t::on_plugin_operation(int plugin_index, plugin_op_t op)
         const auto selected = dialog.get_selected_paths();
         if (selected.empty())
             return;
+
+        ensure_dicts_loaded(selected);
 
         result = executor_.create_plugin(plugin_path, selected, encoding);
         break;
@@ -1639,7 +1673,7 @@ void main_window_t::on_plugin_unload(int plugin_index)
         return;
 
     plugin_slots_.erase(plugin_slots_.begin() + plugin_index);
-    update_plugin_sidebar();
+    rebuild_sidebar();
 }
 
 void main_window_t::detect_plugin_info(plugin_slot_t & slot)
@@ -1685,24 +1719,6 @@ void main_window_t::detect_plugin_info(plugin_slot_t & slot)
     }
 }
 
-void main_window_t::update_plugin_sidebar()
-{
-    std::vector<std::string> names;
-    std::vector<std::string> paths;
-    for (const auto & slot : plugin_slots_)
-    {
-        auto sep = slot.path.find_last_of("/\\");
-        auto filename = sep != std::string::npos ? slot.path.substr(sep + 1) : slot.path;
-
-        if (!slot.language.empty())
-            filename += " [" + slot.language + "]";
-
-        names.push_back(filename);
-        paths.push_back(slot.path);
-    }
-    sidebar_->set_plugin_slots(names, paths);
-}
-
 void main_window_t::scan_workspace()
 {
     const auto app_dir = QCoreApplication::applicationDirPath();
@@ -1715,6 +1731,14 @@ void main_window_t::scan_workspace()
         sidebar_->set_workspace_sections(sections);
         workspace_sections_ = sections;
         return;
+    }
+
+    std::set<std::string> loaded_paths;
+    for (int i = 0; i < workspace_.slot_count(); ++i)
+    {
+        const auto * slot = workspace_.get_slot(i);
+        if (slot)
+            loaded_paths.insert(slot->path);
     }
 
     workspace_section_t root_section;
@@ -1746,6 +1770,42 @@ void main_window_t::scan_workspace()
         sections.push_back(std::move(section));
     }
 
+    for (const auto & section : sections)
+    {
+        for (const auto & path : section.file_paths)
+        {
+            auto dot = path.rfind('.');
+            if (dot == std::string::npos)
+                continue;
+
+            auto ext = path.substr(dot);
+            if (ext != ".json" && ext != ".xml")
+                continue;
+
+            if (loaded_paths.count(path))
+                continue;
+
+            auto kind = (path.find("_BASE_") != std::string::npos) ? dict_kind_t::base : dict_kind_t::user;
+            workspace_.load_dict(path, kind);
+
+            auto * new_slot = workspace_.get_slot(workspace_.slot_count() - 1);
+            if (new_slot)
+            {
+                for (auto & [type, chapter] : new_slot->data)
+                {
+                    for (auto & entry : chapter.records)
+                    {
+                        entry.key_text = decode_to_utf8(entry.key_text, current_codepage_);
+                        entry.old_text = decode_to_utf8(entry.old_text, current_codepage_);
+                        entry.new_text = decode_to_utf8(entry.new_text, current_codepage_);
+                    if (!entry.adapted_from.empty())
+                        entry.adapted_from = decode_to_utf8(entry.adapted_from, current_codepage_);
+                    }
+                }
+            }
+        }
+    }
+
     sidebar_->set_workspace_sections(sections);
     workspace_sections_ = sections;
 }
@@ -1753,9 +1813,7 @@ void main_window_t::scan_workspace()
 std::vector<dict_selection_dialog_t::dict_entry_t> main_window_t::build_dict_entries(const std::string & workspace_folder) const
 {
     std::vector<dict_selection_dialog_t::dict_entry_t> entries;
-
-    const auto app_dir = QCoreApplication::applicationDirPath().toStdString();
-    const auto workspace_path = app_dir + "/workspace/" + workspace_folder;
+    std::set<std::string> added_paths;
 
     for (int i = 0; i < workspace_.slot_count(); ++i)
     {
@@ -1770,22 +1828,91 @@ std::vector<dict_selection_dialog_t::dict_entry_t> main_window_t::build_dict_ent
 
         auto kind = workspace_.is_base_slot(i) ? dict_kind_t::base : dict_kind_t::user;
 
-        bool checked = false;
-        if (!workspace_folder.empty())
+        entries.push_back({filename, slot->path, kind, false});
+        added_paths.insert(slot->path);
+    }
+
+    for (const auto & section : workspace_sections_)
+    {
+        for (int i = 0; i < static_cast<int>(section.file_paths.size()); ++i)
         {
-            auto slot_dir = slot->path;
-            auto dir_sep = slot_dir.find_last_of("/\\");
-            if (dir_sep != std::string::npos)
-                slot_dir = slot_dir.substr(0, dir_sep);
+            const auto & path = section.file_paths[i];
 
-            if (slot_dir == workspace_path)
-                checked = true;
+            if (added_paths.count(path))
+                continue;
+
+            auto dot = path.rfind('.');
+            if (dot == std::string::npos)
+                continue;
+
+            auto ext = path.substr(dot);
+            if (ext != ".json" && ext != ".xml")
+                continue;
+
+            const auto & filename = section.file_names[i];
+            auto kind = (filename.find("_BASE_") != std::string::npos) ? dict_kind_t::base : dict_kind_t::user;
+
+            entries.push_back({filename, path, kind, false});
         }
+    }
 
-        entries.push_back({filename, slot->path, kind, checked});
+    if (!workspace_folder.empty())
+    {
+        const auto app_dir = QCoreApplication::applicationDirPath().toStdString();
+        const auto target_dir = app_dir + "/workspace/" + workspace_folder;
+
+        for (auto & entry : entries)
+        {
+            auto dir = entry.path;
+            auto dir_sep = dir.find_last_of("/\\");
+            if (dir_sep != std::string::npos)
+                dir = dir.substr(0, dir_sep);
+
+            if (dir == target_dir)
+                entry.checked = true;
+        }
     }
 
     return entries;
+}
+
+void main_window_t::ensure_dicts_loaded(const std::vector<std::string> & paths)
+{
+    for (const auto & path : paths)
+    {
+        bool already_loaded = false;
+        for (int i = 0; i < workspace_.slot_count(); ++i)
+        {
+            const auto * slot = workspace_.get_slot(i);
+            if (slot && slot->path == path)
+            {
+                already_loaded = true;
+                break;
+            }
+        }
+
+        if (already_loaded)
+            continue;
+
+        auto kind = (path.find("_BASE_") != std::string::npos) ? dict_kind_t::base : dict_kind_t::user;
+        workspace_.load_dict(path, kind);
+
+        auto * new_slot = workspace_.get_slot(workspace_.slot_count() - 1);
+        if (!new_slot)
+            continue;
+
+        for (auto & [type, chapter] : new_slot->data)
+        {
+            for (auto & entry : chapter.records)
+            {
+                entry.key_text = decode_to_utf8(entry.key_text, current_codepage_);
+                entry.old_text = decode_to_utf8(entry.old_text, current_codepage_);
+                entry.new_text = decode_to_utf8(entry.new_text, current_codepage_);
+                    if (!entry.adapted_from.empty())
+                        entry.adapted_from = decode_to_utf8(entry.adapted_from, current_codepage_);
+            }
+        }
+    }
 }
 
 tools_t::encoding_t main_window_t::get_current_tools_encoding() const

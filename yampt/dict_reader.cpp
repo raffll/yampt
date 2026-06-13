@@ -77,6 +77,8 @@ void dict_reader_t::parse_json(const std::string & content, const std::string & 
 				entry.enchantment = json_reader_t::get_string(record, "enchantment", "");
 			}
 
+			entry.adapted_from = json_reader_t::get_string(record, "adapted_from", "");
+
 			validate_entry(entry, type);
 		});
 	});

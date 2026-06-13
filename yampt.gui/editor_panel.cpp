@@ -27,8 +27,20 @@ editor_panel_t::editor_panel_t(QWidget * parent)
     auto palette = original_view_->palette();
     palette.setColor(QPalette::Base, QColor(245, 245, 245));
     original_view_->setPalette(palette);
+
+    adapted_from_label_ = new QLabel("Adapted from", left_widget);
+    adapted_from_view_ = new QTextEdit(left_widget);
+    adapted_from_view_->setReadOnly(true);
+    auto adapted_palette = adapted_from_view_->palette();
+    adapted_palette.setColor(QPalette::Base, QColor(240, 235, 250));
+    adapted_from_view_->setPalette(adapted_palette);
+    adapted_from_label_->setVisible(false);
+    adapted_from_view_->setVisible(false);
+
     left_layout->addWidget(original_label_);
     left_layout->addWidget(original_view_);
+    left_layout->addWidget(adapted_from_label_);
+    left_layout->addWidget(adapted_from_view_);
 
     auto * right_widget = new QWidget(splitter_);
     auto * right_layout = new QVBoxLayout(right_widget);
@@ -42,6 +54,7 @@ editor_panel_t::editor_panel_t(QWidget * parent)
 
     QFont editor_font("Segoe UI", 10);
     original_view_->setFont(editor_font);
+    adapted_from_view_->setFont(editor_font);
     translation_editor_->setFont(editor_font);
 
     splitter_->addWidget(left_widget);
@@ -80,4 +93,74 @@ double editor_panel_t::get_split_ratio() const
         return 0.5;
 
     return static_cast<double>(sizes[0]) / total;
+}
+
+void editor_panel_t::set_adapted_from(const std::string & text)
+{
+    adapted_from_view_->setPlainText(QString::fromStdString(text));
+    adapted_from_label_->setVisible(true);
+    adapted_from_view_->setVisible(true);
+}
+
+void editor_panel_t::highlight_adapted_diff(const std::string & new_text, const std::string & adapted_from, bool use_original)
+{
+    const auto new_str = QString::fromStdString(new_text);
+    const auto from_str = QString::fromStdString(adapted_from);
+
+    auto * target_view = use_original ? original_view_ : translation_editor_;
+
+    QList<QTextEdit::ExtraSelection> target_selections;
+    QList<QTextEdit::ExtraSelection> from_selections;
+
+    int len = std::min(new_str.length(), from_str.length());
+
+    for (int i = 0; i < len; ++i)
+    {
+        if (new_str[i] == from_str[i])
+            continue;
+
+        QTextEdit::ExtraSelection sel_target;
+        sel_target.format.setBackground(QColor(255, 220, 150));
+        sel_target.cursor = target_view->textCursor();
+        sel_target.cursor.setPosition(i);
+        sel_target.cursor.setPosition(i + 1, QTextCursor::KeepAnchor);
+        target_selections.append(sel_target);
+
+        QTextEdit::ExtraSelection sel_from;
+        sel_from.format.setBackground(QColor(255, 220, 150));
+        sel_from.cursor = adapted_from_view_->textCursor();
+        sel_from.cursor.setPosition(i);
+        sel_from.cursor.setPosition(i + 1, QTextCursor::KeepAnchor);
+        from_selections.append(sel_from);
+    }
+
+    for (int i = len; i < new_str.length(); ++i)
+    {
+        QTextEdit::ExtraSelection sel;
+        sel.format.setBackground(QColor(255, 220, 150));
+        sel.cursor = target_view->textCursor();
+        sel.cursor.setPosition(i);
+        sel.cursor.setPosition(i + 1, QTextCursor::KeepAnchor);
+        target_selections.append(sel);
+    }
+
+    for (int i = len; i < from_str.length(); ++i)
+    {
+        QTextEdit::ExtraSelection sel;
+        sel.format.setBackground(QColor(255, 220, 150));
+        sel.cursor = adapted_from_view_->textCursor();
+        sel.cursor.setPosition(i);
+        sel.cursor.setPosition(i + 1, QTextCursor::KeepAnchor);
+        from_selections.append(sel);
+    }
+
+    target_view->setExtraSelections(target_selections);
+    adapted_from_view_->setExtraSelections(from_selections);
+}
+
+void editor_panel_t::clear_adapted_from()
+{
+    adapted_from_view_->clear();
+    adapted_from_label_->setVisible(false);
+    adapted_from_view_->setVisible(false);
 }

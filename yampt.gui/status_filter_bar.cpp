@@ -1,48 +1,7 @@
 #include "status_filter_bar.hpp"
-#include <QColor>
+#include "status_colors.hpp"
 #include <QHBoxLayout>
 #include <QPushButton>
-
-static QColor get_status_color_qt(const std::string & status)
-{
-	if (status == "untranslated")
-		return QColor(166, 166, 166);
-	if (status == "missing")
-		return QColor(242, 140, 89);
-	if (status == "duplicate")
-		return QColor(242, 230, 102);
-	if (status == "coords")
-		return QColor(102, 204, 204);
-	if (status == "fingerprint")
-		return QColor(102, 191, 217);
-	if (status == "heuristic")
-		return QColor(153, 179, 230);
-	if (status == "info")
-		return QColor(115, 217, 191);
-	if (status == "exact")
-		return QColor(128, 230, 217);
-	if (status == "wilderness")
-		return QColor(77, 153, 77);
-	if (status == "region")
-		return QColor(153, 153, 89);
-	if (status == "matched")
-		return QColor(217, 217, 217);
-	if (status == "error")
-		return QColor(242, 102, 102);
-	if (status == "identical")
-		return QColor(140, 191, 140);
-	if (status == "translated")
-		return QColor(128, 230, 128);
-	if (status == "reused")
-		return QColor(128, 217, 179);
-	if (status == "adapted")
-		return QColor(179, 140, 217);
-	if (status == "changed")
-		return QColor(242, 179, 102);
-	if (status == "in_progress")
-		return QColor(102, 153, 242);
-	return QColor(217, 217, 217);
-}
 
 static const char * get_status_display_name_qt(const std::string & status)
 {
@@ -90,6 +49,8 @@ static const char * get_status_display_name_qt(const std::string & status)
 status_filter_bar_t::status_filter_bar_t(QWidget * parent)
 	: QWidget(parent)
 {
+	setFixedHeight(26);
+
 	layout_ = new QHBoxLayout(this);
 	layout_->setContentsMargins(0, 0, 0, 0);
 	layout_->setSpacing(2);
@@ -234,7 +195,7 @@ void status_filter_bar_t::update_button_styles()
 		bool active = no_filter || active_statuses_.count(sb.status) > 0;
 		if (active)
 		{
-			const auto & color = get_status_color_qt(sb.status);
+			const auto & color = get_status_color(sb.status);
 			int text_brightness = (color.red() * 299 + color.green() * 587 + color.blue() * 114) / 1000;
 			QString text_color = (text_brightness > 150) ? "black" : "white";
 			sb.button->setStyleSheet(

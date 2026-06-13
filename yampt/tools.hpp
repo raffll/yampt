@@ -54,6 +54,7 @@ public:
 		std::string speaker_name;
 		std::string gender;
 		std::string enchantment;
+		std::string adapted_from;
 	};
 
 	struct chapter_t

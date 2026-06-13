@@ -481,11 +481,27 @@ void dict_creator_t::insert_entry_single_with_base(
 	if (differs_only_in_numbers_or_punct(old_text, base_entry->old_text))
 	{
 		const auto & adapted = adapt_translation(old_text, base_entry->old_text, base_entry->new_text);
+
+		if (adapted == base_entry->new_text)
+		{
+			insert_with_status(key_text, old_text, adapted, type, tools_t::status_t::translated);
+			return;
+		}
+
 		insert_with_status(key_text, old_text, adapted, type, tools_t::status_t::adapted);
+
+		auto * entry = dict.at(type).find(key_text);
+		if (entry)
+			entry->adapted_from = base_entry->new_text;
+
 		return;
 	}
 
 	insert_with_status(key_text, old_text, base_entry->new_text, type, tools_t::status_t::changed);
+
+	auto * changed_entry = dict.at(type).find(key_text);
+	if (changed_entry)
+		changed_entry->adapted_from = base_entry->old_text;
 }
 
 void dict_creator_t::insert_as_untranslated(

@@ -19,98 +19,51 @@ sidebar_widget_t::sidebar_widget_t(QWidget * parent)
     connect(list_, &QListWidget::customContextMenuRequested, this, &sidebar_widget_t::on_context_menu);
 }
 
-void sidebar_widget_t::rebuild(const std::vector<std::string> & user_names,
-    const std::vector<std::string> & user_paths, const std::vector<bool> & user_dirty,
-    const std::vector<std::string> & base_names, const std::vector<std::string> & base_paths)
+void sidebar_widget_t::set_loaded_items(const std::vector<loaded_item_t> & items)
 {
     list_->clear();
-    user_count_ = static_cast<int>(user_names.size());
-    base_count_ = static_cast<int>(base_names.size());
+    loaded_count_ = 0;
 
-    auto * user_header = new QListWidgetItem("--- User Dicts ---");
-    user_header->setFlags(Qt::NoItemFlags);
-    user_header->setForeground(QColor(100, 100, 100));
-    list_->addItem(user_header);
+    auto * header = new QListWidgetItem("--- Loaded ---");
+    header->setFlags(Qt::NoItemFlags);
+    header->setForeground(QColor(100, 100, 100));
+    list_->addItem(header);
 
-    for (int i = 0; i < static_cast<int>(user_names.size()); ++i)
+    for (const auto & item : items)
     {
-        QString display = QString::fromStdString(user_names[i]);
-        if (i < static_cast<int>(user_dirty.size()) && user_dirty[i])
+        QString display = QString::fromStdString(item.display_name);
+
+        if (item.is_dirty)
             display = "* " + display;
 
-        auto * item = new QListWidgetItem(display);
-        if (i < static_cast<int>(user_paths.size()))
-        {
-            item->setToolTip(QString::fromStdString(user_paths[i]));
-            item->setData(Qt::UserRole + 2, QString::fromStdString(user_paths[i]));
-        }
+        if (item.is_base)
+            display += " [BASE]";
 
-        item->setData(Qt::UserRole, i);
-        item->setData(Qt::UserRole + 1, 0);
-        list_->addItem(item);
+        auto * list_item = new QListWidgetItem(display);
+        list_item->setToolTip(QString::fromStdString(item.path));
+        list_item->setData(Qt::UserRole, item.slot_index);
+        list_item->setData(Qt::UserRole + 1, item.is_plugin ? 2 : (item.is_base ? 1 : 0));
+        list_item->setData(Qt::UserRole + 2, QString::fromStdString(item.path));
+        list_item->setData(Qt::UserRole + 3, item.plugin_index);
+        list_->addItem(list_item);
+        loaded_count_++;
     }
 
-    auto * base_header = new QListWidgetItem("--- Base Dicts ---");
-    base_header->setFlags(Qt::NoItemFlags);
-    base_header->setForeground(QColor(100, 100, 100));
-    list_->addItem(base_header);
-
-    for (int i = 0; i < static_cast<int>(base_names.size()); ++i)
-    {
-        auto * item = new QListWidgetItem(QString::fromStdString(base_names[i]));
-        if (i < static_cast<int>(base_paths.size()))
-        {
-            item->setToolTip(QString::fromStdString(base_paths[i]));
-            item->setData(Qt::UserRole + 2, QString::fromStdString(base_paths[i]));
-        }
-
-        item->setData(Qt::UserRole, user_count_ + i);
-        item->setData(Qt::UserRole + 1, 1);
-        list_->addItem(item);
-    }
-
-    rebuild_plugin_workspace_section();
-}
-
-void sidebar_widget_t::set_plugin_slots(const std::vector<std::string> & names, const std::vector<std::string> & paths)
-{
-    plugin_names_ = names;
-    plugin_paths_ = paths;
-    plugin_count_ = static_cast<int>(names.size());
-    rebuild_plugin_workspace_section();
+    rebuild_workspace_section();
 }
 
 void sidebar_widget_t::set_workspace_sections(const std::vector<workspace_section_t> & sections)
 {
     workspace_sections_ = sections;
-    rebuild_plugin_workspace_section();
+    rebuild_workspace_section();
 }
 
-void sidebar_widget_t::rebuild_plugin_workspace_section()
+void sidebar_widget_t::rebuild_workspace_section()
 {
-    int keep_count = 1 + user_count_ + 1 + base_count_;
+    int keep_count = 1 + loaded_count_;
 
     while (list_->count() > keep_count)
         delete list_->takeItem(list_->count() - 1);
-
-    auto * plugin_header = new QListWidgetItem("--- Plugins ---");
-    plugin_header->setFlags(Qt::NoItemFlags);
-    plugin_header->setForeground(QColor(100, 100, 100));
-    list_->addItem(plugin_header);
-
-    for (int i = 0; i < static_cast<int>(plugin_names_.size()); ++i)
-    {
-        auto * item = new QListWidgetItem(QString::fromStdString(plugin_names_[i]));
-        if (i < static_cast<int>(plugin_paths_.size()))
-        {
-            item->setToolTip(QString::fromStdString(plugin_paths_[i]));
-            item->setData(Qt::UserRole + 2, QString::fromStdString(plugin_paths_[i]));
-        }
-
-        item->setData(Qt::UserRole, i);
-        item->setData(Qt::UserRole + 1, 2);
-        list_->addItem(item);
-    }
 
     int ws_flat_index = 0;
     for (const auto & section : workspace_sections_)
@@ -128,7 +81,13 @@ void sidebar_widget_t::rebuild_plugin_workspace_section()
 
         for (int i = 0; i < static_cast<int>(section.file_names.size()); ++i)
         {
-            auto * item = new QListWidgetItem(QString::fromStdString(section.file_names[i]));
+            auto display = QString::fromStdString(section.file_names[i]);
+            const auto & file_name = section.file_names[i];
+
+            if (file_name.find("_BASE_") != std::string::npos)
+                display += " [BASE]";
+
+            auto * item = new QListWidgetItem(display);
             if (i < static_cast<int>(section.file_paths.size()))
             {
                 item->setToolTip(QString::fromStdString(section.file_paths[i]));
@@ -143,17 +102,19 @@ void sidebar_widget_t::rebuild_plugin_workspace_section()
     }
 }
 
-void sidebar_widget_t::set_active_slot(int index)
+void sidebar_widget_t::set_active_slot(int slot_index)
 {
     list_->clearSelection();
 
-    if (index < 0)
+    if (slot_index < 0)
         return;
 
     for (int i = 0; i < list_->count(); ++i)
     {
         auto * item = list_->item(i);
-        if (item->data(Qt::UserRole).toInt() == index && (item->flags() & Qt::ItemIsSelectable))
+        if (item->data(Qt::UserRole).toInt() == slot_index &&
+            item->data(Qt::UserRole + 1).toInt() != 3 &&
+            (item->flags() & Qt::ItemIsSelectable))
         {
             list_->setCurrentItem(item);
             return;
@@ -214,37 +175,32 @@ void sidebar_widget_t::on_context_menu(const QPoint & pos)
         return;
 
     int kind = item->data(Qt::UserRole + 1).toInt();
-    int index = item->data(Qt::UserRole).toInt();
+    int slot_index = item->data(Qt::UserRole).toInt();
+    int plugin_index = item->data(Qt::UserRole + 3).toInt();
 
     QMenu menu(this);
 
-    if (kind == 0)
+    if (kind == 0 || kind == 1)
     {
         auto * save_action = menu.addAction("Save");
         auto * save_as_action = menu.addAction("Save As...");
+        menu.addSeparator();
         auto * unload_action = menu.addAction("Unload");
 
         auto * selected = menu.exec(list_->viewport()->mapToGlobal(pos));
         if (selected == save_action)
-            emit save_requested(index);
+            emit save_requested(slot_index);
         else if (selected == save_as_action)
-            emit save_as_requested(index);
+            emit save_as_requested(slot_index);
         else if (selected == unload_action)
-            emit unload_requested(index);
-    }
-    else if (kind == 1)
-    {
-        auto * remove_action = menu.addAction("Remove");
-
-        auto * selected = menu.exec(list_->viewport()->mapToGlobal(pos));
-        if (selected == remove_action)
-            emit remove_requested(index);
+            emit unload_requested(slot_index);
     }
     else if (kind == 2)
     {
         auto * make_dict_action = menu.addAction("Make Dict");
         auto * make_dict_base_action = menu.addAction("Make Dict with Base");
         auto * make_base_action = menu.addAction("Make Base");
+        menu.addSeparator();
         auto * convert_action = menu.addAction("Convert");
         auto * create_action = menu.addAction("Create");
         menu.addSeparator();
@@ -252,17 +208,17 @@ void sidebar_widget_t::on_context_menu(const QPoint & pos)
 
         auto * selected = menu.exec(list_->viewport()->mapToGlobal(pos));
         if (selected == make_dict_action)
-            emit plugin_operation_requested(index, plugin_op_t::make_dict);
+            emit plugin_operation_requested(plugin_index, plugin_op_t::make_dict);
         else if (selected == make_dict_base_action)
-            emit plugin_operation_requested(index, plugin_op_t::make_dict_with_base);
+            emit plugin_operation_requested(plugin_index, plugin_op_t::make_dict_with_base);
         else if (selected == make_base_action)
-            emit plugin_operation_requested(index, plugin_op_t::make_base);
+            emit plugin_operation_requested(plugin_index, plugin_op_t::make_base);
         else if (selected == convert_action)
-            emit plugin_operation_requested(index, plugin_op_t::convert);
+            emit plugin_operation_requested(plugin_index, plugin_op_t::convert);
         else if (selected == create_action)
-            emit plugin_operation_requested(index, plugin_op_t::create_plugin);
+            emit plugin_operation_requested(plugin_index, plugin_op_t::create_plugin);
         else if (selected == unload_action)
-            emit plugin_unload_requested(index);
+            emit plugin_unload_requested(plugin_index);
     }
     else if (kind == 3)
     {
@@ -282,15 +238,15 @@ void sidebar_widget_t::on_context_menu(const QPoint & pos)
 
             auto * selected = menu.exec(list_->viewport()->mapToGlobal(pos));
             if (selected == make_dict_action)
-                emit plugin_operation_requested(-(index + 1), plugin_op_t::make_dict);
+                emit plugin_operation_requested(-(slot_index + 1), plugin_op_t::make_dict);
             else if (selected == make_dict_base_action)
-                emit plugin_operation_requested(-(index + 1), plugin_op_t::make_dict_with_base);
+                emit plugin_operation_requested(-(slot_index + 1), plugin_op_t::make_dict_with_base);
             else if (selected == make_base_action)
-                emit plugin_operation_requested(-(index + 1), plugin_op_t::make_base);
+                emit plugin_operation_requested(-(slot_index + 1), plugin_op_t::make_base);
             else if (selected == convert_action)
-                emit plugin_operation_requested(-(index + 1), plugin_op_t::convert);
+                emit plugin_operation_requested(-(slot_index + 1), plugin_op_t::convert);
             else if (selected == create_action)
-                emit plugin_operation_requested(-(index + 1), plugin_op_t::create_plugin);
+                emit plugin_operation_requested(-(slot_index + 1), plugin_op_t::create_plugin);
             else if (selected == delete_action)
                 emit workspace_delete_requested(path.toStdString());
         }

@@ -1,5 +1,5 @@
 #include "record_table_model.hpp"
-#include <QColor>
+#include "status_colors.hpp"
 #include <QString>
 #include <algorithm>
 
@@ -55,47 +55,6 @@ static std::string status_display_name(const std::string & status)
 	return status;
 }
 
-static QColor status_to_color(const std::string & status)
-{
-	if (status == "untranslated")
-		return QColor(166, 166, 166);
-	if (status == "missing")
-		return QColor(242, 140, 89);
-	if (status == "duplicate")
-		return QColor(242, 230, 102);
-	if (status == "coords")
-		return QColor(102, 204, 204);
-	if (status == "fingerprint")
-		return QColor(102, 191, 217);
-	if (status == "heuristic")
-		return QColor(153, 179, 230);
-	if (status == "info")
-		return QColor(115, 217, 191);
-	if (status == "exact")
-		return QColor(128, 230, 217);
-	if (status == "wilderness")
-		return QColor(77, 153, 77);
-	if (status == "region")
-		return QColor(153, 153, 89);
-	if (status == "matched")
-		return QColor(217, 217, 217);
-	if (status == "error")
-		return QColor(242, 102, 102);
-	if (status == "identical")
-		return QColor(140, 191, 140);
-	if (status == "translated")
-		return QColor(128, 230, 128);
-	if (status == "reused")
-		return QColor(128, 217, 179);
-	if (status == "adapted")
-		return QColor(179, 140, 217);
-	if (status == "changed")
-		return QColor(242, 179, 102);
-	if (status == "in_progress")
-		return QColor(102, 153, 242);
-	return QColor(217, 217, 217);
-}
-
 int record_table_model_t::rowCount(const QModelIndex & parent) const
 {
 	if (parent.isValid())
@@ -142,7 +101,7 @@ QVariant record_table_model_t::data(const QModelIndex & index, int role) const
 	}
 
 	if (role == Qt::BackgroundRole && index.column() == 4)
-		return status_to_color(row.status);
+		return get_status_color(row.status);
 
 	return {};
 }

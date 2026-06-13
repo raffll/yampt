@@ -67,7 +67,7 @@ dict_selection_dialog_t::dict_selection_dialog_t(
     list_ = new QListWidget(this);
     for (const auto & entry : sorted)
     {
-        const auto & kind_label = (entry.kind == dict_kind_t::base) ? "[base]" : "[user]";
+        const auto & kind_label = (entry.kind == dict_kind_t::base) ? "[BASE]" : "[USER]";
         auto display = QString::fromStdString(entry.name) + " " + kind_label;
 
         auto * item = new QListWidgetItem(display);

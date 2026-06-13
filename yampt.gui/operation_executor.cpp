@@ -79,8 +79,8 @@ operation_executor_t::result_t operation_executor_t::make_base(const std::string
 	const auto foreign_name = foreign_info.completeBaseName().toStdString();
 	const auto native_name = native_info.completeBaseName().toStdString();
 
-	auto fl = foreign_lang.empty() ? "??" : foreign_lang;
-	auto nl = native_lang.empty() ? "??" : native_lang;
+	auto fl = foreign_lang.empty() ? "XX" : foreign_lang;
+	auto nl = native_lang.empty() ? "XX" : native_lang;
 
 	std::string output_name = foreign_name;
 	if (foreign_name != native_name)
