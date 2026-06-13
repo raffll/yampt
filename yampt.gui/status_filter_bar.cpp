@@ -1,7 +1,6 @@
 #include "status_filter_bar.hpp"
 #include <QColor>
 #include <QHBoxLayout>
-#include <QLabel>
 #include <QPushButton>
 
 static QColor get_status_color_qt(const std::string & status)
@@ -95,10 +94,6 @@ status_filter_bar_t::status_filter_bar_t(QWidget * parent)
 	layout_->setContentsMargins(0, 0, 0, 0);
 	layout_->setSpacing(2);
 
-	all_button_ = new QPushButton("All", this);
-	connect(all_button_, &QPushButton::clicked, this, &status_filter_bar_t::on_all_clicked);
-	layout_->addWidget(all_button_);
-
 	static const std::vector<std::string> all_statuses = {
 		"untranslated", "missing", "duplicate", "coords", "fingerprint",
 		"heuristic", "info", "exact", "wilderness", "region",
@@ -128,10 +123,6 @@ status_filter_bar_t::status_filter_bar_t(QWidget * parent)
 	}
 
 	layout_->addStretch();
-
-	total_label_ = new QLabel("Total: 0", this);
-	layout_->addWidget(total_label_);
-
 	update_button_styles();
 }
 
@@ -161,23 +152,13 @@ void status_filter_bar_t::set_filter_state(const std::set<std::string> & statuse
 
 void status_filter_bar_t::rebuild_buttons()
 {
-	size_t total = 0;
-	bool has_any_data = false;
-
-	for (const auto & [status, count] : current_counts_)
-	{
-		if (count > 0)
-			has_any_data = true;
-	}
-
 	for (auto & sb : status_buttons_)
 	{
 		auto it = current_counts_.find(sb.status);
 		size_t count = (it != current_counts_.end()) ? it->second : 0;
 		sb.count = count;
-		total += count;
 
-		if (has_any_data)
+		if (count > 0)
 		{
 			sb.button->setText(QString("%1 (%2)").arg(get_status_display_name_qt(sb.status)).arg(count));
 			sb.button->setVisible(true);
@@ -188,7 +169,6 @@ void status_filter_bar_t::rebuild_buttons()
 		}
 	}
 
-	total_label_->setText(QString("Total: %1").arg(total));
 	update_button_styles();
 }
 
@@ -242,25 +222,12 @@ void status_filter_bar_t::on_status_right_clicked(const std::string & status)
 	emit filters_changed();
 }
 
-void status_filter_bar_t::on_all_clicked()
-{
-	active_statuses_.clear();
-	solo_ = false;
-	solo_status_.clear();
-	update_button_styles();
-	emit filters_changed();
-}
-
 void status_filter_bar_t::update_button_styles()
 {
 	static const QString inactive_style =
 		"background-color: transparent; color: rgb(80,80,80); border: 1px solid rgb(150,150,150); padding: 2px 6px;";
 
-	static const QString all_active_style =
-		"background-color: rgb(70,130,200); color: white; border: 1px solid rgb(50,100,170); padding: 2px 6px;";
-
 	bool no_filter = active_statuses_.empty();
-	all_button_->setStyleSheet(no_filter ? all_active_style : inactive_style);
 
 	for (const auto & sb : status_buttons_)
 	{

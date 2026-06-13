@@ -12,6 +12,49 @@ static QString first_line(const std::string & text)
 	return QString::fromStdString(text.substr(0, pos));
 }
 
+static std::string status_display_name(const std::string & status)
+{
+	if (status == "untranslated")
+		return "Untranslated";
+	if (status == "missing")
+		return "Missing";
+	if (status == "duplicate")
+		return "Duplicate";
+	if (status == "coords")
+		return "Coords";
+	if (status == "fingerprint")
+		return "Fingerprint";
+	if (status == "heuristic")
+		return "Heuristic";
+	if (status == "info")
+		return "Info";
+	if (status == "exact")
+		return "Exact";
+	if (status == "wilderness")
+		return "Wilderness";
+	if (status == "region")
+		return "Region";
+	if (status == "matched")
+		return "Matched";
+	if (status == "error")
+		return "Error";
+	if (status == "identical")
+		return "Identical";
+	if (status == "translated")
+		return "Translated";
+	if (status == "reused")
+		return "Reused";
+	if (status == "adapted")
+		return "Adapted";
+	if (status == "changed")
+		return "Changed";
+	if (status == "in_progress")
+		return "In Progress";
+	if (status == "mismatch")
+		return "Mismatch";
+	return status;
+}
+
 static QColor status_to_color(const std::string & status)
 {
 	if (status == "untranslated")
@@ -92,7 +135,7 @@ QVariant record_table_model_t::data(const QModelIndex & index, int role) const
 		case 3:
 			return first_line(row.new_text);
 		case 4:
-			return QString::fromStdString(row.status);
+			return QString::fromStdString(status_display_name(row.status));
 		default:
 			return {};
 		}

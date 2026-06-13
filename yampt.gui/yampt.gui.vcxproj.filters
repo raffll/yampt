@@ -24,6 +24,7 @@
     <ClCompile Include="spell_check_highlighter.cpp" />
     <ClCompile Include="spell_context_menu.cpp" />
     <ClCompile Include="filter_bar.cpp" />
+    <ClCompile Include="flow_layout.cpp" />
     <ClCompile Include="status_filter_bar.cpp" />
     <ClCompile Include="editor_panel.cpp" />
     <ClCompile Include="record_table_model.cpp" />

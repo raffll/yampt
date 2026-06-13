@@ -7,7 +7,6 @@
 #include <vector>
 
 class QHBoxLayout;
-class QLabel;
 class QPushButton;
 
 class status_filter_bar_t : public QWidget
@@ -29,7 +28,6 @@ private:
 	void rebuild_buttons();
 	void on_status_clicked(const std::string & status);
 	void on_status_right_clicked(const std::string & status);
-	void on_all_clicked();
 	void update_button_styles();
 
 	struct status_button_t
@@ -40,8 +38,6 @@ private:
 	};
 
 	QHBoxLayout * layout_ = nullptr;
-	QPushButton * all_button_ = nullptr;
-	QLabel * total_label_ = nullptr;
 	std::vector<status_button_t> status_buttons_;
 	std::map<std::string, size_t> current_counts_;
 	std::set<std::string> active_statuses_;

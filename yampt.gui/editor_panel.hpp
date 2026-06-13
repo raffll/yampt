@@ -4,6 +4,7 @@
 #include <QWidget>
 
 class QLabel;
+class QPushButton;
 class QSplitter;
 class QTextEdit;
 
@@ -22,6 +23,7 @@ public:
 
 signals:
     void text_changed();
+    void apply_clicked();
 
 private:
     QSplitter * splitter_ = nullptr;
@@ -29,4 +31,5 @@ private:
     QTextEdit * translation_editor_ = nullptr;
     QLabel * original_label_ = nullptr;
     QLabel * translation_label_ = nullptr;
+    QPushButton * apply_button_ = nullptr;
 };

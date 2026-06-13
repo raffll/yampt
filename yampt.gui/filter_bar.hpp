@@ -18,6 +18,7 @@ public:
 	explicit filter_bar_t(QWidget * parent = nullptr);
 
 	void update_counts(const std::map<tools_t::rec_type_t, size_t> & counts);
+	void set_total_count(size_t total);
 	std::set<tools_t::rec_type_t> get_active_types() const;
 	std::set<std::string> get_active_sub_types() const;
 	bool is_solo() const;
@@ -27,6 +28,7 @@ public:
 
 signals:
 	void filters_changed();
+	void all_reset_requested();
 
 private:
 	void on_type_clicked(tools_t::rec_type_t type);

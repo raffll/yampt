@@ -43,9 +43,6 @@ void annotations_panel_t::update_annotations(const std::vector<annotation_t> & a
         has_header = true;
     }
 
-    if (has_header)
-        list_->addItem("---");
-
     struct entry_t
     {
         std::string old_text;
@@ -78,6 +75,14 @@ void annotations_panel_t::update_annotations(const std::vector<annotation_t> & a
     };
 
     auto hyperlinks = deduplicate_and_sort(annotations, annotation_t::dial_topic);
+    if (!hyperlinks.empty())
+    {
+        auto * header = new QListWidgetItem("--- Hyperlinks ---");
+        header->setForeground(QColor(70, 130, 200));
+        header->setFlags(Qt::NoItemFlags);
+        list_->addItem(header);
+    }
+
     for (const auto & e : hyperlinks)
     {
         QString display = QString::fromStdString(e.old_text + " \xe2\x86\x92 " + e.new_text);
@@ -86,10 +91,15 @@ void annotations_panel_t::update_annotations(const std::vector<annotation_t> & a
         list_->addItem(item);
     }
 
-    if (!hyperlinks.empty())
-        list_->addItem("---");
-
     auto glossary = deduplicate_and_sort(annotations, annotation_t::glossary_term);
+    if (!glossary.empty())
+    {
+        auto * header = new QListWidgetItem("--- Glossary ---");
+        header->setForeground(QColor(50, 150, 50));
+        header->setFlags(Qt::NoItemFlags);
+        list_->addItem(header);
+    }
+
     for (const auto & e : glossary)
     {
         QString display = QString::fromStdString(e.old_text + " \xe2\x86\x92 " + e.new_text);

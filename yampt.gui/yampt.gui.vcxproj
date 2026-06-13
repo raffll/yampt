@@ -192,6 +192,7 @@
     <ClCompile Include="spell_context_menu.cpp" />
     <ClCompile Include="hyperlink_highlighter.cpp" />
     <ClCompile Include="filter_bar.cpp" />
+    <ClCompile Include="flow_layout.cpp" />
     <ClCompile Include="status_filter_bar.cpp" />
     <ClCompile Include="editor_panel.cpp" />
     <ClCompile Include="record_table_model.cpp" />

@@ -142,13 +142,12 @@ main_window_t::main_window_t(QWidget * parent)
     auto * central_widget = new QWidget(this);
     auto * central_layout = new QVBoxLayout(central_widget);
     central_layout->setContentsMargins(0, 0, 0, 0);
-    central_layout->setSpacing(0);
+    central_layout->setSpacing(4);
 
     filter_bar_ = new filter_bar_t(central_widget);
     status_filter_bar_ = new status_filter_bar_t(central_widget);
     central_layout->addWidget(filter_bar_);
     central_layout->addWidget(status_filter_bar_);
-    central_layout->addSpacing(4);
 
     central_splitter_ = new QSplitter(Qt::Horizontal, central_widget);
     central_layout->addWidget(central_splitter_, 1);
@@ -252,8 +251,16 @@ main_window_t::main_window_t(QWidget * parent)
     });
 
     connect(editor_panel_, &editor_panel_t::text_changed, this, &main_window_t::on_translation_changed);
+    connect(editor_panel_, &editor_panel_t::apply_clicked, this, [this]() {
+        commit_current_edit();
+        rebuild_table();
+    });
 
     connect(filter_bar_, &filter_bar_t::filters_changed, this, &main_window_t::on_filters_changed);
+    connect(filter_bar_, &filter_bar_t::all_reset_requested, this, [this]() {
+        status_filter_.clear();
+        status_filter_bar_->set_filter_state(status_filter_);
+    });
     connect(status_filter_bar_, &status_filter_bar_t::filters_changed, this, &main_window_t::on_status_filters_changed);
 
     connect(history_panel_, &history_panel_t::revert_requested, this, [this](size_t history_index) {
@@ -601,10 +608,18 @@ void main_window_t::rebuild_table()
     const auto query_lower = search_query_.toLower();
 
     const auto active_sub_types = filter_bar_->get_active_sub_types();
-    const bool has_sub_type_filter = filter_bar_->is_solo() && !active_sub_types.empty();
+    const size_t total_sub_types = 5 + 23 + 3 + 2;
+    const bool has_sub_type_filter = active_sub_types.size() < total_sub_types;
 
     static const std::map<std::string, std::string> sub_type_to_prefix = {
         {"Topic", "T"}, {"Voice", "V"}, {"Greeting", "G"}, {"Persuasion", "P"}, {"Journal", "J"},
+        {"ACTI", "ACTI"}, {"ALCH", "ALCH"}, {"APPA", "APPA"}, {"ARMO", "ARMO"}, {"BOOK", "BOOK"},
+        {"BSGN", "BSGN"}, {"CLAS", "CLAS"}, {"CLOT", "CLOT"}, {"CONT", "CONT"}, {"CREA", "CREA"},
+        {"DOOR", "DOOR"}, {"FACT", "FACT"}, {"INGR", "INGR"}, {"LIGH", "LIGH"}, {"LOCK", "LOCK"},
+        {"MISC", "MISC"}, {"NPC_", "NPC_"}, {"PROB", "PROB"}, {"RACE", "RACE"}, {"REGN", "REGN"},
+        {"REPA", "REPA"}, {"SPEL", "SPEL"}, {"WEAP", "WEAP"},
+        {"Birthsigns", "BSGN"}, {"Classes", "CLAS"}, {"Races", "RACE"},
+        {"Skills", "SKIL"}, {"Magic Effects", "MGEF"},
     };
 
     std::vector<table_row_t> rows;
@@ -622,7 +637,8 @@ void main_window_t::rebuild_table()
             if (!type_filter_.empty() && type_filter_.count(type) == 0)
                 continue;
 
-            if (has_sub_type_filter && (type == tools_t::rec_type_t::info || type == tools_t::rec_type_t::bnam))
+            if (has_sub_type_filter && (type == tools_t::rec_type_t::info || type == tools_t::rec_type_t::bnam ||
+                type == tools_t::rec_type_t::fnam || type == tools_t::rec_type_t::desc || type == tools_t::rec_type_t::indx))
             {
                 bool sub_match = false;
                 auto caret_pos = entry.key_text.find('^');
@@ -682,7 +698,12 @@ void main_window_t::rebuild_table()
     table_model_->rebuild(std::move(rows));
     current_row_ = -1;
 
+    size_t total = 0;
+    for (const auto & [t, c] : type_counts)
+        total += c;
+
     filter_bar_->update_counts(type_counts);
+    filter_bar_->set_total_count(total);
     status_filter_bar_->update_counts(status_counts);
 }
 
@@ -702,6 +723,77 @@ void main_window_t::on_translation_changed()
 
     set_dirty(true);
     update_validation();
+
+    if (current_row_ < 0)
+        return;
+
+    const auto * row_data = table_model_->row_at(current_row_);
+    if (!row_data)
+        return;
+
+    const auto annotations = annotation_manager_.annotate(row_data->old_text, row_data->type);
+    const auto current_text = editor_panel_->translation_editor()->toPlainText().toLower();
+
+    struct highlight_t { int start; int length; bool is_hyperlink; };
+    struct candidate_t { int start; int length; bool is_hyperlink; };
+
+    std::vector<candidate_t> candidates;
+    for (const auto & ann : annotations)
+    {
+        if (ann.new_text.empty())
+            continue;
+
+        bool is_hl = (ann.kind == annotation_t::dial_topic);
+        const auto term = QString::fromStdString(ann.new_text).toLower();
+        int pos = 0;
+        while ((pos = current_text.indexOf(term, pos)) != -1)
+        {
+            candidates.push_back({pos, static_cast<int>(term.length()), is_hl});
+            pos += static_cast<int>(term.length());
+        }
+    }
+
+    std::sort(candidates.begin(), candidates.end(), [](const candidate_t & a, const candidate_t & b)
+    {
+        if (a.is_hyperlink != b.is_hyperlink)
+            return a.is_hyperlink;
+
+        if (a.length != b.length)
+            return a.length > b.length;
+
+        return a.start < b.start;
+    });
+
+    std::vector<bool> covered(current_text.length(), false);
+    QList<QTextEdit::ExtraSelection> selections;
+
+    for (const auto & c : candidates)
+    {
+        bool overlap = false;
+        for (int i = c.start; i < c.start + c.length; ++i)
+        {
+            if (covered[i])
+            {
+                overlap = true;
+                break;
+            }
+        }
+
+        if (overlap)
+            continue;
+
+        for (int i = c.start; i < c.start + c.length; ++i)
+            covered[i] = true;
+
+        QTextEdit::ExtraSelection sel;
+        sel.format.setBackground(c.is_hyperlink ? QColor(200, 220, 255) : QColor(200, 240, 200));
+        sel.cursor = editor_panel_->translation_editor()->textCursor();
+        sel.cursor.setPosition(c.start);
+        sel.cursor.setPosition(c.start + c.length, QTextCursor::KeepAnchor);
+        selections.append(sel);
+    }
+
+    editor_panel_->translation_editor()->setExtraSelections(selections);
 }
 
 void main_window_t::commit_current_edit()
@@ -818,27 +910,106 @@ void main_window_t::load_record(int row)
 
     annotations_panel_->update_annotations(annotations, speaker_name, gender_str, enchantment_str);
 
-    QList<QTextEdit::ExtraSelection> extra_selections;
-    const auto translation_text = QString::fromStdString(row_data->new_text).toLower();
-    for (const auto & ann : annotations)
+    struct highlight_t
     {
-        if (ann.new_text.empty())
-            continue;
+        int start;
+        int length;
+        bool is_hyperlink;
+    };
 
-        const auto term = QString::fromStdString(ann.new_text).toLower();
-        int pos = 0;
-        while ((pos = translation_text.indexOf(term, pos)) != -1)
+    auto find_highlights = [](const QString & text_lower, const std::vector<annotation_t> & annotations, bool use_old) -> std::vector<highlight_t>
+    {
+        struct candidate_t
         {
-            QTextEdit::ExtraSelection sel;
-            sel.format.setBackground(QColor(200, 220, 255));
-            sel.cursor = editor_panel_->translation_editor()->textCursor();
-            sel.cursor.setPosition(pos);
-            sel.cursor.setPosition(pos + term.length(), QTextCursor::KeepAnchor);
-            extra_selections.append(sel);
-            pos += term.length();
+            int start;
+            int length;
+            bool is_hyperlink;
+        };
+
+        std::vector<candidate_t> candidates;
+
+        for (const auto & ann : annotations)
+        {
+            const auto & raw = use_old ? ann.old_text : ann.new_text;
+            if (raw.empty())
+                continue;
+
+            bool is_hl = (ann.kind == annotation_t::dial_topic);
+            const auto term = QString::fromStdString(raw).toLower();
+            int pos = 0;
+            while ((pos = text_lower.indexOf(term, pos)) != -1)
+            {
+                candidates.push_back({pos, static_cast<int>(term.length()), is_hl});
+                pos += static_cast<int>(term.length());
+            }
         }
+
+        std::sort(candidates.begin(), candidates.end(), [](const candidate_t & a, const candidate_t & b)
+        {
+            if (a.length != b.length)
+                return a.length > b.length;
+
+            if (a.is_hyperlink != b.is_hyperlink)
+                return a.is_hyperlink;
+
+            return a.start < b.start;
+        });
+
+        std::vector<bool> covered(text_lower.length(), false);
+        std::vector<highlight_t> results;
+
+        for (const auto & c : candidates)
+        {
+            bool overlap = false;
+            for (int i = c.start; i < c.start + c.length; ++i)
+            {
+                if (covered[i])
+                {
+                    overlap = true;
+                    break;
+                }
+            }
+
+            if (overlap)
+                continue;
+
+            for (int i = c.start; i < c.start + c.length; ++i)
+                covered[i] = true;
+
+            results.push_back({c.start, c.length, c.is_hyperlink});
+        }
+
+        return results;
+    };
+
+    const auto original_text_lower = QString::fromStdString(row_data->old_text).toLower();
+    const auto translation_text_lower = QString::fromStdString(row_data->new_text).toLower();
+
+    auto orig_highlights = find_highlights(original_text_lower, annotations, true);
+    QList<QTextEdit::ExtraSelection> orig_selections;
+    for (const auto & h : orig_highlights)
+    {
+        QTextEdit::ExtraSelection sel;
+        sel.format.setBackground(h.is_hyperlink ? QColor(200, 220, 255) : QColor(200, 240, 200));
+        sel.cursor = editor_panel_->original_view()->textCursor();
+        sel.cursor.setPosition(h.start);
+        sel.cursor.setPosition(h.start + h.length, QTextCursor::KeepAnchor);
+        orig_selections.append(sel);
     }
-    editor_panel_->translation_editor()->setExtraSelections(extra_selections);
+    editor_panel_->original_view()->setExtraSelections(orig_selections);
+
+    auto trans_highlights = find_highlights(translation_text_lower, annotations, false);
+    QList<QTextEdit::ExtraSelection> trans_selections;
+    for (const auto & h : trans_highlights)
+    {
+        QTextEdit::ExtraSelection sel;
+        sel.format.setBackground(h.is_hyperlink ? QColor(200, 220, 255) : QColor(200, 240, 200));
+        sel.cursor = editor_panel_->translation_editor()->textCursor();
+        sel.cursor.setPosition(h.start);
+        sel.cursor.setPosition(h.start + h.length, QTextCursor::KeepAnchor);
+        trans_selections.append(sel);
+    }
+    editor_panel_->translation_editor()->setExtraSelections(trans_selections);
 
     const auto history = history_manager_.get_history(row_data->type, row_data->key_text);
     history_panel_->update_history(history, !is_base);

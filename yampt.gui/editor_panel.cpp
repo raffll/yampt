@@ -3,6 +3,7 @@
 #include <QFont>
 #include <QLabel>
 #include <QPalette>
+#include <QPushButton>
 #include <QSplitter>
 #include <QTextEdit>
 #include <QVBoxLayout>
@@ -34,8 +35,10 @@ editor_panel_t::editor_panel_t(QWidget * parent)
     right_layout->setContentsMargins(0, 0, 0, 0);
     translation_label_ = new QLabel("Translation", right_widget);
     translation_editor_ = new QTextEdit(right_widget);
+    apply_button_ = new QPushButton("Apply", right_widget);
     right_layout->addWidget(translation_label_);
     right_layout->addWidget(translation_editor_);
+    right_layout->addWidget(apply_button_);
 
     QFont editor_font("Segoe UI", 10);
     original_view_->setFont(editor_font);
@@ -48,6 +51,7 @@ editor_panel_t::editor_panel_t(QWidget * parent)
     layout->addWidget(splitter_);
 
     connect(translation_editor_, &QTextEdit::textChanged, this, &editor_panel_t::text_changed);
+    connect(apply_button_, &QPushButton::clicked, this, &editor_panel_t::apply_clicked);
 }
 
 QTextEdit * editor_panel_t::original_view() const

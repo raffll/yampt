@@ -19,6 +19,11 @@ if (Test-Path "$outDir\dictionaries") {
     Copy-Item -Recurse "$outDir\dictionaries" "$packDir\dictionaries"
 }
 
+if (Test-Path "$outDir\platforms") {
+    New-Item -ItemType Directory -Force "$packDir\platforms" | Out-Null
+    Copy-Item "$outDir\platforms\*.dll" "$packDir\platforms"
+}
+
 Compress-Archive -Path "$packDir\*" -DestinationPath $zipName -Force
 
 Write-Host "Created $zipName (build $buildNum)"
