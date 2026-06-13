@@ -45,6 +45,13 @@ struct plugin_slot_t
     bool is_master = false;
 };
 
+struct workspace_scan_section_t
+{
+    std::string folder_name;
+    std::vector<std::string> file_names;
+    std::vector<std::string> file_paths;
+};
+
 class main_window_t : public QMainWindow
 {
     Q_OBJECT
@@ -89,6 +96,7 @@ private:
     void save_config();
     void load_config();
     void rebuild_sidebar();
+    void save_dict_encoded(int slot_index);
     void update_annotations();
     void update_validation();
     void scan_spell_dictionaries();
@@ -167,5 +175,5 @@ private:
     log_tab_t * log_tab_ = nullptr;
     operation_executor_t executor_;
     std::vector<plugin_slot_t> plugin_slots_;
-    std::vector<workspace_section_t> workspace_sections_;
+    std::vector<workspace_scan_section_t> workspace_sections_;
 };

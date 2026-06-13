@@ -16,14 +16,7 @@ enum class plugin_op_t
     create_plugin
 };
 
-struct workspace_section_t
-{
-    std::string folder_name;
-    std::vector<std::string> file_names;
-    std::vector<std::string> file_paths;
-};
-
-struct loaded_item_t
+struct sidebar_item_t
 {
     std::string display_name;
     std::string path;
@@ -34,6 +27,12 @@ struct loaded_item_t
     int plugin_index = -1;
 };
 
+struct sidebar_section_t
+{
+    std::string header;
+    std::vector<sidebar_item_t> items;
+};
+
 class sidebar_widget_t : public QWidget
 {
     Q_OBJECT
@@ -41,8 +40,7 @@ class sidebar_widget_t : public QWidget
 public:
     explicit sidebar_widget_t(QWidget * parent = nullptr);
 
-    void set_loaded_items(const std::vector<loaded_item_t> & items);
-    void set_workspace_sections(const std::vector<workspace_section_t> & sections);
+    void set_sections(const std::vector<sidebar_section_t> & sections);
     void set_active_slot(int slot_index);
     int get_clicked_slot_index() const;
 
@@ -56,15 +54,12 @@ signals:
     void plugin_selected();
     void workspace_file_clicked(const std::string & path);
     void workspace_delete_requested(const std::string & path);
+    void workspace_save_requested(const std::string & path);
 
 private:
     void on_item_clicked(QListWidgetItem * item);
     void on_context_menu(const QPoint & pos);
-    void rebuild_workspace_section();
 
     QListWidget * list_ = nullptr;
-    int loaded_count_ = 0;
     int clicked_slot_index_ = -1;
-
-    std::vector<workspace_section_t> workspace_sections_;
 };

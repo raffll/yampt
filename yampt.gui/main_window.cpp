@@ -17,6 +17,7 @@
 #include "validation_indicator.hpp"
 
 #include "../yampt/dict_merger.hpp"
+#include "../yampt/dict_writer.hpp"
 
 #include <QAction>
 #include <QCheckBox>
@@ -235,7 +236,7 @@ main_window_t::main_window_t(QWidget * parent)
 
     connect(sidebar_, &sidebar_widget_t::slot_clicked, this, &main_window_t::on_slot_clicked);
     connect(sidebar_, &sidebar_widget_t::save_requested, this, [this](int index) {
-        workspace_.save_dict(index);
+        save_dict_encoded(index);
         if (!workspace_.has_any_unsaved())
             set_dirty(false);
         rebuild_sidebar();
@@ -274,6 +275,18 @@ main_window_t::main_window_t(QWidget * parent)
         rebuild_sidebar();
         rebuild_table();
         scan_workspace();
+    });
+    connect(sidebar_, &sidebar_widget_t::workspace_save_requested, this, [this](const std::string & path) {
+        for (int i = 0; i < workspace_.slot_count(); ++i)
+        {
+            const auto * slot = workspace_.get_slot(i);
+            if (slot && slot->path == path)
+            {
+                save_dict_encoded(i);
+                rebuild_sidebar();
+                break;
+            }
+        }
     });
     connect(sidebar_, &sidebar_widget_t::workspace_file_clicked, this, [this](const std::string & path) {
         for (int i = 0; i < workspace_.slot_count(); ++i)
@@ -404,7 +417,7 @@ void main_window_t::on_save()
     if (!workspace_.is_user_slot(active))
         return;
 
-    workspace_.save_dict(active);
+    save_dict_encoded(active);
     rebuild_sidebar();
 
     if (!workspace_.has_any_unsaved())
@@ -415,7 +428,13 @@ void main_window_t::on_save_all()
 {
     commit_current_edit();
 
-    workspace_.save_all_dirty();
+    for (int i = 0; i < workspace_.slot_count(); ++i)
+    {
+        const auto * slot = workspace_.get_slot(i);
+        if (slot && slot->dirty)
+            save_dict_encoded(i);
+    }
+
     rebuild_sidebar();
 
     if (!workspace_.has_any_unsaved())
@@ -522,7 +541,7 @@ void main_window_t::on_unload_slot(int index)
             return;
 
         if (answer == QMessageBox::Save)
-            workspace_.save_dict(index);
+            save_dict_encoded(index);
     }
 
     workspace_.unload_dict(index);
@@ -1183,11 +1202,42 @@ void main_window_t::on_encoding_changed(int index)
     rebuild_table();
 }
 
+void main_window_t::save_dict_encoded(int slot_index)
+{
+    auto * slot = workspace_.get_slot(slot_index);
+    if (!slot)
+        return;
+
+    tools_t::dict_t encoded;
+    for (const auto & [type, chapter] : slot->data)
+    {
+        for (const auto & entry : chapter.records)
+        {
+            tools_t::record_entry_t enc_entry = entry;
+            enc_entry.key_text = encode_from_utf8(entry.key_text, current_codepage_);
+            enc_entry.old_text = encode_from_utf8(entry.old_text, current_codepage_);
+            enc_entry.new_text = encode_from_utf8(entry.new_text, current_codepage_);
+
+            if (!entry.adapted_from.empty())
+                enc_entry.adapted_from = encode_from_utf8(entry.adapted_from, current_codepage_);
+
+            encoded[type].insert(enc_entry);
+        }
+    }
+
+    dict_writer_t::write(encoded, slot->path);
+    slot->dirty = false;
+    slot->modified_records.clear();
+}
+
 void main_window_t::rebuild_sidebar()
 {
     const auto workspace_dir = QCoreApplication::applicationDirPath().toStdString() + "/workspace/";
 
-    std::vector<loaded_item_t> items;
+    std::vector<sidebar_section_t> sections;
+
+    sidebar_section_t loaded_section;
+    loaded_section.header = "Loaded";
 
     for (int i = 0; i < workspace_.slot_count(); ++i)
     {
@@ -1203,7 +1253,7 @@ void main_window_t::rebuild_sidebar()
         if (sep != std::string::npos)
             filename = filename.substr(sep + 1);
 
-        loaded_item_t item;
+        sidebar_item_t item;
         item.display_name = filename;
         item.path = slot->path;
         item.is_plugin = false;
@@ -1211,7 +1261,7 @@ void main_window_t::rebuild_sidebar()
         item.is_dirty = slot->dirty;
         item.slot_index = i;
         item.plugin_index = -1;
-        items.push_back(item);
+        loaded_section.items.push_back(item);
     }
 
     for (int i = 0; i < static_cast<int>(plugin_slots_.size()); ++i)
@@ -1223,7 +1273,7 @@ void main_window_t::rebuild_sidebar()
         if (!slot.language.empty())
             filename += " [" + slot.language + "]";
 
-        loaded_item_t item;
+        sidebar_item_t item;
         item.display_name = filename;
         item.path = slot.path;
         item.is_plugin = true;
@@ -1231,10 +1281,55 @@ void main_window_t::rebuild_sidebar()
         item.is_dirty = false;
         item.slot_index = -1;
         item.plugin_index = i;
-        items.push_back(item);
+        loaded_section.items.push_back(item);
     }
 
-    sidebar_->set_loaded_items(items);
+    sections.push_back(std::move(loaded_section));
+
+    for (const auto & ws : workspace_sections_)
+    {
+        sidebar_section_t section;
+        section.header = ws.folder_name.empty() ? "Workspace" : ws.folder_name;
+
+        for (int i = 0; i < static_cast<int>(ws.file_names.size()); ++i)
+        {
+            const auto & path = ws.file_paths[i];
+            auto filename = ws.file_names[i];
+
+            auto dot = path.rfind('.');
+            auto ext = dot != std::string::npos ? path.substr(dot) : "";
+            bool is_plugin_file = (ext == ".esm" || ext == ".esp");
+
+            bool is_base = (filename.find("_BASE_") != std::string::npos);
+            bool is_dirty = false;
+
+            int slot_idx = -1;
+            for (int j = 0; j < workspace_.slot_count(); ++j)
+            {
+                const auto * slot = workspace_.get_slot(j);
+                if (slot && slot->path == path)
+                {
+                    slot_idx = j;
+                    is_dirty = slot->dirty;
+                    break;
+                }
+            }
+
+            sidebar_item_t item;
+            item.display_name = filename;
+            item.path = path;
+            item.is_plugin = is_plugin_file;
+            item.is_base = is_base;
+            item.is_dirty = is_dirty;
+            item.slot_index = slot_idx;
+            item.plugin_index = -1;
+            section.items.push_back(item);
+        }
+
+        sections.push_back(std::move(section));
+    }
+
+    sidebar_->set_sections(sections);
     sidebar_->set_active_slot(workspace_.get_active_index());
 }
 
@@ -1522,6 +1617,13 @@ void main_window_t::on_plugin_operation(int plugin_index, plugin_op_t op)
     }
     const auto encoding = get_current_tools_encoding();
 
+    std::string output_dir;
+    if (!workspace_folder.empty())
+    {
+        output_dir = QCoreApplication::applicationDirPath().toStdString() + "/workspace/" + workspace_folder + "/";
+    }
+    executor_.set_output_dir(output_dir);
+
     operation_executor_t::result_t result;
 
     switch (op)
@@ -1728,12 +1830,12 @@ void main_window_t::scan_workspace()
     const auto app_dir = QCoreApplication::applicationDirPath();
     QDir workspace_dir(app_dir + "/workspace");
 
-    std::vector<workspace_section_t> sections;
+    std::vector<workspace_scan_section_t> sections;
 
     if (!workspace_dir.exists())
     {
-        sidebar_->set_workspace_sections(sections);
         workspace_sections_ = sections;
+        rebuild_sidebar();
         return;
     }
 
@@ -1745,7 +1847,7 @@ void main_window_t::scan_workspace()
             loaded_paths.insert(slot->path);
     }
 
-    workspace_section_t root_section;
+    workspace_scan_section_t root_section;
     root_section.folder_name = "";
     const auto root_files = workspace_dir.entryList({"*.json", "*.xml", "*.esm", "*.esp"}, QDir::Files);
     for (const auto & f : root_files)
@@ -1764,7 +1866,7 @@ void main_window_t::scan_workspace()
         if (sub_files.isEmpty())
             continue;
 
-        workspace_section_t section;
+        workspace_scan_section_t section;
         section.folder_name = sub.toStdString();
         for (const auto & f : sub_files)
         {
@@ -1810,8 +1912,8 @@ void main_window_t::scan_workspace()
         }
     }
 
-    sidebar_->set_workspace_sections(sections);
     workspace_sections_ = sections;
+    rebuild_sidebar();
 
     std::vector<dict_source_t> sources;
     for (const auto & dict_slot : workspace_.get_all_slots())
@@ -1955,7 +2057,14 @@ void main_window_t::closeEvent(QCloseEvent * event)
         }
 
         if (answer == QMessageBox::Save)
-            workspace_.save_all_dirty();
+        {
+            for (int i = 0; i < workspace_.slot_count(); ++i)
+            {
+                const auto * slot = workspace_.get_slot(i);
+                if (slot && slot->dirty)
+                    save_dict_encoded(i);
+            }
+        }
     }
 
     commit_current_edit();

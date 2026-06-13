@@ -14,6 +14,8 @@ public:
 		std::string output_path;
 	};
 
+	void set_output_dir(const std::string & dir) { output_dir_ = dir; }
+
 	result_t make_dict(const std::string & plugin_path, tools_t::encoding_t encoding);
 	result_t make_dict_with_base(const std::string & plugin_path, const tools_t::dict_t & base_dict, tools_t::encoding_t encoding);
 	result_t make_base(const std::string & foreign_path, const std::string & native_path,
@@ -23,5 +25,7 @@ public:
 
 private:
 	std::string make_output_path(const std::string & source_path, const std::string & ext) const;
-	std::string get_workspace_dir() const;
+	std::string get_output_dir() const;
+
+	std::string output_dir_;
 };

@@ -17,21 +17,29 @@ std::string operation_executor_t::make_output_path(const std::string & source_pa
 	const auto info = QFileInfo(QString::fromStdString(source_path));
 	const auto base_name = info.completeBaseName().toStdString();
 	const auto timestamp = QDateTime::currentDateTime().toString("yyyyMMddHHmmss").toStdString();
-	const auto dir = get_workspace_dir();
+	const auto dir = get_output_dir();
 
 	return dir + base_name + "-" + timestamp + "." + ext;
 }
 
-std::string operation_executor_t::get_workspace_dir() const
+std::string operation_executor_t::get_output_dir() const
 {
-	const auto app_dir = QCoreApplication::applicationDirPath();
-	const auto workspace_path = app_dir + "/workspace/";
+	QString dir_path;
 
-	QDir dir(workspace_path);
+	if (!output_dir_.empty())
+		dir_path = QString::fromStdString(output_dir_);
+	else
+		dir_path = QCoreApplication::applicationDirPath() + "/workspace/";
+
+	QDir dir(dir_path);
 	if (!dir.exists())
 		dir.mkpath(".");
 
-	return workspace_path.toStdString();
+	auto result = dir_path.toStdString();
+	if (!result.empty() && result.back() != '/' && result.back() != '\\')
+		result += '/';
+
+	return result;
 }
 
 operation_executor_t::result_t operation_executor_t::make_dict(const std::string & plugin_path, tools_t::encoding_t encoding)
@@ -89,7 +97,7 @@ operation_executor_t::result_t operation_executor_t::make_base(const std::string
 	const auto timestamp = QDateTime::currentDateTime().toString("yyyyMMddHHmmss").toStdString();
 	output_name += "_BASE_" + fl + "-" + nl + "-" + timestamp;
 
-	const auto output_path = get_workspace_dir() + output_name + ".json";
+	const auto output_path = get_output_dir() + output_name + ".json";
 	dict_writer_t::write(creator.get_dict(), output_path);
 
 	return {!tools_t::has_error(), tools_t::get_log(), output_path};
