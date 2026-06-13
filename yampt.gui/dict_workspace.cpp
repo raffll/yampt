@@ -54,6 +54,13 @@ bool dict_workspace_t::unload_dict(int slot_index)
 	return true;
 }
 
+void dict_workspace_t::unload_all()
+{
+	slots_.clear();
+	kinds_.clear();
+	active_index_ = -1;
+}
+
 bool dict_workspace_t::save_dict(int slot_index)
 {
 	if (slot_index < 0 || slot_index >= static_cast<int>(slots_.size()))

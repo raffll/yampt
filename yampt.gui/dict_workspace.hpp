@@ -38,6 +38,7 @@ class dict_workspace_t
 public:
 	int load_dict(const std::string & path, dict_kind_t kind);
 	bool unload_dict(int slot_index);
+	void unload_all();
 	bool save_dict(int slot_index);
 	bool save_dict_as(int slot_index, const std::string & path);
 	void save_all_dirty();

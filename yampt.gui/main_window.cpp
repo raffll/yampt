@@ -1167,39 +1167,12 @@ void main_window_t::on_encoding_changed(int index)
     if (new_codepage == current_codepage_)
         return;
 
-    const auto old_codepage = current_codepage_;
     current_codepage_ = new_codepage;
+    config_.encoding_index = index;
+    save_config();
 
-    for (int i = 0; i < workspace_.slot_count(); ++i)
-    {
-        auto * slot = workspace_.get_slot(i);
-        if (!slot)
-            continue;
-
-        for (auto & [type, chapter] : slot->data)
-        {
-            for (auto & entry : chapter.records)
-            {
-                const auto raw = encode_from_utf8(entry.old_text, old_codepage);
-                entry.old_text = decode_to_utf8(raw, new_codepage);
-
-                const auto raw_new = encode_from_utf8(entry.new_text, old_codepage);
-                entry.new_text = decode_to_utf8(raw_new, new_codepage);
-
-                const auto raw_key = encode_from_utf8(entry.key_text, old_codepage);
-                entry.key_text = decode_to_utf8(raw_key, new_codepage);
-
-                if (!entry.adapted_from.empty())
-                {
-                    const auto raw_af = encode_from_utf8(entry.adapted_from, old_codepage);
-                    entry.adapted_from = decode_to_utf8(raw_af, new_codepage);
-                }
-            }
-        }
-    }
-
-    validation_manager_.set_codepage(new_codepage);
-    rebuild_table();
+    QMessageBox::information(this, "Restart Required",
+        "Encoding changed. Please restart the application for the change to take effect.");
 }
 
 void main_window_t::save_dict_encoded(int slot_index)
