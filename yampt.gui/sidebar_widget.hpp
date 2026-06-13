@@ -47,7 +47,9 @@ signals:
     void remove_requested(int slot_index);
     void plugin_operation_requested(int plugin_index, plugin_op_t op);
     void plugin_unload_requested(int plugin_index);
+    void plugin_selected();
     void workspace_file_clicked(const std::string & path);
+    void workspace_delete_requested(const std::string & path);
 
 private:
     void on_item_clicked(QListWidgetItem * item);

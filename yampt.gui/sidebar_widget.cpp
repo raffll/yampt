@@ -177,7 +177,10 @@ void sidebar_widget_t::on_item_clicked(QListWidgetItem * item)
     int kind = item->data(Qt::UserRole + 1).toInt();
 
     if (kind == 2)
+    {
+        emit plugin_selected();
         return;
+    }
 
     if (kind == 3)
     {
@@ -188,8 +191,12 @@ void sidebar_widget_t::on_item_clicked(QListWidgetItem * item)
 
         auto ext = path.substr(dot);
         if (ext == ".json" || ext == ".xml")
+        {
             emit workspace_file_clicked(path);
+            return;
+        }
 
+        emit plugin_selected();
         return;
     }
 
@@ -243,12 +250,6 @@ void sidebar_widget_t::on_context_menu(const QPoint & pos)
         menu.addSeparator();
         auto * unload_action = menu.addAction("Unload");
 
-        bool has_dicts = (user_count_ + base_count_) > 0;
-        make_dict_base_action->setEnabled(has_dicts);
-        make_base_action->setEnabled(plugin_count_ >= 2);
-        convert_action->setEnabled(has_dicts);
-        create_action->setEnabled(has_dicts);
-
         auto * selected = menu.exec(list_->viewport()->mapToGlobal(pos));
         if (selected == make_dict_action)
             emit plugin_operation_requested(index, plugin_op_t::make_dict);
@@ -273,14 +274,11 @@ void sidebar_widget_t::on_context_menu(const QPoint & pos)
             auto * make_dict_action = menu.addAction("Make Dict");
             auto * make_dict_base_action = menu.addAction("Make Dict with Base");
             auto * make_base_action = menu.addAction("Make Base");
+            menu.addSeparator();
             auto * convert_action = menu.addAction("Convert");
             auto * create_action = menu.addAction("Create");
-
-            bool has_dicts = (user_count_ + base_count_) > 0;
-            make_dict_base_action->setEnabled(has_dicts);
-            make_base_action->setEnabled(plugin_count_ >= 2);
-            convert_action->setEnabled(has_dicts);
-            create_action->setEnabled(has_dicts);
+            menu.addSeparator();
+            auto * delete_action = menu.addAction("Delete");
 
             auto * selected = menu.exec(list_->viewport()->mapToGlobal(pos));
             if (selected == make_dict_action)
@@ -293,20 +291,16 @@ void sidebar_widget_t::on_context_menu(const QPoint & pos)
                 emit plugin_operation_requested(-(index + 1), plugin_op_t::convert);
             else if (selected == create_action)
                 emit plugin_operation_requested(-(index + 1), plugin_op_t::create_plugin);
+            else if (selected == delete_action)
+                emit workspace_delete_requested(path.toStdString());
         }
         else if (ext == "json" || ext == "xml")
         {
-            auto * save_action = menu.addAction("Save");
-            auto * save_as_action = menu.addAction("Save As...");
-            auto * unload_action = menu.addAction("Unload");
+            auto * delete_action = menu.addAction("Delete");
 
             auto * selected = menu.exec(list_->viewport()->mapToGlobal(pos));
-            if (selected == save_action)
-                emit save_requested(index);
-            else if (selected == save_as_action)
-                emit save_as_requested(index);
-            else if (selected == unload_action)
-                emit unload_requested(index);
+            if (selected == delete_action)
+                emit workspace_delete_requested(path.toStdString());
         }
     }
 }

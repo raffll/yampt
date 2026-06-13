@@ -241,38 +241,79 @@ main_window_t::main_window_t(QWidget * parent)
     connect(sidebar_, &sidebar_widget_t::unload_requested, this, &main_window_t::on_unload_slot);
     connect(sidebar_, &sidebar_widget_t::plugin_operation_requested, this, &main_window_t::on_plugin_operation);
     connect(sidebar_, &sidebar_widget_t::plugin_unload_requested, this, &main_window_t::on_plugin_unload);
-    connect(sidebar_, &sidebar_widget_t::workspace_file_clicked, this, [this](const std::string & path) {
-        int old_count = workspace_.slot_count();
-        workspace_.load_dict(path, dict_kind_t::user);
+    connect(sidebar_, &sidebar_widget_t::plugin_selected, this, [this]() {
+        table_model_->rebuild({});
+        current_row_ = -1;
+    });
+    connect(sidebar_, &sidebar_widget_t::workspace_delete_requested, this, [this](const std::string & path) {
+        auto sep = path.find_last_of("/\\");
+        auto filename = sep != std::string::npos ? path.substr(sep + 1) : path;
 
-        if (workspace_.slot_count() > old_count)
+        auto answer = QMessageBox::question(
+            this, "Delete File",
+            QString("Delete \"%1\" from disk?").arg(QString::fromStdString(filename)),
+            QMessageBox::Yes | QMessageBox::No);
+
+        if (answer != QMessageBox::Yes)
+            return;
+
+        QFile::remove(QString::fromStdString(path));
+
+        for (int i = 0; i < workspace_.slot_count(); ++i)
         {
-            auto * new_slot = workspace_.get_slot(workspace_.slot_count() - 1);
-            if (new_slot)
+            const auto * slot = workspace_.get_slot(i);
+            if (slot && slot->path == path)
             {
-                for (auto & [type, chapter] : new_slot->data)
-                {
-                    for (auto & entry : chapter.records)
-                    {
-                        entry.key_text = decode_to_utf8(entry.key_text, current_codepage_);
-                        entry.old_text = decode_to_utf8(entry.old_text, current_codepage_);
-                        entry.new_text = decode_to_utf8(entry.new_text, current_codepage_);
-                    }
-                }
+                workspace_.unload_dict(i);
+                break;
             }
-
-            std::vector<dict_source_t> sources;
-            for (const auto & dict_slot : workspace_.get_all_slots())
-                sources.push_back({&dict_slot.data, dict_slot.path});
-            annotation_manager_.rebuild(sources);
         }
 
         rebuild_sidebar();
         rebuild_table();
+        scan_workspace();
+    });
+    connect(sidebar_, &sidebar_widget_t::workspace_file_clicked, this, [this](const std::string & path) {
+        for (int i = 0; i < workspace_.slot_count(); ++i)
+        {
+            const auto * slot = workspace_.get_slot(i);
+            if (slot && slot->path == path)
+            {
+                commit_current_edit();
+                workspace_.set_active(i);
+                rebuild_table();
+                return;
+            }
+        }
 
-        int new_index = workspace_.slot_count() - 1;
-        if (new_index >= 0)
-            on_slot_clicked(new_index);
+        int old_count = workspace_.slot_count();
+        workspace_.load_dict(path, dict_kind_t::user);
+
+        if (workspace_.slot_count() <= old_count)
+            return;
+
+        auto * new_slot = workspace_.get_slot(workspace_.slot_count() - 1);
+        if (new_slot)
+        {
+            for (auto & [type, chapter] : new_slot->data)
+            {
+                for (auto & entry : chapter.records)
+                {
+                    entry.key_text = decode_to_utf8(entry.key_text, current_codepage_);
+                    entry.old_text = decode_to_utf8(entry.old_text, current_codepage_);
+                    entry.new_text = decode_to_utf8(entry.new_text, current_codepage_);
+                }
+            }
+        }
+
+        std::vector<dict_source_t> sources;
+        for (const auto & dict_slot : workspace_.get_all_slots())
+            sources.push_back({&dict_slot.data, dict_slot.path});
+        annotation_manager_.rebuild(sources);
+
+        commit_current_edit();
+        workspace_.set_active(workspace_.slot_count() - 1);
+        rebuild_table();
     });
 
     connect(table_view_, &record_table_view_t::row_selected, this, &main_window_t::on_row_selected);
@@ -1126,6 +1167,8 @@ void main_window_t::on_encoding_changed(int index)
 
 void main_window_t::rebuild_sidebar()
 {
+    const auto workspace_dir = QCoreApplication::applicationDirPath().toStdString() + "/workspace/";
+
     std::vector<std::string> user_names;
     std::vector<std::string> user_paths;
     std::vector<bool> user_dirty;
@@ -1136,6 +1179,9 @@ void main_window_t::rebuild_sidebar()
     {
         const auto * slot = workspace_.get_slot(i);
         if (!slot)
+            continue;
+
+        if (slot->path.find(workspace_dir) == 0)
             continue;
 
         auto filename = slot->path;
@@ -1357,10 +1403,15 @@ void main_window_t::save_config()
     config_.user_dict_paths.clear();
     config_.base_dict_paths.clear();
 
+    const auto workspace_dir = QCoreApplication::applicationDirPath().toStdString() + "/workspace/";
+
     for (int i = 0; i < workspace_.slot_count(); ++i)
     {
         const auto * slot = workspace_.get_slot(i);
         if (!slot)
+            continue;
+
+        if (slot->path.find(workspace_dir) == 0)
             continue;
 
         if (workspace_.is_user_slot(i))
@@ -1449,8 +1500,6 @@ void main_window_t::on_plugin_operation(int plugin_index, plugin_op_t op)
     case plugin_op_t::make_dict_with_base:
     {
         auto entries = build_dict_entries(workspace_folder);
-        if (entries.empty())
-            return;
 
         dict_selection_dialog_t dialog(entries, this);
         if (dialog.exec() != QDialog::Accepted)
@@ -1466,8 +1515,16 @@ void main_window_t::on_plugin_operation(int plugin_index, plugin_op_t op)
     }
     case plugin_op_t::make_base:
     {
+        auto source_sep = plugin_path.find_last_of("/\\");
+        auto source_filename = source_sep != std::string::npos ? plugin_path.substr(source_sep + 1) : plugin_path;
+        auto source_lower = source_filename;
+        std::transform(source_lower.begin(), source_lower.end(), source_lower.begin(),
+            [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+
         QStringList plugin_names;
         std::vector<int> plugin_indices;
+        int best_match_row = 0;
+
         for (int i = 0; i < static_cast<int>(plugin_slots_.size()); ++i)
         {
             if (i == plugin_index)
@@ -1476,6 +1533,13 @@ void main_window_t::on_plugin_operation(int plugin_index, plugin_op_t op)
             const auto & slot = plugin_slots_[i];
             auto sep = slot.path.find_last_of("/\\");
             auto name = sep != std::string::npos ? slot.path.substr(sep + 1) : slot.path;
+
+            auto name_lower = name;
+            std::transform(name_lower.begin(), name_lower.end(), name_lower.begin(),
+                [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+
+            if (name_lower == source_lower && slot.path != plugin_path)
+                best_match_row = static_cast<int>(plugin_names.size());
 
             if (!slot.language.empty())
                 name += " [" + slot.language + "]";
@@ -1496,7 +1560,7 @@ void main_window_t::on_plugin_operation(int plugin_index, plugin_op_t op)
 
         auto * list = new QListWidget(&dlg);
         list->addItems(plugin_names);
-        list->setCurrentRow(0);
+        list->setCurrentRow(best_match_row);
         dlg_layout->addWidget(list);
 
         auto * buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dlg);
@@ -1513,15 +1577,15 @@ void main_window_t::on_plugin_operation(int plugin_index, plugin_op_t op)
         if (sel_idx < 0)
             return;
 
-        const auto & native_path = plugin_slots_[plugin_indices[sel_idx]].path;
-        result = executor_.make_base(plugin_path, native_path);
+        const auto & native_slot = plugin_slots_[plugin_indices[sel_idx]];
+        const auto & foreign_lang = (plugin_index >= 0 && plugin_index < static_cast<int>(plugin_slots_.size()))
+            ? plugin_slots_[plugin_index].language : std::string{};
+        result = executor_.make_base(plugin_path, native_slot.path, foreign_lang, native_slot.language);
         break;
     }
     case plugin_op_t::convert:
     {
         auto entries = build_dict_entries(workspace_folder);
-        if (entries.empty())
-            return;
 
         dict_selection_dialog_t dialog(entries, this);
         if (dialog.exec() != QDialog::Accepted)
@@ -1537,8 +1601,6 @@ void main_window_t::on_plugin_operation(int plugin_index, plugin_op_t op)
     case plugin_op_t::create_plugin:
     {
         auto entries = build_dict_entries(workspace_folder);
-        if (entries.empty())
-            return;
 
         dict_selection_dialog_t dialog(entries, this);
         if (dialog.exec() != QDialog::Accepted)

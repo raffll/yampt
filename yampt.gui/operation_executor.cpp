@@ -10,6 +10,8 @@
 #include <QDir>
 #include <QFileInfo>
 
+#include <algorithm>
+
 std::string operation_executor_t::make_output_path(const std::string & source_path, const std::string & ext) const
 {
 	const auto info = QFileInfo(QString::fromStdString(source_path));
@@ -62,7 +64,8 @@ operation_executor_t::result_t operation_executor_t::make_dict_with_base(const s
 	return {!tools_t::has_error(), tools_t::get_log(), output_path};
 }
 
-operation_executor_t::result_t operation_executor_t::make_base(const std::string & foreign_path, const std::string & native_path)
+operation_executor_t::result_t operation_executor_t::make_base(const std::string & foreign_path, const std::string & native_path,
+    const std::string & foreign_lang, const std::string & native_lang)
 {
 	tools_t::reset_log();
 
@@ -71,7 +74,22 @@ operation_executor_t::result_t operation_executor_t::make_base(const std::string
 	if (tools_t::has_error())
 		return {false, tools_t::get_log(), ""};
 
-	const auto output_path = make_output_path(foreign_path, "json");
+	const auto foreign_info = QFileInfo(QString::fromStdString(foreign_path));
+	const auto native_info = QFileInfo(QString::fromStdString(native_path));
+	const auto foreign_name = foreign_info.completeBaseName().toStdString();
+	const auto native_name = native_info.completeBaseName().toStdString();
+
+	auto fl = foreign_lang.empty() ? "??" : foreign_lang;
+	auto nl = native_lang.empty() ? "??" : native_lang;
+
+	std::string output_name = foreign_name;
+	if (foreign_name != native_name)
+		output_name += "+" + native_name;
+
+	const auto timestamp = QDateTime::currentDateTime().toString("yyyyMMddHHmmss").toStdString();
+	output_name += "_BASE_" + fl + "-" + nl + "-" + timestamp;
+
+	const auto output_path = get_workspace_dir() + output_name + ".json";
 	dict_writer_t::write(creator.get_dict(), output_path);
 
 	return {!tools_t::has_error(), tools_t::get_log(), output_path};
@@ -81,7 +99,9 @@ operation_executor_t::result_t operation_executor_t::convert(const std::string &
 {
 	tools_t::reset_log();
 
-	dict_merger_t merger(dict_paths);
+	auto reversed = dict_paths;
+	std::reverse(reversed.begin(), reversed.end());
+	dict_merger_t merger(reversed);
 
 	esm_converter_t converter(plugin_path, merger, false, "", encoding, false);
 
@@ -101,7 +121,9 @@ operation_executor_t::result_t operation_executor_t::create_plugin(const std::st
 {
 	tools_t::reset_log();
 
-	dict_merger_t merger(dict_paths);
+	auto reversed = dict_paths;
+	std::reverse(reversed.begin(), reversed.end());
+	dict_merger_t merger(reversed);
 
 	esm_converter_t converter(plugin_path, merger, false, "", encoding, true);
 

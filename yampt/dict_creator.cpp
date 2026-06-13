@@ -17,8 +17,8 @@ dict_creator_t::dict_creator_t(
     const std::string & path,
     const std::string & path_ext,
     translation_engine_t * translation_engine)
-    : esm(path)
-    , esm_ext(path_ext)
+    : esm(path_ext)
+    , esm_ext(path)
     , esm_ref(esm_ext)
     , mode(mode_t::base)
     , translation_engine_(translation_engine)
