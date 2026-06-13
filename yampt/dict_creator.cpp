@@ -79,7 +79,7 @@ void dict_creator_t::reset_counters()
 
 static bool is_number_or_punct(char c)
 {
-	return (c >= '0' && c <= '9') || c == '.' || c == ',' || c == '-' || c == ':' || c == ';' || c == '!' || c == '?';
+	return (c >= '0' && c <= '9');
 }
 
 bool dict_creator_t::differs_only_in_numbers_or_punct(const std::string & a, const std::string & b)
@@ -94,7 +94,7 @@ bool dict_creator_t::differs_only_in_numbers_or_punct(const std::string & a, con
 		if (a[i] == b[i])
 			continue;
 
-		if (!is_number_or_punct(a[i]) && !is_number_or_punct(b[i]))
+		if (!is_number_or_punct(a[i]) || !is_number_or_punct(b[i]))
 			return false;
 
 		has_difference = true;

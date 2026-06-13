@@ -102,59 +102,27 @@ void editor_panel_t::set_adapted_from(const std::string & text)
     adapted_from_view_->setVisible(true);
 }
 
-void editor_panel_t::highlight_adapted_diff(const std::string & new_text, const std::string & adapted_from, bool use_original)
+void editor_panel_t::highlight_adapted_diff(const std::string & new_text, const std::string & adapted_from, bool /*use_original*/)
 {
     const auto new_str = QString::fromStdString(new_text);
     const auto from_str = QString::fromStdString(adapted_from);
 
-    auto * target_view = use_original ? original_view_ : translation_editor_;
+    int prefix = 0;
+    int max_prefix = std::min(new_str.length(), from_str.length());
+    while (prefix < max_prefix && new_str[prefix] == from_str[prefix])
+        ++prefix;
 
-    QList<QTextEdit::ExtraSelection> target_selections;
     QList<QTextEdit::ExtraSelection> from_selections;
-
-    int len = std::min(new_str.length(), from_str.length());
-
-    for (int i = 0; i < len; ++i)
-    {
-        if (new_str[i] == from_str[i])
-            continue;
-
-        QTextEdit::ExtraSelection sel_target;
-        sel_target.format.setBackground(QColor(255, 220, 150));
-        sel_target.cursor = target_view->textCursor();
-        sel_target.cursor.setPosition(i);
-        sel_target.cursor.setPosition(i + 1, QTextCursor::KeepAnchor);
-        target_selections.append(sel_target);
-
-        QTextEdit::ExtraSelection sel_from;
-        sel_from.format.setBackground(QColor(255, 220, 150));
-        sel_from.cursor = adapted_from_view_->textCursor();
-        sel_from.cursor.setPosition(i);
-        sel_from.cursor.setPosition(i + 1, QTextCursor::KeepAnchor);
-        from_selections.append(sel_from);
-    }
-
-    for (int i = len; i < new_str.length(); ++i)
-    {
-        QTextEdit::ExtraSelection sel;
-        sel.format.setBackground(QColor(255, 220, 150));
-        sel.cursor = target_view->textCursor();
-        sel.cursor.setPosition(i);
-        sel.cursor.setPosition(i + 1, QTextCursor::KeepAnchor);
-        target_selections.append(sel);
-    }
-
-    for (int i = len; i < from_str.length(); ++i)
+    if (prefix < from_str.length())
     {
         QTextEdit::ExtraSelection sel;
         sel.format.setBackground(QColor(255, 220, 150));
         sel.cursor = adapted_from_view_->textCursor();
-        sel.cursor.setPosition(i);
-        sel.cursor.setPosition(i + 1, QTextCursor::KeepAnchor);
+        sel.cursor.setPosition(prefix);
+        sel.cursor.setPosition(from_str.length(), QTextCursor::KeepAnchor);
         from_selections.append(sel);
     }
 
-    target_view->setExtraSelections(target_selections);
     adapted_from_view_->setExtraSelections(from_selections);
 }
 

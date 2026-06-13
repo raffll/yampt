@@ -996,11 +996,6 @@ void main_window_t::load_record(int row)
     if ((row_data->status == "adapted" || row_data->status == "changed") && !adapted_from_str.empty())
     {
         editor_panel_->set_adapted_from(adapted_from_str);
-
-        if (row_data->status == "adapted")
-            editor_panel_->highlight_adapted_diff(row_data->new_text, adapted_from_str, false);
-        else
-            editor_panel_->highlight_adapted_diff(row_data->old_text, adapted_from_str, true);
     }
     else
     {
@@ -1107,6 +1102,15 @@ void main_window_t::load_record(int row)
         trans_selections.append(sel);
     }
     editor_panel_->translation_editor()->setExtraSelections(trans_selections);
+
+    if (row_data->status == "adapted" && !adapted_from_str.empty())
+    {
+        editor_panel_->highlight_adapted_diff(row_data->new_text, adapted_from_str, false);
+    }
+    else if (row_data->status == "changed" && !adapted_from_str.empty())
+    {
+        editor_panel_->highlight_adapted_diff(row_data->old_text, adapted_from_str, true);
+    }
 
     const auto history = history_manager_.get_history(row_data->type, row_data->key_text);
     history_panel_->update_history(history, !is_base);
@@ -1808,6 +1812,11 @@ void main_window_t::scan_workspace()
 
     sidebar_->set_workspace_sections(sections);
     workspace_sections_ = sections;
+
+    std::vector<dict_source_t> sources;
+    for (const auto & dict_slot : workspace_.get_all_slots())
+        sources.push_back({&dict_slot.data, dict_slot.path});
+    annotation_manager_.rebuild(sources);
 }
 
 std::vector<dict_selection_dialog_t::dict_entry_t> main_window_t::build_dict_entries(const std::string & workspace_folder) const
