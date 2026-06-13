@@ -79,7 +79,9 @@ filter_bar_t::filter_bar_t(QWidget * parent)
 	top_layout->setSpacing(2);
 
 	all_button_ = new QPushButton("All", top_row);
-	connect(all_button_, &QPushButton::clicked, this, &filter_bar_t::on_all_clicked);
+	connect(all_button_, &QPushButton::clicked, this, [this]() {
+		on_all_clicked();
+	});
 	top_layout->addWidget(all_button_);
 
 	for (const auto & type : type_order)
@@ -148,7 +150,6 @@ filter_bar_t::filter_bar_t(QWidget * parent)
 	add_group(sub_type_layout_, row2, indx_sub_types);
 	sub_type_layout_->addStretch();
 
-	sub_type_bar_ = new QWidget(this);
 	root_layout->addWidget(row1);
 	root_layout->addWidget(row2);
 
@@ -251,8 +252,17 @@ void filter_bar_t::on_all_clicked()
 
 	solo_ = false;
 	solo_type_ = tools_t::rec_type_t::unknown;
+
+	active_sub_types_.clear();
+	for (auto * btn : sub_type_buttons_)
+		active_sub_types_.insert(btn->text().toStdString());
+
+	sub_type_solo_ = false;
+	sub_type_solo_value_.clear();
+	saved_sub_types_.clear();
+
 	update_button_styles();
-	rebuild_sub_type_bar();
+	update_sub_type_styles();
 	emit all_reset_requested();
 	emit filters_changed();
 }

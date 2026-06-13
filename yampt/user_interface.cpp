@@ -25,6 +25,10 @@ void user_interface_t::parse_command_line()
 			{
 				encoding = tools_t::encoding_t::windows_1250;
 			}
+			else if (args[i] == "--debug")
+			{
+				tools_t::set_debug(true);
+			}
 			else if (args[i] == "-f")
 			{
 				command = "-f";

@@ -54,7 +54,6 @@ private:
 	bool solo_ = false;
 	tools_t::rec_type_t solo_type_ = tools_t::rec_type_t::unknown;
 
-	QWidget * sub_type_bar_ = nullptr;
 	QHBoxLayout * sub_type_layout_ = nullptr;
 	std::vector<QPushButton *> sub_type_buttons_;
 	std::set<std::string> active_sub_types_;

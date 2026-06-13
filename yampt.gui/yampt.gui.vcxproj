@@ -172,6 +172,7 @@
     <ClCompile Include="..\yampt\tools.cpp" />
     <ClCompile Include="..\yampt\dict_reader.cpp" />
     <ClCompile Include="..\yampt\dict_writer.cpp" />
+    <ClCompile Include="..\yampt\dict_merger.cpp" />
     <ClCompile Include="..\yampt\dict_creator.cpp" />
     <ClCompile Include="..\yampt\dict_creator_single.cpp" />
     <ClCompile Include="..\yampt\dict_creator_base.cpp" />
@@ -203,6 +204,9 @@
     <ClCompile Include="sidebar_widget.cpp" />
     <ClCompile Include="annotations_panel.cpp" />
     <ClCompile Include="history_panel.cpp" />
+    <ClCompile Include="log_tab.cpp" />
+    <ClCompile Include="dict_selection_dialog.cpp" />
+    <ClCompile Include="operation_executor.cpp" />
     <ClCompile Include="..\yampt\translation_engine.cpp" />
     <ClCompile Include="..\external\yyjson.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CompileAsC</CompileAs>
@@ -317,6 +321,18 @@
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
+    <CustomBuild Include="log_tab.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+    <CustomBuild Include="dict_selection_dialog.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(IntDir)moc_main_window.cpp">
@@ -363,6 +379,12 @@
     </ClCompile>
     <ClCompile Include="$(IntDir)moc_history_panel.cpp">
       <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_history_panel.cpp')">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(IntDir)moc_log_tab.cpp">
+      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_log_tab.cpp')">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(IntDir)moc_dict_selection_dialog.cpp">
+      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_dict_selection_dialog.cpp')">true</ExcludedFromBuild>
     </ClCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

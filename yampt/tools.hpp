@@ -162,6 +162,16 @@ public:
 		return error_flag;
 	}
 
+	static void set_debug(bool enabled)
+	{
+		debug_flag = enabled;
+	}
+
+	static bool is_debug()
+	{
+		return debug_flag;
+	}
+
 	static void reset_log();
 	static dict_t initialize_dict();
 	static std::string type_to_str(tools_t::rec_type_t type);
@@ -173,4 +183,5 @@ public:
 private:
 	static std::string log1;
 	static bool error_flag;
+	static bool debug_flag;
 };

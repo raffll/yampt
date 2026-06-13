@@ -1,4 +1,5 @@
 #include "editor_config.hpp"
+#include <filesystem>
 #include <fstream>
 
 static std::string trim(const std::string & s)
@@ -81,6 +82,26 @@ void editor_config_t::load(const std::string & path)
 			else if (starts_with(key, "Path"))
 			{
 				base_dict_paths.push_back(value);
+			}
+		}
+		else if (section == "Plugins")
+		{
+			if (key == "Count")
+			{
+				int count = 0;
+				try
+				{
+					count = std::stoi(value);
+				}
+				catch (...)
+				{}
+				plugin_paths.clear();
+				plugin_paths.reserve(count);
+			}
+			else if (starts_with(key, "Path"))
+			{
+				if (std::filesystem::exists(value))
+					plugin_paths.push_back(value);
 			}
 		}
 		else if (section == "Editor")
@@ -235,6 +256,11 @@ void editor_config_t::save(const std::string & path) const
 	file << "Count=" << base_dict_paths.size() << "\n";
 	for (size_t i = 0; i < base_dict_paths.size(); ++i)
 		file << "Path" << i << "=" << base_dict_paths[i] << "\n";
+
+	file << "\n[Plugins]\n";
+	file << "Count=" << plugin_paths.size() << "\n";
+	for (size_t i = 0; i < plugin_paths.size(); ++i)
+		file << "Path" << i << "=" << plugin_paths[i] << "\n";
 
 	file << "\n[Editor]\n";
 	file << "ActiveDictIndex=" << active_dict_index << "\n";

@@ -1,0 +1,118 @@
+#include "operation_executor.hpp"
+
+#include "../yampt/dict_creator.hpp"
+#include "../yampt/dict_merger.hpp"
+#include "../yampt/dict_writer.hpp"
+#include "../yampt/esm_converter.hpp"
+
+#include <QCoreApplication>
+#include <QDateTime>
+#include <QDir>
+#include <QFileInfo>
+
+std::string operation_executor_t::make_output_path(const std::string & source_path, const std::string & ext) const
+{
+	const auto info = QFileInfo(QString::fromStdString(source_path));
+	const auto base_name = info.completeBaseName().toStdString();
+	const auto timestamp = QDateTime::currentDateTime().toString("yyyyMMddHHmmss").toStdString();
+	const auto dir = get_workspace_dir();
+
+	return dir + base_name + "-" + timestamp + "." + ext;
+}
+
+std::string operation_executor_t::get_workspace_dir() const
+{
+	const auto app_dir = QCoreApplication::applicationDirPath();
+	const auto workspace_path = app_dir + "/workspace/";
+
+	QDir dir(workspace_path);
+	if (!dir.exists())
+		dir.mkpath(".");
+
+	return workspace_path.toStdString();
+}
+
+operation_executor_t::result_t operation_executor_t::make_dict(const std::string & plugin_path, tools_t::encoding_t encoding)
+{
+	tools_t::reset_log();
+
+	dict_creator_t creator(plugin_path);
+
+	if (tools_t::has_error())
+		return {false, tools_t::get_log(), ""};
+
+	const auto output_path = make_output_path(plugin_path, "json");
+	dict_writer_t::write(creator.get_dict(), output_path);
+
+	return {!tools_t::has_error(), tools_t::get_log(), output_path};
+}
+
+operation_executor_t::result_t operation_executor_t::make_dict_with_base(const std::string & plugin_path, const tools_t::dict_t & base_dict, tools_t::encoding_t encoding)
+{
+	tools_t::reset_log();
+
+	dict_creator_t creator(plugin_path, &base_dict);
+
+	if (tools_t::has_error())
+		return {false, tools_t::get_log(), ""};
+
+	const auto output_path = make_output_path(plugin_path, "json");
+	dict_writer_t::write(creator.get_dict(), output_path);
+
+	return {!tools_t::has_error(), tools_t::get_log(), output_path};
+}
+
+operation_executor_t::result_t operation_executor_t::make_base(const std::string & foreign_path, const std::string & native_path)
+{
+	tools_t::reset_log();
+
+	dict_creator_t creator(foreign_path, native_path);
+
+	if (tools_t::has_error())
+		return {false, tools_t::get_log(), ""};
+
+	const auto output_path = make_output_path(foreign_path, "json");
+	dict_writer_t::write(creator.get_dict(), output_path);
+
+	return {!tools_t::has_error(), tools_t::get_log(), output_path};
+}
+
+operation_executor_t::result_t operation_executor_t::convert(const std::string & plugin_path, const std::vector<std::string> & dict_paths, tools_t::encoding_t encoding)
+{
+	tools_t::reset_log();
+
+	dict_merger_t merger(dict_paths);
+
+	esm_converter_t converter(plugin_path, merger, false, "", encoding, false);
+
+	if (!converter.is_loaded())
+		return {false, tools_t::get_log(), ""};
+
+	const auto info = QFileInfo(QString::fromStdString(plugin_path));
+	const auto ext = info.suffix().toStdString();
+	const auto output_path = make_output_path(plugin_path, ext);
+
+	tools_t::write_file(converter.get_records(), output_path);
+
+	return {true, tools_t::get_log(), output_path};
+}
+
+operation_executor_t::result_t operation_executor_t::create_plugin(const std::string & plugin_path, const std::vector<std::string> & dict_paths, tools_t::encoding_t encoding)
+{
+	tools_t::reset_log();
+
+	dict_merger_t merger(dict_paths);
+
+	esm_converter_t converter(plugin_path, merger, false, "", encoding, true);
+
+	if (!converter.is_loaded())
+		return {false, tools_t::get_log(), ""};
+
+	const auto info = QFileInfo(QString::fromStdString(plugin_path));
+	const auto ext = info.suffix().toStdString();
+	const auto output_path = make_output_path(plugin_path, ext);
+
+	tools_t::create_file(converter.get_records(), output_path);
+
+	return {true, tools_t::get_log(), output_path};
+}

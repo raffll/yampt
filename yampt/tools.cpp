@@ -2,6 +2,7 @@
 
 std::string tools_t::log1;
 bool tools_t::error_flag = false;
+bool tools_t::debug_flag = false;
 
 const std::vector<std::string> tools_t::keywords { "messagebox", "choice", "say" };
 
@@ -231,6 +232,9 @@ void tools_t::add_log(const std::string & entry, const bool silent)
 	{
 		error_flag = true;
 	}
+
+	if (silent && !debug_flag)
+		return;
 
 	log1 += entry;
 

@@ -14,6 +14,7 @@ public:
 	std::array<float, 4> column_widths = { 150.f, 300.f, 300.f, 80.f };
 	std::vector<std::string> user_dict_paths;
 	std::vector<std::string> base_dict_paths;
+	std::vector<std::string> plugin_paths;
 	std::string spell_check_aff;
 	std::string spell_check_dic;
 	int spell_lang_index = -1;

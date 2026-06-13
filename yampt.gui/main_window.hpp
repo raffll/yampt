@@ -1,11 +1,14 @@
 #pragma once
 
 #include "annotation_manager.hpp"
+#include "dict_selection_dialog.hpp"
 #include "dict_workspace.hpp"
 #include "editor_config.hpp"
 #include "encoding_utils.hpp"
 #include "history_manager.hpp"
+#include "operation_executor.hpp"
 #include "record_table_model.hpp"
+#include "sidebar_widget.hpp"
 #include "spell_checker.hpp"
 #include "syntax_highlighter.hpp"
 #include "validation_manager.hpp"
@@ -19,9 +22,9 @@ class editor_panel_t;
 class filter_bar_t;
 class history_panel_t;
 class hyperlink_highlighter_t;
+class log_tab_t;
 class mwscript_highlighter_t;
 class record_table_view_t;
-class sidebar_widget_t;
 class spell_check_highlighter_t;
 class spell_context_menu_t;
 class status_filter_bar_t;
@@ -34,6 +37,11 @@ class QComboBox;
 class QLineEdit;
 class QSplitter;
 class QTabWidget;
+
+struct plugin_slot_t
+{
+    std::string path;
+};
 
 class main_window_t : public QMainWindow
 {
@@ -54,6 +62,9 @@ private slots:
     void on_open_user_dict();
     void on_open_base_dict();
     void on_unload_slot(int index);
+    void on_load_plugin();
+    void on_plugin_operation(int plugin_index, plugin_op_t op);
+    void on_plugin_unload(int plugin_index);
     void on_find();
     void on_next_search();
     void on_prev_search();
@@ -80,6 +91,10 @@ private:
     void update_validation();
     void scan_spell_dictionaries();
     void on_spell_lang_changed(int index);
+    void update_plugin_sidebar();
+    void scan_workspace();
+    std::vector<dict_selection_dialog_t::dict_entry_t> build_dict_entries(const std::string & workspace_folder = {}) const;
+    tools_t::encoding_t get_current_tools_encoding() const;
 
     QAction * save_action_ = nullptr;
     QAction * save_all_action_ = nullptr;
@@ -90,6 +105,7 @@ private:
     QAction * prev_search_action_ = nullptr;
     QAction * refresh_action_ = nullptr;
     QAction * escape_action_ = nullptr;
+    QAction * load_plugin_action_ = nullptr;
 
     QAction * sidebar_toggle_ = nullptr;
     QAction * bottom_panel_toggle_ = nullptr;
@@ -144,4 +160,9 @@ private:
     dict_workspace_t workspace_;
     codepage_t current_codepage_ = codepage_t::windows_1252;
     editor_config_t config_;
+
+    log_tab_t * log_tab_ = nullptr;
+    operation_executor_t executor_;
+    std::vector<plugin_slot_t> plugin_slots_;
+    std::vector<workspace_section_t> workspace_sections_;
 };

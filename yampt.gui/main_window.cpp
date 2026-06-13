@@ -2,10 +2,12 @@
 #include "annotation_highlighter.hpp"
 #include "annotations_panel.hpp"
 #include "book_preview.hpp"
+#include "dict_selection_dialog.hpp"
 #include "editor_panel.hpp"
 #include "filter_bar.hpp"
 #include "history_panel.hpp"
 #include "hyperlink_highlighter.hpp"
+#include "log_tab.hpp"
 #include "mwscript_highlighter.hpp"
 #include "record_table_view.hpp"
 #include "sidebar_widget.hpp"
@@ -14,6 +16,8 @@
 #include "status_filter_bar.hpp"
 #include "validation_indicator.hpp"
 
+#include "../yampt/dict_merger.hpp"
+
 #include <QAction>
 #include <QCheckBox>
 #include <QCloseEvent>
@@ -21,6 +25,7 @@
 #include <QCoreApplication>
 #include <QDir>
 #include <QFileDialog>
+#include <QInputDialog>
 #include <QLabel>
 #include <QLineEdit>
 #include <QMenu>
@@ -59,6 +64,9 @@ main_window_t::main_window_t(QWidget * parent)
 
     open_base_action_ = new QAction("Open &Base...", this);
     file_menu->addAction(open_base_action_);
+
+    load_plugin_action_ = new QAction("Load &Plugin...", this);
+    file_menu->addAction(load_plugin_action_);
 
     save_action_ = new QAction("&Save", this);
     save_action_->setShortcut(QKeySequence("Ctrl+S"));
@@ -177,8 +185,10 @@ main_window_t::main_window_t(QWidget * parent)
     table_view_ = new record_table_view_t(record_tabs_);
     table_view_->setModel(table_model_);
     book_preview_ = new book_preview_t(record_tabs_);
+    log_tab_ = new log_tab_t(record_tabs_);
     record_tabs_->addTab(table_view_, "Records");
     record_tabs_->addTab(book_preview_, "Book Preview");
+    record_tabs_->addTab(log_tab_, "Log");
     right_top_layout->addWidget(record_tabs_, 1);
 
     right_splitter_->addWidget(right_top_widget);
@@ -204,6 +214,7 @@ main_window_t::main_window_t(QWidget * parent)
 
     connect(open_action_, &QAction::triggered, this, &main_window_t::on_open_user_dict);
     connect(open_base_action_, &QAction::triggered, this, &main_window_t::on_open_base_dict);
+    connect(load_plugin_action_, &QAction::triggered, this, &main_window_t::on_load_plugin);
     connect(save_action_, &QAction::triggered, this, &main_window_t::on_save);
     connect(save_all_action_, &QAction::triggered, this, &main_window_t::on_save_all);
     connect(quit_action, &QAction::triggered, this, &QWidget::close);
@@ -226,6 +237,8 @@ main_window_t::main_window_t(QWidget * parent)
         rebuild_sidebar();
     });
     connect(sidebar_, &sidebar_widget_t::unload_requested, this, &main_window_t::on_unload_slot);
+    connect(sidebar_, &sidebar_widget_t::plugin_operation_requested, this, &main_window_t::on_plugin_operation);
+    connect(sidebar_, &sidebar_widget_t::plugin_unload_requested, this, &main_window_t::on_plugin_unload);
 
     connect(table_view_, &record_table_view_t::row_selected, this, &main_window_t::on_row_selected);
     connect(table_view_, &record_table_view_t::status_change_requested, this, [this](int row, const QString & new_status) {
@@ -1267,6 +1280,14 @@ void main_window_t::load_config()
     rebuild_sidebar();
     rebuild_table();
 
+    for (const auto & p : config_.plugin_paths)
+    {
+        if (QFile::exists(QString::fromStdString(p)))
+            plugin_slots_.push_back({p});
+    }
+    update_plugin_sidebar();
+    scan_workspace();
+
     if (config_.spell_lang_index > 0 && config_.spell_lang_index < spell_lang_combo_->count())
         spell_lang_combo_->setCurrentIndex(config_.spell_lang_index);
 }
@@ -1308,8 +1329,304 @@ void main_window_t::save_config()
             config_.base_dict_paths.push_back(slot->path);
     }
 
+    config_.plugin_paths.clear();
+    for (const auto & slot : plugin_slots_)
+        config_.plugin_paths.push_back(slot.path);
+
     const auto path = QCoreApplication::applicationDirPath() + "/yampt_gui.ini";
     config_.save(path.toStdString());
+}
+
+void main_window_t::on_load_plugin()
+{
+    const auto paths = QFileDialog::getOpenFileNames(
+        this, "Load Plugin", "", "ESM/ESP Files (*.esm *.esp);;All Files (*.*)");
+
+    if (paths.isEmpty())
+        return;
+
+    for (const auto & path : paths)
+        plugin_slots_.push_back({path.toStdString()});
+
+    update_plugin_sidebar();
+}
+
+void main_window_t::on_plugin_operation(int plugin_index, plugin_op_t op)
+{
+    std::string plugin_path;
+    std::string workspace_folder;
+
+    if (plugin_index < 0)
+    {
+        int ws_flat_index = -(plugin_index + 1);
+
+        int offset = 0;
+        bool found = false;
+
+        for (const auto & section : workspace_sections_)
+        {
+            for (int i = 0; i < static_cast<int>(section.file_paths.size()); ++i)
+            {
+                if (offset == ws_flat_index)
+                {
+                    plugin_path = section.file_paths[i];
+                    workspace_folder = section.folder_name;
+                    found = true;
+                    break;
+                }
+                ++offset;
+            }
+            if (found)
+                break;
+        }
+
+        if (!found)
+            return;
+    }
+    else
+    {
+        if (plugin_index >= static_cast<int>(plugin_slots_.size()))
+            return;
+
+        plugin_path = plugin_slots_[plugin_index].path;
+    }
+    const auto encoding = get_current_tools_encoding();
+
+    operation_executor_t::result_t result;
+
+    switch (op)
+    {
+    case plugin_op_t::make_dict:
+    {
+        result = executor_.make_dict(plugin_path, encoding);
+        break;
+    }
+    case plugin_op_t::make_dict_with_base:
+    {
+        auto entries = build_dict_entries(workspace_folder);
+        if (entries.empty())
+            return;
+
+        dict_selection_dialog_t dialog(entries, this);
+        if (dialog.exec() != QDialog::Accepted)
+            return;
+
+        const auto selected = dialog.get_selected_paths();
+        if (selected.empty())
+            return;
+
+        dict_merger_t merger(selected);
+        result = executor_.make_dict_with_base(plugin_path, merger.get_dict(), encoding);
+        break;
+    }
+    case plugin_op_t::make_base:
+    {
+        QStringList plugin_names;
+        std::vector<int> plugin_indices;
+        for (int i = 0; i < static_cast<int>(plugin_slots_.size()); ++i)
+        {
+            if (i == plugin_index)
+                continue;
+
+            const auto & p = plugin_slots_[i].path;
+            auto sep = p.find_last_of("/\\");
+            auto name = sep != std::string::npos ? p.substr(sep + 1) : p;
+            plugin_names.append(QString::fromStdString(name));
+            plugin_indices.push_back(i);
+        }
+
+        if (plugin_names.isEmpty())
+            return;
+
+        bool ok = false;
+        const auto selected = QInputDialog::getItem(
+            this, "Make Base", "Select the native ESM:", plugin_names, 0, false, &ok);
+
+        if (!ok || selected.isEmpty())
+            return;
+
+        int sel_idx = plugin_names.indexOf(selected);
+        if (sel_idx < 0)
+            return;
+
+        const auto & native_path = plugin_slots_[plugin_indices[sel_idx]].path;
+        result = executor_.make_base(plugin_path, native_path);
+        break;
+    }
+    case plugin_op_t::convert:
+    {
+        auto entries = build_dict_entries(workspace_folder);
+        if (entries.empty())
+            return;
+
+        dict_selection_dialog_t dialog(entries, this);
+        if (dialog.exec() != QDialog::Accepted)
+            return;
+
+        const auto selected = dialog.get_selected_paths();
+        if (selected.empty())
+            return;
+
+        result = executor_.convert(plugin_path, selected, encoding);
+        break;
+    }
+    case plugin_op_t::create_plugin:
+    {
+        auto entries = build_dict_entries(workspace_folder);
+        if (entries.empty())
+            return;
+
+        dict_selection_dialog_t dialog(entries, this);
+        if (dialog.exec() != QDialog::Accepted)
+            return;
+
+        const auto selected = dialog.get_selected_paths();
+        if (selected.empty())
+            return;
+
+        result = executor_.create_plugin(plugin_path, selected, encoding);
+        break;
+    }
+    }
+
+    auto sep = plugin_path.find_last_of("/\\");
+    auto plugin_name = sep != std::string::npos ? plugin_path.substr(sep + 1) : plugin_path;
+
+    std::string op_name;
+    switch (op)
+    {
+    case plugin_op_t::make_dict: op_name = "Make Dict: " + plugin_name; break;
+    case plugin_op_t::make_dict_with_base: op_name = "Make Dict with Base: " + plugin_name; break;
+    case plugin_op_t::make_base: op_name = "Make Base: " + plugin_name; break;
+    case plugin_op_t::convert: op_name = "Convert: " + plugin_name; break;
+    case plugin_op_t::create_plugin: op_name = "Create: " + plugin_name; break;
+    }
+
+    log_tab_->append_log(op_name, result.log_text);
+    record_tabs_->setCurrentWidget(log_tab_);
+    scan_workspace();
+}
+
+void main_window_t::on_plugin_unload(int plugin_index)
+{
+    if (plugin_index < 0 || plugin_index >= static_cast<int>(plugin_slots_.size()))
+        return;
+
+    plugin_slots_.erase(plugin_slots_.begin() + plugin_index);
+    update_plugin_sidebar();
+}
+
+void main_window_t::update_plugin_sidebar()
+{
+    std::vector<std::string> names;
+    std::vector<std::string> paths;
+    for (const auto & slot : plugin_slots_)
+    {
+        auto sep = slot.path.find_last_of("/\\");
+        names.push_back(sep != std::string::npos ? slot.path.substr(sep + 1) : slot.path);
+        paths.push_back(slot.path);
+    }
+    sidebar_->set_plugin_slots(names, paths);
+}
+
+void main_window_t::scan_workspace()
+{
+    const auto app_dir = QCoreApplication::applicationDirPath();
+    QDir workspace_dir(app_dir + "/workspace");
+
+    std::vector<workspace_section_t> sections;
+
+    if (!workspace_dir.exists())
+    {
+        sidebar_->set_workspace_sections(sections);
+        workspace_sections_ = sections;
+        return;
+    }
+
+    workspace_section_t root_section;
+    root_section.folder_name = "";
+    const auto root_files = workspace_dir.entryList({"*.json", "*.xml", "*.esm", "*.esp"}, QDir::Files);
+    for (const auto & f : root_files)
+    {
+        root_section.file_names.push_back(f.toStdString());
+        root_section.file_paths.push_back(workspace_dir.absoluteFilePath(f).toStdString());
+    }
+    if (!root_section.file_names.empty())
+        sections.push_back(std::move(root_section));
+
+    const auto subdirs = workspace_dir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+    for (const auto & sub : subdirs)
+    {
+        QDir sub_dir(workspace_dir.absoluteFilePath(sub));
+        const auto sub_files = sub_dir.entryList({"*.json", "*.xml", "*.esm", "*.esp"}, QDir::Files);
+        if (sub_files.isEmpty())
+            continue;
+
+        workspace_section_t section;
+        section.folder_name = sub.toStdString();
+        for (const auto & f : sub_files)
+        {
+            section.file_names.push_back(f.toStdString());
+            section.file_paths.push_back(sub_dir.absoluteFilePath(f).toStdString());
+        }
+        sections.push_back(std::move(section));
+    }
+
+    sidebar_->set_workspace_sections(sections);
+    workspace_sections_ = sections;
+}
+
+std::vector<dict_selection_dialog_t::dict_entry_t> main_window_t::build_dict_entries(const std::string & workspace_folder) const
+{
+    std::vector<dict_selection_dialog_t::dict_entry_t> entries;
+
+    const auto app_dir = QCoreApplication::applicationDirPath().toStdString();
+    const auto workspace_path = app_dir + "/workspace/" + workspace_folder;
+
+    for (int i = 0; i < workspace_.slot_count(); ++i)
+    {
+        const auto * slot = workspace_.get_slot(i);
+        if (!slot)
+            continue;
+
+        auto filename = slot->path;
+        auto sep = filename.find_last_of("/\\");
+        if (sep != std::string::npos)
+            filename = filename.substr(sep + 1);
+
+        auto kind = workspace_.is_base_slot(i) ? dict_kind_t::base : dict_kind_t::user;
+
+        bool checked = false;
+        if (!workspace_folder.empty())
+        {
+            auto slot_dir = slot->path;
+            auto dir_sep = slot_dir.find_last_of("/\\");
+            if (dir_sep != std::string::npos)
+                slot_dir = slot_dir.substr(0, dir_sep);
+
+            if (slot_dir == workspace_path)
+                checked = true;
+        }
+
+        entries.push_back({filename, slot->path, kind, checked});
+    }
+
+    return entries;
+}
+
+tools_t::encoding_t main_window_t::get_current_tools_encoding() const
+{
+    constexpr tools_t::encoding_t encodings[] = {
+        tools_t::encoding_t::windows_1250,
+        tools_t::encoding_t::windows_1251,
+        tools_t::encoding_t::windows_1252,
+    };
+
+    const int index = encoding_combo_->currentIndex();
+    if (index < 0 || index >= static_cast<int>(std::size(encodings)))
+        return tools_t::encoding_t::windows_1252;
+
+    return encodings[index];
 }
 
 void main_window_t::closeEvent(QCloseEvent * event)
