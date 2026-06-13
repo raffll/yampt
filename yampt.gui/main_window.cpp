@@ -24,10 +24,11 @@
 #include <QComboBox>
 #include <QCoreApplication>
 #include <QDir>
+#include <QDialogButtonBox>
 #include <QFileDialog>
-#include <QInputDialog>
 #include <QLabel>
 #include <QLineEdit>
+#include <QListWidget>
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
@@ -41,6 +42,7 @@
 #include <QVBoxLayout>
 
 #include <algorithm>
+#include <filesystem>
 
 main_window_t::main_window_t(QWidget * parent)
     : QMainWindow(parent)
@@ -239,6 +241,39 @@ main_window_t::main_window_t(QWidget * parent)
     connect(sidebar_, &sidebar_widget_t::unload_requested, this, &main_window_t::on_unload_slot);
     connect(sidebar_, &sidebar_widget_t::plugin_operation_requested, this, &main_window_t::on_plugin_operation);
     connect(sidebar_, &sidebar_widget_t::plugin_unload_requested, this, &main_window_t::on_plugin_unload);
+    connect(sidebar_, &sidebar_widget_t::workspace_file_clicked, this, [this](const std::string & path) {
+        int old_count = workspace_.slot_count();
+        workspace_.load_dict(path, dict_kind_t::user);
+
+        if (workspace_.slot_count() > old_count)
+        {
+            auto * new_slot = workspace_.get_slot(workspace_.slot_count() - 1);
+            if (new_slot)
+            {
+                for (auto & [type, chapter] : new_slot->data)
+                {
+                    for (auto & entry : chapter.records)
+                    {
+                        entry.key_text = decode_to_utf8(entry.key_text, current_codepage_);
+                        entry.old_text = decode_to_utf8(entry.old_text, current_codepage_);
+                        entry.new_text = decode_to_utf8(entry.new_text, current_codepage_);
+                    }
+                }
+            }
+
+            std::vector<dict_source_t> sources;
+            for (const auto & dict_slot : workspace_.get_all_slots())
+                sources.push_back({&dict_slot.data, dict_slot.path});
+            annotation_manager_.rebuild(sources);
+        }
+
+        rebuild_sidebar();
+        rebuild_table();
+
+        int new_index = workspace_.slot_count() - 1;
+        if (new_index >= 0)
+            on_slot_clicked(new_index);
+    });
 
     connect(table_view_, &record_table_view_t::row_selected, this, &main_window_t::on_row_selected);
     connect(table_view_, &record_table_view_t::status_change_requested, this, [this](int row, const QString & new_status) {
@@ -1282,8 +1317,13 @@ void main_window_t::load_config()
 
     for (const auto & p : config_.plugin_paths)
     {
-        if (QFile::exists(QString::fromStdString(p)))
-            plugin_slots_.push_back({p});
+        if (!QFile::exists(QString::fromStdString(p)))
+            continue;
+
+        plugin_slot_t slot;
+        slot.path = p;
+        detect_plugin_info(slot);
+        plugin_slots_.push_back(std::move(slot));
     }
     update_plugin_sidebar();
     scan_workspace();
@@ -1346,7 +1386,12 @@ void main_window_t::on_load_plugin()
         return;
 
     for (const auto & path : paths)
-        plugin_slots_.push_back({path.toStdString()});
+    {
+        plugin_slot_t slot;
+        slot.path = path.toStdString();
+        detect_plugin_info(slot);
+        plugin_slots_.push_back(std::move(slot));
+    }
 
     update_plugin_sidebar();
 }
@@ -1428,9 +1473,13 @@ void main_window_t::on_plugin_operation(int plugin_index, plugin_op_t op)
             if (i == plugin_index)
                 continue;
 
-            const auto & p = plugin_slots_[i].path;
-            auto sep = p.find_last_of("/\\");
-            auto name = sep != std::string::npos ? p.substr(sep + 1) : p;
+            const auto & slot = plugin_slots_[i];
+            auto sep = slot.path.find_last_of("/\\");
+            auto name = sep != std::string::npos ? slot.path.substr(sep + 1) : slot.path;
+
+            if (!slot.language.empty())
+                name += " [" + slot.language + "]";
+
             plugin_names.append(QString::fromStdString(name));
             plugin_indices.push_back(i);
         }
@@ -1438,14 +1487,29 @@ void main_window_t::on_plugin_operation(int plugin_index, plugin_op_t op)
         if (plugin_names.isEmpty())
             return;
 
-        bool ok = false;
-        const auto selected = QInputDialog::getItem(
-            this, "Make Base", "Select the native ESM:", plugin_names, 0, false, &ok);
+        QDialog dlg(this);
+        dlg.setWindowTitle("Make Base");
+        dlg.setModal(true);
 
-        if (!ok || selected.isEmpty())
+        auto * dlg_layout = new QVBoxLayout(&dlg);
+        dlg_layout->addWidget(new QLabel("Select the native ESM:", &dlg));
+
+        auto * list = new QListWidget(&dlg);
+        list->addItems(plugin_names);
+        list->setCurrentRow(0);
+        dlg_layout->addWidget(list);
+
+        auto * buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dlg);
+        dlg_layout->addWidget(buttons);
+
+        connect(buttons, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
+        connect(buttons, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
+        connect(list, &QListWidget::itemDoubleClicked, &dlg, &QDialog::accept);
+
+        if (dlg.exec() != QDialog::Accepted)
             return;
 
-        int sel_idx = plugin_names.indexOf(selected);
+        int sel_idx = list->currentRow();
         if (sel_idx < 0)
             return;
 
@@ -1516,6 +1580,49 @@ void main_window_t::on_plugin_unload(int plugin_index)
     update_plugin_sidebar();
 }
 
+void main_window_t::detect_plugin_info(plugin_slot_t & slot)
+{
+    auto sep = slot.path.find_last_of("/\\");
+    auto filename = sep != std::string::npos ? slot.path.substr(sep + 1) : slot.path;
+
+    auto lower = filename;
+    std::transform(lower.begin(), lower.end(), lower.begin(),
+        [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+
+    slot.is_master = (lower == "morrowind.esm" || lower == "tribunal.esm" || lower == "bloodmoon.esm");
+
+    if (!slot.is_master)
+        return;
+
+    std::error_code ec;
+    auto file_size = std::filesystem::file_size(slot.path, ec);
+    if (ec)
+        return;
+
+    struct known_master_t
+    {
+        uintmax_t size;
+        const char * language;
+    };
+
+    static const known_master_t known_masters[] = {
+        {79837557, "EN"}, {9631798, "EN"}, {4565686, "EN"},
+        {80640776, "DE"}, {9797295, "DE"}, {6069165, "DE"},
+        {80105097, "PL"}, {9658076, "PL"}, {4626565, "PL"},
+        {80681814, "FR"}, {10015689, "FR"}, {4697358, "FR"},
+        {79857000, "RU"}, {9702000, "RU"}, {4625000, "RU"},
+    };
+
+    for (const auto & m : known_masters)
+    {
+        if (file_size == m.size)
+        {
+            slot.language = m.language;
+            return;
+        }
+    }
+}
+
 void main_window_t::update_plugin_sidebar()
 {
     std::vector<std::string> names;
@@ -1523,7 +1630,12 @@ void main_window_t::update_plugin_sidebar()
     for (const auto & slot : plugin_slots_)
     {
         auto sep = slot.path.find_last_of("/\\");
-        names.push_back(sep != std::string::npos ? slot.path.substr(sep + 1) : slot.path);
+        auto filename = sep != std::string::npos ? slot.path.substr(sep + 1) : slot.path;
+
+        if (!slot.language.empty())
+            filename += " [" + slot.language + "]";
+
+        names.push_back(filename);
         paths.push_back(slot.path);
     }
     sidebar_->set_plugin_slots(names, paths);

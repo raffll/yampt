@@ -174,6 +174,25 @@ void sidebar_widget_t::on_item_clicked(QListWidgetItem * item)
     if (!(item->flags() & Qt::ItemIsSelectable))
         return;
 
+    int kind = item->data(Qt::UserRole + 1).toInt();
+
+    if (kind == 2)
+        return;
+
+    if (kind == 3)
+    {
+        const auto path = item->data(Qt::UserRole + 2).toString().toStdString();
+        auto dot = path.rfind('.');
+        if (dot == std::string::npos)
+            return;
+
+        auto ext = path.substr(dot);
+        if (ext == ".json" || ext == ".xml")
+            emit workspace_file_clicked(path);
+
+        return;
+    }
+
     clicked_slot_index_ = item->data(Qt::UserRole).toInt();
     emit slot_clicked(clicked_slot_index_);
 }

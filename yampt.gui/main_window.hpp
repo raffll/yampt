@@ -41,6 +41,8 @@ class QTabWidget;
 struct plugin_slot_t
 {
     std::string path;
+    std::string language;
+    bool is_master = false;
 };
 
 class main_window_t : public QMainWindow
@@ -92,6 +94,7 @@ private:
     void scan_spell_dictionaries();
     void on_spell_lang_changed(int index);
     void update_plugin_sidebar();
+    void detect_plugin_info(plugin_slot_t & slot);
     void scan_workspace();
     std::vector<dict_selection_dialog_t::dict_entry_t> build_dict_entries(const std::string & workspace_folder = {}) const;
     tools_t::encoding_t get_current_tools_encoding() const;
