@@ -1077,6 +1077,7 @@ void main_window_t::rebuild_table()
     std::map<tools_t::rec_type_t, size_t> type_counts;
     std::map<tools_t::rec_type_t, size_t> translated_counts;
     std::map<std::string, size_t> status_counts;
+    std::map<std::string, size_t> filtered_status_counts;
 
     std::unordered_multimap<std::string, size_t> bnam_prefix_map;
     std::set<size_t> consumed_bnams;
@@ -1135,6 +1136,19 @@ void main_window_t::rebuild_table()
                     continue;
             }
 
+            {
+                table_row_t tmp_row;
+                tmp_row.type = type;
+                tmp_row.key_text = entry.key_text;
+                tmp_row.old_text = entry.old_text;
+                tmp_row.new_text = entry.new_text;
+                tmp_row.status = entry.status;
+                tmp_row.chapter_index = i;
+
+                if (!search_engine_.has_query() || search_engine_.matches(tmp_row))
+                    filtered_status_counts[entry.status]++;
+            }
+
             if (!status_filter_.empty() && status_filter_.count(entry.status) == 0)
                 continue;
 
@@ -1162,6 +1176,20 @@ void main_window_t::rebuild_table()
                 {
                     const auto & bnam_entry = bnam_it->second.records[it->second];
 
+                    {
+                        table_row_t tmp_child;
+                        tmp_child.type = tools_t::rec_type_t::bnam;
+                        tmp_child.key_text = bnam_entry.key_text;
+                        tmp_child.old_text = bnam_entry.old_text;
+                        tmp_child.new_text = bnam_entry.new_text;
+                        tmp_child.status = bnam_entry.status;
+                        tmp_child.chapter_index = it->second;
+                        tmp_child.is_child = true;
+
+                        if (!search_engine_.has_query() || search_engine_.matches(tmp_child))
+                            filtered_status_counts[bnam_entry.status]++;
+                    }
+
                     if (!status_filter_.empty() && status_filter_.count(bnam_entry.status) == 0)
                         continue;
 
@@ -1187,19 +1215,11 @@ void main_window_t::rebuild_table()
     table_model_->rebuild(std::move(rows));
     current_row_ = -1;
 
-    std::map<std::string, size_t> displayed_status_counts;
     std::map<std::string, size_t> total_status_counts;
     for (const auto & [type, chapter] : slot->data)
     {
         for (const auto & rec : chapter.records)
             total_status_counts[rec.status]++;
-    }
-
-    for (int i = 0; i < table_model_->rowCount(); ++i)
-    {
-        const auto * r = table_model_->row_at(i);
-        if (r)
-            displayed_status_counts[r->status]++;
     }
 
     size_t total = 0;
@@ -1211,7 +1231,7 @@ void main_window_t::rebuild_table()
 
     filter_bar_->update_counts(type_counts, translated_counts);
     filter_bar_->set_total_count(total_translated, total);
-    status_filter_bar_->update_counts(displayed_status_counts, total_status_counts);
+    status_filter_bar_->update_counts(filtered_status_counts, total_status_counts);
 
     size_t progress_translated = 0;
     size_t progress_total = 0;
@@ -1264,7 +1284,23 @@ void main_window_t::on_translation_changed()
         if (slot && !slot->dirty)
         {
             slot->dirty = true;
-            file_list_.set_dirty(slot->path, true);
+
+            auto * fe = file_list_.get(slot->path);
+            if (!fe)
+            {
+                auto normalized = slot->path;
+                std::replace(normalized.begin(), normalized.end(), '/', '\\');
+                fe = file_list_.get(normalized);
+                if (!fe)
+                {
+                    std::replace(normalized.begin(), normalized.end(), '\\', '/');
+                    fe = file_list_.get(normalized);
+                }
+            }
+
+            if (fe)
+                fe->dirty = true;
+
             rebuild_sidebar();
         }
     }
