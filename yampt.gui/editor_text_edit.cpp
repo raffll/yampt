@@ -33,6 +33,28 @@ void editor_text_edit_t::set_record_type(tools_t::rec_type_t type)
 
 void editor_text_edit_t::keyPressEvent(QKeyEvent * event)
 {
+	if (event->modifiers() == Qt::ShiftModifier && (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter))
+	{
+		if (block_multiline_)
+		{
+			auto cursor = textCursor();
+			int current_block = cursor.blockNumber();
+			int total_blocks = document()->blockCount();
+
+			if (current_block < total_blocks - 1)
+			{
+				cursor.movePosition(QTextCursor::Down);
+				cursor.movePosition(QTextCursor::StartOfBlock);
+				cursor.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
+				setTextCursor(cursor);
+				return;
+			}
+		}
+
+		emit navigate_next();
+		return;
+	}
+
 	if (event->modifiers() == Qt::ControlModifier && event->key() == Qt::Key_Down)
 	{
 		emit navigate_next();

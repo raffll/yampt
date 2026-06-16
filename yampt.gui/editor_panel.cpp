@@ -65,7 +65,7 @@ editor_panel_t::editor_panel_t(QWidget * parent)
     right_layout->setContentsMargins(0, 0, 0, 0);
     translation_label_ = new QLabel("Translation", right_widget);
     translation_editor_ = new editor_text_edit_t(right_widget);
-    apply_button_ = new QPushButton("Apply", right_widget);
+    apply_button_ = new QPushButton("Next (Shift+Enter)", right_widget);
 
     auto * translation_container = new QWidget(right_widget);
     auto * translation_hlayout = new QHBoxLayout(translation_container);

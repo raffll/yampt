@@ -102,6 +102,7 @@ private:
     void save_dict_encoded(int slot_index);
     void update_annotations();
     void update_validation();
+    void update_status_counts();
     void scan_spell_dictionaries();
     void on_spell_lang_changed(int index);
     void scan_workspace();
@@ -137,6 +138,7 @@ private:
     QTabWidget * info_tabs_ = nullptr;
     QTabWidget * record_tabs_ = nullptr;
 
+    QLabel * search_label_ = nullptr;
     QLineEdit * search_field_ = nullptr;
     QCheckBox * case_sensitive_check_ = nullptr;
     QCheckBox * regex_check_ = nullptr;

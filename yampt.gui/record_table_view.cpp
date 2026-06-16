@@ -59,45 +59,29 @@ void record_table_view_t::contextMenuEvent(QContextMenuEvent * event)
 
 	auto * menu = new QMenu(this);
 
-	if (selected.count() == 1)
+	auto * act_translated = menu->addAction("Set Translated");
+	auto * act_in_progress = menu->addAction("Set In Progress");
+	auto * act_untranslated = menu->addAction("Set Untranslated");
+	auto * act_error = menu->addAction("Set Error");
+
+	auto * chosen = menu->exec(event->globalPos());
+	QString new_status;
+	if (chosen == act_translated)
+		new_status = "translated";
+	else if (chosen == act_in_progress)
+		new_status = "in_progress";
+	else if (chosen == act_untranslated)
+		new_status = "untranslated";
+	else if (chosen == act_error)
+		new_status = "error";
+
+	if (!new_status.isEmpty())
 	{
-		int row = selected.first().row();
-		auto * act_untranslated = menu->addAction("Set Untranslated");
-		auto * act_translated = menu->addAction("Set Translated");
-		auto * act_error = menu->addAction("Set Error");
+		QList<int> rows;
+		for (const auto & idx : selected)
+			rows.append(idx.row());
 
-		auto * chosen = menu->exec(event->globalPos());
-		if (chosen == act_untranslated)
-			emit status_change_requested(row, "untranslated");
-		else if (chosen == act_translated)
-			emit status_change_requested(row, "translated");
-		else if (chosen == act_error)
-			emit status_change_requested(row, "error");
-	}
-	else
-	{
-		auto * submenu = menu->addMenu("Set Status");
-		auto * act_translated = submenu->addAction("Translated");
-		auto * act_in_progress = submenu->addAction("In Progress");
-		auto * act_untranslated = submenu->addAction("Untranslated");
-
-		auto * chosen = menu->exec(event->globalPos());
-		QString new_status;
-		if (chosen == act_translated)
-			new_status = "translated";
-		else if (chosen == act_in_progress)
-			new_status = "in_progress";
-		else if (chosen == act_untranslated)
-			new_status = "untranslated";
-
-		if (!new_status.isEmpty())
-		{
-			QList<int> rows;
-			for (const auto & idx : selected)
-				rows.append(idx.row());
-
-			emit batch_status_change_requested(rows, new_status);
-		}
+		emit batch_status_change_requested(rows, new_status);
 	}
 
 	delete menu;

@@ -191,7 +191,7 @@ std::string file_list_t::detect_language(const std::string & filename, std::uint
 file_type_t classify(const std::string & path)
 {
 	const auto ext = extract_extension(path);
-	if (ext == ".esm" || ext == ".esp")
+	if (ext == ".esm" || ext == ".esp" || ext == ".omwgame" || ext == ".omwaddon")
 		return file_type_t::plugin;
 
 	if (ext == ".yaml")

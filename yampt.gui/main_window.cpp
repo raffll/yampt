@@ -122,31 +122,42 @@ main_window_t::main_window_t(QWidget * parent)
     auto * toolbar = new QToolBar(this);
     toolbar->setMovable(false);
 
-    toolbar->addWidget(new QLabel("Search:", this));
+    search_label_ = new QLabel("Search:", this);
+    search_label_->setStyleSheet("QLabel:disabled { color: rgb(180,180,180); }");
+    toolbar->addWidget(search_label_);
     search_field_ = new QLineEdit(this);
     search_field_->setPlaceholderText("Search...");
     toolbar->addWidget(search_field_);
 
-    case_sensitive_check_ = new QCheckBox("Aa", this);
+    static const QString checkbox_style =
+        "QCheckBox:disabled { color: rgb(180,180,180); }";
+
+    case_sensitive_check_ = new QCheckBox("Case", this);
+    case_sensitive_check_->setLayoutDirection(Qt::RightToLeft);
+    case_sensitive_check_->setStyleSheet(checkbox_style);
     toolbar->addWidget(case_sensitive_check_);
 
-    regex_check_ = new QCheckBox(".*", this);
-    regex_check_->setToolTip("Regular expression search");
+    regex_check_ = new QCheckBox("Regex", this);
+    regex_check_->setLayoutDirection(Qt::RightToLeft);
+    regex_check_->setStyleSheet(checkbox_style);
     toolbar->addWidget(regex_check_);
 
-    search_col_key_ = new QCheckBox("K", this);
+    search_col_key_ = new QCheckBox("Key", this);
     search_col_key_->setChecked(true);
-    search_col_key_->setToolTip("Search Key column");
+    search_col_key_->setLayoutDirection(Qt::RightToLeft);
+    search_col_key_->setStyleSheet(checkbox_style);
     toolbar->addWidget(search_col_key_);
 
-    search_col_original_ = new QCheckBox("O", this);
+    search_col_original_ = new QCheckBox("Original", this);
     search_col_original_->setChecked(true);
-    search_col_original_->setToolTip("Search Original column");
+    search_col_original_->setLayoutDirection(Qt::RightToLeft);
+    search_col_original_->setStyleSheet(checkbox_style);
     toolbar->addWidget(search_col_original_);
 
-    search_col_translation_ = new QCheckBox("T", this);
+    search_col_translation_ = new QCheckBox("Translation", this);
     search_col_translation_->setChecked(true);
-    search_col_translation_->setToolTip("Search Translation column");
+    search_col_translation_->setLayoutDirection(Qt::RightToLeft);
+    search_col_translation_->setStyleSheet(checkbox_style);
     toolbar->addWidget(search_col_translation_);
 
     toolbar->addSeparator();
@@ -518,28 +529,6 @@ main_window_t::main_window_t(QWidget * parent)
     connect(sidebar_, &sidebar_widget_t::delete_requested, this, &main_window_t::on_delete_requested);
 
     connect(table_view_, &record_table_view_t::row_selected, this, &main_window_t::on_row_selected);
-    connect(table_view_, &record_table_view_t::status_change_requested, this, [this](int row, const QString & new_status) {
-        auto * row_data = table_model_->row_at(row);
-        if (!row_data)
-            return;
-
-        auto * slot = workspace_.get_active_slot();
-        if (!slot)
-            return;
-
-        auto it = slot->data.find(row_data->type);
-        if (it == slot->data.end())
-            return;
-
-        if (row_data->chapter_index >= it->second.records.size())
-            return;
-
-        it->second.records[row_data->chapter_index].status = new_status.toStdString();
-        slot->dirty = true;
-        set_dirty(true);
-        rebuild_table();
-    });
-
     connect(table_view_, &record_table_view_t::batch_status_change_requested, this, [this](const QList<int> & rows, const QString & new_status) {
         auto * slot = workspace_.get_active_slot();
         if (!slot)
@@ -559,11 +548,12 @@ main_window_t::main_window_t(QWidget * parent)
                 continue;
 
             it->second.records[row_data->chapter_index].status = new_status.toStdString();
+            table_model_->update_row(row, row_data->new_text, new_status.toStdString());
         }
 
         slot->dirty = true;
         set_dirty(true);
-        rebuild_table();
+        update_status_counts();
     });
 
     connect(editor_panel_, &editor_panel_t::text_changed, this, &main_window_t::on_translation_changed);
@@ -571,30 +561,50 @@ main_window_t::main_window_t(QWidget * parent)
         if (current_row_ < 0)
             return;
 
-        int target_row = current_row_ + 1;
         commit_current_edit();
-        rebuild_table();
 
+        int next_row = current_row_ + 1;
         int row_count = table_model_->rowCount();
-        if (target_row >= row_count)
-            target_row = row_count - 1;
+        if (next_row >= row_count)
+            next_row = row_count - 1;
 
-        if (target_row >= 0)
-            table_view_->selectRow(target_row);
+        if (next_row >= 0 && next_row != current_row_)
+        {
+            auto idx = table_model_->index(next_row, 0);
+            table_view_->selectionModel()->setCurrentIndex(idx, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+            on_row_selected(next_row);
+        }
     });
 
     connect(editor_panel_->translation_editor(), &editor_text_edit_t::navigate_next, this, [this]() {
+        if (current_row_ < 0)
+            return;
+
         commit_current_edit();
-        rebuild_table();
-        if (current_row_ < table_model_->rowCount() - 1)
-            table_view_->selectRow(current_row_ + 1);
+
+        int next_row = current_row_ + 1;
+        int row_count = table_model_->rowCount();
+        if (next_row >= row_count)
+            next_row = row_count - 1;
+
+        if (next_row >= 0 && next_row != current_row_)
+        {
+            auto idx = table_model_->index(next_row, 0);
+            table_view_->selectionModel()->setCurrentIndex(idx, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+            on_row_selected(next_row);
+        }
     });
 
     connect(editor_panel_->translation_editor(), &editor_text_edit_t::navigate_prev, this, [this]() {
+        if (current_row_ <= 0)
+            return;
+
         commit_current_edit();
-        rebuild_table();
-        if (current_row_ > 0)
-            table_view_->selectRow(current_row_ - 1);
+
+        int prev_row = current_row_ - 1;
+        auto idx = table_model_->index(prev_row, 0);
+        table_view_->selectionModel()->setCurrentIndex(idx, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+        on_row_selected(prev_row);
     });
 
     connect(filter_bar_, &filter_bar_t::filters_changed, this, &main_window_t::on_filters_changed);
@@ -973,6 +983,7 @@ void main_window_t::rebuild_table()
         progress_label_->clear();
         filter_bar_->setEnabled(false);
         status_filter_bar_->set_dict_mode(status_filter_bar_t::dict_mode_t::none);
+        search_label_->setEnabled(false);
         search_field_->setEnabled(false);
         case_sensitive_check_->setEnabled(false);
         regex_check_->setEnabled(false);
@@ -989,6 +1000,7 @@ void main_window_t::rebuild_table()
         status_filter_bar_->set_dict_mode(status_filter_bar_t::dict_mode_t::user);
 
     filter_bar_->setEnabled(true);
+    search_label_->setEnabled(true);
     search_field_->setEnabled(true);
     case_sensitive_check_->setEnabled(true);
     regex_check_->setEnabled(true);
@@ -1872,6 +1884,30 @@ void main_window_t::apply_extra_selections(editor_text_edit_t * editor, const ex
     editor->setExtraSelections(merged);
 }
 
+void main_window_t::update_status_counts()
+{
+    const auto * slot = workspace_.get_active_slot();
+    if (!slot)
+        return;
+
+    std::map<std::string, size_t> total_status_counts;
+    for (const auto & [type, chapter] : slot->data)
+    {
+        for (const auto & rec : chapter.records)
+            total_status_counts[rec.status]++;
+    }
+
+    std::map<std::string, size_t> displayed_counts;
+    for (int i = 0; i < table_model_->rowCount(); ++i)
+    {
+        const auto * r = table_model_->row_at(i);
+        if (r)
+            displayed_counts[r->status]++;
+    }
+
+    status_filter_bar_->update_counts(displayed_counts, total_status_counts);
+}
+
 void main_window_t::update_validation()
 {
     if (current_row_ < 0)
@@ -2100,7 +2136,7 @@ void main_window_t::save_config()
 void main_window_t::on_load_plugin()
 {
     const auto paths = QFileDialog::getOpenFileNames(
-        this, "Load Plugin", "", "ESM/ESP Files (*.esm *.esp);;All Files (*.*)");
+        this, "Load Plugin", "", "Plugin Files (*.esm *.esp *.omwgame *.omwaddon);;All Files (*.*)");
 
     if (paths.isEmpty())
         return;
@@ -2223,7 +2259,10 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
 
     auto path_sep = plugin_path.find_last_of("/\\");
     auto plugin_dir = path_sep != std::string::npos ? plugin_path.substr(0, path_sep) : std::string{};
+    std::replace(plugin_dir.begin(), plugin_dir.end(), '\\', '/');
+
     auto workspace_base = QCoreApplication::applicationDirPath().toStdString() + "/workspace/";
+    std::replace(workspace_base.begin(), workspace_base.end(), '\\', '/');
 
     std::string workspace_folder;
     if (plugin_dir.find(workspace_base) == 0)
@@ -2706,6 +2745,7 @@ void main_window_t::on_item_clicked(const std::string & path)
         current_row_ = -1;
         filter_bar_->setEnabled(false);
         status_filter_bar_->set_dict_mode(status_filter_bar_t::dict_mode_t::none);
+        search_label_->setEnabled(false);
         search_field_->setEnabled(false);
         case_sensitive_check_->setEnabled(false);
         regex_check_->setEnabled(false);

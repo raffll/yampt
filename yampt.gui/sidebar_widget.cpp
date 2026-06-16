@@ -123,7 +123,7 @@ void sidebar_widget_t::on_context_menu(const QPoint & pos)
 
     QMenu menu(this);
 
-    if (ext == "esm" || ext == "esp")
+    if (ext == "esm" || ext == "esp" || ext == "omwgame" || ext == "omwaddon")
     {
         auto * make_dict_action = menu.addAction("Make Dict");
         auto * make_dict_base_action = menu.addAction("Make Dict with Base");
