@@ -10,6 +10,32 @@ validation_result_t validation_manager_t::validate(tools_t::rec_type_t type, con
 	const auto encoded = encode_from_utf8(utf8_value, codepage_);
 	const size_t byte_count = encoded.size();
 
+	bool has_forbidden = false;
+	for (size_t i = 0; i < utf8_value.size(); ++i)
+	{
+		unsigned char ch = static_cast<unsigned char>(utf8_value[i]);
+		if (ch == '|' || ch == '~' || ch == '@' || ch == '{' || ch == '}')
+		{
+			has_forbidden = true;
+			break;
+		}
+
+		if (ch <= 0x1F && ch != 0x09 && ch != 0x0D && ch != 0x0A)
+		{
+			has_forbidden = true;
+			break;
+		}
+
+		if (ch == '"' && (type == tools_t::rec_type_t::sctx || type == tools_t::rec_type_t::bnam))
+		{
+			has_forbidden = true;
+			break;
+		}
+	}
+
+	if (has_forbidden)
+		return { validation_level_t::error, byte_count, 0 };
+
 	if (type == tools_t::rec_type_t::cell)
 	{
 		if (byte_count > 63)

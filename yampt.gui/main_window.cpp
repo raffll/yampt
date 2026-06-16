@@ -1531,8 +1531,11 @@ void main_window_t::commit_current_edit()
 
     history_manager_.record_change(row_data->type, row_data->key_text, loaded_text_.toStdString(), new_text_str);
 
+    const auto validation = validation_manager_.validate(row_data->type, new_text_str);
+    const std::string commit_status = (validation.level == validation_level_t::error) ? "error" : "in_progress";
+
     it->second.records[row_data->chapter_index].new_text = new_text_str;
-    it->second.records[row_data->chapter_index].status = "in_progress";
+    it->second.records[row_data->chapter_index].status = commit_status;
     slot->dirty = true;
     slot->modified_records.insert({row_data->type, row_data->chapter_index});
     set_dirty(true);
@@ -1578,7 +1581,7 @@ void main_window_t::commit_current_edit()
         }
     }
 
-    table_model_->update_row(current_row_, new_text_str, "in_progress");
+    table_model_->update_row(current_row_, new_text_str, commit_status);
     loaded_text_ = current_text;
     rebuild_sidebar();
     update_status_counts();
