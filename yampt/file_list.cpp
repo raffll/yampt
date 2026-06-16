@@ -442,8 +442,17 @@ sidebar_render_model_t build_render_model(const file_list_t & file_list, const s
 		subfolder_items[entry->workspace_subfolder].push_back(std::move(item));
 	}
 
-	auto sort_items = [](std::vector<sidebar_render_item_t> &)
+	auto sort_items = [](std::vector<sidebar_render_item_t> & items)
 	{
+		std::sort(items.begin(), items.end(),
+			[](const sidebar_render_item_t & a, const sidebar_render_item_t & b)
+			{
+				auto fname = [](const std::string & p) {
+					auto pos = p.find_last_of("/\\");
+					return pos != std::string::npos ? p.substr(pos + 1) : p;
+				};
+				return fname(a.path) < fname(b.path);
+			});
 	};
 
 	sort_items(model.loaded_root.items);
