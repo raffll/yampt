@@ -176,14 +176,35 @@ std::string file_list_t::detect_language(const std::string & filename, std::uint
 {
 	const auto lower = to_lower(filename);
 
-	if (lower != "morrowind.esm" && lower != "tribunal.esm" && lower != "bloodmoon.esm")
+	if (lower == "morrowind.esm")
+	{
+		if (file_size == 79837557) return "EN";
+		if (file_size == 80640776) return "DE";
+		if (file_size == 80105097) return "PL";
+		if (file_size == 80681814) return "FR";
+		if (file_size == 79857000) return "RU";
 		return "";
+	}
 
-	if (file_size == 79837557 || file_size == 9631798 || file_size == 4565686) return "EN";
-	if (file_size == 80640776 || file_size == 9797295 || file_size == 6069165) return "DE";
-	if (file_size == 80105097 || file_size == 9658076 || file_size == 4626565) return "PL";
-	if (file_size == 80681814 || file_size == 10015689 || file_size == 4697358) return "FR";
-	if (file_size == 79857000 || file_size == 9702000 || file_size == 4625000) return "RU";
+	if (lower == "tribunal.esm")
+	{
+		if (file_size == 9631798) return "EN";
+		if (file_size == 9797295) return "DE";
+		if (file_size == 9658076) return "PL";
+		if (file_size == 10015689) return "FR";
+		if (file_size == 9702000) return "RU";
+		return "";
+	}
+
+	if (lower == "bloodmoon.esm")
+	{
+		if (file_size == 4565686) return "EN";
+		if (file_size == 6069165) return "DE";
+		if (file_size == 4626565) return "PL";
+		if (file_size == 4697358) return "FR";
+		if (file_size == 4625000) return "RU";
+		return "";
+	}
 
 	return "";
 }
