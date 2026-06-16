@@ -97,5 +97,9 @@ void composite_highlighter_t::highlightBlock(const QString & text)
 	const auto matches = spell_checker_->find_misspelled(text_str);
 
 	for (const auto & match : matches)
-		setFormat(static_cast<int>(match.start), static_cast<int>(match.end - match.start), format_misspelled_);
+	{
+		int qchar_start = QString::fromUtf8(text_str.data(), static_cast<int>(match.start)).length();
+		int qchar_len = QString::fromUtf8(text_str.data() + match.start, static_cast<int>(match.end - match.start)).length();
+		setFormat(qchar_start, qchar_len, format_misspelled_);
+	}
 }

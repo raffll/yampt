@@ -1291,6 +1291,22 @@ void main_window_t::on_translation_changed()
     extra_sel_translation_.annotations = selections;
     extra_sel_translation_.grammar = grammar_checker_.check(editor_panel_->translation_editor());
     apply_extra_selections(editor_panel_->translation_editor(), extra_sel_translation_);
+
+    {
+        auto doc_text = editor_panel_->translation_editor()->toPlainText();
+        std::string log_msg = "grammar count=" + std::to_string(extra_sel_translation_.grammar.size()) + "\r\n";
+        for (int i = 0; i < extra_sel_translation_.grammar.size(); ++i)
+        {
+            auto sel_cursor = extra_sel_translation_.grammar[i].cursor;
+            int start = sel_cursor.anchor();
+            int end = sel_cursor.position();
+            auto slice = doc_text.mid(start, end - start);
+            log_msg += "  [" + std::to_string(i) + "] pos=" + std::to_string(start) +
+                " len=" + std::to_string(end - start) +
+                " text=\"" + slice.toStdString() + "\"\r\n";
+        }
+        log_tab_->append_log("grammar", log_msg);
+    }
 }
 
 int main_window_t::propagate_translation(const std::string & old_text, const std::string & new_text)
@@ -1635,8 +1651,8 @@ void main_window_t::load_record(int row)
         return results;
     };
 
-    const auto original_text_lower = QString::fromStdString(row_data->old_text).toLower();
-    const auto translation_text_lower = QString::fromStdString(row_data->new_text).toLower();
+    const auto original_text_lower = editor_panel_->original_view()->toPlainText().toLower();
+    const auto translation_text_lower = editor_panel_->translation_editor()->toPlainText().toLower();
 
     auto orig_highlights = find_highlights(original_text_lower, annotations, true);
     QList<QTextEdit::ExtraSelection> orig_selections;
@@ -1656,19 +1672,68 @@ void main_window_t::load_record(int row)
 
     auto trans_highlights = find_highlights(translation_text_lower, annotations, false);
     QList<QTextEdit::ExtraSelection> trans_selections;
+
+    {
+        auto doc_text = editor_panel_->translation_editor()->toPlainText();
+        std::string log_msg = "count=" + std::to_string(trans_highlights.size()) +
+            " doc_len=" + std::to_string(doc_text.length()) + "\r\n";
+        for (size_t i = 0; i < trans_highlights.size(); ++i)
+        {
+            const auto & h = trans_highlights[i];
+            auto slice = doc_text.mid(h.start, h.length);
+            log_msg += "  [" + std::to_string(i) + "] pos=" + std::to_string(h.start) +
+                " len=" + std::to_string(h.length) +
+                " text=\"" + slice.toStdString() + "\"\r\n";
+        }
+        log_tab_->append_log("all highlights", log_msg);
+    }
+
     for (const auto & h : trans_highlights)
     {
         QTextEdit::ExtraSelection sel;
         sel.format.setBackground(h.is_hyperlink ? QColor(200, 220, 255) : QColor(200, 240, 200));
-        sel.cursor = editor_panel_->translation_editor()->textCursor();
+        sel.cursor = QTextCursor(editor_panel_->translation_editor()->document());
         sel.cursor.setPosition(h.start);
         sel.cursor.setPosition(h.start + h.length, QTextCursor::KeepAnchor);
         trans_selections.append(sel);
     }
     extra_sel_translation_.annotations = trans_selections;
-    extra_sel_translation_.grammar.clear();
+    extra_sel_translation_.grammar = grammar_checker_.check(editor_panel_->translation_editor());
     extra_sel_translation_.adapted_diff.clear();
     apply_extra_selections(editor_panel_->translation_editor(), extra_sel_translation_);
+
+    {
+        auto doc_text = editor_panel_->translation_editor()->toPlainText();
+        std::string log_msg = "grammar count=" + std::to_string(extra_sel_translation_.grammar.size()) + "\r\n";
+        for (int i = 0; i < static_cast<int>(extra_sel_translation_.grammar.size()); ++i)
+        {
+            auto sel_cursor = extra_sel_translation_.grammar[i].cursor;
+            int start = sel_cursor.anchor();
+            int end = sel_cursor.position();
+            auto slice = doc_text.mid(start, end - start);
+            log_msg += "  [" + std::to_string(i) + "] pos=" + std::to_string(start) +
+                " len=" + std::to_string(end - start) +
+                " text=\"" + slice.toStdString() + "\"\r\n";
+        }
+        log_tab_->append_log("grammar", log_msg);
+
+        auto text_str = doc_text.toStdString();
+        auto spell_matches = spell_checker_.find_misspelled(text_str);
+        std::string spell_msg = "spelling count=" + std::to_string(spell_matches.size()) + "\r\n";
+        for (size_t i = 0; i < spell_matches.size(); ++i)
+        {
+            const auto & m = spell_matches[i];
+            int qchar_start = QString::fromUtf8(text_str.data(), static_cast<int>(m.start)).length();
+            int qchar_len = QString::fromUtf8(text_str.data() + m.start, static_cast<int>(m.end - m.start)).length();
+            auto slice = doc_text.mid(qchar_start, qchar_len);
+            spell_msg += "  [" + std::to_string(i) + "] byte_pos=" + std::to_string(m.start) +
+                " qchar_pos=" + std::to_string(qchar_start) +
+                " len=" + std::to_string(qchar_len) +
+                " word=\"" + m.word + "\""
+                " slice=\"" + slice.toStdString() + "\"\r\n";
+        }
+        log_tab_->append_log("spelling", spell_msg);
+    }
 
     extra_sel_adapted_.annotations.clear();
     extra_sel_adapted_.grammar.clear();
