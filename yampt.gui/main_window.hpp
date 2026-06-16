@@ -129,7 +129,6 @@ private:
 
     QAction * sidebar_toggle_ = nullptr;
     QAction * bottom_panel_toggle_ = nullptr;
-    QAction * whitespace_toggle_ = nullptr;
 
     QSplitter * central_splitter_ = nullptr;
 
@@ -147,6 +146,8 @@ private:
     QCheckBox * search_col_translation_ = nullptr;
     QComboBox * encoding_combo_ = nullptr;
     QComboBox * spell_lang_combo_ = nullptr;
+    QCheckBox * grammar_check_ = nullptr;
+    QCheckBox * whitespace_check_ = nullptr;
 
     QString search_query_;
 

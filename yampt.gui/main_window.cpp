@@ -114,11 +114,6 @@ main_window_t::main_window_t(QWidget * parent)
     bottom_panel_toggle_->setChecked(true);
     view_menu->addAction(bottom_panel_toggle_);
 
-    whitespace_toggle_ = new QAction("Show &Whitespace", this);
-    whitespace_toggle_->setCheckable(true);
-    whitespace_toggle_->setChecked(false);
-    view_menu->addAction(whitespace_toggle_);
-
     auto * toolbar = new QToolBar(this);
     toolbar->setMovable(false);
 
@@ -175,6 +170,17 @@ main_window_t::main_window_t(QWidget * parent)
     spell_lang_combo_ = new QComboBox(this);
     spell_lang_combo_->addItem("None");
     toolbar->addWidget(spell_lang_combo_);
+
+    grammar_check_ = new QCheckBox("Grammar", this);
+    grammar_check_->setChecked(true);
+    grammar_check_->setLayoutDirection(Qt::RightToLeft);
+    grammar_check_->setStyleSheet(checkbox_style);
+    toolbar->addWidget(grammar_check_);
+
+    whitespace_check_ = new QCheckBox("Whitespace", this);
+    whitespace_check_->setLayoutDirection(Qt::RightToLeft);
+    whitespace_check_->setStyleSheet(checkbox_style);
+    toolbar->addWidget(whitespace_check_);
 
     search_field_->setToolTip("Search across entries");
     case_sensitive_check_->setToolTip("Case-sensitive search");
@@ -275,7 +281,16 @@ main_window_t::main_window_t(QWidget * parent)
 
     connect(sidebar_toggle_, &QAction::toggled, left_splitter_, &QWidget::setVisible);
     connect(bottom_panel_toggle_, &QAction::toggled, editor_panel_, &QWidget::setVisible);
-    connect(whitespace_toggle_, &QAction::toggled, this, &main_window_t::on_whitespace_toggled);
+    connect(whitespace_check_, &QCheckBox::toggled, this, &main_window_t::on_whitespace_toggled);
+    connect(grammar_check_, &QCheckBox::toggled, this, [this]() {
+        if (current_row_ < 0)
+            return;
+
+        extra_sel_translation_.grammar = grammar_check_->isChecked()
+            ? grammar_checker_.check(editor_panel_->translation_editor())
+            : QList<QTextEdit::ExtraSelection>{};
+        apply_extra_selections(editor_panel_->translation_editor(), extra_sel_translation_);
+    });
 
     connect(open_action_, &QAction::triggered, this, &main_window_t::on_open_user_dict);
     connect(open_base_action_, &QAction::triggered, this, &main_window_t::on_open_base_dict);
@@ -573,6 +588,10 @@ main_window_t::main_window_t(QWidget * parent)
             auto idx = table_model_->index(next_row, 0);
             table_view_->selectionModel()->setCurrentIndex(idx, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
             on_row_selected(next_row);
+            auto cursor = editor_panel_->translation_editor()->textCursor();
+            cursor.movePosition(QTextCursor::End);
+            editor_panel_->translation_editor()->setTextCursor(cursor);
+            editor_panel_->translation_editor()->setFocus();
         }
     });
 
@@ -592,6 +611,10 @@ main_window_t::main_window_t(QWidget * parent)
             auto idx = table_model_->index(next_row, 0);
             table_view_->selectionModel()->setCurrentIndex(idx, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
             on_row_selected(next_row);
+            auto cursor = editor_panel_->translation_editor()->textCursor();
+            cursor.movePosition(QTextCursor::End);
+            editor_panel_->translation_editor()->setTextCursor(cursor);
+            editor_panel_->translation_editor()->setFocus();
         }
     });
 
@@ -605,6 +628,10 @@ main_window_t::main_window_t(QWidget * parent)
         auto idx = table_model_->index(prev_row, 0);
         table_view_->selectionModel()->setCurrentIndex(idx, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
         on_row_selected(prev_row);
+        auto cursor = editor_panel_->translation_editor()->textCursor();
+        cursor.movePosition(QTextCursor::End);
+        editor_panel_->translation_editor()->setTextCursor(cursor);
+        editor_panel_->translation_editor()->setFocus();
     });
 
     connect(filter_bar_, &filter_bar_t::filters_changed, this, &main_window_t::on_filters_changed);
@@ -676,8 +703,12 @@ void main_window_t::on_save()
     if (!workspace_.is_user_slot(active))
         return;
 
+    const auto * slot = workspace_.get_slot(active);
     save_dict_encoded(active);
     rebuild_sidebar();
+
+    if (slot)
+        log_tab_->append_log("save", "saved \"" + slot->path + "\"\r\n");
 
     if (!workspace_.has_any_unsaved())
         set_dirty(false);
@@ -687,14 +718,21 @@ void main_window_t::on_save_all()
 {
     commit_current_edit();
 
+    std::string log_msg;
     for (int i = 0; i < workspace_.slot_count(); ++i)
     {
         const auto * slot = workspace_.get_slot(i);
         if (slot && slot->dirty)
+        {
             save_dict_encoded(i);
+            log_msg += "saved \"" + slot->path + "\"\r\n";
+        }
     }
 
     rebuild_sidebar();
+
+    if (!log_msg.empty())
+        log_tab_->append_log("save all", log_msg);
 
     if (!workspace_.has_any_unsaved())
         set_dirty(false);
@@ -1220,14 +1258,18 @@ void main_window_t::on_translation_changed()
     if (current_row_ < 0)
         return;
 
-    set_dirty(true);
-
     if (workspace_.get_active_index() >= 0)
     {
-        const auto * slot = workspace_.get_slot(workspace_.get_active_index());
-        if (slot)
+        auto * slot = workspace_.get_slot(workspace_.get_active_index());
+        if (slot && !slot->dirty)
+        {
+            slot->dirty = true;
             file_list_.set_dirty(slot->path, true);
+            rebuild_sidebar();
+        }
     }
+
+    set_dirty(true);
 
     update_validation();
 
@@ -1301,7 +1343,9 @@ void main_window_t::on_translation_changed()
     }
 
     extra_sel_translation_.annotations = selections;
-    extra_sel_translation_.grammar = grammar_checker_.check(editor_panel_->translation_editor());
+    extra_sel_translation_.grammar = grammar_check_->isChecked()
+        ? grammar_checker_.check(editor_panel_->translation_editor())
+        : QList<QTextEdit::ExtraSelection>{};
     apply_extra_selections(editor_panel_->translation_editor(), extra_sel_translation_);
 
     {
@@ -1445,23 +1489,7 @@ void main_window_t::commit_current_edit()
             }
 
             rebuild_sidebar();
-
-            std::map<std::string, size_t> status_counts;
-            for (const auto & [type, chapter] : slot->data)
-            {
-                for (const auto & rec : chapter.records)
-                    status_counts[rec.status]++;
-            }
-
-            std::map<std::string, size_t> displayed_counts;
-            for (int ri = 0; ri < table_model_->rowCount(); ++ri)
-            {
-                const auto * r = table_model_->row_at(ri);
-                if (r)
-                    displayed_counts[r->status]++;
-            }
-
-            status_filter_bar_->update_counts(displayed_counts, status_counts);
+            update_status_counts();
             loaded_text_ = current_text;
             return;
         }
@@ -1470,23 +1498,7 @@ void main_window_t::commit_current_edit()
     table_model_->update_row(current_row_, new_text_str, "in_progress");
     loaded_text_ = current_text;
     rebuild_sidebar();
-
-    std::map<std::string, size_t> status_counts;
-    for (const auto & [type, chapter] : slot->data)
-    {
-        for (const auto & rec : chapter.records)
-            status_counts[rec.status]++;
-    }
-
-    std::map<std::string, size_t> displayed_counts;
-    for (int ri = 0; ri < table_model_->rowCount(); ++ri)
-    {
-        const auto * r = table_model_->row_at(ri);
-        if (r)
-            displayed_counts[r->status]++;
-    }
-
-    status_filter_bar_->update_counts(displayed_counts, status_counts);
+    update_status_counts();
 }
 
 void main_window_t::load_record(int row)
@@ -1710,7 +1722,9 @@ void main_window_t::load_record(int row)
         trans_selections.append(sel);
     }
     extra_sel_translation_.annotations = trans_selections;
-    extra_sel_translation_.grammar = grammar_checker_.check(editor_panel_->translation_editor());
+    extra_sel_translation_.grammar = grammar_check_->isChecked()
+        ? grammar_checker_.check(editor_panel_->translation_editor())
+        : QList<QTextEdit::ExtraSelection>{};
     extra_sel_translation_.adapted_diff.clear();
     apply_extra_selections(editor_panel_->translation_editor(), extra_sel_translation_);
 
@@ -1767,6 +1781,11 @@ void main_window_t::load_record(int row)
 
     loaded_text_ = editor_panel_->translation_editor()->toPlainText();
     current_row_ = row;
+
+    auto cursor = editor_panel_->translation_editor()->textCursor();
+    cursor.movePosition(QTextCursor::End);
+    editor_panel_->translation_editor()->setTextCursor(cursor);
+
     loading_record_ = false;
 }
 
@@ -1890,11 +1909,29 @@ void main_window_t::update_status_counts()
     if (!slot)
         return;
 
+    static const std::set<std::string> done_statuses_user = { "translated" };
+    static const std::set<std::string> done_statuses_base = {
+        "matched", "fingerprint", "coords", "heuristic", "exact",
+        "info", "wilderness", "region"
+    };
+
+    const bool is_base = workspace_.is_base_slot(workspace_.get_active_index());
+    const auto & done_statuses = is_base ? done_statuses_base : done_statuses_user;
+
     std::map<std::string, size_t> total_status_counts;
+    std::map<tools_t::rec_type_t, size_t> type_counts;
+    std::map<tools_t::rec_type_t, size_t> translated_counts;
+
     for (const auto & [type, chapter] : slot->data)
     {
         for (const auto & rec : chapter.records)
+        {
             total_status_counts[rec.status]++;
+            type_counts[type]++;
+
+            if (done_statuses.count(rec.status))
+                translated_counts[type]++;
+        }
     }
 
     std::map<std::string, size_t> displayed_counts;
@@ -1906,6 +1943,16 @@ void main_window_t::update_status_counts()
     }
 
     status_filter_bar_->update_counts(displayed_counts, total_status_counts);
+
+    size_t total = 0;
+    size_t total_translated = 0;
+    for (const auto & [t, c] : type_counts)
+        total += c;
+    for (const auto & [t, c] : translated_counts)
+        total_translated += c;
+
+    filter_bar_->update_counts(type_counts, translated_counts);
+    filter_bar_->set_total_count(total_translated, total);
 }
 
 void main_window_t::update_validation()
@@ -2763,6 +2810,14 @@ void main_window_t::on_item_clicked(const std::string & path)
             commit_current_edit();
             workspace_.set_active(i);
             rebuild_table();
+            editor_panel_->original_view()->clear();
+            editor_panel_->translation_editor()->clear();
+            editor_panel_->clear_adapted_from();
+            validation_indicator_->clear();
+            annotations_panel_->clear();
+            history_panel_->clear();
+            book_preview_->clear();
+            current_row_ = -1;
             return;
         }
     }
@@ -2825,6 +2880,8 @@ void main_window_t::on_save_requested(const std::string & path)
         if (slot && slot->path == path)
         {
             save_dict_encoded(i);
+            rebuild_sidebar();
+            log_tab_->append_log("save", "saved \"" + slot->path + "\"\r\n");
             if (!workspace_.has_any_unsaved())
                 set_dirty(false);
             return;
