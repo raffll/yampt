@@ -1284,24 +1284,21 @@ void main_window_t::on_translation_changed()
         if (slot && !slot->dirty)
         {
             slot->dirty = true;
-
-            auto * fe = file_list_.get(slot->path);
-            if (!fe)
-            {
-                auto normalized = slot->path;
-                std::replace(normalized.begin(), normalized.end(), '/', '\\');
-                fe = file_list_.get(normalized);
-                if (!fe)
-                {
-                    std::replace(normalized.begin(), normalized.end(), '\\', '/');
-                    fe = file_list_.get(normalized);
-                }
-            }
-
-            if (fe)
-                fe->dirty = true;
-
+            file_list_.set_dirty(slot->path, true);
             rebuild_sidebar();
+        }
+
+        if (slot && slot->dirty)
+        {
+            auto * fe = file_list_.get(slot->path);
+            if (!fe || !fe->dirty)
+            {
+                log_tab_->append_log("dirty debug",
+                    "slot->path=\"" + slot->path + "\""
+                    " fe=" + (fe ? "found" : "null") +
+                    " fe->loaded=" + (fe ? std::to_string(fe->loaded) : "n/a") +
+                    " fe->dirty=" + (fe ? std::to_string(fe->dirty) : "n/a") + "\r\n");
+            }
         }
     }
 
@@ -2868,6 +2865,8 @@ void main_window_t::on_item_clicked(const std::string & path)
 
     if (workspace_.slot_count() <= old_count)
         return;
+
+    file_list_.set_loaded(path, true);
 
     auto * new_slot = workspace_.get_slot(workspace_.slot_count() - 1);
     if (new_slot)

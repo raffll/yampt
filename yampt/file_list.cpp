@@ -39,9 +39,15 @@ static std::string parent_directory(const std::string & path)
 	return path.substr(0, pos);
 }
 
+static std::string normalize_path(std::string path)
+{
+	std::replace(path.begin(), path.end(), '\\', '/');
+	return path;
+}
+
 const file_entry_t * file_list_t::get(const std::string & path) const
 {
-	const auto it = entries_.find(path);
+	const auto it = entries_.find(normalize_path(path));
 	if (it == entries_.end())
 		return nullptr;
 
@@ -50,7 +56,7 @@ const file_entry_t * file_list_t::get(const std::string & path) const
 
 file_entry_t * file_list_t::get(const std::string & path)
 {
-	auto it = entries_.find(path);
+	auto it = entries_.find(normalize_path(path));
 	if (it == entries_.end())
 		return nullptr;
 
@@ -59,7 +65,7 @@ file_entry_t * file_list_t::get(const std::string & path)
 
 bool file_list_t::contains(const std::string & path) const
 {
-	return entries_.count(path) > 0;
+	return entries_.count(normalize_path(path)) > 0;
 }
 
 std::vector<const file_entry_t *> file_list_t::all() const
@@ -98,22 +104,23 @@ std::vector<const file_entry_t *> file_list_t::workspace_files() const
 
 file_entry_t & file_list_t::add(const std::string & path)
 {
-	auto it = entries_.find(path);
+	const auto normalized = normalize_path(path);
+	auto it = entries_.find(normalized);
 	if (it != entries_.end())
 		return it->second;
 
 	file_entry_t entry;
-	entry.path = path;
-	entry.filename = extract_filename(path);
-	entry.type = classify(path);
+	entry.path = normalized;
+	entry.filename = extract_filename(normalized);
+	entry.type = classify(normalized);
 
-	auto [inserted_it, success] = entries_.emplace(path, std::move(entry));
+	auto [inserted_it, success] = entries_.emplace(normalized, std::move(entry));
 	return inserted_it->second;
 }
 
 void file_list_t::remove(const std::string & path)
 {
-	entries_.erase(path);
+	entries_.erase(normalize_path(path));
 }
 
 void file_list_t::set_loaded(const std::string & path, bool loaded)
@@ -131,9 +138,6 @@ void file_list_t::set_dirty(const std::string & path, bool dirty)
 {
 	auto * entry = get(path);
 	if (!entry)
-		return;
-
-	if (!entry->loaded)
 		return;
 
 	entry->dirty = dirty;
