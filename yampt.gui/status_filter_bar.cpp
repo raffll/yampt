@@ -270,10 +270,39 @@ void status_filter_bar_t::update_button_styles()
 	static const QString inactive_style =
 		"background-color: transparent; color: rgb(80,80,80); border: 1px solid rgb(150,150,150); padding: 2px 6px;";
 
+	static const QString disabled_style =
+		"background-color: transparent; color: rgb(180,180,180); border: 1px solid rgb(210,210,210); padding: 2px 6px;";
+
+	static const std::set<std::string> base_statuses = {
+		"matched", "missing", "duplicate", "mismatch"
+	};
+
+	static const std::set<std::string> user_statuses = {
+		"translated", "reused", "adapted", "changed", "untranslated",
+		"in_progress", "propagated", "error"
+	};
+
 	bool no_filter = active_statuses_.empty();
 
 	for (const auto & sb : status_buttons_)
 	{
+		bool disabled = false;
+		if (dict_mode_ == dict_mode_t::none)
+			disabled = true;
+		else if (dict_mode_ == dict_mode_t::base && user_statuses.count(sb.status))
+			disabled = true;
+		else if (dict_mode_ == dict_mode_t::user && base_statuses.count(sb.status))
+			disabled = true;
+
+		if (disabled)
+		{
+			sb.button->setStyleSheet(disabled_style);
+			sb.button->setEnabled(false);
+			continue;
+		}
+
+		sb.button->setEnabled(true);
+
 		auto expanded = expand_status_group(sb.status);
 		bool active = no_filter;
 		if (!active)
@@ -308,4 +337,10 @@ void status_filter_bar_t::update_button_styles()
 			sb.button->setStyleSheet(inactive_style);
 		}
 	}
+}
+
+void status_filter_bar_t::set_dict_mode(dict_mode_t mode)
+{
+	dict_mode_ = mode;
+	update_button_styles();
 }

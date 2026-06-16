@@ -215,6 +215,7 @@
     <ClCompile Include="yaml_l10n_reader.cpp" />
     <ClCompile Include="yaml_l10n_writer.cpp" />
     <ClCompile Include="..\yampt\translation_engine.cpp" />
+    <ClCompile Include="..\yampt\file_list.cpp" />
     <ClCompile Include="..\external\yyjson.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CompileAsC</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CompileAsC</CompileAs>
@@ -235,6 +236,7 @@
     <ClInclude Include="..\yampt\includes.hpp" />
     <ClInclude Include="..\yampt\json_reader.hpp" />
     <ClInclude Include="..\yampt\translation_engine.hpp" />
+    <ClInclude Include="..\yampt\file_list.hpp" />
     <ClInclude Include="..\external\yyjson.h" />
     <ClInclude Include="grammar_checker.hpp" />
     <ClInclude Include="search_engine.hpp" />

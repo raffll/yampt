@@ -5,6 +5,9 @@
 #include <QMenu>
 #include <QVBoxLayout>
 
+static constexpr int role_path = Qt::UserRole;
+static constexpr int role_is_workspace = Qt::UserRole + 1;
+
 sidebar_widget_t::sidebar_widget_t(QWidget * parent)
     : QWidget(parent)
 {
@@ -19,61 +22,63 @@ sidebar_widget_t::sidebar_widget_t(QWidget * parent)
     connect(list_, &QListWidget::customContextMenuRequested, this, &sidebar_widget_t::on_context_menu);
 }
 
-void sidebar_widget_t::set_sections(const std::vector<sidebar_section_t> & sections)
+void sidebar_widget_t::add_section_header(const std::string & label)
 {
-    list_->clear();
-
-    for (const auto & section : sections)
-    {
-        auto * header = new QListWidgetItem(QString::fromStdString("--- " + section.header + " ---"));
-        header->setFlags(Qt::NoItemFlags);
-        header->setForeground(QColor(100, 100, 100));
-        list_->addItem(header);
-
-        for (const auto & item : section.items)
-        {
-            QString display = QString::fromStdString(item.display_name);
-
-            if (item.is_dirty)
-                display = "* " + display;
-
-            if (item.is_base)
-                display += " [BASE]";
-
-            auto * list_item = new QListWidgetItem(display);
-            list_item->setToolTip(QString::fromStdString(item.path));
-            list_item->setData(Qt::UserRole, item.slot_index);
-            list_item->setData(Qt::UserRole + 1, item.is_plugin ? 2 : 0);
-            list_item->setData(Qt::UserRole + 2, QString::fromStdString(item.path));
-            list_item->setData(Qt::UserRole + 3, item.plugin_index);
-            list_->addItem(list_item);
-        }
-    }
+	auto * header = new QListWidgetItem(QString::fromStdString("--- " + label + " ---"));
+	header->setFlags(Qt::NoItemFlags);
+	header->setForeground(QColor(100, 100, 100));
+	list_->addItem(header);
 }
 
-void sidebar_widget_t::set_active_slot(int slot_index)
+void sidebar_widget_t::add_leaf_items(const std::vector<sidebar_render_item_t> & items, int indent)
 {
-    list_->clearSelection();
+	for (const auto & item : items)
+	{
+		QString display = QString::fromStdString(item.display_text);
+		if (indent > 0)
+			display = QString(indent * 2, ' ') + display;
 
-    if (slot_index < 0)
-        return;
-
-    for (int i = 0; i < list_->count(); ++i)
-    {
-        auto * item = list_->item(i);
-        if (item->data(Qt::UserRole).toInt() == slot_index &&
-            item->data(Qt::UserRole + 1).toInt() != 2 &&
-            (item->flags() & Qt::ItemIsSelectable))
-        {
-            list_->setCurrentItem(item);
-            return;
-        }
-    }
+		auto * list_item = new QListWidgetItem(display);
+		list_item->setToolTip(QString::fromStdString(item.path));
+		list_item->setData(role_path, QString::fromStdString(item.path));
+		list_item->setData(role_is_workspace, item.is_workspace);
+		list_->addItem(list_item);
+	}
 }
 
-int sidebar_widget_t::get_clicked_slot_index() const
+void sidebar_widget_t::set_model(const sidebar_render_model_t & model)
 {
-    return clicked_slot_index_;
+	list_->clear();
+
+	add_section_header(model.loaded_root.label);
+	add_leaf_items(model.loaded_root.items, 0);
+
+	add_section_header(model.workspace_root.label);
+	add_leaf_items(model.workspace_root.items, 0);
+
+	for (const auto & child : model.workspace_root.children)
+	{
+		auto * subfolder_header = new QListWidgetItem(QString::fromStdString("  " + child.label));
+		subfolder_header->setFlags(Qt::NoItemFlags);
+		subfolder_header->setForeground(QColor(130, 130, 130));
+		list_->addItem(subfolder_header);
+
+		add_leaf_items(child.items, 1);
+	}
+
+	if (model.active_path.empty())
+		return;
+
+	for (int i = 0; i < list_->count(); ++i)
+	{
+		auto * item = list_->item(i);
+		auto path = item->data(role_path).toString().toStdString();
+		if (path == model.active_path)
+		{
+			list_->setCurrentItem(item);
+			return;
+		}
+	}
 }
 
 void sidebar_widget_t::on_item_clicked(QListWidgetItem * item)
@@ -84,36 +89,15 @@ void sidebar_widget_t::on_item_clicked(QListWidgetItem * item)
     if (!(item->flags() & Qt::ItemIsSelectable))
         return;
 
-    int kind = item->data(Qt::UserRole + 1).toInt();
-
-    if (kind == 2)
-    {
-        emit plugin_selected();
-        return;
-    }
-
-    const auto path = item->data(Qt::UserRole + 2).toString().toStdString();
-    int slot_index = item->data(Qt::UserRole).toInt();
-
-    if (slot_index >= 0)
-    {
-        clicked_slot_index_ = slot_index;
-        emit slot_clicked(slot_index);
-        return;
-    }
-
-    auto dot = path.rfind('.');
-    if (dot == std::string::npos)
+    auto path_data = item->data(role_path);
+    if (path_data.typeId() != QMetaType::QString)
         return;
 
-    auto ext = path.substr(dot);
-    if (ext == ".json" || ext == ".xml")
-    {
-        emit workspace_file_clicked(path);
+    auto path = path_data.toString().toStdString();
+    if (path.empty())
         return;
-    }
 
-    emit plugin_selected();
+    emit item_clicked(path);
 }
 
 void sidebar_widget_t::on_context_menu(const QPoint & pos)
@@ -125,40 +109,19 @@ void sidebar_widget_t::on_context_menu(const QPoint & pos)
     if (!(item->flags() & Qt::ItemIsSelectable))
         return;
 
-    int kind = item->data(Qt::UserRole + 1).toInt();
-    int slot_index = item->data(Qt::UserRole).toInt();
-    int plugin_index = item->data(Qt::UserRole + 3).toInt();
-    const auto path = item->data(Qt::UserRole + 2).toString();
+    auto path_data = item->data(role_path);
+    if (path_data.typeId() != QMetaType::QString)
+        return;
+
+    auto path = path_data.toString();
+    if (path.isEmpty())
+        return;
+
     const auto ext = QFileInfo(path).suffix().toLower();
+    const auto is_workspace = item->data(role_is_workspace).toBool();
+    auto path_str = path.toStdString();
 
     QMenu menu(this);
-
-    if (kind == 2)
-    {
-        auto * make_dict_action = menu.addAction("Make Dict");
-        auto * make_dict_base_action = menu.addAction("Make Dict with Base");
-        auto * make_base_action = menu.addAction("Make Base");
-        menu.addSeparator();
-        auto * convert_action = menu.addAction("Convert");
-        auto * create_action = menu.addAction("Create");
-        menu.addSeparator();
-        auto * unload_action = menu.addAction("Unload");
-
-        auto * selected = menu.exec(list_->viewport()->mapToGlobal(pos));
-        if (selected == make_dict_action)
-            emit plugin_operation_requested(plugin_index, plugin_op_t::make_dict);
-        else if (selected == make_dict_base_action)
-            emit plugin_operation_requested(plugin_index, plugin_op_t::make_dict_with_base);
-        else if (selected == make_base_action)
-            emit plugin_operation_requested(plugin_index, plugin_op_t::make_base);
-        else if (selected == convert_action)
-            emit plugin_operation_requested(plugin_index, plugin_op_t::convert);
-        else if (selected == create_action)
-            emit plugin_operation_requested(plugin_index, plugin_op_t::create_plugin);
-        else if (selected == unload_action)
-            emit plugin_unload_requested(plugin_index);
-        return;
-    }
 
     if (ext == "esm" || ext == "esp")
     {
@@ -169,48 +132,52 @@ void sidebar_widget_t::on_context_menu(const QPoint & pos)
         auto * convert_action = menu.addAction("Convert");
         auto * create_action = menu.addAction("Create");
         menu.addSeparator();
-        auto * delete_action = menu.addAction("Delete");
+
+        QAction * unload_action = nullptr;
+        QAction * delete_action = nullptr;
+
+        if (is_workspace)
+            delete_action = menu.addAction("Delete");
+        else
+            unload_action = menu.addAction("Unload");
 
         auto * selected = menu.exec(list_->viewport()->mapToGlobal(pos));
         if (selected == make_dict_action)
-            emit plugin_operation_requested(plugin_index, plugin_op_t::make_dict);
+            emit operation_requested(path_str, plugin_op_t::make_dict);
         else if (selected == make_dict_base_action)
-            emit plugin_operation_requested(plugin_index, plugin_op_t::make_dict_with_base);
+            emit operation_requested(path_str, plugin_op_t::make_dict_with_base);
         else if (selected == make_base_action)
-            emit plugin_operation_requested(plugin_index, plugin_op_t::make_base);
+            emit operation_requested(path_str, plugin_op_t::make_base);
         else if (selected == convert_action)
-            emit plugin_operation_requested(plugin_index, plugin_op_t::convert);
+            emit operation_requested(path_str, plugin_op_t::convert);
         else if (selected == create_action)
-            emit plugin_operation_requested(plugin_index, plugin_op_t::create_plugin);
-        else if (selected == delete_action)
-            emit workspace_delete_requested(path.toStdString());
+            emit operation_requested(path_str, plugin_op_t::create_plugin);
+        else if (unload_action && selected == unload_action)
+            emit unload_requested(path_str);
+        else if (delete_action && selected == delete_action)
+            emit delete_requested(path_str);
         return;
     }
 
     if (ext == "json" || ext == "xml")
     {
-        auto * save_action = menu.addAction("Save");
+        QAction * save_action = menu.addAction("Save");
         menu.addSeparator();
 
         QAction * unload_action = nullptr;
         QAction * delete_action = nullptr;
 
-        if (slot_index >= 0)
-            unload_action = menu.addAction("Unload");
-        else
+        if (is_workspace)
             delete_action = menu.addAction("Delete");
+        else
+            unload_action = menu.addAction("Unload");
 
         auto * selected = menu.exec(list_->viewport()->mapToGlobal(pos));
         if (selected == save_action)
-        {
-            if (slot_index >= 0)
-                emit save_requested(slot_index);
-            else
-                emit workspace_save_requested(path.toStdString());
-        }
+            emit save_requested(path_str);
         else if (unload_action && selected == unload_action)
-            emit unload_requested(slot_index);
+            emit unload_requested(path_str);
         else if (delete_action && selected == delete_action)
-            emit workspace_delete_requested(path.toStdString());
+            emit delete_requested(path_str);
     }
 }

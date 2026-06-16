@@ -21,6 +21,9 @@ public:
 	bool has_filter() const;
 	void set_filter_state(const std::set<std::string> & statuses);
 
+	enum class dict_mode_t { none, base, user };
+	void set_dict_mode(dict_mode_t mode);
+
 signals:
 	void filters_changed();
 
@@ -43,4 +46,5 @@ private:
 	std::set<std::string> saved_statuses_;
 	bool solo_ = false;
 	std::string solo_status_;
+	dict_mode_t dict_mode_ = dict_mode_t::none;
 };

@@ -14,6 +14,7 @@
   <ItemGroup>
     <ClCompile Include="tests.main.cpp" />
     <ClCompile Include="tests.tools.cpp" />
+    <ClCompile Include="tests.file_list.cpp" />
     <ClCompile Include="tests.dict_reader.cpp" />
     <ClCompile Include="tests.dict_writer.cpp" />
     <ClCompile Include="tests.dict_merger.cpp" />

@@ -46,6 +46,9 @@
     <ClCompile Include="..\yampt\translation_engine.cpp">
       <Filter>yampt</Filter>
     </ClCompile>
+    <ClCompile Include="..\yampt\file_list.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
     <ClCompile Include="..\yampt\tools.cpp">
       <Filter>yampt</Filter>
     </ClCompile>
@@ -84,6 +87,9 @@
     <ClInclude Include="dict_workspace.hpp" />
     <ClInclude Include="spell_context_menu.hpp" />
     <ClInclude Include="..\yampt\translation_engine.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\yampt\file_list.hpp">
       <Filter>yampt</Filter>
     </ClInclude>
     <ClInclude Include="..\yampt\tools.hpp">

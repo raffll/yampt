@@ -14,6 +14,8 @@
 #include "spell_checker.hpp"
 #include "validation_manager.hpp"
 
+#include "../yampt/file_list.hpp"
+
 #include <QMainWindow>
 #include <QTextEdit>
 
@@ -47,20 +49,6 @@ struct extra_selections_state_t
     QList<QTextEdit::ExtraSelection> adapted_diff;
 };
 
-struct plugin_slot_t
-{
-    std::string path;
-    std::string language;
-    bool is_master = false;
-};
-
-struct workspace_scan_section_t
-{
-    std::string folder_name;
-    std::vector<std::string> file_names;
-    std::vector<std::string> file_paths;
-};
-
 class main_window_t : public QMainWindow
 {
     Q_OBJECT
@@ -81,8 +69,8 @@ private slots:
     void on_open_base_dict();
     void on_unload_slot(int index);
     void on_load_plugin();
-    void on_plugin_operation(int plugin_index, plugin_op_t op);
-    void on_plugin_unload(int plugin_index);
+    void on_plugin_operation(const std::string & plugin_path, plugin_op_t op);
+    void on_plugin_unload(const std::string & path);
     void on_find();
     void on_next_search();
     void on_prev_search();
@@ -92,11 +80,16 @@ private slots:
     void on_case_sensitive_changed(int state);
     void on_row_selected(int row);
     void on_translation_changed();
-    void on_slot_clicked(int slot_index);
     void on_whitespace_toggled(bool checked);
     void on_encoding_changed(int index);
     void on_filters_changed();
     void on_status_filters_changed();
+
+    void on_item_clicked(const std::string & path);
+    void on_operation_requested(const std::string & path, plugin_op_t op);
+    void on_save_requested(const std::string & path);
+    void on_unload_requested(const std::string & path);
+    void on_delete_requested(const std::string & path);
 
 private:
     void on_load_archive();
@@ -111,7 +104,6 @@ private:
     void update_validation();
     void scan_spell_dictionaries();
     void on_spell_lang_changed(int index);
-    void detect_plugin_info(plugin_slot_t & slot);
     void scan_workspace();
     void load_l10n_folder(const std::string & folder_path);
     std::vector<dict_selection_dialog_t::dict_entry_t> build_dict_entries(const std::string & workspace_folder = {}) const;
@@ -191,13 +183,12 @@ private:
     validation_manager_t validation_manager_;
 
     dict_workspace_t workspace_;
+    file_list_t file_list_;
     codepage_t current_codepage_ = codepage_t::windows_1252;
     editor_config_t config_;
 
     log_tab_t * log_tab_ = nullptr;
     operation_executor_t executor_;
-    std::vector<plugin_slot_t> plugin_slots_;
-    std::vector<workspace_scan_section_t> workspace_sections_;
 
     extra_selections_state_t extra_sel_original_;
     extra_selections_state_t extra_sel_adapted_;
