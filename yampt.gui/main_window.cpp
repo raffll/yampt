@@ -578,10 +578,24 @@ main_window_t::main_window_t(QWidget * parent)
 
         commit_current_edit();
 
-        int next_row = current_row_ + 1;
         int row_count = table_model_->rowCount();
-        if (next_row >= row_count)
-            next_row = row_count - 1;
+        int next_row = -1;
+        for (int i = current_row_ + 1; i < row_count; ++i)
+        {
+            const auto * r = table_model_->row_at(i);
+            if (r && r->status != "propagated")
+            {
+                next_row = i;
+                break;
+            }
+        }
+
+        if (next_row < 0)
+        {
+            next_row = current_row_ + 1;
+            if (next_row >= row_count)
+                next_row = row_count - 1;
+        }
 
         if (next_row >= 0 && next_row != current_row_)
         {
@@ -601,10 +615,24 @@ main_window_t::main_window_t(QWidget * parent)
 
         commit_current_edit();
 
-        int next_row = current_row_ + 1;
         int row_count = table_model_->rowCount();
-        if (next_row >= row_count)
-            next_row = row_count - 1;
+        int next_row = -1;
+        for (int i = current_row_ + 1; i < row_count; ++i)
+        {
+            const auto * r = table_model_->row_at(i);
+            if (r && r->status != "propagated")
+            {
+                next_row = i;
+                break;
+            }
+        }
+
+        if (next_row < 0)
+        {
+            next_row = current_row_ + 1;
+            if (next_row >= row_count)
+                next_row = row_count - 1;
+        }
 
         if (next_row >= 0 && next_row != current_row_)
         {
@@ -656,7 +684,18 @@ main_window_t::main_window_t(QWidget * parent)
         history_manager_.revert(*slot, row_data->type, row_data->key_text, history_index);
         slot->dirty = true;
         set_dirty(true);
-        rebuild_table();
+
+        const auto * updated_row = table_model_->row_at(current_row_);
+        if (updated_row)
+        {
+            auto type_it = slot->data.find(updated_row->type);
+            if (type_it != slot->data.end() && updated_row->chapter_index < type_it->second.records.size())
+            {
+                const auto & rec = type_it->second.records[updated_row->chapter_index];
+                table_model_->update_row(current_row_, rec.new_text, rec.status);
+            }
+        }
+
         load_record(current_row_);
     });
 
@@ -1252,7 +1291,7 @@ void main_window_t::rebuild_table()
     {
         int pct = static_cast<int>(progress_translated * 100 / progress_total);
         int shown = table_model_->rowCount();
-        progress_label_->setText(QString("%1 / %2 (%3%) \u2022 %4 shown")
+        progress_label_->setText(QString("%1 / %2 (%3%) | %4 shown")
             .arg(progress_translated).arg(progress_total).arg(pct).arg(shown));
     }
     else
@@ -1498,6 +1537,8 @@ void main_window_t::commit_current_edit()
     slot->modified_records.insert({row_data->type, row_data->chapter_index});
     set_dirty(true);
 
+    annotation_manager_.update_term(row_data->type, it->second.records[row_data->chapter_index].old_text, new_text_str);
+
     if (new_text_str != it->second.records[row_data->chapter_index].old_text)
     {
         int propagated = propagate_translation(it->second.records[row_data->chapter_index].old_text, new_text_str);
@@ -1507,23 +1548,32 @@ void main_window_t::commit_current_edit()
             slot->dirty = true;
             statusBar()->showMessage(QString("Propagated to %1 entries").arg(propagated), 5000);
 
-            const auto saved_key = row_data->key_text;
-            const auto saved_type = row_data->type;
-            rebuild_table();
+            table_model_->update_row(current_row_, new_text_str, "propagated");
 
             for (int i = 0; i < table_model_->rowCount(); ++i)
             {
+                if (i == current_row_)
+                    continue;
+
                 const auto * r = table_model_->row_at(i);
-                if (r && r->key_text == saved_key && r->type == saved_type)
-                {
-                    table_view_->selectRow(i);
-                    break;
-                }
+                if (!r)
+                    continue;
+
+                auto chap_it = slot->data.find(r->type);
+                if (chap_it == slot->data.end())
+                    continue;
+
+                if (r->chapter_index >= chap_it->second.records.size())
+                    continue;
+
+                const auto & rec = chap_it->second.records[r->chapter_index];
+                if (rec.new_text != r->new_text || rec.status != r->status)
+                    table_model_->update_row(i, rec.new_text, rec.status);
             }
 
+            loaded_text_ = current_text;
             rebuild_sidebar();
             update_status_counts();
-            loaded_text_ = current_text;
             return;
         }
     }

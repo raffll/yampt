@@ -33,6 +33,7 @@ class annotation_manager_t
 {
 public:
 	void rebuild(const std::vector<dict_source_t> & sources);
+	void update_term(tools_t::rec_type_t type, const std::string & old_text, const std::string & new_text);
 	std::vector<annotation_t> annotate(const std::string & text, tools_t::rec_type_t type) const;
 	std::vector<annotation_t> annotate_translated(const std::string & text, tools_t::rec_type_t type) const;
 
@@ -58,6 +59,9 @@ private:
 
 	static std::string to_lower(const std::string & str);
 	static bool is_alpha(char c);
+
+	void update_vector(std::vector<topic_entry_t> & vec, const std::string & old_text, const std::string & new_text);
+	void remove_from_vector(std::vector<topic_entry_t> & vec, const std::string & old_text);
 
 	void find_matches(
 	    const std::string & text_lower,

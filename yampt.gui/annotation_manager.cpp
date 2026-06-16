@@ -66,6 +66,50 @@ void annotation_manager_t::rebuild(const std::vector<dict_source_t> & sources)
 	    [](const topic_entry_t & a, const topic_entry_t & b) { return a.key_lower.size() > b.key_lower.size(); });
 }
 
+void annotation_manager_t::update_term(tools_t::rec_type_t type, const std::string & old_text, const std::string & new_text)
+{
+	if (type == tools_t::rec_type_t::dial)
+	{
+		update_vector(dial_topics_, old_text, new_text);
+	}
+	else if (type == tools_t::rec_type_t::fnam)
+	{
+		if (old_text == new_text || new_text.empty())
+			remove_from_vector(glossary_terms_, old_text);
+		else
+			update_vector(glossary_terms_, old_text, new_text);
+	}
+}
+
+void annotation_manager_t::update_vector(std::vector<topic_entry_t> & vec, const std::string & old_text, const std::string & new_text)
+{
+	std::string key = to_lower(old_text);
+
+	for (auto & entry : vec)
+	{
+		if (entry.key_lower == key)
+		{
+			entry.new_text = new_text;
+			return;
+		}
+	}
+
+	if (new_text.empty())
+		return;
+
+	topic_entry_t new_entry{ key, new_text, {} };
+	auto pos = std::lower_bound(vec.begin(), vec.end(), new_entry,
+	    [](const topic_entry_t & a, const topic_entry_t & b) { return a.key_lower.size() > b.key_lower.size(); });
+	vec.insert(pos, std::move(new_entry));
+}
+
+void annotation_manager_t::remove_from_vector(std::vector<topic_entry_t> & vec, const std::string & old_text)
+{
+	std::string key = to_lower(old_text);
+	vec.erase(std::remove_if(vec.begin(), vec.end(),
+	    [&key](const topic_entry_t & e) { return e.key_lower == key; }), vec.end());
+}
+
 std::vector<annotation_t> annotation_manager_t::annotate(const std::string & text, tools_t::rec_type_t type) const
 {
 	std::vector<annotation_t> results;

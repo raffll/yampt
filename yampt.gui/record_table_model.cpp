@@ -248,5 +248,5 @@ void record_table_model_t::update_row(int row, const std::string & new_text, con
 
 	rows_[row].new_text = new_text;
 	rows_[row].status = status;
-	emit dataChanged(index(row, col_translation), index(row, col_status));
+	emit dataChanged(index(row, col_id), index(row, col_status));
 }
