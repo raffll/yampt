@@ -468,7 +468,7 @@ void dict_creator_t::insert_entry_single_with_base(
 
 	if (base_entry->old_text == old_text && base_entry->new_text == old_text)
 	{
-		insert_with_status(key_text, old_text, old_text, type, tools_t::status_t::identical);
+		insert_with_status(key_text, old_text, old_text, type, tools_t::status_t::translated);
 		return;
 	}
 

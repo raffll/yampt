@@ -185,28 +185,35 @@
     <ClCompile Include="validation_manager.cpp" />
     <ClCompile Include="history_manager.cpp" />
     <ClCompile Include="syntax_highlighter.cpp" />
+    <ClCompile Include="composite_highlighter.cpp" />
     <ClCompile Include="annotation_manager.cpp" />
     <ClCompile Include="annotation_highlighter.cpp" />
     <ClCompile Include="encoding_utils.cpp" />
     <ClCompile Include="spell_checker.cpp" />
-    <ClCompile Include="spell_check_highlighter.cpp" />
     <ClCompile Include="spell_context_menu.cpp" />
     <ClCompile Include="hyperlink_highlighter.cpp" />
     <ClCompile Include="filter_bar.cpp" />
     <ClCompile Include="flow_layout.cpp" />
     <ClCompile Include="status_filter_bar.cpp" />
+    <ClCompile Include="editor_text_edit.cpp" />
     <ClCompile Include="editor_panel.cpp" />
+    <ClCompile Include="line_number_gutter.cpp" />
     <ClCompile Include="record_table_model.cpp" />
     <ClCompile Include="record_table_view.cpp" />
     <ClCompile Include="validation_indicator.cpp" />
-    <ClCompile Include="mwscript_highlighter.cpp" />
     <ClCompile Include="book_preview.cpp" />
     <ClCompile Include="sidebar_widget.cpp" />
     <ClCompile Include="annotations_panel.cpp" />
     <ClCompile Include="history_panel.cpp" />
     <ClCompile Include="log_tab.cpp" />
     <ClCompile Include="dict_selection_dialog.cpp" />
+    <ClCompile Include="first_run_dialog.cpp" />
     <ClCompile Include="operation_executor.cpp" />
+    <ClCompile Include="grammar_checker.cpp" />
+    <ClCompile Include="search_engine.cpp" />
+    <ClCompile Include="find_replace_dialog.cpp" />
+    <ClCompile Include="yaml_l10n_reader.cpp" />
+    <ClCompile Include="yaml_l10n_writer.cpp" />
     <ClCompile Include="..\yampt\translation_engine.cpp" />
     <ClCompile Include="..\external\yyjson.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CompileAsC</CompileAs>
@@ -229,6 +236,10 @@
     <ClInclude Include="..\yampt\json_reader.hpp" />
     <ClInclude Include="..\yampt\translation_engine.hpp" />
     <ClInclude Include="..\external\yyjson.h" />
+    <ClInclude Include="grammar_checker.hpp" />
+    <ClInclude Include="search_engine.hpp" />
+    <ClInclude Include="yaml_l10n_reader.hpp" />
+    <ClInclude Include="yaml_l10n_writer.hpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="main_window.hpp">
@@ -238,6 +249,12 @@
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
     <CustomBuild Include="record_table_model.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+    <CustomBuild Include="editor_text_edit.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
@@ -267,7 +284,7 @@
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
-    <CustomBuild Include="spell_check_highlighter.hpp">
+    <CustomBuild Include="composite_highlighter.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
@@ -280,12 +297,6 @@
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
     <CustomBuild Include="annotation_highlighter.hpp">
-      <FileType>Document</FileType>
-      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
-      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
-      <Message>MOC %(Filename).hpp</Message>
-    </CustomBuild>
-    <CustomBuild Include="mwscript_highlighter.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
@@ -333,6 +344,24 @@
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
+    <CustomBuild Include="line_number_gutter.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+    <CustomBuild Include="first_run_dialog.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+    <CustomBuild Include="find_replace_dialog.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(IntDir)moc_main_window.cpp">
@@ -340,6 +369,9 @@
     </ClCompile>
     <ClCompile Include="$(IntDir)moc_record_table_model.cpp">
       <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_record_table_model.cpp')">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(IntDir)moc_editor_text_edit.cpp">
+      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_editor_text_edit.cpp')">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="$(IntDir)moc_editor_panel.cpp">
       <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_editor_panel.cpp')">true</ExcludedFromBuild>
@@ -353,17 +385,14 @@
     <ClCompile Include="$(IntDir)moc_record_table_view.cpp">
       <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_record_table_view.cpp')">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="$(IntDir)moc_spell_check_highlighter.cpp">
-      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_spell_check_highlighter.cpp')">true</ExcludedFromBuild>
+    <ClCompile Include="$(IntDir)moc_composite_highlighter.cpp">
+      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_composite_highlighter.cpp')">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="$(IntDir)moc_validation_indicator.cpp">
       <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_validation_indicator.cpp')">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="$(IntDir)moc_annotation_highlighter.cpp">
       <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_annotation_highlighter.cpp')">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="$(IntDir)moc_mwscript_highlighter.cpp">
-      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_mwscript_highlighter.cpp')">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="$(IntDir)moc_hyperlink_highlighter.cpp">
       <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_hyperlink_highlighter.cpp')">true</ExcludedFromBuild>
@@ -385,6 +414,15 @@
     </ClCompile>
     <ClCompile Include="$(IntDir)moc_dict_selection_dialog.cpp">
       <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_dict_selection_dialog.cpp')">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(IntDir)moc_line_number_gutter.cpp">
+      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_line_number_gutter.cpp')">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(IntDir)moc_first_run_dialog.cpp">
+      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_first_run_dialog.cpp')">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(IntDir)moc_find_replace_dialog.cpp">
+      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_find_replace_dialog.cpp')">true</ExcludedFromBuild>
     </ClCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

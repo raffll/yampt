@@ -5,27 +5,28 @@
 #include "dict_workspace.hpp"
 #include "editor_config.hpp"
 #include "encoding_utils.hpp"
+#include "grammar_checker.hpp"
 #include "history_manager.hpp"
 #include "operation_executor.hpp"
 #include "record_table_model.hpp"
+#include "search_engine.hpp"
 #include "sidebar_widget.hpp"
 #include "spell_checker.hpp"
-#include "syntax_highlighter.hpp"
 #include "validation_manager.hpp"
 
 #include <QMainWindow>
+#include <QTextEdit>
 
-class annotation_highlighter_t;
 class annotations_panel_t;
 class book_preview_t;
+class composite_highlighter_t;
 class editor_panel_t;
+class editor_text_edit_t;
 class filter_bar_t;
+class find_replace_dialog_t;
 class history_panel_t;
-class hyperlink_highlighter_t;
 class log_tab_t;
-class mwscript_highlighter_t;
 class record_table_view_t;
-class spell_check_highlighter_t;
 class spell_context_menu_t;
 class status_filter_bar_t;
 class validation_indicator_t;
@@ -34,9 +35,17 @@ class QAction;
 class QCheckBox;
 class QCloseEvent;
 class QComboBox;
+class QLabel;
 class QLineEdit;
 class QSplitter;
 class QTabWidget;
+
+struct extra_selections_state_t
+{
+    QList<QTextEdit::ExtraSelection> annotations;
+    QList<QTextEdit::ExtraSelection> grammar;
+    QList<QTextEdit::ExtraSelection> adapted_diff;
+};
 
 struct plugin_slot_t
 {
@@ -90,6 +99,7 @@ private slots:
     void on_status_filters_changed();
 
 private:
+    void on_load_archive();
     void rebuild_table();
     void commit_current_edit();
     void load_record(int row);
@@ -103,9 +113,12 @@ private:
     void on_spell_lang_changed(int index);
     void detect_plugin_info(plugin_slot_t & slot);
     void scan_workspace();
+    void load_l10n_folder(const std::string & folder_path);
     std::vector<dict_selection_dialog_t::dict_entry_t> build_dict_entries(const std::string & workspace_folder = {}) const;
     void ensure_dicts_loaded(const std::vector<std::string> & paths);
     tools_t::encoding_t get_current_tools_encoding() const;
+    void apply_extra_selections(editor_text_edit_t * editor, const extra_selections_state_t & state);
+    int propagate_translation(const std::string & old_text, const std::string & new_text);
 
     QAction * save_action_ = nullptr;
     QAction * save_all_action_ = nullptr;
@@ -117,6 +130,9 @@ private:
     QAction * refresh_action_ = nullptr;
     QAction * escape_action_ = nullptr;
     QAction * load_plugin_action_ = nullptr;
+    QAction * load_archive_action_ = nullptr;
+    QAction * load_l10n_action_ = nullptr;
+    QAction * find_replace_action_ = nullptr;
 
     QAction * sidebar_toggle_ = nullptr;
     QAction * bottom_panel_toggle_ = nullptr;
@@ -131,6 +147,10 @@ private:
 
     QLineEdit * search_field_ = nullptr;
     QCheckBox * case_sensitive_check_ = nullptr;
+    QCheckBox * regex_check_ = nullptr;
+    QCheckBox * search_col_key_ = nullptr;
+    QCheckBox * search_col_original_ = nullptr;
+    QCheckBox * search_col_translation_ = nullptr;
     QComboBox * encoding_combo_ = nullptr;
     QComboBox * spell_lang_combo_ = nullptr;
 
@@ -153,12 +173,14 @@ private:
     record_table_view_t * table_view_ = nullptr;
     sidebar_widget_t * sidebar_ = nullptr;
     book_preview_t * book_preview_ = nullptr;
+    QLabel * progress_label_ = nullptr;
     validation_indicator_t * validation_indicator_ = nullptr;
-    mwscript_highlighter_t * syntax_hl_original_ = nullptr;
-    mwscript_highlighter_t * syntax_hl_translation_ = nullptr;
-    spell_check_highlighter_t * spell_hl_ = nullptr;
-    annotation_highlighter_t * annotation_hl_ = nullptr;
-    hyperlink_highlighter_t * hyperlink_hl_ = nullptr;
+    composite_highlighter_t * hl_original_ = nullptr;
+    composite_highlighter_t * hl_adapted_ = nullptr;
+    composite_highlighter_t * hl_translation_ = nullptr;
+
+    grammar_checker_t grammar_checker_;
+    search_engine_t search_engine_;
     spell_context_menu_t * spell_menu_ = nullptr;
     annotations_panel_t * annotations_panel_ = nullptr;
     history_panel_t * history_panel_ = nullptr;
@@ -176,4 +198,10 @@ private:
     operation_executor_t executor_;
     std::vector<plugin_slot_t> plugin_slots_;
     std::vector<workspace_scan_section_t> workspace_sections_;
+
+    extra_selections_state_t extra_sel_original_;
+    extra_selections_state_t extra_sel_adapted_;
+    extra_selections_state_t extra_sel_translation_;
+
+    find_replace_dialog_t * find_replace_dialog_ = nullptr;
 };

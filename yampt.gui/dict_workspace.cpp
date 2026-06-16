@@ -27,6 +27,23 @@ int dict_workspace_t::load_dict(const std::string & path, dict_kind_t kind)
 	return new_index;
 }
 
+int dict_workspace_t::add_slot(dict_slot_t slot, dict_kind_t kind)
+{
+	int existing = find_by_path(slot.path);
+	if (existing >= 0)
+	{
+		set_active(existing);
+		return existing;
+	}
+
+	slots_.push_back(std::move(slot));
+	kinds_.push_back(kind);
+
+	int new_index = static_cast<int>(slots_.size()) - 1;
+	set_active(new_index);
+	return new_index;
+}
+
 bool dict_workspace_t::unload_dict(int slot_index)
 {
 	if (slot_index < 0 || slot_index >= static_cast<int>(slots_.size()))

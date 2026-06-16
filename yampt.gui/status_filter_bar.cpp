@@ -11,26 +11,10 @@ static const char * get_status_display_name_qt(const std::string & status)
 		return "Missing";
 	if (status == "duplicate")
 		return "Duplicate";
-	if (status == "coords")
-		return "Coords";
-	if (status == "fingerprint")
-		return "Fingerprint";
-	if (status == "heuristic")
-		return "Heuristic";
-	if (status == "info")
-		return "Info";
-	if (status == "exact")
-		return "Exact";
-	if (status == "wilderness")
-		return "Wilderness";
-	if (status == "region")
-		return "Region";
 	if (status == "matched")
 		return "Matched";
 	if (status == "error")
 		return "Error";
-	if (status == "identical")
-		return "Identical";
 	if (status == "translated")
 		return "Translated";
 	if (status == "reused")
@@ -43,6 +27,8 @@ static const char * get_status_display_name_qt(const std::string & status)
 		return "In Progress";
 	if (status == "mismatch")
 		return "Mismatch";
+	if (status == "propagated")
+		return "Propagated";
 	return status.c_str();
 }
 
@@ -55,21 +41,69 @@ status_filter_bar_t::status_filter_bar_t(QWidget * parent)
 	layout_->setContentsMargins(0, 0, 0, 0);
 	layout_->setSpacing(2);
 
-	static const std::vector<std::string> all_statuses = {
-		"untranslated", "missing", "duplicate", "coords", "fingerprint",
-		"heuristic", "info", "exact", "wilderness", "region",
-		"matched", "error", "identical", "translated", "reused",
-		"adapted", "changed", "in_progress", "mismatch"
+	static const std::vector<std::string> base_statuses = {
+		"matched", "duplicate", "missing", "mismatch"
 	};
 
-	for (const auto & status : all_statuses)
+	static const std::vector<std::string> single_statuses = {
+		"translated", "reused", "adapted", "changed", "untranslated"
+	};
+
+	static const std::vector<std::string> work_statuses = {
+		"in_progress", "propagated", "error"
+	};
+
+	for (const auto & status : base_statuses)
 	{
 		status_button_t sb;
 		sb.status = status;
 		sb.count = 0;
 		sb.button = new QPushButton(get_status_display_name_qt(status), this);
 		sb.button->setContextMenuPolicy(Qt::CustomContextMenu);
-		sb.button->setVisible(false);
+
+		connect(sb.button, &QPushButton::clicked, this, [this, s = status]() {
+			on_status_clicked(s);
+		});
+
+		connect(sb.button, &QWidget::customContextMenuRequested, this, [this, s = status]() {
+			on_status_right_clicked(s);
+		});
+
+		layout_->addWidget(sb.button);
+		status_buttons_.push_back(sb);
+	}
+
+	layout_->addSpacing(12);
+
+	for (const auto & status : single_statuses)
+	{
+		status_button_t sb;
+		sb.status = status;
+		sb.count = 0;
+		sb.button = new QPushButton(get_status_display_name_qt(status), this);
+		sb.button->setContextMenuPolicy(Qt::CustomContextMenu);
+
+		connect(sb.button, &QPushButton::clicked, this, [this, s = status]() {
+			on_status_clicked(s);
+		});
+
+		connect(sb.button, &QWidget::customContextMenuRequested, this, [this, s = status]() {
+			on_status_right_clicked(s);
+		});
+
+		layout_->addWidget(sb.button);
+		status_buttons_.push_back(sb);
+	}
+
+	layout_->addSpacing(12);
+
+	for (const auto & status : work_statuses)
+	{
+		status_button_t sb;
+		sb.status = status;
+		sb.count = 0;
+		sb.button = new QPushButton(get_status_display_name_qt(status), this);
+		sb.button->setContextMenuPolicy(Qt::CustomContextMenu);
 
 		connect(sb.button, &QPushButton::clicked, this, [this, s = status]() {
 			on_status_clicked(s);
@@ -90,7 +124,48 @@ status_filter_bar_t::status_filter_bar_t(QWidget * parent)
 void status_filter_bar_t::update_counts(const std::map<std::string, size_t> & counts)
 {
 	current_counts_ = counts;
-	rebuild_buttons();
+
+	static const std::vector<std::string> matched_group = {
+		"matched", "fingerprint", "coords", "heuristic", "exact",
+		"info", "wilderness", "region"
+	};
+
+	static const std::vector<std::string> translated_group = {
+		"translated"
+	};
+
+	for (auto & sb : status_buttons_)
+	{
+		size_t total = 0;
+
+		if (sb.status == "matched")
+		{
+			for (const auto & s : matched_group)
+			{
+				auto it = current_counts_.find(s);
+				if (it != current_counts_.end())
+					total += it->second;
+			}
+		}
+		else if (sb.status == "translated")
+		{
+			for (const auto & s : translated_group)
+			{
+				auto it = current_counts_.find(s);
+				if (it != current_counts_.end())
+					total += it->second;
+			}
+		}
+		else
+		{
+			auto it = current_counts_.find(sb.status);
+			if (it != current_counts_.end())
+				total = it->second;
+		}
+
+		sb.count = total;
+		sb.button->setText(QString("%1 (%2)").arg(get_status_display_name_qt(sb.status)).arg(total));
+	}
 }
 
 std::set<std::string> status_filter_bar_t::get_active_statuses() const
@@ -111,26 +186,15 @@ void status_filter_bar_t::set_filter_state(const std::set<std::string> & statuse
 	update_button_styles();
 }
 
-void status_filter_bar_t::rebuild_buttons()
+static std::set<std::string> expand_status_group(const std::string & status)
 {
-	for (auto & sb : status_buttons_)
-	{
-		auto it = current_counts_.find(sb.status);
-		size_t count = (it != current_counts_.end()) ? it->second : 0;
-		sb.count = count;
+	if (status == "matched")
+		return {"matched", "fingerprint", "coords", "heuristic", "exact", "info", "wilderness", "region"};
 
-		if (count > 0)
-		{
-			sb.button->setText(QString("%1 (%2)").arg(get_status_display_name_qt(sb.status)).arg(count));
-			sb.button->setVisible(true);
-		}
-		else
-		{
-			sb.button->setVisible(false);
-		}
-	}
+	if (status == "translated")
+		return {"translated"};
 
-	update_button_styles();
+	return {status};
 }
 
 void status_filter_bar_t::on_status_clicked(const std::string & status)
@@ -148,8 +212,7 @@ void status_filter_bar_t::on_status_clicked(const std::string & status)
 	saved_statuses_ = active_statuses_;
 	solo_ = true;
 	solo_status_ = status;
-	active_statuses_.clear();
-	active_statuses_.insert(status);
+	active_statuses_ = expand_status_group(status);
 	update_button_styles();
 	emit filters_changed();
 }
@@ -161,7 +224,10 @@ void status_filter_bar_t::on_status_right_clicked(const std::string & status)
 		for (const auto & sb : status_buttons_)
 		{
 			if (sb.status != status)
-				active_statuses_.insert(sb.status);
+			{
+				auto expanded = expand_status_group(sb.status);
+				active_statuses_.insert(expanded.begin(), expanded.end());
+			}
 		}
 
 		solo_ = false;
@@ -174,10 +240,26 @@ void status_filter_bar_t::on_status_right_clicked(const std::string & status)
 	solo_ = false;
 	solo_status_.clear();
 
-	if (active_statuses_.count(status))
-		active_statuses_.erase(status);
+	auto expanded = expand_status_group(status);
+	bool any_active = false;
+	for (const auto & s : expanded)
+	{
+		if (active_statuses_.count(s))
+		{
+			any_active = true;
+			break;
+		}
+	}
+
+	if (any_active)
+	{
+		for (const auto & s : expanded)
+			active_statuses_.erase(s);
+	}
 	else
-		active_statuses_.insert(status);
+	{
+		active_statuses_.insert(expanded.begin(), expanded.end());
+	}
 
 	update_button_styles();
 	emit filters_changed();
@@ -192,7 +274,20 @@ void status_filter_bar_t::update_button_styles()
 
 	for (const auto & sb : status_buttons_)
 	{
-		bool active = no_filter || active_statuses_.count(sb.status) > 0;
+		auto expanded = expand_status_group(sb.status);
+		bool active = no_filter;
+		if (!active)
+		{
+			for (const auto & s : expanded)
+			{
+				if (active_statuses_.count(s))
+				{
+					active = true;
+					break;
+				}
+			}
+		}
+
 		if (active)
 		{
 			const auto & color = get_status_color(sb.status);

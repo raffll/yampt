@@ -99,7 +99,6 @@ public:
 		static constexpr const char * error = "error";
 
 		// single_with_base mode
-		static constexpr const char * identical = "identical";
 		static constexpr const char * translated = "translated";
 		static constexpr const char * adapted = "adapted";
 		static constexpr const char * changed = "changed";

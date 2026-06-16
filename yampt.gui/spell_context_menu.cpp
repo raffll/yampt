@@ -1,19 +1,19 @@
 #include "spell_context_menu.hpp"
+#include "editor_text_edit.hpp"
 #include "spell_checker.hpp"
-#include "spell_check_highlighter.hpp"
 
-#include <QTextEdit>
+#include <QSyntaxHighlighter>
 #include <QTextCursor>
 #include <QMenu>
 #include <QAction>
 
-spell_context_menu_t::spell_context_menu_t(spell_checker_t * checker, spell_check_highlighter_t * highlighter)
+spell_context_menu_t::spell_context_menu_t(spell_checker_t * checker, QSyntaxHighlighter * highlighter)
 	: checker_(checker)
 	, highlighter_(highlighter)
 {
 }
 
-void spell_context_menu_t::show_menu(QTextEdit * editor, const QPoint & pos)
+void spell_context_menu_t::show_menu(editor_text_edit_t * editor, const QPoint & pos)
 {
 	int start = 0;
 	int end = 0;
@@ -54,7 +54,7 @@ void spell_context_menu_t::show_menu(QTextEdit * editor, const QPoint & pos)
 	cursor.insertText(selected->text());
 }
 
-std::string spell_context_menu_t::get_word_at_cursor(QTextEdit * editor, const QPoint & pos, int & start, int & end) const
+std::string spell_context_menu_t::get_word_at_cursor(editor_text_edit_t * editor, const QPoint & pos, int & start, int & end) const
 {
 	QTextCursor cursor = editor->cursorForPosition(pos);
 	int position = cursor.position();
@@ -88,6 +88,6 @@ std::string spell_context_menu_t::get_word_at_cursor(QTextEdit * editor, const Q
 	while (end < length && is_word_char(end))
 		end++;
 
-	auto selected = text.mid(start, end - start);
-	return selected.toStdString();
+	auto selected_text = text.mid(start, end - start);
+	return selected_text.toStdString();
 }

@@ -105,6 +105,16 @@ filter_bar_t::filter_bar_t(QWidget * parent)
 	}
 
 	top_layout->addStretch();
+
+	lua_button_ = new QPushButton("LUA", top_row);
+	lua_button_->setVisible(false);
+	connect(lua_button_, &QPushButton::clicked, this, [this]() {
+		lua_filter_active_ = !lua_filter_active_;
+		update_button_styles();
+		emit filters_changed();
+	});
+	top_layout->addWidget(lua_button_);
+
 	root_layout->addWidget(top_row);
 
 	auto * row1 = new QWidget(this);
@@ -157,20 +167,27 @@ filter_bar_t::filter_bar_t(QWidget * parent)
 	update_sub_type_styles();
 }
 
-void filter_bar_t::update_counts(const std::map<tools_t::rec_type_t, size_t> & counts)
+void filter_bar_t::update_counts(const std::map<tools_t::rec_type_t, size_t> & total_counts,
+	const std::map<tools_t::rec_type_t, size_t> & translated_counts)
 {
 	for (auto & tb : type_buttons_)
 	{
-		auto it = counts.find(tb.type);
-		tb.count = (it != counts.end()) ? it->second : 0;
-		QString text = QString("%1 (%2)").arg(get_type_display_name(tb.type)).arg(tb.count);
-		tb.button->setText(text);
+		auto total_it = total_counts.find(tb.type);
+		tb.count = (total_it != total_counts.end()) ? total_it->second : 0;
+
+		auto trans_it = translated_counts.find(tb.type);
+		size_t translated = (trans_it != translated_counts.end()) ? trans_it->second : 0;
+
+		tb.button->setText(QString("%1 (%2/%3)")
+			.arg(get_type_display_name(tb.type))
+			.arg(translated)
+			.arg(tb.count));
 	}
 }
 
-void filter_bar_t::set_total_count(size_t total)
+void filter_bar_t::set_total_count(size_t translated, size_t total)
 {
-	all_button_->setText(QString("All (%1)").arg(total));
+	all_button_->setText(QString("All (%1/%2)").arg(translated).arg(total));
 }
 
 std::set<tools_t::rec_type_t> filter_bar_t::get_active_types() const
@@ -261,6 +278,8 @@ void filter_bar_t::on_all_clicked()
 	sub_type_solo_value_.clear();
 	saved_sub_types_.clear();
 
+	lua_filter_active_ = false;
+
 	update_button_styles();
 	update_sub_type_styles();
 	emit all_reset_requested();
@@ -282,6 +301,9 @@ void filter_bar_t::update_button_styles()
 		bool active = active_types_.count(tb.type) > 0;
 		tb.button->setStyleSheet(active ? active_style : inactive_style);
 	}
+
+	if (lua_button_->isVisible())
+		lua_button_->setStyleSheet(lua_filter_active_ ? active_style : inactive_style);
 }
 
 void filter_bar_t::rebuild_sub_type_bar()
@@ -380,4 +402,20 @@ void filter_bar_t::update_sub_type_styles()
 		bool active = active_sub_types_.count(label) > 0;
 		btn->setStyleSheet(active ? active_style : inactive_style);
 	}
+}
+
+bool filter_bar_t::is_lua_filter_active() const
+{
+	return lua_filter_active_;
+}
+
+void filter_bar_t::set_lua_filter_active(bool active)
+{
+	lua_filter_active_ = active;
+	update_button_styles();
+}
+
+void filter_bar_t::set_lua_button_visible(bool visible)
+{
+	lua_button_->setVisible(visible);
 }

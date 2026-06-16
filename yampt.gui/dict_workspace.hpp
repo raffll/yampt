@@ -37,6 +37,7 @@ class dict_workspace_t
 {
 public:
 	int load_dict(const std::string & path, dict_kind_t kind);
+	int add_slot(dict_slot_t slot, dict_kind_t kind);
 	bool unload_dict(int slot_index);
 	void unload_all();
 	bool save_dict(int slot_index);

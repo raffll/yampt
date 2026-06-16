@@ -17,25 +17,32 @@
     <ClCompile Include="validation_manager.cpp" />
     <ClCompile Include="history_manager.cpp" />
     <ClCompile Include="syntax_highlighter.cpp" />
+    <ClCompile Include="composite_highlighter.cpp" />
     <ClCompile Include="annotation_manager.cpp" />
     <ClCompile Include="annotation_highlighter.cpp" />
     <ClCompile Include="encoding_utils.cpp" />
     <ClCompile Include="spell_checker.cpp" />
-    <ClCompile Include="spell_check_highlighter.cpp" />
     <ClCompile Include="spell_context_menu.cpp" />
     <ClCompile Include="filter_bar.cpp" />
     <ClCompile Include="flow_layout.cpp" />
     <ClCompile Include="status_filter_bar.cpp" />
+    <ClCompile Include="editor_text_edit.cpp" />
     <ClCompile Include="editor_panel.cpp" />
+    <ClCompile Include="line_number_gutter.cpp" />
     <ClCompile Include="record_table_model.cpp" />
     <ClCompile Include="record_table_view.cpp" />
     <ClCompile Include="validation_indicator.cpp" />
-    <ClCompile Include="mwscript_highlighter.cpp" />
     <ClCompile Include="hyperlink_highlighter.cpp" />
     <ClCompile Include="book_preview.cpp" />
     <ClCompile Include="sidebar_widget.cpp" />
     <ClCompile Include="annotations_panel.cpp" />
     <ClCompile Include="history_panel.cpp" />
+    <ClCompile Include="grammar_checker.cpp" />
+    <ClCompile Include="search_engine.cpp" />
+    <ClCompile Include="find_replace_dialog.cpp" />
+    <ClCompile Include="yaml_l10n_reader.cpp" />
+    <ClCompile Include="yaml_l10n_writer.cpp" />
+    <ClCompile Include="first_run_dialog.cpp" />
     <ClCompile Include="..\yampt\translation_engine.cpp">
       <Filter>yampt</Filter>
     </ClCompile>
@@ -109,22 +116,28 @@
     <ClInclude Include="..\external\yyjson.h">
       <Filter>external</Filter>
     </ClInclude>
+    <ClInclude Include="grammar_checker.hpp" />
+    <ClInclude Include="search_engine.hpp" />
+    <ClInclude Include="yaml_l10n_reader.hpp" />
+    <ClInclude Include="yaml_l10n_writer.hpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="main_window.hpp" />
+    <CustomBuild Include="editor_text_edit.hpp" />
     <CustomBuild Include="editor_panel.hpp" />
     <CustomBuild Include="filter_bar.hpp" />
     <CustomBuild Include="status_filter_bar.hpp" />
     <CustomBuild Include="record_table_model.hpp" />
     <CustomBuild Include="record_table_view.hpp" />
-    <CustomBuild Include="spell_check_highlighter.hpp" />
-    <CustomBuild Include="annotation_highlighter.hpp" />
+    <CustomBuild Include="composite_highlighter.hpp" />
     <CustomBuild Include="validation_indicator.hpp" />
-    <CustomBuild Include="mwscript_highlighter.hpp" />
-    <CustomBuild Include="hyperlink_highlighter.hpp" />
+    <CustomBuild Include="annotation_highlighter.hpp" />
     <CustomBuild Include="book_preview.hpp" />
     <CustomBuild Include="sidebar_widget.hpp" />
     <CustomBuild Include="annotations_panel.hpp" />
     <CustomBuild Include="history_panel.hpp" />
+    <CustomBuild Include="line_number_gutter.hpp" />
+    <CustomBuild Include="first_run_dialog.hpp" />
+    <CustomBuild Include="find_replace_dialog.hpp" />
   </ItemGroup>
 </Project>

@@ -17,6 +17,7 @@ public:
 signals:
 	void row_selected(int row);
 	void status_change_requested(int row, const QString & new_status);
+	void batch_status_change_requested(const QList<int> & rows, const QString & new_status);
 
 protected:
 	void contextMenuEvent(QContextMenuEvent * event) override;

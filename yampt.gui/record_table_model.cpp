@@ -20,27 +20,13 @@ static std::string status_display_name(const std::string & status)
 		return "Missing";
 	if (status == "duplicate")
 		return "Duplicate";
-	if (status == "coords")
-		return "Coords";
-	if (status == "fingerprint")
-		return "Fingerprint";
-	if (status == "heuristic")
-		return "Heuristic";
-	if (status == "info")
-		return "Info";
-	if (status == "exact")
-		return "Exact";
-	if (status == "wilderness")
-		return "Wilderness";
-	if (status == "region")
-		return "Region";
-	if (status == "matched")
+	if (status == "matched" || status == "fingerprint" || status == "coords" ||
+		status == "heuristic" || status == "exact" || status == "info" ||
+		status == "wilderness" || status == "region")
 		return "Matched";
 	if (status == "error")
 		return "Error";
-	if (status == "identical")
-		return "Identical";
-	if (status == "translated")
+	if (status == "identical" || status == "translated")
 		return "Translated";
 	if (status == "reused")
 		return "Reused";
@@ -52,6 +38,8 @@ static std::string status_display_name(const std::string & status)
 		return "In Progress";
 	if (status == "mismatch")
 		return "Mismatch";
+	if (status == "propagated")
+		return "Propagated";
 	return status;
 }
 
@@ -68,7 +56,7 @@ int record_table_model_t::columnCount(const QModelIndex & parent) const
 	if (parent.isValid())
 		return 0;
 
-	return 5;
+	return col_count;
 }
 
 QVariant record_table_model_t::data(const QModelIndex & index, int role) const
@@ -85,23 +73,72 @@ QVariant record_table_model_t::data(const QModelIndex & index, int role) const
 	{
 		switch (index.column())
 		{
-		case 0:
+		case col_id:
 			return QString::fromStdString(tools_t::type_to_str(row.type));
-		case 1:
-			return QString::fromStdString(row.key_text);
-		case 2:
-			return first_line(row.old_text);
-		case 3:
-			return first_line(row.new_text);
-		case 4:
+		case col_key:
+		{
+			auto display = QString::fromStdString(row.key_text);
+			if (row.type == tools_t::rec_type_t::sctx || row.type == tools_t::rec_type_t::bnam)
+			{
+				auto parts = display.split('^');
+				for (auto & part : parts)
+				{
+					int i = 0;
+					while (i < part.length() && (part[i] == ' ' || part[i] == '\t'))
+						++i;
+					part = part.mid(i);
+				}
+				display = parts.join(QString::fromUtf8(" \xe2\x80\xa2 "));
+			}
+			else
+			{
+				display.replace('^', QString::fromUtf8(" \xe2\x80\xa2 "));
+			}
+
+			if (row.is_child)
+				return QString::fromUtf8("\xe2\x86\xb3 ") + display;
+
+			return display;
+		}
+		case col_original:
+		{
+			auto text = first_line(row.old_text);
+			if (row.type == tools_t::rec_type_t::sctx || row.type == tools_t::rec_type_t::bnam)
+			{
+				int i = 0;
+				while (i < text.length() && (text[i] == ' ' || text[i] == '\t'))
+					++i;
+				text = text.mid(i);
+			}
+			return text;
+		}
+		case col_translation:
+		{
+			auto text = first_line(row.new_text);
+			if (row.type == tools_t::rec_type_t::sctx || row.type == tools_t::rec_type_t::bnam)
+			{
+				int i = 0;
+				while (i < text.length() && (text[i] == ' ' || text[i] == '\t'))
+					++i;
+				text = text.mid(i);
+			}
+			return text;
+		}
+		case col_status:
 			return QString::fromStdString(status_display_name(row.status));
 		default:
 			return {};
 		}
 	}
 
-	if (role == Qt::BackgroundRole && index.column() == 4)
-		return get_status_color(row.status);
+	if (role == Qt::BackgroundRole)
+	{
+		const auto & color = get_status_color(row.status);
+		return QColor(
+			255 - (255 - color.red()) * 20 / 100,
+			255 - (255 - color.green()) * 20 / 100,
+			255 - (255 - color.blue()) * 20 / 100);
+	}
 
 	return {};
 }
@@ -113,15 +150,15 @@ QVariant record_table_model_t::headerData(int section, Qt::Orientation orientati
 
 	switch (section)
 	{
-	case 0:
-		return QStringLiteral("Type");
-	case 1:
+	case col_id:
+		return QStringLiteral("ID");
+	case col_key:
 		return QStringLiteral("Key");
-	case 2:
+	case col_original:
 		return QStringLiteral("Original");
-	case 3:
+	case col_translation:
 		return QStringLiteral("Translation");
-	case 4:
+	case col_status:
 		return QStringLiteral("Status");
 	default:
 		return {};
@@ -138,19 +175,19 @@ void record_table_model_t::sort(int column, Qt::SortOrder order)
 
 		switch (column)
 		{
-		case 0:
+		case col_id:
 			result = static_cast<int>(a.type) - static_cast<int>(b.type);
 			break;
-		case 1:
+		case col_key:
 			result = a.key_text.compare(b.key_text);
 			break;
-		case 2:
+		case col_original:
 			result = a.old_text.compare(b.old_text);
 			break;
-		case 3:
+		case col_translation:
 			result = a.new_text.compare(b.new_text);
 			break;
-		case 4:
+		case col_status:
 			result = a.status.compare(b.status);
 			break;
 		}
@@ -161,7 +198,31 @@ void record_table_model_t::sort(int column, Qt::SortOrder order)
 		return result < 0;
 	};
 
-	std::sort(rows_.begin(), rows_.end(), cmp);
+	std::vector<std::vector<table_row_t>> groups;
+	for (auto & row : rows_)
+	{
+		if (!row.is_child)
+			groups.push_back({});
+
+		if (!groups.empty())
+			groups.back().push_back(std::move(row));
+	}
+
+	std::sort(groups.begin(), groups.end(), [&cmp](const std::vector<table_row_t> & a, const std::vector<table_row_t> & b)
+	{
+		if (a.empty() || b.empty())
+			return !a.empty();
+
+		return cmp(a.front(), b.front());
+	});
+
+	rows_.clear();
+	for (auto & group : groups)
+	{
+		for (auto & row : group)
+			rows_.push_back(std::move(row));
+	}
+
 	endResetModel();
 }
 
@@ -187,5 +248,5 @@ void record_table_model_t::update_row(int row, const std::string & new_text, con
 
 	rows_[row].new_text = new_text;
 	rows_[row].status = status;
-	emit dataChanged(index(row, 3), index(row, 4));
+	emit dataChanged(index(row, col_translation), index(row, col_status));
 }

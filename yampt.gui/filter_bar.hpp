@@ -17,14 +17,19 @@ class filter_bar_t : public QWidget
 public:
 	explicit filter_bar_t(QWidget * parent = nullptr);
 
-	void update_counts(const std::map<tools_t::rec_type_t, size_t> & counts);
-	void set_total_count(size_t total);
+	void update_counts(const std::map<tools_t::rec_type_t, size_t> & total_counts,
+		const std::map<tools_t::rec_type_t, size_t> & translated_counts);
+	void set_total_count(size_t translated, size_t total);
 	std::set<tools_t::rec_type_t> get_active_types() const;
 	std::set<std::string> get_active_sub_types() const;
 	bool is_solo() const;
 	tools_t::rec_type_t get_solo_type() const;
 
 	void set_filter_state(const std::set<tools_t::rec_type_t> & types, bool solo, tools_t::rec_type_t solo_type);
+
+	bool is_lua_filter_active() const;
+	void set_lua_filter_active(bool active);
+	void set_lua_button_visible(bool visible);
 
 signals:
 	void filters_changed();
@@ -60,4 +65,7 @@ private:
 	std::set<std::string> saved_sub_types_;
 	bool sub_type_solo_ = false;
 	std::string sub_type_solo_value_;
+
+	QPushButton * lua_button_ = nullptr;
+	bool lua_filter_active_ = false;
 };
