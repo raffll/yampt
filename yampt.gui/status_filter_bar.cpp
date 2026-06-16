@@ -1,6 +1,7 @@
 #include "status_filter_bar.hpp"
 #include "status_colors.hpp"
 #include <QHBoxLayout>
+#include <QLabel>
 #include <QPushButton>
 
 static const char * get_status_display_name_qt(const std::string & status)
@@ -73,7 +74,9 @@ status_filter_bar_t::status_filter_bar_t(QWidget * parent)
 		status_buttons_.push_back(sb);
 	}
 
-	layout_->addSpacing(12);
+	auto * sep1 = new QLabel(QString::fromUtf8("\xE2\x80\xA2"), this);
+	sep1->setStyleSheet("color: rgb(150,150,150);");
+	layout_->addWidget(sep1);
 
 	for (const auto & status : single_statuses)
 	{
@@ -95,7 +98,9 @@ status_filter_bar_t::status_filter_bar_t(QWidget * parent)
 		status_buttons_.push_back(sb);
 	}
 
-	layout_->addSpacing(12);
+	auto * sep2 = new QLabel(QString::fromUtf8("\xE2\x80\xA2"), this);
+	sep2->setStyleSheet("color: rgb(150,150,150);");
+	layout_->addWidget(sep2);
 
 	for (const auto & status : work_statuses)
 	{
@@ -121,9 +126,10 @@ status_filter_bar_t::status_filter_bar_t(QWidget * parent)
 	update_button_styles();
 }
 
-void status_filter_bar_t::update_counts(const std::map<std::string, size_t> & counts)
+void status_filter_bar_t::update_counts(const std::map<std::string, size_t> & displayed_counts,
+	const std::map<std::string, size_t> & total_counts)
 {
-	current_counts_ = counts;
+	current_counts_ = total_counts;
 
 	static const std::vector<std::string> matched_group = {
 		"matched", "fingerprint", "coords", "heuristic", "exact",
@@ -136,35 +142,51 @@ void status_filter_bar_t::update_counts(const std::map<std::string, size_t> & co
 
 	for (auto & sb : status_buttons_)
 	{
+		size_t displayed = 0;
 		size_t total = 0;
 
 		if (sb.status == "matched")
 		{
 			for (const auto & s : matched_group)
 			{
-				auto it = current_counts_.find(s);
-				if (it != current_counts_.end())
-					total += it->second;
+				auto it = displayed_counts.find(s);
+				if (it != displayed_counts.end())
+					displayed += it->second;
+
+				auto it2 = total_counts.find(s);
+				if (it2 != total_counts.end())
+					total += it2->second;
 			}
 		}
 		else if (sb.status == "translated")
 		{
 			for (const auto & s : translated_group)
 			{
-				auto it = current_counts_.find(s);
-				if (it != current_counts_.end())
-					total += it->second;
+				auto it = displayed_counts.find(s);
+				if (it != displayed_counts.end())
+					displayed += it->second;
+
+				auto it2 = total_counts.find(s);
+				if (it2 != total_counts.end())
+					total += it2->second;
 			}
 		}
 		else
 		{
-			auto it = current_counts_.find(sb.status);
-			if (it != current_counts_.end())
-				total = it->second;
+			auto it = displayed_counts.find(sb.status);
+			if (it != displayed_counts.end())
+				displayed = it->second;
+
+			auto it2 = total_counts.find(sb.status);
+			if (it2 != total_counts.end())
+				total = it2->second;
 		}
 
 		sb.count = total;
-		sb.button->setText(QString("%1 (%2)").arg(get_status_display_name_qt(sb.status)).arg(total));
+		sb.button->setText(QString("%1 (%2/%3)")
+			.arg(get_status_display_name_qt(sb.status))
+			.arg(displayed)
+			.arg(total));
 	}
 }
 

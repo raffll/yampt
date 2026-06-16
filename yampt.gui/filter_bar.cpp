@@ -1,5 +1,7 @@
 #include "filter_bar.hpp"
+#include <QEvent>
 #include <QHBoxLayout>
+#include <QLabel>
 #include <QPushButton>
 #include <QVBoxLayout>
 
@@ -152,10 +154,14 @@ filter_bar_t::filter_bar_t(QWidget * parent)
 	row1_layout->addStretch();
 
 	add_group(sub_type_layout_, row2, info_sub_types);
-	sub_type_layout_->addSpacing(8);
+	auto * sep1 = new QLabel(QString::fromUtf8("\xE2\x80\xA2"), row2);
+	sep1->setStyleSheet("color: rgb(150,150,150);");
+	sub_type_layout_->addWidget(sep1);
 
 	add_group(sub_type_layout_, row2, desc_sub_types);
-	sub_type_layout_->addSpacing(8);
+	auto * sep2 = new QLabel(QString::fromUtf8("\xE2\x80\xA2"), row2);
+	sep2->setStyleSheet("color: rgb(150,150,150);");
+	sub_type_layout_->addWidget(sep2);
 
 	add_group(sub_type_layout_, row2, indx_sub_types);
 	sub_type_layout_->addStretch();
@@ -292,6 +298,23 @@ void filter_bar_t::update_button_styles()
 		"background-color: rgb(70,130,200); color: white; border: 1px solid rgb(50,100,170); padding: 2px 6px;";
 	static const QString inactive_style =
 		"background-color: transparent; color: rgb(80,80,80); border: 1px solid rgb(150,150,150); padding: 2px 6px;";
+	static const QString disabled_style =
+		"background-color: transparent; color: rgb(180,180,180); border: 1px solid rgb(210,210,210); padding: 2px 6px;";
+
+	if (!isEnabled())
+	{
+		all_button_->setStyleSheet(disabled_style);
+		for (const auto & tb : type_buttons_)
+			tb.button->setStyleSheet(disabled_style);
+
+		if (lua_button_->isVisible())
+			lua_button_->setStyleSheet(disabled_style);
+
+		for (auto * btn : sub_type_buttons_)
+			btn->setStyleSheet(disabled_style);
+
+		return;
+	}
 
 	bool all_active = (active_types_.size() == type_order.size());
 	all_button_->setStyleSheet(all_active ? active_style : inactive_style);
@@ -367,6 +390,17 @@ void filter_bar_t::update_sub_type_styles()
 	static const QString disabled_style =
 		"background-color: transparent; color: rgb(180,180,180); border: 1px solid rgb(210,210,210); padding: 2px 6px;";
 
+	if (!isEnabled())
+	{
+		for (auto * btn : sub_type_buttons_)
+		{
+			btn->setStyleSheet(disabled_style);
+			btn->setEnabled(false);
+		}
+
+		return;
+	}
+
 	static const std::set<std::string> info_set(info_sub_types.begin(), info_sub_types.end());
 	static const std::set<std::string> fnam_set(fnam_sub_types.begin(), fnam_sub_types.end());
 	static const std::set<std::string> desc_set(desc_sub_types.begin(), desc_sub_types.end());
@@ -418,4 +452,14 @@ void filter_bar_t::set_lua_filter_active(bool active)
 void filter_bar_t::set_lua_button_visible(bool visible)
 {
 	lua_button_->setVisible(visible);
+}
+
+void filter_bar_t::changeEvent(QEvent * event)
+{
+	QWidget::changeEvent(event);
+	if (event->type() == QEvent::EnabledChange)
+	{
+		update_button_styles();
+		update_sub_type_styles();
+	}
 }

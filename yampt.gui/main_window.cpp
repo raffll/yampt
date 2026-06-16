@@ -73,11 +73,11 @@ main_window_t::main_window_t(QWidget * parent)
 
     auto * file_menu = menuBar()->addMenu("&File");
 
-    open_action_ = new QAction("&Open", this);
+    open_action_ = new QAction("Open &User Dictionary...", this);
     open_action_->setShortcut(QKeySequence("Ctrl+O"));
     file_menu->addAction(open_action_);
 
-    open_base_action_ = new QAction("Open &Base...", this);
+    open_base_action_ = new QAction("Open &Base Dictionary...", this);
     file_menu->addAction(open_base_action_);
 
     load_plugin_action_ = new QAction("Load &Plugin...", this);
@@ -971,7 +971,14 @@ void main_window_t::rebuild_table()
     {
         table_model_->rebuild({});
         progress_label_->clear();
+        filter_bar_->setEnabled(false);
         status_filter_bar_->set_dict_mode(status_filter_bar_t::dict_mode_t::none);
+        search_field_->setEnabled(false);
+        case_sensitive_check_->setEnabled(false);
+        regex_check_->setEnabled(false);
+        search_col_key_->setEnabled(false);
+        search_col_original_->setEnabled(false);
+        search_col_translation_->setEnabled(false);
         return;
     }
 
@@ -980,6 +987,14 @@ void main_window_t::rebuild_table()
         status_filter_bar_->set_dict_mode(status_filter_bar_t::dict_mode_t::base);
     else
         status_filter_bar_->set_dict_mode(status_filter_bar_t::dict_mode_t::user);
+
+    filter_bar_->setEnabled(true);
+    search_field_->setEnabled(true);
+    case_sensitive_check_->setEnabled(true);
+    regex_check_->setEnabled(true);
+    search_col_key_->setEnabled(true);
+    search_col_original_->setEnabled(true);
+    search_col_translation_->setEnabled(true);
 
     const auto active_sub_types = filter_bar_->get_active_sub_types();
     const size_t total_sub_types = 5 + 23 + 3 + 2;
@@ -1123,10 +1138,18 @@ void main_window_t::rebuild_table()
     current_row_ = -1;
 
     std::map<std::string, size_t> displayed_status_counts;
+    std::map<std::string, size_t> total_status_counts;
     for (const auto & [type, chapter] : slot->data)
     {
         for (const auto & rec : chapter.records)
-            displayed_status_counts[rec.status]++;
+            total_status_counts[rec.status]++;
+    }
+
+    for (int i = 0; i < table_model_->rowCount(); ++i)
+    {
+        const auto * r = table_model_->row_at(i);
+        if (r)
+            displayed_status_counts[r->status]++;
     }
 
     size_t total = 0;
@@ -1138,7 +1161,7 @@ void main_window_t::rebuild_table()
 
     filter_bar_->update_counts(type_counts, translated_counts);
     filter_bar_->set_total_count(total_translated, total);
-    status_filter_bar_->update_counts(displayed_status_counts);
+    status_filter_bar_->update_counts(displayed_status_counts, total_status_counts);
 
     size_t progress_translated = 0;
     size_t progress_total = 0;
@@ -1180,6 +1203,9 @@ void main_window_t::on_row_selected(int row)
 void main_window_t::on_translation_changed()
 {
     if (loading_record_)
+        return;
+
+    if (current_row_ < 0)
         return;
 
     set_dirty(true);
@@ -1398,7 +1424,16 @@ void main_window_t::commit_current_edit()
                 for (const auto & rec : chapter.records)
                     status_counts[rec.status]++;
             }
-            status_filter_bar_->update_counts(status_counts);
+
+            std::map<std::string, size_t> displayed_counts;
+            for (int ri = 0; ri < table_model_->rowCount(); ++ri)
+            {
+                const auto * r = table_model_->row_at(ri);
+                if (r)
+                    displayed_counts[r->status]++;
+            }
+
+            status_filter_bar_->update_counts(displayed_counts, status_counts);
             loaded_text_ = current_text;
             return;
         }
@@ -1414,7 +1449,16 @@ void main_window_t::commit_current_edit()
         for (const auto & rec : chapter.records)
             status_counts[rec.status]++;
     }
-    status_filter_bar_->update_counts(status_counts);
+
+    std::map<std::string, size_t> displayed_counts;
+    for (int ri = 0; ri < table_model_->rowCount(); ++ri)
+    {
+        const auto * r = table_model_->row_at(ri);
+        if (r)
+            displayed_counts[r->status]++;
+    }
+
+    status_filter_bar_->update_counts(displayed_counts, status_counts);
 }
 
 void main_window_t::load_record(int row)
@@ -1911,6 +1955,12 @@ void main_window_t::load_config()
         auto file_size = std::filesystem::file_size(p, ec);
         if (!ec)
             entry.language_tag = file_list_t::detect_language(entry.filename, file_size);
+
+        log_tab_->append_log("restore",
+            "filename=\"" + entry.filename +
+            "\" size=" + std::to_string(ec ? 0 : file_size) +
+            " lang=" + (entry.language_tag.empty() ? "none" : entry.language_tag) +
+            " ec=" + (ec ? ec.message() : "ok") + "\r\n");
     }
 
     rebuild_sidebar();
@@ -1945,16 +1995,25 @@ void main_window_t::save_config()
     config_.user_dict_paths.clear();
     config_.base_dict_paths.clear();
 
-    const auto workspace_dir = QCoreApplication::applicationDirPath().toStdString() + "/workspace/";
-
     for (int i = 0; i < workspace_.slot_count(); ++i)
     {
         const auto * slot = workspace_.get_slot(i);
         if (!slot)
             continue;
 
-        if (slot->path.find(workspace_dir) == 0)
+        const auto * fe = file_list_.get(slot->path);
+        if (fe && fe->is_workspace)
             continue;
+
+        if (!fe)
+        {
+            auto normalized = slot->path;
+            std::replace(normalized.begin(), normalized.end(), '\\', '/');
+            auto workspace_dir = QCoreApplication::applicationDirPath().toStdString() + "/workspace/";
+            std::replace(workspace_dir.begin(), workspace_dir.end(), '\\', '/');
+            if (normalized.find(workspace_dir) == 0)
+                continue;
+        }
 
         if (workspace_.is_user_slot(i))
             config_.user_dict_paths.push_back(slot->path);
@@ -1990,6 +2049,12 @@ void main_window_t::on_load_plugin()
         auto file_size = std::filesystem::file_size(entry.path, ec);
         if (!ec)
             entry.language_tag = file_list_t::detect_language(entry.filename, file_size);
+
+        log_tab_->append_log("load plugin",
+            "filename=\"" + entry.filename +
+            "\" size=" + std::to_string(ec ? 0 : file_size) +
+            " lang=" + (entry.language_tag.empty() ? "none" : entry.language_tag) +
+            " ec=" + (ec ? ec.message() : "ok") + "\r\n");
     }
 
     rebuild_sidebar();
@@ -2456,6 +2521,11 @@ std::vector<dict_selection_dialog_t::dict_entry_t> main_window_t::build_dict_ent
     std::vector<dict_selection_dialog_t::dict_entry_t> entries;
     std::set<std::string> added_paths;
 
+    auto normalize = [](std::string p) {
+        std::replace(p.begin(), p.end(), '\\', '/');
+        return p;
+    };
+
     for (int i = 0; i < workspace_.slot_count(); ++i)
     {
         const auto * slot = workspace_.get_slot(i);
@@ -2470,12 +2540,12 @@ std::vector<dict_selection_dialog_t::dict_entry_t> main_window_t::build_dict_ent
         auto kind = workspace_.is_base_slot(i) ? dict_kind_t::base : dict_kind_t::user;
 
         entries.push_back({filename, slot->path, kind, false});
-        added_paths.insert(slot->path);
+        added_paths.insert(normalize(slot->path));
     }
 
     for (const auto * ws_entry : file_list_.workspace_files())
     {
-        if (added_paths.count(ws_entry->path))
+        if (added_paths.count(normalize(ws_entry->path)))
             continue;
 
         if (ws_entry->type != file_type_t::base_dict && ws_entry->type != file_type_t::user_dict)
@@ -2569,7 +2639,14 @@ void main_window_t::on_item_clicked(const std::string & path)
     {
         table_model_->rebuild({});
         current_row_ = -1;
+        filter_bar_->setEnabled(false);
         status_filter_bar_->set_dict_mode(status_filter_bar_t::dict_mode_t::none);
+        search_field_->setEnabled(false);
+        case_sensitive_check_->setEnabled(false);
+        regex_check_->setEnabled(false);
+        search_col_key_->setEnabled(false);
+        search_col_original_->setEnabled(false);
+        search_col_translation_->setEnabled(false);
         return;
     }
 

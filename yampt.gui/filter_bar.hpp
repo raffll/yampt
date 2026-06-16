@@ -35,6 +35,9 @@ signals:
 	void filters_changed();
 	void all_reset_requested();
 
+protected:
+	void changeEvent(QEvent * event) override;
+
 private:
 	void on_type_clicked(tools_t::rec_type_t type);
 	void on_type_right_clicked(tools_t::rec_type_t type);
