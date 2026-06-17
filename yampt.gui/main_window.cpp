@@ -17,6 +17,7 @@
 #include "spell_context_menu.hpp"
 #include "status_filter_bar.hpp"
 #include "validation_indicator.hpp"
+#include "yaml_l10n_writer.hpp"
 
 #include "../yampt/dict_merger.hpp"
 #include "../yampt/dict_writer.hpp"
@@ -86,7 +87,7 @@ main_window_t::main_window_t(QWidget * parent)
     save_action_->setShortcut(QKeySequence("Ctrl+S"));
     file_menu->addAction(save_action_);
 
-    save_all_action_ = new QAction("Save &All", this);
+    save_all_action_ = new QAction("Save A&ll", this);
     file_menu->addAction(save_all_action_);
 
     file_menu->addSeparator();
@@ -579,6 +580,49 @@ main_window_t::main_window_t(QWidget * parent)
     connect(sidebar_, &sidebar_widget_t::item_clicked, this, &main_window_t::on_item_clicked);
     connect(sidebar_, &sidebar_widget_t::operation_requested, this, &main_window_t::on_operation_requested);
     connect(sidebar_, &sidebar_widget_t::save_requested, this, &main_window_t::on_save_requested);
+    connect(sidebar_, &sidebar_widget_t::save_as_requested, this, [this](const std::string & path) {
+        commit_current_edit();
+
+        if (lua_active_path_.empty())
+            return;
+
+        auto sep = path.find_last_of("/\\");
+        auto default_dir = sep != std::string::npos ? path.substr(0, sep) : std::string{};
+
+        auto save_path = QFileDialog::getSaveFileName(
+            this, "Save Translated YAML",
+            QString::fromStdString(default_dir),
+            "YAML files (*.yaml)");
+
+        if (save_path.isEmpty())
+            return;
+
+        std::vector<std::string> key_order;
+        for (const auto & e : lua_entries_)
+            key_order.push_back(e.key);
+
+        yaml_l10n_writer_t writer;
+        if (!writer.write(save_path.toStdString(), lua_entries_, key_order))
+            return;
+
+        log_tab_->append_log("save as", "saved \"" + save_path.toStdString() + "\"\r\n");
+
+        const auto tmp_path = lua_active_path_ + ".tmp";
+        QFile::remove(QString::fromStdString(tmp_path));
+        lua_modified_indices_.clear();
+
+        auto * fe = file_list_.get(lua_active_path_);
+        if (fe)
+        {
+            fe->dirty = false;
+            fe->has_tmp = false;
+            sidebar_->update_item_text(fe->path, derive_display_name(*fe));
+        }
+
+        lua_active_path_.clear();
+        lua_entries_.clear();
+        set_dirty(false);
+    });
     connect(sidebar_, &sidebar_widget_t::unload_requested, this, &main_window_t::on_unload_requested);
     connect(sidebar_, &sidebar_widget_t::delete_requested, this, &main_window_t::on_delete_requested);
     connect(sidebar_, &sidebar_widget_t::remove_folder_requested, this, [this](const std::string & root_path) {
@@ -843,6 +887,21 @@ void main_window_t::on_save()
 {
     commit_current_edit();
 
+    if (!lua_active_path_.empty())
+    {
+        save_lua_temp();
+
+        auto * fe = file_list_.get(lua_active_path_);
+        if (fe)
+        {
+            fe->dirty = false;
+            sidebar_->update_item_text(fe->path, derive_display_name(*fe));
+        }
+
+        set_dirty(false);
+        return;
+    }
+
     int active = workspace_.get_active_index();
     if (active < 0)
         return;
@@ -852,10 +911,15 @@ void main_window_t::on_save()
 
     const auto * slot = workspace_.get_slot(active);
     save_dict_encoded(active);
-    rebuild_sidebar();
 
     if (slot)
+    {
+        auto * fe = file_list_.get(slot->path);
+        if (fe)
+            sidebar_->update_item_text(fe->path, derive_display_name(*fe));
+
         log_tab_->append_log("save", "saved \"" + slot->path + "\"\r\n");
+    }
 
     if (!workspace_.has_any_unsaved())
         set_dirty(false);
@@ -872,11 +936,14 @@ void main_window_t::on_save_all()
         if (slot && slot->dirty)
         {
             save_dict_encoded(i);
+
+            auto * fe = file_list_.get(slot->path);
+            if (fe)
+                sidebar_->update_item_text(fe->path, derive_display_name(*fe));
+
             log_msg += "saved \"" + slot->path + "\"\r\n";
         }
     }
-
-    rebuild_sidebar();
 
     if (!log_msg.empty())
         log_tab_->append_log("save all", log_msg);
@@ -1395,6 +1462,20 @@ void main_window_t::on_translation_changed()
     if (current_row_ < 0)
         return;
 
+    if (!lua_active_path_.empty())
+    {
+        auto * fe = file_list_.get(lua_active_path_);
+        if (fe && !fe->dirty)
+        {
+            fe->dirty = true;
+            fe->has_tmp = true;
+            sidebar_->update_item_text(fe->path, derive_display_name(*fe));
+            set_dirty(true);
+        }
+
+        return;
+    }
+
     if (workspace_.get_active_index() >= 0)
     {
         auto * slot = workspace_.get_slot(workspace_.get_active_index());
@@ -1402,20 +1483,10 @@ void main_window_t::on_translation_changed()
         {
             slot->dirty = true;
             file_list_.set_dirty(slot->path, true);
-            rebuild_sidebar();
-        }
 
-        if (slot && slot->dirty)
-        {
             auto * fe = file_list_.get(slot->path);
-            if (!fe || !fe->dirty)
-            {
-                log_tab_->append_log("dirty debug",
-                    "slot->path=\"" + slot->path + "\""
-                    " fe=" + (fe ? "found" : "null") +
-                    " fe->dict_loaded=" + (fe ? std::to_string(fe->dict_loaded) : "n/a") +
-                    " fe->dirty=" + (fe ? std::to_string(fe->dirty) : "n/a") + "\r\n");
-            }
+            if (fe)
+                sidebar_->update_item_text(fe->path, derive_display_name(*fe));
         }
     }
 
@@ -1574,6 +1645,20 @@ void main_window_t::commit_current_edit()
     if (!row_data)
         return;
 
+    if (row_data->type == tools_t::rec_type_t::lua)
+    {
+        if (row_data->chapter_index < lua_entries_.size())
+        {
+            lua_entries_[row_data->chapter_index].value = current_text.toStdString();
+            lua_modified_indices_.insert(row_data->chapter_index);
+            table_model_->update_row(current_row_, current_text.toStdString(), "in_progress");
+            save_lua_temp();
+        }
+
+        loaded_text_ = current_text;
+        return;
+    }
+
     auto * slot = workspace_.get_active_slot();
     if (!slot)
         return;
@@ -1653,7 +1738,6 @@ void main_window_t::commit_current_edit()
             }
 
             loaded_text_ = current_text;
-            rebuild_sidebar();
             update_status_counts();
             return;
         }
@@ -1661,7 +1745,6 @@ void main_window_t::commit_current_edit()
 
     table_model_->update_row(current_row_, new_text_str, commit_status);
     loaded_text_ = current_text;
-    rebuild_sidebar();
     update_status_counts();
 }
 
@@ -2020,9 +2103,12 @@ void main_window_t::save_dict_encoded(int slot_index)
 
 void main_window_t::rebuild_sidebar()
 {
-	const auto active_path = workspace_.get_active_index() >= 0
-		? workspace_.get_slot(workspace_.get_active_index())->path
-		: std::string{};
+	std::string active_path;
+	if (!lua_active_path_.empty())
+		active_path = lua_active_path_;
+	else if (workspace_.get_active_index() >= 0)
+		active_path = workspace_.get_slot(workspace_.get_active_index())->path;
+
 	auto model = build_render_model(file_list_, active_path);
 	sidebar_->set_model(model);
 }
@@ -2599,6 +2685,31 @@ void main_window_t::update_watcher_paths()
         fs_watcher_->addPaths(paths);
 }
 
+void main_window_t::save_lua_temp()
+{
+    if (lua_active_path_.empty())
+        return;
+
+    if (lua_modified_indices_.empty())
+        return;
+
+    const auto tmp_path = lua_active_path_ + ".tmp";
+
+    std::vector<l10n_entry_t> modified_entries;
+    std::vector<std::string> key_order;
+    for (auto idx : lua_modified_indices_)
+    {
+        if (idx >= lua_entries_.size())
+            continue;
+
+        modified_entries.push_back(lua_entries_[idx]);
+        key_order.push_back(lua_entries_[idx].key);
+    }
+
+    yaml_l10n_writer_t writer;
+    writer.write(tmp_path, modified_entries, key_order);
+}
+
 std::vector<dict_selection_dialog_t::dict_entry_t> main_window_t::build_dict_entries(const std::string & source_dir) const
 {
     std::vector<dict_selection_dialog_t::dict_entry_t> entries;
@@ -2733,6 +2844,98 @@ void main_window_t::on_item_clicked(const std::string & path)
         search_col_translation_->setEnabled(false);
         return;
     }
+
+    if (entry->type == file_type_t::lua_l10n)
+    {
+        auto norm_path = path;
+        std::replace(norm_path.begin(), norm_path.end(), '\\', '/');
+
+        auto active_norm = lua_active_path_;
+        std::replace(active_norm.begin(), active_norm.end(), '\\', '/');
+        if (norm_path == active_norm)
+            return;
+
+        commit_current_edit();
+        save_lua_temp();
+
+        yaml_l10n_reader_t reader;
+        if (!reader.load(path))
+        {
+            table_model_->rebuild({});
+            active_file_label_->setText(QString::fromStdString(path));
+            return;
+        }
+
+        lua_active_path_ = path;
+        lua_entries_.clear();
+        lua_modified_indices_.clear();
+
+        const auto & source_entries = reader.source_entries();
+        for (const auto & src : source_entries)
+        {
+            l10n_entry_t e;
+            e.key = src.key;
+            e.value = src.value;
+            lua_entries_.push_back(std::move(e));
+        }
+
+        const auto tmp_path = path + ".tmp";
+        yaml_l10n_reader_t tmp_reader;
+        if (tmp_reader.load(tmp_path))
+        {
+            std::unordered_map<std::string, std::string> tmp_map;
+            for (const auto & e : tmp_reader.source_entries())
+                tmp_map[e.key] = e.value;
+
+            for (size_t i = 0; i < lua_entries_.size(); ++i)
+            {
+                auto it = tmp_map.find(lua_entries_[i].key);
+                if (it != tmp_map.end())
+                {
+                    lua_entries_[i].value = it->second;
+                    lua_modified_indices_.insert(i);
+                }
+            }
+        }
+
+        std::vector<table_row_t> rows;
+        for (size_t i = 0; i < lua_entries_.size(); ++i)
+        {
+            table_row_t row;
+            row.type = tools_t::rec_type_t::lua;
+            row.key_text = lua_entries_[i].key;
+            row.old_text = source_entries[i].value;
+            row.new_text = lua_modified_indices_.count(i) ? lua_entries_[i].value : "";
+
+            if (lua_modified_indices_.count(i))
+                row.status = "in_progress";
+            else
+                row.status = "untranslated";
+
+            row.chapter_index = i;
+            rows.push_back(std::move(row));
+        }
+
+        table_model_->rebuild(std::move(rows));
+        active_file_label_->setText(QString::fromStdString(lua_active_path_));
+        filter_tree_->setEnabled(false);
+        filter_tree_->set_lua_button_visible(true);
+        filter_tree_->set_lua_filter_active(true);
+        status_filter_bar_->set_dict_mode(status_filter_bar_t::dict_mode_t::user);
+        search_label_->setEnabled(true);
+        search_field_->setEnabled(true);
+        case_sensitive_check_->setEnabled(true);
+        regex_check_->setEnabled(true);
+        search_col_key_->setEnabled(true);
+        search_col_original_->setEnabled(true);
+        search_col_translation_->setEnabled(true);
+        current_row_ = -1;
+        return;
+    }
+
+    lua_active_path_.clear();
+    lua_entries_.clear();
+    lua_modified_indices_.clear();
 
     for (int i = 0; i < workspace_.slot_count(); ++i)
     {
@@ -2897,6 +3100,7 @@ void main_window_t::closeEvent(QCloseEvent * event)
     }
 
     commit_current_edit();
+    save_lua_temp();
     save_config();
     QMainWindow::closeEvent(event);
 }

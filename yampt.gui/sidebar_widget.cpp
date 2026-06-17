@@ -228,5 +228,35 @@ void sidebar_widget_t::on_context_menu(const QPoint & pos)
             emit save_requested(path_str);
         else if (selected == delete_action)
             emit delete_requested(path_str);
+
+        return;
+    }
+
+    if (ext == "yaml")
+    {
+        auto * save_as_action = menu.addAction("Save As...");
+        menu.addSeparator();
+        auto * delete_action = menu.addAction("Delete");
+
+        auto * selected = menu.exec(tree_->viewport()->mapToGlobal(pos));
+        if (selected == save_as_action)
+            emit save_as_requested(path_str);
+        else if (selected == delete_action)
+            emit delete_requested(path_str);
+    }
+}
+
+void sidebar_widget_t::update_item_text(const std::string & path, const std::string & display_text)
+{
+    QTreeWidgetItemIterator it(tree_);
+    while (*it)
+    {
+        if ((*it)->data(0, role_path).toString().toStdString() == path)
+        {
+            (*it)->setText(0, QString::fromStdString(display_text));
+            return;
+        }
+
+        ++it;
     }
 }

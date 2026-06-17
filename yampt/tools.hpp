@@ -18,6 +18,7 @@ public:
 		text,
 		bnam,
 		sctx,
+		lua,
 
 		pgrd,
 		anam,

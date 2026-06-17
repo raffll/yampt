@@ -245,6 +245,8 @@ std::string derive_display_name(const file_entry_t & entry)
 		break;
 	case file_type_t::lua_l10n:
 		result += "[LUA]";
+		if (entry.has_tmp)
+			result += " [WIP]";
 		break;
 	}
 
@@ -305,11 +307,31 @@ void file_list_t::clear_workspace()
 
 void file_list_t::scan_roots(const std::vector<std::string> & root_paths)
 {
+	std::unordered_map<std::string, bool> dirty_state;
+	std::unordered_map<std::string, bool> loaded_state;
+	for (const auto & [key, entry] : entries_)
+	{
+		if (entry.dirty)
+			dirty_state[key] = true;
+
+		if (entry.dict_loaded)
+			loaded_state[key] = true;
+	}
+
 	clear_workspace();
 	roots_ = root_paths;
 
 	for (const auto & root : root_paths)
 		scan_single_root(root);
+
+	for (auto & [key, entry] : entries_)
+	{
+		if (dirty_state.count(key))
+			entry.dirty = true;
+
+		if (loaded_state.count(key))
+			entry.dict_loaded = true;
+	}
 }
 
 const std::vector<std::string> & file_list_t::get_roots() const
@@ -336,6 +358,14 @@ void file_list_t::scan_single_root(const std::string & root_path)
 			&& ext != ".yaml" && ext != ".omwaddon" && ext != ".omwgame")
 			continue;
 
+		if (ext == ".yaml")
+		{
+			const auto path_lower = to_lower(entry.path().string());
+			if (path_lower.find("/l10n/") == std::string::npos &&
+				path_lower.find("\\l10n\\") == std::string::npos)
+				continue;
+		}
+
 		const auto path = entry.path().string();
 		auto & fe = add(path);
 		fe.is_workspace = true;
@@ -354,6 +384,9 @@ void file_list_t::scan_single_root(const std::string & root_path)
 			if (!ec)
 				fe.language_tag = detect_language(fe.filename, size);
 		}
+
+		if (fe.type == file_type_t::lua_l10n)
+			fe.has_tmp = std::filesystem::exists(path + ".tmp", ec);
 	}
 }
 

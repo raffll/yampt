@@ -21,6 +21,7 @@ struct file_entry_t
 	std::string language_tag;
 	bool dict_loaded = false;
 	bool dirty = false;
+	bool has_tmp = false;
 	bool is_workspace = false;
 	std::string workspace_subfolder;
 	std::string root_path;

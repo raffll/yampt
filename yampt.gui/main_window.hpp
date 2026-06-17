@@ -13,6 +13,7 @@
 #include "sidebar_widget.hpp"
 #include "spell_checker.hpp"
 #include "validation_manager.hpp"
+#include "yaml_l10n_reader.hpp"
 
 #include "../yampt/file_list.hpp"
 
@@ -198,4 +199,10 @@ private:
 
     QFileSystemWatcher * fs_watcher_ = nullptr;
     QTimer * rescan_timer_ = nullptr;
+
+    std::string lua_active_path_;
+    std::vector<l10n_entry_t> lua_entries_;
+    std::set<size_t> lua_modified_indices_;
+
+    void save_lua_temp();
 };
