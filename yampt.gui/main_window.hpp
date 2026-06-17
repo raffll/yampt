@@ -24,7 +24,7 @@ class book_preview_t;
 class composite_highlighter_t;
 class editor_panel_t;
 class editor_text_edit_t;
-class filter_bar_t;
+class filter_tree_t;
 class find_replace_dialog_t;
 class history_panel_t;
 class log_tab_t;
@@ -134,6 +134,7 @@ private:
 
     QSplitter * left_splitter_ = nullptr;
     QSplitter * right_splitter_ = nullptr;
+    QTabWidget * left_tabs_ = nullptr;
     QTabWidget * info_tabs_ = nullptr;
     QTabWidget * record_tabs_ = nullptr;
 
@@ -163,11 +164,12 @@ private:
     record_table_model_t * table_model_ = nullptr;
     editor_panel_t * editor_panel_ = nullptr;
 
-    filter_bar_t * filter_bar_ = nullptr;
+    filter_tree_t * filter_tree_ = nullptr;
     status_filter_bar_t * status_filter_bar_ = nullptr;
     record_table_view_t * table_view_ = nullptr;
     sidebar_widget_t * sidebar_ = nullptr;
     book_preview_t * book_preview_ = nullptr;
+    QLabel * active_file_label_ = nullptr;
     QLabel * progress_label_ = nullptr;
     validation_indicator_t * validation_indicator_ = nullptr;
     composite_highlighter_t * hl_original_ = nullptr;

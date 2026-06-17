@@ -23,8 +23,7 @@
     <ClCompile Include="encoding_utils.cpp" />
     <ClCompile Include="spell_checker.cpp" />
     <ClCompile Include="spell_context_menu.cpp" />
-    <ClCompile Include="filter_bar.cpp" />
-    <ClCompile Include="flow_layout.cpp" />
+    <ClCompile Include="filter_tree.cpp" />
     <ClCompile Include="status_filter_bar.cpp" />
     <ClCompile Include="editor_text_edit.cpp" />
     <ClCompile Include="editor_panel.cpp" />
@@ -131,7 +130,7 @@
     <CustomBuild Include="main_window.hpp" />
     <CustomBuild Include="editor_text_edit.hpp" />
     <CustomBuild Include="editor_panel.hpp" />
-    <CustomBuild Include="filter_bar.hpp" />
+    <CustomBuild Include="filter_tree.hpp" />
     <CustomBuild Include="status_filter_bar.hpp" />
     <CustomBuild Include="record_table_model.hpp" />
     <CustomBuild Include="record_table_view.hpp" />

@@ -5,7 +5,7 @@
 #include "composite_highlighter.hpp"
 #include "dict_selection_dialog.hpp"
 #include "editor_panel.hpp"
-#include "filter_bar.hpp"
+#include "filter_tree.hpp"
 #include "find_replace_dialog.hpp"
 #include "first_run_dialog.hpp"
 #include "grammar_checker.hpp"
@@ -218,9 +218,8 @@ main_window_t::main_window_t(QWidget * parent)
     central_layout->setContentsMargins(0, 0, 0, 0);
     central_layout->setSpacing(4);
 
-    filter_bar_ = new filter_bar_t(central_widget);
+    filter_tree_ = new filter_tree_t(this);
     status_filter_bar_ = new status_filter_bar_t(central_widget);
-    central_layout->addWidget(filter_bar_);
     central_layout->addWidget(status_filter_bar_);
 
     central_splitter_ = new QSplitter(Qt::Horizontal, central_widget);
@@ -229,8 +228,12 @@ main_window_t::main_window_t(QWidget * parent)
     setCentralWidget(central_widget);
 
     left_splitter_ = new QSplitter(Qt::Vertical, central_splitter_);
-    sidebar_ = new sidebar_widget_t(left_splitter_);
-    left_splitter_->addWidget(sidebar_);
+
+    left_tabs_ = new QTabWidget(left_splitter_);
+    sidebar_ = new sidebar_widget_t(left_tabs_);
+    left_tabs_->addTab(sidebar_, "Files");
+    left_tabs_->addTab(filter_tree_, "Filters");
+    left_splitter_->addWidget(left_tabs_);
 
     info_tabs_ = new QTabWidget(left_splitter_);
     annotations_panel_ = new annotations_panel_t(info_tabs_);
@@ -261,6 +264,9 @@ main_window_t::main_window_t(QWidget * parent)
 
     editor_panel_ = new editor_panel_t(right_splitter_);
     right_splitter_->addWidget(editor_panel_);
+
+    active_file_label_ = new QLabel(this);
+    statusBar()->addWidget(active_file_label_, 1);
 
     progress_label_ = new QLabel(this);
     statusBar()->addPermanentWidget(progress_label_);
@@ -662,8 +668,8 @@ main_window_t::main_window_t(QWidget * parent)
         editor_panel_->translation_editor()->setFocus();
     });
 
-    connect(filter_bar_, &filter_bar_t::filters_changed, this, &main_window_t::on_filters_changed);
-    connect(filter_bar_, &filter_bar_t::all_reset_requested, this, [this]() {
+    connect(filter_tree_, &filter_tree_t::filters_changed, this, &main_window_t::on_filters_changed);
+    connect(filter_tree_, &filter_tree_t::all_reset_requested, this, [this]() {
         status_filter_.clear();
         status_filter_bar_->set_filter_state(status_filter_);
     });
@@ -1020,8 +1026,8 @@ void main_window_t::on_case_sensitive_changed(int /*state*/)
 
 void main_window_t::on_filters_changed()
 {
-    type_filter_ = filter_bar_->get_active_types();
-    type_filter_solo_ = filter_bar_->is_solo();
+    type_filter_ = filter_tree_->get_active_types();
+    type_filter_solo_ = false;
     rebuild_table();
 }
 
@@ -1058,7 +1064,8 @@ void main_window_t::rebuild_table()
     {
         table_model_->rebuild({});
         progress_label_->clear();
-        filter_bar_->setEnabled(false);
+        active_file_label_->clear();
+        filter_tree_->setEnabled(false);
         status_filter_bar_->set_dict_mode(status_filter_bar_t::dict_mode_t::none);
         search_label_->setEnabled(false);
         search_field_->setEnabled(false);
@@ -1076,7 +1083,8 @@ void main_window_t::rebuild_table()
     else
         status_filter_bar_->set_dict_mode(status_filter_bar_t::dict_mode_t::user);
 
-    filter_bar_->setEnabled(true);
+    filter_tree_->setEnabled(true);
+    active_file_label_->setText(QString::fromStdString(slot->path));
     search_label_->setEnabled(true);
     search_field_->setEnabled(true);
     case_sensitive_check_->setEnabled(true);
@@ -1085,7 +1093,7 @@ void main_window_t::rebuild_table()
     search_col_original_->setEnabled(true);
     search_col_translation_->setEnabled(true);
 
-    const auto active_sub_types = filter_bar_->get_active_sub_types();
+    const auto active_sub_types = filter_tree_->get_active_sub_types();
     const size_t total_sub_types = 5 + 23 + 3 + 2;
     const bool has_sub_type_filter = active_sub_types.size() < total_sub_types;
 
@@ -1098,6 +1106,36 @@ void main_window_t::rebuild_table()
         {"REPA", "REPA"}, {"SPEL", "SPEL"}, {"WEAP", "WEAP"},
         {"Birthsigns", "BSGN"}, {"Classes", "CLAS"}, {"Races", "RACE"},
         {"Skills", "SKIL"}, {"Magic Effects", "MGEF"},
+    };
+
+    static const std::map<std::pair<tools_t::rec_type_t, std::string>, std::string> prefix_to_sub_type = {
+        {{tools_t::rec_type_t::info, "T"}, "Topic"},
+        {{tools_t::rec_type_t::info, "V"}, "Voice"},
+        {{tools_t::rec_type_t::info, "G"}, "Greeting"},
+        {{tools_t::rec_type_t::info, "P"}, "Persuasion"},
+        {{tools_t::rec_type_t::info, "J"}, "Journal"},
+        {{tools_t::rec_type_t::bnam, "T"}, "Topic"},
+        {{tools_t::rec_type_t::bnam, "V"}, "Voice"},
+        {{tools_t::rec_type_t::bnam, "G"}, "Greeting"},
+        {{tools_t::rec_type_t::bnam, "P"}, "Persuasion"},
+        {{tools_t::rec_type_t::bnam, "J"}, "Journal"},
+        {{tools_t::rec_type_t::fnam, "ACTI"}, "ACTI"}, {{tools_t::rec_type_t::fnam, "ALCH"}, "ALCH"},
+        {{tools_t::rec_type_t::fnam, "APPA"}, "APPA"}, {{tools_t::rec_type_t::fnam, "ARMO"}, "ARMO"},
+        {{tools_t::rec_type_t::fnam, "BOOK"}, "BOOK"}, {{tools_t::rec_type_t::fnam, "BSGN"}, "BSGN"},
+        {{tools_t::rec_type_t::fnam, "CLAS"}, "CLAS"}, {{tools_t::rec_type_t::fnam, "CLOT"}, "CLOT"},
+        {{tools_t::rec_type_t::fnam, "CONT"}, "CONT"}, {{tools_t::rec_type_t::fnam, "CREA"}, "CREA"},
+        {{tools_t::rec_type_t::fnam, "DOOR"}, "DOOR"}, {{tools_t::rec_type_t::fnam, "FACT"}, "FACT"},
+        {{tools_t::rec_type_t::fnam, "INGR"}, "INGR"}, {{tools_t::rec_type_t::fnam, "LIGH"}, "LIGH"},
+        {{tools_t::rec_type_t::fnam, "LOCK"}, "LOCK"}, {{tools_t::rec_type_t::fnam, "MISC"}, "MISC"},
+        {{tools_t::rec_type_t::fnam, "NPC_"}, "NPC_"}, {{tools_t::rec_type_t::fnam, "PROB"}, "PROB"},
+        {{tools_t::rec_type_t::fnam, "RACE"}, "RACE"}, {{tools_t::rec_type_t::fnam, "REGN"}, "REGN"},
+        {{tools_t::rec_type_t::fnam, "REPA"}, "REPA"}, {{tools_t::rec_type_t::fnam, "SPEL"}, "SPEL"},
+        {{tools_t::rec_type_t::fnam, "WEAP"}, "WEAP"},
+        {{tools_t::rec_type_t::desc, "BSGN"}, "Birthsigns"},
+        {{tools_t::rec_type_t::desc, "CLAS"}, "Classes"},
+        {{tools_t::rec_type_t::desc, "RACE"}, "Races"},
+        {{tools_t::rec_type_t::indx, "SKIL"}, "Skills"},
+        {{tools_t::rec_type_t::indx, "MGEF"}, "Magic Effects"},
     };
 
     static const std::set<std::string> done_statuses_user = {
@@ -1117,6 +1155,8 @@ void main_window_t::rebuild_table()
     std::map<tools_t::rec_type_t, size_t> translated_counts;
     std::map<std::string, size_t> status_counts;
     std::map<std::string, size_t> filtered_status_counts;
+    std::map<std::string, size_t> sub_type_counts;
+    std::map<std::string, size_t> sub_type_translated_counts;
 
     std::unordered_multimap<std::string, size_t> bnam_prefix_map;
     std::set<size_t> consumed_bnams;
@@ -1142,6 +1182,24 @@ void main_window_t::rebuild_table()
             const auto & entry = chapter.records[i];
             type_counts[type]++;
             status_counts[entry.status]++;
+
+            if (type == tools_t::rec_type_t::info || type == tools_t::rec_type_t::bnam ||
+                type == tools_t::rec_type_t::fnam || type == tools_t::rec_type_t::desc ||
+                type == tools_t::rec_type_t::indx)
+            {
+                auto caret_pos = entry.key_text.find('^');
+                if (caret_pos != std::string::npos && caret_pos > 0)
+                {
+                    auto prefix = entry.key_text.substr(0, caret_pos);
+                    auto p2s_it = prefix_to_sub_type.find({type, prefix});
+                    if (p2s_it != prefix_to_sub_type.end())
+                    {
+                        sub_type_counts[p2s_it->second]++;
+                        if (done_statuses.count(entry.status))
+                            sub_type_translated_counts[p2s_it->second]++;
+                    }
+                }
+            }
 
             if (done_statuses.count(entry.status))
                 translated_counts[type]++;
@@ -1268,8 +1326,9 @@ void main_window_t::rebuild_table()
     for (const auto & [t, c] : translated_counts)
         total_translated += c;
 
-    filter_bar_->update_counts(type_counts, translated_counts);
-    filter_bar_->set_total_count(total_translated, total);
+    filter_tree_->update_counts(type_counts, translated_counts);
+    filter_tree_->update_sub_type_counts(sub_type_counts, sub_type_translated_counts);
+    filter_tree_->set_total_count(total_translated, total);
     status_filter_bar_->update_counts(filtered_status_counts, total_status_counts);
 
     size_t progress_translated = 0;
@@ -2008,6 +2067,8 @@ void main_window_t::update_status_counts()
     std::map<tools_t::rec_type_t, size_t> type_counts;
     std::map<tools_t::rec_type_t, size_t> translated_counts;
 
+    std::map<std::string, size_t> sub_type_counts_2;
+    std::map<std::string, size_t> sub_type_translated_2;
     for (const auto & [type, chapter] : slot->data)
     {
         for (const auto & rec : chapter.records)
@@ -2017,6 +2078,53 @@ void main_window_t::update_status_counts()
 
             if (done_statuses.count(rec.status))
                 translated_counts[type]++;
+
+            if (type == tools_t::rec_type_t::info || type == tools_t::rec_type_t::bnam ||
+                type == tools_t::rec_type_t::fnam || type == tools_t::rec_type_t::desc ||
+                type == tools_t::rec_type_t::indx)
+            {
+                auto caret_pos = rec.key_text.find('^');
+                if (caret_pos != std::string::npos && caret_pos > 0)
+                {
+                    auto prefix = rec.key_text.substr(0, caret_pos);
+                    static const std::map<std::pair<tools_t::rec_type_t, std::string>, std::string> prefix_to_sub_type = {
+                        {{tools_t::rec_type_t::info, "T"}, "Topic"},
+                        {{tools_t::rec_type_t::info, "V"}, "Voice"},
+                        {{tools_t::rec_type_t::info, "G"}, "Greeting"},
+                        {{tools_t::rec_type_t::info, "P"}, "Persuasion"},
+                        {{tools_t::rec_type_t::info, "J"}, "Journal"},
+                        {{tools_t::rec_type_t::bnam, "T"}, "Topic"},
+                        {{tools_t::rec_type_t::bnam, "V"}, "Voice"},
+                        {{tools_t::rec_type_t::bnam, "G"}, "Greeting"},
+                        {{tools_t::rec_type_t::bnam, "P"}, "Persuasion"},
+                        {{tools_t::rec_type_t::bnam, "J"}, "Journal"},
+                        {{tools_t::rec_type_t::fnam, "ACTI"}, "ACTI"}, {{tools_t::rec_type_t::fnam, "ALCH"}, "ALCH"},
+                        {{tools_t::rec_type_t::fnam, "APPA"}, "APPA"}, {{tools_t::rec_type_t::fnam, "ARMO"}, "ARMO"},
+                        {{tools_t::rec_type_t::fnam, "BOOK"}, "BOOK"}, {{tools_t::rec_type_t::fnam, "BSGN"}, "BSGN"},
+                        {{tools_t::rec_type_t::fnam, "CLAS"}, "CLAS"}, {{tools_t::rec_type_t::fnam, "CLOT"}, "CLOT"},
+                        {{tools_t::rec_type_t::fnam, "CONT"}, "CONT"}, {{tools_t::rec_type_t::fnam, "CREA"}, "CREA"},
+                        {{tools_t::rec_type_t::fnam, "DOOR"}, "DOOR"}, {{tools_t::rec_type_t::fnam, "FACT"}, "FACT"},
+                        {{tools_t::rec_type_t::fnam, "INGR"}, "INGR"}, {{tools_t::rec_type_t::fnam, "LIGH"}, "LIGH"},
+                        {{tools_t::rec_type_t::fnam, "LOCK"}, "LOCK"}, {{tools_t::rec_type_t::fnam, "MISC"}, "MISC"},
+                        {{tools_t::rec_type_t::fnam, "NPC_"}, "NPC_"}, {{tools_t::rec_type_t::fnam, "PROB"}, "PROB"},
+                        {{tools_t::rec_type_t::fnam, "RACE"}, "RACE"}, {{tools_t::rec_type_t::fnam, "REGN"}, "REGN"},
+                        {{tools_t::rec_type_t::fnam, "REPA"}, "REPA"}, {{tools_t::rec_type_t::fnam, "SPEL"}, "SPEL"},
+                        {{tools_t::rec_type_t::fnam, "WEAP"}, "WEAP"},
+                        {{tools_t::rec_type_t::desc, "BSGN"}, "Birthsigns"},
+                        {{tools_t::rec_type_t::desc, "CLAS"}, "Classes"},
+                        {{tools_t::rec_type_t::desc, "RACE"}, "Races"},
+                        {{tools_t::rec_type_t::indx, "SKIL"}, "Skills"},
+                        {{tools_t::rec_type_t::indx, "MGEF"}, "Magic Effects"},
+                    };
+                    auto p2s_it = prefix_to_sub_type.find({type, prefix});
+                    if (p2s_it != prefix_to_sub_type.end())
+                    {
+                        sub_type_counts_2[p2s_it->second]++;
+                        if (done_statuses.count(rec.status))
+                            sub_type_translated_2[p2s_it->second]++;
+                    }
+                }
+            }
         }
     }
 
@@ -2037,8 +2145,9 @@ void main_window_t::update_status_counts()
     for (const auto & [t, c] : translated_counts)
         total_translated += c;
 
-    filter_bar_->update_counts(type_counts, translated_counts);
-    filter_bar_->set_total_count(total_translated, total);
+    filter_tree_->update_counts(type_counts, translated_counts);
+    filter_tree_->update_sub_type_counts(sub_type_counts_2, sub_type_translated_2);
+    filter_tree_->set_total_count(total_translated, total);
 }
 
 void main_window_t::update_validation()
@@ -2748,7 +2857,7 @@ void main_window_t::load_l10n_folder(const std::string & folder_path)
 
     workspace_.add_slot(std::move(slot), dict_kind_t::user);
 
-    filter_bar_->set_lua_button_visible(true);
+    filter_tree_->set_lua_button_visible(true);
     rebuild_sidebar();
     rebuild_table();
 }
@@ -2876,7 +2985,8 @@ void main_window_t::on_item_clicked(const std::string & path)
     {
         table_model_->rebuild({});
         current_row_ = -1;
-        filter_bar_->setEnabled(false);
+        filter_tree_->setEnabled(false);
+        active_file_label_->clear();
         status_filter_bar_->set_dict_mode(status_filter_bar_t::dict_mode_t::none);
         search_label_->setEnabled(false);
         search_field_->setEnabled(false);

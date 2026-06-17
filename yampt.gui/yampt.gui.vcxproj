@@ -192,8 +192,7 @@
     <ClCompile Include="spell_checker.cpp" />
     <ClCompile Include="spell_context_menu.cpp" />
     <ClCompile Include="hyperlink_highlighter.cpp" />
-    <ClCompile Include="filter_bar.cpp" />
-    <ClCompile Include="flow_layout.cpp" />
+    <ClCompile Include="filter_tree.cpp" />
     <ClCompile Include="status_filter_bar.cpp" />
     <ClCompile Include="editor_text_edit.cpp" />
     <ClCompile Include="editor_panel.cpp" />
@@ -268,7 +267,7 @@
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
-    <CustomBuild Include="filter_bar.hpp">
+    <CustomBuild Include="filter_tree.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
@@ -378,8 +377,8 @@
     <ClCompile Include="$(IntDir)moc_editor_panel.cpp">
       <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_editor_panel.cpp')">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="$(IntDir)moc_filter_bar.cpp">
-      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_filter_bar.cpp')">true</ExcludedFromBuild>
+    <ClCompile Include="$(IntDir)moc_filter_tree.cpp">
+      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_filter_tree.cpp')">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="$(IntDir)moc_status_filter_bar.cpp">
       <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_status_filter_bar.cpp')">true</ExcludedFromBuild>
