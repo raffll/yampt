@@ -17,7 +17,6 @@
 #include "spell_context_menu.hpp"
 #include "status_filter_bar.hpp"
 #include "validation_indicator.hpp"
-#include "yaml_l10n_reader.hpp"
 
 #include "../yampt/dict_merger.hpp"
 #include "../yampt/dict_writer.hpp"
@@ -31,7 +30,7 @@
 #include <QDialogButtonBox>
 #include <QDirIterator>
 #include <QFileDialog>
-#include <QInputDialog>
+#include <QFileSystemWatcher>
 #include <QLabel>
 #include <QLineEdit>
 #include <QListWidget>
@@ -47,11 +46,13 @@
 #include <QPlainTextEdit>
 #include <QTextOption>
 #include <QToolBar>
-#include <QUuid>
+#include <QTimer>
+#include <QTreeWidget>
 #include <QVBoxLayout>
 
 #include <algorithm>
 #include <filesystem>
+#include <map>
 #include <optional>
 #include <regex>
 #include <set>
@@ -73,21 +74,13 @@ main_window_t::main_window_t(QWidget * parent)
 
     auto * file_menu = menuBar()->addMenu("&File");
 
-    open_action_ = new QAction("Open &User Dictionary...", this);
-    open_action_->setShortcut(QKeySequence("Ctrl+O"));
-    file_menu->addAction(open_action_);
+    add_folder_action_ = new QAction("Add &Folder...", this);
+    file_menu->addAction(add_folder_action_);
 
-    open_base_action_ = new QAction("Open &Base Dictionary...", this);
-    file_menu->addAction(open_base_action_);
+    import_archive_action_ = new QAction("&Import Archive...", this);
+    file_menu->addAction(import_archive_action_);
 
-    load_plugin_action_ = new QAction("Load &Plugin...", this);
-    file_menu->addAction(load_plugin_action_);
-
-    load_archive_action_ = new QAction("Load Mod from &Archive...", this);
-    file_menu->addAction(load_archive_action_);
-
-    load_l10n_action_ = new QAction("Load l10n &Folder...", this);
-    file_menu->addAction(load_l10n_action_);
+    file_menu->addSeparator();
 
     save_action_ = new QAction("&Save", this);
     save_action_->setShortcut(QKeySequence("Ctrl+S"));
@@ -298,17 +291,57 @@ main_window_t::main_window_t(QWidget * parent)
         apply_extra_selections(editor_panel_->translation_editor(), extra_sel_translation_);
     });
 
-    connect(open_action_, &QAction::triggered, this, &main_window_t::on_open_user_dict);
-    connect(open_base_action_, &QAction::triggered, this, &main_window_t::on_open_base_dict);
-    connect(load_plugin_action_, &QAction::triggered, this, &main_window_t::on_load_plugin);
-    connect(load_archive_action_, &QAction::triggered, this, &main_window_t::on_load_archive);
-    connect(load_l10n_action_, &QAction::triggered, this, [this]() {
-        auto folder = QFileDialog::getExistingDirectory(this, "Load l10n Folder");
+    connect(add_folder_action_, &QAction::triggered, this, [this]() {
+        const auto folder = QFileDialog::getExistingDirectory(this, "Add Folder");
         if (folder.isEmpty())
             return;
 
-        load_l10n_folder(folder.toStdString());
+        const auto path = folder.toStdString();
+        const auto & roots = config_.workspace_roots;
+        if (std::find(roots.begin(), roots.end(), path) != roots.end())
+            return;
+
+        config_.workspace_roots.push_back(path);
+        scan_workspace();
+        save_config();
+        update_watcher_paths();
     });
+
+    connect(import_archive_action_, &QAction::triggered, this, [this]() {
+        const auto archive_path = QFileDialog::getOpenFileName(
+            this, "Import Archive", "", "Archives (*.zip *.rar)");
+
+        if (archive_path.isEmpty())
+            return;
+
+        const QString sevenzip = "C:/Program Files/7-Zip/7z.exe";
+        if (!QFile::exists(sevenzip))
+        {
+            QMessageBox::critical(this, "Error", "7-Zip not found at C:\\Program Files\\7-Zip\\7z.exe");
+            return;
+        }
+
+        const auto archive_name = QFileInfo(archive_path).completeBaseName();
+        const auto app_dir = QCoreApplication::applicationDirPath();
+        const auto target_dir = app_dir + "/workspace/" + archive_name;
+        QDir().mkpath(target_dir);
+
+        QProcess proc;
+        proc.start(sevenzip, {"x", archive_path, "-o" + target_dir, "-y"});
+        proc.waitForFinished(60000);
+
+        if (proc.exitCode() != 0)
+        {
+            QMessageBox::critical(this, "Extraction Error",
+                "Failed to extract archive:\n" + proc.readAllStandardError());
+            return;
+        }
+
+        const auto workspace = (app_dir + "/workspace").toStdString();
+        scan_workspace();
+        update_watcher_paths();
+    });
+
     connect(save_action_, &QAction::triggered, this, &main_window_t::on_save);
     connect(save_all_action_, &QAction::triggered, this, &main_window_t::on_save_all);
     connect(quit_action, &QAction::triggered, this, &QWidget::close);
@@ -548,6 +581,57 @@ main_window_t::main_window_t(QWidget * parent)
     connect(sidebar_, &sidebar_widget_t::save_requested, this, &main_window_t::on_save_requested);
     connect(sidebar_, &sidebar_widget_t::unload_requested, this, &main_window_t::on_unload_requested);
     connect(sidebar_, &sidebar_widget_t::delete_requested, this, &main_window_t::on_delete_requested);
+    connect(sidebar_, &sidebar_widget_t::remove_folder_requested, this, [this](const std::string & root_path) {
+        auto & roots = config_.workspace_roots;
+        roots.erase(std::remove(roots.begin(), roots.end(), root_path), roots.end());
+
+        for (int i = workspace_.slot_count() - 1; i >= 0; --i)
+        {
+            const auto * slot = workspace_.get_slot(i);
+            if (!slot)
+                continue;
+
+            const auto * entry = file_list_.get(slot->path);
+            if (entry && entry->root_path == root_path)
+                workspace_.unload_dict(i);
+        }
+
+        scan_workspace();
+        save_config();
+        update_watcher_paths();
+    });
+
+    connect(sidebar_, &sidebar_widget_t::delete_folder_requested, this, [this](const std::string & folder_path) {
+        auto sep = folder_path.find_last_of("/\\");
+        auto folder_name = sep != std::string::npos ? folder_path.substr(sep + 1) : folder_path;
+
+        auto answer = QMessageBox::question(
+            this, "Delete Folder",
+            QString("Delete \"%1\" and all its contents from disk?").arg(QString::fromStdString(folder_name)),
+            QMessageBox::Yes | QMessageBox::No);
+
+        if (answer != QMessageBox::Yes)
+            return;
+
+        for (int i = workspace_.slot_count() - 1; i >= 0; --i)
+        {
+            const auto * slot = workspace_.get_slot(i);
+            if (!slot)
+                continue;
+
+            auto normalized = slot->path;
+            std::replace(normalized.begin(), normalized.end(), '\\', '/');
+
+            auto folder_norm = folder_path;
+            std::replace(folder_norm.begin(), folder_norm.end(), '\\', '/');
+
+            if (normalized.find(folder_norm + "/") == 0 || normalized == folder_norm)
+                workspace_.unload_dict(i);
+        }
+
+        QDir(QString::fromStdString(folder_path)).removeRecursively();
+        scan_workspace();
+    });
 
     connect(table_view_, &record_table_view_t::row_selected, this, &main_window_t::on_row_selected);
     connect(table_view_, &record_table_view_t::batch_status_change_requested, this, [this](const QList<int> & rows, const QString & new_status) {
@@ -705,6 +789,24 @@ main_window_t::main_window_t(QWidget * parent)
         load_record(current_row_);
     });
 
+    fs_watcher_ = new QFileSystemWatcher(this);
+    rescan_timer_ = new QTimer(this);
+    rescan_timer_->setSingleShot(true);
+    rescan_timer_->setInterval(200);
+    connect(rescan_timer_, &QTimer::timeout, this, [this]() {
+        scan_workspace();
+
+        const auto * slot = workspace_.get_active_slot();
+        if (slot && !QFile::exists(QString::fromStdString(slot->path)))
+        {
+            const int active = workspace_.get_active_index();
+            workspace_.unload_dict(active);
+            rebuild_table();
+        }
+    });
+    connect(fs_watcher_, &QFileSystemWatcher::directoryChanged,
+            rescan_timer_, qOverload<>(&QTimer::start));
+
     scan_spell_dictionaries();
 
     const auto config_path = QCoreApplication::applicationDirPath() + "/yampt_gui.ini";
@@ -781,89 +883,6 @@ void main_window_t::on_save_all()
 
     if (!workspace_.has_any_unsaved())
         set_dirty(false);
-}
-
-void main_window_t::on_open()
-{
-    on_open_user_dict();
-}
-
-void main_window_t::on_open_user_dict()
-{
-    const auto path = QFileDialog::getOpenFileName(
-        this, "Open User Dict", "", "Dictionary Files (*.json *.xml);;All Files (*.*)");
-
-    if (path.isEmpty())
-        return;
-
-    int old_count = workspace_.slot_count();
-    workspace_.load_dict(path.toStdString(), dict_kind_t::user);
-
-    if (workspace_.slot_count() > old_count)
-    {
-        auto * new_slot = workspace_.get_slot(workspace_.slot_count() - 1);
-        if (new_slot)
-        {
-            for (auto & [type, chapter] : new_slot->data)
-            {
-                for (auto & entry : chapter.records)
-                {
-                    entry.key_text = decode_to_utf8(entry.key_text, current_codepage_);
-                    entry.old_text = decode_to_utf8(entry.old_text, current_codepage_);
-                    entry.new_text = decode_to_utf8(entry.new_text, current_codepage_);
-                    if (!entry.adapted_from.empty())
-                        entry.adapted_from = decode_to_utf8(entry.adapted_from, current_codepage_);
-                }
-            }
-        }
-
-        std::vector<dict_source_t> sources;
-        for (const auto & dict_slot : workspace_.get_all_slots())
-            sources.push_back({&dict_slot.data, dict_slot.path});
-        annotation_manager_.rebuild(sources);
-    }
-
-    rebuild_sidebar();
-    rebuild_table();
-}
-
-void main_window_t::on_open_base_dict()
-{
-    const auto path = QFileDialog::getOpenFileName(
-        this, "Open Base Dict", "", "Dictionary Files (*.json *.xml);;All Files (*.*)");
-
-    if (path.isEmpty())
-        return;
-
-    int old_count = workspace_.slot_count();
-    workspace_.load_dict(path.toStdString(), dict_kind_t::base);
-
-    if (workspace_.slot_count() > old_count)
-    {
-        auto * new_slot = workspace_.get_slot(workspace_.slot_count() - 1);
-        if (new_slot)
-        {
-            for (auto & [type, chapter] : new_slot->data)
-            {
-                for (auto & entry : chapter.records)
-                {
-                    entry.key_text = decode_to_utf8(entry.key_text, current_codepage_);
-                    entry.old_text = decode_to_utf8(entry.old_text, current_codepage_);
-                    entry.new_text = decode_to_utf8(entry.new_text, current_codepage_);
-                    if (!entry.adapted_from.empty())
-                        entry.adapted_from = decode_to_utf8(entry.adapted_from, current_codepage_);
-                }
-            }
-        }
-
-        std::vector<dict_source_t> sources;
-        for (const auto & dict_slot : workspace_.get_all_slots())
-            sources.push_back({&dict_slot.data, dict_slot.path});
-        annotation_manager_.rebuild(sources);
-    }
-
-    rebuild_sidebar();
-    rebuild_table();
 }
 
 void main_window_t::on_unload_slot(int index)
@@ -1394,7 +1413,7 @@ void main_window_t::on_translation_changed()
                 log_tab_->append_log("dirty debug",
                     "slot->path=\"" + slot->path + "\""
                     " fe=" + (fe ? "found" : "null") +
-                    " fe->loaded=" + (fe ? std::to_string(fe->loaded) : "n/a") +
+                    " fe->dict_loaded=" + (fe ? std::to_string(fe->dict_loaded) : "n/a") +
                     " fe->dirty=" + (fe ? std::to_string(fe->dirty) : "n/a") + "\r\n");
             }
         }
@@ -2004,7 +2023,7 @@ void main_window_t::rebuild_sidebar()
 	const auto active_path = workspace_.get_active_index() >= 0
 		? workspace_.get_slot(workspace_.get_active_index())->path
 		: std::string{};
-	const auto model = build_render_model(file_list_, active_path);
+	auto model = build_render_model(file_list_, active_path);
 	sidebar_->set_model(model);
 }
 
@@ -2237,80 +2256,18 @@ void main_window_t::load_config()
         col_widths.push_back(static_cast<int>(w));
     table_view_->set_column_widths(col_widths);
 
-    for (const auto & p : config_.user_dict_paths)
-        workspace_.load_dict(p, dict_kind_t::user);
-
-    for (const auto & p : config_.base_dict_paths)
-        workspace_.load_dict(p, dict_kind_t::base);
-
-    for (int i = 0; i < workspace_.slot_count(); ++i)
-    {
-        auto * s = workspace_.get_slot(i);
-        if (!s)
-            continue;
-
-        for (auto & [type, chapter] : s->data)
-        {
-            for (auto & entry : chapter.records)
-            {
-                entry.key_text = decode_to_utf8(entry.key_text, current_codepage_);
-                entry.old_text = decode_to_utf8(entry.old_text, current_codepage_);
-                entry.new_text = decode_to_utf8(entry.new_text, current_codepage_);
-                    if (!entry.adapted_from.empty())
-                        entry.adapted_from = decode_to_utf8(entry.adapted_from, current_codepage_);
-            }
-        }
-    }
+    file_list_.scan_roots(config_.workspace_roots);
+    scan_workspace();
 
     if (config_.active_dict_index >= 0 && config_.active_dict_index < workspace_.slot_count())
         workspace_.set_active(config_.active_dict_index);
 
-    if (workspace_.slot_count() > 0)
-    {
-        std::vector<dict_source_t> sources;
-        for (const auto & dict_slot : workspace_.get_all_slots())
-            sources.push_back({&dict_slot.data, dict_slot.path});
-        annotation_manager_.rebuild(sources);
-    }
-
-    rebuild_sidebar();
     rebuild_table();
-
-    for (int i = 0; i < workspace_.slot_count(); ++i)
-    {
-        const auto * slot = workspace_.get_slot(i);
-        if (!slot)
-            continue;
-
-        file_list_.add(slot->path);
-        file_list_.set_loaded(slot->path, true);
-    }
-
-    for (const auto & p : config_.plugin_paths)
-    {
-        if (!QFile::exists(QString::fromStdString(p)))
-            continue;
-
-        auto & entry = file_list_.add(p);
-        entry.loaded = true;
-
-        std::error_code ec;
-        auto file_size = std::filesystem::file_size(p, ec);
-        if (!ec)
-            entry.language_tag = file_list_t::detect_language(entry.filename, file_size);
-
-        log_tab_->append_log("restore",
-            "filename=\"" + entry.filename +
-            "\" size=" + std::to_string(ec ? 0 : file_size) +
-            " lang=" + (entry.language_tag.empty() ? "none" : entry.language_tag) +
-            " ec=" + (ec ? ec.message() : "ok") + "\r\n");
-    }
-
-    rebuild_sidebar();
-    scan_workspace();
 
     if (config_.spell_lang_index > 0 && config_.spell_lang_index < spell_lang_combo_->count())
         spell_lang_combo_->setCurrentIndex(config_.spell_lang_index);
+
+    update_watcher_paths();
 }
 
 void main_window_t::save_config()
@@ -2334,164 +2291,10 @@ void main_window_t::save_config()
         config_.column_widths[i] = static_cast<float>(col_widths[i]);
 
     config_.active_dict_index = workspace_.get_active_index();
-
-    config_.user_dict_paths.clear();
-    config_.base_dict_paths.clear();
-
-    for (int i = 0; i < workspace_.slot_count(); ++i)
-    {
-        const auto * slot = workspace_.get_slot(i);
-        if (!slot)
-            continue;
-
-        const auto * fe = file_list_.get(slot->path);
-        if (fe && fe->is_workspace)
-            continue;
-
-        if (!fe)
-        {
-            auto normalized = slot->path;
-            std::replace(normalized.begin(), normalized.end(), '\\', '/');
-            auto workspace_dir = QCoreApplication::applicationDirPath().toStdString() + "/workspace/";
-            std::replace(workspace_dir.begin(), workspace_dir.end(), '\\', '/');
-            if (normalized.find(workspace_dir) == 0)
-                continue;
-        }
-
-        if (workspace_.is_user_slot(i))
-            config_.user_dict_paths.push_back(slot->path);
-        else
-            config_.base_dict_paths.push_back(slot->path);
-    }
-
-    config_.plugin_paths.clear();
-    for (const auto * entry : file_list_.loaded_non_workspace())
-    {
-        if (entry->type == file_type_t::plugin)
-            config_.plugin_paths.push_back(entry->path);
-    }
+    config_.workspace_roots = file_list_.get_roots();
 
     const auto path = QCoreApplication::applicationDirPath() + "/yampt_gui.ini";
     config_.save(path.toStdString());
-}
-
-void main_window_t::on_load_plugin()
-{
-    const auto paths = QFileDialog::getOpenFileNames(
-        this, "Load Plugin", "", "Plugin Files (*.esm *.esp *.omwgame *.omwaddon);;All Files (*.*)");
-
-    if (paths.isEmpty())
-        return;
-
-    for (const auto & path : paths)
-    {
-        auto & entry = file_list_.add(path.toStdString());
-        entry.loaded = true;
-
-        std::error_code ec;
-        auto file_size = std::filesystem::file_size(entry.path, ec);
-        if (!ec)
-            entry.language_tag = file_list_t::detect_language(entry.filename, file_size);
-
-        log_tab_->append_log("load plugin",
-            "filename=\"" + entry.filename +
-            "\" size=" + std::to_string(ec ? 0 : file_size) +
-            " lang=" + (entry.language_tag.empty() ? "none" : entry.language_tag) +
-            " ec=" + (ec ? ec.message() : "ok") + "\r\n");
-    }
-
-    rebuild_sidebar();
-}
-
-void main_window_t::on_load_archive()
-{
-    auto archive_path = QFileDialog::getOpenFileName(
-        this, "Load Mod from Archive", "",
-        "Archive files (*.zip *.7z *.rar);;All files (*.*)");
-
-    if (archive_path.isEmpty())
-        return;
-
-    const QString sevenzip = "C:/Program Files/7-Zip/7z.exe";
-    if (!QFile::exists(sevenzip))
-    {
-        QMessageBox::critical(this, "Error", "7-Zip not found at C:\\Program Files\\7-Zip\\7z.exe");
-        return;
-    }
-
-    auto temp_dir = QDir::tempPath() + "/yampt_extract_" + QUuid::createUuid().toString(QUuid::Id128);
-    QDir().mkpath(temp_dir);
-
-    QProcess proc;
-    proc.start(sevenzip, {"x", archive_path, "-o" + temp_dir, "-y"});
-    proc.waitForFinished(60000);
-    if (proc.exitCode() != 0)
-    {
-        QMessageBox::critical(this, "Extraction Error", proc.readAllStandardError());
-        QDir(temp_dir).removeRecursively();
-        return;
-    }
-
-    QDir root(temp_dir);
-    auto entries = root.entryList(QDir::NoDotAndDotDot | QDir::AllEntries);
-    QString effective_root = temp_dir;
-    if (entries.size() == 1)
-    {
-        auto single_path = temp_dir + "/" + entries.first();
-        if (QFileInfo(single_path).isDir())
-            effective_root = single_path;
-    }
-
-    auto archive_name = QFileInfo(archive_path).completeBaseName();
-    archive_name.remove(QRegularExpression("-\\d{4,}[\\d\\-]*$"));
-
-    auto workspace_dir = QCoreApplication::applicationDirPath() + "/workspace/" + archive_name;
-
-    if (QDir(workspace_dir).exists())
-    {
-        auto answer = QMessageBox::question(this, "Folder Exists",
-            QString("\"%1\" already exists. Overwrite?").arg(archive_name),
-            QMessageBox::Yes | QMessageBox::No);
-        if (answer != QMessageBox::Yes)
-        {
-            QDir(temp_dir).removeRecursively();
-            return;
-        }
-    }
-
-    static const QStringList supported = {"esm", "esp", "omwaddon", "omwgame", "omwscripts", "lua", "yaml"};
-
-    QDirIterator it(effective_root, QDir::Files, QDirIterator::Subdirectories);
-    while (it.hasNext())
-    {
-        it.next();
-        auto suffix = it.fileInfo().suffix().toLower();
-        if (!supported.contains(suffix))
-            continue;
-
-        auto relative = QDir(effective_root).relativeFilePath(it.filePath());
-        auto target = workspace_dir + "/" + relative;
-
-        if (QFile::exists(target))
-        {
-            auto dir = QFileInfo(target).path();
-            auto base = QFileInfo(target).completeBaseName();
-            auto ext = QFileInfo(target).suffix();
-            int n = 1;
-            while (QFile::exists(target))
-            {
-                target = QString("%1/%2_%3.%4").arg(dir).arg(base).arg(n).arg(ext);
-                ++n;
-            }
-        }
-
-        QDir().mkpath(QFileInfo(target).path());
-        QFile::copy(it.filePath(), target);
-    }
-
-    QDir(temp_dir).removeRecursively();
-
-    scan_workspace();
 }
 
 void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plugin_op_t op)
@@ -2503,19 +2306,7 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
     auto plugin_dir = path_sep != std::string::npos ? plugin_path.substr(0, path_sep) : std::string{};
     std::replace(plugin_dir.begin(), plugin_dir.end(), '\\', '/');
 
-    auto workspace_base = QCoreApplication::applicationDirPath().toStdString() + "/workspace/";
-    std::replace(workspace_base.begin(), workspace_base.end(), '\\', '/');
-
-    std::string workspace_folder;
-    if (plugin_dir.find(workspace_base) == 0)
-        workspace_folder = plugin_dir.substr(workspace_base.size());
-
-    std::string output_dir;
-    if (!workspace_folder.empty())
-    {
-        output_dir = workspace_base + workspace_folder + "/";
-    }
-    executor_.set_output_dir(output_dir);
+    executor_.set_output_dir(plugin_dir);
 
     operation_executor_t::result_t result;
 
@@ -2528,7 +2319,7 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
     }
     case plugin_op_t::make_dict_with_base:
     {
-        auto entries = build_dict_entries(workspace_folder);
+        auto entries = build_dict_entries(plugin_dir);
 
         dict_selection_dialog_t dialog(entries, this);
         if (dialog.exec() != QDialog::Accepted)
@@ -2551,9 +2342,16 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
         std::transform(source_lower.begin(), source_lower.end(), source_lower.begin(),
             [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
 
-        QStringList plugin_names;
-        std::vector<std::string> plugin_paths;
-        int best_match_row = 0;
+        struct plugin_item_t
+        {
+            std::string path;
+            std::string display;
+            std::string filename;
+            std::string root_path;
+            std::string subfolder;
+        };
+
+        std::vector<plugin_item_t> plugins;
 
         for (const auto * entry : file_list_.all())
         {
@@ -2563,51 +2361,123 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
             if (entry->path == plugin_path)
                 continue;
 
-            auto name_lower = entry->filename;
-            std::transform(name_lower.begin(), name_lower.end(), name_lower.begin(),
-                [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-
-            if (name_lower == source_lower)
-                best_match_row = static_cast<int>(plugin_names.size());
-
-            auto display = entry->filename;
-            if (!entry->language_tag.empty())
-                display += " [" + entry->language_tag + "]";
-
-            plugin_names.append(QString::fromStdString(display));
-            plugin_paths.push_back(entry->path);
+            plugins.push_back({entry->path, derive_display_name(*entry), entry->filename, entry->root_path, entry->workspace_subfolder});
         }
 
-        if (plugin_names.isEmpty())
+        if (plugins.empty())
             return;
+
+        std::sort(plugins.begin(), plugins.end(),
+            [](const plugin_item_t & a, const plugin_item_t & b)
+            {
+                return a.filename < b.filename;
+            });
 
         QDialog dlg(this);
         dlg.setWindowTitle("Make Base");
         dlg.setModal(true);
+        dlg.resize(400, 350);
 
         auto * dlg_layout = new QVBoxLayout(&dlg);
         dlg_layout->addWidget(new QLabel("Select the native ESM:", &dlg));
 
-        auto * list = new QListWidget(&dlg);
-        list->addItems(plugin_names);
-        list->setCurrentRow(best_match_row);
-        dlg_layout->addWidget(list);
+        auto * tree = new QTreeWidget(&dlg);
+        tree->setHeaderHidden(true);
+        tree->setRootIsDecorated(true);
+        tree->setIndentation(16);
+        dlg_layout->addWidget(tree);
+
+        struct root_builder_t
+        {
+            std::map<std::string, std::vector<plugin_item_t *>> subfolder_items;
+            std::vector<plugin_item_t *> root_items;
+        };
+
+        std::map<std::string, root_builder_t> roots;
+        for (auto & p : plugins)
+        {
+            auto & rb = roots[p.root_path];
+            if (p.subfolder.empty())
+                rb.root_items.push_back(&p);
+            else
+                rb.subfolder_items[p.subfolder].push_back(&p);
+        }
+
+        QTreeWidgetItem * best_match_item = nullptr;
+
+        for (auto & [root_path, rb] : roots)
+        {
+            auto root_label = root_path;
+            auto sep = root_label.find_last_of("/\\");
+            if (sep != std::string::npos)
+                root_label = root_label.substr(sep + 1);
+
+            if (root_label == "workspace")
+                root_label = "Workspace";
+
+            auto * root_node = new QTreeWidgetItem(tree);
+            root_node->setText(0, QString::fromStdString(root_label));
+            root_node->setFlags(Qt::ItemIsEnabled);
+            QFont bold = root_node->font(0);
+            bold.setBold(true);
+            root_node->setFont(0, bold);
+
+            auto add_plugin_items = [&](QTreeWidgetItem * parent, std::vector<plugin_item_t *> & items)
+            {
+                for (auto * p : items)
+                {
+                    auto * item = new QTreeWidgetItem(parent);
+                    item->setText(0, QString::fromStdString(p->display));
+                    item->setData(0, Qt::UserRole, QString::fromStdString(p->path));
+                    item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+                    item->setForeground(0, QColor(100, 180, 100));
+
+                    auto name_lower = p->filename;
+                    std::transform(name_lower.begin(), name_lower.end(), name_lower.begin(),
+                        [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+
+                    if (name_lower == source_lower && !best_match_item)
+                        best_match_item = item;
+                }
+            };
+
+            add_plugin_items(root_node, rb.root_items);
+
+            for (auto & [subfolder, items] : rb.subfolder_items)
+            {
+                auto * folder_node = new QTreeWidgetItem(root_node);
+                folder_node->setText(0, QString::fromStdString(subfolder));
+                folder_node->setFlags(Qt::ItemIsEnabled);
+                folder_node->setForeground(0, QColor(130, 130, 130));
+
+                add_plugin_items(folder_node, items);
+                folder_node->setExpanded(true);
+            }
+
+            root_node->setExpanded(true);
+        }
+
+        if (best_match_item)
+            tree->setCurrentItem(best_match_item);
 
         auto * buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dlg);
         dlg_layout->addWidget(buttons);
 
         connect(buttons, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
         connect(buttons, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
-        connect(list, &QListWidget::itemDoubleClicked, &dlg, &QDialog::accept);
+        connect(tree, &QTreeWidget::itemDoubleClicked, &dlg, [&dlg](QTreeWidgetItem * item, int) {
+            if (item && (item->flags() & Qt::ItemIsSelectable))
+                dlg.accept();
+        });
 
         if (dlg.exec() != QDialog::Accepted)
             return;
 
-        int sel_idx = list->currentRow();
-        if (sel_idx < 0)
+        auto * selected_item = tree->currentItem();
+        if (!selected_item || !(selected_item->flags() & Qt::ItemIsSelectable))
             return;
 
-        const auto & native_path = plugin_paths[sel_idx];
+        const auto native_path = selected_item->data(0, Qt::UserRole).toString().toStdString();
         const auto * native_entry = file_list_.get(native_path);
 
         std::string foreign_lang;
@@ -2624,7 +2494,7 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
     }
     case plugin_op_t::convert:
     {
-        auto entries = build_dict_entries(workspace_folder);
+        auto entries = build_dict_entries(plugin_dir);
 
         dict_selection_dialog_t dialog(entries, this);
         if (dialog.exec() != QDialog::Accepted)
@@ -2640,7 +2510,7 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
     }
     case plugin_op_t::create_plugin:
     {
-        auto entries = build_dict_entries(workspace_folder);
+        auto entries = build_dict_entries(plugin_dir);
 
         dict_selection_dialog_t dialog(entries, this);
         if (dialog.exec() != QDialog::Accepted)
@@ -2683,186 +2553,53 @@ void main_window_t::on_plugin_unload(const std::string & path)
 
 void main_window_t::scan_workspace()
 {
-    const auto app_dir = QCoreApplication::applicationDirPath();
-    QDir workspace_dir(app_dir + "/workspace");
+    const auto workspace = (QCoreApplication::applicationDirPath() + "/workspace").toStdString();
+    QDir().mkpath(QString::fromStdString(workspace));
 
-    if (!workspace_dir.exists())
+    std::vector<std::string> roots;
+    roots.push_back(workspace);
+    for (const auto & r : config_.workspace_roots)
     {
-        file_list_.scan_workspace(workspace_dir.absolutePath().toStdString());
-        rebuild_sidebar();
-        return;
+        if (r != workspace)
+            roots.push_back(r);
     }
 
-    std::set<std::string> loaded_paths;
-    for (int i = 0; i < workspace_.slot_count(); ++i)
+    file_list_.scan_roots(roots);
+    rebuild_sidebar();
+}
+
+void main_window_t::update_watcher_paths()
+{
+    const auto current = fs_watcher_->directories();
+    if (!current.isEmpty())
+        fs_watcher_->removePaths(current);
+
+    QStringList paths;
+
+    auto add_recursive = [&](const QString & dir)
     {
-        const auto * slot = workspace_.get_slot(i);
-        if (slot)
-            loaded_paths.insert(slot->path);
-    }
+        QDir qdir(dir);
+        if (!qdir.exists())
+            return;
 
-    auto load_workspace_dicts = [&](const QDir & dir)
-    {
-        const auto files = dir.entryList({"*.json", "*.xml"}, QDir::Files);
-        for (const auto & f : files)
-        {
-            auto path = dir.absoluteFilePath(f).toStdString();
+        paths.append(dir);
 
-            if (loaded_paths.count(path))
-                continue;
-
-            auto kind = (path.find("_BASE_") != std::string::npos) ? dict_kind_t::base : dict_kind_t::user;
-            workspace_.load_dict(path, kind);
-
-            auto * new_slot = workspace_.get_slot(workspace_.slot_count() - 1);
-            if (new_slot)
-            {
-                for (auto & [type, chapter] : new_slot->data)
-                {
-                    for (auto & entry : chapter.records)
-                    {
-                        entry.key_text = decode_to_utf8(entry.key_text, current_codepage_);
-                        entry.old_text = decode_to_utf8(entry.old_text, current_codepage_);
-                        entry.new_text = decode_to_utf8(entry.new_text, current_codepage_);
-                        if (!entry.adapted_from.empty())
-                            entry.adapted_from = decode_to_utf8(entry.adapted_from, current_codepage_);
-                    }
-                }
-            }
-        }
+        QDirIterator it(dir, QDir::Dirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
+        while (it.hasNext())
+            paths.append(it.next());
     };
 
-    load_workspace_dicts(workspace_dir);
+    const auto workspace = QCoreApplication::applicationDirPath() + "/workspace";
+    add_recursive(workspace);
 
-    const auto subdirs = workspace_dir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
-    for (const auto & sub : subdirs)
-        load_workspace_dicts(QDir(workspace_dir.absoluteFilePath(sub)));
+    for (const auto & root : config_.workspace_roots)
+        add_recursive(QString::fromStdString(root));
 
-    file_list_.scan_workspace(workspace_dir.absolutePath().toStdString());
-    rebuild_sidebar();
-
-    std::vector<dict_source_t> sources;
-    for (const auto & dict_slot : workspace_.get_all_slots())
-        sources.push_back({&dict_slot.data, dict_slot.path});
-    annotation_manager_.rebuild(sources);
+    if (!paths.isEmpty())
+        fs_watcher_->addPaths(paths);
 }
 
-void main_window_t::load_l10n_folder(const std::string & folder_path)
-{
-    namespace fs = std::filesystem;
-
-    fs::path dir(folder_path);
-    fs::path source_path = dir / "en.yaml";
-    if (!fs::exists(source_path))
-    {
-        QMessageBox::critical(this, "Error",
-            QString("en.yaml not found in \"%1\"").arg(QString::fromStdString(folder_path)));
-        return;
-    }
-
-    std::vector<std::string> target_names;
-    for (const auto & entry : fs::directory_iterator(dir))
-    {
-        if (!entry.is_regular_file())
-            continue;
-
-        auto ext = entry.path().extension().string();
-        if (ext != ".yaml" && ext != ".yml")
-            continue;
-
-        auto stem = entry.path().stem().string();
-        if (stem == "en")
-            continue;
-
-        target_names.push_back(stem);
-    }
-
-    std::string target_lang;
-
-    if (target_names.size() > 1)
-    {
-        QStringList items;
-        for (const auto & name : target_names)
-            items.append(QString::fromStdString(name));
-
-        bool ok = false;
-        auto selected = QInputDialog::getItem(this, "Select Target Language",
-            "Multiple target languages found. Select one:", items, 0, false, &ok);
-
-        if (!ok || selected.isEmpty())
-            return;
-
-        target_lang = selected.toStdString();
-    }
-    else if (target_names.size() == 1)
-    {
-        target_lang = target_names[0];
-    }
-    else
-    {
-        bool ok = false;
-        auto code = QInputDialog::getText(this, "Target Language",
-            "No target YAML found. Enter language code (e.g. pl, de, fr):",
-            QLineEdit::Normal, "", &ok);
-
-        if (!ok || code.isEmpty())
-            return;
-
-        target_lang = code.toStdString();
-    }
-
-    fs::path target_path = dir / (target_lang + ".yaml");
-
-    yaml_l10n_reader_t reader;
-    std::string target_str = fs::exists(target_path) ? target_path.string() : "";
-    if (!reader.load(source_path.string(), target_str))
-    {
-        QMessageBox::critical(this, "Error", "Failed to parse en.yaml");
-        return;
-    }
-
-    const auto & source_entries = reader.source_entries();
-    const auto & target_entries = reader.target_entries();
-
-    std::unordered_map<std::string, std::string> target_map;
-    for (const auto & te : target_entries)
-        target_map[te.key] = te.value;
-
-    auto lua_type = static_cast<tools_t::rec_type_t>(gui_rec_type_lua);
-
-    dict_slot_t slot;
-    slot.path = target_path.string();
-    auto & chapter = slot.data[lua_type];
-
-    for (const auto & se : source_entries)
-    {
-        tools_t::record_entry_t entry;
-        entry.key_text = se.key;
-        entry.old_text = se.value;
-
-        auto it = target_map.find(se.key);
-        if (it != target_map.end() && !it->second.empty())
-        {
-            entry.new_text = it->second;
-            entry.status = "translated";
-        }
-        else
-        {
-            entry.new_text = se.value;
-            entry.status = "untranslated";
-        }
-
-        chapter.insert(entry);
-    }
-
-    workspace_.add_slot(std::move(slot), dict_kind_t::user);
-
-    filter_tree_->set_lua_button_visible(true);
-    rebuild_sidebar();
-    rebuild_table();
-}
-
-std::vector<dict_selection_dialog_t::dict_entry_t> main_window_t::build_dict_entries(const std::string & workspace_folder) const
+std::vector<dict_selection_dialog_t::dict_entry_t> main_window_t::build_dict_entries(const std::string & source_dir) const
 {
     std::vector<dict_selection_dialog_t::dict_entry_t> entries;
     std::set<std::string> added_paths;
@@ -2901,19 +2638,18 @@ std::vector<dict_selection_dialog_t::dict_entry_t> main_window_t::build_dict_ent
         entries.push_back({ws_entry->filename, ws_entry->path, kind, false});
     }
 
-    if (!workspace_folder.empty())
+    if (!source_dir.empty())
     {
-        const auto app_dir = QCoreApplication::applicationDirPath().toStdString();
-        const auto target_dir = app_dir + "/workspace/" + workspace_folder;
+        const auto target = normalize(source_dir);
 
         for (auto & entry : entries)
         {
-            auto dir = entry.path;
-            auto dir_sep = dir.find_last_of("/\\");
+            auto dir = normalize(entry.path);
+            auto dir_sep = dir.find_last_of('/');
             if (dir_sep != std::string::npos)
                 dir = dir.substr(0, dir_sep);
 
-            if (dir == target_dir)
+            if (dir == target)
                 entry.checked = true;
         }
     }

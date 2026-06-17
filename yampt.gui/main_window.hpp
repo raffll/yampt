@@ -19,6 +19,9 @@
 #include <QMainWindow>
 #include <QTextEdit>
 
+class QFileSystemWatcher;
+class QTimer;
+
 class annotations_panel_t;
 class book_preview_t;
 class composite_highlighter_t;
@@ -64,11 +67,7 @@ protected:
 private slots:
     void on_save();
     void on_save_all();
-    void on_open();
-    void on_open_user_dict();
-    void on_open_base_dict();
     void on_unload_slot(int index);
-    void on_load_plugin();
     void on_plugin_operation(const std::string & plugin_path, plugin_op_t op);
     void on_plugin_unload(const std::string & path);
     void on_find();
@@ -92,7 +91,6 @@ private slots:
     void on_delete_requested(const std::string & path);
 
 private:
-    void on_load_archive();
     void rebuild_table();
     void commit_current_edit();
     void load_record(int row);
@@ -106,25 +104,22 @@ private:
     void scan_spell_dictionaries();
     void on_spell_lang_changed(int index);
     void scan_workspace();
-    void load_l10n_folder(const std::string & folder_path);
-    std::vector<dict_selection_dialog_t::dict_entry_t> build_dict_entries(const std::string & workspace_folder = {}) const;
+    void update_watcher_paths();
+    std::vector<dict_selection_dialog_t::dict_entry_t> build_dict_entries(const std::string & source_dir = {}) const;
     void ensure_dicts_loaded(const std::vector<std::string> & paths);
     tools_t::encoding_t get_current_tools_encoding() const;
     void apply_extra_selections(editor_text_edit_t * editor, const extra_selections_state_t & state);
     int propagate_translation(const std::string & old_text, const std::string & new_text);
 
+    QAction * add_folder_action_ = nullptr;
+    QAction * import_archive_action_ = nullptr;
     QAction * save_action_ = nullptr;
     QAction * save_all_action_ = nullptr;
-    QAction * open_action_ = nullptr;
-    QAction * open_base_action_ = nullptr;
     QAction * find_action_ = nullptr;
     QAction * next_search_action_ = nullptr;
     QAction * prev_search_action_ = nullptr;
     QAction * refresh_action_ = nullptr;
     QAction * escape_action_ = nullptr;
-    QAction * load_plugin_action_ = nullptr;
-    QAction * load_archive_action_ = nullptr;
-    QAction * load_l10n_action_ = nullptr;
     QAction * find_replace_action_ = nullptr;
 
     QAction * sidebar_toggle_ = nullptr;
@@ -200,4 +195,7 @@ private:
     extra_selections_state_t extra_sel_translation_;
 
     find_replace_dialog_t * find_replace_dialog_ = nullptr;
+
+    QFileSystemWatcher * fs_watcher_ = nullptr;
+    QTimer * rescan_timer_ = nullptr;
 };

@@ -1,5 +1,4 @@
 #include "editor_config.hpp"
-#include <filesystem>
 #include <fstream>
 
 static std::string trim(const std::string & s)
@@ -46,7 +45,7 @@ void editor_config_t::load(const std::string & path)
 		std::string key = trim(line.substr(0, eq_pos));
 		std::string value = trim(line.substr(eq_pos + 1));
 
-		if (section == "UserDicts")
+		if (section == "WorkspaceRoots")
 		{
 			if (key == "Count")
 			{
@@ -57,51 +56,12 @@ void editor_config_t::load(const std::string & path)
 				}
 				catch (...)
 				{}
-				user_dict_paths.clear();
-				user_dict_paths.reserve(count);
+				workspace_roots.clear();
+				workspace_roots.reserve(count);
 			}
 			else if (starts_with(key, "Path"))
 			{
-				user_dict_paths.push_back(value);
-			}
-		}
-		else if (section == "BaseDicts")
-		{
-			if (key == "Count")
-			{
-				int count = 0;
-				try
-				{
-					count = std::stoi(value);
-				}
-				catch (...)
-				{}
-				base_dict_paths.clear();
-				base_dict_paths.reserve(count);
-			}
-			else if (starts_with(key, "Path"))
-			{
-				base_dict_paths.push_back(value);
-			}
-		}
-		else if (section == "Plugins")
-		{
-			if (key == "Count")
-			{
-				int count = 0;
-				try
-				{
-					count = std::stoi(value);
-				}
-				catch (...)
-				{}
-				plugin_paths.clear();
-				plugin_paths.reserve(count);
-			}
-			else if (starts_with(key, "Path"))
-			{
-				if (std::filesystem::exists(value))
-					plugin_paths.push_back(value);
+				workspace_roots.push_back(value);
 			}
 		}
 		else if (section == "Editor")
@@ -247,20 +207,10 @@ void editor_config_t::save(const std::string & path) const
 	if (!file.is_open())
 		return;
 
-	file << "[UserDicts]\n";
-	file << "Count=" << user_dict_paths.size() << "\n";
-	for (size_t i = 0; i < user_dict_paths.size(); ++i)
-		file << "Path" << i << "=" << user_dict_paths[i] << "\n";
-
-	file << "\n[BaseDicts]\n";
-	file << "Count=" << base_dict_paths.size() << "\n";
-	for (size_t i = 0; i < base_dict_paths.size(); ++i)
-		file << "Path" << i << "=" << base_dict_paths[i] << "\n";
-
-	file << "\n[Plugins]\n";
-	file << "Count=" << plugin_paths.size() << "\n";
-	for (size_t i = 0; i < plugin_paths.size(); ++i)
-		file << "Path" << i << "=" << plugin_paths[i] << "\n";
+	file << "[WorkspaceRoots]\n";
+	file << "Count=" << workspace_roots.size() << "\n";
+	for (size_t i = 0; i < workspace_roots.size(); ++i)
+		file << "Path" << i << "=" << workspace_roots[i] << "\n";
 
 	file << "\n[Editor]\n";
 	file << "ActiveDictIndex=" << active_dict_index << "\n";

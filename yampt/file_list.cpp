@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cctype>
 #include <filesystem>
+#include <functional>
+#include <map>
 
 static std::string to_lower(std::string str)
 {
@@ -78,26 +80,11 @@ std::vector<const file_entry_t *> file_list_t::all() const
 	return result;
 }
 
-std::vector<const file_entry_t *> file_list_t::loaded_non_workspace() const
-{
-	std::vector<const file_entry_t *> result;
-	for (const auto & [key, entry] : entries_)
-	{
-		if (entry.loaded && !entry.is_workspace)
-			result.push_back(&entry);
-	}
-
-	return result;
-}
-
 std::vector<const file_entry_t *> file_list_t::workspace_files() const
 {
 	std::vector<const file_entry_t *> result;
 	for (const auto & [key, entry] : entries_)
-	{
-		if (entry.is_workspace)
-			result.push_back(&entry);
-	}
+		result.push_back(&entry);
 
 	return result;
 }
@@ -129,7 +116,7 @@ void file_list_t::set_loaded(const std::string & path, bool loaded)
 	if (!entry)
 		return;
 
-	entry->loaded = loaded;
+	entry->dict_loaded = loaded;
 	if (!loaded)
 		entry->dirty = false;
 }
@@ -141,18 +128,6 @@ void file_list_t::set_dirty(const std::string & path, bool dirty)
 		return;
 
 	entry->dirty = dirty;
-}
-
-std::vector<std::string> file_list_t::paths_to_persist() const
-{
-	std::vector<std::string> result;
-	for (const auto & [key, entry] : entries_)
-	{
-		if (entry.loaded && !entry.is_workspace)
-			result.push_back(entry.path);
-	}
-
-	return result;
 }
 
 file_type_t file_list_t::classify(const std::string & path)
@@ -288,48 +263,22 @@ std::vector<menu_action_t> derive_context_menu(const file_entry_t & entry)
 
 	if (entry.type == file_type_t::plugin)
 	{
-		if (entry.loaded && !entry.is_workspace)
-		{
-			return {
-				menu_action_t::make_dict,
-				menu_action_t::make_dict_with_base,
-				menu_action_t::make_base,
-				menu_action_t::convert,
-				menu_action_t::create_plugin,
-				menu_action_t::unload
-			};
-		}
-
-		if (!entry.loaded && entry.is_workspace)
-		{
-			return {
-				menu_action_t::make_dict,
-				menu_action_t::make_dict_with_base,
-				menu_action_t::make_base,
-				menu_action_t::convert,
-				menu_action_t::create_plugin,
-				menu_action_t::delete_file
-			};
-		}
-
-		return {};
+		return {
+			menu_action_t::make_dict,
+			menu_action_t::make_dict_with_base,
+			menu_action_t::make_base,
+			menu_action_t::convert,
+			menu_action_t::create_plugin,
+			menu_action_t::delete_file
+		};
 	}
 
 	if (entry.type == file_type_t::base_dict || entry.type == file_type_t::user_dict)
 	{
-		if (entry.loaded && !entry.is_workspace)
-			return {menu_action_t::save, menu_action_t::save_as, menu_action_t::unload};
-
-		if (entry.loaded && entry.is_workspace && entry.dirty)
+		if (entry.dict_loaded && entry.dirty)
 			return {menu_action_t::save, menu_action_t::delete_file};
 
-		if (entry.loaded && entry.is_workspace && !entry.dirty)
-			return {menu_action_t::delete_file};
-
-		if (!entry.loaded && entry.is_workspace)
-			return {menu_action_t::delete_file};
-
-		return {};
+		return {menu_action_t::delete_file};
 	}
 
 	return {};
@@ -354,52 +303,56 @@ void file_list_t::clear_workspace()
 	}
 }
 
-void file_list_t::scan_workspace(const std::string & workspace_dir)
+void file_list_t::scan_roots(const std::vector<std::string> & root_paths)
 {
 	clear_workspace();
+	roots_ = root_paths;
 
+	for (const auto & root : root_paths)
+		scan_single_root(root);
+}
+
+const std::vector<std::string> & file_list_t::get_roots() const
+{
+	return roots_;
+}
+
+void file_list_t::scan_single_root(const std::string & root_path)
+{
 	std::error_code ec;
-	if (!std::filesystem::is_directory(workspace_dir, ec))
+	if (!std::filesystem::is_directory(root_path, ec))
 		return;
 
-	for (const auto & entry : std::filesystem::directory_iterator(workspace_dir, ec))
+	const auto root_fs = std::filesystem::path(root_path);
+	const auto normalized_root = normalize_path(root_path);
+
+	for (const auto & entry : std::filesystem::recursive_directory_iterator(root_path, ec))
 	{
-		if (entry.is_regular_file(ec))
-		{
-			const auto path = entry.path().string();
-			auto & fe = add(path);
-			fe.is_workspace = true;
+		if (!entry.is_regular_file(ec))
+			continue;
+
+		const auto ext = to_lower(entry.path().extension().string());
+		if (ext != ".esm" && ext != ".esp" && ext != ".json" && ext != ".xml"
+			&& ext != ".yaml" && ext != ".omwaddon" && ext != ".omwgame")
+			continue;
+
+		const auto path = entry.path().string();
+		auto & fe = add(path);
+		fe.is_workspace = true;
+		fe.root_path = normalized_root;
+
+		const auto parent = entry.path().parent_path();
+		const auto relative = std::filesystem::relative(parent, root_fs, ec);
+		if (!ec && relative != ".")
+			fe.workspace_subfolder = relative.string();
+		else
 			fe.workspace_subfolder = "";
 
-			if (fe.type == file_type_t::plugin)
-			{
-				auto size = entry.file_size(ec);
-				if (!ec)
-					fe.language_tag = detect_language(fe.filename, size);
-			}
-			continue;
-		}
-
-		if (!entry.is_directory(ec))
-			continue;
-
-		const auto subfolder = entry.path().filename().string();
-		for (const auto & sub_entry : std::filesystem::directory_iterator(entry.path(), ec))
+		if (fe.type == file_type_t::plugin)
 		{
-			if (!sub_entry.is_regular_file(ec))
-				continue;
-
-			const auto path = sub_entry.path().string();
-			auto & fe = add(path);
-			fe.is_workspace = true;
-			fe.workspace_subfolder = subfolder;
-
-			if (fe.type == file_type_t::plugin)
-			{
-				auto size = sub_entry.file_size(ec);
-				if (!ec)
-					fe.language_tag = detect_language(fe.filename, size);
-			}
+			const auto size = entry.file_size(ec);
+			if (!ec)
+				fe.language_tag = detect_language(fe.filename, size);
 		}
 	}
 }
@@ -408,45 +361,15 @@ sidebar_render_model_t build_render_model(const file_list_t & file_list, const s
 {
 	sidebar_render_model_t model;
 	model.active_path = active_path;
-	model.loaded_root.label = "Loaded";
-	model.workspace_root.label = "Workspace";
-
-	std::unordered_map<std::string, std::vector<sidebar_render_item_t>> subfolder_items;
-
-	for (const auto * entry : file_list.all())
-	{
-		if (entry->loaded && !entry->is_workspace)
-		{
-			sidebar_render_item_t item;
-			item.path = entry->path;
-			item.display_text = derive_display_name(*entry);
-			item.is_workspace = false;
-			model.loaded_root.items.push_back(std::move(item));
-			continue;
-		}
-
-		if (!entry->is_workspace)
-			continue;
-
-		sidebar_render_item_t item;
-		item.path = entry->path;
-		item.display_text = derive_display_name(*entry);
-		item.is_workspace = true;
-
-		if (entry->workspace_subfolder.empty())
-		{
-			model.workspace_root.items.push_back(std::move(item));
-			continue;
-		}
-
-		subfolder_items[entry->workspace_subfolder].push_back(std::move(item));
-	}
 
 	auto sort_items = [](std::vector<sidebar_render_item_t> & items)
 	{
 		std::sort(items.begin(), items.end(),
 			[](const sidebar_render_item_t & a, const sidebar_render_item_t & b)
 			{
+				if (a.type != b.type)
+					return static_cast<int>(a.type) < static_cast<int>(b.type);
+
 				auto fname = [](const std::string & p) {
 					auto pos = p.find_last_of("/\\");
 					return pos != std::string::npos ? p.substr(pos + 1) : p;
@@ -455,21 +378,113 @@ sidebar_render_model_t build_render_model(const file_list_t & file_list, const s
 			});
 	};
 
-	sort_items(model.loaded_root.items);
-	sort_items(model.workspace_root.items);
-
-	for (auto & [subfolder, items] : subfolder_items)
+	auto split_path = [](const std::string & path) -> std::vector<std::string>
 	{
-		sidebar_render_node_t child;
-		child.label = subfolder + "/";
-		child.items = std::move(items);
-		sort_items(child.items);
-		model.workspace_root.children.push_back(std::move(child));
+		std::vector<std::string> parts;
+		std::string segment;
+		for (auto c : path)
+		{
+			if (c == '/' || c == '\\')
+			{
+				if (!segment.empty())
+				{
+					parts.push_back(segment);
+					segment.clear();
+				}
+				continue;
+			}
+
+			segment += c;
+		}
+
+		if (!segment.empty())
+			parts.push_back(segment);
+
+		return parts;
+	};
+
+	struct tree_builder_t
+	{
+		std::vector<sidebar_render_item_t> items;
+		std::map<std::string, tree_builder_t> children;
+	};
+
+	std::map<std::string, tree_builder_t> roots_map;
+
+	for (const auto & root : file_list.get_roots())
+		roots_map[normalize_path(root)];
+
+	for (const auto * entry : file_list.all())
+	{
+		if (!entry->is_workspace)
+			continue;
+
+		sidebar_render_item_t item;
+		item.path = entry->path;
+		item.display_text = derive_display_name(*entry);
+		item.type = entry->type;
+		item.is_workspace = true;
+
+		auto & root_builder = roots_map[entry->root_path];
+
+		if (entry->workspace_subfolder.empty())
+		{
+			root_builder.items.push_back(std::move(item));
+			continue;
+		}
+
+		const auto segments = split_path(entry->workspace_subfolder);
+		auto * current = &root_builder;
+		for (const auto & seg : segments)
+			current = &current->children[seg];
+
+		current->items.push_back(std::move(item));
 	}
 
-	std::sort(model.workspace_root.children.begin(), model.workspace_root.children.end(),
+	std::function<sidebar_render_node_t(const std::string &, const std::string &, tree_builder_t &)> build_node;
+	build_node = [&](const std::string & label, const std::string & parent_path, tree_builder_t & builder) -> sidebar_render_node_t
+	{
+		sidebar_render_node_t node;
+		node.label = label;
+		node.folder_path = parent_path.empty() ? "" : parent_path + "/" + label;
+
+		sort_items(builder.items);
+		node.items = std::move(builder.items);
+
+		const auto & current_path = node.folder_path.empty() ? parent_path : node.folder_path;
+		for (auto & [child_name, child_builder] : builder.children)
+			node.children.push_back(build_node(child_name, current_path, child_builder));
+
+		std::sort(node.children.begin(), node.children.end(),
+			[](const sidebar_render_node_t & a, const sidebar_render_node_t & b)
+			{
+				return a.label < b.label;
+			});
+
+		return node;
+	};
+
+	for (auto & [root_path, root_builder] : roots_map)
+	{
+		auto label = extract_filename(root_path);
+		if (label == "workspace")
+			label = "Workspace";
+
+		auto root_node = build_node(label, root_path, root_builder);
+		root_node.root_path = root_path;
+		root_node.folder_path = root_path;
+		model.roots.push_back(std::move(root_node));
+	}
+
+	std::sort(model.roots.begin(), model.roots.end(),
 		[](const sidebar_render_node_t & a, const sidebar_render_node_t & b)
 		{
+			if (a.label == "Workspace")
+				return true;
+
+			if (b.label == "Workspace")
+				return false;
+
 			return a.label < b.label;
 		});
 

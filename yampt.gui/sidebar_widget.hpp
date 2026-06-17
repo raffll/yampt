@@ -6,8 +6,8 @@
 
 #include "../yampt/file_list.hpp"
 
-class QListWidget;
-class QListWidgetItem;
+class QTreeWidget;
+class QTreeWidgetItem;
 
 enum class plugin_op_t
 {
@@ -33,12 +33,12 @@ signals:
     void save_requested(const std::string & path);
     void unload_requested(const std::string & path);
     void delete_requested(const std::string & path);
+    void delete_folder_requested(const std::string & folder_path);
+    void remove_folder_requested(const std::string & root_path);
 
 private:
-    void on_item_clicked(QListWidgetItem * item);
+    void on_item_clicked(QTreeWidgetItem * item, int column);
     void on_context_menu(const QPoint & pos);
-    void add_section_header(const std::string & label);
-    void add_leaf_items(const std::vector<sidebar_render_item_t> & items, int indent);
 
-    QListWidget * list_ = nullptr;
+    QTreeWidget * tree_ = nullptr;
 };

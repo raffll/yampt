@@ -19,10 +19,11 @@ struct file_entry_t
 	std::string filename;
 	file_type_t type;
 	std::string language_tag;
-	bool loaded = false;
+	bool dict_loaded = false;
 	bool dirty = false;
 	bool is_workspace = false;
 	std::string workspace_subfolder;
+	std::string root_path;
 };
 
 enum class menu_action_t
@@ -42,20 +43,22 @@ struct sidebar_render_item_t
 {
 	std::string path;
 	std::string display_text;
+	file_type_t type = file_type_t::user_dict;
 	bool is_workspace = false;
 };
 
 struct sidebar_render_node_t
 {
 	std::string label;
+	std::string root_path;
+	std::string folder_path;
 	std::vector<sidebar_render_item_t> items;
 	std::vector<sidebar_render_node_t> children;
 };
 
 struct sidebar_render_model_t
 {
-	sidebar_render_node_t loaded_root;
-	sidebar_render_node_t workspace_root;
+	std::vector<sidebar_render_node_t> roots;
 	std::string active_path;
 };
 
@@ -66,7 +69,6 @@ public:
 	file_entry_t * get(const std::string & path);
 	bool contains(const std::string & path) const;
 	std::vector<const file_entry_t *> all() const;
-	std::vector<const file_entry_t *> loaded_non_workspace() const;
 	std::vector<const file_entry_t *> workspace_files() const;
 
 	file_entry_t & add(const std::string & path);
@@ -74,15 +76,17 @@ public:
 	void set_loaded(const std::string & path, bool loaded);
 	void set_dirty(const std::string & path, bool dirty);
 
-	void scan_workspace(const std::string & workspace_dir);
+	void scan_roots(const std::vector<std::string> & root_paths);
+	const std::vector<std::string> & get_roots() const;
 	void clear_workspace();
-	std::vector<std::string> paths_to_persist() const;
 
 	static file_type_t classify(const std::string & path);
 	static std::string detect_language(const std::string & filename, std::uintmax_t file_size);
 
 private:
+	void scan_single_root(const std::string & root_path);
 	std::unordered_map<std::string, file_entry_t> entries_;
+	std::vector<std::string> roots_;
 };
 
 file_type_t classify(const std::string & path);

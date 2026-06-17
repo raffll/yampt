@@ -196,8 +196,8 @@ TEST_CASE("property: context menu derivation", "[u]")
 	{
 		file_entry_t entry;
 		entry.type = static_cast<file_type_t>(*rc::gen::inRange(0, 4));
-		entry.loaded = *rc::gen::arbitrary<bool>();
-		entry.is_workspace = *rc::gen::arbitrary<bool>();
+		entry.dict_loaded = *rc::gen::arbitrary<bool>();
+		entry.is_workspace = true;
 		entry.dirty = *rc::gen::arbitrary<bool>();
 		entry.filename = "test.esp";
 		entry.path = "/some/path/test.esp";
@@ -213,84 +213,31 @@ TEST_CASE("property: context menu derivation", "[u]")
 
 		if (entry.type == file_type_t::plugin)
 		{
-			if (entry.loaded && !entry.is_workspace)
-			{
-				RC_ASSERT(menu.size() == 6);
-				RC_ASSERT(menu[0] == menu_action_t::make_dict);
-				RC_ASSERT(menu[5] == menu_action_t::unload);
-			}
-			else if (!entry.loaded && entry.is_workspace)
-			{
-				RC_ASSERT(menu.size() == 6);
-				RC_ASSERT(menu[0] == menu_action_t::make_dict);
-				RC_ASSERT(menu[5] == menu_action_t::delete_file);
-			}
-			else
-			{
-				RC_ASSERT(menu.empty());
-			}
+			RC_ASSERT(menu.size() == 6);
+			RC_ASSERT(menu[0] == menu_action_t::make_dict);
+			RC_ASSERT(menu[5] == menu_action_t::delete_file);
 			return;
 		}
 
 		if (entry.type == file_type_t::base_dict || entry.type == file_type_t::user_dict)
 		{
-			if (entry.loaded && !entry.is_workspace)
-			{
-				RC_ASSERT(menu.size() == 3);
-				RC_ASSERT(menu[0] == menu_action_t::save);
-				RC_ASSERT(menu[1] == menu_action_t::save_as);
-				RC_ASSERT(menu[2] == menu_action_t::unload);
-			}
-			else if (entry.loaded && entry.is_workspace && entry.dirty)
+			if (entry.dict_loaded && entry.dirty)
 			{
 				RC_ASSERT(menu.size() == 2);
 				RC_ASSERT(menu[0] == menu_action_t::save);
 				RC_ASSERT(menu[1] == menu_action_t::delete_file);
 			}
-			else if (entry.loaded && entry.is_workspace && !entry.dirty)
-			{
-				RC_ASSERT(menu.size() == 1);
-				RC_ASSERT(menu[0] == menu_action_t::delete_file);
-			}
-			else if (!entry.loaded && entry.is_workspace)
+			else if (entry.dict_loaded && !entry.dirty)
 			{
 				RC_ASSERT(menu.size() == 1);
 				RC_ASSERT(menu[0] == menu_action_t::delete_file);
 			}
 			else
 			{
-				RC_ASSERT(menu.empty());
+				RC_ASSERT(menu.size() == 1);
+				RC_ASSERT(menu[0] == menu_action_t::delete_file);
 			}
 		}
-	});
-}
-
-TEST_CASE("property: persistence filter", "[u]")
-{
-	rc::prop("paths_to_persist contains only loaded non-workspace paths", []()
-	{
-		file_list_t list;
-		const auto count = *rc::gen::inRange(1, 20);
-
-		std::vector<std::string> expected_paths;
-
-		for (int i = 0; i < count; ++i)
-		{
-			const auto path = "path_" + std::to_string(i) + ".esp";
-			auto & entry = list.add(path);
-			entry.loaded = *rc::gen::arbitrary<bool>();
-			entry.is_workspace = *rc::gen::arbitrary<bool>();
-
-			if (entry.loaded && !entry.is_workspace)
-				expected_paths.push_back(path);
-		}
-
-		const auto result = list.paths_to_persist();
-
-		std::set<std::string> result_set(result.begin(), result.end());
-		std::set<std::string> expected_set(expected_paths.begin(), expected_paths.end());
-
-		RC_ASSERT(result_set == expected_set);
 	});
 }
 
@@ -329,7 +276,7 @@ TEST_CASE("property: dirty flag round-trip", "[u]")
 			const auto path = "entry_" + std::to_string(i) + ".json";
 			paths.push_back(path);
 			auto & entry = list.add(path);
-			entry.loaded = true;
+			entry.dict_loaded = true;
 		}
 
 		const auto target_idx = *rc::gen::inRange(0, count);
@@ -464,28 +411,11 @@ TEST_CASE("derive_display_name examples", "[u]")
 
 TEST_CASE("derive_context_menu decision table", "[u]")
 {
-	SECTION("plugin loaded non-workspace")
+	SECTION("plugin workspace")
 	{
 		file_entry_t entry;
 		entry.type = file_type_t::plugin;
-		entry.loaded = true;
-		entry.is_workspace = false;
-		entry.dirty = false;
-		const auto menu = derive_context_menu(entry);
-		REQUIRE(menu.size() == 6);
-		REQUIRE(menu[0] == menu_action_t::make_dict);
-		REQUIRE(menu[1] == menu_action_t::make_dict_with_base);
-		REQUIRE(menu[2] == menu_action_t::make_base);
-		REQUIRE(menu[3] == menu_action_t::convert);
-		REQUIRE(menu[4] == menu_action_t::create_plugin);
-		REQUIRE(menu[5] == menu_action_t::unload);
-	}
-
-	SECTION("plugin not loaded workspace")
-	{
-		file_entry_t entry;
-		entry.type = file_type_t::plugin;
-		entry.loaded = false;
+		entry.dict_loaded = false;
 		entry.is_workspace = true;
 		entry.dirty = false;
 		const auto menu = derive_context_menu(entry);
@@ -498,25 +428,11 @@ TEST_CASE("derive_context_menu decision table", "[u]")
 		REQUIRE(menu[5] == menu_action_t::delete_file);
 	}
 
-	SECTION("base_dict loaded non-workspace")
-	{
-		file_entry_t entry;
-		entry.type = file_type_t::base_dict;
-		entry.loaded = true;
-		entry.is_workspace = false;
-		entry.dirty = false;
-		const auto menu = derive_context_menu(entry);
-		REQUIRE(menu.size() == 3);
-		REQUIRE(menu[0] == menu_action_t::save);
-		REQUIRE(menu[1] == menu_action_t::save_as);
-		REQUIRE(menu[2] == menu_action_t::unload);
-	}
-
 	SECTION("user_dict loaded workspace dirty")
 	{
 		file_entry_t entry;
 		entry.type = file_type_t::user_dict;
-		entry.loaded = true;
+		entry.dict_loaded = true;
 		entry.is_workspace = true;
 		entry.dirty = true;
 		const auto menu = derive_context_menu(entry);
@@ -529,7 +445,7 @@ TEST_CASE("derive_context_menu decision table", "[u]")
 	{
 		file_entry_t entry;
 		entry.type = file_type_t::base_dict;
-		entry.loaded = true;
+		entry.dict_loaded = true;
 		entry.is_workspace = true;
 		entry.dirty = false;
 		const auto menu = derive_context_menu(entry);
@@ -541,7 +457,7 @@ TEST_CASE("derive_context_menu decision table", "[u]")
 	{
 		file_entry_t entry;
 		entry.type = file_type_t::user_dict;
-		entry.loaded = false;
+		entry.dict_loaded = false;
 		entry.is_workspace = true;
 		entry.dirty = false;
 		const auto menu = derive_context_menu(entry);
@@ -553,7 +469,7 @@ TEST_CASE("derive_context_menu decision table", "[u]")
 	{
 		file_entry_t entry;
 		entry.type = file_type_t::lua_l10n;
-		entry.loaded = true;
+		entry.dict_loaded = true;
 		entry.is_workspace = true;
 		entry.dirty = true;
 		const auto menu = derive_context_menu(entry);
@@ -597,9 +513,9 @@ TEST_CASE("file_list_t container operations", "[u]")
 	SECTION("duplicate add returns existing entry")
 	{
 		auto & first = list.add("C:/path/file.esp");
-		first.loaded = true;
+		first.dict_loaded = true;
 		auto & second = list.add("C:/path/file.esp");
-		REQUIRE(second.loaded == true);
+		REQUIRE(second.dict_loaded == true);
 		REQUIRE(&first == &second);
 	}
 
@@ -607,9 +523,9 @@ TEST_CASE("file_list_t container operations", "[u]")
 	{
 		list.add("C:/path/file.esp");
 		list.set_loaded("C:/path/file.esp", true);
-		REQUIRE(list.get("C:/path/file.esp")->loaded == true);
+		REQUIRE(list.get("C:/path/file.esp")->dict_loaded == true);
 		list.set_loaded("C:/path/file.esp", false);
-		REQUIRE(list.get("C:/path/file.esp")->loaded == false);
+		REQUIRE(list.get("C:/path/file.esp")->dict_loaded == false);
 	}
 
 	SECTION("set_dirty no-op on unloaded entry")
@@ -622,7 +538,7 @@ TEST_CASE("file_list_t container operations", "[u]")
 	SECTION("set_dirty works on loaded entry")
 	{
 		auto & entry = list.add("C:/path/file.json");
-		entry.loaded = true;
+		entry.dict_loaded = true;
 		list.set_dirty("C:/path/file.json", true);
 		REQUIRE(list.get("C:/path/file.json")->dirty == true);
 	}
@@ -630,7 +546,7 @@ TEST_CASE("file_list_t container operations", "[u]")
 	SECTION("set_loaded false clears dirty")
 	{
 		auto & entry = list.add("C:/path/file.json");
-		entry.loaded = true;
+		entry.dict_loaded = true;
 		entry.dirty = true;
 		list.set_loaded("C:/path/file.json", false);
 		REQUIRE(list.get("C:/path/file.json")->dirty == false);
@@ -639,17 +555,19 @@ TEST_CASE("file_list_t container operations", "[u]")
 
 TEST_CASE("property: section grouping", "[u]")
 {
-	rc::prop("build_render_model groups entries correctly", []()
+	rc::prop("build_render_model groups entries by root_path", []()
 	{
 		file_list_t list;
 		const auto count = *rc::gen::inRange(1, 30);
+
+		const auto root_paths = std::vector<std::string>{
+			"C:/root_a", "C:/root_b", "C:/root_c"};
 
 		struct expected_entry_t
 		{
 			std::string path;
 			std::string display_text;
-			bool loaded_non_workspace;
-			bool workspace_root_file;
+			std::string root_path;
 			std::string subfolder;
 		};
 
@@ -660,96 +578,87 @@ TEST_CASE("property: section grouping", "[u]")
 			const auto ext = *rc::gen::element(
 				std::string(".esp"), std::string(".json"),
 				std::string(".xml"), std::string(".yaml"));
-			const auto path = "C:/workspace/" + std::to_string(i) + "_file" + ext;
+			const auto root_idx = *rc::gen::inRange<size_t>(0, root_paths.size());
+			const auto & root = root_paths[root_idx];
+			const auto path = root + "/" + std::to_string(i) + "_file" + ext;
 
 			auto & entry = list.add(path);
-			entry.loaded = *rc::gen::arbitrary<bool>();
-			entry.is_workspace = *rc::gen::arbitrary<bool>();
+			entry.is_workspace = true;
+			entry.root_path = root;
 			entry.dirty = *rc::gen::arbitrary<bool>();
 
-			if (entry.is_workspace)
+			const auto use_subfolder = *rc::gen::arbitrary<bool>();
+			if (use_subfolder)
 			{
-				const auto use_subfolder = *rc::gen::arbitrary<bool>();
-				if (use_subfolder)
-				{
-					entry.workspace_subfolder = *rc::gen::element(
-						std::string("en"), std::string("pl"),
-						std::string("de"), std::string("fr"));
-				}
+				entry.workspace_subfolder = *rc::gen::element(
+					std::string("en"), std::string("pl"),
+					std::string("de"), std::string("fr"));
 			}
 
 			expected_entry_t exp;
 			exp.path = entry.path;
 			exp.display_text = derive_display_name(entry);
-			exp.loaded_non_workspace = entry.loaded && !entry.is_workspace;
-			exp.workspace_root_file = entry.is_workspace && entry.workspace_subfolder.empty();
-			exp.subfolder = entry.is_workspace ? entry.workspace_subfolder : "";
+			exp.root_path = root;
+			exp.subfolder = entry.workspace_subfolder;
 			expected.push_back(std::move(exp));
 		}
 
 		const auto model = build_render_model(list, "");
 
-		std::set<std::string> loaded_paths;
-		for (const auto & item : model.loaded_root.items)
-			loaded_paths.insert(item.path);
-
-		std::set<std::string> expected_loaded_paths;
+		std::set<std::string> unique_roots;
 		for (const auto & e : expected)
+			unique_roots.insert(e.root_path);
+
+		RC_ASSERT(model.roots.size() == unique_roots.size());
+
+		for (const auto & root_node : model.roots)
 		{
-			if (e.loaded_non_workspace)
-				expected_loaded_paths.insert(e.path);
-		}
-		RC_ASSERT(loaded_paths == expected_loaded_paths);
+			RC_ASSERT(unique_roots.count(root_node.root_path) == 1);
 
-		std::set<std::string> ws_root_paths;
-		for (const auto & item : model.workspace_root.items)
-			ws_root_paths.insert(item.path);
+			std::set<std::string> root_file_paths;
+			for (const auto & item : root_node.items)
+				root_file_paths.insert(item.path);
 
-		std::set<std::string> expected_ws_root_paths;
-		for (const auto & e : expected)
-		{
-			if (e.workspace_root_file)
-				expected_ws_root_paths.insert(e.path);
-		}
-		RC_ASSERT(ws_root_paths == expected_ws_root_paths);
-
-		std::set<std::string> expected_subfolders;
-		for (const auto & e : expected)
-		{
-			if (e.subfolder.empty())
-				continue;
-
-			expected_subfolders.insert(e.subfolder);
-		}
-
-		RC_ASSERT(model.workspace_root.children.size() == expected_subfolders.size());
-
-		for (const auto & child : model.workspace_root.children)
-		{
-			const auto subfolder = child.label.substr(0, child.label.size() - 1);
-			RC_ASSERT(expected_subfolders.count(subfolder) == 1);
-
-			std::set<std::string> child_paths;
-			for (const auto & item : child.items)
-				child_paths.insert(item.path);
-
-			std::set<std::string> expected_child_paths;
+			std::set<std::string> expected_root_file_paths;
 			for (const auto & e : expected)
 			{
-				if (e.subfolder == subfolder)
-					expected_child_paths.insert(e.path);
+				if (e.root_path == root_node.root_path && e.subfolder.empty())
+					expected_root_file_paths.insert(e.path);
 			}
-			RC_ASSERT(child_paths == expected_child_paths);
+			RC_ASSERT(root_file_paths == expected_root_file_paths);
 
-			for (size_t i = 1; i < child.items.size(); ++i)
-				RC_ASSERT(child.items[i - 1].display_text <= child.items[i].display_text);
+			std::set<std::string> expected_subfolders;
+			for (const auto & e : expected)
+			{
+				if (e.root_path == root_node.root_path && !e.subfolder.empty())
+					expected_subfolders.insert(e.subfolder);
+			}
+
+			RC_ASSERT(root_node.children.size() == expected_subfolders.size());
+
+			for (const auto & child : root_node.children)
+			{
+				RC_ASSERT(expected_subfolders.count(child.label) == 1);
+
+				std::set<std::string> child_paths;
+				for (const auto & item : child.items)
+					child_paths.insert(item.path);
+
+				std::set<std::string> expected_child_paths;
+				for (const auto & e : expected)
+				{
+					if (e.root_path == root_node.root_path && e.subfolder == child.label)
+						expected_child_paths.insert(e.path);
+				}
+				RC_ASSERT(child_paths == expected_child_paths);
+
+				for (size_t i = 1; i < child.items.size(); ++i)
+					RC_ASSERT(child.items[i - 1].display_text <= child.items[i].display_text);
+			}
+
+			for (size_t i = 1; i < root_node.items.size(); ++i)
+				RC_ASSERT(root_node.items[i - 1].display_text <= root_node.items[i].display_text);
 		}
-
-		for (size_t i = 1; i < model.loaded_root.items.size(); ++i)
-			RC_ASSERT(model.loaded_root.items[i - 1].display_text <= model.loaded_root.items[i].display_text);
-
-		for (size_t i = 1; i < model.workspace_root.items.size(); ++i)
-			RC_ASSERT(model.workspace_root.items[i - 1].display_text <= model.workspace_root.items[i].display_text);
 	});
 }
 
@@ -770,7 +679,7 @@ TEST_CASE("workspace scan round-trip", "[i]")
 	std::ofstream(temp_dir / "pl" / "morrowind_pl.json").put('x');
 
 	file_list_t list;
-	list.scan_workspace(temp_dir.string());
+	list.scan_roots({temp_dir.string()});
 
 	REQUIRE(list.contains((temp_dir / "test.esp").string()));
 	REQUIRE(list.contains((temp_dir / "dict.json").string()));
@@ -810,54 +719,4 @@ TEST_CASE("workspace scan round-trip", "[i]")
 	fs::remove_all(temp_dir);
 }
 
-TEST_CASE("config persistence round-trip via file_list paths_to_persist", "[i]")
-{
-	file_list_t list;
 
-	auto & loaded_plugin = list.add("C:/loaded/Morrowind.esm");
-	loaded_plugin.loaded = true;
-	loaded_plugin.is_workspace = false;
-
-	auto & loaded_dict = list.add("C:/loaded/dict_en.json");
-	loaded_dict.loaded = true;
-	loaded_dict.is_workspace = false;
-
-	auto & workspace_file = list.add("C:/workspace/test.esp");
-	workspace_file.loaded = false;
-	workspace_file.is_workspace = true;
-
-	auto & workspace_loaded = list.add("C:/workspace/loaded.json");
-	workspace_loaded.loaded = true;
-	workspace_loaded.is_workspace = true;
-
-	auto & unloaded = list.add("C:/other/unused.json");
-	unloaded.loaded = false;
-	unloaded.is_workspace = false;
-
-	const auto persisted = list.paths_to_persist();
-
-	REQUIRE(persisted.size() == 2);
-	std::set<std::string> persisted_set(persisted.begin(), persisted.end());
-	REQUIRE(persisted_set.count("C:/loaded/Morrowind.esm") == 1);
-	REQUIRE(persisted_set.count("C:/loaded/dict_en.json") == 1);
-	REQUIRE(persisted_set.count("C:/workspace/test.esp") == 0);
-	REQUIRE(persisted_set.count("C:/workspace/loaded.json") == 0);
-	REQUIRE(persisted_set.count("C:/other/unused.json") == 0);
-
-	file_list_t restored;
-	for (const auto & path : persisted)
-	{
-		auto & entry = restored.add(path);
-		entry.loaded = true;
-	}
-
-	REQUIRE(restored.contains("C:/loaded/Morrowind.esm"));
-	REQUIRE(restored.contains("C:/loaded/dict_en.json"));
-	REQUIRE(!restored.contains("C:/workspace/test.esp"));
-	REQUIRE(!restored.contains("C:/workspace/loaded.json"));
-	REQUIRE(!restored.contains("C:/other/unused.json"));
-
-	const auto restored_persist = restored.paths_to_persist();
-	std::set<std::string> restored_set(restored_persist.begin(), restored_persist.end());
-	REQUIRE(restored_set == persisted_set);
-}
