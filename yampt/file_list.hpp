@@ -46,6 +46,8 @@ struct sidebar_render_item_t
 	std::string display_text;
 	file_type_t type = file_type_t::user_dict;
 	bool is_workspace = false;
+	int translated_count = -1;
+	int total_count = -1;
 };
 
 struct sidebar_render_node_t

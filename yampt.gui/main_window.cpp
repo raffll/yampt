@@ -1145,6 +1145,9 @@ void main_window_t::rebuild_table()
     if (!table_model_)
         return;
 
+    if (!lua_active_path_.empty())
+        return;
+
     const auto * slot = workspace_.get_active_slot();
     if (!slot)
     {
@@ -1169,6 +1172,7 @@ void main_window_t::rebuild_table()
     else
         status_filter_bar_->set_dict_mode(status_filter_bar_t::dict_mode_t::user);
 
+    filter_tree_->set_display_mode(filter_tree_t::display_mode_t::full);
     filter_tree_->setEnabled(true);
     active_file_label_->setText(QString::fromStdString(slot->path));
     search_label_->setEnabled(true);
@@ -1803,7 +1807,8 @@ void main_window_t::load_record(int row)
         editor_panel_->translation_editor()->set_block_multiline(block);
     }
 
-    const bool is_base = workspace_.is_base_slot(workspace_.get_active_index());
+    const bool is_base = !lua_active_path_.empty() ? false
+        : workspace_.is_base_slot(workspace_.get_active_index());
     editor_panel_->translation_editor()->setReadOnly(is_base);
 
     hl_original_->set_record_type(row_data->type);
@@ -2110,6 +2115,60 @@ void main_window_t::rebuild_sidebar()
 		active_path = workspace_.get_slot(workspace_.get_active_index())->path;
 
 	auto model = build_render_model(file_list_, active_path);
+
+	static const std::set<std::string> done_statuses_user = {"translated", "in_progress", "propagated"};
+	static const std::set<std::string> done_statuses_base = {
+		"matched", "fingerprint", "coords", "heuristic", "exact", "info", "wilderness", "region"};
+
+	std::function<void(sidebar_render_node_t &)> fill_counts;
+	fill_counts = [&](sidebar_render_node_t & node)
+	{
+		for (auto & item : node.items)
+		{
+			if (item.type == file_type_t::plugin)
+				continue;
+
+			if (item.type == file_type_t::lua_l10n && item.path == lua_active_path_)
+			{
+				item.total_count = static_cast<int>(lua_entries_.size());
+				item.translated_count = static_cast<int>(lua_modified_indices_.size());
+				continue;
+			}
+
+			for (int i = 0; i < workspace_.slot_count(); ++i)
+			{
+				const auto * slot = workspace_.get_slot(i);
+				if (!slot || slot->path != item.path)
+					continue;
+
+				const bool is_base = workspace_.is_base_slot(i);
+				const auto & done = is_base ? done_statuses_base : done_statuses_user;
+
+				int total = 0;
+				int translated = 0;
+				for (const auto & [type, chapter] : slot->data)
+				{
+					for (const auto & rec : chapter.records)
+					{
+						total++;
+						if (done.count(rec.status))
+							translated++;
+					}
+				}
+
+				item.translated_count = translated;
+				item.total_count = total;
+				break;
+			}
+		}
+
+		for (auto & child : node.children)
+			fill_counts(child);
+	};
+
+	for (auto & root : model.roots)
+		fill_counts(root);
+
 	sidebar_->set_model(model);
 }
 
@@ -2832,6 +2891,7 @@ void main_window_t::on_item_clicked(const std::string & path)
     {
         table_model_->rebuild({});
         current_row_ = -1;
+        filter_tree_->set_display_mode(filter_tree_t::display_mode_t::empty);
         filter_tree_->setEnabled(false);
         active_file_label_->clear();
         status_filter_bar_->set_dict_mode(status_filter_bar_t::dict_mode_t::none);
@@ -2869,6 +2929,7 @@ void main_window_t::on_item_clicked(const std::string & path)
         lua_active_path_ = path;
         lua_entries_.clear();
         lua_modified_indices_.clear();
+        workspace_.set_active(-1);
 
         const auto & source_entries = reader.source_entries();
         for (const auto & src : source_entries)
@@ -2918,9 +2979,8 @@ void main_window_t::on_item_clicked(const std::string & path)
 
         table_model_->rebuild(std::move(rows));
         active_file_label_->setText(QString::fromStdString(lua_active_path_));
-        filter_tree_->setEnabled(false);
-        filter_tree_->set_lua_button_visible(true);
-        filter_tree_->set_lua_filter_active(true);
+        filter_tree_->set_display_mode(filter_tree_t::display_mode_t::all_only);
+        filter_tree_->setEnabled(true);
         status_filter_bar_->set_dict_mode(status_filter_bar_t::dict_mode_t::user);
         search_label_->setEnabled(true);
         search_field_->setEnabled(true);
@@ -3011,13 +3071,39 @@ void main_window_t::on_operation_requested(const std::string & path, plugin_op_t
 
 void main_window_t::on_save_requested(const std::string & path)
 {
+    auto norm_path = path;
+    std::replace(norm_path.begin(), norm_path.end(), '\\', '/');
+
+    auto norm_lua = lua_active_path_;
+    std::replace(norm_lua.begin(), norm_lua.end(), '\\', '/');
+
+    if (!lua_active_path_.empty() && norm_path == norm_lua)
+    {
+        commit_current_edit();
+        save_lua_temp();
+
+        auto * fe = file_list_.get(lua_active_path_);
+        if (fe)
+        {
+            fe->dirty = false;
+            sidebar_->update_item_text(fe->path, derive_display_name(*fe));
+        }
+
+        set_dirty(false);
+        return;
+    }
+
     for (int i = 0; i < workspace_.slot_count(); ++i)
     {
         const auto * slot = workspace_.get_slot(i);
         if (slot && slot->path == path)
         {
             save_dict_encoded(i);
-            rebuild_sidebar();
+
+            auto * fe = file_list_.get(slot->path);
+            if (fe)
+                sidebar_->update_item_text(fe->path, derive_display_name(*fe));
+
             log_tab_->append_log("save", "saved \"" + slot->path + "\"\r\n");
             if (!workspace_.has_any_unsaved())
                 set_dirty(false);

@@ -490,3 +490,30 @@ void filter_tree_t::setEnabled(bool enabled)
 	QWidget::setEnabled(enabled);
 	update_item_styles();
 }
+
+void filter_tree_t::set_display_mode(display_mode_t mode)
+{
+	switch (mode)
+	{
+	case display_mode_t::empty:
+		all_item_->setHidden(true);
+		lua_item_->setHidden(true);
+		for (auto & tn : type_nodes_)
+			tn.item->setHidden(true);
+		break;
+
+	case display_mode_t::all_only:
+		all_item_->setHidden(false);
+		lua_item_->setHidden(true);
+		for (auto & tn : type_nodes_)
+			tn.item->setHidden(true);
+		break;
+
+	case display_mode_t::full:
+		all_item_->setHidden(false);
+		lua_item_->setHidden(true);
+		for (auto & tn : type_nodes_)
+			tn.item->setHidden(false);
+		break;
+	}
+}

@@ -17,6 +17,9 @@ class filter_tree_t : public QWidget
 public:
 	explicit filter_tree_t(QWidget * parent = nullptr);
 
+	enum class display_mode_t { full, all_only, empty };
+	void set_display_mode(display_mode_t mode);
+
 	void update_counts(const std::map<tools_t::rec_type_t, size_t> & total_counts,
 		const std::map<tools_t::rec_type_t, size_t> & translated_counts);
 	void update_sub_type_counts(const std::map<std::string, size_t> & sub_type_total_counts,

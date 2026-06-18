@@ -22,9 +22,13 @@ sidebar_widget_t::sidebar_widget_t(QWidget * parent)
 
     tree_ = new QTreeWidget(this);
     tree_->setHeaderHidden(true);
+    tree_->setColumnCount(2);
     tree_->setRootIsDecorated(true);
     tree_->setContextMenuPolicy(Qt::CustomContextMenu);
     tree_->setIndentation(16);
+    tree_->header()->setStretchLastSection(false);
+    tree_->header()->setSectionResizeMode(0, QHeaderView::Stretch);
+    tree_->header()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
     layout->addWidget(tree_);
 
     connect(tree_, &QTreeWidget::itemClicked, this, &sidebar_widget_t::on_item_clicked);
@@ -57,6 +61,12 @@ void sidebar_widget_t::set_model(const sidebar_render_model_t & model)
             child->setToolTip(0, QString::fromStdString(file_item.path));
             child->setData(0, role_path, QString::fromStdString(file_item.path));
             child->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+
+            if (file_item.total_count >= 0)
+            {
+                child->setText(1, QString("%1/%2").arg(file_item.translated_count).arg(file_item.total_count));
+                child->setTextAlignment(1, Qt::AlignRight | Qt::AlignVCenter);
+            }
 
             switch (file_item.type)
             {
@@ -234,12 +244,15 @@ void sidebar_widget_t::on_context_menu(const QPoint & pos)
 
     if (ext == "yaml")
     {
-        auto * save_as_action = menu.addAction("Save As...");
+        auto * save_action = menu.addAction("Save");
+        auto * export_action = menu.addAction("Export...");
         menu.addSeparator();
         auto * delete_action = menu.addAction("Delete");
 
         auto * selected = menu.exec(tree_->viewport()->mapToGlobal(pos));
-        if (selected == save_as_action)
+        if (selected == save_action)
+            emit save_requested(path_str);
+        else if (selected == export_action)
             emit save_as_requested(path_str);
         else if (selected == delete_action)
             emit delete_requested(path_str);
