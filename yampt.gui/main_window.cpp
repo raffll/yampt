@@ -996,6 +996,13 @@ void main_window_t::rebuild_table()
         return;
     }
 
+    if (dynamic_cast<plugin_document_t *>(active_doc_))
+    {
+        table_display_->clear();
+        editor_controller_.set_current_row(-1);
+        return;
+    }
+
     auto * dict_doc = dynamic_cast<dict_document_t*>(active_doc_);
     if (!dict_doc)
     {
