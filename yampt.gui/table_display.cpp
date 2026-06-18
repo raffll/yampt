@@ -72,13 +72,17 @@ void table_display_t::apply(table_build_result_t result, const std::string & fil
 }
 
 void table_display_t::apply_yaml(std::vector<table_row_t> rows, int total, int translated,
-                                 const std::string & file_path)
+                                 const std::string & file_path,
+                                 const std::map<std::string, size_t> & filtered_status_counts,
+                                 const std::map<std::string, size_t> & total_status_counts)
 {
 	file_label_.setText(QString::fromStdString(file_path));
 	filter_tree_.setEnabled(true);
 	filter_tree_.set_display_mode(filter_tree_t::display_mode_t::all_only);
 	status_bar_.set_dict_mode(status_filter_bar_t::dict_mode_t::user);
 	set_enabled(true);
+
+	status_bar_.update_counts(filtered_status_counts, total_status_counts);
 
 	model_.rebuild(std::move(rows));
 

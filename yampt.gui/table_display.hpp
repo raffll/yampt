@@ -24,7 +24,10 @@ public:
 	                QCheckBox & col_key, QCheckBox & col_orig, QCheckBox & col_trans);
 
 	void apply(table_build_result_t result, const std::string & file_path, dict_kind_t kind);
-	void apply_yaml(std::vector<table_row_t> rows, int total, int translated, const std::string & file_path);
+	void apply_yaml(std::vector<table_row_t> rows, int total, int translated,
+	                const std::string & file_path,
+	                const std::map<std::string, size_t> & filtered_status_counts,
+	                const std::map<std::string, size_t> & total_status_counts);
 	void clear();
 	void set_enabled(bool enabled);
 

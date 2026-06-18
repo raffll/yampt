@@ -1007,6 +1007,20 @@ void main_window_t::rebuild_table()
     if (!dict_doc)
     {
         const auto raw_rows = active_doc_->build_rows();
+
+        std::map<std::string, size_t> total_status_counts;
+        std::map<std::string, size_t> filtered_status_counts;
+
+        for (const auto & row : raw_rows)
+        {
+            total_status_counts[row.status]++;
+
+            if (search_engine_.has_query() && !search_engine_.matches(row))
+                continue;
+
+            filtered_status_counts[row.status]++;
+        }
+
         std::vector<table_row_t> rows;
         for (const auto & row : raw_rows)
         {
@@ -1021,7 +1035,8 @@ void main_window_t::rebuild_table()
 
         int total = active_doc_->total_count();
         int translated = active_doc_->translated_count();
-        table_display_->apply_yaml(std::move(rows), total, translated, active_doc_->path());
+        table_display_->apply_yaml(std::move(rows), total, translated, active_doc_->path(),
+                                   filtered_status_counts, total_status_counts);
         editor_controller_.set_current_row(-1);
         return;
     }

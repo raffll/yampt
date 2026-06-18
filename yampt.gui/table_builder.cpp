@@ -177,19 +177,16 @@ table_build_result_t build_filtered_rows(
 
 			// --- filter pipeline ---
 
-			// 1. skip consumed BNAMs
-			if (type == tools_t::rec_type_t::bnam && consumed_bnams.count(i) > 0)
-				continue;
-
-			// 2. type_filter
+			// 1. type_filter check (for filtered_status_counts and row emission)
 			if (!type_filter.empty() && type_filter.count(type) == 0)
 				continue;
 
-			// 3. sub_type_filter
+			// 2. sub_type_filter check
 			if (!passes_sub_type_filter(type, entry.key_text, sub_type_filter, type_filter_solo))
 				continue;
 
-			// 4. count filtered_status_counts (passes type + sub_type + search, but NOT status)
+			// 3. count filtered_status_counts (passes type + sub_type + search, but NOT status)
+			//    Counted for ALL records including consumed BNAMs — this is status-independent
 			{
 				table_row_t tmp_row;
 				tmp_row.type = type;
@@ -202,6 +199,10 @@ table_build_result_t build_filtered_rows(
 				if (!search.has_query() || search.matches(tmp_row))
 					counts.filtered_status_counts[entry.status]++;
 			}
+
+			// 4. skip consumed BNAMs (for row emission only — counting is done above)
+			if (type == tools_t::rec_type_t::bnam && consumed_bnams.count(i) > 0)
+				continue;
 
 			// 5. status_filter
 			if (!status_filter.empty() && status_filter.count(entry.status) == 0)
@@ -233,21 +234,6 @@ table_build_result_t build_filtered_rows(
 				for (auto bit = begin; bit != end; ++bit)
 				{
 					const auto & bnam_entry = bnam_it->second.records[bit->second];
-
-					// count filtered_status_counts for BNAM children too
-					{
-						table_row_t tmp_child;
-						tmp_child.type = tools_t::rec_type_t::bnam;
-						tmp_child.key_text = bnam_entry.key_text;
-						tmp_child.old_text = bnam_entry.old_text;
-						tmp_child.new_text = bnam_entry.new_text;
-						tmp_child.status = bnam_entry.status;
-						tmp_child.record_index = bit->second;
-						tmp_child.is_child = true;
-
-						if (!search.has_query() || search.matches(tmp_child))
-							counts.filtered_status_counts[bnam_entry.status]++;
-					}
 
 					if (!status_filter.empty() && status_filter.count(bnam_entry.status) == 0)
 						continue;
