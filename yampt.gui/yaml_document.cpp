@@ -66,7 +66,7 @@ std::vector<table_row_t> yaml_document_t::build_rows() const
     for (size_t i = 0; i < entries_.size(); ++i)
     {
         table_row_t row;
-        row.type = tools_t::rec_type_t::lua;
+        row.type = tools_t::rec_type_t::yaml;
         row.key_text = entries_[i].key;
         row.old_text = (i < source_values_.size()) ? source_values_[i] : "";
         row.new_text = modified_indices_.count(i) ? entries_[i].value : "";
@@ -76,20 +76,20 @@ std::vector<table_row_t> yaml_document_t::build_rows() const
         else
             row.status = "untranslated";
 
-        row.chapter_index = i;
+        row.record_index = i;
         rows.push_back(std::move(row));
     }
 
     return rows;
 }
 
-void yaml_document_t::commit_edit(tools_t::rec_type_t type, size_t chapter_index, const std::string & new_text)
+void yaml_document_t::commit_edit(tools_t::rec_type_t type, size_t record_index, const std::string & new_text)
 {
-    if (chapter_index >= entries_.size())
+    if (record_index >= entries_.size())
         return;
 
-    entries_[chapter_index].value = new_text;
-    modified_indices_.insert(chapter_index);
+    entries_[record_index].value = new_text;
+    modified_indices_.insert(record_index);
     dirty_ = true;
 }
 

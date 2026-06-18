@@ -18,7 +18,7 @@ public:
     bool is_read_only() const override;
 
     std::vector<table_row_t> build_rows() const override;
-    void commit_edit(tools_t::rec_type_t type, size_t chapter_index, const std::string & new_text) override;
+    void commit_edit(tools_t::rec_type_t type, size_t record_index, const std::string & new_text) override;
     void save() override;
 
     int translated_count() const override;

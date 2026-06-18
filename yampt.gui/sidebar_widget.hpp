@@ -4,19 +4,11 @@
 #include <string>
 #include <vector>
 
-#include "../yampt/file_list.hpp"
+#include "plugin_op.hpp"
+#include "sidebar_model.hpp"
 
 class QTreeWidget;
 class QTreeWidgetItem;
-
-enum class plugin_op_t
-{
-    make_dict,
-    make_dict_with_base,
-    make_base,
-    convert,
-    create_plugin
-};
 
 class sidebar_widget_t : public QWidget
 {

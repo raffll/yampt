@@ -2,6 +2,7 @@
 
 #include "includes.hpp"
 #include "tools.hpp"
+#include "codepage.hpp"
 #include "esm_reader.hpp"
 #include "dict_merger.hpp"
 
@@ -33,7 +34,7 @@ public:
 	    const dict_merger_t & merger,
 	    const bool add_hyperlinks,
 	    const std::string & file_suffix,
-	    const tools_t::encoding_t encoding,
+	    const codepage_t encoding,
 	    const bool create_header);
 
 private:
@@ -64,7 +65,7 @@ private:
 	void convert_scpt();
 	void convert_gmdt();
 
-	tools_t::encoding_t detect_encoding();
+	bool detect_encoding();
 	bool detect_windows_1250_encoding(const std::string & text);
 
 	esm_reader_t esm;
@@ -79,6 +80,4 @@ private:
 	int counter_unchanged = 0;
 	int counter_all = 0;
 	int counter_added = 0;
-
-	tools_t::encoding_t esm_encoding = tools_t::encoding_t::unknown;
 };

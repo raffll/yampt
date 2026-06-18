@@ -18,7 +18,7 @@ public:
 		text,
 		bnam,
 		sctx,
-		lua,
+		yaml,
 
 		pgrd,
 		anam,
@@ -36,14 +36,6 @@ public:
 	enum class creator_mode_t
 	{
 		base
-	};
-
-	enum class encoding_t
-	{
-		unknown,
-		windows_1250,
-		windows_1251,
-		windows_1252
 	};
 
 	struct record_entry_t

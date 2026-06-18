@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-static constexpr int gui_rec_type_lua = 100;
+static constexpr int gui_rec_type_yaml = 100;
 
 struct l10n_entry_t
 {

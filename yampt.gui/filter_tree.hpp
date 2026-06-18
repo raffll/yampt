@@ -28,12 +28,14 @@ public:
 
 	std::set<tools_t::rec_type_t> get_active_types() const;
 	std::set<std::string> get_active_sub_types() const;
+	void set_active_types(const std::set<tools_t::rec_type_t> & types);
+	void set_active_sub_types(const std::set<std::string> & sub_types);
 	bool is_solo() const;
 	tools_t::rec_type_t get_solo_type() const;
 
-	bool is_lua_filter_active() const;
-	void set_lua_filter_active(bool active);
-	void set_lua_button_visible(bool visible);
+	bool is_yaml_filter_active() const;
+	void set_yaml_filter_active(bool active);
+	void set_yaml_button_visible(bool visible);
 	void setEnabled(bool enabled);
 
 signals:
@@ -47,7 +49,7 @@ private:
 	static constexpr int role_type = Qt::UserRole + 11;
 	static constexpr int role_sub_type = Qt::UserRole + 12;
 	static constexpr int role_is_all = Qt::UserRole + 13;
-	static constexpr int role_is_lua = Qt::UserRole + 14;
+	static constexpr int role_is_yaml = Qt::UserRole + 14;
 
 	void on_item_clicked(QTreeWidgetItem * item, int column);
 	void on_item_right_clicked(QTreeWidgetItem * item);
@@ -72,7 +74,7 @@ private:
 
 	QTreeWidget * tree_ = nullptr;
 	QTreeWidgetItem * all_item_ = nullptr;
-	QTreeWidgetItem * lua_item_ = nullptr;
+	QTreeWidgetItem * yaml_item_ = nullptr;
 
 	std::vector<type_node_t> type_nodes_;
 	std::vector<sub_type_node_t> sub_type_nodes_;

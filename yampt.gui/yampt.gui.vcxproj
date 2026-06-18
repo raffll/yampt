@@ -180,7 +180,6 @@
     <ClCompile Include="..\yampt\esm_reader.cpp" />
     <ClCompile Include="..\yampt\esm_converter.cpp" />
     <ClCompile Include="..\yampt\script_parser.cpp" />
-    <ClCompile Include="dict_workspace.cpp" />
     <ClCompile Include="search_manager.cpp" />
     <ClCompile Include="validation_manager.cpp" />
     <ClCompile Include="history_manager.cpp" />
@@ -188,7 +187,7 @@
     <ClCompile Include="composite_highlighter.cpp" />
     <ClCompile Include="annotation_manager.cpp" />
     <ClCompile Include="annotation_highlighter.cpp" />
-    <ClCompile Include="encoding_utils.cpp" />
+    <ClCompile Include="..\yampt\codepage.cpp" />
     <ClCompile Include="spell_checker.cpp" />
     <ClCompile Include="spell_context_menu.cpp" />
     <ClCompile Include="hyperlink_highlighter.cpp" />
@@ -215,6 +214,12 @@
     <ClCompile Include="yaml_l10n_writer.cpp" />
     <ClCompile Include="dict_document.cpp" />
     <ClCompile Include="yaml_document.cpp" />
+    <ClCompile Include="table_builder.cpp" />
+    <ClCompile Include="table_display.cpp" />
+    <ClCompile Include="find_replace_service.cpp" />
+    <ClCompile Include="editor_controller.cpp" />
+    <ClCompile Include="session.cpp" />
+    <ClCompile Include="sidebar_model.cpp" />
     <ClCompile Include="..\yampt\translation_engine.cpp" />
     <ClCompile Include="..\yampt\file_list.cpp" />
     <ClCompile Include="..\external\yyjson.c">
@@ -225,9 +230,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="dict_workspace.hpp" />
     <ClInclude Include="spell_context_menu.hpp" />
     <ClInclude Include="..\yampt\tools.hpp" />
+    <ClInclude Include="..\yampt\codepage.hpp" />
+    <ClInclude Include="..\yampt\dict_kind.hpp" />
     <ClInclude Include="..\yampt\dict_reader.hpp" />
     <ClInclude Include="..\yampt\dict_writer.hpp" />
     <ClInclude Include="..\yampt\dict_creator.hpp" />
@@ -245,8 +251,15 @@
     <ClInclude Include="yaml_l10n_writer.hpp" />
     <ClInclude Include="document.hpp" />
     <ClInclude Include="dict_document.hpp" />
+    <ClInclude Include="plugin_document.hpp" />
     <ClInclude Include="yaml_document.hpp" />
+    <ClInclude Include="session.hpp" />
     <ClInclude Include="table_row.hpp" />
+    <ClInclude Include="table_builder.hpp" />
+    <ClInclude Include="table_display.hpp" />
+    <ClInclude Include="find_replace_service.hpp" />
+    <ClInclude Include="editor_controller.hpp" />
+    <ClInclude Include="sidebar_model.hpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="main_window.hpp">

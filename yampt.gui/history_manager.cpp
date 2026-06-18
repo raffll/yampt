@@ -1,5 +1,4 @@
 #include "history_manager.hpp"
-#include "dict_workspace.hpp"
 #include "json.hpp"
 #include <chrono>
 #include <ctime>
@@ -44,8 +43,7 @@ std::vector<history_entry_t> history_manager_t::get_history(tools_t::rec_type_t 
 	return it->second;
 }
 
-void history_manager_t::revert(
-    dict_slot_t & slot,
+revert_result_t history_manager_t::revert(
     tools_t::rec_type_t type,
     const std::string & key,
     size_t history_index)
@@ -53,32 +51,13 @@ void history_manager_t::revert(
 	auto compound_key = make_key(type, key);
 	auto it = entries_.find(compound_key);
 	if (it == entries_.end())
-		return;
+		return {};
 
 	if (history_index >= it->second.size())
-		return;
+		return {};
 
 	const auto & entry = it->second[history_index];
-	auto & dict = slot.data;
-	auto type_it = dict.find(type);
-	if (type_it == dict.end())
-		return;
-
-	auto * record = type_it->second.find(key);
-	if (!record)
-		return;
-
-	std::string current_value = record->new_text;
-	record->new_text = entry.value;
-
-	auto index_it = type_it->second.index.find(key);
-	if (index_it != type_it->second.index.end())
-	{
-		slot.dirty = true;
-		slot.modified_records.insert({ type, index_it->second });
-	}
-
-	record_change(type, key, current_value, entry.value);
+	return { entry.value, true };
 }
 
 void history_manager_t::load_from_file(const std::string & path)

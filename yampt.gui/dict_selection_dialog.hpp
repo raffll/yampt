@@ -1,6 +1,6 @@
 #pragma once
 
-#include "dict_workspace.hpp"
+#include "../yampt/dict_kind.hpp"
 
 #include <QDialog>
 #include <string>

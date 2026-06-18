@@ -3,8 +3,6 @@
 #include <algorithm>
 #include <cctype>
 #include <filesystem>
-#include <functional>
-#include <map>
 
 static std::string to_lower(std::string str)
 {
@@ -30,15 +28,6 @@ static std::string extract_extension(const std::string & path)
 		return "";
 
 	return to_lower(filename.substr(pos));
-}
-
-static std::string parent_directory(const std::string & path)
-{
-	const auto pos = path.find_last_of("\\/");
-	if (pos == std::string::npos)
-		return "";
-
-	return path.substr(0, pos);
 }
 
 static std::string normalize_path(std::string path)
@@ -110,26 +99,6 @@ void file_list_t::remove(const std::string & path)
 	entries_.erase(normalize_path(path));
 }
 
-void file_list_t::set_loaded(const std::string & path, bool loaded)
-{
-	auto * entry = get(path);
-	if (!entry)
-		return;
-
-	entry->dict_loaded = loaded;
-	if (!loaded)
-		entry->dirty = false;
-}
-
-void file_list_t::set_dirty(const std::string & path, bool dirty)
-{
-	auto * entry = get(path);
-	if (!entry)
-		return;
-
-	entry->dirty = dirty;
-}
-
 file_type_t file_list_t::classify(const std::string & path)
 {
 	const auto ext = extract_extension(path);
@@ -137,7 +106,7 @@ file_type_t file_list_t::classify(const std::string & path)
 		return file_type_t::plugin;
 
 	if (ext == ".yaml")
-		return file_type_t::lua_l10n;
+		return file_type_t::yaml_l10n;
 
 	if (ext == ".json" || ext == ".xml")
 	{
@@ -174,7 +143,7 @@ file_type_t classify(const std::string & path)
 		return file_type_t::plugin;
 
 	if (ext == ".yaml")
-		return file_type_t::lua_l10n;
+		return file_type_t::yaml_l10n;
 
 	if (ext == ".json" || ext == ".xml")
 	{
@@ -225,75 +194,6 @@ std::string detect_language(const std::string & filename, std::uintmax_t file_si
 	return "";
 }
 
-std::string derive_display_name(const file_entry_t & entry)
-{
-	std::string result;
-
-	if (entry.dirty)
-		result += "* ";
-
-	switch (entry.type)
-	{
-	case file_type_t::plugin:
-		result += "[ESP]";
-		break;
-	case file_type_t::base_dict:
-		result += "[BASE]";
-		break;
-	case file_type_t::user_dict:
-		result += "[USER]";
-		break;
-	case file_type_t::lua_l10n:
-		result += "[LUA]";
-		if (entry.has_tmp)
-			result += " [WIP]";
-		break;
-	}
-
-	if (entry.type == file_type_t::plugin && !entry.language_tag.empty())
-		result += " [" + entry.language_tag + "]";
-
-	result += " " + entry.filename;
-
-	return result;
-}
-
-std::vector<menu_action_t> derive_context_menu(const file_entry_t & entry)
-{
-	if (entry.type == file_type_t::lua_l10n)
-		return {menu_action_t::delete_file};
-
-	if (entry.type == file_type_t::plugin)
-	{
-		return {
-			menu_action_t::make_dict,
-			menu_action_t::make_dict_with_base,
-			menu_action_t::make_base,
-			menu_action_t::convert,
-			menu_action_t::create_plugin,
-			menu_action_t::delete_file
-		};
-	}
-
-	if (entry.type == file_type_t::base_dict || entry.type == file_type_t::user_dict)
-	{
-		if (entry.dict_loaded && entry.dirty)
-			return {menu_action_t::save, menu_action_t::delete_file};
-
-		return {menu_action_t::delete_file};
-	}
-
-	return {};
-}
-
-std::string derive_output_dir(const file_entry_t & entry, const std::string & default_dir)
-{
-	if (entry.is_workspace)
-		return parent_directory(entry.path);
-
-	return default_dir;
-}
-
 void file_list_t::clear_workspace()
 {
 	for (auto it = entries_.begin(); it != entries_.end(); )
@@ -307,31 +207,11 @@ void file_list_t::clear_workspace()
 
 void file_list_t::scan_roots(const std::vector<std::string> & root_paths)
 {
-	std::unordered_map<std::string, bool> dirty_state;
-	std::unordered_map<std::string, bool> loaded_state;
-	for (const auto & [key, entry] : entries_)
-	{
-		if (entry.dirty)
-			dirty_state[key] = true;
-
-		if (entry.dict_loaded)
-			loaded_state[key] = true;
-	}
-
 	clear_workspace();
 	roots_ = root_paths;
 
 	for (const auto & root : root_paths)
 		scan_single_root(root);
-
-	for (auto & [key, entry] : entries_)
-	{
-		if (dirty_state.count(key))
-			entry.dirty = true;
-
-		if (loaded_state.count(key))
-			entry.dict_loaded = true;
-	}
 }
 
 const std::vector<std::string> & file_list_t::get_roots() const
@@ -384,142 +264,6 @@ void file_list_t::scan_single_root(const std::string & root_path)
 			if (!ec)
 				fe.language_tag = detect_language(fe.filename, size);
 		}
-
-		if (fe.type == file_type_t::lua_l10n)
-			fe.has_tmp = std::filesystem::exists(path + ".tmp", ec);
 	}
 }
 
-sidebar_render_model_t build_render_model(const file_list_t & file_list, const std::string & active_path)
-{
-	sidebar_render_model_t model;
-	model.active_path = active_path;
-
-	auto sort_items = [](std::vector<sidebar_render_item_t> & items)
-	{
-		std::sort(items.begin(), items.end(),
-			[](const sidebar_render_item_t & a, const sidebar_render_item_t & b)
-			{
-				if (a.type != b.type)
-					return static_cast<int>(a.type) < static_cast<int>(b.type);
-
-				auto fname = [](const std::string & p) {
-					auto pos = p.find_last_of("/\\");
-					return pos != std::string::npos ? p.substr(pos + 1) : p;
-				};
-				return fname(a.path) < fname(b.path);
-			});
-	};
-
-	auto split_path = [](const std::string & path) -> std::vector<std::string>
-	{
-		std::vector<std::string> parts;
-		std::string segment;
-		for (auto c : path)
-		{
-			if (c == '/' || c == '\\')
-			{
-				if (!segment.empty())
-				{
-					parts.push_back(segment);
-					segment.clear();
-				}
-				continue;
-			}
-
-			segment += c;
-		}
-
-		if (!segment.empty())
-			parts.push_back(segment);
-
-		return parts;
-	};
-
-	struct tree_builder_t
-	{
-		std::vector<sidebar_render_item_t> items;
-		std::map<std::string, tree_builder_t> children;
-	};
-
-	std::map<std::string, tree_builder_t> roots_map;
-
-	for (const auto & root : file_list.get_roots())
-		roots_map[normalize_path(root)];
-
-	for (const auto * entry : file_list.all())
-	{
-		if (!entry->is_workspace)
-			continue;
-
-		sidebar_render_item_t item;
-		item.path = entry->path;
-		item.display_text = derive_display_name(*entry);
-		item.type = entry->type;
-		item.is_workspace = true;
-
-		auto & root_builder = roots_map[entry->root_path];
-
-		if (entry->workspace_subfolder.empty())
-		{
-			root_builder.items.push_back(std::move(item));
-			continue;
-		}
-
-		const auto segments = split_path(entry->workspace_subfolder);
-		auto * current = &root_builder;
-		for (const auto & seg : segments)
-			current = &current->children[seg];
-
-		current->items.push_back(std::move(item));
-	}
-
-	std::function<sidebar_render_node_t(const std::string &, const std::string &, tree_builder_t &)> build_node;
-	build_node = [&](const std::string & label, const std::string & parent_path, tree_builder_t & builder) -> sidebar_render_node_t
-	{
-		sidebar_render_node_t node;
-		node.label = label;
-		node.folder_path = parent_path.empty() ? "" : parent_path + "/" + label;
-
-		sort_items(builder.items);
-		node.items = std::move(builder.items);
-
-		const auto & current_path = node.folder_path.empty() ? parent_path : node.folder_path;
-		for (auto & [child_name, child_builder] : builder.children)
-			node.children.push_back(build_node(child_name, current_path, child_builder));
-
-		std::sort(node.children.begin(), node.children.end(),
-			[](const sidebar_render_node_t & a, const sidebar_render_node_t & b)
-			{
-				return a.label < b.label;
-			});
-
-		return node;
-	};
-
-	for (auto & [root_path, root_builder] : roots_map)
-	{
-		auto label = extract_filename(root_path);
-		if (label == "workspace")
-			label = "Workspace";
-
-		auto root_node = build_node(label, root_path, root_builder);
-		root_node.root_path = root_path;
-		root_node.folder_path = root_path;
-		model.roots.push_back(std::move(root_node));
-	}
-
-	std::sort(model.roots.begin(), model.roots.end(),
-		[](const sidebar_render_node_t & a, const sidebar_render_node_t & b)
-		{
-			if (a.label == "Workspace")
-				return true;
-
-			if (b.label == "Workspace")
-				return false;
-
-			return a.label < b.label;
-		});
-
-	return model;
-}

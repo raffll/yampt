@@ -79,7 +79,7 @@ void sidebar_widget_t::set_model(const sidebar_render_model_t & model)
             case file_type_t::user_dict:
                 child->setForeground(0, QColor(100, 160, 220));
                 break;
-            case file_type_t::lua_l10n:
+            case file_type_t::yaml_l10n:
                 child->setForeground(0, QColor(180, 120, 180));
                 break;
             }

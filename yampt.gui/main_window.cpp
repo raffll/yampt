@@ -1,9 +1,11 @@
 #include "main_window.hpp"
 #include "annotation_highlighter.hpp"
+#include "table_builder.hpp"
 #include "annotations_panel.hpp"
 #include "book_preview.hpp"
 #include "composite_highlighter.hpp"
 #include "dict_document.hpp"
+#include "plugin_document.hpp"
 #include "dict_selection_dialog.hpp"
 #include "editor_panel.hpp"
 #include "filter_tree.hpp"
@@ -55,13 +57,13 @@
 #include <algorithm>
 #include <filesystem>
 #include <map>
-#include <optional>
-#include <regex>
 #include <set>
 #include <unordered_map>
 
 main_window_t::main_window_t(QWidget * parent)
     : QMainWindow(parent)
+    , session_(current_codepage_)
+    , editor_controller_(history_manager_, validation_manager_, annotation_manager_)
 {
     setWindowTitle("yampt.gui");
     resize(1280, 720);
@@ -284,7 +286,7 @@ main_window_t::main_window_t(QWidget * parent)
     connect(bottom_panel_toggle_, &QAction::toggled, editor_panel_, &QWidget::setVisible);
     connect(whitespace_check_, &QCheckBox::toggled, this, &main_window_t::on_whitespace_toggled);
     connect(grammar_check_, &QCheckBox::toggled, this, [this]() {
-        if (current_row_ < 0)
+        if (editor_controller_.current_row() < 0)
             return;
 
         extra_sel_translation_.grammar = grammar_check_->isChecked()
@@ -358,206 +360,51 @@ main_window_t::main_window_t(QWidget * parent)
         {
             find_replace_dialog_ = new find_replace_dialog_t(this);
 
+            if (!find_replace_service_)
+                find_replace_service_ = new find_replace_service_t(*table_model_, active_doc_);
+
             connect(find_replace_dialog_, &find_replace_dialog_t::find_next_requested, this,
                 [this](const QString & query, bool case_sensitive, bool regex_mode) {
-                    if (query.isEmpty())
-                        return;
+                    auto result = find_replace_service_->find_next(
+                        query.toStdString(), case_sensitive, regex_mode, editor_controller_.current_row());
 
-                    if (!table_model_)
-                        return;
-
-                    const int count = table_model_->rowCount();
-                    if (count == 0)
-                        return;
-
-                    std::optional<std::regex> rx;
-                    if (regex_mode)
-                    {
-                        auto flags = std::regex_constants::ECMAScript;
-                        if (!case_sensitive)
-                            flags |= std::regex_constants::icase;
-
-                        try { rx.emplace(query.toStdString(), flags); }
-                        catch (...) { return; }
-                    }
-
-                    const auto q = case_sensitive ? query : query.toLower();
-
-                    for (int i = 1; i <= count; ++i)
-                    {
-                        const int row = (current_row_ + i) % count;
-                        const auto * data = table_model_->row_at(row);
-                        if (!data)
-                            continue;
-
-                        const auto & text = data->new_text;
-                        bool found = false;
-
-                        if (rx)
-                        {
-                            found = std::regex_search(text, *rx);
-                        }
-                        else
-                        {
-                            auto haystack = QString::fromStdString(text);
-                            if (!case_sensitive)
-                                haystack = haystack.toLower();
-
-                            found = haystack.contains(q);
-                        }
-
-                        if (found)
-                        {
-                            on_row_selected(row);
-                            return;
-                        }
-                    }
-
-                    statusBar()->showMessage("No match found", 3000);
+                    if (result.found)
+                        on_row_selected(result.row);
+                    else
+                        statusBar()->showMessage("No match found", 3000);
                 });
 
             connect(find_replace_dialog_, &find_replace_dialog_t::replace_requested, this,
                 [this](const QString & query, const QString & replacement, bool case_sensitive, bool regex_mode) {
-                    if (query.isEmpty())
+                    auto result = find_replace_service_->replace_current(
+                        query.toStdString(), replacement.toStdString(),
+                        case_sensitive, regex_mode, editor_controller_.current_row());
+
+                    if (!result.replaced)
                         return;
 
-                    if (current_row_ < 0)
-                        return;
-
-                    auto * slot = workspace_.get_active_slot();
-                    if (!slot)
-                        return;
-
-                    const auto * row_data = table_model_->row_at(current_row_);
-                    if (!row_data)
-                        return;
-
-                    auto it = slot->data.find(row_data->type);
-                    if (it == slot->data.end())
-                        return;
-
-                    if (row_data->chapter_index >= it->second.records.size())
-                        return;
-
-                    auto & entry = it->second.records[row_data->chapter_index];
-                    std::string result;
-
-                    if (regex_mode)
-                    {
-                        auto flags = std::regex_constants::ECMAScript;
-                        if (!case_sensitive)
-                            flags |= std::regex_constants::icase;
-
-                        try
-                        {
-                            std::regex rx(query.toStdString(), flags);
-                            result = std::regex_replace(entry.new_text, rx, replacement.toStdString());
-                        }
-                        catch (...) { return; }
-                    }
-                    else
-                    {
-                        auto q_new = QString::fromStdString(entry.new_text);
-                        auto idx = q_new.indexOf(query, 0, case_sensitive ? Qt::CaseSensitive : Qt::CaseInsensitive);
-                        if (idx < 0)
-                            return;
-
-                        q_new.replace(idx, query.length(), replacement);
-                        result = q_new.toStdString();
-                    }
-
-                    if (result == entry.new_text)
-                        return;
-
-                    entry.new_text = result;
-                    entry.status = "in_progress";
-                    slot->dirty = true;
-                    slot->modified_records.insert({row_data->type, row_data->chapter_index});
-                    set_dirty(true);
-
-                    table_model_->update_row(current_row_, entry.new_text, entry.status);
-                    load_record(current_row_);
+                    set_unsaved_changes(true);
+                    table_model_->update_row(editor_controller_.current_row(), result.new_text, result.status);
+                    load_record(editor_controller_.current_row());
 
                     emit find_replace_dialog_->find_next_requested(query, case_sensitive, regex_mode);
                 });
 
             connect(find_replace_dialog_, &find_replace_dialog_t::replace_all_requested, this,
                 [this](const QString & query, const QString & replacement, bool case_sensitive, bool regex_mode) {
-                    if (query.isEmpty())
-                        return;
+                    auto result = find_replace_service_->replace_all(
+                        query.toStdString(), replacement.toStdString(),
+                        case_sensitive, regex_mode);
 
-                    auto * slot = workspace_.get_active_slot();
-                    if (!slot)
-                        return;
-
-                    int replaced_count = 0;
-
-                    std::optional<std::regex> rx;
-                    if (regex_mode)
+                    if (result.count > 0)
                     {
-                        auto flags = std::regex_constants::ECMAScript;
-                        if (!case_sensitive)
-                            flags |= std::regex_constants::icase;
-
-                        try { rx.emplace(query.toStdString(), flags); }
-                        catch (...) { return; }
-                    }
-
-                    for (auto & [type, chapter] : slot->data)
-                    {
-                        for (size_t idx = 0; idx < chapter.records.size(); ++idx)
-                        {
-                            auto & entry = chapter.records[idx];
-                            std::string result;
-
-                            if (rx)
-                            {
-                                result = std::regex_replace(entry.new_text, *rx, replacement.toStdString());
-                            }
-                            else
-                            {
-                                auto q_text = QString::fromStdString(entry.new_text);
-                                auto q_query = query;
-                                int pos = 0;
-                                bool changed = false;
-
-                                while (true)
-                                {
-                                    int found = q_text.indexOf(q_query, pos, case_sensitive ? Qt::CaseSensitive : Qt::CaseInsensitive);
-                                    if (found < 0)
-                                        break;
-
-                                    q_text.replace(found, q_query.length(), replacement);
-                                    pos = found + replacement.length();
-                                    changed = true;
-                                }
-
-                                if (!changed)
-                                    continue;
-
-                                result = q_text.toStdString();
-                            }
-
-                            if (result == entry.new_text)
-                                continue;
-
-                            entry.new_text = result;
-                            entry.status = "in_progress";
-                            slot->dirty = true;
-                            slot->modified_records.insert({type, idx});
-                            ++replaced_count;
-                        }
-                    }
-
-                    if (replaced_count > 0)
-                    {
-                        set_dirty(true);
+                        set_unsaved_changes(true);
                         rebuild_table();
-                        if (current_row_ >= 0)
-                            load_record(current_row_);
+                        if (editor_controller_.current_row() >= 0)
+                            load_record(editor_controller_.current_row());
                     }
 
-                    statusBar()->showMessage(QString("Replaced in %1 entries").arg(replaced_count), 5000);
+                    statusBar()->showMessage(QString("Replaced in %1 entries").arg(result.count), 5000);
                 });
         }
 
@@ -584,7 +431,7 @@ main_window_t::main_window_t(QWidget * parent)
     connect(sidebar_, &sidebar_widget_t::save_as_requested, this, [this](const std::string & path) {
         commit_current_edit();
 
-        auto * yaml_doc = dynamic_cast<yaml_document_t*>(active_doc_.get());
+        auto * yaml_doc = dynamic_cast<yaml_document_t*>(active_doc_);
         if (!yaml_doc)
             return;
 
@@ -602,16 +449,10 @@ main_window_t::main_window_t(QWidget * parent)
         yaml_doc->export_to(save_path.toStdString());
         log_tab_->append_log("save as", "saved \"" + save_path.toStdString() + "\"\r\n");
 
-        auto * fe = file_list_.get(yaml_doc->path());
-        if (fe)
-        {
-            fe->dirty = false;
-            fe->has_tmp = false;
-            sidebar_->update_item_text(fe->path, derive_display_name(*fe));
-        }
+        update_sidebar_item(yaml_doc->path());
 
-        active_doc_.reset();
-        set_dirty(false);
+        switch_document(nullptr);
+        set_unsaved_changes(false);
     });
     connect(sidebar_, &sidebar_widget_t::unload_requested, this, &main_window_t::on_unload_requested);
     connect(sidebar_, &sidebar_widget_t::delete_requested, this, &main_window_t::on_delete_requested);
@@ -619,24 +460,25 @@ main_window_t::main_window_t(QWidget * parent)
         auto & roots = config_.workspace_roots;
         roots.erase(std::remove(roots.begin(), roots.end(), root_path), roots.end());
 
-        if (auto * dict_doc = dynamic_cast<dict_document_t*>(active_doc_.get()))
+        if (active_doc_)
         {
-            const auto * fe = file_list_.get(dict_doc->slot_path());
+            const auto * fe = file_list_.get(active_doc_->path());
             if (fe && fe->root_path == root_path)
-                active_doc_.reset();
+                switch_document(nullptr);
         }
 
-        for (int i = workspace_.slot_count() - 1; i >= 0; --i)
-        {
-            const auto * slot = workspace_.get_slot(i);
-            if (!slot)
-                continue;
+        session_.close_if([this, &root_path](const document_t & doc) {
+            const auto * fe = file_list_.get(doc.path());
+            if (fe && fe->root_path == root_path)
+            {
+                filter_states_.erase(doc.path());
+                return true;
+            }
+            return false;
+        });
 
-            const auto * entry = file_list_.get(slot->path);
-            if (entry && entry->root_path == root_path)
-                workspace_.unload_dict(i);
-        }
-
+        rebuild_annotations();
+        last_annotation_version_ = session_.dict_version();
         scan_workspace();
         save_config();
         update_watcher_paths();
@@ -660,34 +502,35 @@ main_window_t::main_window_t(QWidget * parent)
             std::replace(folder_norm.begin(), folder_norm.end(), '\\', '/');
             const auto & doc_path = active_doc_->path();
             if (doc_path.find(folder_norm + "/") == 0 || doc_path == folder_norm)
-                active_doc_.reset();
+                switch_document(nullptr);
         }
 
-        for (int i = workspace_.slot_count() - 1; i >= 0; --i)
-        {
-            const auto * slot = workspace_.get_slot(i);
-            if (!slot)
-                continue;
+        auto folder_norm = folder_path;
+        std::replace(folder_norm.begin(), folder_norm.end(), '\\', '/');
 
-            auto normalized = slot->path;
-            std::replace(normalized.begin(), normalized.end(), '\\', '/');
+        session_.close_if([this, &folder_norm](const document_t & doc) {
+            const auto & p = doc.path();
+            if (p.find(folder_norm + "/") == 0 || p == folder_norm)
+            {
+                filter_states_.erase(p);
+                return true;
+            }
+            return false;
+        });
 
-            auto folder_norm = folder_path;
-            std::replace(folder_norm.begin(), folder_norm.end(), '\\', '/');
-
-            if (normalized.find(folder_norm + "/") == 0 || normalized == folder_norm)
-                workspace_.unload_dict(i);
-        }
-
+        rebuild_annotations();
+        last_annotation_version_ = session_.dict_version();
         QDir(QString::fromStdString(folder_path)).removeRecursively();
         scan_workspace();
     });
 
     connect(table_view_, &record_table_view_t::row_selected, this, &main_window_t::on_row_selected);
     connect(table_view_, &record_table_view_t::batch_status_change_requested, this, [this](const QList<int> & rows, const QString & new_status) {
-        auto * slot = workspace_.get_active_slot();
-        if (!slot)
+        auto * dict_doc = dynamic_cast<dict_document_t *>(active_doc_);
+        if (!dict_doc)
             return;
+
+        auto & data = dict_doc->data_mut();
 
         for (int row : rows)
         {
@@ -695,32 +538,32 @@ main_window_t::main_window_t(QWidget * parent)
             if (!row_data)
                 continue;
 
-            auto it = slot->data.find(row_data->type);
-            if (it == slot->data.end())
+            auto it = data.find(row_data->type);
+            if (it == data.end())
                 continue;
 
-            if (row_data->chapter_index >= it->second.records.size())
+            if (row_data->record_index >= it->second.records.size())
                 continue;
 
-            it->second.records[row_data->chapter_index].status = new_status.toStdString();
+            it->second.records[row_data->record_index].status = new_status.toStdString();
             table_model_->update_row(row, row_data->new_text, new_status.toStdString());
         }
 
-        slot->dirty = true;
-        set_dirty(true);
+        dict_doc->set_dirty(true);
+        set_unsaved_changes(true);
         update_status_counts();
     });
 
     connect(editor_panel_, &editor_panel_t::text_changed, this, &main_window_t::on_translation_changed);
     connect(editor_panel_, &editor_panel_t::apply_clicked, this, [this]() {
-        if (current_row_ < 0)
+        if (editor_controller_.current_row() < 0)
             return;
 
         commit_current_edit();
 
         int row_count = table_model_->rowCount();
         int next_row = -1;
-        for (int i = current_row_ + 1; i < row_count; ++i)
+        for (int i = editor_controller_.current_row() + 1; i < row_count; ++i)
         {
             const auto * r = table_model_->row_at(i);
             if (r && r->status != "propagated")
@@ -732,12 +575,12 @@ main_window_t::main_window_t(QWidget * parent)
 
         if (next_row < 0)
         {
-            next_row = current_row_ + 1;
+            next_row = editor_controller_.current_row() + 1;
             if (next_row >= row_count)
                 next_row = row_count - 1;
         }
 
-        if (next_row >= 0 && next_row != current_row_)
+        if (next_row >= 0 && next_row != editor_controller_.current_row())
         {
             auto idx = table_model_->index(next_row, 0);
             table_view_->selectionModel()->setCurrentIndex(idx, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
@@ -750,14 +593,14 @@ main_window_t::main_window_t(QWidget * parent)
     });
 
     connect(editor_panel_->translation_editor(), &editor_text_edit_t::navigate_next, this, [this]() {
-        if (current_row_ < 0)
+        if (editor_controller_.current_row() < 0)
             return;
 
         commit_current_edit();
 
         int row_count = table_model_->rowCount();
         int next_row = -1;
-        for (int i = current_row_ + 1; i < row_count; ++i)
+        for (int i = editor_controller_.current_row() + 1; i < row_count; ++i)
         {
             const auto * r = table_model_->row_at(i);
             if (r && r->status != "propagated")
@@ -769,12 +612,12 @@ main_window_t::main_window_t(QWidget * parent)
 
         if (next_row < 0)
         {
-            next_row = current_row_ + 1;
+            next_row = editor_controller_.current_row() + 1;
             if (next_row >= row_count)
                 next_row = row_count - 1;
         }
 
-        if (next_row >= 0 && next_row != current_row_)
+        if (next_row >= 0 && next_row != editor_controller_.current_row())
         {
             auto idx = table_model_->index(next_row, 0);
             table_view_->selectionModel()->setCurrentIndex(idx, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
@@ -787,12 +630,12 @@ main_window_t::main_window_t(QWidget * parent)
     });
 
     connect(editor_panel_->translation_editor(), &editor_text_edit_t::navigate_prev, this, [this]() {
-        if (current_row_ <= 0)
+        if (editor_controller_.current_row() <= 0)
             return;
 
         commit_current_edit();
 
-        int prev_row = current_row_ - 1;
+        int prev_row = editor_controller_.current_row() - 1;
         auto idx = table_model_->index(prev_row, 0);
         table_view_->selectionModel()->setCurrentIndex(idx, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
         on_row_selected(prev_row);
@@ -810,33 +653,44 @@ main_window_t::main_window_t(QWidget * parent)
     connect(status_filter_bar_, &status_filter_bar_t::filters_changed, this, &main_window_t::on_status_filters_changed);
 
     connect(history_panel_, &history_panel_t::revert_requested, this, [this](size_t history_index) {
-        if (current_row_ < 0)
+        if (editor_controller_.current_row() < 0)
             return;
 
-        const auto * row_data = table_model_->row_at(current_row_);
+        const auto * row_data = table_model_->row_at(editor_controller_.current_row());
         if (!row_data)
             return;
 
-        auto * slot = workspace_.get_active_slot();
-        if (!slot)
+        auto * dict_doc = dynamic_cast<dict_document_t *>(active_doc_);
+        if (!dict_doc)
             return;
 
-        history_manager_.revert(*slot, row_data->type, row_data->key_text, history_index);
-        slot->dirty = true;
-        set_dirty(true);
+        auto & data = dict_doc->data_mut();
+        auto type_it = data.find(row_data->type);
+        if (type_it == data.end())
+            return;
 
-        const auto * updated_row = table_model_->row_at(current_row_);
-        if (updated_row)
-        {
-            auto type_it = slot->data.find(updated_row->type);
-            if (type_it != slot->data.end() && updated_row->chapter_index < type_it->second.records.size())
-            {
-                const auto & rec = type_it->second.records[updated_row->chapter_index];
-                table_model_->update_row(current_row_, rec.new_text, rec.status);
-            }
-        }
+        auto * record = type_it->second.find(row_data->key_text);
+        if (!record)
+            return;
 
-        load_record(current_row_);
+        auto index_it = type_it->second.index.find(row_data->key_text);
+        if (index_it == type_it->second.index.end())
+            return;
+
+        const auto history = history_manager_.get_history(row_data->type, row_data->key_text);
+        if (history_index >= history.size())
+            return;
+
+        std::string current_value = record->new_text;
+        record->new_text = history[history_index].value;
+        dict_doc->set_dirty(true);
+        dict_doc->modified_records_insert(row_data->type, index_it->second);
+        set_unsaved_changes(true);
+
+        history_manager_.record_change(row_data->type, row_data->key_text, current_value, record->new_text);
+
+        table_model_->update_row(editor_controller_.current_row(), record->new_text, record->status);
+        load_record(editor_controller_.current_row());
     });
 
     fs_watcher_ = new QFileSystemWatcher(this);
@@ -846,19 +700,27 @@ main_window_t::main_window_t(QWidget * parent)
     connect(rescan_timer_, &QTimer::timeout, this, [this]() {
         scan_workspace();
 
-        const auto * slot = workspace_.get_active_slot();
-        if (slot && !QFile::exists(QString::fromStdString(slot->path)))
+        if (active_doc_ && !QFile::exists(QString::fromStdString(active_doc_->path())))
         {
-            active_doc_.reset();
-            const int active = workspace_.get_active_index();
-            workspace_.unload_dict(active);
-            rebuild_table();
+            const auto path = active_doc_->path();
+            switch_document(nullptr);
+            session_.close(path);
+            filter_states_.erase(path);
+            rebuild_annotations();
+            last_annotation_version_ = session_.dict_version();
         }
     });
     connect(fs_watcher_, &QFileSystemWatcher::directoryChanged,
             rescan_timer_, qOverload<>(&QTimer::start));
 
     scan_spell_dictionaries();
+
+    table_display_ = std::make_unique<table_display_t>(
+        *filter_tree_, *status_filter_bar_, *table_model_,
+        *progress_label_, *active_file_label_,
+        *search_label_, *search_field_,
+        *case_sensitive_check_, *regex_check_,
+        *search_col_key_, *search_col_original_, *search_col_translation_);
 
     const auto config_path = QCoreApplication::applicationDirPath() + "/yampt_gui.ini";
     bool first_run = !QFile::exists(config_path);
@@ -881,13 +743,13 @@ main_window_t::main_window_t(QWidget * parent)
     }
 }
 
-void main_window_t::set_dirty(bool dirty)
+void main_window_t::set_unsaved_changes(bool dirty)
 {
-    if (dirty_ == dirty)
+    if (has_unsaved_changes_ == dirty)
         return;
 
-    dirty_ = dirty;
-    setWindowTitle(dirty_ ? "yampt.gui *" : "yampt.gui");
+    has_unsaved_changes_ = dirty;
+    setWindowTitle(has_unsaved_changes_ ? "yampt.gui *" : "yampt.gui");
 }
 
 void main_window_t::on_save()
@@ -902,17 +764,12 @@ void main_window_t::on_save()
 
     active_doc_->save();
 
-    auto * fe = file_list_.get(active_doc_->path());
-    if (fe)
-    {
-        fe->dirty = false;
-        sidebar_->update_item_text(fe->path, derive_display_name(*fe));
-    }
+    update_sidebar_item(active_doc_->path());
 
     log_tab_->append_log("save", "saved \"" + active_doc_->path() + "\"\r\n");
 
-    if (!workspace_.has_any_unsaved())
-        set_dirty(false);
+    if (!session_.has_any_unsaved())
+        set_unsaved_changes(false);
 }
 
 void main_window_t::on_save_all()
@@ -920,63 +777,19 @@ void main_window_t::on_save_all()
     commit_current_edit();
 
     std::string log_msg;
-    for (int i = 0; i < workspace_.slot_count(); ++i)
-    {
-        const auto * slot = workspace_.get_slot(i);
-        if (slot && slot->dirty)
-        {
-            save_dict_encoded(i);
+    for (auto * doc : session_.all_dirty())
+        log_msg += "saved \"" + doc->path() + "\"\r\n";
 
-            auto * fe = file_list_.get(slot->path);
-            if (fe)
-                sidebar_->update_item_text(fe->path, derive_display_name(*fe));
+    session_.save_all();
 
-            log_msg += "saved \"" + slot->path + "\"\r\n";
-        }
-    }
+    for (auto * doc : session_.all())
+        update_sidebar_item(doc->path());
 
     if (!log_msg.empty())
         log_tab_->append_log("save all", log_msg);
 
-    if (!workspace_.has_any_unsaved())
-        set_dirty(false);
-}
-
-void main_window_t::on_unload_slot(int index)
-{
-    auto * slot = workspace_.get_slot(index);
-    if (!slot)
-        return;
-
-    if (slot->dirty)
-    {
-        auto answer = QMessageBox::question(
-            this, "Unsaved Changes",
-            "This dictionary has unsaved changes. Save before unloading?",
-            QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
-
-        if (answer == QMessageBox::Cancel)
-            return;
-
-        if (answer == QMessageBox::Save)
-            save_dict_encoded(index);
-    }
-
-    auto slot_path = slot->path;
-    std::replace(slot_path.begin(), slot_path.end(), '\\', '/');
-
-    if (active_doc_ && active_doc_->path() == slot_path)
-        active_doc_.reset();
-
-    workspace_.unload_dict(index);
-
-    std::vector<dict_source_t> sources;
-    for (const auto & dict_slot_ref : workspace_.get_all_slots())
-        sources.push_back({&dict_slot_ref.data, dict_slot_ref.path});
-    annotation_manager_.rebuild(sources);
-
-    rebuild_sidebar();
-    rebuild_table();
+    if (!session_.has_any_unsaved())
+        set_unsaved_changes(false);
 }
 
 void main_window_t::on_find()
@@ -1002,7 +815,7 @@ void main_window_t::on_next_search()
 
     for (int i = 1; i <= count; ++i)
     {
-        const int row = (current_row_ + i) % count;
+        const int row = (editor_controller_.current_row() + i) % count;
         const auto * data = table_model_->row_at(row);
         if (!data)
             continue;
@@ -1043,7 +856,7 @@ void main_window_t::on_prev_search()
 
     for (int i = 1; i <= count; ++i)
     {
-        const int row = (current_row_ - i + count) % count;
+        const int row = (editor_controller_.current_row() - i + count) % count;
         const auto * data = table_model_->row_at(row);
         if (!data)
             continue;
@@ -1069,10 +882,10 @@ void main_window_t::on_prev_search()
 
 void main_window_t::on_refresh()
 {
-    if (current_row_ < 0)
+    if (editor_controller_.current_row() < 0)
         return;
 
-    load_record(current_row_);
+    load_record(editor_controller_.current_row());
 }
 
 void main_window_t::on_escape()
@@ -1119,21 +932,56 @@ void main_window_t::on_status_filters_changed()
     rebuild_table();
 }
 
-static std::string extract_info_prefix(const std::string & key_text)
+void main_window_t::clear_editor_panels()
 {
-    size_t first = key_text.find('^');
-    if (first == std::string::npos)
-        return {};
+    editor_panel_->original_view()->clear();
+    editor_panel_->translation_editor()->clear();
+    editor_panel_->clear_adapted_from();
+    validation_indicator_->clear();
+    annotations_panel_->clear();
+    history_panel_->clear();
+    book_preview_->clear();
+}
 
-    size_t second = key_text.find('^', first + 1);
-    if (second == std::string::npos)
-        return {};
+void main_window_t::switch_document(document_t * new_doc)
+{
+    commit_current_edit();
+    save_current_filter_state();
 
-    size_t third = key_text.find('^', second + 1);
-    if (third == std::string::npos)
-        return key_text;
+    active_doc_ = new_doc;
+    editor_controller_.set_current_row(-1);
 
-    return key_text.substr(0, third);
+    if (!active_doc_)
+    {
+        rebuild_table();
+        clear_editor_panels();
+        return;
+    }
+
+    restore_filter_state(active_doc_->path());
+
+    auto * dict_doc = dynamic_cast<dict_document_t *>(active_doc_);
+    if (dict_doc)
+    {
+        filter_tree_->set_display_mode(filter_tree_t::display_mode_t::full);
+        if (session_.dict_version() != last_annotation_version_)
+        {
+            rebuild_annotations();
+            last_annotation_version_ = session_.dict_version();
+        }
+    }
+    else if (dynamic_cast<plugin_document_t *>(active_doc_))
+    {
+        filter_tree_->set_display_mode(filter_tree_t::display_mode_t::empty);
+        filter_tree_->setEnabled(false);
+    }
+    else
+    {
+        filter_tree_->set_display_mode(filter_tree_t::display_mode_t::all_only);
+    }
+
+    rebuild_table();
+    clear_editor_panels();
 }
 
 void main_window_t::rebuild_table()
@@ -1141,38 +989,16 @@ void main_window_t::rebuild_table()
     if (!table_model_)
         return;
 
-    auto * dict_doc = dynamic_cast<dict_document_t*>(active_doc_.get());
+    if (!active_doc_)
+    {
+        table_display_->clear();
+        editor_controller_.set_current_row(-1);
+        return;
+    }
+
+    auto * dict_doc = dynamic_cast<dict_document_t*>(active_doc_);
     if (!dict_doc)
     {
-        if (!active_doc_)
-        {
-            table_model_->rebuild({});
-            progress_label_->clear();
-            active_file_label_->clear();
-            filter_tree_->setEnabled(false);
-            status_filter_bar_->set_dict_mode(status_filter_bar_t::dict_mode_t::none);
-            search_label_->setEnabled(false);
-            search_field_->setEnabled(false);
-            case_sensitive_check_->setEnabled(false);
-            regex_check_->setEnabled(false);
-            search_col_key_->setEnabled(false);
-            search_col_original_->setEnabled(false);
-            search_col_translation_->setEnabled(false);
-            return;
-        }
-
-        active_file_label_->setText(QString::fromStdString(active_doc_->path()));
-        filter_tree_->set_display_mode(filter_tree_t::display_mode_t::all_only);
-        filter_tree_->setEnabled(true);
-        status_filter_bar_->set_dict_mode(status_filter_bar_t::dict_mode_t::user);
-        search_label_->setEnabled(true);
-        search_field_->setEnabled(true);
-        case_sensitive_check_->setEnabled(true);
-        regex_check_->setEnabled(true);
-        search_col_key_->setEnabled(true);
-        search_col_original_->setEnabled(true);
-        search_col_translation_->setEnabled(true);
-
         const auto raw_rows = active_doc_->build_rows();
         std::vector<table_row_t> rows;
         for (const auto & row : raw_rows)
@@ -1186,321 +1012,25 @@ void main_window_t::rebuild_table()
             rows.push_back(row);
         }
 
-        table_model_->rebuild(std::move(rows));
-        current_row_ = -1;
-
         int total = active_doc_->total_count();
         int translated = active_doc_->translated_count();
-        if (total > 0)
-        {
-            int pct = translated * 100 / total;
-            int shown = table_model_->rowCount();
-            progress_label_->setText(QString("%1 / %2 (%3%) | %4 shown")
-                .arg(translated).arg(total).arg(pct).arg(shown));
-        }
-        else
-        {
-            progress_label_->clear();
-        }
-
+        table_display_->apply_yaml(std::move(rows), total, translated, active_doc_->path());
+        editor_controller_.set_current_row(-1);
         return;
     }
 
-    const auto * slot = dict_doc->slot();
-    if (!slot)
-    {
-        table_model_->rebuild({});
-        progress_label_->clear();
-        active_file_label_->clear();
-        return;
-    }
+    auto result = build_filtered_rows(
+        dict_doc->data(), dict_doc->kind(), type_filter_,
+        filter_tree_->get_active_sub_types(),
+        status_filter_, search_engine_, type_filter_solo_);
 
-    int active_idx = workspace_.get_active_index();
-    if (active_idx >= 0 && workspace_.is_base_slot(active_idx))
-        status_filter_bar_->set_dict_mode(status_filter_bar_t::dict_mode_t::base);
-    else
-        status_filter_bar_->set_dict_mode(status_filter_bar_t::dict_mode_t::user);
-
-    filter_tree_->set_display_mode(filter_tree_t::display_mode_t::full);
-    filter_tree_->setEnabled(true);
-    active_file_label_->setText(QString::fromStdString(slot->path));
-    search_label_->setEnabled(true);
-    search_field_->setEnabled(true);
-    case_sensitive_check_->setEnabled(true);
-    regex_check_->setEnabled(true);
-    search_col_key_->setEnabled(true);
-    search_col_original_->setEnabled(true);
-    search_col_translation_->setEnabled(true);
-
-    const auto active_sub_types = filter_tree_->get_active_sub_types();
-    const size_t total_sub_types = 5 + 23 + 3 + 2;
-    const bool has_sub_type_filter = active_sub_types.size() < total_sub_types;
-
-    static const std::map<std::string, std::string> sub_type_to_prefix = {
-        {"Topic", "T"}, {"Voice", "V"}, {"Greeting", "G"}, {"Persuasion", "P"}, {"Journal", "J"},
-        {"ACTI", "ACTI"}, {"ALCH", "ALCH"}, {"APPA", "APPA"}, {"ARMO", "ARMO"}, {"BOOK", "BOOK"},
-        {"BSGN", "BSGN"}, {"CLAS", "CLAS"}, {"CLOT", "CLOT"}, {"CONT", "CONT"}, {"CREA", "CREA"},
-        {"DOOR", "DOOR"}, {"FACT", "FACT"}, {"INGR", "INGR"}, {"LIGH", "LIGH"}, {"LOCK", "LOCK"},
-        {"MISC", "MISC"}, {"NPC_", "NPC_"}, {"PROB", "PROB"}, {"RACE", "RACE"}, {"REGN", "REGN"},
-        {"REPA", "REPA"}, {"SPEL", "SPEL"}, {"WEAP", "WEAP"},
-        {"Birthsigns", "BSGN"}, {"Classes", "CLAS"}, {"Races", "RACE"},
-        {"Skills", "SKIL"}, {"Magic Effects", "MGEF"},
-    };
-
-    static const std::map<std::pair<tools_t::rec_type_t, std::string>, std::string> prefix_to_sub_type = {
-        {{tools_t::rec_type_t::info, "T"}, "Topic"},
-        {{tools_t::rec_type_t::info, "V"}, "Voice"},
-        {{tools_t::rec_type_t::info, "G"}, "Greeting"},
-        {{tools_t::rec_type_t::info, "P"}, "Persuasion"},
-        {{tools_t::rec_type_t::info, "J"}, "Journal"},
-        {{tools_t::rec_type_t::bnam, "T"}, "Topic"},
-        {{tools_t::rec_type_t::bnam, "V"}, "Voice"},
-        {{tools_t::rec_type_t::bnam, "G"}, "Greeting"},
-        {{tools_t::rec_type_t::bnam, "P"}, "Persuasion"},
-        {{tools_t::rec_type_t::bnam, "J"}, "Journal"},
-        {{tools_t::rec_type_t::fnam, "ACTI"}, "ACTI"}, {{tools_t::rec_type_t::fnam, "ALCH"}, "ALCH"},
-        {{tools_t::rec_type_t::fnam, "APPA"}, "APPA"}, {{tools_t::rec_type_t::fnam, "ARMO"}, "ARMO"},
-        {{tools_t::rec_type_t::fnam, "BOOK"}, "BOOK"}, {{tools_t::rec_type_t::fnam, "BSGN"}, "BSGN"},
-        {{tools_t::rec_type_t::fnam, "CLAS"}, "CLAS"}, {{tools_t::rec_type_t::fnam, "CLOT"}, "CLOT"},
-        {{tools_t::rec_type_t::fnam, "CONT"}, "CONT"}, {{tools_t::rec_type_t::fnam, "CREA"}, "CREA"},
-        {{tools_t::rec_type_t::fnam, "DOOR"}, "DOOR"}, {{tools_t::rec_type_t::fnam, "FACT"}, "FACT"},
-        {{tools_t::rec_type_t::fnam, "INGR"}, "INGR"}, {{tools_t::rec_type_t::fnam, "LIGH"}, "LIGH"},
-        {{tools_t::rec_type_t::fnam, "LOCK"}, "LOCK"}, {{tools_t::rec_type_t::fnam, "MISC"}, "MISC"},
-        {{tools_t::rec_type_t::fnam, "NPC_"}, "NPC_"}, {{tools_t::rec_type_t::fnam, "PROB"}, "PROB"},
-        {{tools_t::rec_type_t::fnam, "RACE"}, "RACE"}, {{tools_t::rec_type_t::fnam, "REGN"}, "REGN"},
-        {{tools_t::rec_type_t::fnam, "REPA"}, "REPA"}, {{tools_t::rec_type_t::fnam, "SPEL"}, "SPEL"},
-        {{tools_t::rec_type_t::fnam, "WEAP"}, "WEAP"},
-        {{tools_t::rec_type_t::desc, "BSGN"}, "Birthsigns"},
-        {{tools_t::rec_type_t::desc, "CLAS"}, "Classes"},
-        {{tools_t::rec_type_t::desc, "RACE"}, "Races"},
-        {{tools_t::rec_type_t::indx, "SKIL"}, "Skills"},
-        {{tools_t::rec_type_t::indx, "MGEF"}, "Magic Effects"},
-    };
-
-    static const std::set<std::string> done_statuses_user = {
-        "translated"
-    };
-
-    static const std::set<std::string> done_statuses_base = {
-        "matched", "fingerprint", "coords", "heuristic", "exact",
-        "info", "wilderness", "region"
-    };
-
-    const bool is_base = workspace_.is_base_slot(workspace_.get_active_index());
-    const auto & done_statuses = is_base ? done_statuses_base : done_statuses_user;
-
-    std::vector<table_row_t> rows;
-    std::map<tools_t::rec_type_t, size_t> type_counts;
-    std::map<tools_t::rec_type_t, size_t> translated_counts;
-    std::map<std::string, size_t> status_counts;
-    std::map<std::string, size_t> filtered_status_counts;
-    std::map<std::string, size_t> sub_type_counts;
-    std::map<std::string, size_t> sub_type_translated_counts;
-
-    std::unordered_multimap<std::string, size_t> bnam_prefix_map;
-    std::set<size_t> consumed_bnams;
-
-    auto bnam_it = slot->data.find(tools_t::rec_type_t::bnam);
-    if (bnam_it != slot->data.end())
-    {
-        for (size_t i = 0; i < bnam_it->second.records.size(); ++i)
-        {
-            const auto & entry = bnam_it->second.records[i];
-            auto prefix = extract_info_prefix(entry.key_text);
-            if (!prefix.empty())
-                bnam_prefix_map.emplace(prefix, i);
-        }
-    }
-
-    const bool info_in_filter = type_filter_.empty() || type_filter_.count(tools_t::rec_type_t::info) > 0;
-
-    for (const auto & [type, chapter] : slot->data)
-    {
-        for (size_t i = 0; i < chapter.records.size(); ++i)
-        {
-            const auto & entry = chapter.records[i];
-            type_counts[type]++;
-            status_counts[entry.status]++;
-
-            if (type == tools_t::rec_type_t::info || type == tools_t::rec_type_t::bnam ||
-                type == tools_t::rec_type_t::fnam || type == tools_t::rec_type_t::desc ||
-                type == tools_t::rec_type_t::indx)
-            {
-                auto caret_pos = entry.key_text.find('^');
-                if (caret_pos != std::string::npos && caret_pos > 0)
-                {
-                    auto prefix = entry.key_text.substr(0, caret_pos);
-                    auto p2s_it = prefix_to_sub_type.find({type, prefix});
-                    if (p2s_it != prefix_to_sub_type.end())
-                    {
-                        sub_type_counts[p2s_it->second]++;
-                        if (done_statuses.count(entry.status))
-                            sub_type_translated_counts[p2s_it->second]++;
-                    }
-                }
-            }
-
-            if (done_statuses.count(entry.status))
-                translated_counts[type]++;
-
-            if (type == tools_t::rec_type_t::bnam && consumed_bnams.count(i) > 0)
-                continue;
-
-            if (!type_filter_.empty() && type_filter_.count(type) == 0)
-                continue;
-
-            if (has_sub_type_filter && (type == tools_t::rec_type_t::info || type == tools_t::rec_type_t::bnam ||
-                type == tools_t::rec_type_t::fnam || type == tools_t::rec_type_t::desc || type == tools_t::rec_type_t::indx))
-            {
-                bool sub_match = false;
-                auto caret_pos = entry.key_text.find('^');
-                if (caret_pos != std::string::npos && caret_pos > 0)
-                {
-                    auto prefix = entry.key_text.substr(0, caret_pos);
-                    for (const auto & sub : active_sub_types)
-                    {
-                        auto it = sub_type_to_prefix.find(sub);
-                        if (it != sub_type_to_prefix.end() && it->second == prefix)
-                        {
-                            sub_match = true;
-                            break;
-                        }
-                    }
-                }
-
-                if (!sub_match)
-                    continue;
-            }
-
-            {
-                table_row_t tmp_row;
-                tmp_row.type = type;
-                tmp_row.key_text = entry.key_text;
-                tmp_row.old_text = entry.old_text;
-                tmp_row.new_text = entry.new_text;
-                tmp_row.status = entry.status;
-                tmp_row.chapter_index = i;
-
-                if (!search_engine_.has_query() || search_engine_.matches(tmp_row))
-                    filtered_status_counts[entry.status]++;
-            }
-
-            if (!status_filter_.empty() && status_filter_.count(entry.status) == 0)
-                continue;
-
-            table_row_t row;
-            row.type = type;
-            row.key_text = entry.key_text;
-            row.old_text = entry.old_text;
-            row.new_text = entry.new_text;
-            row.status = entry.status;
-            row.chapter_index = i;
-
-            if (search_engine_.has_query() && !search_engine_.matches(row))
-                continue;
-
-            rows.push_back(std::move(row));
-
-            if (type == tools_t::rec_type_t::info && info_in_filter && bnam_it != slot->data.end())
-            {
-                auto info_prefix = extract_info_prefix(entry.key_text);
-                if (info_prefix.empty())
-                    continue;
-
-                auto [begin, end] = bnam_prefix_map.equal_range(info_prefix);
-                for (auto it = begin; it != end; ++it)
-                {
-                    const auto & bnam_entry = bnam_it->second.records[it->second];
-
-                    {
-                        table_row_t tmp_child;
-                        tmp_child.type = tools_t::rec_type_t::bnam;
-                        tmp_child.key_text = bnam_entry.key_text;
-                        tmp_child.old_text = bnam_entry.old_text;
-                        tmp_child.new_text = bnam_entry.new_text;
-                        tmp_child.status = bnam_entry.status;
-                        tmp_child.chapter_index = it->second;
-                        tmp_child.is_child = true;
-
-                        if (!search_engine_.has_query() || search_engine_.matches(tmp_child))
-                            filtered_status_counts[bnam_entry.status]++;
-                    }
-
-                    if (!status_filter_.empty() && status_filter_.count(bnam_entry.status) == 0)
-                        continue;
-
-                    table_row_t child;
-                    child.type = tools_t::rec_type_t::bnam;
-                    child.key_text = bnam_entry.key_text;
-                    child.old_text = bnam_entry.old_text;
-                    child.new_text = bnam_entry.new_text;
-                    child.status = bnam_entry.status;
-                    child.chapter_index = it->second;
-                    child.is_child = true;
-
-                    if (search_engine_.has_query() && !search_engine_.matches(child))
-                        continue;
-
-                    rows.push_back(std::move(child));
-                    consumed_bnams.insert(it->second);
-                }
-            }
-        }
-    }
-
-    table_model_->rebuild(std::move(rows));
-    current_row_ = -1;
-
-    std::map<std::string, size_t> total_status_counts;
-    for (const auto & [type, chapter] : slot->data)
-    {
-        for (const auto & rec : chapter.records)
-            total_status_counts[rec.status]++;
-    }
-
-    size_t total = 0;
-    size_t total_translated = 0;
-    for (const auto & [t, c] : type_counts)
-        total += c;
-    for (const auto & [t, c] : translated_counts)
-        total_translated += c;
-
-    filter_tree_->update_counts(type_counts, translated_counts);
-    filter_tree_->update_sub_type_counts(sub_type_counts, sub_type_translated_counts);
-    filter_tree_->set_total_count(total_translated, total);
-    status_filter_bar_->update_counts(filtered_status_counts, total_status_counts);
-
-    size_t progress_translated = 0;
-    size_t progress_total = 0;
-    for (const auto & [type, chapter] : slot->data)
-    {
-        if (!type_filter_.empty() && type_filter_.count(type) == 0)
-            continue;
-
-        for (const auto & entry : chapter.records)
-        {
-            progress_total++;
-            if (done_statuses.count(entry.status))
-                progress_translated++;
-        }
-    }
-
-    if (progress_total > 0)
-    {
-        int pct = static_cast<int>(progress_translated * 100 / progress_total);
-        int shown = table_model_->rowCount();
-        progress_label_->setText(QString("%1 / %2 (%3%) | %4 shown")
-            .arg(progress_translated).arg(progress_total).arg(pct).arg(shown));
-    }
-    else
-    {
-        progress_label_->clear();
-    }
+    table_display_->apply(std::move(result), dict_doc->path(), dict_doc->kind());
+    editor_controller_.set_current_row(-1);
 }
 
 void main_window_t::on_row_selected(int row)
 {
-    if (row == current_row_)
+    if (row == editor_controller_.current_row())
         return;
 
     commit_current_edit();
@@ -1509,53 +1039,46 @@ void main_window_t::on_row_selected(int row)
 
 void main_window_t::on_translation_changed()
 {
-    if (loading_record_)
+    if (editor_controller_.is_loading())
         return;
 
-    if (current_row_ < 0)
+    if (editor_controller_.current_row() < 0)
         return;
 
     if (!active_doc_)
         return;
 
-    auto * yaml_doc = dynamic_cast<yaml_document_t*>(active_doc_.get());
+    auto * yaml_doc = dynamic_cast<yaml_document_t*>(active_doc_);
     if (yaml_doc)
     {
-        auto * fe = file_list_.get(yaml_doc->path());
-        if (fe && !fe->dirty)
+        if (!yaml_doc->is_dirty())
         {
-            fe->dirty = true;
-            fe->has_tmp = true;
-            sidebar_->update_item_text(fe->path, derive_display_name(*fe));
-            set_dirty(true);
+            yaml_doc->set_dirty(true);
+            update_sidebar_item(yaml_doc->path());
+            set_unsaved_changes(true);
         }
 
         return;
     }
 
-    auto * dict_doc = dynamic_cast<dict_document_t*>(active_doc_.get());
+    auto * dict_doc = dynamic_cast<dict_document_t*>(active_doc_);
     if (dict_doc)
     {
-        auto * slot = dict_doc->slot();
-        if (slot && !slot->dirty)
+        if (!dict_doc->is_dirty())
         {
-            slot->dirty = true;
-            file_list_.set_dirty(slot->path, true);
-
-            auto * fe = file_list_.get(slot->path);
-            if (fe)
-                sidebar_->update_item_text(fe->path, derive_display_name(*fe));
+            dict_doc->set_dirty(true);
+            update_sidebar_item(dict_doc->path());
         }
     }
 
-    set_dirty(true);
+    set_unsaved_changes(true);
 
     update_validation();
 
-    if (current_row_ < 0)
+    if (editor_controller_.current_row() < 0)
         return;
 
-    const auto * row_data = table_model_->row_at(current_row_);
+    const auto * row_data = table_model_->row_at(editor_controller_.current_row());
     if (!row_data)
         return;
 
@@ -1644,52 +1167,12 @@ void main_window_t::on_translation_changed()
     }
 }
 
-int main_window_t::propagate_translation(const std::string & old_text, const std::string & new_text)
-{
-    auto * slot = workspace_.get_active_slot();
-    if (!slot)
-        return 0;
-
-    auto trimmed_source = old_text;
-    while (!trimmed_source.empty() && (trimmed_source.front() == ' ' || trimmed_source.front() == '\t'))
-        trimmed_source.erase(trimmed_source.begin());
-    while (!trimmed_source.empty() && (trimmed_source.back() == ' ' || trimmed_source.back() == '\t'))
-        trimmed_source.pop_back();
-
-    int count = 0;
-    for (auto & [type, chapter] : slot->data)
-    {
-        for (size_t i = 0; i < chapter.records.size(); ++i)
-        {
-            auto & entry = chapter.records[i];
-
-            auto trimmed = entry.old_text;
-            while (!trimmed.empty() && (trimmed.front() == ' ' || trimmed.front() == '\t'))
-                trimmed.erase(trimmed.begin());
-            while (!trimmed.empty() && (trimmed.back() == ' ' || trimmed.back() == '\t'))
-                trimmed.pop_back();
-
-            if (trimmed != trimmed_source)
-                continue;
-
-            if (entry.new_text == new_text)
-                continue;
-
-            entry.new_text = new_text;
-            entry.status = "propagated";
-            ++count;
-        }
-    }
-
-    return count;
-}
-
 void main_window_t::commit_current_edit()
 {
-    if (current_row_ < 0)
+    if (editor_controller_.current_row() < 0)
         return;
 
-    if (loading_record_)
+    if (editor_controller_.is_loading())
         return;
 
     if (!editor_panel_)
@@ -1702,10 +1185,10 @@ void main_window_t::commit_current_edit()
         return;
 
     const auto & current_text = editor_panel_->translation_editor()->toPlainText();
-    if (current_text == loaded_text_)
+    if (current_text == editor_controller_.loaded_text())
         return;
 
-    const auto * row_data = table_model_->row_at(current_row_);
+    const auto * row_data = table_model_->row_at(editor_controller_.current_row());
     if (!row_data)
         return;
 
@@ -1731,93 +1214,72 @@ void main_window_t::commit_current_edit()
         new_text_str = current_text.toStdString();
     }
 
-    auto * dict_doc = dynamic_cast<dict_document_t*>(active_doc_.get());
+    auto * dict_doc = dynamic_cast<dict_document_t*>(active_doc_);
     if (dict_doc)
     {
-        auto * slot = dict_doc->slot();
-        auto it = slot->data.find(row_data->type);
-        if (it == slot->data.end() || row_data->chapter_index >= it->second.records.size())
+        const auto result = editor_controller_.commit(*dict_doc, *row_data, new_text_str);
+        if (!result.success)
             return;
 
-        history_manager_.record_change(row_data->type, row_data->key_text,
-                                       loaded_text_.toStdString(), new_text_str);
-
-        const auto validation = validation_manager_.validate(row_data->type, new_text_str);
-        const std::string commit_status =
-            (validation.level == validation_level_t::error) ? "error" : "in_progress";
-
-        active_doc_->commit_edit(row_data->type, row_data->chapter_index, new_text_str);
-        it->second.records[row_data->chapter_index].status = commit_status;
-        slot->modified_records.insert({row_data->type, row_data->chapter_index});
-
-        annotation_manager_.update_term(row_data->type,
-            it->second.records[row_data->chapter_index].old_text, new_text_str);
-
-        if (new_text_str != it->second.records[row_data->chapter_index].old_text)
+        if (result.propagated_count > 0)
         {
-            int propagated = propagate_translation(
-                it->second.records[row_data->chapter_index].old_text, new_text_str);
-            if (propagated > 0)
+            statusBar()->showMessage(QString("Propagated to %1 entries").arg(result.propagated_count), 5000);
+
+            table_model_->update_row(editor_controller_.current_row(), result.new_text, result.status);
+
+            auto & data = dict_doc->data_mut();
+            for (int i = 0; i < table_model_->rowCount(); ++i)
             {
-                it->second.records[row_data->chapter_index].status = "propagated";
-                slot->dirty = true;
-                statusBar()->showMessage(QString("Propagated to %1 entries").arg(propagated), 5000);
+                if (i == editor_controller_.current_row())
+                    continue;
 
-                table_model_->update_row(current_row_, new_text_str, "propagated");
+                const auto * r = table_model_->row_at(i);
+                if (!r)
+                    continue;
 
-                for (int i = 0; i < table_model_->rowCount(); ++i)
-                {
-                    if (i == current_row_)
-                        continue;
+                auto chap_it = data.find(r->type);
+                if (chap_it == data.end())
+                    continue;
 
-                    const auto * r = table_model_->row_at(i);
-                    if (!r)
-                        continue;
+                if (r->record_index >= chap_it->second.records.size())
+                    continue;
 
-                    auto chap_it = slot->data.find(r->type);
-                    if (chap_it == slot->data.end())
-                        continue;
-
-                    if (r->chapter_index >= chap_it->second.records.size())
-                        continue;
-
-                    const auto & rec = chap_it->second.records[r->chapter_index];
-                    if (rec.new_text != r->new_text || rec.status != r->status)
-                        table_model_->update_row(i, rec.new_text, rec.status);
-                }
-
-                set_dirty(active_doc_->is_dirty());
-                loaded_text_ = current_text;
-                update_status_counts();
-                return;
+                const auto & rec = chap_it->second.records[r->record_index];
+                if (rec.new_text != r->new_text || rec.status != r->status)
+                    table_model_->update_row(i, rec.new_text, rec.status);
             }
+
+            set_unsaved_changes(active_doc_->is_dirty());
+            editor_controller_.set_loaded_text(current_text);
+            update_status_counts();
+            return;
         }
 
-        table_model_->update_row(current_row_, new_text_str, commit_status);
+        table_model_->update_row(editor_controller_.current_row(), result.new_text, result.status);
     }
     else
     {
-        active_doc_->commit_edit(row_data->type, row_data->chapter_index, new_text_str);
-        table_model_->update_row(current_row_, new_text_str, "in_progress");
+        active_doc_->commit_edit(row_data->type, row_data->record_index, new_text_str);
+        table_model_->update_row(editor_controller_.current_row(), new_text_str, "in_progress");
 
-        auto * yaml_doc = dynamic_cast<yaml_document_t*>(active_doc_.get());
+        auto * yaml_doc = dynamic_cast<yaml_document_t*>(active_doc_);
         if (yaml_doc)
             yaml_doc->save_tmp();
     }
 
-    set_dirty(active_doc_->is_dirty());
-    loaded_text_ = current_text;
+    set_unsaved_changes(active_doc_->is_dirty());
+    editor_controller_.set_loaded_text(current_text);
     update_status_counts();
 }
 
 void main_window_t::load_record(int row)
 {
-    loading_record_ = true;
+    editor_controller_.set_loading(true);
 
     if (!table_model_ || !editor_panel_)
     {
-        current_row_ = -1;
-        loading_record_ = false;
+        editor_controller_.set_current_row(-1);
+        editor_controller_.set_loading(false);
         return;
     }
 
@@ -1830,10 +1292,14 @@ void main_window_t::load_record(int row)
         annotations_panel_->clear();
         history_panel_->clear();
         book_preview_->clear();
-        current_row_ = -1;
-        loading_record_ = false;
+        editor_controller_.set_current_row(-1);
+        editor_controller_.set_loading(false);
         return;
     }
+
+    const auto load_result = active_doc_
+        ? editor_controller_.load(*active_doc_, *row_data)
+        : editor_load_result_t{};
 
     if (row_data->type == tools_t::rec_type_t::sctx || row_data->type == tools_t::rec_type_t::bnam)
     {
@@ -1865,8 +1331,7 @@ void main_window_t::load_record(int row)
         editor_panel_->translation_editor()->set_block_multiline(block);
     }
 
-    const bool is_base = active_doc_ ? active_doc_->is_read_only() : false;
-    editor_panel_->translation_editor()->setReadOnly(is_base);
+    editor_panel_->translation_editor()->setReadOnly(load_result.is_read_only);
 
     hl_original_->set_record_type(row_data->type);
     hl_adapted_->set_record_type(row_data->type);
@@ -1880,32 +1345,14 @@ void main_window_t::load_record(int row)
     else
         book_preview_->clear();
 
-    const auto annotations = annotation_manager_.annotate(row_data->old_text, row_data->type);
+    const auto & annotations = load_result.annotations;
 
-    std::string speaker_name;
-    std::string gender_str;
-    std::string enchantment_str;
-    std::string adapted_from_str;
+    annotations_panel_->update_annotations(annotations, load_result.speaker_name,
+        load_result.gender, load_result.enchantment);
 
-    auto * active_slot = workspace_.get_active_slot();
-    if (active_slot)
+    if ((row_data->status == "adapted" || row_data->status == "changed") && !load_result.adapted_from.empty())
     {
-        auto it = active_slot->data.find(row_data->type);
-        if (it != active_slot->data.end() && row_data->chapter_index < it->second.records.size())
-        {
-            const auto & entry = it->second.records[row_data->chapter_index];
-            speaker_name = entry.speaker_name;
-            gender_str = entry.gender;
-            enchantment_str = entry.enchantment;
-            adapted_from_str = entry.adapted_from;
-        }
-    }
-
-    annotations_panel_->update_annotations(annotations, speaker_name, gender_str, enchantment_str);
-
-    if ((row_data->status == "adapted" || row_data->status == "changed") && !adapted_from_str.empty())
-    {
-        editor_panel_->set_adapted_from(adapted_from_str);
+        editor_panel_->set_adapted_from(load_result.adapted_from);
     }
     else
     {
@@ -2074,28 +1521,28 @@ void main_window_t::load_record(int row)
     extra_sel_adapted_.grammar.clear();
     extra_sel_adapted_.adapted_diff.clear();
 
-    if (row_data->status == "adapted" && !adapted_from_str.empty())
+    if (row_data->status == "adapted" && !load_result.adapted_from.empty())
     {
-        extra_sel_adapted_.adapted_diff = editor_panel_->highlight_adapted_diff(row_data->new_text, adapted_from_str, false);
+        extra_sel_adapted_.adapted_diff = editor_panel_->highlight_adapted_diff(row_data->new_text, load_result.adapted_from, false);
     }
-    else if (row_data->status == "changed" && !adapted_from_str.empty())
+    else if (row_data->status == "changed" && !load_result.adapted_from.empty())
     {
-        extra_sel_adapted_.adapted_diff = editor_panel_->highlight_adapted_diff(row_data->old_text, adapted_from_str, true);
+        extra_sel_adapted_.adapted_diff = editor_panel_->highlight_adapted_diff(row_data->old_text, load_result.adapted_from, true);
     }
 
     apply_extra_selections(editor_panel_->adapted_from_view(), extra_sel_adapted_);
 
     const auto history = history_manager_.get_history(row_data->type, row_data->key_text);
-    history_panel_->update_history(history, !is_base);
+    history_panel_->update_history(history, !load_result.is_read_only);
 
-    loaded_text_ = editor_panel_->translation_editor()->toPlainText();
-    current_row_ = row;
+    editor_controller_.set_loaded_text(editor_panel_->translation_editor()->toPlainText());
+    editor_controller_.set_current_row(row);
 
     auto cursor = editor_panel_->translation_editor()->textCursor();
     cursor.movePosition(QTextCursor::End);
     editor_panel_->translation_editor()->setTextCursor(cursor);
 
-    loading_record_ = false;
+    editor_controller_.set_loading(false);
 }
 
 void main_window_t::on_whitespace_toggled(bool checked)
@@ -2127,40 +1574,61 @@ void main_window_t::on_encoding_changed(int index)
         return;
 
     current_codepage_ = new_codepage;
+    session_.set_codepage(new_codepage);
+    validation_manager_.set_codepage(new_codepage);
     config_.encoding_index = index;
     save_config();
 
-    QMessageBox::information(this, "Restart Required",
-        "Encoding changed. Please restart the application for the change to take effect.");
+    statusBar()->showMessage(
+        "Encoding changed. Open documents keep their original encoding until re-opened.", 5000);
 }
 
-void main_window_t::save_dict_encoded(int slot_index)
+void main_window_t::rebuild_annotations()
 {
-    auto * slot = workspace_.get_slot(slot_index);
-    if (!slot)
+    std::vector<dict_source_t> sources;
+    for (auto * dict_doc : session_.all_dicts())
+        sources.push_back({&dict_doc->data(), dict_doc->path()});
+
+    annotation_manager_.rebuild(sources);
+}
+
+void main_window_t::save_current_filter_state()
+{
+    if (!active_doc_)
         return;
 
-    tools_t::dict_t encoded;
-    for (const auto & [type, chapter] : slot->data)
+    filter_state_t state;
+    state.type_filter = type_filter_;
+    state.sub_type_filter = filter_tree_->get_active_sub_types();
+    state.status_filter = status_filter_;
+    state.type_filter_solo = type_filter_solo_;
+    filter_states_[active_doc_->path()] = std::move(state);
+}
+
+void main_window_t::restore_filter_state(const std::string & path)
+{
+    auto it = filter_states_.find(path);
+    if (it != filter_states_.end())
     {
-        for (const auto & entry : chapter.records)
-        {
-            tools_t::record_entry_t enc_entry = entry;
-            enc_entry.key_text = encode_from_utf8(entry.key_text, current_codepage_);
-            enc_entry.old_text = encode_from_utf8(entry.old_text, current_codepage_);
-            enc_entry.new_text = encode_from_utf8(entry.new_text, current_codepage_);
-
-            if (!entry.adapted_from.empty())
-                enc_entry.adapted_from = encode_from_utf8(entry.adapted_from, current_codepage_);
-
-            encoded[type].insert(enc_entry);
-        }
+        type_filter_ = it->second.type_filter;
+        status_filter_ = it->second.status_filter;
+        type_filter_solo_ = it->second.type_filter_solo;
+        filter_tree_->set_active_types(it->second.type_filter);
+        filter_tree_->set_active_sub_types(it->second.sub_type_filter);
     }
-
-    dict_writer_t::write(encoded, slot->path);
-    slot->dirty = false;
-    slot->modified_records.clear();
-    file_list_.set_dirty(slot->path, false);
+    else
+    {
+        type_filter_ = {
+            tools_t::rec_type_t::cell, tools_t::rec_type_t::dial, tools_t::rec_type_t::info,
+            tools_t::rec_type_t::fnam, tools_t::rec_type_t::text, tools_t::rec_type_t::gmst,
+            tools_t::rec_type_t::desc, tools_t::rec_type_t::rnam, tools_t::rec_type_t::indx,
+            tools_t::rec_type_t::bnam, tools_t::rec_type_t::sctx,
+        };
+        status_filter_.clear();
+        type_filter_solo_ = false;
+        filter_tree_->set_active_types(type_filter_);
+        filter_tree_->set_active_sub_types({});
+    }
 }
 
 void main_window_t::rebuild_sidebar()
@@ -2169,7 +1637,7 @@ void main_window_t::rebuild_sidebar()
 	if (active_doc_)
 		active_path = active_doc_->path();
 
-	auto model = build_render_model(file_list_, active_path);
+	auto model = build_render_model(file_list_, session_, active_path);
 
 	static const std::set<std::string> done_statuses_user = {"translated", "in_progress", "propagated"};
 	static const std::set<std::string> done_statuses_base = {
@@ -2183,38 +1651,38 @@ void main_window_t::rebuild_sidebar()
 			if (item.type == file_type_t::plugin)
 				continue;
 
-			if (item.type == file_type_t::lua_l10n && active_doc_ && item.path == active_doc_->path())
+			if (item.type == file_type_t::yaml_l10n && active_doc_ && item.path == active_doc_->path())
 			{
 				item.total_count = active_doc_->total_count();
 				item.translated_count = active_doc_->translated_count();
 				continue;
 			}
 
-			for (int i = 0; i < workspace_.slot_count(); ++i)
+			auto * doc = session_.find(item.path);
+			if (!doc)
+				continue;
+
+			auto * dict_doc = dynamic_cast<dict_document_t *>(doc);
+			if (!dict_doc)
+				continue;
+
+			const auto & done = (dict_doc->kind() == dict_kind_t::base)
+				? done_statuses_base : done_statuses_user;
+
+			int total = 0;
+			int translated = 0;
+			for (const auto & [type, chapter] : dict_doc->data())
 			{
-				const auto * slot = workspace_.get_slot(i);
-				if (!slot || slot->path != item.path)
-					continue;
-
-				const bool is_base = workspace_.is_base_slot(i);
-				const auto & done = is_base ? done_statuses_base : done_statuses_user;
-
-				int total = 0;
-				int translated = 0;
-				for (const auto & [type, chapter] : slot->data)
+				for (const auto & rec : chapter.records)
 				{
-					for (const auto & rec : chapter.records)
-					{
-						total++;
-						if (done.count(rec.status))
-							translated++;
-					}
+					total++;
+					if (done.count(rec.status))
+						translated++;
 				}
-
-				item.translated_count = translated;
-				item.total_count = total;
-				break;
 			}
+
+			item.translated_count = translated;
+			item.total_count = total;
 		}
 
 		for (auto & child : node.children)
@@ -2227,12 +1695,24 @@ void main_window_t::rebuild_sidebar()
 	sidebar_->set_model(model);
 }
 
+void main_window_t::update_sidebar_item(const std::string & path)
+{
+	const auto * fe = file_list_.get(path);
+	if (!fe)
+		return;
+
+	const auto * doc = session_.find(path);
+	const bool is_loaded = (doc != nullptr);
+	const bool is_dirty = doc && doc->is_dirty();
+	sidebar_->update_item_text(fe->path, derive_display_name(*fe, is_loaded, is_dirty));
+}
+
 void main_window_t::update_annotations()
 {
-    if (current_row_ < 0)
+    if (editor_controller_.current_row() < 0)
         return;
 
-    const auto * row_data = table_model_->row_at(current_row_);
+    const auto * row_data = table_model_->row_at(editor_controller_.current_row());
     if (!row_data)
         return;
 
@@ -2242,13 +1722,14 @@ void main_window_t::update_annotations()
     std::string gender_str;
     std::string enchantment_str;
 
-    auto * active_slot = workspace_.get_active_slot();
-    if (active_slot)
+    auto * dict_doc = dynamic_cast<dict_document_t *>(active_doc_);
+    if (dict_doc)
     {
-        auto it = active_slot->data.find(row_data->type);
-        if (it != active_slot->data.end() && row_data->chapter_index < it->second.records.size())
+        const auto & data = dict_doc->data();
+        auto it = data.find(row_data->type);
+        if (it != data.end() && row_data->record_index < it->second.records.size())
         {
-            const auto & entry = it->second.records[row_data->chapter_index];
+            const auto & entry = it->second.records[row_data->record_index];
             speaker_name = entry.speaker_name;
             gender_str = entry.gender;
             enchantment_str = entry.enchantment;
@@ -2269,112 +1750,36 @@ void main_window_t::apply_extra_selections(editor_text_edit_t * editor, const ex
 
 void main_window_t::update_status_counts()
 {
-    const auto * slot = workspace_.get_active_slot();
-    if (!slot)
+    auto * dict_doc = dynamic_cast<dict_document_t *>(active_doc_);
+    if (!dict_doc)
         return;
 
-    static const std::set<std::string> done_statuses_user = { "translated" };
-    static const std::set<std::string> done_statuses_base = {
-        "matched", "fingerprint", "coords", "heuristic", "exact",
-        "info", "wilderness", "region"
-    };
-
-    const bool is_base = workspace_.is_base_slot(workspace_.get_active_index());
-    const auto & done_statuses = is_base ? done_statuses_base : done_statuses_user;
-
-    std::map<std::string, size_t> total_status_counts;
-    std::map<tools_t::rec_type_t, size_t> type_counts;
-    std::map<tools_t::rec_type_t, size_t> translated_counts;
-
-    std::map<std::string, size_t> sub_type_counts_2;
-    std::map<std::string, size_t> sub_type_translated_2;
-    for (const auto & [type, chapter] : slot->data)
-    {
-        for (const auto & rec : chapter.records)
-        {
-            total_status_counts[rec.status]++;
-            type_counts[type]++;
-
-            if (done_statuses.count(rec.status))
-                translated_counts[type]++;
-
-            if (type == tools_t::rec_type_t::info || type == tools_t::rec_type_t::bnam ||
-                type == tools_t::rec_type_t::fnam || type == tools_t::rec_type_t::desc ||
-                type == tools_t::rec_type_t::indx)
-            {
-                auto caret_pos = rec.key_text.find('^');
-                if (caret_pos != std::string::npos && caret_pos > 0)
-                {
-                    auto prefix = rec.key_text.substr(0, caret_pos);
-                    static const std::map<std::pair<tools_t::rec_type_t, std::string>, std::string> prefix_to_sub_type = {
-                        {{tools_t::rec_type_t::info, "T"}, "Topic"},
-                        {{tools_t::rec_type_t::info, "V"}, "Voice"},
-                        {{tools_t::rec_type_t::info, "G"}, "Greeting"},
-                        {{tools_t::rec_type_t::info, "P"}, "Persuasion"},
-                        {{tools_t::rec_type_t::info, "J"}, "Journal"},
-                        {{tools_t::rec_type_t::bnam, "T"}, "Topic"},
-                        {{tools_t::rec_type_t::bnam, "V"}, "Voice"},
-                        {{tools_t::rec_type_t::bnam, "G"}, "Greeting"},
-                        {{tools_t::rec_type_t::bnam, "P"}, "Persuasion"},
-                        {{tools_t::rec_type_t::bnam, "J"}, "Journal"},
-                        {{tools_t::rec_type_t::fnam, "ACTI"}, "ACTI"}, {{tools_t::rec_type_t::fnam, "ALCH"}, "ALCH"},
-                        {{tools_t::rec_type_t::fnam, "APPA"}, "APPA"}, {{tools_t::rec_type_t::fnam, "ARMO"}, "ARMO"},
-                        {{tools_t::rec_type_t::fnam, "BOOK"}, "BOOK"}, {{tools_t::rec_type_t::fnam, "BSGN"}, "BSGN"},
-                        {{tools_t::rec_type_t::fnam, "CLAS"}, "CLAS"}, {{tools_t::rec_type_t::fnam, "CLOT"}, "CLOT"},
-                        {{tools_t::rec_type_t::fnam, "CONT"}, "CONT"}, {{tools_t::rec_type_t::fnam, "CREA"}, "CREA"},
-                        {{tools_t::rec_type_t::fnam, "DOOR"}, "DOOR"}, {{tools_t::rec_type_t::fnam, "FACT"}, "FACT"},
-                        {{tools_t::rec_type_t::fnam, "INGR"}, "INGR"}, {{tools_t::rec_type_t::fnam, "LIGH"}, "LIGH"},
-                        {{tools_t::rec_type_t::fnam, "LOCK"}, "LOCK"}, {{tools_t::rec_type_t::fnam, "MISC"}, "MISC"},
-                        {{tools_t::rec_type_t::fnam, "NPC_"}, "NPC_"}, {{tools_t::rec_type_t::fnam, "PROB"}, "PROB"},
-                        {{tools_t::rec_type_t::fnam, "RACE"}, "RACE"}, {{tools_t::rec_type_t::fnam, "REGN"}, "REGN"},
-                        {{tools_t::rec_type_t::fnam, "REPA"}, "REPA"}, {{tools_t::rec_type_t::fnam, "SPEL"}, "SPEL"},
-                        {{tools_t::rec_type_t::fnam, "WEAP"}, "WEAP"},
-                        {{tools_t::rec_type_t::desc, "BSGN"}, "Birthsigns"},
-                        {{tools_t::rec_type_t::desc, "CLAS"}, "Classes"},
-                        {{tools_t::rec_type_t::desc, "RACE"}, "Races"},
-                        {{tools_t::rec_type_t::indx, "SKIL"}, "Skills"},
-                        {{tools_t::rec_type_t::indx, "MGEF"}, "Magic Effects"},
-                    };
-                    auto p2s_it = prefix_to_sub_type.find({type, prefix});
-                    if (p2s_it != prefix_to_sub_type.end())
-                    {
-                        sub_type_counts_2[p2s_it->second]++;
-                        if (done_statuses.count(rec.status))
-                            sub_type_translated_2[p2s_it->second]++;
-                    }
-                }
-            }
-        }
-    }
-
-    std::map<std::string, size_t> displayed_counts;
-    for (int i = 0; i < table_model_->rowCount(); ++i)
-    {
-        const auto * r = table_model_->row_at(i);
-        if (r)
-            displayed_counts[r->status]++;
-    }
-
-    status_filter_bar_->update_counts(displayed_counts, total_status_counts);
+    auto result = build_filtered_rows(
+        dict_doc->data(), dict_doc->kind(), type_filter_,
+        filter_tree_->get_active_sub_types(),
+        status_filter_, search_engine_, type_filter_solo_);
 
     size_t total = 0;
     size_t total_translated = 0;
-    for (const auto & [t, c] : type_counts)
+    for (const auto & [t, c] : result.counts.type_counts)
         total += c;
-    for (const auto & [t, c] : translated_counts)
+    for (const auto & [t, c] : result.counts.translated_counts)
         total_translated += c;
 
-    filter_tree_->update_counts(type_counts, translated_counts);
-    filter_tree_->update_sub_type_counts(sub_type_counts_2, sub_type_translated_2);
+    filter_tree_->update_counts(result.counts.type_counts, result.counts.translated_counts);
+    filter_tree_->update_sub_type_counts(result.counts.sub_type_total_counts,
+                                         result.counts.sub_type_translated_counts);
     filter_tree_->set_total_count(total_translated, total);
+    status_filter_bar_->update_counts(result.counts.filtered_status_counts,
+                                      result.counts.total_status_counts);
 }
 
 void main_window_t::update_validation()
 {
-    if (current_row_ < 0)
+    if (editor_controller_.current_row() < 0)
         return;
 
-    const auto * row_data = table_model_->row_at(current_row_);
+    const auto * row_data = table_model_->row_at(editor_controller_.current_row());
     if (!row_data)
         return;
 
@@ -2459,22 +1864,11 @@ void main_window_t::load_config()
     file_list_.scan_roots(config_.workspace_roots);
     scan_workspace();
 
-    if (config_.active_dict_index >= 0 && config_.active_dict_index < workspace_.slot_count())
+    if (!config_.active_dict_path.empty())
     {
-        workspace_.set_active(config_.active_dict_index);
-        auto * slot = workspace_.get_slot(config_.active_dict_index);
-        if (slot)
-        {
-            const bool is_base = workspace_.is_base_slot(config_.active_dict_index);
-            active_doc_ = std::make_unique<dict_document_t>(
-                slot, slot->path,
-                [this](const std::string & p) {
-                    int idx = workspace_.find_by_path(p);
-                    if (idx >= 0)
-                        save_dict_encoded(idx);
-                },
-                is_base);
-        }
+        auto * doc = session_.open(config_.active_dict_path);
+        if (doc)
+            switch_document(doc);
     }
 
     rebuild_table();
@@ -2505,7 +1899,8 @@ void main_window_t::save_config()
     for (size_t i = 0; i < col_widths.size() && i < config_.column_widths.size(); ++i)
         config_.column_widths[i] = static_cast<float>(col_widths[i]);
 
-    config_.active_dict_index = workspace_.get_active_index();
+    config_.active_dict_index = -1;  // deprecated — use active_dict_path
+    config_.active_dict_path = active_doc_ ? active_doc_->path() : std::string{};
     config_.workspace_roots = file_list_.get_roots();
 
     const auto path = QCoreApplication::applicationDirPath() + "/yampt_gui.ini";
@@ -2515,7 +1910,7 @@ void main_window_t::save_config()
 void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plugin_op_t op)
 {
     const auto plugin_path = plugin_path_arg;
-    const auto encoding = get_current_tools_encoding();
+    const auto encoding = current_codepage_;
 
     auto path_sep = plugin_path.find_last_of("/\\");
     auto plugin_dir = path_sep != std::string::npos ? plugin_path.substr(0, path_sep) : std::string{};
@@ -2544,7 +1939,8 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
         if (selected.empty())
             return;
 
-        ensure_dicts_loaded(selected);
+        for (const auto & sel_path : selected)
+            session_.open(sel_path);
         dict_merger_t merger(selected);
         result = executor_.make_dict_with_base(plugin_path, merger.get_dict(), encoding);
         break;
@@ -2576,7 +1972,7 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
             if (entry->path == plugin_path)
                 continue;
 
-            plugins.push_back({entry->path, derive_display_name(*entry), entry->filename, entry->root_path, entry->workspace_subfolder});
+            plugins.push_back({entry->path, derive_display_name(*entry, false, false), entry->filename, entry->root_path, entry->workspace_subfolder});
         }
 
         if (plugins.empty())
@@ -2719,7 +2115,8 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
         if (selected.empty())
             return;
 
-        ensure_dicts_loaded(selected);
+        for (const auto & sel_path : selected)
+            session_.open(sel_path);
         result = executor_.convert(plugin_path, selected, encoding);
         break;
     }
@@ -2735,7 +2132,8 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
         if (selected.empty())
             return;
 
-        ensure_dicts_loaded(selected);
+        for (const auto & sel_path : selected)
+            session_.open(sel_path);
 
         result = executor_.create_plugin(plugin_path, selected, encoding);
         break;
@@ -2816,114 +2214,57 @@ void main_window_t::update_watcher_paths()
 
 std::vector<dict_selection_dialog_t::dict_entry_t> main_window_t::build_dict_entries(const std::string & source_dir) const
 {
+    std::set<std::string> seen;
     std::vector<dict_selection_dialog_t::dict_entry_t> entries;
-    std::set<std::string> added_paths;
 
     auto normalize = [](std::string p) {
         std::replace(p.begin(), p.end(), '\\', '/');
+        std::transform(p.begin(), p.end(), p.begin(),
+            [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
         return p;
     };
 
-    for (int i = 0; i < workspace_.slot_count(); ++i)
+    auto extract_filename = [](const std::string & p) {
+        auto sep = p.find_last_of("/\\");
+        return sep != std::string::npos ? p.substr(sep + 1) : p;
+    };
+
+    auto matches_source_dir = [&](const std::string & norm, const std::string & target) {
+        if (target.empty())
+            return false;
+
+        auto dir_sep = norm.find_last_of('/');
+        if (dir_sep == std::string::npos)
+            return false;
+
+        return norm.substr(0, dir_sep) == target;
+    };
+
+    auto target = source_dir.empty() ? std::string{} : normalize(source_dir);
+
+    for (const auto * dict_doc : session_.all_dicts())
     {
-        const auto * slot = workspace_.get_slot(i);
-        if (!slot)
+        auto norm = normalize(dict_doc->path());
+        if (!seen.insert(norm).second)
             continue;
 
-        auto filename = slot->path;
-        auto sep = filename.find_last_of("/\\");
-        if (sep != std::string::npos)
-            filename = filename.substr(sep + 1);
-
-        auto kind = workspace_.is_base_slot(i) ? dict_kind_t::base : dict_kind_t::user;
-
-        entries.push_back({filename, slot->path, kind, false});
-        added_paths.insert(normalize(slot->path));
+        entries.push_back({extract_filename(dict_doc->path()), dict_doc->path(), dict_doc->kind(), matches_source_dir(norm, target)});
     }
 
-    for (const auto * ws_entry : file_list_.workspace_files())
+    for (const auto * fe : file_list_.all())
     {
-        if (added_paths.count(normalize(ws_entry->path)))
+        if (fe->type != file_type_t::user_dict && fe->type != file_type_t::base_dict)
             continue;
 
-        if (ws_entry->type != file_type_t::base_dict && ws_entry->type != file_type_t::user_dict)
+        auto norm = normalize(fe->path);
+        if (!seen.insert(norm).second)
             continue;
 
-        auto kind = (ws_entry->type == file_type_t::base_dict) ? dict_kind_t::base : dict_kind_t::user;
-        entries.push_back({ws_entry->filename, ws_entry->path, kind, false});
-    }
-
-    if (!source_dir.empty())
-    {
-        const auto target = normalize(source_dir);
-
-        for (auto & entry : entries)
-        {
-            auto dir = normalize(entry.path);
-            auto dir_sep = dir.find_last_of('/');
-            if (dir_sep != std::string::npos)
-                dir = dir.substr(0, dir_sep);
-
-            if (dir == target)
-                entry.checked = true;
-        }
+        auto kind = (fe->type == file_type_t::base_dict) ? dict_kind_t::base : dict_kind_t::user;
+        entries.push_back({fe->filename, fe->path, kind, matches_source_dir(norm, target)});
     }
 
     return entries;
-}
-
-void main_window_t::ensure_dicts_loaded(const std::vector<std::string> & paths)
-{
-    for (const auto & path : paths)
-    {
-        bool already_loaded = false;
-        for (int i = 0; i < workspace_.slot_count(); ++i)
-        {
-            const auto * slot = workspace_.get_slot(i);
-            if (slot && slot->path == path)
-            {
-                already_loaded = true;
-                break;
-            }
-        }
-
-        if (already_loaded)
-            continue;
-
-        auto kind = (path.find("_BASE_") != std::string::npos) ? dict_kind_t::base : dict_kind_t::user;
-        workspace_.load_dict(path, kind);
-
-        auto * new_slot = workspace_.get_slot(workspace_.slot_count() - 1);
-        if (!new_slot)
-            continue;
-
-        for (auto & [type, chapter] : new_slot->data)
-        {
-            for (auto & entry : chapter.records)
-            {
-                entry.key_text = decode_to_utf8(entry.key_text, current_codepage_);
-                entry.old_text = decode_to_utf8(entry.old_text, current_codepage_);
-                entry.new_text = decode_to_utf8(entry.new_text, current_codepage_);
-                    if (!entry.adapted_from.empty())
-                        entry.adapted_from = decode_to_utf8(entry.adapted_from, current_codepage_);
-            }
-        }
-    }
-}
-
-tools_t::encoding_t main_window_t::get_current_tools_encoding() const
-{
-    constexpr tools_t::encoding_t encodings[] = {
-        tools_t::encoding_t::windows_1250,
-        tools_t::encoding_t::windows_1251,
-        tools_t::encoding_t::windows_1252,
-    };
-
-    const int index = encoding_combo_->currentIndex();
-    if (index < 0 || index >= static_cast<int>(std::size(encodings)))
-        return tools_t::encoding_t::windows_1252;
-
-    return encodings[index];
 }
 
 void main_window_t::on_item_clicked(const std::string & path)
@@ -2932,135 +2273,17 @@ void main_window_t::on_item_clicked(const std::string & path)
     if (!entry)
         return;
 
-    if (entry->type == file_type_t::plugin)
-    {
-        commit_current_edit();
-        active_doc_.reset();
-        workspace_.set_active(-1);
-        table_model_->rebuild({});
-        current_row_ = -1;
-        filter_tree_->set_display_mode(filter_tree_t::display_mode_t::empty);
-        filter_tree_->setEnabled(false);
-        active_file_label_->clear();
-        status_filter_bar_->set_dict_mode(status_filter_bar_t::dict_mode_t::none);
-        search_label_->setEnabled(false);
-        search_field_->setEnabled(false);
-        case_sensitive_check_->setEnabled(false);
-        regex_check_->setEnabled(false);
-        search_col_key_->setEnabled(false);
-        search_col_original_->setEnabled(false);
-        search_col_translation_->setEnabled(false);
-        return;
-    }
-
     auto norm_path = path;
     std::replace(norm_path.begin(), norm_path.end(), '\\', '/');
 
     if (active_doc_ && active_doc_->path() == norm_path)
         return;
 
-    if (entry->type == file_type_t::lua_l10n)
-    {
-        commit_current_edit();
-        workspace_.set_active(-1);
-        active_doc_ = std::make_unique<yaml_document_t>(path);
-        filter_tree_->set_display_mode(filter_tree_t::display_mode_t::all_only);
-        status_filter_bar_->set_dict_mode(status_filter_bar_t::dict_mode_t::user);
-        rebuild_table();
-        editor_panel_->original_view()->clear();
-        editor_panel_->translation_editor()->clear();
-        editor_panel_->clear_adapted_from();
-        validation_indicator_->clear();
-        annotations_panel_->clear();
-        history_panel_->clear();
-        book_preview_->clear();
-        current_row_ = -1;
-        return;
-    }
-
-    // Dict file (json/xml)
-    for (int i = 0; i < workspace_.slot_count(); ++i)
-    {
-        const auto * slot = workspace_.get_slot(i);
-        if (!slot)
-            continue;
-
-        auto slot_norm = slot->path;
-        std::replace(slot_norm.begin(), slot_norm.end(), '\\', '/');
-        if (slot_norm != norm_path)
-            continue;
-
-        commit_current_edit();
-        workspace_.set_active(i);
-        const bool is_base = workspace_.is_base_slot(i);
-        active_doc_ = std::make_unique<dict_document_t>(
-            workspace_.get_slot(i), slot->path,
-            [this](const std::string & p) {
-                int idx = workspace_.find_by_path(p);
-                if (idx >= 0)
-                    save_dict_encoded(idx);
-            },
-            is_base);
-        rebuild_table();
-        editor_panel_->original_view()->clear();
-        editor_panel_->translation_editor()->clear();
-        editor_panel_->clear_adapted_from();
-        validation_indicator_->clear();
-        annotations_panel_->clear();
-        history_panel_->clear();
-        book_preview_->clear();
-        current_row_ = -1;
-        return;
-    }
-
-    // Not yet loaded — load it
-    int old_count = workspace_.slot_count();
-
-    auto kind = dict_kind_t::user;
-    if (path.find("_BASE_") != std::string::npos)
-        kind = dict_kind_t::base;
-
-    workspace_.load_dict(path, kind);
-
-    if (workspace_.slot_count() <= old_count)
+    auto * doc = session_.open(path);
+    if (!doc)
         return;
 
-    file_list_.set_loaded(path, true);
-
-    auto * new_slot = workspace_.get_slot(workspace_.slot_count() - 1);
-    if (new_slot)
-    {
-        for (auto & [type, chapter] : new_slot->data)
-        {
-            for (auto & rec : chapter.records)
-            {
-                rec.key_text = decode_to_utf8(rec.key_text, current_codepage_);
-                rec.old_text = decode_to_utf8(rec.old_text, current_codepage_);
-                rec.new_text = decode_to_utf8(rec.new_text, current_codepage_);
-                if (!rec.adapted_from.empty())
-                    rec.adapted_from = decode_to_utf8(rec.adapted_from, current_codepage_);
-            }
-        }
-    }
-
-    std::vector<dict_source_t> sources;
-    for (const auto & dict_slot : workspace_.get_all_slots())
-        sources.push_back({&dict_slot.data, dict_slot.path});
-    annotation_manager_.rebuild(sources);
-
-    commit_current_edit();
-    int new_idx = workspace_.slot_count() - 1;
-    workspace_.set_active(new_idx);
-    const bool is_base = workspace_.is_base_slot(new_idx);
-    active_doc_ = std::make_unique<dict_document_t>(
-        workspace_.get_slot(new_idx), workspace_.get_slot(new_idx)->path,
-        [this](const std::string & p) {
-            int idx = workspace_.find_by_path(p);
-            if (idx >= 0)
-                save_dict_encoded(idx);
-        },
-        is_base);
-    rebuild_table();
+    switch_document(doc);
 }
 
 void main_window_t::on_operation_requested(const std::string & path, plugin_op_t op)
@@ -3085,62 +2308,66 @@ void main_window_t::on_save_requested(const std::string & path)
     {
         commit_current_edit();
         active_doc_->save();
-
-        auto * fe = file_list_.get(active_doc_->path());
-        if (fe)
-        {
-            fe->dirty = false;
-            sidebar_->update_item_text(fe->path, derive_display_name(*fe));
-        }
+        update_sidebar_item(active_doc_->path());
 
         log_tab_->append_log("save", "saved \"" + active_doc_->path() + "\"\r\n");
 
-        if (!workspace_.has_any_unsaved())
-            set_dirty(false);
+        if (!session_.has_any_unsaved())
+            set_unsaved_changes(false);
 
         return;
     }
 
-    for (int i = 0; i < workspace_.slot_count(); ++i)
-    {
-        const auto * slot = workspace_.get_slot(i);
-        if (!slot)
-            continue;
-
-        auto slot_norm = slot->path;
-        std::replace(slot_norm.begin(), slot_norm.end(), '\\', '/');
-        if (slot_norm != norm_path)
-            continue;
-
-        save_dict_encoded(i);
-
-        auto * fe = file_list_.get(slot->path);
-        if (fe)
-            sidebar_->update_item_text(fe->path, derive_display_name(*fe));
-
-        log_tab_->append_log("save", "saved \"" + slot->path + "\"\r\n");
-
-        if (!workspace_.has_any_unsaved())
-            set_dirty(false);
-
+    auto * doc = session_.find(path);
+    if (!doc)
         return;
-    }
+
+    doc->save();
+    update_sidebar_item(doc->path());
+
+    log_tab_->append_log("save", "saved \"" + doc->path() + "\"\r\n");
+
+    if (!session_.has_any_unsaved())
+        set_unsaved_changes(false);
 }
 
 void main_window_t::on_unload_requested(const std::string & path)
 {
-    for (int i = 0; i < workspace_.slot_count(); ++i)
+    auto * doc = session_.find(path);
+    if (!doc)
     {
-        const auto * slot = workspace_.get_slot(i);
-        if (slot && slot->path == path)
-        {
-            on_unload_slot(i);
-            return;
-        }
+        file_list_.remove(path);
+        rebuild_sidebar();
+        return;
     }
 
-    file_list_.remove(path);
+    if (doc->is_dirty())
+    {
+        auto answer = QMessageBox::question(
+            this, "Unsaved Changes",
+            "This dictionary has unsaved changes. Save before unloading?",
+            QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+
+        if (answer == QMessageBox::Cancel)
+            return;
+
+        if (answer == QMessageBox::Save)
+            doc->save();
+    }
+
+    if (active_doc_ && active_doc_->path() == doc->path())
+        switch_document(nullptr);
+
+    session_.close(path);
+
+    auto norm = path;
+    std::replace(norm.begin(), norm.end(), '\\', '/');
+    filter_states_.erase(norm);
+
+    rebuild_annotations();
+    last_annotation_version_ = session_.dict_version();
     rebuild_sidebar();
+    rebuild_table();
 }
 
 void main_window_t::on_delete_requested(const std::string & path)
@@ -3161,18 +2388,12 @@ void main_window_t::on_delete_requested(const std::string & path)
     auto norm_del_path = path;
     std::replace(norm_del_path.begin(), norm_del_path.end(), '\\', '/');
     if (active_doc_ && active_doc_->path() == norm_del_path)
-        active_doc_.reset();
+        switch_document(nullptr);
 
-    for (int i = 0; i < workspace_.slot_count(); ++i)
-    {
-        const auto * slot = workspace_.get_slot(i);
-        if (slot && slot->path == path)
-        {
-            workspace_.unload_dict(i);
-            break;
-        }
-    }
-
+    session_.close(path);
+    filter_states_.erase(norm_del_path);
+    rebuild_annotations();
+    last_annotation_version_ = session_.dict_version();
     file_list_.remove(path);
     rebuild_sidebar();
     rebuild_table();
@@ -3181,7 +2402,7 @@ void main_window_t::on_delete_requested(const std::string & path)
 
 void main_window_t::closeEvent(QCloseEvent * event)
 {
-    if (workspace_.has_any_unsaved())
+    if (session_.has_any_unsaved())
     {
         auto answer = QMessageBox::question(
             this, "Unsaved Changes",
@@ -3195,19 +2416,13 @@ void main_window_t::closeEvent(QCloseEvent * event)
         }
 
         if (answer == QMessageBox::Save)
-        {
-            for (int i = 0; i < workspace_.slot_count(); ++i)
-            {
-                const auto * slot = workspace_.get_slot(i);
-                if (slot && slot->dirty)
-                    save_dict_encoded(i);
-            }
-        }
+            session_.save_all();
     }
 
     commit_current_edit();
-    if (auto * yaml_doc = dynamic_cast<yaml_document_t*>(active_doc_.get()))
+    if (auto * yaml_doc = dynamic_cast<yaml_document_t *>(active_doc_))
         yaml_doc->save_tmp();
+
     save_config();
     QMainWindow::closeEvent(event);
 }

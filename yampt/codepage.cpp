@@ -1,4 +1,4 @@
-#include "../yampt/codepage.hpp"
+#include "codepage.hpp"
 #define NOMINMAX
 #include <Windows.h>
 

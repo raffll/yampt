@@ -73,6 +73,12 @@
     <ClInclude Include="..\yampt\tools.hpp">
       <Filter>yampt</Filter>
     </ClInclude>
+    <ClInclude Include="..\yampt\codepage.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\yampt\dict_kind.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
     <ClInclude Include="..\yampt\dict_reader.hpp">
       <Filter>yampt</Filter>
     </ClInclude>

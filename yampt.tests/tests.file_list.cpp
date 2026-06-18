@@ -2,6 +2,8 @@
 #include <rapidcheck.h>
 #include <rapidcheck/catch.h>
 #include "../yampt/file_list.hpp"
+#include "../yampt.gui/sidebar_model.hpp"
+#include "../yampt.gui/session.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -31,7 +33,7 @@ TEST_CASE("property: file type classification correctness", "[u]")
 		}
 		else if (ext == ".yaml")
 		{
-			RC_ASSERT(first == file_type_t::lua_l10n);
+			RC_ASSERT(first == file_type_t::yaml_l10n);
 		}
 		else if (ext == ".json" || ext == ".xml")
 		{
@@ -151,15 +153,17 @@ TEST_CASE("property: display name derivation", "[u]")
 	{
 		file_entry_t entry;
 		entry.type = static_cast<file_type_t>(*rc::gen::inRange(0, 4));
-		entry.dirty = *rc::gen::arbitrary<bool>();
 		entry.filename = *rc::gen::nonEmpty(rc::gen::arbitrary<std::string>());
 		entry.language_tag = *rc::gen::element(
 			std::string(""), std::string("EN"), std::string("PL"),
 			std::string("DE"), std::string("FR"));
 
-		const auto result = derive_display_name(entry);
+		const auto is_loaded = *rc::gen::arbitrary<bool>();
+		const auto is_dirty = *rc::gen::arbitrary<bool>();
 
-		if (entry.dirty)
+		const auto result = derive_display_name(entry, is_loaded, is_dirty);
+
+		if (is_dirty)
 		{
 			RC_ASSERT(result.substr(0, 2) == "* ");
 		}
@@ -174,7 +178,7 @@ TEST_CASE("property: display name derivation", "[u]")
 		case file_type_t::plugin: type_tag = "[ESP]"; break;
 		case file_type_t::base_dict: type_tag = "[BASE]"; break;
 		case file_type_t::user_dict: type_tag = "[USER]"; break;
-		case file_type_t::lua_l10n: type_tag = "[LUA]"; break;
+		case file_type_t::yaml_l10n: type_tag = "[YAML]"; break;
 		}
 		RC_ASSERT(result.find(type_tag) != std::string::npos);
 
@@ -196,15 +200,15 @@ TEST_CASE("property: context menu derivation", "[u]")
 	{
 		file_entry_t entry;
 		entry.type = static_cast<file_type_t>(*rc::gen::inRange(0, 4));
-		entry.dict_loaded = *rc::gen::arbitrary<bool>();
+		const auto is_loaded = *rc::gen::arbitrary<bool>();
+		const auto is_dirty = *rc::gen::arbitrary<bool>();
 		entry.is_workspace = true;
-		entry.dirty = *rc::gen::arbitrary<bool>();
 		entry.filename = "test.esp";
 		entry.path = "/some/path/test.esp";
 
-		const auto menu = derive_context_menu(entry);
+		const auto menu = derive_context_menu(entry, is_loaded, is_dirty);
 
-		if (entry.type == file_type_t::lua_l10n)
+		if (entry.type == file_type_t::yaml_l10n)
 		{
 			RC_ASSERT(menu.size() == 1);
 			RC_ASSERT(menu[0] == menu_action_t::delete_file);
@@ -221,16 +225,11 @@ TEST_CASE("property: context menu derivation", "[u]")
 
 		if (entry.type == file_type_t::base_dict || entry.type == file_type_t::user_dict)
 		{
-			if (entry.dict_loaded && entry.dirty)
+			if (is_loaded && is_dirty)
 			{
 				RC_ASSERT(menu.size() == 2);
 				RC_ASSERT(menu[0] == menu_action_t::save);
 				RC_ASSERT(menu[1] == menu_action_t::delete_file);
-			}
-			else if (entry.dict_loaded && !entry.dirty)
-			{
-				RC_ASSERT(menu.size() == 1);
-				RC_ASSERT(menu[0] == menu_action_t::delete_file);
 			}
 			else
 			{
@@ -263,42 +262,6 @@ TEST_CASE("property: output directory derivation", "[u]")
 	});
 }
 
-TEST_CASE("property: dirty flag round-trip", "[u]")
-{
-	rc::prop("set_dirty affects only the targeted entry", []()
-	{
-		file_list_t list;
-		const auto count = *rc::gen::inRange(2, 10);
-		std::vector<std::string> paths;
-
-		for (int i = 0; i < count; ++i)
-		{
-			const auto path = "entry_" + std::to_string(i) + ".json";
-			paths.push_back(path);
-			auto & entry = list.add(path);
-			entry.dict_loaded = true;
-		}
-
-		const auto target_idx = *rc::gen::inRange(0, count);
-		const auto dirty_val = *rc::gen::arbitrary<bool>();
-
-		list.set_dirty(paths[target_idx], dirty_val);
-
-		for (int i = 0; i < count; ++i)
-		{
-			const auto * entry = list.get(paths[i]);
-			if (i == target_idx)
-			{
-				RC_ASSERT(entry->dirty == dirty_val);
-			}
-			else
-			{
-				RC_ASSERT(entry->dirty == false);
-			}
-		}
-	});
-}
-
 TEST_CASE("classify edge cases", "[u]")
 {
 	SECTION("mixed case extensions")
@@ -306,7 +269,7 @@ TEST_CASE("classify edge cases", "[u]")
 		REQUIRE(classify("C:/path/Morrowind.ESM") == file_type_t::plugin);
 		REQUIRE(classify("C:/path/plugin.Esp") == file_type_t::plugin);
 		REQUIRE(classify("C:/path/dict.JSON") == file_type_t::user_dict);
-		REQUIRE(classify("C:/path/l10n.YAML") == file_type_t::lua_l10n);
+		REQUIRE(classify("C:/path/l10n.YAML") == file_type_t::yaml_l10n);
 	}
 
 	SECTION("paths with multiple dots")
@@ -372,40 +335,36 @@ TEST_CASE("derive_display_name examples", "[u]")
 	{
 		file_entry_t entry;
 		entry.type = file_type_t::user_dict;
-		entry.dirty = true;
 		entry.filename = "Morrowind_en.json";
 		entry.language_tag = "";
-		REQUIRE(derive_display_name(entry) == "* [USER] Morrowind_en.json");
+		REQUIRE(derive_display_name(entry, true, true) == "* [USER] Morrowind_en.json");
 	}
 
 	SECTION("clean plugin with language tag")
 	{
 		file_entry_t entry;
 		entry.type = file_type_t::plugin;
-		entry.dirty = false;
 		entry.filename = "Morrowind.esm";
 		entry.language_tag = "EN";
-		REQUIRE(derive_display_name(entry) == "[ESP] [EN] Morrowind.esm");
+		REQUIRE(derive_display_name(entry, false, false) == "[ESP] [EN] Morrowind.esm");
 	}
 
 	SECTION("base dict")
 	{
 		file_entry_t entry;
 		entry.type = file_type_t::base_dict;
-		entry.dirty = false;
 		entry.filename = "Morrowind_BASE_EN-PL.json";
 		entry.language_tag = "";
-		REQUIRE(derive_display_name(entry) == "[BASE] Morrowind_BASE_EN-PL.json");
+		REQUIRE(derive_display_name(entry, true, false) == "[BASE] Morrowind_BASE_EN-PL.json");
 	}
 
-	SECTION("lua l10n")
+	SECTION("yaml l10n")
 	{
 		file_entry_t entry;
-		entry.type = file_type_t::lua_l10n;
-		entry.dirty = false;
+		entry.type = file_type_t::yaml_l10n;
 		entry.filename = "en.yaml";
 		entry.language_tag = "";
-		REQUIRE(derive_display_name(entry) == "[LUA] en.yaml");
+		REQUIRE(derive_display_name(entry, false, false) == "[YAML] en.yaml");
 	}
 }
 
@@ -415,10 +374,8 @@ TEST_CASE("derive_context_menu decision table", "[u]")
 	{
 		file_entry_t entry;
 		entry.type = file_type_t::plugin;
-		entry.dict_loaded = false;
 		entry.is_workspace = true;
-		entry.dirty = false;
-		const auto menu = derive_context_menu(entry);
+		const auto menu = derive_context_menu(entry, false, false);
 		REQUIRE(menu.size() == 6);
 		REQUIRE(menu[0] == menu_action_t::make_dict);
 		REQUIRE(menu[1] == menu_action_t::make_dict_with_base);
@@ -432,10 +389,8 @@ TEST_CASE("derive_context_menu decision table", "[u]")
 	{
 		file_entry_t entry;
 		entry.type = file_type_t::user_dict;
-		entry.dict_loaded = true;
 		entry.is_workspace = true;
-		entry.dirty = true;
-		const auto menu = derive_context_menu(entry);
+		const auto menu = derive_context_menu(entry, true, true);
 		REQUIRE(menu.size() == 2);
 		REQUIRE(menu[0] == menu_action_t::save);
 		REQUIRE(menu[1] == menu_action_t::delete_file);
@@ -445,10 +400,8 @@ TEST_CASE("derive_context_menu decision table", "[u]")
 	{
 		file_entry_t entry;
 		entry.type = file_type_t::base_dict;
-		entry.dict_loaded = true;
 		entry.is_workspace = true;
-		entry.dirty = false;
-		const auto menu = derive_context_menu(entry);
+		const auto menu = derive_context_menu(entry, true, false);
 		REQUIRE(menu.size() == 1);
 		REQUIRE(menu[0] == menu_action_t::delete_file);
 	}
@@ -457,22 +410,18 @@ TEST_CASE("derive_context_menu decision table", "[u]")
 	{
 		file_entry_t entry;
 		entry.type = file_type_t::user_dict;
-		entry.dict_loaded = false;
 		entry.is_workspace = true;
-		entry.dirty = false;
-		const auto menu = derive_context_menu(entry);
+		const auto menu = derive_context_menu(entry, false, false);
 		REQUIRE(menu.size() == 1);
 		REQUIRE(menu[0] == menu_action_t::delete_file);
 	}
 
-	SECTION("lua_l10n any state")
+	SECTION("yaml_l10n any state")
 	{
 		file_entry_t entry;
-		entry.type = file_type_t::lua_l10n;
-		entry.dict_loaded = true;
+		entry.type = file_type_t::yaml_l10n;
 		entry.is_workspace = true;
-		entry.dirty = true;
-		const auto menu = derive_context_menu(entry);
+		const auto menu = derive_context_menu(entry, true, true);
 		REQUIRE(menu.size() == 1);
 		REQUIRE(menu[0] == menu_action_t::delete_file);
 	}
@@ -513,43 +462,10 @@ TEST_CASE("file_list_t container operations", "[u]")
 	SECTION("duplicate add returns existing entry")
 	{
 		auto & first = list.add("C:/path/file.esp");
-		first.dict_loaded = true;
+		first.language_tag = "EN";
 		auto & second = list.add("C:/path/file.esp");
-		REQUIRE(second.dict_loaded == true);
+		REQUIRE(second.language_tag == "EN");
 		REQUIRE(&first == &second);
-	}
-
-	SECTION("set_loaded")
-	{
-		list.add("C:/path/file.esp");
-		list.set_loaded("C:/path/file.esp", true);
-		REQUIRE(list.get("C:/path/file.esp")->dict_loaded == true);
-		list.set_loaded("C:/path/file.esp", false);
-		REQUIRE(list.get("C:/path/file.esp")->dict_loaded == false);
-	}
-
-	SECTION("set_dirty no-op on unloaded entry")
-	{
-		list.add("C:/path/file.json");
-		list.set_dirty("C:/path/file.json", true);
-		REQUIRE(list.get("C:/path/file.json")->dirty == false);
-	}
-
-	SECTION("set_dirty works on loaded entry")
-	{
-		auto & entry = list.add("C:/path/file.json");
-		entry.dict_loaded = true;
-		list.set_dirty("C:/path/file.json", true);
-		REQUIRE(list.get("C:/path/file.json")->dirty == true);
-	}
-
-	SECTION("set_loaded false clears dirty")
-	{
-		auto & entry = list.add("C:/path/file.json");
-		entry.dict_loaded = true;
-		entry.dirty = true;
-		list.set_loaded("C:/path/file.json", false);
-		REQUIRE(list.get("C:/path/file.json")->dirty == false);
 	}
 }
 
@@ -585,7 +501,6 @@ TEST_CASE("property: section grouping", "[u]")
 			auto & entry = list.add(path);
 			entry.is_workspace = true;
 			entry.root_path = root;
-			entry.dirty = *rc::gen::arbitrary<bool>();
 
 			const auto use_subfolder = *rc::gen::arbitrary<bool>();
 			if (use_subfolder)
@@ -597,13 +512,14 @@ TEST_CASE("property: section grouping", "[u]")
 
 			expected_entry_t exp;
 			exp.path = entry.path;
-			exp.display_text = derive_display_name(entry);
+			exp.display_text = derive_display_name(entry, false, false);
 			exp.root_path = root;
 			exp.subfolder = entry.workspace_subfolder;
 			expected.push_back(std::move(exp));
 		}
 
-		const auto model = build_render_model(list, "");
+		session_t session(codepage_t::windows_1252);
+		const auto model = build_render_model(list, session, "");
 
 		std::set<std::string> unique_roots;
 		for (const auto & e : expected)

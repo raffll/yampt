@@ -6,7 +6,7 @@ esm_converter_t::esm_converter_t(
     const dict_merger_t & merger,
     const bool add_hyperlinks,
     const std::string & file_suffix,
-    const tools_t::encoding_t encoding,
+    const codepage_t encoding,
     const bool create_header)
     : esm(path)
     , merger(merger)
@@ -14,10 +14,9 @@ esm_converter_t::esm_converter_t(
     , file_suffix(file_suffix)
     , create_header(create_header)
 {
-	if (encoding == tools_t::encoding_t::windows_1250)
+	if (encoding == codepage_t::windows_1250)
 	{
-		esm_encoding = detect_encoding();
-		if (esm_encoding == tools_t::encoding_t::windows_1250)
+		if (detect_encoding())
 		{
 			this->add_hyperlinks = false;
 		}
@@ -758,7 +757,7 @@ void esm_converter_t::print_log_line(const tools_t::rec_type_t type)
 	tools_t::add_log(line);
 }
 
-tools_t::encoding_t esm_converter_t::detect_encoding()
+bool esm_converter_t::detect_encoding()
 {
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
@@ -770,10 +769,10 @@ tools_t::encoding_t esm_converter_t::detect_encoding()
 		{
 			tools_t::add_log("[warning] windows-1250 encoding detected\r\n");
 			tools_t::add_log(esm.get_value().text + "\r\n", true);
-			return tools_t::encoding_t::windows_1250;
+			return true;
 		}
 	}
-	return tools_t::encoding_t::unknown;
+	return false;
 }
 
 bool esm_converter_t::detect_windows_1250_encoding(const std::string & val_text)

@@ -21,5 +21,5 @@ struct table_row_t
 	std::string old_text;
 	std::string new_text;
 	std::string status;
-	size_t chapter_index;
+	size_t record_index;
 };

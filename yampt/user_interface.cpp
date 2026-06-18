@@ -23,7 +23,7 @@ void user_interface_t::parse_command_line()
 		{
 			if (args[i] == "--windows-1250")
 			{
-				encoding = tools_t::encoding_t::windows_1250;
+				encoding = codepage_t::windows_1250;
 			}
 			else if (args[i] == "--debug")
 			{

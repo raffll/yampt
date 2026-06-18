@@ -98,11 +98,11 @@ filter_tree_t::filter_tree_t(QWidget * parent)
 			add_sub_types(item, type, indx_sub_types);
 	}
 
-	lua_item_ = new QTreeWidgetItem(tree_);
-	lua_item_->setText(0, "LUA");
-	lua_item_->setData(0, role_is_lua, true);
-	lua_item_->setData(0, role_state, static_cast<int>(node_state_t::deselected));
-	lua_item_->setHidden(true);
+	yaml_item_ = new QTreeWidgetItem(tree_);
+	yaml_item_->setText(0, "YAML");
+	yaml_item_->setData(0, role_is_yaml, true);
+	yaml_item_->setData(0, role_state, static_cast<int>(node_state_t::deselected));
+	yaml_item_->setHidden(true);
 
 	tree_->expandAll();
 	tree_->header()->setStretchLastSection(false);
@@ -176,7 +176,7 @@ void filter_tree_t::on_item_clicked(QTreeWidgetItem * item, int)
 		return;
 	}
 
-	if (item->data(0, role_is_lua).toBool())
+	if (item->data(0, role_is_yaml).toBool())
 	{
 		auto state = static_cast<node_state_t>(item->data(0, role_state).toInt());
 		bool new_selected = (state != node_state_t::selected);
@@ -252,7 +252,7 @@ void filter_tree_t::on_item_right_clicked(QTreeWidgetItem * item)
 		return;
 	}
 
-	if (item->data(0, role_is_lua).toBool())
+	if (item->data(0, role_is_yaml).toBool())
 		return;
 
 	for (auto & tn : type_nodes_)
@@ -338,7 +338,7 @@ void filter_tree_t::update_all_node_state()
 void filter_tree_t::update_item_styles()
 {
 	apply_item_style(all_item_);
-	apply_item_style(lua_item_);
+	apply_item_style(yaml_item_);
 
 	for (const auto & tn : type_nodes_)
 		apply_item_style(tn.item);
@@ -457,6 +457,39 @@ std::set<std::string> filter_tree_t::get_active_sub_types() const
 	return result;
 }
 
+void filter_tree_t::set_active_types(const std::set<tools_t::rec_type_t> & types)
+{
+	for (auto & tn : type_nodes_)
+	{
+		bool active = types.count(tn.type) > 0;
+		tn.item->setData(0, role_state, static_cast<int>(active ? node_state_t::selected : node_state_t::deselected));
+
+		for (int i = 0; i < tn.item->childCount(); ++i)
+			tn.item->child(i)->setData(0, role_state, static_cast<int>(active ? node_state_t::selected : node_state_t::deselected));
+	}
+
+	update_all_node_state();
+	update_item_styles();
+}
+
+void filter_tree_t::set_active_sub_types(const std::set<std::string> & sub_types)
+{
+	for (auto & stn : sub_type_nodes_)
+	{
+		bool active = sub_types.empty() || sub_types.count(stn.sub_type) > 0;
+		stn.item->setData(0, role_state, static_cast<int>(active ? node_state_t::selected : node_state_t::deselected));
+	}
+
+	for (auto & tn : type_nodes_)
+	{
+		if (tn.item->childCount() > 0)
+			update_parent_state(tn.item);
+	}
+
+	update_all_node_state();
+	update_item_styles();
+}
+
 bool filter_tree_t::is_solo() const
 {
 	return false;
@@ -467,21 +500,21 @@ tools_t::rec_type_t filter_tree_t::get_solo_type() const
 	return tools_t::rec_type_t::unknown;
 }
 
-bool filter_tree_t::is_lua_filter_active() const
+bool filter_tree_t::is_yaml_filter_active() const
 {
-	auto state = static_cast<node_state_t>(lua_item_->data(0, role_state).toInt());
+	auto state = static_cast<node_state_t>(yaml_item_->data(0, role_state).toInt());
 	return state == node_state_t::selected;
 }
 
-void filter_tree_t::set_lua_filter_active(bool active)
+void filter_tree_t::set_yaml_filter_active(bool active)
 {
-	lua_item_->setData(0, role_state, static_cast<int>(active ? node_state_t::selected : node_state_t::deselected));
-	apply_item_style(lua_item_);
+	yaml_item_->setData(0, role_state, static_cast<int>(active ? node_state_t::selected : node_state_t::deselected));
+	apply_item_style(yaml_item_);
 }
 
-void filter_tree_t::set_lua_button_visible(bool visible)
+void filter_tree_t::set_yaml_button_visible(bool visible)
 {
-	lua_item_->setHidden(!visible);
+	yaml_item_->setHidden(!visible);
 }
 
 void filter_tree_t::setEnabled(bool enabled)
@@ -497,21 +530,21 @@ void filter_tree_t::set_display_mode(display_mode_t mode)
 	{
 	case display_mode_t::empty:
 		all_item_->setHidden(true);
-		lua_item_->setHidden(true);
+		yaml_item_->setHidden(true);
 		for (auto & tn : type_nodes_)
 			tn.item->setHidden(true);
 		break;
 
 	case display_mode_t::all_only:
 		all_item_->setHidden(false);
-		lua_item_->setHidden(true);
+		yaml_item_->setHidden(true);
 		for (auto & tn : type_nodes_)
 			tn.item->setHidden(true);
 		break;
 
 	case display_mode_t::full:
 		all_item_->setHidden(false);
-		lua_item_->setHidden(true);
+		yaml_item_->setHidden(true);
 		for (auto & tn : type_nodes_)
 			tn.item->setHidden(false);
 		break;

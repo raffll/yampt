@@ -10,7 +10,7 @@ enum class file_type_t
 	plugin,
 	base_dict,
 	user_dict,
-	lua_l10n
+	yaml_l10n
 };
 
 struct file_entry_t
@@ -19,9 +19,6 @@ struct file_entry_t
 	std::string filename;
 	file_type_t type;
 	std::string language_tag;
-	bool dict_loaded = false;
-	bool dirty = false;
-	bool has_tmp = false;
 	bool is_workspace = false;
 	std::string workspace_subfolder;
 	std::string root_path;
@@ -40,31 +37,6 @@ enum class menu_action_t
 	delete_file
 };
 
-struct sidebar_render_item_t
-{
-	std::string path;
-	std::string display_text;
-	file_type_t type = file_type_t::user_dict;
-	bool is_workspace = false;
-	int translated_count = -1;
-	int total_count = -1;
-};
-
-struct sidebar_render_node_t
-{
-	std::string label;
-	std::string root_path;
-	std::string folder_path;
-	std::vector<sidebar_render_item_t> items;
-	std::vector<sidebar_render_node_t> children;
-};
-
-struct sidebar_render_model_t
-{
-	std::vector<sidebar_render_node_t> roots;
-	std::string active_path;
-};
-
 class file_list_t
 {
 public:
@@ -76,8 +48,6 @@ public:
 
 	file_entry_t & add(const std::string & path);
 	void remove(const std::string & path);
-	void set_loaded(const std::string & path, bool loaded);
-	void set_dirty(const std::string & path, bool dirty);
 
 	void scan_roots(const std::vector<std::string> & root_paths);
 	const std::vector<std::string> & get_roots() const;
@@ -94,7 +64,3 @@ private:
 
 file_type_t classify(const std::string & path);
 std::string detect_language(const std::string & filename, std::uintmax_t file_size);
-std::string derive_display_name(const file_entry_t & entry);
-std::vector<menu_action_t> derive_context_menu(const file_entry_t & entry);
-std::string derive_output_dir(const file_entry_t & entry, const std::string & default_dir);
-sidebar_render_model_t build_render_model(const file_list_t & file_list, const std::string & active_path);

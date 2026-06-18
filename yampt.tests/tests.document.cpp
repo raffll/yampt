@@ -2,23 +2,55 @@
 #include <rapidcheck.h>
 #include <rapidcheck/catch.h>
 #include "../yampt.gui/dict_document.hpp"
-#include "../yampt.gui/dict_workspace.hpp"
+#include "../yampt/dict_writer.hpp"
 
 #include <algorithm>
+#include <filesystem>
+#include <set>
+
+namespace
+{
+
+std::string create_temp_dict_json(const tools_t::dict_t & data)
+{
+	namespace fs = std::filesystem;
+	auto path = (fs::temp_directory_path() / "yampt_test_dict.json").string();
+	std::replace(path.begin(), path.end(), '\\', '/');
+
+	dict_writer_t::write(data, path);
+	return path;
+}
+
+void cleanup_temp_dict(const std::string & path)
+{
+	std::error_code ec;
+	std::filesystem::remove(path, ec);
+}
+
+} // anonymous namespace
 
 // **Validates: Requirements 2.2**
 TEST_CASE("dict_document_t property: path round trip", "[u]")
 {
-	rc::prop("path() returns normalized slot_path", []()
+	rc::prop("path() returns normalized path", []()
 	{
-		dict_slot_t slot;
-		const auto raw_path = *rc::gen::nonEmpty(rc::gen::arbitrary<std::string>());
+		tools_t::dict_t data;
+		auto & chapter = data[tools_t::rec_type_t::cell];
+		tools_t::record_entry_t entry;
+		entry.key_text = "test_key";
+		entry.old_text = "old";
+		entry.new_text = "new";
+		entry.status = "untranslated";
+		chapter.records.push_back(std::move(entry));
 
-		dict_document_t doc(&slot, raw_path, [](const std::string &) {}, false);
+		const auto path = create_temp_dict_json(data);
+		dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
 
-		auto expected = raw_path;
+		auto expected = path;
 		std::replace(expected.begin(), expected.end(), '\\', '/');
 		RC_ASSERT(doc.path() == expected);
+
+		cleanup_temp_dict(path);
 	});
 }
 
@@ -27,7 +59,7 @@ TEST_CASE("dict_document_t property: build_rows count invariant", "[u]")
 {
 	rc::prop("build_rows().size() == total_count()", []()
 	{
-		dict_slot_t slot;
+		tools_t::dict_t data;
 
 		const auto type_count = *rc::gen::inRange(0, 4);
 		const std::vector<tools_t::rec_type_t> types = {
@@ -40,11 +72,11 @@ TEST_CASE("dict_document_t property: build_rows count invariant", "[u]")
 		for (int t = 0; t < type_count; ++t)
 		{
 			const auto rec_count = *rc::gen::inRange(0, 20);
-			auto & chapter = slot.data[types[t]];
+			auto & chapter = data[types[t]];
 			for (int r = 0; r < rec_count; ++r)
 			{
 				tools_t::record_entry_t entry;
-				entry.key_text = *rc::gen::arbitrary<std::string>();
+				entry.key_text = "key_" + std::to_string(t) + "_" + std::to_string(r);
 				entry.old_text = *rc::gen::arbitrary<std::string>();
 				entry.new_text = *rc::gen::arbitrary<std::string>();
 				entry.status = "untranslated";
@@ -52,10 +84,13 @@ TEST_CASE("dict_document_t property: build_rows count invariant", "[u]")
 			}
 		}
 
-		dict_document_t doc(&slot, "test/path.json", [](const std::string &) {}, false);
+		const auto path = create_temp_dict_json(data);
+		dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
 
 		const auto rows = doc.build_rows();
 		RC_ASSERT(static_cast<int>(rows.size()) == doc.total_count());
+
+		cleanup_temp_dict(path);
 	});
 }
 
@@ -64,8 +99,8 @@ TEST_CASE("dict_document_t property: read-only commit is no-op", "[u]")
 {
 	rc::prop("commit_edit on read-only doc does not modify data", []()
 	{
-		dict_slot_t slot;
-		auto & chapter = slot.data[tools_t::rec_type_t::cell];
+		tools_t::dict_t data;
+		auto & chapter = data[tools_t::rec_type_t::cell];
 
 		const auto rec_count = *rc::gen::inRange(1, 10);
 		for (int i = 0; i < rec_count; ++i)
@@ -78,7 +113,8 @@ TEST_CASE("dict_document_t property: read-only commit is no-op", "[u]")
 			chapter.records.push_back(std::move(entry));
 		}
 
-		dict_document_t doc(&slot, "test/path.json", [](const std::string &) {}, true);
+		const auto path = create_temp_dict_json(data);
+		dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::base);
 
 		const auto rows_before = doc.build_rows();
 
@@ -92,6 +128,8 @@ TEST_CASE("dict_document_t property: read-only commit is no-op", "[u]")
 		{
 			RC_ASSERT(rows_before[i].new_text == rows_after[i].new_text);
 		}
+
+		cleanup_temp_dict(path);
 	});
 }
 
@@ -160,7 +198,7 @@ TEST_CASE("yaml_document_t property: dirty state consistency", "[u]")
 
 		doc.set_dirty(false);
 		const auto idx = *rc::gen::inRange<size_t>(0, static_cast<size_t>(count));
-		doc.commit_edit(tools_t::rec_type_t::lua, idx, "edited");
+		doc.commit_edit(tools_t::rec_type_t::yaml, idx, "edited");
 		RC_ASSERT(doc.is_dirty() == true);
 
 		cleanup_temp_yaml(path);
@@ -182,7 +220,7 @@ TEST_CASE("yaml_document_t property: commit-edit round trip", "[u]")
 
 		const auto idx = *rc::gen::inRange<size_t>(0, static_cast<size_t>(count));
 		const auto new_text = *rc::gen::nonEmpty(rc::gen::arbitrary<std::string>());
-		doc.commit_edit(tools_t::rec_type_t::lua, idx, new_text);
+		doc.commit_edit(tools_t::rec_type_t::yaml, idx, new_text);
 
 		const auto rows = doc.build_rows();
 		RC_ASSERT(rows[idx].new_text == new_text);
@@ -209,7 +247,7 @@ TEST_CASE("yaml_document_t property: translated count invariant", "[u]")
 		for (int e = 0; e < edit_count; ++e)
 		{
 			const auto idx = *rc::gen::inRange<size_t>(0, static_cast<size_t>(count));
-			doc.commit_edit(tools_t::rec_type_t::lua, idx, "edited_" + std::to_string(e));
+			doc.commit_edit(tools_t::rec_type_t::yaml, idx, "edited_" + std::to_string(e));
 			edited.insert(idx);
 		}
 

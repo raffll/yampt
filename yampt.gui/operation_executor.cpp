@@ -42,7 +42,7 @@ std::string operation_executor_t::get_output_dir() const
 	return result;
 }
 
-operation_executor_t::result_t operation_executor_t::make_dict(const std::string & plugin_path, tools_t::encoding_t encoding)
+operation_executor_t::result_t operation_executor_t::make_dict(const std::string & plugin_path, codepage_t encoding)
 {
 	tools_t::reset_log();
 
@@ -57,7 +57,7 @@ operation_executor_t::result_t operation_executor_t::make_dict(const std::string
 	return {!tools_t::has_error(), tools_t::get_log(), output_path};
 }
 
-operation_executor_t::result_t operation_executor_t::make_dict_with_base(const std::string & plugin_path, const tools_t::dict_t & base_dict, tools_t::encoding_t encoding)
+operation_executor_t::result_t operation_executor_t::make_dict_with_base(const std::string & plugin_path, const tools_t::dict_t & base_dict, codepage_t encoding)
 {
 	tools_t::reset_log();
 
@@ -103,7 +103,7 @@ operation_executor_t::result_t operation_executor_t::make_base(const std::string
 	return {!tools_t::has_error(), tools_t::get_log(), output_path};
 }
 
-operation_executor_t::result_t operation_executor_t::convert(const std::string & plugin_path, const std::vector<std::string> & dict_paths, tools_t::encoding_t encoding)
+operation_executor_t::result_t operation_executor_t::convert(const std::string & plugin_path, const std::vector<std::string> & dict_paths, codepage_t encoding)
 {
 	tools_t::reset_log();
 
@@ -125,7 +125,7 @@ operation_executor_t::result_t operation_executor_t::convert(const std::string &
 	return {true, tools_t::get_log(), output_path};
 }
 
-operation_executor_t::result_t operation_executor_t::create_plugin(const std::string & plugin_path, const std::vector<std::string> & dict_paths, tools_t::encoding_t encoding)
+operation_executor_t::result_t operation_executor_t::create_plugin(const std::string & plugin_path, const std::vector<std::string> & dict_paths, codepage_t encoding)
 {
 	tools_t::reset_log();
 

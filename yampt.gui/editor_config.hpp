@@ -24,6 +24,7 @@ public:
 	bool bottom_visible = true;
 	int encoding_index = 2;
 	int active_dict_index = -1;
+	std::string active_dict_path;
 	int window_x = -1;
 	int window_y = -1;
 	int window_w = 1280;

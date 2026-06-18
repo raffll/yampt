@@ -1,6 +1,7 @@
 #pragma once
 
 #include "includes.hpp"
+#include "codepage.hpp"
 #include "tools.hpp"
 
 class user_interface_t
@@ -25,5 +26,5 @@ private:
 	std::string suffix;
 	std::string translate_model_path;
 
-	tools_t::encoding_t encoding = tools_t::encoding_t::unknown;
+	codepage_t encoding = codepage_t::windows_1252;
 };

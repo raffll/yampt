@@ -159,6 +159,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="script_parser.cpp" />
+    <ClCompile Include="codepage.cpp" />
     <ClCompile Include="tools.cpp" />
     <ClCompile Include="dict_creator.cpp" />
     <ClCompile Include="dict_creator_single.cpp" />
@@ -182,6 +183,8 @@
   <ItemGroup>
     <ClInclude Include="script_parser.hpp" />
     <ClInclude Include="tools.hpp" />
+    <ClInclude Include="codepage.hpp" />
+    <ClInclude Include="dict_kind.hpp" />
     <ClInclude Include="dict_creator.hpp" />
     <ClInclude Include="dict_merger.hpp" />
     <ClInclude Include="dict_reader.hpp" />
