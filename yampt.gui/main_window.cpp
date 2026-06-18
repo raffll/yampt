@@ -3,6 +3,7 @@
 #include "annotations_panel.hpp"
 #include "book_preview.hpp"
 #include "composite_highlighter.hpp"
+#include "dict_document.hpp"
 #include "dict_selection_dialog.hpp"
 #include "editor_panel.hpp"
 #include "filter_tree.hpp"
@@ -17,7 +18,7 @@
 #include "spell_context_menu.hpp"
 #include "status_filter_bar.hpp"
 #include "validation_indicator.hpp"
-#include "yaml_l10n_writer.hpp"
+#include "yaml_document.hpp"
 
 #include "../yampt/dict_merger.hpp"
 #include "../yampt/dict_writer.hpp"
@@ -583,7 +584,8 @@ main_window_t::main_window_t(QWidget * parent)
     connect(sidebar_, &sidebar_widget_t::save_as_requested, this, [this](const std::string & path) {
         commit_current_edit();
 
-        if (lua_active_path_.empty())
+        auto * yaml_doc = dynamic_cast<yaml_document_t*>(active_doc_.get());
+        if (!yaml_doc)
             return;
 
         auto sep = path.find_last_of("/\\");
@@ -597,21 +599,10 @@ main_window_t::main_window_t(QWidget * parent)
         if (save_path.isEmpty())
             return;
 
-        std::vector<std::string> key_order;
-        for (const auto & e : lua_entries_)
-            key_order.push_back(e.key);
-
-        yaml_l10n_writer_t writer;
-        if (!writer.write(save_path.toStdString(), lua_entries_, key_order))
-            return;
-
+        yaml_doc->export_to(save_path.toStdString());
         log_tab_->append_log("save as", "saved \"" + save_path.toStdString() + "\"\r\n");
 
-        const auto tmp_path = lua_active_path_ + ".tmp";
-        QFile::remove(QString::fromStdString(tmp_path));
-        lua_modified_indices_.clear();
-
-        auto * fe = file_list_.get(lua_active_path_);
+        auto * fe = file_list_.get(yaml_doc->path());
         if (fe)
         {
             fe->dirty = false;
@@ -619,8 +610,7 @@ main_window_t::main_window_t(QWidget * parent)
             sidebar_->update_item_text(fe->path, derive_display_name(*fe));
         }
 
-        lua_active_path_.clear();
-        lua_entries_.clear();
+        active_doc_.reset();
         set_dirty(false);
     });
     connect(sidebar_, &sidebar_widget_t::unload_requested, this, &main_window_t::on_unload_requested);
@@ -628,6 +618,13 @@ main_window_t::main_window_t(QWidget * parent)
     connect(sidebar_, &sidebar_widget_t::remove_folder_requested, this, [this](const std::string & root_path) {
         auto & roots = config_.workspace_roots;
         roots.erase(std::remove(roots.begin(), roots.end(), root_path), roots.end());
+
+        if (auto * dict_doc = dynamic_cast<dict_document_t*>(active_doc_.get()))
+        {
+            const auto * fe = file_list_.get(dict_doc->slot_path());
+            if (fe && fe->root_path == root_path)
+                active_doc_.reset();
+        }
 
         for (int i = workspace_.slot_count() - 1; i >= 0; --i)
         {
@@ -656,6 +653,15 @@ main_window_t::main_window_t(QWidget * parent)
 
         if (answer != QMessageBox::Yes)
             return;
+
+        if (active_doc_)
+        {
+            auto folder_norm = folder_path;
+            std::replace(folder_norm.begin(), folder_norm.end(), '\\', '/');
+            const auto & doc_path = active_doc_->path();
+            if (doc_path.find(folder_norm + "/") == 0 || doc_path == folder_norm)
+                active_doc_.reset();
+        }
 
         for (int i = workspace_.slot_count() - 1; i >= 0; --i)
         {
@@ -843,6 +849,7 @@ main_window_t::main_window_t(QWidget * parent)
         const auto * slot = workspace_.get_active_slot();
         if (slot && !QFile::exists(QString::fromStdString(slot->path)))
         {
+            active_doc_.reset();
             const int active = workspace_.get_active_index();
             workspace_.unload_dict(active);
             rebuild_table();
@@ -887,39 +894,22 @@ void main_window_t::on_save()
 {
     commit_current_edit();
 
-    if (!lua_active_path_.empty())
-    {
-        save_lua_temp();
-
-        auto * fe = file_list_.get(lua_active_path_);
-        if (fe)
-        {
-            fe->dirty = false;
-            sidebar_->update_item_text(fe->path, derive_display_name(*fe));
-        }
-
-        set_dirty(false);
+    if (!active_doc_)
         return;
+
+    if (!active_doc_->is_dirty())
+        return;
+
+    active_doc_->save();
+
+    auto * fe = file_list_.get(active_doc_->path());
+    if (fe)
+    {
+        fe->dirty = false;
+        sidebar_->update_item_text(fe->path, derive_display_name(*fe));
     }
 
-    int active = workspace_.get_active_index();
-    if (active < 0)
-        return;
-
-    if (!workspace_.is_user_slot(active))
-        return;
-
-    const auto * slot = workspace_.get_slot(active);
-    save_dict_encoded(active);
-
-    if (slot)
-    {
-        auto * fe = file_list_.get(slot->path);
-        if (fe)
-            sidebar_->update_item_text(fe->path, derive_display_name(*fe));
-
-        log_tab_->append_log("save", "saved \"" + slot->path + "\"\r\n");
-    }
+    log_tab_->append_log("save", "saved \"" + active_doc_->path() + "\"\r\n");
 
     if (!workspace_.has_any_unsaved())
         set_dirty(false);
@@ -971,6 +961,12 @@ void main_window_t::on_unload_slot(int index)
         if (answer == QMessageBox::Save)
             save_dict_encoded(index);
     }
+
+    auto slot_path = slot->path;
+    std::replace(slot_path.begin(), slot_path.end(), '\\', '/');
+
+    if (active_doc_ && active_doc_->path() == slot_path)
+        active_doc_.reset();
 
     workspace_.unload_dict(index);
 
@@ -1145,24 +1141,77 @@ void main_window_t::rebuild_table()
     if (!table_model_)
         return;
 
-    if (!lua_active_path_.empty())
-        return;
+    auto * dict_doc = dynamic_cast<dict_document_t*>(active_doc_.get());
+    if (!dict_doc)
+    {
+        if (!active_doc_)
+        {
+            table_model_->rebuild({});
+            progress_label_->clear();
+            active_file_label_->clear();
+            filter_tree_->setEnabled(false);
+            status_filter_bar_->set_dict_mode(status_filter_bar_t::dict_mode_t::none);
+            search_label_->setEnabled(false);
+            search_field_->setEnabled(false);
+            case_sensitive_check_->setEnabled(false);
+            regex_check_->setEnabled(false);
+            search_col_key_->setEnabled(false);
+            search_col_original_->setEnabled(false);
+            search_col_translation_->setEnabled(false);
+            return;
+        }
 
-    const auto * slot = workspace_.get_active_slot();
+        active_file_label_->setText(QString::fromStdString(active_doc_->path()));
+        filter_tree_->set_display_mode(filter_tree_t::display_mode_t::all_only);
+        filter_tree_->setEnabled(true);
+        status_filter_bar_->set_dict_mode(status_filter_bar_t::dict_mode_t::user);
+        search_label_->setEnabled(true);
+        search_field_->setEnabled(true);
+        case_sensitive_check_->setEnabled(true);
+        regex_check_->setEnabled(true);
+        search_col_key_->setEnabled(true);
+        search_col_original_->setEnabled(true);
+        search_col_translation_->setEnabled(true);
+
+        const auto raw_rows = active_doc_->build_rows();
+        std::vector<table_row_t> rows;
+        for (const auto & row : raw_rows)
+        {
+            if (!status_filter_.empty() && status_filter_.count(row.status) == 0)
+                continue;
+
+            if (search_engine_.has_query() && !search_engine_.matches(row))
+                continue;
+
+            rows.push_back(row);
+        }
+
+        table_model_->rebuild(std::move(rows));
+        current_row_ = -1;
+
+        int total = active_doc_->total_count();
+        int translated = active_doc_->translated_count();
+        if (total > 0)
+        {
+            int pct = translated * 100 / total;
+            int shown = table_model_->rowCount();
+            progress_label_->setText(QString("%1 / %2 (%3%) | %4 shown")
+                .arg(translated).arg(total).arg(pct).arg(shown));
+        }
+        else
+        {
+            progress_label_->clear();
+        }
+
+        return;
+    }
+
+    const auto * slot = dict_doc->slot();
     if (!slot)
     {
         table_model_->rebuild({});
         progress_label_->clear();
         active_file_label_->clear();
-        filter_tree_->setEnabled(false);
-        status_filter_bar_->set_dict_mode(status_filter_bar_t::dict_mode_t::none);
-        search_label_->setEnabled(false);
-        search_field_->setEnabled(false);
-        case_sensitive_check_->setEnabled(false);
-        regex_check_->setEnabled(false);
-        search_col_key_->setEnabled(false);
-        search_col_original_->setEnabled(false);
-        search_col_translation_->setEnabled(false);
         return;
     }
 
@@ -1466,9 +1515,13 @@ void main_window_t::on_translation_changed()
     if (current_row_ < 0)
         return;
 
-    if (!lua_active_path_.empty())
+    if (!active_doc_)
+        return;
+
+    auto * yaml_doc = dynamic_cast<yaml_document_t*>(active_doc_.get());
+    if (yaml_doc)
     {
-        auto * fe = file_list_.get(lua_active_path_);
+        auto * fe = file_list_.get(yaml_doc->path());
         if (fe && !fe->dirty)
         {
             fe->dirty = true;
@@ -1480,9 +1533,10 @@ void main_window_t::on_translation_changed()
         return;
     }
 
-    if (workspace_.get_active_index() >= 0)
+    auto * dict_doc = dynamic_cast<dict_document_t*>(active_doc_.get());
+    if (dict_doc)
     {
-        auto * slot = workspace_.get_slot(workspace_.get_active_index());
+        auto * slot = dict_doc->slot();
         if (slot && !slot->dirty)
         {
             slot->dirty = true;
@@ -1641,37 +1695,18 @@ void main_window_t::commit_current_edit()
     if (!editor_panel_)
         return;
 
+    if (!active_doc_)
+        return;
+
+    if (active_doc_->is_read_only())
+        return;
+
     const auto & current_text = editor_panel_->translation_editor()->toPlainText();
     if (current_text == loaded_text_)
         return;
 
     const auto * row_data = table_model_->row_at(current_row_);
     if (!row_data)
-        return;
-
-    if (row_data->type == tools_t::rec_type_t::lua)
-    {
-        if (row_data->chapter_index < lua_entries_.size())
-        {
-            lua_entries_[row_data->chapter_index].value = current_text.toStdString();
-            lua_modified_indices_.insert(row_data->chapter_index);
-            table_model_->update_row(current_row_, current_text.toStdString(), "in_progress");
-            save_lua_temp();
-        }
-
-        loaded_text_ = current_text;
-        return;
-    }
-
-    auto * slot = workspace_.get_active_slot();
-    if (!slot)
-        return;
-
-    auto it = slot->data.find(row_data->type);
-    if (it == slot->data.end())
-        return;
-
-    if (row_data->chapter_index >= it->second.records.size())
         return;
 
     std::string new_text_str;
@@ -1696,58 +1731,81 @@ void main_window_t::commit_current_edit()
         new_text_str = current_text.toStdString();
     }
 
-    history_manager_.record_change(row_data->type, row_data->key_text, loaded_text_.toStdString(), new_text_str);
-
-    const auto validation = validation_manager_.validate(row_data->type, new_text_str);
-    const std::string commit_status = (validation.level == validation_level_t::error) ? "error" : "in_progress";
-
-    it->second.records[row_data->chapter_index].new_text = new_text_str;
-    it->second.records[row_data->chapter_index].status = commit_status;
-    slot->dirty = true;
-    slot->modified_records.insert({row_data->type, row_data->chapter_index});
-    set_dirty(true);
-
-    annotation_manager_.update_term(row_data->type, it->second.records[row_data->chapter_index].old_text, new_text_str);
-
-    if (new_text_str != it->second.records[row_data->chapter_index].old_text)
+    auto * dict_doc = dynamic_cast<dict_document_t*>(active_doc_.get());
+    if (dict_doc)
     {
-        int propagated = propagate_translation(it->second.records[row_data->chapter_index].old_text, new_text_str);
-        if (propagated > 0)
-        {
-            it->second.records[row_data->chapter_index].status = "propagated";
-            slot->dirty = true;
-            statusBar()->showMessage(QString("Propagated to %1 entries").arg(propagated), 5000);
-
-            table_model_->update_row(current_row_, new_text_str, "propagated");
-
-            for (int i = 0; i < table_model_->rowCount(); ++i)
-            {
-                if (i == current_row_)
-                    continue;
-
-                const auto * r = table_model_->row_at(i);
-                if (!r)
-                    continue;
-
-                auto chap_it = slot->data.find(r->type);
-                if (chap_it == slot->data.end())
-                    continue;
-
-                if (r->chapter_index >= chap_it->second.records.size())
-                    continue;
-
-                const auto & rec = chap_it->second.records[r->chapter_index];
-                if (rec.new_text != r->new_text || rec.status != r->status)
-                    table_model_->update_row(i, rec.new_text, rec.status);
-            }
-
-            loaded_text_ = current_text;
-            update_status_counts();
+        auto * slot = dict_doc->slot();
+        auto it = slot->data.find(row_data->type);
+        if (it == slot->data.end() || row_data->chapter_index >= it->second.records.size())
             return;
+
+        history_manager_.record_change(row_data->type, row_data->key_text,
+                                       loaded_text_.toStdString(), new_text_str);
+
+        const auto validation = validation_manager_.validate(row_data->type, new_text_str);
+        const std::string commit_status =
+            (validation.level == validation_level_t::error) ? "error" : "in_progress";
+
+        active_doc_->commit_edit(row_data->type, row_data->chapter_index, new_text_str);
+        it->second.records[row_data->chapter_index].status = commit_status;
+        slot->modified_records.insert({row_data->type, row_data->chapter_index});
+
+        annotation_manager_.update_term(row_data->type,
+            it->second.records[row_data->chapter_index].old_text, new_text_str);
+
+        if (new_text_str != it->second.records[row_data->chapter_index].old_text)
+        {
+            int propagated = propagate_translation(
+                it->second.records[row_data->chapter_index].old_text, new_text_str);
+            if (propagated > 0)
+            {
+                it->second.records[row_data->chapter_index].status = "propagated";
+                slot->dirty = true;
+                statusBar()->showMessage(QString("Propagated to %1 entries").arg(propagated), 5000);
+
+                table_model_->update_row(current_row_, new_text_str, "propagated");
+
+                for (int i = 0; i < table_model_->rowCount(); ++i)
+                {
+                    if (i == current_row_)
+                        continue;
+
+                    const auto * r = table_model_->row_at(i);
+                    if (!r)
+                        continue;
+
+                    auto chap_it = slot->data.find(r->type);
+                    if (chap_it == slot->data.end())
+                        continue;
+
+                    if (r->chapter_index >= chap_it->second.records.size())
+                        continue;
+
+                    const auto & rec = chap_it->second.records[r->chapter_index];
+                    if (rec.new_text != r->new_text || rec.status != r->status)
+                        table_model_->update_row(i, rec.new_text, rec.status);
+                }
+
+                set_dirty(active_doc_->is_dirty());
+                loaded_text_ = current_text;
+                update_status_counts();
+                return;
+            }
         }
+
+        table_model_->update_row(current_row_, new_text_str, commit_status);
+    }
+    else
+    {
+        active_doc_->commit_edit(row_data->type, row_data->chapter_index, new_text_str);
+        table_model_->update_row(current_row_, new_text_str, "in_progress");
+
+        auto * yaml_doc = dynamic_cast<yaml_document_t*>(active_doc_.get());
+        if (yaml_doc)
+            yaml_doc->save_tmp();
     }
 
-    table_model_->update_row(current_row_, new_text_str, commit_status);
+    set_dirty(active_doc_->is_dirty());
     loaded_text_ = current_text;
     update_status_counts();
 }
@@ -1807,8 +1865,7 @@ void main_window_t::load_record(int row)
         editor_panel_->translation_editor()->set_block_multiline(block);
     }
 
-    const bool is_base = !lua_active_path_.empty() ? false
-        : workspace_.is_base_slot(workspace_.get_active_index());
+    const bool is_base = active_doc_ ? active_doc_->is_read_only() : false;
     editor_panel_->translation_editor()->setReadOnly(is_base);
 
     hl_original_->set_record_type(row_data->type);
@@ -2109,10 +2166,8 @@ void main_window_t::save_dict_encoded(int slot_index)
 void main_window_t::rebuild_sidebar()
 {
 	std::string active_path;
-	if (!lua_active_path_.empty())
-		active_path = lua_active_path_;
-	else if (workspace_.get_active_index() >= 0)
-		active_path = workspace_.get_slot(workspace_.get_active_index())->path;
+	if (active_doc_)
+		active_path = active_doc_->path();
 
 	auto model = build_render_model(file_list_, active_path);
 
@@ -2128,10 +2183,10 @@ void main_window_t::rebuild_sidebar()
 			if (item.type == file_type_t::plugin)
 				continue;
 
-			if (item.type == file_type_t::lua_l10n && item.path == lua_active_path_)
+			if (item.type == file_type_t::lua_l10n && active_doc_ && item.path == active_doc_->path())
 			{
-				item.total_count = static_cast<int>(lua_entries_.size());
-				item.translated_count = static_cast<int>(lua_modified_indices_.size());
+				item.total_count = active_doc_->total_count();
+				item.translated_count = active_doc_->translated_count();
 				continue;
 			}
 
@@ -2405,7 +2460,22 @@ void main_window_t::load_config()
     scan_workspace();
 
     if (config_.active_dict_index >= 0 && config_.active_dict_index < workspace_.slot_count())
+    {
         workspace_.set_active(config_.active_dict_index);
+        auto * slot = workspace_.get_slot(config_.active_dict_index);
+        if (slot)
+        {
+            const bool is_base = workspace_.is_base_slot(config_.active_dict_index);
+            active_doc_ = std::make_unique<dict_document_t>(
+                slot, slot->path,
+                [this](const std::string & p) {
+                    int idx = workspace_.find_by_path(p);
+                    if (idx >= 0)
+                        save_dict_encoded(idx);
+                },
+                is_base);
+        }
+    }
 
     rebuild_table();
 
@@ -2744,31 +2814,6 @@ void main_window_t::update_watcher_paths()
         fs_watcher_->addPaths(paths);
 }
 
-void main_window_t::save_lua_temp()
-{
-    if (lua_active_path_.empty())
-        return;
-
-    if (lua_modified_indices_.empty())
-        return;
-
-    const auto tmp_path = lua_active_path_ + ".tmp";
-
-    std::vector<l10n_entry_t> modified_entries;
-    std::vector<std::string> key_order;
-    for (auto idx : lua_modified_indices_)
-    {
-        if (idx >= lua_entries_.size())
-            continue;
-
-        modified_entries.push_back(lua_entries_[idx]);
-        key_order.push_back(lua_entries_[idx].key);
-    }
-
-    yaml_l10n_writer_t writer;
-    writer.write(tmp_path, modified_entries, key_order);
-}
-
 std::vector<dict_selection_dialog_t::dict_entry_t> main_window_t::build_dict_entries(const std::string & source_dir) const
 {
     std::vector<dict_selection_dialog_t::dict_entry_t> entries;
@@ -2889,6 +2934,9 @@ void main_window_t::on_item_clicked(const std::string & path)
 
     if (entry->type == file_type_t::plugin)
     {
+        commit_current_edit();
+        active_doc_.reset();
+        workspace_.set_active(-1);
         table_model_->rebuild({});
         current_row_ = -1;
         filter_tree_->set_display_mode(filter_tree_t::display_mode_t::empty);
@@ -2905,118 +2953,67 @@ void main_window_t::on_item_clicked(const std::string & path)
         return;
     }
 
+    auto norm_path = path;
+    std::replace(norm_path.begin(), norm_path.end(), '\\', '/');
+
+    if (active_doc_ && active_doc_->path() == norm_path)
+        return;
+
     if (entry->type == file_type_t::lua_l10n)
     {
-        auto norm_path = path;
-        std::replace(norm_path.begin(), norm_path.end(), '\\', '/');
-
-        auto active_norm = lua_active_path_;
-        std::replace(active_norm.begin(), active_norm.end(), '\\', '/');
-        if (norm_path == active_norm)
-            return;
-
         commit_current_edit();
-        save_lua_temp();
-
-        yaml_l10n_reader_t reader;
-        if (!reader.load(path))
-        {
-            table_model_->rebuild({});
-            active_file_label_->setText(QString::fromStdString(path));
-            return;
-        }
-
-        lua_active_path_ = path;
-        lua_entries_.clear();
-        lua_modified_indices_.clear();
         workspace_.set_active(-1);
-
-        const auto & source_entries = reader.source_entries();
-        for (const auto & src : source_entries)
-        {
-            l10n_entry_t e;
-            e.key = src.key;
-            e.value = src.value;
-            lua_entries_.push_back(std::move(e));
-        }
-
-        const auto tmp_path = path + ".tmp";
-        yaml_l10n_reader_t tmp_reader;
-        if (tmp_reader.load(tmp_path))
-        {
-            std::unordered_map<std::string, std::string> tmp_map;
-            for (const auto & e : tmp_reader.source_entries())
-                tmp_map[e.key] = e.value;
-
-            for (size_t i = 0; i < lua_entries_.size(); ++i)
-            {
-                auto it = tmp_map.find(lua_entries_[i].key);
-                if (it != tmp_map.end())
-                {
-                    lua_entries_[i].value = it->second;
-                    lua_modified_indices_.insert(i);
-                }
-            }
-        }
-
-        std::vector<table_row_t> rows;
-        for (size_t i = 0; i < lua_entries_.size(); ++i)
-        {
-            table_row_t row;
-            row.type = tools_t::rec_type_t::lua;
-            row.key_text = lua_entries_[i].key;
-            row.old_text = source_entries[i].value;
-            row.new_text = lua_modified_indices_.count(i) ? lua_entries_[i].value : "";
-
-            if (lua_modified_indices_.count(i))
-                row.status = "in_progress";
-            else
-                row.status = "untranslated";
-
-            row.chapter_index = i;
-            rows.push_back(std::move(row));
-        }
-
-        table_model_->rebuild(std::move(rows));
-        active_file_label_->setText(QString::fromStdString(lua_active_path_));
+        active_doc_ = std::make_unique<yaml_document_t>(path);
         filter_tree_->set_display_mode(filter_tree_t::display_mode_t::all_only);
-        filter_tree_->setEnabled(true);
         status_filter_bar_->set_dict_mode(status_filter_bar_t::dict_mode_t::user);
-        search_label_->setEnabled(true);
-        search_field_->setEnabled(true);
-        case_sensitive_check_->setEnabled(true);
-        regex_check_->setEnabled(true);
-        search_col_key_->setEnabled(true);
-        search_col_original_->setEnabled(true);
-        search_col_translation_->setEnabled(true);
+        rebuild_table();
+        editor_panel_->original_view()->clear();
+        editor_panel_->translation_editor()->clear();
+        editor_panel_->clear_adapted_from();
+        validation_indicator_->clear();
+        annotations_panel_->clear();
+        history_panel_->clear();
+        book_preview_->clear();
         current_row_ = -1;
         return;
     }
 
-    lua_active_path_.clear();
-    lua_entries_.clear();
-    lua_modified_indices_.clear();
-
+    // Dict file (json/xml)
     for (int i = 0; i < workspace_.slot_count(); ++i)
     {
         const auto * slot = workspace_.get_slot(i);
-        if (slot && slot->path == path)
-        {
-            commit_current_edit();
-            workspace_.set_active(i);
-            rebuild_table();
-            editor_panel_->original_view()->clear();
-            editor_panel_->translation_editor()->clear();
-            editor_panel_->clear_adapted_from();
-            validation_indicator_->clear();
-            annotations_panel_->clear();
-            history_panel_->clear();
-            book_preview_->clear();
-            current_row_ = -1;
-            return;
-        }
+        if (!slot)
+            continue;
+
+        auto slot_norm = slot->path;
+        std::replace(slot_norm.begin(), slot_norm.end(), '\\', '/');
+        if (slot_norm != norm_path)
+            continue;
+
+        commit_current_edit();
+        workspace_.set_active(i);
+        const bool is_base = workspace_.is_base_slot(i);
+        active_doc_ = std::make_unique<dict_document_t>(
+            workspace_.get_slot(i), slot->path,
+            [this](const std::string & p) {
+                int idx = workspace_.find_by_path(p);
+                if (idx >= 0)
+                    save_dict_encoded(idx);
+            },
+            is_base);
+        rebuild_table();
+        editor_panel_->original_view()->clear();
+        editor_panel_->translation_editor()->clear();
+        editor_panel_->clear_adapted_from();
+        validation_indicator_->clear();
+        annotations_panel_->clear();
+        history_panel_->clear();
+        book_preview_->clear();
+        current_row_ = -1;
+        return;
     }
 
+    // Not yet loaded — load it
     int old_count = workspace_.slot_count();
 
     auto kind = dict_kind_t::user;
@@ -3052,7 +3049,17 @@ void main_window_t::on_item_clicked(const std::string & path)
     annotation_manager_.rebuild(sources);
 
     commit_current_edit();
-    workspace_.set_active(workspace_.slot_count() - 1);
+    int new_idx = workspace_.slot_count() - 1;
+    workspace_.set_active(new_idx);
+    const bool is_base = workspace_.is_base_slot(new_idx);
+    active_doc_ = std::make_unique<dict_document_t>(
+        workspace_.get_slot(new_idx), workspace_.get_slot(new_idx)->path,
+        [this](const std::string & p) {
+            int idx = workspace_.find_by_path(p);
+            if (idx >= 0)
+                save_dict_encoded(idx);
+        },
+        is_base);
     rebuild_table();
 }
 
@@ -3074,41 +3081,49 @@ void main_window_t::on_save_requested(const std::string & path)
     auto norm_path = path;
     std::replace(norm_path.begin(), norm_path.end(), '\\', '/');
 
-    auto norm_lua = lua_active_path_;
-    std::replace(norm_lua.begin(), norm_lua.end(), '\\', '/');
-
-    if (!lua_active_path_.empty() && norm_path == norm_lua)
+    if (active_doc_ && active_doc_->path() == norm_path)
     {
         commit_current_edit();
-        save_lua_temp();
+        active_doc_->save();
 
-        auto * fe = file_list_.get(lua_active_path_);
+        auto * fe = file_list_.get(active_doc_->path());
         if (fe)
         {
             fe->dirty = false;
             sidebar_->update_item_text(fe->path, derive_display_name(*fe));
         }
 
-        set_dirty(false);
+        log_tab_->append_log("save", "saved \"" + active_doc_->path() + "\"\r\n");
+
+        if (!workspace_.has_any_unsaved())
+            set_dirty(false);
+
         return;
     }
 
     for (int i = 0; i < workspace_.slot_count(); ++i)
     {
         const auto * slot = workspace_.get_slot(i);
-        if (slot && slot->path == path)
-        {
-            save_dict_encoded(i);
+        if (!slot)
+            continue;
 
-            auto * fe = file_list_.get(slot->path);
-            if (fe)
-                sidebar_->update_item_text(fe->path, derive_display_name(*fe));
+        auto slot_norm = slot->path;
+        std::replace(slot_norm.begin(), slot_norm.end(), '\\', '/');
+        if (slot_norm != norm_path)
+            continue;
 
-            log_tab_->append_log("save", "saved \"" + slot->path + "\"\r\n");
-            if (!workspace_.has_any_unsaved())
-                set_dirty(false);
-            return;
-        }
+        save_dict_encoded(i);
+
+        auto * fe = file_list_.get(slot->path);
+        if (fe)
+            sidebar_->update_item_text(fe->path, derive_display_name(*fe));
+
+        log_tab_->append_log("save", "saved \"" + slot->path + "\"\r\n");
+
+        if (!workspace_.has_any_unsaved())
+            set_dirty(false);
+
+        return;
     }
 }
 
@@ -3142,6 +3157,11 @@ void main_window_t::on_delete_requested(const std::string & path)
         return;
 
     QFile::remove(QString::fromStdString(path));
+
+    auto norm_del_path = path;
+    std::replace(norm_del_path.begin(), norm_del_path.end(), '\\', '/');
+    if (active_doc_ && active_doc_->path() == norm_del_path)
+        active_doc_.reset();
 
     for (int i = 0; i < workspace_.slot_count(); ++i)
     {
@@ -3186,7 +3206,8 @@ void main_window_t::closeEvent(QCloseEvent * event)
     }
 
     commit_current_edit();
-    save_lua_temp();
+    if (auto * yaml_doc = dynamic_cast<yaml_document_t*>(active_doc_.get()))
+        yaml_doc->save_tmp();
     save_config();
     QMainWindow::closeEvent(event);
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "record_table_model.hpp"
+#include "table_row.hpp"
 #include <string>
 #include <vector>
 
@@ -14,7 +14,7 @@ public:
     virtual bool is_read_only() const = 0;
 
     virtual std::vector<table_row_t> build_rows() const = 0;
-    virtual void commit_edit(size_t row_index, const std::string & new_text) = 0;
+    virtual void commit_edit(tools_t::rec_type_t type, size_t chapter_index, const std::string & new_text) = 0;
     virtual void save() = 0;
 
     virtual int translated_count() const = 0;

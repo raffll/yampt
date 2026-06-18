@@ -197,7 +197,7 @@ bool dict_workspace_t::has_any_unsaved() const
 	return false;
 }
 
-const std::vector<dict_slot_t> & dict_workspace_t::slots() const
+const std::vector<dict_slot_t> & dict_workspace_t::get_slots() const
 {
 	return slots_;
 }

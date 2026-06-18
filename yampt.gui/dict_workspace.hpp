@@ -58,7 +58,7 @@ public:
 	bool is_base_slot(int index) const;
 	bool has_any_unsaved() const;
 
-	const std::vector<dict_slot_t> & slots() const;
+	const std::vector<dict_slot_t> & get_slots() const;
 	const std::vector<dict_slot_t> & get_all_slots() const { return slots_; }
 
 private:

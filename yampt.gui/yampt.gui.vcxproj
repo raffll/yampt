@@ -213,6 +213,8 @@
     <ClCompile Include="find_replace_dialog.cpp" />
     <ClCompile Include="yaml_l10n_reader.cpp" />
     <ClCompile Include="yaml_l10n_writer.cpp" />
+    <ClCompile Include="dict_document.cpp" />
+    <ClCompile Include="yaml_document.cpp" />
     <ClCompile Include="..\yampt\translation_engine.cpp" />
     <ClCompile Include="..\yampt\file_list.cpp" />
     <ClCompile Include="..\external\yyjson.c">
@@ -241,6 +243,10 @@
     <ClInclude Include="search_engine.hpp" />
     <ClInclude Include="yaml_l10n_reader.hpp" />
     <ClInclude Include="yaml_l10n_writer.hpp" />
+    <ClInclude Include="document.hpp" />
+    <ClInclude Include="dict_document.hpp" />
+    <ClInclude Include="yaml_document.hpp" />
+    <ClInclude Include="table_row.hpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="main_window.hpp">

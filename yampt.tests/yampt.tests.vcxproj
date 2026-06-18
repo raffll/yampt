@@ -208,6 +208,11 @@
     <ClCompile Include="tests.script_parser.cpp" />
     <ClCompile Include="tests.tools.cpp" />
     <ClCompile Include="tests.file_list.cpp" />
+    <ClCompile Include="tests.document.cpp" />
+    <ClCompile Include="..\yampt.gui\dict_document.cpp" />
+    <ClCompile Include="..\yampt.gui\yaml_document.cpp" />
+    <ClCompile Include="..\yampt.gui\yaml_l10n_reader.cpp" />
+    <ClCompile Include="..\yampt.gui\yaml_l10n_writer.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

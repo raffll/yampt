@@ -1,12 +1,16 @@
 #include "yaml_document.hpp"
 #include "yaml_l10n_writer.hpp"
 
+#include <algorithm>
 #include <filesystem>
 
 yaml_document_t::yaml_document_t(const std::string & file_path)
     : path_(file_path)
     , tmp_path_(file_path + ".tmp")
 {
+    std::replace(path_.begin(), path_.end(), '\\', '/');
+    tmp_path_ = path_ + ".tmp";
+
     yaml_l10n_reader_t reader;
     if (!reader.load(path_))
         return;
@@ -16,6 +20,7 @@ yaml_document_t::yaml_document_t(const std::string & file_path)
         l10n_entry_t e;
         e.key = src.key;
         e.value = src.value;
+        source_values_.push_back(src.value);
         entries_.push_back(std::move(e));
     }
 
@@ -58,16 +63,12 @@ std::vector<table_row_t> yaml_document_t::build_rows() const
     std::vector<table_row_t> rows;
     rows.reserve(entries_.size());
 
-    yaml_l10n_reader_t source_reader;
-    source_reader.load(path_);
-    const auto & source_entries = source_reader.source_entries();
-
     for (size_t i = 0; i < entries_.size(); ++i)
     {
         table_row_t row;
         row.type = tools_t::rec_type_t::lua;
         row.key_text = entries_[i].key;
-        row.old_text = (i < source_entries.size()) ? source_entries[i].value : "";
+        row.old_text = (i < source_values_.size()) ? source_values_[i] : "";
         row.new_text = modified_indices_.count(i) ? entries_[i].value : "";
 
         if (modified_indices_.count(i))
@@ -82,13 +83,13 @@ std::vector<table_row_t> yaml_document_t::build_rows() const
     return rows;
 }
 
-void yaml_document_t::commit_edit(size_t row_index, const std::string & new_text)
+void yaml_document_t::commit_edit(tools_t::rec_type_t type, size_t chapter_index, const std::string & new_text)
 {
-    if (row_index >= entries_.size())
+    if (chapter_index >= entries_.size())
         return;
 
-    entries_[row_index].value = new_text;
-    modified_indices_.insert(row_index);
+    entries_[chapter_index].value = new_text;
+    modified_indices_.insert(chapter_index);
     dirty_ = true;
 }
 

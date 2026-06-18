@@ -18,7 +18,7 @@ public:
     bool is_read_only() const override;
 
     std::vector<table_row_t> build_rows() const override;
-    void commit_edit(size_t row_index, const std::string & new_text) override;
+    void commit_edit(tools_t::rec_type_t type, size_t chapter_index, const std::string & new_text) override;
     void save() override;
 
     int translated_count() const override;
@@ -35,6 +35,7 @@ private:
     std::string path_;
     std::string tmp_path_;
     std::vector<l10n_entry_t> entries_;
+    std::vector<std::string> source_values_;
     std::set<size_t> modified_indices_;
     bool dirty_ = false;
 };

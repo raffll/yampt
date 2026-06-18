@@ -2,7 +2,9 @@
 
 #include "annotation_manager.hpp"
 #include "dict_selection_dialog.hpp"
+#include "dict_document.hpp"
 #include "dict_workspace.hpp"
+#include "document.hpp"
 #include "editor_config.hpp"
 #include "encoding_utils.hpp"
 #include "grammar_checker.hpp"
@@ -13,9 +15,10 @@
 #include "sidebar_widget.hpp"
 #include "spell_checker.hpp"
 #include "validation_manager.hpp"
-#include "yaml_l10n_reader.hpp"
 
 #include "../yampt/file_list.hpp"
+
+#include <memory>
 
 #include <QMainWindow>
 #include <QTextEdit>
@@ -200,9 +203,5 @@ private:
     QFileSystemWatcher * fs_watcher_ = nullptr;
     QTimer * rescan_timer_ = nullptr;
 
-    std::string lua_active_path_;
-    std::vector<l10n_entry_t> lua_entries_;
-    std::set<size_t> lua_modified_indices_;
-
-    void save_lua_temp();
+    std::unique_ptr<document_t> active_doc_;
 };
