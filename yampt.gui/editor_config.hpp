@@ -27,6 +27,8 @@ public:
 	std::string active_dict_path;
 	std::vector<std::string> last_merge_order;
 	std::string deepl_api_key;
+	int translation_source_index = 0;
+	int translation_language_index = 0;
 	int window_x = -1;
 	int window_y = -1;
 	int window_w = 1280;

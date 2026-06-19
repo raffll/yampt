@@ -1833,6 +1833,9 @@ void main_window_t::load_config()
     if (!config_.deepl_api_key.empty())
         translation_tab_->set_deepl_api_key(config_.deepl_api_key);
 
+    translation_tab_->set_source_index(config_.translation_source_index);
+    translation_tab_->set_language_index(config_.translation_language_index);
+
     sidebar_toggle_->setChecked(config_.sidebar_visible);
     bottom_panel_toggle_->setChecked(config_.bottom_visible);
 
@@ -1886,6 +1889,8 @@ void main_window_t::save_config()
     config_.active_dict_index = -1;  // deprecated — use active_dict_path
     config_.active_dict_path = active_doc_ ? active_doc_->path() : std::string{};
     config_.deepl_api_key = translation_tab_->deepl_api_key();
+    config_.translation_source_index = translation_tab_->source_index();
+    config_.translation_language_index = translation_tab_->language_index();
     config_.workspace_roots = file_list_.get_roots();
 
     const auto path = QCoreApplication::applicationDirPath() + "/yampt_gui.ini";

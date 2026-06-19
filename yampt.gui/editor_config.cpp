@@ -83,6 +83,14 @@ void editor_config_t::load(const std::string & path)
 			{
 				deepl_api_key = value;
 			}
+			else if (key == "TranslationSourceIndex")
+			{
+				try { translation_source_index = std::stoi(value); } catch (...) {}
+			}
+			else if (key == "TranslationLanguageIndex")
+			{
+				try { translation_language_index = std::stoi(value); } catch (...) {}
+			}
 			else if (key == "SplitRatio")
 			{
 				try
@@ -244,6 +252,8 @@ void editor_config_t::save(const std::string & path) const
 	file << "ActiveDictPath=" << active_dict_path << "\n";
 	if (!deepl_api_key.empty())
 		file << "DeepLApiKey=" << deepl_api_key << "\n";
+	file << "TranslationSourceIndex=" << translation_source_index << "\n";
+	file << "TranslationLanguageIndex=" << translation_language_index << "\n";
 	file << "SplitRatio=" << split_ratio << "\n";
 	file << "SidebarWidth=" << sidebar_width << "\n";
 	file << "BottomHeight=" << bottom_height << "\n";
