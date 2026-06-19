@@ -46,6 +46,7 @@ public:
 	bool save_merge(const std::string & output_path, const std::string & author, const std::string & description);
 	bool has_merge() const;
 	size_t merge_record_count() const;
+	const std::string & merge_record_content(size_t index) const;
 
 	size_t itm_count(int plugin_idx) const;
 	std::vector<const conflict_entry_t *> itm_entries(int plugin_idx) const;

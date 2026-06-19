@@ -18,6 +18,9 @@
 #include <QStyledItemDelegate>
 #include <QVBoxLayout>
 
+#include <functional>
+#include <set>
+
 class grid_delegate_t : public QStyledItemDelegate
 {
 public:
@@ -92,9 +95,16 @@ editor_tab_t::editor_tab_t(QWidget * parent)
 	nav_view_->setContextMenuPolicy(Qt::CustomContextMenu);
 
 	view_view_ = new QTreeView(content_splitter_);
-	view_view_->setSelectionMode(QAbstractItemView::ExtendedSelection);
+	view_view_->setSelectionMode(QAbstractItemView::SingleSelection);
+	view_view_->setSelectionBehavior(QAbstractItemView::SelectItems);
 	view_view_->setRootIsDecorated(true);
 	view_view_->setAlternatingRowColors(false);
+	view_view_->setDragEnabled(true);
+	view_view_->setAcceptDrops(true);
+	view_view_->setDragDropMode(QAbstractItemView::DragDrop);
+	view_view_->setDragDropOverwriteMode(true);
+	view_view_->setDropIndicatorShown(false);
+	view_view_->setDefaultDropAction(Qt::CopyAction);
 	view_view_->setItemDelegate(new grid_delegate_t(view_view_));
 
 	content_splitter_->addWidget(nav_view_);
@@ -134,6 +144,7 @@ editor_tab_t::editor_tab_t(QWidget * parent)
 	        this, &editor_tab_t::on_nav_selection_changed);
 
 	nav_view_->viewport()->installEventFilter(this);
+	view_view_->viewport()->installEventFilter(this);
 
 	auto * copy_shortcut = new QShortcut(QKeySequence::Copy, view_view_);
 	connect(copy_shortcut, &QShortcut::activated, this, &editor_tab_t::on_view_copy);
@@ -213,6 +224,7 @@ void editor_tab_t::on_load_plugins()
 void editor_tab_t::rebuild_after_load()
 {
 	nav_model_->rebuild();
+	nav_view_->expandToDepth(0);
 
 	cmb_type_filter_->blockSignals(true);
 	cmb_type_filter_->clear();
@@ -222,6 +234,59 @@ void editor_tab_t::rebuild_after_load()
 	cmb_type_filter_->blockSignals(false);
 
 	update_status();
+}
+
+void editor_tab_t::rebuild_nav_preserving_state()
+{
+	std::set<std::string> expanded;
+
+	std::function<void(const QModelIndex &, const std::string &)> collect =
+		[&](const QModelIndex & parent, const std::string & path)
+	{
+		int rows = nav_model_->rowCount(parent);
+		for (int i = 0; i < rows; ++i)
+		{
+			auto idx = nav_model_->index(i, 0, parent);
+			if (!idx.isValid())
+				continue;
+
+			auto text = nav_model_->data(idx, Qt::DisplayRole).toString().toStdString();
+			auto full_path = path + "/" + text;
+
+			if (nav_view_->isExpanded(idx))
+			{
+				expanded.insert(full_path);
+				collect(idx, full_path);
+			}
+		}
+	};
+
+	collect(QModelIndex(), "");
+
+	nav_model_->rebuild();
+
+	std::function<void(const QModelIndex &, const std::string &)> restore =
+		[&](const QModelIndex & parent, const std::string & path)
+	{
+		int rows = nav_model_->rowCount(parent);
+		for (int i = 0; i < rows; ++i)
+		{
+			auto idx = nav_model_->index(i, 0, parent);
+			if (!idx.isValid())
+				continue;
+
+			auto text = nav_model_->data(idx, Qt::DisplayRole).toString().toStdString();
+			auto full_path = path + "/" + text;
+
+			if (expanded.count(full_path))
+			{
+				nav_view_->expand(idx);
+				restore(idx, full_path);
+			}
+		}
+	};
+
+	restore(QModelIndex(), "");
 }
 
 void editor_tab_t::on_nav_selection_changed(const QModelIndex & current)
@@ -258,6 +323,23 @@ void editor_tab_t::on_nav_selection_changed(const QModelIndex & current)
 	}
 
 	view_model_->set_record(scan_, *entry);
+	for (int i = 0; i < view_model_->rowCount({}); ++i)
+	{
+		auto idx = view_model_->index(i, 0, {});
+		if (view_model_->rowCount(idx) > 0)
+		{
+			auto child = view_model_->index(0, 0, idx);
+			auto name = child.data(Qt::DisplayRole).toString();
+			if (!name.isEmpty() && !name[0].isDigit())
+				view_view_->expand(idx);
+		}
+	}
+	for (int i = 0; i < view_model_->columnCount({}); ++i)
+	{
+		view_view_->resizeColumnToContents(i);
+		if (view_view_->columnWidth(i) > 400)
+			view_view_->setColumnWidth(i, 400);
+	}
 	update_status();
 }
 
@@ -361,7 +443,7 @@ void editor_tab_t::on_new_plugin()
 		filename += ".esp";
 
 	scan_.set_merge_plugin(filename.toStdString());
-	nav_model_->rebuild();
+	rebuild_nav_preserving_state();
 	log_message("Created merge plugin: " + filename.toStdString());
 	update_status();
 }
@@ -413,16 +495,8 @@ void editor_tab_t::on_create_merged_patch()
 		return;
 	}
 
-	QString path = QFileDialog::getSaveFileName(
-		this, "Save Merged Patch", QString(), "ESP files (*.esp)");
-
-	if (path.isEmpty())
-		return;
-
-	auto filename = QFileInfo(path).fileName().toStdString();
-
 	if (!scan_.has_merge())
-		scan_.set_merge_plugin(filename);
+		scan_.set_merge_plugin("Merged Patch.esp");
 
 	const auto & entries = scan_.entries();
 	int copied = 0;
@@ -446,35 +520,42 @@ void editor_tab_t::on_create_merged_patch()
 		++copied;
 	}
 
-	bool ok_author = false;
-	QString author = QInputDialog::getText(
-		this, "Plugin Author", "Author:", QLineEdit::Normal, QString(), &ok_author);
-
-	if (!ok_author)
-		return;
-
-	bool ok_desc = false;
-	QString description = QInputDialog::getText(
-		this, "Plugin Description", "Description:", QLineEdit::Normal,
-		"Merged patch - conflict resolution", &ok_desc);
-
-	if (!ok_desc)
-		return;
-
-	bool result = scan_.save_merge(
-		path.toStdString(), author.toStdString(), description.toStdString());
-
-	if (result)
-	{
-		log_message("Created merged patch: " + filename + " (" + std::to_string(copied) + " records)");
-	}
-	else
-	{
-		log_message("Error creating merged patch");
-	}
+	log_message("Created merged patch: Merged Patch.esp (" + std::to_string(copied) + " records)");
 
 	scan_.rebuild_conflicts();
-	nav_model_->rebuild();
+	rebuild_nav_preserving_state();
+
+	auto current = nav_view_->currentIndex();
+	if (current.isValid())
+	{
+		auto info = nav_model_->node_at(current);
+		if (!info.record_id.empty())
+		{
+			const auto * updated = scan_.find(info.rec_type, info.record_id);
+			if (updated)
+			{
+				view_model_->set_record(scan_, *updated);
+				for (int i = 0; i < view_model_->rowCount({}); ++i)
+				{
+					auto idx = view_model_->index(i, 0, {});
+					if (view_model_->rowCount(idx) > 0)
+					{
+						auto child = view_model_->index(0, 0, idx);
+						auto name = child.data(Qt::DisplayRole).toString();
+						if (!name.isEmpty() && !name[0].isDigit())
+							view_view_->expand(idx);
+					}
+				}
+				for (int i = 0; i < view_model_->columnCount({}); ++i)
+				{
+					view_view_->resizeColumnToContents(i);
+					if (view_view_->columnWidth(i) > 400)
+						view_view_->setColumnWidth(i, 400);
+				}
+			}
+		}
+	}
+
 	update_status();
 }
 
@@ -504,7 +585,7 @@ void editor_tab_t::on_remove_itm()
 
 	log_message("Removed " + std::to_string(count) + " ITM records from merge plugin");
 	scan_.rebuild_conflicts();
-	nav_model_->rebuild();
+	rebuild_nav_preserving_state();
 	update_status();
 }
 
@@ -531,7 +612,7 @@ void editor_tab_t::on_nav_context_menu(const QPoint & pos)
 		{
 			scan_.remove_from_merge(info.rec_type, info.record_id);
 			scan_.rebuild_conflicts();
-			nav_model_->rebuild();
+			rebuild_nav_preserving_state();
 			log_message("Removed " + info.rec_type + ":" + info.record_id + " from merge");
 			update_status();
 		});
@@ -551,7 +632,7 @@ void editor_tab_t::on_nav_context_menu(const QPoint & pos)
 			}
 
 			scan_.rebuild_conflicts();
-			nav_model_->rebuild();
+			rebuild_nav_preserving_state();
 			log_message("Copied " + info.rec_type + ":" + info.record_id + " to merge");
 			update_status();
 		});
@@ -591,8 +672,25 @@ void editor_tab_t::on_view_copy()
 
 bool editor_tab_t::eventFilter(QObject * obj, QEvent * event)
 {
-	if (obj != nav_view_->viewport())
-		return QWidget::eventFilter(obj, event);
+	if (obj == view_view_->viewport() && event->type() == QEvent::DragEnter)
+	{
+		auto * drag = static_cast<QDragEnterEvent *>(event);
+		if (drag->mimeData()->hasFormat("application/x-yampt-record") && scan_.has_merge())
+		{
+			drag->acceptProposedAction();
+			return true;
+		}
+	}
+
+	if (obj == view_view_->viewport() && event->type() == QEvent::DragMove)
+	{
+		auto * drag = static_cast<QDragMoveEvent *>(event);
+		if (drag->mimeData()->hasFormat("application/x-yampt-record") && scan_.has_merge())
+		{
+			drag->acceptProposedAction();
+			return true;
+		}
+	}
 
 	if (event->type() != QEvent::Drop)
 		return QWidget::eventFilter(obj, event);
@@ -600,71 +698,144 @@ bool editor_tab_t::eventFilter(QObject * obj, QEvent * event)
 	auto * drop = static_cast<QDropEvent *>(event);
 	const auto * mime = drop->mimeData();
 
-	if (!mime->hasFormat("application/x-yampt-record"))
-		return QWidget::eventFilter(obj, event);
-
 	if (!scan_.has_merge())
 		return QWidget::eventFilter(obj, event);
 
-	auto target_index = nav_view_->indexAt(drop->position().toPoint());
-	if (!target_index.isValid())
-		return QWidget::eventFilter(obj, event);
-
-	auto target_info = nav_model_->node_at(target_index);
-	if (!scan_.is_merge_plugin(target_info.plugin_idx))
-		return QWidget::eventFilter(obj, event);
-
-	auto payload = QString::fromUtf8(mime->data("application/x-yampt-record"));
-	auto parts = payload.split('\t');
-	if (parts.size() != 3)
-		return QWidget::eventFilter(obj, event);
-
-	int source_plugin = parts[0].toInt();
-	auto rec_type = parts[1].toStdString();
-	auto record_id = parts[2].toStdString();
-
-	const auto * entry = scan_.find(rec_type, record_id);
-	if (!entry)
-		return true;
-
-	for (const auto & v : entry->versions)
+	if (obj == view_view_->viewport())
 	{
-		if (v.plugin_idx == source_plugin)
+		if (!mime->hasFormat("application/x-yampt-record"))
+			return QWidget::eventFilter(obj, event);
+
+		auto payload = QString::fromUtf8(mime->data("application/x-yampt-record"));
+		auto parts = payload.split('\t');
+		if (parts.size() != 3)
+			return QWidget::eventFilter(obj, event);
+
+		int source_plugin = parts[0].toInt();
+		auto rec_type = parts[1].toStdString();
+		auto record_id = parts[2].toStdString();
+
+		const auto * entry = scan_.find(rec_type, record_id);
+		if (!entry)
+			return true;
+
+		bool already_in_merge = false;
+		for (const auto & v : entry->versions)
 		{
-			bool already_in_merge = false;
-			for (const auto & mv : entry->versions)
+			if (scan_.is_merge_plugin(v.plugin_idx))
 			{
-				if (scan_.is_merge_plugin(mv.plugin_idx))
+				already_in_merge = true;
+				break;
+			}
+		}
+
+		if (!already_in_merge)
+		{
+			int best_plugin = -1;
+			size_t best_index = 0;
+			for (const auto & v : entry->versions)
+			{
+				if (scan_.is_merge_plugin(v.plugin_idx))
+					continue;
+
+				best_plugin = v.plugin_idx;
+				best_index = v.record_index;
+			}
+
+			if (best_plugin >= 0)
+			{
+				scan_.copy_record_to_merge(best_plugin, best_index);
+				log_message("Copied " + rec_type + ":" + record_id + " to merge (winner)");
+			}
+		}
+		else
+		{
+			for (const auto & v : entry->versions)
+			{
+				if (v.plugin_idx != source_plugin)
+					continue;
+
+				scan_.copy_record_to_merge(source_plugin, v.record_index);
+				log_message("Copied " + rec_type + ":" + record_id + " to merge (override)");
+				break;
+			}
+		}
+
+		scan_.rebuild_conflicts();
+		rebuild_nav_preserving_state();
+
+		const auto * updated = scan_.find(rec_type, record_id);
+		if (updated)
+		{
+			view_model_->set_record(scan_, *updated);
+			for (int i = 0; i < view_model_->rowCount({}); ++i)
+			{
+				auto idx = view_model_->index(i, 0, {});
+				if (view_model_->rowCount(idx) > 0)
 				{
-					already_in_merge = true;
-					break;
+					auto child = view_model_->index(0, 0, idx);
+					auto name = child.data(Qt::DisplayRole).toString();
+					if (!name.isEmpty() && !name[0].isDigit())
+						view_view_->expand(idx);
 				}
 			}
-
-			if (already_in_merge)
+			for (int i = 0; i < view_model_->columnCount({}); ++i)
 			{
-				auto answer = QMessageBox::question(
-					this, "Overwrite",
-					QString("Record %1:%2 already exists in merge plugin. Overwrite?")
-						.arg(QString::fromStdString(rec_type))
-						.arg(QString::fromStdString(record_id)),
-					QMessageBox::Yes | QMessageBox::No);
-
-				if (answer != QMessageBox::Yes)
-					return true;
+				view_view_->resizeColumnToContents(i);
+				if (view_view_->columnWidth(i) > 400)
+					view_view_->setColumnWidth(i, 400);
 			}
+		}
+
+		update_status();
+		event->accept();
+		return true;
+	}
+
+	if (obj == nav_view_->viewport())
+	{
+		if (!mime->hasFormat("application/x-yampt-record"))
+			return QWidget::eventFilter(obj, event);
+
+		auto target_index = nav_view_->indexAt(drop->position().toPoint());
+		if (!target_index.isValid())
+			return QWidget::eventFilter(obj, event);
+
+		auto target_info = nav_model_->node_at(target_index);
+		if (!scan_.is_merge_plugin(target_info.plugin_idx))
+			return QWidget::eventFilter(obj, event);
+
+		auto payload = QString::fromUtf8(mime->data("application/x-yampt-record"));
+		auto parts = payload.split('\t');
+		if (parts.size() != 3)
+			return QWidget::eventFilter(obj, event);
+
+		int source_plugin = parts[0].toInt();
+		auto rec_type = parts[1].toStdString();
+		auto record_id = parts[2].toStdString();
+
+		const auto * entry = scan_.find(rec_type, record_id);
+		if (!entry)
+			return true;
+
+		for (const auto & v : entry->versions)
+		{
+			if (v.plugin_idx != source_plugin)
+				continue;
 
 			scan_.copy_record_to_merge(source_plugin, v.record_index);
 			scan_.rebuild_conflicts();
-			nav_model_->rebuild();
+			rebuild_nav_preserving_state();
 			log_message("Copied " + rec_type + ":" + record_id + " to merge (drag)");
 			update_status();
 			break;
 		}
+
+		event->accept();
+		return true;
 	}
 
-	event->accept();
-	return true;
+	return QWidget::eventFilter(obj, event);
 }
 
 void editor_tab_t::update_status()
@@ -754,6 +925,18 @@ void editor_tab_t::load_plugin_paths()
 
 	for (const auto & path : paths)
 	{
+		auto filename = path;
+		auto pos = filename.find_last_of("/\\");
+		if (pos != std::string::npos)
+			filename = filename.substr(pos + 1);
+
+		if (filename == "Merged Patch.esp")
+		{
+			scan_.set_merge_plugin("Merged Patch.esp");
+			log_message("Detected merge plugin: Merged Patch.esp");
+			continue;
+		}
+
 		try
 		{
 			scan_.load_plugin(path);
@@ -763,11 +946,6 @@ void editor_tab_t::load_plugin_paths()
 		}
 		catch (const std::exception & e)
 		{
-			auto filename = path;
-			auto pos = filename.find_last_of("/\\");
-			if (pos != std::string::npos)
-				filename = filename.substr(pos + 1);
-
 			log_message("Error loading " + filename + ": " + e.what());
 		}
 	}

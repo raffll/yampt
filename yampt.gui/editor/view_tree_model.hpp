@@ -5,6 +5,7 @@
 #include "../../yampt/plugin_scan/sub_record_iter.hpp"
 #include "../../yampt/plugin_scan/sub_record_schema.hpp"
 #include <QAbstractItemModel>
+#include <QMimeData>
 #include <string>
 #include <vector>
 
@@ -17,6 +18,8 @@ public:
 	void set_record(plugin_scan_t & scan, const conflict_entry_t & entry);
 	void clear();
 	void set_hide_no_conflict(bool hide);
+	bool is_merge_column(int section) const;
+	int merge_column() const;
 
 	QModelIndex index(int row, int column, const QModelIndex & parent) const override;
 	QModelIndex parent(const QModelIndex & child) const override;
@@ -24,6 +27,12 @@ public:
 	int columnCount(const QModelIndex & parent) const override;
 	QVariant data(const QModelIndex & index, int role) const override;
 	QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
+	Qt::ItemFlags flags(const QModelIndex & index) const override;
+	Qt::DropActions supportedDragActions() const override;
+	Qt::DropActions supportedDropActions() const override;
+	QMimeData * mimeData(const QModelIndexList & indexes) const override;
+	bool canDropMimeData(const QMimeData * data, Qt::DropAction action,
+	                     int row, int column, const QModelIndex & parent) const override;
 
 private:
 	struct field_row_t
@@ -51,7 +60,11 @@ private:
 	std::vector<std::string> column_names_;
 	std::vector<conflict_this_t> plugin_conflict_this_;
 	bool hide_no_conflict_ = false;
+	bool has_merge_column_ = false;
+	int merge_col_index_ = -1;
 	std::string record_type_;
+	std::string record_id_;
+	std::vector<int> column_plugin_indices_;
 
 	std::string format_value(const char * data, size_t size) const;
 	std::string decode_field(const field_def_t & field, const char * data, size_t data_size) const;

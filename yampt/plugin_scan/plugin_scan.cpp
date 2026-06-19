@@ -74,6 +74,43 @@ void plugin_scan_t::rebuild_conflicts()
 		}
 	}
 
+	if (merge_plugin_idx_ >= 0)
+	{
+		for (size_t mi = 0; mi < merge_records_.size(); ++mi)
+		{
+			const auto & mr = merge_records_[mi];
+			std::string key = mr.rec_type + std::string(1, '\0') + mr.record_id;
+			auto it = entry_lookup_.find(key);
+
+			if (it == entry_lookup_.end())
+			{
+				conflict_entry_t entry;
+				entry.rec_type = mr.rec_type;
+				entry.record_id = mr.record_id;
+				entry.conflict_all = conflict_all_t::only_one;
+
+				record_version_t ver;
+				ver.plugin_idx = merge_plugin_idx_;
+				ver.record_index = mi;
+				ver.status = conflict_this_t::master;
+				entry.versions.push_back(ver);
+
+				entry_lookup_[key] = entries_.size();
+				entries_.push_back(std::move(entry));
+			}
+			else
+			{
+				auto & entry = entries_[it->second];
+
+				record_version_t ver;
+				ver.plugin_idx = merge_plugin_idx_;
+				ver.record_index = mi;
+				ver.status = conflict_this_t::unknown;
+				entry.versions.push_back(ver);
+			}
+		}
+	}
+
 	for (auto & entry : entries_)
 	{
 		if (entry.versions.size() >= 2)
@@ -84,8 +121,15 @@ void plugin_scan_t::rebuild_conflicts()
 void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 {
 	auto & master_ver = entry.versions[0];
-	plugins_[master_ver.plugin_idx]->esm.select_record(master_ver.record_index);
-	const std::string master_content = plugins_[master_ver.plugin_idx]->esm.get_record().content;
+
+	std::string master_content;
+	if (master_ver.plugin_idx == merge_plugin_idx_)
+		master_content = merge_records_[master_ver.record_index].content;
+	else
+	{
+		plugins_[master_ver.plugin_idx]->esm.select_record(master_ver.record_index);
+		master_content = plugins_[master_ver.plugin_idx]->esm.get_record().content;
+	}
 
 	bool any_differs = false;
 	int last_differ_idx = -1;
@@ -94,6 +138,23 @@ void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 	for (size_t i = 1; i < entry.versions.size(); ++i)
 	{
 		auto & ver = entry.versions[i];
+
+		if (ver.plugin_idx == merge_plugin_idx_)
+		{
+			const auto & ver_content = merge_records_[ver.record_index].content;
+			if (content_equal(master_content, ver_content))
+			{
+				ver.status = conflict_this_t::identical_to_master;
+			}
+			else
+			{
+				any_differs = true;
+				last_differ_idx = static_cast<int>(i);
+				++differ_count;
+			}
+
+			continue;
+		}
 
 		const auto & plugin_entries = plugins_[ver.plugin_idx]->index.entries();
 		if (ver.record_index < plugin_entries.size() && plugin_entries[ver.record_index].has_dele)
@@ -106,7 +167,7 @@ void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 		}
 
 		plugins_[ver.plugin_idx]->esm.select_record(ver.record_index);
-		const auto & ver_content = plugins_[ver.plugin_idx]->esm.get_record().content;
+		const std::string ver_content = plugins_[ver.plugin_idx]->esm.get_record().content;
 
 		if (content_equal(master_content, ver_content))
 		{
@@ -290,6 +351,11 @@ bool plugin_scan_t::has_merge() const
 size_t plugin_scan_t::merge_record_count() const
 {
 	return merge_records_.size();
+}
+
+const std::string & plugin_scan_t::merge_record_content(size_t index) const
+{
+	return merge_records_[index].content;
 }
 
 size_t plugin_scan_t::itm_count(int plugin_idx) const

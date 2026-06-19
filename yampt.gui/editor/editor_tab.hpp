@@ -38,6 +38,7 @@ private:
 	void log_message(const std::string & msg);
 	void save_plugin_paths();
 	void load_plugin_paths();
+	void rebuild_nav_preserving_state();
 	bool eventFilter(QObject * obj, QEvent * event) override;
 
 	plugin_scan_t scan_;
