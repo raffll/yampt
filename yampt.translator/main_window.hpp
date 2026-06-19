@@ -55,6 +55,7 @@ class QComboBox;
 class QLabel;
 class QLineEdit;
 class QMenu;
+class QPushButton;
 class QSplitter;
 class QTabWidget;
 
@@ -157,11 +158,11 @@ private:
 
 	QLabel * search_label_ = nullptr;
 	QLineEdit * search_field_ = nullptr;
-	QCheckBox * case_sensitive_check_ = nullptr;
-	QCheckBox * regex_check_ = nullptr;
-	QCheckBox * search_col_key_ = nullptr;
-	QCheckBox * search_col_original_ = nullptr;
-	QCheckBox * search_col_translation_ = nullptr;
+	QPushButton * case_sensitive_check_ = nullptr;
+	QPushButton * regex_check_ = nullptr;
+	QPushButton * search_col_key_ = nullptr;
+	QPushButton * search_col_original_ = nullptr;
+	QPushButton * search_col_translation_ = nullptr;
 	QComboBox * encoding_combo_ = nullptr;
 	QComboBox * spell_lang_combo_ = nullptr;
 	QCheckBox * grammar_check_ = nullptr;

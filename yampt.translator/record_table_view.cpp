@@ -14,6 +14,8 @@ record_table_view_t::record_table_view_t(QWidget * parent)
 	setSortingEnabled(true);
 	setAlternatingRowColors(false);
 	verticalHeader()->setVisible(false);
+	verticalHeader()->setDefaultSectionSize(20);
+	verticalHeader()->setMinimumSectionSize(20);
 
 	auto * header = horizontalHeader();
 	header->setStretchLastSection(false);

@@ -126,34 +126,38 @@ main_window_t::main_window_t(QWidget * parent)
 	search_field_->setPlaceholderText("Search...");
 	toolbar->addWidget(search_field_);
 
-	static const QString checkbox_style = "QCheckBox:disabled { color: rgb(180,180,180); }";
+	static const QString toggle_style =
+	    "QPushButton { border: 1px solid #bbb; border-radius: 2px; padding: 2px 6px; background: #f0f0f0; }"
+	    "QPushButton:checked { background: #cde; border-color: #89a; }"
+	    "QPushButton:disabled { color: rgb(180,180,180); }";
 
-	case_sensitive_check_ = new QCheckBox("Case", this);
-	case_sensitive_check_->setLayoutDirection(Qt::RightToLeft);
-	case_sensitive_check_->setStyleSheet(checkbox_style);
+	case_sensitive_check_ = new QPushButton("Aa", this);
+	case_sensitive_check_->setCheckable(true);
+	case_sensitive_check_->setFlat(false);
+	case_sensitive_check_->setStyleSheet(toggle_style);
 	toolbar->addWidget(case_sensitive_check_);
 
-	regex_check_ = new QCheckBox("Regex", this);
-	regex_check_->setLayoutDirection(Qt::RightToLeft);
-	regex_check_->setStyleSheet(checkbox_style);
+	regex_check_ = new QPushButton(".*", this);
+	regex_check_->setCheckable(true);
+	regex_check_->setStyleSheet(toggle_style);
 	toolbar->addWidget(regex_check_);
 
-	search_col_key_ = new QCheckBox("Key", this);
+	search_col_key_ = new QPushButton("Key", this);
+	search_col_key_->setCheckable(true);
 	search_col_key_->setChecked(true);
-	search_col_key_->setLayoutDirection(Qt::RightToLeft);
-	search_col_key_->setStyleSheet(checkbox_style);
+	search_col_key_->setStyleSheet(toggle_style);
 	toolbar->addWidget(search_col_key_);
 
-	search_col_original_ = new QCheckBox("Original", this);
+	search_col_original_ = new QPushButton("Original", this);
+	search_col_original_->setCheckable(true);
 	search_col_original_->setChecked(true);
-	search_col_original_->setLayoutDirection(Qt::RightToLeft);
-	search_col_original_->setStyleSheet(checkbox_style);
+	search_col_original_->setStyleSheet(toggle_style);
 	toolbar->addWidget(search_col_original_);
 
-	search_col_translation_ = new QCheckBox("Translation", this);
+	search_col_translation_ = new QPushButton("Translation", this);
+	search_col_translation_->setCheckable(true);
 	search_col_translation_->setChecked(true);
-	search_col_translation_->setLayoutDirection(Qt::RightToLeft);
-	search_col_translation_->setStyleSheet(checkbox_style);
+	search_col_translation_->setStyleSheet(toggle_style);
 	toolbar->addWidget(search_col_translation_);
 
 	toolbar->addSeparator();
@@ -175,12 +179,10 @@ main_window_t::main_window_t(QWidget * parent)
 	grammar_check_ = new QCheckBox("Grammar", this);
 	grammar_check_->setChecked(true);
 	grammar_check_->setLayoutDirection(Qt::RightToLeft);
-	grammar_check_->setStyleSheet(checkbox_style);
 	toolbar->addWidget(grammar_check_);
 
 	whitespace_check_ = new QCheckBox("Whitespace", this);
 	whitespace_check_->setLayoutDirection(Qt::RightToLeft);
-	whitespace_check_->setStyleSheet(checkbox_style);
 	toolbar->addWidget(whitespace_check_);
 
 	search_field_->setToolTip("Search across entries");
@@ -454,13 +456,13 @@ main_window_t::main_window_t(QWidget * parent)
 	});
 
 	connect(search_field_, &QLineEdit::textChanged, this, &main_window_t::on_search_changed);
-	connect(case_sensitive_check_, &QCheckBox::checkStateChanged, this, [this]() { on_case_sensitive_changed(0); });
-	connect(regex_check_, &QCheckBox::checkStateChanged, this, [this]() { on_search_changed(search_query_); });
+	connect(case_sensitive_check_, &QPushButton::toggled, this, [this]() { on_case_sensitive_changed(0); });
+	connect(regex_check_, &QPushButton::toggled, this, [this]() { on_search_changed(search_query_); });
 
 	auto on_search_col_changed = [this]() { on_search_changed(search_query_); };
-	connect(search_col_key_, &QCheckBox::checkStateChanged, this, on_search_col_changed);
-	connect(search_col_original_, &QCheckBox::checkStateChanged, this, on_search_col_changed);
-	connect(search_col_translation_, &QCheckBox::checkStateChanged, this, on_search_col_changed);
+	connect(search_col_key_, &QPushButton::toggled, this, on_search_col_changed);
+	connect(search_col_original_, &QPushButton::toggled, this, on_search_col_changed);
+	connect(search_col_translation_, &QPushButton::toggled, this, on_search_col_changed);
 
 	connect(
 	    encoding_combo_,

@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-class QCheckBox;
+class QAbstractButton;
 class QLabel;
 class QLineEdit;
 
@@ -25,11 +25,11 @@ public:
 	    QLabel & file_label,
 	    QLabel & search_label,
 	    QLineEdit & search_field,
-	    QCheckBox & case_check,
-	    QCheckBox & regex_check,
-	    QCheckBox & col_key,
-	    QCheckBox & col_orig,
-	    QCheckBox & col_trans);
+	    QAbstractButton & case_check,
+	    QAbstractButton & regex_check,
+	    QAbstractButton & col_key,
+	    QAbstractButton & col_orig,
+	    QAbstractButton & col_trans);
 
 	void apply(table_build_result_t result, const std::string & file_path, dict_kind_t kind);
 	void apply_yaml(
@@ -50,9 +50,9 @@ private:
 	QLabel & file_label_;
 	QLabel & search_label_;
 	QLineEdit & search_field_;
-	QCheckBox & case_check_;
-	QCheckBox & regex_check_;
-	QCheckBox & col_key_;
-	QCheckBox & col_orig_;
-	QCheckBox & col_trans_;
+	QAbstractButton & case_check_;
+	QAbstractButton & regex_check_;
+	QAbstractButton & col_key_;
+	QAbstractButton & col_orig_;
+	QAbstractButton & col_trans_;
 };

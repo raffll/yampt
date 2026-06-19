@@ -3,7 +3,7 @@
 #include "record_table_model.hpp"
 #include "status_filter_bar.hpp"
 
-#include <QCheckBox>
+#include <QAbstractButton>
 #include <QLabel>
 #include <QLineEdit>
 #include <QString>
@@ -16,11 +16,11 @@ table_display_t::table_display_t(
     QLabel & file_label,
     QLabel & search_label,
     QLineEdit & search_field,
-    QCheckBox & case_check,
-    QCheckBox & regex_check,
-    QCheckBox & col_key,
-    QCheckBox & col_orig,
-    QCheckBox & col_trans)
+    QAbstractButton & case_check,
+    QAbstractButton & regex_check,
+    QAbstractButton & col_key,
+    QAbstractButton & col_orig,
+    QAbstractButton & col_trans)
     : filter_tree_(filter_tree)
     , status_bar_(status_bar)
     , model_(model)
