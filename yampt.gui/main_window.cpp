@@ -1,4 +1,5 @@
 #include "main_window.hpp"
+#include "editor/editor_tab.hpp"
 #include "annotation_highlighter.hpp"
 #include "table_builder.hpp"
 #include "annotations_panel.hpp"
@@ -81,6 +82,7 @@ main_window_t::main_window_t(QWidget * parent)
     };
 
     auto * file_menu = menuBar()->addMenu("&File");
+    translator_file_menu_ = file_menu;
 
     add_folder_action_ = new QAction("Add &Folder...", this);
     file_menu->addAction(add_folder_action_);
@@ -104,6 +106,7 @@ main_window_t::main_window_t(QWidget * parent)
     file_menu->addAction(quit_action);
 
     auto * view_menu = menuBar()->addMenu("&View");
+    translator_view_menu_ = view_menu;
 
     sidebar_toggle_ = new QAction("Toggle &Sidebar", this);
     sidebar_toggle_->setCheckable(true);
@@ -188,8 +191,6 @@ main_window_t::main_window_t(QWidget * parent)
     encoding_combo_->setToolTip("Text encoding");
     spell_lang_combo_->setToolTip("Spell check language");
 
-    addToolBar(toolbar);
-
     find_action_ = new QAction(this);
     find_action_->setShortcut(QKeySequence("Ctrl+F"));
     addAction(find_action_);
@@ -219,6 +220,8 @@ main_window_t::main_window_t(QWidget * parent)
     central_layout->setContentsMargins(0, 0, 0, 0);
     central_layout->setSpacing(4);
 
+    central_layout->addWidget(toolbar);
+
     filter_tree_ = new filter_tree_t(this);
     status_filter_bar_ = new status_filter_bar_t(central_widget);
     central_layout->addWidget(status_filter_bar_);
@@ -226,7 +229,30 @@ main_window_t::main_window_t(QWidget * parent)
     central_splitter_ = new QSplitter(Qt::Horizontal, central_widget);
     central_layout->addWidget(central_splitter_, 1);
 
-    setCentralWidget(central_widget);
+    top_tabs_ = new QTabWidget(this);
+    top_tabs_->addTab(central_widget, "Translator");
+    editor_tab_ = new editor_tab_t(top_tabs_);
+    top_tabs_->addTab(editor_tab_, "Editor");
+    setCentralWidget(top_tabs_);
+
+    editor_file_menu_ = menuBar()->addMenu("&File");
+    editor_file_menu_->addAction("&Quit", QKeySequence("Alt+F4"), this, &QWidget::close);
+    editor_file_menu_->menuAction()->setVisible(false);
+
+    editor_view_menu_ = menuBar()->addMenu("&View");
+    editor_view_menu_->addAction("Hide No Conflict", editor_tab_, [this]() {});
+    editor_view_menu_->menuAction()->setVisible(false);
+
+    connect(top_tabs_, &QTabWidget::currentChanged, this, [this](int index) {
+        bool translator = (index == 0);
+        translator_file_menu_->menuAction()->setVisible(translator);
+        translator_view_menu_->menuAction()->setVisible(translator);
+        editor_file_menu_->menuAction()->setVisible(!translator);
+        editor_view_menu_->menuAction()->setVisible(!translator);
+        active_file_label_->setVisible(translator);
+        progress_label_->setVisible(translator);
+        validation_indicator_->setVisible(translator);
+    });
 
     left_splitter_ = new QSplitter(Qt::Vertical, central_splitter_);
 

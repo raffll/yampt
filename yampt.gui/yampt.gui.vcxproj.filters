@@ -7,6 +7,9 @@
     <Filter Include="external">
       <UniqueIdentifier>{A1000002-0000-0000-0000-000000000002}</UniqueIdentifier>
     </Filter>
+    <Filter Include="editor">
+      <UniqueIdentifier>{A1000003-0000-0000-0000-000000000003}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -90,6 +93,33 @@
     <ClCompile Include="..\yampt\script_parser.cpp">
       <Filter>yampt</Filter>
     </ClCompile>
+    <ClCompile Include="..\yampt\plugin_scan\sub_record_schema.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\yampt\plugin_scan\plugin_index.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\yampt\plugin_scan\plugin_scan.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\editor_tab.cpp">
+      <Filter>editor</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\nav_tree_model.cpp">
+      <Filter>editor</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\view_tree_model.cpp">
+      <Filter>editor</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\plugin_select_dialog.cpp">
+      <Filter>editor</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\filter_dialog.cpp">
+      <Filter>editor</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\messages_panel.cpp">
+      <Filter>editor</Filter>
+    </ClCompile>
     <ClCompile Include="..\external\yyjson.c">
       <Filter>external</Filter>
     </ClCompile>
@@ -134,6 +164,39 @@
     </ClInclude>
     <ClInclude Include="..\yampt\json_reader.hpp">
       <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\yampt\plugin_scan\conflict_types.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\yampt\plugin_scan\sub_record_iter.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\yampt\plugin_scan\sub_record_schema.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\yampt\plugin_scan\plugin_index.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\yampt\plugin_scan\plugin_scan.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\editor_tab.hpp">
+      <Filter>editor</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\nav_tree_model.hpp">
+      <Filter>editor</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\view_tree_model.hpp">
+      <Filter>editor</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\plugin_select_dialog.hpp">
+      <Filter>editor</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\filter_dialog.hpp">
+      <Filter>editor</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\messages_panel.hpp">
+      <Filter>editor</Filter>
     </ClInclude>
     <ClInclude Include="..\external\yyjson.h">
       <Filter>external</Filter>

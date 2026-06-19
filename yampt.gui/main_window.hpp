@@ -36,6 +36,7 @@ class QTimer;
 
 class annotations_panel_t;
 class book_preview_t;
+class editor_tab_t;
 class composite_highlighter_t;
 class editor_panel_t;
 class editor_text_edit_t;
@@ -54,6 +55,7 @@ class QCloseEvent;
 class QComboBox;
 class QLabel;
 class QLineEdit;
+class QMenu;
 class QSplitter;
 class QTabWidget;
 
@@ -223,6 +225,14 @@ private:
 
     QFileSystemWatcher * fs_watcher_ = nullptr;
     QTimer * rescan_timer_ = nullptr;
+
+    QTabWidget * top_tabs_ = nullptr;
+    editor_tab_t * editor_tab_ = nullptr;
+
+    QMenu * translator_file_menu_ = nullptr;
+    QMenu * translator_view_menu_ = nullptr;
+    QMenu * editor_file_menu_ = nullptr;
+    QMenu * editor_view_menu_ = nullptr;
 
     document_t * active_doc_ = nullptr;
 };

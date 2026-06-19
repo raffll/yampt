@@ -236,6 +236,15 @@ if exist "$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\plugin
     <ClCompile Include="google_provider.cpp" />
     <ClCompile Include="..\yampt\translation_engine.cpp" />
     <ClCompile Include="..\yampt\file_list.cpp" />
+    <ClCompile Include="..\yampt\plugin_scan\sub_record_schema.cpp" />
+    <ClCompile Include="..\yampt\plugin_scan\plugin_index.cpp" />
+    <ClCompile Include="..\yampt\plugin_scan\plugin_scan.cpp" />
+    <ClCompile Include="editor\editor_tab.cpp" />
+    <ClCompile Include="editor\nav_tree_model.cpp" />
+    <ClCompile Include="editor\view_tree_model.cpp" />
+    <ClCompile Include="editor\plugin_select_dialog.cpp" />
+    <ClCompile Include="editor\filter_dialog.cpp" />
+    <ClCompile Include="editor\messages_panel.cpp" />
     <ClCompile Include="..\external\yyjson.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CompileAsC</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CompileAsC</CompileAs>
@@ -258,6 +267,11 @@ if exist "$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\plugin
     <ClInclude Include="..\yampt\json_reader.hpp" />
     <ClInclude Include="..\yampt\translation_engine.hpp" />
     <ClInclude Include="..\yampt\file_list.hpp" />
+    <ClInclude Include="..\yampt\plugin_scan\conflict_types.hpp" />
+    <ClInclude Include="..\yampt\plugin_scan\sub_record_iter.hpp" />
+    <ClInclude Include="..\yampt\plugin_scan\sub_record_schema.hpp" />
+    <ClInclude Include="..\yampt\plugin_scan\plugin_index.hpp" />
+    <ClInclude Include="..\yampt\plugin_scan\plugin_scan.hpp" />
     <ClInclude Include="..\external\yyjson.h" />
     <ClInclude Include="grammar_checker.hpp" />
     <ClInclude Include="search_engine.hpp" />
@@ -422,6 +436,42 @@ if exist "$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\plugin
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
+    <CustomBuild Include="editor\editor_tab.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+    <CustomBuild Include="editor\nav_tree_model.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+    <CustomBuild Include="editor\view_tree_model.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+    <CustomBuild Include="editor\plugin_select_dialog.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+    <CustomBuild Include="editor\filter_dialog.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+    <CustomBuild Include="editor\messages_panel.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(IntDir)moc_main_window.cpp">
@@ -495,6 +545,24 @@ if exist "$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\plugin
     </ClCompile>
     <ClCompile Include="$(IntDir)moc_google_provider.cpp">
       <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_google_provider.cpp')">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(IntDir)moc_editor_tab.cpp">
+      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_editor_tab.cpp')">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(IntDir)moc_nav_tree_model.cpp">
+      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_nav_tree_model.cpp')">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(IntDir)moc_view_tree_model.cpp">
+      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_view_tree_model.cpp')">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(IntDir)moc_plugin_select_dialog.cpp">
+      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_plugin_select_dialog.cpp')">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(IntDir)moc_filter_dialog.cpp">
+      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_filter_dialog.cpp')">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(IntDir)moc_messages_panel.cpp">
+      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_messages_panel.cpp')">true</ExcludedFromBuild>
     </ClCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
