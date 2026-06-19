@@ -5,6 +5,7 @@
 #include "book_preview.hpp"
 #include "composite_highlighter.hpp"
 #include "dict_document.hpp"
+#include "display_name.hpp"
 #include "plugin_document.hpp"
 #include "dict_selection_dialog.hpp"
 #include "editor_panel.hpp"
@@ -54,6 +55,7 @@
 #include <QTimer>
 #include <QTreeWidget>
 #include <QHBoxLayout>
+#include <QHeaderView>
 #include <QVBoxLayout>
 
 #include <algorithm>
@@ -1929,6 +1931,12 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
         std::set<std::string> seen;
         std::vector<dict_item_t> items;
 
+        std::set<std::string> saved_order_set;
+        for (const auto & p : config_.last_merge_order)
+            saved_order_set.insert(normalize(p));
+
+        bool use_saved_order = !saved_order_set.empty();
+
         for (const auto * dict_doc : session_.all_dicts())
         {
             auto norm = normalize(dict_doc->path());
@@ -1939,9 +1947,20 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
             auto filename = sep2 != std::string::npos ? dict_doc->path().substr(sep2 + 1) : dict_doc->path();
 
             auto dir_norm = sep2 != std::string::npos ? normalize(dict_doc->path().substr(0, sep2)) : std::string{};
-            bool pre = (!plugin_dir_norm.empty() && dir_norm == plugin_dir_norm);
+            bool pre = use_saved_order
+                ? (saved_order_set.count(norm) > 0)
+                : (!plugin_dir_norm.empty() && dir_norm == plugin_dir_norm);
 
-            items.push_back({dict_doc->path(), filename, filename, {}, {}, dict_doc->kind(), pre});
+            std::string root_path;
+            std::string subfolder;
+            const auto * fe = file_list_.get(dict_doc->path());
+            if (fe)
+            {
+                root_path = fe->root_path;
+                subfolder = fe->workspace_subfolder;
+            }
+
+            items.push_back({dict_doc->path(), filename, filename, root_path, subfolder, dict_doc->kind(), pre});
         }
 
         for (const auto * fe : file_list_.all())
@@ -1956,7 +1975,9 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
             auto dir_norm = norm;
             auto dir_sep2 = dir_norm.find_last_of('/');
             dir_norm = (dir_sep2 != std::string::npos) ? dir_norm.substr(0, dir_sep2) : std::string{};
-            bool pre = (!plugin_dir_norm.empty() && dir_norm == plugin_dir_norm);
+            bool pre = use_saved_order
+                ? (saved_order_set.count(norm) > 0)
+                : (!plugin_dir_norm.empty() && dir_norm == plugin_dir_norm);
 
             auto kind = (fe->type == file_type_t::base_dict) ? dict_kind_t::base : dict_kind_t::user;
             items.push_back({fe->path, fe->filename, fe->filename, fe->root_path, fe->workspace_subfolder, kind, pre});
@@ -1978,6 +1999,11 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
         tree->setHeaderHidden(true);
         tree->setRootIsDecorated(true);
         tree->setIndentation(16);
+        tree->setStyleSheet(
+            "QTreeWidget::indicator { width: 14px; height: 14px; }"
+            "QTreeWidget::indicator:unchecked { border: 1px solid #888; background: white; }"
+            "QTreeWidget::indicator:checked { border: 1px solid #888; background: black; }"
+        );
         dlg_layout->addWidget(tree);
 
         struct root_builder_t
@@ -1987,13 +2013,13 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
         };
 
         std::map<std::string, root_builder_t> roots;
-        std::vector<dict_item_t *> no_root_items;
 
         for (auto & item : items)
         {
             if (item.root_path.empty())
-                no_root_items.push_back(&item);
-            else if (item.subfolder.empty())
+                continue;
+
+            if (item.subfolder.empty())
                 roots[item.root_path].root_items.push_back(&item);
             else
                 roots[item.root_path].subfolder_items[item.subfolder].push_back(&item);
@@ -2006,9 +2032,10 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
             for (auto * di : dict_items)
             {
                 auto * item = new QTreeWidgetItem(parent);
-                auto label = QString::fromStdString(di->display);
-                if (di->kind == dict_kind_t::base)
-                    label += " [BASE]";
+
+                display_name_t dname(di->display);
+                dname.set_kind(di->kind);
+                auto label = QString::fromStdString(dname.to_string());
 
                 item->setText(0, label);
                 item->setData(0, Qt::UserRole, QString::fromStdString(di->path));
@@ -2019,28 +2046,8 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
                     item->setForeground(0, QColor(180, 140, 80));
                 else
                     item->setForeground(0, QColor(100, 160, 220));
-
-                if (di->pre_checked)
-                {
-                    auto * order_item = new QListWidgetItem(label);
-                    order_item->setData(Qt::UserRole, QString::fromStdString(di->path));
-                    order_list->addItem(order_item);
-                }
             }
         };
-
-        if (!no_root_items.empty())
-        {
-            auto * loaded_node = new QTreeWidgetItem(tree);
-            loaded_node->setText(0, "Loaded");
-            loaded_node->setFlags(Qt::ItemIsEnabled);
-            QFont bold = loaded_node->font(0);
-            bold.setBold(true);
-            loaded_node->setFont(0, bold);
-
-            add_dict_items(loaded_node, no_root_items);
-            loaded_node->setExpanded(true);
-        }
 
         for (auto & [root_path, rb] : roots)
         {
@@ -2048,6 +2055,9 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
             auto sep2 = root_label.find_last_of("/\\");
             if (sep2 != std::string::npos)
                 root_label = root_label.substr(sep2 + 1);
+
+            if (root_label == "workspace")
+                root_label = "Workspace";
 
             auto * root_node = new QTreeWidgetItem(tree);
             root_node->setText(0, QString::fromStdString(root_label));
@@ -2070,6 +2080,40 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
             }
 
             root_node->setExpanded(true);
+        }
+
+        if (use_saved_order)
+        {
+            for (const auto & saved_path : config_.last_merge_order)
+            {
+                auto norm_saved = normalize(saved_path);
+                for (const auto & di : items)
+                {
+                    if (normalize(di.path) != norm_saved)
+                        continue;
+
+                    display_name_t dname(di.display);
+                    dname.set_kind(di.kind);
+                    auto * order_item = new QListWidgetItem(QString::fromStdString(dname.to_string()));
+                    order_item->setData(Qt::UserRole, QString::fromStdString(di.path));
+                    order_list->addItem(order_item);
+                    break;
+                }
+            }
+        }
+        else
+        {
+            for (const auto & di : items)
+            {
+                if (!di.pre_checked)
+                    continue;
+
+                display_name_t dname(di.display);
+                dname.set_kind(di.kind);
+                auto * order_item = new QListWidgetItem(QString::fromStdString(dname.to_string()));
+                order_item->setData(Qt::UserRole, QString::fromStdString(di.path));
+                order_list->addItem(order_item);
+            }
         }
 
         dlg_layout->addWidget(new QLabel("Merge order (last wins):", &dlg));
@@ -2154,6 +2198,8 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
 
         if (selected.empty())
             return;
+
+        config_.last_merge_order = selected;
 
         for (const auto & sel_path : selected)
             session_.open(sel_path);

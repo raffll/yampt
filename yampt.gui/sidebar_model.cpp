@@ -1,4 +1,5 @@
 #include "sidebar_model.hpp"
+#include "display_name.hpp"
 #include "session.hpp"
 
 #include <algorithm>
@@ -33,35 +34,17 @@ std::string derive_display_name(const file_entry_t & entry, bool is_loaded, bool
 {
 	(void)is_loaded;
 
-	std::string result;
+	display_name_t name(entry.filename);
+	name.set_dirty(is_dirty);
+	name.set_file_type(entry.type);
 
-	if (is_dirty)
-		result += "* ";
-
-	switch (entry.type)
-	{
-	case file_type_t::plugin:
-		result += "[ESP]";
-		break;
-	case file_type_t::base_dict:
-		result += "[BASE]";
-		break;
-	case file_type_t::user_dict:
-		result += "[USER]";
-		break;
-	case file_type_t::yaml_l10n:
-		result += "[YAML]";
-		if (is_dirty)
-			result += " [WIP]";
-		break;
-	}
+	if (entry.type == file_type_t::base_dict)
+		name.set_kind(dict_kind_t::base);
 
 	if (entry.type == file_type_t::plugin && !entry.language_tag.empty())
-		result += " [" + entry.language_tag + "]";
+		name.set_language(entry.language_tag);
 
-	result += " " + entry.filename;
-
-	return result;
+	return name.to_string();
 }
 
 std::vector<menu_action_t> derive_context_menu(const file_entry_t & entry, bool is_loaded, bool is_dirty)

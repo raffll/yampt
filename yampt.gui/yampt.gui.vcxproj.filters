@@ -48,6 +48,7 @@
     <ClCompile Include="editor_controller.cpp" />
     <ClCompile Include="session.cpp" />
     <ClCompile Include="sidebar_model.cpp" />
+    <ClCompile Include="display_name.cpp" />
     <ClCompile Include="first_run_dialog.cpp" />
     <ClCompile Include="..\yampt\translation_engine.cpp">
       <Filter>yampt</Filter>
@@ -142,6 +143,7 @@
     <ClInclude Include="find_replace_service.hpp" />
     <ClInclude Include="editor_controller.hpp" />
     <ClInclude Include="sidebar_model.hpp" />
+    <ClInclude Include="display_name.hpp" />
     <ClInclude Include="session.hpp" />
   </ItemGroup>
   <ItemGroup>

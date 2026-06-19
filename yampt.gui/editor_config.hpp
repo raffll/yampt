@@ -25,6 +25,7 @@ public:
 	int encoding_index = 2;
 	int active_dict_index = -1;
 	std::string active_dict_path;
+	std::vector<std::string> last_merge_order;
 	int window_x = -1;
 	int window_y = -1;
 	int window_w = 1280;

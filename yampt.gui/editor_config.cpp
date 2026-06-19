@@ -202,6 +202,25 @@ void editor_config_t::load(const std::string & path)
 				{}
 			}
 		}
+		else if (section == "MergeOrder")
+		{
+			if (key == "Count")
+			{
+				int count = 0;
+				try
+				{
+					count = std::stoi(value);
+				}
+				catch (...)
+				{}
+				last_merge_order.clear();
+				last_merge_order.reserve(count);
+			}
+			else if (starts_with(key, "Path"))
+			{
+				last_merge_order.push_back(value);
+			}
+		}
 	}
 }
 
@@ -242,5 +261,13 @@ void editor_config_t::save(const std::string & path) const
 		if (!spell_check_dic.empty())
 			file << "DicPath=" << spell_check_dic << "\n";
 		file << "LangIndex=" << spell_lang_index << "\n";
+	}
+
+	if (!last_merge_order.empty())
+	{
+		file << "\n[MergeOrder]\n";
+		file << "Count=" << last_merge_order.size() << "\n";
+		for (size_t i = 0; i < last_merge_order.size(); ++i)
+			file << "Path" << i << "=" << last_merge_order[i] << "\n";
 	}
 }

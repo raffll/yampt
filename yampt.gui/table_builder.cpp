@@ -261,14 +261,20 @@ table_build_result_t build_filtered_rows(
 		}
 	}
 
-	// progress computation: count type-filtered records with done statuses
+	// progress computation: count type-filtered + sub-type-filtered records with done statuses
 	for (const auto & [type, chapter] : data)
 	{
-		if (!type_filter.empty() && type_filter.count(type) == 0)
+		const auto effective_type = (type == tools_t::rec_type_t::bnam)
+			? tools_t::rec_type_t::info : type;
+
+		if (!type_filter.empty() && type_filter.count(effective_type) == 0)
 			continue;
 
 		for (const auto & entry : chapter.records)
 		{
+			if (!passes_sub_type_filter(type, entry.key_text, sub_type_filter, type_filter_solo))
+				continue;
+
 			counts.progress_total++;
 			if (done_statuses.count(entry.status))
 				counts.progress_translated++;
