@@ -239,8 +239,10 @@ main_window_t::main_window_t(QWidget * parent)
     info_tabs_ = new QTabWidget(left_splitter_);
     annotations_panel_ = new annotations_panel_t(info_tabs_);
     history_panel_ = new history_panel_t(info_tabs_);
+    translation_tab_ = new translation_suggestion_tab_t(info_tabs_);
     info_tabs_->addTab(annotations_panel_, "Annotations");
     info_tabs_->addTab(history_panel_, "History");
+    info_tabs_->addTab(translation_tab_, "Translate");
     left_splitter_->addWidget(info_tabs_);
 
     right_splitter_ = new QSplitter(Qt::Vertical, central_splitter_);
@@ -1375,6 +1377,8 @@ void main_window_t::load_record(int row)
 
     annotations_panel_->update_annotations(annotations, load_result.speaker_name,
         load_result.gender, load_result.enchantment);
+
+    translation_tab_->set_source_text(row_data->old_text);
 
     if ((row_data->status == "adapted" || row_data->status == "changed") && !load_result.adapted_from.empty())
     {

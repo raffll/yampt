@@ -97,7 +97,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtNetwork;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -114,7 +114,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtNetwork;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -133,7 +133,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtNetwork;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -154,7 +154,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtNetwork;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -221,6 +221,9 @@
     <ClCompile Include="session.cpp" />
     <ClCompile Include="sidebar_model.cpp" />
     <ClCompile Include="display_name.cpp" />
+    <ClCompile Include="translation_suggestion_tab.cpp" />
+    <ClCompile Include="ctranslate2_provider.cpp" />
+    <ClCompile Include="deepl_provider.cpp" />
     <ClCompile Include="..\yampt\translation_engine.cpp" />
     <ClCompile Include="..\yampt\file_list.cpp" />
     <ClCompile Include="..\external\yyjson.c">
@@ -262,6 +265,7 @@
     <ClInclude Include="editor_controller.hpp" />
     <ClInclude Include="sidebar_model.hpp" />
     <ClInclude Include="display_name.hpp" />
+    <ClInclude Include="translation_provider.hpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="main_window.hpp">
@@ -384,6 +388,24 @@
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
+    <CustomBuild Include="translation_suggestion_tab.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+    <CustomBuild Include="ctranslate2_provider.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+    <CustomBuild Include="deepl_provider.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(IntDir)moc_main_window.cpp">
@@ -445,6 +467,15 @@
     </ClCompile>
     <ClCompile Include="$(IntDir)moc_find_replace_dialog.cpp">
       <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_find_replace_dialog.cpp')">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(IntDir)moc_translation_suggestion_tab.cpp">
+      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_translation_suggestion_tab.cpp')">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(IntDir)moc_ctranslate2_provider.cpp">
+      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_ctranslate2_provider.cpp')">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(IntDir)moc_deepl_provider.cpp">
+      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_deepl_provider.cpp')">true</ExcludedFromBuild>
     </ClCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

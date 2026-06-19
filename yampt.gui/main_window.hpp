@@ -19,6 +19,7 @@
 #include "sidebar_widget.hpp"
 #include "spell_checker.hpp"
 #include "table_display.hpp"
+#include "translation_suggestion_tab.hpp"
 #include "validation_manager.hpp"
 
 #include "../yampt/file_list.hpp"
@@ -193,6 +194,7 @@ private:
     spell_context_menu_t * spell_menu_ = nullptr;
     annotations_panel_t * annotations_panel_ = nullptr;
     history_panel_t * history_panel_ = nullptr;
+    translation_suggestion_tab_t * translation_tab_ = nullptr;
 
     annotation_manager_t annotation_manager_;
     history_manager_t history_manager_;

@@ -49,6 +49,9 @@
     <ClCompile Include="session.cpp" />
     <ClCompile Include="sidebar_model.cpp" />
     <ClCompile Include="display_name.cpp" />
+    <ClCompile Include="translation_suggestion_tab.cpp" />
+    <ClCompile Include="ctranslate2_provider.cpp" />
+    <ClCompile Include="deepl_provider.cpp" />
     <ClCompile Include="first_run_dialog.cpp" />
     <ClCompile Include="..\yampt\translation_engine.cpp">
       <Filter>yampt</Filter>
@@ -144,6 +147,7 @@
     <ClInclude Include="editor_controller.hpp" />
     <ClInclude Include="sidebar_model.hpp" />
     <ClInclude Include="display_name.hpp" />
+    <ClInclude Include="translation_provider.hpp" />
     <ClInclude Include="session.hpp" />
   </ItemGroup>
   <ItemGroup>

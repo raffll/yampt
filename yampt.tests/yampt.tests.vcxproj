@@ -219,6 +219,7 @@
     <ClCompile Include="..\yampt.gui\yaml_l10n_reader.cpp" />
     <ClCompile Include="..\yampt.gui\yaml_l10n_writer.cpp" />
     <ClCompile Include="..\yampt.gui\sidebar_model.cpp" />
+    <ClCompile Include="..\yampt.gui\display_name.cpp" />
     <ClCompile Include="..\yampt.gui\session.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
