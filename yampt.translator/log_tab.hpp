@@ -14,6 +14,7 @@ public:
 	explicit log_tab_t(QWidget * parent = nullptr);
 
 	void append_log(const std::string & operation_name, const std::string & log_text);
+	void append_text(const std::string & text);
 	void clear();
 
 private:

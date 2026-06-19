@@ -4,6 +4,7 @@
 #include <QPlainTextEdit>
 #include <QPushButton>
 #include <QScrollBar>
+#include <QTextCursor>
 #include <QVBoxLayout>
 
 log_tab_t::log_tab_t(QWidget * parent)
@@ -29,6 +30,13 @@ void log_tab_t::append_log(const std::string & operation_name, const std::string
 	auto header = "--- [" + operation_name + "] [" + timestamp + "] ---\n";
 
 	text_edit_->appendPlainText(QString::fromStdString(header + log_text));
+	text_edit_->verticalScrollBar()->setValue(text_edit_->verticalScrollBar()->maximum());
+}
+
+void log_tab_t::append_text(const std::string & text)
+{
+	text_edit_->moveCursor(QTextCursor::End);
+	text_edit_->insertPlainText(QString::fromStdString(text));
 	text_edit_->verticalScrollBar()->setValue(text_edit_->verticalScrollBar()->maximum());
 }
 

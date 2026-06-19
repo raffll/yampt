@@ -2,6 +2,8 @@
 #include "ctranslate2_provider.hpp"
 #include "deepl_provider.hpp"
 #include "google_provider.hpp"
+#include "model_downloader.hpp"
+#include "../yampt/tools.hpp"
 
 #include <QComboBox>
 #include <QCoreApplication>
@@ -9,8 +11,12 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
+#include <QMessageBox>
 #include <QPlainTextEdit>
 #include <QPushButton>
+#include <QScrollBar>
+#include <QSslSocket>
+#include <QTextCursor>
 #include <QVBoxLayout>
 
 static const std::vector<std::pair<std::string, std::string>> deepl_languages = {
@@ -52,6 +58,8 @@ translation_suggestion_tab_t::translation_suggestion_tab_t(QWidget * parent)
 	api_key_field_->setEchoMode(QLineEdit::Password);
 	api_key_field_->setPlaceholderText("DeepL API key");
 	key_row->addWidget(api_key_field_);
+	download_btn_ = new QPushButton("Download Models", this);
+	key_row->addWidget(download_btn_);
 	layout->addLayout(key_row);
 
 	result_text_ = new QPlainTextEdit(this);
@@ -76,6 +84,7 @@ translation_suggestion_tab_t::translation_suggestion_tab_t(QWidget * parent)
 	source_combo_->addItem(QString::fromStdString(google_provider_->name()));
 
 	connect(translate_btn_, &QPushButton::clicked, this, &translation_suggestion_tab_t::on_translate_clicked);
+	connect(download_btn_, &QPushButton::clicked, this, &translation_suggestion_tab_t::on_download_clicked);
 	connect(
 	    ct2_provider_, &ctranslate2_provider_t::translation_finished, this, &translation_suggestion_tab_t::on_result);
 	connect(deepl_provider_, &deepl_provider_t::translation_finished, this, &translation_suggestion_tab_t::on_result);
@@ -89,8 +98,11 @@ translation_suggestion_tab_t::translation_suggestion_tab_t(QWidget * parent)
 		bool show_key = (idx == 1);
 		key_label_->setVisible(show_key);
 		api_key_field_->setVisible(show_key);
+		download_btn_->setVisible(idx == 0);
 		rebuild_language_combo();
 		update_counter_label();
+		if (idx == 0)
+			update_download_button();
 	});
 	connect(
 	    language_combo_,
@@ -109,6 +121,7 @@ translation_suggestion_tab_t::translation_suggestion_tab_t(QWidget * parent)
 
 	key_label_->setVisible(false);
 	api_key_field_->setVisible(false);
+	download_btn_->setVisible(true);
 	rebuild_language_combo();
 	update_counter_label();
 }
@@ -122,6 +135,7 @@ void translation_suggestion_tab_t::set_models_dir(const std::string & dir)
 {
 	models_dir_ = dir;
 	rebuild_language_combo();
+	update_download_button();
 }
 
 void translation_suggestion_tab_t::set_deepl_api_key(const std::string & key)
@@ -309,4 +323,85 @@ void translation_suggestion_tab_t::update_counter_label()
 
 	int remaining = provider->remaining_quota();
 	counter_label_->setText(QString("%1 chars remaining").arg(remaining));
+}
+
+void translation_suggestion_tab_t::on_download_clicked()
+{
+	if (!QSslSocket::supportsSsl())
+	{
+		auto msg = "[error] SSL not available, cannot download over HTTPS\n"
+		           "SSL build: " + QSslSocket::sslLibraryBuildVersionString().toStdString() + "\n"
+		           "SSL runtime: " +
+		    (QSslSocket::sslLibraryVersionString().isEmpty() ? "NOT FOUND"
+		                                                     : QSslSocket::sslLibraryVersionString().toStdString()) +
+		    "\n";
+		result_text_->setPlainText(QString::fromStdString(msg));
+		return;
+	}
+
+	if (models_dir_.empty())
+		models_dir_ = (QCoreApplication::applicationDirPath() + "/models").toStdString();
+
+	QDir().mkpath(QString::fromStdString(models_dir_));
+
+	tools_t::add_log("[info] starting model download\r\n");
+	result_text_->setPlainText("Starting model download...\n");
+	download_btn_->setEnabled(false);
+	download_btn_->setText("Downloading...");
+
+	if (!downloader_)
+	{
+		downloader_ = new model_downloader_t(this);
+		connect(
+		    downloader_,
+		    &model_downloader_t::finished,
+		    this,
+		    [this](bool success, const std::string & error)
+		{
+			download_btn_->setText("Download Models");
+
+			if (success)
+			{
+				on_download_progress("[info] download complete\r\n");
+				rebuild_language_combo();
+				update_download_button();
+			}
+			else
+			{
+				on_download_progress("[error] " + error + "\r\n");
+				download_btn_->setEnabled(true);
+			}
+		});
+	}
+
+	downloader_->download(models_dir_, [this](const std::string & msg) { on_download_progress(msg); });
+}
+
+void translation_suggestion_tab_t::on_download_progress(const std::string & msg)
+{
+	result_text_->moveCursor(QTextCursor::End);
+	result_text_->insertPlainText(QString::fromStdString(msg));
+	result_text_->verticalScrollBar()->setValue(result_text_->verticalScrollBar()->maximum());
+}
+
+void translation_suggestion_tab_t::update_download_button()
+{
+	if (source_combo_->currentIndex() != 0)
+	{
+		download_btn_->setVisible(false);
+		return;
+	}
+
+	download_btn_->setVisible(true);
+
+	if (models_dir_.empty())
+	{
+		download_btn_->setEnabled(true);
+		return;
+	}
+
+	if (!downloader_)
+		downloader_ = new model_downloader_t(this);
+
+	download_btn_->setEnabled(!downloader_->is_model_present(models_dir_));
 }

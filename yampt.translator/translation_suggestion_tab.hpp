@@ -16,6 +16,7 @@ class QPushButton;
 class ctranslate2_provider_t;
 class deepl_provider_t;
 class google_provider_t;
+class model_downloader_t;
 
 class translation_suggestion_tab_t : public QWidget
 {
@@ -40,17 +41,21 @@ public:
 
 private slots:
 	void on_translate_clicked();
+	void on_download_clicked();
+	void on_download_progress(const std::string & msg);
 	void on_result(translation_suggestion_t result);
 	void on_language_changed(int index);
 
 private:
 	void update_counter_label();
+	void update_download_button();
 	void load_model_for_language(int index);
 	void rebuild_language_combo();
 
 	QComboBox * source_combo_ = nullptr;
 	QComboBox * language_combo_ = nullptr;
 	QPushButton * translate_btn_ = nullptr;
+	QPushButton * download_btn_ = nullptr;
 	QLabel * key_label_ = nullptr;
 	QLineEdit * api_key_field_ = nullptr;
 	QPlainTextEdit * result_text_ = nullptr;
@@ -62,6 +67,7 @@ private:
 	ctranslate2_provider_t * ct2_provider_ = nullptr;
 	deepl_provider_t * deepl_provider_ = nullptr;
 	google_provider_t * google_provider_ = nullptr;
+	model_downloader_t * downloader_ = nullptr;
 	std::vector<translation_provider_t *> providers_;
 
 	struct lang_entry_t

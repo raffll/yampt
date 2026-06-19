@@ -2203,19 +2203,19 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
 	switch (op)
 	{
 	case plugin_op_t::make_dict:
-		op_name = "Make Dict: " + plugin_name;
+		op_name = "make dict: " + plugin_name;
 		break;
 	case plugin_op_t::make_dict_with_base:
-		op_name = "Make Dict with Base: " + plugin_name;
+		op_name = "make dict with base: " + plugin_name;
 		break;
 	case plugin_op_t::make_base:
-		op_name = "Make Base: " + plugin_name;
+		op_name = "make base: " + plugin_name;
 		break;
 	case plugin_op_t::convert:
-		op_name = "Convert: " + plugin_name;
+		op_name = "convert: " + plugin_name;
 		break;
 	case plugin_op_t::create_plugin:
-		op_name = "Create: " + plugin_name;
+		op_name = "create: " + plugin_name;
 		break;
 	}
 

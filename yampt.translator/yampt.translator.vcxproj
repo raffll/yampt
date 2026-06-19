@@ -171,7 +171,7 @@
       <Command>xcopy /Y /D "$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\bin\libssl-3-x64.dll" "$(OutDir)"
 xcopy /Y /D "$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\bin\libcrypto-3-x64.dll" "$(OutDir)"
 xcopy /Y /D "$(SolutionDir)external\CTranslate2\build\Release\ctranslate2.dll" "$(OutDir)"
-if exist "$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\plugins\tls" xcopy /Y /D /I "$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\plugins\tls\*.*" "$(OutDir)tls"</Command>
+if exist "$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\Qt6\plugins\tls" xcopy /Y /D /I "$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\Qt6\plugins\tls\*.*" "$(OutDir)tls"</Command>
       <Message>Copying runtime DLLs to output directory</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -235,6 +235,7 @@ if exist "$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\plugin
     <ClCompile Include="ctranslate2_provider.cpp" />
     <ClCompile Include="deepl_provider.cpp" />
     <ClCompile Include="google_provider.cpp" />
+    <ClCompile Include="model_downloader.cpp" />
     <ClCompile Include="..\yampt\translation_engine.cpp" />
     <ClCompile Include="..\yampt\file_list.cpp" />
     <ClCompile Include="..\yampt\plugin_scan\sub_record_schema.cpp" />
@@ -431,6 +432,12 @@ if exist "$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\plugin
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
+    <CustomBuild Include="model_downloader.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(IntDir)moc_main_window.cpp">
@@ -504,6 +511,9 @@ if exist "$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\plugin
     </ClCompile>
     <ClCompile Include="$(IntDir)moc_google_provider.cpp">
       <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_google_provider.cpp')">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(IntDir)moc_model_downloader.cpp">
+      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_model_downloader.cpp')">true</ExcludedFromBuild>
     </ClCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

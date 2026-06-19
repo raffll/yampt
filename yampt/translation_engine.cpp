@@ -8,11 +8,9 @@
 struct translation_engine_t::impl_t
 {
 	std::unique_ptr<ctranslate2::Translator> translator;
-	std::unique_ptr<sentencepiece::SentencePieceProcessor> source_spm;
-	std::unique_ptr<sentencepiece::SentencePieceProcessor> target_spm;
+	std::unique_ptr<sentencepiece::SentencePieceProcessor> spm;
 	std::string source_lang;
 	std::string target_lang;
-	std::string target_prefix;
 };
 
 translation_engine_t::translation_engine_t()
@@ -43,26 +41,14 @@ bool translation_engine_t::load(const std::string & model_pack_path)
 	if (!fs::is_directory(model_dir))
 		return false;
 
-	auto source_spm_path = fs::path(model_pack_path) / "source.spm";
-	if (!fs::exists(source_spm_path))
-		return false;
-
-	auto target_spm_path = fs::path(model_pack_path) / "target.spm";
-	if (!fs::exists(target_spm_path))
+	auto spm_path = fs::path(model_pack_path) / "sentencepiece.bpe.model";
+	if (!fs::exists(spm_path))
 		return false;
 
 	try
 	{
-		impl_->source_spm = std::make_unique<sentencepiece::SentencePieceProcessor>();
-		auto status = impl_->source_spm->Load(source_spm_path.string());
-		if (!status.ok())
-		{
-			unload();
-			return false;
-		}
-
-		impl_->target_spm = std::make_unique<sentencepiece::SentencePieceProcessor>();
-		status = impl_->target_spm->Load(target_spm_path.string());
+		impl_->spm = std::make_unique<sentencepiece::SentencePieceProcessor>();
+		auto status = impl_->spm->Load(spm_path.string());
 		if (!status.ok())
 		{
 			unload();
@@ -78,30 +64,26 @@ bool translation_engine_t::load(const std::string & model_pack_path)
 		return false;
 	}
 
-	auto dir_name = fs::path(model_pack_path).filename().string();
-	auto sep = dir_name.find('-');
-	if (sep != std::string::npos)
+	auto lang_path = fs::path(model_pack_path) / "languages.txt";
+	if (fs::exists(lang_path))
 	{
-		impl_->source_lang = dir_name.substr(0, sep);
-		impl_->target_lang = dir_name.substr(sep + 1);
+		std::ifstream f(lang_path);
+		std::getline(f, impl_->source_lang);
+		std::getline(f, impl_->target_lang);
 	}
 
-	auto prefix_path = fs::path(model_pack_path) / "target_prefix.txt";
-	if (fs::exists(prefix_path))
-	{
-		std::ifstream f(prefix_path);
-		std::getline(f, impl_->target_prefix);
-	}
+	if (impl_->source_lang.empty())
+		impl_->source_lang = "eng_Latn";
 
-	tools_t::add_log("[info] translation model loaded\r\n");
+	tools_t::add_log(
+	    "[info] translation model loaded: " + impl_->source_lang + " -> " + impl_->target_lang + "\r\n");
 	return true;
 }
 
 void translation_engine_t::unload()
 {
 	impl_->translator.release();
-	impl_->source_spm.reset();
-	impl_->target_spm.reset();
+	impl_->spm.reset();
 	impl_->source_lang.clear();
 	impl_->target_lang.clear();
 }
@@ -169,6 +151,9 @@ translation_result_t translation_engine_t::translate(const std::string & text) c
 	if (text.empty())
 		return { "", true, "" };
 
+	if (impl_->target_lang.empty())
+		return { "", false, "target language not set" };
+
 	try
 	{
 		auto sentences = split_sentences(text);
@@ -177,19 +162,20 @@ translation_result_t translation_engine_t::translate(const std::string & text) c
 		for (const auto & sentence : sentences)
 		{
 			std::vector<std::string> tokens;
-			impl_->source_spm->Encode(sentence, &tokens);
+			impl_->spm->Encode(sentence, &tokens);
+			tokens.insert(tokens.begin(), impl_->source_lang);
+			tokens.push_back("</s>");
 			token_batch.push_back(std::move(tokens));
 		}
 
 		std::vector<std::vector<std::string>> target_prefix_batch;
-		if (!impl_->target_prefix.empty())
-		{
-			for (size_t i = 0; i < token_batch.size(); ++i)
-				target_prefix_batch.push_back({ impl_->target_prefix });
-		}
+		for (size_t i = 0; i < token_batch.size(); ++i)
+			target_prefix_batch.push_back({ impl_->target_lang });
 
 		ctranslate2::TranslationOptions options;
-		options.repetition_penalty = 1.3f;
+		options.beam_size = 4;
+		options.length_penalty = 0.6f;
+		options.repetition_penalty = 1.5f;
 		options.no_repeat_ngram_size = 3;
 
 		size_t max_input_len = 0;
@@ -201,10 +187,7 @@ translation_result_t translation_engine_t::translate(const std::string & text) c
 
 		options.max_decoding_length = max_input_len * 3 + 10;
 
-		auto results = impl_->translator->translate_batch(
-		    token_batch,
-		    target_prefix_batch.empty() ? std::vector<std::vector<std::string>> {} : target_prefix_batch,
-		    options);
+		auto results = impl_->translator->translate_batch(token_batch, target_prefix_batch, options);
 
 		std::string translated;
 		for (size_t i = 0; i < results.size(); ++i)
@@ -212,10 +195,14 @@ translation_result_t translation_engine_t::translate(const std::string & text) c
 			if (results[i].hypotheses.empty())
 				continue;
 
+			auto hypothesis = results[i].hypotheses[0];
+			if (!hypothesis.empty() && hypothesis[0] == impl_->target_lang)
+				hypothesis.erase(hypothesis.begin());
+
 			if (!translated.empty())
 				translated += ' ';
 
-			translated += impl_->target_spm->DecodePieces(results[i].hypotheses[0]);
+			translated += impl_->spm->DecodePieces(hypothesis);
 		}
 
 		return { translated, true, "" };

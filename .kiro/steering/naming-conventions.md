@@ -86,6 +86,15 @@ tools_t::add_log("--> Error loading \"file.esp\" (wrong path)!\r\n");
 tools_t::add_log("Warning: duplicate CELL value Balmora\r\n");
 ```
 
+## GUI Log Tab Headers
+
+The `log_tab_t::append_log(operation_name, text)` first argument is the operation name displayed as a section header in the log panel. Use lowercase with no extra formatting:
+
+- `"make dict"`, `"make base"`, `"convert"`, `"create"`, `"merge"`
+- `"download models"`, `"spelling"`
+
+Do not use Title Case, ALL CAPS, or mixed casing for log tab headers.
+
 ## Examples
 
 ```cpp
