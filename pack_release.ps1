@@ -11,8 +11,8 @@ if (Test-Path $zipName) { Remove-Item -Force $zipName }
 New-Item -ItemType Directory -Force $packDir | Out-Null
 
 Copy-Item "$outDir\yampt.exe" $packDir
-Copy-Item "$outDir\yampt.gui.exe" $packDir
-Copy-Item "$outDir\ctranslate2.dll" $packDir
+Copy-Item "$outDir\yampt.translator.exe" $packDir
+Copy-Item "$outDir\yampt.editor.exe" $packDir
 Copy-Item "$outDir\*.dll" $packDir
 
 if (Test-Path "$outDir\dictionaries") {

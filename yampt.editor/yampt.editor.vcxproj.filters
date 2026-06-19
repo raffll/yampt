@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="yampt">
+      <UniqueIdentifier>{B2000001-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external">
+      <UniqueIdentifier>{B2000003-0000-0000-0000-000000000003}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="editor_window.cpp" />
+    <ClCompile Include="editor_tab.cpp" />
+    <ClCompile Include="nav_tree_model.cpp" />
+    <ClCompile Include="view_tree_model.cpp" />
+    <ClCompile Include="plugin_select_dialog.cpp" />
+    <ClCompile Include="filter_dialog.cpp" />
+    <ClCompile Include="messages_panel.cpp" />
+    <ClCompile Include="..\yampt\tools.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\yampt\esm_reader.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\yampt\codepage.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\yampt\file_list.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\yampt\plugin_scan\sub_record_schema.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\yampt\plugin_scan\plugin_index.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\yampt\plugin_scan\plugin_scan.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\external\yyjson.c">
+      <Filter>external</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\yampt\tools.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\yampt\codepage.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\yampt\esm_reader.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\yampt\includes.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\yampt\file_list.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\yampt\plugin_scan\conflict_types.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\yampt\plugin_scan\sub_record_iter.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\yampt\plugin_scan\sub_record_schema.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\yampt\plugin_scan\plugin_index.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\yampt\plugin_scan\plugin_scan.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\external\yyjson.h">
+      <Filter>external</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

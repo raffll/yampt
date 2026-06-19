@@ -2,8 +2,8 @@
 #include <rapidcheck.h>
 #include <rapidcheck/catch.h>
 #include "../yampt/file_list.hpp"
-#include "../yampt.gui/sidebar_model.hpp"
-#include "../yampt.gui/session.hpp"
+#include "../yampt.translator/sidebar_model.hpp"
+#include "../yampt.translator/session.hpp"
 
 #include <algorithm>
 #include <cctype>

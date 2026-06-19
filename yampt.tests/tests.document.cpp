@@ -1,7 +1,7 @@
 #include "catch.hpp"
 #include <rapidcheck.h>
 #include <rapidcheck/catch.h>
-#include "../yampt.gui/dict_document.hpp"
+#include "../yampt.translator/dict_document.hpp"
 #include "../yampt/dict_writer.hpp"
 
 #include <algorithm>
@@ -133,7 +133,7 @@ TEST_CASE("dict_document_t property: read-only commit is no-op", "[u]")
 	});
 }
 
-#include "../yampt.gui/yaml_document.hpp"
+#include "../yampt.translator/yaml_document.hpp"
 
 #include <filesystem>
 #include <fstream>

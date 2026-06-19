@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <ProjectGuid>{B2C3D4E5-F6A7-8901-BCDE-F12345678901}</ProjectGuid>
+    <RootNamespace>yampt_editor</RootNamespace>
+    <TargetName>yampt.editor</TargetName>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <VcpkgEnabled>true</VcpkgEnabled>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg">
+    <VcpkgEnableManifest>true</VcpkgEnableManifest>
+    <VcpkgTriplet Condition="'$(Platform)'=='x64'">x64-windows-v143</VcpkgTriplet>
+  </PropertyGroup>
+  <PropertyGroup Label="QtToolsPath">
+    <QtToolsPath>$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows\tools\Qt6\bin</QtToolsPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;_SILENCE_CXX23_DENORM_DEPRECATION_WARNING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;_SILENCE_CXX23_DENORM_DEPRECATION_WARNING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;_SILENCE_CXX23_DENORM_DEPRECATION_WARNING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;_SILENCE_CXX23_DENORM_DEPRECATION_WARNING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="editor_window.cpp" />
+    <ClCompile Include="editor_tab.cpp" />
+    <ClCompile Include="nav_tree_model.cpp" />
+    <ClCompile Include="view_tree_model.cpp" />
+    <ClCompile Include="plugin_select_dialog.cpp" />
+    <ClCompile Include="filter_dialog.cpp" />
+    <ClCompile Include="messages_panel.cpp" />
+    <ClCompile Include="..\yampt\tools.cpp" />
+    <ClCompile Include="..\yampt\esm_reader.cpp" />
+    <ClCompile Include="..\yampt\codepage.cpp" />
+    <ClCompile Include="..\yampt\file_list.cpp" />
+    <ClCompile Include="..\yampt\plugin_scan\sub_record_schema.cpp" />
+    <ClCompile Include="..\yampt\plugin_scan\plugin_index.cpp" />
+    <ClCompile Include="..\yampt\plugin_scan\plugin_scan.cpp" />
+    <ClCompile Include="..\external\yyjson.c">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsC</CompileAs>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\yampt\tools.hpp" />
+    <ClInclude Include="..\yampt\codepage.hpp" />
+    <ClInclude Include="..\yampt\esm_reader.hpp" />
+    <ClInclude Include="..\yampt\includes.hpp" />
+    <ClInclude Include="..\yampt\file_list.hpp" />
+    <ClInclude Include="..\yampt\plugin_scan\conflict_types.hpp" />
+    <ClInclude Include="..\yampt\plugin_scan\sub_record_iter.hpp" />
+    <ClInclude Include="..\yampt\plugin_scan\sub_record_schema.hpp" />
+    <ClInclude Include="..\yampt\plugin_scan\plugin_index.hpp" />
+    <ClInclude Include="..\yampt\plugin_scan\plugin_scan.hpp" />
+    <ClInclude Include="..\external\yyjson.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="editor_window.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+    <CustomBuild Include="editor_tab.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+    <CustomBuild Include="nav_tree_model.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+    <CustomBuild Include="view_tree_model.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+    <CustomBuild Include="plugin_select_dialog.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+    <CustomBuild Include="filter_dialog.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+    <CustomBuild Include="messages_panel.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(IntDir)moc_editor_window.cpp" />
+    <ClCompile Include="$(IntDir)moc_editor_tab.cpp" />
+    <ClCompile Include="$(IntDir)moc_nav_tree_model.cpp" />
+    <ClCompile Include="$(IntDir)moc_view_tree_model.cpp" />
+    <ClCompile Include="$(IntDir)moc_plugin_select_dialog.cpp" />
+    <ClCompile Include="$(IntDir)moc_filter_dialog.cpp" />
+    <ClCompile Include="$(IntDir)moc_messages_panel.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+  <Target Name="CopyQtPlugins" AfterTargets="Build">
+    <MakeDir Directories="$(OutDir)platforms" />
+    <ItemGroup>
+      <QtPlatformPlugins Include="$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\Qt6\plugins\platforms\*.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(QtPlatformPlugins)" DestinationFolder="$(OutDir)platforms" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="CopyVcpkgDlls" AfterTargets="Build">
+    <ItemGroup>
+      <VcpkgDlls Include="$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\bin\*.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(VcpkgDlls)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
+</Project>

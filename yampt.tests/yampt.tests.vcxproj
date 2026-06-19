@@ -175,8 +175,8 @@
     <ClInclude Include="..\yampt\codepage.hpp" />
     <ClInclude Include="..\yampt\dict_kind.hpp" />
     <ClInclude Include="..\yampt\file_list.hpp" />
-    <ClInclude Include="..\yampt.gui\sidebar_model.hpp" />
-    <ClInclude Include="..\yampt.gui\session.hpp" />
+    <ClInclude Include="..\yampt.translator\sidebar_model.hpp" />
+    <ClInclude Include="..\yampt.translator\session.hpp" />
     <ClInclude Include="..\external\catch.hpp" />
     <ClInclude Include="..\external\yyjson.h" />
   </ItemGroup>
@@ -214,13 +214,13 @@
     <ClCompile Include="tests.tools.cpp" />
     <ClCompile Include="tests.file_list.cpp" />
     <ClCompile Include="tests.document.cpp" />
-    <ClCompile Include="..\yampt.gui\dict_document.cpp" />
-    <ClCompile Include="..\yampt.gui\yaml_document.cpp" />
-    <ClCompile Include="..\yampt.gui\yaml_l10n_reader.cpp" />
-    <ClCompile Include="..\yampt.gui\yaml_l10n_writer.cpp" />
-    <ClCompile Include="..\yampt.gui\sidebar_model.cpp" />
-    <ClCompile Include="..\yampt.gui\display_name.cpp" />
-    <ClCompile Include="..\yampt.gui\session.cpp" />
+    <ClCompile Include="..\yampt.translator\dict_document.cpp" />
+    <ClCompile Include="..\yampt.translator\yaml_document.cpp" />
+    <ClCompile Include="..\yampt.translator\yaml_l10n_reader.cpp" />
+    <ClCompile Include="..\yampt.translator\yaml_l10n_writer.cpp" />
+    <ClCompile Include="..\yampt.translator\sidebar_model.cpp" />
+    <ClCompile Include="..\yampt.translator\display_name.cpp" />
+    <ClCompile Include="..\yampt.translator\session.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

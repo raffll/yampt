@@ -4,38 +4,43 @@
 
 ```
 yampt/
-├── yampt/                  # Main project source (C++)
+├── yampt/                  # Core library + CLI (C++)
 │   ├── main.cpp
 │   ├── tools.hpp / tools.cpp
-│   ├── dictreader.hpp / dictreader.cpp
-│   ├── dictwriter.hpp / dictwriter.cpp
-│   ├── dictmerger.hpp / dictmerger.cpp
-│   ├── dictcreator.hpp / dictcreator.cpp
-│   ├── esmreader.hpp / esmreader.cpp
-│   ├── esmconverter.hpp / esmconverter.cpp
-│   ├── scriptparser.hpp / scriptparser.cpp
-│   ├── userinterface.hpp / userinterface.cpp
+│   ├── dict_reader.hpp / dict_reader.cpp
+│   ├── dict_writer.hpp / dict_writer.cpp
+│   ├── dict_merger.hpp / dict_merger.cpp
+│   ├── dict_creator.hpp / dict_creator.cpp
+│   ├── esm_reader.hpp / esm_reader.cpp
+│   ├── esm_converter.hpp / esm_converter.cpp
+│   ├── script_parser.hpp / script_parser.cpp
+│   ├── user_interface.hpp / user_interface.cpp
+│   ├── translation_engine.hpp / translation_engine.cpp
+│   ├── file_list.hpp / file_list.cpp
+│   ├── plugin_scan/       # Plugin comparison/conflict detection
 │   ├── includes.hpp
-│   ├── json.hpp
 │   └── yampt.vcxproj
+├── yampt.translator/       # GUI translation workbench (Qt6)
+│   ├── main.cpp            # → yampt.translator.exe
+│   ├── main_window.hpp / main_window.cpp
+│   ├── editor/            # Editor tab (xEdit-like plugin viewer)
+│   ├── dictionaries/      # Hunspell spell check dictionaries
+│   └── yampt.translator.vcxproj
+├── yampt.editor/           # Standalone editor app (Qt6)
+│   ├── main.cpp            # → yampt.editor.exe
+│   ├── editor_window.hpp / editor_window.cpp
+│   └── yampt.editor.vcxproj
 ├── yampt.tests/            # Catch2 unit tests
-│   ├── catch.hpp
-│   ├── tests.main.cpp
-│   ├── tests.tools.cpp
-│   ├── tests.dictreader.cpp
-│   ├── tests.dictwriter.cpp
-│   ├── tests.dictmerger.cpp
-│   ├── tests.dictcreator.cpp
-│   ├── tests.esmreader.cpp
-│   ├── tests.scriptparser.cpp
 │   └── yampt.tests.vcxproj
-├── scripts/                # Batch file templates for yampt CLI workflows
+├── external/               # Third-party (CTranslate2, yyjson)
+├── models/                 # CTranslate2 translation models
 ├── x64/Debug/              # Build output
 │   ├── yampt.exe
+│   ├── yampt.translator.exe
+│   ├── yampt.editor.exe
 │   └── yampt.tests.exe
-├── packages/               # NuGet packages (Boost 1.71, to be removed)
-├── yampt.sln               # VS2022 solution
-└── packages.config         # NuGet manifest (to be removed)
+├── yampt.sln               # VS 2026 solution
+└── vcpkg.json              # vcpkg manifest
 ```
 
 ## External Dependencies — Read Only
@@ -47,15 +52,14 @@ NEVER modify files directly in the `external/` folder. These are upstream third-
 vcxproj.filters must follow this structure:
 - **Root (no filter)** — project's own source files (files in the same directory as the vcxproj)
 - **yampt** — files referenced from `../yampt/`
+- **editor** — files from the `editor/` subfolder (yampt.translator and yampt.editor)
 - **external** — files from `../external/` (yyjson, catch)
-- **external\imgui** — imgui core files
-- **external\imgui\backends** — SDL2/OpenGL3 backend files
 
 Never use default VS filters like "Source Files", "Header Files", or "Resource Files".
 
 ## Build
 
-Visual Studio (v143 toolset). Open `yampt.sln` and build. Output: `x64/Debug/yampt.exe`.
+Visual Studio (v143 toolset). Open `yampt.sln` and build. Output: `x64/Debug/yampt.exe`, `x64/Debug/yampt.translator.exe`, `x64/Debug/yampt.editor.exe`.
 
 MSBuild path:
 ```
@@ -247,3 +251,23 @@ Only 2 false positives in vanilla Morrowind.esm:
 - `LorkhanHeart`: "say" inside variable name `countSays`
 
 Low impact for vanilla, but mods with variables like `mychoice`, `sayHello` would be affected.
+
+
+---
+
+## Release Packaging (`pack_release.ps1`)
+
+The `pack_release.ps1` script creates a zip archive from `x64\Release\` for distribution.
+
+What is included:
+- `yampt.exe`, `yampt.translator.exe`, `yampt.editor.exe`
+- All DLLs from the output dir (including `ctranslate2.dll`)
+- `dictionaries/` folder (spell check dictionaries)
+- `platforms/` folder (Qt platform plugins)
+
+What is NOT included:
+- `models/` — translation engine models are too large for distribution; users download them separately via `download_models.py`
+- `scripts/` — batch templates live in the repo for reference, not in the release package
+- `tests/`, `workspace/` — development artifacts
+- `.pdb` files — debug symbols stay local
+- `.ini` files — user-specific config
