@@ -30,6 +30,11 @@ void display_name_t::set_dirty(bool dirty)
     dirty_ = dirty;
 }
 
+void display_name_t::set_wip(bool wip)
+{
+    wip_ = wip;
+}
+
 std::string display_name_t::to_string() const
 {
     std::string result;
@@ -40,7 +45,7 @@ std::string display_name_t::to_string() const
     if (kind_ == dict_kind_t::base)
         result += "[BASE] ";
 
-    if (file_type_ == file_type_t::yaml_l10n)
+    if (wip_)
         result += "[WIP] ";
 
     if (!language_.empty())

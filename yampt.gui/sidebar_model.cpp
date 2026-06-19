@@ -3,6 +3,7 @@
 #include "session.hpp"
 
 #include <algorithm>
+#include <filesystem>
 #include <functional>
 #include <map>
 
@@ -43,6 +44,13 @@ std::string derive_display_name(const file_entry_t & entry, bool is_loaded, bool
 
 	if (entry.type == file_type_t::plugin && !entry.language_tag.empty())
 		name.set_language(entry.language_tag);
+
+	if (entry.type == file_type_t::yaml_l10n)
+	{
+		std::error_code ec;
+		if (std::filesystem::exists(entry.path + ".tmp", ec))
+			name.set_wip(true);
+	}
 
 	return name.to_string();
 }
