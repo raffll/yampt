@@ -1,27 +1,93 @@
 #include "filter_tree.hpp"
-#include <QHeaderView>
-#include <QTreeWidget>
+#include <QListWidget>
+#include <QPainter>
+#include <QStyledItemDelegate>
 #include <QVBoxLayout>
 
-static const std::vector<std::pair<tools_t::rec_type_t, const char *>> type_order = {
-	{ tools_t::rec_type_t::cell, "Cells" },        { tools_t::rec_type_t::dial, "Topics" },
-	{ tools_t::rec_type_t::info, "Dialogues" },    { tools_t::rec_type_t::fnam, "Names" },
-	{ tools_t::rec_type_t::text, "Books" },        { tools_t::rec_type_t::gmst, "Settings" },
-	{ tools_t::rec_type_t::desc, "Descriptions" }, { tools_t::rec_type_t::rnam, "Factions" },
-	{ tools_t::rec_type_t::indx, "Index" },        { tools_t::rec_type_t::sctx, "Scripts" },
+static const int role_counter = Qt::UserRole + 100;
+
+class filter_delegate_t : public QStyledItemDelegate
+{
+public:
+	using QStyledItemDelegate::QStyledItemDelegate;
+
+	void paint(QPainter * painter, const QStyleOptionViewItem & option, const QModelIndex & index) const override
+	{
+		QStyledItemDelegate::paint(painter, option, index);
+
+		auto counter = index.data(role_counter).toString();
+		if (counter.isEmpty())
+			return;
+
+		painter->save();
+		auto color = index.data(Qt::ForegroundRole).value<QBrush>().color();
+		painter->setPen(color);
+		auto rect = option.rect.adjusted(0, 0, -6, 0);
+		painter->drawText(rect, Qt::AlignRight | Qt::AlignVCenter, counter);
+		painter->restore();
+	}
 };
 
-static const std::vector<std::string> info_sub_types = { "Topic", "Voice", "Greeting", "Persuasion", "Journal" };
+static const std::vector<std::pair<tools_t::rec_type_t, const char *>> type_order = {
+	{ tools_t::rec_type_t::cell, "Cells" },
+	{ tools_t::rec_type_t::dial, "Topics" },
+	{ tools_t::rec_type_t::info, "Dialogues" },
+	{ tools_t::rec_type_t::fnam, "Names" },
+	{ tools_t::rec_type_t::text, "Books" },
+	{ tools_t::rec_type_t::gmst, "Settings" },
+	{ tools_t::rec_type_t::desc, "Descriptions" },
+	{ tools_t::rec_type_t::rnam, "Factions" },
+	{ tools_t::rec_type_t::indx, "Index" },
+	{ tools_t::rec_type_t::sctx, "Scripts" },
+};
 
-static const std::vector<std::string> fnam_sub_types = { "ACTI", "ALCH", "APPA", "ARMO", "BOOK", "BSGN", "CLAS", "CLOT",
-	                                                     "CONT", "CREA", "DOOR", "FACT", "INGR", "LIGH", "LOCK", "MISC",
-	                                                     "NPC_", "PROB", "RACE", "REGN", "REPA", "SPEL", "WEAP" };
+static const std::vector<std::pair<std::string, const char *>> info_sub_types = {
+	{ "Topic", "Dialogues: Topic" },
+	{ "Voice", "Dialogues: Voice" },
+	{ "Greeting", "Dialogues: Greeting" },
+	{ "Persuasion", "Dialogues: Persuasion" },
+	{ "Journal", "Dialogues: Journal" },
+};
 
-static const std::vector<std::string> desc_sub_types = { "Birthsigns", "Classes", "Races" };
+static const std::vector<std::pair<std::string, const char *>> fnam_sub_types = {
+	{ "ACTI", "Names: Activators" },
+	{ "ALCH", "Names: Potions" },
+	{ "APPA", "Names: Apparatus" },
+	{ "ARMO", "Names: Armor" },
+	{ "BOOK", "Names: Books" },
+	{ "BSGN", "Names: Birthsigns" },
+	{ "CLAS", "Names: Classes" },
+	{ "CLOT", "Names: Clothing" },
+	{ "CONT", "Names: Containers" },
+	{ "CREA", "Names: Creatures" },
+	{ "DOOR", "Names: Doors" },
+	{ "FACT", "Names: Factions" },
+	{ "INGR", "Names: Ingredients" },
+	{ "LIGH", "Names: Lights" },
+	{ "LOCK", "Names: Lockpicks" },
+	{ "MISC", "Names: Miscellaneous" },
+	{ "NPC_", "Names: NPCs" },
+	{ "PROB", "Names: Probes" },
+	{ "RACE", "Names: Races" },
+	{ "REGN", "Names: Regions" },
+	{ "REPA", "Names: Repair Items" },
+	{ "SPEL", "Names: Spells" },
+	{ "WEAP", "Names: Weapons" },
+};
 
-static const std::vector<std::string> indx_sub_types = { "Skills", "Magic Effects" };
+static const std::vector<std::pair<std::string, const char *>> desc_sub_types = {
+	{ "Birthsigns", "Descriptions: Birthsigns" },
+	{ "Classes", "Descriptions: Classes" },
+	{ "Races", "Descriptions: Races" },
+};
 
-static const QColor color_selected_fg(90, 155, 230);
+static const std::vector<std::pair<std::string, const char *>> indx_sub_types = {
+	{ "Skills", "Index: Skills" },
+	{ "Magic Effects", "Index: Magic Effects" },
+};
+
+static const QColor color_selected_bg(90, 155, 230);
+static const QColor color_selected_fg(255, 255, 255);
 static const QColor color_deselected_fg(80, 80, 80);
 static const QColor color_disabled_fg(180, 180, 180);
 
@@ -31,343 +97,217 @@ filter_tree_t::filter_tree_t(QWidget * parent)
 	auto * layout = new QVBoxLayout(this);
 	layout->setContentsMargins(0, 0, 0, 0);
 
-	tree_ = new QTreeWidget(this);
-	tree_->setHeaderHidden(true);
-	tree_->setColumnCount(2);
-	tree_->setRootIsDecorated(true);
-	tree_->setIndentation(16);
-	tree_->setSelectionMode(QAbstractItemView::NoSelection);
-	tree_->setFocusPolicy(Qt::NoFocus);
-	layout->addWidget(tree_);
+	list_ = new QListWidget(this);
+	list_->setSelectionMode(QAbstractItemView::NoSelection);
+	list_->setFocusPolicy(Qt::NoFocus);
+	list_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+	list_->setItemDelegate(new filter_delegate_t(list_));
+	layout->addWidget(list_);
 
-	all_item_ = new QTreeWidgetItem(tree_);
-	all_item_->setText(0, "All");
-	all_item_->setTextAlignment(1, Qt::AlignRight | Qt::AlignVCenter);
-	all_item_->setData(0, role_is_all, true);
-	all_item_->setData(0, role_state, static_cast<int>(node_state_t::selected));
-
-	auto add_sub_types =
-	    [this](QTreeWidgetItem * parent_item, tools_t::rec_type_t parent_type, const std::vector<std::string> & subs)
+	auto add_row = [this](item_kind_t kind, tools_t::rec_type_t type, const std::string & sub_type,
+	                   const char * label) -> int
 	{
-		for (const auto & sub : subs)
-		{
-			auto * child = new QTreeWidgetItem(parent_item);
-			child->setText(0, QString::fromStdString(sub));
-			child->setTextAlignment(1, Qt::AlignRight | Qt::AlignVCenter);
-			child->setData(0, role_sub_type, QString::fromStdString(sub));
-			child->setData(0, role_state, static_cast<int>(node_state_t::selected));
+		auto * item = new QListWidgetItem(label, list_);
+		item->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+		int idx = static_cast<int>(rows_.size());
+		rows_.push_back({ item, kind, type, sub_type, true });
+		return idx;
+	};
 
-			sub_type_nodes_.push_back({ child, sub, parent_type });
-		}
+	all_row_ = add_row(item_kind_t::all, tools_t::rec_type_t::unknown, {}, "All");
+
+	auto add_sub_types_for = [&](tools_t::rec_type_t type,
+	                             const std::vector<std::pair<std::string, const char *>> & subs)
+	{
+		for (const auto & [sub_id, label] : subs)
+			add_row(item_kind_t::sub_type, type, sub_id, label);
 	};
 
 	for (const auto & [type, name] : type_order)
 	{
-		auto * item = new QTreeWidgetItem(all_item_);
-		item->setText(0, name);
-		item->setTextAlignment(1, Qt::AlignRight | Qt::AlignVCenter);
-		item->setData(0, role_type, static_cast<int>(type));
-		item->setData(0, role_state, static_cast<int>(node_state_t::selected));
+		bool has_subs = (type == tools_t::rec_type_t::info || type == tools_t::rec_type_t::fnam ||
+		                 type == tools_t::rec_type_t::desc || type == tools_t::rec_type_t::indx);
 
-		type_nodes_.push_back({ item, type });
-
-		if (type == tools_t::rec_type_t::info)
-			add_sub_types(item, type, info_sub_types);
-		else if (type == tools_t::rec_type_t::fnam)
-			add_sub_types(item, type, fnam_sub_types);
-		else if (type == tools_t::rec_type_t::desc)
-			add_sub_types(item, type, desc_sub_types);
-		else if (type == tools_t::rec_type_t::indx)
-			add_sub_types(item, type, indx_sub_types);
+		if (has_subs)
+		{
+			if (type == tools_t::rec_type_t::info)
+				add_sub_types_for(type, info_sub_types);
+			else if (type == tools_t::rec_type_t::fnam)
+				add_sub_types_for(type, fnam_sub_types);
+			else if (type == tools_t::rec_type_t::desc)
+				add_sub_types_for(type, desc_sub_types);
+			else if (type == tools_t::rec_type_t::indx)
+				add_sub_types_for(type, indx_sub_types);
+		}
+		else
+		{
+			add_row(item_kind_t::type, type, {}, name);
+		}
 	}
 
-	yaml_item_ = new QTreeWidgetItem(tree_);
-	yaml_item_->setText(0, "YAML");
-	yaml_item_->setData(0, role_is_yaml, true);
-	yaml_item_->setData(0, role_state, static_cast<int>(node_state_t::deselected));
-	yaml_item_->setHidden(true);
+	yaml_row_ = add_row(item_kind_t::yaml, tools_t::rec_type_t::unknown, {}, "YAML");
+	rows_[yaml_row_].selected = false;
+	rows_[yaml_row_].item->setHidden(true);
 
-	tree_->expandAll();
-	tree_->header()->setStretchLastSection(false);
-	tree_->header()->setSectionResizeMode(0, QHeaderView::Stretch);
-	tree_->header()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
-	update_item_styles();
+	update_styles();
 
+	connect(list_, &QListWidget::itemClicked, this, &filter_tree_t::on_item_clicked);
+	list_->setContextMenuPolicy(Qt::CustomContextMenu);
 	connect(
-	    tree_, &QTreeWidget::itemClicked, this, [this](QTreeWidgetItem * item, int) { on_item_right_clicked(item); });
-	tree_->setContextMenuPolicy(Qt::CustomContextMenu);
-	connect(
-	    tree_,
+	    list_,
 	    &QWidget::customContextMenuRequested,
 	    this,
 	    [this](const QPoint & pos)
 	{
-		auto * item = tree_->itemAt(pos);
+		auto * item = list_->itemAt(pos);
 		if (item)
-			on_item_clicked(item, 0);
+			on_item_right_clicked(item);
 	});
 }
 
-void filter_tree_t::on_item_clicked(QTreeWidgetItem * item, int)
+void filter_tree_t::on_item_clicked(QListWidgetItem * item)
 {
 	if (!enabled_)
 		return;
 
-	if (item->data(0, role_is_all).toBool())
+	int idx = list_->row(item);
+	if (idx < 0 || idx >= static_cast<int>(rows_.size()))
+		return;
+
+	auto & row = rows_[idx];
+
+	if (row.kind == item_kind_t::all)
+	{
+		for (auto & r : rows_)
+		{
+			if (r.kind == item_kind_t::all || r.kind == item_kind_t::yaml)
+				continue;
+
+			r.selected = true;
+		}
+
+		update_all_state();
+		update_styles();
+		emit all_reset_requested();
+		emit filters_changed();
+		return;
+	}
+
+	if (row.kind == item_kind_t::yaml)
+	{
+		row.selected = !row.selected;
+		update_styles();
+		emit filters_changed();
+		return;
+	}
+
+	for (auto & r : rows_)
+	{
+		if (r.kind == item_kind_t::all || r.kind == item_kind_t::yaml)
+			continue;
+
+		r.selected = false;
+	}
+
+	row.selected = true;
+	update_all_state();
+	update_styles();
+	emit filters_changed();
+}
+
+void filter_tree_t::on_item_right_clicked(QListWidgetItem * item)
+{
+	if (!enabled_)
+		return;
+
+	int idx = list_->row(item);
+	if (idx < 0 || idx >= static_cast<int>(rows_.size()))
+		return;
+
+	auto & row = rows_[idx];
+
+	if (row.kind == item_kind_t::all)
 	{
 		bool any_deselected = false;
-		for (const auto & tn : type_nodes_)
+		for (const auto & r : rows_)
 		{
-			auto state = static_cast<node_state_t>(tn.item->data(0, role_state).toInt());
-			if (state != node_state_t::selected)
+			if (r.kind == item_kind_t::all || r.kind == item_kind_t::yaml)
+				continue;
+
+			if (!r.selected)
 			{
 				any_deselected = true;
 				break;
 			}
 		}
 
-		if (!any_deselected)
+		bool new_state = any_deselected;
+		for (auto & r : rows_)
 		{
-			for (const auto & stn : sub_type_nodes_)
-			{
-				auto state = static_cast<node_state_t>(stn.item->data(0, role_state).toInt());
-				if (state != node_state_t::selected)
-				{
-					any_deselected = true;
-					break;
-				}
-			}
+			if (r.kind == item_kind_t::all || r.kind == item_kind_t::yaml)
+				continue;
+
+			r.selected = new_state;
 		}
 
-		if (any_deselected)
-		{
-			for (auto & tn : type_nodes_)
-				tn.item->setData(0, role_state, static_cast<int>(node_state_t::selected));
-
-			for (auto & stn : sub_type_nodes_)
-				stn.item->setData(0, role_state, static_cast<int>(node_state_t::selected));
-		}
-		else
-		{
-			for (auto & tn : type_nodes_)
-				tn.item->setData(0, role_state, static_cast<int>(node_state_t::deselected));
-
-			for (auto & stn : sub_type_nodes_)
-				stn.item->setData(0, role_state, static_cast<int>(node_state_t::deselected));
-		}
-
-		update_all_node_state();
-		update_item_styles();
+		update_all_state();
+		update_styles();
 		emit all_reset_requested();
 		emit filters_changed();
 		return;
 	}
 
-	if (item->data(0, role_is_yaml).toBool())
-	{
-		auto state = static_cast<node_state_t>(item->data(0, role_state).toInt());
-		bool new_selected = (state != node_state_t::selected);
-		item->setData(
-		    0, role_state, static_cast<int>(new_selected ? node_state_t::selected : node_state_t::deselected));
-		update_item_styles();
-		emit filters_changed();
-		return;
-	}
-
-	if (item->data(0, role_sub_type).isValid())
-	{
-		auto state = static_cast<node_state_t>(item->data(0, role_state).toInt());
-		bool new_selected = (state != node_state_t::selected);
-		item->setData(
-		    0, role_state, static_cast<int>(new_selected ? node_state_t::selected : node_state_t::deselected));
-		update_parent_state(item->parent());
-		update_all_node_state();
-		update_item_styles();
-		emit filters_changed();
-		return;
-	}
-
-	if (item->data(0, role_type).isValid())
-	{
-		if (item->childCount() == 0)
-		{
-			auto state = static_cast<node_state_t>(item->data(0, role_state).toInt());
-			bool new_selected = (state != node_state_t::selected);
-			item->setData(
-			    0, role_state, static_cast<int>(new_selected ? node_state_t::selected : node_state_t::deselected));
-		}
-		else
-		{
-			bool any_child_deselected = false;
-			for (int i = 0; i < item->childCount(); ++i)
-			{
-				auto child_state = static_cast<node_state_t>(item->child(i)->data(0, role_state).toInt());
-				if (child_state != node_state_t::selected)
-				{
-					any_child_deselected = true;
-					break;
-				}
-			}
-
-			node_state_t new_child_state = any_child_deselected ? node_state_t::selected : node_state_t::deselected;
-			for (int i = 0; i < item->childCount(); ++i)
-				item->child(i)->setData(0, role_state, static_cast<int>(new_child_state));
-
-			update_parent_state(item);
-		}
-
-		update_all_node_state();
-		update_item_styles();
-		emit filters_changed();
-	}
-}
-
-void filter_tree_t::on_item_right_clicked(QTreeWidgetItem * item)
-{
-	if (!enabled_)
+	if (row.kind == item_kind_t::yaml)
 		return;
 
-	if (item->data(0, role_is_all).toBool())
-	{
-		for (auto & tn : type_nodes_)
-			tn.item->setData(0, role_state, static_cast<int>(node_state_t::selected));
-
-		for (auto & stn : sub_type_nodes_)
-			stn.item->setData(0, role_state, static_cast<int>(node_state_t::selected));
-
-		update_all_node_state();
-		update_item_styles();
-		emit all_reset_requested();
-		emit filters_changed();
-		return;
-	}
-
-	if (item->data(0, role_is_yaml).toBool())
-		return;
-
-	for (auto & tn : type_nodes_)
-		tn.item->setData(0, role_state, static_cast<int>(node_state_t::deselected));
-
-	for (auto & stn : sub_type_nodes_)
-		stn.item->setData(0, role_state, static_cast<int>(node_state_t::deselected));
-
-	if (item->data(0, role_sub_type).isValid())
-	{
-		item->setData(0, role_state, static_cast<int>(node_state_t::selected));
-		update_parent_state(item->parent());
-	}
-	else if (item->data(0, role_type).isValid())
-	{
-		if (item->childCount() == 0)
-		{
-			item->setData(0, role_state, static_cast<int>(node_state_t::selected));
-		}
-		else
-		{
-			for (int i = 0; i < item->childCount(); ++i)
-				item->child(i)->setData(0, role_state, static_cast<int>(node_state_t::selected));
-
-			update_parent_state(item);
-		}
-	}
-
-	update_all_node_state();
-	update_item_styles();
+	row.selected = !row.selected;
+	update_all_state();
+	update_styles();
 	emit filters_changed();
 }
 
-void filter_tree_t::update_parent_state(QTreeWidgetItem * parent)
+void filter_tree_t::update_all_state()
 {
-	if (!parent)
+	if (all_row_ < 0)
 		return;
 
-	int selected_count = 0;
-	int total = parent->childCount();
-
-	for (int i = 0; i < total; ++i)
+	bool all_selected = true;
+	for (const auto & r : rows_)
 	{
-		auto state = static_cast<node_state_t>(parent->child(i)->data(0, role_state).toInt());
-		if (state == node_state_t::selected)
-			++selected_count;
+		if (r.kind == item_kind_t::all || r.kind == item_kind_t::yaml)
+			continue;
+
+		if (!r.selected)
+		{
+			all_selected = false;
+			break;
+		}
 	}
 
-	node_state_t new_state;
-	if (selected_count == 0)
-		new_state = node_state_t::deselected;
-	else if (selected_count == total)
-		new_state = node_state_t::selected;
-	else
-		new_state = node_state_t::partial;
-
-	parent->setData(0, role_state, static_cast<int>(new_state));
+	rows_[all_row_].selected = all_selected;
 }
 
-void filter_tree_t::update_all_node_state()
+void filter_tree_t::update_styles()
 {
-	int selected_count = 0;
-	int total = static_cast<int>(type_nodes_.size());
-
-	for (const auto & tn : type_nodes_)
+	for (auto & r : rows_)
 	{
-		auto state = static_cast<node_state_t>(tn.item->data(0, role_state).toInt());
-		if (state == node_state_t::selected)
-			++selected_count;
-	}
+		if (!enabled_)
+		{
+			r.item->setForeground(QBrush(color_disabled_fg));
+			r.item->setBackground(QBrush());
+			continue;
+		}
 
-	node_state_t new_state;
-	if (selected_count == 0)
-		new_state = node_state_t::deselected;
-	else if (selected_count == total)
-		new_state = node_state_t::selected;
-	else
-		new_state = node_state_t::partial;
-
-	all_item_->setData(0, role_state, static_cast<int>(new_state));
-}
-
-void filter_tree_t::update_item_styles()
-{
-	apply_item_style(all_item_);
-	apply_item_style(yaml_item_);
-
-	for (const auto & tn : type_nodes_)
-		apply_item_style(tn.item);
-
-	for (const auto & stn : sub_type_nodes_)
-		apply_item_style(stn.item);
-}
-
-void filter_tree_t::apply_item_style(QTreeWidgetItem * item)
-{
-	if (!enabled_)
-	{
-		item->setForeground(0, QBrush(color_disabled_fg));
-		item->setForeground(1, QBrush(color_disabled_fg));
-		return;
-	}
-
-	auto state = static_cast<node_state_t>(item->data(0, role_state).toInt());
-
-	switch (state)
-	{
-	case node_state_t::selected:
-		item->setBackground(0, QBrush(color_selected_fg));
-		item->setForeground(0, QBrush(QColor(255, 255, 255)));
-		item->setBackground(1, QBrush(color_selected_fg));
-		item->setForeground(1, QBrush(QColor(255, 255, 255)));
-		break;
-	case node_state_t::partial:
-		item->setBackground(0, QBrush(QColor(160, 195, 235)));
-		item->setForeground(0, QBrush(QColor(255, 255, 255)));
-		item->setBackground(1, QBrush(QColor(160, 195, 235)));
-		item->setForeground(1, QBrush(QColor(255, 255, 255)));
-		break;
-	case node_state_t::deselected:
-		item->setBackground(0, QBrush());
-		item->setForeground(0, QBrush(color_deselected_fg));
-		item->setBackground(1, QBrush());
-		item->setForeground(1, QBrush(color_deselected_fg));
-		break;
+		if (r.selected)
+		{
+			r.item->setBackground(QBrush(color_selected_bg));
+			r.item->setForeground(QBrush(color_selected_fg));
+		}
+		else
+		{
+			r.item->setBackground(QBrush());
+			r.item->setForeground(QBrush(color_deselected_fg));
+		}
 	}
 }
 
@@ -375,16 +315,19 @@ void filter_tree_t::update_counts(
     const std::map<tools_t::rec_type_t, size_t> & total_counts,
     const std::map<tools_t::rec_type_t, size_t> & translated_counts)
 {
-	for (auto & tn : type_nodes_)
+	for (auto & r : rows_)
 	{
-		auto total_it = total_counts.find(tn.type);
+		if (r.kind != item_kind_t::type)
+			continue;
+
+		auto total_it = total_counts.find(r.type);
 		size_t total = (total_it != total_counts.end()) ? total_it->second : 0;
 
-		auto trans_it = translated_counts.find(tn.type);
+		auto trans_it = translated_counts.find(r.type);
 		size_t translated = (trans_it != translated_counts.end()) ? trans_it->second : 0;
 
-		tn.item->setHidden(total == 0);
-		tn.item->setText(1, QString("%1/%2").arg(translated).arg(total));
+		r.item->setHidden(total == 0);
+		r.item->setData(role_counter, QString("%1/%2").arg(translated).arg(total));
 	}
 }
 
@@ -392,42 +335,41 @@ void filter_tree_t::update_sub_type_counts(
     const std::map<std::string, size_t> & sub_type_total_counts,
     const std::map<std::string, size_t> & sub_type_translated_counts)
 {
-	for (auto & stn : sub_type_nodes_)
+	for (auto & r : rows_)
 	{
-		auto total_it = sub_type_total_counts.find(stn.sub_type);
+		if (r.kind != item_kind_t::sub_type)
+			continue;
+
+		auto total_it = sub_type_total_counts.find(r.sub_type);
 		size_t total = (total_it != sub_type_total_counts.end()) ? total_it->second : 0;
 
-		auto trans_it = sub_type_translated_counts.find(stn.sub_type);
+		auto trans_it = sub_type_translated_counts.find(r.sub_type);
 		size_t translated = (trans_it != sub_type_translated_counts.end()) ? trans_it->second : 0;
 
-		stn.item->setHidden(total == 0);
-		stn.item->setText(1, QString("%1/%2").arg(translated).arg(total));
+		r.item->setHidden(total == 0);
+		r.item->setData(role_counter, QString("%1/%2").arg(translated).arg(total));
 	}
 }
 
 void filter_tree_t::set_total_count(size_t translated, size_t total)
 {
-	all_item_->setText(1, QString("%1/%2").arg(translated).arg(total));
+	if (all_row_ < 0)
+		return;
+
+	rows_[all_row_].item->setData(role_counter, QString("%1/%2").arg(translated).arg(total));
 }
 
 std::set<tools_t::rec_type_t> filter_tree_t::get_active_types() const
 {
 	std::set<tools_t::rec_type_t> result;
 
-	for (const auto & tn : type_nodes_)
+	for (const auto & r : rows_)
 	{
-		if (tn.item->childCount() == 0)
-		{
-			auto state = static_cast<node_state_t>(tn.item->data(0, role_state).toInt());
-			if (state == node_state_t::selected)
-				result.insert(tn.type);
-		}
-		else
-		{
-			auto state = static_cast<node_state_t>(tn.item->data(0, role_state).toInt());
-			if (state != node_state_t::deselected)
-				result.insert(tn.type);
-		}
+		if (r.kind == item_kind_t::type && r.selected)
+			result.insert(r.type);
+
+		if (r.kind == item_kind_t::sub_type && r.selected)
+			result.insert(r.type);
 	}
 
 	return result;
@@ -437,11 +379,10 @@ std::set<std::string> filter_tree_t::get_active_sub_types() const
 {
 	std::set<std::string> result;
 
-	for (const auto & stn : sub_type_nodes_)
+	for (const auto & r : rows_)
 	{
-		auto state = static_cast<node_state_t>(stn.item->data(0, role_state).toInt());
-		if (state == node_state_t::selected)
-			result.insert(stn.sub_type);
+		if (r.kind == item_kind_t::sub_type && r.selected)
+			result.insert(r.sub_type);
 	}
 
 	return result;
@@ -449,13 +390,15 @@ std::set<std::string> filter_tree_t::get_active_sub_types() const
 
 bool filter_tree_t::has_sub_type_filter() const
 {
-	for (const auto & stn : sub_type_nodes_)
+	for (const auto & r : rows_)
 	{
-		if (stn.item->isHidden())
+		if (r.kind != item_kind_t::sub_type)
 			continue;
 
-		auto state = static_cast<node_state_t>(stn.item->data(0, role_state).toInt());
-		if (state != node_state_t::selected)
+		if (r.item->isHidden())
+			continue;
+
+		if (!r.selected)
 			return true;
 	}
 
@@ -464,70 +407,91 @@ bool filter_tree_t::has_sub_type_filter() const
 
 void filter_tree_t::set_active_types(const std::set<tools_t::rec_type_t> & types)
 {
-	for (auto & tn : type_nodes_)
+	for (auto & r : rows_)
 	{
-		bool active = types.count(tn.type) > 0;
-		tn.item->setData(0, role_state, static_cast<int>(active ? node_state_t::selected : node_state_t::deselected));
+		if (r.kind == item_kind_t::all || r.kind == item_kind_t::yaml)
+			continue;
 
-		for (int i = 0; i < tn.item->childCount(); ++i)
-			tn.item->child(i)->setData(
-			    0, role_state, static_cast<int>(active ? node_state_t::selected : node_state_t::deselected));
+		r.selected = types.count(r.type) > 0;
 	}
 
-	update_all_node_state();
-	update_item_styles();
+	update_all_state();
+	update_styles();
 }
 
 void filter_tree_t::set_active_sub_types(const std::set<std::string> & sub_types)
 {
-	for (auto & stn : sub_type_nodes_)
+	for (auto & r : rows_)
 	{
-		bool active = sub_types.empty() || sub_types.count(stn.sub_type) > 0;
-		stn.item->setData(0, role_state, static_cast<int>(active ? node_state_t::selected : node_state_t::deselected));
+		if (r.kind != item_kind_t::sub_type)
+			continue;
+
+		r.selected = sub_types.empty() || sub_types.count(r.sub_type) > 0;
 	}
 
-	for (auto & tn : type_nodes_)
-	{
-		if (tn.item->childCount() > 0)
-			update_parent_state(tn.item);
-	}
-
-	update_all_node_state();
-	update_item_styles();
+	update_all_state();
+	update_styles();
 }
 
 bool filter_tree_t::is_solo() const
 {
-	return false;
+	int active_count = 0;
+	for (const auto & r : rows_)
+	{
+		if (r.kind == item_kind_t::all || r.kind == item_kind_t::yaml)
+			continue;
+
+		if (r.selected)
+			++active_count;
+	}
+
+	return active_count == 1;
 }
 
 tools_t::rec_type_t filter_tree_t::get_solo_type() const
 {
+	for (const auto & r : rows_)
+	{
+		if (r.kind == item_kind_t::all || r.kind == item_kind_t::yaml)
+			continue;
+
+		if (r.selected)
+			return r.type;
+	}
+
 	return tools_t::rec_type_t::unknown;
 }
 
 bool filter_tree_t::is_yaml_filter_active() const
 {
-	auto state = static_cast<node_state_t>(yaml_item_->data(0, role_state).toInt());
-	return state == node_state_t::selected;
+	if (yaml_row_ < 0)
+		return false;
+
+	return rows_[yaml_row_].selected;
 }
 
 void filter_tree_t::set_yaml_filter_active(bool active)
 {
-	yaml_item_->setData(0, role_state, static_cast<int>(active ? node_state_t::selected : node_state_t::deselected));
-	apply_item_style(yaml_item_);
+	if (yaml_row_ < 0)
+		return;
+
+	rows_[yaml_row_].selected = active;
+	update_styles();
 }
 
 void filter_tree_t::set_yaml_button_visible(bool visible)
 {
-	yaml_item_->setHidden(!visible);
+	if (yaml_row_ < 0)
+		return;
+
+	rows_[yaml_row_].item->setHidden(!visible);
 }
 
 void filter_tree_t::setEnabled(bool enabled)
 {
 	enabled_ = enabled;
 	QWidget::setEnabled(enabled);
-	update_item_styles();
+	update_styles();
 }
 
 void filter_tree_t::set_display_mode(display_mode_t mode)
@@ -535,24 +499,23 @@ void filter_tree_t::set_display_mode(display_mode_t mode)
 	switch (mode)
 	{
 	case display_mode_t::empty:
-		all_item_->setHidden(true);
-		yaml_item_->setHidden(true);
-		for (auto & tn : type_nodes_)
-			tn.item->setHidden(true);
+		for (auto & r : rows_)
+			r.item->setHidden(true);
 		break;
 
 	case display_mode_t::all_only:
-		all_item_->setHidden(false);
-		yaml_item_->setHidden(true);
-		for (auto & tn : type_nodes_)
-			tn.item->setHidden(true);
+		for (auto & r : rows_)
+			r.item->setHidden(r.kind != item_kind_t::all);
 		break;
 
 	case display_mode_t::full:
-		all_item_->setHidden(false);
-		yaml_item_->setHidden(true);
-		for (auto & tn : type_nodes_)
-			tn.item->setHidden(false);
+		for (auto & r : rows_)
+		{
+			if (r.kind == item_kind_t::yaml)
+				continue;
+
+			r.item->setHidden(false);
+		}
 		break;
 	}
 }
