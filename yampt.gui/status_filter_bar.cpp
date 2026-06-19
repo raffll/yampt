@@ -183,10 +183,7 @@ void status_filter_bar_t::update_counts(const std::map<std::string, size_t> & di
 		}
 
 		sb.count = total;
-		sb.button->setText(QString("%1 (%2/%3)")
-			.arg(get_status_display_name_qt(sb.status))
-			.arg(displayed)
-			.arg(total));
+		sb.button->setText(get_status_display_name_qt(sb.status));
 	}
 }
 

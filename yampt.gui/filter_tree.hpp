@@ -28,6 +28,7 @@ public:
 
 	std::set<tools_t::rec_type_t> get_active_types() const;
 	std::set<std::string> get_active_sub_types() const;
+	bool has_sub_type_filter() const;
 	void set_active_types(const std::set<tools_t::rec_type_t> & types);
 	void set_active_sub_types(const std::set<std::string> & sub_types);
 	bool is_solo() const;

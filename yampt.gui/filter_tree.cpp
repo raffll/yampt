@@ -453,6 +453,21 @@ std::set<std::string> filter_tree_t::get_active_sub_types() const
 	return result;
 }
 
+bool filter_tree_t::has_sub_type_filter() const
+{
+	for (const auto & stn : sub_type_nodes_)
+	{
+		if (stn.item->isHidden())
+			continue;
+
+		auto state = static_cast<node_state_t>(stn.item->data(0, role_state).toInt());
+		if (state != node_state_t::selected)
+			return true;
+	}
+
+	return false;
+}
+
 void filter_tree_t::set_active_types(const std::set<tools_t::rec_type_t> & types)
 {
 	for (auto & tn : type_nodes_)
