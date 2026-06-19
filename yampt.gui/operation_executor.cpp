@@ -16,10 +16,21 @@ std::string operation_executor_t::make_output_path(const std::string & source_pa
 {
 	const auto info = QFileInfo(QString::fromStdString(source_path));
 	const auto base_name = info.completeBaseName().toStdString();
-	const auto timestamp = QDateTime::currentDateTime().toString("yyyyMMddHHmmss").toStdString();
+	return make_output_path(base_name, ext, true);
+}
+
+std::string operation_executor_t::make_output_path(const std::string & base_name, const std::string & ext, bool) const
+{
 	const auto dir = get_output_dir();
 
-	return dir + base_name + "-" + timestamp + "." + ext;
+	auto path = dir + base_name + "." + ext;
+	if (QFileInfo::exists(QString::fromStdString(path)))
+	{
+		const auto timestamp = QDateTime::currentDateTime().toString("yyyyMMddHHmmss").toStdString();
+		path = dir + base_name + "-" + timestamp + "." + ext;
+	}
+
+	return path;
 }
 
 std::string operation_executor_t::get_output_dir() const
@@ -94,10 +105,9 @@ operation_executor_t::result_t operation_executor_t::make_base(const std::string
 	if (foreign_name != native_name)
 		output_name += "+" + native_name;
 
-	const auto timestamp = QDateTime::currentDateTime().toString("yyyyMMddHHmmss").toStdString();
-	output_name += "_BASE_" + fl + "-" + nl + "-" + timestamp;
+	output_name += "_BASE_" + fl + "-" + nl;
 
-	const auto output_path = get_output_dir() + output_name + ".json";
+	const auto output_path = make_output_path(output_name, "json", true);
 	dict_writer_t::write(creator.get_dict(), output_path);
 
 	return {!tools_t::has_error(), tools_t::get_log(), output_path};

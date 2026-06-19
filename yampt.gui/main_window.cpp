@@ -1999,11 +1999,6 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
         tree->setHeaderHidden(true);
         tree->setRootIsDecorated(true);
         tree->setIndentation(16);
-        tree->setStyleSheet(
-            "QTreeWidget::indicator { width: 14px; height: 14px; }"
-            "QTreeWidget::indicator:unchecked { border: 1px solid #888; background: white; }"
-            "QTreeWidget::indicator:checked { border: 1px solid #888; background: black; }"
-        );
         dlg_layout->addWidget(tree);
 
         struct root_builder_t
