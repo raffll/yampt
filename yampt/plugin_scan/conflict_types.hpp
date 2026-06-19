@@ -58,7 +58,7 @@ inline QColor conflict_this_foreground(conflict_this_t ct)
 	case conflict_this_t::master:              return QColor(128, 0, 128);
 	case conflict_this_t::identical_to_master: return QColor(128, 128, 128);
 	case conflict_this_t::override_wins:       return QColor(0, 128, 0);
-	case conflict_this_t::conflict_wins:       return QColor(255, 165, 0);
+	case conflict_this_t::conflict_wins:       return QColor(255, 128, 64);
 	case conflict_this_t::conflict_loses:      return QColor(255, 0, 0);
 	case conflict_this_t::deleted:             return QColor(128, 128, 128);
 	default:                                   return QColor(0, 0, 0);

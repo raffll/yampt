@@ -7,12 +7,44 @@
 #include <QDragEnterEvent>
 #include <QDropEvent>
 #include <QFileDialog>
+#include <QFileInfo>
 #include <QHBoxLayout>
 #include <QInputDialog>
 #include <QMessageBox>
 #include <QMimeData>
+#include <QPainter>
+#include <QSettings>
 #include <QShortcut>
+#include <QStyledItemDelegate>
 #include <QVBoxLayout>
+
+class grid_delegate_t : public QStyledItemDelegate
+{
+public:
+	using QStyledItemDelegate::QStyledItemDelegate;
+
+	void paint(QPainter * painter, const QStyleOptionViewItem & option,
+	           const QModelIndex & index) const override
+	{
+		QStyleOptionViewItem opt = option;
+		initStyleOption(&opt, index);
+
+		auto bg = index.data(Qt::BackgroundRole);
+		if (bg.isValid())
+		{
+			painter->fillRect(opt.rect, bg.value<QBrush>());
+			opt.backgroundBrush = bg.value<QBrush>();
+		}
+
+		QStyledItemDelegate::paint(painter, opt, index);
+
+		painter->save();
+		painter->setPen(QColor(192, 192, 192));
+		painter->drawLine(opt.rect.topRight(), opt.rect.bottomRight());
+		painter->drawLine(opt.rect.bottomLeft(), opt.rect.bottomRight());
+		painter->restore();
+	}
+};
 
 editor_tab_t::editor_tab_t(QWidget * parent)
 	: QWidget(parent)
@@ -27,6 +59,7 @@ editor_tab_t::editor_tab_t(QWidget * parent)
 	btn_load_ = new QPushButton("Load", toolbar);
 	btn_new_ = new QPushButton("New", toolbar);
 	btn_save_ = new QPushButton("Save", toolbar);
+	auto * btn_merge = new QPushButton("Create Merged Patch", toolbar);
 	btn_filter_ = new QPushButton("Filter", toolbar);
 	chk_conflicts_ = new QCheckBox("Conflicts Only", toolbar);
 	cmb_type_filter_ = new QComboBox(toolbar);
@@ -39,6 +72,7 @@ editor_tab_t::editor_tab_t(QWidget * parent)
 	toolbar_layout->addWidget(btn_load_);
 	toolbar_layout->addWidget(btn_new_);
 	toolbar_layout->addWidget(btn_save_);
+	toolbar_layout->addWidget(btn_merge);
 	toolbar_layout->addWidget(btn_filter_);
 	toolbar_layout->addWidget(chk_conflicts_);
 	toolbar_layout->addWidget(cmb_type_filter_);
@@ -59,10 +93,9 @@ editor_tab_t::editor_tab_t(QWidget * parent)
 
 	view_view_ = new QTreeView(content_splitter_);
 	view_view_->setSelectionMode(QAbstractItemView::ExtendedSelection);
-	view_view_->setStyleSheet("QTreeView { gridline-color: #c0c0c0; }"
-	                          "QTreeView::item { border-right: 1px solid #c0c0c0; border-bottom: 1px solid #e0e0e0; }");
 	view_view_->setRootIsDecorated(true);
 	view_view_->setAlternatingRowColors(false);
+	view_view_->setItemDelegate(new grid_delegate_t(view_view_));
 
 	content_splitter_->addWidget(nav_view_);
 	content_splitter_->addWidget(view_view_);
@@ -88,6 +121,7 @@ editor_tab_t::editor_tab_t(QWidget * parent)
 	connect(btn_load_, &QPushButton::clicked, this, &editor_tab_t::on_load_plugins);
 	connect(btn_new_, &QPushButton::clicked, this, &editor_tab_t::on_new_plugin);
 	connect(btn_save_, &QPushButton::clicked, this, &editor_tab_t::on_save_plugin);
+	connect(btn_merge, &QPushButton::clicked, this, &editor_tab_t::on_create_merged_patch);
 	connect(btn_filter_, &QPushButton::clicked, this, &editor_tab_t::on_advanced_filter);
 
 	connect(chk_conflicts_, &QCheckBox::checkStateChanged, this, &editor_tab_t::on_filter_changed);
@@ -103,6 +137,8 @@ editor_tab_t::editor_tab_t(QWidget * parent)
 
 	auto * copy_shortcut = new QShortcut(QKeySequence::Copy, view_view_);
 	connect(copy_shortcut, &QShortcut::activated, this, &editor_tab_t::on_view_copy);
+
+	load_plugin_paths();
 }
 
 
@@ -171,6 +207,7 @@ void editor_tab_t::on_load_plugins()
 	            + std::to_string(overrides) + " overrides, " + std::to_string(identical) + " identical");
 
 	rebuild_after_load();
+	save_plugin_paths();
 }
 
 void editor_tab_t::rebuild_after_load()
@@ -190,6 +227,13 @@ void editor_tab_t::rebuild_after_load()
 void editor_tab_t::on_nav_selection_changed(const QModelIndex & current)
 {
 	if (!current.isValid())
+	{
+		view_model_->clear();
+		update_status();
+		return;
+	}
+
+	if (current.row() < 0 || current.row() >= nav_model_->rowCount(current.parent()))
 	{
 		view_model_->clear();
 		update_status();
@@ -359,6 +403,79 @@ void editor_tab_t::on_save_plugin()
 	{
 		log_message("Error saving plugin");
 	}
+}
+
+void editor_tab_t::on_create_merged_patch()
+{
+	if (scan_.plugin_count() < 2)
+	{
+		log_message("Need at least 2 plugins loaded to create a merged patch");
+		return;
+	}
+
+	QString path = QFileDialog::getSaveFileName(
+		this, "Save Merged Patch", QString(), "ESP files (*.esp)");
+
+	if (path.isEmpty())
+		return;
+
+	auto filename = QFileInfo(path).fileName().toStdString();
+
+	if (!scan_.has_merge())
+		scan_.set_merge_plugin(filename);
+
+	const auto & entries = scan_.entries();
+	int copied = 0;
+
+	for (const auto & entry : entries)
+	{
+		if (entry.versions.size() < 2)
+			continue;
+
+		if (entry.conflict_all == conflict_all_t::no_conflict)
+			continue;
+
+		if (entry.conflict_all == conflict_all_t::only_one)
+			continue;
+
+		const auto & winner = entry.versions.back();
+		if (winner.status == conflict_this_t::identical_to_master)
+			continue;
+
+		scan_.copy_record_to_merge(winner.plugin_idx, winner.record_index);
+		++copied;
+	}
+
+	bool ok_author = false;
+	QString author = QInputDialog::getText(
+		this, "Plugin Author", "Author:", QLineEdit::Normal, QString(), &ok_author);
+
+	if (!ok_author)
+		return;
+
+	bool ok_desc = false;
+	QString description = QInputDialog::getText(
+		this, "Plugin Description", "Description:", QLineEdit::Normal,
+		"Merged patch - conflict resolution", &ok_desc);
+
+	if (!ok_desc)
+		return;
+
+	bool result = scan_.save_merge(
+		path.toStdString(), author.toStdString(), description.toStdString());
+
+	if (result)
+	{
+		log_message("Created merged patch: " + filename + " (" + std::to_string(copied) + " records)");
+	}
+	else
+	{
+		log_message("Error creating merged patch");
+	}
+
+	scan_.rebuild_conflicts();
+	nav_model_->rebuild();
+	update_status();
 }
 
 void editor_tab_t::on_remove_itm()
@@ -597,4 +714,67 @@ void editor_tab_t::update_status()
 void editor_tab_t::log_message(const std::string & msg)
 {
 	messages_->log(msg);
+}
+
+void editor_tab_t::save_plugin_paths()
+{
+	QSettings settings(QCoreApplication::applicationDirPath() + "/yampt_gui.ini",
+	                   QSettings::IniFormat);
+
+	settings.beginWriteArray("editor/plugins");
+	for (int i = 0; i < static_cast<int>(scan_.plugin_count()); ++i)
+	{
+		settings.setArrayIndex(i);
+		settings.setValue("path", QString::fromStdString(scan_.plugin_path(i)));
+	}
+	settings.endArray();
+}
+
+void editor_tab_t::load_plugin_paths()
+{
+	QSettings settings(QCoreApplication::applicationDirPath() + "/yampt_gui.ini",
+	                   QSettings::IniFormat);
+
+	int count = settings.beginReadArray("editor/plugins");
+	if (count == 0)
+	{
+		settings.endArray();
+		return;
+	}
+
+	std::vector<std::string> paths;
+	for (int i = 0; i < count; ++i)
+	{
+		settings.setArrayIndex(i);
+		auto path = settings.value("path").toString().toStdString();
+		if (!path.empty())
+			paths.push_back(path);
+	}
+	settings.endArray();
+
+	for (const auto & path : paths)
+	{
+		try
+		{
+			scan_.load_plugin(path);
+			const auto & idx = scan_.index(static_cast<int>(scan_.plugin_count()) - 1);
+			log_message("Loaded " + scan_.plugin_filename(static_cast<int>(scan_.plugin_count()) - 1)
+			            + " (" + std::to_string(idx.entries().size()) + " records indexed)");
+		}
+		catch (const std::exception & e)
+		{
+			auto filename = path;
+			auto pos = filename.find_last_of("/\\");
+			if (pos != std::string::npos)
+				filename = filename.substr(pos + 1);
+
+			log_message("Error loading " + filename + ": " + e.what());
+		}
+	}
+
+	if (scan_.plugin_count() == 0)
+		return;
+
+	scan_.rebuild_conflicts();
+	rebuild_after_load();
 }

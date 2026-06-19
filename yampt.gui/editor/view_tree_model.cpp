@@ -88,6 +88,12 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 		plugin_conflict_this_.push_back(ver.status);
 	}
 
+	if (col_count == 0)
+	{
+		endResetModel();
+		return;
+	}
+
 	{
 		sub_record_row_t header_row;
 		header_row.type = "Record Header";
@@ -97,12 +103,14 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 		header_row.row_conflict_all = entry.conflict_all;
 		header_row.all_identical = (entry.conflict_all == conflict_all_t::no_conflict
 		                         || entry.conflict_all == conflict_all_t::only_one);
+		header_row.cell_conflict_this.resize(col_count, conflict_this_t::master);
 
 		field_row_t sig_row;
 		sig_row.name = "Signature";
 		sig_row.values.resize(col_count, entry.rec_type);
 		sig_row.row_conflict_all = conflict_all_t::no_conflict;
 		sig_row.all_identical = true;
+		sig_row.cell_conflict_this = compute_row_conflict_this(sig_row.values);
 		header_row.children.push_back(std::move(sig_row));
 
 		field_row_t flags_row;
@@ -112,6 +120,9 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 		for (size_t col = 0; col < col_count; ++col)
 		{
 			const auto & records = scan.plugin(entry.versions[col].plugin_idx).get_records();
+			if (entry.versions[col].record_index >= records.size())
+				continue;
+
 			const auto & content = records[entry.versions[col].record_index].content;
 			if (content.size() >= 16)
 			{
@@ -133,6 +144,7 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 			}
 		}
 		flags_row.row_conflict_all = compute_row_conflict_all(flags_row.values);
+		flags_row.cell_conflict_this = compute_row_conflict_this(flags_row.values);
 		header_row.children.push_back(std::move(flags_row));
 
 		rows_.push_back(std::move(header_row));
@@ -143,7 +155,18 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 	for (const auto & ver : entry.versions)
 	{
 		const auto & records = scan.plugin(ver.plugin_idx).get_records();
+		if (ver.record_index >= records.size())
+		{
+			all_sub_records.push_back({});
+			continue;
+		}
+
 		const auto & content = records[ver.record_index].content;
+		if (content.size() < 16)
+		{
+			all_sub_records.push_back({});
+			continue;
+		}
 
 		std::vector<sub_record_view_t> subs;
 		sub_record_iter_t iter(content);
@@ -206,6 +229,7 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 		}
 		row.all_identical = all_same;
 		row.row_conflict_all = compute_row_conflict_all(row.values);
+		row.cell_conflict_this = compute_row_conflict_this(row.values);
 
 		const sub_record_schema_t * schema = find_schema(record_type_, sub_type, first_size);
 		if (schema && first_data)
@@ -241,6 +265,7 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 				}
 				frow.all_identical = fields_same;
 				frow.row_conflict_all = compute_row_conflict_all(frow.values);
+				frow.cell_conflict_this = compute_row_conflict_this(frow.values);
 
 				row.children.push_back(std::move(frow));
 			}
@@ -397,7 +422,7 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 			if (index.column() == 0)
 			{
 				conflict_this_t worst = conflict_this_t::unknown;
-				for (const auto & s : plugin_conflict_this_)
+				for (const auto & s : row.cell_conflict_this)
 				{
 					if (s > worst)
 						worst = s;
@@ -407,10 +432,10 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 			}
 
 			int col = index.column() - 1;
-			if (col < 0 || col >= static_cast<int>(plugin_conflict_this_.size()))
+			if (col < 0 || col >= static_cast<int>(row.cell_conflict_this.size()))
 				return {};
 
-			return QBrush(conflict_this_foreground(plugin_conflict_this_[col]));
+			return QBrush(conflict_this_foreground(row.cell_conflict_this[col]));
 		}
 
 		return {};
@@ -453,7 +478,7 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 		if (index.column() == 0)
 		{
 			conflict_this_t worst = conflict_this_t::unknown;
-			for (const auto & s : plugin_conflict_this_)
+			for (const auto & s : frow.cell_conflict_this)
 			{
 				if (s > worst)
 					worst = s;
@@ -463,10 +488,10 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 		}
 
 		int col = index.column() - 1;
-		if (col < 0 || col >= static_cast<int>(plugin_conflict_this_.size()))
+		if (col < 0 || col >= static_cast<int>(frow.cell_conflict_this.size()))
 			return {};
 
-		return QBrush(conflict_this_foreground(plugin_conflict_this_[col]));
+		return QBrush(conflict_this_foreground(frow.cell_conflict_this[col]));
 	}
 
 	return {};
@@ -856,4 +881,74 @@ conflict_all_t view_tree_model_t::compute_row_conflict_all(
 		return conflict_all_t::override_benign;
 
 	return conflict_all_t::conflict;
+}
+
+std::vector<conflict_this_t> view_tree_model_t::compute_row_conflict_this(
+	const std::vector<std::string> & values) const
+{
+	std::vector<conflict_this_t> result(values.size(), conflict_this_t::unknown);
+
+	if (values.empty())
+		return result;
+
+	if (values.size() == 1)
+	{
+		result[0] = values[0].empty() ? conflict_this_t::unknown : conflict_this_t::master;
+		return result;
+	}
+
+	result[0] = values[0].empty() ? conflict_this_t::unknown : conflict_this_t::master;
+
+	size_t last_idx = values.size() - 1;
+
+	for (size_t i = 1; i < values.size(); ++i)
+	{
+		if (values[i].empty() && values[0].empty())
+		{
+			result[i] = conflict_this_t::identical_to_master;
+			continue;
+		}
+
+		if (values[i].empty())
+		{
+			result[i] = conflict_this_t::unknown;
+			continue;
+		}
+
+		if (values[i] == values[0])
+		{
+			result[i] = conflict_this_t::identical_to_master;
+			continue;
+		}
+
+		if (i == last_idx)
+			result[i] = conflict_this_t::override_wins;
+		else
+			result[i] = conflict_this_t::conflict_loses;
+	}
+
+	bool any_differs = false;
+	int differ_count = 0;
+	for (size_t i = 1; i < values.size(); ++i)
+	{
+		if (result[i] != conflict_this_t::identical_to_master && result[i] != conflict_this_t::unknown)
+		{
+			any_differs = true;
+			++differ_count;
+		}
+	}
+
+	if (!any_differs)
+		return result;
+
+	if (differ_count > 1)
+	{
+		for (size_t i = 1; i < values.size(); ++i)
+		{
+			if (result[i] == conflict_this_t::override_wins)
+				result[i] = conflict_this_t::conflict_wins;
+		}
+	}
+
+	return result;
 }

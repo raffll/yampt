@@ -30,6 +30,7 @@ private:
 	{
 		std::string name;
 		std::vector<std::string> values;
+		std::vector<conflict_this_t> cell_conflict_this;
 		conflict_all_t row_conflict_all;
 		bool all_identical;
 	};
@@ -40,6 +41,7 @@ private:
 		std::string label;
 		size_t size;
 		std::vector<std::string> values;
+		std::vector<conflict_this_t> cell_conflict_this;
 		conflict_all_t row_conflict_all;
 		bool all_identical;
 		std::vector<field_row_t> children;
@@ -55,6 +57,7 @@ private:
 	std::string decode_field(const field_def_t & field, const char * data, size_t data_size) const;
 	std::string make_sub_label(const std::string & sub_type, const std::string & record_type, size_t data_size) const;
 	conflict_all_t compute_row_conflict_all(const std::vector<std::string> & values) const;
+	std::vector<conflict_this_t> compute_row_conflict_this(const std::vector<std::string> & values) const;
 	const std::vector<sub_record_row_t> & visible_rows() const;
 	mutable std::vector<sub_record_row_t> filtered_rows_;
 	mutable bool filter_dirty_ = true;

@@ -24,6 +24,7 @@ private slots:
 	void on_load_plugins();
 	void on_new_plugin();
 	void on_save_plugin();
+	void on_create_merged_patch();
 	void on_nav_selection_changed(const QModelIndex & current);
 	void on_filter_changed();
 	void on_advanced_filter();
@@ -35,6 +36,8 @@ private:
 	void rebuild_after_load();
 	void update_status();
 	void log_message(const std::string & msg);
+	void save_plugin_paths();
+	void load_plugin_paths();
 	bool eventFilter(QObject * obj, QEvent * event) override;
 
 	plugin_scan_t scan_;
