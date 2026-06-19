@@ -121,6 +121,46 @@ std::string translation_engine_t::target_language() const
 	return impl_->target_lang;
 }
 
+static std::vector<std::string> split_sentences(const std::string & text)
+{
+	std::vector<std::string> sentences;
+	std::string current;
+
+	for (size_t i = 0; i < text.size(); ++i)
+	{
+		current += text[i];
+
+		if (text[i] == '.' || text[i] == '!' || text[i] == '?')
+		{
+			while (i + 1 < text.size() && (text[i + 1] == '.' || text[i + 1] == '!' || text[i + 1] == '?'))
+			{
+				++i;
+				current += text[i];
+			}
+
+			while (i + 1 < text.size() && (text[i + 1] == ' ' || text[i + 1] == '\t'))
+			{
+				++i;
+				current += text[i];
+			}
+
+			if (!current.empty())
+			{
+				sentences.push_back(current);
+				current.clear();
+			}
+		}
+	}
+
+	if (!current.empty())
+		sentences.push_back(current);
+
+	if (sentences.empty())
+		sentences.push_back(text);
+
+	return sentences;
+}
+
 translation_result_t translation_engine_t::translate(const std::string & text) const
 {
 	if (!impl_->translator)
@@ -131,18 +171,53 @@ translation_result_t translation_engine_t::translate(const std::string & text) c
 
 	try
 	{
-		std::vector<std::string> tokens;
-		impl_->source_spm->Encode(text, &tokens);
+		auto sentences = split_sentences(text);
 
+		std::vector<std::vector<std::string>> token_batch;
+		for (const auto & sentence : sentences)
+		{
+			std::vector<std::string> tokens;
+			impl_->source_spm->Encode(sentence, &tokens);
+			token_batch.push_back(std::move(tokens));
+		}
+
+		std::vector<std::vector<std::string>> target_prefix_batch;
 		if (!impl_->target_prefix.empty())
-			tokens.insert(tokens.begin(), impl_->target_prefix);
+		{
+			for (size_t i = 0; i < token_batch.size(); ++i)
+				target_prefix_batch.push_back({ impl_->target_prefix });
+		}
 
-		auto results = impl_->translator->translate_batch({ tokens });
+		ctranslate2::TranslationOptions options;
+		options.repetition_penalty = 1.3f;
+		options.no_repeat_ngram_size = 3;
 
-		if (results.empty() || results[0].hypotheses.empty())
-			return { "", false, "empty translation result" };
+		size_t max_input_len = 0;
+		for (const auto & t : token_batch)
+		{
+			if (t.size() > max_input_len)
+				max_input_len = t.size();
+		}
 
-		auto translated = impl_->target_spm->DecodePieces(results[0].hypotheses[0]);
+		options.max_decoding_length = max_input_len * 3 + 10;
+
+		auto results = impl_->translator->translate_batch(
+		    token_batch,
+		    target_prefix_batch.empty() ? std::vector<std::vector<std::string>> {} : target_prefix_batch,
+		    options);
+
+		std::string translated;
+		for (size_t i = 0; i < results.size(); ++i)
+		{
+			if (results[i].hypotheses.empty())
+				continue;
+
+			if (!translated.empty())
+				translated += ' ';
+
+			translated += impl_->target_spm->DecodePieces(results[i].hypotheses[0]);
+		}
+
 		return { translated, true, "" };
 	}
 	catch (const std::exception & e)
