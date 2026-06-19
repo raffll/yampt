@@ -1960,306 +1960,14 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
 	}
 	case plugin_op_t::make_dict_with_base:
 	{
-		struct dict_item_t
-		{
-			std::string path;
-			std::string display;
-			std::string filename;
-			std::string root_path;
-			std::string subfolder;
-			dict_kind_t kind;
-			bool pre_checked;
-		};
+		auto entries = build_dict_entries(plugin_dir);
 
-		auto source_sep = plugin_path.find_last_of("/\\");
-		auto plugin_dir_norm = source_sep != std::string::npos ? plugin_path.substr(0, source_sep) : std::string {};
-		std::replace(plugin_dir_norm.begin(), plugin_dir_norm.end(), '\\', '/');
-		std::transform(
-		    plugin_dir_norm.begin(),
-		    plugin_dir_norm.end(),
-		    plugin_dir_norm.begin(),
-		    [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-
-		auto normalize = [](std::string p)
-		{
-			std::replace(p.begin(), p.end(), '\\', '/');
-			std::transform(
-			    p.begin(), p.end(), p.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-			return p;
-		};
-
-		std::set<std::string> seen;
-		std::vector<dict_item_t> items;
-
-		std::set<std::string> saved_order_set;
-		for (const auto & p : config_.last_merge_order)
-			saved_order_set.insert(normalize(p));
-
-		bool use_saved_order = !saved_order_set.empty();
-
-		for (const auto * dict_doc : session_.all_dicts())
-		{
-			auto norm = normalize(dict_doc->path());
-			if (!seen.insert(norm).second)
-				continue;
-
-			auto sep2 = dict_doc->path().find_last_of("/\\");
-			auto filename = sep2 != std::string::npos ? dict_doc->path().substr(sep2 + 1) : dict_doc->path();
-
-			auto dir_norm = sep2 != std::string::npos ? normalize(dict_doc->path().substr(0, sep2)) : std::string {};
-			bool pre = use_saved_order ? (saved_order_set.count(norm) > 0)
-			                           : (!plugin_dir_norm.empty() && dir_norm == plugin_dir_norm);
-
-			std::string root_path;
-			std::string subfolder;
-			const auto * fe = file_list_.get(dict_doc->path());
-			if (fe)
-			{
-				root_path = fe->root_path;
-				subfolder = fe->workspace_subfolder;
-			}
-
-			items.push_back({ dict_doc->path(), filename, filename, root_path, subfolder, dict_doc->kind(), pre });
-		}
-
-		for (const auto * fe : file_list_.all())
-		{
-			if (fe->type != file_type_t::user_dict && fe->type != file_type_t::base_dict)
-				continue;
-
-			auto norm = normalize(fe->path);
-			if (!seen.insert(norm).second)
-				continue;
-
-			auto dir_norm = norm;
-			auto dir_sep2 = dir_norm.find_last_of('/');
-			dir_norm = (dir_sep2 != std::string::npos) ? dir_norm.substr(0, dir_sep2) : std::string {};
-			bool pre = use_saved_order ? (saved_order_set.count(norm) > 0)
-			                           : (!plugin_dir_norm.empty() && dir_norm == plugin_dir_norm);
-
-			auto kind = (fe->type == file_type_t::base_dict) ? dict_kind_t::base : dict_kind_t::user;
-			items.push_back(
-			    { fe->path, fe->filename, fe->filename, fe->root_path, fe->workspace_subfolder, kind, pre });
-		}
-
-		if (items.empty())
+		dict_selection_dialog_t dialog(entries, config_.last_merge_order, this);
+		dialog.setWindowTitle("Select Dictionaries");
+		if (dialog.exec() != QDialog::Accepted)
 			return;
 
-		QDialog dlg(this);
-		dlg.setWindowTitle("Select Dictionaries");
-		dlg.setModal(true);
-		dlg.resize(450, 500);
-
-		auto * dlg_layout = new QVBoxLayout(&dlg);
-
-		dlg_layout->addWidget(new QLabel("Available dictionaries:", &dlg));
-
-		auto * tree = new QTreeWidget(&dlg);
-		tree->setHeaderHidden(true);
-		tree->setRootIsDecorated(true);
-		tree->setIndentation(16);
-		dlg_layout->addWidget(tree);
-
-		struct root_builder_t
-		{
-			std::map<std::string, std::vector<dict_item_t *>> subfolder_items;
-			std::vector<dict_item_t *> root_items;
-		};
-
-		std::map<std::string, root_builder_t> roots;
-
-		for (auto & item : items)
-		{
-			if (item.root_path.empty())
-				continue;
-
-			if (item.subfolder.empty())
-				roots[item.root_path].root_items.push_back(&item);
-			else
-				roots[item.root_path].subfolder_items[item.subfolder].push_back(&item);
-		}
-
-		auto * order_list = new QListWidget(&dlg);
-
-		auto add_dict_items = [&](QTreeWidgetItem * parent, std::vector<dict_item_t *> & dict_items)
-		{
-			for (auto * di : dict_items)
-			{
-				auto * item = new QTreeWidgetItem(parent);
-
-				display_name_t dname(di->display);
-				dname.set_kind(di->kind);
-				auto label = QString::fromStdString(dname.to_string());
-
-				item->setText(0, label);
-				item->setData(0, Qt::UserRole, QString::fromStdString(di->path));
-				item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
-				item->setCheckState(0, di->pre_checked ? Qt::Checked : Qt::Unchecked);
-
-				if (di->kind == dict_kind_t::base)
-					item->setForeground(0, QColor(180, 140, 80));
-				else
-					item->setForeground(0, QColor(100, 160, 220));
-			}
-		};
-
-		for (auto & [root_path, rb] : roots)
-		{
-			auto root_label = root_path;
-			auto sep2 = root_label.find_last_of("/\\");
-			if (sep2 != std::string::npos)
-				root_label = root_label.substr(sep2 + 1);
-
-			if (root_label == "workspace")
-				root_label = workspace_label;
-
-			auto * root_node = new QTreeWidgetItem(tree);
-			root_node->setText(0, QString::fromStdString(root_label));
-			root_node->setFlags(Qt::ItemIsEnabled);
-			QFont bold = root_node->font(0);
-			bold.setBold(true);
-			root_node->setFont(0, bold);
-
-			add_dict_items(root_node, rb.root_items);
-
-			for (auto & [subfolder, sub_items] : rb.subfolder_items)
-			{
-				auto * folder_node = new QTreeWidgetItem(root_node);
-				folder_node->setText(0, QString::fromStdString(subfolder));
-				folder_node->setFlags(Qt::ItemIsEnabled);
-				folder_node->setForeground(0, QColor(130, 130, 130));
-
-				add_dict_items(folder_node, sub_items);
-				folder_node->setExpanded(true);
-			}
-
-			root_node->setExpanded(true);
-		}
-
-		if (use_saved_order)
-		{
-			for (const auto & saved_path : config_.last_merge_order)
-			{
-				auto norm_saved = normalize(saved_path);
-				for (const auto & di : items)
-				{
-					if (normalize(di.path) != norm_saved)
-						continue;
-
-					display_name_t dname(di.display);
-					dname.set_kind(di.kind);
-					auto * order_item = new QListWidgetItem(QString::fromStdString(dname.to_string()));
-					order_item->setData(Qt::UserRole, QString::fromStdString(di.path));
-					order_list->addItem(order_item);
-					break;
-				}
-			}
-		}
-		else
-		{
-			for (const auto & di : items)
-			{
-				if (!di.pre_checked)
-					continue;
-
-				display_name_t dname(di.display);
-				dname.set_kind(di.kind);
-				auto * order_item = new QListWidgetItem(QString::fromStdString(dname.to_string()));
-				order_item->setData(Qt::UserRole, QString::fromStdString(di.path));
-				order_list->addItem(order_item);
-			}
-		}
-
-		dlg_layout->addWidget(new QLabel("Merge order (last wins):", &dlg));
-		dlg_layout->addWidget(order_list);
-
-		auto * order_buttons = new QHBoxLayout;
-		auto * up_btn = new QPushButton("Up", &dlg);
-		auto * down_btn = new QPushButton("Down", &dlg);
-		order_buttons->addWidget(up_btn);
-		order_buttons->addWidget(down_btn);
-		order_buttons->addStretch();
-		dlg_layout->addLayout(order_buttons);
-
-		auto * buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dlg);
-		buttons->button(QDialogButtonBox::Ok)->setEnabled(order_list->count() > 0);
-		dlg_layout->addWidget(buttons);
-
-		auto sync_check_to_list = [&](QTreeWidgetItem * item, int)
-		{
-			auto path_data = item->data(0, Qt::UserRole).toString();
-			if (path_data.isEmpty())
-				return;
-
-			if (item->checkState(0) == Qt::Checked)
-			{
-				for (int i = 0; i < order_list->count(); ++i)
-				{
-					if (order_list->item(i)->data(Qt::UserRole).toString() == path_data)
-						return;
-				}
-
-				auto * order_item = new QListWidgetItem(item->text(0));
-				order_item->setData(Qt::UserRole, path_data);
-				order_list->addItem(order_item);
-			}
-			else
-			{
-				for (int i = 0; i < order_list->count(); ++i)
-				{
-					if (order_list->item(i)->data(Qt::UserRole).toString() == path_data)
-					{
-						delete order_list->takeItem(i);
-						break;
-					}
-				}
-			}
-
-			buttons->button(QDialogButtonBox::Ok)->setEnabled(order_list->count() > 0);
-		};
-
-		connect(tree, &QTreeWidget::itemChanged, &dlg, sync_check_to_list);
-
-		connect(
-		    up_btn,
-		    &QPushButton::clicked,
-		    &dlg,
-		    [&]()
-		{
-			int row = order_list->currentRow();
-			if (row <= 0)
-				return;
-
-			auto * item = order_list->takeItem(row);
-			order_list->insertItem(row - 1, item);
-			order_list->setCurrentRow(row - 1);
-		});
-
-		connect(
-		    down_btn,
-		    &QPushButton::clicked,
-		    &dlg,
-		    [&]()
-		{
-			int row = order_list->currentRow();
-			if (row < 0 || row >= order_list->count() - 1)
-				return;
-
-			auto * item = order_list->takeItem(row);
-			order_list->insertItem(row + 1, item);
-			order_list->setCurrentRow(row + 1);
-		});
-
-		connect(buttons, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
-		connect(buttons, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
-
-		if (dlg.exec() != QDialog::Accepted)
-			return;
-
-		std::vector<std::string> selected;
-		for (int i = 0; i < order_list->count(); ++i)
-			selected.push_back(order_list->item(i)->data(Qt::UserRole).toString().toStdString());
-
+		const auto selected = dialog.get_selected_paths();
 		if (selected.empty())
 			return;
 
@@ -2267,6 +1975,7 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
 
 		for (const auto & sel_path : selected)
 			session_.open(sel_path);
+
 		dict_merger_t merger(selected);
 		result = executor_.make_dict_with_base(plugin_path, merger.get_dict(), encoding);
 		break;
@@ -2448,13 +2157,16 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
 	{
 		auto entries = build_dict_entries(plugin_dir);
 
-		dict_selection_dialog_t dialog(entries, this);
+		dict_selection_dialog_t dialog(entries, config_.last_merge_order, this);
+		dialog.setWindowTitle("Select Dictionaries for Convert");
 		if (dialog.exec() != QDialog::Accepted)
 			return;
 
 		const auto selected = dialog.get_selected_paths();
 		if (selected.empty())
 			return;
+
+		config_.last_merge_order = selected;
 
 		for (const auto & sel_path : selected)
 			session_.open(sel_path);
@@ -2465,13 +2177,16 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
 	{
 		auto entries = build_dict_entries(plugin_dir);
 
-		dict_selection_dialog_t dialog(entries, this);
+		dict_selection_dialog_t dialog(entries, config_.last_merge_order, this);
+		dialog.setWindowTitle("Select Dictionaries for Create");
 		if (dialog.exec() != QDialog::Accepted)
 			return;
 
 		const auto selected = dialog.get_selected_paths();
 		if (selected.empty())
 			return;
+
+		config_.last_merge_order = selected;
 
 		for (const auto & sel_path : selected)
 			session_.open(sel_path);
@@ -2597,17 +2312,35 @@ std::vector<dict_selection_dialog_t::dict_entry_t> main_window_t::build_dict_ent
 
 	auto target = source_dir.empty() ? std::string {} : normalize(source_dir);
 
+	std::set<std::string> saved_order_set;
+	for (const auto & p : config_.last_merge_order)
+		saved_order_set.insert(normalize(p));
+	bool use_saved = !saved_order_set.empty();
+
 	for (const auto * dict_doc : session_.all_dicts())
 	{
 		auto norm = normalize(dict_doc->path());
 		if (!seen.insert(norm).second)
 			continue;
 
+		bool pre = use_saved ? (saved_order_set.count(norm) > 0) : matches_source_dir(norm, target);
+
+		std::string root_path;
+		std::string subfolder;
+		const auto * fe = file_list_.get(dict_doc->path());
+		if (fe)
+		{
+			root_path = fe->root_path;
+			subfolder = fe->workspace_subfolder;
+		}
+
 		entries.push_back(
 		    { extract_filename(dict_doc->path()),
 		      dict_doc->path(),
 		      dict_doc->kind(),
-		      matches_source_dir(norm, target) });
+		      root_path,
+		      subfolder,
+		      pre });
 	}
 
 	for (const auto * fe : file_list_.all())
@@ -2619,8 +2352,10 @@ std::vector<dict_selection_dialog_t::dict_entry_t> main_window_t::build_dict_ent
 		if (!seen.insert(norm).second)
 			continue;
 
+		bool pre = use_saved ? (saved_order_set.count(norm) > 0) : matches_source_dir(norm, target);
+
 		auto kind = (fe->type == file_type_t::base_dict) ? dict_kind_t::base : dict_kind_t::user;
-		entries.push_back({ fe->filename, fe->path, kind, matches_source_dir(norm, target) });
+		entries.push_back({ fe->filename, fe->path, kind, fe->root_path, fe->workspace_subfolder, pre });
 	}
 
 	return entries;
@@ -2744,7 +2479,11 @@ void main_window_t::on_delete_requested(const std::string & path)
 	if (answer != QMessageBox::Yes)
 		return;
 
-	QFile::remove(QString::fromStdString(path));
+	if (!QFile::remove(QString::fromStdString(path)))
+	{
+		QMessageBox::warning(this, "Error", QString("Failed to delete \"%1\".").arg(QString::fromStdString(filename)));
+		return;
+	}
 
 	auto norm_del_path = path;
 	std::replace(norm_del_path.begin(), norm_del_path.end(), '\\', '/');
