@@ -22,6 +22,9 @@ public:
 
 private slots:
 	void on_load_plugins();
+	void on_load_data_files();
+	void on_load_mo2_profile();
+	void on_load_openmw_cfg();
 	void on_new_plugin();
 	void on_save_plugin();
 	void on_create_merged_patch();
@@ -39,6 +42,7 @@ private:
 	void save_plugin_paths();
 	void load_plugin_paths();
 	void rebuild_nav_preserving_state();
+	void load_plugins_from_paths(const std::vector<std::string> & paths);
 	bool eventFilter(QObject * obj, QEvent * event) override;
 
 	plugin_scan_t scan_;

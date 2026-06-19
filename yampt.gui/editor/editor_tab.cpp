@@ -4,18 +4,22 @@
 
 #include <QApplication>
 #include <QClipboard>
+#include <QDir>
 #include <QDragEnterEvent>
 #include <QDropEvent>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QHBoxLayout>
+#include <QHeaderView>
 #include <QInputDialog>
+#include <QMenu>
 #include <QMessageBox>
 #include <QMimeData>
 #include <QPainter>
 #include <QSettings>
 #include <QShortcut>
 #include <QStyledItemDelegate>
+#include <QTextStream>
 #include <QVBoxLayout>
 
 #include <functional>
@@ -60,6 +64,12 @@ editor_tab_t::editor_tab_t(QWidget * parent)
 	toolbar_layout->setContentsMargins(0, 0, 0, 0);
 
 	btn_load_ = new QPushButton("Load", toolbar);
+	auto * load_menu = new QMenu(btn_load_);
+	load_menu->addAction("Browse files...", this, &editor_tab_t::on_load_plugins);
+	load_menu->addAction("Data Files folder...", this, &editor_tab_t::on_load_data_files);
+	load_menu->addAction("MO2 Profile...", this, &editor_tab_t::on_load_mo2_profile);
+	load_menu->addAction("OpenMW config...", this, &editor_tab_t::on_load_openmw_cfg);
+	btn_load_->setMenu(load_menu);
 	btn_new_ = new QPushButton("New", toolbar);
 	btn_save_ = new QPushButton("Save", toolbar);
 	auto * btn_merge = new QPushButton("Create Merged Patch", toolbar);
@@ -127,8 +137,9 @@ editor_tab_t::editor_tab_t(QWidget * parent)
 	view_model_ = new view_tree_model_t(this);
 	nav_view_->setModel(nav_model_);
 	view_view_->setModel(view_model_);
+	view_view_->header()->setStretchLastSection(true);
+	view_view_->header()->setMinimumSectionSize(120);
 
-	connect(btn_load_, &QPushButton::clicked, this, &editor_tab_t::on_load_plugins);
 	connect(btn_new_, &QPushButton::clicked, this, &editor_tab_t::on_new_plugin);
 	connect(btn_save_, &QPushButton::clicked, this, &editor_tab_t::on_save_plugin);
 	connect(btn_merge, &QPushButton::clicked, this, &editor_tab_t::on_create_merged_patch);
@@ -219,6 +230,239 @@ void editor_tab_t::on_load_plugins()
 
 	rebuild_after_load();
 	save_plugin_paths();
+}
+
+void editor_tab_t::load_plugins_from_paths(const std::vector<std::string> & paths)
+{
+	plugin_select_dialog_t dlg(paths, this);
+	if (dlg.exec() != QDialog::Accepted)
+		return;
+
+	const auto selected = dlg.selected_paths();
+	if (selected.empty())
+		return;
+
+	for (const auto & path : selected)
+	{
+		try
+		{
+			scan_.load_plugin(path);
+			const auto & idx = scan_.index(static_cast<int>(scan_.plugin_count()) - 1);
+			log_message("Loaded " + scan_.plugin_filename(static_cast<int>(scan_.plugin_count()) - 1)
+			            + " (" + std::to_string(idx.entries().size()) + " records indexed)");
+		}
+		catch (const std::exception & e)
+		{
+			auto filename = path;
+			auto pos = filename.find_last_of("/\\");
+			if (pos != std::string::npos)
+				filename = filename.substr(pos + 1);
+
+			log_message("Error loading " + filename + ": " + e.what());
+		}
+	}
+
+	scan_.rebuild_conflicts();
+	rebuild_after_load();
+	save_plugin_paths();
+}
+
+void editor_tab_t::on_load_data_files()
+{
+	QString dir = QFileDialog::getExistingDirectory(
+		this, "Select Data Files Folder");
+
+	if (dir.isEmpty())
+		return;
+
+	QDir data_dir(dir);
+	auto file_list = data_dir.entryInfoList(
+		{"*.esm", "*.esp"}, QDir::Files, QDir::Time | QDir::Reversed);
+
+	std::vector<std::string> esms;
+	std::vector<std::string> esps;
+
+	for (const auto & fi : file_list)
+	{
+		auto path = fi.absoluteFilePath().toStdString();
+		if (fi.suffix().toLower() == "esm")
+			esms.push_back(path);
+		else
+			esps.push_back(path);
+	}
+
+	std::vector<std::string> paths;
+	paths.insert(paths.end(), esms.begin(), esms.end());
+	paths.insert(paths.end(), esps.begin(), esps.end());
+
+	if (paths.empty())
+	{
+		log_message("No ESM/ESP files found in " + dir.toStdString());
+		return;
+	}
+
+	load_plugins_from_paths(paths);
+}
+
+void editor_tab_t::on_load_mo2_profile()
+{
+	QString profile_dir = QFileDialog::getExistingDirectory(
+		this, "Select MO2 Profile Folder");
+
+	if (profile_dir.isEmpty())
+		return;
+
+	QString loadorder_path = profile_dir + "/loadorder.txt";
+	QFile loadorder_file(loadorder_path);
+	if (!loadorder_file.open(QIODevice::ReadOnly | QIODevice::Text))
+	{
+		log_message("Cannot open loadorder.txt in " + profile_dir.toStdString());
+		return;
+	}
+
+	std::vector<std::string> plugin_names;
+	QTextStream stream(&loadorder_file);
+	while (!stream.atEnd())
+	{
+		auto line = stream.readLine().trimmed();
+		if (line.isEmpty() || line.startsWith('#'))
+			continue;
+
+		if (line.startsWith('*'))
+			line = line.mid(1);
+
+		plugin_names.push_back(line.toStdString());
+	}
+	loadorder_file.close();
+
+	QDir profile(profile_dir);
+	QDir mo2_root = profile;
+	mo2_root.cdUp();
+	mo2_root.cdUp();
+
+	QString mods_path = mo2_root.absolutePath() + "/mods";
+
+	std::vector<std::string> enabled_mods;
+	QString modlist_path = profile_dir + "/modlist.txt";
+	QFile modlist_file(modlist_path);
+	if (modlist_file.open(QIODevice::ReadOnly | QIODevice::Text))
+	{
+		QTextStream ms(&modlist_file);
+		while (!ms.atEnd())
+		{
+			auto line = ms.readLine().trimmed();
+			if (line.startsWith('+'))
+				enabled_mods.push_back(line.mid(1).toStdString());
+		}
+		modlist_file.close();
+	}
+
+	std::reverse(enabled_mods.begin(), enabled_mods.end());
+
+	auto resolve_plugin = [&](const std::string & name) -> std::string
+	{
+		for (const auto & mod : enabled_mods)
+		{
+			QString candidate = mods_path + "/" + QString::fromStdString(mod)
+			                  + "/" + QString::fromStdString(name);
+			if (QFile::exists(candidate))
+				return candidate.toStdString();
+		}
+
+		QString game_data = mo2_root.absolutePath() + "/../Data Files/" + QString::fromStdString(name);
+		if (QFile::exists(game_data))
+			return game_data.toStdString();
+
+		return {};
+	};
+
+	std::vector<std::string> paths;
+	for (const auto & name : plugin_names)
+	{
+		auto resolved = resolve_plugin(name);
+		if (!resolved.empty())
+			paths.push_back(resolved);
+		else
+			log_message("Cannot find: " + name);
+	}
+
+	if (paths.empty())
+	{
+		log_message("No plugins resolved from MO2 profile");
+		return;
+	}
+
+	load_plugins_from_paths(paths);
+}
+
+void editor_tab_t::on_load_openmw_cfg()
+{
+	QString cfg_path = QFileDialog::getOpenFileName(
+		this, "Select openmw.cfg", QString(), "OpenMW config (openmw.cfg)");
+
+	if (cfg_path.isEmpty())
+		return;
+
+	QFile cfg_file(cfg_path);
+	if (!cfg_file.open(QIODevice::ReadOnly | QIODevice::Text))
+	{
+		log_message("Cannot open " + cfg_path.toStdString());
+		return;
+	}
+
+	std::vector<std::string> data_dirs;
+	std::vector<std::string> content_names;
+
+	QTextStream stream(&cfg_file);
+	while (!stream.atEnd())
+	{
+		auto line = stream.readLine().trimmed();
+
+		if (line.startsWith("data=") || line.startsWith("data ="))
+		{
+			auto value = line.mid(line.indexOf('=') + 1).trimmed();
+			if (value.startsWith('"') && value.endsWith('"'))
+				value = value.mid(1, value.size() - 2);
+
+			data_dirs.push_back(value.toStdString());
+		}
+		else if (line.startsWith("content=") || line.startsWith("content ="))
+		{
+			auto value = line.mid(line.indexOf('=') + 1).trimmed();
+			content_names.push_back(value.toStdString());
+		}
+	}
+	cfg_file.close();
+
+	auto resolve_content = [&](const std::string & name) -> std::string
+	{
+		for (auto it = data_dirs.rbegin(); it != data_dirs.rend(); ++it)
+		{
+			QString candidate = QString::fromStdString(*it) + "/" + QString::fromStdString(name);
+			if (QFile::exists(candidate))
+				return candidate.toStdString();
+		}
+
+		return {};
+	};
+
+	std::vector<std::string> paths;
+	for (const auto & name : content_names)
+	{
+		auto resolved = resolve_content(name);
+		if (!resolved.empty())
+			paths.push_back(resolved);
+		else
+			log_message("Cannot find: " + name);
+	}
+
+	if (paths.empty())
+	{
+		log_message("No plugins resolved from openmw.cfg");
+		return;
+	}
+
+	load_plugins_from_paths(paths);
 }
 
 void editor_tab_t::rebuild_after_load()
@@ -335,10 +579,19 @@ void editor_tab_t::on_nav_selection_changed(const QModelIndex & current)
 		}
 	}
 	for (int i = 0; i < view_model_->columnCount({}); ++i)
-	{
 		view_view_->resizeColumnToContents(i);
-		if (view_view_->columnWidth(i) > 400)
-			view_view_->setColumnWidth(i, 400);
+
+	int total_width = view_view_->viewport()->width();
+	int col_count = view_model_->columnCount({});
+	if (col_count > 1 && total_width > 0)
+	{
+		int label_width = std::min(view_view_->columnWidth(0), total_width / 3);
+		int remaining = total_width - label_width;
+		int per_col = remaining / (col_count - 1);
+
+		view_view_->setColumnWidth(0, label_width);
+		for (int i = 1; i < col_count; ++i)
+			view_view_->setColumnWidth(i, per_col);
 	}
 	update_status();
 }
@@ -547,10 +800,19 @@ void editor_tab_t::on_create_merged_patch()
 					}
 				}
 				for (int i = 0; i < view_model_->columnCount({}); ++i)
-				{
 					view_view_->resizeColumnToContents(i);
-					if (view_view_->columnWidth(i) > 400)
-						view_view_->setColumnWidth(i, 400);
+
+				int total_width = view_view_->viewport()->width();
+				int col_count = view_model_->columnCount({});
+				if (col_count > 1 && total_width > 0)
+				{
+					int label_width = std::min(view_view_->columnWidth(0), total_width / 3);
+					int remaining = total_width - label_width;
+					int per_col = remaining / (col_count - 1);
+
+					view_view_->setColumnWidth(0, label_width);
+					for (int i = 1; i < col_count; ++i)
+						view_view_->setColumnWidth(i, per_col);
 				}
 			}
 		}
@@ -780,10 +1042,19 @@ bool editor_tab_t::eventFilter(QObject * obj, QEvent * event)
 				}
 			}
 			for (int i = 0; i < view_model_->columnCount({}); ++i)
-			{
 				view_view_->resizeColumnToContents(i);
-				if (view_view_->columnWidth(i) > 400)
-					view_view_->setColumnWidth(i, 400);
+
+			int total_width = view_view_->viewport()->width();
+			int col_count = view_model_->columnCount({});
+			if (col_count > 1 && total_width > 0)
+			{
+				int label_width = std::min(view_view_->columnWidth(0), total_width / 3);
+				int remaining = total_width - label_width;
+				int per_col = remaining / (col_count - 1);
+
+				view_view_->setColumnWidth(0, label_width);
+				for (int i = 1; i < col_count; ++i)
+					view_view_->setColumnWidth(i, per_col);
 			}
 		}
 
