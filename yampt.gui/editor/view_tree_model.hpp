@@ -12,6 +12,7 @@
 class view_tree_model_t : public QAbstractItemModel
 {
 	Q_OBJECT
+
 public:
 	explicit view_tree_model_t(QObject * parent = nullptr);
 
@@ -31,8 +32,8 @@ public:
 	Qt::DropActions supportedDragActions() const override;
 	Qt::DropActions supportedDropActions() const override;
 	QMimeData * mimeData(const QModelIndexList & indexes) const override;
-	bool canDropMimeData(const QMimeData * data, Qt::DropAction action,
-	                     int row, int column, const QModelIndex & parent) const override;
+	bool canDropMimeData(const QMimeData * data, Qt::DropAction action, int row, int column, const QModelIndex & parent)
+	    const override;
 
 private:
 	struct field_row_t

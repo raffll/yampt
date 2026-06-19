@@ -30,8 +30,7 @@ class grid_delegate_t : public QStyledItemDelegate
 public:
 	using QStyledItemDelegate::QStyledItemDelegate;
 
-	void paint(QPainter * painter, const QStyleOptionViewItem & option,
-	           const QModelIndex & index) const override
+	void paint(QPainter * painter, const QStyleOptionViewItem & option, const QModelIndex & index) const override
 	{
 		QStyleOptionViewItem opt = option;
 		initStyleOption(&opt, index);
@@ -54,7 +53,7 @@ public:
 };
 
 editor_tab_t::editor_tab_t(QWidget * parent)
-	: QWidget(parent)
+    : QWidget(parent)
 {
 	auto * main_layout = new QVBoxLayout(this);
 	main_layout->setContentsMargins(4, 4, 4, 4);
@@ -119,13 +118,13 @@ editor_tab_t::editor_tab_t(QWidget * parent)
 
 	content_splitter_->addWidget(nav_view_);
 	content_splitter_->addWidget(view_view_);
-	content_splitter_->setSizes({300, 700});
+	content_splitter_->setSizes({ 300, 700 });
 
 	messages_ = new messages_panel_t(main_splitter_);
 
 	main_splitter_->addWidget(content_splitter_);
 	main_splitter_->addWidget(messages_);
-	main_splitter_->setSizes({600, 150});
+	main_splitter_->setSizes({ 600, 150 });
 	main_splitter_->setChildrenCollapsible(true);
 
 	main_layout->addWidget(main_splitter_, 1);
@@ -151,8 +150,11 @@ editor_tab_t::editor_tab_t(QWidget * parent)
 
 	connect(nav_view_, &QTreeView::customContextMenuRequested, this, &editor_tab_t::on_nav_context_menu);
 
-	connect(nav_view_->selectionModel(), &QItemSelectionModel::currentChanged,
-	        this, &editor_tab_t::on_nav_selection_changed);
+	connect(
+	    nav_view_->selectionModel(),
+	    &QItemSelectionModel::currentChanged,
+	    this,
+	    &editor_tab_t::on_nav_selection_changed);
 
 	nav_view_->viewport()->installEventFilter(this);
 	view_view_->viewport()->installEventFilter(this);
@@ -163,12 +165,10 @@ editor_tab_t::editor_tab_t(QWidget * parent)
 	load_plugin_paths();
 }
 
-
 void editor_tab_t::on_load_plugins()
 {
-	QStringList files = QFileDialog::getOpenFileNames(
-		this, "Select Plugins", QString(),
-		"Plugin files (*.esm *.esp);;All files (*)");
+	QStringList files =
+	    QFileDialog::getOpenFileNames(this, "Select Plugins", QString(), "Plugin files (*.esm *.esp);;All files (*)");
 
 	if (files.isEmpty())
 		return;
@@ -191,8 +191,9 @@ void editor_tab_t::on_load_plugins()
 		{
 			scan_.load_plugin(path);
 			const auto & idx = scan_.index(static_cast<int>(scan_.plugin_count()) - 1);
-			log_message("Loaded " + scan_.plugin_filename(static_cast<int>(scan_.plugin_count()) - 1)
-			            + " (" + std::to_string(idx.entries().size()) + " records indexed)");
+			log_message(
+			    "Loaded " + scan_.plugin_filename(static_cast<int>(scan_.plugin_count()) - 1) + " (" +
+			    std::to_string(idx.entries().size()) + " records indexed)");
 		}
 		catch (const std::exception & e)
 		{
@@ -225,8 +226,9 @@ void editor_tab_t::on_load_plugins()
 		}
 	}
 
-	log_message("Conflict detection complete: " + std::to_string(conflicts) + " conflicts, "
-	            + std::to_string(overrides) + " overrides, " + std::to_string(identical) + " identical");
+	log_message(
+	    "Conflict detection complete: " + std::to_string(conflicts) + " conflicts, " + std::to_string(overrides) +
+	    " overrides, " + std::to_string(identical) + " identical");
 
 	rebuild_after_load();
 	save_plugin_paths();
@@ -248,8 +250,9 @@ void editor_tab_t::load_plugins_from_paths(const std::vector<std::string> & path
 		{
 			scan_.load_plugin(path);
 			const auto & idx = scan_.index(static_cast<int>(scan_.plugin_count()) - 1);
-			log_message("Loaded " + scan_.plugin_filename(static_cast<int>(scan_.plugin_count()) - 1)
-			            + " (" + std::to_string(idx.entries().size()) + " records indexed)");
+			log_message(
+			    "Loaded " + scan_.plugin_filename(static_cast<int>(scan_.plugin_count()) - 1) + " (" +
+			    std::to_string(idx.entries().size()) + " records indexed)");
 		}
 		catch (const std::exception & e)
 		{
@@ -269,15 +272,13 @@ void editor_tab_t::load_plugins_from_paths(const std::vector<std::string> & path
 
 void editor_tab_t::on_load_data_files()
 {
-	QString dir = QFileDialog::getExistingDirectory(
-		this, "Select Data Files Folder");
+	QString dir = QFileDialog::getExistingDirectory(this, "Select Data Files Folder");
 
 	if (dir.isEmpty())
 		return;
 
 	QDir data_dir(dir);
-	auto file_list = data_dir.entryInfoList(
-		{"*.esm", "*.esp"}, QDir::Files, QDir::Time | QDir::Reversed);
+	auto file_list = data_dir.entryInfoList({ "*.esm", "*.esp" }, QDir::Files, QDir::Time | QDir::Reversed);
 
 	std::vector<std::string> esms;
 	std::vector<std::string> esps;
@@ -306,8 +307,7 @@ void editor_tab_t::on_load_data_files()
 
 void editor_tab_t::on_load_mo2_profile()
 {
-	QString profile_dir = QFileDialog::getExistingDirectory(
-		this, "Select MO2 Profile Folder");
+	QString profile_dir = QFileDialog::getExistingDirectory(this, "Select MO2 Profile Folder");
 
 	if (profile_dir.isEmpty())
 		return;
@@ -363,8 +363,7 @@ void editor_tab_t::on_load_mo2_profile()
 	{
 		for (const auto & mod : enabled_mods)
 		{
-			QString candidate = mods_path + "/" + QString::fromStdString(mod)
-			                  + "/" + QString::fromStdString(name);
+			QString candidate = mods_path + "/" + QString::fromStdString(mod) + "/" + QString::fromStdString(name);
 			if (QFile::exists(candidate))
 				return candidate.toStdString();
 		}
@@ -397,8 +396,7 @@ void editor_tab_t::on_load_mo2_profile()
 
 void editor_tab_t::on_load_openmw_cfg()
 {
-	QString cfg_path = QFileDialog::getOpenFileName(
-		this, "Select openmw.cfg", QString(), "OpenMW config (openmw.cfg)");
+	QString cfg_path = QFileDialog::getOpenFileName(this, "Select openmw.cfg", QString(), "OpenMW config (openmw.cfg)");
 
 	if (cfg_path.isEmpty())
 		return;
@@ -485,7 +483,7 @@ void editor_tab_t::rebuild_nav_preserving_state()
 	std::set<std::string> expanded;
 
 	std::function<void(const QModelIndex &, const std::string &)> collect =
-		[&](const QModelIndex & parent, const std::string & path)
+	    [&](const QModelIndex & parent, const std::string & path)
 	{
 		int rows = nav_model_->rowCount(parent);
 		for (int i = 0; i < rows; ++i)
@@ -510,7 +508,7 @@ void editor_tab_t::rebuild_nav_preserving_state()
 	nav_model_->rebuild();
 
 	std::function<void(const QModelIndex &, const std::string &)> restore =
-		[&](const QModelIndex & parent, const std::string & path)
+	    [&](const QModelIndex & parent, const std::string & path)
 	{
 		int rows = nav_model_->rowCount(parent);
 		for (int i = 0; i < rows; ++i)
@@ -622,8 +620,7 @@ void editor_tab_t::on_filter_changed()
 		state.name_text = search_text;
 	}
 
-	bool has_any = state.filter_conflict_all || state.filter_by_type
-	               || state.filter_by_id || state.filter_by_name;
+	bool has_any = state.filter_conflict_all || state.filter_by_type || state.filter_by_id || state.filter_by_name;
 
 	if (has_any)
 		nav_model_->set_filter(state);
@@ -686,8 +683,7 @@ void editor_tab_t::on_advanced_filter()
 void editor_tab_t::on_new_plugin()
 {
 	bool ok = false;
-	QString filename = QInputDialog::getText(
-		this, "New Plugin", "Filename:", QLineEdit::Normal, QString(), &ok);
+	QString filename = QInputDialog::getText(this, "New Plugin", "Filename:", QLineEdit::Normal, QString(), &ok);
 
 	if (!ok || filename.isEmpty())
 		return;
@@ -706,33 +702,29 @@ void editor_tab_t::on_save_plugin()
 	if (!scan_.has_merge())
 		return;
 
-	QString path = QFileDialog::getSaveFileName(
-		this, "Save Merge Plugin", QString(), "ESP files (*.esp)");
+	QString path = QFileDialog::getSaveFileName(this, "Save Merge Plugin", QString(), "ESP files (*.esp)");
 
 	if (path.isEmpty())
 		return;
 
 	bool ok_author = false;
-	QString author = QInputDialog::getText(
-		this, "Plugin Author", "Author:", QLineEdit::Normal, QString(), &ok_author);
+	QString author = QInputDialog::getText(this, "Plugin Author", "Author:", QLineEdit::Normal, QString(), &ok_author);
 
 	if (!ok_author)
 		return;
 
 	bool ok_desc = false;
-	QString description = QInputDialog::getText(
-		this, "Plugin Description", "Description:", QLineEdit::Normal, QString(), &ok_desc);
+	QString description =
+	    QInputDialog::getText(this, "Plugin Description", "Description:", QLineEdit::Normal, QString(), &ok_desc);
 
 	if (!ok_desc)
 		return;
 
-	bool result = scan_.save_merge(
-		path.toStdString(), author.toStdString(), description.toStdString());
+	bool result = scan_.save_merge(path.toStdString(), author.toStdString(), description.toStdString());
 
 	if (result)
 	{
-		log_message("Saved " + path.toStdString() + " ("
-		            + std::to_string(scan_.merge_record_count()) + " records)");
+		log_message("Saved " + path.toStdString() + " (" + std::to_string(scan_.merge_record_count()) + " records)");
 	}
 	else
 	{
@@ -753,6 +745,8 @@ void editor_tab_t::on_create_merged_patch()
 
 	const auto & entries = scan_.entries();
 	int copied = 0;
+	int merged_lists = 0;
+	int merged_dial = 0;
 
 	for (const auto & entry : entries)
 	{
@@ -769,11 +763,28 @@ void editor_tab_t::on_create_merged_patch()
 		if (winner.status == conflict_this_t::identical_to_master)
 			continue;
 
+		if (entry.rec_type == "LEVI" || entry.rec_type == "LEVC")
+		{
+			scan_.merge_leveled_list(entry);
+			++merged_lists;
+			continue;
+		}
+
+		if (entry.rec_type == "DIAL")
+		{
+			scan_.merge_dialogue(entry);
+			++merged_dial;
+			continue;
+		}
+
 		scan_.copy_record_to_merge(winner.plugin_idx, winner.record_index);
 		++copied;
 	}
 
-	log_message("Created merged patch: Merged Patch.esp (" + std::to_string(copied) + " records)");
+	log_message("Created merged patch: Merged Patch.esp ("
+	            + std::to_string(copied) + " records, "
+	            + std::to_string(merged_lists) + " leveled lists, "
+	            + std::to_string(merged_dial) + " dialogues)");
 
 	scan_.rebuild_conflicts();
 	rebuild_nav_preserving_state();
@@ -851,7 +862,6 @@ void editor_tab_t::on_remove_itm()
 	update_status();
 }
 
-
 void editor_tab_t::on_nav_context_menu(const QPoint & pos)
 {
 	auto index = nav_view_->indexAt(pos);
@@ -870,7 +880,9 @@ void editor_tab_t::on_nav_context_menu(const QPoint & pos)
 
 	if (is_record_node && is_merge)
 	{
-		menu.addAction("Remove", [this, info]()
+		menu.addAction(
+		    "Remove",
+		    [this, info]()
 		{
 			scan_.remove_from_merge(info.rec_type, info.record_id);
 			scan_.rebuild_conflicts();
@@ -882,7 +894,9 @@ void editor_tab_t::on_nav_context_menu(const QPoint & pos)
 
 	if (is_record_node && !is_merge && scan_.has_merge())
 	{
-		menu.addAction("Copy to Merge", [this, info]()
+		menu.addAction(
+		    "Copy to Merge",
+		    [this, info]()
 		{
 			for (const auto & v : scan_.find(info.rec_type, info.record_id)->versions)
 			{
@@ -902,10 +916,7 @@ void editor_tab_t::on_nav_context_menu(const QPoint & pos)
 
 	if (is_file_node && !is_merge && scan_.has_merge())
 	{
-		menu.addAction("Remove ITM from Merge", [this]()
-		{
-			on_remove_itm();
-		});
+		menu.addAction("Remove ITM from Merge", [this]() { on_remove_itm(); });
 	}
 
 	if (menu.actions().isEmpty())
@@ -1121,8 +1132,8 @@ void editor_tab_t::update_status()
 			++conflict_count;
 	}
 
-	lbl_count_->setText(QString("%1 plugins, %2 records, %3 conflicts")
-		.arg(plugin_count).arg(record_count).arg(conflict_count));
+	lbl_count_->setText(
+	    QString("%1 plugins, %2 records, %3 conflicts").arg(plugin_count).arg(record_count).arg(conflict_count));
 
 	auto current = nav_view_->currentIndex();
 	if (current.isValid())
@@ -1130,8 +1141,7 @@ void editor_tab_t::update_status()
 		auto info = nav_model_->node_at(current);
 		if (!info.record_id.empty())
 		{
-			status_label_->setText(QString::fromStdString(
-				info.rec_type + " : " + info.record_id));
+			status_label_->setText(QString::fromStdString(info.rec_type + " : " + info.record_id));
 		}
 		else if (!info.rec_type.empty())
 		{
@@ -1139,8 +1149,7 @@ void editor_tab_t::update_status()
 		}
 		else if (info.plugin_idx >= 0)
 		{
-			status_label_->setText(QString::fromStdString(
-				scan_.plugin_filename(info.plugin_idx)));
+			status_label_->setText(QString::fromStdString(scan_.plugin_filename(info.plugin_idx)));
 		}
 		else
 		{
@@ -1160,8 +1169,7 @@ void editor_tab_t::log_message(const std::string & msg)
 
 void editor_tab_t::save_plugin_paths()
 {
-	QSettings settings(QCoreApplication::applicationDirPath() + "/yampt_gui.ini",
-	                   QSettings::IniFormat);
+	QSettings settings(QCoreApplication::applicationDirPath() + "/yampt_gui.ini", QSettings::IniFormat);
 
 	settings.beginWriteArray("editor/plugins");
 	for (int i = 0; i < static_cast<int>(scan_.plugin_count()); ++i)
@@ -1174,8 +1182,7 @@ void editor_tab_t::save_plugin_paths()
 
 void editor_tab_t::load_plugin_paths()
 {
-	QSettings settings(QCoreApplication::applicationDirPath() + "/yampt_gui.ini",
-	                   QSettings::IniFormat);
+	QSettings settings(QCoreApplication::applicationDirPath() + "/yampt_gui.ini", QSettings::IniFormat);
 
 	int count = settings.beginReadArray("editor/plugins");
 	if (count == 0)
@@ -1212,8 +1219,9 @@ void editor_tab_t::load_plugin_paths()
 		{
 			scan_.load_plugin(path);
 			const auto & idx = scan_.index(static_cast<int>(scan_.plugin_count()) - 1);
-			log_message("Loaded " + scan_.plugin_filename(static_cast<int>(scan_.plugin_count()) - 1)
-			            + " (" + std::to_string(idx.entries().size()) + " records indexed)");
+			log_message(
+			    "Loaded " + scan_.plugin_filename(static_cast<int>(scan_.plugin_count()) - 1) + " (" +
+			    std::to_string(idx.entries().size()) + " records indexed)");
 		}
 		catch (const std::exception & e)
 		{

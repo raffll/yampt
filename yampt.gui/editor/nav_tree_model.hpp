@@ -11,6 +11,7 @@
 class nav_tree_model_t : public QAbstractItemModel
 {
 	Q_OBJECT
+
 public:
 	explicit nav_tree_model_t(plugin_scan_t & scan, QObject * parent = nullptr);
 
@@ -46,15 +47,35 @@ public:
 	Qt::DropActions supportedDragActions() const override;
 	QMimeData * mimeData(const QModelIndexList & indexes) const override;
 
-	struct node_info_t { int plugin_idx; std::string rec_type; std::string record_id; };
+	struct node_info_t
+	{
+		int plugin_idx;
+		std::string rec_type;
+		std::string record_id;
+	};
+
 	node_info_t node_at(const QModelIndex & index) const;
 
 private:
 	plugin_scan_t & scan_;
 
-	struct visible_record_t { size_t entry_idx; };
-	struct type_group_t { std::string type; std::vector<visible_record_t> records; };
-	struct file_node_t { int plugin_idx; std::vector<type_group_t> groups; };
+	struct visible_record_t
+	{
+		size_t entry_idx;
+	};
+
+	struct type_group_t
+	{
+		std::string type;
+		std::vector<visible_record_t> records;
+	};
+
+	struct file_node_t
+	{
+		int plugin_idx;
+		std::vector<type_group_t> groups;
+	};
+
 	std::vector<file_node_t> tree_;
 
 	filter_state_t filter_;

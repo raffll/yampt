@@ -17,13 +17,20 @@ class filter_tree_t : public QWidget
 public:
 	explicit filter_tree_t(QWidget * parent = nullptr);
 
-	enum class display_mode_t { full, all_only, empty };
+	enum class display_mode_t
+	{
+		full,
+		all_only,
+		empty
+	};
 	void set_display_mode(display_mode_t mode);
 
-	void update_counts(const std::map<tools_t::rec_type_t, size_t> & total_counts,
-		const std::map<tools_t::rec_type_t, size_t> & translated_counts);
-	void update_sub_type_counts(const std::map<std::string, size_t> & sub_type_total_counts,
-		const std::map<std::string, size_t> & sub_type_translated_counts);
+	void update_counts(
+	    const std::map<tools_t::rec_type_t, size_t> & total_counts,
+	    const std::map<tools_t::rec_type_t, size_t> & translated_counts);
+	void update_sub_type_counts(
+	    const std::map<std::string, size_t> & sub_type_total_counts,
+	    const std::map<std::string, size_t> & sub_type_translated_counts);
 	void set_total_count(size_t translated, size_t total);
 
 	std::set<tools_t::rec_type_t> get_active_types() const;
@@ -44,7 +51,12 @@ signals:
 	void all_reset_requested();
 
 private:
-	enum class node_state_t { selected, partial, deselected };
+	enum class node_state_t
+	{
+		selected,
+		partial,
+		deselected
+	};
 
 	static constexpr int role_state = Qt::UserRole + 10;
 	static constexpr int role_type = Qt::UserRole + 11;

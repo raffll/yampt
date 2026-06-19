@@ -60,38 +60,44 @@ operation_executor_t::result_t operation_executor_t::make_dict(const std::string
 	dict_creator_t creator(plugin_path);
 
 	if (tools_t::has_error())
-		return {false, tools_t::get_log(), ""};
+		return { false, tools_t::get_log(), "" };
 
 	const auto output_path = make_output_path(plugin_path, "json");
 	dict_writer_t::write(creator.get_dict(), output_path);
 
-	return {!tools_t::has_error(), tools_t::get_log(), output_path};
+	return { !tools_t::has_error(), tools_t::get_log(), output_path };
 }
 
-operation_executor_t::result_t operation_executor_t::make_dict_with_base(const std::string & plugin_path, const tools_t::dict_t & base_dict, codepage_t encoding)
+operation_executor_t::result_t operation_executor_t::make_dict_with_base(
+    const std::string & plugin_path,
+    const tools_t::dict_t & base_dict,
+    codepage_t encoding)
 {
 	tools_t::reset_log();
 
 	dict_creator_t creator(plugin_path, &base_dict);
 
 	if (tools_t::has_error())
-		return {false, tools_t::get_log(), ""};
+		return { false, tools_t::get_log(), "" };
 
 	const auto output_path = make_output_path(plugin_path, "json");
 	dict_writer_t::write(creator.get_dict(), output_path);
 
-	return {!tools_t::has_error(), tools_t::get_log(), output_path};
+	return { !tools_t::has_error(), tools_t::get_log(), output_path };
 }
 
-operation_executor_t::result_t operation_executor_t::make_base(const std::string & foreign_path, const std::string & native_path,
-    const std::string & foreign_lang, const std::string & native_lang)
+operation_executor_t::result_t operation_executor_t::make_base(
+    const std::string & foreign_path,
+    const std::string & native_path,
+    const std::string & foreign_lang,
+    const std::string & native_lang)
 {
 	tools_t::reset_log();
 
 	dict_creator_t creator(foreign_path, native_path);
 
 	if (tools_t::has_error())
-		return {false, tools_t::get_log(), ""};
+		return { false, tools_t::get_log(), "" };
 
 	const auto foreign_info = QFileInfo(QString::fromStdString(foreign_path));
 	const auto native_info = QFileInfo(QString::fromStdString(native_path));
@@ -110,10 +116,13 @@ operation_executor_t::result_t operation_executor_t::make_base(const std::string
 	const auto output_path = make_output_path(output_name, "json", true);
 	dict_writer_t::write(creator.get_dict(), output_path);
 
-	return {!tools_t::has_error(), tools_t::get_log(), output_path};
+	return { !tools_t::has_error(), tools_t::get_log(), output_path };
 }
 
-operation_executor_t::result_t operation_executor_t::convert(const std::string & plugin_path, const std::vector<std::string> & dict_paths, codepage_t encoding)
+operation_executor_t::result_t operation_executor_t::convert(
+    const std::string & plugin_path,
+    const std::vector<std::string> & dict_paths,
+    codepage_t encoding)
 {
 	tools_t::reset_log();
 
@@ -124,7 +133,7 @@ operation_executor_t::result_t operation_executor_t::convert(const std::string &
 	esm_converter_t converter(plugin_path, merger, false, "", encoding, false);
 
 	if (!converter.is_loaded())
-		return {false, tools_t::get_log(), ""};
+		return { false, tools_t::get_log(), "" };
 
 	const auto info = QFileInfo(QString::fromStdString(plugin_path));
 	const auto ext = info.suffix().toStdString();
@@ -132,10 +141,13 @@ operation_executor_t::result_t operation_executor_t::convert(const std::string &
 
 	tools_t::write_file(converter.get_records(), output_path);
 
-	return {true, tools_t::get_log(), output_path};
+	return { true, tools_t::get_log(), output_path };
 }
 
-operation_executor_t::result_t operation_executor_t::create_plugin(const std::string & plugin_path, const std::vector<std::string> & dict_paths, codepage_t encoding)
+operation_executor_t::result_t operation_executor_t::create_plugin(
+    const std::string & plugin_path,
+    const std::vector<std::string> & dict_paths,
+    codepage_t encoding)
 {
 	tools_t::reset_log();
 
@@ -146,7 +158,7 @@ operation_executor_t::result_t operation_executor_t::create_plugin(const std::st
 	esm_converter_t converter(plugin_path, merger, false, "", encoding, true);
 
 	if (!converter.is_loaded())
-		return {false, tools_t::get_log(), ""};
+		return { false, tools_t::get_log(), "" };
 
 	const auto info = QFileInfo(QString::fromStdString(plugin_path));
 	const auto ext = info.suffix().toStdString();
@@ -154,5 +166,5 @@ operation_executor_t::result_t operation_executor_t::create_plugin(const std::st
 
 	tools_t::create_file(converter.get_records(), output_path);
 
-	return {true, tools_t::get_log(), output_path};
+	return { true, tools_t::get_log(), output_path };
 }

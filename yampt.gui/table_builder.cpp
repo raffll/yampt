@@ -3,44 +3,39 @@
 #include <unordered_map>
 
 static const std::map<std::pair<tools_t::rec_type_t, std::string>, std::string> prefix_to_sub_type = {
-	{{tools_t::rec_type_t::info, "T"}, "Topic"},
-	{{tools_t::rec_type_t::info, "V"}, "Voice"},
-	{{tools_t::rec_type_t::info, "G"}, "Greeting"},
-	{{tools_t::rec_type_t::info, "P"}, "Persuasion"},
-	{{tools_t::rec_type_t::info, "J"}, "Journal"},
-	{{tools_t::rec_type_t::bnam, "T"}, "Topic"},
-	{{tools_t::rec_type_t::bnam, "V"}, "Voice"},
-	{{tools_t::rec_type_t::bnam, "G"}, "Greeting"},
-	{{tools_t::rec_type_t::bnam, "P"}, "Persuasion"},
-	{{tools_t::rec_type_t::bnam, "J"}, "Journal"},
-	{{tools_t::rec_type_t::fnam, "ACTI"}, "ACTI"}, {{tools_t::rec_type_t::fnam, "ALCH"}, "ALCH"},
-	{{tools_t::rec_type_t::fnam, "APPA"}, "APPA"}, {{tools_t::rec_type_t::fnam, "ARMO"}, "ARMO"},
-	{{tools_t::rec_type_t::fnam, "BOOK"}, "BOOK"}, {{tools_t::rec_type_t::fnam, "BSGN"}, "BSGN"},
-	{{tools_t::rec_type_t::fnam, "CLAS"}, "CLAS"}, {{tools_t::rec_type_t::fnam, "CLOT"}, "CLOT"},
-	{{tools_t::rec_type_t::fnam, "CONT"}, "CONT"}, {{tools_t::rec_type_t::fnam, "CREA"}, "CREA"},
-	{{tools_t::rec_type_t::fnam, "DOOR"}, "DOOR"}, {{tools_t::rec_type_t::fnam, "FACT"}, "FACT"},
-	{{tools_t::rec_type_t::fnam, "INGR"}, "INGR"}, {{tools_t::rec_type_t::fnam, "LIGH"}, "LIGH"},
-	{{tools_t::rec_type_t::fnam, "LOCK"}, "LOCK"}, {{tools_t::rec_type_t::fnam, "MISC"}, "MISC"},
-	{{tools_t::rec_type_t::fnam, "NPC_"}, "NPC_"}, {{tools_t::rec_type_t::fnam, "PROB"}, "PROB"},
-	{{tools_t::rec_type_t::fnam, "RACE"}, "RACE"}, {{tools_t::rec_type_t::fnam, "REGN"}, "REGN"},
-	{{tools_t::rec_type_t::fnam, "REPA"}, "REPA"}, {{tools_t::rec_type_t::fnam, "SPEL"}, "SPEL"},
-	{{tools_t::rec_type_t::fnam, "WEAP"}, "WEAP"},
-	{{tools_t::rec_type_t::desc, "BSGN"}, "Birthsigns"},
-	{{tools_t::rec_type_t::desc, "CLAS"}, "Classes"},
-	{{tools_t::rec_type_t::desc, "RACE"}, "Races"},
-	{{tools_t::rec_type_t::indx, "SKIL"}, "Skills"},
-	{{tools_t::rec_type_t::indx, "MGEF"}, "Magic Effects"},
+	{ { tools_t::rec_type_t::info, "T" }, "Topic" },      { { tools_t::rec_type_t::info, "V" }, "Voice" },
+	{ { tools_t::rec_type_t::info, "G" }, "Greeting" },   { { tools_t::rec_type_t::info, "P" }, "Persuasion" },
+	{ { tools_t::rec_type_t::info, "J" }, "Journal" },    { { tools_t::rec_type_t::bnam, "T" }, "Topic" },
+	{ { tools_t::rec_type_t::bnam, "V" }, "Voice" },      { { tools_t::rec_type_t::bnam, "G" }, "Greeting" },
+	{ { tools_t::rec_type_t::bnam, "P" }, "Persuasion" }, { { tools_t::rec_type_t::bnam, "J" }, "Journal" },
+	{ { tools_t::rec_type_t::fnam, "ACTI" }, "ACTI" },    { { tools_t::rec_type_t::fnam, "ALCH" }, "ALCH" },
+	{ { tools_t::rec_type_t::fnam, "APPA" }, "APPA" },    { { tools_t::rec_type_t::fnam, "ARMO" }, "ARMO" },
+	{ { tools_t::rec_type_t::fnam, "BOOK" }, "BOOK" },    { { tools_t::rec_type_t::fnam, "BSGN" }, "BSGN" },
+	{ { tools_t::rec_type_t::fnam, "CLAS" }, "CLAS" },    { { tools_t::rec_type_t::fnam, "CLOT" }, "CLOT" },
+	{ { tools_t::rec_type_t::fnam, "CONT" }, "CONT" },    { { tools_t::rec_type_t::fnam, "CREA" }, "CREA" },
+	{ { tools_t::rec_type_t::fnam, "DOOR" }, "DOOR" },    { { tools_t::rec_type_t::fnam, "FACT" }, "FACT" },
+	{ { tools_t::rec_type_t::fnam, "INGR" }, "INGR" },    { { tools_t::rec_type_t::fnam, "LIGH" }, "LIGH" },
+	{ { tools_t::rec_type_t::fnam, "LOCK" }, "LOCK" },    { { tools_t::rec_type_t::fnam, "MISC" }, "MISC" },
+	{ { tools_t::rec_type_t::fnam, "NPC_" }, "NPC_" },    { { tools_t::rec_type_t::fnam, "PROB" }, "PROB" },
+	{ { tools_t::rec_type_t::fnam, "RACE" }, "RACE" },    { { tools_t::rec_type_t::fnam, "REGN" }, "REGN" },
+	{ { tools_t::rec_type_t::fnam, "REPA" }, "REPA" },    { { tools_t::rec_type_t::fnam, "SPEL" }, "SPEL" },
+	{ { tools_t::rec_type_t::fnam, "WEAP" }, "WEAP" },    { { tools_t::rec_type_t::desc, "BSGN" }, "Birthsigns" },
+	{ { tools_t::rec_type_t::desc, "CLAS" }, "Classes" }, { { tools_t::rec_type_t::desc, "RACE" }, "Races" },
+	{ { tools_t::rec_type_t::indx, "SKIL" }, "Skills" },  { { tools_t::rec_type_t::indx, "MGEF" }, "Magic Effects" },
 };
 
 static const std::map<std::string, std::string> sub_type_to_prefix = {
-	{"Topic", "T"}, {"Voice", "V"}, {"Greeting", "G"}, {"Persuasion", "P"}, {"Journal", "J"},
-	{"ACTI", "ACTI"}, {"ALCH", "ALCH"}, {"APPA", "APPA"}, {"ARMO", "ARMO"}, {"BOOK", "BOOK"},
-	{"BSGN", "BSGN"}, {"CLAS", "CLAS"}, {"CLOT", "CLOT"}, {"CONT", "CONT"}, {"CREA", "CREA"},
-	{"DOOR", "DOOR"}, {"FACT", "FACT"}, {"INGR", "INGR"}, {"LIGH", "LIGH"}, {"LOCK", "LOCK"},
-	{"MISC", "MISC"}, {"NPC_", "NPC_"}, {"PROB", "PROB"}, {"RACE", "RACE"}, {"REGN", "REGN"},
-	{"REPA", "REPA"}, {"SPEL", "SPEL"}, {"WEAP", "WEAP"},
-	{"Birthsigns", "BSGN"}, {"Classes", "CLAS"}, {"Races", "RACE"},
-	{"Skills", "SKIL"}, {"Magic Effects", "MGEF"},
+	{ "Topic", "T" },      { "Voice", "V" },         { "Greeting", "G" },
+	{ "Persuasion", "P" }, { "Journal", "J" },       { "ACTI", "ACTI" },
+	{ "ALCH", "ALCH" },    { "APPA", "APPA" },       { "ARMO", "ARMO" },
+	{ "BOOK", "BOOK" },    { "BSGN", "BSGN" },       { "CLAS", "CLAS" },
+	{ "CLOT", "CLOT" },    { "CONT", "CONT" },       { "CREA", "CREA" },
+	{ "DOOR", "DOOR" },    { "FACT", "FACT" },       { "INGR", "INGR" },
+	{ "LIGH", "LIGH" },    { "LOCK", "LOCK" },       { "MISC", "MISC" },
+	{ "NPC_", "NPC_" },    { "PROB", "PROB" },       { "RACE", "RACE" },
+	{ "REGN", "REGN" },    { "REPA", "REPA" },       { "SPEL", "SPEL" },
+	{ "WEAP", "WEAP" },    { "Birthsigns", "BSGN" }, { "Classes", "CLAS" },
+	{ "Races", "RACE" },   { "Skills", "SKIL" },     { "Magic Effects", "MGEF" },
 };
 
 static std::string extract_info_prefix(const std::string & key_text)
@@ -62,11 +57,8 @@ static std::string extract_info_prefix(const std::string & key_text)
 
 static bool has_sub_type(tools_t::rec_type_t type)
 {
-	return type == tools_t::rec_type_t::info ||
-		type == tools_t::rec_type_t::bnam ||
-		type == tools_t::rec_type_t::fnam ||
-		type == tools_t::rec_type_t::desc ||
-		type == tools_t::rec_type_t::indx;
+	return type == tools_t::rec_type_t::info || type == tools_t::rec_type_t::bnam ||
+	       type == tools_t::rec_type_t::fnam || type == tools_t::rec_type_t::desc || type == tools_t::rec_type_t::indx;
 }
 
 static std::string classify_sub_type(tools_t::rec_type_t type, const std::string & key_text)
@@ -76,7 +68,7 @@ static std::string classify_sub_type(tools_t::rec_type_t type, const std::string
 		return {};
 
 	auto prefix = key_text.substr(0, caret_pos);
-	auto it = prefix_to_sub_type.find({type, prefix});
+	auto it = prefix_to_sub_type.find({ type, prefix });
 	if (it != prefix_to_sub_type.end())
 		return it->second;
 
@@ -84,10 +76,10 @@ static std::string classify_sub_type(tools_t::rec_type_t type, const std::string
 }
 
 static bool passes_sub_type_filter(
-	tools_t::rec_type_t type,
-	const std::string & key_text,
-	const std::set<std::string> & sub_type_filter,
-	bool type_filter_solo)
+    tools_t::rec_type_t type,
+    const std::string & key_text,
+    const std::set<std::string> & sub_type_filter,
+    bool type_filter_solo)
 {
 	if (!type_filter_solo)
 		return true;
@@ -111,25 +103,20 @@ static bool passes_sub_type_filter(
 }
 
 table_build_result_t build_filtered_rows(
-	const tools_t::dict_t & data,
-	dict_kind_t kind,
-	const std::set<tools_t::rec_type_t> & type_filter,
-	const std::set<std::string> & sub_type_filter,
-	const std::set<std::string> & status_filter,
-	const search_engine_t & search,
-	bool type_filter_solo)
+    const tools_t::dict_t & data,
+    dict_kind_t kind,
+    const std::set<tools_t::rec_type_t> & type_filter,
+    const std::set<std::string> & sub_type_filter,
+    const std::set<std::string> & status_filter,
+    const search_engine_t & search,
+    bool type_filter_solo)
 {
-	static const std::set<std::string> done_statuses_user = {
-		"translated"
-	};
+	static const std::set<std::string> done_statuses_user = { "translated" };
 
-	static const std::set<std::string> done_statuses_base = {
-		"matched", "fingerprint", "coords", "heuristic", "exact",
-		"info", "wilderness", "region"
-	};
+	static const std::set<std::string> done_statuses_base = { "matched", "fingerprint", "coords",     "heuristic",
+		                                                      "exact",   "info",        "wilderness", "region" };
 
-	const auto & done_statuses = (kind == dict_kind_t::base)
-		? done_statuses_base : done_statuses_user;
+	const auto & done_statuses = (kind == dict_kind_t::base) ? done_statuses_base : done_statuses_user;
 
 	table_build_result_t result;
 	auto & counts = result.counts;
@@ -149,8 +136,7 @@ table_build_result_t build_filtered_rows(
 		}
 	}
 
-	const bool info_in_filter = type_filter.empty() ||
-		type_filter.count(tools_t::rec_type_t::info) > 0;
+	const bool info_in_filter = type_filter.empty() || type_filter.count(tools_t::rec_type_t::info) > 0;
 
 	for (const auto & [type, chapter] : data)
 	{
@@ -158,8 +144,7 @@ table_build_result_t build_filtered_rows(
 		{
 			const auto & entry = chapter.records[i];
 
-			const auto count_type = (type == tools_t::rec_type_t::bnam)
-				? tools_t::rec_type_t::info : type;
+			const auto count_type = (type == tools_t::rec_type_t::bnam) ? tools_t::rec_type_t::info : type;
 
 			counts.type_counts[count_type]++;
 			counts.total_status_counts[entry.status]++;
@@ -264,8 +249,7 @@ table_build_result_t build_filtered_rows(
 	// progress computation: count type-filtered + sub-type-filtered records with done statuses
 	for (const auto & [type, chapter] : data)
 	{
-		const auto effective_type = (type == tools_t::rec_type_t::bnam)
-			? tools_t::rec_type_t::info : type;
+		const auto effective_type = (type == tools_t::rec_type_t::bnam) ? tools_t::rec_type_t::info : type;
 
 		if (!type_filter.empty() && type_filter.count(effective_type) == 0)
 			continue;

@@ -21,10 +21,9 @@ public:
 		std::string query;
 		bool case_sensitive = false;
 		bool regex_mode = false;
-		std::set<search_column_t> columns = {
-			search_column_t::key, search_column_t::original,
-			search_column_t::translation
-		};
+		std::set<search_column_t> columns = { search_column_t::key,
+			                                  search_column_t::original,
+			                                  search_column_t::translation };
 	};
 
 	void set_config(const config_t & cfg);

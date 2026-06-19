@@ -5,11 +5,21 @@
 
 enum class field_type_t
 {
-	u8, u16, u32, i8, i16, i32, f32,
+	u8,
+	u16,
+	u32,
+	i8,
+	i16,
+	i32,
+	f32,
 	string_fixed,
 	string_var,
-	flags_u8, flags_u16, flags_u32,
-	enum_u8, enum_u16, enum_u32,
+	flags_u8,
+	flags_u16,
+	flags_u32,
+	enum_u8,
+	enum_u16,
+	enum_u32,
 	raw
 };
 
@@ -32,8 +42,9 @@ struct sub_record_schema_t
 	size_t field_count;
 };
 
-const sub_record_schema_t * find_schema(const std::string & record_type,
-                                         const std::string & sub_type,
-                                         size_t data_size);
+const sub_record_schema_t * find_schema(
+    const std::string & record_type,
+    const std::string & sub_type,
+    size_t data_size);
 
 const std::vector<sub_record_schema_t> & all_schemas();

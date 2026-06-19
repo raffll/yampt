@@ -17,8 +17,7 @@ class sub_record_iter_t
 public:
 	explicit sub_record_iter_t(const std::string & record_content)
 	    : content_(record_content)
-	{
-	}
+	{}
 
 	bool next(sub_record_view_t & out)
 	{

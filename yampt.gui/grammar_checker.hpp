@@ -7,7 +7,7 @@ class editor_text_edit_t;
 class grammar_checker_t
 {
 public:
-    grammar_checker_t() = default;
+	grammar_checker_t() = default;
 
-    QList<QTextEdit::ExtraSelection> check(editor_text_edit_t * editor) const;
+	QList<QTextEdit::ExtraSelection> check(editor_text_edit_t * editor) const;
 };

@@ -43,10 +43,7 @@ std::vector<history_entry_t> history_manager_t::get_history(tools_t::rec_type_t 
 	return it->second;
 }
 
-revert_result_t history_manager_t::revert(
-    tools_t::rec_type_t type,
-    const std::string & key,
-    size_t history_index)
+revert_result_t history_manager_t::revert(tools_t::rec_type_t type, const std::string & key, size_t history_index)
 {
 	auto compound_key = make_key(type, key);
 	auto it = entries_.find(compound_key);

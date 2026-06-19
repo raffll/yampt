@@ -115,13 +115,10 @@ std::string plugin_index_t::derive_id(esm_reader_t & esm, size_t i)
 
 			if (sub.type == "DATA" && sub.size >= 12)
 			{
-				uint32_t flags = tools_t::convert_string_byte_array_to_uint(
-				    std::string(sub.data, 4));
+				uint32_t flags = tools_t::convert_string_byte_array_to_uint(std::string(sub.data, 4));
 				is_interior = (flags & 0x01) != 0;
-				grid_x = static_cast<int32_t>(tools_t::convert_string_byte_array_to_uint(
-				    std::string(sub.data + 4, 4)));
-				grid_y = static_cast<int32_t>(tools_t::convert_string_byte_array_to_uint(
-				    std::string(sub.data + 8, 4)));
+				grid_x = static_cast<int32_t>(tools_t::convert_string_byte_array_to_uint(std::string(sub.data + 4, 4)));
+				grid_y = static_cast<int32_t>(tools_t::convert_string_byte_array_to_uint(std::string(sub.data + 8, 4)));
 				has_data = true;
 				break;
 			}
@@ -149,8 +146,8 @@ std::string plugin_index_t::derive_id(esm_reader_t & esm, size_t i)
 			if (sub.size < 4)
 				break;
 
-			int32_t index_val = static_cast<int32_t>(
-			    tools_t::convert_string_byte_array_to_uint(std::string(sub.data, 4)));
+			int32_t index_val =
+			    static_cast<int32_t>(tools_t::convert_string_byte_array_to_uint(std::string(sub.data, 4)));
 			return std::to_string(index_val);
 		}
 
@@ -213,10 +210,9 @@ std::string plugin_index_t::derive_id(esm_reader_t & esm, size_t i)
 			if (sub.size < 8)
 				break;
 
-			int32_t grid_x = static_cast<int32_t>(
-			    tools_t::convert_string_byte_array_to_uint(std::string(sub.data, 4)));
-			int32_t grid_y = static_cast<int32_t>(
-			    tools_t::convert_string_byte_array_to_uint(std::string(sub.data + 4, 4)));
+			int32_t grid_x = static_cast<int32_t>(tools_t::convert_string_byte_array_to_uint(std::string(sub.data, 4)));
+			int32_t grid_y =
+			    static_cast<int32_t>(tools_t::convert_string_byte_array_to_uint(std::string(sub.data + 4, 4)));
 			return "GRID[" + std::to_string(grid_x) + "," + std::to_string(grid_y) + "]";
 		}
 
@@ -233,10 +229,9 @@ std::string plugin_index_t::derive_id(esm_reader_t & esm, size_t i)
 			if (sub.size < 8)
 				break;
 
-			int32_t grid_x = static_cast<int32_t>(
-			    tools_t::convert_string_byte_array_to_uint(std::string(sub.data, 4)));
-			int32_t grid_y = static_cast<int32_t>(
-			    tools_t::convert_string_byte_array_to_uint(std::string(sub.data + 4, 4)));
+			int32_t grid_x = static_cast<int32_t>(tools_t::convert_string_byte_array_to_uint(std::string(sub.data, 4)));
+			int32_t grid_y =
+			    static_cast<int32_t>(tools_t::convert_string_byte_array_to_uint(std::string(sub.data + 4, 4)));
 			return "GRID[" + std::to_string(grid_x) + "," + std::to_string(grid_y) + "]";
 		}
 

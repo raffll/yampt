@@ -1,6 +1,8 @@
 #include "plugin_scan.hpp"
+#include "sub_record_iter.hpp"
 #include <algorithm>
 #include <filesystem>
+#include <map>
 #include <set>
 #include <cstring>
 
@@ -318,15 +320,17 @@ void plugin_scan_t::copy_record_to_merge(int source_plugin, size_t record_index)
 
 void plugin_scan_t::remove_from_merge(const std::string & type, const std::string & id)
 {
-	auto it = std::remove_if(merge_records_.begin(), merge_records_.end(),
-	    [&](const merge_record_t & mr)
-	    {
-		    return mr.rec_type == type && mr.record_id == id;
-	    });
+	auto it = std::remove_if(
+	    merge_records_.begin(),
+	    merge_records_.end(),
+	    [&](const merge_record_t & mr) { return mr.rec_type == type && mr.record_id == id; });
 	merge_records_.erase(it, merge_records_.end());
 }
 
-bool plugin_scan_t::save_merge(const std::string & output_path, const std::string & author, const std::string & description)
+bool plugin_scan_t::save_merge(
+    const std::string & output_path,
+    const std::string & author,
+    const std::string & description)
 {
 	if (merge_plugin_idx_ < 0)
 		return false;
@@ -334,10 +338,10 @@ bool plugin_scan_t::save_merge(const std::string & output_path, const std::strin
 	std::string header_content = build_tes3_header(author, description);
 
 	std::vector<tools_t::record_t> records;
-	records.push_back({"TES3", header_content, header_content.size(), false});
+	records.push_back({ "TES3", header_content, header_content.size(), false });
 
 	for (const auto & mr : merge_records_)
-		records.push_back({mr.rec_type, mr.content, mr.content.size(), false});
+		records.push_back({ mr.rec_type, mr.content, mr.content.size(), false });
 
 	tools_t::write_file(records, output_path);
 	return true;
@@ -356,6 +360,212 @@ size_t plugin_scan_t::merge_record_count() const
 const std::string & plugin_scan_t::merge_record_content(size_t index) const
 {
 	return merge_records_[index].content;
+}
+
+void plugin_scan_t::copy_record_to_merge_raw(const std::string & rec_type,
+                                              const std::string & record_id,
+                                              const std::string & content)
+{
+	if (merge_plugin_idx_ < 0)
+		return;
+
+	for (auto & existing : merge_records_)
+	{
+		if (existing.rec_type == rec_type && existing.record_id == record_id)
+		{
+			existing.content = content;
+			return;
+		}
+	}
+
+	merge_record_t mr;
+	mr.rec_type = rec_type;
+	mr.record_id = record_id;
+	mr.content = content;
+	merge_records_.push_back(std::move(mr));
+}
+
+void plugin_scan_t::merge_leveled_list(const conflict_entry_t & entry)
+{
+	if (entry.versions.size() < 2)
+		return;
+
+	struct list_item_t
+	{
+		std::string id;
+		uint16_t level;
+	};
+
+	auto extract_items = [&](const std::string & content) -> std::vector<list_item_t>
+	{
+		std::vector<list_item_t> items;
+		sub_record_iter_t iter(content);
+		sub_record_view_t sub;
+		std::string current_id;
+
+		while (iter.next(sub))
+		{
+			if (sub.type == "INAM" || sub.type == "CNAM")
+			{
+				current_id = std::string(sub.data, sub.size);
+				current_id = tools_t::erase_null_chars(current_id);
+				continue;
+			}
+
+			if (sub.type == "INTV" && !current_id.empty())
+			{
+				uint16_t level = 0;
+				if (sub.size >= 2)
+					std::memcpy(&level, sub.data, 2);
+
+				items.push_back({current_id, level});
+				current_id.clear();
+			}
+		}
+
+		return items;
+	};
+
+	auto get_content = [&](const record_version_t & ver) -> std::string
+	{
+		if (ver.plugin_idx == merge_plugin_idx_)
+			return merge_records_[ver.record_index].content;
+
+		plugins_[ver.plugin_idx]->esm.select_record(ver.record_index);
+		return plugins_[ver.plugin_idx]->esm.get_record().content;
+	};
+
+	std::string master_content = get_content(entry.versions[0]);
+	auto master_items = extract_items(master_content);
+
+	std::set<std::string> master_keys;
+	for (const auto & item : master_items)
+		master_keys.insert(item.id + "\x00" + std::to_string(item.level));
+
+	std::vector<list_item_t> merged = master_items;
+	std::set<std::string> merged_keys = master_keys;
+
+	for (size_t vi = 1; vi < entry.versions.size(); ++vi)
+	{
+		if (entry.versions[vi].plugin_idx == merge_plugin_idx_)
+			continue;
+
+		std::string ver_content = get_content(entry.versions[vi]);
+		auto ver_items = extract_items(ver_content);
+
+		for (const auto & item : ver_items)
+		{
+			std::string key = item.id + "\x00" + std::to_string(item.level);
+			if (merged_keys.count(key))
+				continue;
+
+			merged.push_back(item);
+			merged_keys.insert(key);
+		}
+	}
+
+	std::string header_part;
+	{
+		sub_record_iter_t iter(master_content);
+		sub_record_view_t sub;
+		while (iter.next(sub))
+		{
+			if (sub.type == "INAM" || sub.type == "CNAM" || sub.type == "INTV")
+				break;
+
+			header_part += sub.type;
+			header_part += tools_t::convert_uint_to_string_byte_array(sub.size);
+			header_part += std::string(sub.data, sub.size);
+		}
+	}
+
+	std::string indx_sub = "INDX";
+	uint32_t item_count = static_cast<uint32_t>(merged.size());
+	indx_sub += tools_t::convert_uint_to_string_byte_array(4);
+	indx_sub += std::string(reinterpret_cast<const char *>(&item_count), 4);
+
+	std::string items_part;
+	std::string item_sub_type = (entry.rec_type == "LEVI") ? "INAM" : "CNAM";
+	for (const auto & item : merged)
+	{
+		std::string id_data = item.id;
+		id_data.push_back('\0');
+
+		items_part += item_sub_type;
+		items_part += tools_t::convert_uint_to_string_byte_array(id_data.size());
+		items_part += id_data;
+
+		items_part += "INTV";
+		items_part += tools_t::convert_uint_to_string_byte_array(2);
+		items_part += std::string(reinterpret_cast<const char *>(&item.level), 2);
+	}
+
+	std::string body = header_part + indx_sub + items_part;
+
+	std::string record;
+	record += entry.rec_type;
+	record += tools_t::convert_uint_to_string_byte_array(body.size());
+	record += std::string(8, '\0');
+	record += body;
+
+	copy_record_to_merge_raw(entry.rec_type, entry.record_id, record);
+}
+
+void plugin_scan_t::merge_dialogue(const conflict_entry_t & entry)
+{
+	if (entry.rec_type != "DIAL")
+		return;
+
+	auto get_content = [&](const record_version_t & ver) -> std::string
+	{
+		if (ver.plugin_idx == merge_plugin_idx_)
+			return merge_records_[ver.record_index].content;
+
+		plugins_[ver.plugin_idx]->esm.select_record(ver.record_index);
+		return plugins_[ver.plugin_idx]->esm.get_record().content;
+	};
+
+	std::string winning_dial = get_content(entry.versions.back());
+	copy_record_to_merge_raw("DIAL", entry.record_id, winning_dial);
+
+	std::vector<std::string> merged_info_ids;
+	std::map<std::string, std::string> info_contents;
+
+	for (size_t vi = 0; vi < entry.versions.size(); ++vi)
+	{
+		const auto & ver = entry.versions[vi];
+		if (ver.plugin_idx == merge_plugin_idx_)
+			continue;
+
+		int pi = ver.plugin_idx;
+		size_t dial_rec_idx = ver.record_index;
+
+		const auto & plugin_entries = plugins_[pi]->index.entries();
+		for (size_t ei = dial_rec_idx + 1; ei < plugin_entries.size(); ++ei)
+		{
+			if (plugin_entries[ei].rec_type != "INFO")
+				break;
+
+			if (plugin_entries[ei].dial_name != entry.record_id)
+				break;
+
+			const auto & info_id = plugin_entries[ei].record_id;
+
+			plugins_[pi]->esm.select_record(plugin_entries[ei].record_index);
+			std::string content = plugins_[pi]->esm.get_record().content;
+
+			if (info_contents.find(info_id) == info_contents.end())
+				merged_info_ids.push_back(info_id);
+
+			info_contents[info_id] = content;
+		}
+	}
+
+	for (const auto & info_id : merged_info_ids)
+	{
+		const auto & content = info_contents[info_id];
+		copy_record_to_merge_raw("INFO", info_id, content);
+	}
 }
 
 size_t plugin_scan_t::itm_count(int plugin_idx) const
@@ -434,8 +644,7 @@ std::string plugin_scan_t::build_tes3_header(const std::string & author, const s
 			file_size = std::filesystem::file_size(plugins_[i]->path);
 		}
 		catch (...)
-		{
-		}
+		{}
 
 		std::string size_data(8, '\0');
 		std::memcpy(&size_data[0], &file_size, 8);

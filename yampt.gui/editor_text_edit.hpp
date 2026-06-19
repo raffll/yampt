@@ -19,10 +19,10 @@ public:
 	void set_show_whitespace(bool value);
 	void set_record_type(tools_t::rec_type_t type);
 
-	using QPlainTextEdit::firstVisibleBlock;
 	using QPlainTextEdit::blockBoundingGeometry;
 	using QPlainTextEdit::blockBoundingRect;
 	using QPlainTextEdit::contentOffset;
+	using QPlainTextEdit::firstVisibleBlock;
 
 protected:
 	void keyPressEvent(QKeyEvent * event) override;

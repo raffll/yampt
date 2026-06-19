@@ -6,8 +6,8 @@
 
 static std::string to_lower(std::string str)
 {
-	std::transform(str.begin(), str.end(), str.begin(),
-		[](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+	std::transform(
+	    str.begin(), str.end(), str.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
 	return str;
 }
 
@@ -127,11 +127,16 @@ std::string file_list_t::detect_language(const std::string & filename, std::uint
 	if (lower != "morrowind.esm" && lower != "tribunal.esm" && lower != "bloodmoon.esm")
 		return "";
 
-	if (file_size == 79837557 || file_size == 9631798 || file_size == 4565686) return "EN";
-	if (file_size == 80640776 || file_size == 9797295 || file_size == 6069165) return "DE";
-	if (file_size == 80105097 || file_size == 9658076 || file_size == 4626565) return "PL";
-	if (file_size == 80681814 || file_size == 10015689 || file_size == 4697358) return "FR";
-	if (file_size == 79857000 || file_size == 9702000 || file_size == 4625000) return "RU";
+	if (file_size == 79837557 || file_size == 9631798 || file_size == 4565686)
+		return "EN";
+	if (file_size == 80640776 || file_size == 9797295 || file_size == 6069165)
+		return "DE";
+	if (file_size == 80105097 || file_size == 9658076 || file_size == 4626565)
+		return "PL";
+	if (file_size == 80681814 || file_size == 10015689 || file_size == 4697358)
+		return "FR";
+	if (file_size == 79857000 || file_size == 9702000 || file_size == 4625000)
+		return "RU";
 
 	return "";
 }
@@ -163,31 +168,46 @@ std::string detect_language(const std::string & filename, std::uintmax_t file_si
 
 	if (lower == "morrowind.esm")
 	{
-		if (file_size == 79837557) return "EN";
-		if (file_size == 80640776) return "DE";
-		if (file_size == 80105097) return "PL";
-		if (file_size == 80681814) return "FR";
-		if (file_size == 79857000) return "RU";
+		if (file_size == 79837557)
+			return "EN";
+		if (file_size == 80640776)
+			return "DE";
+		if (file_size == 80105097)
+			return "PL";
+		if (file_size == 80681814)
+			return "FR";
+		if (file_size == 79857000)
+			return "RU";
 		return "";
 	}
 
 	if (lower == "tribunal.esm")
 	{
-		if (file_size == 9631798) return "EN";
-		if (file_size == 9797295) return "DE";
-		if (file_size == 9658076) return "PL";
-		if (file_size == 10015689) return "FR";
-		if (file_size == 9702000) return "RU";
+		if (file_size == 9631798)
+			return "EN";
+		if (file_size == 9797295)
+			return "DE";
+		if (file_size == 9658076)
+			return "PL";
+		if (file_size == 10015689)
+			return "FR";
+		if (file_size == 9702000)
+			return "RU";
 		return "";
 	}
 
 	if (lower == "bloodmoon.esm")
 	{
-		if (file_size == 4565686) return "EN";
-		if (file_size == 6069165) return "DE";
-		if (file_size == 4626565) return "PL";
-		if (file_size == 4697358) return "FR";
-		if (file_size == 4625000) return "RU";
+		if (file_size == 4565686)
+			return "EN";
+		if (file_size == 6069165)
+			return "DE";
+		if (file_size == 4626565)
+			return "PL";
+		if (file_size == 4697358)
+			return "FR";
+		if (file_size == 4625000)
+			return "RU";
 		return "";
 	}
 
@@ -196,7 +216,7 @@ std::string detect_language(const std::string & filename, std::uintmax_t file_si
 
 void file_list_t::clear_workspace()
 {
-	for (auto it = entries_.begin(); it != entries_.end(); )
+	for (auto it = entries_.begin(); it != entries_.end();)
 	{
 		if (it->second.is_workspace)
 			it = entries_.erase(it);
@@ -234,15 +254,14 @@ void file_list_t::scan_single_root(const std::string & root_path)
 			continue;
 
 		const auto ext = to_lower(entry.path().extension().string());
-		if (ext != ".esm" && ext != ".esp" && ext != ".json" && ext != ".xml"
-			&& ext != ".yaml" && ext != ".omwaddon" && ext != ".omwgame")
+		if (ext != ".esm" && ext != ".esp" && ext != ".json" && ext != ".xml" && ext != ".yaml" && ext != ".omwaddon" &&
+		    ext != ".omwgame")
 			continue;
 
 		if (ext == ".yaml")
 		{
 			const auto path_lower = to_lower(entry.path().string());
-			if (path_lower.find("/l10n/") == std::string::npos &&
-				path_lower.find("\\l10n\\") == std::string::npos)
+			if (path_lower.find("/l10n/") == std::string::npos && path_lower.find("\\l10n\\") == std::string::npos)
 				continue;
 		}
 
@@ -266,4 +285,3 @@ void file_list_t::scan_single_root(const std::string & root_path)
 		}
 	}
 }
-

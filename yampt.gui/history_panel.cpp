@@ -8,7 +8,7 @@
 #include <QVBoxLayout>
 
 history_panel_t::history_panel_t(QWidget * parent)
-	: QWidget(parent)
+    : QWidget(parent)
 {
 	auto * layout = new QVBoxLayout(this);
 	layout->setContentsMargins(0, 0, 0, 0);
@@ -56,10 +56,11 @@ void history_panel_t::update_history(const std::vector<history_entry_t> & entrie
 			button_layout->setContentsMargins(0, 0, 0, 0);
 
 			auto * revert_btn = new QPushButton(tr("Revert"), row);
-			connect(revert_btn, &QPushButton::clicked, this, [this, history_index]()
-			{
-				emit revert_requested(history_index);
-			});
+			connect(
+			    revert_btn,
+			    &QPushButton::clicked,
+			    this,
+			    [this, history_index]() { emit revert_requested(history_index); });
 
 			button_layout->addWidget(revert_btn);
 			button_layout->addStretch();

@@ -9,6 +9,7 @@
 class messages_panel_t : public QWidget
 {
 	Q_OBJECT
+
 public:
 	explicit messages_panel_t(QWidget * parent = nullptr);
 

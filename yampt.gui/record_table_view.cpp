@@ -40,15 +40,18 @@ void record_table_view_t::setModel(QAbstractItemModel * model)
 		header->resizeSection(col_status, 80);
 	}
 
-	connect(selectionModel(), &QItemSelectionModel::selectionChanged, this,
+	connect(
+	    selectionModel(),
+	    &QItemSelectionModel::selectionChanged,
+	    this,
 	    [this]()
-	    {
-		    const auto selected = selectionModel()->selectedRows();
-		    if (selected.count() != 1)
-			    return;
+	{
+		const auto selected = selectionModel()->selectedRows();
+		if (selected.count() != 1)
+			return;
 
-		    emit row_selected(selected.first().row());
-	    });
+		emit row_selected(selected.first().row());
+	});
 }
 
 void record_table_view_t::contextMenuEvent(QContextMenuEvent * event)

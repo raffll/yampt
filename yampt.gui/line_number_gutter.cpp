@@ -6,16 +6,19 @@
 #include <QTextBlock>
 
 line_number_gutter_t::line_number_gutter_t(editor_text_edit_t * editor, QWidget * parent)
-	: QWidget(parent)
-	, editor_(editor)
+    : QWidget(parent)
+    , editor_(editor)
 {
 	setFixedWidth(calculate_width());
 
-	connect(editor_, &editor_text_edit_t::blockCountChanged, this, [this]() {
-		setFixedWidth(calculate_width());
-	});
+	connect(editor_, &editor_text_edit_t::blockCountChanged, this, [this]() { setFixedWidth(calculate_width()); });
 
-	connect(editor_, &editor_text_edit_t::updateRequest, this, [this](const QRect & rect, int dy) {
+	connect(
+	    editor_,
+	    &editor_text_edit_t::updateRequest,
+	    this,
+	    [this](const QRect & rect, int dy)
+	{
 		if (dy != 0)
 			scroll(0, dy);
 		else

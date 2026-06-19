@@ -8,49 +8,49 @@
 static const char * type_to_display_name(const std::string & type)
 {
 	static const std::map<std::string, const char *> names = {
-		{"ACTI", "Activator"},
-		{"ALCH", "Potion"},
-		{"APPA", "Apparatus"},
-		{"ARMO", "Armor"},
-		{"BODY", "Body Part"},
-		{"BOOK", "Book"},
-		{"BSGN", "Birthsign"},
-		{"CELL", "Cell"},
-		{"CLAS", "Class"},
-		{"CLOT", "Clothing"},
-		{"CONT", "Container"},
-		{"CREA", "Creature"},
-		{"DIAL", "Dialogue"},
-		{"DOOR", "Door"},
-		{"ENCH", "Enchantment"},
-		{"FACT", "Faction"},
-		{"GLOB", "Global"},
-		{"GMST", "Game Setting"},
-		{"INFO", "Dialogue Response"},
-		{"INGR", "Ingredient"},
-		{"LAND", "Landscape"},
-		{"LEVC", "Leveled Creature"},
-		{"LEVI", "Leveled Item"},
-		{"LIGH", "Light"},
-		{"LOCK", "Lockpick"},
-		{"LTEX", "Land Texture"},
-		{"MGEF", "Magic Effect"},
-		{"MISC", "Misc. Item"},
-		{"NPC_", "NPC"},
-		{"PGRD", "Path Grid"},
-		{"PROB", "Probe"},
-		{"RACE", "Race"},
-		{"REGN", "Region"},
-		{"REPA", "Repair Item"},
-		{"SCPT", "Script"},
-		{"SKIL", "Skill"},
-		{"SNDG", "Sound Generator"},
-		{"SOUN", "Sound"},
-		{"SPEL", "Spell"},
-		{"SSCR", "Start Script"},
-		{"STAT", "Static"},
-		{"TES3", "File Header"},
-		{"WEAP", "Weapon"},
+		{ "ACTI", "Activator" },
+		{ "ALCH", "Potion" },
+		{ "APPA", "Apparatus" },
+		{ "ARMO", "Armor" },
+		{ "BODY", "Body Part" },
+		{ "BOOK", "Book" },
+		{ "BSGN", "Birthsign" },
+		{ "CELL", "Cell" },
+		{ "CLAS", "Class" },
+		{ "CLOT", "Clothing" },
+		{ "CONT", "Container" },
+		{ "CREA", "Creature" },
+		{ "DIAL", "Dialogue" },
+		{ "DOOR", "Door" },
+		{ "ENCH", "Enchantment" },
+		{ "FACT", "Faction" },
+		{ "GLOB", "Global" },
+		{ "GMST", "Game Setting" },
+		{ "INFO", "Dialogue Response" },
+		{ "INGR", "Ingredient" },
+		{ "LAND", "Landscape" },
+		{ "LEVC", "Leveled Creature" },
+		{ "LEVI", "Leveled Item" },
+		{ "LIGH", "Light" },
+		{ "LOCK", "Lockpick" },
+		{ "LTEX", "Land Texture" },
+		{ "MGEF", "Magic Effect" },
+		{ "MISC", "Misc. Item" },
+		{ "NPC_", "NPC" },
+		{ "PGRD", "Path Grid" },
+		{ "PROB", "Probe" },
+		{ "RACE", "Race" },
+		{ "REGN", "Region" },
+		{ "REPA", "Repair Item" },
+		{ "SCPT", "Script" },
+		{ "SKIL", "Skill" },
+		{ "SNDG", "Sound Generator" },
+		{ "SOUN", "Sound" },
+		{ "SPEL", "Spell" },
+		{ "SSCR", "Start Script" },
+		{ "STAT", "Static" },
+		{ "TES3", "File Header" },
+		{ "WEAP", "Weapon" },
 	};
 
 	auto it = names.find(type);
@@ -61,10 +61,9 @@ static const char * type_to_display_name(const std::string & type)
 }
 
 nav_tree_model_t::nav_tree_model_t(plugin_scan_t & scan, QObject * parent)
-	: QAbstractItemModel(parent)
-	, scan_(scan)
-{
-}
+    : QAbstractItemModel(parent)
+    , scan_(scan)
+{}
 
 void nav_tree_model_t::rebuild()
 {
@@ -120,15 +119,16 @@ void nav_tree_model_t::build_tree()
 			if (has_filter_ && !passes_filter(entry, p))
 				continue;
 
-			type_map[entry.rec_type].push_back({ei});
+			type_map[entry.rec_type].push_back({ ei });
 		}
 
 		for (auto & [type, recs] : type_map)
 		{
-			std::sort(recs.begin(), recs.end(), [&](const visible_record_t & a, const visible_record_t & b)
-			{
-				return entries[a.entry_idx].record_id < entries[b.entry_idx].record_id;
-			});
+			std::sort(
+			    recs.begin(),
+			    recs.end(),
+			    [&](const visible_record_t & a, const visible_record_t & b)
+			{ return entries[a.entry_idx].record_id < entries[b.entry_idx].record_id; });
 
 			type_group_t group;
 			group.type = type;
@@ -175,10 +175,16 @@ bool nav_tree_model_t::passes_filter(const conflict_entry_t & entry, int plugin_
 	{
 		auto lower_id = entry.record_id;
 		auto lower_search = filter_.id_text;
-		std::transform(lower_id.begin(), lower_id.end(), lower_id.begin(),
-		               [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-		std::transform(lower_search.begin(), lower_search.end(), lower_search.begin(),
-		               [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+		std::transform(
+		    lower_id.begin(),
+		    lower_id.end(),
+		    lower_id.begin(),
+		    [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+		std::transform(
+		    lower_search.begin(),
+		    lower_search.end(),
+		    lower_search.begin(),
+		    [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
 
 		if (lower_id.find(lower_search) == std::string::npos)
 			return false;
@@ -188,10 +194,16 @@ bool nav_tree_model_t::passes_filter(const conflict_entry_t & entry, int plugin_
 	{
 		auto lower_name = entry.display_name;
 		auto lower_search = filter_.name_text;
-		std::transform(lower_name.begin(), lower_name.end(), lower_name.begin(),
-		               [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-		std::transform(lower_search.begin(), lower_search.end(), lower_search.begin(),
-		               [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+		std::transform(
+		    lower_name.begin(),
+		    lower_name.end(),
+		    lower_name.begin(),
+		    [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+		std::transform(
+		    lower_search.begin(),
+		    lower_search.end(),
+		    lower_search.begin(),
+		    [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
 
 		if (lower_name.find(lower_search) == std::string::npos)
 			return false;
@@ -351,9 +363,12 @@ QVariant nav_tree_model_t::headerData(int section, Qt::Orientation orientation, 
 
 	switch (section)
 	{
-	case 0: return QStringLiteral("FormID");
-	case 1: return QStringLiteral("EditorID");
-	case 2: return QStringLiteral("Name");
+	case 0:
+		return QStringLiteral("FormID");
+	case 1:
+		return QStringLiteral("EditorID");
+	case 2:
+		return QStringLiteral("Name");
 	}
 
 	return {};
@@ -379,9 +394,12 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 		if (role == Qt::DisplayRole && col == 0)
 		{
 			char buf[64];
-			std::snprintf(buf, sizeof(buf), "[%02X] %s",
-				file_node.plugin_idx,
-				scan_.plugin_filename(file_node.plugin_idx).c_str());
+			std::snprintf(
+			    buf,
+			    sizeof(buf),
+			    "[%02X] %s",
+			    file_node.plugin_idx,
+			    scan_.plugin_filename(file_node.plugin_idx).c_str());
 			return QString::fromUtf8(buf);
 		}
 
@@ -454,9 +472,7 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 				if (display_name)
 					return QString("%1 [%2]").arg(display_name).arg(group.records.size());
 
-				return QString("%1 (%2)")
-					.arg(QString::fromStdString(group.type))
-					.arg(group.records.size());
+				return QString("%1 (%2)").arg(QString::fromStdString(group.type)).arg(group.records.size());
 			}
 
 			if (role == Qt::BackgroundRole)
@@ -524,8 +540,8 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 					}
 
 					char buf[16];
-					uint32_t form_id = (static_cast<uint32_t>(tree_[fi].plugin_idx) << 24)
-					                  | (static_cast<uint32_t>(record_index) & 0x00FFFFFF);
+					uint32_t form_id = (static_cast<uint32_t>(tree_[fi].plugin_idx) << 24) |
+					                   (static_cast<uint32_t>(record_index) & 0x00FFFFFF);
 					std::snprintf(buf, sizeof(buf), "%08X", form_id);
 					return QString::fromUtf8(buf);
 				}
@@ -602,9 +618,9 @@ QMimeData * nav_tree_model_t::mimeData(const QModelIndexList & indexes) const
 
 	auto * mime = new QMimeData;
 	QString payload = QString("%1\t%2\t%3")
-		.arg(info.plugin_idx)
-		.arg(QString::fromStdString(info.rec_type))
-		.arg(QString::fromStdString(info.record_id));
+	                      .arg(info.plugin_idx)
+	                      .arg(QString::fromStdString(info.rec_type))
+	                      .arg(QString::fromStdString(info.record_id));
 	mime->setData("application/x-yampt-record", payload.toUtf8());
 	return mime;
 }
@@ -612,7 +628,7 @@ QMimeData * nav_tree_model_t::mimeData(const QModelIndexList & indexes) const
 nav_tree_model_t::node_info_t nav_tree_model_t::node_at(const QModelIndex & index) const
 {
 	if (!index.isValid())
-		return {-1, {}, {}};
+		return { -1, {}, {} };
 
 	void * ptr = index.internalPointer();
 	const auto & entries = scan_.entries();
@@ -621,9 +637,9 @@ nav_tree_model_t::node_info_t nav_tree_model_t::node_at(const QModelIndex & inde
 	{
 		int file_idx = index.row();
 		if (file_idx < 0 || file_idx >= static_cast<int>(tree_.size()))
-			return {-1, {}, {}};
+			return { -1, {}, {} };
 
-		return {tree_[static_cast<size_t>(file_idx)].plugin_idx, {}, {}};
+		return { tree_[static_cast<size_t>(file_idx)].plugin_idx, {}, {} };
 	}
 
 	for (size_t fi = 0; fi < tree_.size(); ++fi)
@@ -632,9 +648,9 @@ nav_tree_model_t::node_info_t nav_tree_model_t::node_at(const QModelIndex & inde
 		{
 			int group_idx = index.row();
 			if (group_idx < 0 || group_idx >= static_cast<int>(tree_[fi].groups.size()))
-				return {tree_[fi].plugin_idx, {}, {}};
+				return { tree_[fi].plugin_idx, {}, {} };
 
-			return {tree_[fi].plugin_idx, tree_[fi].groups[static_cast<size_t>(group_idx)].type, {}};
+			return { tree_[fi].plugin_idx, tree_[fi].groups[static_cast<size_t>(group_idx)].type, {} };
 		}
 
 		for (size_t gi = 0; gi < tree_[fi].groups.size(); ++gi)
@@ -644,13 +660,13 @@ nav_tree_model_t::node_info_t nav_tree_model_t::node_at(const QModelIndex & inde
 
 			int rec_idx = index.row();
 			if (rec_idx < 0 || rec_idx >= static_cast<int>(tree_[fi].groups[gi].records.size()))
-				return {tree_[fi].plugin_idx, tree_[fi].groups[gi].type, {}};
+				return { tree_[fi].plugin_idx, tree_[fi].groups[gi].type, {} };
 
 			const auto & vis = tree_[fi].groups[gi].records[static_cast<size_t>(rec_idx)];
 			const auto & entry = entries[vis.entry_idx];
-			return {tree_[fi].plugin_idx, entry.rec_type, entry.record_id};
+			return { tree_[fi].plugin_idx, entry.rec_type, entry.record_id };
 		}
 	}
 
-	return {-1, {}, {}};
+	return { -1, {}, {} };
 }

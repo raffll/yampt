@@ -20,9 +20,8 @@ static std::string status_display_name(const std::string & status)
 		return "Missing";
 	if (status == "duplicate")
 		return "Duplicate";
-	if (status == "matched" || status == "fingerprint" || status == "coords" ||
-		status == "heuristic" || status == "exact" || status == "info" ||
-		status == "wilderness" || status == "region")
+	if (status == "matched" || status == "fingerprint" || status == "coords" || status == "heuristic" ||
+	    status == "exact" || status == "info" || status == "wilderness" || status == "region")
 		return "Matched";
 	if (status == "error")
 		return "Error";
@@ -138,9 +137,9 @@ QVariant record_table_model_t::data(const QModelIndex & index, int role) const
 	{
 		const auto & color = get_status_color(row.status);
 		return QColor(
-			255 - (255 - color.red()) * 20 / 100,
-			255 - (255 - color.green()) * 20 / 100,
-			255 - (255 - color.blue()) * 20 / 100);
+		    255 - (255 - color.red()) * 20 / 100,
+		    255 - (255 - color.green()) * 20 / 100,
+		    255 - (255 - color.blue()) * 20 / 100);
 	}
 
 	return {};
@@ -211,7 +210,10 @@ void record_table_model_t::sort(int column, Qt::SortOrder order)
 			groups.back().push_back(std::move(row));
 	}
 
-	std::sort(groups.begin(), groups.end(), [&cmp](const std::vector<table_row_t> & a, const std::vector<table_row_t> & b)
+	std::sort(
+	    groups.begin(),
+	    groups.end(),
+	    [&cmp](const std::vector<table_row_t> & a, const std::vector<table_row_t> & b)
 	{
 		if (a.empty() || b.empty())
 			return !a.empty();

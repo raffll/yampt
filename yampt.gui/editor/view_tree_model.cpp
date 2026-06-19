@@ -9,64 +9,63 @@
 static const std::map<std::string, const char *> & sub_record_descriptions()
 {
 	static const std::map<std::string, const char *> descs = {
-		{"NAME", "ID"},
-		{"FNAM", "Name"},
-		{"MODL", "Model Filename"},
-		{"SCRI", "Script"},
-		{"ITEX", "Icon"},
-		{"ENAM", "Enchantment Effect"},
-		{"ANAM", "Faction/Owner"},
-		{"BNAM", "Script Text"},
-		{"CNAM", "Class"},
-		{"DNAM", "Destination"},
-		{"ONAM", "Actor"},
-		{"RNAM", "Race"},
-		{"INDX", "Index"},
-		{"INTV", "Integer Value"},
-		{"FLTV", "Float Value"},
-		{"STRV", "String Value"},
-		{"INAM", "Info ID"},
-		{"PNAM", "Previous Info"},
-		{"NNAM", "Next Info"},
-		{"SNAM", "Sound"},
-		{"DATA", "Data"},
-		{"FLAG", "Flags"},
-		{"NPDT", "NPC Data"},
-		{"AIDT", "AI Data"},
-		{"WPDT", "Weapon Data"},
-		{"AODT", "Armor Data"},
-		{"ALDT", "Potion Data"},
-		{"ENDT", "Enchantment Data"},
-		{"BKDT", "Book Data"},
-		{"CNDT", "Container Data"},
-		{"FADT", "Faction Data"},
-		{"CLDT", "Class Data"},
-		{"RADT", "Race Data"},
-		{"SPDT", "Spell Data"},
-		{"WEAT", "Weather"},
-		{"WHGT", "Water Height"},
-		{"AMBI", "Ambient Light"},
-		{"RGNN", "Region Name"},
-		{"DELE", "Deleted"},
-		{"SCVR", "Script Variable"},
-		{"SCHD", "Script Header"},
-		{"SCTX", "Script Source"},
-		{"SCDT", "Script Data"},
-		{"HEDR", "Header"},
-		{"MAST", "Master File"},
-		{"DODT", "Door Destination"},
-		{"FRMR", "Object Reference"},
-		{"XSCL", "Scale"},
-		{"NAM0", "Object Count"},
-		{"NAM5", "Map Color"},
+		{ "NAME", "ID" },
+		{ "FNAM", "Name" },
+		{ "MODL", "Model Filename" },
+		{ "SCRI", "Script" },
+		{ "ITEX", "Icon" },
+		{ "ENAM", "Enchantment Effect" },
+		{ "ANAM", "Faction/Owner" },
+		{ "BNAM", "Script Text" },
+		{ "CNAM", "Class" },
+		{ "DNAM", "Destination" },
+		{ "ONAM", "Actor" },
+		{ "RNAM", "Race" },
+		{ "INDX", "Index" },
+		{ "INTV", "Integer Value" },
+		{ "FLTV", "Float Value" },
+		{ "STRV", "String Value" },
+		{ "INAM", "Info ID" },
+		{ "PNAM", "Previous Info" },
+		{ "NNAM", "Next Info" },
+		{ "SNAM", "Sound" },
+		{ "DATA", "Data" },
+		{ "FLAG", "Flags" },
+		{ "NPDT", "NPC Data" },
+		{ "AIDT", "AI Data" },
+		{ "WPDT", "Weapon Data" },
+		{ "AODT", "Armor Data" },
+		{ "ALDT", "Potion Data" },
+		{ "ENDT", "Enchantment Data" },
+		{ "BKDT", "Book Data" },
+		{ "CNDT", "Container Data" },
+		{ "FADT", "Faction Data" },
+		{ "CLDT", "Class Data" },
+		{ "RADT", "Race Data" },
+		{ "SPDT", "Spell Data" },
+		{ "WEAT", "Weather" },
+		{ "WHGT", "Water Height" },
+		{ "AMBI", "Ambient Light" },
+		{ "RGNN", "Region Name" },
+		{ "DELE", "Deleted" },
+		{ "SCVR", "Script Variable" },
+		{ "SCHD", "Script Header" },
+		{ "SCTX", "Script Source" },
+		{ "SCDT", "Script Data" },
+		{ "HEDR", "Header" },
+		{ "MAST", "Master File" },
+		{ "DODT", "Door Destination" },
+		{ "FRMR", "Object Reference" },
+		{ "XSCL", "Scale" },
+		{ "NAM0", "Object Count" },
+		{ "NAM5", "Map Color" },
 	};
 	return descs;
 }
 
 view_tree_model_t::view_tree_model_t(QObject * parent)
-	: QAbstractItemModel(parent)
-{
-}
+    : QAbstractItemModel(parent)
+{}
 
 void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t & entry)
 {
@@ -87,8 +86,7 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 	for (const auto & ver : entry.versions)
 	{
 		char buf[64];
-		std::snprintf(buf, sizeof(buf), "[%02X] %s", ver.plugin_idx,
-			scan.plugin_filename(ver.plugin_idx).c_str());
+		std::snprintf(buf, sizeof(buf), "[%02X] %s", ver.plugin_idx, scan.plugin_filename(ver.plugin_idx).c_str());
 		column_names_.push_back(buf);
 		plugin_conflict_this_.push_back(ver.status);
 		column_plugin_indices_.push_back(ver.plugin_idx);
@@ -121,8 +119,7 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 			}
 
 			char buf[64];
-			std::snprintf(buf, sizeof(buf), "[%02X] %s *", merge_idx,
-				scan.plugin_filename(merge_idx).c_str());
+			std::snprintf(buf, sizeof(buf), "[%02X] %s *", merge_idx, scan.plugin_filename(merge_idx).c_str());
 			column_names_.push_back(buf);
 			plugin_conflict_this_.push_back(conflict_this_t::unknown);
 			column_plugin_indices_.push_back(merge_idx);
@@ -143,8 +140,8 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 		header_row.size = 16;
 		header_row.values.resize(col_count);
 		header_row.row_conflict_all = entry.conflict_all;
-		header_row.all_identical = (entry.conflict_all == conflict_all_t::no_conflict
-		                         || entry.conflict_all == conflict_all_t::only_one);
+		header_row.all_identical =
+		    (entry.conflict_all == conflict_all_t::no_conflict || entry.conflict_all == conflict_all_t::only_one);
 		header_row.cell_conflict_this.resize(col_count, conflict_this_t::master);
 
 		field_row_t sig_row;
@@ -331,7 +328,8 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 				row.children.push_back(std::move(frow));
 			}
 		}
-		else if (first_data && first_size > 0 && !row.values.empty() && row.values[0].size() > 0 && row.values[0][0] == '<')
+		else if (
+		    first_data && first_size > 0 && !row.values.empty() && row.values[0].size() > 0 && row.values[0][0] == '<')
 		{
 			for (size_t offset = 0; offset < first_size; offset += 16)
 			{
@@ -692,9 +690,9 @@ QMimeData * view_tree_model_t::mimeData(const QModelIndexList & indexes) const
 	int plugin_idx = column_plugin_indices_[col];
 	auto * mime = new QMimeData;
 	QString payload = QString("%1\t%2\t%3")
-		.arg(plugin_idx)
-		.arg(QString::fromStdString(record_type_))
-		.arg(QString::fromStdString(record_id_));
+	                      .arg(plugin_idx)
+	                      .arg(QString::fromStdString(record_type_))
+	                      .arg(QString::fromStdString(record_id_));
 	mime->setData("application/x-yampt-record", payload.toUtf8());
 	return mime;
 }
@@ -704,8 +702,7 @@ Qt::DropActions view_tree_model_t::supportedDropActions() const
 	return Qt::CopyAction;
 }
 
-bool view_tree_model_t::canDropMimeData(const QMimeData * data, Qt::DropAction,
-                                         int, int, const QModelIndex &) const
+bool view_tree_model_t::canDropMimeData(const QMimeData * data, Qt::DropAction, int, int, const QModelIndex &) const
 {
 	if (!has_merge_column_)
 		return false;
@@ -931,8 +928,14 @@ std::string view_tree_model_t::decode_field(const field_def_t & field, const cha
 		std::snprintf(buf, sizeof(buf), "%u", val);
 		std::string result = buf;
 
-		if (field.enum_names && field.enum_names[val])
-			result += " (" + std::string(field.enum_names[val]) + ")";
+		if (field.enum_names)
+		{
+			size_t count = 0;
+			while (field.enum_names[count]) ++count;
+
+			if (val < count)
+				result += " (" + std::string(field.enum_names[val]) + ")";
+		}
 
 		return result;
 	}
@@ -943,8 +946,14 @@ std::string view_tree_model_t::decode_field(const field_def_t & field, const cha
 		std::snprintf(buf, sizeof(buf), "%u", val);
 		std::string result = buf;
 
-		if (field.enum_names && field.enum_names[val])
-			result += " (" + std::string(field.enum_names[val]) + ")";
+		if (field.enum_names)
+		{
+			size_t count = 0;
+			while (field.enum_names[count]) ++count;
+
+			if (val < count)
+				result += " (" + std::string(field.enum_names[val]) + ")";
+		}
 
 		return result;
 	}
@@ -955,8 +964,14 @@ std::string view_tree_model_t::decode_field(const field_def_t & field, const cha
 		std::snprintf(buf, sizeof(buf), "%u", val);
 		std::string result = buf;
 
-		if (field.enum_names && field.enum_names[val])
-			result += " (" + std::string(field.enum_names[val]) + ")";
+		if (field.enum_names)
+		{
+			size_t count = 0;
+			while (field.enum_names[count]) ++count;
+
+			if (val < count)
+				result += " (" + std::string(field.enum_names[val]) + ")";
+		}
 
 		return result;
 	}
@@ -984,9 +999,10 @@ std::string view_tree_model_t::decode_field(const field_def_t & field, const cha
 	return "";
 }
 
-std::string view_tree_model_t::make_sub_label(const std::string & sub_type,
-                                               const std::string & record_type,
-                                               size_t data_size) const
+std::string view_tree_model_t::make_sub_label(
+    const std::string & sub_type,
+    const std::string & record_type,
+    size_t data_size) const
 {
 	const auto & descs = sub_record_descriptions();
 	auto it = descs.find(sub_type);
@@ -999,13 +1015,16 @@ std::string view_tree_model_t::make_sub_label(const std::string & sub_type,
 		const char * dn = nullptr;
 
 		static const std::map<std::string, const char *> record_names = {
-			{"ACTI", "Activator"}, {"ALCH", "Potion"}, {"ARMO", "Armor"},
-			{"BOOK", "Book"}, {"CELL", "Cell"}, {"CLAS", "Class"},
-			{"CLOT", "Clothing"}, {"CONT", "Container"}, {"CREA", "Creature"},
-			{"ENCH", "Enchantment"}, {"FACT", "Faction"}, {"INFO", "Info"},
-			{"LEVI", "Leveled Item"}, {"LEVC", "Leveled Creature"},
-			{"NPC_", "NPC"}, {"RACE", "Race"}, {"REGN", "Region"},
-			{"SPEL", "Spell"}, {"WEAP", "Weapon"},
+			{ "ACTI", "Activator" },    { "ALCH", "Potion" },
+			{ "ARMO", "Armor" },        { "BOOK", "Book" },
+			{ "CELL", "Cell" },         { "CLAS", "Class" },
+			{ "CLOT", "Clothing" },     { "CONT", "Container" },
+			{ "CREA", "Creature" },     { "ENCH", "Enchantment" },
+			{ "FACT", "Faction" },      { "INFO", "Info" },
+			{ "LEVI", "Leveled Item" }, { "LEVC", "Leveled Creature" },
+			{ "NPC_", "NPC" },          { "RACE", "Race" },
+			{ "REGN", "Region" },       { "SPEL", "Spell" },
+			{ "WEAP", "Weapon" },
 		};
 
 		auto rit = record_names.find(record_type);
@@ -1026,8 +1045,7 @@ std::string view_tree_model_t::make_sub_label(const std::string & sub_type,
 	return sub_type;
 }
 
-conflict_all_t view_tree_model_t::compute_row_conflict_all(
-	const std::vector<std::string> & values) const
+conflict_all_t view_tree_model_t::compute_row_conflict_all(const std::vector<std::string> & values) const
 {
 	if (values.size() <= 1)
 		return conflict_all_t::only_one;
@@ -1064,8 +1082,7 @@ conflict_all_t view_tree_model_t::compute_row_conflict_all(
 	return conflict_all_t::conflict;
 }
 
-std::vector<conflict_this_t> view_tree_model_t::compute_row_conflict_this(
-	const std::vector<std::string> & values) const
+std::vector<conflict_this_t> view_tree_model_t::compute_row_conflict_this(const std::vector<std::string> & values) const
 {
 	std::vector<conflict_this_t> result(values.size(), conflict_this_t::unknown);
 

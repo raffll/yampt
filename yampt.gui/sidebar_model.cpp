@@ -58,26 +58,20 @@ std::string derive_display_name(const file_entry_t & entry, bool is_loaded, bool
 std::vector<menu_action_t> derive_context_menu(const file_entry_t & entry, bool is_loaded, bool is_dirty)
 {
 	if (entry.type == file_type_t::yaml_l10n)
-		return {menu_action_t::delete_file};
+		return { menu_action_t::delete_file };
 
 	if (entry.type == file_type_t::plugin)
 	{
-		return {
-			menu_action_t::make_dict,
-			menu_action_t::make_dict_with_base,
-			menu_action_t::make_base,
-			menu_action_t::convert,
-			menu_action_t::create_plugin,
-			menu_action_t::delete_file
-		};
+		return { menu_action_t::make_dict, menu_action_t::make_dict_with_base, menu_action_t::make_base,
+			     menu_action_t::convert,   menu_action_t::create_plugin,       menu_action_t::delete_file };
 	}
 
 	if (entry.type == file_type_t::base_dict || entry.type == file_type_t::user_dict)
 	{
 		if (is_loaded && is_dirty)
-			return {menu_action_t::save, menu_action_t::delete_file};
+			return { menu_action_t::save, menu_action_t::delete_file };
 
-		return {menu_action_t::delete_file};
+		return { menu_action_t::delete_file };
 	}
 
 	return {};
@@ -91,25 +85,31 @@ std::string derive_output_dir(const file_entry_t & entry, const std::string & de
 	return default_dir;
 }
 
-sidebar_render_model_t build_render_model(const file_list_t & file_list, const session_t & session, const std::string & active_path)
+sidebar_render_model_t build_render_model(
+    const file_list_t & file_list,
+    const session_t & session,
+    const std::string & active_path)
 {
 	sidebar_render_model_t model;
 	model.active_path = active_path;
 
 	auto sort_items = [](std::vector<sidebar_render_item_t> & items)
 	{
-		std::sort(items.begin(), items.end(),
-			[](const sidebar_render_item_t & a, const sidebar_render_item_t & b)
-			{
-				if (a.type != b.type)
-					return static_cast<int>(a.type) < static_cast<int>(b.type);
+		std::sort(
+		    items.begin(),
+		    items.end(),
+		    [](const sidebar_render_item_t & a, const sidebar_render_item_t & b)
+		{
+			if (a.type != b.type)
+				return static_cast<int>(a.type) < static_cast<int>(b.type);
 
-				auto fname = [](const std::string & p) {
-					auto pos = p.find_last_of("/\\");
-					return pos != std::string::npos ? p.substr(pos + 1) : p;
-				};
-				return fname(a.path) < fname(b.path);
-			});
+			auto fname = [](const std::string & p)
+			{
+				auto pos = p.find_last_of("/\\");
+				return pos != std::string::npos ? p.substr(pos + 1) : p;
+			};
+			return fname(a.path) < fname(b.path);
+		});
 	};
 
 	auto split_path = [](const std::string & path) -> std::vector<std::string>
@@ -180,7 +180,9 @@ sidebar_render_model_t build_render_model(const file_list_t & file_list, const s
 	}
 
 	std::function<sidebar_render_node_t(const std::string &, const std::string &, tree_builder_t &)> build_node;
-	build_node = [&](const std::string & label, const std::string & parent_path, tree_builder_t & builder) -> sidebar_render_node_t
+	build_node = [&](const std::string & label,
+	                 const std::string & parent_path,
+	                 tree_builder_t & builder) -> sidebar_render_node_t
 	{
 		sidebar_render_node_t node;
 		node.label = label;
@@ -193,11 +195,10 @@ sidebar_render_model_t build_render_model(const file_list_t & file_list, const s
 		for (auto & [child_name, child_builder] : builder.children)
 			node.children.push_back(build_node(child_name, current_path, child_builder));
 
-		std::sort(node.children.begin(), node.children.end(),
-			[](const sidebar_render_node_t & a, const sidebar_render_node_t & b)
-			{
-				return a.label < b.label;
-			});
+		std::sort(
+		    node.children.begin(),
+		    node.children.end(),
+		    [](const sidebar_render_node_t & a, const sidebar_render_node_t & b) { return a.label < b.label; });
 
 		return node;
 	};
@@ -214,17 +215,19 @@ sidebar_render_model_t build_render_model(const file_list_t & file_list, const s
 		model.roots.push_back(std::move(root_node));
 	}
 
-	std::sort(model.roots.begin(), model.roots.end(),
-		[](const sidebar_render_node_t & a, const sidebar_render_node_t & b)
-		{
-			if (a.label == workspace_label)
-				return true;
+	std::sort(
+	    model.roots.begin(),
+	    model.roots.end(),
+	    [](const sidebar_render_node_t & a, const sidebar_render_node_t & b)
+	{
+		if (a.label == workspace_label)
+			return true;
 
-			if (b.label == workspace_label)
-				return false;
+		if (b.label == workspace_label)
+			return false;
 
-			return a.label < b.label;
-		});
+		return a.label < b.label;
+	});
 
 	return model;
 }

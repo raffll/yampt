@@ -4,8 +4,8 @@
 #include <cstdio>
 
 messages_panel_t::messages_panel_t(QWidget * parent)
-	: QWidget(parent)
-	, start_time_(std::chrono::steady_clock::now())
+    : QWidget(parent)
+    , start_time_(std::chrono::steady_clock::now())
 {
 	auto * layout = new QVBoxLayout(this);
 	layout->setContentsMargins(0, 0, 0, 0);

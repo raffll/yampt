@@ -10,21 +10,23 @@ class QListWidgetItem;
 
 class annotations_panel_t : public QWidget
 {
-    Q_OBJECT
+	Q_OBJECT
 
 public:
-    explicit annotations_panel_t(QWidget * parent = nullptr);
+	explicit annotations_panel_t(QWidget * parent = nullptr);
 
-    void update_annotations(const std::vector<annotation_t> & annotations,
-        const std::string & speaker_name, const std::string & gender,
-        const std::string & enchantment);
-    void clear();
+	void update_annotations(
+	    const std::vector<annotation_t> & annotations,
+	    const std::string & speaker_name,
+	    const std::string & gender,
+	    const std::string & enchantment);
+	void clear();
 
 signals:
-    void annotation_clicked(const std::string & new_text);
+	void annotation_clicked(const std::string & new_text);
 
 private:
-    void on_item_clicked(QListWidgetItem * item);
+	void on_item_clicked(QListWidgetItem * item);
 
-    QListWidget * list_ = nullptr;
+	QListWidget * list_ = nullptr;
 };

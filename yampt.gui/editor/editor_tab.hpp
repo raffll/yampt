@@ -17,6 +17,7 @@
 class editor_tab_t : public QWidget
 {
 	Q_OBJECT
+
 public:
 	explicit editor_tab_t(QWidget * parent = nullptr);
 

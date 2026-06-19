@@ -15,9 +15,9 @@
 class filter_dialog_t : public QDialog
 {
 	Q_OBJECT
+
 public:
-	explicit filter_dialog_t(const std::vector<std::string> & available_types,
-	                         QWidget * parent = nullptr);
+	explicit filter_dialog_t(const std::vector<std::string> & available_types, QWidget * parent = nullptr);
 
 	struct filter_state_t
 	{

@@ -34,7 +34,7 @@ static const char * get_status_display_name_qt(const std::string & status)
 }
 
 status_filter_bar_t::status_filter_bar_t(QWidget * parent)
-	: QWidget(parent)
+    : QWidget(parent)
 {
 	setFixedHeight(26);
 
@@ -42,17 +42,13 @@ status_filter_bar_t::status_filter_bar_t(QWidget * parent)
 	layout_->setContentsMargins(0, 0, 0, 0);
 	layout_->setSpacing(2);
 
-	static const std::vector<std::string> base_statuses = {
-		"matched", "duplicate", "missing", "mismatch"
-	};
+	static const std::vector<std::string> base_statuses = { "matched", "duplicate", "missing", "mismatch" };
 
 	static const std::vector<std::string> single_statuses = {
 		"translated", "reused", "adapted", "changed", "untranslated"
 	};
 
-	static const std::vector<std::string> work_statuses = {
-		"in_progress", "propagated", "error"
-	};
+	static const std::vector<std::string> work_statuses = { "in_progress", "propagated", "error" };
 
 	for (const auto & status : base_statuses)
 	{
@@ -62,13 +58,13 @@ status_filter_bar_t::status_filter_bar_t(QWidget * parent)
 		sb.button = new QPushButton(get_status_display_name_qt(status), this);
 		sb.button->setContextMenuPolicy(Qt::CustomContextMenu);
 
-		connect(sb.button, &QPushButton::clicked, this, [this, s = status]() {
-			on_status_clicked(s);
-		});
+		connect(sb.button, &QPushButton::clicked, this, [this, s = status]() { on_status_clicked(s); });
 
-		connect(sb.button, &QWidget::customContextMenuRequested, this, [this, s = status]() {
-			on_status_right_clicked(s);
-		});
+		connect(
+		    sb.button,
+		    &QWidget::customContextMenuRequested,
+		    this,
+		    [this, s = status]() { on_status_right_clicked(s); });
 
 		layout_->addWidget(sb.button);
 		status_buttons_.push_back(sb);
@@ -86,13 +82,13 @@ status_filter_bar_t::status_filter_bar_t(QWidget * parent)
 		sb.button = new QPushButton(get_status_display_name_qt(status), this);
 		sb.button->setContextMenuPolicy(Qt::CustomContextMenu);
 
-		connect(sb.button, &QPushButton::clicked, this, [this, s = status]() {
-			on_status_clicked(s);
-		});
+		connect(sb.button, &QPushButton::clicked, this, [this, s = status]() { on_status_clicked(s); });
 
-		connect(sb.button, &QWidget::customContextMenuRequested, this, [this, s = status]() {
-			on_status_right_clicked(s);
-		});
+		connect(
+		    sb.button,
+		    &QWidget::customContextMenuRequested,
+		    this,
+		    [this, s = status]() { on_status_right_clicked(s); });
 
 		layout_->addWidget(sb.button);
 		status_buttons_.push_back(sb);
@@ -110,13 +106,13 @@ status_filter_bar_t::status_filter_bar_t(QWidget * parent)
 		sb.button = new QPushButton(get_status_display_name_qt(status), this);
 		sb.button->setContextMenuPolicy(Qt::CustomContextMenu);
 
-		connect(sb.button, &QPushButton::clicked, this, [this, s = status]() {
-			on_status_clicked(s);
-		});
+		connect(sb.button, &QPushButton::clicked, this, [this, s = status]() { on_status_clicked(s); });
 
-		connect(sb.button, &QWidget::customContextMenuRequested, this, [this, s = status]() {
-			on_status_right_clicked(s);
-		});
+		connect(
+		    sb.button,
+		    &QWidget::customContextMenuRequested,
+		    this,
+		    [this, s = status]() { on_status_right_clicked(s); });
 
 		layout_->addWidget(sb.button);
 		status_buttons_.push_back(sb);
@@ -126,19 +122,16 @@ status_filter_bar_t::status_filter_bar_t(QWidget * parent)
 	update_button_styles();
 }
 
-void status_filter_bar_t::update_counts(const std::map<std::string, size_t> & displayed_counts,
-	const std::map<std::string, size_t> & total_counts)
+void status_filter_bar_t::update_counts(
+    const std::map<std::string, size_t> & displayed_counts,
+    const std::map<std::string, size_t> & total_counts)
 {
 	current_counts_ = total_counts;
 
-	static const std::vector<std::string> matched_group = {
-		"matched", "fingerprint", "coords", "heuristic", "exact",
-		"info", "wilderness", "region"
-	};
+	static const std::vector<std::string> matched_group = { "matched", "fingerprint", "coords",     "heuristic",
+		                                                    "exact",   "info",        "wilderness", "region" };
 
-	static const std::vector<std::string> translated_group = {
-		"translated"
-	};
+	static const std::vector<std::string> translated_group = { "translated" };
 
 	for (auto & sb : status_buttons_)
 	{
@@ -208,12 +201,12 @@ void status_filter_bar_t::set_filter_state(const std::set<std::string> & statuse
 static std::set<std::string> expand_status_group(const std::string & status)
 {
 	if (status == "matched")
-		return {"matched", "fingerprint", "coords", "heuristic", "exact", "info", "wilderness", "region"};
+		return { "matched", "fingerprint", "coords", "heuristic", "exact", "info", "wilderness", "region" };
 
 	if (status == "translated")
-		return {"translated"};
+		return { "translated" };
 
-	return {status};
+	return { status };
 }
 
 void status_filter_bar_t::on_status_clicked(const std::string & status)
@@ -287,19 +280,15 @@ void status_filter_bar_t::on_status_right_clicked(const std::string & status)
 void status_filter_bar_t::update_button_styles()
 {
 	static const QString inactive_style =
-		"background-color: transparent; color: rgb(80,80,80); border: 1px solid rgb(150,150,150); padding: 2px 6px;";
+	    "background-color: transparent; color: rgb(80,80,80); border: 1px solid rgb(150,150,150); padding: 2px 6px;";
 
 	static const QString disabled_style =
-		"background-color: transparent; color: rgb(180,180,180); border: 1px solid rgb(210,210,210); padding: 2px 6px;";
+	    "background-color: transparent; color: rgb(180,180,180); border: 1px solid rgb(210,210,210); padding: 2px 6px;";
 
-	static const std::set<std::string> base_statuses = {
-		"matched", "missing", "duplicate", "mismatch"
-	};
+	static const std::set<std::string> base_statuses = { "matched", "missing", "duplicate", "mismatch" };
 
-	static const std::set<std::string> user_statuses = {
-		"translated", "reused", "adapted", "changed", "untranslated",
-		"in_progress", "propagated", "error"
-	};
+	static const std::set<std::string> user_statuses = { "translated",   "reused",      "adapted",    "changed",
+		                                                 "untranslated", "in_progress", "propagated", "error" };
 
 	bool no_filter = active_statuses_.empty();
 
@@ -342,14 +331,15 @@ void status_filter_bar_t::update_button_styles()
 			int text_brightness = (color.red() * 299 + color.green() * 587 + color.blue() * 114) / 1000;
 			QString text_color = (text_brightness > 150) ? "black" : "white";
 			sb.button->setStyleSheet(
-				QString("background-color: rgb(%1,%2,%3); color: %4; border: 1px solid rgb(%5,%6,%7); padding: 2px 6px;")
-					.arg(color.red())
-					.arg(color.green())
-					.arg(color.blue())
-					.arg(text_color)
-					.arg(qMax(0, color.red() - 30))
-					.arg(qMax(0, color.green() - 30))
-					.arg(qMax(0, color.blue() - 30)));
+			    QString(
+			        "background-color: rgb(%1,%2,%3); color: %4; border: 1px solid rgb(%5,%6,%7); padding: 2px 6px;")
+			        .arg(color.red())
+			        .arg(color.green())
+			        .arg(color.blue())
+			        .arg(text_color)
+			        .arg(qMax(0, color.red() - 30))
+			        .arg(qMax(0, color.green() - 30))
+			        .arg(qMax(0, color.blue() - 30)));
 		}
 		else
 		{

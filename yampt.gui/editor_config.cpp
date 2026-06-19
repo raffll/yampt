@@ -85,11 +85,21 @@ void editor_config_t::load(const std::string & path)
 			}
 			else if (key == "TranslationSourceIndex")
 			{
-				try { translation_source_index = std::stoi(value); } catch (...) {}
+				try
+				{
+					translation_source_index = std::stoi(value);
+				}
+				catch (...)
+				{}
 			}
 			else if (key == "TranslationLanguageIndex")
 			{
-				try { translation_language_index = std::stoi(value); } catch (...) {}
+				try
+				{
+					translation_language_index = std::stoi(value);
+				}
+				catch (...)
+				{}
 			}
 			else if (key == "SplitRatio")
 			{

@@ -36,10 +36,14 @@ inline QColor conflict_all_color_raw(conflict_all_t ca)
 {
 	switch (ca)
 	{
-	case conflict_all_t::no_conflict:     return QColor(0, 255, 0);
-	case conflict_all_t::override_benign: return QColor(255, 255, 0);
-	case conflict_all_t::conflict:        return QColor(255, 0, 0);
-	default:                              return QColor(255, 255, 255);
+	case conflict_all_t::no_conflict:
+		return QColor(0, 255, 0);
+	case conflict_all_t::override_benign:
+		return QColor(255, 255, 0);
+	case conflict_all_t::conflict:
+		return QColor(255, 0, 0);
+	default:
+		return QColor(255, 255, 255);
 	}
 }
 
@@ -55,12 +59,19 @@ inline QColor conflict_this_foreground(conflict_this_t ct)
 {
 	switch (ct)
 	{
-	case conflict_this_t::master:              return QColor(128, 0, 128);
-	case conflict_this_t::identical_to_master: return QColor(128, 128, 128);
-	case conflict_this_t::override_wins:       return QColor(0, 128, 0);
-	case conflict_this_t::conflict_wins:       return QColor(255, 128, 64);
-	case conflict_this_t::conflict_loses:      return QColor(255, 0, 0);
-	case conflict_this_t::deleted:             return QColor(128, 128, 128);
-	default:                                   return QColor(0, 0, 0);
+	case conflict_this_t::master:
+		return QColor(128, 0, 128);
+	case conflict_this_t::identical_to_master:
+		return QColor(128, 128, 128);
+	case conflict_this_t::override_wins:
+		return QColor(0, 128, 0);
+	case conflict_this_t::conflict_wins:
+		return QColor(255, 128, 64);
+	case conflict_this_t::conflict_loses:
+		return QColor(255, 0, 0);
+	case conflict_this_t::deleted:
+		return QColor(128, 128, 128);
+	default:
+		return QColor(0, 0, 0);
 	}
 }

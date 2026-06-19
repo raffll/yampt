@@ -3,9 +3,8 @@
 #include <QHBoxLayout>
 #include <filesystem>
 
-plugin_select_dialog_t::plugin_select_dialog_t(
-	const std::vector<std::string> & available_files, QWidget * parent)
-	: QDialog(parent)
+plugin_select_dialog_t::plugin_select_dialog_t(const std::vector<std::string> & available_files, QWidget * parent)
+    : QDialog(parent)
 {
 	setWindowTitle("Select Plugins");
 	setModal(true);
@@ -37,12 +36,22 @@ plugin_select_dialog_t::plugin_select_dialog_t(
 	main_layout->addLayout(select_layout);
 	main_layout->addWidget(buttons_);
 
-	connect(btn_select_all, &QPushButton::clicked, this, [this]() {
+	connect(
+	    btn_select_all,
+	    &QPushButton::clicked,
+	    this,
+	    [this]()
+	{
 		for (int i = 0; i < list_->count(); ++i)
 			list_->item(i)->setCheckState(Qt::Checked);
 	});
 
-	connect(btn_select_none, &QPushButton::clicked, this, [this]() {
+	connect(
+	    btn_select_none,
+	    &QPushButton::clicked,
+	    this,
+	    [this]()
+	{
 		for (int i = 0; i < list_->count(); ++i)
 			list_->item(i)->setCheckState(Qt::Unchecked);
 	});

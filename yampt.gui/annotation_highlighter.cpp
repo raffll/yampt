@@ -5,8 +5,7 @@
 
 annotation_highlighter_t::annotation_highlighter_t(QTextDocument * parent)
     : QSyntaxHighlighter(parent)
-{
-}
+{}
 
 void annotation_highlighter_t::set_annotation_manager(annotation_manager_t * manager)
 {

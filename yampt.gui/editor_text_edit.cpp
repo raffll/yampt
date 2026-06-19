@@ -7,9 +7,8 @@
 #include <QTextBlock>
 
 editor_text_edit_t::editor_text_edit_t(QWidget * parent)
-	: QPlainTextEdit(parent)
-{
-}
+    : QPlainTextEdit(parent)
+{}
 
 void editor_text_edit_t::set_block_multiline(bool value)
 {

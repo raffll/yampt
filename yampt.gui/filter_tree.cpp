@@ -4,42 +4,29 @@
 #include <QVBoxLayout>
 
 static const std::vector<std::pair<tools_t::rec_type_t, const char *>> type_order = {
-	{tools_t::rec_type_t::cell, "Cells"},
-	{tools_t::rec_type_t::dial, "Topics"},
-	{tools_t::rec_type_t::info, "Dialogues"},
-	{tools_t::rec_type_t::fnam, "Names"},
-	{tools_t::rec_type_t::text, "Books"},
-	{tools_t::rec_type_t::gmst, "Settings"},
-	{tools_t::rec_type_t::desc, "Descriptions"},
-	{tools_t::rec_type_t::rnam, "Factions"},
-	{tools_t::rec_type_t::indx, "Index"},
-	{tools_t::rec_type_t::sctx, "Scripts"},
+	{ tools_t::rec_type_t::cell, "Cells" },        { tools_t::rec_type_t::dial, "Topics" },
+	{ tools_t::rec_type_t::info, "Dialogues" },    { tools_t::rec_type_t::fnam, "Names" },
+	{ tools_t::rec_type_t::text, "Books" },        { tools_t::rec_type_t::gmst, "Settings" },
+	{ tools_t::rec_type_t::desc, "Descriptions" }, { tools_t::rec_type_t::rnam, "Factions" },
+	{ tools_t::rec_type_t::indx, "Index" },        { tools_t::rec_type_t::sctx, "Scripts" },
 };
 
-static const std::vector<std::string> info_sub_types = {
-	"Topic", "Voice", "Greeting", "Persuasion", "Journal"
-};
+static const std::vector<std::string> info_sub_types = { "Topic", "Voice", "Greeting", "Persuasion", "Journal" };
 
-static const std::vector<std::string> fnam_sub_types = {
-	"ACTI", "ALCH", "APPA", "ARMO", "BOOK", "BSGN", "CLAS", "CLOT",
-	"CONT", "CREA", "DOOR", "FACT", "INGR", "LIGH", "LOCK", "MISC",
-	"NPC_", "PROB", "RACE", "REGN", "REPA", "SPEL", "WEAP"
-};
+static const std::vector<std::string> fnam_sub_types = { "ACTI", "ALCH", "APPA", "ARMO", "BOOK", "BSGN", "CLAS", "CLOT",
+	                                                     "CONT", "CREA", "DOOR", "FACT", "INGR", "LIGH", "LOCK", "MISC",
+	                                                     "NPC_", "PROB", "RACE", "REGN", "REPA", "SPEL", "WEAP" };
 
-static const std::vector<std::string> desc_sub_types = {
-	"Birthsigns", "Classes", "Races"
-};
+static const std::vector<std::string> desc_sub_types = { "Birthsigns", "Classes", "Races" };
 
-static const std::vector<std::string> indx_sub_types = {
-	"Skills", "Magic Effects"
-};
+static const std::vector<std::string> indx_sub_types = { "Skills", "Magic Effects" };
 
 static const QColor color_selected_fg(90, 155, 230);
 static const QColor color_deselected_fg(80, 80, 80);
 static const QColor color_disabled_fg(180, 180, 180);
 
 filter_tree_t::filter_tree_t(QWidget * parent)
-	: QWidget(parent)
+    : QWidget(parent)
 {
 	auto * layout = new QVBoxLayout(this);
 	layout->setContentsMargins(0, 0, 0, 0);
@@ -59,8 +46,8 @@ filter_tree_t::filter_tree_t(QWidget * parent)
 	all_item_->setData(0, role_is_all, true);
 	all_item_->setData(0, role_state, static_cast<int>(node_state_t::selected));
 
-	auto add_sub_types = [this](QTreeWidgetItem * parent_item, tools_t::rec_type_t parent_type,
-		const std::vector<std::string> & subs)
+	auto add_sub_types =
+	    [this](QTreeWidgetItem * parent_item, tools_t::rec_type_t parent_type, const std::vector<std::string> & subs)
 	{
 		for (const auto & sub : subs)
 		{
@@ -70,7 +57,7 @@ filter_tree_t::filter_tree_t(QWidget * parent)
 			child->setData(0, role_sub_type, QString::fromStdString(sub));
 			child->setData(0, role_state, static_cast<int>(node_state_t::selected));
 
-			sub_type_nodes_.push_back({child, sub, parent_type});
+			sub_type_nodes_.push_back({ child, sub, parent_type });
 		}
 	};
 
@@ -82,7 +69,7 @@ filter_tree_t::filter_tree_t(QWidget * parent)
 		item->setData(0, role_type, static_cast<int>(type));
 		item->setData(0, role_state, static_cast<int>(node_state_t::selected));
 
-		type_nodes_.push_back({item, type});
+		type_nodes_.push_back({ item, type });
 
 		if (type == tools_t::rec_type_t::info)
 			add_sub_types(item, type, info_sub_types);
@@ -106,11 +93,15 @@ filter_tree_t::filter_tree_t(QWidget * parent)
 	tree_->header()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
 	update_item_styles();
 
-	connect(tree_, &QTreeWidget::itemClicked, this, [this](QTreeWidgetItem * item, int) {
-		on_item_right_clicked(item);
-	});
+	connect(
+	    tree_, &QTreeWidget::itemClicked, this, [this](QTreeWidgetItem * item, int) { on_item_right_clicked(item); });
 	tree_->setContextMenuPolicy(Qt::CustomContextMenu);
-	connect(tree_, &QWidget::customContextMenuRequested, this, [this](const QPoint & pos) {
+	connect(
+	    tree_,
+	    &QWidget::customContextMenuRequested,
+	    this,
+	    [this](const QPoint & pos)
+	{
 		auto * item = tree_->itemAt(pos);
 		if (item)
 			on_item_clicked(item, 0);
@@ -176,7 +167,8 @@ void filter_tree_t::on_item_clicked(QTreeWidgetItem * item, int)
 	{
 		auto state = static_cast<node_state_t>(item->data(0, role_state).toInt());
 		bool new_selected = (state != node_state_t::selected);
-		item->setData(0, role_state, static_cast<int>(new_selected ? node_state_t::selected : node_state_t::deselected));
+		item->setData(
+		    0, role_state, static_cast<int>(new_selected ? node_state_t::selected : node_state_t::deselected));
 		update_item_styles();
 		emit filters_changed();
 		return;
@@ -186,7 +178,8 @@ void filter_tree_t::on_item_clicked(QTreeWidgetItem * item, int)
 	{
 		auto state = static_cast<node_state_t>(item->data(0, role_state).toInt());
 		bool new_selected = (state != node_state_t::selected);
-		item->setData(0, role_state, static_cast<int>(new_selected ? node_state_t::selected : node_state_t::deselected));
+		item->setData(
+		    0, role_state, static_cast<int>(new_selected ? node_state_t::selected : node_state_t::deselected));
 		update_parent_state(item->parent());
 		update_all_node_state();
 		update_item_styles();
@@ -200,7 +193,8 @@ void filter_tree_t::on_item_clicked(QTreeWidgetItem * item, int)
 		{
 			auto state = static_cast<node_state_t>(item->data(0, role_state).toInt());
 			bool new_selected = (state != node_state_t::selected);
-			item->setData(0, role_state, static_cast<int>(new_selected ? node_state_t::selected : node_state_t::deselected));
+			item->setData(
+			    0, role_state, static_cast<int>(new_selected ? node_state_t::selected : node_state_t::deselected));
 		}
 		else
 		{
@@ -378,8 +372,8 @@ void filter_tree_t::apply_item_style(QTreeWidgetItem * item)
 }
 
 void filter_tree_t::update_counts(
-	const std::map<tools_t::rec_type_t, size_t> & total_counts,
-	const std::map<tools_t::rec_type_t, size_t> & translated_counts)
+    const std::map<tools_t::rec_type_t, size_t> & total_counts,
+    const std::map<tools_t::rec_type_t, size_t> & translated_counts)
 {
 	for (auto & tn : type_nodes_)
 	{
@@ -395,8 +389,8 @@ void filter_tree_t::update_counts(
 }
 
 void filter_tree_t::update_sub_type_counts(
-	const std::map<std::string, size_t> & sub_type_total_counts,
-	const std::map<std::string, size_t> & sub_type_translated_counts)
+    const std::map<std::string, size_t> & sub_type_total_counts,
+    const std::map<std::string, size_t> & sub_type_translated_counts)
 {
 	for (auto & stn : sub_type_nodes_)
 	{
@@ -476,7 +470,8 @@ void filter_tree_t::set_active_types(const std::set<tools_t::rec_type_t> & types
 		tn.item->setData(0, role_state, static_cast<int>(active ? node_state_t::selected : node_state_t::deselected));
 
 		for (int i = 0; i < tn.item->childCount(); ++i)
-			tn.item->child(i)->setData(0, role_state, static_cast<int>(active ? node_state_t::selected : node_state_t::deselected));
+			tn.item->child(i)->setData(
+			    0, role_state, static_cast<int>(active ? node_state_t::selected : node_state_t::deselected));
 	}
 
 	update_all_node_state();

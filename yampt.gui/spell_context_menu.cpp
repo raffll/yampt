@@ -8,10 +8,9 @@
 #include <QAction>
 
 spell_context_menu_t::spell_context_menu_t(spell_checker_t * checker, QSyntaxHighlighter * highlighter)
-	: checker_(checker)
-	, highlighter_(highlighter)
-{
-}
+    : checker_(checker)
+    , highlighter_(highlighter)
+{}
 
 void spell_context_menu_t::show_menu(editor_text_edit_t * editor, const QPoint & pos)
 {
@@ -54,7 +53,11 @@ void spell_context_menu_t::show_menu(editor_text_edit_t * editor, const QPoint &
 	cursor.insertText(selected->text());
 }
 
-std::string spell_context_menu_t::get_word_at_cursor(editor_text_edit_t * editor, const QPoint & pos, int & start, int & end) const
+std::string spell_context_menu_t::get_word_at_cursor(
+    editor_text_edit_t * editor,
+    const QPoint & pos,
+    int & start,
+    int & end) const
 {
 	QTextCursor cursor = editor->cursorForPosition(pos);
 	int position = cursor.position();

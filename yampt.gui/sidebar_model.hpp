@@ -35,4 +35,7 @@ struct sidebar_render_model_t
 std::string derive_display_name(const file_entry_t & entry, bool is_loaded, bool is_dirty);
 std::vector<menu_action_t> derive_context_menu(const file_entry_t & entry, bool is_loaded, bool is_dirty);
 std::string derive_output_dir(const file_entry_t & entry, const std::string & default_dir);
-sidebar_render_model_t build_render_model(const file_list_t & file_list, const session_t & session, const std::string & active_path);
+sidebar_render_model_t build_render_model(
+    const file_list_t & file_list,
+    const session_t & session,
+    const std::string & active_path);

@@ -42,11 +42,15 @@ public:
 	std::vector<std::string> all_types() const;
 
 	void copy_record_to_merge(int source_plugin, size_t record_index);
+	void copy_record_to_merge_raw(const std::string & rec_type, const std::string & record_id, const std::string & content);
 	void remove_from_merge(const std::string & type, const std::string & id);
 	bool save_merge(const std::string & output_path, const std::string & author, const std::string & description);
 	bool has_merge() const;
 	size_t merge_record_count() const;
 	const std::string & merge_record_content(size_t index) const;
+
+	void merge_leveled_list(const conflict_entry_t & entry);
+	void merge_dialogue(const conflict_entry_t & entry);
 
 	size_t itm_count(int plugin_idx) const;
 	std::vector<const conflict_entry_t *> itm_entries(int plugin_idx) const;
@@ -59,16 +63,16 @@ private:
 	struct loaded_plugin_t
 	{
 		loaded_plugin_t() = default;
+
 		explicit loaded_plugin_t(const std::string & file_path)
 		    : path(file_path)
 		    , esm(file_path)
 		    , index(esm)
-		{
-		}
+		{}
 
 		std::string path;
 		esm_reader_t esm;
-		plugin_index_t index{esm};
+		plugin_index_t index { esm };
 	};
 
 	std::vector<std::unique_ptr<loaded_plugin_t>> plugins_;
@@ -80,6 +84,7 @@ private:
 		std::string record_id;
 		std::string content;
 	};
+
 	std::vector<merge_record_t> merge_records_;
 
 	std::vector<conflict_entry_t> entries_;

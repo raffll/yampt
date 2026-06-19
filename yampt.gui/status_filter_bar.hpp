@@ -16,13 +16,19 @@ class status_filter_bar_t : public QWidget
 public:
 	explicit status_filter_bar_t(QWidget * parent = nullptr);
 
-	void update_counts(const std::map<std::string, size_t> & displayed_counts,
-		const std::map<std::string, size_t> & total_counts);
+	void update_counts(
+	    const std::map<std::string, size_t> & displayed_counts,
+	    const std::map<std::string, size_t> & total_counts);
 	std::set<std::string> get_active_statuses() const;
 	bool has_filter() const;
 	void set_filter_state(const std::set<std::string> & statuses);
 
-	enum class dict_mode_t { none, base, user };
+	enum class dict_mode_t
+	{
+		none,
+		base,
+		user
+	};
 	void set_dict_mode(dict_mode_t mode);
 
 signals:

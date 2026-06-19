@@ -8,15 +8,15 @@ class QPushButton;
 
 class log_tab_t : public QWidget
 {
-    Q_OBJECT
+	Q_OBJECT
 
 public:
-    explicit log_tab_t(QWidget * parent = nullptr);
+	explicit log_tab_t(QWidget * parent = nullptr);
 
-    void append_log(const std::string & operation_name, const std::string & log_text);
-    void clear();
+	void append_log(const std::string & operation_name, const std::string & log_text);
+	void clear();
 
 private:
-    QPlainTextEdit * text_edit_ = nullptr;
-    QPushButton * clear_button_ = nullptr;
+	QPlainTextEdit * text_edit_ = nullptr;
+	QPushButton * clear_button_ = nullptr;
 };

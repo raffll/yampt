@@ -2,7 +2,7 @@
 #include <algorithm>
 
 hyperlink_highlighter_t::hyperlink_highlighter_t(QTextDocument * parent)
-	: QSyntaxHighlighter(parent)
+    : QSyntaxHighlighter(parent)
 {
 	format_.setBackground(QColor(200, 220, 255));
 }
@@ -22,14 +22,20 @@ void hyperlink_highlighter_t::highlightBlock(const QString & text)
 
 	auto text_str = text.toStdString();
 	auto text_lower = text_str;
-	std::transform(text_lower.begin(), text_lower.end(), text_lower.begin(),
-		[](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+	std::transform(
+	    text_lower.begin(),
+	    text_lower.end(),
+	    text_lower.begin(),
+	    [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
 
 	for (const auto & term : terms_)
 	{
 		std::string term_lower = term;
-		std::transform(term_lower.begin(), term_lower.end(), term_lower.begin(),
-			[](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+		std::transform(
+		    term_lower.begin(),
+		    term_lower.end(),
+		    term_lower.begin(),
+		    [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
 
 		if (term_lower.empty())
 			continue;

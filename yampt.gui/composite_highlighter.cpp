@@ -2,7 +2,7 @@
 #include "spell_checker.hpp"
 
 composite_highlighter_t::composite_highlighter_t(QTextDocument * parent)
-	: QSyntaxHighlighter(parent)
+    : QSyntaxHighlighter(parent)
 {
 	format_function_.setForeground(QColor(100, 180, 255));
 	format_comment_.setForeground(QColor(128, 128, 128));
@@ -36,9 +36,8 @@ void composite_highlighter_t::set_spell_checker(spell_checker_t * checker)
 
 void composite_highlighter_t::highlightBlock(const QString & text)
 {
-	if (record_type_ == tools_t::rec_type_t::sctx ||
-		record_type_ == tools_t::rec_type_t::bnam ||
-		record_type_ == tools_t::rec_type_t::text)
+	if (record_type_ == tools_t::rec_type_t::sctx || record_type_ == tools_t::rec_type_t::bnam ||
+	    record_type_ == tools_t::rec_type_t::text)
 	{
 		const auto tokens = tokenizer_.tokenize(text.toStdString(), record_type_);
 
@@ -75,7 +74,7 @@ void composite_highlighter_t::highlightBlock(const QString & text)
 		const auto ch = text.at(i).unicode();
 
 		if (ch == '|' || ch == '~' || ch == '@' || ch == '{' || ch == '}' ||
-			(ch <= 0x1F && ch != 0x09 && ch != 0x0D && ch != 0x0A))
+		    (ch <= 0x1F && ch != 0x09 && ch != 0x0D && ch != 0x0A))
 		{
 			auto merged = format(i);
 			merged.setBackground(QColor(255, 200, 180));
@@ -99,7 +98,8 @@ void composite_highlighter_t::highlightBlock(const QString & text)
 	for (const auto & match : matches)
 	{
 		int qchar_start = QString::fromUtf8(text_str.data(), static_cast<int>(match.start)).length();
-		int qchar_len = QString::fromUtf8(text_str.data() + match.start, static_cast<int>(match.end - match.start)).length();
+		int qchar_len =
+		    QString::fromUtf8(text_str.data() + match.start, static_cast<int>(match.end - match.start)).length();
 		setFormat(qchar_start, qchar_len, format_misspelled_);
 	}
 }

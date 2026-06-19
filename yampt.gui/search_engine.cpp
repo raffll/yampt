@@ -18,8 +18,7 @@ void search_engine_t::set_config(const config_t & cfg)
 		compiled_regex_ = std::regex(config_.query, flags);
 	}
 	catch (const std::regex_error &)
-	{
-	}
+	{}
 }
 
 bool search_engine_t::has_query() const
@@ -36,9 +35,12 @@ bool search_engine_t::matches(const table_row_t & row) const
 	{
 		switch (col)
 		{
-		case search_column_t::key:         return &row.key_text;
-		case search_column_t::original:    return &row.old_text;
-		case search_column_t::translation: return &row.new_text;
+		case search_column_t::key:
+			return &row.key_text;
+		case search_column_t::original:
+			return &row.old_text;
+		case search_column_t::translation:
+			return &row.new_text;
 		}
 		return nullptr;
 	};
@@ -60,8 +62,7 @@ bool search_engine_t::matches(const table_row_t & row) const
 					return true;
 			}
 			catch (const std::regex_error &)
-			{
-			}
+			{}
 		}
 		return false;
 	}
@@ -69,8 +70,11 @@ bool search_engine_t::matches(const table_row_t & row) const
 	auto to_lower = [](const std::string & s)
 	{
 		std::string result = s;
-		std::transform(result.begin(), result.end(), result.begin(),
-			[](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+		std::transform(
+		    result.begin(),
+		    result.end(),
+		    result.begin(),
+		    [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
 		return result;
 	};
 

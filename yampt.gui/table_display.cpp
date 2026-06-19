@@ -9,25 +9,31 @@
 #include <QString>
 
 table_display_t::table_display_t(
-	filter_tree_t & filter_tree, status_filter_bar_t & status_bar,
-	record_table_model_t & model, QLabel & progress, QLabel & file_label,
-	QLabel & search_label, QLineEdit & search_field,
-	QCheckBox & case_check, QCheckBox & regex_check,
-	QCheckBox & col_key, QCheckBox & col_orig, QCheckBox & col_trans)
-	: filter_tree_(filter_tree)
-	, status_bar_(status_bar)
-	, model_(model)
-	, progress_(progress)
-	, file_label_(file_label)
-	, search_label_(search_label)
-	, search_field_(search_field)
-	, case_check_(case_check)
-	, regex_check_(regex_check)
-	, col_key_(col_key)
-	, col_orig_(col_orig)
-	, col_trans_(col_trans)
-{
-}
+    filter_tree_t & filter_tree,
+    status_filter_bar_t & status_bar,
+    record_table_model_t & model,
+    QLabel & progress,
+    QLabel & file_label,
+    QLabel & search_label,
+    QLineEdit & search_field,
+    QCheckBox & case_check,
+    QCheckBox & regex_check,
+    QCheckBox & col_key,
+    QCheckBox & col_orig,
+    QCheckBox & col_trans)
+    : filter_tree_(filter_tree)
+    , status_bar_(status_bar)
+    , model_(model)
+    , progress_(progress)
+    , file_label_(file_label)
+    , search_label_(search_label)
+    , search_field_(search_field)
+    , case_check_(case_check)
+    , regex_check_(regex_check)
+    , col_key_(col_key)
+    , col_orig_(col_orig)
+    , col_trans_(col_trans)
+{}
 
 void table_display_t::apply(table_build_result_t result, const std::string & file_path, dict_kind_t kind)
 {
@@ -42,8 +48,7 @@ void table_display_t::apply(table_build_result_t result, const std::string & fil
 		status_bar_.set_dict_mode(status_filter_bar_t::dict_mode_t::user);
 
 	filter_tree_.update_counts(result.counts.type_counts, result.counts.translated_counts);
-	filter_tree_.update_sub_type_counts(result.counts.sub_type_total_counts,
-	                                    result.counts.sub_type_translated_counts);
+	filter_tree_.update_sub_type_counts(result.counts.sub_type_total_counts, result.counts.sub_type_translated_counts);
 
 	size_t total = 0;
 	size_t total_translated = 0;
@@ -53,8 +58,7 @@ void table_display_t::apply(table_build_result_t result, const std::string & fil
 		total_translated += c;
 
 	filter_tree_.set_total_count(total_translated, total);
-	status_bar_.update_counts(result.counts.filtered_status_counts,
-	                          result.counts.total_status_counts);
+	status_bar_.update_counts(result.counts.filtered_status_counts, result.counts.total_status_counts);
 
 	model_.rebuild(std::move(result.rows));
 
@@ -63,7 +67,10 @@ void table_display_t::apply(table_build_result_t result, const std::string & fil
 		int pct = static_cast<int>(result.counts.progress_translated * 100 / result.counts.progress_total);
 		int shown = model_.rowCount();
 		progress_.setText(QString("%1 / %2 (%3%) | %4 shown")
-			.arg(result.counts.progress_translated).arg(result.counts.progress_total).arg(pct).arg(shown));
+		                      .arg(result.counts.progress_translated)
+		                      .arg(result.counts.progress_total)
+		                      .arg(pct)
+		                      .arg(shown));
 	}
 	else
 	{
@@ -71,10 +78,13 @@ void table_display_t::apply(table_build_result_t result, const std::string & fil
 	}
 }
 
-void table_display_t::apply_yaml(std::vector<table_row_t> rows, int total, int translated,
-                                 const std::string & file_path,
-                                 const std::map<std::string, size_t> & filtered_status_counts,
-                                 const std::map<std::string, size_t> & total_status_counts)
+void table_display_t::apply_yaml(
+    std::vector<table_row_t> rows,
+    int total,
+    int translated,
+    const std::string & file_path,
+    const std::map<std::string, size_t> & filtered_status_counts,
+    const std::map<std::string, size_t> & total_status_counts)
 {
 	file_label_.setText(QString::fromStdString(file_path));
 	filter_tree_.setEnabled(true);
@@ -90,8 +100,7 @@ void table_display_t::apply_yaml(std::vector<table_row_t> rows, int total, int t
 	{
 		int pct = translated * 100 / total;
 		int shown = model_.rowCount();
-		progress_.setText(QString("%1 / %2 (%3%) | %4 shown")
-			.arg(translated).arg(total).arg(pct).arg(shown));
+		progress_.setText(QString("%1 / %2 (%3%) | %4 shown").arg(translated).arg(total).arg(pct).arg(shown));
 	}
 	else
 	{

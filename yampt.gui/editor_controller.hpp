@@ -37,8 +37,10 @@ struct commit_result_t
 class editor_controller_t
 {
 public:
-	editor_controller_t(history_manager_t & history, validation_manager_t & validation,
-	                    annotation_manager_t & annotations);
+	editor_controller_t(
+	    history_manager_t & history,
+	    validation_manager_t & validation,
+	    annotation_manager_t & annotations);
 
 	int current_row() const;
 	const QString & loaded_text() const;
