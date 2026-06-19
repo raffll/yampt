@@ -280,10 +280,10 @@ void status_filter_bar_t::on_status_right_clicked(const std::string & status)
 void status_filter_bar_t::update_button_styles()
 {
 	static const QString inactive_style =
-	    "background-color: transparent; color: rgb(80,80,80); border: 1px solid rgb(150,150,150); padding: 2px 6px;";
+	    "border: 1px solid #bbb; border-radius: 2px; padding: 2px 6px; background: #f0f0f0; color: rgb(80,80,80);";
 
 	static const QString disabled_style =
-	    "background-color: transparent; color: rgb(180,180,180); border: 1px solid rgb(210,210,210); padding: 2px 6px;";
+	    "border: 1px solid #bbb; border-radius: 2px; padding: 2px 6px; background: #f0f0f0; color: rgb(180,180,180);";
 
 	static const std::set<std::string> base_statuses = { "matched", "missing", "duplicate", "mismatch" };
 
@@ -331,15 +331,15 @@ void status_filter_bar_t::update_button_styles()
 			int text_brightness = (color.red() * 299 + color.green() * 587 + color.blue() * 114) / 1000;
 			QString text_color = (text_brightness > 150) ? "black" : "white";
 			sb.button->setStyleSheet(
-			    QString(
-			        "background-color: rgb(%1,%2,%3); color: %4; border: 1px solid rgb(%5,%6,%7); padding: 2px 6px;")
+			    QString("border: 1px solid rgb(%5,%6,%7); border-radius: 2px; padding: 2px 6px;"
+			            " background-color: rgb(%1,%2,%3); color: %4;")
 			        .arg(color.red())
 			        .arg(color.green())
 			        .arg(color.blue())
 			        .arg(text_color)
-			        .arg(qMax(0, color.red() - 30))
-			        .arg(qMax(0, color.green() - 30))
-			        .arg(qMax(0, color.blue() - 30)));
+			        .arg(qMax(0, color.red() - 40))
+			        .arg(qMax(0, color.green() - 40))
+			        .arg(qMax(0, color.blue() - 40)));
 		}
 		else
 		{

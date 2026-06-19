@@ -27,9 +27,8 @@
 #include "../yampt/dict_writer.hpp"
 
 #include <QAction>
-#include <QCheckBox>
+#include <QActionGroup>
 #include <QCloseEvent>
-#include <QComboBox>
 #include <QCoreApplication>
 #include <QDir>
 #include <QDialogButtonBox>
@@ -116,6 +115,42 @@ main_window_t::main_window_t(QWidget * parent)
 	bottom_panel_toggle_->setChecked(true);
 	view_menu->addAction(bottom_panel_toggle_);
 
+	view_menu->addSeparator();
+
+	grammar_check_ = new QAction("&Grammar Check", this);
+	grammar_check_->setCheckable(true);
+	grammar_check_->setChecked(true);
+	view_menu->addAction(grammar_check_);
+
+	whitespace_check_ = new QAction("&Whitespace Markers", this);
+	whitespace_check_->setCheckable(true);
+	view_menu->addAction(whitespace_check_);
+
+	view_menu->addSeparator();
+
+	auto * encoding_menu = view_menu->addMenu("&Encoding");
+	encoding_group_ = new QActionGroup(this);
+	const QStringList encodings = { "Windows-1250", "Windows-1251", "Windows-1252" };
+	for (int i = 0; i < encodings.size(); ++i)
+	{
+		auto * act = encoding_menu->addAction(encodings[i]);
+		act->setCheckable(true);
+		act->setData(i);
+		encoding_group_->addAction(act);
+	}
+	encoding_group_->actions().last()->setChecked(true);
+	connect(encoding_group_, &QActionGroup::triggered, this, [this](QAction * act) {
+		on_encoding_changed(act->data().toInt());
+	});
+
+	spelling_menu_ = view_menu->addMenu("&Spelling");
+	spelling_group_ = new QActionGroup(this);
+	auto * none_act = spelling_menu_->addAction("None");
+	none_act->setCheckable(true);
+	none_act->setChecked(true);
+	none_act->setData(0);
+	spelling_group_->addAction(none_act);
+
 	auto * toolbar = new QToolBar(this);
 	toolbar->setMovable(false);
 
@@ -160,51 +195,12 @@ main_window_t::main_window_t(QWidget * parent)
 	search_col_translation_->setStyleSheet(toggle_style);
 	toolbar->addWidget(search_col_translation_);
 
-	toolbar->addSeparator();
-
-	toolbar->addWidget(new QLabel("Encoding:", this));
-	encoding_combo_ = new QComboBox(this);
-	encoding_combo_->addItem("Windows-1250");
-	encoding_combo_->addItem("Windows-1251");
-	encoding_combo_->addItem("Windows-1252");
-	toolbar->addWidget(encoding_combo_);
-
-	toolbar->addSeparator();
-
-	toolbar->addWidget(new QLabel("Spelling:", this));
-	spell_lang_combo_ = new QComboBox(this);
-	spell_lang_combo_->addItem("None");
-	toolbar->addWidget(spell_lang_combo_);
-
-	grammar_check_ = new QCheckBox("Grammar", this);
-	grammar_check_->setChecked(true);
-	grammar_check_->setLayoutDirection(Qt::RightToLeft);
-	toolbar->addWidget(grammar_check_);
-
-	whitespace_check_ = new QCheckBox("Whitespace", this);
-	whitespace_check_->setLayoutDirection(Qt::RightToLeft);
-	toolbar->addWidget(whitespace_check_);
-
 	search_field_->setToolTip("Search across entries");
 	case_sensitive_check_->setToolTip("Case-sensitive search");
-	encoding_combo_->setToolTip("Text encoding");
-	spell_lang_combo_->setToolTip("Spell check language");
 
 	find_action_ = new QAction(this);
 	find_action_->setShortcut(QKeySequence("Ctrl+F"));
 	addAction(find_action_);
-
-	next_search_action_ = new QAction(this);
-	next_search_action_->setShortcut(QKeySequence("F3"));
-	addAction(next_search_action_);
-
-	prev_search_action_ = new QAction(this);
-	prev_search_action_->setShortcut(QKeySequence("Shift+F3"));
-	addAction(prev_search_action_);
-
-	refresh_action_ = new QAction(this);
-	refresh_action_->setShortcut(QKeySequence("F5"));
-	addAction(refresh_action_);
 
 	escape_action_ = new QAction(this);
 	escape_action_->setShortcut(QKeySequence("Escape"));
@@ -293,10 +289,10 @@ main_window_t::main_window_t(QWidget * parent)
 
 	connect(sidebar_toggle_, &QAction::toggled, left_splitter_, &QWidget::setVisible);
 	connect(bottom_panel_toggle_, &QAction::toggled, editor_panel_, &QWidget::setVisible);
-	connect(whitespace_check_, &QCheckBox::toggled, this, &main_window_t::on_whitespace_toggled);
+	connect(whitespace_check_, &QAction::toggled, this, &main_window_t::on_whitespace_toggled);
 	connect(
 	    grammar_check_,
-	    &QCheckBox::toggled,
+	    &QAction::toggled,
 	    this,
 	    [this]()
 	{
@@ -373,9 +369,6 @@ main_window_t::main_window_t(QWidget * parent)
 	connect(save_all_action_, &QAction::triggered, this, &main_window_t::on_save_all);
 	connect(quit_action, &QAction::triggered, this, &QWidget::close);
 	connect(find_action_, &QAction::triggered, this, &main_window_t::on_find);
-	connect(next_search_action_, &QAction::triggered, this, &main_window_t::on_next_search);
-	connect(prev_search_action_, &QAction::triggered, this, &main_window_t::on_prev_search);
-	connect(refresh_action_, &QAction::triggered, this, &main_window_t::on_refresh);
 	connect(escape_action_, &QAction::triggered, this, &main_window_t::on_escape);
 
 	connect(
@@ -465,15 +458,10 @@ main_window_t::main_window_t(QWidget * parent)
 	connect(search_col_translation_, &QPushButton::toggled, this, on_search_col_changed);
 
 	connect(
-	    encoding_combo_,
-	    QOverload<int>::of(&QComboBox::currentIndexChanged),
+	    spelling_group_,
+	    &QActionGroup::triggered,
 	    this,
-	    &main_window_t::on_encoding_changed);
-	connect(
-	    spell_lang_combo_,
-	    QOverload<int>::of(&QComboBox::currentIndexChanged),
-	    this,
-	    &main_window_t::on_spell_lang_changed);
+	    [this](QAction * act) { on_spell_lang_changed(act->data().toInt()); });
 
 	connect(sidebar_, &sidebar_widget_t::item_clicked, this, &main_window_t::on_item_clicked);
 	connect(sidebar_, &sidebar_widget_t::operation_requested, this, &main_window_t::on_operation_requested);
@@ -840,14 +828,21 @@ main_window_t::main_window_t(QWidget * parent)
 	if (first_run)
 	{
 		std::vector<std::string> spell_langs;
-		for (int i = 1; i < spell_lang_combo_->count(); ++i)
-			spell_langs.push_back(spell_lang_combo_->itemText(i).toStdString());
+		const auto & spell_actions = spelling_group_->actions();
+		for (int i = 1; i < spell_actions.size(); ++i)
+			spell_langs.push_back(spell_actions.at(i)->text().toStdString());
 
 		first_run_dialog_t dialog(spell_langs, this);
 		if (dialog.exec() == QDialog::Accepted)
 		{
-			encoding_combo_->setCurrentIndex(dialog.selected_encoding_index());
-			spell_lang_combo_->setCurrentIndex(dialog.selected_spell_lang_index());
+			const int enc_idx = dialog.selected_encoding_index();
+			if (enc_idx >= 0 && enc_idx < encoding_group_->actions().size())
+				encoding_group_->actions().at(enc_idx)->trigger();
+
+			const int spell_idx = dialog.selected_spell_lang_index();
+			if (spell_idx >= 0 && spell_idx < spell_actions.size())
+				spell_actions.at(spell_idx)->trigger();
+
 			save_config();
 		}
 	}
@@ -906,96 +901,6 @@ void main_window_t::on_find()
 {
 	search_field_->setFocus();
 	search_field_->selectAll();
-}
-
-void main_window_t::on_next_search()
-{
-	if (search_query_.isEmpty())
-		return;
-
-	if (!table_model_)
-		return;
-
-	const int count = table_model_->rowCount();
-	if (count == 0)
-		return;
-
-	const bool case_sensitive = case_sensitive_check_->isChecked();
-	const auto query = case_sensitive ? search_query_ : search_query_.toLower();
-
-	for (int i = 1; i <= count; ++i)
-	{
-		const int row = (editor_controller_.current_row() + i) % count;
-		const auto * data = table_model_->row_at(row);
-		if (!data)
-			continue;
-
-		auto key = QString::fromStdString(data->key_text);
-		auto old_t = QString::fromStdString(data->old_text);
-		auto new_t = QString::fromStdString(data->new_text);
-
-		if (!case_sensitive)
-		{
-			key = key.toLower();
-			old_t = old_t.toLower();
-			new_t = new_t.toLower();
-		}
-
-		if (key.contains(query) || old_t.contains(query) || new_t.contains(query))
-		{
-			on_row_selected(row);
-			return;
-		}
-	}
-}
-
-void main_window_t::on_prev_search()
-{
-	if (search_query_.isEmpty())
-		return;
-
-	if (!table_model_)
-		return;
-
-	const int count = table_model_->rowCount();
-	if (count == 0)
-		return;
-
-	const bool case_sensitive = case_sensitive_check_->isChecked();
-	const auto query = case_sensitive ? search_query_ : search_query_.toLower();
-
-	for (int i = 1; i <= count; ++i)
-	{
-		const int row = (editor_controller_.current_row() - i + count) % count;
-		const auto * data = table_model_->row_at(row);
-		if (!data)
-			continue;
-
-		auto key = QString::fromStdString(data->key_text);
-		auto old_t = QString::fromStdString(data->old_text);
-		auto new_t = QString::fromStdString(data->new_text);
-
-		if (!case_sensitive)
-		{
-			key = key.toLower();
-			old_t = old_t.toLower();
-			new_t = new_t.toLower();
-		}
-
-		if (key.contains(query) || old_t.contains(query) || new_t.contains(query))
-		{
-			on_row_selected(row);
-			return;
-		}
-	}
-}
-
-void main_window_t::on_refresh()
-{
-	if (editor_controller_.current_row() < 0)
-		return;
-
-	load_record(editor_controller_.current_row());
 }
 
 void main_window_t::on_escape()
@@ -1895,6 +1800,7 @@ void main_window_t::scan_spell_dictionaries()
 		return;
 
 	const auto aff_files = dict_dir.entryList({ "*.aff" }, QDir::Files);
+	int index = 1;
 	for (const auto & aff_file : aff_files)
 	{
 		auto base_name = aff_file;
@@ -1904,7 +1810,11 @@ void main_window_t::scan_spell_dictionaries()
 		if (!QFile::exists(dic_path))
 			continue;
 
-		spell_lang_combo_->addItem(base_name);
+		auto * act = spelling_menu_->addAction(base_name);
+		act->setCheckable(true);
+		act->setData(index);
+		spelling_group_->addAction(act);
+		++index;
 	}
 }
 
@@ -1916,7 +1826,11 @@ void main_window_t::on_spell_lang_changed(int index)
 		return;
 	}
 
-	const auto lang_name = spell_lang_combo_->itemText(index);
+	const auto & actions = spelling_group_->actions();
+	if (index < 0 || index >= actions.size())
+		return;
+
+	const auto lang_name = actions.at(index)->text();
 	const auto app_dir = QCoreApplication::applicationDirPath();
 	const auto aff_path = app_dir + "/dictionaries/" + lang_name + ".aff";
 	const auto dic_path = app_dir + "/dictionaries/" + lang_name + ".dic";
@@ -1938,7 +1852,8 @@ void main_window_t::load_config()
 	if (config_.window_maximized)
 		showMaximized();
 
-	encoding_combo_->setCurrentIndex(config_.encoding_index);
+	if (config_.encoding_index >= 0 && config_.encoding_index < encoding_group_->actions().size())
+		encoding_group_->actions().at(config_.encoding_index)->setChecked(true);
 
 	constexpr codepage_t codepages_table[] = {
 		codepage_t::windows_1250,
@@ -1980,8 +1895,10 @@ void main_window_t::load_config()
 	rebuild_sidebar();
 	rebuild_table();
 
-	if (config_.spell_lang_index > 0 && config_.spell_lang_index < spell_lang_combo_->count())
-		spell_lang_combo_->setCurrentIndex(config_.spell_lang_index);
+	if (config_.spell_lang_index > 0 && config_.spell_lang_index < spelling_group_->actions().size())
+		spelling_group_->actions().at(config_.spell_lang_index)->setChecked(true);
+
+	on_spell_lang_changed(config_.spell_lang_index);
 
 	update_watcher_paths();
 }
@@ -1994,8 +1911,12 @@ void main_window_t::save_config()
 	config_.window_h = size().height();
 	config_.window_maximized = isMaximized();
 
-	config_.encoding_index = encoding_combo_->currentIndex();
-	config_.spell_lang_index = spell_lang_combo_->currentIndex();
+	config_.encoding_index = encoding_group_->checkedAction()
+	    ? encoding_group_->actions().indexOf(encoding_group_->checkedAction())
+	    : 2;
+	config_.spell_lang_index = spelling_group_->checkedAction()
+	    ? spelling_group_->actions().indexOf(spelling_group_->checkedAction())
+	    : 0;
 
 	config_.sidebar_visible = sidebar_toggle_->isChecked();
 	config_.bottom_visible = bottom_panel_toggle_->isChecked();

@@ -49,9 +49,8 @@ class status_filter_bar_t;
 class validation_indicator_t;
 
 class QAction;
-class QCheckBox;
+class QActionGroup;
 class QCloseEvent;
-class QComboBox;
 class QLabel;
 class QLineEdit;
 class QMenu;
@@ -92,9 +91,6 @@ private slots:
 	void on_plugin_operation(const std::string & plugin_path, plugin_op_t op);
 	void on_plugin_unload(const std::string & path);
 	void on_find();
-	void on_next_search();
-	void on_prev_search();
-	void on_refresh();
 	void on_escape();
 	void on_search_changed(const QString & text);
 	void on_case_sensitive_changed(int state);
@@ -139,9 +135,6 @@ private:
 	QAction * save_action_ = nullptr;
 	QAction * save_all_action_ = nullptr;
 	QAction * find_action_ = nullptr;
-	QAction * next_search_action_ = nullptr;
-	QAction * prev_search_action_ = nullptr;
-	QAction * refresh_action_ = nullptr;
 	QAction * escape_action_ = nullptr;
 	QAction * find_replace_action_ = nullptr;
 
@@ -163,10 +156,11 @@ private:
 	QPushButton * search_col_key_ = nullptr;
 	QPushButton * search_col_original_ = nullptr;
 	QPushButton * search_col_translation_ = nullptr;
-	QComboBox * encoding_combo_ = nullptr;
-	QComboBox * spell_lang_combo_ = nullptr;
-	QCheckBox * grammar_check_ = nullptr;
-	QCheckBox * whitespace_check_ = nullptr;
+	QActionGroup * encoding_group_ = nullptr;
+	QMenu * spelling_menu_ = nullptr;
+	QActionGroup * spelling_group_ = nullptr;
+	QAction * grammar_check_ = nullptr;
+	QAction * whitespace_check_ = nullptr;
 
 	QString search_query_;
 
