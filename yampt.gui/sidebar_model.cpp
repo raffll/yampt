@@ -206,7 +206,7 @@ sidebar_render_model_t build_render_model(const file_list_t & file_list, const s
 	{
 		auto label = extract_filename(root_path);
 		if (label == "workspace")
-			label = "Workspace";
+			label = workspace_label;
 
 		auto root_node = build_node(label, root_path, root_builder);
 		root_node.root_path = root_path;
@@ -217,10 +217,10 @@ sidebar_render_model_t build_render_model(const file_list_t & file_list, const s
 	std::sort(model.roots.begin(), model.roots.end(),
 		[](const sidebar_render_node_t & a, const sidebar_render_node_t & b)
 		{
-			if (a.label == "Workspace")
+			if (a.label == workspace_label)
 				return true;
 
-			if (b.label == "Workspace")
+			if (b.label == workspace_label)
 				return false;
 
 			return a.label < b.label;

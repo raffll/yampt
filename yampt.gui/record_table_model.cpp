@@ -114,6 +114,9 @@ QVariant record_table_model_t::data(const QModelIndex & index, int role) const
 		}
 		case col_translation:
 		{
+			if (row.status == "untranslated")
+				return {};
+
 			auto text = first_line(row.new_text);
 			if (row.type == tools_t::rec_type_t::sctx || row.type == tools_t::rec_type_t::bnam)
 			{

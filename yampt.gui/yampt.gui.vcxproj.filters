@@ -52,6 +52,7 @@
     <ClCompile Include="translation_suggestion_tab.cpp" />
     <ClCompile Include="ctranslate2_provider.cpp" />
     <ClCompile Include="deepl_provider.cpp" />
+    <ClCompile Include="google_provider.cpp" />
     <ClCompile Include="first_run_dialog.cpp" />
     <ClCompile Include="..\yampt\translation_engine.cpp">
       <Filter>yampt</Filter>

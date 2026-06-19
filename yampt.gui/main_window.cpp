@@ -240,6 +240,8 @@ main_window_t::main_window_t(QWidget * parent)
     annotations_panel_ = new annotations_panel_t(info_tabs_);
     history_panel_ = new history_panel_t(info_tabs_);
     translation_tab_ = new translation_suggestion_tab_t(info_tabs_);
+    translation_tab_->set_models_dir(
+        (QCoreApplication::applicationDirPath() + "/models").toStdString());
     info_tabs_->addTab(annotations_panel_, "Annotations");
     info_tabs_->addTab(history_panel_, "History");
     info_tabs_->addTab(translation_tab_, "Translate");
@@ -1828,6 +1830,9 @@ void main_window_t::load_config()
 
     session_.set_codepage(current_codepage_);
 
+    if (!config_.deepl_api_key.empty())
+        translation_tab_->set_deepl_api_key(config_.deepl_api_key);
+
     sidebar_toggle_->setChecked(config_.sidebar_visible);
     bottom_panel_toggle_->setChecked(config_.bottom_visible);
 
@@ -1880,6 +1885,7 @@ void main_window_t::save_config()
 
     config_.active_dict_index = -1;  // deprecated — use active_dict_path
     config_.active_dict_path = active_doc_ ? active_doc_->path() : std::string{};
+    config_.deepl_api_key = translation_tab_->deepl_api_key();
     config_.workspace_roots = file_list_.get_roots();
 
     const auto path = QCoreApplication::applicationDirPath() + "/yampt_gui.ini";
@@ -2056,7 +2062,7 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
                 root_label = root_label.substr(sep2 + 1);
 
             if (root_label == "workspace")
-                root_label = "Workspace";
+                root_label = workspace_label;
 
             auto * root_node = new QTreeWidgetItem(tree);
             root_node->setText(0, QString::fromStdString(root_label));
@@ -2285,7 +2291,7 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
                 root_label = root_label.substr(sep + 1);
 
             if (root_label == "workspace")
-                root_label = "Workspace";
+                root_label = workspace_label;
 
             auto * root_node = new QTreeWidgetItem(tree);
             root_node->setText(0, QString::fromStdString(root_label));

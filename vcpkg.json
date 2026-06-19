@@ -2,7 +2,10 @@
   "name": "yampt",
   "version": "0.25",
   "dependencies": [
-    "qtbase",
+    {
+      "name": "qtbase",
+      "features": ["openssl"]
+    },
     "hunspell",
     "rapidcheck",
     "sentencepiece"

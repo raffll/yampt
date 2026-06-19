@@ -100,7 +100,7 @@ void sidebar_widget_t::set_model(const sidebar_render_model_t & model)
         bold_font.setBold(true);
         root_item->setFont(0, bold_font);
 
-        if (root.label != "Workspace")
+        if (root.label != workspace_label)
             root_item->setData(0, role_root_path, QString::fromStdString(root.root_path));
 
         add_node(root_item, root);

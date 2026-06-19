@@ -79,6 +79,10 @@ void editor_config_t::load(const std::string & path)
 			{
 				active_dict_path = value;
 			}
+			else if (key == "DeepLApiKey")
+			{
+				deepl_api_key = value;
+			}
 			else if (key == "SplitRatio")
 			{
 				try
@@ -238,6 +242,8 @@ void editor_config_t::save(const std::string & path) const
 	file << "\n[Editor]\n";
 	file << "ActiveDictIndex=" << active_dict_index << "\n";
 	file << "ActiveDictPath=" << active_dict_path << "\n";
+	if (!deepl_api_key.empty())
+		file << "DeepLApiKey=" << deepl_api_key << "\n";
 	file << "SplitRatio=" << split_ratio << "\n";
 	file << "SidebarWidth=" << sidebar_width << "\n";
 	file << "BottomHeight=" << bottom_height << "\n";

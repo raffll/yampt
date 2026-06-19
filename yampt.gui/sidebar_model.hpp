@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+inline constexpr const char * workspace_label = "Workspace";
+
 class session_t;
 
 struct sidebar_render_item_t
