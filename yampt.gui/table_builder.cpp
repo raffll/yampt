@@ -158,7 +158,10 @@ table_build_result_t build_filtered_rows(
 		{
 			const auto & entry = chapter.records[i];
 
-			counts.type_counts[type]++;
+			const auto count_type = (type == tools_t::rec_type_t::bnam)
+				? tools_t::rec_type_t::info : type;
+
+			counts.type_counts[count_type]++;
 			counts.total_status_counts[entry.status]++;
 
 			if (has_sub_type(type))
@@ -173,12 +176,13 @@ table_build_result_t build_filtered_rows(
 			}
 
 			if (done_statuses.count(entry.status))
-				counts.translated_counts[type]++;
+				counts.translated_counts[count_type]++;
 
 			// --- filter pipeline ---
 
 			// 1. type_filter check (for filtered_status_counts and row emission)
-			if (!type_filter.empty() && type_filter.count(type) == 0)
+			//    BNAMs pass when INFO is in filter (they're displayed under INFO)
+			if (!type_filter.empty() && type_filter.count(count_type) == 0)
 				continue;
 
 			// 2. sub_type_filter check

@@ -34,10 +34,7 @@ static const std::vector<std::string> indx_sub_types = {
 	"Skills", "Magic Effects"
 };
 
-static const QColor color_selected_bg(90, 155, 230);
-static const QColor color_selected_fg(255, 255, 255);
-static const QColor color_partial_bg(160, 195, 235);
-static const QColor color_partial_fg(255, 255, 255);
+static const QColor color_selected_fg(90, 155, 230);
 static const QColor color_deselected_fg(80, 80, 80);
 static const QColor color_disabled_fg(180, 180, 180);
 
@@ -350,9 +347,7 @@ void filter_tree_t::apply_item_style(QTreeWidgetItem * item)
 {
 	if (!enabled_)
 	{
-		item->setBackground(0, QBrush());
 		item->setForeground(0, QBrush(color_disabled_fg));
-		item->setBackground(1, QBrush());
 		item->setForeground(1, QBrush(color_disabled_fg));
 		return;
 	}
@@ -362,16 +357,16 @@ void filter_tree_t::apply_item_style(QTreeWidgetItem * item)
 	switch (state)
 	{
 	case node_state_t::selected:
-		item->setBackground(0, QBrush(color_selected_bg));
-		item->setForeground(0, QBrush(color_selected_fg));
-		item->setBackground(1, QBrush(color_selected_bg));
-		item->setForeground(1, QBrush(color_selected_fg));
+		item->setBackground(0, QBrush(color_selected_fg));
+		item->setForeground(0, QBrush(QColor(255, 255, 255)));
+		item->setBackground(1, QBrush(color_selected_fg));
+		item->setForeground(1, QBrush(QColor(255, 255, 255)));
 		break;
 	case node_state_t::partial:
-		item->setBackground(0, QBrush(color_partial_bg));
-		item->setForeground(0, QBrush(color_partial_fg));
-		item->setBackground(1, QBrush(color_partial_bg));
-		item->setForeground(1, QBrush(color_partial_fg));
+		item->setBackground(0, QBrush(QColor(160, 195, 235)));
+		item->setForeground(0, QBrush(QColor(255, 255, 255)));
+		item->setBackground(1, QBrush(QColor(160, 195, 235)));
+		item->setForeground(1, QBrush(QColor(255, 255, 255)));
 		break;
 	case node_state_t::deselected:
 		item->setBackground(0, QBrush());
@@ -394,6 +389,7 @@ void filter_tree_t::update_counts(
 		auto trans_it = translated_counts.find(tn.type);
 		size_t translated = (trans_it != translated_counts.end()) ? trans_it->second : 0;
 
+		tn.item->setHidden(total == 0);
 		tn.item->setText(1, QString("%1/%2").arg(translated).arg(total));
 	}
 }
@@ -410,6 +406,7 @@ void filter_tree_t::update_sub_type_counts(
 		auto trans_it = sub_type_translated_counts.find(stn.sub_type);
 		size_t translated = (trans_it != sub_type_translated_counts.end()) ? trans_it->second : 0;
 
+		stn.item->setHidden(total == 0);
 		stn.item->setText(1, QString("%1/%2").arg(translated).arg(total));
 	}
 }
