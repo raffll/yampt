@@ -13,8 +13,7 @@ static const std::vector<std::pair<tools_t::rec_type_t, const char *>> type_orde
 	{tools_t::rec_type_t::desc, "Descriptions"},
 	{tools_t::rec_type_t::rnam, "Factions"},
 	{tools_t::rec_type_t::indx, "Index"},
-	{tools_t::rec_type_t::bnam, "Scripts (BNAM)"},
-	{tools_t::rec_type_t::sctx, "Scripts (SCTX)"},
+	{tools_t::rec_type_t::sctx, "Scripts"},
 };
 
 static const std::vector<std::string> info_sub_types = {

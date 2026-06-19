@@ -73,7 +73,7 @@ main_window_t::main_window_t(QWidget * parent)
         tools_t::rec_type_t::cell, tools_t::rec_type_t::dial, tools_t::rec_type_t::info,
         tools_t::rec_type_t::fnam, tools_t::rec_type_t::text, tools_t::rec_type_t::gmst,
         tools_t::rec_type_t::desc, tools_t::rec_type_t::rnam, tools_t::rec_type_t::indx,
-        tools_t::rec_type_t::bnam, tools_t::rec_type_t::sctx,
+        tools_t::rec_type_t::sctx,
     };
 
     auto * file_menu = menuBar()->addMenu("&File");
@@ -1644,7 +1644,7 @@ void main_window_t::restore_filter_state(const std::string & path)
             tools_t::rec_type_t::cell, tools_t::rec_type_t::dial, tools_t::rec_type_t::info,
             tools_t::rec_type_t::fnam, tools_t::rec_type_t::text, tools_t::rec_type_t::gmst,
             tools_t::rec_type_t::desc, tools_t::rec_type_t::rnam, tools_t::rec_type_t::indx,
-            tools_t::rec_type_t::bnam, tools_t::rec_type_t::sctx,
+            tools_t::rec_type_t::sctx,
         };
         status_filter_.clear();
         type_filter_solo_ = false;
@@ -1660,60 +1660,6 @@ void main_window_t::rebuild_sidebar()
 		active_path = active_doc_->path();
 
 	auto model = build_render_model(file_list_, session_, active_path);
-
-	static const std::set<std::string> done_statuses_user = {"translated", "in_progress", "propagated"};
-	static const std::set<std::string> done_statuses_base = {
-		"matched", "fingerprint", "coords", "heuristic", "exact", "info", "wilderness", "region"};
-
-	std::function<void(sidebar_render_node_t &)> fill_counts;
-	fill_counts = [&](sidebar_render_node_t & node)
-	{
-		for (auto & item : node.items)
-		{
-			if (item.type == file_type_t::plugin)
-				continue;
-
-			if (item.type == file_type_t::yaml_l10n && active_doc_ && item.path == active_doc_->path())
-			{
-				item.total_count = active_doc_->total_count();
-				item.translated_count = active_doc_->translated_count();
-				continue;
-			}
-
-			auto * doc = session_.find(item.path);
-			if (!doc)
-				continue;
-
-			auto * dict_doc = dynamic_cast<dict_document_t *>(doc);
-			if (!dict_doc)
-				continue;
-
-			const auto & done = (dict_doc->kind() == dict_kind_t::base)
-				? done_statuses_base : done_statuses_user;
-
-			int total = 0;
-			int translated = 0;
-			for (const auto & [type, chapter] : dict_doc->data())
-			{
-				for (const auto & rec : chapter.records)
-				{
-					total++;
-					if (done.count(rec.status))
-						translated++;
-				}
-			}
-
-			item.translated_count = translated;
-			item.total_count = total;
-		}
-
-		for (auto & child : node.children)
-			fill_counts(child);
-	};
-
-	for (auto & root : model.roots)
-		fill_counts(root);
-
 	sidebar_->set_model(model);
 }
 
@@ -1893,6 +1839,7 @@ void main_window_t::load_config()
             switch_document(doc);
     }
 
+    rebuild_sidebar();
     rebuild_table();
 
     if (config_.spell_lang_index > 0 && config_.spell_lang_index < spell_lang_combo_->count())
