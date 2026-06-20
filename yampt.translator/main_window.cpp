@@ -1127,6 +1127,7 @@ void main_window_t::rebuild_table()
 	{
 		table_display_->clear();
 		editor_controller_.set_current_row(-1);
+		clear_editor_panels();
 		return;
 	}
 
@@ -1134,6 +1135,7 @@ void main_window_t::rebuild_table()
 	{
 		table_display_->clear();
 		editor_controller_.set_current_row(-1);
+		clear_editor_panels();
 		return;
 	}
 
@@ -1172,6 +1174,7 @@ void main_window_t::rebuild_table()
 		table_display_->apply_yaml(
 		    std::move(rows), total, translated, active_doc_->path(), filtered_status_counts, total_status_counts);
 		editor_controller_.set_current_row(-1);
+		clear_editor_panels();
 		return;
 	}
 
@@ -1186,6 +1189,7 @@ void main_window_t::rebuild_table()
 
 	table_display_->apply(std::move(result), dict_doc->path(), dict_doc->kind());
 	editor_controller_.set_current_row(-1);
+	clear_editor_panels();
 }
 
 void main_window_t::on_row_selected(int row)
@@ -1337,6 +1341,12 @@ void main_window_t::on_translation_changed()
 			           " len=" + std::to_string(end - start) + " text=\"" + slice.toStdString() + "\"\r\n";
 		}
 		log_tab_->append_log("grammar", log_msg);
+	}
+
+	if (row_data->type == tools_t::rec_type_t::text)
+	{
+		const auto translation_text = editor_panel_->translation_editor()->toPlainText().toStdString();
+		book_preview_->set_html(row_data->old_text, translation_text);
 	}
 }
 

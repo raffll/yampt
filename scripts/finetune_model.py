@@ -25,7 +25,7 @@ SRC_LANG = "eng_Latn"
 TGT_LANG = "pol_Latn"
 MIN_LENGTH = 5
 MAX_LENGTH = 128
-EPOCHS = 1
+EPOCHS = 3
 BATCH_SIZE = 4
 LEARNING_RATE = 3e-4
 
@@ -129,6 +129,7 @@ def train(pairs):
         fp16=use_fp16,
         predict_with_generate=False,
         report_to="none",
+        resume_from_checkpoint=True,
     )
 
     trainer = Seq2SeqTrainer(
