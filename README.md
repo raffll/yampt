@@ -94,11 +94,7 @@ yampt.exe --create -f <plugins...> -d <dicts...> [-s <suffix>] [--windows-1250]
 
 Optional neural translation engine using CTranslate2 with NLLB/OpusMT models. Improves interior cell matching during base dictionary creation by translating cell names and scoring word overlap against native cells.
 
-Models are not included in the release. Download with:
-
-```
-python download_models.py
-```
+Models are not included in the release.
 
 ## Requirements
 

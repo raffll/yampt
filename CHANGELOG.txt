@@ -1,3 +1,19 @@
+2.0
+- [feature] yampt.editor — Qt6 plugin conflict editor (xEdit-like)
+- [feature] yampt.translator — Qt6 translation workbench with spell check, grammar check, and annotations
+- [feature] translation suggestions from local CTranslate2 model, DeepL API, and Google API
+- [feature] neural translation engine for automatic cell name matching in make-base mode
+- [feature] JSON dictionary format (XML no longer supported)
+- [feature] merged patch creation with leveled list and dialogue merging
+- [feature] ITM detection and removal
+- [feature] load plugins from MO2 profiles and OpenMW cfg
+- [feature] find & replace across dictionaries
+- [feature] history panel with undo
+- [feature] entry validation and status tracking
+- [feature] book content preview
+- [feature] drag-and-drop record copying between plugins
+- [feature] CLI simplified to --make, --make-base, --merge, --convert, --create
+
 0.25
 - [bug] prevent adding hyperlinks to "Voice" type INFO
 
