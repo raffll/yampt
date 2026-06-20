@@ -7,12 +7,11 @@
 #include <QPushButton>
 
 find_replace_dialog_t::find_replace_dialog_t(QWidget * parent)
-    : QDialog(parent)
+    : QWidget(parent)
 {
-	setWindowTitle("Find and Replace");
-	setMinimumWidth(400);
-
 	auto * layout = new QGridLayout(this);
+	layout->setContentsMargins(4, 4, 4, 4);
+	layout->setSpacing(4);
 
 	layout->addWidget(new QLabel("Find:", this), 0, 0);
 	find_field_ = new QLineEdit(this);
@@ -29,12 +28,15 @@ find_replace_dialog_t::find_replace_dialog_t(QWidget * parent)
 	layout->addWidget(regex_check_, 2, 2, 1, 2);
 
 	find_next_btn_ = new QPushButton("Find Next", this);
+	find_next_btn_->setToolTip("Find next matching entry");
 	layout->addWidget(find_next_btn_, 3, 1);
 
 	replace_btn_ = new QPushButton("Replace", this);
+	replace_btn_->setToolTip("Replace current match and find next");
 	layout->addWidget(replace_btn_, 3, 2);
 
 	replace_all_btn_ = new QPushButton("Replace All", this);
+	replace_all_btn_->setToolTip("Replace in all entries regardless of filters");
 	layout->addWidget(replace_all_btn_, 3, 3);
 
 	note_label_ = new QLabel("Replace All affects all entries regardless of filters.", this);

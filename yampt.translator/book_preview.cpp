@@ -1,6 +1,5 @@
 #include "book_preview.hpp"
 
-#include <QLabel>
 #include <QRegularExpression>
 #include <QSplitter>
 #include <QTextBrowser>
@@ -17,9 +16,7 @@ book_preview_t::book_preview_t(QWidget * parent)
 	auto * left_widget = new QWidget(splitter_);
 	auto * left_layout = new QVBoxLayout(left_widget);
 	left_layout->setContentsMargins(0, 0, 0, 0);
-	left_layout->setSpacing(2);
-	auto * original_label = new QLabel("Original", left_widget);
-	left_layout->addWidget(original_label);
+	left_layout->setSpacing(0);
 	original_browser_ = new QTextBrowser(left_widget);
 	original_browser_->setReadOnly(true);
 	original_browser_->setOpenLinks(false);
@@ -29,9 +26,7 @@ book_preview_t::book_preview_t(QWidget * parent)
 	auto * right_widget = new QWidget(splitter_);
 	auto * right_layout = new QVBoxLayout(right_widget);
 	right_layout->setContentsMargins(0, 0, 0, 0);
-	right_layout->setSpacing(2);
-	auto * translation_label = new QLabel("Translation", right_widget);
-	right_layout->addWidget(translation_label);
+	right_layout->setSpacing(0);
 	translation_browser_ = new QTextBrowser(right_widget);
 	translation_browser_->setReadOnly(true);
 	translation_browser_->setOpenLinks(false);

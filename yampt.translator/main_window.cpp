@@ -210,10 +210,6 @@ main_window_t::main_window_t(QWidget * parent)
 	escape_action_->setShortcut(QKeySequence("Escape"));
 	addAction(escape_action_);
 
-	find_replace_action_ = new QAction(this);
-	find_replace_action_->setShortcut(QKeySequence("Ctrl+H"));
-	addAction(find_replace_action_);
-
 	auto * central_widget = new QWidget(this);
 	auto * central_layout = new QVBoxLayout(central_widget);
 	central_layout->setContentsMargins(0, 0, 0, 0);
@@ -241,11 +237,10 @@ main_window_t::main_window_t(QWidget * parent)
 	info_tabs_ = new QTabWidget(left_splitter_);
 	annotations_panel_ = new annotations_panel_t(info_tabs_);
 	history_panel_ = new history_panel_t(info_tabs_);
-	translation_tab_ = new translation_suggestion_tab_t(info_tabs_);
-	translation_tab_->set_models_dir((QCoreApplication::applicationDirPath() + "/models").toStdString());
+	find_replace_dialog_ = new find_replace_dialog_t(this);
+	find_replace_dialog_->setVisible(false);
 	info_tabs_->addTab(annotations_panel_, "Annotations");
 	info_tabs_->addTab(history_panel_, "History");
-	info_tabs_->addTab(translation_tab_, "Translate");
 	left_splitter_->addWidget(info_tabs_);
 
 	right_splitter_ = new QSplitter(Qt::Vertical, central_splitter_);
@@ -260,9 +255,12 @@ main_window_t::main_window_t(QWidget * parent)
 	table_view_ = new record_table_view_t(record_tabs_);
 	table_view_->setModel(table_model_);
 	book_preview_ = new book_preview_t(record_tabs_);
+	translation_tab_ = new translation_suggestion_tab_t(record_tabs_);
+	translation_tab_->set_models_dir((QCoreApplication::applicationDirPath() + "/models").toStdString());
 	log_tab_ = new log_tab_t(record_tabs_);
 	record_tabs_->addTab(table_view_, "Records");
 	record_tabs_->addTab(book_preview_, "Book Preview");
+	record_tabs_->addTab(translation_tab_, "Translate");
 	record_tabs_->addTab(log_tab_, "Log");
 	right_top_layout->addWidget(record_tabs_, 1);
 
@@ -377,82 +375,68 @@ main_window_t::main_window_t(QWidget * parent)
 	connect(find_action_, &QAction::triggered, this, &main_window_t::on_find);
 	connect(escape_action_, &QAction::triggered, this, &main_window_t::on_escape);
 
-	connect(
-	    find_replace_action_,
-	    &QAction::triggered,
-	    this,
-	    [this]()
 	{
-		if (!find_replace_dialog_)
+		if (!find_replace_service_)
+			find_replace_service_ = new find_replace_service_t(*table_model_, active_doc_);
+
+		connect(
+		    find_replace_dialog_,
+		    &find_replace_dialog_t::find_next_requested,
+		    this,
+		    [this](const QString & query, bool case_sensitive, bool regex_mode)
 		{
-			find_replace_dialog_ = new find_replace_dialog_t(this);
+			auto result = find_replace_service_->find_next(
+			    query.toStdString(), case_sensitive, regex_mode, editor_controller_.current_row());
 
-			if (!find_replace_service_)
-				find_replace_service_ = new find_replace_service_t(*table_model_, active_doc_);
+			if (result.found)
+				on_row_selected(result.row);
+			else
+				statusBar()->showMessage("No match found", 3000);
+		});
 
-			connect(
-			    find_replace_dialog_,
-			    &find_replace_dialog_t::find_next_requested,
-			    this,
-			    [this](const QString & query, bool case_sensitive, bool regex_mode)
+		connect(
+		    find_replace_dialog_,
+		    &find_replace_dialog_t::replace_requested,
+		    this,
+		    [this](const QString & query, const QString & replacement, bool case_sensitive, bool regex_mode)
+		{
+			auto result = find_replace_service_->replace_current(
+			    query.toStdString(),
+			    replacement.toStdString(),
+			    case_sensitive,
+			    regex_mode,
+			    editor_controller_.current_row());
+
+			if (!result.replaced)
+				return;
+
+			set_unsaved_changes(true);
+			table_model_->update_row(editor_controller_.current_row(), result.new_text, result.status);
+			load_record(editor_controller_.current_row());
+
+			emit find_replace_dialog_->find_next_requested(query, case_sensitive, regex_mode);
+		});
+
+		connect(
+		    find_replace_dialog_,
+		    &find_replace_dialog_t::replace_all_requested,
+		    this,
+		    [this](const QString & query, const QString & replacement, bool case_sensitive, bool regex_mode)
+		{
+			auto result = find_replace_service_->replace_all(
+			    query.toStdString(), replacement.toStdString(), case_sensitive, regex_mode);
+
+			if (result.count > 0)
 			{
-				auto result = find_replace_service_->find_next(
-				    query.toStdString(), case_sensitive, regex_mode, editor_controller_.current_row());
-
-				if (result.found)
-					on_row_selected(result.row);
-				else
-					statusBar()->showMessage("No match found", 3000);
-			});
-
-			connect(
-			    find_replace_dialog_,
-			    &find_replace_dialog_t::replace_requested,
-			    this,
-			    [this](const QString & query, const QString & replacement, bool case_sensitive, bool regex_mode)
-			{
-				auto result = find_replace_service_->replace_current(
-				    query.toStdString(),
-				    replacement.toStdString(),
-				    case_sensitive,
-				    regex_mode,
-				    editor_controller_.current_row());
-
-				if (!result.replaced)
-					return;
-
 				set_unsaved_changes(true);
-				table_model_->update_row(editor_controller_.current_row(), result.new_text, result.status);
-				load_record(editor_controller_.current_row());
+				rebuild_table();
+				if (editor_controller_.current_row() >= 0)
+					load_record(editor_controller_.current_row());
+			}
 
-				emit find_replace_dialog_->find_next_requested(query, case_sensitive, regex_mode);
-			});
-
-			connect(
-			    find_replace_dialog_,
-			    &find_replace_dialog_t::replace_all_requested,
-			    this,
-			    [this](const QString & query, const QString & replacement, bool case_sensitive, bool regex_mode)
-			{
-				auto result = find_replace_service_->replace_all(
-				    query.toStdString(), replacement.toStdString(), case_sensitive, regex_mode);
-
-				if (result.count > 0)
-				{
-					set_unsaved_changes(true);
-					rebuild_table();
-					if (editor_controller_.current_row() >= 0)
-						load_record(editor_controller_.current_row());
-				}
-
-				statusBar()->showMessage(QString("Replaced in %1 entries").arg(result.count), 5000);
-			});
-		}
-
-		find_replace_dialog_->show();
-		find_replace_dialog_->raise();
-		find_replace_dialog_->activateWindow();
-	});
+			statusBar()->showMessage(QString("Replaced in %1 entries").arg(result.count), 5000);
+		});
+	}
 
 	connect(search_field_, &QLineEdit::textChanged, this, &main_window_t::on_search_changed);
 	connect(case_sensitive_check_, &QPushButton::toggled, this, [this]() { on_case_sensitive_changed(0); });

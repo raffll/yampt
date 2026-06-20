@@ -25,6 +25,7 @@ editor_panel_t::editor_panel_t(QWidget * parent)
 	auto * left_layout = new QVBoxLayout(left_widget);
 	left_layout->setContentsMargins(0, 0, 0, 0);
 	original_label_ = new QLabel("Original", left_widget);
+	original_label_->setAlignment(Qt::AlignCenter);
 	original_view_ = new editor_text_edit_t(left_widget);
 	original_view_->setReadOnly(true);
 	auto palette = original_view_->palette();
@@ -73,6 +74,7 @@ editor_panel_t::editor_panel_t(QWidget * parent)
 	auto * right_layout = new QVBoxLayout(right_widget);
 	right_layout->setContentsMargins(0, 0, 0, 0);
 	translation_label_ = new QLabel("Translation", right_widget);
+	translation_label_->setAlignment(Qt::AlignCenter);
 	translation_editor_ = new editor_text_edit_t(right_widget);
 	apply_button_ = new QPushButton("Next (Shift+Enter)", right_widget);
 	apply_button_->setToolTip("Apply changes and move to next entry");

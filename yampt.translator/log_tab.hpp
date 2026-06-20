@@ -4,7 +4,6 @@
 #include <string>
 
 class QPlainTextEdit;
-class QPushButton;
 
 class log_tab_t : public QWidget
 {
@@ -19,5 +18,4 @@ public:
 
 private:
 	QPlainTextEdit * text_edit_ = nullptr;
-	QPushButton * clear_button_ = nullptr;
 };

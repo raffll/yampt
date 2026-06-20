@@ -40,15 +40,17 @@ void composite_highlighter_t::highlightBlock(const QString & text)
 	if (record_type_ == tools_t::rec_type_t::sctx || record_type_ == tools_t::rec_type_t::bnam ||
 	    record_type_ == tools_t::rec_type_t::text)
 	{
-		const auto tokens = tokenizer_.tokenize(text.toStdString(), record_type_);
+		const auto utf8 = text.toStdString();
+		const auto tokens = tokenizer_.tokenize(utf8, record_type_);
 
 		for (const auto & token : tokens)
 		{
 			if (token.type == token_type_t::normal)
 				continue;
 
-			const int start = static_cast<int>(token.start);
-			const int length = static_cast<int>(token.end - token.start);
+			const int start = QString::fromUtf8(utf8.data(), static_cast<int>(token.start)).length();
+			const int end = QString::fromUtf8(utf8.data(), static_cast<int>(token.end)).length();
+			const int length = end - start;
 
 			switch (token.type)
 			{

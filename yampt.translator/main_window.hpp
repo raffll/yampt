@@ -136,7 +136,6 @@ private:
 	QAction * save_all_action_ = nullptr;
 	QAction * find_action_ = nullptr;
 	QAction * escape_action_ = nullptr;
-	QAction * find_replace_action_ = nullptr;
 
 	QAction * sidebar_toggle_ = nullptr;
 	QAction * bottom_panel_toggle_ = nullptr;

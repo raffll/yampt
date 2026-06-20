@@ -1,13 +1,13 @@
 #pragma once
 
-#include <QDialog>
+#include <QWidget>
 
 class QCheckBox;
 class QLabel;
 class QLineEdit;
 class QPushButton;
 
-class find_replace_dialog_t : public QDialog
+class find_replace_dialog_t : public QWidget
 {
 	Q_OBJECT
 
