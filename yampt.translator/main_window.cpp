@@ -1543,7 +1543,8 @@ void main_window_t::load_record(int row)
 
 	translation_tab_->set_source_text(row_data->old_text);
 
-	if ((row_data->status == "adapted" || row_data->status == "changed") && !load_result.adapted_from.empty())
+	if ((row_data->status == "adapted" || row_data->status == "changed" || row_data->status == "ambiguous") &&
+	    !load_result.adapted_from.empty())
 	{
 		editor_panel_->set_adapted_from(load_result.adapted_from);
 	}

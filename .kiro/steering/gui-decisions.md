@@ -73,3 +73,32 @@ Current mapping:
 - `model` → "Model"
 - `mismatch` → "Mismatch"
 - `propagated` → "Propagated"
+- `ambiguous` → "Ambiguous"
+
+## Ambiguous Status Color
+
+Amber/orange: `QColor(230, 180, 60)`.
+
+## Book Preview — Live Update
+
+The Book Preview tab updates the translation pane in real time as the user types in the translation editor (for TEXT records). The update happens inside `on_translation_changed()` — no F5 or manual refresh needed.
+
+## Annotations Panel — Rebuild Button
+
+A "Rebuild" button at the top of the Annotations tab triggers `rebuild_annotations()` and refreshes the current record. Use when loaded dicts change and annotations are stale.
+
+## Annotations Panel — Source Display
+
+Each annotation entry shows the source dict filename in brackets: `Small Chest → Mała skrzynia  [Morrowind_BASE_EN-PL.json]`. Only the filename is shown, not the full path.
+
+## Sidebar — [UNLOADED] Tag
+
+Workspace dict files (JSON/XML) that haven't been loaded into the session show `[UNLOADED]` as the first tag in the sidebar. The tag disappears when the dict is clicked and loaded. Order: `[UNLOADED] [BASE] [WIP] [XX] filename`.
+
+## rebuild_table() Clears Editor Panels
+
+Every exit path in `rebuild_table()` calls `clear_editor_panels()` after `editor_controller_.set_current_row(-1)`. This prevents stale text in the translation window when no row is selected after a table rebuild (filter change, search, status filter).
+
+## Adapted From Panel — Ambiguous Entries
+
+The adapted_from panel shows for entries with status "adapted", "changed", or "ambiguous". For ambiguous entries, it displays all conflicting translations separated by ` / `.

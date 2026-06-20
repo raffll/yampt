@@ -48,6 +48,9 @@ void annotation_manager_t::rebuild(const std::vector<dict_source_t> & sources)
 					continue;
 				if (entry.old_text == entry.new_text)
 					continue;
+				if (entry.status == "changed" || entry.status == "ambiguous" || entry.status == "in_progress" ||
+				    entry.status == "propagated" || entry.status == "model" || entry.status == "error")
+					continue;
 
 				std::string key_lower = to_lower(entry.old_text);
 				glossary_terms_.push_back({ key_lower, entry.new_text, src.name });
@@ -62,6 +65,9 @@ void annotation_manager_t::rebuild(const std::vector<dict_source_t> & sources)
 				if (entry.old_text.empty())
 					continue;
 				if (entry.old_text == entry.new_text)
+					continue;
+				if (entry.status == "changed" || entry.status == "ambiguous" || entry.status == "in_progress" ||
+				    entry.status == "propagated" || entry.status == "model" || entry.status == "error")
 					continue;
 
 				std::string key_lower = to_lower(entry.old_text);
@@ -78,6 +84,9 @@ void annotation_manager_t::rebuild(const std::vector<dict_source_t> & sources)
 					continue;
 				if (entry.old_text == entry.new_text)
 					continue;
+				if (entry.status == "changed" || entry.status == "ambiguous" || entry.status == "in_progress" ||
+				    entry.status == "propagated" || entry.status == "model" || entry.status == "error")
+					continue;
 
 				std::string key_lower = to_lower(entry.old_text);
 				glossary_terms_.push_back({ key_lower, entry.new_text, src.name });
@@ -92,6 +101,9 @@ void annotation_manager_t::rebuild(const std::vector<dict_source_t> & sources)
 				if (entry.old_text.empty())
 					continue;
 				if (entry.old_text == entry.new_text)
+					continue;
+				if (entry.status == "changed" || entry.status == "ambiguous" || entry.status == "in_progress" ||
+				    entry.status == "propagated" || entry.status == "model" || entry.status == "error")
 					continue;
 
 				std::string key_lower = to_lower(entry.old_text);

@@ -106,7 +106,8 @@ void dict_writer_t::write(const tools_t::dict_t & dict, const std::string & path
 				file << "      \"enchantment\": \"" << escape_json(entry.enchantment) << "\"";
 			}
 
-			if ((entry.status == "adapted" || entry.status == "changed") && !entry.adapted_from.empty())
+			if ((entry.status == "adapted" || entry.status == "changed" || entry.status == "ambiguous") &&
+			    !entry.adapted_from.empty())
 			{
 				file << ",\n";
 				file << "      \"adapted_from\": \"" << escape_json(entry.adapted_from) << "\"";

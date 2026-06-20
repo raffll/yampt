@@ -45,5 +45,8 @@ inline QColor get_status_color(const std::string & status)
 	if (status == "propagated")
 		return QColor(180, 230, 230);
 
+	if (status == "ambiguous")
+		return QColor(230, 180, 60);
+
 	return QColor(217, 217, 217);
 }

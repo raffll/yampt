@@ -14,9 +14,55 @@ Do NOT add `search->second = elem.second;` to the "different value" branch. Do N
 
 ## text_match_index_ — First Entry Wins
 
-`build_text_match_index()` stores one entry per `old_text` (first-wins). It skips entries where `new_text == old_text` (untranslated). When multiple records in the merged base dict share the same `old_text` with different translations, the first one encountered in the merged chapter's record vector wins.
+`build_text_match_index()` stores one entry per `old_text` (first-wins). It skips entries where `new_text == old_text` (untranslated). When multiple records in the merged base dict share the same `old_text` with different translations, the entry is marked as ambiguous.
 
 Since the merger processes the last-listed dict first, its records appear first in each chapter's vector. This means the highest-priority dict also wins for text-match lookups — consistent with the key-based merge behavior.
+
+### Ambiguous Status
+
+When `build_text_match_index` encounters conflicting translations for the same `old_text`:
+- `text_match_first_` stores the highest-priority translation (first encountered)
+- `text_match_conflicts_` stores ALL translations separated by ` / ` (including the first)
+- `insert_via_text_match` creates the entry with:
+  - `new_text` = the highest-priority translation (from `text_match_first_`)
+  - `status` = "ambiguous"
+  - `adapted_from` = all translations joined by ` / ` (from `text_match_conflicts_`)
+
+Ambiguous entries behave like untranslated during convert/create (the converter looks up by key, not by text_match). The adapted_from panel shows all options so the user can pick one.
+
+## Annotation/Glossary Status Filter
+
+The glossary in `annotation_manager_t::rebuild()` only includes entries with trusted statuses. Excluded statuses:
+- `changed` — translation carried over but original text differs, may be wrong
+- `ambiguous` — conflicting translations, unreliable
+- `in_progress` — user is still editing
+- `propagated` — auto-filled, may not be verified
+- `model` — machine translated, not human-verified
+- `error` — has validation issues
+
+Included statuses (glossary sources): `translated`, `reused`, `adapted`, and base dict statuses (`matched`, `fingerprint`, `coords`, `heuristic`, `exact`, `info`, `wilderness`, `region`).
+
+DIAL topics (hyperlinks) have NO status filter — all DIAL entries contribute regardless of status.
+
+## Glossary Sources
+
+The glossary is built from these record types:
+- DIAL — hyperlink topics (kind = `dial_topic`, blue highlight)
+- FNAM — NPC/item display names (kind = `glossary_term`, green highlight)
+- CELL — cell names (kind = `glossary_term`, green highlight)
+- RNAM — race/faction rank names (kind = `glossary_term`, green highlight)
+- INDX — skill/attribute names (kind = `glossary_term`, green highlight)
+
+Glossary terms show for all record types. DIAL hyperlinks show for all record types.
+
+## Forbidden Characters in Syntax Highlighter
+
+The composite highlighter marks these characters with orange background (`255, 200, 180`):
+- `|`, `~`, `@`, `{`, `}`
+- Control characters (0x00–0x1F) except tab (0x09), CR (0x0D), LF (0x0A)
+
+`"` is NOT highlighted — it's a valid character in script records (SCTX/BNAM) as a string delimiter.
+`/` is NOT a forbidden character.
 
 ## XML Dictionary Format Is Frozen
 

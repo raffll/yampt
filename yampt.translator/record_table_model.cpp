@@ -41,6 +41,8 @@ static std::string status_display_name(const std::string & status)
 		return "Mismatch";
 	if (status == "propagated")
 		return "Propagated";
+	if (status == "ambiguous")
+		return "Ambiguous";
 	return status;
 }
 

@@ -14,10 +14,11 @@ annotations_panel_t::annotations_panel_t(QWidget * parent)
     : QWidget(parent)
 {
 	auto * layout = new QVBoxLayout(this);
-	layout->setContentsMargins(0, 0, 0, 0);
+	layout->setContentsMargins(4, 4, 4, 4);
+	layout->setSpacing(4);
 
 	auto * toolbar = new QHBoxLayout();
-	toolbar->setContentsMargins(2, 2, 2, 0);
+	toolbar->setContentsMargins(0, 0, 0, 0);
 	rebuild_btn_ = new QPushButton("Rebuild", this);
 	rebuild_btn_->setToolTip("Rebuild annotations from all loaded dicts");
 	rebuild_btn_->setFixedHeight(22);
@@ -74,10 +75,11 @@ void annotations_panel_t::update_annotations(
 			if (a.kind != kind)
 				continue;
 
-			if (seen.count(a.old_text))
+			auto key = a.old_text + "\x01" + a.new_text + "\x01" + a.source;
+			if (seen.count(key))
 				continue;
 
-			seen.insert(a.old_text);
+			seen.insert(key);
 			result.push_back({ a.old_text, a.new_text, a.source });
 		}
 
@@ -102,7 +104,11 @@ void annotations_panel_t::update_annotations(
 	{
 		QString display = QString::fromStdString(e.old_text + " \xe2\x86\x92 " + e.new_text);
 		if (!e.source.empty())
-			display += QString::fromStdString("  [" + e.source + "]");
+		{
+			auto sep = e.source.find_last_of("/\\");
+			auto name = (sep != std::string::npos) ? e.source.substr(sep + 1) : e.source;
+			display += QString::fromStdString("  [" + name + "]");
+		}
 		auto * item = new QListWidgetItem(display);
 		item->setData(Qt::UserRole, QString::fromStdString(e.new_text));
 		list_->addItem(item);
@@ -121,7 +127,11 @@ void annotations_panel_t::update_annotations(
 	{
 		QString display = QString::fromStdString(e.old_text + " \xe2\x86\x92 " + e.new_text);
 		if (!e.source.empty())
-			display += QString::fromStdString("  [" + e.source + "]");
+		{
+			auto sep = e.source.find_last_of("/\\");
+			auto name = (sep != std::string::npos) ? e.source.substr(sep + 1) : e.source;
+			display += QString::fromStdString("  [" + name + "]");
+		}
 		auto * item = new QListWidgetItem(display);
 		item->setData(Qt::UserRole, QString::fromStdString(e.new_text));
 		list_->addItem(item);

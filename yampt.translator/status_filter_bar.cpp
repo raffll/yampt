@@ -32,6 +32,8 @@ static const char * get_status_display_name_qt(const std::string & status)
 		return "Mismatch";
 	if (status == "propagated")
 		return "Propagated";
+	if (status == "ambiguous")
+		return "Ambiguous";
 	return status.c_str();
 }
 
@@ -61,6 +63,8 @@ static const char * get_status_tooltip(const std::string & status)
 		return "Translated by the translation model";
 	if (status == "propagated")
 		return "Translation propagated from another record";
+	if (status == "ambiguous")
+		return "Multiple conflicting translations found in base dicts";
 	if (status == "error")
 		return "Translation has a validation error";
 	return "";
@@ -78,7 +82,7 @@ status_filter_bar_t::status_filter_bar_t(QWidget * parent)
 	static const std::vector<std::string> base_statuses = { "matched", "duplicate", "missing", "mismatch" };
 
 	static const std::vector<std::string> single_statuses = {
-		"translated", "reused", "adapted", "changed", "untranslated"
+		"translated", "reused", "adapted", "changed", "ambiguous", "untranslated"
 	};
 
 	static const std::vector<std::string> work_statuses = { "in_progress", "propagated", "error" };
@@ -348,7 +352,7 @@ void status_filter_bar_t::update_button_styles()
 	static const std::set<std::string> base_statuses = { "matched", "missing", "duplicate", "mismatch" };
 
 	static const std::set<std::string> user_statuses = { "translated",   "reused",      "adapted",    "changed",
-		                                                 "untranslated", "in_progress", "model",      "propagated", "error" };
+		                                                 "untranslated", "ambiguous",   "in_progress", "model",      "propagated", "error" };
 
 	bool no_filter = active_statuses_.empty();
 

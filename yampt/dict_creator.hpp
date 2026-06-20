@@ -174,4 +174,6 @@ private:
 	std::unordered_map<std::string, size_t> info_index;
 	std::unordered_map<std::string, std::string> dial_native_to_foreign;
 	std::unordered_map<std::string, const tools_t::record_entry_t *> text_match_index_;
+	std::unordered_map<std::string, std::string> text_match_conflicts_;
+	std::unordered_map<std::string, std::string> text_match_first_;
 };

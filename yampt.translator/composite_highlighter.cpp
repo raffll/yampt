@@ -83,13 +83,6 @@ void composite_highlighter_t::highlightBlock(const QString & text)
 			merged.setBackground(QColor(255, 200, 180));
 			setFormat(i, 1, merged);
 		}
-
-		if (ch == '"' && (record_type_ == tools_t::rec_type_t::sctx || record_type_ == tools_t::rec_type_t::bnam))
-		{
-			auto merged = format(i);
-			merged.setBackground(QColor(255, 200, 180));
-			setFormat(i, 1, merged);
-		}
 	}
 
 	if (!is_translation_ || !spell_checker_ || !spell_checker_->is_loaded())

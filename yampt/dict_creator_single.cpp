@@ -376,6 +376,7 @@ void dict_creator_t::make_dict_single_cell()
 void dict_creator_t::build_text_match_index()
 {
 	text_match_index_.clear();
+	text_match_conflicts_.clear();
 
 	if (!base_dict)
 		return;
@@ -390,10 +391,30 @@ void dict_creator_t::build_text_match_index()
 			if (entry.new_text == entry.old_text)
 				continue;
 
-			if (text_match_index_.count(entry.old_text))
+			auto it = text_match_index_.find(entry.old_text);
+			if (it == text_match_index_.end())
+			{
+				text_match_index_[entry.old_text] = &entry;
 				continue;
+			}
 
-			text_match_index_[entry.old_text] = &entry;
+			if (it->second == nullptr)
+			{
+				auto conflict_it = text_match_conflicts_.find(entry.old_text);
+				if (conflict_it != text_match_conflicts_.end())
+				{
+					if (conflict_it->second.find(entry.new_text) == std::string::npos)
+						conflict_it->second += " / " + entry.new_text;
+				}
+				continue;
+			}
+
+			if (it->second->new_text != entry.new_text)
+			{
+				text_match_first_[entry.old_text] = it->second->new_text;
+				text_match_conflicts_[entry.old_text] = it->second->new_text + " / " + entry.new_text;
+				it->second = nullptr;
+			}
 		}
 	}
 }
@@ -560,8 +581,25 @@ void dict_creator_t::insert_via_text_match(
 	auto text_it = text_match_index_.find(old_text);
 	if (text_it != text_match_index_.end())
 	{
-		insert_with_status(key_text, old_text, text_it->second->new_text, type, tools_t::status_t::reused);
-		return;
+		if (text_it->second)
+		{
+			insert_with_status(key_text, old_text, text_it->second->new_text, type, tools_t::status_t::reused);
+			return;
+		}
+
+		auto conflict_it = text_match_conflicts_.find(old_text);
+		if (conflict_it != text_match_conflicts_.end())
+		{
+			auto first_it = text_match_first_.find(old_text);
+			const auto & first_text = (first_it != text_match_first_.end()) ? first_it->second : old_text;
+			insert_with_status(key_text, old_text, first_text, type, tools_t::status_t::ambiguous);
+
+			auto * entry = dict.at(type).find(key_text);
+			if (entry)
+				entry->adapted_from = conflict_it->second;
+
+			return;
+		}
 	}
 
 	insert_as_untranslated(key_text, old_text, type);
