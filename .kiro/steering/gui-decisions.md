@@ -54,3 +54,22 @@ The root cause is likely the OpenGL/ImGui render loop painting the area behind t
 - Use `WS_EX_COMPOSITED` on the parent (may conflict with OpenGL)
 
 Do NOT attempt more `SetWindowPos` flag combinations — they have all been tried.
+
+## Status Display Names
+
+The Status column in the record table and the status filter bar buttons must always show a human-readable capitalized name, never the raw internal string. When adding a new status, update both `status_display_name()` in `record_table_model.cpp` and `get_status_display_name_qt()` in `status_filter_bar.cpp`.
+
+Current mapping:
+- `untranslated` → "Untranslated"
+- `missing` → "Missing"
+- `duplicate` → "Duplicate"
+- `matched` (and sub-statuses) → "Matched"
+- `error` → "Error"
+- `translated` → "Translated"
+- `reused` → "Reused"
+- `adapted` → "Adapted"
+- `changed` → "Changed"
+- `in_progress` → "In Progress"
+- `model` → "Model"
+- `mismatch` → "Mismatch"
+- `propagated` → "Propagated"

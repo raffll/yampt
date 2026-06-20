@@ -35,6 +35,8 @@ static std::string status_display_name(const std::string & status)
 		return "Changed";
 	if (status == "in_progress")
 		return "In Progress";
+	if (status == "model")
+		return "Model";
 	if (status == "mismatch")
 		return "Mismatch";
 	if (status == "propagated")

@@ -26,6 +26,8 @@ static const char * get_status_display_name_qt(const std::string & status)
 		return "Changed";
 	if (status == "in_progress")
 		return "In Progress";
+	if (status == "model")
+		return "Model";
 	if (status == "mismatch")
 		return "Mismatch";
 	if (status == "propagated")
@@ -55,6 +57,8 @@ static const char * get_status_tooltip(const std::string & status)
 		return "No translation provided yet";
 	if (status == "in_progress")
 		return "Translation edited but not finalized";
+	if (status == "model")
+		return "Translated by the translation model";
 	if (status == "propagated")
 		return "Translation propagated from another record";
 	if (status == "error")
@@ -145,6 +149,30 @@ status_filter_bar_t::status_filter_bar_t(QWidget * parent)
 		    &QWidget::customContextMenuRequested,
 		    this,
 		    [this, s = status]() { on_status_right_clicked(s); });
+
+		layout_->addWidget(sb.button);
+		status_buttons_.push_back(sb);
+	}
+
+	auto * sep3 = new QLabel(QString::fromUtf8("\xE2\x80\xA2"), this);
+	sep3->setStyleSheet("color: rgb(150,150,150);");
+	layout_->addWidget(sep3);
+
+	{
+		status_button_t sb;
+		sb.status = "model";
+		sb.count = 0;
+		sb.button = new QPushButton(get_status_display_name_qt("model"), this);
+		sb.button->setContextMenuPolicy(Qt::CustomContextMenu);
+		sb.button->setToolTip(get_status_tooltip("model"));
+
+		connect(sb.button, &QPushButton::clicked, this, [this]() { on_status_clicked("model"); });
+
+		connect(
+		    sb.button,
+		    &QWidget::customContextMenuRequested,
+		    this,
+		    [this]() { on_status_right_clicked("model"); });
 
 		layout_->addWidget(sb.button);
 		status_buttons_.push_back(sb);
@@ -320,7 +348,7 @@ void status_filter_bar_t::update_button_styles()
 	static const std::set<std::string> base_statuses = { "matched", "missing", "duplicate", "mismatch" };
 
 	static const std::set<std::string> user_statuses = { "translated",   "reused",      "adapted",    "changed",
-		                                                 "untranslated", "in_progress", "propagated", "error" };
+		                                                 "untranslated", "in_progress", "model",      "propagated", "error" };
 
 	bool no_filter = active_statuses_.empty();
 

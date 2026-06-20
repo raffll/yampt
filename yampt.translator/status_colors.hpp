@@ -39,6 +39,9 @@ inline QColor get_status_color(const std::string & status)
 	if (status == "in_progress")
 		return QColor(102, 153, 242);
 
+	if (status == "model")
+		return QColor(100, 180, 220);
+
 	if (status == "propagated")
 		return QColor(180, 230, 230);
 

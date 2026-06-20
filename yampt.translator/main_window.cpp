@@ -4,6 +4,7 @@
 #include "annotations_panel.hpp"
 #include "book_preview.hpp"
 #include "composite_highlighter.hpp"
+#include "ctranslate2_provider.hpp"
 #include "dict_document.hpp"
 #include "display_name.hpp"
 #include "plugin_document.hpp"
@@ -20,6 +21,7 @@
 #include "sidebar_widget.hpp"
 #include "spell_context_menu.hpp"
 #include "status_filter_bar.hpp"
+#include "translation_suggestion_tab.hpp"
 #include "validation_indicator.hpp"
 #include "yaml_document.hpp"
 
@@ -237,10 +239,13 @@ main_window_t::main_window_t(QWidget * parent)
 	info_tabs_ = new QTabWidget(left_splitter_);
 	annotations_panel_ = new annotations_panel_t(info_tabs_);
 	history_panel_ = new history_panel_t(info_tabs_);
+	translation_tab_ = new translation_suggestion_tab_t(info_tabs_);
+	translation_tab_->set_models_dir((QCoreApplication::applicationDirPath() + "/models").toStdString());
 	find_replace_dialog_ = new find_replace_dialog_t(this);
 	find_replace_dialog_->setVisible(false);
 	info_tabs_->addTab(annotations_panel_, "Annotations");
 	info_tabs_->addTab(history_panel_, "History");
+	info_tabs_->addTab(translation_tab_, "Translate");
 	left_splitter_->addWidget(info_tabs_);
 
 	right_splitter_ = new QSplitter(Qt::Vertical, central_splitter_);
@@ -255,12 +260,9 @@ main_window_t::main_window_t(QWidget * parent)
 	table_view_ = new record_table_view_t(record_tabs_);
 	table_view_->setModel(table_model_);
 	book_preview_ = new book_preview_t(record_tabs_);
-	translation_tab_ = new translation_suggestion_tab_t(record_tabs_);
-	translation_tab_->set_models_dir((QCoreApplication::applicationDirPath() + "/models").toStdString());
 	log_tab_ = new log_tab_t(record_tabs_);
 	record_tabs_->addTab(table_view_, "Records");
 	record_tabs_->addTab(book_preview_, "Book Preview");
-	record_tabs_->addTab(translation_tab_, "Translate");
 	record_tabs_->addTab(log_tab_, "Log");
 	right_top_layout->addWidget(record_tabs_, 1);
 
@@ -446,6 +448,133 @@ main_window_t::main_window_t(QWidget * parent)
 	connect(search_col_key_, &QPushButton::toggled, this, on_search_col_changed);
 	connect(search_col_original_, &QPushButton::toggled, this, on_search_col_changed);
 	connect(search_col_translation_, &QPushButton::toggled, this, on_search_col_changed);
+
+	connect(translation_tab_, &translation_suggestion_tab_t::translate_all_requested, this, [this]()
+	{
+		auto * dict_doc = dynamic_cast<dict_document_t *>(active_doc_);
+		if (!dict_doc)
+		{
+			translation_tab_->append_log("[error] no dictionary loaded\n");
+			return;
+		}
+
+		auto * provider = translation_tab_->ct2_provider();
+		if (!provider->is_available())
+		{
+			translation_tab_->append_log("[error] model not loaded\n");
+			return;
+		}
+
+		translation_tab_->set_translate_all_enabled(false);
+		translation_tab_->append_log("[info] collecting untranslated entries...\n");
+
+		struct batch_state_t
+		{
+			std::vector<std::pair<tools_t::rec_type_t, size_t>> work_items;
+			size_t current = 0;
+			int translated_count = 0;
+			int glossary_count = 0;
+			int error_count = 0;
+		};
+
+		auto state = std::make_shared<batch_state_t>();
+
+		auto & data = dict_doc->data_mut();
+		for (auto & [type, chapter] : data)
+		{
+			for (size_t i = 0; i < chapter.records.size(); ++i)
+			{
+				if (chapter.records[i].status == "untranslated" && !chapter.records[i].old_text.empty())
+					state->work_items.push_back({ type, i });
+
+				if (state->work_items.size() >= 10)
+					break;
+			}
+
+			if (state->work_items.size() >= 10)
+				break;
+		}
+
+		if (state->work_items.empty())
+		{
+			translation_tab_->append_log("[info] no untranslated entries found\n");
+			translation_tab_->set_translate_all_enabled(true);
+			return;
+		}
+
+		translation_tab_->append_log(
+		    "[info] translating " + std::to_string(state->work_items.size()) + " entries\n");
+
+		auto * timer = new QTimer(this);
+		timer->setInterval(0);
+		connect(timer, &QTimer::timeout, this, [this, state, dict_doc, provider, timer]()
+		{
+			if (state->current >= state->work_items.size())
+			{
+				timer->stop();
+				timer->deleteLater();
+
+				dict_doc->set_dirty(true);
+				set_unsaved_changes(true);
+				update_sidebar_item(dict_doc->path());
+
+				if (editor_controller_.current_row() >= 0)
+					load_record(editor_controller_.current_row());
+
+				translation_tab_->append_log(
+				    "[info] done: translated=" + std::to_string(state->translated_count) +
+				    " glossary=" + std::to_string(state->glossary_count) +
+				    " errors=" + std::to_string(state->error_count) + "\n");
+				translation_tab_->set_translate_all_enabled(true);
+				return;
+			}
+
+			const auto & [type, idx] = state->work_items[state->current];
+			auto & data_ref = dict_doc->data_mut();
+			auto type_it = data_ref.find(type);
+			if (type_it == data_ref.end() || idx >= type_it->second.records.size())
+			{
+				++state->current;
+				return;
+			}
+
+			auto & record = type_it->second.records[idx];
+			auto result = provider->translate_sync(record.old_text);
+
+			if (!result.success)
+			{
+				translation_tab_->append_log(
+				    "[error] \"" + record.old_text.substr(0, 40) + "...\" -> " + result.error + "\n");
+				++state->error_count;
+				++state->current;
+				return;
+			}
+
+			auto glossary_applied = annotation_manager_.apply_glossary(result.text);
+			bool had_glossary = (glossary_applied != result.text);
+
+			record.new_text = glossary_applied;
+			record.status = "model";
+			dict_doc->modified_records_insert(type, idx);
+			++state->translated_count;
+
+			for (int row = 0; row < table_model_->rowCount(); ++row)
+			{
+				const auto * r = table_model_->row_at(row);
+				if (r && r->type == type && r->record_index == idx)
+				{
+					table_model_->update_row(row, record.new_text, record.status);
+					break;
+				}
+			}
+
+			if (had_glossary)
+				++state->glossary_count;
+
+			++state->current;
+		});
+		timer->start();
+	});
 
 	connect(
 	    spelling_group_,
@@ -810,7 +939,7 @@ main_window_t::main_window_t(QWidget * parent)
 	    *search_col_original_,
 	    *search_col_translation_);
 
-	const auto config_path = QCoreApplication::applicationDirPath() + "/yampt_gui.ini";
+	const auto config_path = QCoreApplication::applicationDirPath() + "/yampt.translator.ini";
 	bool first_run = !QFile::exists(config_path);
 
 	load_config();
@@ -1833,7 +1962,7 @@ void main_window_t::on_spell_lang_changed(int index)
 
 void main_window_t::load_config()
 {
-	const auto path = QCoreApplication::applicationDirPath() + "/yampt_gui.ini";
+	const auto path = QCoreApplication::applicationDirPath() + "/yampt.translator.ini";
 	config_.load(path.toStdString());
 
 	move(config_.window_x, config_.window_y);
@@ -1855,10 +1984,6 @@ void main_window_t::load_config()
 
 	session_.set_codepage(current_codepage_);
 
-	if (!config_.deepl_api_key.empty())
-		translation_tab_->set_deepl_api_key(config_.deepl_api_key);
-
-	translation_tab_->set_source_index(config_.translation_source_index);
 	translation_tab_->set_language_index(config_.translation_language_index);
 
 	sidebar_toggle_->setChecked(config_.sidebar_visible);
@@ -1919,12 +2044,10 @@ void main_window_t::save_config()
 
 	config_.active_dict_index = -1; // deprecated — use active_dict_path
 	config_.active_dict_path = active_doc_ ? active_doc_->path() : std::string {};
-	config_.deepl_api_key = translation_tab_->deepl_api_key();
-	config_.translation_source_index = translation_tab_->source_index();
 	config_.translation_language_index = translation_tab_->language_index();
 	config_.workspace_roots = file_list_.get_roots();
 
-	const auto path = QCoreApplication::applicationDirPath() + "/yampt_gui.ini";
+	const auto path = QCoreApplication::applicationDirPath() + "/yampt.translator.ini";
 	config_.save(path.toStdString());
 }
 

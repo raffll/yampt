@@ -43,17 +43,20 @@ bool model_downloader_t::is_model_present(const std::string & target_dir) const
 {
 	namespace fs = std::filesystem;
 
-	auto model_dir = fs::path(target_dir) / "nllb-200" / "model";
-	if (!fs::is_directory(model_dir))
+	if (!fs::is_directory(target_dir))
 		return false;
 
-	for (const auto & f : MODEL_FILES)
+	for (const auto & entry : fs::directory_iterator(target_dir))
 	{
-		if (!fs::exists(model_dir / f))
-			return false;
+		if (!entry.is_directory())
+			continue;
+
+		auto dir = entry.path();
+		if (fs::exists(dir / "sentencepiece.bpe.model") && fs::is_directory(dir / "model"))
+			return true;
 	}
 
-	return true;
+	return false;
 }
 
 void model_downloader_t::download(const std::string & target_dir, std::function<void(const std::string &)> on_progress)

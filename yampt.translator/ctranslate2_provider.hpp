@@ -21,6 +21,7 @@ public:
 	int remaining_quota() const override;
 
 	void translate(const std::string & text, const std::string & target_lang) override;
+	translation_result_t translate_sync(const std::string & text);
 
 	bool load_model(const std::string & model_path);
 

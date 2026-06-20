@@ -44,6 +44,17 @@ public:
 	const std::string & get_enchantment(const std::string & key) const;
 	bool has_enchantment(const std::string & key) const;
 
+	std::string apply_glossary(const std::string & translated_text) const;
+
+	struct glossary_match_t
+	{
+		size_t start;
+		size_t length;
+		std::string replacement;
+	};
+
+	std::vector<glossary_match_t> find_glossary_matches(const std::string & source_text) const;
+
 private:
 	struct topic_entry_t
 	{

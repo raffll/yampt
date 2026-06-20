@@ -1169,7 +1169,7 @@ void editor_tab_t::log_message(const std::string & msg)
 
 void editor_tab_t::save_plugin_paths()
 {
-	QSettings settings(QCoreApplication::applicationDirPath() + "/yampt_gui.ini", QSettings::IniFormat);
+	QSettings settings(QCoreApplication::applicationDirPath() + "/yampt.translator.ini", QSettings::IniFormat);
 
 	settings.beginWriteArray("editor/plugins");
 	for (int i = 0; i < static_cast<int>(scan_.plugin_count()); ++i)
@@ -1182,7 +1182,7 @@ void editor_tab_t::save_plugin_paths()
 
 void editor_tab_t::load_plugin_paths()
 {
-	QSettings settings(QCoreApplication::applicationDirPath() + "/yampt_gui.ini", QSettings::IniFormat);
+	QSettings settings(QCoreApplication::applicationDirPath() + "/yampt.translator.ini", QSettings::IniFormat);
 
 	int count = settings.beginReadArray("editor/plugins");
 	if (count == 0)

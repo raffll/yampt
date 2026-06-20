@@ -540,4 +540,7 @@ if exist "$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\Qt6\pl
     </ItemGroup>
     <Copy SourceFiles="@(QtPlatformPlugins)" DestinationFolder="$(OutDir)platforms" SkipUnchangedFiles="true" />
   </Target>
+  <Target Name="CopyModels" AfterTargets="Build" Condition="Exists('$(SolutionDir)models')">
+    <Exec Command="xcopy /Y /D /E /I &quot;$(SolutionDir)models&quot; &quot;$(OutDir)models&quot;" />
+  </Target>
 </Project>

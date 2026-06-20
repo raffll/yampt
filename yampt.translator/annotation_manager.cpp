@@ -307,3 +307,93 @@ bool annotation_manager_t::has_enchantment(const std::string & key) const
 {
 	return enchantments_.count(key) > 0;
 }
+
+std::vector<annotation_manager_t::glossary_match_t> annotation_manager_t::find_glossary_matches(
+    const std::string & source_text) const
+{
+	std::vector<glossary_match_t> matches;
+	std::string text_lower = to_lower(source_text);
+	std::vector<bool> covered(source_text.size(), false);
+
+	for (const auto & term : glossary_terms_)
+	{
+		if (term.key_lower.empty() || term.new_text.empty())
+			continue;
+
+		size_t pos = 0;
+		while ((pos = text_lower.find(term.key_lower, pos)) != std::string::npos)
+		{
+			bool overlap = false;
+			for (size_t i = pos; i < pos + term.key_lower.size(); ++i)
+			{
+				if (covered[i])
+				{
+					overlap = true;
+					break;
+				}
+			}
+
+			if (overlap)
+			{
+				pos += term.key_lower.size();
+				continue;
+			}
+
+			if (pos > 0 && is_alpha(text_lower[pos - 1]))
+			{
+				pos += term.key_lower.size();
+				continue;
+			}
+
+			size_t end_pos = pos + term.key_lower.size();
+			if (end_pos < text_lower.size() && is_alpha(text_lower[end_pos]))
+			{
+				pos += term.key_lower.size();
+				continue;
+			}
+
+			for (size_t i = pos; i < end_pos; ++i)
+				covered[i] = true;
+
+			matches.push_back({ pos, term.key_lower.size(), term.new_text });
+			pos = end_pos;
+		}
+	}
+
+	return matches;
+}
+
+std::string annotation_manager_t::apply_glossary(const std::string & translated_text) const
+{
+	std::string text_lower = to_lower(translated_text);
+	std::string result = translated_text;
+
+	for (const auto & term : glossary_terms_)
+	{
+		if (term.key_lower.empty() || term.new_text.empty())
+			continue;
+
+		size_t pos = 0;
+		while ((pos = text_lower.find(term.key_lower, pos)) != std::string::npos)
+		{
+			if (pos > 0 && is_alpha(text_lower[pos - 1]))
+			{
+				pos += term.key_lower.size();
+				continue;
+			}
+
+			size_t end_pos = pos + term.key_lower.size();
+			if (end_pos < text_lower.size() && is_alpha(text_lower[end_pos]))
+			{
+				pos += term.key_lower.size();
+				continue;
+			}
+
+			result.replace(pos, term.key_lower.size(), term.new_text);
+			text_lower = to_lower(result);
+			pos += term.new_text.size();
+		}
+	}
+
+	return result;
+}

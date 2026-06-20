@@ -9,14 +9,12 @@
 
 class QComboBox;
 class QLabel;
-class QLineEdit;
 class QPlainTextEdit;
 class QPushButton;
 
 class ctranslate2_provider_t;
 class deepl_provider_t;
 class google_provider_t;
-class model_downloader_t;
 
 class translation_suggestion_tab_t : public QWidget
 {
@@ -27,47 +25,39 @@ public:
 
 	void set_source_text(const std::string & text);
 	void set_models_dir(const std::string & dir);
-
-	void set_deepl_api_key(const std::string & key);
-	std::string deepl_api_key() const;
-	void set_deepl_chars_used(int chars);
-	int deepl_chars_used() const;
-
-	int source_index() const;
-	void set_source_index(int index);
+	void set_glossary_fn(std::function<std::string(const std::string &)> fn);
 
 	int language_index() const;
 	void set_language_index(int index);
 
+	ctranslate2_provider_t * ct2_provider() const;
+	void append_log(const std::string & msg);
+	void set_translate_all_enabled(bool enabled);
+
+signals:
+	void translate_all_requested();
+
 private slots:
-	void on_translate_clicked();
-	void on_download_clicked();
-	void on_download_progress(const std::string & msg);
-	void on_result(translation_suggestion_t result);
 	void on_language_changed(int index);
 
 private:
 	void update_counter_label();
-	void update_download_button();
 	void load_model_for_language(int index);
 	void rebuild_language_combo();
 
 	QComboBox * source_combo_ = nullptr;
 	QComboBox * language_combo_ = nullptr;
-	QPushButton * translate_btn_ = nullptr;
-	QPushButton * download_btn_ = nullptr;
-	QLabel * key_label_ = nullptr;
-	QLineEdit * api_key_field_ = nullptr;
+	QPushButton * translate_all_btn_ = nullptr;
 	QPlainTextEdit * result_text_ = nullptr;
 	QLabel * counter_label_ = nullptr;
 
 	std::string source_text_;
 	std::string models_dir_;
+	std::function<std::string(const std::string &)> glossary_fn_;
 
 	ctranslate2_provider_t * ct2_provider_ = nullptr;
 	deepl_provider_t * deepl_provider_ = nullptr;
 	google_provider_t * google_provider_ = nullptr;
-	model_downloader_t * downloader_ = nullptr;
 	std::vector<translation_provider_t *> providers_;
 
 	struct lang_entry_t

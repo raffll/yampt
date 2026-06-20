@@ -41,6 +41,14 @@ void ctranslate2_provider_t::translate(const std::string & text, const std::stri
 	emit translation_finished({ result.text, result.success, result.error });
 }
 
+translation_result_t ctranslate2_provider_t::translate_sync(const std::string & text)
+{
+	if (!engine_.is_loaded())
+		return { "", false, "Model not loaded" };
+
+	return engine_.translate(text);
+}
+
 bool ctranslate2_provider_t::load_model(const std::string & model_path)
 {
 	return engine_.load(model_path);
