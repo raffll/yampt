@@ -13,3 +13,4 @@ dictionaries/
 *.log
 *.ini
 
+/scripts/finetune_tmp

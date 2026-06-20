@@ -68,6 +68,36 @@ void annotation_manager_t::rebuild(const std::vector<dict_source_t> & sources)
 				glossary_terms_.push_back({ key_lower, entry.new_text, src.name });
 			}
 		}
+
+		auto rnam_it = src.dict->find(tools_t::rec_type_t::rnam);
+		if (rnam_it != src.dict->end())
+		{
+			for (const auto & entry : rnam_it->second.records)
+			{
+				if (entry.old_text.empty())
+					continue;
+				if (entry.old_text == entry.new_text)
+					continue;
+
+				std::string key_lower = to_lower(entry.old_text);
+				glossary_terms_.push_back({ key_lower, entry.new_text, src.name });
+			}
+		}
+
+		auto indx_it = src.dict->find(tools_t::rec_type_t::indx);
+		if (indx_it != src.dict->end())
+		{
+			for (const auto & entry : indx_it->second.records)
+			{
+				if (entry.old_text.empty())
+					continue;
+				if (entry.old_text == entry.new_text)
+					continue;
+
+				std::string key_lower = to_lower(entry.old_text);
+				glossary_terms_.push_back({ key_lower, entry.new_text, src.name });
+			}
+		}
 	}
 
 	std::sort(
