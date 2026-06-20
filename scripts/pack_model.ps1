@@ -1,9 +1,11 @@
 $src = "models\nllb-600M"
-$out = "nllb-600M.zip"
+$version = "1.0"
+$out = "build\nllb-600M-v$version.zip"
 
+New-Item -ItemType Directory -Path "build" -Force | Out-Null
 if (Test-Path $out) { Remove-Item $out }
 
-$tmp = "pack_tmp\nllb-600M"
+$tmp = "pack_tmp\models\nllb-600M"
 if (Test-Path "pack_tmp") { Remove-Item -Recurse -Force "pack_tmp" }
 
 New-Item -ItemType Directory -Path "$tmp\model" -Force | Out-Null
@@ -45,7 +47,7 @@ License: CC-BY-NC-4.0 (same as the original model)
 Set-Content -Path "$tmp\LICENSE" -Value $license -Encoding UTF8
 Set-Content -Path "$tmp\README.md" -Value $readme -Encoding UTF8
 
-Compress-Archive -Path "pack_tmp\nllb-600M" -DestinationPath $out -Force
+Compress-Archive -Path "pack_tmp\models" -DestinationPath $out -Force
 
 Remove-Item -Recurse -Force "pack_tmp"
 
