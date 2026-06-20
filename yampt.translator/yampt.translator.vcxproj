@@ -529,7 +529,7 @@ if exist "$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\Qt6\pl
   <Target Name="CopyDictionaries" AfterTargets="Build">
     <MakeDir Directories="$(OutDir)dictionaries" />
     <ItemGroup>
-      <DictFiles Include="$(ProjectDir)dictionaries\*.*" />
+      <DictFiles Include="$(SolutionDir)dictionaries\*.*" />
     </ItemGroup>
     <Copy SourceFiles="@(DictFiles)" DestinationFolder="$(OutDir)dictionaries" SkipUnchangedFiles="true" />
   </Target>
