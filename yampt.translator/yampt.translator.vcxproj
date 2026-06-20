@@ -540,7 +540,13 @@ if exist "$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\Qt6\pl
     </ItemGroup>
     <Copy SourceFiles="@(QtPlatformPlugins)" DestinationFolder="$(OutDir)platforms" SkipUnchangedFiles="true" />
   </Target>
-  <Target Name="CopyModels" AfterTargets="Build" Condition="Exists('$(SolutionDir)models')">
-    <Exec Command="xcopy /Y /D /E /I &quot;$(SolutionDir)models&quot; &quot;$(OutDir)models&quot;" />
+  <Target Name="CopyModels" AfterTargets="Build" Condition="Exists('$(SolutionDir)models\nllb-600M\model')">
+    <MakeDir Directories="$(OutDir)models\nllb-600M\model" />
+    <ItemGroup>
+      <ModelBin Include="$(SolutionDir)models\nllb-600M\model\*.*" />
+      <ModelSpm Include="$(SolutionDir)models\nllb-600M\sentencepiece.bpe.model" />
+    </ItemGroup>
+    <Copy SourceFiles="@(ModelBin)" DestinationFolder="$(OutDir)models\nllb-600M\model" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(ModelSpm)" DestinationFolder="$(OutDir)models\nllb-600M" SkipUnchangedFiles="true" />
   </Target>
 </Project>

@@ -2358,6 +2358,18 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
 
 	log_tab_->append_log(op_name, result.log_text);
 	record_tabs_->setCurrentWidget(log_tab_);
+
+	if (!result.output_path.empty())
+	{
+		auto norm_output = result.output_path;
+		std::replace(norm_output.begin(), norm_output.end(), '\\', '/');
+
+		if (active_doc_ && active_doc_->path() == norm_output)
+			active_doc_ = nullptr;
+
+		session_.close(result.output_path);
+	}
+
 	scan_workspace();
 }
 
@@ -2381,6 +2393,29 @@ void main_window_t::scan_workspace()
 	}
 
 	file_list_.scan_roots(roots);
+
+	bool any_loaded = false;
+	for (const auto * entry : file_list_.all())
+	{
+		if (!entry->is_workspace)
+			continue;
+
+		if (entry->type != file_type_t::base_dict && entry->type != file_type_t::user_dict)
+			continue;
+
+		if (session_.find(entry->path))
+			continue;
+
+		if (session_.open(entry->path))
+			any_loaded = true;
+	}
+
+	if (any_loaded)
+	{
+		rebuild_annotations();
+		last_annotation_version_ = session_.dict_version();
+	}
+
 	rebuild_sidebar();
 }
 
