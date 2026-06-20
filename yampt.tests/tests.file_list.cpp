@@ -14,12 +14,12 @@
 
 TEST_CASE("property: file type classification correctness", "[u]")
 {
-	rc::prop("classify is deterministic and matches extension rules", []()
+	rc::prop(
+	    "classify is deterministic and matches extension rules",
+	    []()
 	{
 		const auto ext = *rc::gen::element(
-			std::string(".esm"), std::string(".esp"),
-			std::string(".json"), std::string(".xml"),
-			std::string(".yaml"));
+		    std::string(".esm"), std::string(".esp"), std::string(".json"), std::string(".xml"), std::string(".yaml"));
 		const auto prefix = *rc::gen::arbitrary<std::string>();
 		const auto path = prefix + ext;
 
@@ -37,8 +37,7 @@ TEST_CASE("property: file type classification correctness", "[u]")
 		}
 		else if (ext == ".json" || ext == ".xml")
 		{
-			RC_ASSERT(first == file_type_t::base_dict ||
-				first == file_type_t::user_dict);
+			RC_ASSERT(first == file_type_t::base_dict || first == file_type_t::user_dict);
 
 			if (first == file_type_t::base_dict)
 			{
@@ -47,8 +46,11 @@ TEST_CASE("property: file type classification correctness", "[u]")
 				if (pos != std::string::npos)
 					filename = filename.substr(pos + 1);
 
-				std::transform(filename.begin(), filename.end(), filename.begin(),
-					[](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+				std::transform(
+				    filename.begin(),
+				    filename.end(),
+				    filename.begin(),
+				    [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
 				RC_ASSERT(filename.find("_base_") != std::string::npos);
 			}
 		}
@@ -57,13 +59,14 @@ TEST_CASE("property: file type classification correctness", "[u]")
 
 TEST_CASE("property: path-keyed insert/lookup/remove invariant", "[u]")
 {
-	rc::prop("get returns non-null iff add was last operation for path", []()
+	rc::prop(
+	    "get returns non-null iff add was last operation for path",
+	    []()
 	{
 		file_list_t list;
-		const auto paths = *rc::gen::container<std::vector<std::string>>(
-			rc::gen::nonEmpty(rc::gen::arbitrary<std::string>()));
-		const auto ops = *rc::gen::container<std::vector<bool>>(
-			rc::gen::arbitrary<bool>());
+		const auto paths =
+		    *rc::gen::container<std::vector<std::string>>(rc::gen::nonEmpty(rc::gen::arbitrary<std::string>()));
+		const auto ops = *rc::gen::container<std::vector<bool>>(rc::gen::arbitrary<bool>());
 
 		std::unordered_map<std::string, bool> expected;
 
@@ -100,35 +103,35 @@ TEST_CASE("property: path-keyed insert/lookup/remove invariant", "[u]")
 
 TEST_CASE("property: language tag detection", "[u]")
 {
-	rc::prop("detect_language returns correct tag or empty for all inputs", []()
+	rc::prop(
+	    "detect_language returns correct tag or empty for all inputs",
+	    []()
 	{
 		const auto use_known = *rc::gen::arbitrary<bool>();
 
 		if (use_known)
 		{
 			const auto filename = *rc::gen::element(
-				std::string("Morrowind.esm"),
-				std::string("Tribunal.esm"),
-				std::string("Bloodmoon.esm"));
+			    std::string("Morrowind.esm"), std::string("Tribunal.esm"), std::string("Bloodmoon.esm"));
 
 			std::vector<std::pair<std::uintmax_t, std::string>> known_sizes;
 			if (filename == "Morrowind.esm")
 			{
 				known_sizes = {
-					{79837557, "EN"}, {80640776, "DE"}, {80105097, "PL"},
-					{80681814, "FR"}, {79857000, "RU"}};
+					{ 79837557, "EN" }, { 80640776, "DE" }, { 80105097, "PL" }, { 80681814, "FR" }, { 79857000, "RU" }
+				};
 			}
 			else if (filename == "Tribunal.esm")
 			{
 				known_sizes = {
-					{9631798, "EN"}, {9797295, "DE"}, {9658076, "PL"},
-					{10015689, "FR"}, {9702000, "RU"}};
+					{ 9631798, "EN" }, { 9797295, "DE" }, { 9658076, "PL" }, { 10015689, "FR" }, { 9702000, "RU" }
+				};
 			}
 			else
 			{
 				known_sizes = {
-					{4565686, "EN"}, {6069165, "DE"}, {4626565, "PL"},
-					{4697358, "FR"}, {4625000, "RU"}};
+					{ 4565686, "EN" }, { 6069165, "DE" }, { 4626565, "PL" }, { 4697358, "FR" }, { 4625000, "RU" }
+				};
 			}
 
 			const auto idx = *rc::gen::inRange<size_t>(0, known_sizes.size());
@@ -141,22 +144,24 @@ TEST_CASE("property: language tag detection", "[u]")
 			const auto filename = *rc::gen::arbitrary<std::string>();
 			const auto size = *rc::gen::arbitrary<std::uintmax_t>();
 			const auto result = detect_language(filename, size);
-			RC_ASSERT(result.empty() || result == "EN" || result == "DE" ||
-				result == "PL" || result == "FR" || result == "RU");
+			RC_ASSERT(
+			    result.empty() || result == "EN" || result == "DE" || result == "PL" || result == "FR" ||
+			    result == "RU");
 		}
 	});
 }
 
 TEST_CASE("property: display name derivation", "[u]")
 {
-	rc::prop("display name follows prefix/tag/suffix structure", []()
+	rc::prop(
+	    "display name follows prefix/tag/suffix structure",
+	    []()
 	{
 		file_entry_t entry;
 		entry.type = static_cast<file_type_t>(*rc::gen::inRange(0, 4));
 		entry.filename = *rc::gen::nonEmpty(rc::gen::arbitrary<std::string>());
 		entry.language_tag = *rc::gen::element(
-			std::string(""), std::string("EN"), std::string("PL"),
-			std::string("DE"), std::string("FR"));
+		    std::string(""), std::string("EN"), std::string("PL"), std::string("DE"), std::string("FR"));
 
 		const auto is_loaded = *rc::gen::arbitrary<bool>();
 		const auto is_dirty = *rc::gen::arbitrary<bool>();
@@ -175,10 +180,18 @@ TEST_CASE("property: display name derivation", "[u]")
 		std::string type_tag;
 		switch (entry.type)
 		{
-		case file_type_t::plugin: type_tag = "[ESP]"; break;
-		case file_type_t::base_dict: type_tag = "[BASE]"; break;
-		case file_type_t::user_dict: type_tag = "[USER]"; break;
-		case file_type_t::yaml_l10n: type_tag = "[YAML]"; break;
+		case file_type_t::plugin:
+			type_tag = "[ESP]";
+			break;
+		case file_type_t::base_dict:
+			type_tag = "[BASE]";
+			break;
+		case file_type_t::user_dict:
+			type_tag = "[USER]";
+			break;
+		case file_type_t::yaml_l10n:
+			type_tag = "[YAML]";
+			break;
 		}
 		RC_ASSERT(result.find(type_tag) != std::string::npos);
 
@@ -196,7 +209,9 @@ TEST_CASE("property: display name derivation", "[u]")
 
 TEST_CASE("property: context menu derivation", "[u]")
 {
-	rc::prop("menu items match decision table for all valid states", []()
+	rc::prop(
+	    "menu items match decision table for all valid states",
+	    []()
 	{
 		file_entry_t entry;
 		entry.type = static_cast<file_type_t>(*rc::gen::inRange(0, 4));
@@ -242,7 +257,9 @@ TEST_CASE("property: context menu derivation", "[u]")
 
 TEST_CASE("property: output directory derivation", "[u]")
 {
-	rc::prop("workspace uses parent dir, non-workspace uses default_dir", []()
+	rc::prop(
+	    "workspace uses parent dir, non-workspace uses default_dir",
+	    []()
 	{
 		file_entry_t entry;
 		entry.is_workspace = *rc::gen::arbitrary<bool>();
@@ -471,13 +488,14 @@ TEST_CASE("file_list_t container operations", "[u]")
 
 TEST_CASE("property: section grouping", "[u]")
 {
-	rc::prop("build_render_model groups entries by root_path", []()
+	rc::prop(
+	    "build_render_model groups entries by root_path",
+	    []()
 	{
 		file_list_t list;
 		const auto count = *rc::gen::inRange(1, 30);
 
-		const auto root_paths = std::vector<std::string>{
-			"C:/root_a", "C:/root_b", "C:/root_c"};
+		const auto root_paths = std::vector<std::string> { "C:/root_a", "C:/root_b", "C:/root_c" };
 
 		struct expected_entry_t
 		{
@@ -491,9 +509,8 @@ TEST_CASE("property: section grouping", "[u]")
 
 		for (int i = 0; i < count; ++i)
 		{
-			const auto ext = *rc::gen::element(
-				std::string(".esp"), std::string(".json"),
-				std::string(".xml"), std::string(".yaml"));
+			const auto ext =
+			    *rc::gen::element(std::string(".esp"), std::string(".json"), std::string(".xml"), std::string(".yaml"));
 			const auto root_idx = *rc::gen::inRange<size_t>(0, root_paths.size());
 			const auto & root = root_paths[root_idx];
 			const auto path = root + "/" + std::to_string(i) + "_file" + ext;
@@ -505,9 +522,8 @@ TEST_CASE("property: section grouping", "[u]")
 			const auto use_subfolder = *rc::gen::arbitrary<bool>();
 			if (use_subfolder)
 			{
-				entry.workspace_subfolder = *rc::gen::element(
-					std::string("en"), std::string("pl"),
-					std::string("de"), std::string("fr"));
+				entry.workspace_subfolder =
+				    *rc::gen::element(std::string("en"), std::string("pl"), std::string("de"), std::string("fr"));
 			}
 
 			expected_entry_t exp;
@@ -595,7 +611,7 @@ TEST_CASE("workspace scan round-trip", "[i]")
 	std::ofstream(temp_dir / "pl" / "morrowind_pl.json").put('x');
 
 	file_list_t list;
-	list.scan_roots({temp_dir.string()});
+	list.scan_roots({ temp_dir.string() });
 
 	REQUIRE(list.contains((temp_dir / "test.esp").string()));
 	REQUIRE(list.contains((temp_dir / "dict.json").string()));
@@ -634,5 +650,3 @@ TEST_CASE("workspace scan round-trip", "[i]")
 
 	fs::remove_all(temp_dir);
 }
-
-

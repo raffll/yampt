@@ -931,7 +931,8 @@ std::string view_tree_model_t::decode_field(const field_def_t & field, const cha
 		if (field.enum_names)
 		{
 			size_t count = 0;
-			while (field.enum_names[count]) ++count;
+			while (field.enum_names[count])
+				++count;
 
 			if (val < count)
 				result += " (" + std::string(field.enum_names[val]) + ")";
@@ -949,7 +950,8 @@ std::string view_tree_model_t::decode_field(const field_def_t & field, const cha
 		if (field.enum_names)
 		{
 			size_t count = 0;
-			while (field.enum_names[count]) ++count;
+			while (field.enum_names[count])
+				++count;
 
 			if (val < count)
 				result += " (" + std::string(field.enum_names[val]) + ")";
@@ -967,7 +969,8 @@ std::string view_tree_model_t::decode_field(const field_def_t & field, const cha
 		if (field.enum_names)
 		{
 			size_t count = 0;
-			while (field.enum_names[count]) ++count;
+			while (field.enum_names[count])
+				++count;
 
 			if (val < count)
 				result += " (" + std::string(field.enum_names[val]) + ")";

@@ -42,7 +42,10 @@ public:
 	std::vector<std::string> all_types() const;
 
 	void copy_record_to_merge(int source_plugin, size_t record_index);
-	void copy_record_to_merge_raw(const std::string & rec_type, const std::string & record_id, const std::string & content);
+	void copy_record_to_merge_raw(
+	    const std::string & rec_type,
+	    const std::string & record_id,
+	    const std::string & content);
 	void remove_from_merge(const std::string & type, const std::string & id);
 	bool save_merge(const std::string & output_path, const std::string & author, const std::string & description);
 	bool has_merge() const;

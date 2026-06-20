@@ -781,10 +781,9 @@ void editor_tab_t::on_create_merged_patch()
 		++copied;
 	}
 
-	log_message("Created merged patch: Merged Patch.esp ("
-	            + std::to_string(copied) + " records, "
-	            + std::to_string(merged_lists) + " leveled lists, "
-	            + std::to_string(merged_dial) + " dialogues)");
+	log_message(
+	    "Created merged patch: Merged Patch.esp (" + std::to_string(copied) + " records, " +
+	    std::to_string(merged_lists) + " leveled lists, " + std::to_string(merged_dial) + " dialogues)");
 
 	scan_.rebuild_conflicts();
 	rebuild_nav_preserving_state();

@@ -29,50 +29,28 @@ public:
 };
 
 static const std::vector<std::pair<tools_t::rec_type_t, const char *>> type_order = {
-	{ tools_t::rec_type_t::cell, "Cells" },
-	{ tools_t::rec_type_t::dial, "Topics" },
-	{ tools_t::rec_type_t::info, "Dialogues" },
-	{ tools_t::rec_type_t::fnam, "Names" },
-	{ tools_t::rec_type_t::text, "Books" },
-	{ tools_t::rec_type_t::gmst, "Settings" },
-	{ tools_t::rec_type_t::desc, "Descriptions" },
-	{ tools_t::rec_type_t::rnam, "Factions" },
-	{ tools_t::rec_type_t::indx, "Index" },
-	{ tools_t::rec_type_t::sctx, "Scripts" },
+	{ tools_t::rec_type_t::cell, "Cells" },        { tools_t::rec_type_t::dial, "Topics" },
+	{ tools_t::rec_type_t::info, "Dialogues" },    { tools_t::rec_type_t::fnam, "Names" },
+	{ tools_t::rec_type_t::text, "Books" },        { tools_t::rec_type_t::gmst, "Settings" },
+	{ tools_t::rec_type_t::desc, "Descriptions" }, { tools_t::rec_type_t::rnam, "Factions" },
+	{ tools_t::rec_type_t::indx, "Index" },        { tools_t::rec_type_t::sctx, "Scripts" },
 };
 
 static const std::vector<std::pair<std::string, const char *>> info_sub_types = {
-	{ "Topic", "Dialogues: Topic" },
-	{ "Voice", "Dialogues: Voice" },
-	{ "Greeting", "Dialogues: Greeting" },
-	{ "Persuasion", "Dialogues: Persuasion" },
+	{ "Topic", "Dialogues: Topic" },       { "Voice", "Dialogues: Voice" },
+	{ "Greeting", "Dialogues: Greeting" }, { "Persuasion", "Dialogues: Persuasion" },
 	{ "Journal", "Dialogues: Journal" },
 };
 
 static const std::vector<std::pair<std::string, const char *>> fnam_sub_types = {
-	{ "ACTI", "Names: Activators" },
-	{ "ALCH", "Names: Potions" },
-	{ "APPA", "Names: Apparatus" },
-	{ "ARMO", "Names: Armor" },
-	{ "BOOK", "Names: Books" },
-	{ "BSGN", "Names: Birthsigns" },
-	{ "CLAS", "Names: Classes" },
-	{ "CLOT", "Names: Clothing" },
-	{ "CONT", "Names: Containers" },
-	{ "CREA", "Names: Creatures" },
-	{ "DOOR", "Names: Doors" },
-	{ "FACT", "Names: Factions" },
-	{ "INGR", "Names: Ingredients" },
-	{ "LIGH", "Names: Lights" },
-	{ "LOCK", "Names: Lockpicks" },
-	{ "MISC", "Names: Miscellaneous" },
-	{ "NPC_", "Names: NPCs" },
-	{ "PROB", "Names: Probes" },
-	{ "RACE", "Names: Races" },
-	{ "REGN", "Names: Regions" },
-	{ "REPA", "Names: Repair Items" },
-	{ "SPEL", "Names: Spells" },
-	{ "WEAP", "Names: Weapons" },
+	{ "ACTI", "Names: Activators" },    { "ALCH", "Names: Potions" },  { "APPA", "Names: Apparatus" },
+	{ "ARMO", "Names: Armor" },         { "BOOK", "Names: Books" },    { "BSGN", "Names: Birthsigns" },
+	{ "CLAS", "Names: Classes" },       { "CLOT", "Names: Clothing" }, { "CONT", "Names: Containers" },
+	{ "CREA", "Names: Creatures" },     { "DOOR", "Names: Doors" },    { "FACT", "Names: Factions" },
+	{ "INGR", "Names: Ingredients" },   { "LIGH", "Names: Lights" },   { "LOCK", "Names: Lockpicks" },
+	{ "MISC", "Names: Miscellaneous" }, { "NPC_", "Names: NPCs" },     { "PROB", "Names: Probes" },
+	{ "RACE", "Names: Races" },         { "REGN", "Names: Regions" },  { "REPA", "Names: Repair Items" },
+	{ "SPEL", "Names: Spells" },        { "WEAP", "Names: Weapons" },
 };
 
 static const std::vector<std::pair<std::string, const char *>> desc_sub_types = {
@@ -104,8 +82,8 @@ filter_tree_t::filter_tree_t(QWidget * parent)
 	list_->setItemDelegate(new filter_delegate_t(list_));
 	layout->addWidget(list_);
 
-	auto add_row = [this](item_kind_t kind, tools_t::rec_type_t type, const std::string & sub_type,
-	                   const char * label) -> int
+	auto add_row =
+	    [this](item_kind_t kind, tools_t::rec_type_t type, const std::string & sub_type, const char * label) -> int
 	{
 		auto * item = new QListWidgetItem(label, list_);
 		item->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
@@ -116,8 +94,8 @@ filter_tree_t::filter_tree_t(QWidget * parent)
 
 	all_row_ = add_row(item_kind_t::all, tools_t::rec_type_t::unknown, {}, "All");
 
-	auto add_sub_types_for = [&](tools_t::rec_type_t type,
-	                             const std::vector<std::pair<std::string, const char *>> & subs)
+	auto add_sub_types_for =
+	    [&](tools_t::rec_type_t type, const std::vector<std::pair<std::string, const char *>> & subs)
 	{
 		for (const auto & [sub_id, label] : subs)
 			add_row(item_kind_t::sub_type, type, sub_id, label);
@@ -125,8 +103,9 @@ filter_tree_t::filter_tree_t(QWidget * parent)
 
 	for (const auto & [type, name] : type_order)
 	{
-		bool has_subs = (type == tools_t::rec_type_t::info || type == tools_t::rec_type_t::fnam ||
-		                 type == tools_t::rec_type_t::desc || type == tools_t::rec_type_t::indx);
+		bool has_subs =
+		    (type == tools_t::rec_type_t::info || type == tools_t::rec_type_t::fnam ||
+		     type == tools_t::rec_type_t::desc || type == tools_t::rec_type_t::indx);
 
 		if (has_subs)
 		{

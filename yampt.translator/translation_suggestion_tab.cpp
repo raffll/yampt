@@ -138,16 +138,9 @@ void translation_suggestion_tab_t::rebuild_language_combo()
 		if (!nllb_models.empty())
 		{
 			static const std::vector<std::pair<std::string, std::string>> nllb_targets = {
-				{ "pol_Latn", "PL" },
-				{ "deu_Latn", "DE" },
-				{ "fra_Latn", "FR" },
-				{ "rus_Cyrl", "RU" },
-				{ "spa_Latn", "ES" },
-				{ "ita_Latn", "IT" },
-				{ "ces_Latn", "CS" },
-				{ "nld_Latn", "NL" },
-				{ "por_Latn", "PT" },
-				{ "ukr_Cyrl", "UK" },
+				{ "pol_Latn", "PL" }, { "deu_Latn", "DE" }, { "fra_Latn", "FR" }, { "rus_Cyrl", "RU" },
+				{ "spa_Latn", "ES" }, { "ita_Latn", "IT" }, { "ces_Latn", "CS" }, { "nld_Latn", "NL" },
+				{ "por_Latn", "PT" }, { "ukr_Cyrl", "UK" },
 			};
 
 			const auto & model_path = nllb_models[0];

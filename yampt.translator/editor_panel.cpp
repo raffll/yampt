@@ -60,10 +60,11 @@ editor_panel_t::editor_panel_t(QWidget * parent)
 	adapted_toggle_->setToolTip("Show/hide adapted from panel");
 	adapted_toggle_->setVisible(false);
 
-	connect(adapted_toggle_, &QPushButton::toggled, this, [this](bool checked)
-	{
-		adapted_from_container_->setVisible(checked);
-	});
+	connect(
+	    adapted_toggle_,
+	    &QPushButton::toggled,
+	    this,
+	    [this](bool checked) { adapted_from_container_->setVisible(checked); });
 
 	left_layout->addWidget(original_label_);
 	left_layout->addWidget(original_container);

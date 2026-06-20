@@ -81,9 +81,8 @@ status_filter_bar_t::status_filter_bar_t(QWidget * parent)
 
 	static const std::vector<std::string> base_statuses = { "matched", "duplicate", "missing", "mismatch" };
 
-	static const std::vector<std::string> single_statuses = {
-		"translated", "reused", "adapted", "changed", "ambiguous", "untranslated"
-	};
+	static const std::vector<std::string> single_statuses = { "translated", "reused",    "adapted",
+		                                                      "changed",    "ambiguous", "untranslated" };
 
 	static const std::vector<std::string> work_statuses = { "in_progress", "propagated", "error" };
 
@@ -172,11 +171,7 @@ status_filter_bar_t::status_filter_bar_t(QWidget * parent)
 
 		connect(sb.button, &QPushButton::clicked, this, [this]() { on_status_clicked("model"); });
 
-		connect(
-		    sb.button,
-		    &QWidget::customContextMenuRequested,
-		    this,
-		    [this]() { on_status_right_clicked("model"); });
+		connect(sb.button, &QWidget::customContextMenuRequested, this, [this]() { on_status_right_clicked("model"); });
 
 		layout_->addWidget(sb.button);
 		status_buttons_.push_back(sb);
@@ -351,8 +346,9 @@ void status_filter_bar_t::update_button_styles()
 
 	static const std::set<std::string> base_statuses = { "matched", "missing", "duplicate", "mismatch" };
 
-	static const std::set<std::string> user_statuses = { "translated",   "reused",      "adapted",    "changed",
-		                                                 "untranslated", "ambiguous",   "in_progress", "model",      "propagated", "error" };
+	static const std::set<std::string> user_statuses = { "translated",   "reused",    "adapted",     "changed",
+		                                                 "untranslated", "ambiguous", "in_progress", "model",
+		                                                 "propagated",   "error" };
 
 	bool no_filter = active_statuses_.empty();
 
@@ -394,16 +390,16 @@ void status_filter_bar_t::update_button_styles()
 			const auto & color = get_status_color(sb.status);
 			int text_brightness = (color.red() * 299 + color.green() * 587 + color.blue() * 114) / 1000;
 			QString text_color = (text_brightness > 150) ? "black" : "white";
-			sb.button->setStyleSheet(
-			    QString("border: 1px solid rgb(%5,%6,%7); border-radius: 2px; padding: 2px 6px;"
-			            " background-color: rgb(%1,%2,%3); color: %4;")
-			        .arg(color.red())
-			        .arg(color.green())
-			        .arg(color.blue())
-			        .arg(text_color)
-			        .arg(qMax(0, color.red() - 40))
-			        .arg(qMax(0, color.green() - 40))
-			        .arg(qMax(0, color.blue() - 40)));
+			sb.button->setStyleSheet(QString(
+			                             "border: 1px solid rgb(%5,%6,%7); border-radius: 2px; padding: 2px 6px;"
+			                             " background-color: rgb(%1,%2,%3); color: %4;")
+			                             .arg(color.red())
+			                             .arg(color.green())
+			                             .arg(color.blue())
+			                             .arg(text_color)
+			                             .arg(qMax(0, color.red() - 40))
+			                             .arg(qMax(0, color.green() - 40))
+			                             .arg(qMax(0, color.blue() - 40)));
 		}
 		else
 		{

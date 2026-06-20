@@ -141,9 +141,11 @@ main_window_t::main_window_t(QWidget * parent)
 		encoding_group_->addAction(act);
 	}
 	encoding_group_->actions().last()->setChecked(true);
-	connect(encoding_group_, &QActionGroup::triggered, this, [this](QAction * act) {
-		on_encoding_changed(act->data().toInt());
-	});
+	connect(
+	    encoding_group_,
+	    &QActionGroup::triggered,
+	    this,
+	    [this](QAction * act) { on_encoding_changed(act->data().toInt()); });
 
 	spelling_menu_ = view_menu->addMenu("&Spelling");
 	spelling_group_ = new QActionGroup(this);
@@ -449,7 +451,11 @@ main_window_t::main_window_t(QWidget * parent)
 	connect(search_col_original_, &QPushButton::toggled, this, on_search_col_changed);
 	connect(search_col_translation_, &QPushButton::toggled, this, on_search_col_changed);
 
-	connect(translation_tab_, &translation_suggestion_tab_t::translate_all_requested, this, [this]()
+	connect(
+	    translation_tab_,
+	    &translation_suggestion_tab_t::translate_all_requested,
+	    this,
+	    [this]()
 	{
 		auto * dict_doc = dynamic_cast<dict_document_t *>(active_doc_);
 		if (!dict_doc)
@@ -502,12 +508,15 @@ main_window_t::main_window_t(QWidget * parent)
 			return;
 		}
 
-		translation_tab_->append_log(
-		    "[info] translating " + std::to_string(state->work_items.size()) + " entries\n");
+		translation_tab_->append_log("[info] translating " + std::to_string(state->work_items.size()) + " entries\n");
 
 		auto * timer = new QTimer(this);
 		timer->setInterval(0);
-		connect(timer, &QTimer::timeout, this, [this, state, dict_doc, provider, timer]()
+		connect(
+		    timer,
+		    &QTimer::timeout,
+		    this,
+		    [this, state, dict_doc, provider, timer]()
 		{
 			if (state->current >= state->work_items.size())
 			{
@@ -522,9 +531,8 @@ main_window_t::main_window_t(QWidget * parent)
 					load_record(editor_controller_.current_row());
 
 				translation_tab_->append_log(
-				    "[info] done: translated=" + std::to_string(state->translated_count) +
-				    " glossary=" + std::to_string(state->glossary_count) +
-				    " errors=" + std::to_string(state->error_count) + "\n");
+				    "[info] done: translated=" + std::to_string(state->translated_count) + " glossary=" +
+				    std::to_string(state->glossary_count) + " errors=" + std::to_string(state->error_count) + "\n");
 				translation_tab_->set_translate_all_enabled(true);
 				return;
 			}
@@ -2050,12 +2058,10 @@ void main_window_t::save_config()
 	config_.window_h = size().height();
 	config_.window_maximized = isMaximized();
 
-	config_.encoding_index = encoding_group_->checkedAction()
-	    ? encoding_group_->actions().indexOf(encoding_group_->checkedAction())
-	    : 2;
-	config_.spell_lang_index = spelling_group_->checkedAction()
-	    ? spelling_group_->actions().indexOf(spelling_group_->checkedAction())
-	    : 0;
+	config_.encoding_index =
+	    encoding_group_->checkedAction() ? encoding_group_->actions().indexOf(encoding_group_->checkedAction()) : 2;
+	config_.spell_lang_index =
+	    spelling_group_->checkedAction() ? spelling_group_->actions().indexOf(spelling_group_->checkedAction()) : 0;
 
 	config_.sidebar_visible = sidebar_toggle_->isChecked();
 	config_.bottom_visible = bottom_panel_toggle_->isChecked();
@@ -2507,12 +2513,7 @@ std::vector<dict_selection_dialog_t::dict_entry_t> main_window_t::build_dict_ent
 		}
 
 		entries.push_back(
-		    { extract_filename(dict_doc->path()),
-		      dict_doc->path(),
-		      dict_doc->kind(),
-		      root_path,
-		      subfolder,
-		      pre });
+		    { extract_filename(dict_doc->path()), dict_doc->path(), dict_doc->kind(), root_path, subfolder, pre });
 	}
 
 	for (const auto * fe : file_list_.all())

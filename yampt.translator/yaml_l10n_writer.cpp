@@ -3,9 +3,10 @@
 #include <fstream>
 #include <unordered_map>
 
-bool yaml_l10n_writer_t::write(const std::string & output_path,
-                               const std::vector<l10n_entry_t> & entries,
-                               const std::vector<std::string> & key_order)
+bool yaml_l10n_writer_t::write(
+    const std::string & output_path,
+    const std::vector<l10n_entry_t> & entries,
+    const std::vector<std::string> & key_order)
 {
 	std::ofstream file(output_path, std::ios::binary);
 	if (!file.is_open())
@@ -44,12 +45,11 @@ bool yaml_l10n_writer_t::write(const std::string & output_path,
 			continue;
 		}
 
-		if (!value.empty() && (value.find(':') != std::string::npos ||
-		    value[0] == '{' || value[0] == '[' || value[0] == '&' ||
-		    value[0] == '*' || value[0] == '?' || value[0] == '|' ||
-		    value[0] == '-' || value[0] == '<' || value[0] == '>' ||
-		    value[0] == '!' || value[0] == '%' || value[0] == '@' ||
-		    value[0] == '#' || value[0] == '\'' || value[0] == '"'))
+		if (!value.empty() &&
+		    (value.find(':') != std::string::npos || value[0] == '{' || value[0] == '[' || value[0] == '&' ||
+		     value[0] == '*' || value[0] == '?' || value[0] == '|' || value[0] == '-' || value[0] == '<' ||
+		     value[0] == '>' || value[0] == '!' || value[0] == '%' || value[0] == '@' || value[0] == '#' ||
+		     value[0] == '\'' || value[0] == '"'))
 		{
 			file << key << ": \"" << value << "\"\n";
 			continue;

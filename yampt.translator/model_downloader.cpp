@@ -131,7 +131,8 @@ void model_downloader_t::download_next()
 	}
 
 	tools_t::add_log("[info] downloading \"" + files_[current_index_].url + "\"\r\n");
-	if (on_progress_) on_progress_("[info] downloading \"" + files_[current_index_].url + "\"\r\n");
+	if (on_progress_)
+		on_progress_("[info] downloading \"" + files_[current_index_].url + "\"\r\n");
 
 	QNetworkRequest request(QUrl(QString::fromStdString(files_[current_index_].url)));
 	request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
@@ -148,7 +149,12 @@ void model_downloader_t::download_next()
 		return;
 	}
 
-	connect(reply, &QNetworkReply::downloadProgress, this, [this](qint64 received, qint64 total) {
+	connect(
+	    reply,
+	    &QNetworkReply::downloadProgress,
+	    this,
+	    [this](qint64 received, qint64 total)
+	{
 		if (total > 0)
 		{
 			int pct = static_cast<int>(received * 100 / total);
@@ -157,19 +163,33 @@ void model_downloader_t::download_next()
 			if (sep != std::string::npos)
 				filename = filename.substr(sep + 1);
 
-			if (on_progress_) on_progress_("[info] " + filename + " " + std::to_string(pct) + "% (" +
-			    std::to_string(received / 1024) + "/" + std::to_string(total / 1024) + " KB)\r\n");
+			if (on_progress_)
+				on_progress_(
+				    "[info] " + filename + " " + std::to_string(pct) + "% (" + std::to_string(received / 1024) + "/" +
+				    std::to_string(total / 1024) + " KB)\r\n");
 		}
 	});
 
-	connect(reply, &QNetworkReply::errorOccurred, this, [this, reply](QNetworkReply::NetworkError code) {
+	connect(
+	    reply,
+	    &QNetworkReply::errorOccurred,
+	    this,
+	    [this, reply](QNetworkReply::NetworkError code)
+	{
 		auto err = reply->errorString().toStdString();
-		if (on_progress_) on_progress_("[error] network error " + std::to_string(static_cast<int>(code)) + ": " + err + "\r\n");
+		if (on_progress_)
+			on_progress_("[error] network error " + std::to_string(static_cast<int>(code)) + ": " + err + "\r\n");
 	});
 
-	connect(reply, &QNetworkReply::sslErrors, this, [this, reply](const QList<QSslError> & errors) {
+	connect(
+	    reply,
+	    &QNetworkReply::sslErrors,
+	    this,
+	    [this, reply](const QList<QSslError> & errors)
+	{
 		for (const auto & e : errors)
-			if (on_progress_) on_progress_("[warning] SSL: " + e.errorString().toStdString() + "\r\n");
+			if (on_progress_)
+				on_progress_("[warning] SSL: " + e.errorString().toStdString() + "\r\n");
 
 		reply->ignoreSslErrors();
 	});
@@ -203,7 +223,8 @@ void model_downloader_t::on_file_finished(QNetworkReply * reply)
 	file.close();
 
 	tools_t::add_log("[info] saved \"" + local_path + "\"\r\n");
-	if (on_progress_) on_progress_("[info] saved \"" + local_path + "\"\r\n");
+	if (on_progress_)
+		on_progress_("[info] saved \"" + local_path + "\"\r\n");
 
 	++current_index_;
 	download_next();

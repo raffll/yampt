@@ -8,8 +8,7 @@
 #include <filesystem>
 #include <set>
 
-namespace
-{
+namespace {
 
 std::string create_temp_dict_json(const tools_t::dict_t & data)
 {
@@ -32,7 +31,9 @@ void cleanup_temp_dict(const std::string & path)
 // **Validates: Requirements 2.2**
 TEST_CASE("dict_document_t property: path round trip", "[u]")
 {
-	rc::prop("path() returns normalized path", []()
+	rc::prop(
+	    "path() returns normalized path",
+	    []()
 	{
 		tools_t::dict_t data;
 		auto & chapter = data[tools_t::rec_type_t::cell];
@@ -57,16 +58,15 @@ TEST_CASE("dict_document_t property: path round trip", "[u]")
 // **Validates: Requirements 2.5, 2.7**
 TEST_CASE("dict_document_t property: build_rows count invariant", "[u]")
 {
-	rc::prop("build_rows().size() == total_count()", []()
+	rc::prop(
+	    "build_rows().size() == total_count()",
+	    []()
 	{
 		tools_t::dict_t data;
 
 		const auto type_count = *rc::gen::inRange(0, 4);
 		const std::vector<tools_t::rec_type_t> types = {
-			tools_t::rec_type_t::cell,
-			tools_t::rec_type_t::dial,
-			tools_t::rec_type_t::info,
-			tools_t::rec_type_t::fnam
+			tools_t::rec_type_t::cell, tools_t::rec_type_t::dial, tools_t::rec_type_t::info, tools_t::rec_type_t::fnam
 		};
 
 		for (int t = 0; t < type_count; ++t)
@@ -97,7 +97,9 @@ TEST_CASE("dict_document_t property: build_rows count invariant", "[u]")
 // **Validates: Requirements 2.10**
 TEST_CASE("dict_document_t property: read-only commit is no-op", "[u]")
 {
-	rc::prop("commit_edit on read-only doc does not modify data", []()
+	rc::prop(
+	    "commit_edit on read-only doc does not modify data",
+	    []()
 	{
 		tools_t::dict_t data;
 		auto & chapter = data[tools_t::rec_type_t::cell];
@@ -138,8 +140,7 @@ TEST_CASE("dict_document_t property: read-only commit is no-op", "[u]")
 #include <filesystem>
 #include <fstream>
 
-namespace
-{
+namespace {
 
 std::string create_temp_yaml(const std::vector<std::pair<std::string, std::string>> & entries)
 {
@@ -166,10 +167,12 @@ void cleanup_temp_yaml(const std::string & path)
 // **Validates: Requirements 3.2**
 TEST_CASE("yaml_document_t property: path round trip", "[u]")
 {
-	rc::prop("path() returns normalized file path", []()
+	rc::prop(
+	    "path() returns normalized file path",
+	    []()
 	{
-		const auto entries = std::vector<std::pair<std::string, std::string>>{
-			{"key1", "value1"}, {"key2", "value2"}};
+		const auto entries =
+		    std::vector<std::pair<std::string, std::string>> { { "key1", "value1" }, { "key2", "value2" } };
 		const auto path = create_temp_yaml(entries);
 
 		yaml_document_t doc(path);
@@ -182,12 +185,14 @@ TEST_CASE("yaml_document_t property: path round trip", "[u]")
 // **Validates: Requirements 3.5**
 TEST_CASE("yaml_document_t property: dirty state consistency", "[u]")
 {
-	rc::prop("set_dirty round-trips; commit_edit sets dirty", []()
+	rc::prop(
+	    "set_dirty round-trips; commit_edit sets dirty",
+	    []()
 	{
 		const auto count = *rc::gen::inRange(1, 10);
 		std::vector<std::pair<std::string, std::string>> entries;
 		for (int i = 0; i < count; ++i)
-			entries.push_back({"key_" + std::to_string(i), "val_" + std::to_string(i)});
+			entries.push_back({ "key_" + std::to_string(i), "val_" + std::to_string(i) });
 
 		const auto path = create_temp_yaml(entries);
 		yaml_document_t doc(path);
@@ -208,12 +213,14 @@ TEST_CASE("yaml_document_t property: dirty state consistency", "[u]")
 // **Validates: Requirements 3.8**
 TEST_CASE("yaml_document_t property: commit-edit round trip", "[u]")
 {
-	rc::prop("after commit_edit, build_rows()[idx].new_text == text", []()
+	rc::prop(
+	    "after commit_edit, build_rows()[idx].new_text == text",
+	    []()
 	{
 		const auto count = *rc::gen::inRange(1, 10);
 		std::vector<std::pair<std::string, std::string>> entries;
 		for (int i = 0; i < count; ++i)
-			entries.push_back({"key_" + std::to_string(i), "val_" + std::to_string(i)});
+			entries.push_back({ "key_" + std::to_string(i), "val_" + std::to_string(i) });
 
 		const auto path = create_temp_yaml(entries);
 		yaml_document_t doc(path);
@@ -232,12 +239,14 @@ TEST_CASE("yaml_document_t property: commit-edit round trip", "[u]")
 // **Validates: Requirements 3.9**
 TEST_CASE("yaml_document_t property: translated count invariant", "[u]")
 {
-	rc::prop("after K distinct edits, translated_count() == K", []()
+	rc::prop(
+	    "after K distinct edits, translated_count() == K",
+	    []()
 	{
 		const auto count = *rc::gen::inRange(2, 15);
 		std::vector<std::pair<std::string, std::string>> entries;
 		for (int i = 0; i < count; ++i)
-			entries.push_back({"key_" + std::to_string(i), "val_" + std::to_string(i)});
+			entries.push_back({ "key_" + std::to_string(i), "val_" + std::to_string(i) });
 
 		const auto path = create_temp_yaml(entries);
 		yaml_document_t doc(path);

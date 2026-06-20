@@ -75,8 +75,7 @@ bool translation_engine_t::load(const std::string & model_pack_path)
 	if (impl_->source_lang.empty())
 		impl_->source_lang = "eng_Latn";
 
-	tools_t::add_log(
-	    "[info] translation model loaded: " + impl_->source_lang + " -> " + impl_->target_lang + "\r\n");
+	tools_t::add_log("[info] translation model loaded: " + impl_->source_lang + " -> " + impl_->target_lang + "\r\n");
 	return true;
 }
 

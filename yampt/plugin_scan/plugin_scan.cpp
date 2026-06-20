@@ -362,9 +362,10 @@ const std::string & plugin_scan_t::merge_record_content(size_t index) const
 	return merge_records_[index].content;
 }
 
-void plugin_scan_t::copy_record_to_merge_raw(const std::string & rec_type,
-                                              const std::string & record_id,
-                                              const std::string & content)
+void plugin_scan_t::copy_record_to_merge_raw(
+    const std::string & rec_type,
+    const std::string & record_id,
+    const std::string & content)
 {
 	if (merge_plugin_idx_ < 0)
 		return;
@@ -418,7 +419,7 @@ void plugin_scan_t::merge_leveled_list(const conflict_entry_t & entry)
 				if (sub.size >= 2)
 					std::memcpy(&level, sub.data, 2);
 
-				items.push_back({current_id, level});
+				items.push_back({ current_id, level });
 				current_id.clear();
 			}
 		}

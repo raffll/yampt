@@ -95,7 +95,7 @@ std::vector<l10n_entry_t> yaml_l10n_reader_t::parse_yaml(const std::string & pat
 							if (strip_trailing && !assembled.empty() && assembled.back() == '\n')
 								assembled.pop_back();
 
-							entries.push_back({key, assembled});
+							entries.push_back({ key, assembled });
 
 							key = next_key;
 
@@ -120,7 +120,7 @@ std::vector<l10n_entry_t> yaml_l10n_reader_t::parse_yaml(const std::string & pat
 								value = next_raw;
 							}
 
-							entries.push_back({key, value});
+							entries.push_back({ key, value });
 							goto next_entry;
 						}
 					}
@@ -129,7 +129,7 @@ std::vector<l10n_entry_t> yaml_l10n_reader_t::parse_yaml(const std::string & pat
 					if (strip_trailing && !assembled.empty() && assembled.back() == '\n')
 						assembled.pop_back();
 
-					entries.push_back({key, assembled});
+					entries.push_back({ key, assembled });
 					goto next_entry;
 				}
 
@@ -148,7 +148,7 @@ std::vector<l10n_entry_t> yaml_l10n_reader_t::parse_yaml(const std::string & pat
 			if (strip_trailing && !assembled.empty() && assembled.back() == '\n')
 				assembled.pop_back();
 
-			entries.push_back({key, assembled});
+			entries.push_back({ key, assembled });
 			continue;
 		}
 		else
@@ -156,9 +156,9 @@ std::vector<l10n_entry_t> yaml_l10n_reader_t::parse_yaml(const std::string & pat
 			value = raw_value;
 		}
 
-		entries.push_back({key, value});
+		entries.push_back({ key, value });
 
-		next_entry:;
+	next_entry:;
 	}
 
 	return entries;
