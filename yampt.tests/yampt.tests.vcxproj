@@ -28,26 +28,26 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -85,7 +85,7 @@
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg">
     <VcpkgEnableManifest>true</VcpkgEnableManifest>
-    <VcpkgTriplet Condition="'$(Platform)'=='x64'">x64-windows-v143</VcpkgTriplet>
+    <VcpkgTriplet Condition="'$(Platform)'=='x64'">x64-windows</VcpkgTriplet>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -94,7 +94,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;_SILENCE_CXX23_ALIGNED_STORAGE_DEPRECATION_WARNING;_SILENCE_CXX23_DENORM_DEPRECATION_WARNING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)external\imgui;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -110,7 +110,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;_SILENCE_CXX23_ALIGNED_STORAGE_DEPRECATION_WARNING;_SILENCE_CXX23_DENORM_DEPRECATION_WARNING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)external\imgui;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -128,7 +128,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;_SILENCE_CXX23_ALIGNED_STORAGE_DEPRECATION_WARNING;_SILENCE_CXX23_DENORM_DEPRECATION_WARNING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)external\imgui;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -148,7 +148,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;_SILENCE_CXX23_ALIGNED_STORAGE_DEPRECATION_WARNING;_SILENCE_CXX23_DENORM_DEPRECATION_WARNING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)external\imgui;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -177,8 +177,6 @@
     <ClInclude Include="..\yampt\file_list.hpp" />
     <ClInclude Include="..\yampt.translator\sidebar_model.hpp" />
     <ClInclude Include="..\yampt.translator\session.hpp" />
-    <ClInclude Include="..\external\catch.hpp" />
-    <ClInclude Include="..\external\yyjson.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\yampt\dict_creator.cpp" />
@@ -195,16 +193,6 @@
     <ClCompile Include="..\yampt\codepage.cpp" />
     <ClCompile Include="..\yampt\translation_engine.cpp" />
     <ClCompile Include="..\yampt\file_list.cpp" />
-    <ClCompile Include="..\external\imgui\imgui.cpp" />
-    <ClCompile Include="..\external\imgui\imgui_draw.cpp" />
-    <ClCompile Include="..\external\imgui\imgui_tables.cpp" />
-    <ClCompile Include="..\external\imgui\imgui_widgets.cpp" />
-    <ClCompile Include="..\external\yyjson.c">
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CompileAsC</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CompileAsC</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsC</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsC</CompileAs>
-    </ClCompile>
     <ClCompile Include="tests.dict_merger.cpp" />
     <ClCompile Include="tests.dict_reader.cpp" />
     <ClCompile Include="tests.dict_writer.cpp" />
@@ -228,7 +216,7 @@
   <Target Name="CopyCTranslate2Dll" AfterTargets="Build">
     <Copy SourceFiles="$(SolutionDir)external\CTranslate2\build\Release\ctranslate2.dll" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
     <ItemGroup>
-      <VcpkgDlls Include="$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\bin\*.dll" />
+      <VcpkgDlls Include="$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\bin\*.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(VcpkgDlls)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
   </Target>

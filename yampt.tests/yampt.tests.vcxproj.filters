@@ -7,9 +7,6 @@
     <Filter Include="external">
       <UniqueIdentifier>{C1000002-0000-0000-0000-000000000002}</UniqueIdentifier>
     </Filter>
-    <Filter Include="external\imgui">
-      <UniqueIdentifier>{C1000003-0000-0000-0000-000000000003}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="tests.main.cpp" />
@@ -50,24 +47,20 @@
     <ClCompile Include="..\yampt\script_parser.cpp">
       <Filter>yampt</Filter>
     </ClCompile>
-    <ClCompile Include="..\external\imgui\imgui.cpp">
-      <Filter>external\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\external\imgui\imgui_draw.cpp">
-      <Filter>external\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\external\imgui\imgui_tables.cpp">
-      <Filter>external\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\external\imgui\imgui_widgets.cpp">
-      <Filter>external\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\external\yyjson.c">
-      <Filter>external</Filter>
-    </ClCompile>
     <ClCompile Include="..\yampt\esm_converter.cpp">
       <Filter>yampt</Filter>
     </ClCompile>
+    <ClCompile Include="..\yampt\codepage.cpp" />
+    <ClCompile Include="..\yampt\translation_engine.cpp" />
+    <ClCompile Include="..\yampt\file_list.cpp" />
+    <ClCompile Include="tests.document.cpp" />
+    <ClCompile Include="..\yampt.translator\dict_document.cpp" />
+    <ClCompile Include="..\yampt.translator\yaml_document.cpp" />
+    <ClCompile Include="..\yampt.translator\yaml_l10n_reader.cpp" />
+    <ClCompile Include="..\yampt.translator\yaml_l10n_writer.cpp" />
+    <ClCompile Include="..\yampt.translator\sidebar_model.cpp" />
+    <ClCompile Include="..\yampt.translator\display_name.cpp" />
+    <ClCompile Include="..\yampt.translator\session.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\yampt\tools.hpp">
@@ -103,12 +96,9 @@
     <ClInclude Include="..\yampt\json_reader.hpp">
       <Filter>yampt</Filter>
     </ClInclude>
-    <ClInclude Include="..\external\catch.hpp">
-      <Filter>external</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\yyjson.h">
-      <Filter>external</Filter>
-    </ClInclude>
+    <ClInclude Include="..\yampt\file_list.hpp" />
+    <ClInclude Include="..\yampt.translator\sidebar_model.hpp" />
+    <ClInclude Include="..\yampt.translator\session.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />

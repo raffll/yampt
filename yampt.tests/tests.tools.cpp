@@ -1,4 +1,4 @@
-#include "catch.hpp"
+#include <catch2/catch_all.hpp>
 #include "../yampt/tools.hpp"
 
 TEST_CASE("convert string byte array to uint", "[u]")

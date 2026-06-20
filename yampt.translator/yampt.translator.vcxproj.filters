@@ -99,9 +99,38 @@
     <ClCompile Include="..\yampt\plugin_scan\plugin_scan.cpp">
       <Filter>yampt</Filter>
     </ClCompile>
-    <ClCompile Include="..\external\yyjson.c">
-      <Filter>external</Filter>
-    </ClCompile>
+    <ClCompile Include="..\yampt\dict_merger.cpp" />
+    <ClCompile Include="log_tab.cpp" />
+    <ClCompile Include="dict_selection_dialog.cpp" />
+    <ClCompile Include="operation_executor.cpp" />
+    <ClCompile Include="dict_document.cpp" />
+    <ClCompile Include="yaml_document.cpp" />
+    <ClCompile Include="model_downloader.cpp" />
+    <ClCompile Include="$(IntDir)moc_main_window.cpp" />
+    <ClCompile Include="$(IntDir)moc_record_table_model.cpp" />
+    <ClCompile Include="$(IntDir)moc_editor_text_edit.cpp" />
+    <ClCompile Include="$(IntDir)moc_editor_panel.cpp" />
+    <ClCompile Include="$(IntDir)moc_filter_tree.cpp" />
+    <ClCompile Include="$(IntDir)moc_status_filter_bar.cpp" />
+    <ClCompile Include="$(IntDir)moc_record_table_view.cpp" />
+    <ClCompile Include="$(IntDir)moc_composite_highlighter.cpp" />
+    <ClCompile Include="$(IntDir)moc_validation_indicator.cpp" />
+    <ClCompile Include="$(IntDir)moc_annotation_highlighter.cpp" />
+    <ClCompile Include="$(IntDir)moc_hyperlink_highlighter.cpp" />
+    <ClCompile Include="$(IntDir)moc_book_preview.cpp" />
+    <ClCompile Include="$(IntDir)moc_sidebar_widget.cpp" />
+    <ClCompile Include="$(IntDir)moc_annotations_panel.cpp" />
+    <ClCompile Include="$(IntDir)moc_history_panel.cpp" />
+    <ClCompile Include="$(IntDir)moc_log_tab.cpp" />
+    <ClCompile Include="$(IntDir)moc_dict_selection_dialog.cpp" />
+    <ClCompile Include="$(IntDir)moc_line_number_gutter.cpp" />
+    <ClCompile Include="$(IntDir)moc_first_run_dialog.cpp" />
+    <ClCompile Include="$(IntDir)moc_find_replace_dialog.cpp" />
+    <ClCompile Include="$(IntDir)moc_translation_suggestion_tab.cpp" />
+    <ClCompile Include="$(IntDir)moc_ctranslate2_provider.cpp" />
+    <ClCompile Include="$(IntDir)moc_deepl_provider.cpp" />
+    <ClCompile Include="$(IntDir)moc_google_provider.cpp" />
+    <ClCompile Include="$(IntDir)moc_model_downloader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="spell_context_menu.hpp" />
@@ -159,9 +188,6 @@
     <ClInclude Include="..\yampt\plugin_scan\plugin_scan.hpp">
       <Filter>yampt</Filter>
     </ClInclude>
-    <ClInclude Include="..\external\yyjson.h">
-      <Filter>external</Filter>
-    </ClInclude>
     <ClInclude Include="grammar_checker.hpp" />
     <ClInclude Include="search_engine.hpp" />
     <ClInclude Include="yaml_l10n_reader.hpp" />
@@ -174,6 +200,11 @@
     <ClInclude Include="display_name.hpp" />
     <ClInclude Include="translation_provider.hpp" />
     <ClInclude Include="session.hpp" />
+    <ClInclude Include="document.hpp" />
+    <ClInclude Include="dict_document.hpp" />
+    <ClInclude Include="plugin_document.hpp" />
+    <ClInclude Include="yaml_document.hpp" />
+    <ClInclude Include="table_row.hpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="main_window.hpp" />
@@ -193,5 +224,13 @@
     <CustomBuild Include="line_number_gutter.hpp" />
     <CustomBuild Include="first_run_dialog.hpp" />
     <CustomBuild Include="find_replace_dialog.hpp" />
+    <CustomBuild Include="hyperlink_highlighter.hpp" />
+    <CustomBuild Include="log_tab.hpp" />
+    <CustomBuild Include="dict_selection_dialog.hpp" />
+    <CustomBuild Include="translation_suggestion_tab.hpp" />
+    <CustomBuild Include="ctranslate2_provider.hpp" />
+    <CustomBuild Include="deepl_provider.hpp" />
+    <CustomBuild Include="google_provider.hpp" />
+    <CustomBuild Include="model_downloader.hpp" />
   </ItemGroup>
 </Project>

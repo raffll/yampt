@@ -38,9 +38,13 @@
     <ClCompile Include="..\yampt\plugin_scan\plugin_scan.cpp">
       <Filter>yampt</Filter>
     </ClCompile>
-    <ClCompile Include="..\external\yyjson.c">
-      <Filter>external</Filter>
-    </ClCompile>
+    <ClCompile Include="$(IntDir)moc_editor_window.cpp" />
+    <ClCompile Include="$(IntDir)moc_editor_tab.cpp" />
+    <ClCompile Include="$(IntDir)moc_nav_tree_model.cpp" />
+    <ClCompile Include="$(IntDir)moc_view_tree_model.cpp" />
+    <ClCompile Include="$(IntDir)moc_plugin_select_dialog.cpp" />
+    <ClCompile Include="$(IntDir)moc_filter_dialog.cpp" />
+    <ClCompile Include="$(IntDir)moc_messages_panel.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\yampt\tools.hpp">
@@ -73,8 +77,14 @@
     <ClInclude Include="..\yampt\plugin_scan\plugin_scan.hpp">
       <Filter>yampt</Filter>
     </ClInclude>
-    <ClInclude Include="..\external\yyjson.h">
-      <Filter>external</Filter>
-    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="editor_window.hpp" />
+    <CustomBuild Include="editor_tab.hpp" />
+    <CustomBuild Include="nav_tree_model.hpp" />
+    <CustomBuild Include="view_tree_model.hpp" />
+    <CustomBuild Include="plugin_select_dialog.hpp" />
+    <CustomBuild Include="filter_dialog.hpp" />
+    <CustomBuild Include="messages_panel.hpp" />
   </ItemGroup>
 </Project>

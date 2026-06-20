@@ -20,9 +20,7 @@
     <ClCompile Include="esm_reader.cpp" />
     <ClCompile Include="script_parser.cpp" />
     <ClCompile Include="user_interface.cpp" />
-    <ClCompile Include="..\external\yyjson.c">
-      <Filter>external</Filter>
-    </ClCompile>
+    <ClCompile Include="translation_engine.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="tools.hpp" />
@@ -38,8 +36,6 @@
     <ClInclude Include="includes.hpp" />
     <ClInclude Include="json_reader.hpp" />
     <ClInclude Include="user_interface.hpp" />
-    <ClInclude Include="..\external\yyjson.h">
-      <Filter>external</Filter>
-    </ClInclude>
+    <ClInclude Include="translation_engine.hpp" />
   </ItemGroup>
 </Project>

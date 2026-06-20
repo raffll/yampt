@@ -4,7 +4,7 @@
 #include <functional>
 
 #pragma warning(push, 0)
-#include "yyjson.h"
+#include <yyjson.h>
 #pragma warning(pop)
 
 class json_reader_t

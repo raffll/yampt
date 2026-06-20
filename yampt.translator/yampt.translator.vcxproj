@@ -30,26 +30,26 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -85,10 +85,10 @@
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg">
     <VcpkgEnableManifest>true</VcpkgEnableManifest>
-    <VcpkgTriplet Condition="'$(Platform)'=='x64'">x64-windows-v143</VcpkgTriplet>
+    <VcpkgTriplet Condition="'$(Platform)'=='x64'">x64-windows</VcpkgTriplet>
   </PropertyGroup>
   <PropertyGroup Label="QtToolsPath">
-    <QtToolsPath>$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows\tools\Qt6\bin</QtToolsPath>
+    <QtToolsPath>$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\tools\Qt6\bin</QtToolsPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -98,7 +98,8 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtNetwork;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtNetwork;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -115,7 +116,8 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtNetwork;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtNetwork;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -134,7 +136,8 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtNetwork;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtNetwork;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -155,7 +158,8 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\Qt6\QtNetwork;$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtNetwork;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -168,10 +172,10 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup>
     <PostBuildEvent>
-      <Command>xcopy /Y /D "$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\bin\libssl-3-x64.dll" "$(OutDir)"
-xcopy /Y /D "$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\bin\libcrypto-3-x64.dll" "$(OutDir)"
+      <Command>xcopy /Y /D "$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\bin\libssl-3-x64.dll" "$(OutDir)"
+xcopy /Y /D "$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\bin\libcrypto-3-x64.dll" "$(OutDir)"
 xcopy /Y /D "$(SolutionDir)external\CTranslate2\build\Release\ctranslate2.dll" "$(OutDir)"
-if exist "$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\Qt6\plugins\tls" xcopy /Y /D /I "$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\Qt6\plugins\tls\*.*" "$(OutDir)tls"</Command>
+if exist "$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\Qt6\plugins\tls" xcopy /Y /D /I "$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\Qt6\plugins\tls\*.*" "$(OutDir)tls"</Command>
       <Message>Copying runtime DLLs to output directory</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -241,12 +245,6 @@ if exist "$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\Qt6\pl
     <ClCompile Include="..\yampt\plugin_scan\sub_record_schema.cpp" />
     <ClCompile Include="..\yampt\plugin_scan\plugin_index.cpp" />
     <ClCompile Include="..\yampt\plugin_scan\plugin_scan.cpp" />
-    <ClCompile Include="..\external\yyjson.c">
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CompileAsC</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CompileAsC</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsC</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsC</CompileAs>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="spell_context_menu.hpp" />
@@ -268,7 +266,6 @@ if exist "$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\Qt6\pl
     <ClInclude Include="..\yampt\plugin_scan\sub_record_schema.hpp" />
     <ClInclude Include="..\yampt\plugin_scan\plugin_index.hpp" />
     <ClInclude Include="..\yampt\plugin_scan\plugin_scan.hpp" />
-    <ClInclude Include="..\external\yyjson.h" />
     <ClInclude Include="grammar_checker.hpp" />
     <ClInclude Include="search_engine.hpp" />
     <ClInclude Include="yaml_l10n_reader.hpp" />
@@ -290,151 +287,151 @@ if exist "$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\Qt6\pl
   <ItemGroup>
     <CustomBuild Include="main_window.hpp">
       <FileType>Document</FileType>
-      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
     <CustomBuild Include="record_table_model.hpp">
       <FileType>Document</FileType>
-      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
     <CustomBuild Include="editor_text_edit.hpp">
       <FileType>Document</FileType>
-      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
     <CustomBuild Include="editor_panel.hpp">
       <FileType>Document</FileType>
-      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
     <CustomBuild Include="filter_tree.hpp">
       <FileType>Document</FileType>
-      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
     <CustomBuild Include="status_filter_bar.hpp">
       <FileType>Document</FileType>
-      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
     <CustomBuild Include="record_table_view.hpp">
       <FileType>Document</FileType>
-      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
     <CustomBuild Include="composite_highlighter.hpp">
       <FileType>Document</FileType>
-      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
     <CustomBuild Include="validation_indicator.hpp">
       <FileType>Document</FileType>
-      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
     <CustomBuild Include="annotation_highlighter.hpp">
       <FileType>Document</FileType>
-      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
     <CustomBuild Include="hyperlink_highlighter.hpp">
       <FileType>Document</FileType>
-      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
     <CustomBuild Include="book_preview.hpp">
       <FileType>Document</FileType>
-      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
     <CustomBuild Include="sidebar_widget.hpp">
       <FileType>Document</FileType>
-      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
     <CustomBuild Include="annotations_panel.hpp">
       <FileType>Document</FileType>
-      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
     <CustomBuild Include="history_panel.hpp">
       <FileType>Document</FileType>
-      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
     <CustomBuild Include="log_tab.hpp">
       <FileType>Document</FileType>
-      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
     <CustomBuild Include="dict_selection_dialog.hpp">
       <FileType>Document</FileType>
-      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
     <CustomBuild Include="line_number_gutter.hpp">
       <FileType>Document</FileType>
-      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
     <CustomBuild Include="first_run_dialog.hpp">
       <FileType>Document</FileType>
-      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
     <CustomBuild Include="find_replace_dialog.hpp">
       <FileType>Document</FileType>
-      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
     <CustomBuild Include="translation_suggestion_tab.hpp">
       <FileType>Document</FileType>
-      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
     <CustomBuild Include="ctranslate2_provider.hpp">
       <FileType>Document</FileType>
-      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
     <CustomBuild Include="deepl_provider.hpp">
       <FileType>Document</FileType>
-      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
     <CustomBuild Include="google_provider.hpp">
       <FileType>Document</FileType>
-      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
     <CustomBuild Include="model_downloader.hpp">
       <FileType>Document</FileType>
-      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include"</Command>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
@@ -522,7 +519,7 @@ if exist "$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\Qt6\pl
   <Target Name="CopyCTranslate2Dll" AfterTargets="Build">
     <Copy SourceFiles="$(SolutionDir)external\CTranslate2\build\Release\ctranslate2.dll" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
     <ItemGroup>
-      <VcpkgDlls Include="$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\bin\*.dll" />
+      <VcpkgDlls Include="$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\bin\*.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(VcpkgDlls)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
   </Target>
@@ -536,7 +533,7 @@ if exist "$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\Qt6\pl
   <Target Name="CopyQtPlugins" AfterTargets="Build">
     <MakeDir Directories="$(OutDir)platforms" />
     <ItemGroup>
-      <QtPlatformPlugins Include="$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\Qt6\plugins\platforms\*.dll" />
+      <QtPlatformPlugins Include="$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\Qt6\plugins\platforms\*.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(QtPlatformPlugins)" DestinationFolder="$(OutDir)platforms" SkipUnchangedFiles="true" />
   </Target>

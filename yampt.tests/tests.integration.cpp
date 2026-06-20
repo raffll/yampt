@@ -1,4 +1,4 @@
-#include "catch.hpp"
+#include <catch2/catch_all.hpp>
 #include "../yampt/tools.hpp"
 #include "../yampt/esm_reader.hpp"
 #include "../yampt/dict_creator.hpp"

@@ -1,5 +1,5 @@
 #define CATCH_CONFIG_RUNNER
-#include "catch.hpp"
+#include <catch2/catch_all.hpp>
 
 #include <iostream>
 #include <string>
@@ -10,8 +10,7 @@ int main(int argc, char * argv[])
 {
 	Catch::Session session;
 
-	using namespace Catch::clara;
-	auto cli = session.cli() | Opt(g_master_path, "path")["--master-path"]("Path to master directory with ESM files");
+	auto cli = session.cli() | Catch::Clara::Opt(g_master_path, "path")["--master-path"]("Path to master directory with ESM files");
 
 	session.cli(cli);
 

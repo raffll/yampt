@@ -1,5 +1,5 @@
 #include "history_manager.hpp"
-#include "json.hpp"
+#include <nlohmann/json.hpp>
 #include <chrono>
 #include <ctime>
 #include <fstream>

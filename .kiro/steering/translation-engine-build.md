@@ -10,7 +10,7 @@
    & $cmake -S . -B build -G "Visual Studio 18 2026" -A x64 -DWITH_MKL=OFF -DWITH_CUDA=OFF -DWITH_CUDNN=OFF -DWITH_DNNL=OFF -DWITH_OPENBLAS=OFF -DWITH_RUY=ON -DBUILD_CLI=OFF -DBUILD_TESTS=OFF -DOPENMP_RUNTIME=NONE
    & $cmake --build build --config Release
    ```
-3. **vcpkg install** — just build the solution in VS, vcpkg manifest mode restores packages automatically using the `x64-windows-v143` triplet
+3. **vcpkg install** — just build the solution in VS, vcpkg manifest mode restores packages automatically using the default `x64-windows` triplet
 4. **Download models**:
    ```powershell
    python -m pip install torch transformers ctranslate2 huggingface_hub sentencepiece
@@ -20,23 +20,18 @@
 6. **Build solution** in VS (Release x64)
 7. **Run** from repo root (so `models/` relative path works)
 
-## VS 18 STL Bug (Root Cause of All Build Issues)
+## VS 18 STL Bug (RESOLVED in v145)
 
-VS 18 (Visual Studio 2026) introduced internal STL dispatch symbols that cannot be resolved at link time:
+VS 18 (Visual Studio 2026) v144 toolset had internal STL dispatch symbols that could not be resolved at link time:
 - `__std_rotate`
 - `__std_find_first_not_of_trivial_pos_1`
 
-These are called by abseil (a sentencepiece dependency). They don't exist in any linkable `.lib`. This is a VS 18 toolchain bug.
+These were called by abseil (a sentencepiece dependency). This was fixed in the v145 toolset update. The custom triplet workaround is no longer needed.
 
-## Solution: Custom vcpkg Triplet with v143 Toolset
+## vcpkg Triplet
 
-Force vcpkg to compile all packages using the v143 toolset (MSVC 14.44) instead of v144 (VS 18). The v143 STL doesn't have the broken dispatch symbols.
+Uses the default `x64-windows` triplet. No custom triplet or overlay-triplets configuration required.
 
-Files:
-- `triplets/x64-windows-v143.cmake` — `VCPKG_PLATFORM_TOOLSET v143`, dynamic CRT
-- `vcpkg-configuration.json` — `"overlay-triplets": ["./triplets"]`
-- All vcxprojs: `<VcpkgTriplet>x64-windows-v143</VcpkgTriplet>`
-- SDL2 include hardcoded: `$(SolutionDir)vcpkg_installed\x64-windows-v143\x64-windows-v143\include\SDL2`
 - vcpkg auto-links sentencepiece + abseil — no manual lib listing needed
 - Do NOT add abseil libs manually. Do NOT add sentencepiece.lib manually. vcpkg handles it.
 - Do NOT set RuntimeLibrary to MultiThreaded. Keep default (/MD).
@@ -110,8 +105,6 @@ models/
 
 ## What NOT to Do
 
-- Do NOT use vcpkg's default `x64-windows` triplet — abseil triggers VS 18 STL bug
-- Do NOT add `sentencepiece` to `external/` and build from source — same abseil issue
 - Do NOT mix `/MT` and `/MD` — causes RuntimeLibrary mismatch with vcpkg deps
 - Do NOT add abseil .lib files manually to AdditionalDependencies
 - Do NOT use `libcpmt.lib` as a workaround

@@ -1,4 +1,4 @@
-#include "catch.hpp"
+#include <catch2/catch_all.hpp>
 #include <rapidcheck.h>
 #include <rapidcheck/catch.h>
 #include "../yampt/file_list.hpp"
