@@ -17,6 +17,7 @@ public:
 	void set_language(const std::string & lang);
 	void set_dirty(bool dirty);
 	void set_wip(bool wip);
+	void set_unloaded(bool unloaded);
 
 	std::string to_string() const;
 	const std::string & filename() const;
@@ -28,4 +29,5 @@ private:
 	std::string language_;
 	bool dirty_ = false;
 	bool wip_ = false;
+	bool unloaded_ = false;
 };

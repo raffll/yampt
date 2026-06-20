@@ -33,11 +33,12 @@ static std::string normalize_path(std::string path)
 
 std::string derive_display_name(const file_entry_t & entry, bool is_loaded, bool is_dirty)
 {
-	(void)is_loaded;
-
 	display_name_t name(entry.filename);
 	name.set_dirty(is_dirty);
 	name.set_file_type(entry.type);
+
+	if ((entry.type == file_type_t::base_dict || entry.type == file_type_t::user_dict) && !is_loaded)
+		name.set_unloaded(true);
 
 	if (entry.type == file_type_t::base_dict)
 		name.set_kind(dict_kind_t::base);

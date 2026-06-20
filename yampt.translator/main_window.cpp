@@ -2501,6 +2501,7 @@ void main_window_t::on_item_clicked(const std::string & path)
 		return;
 
 	switch_document(doc);
+	rebuild_sidebar();
 }
 
 void main_window_t::on_operation_requested(const std::string & path, plugin_op_t op)

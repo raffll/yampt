@@ -34,12 +34,20 @@ void display_name_t::set_wip(bool wip)
 	wip_ = wip;
 }
 
+void display_name_t::set_unloaded(bool unloaded)
+{
+	unloaded_ = unloaded;
+}
+
 std::string display_name_t::to_string() const
 {
 	std::string result;
 
 	if (dirty_)
 		result += "* ";
+
+	if (unloaded_)
+		result += "[UNLOADED] ";
 
 	if (kind_ == dict_kind_t::base)
 		result += "[BASE] ";

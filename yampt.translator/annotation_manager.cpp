@@ -137,10 +137,8 @@ void annotation_manager_t::remove_from_vector(std::vector<topic_entry_t> & vec, 
 
 std::vector<annotation_t> annotation_manager_t::annotate(const std::string & text, tools_t::rec_type_t type) const
 {
+	(void)type;
 	std::vector<annotation_t> results;
-
-	if (type != tools_t::rec_type_t::info)
-		return results;
 
 	if (text.empty())
 		return results;
@@ -178,10 +176,8 @@ std::vector<annotation_t> annotation_manager_t::annotate(const std::string & tex
 std::vector<annotation_t> annotation_manager_t::annotate_translated(const std::string & text, tools_t::rec_type_t type)
     const
 {
+	(void)type;
 	std::vector<annotation_t> results;
-
-	if (type != tools_t::rec_type_t::info)
-		return results;
 
 	if (text.empty())
 		return results;
