@@ -115,3 +115,37 @@ models/
 - Do NOT mix `/MT` and `/MD` — causes RuntimeLibrary mismatch with vcpkg deps
 - Do NOT add abseil .lib files manually to AdditionalDependencies
 - Do NOT use `libcpmt.lib` as a workaround
+
+## Fine-Tuning the NLLB Model (GPU)
+
+Requires Python 3.12 (PyTorch CUDA builds don't support 3.14 yet) and an NVIDIA GPU.
+
+### Setup (one-time)
+
+```powershell
+py install 3.12
+py -3.12 -m pip install torch --index-url https://download.pytorch.org/whl/cu124
+py -3.12 -m pip install transformers peft datasets sentencepiece accelerate ctranslate2
+```
+
+### Run fine-tuning
+
+```powershell
+cd C:\OMEN\Morrowind\yampt
+py -3.12 scripts/finetune_model.py
+```
+
+The script:
+1. Reads EN→PL pairs from `scripts/base/*.json` (Windows-1250 encoded)
+2. Trains a LoRA adapter on NLLB-600M (~10-15 min on RTX 4070)
+3. Merges adapter into base model
+4. Converts to CTranslate2 int8 → overwrites `models/nllb-600M/model/`
+5. Cleans up temp files from `scripts/finetune_tmp/`
+
+After completion, restart yampt.translator to use the updated model.
+
+### Notes
+- Training data: all entries from base dicts where `old != new` and `len(old) >= 5`
+- Intermediate files go to `scripts/finetune_tmp/` (auto-cleaned)
+- Re-run any time after accumulating more translations in base dicts
+- The script auto-detects GPU; falls back to CPU if unavailable (hours instead of minutes)

@@ -8,7 +8,7 @@ Prerequisites:
 Usage:
     python finetune_model.py
 
-Input:  JSON dict files from tests/pl/ (or specify DICT_DIR below)
+Input:  JSON dict files from base/ (or specify DICT_DIR below)
 Output: models/nllb-600M/model/ (overwritten with fine-tuned int8 model)
 """
 
@@ -16,17 +16,17 @@ import json
 import os
 import sys
 
-DICT_DIR = "tests/pl"
+DICT_DIR = "scripts/base"
 MODEL_NAME = "facebook/nllb-200-distilled-600M"
 OUTPUT_DIR = "models/nllb-600M/model"
-LORA_DIR = "./finetune_tmp/lora"
-MERGED_DIR = "./finetune_tmp/merged"
+LORA_DIR = "scripts/finetune_tmp/lora"
+MERGED_DIR = "scripts/finetune_tmp/merged"
 SRC_LANG = "eng_Latn"
 TGT_LANG = "pol_Latn"
 MIN_LENGTH = 5
 MAX_LENGTH = 128
-EPOCHS = 3
-BATCH_SIZE = 16
+EPOCHS = 1
+BATCH_SIZE = 4
 LEARNING_RATE = 3e-4
 
 
@@ -38,7 +38,7 @@ def extract_pairs():
             continue
 
         path = os.path.join(DICT_DIR, fname)
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, "r", encoding="windows-1250", errors="replace") as f:
             data = json.load(f)
 
         for key, chapter in data.items():
@@ -120,6 +120,7 @@ def train(pairs):
         num_train_epochs=EPOCHS,
         per_device_train_batch_size=BATCH_SIZE,
         per_device_eval_batch_size=BATCH_SIZE,
+        gradient_accumulation_steps=4,
         learning_rate=LEARNING_RATE,
         weight_decay=0.01,
         eval_strategy="epoch",
@@ -135,7 +136,7 @@ def train(pairs):
         args=args,
         train_dataset=split["train"],
         eval_dataset=split["test"],
-        tokenizer=tokenizer,
+        processing_class=tokenizer,
     )
 
     print("Starting training...")
@@ -172,15 +173,15 @@ def merge_and_convert():
 def cleanup():
     import shutil
 
-    if os.path.isdir("./finetune_tmp"):
-        shutil.rmtree("./finetune_tmp")
+    if os.path.isdir("scripts/finetune_tmp"):
+        shutil.rmtree("scripts/finetune_tmp")
         print("Cleaned up temporary files")
 
 
 def main():
     if not os.path.isdir(DICT_DIR):
         print(f"Error: dictionary directory not found: {DICT_DIR}")
-        print("Run integration tests first to generate base dictionaries, or change DICT_DIR.")
+        print("Place base dictionary JSON files in the base/ folder.")
         sys.exit(1)
 
     pairs = extract_pairs()
