@@ -585,6 +585,19 @@ main_window_t::main_window_t(QWidget * parent)
 	connect(sidebar_, &sidebar_widget_t::item_clicked, this, &main_window_t::on_item_clicked);
 	connect(sidebar_, &sidebar_widget_t::operation_requested, this, &main_window_t::on_operation_requested);
 	connect(sidebar_, &sidebar_widget_t::save_requested, this, &main_window_t::on_save_requested);
+
+	connect(
+	    annotations_panel_,
+	    &annotations_panel_t::rebuild_requested,
+	    this,
+	    [this]()
+	{
+		rebuild_annotations();
+		last_annotation_version_ = session_.dict_version();
+		if (editor_controller_.current_row() >= 0)
+			load_record(editor_controller_.current_row());
+	});
+
 	connect(
 	    sidebar_,
 	    &sidebar_widget_t::save_as_requested,

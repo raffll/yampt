@@ -48,12 +48,14 @@ Format: `{ForeignName}[+{NativeName}]_BASE_{FL}-{NL}-{timestamp}.json`
 - FL/NL = detected language codes, or `XX` if unknown
 - timestamp = YYYYMMDDHHmmss
 
-## Dict Merger Order (Convert/Create)
+## Dict Merger Order (Convert/Create/Make Dict with Base)
 
-`dict_merger_t` uses first-wins semantics. The GUI reverses the user-selected list before passing to the merger so that the LAST item in the selection dialog wins (overrides earlier ones).
+The merger handles reversal internally — all callers pass paths in user-facing order (least important → most important). The last item in the selection dialog wins.
 
 User sees: Morrowind, Tribunal, Bloodmoon (top to bottom).
-Internally reversed: Bloodmoon first → wins over Tribunal → wins over Morrowind.
+Merger processes internally: Bloodmoon first → wins over Tribunal → wins over Morrowind.
+
+Do NOT reverse paths before passing to `dict_merger_t`. The reversal is the merger's responsibility.
 
 ## esm_converter_t Error Handling
 

@@ -1,14 +1,22 @@
 # Design Decisions — yampt
 
-## DictMerger Uses First-Wins Semantics
+## DictMerger: Last-Listed Wins
 
-`mergeDict` iterates dictionaries in order. When a key already exists in the merged dict with a different value, the **first** dictionary's value is kept. Later dictionaries do NOT overwrite.
+The user always provides dictionaries from least important to most important: `Morrowind Tribunal Bloodmoon`. The **last** in the user's list has highest priority.
 
-The log message says "Warning: replaced ..." and the counter is named `counter_replaced`, but these are misleading — the value is NOT replaced. The warning means "a later dictionary tried to provide a different value for this key, but it was ignored."
+Internally, `dict_merger_t` iterates paths in **reverse order** (`rbegin`→`rend`), then uses first-wins insertion. This means the last-listed path is processed first and its keys win over earlier ones.
 
-The test `"DictMerger merge first-wins precedence"` confirms this: when path1 has "FirstValue" and path2 has "SecondValue" for the same key, the result is "FirstValue".
+The reversal lives **solely inside the merger constructor**. No caller (CLI, GUI convert, GUI create, GUI make_dict_with_base) should reverse paths before passing them. All callers pass paths in user-facing order (least important → most important).
 
-Do NOT add `search->second = elem.second;` to the "different value" branch. The original behavior is correct.
+The log counter `counter_rejected` counts later dicts that tried to provide a different value for an existing key but were ignored (first-wins after reversal).
+
+Do NOT add `search->second = elem.second;` to the "different value" branch. Do NOT reverse paths at call sites. Do NOT change the merger's internal iteration order.
+
+## text_match_index_ — First Entry Wins
+
+`build_text_match_index()` stores one entry per `old_text` (first-wins). It skips entries where `new_text == old_text` (untranslated). When multiple records in the merged base dict share the same `old_text` with different translations, the first one encountered in the merged chapter's record vector wins.
+
+Since the merger processes the last-listed dict first, its records appear first in each chapter's vector. This means the highest-priority dict also wins for text-match lookups — consistent with the key-based merge behavior.
 
 ## XML Dictionary Format Is Frozen
 

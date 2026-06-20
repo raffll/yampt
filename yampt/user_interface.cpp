@@ -75,7 +75,7 @@ void user_interface_t::parse_command_line()
 		}
 	}
 
-	dict_paths.insert(dict_paths.begin(), dict_path_reverse.rbegin(), dict_path_reverse.rend());
+	dict_paths.insert(dict_paths.end(), dict_path_reverse.begin(), dict_path_reverse.end());
 }
 
 void user_interface_t::run_command()

@@ -7,6 +7,7 @@
 
 class QListWidget;
 class QListWidgetItem;
+class QPushButton;
 
 class annotations_panel_t : public QWidget
 {
@@ -24,9 +25,11 @@ public:
 
 signals:
 	void annotation_clicked(const std::string & new_text);
+	void rebuild_requested();
 
 private:
 	void on_item_clicked(QListWidgetItem * item);
 
 	QListWidget * list_ = nullptr;
+	QPushButton * rebuild_btn_ = nullptr;
 };

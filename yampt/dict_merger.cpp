@@ -9,9 +9,9 @@ dict_merger_t::dict_merger_t(const std::vector<std::string> & paths)
 {
 	dict = tools_t::initialize_dict();
 
-	for (const auto & path : paths)
+	for (auto it = paths.rbegin(); it != paths.rend(); ++it)
 	{
-		dict_reader_t reader(path);
+		dict_reader_t reader(*it);
 		readers.push_back(reader);
 	}
 

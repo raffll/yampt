@@ -2,7 +2,9 @@
 
 #include <QApplication>
 #include <QClipboard>
+#include <QHBoxLayout>
 #include <QListWidget>
+#include <QPushButton>
 #include <QVBoxLayout>
 
 #include <algorithm>
@@ -14,10 +16,20 @@ annotations_panel_t::annotations_panel_t(QWidget * parent)
 	auto * layout = new QVBoxLayout(this);
 	layout->setContentsMargins(0, 0, 0, 0);
 
+	auto * toolbar = new QHBoxLayout();
+	toolbar->setContentsMargins(2, 2, 2, 0);
+	rebuild_btn_ = new QPushButton("Rebuild", this);
+	rebuild_btn_->setToolTip("Rebuild annotations from all loaded dicts");
+	rebuild_btn_->setFixedHeight(22);
+	toolbar->addWidget(rebuild_btn_);
+	toolbar->addStretch();
+	layout->addLayout(toolbar);
+
 	list_ = new QListWidget(this);
 	layout->addWidget(list_);
 
 	connect(list_, &QListWidget::itemClicked, this, &annotations_panel_t::on_item_clicked);
+	connect(rebuild_btn_, &QPushButton::clicked, this, &annotations_panel_t::rebuild_requested);
 }
 
 void annotations_panel_t::update_annotations(
@@ -89,6 +101,8 @@ void annotations_panel_t::update_annotations(
 	for (const auto & e : hyperlinks)
 	{
 		QString display = QString::fromStdString(e.old_text + " \xe2\x86\x92 " + e.new_text);
+		if (!e.source.empty())
+			display += QString::fromStdString("  [" + e.source + "]");
 		auto * item = new QListWidgetItem(display);
 		item->setData(Qt::UserRole, QString::fromStdString(e.new_text));
 		list_->addItem(item);
@@ -106,6 +120,8 @@ void annotations_panel_t::update_annotations(
 	for (const auto & e : glossary)
 	{
 		QString display = QString::fromStdString(e.old_text + " \xe2\x86\x92 " + e.new_text);
+		if (!e.source.empty())
+			display += QString::fromStdString("  [" + e.source + "]");
 		auto * item = new QListWidgetItem(display);
 		item->setData(Qt::UserRole, QString::fromStdString(e.new_text));
 		list_->addItem(item);

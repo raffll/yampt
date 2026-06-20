@@ -387,7 +387,13 @@ void dict_creator_t::build_text_match_index()
 			if (entry.old_text.empty())
 				continue;
 
-			text_match_index_[entry.old_text].push_back(&entry);
+			if (entry.new_text == entry.old_text)
+				continue;
+
+			if (text_match_index_.count(entry.old_text))
+				continue;
+
+			text_match_index_[entry.old_text] = &entry;
 		}
 	}
 }
@@ -554,25 +560,8 @@ void dict_creator_t::insert_via_text_match(
 	auto text_it = text_match_index_.find(old_text);
 	if (text_it != text_match_index_.end())
 	{
-		const tools_t::record_entry_t * translated_match = nullptr;
-		int match_count = 0;
-
-		for (const auto * candidate : text_it->second)
-		{
-			if (candidate->new_text == candidate->old_text)
-				continue;
-
-			translated_match = candidate;
-			++match_count;
-			if (match_count > 1)
-				break;
-		}
-
-		if (match_count == 1 && translated_match)
-		{
-			insert_with_status(key_text, old_text, translated_match->new_text, type, tools_t::status_t::reused);
-			return;
-		}
+		insert_with_status(key_text, old_text, text_it->second->new_text, type, tools_t::status_t::reused);
+		return;
 	}
 
 	insert_as_untranslated(key_text, old_text, type);

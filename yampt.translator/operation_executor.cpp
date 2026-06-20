@@ -126,9 +126,7 @@ operation_executor_t::result_t operation_executor_t::convert(
 {
 	tools_t::reset_log();
 
-	auto reversed = dict_paths;
-	std::reverse(reversed.begin(), reversed.end());
-	dict_merger_t merger(reversed);
+	dict_merger_t merger(dict_paths);
 
 	esm_converter_t converter(plugin_path, merger, false, "", encoding, false);
 
@@ -151,9 +149,7 @@ operation_executor_t::result_t operation_executor_t::create_plugin(
 {
 	tools_t::reset_log();
 
-	auto reversed = dict_paths;
-	std::reverse(reversed.begin(), reversed.end());
-	dict_merger_t merger(reversed);
+	dict_merger_t merger(dict_paths);
 
 	esm_converter_t converter(plugin_path, merger, false, "", encoding, true);
 
