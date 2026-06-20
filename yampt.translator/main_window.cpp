@@ -154,7 +154,7 @@ main_window_t::main_window_t(QWidget * parent)
 	auto * toolbar = new QToolBar(this);
 	toolbar->setMovable(false);
 
-	search_label_ = new QLabel("Search:", this);
+	search_label_ = new QLabel("Filter by:", this);
 	search_label_->setStyleSheet("QLabel:disabled { color: rgb(180,180,180); }");
 	toolbar->addWidget(search_label_);
 	search_field_ = new QLineEdit(this);
@@ -197,6 +197,10 @@ main_window_t::main_window_t(QWidget * parent)
 
 	search_field_->setToolTip("Search across entries");
 	case_sensitive_check_->setToolTip("Case-sensitive search");
+	regex_check_->setToolTip("Regular expression search");
+	search_col_key_->setToolTip("Search in key column");
+	search_col_original_->setToolTip("Search in original column");
+	search_col_translation_->setToolTip("Search in translation column");
 
 	find_action_ = new QAction(this);
 	find_action_->setShortcut(QKeySequence("Ctrl+F"));
@@ -299,8 +303,10 @@ main_window_t::main_window_t(QWidget * parent)
 		if (editor_controller_.current_row() < 0)
 			return;
 
+		const auto * row_data = table_model_->row_at(editor_controller_.current_row());
+		auto type = row_data ? row_data->type : tools_t::rec_type_t::info;
 		extra_sel_translation_.grammar = grammar_check_->isChecked()
-		                                     ? grammar_checker_.check(editor_panel_->translation_editor())
+		                                     ? grammar_checker_.check(editor_panel_->translation_editor(), type)
 		                                     : QList<QTextEdit::ExtraSelection> {};
 		apply_extra_selections(editor_panel_->translation_editor(), extra_sel_translation_);
 	});
@@ -1201,7 +1207,7 @@ void main_window_t::on_translation_changed()
 
 	extra_sel_translation_.annotations = selections;
 	extra_sel_translation_.grammar = grammar_check_->isChecked()
-	                                     ? grammar_checker_.check(editor_panel_->translation_editor())
+	                                     ? grammar_checker_.check(editor_panel_->translation_editor(), row_data->type)
 	                                     : QList<QTextEdit::ExtraSelection> {};
 	apply_extra_selections(editor_panel_->translation_editor(), extra_sel_translation_);
 
@@ -1390,7 +1396,7 @@ void main_window_t::load_record(int row)
 	validation_indicator_->update_validation(validation_result);
 
 	if (row_data->type == tools_t::rec_type_t::text)
-		book_preview_->set_html(row_data->new_text);
+		book_preview_->set_html(row_data->old_text, row_data->new_text);
 	else
 		book_preview_->clear();
 
@@ -1534,7 +1540,7 @@ void main_window_t::load_record(int row)
 	}
 	extra_sel_translation_.annotations = trans_selections;
 	extra_sel_translation_.grammar = grammar_check_->isChecked()
-	                                     ? grammar_checker_.check(editor_panel_->translation_editor())
+	                                     ? grammar_checker_.check(editor_panel_->translation_editor(), row_data->type)
 	                                     : QList<QTextEdit::ExtraSelection> {};
 	extra_sel_translation_.adapted_diff.clear();
 	apply_extra_selections(editor_panel_->translation_editor(), extra_sel_translation_);

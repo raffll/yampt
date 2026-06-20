@@ -209,9 +209,22 @@ sidebar_render_model_t build_render_model(
 		if (label == "workspace")
 			label = workspace_label;
 
-		auto root_node = build_node(label, root_path, root_builder);
+		sidebar_render_node_t root_node;
+		root_node.label = label;
 		root_node.root_path = root_path;
 		root_node.folder_path = root_path;
+
+		sort_items(root_builder.items);
+		root_node.items = std::move(root_builder.items);
+
+		for (auto & [child_name, child_builder] : root_builder.children)
+			root_node.children.push_back(build_node(child_name, root_path, child_builder));
+
+		std::sort(
+		    root_node.children.begin(),
+		    root_node.children.end(),
+		    [](const sidebar_render_node_t & a, const sidebar_render_node_t & b) { return a.label < b.label; });
+
 		model.roots.push_back(std::move(root_node));
 	}
 

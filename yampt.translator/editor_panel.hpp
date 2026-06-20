@@ -55,7 +55,7 @@ private:
 	editor_text_edit_t * original_view_ = nullptr;
 	editor_text_edit_t * adapted_from_view_ = nullptr;
 	QWidget * adapted_from_container_ = nullptr;
-	QLabel * adapted_from_label_ = nullptr;
+	QPushButton * adapted_toggle_ = nullptr;
 	editor_text_edit_t * translation_editor_ = nullptr;
 	QLabel * original_label_ = nullptr;
 	QLabel * translation_label_ = nullptr;

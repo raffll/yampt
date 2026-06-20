@@ -33,6 +33,35 @@ static const char * get_status_display_name_qt(const std::string & status)
 	return status.c_str();
 }
 
+static const char * get_status_tooltip(const std::string & status)
+{
+	if (status == "matched")
+		return "Paired via fingerprint, coordinates, or heuristic";
+	if (status == "missing")
+		return "No matching record found in the other ESM";
+	if (status == "duplicate")
+		return "Multiple records share the same key";
+	if (status == "mismatch")
+		return "Record exists but original text differs";
+	if (status == "translated")
+		return "Translation present and unchanged";
+	if (status == "reused")
+		return "Translation copied from another entry";
+	if (status == "adapted")
+		return "Translation adapted from a similar entry";
+	if (status == "changed")
+		return "Original text changed since last translation";
+	if (status == "untranslated")
+		return "No translation provided yet";
+	if (status == "in_progress")
+		return "Translation edited but not finalized";
+	if (status == "propagated")
+		return "Translation propagated from another record";
+	if (status == "error")
+		return "Translation has a validation error";
+	return "";
+}
+
 status_filter_bar_t::status_filter_bar_t(QWidget * parent)
     : QWidget(parent)
 {
@@ -57,6 +86,7 @@ status_filter_bar_t::status_filter_bar_t(QWidget * parent)
 		sb.count = 0;
 		sb.button = new QPushButton(get_status_display_name_qt(status), this);
 		sb.button->setContextMenuPolicy(Qt::CustomContextMenu);
+		sb.button->setToolTip(get_status_tooltip(status));
 
 		connect(sb.button, &QPushButton::clicked, this, [this, s = status]() { on_status_clicked(s); });
 
@@ -81,6 +111,7 @@ status_filter_bar_t::status_filter_bar_t(QWidget * parent)
 		sb.count = 0;
 		sb.button = new QPushButton(get_status_display_name_qt(status), this);
 		sb.button->setContextMenuPolicy(Qt::CustomContextMenu);
+		sb.button->setToolTip(get_status_tooltip(status));
 
 		connect(sb.button, &QPushButton::clicked, this, [this, s = status]() { on_status_clicked(s); });
 
@@ -105,6 +136,7 @@ status_filter_bar_t::status_filter_bar_t(QWidget * parent)
 		sb.count = 0;
 		sb.button = new QPushButton(get_status_display_name_qt(status), this);
 		sb.button->setContextMenuPolicy(Qt::CustomContextMenu);
+		sb.button->setToolTip(get_status_tooltip(status));
 
 		connect(sb.button, &QPushButton::clicked, this, [this, s = status]() { on_status_clicked(s); });
 

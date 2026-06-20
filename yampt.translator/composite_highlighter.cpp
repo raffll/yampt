@@ -7,7 +7,8 @@ composite_highlighter_t::composite_highlighter_t(QTextDocument * parent)
 	format_function_.setForeground(QColor(100, 180, 255));
 	format_comment_.setForeground(QColor(128, 128, 128));
 	format_string_.setForeground(QColor(200, 150, 50));
-	format_html_tag_.setForeground(QColor(140, 140, 150));
+	format_html_tag_.setForeground(QColor(100, 0, 20));
+	format_html_tag_.setFontWeight(QFont::Bold);
 	format_forbidden_.setBackground(QColor(255, 200, 180));
 	format_misspelled_.setUnderlineStyle(QTextCharFormat::WaveUnderline);
 	format_misspelled_.setUnderlineColor(QColor(220, 50, 50));

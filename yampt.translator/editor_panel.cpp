@@ -38,7 +38,6 @@ editor_panel_t::editor_panel_t(QWidget * parent)
 	original_hlayout->addWidget(new line_number_gutter_t(original_view_, original_container));
 	original_hlayout->addWidget(original_view_);
 
-	adapted_from_label_ = new QLabel("Adapted from", left_widget);
 	adapted_from_view_ = new editor_text_edit_t(left_widget);
 	adapted_from_view_->setReadOnly(true);
 	auto adapted_palette = adapted_from_view_->palette();
@@ -52,13 +51,23 @@ editor_panel_t::editor_panel_t(QWidget * parent)
 	adapted_hlayout->addWidget(new line_number_gutter_t(adapted_from_view_, adapted_from_container_));
 	adapted_hlayout->addWidget(adapted_from_view_);
 
-	adapted_from_label_->setVisible(false);
 	adapted_from_container_->setVisible(false);
+
+	adapted_toggle_ = new QPushButton("Adapted From", left_widget);
+	adapted_toggle_->setCheckable(true);
+	adapted_toggle_->setChecked(true);
+	adapted_toggle_->setToolTip("Show/hide adapted from panel");
+	adapted_toggle_->setVisible(false);
+
+	connect(adapted_toggle_, &QPushButton::toggled, this, [this](bool checked)
+	{
+		adapted_from_container_->setVisible(checked);
+	});
 
 	left_layout->addWidget(original_label_);
 	left_layout->addWidget(original_container);
-	left_layout->addWidget(adapted_from_label_);
 	left_layout->addWidget(adapted_from_container_);
+	left_layout->addWidget(adapted_toggle_);
 
 	auto * right_widget = new QWidget(splitter_);
 	auto * right_layout = new QVBoxLayout(right_widget);
@@ -66,6 +75,7 @@ editor_panel_t::editor_panel_t(QWidget * parent)
 	translation_label_ = new QLabel("Translation", right_widget);
 	translation_editor_ = new editor_text_edit_t(right_widget);
 	apply_button_ = new QPushButton("Next (Shift+Enter)", right_widget);
+	apply_button_->setToolTip("Apply changes and move to next entry");
 
 	auto * translation_container = new QWidget(right_widget);
 	auto * translation_hlayout = new QHBoxLayout(translation_container);
@@ -132,8 +142,11 @@ double editor_panel_t::get_split_ratio() const
 void editor_panel_t::set_adapted_from(const std::string & text)
 {
 	adapted_from_view_->setPlainText(QString::fromStdString(text));
-	adapted_from_label_->setVisible(true);
-	adapted_from_container_->setVisible(true);
+	adapted_toggle_->setVisible(true);
+	if (adapted_toggle_->isChecked())
+	{
+		adapted_from_container_->setVisible(true);
+	}
 }
 
 QList<QTextEdit::ExtraSelection> editor_panel_t::highlight_adapted_diff(
@@ -166,8 +179,8 @@ QList<QTextEdit::ExtraSelection> editor_panel_t::highlight_adapted_diff(
 void editor_panel_t::clear_adapted_from()
 {
 	adapted_from_view_->clear();
-	adapted_from_label_->setVisible(false);
 	adapted_from_container_->setVisible(false);
+	adapted_toggle_->setVisible(false);
 }
 
 void editor_panel_t::load_script_entry(const std::string & old_text, const std::string & new_text)

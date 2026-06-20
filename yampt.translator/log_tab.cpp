@@ -18,6 +18,7 @@ log_tab_t::log_tab_t(QWidget * parent)
 	layout->addWidget(text_edit_);
 
 	clear_button_ = new QPushButton("Clear", this);
+	clear_button_->setToolTip("Clear log output");
 	layout->addWidget(clear_button_);
 
 	connect(clear_button_, &QPushButton::clicked, this, &log_tab_t::clear);

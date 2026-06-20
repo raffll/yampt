@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../yampt/tools.hpp"
 #include <QTextEdit>
 
 class editor_text_edit_t;
@@ -9,5 +10,5 @@ class grammar_checker_t
 public:
 	grammar_checker_t() = default;
 
-	QList<QTextEdit::ExtraSelection> check(editor_text_edit_t * editor) const;
+	QList<QTextEdit::ExtraSelection> check(editor_text_edit_t * editor, tools_t::rec_type_t type) const;
 };

@@ -45,6 +45,7 @@ translation_suggestion_tab_t::translation_suggestion_tab_t(QWidget * parent)
 	top_row->addWidget(language_combo_);
 
 	translate_btn_ = new QPushButton("Translate", this);
+	translate_btn_->setToolTip("Translate the current entry");
 	translate_btn_->setFixedWidth(80);
 	top_row->addWidget(translate_btn_);
 
@@ -59,6 +60,7 @@ translation_suggestion_tab_t::translation_suggestion_tab_t(QWidget * parent)
 	api_key_field_->setPlaceholderText("DeepL API key");
 	key_row->addWidget(api_key_field_);
 	download_btn_ = new QPushButton("Download Models", this);
+	download_btn_->setToolTip("Download translation models for offline use");
 	key_row->addWidget(download_btn_);
 	layout->addLayout(key_row);
 

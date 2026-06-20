@@ -4,7 +4,7 @@
 #include <QTextCursor>
 #include <QTextDocument>
 
-QList<QTextEdit::ExtraSelection> grammar_checker_t::check(editor_text_edit_t * editor) const
+QList<QTextEdit::ExtraSelection> grammar_checker_t::check(editor_text_edit_t * editor, tools_t::rec_type_t type) const
 {
 	QList<QTextEdit::ExtraSelection> selections;
 
@@ -13,8 +13,7 @@ QList<QTextEdit::ExtraSelection> grammar_checker_t::check(editor_text_edit_t * e
 		return selections;
 
 	QTextCharFormat fmt;
-	fmt.setUnderlineStyle(QTextCharFormat::WaveUnderline);
-	fmt.setUnderlineColor(QColor(200, 150, 0));
+	fmt.setBackground(QColor(200, 150, 0, 60));
 
 	for (int i = 0; i < text.size() - 1; ++i)
 	{
@@ -80,15 +79,18 @@ QList<QTextEdit::ExtraSelection> grammar_checker_t::check(editor_text_edit_t * e
 		}
 	}
 
-	const auto last = text[text.size() - 1];
-	if (!last.isSpace() && last != '.' && last != '!' && last != '?' && last != '"' && last != ')')
+	if (type == tools_t::rec_type_t::info || type == tools_t::rec_type_t::text)
 	{
-		QTextEdit::ExtraSelection sel;
-		sel.format = fmt;
-		sel.cursor = QTextCursor(editor->document());
-		sel.cursor.setPosition(text.size() - 1);
-		sel.cursor.setPosition(text.size(), QTextCursor::KeepAnchor);
-		selections.append(sel);
+		const auto last = text[text.size() - 1];
+		if (!last.isSpace() && last != '.' && last != '!' && last != '?' && last != '"' && last != ')')
+		{
+			QTextEdit::ExtraSelection sel;
+			sel.format = fmt;
+			sel.cursor = QTextCursor(editor->document());
+			sel.cursor.setPosition(text.size() - 1);
+			sel.cursor.setPosition(text.size(), QTextCursor::KeepAnchor);
+			selections.append(sel);
+		}
 	}
 
 	return selections;

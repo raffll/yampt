@@ -53,6 +53,21 @@ void annotation_manager_t::rebuild(const std::vector<dict_source_t> & sources)
 				glossary_terms_.push_back({ key_lower, entry.new_text, src.name });
 			}
 		}
+
+		auto cell_it = src.dict->find(tools_t::rec_type_t::cell);
+		if (cell_it != src.dict->end())
+		{
+			for (const auto & entry : cell_it->second.records)
+			{
+				if (entry.old_text.empty())
+					continue;
+				if (entry.old_text == entry.new_text)
+					continue;
+
+				std::string key_lower = to_lower(entry.old_text);
+				glossary_terms_.push_back({ key_lower, entry.new_text, src.name });
+			}
+		}
 	}
 
 	std::sort(
@@ -75,7 +90,7 @@ void annotation_manager_t::update_term(
 	{
 		update_vector(dial_topics_, old_text, new_text);
 	}
-	else if (type == tools_t::rec_type_t::fnam)
+	else if (type == tools_t::rec_type_t::fnam || type == tools_t::rec_type_t::cell)
 	{
 		if (old_text == new_text || new_text.empty())
 			remove_from_vector(glossary_terms_, old_text);
