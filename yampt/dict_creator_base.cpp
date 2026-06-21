@@ -1,4 +1,4 @@
-﻿#include "dict_creator.hpp"
+#include "dict_creator.hpp"
 #include "translation_engine.hpp"
 
 static std::vector<std::string> split_words(const std::string & name)
@@ -67,6 +67,8 @@ void dict_creator_t::make_dict_base()
 void dict_creator_t::make_dict_base_gmst()
 {
 	reset_counters();
+	std::set<std::string> matched_keys;
+
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
@@ -87,6 +89,7 @@ void dict_creator_t::make_dict_base_gmst()
 		auto search = gmst_index.find(key_text);
 		if (search != gmst_index.end())
 		{
+			matched_keys.insert(key_text);
 			esm_ref.select_record(search->second);
 			esm_ref.set_key("NAME");
 			esm_ref.set_value("STRV");
@@ -95,14 +98,30 @@ void dict_creator_t::make_dict_base_gmst()
 		}
 		else
 		{
-			insert_entry_base(key_text, "", new_text, tools_t::rec_type_t::gmst, tools_t::status_t::missing);
+			insert_entry_base(key_text, "", new_text, tools_t::rec_type_t::gmst, tools_t::status_t::mismatch);
 		}
+	}
+
+	for (const auto & [key, rec_idx] : gmst_index)
+	{
+		if (matched_keys.count(key))
+			continue;
+
+		esm_ref.select_record(rec_idx);
+		esm_ref.set_value("STRV");
+		if (!esm_ref.get_value().exist)
+			continue;
+
+		const auto & old_text = esm_ref.get_value().text;
+		insert_entry_base(key, old_text, old_text, tools_t::rec_type_t::gmst, tools_t::status_t::missing);
 	}
 }
 
 void dict_creator_t::make_dict_base_fnam()
 {
 	reset_counters();
+	std::set<std::string> matched_keys;
+
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
@@ -126,6 +145,7 @@ void dict_creator_t::make_dict_base_fnam()
 		auto search = fnam_index.find(key_text);
 		if (search != fnam_index.end())
 		{
+			matched_keys.insert(key_text);
 			esm_ref.select_record(search->second);
 			esm_ref.set_key("NAME");
 			esm_ref.set_value("FNAM");
@@ -134,14 +154,30 @@ void dict_creator_t::make_dict_base_fnam()
 		}
 		else
 		{
-			insert_entry_base(key_text, "", new_text, tools_t::rec_type_t::fnam, tools_t::status_t::missing);
+			insert_entry_base(key_text, "", new_text, tools_t::rec_type_t::fnam, tools_t::status_t::mismatch);
 		}
+	}
+
+	for (const auto & [key, rec_idx] : fnam_index)
+	{
+		if (matched_keys.count(key))
+			continue;
+
+		esm_ref.select_record(rec_idx);
+		esm_ref.set_value("FNAM");
+		if (!esm_ref.get_value().exist || esm_ref.get_value().text.empty())
+			continue;
+
+		const auto & old_text = esm_ref.get_value().text;
+		insert_entry_base(key, old_text, old_text, tools_t::rec_type_t::fnam, tools_t::status_t::missing);
 	}
 }
 
 void dict_creator_t::make_dict_base_desc()
 {
 	reset_counters();
+	std::set<std::string> matched_keys;
+
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
@@ -160,6 +196,7 @@ void dict_creator_t::make_dict_base_desc()
 		auto search = desc_index.find(key_text);
 		if (search != desc_index.end())
 		{
+			matched_keys.insert(key_text);
 			esm_ref.select_record(search->second);
 			esm_ref.set_key("NAME");
 			esm_ref.set_value("DESC");
@@ -168,14 +205,30 @@ void dict_creator_t::make_dict_base_desc()
 		}
 		else
 		{
-			insert_entry_base(key_text, "", new_text, tools_t::rec_type_t::desc, tools_t::status_t::missing);
+			insert_entry_base(key_text, "", new_text, tools_t::rec_type_t::desc, tools_t::status_t::mismatch);
 		}
+	}
+
+	for (const auto & [key, rec_idx] : desc_index)
+	{
+		if (matched_keys.count(key))
+			continue;
+
+		esm_ref.select_record(rec_idx);
+		esm_ref.set_value("DESC");
+		if (!esm_ref.get_value().exist)
+			continue;
+
+		const auto & old_text = esm_ref.get_value().text;
+		insert_entry_base(key, old_text, old_text, tools_t::rec_type_t::desc, tools_t::status_t::missing);
 	}
 }
 
 void dict_creator_t::make_dict_base_text()
 {
 	reset_counters();
+	std::set<std::string> matched_keys;
+
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
@@ -193,6 +246,7 @@ void dict_creator_t::make_dict_base_text()
 		auto search = text_index.find(key_text);
 		if (search != text_index.end())
 		{
+			matched_keys.insert(key_text);
 			esm_ref.select_record(search->second);
 			esm_ref.set_key("NAME");
 			esm_ref.set_value("TEXT");
@@ -201,8 +255,22 @@ void dict_creator_t::make_dict_base_text()
 		}
 		else
 		{
-			insert_entry_base(key_text, "", new_text, tools_t::rec_type_t::text, tools_t::status_t::missing);
+			insert_entry_base(key_text, "", new_text, tools_t::rec_type_t::text, tools_t::status_t::mismatch);
 		}
+	}
+
+	for (const auto & [key, rec_idx] : text_index)
+	{
+		if (matched_keys.count(key))
+			continue;
+
+		esm_ref.select_record(rec_idx);
+		esm_ref.set_value("TEXT");
+		if (!esm_ref.get_value().exist)
+			continue;
+
+		const auto & old_text = esm_ref.get_value().text;
+		insert_entry_base(key, old_text, old_text, tools_t::rec_type_t::text, tools_t::status_t::missing);
 	}
 }
 
@@ -233,7 +301,7 @@ void dict_creator_t::make_dict_base_rnam()
 			}
 			else
 			{
-				insert_entry_base(key_text, "", new_text, tools_t::rec_type_t::rnam, tools_t::status_t::missing);
+				insert_entry_base(key_text, "", new_text, tools_t::rec_type_t::rnam, tools_t::status_t::mismatch);
 			}
 
 			esm.set_next_value("RNAM");
@@ -244,6 +312,8 @@ void dict_creator_t::make_dict_base_rnam()
 void dict_creator_t::make_dict_base_indx()
 {
 	reset_counters();
+	std::set<std::string> matched_keys;
+
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
@@ -262,6 +332,7 @@ void dict_creator_t::make_dict_base_indx()
 		auto search = indx_index.find(key_text);
 		if (search != indx_index.end())
 		{
+			matched_keys.insert(key_text);
 			esm_ref.select_record(search->second);
 			esm_ref.set_key("INDX");
 			esm_ref.set_value("DESC");
@@ -270,8 +341,22 @@ void dict_creator_t::make_dict_base_indx()
 		}
 		else
 		{
-			insert_entry_base(key_text, "", new_text, tools_t::rec_type_t::indx, tools_t::status_t::missing);
+			insert_entry_base(key_text, "", new_text, tools_t::rec_type_t::indx, tools_t::status_t::mismatch);
 		}
+	}
+
+	for (const auto & [key, rec_idx] : indx_index)
+	{
+		if (matched_keys.count(key))
+			continue;
+
+		esm_ref.select_record(rec_idx);
+		esm_ref.set_value("DESC");
+		if (!esm_ref.get_value().exist)
+			continue;
+
+		const auto & old_text = esm_ref.get_value().text;
+		insert_entry_base(key, old_text, old_text, tools_t::rec_type_t::indx, tools_t::status_t::missing);
 	}
 }
 
@@ -325,7 +410,7 @@ void dict_creator_t::make_dict_base_info()
 		}
 		else
 		{
-			insert_entry_base(key_text, "", new_text, tools_t::rec_type_t::info, tools_t::status_t::missing);
+			insert_entry_base(key_text, "", new_text, tools_t::rec_type_t::info, tools_t::status_t::mismatch);
 		}
 
 		esm.select_record(i);
@@ -452,6 +537,10 @@ void dict_creator_t::make_dict_base_bnam()
 	std::string info_inam;
 	reset_counters();
 
+	std::set<std::string> matched_foreign_topics;
+	for (const auto & [native, foreign] : dial_native_to_foreign)
+		matched_foreign_topics.insert(foreign);
+
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
@@ -469,12 +558,15 @@ void dict_creator_t::make_dict_base_bnam()
 				if (map_it != dial_native_to_foreign.end())
 					dial_name = map_it->second;
 				else
-					dial_name = native_name;
+					dial_name.clear();
 			}
 			continue;
 		}
 
 		if (rec_id != "INFO")
+			continue;
+
+		if (dial_name.empty())
 			continue;
 
 		esm.set_key("INAM");
@@ -493,7 +585,6 @@ void dict_creator_t::make_dict_base_bnam()
 		auto search = info_index.find(info_key);
 		if (search == info_index.end())
 		{
-			tools_t::add_log("[warning] BNAM not found: \"" + info_key + "\"\r\n");
 			for (const auto & msg : native_messages)
 			{
 				const auto key_text = info_key + "^" + msg;
@@ -506,7 +597,6 @@ void dict_creator_t::make_dict_base_bnam()
 		esm_ref.set_value("BNAM");
 		if (!esm_ref.get_value().exist || esm_ref.get_value().text.empty())
 		{
-			tools_t::add_log("[warning] BNAM not found: \"" + info_key + "\"\r\n");
 			for (const auto & msg : native_messages)
 			{
 				const auto key_text = info_key + "^" + msg;
@@ -534,6 +624,50 @@ void dict_creator_t::make_dict_base_bnam()
 			const auto & old_text = foreign_messages[k];
 			const auto & new_text = native_messages[k];
 			insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::bnam, tools_t::status_t::matched);
+		}
+	}
+
+	std::string foreign_dial_type;
+	std::string foreign_dial_name;
+
+	for (size_t i = 0; i < esm_ref.get_records().size(); ++i)
+	{
+		esm_ref.select_record(i);
+		const auto & rec_id = esm_ref.get_record().id;
+
+		if (rec_id == "DIAL")
+		{
+			esm_ref.set_key("DATA");
+			esm_ref.set_value("NAME");
+			if (esm_ref.get_key().exist && esm_ref.get_value().exist)
+			{
+				foreign_dial_type = tools_t::get_dialog_type(esm_ref.get_key().content);
+				foreign_dial_name = esm_ref.get_value().text;
+			}
+			continue;
+		}
+
+		if (rec_id != "INFO")
+			continue;
+
+		if (matched_foreign_topics.count(foreign_dial_name))
+			continue;
+
+		esm_ref.set_key("INAM");
+		if (!esm_ref.get_key().exist)
+			continue;
+
+		const auto & inam = esm_ref.get_key().text;
+
+		esm_ref.set_value("BNAM");
+		if (!esm_ref.get_value().exist || esm_ref.get_value().text.empty())
+			continue;
+
+		const auto foreign_messages = make_script_messages(esm_ref.get_value().text);
+		for (const auto & msg : foreign_messages)
+		{
+			const auto key_text = foreign_dial_type + "^" + foreign_dial_name + "^" + inam + "^" + msg;
+			insert_entry_base(key_text, msg, msg, tools_t::rec_type_t::bnam, tools_t::status_t::missing);
 		}
 	}
 }
@@ -625,14 +759,62 @@ void dict_creator_t::make_dict_base_dial()
 	{
 		tools_t::add_log("[info] translation engine: inactive (DIAL heuristic skipped)\r\n");
 
+		std::vector<std::string> native_names;
+		for (size_t i = 0; i < esm.get_records().size(); ++i)
+		{
+			if (matched_native_records.count(i))
+				continue;
+
+			esm.select_record(i);
+			if (esm.get_record().id != "DIAL")
+				continue;
+
+			esm.set_key("DATA");
+			if (!esm.get_key().exist)
+				continue;
+
+			if (tools_t::get_dialog_type(esm.get_key().content) != "T")
+				continue;
+
+			esm.set_value("NAME");
+			if (!esm.get_value().exist)
+				continue;
+
+			native_names.push_back(esm.get_value().text);
+		}
+
+		std::string candidates_str;
+		for (const auto & name : native_names)
+		{
+			if (!candidates_str.empty())
+				candidates_str += "|";
+
+			candidates_str += name;
+		}
+
 		for (const auto & entry : unmatched_foreign)
 		{
 			insert_entry_base(
 			    entry.name, entry.name, entry.name, tools_t::rec_type_t::dial, tools_t::status_t::missing);
+
+			if (!candidates_str.empty())
+			{
+				auto * rec = dict.at(tools_t::rec_type_t::dial).find(entry.name);
+				if (rec)
+					rec->adapted_from = candidates_str;
+			}
 		}
 
 		for (const auto & entry : unmatched_foreign)
 			tools_t::add_log("[warning] missing DIAL: " + entry.name + "\r\n");
+
+		if (!native_names.empty())
+		{
+			tools_t::add_log(
+			    "[info] unmatched native DIAL candidates (" + std::to_string(native_names.size()) + "):\r\n");
+			for (const auto & name : native_names)
+				tools_t::add_log("  " + name + "\r\n");
+		}
 
 		return;
 	}
@@ -824,6 +1006,23 @@ void dict_creator_t::make_dict_base_dial()
 	}
 
 	tools_t::add_log("--- UNMATCHED FOREIGN DIAL ---\r\n", true);
+
+	std::vector<std::string> unmatched_native_names;
+	for (size_t ni = 0; ni < native_candidates.size(); ++ni)
+	{
+		if (!matched_native_idx.count(ni))
+			unmatched_native_names.push_back(native_candidates[ni].name);
+	}
+
+	std::string candidates_str;
+	for (const auto & name : unmatched_native_names)
+	{
+		if (!candidates_str.empty())
+			candidates_str += "|";
+
+		candidates_str += name;
+	}
+
 	for (size_t fi = 0; fi < unmatched_foreign.size(); ++fi)
 	{
 		if (matched_foreign_idx.count(fi))
@@ -833,6 +1032,13 @@ void dict_creator_t::make_dict_base_dial()
 		tools_t::add_log("  " + name + "\r\n", true);
 
 		insert_entry_base(name, name, name, tools_t::rec_type_t::dial, tools_t::status_t::missing);
+
+		if (!candidates_str.empty())
+		{
+			auto * entry = dict.at(tools_t::rec_type_t::dial).find(name);
+			if (entry)
+				entry->adapted_from = candidates_str;
+		}
 	}
 
 	tools_t::add_log("--- UNMATCHED NATIVE DIAL ---\r\n", true);
@@ -848,13 +1054,6 @@ void dict_creator_t::make_dict_base_dial()
 			continue;
 
 		tools_t::add_log("[warning] missing DIAL: " + unmatched_foreign[fi].name + "\r\n");
-	}
-
-	std::vector<std::string> unmatched_native_names;
-	for (size_t ni = 0; ni < native_candidates.size(); ++ni)
-	{
-		if (!matched_native_idx.count(ni))
-			unmatched_native_names.push_back(native_candidates[ni].name);
 	}
 
 	if (!unmatched_native_names.empty())
@@ -1396,7 +1595,7 @@ void dict_creator_t::make_dict_cell_interior()
 	}
 
 	make_dict_cell_interior_heuristic(missing_cells, matched_native_records);
-	make_dict_cell_add_missing(missing_cells);
+	make_dict_cell_add_missing(missing_cells, cell_native_candidates_str_);
 }
 
 void dict_creator_t::make_dict_cell_interior_heuristic(
@@ -1631,15 +1830,35 @@ void dict_creator_t::make_dict_cell_interior_heuristic(
 			for (const auto & name : unmatched_native_names)
 				tools_t::add_log("  " + name + "\r\n");
 		}
+
+		std::string candidates_str;
+		for (const auto & name : unmatched_native_names)
+		{
+			if (!candidates_str.empty())
+				candidates_str += "|";
+
+			candidates_str += name;
+		}
+
+		cell_native_candidates_str_ = candidates_str;
 	}
 }
 
-void dict_creator_t::make_dict_cell_add_missing(const std::vector<std::pair<size_t, std::string>> & missing_cells)
+void dict_creator_t::make_dict_cell_add_missing(
+    const std::vector<std::pair<size_t, std::string>> & missing_cells,
+    const std::string & native_candidates_str)
 {
 	for (const auto & [rec_index, cell_name] : missing_cells)
 	{
 		insert_entry_base(cell_name, cell_name, cell_name, tools_t::rec_type_t::cell, tools_t::status_t::missing);
 		tools_t::add_log("[warning] missing CELL: " + cell_name + "\r\n");
+
+		if (!native_candidates_str.empty())
+		{
+			auto * entry = dict.at(tools_t::rec_type_t::cell).find_by_old_text(cell_name);
+			if (entry)
+				entry->adapted_from = native_candidates_str;
+		}
 	}
 }
 
@@ -1675,5 +1894,15 @@ void dict_creator_t::insert_entry_base(
 		return;
 	}
 
-	insert_duplicate(key_text, old_text, new_text, type, tools_t::status_t::duplicate);
+	auto * dup = dict.at(type).find(key_text);
+	if (dup)
+	{
+		dup->status = tools_t::status_t::duplicate;
+		if (dup->adapted_from.empty())
+			dup->adapted_from = new_text;
+		else
+			dup->adapted_from += "|" + new_text;
+
+		counter_doubled++;
+	}
 }

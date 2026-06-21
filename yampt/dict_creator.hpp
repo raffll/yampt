@@ -137,7 +137,9 @@ private:
 	void make_dict_cell_interior();
 	void make_dict_cell_default();
 	void make_dict_cell_region();
-	void make_dict_cell_add_missing(const std::vector<std::pair<size_t, std::string>> & missing_cells);
+	void make_dict_cell_add_missing(
+	    const std::vector<std::pair<size_t, std::string>> & missing_cells,
+	    const std::string & native_candidates_str = {});
 
 	static bool is_interior_cell(const std::string & data_content);
 	static std::string make_exterior_coord_key(const std::string & data_content);
@@ -173,6 +175,7 @@ private:
 	std::unordered_map<std::string, size_t> npc_index;
 	std::unordered_map<std::string, size_t> info_index;
 	std::unordered_map<std::string, std::string> dial_native_to_foreign;
+	std::string cell_native_candidates_str_;
 	std::unordered_map<std::string, const tools_t::record_entry_t *> text_match_index_;
 	std::unordered_map<std::string, std::string> text_match_conflicts_;
 	std::unordered_map<std::string, std::string> text_match_first_;

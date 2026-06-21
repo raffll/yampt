@@ -144,7 +144,9 @@ double editor_panel_t::get_split_ratio() const
 
 void editor_panel_t::set_adapted_from(const std::string & text)
 {
-	adapted_from_view_->setPlainText(QString::fromStdString(text));
+	auto display = QString::fromStdString(text);
+	display.replace('|', '\n');
+	adapted_from_view_->setPlainText(display);
 	adapted_toggle_->setVisible(true);
 	if (adapted_toggle_->isChecked())
 	{

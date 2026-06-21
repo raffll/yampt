@@ -404,7 +404,7 @@ void dict_creator_t::build_text_match_index()
 				if (conflict_it != text_match_conflicts_.end())
 				{
 					if (conflict_it->second.find(entry.new_text) == std::string::npos)
-						conflict_it->second += " / " + entry.new_text;
+						conflict_it->second += "|" + entry.new_text;
 				}
 				continue;
 			}
@@ -412,7 +412,7 @@ void dict_creator_t::build_text_match_index()
 			if (it->second->new_text != entry.new_text)
 			{
 				text_match_first_[entry.old_text] = it->second->new_text;
-				text_match_conflicts_[entry.old_text] = it->second->new_text + " / " + entry.new_text;
+				text_match_conflicts_[entry.old_text] = it->second->new_text + "|" + entry.new_text;
 				it->second = nullptr;
 			}
 		}
@@ -495,7 +495,7 @@ void dict_creator_t::insert_entry_single_with_base(
 
 	if (base_entry->old_text == old_text && base_entry->new_text == old_text)
 	{
-		insert_with_status(key_text, old_text, old_text, type, tools_t::status_t::translated);
+		insert_with_status(key_text, old_text, old_text, type, tools_t::status_t::identical);
 		return;
 	}
 

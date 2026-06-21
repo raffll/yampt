@@ -27,8 +27,11 @@ inline QColor get_status_color(const std::string & status)
 	if (status == "error")
 		return QColor(242, 102, 102);
 
-	if (status == "identical" || status == "translated")
+	if (status == "translated")
 		return QColor(128, 230, 128);
+
+	if (status == "identical")
+		return QColor(180, 220, 140);
 
 	if (status == "reused")
 		return QColor(128, 217, 179);

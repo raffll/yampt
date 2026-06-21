@@ -27,8 +27,10 @@ static std::string status_display_name(const std::string & status)
 		return "Heuristic";
 	if (status == "error")
 		return "Error";
-	if (status == "identical" || status == "translated")
+	if (status == "translated")
 		return "Translated";
+	if (status == "identical")
+		return "Identical";
 	if (status == "reused")
 		return "Reused";
 	if (status == "adapted")

@@ -20,6 +20,8 @@ static const char * get_status_display_name_qt(const std::string & status)
 		return "Error";
 	if (status == "translated")
 		return "Translated";
+	if (status == "identical")
+		return "Identical";
 	if (status == "reused")
 		return "Reused";
 	if (status == "adapted")
@@ -53,6 +55,8 @@ static const char * get_status_tooltip(const std::string & status)
 		return "Record exists but original text differs";
 	if (status == "translated")
 		return "Translation present and unchanged";
+	if (status == "identical")
+		return "Original equals translation (may need work)";
 	if (status == "reused")
 		return "Translation copied from another entry";
 	if (status == "adapted")
@@ -86,8 +90,8 @@ status_filter_bar_t::status_filter_bar_t(QWidget * parent)
 	static const std::vector<std::string> base_statuses = { "matched", "heuristic", "duplicate", "missing",
 		                                                     "mismatch" };
 
-	static const std::vector<std::string> single_statuses = { "translated", "reused",    "adapted",
-		                                                      "changed",    "ambiguous", "untranslated" };
+	static const std::vector<std::string> single_statuses = { "translated", "identical", "reused",    "adapted",
+		                                                      "changed",    "ambiguous",  "untranslated" };
 
 	static const std::vector<std::string> work_statuses = { "in_progress", "propagated", "error" };
 
@@ -351,9 +355,9 @@ void status_filter_bar_t::update_button_styles()
 
 	static const std::set<std::string> base_statuses = { "matched", "heuristic", "missing", "duplicate", "mismatch" };
 
-	static const std::set<std::string> user_statuses = { "translated",   "reused",    "adapted",     "changed",
-		                                                 "untranslated", "ambiguous", "in_progress", "model",
-		                                                 "propagated",   "error" };
+	static const std::set<std::string> user_statuses = { "translated",   "identical",  "reused",      "adapted",
+		                                                 "changed",      "ambiguous",  "untranslated", "in_progress",
+		                                                 "model",        "propagated", "error" };
 
 	bool no_filter = active_statuses_.empty();
 
