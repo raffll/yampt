@@ -319,15 +319,16 @@ TEST_CASE("get_number_of_elements_in_dict correct total", "[u]")
 TEST_CASE("status_t constants are distinct non-empty strings", "[u]")
 {
 	std::vector<std::string> all_statuses {
-		tools_t::status_t::matched,    tools_t::status_t::fingerprint,  tools_t::status_t::coords,
-		tools_t::status_t::heuristic,  tools_t::status_t::exact,        tools_t::status_t::info,
-		tools_t::status_t::wilderness, tools_t::status_t::region,       tools_t::status_t::missing,
-		tools_t::status_t::duplicate,  tools_t::status_t::mismatch,     tools_t::status_t::error,
-		tools_t::status_t::translated, tools_t::status_t::adapted,      tools_t::status_t::changed,
-		tools_t::status_t::reused,     tools_t::status_t::untranslated,
+		tools_t::status_t::matched,      tools_t::status_t::fingerprint,  tools_t::status_t::coords,
+		tools_t::status_t::heuristic,    tools_t::status_t::exact,        tools_t::status_t::info,
+		tools_t::status_t::wilderness,   tools_t::status_t::region,       tools_t::status_t::missing,
+		tools_t::status_t::duplicate,    tools_t::status_t::mismatch,     tools_t::status_t::error,
+		tools_t::status_t::translated,   tools_t::status_t::identical,    tools_t::status_t::adapted,
+		tools_t::status_t::changed,      tools_t::status_t::reused,       tools_t::status_t::untranslated,
+		tools_t::status_t::ambiguous,    tools_t::status_t::in_progress,  tools_t::status_t::outdated,
 	};
 
-	REQUIRE(all_statuses.size() == 18);
+	REQUIRE(all_statuses.size() == 21);
 
 	for (const auto & s : all_statuses)
 	{

@@ -3,6 +3,7 @@ build/
 x64/
 .vs/
 models/
+/scripts/finetune_tmp
 /vcpkg_installed
 /.kiro/specs
 /external/CTranslate2
@@ -11,5 +12,3 @@ models/
 *.user
 *.log
 *.ini
-
-/scripts/finetune_tmp

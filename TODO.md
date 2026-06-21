@@ -21,6 +21,12 @@ Improve the diff highlighting between the current text and the adapted_from sour
 ## Hyperlink spec
 Document how hyperlinks work in Morrowind dialogues, how yampt detects and applies them during conversion, and how the annotation system highlights them. Cover: DIAL topic matching, `@` prefix in INFO NAME, hyperlink insertion during convert with `--add-hyperlinks`, and the hyperlink highlighter in yTranslator.
 
+## Script parser: unquoted multi-word cell names
+Commands like `ShowMap Ald Velothi` use unquoted multi-word cell names. The regex-based token extractor only grabs the first word (`Ald`). Need special handling for commands where the cell name is the last parameter — take everything to end-of-line. Affects `ShowMap`, `CenterOnCell`, and potentially others. Low frequency in practice (most mods use quotes).
+
+## Script parser: skip bytecode modification when no translation found
+When `new_text == old_text` (cell/topic not in dictionary), the script parser currently still runs the full erase/insert cycle on SCTX and SCDT (which is a no-op but risks size byte validation false positives). Solution: after the size byte validation loop confirms the correct bytecode occurrence, check `if (new_text == old_text)` and advance `pos_c += old_text.size()` then return — skipping the actual modification. The `insert_new_text` function should also early-return when `new_text == old_text`. This prevents the "unknown error" bug with mod scripts like `"ulyne henim"->PositionCell, pX1, pY1, pZ1, 0, "GetPCCell"` where a function name is misused as a cell parameter.
+
 ## Polish UI localization
 Move hardcoded UI strings to YAML l10n files so the interface can be displayed in Polish.
 
