@@ -100,6 +100,7 @@ public:
 		static constexpr const char * untranslated = "untranslated";
 		static constexpr const char * ambiguous = "ambiguous";
 		static constexpr const char * in_progress = "in_progress";
+		static constexpr const char * outdated = "outdated";
 	};
 
 	struct entry_t

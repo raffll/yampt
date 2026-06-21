@@ -37,6 +37,8 @@ static std::string status_display_name(const std::string & status)
 		return "Adapted";
 	if (status == "changed")
 		return "Changed";
+	if (status == "outdated")
+		return "Outdated";
 	if (status == "in_progress")
 		return "In Progress";
 	if (status == "model")

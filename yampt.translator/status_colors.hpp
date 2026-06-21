@@ -42,6 +42,9 @@ inline QColor get_status_color(const std::string & status)
 	if (status == "changed")
 		return QColor(242, 179, 102);
 
+	if (status == "outdated")
+		return QColor(220, 140, 80);
+
 	if (status == "in_progress")
 		return QColor(102, 153, 242);
 

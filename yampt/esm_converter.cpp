@@ -1,6 +1,15 @@
 #include "esm_converter.hpp"
 #include "script_parser.hpp"
 
+static bool is_approved_status(const std::string & status)
+{
+	return status == tools_t::status_t::translated || status == tools_t::status_t::matched ||
+	       status == tools_t::status_t::fingerprint || status == tools_t::status_t::coords ||
+	       status == tools_t::status_t::heuristic || status == tools_t::status_t::exact ||
+	       status == tools_t::status_t::info || status == tools_t::status_t::wilderness ||
+	       status == tools_t::status_t::region;
+}
+
 esm_converter_t::esm_converter_t(
     const std::string & path,
     const dict_merger_t & merger,
@@ -707,6 +716,12 @@ bool esm_converter_t::make_new_text(const tools_t::entry_t & entry, std::string 
 
 	if (found)
 	{
+		if (!is_approved_status(found->status))
+		{
+			counter_unchanged++;
+			return false;
+		}
+
 		new_text = found->new_text;
 		return !is_identical(entry.val_text, new_text);
 	}

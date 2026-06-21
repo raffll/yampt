@@ -1537,7 +1537,7 @@ void main_window_t::load_record(int row)
 	translation_tab_->set_source_text(row_data->old_text);
 
 	if ((row_data->status == "adapted" || row_data->status == "changed" || row_data->status == "ambiguous" ||
-	     row_data->status == "missing" || row_data->status == "duplicate") &&
+	     row_data->status == "missing" || row_data->status == "duplicate" || row_data->status == "outdated") &&
 	    !load_result.adapted_from.empty())
 	{
 		editor_panel_->set_adapted_from(load_result.adapted_from);
@@ -2029,7 +2029,27 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
 	auto plugin_dir = path_sep != std::string::npos ? plugin_path.substr(0, path_sep) : std::string {};
 	std::replace(plugin_dir.begin(), plugin_dir.end(), '\\', '/');
 
-	executor_.set_output_dir(plugin_dir);
+	const auto workspace_dir = QCoreApplication::applicationDirPath().toStdString() + "/workspace/";
+
+	if (op == plugin_op_t::convert || op == plugin_op_t::create_plugin)
+		executor_.set_output_dir(plugin_dir);
+	else
+		executor_.set_output_dir(workspace_dir);
+
+	if (session_.has_any_unsaved())
+	{
+		auto answer = QMessageBox::question(
+		    this,
+		    "Unsaved Changes",
+		    "Some dictionaries have unsaved changes. Save before proceeding?",
+		    QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
+
+		if (answer == QMessageBox::Cancel)
+			return;
+
+		if (answer == QMessageBox::Yes)
+			session_.save_all();
+	}
 
 	operation_executor_t::result_t result;
 
@@ -2252,6 +2272,7 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
 
 		for (const auto & sel_path : selected)
 			session_.open(sel_path);
+
 		result = executor_.convert(plugin_path, selected, encoding);
 		break;
 	}

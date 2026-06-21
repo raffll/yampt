@@ -107,7 +107,7 @@ void dict_writer_t::write(const tools_t::dict_t & dict, const std::string & path
 			}
 
 			if ((entry.status == "adapted" || entry.status == "changed" || entry.status == "ambiguous" ||
-			     entry.status == "missing" || entry.status == "duplicate") &&
+			     entry.status == "missing" || entry.status == "duplicate" || entry.status == "outdated") &&
 			    !entry.adapted_from.empty())
 			{
 				file << ",\n";
