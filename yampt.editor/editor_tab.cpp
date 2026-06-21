@@ -69,10 +69,14 @@ editor_tab_t::editor_tab_t(QWidget * parent)
 	load_menu->addAction("MO2 Profile...", this, &editor_tab_t::on_load_mo2_profile);
 	load_menu->addAction("OpenMW config...", this, &editor_tab_t::on_load_openmw_cfg);
 	btn_load_->setMenu(load_menu);
+	btn_load_->setVisible(false);
 	btn_new_ = new QPushButton("New", toolbar);
+	btn_new_->setVisible(false);
 	btn_save_ = new QPushButton("Save", toolbar);
+	btn_save_->setVisible(false);
 	auto * btn_merge = new QPushButton("Create Merged Patch", toolbar);
 	btn_filter_ = new QPushButton("Filter", toolbar);
+	btn_filter_->setVisible(false);
 	chk_conflicts_ = new QCheckBox("Conflicts Only", toolbar);
 	cmb_type_filter_ = new QComboBox(toolbar);
 	cmb_type_filter_->addItem("All Types");
@@ -342,6 +346,31 @@ void editor_tab_t::on_load_mo2_profile()
 
 	QString mods_path = mo2_root.absolutePath() + "/mods";
 
+	QString game_data_path;
+	QString ini_path = mo2_root.absolutePath() + "/ModOrganizer.ini";
+	QFile ini_file(ini_path);
+	if (ini_file.open(QIODevice::ReadOnly | QIODevice::Text))
+	{
+		QTextStream ini_stream(&ini_file);
+		while (!ini_stream.atEnd())
+		{
+			auto line = ini_stream.readLine().trimmed();
+			if (line.startsWith("gamePath="))
+			{
+				auto value = line.mid(9);
+				if (value.startsWith("@ByteArray(") && value.endsWith(")"))
+					value = value.mid(11, value.size() - 12);
+				value.replace("\\\\", "/");
+				game_data_path = value + "/Data Files";
+				break;
+			}
+		}
+		ini_file.close();
+	}
+
+	if (game_data_path.isEmpty())
+		game_data_path = mo2_root.absolutePath() + "/../Data Files";
+
 	std::vector<std::string> enabled_mods;
 	QString modlist_path = profile_dir + "/modlist.txt";
 	QFile modlist_file(modlist_path);
@@ -368,9 +397,9 @@ void editor_tab_t::on_load_mo2_profile()
 				return candidate.toStdString();
 		}
 
-		QString game_data = mo2_root.absolutePath() + "/../Data Files/" + QString::fromStdString(name);
-		if (QFile::exists(game_data))
-			return game_data.toStdString();
+		QString game_file = game_data_path + "/" + QString::fromStdString(name);
+		if (QFile::exists(game_file))
+			return game_file.toStdString();
 
 		return {};
 	};
@@ -466,7 +495,7 @@ void editor_tab_t::on_load_openmw_cfg()
 void editor_tab_t::rebuild_after_load()
 {
 	nav_model_->rebuild();
-	nav_view_->expandToDepth(0);
+	nav_view_->setColumnWidth(0, 280);
 
 	cmb_type_filter_->blockSignals(true);
 	cmb_type_filter_->clear();

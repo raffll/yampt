@@ -15,5 +15,9 @@ protected:
 	void closeEvent(QCloseEvent * event) override;
 
 private:
+	void setup_menu_bar();
+	void load_config();
+	void save_config();
+
 	editor_tab_t * editor_tab_ = nullptr;
 };

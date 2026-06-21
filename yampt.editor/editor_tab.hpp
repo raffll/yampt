@@ -21,13 +21,15 @@ class editor_tab_t : public QWidget
 public:
 	explicit editor_tab_t(QWidget * parent = nullptr);
 
-private slots:
+public slots:
 	void on_load_plugins();
 	void on_load_data_files();
 	void on_load_mo2_profile();
 	void on_load_openmw_cfg();
 	void on_new_plugin();
 	void on_save_plugin();
+
+private slots:
 	void on_create_merged_patch();
 	void on_nav_selection_changed(const QModelIndex & current);
 	void on_filter_changed();

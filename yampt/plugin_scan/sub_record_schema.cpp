@@ -280,10 +280,165 @@ static const field_def_t spel_spdt_fields[] = {
 	{ "Flags", field_type_t::flags_u32, 8, 4, nullptr, spell_flags },
 };
 
+static const field_def_t npco_fields[] = {
+	{ "Count", field_type_t::i32, 0, 4, nullptr, nullptr },
+	{ "Item ID", field_type_t::string_fixed, 4, 32, nullptr, nullptr },
+};
+
+static const char * const mgef_schools[] = { "Alteration", "Conjuration", "Destruction",
+	                                         "Illusion",   "Mysticism",   "Restoration", nullptr };
+
+static const char * const mgef_flags[] = { nullptr,        nullptr,        nullptr, nullptr, nullptr,
+	                                       nullptr,        nullptr,        nullptr, nullptr, "Spellmaking",
+	                                       "Enchanting", "Negative",   nullptr };
+
+static const field_def_t mgef_medt_fields[] = {
+	{ "School", field_type_t::enum_u32, 0, 4, mgef_schools, nullptr },
+	{ "Base Cost", field_type_t::f32, 4, 4, nullptr, nullptr },
+	{ "Flags", field_type_t::flags_u32, 8, 4, nullptr, mgef_flags },
+	{ "Red", field_type_t::u32, 12, 4, nullptr, nullptr },
+	{ "Blue", field_type_t::u32, 16, 4, nullptr, nullptr },
+	{ "Green", field_type_t::u32, 20, 4, nullptr, nullptr },
+	{ "Speed", field_type_t::f32, 24, 4, nullptr, nullptr },
+	{ "Size", field_type_t::f32, 28, 4, nullptr, nullptr },
+	{ "Size Cap", field_type_t::f32, 32, 4, nullptr, nullptr },
+};
+
+static const char * const skill_specializations[] = { "Combat", "Magic", "Stealth", nullptr };
+
+static const field_def_t skil_skdt_fields[] = {
+	{ "Attribute", field_type_t::u32, 0, 4, nullptr, nullptr },
+	{ "Specialization", field_type_t::enum_u32, 4, 4, skill_specializations, nullptr },
+	{ "Use Value 1", field_type_t::f32, 8, 4, nullptr, nullptr },
+	{ "Use Value 2", field_type_t::f32, 12, 4, nullptr, nullptr },
+	{ "Use Value 3", field_type_t::f32, 16, 4, nullptr, nullptr },
+	{ "Use Value 4", field_type_t::f32, 20, 4, nullptr, nullptr },
+};
+
+static const field_def_t cell_ambi_fields[] = {
+	{ "Ambient Color", field_type_t::u32, 0, 4, nullptr, nullptr },
+	{ "Sunlight Color", field_type_t::u32, 4, 4, nullptr, nullptr },
+	{ "Fog Color", field_type_t::u32, 8, 4, nullptr, nullptr },
+	{ "Fog Density", field_type_t::f32, 12, 4, nullptr, nullptr },
+};
+
+static const field_def_t cell_dodt_fields[] = {
+	{ "X Pos", field_type_t::f32, 0, 4, nullptr, nullptr },
+	{ "Y Pos", field_type_t::f32, 4, 4, nullptr, nullptr },
+	{ "Z Pos", field_type_t::f32, 8, 4, nullptr, nullptr },
+	{ "X Rotate", field_type_t::f32, 12, 4, nullptr, nullptr },
+	{ "Y Rotate", field_type_t::f32, 16, 4, nullptr, nullptr },
+	{ "Z Rotate", field_type_t::f32, 20, 4, nullptr, nullptr },
+};
+
+static const char * const cont_flags[] = { "Organic", "Respawns", nullptr, "Default", nullptr };
+
+static const field_def_t cont_flag_fields[] = {
+	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, cont_flags },
+};
+
+static const char * const crea_flags[] = { "Biped",  "Respawn",      "Weapon and Shield", nullptr,
+	                                       "Swims",  "Flies",        "Walks",             nullptr,
+	                                       nullptr,  nullptr,        "Skeleton Blood",    "Metal Blood", nullptr };
+
+static const field_def_t crea_flag_fields[] = {
+	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, crea_flags },
+};
+
+static const field_def_t levi_intv_fields[] = {
+	{ "PC Level", field_type_t::u16, 0, 2, nullptr, nullptr },
+};
+
+static const char * const clothing_types[] = { "Pants", "Shoes",  "Shirt", "Belt",  "Robe",
+	                                           "Right Glove", "Left Glove", "Skirt", "Ring", "Amulet", nullptr };
+
+static const field_def_t clot_ctdt_fields[] = {
+	{ "Type", field_type_t::enum_u32, 0, 4, clothing_types, nullptr },
+	{ "Weight", field_type_t::f32, 4, 4, nullptr, nullptr },
+	{ "Value", field_type_t::u16, 8, 2, nullptr, nullptr },
+	{ "Enchant Pts", field_type_t::u16, 10, 2, nullptr, nullptr },
+};
+
+static const char * const light_flags[] = { "Dynamic", "Can Carry", "Negative", "Flicker",
+	                                        "Fire",    "Off Default", "Flicker Slow", "Pulse",
+	                                        "Pulse Slow", nullptr };
+
+static const field_def_t ligh_lhdt_fields[] = {
+	{ "Weight", field_type_t::f32, 0, 4, nullptr, nullptr },
+	{ "Value", field_type_t::u32, 4, 4, nullptr, nullptr },
+	{ "Time", field_type_t::u32, 8, 4, nullptr, nullptr },
+	{ "Radius", field_type_t::u32, 12, 4, nullptr, nullptr },
+	{ "Red", field_type_t::u8, 16, 1, nullptr, nullptr },
+	{ "Green", field_type_t::u8, 17, 1, nullptr, nullptr },
+	{ "Blue", field_type_t::u8, 18, 1, nullptr, nullptr },
+	{ "Null", field_type_t::u8, 19, 1, nullptr, nullptr },
+	{ "Flags", field_type_t::flags_u32, 20, 4, nullptr, light_flags },
+};
+
+static const field_def_t ingr_irdt_fields[] = {
+	{ "Weight", field_type_t::f32, 0, 4, nullptr, nullptr },
+	{ "Value", field_type_t::u32, 4, 4, nullptr, nullptr },
+	{ "Effect 1", field_type_t::i32, 8, 4, nullptr, nullptr },
+	{ "Effect 2", field_type_t::i32, 12, 4, nullptr, nullptr },
+	{ "Effect 3", field_type_t::i32, 16, 4, nullptr, nullptr },
+	{ "Effect 4", field_type_t::i32, 20, 4, nullptr, nullptr },
+	{ "Skill 1", field_type_t::i32, 24, 4, nullptr, nullptr },
+	{ "Skill 2", field_type_t::i32, 28, 4, nullptr, nullptr },
+	{ "Skill 3", field_type_t::i32, 32, 4, nullptr, nullptr },
+	{ "Skill 4", field_type_t::i32, 36, 4, nullptr, nullptr },
+	{ "Attribute 1", field_type_t::i32, 40, 4, nullptr, nullptr },
+	{ "Attribute 2", field_type_t::i32, 44, 4, nullptr, nullptr },
+	{ "Attribute 3", field_type_t::i32, 48, 4, nullptr, nullptr },
+	{ "Attribute 4", field_type_t::i32, 52, 4, nullptr, nullptr },
+};
+
+static const field_def_t scpt_schd_fields[] = {
+	{ "Name", field_type_t::string_fixed, 0, 32, nullptr, nullptr },
+	{ "Num Shorts", field_type_t::u32, 32, 4, nullptr, nullptr },
+	{ "Num Longs", field_type_t::u32, 36, 4, nullptr, nullptr },
+	{ "Num Floats", field_type_t::u32, 40, 4, nullptr, nullptr },
+	{ "Script Data Size", field_type_t::u32, 44, 4, nullptr, nullptr },
+	{ "Local Var Size", field_type_t::u32, 48, 4, nullptr, nullptr },
+};
+
+static const field_def_t misc_mcdt_fields[] = {
+	{ "Weight", field_type_t::f32, 0, 4, nullptr, nullptr },
+	{ "Value", field_type_t::u32, 4, 4, nullptr, nullptr },
+	{ "Unknown", field_type_t::u32, 8, 4, nullptr, nullptr },
+};
+
+static const char * const appa_types[] = { "Mortar and Pestle", "Alembic", "Calcinator", "Retort", nullptr };
+
+static const field_def_t appa_aadt_fields[] = {
+	{ "Type", field_type_t::enum_u32, 0, 4, appa_types, nullptr },
+	{ "Quality", field_type_t::f32, 4, 4, nullptr, nullptr },
+	{ "Weight", field_type_t::f32, 8, 4, nullptr, nullptr },
+	{ "Value", field_type_t::u32, 12, 4, nullptr, nullptr },
+};
+
+static const field_def_t repa_ridt_fields[] = {
+	{ "Weight", field_type_t::f32, 0, 4, nullptr, nullptr },
+	{ "Value", field_type_t::u32, 4, 4, nullptr, nullptr },
+	{ "Uses", field_type_t::u32, 8, 4, nullptr, nullptr },
+	{ "Quality", field_type_t::f32, 12, 4, nullptr, nullptr },
+};
+
+static const field_def_t cell_ref_data_fields[] = {
+	{ "X Pos", field_type_t::f32, 0, 4, nullptr, nullptr },
+	{ "Y Pos", field_type_t::f32, 4, 4, nullptr, nullptr },
+	{ "Z Pos", field_type_t::f32, 8, 4, nullptr, nullptr },
+	{ "X Rotate", field_type_t::f32, 12, 4, nullptr, nullptr },
+	{ "Y Rotate", field_type_t::f32, 16, 4, nullptr, nullptr },
+	{ "Z Rotate", field_type_t::f32, 20, 4, nullptr, nullptr },
+};
+
 static const std::vector<sub_record_schema_t> & build_schemas()
 {
 	static const std::vector<sub_record_schema_t> schemas = {
 		{ "CELL", "DATA", 12, cell_data_fields, std::size(cell_data_fields) },
+		{ "CELL", "AMBI", 16, cell_ambi_fields, std::size(cell_ambi_fields) },
+		{ "CELL", "DODT", 24, cell_dodt_fields, std::size(cell_dodt_fields) },
+		{ "CELL", "DATA", 24, cell_ref_data_fields, std::size(cell_ref_data_fields) },
 		{ "NPC_", "FLAG", 4, npc_flag_fields, std::size(npc_flag_fields) },
 		{ "NPC_", "NPDT", 12, npc_npdt_12_fields, std::size(npc_npdt_12_fields) },
 		{ "NPC_", "NPDT", 52, npc_npdt_52_fields, std::size(npc_npdt_52_fields) },
@@ -293,20 +448,36 @@ static const std::vector<sub_record_schema_t> & build_schemas()
 		{ "ALCH", "ALDT", 12, alch_aldt_fields, std::size(alch_aldt_fields) },
 		{ "ENCH", "ENDT", 16, ench_endt_fields, std::size(ench_endt_fields) },
 		{ "*", "ENAM", 24, enam_fields, std::size(enam_fields) },
+		{ "*", "NPCO", 36, npco_fields, std::size(npco_fields) },
 		{ "BOOK", "BKDT", 20, book_bkdt_fields, std::size(book_bkdt_fields) },
 		{ "CREA", "NPDT", 96, crea_npdt_fields, std::size(crea_npdt_fields) },
+		{ "CREA", "FLAG", 4, crea_flag_fields, std::size(crea_flag_fields) },
 		{ "CONT", "CNDT", 4, cont_cndt_fields, std::size(cont_cndt_fields) },
+		{ "CONT", "FLAG", 4, cont_flag_fields, std::size(cont_flag_fields) },
 		{ "FACT", "FADT", 240, fact_fadt_fields, std::size(fact_fadt_fields) },
 		{ "CLAS", "CLDT", 60, clas_cldt_fields, std::size(clas_cldt_fields) },
 		{ "RACE", "RADT", 140, race_radt_fields, std::size(race_radt_fields) },
 		{ "LEVI", "DATA", 4, levi_data_fields, std::size(levi_data_fields) },
 		{ "LEVC", "DATA", 4, levi_data_fields, std::size(levi_data_fields) },
+		{ "LEVI", "INTV", 2, levi_intv_fields, std::size(levi_intv_fields) },
+		{ "LEVC", "INTV", 2, levi_intv_fields, std::size(levi_intv_fields) },
 		{ "GMST", "STRV", 0, gmst_strv_fields, std::size(gmst_strv_fields) },
 		{ "GMST", "INTV", 4, gmst_intv_fields, std::size(gmst_intv_fields) },
 		{ "GMST", "FLTV", 4, gmst_fltv_fields, std::size(gmst_fltv_fields) },
 		{ "INFO", "DATA", 12, info_data_fields, std::size(info_data_fields) },
 		{ "REGN", "WEAT", 8, regn_weat_fields, std::size(regn_weat_fields) },
 		{ "SPEL", "SPDT", 12, spel_spdt_fields, std::size(spel_spdt_fields) },
+		{ "MGEF", "MEDT", 36, mgef_medt_fields, std::size(mgef_medt_fields) },
+		{ "SKIL", "SKDT", 24, skil_skdt_fields, std::size(skil_skdt_fields) },
+		{ "CLOT", "CTDT", 12, clot_ctdt_fields, std::size(clot_ctdt_fields) },
+		{ "LIGH", "LHDT", 24, ligh_lhdt_fields, std::size(ligh_lhdt_fields) },
+		{ "INGR", "IRDT", 56, ingr_irdt_fields, std::size(ingr_irdt_fields) },
+		{ "SCPT", "SCHD", 52, scpt_schd_fields, std::size(scpt_schd_fields) },
+		{ "MISC", "MCDT", 12, misc_mcdt_fields, std::size(misc_mcdt_fields) },
+		{ "APPA", "AADT", 16, appa_aadt_fields, std::size(appa_aadt_fields) },
+		{ "REPA", "RIDT", 16, repa_ridt_fields, std::size(repa_ridt_fields) },
+		{ "LOCK", "LKDT", 16, repa_ridt_fields, std::size(repa_ridt_fields) },
+		{ "PROB", "PBDT", 16, repa_ridt_fields, std::size(repa_ridt_fields) },
 	};
 	return schemas;
 }
