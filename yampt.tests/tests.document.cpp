@@ -31,7 +31,6 @@ void cleanup_temp_dict(const std::string & path)
 
 } // anonymous namespace
 
-// **Validates: Requirements 2.2**
 TEST_CASE("dict_document_t, path round-trip", "[i]")
 {
 	rc::prop(
@@ -58,7 +57,6 @@ TEST_CASE("dict_document_t, path round-trip", "[i]")
 	});
 }
 
-// **Validates: Requirements 2.5, 2.7**
 TEST_CASE("dict_document_t, build_rows count invariant", "[i]")
 {
 	rc::prop(
@@ -97,7 +95,6 @@ TEST_CASE("dict_document_t, build_rows count invariant", "[i]")
 	});
 }
 
-// **Validates: Requirements 2.10**
 TEST_CASE("dict_document_t, read-only commit is no-op", "[i]")
 {
 	rc::prop(
@@ -167,7 +164,6 @@ void cleanup_temp_yaml(const std::string & path)
 
 } // anonymous namespace
 
-// **Validates: Requirements 3.2**
 TEST_CASE("yaml_document_t, path round-trip", "[i]")
 {
 	rc::prop(
@@ -185,7 +181,6 @@ TEST_CASE("yaml_document_t, path round-trip", "[i]")
 	});
 }
 
-// **Validates: Requirements 3.5**
 TEST_CASE("yaml_document_t, dirty state consistency", "[i]")
 {
 	rc::prop(
@@ -213,7 +208,6 @@ TEST_CASE("yaml_document_t, dirty state consistency", "[i]")
 	});
 }
 
-// **Validates: Requirements 3.8**
 TEST_CASE("yaml_document_t, commit-edit round-trip", "[i]")
 {
 	rc::prop(
@@ -239,7 +233,6 @@ TEST_CASE("yaml_document_t, commit-edit round-trip", "[i]")
 	});
 }
 
-// **Validates: Requirements 3.9**
 TEST_CASE("yaml_document_t, translated count invariant", "[i]")
 {
 	rc::prop(

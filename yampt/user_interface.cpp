@@ -129,7 +129,9 @@ void user_interface_t::make_dict_()
 		}
 		else
 		{
-			tools_t::add_log("[warning] base dictionary could not be loaded, proceeding without it\r\n");
+			tools_t::add_log(
+			    "[warning] base dictionary could not be loaded, proceeding "
+			    "without it\r\n");
 		}
 	}
 

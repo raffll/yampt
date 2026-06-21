@@ -502,7 +502,10 @@ void script_parser_t::dump_error()
 	{
 		tools_t::add_log("----------------------------------------------------------\r\n", true);
 		tools_t::add_log(tools_t::replace_non_readable_chars_with_dot(old_scdt), true);
-		tools_t::add_log("\r\n----------------------------------------------------------\r\n", true);
+		tools_t::add_log(
+		    "\r\n----------------------------------------------------------"
+		    "\r\n",
+		    true);
 		tools_t::add_log(tools_t::replace_non_readable_chars_with_dot(new_scdt), true);
 	}
 	tools_t::add_log("\r\n----------------------------------------------------------\r\n", true);

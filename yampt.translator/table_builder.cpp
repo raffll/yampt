@@ -165,8 +165,10 @@ table_build_result_t build_filtered_rows(
 
 			// --- filter pipeline ---
 
-			// 1. type_filter check (for filtered_status_counts and row emission)
-			//    BNAMs pass when INFO is in filter (they're displayed under INFO)
+			// 1. type_filter check (for filtered_status_counts and row
+			// emission)
+			//    BNAMs pass when INFO is in filter (they're displayed under
+			//    INFO)
 			if (!type_filter.empty() && type_filter.count(count_type) == 0)
 				continue;
 
@@ -174,8 +176,10 @@ table_build_result_t build_filtered_rows(
 			if (!passes_sub_type_filter(type, entry.key_text, sub_type_filter, type_filter_solo))
 				continue;
 
-			// 3. count filtered_status_counts (passes type + sub_type + search, but NOT status)
-			//    Counted for ALL records including consumed BNAMs — this is status-independent
+			// 3. count filtered_status_counts (passes type + sub_type + search,
+			// but NOT status)
+			//    Counted for ALL records including consumed BNAMs — this is
+			//    status-independent
 			{
 				table_row_t tmp_row;
 				tmp_row.type = type;
@@ -189,7 +193,8 @@ table_build_result_t build_filtered_rows(
 					counts.filtered_status_counts[entry.status]++;
 			}
 
-			// 4. skip consumed BNAMs (for row emission only — counting is done above)
+			// 4. skip consumed BNAMs (for row emission only — counting is done
+			// above)
 			if (type == tools_t::rec_type_t::bnam && consumed_bnams.count(i) > 0)
 				continue;
 
@@ -212,7 +217,8 @@ table_build_result_t build_filtered_rows(
 			// 7. add to output
 			result.rows.push_back(std::move(row));
 
-			// BNAM interleaving: after an INFO row passes all filters, emit matching BNAMs
+			// BNAM interleaving: after an INFO row passes all filters, emit
+			// matching BNAMs
 			if (type == tools_t::rec_type_t::info && info_in_filter && bnam_it != data.end())
 			{
 				auto info_prefix = extract_info_prefix(entry.key_text);
@@ -246,7 +252,8 @@ table_build_result_t build_filtered_rows(
 		}
 	}
 
-	// progress computation: count type-filtered + sub-type-filtered records with done statuses
+	// progress computation: count type-filtered + sub-type-filtered records
+	// with done statuses
 	for (const auto & [type, chapter] : data)
 	{
 		const auto effective_type = (type == tools_t::rec_type_t::bnam) ? tools_t::rec_type_t::info : type;

@@ -176,9 +176,6 @@ TEST_CASE("tools_t::is_fnam, false IDs", "[u]")
 
 TEST_CASE("tools_t::byte conversion, round-trip", "[u]")
 {
-	// Validates: Requirements 1.5
-	// Property 1: for any unsigned 32-bit integer x,
-	// convert_string_byte_array_to_uint(convert_uint_to_string_byte_array(x)) == x
 	const unsigned int values[] = {
 		0u,          1u, 127u, 128u, 255u, 256u, 65535u, 65536u, 0x7FFFFFFFu, 0xFFFFFFFFu,
 		0x01020304u, // all four bytes non-zero
@@ -225,8 +222,6 @@ TEST_CASE("tools_t::replace_non_readable_chars_with_dot, basic cases", "[u]")
 
 TEST_CASE("tools_t::replace_non_readable_chars_with_dot, printable chars preserved", "[u]")
 {
-	// Validates: Requirements 2.8
-	// Property 2: Printable Characters Are Preserved
 	for (int c = 32; c <= 126; ++c)
 	{
 		std::string single(1, static_cast<char>(c));
@@ -243,8 +238,6 @@ TEST_CASE("tools_t::replace_non_readable_chars_with_dot, printable chars preserv
 
 TEST_CASE("tools_t::replace_non_readable_chars_with_dot, all bytes", "[u]")
 {
-	// Validates: Requirements 2.9
-	// Property 3: Non-Printable Characters Are Replaced with Dot
 	for (int i = 0; i <= 255; ++i)
 	{
 		std::string single(1, static_cast<char>(i));
@@ -281,8 +274,6 @@ TEST_CASE("tools_t::initialize_dict, has all expected keys", "[u]")
 
 TEST_CASE("tools_t::initialize_dict, all chapters empty", "[u]")
 {
-	// Validates: Requirements 5.2
-	// Property 5: Fresh dict_t Has All Chapters Empty
 	tools_t::dict_t dict = tools_t::initialize_dict();
 
 	for (const auto & chapter : dict)

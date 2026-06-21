@@ -165,10 +165,10 @@ main_window_t::main_window_t(QWidget * parent)
 	search_field_->setPlaceholderText("Search...");
 	toolbar->addWidget(search_field_);
 
-	static const QString toggle_style =
-	    "QPushButton { border: 1px solid #bbb; border-radius: 2px; padding: 2px 6px; background: #f0f0f0; }"
-	    "QPushButton:checked { background: #cde; border-color: #89a; }"
-	    "QPushButton:disabled { color: rgb(180,180,180); }";
+	static const QString toggle_style = "QPushButton { border: 1px solid #bbb; border-radius: 2px; padding: "
+	                                    "2px 6px; background: #f0f0f0; }"
+	                                    "QPushButton:checked { background: #cde; border-color: #89a; }"
+	                                    "QPushButton:disabled { color: rgb(180,180,180); }";
 
 	case_sensitive_check_ = new QPushButton("Aa", this);
 	case_sensitive_check_->setCheckable(true);
@@ -1726,7 +1726,10 @@ void main_window_t::on_encoding_changed(int index)
 	config_.encoding_index = index;
 	save_config();
 
-	statusBar()->showMessage("Encoding changed. Open documents keep their original encoding until re-opened.", 5000);
+	statusBar()->showMessage(
+	    "Encoding changed. Open documents keep their original encoding until "
+	    "re-opened.",
+	    5000);
 }
 
 void main_window_t::rebuild_annotations()

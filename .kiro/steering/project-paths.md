@@ -129,6 +129,7 @@ tests/
 - Unit tests verify logic only: data structure operations, string manipulation, parsing from in-memory strings, algorithm correctness.
 - Never create or modify integration tests. Only the user writes and maintains integration tests.
 - Never skip or weaken a test to make it pass. If a test fails, diagnose and fix the root cause.
+- No comments in test code. No spec references, requirement IDs, property descriptions, or explanatory prose. The test name is the documentation.
 
 ## Unit Test Naming Convention
 
