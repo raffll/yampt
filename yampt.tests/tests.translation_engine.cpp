@@ -5,7 +5,7 @@
 
 static const char * model_path = "../../models/en-de";
 
-TEST_CASE("translation_engine loads en-de model", "[i]")
+TEST_CASE("translation_engine_t::load, en-de model", "[i]")
 {
 	translation_engine_t engine;
 	REQUIRE_FALSE(engine.is_loaded());
@@ -17,7 +17,7 @@ TEST_CASE("translation_engine loads en-de model", "[i]")
 	REQUIRE(engine.target_language() == "de");
 }
 
-TEST_CASE("translation_engine translates test strings", "[i]")
+TEST_CASE("translation_engine_t::translate, test strings", "[i]")
 {
 	translation_engine_t engine;
 	REQUIRE(engine.load(model_path));
@@ -60,7 +60,7 @@ TEST_CASE("translation_engine translates test strings", "[i]")
 	}
 }
 
-TEST_CASE("translation_engine load from invalid path does not crash", "[i]")
+TEST_CASE("translation_engine_t::load, invalid path does not crash", "[i]")
 {
 	translation_engine_t engine;
 	bool loaded = engine.load("nonexistent/path/to/model");
@@ -68,7 +68,7 @@ TEST_CASE("translation_engine load from invalid path does not crash", "[i]")
 	REQUIRE_FALSE(engine.is_loaded());
 }
 
-TEST_CASE("translation_engine translate without loaded model returns error", "[i]")
+TEST_CASE("translation_engine_t::translate, without loaded model returns error", "[i]")
 {
 	translation_engine_t engine;
 	auto result = engine.translate("Hello");

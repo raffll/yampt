@@ -2,7 +2,7 @@
 #include "../yampt/tools.hpp"
 #include "../yampt/dict_merger.hpp"
 
-TEST_CASE("dict_merger_t add_record inserts entry", "[u]")
+TEST_CASE("dict_merger_t::add_record, inserts entry", "[u]")
 {
 	dict_merger_t merger;
 	merger.add_record(tools_t::rec_type_t::cell, "Balmora", "BalmoraTrans");

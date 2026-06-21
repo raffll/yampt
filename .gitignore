@@ -12,3 +12,4 @@ models/
 *.user
 *.log
 *.ini
+/tests

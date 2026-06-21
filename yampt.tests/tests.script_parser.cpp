@@ -5,7 +5,7 @@
 
 using namespace std;
 
-TEST_CASE("script parser, dial keywords", "[u]")
+TEST_CASE("script_parser_t, dial keywords", "[u]")
 {
 	vector<std::pair<std::string, std::string>> lines {
 		{ "AddTopic \"Test\"", "AddTopic \"Result\"" },
@@ -32,7 +32,7 @@ TEST_CASE("script parser, dial keywords", "[u]")
 	}
 }
 
-TEST_CASE("script parser, AddTopic no-match", "[u]")
+TEST_CASE("script_parser_t, AddTopic no-match", "[u]")
 {
 	dict_merger_t merger;
 	merger.add_record(tools_t::rec_type_t::dial, "SomeTopic", "SomeResult");
@@ -66,7 +66,7 @@ TEST_CASE("script parser, AddTopic no-match", "[u]")
 	}
 }
 
-TEST_CASE("script parser, cell keywords", "[u]")
+TEST_CASE("script_parser_t, cell keywords", "[u]")
 {
 	vector<std::pair<std::string, std::string>> lines {
 		{ "if ( GetPCCell \"Test Test\" == 1 )", "if ( GetPCCell \"Result Result\" == 1 )" },
@@ -88,7 +88,7 @@ TEST_CASE("script parser, cell keywords", "[u]")
 	}
 }
 
-TEST_CASE("script parser, messages", "[u]")
+TEST_CASE("script_parser_t, messages", "[u]")
 {
 	vector<std::pair<std::string, std::string>> lines {
 		{ "NPC->Say \"Test.wav\" \"Test\"", "NPC->Say \"Test.wav\" \"Result\"" },
@@ -112,7 +112,7 @@ TEST_CASE("script parser, messages", "[u]")
 	}
 }
 
-TEST_CASE("script parser, MessageBox replacement", "[u]")
+TEST_CASE("script_parser_t, MessageBox replacement", "[u]")
 {
 	const std::string script_name = "TestScript";
 	const std::string input_line = "MessageBox \"Hello World\"";
@@ -129,7 +129,7 @@ TEST_CASE("script parser, MessageBox replacement", "[u]")
 	REQUIRE(parser.get_new_script() == expected_line);
 }
 
-TEST_CASE("script parser, end keyword stops processing", "[u]")
+TEST_CASE("script_parser_t, end keyword stops processing", "[u]")
 {
 	dict_merger_t merger;
 	merger.add_record(tools_t::rec_type_t::dial, "Test", "Result");
@@ -146,7 +146,7 @@ TEST_CASE("script parser, end keyword stops processing", "[u]")
 	REQUIRE(parser.get_new_script() == expected);
 }
 
-TEST_CASE("script parser, multi-line script", "[u]")
+TEST_CASE("script_parser_t, multi-line script", "[u]")
 {
 	dict_merger_t merger;
 	merger.add_record(tools_t::rec_type_t::dial, "Test", "Result");
@@ -162,7 +162,7 @@ TEST_CASE("script parser, multi-line script", "[u]")
 	REQUIRE(parser.get_new_script() == expected);
 }
 
-TEST_CASE("script parser, trailing CRLF not appended", "[u]")
+TEST_CASE("script_parser_t, trailing CRLF not appended", "[u]")
 {
 	dict_merger_t merger;
 	merger.add_record(tools_t::rec_type_t::dial, "Test", "Result");

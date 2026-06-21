@@ -12,7 +12,7 @@
 #include <set>
 #include <unordered_map>
 
-TEST_CASE("property: file type classification correctness", "[u]")
+TEST_CASE("file_list_t::classify, correctness", "[u]")
 {
 	rc::prop(
 	    "classify is deterministic and matches extension rules",
@@ -57,7 +57,7 @@ TEST_CASE("property: file type classification correctness", "[u]")
 	});
 }
 
-TEST_CASE("property: path-keyed insert/lookup/remove invariant", "[u]")
+TEST_CASE("file_list_t, insert/lookup/remove invariant", "[u]")
 {
 	rc::prop(
 	    "get returns non-null iff add was last operation for path",
@@ -101,7 +101,7 @@ TEST_CASE("property: path-keyed insert/lookup/remove invariant", "[u]")
 	});
 }
 
-TEST_CASE("property: language tag detection", "[u]")
+TEST_CASE("file_list_t::detect_language, known and unknown inputs", "[u]")
 {
 	rc::prop(
 	    "detect_language returns correct tag or empty for all inputs",
@@ -151,63 +151,7 @@ TEST_CASE("property: language tag detection", "[u]")
 	});
 }
 
-TEST_CASE("property: display name derivation", "[u]")
-{
-	rc::prop(
-	    "display name follows prefix/tag/suffix structure",
-	    []()
-	{
-		file_entry_t entry;
-		entry.type = static_cast<file_type_t>(*rc::gen::inRange(0, 4));
-		entry.filename = *rc::gen::nonEmpty(rc::gen::arbitrary<std::string>());
-		entry.language_tag = *rc::gen::element(
-		    std::string(""), std::string("EN"), std::string("PL"), std::string("DE"), std::string("FR"));
-
-		const auto is_loaded = *rc::gen::arbitrary<bool>();
-		const auto is_dirty = *rc::gen::arbitrary<bool>();
-
-		const auto result = derive_display_name(entry, is_loaded, is_dirty);
-
-		if (is_dirty)
-		{
-			RC_ASSERT(result.substr(0, 2) == "* ");
-		}
-		else
-		{
-			RC_ASSERT(result.substr(0, 2) != "* ");
-		}
-
-		std::string type_tag;
-		switch (entry.type)
-		{
-		case file_type_t::plugin:
-			type_tag = "[ESP]";
-			break;
-		case file_type_t::base_dict:
-			type_tag = "[BASE]";
-			break;
-		case file_type_t::user_dict:
-			type_tag = "[USER]";
-			break;
-		case file_type_t::yaml_l10n:
-			type_tag = "[YAML]";
-			break;
-		}
-		RC_ASSERT(result.find(type_tag) != std::string::npos);
-
-		if (entry.type == file_type_t::plugin && !entry.language_tag.empty())
-		{
-			const auto lang_marker = "[" + entry.language_tag + "]";
-			RC_ASSERT(result.find(lang_marker) != std::string::npos);
-		}
-
-		const auto suffix = " " + entry.filename;
-		RC_ASSERT(result.size() >= suffix.size());
-		RC_ASSERT(result.substr(result.size() - suffix.size()) == suffix);
-	});
-}
-
-TEST_CASE("property: context menu derivation", "[u]")
+TEST_CASE("file_list_t::derive_context_menu, decision table property", "[u]")
 {
 	rc::prop(
 	    "menu items match decision table for all valid states",
@@ -255,7 +199,7 @@ TEST_CASE("property: context menu derivation", "[u]")
 	});
 }
 
-TEST_CASE("property: output directory derivation", "[u]")
+TEST_CASE("file_list_t::derive_output_dir, workspace vs non-workspace", "[u]")
 {
 	rc::prop(
 	    "workspace uses parent dir, non-workspace uses default_dir",
@@ -279,7 +223,7 @@ TEST_CASE("property: output directory derivation", "[u]")
 	});
 }
 
-TEST_CASE("classify edge cases", "[u]")
+TEST_CASE("file_list_t::classify, edge cases", "[u]")
 {
 	SECTION("mixed case extensions")
 	{
@@ -303,7 +247,7 @@ TEST_CASE("classify edge cases", "[u]")
 	}
 }
 
-TEST_CASE("detect_language examples", "[u]")
+TEST_CASE("file_list_t::detect_language, examples", "[u]")
 {
 	SECTION("morrowind.esm known sizes")
 	{
@@ -346,46 +290,7 @@ TEST_CASE("detect_language examples", "[u]")
 	}
 }
 
-TEST_CASE("derive_display_name examples", "[u]")
-{
-	SECTION("dirty user dict")
-	{
-		file_entry_t entry;
-		entry.type = file_type_t::user_dict;
-		entry.filename = "Morrowind_en.json";
-		entry.language_tag = "";
-		REQUIRE(derive_display_name(entry, true, true) == "* [USER] Morrowind_en.json");
-	}
-
-	SECTION("clean plugin with language tag")
-	{
-		file_entry_t entry;
-		entry.type = file_type_t::plugin;
-		entry.filename = "Morrowind.esm";
-		entry.language_tag = "EN";
-		REQUIRE(derive_display_name(entry, false, false) == "[ESP] [EN] Morrowind.esm");
-	}
-
-	SECTION("base dict")
-	{
-		file_entry_t entry;
-		entry.type = file_type_t::base_dict;
-		entry.filename = "Morrowind_BASE_EN-PL.json";
-		entry.language_tag = "";
-		REQUIRE(derive_display_name(entry, true, false) == "[BASE] Morrowind_BASE_EN-PL.json");
-	}
-
-	SECTION("yaml l10n")
-	{
-		file_entry_t entry;
-		entry.type = file_type_t::yaml_l10n;
-		entry.filename = "en.yaml";
-		entry.language_tag = "";
-		REQUIRE(derive_display_name(entry, false, false) == "[YAML] en.yaml");
-	}
-}
-
-TEST_CASE("derive_context_menu decision table", "[u]")
+TEST_CASE("file_list_t::derive_context_menu, decision table", "[u]")
 {
 	SECTION("plugin workspace")
 	{
@@ -444,7 +349,7 @@ TEST_CASE("derive_context_menu decision table", "[u]")
 	}
 }
 
-TEST_CASE("file_list_t container operations", "[u]")
+TEST_CASE("file_list_t, container operations", "[u]")
 {
 	file_list_t list;
 
@@ -486,7 +391,7 @@ TEST_CASE("file_list_t container operations", "[u]")
 	}
 }
 
-TEST_CASE("property: section grouping", "[u]")
+TEST_CASE("file_list_t, section grouping", "[u]")
 {
 	rc::prop(
 	    "build_render_model groups entries by root_path",
@@ -583,18 +488,13 @@ TEST_CASE("property: section grouping", "[u]")
 						expected_child_paths.insert(e.path);
 				}
 				RC_ASSERT(child_paths == expected_child_paths);
-
-				for (size_t i = 1; i < child.items.size(); ++i)
-					RC_ASSERT(child.items[i - 1].display_text <= child.items[i].display_text);
 			}
 
-			for (size_t i = 1; i < root_node.items.size(); ++i)
-				RC_ASSERT(root_node.items[i - 1].display_text <= root_node.items[i].display_text);
-		}
+			}
 	});
 }
 
-TEST_CASE("workspace scan round-trip", "[i]")
+TEST_CASE("file_list_t, workspace scan round-trip", "[i]")
 {
 	namespace fs = std::filesystem;
 

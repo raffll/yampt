@@ -1,7 +1,7 @@
 #include <catch2/catch_all.hpp>
 #include "../yampt/tools.hpp"
 
-TEST_CASE("convert string byte array to uint", "[u]")
+TEST_CASE("tools_t::convert_string_byte_array_to_uint, basic conversions", "[u]")
 {
 	std::string text = "DEAD";
 	REQUIRE(tools_t::convert_string_byte_array_to_uint(text) == 1145128260);
@@ -15,18 +15,18 @@ TEST_CASE("convert string byte array to uint", "[u]")
 	REQUIRE(tools_t::convert_string_byte_array_to_uint(text) == 68);
 }
 
-TEST_CASE("convert uint to string byte array", "[u]")
+TEST_CASE("tools_t::convert_uint_to_string_byte_array, basic conversion", "[u]")
 {
 	REQUIRE(tools_t::convert_uint_to_string_byte_array(1145128260) == "DEAD");
 }
 
-TEST_CASE("case insensitive string comparison", "[u]")
+TEST_CASE("tools_t::case_insensitive_string_cmp, matches and mismatches", "[u]")
 {
 	REQUIRE(tools_t::case_insensitive_string_cmp("DEAD", "dead") == true);
 	REQUIRE(tools_t::case_insensitive_string_cmp("DEAD", "BEEF") == false);
 }
 
-TEST_CASE("erase null chars from first found", "[u]")
+TEST_CASE("tools_t::erase_null_chars, truncates at first null", "[u]")
 {
 	std::string text = "DEAD";
 	text.resize(8);
@@ -37,7 +37,7 @@ TEST_CASE("erase null chars from first found", "[u]")
 	REQUIRE(tools_t::erase_null_chars(text) == "DEAD");
 }
 
-TEST_CASE("erase only last \\r char", "[u]")
+TEST_CASE("tools_t::trim_cr, removes only trailing CR", "[u]")
 {
 	std::string text = "DEAD\r";
 	REQUIRE(tools_t::trim_cr(text) == "DEAD");
@@ -45,7 +45,7 @@ TEST_CASE("erase only last \\r char", "[u]")
 	REQUIRE(tools_t::trim_cr(text) == "DE\rAD");
 }
 
-TEST_CASE("Chapter::insert", "[u]")
+TEST_CASE("tools_t::chapter_t::insert, new and duplicate keys", "[u]")
 {
 	tools_t::chapter_t chapter;
 
@@ -63,7 +63,7 @@ TEST_CASE("Chapter::insert", "[u]")
 	}
 }
 
-TEST_CASE("Chapter::find", "[u]")
+TEST_CASE("tools_t::chapter_t::find, existing and missing keys", "[u]")
 {
 	tools_t::chapter_t chapter;
 	chapter.insert({ "key1", "orig1", "trans1", "untranslated" });
@@ -85,7 +85,7 @@ TEST_CASE("Chapter::find", "[u]")
 	}
 }
 
-TEST_CASE("Chapter::size", "[u]")
+TEST_CASE("tools_t::chapter_t::size, counts unique entries", "[u]")
 {
 	tools_t::chapter_t chapter;
 	REQUIRE(chapter.size() == 0);
@@ -100,7 +100,7 @@ TEST_CASE("Chapter::size", "[u]")
 	REQUIRE(chapter.size() == 2);
 }
 
-TEST_CASE("Chapter::empty", "[u]")
+TEST_CASE("tools_t::chapter_t::empty, reflects entry count", "[u]")
 {
 	tools_t::chapter_t chapter;
 	REQUIRE(chapter.empty() == true);
@@ -109,7 +109,7 @@ TEST_CASE("Chapter::empty", "[u]")
 	REQUIRE(chapter.empty() == false);
 }
 
-TEST_CASE("type_to_str and str_to_type round-trip", "[u]")
+TEST_CASE("tools_t::type_to_str and str_to_type, round-trip", "[u]")
 {
 	const std::vector<tools_t::rec_type_t> defined_types {
 		tools_t::rec_type_t::cell, tools_t::rec_type_t::dial, tools_t::rec_type_t::indx, tools_t::rec_type_t::rnam,
@@ -130,7 +130,7 @@ TEST_CASE("type_to_str and str_to_type round-trip", "[u]")
 	}
 }
 
-TEST_CASE("get_dialog_type all values", "[u]")
+TEST_CASE("tools_t::get_dialog_type, all values", "[u]")
 {
 	REQUIRE(tools_t::get_dialog_type(std::string(1, '\x00')) == "T");
 	REQUIRE(tools_t::get_dialog_type(std::string(1, '\x01')) == "V");
@@ -139,7 +139,7 @@ TEST_CASE("get_dialog_type all values", "[u]")
 	REQUIRE(tools_t::get_dialog_type(std::string(1, '\x04')) == "J");
 }
 
-TEST_CASE("get_indx zero-padded output", "[u]")
+TEST_CASE("tools_t::get_indx, zero-padded output", "[u]")
 {
 	// 4-byte little-endian encoding of 1 → "001"
 	std::string one = tools_t::convert_uint_to_string_byte_array(1);
@@ -154,7 +154,7 @@ TEST_CASE("get_indx zero-padded output", "[u]")
 	REQUIRE(tools_t::get_indx(twofiftyfive) == "255");
 }
 
-TEST_CASE("is_fnam true IDs", "[u]")
+TEST_CASE("tools_t::is_fnam, true IDs", "[u]")
 {
 	const std::vector<std::string> true_ids {
 		"ACTI", "ALCH", "APPA", "ARMO", "BOOK", "BSGN", "CLAS", "CLOT", "CONT", "CREA", "DOOR", "FACT",
@@ -167,14 +167,14 @@ TEST_CASE("is_fnam true IDs", "[u]")
 	}
 }
 
-TEST_CASE("is_fnam false IDs", "[u]")
+TEST_CASE("tools_t::is_fnam, false IDs", "[u]")
 {
 	REQUIRE(tools_t::is_fnam("CELL") == false);
 	REQUIRE(tools_t::is_fnam("INFO") == false);
 	REQUIRE(tools_t::is_fnam("DIAL") == false);
 }
 
-TEST_CASE("byte conversion round-trip", "[u]")
+TEST_CASE("tools_t::byte conversion, round-trip", "[u]")
 {
 	// Validates: Requirements 1.5
 	// Property 1: for any unsigned 32-bit integer x,
@@ -193,7 +193,7 @@ TEST_CASE("byte conversion round-trip", "[u]")
 	}
 }
 
-TEST_CASE("trim_cr, no CR present", "[u]")
+TEST_CASE("tools_t::trim_cr, no CR present", "[u]")
 {
 	std::string text = "DEAD";
 	REQUIRE(tools_t::trim_cr(text) == "DEAD");
@@ -203,7 +203,7 @@ TEST_CASE("trim_cr, no CR present", "[u]")
 	REQUIRE(tools_t::trim_cr(text) == "no carriage return here");
 }
 
-TEST_CASE("replace non-readable chars with dot", "[u]")
+TEST_CASE("tools_t::replace_non_readable_chars_with_dot, basic cases", "[u]")
 {
 	SECTION("printable-only string is preserved")
 	{
@@ -223,7 +223,7 @@ TEST_CASE("replace non-readable chars with dot", "[u]")
 	}
 }
 
-TEST_CASE("replace_non_readable_chars_with_dot property: printable chars preserved", "[u]")
+TEST_CASE("tools_t::replace_non_readable_chars_with_dot, printable chars preserved", "[u]")
 {
 	// Validates: Requirements 2.8
 	// Property 2: Printable Characters Are Preserved
@@ -241,7 +241,7 @@ TEST_CASE("replace_non_readable_chars_with_dot property: printable chars preserv
 	REQUIRE(tools_t::replace_non_readable_chars_with_dot(all_printable) == all_printable);
 }
 
-TEST_CASE("replace_non_readable_chars_with_dot property: all bytes", "[u]")
+TEST_CASE("tools_t::replace_non_readable_chars_with_dot, all bytes", "[u]")
 {
 	// Validates: Requirements 2.9
 	// Property 3: Non-Printable Characters Are Replaced with Dot
@@ -260,7 +260,7 @@ TEST_CASE("replace_non_readable_chars_with_dot property: all bytes", "[u]")
 	}
 }
 
-TEST_CASE("initialize_dict has all expected keys", "[u]")
+TEST_CASE("tools_t::initialize_dict, has all expected keys", "[u]")
 {
 	tools_t::dict_t dict = tools_t::initialize_dict();
 
@@ -279,7 +279,7 @@ TEST_CASE("initialize_dict has all expected keys", "[u]")
 	REQUIRE(dict.size() == 11);
 }
 
-TEST_CASE("initialize_dict all chapters empty", "[u]")
+TEST_CASE("tools_t::initialize_dict, all chapters empty", "[u]")
 {
 	// Validates: Requirements 5.2
 	// Property 5: Fresh dict_t Has All Chapters Empty
@@ -291,13 +291,13 @@ TEST_CASE("initialize_dict all chapters empty", "[u]")
 	}
 }
 
-TEST_CASE("get_number_of_elements_in_dict zero for empty dict", "[u]")
+TEST_CASE("tools_t::get_number_of_elements_in_dict, zero for empty dict", "[u]")
 {
 	tools_t::dict_t dict = tools_t::initialize_dict();
 	REQUIRE(tools_t::get_number_of_elements_in_dict(dict) == 0);
 }
 
-TEST_CASE("get_number_of_elements_in_dict counts inserted entries", "[u]")
+TEST_CASE("tools_t::get_number_of_elements_in_dict, counts inserted entries", "[u]")
 {
 	tools_t::dict_t dict = tools_t::initialize_dict();
 	dict.at(tools_t::rec_type_t::cell).insert({ "Balmora", "Balmora", "Balmora", "translated" });
@@ -306,7 +306,7 @@ TEST_CASE("get_number_of_elements_in_dict counts inserted entries", "[u]")
 	REQUIRE(tools_t::get_number_of_elements_in_dict(dict) == 3);
 }
 
-TEST_CASE("get_number_of_elements_in_dict correct total", "[u]")
+TEST_CASE("tools_t::get_number_of_elements_in_dict, correct total", "[u]")
 {
 	tools_t::dict_t dict = tools_t::initialize_dict();
 	dict.at(tools_t::rec_type_t::cell).insert({ "Balmora", "Balmora", "Balmora", "translated" });
@@ -316,7 +316,7 @@ TEST_CASE("get_number_of_elements_in_dict correct total", "[u]")
 	REQUIRE(tools_t::get_number_of_elements_in_dict(dict) == 4);
 }
 
-TEST_CASE("status_t constants are distinct non-empty strings", "[u]")
+TEST_CASE("tools_t::status_t, constants are distinct non-empty strings", "[u]")
 {
 	std::vector<std::string> all_statuses {
 		tools_t::status_t::matched,      tools_t::status_t::fingerprint,  tools_t::status_t::coords,
@@ -339,21 +339,21 @@ TEST_CASE("status_t constants are distinct non-empty strings", "[u]")
 	REQUIRE(unique_set.size() == all_statuses.size());
 }
 
-TEST_CASE("record_entry_t speaker fields default to empty", "[u]")
+TEST_CASE("tools_t::record_entry_t, speaker fields default to empty", "[u]")
 {
 	tools_t::record_entry_t entry { "key", "old", "new", "untranslated" };
 	REQUIRE(entry.speaker_name.empty());
 	REQUIRE(entry.gender.empty());
 }
 
-TEST_CASE("record_entry_t with speaker fields", "[u]")
+TEST_CASE("tools_t::record_entry_t, with speaker fields", "[u]")
 {
 	tools_t::record_entry_t entry { "key", "old", "new", "translated", "Fargoth", "M" };
 	REQUIRE(entry.speaker_name == "Fargoth");
 	REQUIRE(entry.gender == "M");
 }
 
-TEST_CASE("Chapter::insert with speaker fields", "[u]")
+TEST_CASE("tools_t::chapter_t::insert, with speaker fields", "[u]")
 {
 	tools_t::chapter_t chapter;
 	bool result = chapter.insert({ "info_1", "Hello", "Cześć", "translated", "Fargoth", "M" });
@@ -365,7 +365,7 @@ TEST_CASE("Chapter::insert with speaker fields", "[u]")
 	REQUIRE(entry->gender == "M");
 }
 
-TEST_CASE("initialize_dict does not contain npc_flag or glossary", "[u]")
+TEST_CASE("tools_t::initialize_dict, excludes non-dict types", "[u]")
 {
 	tools_t::dict_t dict = tools_t::initialize_dict();
 	for (const auto & chapter : dict)

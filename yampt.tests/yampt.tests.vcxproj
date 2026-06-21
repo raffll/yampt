@@ -71,7 +71,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <LocalDebuggerCommandArguments>--master-path "$(SolutionDir)master"</LocalDebuggerCommandArguments>
+    <LocalDebuggerWorkingDirectory>$(SolutionDir)</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
@@ -81,7 +81,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <LocalDebuggerCommandArguments>--master-path "$(SolutionDir)master"</LocalDebuggerCommandArguments>
+    <LocalDebuggerWorkingDirectory>$(SolutionDir)</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg">
     <VcpkgEnableManifest>true</VcpkgEnableManifest>
@@ -196,7 +196,6 @@
     <ClCompile Include="tests.dict_merger.cpp" />
     <ClCompile Include="tests.dict_reader.cpp" />
     <ClCompile Include="tests.dict_writer.cpp" />
-    <ClCompile Include="tests.integration.cpp" />
     <ClCompile Include="tests.main.cpp" />
     <ClCompile Include="tests.script_parser.cpp" />
     <ClCompile Include="tests.tools.cpp" />

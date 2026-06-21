@@ -16,12 +16,15 @@ std::string create_temp_dict_json(const tools_t::dict_t & data)
 	auto path = (fs::temp_directory_path() / "yampt_test_dict.json").string();
 	std::replace(path.begin(), path.end(), '\\', '/');
 
+	tools_t::reset_log();
 	dict_writer_t::write(data, path);
+	tools_t::reset_log();
 	return path;
 }
 
 void cleanup_temp_dict(const std::string & path)
 {
+	tools_t::reset_log();
 	std::error_code ec;
 	std::filesystem::remove(path, ec);
 }
@@ -29,7 +32,7 @@ void cleanup_temp_dict(const std::string & path)
 } // anonymous namespace
 
 // **Validates: Requirements 2.2**
-TEST_CASE("dict_document_t property: path round trip", "[u]")
+TEST_CASE("dict_document_t, path round-trip", "[i]")
 {
 	rc::prop(
 	    "path() returns normalized path",
@@ -56,7 +59,7 @@ TEST_CASE("dict_document_t property: path round trip", "[u]")
 }
 
 // **Validates: Requirements 2.5, 2.7**
-TEST_CASE("dict_document_t property: build_rows count invariant", "[u]")
+TEST_CASE("dict_document_t, build_rows count invariant", "[i]")
 {
 	rc::prop(
 	    "build_rows().size() == total_count()",
@@ -95,7 +98,7 @@ TEST_CASE("dict_document_t property: build_rows count invariant", "[u]")
 }
 
 // **Validates: Requirements 2.10**
-TEST_CASE("dict_document_t property: read-only commit is no-op", "[u]")
+TEST_CASE("dict_document_t, read-only commit is no-op", "[i]")
 {
 	rc::prop(
 	    "commit_edit on read-only doc does not modify data",
@@ -165,7 +168,7 @@ void cleanup_temp_yaml(const std::string & path)
 } // anonymous namespace
 
 // **Validates: Requirements 3.2**
-TEST_CASE("yaml_document_t property: path round trip", "[u]")
+TEST_CASE("yaml_document_t, path round-trip", "[i]")
 {
 	rc::prop(
 	    "path() returns normalized file path",
@@ -183,7 +186,7 @@ TEST_CASE("yaml_document_t property: path round trip", "[u]")
 }
 
 // **Validates: Requirements 3.5**
-TEST_CASE("yaml_document_t property: dirty state consistency", "[u]")
+TEST_CASE("yaml_document_t, dirty state consistency", "[i]")
 {
 	rc::prop(
 	    "set_dirty round-trips; commit_edit sets dirty",
@@ -211,7 +214,7 @@ TEST_CASE("yaml_document_t property: dirty state consistency", "[u]")
 }
 
 // **Validates: Requirements 3.8**
-TEST_CASE("yaml_document_t property: commit-edit round trip", "[u]")
+TEST_CASE("yaml_document_t, commit-edit round-trip", "[i]")
 {
 	rc::prop(
 	    "after commit_edit, build_rows()[idx].new_text == text",
@@ -237,7 +240,7 @@ TEST_CASE("yaml_document_t property: commit-edit round trip", "[u]")
 }
 
 // **Validates: Requirements 3.9**
-TEST_CASE("yaml_document_t property: translated count invariant", "[u]")
+TEST_CASE("yaml_document_t, translated count invariant", "[i]")
 {
 	rc::prop(
 	    "after K distinct edits, translated_count() == K",

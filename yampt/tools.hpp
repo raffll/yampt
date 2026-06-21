@@ -168,6 +168,11 @@ public:
 		return debug_flag;
 	}
 
+	static void set_quiet(bool enabled)
+	{
+		quiet_flag = enabled;
+	}
+
 	static void reset_log();
 	static dict_t initialize_dict();
 	static std::string type_to_str(tools_t::rec_type_t type);
@@ -180,4 +185,5 @@ private:
 	static std::string log1;
 	static bool error_flag;
 	static bool debug_flag;
+	static bool quiet_flag;
 };

@@ -86,39 +86,35 @@ Catch2 header-only, self-contained.
 
 ## Integration Test Output Structure
 
-Integration tests (`[i]` tag) write output to `tests/` relative to the working directory:
+Integration tests live in `scripts/run_integration.ps1` (PowerShell). Run from repo root:
+
+```powershell
+.\scripts\run_integration.ps1
+```
+
+Output goes to `tests/` relative to the working directory:
 
 ```
 tests/
 ├── en/
 │   ├── Morrowind_en.json
-│   ├── Morrowind_en.log
 │   ├── Tribunal_en.json
-│   ├── Tribunal_en.log
 │   ├── Bloodmoon_en.json
-│   ├── Bloodmoon_en.log
-│   ├── Morrowind_en_with_base.json
-│   └── Morrowind_en_with_base.log
+│   └── Morrowind_en_with_base.json
 ├── pl/
 │   ├── Morrowind_en_pl.json
-│   ├── Morrowind_en_pl.log
 │   ├── Tribunal_en_pl.json
-│   ├── Tribunal_en_pl.log
 │   ├── Bloodmoon_en_pl.json
-│   ├── Bloodmoon_en_pl.log
-│   ├── Merged_en_pl.json
-│   └── Merged_en_pl.log
+│   └── Merged_en_pl.json
 ├── de/
 │   ├── Morrowind_en_de.json
-│   ├── Morrowind_en_de.log
 │   └── ...
-└── fr/
-    ├── Morrowind_en_fr.json
-    ├── Morrowind_en_fr.log
-    └── ...
+├── fr/
+│   ├── Morrowind_en_fr.json
+│   └── ...
+└── converted/
+    └── *.esp / *.omwaddon
 ```
-
-JSON and log files live side-by-side in the same language folder. Log filenames match their corresponding JSON filenames (same base name, `.log` extension).
 
 ## Integration Test Rules
 
@@ -132,6 +128,25 @@ JSON and log files live side-by-side in the same language folder. Log filenames 
 - All file I/O testing (write-read round trips, JSON serialization, dict_writer output) belongs in integration tests (`[i]` tag).
 - Unit tests verify logic only: data structure operations, string manipulation, parsing from in-memory strings, algorithm correctness.
 - Never create or modify integration tests. Only the user writes and maintains integration tests.
+- Never skip or weaken a test to make it pass. If a test fails, diagnose and fix the root cause.
+
+## Unit Test Naming Convention
+
+Format: `"class_t::method, description"` or `"class_t::nested_t::method, description"`
+
+Examples:
+- `"tools_t::chapter_t::insert, new and duplicate keys"`
+- `"tools_t::is_fnam, true IDs"`
+- `"dict_merger_t::add_record, inserts entry"`
+- `"script_parser_t, dial keywords"`
+- `"file_list_t::classify, edge cases"`
+- `"dict_document_t, path round-trip"`
+
+Rules:
+- First part is the fully-qualified type path using `::` separators (with `_t` suffix)
+- If the test is about a specific method, include the method name after `::` before the comma
+- If the test is about general class behavior (not one method), use just the class name before the comma
+- Description after the comma is a short lowercase phrase
 
 ## Cell Heuristic Matching — Log Format
 
