@@ -3,7 +3,6 @@ build/
 x64/
 .vs/
 models/
-dictionaries/
 /vcpkg_installed
 /.kiro/specs
 /external/CTranslate2
