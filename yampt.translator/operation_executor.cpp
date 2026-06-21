@@ -90,11 +90,12 @@ operation_executor_t::result_t operation_executor_t::make_base(
     const std::string & foreign_path,
     const std::string & native_path,
     const std::string & foreign_lang,
-    const std::string & native_lang)
+    const std::string & native_lang,
+    translation_engine_t * engine)
 {
 	tools_t::reset_log();
 
-	dict_creator_t creator(foreign_path, native_path);
+	dict_creator_t creator(foreign_path, native_path, engine);
 
 	if (tools_t::has_error())
 		return { false, tools_t::get_log(), "" };

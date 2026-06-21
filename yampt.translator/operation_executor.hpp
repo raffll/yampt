@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+class translation_engine_t;
+
 class operation_executor_t
 {
 public:
@@ -30,7 +32,8 @@ public:
 	    const std::string & foreign_path,
 	    const std::string & native_path,
 	    const std::string & foreign_lang = {},
-	    const std::string & native_lang = {});
+	    const std::string & native_lang = {},
+	    translation_engine_t * engine = nullptr);
 	result_t convert(const std::string & plugin_path, const std::vector<std::string> & dict_paths, codepage_t encoding);
 	result_t create_plugin(
 	    const std::string & plugin_path,

@@ -20,9 +20,11 @@ static std::string status_display_name(const std::string & status)
 		return "Missing";
 	if (status == "duplicate")
 		return "Duplicate";
-	if (status == "matched" || status == "fingerprint" || status == "coords" || status == "heuristic" ||
-	    status == "exact" || status == "info" || status == "wilderness" || status == "region")
+	if (status == "matched" || status == "fingerprint" || status == "coords" || status == "exact" ||
+	    status == "info" || status == "wilderness" || status == "region")
 		return "Matched";
+	if (status == "heuristic")
+		return "Heuristic";
 	if (status == "error")
 		return "Error";
 	if (status == "identical" || status == "translated")

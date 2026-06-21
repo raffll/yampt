@@ -623,7 +623,7 @@ void dict_creator_t::make_dict_base_dial()
 
 	if (!translation_engine_ || !translation_engine_->is_loaded())
 	{
-		tools_t::add_log("Translation engine: inactive (heuristic skipped)\r\n", true);
+		tools_t::add_log("[info] translation engine: inactive (DIAL heuristic skipped)\r\n");
 
 		for (const auto & entry : unmatched_foreign)
 		{
@@ -670,7 +670,7 @@ void dict_creator_t::make_dict_base_dial()
 	tools_t::add_log("=== DIAL HEURISTIC START ===\r\n", true);
 	tools_t::add_log("Foreign unmatched: " + std::to_string(unmatched_foreign.size()) + "\r\n", true);
 	tools_t::add_log("Native unmatched: " + std::to_string(native_candidates.size()) + "\r\n", true);
-	tools_t::add_log("Translation engine: active\r\n", true);
+	tools_t::add_log("[info] translation engine: active (DIAL heuristic)\r\n");
 
 	std::set<size_t> matched_foreign_idx;
 	std::set<size_t> matched_native_idx;
@@ -791,8 +791,7 @@ void dict_creator_t::make_dict_base_dial()
 					tools_t::add_log(
 					    "[TIE-SAME iter=" + std::to_string(iteration) + " orig=" + std::to_string(best_score_orig) +
 					        " model=" + std::to_string(best_score_model) + " count=" + std::to_string(best_count) +
-					        "] \"" + foreign_name + "\" -> \"" + best_name + "\"\r\n",
-					    true);
+					        "] \"" + foreign_name + "\" => \"" + translated_text + "\" -> \"" + best_name + "\"\r\n");
 				}
 			}
 
@@ -805,9 +804,8 @@ void dict_creator_t::make_dict_base_dial()
 				{
 					tools_t::add_log(
 					    "[TRANSLATE iter=" + std::to_string(iteration) + " orig=" + std::to_string(best_score_orig) +
-					        " model=" + std::to_string(best_score_model) + "] \"" + foreign_name + "\" -> \"" +
-					        best_name + "\"\r\n",
-					    true);
+					        " model=" + std::to_string(best_score_model) + "] \"" + foreign_name + "\" => \"" +
+					        translated_text + "\" -> \"" + best_name + "\"\r\n");
 				}
 
 				dial_native_to_foreign[best_name] = foreign_name;
@@ -820,8 +818,7 @@ void dict_creator_t::make_dict_base_dial()
 				tools_t::add_log(
 				    "[TIE iter=" + std::to_string(iteration) + " orig=" + std::to_string(best_score_orig) +
 				        " model=" + std::to_string(best_score_model) + " count=" + std::to_string(best_count) + "] \"" +
-				        foreign_name + "\"\r\n",
-				    true);
+				        foreign_name + "\"\r\n");
 			}
 		}
 	}
@@ -851,6 +848,21 @@ void dict_creator_t::make_dict_base_dial()
 			continue;
 
 		tools_t::add_log("[warning] missing DIAL: " + unmatched_foreign[fi].name + "\r\n");
+	}
+
+	std::vector<std::string> unmatched_native_names;
+	for (size_t ni = 0; ni < native_candidates.size(); ++ni)
+	{
+		if (!matched_native_idx.count(ni))
+			unmatched_native_names.push_back(native_candidates[ni].name);
+	}
+
+	if (!unmatched_native_names.empty())
+	{
+		tools_t::add_log("[info] unmatched native DIAL candidates (" + std::to_string(unmatched_native_names.size()) +
+		                 "):\r\n");
+		for (const auto & name : unmatched_native_names)
+			tools_t::add_log("  " + name + "\r\n");
 	}
 }
 
@@ -1420,9 +1432,9 @@ void dict_creator_t::make_dict_cell_interior_heuristic(
 	tools_t::add_log("Foreign missing: " + std::to_string(missing_cells.size()) + "\r\n", true);
 	tools_t::add_log("Native unmatched: " + std::to_string(native_cells.size()) + "\r\n", true);
 	if (translation_engine_ && translation_engine_->is_loaded())
-		tools_t::add_log("Translation engine: active\r\n", true);
+		tools_t::add_log("[info] translation engine: active (cell heuristic)\r\n");
 	else
-		tools_t::add_log("Translation engine: inactive (heuristic skipped)\r\n", true);
+		tools_t::add_log("[info] translation engine: inactive (cell heuristic skipped)\r\n");
 
 	std::set<size_t> matched_native;
 	std::set<size_t> matched_foreign;
@@ -1550,8 +1562,7 @@ void dict_creator_t::make_dict_cell_interior_heuristic(
 					tools_t::add_log(
 					    "[TIE-SAME iter=" + std::to_string(iteration) + " orig=" + std::to_string(best_score_orig) +
 					        " model=" + std::to_string(best_score_model) + " count=" + std::to_string(best_count) +
-					        "] \"" + foreign_name + "\" -> \"" + best_name + "\"\r\n",
-					    true);
+					        "] \"" + foreign_name + "\" => \"" + translated_text + "\" -> \"" + best_name + "\"\r\n");
 				}
 			}
 
@@ -1564,9 +1575,8 @@ void dict_creator_t::make_dict_cell_interior_heuristic(
 				{
 					tools_t::add_log(
 					    "[TRANSLATE iter=" + std::to_string(iteration) + " orig=" + std::to_string(best_score_orig) +
-					        " model=" + std::to_string(best_score_model) + "] \"" + foreign_name + "\" -> \"" +
-					        best_name + "\"\r\n",
-					    true);
+					        " model=" + std::to_string(best_score_model) + "] \"" + foreign_name + "\" => \"" +
+					        translated_text + "\" -> \"" + best_name + "\"\r\n");
 				}
 
 				const auto * cell_status = resolved ? tools_t::status_t::exact : tools_t::status_t::heuristic;
@@ -1578,8 +1588,7 @@ void dict_creator_t::make_dict_cell_interior_heuristic(
 				tools_t::add_log(
 				    "[TIE iter=" + std::to_string(iteration) + " orig=" + std::to_string(best_score_orig) +
 				        " model=" + std::to_string(best_score_model) + " count=" + std::to_string(best_count) + "] \"" +
-				        foreign_name + "\"\r\n",
-				    true);
+				        foreign_name + "\"\r\n");
 			}
 		}
 	}
@@ -1605,6 +1614,24 @@ void dict_creator_t::make_dict_cell_interior_heuristic(
 			still_missing.push_back(missing_cells[fi]);
 	}
 	missing_cells = std::move(still_missing);
+
+	if (!missing_cells.empty())
+	{
+		std::vector<std::string> unmatched_native_names;
+		for (size_t ni = 0; ni < native_cells.size(); ++ni)
+		{
+			if (!matched_native.count(ni) && !matched_native_names.count(native_cells[ni].second))
+				unmatched_native_names.push_back(native_cells[ni].second);
+		}
+
+		if (!unmatched_native_names.empty())
+		{
+			tools_t::add_log(
+			    "[info] unmatched native CELL candidates (" + std::to_string(unmatched_native_names.size()) + "):\r\n");
+			for (const auto & name : unmatched_native_names)
+				tools_t::add_log("  " + name + "\r\n");
+		}
+	}
 }
 
 void dict_creator_t::make_dict_cell_add_missing(const std::vector<std::pair<size_t, std::string>> & missing_cells)

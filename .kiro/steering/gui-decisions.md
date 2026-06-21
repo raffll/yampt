@@ -64,6 +64,7 @@ Current mapping:
 - `missing` → "Missing"
 - `duplicate` → "Duplicate"
 - `matched` (and sub-statuses) → "Matched"
+- `heuristic` → "Heuristic"
 - `error` → "Error"
 - `translated` → "Translated"
 - `reused` → "Reused"

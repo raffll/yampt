@@ -14,6 +14,8 @@ static const char * get_status_display_name_qt(const std::string & status)
 		return "Duplicate";
 	if (status == "matched")
 		return "Matched";
+	if (status == "heuristic")
+		return "Heuristic";
 	if (status == "error")
 		return "Error";
 	if (status == "translated")
@@ -40,7 +42,9 @@ static const char * get_status_display_name_qt(const std::string & status)
 static const char * get_status_tooltip(const std::string & status)
 {
 	if (status == "matched")
-		return "Paired via fingerprint, coordinates, or heuristic";
+		return "Paired via fingerprint, coordinates, or position";
+	if (status == "heuristic")
+		return "Matched via translation engine word overlap";
 	if (status == "missing")
 		return "No matching record found in the other ESM";
 	if (status == "duplicate")
@@ -79,7 +83,8 @@ status_filter_bar_t::status_filter_bar_t(QWidget * parent)
 	layout_->setContentsMargins(0, 0, 0, 0);
 	layout_->setSpacing(2);
 
-	static const std::vector<std::string> base_statuses = { "matched", "duplicate", "missing", "mismatch" };
+	static const std::vector<std::string> base_statuses = { "matched", "heuristic", "duplicate", "missing",
+		                                                     "mismatch" };
 
 	static const std::vector<std::string> single_statuses = { "translated", "reused",    "adapted",
 		                                                      "changed",    "ambiguous", "untranslated" };
@@ -187,8 +192,8 @@ void status_filter_bar_t::update_counts(
 {
 	current_counts_ = total_counts;
 
-	static const std::vector<std::string> matched_group = { "matched", "fingerprint", "coords",     "heuristic",
-		                                                    "exact",   "info",        "wilderness", "region" };
+	static const std::vector<std::string> matched_group = { "matched", "fingerprint", "coords",
+		                                                     "exact",   "info",        "wilderness", "region" };
 
 	static const std::vector<std::string> translated_group = { "translated" };
 
@@ -260,7 +265,7 @@ void status_filter_bar_t::set_filter_state(const std::set<std::string> & statuse
 static std::set<std::string> expand_status_group(const std::string & status)
 {
 	if (status == "matched")
-		return { "matched", "fingerprint", "coords", "heuristic", "exact", "info", "wilderness", "region" };
+		return { "matched", "fingerprint", "coords", "exact", "info", "wilderness", "region" };
 
 	if (status == "translated")
 		return { "translated" };
@@ -344,7 +349,7 @@ void status_filter_bar_t::update_button_styles()
 	static const QString disabled_style =
 	    "border: 1px solid #bbb; border-radius: 2px; padding: 2px 6px; background: #f0f0f0; color: rgb(180,180,180);";
 
-	static const std::set<std::string> base_statuses = { "matched", "missing", "duplicate", "mismatch" };
+	static const std::set<std::string> base_statuses = { "matched", "heuristic", "missing", "duplicate", "mismatch" };
 
 	static const std::set<std::string> user_statuses = { "translated",   "reused",    "adapted",     "changed",
 		                                                 "untranslated", "ambiguous", "in_progress", "model",
