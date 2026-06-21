@@ -7,12 +7,12 @@
 #include <QSettings>
 #include <QVBoxLayout>
 
-static const QString config_path = "yampt.editor.ini";
+static const QString config_path = "yEditor.ini";
 
 editor_window_t::editor_window_t(QWidget * parent)
     : QMainWindow(parent)
 {
-	setWindowTitle("yampt.editor");
+	setWindowTitle("yEditor");
 	resize(1400, 900);
 
 	auto * central = new QWidget(this);

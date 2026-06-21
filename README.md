@@ -1,10 +1,10 @@
-# yampt — Morrowind Plugin Tools
+# yampt — Yet Another Morrowind Plugin Tools
 
 A suite of tools for working with Morrowind plugins (ESM/ESP/omwgame/omwaddon). Includes a plugin conflict editor similar to xEdit, a translation workbench, and a CLI for batch operations.
 
 ## Applications
 
-### yampt.editor.exe — Plugin Editor
+### yEditor — Plugin Editor
 
 Qt6 GUI for viewing, comparing, and patching plugins. Similar to TES5Edit/xEdit.
 
@@ -19,7 +19,7 @@ Qt6 GUI for viewing, comparing, and patching plugins. Similar to TES5Edit/xEdit.
 - Save edited plugins, create new patch plugins
 - Drag-and-drop record copying between plugins
 
-### yampt.translator.exe — Translation Workbench
+### yTranslator — Translation Workbench
 
 Qt6 GUI for interactive plugin translation.
 
@@ -39,7 +39,7 @@ Qt6 GUI for interactive plugin translation.
 - All CLI operations accessible from the GUI (make dict, make base, merge, convert, create)
 - Session persistence and encoding selection (Windows-1250/1252)
 
-### yampt.exe — Command Line
+### yampt — Command Line
 
 Batch tool for automated dictionary and conversion workflows.
 
@@ -103,4 +103,4 @@ Models are not included in the release.
 
 ## Building
 
-Open `yampt.sln` in Visual Studio 2026, build Release x64. Requires vcpkg (manifest mode) with the `x64-windows-v143` custom triplet.
+Open `yampt.sln` in Visual Studio 2026, build Release x64. Requires vcpkg (manifest mode).

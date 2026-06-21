@@ -21,13 +21,13 @@ yampt/
 │   ├── includes.hpp
 │   └── yampt.vcxproj
 ├── yampt.translator/       # GUI translation workbench (Qt6)
-│   ├── main.cpp            # → yampt.translator.exe
+│   ├── main.cpp            # → yTranslator.exe
 │   ├── main_window.hpp / main_window.cpp
 │   ├── editor/            # Editor tab (xEdit-like plugin viewer)
 │   ├── dictionaries/      # Hunspell spell check dictionaries
 │   └── yampt.translator.vcxproj
 ├── yampt.editor/           # Standalone editor app (Qt6)
-│   ├── main.cpp            # → yampt.editor.exe
+│   ├── main.cpp            # → yEditor.exe
 │   ├── editor_window.hpp / editor_window.cpp
 │   └── yampt.editor.vcxproj
 ├── yampt.tests/            # Catch2 unit tests
@@ -36,8 +36,8 @@ yampt/
 ├── models/                 # CTranslate2 translation models
 ├── x64/Debug/              # Build output
 │   ├── yampt.exe
-│   ├── yampt.translator.exe
-│   ├── yampt.editor.exe
+│   ├── yTranslator.exe
+│   ├── yEditor.exe
 │   └── yampt.tests.exe
 ├── yampt.sln               # VS 2026 solution
 └── vcpkg.json              # vcpkg manifest
@@ -59,7 +59,7 @@ Never use default VS filters like "Source Files", "Header Files", or "Resource F
 
 ## Build
 
-Visual Studio (v143 toolset). Open `yampt.sln` and build. Output: `x64/Debug/yampt.exe`, `x64/Debug/yampt.translator.exe`, `x64/Debug/yampt.editor.exe`.
+Visual Studio (v145 toolset). Open `yampt.sln` and build. Output: `x64/Debug/yampt.exe`, `x64/Debug/yTranslator.exe`, `x64/Debug/yEditor.exe`.
 
 MSBuild path:
 ```
@@ -260,7 +260,7 @@ Low impact for vanilla, but mods with variables like `mychoice`, `sayHello` woul
 The `pack_release.ps1` script creates a zip archive from `x64\Release\` for distribution.
 
 What is included:
-- `yampt.exe`, `yampt.translator.exe`, `yampt.editor.exe`
+- `yampt.exe`, `yTranslator.exe`, `yEditor.exe`
 - All DLLs from the output dir (including `ctranslate2.dll`)
 - `dictionaries/` folder (spell check dictionaries)
 - `platforms/` folder (Qt platform plugins)

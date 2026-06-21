@@ -70,7 +70,7 @@ main_window_t::main_window_t(QWidget * parent)
     , session_(current_codepage_)
     , editor_controller_(history_manager_, validation_manager_, annotation_manager_)
 {
-	setWindowTitle("yampt.translator");
+	setWindowTitle("yTranslator");
 	resize(1280, 720);
 	setMinimumSize(800, 600);
 
@@ -345,15 +345,15 @@ main_window_t::main_window_t(QWidget * parent)
 		if (archive_path.isEmpty())
 			return;
 
-		const QString sevenzip = "C:/Program Files/7-Zip/7z.exe";
+		const auto app_dir = QCoreApplication::applicationDirPath();
+		const QString sevenzip = app_dir + "/7za.exe";
 		if (!QFile::exists(sevenzip))
 		{
-			QMessageBox::critical(this, "Error", "7-Zip not found at C:\\Program Files\\7-Zip\\7z.exe");
+			QMessageBox::critical(this, "Error", "7za.exe not found next to the application");
 			return;
 		}
 
 		const auto archive_name = QFileInfo(archive_path).completeBaseName();
-		const auto app_dir = QCoreApplication::applicationDirPath();
 		const auto target_dir = app_dir + "/workspace/" + archive_name;
 		QDir().mkpath(target_dir);
 
@@ -960,7 +960,7 @@ main_window_t::main_window_t(QWidget * parent)
 	    *search_col_original_,
 	    *search_col_translation_);
 
-	const auto config_path = QCoreApplication::applicationDirPath() + "/yampt.translator.ini";
+	const auto config_path = QCoreApplication::applicationDirPath() + "/yTranslator.ini";
 	bool first_run = !QFile::exists(config_path);
 
 	load_config();
@@ -994,7 +994,7 @@ void main_window_t::set_unsaved_changes(bool dirty)
 		return;
 
 	has_unsaved_changes_ = dirty;
-	setWindowTitle(has_unsaved_changes_ ? "yampt.translator *" : "yampt.translator");
+	setWindowTitle(has_unsaved_changes_ ? "yTranslator *" : "yTranslator");
 }
 
 void main_window_t::on_save()
@@ -1349,21 +1349,6 @@ void main_window_t::on_translation_changed()
 	                                     : QList<QTextEdit::ExtraSelection> {};
 	apply_extra_selections(editor_panel_->translation_editor(), extra_sel_translation_);
 
-	{
-		auto doc_text = editor_panel_->translation_editor()->toPlainText();
-		std::string log_msg = "grammar count=" + std::to_string(extra_sel_translation_.grammar.size()) + "\r\n";
-		for (int i = 0; i < extra_sel_translation_.grammar.size(); ++i)
-		{
-			auto sel_cursor = extra_sel_translation_.grammar[i].cursor;
-			int start = sel_cursor.anchor();
-			int end = sel_cursor.position();
-			auto slice = doc_text.mid(start, end - start);
-			log_msg += "  [" + std::to_string(i) + "] pos=" + std::to_string(start) +
-			           " len=" + std::to_string(end - start) + " text=\"" + slice.toStdString() + "\"\r\n";
-		}
-		log_tab_->append_log("grammar", log_msg);
-	}
-
 	if (row_data->type == tools_t::rec_type_t::text)
 	{
 		const auto translation_text = editor_panel_->translation_editor()->toPlainText().toStdString();
@@ -1660,20 +1645,6 @@ void main_window_t::load_record(int row)
 	auto trans_highlights = find_highlights(translation_text_lower, annotations, false);
 	QList<QTextEdit::ExtraSelection> trans_selections;
 
-	{
-		auto doc_text = editor_panel_->translation_editor()->toPlainText();
-		std::string log_msg = "count=" + std::to_string(trans_highlights.size()) +
-		                      " doc_len=" + std::to_string(doc_text.length()) + "\r\n";
-		for (size_t i = 0; i < trans_highlights.size(); ++i)
-		{
-			const auto & h = trans_highlights[i];
-			auto slice = doc_text.mid(h.start, h.length);
-			log_msg += "  [" + std::to_string(i) + "] pos=" + std::to_string(h.start) +
-			           " len=" + std::to_string(h.length) + " text=\"" + slice.toStdString() + "\"\r\n";
-		}
-		log_tab_->append_log("all highlights", log_msg);
-	}
-
 	for (const auto & h : trans_highlights)
 	{
 		QTextEdit::ExtraSelection sel;
@@ -1689,39 +1660,6 @@ void main_window_t::load_record(int row)
 	                                     : QList<QTextEdit::ExtraSelection> {};
 	extra_sel_translation_.adapted_diff.clear();
 	apply_extra_selections(editor_panel_->translation_editor(), extra_sel_translation_);
-
-	{
-		auto doc_text = editor_panel_->translation_editor()->toPlainText();
-		std::string log_msg = "grammar count=" + std::to_string(extra_sel_translation_.grammar.size()) + "\r\n";
-		for (int i = 0; i < static_cast<int>(extra_sel_translation_.grammar.size()); ++i)
-		{
-			auto sel_cursor = extra_sel_translation_.grammar[i].cursor;
-			int start = sel_cursor.anchor();
-			int end = sel_cursor.position();
-			auto slice = doc_text.mid(start, end - start);
-			log_msg += "  [" + std::to_string(i) + "] pos=" + std::to_string(start) +
-			           " len=" + std::to_string(end - start) + " text=\"" + slice.toStdString() + "\"\r\n";
-		}
-		log_tab_->append_log("grammar", log_msg);
-
-		auto text_str = doc_text.toStdString();
-		auto spell_matches = spell_checker_.find_misspelled(text_str);
-		std::string spell_msg = "spelling count=" + std::to_string(spell_matches.size()) + "\r\n";
-		for (size_t i = 0; i < spell_matches.size(); ++i)
-		{
-			const auto & m = spell_matches[i];
-			int qchar_start = QString::fromUtf8(text_str.data(), static_cast<int>(m.start)).length();
-			int qchar_len = QString::fromUtf8(text_str.data() + m.start, static_cast<int>(m.end - m.start)).length();
-			auto slice = doc_text.mid(qchar_start, qchar_len);
-			spell_msg += "  [" + std::to_string(i) + "] byte_pos=" + std::to_string(m.start) +
-			             " qchar_pos=" + std::to_string(qchar_start) + " len=" + std::to_string(qchar_len) +
-			             " word=\"" + m.word +
-			             "\""
-			             " slice=\"" +
-			             slice.toStdString() + "\"\r\n";
-		}
-		log_tab_->append_log("spelling", spell_msg);
-	}
 
 	extra_sel_adapted_.annotations.clear();
 	extra_sel_adapted_.grammar.clear();
@@ -1994,7 +1932,7 @@ void main_window_t::on_spell_lang_changed(int index)
 
 void main_window_t::load_config()
 {
-	const auto path = QCoreApplication::applicationDirPath() + "/yampt.translator.ini";
+	const auto path = QCoreApplication::applicationDirPath() + "/yTranslator.ini";
 	config_.load(path.toStdString());
 
 	move(config_.window_x, config_.window_y);
@@ -2077,7 +2015,7 @@ void main_window_t::save_config()
 	config_.translation_language_index = translation_tab_->language_index();
 	config_.workspace_roots = file_list_.get_roots();
 
-	const auto path = QCoreApplication::applicationDirPath() + "/yampt.translator.ini";
+	const auto path = QCoreApplication::applicationDirPath() + "/yTranslator.ini";
 	config_.save(path.toStdString());
 }
 

@@ -1,6 +1,6 @@
 {
   "name": "yampt",
-  "version": "0.25",
+  "version": "0.999-alpha",
   "dependencies": [
     {
       "name": "qtbase",
