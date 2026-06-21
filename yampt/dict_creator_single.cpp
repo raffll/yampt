@@ -503,8 +503,9 @@ void dict_creator_t::insert_entry_single_with_base(
 	if (base_entry->old_text == old_text && base_entry->new_text == old_text)
 	{
 		const auto & s = base_entry->status;
-		const bool preserve = (s == tools_t::status_t::untranslated || s == tools_t::status_t::identical ||
-		                       s == tools_t::status_t::in_progress || s == "model" || s == "propagated" || s == "error");
+		const bool preserve =
+		    (s == tools_t::status_t::untranslated || s == tools_t::status_t::identical ||
+		     s == tools_t::status_t::in_progress || s == "model" || s == "propagated" || s == "error");
 		const char * status = preserve ? s.c_str() : tools_t::status_t::identical;
 		insert_with_status(key_text, old_text, old_text, type, status);
 		return;
@@ -513,20 +514,20 @@ void dict_creator_t::insert_entry_single_with_base(
 	if (base_entry->old_text == old_text)
 	{
 		const auto & s = base_entry->status;
-		const bool preserve = (s == tools_t::status_t::untranslated || s == tools_t::status_t::identical ||
-		                       s == tools_t::status_t::in_progress || s == "model" || s == "propagated" || s == "error" ||
-		                       s == tools_t::status_t::translated);
+		const bool preserve =
+		    (s == tools_t::status_t::untranslated || s == tools_t::status_t::identical ||
+		     s == tools_t::status_t::in_progress || s == "model" || s == "propagated" || s == "error" ||
+		     s == tools_t::status_t::translated);
 		const char * status = preserve ? s.c_str() : tools_t::status_t::translated;
 		insert_with_status(key_text, old_text, base_entry->new_text, type, status);
 		return;
 	}
 
 	const auto & s = base_entry->status;
-	const bool is_approved = (s == tools_t::status_t::translated || s == tools_t::status_t::matched ||
-	                          s == tools_t::status_t::fingerprint || s == tools_t::status_t::coords ||
-	                          s == tools_t::status_t::heuristic || s == tools_t::status_t::exact ||
-	                          s == tools_t::status_t::info || s == tools_t::status_t::wilderness ||
-	                          s == tools_t::status_t::region);
+	const bool is_approved =
+	    (s == tools_t::status_t::translated || s == tools_t::status_t::matched || s == tools_t::status_t::fingerprint ||
+	     s == tools_t::status_t::coords || s == tools_t::status_t::heuristic || s == tools_t::status_t::exact ||
+	     s == tools_t::status_t::info || s == tools_t::status_t::wilderness || s == tools_t::status_t::region);
 
 	if (!is_approved)
 	{

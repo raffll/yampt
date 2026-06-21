@@ -972,8 +972,8 @@ void dict_creator_t::make_dict_base_dial()
 					resolved = true;
 					tools_t::add_log(
 					    "[TIE-SAME iter=" + std::to_string(iteration) + " orig=" + std::to_string(best_score_orig) +
-					        " model=" + std::to_string(best_score_model) + " count=" + std::to_string(best_count) +
-					        "] \"" + foreign_name + "\" => \"" + translated_text + "\" -> \"" + best_name + "\"\r\n");
+					    " model=" + std::to_string(best_score_model) + " count=" + std::to_string(best_count) + "] \"" +
+					    foreign_name + "\" => \"" + translated_text + "\" -> \"" + best_name + "\"\r\n");
 				}
 			}
 
@@ -986,8 +986,8 @@ void dict_creator_t::make_dict_base_dial()
 				{
 					tools_t::add_log(
 					    "[TRANSLATE iter=" + std::to_string(iteration) + " orig=" + std::to_string(best_score_orig) +
-					        " model=" + std::to_string(best_score_model) + "] \"" + foreign_name + "\" => \"" +
-					        translated_text + "\" -> \"" + best_name + "\"\r\n");
+					    " model=" + std::to_string(best_score_model) + "] \"" + foreign_name + "\" => \"" +
+					    translated_text + "\" -> \"" + best_name + "\"\r\n");
 				}
 
 				dial_native_to_foreign[best_name] = foreign_name;
@@ -999,8 +999,8 @@ void dict_creator_t::make_dict_base_dial()
 			{
 				tools_t::add_log(
 				    "[TIE iter=" + std::to_string(iteration) + " orig=" + std::to_string(best_score_orig) +
-				        " model=" + std::to_string(best_score_model) + " count=" + std::to_string(best_count) + "] \"" +
-				        foreign_name + "\"\r\n");
+				    " model=" + std::to_string(best_score_model) + " count=" + std::to_string(best_count) + "] \"" +
+				    foreign_name + "\"\r\n");
 			}
 		}
 	}
@@ -1058,8 +1058,8 @@ void dict_creator_t::make_dict_base_dial()
 
 	if (!unmatched_native_names.empty())
 	{
-		tools_t::add_log("[info] unmatched native DIAL candidates (" + std::to_string(unmatched_native_names.size()) +
-		                 "):\r\n");
+		tools_t::add_log(
+		    "[info] unmatched native DIAL candidates (" + std::to_string(unmatched_native_names.size()) + "):\r\n");
 		for (const auto & name : unmatched_native_names)
 			tools_t::add_log("  " + name + "\r\n");
 	}
@@ -1760,8 +1760,8 @@ void dict_creator_t::make_dict_cell_interior_heuristic(
 					resolved = true;
 					tools_t::add_log(
 					    "[TIE-SAME iter=" + std::to_string(iteration) + " orig=" + std::to_string(best_score_orig) +
-					        " model=" + std::to_string(best_score_model) + " count=" + std::to_string(best_count) +
-					        "] \"" + foreign_name + "\" => \"" + translated_text + "\" -> \"" + best_name + "\"\r\n");
+					    " model=" + std::to_string(best_score_model) + " count=" + std::to_string(best_count) + "] \"" +
+					    foreign_name + "\" => \"" + translated_text + "\" -> \"" + best_name + "\"\r\n");
 				}
 			}
 
@@ -1774,8 +1774,8 @@ void dict_creator_t::make_dict_cell_interior_heuristic(
 				{
 					tools_t::add_log(
 					    "[TRANSLATE iter=" + std::to_string(iteration) + " orig=" + std::to_string(best_score_orig) +
-					        " model=" + std::to_string(best_score_model) + "] \"" + foreign_name + "\" => \"" +
-					        translated_text + "\" -> \"" + best_name + "\"\r\n");
+					    " model=" + std::to_string(best_score_model) + "] \"" + foreign_name + "\" => \"" +
+					    translated_text + "\" -> \"" + best_name + "\"\r\n");
 				}
 
 				const auto * cell_status = resolved ? tools_t::status_t::exact : tools_t::status_t::heuristic;
@@ -1786,8 +1786,8 @@ void dict_creator_t::make_dict_cell_interior_heuristic(
 			{
 				tools_t::add_log(
 				    "[TIE iter=" + std::to_string(iteration) + " orig=" + std::to_string(best_score_orig) +
-				        " model=" + std::to_string(best_score_model) + " count=" + std::to_string(best_count) + "] \"" +
-				        foreign_name + "\"\r\n");
+				    " model=" + std::to_string(best_score_model) + " count=" + std::to_string(best_count) + "] \"" +
+				    foreign_name + "\"\r\n");
 			}
 		}
 	}

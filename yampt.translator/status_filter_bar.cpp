@@ -91,8 +91,9 @@ status_filter_bar_t::status_filter_bar_t(QWidget * parent)
 	layout_->setContentsMargins(0, 0, 0, 0);
 	layout_->setSpacing(2);
 
-	static const std::vector<std::string> base_statuses = { "matched", "heuristic", "duplicate", "missing",
-		                                                     "mismatch" };
+	static const std::vector<std::string> base_statuses = {
+		"matched", "heuristic", "duplicate", "missing", "mismatch"
+	};
 
 	static const std::vector<std::string> single_statuses = { "translated", "identical", "reused",    "adapted",
 		                                                      "changed",    "outdated",  "ambiguous", "untranslated" };
@@ -200,8 +201,8 @@ void status_filter_bar_t::update_counts(
 {
 	current_counts_ = total_counts;
 
-	static const std::vector<std::string> matched_group = { "matched", "fingerprint", "coords",
-		                                                     "exact",   "info",        "wilderness", "region" };
+	static const std::vector<std::string> matched_group = { "matched", "fingerprint", "coords", "exact",
+		                                                    "info",    "wilderness",  "region" };
 
 	static const std::vector<std::string> translated_group = { "translated" };
 
@@ -359,9 +360,9 @@ void status_filter_bar_t::update_button_styles()
 
 	static const std::set<std::string> base_statuses = { "matched", "heuristic", "missing", "duplicate", "mismatch" };
 
-	static const std::set<std::string> user_statuses = { "translated",   "identical",  "reused",       "adapted",
-		                                                 "changed",      "outdated",   "ambiguous",    "untranslated",
-		                                                 "in_progress",  "model",      "propagated",   "error" };
+	static const std::set<std::string> user_statuses = { "translated",  "identical", "reused",     "adapted",
+		                                                 "changed",     "outdated",  "ambiguous",  "untranslated",
+		                                                 "in_progress", "model",     "propagated", "error" };
 
 	bool no_filter = active_statuses_.empty();
 

@@ -489,8 +489,7 @@ TEST_CASE("file_list_t, section grouping", "[u]")
 				}
 				RC_ASSERT(child_paths == expected_child_paths);
 			}
-
-			}
+		}
 	});
 }
 

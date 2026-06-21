@@ -24,7 +24,11 @@ public:
 	translation_result_t translate_sync(const std::string & text);
 
 	bool load_model(const std::string & model_path);
-	translation_engine_t * engine_ptr() { return &engine_; }
+
+	translation_engine_t * engine_ptr()
+	{
+		return &engine_;
+	}
 
 signals:
 	void translation_finished(translation_suggestion_t result);

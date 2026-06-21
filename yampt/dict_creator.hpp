@@ -34,6 +34,15 @@ public:
 	    const std::string & path_ext,
 	    translation_engine_t * translation_engine = nullptr);
 
+	static bool differs_only_in_numbers_or_punct(const std::string & a, const std::string & b);
+	static std::string adapt_translation(
+	    const std::string & source,
+	    const std::string & matched_source,
+	    const std::string & matched_translation);
+	static bool is_interior_cell(const std::string & data_content);
+	static std::string make_exterior_coord_key(const std::string & data_content);
+	static std::string make_cell_key_text(const std::string & fingerprint);
+
 private:
 	void make_dict_single();
 	void make_dict_base();
@@ -127,12 +136,6 @@ private:
 
 	std::vector<std::string> make_script_messages(const std::string & script_text);
 
-	static bool differs_only_in_numbers_or_punct(const std::string & a, const std::string & b);
-	static std::string adapt_translation(
-	    const std::string & source,
-	    const std::string & matched_source,
-	    const std::string & matched_translation);
-
 	void make_dict_cell_exterior();
 	void make_dict_cell_interior();
 	void make_dict_cell_default();
@@ -141,13 +144,10 @@ private:
 	    const std::vector<std::pair<size_t, std::string>> & missing_cells,
 	    const std::string & native_candidates_str = {});
 
-	static bool is_interior_cell(const std::string & data_content);
-	static std::string make_exterior_coord_key(const std::string & data_content);
 	using fingerprint_index_t = std::unordered_map<std::string, std::set<size_t>>;
 	fingerprint_index_t build_cell_fingerprint_index(esm_reader_t & esm_src);
 	fingerprint_index_t build_dial_inam_index(esm_reader_t & esm_src);
 	static std::string make_cell_fingerprint(esm_reader_t & esm_src);
-	static std::string make_cell_key_text(const std::string & fingerprint);
 	void make_dict_cell_interior_heuristic(
 	    std::vector<std::pair<size_t, std::string>> & missing_cells,
 	    const std::set<size_t> & matched_native_records);

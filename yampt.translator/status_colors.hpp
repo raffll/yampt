@@ -17,8 +17,8 @@ inline QColor get_status_color(const std::string & status)
 	if (status == "mismatch")
 		return QColor(230, 115, 140);
 
-	if (status == "matched" || status == "fingerprint" || status == "coords" || status == "exact" ||
-	    status == "info" || status == "wilderness" || status == "region")
+	if (status == "matched" || status == "fingerprint" || status == "coords" || status == "exact" || status == "info" ||
+	    status == "wilderness" || status == "region")
 		return QColor(140, 200, 170);
 
 	if (status == "heuristic")

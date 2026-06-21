@@ -285,12 +285,11 @@ static const field_def_t npco_fields[] = {
 	{ "Item ID", field_type_t::string_fixed, 4, 32, nullptr, nullptr },
 };
 
-static const char * const mgef_schools[] = { "Alteration", "Conjuration", "Destruction",
-	                                         "Illusion",   "Mysticism",   "Restoration", nullptr };
+static const char * const mgef_schools[] = { "Alteration", "Conjuration", "Destruction", "Illusion",
+	                                         "Mysticism",  "Restoration", nullptr };
 
-static const char * const mgef_flags[] = { nullptr,        nullptr,        nullptr, nullptr, nullptr,
-	                                       nullptr,        nullptr,        nullptr, nullptr, "Spellmaking",
-	                                       "Enchanting", "Negative",   nullptr };
+static const char * const mgef_flags[] = { nullptr, nullptr, nullptr,       nullptr,      nullptr,    nullptr, nullptr,
+	                                       nullptr, nullptr, "Spellmaking", "Enchanting", "Negative", nullptr };
 
 static const field_def_t mgef_medt_fields[] = {
 	{ "School", field_type_t::enum_u32, 0, 4, mgef_schools, nullptr },
@@ -337,9 +336,10 @@ static const field_def_t cont_flag_fields[] = {
 	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, cont_flags },
 };
 
-static const char * const crea_flags[] = { "Biped",  "Respawn",      "Weapon and Shield", nullptr,
-	                                       "Swims",  "Flies",        "Walks",             nullptr,
-	                                       nullptr,  nullptr,        "Skeleton Blood",    "Metal Blood", nullptr };
+static const char * const crea_flags[] = {
+	"Biped", "Respawn", "Weapon and Shield", nullptr,       "Swims", "Flies", "Walks", nullptr,
+	nullptr, nullptr,   "Skeleton Blood",    "Metal Blood", nullptr
+};
 
 static const field_def_t crea_flag_fields[] = {
 	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, crea_flags },
@@ -349,8 +349,8 @@ static const field_def_t levi_intv_fields[] = {
 	{ "PC Level", field_type_t::u16, 0, 2, nullptr, nullptr },
 };
 
-static const char * const clothing_types[] = { "Pants", "Shoes",  "Shirt", "Belt",  "Robe",
-	                                           "Right Glove", "Left Glove", "Skirt", "Ring", "Amulet", nullptr };
+static const char * const clothing_types[] = { "Pants",      "Shoes", "Shirt", "Belt",   "Robe", "Right Glove",
+	                                           "Left Glove", "Skirt", "Ring",  "Amulet", nullptr };
 
 static const field_def_t clot_ctdt_fields[] = {
 	{ "Type", field_type_t::enum_u32, 0, 4, clothing_types, nullptr },
@@ -359,9 +359,8 @@ static const field_def_t clot_ctdt_fields[] = {
 	{ "Enchant Pts", field_type_t::u16, 10, 2, nullptr, nullptr },
 };
 
-static const char * const light_flags[] = { "Dynamic", "Can Carry", "Negative", "Flicker",
-	                                        "Fire",    "Off Default", "Flicker Slow", "Pulse",
-	                                        "Pulse Slow", nullptr };
+static const char * const light_flags[] = { "Dynamic",     "Can Carry",    "Negative", "Flicker",    "Fire",
+	                                        "Off Default", "Flicker Slow", "Pulse",    "Pulse Slow", nullptr };
 
 static const field_def_t ligh_lhdt_fields[] = {
 	{ "Weight", field_type_t::f32, 0, 4, nullptr, nullptr },

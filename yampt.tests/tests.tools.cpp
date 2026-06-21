@@ -319,13 +319,13 @@ TEST_CASE("tools_t::get_number_of_elements_in_dict, correct total", "[u]")
 TEST_CASE("tools_t::status_t, constants are distinct non-empty strings", "[u]")
 {
 	std::vector<std::string> all_statuses {
-		tools_t::status_t::matched,      tools_t::status_t::fingerprint,  tools_t::status_t::coords,
-		tools_t::status_t::heuristic,    tools_t::status_t::exact,        tools_t::status_t::info,
-		tools_t::status_t::wilderness,   tools_t::status_t::region,       tools_t::status_t::missing,
-		tools_t::status_t::duplicate,    tools_t::status_t::mismatch,     tools_t::status_t::error,
-		tools_t::status_t::translated,   tools_t::status_t::identical,    tools_t::status_t::adapted,
-		tools_t::status_t::changed,      tools_t::status_t::reused,       tools_t::status_t::untranslated,
-		tools_t::status_t::ambiguous,    tools_t::status_t::in_progress,  tools_t::status_t::outdated,
+		tools_t::status_t::matched,    tools_t::status_t::fingerprint, tools_t::status_t::coords,
+		tools_t::status_t::heuristic,  tools_t::status_t::exact,       tools_t::status_t::info,
+		tools_t::status_t::wilderness, tools_t::status_t::region,      tools_t::status_t::missing,
+		tools_t::status_t::duplicate,  tools_t::status_t::mismatch,    tools_t::status_t::error,
+		tools_t::status_t::translated, tools_t::status_t::identical,   tools_t::status_t::adapted,
+		tools_t::status_t::changed,    tools_t::status_t::reused,      tools_t::status_t::untranslated,
+		tools_t::status_t::ambiguous,  tools_t::status_t::in_progress, tools_t::status_t::outdated,
 	};
 
 	REQUIRE(all_statuses.size() == 21);
@@ -374,4 +374,82 @@ TEST_CASE("tools_t::initialize_dict, excludes non-dict types", "[u]")
 		REQUIRE(chapter.first != tools_t::rec_type_t::anam);
 		REQUIRE(chapter.first != tools_t::rec_type_t::unknown);
 	}
+}
+
+TEST_CASE("tools_t::chapter_t::find_by_old_text, existing entry", "[u]")
+{
+	tools_t::chapter_t chapter;
+	chapter.insert({ "key1", "Balmora", "Balmora_PL", "translated" });
+	chapter.insert({ "key2", "Vivec", "Vivec_PL", "translated" });
+
+	auto * entry = chapter.find_by_old_text("Balmora");
+	REQUIRE(entry != nullptr);
+	REQUIRE(entry->key_text == "key1");
+	REQUIRE(entry->new_text == "Balmora_PL");
+}
+
+TEST_CASE("tools_t::chapter_t::find_by_old_text, missing entry", "[u]")
+{
+	tools_t::chapter_t chapter;
+	chapter.insert({ "key1", "Balmora", "Balmora_PL", "translated" });
+
+	auto * entry = chapter.find_by_old_text("Ald-ruhn");
+	REQUIRE(entry == nullptr);
+}
+
+TEST_CASE("tools_t::chapter_t::find_by_old_text, first-wins semantics", "[u]")
+{
+	tools_t::chapter_t chapter;
+	chapter.insert({ "key1", "Same Text", "Translation A", "translated" });
+	chapter.insert({ "key2", "Same Text", "Translation B", "translated" });
+
+	auto * entry = chapter.find_by_old_text("Same Text");
+	REQUIRE(entry != nullptr);
+	REQUIRE(entry->key_text == "key1");
+	REQUIRE(entry->new_text == "Translation A");
+}
+
+TEST_CASE("tools_t::chapter_t::find_by_old_text, empty old_text not indexed", "[u]")
+{
+	tools_t::chapter_t chapter;
+	chapter.insert({ "key1", "", "something", "translated" });
+
+	auto * entry = chapter.find_by_old_text("");
+	REQUIRE(entry == nullptr);
+}
+
+TEST_CASE("tools_t::name_t::set_name, forward slash path", "[u]")
+{
+	tools_t::name_t n;
+	n.set_name("C:/path/to/Morrowind.esm");
+	REQUIRE(n.full == "Morrowind.esm");
+	REQUIRE(n.name == "Morrowind");
+	REQUIRE(n.ext == ".esm");
+}
+
+TEST_CASE("tools_t::name_t::set_name, backslash path", "[u]")
+{
+	tools_t::name_t n;
+	n.set_name("C:\\path\\to\\Tribunal.esp");
+	REQUIRE(n.full == "Tribunal.esp");
+	REQUIRE(n.name == "Tribunal");
+	REQUIRE(n.ext == ".esp");
+}
+
+TEST_CASE("tools_t::name_t::set_name, multiple dots in filename", "[u]")
+{
+	tools_t::name_t n;
+	n.set_name("C:/path/my.plugin.esp");
+	REQUIRE(n.full == "my.plugin.esp");
+	REQUIRE(n.name == "my.plugin");
+	REQUIRE(n.ext == ".esp");
+}
+
+TEST_CASE("tools_t::name_t::set_name, filename only no path", "[u]")
+{
+	tools_t::name_t n;
+	n.set_name("Bloodmoon.json");
+	REQUIRE(n.full == "Bloodmoon.json");
+	REQUIRE(n.name == "Bloodmoon");
+	REQUIRE(n.ext == ".json");
 }
