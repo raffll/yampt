@@ -549,3 +549,51 @@ TEST_CASE("file_list_t, workspace scan round-trip", "[i]")
 
 	fs::remove_all(temp_dir);
 }
+
+TEST_CASE("file_list_t, scan finds nested files", "[i]")
+{
+	namespace fs = std::filesystem;
+
+	const auto temp_dir = fs::temp_directory_path() / "yampt_test_depth";
+	fs::remove_all(temp_dir);
+	fs::create_directories(temp_dir / "en" / "deep");
+
+	std::ofstream(temp_dir / "root.esp").put('x');
+	std::ofstream(temp_dir / "en" / "level1.json").put('x');
+	std::ofstream(temp_dir / "en" / "deep" / "level2.json").put('x');
+
+	file_list_t list;
+	list.scan_roots({ temp_dir.string() });
+
+	REQUIRE(list.contains((temp_dir / "root.esp").string()));
+	REQUIRE(list.contains((temp_dir / "en" / "level1.json").string()));
+	REQUIRE(list.contains((temp_dir / "en" / "deep" / "level2.json").string()));
+
+	fs::remove_all(temp_dir);
+}
+
+TEST_CASE("file_list_t, rescan after file deletion", "[i]")
+{
+	namespace fs = std::filesystem;
+
+	const auto temp_dir = fs::temp_directory_path() / "yampt_test_rescan";
+	fs::remove_all(temp_dir);
+	fs::create_directories(temp_dir);
+
+	std::ofstream(temp_dir / "keep.esp").put('x');
+	std::ofstream(temp_dir / "remove.json").put('x');
+
+	file_list_t list;
+	list.scan_roots({ temp_dir.string() });
+	REQUIRE(list.contains((temp_dir / "keep.esp").string()));
+	REQUIRE(list.contains((temp_dir / "remove.json").string()));
+
+	fs::remove(temp_dir / "remove.json");
+
+	list.clear_workspace();
+	list.scan_roots({ temp_dir.string() });
+	REQUIRE(list.contains((temp_dir / "keep.esp").string()));
+	REQUIRE_FALSE(list.contains((temp_dir / "remove.json").string()));
+
+	fs::remove_all(temp_dir);
+}
