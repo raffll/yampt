@@ -47,7 +47,7 @@ public:
 		std::string speaker_name;
 		std::string gender;
 		std::string enchantment;
-		std::string adapted_from;
+		std::string details;
 	};
 
 	struct chapter_t
@@ -77,30 +77,26 @@ public:
 
 	struct status_t
 	{
-		// base mode
-		static constexpr const char * matched = "matched";
-		static constexpr const char * fingerprint = "fingerprint";
-		static constexpr const char * coords = "coords";
-		static constexpr const char * heuristic = "heuristic";
-		static constexpr const char * exact = "exact";
-		static constexpr const char * info = "info";
-		static constexpr const char * wilderness = "wilderness";
-		static constexpr const char * region = "region";
+		// approved (applied during convert/create)
+		static constexpr const char * translated = "translated";
+
+		// problem statuses (skipped during convert/create)
 		static constexpr const char * missing = "missing";
 		static constexpr const char * duplicate = "duplicate";
 		static constexpr const char * mismatch = "mismatch";
-		static constexpr const char * error = "error";
+		static constexpr const char * heuristic = "heuristic";
 
-		// single_with_base mode
-		static constexpr const char * translated = "translated";
-		static constexpr const char * identical = "identical";
+		// user/GUI statuses (skipped during convert/create)
+		static constexpr const char * untranslated = "untranslated";
 		static constexpr const char * adapted = "adapted";
 		static constexpr const char * changed = "changed";
+		static constexpr const char * outdated = "outdated";
 		static constexpr const char * reused = "reused";
-		static constexpr const char * untranslated = "untranslated";
 		static constexpr const char * ambiguous = "ambiguous";
 		static constexpr const char * in_progress = "in_progress";
-		static constexpr const char * outdated = "outdated";
+		static constexpr const char * model = "model";
+		static constexpr const char * propagated = "propagated";
+		static constexpr const char * error = "error";
 	};
 
 	struct entry_t
@@ -173,6 +169,16 @@ public:
 		quiet_flag = enabled;
 	}
 
+	static void set_exe_dir(const std::string & dir)
+	{
+		exe_dir_ = dir;
+	}
+
+	static const std::string & get_exe_dir()
+	{
+		return exe_dir_;
+	}
+
 	static void reset_log();
 	static dict_t initialize_dict();
 	static std::string type_to_str(tools_t::rec_type_t type);
@@ -186,4 +192,5 @@ private:
 	static bool error_flag;
 	static bool debug_flag;
 	static bool quiet_flag;
+	static std::string exe_dir_;
 };

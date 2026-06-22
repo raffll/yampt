@@ -29,6 +29,10 @@ void user_interface_t::parse_command_line()
 			{
 				tools_t::set_debug(true);
 			}
+			else if (args[i] == "--partial")
+			{
+				partial_mode = true;
+			}
 			else if (args[i] == "-f")
 			{
 				command = "-f";
@@ -177,7 +181,8 @@ void user_interface_t::make_dict_base()
 		}
 	}
 
-	dict_creator_t creator(file_paths[0], file_paths[1], engine_ptr);
+	auto mode = partial_mode ? base_mode_t::partial : base_mode_t::full;
+	dict_creator_t creator(file_paths[0], file_paths[1], engine_ptr, mode);
 	dict_writer_t::write(creator.get_dict(), creator.get_name().name + ".BASE.json");
 	tools_t::add_log("[info] done!\r\n");
 }

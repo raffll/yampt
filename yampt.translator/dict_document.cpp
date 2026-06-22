@@ -25,8 +25,8 @@ dict_document_t::dict_document_t(const std::string & path, codepage_t codepage, 
 			entry.old_text = decode_to_utf8(entry.old_text, codepage_);
 			entry.new_text = decode_to_utf8(entry.new_text, codepage_);
 
-			if (!entry.adapted_from.empty())
-				entry.adapted_from = decode_to_utf8(entry.adapted_from, codepage_);
+			if (!entry.details.empty())
+				entry.details = decode_to_utf8(entry.details, codepage_);
 		}
 	}
 }
@@ -43,7 +43,7 @@ bool dict_document_t::is_dirty() const
 
 bool dict_document_t::is_read_only() const
 {
-	return kind_ == dict_kind_t::base;
+	return false;
 }
 
 std::vector<table_row_t> dict_document_t::build_rows() const
@@ -71,9 +71,6 @@ std::vector<table_row_t> dict_document_t::build_rows() const
 
 void dict_document_t::commit_edit(tools_t::rec_type_t type, size_t record_index, const std::string & new_text)
 {
-	if (kind_ == dict_kind_t::base)
-		return;
-
 	auto it = data_.find(type);
 	if (it == data_.end())
 		return;
@@ -102,8 +99,8 @@ void dict_document_t::save()
 			entry.gender = rec.gender;
 			entry.enchantment = rec.enchantment;
 
-			if (!rec.adapted_from.empty())
-				entry.adapted_from = encode_from_utf8(rec.adapted_from, codepage_);
+			if (!rec.details.empty())
+				entry.details = encode_from_utf8(rec.details, codepage_);
 
 			encoded[type].insert(entry);
 		}

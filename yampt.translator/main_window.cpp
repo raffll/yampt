@@ -37,6 +37,7 @@
 #include <QDirIterator>
 #include <QFileDialog>
 #include <QFileSystemWatcher>
+#include <QGroupBox>
 #include <QLabel>
 #include <QLineEdit>
 #include <QListWidget>
@@ -45,6 +46,7 @@
 #include <QMessageBox>
 #include <QProcess>
 #include <QPushButton>
+#include <QRadioButton>
 #include <QRegularExpression>
 #include <QSplitter>
 #include <QStatusBar>
@@ -287,7 +289,7 @@ main_window_t::main_window_t(QWidget * parent)
 	central_splitter_->setSizes({ 250, 1030 });
 
 	hl_original_ = new composite_highlighter_t(editor_panel_->original_view()->document());
-	hl_adapted_ = new composite_highlighter_t(editor_panel_->adapted_from_view()->document());
+	hl_adapted_ = new composite_highlighter_t(editor_panel_->details_view()->document());
 	hl_translation_ = new composite_highlighter_t(editor_panel_->translation_editor()->document());
 	hl_translation_->set_translation_mode(true);
 
@@ -562,7 +564,7 @@ main_window_t::main_window_t(QWidget * parent)
 			bool had_glossary = (glossary_applied != result.text);
 
 			record.new_text = glossary_applied;
-			record.status = "model";
+			record.status = tools_t::status_t::model;
 			dict_doc->modified_records_insert(type, idx);
 			++state->translated_count;
 
@@ -770,7 +772,7 @@ main_window_t::main_window_t(QWidget * parent)
 		for (int i = editor_controller_.current_row() + 1; i < row_count; ++i)
 		{
 			const auto * r = table_model_->row_at(i);
-			if (r && r->status != "propagated")
+			if (r && r->status != tools_t::status_t::propagated)
 			{
 				next_row = i;
 				break;
@@ -813,7 +815,7 @@ main_window_t::main_window_t(QWidget * parent)
 		for (int i = editor_controller_.current_row() + 1; i < row_count; ++i)
 		{
 			const auto * r = table_model_->row_at(i);
-			if (r && r->status != "propagated")
+			if (r && r->status != tools_t::status_t::propagated)
 			{
 				next_row = i;
 				break;
@@ -1091,7 +1093,7 @@ void main_window_t::clear_editor_panels()
 {
 	editor_panel_->original_view()->clear();
 	editor_panel_->translation_editor()->clear();
-	editor_panel_->clear_adapted_from();
+	editor_panel_->clear_details();
 	validation_indicator_->clear();
 	annotations_panel_->clear();
 	history_panel_->clear();
@@ -1201,7 +1203,6 @@ void main_window_t::rebuild_table()
 
 	auto result = build_filtered_rows(
 	    dict_doc->data(),
-	    dict_doc->kind(),
 	    type_filter_,
 	    filter_tree_->get_active_sub_types(),
 	    status_filter_,
@@ -1370,9 +1371,6 @@ void main_window_t::commit_current_edit()
 	if (!active_doc_)
 		return;
 
-	if (active_doc_->is_read_only())
-		return;
-
 	const auto & current_text = editor_panel_->translation_editor()->toPlainText();
 	if (current_text == editor_controller_.loaded_text())
 		return;
@@ -1536,15 +1534,13 @@ void main_window_t::load_record(int row)
 
 	translation_tab_->set_source_text(row_data->old_text);
 
-	if ((row_data->status == "adapted" || row_data->status == "changed" || row_data->status == "ambiguous" ||
-	     row_data->status == "missing" || row_data->status == "duplicate" || row_data->status == "outdated") &&
-	    !load_result.adapted_from.empty())
+	if (!load_result.details.empty())
 	{
-		editor_panel_->set_adapted_from(load_result.adapted_from);
+		editor_panel_->set_details(load_result.details);
 	}
 	else
 	{
-		editor_panel_->clear_adapted_from();
+		editor_panel_->clear_details();
 	}
 
 	struct highlight_t
@@ -1666,18 +1662,18 @@ void main_window_t::load_record(int row)
 	extra_sel_adapted_.grammar.clear();
 	extra_sel_adapted_.adapted_diff.clear();
 
-	if (row_data->status == "adapted" && !load_result.adapted_from.empty())
+	if (row_data->status == "adapted" && !load_result.details.empty())
 	{
 		extra_sel_adapted_.adapted_diff =
-		    editor_panel_->highlight_adapted_diff(row_data->new_text, load_result.adapted_from, false);
+		    editor_panel_->highlight_adapted_diff(row_data->new_text, load_result.details, false);
 	}
-	else if (row_data->status == "changed" && !load_result.adapted_from.empty())
+	else if (row_data->status == "changed" && !load_result.details.empty())
 	{
 		extra_sel_adapted_.adapted_diff =
-		    editor_panel_->highlight_adapted_diff(row_data->old_text, load_result.adapted_from, true);
+		    editor_panel_->highlight_adapted_diff(row_data->old_text, load_result.details, true);
 	}
 
-	apply_extra_selections(editor_panel_->adapted_from_view(), extra_sel_adapted_);
+	apply_extra_selections(editor_panel_->details_view(), extra_sel_adapted_);
 
 	const auto history = history_manager_.get_history(row_data->type, row_data->key_text);
 	history_panel_->update_history(history, !load_result.is_read_only);
@@ -1850,7 +1846,6 @@ void main_window_t::update_status_counts()
 
 	auto result = build_filtered_rows(
 	    dict_doc->data(),
-	    dict_doc->kind(),
 	    type_filter_,
 	    filter_tree_->get_active_sub_types(),
 	    status_filter_,
@@ -2221,6 +2216,17 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
 		if (best_match_item)
 			tree->setCurrentItem(best_match_item);
 
+		auto * mode_group = new QGroupBox("Identical text handling", &dlg);
+		auto * mode_layout = new QVBoxLayout(mode_group);
+		auto * radio_full = new QRadioButton("Full (identical marked as Translated)", mode_group);
+		auto * radio_partial = new QRadioButton("Partial (identical marked as Untranslated)", mode_group);
+		radio_full->setChecked(true);
+		radio_full->setToolTip("Use to create base dictionary from a fully translated file");
+		radio_partial->setToolTip("Use to create base dictionary from a partially translated file");
+		mode_layout->addWidget(radio_full);
+		mode_layout->addWidget(radio_partial);
+		dlg_layout->addWidget(mode_group);
+
 		auto * buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dlg);
 		dlg_layout->addWidget(buttons);
 
@@ -2255,7 +2261,8 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
 		if (native_entry)
 			native_lang = native_entry->language_tag;
 
-		result = executor_.make_base(plugin_path, native_path, foreign_lang, native_lang);
+		result = executor_.make_base(plugin_path, native_path, foreign_lang, native_lang, nullptr,
+		    radio_partial->isChecked() ? base_mode_t::partial : base_mode_t::full);
 		break;
 	}
 	case plugin_op_t::convert:

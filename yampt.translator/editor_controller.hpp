@@ -21,7 +21,7 @@ struct editor_load_result_t
 	std::string speaker_name;
 	std::string gender;
 	std::string enchantment;
-	std::string adapted_from;
+	std::string details;
 	std::vector<annotation_t> annotations;
 	bool is_read_only = false;
 };

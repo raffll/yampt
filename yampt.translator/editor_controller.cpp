@@ -66,7 +66,7 @@ editor_load_result_t editor_controller_t::load(document_t & doc, const table_row
 	result.speaker_name = entry.speaker_name;
 	result.gender = entry.gender;
 	result.enchantment = entry.enchantment;
-	result.adapted_from = entry.adapted_from;
+	result.details = entry.details;
 
 	return result;
 }
@@ -103,7 +103,7 @@ commit_result_t editor_controller_t::commit(
 	{
 		propagated = propagate(doc, entry.old_text, new_text);
 		if (propagated > 0)
-			entry.status = "propagated";
+			entry.status = tools_t::status_t::propagated;
 	}
 
 	result.status = entry.status;
@@ -142,7 +142,7 @@ int editor_controller_t::propagate(dict_document_t & doc, const std::string & ol
 				continue;
 
 			entry.new_text = new_text;
-			entry.status = "propagated";
+			entry.status = tools_t::status_t::propagated;
 			doc.modified_records_insert(type, i);
 			++count;
 		}

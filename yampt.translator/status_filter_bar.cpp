@@ -12,16 +12,10 @@ static const char * get_status_display_name_qt(const std::string & status)
 		return "Missing";
 	if (status == "duplicate")
 		return "Duplicate";
-	if (status == "matched")
-		return "Matched";
-	if (status == "heuristic")
-		return "Heuristic";
 	if (status == "error")
 		return "Error";
 	if (status == "translated")
 		return "Translated";
-	if (status == "identical")
-		return "Identical";
 	if (status == "reused")
 		return "Reused";
 	if (status == "adapted")
@@ -32,23 +26,21 @@ static const char * get_status_display_name_qt(const std::string & status)
 		return "Outdated";
 	if (status == "in_progress")
 		return "In Progress";
-	if (status == "model")
+	if (status == tools_t::status_t::model)
 		return "Model";
 	if (status == "mismatch")
 		return "Mismatch";
-	if (status == "propagated")
+	if (status == tools_t::status_t::propagated)
 		return "Propagated";
 	if (status == "ambiguous")
 		return "Ambiguous";
+	if (status == tools_t::status_t::heuristic)
+		return "Heuristic";
 	return status.c_str();
 }
 
 static const char * get_status_tooltip(const std::string & status)
 {
-	if (status == "matched")
-		return "Paired via fingerprint, coordinates, or position";
-	if (status == "heuristic")
-		return "Matched via translation engine word overlap";
 	if (status == "missing")
 		return "No matching record found in the other ESM";
 	if (status == "duplicate")
@@ -57,8 +49,6 @@ static const char * get_status_tooltip(const std::string & status)
 		return "Record exists but original text differs";
 	if (status == "translated")
 		return "Translation present and unchanged";
-	if (status == "identical")
-		return "Original equals translation (may need work)";
 	if (status == "reused")
 		return "Translation copied from another entry";
 	if (status == "adapted")
@@ -71,14 +61,16 @@ static const char * get_status_tooltip(const std::string & status)
 		return "No translation provided yet";
 	if (status == "in_progress")
 		return "Translation edited but not finalized";
-	if (status == "model")
+	if (status == tools_t::status_t::model)
 		return "Translated by the translation model";
-	if (status == "propagated")
+	if (status == tools_t::status_t::propagated)
 		return "Translation propagated from another record";
 	if (status == "ambiguous")
 		return "Multiple conflicting translations found in base dicts";
 	if (status == "error")
 		return "Translation has a validation error";
+	if (status == tools_t::status_t::heuristic)
+		return "Matched by translation engine heuristic (needs verification)";
 	return "";
 }
 
@@ -91,104 +83,42 @@ status_filter_bar_t::status_filter_bar_t(QWidget * parent)
 	layout_->setContentsMargins(0, 0, 0, 0);
 	layout_->setSpacing(2);
 
-	static const std::vector<std::string> base_statuses = {
-		"matched", "heuristic", "duplicate", "missing", "mismatch"
+	static const std::vector<std::vector<std::string>> status_groups = {
+		{ "translated", "untranslated" },
+		{ "reused", "adapted", "ambiguous", "changed", "outdated" },
+		{ "duplicate", tools_t::status_t::heuristic, "missing", "mismatch" },
+		{ "in_progress", tools_t::status_t::propagated, tools_t::status_t::model, "error" },
 	};
 
-	static const std::vector<std::string> single_statuses = { "translated", "identical", "reused",    "adapted",
-		                                                      "changed",    "outdated",  "ambiguous", "untranslated" };
-
-	static const std::vector<std::string> work_statuses = { "in_progress", "propagated", "error" };
-
-	for (const auto & status : base_statuses)
+	for (size_t g = 0; g < status_groups.size(); ++g)
 	{
-		status_button_t sb;
-		sb.status = status;
-		sb.count = 0;
-		sb.button = new QPushButton(get_status_display_name_qt(status), this);
-		sb.button->setContextMenuPolicy(Qt::CustomContextMenu);
-		sb.button->setToolTip(get_status_tooltip(status));
+		if (g > 0)
+		{
+			auto * sep = new QLabel(QString::fromUtf8("\xe2\x80\xa2"), this);
+			sep->setStyleSheet("color: #aaa;");
+			layout_->addWidget(sep);
+		}
 
-		connect(sb.button, &QPushButton::clicked, this, [this, s = status]() { on_status_clicked(s); });
+		for (const auto & status : status_groups[g])
+		{
+			status_button_t sb;
+			sb.status = status;
+			sb.count = 0;
+			sb.button = new QPushButton(get_status_display_name_qt(status), this);
+			sb.button->setContextMenuPolicy(Qt::CustomContextMenu);
+			sb.button->setToolTip(get_status_tooltip(status));
 
-		connect(
-		    sb.button,
-		    &QWidget::customContextMenuRequested,
-		    this,
-		    [this, s = status]() { on_status_right_clicked(s); });
+			connect(sb.button, &QPushButton::clicked, this, [this, s = status]() { on_status_clicked(s); });
 
-		layout_->addWidget(sb.button);
-		status_buttons_.push_back(sb);
-	}
+			connect(
+			    sb.button,
+			    &QWidget::customContextMenuRequested,
+			    this,
+			    [this, s = status]() { on_status_right_clicked(s); });
 
-	auto * sep1 = new QLabel(QString::fromUtf8("\xE2\x80\xA2"), this);
-	sep1->setStyleSheet("color: rgb(150,150,150);");
-	layout_->addWidget(sep1);
-
-	for (const auto & status : single_statuses)
-	{
-		status_button_t sb;
-		sb.status = status;
-		sb.count = 0;
-		sb.button = new QPushButton(get_status_display_name_qt(status), this);
-		sb.button->setContextMenuPolicy(Qt::CustomContextMenu);
-		sb.button->setToolTip(get_status_tooltip(status));
-
-		connect(sb.button, &QPushButton::clicked, this, [this, s = status]() { on_status_clicked(s); });
-
-		connect(
-		    sb.button,
-		    &QWidget::customContextMenuRequested,
-		    this,
-		    [this, s = status]() { on_status_right_clicked(s); });
-
-		layout_->addWidget(sb.button);
-		status_buttons_.push_back(sb);
-	}
-
-	auto * sep2 = new QLabel(QString::fromUtf8("\xE2\x80\xA2"), this);
-	sep2->setStyleSheet("color: rgb(150,150,150);");
-	layout_->addWidget(sep2);
-
-	for (const auto & status : work_statuses)
-	{
-		status_button_t sb;
-		sb.status = status;
-		sb.count = 0;
-		sb.button = new QPushButton(get_status_display_name_qt(status), this);
-		sb.button->setContextMenuPolicy(Qt::CustomContextMenu);
-		sb.button->setToolTip(get_status_tooltip(status));
-
-		connect(sb.button, &QPushButton::clicked, this, [this, s = status]() { on_status_clicked(s); });
-
-		connect(
-		    sb.button,
-		    &QWidget::customContextMenuRequested,
-		    this,
-		    [this, s = status]() { on_status_right_clicked(s); });
-
-		layout_->addWidget(sb.button);
-		status_buttons_.push_back(sb);
-	}
-
-	auto * sep3 = new QLabel(QString::fromUtf8("\xE2\x80\xA2"), this);
-	sep3->setStyleSheet("color: rgb(150,150,150);");
-	layout_->addWidget(sep3);
-
-	{
-		status_button_t sb;
-		sb.status = "model";
-		sb.count = 0;
-		sb.button = new QPushButton(get_status_display_name_qt("model"), this);
-		sb.button->setContextMenuPolicy(Qt::CustomContextMenu);
-		sb.button->setToolTip(get_status_tooltip("model"));
-
-		connect(sb.button, &QPushButton::clicked, this, [this]() { on_status_clicked("model"); });
-
-		connect(sb.button, &QWidget::customContextMenuRequested, this, [this]() { on_status_right_clicked("model"); });
-
-		layout_->addWidget(sb.button);
-		status_buttons_.push_back(sb);
+			layout_->addWidget(sb.button);
+			status_buttons_.push_back(sb);
+		}
 	}
 
 	layout_->addStretch();
@@ -201,55 +131,20 @@ void status_filter_bar_t::update_counts(
 {
 	current_counts_ = total_counts;
 
-	static const std::vector<std::string> matched_group = { "matched", "fingerprint", "coords", "exact",
-		                                                    "info",    "wilderness",  "region" };
-
-	static const std::vector<std::string> translated_group = { "translated" };
-
 	for (auto & sb : status_buttons_)
 	{
-		size_t displayed = 0;
 		size_t total = 0;
 
-		if (sb.status == "matched")
-		{
-			for (const auto & s : matched_group)
-			{
-				auto it = displayed_counts.find(s);
-				if (it != displayed_counts.end())
-					displayed += it->second;
-
-				auto it2 = total_counts.find(s);
-				if (it2 != total_counts.end())
-					total += it2->second;
-			}
-		}
-		else if (sb.status == "translated")
-		{
-			for (const auto & s : translated_group)
-			{
-				auto it = displayed_counts.find(s);
-				if (it != displayed_counts.end())
-					displayed += it->second;
-
-				auto it2 = total_counts.find(s);
-				if (it2 != total_counts.end())
-					total += it2->second;
-			}
-		}
-		else
-		{
-			auto it = displayed_counts.find(sb.status);
-			if (it != displayed_counts.end())
-				displayed = it->second;
-
-			auto it2 = total_counts.find(sb.status);
-			if (it2 != total_counts.end())
-				total = it2->second;
-		}
+		auto it2 = total_counts.find(sb.status);
+		if (it2 != total_counts.end())
+			total = it2->second;
 
 		sb.count = total;
-		sb.button->setText(get_status_display_name_qt(sb.status));
+
+		if (total > 0)
+			sb.button->setText(QString("%1 (%2)").arg(get_status_display_name_qt(sb.status)).arg(total));
+		else
+			sb.button->setText(get_status_display_name_qt(sb.status));
 	}
 }
 
@@ -271,17 +166,6 @@ void status_filter_bar_t::set_filter_state(const std::set<std::string> & statuse
 	update_button_styles();
 }
 
-static std::set<std::string> expand_status_group(const std::string & status)
-{
-	if (status == "matched")
-		return { "matched", "fingerprint", "coords", "exact", "info", "wilderness", "region" };
-
-	if (status == "translated")
-		return { "translated" };
-
-	return { status };
-}
-
 void status_filter_bar_t::on_status_clicked(const std::string & status)
 {
 	if (solo_ && solo_status_ == status)
@@ -297,7 +181,7 @@ void status_filter_bar_t::on_status_clicked(const std::string & status)
 	saved_statuses_ = active_statuses_;
 	solo_ = true;
 	solo_status_ = status;
-	active_statuses_ = expand_status_group(status);
+	active_statuses_ = { status };
 	update_button_styles();
 	emit filters_changed();
 }
@@ -309,10 +193,7 @@ void status_filter_bar_t::on_status_right_clicked(const std::string & status)
 		for (const auto & sb : status_buttons_)
 		{
 			if (sb.status != status)
-			{
-				auto expanded = expand_status_group(sb.status);
-				active_statuses_.insert(expanded.begin(), expanded.end());
-			}
+				active_statuses_.insert(sb.status);
 		}
 
 		solo_ = false;
@@ -325,26 +206,12 @@ void status_filter_bar_t::on_status_right_clicked(const std::string & status)
 	solo_ = false;
 	solo_status_.clear();
 
-	auto expanded = expand_status_group(status);
-	bool any_active = false;
-	for (const auto & s : expanded)
-	{
-		if (active_statuses_.count(s))
-		{
-			any_active = true;
-			break;
-		}
-	}
+	bool active = active_statuses_.count(status) > 0;
 
-	if (any_active)
-	{
-		for (const auto & s : expanded)
-			active_statuses_.erase(s);
-	}
+	if (active)
+		active_statuses_.erase(status);
 	else
-	{
-		active_statuses_.insert(expanded.begin(), expanded.end());
-	}
+		active_statuses_.insert(status);
 
 	update_button_styles();
 	emit filters_changed();
@@ -358,25 +225,11 @@ void status_filter_bar_t::update_button_styles()
 	static const QString disabled_style = "border: 1px solid #bbb; border-radius: 2px; padding: 2px 6px; "
 	                                      "background: #f0f0f0; color: rgb(180,180,180);";
 
-	static const std::set<std::string> base_statuses = { "matched", "heuristic", "missing", "duplicate", "mismatch" };
-
-	static const std::set<std::string> user_statuses = { "translated",  "identical", "reused",     "adapted",
-		                                                 "changed",     "outdated",  "ambiguous",  "untranslated",
-		                                                 "in_progress", "model",     "propagated", "error" };
-
 	bool no_filter = active_statuses_.empty();
 
 	for (const auto & sb : status_buttons_)
 	{
-		bool disabled = false;
-		if (dict_mode_ == dict_mode_t::none)
-			disabled = true;
-		else if (dict_mode_ == dict_mode_t::base && user_statuses.count(sb.status))
-			disabled = true;
-		else if (dict_mode_ == dict_mode_t::user && base_statuses.count(sb.status))
-			disabled = true;
-
-		if (disabled)
+		if (!document_open_)
 		{
 			sb.button->setStyleSheet(disabled_style);
 			sb.button->setEnabled(false);
@@ -385,19 +238,7 @@ void status_filter_bar_t::update_button_styles()
 
 		sb.button->setEnabled(true);
 
-		auto expanded = expand_status_group(sb.status);
-		bool active = no_filter;
-		if (!active)
-		{
-			for (const auto & s : expanded)
-			{
-				if (active_statuses_.count(s))
-				{
-					active = true;
-					break;
-				}
-			}
-		}
+		bool active = no_filter || active_statuses_.count(sb.status) > 0;
 
 		if (active)
 		{
@@ -423,8 +264,8 @@ void status_filter_bar_t::update_button_styles()
 	}
 }
 
-void status_filter_bar_t::set_dict_mode(dict_mode_t mode)
+void status_filter_bar_t::set_document_open(bool open)
 {
-	dict_mode_ = mode;
+	document_open_ = open;
 	update_button_styles();
 }

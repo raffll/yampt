@@ -1,6 +1,8 @@
 #include "dict_creator.hpp"
 #include "translation_engine.hpp"
 
+#include <hunspell/hunspell.hxx>
+
 dict_creator_t::dict_creator_t(const std::string & plugin_path, const tools_t::dict_t * base_dict)
     : esm(plugin_path)
     , esm_ref(esm)
@@ -16,12 +18,14 @@ dict_creator_t::dict_creator_t(const std::string & plugin_path, const tools_t::d
 dict_creator_t::dict_creator_t(
     const std::string & path,
     const std::string & path_ext,
-    translation_engine_t * translation_engine)
+    translation_engine_t * translation_engine,
+    base_mode_t base_mode)
     : esm(path_ext)
     , esm_ext(path)
     , esm_ref(esm_ext)
     , mode(mode_t::base)
     , translation_engine_(translation_engine)
+    , base_mode_(base_mode)
 {
 	dict = tools_t::initialize_dict();
 
@@ -50,6 +54,22 @@ dict_creator_t::dict_creator_t(
 			make_dict_base();
 		}
 	}
+}
+
+dict_creator_t::~dict_creator_t() = default;
+
+void dict_creator_t::load_english_dict()
+{
+	if (base_mode_ != base_mode_t::partial)
+		return;
+
+	auto dir = tools_t::get_exe_dir();
+	if (!dir.empty() && dir.back() != '/' && dir.back() != '\\')
+		dir += '/';
+
+	auto aff = dir + "dictionaries/en_US.aff";
+	auto dic = dir + "dictionaries/en_US.dic";
+	english_dict_ = std::make_unique<Hunspell>(aff.c_str(), dic.c_str());
 }
 
 void dict_creator_t::build_npc_index()
@@ -158,15 +178,17 @@ void dict_creator_t::insert_duplicate(
     tools_t::rec_type_t type,
     const char * status)
 {
-	tools_t::record_entry_t dup_entry;
-	dup_entry.key_text = key_text + "^DUP_" + std::to_string(counter_doubled);
-	dup_entry.old_text = old_text;
-	dup_entry.new_text = new_text;
-	dup_entry.status = status;
-	dict.at(type).insert(dup_entry);
-	counter_doubled++;
-	counter_created++;
-	tools_t::add_log("[warning] doubled " + tools_t::type_to_str(type) + ": " + key_text + "\r\n");
+	auto * dup = dict.at(type).find(key_text);
+	if (dup)
+	{
+		dup->status = tools_t::status_t::duplicate;
+		if (dup->details.empty())
+			dup->details = new_text;
+		else
+			dup->details += "|" + new_text;
+
+		counter_doubled++;
+	}
 }
 
 std::vector<std::string> dict_creator_t::make_script_messages(const std::string & script_text)

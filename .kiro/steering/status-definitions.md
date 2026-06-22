@@ -2,34 +2,45 @@
 
 ## Conversion Behavior
 
-Only entries with **approved** statuses are applied during `--convert` and `--create` operations. All other entries are skipped — the original plugin text stays unchanged.
+Only entries with status `translated` are applied during `--convert` and `--create` operations. All other entries are skipped — the original plugin text stays unchanged.
 
-Approved statuses:
+Approved status:
 - `translated`
-- `matched`, `fingerprint`, `coords`, `heuristic`, `exact`, `info`, `wilderness`, `region`
 
 Skipped statuses:
-- `identical`, `adapted`, `reused`, `changed`, `ambiguous`
+- `untranslated`, `adapted`, `reused`, `changed`, `outdated`, `ambiguous`
 - `in_progress`, `model`, `propagated`
-- `untranslated`, `missing`, `duplicate`, `mismatch`, `error`
+- `missing`, `duplicate`, `mismatch`, `error`
 
-## Base Mode Statuses
+The `details` field has no effect on conversion — only `status` determines whether an entry is applied.
 
-Assigned by `make-base` when comparing two language versions of the same file.
+## Make-Base Statuses
 
-| Status | Meaning | old_text | new_text | adapted_from |
-|--------|---------|----------|----------|--------------|
-| `matched` | Paired by key or fingerprint | foreign text | native text | — |
-| `fingerprint` | Interior cell matched by door fingerprint | foreign cell name | native cell name | — |
-| `coords` | Exterior cell matched by grid coordinates | foreign cell name | native cell name | — |
-| `heuristic` | Matched via translation engine word overlap | foreign name | native name | — |
-| `exact` | Heuristic tie resolved (all candidates identical) | foreign name | native name | — |
-| `info` | INFO matched via DIAL+INAM composite key | foreign text | native text | — |
-| `wilderness` | sDefaultCellname GMST | foreign name | native name | — |
-| `region` | Region display name (FNAM of REGN) | foreign name | native name | — |
+Assigned by `make-base` when comparing two language versions of the same file. All successfully matched entries receive status `translated`. The matching method is stored in the `details` field as metadata.
+
+| Status | Meaning | old_text | new_text | details |
+|--------|---------|----------|----------|---------|
+| `translated` | Successfully matched | foreign text | native text | method (matched, fingerprint, coords, heuristic, exact, info, wilderness, region) |
 | `missing` | Foreign record exists but no native match found | foreign text | foreign text | native candidates (pipe-separated) |
 | `duplicate` | Multiple records share the same key | first foreign text | first native text | alternative translations (pipe-separated) |
 | `mismatch` | Native record exists but no foreign match (extra native content) | empty | native text | — |
+
+### Full Mode (default)
+
+All entries get status `translated` regardless of whether old_text equals new_text. Identical-text entries are treated as proper nouns that are correct as-is.
+
+Use for fully translated ESMs where old==new means the word is the same in both languages (proper noun).
+
+### Partial Mode (`--partial` CLI flag / GUI radio button)
+
+Entries where old_text differs from new_text get status `translated`.
+
+Entries where old_text equals new_text are checked against an English Hunspell dictionary (`dictionaries/en_US.aff` + `dictionaries/en_US.dic`):
+- Text is tokenized by non-alphanumeric characters; tokens shorter than 3 characters are ignored
+- If no tokens are found in the English dictionary → `translated` (proper noun — correct as-is)
+- If any token is found in the English dictionary → `untranslated` (contains English — needs translation)
+
+Use for partially translated ESMs (e.g. EET-imported dictionaries) where old==new may mean the entry was never translated.
 
 ## Single Mode Statuses
 
@@ -37,13 +48,14 @@ Assigned by `make-dict` when creating a dictionary from a plugin using a base di
 
 | Status | Meaning | old_text | new_text |
 |--------|---------|----------|----------|
-| `translated` | Base dict has a real translation (old ≠ new) | plugin text | translation from base |
-| `identical` | Base dict has old == new (proper noun or untranslated pass-through) | plugin text | same as old |
+| `translated` | Base dict has a translation (old ≠ new), or base entry has status `translated` with old == new (proper noun) | plugin text | translation from base (or same as old for proper nouns) |
+| `untranslated` | No match in base dict, or base entry has status `untranslated` with old == new (partial mode flagged) | plugin text | plugin text |
 | `adapted` | Matched by old_text via text_match_index (different key) | plugin text | adapted translation |
 | `changed` | Key matches base but old_text differs (source text changed between versions) | plugin text | base translation (may be outdated) |
 | `reused` | Matched by old_text in text_match_index (first-wins) | plugin text | reused translation |
 | `ambiguous` | Multiple conflicting translations for same old_text in base | plugin text | highest-priority translation |
-| `untranslated` | No match in base dict at all | plugin text | plugin text |
+
+For identical-text entries (base has old==new), the base entry's status is passed through directly. If the base says `translated` (proper noun), the user dict entry is `translated`. If the base says `untranslated` (partial mode), the user dict entry is `untranslated`.
 
 ## User/GUI Statuses
 
@@ -56,17 +68,28 @@ Assigned by user actions in yTranslator.
 | `propagated` | Translation auto-filled from another record with same old_text |
 | `error` | Entry has a validation error |
 
-## adapted_from Field
+## Details Field
 
-The `adapted_from` field uses `|` (pipe) as separator for multiple values. The GUI displays each value on a separate line.
+The `details` field (renamed from `adapted_from`) uses `|` (pipe) as separator for multiple values. The GUI displays each value on a separate line in the Details panel.
 
-| Status | adapted_from contains |
-|--------|----------------------|
-| `adapted` | The base translation that was modified to produce the adaptation |
-| `changed` | The original old_text from the base (what it used to be) |
-| `ambiguous` | All conflicting translations |
-| `missing` | All unmatched native candidates (for DIAL/CELL) |
-| `duplicate` | All alternative translations from duplicate records |
+The details panel is shown for any entry with a non-empty `details` field. Diff-highlighting (marking differences between old_text and the adaptation source) applies only to entries with status `adapted` or `changed`.
+
+| Context | details contains |
+|---------|-----------------|
+| Base-mode entries | Match method: `matched`, `fingerprint`, `coords`, `heuristic`, `exact`, `info`, `wilderness`, `region` |
+| `missing` entries | All unmatched native candidates (for DIAL/CELL) |
+| `duplicate` entries | All alternative translations from duplicate records |
+| `adapted` entries | The base translation that was modified to produce the adaptation |
+| `changed` entries | The original old_text from the base (what it used to be) |
+| `outdated` entries | The original old_text from the base |
+| `ambiguous` entries | All conflicting translations |
+
+## Legacy Migration
+
+When loading old dictionaries, `dict_reader_t` performs inline migration:
+- Status `matched`/`fingerprint`/`coords`/`heuristic`/`exact`/`info`/`wilderness`/`region` → status becomes `translated`, old status string moves to `details`
+- Status `identical` → status becomes `translated`
+- JSON field `"adapted_from"` → read as `"details"` (fallback when `"details"` key is absent)
 
 ## Auto-Save Before Operations
 

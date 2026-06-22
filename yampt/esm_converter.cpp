@@ -3,11 +3,7 @@
 
 static bool is_approved_status(const std::string & status)
 {
-	return status == tools_t::status_t::translated || status == tools_t::status_t::matched ||
-	       status == tools_t::status_t::fingerprint || status == tools_t::status_t::coords ||
-	       status == tools_t::status_t::heuristic || status == tools_t::status_t::exact ||
-	       status == tools_t::status_t::info || status == tools_t::status_t::wilderness ||
-	       status == tools_t::status_t::region;
+	return status == tools_t::status_t::translated;
 }
 
 esm_converter_t::esm_converter_t(

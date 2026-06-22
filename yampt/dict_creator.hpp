@@ -1,10 +1,19 @@
 #pragma once
 
+#include <memory>
+
 #include "includes.hpp"
 #include "tools.hpp"
 #include "esm_reader.hpp"
 
+class Hunspell;
 class translation_engine_t;
+
+enum class base_mode_t
+{
+	full,
+	partial
+};
 
 class dict_creator_t
 {
@@ -32,7 +41,10 @@ public:
 	dict_creator_t(
 	    const std::string & path,
 	    const std::string & path_ext,
-	    translation_engine_t * translation_engine = nullptr);
+	    translation_engine_t * translation_engine = nullptr,
+	    base_mode_t base_mode = base_mode_t::full);
+
+	~dict_creator_t();
 
 	static bool differs_only_in_numbers_or_punct(const std::string & a, const std::string & b);
 	static std::string adapt_translation(
@@ -136,6 +148,10 @@ private:
 
 	std::vector<std::string> make_script_messages(const std::string & script_text);
 
+	const char * determine_status(const std::string & old_text, const std::string & new_text) const;
+	bool is_proper_noun(const std::string & text) const;
+	void load_english_dict();
+
 	void make_dict_cell_exterior();
 	void make_dict_cell_interior();
 	void make_dict_cell_default();
@@ -159,6 +175,8 @@ private:
 	tools_t::dict_t dict;
 	mode_t mode = mode_t::single;
 	translation_engine_t * translation_engine_ = nullptr;
+	base_mode_t base_mode_ = base_mode_t::full;
+	std::unique_ptr<Hunspell> english_dict_;
 
 	int counter_created = 0;
 	int counter_missing = 0;

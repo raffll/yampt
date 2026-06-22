@@ -77,7 +77,23 @@ void dict_reader_t::parse_json(const std::string & content, const std::string & 
 				entry.enchantment = json_reader_t::get_string(record, "enchantment", "");
 			}
 
-			entry.adapted_from = json_reader_t::get_string(record, "adapted_from", "");
+			entry.details = json_reader_t::get_string(record, "details", "");
+			if (entry.details.empty())
+				entry.details = json_reader_t::get_string(record, "adapted_from", "");
+
+			static const std::set<std::string> legacy_method_statuses = {
+			    "matched", "fingerprint", "coords", "exact", "info", "wilderness", "region"
+			};
+
+			if (legacy_method_statuses.count(entry.status))
+			{
+				if (entry.details.empty())
+					entry.details = entry.status;
+				entry.status = tools_t::status_t::translated;
+			}
+
+			if (entry.status == "identical")
+				entry.status = tools_t::status_t::translated;
 
 			validate_entry(entry, type);
 		});

@@ -49,7 +49,8 @@ void annotation_manager_t::rebuild(const std::vector<dict_source_t> & sources)
 				if (entry.old_text == entry.new_text)
 					continue;
 				if (entry.status == "changed" || entry.status == "ambiguous" || entry.status == "in_progress" ||
-				    entry.status == "propagated" || entry.status == "model" || entry.status == "error")
+				    entry.status == tools_t::status_t::propagated || entry.status == tools_t::status_t::model ||
+				    entry.status == "error" || entry.status == tools_t::status_t::heuristic)
 					continue;
 
 				std::string key_lower = to_lower(entry.old_text);
@@ -67,7 +68,8 @@ void annotation_manager_t::rebuild(const std::vector<dict_source_t> & sources)
 				if (entry.old_text == entry.new_text)
 					continue;
 				if (entry.status == "changed" || entry.status == "ambiguous" || entry.status == "in_progress" ||
-				    entry.status == "propagated" || entry.status == "model" || entry.status == "error")
+				    entry.status == tools_t::status_t::propagated || entry.status == tools_t::status_t::model ||
+				    entry.status == "error" || entry.status == tools_t::status_t::heuristic)
 					continue;
 
 				std::string key_lower = to_lower(entry.old_text);
@@ -85,7 +87,8 @@ void annotation_manager_t::rebuild(const std::vector<dict_source_t> & sources)
 				if (entry.old_text == entry.new_text)
 					continue;
 				if (entry.status == "changed" || entry.status == "ambiguous" || entry.status == "in_progress" ||
-				    entry.status == "propagated" || entry.status == "model" || entry.status == "error")
+				    entry.status == tools_t::status_t::propagated || entry.status == tools_t::status_t::model ||
+				    entry.status == "error" || entry.status == tools_t::status_t::heuristic)
 					continue;
 
 				std::string key_lower = to_lower(entry.old_text);
@@ -103,7 +106,8 @@ void annotation_manager_t::rebuild(const std::vector<dict_source_t> & sources)
 				if (entry.old_text == entry.new_text)
 					continue;
 				if (entry.status == "changed" || entry.status == "ambiguous" || entry.status == "in_progress" ||
-				    entry.status == "propagated" || entry.status == "model" || entry.status == "error")
+				    entry.status == tools_t::status_t::propagated || entry.status == tools_t::status_t::model ||
+				    entry.status == "error" || entry.status == tools_t::status_t::heuristic)
 					continue;
 
 				std::string key_lower = to_lower(entry.old_text);

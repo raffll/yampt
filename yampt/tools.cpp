@@ -4,6 +4,7 @@ std::string tools_t::log1;
 bool tools_t::error_flag = false;
 bool tools_t::debug_flag = false;
 bool tools_t::quiet_flag = false;
+std::string tools_t::exe_dir_;
 
 const std::vector<std::string> tools_t::keywords { "messagebox", "choice", "say" };
 

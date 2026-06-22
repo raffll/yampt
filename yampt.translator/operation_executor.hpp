@@ -2,6 +2,7 @@
 
 #include "plugin_op.hpp"
 #include "../yampt/codepage.hpp"
+#include "../yampt/dict_creator.hpp"
 #include "../yampt/tools.hpp"
 #include <string>
 #include <vector>
@@ -33,7 +34,8 @@ public:
 	    const std::string & native_path,
 	    const std::string & foreign_lang = {},
 	    const std::string & native_lang = {},
-	    translation_engine_t * engine = nullptr);
+	    translation_engine_t * engine = nullptr,
+	    base_mode_t mode = base_mode_t::full);
 	result_t convert(const std::string & plugin_path, const std::vector<std::string> & dict_paths, codepage_t encoding);
 	result_t create_plugin(
 	    const std::string & plugin_path,

@@ -141,3 +141,11 @@ Unload
 ## Make Base Dialog
 
 Shows a QListWidget (not combobox) of all loaded plugins except the right-clicked one. Pre-selects the item with matching filename (case-insensitive). Double-click accepts.
+
+## Make Base Dialog — Mode Selection
+
+The make-base dialog includes a mode selector (QGroupBox "Identical text handling") with two radio buttons:
+- **Full** (default, pre-selected): All entries get status `translated` — use for fully translated ESMs where identical entries are proper nouns
+- **Partial**: Identical entries are checked against an English Hunspell dictionary — use for EET imports where identical entries may be untranslated English text
+
+The selected mode is passed to `executor_.make_base()` as the `base_mode_t` parameter.

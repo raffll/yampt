@@ -3,10 +3,14 @@
 #include <QApplication>
 #include <QStyleFactory>
 
+#include "../yampt/tools.hpp"
+
 int main(int argc, char * argv[])
 {
 	QApplication app(argc, argv);
 	app.setStyle(QStyleFactory::create("Fusion"));
+
+	tools_t::set_exe_dir(QCoreApplication::applicationDirPath().toStdString());
 
 	QPalette palette;
 	palette.setColor(QPalette::Window, QColor(240, 240, 240));

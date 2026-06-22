@@ -54,7 +54,7 @@ editor_panel_t::editor_panel_t(QWidget * parent)
 
 	adapted_from_container_->setVisible(false);
 
-	adapted_toggle_ = new QPushButton("Adapted From", left_widget);
+	adapted_toggle_ = new QPushButton("Details", left_widget);
 	adapted_toggle_->setCheckable(true);
 	adapted_toggle_->setChecked(true);
 	adapted_toggle_->setToolTip("Show/hide adapted from panel");
@@ -114,7 +114,7 @@ editor_text_edit_t * editor_panel_t::original_view() const
 	return original_view_;
 }
 
-editor_text_edit_t * editor_panel_t::adapted_from_view() const
+editor_text_edit_t * editor_panel_t::details_view() const
 {
 	return adapted_from_view_;
 }
@@ -142,7 +142,7 @@ double editor_panel_t::get_split_ratio() const
 	return static_cast<double>(sizes[0]) / total;
 }
 
-void editor_panel_t::set_adapted_from(const std::string & text)
+void editor_panel_t::set_details(const std::string & text)
 {
 	auto display = QString::fromStdString(text);
 	display.replace('|', '\n');
@@ -181,7 +181,7 @@ QList<QTextEdit::ExtraSelection> editor_panel_t::highlight_adapted_diff(
 	return from_selections;
 }
 
-void editor_panel_t::clear_adapted_from()
+void editor_panel_t::clear_details()
 {
 	adapted_from_view_->clear();
 	adapted_from_container_->setVisible(false);

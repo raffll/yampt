@@ -2,6 +2,8 @@
 
 void dict_creator_t::make_dict_base_ordered()
 {
+	load_english_dict();
+
 	build_npc_index();
 	build_dial_map_ordered();
 
@@ -92,7 +94,7 @@ void dict_creator_t::process_gmst_ordered(size_t i)
 		return;
 
 	const auto & old_text = esm_ref.get_value().text;
-	insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::gmst, tools_t::status_t::matched);
+	insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::gmst, "matched");
 }
 
 void dict_creator_t::process_fnam_ordered(size_t i)
@@ -117,7 +119,7 @@ void dict_creator_t::process_fnam_ordered(size_t i)
 		return;
 
 	const auto & old_text = esm_ref.get_value().text;
-	insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::fnam, tools_t::status_t::matched);
+	insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::fnam, "matched");
 }
 
 void dict_creator_t::process_desc_ordered(size_t i)
@@ -136,7 +138,7 @@ void dict_creator_t::process_desc_ordered(size_t i)
 		return;
 
 	const auto & old_text = esm_ref.get_value().text;
-	insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::desc, tools_t::status_t::matched);
+	insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::desc, "matched");
 }
 
 void dict_creator_t::process_text_ordered(size_t i)
@@ -155,7 +157,7 @@ void dict_creator_t::process_text_ordered(size_t i)
 		return;
 
 	const auto & old_text = esm_ref.get_value().text;
-	insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::text, tools_t::status_t::matched);
+	insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::text, "matched");
 }
 
 void dict_creator_t::process_rnam_ordered(size_t i)
@@ -176,7 +178,7 @@ void dict_creator_t::process_rnam_ordered(size_t i)
 		if (esm_ref.get_value().exist)
 		{
 			const auto & old_text = esm_ref.get_value().text;
-			insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::rnam, tools_t::status_t::matched);
+			insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::rnam, "matched");
 			esm_ref.set_next_value("RNAM");
 		}
 		else
@@ -205,7 +207,7 @@ void dict_creator_t::process_indx_ordered(size_t i)
 		return;
 
 	const auto & old_text = esm_ref.get_value().text;
-	insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::indx, tools_t::status_t::matched);
+	insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::indx, "matched");
 }
 
 void dict_creator_t::process_cell_ordered(size_t i)
@@ -221,7 +223,7 @@ void dict_creator_t::process_cell_ordered(size_t i)
 		return;
 
 	const auto & old_text = esm_ref.get_value().text;
-	insert_entry_base(old_text, old_text, new_text, tools_t::rec_type_t::cell, tools_t::status_t::matched);
+	insert_entry_base(old_text, old_text, new_text, tools_t::rec_type_t::cell, "matched");
 }
 
 void dict_creator_t::process_dial_ordered(size_t i, std::string & dial_type, std::string & dial_foreign_name)
@@ -248,7 +250,7 @@ void dict_creator_t::process_dial_ordered(size_t i, std::string & dial_type, std
 		return;
 
 	insert_entry_base(
-	    dial_foreign_name, dial_foreign_name, native_name, tools_t::rec_type_t::dial, tools_t::status_t::matched);
+	    dial_foreign_name, dial_foreign_name, native_name, tools_t::rec_type_t::dial, "matched");
 }
 
 void dict_creator_t::process_info_ordered(
@@ -275,7 +277,7 @@ void dict_creator_t::process_info_ordered(
 	const auto & old_text = esm_ref.get_value().text;
 
 	const auto key_text = dial_type + "^" + dial_foreign_name + "^" + inam;
-	insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::info, tools_t::status_t::matched);
+	insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::info, "matched");
 
 	process_bnam_ordered(i, dial_type, dial_foreign_name, inam);
 
@@ -346,7 +348,7 @@ void dict_creator_t::process_sctx_ordered(size_t i)
 		    foreign_messages[k],
 		    native_messages[k],
 		    tools_t::rec_type_t::sctx,
-		    tools_t::status_t::matched);
+		    "matched");
 }
 
 void dict_creator_t::process_bnam_ordered(
@@ -396,7 +398,7 @@ void dict_creator_t::process_bnam_ordered(
 		const auto key_text = dial_type + "^" + dial_foreign_name + "^" + info_inam + "^" + foreign_messages[k];
 		const auto & old_text = foreign_messages[k];
 		const auto & new_text = native_messages[k];
-		insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::bnam, tools_t::status_t::matched);
+		insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::bnam, "matched");
 	}
 }
 
@@ -428,7 +430,7 @@ void dict_creator_t::process_cell_default_ordered()
 			break;
 
 		const auto & old_text = esm_ref.get_value().text;
-		insert_entry_base(old_text, old_text, new_text, tools_t::rec_type_t::cell, tools_t::status_t::wilderness);
+		insert_entry_base(old_text, old_text, new_text, tools_t::rec_type_t::cell, "wilderness");
 		break;
 	}
 }
@@ -453,6 +455,6 @@ void dict_creator_t::process_cell_region_ordered()
 			continue;
 
 		const auto & old_text = esm_ref.get_value().text;
-		insert_entry_base(old_text, old_text, new_text, tools_t::rec_type_t::cell, tools_t::status_t::region);
+		insert_entry_base(old_text, old_text, new_text, tools_t::rec_type_t::cell, "region");
 	}
 }

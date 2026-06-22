@@ -45,8 +45,8 @@ TEST_CASE("dict_writer_t + dict_reader_t, multiple types round-trip", "[i]")
 	tools_t::reset_log();
 
 	tools_t::dict_t dict = tools_t::initialize_dict();
-	dict.at(tools_t::rec_type_t::cell).insert({ "key_cell", "Balmora", "Balmora_PL", "matched" });
-	dict.at(tools_t::rec_type_t::dial).insert({ "key_dial", "background", "tlo", "matched" });
+	dict.at(tools_t::rec_type_t::cell).insert({ "key_cell", "Balmora", "Balmora_PL", "translated" });
+	dict.at(tools_t::rec_type_t::dial).insert({ "key_dial", "background", "tlo", "translated" });
 	dict.at(tools_t::rec_type_t::fnam).insert({ "key_fnam", "Iron Dagger", "Zelazny Sztylet", "translated" });
 	dict.at(tools_t::rec_type_t::info).insert({ "key_info", "Hello there", "Witaj", "translated", "Fargoth", "M" });
 
@@ -61,7 +61,7 @@ TEST_CASE("dict_writer_t + dict_reader_t, multiple types round-trip", "[i]")
 	REQUIRE(cell != nullptr);
 	REQUIRE(cell->old_text == "Balmora");
 	REQUIRE(cell->new_text == "Balmora_PL");
-	REQUIRE(cell->status == "matched");
+	REQUIRE(cell->status == "translated");
 
 	const auto * info = reader.get_dict().at(tools_t::rec_type_t::info).find("key_info");
 	REQUIRE(info != nullptr);
@@ -123,7 +123,7 @@ TEST_CASE("dict_writer_t + dict_reader_t, adapted_from field round-trip", "[i]")
 	entry.old_text = "Old Text";
 	entry.new_text = "New Text";
 	entry.status = "adapted";
-	entry.adapted_from = "Original Translation|Alternative";
+	entry.details = "Original Translation|Alternative";
 	dict.at(tools_t::rec_type_t::cell).insert(entry);
 
 	tools_t::record_entry_t ambiguous;
@@ -131,7 +131,7 @@ TEST_CASE("dict_writer_t + dict_reader_t, adapted_from field round-trip", "[i]")
 	ambiguous.old_text = "Ambiguous";
 	ambiguous.new_text = "Option A";
 	ambiguous.status = "ambiguous";
-	ambiguous.adapted_from = "Option A / Option B / Option C";
+	ambiguous.details = "Option A / Option B / Option C";
 	dict.at(tools_t::rec_type_t::cell).insert(ambiguous);
 
 	dict_writer_t::write(dict, path);
@@ -142,11 +142,11 @@ TEST_CASE("dict_writer_t + dict_reader_t, adapted_from field round-trip", "[i]")
 
 	const auto * adapted = reader.get_dict().at(tools_t::rec_type_t::cell).find("key_adapted");
 	REQUIRE(adapted != nullptr);
-	REQUIRE(adapted->adapted_from == "Original Translation|Alternative");
+	REQUIRE(adapted->details == "Original Translation|Alternative");
 
 	const auto * amb = reader.get_dict().at(tools_t::rec_type_t::cell).find("key_ambiguous");
 	REQUIRE(amb != nullptr);
-	REQUIRE(amb->adapted_from == "Option A / Option B / Option C");
+	REQUIRE(amb->details == "Option A / Option B / Option C");
 
 	cleanup(path);
 }
@@ -185,11 +185,11 @@ TEST_CASE("dict_writer_t + dict_reader_t, all statuses round-trip", "[i]")
 
 	tools_t::dict_t dict = tools_t::initialize_dict();
 	const std::vector<const char *> statuses = {
-		tools_t::status_t::matched,     tools_t::status_t::fingerprint, tools_t::status_t::coords,
-		tools_t::status_t::heuristic,   tools_t::status_t::exact,       tools_t::status_t::info,
-		tools_t::status_t::wilderness,  tools_t::status_t::region,      tools_t::status_t::translated,
-		tools_t::status_t::identical,   tools_t::status_t::reused,      tools_t::status_t::untranslated,
-		tools_t::status_t::in_progress, tools_t::status_t::outdated,
+		tools_t::status_t::translated,  tools_t::status_t::reused,      tools_t::status_t::untranslated,
+		tools_t::status_t::in_progress, tools_t::status_t::outdated,    tools_t::status_t::missing,
+		tools_t::status_t::duplicate,   tools_t::status_t::mismatch,    tools_t::status_t::adapted,
+		tools_t::status_t::changed,     tools_t::status_t::ambiguous,   tools_t::status_t::model,
+		tools_t::status_t::propagated,  tools_t::status_t::error,
 	};
 
 	int idx = 0;
@@ -256,15 +256,15 @@ TEST_CASE("dict_merger_t, file-based merge last-listed wins", "[i]")
 	tools_t::reset_log();
 
 	tools_t::dict_t dict1 = tools_t::initialize_dict();
-	dict1.at(tools_t::rec_type_t::cell).insert({ "Balmora", "Balmora", "First", "matched" });
-	dict1.at(tools_t::rec_type_t::cell).insert({ "Vivec", "Vivec", "OnlyInFirst", "matched" });
+	dict1.at(tools_t::rec_type_t::cell).insert({ "Balmora", "Balmora", "First", "translated" });
+	dict1.at(tools_t::rec_type_t::cell).insert({ "Vivec", "Vivec", "OnlyInFirst", "translated" });
 	dict_writer_t::write(dict1, path1);
 
 	tools_t::reset_log();
 
 	tools_t::dict_t dict2 = tools_t::initialize_dict();
-	dict2.at(tools_t::rec_type_t::cell).insert({ "Balmora", "Balmora", "Second", "matched" });
-	dict2.at(tools_t::rec_type_t::cell).insert({ "Ald-ruhn", "Ald-ruhn", "OnlyInSecond", "matched" });
+	dict2.at(tools_t::rec_type_t::cell).insert({ "Balmora", "Balmora", "Second", "translated" });
+	dict2.at(tools_t::rec_type_t::cell).insert({ "Ald-ruhn", "Ald-ruhn", "OnlyInSecond", "translated" });
 	dict_writer_t::write(dict2, path2);
 
 	tools_t::reset_log();
@@ -296,19 +296,19 @@ TEST_CASE("dict_merger_t, three-file merge element count", "[i]")
 	tools_t::reset_log();
 
 	tools_t::dict_t d1 = tools_t::initialize_dict();
-	d1.at(tools_t::rec_type_t::cell).insert({ "A", "A", "A_val", "matched" });
-	d1.at(tools_t::rec_type_t::cell).insert({ "B", "B", "B_val", "matched" });
+	d1.at(tools_t::rec_type_t::cell).insert({ "A", "A", "A_val", "translated" });
+	d1.at(tools_t::rec_type_t::cell).insert({ "B", "B", "B_val", "translated" });
 	dict_writer_t::write(d1, path1);
 	tools_t::reset_log();
 
 	tools_t::dict_t d2 = tools_t::initialize_dict();
-	d2.at(tools_t::rec_type_t::cell).insert({ "B", "B", "B_override", "matched" });
-	d2.at(tools_t::rec_type_t::cell).insert({ "C", "C", "C_val", "matched" });
+	d2.at(tools_t::rec_type_t::cell).insert({ "B", "B", "B_override", "translated" });
+	d2.at(tools_t::rec_type_t::cell).insert({ "C", "C", "C_val", "translated" });
 	dict_writer_t::write(d2, path2);
 	tools_t::reset_log();
 
 	tools_t::dict_t d3 = tools_t::initialize_dict();
-	d3.at(tools_t::rec_type_t::dial).insert({ "D", "D", "D_val", "matched" });
+	d3.at(tools_t::rec_type_t::dial).insert({ "D", "D", "D_val", "translated" });
 	dict_writer_t::write(d3, path3);
 	tools_t::reset_log();
 
@@ -327,7 +327,7 @@ TEST_CASE("dict_writer_t + dict_reader_t, raw codepage bytes survive round-trip"
 
 	std::string raw_1250 = "Zdr\xF3j \xB9\x9C\x9F";
 	tools_t::dict_t dict = tools_t::initialize_dict();
-	dict.at(tools_t::rec_type_t::cell).insert({ "key_raw", raw_1250, raw_1250, "matched" });
+	dict.at(tools_t::rec_type_t::cell).insert({ "key_raw", raw_1250, raw_1250, "translated" });
 
 	dict_writer_t::write(dict, path);
 	REQUIRE(fs::exists(path));

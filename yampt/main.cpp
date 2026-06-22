@@ -4,6 +4,12 @@
 
 int main(int argc, char * argv[])
 {
+	auto exe_path = std::filesystem::path(argv[0]).parent_path();
+	if (exe_path.empty())
+		exe_path = std::filesystem::current_path();
+
+	tools_t::set_exe_dir(exe_path.string());
+
 	try
 	{
 		std::vector<std::string> arg;

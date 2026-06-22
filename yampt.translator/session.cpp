@@ -178,9 +178,6 @@ void session_t::save_all()
 {
 	for (const auto & doc : docs_)
 	{
-		if (doc->is_read_only())
-			continue;
-
 		if (!doc->is_dirty())
 			continue;
 

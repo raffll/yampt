@@ -1,6 +1,8 @@
 #include "dict_creator.hpp"
 #include "translation_engine.hpp"
 
+#include <hunspell/hunspell.hxx>
+
 static std::vector<std::string> split_words(const std::string & name)
 {
 	std::vector<std::string> words;
@@ -42,6 +44,8 @@ static int count_shared_words(const std::vector<std::string> & a, const std::vec
 
 void dict_creator_t::make_dict_base()
 {
+	load_english_dict();
+
 	build_gmst_index();
 	build_fnam_index();
 	build_desc_index();
@@ -94,7 +98,7 @@ void dict_creator_t::make_dict_base_gmst()
 			esm_ref.set_key("NAME");
 			esm_ref.set_value("STRV");
 			const auto & old_text = esm_ref.get_value().text;
-			insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::gmst, tools_t::status_t::matched);
+			insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::gmst, "matched");
 		}
 		else
 		{
@@ -150,7 +154,7 @@ void dict_creator_t::make_dict_base_fnam()
 			esm_ref.set_key("NAME");
 			esm_ref.set_value("FNAM");
 			const auto & old_text = esm_ref.get_value().text;
-			insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::fnam, tools_t::status_t::matched);
+			insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::fnam, "matched");
 		}
 		else
 		{
@@ -201,7 +205,7 @@ void dict_creator_t::make_dict_base_desc()
 			esm_ref.set_key("NAME");
 			esm_ref.set_value("DESC");
 			const auto & old_text = esm_ref.get_value().text;
-			insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::desc, tools_t::status_t::matched);
+			insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::desc, "matched");
 		}
 		else
 		{
@@ -251,7 +255,7 @@ void dict_creator_t::make_dict_base_text()
 			esm_ref.set_key("NAME");
 			esm_ref.set_value("TEXT");
 			const auto & old_text = esm_ref.get_value().text;
-			insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::text, tools_t::status_t::matched);
+			insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::text, "matched");
 		}
 		else
 		{
@@ -297,7 +301,7 @@ void dict_creator_t::make_dict_base_rnam()
 			if (search != rnam_index.end())
 			{
 				const auto & old_text = search->second;
-				insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::rnam, tools_t::status_t::matched);
+				insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::rnam, "matched");
 			}
 			else
 			{
@@ -337,7 +341,7 @@ void dict_creator_t::make_dict_base_indx()
 			esm_ref.set_key("INDX");
 			esm_ref.set_value("DESC");
 			const auto & old_text = esm_ref.get_value().text;
-			insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::indx, tools_t::status_t::matched);
+			insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::indx, "matched");
 		}
 		else
 		{
@@ -406,7 +410,7 @@ void dict_creator_t::make_dict_base_info()
 			esm_ref.set_key("INAM");
 			esm_ref.set_value("NAME");
 			const auto & old_text = esm_ref.get_value().text;
-			insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::info, tools_t::status_t::matched);
+			insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::info, "matched");
 		}
 		else
 		{
@@ -525,7 +529,7 @@ void dict_creator_t::make_dict_base_sctx()
 			const auto key_text = script_name + "^" + foreign_messages[k];
 			const auto & old_text = foreign_messages[k];
 			const auto & new_text = native_messages[k];
-			insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::sctx, tools_t::status_t::matched);
+			insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::sctx, "matched");
 		}
 	}
 }
@@ -623,7 +627,7 @@ void dict_creator_t::make_dict_base_bnam()
 			const auto key_text = info_key + "^" + foreign_messages[k];
 			const auto & old_text = foreign_messages[k];
 			const auto & new_text = native_messages[k];
-			insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::bnam, tools_t::status_t::matched);
+			insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::bnam, "matched");
 		}
 	}
 
@@ -747,7 +751,7 @@ void dict_creator_t::make_dict_base_dial()
 
 			dial_native_to_foreign[native_name] = foreign_name;
 			insert_entry_base(
-			    foreign_name, foreign_name, native_name, tools_t::rec_type_t::dial, tools_t::status_t::info);
+			    foreign_name, foreign_name, native_name, tools_t::rec_type_t::dial, "info");
 		}
 		else
 		{
@@ -801,7 +805,7 @@ void dict_creator_t::make_dict_base_dial()
 			{
 				auto * rec = dict.at(tools_t::rec_type_t::dial).find(entry.name);
 				if (rec)
-					rec->adapted_from = candidates_str;
+					rec->details = candidates_str;
 			}
 		}
 
@@ -874,7 +878,7 @@ void dict_creator_t::make_dict_base_dial()
 
 				dial_native_to_foreign[foreign_name] = foreign_name;
 				insert_entry_base(
-				    foreign_name, foreign_name, foreign_name, tools_t::rec_type_t::dial, tools_t::status_t::exact);
+				    foreign_name, foreign_name, foreign_name, tools_t::rec_type_t::dial, "exact");
 				break;
 			}
 		}
@@ -992,7 +996,7 @@ void dict_creator_t::make_dict_base_dial()
 
 				dial_native_to_foreign[best_name] = foreign_name;
 				insert_entry_base(
-				    foreign_name, foreign_name, best_name, tools_t::rec_type_t::dial, tools_t::status_t::heuristic);
+				    foreign_name, foreign_name, best_name, tools_t::rec_type_t::dial, "heuristic");
 				progress = true;
 			}
 			else if (best_score > 0 && best_count > 1 && !resolved)
@@ -1037,7 +1041,7 @@ void dict_creator_t::make_dict_base_dial()
 		{
 			auto * entry = dict.at(tools_t::rec_type_t::dial).find(name);
 			if (entry)
-				entry->adapted_from = candidates_str;
+				entry->details = candidates_str;
 		}
 	}
 
@@ -1099,7 +1103,7 @@ void dict_creator_t::make_dict_cell_default()
 					const auto & old_text = esm_ref.get_value().text;
 					const auto & new_text = esm.get_value().text;
 					insert_entry_base(
-					    old_text, old_text, new_text, tools_t::rec_type_t::cell, tools_t::status_t::wilderness);
+					    old_text, old_text, new_text, tools_t::rec_type_t::cell, "wilderness");
 
 					break;
 				}
@@ -1135,7 +1139,7 @@ void dict_creator_t::make_dict_cell_region()
 					const auto & old_text = esm_ref.get_value().text;
 					const auto & new_text = esm.get_value().text;
 					insert_entry_base(
-					    old_text, old_text, new_text, tools_t::rec_type_t::cell, tools_t::status_t::region);
+					    old_text, old_text, new_text, tools_t::rec_type_t::cell, "region");
 
 					break;
 				}
@@ -1525,7 +1529,7 @@ void dict_creator_t::make_dict_cell_exterior()
 		esm.select_record(match_it->second);
 		esm.set_value("NAME");
 		const auto & val_text = esm.get_value().text;
-		insert_entry_base(ref_cell_name, ref_cell_name, val_text, tools_t::rec_type_t::cell, tools_t::status_t::coords);
+		insert_entry_base(ref_cell_name, ref_cell_name, val_text, tools_t::rec_type_t::cell, "coords");
 	}
 
 	make_dict_cell_add_missing(missing_cells);
@@ -1591,7 +1595,7 @@ void dict_creator_t::make_dict_cell_interior()
 		const auto & val_text = esm.get_value().text;
 
 		insert_entry_base(
-		    ref_cell_name, ref_cell_name, val_text, tools_t::rec_type_t::cell, tools_t::status_t::fingerprint);
+		    ref_cell_name, ref_cell_name, val_text, tools_t::rec_type_t::cell, "fingerprint");
 	}
 
 	make_dict_cell_interior_heuristic(missing_cells, matched_native_records);
@@ -1656,7 +1660,7 @@ void dict_creator_t::make_dict_cell_interior_heuristic(
 				tools_t::add_log("[EXACT] \"" + foreign_name + "\"\r\n", true);
 
 				insert_entry_base(
-				    foreign_name, foreign_name, foreign_name, tools_t::rec_type_t::cell, tools_t::status_t::exact);
+				    foreign_name, foreign_name, foreign_name, tools_t::rec_type_t::cell, "exact");
 				break;
 			}
 		}
@@ -1778,7 +1782,7 @@ void dict_creator_t::make_dict_cell_interior_heuristic(
 					    translated_text + "\" -> \"" + best_name + "\"\r\n");
 				}
 
-				const auto * cell_status = resolved ? tools_t::status_t::exact : tools_t::status_t::heuristic;
+				const auto * cell_status = resolved ? "exact" : "heuristic";
 				insert_entry_base(foreign_name, foreign_name, best_name, tools_t::rec_type_t::cell, cell_status);
 				progress = true;
 			}
@@ -1857,7 +1861,7 @@ void dict_creator_t::make_dict_cell_add_missing(
 		{
 			auto * entry = dict.at(tools_t::rec_type_t::cell).find_by_old_text(cell_name);
 			if (entry)
-				entry->adapted_from = native_candidates_str;
+				entry->details = native_candidates_str;
 		}
 	}
 }
@@ -1882,11 +1886,17 @@ void dict_creator_t::insert_entry_base(
 			return;
 	}
 
+	const bool is_problem = (std::strcmp(status, tools_t::status_t::missing) == 0 ||
+	                         std::strcmp(status, tools_t::status_t::mismatch) == 0 ||
+	                         std::strcmp(status, tools_t::status_t::duplicate) == 0);
+
+	const bool is_status = is_problem || std::strcmp(status, tools_t::status_t::heuristic) == 0;
+
 	tools_t::record_entry_t entry;
 	entry.key_text = key_text;
 	entry.old_text = old_text;
 	entry.new_text = new_text;
-	entry.status = status;
+	entry.status = is_status ? status : determine_status(old_text, new_text);
 
 	if (dict.at(type).insert(entry))
 	{
@@ -1898,11 +1908,43 @@ void dict_creator_t::insert_entry_base(
 	if (dup)
 	{
 		dup->status = tools_t::status_t::duplicate;
-		if (dup->adapted_from.empty())
-			dup->adapted_from = new_text;
+		if (dup->details.empty())
+			dup->details = new_text;
 		else
-			dup->adapted_from += "|" + new_text;
+			dup->details += "|" + new_text;
 
 		counter_doubled++;
 	}
+}
+
+const char * dict_creator_t::determine_status(const std::string & old_text, const std::string & new_text) const
+{
+	if (old_text != new_text)
+		return tools_t::status_t::translated;
+
+	if (base_mode_ == base_mode_t::full)
+		return tools_t::status_t::translated;
+
+	if (!english_dict_)
+		return tools_t::status_t::untranslated;
+
+	if (is_proper_noun(old_text))
+		return tools_t::status_t::translated;
+
+	return tools_t::status_t::untranslated;
+}
+
+bool dict_creator_t::is_proper_noun(const std::string & text) const
+{
+	auto words = split_words(text);
+	for (const auto & word : words)
+	{
+		if (word.size() < 3)
+			continue;
+
+		if (english_dict_->spell(word))
+			return false;
+	}
+
+	return true;
 }

@@ -63,13 +63,12 @@ Current mapping:
 - `untranslated` → "Untranslated"
 - `missing` → "Missing"
 - `duplicate` → "Duplicate"
-- `matched` (and sub-statuses) → "Matched"
-- `heuristic` → "Heuristic"
 - `error` → "Error"
 - `translated` → "Translated"
 - `reused` → "Reused"
 - `adapted` → "Adapted"
 - `changed` → "Changed"
+- `outdated` → "Outdated"
 - `in_progress` → "In Progress"
 - `model` → "Model"
 - `mismatch` → "Mismatch"
@@ -100,6 +99,6 @@ Workspace dict files (JSON/XML) that haven't been loaded into the session show `
 
 Every exit path in `rebuild_table()` calls `clear_editor_panels()` after `editor_controller_.set_current_row(-1)`. This prevents stale text in the translation window when no row is selected after a table rebuild (filter change, search, status filter).
 
-## Adapted From Panel — Ambiguous Entries
+## Details Panel
 
-The adapted_from panel shows for entries with status "adapted", "changed", or "ambiguous". For ambiguous entries, it displays all conflicting translations separated by ` / `.
+The Details panel shows for ANY entry with non-empty `details` field (not just adapted/changed/ambiguous). For `translated` entries with method details (e.g. matched, fingerprint, heuristic), it shows the method name as plain text (no diff highlighting). Diff highlighting still only applies to `adapted` and `changed` statuses. For ambiguous entries, it displays all conflicting translations separated by ` / `.

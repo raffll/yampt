@@ -104,19 +104,13 @@ static bool passes_sub_type_filter(
 
 table_build_result_t build_filtered_rows(
     const tools_t::dict_t & data,
-    dict_kind_t kind,
     const std::set<tools_t::rec_type_t> & type_filter,
     const std::set<std::string> & sub_type_filter,
     const std::set<std::string> & status_filter,
     const search_engine_t & search,
     bool type_filter_solo)
 {
-	static const std::set<std::string> done_statuses_user = { "translated" };
-
-	static const std::set<std::string> done_statuses_base = { "matched", "fingerprint", "coords",     "heuristic",
-		                                                      "exact",   "info",        "wilderness", "region" };
-
-	const auto & done_statuses = (kind == dict_kind_t::base) ? done_statuses_base : done_statuses_user;
+	static const std::set<std::string> done_statuses = { "translated" };
 
 	table_build_result_t result;
 	auto & counts = result.counts;

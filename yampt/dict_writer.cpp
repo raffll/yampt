@@ -106,12 +106,10 @@ void dict_writer_t::write(const tools_t::dict_t & dict, const std::string & path
 				file << "      \"enchantment\": \"" << escape_json(entry.enchantment) << "\"";
 			}
 
-			if ((entry.status == "adapted" || entry.status == "changed" || entry.status == "ambiguous" ||
-			     entry.status == "missing" || entry.status == "duplicate" || entry.status == "outdated") &&
-			    !entry.adapted_from.empty())
+			if (!entry.details.empty())
 			{
 				file << ",\n";
-				file << "      \"adapted_from\": \"" << escape_json(entry.adapted_from) << "\"";
+				file << "      \"details\": \"" << escape_json(entry.details) << "\"";
 			}
 
 			file << "\n";

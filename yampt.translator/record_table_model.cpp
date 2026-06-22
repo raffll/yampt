@@ -20,17 +20,10 @@ static std::string status_display_name(const std::string & status)
 		return "Missing";
 	if (status == "duplicate")
 		return "Duplicate";
-	if (status == "matched" || status == "fingerprint" || status == "coords" || status == "exact" || status == "info" ||
-	    status == "wilderness" || status == "region")
-		return "Matched";
-	if (status == "heuristic")
-		return "Heuristic";
 	if (status == "error")
 		return "Error";
 	if (status == "translated")
 		return "Translated";
-	if (status == "identical")
-		return "Identical";
 	if (status == "reused")
 		return "Reused";
 	if (status == "adapted")
@@ -41,14 +34,16 @@ static std::string status_display_name(const std::string & status)
 		return "Outdated";
 	if (status == "in_progress")
 		return "In Progress";
-	if (status == "model")
+	if (status == tools_t::status_t::model)
 		return "Model";
 	if (status == "mismatch")
 		return "Mismatch";
-	if (status == "propagated")
+	if (status == tools_t::status_t::propagated)
 		return "Propagated";
 	if (status == "ambiguous")
 		return "Ambiguous";
+	if (status == tools_t::status_t::heuristic)
+		return "Heuristic";
 	return status;
 }
 

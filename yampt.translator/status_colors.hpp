@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../yampt/tools.hpp"
 #include <QColor>
 #include <string>
 
@@ -17,21 +18,11 @@ inline QColor get_status_color(const std::string & status)
 	if (status == "mismatch")
 		return QColor(230, 115, 140);
 
-	if (status == "matched" || status == "fingerprint" || status == "coords" || status == "exact" || status == "info" ||
-	    status == "wilderness" || status == "region")
-		return QColor(140, 200, 170);
-
-	if (status == "heuristic")
-		return QColor(100, 180, 160);
-
 	if (status == "error")
 		return QColor(242, 102, 102);
 
 	if (status == "translated")
 		return QColor(128, 230, 128);
-
-	if (status == "identical")
-		return QColor(180, 220, 140);
 
 	if (status == "reused")
 		return QColor(128, 217, 179);
@@ -48,11 +39,14 @@ inline QColor get_status_color(const std::string & status)
 	if (status == "in_progress")
 		return QColor(102, 153, 242);
 
-	if (status == "model")
+	if (status == tools_t::status_t::model)
 		return QColor(100, 180, 220);
 
-	if (status == "propagated")
+	if (status == tools_t::status_t::propagated)
 		return QColor(180, 230, 230);
+
+	if (status == tools_t::status_t::heuristic)
+		return QColor(100, 180, 160);
 
 	if (status == "ambiguous")
 		return QColor(230, 180, 60);

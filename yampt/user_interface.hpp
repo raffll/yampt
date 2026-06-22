@@ -27,4 +27,5 @@ private:
 	std::string translate_model_path;
 
 	codepage_t encoding = codepage_t::windows_1252;
+	bool partial_mode = false;
 };

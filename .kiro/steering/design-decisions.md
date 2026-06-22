@@ -40,7 +40,7 @@ The glossary in `annotation_manager_t::rebuild()` only includes entries with tru
 - `model` — machine translated, not human-verified
 - `error` — has validation issues
 
-Included statuses (glossary sources): `translated`, `reused`, `adapted`, and base dict statuses (`matched`, `fingerprint`, `coords`, `heuristic`, `exact`, `info`, `wilderness`, `region`).
+Included statuses (glossary sources): `translated`, `reused`, `adapted`.
 
 DIAL topics (hyperlinks) have NO status filter — all DIAL entries contribute regardless of status.
 
@@ -115,3 +115,28 @@ The `dict_creator_t` class is split across multiple `.cpp` files:
 - `dict_creator_base_ordered.cpp` — ordered base mode logic (`make_dict_base_ordered`)
 
 Rule: if a member function is called from more than one `.cpp` file, it belongs in `dict_creator.cpp`. Mode-specific functions stay in their respective files.
+
+
+## Identical-Text Entries Are Now Approved
+
+Old behavior: when `make-dict` encountered a base entry where `old_text == new_text`, it assigned the `identical` status. Entries with `identical` were skipped during `--convert` and `--create` — proper nouns were not applied to the output.
+
+New behavior: identical-text entries in base dicts receive `translated` (full mode, or partial mode when the English dictionary confirms a proper noun) or `untranslated` (partial mode when English words are detected). The `identical` status no longer exists.
+
+When `make-dict` sees a base entry with `old_text == new_text`, it passes through the base entry's status directly:
+- Base status `translated` → user dict entry is `translated` → applied during convert
+- Base status `untranslated` → user dict entry is `untranslated` → skipped during convert
+
+Net effect: `--convert` now includes proper noun entries (cells, NPCs, items with unchanged names) in the output, where before it would skip them. This produces more complete translations.
+
+Legacy migration: old dictionaries with `identical` status are migrated to `translated` on load.
+
+## dict_kind_t::base No Longer Gates Editing
+
+`dict_kind_t` still exists and is used for display purposes (the `[BASE]` tag in the sidebar, golden color in selection dialogs). However, it no longer affects editing behavior:
+
+- `dict_document_t::is_read_only()` always returns `false` regardless of `dict_kind_t`
+- `commit_edit()` applies edits to all documents regardless of kind
+- `session_t::save_all()` saves dirty documents regardless of kind
+
+All dictionaries are saveable and editable in yTranslator. The base/user distinction is purely visual.

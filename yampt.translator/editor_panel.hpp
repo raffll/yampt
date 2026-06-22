@@ -27,15 +27,15 @@ public:
 	explicit editor_panel_t(QWidget * parent = nullptr);
 
 	editor_text_edit_t * original_view() const;
-	editor_text_edit_t * adapted_from_view() const;
+	editor_text_edit_t * details_view() const;
 	editor_text_edit_t * translation_editor() const;
 
-	void set_adapted_from(const std::string & text);
+	void set_details(const std::string & text);
 	QList<QTextEdit::ExtraSelection> highlight_adapted_diff(
 	    const std::string & new_text,
 	    const std::string & adapted_from,
 	    bool use_original = false);
-	void clear_adapted_from();
+	void clear_details();
 
 	void load_script_entry(const std::string & old_text, const std::string & new_text);
 	std::string reconstruct_script_line() const;

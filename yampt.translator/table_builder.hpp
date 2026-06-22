@@ -2,7 +2,6 @@
 
 #include "table_row.hpp"
 #include "search_engine.hpp"
-#include "../yampt/dict_kind.hpp"
 #include "../yampt/tools.hpp"
 
 #include <map>
@@ -30,7 +29,6 @@ struct table_build_result_t
 
 table_build_result_t build_filtered_rows(
     const tools_t::dict_t & data,
-    dict_kind_t kind,
     const std::set<tools_t::rec_type_t> & type_filter,
     const std::set<std::string> & sub_type_filter,
     const std::set<std::string> & status_filter,
