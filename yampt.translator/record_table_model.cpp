@@ -44,6 +44,8 @@ static std::string status_display_name(const std::string & status)
 		return "Ambiguous";
 	if (status == tools_t::status_t::heuristic)
 		return "Heuristic";
+	if (status == tools_t::status_t::to_verify)
+		return "To Verify";
 	return status;
 }
 

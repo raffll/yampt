@@ -2,15 +2,15 @@
 
 ## Conversion Behavior
 
-Only entries with status `translated` are applied during `--convert` and `--create` operations. All other entries are skipped — the original plugin text stays unchanged.
+Only entries with status `translated` are applied during `--convert` and `--create` operations. All other entries are skipped — the original plugin text stays unchanged. No exceptions.
 
 Approved status:
 - `translated`
 
 Skipped statuses:
-- `untranslated`, `adapted`, `reused`, `changed`, `outdated`, `ambiguous`
+- `to_verify`, `untranslated`, `adapted`, `reused`, `changed`, `outdated`, `ambiguous`
 - `in_progress`, `model`, `propagated`
-- `missing`, `duplicate`, `mismatch`, `error`
+- `missing`, `duplicate`, `mismatch`, `heuristic`, `error`
 
 The `details` field has no effect on conversion — only `status` determines whether an entry is applied.
 
@@ -37,7 +37,7 @@ Entries where old_text differs from new_text get status `translated`.
 
 Entries where old_text equals new_text are checked against an English Hunspell dictionary (`dictionaries/en_US.aff` + `dictionaries/en_US.dic`):
 - Text is tokenized by non-alphanumeric characters; tokens shorter than 3 characters are ignored
-- If no tokens are found in the English dictionary → `translated` (proper noun — correct as-is)
+- If no tokens are found in the English dictionary → `to_verify` (likely a proper noun, needs user confirmation)
 - If any token is found in the English dictionary → `untranslated` (contains English — needs translation)
 
 Use for partially translated ESMs (e.g. EET-imported dictionaries) where old==new may mean the entry was never translated.
@@ -55,7 +55,7 @@ Assigned by `make-dict` when creating a dictionary from a plugin using a base di
 | `reused` | Matched by old_text in text_match_index (first-wins) | plugin text | reused translation |
 | `ambiguous` | Multiple conflicting translations for same old_text in base | plugin text | highest-priority translation |
 
-For identical-text entries (base has old==new), the base entry's status is passed through directly. If the base says `translated` (proper noun), the user dict entry is `translated`. If the base says `untranslated` (partial mode), the user dict entry is `untranslated`.
+For identical-text entries (base has old==new), the base entry's status is passed through directly. If the base says `translated` (proper noun in full mode), the user dict entry is `translated`. If the base says `to_verify` (partial mode, no English words found), the user dict entry is `to_verify`. If the base says `untranslated` (partial mode, English words found), the user dict entry is `untranslated`.
 
 ## User/GUI Statuses
 
@@ -86,10 +86,9 @@ The details panel is shown for any entry with a non-empty `details` field. Diff-
 
 ## Legacy Migration
 
-When loading old dictionaries, `dict_reader_t` performs inline migration:
-- Status `matched`/`fingerprint`/`coords`/`heuristic`/`exact`/`info`/`wilderness`/`region` → status becomes `translated`, old status string moves to `details`
-- Status `identical` → status becomes `translated`
-- JSON field `"adapted_from"` → read as `"details"` (fallback when `"details"` key is absent)
+No migration or backward compatibility code. This is pre-1.0 software — old dictionary formats are not supported. If a dict has obsolete statuses or fields, it must be regenerated.
+
+Do NOT add migration paths, version checks, or fallback reads for old formats.
 
 ## Auto-Save Before Operations
 

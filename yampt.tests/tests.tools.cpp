@@ -315,9 +315,10 @@ TEST_CASE("tools_t::status_t, constants are distinct non-empty strings", "[u]")
 		tools_t::status_t::changed,     tools_t::status_t::reused,      tools_t::status_t::untranslated,
 		tools_t::status_t::ambiguous,   tools_t::status_t::in_progress, tools_t::status_t::outdated,
 		tools_t::status_t::model,       tools_t::status_t::propagated,  tools_t::status_t::heuristic,
+		tools_t::status_t::to_verify,
 	};
 
-	REQUIRE(all_statuses.size() == 15);
+	REQUIRE(all_statuses.size() == 16);
 
 	for (const auto & s : all_statuses)
 	{

@@ -36,6 +36,8 @@ static const char * get_status_display_name_qt(const std::string & status)
 		return "Ambiguous";
 	if (status == tools_t::status_t::heuristic)
 		return "Heuristic";
+	if (status == tools_t::status_t::to_verify)
+		return "To Verify";
 	return status.c_str();
 }
 
@@ -70,7 +72,9 @@ static const char * get_status_tooltip(const std::string & status)
 	if (status == "error")
 		return "Translation has a validation error";
 	if (status == tools_t::status_t::heuristic)
-		return "Matched by translation engine heuristic (needs verification)";
+		return "Matched by heuristic (needs verification)";
+	if (status == tools_t::status_t::to_verify)
+		return "Identical text, needs verification";
 	return "";
 }
 
@@ -84,7 +88,7 @@ status_filter_bar_t::status_filter_bar_t(QWidget * parent)
 	layout_->setSpacing(2);
 
 	static const std::vector<std::vector<std::string>> status_groups = {
-		{ "translated", "untranslated" },
+		{ "translated", tools_t::status_t::to_verify, "untranslated" },
 		{ "reused", "adapted", "ambiguous", "changed", "outdated" },
 		{ "duplicate", tools_t::status_t::heuristic, "missing", "mismatch" },
 		{ "in_progress", tools_t::status_t::propagated, tools_t::status_t::model, "error" },

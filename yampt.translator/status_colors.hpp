@@ -48,6 +48,9 @@ inline QColor get_status_color(const std::string & status)
 	if (status == tools_t::status_t::heuristic)
 		return QColor(100, 180, 160);
 
+	if (status == tools_t::status_t::to_verify)
+		return QColor(180, 200, 180);
+
 	if (status == "ambiguous")
 		return QColor(230, 180, 60);
 

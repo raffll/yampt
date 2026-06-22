@@ -507,7 +507,7 @@ void dict_creator_t::insert_entry_single_with_base(
 	{
 		const auto & s = base_entry->status;
 		const bool preserve =
-		    (s == tools_t::status_t::untranslated ||
+		    (s == tools_t::status_t::untranslated || s == tools_t::status_t::to_verify ||
 		     s == tools_t::status_t::in_progress || s == tools_t::status_t::model ||
 		     s == tools_t::status_t::propagated || s == tools_t::status_t::error ||
 		     s == tools_t::status_t::translated);

@@ -1929,7 +1929,7 @@ const char * dict_creator_t::determine_status(const std::string & old_text, cons
 		return tools_t::status_t::untranslated;
 
 	if (is_proper_noun(old_text))
-		return tools_t::status_t::translated;
+		return tools_t::status_t::to_verify;
 
 	return tools_t::status_t::untranslated;
 }

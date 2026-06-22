@@ -85,6 +85,7 @@ public:
 		static constexpr const char * duplicate = "duplicate";
 		static constexpr const char * mismatch = "mismatch";
 		static constexpr const char * heuristic = "heuristic";
+		static constexpr const char * to_verify = "to_verify";
 
 		// user/GUI statuses (skipped during convert/create)
 		static constexpr const char * untranslated = "untranslated";
