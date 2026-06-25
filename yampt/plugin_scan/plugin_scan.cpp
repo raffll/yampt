@@ -1,6 +1,7 @@
 #include "plugin_scan.hpp"
 #include "conflict_compute.hpp"
 #include "sub_record_iter.hpp"
+#include "sub_record_schema.hpp"
 #include <algorithm>
 #include <filesystem>
 #include <map>
@@ -352,6 +353,7 @@ void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 		for (const auto & slot : unified_slots)
 		{
 			std::vector<std::string> slot_values(ver_count);
+			size_t first_size = 0;
 
 			for (size_t vi = 0; vi < ver_count; ++vi)
 			{
@@ -366,6 +368,9 @@ void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 					if (current_occ == target_occ)
 					{
 						slot_values[vi] = std::string(sv.data, sv.size);
+						if (first_size == 0)
+							first_size = sv.size;
+
 						break;
 					}
 
@@ -376,11 +381,52 @@ void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 					slot_values[vi] = "\x01\x44\x45\x4C\x45";
 			}
 
-			const auto slot_level = compute_conflict_all(slot_values);
-			if (slot_level > worst_all)
-				worst_all = slot_level;
+			const auto * schema = find_schema(entry.rec_type, slot.first, first_size);
+			if (schema && schema->field_count > 0 && first_size > 0)
+			{
+				for (size_t fi = 0; fi < schema->field_count; ++fi)
+				{
+					const auto & fdef = schema->fields[fi];
+					std::vector<std::string> field_values(ver_count);
 
-			per_slot_this.push_back(compute_conflict_this(slot_values));
+					for (size_t vi = 0; vi < ver_count; ++vi)
+					{
+						if (is_deleted[vi])
+						{
+							field_values[vi] = "\x01\x44\x45\x4C\x45";
+							continue;
+						}
+
+						if (slot_values[vi].empty())
+							continue;
+
+						if (fdef.offset >= slot_values[vi].size())
+							continue;
+
+						size_t field_len = fdef.size;
+						if (fdef.type == field_type_t::string_var)
+							field_len = slot_values[vi].size() - fdef.offset;
+						else
+							field_len = std::min(fdef.size, slot_values[vi].size() - fdef.offset);
+
+						field_values[vi] = slot_values[vi].substr(fdef.offset, field_len);
+					}
+
+					const auto field_level = compute_conflict_all(field_values);
+					if (field_level > worst_all)
+						worst_all = field_level;
+
+					per_slot_this.push_back(compute_conflict_this(field_values));
+				}
+			}
+			else
+			{
+				const auto slot_level = compute_conflict_all(slot_values);
+				if (slot_level > worst_all)
+					worst_all = slot_level;
+
+				per_slot_this.push_back(compute_conflict_this(slot_values));
+			}
 		}
 	}
 

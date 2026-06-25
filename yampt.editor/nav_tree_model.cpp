@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdio>
+#include <cstring>
 #include <map>
 
 static const char * type_to_display_name(const std::string & type)
@@ -128,7 +129,20 @@ void nav_tree_model_t::build_tree()
 			    recs.begin(),
 			    recs.end(),
 			    [&](const visible_record_t & a, const visible_record_t & b)
-			{ return entries[a.entry_idx].record_id < entries[b.entry_idx].record_id; });
+			{
+				const auto & na = entries[a.entry_idx].display_name;
+				const auto & nb = entries[b.entry_idx].display_name;
+				if (na.empty() && nb.empty())
+					return entries[a.entry_idx].record_id < entries[b.entry_idx].record_id;
+
+				if (na.empty())
+					return false;
+
+				if (nb.empty())
+					return true;
+
+				return na < nb;
+			});
 
 			type_group_t group;
 			group.type = type;
@@ -138,6 +152,18 @@ void nav_tree_model_t::build_tree()
 
 		if (file_node.groups.empty())
 			continue;
+
+		std::sort(
+		    file_node.groups.begin(),
+		    file_node.groups.end(),
+		    [](const type_group_t & a, const type_group_t & b)
+		{
+			const char * na = type_to_display_name(a.type);
+			const char * nb = type_to_display_name(b.type);
+			const char * sa = na ? na : a.type.c_str();
+			const char * sb = nb ? nb : b.type.c_str();
+			return std::strcmp(sa, sb) < 0;
+		});
 
 		tree_.push_back(std::move(file_node));
 	}
