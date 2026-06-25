@@ -43,12 +43,6 @@ public:
 		}
 
 		QStyledItemDelegate::paint(painter, opt, index);
-
-		painter->save();
-		painter->setPen(QColor(232, 232, 232));
-		painter->drawLine(opt.rect.topRight(), opt.rect.bottomRight());
-		painter->drawLine(opt.rect.bottomLeft(), opt.rect.bottomRight());
-		painter->restore();
 	}
 };
 

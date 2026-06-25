@@ -825,7 +825,7 @@ static void dispatch_strategy(const std::string & rec_type, slot_result_t & resu
 	else if (rec_type == "FACT")
 		build_fact_slots(result);
 
-	else if (rec_type == "CONT" || rec_type == "CREA" || rec_type == "NPC_")
+	else if (rec_type == "CONT" || rec_type == "CREA" || rec_type == "NPC_" || rec_type == "BSGN")
 		build_container_slots(result);
 
 	else

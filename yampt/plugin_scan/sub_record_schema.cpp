@@ -212,8 +212,8 @@ static const field_def_t enam_fields[] = {
 static const field_def_t book_bkdt_fields[] = {
 	{ "Weight", field_type_t::f32, 0, 4, nullptr, nullptr },
 	{ "Value", field_type_t::u32, 4, 4, nullptr, nullptr },
-	{ "Scroll", field_type_t::u32, 8, 4, nullptr, nullptr },
-	{ "Skill", field_type_t::i32, 12, 4, nullptr, nullptr },
+	{ "Is Scroll", field_type_t::u32, 8, 4, nullptr, nullptr },
+	{ "Skill", field_type_t::i8, 12, 1, skill_names, nullptr },
 	{ "Enchant Pts", field_type_t::u32, 16, 4, nullptr, nullptr },
 };
 
@@ -251,8 +251,8 @@ static const field_def_t cont_cndt_fields[] = {
 };
 
 static const field_def_t fact_fadt_fields[] = {
-	{ "Attribute 1", field_type_t::u32, 0, 4, nullptr, nullptr },
-	{ "Attribute 2", field_type_t::u32, 4, 4, nullptr, nullptr },
+	{ "Attribute 1", field_type_t::enum_u32, 0, 4, attribute_names, nullptr },
+	{ "Attribute 2", field_type_t::enum_u32, 4, 4, attribute_names, nullptr },
 	{ "Rank 1 Attr1", field_type_t::u32, 8, 4, nullptr, nullptr },
 	{ "Rank 1 Attr2", field_type_t::u32, 12, 4, nullptr, nullptr },
 	{ "Rank 1 Primary", field_type_t::u32, 16, 4, nullptr, nullptr },
@@ -303,14 +303,14 @@ static const field_def_t fact_fadt_fields[] = {
 	{ "Rank 10 Primary", field_type_t::u32, 196, 4, nullptr, nullptr },
 	{ "Rank 10 Favoured", field_type_t::u32, 200, 4, nullptr, nullptr },
 	{ "Rank 10 Reputation", field_type_t::u32, 204, 4, nullptr, nullptr },
-	{ "Skill 1", field_type_t::i32, 208, 4, nullptr, nullptr },
-	{ "Skill 2", field_type_t::i32, 212, 4, nullptr, nullptr },
-	{ "Skill 3", field_type_t::i32, 216, 4, nullptr, nullptr },
-	{ "Skill 4", field_type_t::i32, 220, 4, nullptr, nullptr },
-	{ "Skill 5", field_type_t::i32, 224, 4, nullptr, nullptr },
-	{ "Skill 6", field_type_t::i32, 228, 4, nullptr, nullptr },
-	{ "Skill 7", field_type_t::i32, 232, 4, nullptr, nullptr },
-	{ "Hidden", field_type_t::u32, 236, 4, nullptr, nullptr },
+	{ "Skill 1", field_type_t::enum_u32, 208, 4, skill_names, nullptr },
+	{ "Skill 2", field_type_t::enum_u32, 212, 4, skill_names, nullptr },
+	{ "Skill 3", field_type_t::enum_u32, 216, 4, skill_names, nullptr },
+	{ "Skill 4", field_type_t::enum_u32, 220, 4, skill_names, nullptr },
+	{ "Skill 5", field_type_t::enum_u32, 224, 4, skill_names, nullptr },
+	{ "Skill 6", field_type_t::enum_u32, 228, 4, skill_names, nullptr },
+	{ "Skill 7", field_type_t::enum_u32, 232, 4, skill_names, nullptr },
+	{ "Is Hidden", field_type_t::u32, 236, 4, nullptr, nullptr },
 };
 
 static const field_def_t fact_rnam_fields[] = {
@@ -402,11 +402,13 @@ static const field_def_t gmst_fltv_fields[] = {
 	{ "Value", field_type_t::f32, 0, 4, nullptr, nullptr },
 };
 
+static const char * const info_gender[] = { "Male", "Female", nullptr };
+
 static const field_def_t info_data_fields[] = {
 	{ "Unknown1", field_type_t::u32, 0, 4, nullptr, nullptr },
 	{ "Disposition", field_type_t::u32, 4, 4, nullptr, nullptr },
 	{ "Rank", field_type_t::u8, 8, 1, nullptr, nullptr },
-	{ "Gender", field_type_t::u8, 9, 1, nullptr, nullptr },
+	{ "Gender", field_type_t::enum_u8, 9, 1, info_gender, nullptr },
 	{ "PC Rank", field_type_t::u8, 10, 1, nullptr, nullptr },
 	{ "Unknown2", field_type_t::u8, 11, 1, nullptr, nullptr },
 };
@@ -703,9 +705,9 @@ static const field_def_t indx_fields[] = {
 };
 
 static const char * const armo_part_names[] = {
-	"Helmet", "Cuirass", "Left Pauldron", "Right Pauldron", "Greaves",
-	"Boots", "Left Gauntlet", "Right Gauntlet", "Shield", "Left Bracer",
-	"Right Bracer", nullptr
+	"Head", "Hair", "Neck", "Chest", "Groin",
+	"Hand", "Wrist", "Forearm", "Upper Arm", "Foot",
+	"Ankle", "Knee", "Upper Leg", "Clavicle", "Tail", nullptr
 };
 
 static const field_def_t armo_indx_fields[] = {

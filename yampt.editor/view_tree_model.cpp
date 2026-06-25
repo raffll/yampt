@@ -1727,7 +1727,7 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 		endResetModel();
 		return;
 	}
-	else if (record_type_ == "CONT" || record_type_ == "CREA" || record_type_ == "NPC_")
+	else if (record_type_ == "CONT" || record_type_ == "CREA" || record_type_ == "NPC_" || record_type_ == "BSGN")
 	{
 		struct cont_entry_t
 		{
