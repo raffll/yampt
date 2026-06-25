@@ -57,14 +57,10 @@ static const char * const aidt_flags[] = { "Weapon",        "Armor",      "Cloth
 	                                       "Spellmaking",   "Enchanting" };
 
 static const field_def_t npc_aidt_fields[] = {
-	{ "Hello", field_type_t::u8, 0, 1, nullptr, nullptr },
-	{ "Unknown", field_type_t::u8, 1, 1, nullptr, nullptr },
+	{ "Hello", field_type_t::u16, 0, 2, nullptr, nullptr },
 	{ "Fight", field_type_t::u8, 2, 1, nullptr, nullptr },
 	{ "Flee", field_type_t::u8, 3, 1, nullptr, nullptr },
 	{ "Alarm", field_type_t::u8, 4, 1, nullptr, nullptr },
-	{ "Unknown2", field_type_t::u8, 5, 1, nullptr, nullptr },
-	{ "Unknown3", field_type_t::u8, 6, 1, nullptr, nullptr },
-	{ "Unknown4", field_type_t::u8, 7, 1, nullptr, nullptr },
 	{ "Services", field_type_t::flags_u32, 8, 4, nullptr, aidt_flags, std::size(aidt_flags) },
 };
 
@@ -125,10 +121,47 @@ static const field_def_t ench_endt_fields[] = {
 
 static const char * const spell_effect_range[] = { "Self", "Touch", "Target", nullptr };
 
+static const char * const effect_names[] = {
+	"Water Breathing", "Swift Swim", "Water Walking", "Shield", "Fire Shield",
+	"Lightning Shield", "Frost Shield", "Burden", "Feather", "Jump",
+	"Levitate", "Slow Fall", "Lock", "Open", "Fire Damage",
+	"Shock Damage", "Frost Damage", "Drain Attribute", "Drain Health", "Drain Magicka",
+	"Drain Fatigue", "Drain Skill", "Damage Attribute", "Damage Health", "Damage Magicka",
+	"Damage Fatigue", "Damage Skill", "Poison", "Weakness to Fire", "Weakness to Frost",
+	"Weakness to Shock", "Weakness to Magicka", "Weakness to Common Disease", "Weakness to Blight Disease",
+	"Weakness to Corprus Disease", "Weakness to Poison", "Weakness to Normal Weapons",
+	"Disintegrate Weapon", "Disintegrate Armor", "Invisibility", "Chameleon", "Light",
+	"Sanctuary", "Night Eye", "Charm", "Paralyze", "Silence",
+	"Blind", "Sound", "Calm Humanoid", "Calm Creature", "Frenzy Humanoid",
+	"Frenzy Creature", "Demoralize Humanoid", "Demoralize Creature", "Rally Humanoid",
+	"Rally Creature", "Dispel", "Soultrap", "Telekinesis", "Mark",
+	"Recall", "Divine Intervention", "Almsivi Intervention", "Detect Animal",
+	"Detect Enchantment", "Detect Key", "Spell Absorption", "Reflect",
+	"Cure Common Disease", "Cure Blight Disease", "Cure Corprus Disease", "Cure Poison",
+	"Cure Paralyzation", "Restore Attribute", "Restore Health", "Restore Magicka",
+	"Restore Fatigue", "Restore Skill", "Fortify Attribute", "Fortify Health",
+	"Fortify Magicka", "Fortify Fatigue", "Fortify Skill", "Fortify Maximum Magicka",
+	"Absorb Attribute", "Absorb Health", "Absorb Magicka", "Absorb Fatigue",
+	"Absorb Skill", "Resist Fire", "Resist Frost", "Resist Shock",
+	"Resist Magicka", "Resist Common Disease", "Resist Blight Disease", "Resist Corprus Disease",
+	"Resist Poison", "Resist Normal Weapons", "Resist Paralysis", "Remove Curse",
+	"Turn Undead", "Summon Scamp", "Summon Clannfear", "Summon Daedroth",
+	"Summon Dremora", "Summon Ancestral Ghost", "Summon Skeletal Minion", "Summon Bonewalker",
+	"Summon Greater Bonewalker", "Summon Bonelord", "Summon Winged Twilight", "Summon Hunger",
+	"Summon Golden Saint", "Summon Flame Atronach", "Summon Frost Atronach", "Summon Storm Atronach",
+	"Fortify Attack", "Command Creature", "Command Humanoid", "Bound Dagger",
+	"Bound Longsword", "Bound Mace", "Bound Battle Axe", "Bound Spear",
+	"Bound Longbow", "Extra Spell", "Bound Cuirass", "Bound Helm",
+	"Bound Boots", "Bound Shield", "Bound Gloves", "Corprus",
+	"Vampirism", "Summon Centurion Sphere", "Sun Damage", "Stunted Magicka",
+	"Summon Fabricant", "Summon Wolf", "Summon Bear", "Summon Bonewolf",
+	"Summon Creature 04", "Summon Creature 05", nullptr
+};
+
 static const field_def_t enam_fields[] = {
-	{ "Effect ID", field_type_t::u16, 0, 2, nullptr, nullptr },
-	{ "Skill ID", field_type_t::i8, 2, 1, nullptr, nullptr },
-	{ "Attribute ID", field_type_t::i8, 3, 1, nullptr, nullptr },
+	{ "Effect ID", field_type_t::enum_u16, 0, 2, effect_names, nullptr },
+	{ "Skill ID", field_type_t::i8, 2, 1, skill_names, nullptr },
+	{ "Attribute ID", field_type_t::i8, 3, 1, attribute_names, nullptr },
 	{ "Range", field_type_t::enum_u32, 4, 4, spell_effect_range, nullptr },
 	{ "Area", field_type_t::u32, 8, 4, nullptr, nullptr },
 	{ "Duration", field_type_t::u32, 12, 4, nullptr, nullptr },
@@ -475,7 +508,6 @@ static const field_def_t ai_w_fields[] = {
 	{ "Idle 6", field_type_t::u8, 10, 1, nullptr, nullptr },
 	{ "Idle 7", field_type_t::u8, 11, 1, nullptr, nullptr },
 	{ "Idle 8", field_type_t::u8, 12, 1, nullptr, nullptr },
-	{ "Unknown", field_type_t::u8, 13, 1, nullptr, nullptr },
 };
 
 static const std::vector<sub_record_schema_t> & build_schemas()

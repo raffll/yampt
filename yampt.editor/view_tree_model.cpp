@@ -258,36 +258,75 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 		all_sub_records.push_back(std::move(subs));
 	}
 
-	size_t max_count = 0;
+	struct sub_slot_t
+	{
+		std::string type;
+		int occurrence;
+	};
+
+	std::vector<sub_slot_t> unified_slots;
+
 	for (const auto & subs : all_sub_records)
 	{
-		if (subs.size() > max_count)
-			max_count = subs.size();
+		std::unordered_map<std::string, int> type_count;
+		for (const auto & sv : subs)
+		{
+			int occ = type_count[sv.type]++;
+			bool found = false;
+			for (const auto & slot : unified_slots)
+			{
+				if (slot.type == sv.type && slot.occurrence == occ)
+				{
+					found = true;
+					break;
+				}
+			}
+
+			if (!found)
+				unified_slots.push_back({ sv.type, occ });
+		}
 	}
 
-	for (size_t row_idx = 0; row_idx < max_count; ++row_idx)
+	std::vector<std::unordered_map<std::string, std::vector<size_t>>> col_type_indices(col_count);
+	for (size_t col = 0; col < col_count; ++col)
+	{
+		if (col >= all_sub_records.size())
+			continue;
+
+		for (size_t i = 0; i < all_sub_records[col].size(); ++i)
+			col_type_indices[col][all_sub_records[col][i].type].push_back(i);
+	}
+
+	for (const auto & slot : unified_slots)
 	{
 		sub_record_row_t row;
 		row.size = 0;
 		row.values.resize(col_count);
 
-		std::string sub_type;
+		std::string sub_type = slot.type;
 		const char * first_data = nullptr;
 		size_t first_size = 0;
 
 		for (size_t col = 0; col < col_count; ++col)
 		{
-			if (col >= all_sub_records.size() || row_idx >= all_sub_records[col].size())
+			if (col >= all_sub_records.size())
 			{
 				row.values[col] = "";
 				continue;
 			}
 
-			const auto & sv = all_sub_records[col][row_idx];
-
-			if (sub_type.empty())
+			auto & indices = col_type_indices[col][slot.type];
+			if (slot.occurrence >= static_cast<int>(indices.size()))
 			{
-				sub_type = sv.type;
+				row.values[col] = "";
+				continue;
+			}
+
+			size_t idx = indices[slot.occurrence];
+			const auto & sv = all_sub_records[col][idx];
+
+			if (!first_data)
+			{
 				first_data = sv.data;
 				first_size = sv.size;
 				row.size = sv.size;
@@ -336,13 +375,20 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 
 						for (size_t col = 0; col < col_count; ++col)
 						{
-							if (col >= all_sub_records.size() || row_idx >= all_sub_records[col].size())
+							if (col >= all_sub_records.size())
 							{
 								frow.values[col] = "";
 								continue;
 							}
 
-							const auto & sv = all_sub_records[col][row_idx];
+							auto & indices = col_type_indices[col][slot.type];
+							if (slot.occurrence >= static_cast<int>(indices.size()))
+							{
+								frow.values[col] = "";
+								continue;
+							}
+
+							const auto & sv = all_sub_records[col][indices[slot.occurrence]];
 							if (fdef.offset >= sv.size)
 							{
 								frow.values[col] = "";
@@ -381,13 +427,20 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 
 				for (size_t col = 0; col < col_count; ++col)
 				{
-					if (col >= all_sub_records.size() || row_idx >= all_sub_records[col].size())
+					if (col >= all_sub_records.size())
 					{
 						frow.values[col] = "";
 						continue;
 					}
 
-					const auto & sv = all_sub_records[col][row_idx];
+					auto & indices = col_type_indices[col][slot.type];
+					if (slot.occurrence >= static_cast<int>(indices.size()))
+					{
+						frow.values[col] = "";
+						continue;
+					}
+
+					const auto & sv = all_sub_records[col][indices[slot.occurrence]];
 					frow.values[col] = decode_field(fdef, sv.data, sv.size);
 				}
 
@@ -420,13 +473,20 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 
 				for (size_t col = 0; col < col_count; ++col)
 				{
-					if (col >= all_sub_records.size() || row_idx >= all_sub_records[col].size())
+					if (col >= all_sub_records.size())
 					{
 						frow.values[col] = "";
 						continue;
 					}
 
-					const auto & sv = all_sub_records[col][row_idx];
+					auto & indices = col_type_indices[col][slot.type];
+					if (slot.occurrence >= static_cast<int>(indices.size()))
+					{
+						frow.values[col] = "";
+						continue;
+					}
+
+					const auto & sv = all_sub_records[col][indices[slot.occurrence]];
 					size_t chunk = std::min(static_cast<size_t>(16), sv.size - offset);
 					if (offset >= sv.size)
 					{
@@ -865,7 +925,23 @@ std::string view_tree_model_t::decode_field(const field_def_t & field, const cha
 		int8_t val = 0;
 		std::memcpy(&val, ptr, 1);
 		std::snprintf(buf, sizeof(buf), "%d", val);
-		return buf;
+		std::string result = buf;
+
+		if (field.enum_names && val >= 0)
+		{
+			size_t count = 0;
+			while (field.enum_names[count])
+				++count;
+
+			if (static_cast<size_t>(val) < count)
+				result += " (" + std::string(field.enum_names[val]) + ")";
+		}
+		else if (field.enum_names && val == -1)
+		{
+			result += " (None)";
+		}
+
+		return result;
 	}
 	case field_type_t::i16:
 	{
