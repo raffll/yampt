@@ -2560,26 +2560,17 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 
 		if (role == Qt::BackgroundRole)
 		{
-			bool odd_group = (index.row() % 2 == 1);
-
 			if (row.row_conflict_all < conflict_all_t::no_conflict)
-			{
-				if (odd_group)
-					return QBrush(QColor(235, 235, 235));
-
 				return {};
-			}
-
-			double factor = odd_group ? 0.78 : 0.85;
 
 			if (index.column() > 0)
 			{
 				int col = index.column() - 1;
 				if (col >= 0 && col < static_cast<int>(row.values.size()) && row.values[col].empty())
-					return QBrush(lighter_hsl(conflict_all_color_raw(row.row_conflict_all), factor + 0.08));
+					return QBrush(lighter_hsl(conflict_all_color_raw(row.row_conflict_all), 0.93));
 			}
 
-			return QBrush(lighter_hsl(conflict_all_color_raw(row.row_conflict_all), factor));
+			return QBrush(conflict_all_background(row.row_conflict_all));
 		}
 
 		if (role == Qt::ForegroundRole)
@@ -2628,26 +2619,17 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 
 	if (role == Qt::BackgroundRole)
 	{
-		bool odd_group = (index.parent().row() % 2 == 1);
-
 		if (frow.row_conflict_all < conflict_all_t::no_conflict)
-		{
-			if (odd_group)
-				return QBrush(QColor(235, 235, 235));
-
 			return {};
-		}
-
-		double factor = odd_group ? 0.78 : 0.85;
 
 		if (index.column() > 0)
 		{
 			int col = index.column() - 1;
 			if (col >= 0 && col < static_cast<int>(frow.values.size()) && frow.values[col].empty())
-				return QBrush(lighter_hsl(conflict_all_color_raw(frow.row_conflict_all), factor + 0.08));
+				return QBrush(lighter_hsl(conflict_all_color_raw(frow.row_conflict_all), 0.93));
 		}
 
-		return QBrush(lighter_hsl(conflict_all_color_raw(frow.row_conflict_all), factor));
+		return QBrush(conflict_all_background(frow.row_conflict_all));
 	}
 
 	if (role == Qt::ForegroundRole)
