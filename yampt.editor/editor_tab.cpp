@@ -64,8 +64,7 @@ editor_tab_t::editor_tab_t(QWidget * parent)
 
 	btn_load_ = new QPushButton("Load", toolbar);
 	auto * load_menu = new QMenu(btn_load_);
-	load_menu->addAction("Browse files...", this, &editor_tab_t::on_load_plugins);
-	load_menu->addAction("Data Files folder...", this, &editor_tab_t::on_load_data_files);
+	load_menu->addAction("Open Folder...", this, &editor_tab_t::on_load_data_files);
 	load_menu->addAction("MO2 Profile...", this, &editor_tab_t::on_load_mo2_profile);
 	load_menu->addAction("OpenMW config...", this, &editor_tab_t::on_load_openmw_cfg);
 	btn_load_->setMenu(load_menu);
@@ -85,6 +84,7 @@ editor_tab_t::editor_tab_t(QWidget * parent)
 	edt_search_ = new QLineEdit(toolbar);
 	edt_search_->setPlaceholderText("Search by ID...");
 	edt_search_->setMaximumWidth(200);
+	edt_search_->setVisible(false);
 	lbl_count_ = new QLabel(toolbar);
 
 	toolbar_layout->addWidget(btn_load_);

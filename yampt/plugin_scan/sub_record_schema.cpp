@@ -511,6 +511,79 @@ static const field_def_t ai_w_fields[] = {
 	{ "Idle 8", field_type_t::u8, 12, 1, nullptr, nullptr },
 };
 
+static const field_def_t ai_t_fields[] = {
+	{ "X", field_type_t::f32, 0, 4, nullptr, nullptr },
+	{ "Y", field_type_t::f32, 4, 4, nullptr, nullptr },
+	{ "Z", field_type_t::f32, 8, 4, nullptr, nullptr },
+};
+
+static const field_def_t ai_f_fields[] = {
+	{ "X", field_type_t::f32, 0, 4, nullptr, nullptr },
+	{ "Y", field_type_t::f32, 4, 4, nullptr, nullptr },
+	{ "Z", field_type_t::f32, 8, 4, nullptr, nullptr },
+	{ "Duration", field_type_t::u16, 12, 2, nullptr, nullptr },
+	{ "ID", field_type_t::string_fixed, 14, 32, nullptr, nullptr },
+};
+
+static const field_def_t ai_a_fields[] = {
+	{ "ID", field_type_t::string_fixed, 0, 32, nullptr, nullptr },
+};
+
+static const char * const dial_types[] = { "Topic", "Voice", "Greeting", "Persuasion", "Journal", nullptr };
+
+static const field_def_t dial_data_fields[] = {
+	{ "Type", field_type_t::enum_u8, 0, 1, dial_types, nullptr },
+};
+
+static const field_def_t xscl_fields[] = {
+	{ "Scale", field_type_t::f32, 0, 4, nullptr, nullptr },
+};
+
+static const field_def_t frmr_fields[] = {
+	{ "Object Index", field_type_t::u32, 0, 4, nullptr, nullptr },
+};
+
+static const field_def_t whgt_fields[] = {
+	{ "Water Height", field_type_t::f32, 0, 4, nullptr, nullptr },
+};
+
+static const field_def_t nam0_fields[] = {
+	{ "Object Count", field_type_t::u32, 0, 4, nullptr, nullptr },
+};
+
+static const field_def_t intv_4_fields[] = {
+	{ "Value", field_type_t::u32, 0, 4, nullptr, nullptr },
+};
+
+static const field_def_t soun_data_fields[] = {
+	{ "Volume", field_type_t::u8, 0, 1, nullptr, nullptr },
+	{ "Min Range", field_type_t::u8, 1, 1, nullptr, nullptr },
+	{ "Max Range", field_type_t::u8, 2, 1, nullptr, nullptr },
+};
+
+static const field_def_t pgrd_data_fields[] = {
+	{ "Grid X", field_type_t::i32, 0, 4, nullptr, nullptr },
+	{ "Grid Y", field_type_t::i32, 4, 4, nullptr, nullptr },
+	{ "Granularity", field_type_t::u16, 8, 2, nullptr, nullptr },
+	{ "Points", field_type_t::u16, 10, 2, nullptr, nullptr },
+};
+
+static const field_def_t regn_snam_fields[] = {
+	{ "Sound", field_type_t::string_fixed, 0, 32, nullptr, nullptr },
+	{ "Chance", field_type_t::u8, 32, 1, nullptr, nullptr },
+};
+
+static const field_def_t regn_cnam_fields[] = {
+	{ "Red", field_type_t::u8, 0, 1, nullptr, nullptr },
+	{ "Green", field_type_t::u8, 1, 1, nullptr, nullptr },
+	{ "Blue", field_type_t::u8, 2, 1, nullptr, nullptr },
+	{ "Alpha", field_type_t::u8, 3, 1, nullptr, nullptr },
+};
+
+static const field_def_t indx_fields[] = {
+	{ "Index", field_type_t::u32, 0, 4, nullptr, nullptr },
+};
+
 static const std::vector<sub_record_schema_t> & build_schemas()
 {
 	static const std::vector<sub_record_schema_t> schemas = {
@@ -559,6 +632,21 @@ static const std::vector<sub_record_schema_t> & build_schemas()
 		{ "PROB", "PBDT", 16, repa_ridt_fields, ARRAY_COUNT(repa_ridt_fields) },
 		{ "BODY", "BYDT", 4, body_bydt_fields, ARRAY_COUNT(body_bydt_fields) },
 		{ "*", "AI_W", 14, ai_w_fields, ARRAY_COUNT(ai_w_fields) },
+		{ "*", "AI_T", 16, ai_t_fields, ARRAY_COUNT(ai_t_fields) },
+		{ "*", "AI_F", 48, ai_f_fields, ARRAY_COUNT(ai_f_fields) },
+		{ "*", "AI_E", 48, ai_f_fields, ARRAY_COUNT(ai_f_fields) },
+		{ "*", "AI_A", 33, ai_a_fields, ARRAY_COUNT(ai_a_fields) },
+		{ "DIAL", "DATA", 1, dial_data_fields, ARRAY_COUNT(dial_data_fields) },
+		{ "*", "XSCL", 4, xscl_fields, ARRAY_COUNT(xscl_fields) },
+		{ "*", "FRMR", 4, frmr_fields, ARRAY_COUNT(frmr_fields) },
+		{ "CELL", "WHGT", 4, whgt_fields, ARRAY_COUNT(whgt_fields) },
+		{ "CELL", "NAM0", 4, nam0_fields, ARRAY_COUNT(nam0_fields) },
+		{ "*", "INTV", 4, intv_4_fields, ARRAY_COUNT(intv_4_fields) },
+		{ "SOUN", "DATA", 3, soun_data_fields, ARRAY_COUNT(soun_data_fields) },
+		{ "PGRD", "DATA", 12, pgrd_data_fields, ARRAY_COUNT(pgrd_data_fields) },
+		{ "REGN", "SNAM", 33, regn_snam_fields, ARRAY_COUNT(regn_snam_fields) },
+		{ "REGN", "CNAM", 4, regn_cnam_fields, ARRAY_COUNT(regn_cnam_fields) },
+		{ "*", "INDX", 4, indx_fields, ARRAY_COUNT(indx_fields) },
 	};
 	return schemas;
 }

@@ -32,16 +32,11 @@ void editor_window_t::setup_menu_bar()
 {
 	auto * file_menu = menuBar()->addMenu("&File");
 
-	auto * load_action = new QAction("&Open Plugins...", this);
+	auto * load_action = new QAction("Open &Folder...", this);
 	load_action->setShortcut(QKeySequence("Ctrl+O"));
-	load_action->setToolTip("Load one or more plugin files");
+	load_action->setToolTip("Load all plugins from a folder");
 	file_menu->addAction(load_action);
-	connect(load_action, &QAction::triggered, editor_tab_, &editor_tab_t::on_load_plugins);
-
-	auto * load_data_action = new QAction("Open &Data Files...", this);
-	load_data_action->setToolTip("Load all plugins from a Data Files folder");
-	file_menu->addAction(load_data_action);
-	connect(load_data_action, &QAction::triggered, editor_tab_, &editor_tab_t::on_load_data_files);
+	connect(load_action, &QAction::triggered, editor_tab_, &editor_tab_t::on_load_data_files);
 
 	auto * load_mo2_action = new QAction("Open &MO2 Profile...", this);
 	load_mo2_action->setToolTip("Load plugins from a Mod Organizer 2 profile");
@@ -58,6 +53,7 @@ void editor_window_t::setup_menu_bar()
 	auto * save_action = new QAction("&Save Plugin", this);
 	save_action->setShortcut(QKeySequence("Ctrl+S"));
 	save_action->setToolTip("Save the active plugin to disk");
+	save_action->setVisible(false);
 	file_menu->addAction(save_action);
 	connect(save_action, &QAction::triggered, editor_tab_, &editor_tab_t::on_save_plugin);
 

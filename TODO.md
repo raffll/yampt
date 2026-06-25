@@ -41,3 +41,6 @@ Clarify in the GUI (tooltip, help text, or info panel) how the English dictionar
 
 ## Configurable source dictionary for partial mode
 Allow changing the Hunspell dictionary used in partial mode from English to another language (e.g. German, French). Currently hardcoded to `en_US.aff`/`en_US.dic`. Should be a dropdown or file selector in the make-base dialog.
+
+## Expand all remaining hex sub-records in yEditor
+Many sub-records still display as raw hex dumps (`<N bytes>` with `0000: XX XX XX...`). Add schemas for all common sub-records using OpenMW source as reference for field layouts. Priority records: DIAL DATA, DOOR DATA, LOCK DATA, AI_T, AI_F, AI_E, AI_A, BSGN, NAM0, WHGT, NAM5, XSCL, INTV, FLTV, INDX (skill/magic effect index).
