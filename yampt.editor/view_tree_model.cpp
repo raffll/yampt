@@ -1,90 +1,12 @@
 #include "view_tree_model.hpp"
+#include "view_tree_format.hpp"
+#include "../yampt/plugin_scan/conflict_compute.hpp"
 #include <QBrush>
 #include <QMimeData>
 #include <cstring>
 #include <cstdio>
 #include <algorithm>
 #include <map>
-
-static const std::map<std::string, const char *> & sub_record_descriptions()
-{
-	static const std::map<std::string, const char *> descs = {
-		{ "NAME", "ID" },
-		{ "FNAM", "Name" },
-		{ "MODL", "Model Filename" },
-		{ "SCRI", "Script" },
-		{ "ITEX", "Icon" },
-		{ "ENAM", "Enchantment Effect" },
-		{ "ANAM", "Faction/Owner" },
-		{ "BNAM", "Script Text" },
-		{ "CNAM", "Class" },
-		{ "DNAM", "Destination" },
-		{ "ONAM", "Actor" },
-		{ "RNAM", "Race" },
-		{ "INDX", "Index" },
-		{ "INTV", "Integer Value" },
-		{ "FLTV", "Float Value" },
-		{ "STRV", "String Value" },
-		{ "INAM", "Info ID" },
-		{ "PNAM", "Previous Info" },
-		{ "NNAM", "Next Info" },
-		{ "SNAM", "Sound" },
-		{ "DATA", "Data" },
-		{ "FLAG", "Flags" },
-		{ "NPDT", "NPC Data" },
-		{ "AIDT", "AI Data" },
-		{ "WPDT", "Weapon Data" },
-		{ "AODT", "Armor Data" },
-		{ "ALDT", "Potion Data" },
-		{ "ENDT", "Enchantment Data" },
-		{ "BKDT", "Book Data" },
-		{ "CNDT", "Container Data" },
-		{ "FADT", "Faction Data" },
-		{ "CLDT", "Class Data" },
-		{ "RADT", "Race Data" },
-		{ "SPDT", "Spell Data" },
-		{ "WEAT", "Weather" },
-		{ "WHGT", "Water Height" },
-		{ "AMBI", "Ambient Light" },
-		{ "RGNN", "Region Name" },
-		{ "DELE", "Deleted" },
-		{ "SCVR", "Script Variable" },
-		{ "SCHD", "Script Header" },
-		{ "SCTX", "Script Source" },
-		{ "SCDT", "Script Data" },
-		{ "HEDR", "Header" },
-		{ "MAST", "Master File" },
-		{ "DODT", "Door Destination" },
-		{ "FRMR", "Object Reference" },
-		{ "XSCL", "Scale" },
-		{ "NAM0", "Object Count" },
-		{ "NAM5", "Map Color" },
-		{ "NPCO", "Item" },
-		{ "NPCS", "Spell/Ability" },
-		{ "MEDT", "Effect Data" },
-		{ "SKDT", "Skill Data" },
-		{ "CTDT", "Clothing Data" },
-		{ "LHDT", "Light Data" },
-		{ "IRDT", "Ingredient Data" },
-		{ "MCDT", "Misc Item Data" },
-		{ "AADT", "Apparatus Data" },
-		{ "RIDT", "Repair Data" },
-		{ "LKDT", "Lock Data" },
-		{ "PBDT", "Probe Data" },
-		{ "KNAM", "Key" },
-		{ "TNAM", "Trap" },
-		{ "UNAM", "Blocked" },
-		{ "AI_W", "AI Wander" },
-		{ "AI_T", "AI Travel" },
-		{ "AI_F", "AI Follow" },
-		{ "AI_E", "AI Escort" },
-		{ "AI_A", "AI Activate" },
-		{ "GLOB", "Global" },
-		{ "DESC", "Description" },
-		{ "TEXT", "Text" },
-	};
-	return descs;
-}
 
 view_tree_model_t::view_tree_model_t(QObject * parent)
     : QAbstractItemModel(parent)
@@ -169,9 +91,9 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 		field_row_t sig_row;
 		sig_row.name = "Signature";
 		sig_row.values.resize(col_count, entry.rec_type);
-		sig_row.row_conflict_all = compute_row_conflict_all(sig_row.values);
+		sig_row.row_conflict_all = compute_conflict_all(sig_row.values);
 		sig_row.all_identical = true;
-		sig_row.cell_conflict_this = compute_row_conflict_this(sig_row.values);
+		sig_row.cell_conflict_this = compute_conflict_this(sig_row.values);
 		header_row.children.push_back(std::move(sig_row));
 
 		field_row_t flags_row;
@@ -212,8 +134,8 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 				break;
 			}
 		}
-		flags_row.row_conflict_all = compute_row_conflict_all(flags_row.values);
-		flags_row.cell_conflict_this = compute_row_conflict_this(flags_row.values);
+		flags_row.row_conflict_all = compute_conflict_all(flags_row.values);
+		flags_row.cell_conflict_this = compute_conflict_this(flags_row.values);
 		header_row.children.push_back(std::move(flags_row));
 
 		rows_.push_back(std::move(header_row));
@@ -455,8 +377,8 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 				}
 			}
 			row.all_identical = all_same;
-			row.row_conflict_all = compute_row_conflict_all(row.values);
-			row.cell_conflict_this = compute_row_conflict_this(row.values);
+			row.row_conflict_all = compute_conflict_all(row.values);
+			row.cell_conflict_this = compute_conflict_this(row.values);
 
 			const sub_record_schema_t * schema = find_schema(record_type_, sub_type, first_size);
 			if (schema && first_data)
@@ -505,8 +427,8 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 						}
 					}
 					frow.all_identical = fields_same;
-					frow.row_conflict_all = compute_row_conflict_all(frow.values);
-					frow.cell_conflict_this = compute_row_conflict_this(frow.values);
+					frow.row_conflict_all = compute_conflict_all(frow.values);
+					frow.cell_conflict_this = compute_conflict_this(frow.values);
 
 					row.children.push_back(std::move(frow));
 				}
@@ -615,8 +537,8 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 			}
 		}
 		row.all_identical = all_same;
-		row.row_conflict_all = compute_row_conflict_all(row.values);
-		row.cell_conflict_this = compute_row_conflict_this(row.values);
+		row.row_conflict_all = compute_conflict_all(row.values);
+		row.cell_conflict_this = compute_conflict_this(row.values);
 
 		const sub_record_schema_t * schema = find_schema(record_type_, sub_type, first_size);
 		if (schema && first_data)
@@ -679,8 +601,8 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 							}
 						}
 						frow.all_identical = fields_same;
-						frow.row_conflict_all = compute_row_conflict_all(frow.values);
-						frow.cell_conflict_this = compute_row_conflict_this(frow.values);
+						frow.row_conflict_all = compute_conflict_all(frow.values);
+						frow.cell_conflict_this = compute_conflict_this(frow.values);
 
 						row.children.push_back(std::move(frow));
 					}
@@ -721,8 +643,8 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 					}
 				}
 				frow.all_identical = fields_same;
-				frow.row_conflict_all = compute_row_conflict_all(frow.values);
-				frow.cell_conflict_this = compute_row_conflict_this(frow.values);
+				frow.row_conflict_all = compute_conflict_all(frow.values);
+				frow.cell_conflict_this = compute_conflict_this(frow.values);
 
 				row.children.push_back(std::move(frow));
 			}
@@ -784,8 +706,8 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 					}
 				}
 				frow.all_identical = fields_same;
-				frow.row_conflict_all = compute_row_conflict_all(frow.values);
-				frow.cell_conflict_this = compute_row_conflict_this(frow.values);
+				frow.row_conflict_all = compute_conflict_all(frow.values);
+				frow.cell_conflict_this = compute_conflict_this(frow.values);
 
 				row.children.push_back(std::move(frow));
 			}
@@ -1132,464 +1054,4 @@ bool view_tree_model_t::canDropMimeData(const QMimeData * data, Qt::DropAction, 
 		return false;
 
 	return data && data->hasFormat("application/x-yampt-record");
-}
-
-std::string view_tree_model_t::format_value(const char * data, size_t size) const
-{
-	bool printable = true;
-	for (size_t i = 0; i < size; ++i)
-	{
-		unsigned char c = static_cast<unsigned char>(data[i]);
-		if (c == 0)
-			continue;
-
-		if (c < 32 || c > 126)
-		{
-			printable = false;
-			break;
-		}
-	}
-
-	if (printable)
-	{
-		size_t len = 0;
-		for (size_t i = 0; i < size; ++i)
-		{
-			if (data[i] == '\0')
-				break;
-
-			++len;
-		}
-		return std::string(data, len);
-	}
-
-	char buf[64];
-	std::snprintf(buf, sizeof(buf), "<%zu bytes>", size);
-	return std::string(buf);
-}
-
-std::string view_tree_model_t::decode_field(const field_def_t & field, const char * data, size_t data_size) const
-{
-	if (field.offset + field.size > data_size && field.type != field_type_t::string_var)
-		return "";
-
-	const char * ptr = data + field.offset;
-	char buf[128];
-
-	switch (field.type)
-	{
-	case field_type_t::u8:
-	{
-		uint8_t val = 0;
-		std::memcpy(&val, ptr, 1);
-		std::snprintf(buf, sizeof(buf), "%u", val);
-		return buf;
-	}
-	case field_type_t::u16:
-	{
-		uint16_t val = 0;
-		std::memcpy(&val, ptr, 2);
-		std::snprintf(buf, sizeof(buf), "%u", val);
-		return buf;
-	}
-	case field_type_t::u32:
-	{
-		uint32_t val = 0;
-		std::memcpy(&val, ptr, 4);
-		std::snprintf(buf, sizeof(buf), "%u", val);
-		return buf;
-	}
-	case field_type_t::i8:
-	{
-		int8_t val = 0;
-		std::memcpy(&val, ptr, 1);
-		std::snprintf(buf, sizeof(buf), "%d", val);
-		std::string result = buf;
-
-		if (field.enum_names && val >= 0)
-		{
-			size_t count = 0;
-			while (field.enum_names[count])
-				++count;
-
-			if (static_cast<size_t>(val) < count)
-				result += " (" + std::string(field.enum_names[val]) + ")";
-		}
-		else if (field.enum_names && val == -1)
-		{
-			result += " (None)";
-		}
-
-		return result;
-	}
-	case field_type_t::i16:
-	{
-		int16_t val = 0;
-		std::memcpy(&val, ptr, 2);
-		std::snprintf(buf, sizeof(buf), "%d", val);
-		return buf;
-	}
-	case field_type_t::i32:
-	{
-		int32_t val = 0;
-		std::memcpy(&val, ptr, 4);
-		std::snprintf(buf, sizeof(buf), "%d", val);
-		return buf;
-	}
-	case field_type_t::f32:
-	{
-		float val = 0;
-		std::memcpy(&val, ptr, 4);
-		std::snprintf(buf, sizeof(buf), "%.4f", val);
-		return buf;
-	}
-	case field_type_t::string_fixed:
-	{
-		size_t len = 0;
-		for (size_t i = 0; i < field.size && field.offset + i < data_size; ++i)
-		{
-			if (ptr[i] == '\0')
-				break;
-
-			++len;
-		}
-		return std::string(ptr, len);
-	}
-	case field_type_t::string_var:
-	{
-		if (field.offset >= data_size)
-			return "";
-
-		size_t remaining = data_size - field.offset;
-		size_t len = 0;
-		for (size_t i = 0; i < remaining; ++i)
-		{
-			if (ptr[i] == '\0')
-				break;
-
-			++len;
-		}
-		return std::string(ptr, len);
-	}
-	case field_type_t::flags_u8:
-	{
-		uint8_t val = 0;
-		std::memcpy(&val, ptr, 1);
-		std::snprintf(buf, sizeof(buf), "0x%X", val);
-		std::string result = buf;
-
-		if (field.flag_names && field.flag_count > 0)
-		{
-			std::string names;
-			for (int bit = 0; bit < 8 && bit < field.flag_count; ++bit)
-			{
-				if (!(val & (1u << bit)))
-					continue;
-
-				if (field.flag_names[bit][0] == '_')
-					continue;
-
-				if (!names.empty())
-					names += " | ";
-
-				names += field.flag_names[bit];
-			}
-
-			if (!names.empty())
-				result += " (" + names + ")";
-		}
-
-		return result;
-	}
-	case field_type_t::flags_u16:
-	{
-		uint16_t val = 0;
-		std::memcpy(&val, ptr, 2);
-		std::snprintf(buf, sizeof(buf), "0x%X", val);
-		std::string result = buf;
-
-		if (field.flag_names && field.flag_count > 0)
-		{
-			std::string names;
-			for (int bit = 0; bit < 16 && bit < field.flag_count; ++bit)
-			{
-				if (!(val & (1u << bit)))
-					continue;
-
-				if (field.flag_names[bit][0] == '_')
-					continue;
-
-				if (!names.empty())
-					names += " | ";
-
-				names += field.flag_names[bit];
-			}
-
-			if (!names.empty())
-				result += " (" + names + ")";
-		}
-
-		return result;
-	}
-	case field_type_t::flags_u32:
-	{
-		uint32_t val = 0;
-		std::memcpy(&val, ptr, 4);
-		std::snprintf(buf, sizeof(buf), "0x%X", val);
-		std::string result = buf;
-
-		if (field.flag_names && field.flag_count > 0)
-		{
-			std::string names;
-			for (int bit = 0; bit < 32 && bit < field.flag_count; ++bit)
-			{
-				if (!(val & (1u << bit)))
-					continue;
-
-				if (field.flag_names[bit][0] == '_')
-					continue;
-
-				if (!names.empty())
-					names += " | ";
-
-				names += field.flag_names[bit];
-			}
-
-			if (!names.empty())
-				result += " (" + names + ")";
-		}
-
-		return result;
-	}
-	case field_type_t::enum_u8:
-	{
-		uint8_t val = 0;
-		std::memcpy(&val, ptr, 1);
-		std::snprintf(buf, sizeof(buf), "%u", val);
-		std::string result = buf;
-
-		if (field.enum_names)
-		{
-			size_t count = 0;
-			while (field.enum_names[count])
-				++count;
-
-			if (val < count)
-				result += " (" + std::string(field.enum_names[val]) + ")";
-		}
-
-		return result;
-	}
-	case field_type_t::enum_u16:
-	{
-		uint16_t val = 0;
-		std::memcpy(&val, ptr, 2);
-		std::snprintf(buf, sizeof(buf), "%u", val);
-		std::string result = buf;
-
-		if (field.enum_names)
-		{
-			size_t count = 0;
-			while (field.enum_names[count])
-				++count;
-
-			if (val < count)
-				result += " (" + std::string(field.enum_names[val]) + ")";
-		}
-
-		return result;
-	}
-	case field_type_t::enum_u32:
-	{
-		uint32_t val = 0;
-		std::memcpy(&val, ptr, 4);
-		std::snprintf(buf, sizeof(buf), "%u", val);
-		std::string result = buf;
-
-		if (field.enum_names)
-		{
-			size_t count = 0;
-			while (field.enum_names[count])
-				++count;
-
-			if (val < count)
-				result += " (" + std::string(field.enum_names[val]) + ")";
-		}
-
-		return result;
-	}
-	case field_type_t::raw:
-	{
-		std::string hex;
-		size_t limit = std::min(field.size, static_cast<size_t>(64));
-		for (size_t i = 0; i < limit && field.offset + i < data_size; ++i)
-		{
-			char hbuf[4];
-			std::snprintf(hbuf, sizeof(hbuf), "%02X", static_cast<unsigned char>(ptr[i]));
-			if (!hex.empty())
-				hex += ' ';
-
-			hex += hbuf;
-		}
-
-		if (field.size > 64)
-			hex += " ...";
-
-		return hex;
-	}
-	}
-
-	return "";
-}
-
-std::string view_tree_model_t::make_sub_label(
-    const std::string & sub_type,
-    const std::string & record_type,
-    size_t data_size) const
-{
-	const auto & descs = sub_record_descriptions();
-	auto it = descs.find(sub_type);
-
-	const sub_record_schema_t * schema = find_schema(record_type, sub_type, data_size);
-
-	if (schema)
-	{
-		std::string parent_name;
-		const char * dn = nullptr;
-
-		static const std::map<std::string, const char *> record_names = {
-			{ "ACTI", "Activator" },
-			{ "ALCH", "Potion" },
-			{ "APPA", "Apparatus" },
-			{ "ARMO", "Armor" },
-			{ "BOOK", "Book" },
-			{ "CELL", "Cell" },
-			{ "CLAS", "Class" },
-			{ "CLOT", "Clothing" },
-			{ "CONT", "Container" },
-			{ "CREA", "Creature" },
-			{ "ENCH", "Enchantment" },
-			{ "FACT", "Faction" },
-			{ "GLOB", "Global" },
-			{ "INFO", "Info" },
-			{ "INGR", "Ingredient" },
-			{ "LEVI", "Leveled Item" },
-			{ "LEVC", "Leveled Creature" },
-			{ "LIGH", "Light" },
-			{ "LOCK", "Lockpick" },
-			{ "MGEF", "Magic Effect" },
-			{ "MISC", "Misc Item" },
-			{ "NPC_", "NPC" },
-			{ "PROB", "Probe" },
-			{ "RACE", "Race" },
-			{ "REGN", "Region" },
-			{ "REPA", "Repair Item" },
-			{ "SCPT", "Script" },
-			{ "SKIL", "Skill" },
-			{ "SPEL", "Spell" },
-			{ "WEAP", "Weapon" },
-		};
-
-		auto rit = record_names.find(record_type);
-		if (rit != record_names.end())
-			parent_name = rit->second;
-		else
-			parent_name = record_type;
-
-		if (it != descs.end())
-			return sub_type + " - " + parent_name + " " + it->second;
-
-		return sub_type + " - " + parent_name + " Data";
-	}
-
-	if (it != descs.end())
-		return sub_type + " - " + it->second;
-
-	return sub_type;
-}
-
-conflict_all_t view_tree_model_t::compute_row_conflict_all(const std::vector<std::string> & values) const
-{
-	if (values.size() <= 1)
-		return conflict_all_t::only_one;
-
-	bool all_same = true;
-	for (size_t i = 1; i < values.size(); ++i)
-	{
-		if (values[i] != values[0])
-		{
-			all_same = false;
-			break;
-		}
-	}
-
-	if (all_same)
-		return conflict_all_t::no_conflict;
-
-	const auto & winner = values.back();
-	for (size_t i = 0; i < values.size() - 1; ++i)
-	{
-		if (values[i] != values[0] && values[i] != winner)
-			return conflict_all_t::conflict;
-	}
-
-	return conflict_all_t::override_benign;
-}
-
-std::vector<conflict_this_t> view_tree_model_t::compute_row_conflict_this(const std::vector<std::string> & values) const
-{
-	std::vector<conflict_this_t> result(values.size(), conflict_this_t::unknown);
-
-	if (values.empty())
-		return result;
-
-	if (values.size() == 1)
-	{
-		result[0] = values[0].empty() ? conflict_this_t::unknown : conflict_this_t::master;
-		return result;
-	}
-
-	result[0] = values[0].empty() ? conflict_this_t::unknown : conflict_this_t::master;
-
-	const auto & winner = values.back();
-	bool is_override = true;
-
-	for (size_t i = 0; i < values.size() - 1; ++i)
-	{
-		if (values[i] != values[0] && values[i] != winner)
-		{
-			is_override = false;
-			break;
-		}
-	}
-
-	for (size_t i = 1; i < values.size(); ++i)
-	{
-		if (values[i].empty() && values[0].empty())
-		{
-			result[i] = conflict_this_t::identical_to_master;
-			continue;
-		}
-
-		if (values[i].empty())
-		{
-			result[i] = conflict_this_t::unknown;
-			continue;
-		}
-
-		if (values[i] == values[0])
-		{
-			result[i] = conflict_this_t::identical_to_master;
-			continue;
-		}
-
-		if (is_override)
-			result[i] = conflict_this_t::override_wins;
-		else if (i == values.size() - 1)
-			result[i] = conflict_this_t::conflict_wins;
-		else
-			result[i] = conflict_this_t::conflict_loses;
-	}
-
-	return result;
 }

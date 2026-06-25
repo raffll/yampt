@@ -99,6 +99,9 @@
     <ClCompile Include="..\yampt\plugin_scan\plugin_scan.cpp">
       <Filter>yampt</Filter>
     </ClCompile>
+    <ClCompile Include="..\yampt\plugin_scan\conflict_compute.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
     <ClCompile Include="..\yampt\dict_merger.cpp" />
     <ClCompile Include="log_tab.cpp" />
     <ClCompile Include="dict_selection_dialog.cpp" />
@@ -173,6 +176,9 @@
     <ClInclude Include="..\yampt\json_reader.hpp">
       <Filter>yampt</Filter>
     </ClInclude>
+    <ClInclude Include="..\yampt\plugin_scan\conflict_enums.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
     <ClInclude Include="..\yampt\plugin_scan\conflict_types.hpp">
       <Filter>yampt</Filter>
     </ClInclude>
@@ -186,6 +192,9 @@
       <Filter>yampt</Filter>
     </ClInclude>
     <ClInclude Include="..\yampt\plugin_scan\plugin_scan.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\yampt\plugin_scan\conflict_compute.hpp">
       <Filter>yampt</Filter>
     </ClInclude>
     <ClInclude Include="grammar_checker.hpp" />

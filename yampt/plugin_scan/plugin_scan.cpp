@@ -1,4 +1,5 @@
 #include "plugin_scan.hpp"
+#include "conflict_compute.hpp"
 #include "sub_record_iter.hpp"
 #include <algorithm>
 #include <filesystem>
@@ -122,160 +123,294 @@ void plugin_scan_t::rebuild_conflicts()
 
 void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 {
-	auto & master_ver = entry.versions[0];
+	const size_t ver_count = entry.versions.size();
 
-	std::string master_content;
-	if (master_ver.plugin_idx == merge_plugin_idx_)
-		master_content = merge_records_[master_ver.record_index].content;
-	else
-	{
-		plugins_[master_ver.plugin_idx]->esm.select_record(master_ver.record_index);
-		master_content = plugins_[master_ver.plugin_idx]->esm.get_record().content;
-	}
+	std::vector<std::string> contents(ver_count);
+	std::vector<bool> is_deleted(ver_count, false);
 
-	bool any_differs = false;
-	int last_differ_idx = -1;
-	int differ_count = 0;
-
-	for (size_t i = 1; i < entry.versions.size(); ++i)
+	for (size_t i = 0; i < ver_count; ++i)
 	{
 		auto & ver = entry.versions[i];
 
 		if (ver.plugin_idx == merge_plugin_idx_)
 		{
-			const auto & ver_content = merge_records_[ver.record_index].content;
-			if (content_equal(master_content, ver_content))
-			{
-				ver.status = conflict_this_t::identical_to_master;
-			}
-			else
-			{
-				any_differs = true;
-				last_differ_idx = static_cast<int>(i);
-				++differ_count;
-			}
-
-			continue;
+			contents[i] = merge_records_[ver.record_index].content;
 		}
-
-		const auto & plugin_entries = plugins_[ver.plugin_idx]->index.entries();
-		if (ver.record_index < plugin_entries.size() && plugin_entries[ver.record_index].has_dele)
-		{
-			ver.status = conflict_this_t::deleted;
-			any_differs = true;
-			last_differ_idx = static_cast<int>(i);
-			++differ_count;
-			continue;
-		}
-
-		plugins_[ver.plugin_idx]->esm.select_record(ver.record_index);
-		const std::string ver_content = plugins_[ver.plugin_idx]->esm.get_record().content;
-
-		if (content_equal(master_content, ver_content))
-		{
-			ver.status = conflict_this_t::identical_to_master;
-		}
-		else
-		{
-			any_differs = true;
-			last_differ_idx = static_cast<int>(i);
-			++differ_count;
-		}
-	}
-
-	if (!any_differs)
-	{
-		entry.conflict_all = conflict_all_t::no_conflict;
-		return;
-	}
-
-	if (differ_count == 1)
-	{
-		entry.conflict_all = conflict_all_t::override_benign;
-		auto & ver = entry.versions[last_differ_idx];
-		if (ver.status != conflict_this_t::deleted)
-			ver.status = conflict_this_t::override_wins;
-
-		return;
-	}
-
-	std::string winner_content;
-	if (entry.versions[last_differ_idx].plugin_idx == merge_plugin_idx_)
-		winner_content = merge_records_[entry.versions[last_differ_idx].record_index].content;
-	else
-	{
-		plugins_[entry.versions[last_differ_idx].plugin_idx]->esm.select_record(
-		    entry.versions[last_differ_idx].record_index);
-		winner_content = plugins_[entry.versions[last_differ_idx].plugin_idx]->esm.get_record().content;
-	}
-
-	bool all_overrides_agree = true;
-	for (size_t i = 1; i < entry.versions.size(); ++i)
-	{
-		auto & ver = entry.versions[i];
-		if (ver.status == conflict_this_t::identical_to_master || ver.status == conflict_this_t::deleted)
-			continue;
-
-		std::string ver_content;
-		if (ver.plugin_idx == merge_plugin_idx_)
-			ver_content = merge_records_[ver.record_index].content;
 		else
 		{
 			plugins_[ver.plugin_idx]->esm.select_record(ver.record_index);
-			ver_content = plugins_[ver.plugin_idx]->esm.get_record().content;
+			contents[i] = plugins_[ver.plugin_idx]->esm.get_record().content;
 		}
 
-		if (!content_equal(winner_content, ver_content))
+		if (ver.plugin_idx != merge_plugin_idx_)
 		{
-			all_overrides_agree = false;
-			break;
+			const auto & plugin_entries = plugins_[ver.plugin_idx]->index.entries();
+			if (ver.record_index < plugin_entries.size() && plugin_entries[ver.record_index].has_dele)
+				is_deleted[i] = true;
 		}
 	}
 
-	if (all_overrides_agree)
-	{
-		entry.conflict_all = conflict_all_t::override_benign;
-		for (size_t i = 1; i < entry.versions.size(); ++i)
-		{
-			auto & ver = entry.versions[i];
-			if (ver.status == conflict_this_t::identical_to_master || ver.status == conflict_this_t::deleted)
-				continue;
+	using slot_key_t = std::pair<std::string, int>;
+	std::vector<slot_key_t> unified_slots;
 
-			ver.status = conflict_this_t::override_wins;
+	std::vector<std::vector<sub_record_view_t>> parsed(ver_count);
+	for (size_t i = 0; i < ver_count; ++i)
+	{
+		if (contents[i].size() < 16)
+			continue;
+
+		sub_record_iter_t iter(contents[i]);
+		sub_record_view_t sv;
+		std::map<std::string, int> occurrence_count;
+
+		while (iter.next(sv))
+		{
+			int occ = occurrence_count[sv.type]++;
+			sv.offset = static_cast<size_t>(occ);
+			parsed[i].push_back(sv);
+		}
+	}
+
+	conflict_all_t worst_all = conflict_all_t::only_one;
+	std::vector<std::vector<conflict_this_t>> per_slot_this;
+
+	if (entry.rec_type == "LEVI" || entry.rec_type == "LEVC")
+	{
+		struct lev_entry_t
+		{
+			std::string item_id;
+			size_t intv_idx;
+			size_t inam_idx;
+		};
+
+		std::vector<std::vector<lev_entry_t>> ver_entries(ver_count);
+		std::vector<std::string> all_item_ids;
+
+		for (size_t i = 0; i < ver_count; ++i)
+		{
+			for (size_t j = 0; j + 1 < parsed[i].size(); ++j)
+			{
+				if (parsed[i][j].type != "INTV" || parsed[i][j].size != 2)
+					continue;
+
+				if (parsed[i][j + 1].type != "INAM")
+					continue;
+
+				std::string item_id(parsed[i][j + 1].data, parsed[i][j + 1].size);
+				if (!item_id.empty() && item_id.back() == '\0')
+					item_id.pop_back();
+
+				ver_entries[i].push_back({ item_id, j, j + 1 });
+
+				bool found = false;
+				for (const auto & id : all_item_ids)
+				{
+					if (id == item_id)
+					{
+						found = true;
+						break;
+					}
+				}
+
+				if (!found)
+					all_item_ids.push_back(item_id);
+			}
 		}
 
+		for (size_t i = 0; i < ver_count; ++i)
+		{
+			std::map<std::string, int> occ_count;
+			for (const auto & sv : parsed[i])
+			{
+				if (sv.type == "INTV" && sv.size == 2)
+					continue;
+
+				if (sv.type == "INAM")
+					continue;
+
+				int occ = occ_count[sv.type]++;
+				slot_key_t key = { sv.type, occ };
+				bool found = false;
+				for (const auto & slot : unified_slots)
+				{
+					if (slot == key)
+					{
+						found = true;
+						break;
+					}
+				}
+
+				if (!found)
+					unified_slots.push_back(key);
+			}
+		}
+
+		int intv_occ_base = 0;
+		int inam_occ_base = 0;
+		for (const auto & slot : unified_slots)
+		{
+			if (slot.first == "INTV")
+				intv_occ_base = std::max(intv_occ_base, slot.second + 1);
+
+			if (slot.first == "INAM")
+				inam_occ_base = std::max(inam_occ_base, slot.second + 1);
+		}
+
+		for (size_t idx = 0; idx < all_item_ids.size(); ++idx)
+		{
+			unified_slots.push_back({ "INTV", intv_occ_base + static_cast<int>(idx) });
+			unified_slots.push_back({ "INAM", inam_occ_base + static_cast<int>(idx) });
+		}
+
+		for (const auto & slot : unified_slots)
+		{
+			std::vector<std::string> slot_values(ver_count);
+			bool is_item_intv = (slot.first == "INTV" && slot.second >= intv_occ_base);
+			bool is_item_inam = (slot.first == "INAM" && slot.second >= inam_occ_base);
+
+			for (size_t vi = 0; vi < ver_count; ++vi)
+			{
+				if (is_item_intv)
+				{
+					size_t item_idx = static_cast<size_t>(slot.second - intv_occ_base);
+					const auto & target_id = all_item_ids[item_idx];
+					for (const auto & e : ver_entries[vi])
+					{
+						if (e.item_id != target_id)
+							continue;
+
+						const auto & sv = parsed[vi][e.intv_idx];
+						slot_values[vi] = std::string(sv.data, sv.size);
+						break;
+					}
+				}
+				else if (is_item_inam)
+				{
+					size_t item_idx = static_cast<size_t>(slot.second - inam_occ_base);
+					const auto & target_id = all_item_ids[item_idx];
+					for (const auto & e : ver_entries[vi])
+					{
+						if (e.item_id != target_id)
+							continue;
+
+						const auto & sv = parsed[vi][e.inam_idx];
+						slot_values[vi] = std::string(sv.data, sv.size);
+						break;
+					}
+				}
+				else
+				{
+					int target_occ = slot.second;
+					int current_occ = 0;
+					for (const auto & sv : parsed[vi])
+					{
+						if (sv.type == "INTV" && sv.size == 2)
+							continue;
+
+						if (sv.type == "INAM")
+							continue;
+
+						if (sv.type != slot.first)
+							continue;
+
+						if (current_occ == target_occ)
+						{
+							slot_values[vi] = std::string(sv.data, sv.size);
+							break;
+						}
+
+						++current_occ;
+					}
+				}
+
+				if (is_deleted[vi])
+					slot_values[vi] = "\x01\x44\x45\x4C\x45";
+			}
+
+			const auto slot_level = compute_conflict_all(slot_values);
+			if (slot_level > worst_all)
+				worst_all = slot_level;
+
+			per_slot_this.push_back(compute_conflict_this(slot_values));
+		}
+	}
+	else
+	{
+		std::set<slot_key_t> seen;
+		for (size_t i = 0; i < ver_count; ++i)
+		{
+			std::map<std::string, int> occ_count;
+			for (const auto & sv : parsed[i])
+			{
+				int occ = occ_count[sv.type]++;
+				slot_key_t key = { sv.type, occ };
+				if (seen.insert(key).second)
+					unified_slots.push_back(key);
+			}
+		}
+
+		for (const auto & slot : unified_slots)
+		{
+			std::vector<std::string> slot_values(ver_count);
+
+			for (size_t vi = 0; vi < ver_count; ++vi)
+			{
+				int target_occ = slot.second;
+				int current_occ = 0;
+
+				for (const auto & sv : parsed[vi])
+				{
+					if (sv.type != slot.first)
+						continue;
+
+					if (current_occ == target_occ)
+					{
+						slot_values[vi] = std::string(sv.data, sv.size);
+						break;
+					}
+
+					++current_occ;
+				}
+
+				if (is_deleted[vi])
+					slot_values[vi] = "\x01\x44\x45\x4C\x45";
+			}
+
+			const auto slot_level = compute_conflict_all(slot_values);
+			if (slot_level > worst_all)
+				worst_all = slot_level;
+
+			per_slot_this.push_back(compute_conflict_this(slot_values));
+		}
+	}
+
+	entry.conflict_all = worst_all;
+
+	if (worst_all <= conflict_all_t::only_one)
 		return;
-	}
 
-	entry.conflict_all = conflict_all_t::conflict;
-	for (size_t i = 1; i < entry.versions.size(); ++i)
+	std::vector<conflict_this_t> worst_this(ver_count, conflict_this_t::unknown);
+	worst_this[0] = conflict_this_t::master;
+
+	for (const auto & slot_ct : per_slot_this)
 	{
-		auto & ver = entry.versions[i];
-		if (ver.status == conflict_this_t::identical_to_master)
-			continue;
-
-		if (ver.status == conflict_this_t::deleted)
-			continue;
-
-		if (static_cast<int>(i) == last_differ_idx)
-			ver.status = conflict_this_t::conflict_wins;
-		else
-			ver.status = conflict_this_t::conflict_loses;
+		for (size_t i = 1; i < ver_count; ++i)
+		{
+			if (slot_ct[i] > worst_this[i])
+				worst_this[i] = slot_ct[i];
+		}
 	}
-}
 
-bool plugin_scan_t::content_equal(const std::string & a, const std::string & b) const
-{
-	if (a.size() != b.size())
-		return false;
+	for (size_t i = 1; i < ver_count; ++i)
+	{
+		if (is_deleted[i])
+		{
+			entry.versions[i].status = conflict_this_t::deleted;
+			continue;
+		}
 
-	if (a.size() <= 16)
-		return a == b;
-
-	if (a.compare(16, a.size() - 16, b, 16, b.size() - 16) != 0)
-		return false;
-
-	return true;
+		entry.versions[i].status = worst_this[i];
+	}
 }
 
 size_t plugin_scan_t::plugin_count() const

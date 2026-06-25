@@ -654,9 +654,23 @@ void editor_tab_t::on_filter_changed()
 	bool has_any = state.filter_conflict_all || state.filter_by_type || state.filter_by_id || state.filter_by_name;
 
 	if (has_any)
+	{
+		if (has_filter_active_ && state == last_quick_filter_)
+			return;
+
+		has_filter_active_ = true;
+		last_quick_filter_ = state;
 		nav_model_->set_filter(state);
+	}
 	else
+	{
+		if (!has_filter_active_)
+			return;
+
+		has_filter_active_ = false;
+		last_quick_filter_ = {};
 		nav_model_->clear_filter();
+	}
 
 	update_status();
 }
@@ -705,6 +719,8 @@ void editor_tab_t::on_advanced_filter()
 
 	last_filter_state_ = nav_state;
 	filter_active_ = true;
+	has_filter_active_ = true;
+	last_quick_filter_ = nav_state;
 	btn_filter_->setStyleSheet("background-color: #FFD700;");
 
 	nav_model_->set_filter(nav_state);

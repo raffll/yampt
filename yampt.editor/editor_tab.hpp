@@ -71,4 +71,7 @@ private:
 
 	bool filter_active_ = false;
 	nav_tree_model_t::filter_state_t last_filter_state_;
+
+	bool has_filter_active_ = false;
+	nav_tree_model_t::filter_state_t last_quick_filter_;
 };

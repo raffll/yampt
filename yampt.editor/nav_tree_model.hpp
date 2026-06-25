@@ -31,6 +31,8 @@ public:
 		std::string name_text;
 		bool filter_deleted = false;
 		bool filter_itm_only = false;
+
+		bool operator==(const filter_state_t &) const = default;
 	};
 
 	void set_filter(const filter_state_t & state);

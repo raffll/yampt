@@ -2,6 +2,7 @@
 
 #include "../yampt/plugin_scan/plugin_scan.hpp"
 #include "../yampt/plugin_scan/conflict_types.hpp"
+#include "../yampt/plugin_scan/conflict_compute.hpp"
 #include "../yampt/plugin_scan/sub_record_iter.hpp"
 #include "../yampt/plugin_scan/sub_record_schema.hpp"
 #include <QAbstractItemModel>
@@ -67,11 +68,6 @@ private:
 	std::string record_id_;
 	std::vector<int> column_plugin_indices_;
 
-	std::string format_value(const char * data, size_t size) const;
-	std::string decode_field(const field_def_t & field, const char * data, size_t data_size) const;
-	std::string make_sub_label(const std::string & sub_type, const std::string & record_type, size_t data_size) const;
-	conflict_all_t compute_row_conflict_all(const std::vector<std::string> & values) const;
-	std::vector<conflict_this_t> compute_row_conflict_this(const std::vector<std::string> & values) const;
 	const std::vector<sub_record_row_t> & visible_rows() const;
 	mutable std::vector<sub_record_row_t> filtered_rows_;
 	mutable bool filter_dirty_ = true;

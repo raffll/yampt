@@ -168,6 +168,7 @@
     <ClCompile Include="editor_tab.cpp" />
     <ClCompile Include="nav_tree_model.cpp" />
     <ClCompile Include="view_tree_model.cpp" />
+    <ClCompile Include="view_tree_format.cpp" />
     <ClCompile Include="plugin_select_dialog.cpp" />
     <ClCompile Include="filter_dialog.cpp" />
     <ClCompile Include="messages_panel.cpp" />
@@ -178,18 +179,22 @@
     <ClCompile Include="..\yampt\plugin_scan\sub_record_schema.cpp" />
     <ClCompile Include="..\yampt\plugin_scan\plugin_index.cpp" />
     <ClCompile Include="..\yampt\plugin_scan\plugin_scan.cpp" />
+    <ClCompile Include="..\yampt\plugin_scan\conflict_compute.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="view_tree_format.hpp" />
     <ClInclude Include="..\yampt\tools.hpp" />
     <ClInclude Include="..\yampt\codepage.hpp" />
     <ClInclude Include="..\yampt\esm_reader.hpp" />
     <ClInclude Include="..\yampt\includes.hpp" />
     <ClInclude Include="..\yampt\file_list.hpp" />
+    <ClInclude Include="..\yampt\plugin_scan\conflict_enums.hpp" />
     <ClInclude Include="..\yampt\plugin_scan\conflict_types.hpp" />
     <ClInclude Include="..\yampt\plugin_scan\sub_record_iter.hpp" />
     <ClInclude Include="..\yampt\plugin_scan\sub_record_schema.hpp" />
     <ClInclude Include="..\yampt\plugin_scan\plugin_index.hpp" />
     <ClInclude Include="..\yampt\plugin_scan\plugin_scan.hpp" />
+    <ClInclude Include="..\yampt\plugin_scan\conflict_compute.hpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="editor_window.hpp">

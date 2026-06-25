@@ -60,7 +60,6 @@ public:
 
 private:
 	void compute_conflict(conflict_entry_t & entry);
-	bool content_equal(const std::string & a, const std::string & b) const;
 	std::string build_tes3_header(const std::string & author, const std::string & description);
 
 	struct loaded_plugin_t

@@ -44,3 +44,12 @@ Allow changing the Hunspell dictionary used in partial mode from English to anot
 
 ## Expand all remaining hex sub-records in yEditor
 Many sub-records still display as raw hex dumps (`<N bytes>` with `0000: XX XX XX...`). Add schemas for all common sub-records using OpenMW source as reference for field layouts. Priority records: DIAL DATA, DOOR DATA, LOCK DATA, AI_T, AI_F, AI_E, AI_A, BSGN, NAM0, WHGT, NAM5, XSCL, INTV, FLTV, INDX (skill/magic effect index).
+
+## PRIORITY: Unify left/right panel conflict computation
+`plugin_scan_t::compute_conflict()` must use the exact same algorithm as the view tree:
+1. Parse sub-records from each version using `sub_record_iter_t`
+2. Align by type+occurrence (same as view tree's unified_slots)
+3. Format each sub-record value using the same `format_value` logic (printable → string, else raw bytes)
+4. Per-slot: compare formatted strings across columns using the winner-based rule (all non-master values must be either master or winner → override_benign, else → conflict)
+5. Record-level conflict_all = max of all slot conflicts
+6. Left panel reads this result — guaranteed to match what the right panel shows
