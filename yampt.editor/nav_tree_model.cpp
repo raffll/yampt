@@ -459,9 +459,14 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 				for (const auto & rec : group.records)
 				{
 					const auto & e = entries[rec.entry_idx];
-					const auto & winner = e.versions.back();
-					if (winner.status > worst_ct)
-						worst_ct = winner.status;
+					for (const auto & v : e.versions)
+					{
+						if (v.plugin_idx != file_node.plugin_idx)
+							continue;
+
+						if (v.status > worst_ct)
+							worst_ct = v.status;
+					}
 				}
 			}
 
@@ -521,9 +526,14 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 				for (const auto & rec : group.records)
 				{
 					const auto & e = entries[rec.entry_idx];
-					const auto & winner = e.versions.back();
-					if (winner.status > worst_ct)
-						worst_ct = winner.status;
+					for (const auto & v : e.versions)
+					{
+						if (v.plugin_idx != tree_[fi].plugin_idx)
+							continue;
+
+						if (v.status > worst_ct)
+							worst_ct = v.status;
+					}
 				}
 
 				return QBrush(conflict_this_foreground(worst_ct));
@@ -582,8 +592,13 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 
 			if (role == Qt::ForegroundRole)
 			{
-				const auto & winner = entry.versions.back();
-				return QBrush(conflict_this_foreground(winner.status));
+				for (const auto & v : entry.versions)
+				{
+					if (v.plugin_idx != tree_[fi].plugin_idx)
+						continue;
+
+					return QBrush(conflict_this_foreground(v.status));
+				}
 			}
 
 			return {};
