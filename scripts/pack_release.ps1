@@ -1,9 +1,15 @@
+param(
+    [switch]$Upload
+)
+
 $outDir = "x64\Release"
 $buildNum = (git rev-list --count HEAD)
 $buildDir = "build"
 $packDir = "$buildDir\yampt_build$buildNum"
 $zipName = "$buildDir\yampt_build$buildNum.7z"
 $sevenZip = "$PSScriptRoot\7za.exe"
+$repo = "raffll/yampt"
+$tag = "build$buildNum"
 
 if (!(Test-Path $sevenZip)) {
     Write-Error "7z.exe not found at: $sevenZip"
@@ -34,3 +40,48 @@ if (Test-Path "$outDir\platforms") {
 & $sevenZip a -t7z -mx=9 $zipName "$packDir\*"
 
 Write-Host "Created $zipName (build $buildNum)"
+
+if (!$Upload) {
+    exit 0
+}
+
+# --- GitHub Release Upload ---
+
+if (!$env:GITHUB_TOKEN) {
+    Write-Error "GITHUB_TOKEN environment variable not set. Cannot upload."
+    exit 1
+}
+
+$headers = @{
+    "Authorization" = "token $env:GITHUB_TOKEN"
+    "Accept"        = "application/vnd.github+json"
+}
+
+$commitSha = (git rev-parse HEAD)
+$body = @{
+    tag_name         = $tag
+    target_commitish = $commitSha
+    name             = "Build $buildNum"
+    body             = "Automated release build $buildNum"
+    draft            = $false
+    prerelease       = $true
+} | ConvertTo-Json
+
+Write-Host "Creating release $tag..."
+$release = Invoke-RestMethod -Uri "https://api.github.com/repos/$repo/releases" `
+    -Method Post -Headers $headers -Body $body -ContentType "application/json"
+
+$uploadUrl = $release.upload_url -replace '\{\?name,label\}', ''
+$fileName = Split-Path $zipName -Leaf
+
+Write-Host "Uploading $fileName..."
+$fileBytes = [System.IO.File]::ReadAllBytes((Resolve-Path $zipName))
+Invoke-RestMethod -Uri "$uploadUrl`?name=$fileName" `
+    -Method Post `
+    -Headers @{
+        "Authorization" = "token $env:GITHUB_TOKEN"
+        "Content-Type"  = "application/x-7z-compressed"
+    } `
+    -Body $fileBytes | Out-Null
+
+Write-Host "Uploaded to https://github.com/$repo/releases/tag/$tag"

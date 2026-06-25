@@ -424,6 +424,9 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 
 		if (role == Qt::ForegroundRole)
 		{
+			if (scan_.plugin_count() <= 1)
+				return {};
+
 			conflict_this_t worst_ct = conflict_this_t::unknown;
 			for (const auto & group : file_node.groups)
 			{
@@ -493,6 +496,9 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 
 			if (role == Qt::ForegroundRole)
 			{
+				if (scan_.plugin_count() <= 1)
+					return {};
+
 				conflict_this_t worst_ct = conflict_this_t::unknown;
 				for (const auto & rec : group.records)
 				{
@@ -563,6 +569,9 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 
 			if (role == Qt::ForegroundRole)
 			{
+				if (scan_.plugin_count() <= 1)
+					return {};
+
 				for (const auto & v : entry.versions)
 				{
 					if (v.plugin_idx != tree_[fi].plugin_idx)

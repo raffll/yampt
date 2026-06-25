@@ -2,20 +2,20 @@
 #include <cstring>
 #include <iterator>
 
-static const char * const cell_flags[] = { "Interior", "Has Water", "Illegal to Sleep",     nullptr, nullptr,
-	                                       nullptr,    nullptr,     "Behave like Exterior", nullptr };
+static const char * const cell_flags[] = {
+	"Interior", "Has Water", "Illegal to Sleep", "_", "_", "_", "_", "Behave like Exterior",
+};
 
 static const field_def_t cell_data_fields[] = {
-	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, cell_flags },
+	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, cell_flags, std::size(cell_flags) },
 	{ "Grid X", field_type_t::i32, 4, 4, nullptr, nullptr },
 	{ "Grid Y", field_type_t::i32, 8, 4, nullptr, nullptr },
 };
 
-static const char * const npc_flags[] = { "Female", "Essential", "Respawn", nullptr, "Autocalc",
-	                                      nullptr,  nullptr,     nullptr,   nullptr };
+static const char * const npc_flags[] = { "Female", "Essential", "Respawn", "_", "Autocalc" };
 
 static const field_def_t npc_flag_fields[] = {
-	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, npc_flags },
+	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, npc_flags, std::size(npc_flags) },
 };
 
 static const field_def_t npc_npdt_12_fields[] = {
@@ -54,7 +54,7 @@ static const field_def_t npc_npdt_52_fields[] = {
 static const char * const aidt_flags[] = { "Weapon",        "Armor",      "Clothing",    "Books",     "Ingredients",
 	                                       "Picks",         "Probes",     "Lights",      "Apparatus", "Repair Items",
 	                                       "Miscellaneous", "Spells",     "Magic Items", "Potions",   "Training",
-	                                       "Spellmaking",   "Enchanting", nullptr };
+	                                       "Spellmaking",   "Enchanting" };
 
 static const field_def_t npc_aidt_fields[] = {
 	{ "Hello", field_type_t::u8, 0, 1, nullptr, nullptr },
@@ -65,7 +65,7 @@ static const field_def_t npc_aidt_fields[] = {
 	{ "Unknown2", field_type_t::u8, 5, 1, nullptr, nullptr },
 	{ "Unknown3", field_type_t::u8, 6, 1, nullptr, nullptr },
 	{ "Unknown4", field_type_t::u8, 7, 1, nullptr, nullptr },
-	{ "Services", field_type_t::flags_u32, 8, 4, nullptr, aidt_flags },
+	{ "Services", field_type_t::flags_u32, 8, 4, nullptr, aidt_flags, std::size(aidt_flags) },
 };
 
 static const char * const weapon_types[] = {
@@ -193,21 +193,35 @@ static const field_def_t fact_fadt_fields[] = {
 
 static const char * const class_specializations[] = { "Combat", "Magic", "Stealth", nullptr };
 
+static const char * const attribute_names[] = { "Strength",    "Intelligence", "Willpower", "Agility",
+	                                            "Speed",       "Endurance",    "Personality", "Luck", nullptr };
+
+static const char * const skill_names[] = {
+	"Block",       "Armorer",      "Medium Armor", "Heavy Armor",  "Blunt Weapon",
+	"Long Blade",  "Axe",          "Spear",        "Athletics",    "Enchant",
+	"Destruction", "Alteration",   "Illusion",     "Conjuration",  "Mysticism",
+	"Restoration", "Alchemy",      "Unarmored",    "Security",     "Sneak",
+	"Acrobatics",  "Light Armor",  "Short Blade",  "Marksman",     "Mercantile",
+	"Speechcraft", "Hand-to-hand", nullptr
+};
+
+static const char * const class_flags[] = { "Playable" };
+
 static const field_def_t clas_cldt_fields[] = {
-	{ "Attribute 1", field_type_t::u32, 0, 4, nullptr, nullptr },
-	{ "Attribute 2", field_type_t::u32, 4, 4, nullptr, nullptr },
+	{ "Attribute 1", field_type_t::enum_u32, 0, 4, attribute_names, nullptr },
+	{ "Attribute 2", field_type_t::enum_u32, 4, 4, attribute_names, nullptr },
 	{ "Specialization", field_type_t::enum_u32, 8, 4, class_specializations, nullptr },
-	{ "Minor 1", field_type_t::u32, 12, 4, nullptr, nullptr },
-	{ "Major 1", field_type_t::u32, 16, 4, nullptr, nullptr },
-	{ "Minor 2", field_type_t::u32, 20, 4, nullptr, nullptr },
-	{ "Major 2", field_type_t::u32, 24, 4, nullptr, nullptr },
-	{ "Minor 3", field_type_t::u32, 28, 4, nullptr, nullptr },
-	{ "Major 3", field_type_t::u32, 32, 4, nullptr, nullptr },
-	{ "Minor 4", field_type_t::u32, 36, 4, nullptr, nullptr },
-	{ "Major 4", field_type_t::u32, 40, 4, nullptr, nullptr },
-	{ "Minor 5", field_type_t::u32, 44, 4, nullptr, nullptr },
-	{ "Major 5", field_type_t::u32, 48, 4, nullptr, nullptr },
-	{ "Flags", field_type_t::flags_u32, 52, 4, nullptr, nullptr },
+	{ "Major 1", field_type_t::enum_u32, 16, 4, skill_names, nullptr },
+	{ "Major 2", field_type_t::enum_u32, 24, 4, skill_names, nullptr },
+	{ "Major 3", field_type_t::enum_u32, 32, 4, skill_names, nullptr },
+	{ "Major 4", field_type_t::enum_u32, 40, 4, skill_names, nullptr },
+	{ "Major 5", field_type_t::enum_u32, 48, 4, skill_names, nullptr },
+	{ "Minor 1", field_type_t::enum_u32, 12, 4, skill_names, nullptr },
+	{ "Minor 2", field_type_t::enum_u32, 20, 4, skill_names, nullptr },
+	{ "Minor 3", field_type_t::enum_u32, 28, 4, skill_names, nullptr },
+	{ "Minor 4", field_type_t::enum_u32, 36, 4, skill_names, nullptr },
+	{ "Minor 5", field_type_t::enum_u32, 44, 4, skill_names, nullptr },
+	{ "Flags", field_type_t::flags_u32, 52, 4, nullptr, class_flags, std::size(class_flags) },
 	{ "Auto Calc", field_type_t::u32, 56, 4, nullptr, nullptr },
 };
 
@@ -236,10 +250,10 @@ static const field_def_t race_radt_fields[] = {
 	{ "Flags", field_type_t::flags_u32, 136, 4, nullptr, nullptr },
 };
 
-static const char * const leveled_flags[] = { "Calc from All Levels", "Calc for Each Item", nullptr };
+static const char * const leveled_flags[] = { "Calc from All Levels", "Calc for Each Item" };
 
 static const field_def_t levi_data_fields[] = {
-	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, leveled_flags },
+	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, leveled_flags, std::size(leveled_flags) },
 };
 
 static const field_def_t gmst_strv_fields[] = {
@@ -272,12 +286,12 @@ static const field_def_t regn_weat_fields[] = {
 
 static const char * const spell_types[] = { "Spell", "Ability", "Blight", "Disease", "Curse", "Power", nullptr };
 
-static const char * const spell_flags[] = { "Auto Calc Cost", "PC Start Spell", "Always Succeeds", nullptr };
+static const char * const spell_flags[] = { "Auto Calc Cost", "PC Start Spell", "Always Succeeds" };
 
 static const field_def_t spel_spdt_fields[] = {
 	{ "Type", field_type_t::enum_u32, 0, 4, spell_types, nullptr },
 	{ "Cost", field_type_t::u32, 4, 4, nullptr, nullptr },
-	{ "Flags", field_type_t::flags_u32, 8, 4, nullptr, spell_flags },
+	{ "Flags", field_type_t::flags_u32, 8, 4, nullptr, spell_flags, std::size(spell_flags) },
 };
 
 static const field_def_t npco_fields[] = {
@@ -288,13 +302,14 @@ static const field_def_t npco_fields[] = {
 static const char * const mgef_schools[] = { "Alteration", "Conjuration", "Destruction", "Illusion",
 	                                         "Mysticism",  "Restoration", nullptr };
 
-static const char * const mgef_flags[] = { nullptr, nullptr, nullptr,       nullptr,      nullptr,    nullptr, nullptr,
-	                                       nullptr, nullptr, "Spellmaking", "Enchanting", "Negative", nullptr };
+static const char * const mgef_flags[] = {
+	"_", "_", "_", "_", "_", "_", "_", "_", "_", "Spellmaking", "Enchanting", "Negative",
+};
 
 static const field_def_t mgef_medt_fields[] = {
 	{ "School", field_type_t::enum_u32, 0, 4, mgef_schools, nullptr },
 	{ "Base Cost", field_type_t::f32, 4, 4, nullptr, nullptr },
-	{ "Flags", field_type_t::flags_u32, 8, 4, nullptr, mgef_flags },
+	{ "Flags", field_type_t::flags_u32, 8, 4, nullptr, mgef_flags, std::size(mgef_flags) },
 	{ "Red", field_type_t::u32, 12, 4, nullptr, nullptr },
 	{ "Blue", field_type_t::u32, 16, 4, nullptr, nullptr },
 	{ "Green", field_type_t::u32, 20, 4, nullptr, nullptr },
@@ -330,19 +345,19 @@ static const field_def_t cell_dodt_fields[] = {
 	{ "Z Rotate", field_type_t::f32, 20, 4, nullptr, nullptr },
 };
 
-static const char * const cont_flags[] = { "Organic", "Respawns", nullptr, "Default", nullptr };
+static const char * const cont_flags[] = { "Organic", "Respawns", "_", "Default" };
 
 static const field_def_t cont_flag_fields[] = {
-	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, cont_flags },
+	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, cont_flags, std::size(cont_flags) },
 };
 
 static const char * const crea_flags[] = {
-	"Biped", "Respawn", "Weapon and Shield", nullptr,       "Swims", "Flies", "Walks", nullptr,
-	nullptr, nullptr,   "Skeleton Blood",    "Metal Blood", nullptr
+	"Biped", "Respawn", "Weapon and Shield", "_", "Swims", "Flies", "Walks", "_",
+	"_", "_", "Skeleton Blood", "Metal Blood",
 };
 
 static const field_def_t crea_flag_fields[] = {
-	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, crea_flags },
+	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, crea_flags, std::size(crea_flags) },
 };
 
 static const field_def_t levi_intv_fields[] = {
@@ -360,7 +375,7 @@ static const field_def_t clot_ctdt_fields[] = {
 };
 
 static const char * const light_flags[] = { "Dynamic",     "Can Carry",    "Negative", "Flicker",    "Fire",
-	                                        "Off Default", "Flicker Slow", "Pulse",    "Pulse Slow", nullptr };
+	                                        "Off Default", "Flicker Slow", "Pulse",    "Pulse Slow" };
 
 static const field_def_t ligh_lhdt_fields[] = {
 	{ "Weight", field_type_t::f32, 0, 4, nullptr, nullptr },
@@ -371,7 +386,7 @@ static const field_def_t ligh_lhdt_fields[] = {
 	{ "Green", field_type_t::u8, 17, 1, nullptr, nullptr },
 	{ "Blue", field_type_t::u8, 18, 1, nullptr, nullptr },
 	{ "Null", field_type_t::u8, 19, 1, nullptr, nullptr },
-	{ "Flags", field_type_t::flags_u32, 20, 4, nullptr, light_flags },
+	{ "Flags", field_type_t::flags_u32, 20, 4, nullptr, light_flags, std::size(light_flags) },
 };
 
 static const field_def_t ingr_irdt_fields[] = {
@@ -431,6 +446,38 @@ static const field_def_t cell_ref_data_fields[] = {
 	{ "Z Rotate", field_type_t::f32, 20, 4, nullptr, nullptr },
 };
 
+static const char * const body_parts[] = { "Head",      "Hair",     "Neck",     "Chest",   "Groin",
+	                                       "Hand",      "Wrist",    "Forearm",  "Upperarm", "Foot",
+	                                       "Ankle",     "Knee",     "Upperleg", "Clavicle", "Tail", nullptr };
+
+static const char * const body_vampire[] = { "No", "Yes", nullptr };
+
+static const char * const body_gender[] = { "Male", "Female", nullptr };
+
+static const char * const body_part_types[] = { "Skin", "Clothing", "Armor", nullptr };
+
+static const field_def_t body_bydt_fields[] = {
+	{ "Part", field_type_t::enum_u8, 0, 1, body_parts, nullptr },
+	{ "Vampire", field_type_t::enum_u8, 1, 1, body_vampire, nullptr },
+	{ "Gender", field_type_t::enum_u8, 2, 1, body_gender, nullptr },
+	{ "Part Type", field_type_t::enum_u8, 3, 1, body_part_types, nullptr },
+};
+
+static const field_def_t ai_w_fields[] = {
+	{ "Distance", field_type_t::u16, 0, 2, nullptr, nullptr },
+	{ "Duration", field_type_t::u16, 2, 2, nullptr, nullptr },
+	{ "Time of Day", field_type_t::u8, 4, 1, nullptr, nullptr },
+	{ "Idle 1", field_type_t::u8, 5, 1, nullptr, nullptr },
+	{ "Idle 2", field_type_t::u8, 6, 1, nullptr, nullptr },
+	{ "Idle 3", field_type_t::u8, 7, 1, nullptr, nullptr },
+	{ "Idle 4", field_type_t::u8, 8, 1, nullptr, nullptr },
+	{ "Idle 5", field_type_t::u8, 9, 1, nullptr, nullptr },
+	{ "Idle 6", field_type_t::u8, 10, 1, nullptr, nullptr },
+	{ "Idle 7", field_type_t::u8, 11, 1, nullptr, nullptr },
+	{ "Idle 8", field_type_t::u8, 12, 1, nullptr, nullptr },
+	{ "Unknown", field_type_t::u8, 13, 1, nullptr, nullptr },
+};
+
 static const std::vector<sub_record_schema_t> & build_schemas()
 {
 	static const std::vector<sub_record_schema_t> schemas = {
@@ -441,7 +488,7 @@ static const std::vector<sub_record_schema_t> & build_schemas()
 		{ "NPC_", "FLAG", 4, npc_flag_fields, std::size(npc_flag_fields) },
 		{ "NPC_", "NPDT", 12, npc_npdt_12_fields, std::size(npc_npdt_12_fields) },
 		{ "NPC_", "NPDT", 52, npc_npdt_52_fields, std::size(npc_npdt_52_fields) },
-		{ "NPC_", "AIDT", 12, npc_aidt_fields, std::size(npc_aidt_fields) },
+		{ "*", "AIDT", 12, npc_aidt_fields, std::size(npc_aidt_fields) },
 		{ "WEAP", "WPDT", 32, weap_wpdt_fields, std::size(weap_wpdt_fields) },
 		{ "ARMO", "AODT", 24, armo_aodt_fields, std::size(armo_aodt_fields) },
 		{ "ALCH", "ALDT", 12, alch_aldt_fields, std::size(alch_aldt_fields) },
@@ -477,6 +524,8 @@ static const std::vector<sub_record_schema_t> & build_schemas()
 		{ "REPA", "RIDT", 16, repa_ridt_fields, std::size(repa_ridt_fields) },
 		{ "LOCK", "LKDT", 16, repa_ridt_fields, std::size(repa_ridt_fields) },
 		{ "PROB", "PBDT", 16, repa_ridt_fields, std::size(repa_ridt_fields) },
+		{ "BODY", "BYDT", 4, body_bydt_fields, std::size(body_bydt_fields) },
+		{ "*", "AI_W", 14, ai_w_fields, std::size(ai_w_fields) },
 	};
 	return schemas;
 }

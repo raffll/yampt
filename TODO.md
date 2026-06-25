@@ -35,3 +35,9 @@ No Windows-only dependencies identified. Needs CMake/build scripts for Linux.
 
 ## Merge as GUI option
 Add explicit merge functionality in the GUI. Currently users can load multiple dicts and the merge happens implicitly during convert. Consider a dedicated merge button/dialog.
+
+## Better explanation of partial mode dictionary comparison
+Clarify in the GUI (tooltip, help text, or info panel) how the English dictionary comparison works in partial mode: what "To Verify" means (identical text passed through the dictionary check — no English words found, likely a proper noun but needs confirmation), versus "Untranslated" (English words detected — genuinely untranslated).
+
+## Configurable source dictionary for partial mode
+Allow changing the Hunspell dictionary used in partial mode from English to another language (e.g. German, French). Currently hardcoded to `en_US.aff`/`en_US.dic`. Should be a dropdown or file selector in the make-base dialog.

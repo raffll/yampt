@@ -170,7 +170,7 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 		field_row_t sig_row;
 		sig_row.name = "Signature";
 		sig_row.values.resize(col_count, entry.rec_type);
-		sig_row.row_conflict_all = conflict_all_t::no_conflict;
+		sig_row.row_conflict_all = compute_row_conflict_all(sig_row.values);
 		sig_row.all_identical = true;
 		sig_row.cell_conflict_this = compute_row_conflict_this(sig_row.values);
 		header_row.children.push_back(std::move(sig_row));
@@ -318,6 +318,62 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 			for (size_t fi = 0; fi < schema->field_count; ++fi)
 			{
 				const auto & fdef = schema->fields[fi];
+
+				const bool is_flags = (fdef.type == field_type_t::flags_u8 ||
+				                       fdef.type == field_type_t::flags_u16 ||
+				                       fdef.type == field_type_t::flags_u32);
+
+				if (is_flags && fdef.flag_names && fdef.flag_count > 0)
+				{
+					for (int bit = 0; bit < fdef.flag_count; ++bit)
+					{
+						if (fdef.flag_names[bit][0] == '_')
+							continue;
+
+						field_row_t frow;
+						frow.name = fdef.flag_names[bit];
+						frow.values.resize(col_count);
+
+						for (size_t col = 0; col < col_count; ++col)
+						{
+							if (col >= all_sub_records.size() || row_idx >= all_sub_records[col].size())
+							{
+								frow.values[col] = "";
+								continue;
+							}
+
+							const auto & sv = all_sub_records[col][row_idx];
+							if (fdef.offset >= sv.size)
+							{
+								frow.values[col] = "";
+								continue;
+							}
+
+							uint32_t val = 0;
+							size_t bytes = (fdef.type == field_type_t::flags_u8) ? 1 :
+							               (fdef.type == field_type_t::flags_u16) ? 2 : 4;
+							std::memcpy(&val, sv.data + fdef.offset, std::min(bytes, sv.size - fdef.offset));
+							frow.values[col] = (val & (1u << bit)) ? "1" : "0";
+						}
+
+						bool fields_same = true;
+						for (size_t col = 1; col < col_count; ++col)
+						{
+							if (frow.values[col] != frow.values[0])
+							{
+								fields_same = false;
+								break;
+							}
+						}
+						frow.all_identical = fields_same;
+						frow.row_conflict_all = compute_row_conflict_all(frow.values);
+						frow.cell_conflict_this = compute_row_conflict_this(frow.values);
+
+						row.children.push_back(std::move(frow));
+					}
+
+					continue;
+				}
 
 				field_row_t frow;
 				frow.name = fdef.name;
@@ -576,6 +632,9 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 
 		if (role == Qt::ForegroundRole)
 		{
+			if (column_names_.size() <= 1)
+				return {};
+
 			if (index.column() == 0)
 			{
 				conflict_this_t worst = conflict_this_t::unknown;
@@ -632,6 +691,9 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 
 	if (role == Qt::ForegroundRole)
 	{
+		if (column_names_.size() <= 1)
+			return {};
+
 		if (index.column() == 0)
 		{
 			conflict_this_t worst = conflict_this_t::unknown;
@@ -861,15 +923,15 @@ std::string view_tree_model_t::decode_field(const field_def_t & field, const cha
 		std::snprintf(buf, sizeof(buf), "0x%X", val);
 		std::string result = buf;
 
-		if (field.flag_names)
+		if (field.flag_names && field.flag_count > 0)
 		{
 			std::string names;
-			for (int bit = 0; bit < 8; ++bit)
+			for (int bit = 0; bit < 8 && bit < field.flag_count; ++bit)
 			{
 				if (!(val & (1u << bit)))
 					continue;
 
-				if (!field.flag_names[bit])
+				if (field.flag_names[bit][0] == '_')
 					continue;
 
 				if (!names.empty())
@@ -891,15 +953,15 @@ std::string view_tree_model_t::decode_field(const field_def_t & field, const cha
 		std::snprintf(buf, sizeof(buf), "0x%X", val);
 		std::string result = buf;
 
-		if (field.flag_names)
+		if (field.flag_names && field.flag_count > 0)
 		{
 			std::string names;
-			for (int bit = 0; bit < 16; ++bit)
+			for (int bit = 0; bit < 16 && bit < field.flag_count; ++bit)
 			{
 				if (!(val & (1u << bit)))
 					continue;
 
-				if (!field.flag_names[bit])
+				if (field.flag_names[bit][0] == '_')
 					continue;
 
 				if (!names.empty())
@@ -921,15 +983,15 @@ std::string view_tree_model_t::decode_field(const field_def_t & field, const cha
 		std::snprintf(buf, sizeof(buf), "0x%X", val);
 		std::string result = buf;
 
-		if (field.flag_names)
+		if (field.flag_names && field.flag_count > 0)
 		{
 			std::string names;
-			for (int bit = 0; bit < 32; ++bit)
+			for (int bit = 0; bit < 32 && bit < field.flag_count; ++bit)
 			{
 				if (!(val & (1u << bit)))
 					continue;
 
-				if (!field.flag_names[bit])
+				if (field.flag_names[bit][0] == '_')
 					continue;
 
 				if (!names.empty())

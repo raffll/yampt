@@ -78,8 +78,10 @@ editor_tab_t::editor_tab_t(QWidget * parent)
 	btn_filter_ = new QPushButton("Filter", toolbar);
 	btn_filter_->setVisible(false);
 	chk_conflicts_ = new QCheckBox("Conflicts Only", toolbar);
+	chk_conflicts_->setVisible(false);
 	cmb_type_filter_ = new QComboBox(toolbar);
 	cmb_type_filter_->addItem("All Types");
+	cmb_type_filter_->setVisible(false);
 	edt_search_ = new QLineEdit(toolbar);
 	edt_search_->setPlaceholderText("Search by ID...");
 	edt_search_->setMaximumWidth(200);

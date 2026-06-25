@@ -221,13 +221,10 @@ bool plugin_scan_t::content_equal(const std::string & a, const std::string & b) 
 	if (a.size() != b.size())
 		return false;
 
-	if (a.size() < 12)
+	if (a.size() <= 16)
 		return a == b;
 
-	if (a.compare(0, 8, b, 0, 8) != 0)
-		return false;
-
-	if (a.compare(12, a.size() - 12, b, 12, b.size() - 12) != 0)
+	if (a.compare(16, a.size() - 16, b, 16, b.size() - 16) != 0)
 		return false;
 
 	return true;
