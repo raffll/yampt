@@ -49,3 +49,6 @@ const sub_record_schema_t * find_schema(
     size_t data_size);
 
 const std::vector<sub_record_schema_t> & all_schemas();
+
+const char * effect_name_by_index(int index);
+const char * skill_name_by_index(int index);

@@ -1,5 +1,5 @@
 #include "view_tree_model.hpp"
-#include "view_tree_format.hpp"
+#include "../yampt/plugin_scan/view_tree_format.hpp"
 #include "../yampt/plugin_scan/conflict_compute.hpp"
 #include <QBrush>
 #include <QMimeData>
@@ -911,93 +911,118 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 			}
 		}
 
-		std::unordered_map<std::string, int> type_count;
-		for (size_t col = 0; col < col_count; ++col)
+		if (entry.slot_result)
 		{
-			if (col >= all_sub_records.size())
-				continue;
-
-			for (const auto & sv : all_sub_records[col])
+			for (const auto & as : entry.slot_result->aligned)
+				unified_slots.push_back({ as.key.type, as.key.occurrence });
+		}
+		else
+		{
+			std::unordered_map<std::string, int> type_count;
+			for (size_t col = 0; col < col_count; ++col)
 			{
-				if (sv.type == "INTV" && sv.size == 2)
+				if (col >= all_sub_records.size())
 					continue;
 
-				if (sv.type == "INAM")
-					continue;
+				for (const auto & sv : all_sub_records[col])
+				{
+					if (sv.type == "INTV" && sv.size == 2)
+						continue;
 
-				int occ = type_count[sv.type]++;
-				bool found = false;
+					if (sv.type == "INAM")
+						continue;
+
+					int occ = type_count[sv.type]++;
+					bool found = false;
+					for (const auto & slot : unified_slots)
+					{
+						if (slot.type == sv.type && slot.occurrence == occ)
+						{
+							found = true;
+							break;
+						}
+					}
+					if (!found)
+						unified_slots.push_back({ sv.type, occ });
+				}
+				type_count.clear();
+			}
+
+			for (const auto & item_id : all_item_ids)
+			{
+				int intv_occ = -1;
+				int inam_occ = -1;
+
 				for (const auto & slot : unified_slots)
 				{
-					if (slot.type == sv.type && slot.occurrence == occ)
-					{
-						found = true;
-						break;
-					}
+					if (slot.type == "INTV")
+						intv_occ = std::max(intv_occ, slot.occurrence);
+
+					if (slot.type == "INAM")
+						inam_occ = std::max(inam_occ, slot.occurrence);
 				}
-				if (!found)
-					unified_slots.push_back({ sv.type, occ });
-			}
-			type_count.clear();
-		}
 
-		for (const auto & item_id : all_item_ids)
-		{
-			int intv_occ = -1;
-			int inam_occ = -1;
-
-			for (const auto & slot : unified_slots)
-			{
-				if (slot.type == "INTV")
-					intv_occ = std::max(intv_occ, slot.occurrence);
-
-				if (slot.type == "INAM")
-					inam_occ = std::max(inam_occ, slot.occurrence);
-			}
-
-			unified_slots.push_back({ "INTV", intv_occ + 1 });
-			unified_slots.push_back({ "INAM", inam_occ + 1 });
-		}
-
-		std::vector<std::unordered_map<std::string, std::vector<size_t>>> col_type_indices_lev(col_count);
-		for (size_t col = 0; col < col_count; ++col)
-		{
-			if (col >= all_sub_records.size())
-				continue;
-
-			for (size_t i = 0; i < all_sub_records[col].size(); ++i)
-			{
-				const auto & sv = all_sub_records[col][i];
-				if ((sv.type == "INTV" && sv.size == 2) || sv.type == "INAM")
-					continue;
-
-				col_type_indices_lev[col][sv.type].push_back(i);
-			}
-
-			for (size_t entry_idx = 0; entry_idx < all_item_ids.size(); ++entry_idx)
-			{
-				const auto & target_id = all_item_ids[entry_idx];
-				bool matched = false;
-				for (const auto & e : col_entries[col])
-				{
-					if (e.item_id == target_id)
-					{
-						col_type_indices_lev[col]["INTV"].push_back(e.intv_idx);
-						col_type_indices_lev[col]["INAM"].push_back(e.inam_idx);
-						matched = true;
-						break;
-					}
-				}
-				if (!matched)
-				{
-					col_type_indices_lev[col]["INTV"].push_back(SIZE_MAX);
-					col_type_indices_lev[col]["INAM"].push_back(SIZE_MAX);
-				}
+				unified_slots.push_back({ "INTV", intv_occ + 1 });
+				unified_slots.push_back({ "INAM", inam_occ + 1 });
 			}
 		}
 
 		std::vector<std::unordered_map<std::string, std::vector<size_t>>> col_type_indices(col_count);
-		col_type_indices = std::move(col_type_indices_lev);
+		if (entry.slot_result)
+		{
+			for (const auto & as : entry.slot_result->aligned)
+			{
+				size_t ver_size = as.indices.size();
+				for (size_t col = 0; col < col_count; ++col)
+				{
+					if (col < ver_size)
+						col_type_indices[col][as.key.type].push_back(as.indices[col]);
+					else
+						col_type_indices[col][as.key.type].push_back(SIZE_MAX);
+				}
+			}
+		}
+		else
+		{
+			std::vector<std::unordered_map<std::string, std::vector<size_t>>> col_type_indices_lev(col_count);
+			for (size_t col = 0; col < col_count; ++col)
+			{
+				if (col >= all_sub_records.size())
+					continue;
+
+				for (size_t i = 0; i < all_sub_records[col].size(); ++i)
+				{
+					const auto & sv = all_sub_records[col][i];
+					if ((sv.type == "INTV" && sv.size == 2) || sv.type == "INAM")
+						continue;
+
+					col_type_indices_lev[col][sv.type].push_back(i);
+				}
+
+				for (size_t entry_idx = 0; entry_idx < all_item_ids.size(); ++entry_idx)
+				{
+					const auto & target_id = all_item_ids[entry_idx];
+					bool matched = false;
+					for (const auto & e : col_entries[col])
+					{
+						if (e.item_id == target_id)
+						{
+							col_type_indices_lev[col]["INTV"].push_back(e.intv_idx);
+							col_type_indices_lev[col]["INAM"].push_back(e.inam_idx);
+							matched = true;
+							break;
+						}
+					}
+					if (!matched)
+					{
+						col_type_indices_lev[col]["INTV"].push_back(SIZE_MAX);
+						col_type_indices_lev[col]["INAM"].push_back(SIZE_MAX);
+					}
+				}
+			}
+
+			col_type_indices = std::move(col_type_indices_lev);
+		}
 
 		for (const auto & slot : unified_slots)
 		{
@@ -1318,89 +1343,114 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 			}
 		}
 
-		std::unordered_map<std::string, int> type_count;
-		for (size_t col = 0; col < col_count; ++col)
+		if (entry.slot_result)
 		{
-			if (col >= all_sub_records.size())
-				continue;
-
-			for (const auto & sv : all_sub_records[col])
+			for (const auto & as : entry.slot_result->aligned)
+				unified_slots.push_back({ as.key.type, as.key.occurrence });
+		}
+		else
+		{
+			std::unordered_map<std::string, int> type_count;
+			for (size_t col = 0; col < col_count; ++col)
 			{
-				if (sv.type == "INTV" && sv.size == 4)
+				if (col >= all_sub_records.size())
 					continue;
 
-				if (sv.type == "ANAM")
-					continue;
+				for (const auto & sv : all_sub_records[col])
+				{
+					if (sv.type == "INTV" && sv.size == 4)
+						continue;
 
-				int occ = type_count[sv.type]++;
-				bool found = false;
+					if (sv.type == "ANAM")
+						continue;
+
+					int occ = type_count[sv.type]++;
+					bool found = false;
+					for (const auto & slot : unified_slots)
+					{
+						if (slot.type == sv.type && slot.occurrence == occ)
+						{
+							found = true;
+							break;
+						}
+					}
+
+					if (!found)
+						unified_slots.push_back({ sv.type, occ });
+				}
+				type_count.clear();
+			}
+
+			for (const auto & faction_name : all_faction_names)
+			{
+				int intv_occ = -1;
+				int anam_occ = -1;
+
 				for (const auto & slot : unified_slots)
 				{
-					if (slot.type == sv.type && slot.occurrence == occ)
-					{
-						found = true;
-						break;
-					}
+					if (slot.type == "INTV")
+						intv_occ = std::max(intv_occ, slot.occurrence);
+
+					if (slot.type == "ANAM")
+						anam_occ = std::max(anam_occ, slot.occurrence);
 				}
 
-				if (!found)
-					unified_slots.push_back({ sv.type, occ });
+				unified_slots.push_back({ "INTV", intv_occ + 1 });
+				unified_slots.push_back({ "ANAM", anam_occ + 1 });
 			}
-			type_count.clear();
-		}
-
-		for (const auto & faction_name : all_faction_names)
-		{
-			int intv_occ = -1;
-			int anam_occ = -1;
-
-			for (const auto & slot : unified_slots)
-			{
-				if (slot.type == "INTV")
-					intv_occ = std::max(intv_occ, slot.occurrence);
-
-				if (slot.type == "ANAM")
-					anam_occ = std::max(anam_occ, slot.occurrence);
-			}
-
-			unified_slots.push_back({ "INTV", intv_occ + 1 });
-			unified_slots.push_back({ "ANAM", anam_occ + 1 });
 		}
 
 		std::vector<std::unordered_map<std::string, std::vector<size_t>>> col_type_indices(col_count);
-		for (size_t col = 0; col < col_count; ++col)
+		if (entry.slot_result)
 		{
-			if (col >= all_sub_records.size())
-				continue;
-
-			for (size_t i = 0; i < all_sub_records[col].size(); ++i)
+			for (const auto & as : entry.slot_result->aligned)
 			{
-				const auto & sv = all_sub_records[col][i];
-				if ((sv.type == "INTV" && sv.size == 4) || sv.type == "ANAM")
+				size_t ver_size = as.indices.size();
+				for (size_t col = 0; col < col_count; ++col)
+				{
+					if (col < ver_size)
+						col_type_indices[col][as.key.type].push_back(as.indices[col]);
+					else
+						col_type_indices[col][as.key.type].push_back(SIZE_MAX);
+				}
+			}
+		}
+		else
+		{
+			for (size_t col = 0; col < col_count; ++col)
+			{
+				if (col >= all_sub_records.size())
 					continue;
 
-				col_type_indices[col][sv.type].push_back(i);
-			}
-
-			for (size_t entry_idx = 0; entry_idx < all_faction_names.size(); ++entry_idx)
-			{
-				const auto & target_name = all_faction_names[entry_idx];
-				bool matched = false;
-				for (const auto & e : col_entries[col])
+				for (size_t i = 0; i < all_sub_records[col].size(); ++i)
 				{
-					if (e.faction_name == target_name)
-					{
-						col_type_indices[col]["INTV"].push_back(e.intv_idx);
-						col_type_indices[col]["ANAM"].push_back(e.anam_idx);
-						matched = true;
-						break;
-					}
+					const auto & sv = all_sub_records[col][i];
+					if ((sv.type == "INTV" && sv.size == 4) || sv.type == "ANAM")
+						continue;
+
+					col_type_indices[col][sv.type].push_back(i);
 				}
 
-				if (!matched)
+				for (size_t entry_idx = 0; entry_idx < all_faction_names.size(); ++entry_idx)
 				{
-					col_type_indices[col]["INTV"].push_back(SIZE_MAX);
-					col_type_indices[col]["ANAM"].push_back(SIZE_MAX);
+					const auto & target_name = all_faction_names[entry_idx];
+					bool matched = false;
+					for (const auto & e : col_entries[col])
+					{
+						if (e.faction_name == target_name)
+						{
+							col_type_indices[col]["INTV"].push_back(e.intv_idx);
+							col_type_indices[col]["ANAM"].push_back(e.anam_idx);
+							matched = true;
+							break;
+						}
+					}
+
+					if (!matched)
+					{
+						col_type_indices[col]["INTV"].push_back(SIZE_MAX);
+						col_type_indices[col]["ANAM"].push_back(SIZE_MAX);
+					}
 				}
 			}
 		}
@@ -1749,113 +1799,138 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 			}
 		}
 
-		std::unordered_map<std::string, int> type_count;
-		for (size_t col = 0; col < col_count; ++col)
+		if (entry.slot_result)
 		{
-			if (col >= all_sub_records.size())
-				continue;
-
-			for (const auto & sv : all_sub_records[col])
+			for (const auto & as : entry.slot_result->aligned)
+				unified_slots.push_back({ as.key.type, as.key.occurrence });
+		}
+		else
+		{
+			std::unordered_map<std::string, int> type_count;
+			for (size_t col = 0; col < col_count; ++col)
 			{
-				if (sv.type == "NPCO" && sv.size == 36)
+				if (col >= all_sub_records.size())
 					continue;
 
-				if (sv.type == "NPCS" && sv.size == 32)
-					continue;
+				for (const auto & sv : all_sub_records[col])
+				{
+					if (sv.type == "NPCO" && sv.size == 36)
+						continue;
 
-				int occ = type_count[sv.type]++;
-				bool found = false;
+					if (sv.type == "NPCS" && sv.size == 32)
+						continue;
+
+					int occ = type_count[sv.type]++;
+					bool found = false;
+					for (const auto & slot : unified_slots)
+					{
+						if (slot.type == sv.type && slot.occurrence == occ)
+						{
+							found = true;
+							break;
+						}
+					}
+
+					if (!found)
+						unified_slots.push_back({ sv.type, occ });
+				}
+				type_count.clear();
+			}
+
+			for (const auto & item_id : all_item_ids)
+			{
+				int npco_occ = -1;
 				for (const auto & slot : unified_slots)
 				{
-					if (slot.type == sv.type && slot.occurrence == occ)
-					{
-						found = true;
-						break;
-					}
+					if (slot.type == "NPCO")
+						npco_occ = std::max(npco_occ, slot.occurrence);
 				}
 
-				if (!found)
-					unified_slots.push_back({ sv.type, occ });
+				unified_slots.push_back({ "NPCO", npco_occ + 1 });
 			}
-			type_count.clear();
-		}
 
-		for (const auto & item_id : all_item_ids)
-		{
-			int npco_occ = -1;
-			for (const auto & slot : unified_slots)
+			for (const auto & spell_id : all_spell_ids)
 			{
-				if (slot.type == "NPCO")
-					npco_occ = std::max(npco_occ, slot.occurrence);
+				int npcs_occ = -1;
+				for (const auto & slot : unified_slots)
+				{
+					if (slot.type == "NPCS")
+						npcs_occ = std::max(npcs_occ, slot.occurrence);
+				}
+
+				unified_slots.push_back({ "NPCS", npcs_occ + 1 });
 			}
-
-			unified_slots.push_back({ "NPCO", npco_occ + 1 });
-		}
-
-		for (const auto & spell_id : all_spell_ids)
-		{
-			int npcs_occ = -1;
-			for (const auto & slot : unified_slots)
-			{
-				if (slot.type == "NPCS")
-					npcs_occ = std::max(npcs_occ, slot.occurrence);
-			}
-
-			unified_slots.push_back({ "NPCS", npcs_occ + 1 });
 		}
 
 		std::vector<std::unordered_map<std::string, std::vector<size_t>>> col_type_indices(col_count);
-		for (size_t col = 0; col < col_count; ++col)
+		if (entry.slot_result)
 		{
-			if (col >= all_sub_records.size())
-				continue;
-
-			for (size_t i = 0; i < all_sub_records[col].size(); ++i)
+			for (const auto & as : entry.slot_result->aligned)
 			{
-				const auto & sv = all_sub_records[col][i];
-				if (sv.type == "NPCO" && sv.size == 36)
+				size_t ver_size = as.indices.size();
+				for (size_t col = 0; col < col_count; ++col)
+				{
+					if (col < ver_size)
+						col_type_indices[col][as.key.type].push_back(as.indices[col]);
+					else
+						col_type_indices[col][as.key.type].push_back(SIZE_MAX);
+				}
+			}
+		}
+		else
+		{
+			for (size_t col = 0; col < col_count; ++col)
+			{
+				if (col >= all_sub_records.size())
 					continue;
 
-				if (sv.type == "NPCS" && sv.size == 32)
-					continue;
-
-				col_type_indices[col][sv.type].push_back(i);
-			}
-
-			for (size_t entry_idx = 0; entry_idx < all_item_ids.size(); ++entry_idx)
-			{
-				const auto & target_id = all_item_ids[entry_idx];
-				bool matched = false;
-				for (const auto & e : col_entries[col])
+				for (size_t i = 0; i < all_sub_records[col].size(); ++i)
 				{
-					if (e.item_id == target_id)
-					{
-						col_type_indices[col]["NPCO"].push_back(e.npco_idx);
-						matched = true;
-						break;
-					}
+					const auto & sv = all_sub_records[col][i];
+					if (sv.type == "NPCO" && sv.size == 36)
+						continue;
+
+					if (sv.type == "NPCS" && sv.size == 32)
+						continue;
+
+					col_type_indices[col][sv.type].push_back(i);
 				}
 
-				if (!matched)
-					col_type_indices[col]["NPCO"].push_back(SIZE_MAX);
-			}
-
-			for (size_t entry_idx = 0; entry_idx < all_spell_ids.size(); ++entry_idx)
-			{
-				const auto & target_id = all_spell_ids[entry_idx];
-				bool matched = false;
-				for (const auto & e : col_spells[col])
+				for (size_t entry_idx = 0; entry_idx < all_item_ids.size(); ++entry_idx)
 				{
-					if (e.spell_id == target_id)
+					const auto & target_id = all_item_ids[entry_idx];
+					bool matched = false;
+					for (const auto & e : col_entries[col])
 					{
-						col_type_indices[col]["NPCS"].push_back(e.npcs_idx);
-						matched = true;
-						break;
+						if (e.item_id == target_id)
+						{
+							col_type_indices[col]["NPCO"].push_back(e.npco_idx);
+							matched = true;
+							break;
+						}
 					}
+
+					if (!matched)
+						col_type_indices[col]["NPCO"].push_back(SIZE_MAX);
 				}
 
-				if (!matched)
-					col_type_indices[col]["NPCS"].push_back(SIZE_MAX);
+				for (size_t entry_idx = 0; entry_idx < all_spell_ids.size(); ++entry_idx)
+				{
+					const auto & target_id = all_spell_ids[entry_idx];
+					bool matched = false;
+					for (const auto & e : col_spells[col])
+					{
+						if (e.spell_id == target_id)
+						{
+							col_type_indices[col]["NPCS"].push_back(e.npcs_idx);
+							matched = true;
+							break;
+						}
+					}
+
+					if (!matched)
+						col_type_indices[col]["NPCS"].push_back(SIZE_MAX);
+				}
 			}
 		}
 
@@ -2130,6 +2205,11 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 
 		endResetModel();
 		return;
+	}
+	else if (entry.slot_result)
+	{
+		for (const auto & as : entry.slot_result->aligned)
+			unified_slots.push_back({ as.key.type, as.key.occurrence });
 	}
 	else
 	{

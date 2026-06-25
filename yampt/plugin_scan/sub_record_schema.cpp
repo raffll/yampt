@@ -766,3 +766,33 @@ const std::vector<sub_record_schema_t> & all_schemas()
 {
 	return build_schemas();
 }
+
+const char * effect_name_by_index(int index)
+{
+	if (index < 0)
+		return nullptr;
+
+	int count = 0;
+	while (effect_names[count])
+		++count;
+
+	if (index >= count)
+		return nullptr;
+
+	return effect_names[index];
+}
+
+const char * skill_name_by_index(int index)
+{
+	if (index < 0)
+		return nullptr;
+
+	int count = 0;
+	while (skill_names[count])
+		++count;
+
+	if (index >= count)
+		return nullptr;
+
+	return skill_names[index];
+}

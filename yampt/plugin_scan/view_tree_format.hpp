@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../yampt/plugin_scan/sub_record_schema.hpp"
+#include "sub_record_schema.hpp"
 #include <map>
 #include <string>
 

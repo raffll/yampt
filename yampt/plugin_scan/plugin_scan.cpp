@@ -2,6 +2,7 @@
 #include "conflict_compute.hpp"
 #include "sub_record_iter.hpp"
 #include "sub_record_schema.hpp"
+#include "view_tree_format.hpp"
 #include <algorithm>
 #include <filesystem>
 #include <map>
@@ -151,966 +152,117 @@ void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 		}
 	}
 
-	using slot_key_t = std::pair<std::string, int>;
-	std::vector<slot_key_t> unified_slots;
-
-	std::vector<std::vector<sub_record_view_t>> parsed(ver_count);
-	for (size_t i = 0; i < ver_count; ++i)
-	{
-		if (contents[i].size() < 16)
-			continue;
-
-		sub_record_iter_t iter(contents[i]);
-		sub_record_view_t sv;
-		std::map<std::string, int> occurrence_count;
-
-		while (iter.next(sv))
-		{
-			int occ = occurrence_count[sv.type]++;
-			sv.offset = static_cast<size_t>(occ);
-			parsed[i].push_back(sv);
-		}
-	}
+	entry.slot_result = std::make_unique<slot_result_t>(
+		build_conflict_slots(entry.rec_type, std::move(contents), is_deleted));
 
 	conflict_all_t worst_all = conflict_all_t::only_one;
 	std::vector<std::vector<conflict_this_t>> per_slot_this;
 
-	if (entry.rec_type == "CELL")
+	const auto & sr = *entry.slot_result;
+
+	for (const auto & slot : sr.aligned)
 	{
-		struct ref_group_t
-		{
-			uint32_t object_index;
-			size_t start_idx;
-			size_t end_idx;
-		};
+		std::vector<std::string> slot_values(ver_count);
+		const char * first_data = nullptr;
+		size_t first_size = 0;
 
-		std::vector<std::vector<ref_group_t>> ver_refs(ver_count);
-		std::vector<uint32_t> all_object_indices;
-		std::vector<size_t> ver_header_end(ver_count, 0);
-
-		for (size_t i = 0; i < ver_count; ++i)
+		for (size_t vi = 0; vi < ver_count; ++vi)
 		{
-			for (size_t j = 0; j < parsed[i].size(); ++j)
+			if (is_deleted[vi])
+				continue;
+
+			if (slot.indices[vi] == SIZE_MAX)
+				continue;
+
+			const auto & sv = sr.parsed[vi][slot.indices[vi]];
+			slot_values[vi] = format_value(sv.data, sv.size);
+			if (!first_data)
 			{
-				if (parsed[i][j].type != "FRMR")
-					continue;
-
-				if (ver_refs[i].empty())
-					ver_header_end[i] = j;
-
-				uint32_t obj_idx = 0;
-				if (parsed[i][j].size >= 4)
-					std::memcpy(&obj_idx, parsed[i][j].data, 4);
-
-				size_t end = parsed[i].size();
-				for (size_t k = j + 1; k < parsed[i].size(); ++k)
-				{
-					if (parsed[i][k].type == "FRMR")
-					{
-						end = k;
-						break;
-					}
-				}
-
-				ver_refs[i].push_back({ obj_idx, j, end });
-
-				bool found = false;
-				for (const auto & oi : all_object_indices)
-				{
-					if (oi == obj_idx)
-					{
-						found = true;
-						break;
-					}
-				}
-
-				if (!found)
-					all_object_indices.push_back(obj_idx);
+				first_data = sv.data;
+				first_size = sv.size;
 			}
 		}
 
-		using slot_key_t = std::pair<std::string, int>;
-		std::vector<slot_key_t> unified_slots;
-
-		for (size_t i = 0; i < ver_count; ++i)
+		const auto * schema = find_schema(entry.rec_type, slot.key.type, first_size);
+		if (schema && schema->field_count > 0 && first_data)
 		{
-			std::map<std::string, int> occ_count;
-			for (size_t j = 0; j < ver_header_end[i]; ++j)
+			for (size_t fi = 0; fi < schema->field_count; ++fi)
 			{
-				const auto & sv = parsed[i][j];
-				int occ = occ_count[sv.type]++;
-				slot_key_t key = { sv.type, occ };
-				bool exists = false;
-				for (const auto & s : unified_slots)
+				const auto & fdef = schema->fields[fi];
+
+				const bool is_flags = (fdef.type == field_type_t::flags_u8 ||
+				                       fdef.type == field_type_t::flags_u16 ||
+				                       fdef.type == field_type_t::flags_u32);
+
+				if (is_flags && fdef.flag_names && fdef.flag_count > 0)
 				{
-					if (s == key)
+					for (int bit = 0; bit < fdef.flag_count; ++bit)
 					{
-						exists = true;
-						break;
-					}
-				}
-
-				if (!exists)
-					unified_slots.push_back(key);
-			}
-		}
-
-		for (const auto & obj_idx : all_object_indices)
-		{
-			std::map<std::string, int> max_occ;
-
-			for (size_t i = 0; i < ver_count; ++i)
-			{
-				for (const auto & ref : ver_refs[i])
-				{
-					if (ref.object_index != obj_idx)
-						continue;
-
-					std::map<std::string, int> occ_count;
-					for (size_t j = ref.start_idx; j < ref.end_idx; ++j)
-					{
-						int occ = ++occ_count[parsed[i][j].type];
-						if (occ > max_occ[parsed[i][j].type])
-							max_occ[parsed[i][j].type] = occ;
-					}
-
-					break;
-				}
-			}
-
-			for (const auto & [type, count] : max_occ)
-			{
-				for (int occ = 0; occ < count; ++occ)
-					unified_slots.push_back({ type, occ });
-			}
-		}
-
-		size_t header_slot_count = 0;
-		{
-			std::set<slot_key_t> seen;
-			for (size_t i = 0; i < ver_count; ++i)
-			{
-				std::map<std::string, int> occ_count;
-				for (size_t j = 0; j < ver_header_end[i]; ++j)
-				{
-					const auto & sv = parsed[i][j];
-					int occ = occ_count[sv.type]++;
-					seen.insert({ sv.type, occ });
-				}
-			}
-			header_slot_count = seen.size();
-		}
-
-		std::vector<std::vector<std::string>> slot_values_all;
-		for (const auto & slot : unified_slots)
-			slot_values_all.push_back(std::vector<std::string>(ver_count));
-
-		for (size_t i = 0; i < ver_count; ++i)
-		{
-			std::map<std::string, int> occ_count;
-			for (size_t j = 0; j < ver_header_end[i]; ++j)
-			{
-				const auto & sv = parsed[i][j];
-				int occ = occ_count[sv.type]++;
-				slot_key_t key = { sv.type, occ };
-
-				for (size_t si = 0; si < unified_slots.size(); ++si)
-				{
-					if (unified_slots[si] == key)
-					{
-						slot_values_all[si][i] = std::string(sv.data, sv.size);
-						break;
-					}
-				}
-			}
-		}
-
-		size_t slot_pos = header_slot_count;
-		for (const auto & obj_idx : all_object_indices)
-		{
-			std::map<std::string, int> max_occ;
-			for (size_t i = 0; i < ver_count; ++i)
-			{
-				for (const auto & ref : ver_refs[i])
-				{
-					if (ref.object_index != obj_idx)
-						continue;
-
-					std::map<std::string, int> occ_count;
-					for (size_t j = ref.start_idx; j < ref.end_idx; ++j)
-					{
-						int occ = ++occ_count[parsed[i][j].type];
-						if (occ > max_occ[parsed[i][j].type])
-							max_occ[parsed[i][j].type] = occ;
-					}
-
-					break;
-				}
-			}
-
-			for (size_t i = 0; i < ver_count; ++i)
-			{
-				for (const auto & ref : ver_refs[i])
-				{
-					if (ref.object_index != obj_idx)
-						continue;
-
-					std::map<std::string, int> occ_count;
-					for (size_t j = ref.start_idx; j < ref.end_idx; ++j)
-					{
-						const auto & sv = parsed[i][j];
-						int occ = occ_count[sv.type]++;
-
-						size_t target_slot = slot_pos;
-						for (const auto & [type, count] : max_occ)
-						{
-							if (type == sv.type)
-							{
-								slot_values_all[target_slot + occ][i] = std::string(sv.data, sv.size);
-								break;
-							}
-
-							target_slot += count;
-						}
-					}
-
-					break;
-				}
-			}
-
-			for (const auto & [type, count] : max_occ)
-				slot_pos += count;
-		}
-
-		for (size_t si = 0; si < unified_slots.size(); ++si)
-		{
-			auto & slot_values = slot_values_all[si];
-
-			for (size_t vi = 0; vi < ver_count; ++vi)
-			{
-				if (is_deleted[vi])
-					slot_values[vi] = "\x01\x44\x45\x4C\x45";
-			}
-
-			size_t first_size = 0;
-			for (size_t vi = 0; vi < ver_count; ++vi)
-			{
-				if (!slot_values[vi].empty() && slot_values[vi][0] != '\x01')
-				{
-					first_size = slot_values[vi].size();
-					break;
-				}
-			}
-
-			const auto * schema = find_schema(entry.rec_type, unified_slots[si].first, first_size);
-			if (schema && schema->field_count > 0 && first_size > 0)
-			{
-				for (size_t fi = 0; fi < schema->field_count; ++fi)
-				{
-					const auto & fdef = schema->fields[fi];
-					std::vector<std::string> field_values(ver_count);
-
-					for (size_t vi = 0; vi < ver_count; ++vi)
-					{
-						if (is_deleted[vi])
-						{
-							field_values[vi] = "\x01\x44\x45\x4C\x45";
+						if (fdef.flag_names[bit][0] == '_')
 							continue;
+
+						std::vector<std::string> bit_values(ver_count);
+						for (size_t vi = 0; vi < ver_count; ++vi)
+						{
+							if (is_deleted[vi])
+								continue;
+
+							if (slot.indices[vi] == SIZE_MAX)
+								continue;
+
+							const auto & sv = sr.parsed[vi][slot.indices[vi]];
+							if (fdef.offset >= sv.size)
+								continue;
+
+							uint32_t val = 0;
+							size_t bytes = (fdef.type == field_type_t::flags_u8) ? 1 :
+							               (fdef.type == field_type_t::flags_u16) ? 2 : 4;
+							std::memcpy(&val, sv.data + fdef.offset, std::min(bytes, sv.size - fdef.offset));
+							bit_values[vi] = (val & (1u << bit)) ? "1" : "0";
 						}
 
-						if (slot_values[vi].empty())
-							continue;
+						const auto bit_level = compute_conflict_all(bit_values);
+						if (bit_level > worst_all)
+							worst_all = bit_level;
 
-						if (fdef.offset >= slot_values[vi].size())
-							continue;
-
-						size_t field_len = fdef.size;
-						if (fdef.type == field_type_t::string_var)
-							field_len = slot_values[vi].size() - fdef.offset;
-						else
-							field_len = std::min(fdef.size, slot_values[vi].size() - fdef.offset);
-
-						field_values[vi] = slot_values[vi].substr(fdef.offset, field_len);
+						per_slot_this.push_back(compute_conflict_this(bit_values));
 					}
 
-					const auto field_level = compute_conflict_all(field_values);
-					if (field_level > worst_all)
-						worst_all = field_level;
-
-					per_slot_this.push_back(compute_conflict_this(field_values));
-				}
-			}
-			else
-			{
-				const auto slot_level = compute_conflict_all(slot_values);
-				if (slot_level > worst_all)
-					worst_all = slot_level;
-
-				per_slot_this.push_back(compute_conflict_this(slot_values));
-			}
-		}
-	}
-	else if (entry.rec_type == "LEVI" || entry.rec_type == "LEVC")
-	{
-		struct lev_entry_t
-		{
-			std::string item_id;
-			size_t intv_idx;
-			size_t inam_idx;
-		};
-
-		std::vector<std::vector<lev_entry_t>> ver_entries(ver_count);
-		std::vector<std::string> all_item_ids;
-
-		for (size_t i = 0; i < ver_count; ++i)
-		{
-			for (size_t j = 0; j + 1 < parsed[i].size(); ++j)
-			{
-				if (parsed[i][j].type != "INTV" || parsed[i][j].size != 2)
 					continue;
-
-				if (parsed[i][j + 1].type != "INAM")
-					continue;
-
-				std::string item_id(parsed[i][j + 1].data, parsed[i][j + 1].size);
-				if (!item_id.empty() && item_id.back() == '\0')
-					item_id.pop_back();
-
-				ver_entries[i].push_back({ item_id, j, j + 1 });
-
-				bool found = false;
-				for (const auto & id : all_item_ids)
-				{
-					if (id == item_id)
-					{
-						found = true;
-						break;
-					}
 				}
 
-				if (!found)
-					all_item_ids.push_back(item_id);
+				std::vector<std::string> field_values(ver_count);
+				for (size_t vi = 0; vi < ver_count; ++vi)
+				{
+					if (is_deleted[vi])
+						continue;
+
+					if (slot.indices[vi] == SIZE_MAX)
+						continue;
+
+					const auto & sv = sr.parsed[vi][slot.indices[vi]];
+					field_values[vi] = decode_field(fdef, sv.data, sv.size);
+				}
+
+				const auto field_level = compute_conflict_all(field_values);
+				if (field_level > worst_all)
+					worst_all = field_level;
+
+				per_slot_this.push_back(compute_conflict_this(field_values));
 			}
 		}
-
-		for (size_t i = 0; i < ver_count; ++i)
+		else
 		{
-			std::map<std::string, int> occ_count;
-			for (const auto & sv : parsed[i])
-			{
-				if (sv.type == "INTV" && sv.size == 2)
-					continue;
-
-				if (sv.type == "INAM")
-					continue;
-
-				int occ = occ_count[sv.type]++;
-				slot_key_t key = { sv.type, occ };
-				bool found = false;
-				for (const auto & slot : unified_slots)
-				{
-					if (slot == key)
-					{
-						found = true;
-						break;
-					}
-				}
-
-				if (!found)
-					unified_slots.push_back(key);
-			}
-		}
-
-		int intv_occ_base = 0;
-		int inam_occ_base = 0;
-		for (const auto & slot : unified_slots)
-		{
-			if (slot.first == "INTV")
-				intv_occ_base = std::max(intv_occ_base, slot.second + 1);
-
-			if (slot.first == "INAM")
-				inam_occ_base = std::max(inam_occ_base, slot.second + 1);
-		}
-
-		for (size_t idx = 0; idx < all_item_ids.size(); ++idx)
-		{
-			unified_slots.push_back({ "INTV", intv_occ_base + static_cast<int>(idx) });
-			unified_slots.push_back({ "INAM", inam_occ_base + static_cast<int>(idx) });
-		}
-
-		for (const auto & slot : unified_slots)
-		{
-			std::vector<std::string> slot_values(ver_count);
-			bool is_item_intv = (slot.first == "INTV" && slot.second >= intv_occ_base);
-			bool is_item_inam = (slot.first == "INAM" && slot.second >= inam_occ_base);
-
-			for (size_t vi = 0; vi < ver_count; ++vi)
-			{
-				if (is_item_intv)
-				{
-					size_t item_idx = static_cast<size_t>(slot.second - intv_occ_base);
-					const auto & target_id = all_item_ids[item_idx];
-					for (const auto & e : ver_entries[vi])
-					{
-						if (e.item_id != target_id)
-							continue;
-
-						const auto & sv = parsed[vi][e.intv_idx];
-						slot_values[vi] = std::string(sv.data, sv.size);
-						break;
-					}
-				}
-				else if (is_item_inam)
-				{
-					size_t item_idx = static_cast<size_t>(slot.second - inam_occ_base);
-					const auto & target_id = all_item_ids[item_idx];
-					for (const auto & e : ver_entries[vi])
-					{
-						if (e.item_id != target_id)
-							continue;
-
-						const auto & sv = parsed[vi][e.inam_idx];
-						slot_values[vi] = std::string(sv.data, sv.size);
-						break;
-					}
-				}
-				else
-				{
-					int target_occ = slot.second;
-					int current_occ = 0;
-					for (const auto & sv : parsed[vi])
-					{
-						if (sv.type == "INTV" && sv.size == 2)
-							continue;
-
-						if (sv.type == "INAM")
-							continue;
-
-						if (sv.type != slot.first)
-							continue;
-
-						if (current_occ == target_occ)
-						{
-							slot_values[vi] = std::string(sv.data, sv.size);
-							break;
-						}
-
-						++current_occ;
-					}
-				}
-
-				if (is_deleted[vi])
-					slot_values[vi] = "\x01\x44\x45\x4C\x45";
-			}
-
 			const auto slot_level = compute_conflict_all(slot_values);
 			if (slot_level > worst_all)
 				worst_all = slot_level;
 
 			per_slot_this.push_back(compute_conflict_this(slot_values));
-		}
-	}
-	else if (entry.rec_type == "FACT")
-	{
-		struct fact_entry_t
-		{
-			std::string faction_name;
-			size_t intv_idx;
-			size_t anam_idx;
-		};
-
-		std::vector<std::vector<fact_entry_t>> ver_entries(ver_count);
-		std::vector<std::string> all_faction_names;
-
-		for (size_t i = 0; i < ver_count; ++i)
-		{
-			for (size_t j = 0; j + 1 < parsed[i].size(); ++j)
-			{
-				if (parsed[i][j].type != "INTV" || parsed[i][j].size != 4)
-					continue;
-
-				if (parsed[i][j + 1].type != "ANAM")
-					continue;
-
-				std::string faction_name(parsed[i][j + 1].data, parsed[i][j + 1].size);
-				if (!faction_name.empty() && faction_name.back() == '\0')
-					faction_name.pop_back();
-
-				ver_entries[i].push_back({ faction_name, j, j + 1 });
-
-				bool found = false;
-				for (const auto & name : all_faction_names)
-				{
-					if (name == faction_name)
-					{
-						found = true;
-						break;
-					}
-				}
-
-				if (!found)
-					all_faction_names.push_back(faction_name);
-			}
-		}
-
-		using slot_key_t = std::pair<std::string, int>;
-		std::vector<slot_key_t> unified_slots;
-
-		for (size_t i = 0; i < ver_count; ++i)
-		{
-			std::map<std::string, int> occ_count;
-			for (const auto & sv : parsed[i])
-			{
-				if (sv.type == "INTV" && sv.size == 4)
-					continue;
-
-				if (sv.type == "ANAM")
-					continue;
-
-				int occ = occ_count[sv.type]++;
-				slot_key_t key = { sv.type, occ };
-				bool exists = false;
-				for (const auto & s : unified_slots)
-				{
-					if (s == key)
-					{
-						exists = true;
-						break;
-					}
-				}
-
-				if (!exists)
-					unified_slots.push_back(key);
-			}
-		}
-
-		int intv_occ_base = 0;
-		int anam_occ_base = 0;
-		for (const auto & slot : unified_slots)
-		{
-			if (slot.first == "INTV")
-				intv_occ_base = std::max(intv_occ_base, slot.second + 1);
-
-			if (slot.first == "ANAM")
-				anam_occ_base = std::max(anam_occ_base, slot.second + 1);
-		}
-
-		for (size_t idx = 0; idx < all_faction_names.size(); ++idx)
-		{
-			unified_slots.push_back({ "INTV", intv_occ_base + static_cast<int>(idx) });
-			unified_slots.push_back({ "ANAM", anam_occ_base + static_cast<int>(idx) });
-		}
-
-		for (const auto & slot : unified_slots)
-		{
-			std::vector<std::string> slot_values(ver_count);
-			bool is_faction_intv = (slot.first == "INTV" && slot.second >= intv_occ_base);
-			bool is_faction_anam = (slot.first == "ANAM" && slot.second >= anam_occ_base);
-
-			for (size_t vi = 0; vi < ver_count; ++vi)
-			{
-				if (is_faction_intv)
-				{
-					size_t item_idx = static_cast<size_t>(slot.second - intv_occ_base);
-					const auto & target_name = all_faction_names[item_idx];
-					for (const auto & e : ver_entries[vi])
-					{
-						if (e.faction_name != target_name)
-							continue;
-
-						const auto & sv = parsed[vi][e.intv_idx];
-						slot_values[vi] = std::string(sv.data, sv.size);
-						break;
-					}
-				}
-				else if (is_faction_anam)
-				{
-					size_t item_idx = static_cast<size_t>(slot.second - anam_occ_base);
-					const auto & target_name = all_faction_names[item_idx];
-					for (const auto & e : ver_entries[vi])
-					{
-						if (e.faction_name != target_name)
-							continue;
-
-						const auto & sv = parsed[vi][e.anam_idx];
-						slot_values[vi] = std::string(sv.data, sv.size);
-						break;
-					}
-				}
-				else
-				{
-					int target_occ = slot.second;
-					int current_occ = 0;
-					for (const auto & sv : parsed[vi])
-					{
-						if (sv.type == "INTV" && sv.size == 4)
-							continue;
-
-						if (sv.type == "ANAM")
-							continue;
-
-						if (sv.type != slot.first)
-							continue;
-
-						if (current_occ == target_occ)
-						{
-							slot_values[vi] = std::string(sv.data, sv.size);
-							break;
-						}
-
-						++current_occ;
-					}
-				}
-
-				if (is_deleted[vi])
-					slot_values[vi] = "\x01\x44\x45\x4C\x45";
-			}
-
-			const auto slot_level = compute_conflict_all(slot_values);
-			if (slot_level > worst_all)
-				worst_all = slot_level;
-
-			per_slot_this.push_back(compute_conflict_this(slot_values));
-		}
-	}
-	else if (entry.rec_type == "CONT" || entry.rec_type == "CREA" || entry.rec_type == "NPC_")
-	{
-		struct cont_entry_t
-		{
-			std::string item_id;
-			size_t npco_idx;
-		};
-
-		struct spell_entry_t
-		{
-			std::string spell_id;
-			size_t npcs_idx;
-		};
-
-		std::vector<std::vector<cont_entry_t>> ver_entries(ver_count);
-		std::vector<std::string> all_item_ids;
-		std::vector<std::vector<spell_entry_t>> ver_spells(ver_count);
-		std::vector<std::string> all_spell_ids;
-
-		for (size_t i = 0; i < ver_count; ++i)
-		{
-			for (size_t j = 0; j < parsed[i].size(); ++j)
-			{
-				if (parsed[i][j].type == "NPCO" && parsed[i][j].size == 36)
-				{
-					std::string item_id(parsed[i][j].data + 4, 32);
-					while (!item_id.empty() && item_id.back() == '\0')
-						item_id.pop_back();
-
-					ver_entries[i].push_back({ item_id, j });
-
-					bool found = false;
-					for (const auto & id : all_item_ids)
-					{
-						if (id == item_id)
-						{
-							found = true;
-							break;
-						}
-					}
-
-					if (!found)
-						all_item_ids.push_back(item_id);
-				}
-				else if (parsed[i][j].type == "NPCS" && parsed[i][j].size == 32)
-				{
-					std::string spell_id(parsed[i][j].data, 32);
-					while (!spell_id.empty() && spell_id.back() == '\0')
-						spell_id.pop_back();
-
-					ver_spells[i].push_back({ spell_id, j });
-
-					bool found = false;
-					for (const auto & id : all_spell_ids)
-					{
-						if (id == spell_id)
-						{
-							found = true;
-							break;
-						}
-					}
-
-					if (!found)
-						all_spell_ids.push_back(spell_id);
-				}
-			}
-		}
-
-		using slot_key_t = std::pair<std::string, int>;
-		std::vector<slot_key_t> unified_slots;
-
-		for (size_t i = 0; i < ver_count; ++i)
-		{
-			std::map<std::string, int> occ_count;
-			for (const auto & sv : parsed[i])
-			{
-				if (sv.type == "NPCO" && sv.size == 36)
-					continue;
-
-				if (sv.type == "NPCS" && sv.size == 32)
-					continue;
-
-				int occ = occ_count[sv.type]++;
-				slot_key_t key = { sv.type, occ };
-				bool exists = false;
-				for (const auto & s : unified_slots)
-				{
-					if (s == key)
-					{
-						exists = true;
-						break;
-					}
-				}
-
-				if (!exists)
-					unified_slots.push_back(key);
-			}
-		}
-
-		int npco_occ_base = 0;
-		for (const auto & slot : unified_slots)
-		{
-			if (slot.first == "NPCO")
-				npco_occ_base = std::max(npco_occ_base, slot.second + 1);
-		}
-
-		for (size_t idx = 0; idx < all_item_ids.size(); ++idx)
-			unified_slots.push_back({ "NPCO", npco_occ_base + static_cast<int>(idx) });
-
-		int npcs_occ_base = 0;
-		for (const auto & slot : unified_slots)
-		{
-			if (slot.first == "NPCS")
-				npcs_occ_base = std::max(npcs_occ_base, slot.second + 1);
-		}
-
-		for (size_t idx = 0; idx < all_spell_ids.size(); ++idx)
-			unified_slots.push_back({ "NPCS", npcs_occ_base + static_cast<int>(idx) });
-
-		for (const auto & slot : unified_slots)
-		{
-			std::vector<std::string> slot_values(ver_count);
-			bool is_item_npco = (slot.first == "NPCO" && slot.second >= npco_occ_base);
-			bool is_spell_npcs = (slot.first == "NPCS" && slot.second >= npcs_occ_base);
-
-			for (size_t vi = 0; vi < ver_count; ++vi)
-			{
-				if (is_item_npco)
-				{
-					size_t item_idx = static_cast<size_t>(slot.second - npco_occ_base);
-					const auto & target_id = all_item_ids[item_idx];
-					for (const auto & e : ver_entries[vi])
-					{
-						if (e.item_id != target_id)
-							continue;
-
-						const auto & sv = parsed[vi][e.npco_idx];
-						slot_values[vi] = std::string(sv.data, sv.size);
-						break;
-					}
-				}
-				else if (is_spell_npcs)
-				{
-					size_t spell_idx = static_cast<size_t>(slot.second - npcs_occ_base);
-					const auto & target_id = all_spell_ids[spell_idx];
-					for (const auto & e : ver_spells[vi])
-					{
-						if (e.spell_id != target_id)
-							continue;
-
-						const auto & sv = parsed[vi][e.npcs_idx];
-						slot_values[vi] = std::string(sv.data, sv.size);
-						break;
-					}
-				}
-				else
-				{
-					int target_occ = slot.second;
-					int current_occ = 0;
-					for (const auto & sv : parsed[vi])
-					{
-						if (sv.type == "NPCO" && sv.size == 36)
-							continue;
-
-						if (sv.type == "NPCS" && sv.size == 32)
-							continue;
-
-						if (sv.type != slot.first)
-							continue;
-
-						if (current_occ == target_occ)
-						{
-							slot_values[vi] = std::string(sv.data, sv.size);
-							break;
-						}
-
-						++current_occ;
-					}
-				}
-
-				if (is_deleted[vi])
-					slot_values[vi] = "\x01\x44\x45\x4C\x45";
-			}
-
-			size_t first_size = 0;
-			for (size_t vi = 0; vi < ver_count; ++vi)
-			{
-				if (!slot_values[vi].empty() && slot_values[vi][0] != '\x01')
-				{
-					first_size = slot_values[vi].size();
-					break;
-				}
-			}
-
-			const auto * schema = find_schema(entry.rec_type, slot.first, first_size);
-			if (schema && schema->field_count > 0 && first_size > 0)
-			{
-				for (size_t fi = 0; fi < schema->field_count; ++fi)
-				{
-					const auto & fdef = schema->fields[fi];
-					std::vector<std::string> field_values(ver_count);
-
-					for (size_t vi = 0; vi < ver_count; ++vi)
-					{
-						if (is_deleted[vi])
-						{
-							field_values[vi] = "\x01\x44\x45\x4C\x45";
-							continue;
-						}
-
-						if (slot_values[vi].empty())
-							continue;
-
-						if (fdef.offset >= slot_values[vi].size())
-							continue;
-
-						size_t field_len = fdef.size;
-						if (fdef.type == field_type_t::string_var)
-							field_len = slot_values[vi].size() - fdef.offset;
-						else
-							field_len = std::min(fdef.size, slot_values[vi].size() - fdef.offset);
-
-						field_values[vi] = slot_values[vi].substr(fdef.offset, field_len);
-					}
-
-					const auto field_level = compute_conflict_all(field_values);
-					if (field_level > worst_all)
-						worst_all = field_level;
-
-					per_slot_this.push_back(compute_conflict_this(field_values));
-				}
-			}
-			else
-			{
-				const auto slot_level = compute_conflict_all(slot_values);
-				if (slot_level > worst_all)
-					worst_all = slot_level;
-
-				per_slot_this.push_back(compute_conflict_this(slot_values));
-			}
-		}
-	}
-	else
-	{
-		std::set<slot_key_t> seen;
-		for (size_t i = 0; i < ver_count; ++i)
-		{
-			std::map<std::string, int> occ_count;
-			for (const auto & sv : parsed[i])
-			{
-				int occ = occ_count[sv.type]++;
-				slot_key_t key = { sv.type, occ };
-				if (seen.insert(key).second)
-					unified_slots.push_back(key);
-			}
-		}
-
-		for (const auto & slot : unified_slots)
-		{
-			std::vector<std::string> slot_values(ver_count);
-			size_t first_size = 0;
-
-			for (size_t vi = 0; vi < ver_count; ++vi)
-			{
-				int target_occ = slot.second;
-				int current_occ = 0;
-
-				for (const auto & sv : parsed[vi])
-				{
-					if (sv.type != slot.first)
-						continue;
-
-					if (current_occ == target_occ)
-					{
-						slot_values[vi] = std::string(sv.data, sv.size);
-						if (first_size == 0)
-							first_size = sv.size;
-
-						break;
-					}
-
-					++current_occ;
-				}
-
-				if (is_deleted[vi])
-					slot_values[vi] = "\x01\x44\x45\x4C\x45";
-			}
-
-			const auto * schema = find_schema(entry.rec_type, slot.first, first_size);
-			if (schema && schema->field_count > 0 && first_size > 0)
-			{
-				for (size_t fi = 0; fi < schema->field_count; ++fi)
-				{
-					const auto & fdef = schema->fields[fi];
-					std::vector<std::string> field_values(ver_count);
-
-					for (size_t vi = 0; vi < ver_count; ++vi)
-					{
-						if (is_deleted[vi])
-						{
-							field_values[vi] = "\x01\x44\x45\x4C\x45";
-							continue;
-						}
-
-						if (slot_values[vi].empty())
-							continue;
-
-						if (fdef.offset >= slot_values[vi].size())
-							continue;
-
-						size_t field_len = fdef.size;
-						if (fdef.type == field_type_t::string_var)
-							field_len = slot_values[vi].size() - fdef.offset;
-						else
-							field_len = std::min(fdef.size, slot_values[vi].size() - fdef.offset);
-
-						field_values[vi] = slot_values[vi].substr(fdef.offset, field_len);
-					}
-
-					const auto field_level = compute_conflict_all(field_values);
-					if (field_level > worst_all)
-						worst_all = field_level;
-
-					per_slot_this.push_back(compute_conflict_this(field_values));
-				}
-			}
-			else
-			{
-				const auto slot_level = compute_conflict_all(slot_values);
-				if (slot_level > worst_all)
-					worst_all = slot_level;
-
-				per_slot_this.push_back(compute_conflict_this(slot_values));
-			}
 		}
 	}
 
 	entry.conflict_all = worst_all;
+
 
 	if (worst_all <= conflict_all_t::only_one)
 		return;

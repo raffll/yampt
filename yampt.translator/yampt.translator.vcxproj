@@ -246,6 +246,8 @@ if exist "$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\Qt6\plugins\tls"
     <ClCompile Include="..\yampt\plugin_scan\plugin_index.cpp" />
     <ClCompile Include="..\yampt\plugin_scan\plugin_scan.cpp" />
     <ClCompile Include="..\yampt\plugin_scan\conflict_compute.cpp" />
+    <ClCompile Include="..\yampt\plugin_scan\conflict_slots.cpp" />
+    <ClCompile Include="..\yampt\plugin_scan\view_tree_format.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="spell_context_menu.hpp" />
@@ -264,6 +266,8 @@ if exist "$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\Qt6\plugins\tls"
     <ClInclude Include="..\yampt\file_list.hpp" />
     <ClInclude Include="..\yampt\plugin_scan\conflict_enums.hpp" />
     <ClInclude Include="..\yampt\plugin_scan\conflict_types.hpp" />
+    <ClInclude Include="..\yampt\plugin_scan\conflict_slots.hpp" />
+    <ClInclude Include="..\yampt\plugin_scan\view_tree_format.hpp" />
     <ClInclude Include="..\yampt\plugin_scan\sub_record_iter.hpp" />
     <ClInclude Include="..\yampt\plugin_scan\sub_record_schema.hpp" />
     <ClInclude Include="..\yampt\plugin_scan\plugin_index.hpp" />

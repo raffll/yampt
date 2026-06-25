@@ -194,6 +194,7 @@
     <ClCompile Include="..\yampt\translation_engine.cpp" />
     <ClCompile Include="..\yampt\file_list.cpp" />
     <ClCompile Include="..\yampt\plugin_scan\conflict_compute.cpp" />
+    <ClCompile Include="..\yampt\plugin_scan\conflict_slots.cpp" />
     <ClCompile Include="tests.dict_merger.cpp" />
     <ClCompile Include="tests.dict_reader.cpp" />
     <ClCompile Include="tests.dict_writer.cpp" />
@@ -204,6 +205,7 @@
     <ClCompile Include="tests.tools.cpp" />
     <ClCompile Include="tests.file_list.cpp" />
     <ClCompile Include="tests.conflict_compute.cpp" />
+    <ClCompile Include="tests.conflict_slots.cpp" />
     <ClCompile Include="tests.document.cpp" />
     <ClCompile Include="..\yampt.translator\dict_document.cpp" />
     <ClCompile Include="..\yampt.translator\yaml_document.cpp" />

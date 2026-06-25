@@ -14,7 +14,9 @@
     <ClCompile Include="editor_tab.cpp" />
     <ClCompile Include="nav_tree_model.cpp" />
     <ClCompile Include="view_tree_model.cpp" />
-    <ClCompile Include="view_tree_format.cpp" />
+    <ClCompile Include="..\yampt\plugin_scan\view_tree_format.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
     <ClCompile Include="plugin_select_dialog.cpp" />
     <ClCompile Include="filter_dialog.cpp" />
     <ClCompile Include="messages_panel.cpp" />
@@ -42,6 +44,9 @@
     <ClCompile Include="..\yampt\plugin_scan\conflict_compute.cpp">
       <Filter>yampt</Filter>
     </ClCompile>
+    <ClCompile Include="..\yampt\plugin_scan\conflict_slots.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
     <ClCompile Include="$(IntDir)moc_editor_window.cpp" />
     <ClCompile Include="$(IntDir)moc_editor_tab.cpp" />
     <ClCompile Include="$(IntDir)moc_nav_tree_model.cpp" />
@@ -51,7 +56,9 @@
     <ClCompile Include="$(IntDir)moc_messages_panel.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="view_tree_format.hpp" />
+    <ClInclude Include="..\yampt\plugin_scan\view_tree_format.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
     <ClInclude Include="..\yampt\tools.hpp">
       <Filter>yampt</Filter>
     </ClInclude>
@@ -86,6 +93,9 @@
       <Filter>yampt</Filter>
     </ClInclude>
     <ClInclude Include="..\yampt\plugin_scan\conflict_compute.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\yampt\plugin_scan\conflict_slots.hpp">
       <Filter>yampt</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,5 +1,6 @@
 #include "plugin_index.hpp"
 #include "sub_record_iter.hpp"
+#include "sub_record_schema.hpp"
 #include <algorithm>
 #include <set>
 
@@ -254,6 +255,41 @@ std::string plugin_index_t::derive_id(esm_reader_t & esm, size_t i)
 std::string plugin_index_t::derive_display_name(esm_reader_t & esm, size_t i)
 {
 	const auto & content = esm.get_record().content;
+	const auto & rec_type = esm.get_record().id;
+
+	if (rec_type == "MGEF" || rec_type == "SKIL")
+	{
+		sub_record_iter_t iter(content);
+		sub_record_view_t sub;
+		while (iter.next(sub))
+		{
+			if (sub.type != "INDX")
+				continue;
+
+			if (sub.size < 4)
+				break;
+
+			int32_t index_val =
+			    static_cast<int32_t>(tools_t::convert_string_byte_array_to_uint(std::string(sub.data, 4)));
+
+			if (rec_type == "MGEF")
+			{
+				const char * name = effect_name_by_index(index_val);
+				if (name)
+					return name;
+			}
+			else
+			{
+				const char * name = skill_name_by_index(index_val);
+				if (name)
+					return name;
+			}
+
+			break;
+		}
+
+		return "";
+	}
 
 	sub_record_iter_t iter(content);
 	sub_record_view_t sub;

@@ -102,6 +102,12 @@
     <ClCompile Include="..\yampt\plugin_scan\conflict_compute.cpp">
       <Filter>yampt</Filter>
     </ClCompile>
+    <ClCompile Include="..\yampt\plugin_scan\conflict_slots.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\yampt\plugin_scan\view_tree_format.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
     <ClCompile Include="..\yampt\dict_merger.cpp" />
     <ClCompile Include="log_tab.cpp" />
     <ClCompile Include="dict_selection_dialog.cpp" />
@@ -195,6 +201,12 @@
       <Filter>yampt</Filter>
     </ClInclude>
     <ClInclude Include="..\yampt\plugin_scan\conflict_compute.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\yampt\plugin_scan\conflict_slots.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\yampt\plugin_scan\view_tree_format.hpp">
       <Filter>yampt</Filter>
     </ClInclude>
     <ClInclude Include="grammar_checker.hpp" />

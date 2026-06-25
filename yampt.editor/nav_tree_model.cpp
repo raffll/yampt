@@ -6,6 +6,53 @@
 #include <cstring>
 #include <map>
 
+static int natural_compare(const std::string & a, const std::string & b)
+{
+	size_t i = 0, j = 0;
+	while (i < a.size() && j < b.size())
+	{
+		bool a_digit = std::isdigit(static_cast<unsigned char>(a[i]));
+		bool b_digit = std::isdigit(static_cast<unsigned char>(b[j]));
+
+		if (a_digit && b_digit)
+		{
+			while (i < a.size() && a[i] == '0') ++i;
+			while (j < b.size() && b[j] == '0') ++j;
+
+			size_t a_start = i, b_start = j;
+			while (i < a.size() && std::isdigit(static_cast<unsigned char>(a[i]))) ++i;
+			while (j < b.size() && std::isdigit(static_cast<unsigned char>(b[j]))) ++j;
+
+			size_t a_len = i - a_start;
+			size_t b_len = j - b_start;
+
+			if (a_len != b_len)
+				return a_len < b_len ? -1 : 1;
+
+			for (size_t k = 0; k < a_len; ++k)
+			{
+				if (a[a_start + k] != b[b_start + k])
+					return a[a_start + k] < b[b_start + k] ? -1 : 1;
+			}
+		}
+		else
+		{
+			unsigned char ca = static_cast<unsigned char>(std::tolower(static_cast<unsigned char>(a[i])));
+			unsigned char cb = static_cast<unsigned char>(std::tolower(static_cast<unsigned char>(b[j])));
+
+			if (ca != cb)
+				return ca < cb ? -1 : 1;
+
+			++i;
+			++j;
+		}
+	}
+
+	if (i < a.size()) return 1;
+	if (j < b.size()) return -1;
+	return 0;
+}
+
 static const char * type_to_display_name(const std::string & type)
 {
 	static const std::map<std::string, const char *> names = {
@@ -130,18 +177,18 @@ void nav_tree_model_t::build_tree()
 			    recs.end(),
 			    [&](const visible_record_t & a, const visible_record_t & b)
 			{
-				const auto & na = entries[a.entry_idx].display_name;
-				const auto & nb = entries[b.entry_idx].display_name;
+				const auto & ea = entries[a.entry_idx];
+				const auto & eb = entries[b.entry_idx];
+				const auto & na = ea.display_name;
+				const auto & nb = eb.display_name;
+
+				if (!na.empty() && !nb.empty())
+					return natural_compare(na, nb) < 0;
+
 				if (na.empty() && nb.empty())
-					return entries[a.entry_idx].record_id < entries[b.entry_idx].record_id;
+					return natural_compare(ea.record_id, eb.record_id) < 0;
 
-				if (na.empty())
-					return false;
-
-				if (nb.empty())
-					return true;
-
-				return na < nb;
+				return !na.empty();
 			});
 
 			type_group_t group;
@@ -382,7 +429,7 @@ int nav_tree_model_t::rowCount(const QModelIndex & parent) const
 
 int nav_tree_model_t::columnCount(const QModelIndex &) const
 {
-	return 3;
+	return 2;
 }
 
 QVariant nav_tree_model_t::headerData(int section, Qt::Orientation orientation, int role) const
@@ -393,10 +440,8 @@ QVariant nav_tree_model_t::headerData(int section, Qt::Orientation orientation, 
 	switch (section)
 	{
 	case 0:
-		return QStringLiteral("FormID");
-	case 1:
 		return QStringLiteral("EditorID");
-	case 2:
+	case 1:
 		return QStringLiteral("Name");
 	}
 
@@ -557,28 +602,9 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 			if (role == Qt::DisplayRole)
 			{
 				if (col == 0)
-				{
-					size_t record_index = 0;
-					for (const auto & v : entry.versions)
-					{
-						if (v.plugin_idx != tree_[fi].plugin_idx)
-							continue;
-
-						record_index = v.record_index;
-						break;
-					}
-
-					char buf[16];
-					uint32_t form_id = (static_cast<uint32_t>(tree_[fi].plugin_idx) << 24) |
-					                   (static_cast<uint32_t>(record_index) & 0x00FFFFFF);
-					std::snprintf(buf, sizeof(buf), "%08X", form_id);
-					return QString::fromUtf8(buf);
-				}
-
-				if (col == 1)
 					return QString::fromStdString(entry.record_id);
 
-				if (col == 2)
+				if (col == 1)
 					return QString::fromStdString(entry.display_name);
 			}
 

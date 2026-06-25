@@ -1,6 +1,7 @@
 #pragma once
 
 #include "plugin_index.hpp"
+#include "conflict_slots.hpp"
 #include "conflict_types.hpp"
 #include <memory>
 #include <string>
@@ -21,6 +22,7 @@ struct conflict_entry_t
 	std::string dial_name;
 	conflict_all_t conflict_all = conflict_all_t::unknown;
 	std::vector<record_version_t> versions;
+	std::unique_ptr<slot_result_t> slot_result;
 };
 
 class plugin_scan_t

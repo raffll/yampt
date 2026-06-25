@@ -55,8 +55,12 @@
     <ClCompile Include="..\yampt\translation_engine.cpp" />
     <ClCompile Include="..\yampt\file_list.cpp" />
     <ClCompile Include="tests.conflict_compute.cpp" />
+    <ClCompile Include="tests.conflict_slots.cpp" />
     <ClCompile Include="tests.document.cpp" />
     <ClCompile Include="..\yampt\plugin_scan\conflict_compute.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\yampt\plugin_scan\conflict_slots.cpp">
       <Filter>yampt</Filter>
     </ClCompile>
     <ClCompile Include="..\yampt.translator\dict_document.cpp" />
