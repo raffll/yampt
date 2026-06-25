@@ -1685,8 +1685,16 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 			size_t npco_idx;
 		};
 
+		struct spell_entry_t
+		{
+			std::string spell_id;
+			size_t npcs_idx;
+		};
+
 		std::vector<std::vector<cont_entry_t>> col_entries(col_count);
 		std::vector<std::string> all_item_ids;
+		std::vector<std::vector<spell_entry_t>> col_spells(col_count);
+		std::vector<std::string> all_spell_ids;
 
 		for (size_t col = 0; col < col_count; ++col)
 		{
@@ -1696,27 +1704,48 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 			const auto & subs = all_sub_records[col];
 			for (size_t i = 0; i < subs.size(); ++i)
 			{
-				if (subs[i].type != "NPCO" || subs[i].size != 36)
-					continue;
-
-				std::string item_id(subs[i].data + 4, 32);
-				while (!item_id.empty() && item_id.back() == '\0')
-					item_id.pop_back();
-
-				col_entries[col].push_back({ item_id, i });
-
-				bool found = false;
-				for (const auto & id : all_item_ids)
+				if (subs[i].type == "NPCO" && subs[i].size == 36)
 				{
-					if (id == item_id)
-					{
-						found = true;
-						break;
-					}
-				}
+					std::string item_id(subs[i].data + 4, 32);
+					while (!item_id.empty() && item_id.back() == '\0')
+						item_id.pop_back();
 
-				if (!found)
-					all_item_ids.push_back(item_id);
+					col_entries[col].push_back({ item_id, i });
+
+					bool found = false;
+					for (const auto & id : all_item_ids)
+					{
+						if (id == item_id)
+						{
+							found = true;
+							break;
+						}
+					}
+
+					if (!found)
+						all_item_ids.push_back(item_id);
+				}
+				else if (subs[i].type == "NPCS" && subs[i].size == 32)
+				{
+					std::string spell_id(subs[i].data, 32);
+					while (!spell_id.empty() && spell_id.back() == '\0')
+						spell_id.pop_back();
+
+					col_spells[col].push_back({ spell_id, i });
+
+					bool found = false;
+					for (const auto & id : all_spell_ids)
+					{
+						if (id == spell_id)
+						{
+							found = true;
+							break;
+						}
+					}
+
+					if (!found)
+						all_spell_ids.push_back(spell_id);
+				}
 			}
 		}
 
@@ -1729,6 +1758,9 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 			for (const auto & sv : all_sub_records[col])
 			{
 				if (sv.type == "NPCO" && sv.size == 36)
+					continue;
+
+				if (sv.type == "NPCS" && sv.size == 32)
 					continue;
 
 				int occ = type_count[sv.type]++;
@@ -1760,6 +1792,18 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 			unified_slots.push_back({ "NPCO", npco_occ + 1 });
 		}
 
+		for (const auto & spell_id : all_spell_ids)
+		{
+			int npcs_occ = -1;
+			for (const auto & slot : unified_slots)
+			{
+				if (slot.type == "NPCS")
+					npcs_occ = std::max(npcs_occ, slot.occurrence);
+			}
+
+			unified_slots.push_back({ "NPCS", npcs_occ + 1 });
+		}
+
 		std::vector<std::unordered_map<std::string, std::vector<size_t>>> col_type_indices(col_count);
 		for (size_t col = 0; col < col_count; ++col)
 		{
@@ -1770,6 +1814,9 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 			{
 				const auto & sv = all_sub_records[col][i];
 				if (sv.type == "NPCO" && sv.size == 36)
+					continue;
+
+				if (sv.type == "NPCS" && sv.size == 32)
 					continue;
 
 				col_type_indices[col][sv.type].push_back(i);
@@ -1791,6 +1838,24 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 
 				if (!matched)
 					col_type_indices[col]["NPCO"].push_back(SIZE_MAX);
+			}
+
+			for (size_t entry_idx = 0; entry_idx < all_spell_ids.size(); ++entry_idx)
+			{
+				const auto & target_id = all_spell_ids[entry_idx];
+				bool matched = false;
+				for (const auto & e : col_spells[col])
+				{
+					if (e.spell_id == target_id)
+					{
+						col_type_indices[col]["NPCS"].push_back(e.npcs_idx);
+						matched = true;
+						break;
+					}
+				}
+
+				if (!matched)
+					col_type_indices[col]["NPCS"].push_back(SIZE_MAX);
 			}
 		}
 

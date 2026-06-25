@@ -781,34 +781,63 @@ void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 			size_t npco_idx;
 		};
 
+		struct spell_entry_t
+		{
+			std::string spell_id;
+			size_t npcs_idx;
+		};
+
 		std::vector<std::vector<cont_entry_t>> ver_entries(ver_count);
 		std::vector<std::string> all_item_ids;
+		std::vector<std::vector<spell_entry_t>> ver_spells(ver_count);
+		std::vector<std::string> all_spell_ids;
 
 		for (size_t i = 0; i < ver_count; ++i)
 		{
 			for (size_t j = 0; j < parsed[i].size(); ++j)
 			{
-				if (parsed[i][j].type != "NPCO" || parsed[i][j].size != 36)
-					continue;
-
-				std::string item_id(parsed[i][j].data + 4, 32);
-				while (!item_id.empty() && item_id.back() == '\0')
-					item_id.pop_back();
-
-				ver_entries[i].push_back({ item_id, j });
-
-				bool found = false;
-				for (const auto & id : all_item_ids)
+				if (parsed[i][j].type == "NPCO" && parsed[i][j].size == 36)
 				{
-					if (id == item_id)
-					{
-						found = true;
-						break;
-					}
-				}
+					std::string item_id(parsed[i][j].data + 4, 32);
+					while (!item_id.empty() && item_id.back() == '\0')
+						item_id.pop_back();
 
-				if (!found)
-					all_item_ids.push_back(item_id);
+					ver_entries[i].push_back({ item_id, j });
+
+					bool found = false;
+					for (const auto & id : all_item_ids)
+					{
+						if (id == item_id)
+						{
+							found = true;
+							break;
+						}
+					}
+
+					if (!found)
+						all_item_ids.push_back(item_id);
+				}
+				else if (parsed[i][j].type == "NPCS" && parsed[i][j].size == 32)
+				{
+					std::string spell_id(parsed[i][j].data, 32);
+					while (!spell_id.empty() && spell_id.back() == '\0')
+						spell_id.pop_back();
+
+					ver_spells[i].push_back({ spell_id, j });
+
+					bool found = false;
+					for (const auto & id : all_spell_ids)
+					{
+						if (id == spell_id)
+						{
+							found = true;
+							break;
+						}
+					}
+
+					if (!found)
+						all_spell_ids.push_back(spell_id);
+				}
 			}
 		}
 
@@ -821,6 +850,9 @@ void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 			for (const auto & sv : parsed[i])
 			{
 				if (sv.type == "NPCO" && sv.size == 36)
+					continue;
+
+				if (sv.type == "NPCS" && sv.size == 32)
 					continue;
 
 				int occ = occ_count[sv.type]++;
@@ -850,10 +882,21 @@ void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 		for (size_t idx = 0; idx < all_item_ids.size(); ++idx)
 			unified_slots.push_back({ "NPCO", npco_occ_base + static_cast<int>(idx) });
 
+		int npcs_occ_base = 0;
+		for (const auto & slot : unified_slots)
+		{
+			if (slot.first == "NPCS")
+				npcs_occ_base = std::max(npcs_occ_base, slot.second + 1);
+		}
+
+		for (size_t idx = 0; idx < all_spell_ids.size(); ++idx)
+			unified_slots.push_back({ "NPCS", npcs_occ_base + static_cast<int>(idx) });
+
 		for (const auto & slot : unified_slots)
 		{
 			std::vector<std::string> slot_values(ver_count);
 			bool is_item_npco = (slot.first == "NPCO" && slot.second >= npco_occ_base);
+			bool is_spell_npcs = (slot.first == "NPCS" && slot.second >= npcs_occ_base);
 
 			for (size_t vi = 0; vi < ver_count; ++vi)
 			{
@@ -871,6 +914,20 @@ void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 						break;
 					}
 				}
+				else if (is_spell_npcs)
+				{
+					size_t spell_idx = static_cast<size_t>(slot.second - npcs_occ_base);
+					const auto & target_id = all_spell_ids[spell_idx];
+					for (const auto & e : ver_spells[vi])
+					{
+						if (e.spell_id != target_id)
+							continue;
+
+						const auto & sv = parsed[vi][e.npcs_idx];
+						slot_values[vi] = std::string(sv.data, sv.size);
+						break;
+					}
+				}
 				else
 				{
 					int target_occ = slot.second;
@@ -878,6 +935,9 @@ void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 					for (const auto & sv : parsed[vi])
 					{
 						if (sv.type == "NPCO" && sv.size == 36)
+							continue;
+
+						if (sv.type == "NPCS" && sv.size == 32)
 							continue;
 
 						if (sv.type != slot.first)
