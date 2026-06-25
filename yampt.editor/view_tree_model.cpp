@@ -162,9 +162,8 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 		header_row.label = "Record Header";
 		header_row.size = 16;
 		header_row.values.resize(col_count);
-		header_row.row_conflict_all = entry.conflict_all;
-		header_row.all_identical =
-		    (entry.conflict_all == conflict_all_t::no_conflict || entry.conflict_all == conflict_all_t::only_one);
+		header_row.row_conflict_all = conflict_all_t::only_one;
+		header_row.all_identical = true;
 		header_row.cell_conflict_this.resize(col_count, conflict_this_t::master);
 
 		field_row_t sig_row;
@@ -516,6 +515,18 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 			rows_.push_back(std::move(row));
 		}
 
+		if (!rows_.empty())
+		{
+			conflict_all_t worst = conflict_all_t::only_one;
+			for (size_t i = 1; i < rows_.size(); ++i)
+			{
+				if (rows_[i].row_conflict_all > worst)
+					worst = rows_[i].row_conflict_all;
+			}
+			rows_[0].row_conflict_all = worst;
+			rows_[0].all_identical = (worst <= conflict_all_t::no_conflict);
+		}
+
 		endResetModel();
 		return;
 	}
@@ -781,6 +792,18 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 		}
 
 		rows_.push_back(std::move(row));
+	}
+
+	if (!rows_.empty())
+	{
+		conflict_all_t worst = conflict_all_t::only_one;
+		for (size_t i = 1; i < rows_.size(); ++i)
+		{
+			if (rows_[i].row_conflict_all > worst)
+				worst = rows_[i].row_conflict_all;
+		}
+		rows_[0].row_conflict_all = worst;
+		rows_[0].all_identical = (worst <= conflict_all_t::no_conflict);
 	}
 
 	endResetModel();

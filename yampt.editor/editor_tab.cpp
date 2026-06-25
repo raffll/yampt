@@ -74,10 +74,10 @@ editor_tab_t::editor_tab_t(QWidget * parent)
 	btn_save_ = new QPushButton("Save", toolbar);
 	btn_save_->setVisible(false);
 	auto * btn_merge = new QPushButton("Create Merged Patch", toolbar);
+	btn_merge->setVisible(false);
 	btn_filter_ = new QPushButton("Filter", toolbar);
 	btn_filter_->setVisible(false);
 	chk_conflicts_ = new QCheckBox("Conflicts Only", toolbar);
-	chk_conflicts_->setVisible(false);
 	cmb_type_filter_ = new QComboBox(toolbar);
 	cmb_type_filter_->addItem("All Types");
 	cmb_type_filter_->setVisible(false);

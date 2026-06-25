@@ -199,6 +199,54 @@ void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 		return;
 	}
 
+	std::string winner_content;
+	if (entry.versions[last_differ_idx].plugin_idx == merge_plugin_idx_)
+		winner_content = merge_records_[entry.versions[last_differ_idx].record_index].content;
+	else
+	{
+		plugins_[entry.versions[last_differ_idx].plugin_idx]->esm.select_record(
+		    entry.versions[last_differ_idx].record_index);
+		winner_content = plugins_[entry.versions[last_differ_idx].plugin_idx]->esm.get_record().content;
+	}
+
+	bool all_overrides_agree = true;
+	for (size_t i = 1; i < entry.versions.size(); ++i)
+	{
+		auto & ver = entry.versions[i];
+		if (ver.status == conflict_this_t::identical_to_master || ver.status == conflict_this_t::deleted)
+			continue;
+
+		std::string ver_content;
+		if (ver.plugin_idx == merge_plugin_idx_)
+			ver_content = merge_records_[ver.record_index].content;
+		else
+		{
+			plugins_[ver.plugin_idx]->esm.select_record(ver.record_index);
+			ver_content = plugins_[ver.plugin_idx]->esm.get_record().content;
+		}
+
+		if (!content_equal(winner_content, ver_content))
+		{
+			all_overrides_agree = false;
+			break;
+		}
+	}
+
+	if (all_overrides_agree)
+	{
+		entry.conflict_all = conflict_all_t::override_benign;
+		for (size_t i = 1; i < entry.versions.size(); ++i)
+		{
+			auto & ver = entry.versions[i];
+			if (ver.status == conflict_this_t::identical_to_master || ver.status == conflict_this_t::deleted)
+				continue;
+
+			ver.status = conflict_this_t::override_wins;
+		}
+
+		return;
+	}
+
 	entry.conflict_all = conflict_all_t::conflict;
 	for (size_t i = 1; i < entry.versions.size(); ++i)
 	{
