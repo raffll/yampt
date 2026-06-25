@@ -519,25 +519,27 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 		endResetModel();
 		return;
 	}
-
-	for (const auto & subs : all_sub_records)
+	else
 	{
-		std::unordered_map<std::string, int> type_count;
-		for (const auto & sv : subs)
+		for (const auto & subs : all_sub_records)
 		{
-			int occ = type_count[sv.type]++;
-			bool found = false;
-			for (const auto & slot : unified_slots)
+			std::unordered_map<std::string, int> type_count;
+			for (const auto & sv : subs)
 			{
-				if (slot.type == sv.type && slot.occurrence == occ)
+				int occ = type_count[sv.type]++;
+				bool found = false;
+				for (const auto & slot : unified_slots)
 				{
-					found = true;
-					break;
+					if (slot.type == sv.type && slot.occurrence == occ)
+					{
+						found = true;
+						break;
+					}
 				}
-			}
 
-			if (!found)
-				unified_slots.push_back({ sv.type, occ });
+				if (!found)
+					unified_slots.push_back({ sv.type, occ });
+			}
 		}
 	}
 
