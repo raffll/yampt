@@ -186,10 +186,313 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 	};
 
 	bool is_leveled_list = (record_type_ == "LEVI" || record_type_ == "LEVC");
+	bool is_cell = (record_type_ == "CELL");
 
 	std::vector<sub_slot_t> unified_slots;
 
-	if (is_leveled_list)
+	if (is_cell)
+	{
+		struct ref_group_t
+		{
+			uint32_t object_index;
+			size_t start_idx;
+			size_t end_idx;
+		};
+
+		std::vector<std::vector<ref_group_t>> col_refs(col_count);
+		std::vector<uint32_t> all_object_indices;
+		std::vector<size_t> col_header_end(col_count, 0);
+
+		for (size_t col = 0; col < col_count; ++col)
+		{
+			if (col >= all_sub_records.size())
+				continue;
+
+			const auto & subs = all_sub_records[col];
+			size_t header_end = 0;
+
+			for (size_t i = 0; i < subs.size(); ++i)
+			{
+				if (subs[i].type != "FRMR")
+					continue;
+
+				if (col_refs[col].empty())
+					header_end = i;
+
+				uint32_t obj_idx = 0;
+				if (subs[i].size >= 4)
+					std::memcpy(&obj_idx, subs[i].data, 4);
+
+				size_t end = subs.size();
+				for (size_t j = i + 1; j < subs.size(); ++j)
+				{
+					if (subs[j].type == "FRMR")
+					{
+						end = j;
+						break;
+					}
+				}
+
+				col_refs[col].push_back({ obj_idx, i, end });
+
+				bool found = false;
+				for (const auto & oi : all_object_indices)
+				{
+					if (oi == obj_idx)
+					{
+						found = true;
+						break;
+					}
+				}
+
+				if (!found)
+					all_object_indices.push_back(obj_idx);
+			}
+
+			col_header_end[col] = header_end;
+		}
+
+		for (size_t col = 0; col < col_count; ++col)
+		{
+			if (col >= all_sub_records.size())
+				continue;
+
+			std::unordered_map<std::string, int> type_count;
+			for (size_t i = 0; i < col_header_end[col]; ++i)
+			{
+				const auto & sv = all_sub_records[col][i];
+				int occ = type_count[sv.type]++;
+				bool found = false;
+				for (const auto & slot : unified_slots)
+				{
+					if (slot.type == sv.type && slot.occurrence == occ)
+					{
+						found = true;
+						break;
+					}
+				}
+
+				if (!found)
+					unified_slots.push_back({ sv.type, occ });
+			}
+		}
+
+		size_t header_slot_count = unified_slots.size();
+
+		for (const auto & obj_idx : all_object_indices)
+		{
+			std::unordered_map<std::string, int> max_type_count;
+
+			for (size_t col = 0; col < col_count; ++col)
+			{
+				if (col >= all_sub_records.size())
+					continue;
+
+				for (const auto & ref : col_refs[col])
+				{
+					if (ref.object_index != obj_idx)
+						continue;
+
+					std::unordered_map<std::string, int> type_count;
+					for (size_t i = ref.start_idx; i < ref.end_idx; ++i)
+					{
+						const auto & sv = all_sub_records[col][i];
+						int occ = ++type_count[sv.type];
+						if (occ > max_type_count[sv.type])
+							max_type_count[sv.type] = occ;
+					}
+
+					break;
+				}
+			}
+
+			for (const auto & [type, count] : max_type_count)
+			{
+				for (int occ = 0; occ < count; ++occ)
+					unified_slots.push_back({ type, occ });
+			}
+		}
+
+		std::vector<std::unordered_map<std::string, std::vector<size_t>>> col_type_indices(col_count);
+
+		for (size_t col = 0; col < col_count; ++col)
+		{
+			if (col >= all_sub_records.size())
+				continue;
+
+			for (size_t i = 0; i < col_header_end[col]; ++i)
+				col_type_indices[col][all_sub_records[col][i].type].push_back(i);
+		}
+
+		size_t slot_pos = header_slot_count;
+		for (const auto & obj_idx : all_object_indices)
+		{
+			std::unordered_map<std::string, int> max_type_count;
+			for (size_t col = 0; col < col_count; ++col)
+			{
+				if (col >= all_sub_records.size())
+					continue;
+
+				for (const auto & ref : col_refs[col])
+				{
+					if (ref.object_index != obj_idx)
+						continue;
+
+					std::unordered_map<std::string, int> type_count;
+					for (size_t i = ref.start_idx; i < ref.end_idx; ++i)
+					{
+						const auto & sv = all_sub_records[col][i];
+						int occ = ++type_count[sv.type];
+						if (occ > max_type_count[sv.type])
+							max_type_count[sv.type] = occ;
+					}
+
+					break;
+				}
+			}
+
+			for (size_t col = 0; col < col_count; ++col)
+			{
+				if (col >= all_sub_records.size())
+					continue;
+
+				for (const auto & ref : col_refs[col])
+				{
+					if (ref.object_index != obj_idx)
+						continue;
+
+					for (size_t i = ref.start_idx; i < ref.end_idx; ++i)
+						col_type_indices[col][all_sub_records[col][i].type].push_back(i);
+
+					break;
+				}
+			}
+
+			for (const auto & [type, count] : max_type_count)
+				slot_pos += count;
+		}
+
+		for (const auto & slot : unified_slots)
+		{
+			sub_record_row_t row;
+			row.size = 0;
+			row.values.resize(col_count);
+
+			std::string sub_type = slot.type;
+			const char * first_data = nullptr;
+			size_t first_size = 0;
+
+			for (size_t col = 0; col < col_count; ++col)
+			{
+				if (col >= all_sub_records.size())
+				{
+					row.values[col] = "";
+					continue;
+				}
+
+				auto & indices = col_type_indices[col][slot.type];
+				if (slot.occurrence >= static_cast<int>(indices.size()))
+				{
+					row.values[col] = "";
+					continue;
+				}
+
+				size_t idx = indices[slot.occurrence];
+				const auto & sv = all_sub_records[col][idx];
+
+				if (!first_data)
+				{
+					first_data = sv.data;
+					first_size = sv.size;
+					row.size = sv.size;
+				}
+
+				row.values[col] = format_value(sv.data, sv.size);
+			}
+
+			row.type = sub_type;
+			row.label = make_sub_label(sub_type, record_type_, first_size);
+
+			bool all_same = true;
+			for (size_t col = 1; col < col_count; ++col)
+			{
+				if (row.values[col] != row.values[0])
+				{
+					all_same = false;
+					break;
+				}
+			}
+			row.all_identical = all_same;
+			row.row_conflict_all = compute_conflict_all(row.values);
+			row.cell_conflict_this = compute_conflict_this(row.values);
+
+			const sub_record_schema_t * schema = find_schema(record_type_, sub_type, first_size);
+			if (schema && first_data)
+			{
+				for (size_t fi = 0; fi < schema->field_count; ++fi)
+				{
+					const auto & fdef = schema->fields[fi];
+
+					field_row_t frow;
+					frow.name = fdef.name;
+					frow.values.resize(col_count);
+
+					for (size_t col = 0; col < col_count; ++col)
+					{
+						if (col >= all_sub_records.size())
+						{
+							frow.values[col] = "";
+							continue;
+						}
+
+						auto & indices2 = col_type_indices[col][slot.type];
+						if (slot.occurrence >= static_cast<int>(indices2.size()))
+						{
+							frow.values[col] = "";
+							continue;
+						}
+
+						size_t idx2 = indices2[slot.occurrence];
+						const auto & sv = all_sub_records[col][idx2];
+						frow.values[col] = decode_field(fdef, sv.data, sv.size);
+					}
+
+					bool fields_same = true;
+					for (size_t col = 1; col < col_count; ++col)
+					{
+						if (frow.values[col] != frow.values[0])
+						{
+							fields_same = false;
+							break;
+						}
+					}
+					frow.all_identical = fields_same;
+					frow.row_conflict_all = compute_conflict_all(frow.values);
+					frow.cell_conflict_this = compute_conflict_this(frow.values);
+
+					row.children.push_back(std::move(frow));
+				}
+			}
+
+			rows_.push_back(std::move(row));
+		}
+
+		if (!rows_.empty())
+		{
+			conflict_all_t worst = conflict_all_t::only_one;
+			for (size_t i = 1; i < rows_.size(); ++i)
+			{
+				if (rows_[i].row_conflict_all > worst)
+					worst = rows_[i].row_conflict_all;
+			}
+			rows_[0].row_conflict_all = worst;
+			rows_[0].all_identical = (worst <= conflict_all_t::no_conflict);
+		}
+
+		endResetModel();
+		return;
+	}
+	else if (is_leveled_list)
 	{
 		struct lev_entry_t
 		{

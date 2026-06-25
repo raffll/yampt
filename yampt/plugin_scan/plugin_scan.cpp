@@ -175,7 +175,282 @@ void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 	conflict_all_t worst_all = conflict_all_t::only_one;
 	std::vector<std::vector<conflict_this_t>> per_slot_this;
 
-	if (entry.rec_type == "LEVI" || entry.rec_type == "LEVC")
+	if (entry.rec_type == "CELL")
+	{
+		struct ref_group_t
+		{
+			uint32_t object_index;
+			size_t start_idx;
+			size_t end_idx;
+		};
+
+		std::vector<std::vector<ref_group_t>> ver_refs(ver_count);
+		std::vector<uint32_t> all_object_indices;
+		std::vector<size_t> ver_header_end(ver_count, 0);
+
+		for (size_t i = 0; i < ver_count; ++i)
+		{
+			for (size_t j = 0; j < parsed[i].size(); ++j)
+			{
+				if (parsed[i][j].type != "FRMR")
+					continue;
+
+				if (ver_refs[i].empty())
+					ver_header_end[i] = j;
+
+				uint32_t obj_idx = 0;
+				if (parsed[i][j].size >= 4)
+					std::memcpy(&obj_idx, parsed[i][j].data, 4);
+
+				size_t end = parsed[i].size();
+				for (size_t k = j + 1; k < parsed[i].size(); ++k)
+				{
+					if (parsed[i][k].type == "FRMR")
+					{
+						end = k;
+						break;
+					}
+				}
+
+				ver_refs[i].push_back({ obj_idx, j, end });
+
+				bool found = false;
+				for (const auto & oi : all_object_indices)
+				{
+					if (oi == obj_idx)
+					{
+						found = true;
+						break;
+					}
+				}
+
+				if (!found)
+					all_object_indices.push_back(obj_idx);
+			}
+		}
+
+		using slot_key_t = std::pair<std::string, int>;
+		std::vector<slot_key_t> unified_slots;
+
+		for (size_t i = 0; i < ver_count; ++i)
+		{
+			std::map<std::string, int> occ_count;
+			for (size_t j = 0; j < ver_header_end[i]; ++j)
+			{
+				const auto & sv = parsed[i][j];
+				int occ = occ_count[sv.type]++;
+				slot_key_t key = { sv.type, occ };
+				bool exists = false;
+				for (const auto & s : unified_slots)
+				{
+					if (s == key)
+					{
+						exists = true;
+						break;
+					}
+				}
+
+				if (!exists)
+					unified_slots.push_back(key);
+			}
+		}
+
+		for (const auto & obj_idx : all_object_indices)
+		{
+			std::map<std::string, int> max_occ;
+
+			for (size_t i = 0; i < ver_count; ++i)
+			{
+				for (const auto & ref : ver_refs[i])
+				{
+					if (ref.object_index != obj_idx)
+						continue;
+
+					std::map<std::string, int> occ_count;
+					for (size_t j = ref.start_idx; j < ref.end_idx; ++j)
+					{
+						int occ = ++occ_count[parsed[i][j].type];
+						if (occ > max_occ[parsed[i][j].type])
+							max_occ[parsed[i][j].type] = occ;
+					}
+
+					break;
+				}
+			}
+
+			for (const auto & [type, count] : max_occ)
+			{
+				for (int occ = 0; occ < count; ++occ)
+					unified_slots.push_back({ type, occ });
+			}
+		}
+
+		size_t header_slot_count = 0;
+		{
+			std::set<slot_key_t> seen;
+			for (size_t i = 0; i < ver_count; ++i)
+			{
+				std::map<std::string, int> occ_count;
+				for (size_t j = 0; j < ver_header_end[i]; ++j)
+				{
+					const auto & sv = parsed[i][j];
+					int occ = occ_count[sv.type]++;
+					seen.insert({ sv.type, occ });
+				}
+			}
+			header_slot_count = seen.size();
+		}
+
+		std::vector<std::vector<std::string>> slot_values_all;
+		for (const auto & slot : unified_slots)
+			slot_values_all.push_back(std::vector<std::string>(ver_count));
+
+		for (size_t i = 0; i < ver_count; ++i)
+		{
+			std::map<std::string, int> occ_count;
+			for (size_t j = 0; j < ver_header_end[i]; ++j)
+			{
+				const auto & sv = parsed[i][j];
+				int occ = occ_count[sv.type]++;
+				slot_key_t key = { sv.type, occ };
+
+				for (size_t si = 0; si < unified_slots.size(); ++si)
+				{
+					if (unified_slots[si] == key)
+					{
+						slot_values_all[si][i] = std::string(sv.data, sv.size);
+						break;
+					}
+				}
+			}
+		}
+
+		size_t slot_pos = header_slot_count;
+		for (const auto & obj_idx : all_object_indices)
+		{
+			std::map<std::string, int> max_occ;
+			for (size_t i = 0; i < ver_count; ++i)
+			{
+				for (const auto & ref : ver_refs[i])
+				{
+					if (ref.object_index != obj_idx)
+						continue;
+
+					std::map<std::string, int> occ_count;
+					for (size_t j = ref.start_idx; j < ref.end_idx; ++j)
+					{
+						int occ = ++occ_count[parsed[i][j].type];
+						if (occ > max_occ[parsed[i][j].type])
+							max_occ[parsed[i][j].type] = occ;
+					}
+
+					break;
+				}
+			}
+
+			for (size_t i = 0; i < ver_count; ++i)
+			{
+				for (const auto & ref : ver_refs[i])
+				{
+					if (ref.object_index != obj_idx)
+						continue;
+
+					std::map<std::string, int> occ_count;
+					for (size_t j = ref.start_idx; j < ref.end_idx; ++j)
+					{
+						const auto & sv = parsed[i][j];
+						int occ = occ_count[sv.type]++;
+
+						size_t target_slot = slot_pos;
+						for (const auto & [type, count] : max_occ)
+						{
+							if (type == sv.type)
+							{
+								slot_values_all[target_slot + occ][i] = std::string(sv.data, sv.size);
+								break;
+							}
+
+							target_slot += count;
+						}
+					}
+
+					break;
+				}
+			}
+
+			for (const auto & [type, count] : max_occ)
+				slot_pos += count;
+		}
+
+		for (size_t si = 0; si < unified_slots.size(); ++si)
+		{
+			auto & slot_values = slot_values_all[si];
+
+			for (size_t vi = 0; vi < ver_count; ++vi)
+			{
+				if (is_deleted[vi])
+					slot_values[vi] = "\x01\x44\x45\x4C\x45";
+			}
+
+			size_t first_size = 0;
+			for (size_t vi = 0; vi < ver_count; ++vi)
+			{
+				if (!slot_values[vi].empty() && slot_values[vi][0] != '\x01')
+				{
+					first_size = slot_values[vi].size();
+					break;
+				}
+			}
+
+			const auto * schema = find_schema(entry.rec_type, unified_slots[si].first, first_size);
+			if (schema && schema->field_count > 0 && first_size > 0)
+			{
+				for (size_t fi = 0; fi < schema->field_count; ++fi)
+				{
+					const auto & fdef = schema->fields[fi];
+					std::vector<std::string> field_values(ver_count);
+
+					for (size_t vi = 0; vi < ver_count; ++vi)
+					{
+						if (is_deleted[vi])
+						{
+							field_values[vi] = "\x01\x44\x45\x4C\x45";
+							continue;
+						}
+
+						if (slot_values[vi].empty())
+							continue;
+
+						if (fdef.offset >= slot_values[vi].size())
+							continue;
+
+						size_t field_len = fdef.size;
+						if (fdef.type == field_type_t::string_var)
+							field_len = slot_values[vi].size() - fdef.offset;
+						else
+							field_len = std::min(fdef.size, slot_values[vi].size() - fdef.offset);
+
+						field_values[vi] = slot_values[vi].substr(fdef.offset, field_len);
+					}
+
+					const auto field_level = compute_conflict_all(field_values);
+					if (field_level > worst_all)
+						worst_all = field_level;
+
+					per_slot_this.push_back(compute_conflict_this(field_values));
+				}
+			}
+			else
+			{
+				const auto slot_level = compute_conflict_all(slot_values);
+				if (slot_level > worst_all)
+					worst_all = slot_level;
+
+				per_slot_this.push_back(compute_conflict_this(slot_values));
+			}
+		}
+	}
+	else if (entry.rec_type == "LEVI" || entry.rec_type == "LEVC")
 	{
 		struct lev_entry_t
 		{
