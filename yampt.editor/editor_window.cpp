@@ -59,6 +59,13 @@ void editor_window_t::setup_menu_bar()
 
 	file_menu->addSeparator();
 
+	auto * unload_action = new QAction("&Unload All", this);
+	unload_action->setToolTip("Unload all plugins and clear the list");
+	file_menu->addAction(unload_action);
+	connect(unload_action, &QAction::triggered, editor_tab_, &editor_tab_t::on_unload_all);
+
+	file_menu->addSeparator();
+
 	auto * quit_action = new QAction("&Quit", this);
 	quit_action->setShortcut(QKeySequence("Alt+F4"));
 	quit_action->setToolTip("Exit the application");

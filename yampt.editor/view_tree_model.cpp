@@ -755,6 +755,272 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 		endResetModel();
 		return;
 	}
+	else if (record_type_ == "FACT")
+	{
+		struct fact_entry_t
+		{
+			std::string faction_name;
+			size_t intv_idx;
+			size_t anam_idx;
+		};
+
+		std::vector<std::vector<fact_entry_t>> col_entries(col_count);
+		std::vector<std::string> all_faction_names;
+
+		for (size_t col = 0; col < col_count; ++col)
+		{
+			if (col >= all_sub_records.size())
+				continue;
+
+			const auto & subs = all_sub_records[col];
+			for (size_t i = 0; i + 1 < subs.size(); ++i)
+			{
+				if (subs[i].type != "INTV" || subs[i].size != 4)
+					continue;
+
+				if (subs[i + 1].type != "ANAM")
+					continue;
+
+				std::string faction_name(subs[i + 1].data, subs[i + 1].size);
+				if (!faction_name.empty() && faction_name.back() == '\0')
+					faction_name.pop_back();
+
+				col_entries[col].push_back({ faction_name, i, i + 1 });
+
+				bool found = false;
+				for (const auto & name : all_faction_names)
+				{
+					if (name == faction_name)
+					{
+						found = true;
+						break;
+					}
+				}
+
+				if (!found)
+					all_faction_names.push_back(faction_name);
+			}
+		}
+
+		std::unordered_map<std::string, int> type_count;
+		for (size_t col = 0; col < col_count; ++col)
+		{
+			if (col >= all_sub_records.size())
+				continue;
+
+			for (const auto & sv : all_sub_records[col])
+			{
+				if (sv.type == "INTV" && sv.size == 4)
+					continue;
+
+				if (sv.type == "ANAM")
+					continue;
+
+				int occ = type_count[sv.type]++;
+				bool found = false;
+				for (const auto & slot : unified_slots)
+				{
+					if (slot.type == sv.type && slot.occurrence == occ)
+					{
+						found = true;
+						break;
+					}
+				}
+
+				if (!found)
+					unified_slots.push_back({ sv.type, occ });
+			}
+			type_count.clear();
+		}
+
+		for (const auto & faction_name : all_faction_names)
+		{
+			int intv_occ = -1;
+			int anam_occ = -1;
+
+			for (const auto & slot : unified_slots)
+			{
+				if (slot.type == "INTV")
+					intv_occ = std::max(intv_occ, slot.occurrence);
+
+				if (slot.type == "ANAM")
+					anam_occ = std::max(anam_occ, slot.occurrence);
+			}
+
+			unified_slots.push_back({ "INTV", intv_occ + 1 });
+			unified_slots.push_back({ "ANAM", anam_occ + 1 });
+		}
+
+		std::vector<std::unordered_map<std::string, std::vector<size_t>>> col_type_indices(col_count);
+		for (size_t col = 0; col < col_count; ++col)
+		{
+			if (col >= all_sub_records.size())
+				continue;
+
+			for (size_t i = 0; i < all_sub_records[col].size(); ++i)
+			{
+				const auto & sv = all_sub_records[col][i];
+				if ((sv.type == "INTV" && sv.size == 4) || sv.type == "ANAM")
+					continue;
+
+				col_type_indices[col][sv.type].push_back(i);
+			}
+
+			for (size_t entry_idx = 0; entry_idx < all_faction_names.size(); ++entry_idx)
+			{
+				const auto & target_name = all_faction_names[entry_idx];
+				bool matched = false;
+				for (const auto & e : col_entries[col])
+				{
+					if (e.faction_name == target_name)
+					{
+						col_type_indices[col]["INTV"].push_back(e.intv_idx);
+						col_type_indices[col]["ANAM"].push_back(e.anam_idx);
+						matched = true;
+						break;
+					}
+				}
+
+				if (!matched)
+				{
+					col_type_indices[col]["INTV"].push_back(SIZE_MAX);
+					col_type_indices[col]["ANAM"].push_back(SIZE_MAX);
+				}
+			}
+		}
+
+		for (const auto & slot : unified_slots)
+		{
+			sub_record_row_t row;
+			row.size = 0;
+			row.values.resize(col_count);
+
+			std::string sub_type = slot.type;
+			const char * first_data = nullptr;
+			size_t first_size = 0;
+
+			for (size_t col = 0; col < col_count; ++col)
+			{
+				if (col >= all_sub_records.size())
+				{
+					row.values[col] = "";
+					continue;
+				}
+
+				auto & indices = col_type_indices[col][slot.type];
+				if (slot.occurrence >= static_cast<int>(indices.size()))
+				{
+					row.values[col] = "";
+					continue;
+				}
+
+				size_t idx = indices[slot.occurrence];
+				if (idx == SIZE_MAX)
+				{
+					row.values[col] = "";
+					continue;
+				}
+
+				const auto & sv = all_sub_records[col][idx];
+
+				if (!first_data)
+				{
+					first_data = sv.data;
+					first_size = sv.size;
+					row.size = sv.size;
+				}
+
+				row.values[col] = format_value(sv.data, sv.size);
+			}
+
+			row.type = sub_type;
+			row.label = make_sub_label(sub_type, record_type_, first_size);
+
+			bool all_same = true;
+			for (size_t col = 1; col < col_count; ++col)
+			{
+				if (row.values[col] != row.values[0])
+				{
+					all_same = false;
+					break;
+				}
+			}
+			row.all_identical = all_same;
+			row.row_conflict_all = compute_conflict_all(row.values);
+			row.cell_conflict_this = compute_conflict_this(row.values);
+
+			const sub_record_schema_t * schema = find_schema(record_type_, sub_type, first_size);
+			if (schema && first_data)
+			{
+				for (size_t fi = 0; fi < schema->field_count; ++fi)
+				{
+					const auto & fdef = schema->fields[fi];
+
+					field_row_t frow;
+					frow.name = fdef.name;
+					frow.values.resize(col_count);
+
+					for (size_t col = 0; col < col_count; ++col)
+					{
+						if (col >= all_sub_records.size())
+						{
+							frow.values[col] = "";
+							continue;
+						}
+
+						auto & indices2 = col_type_indices[col][slot.type];
+						if (slot.occurrence >= static_cast<int>(indices2.size()))
+						{
+							frow.values[col] = "";
+							continue;
+						}
+
+						size_t idx2 = indices2[slot.occurrence];
+						if (idx2 == SIZE_MAX)
+						{
+							frow.values[col] = "";
+							continue;
+						}
+
+						const auto & sv = all_sub_records[col][idx2];
+						frow.values[col] = decode_field(fdef, sv.data, sv.size);
+					}
+
+					bool fields_same = true;
+					for (size_t col = 1; col < col_count; ++col)
+					{
+						if (frow.values[col] != frow.values[0])
+						{
+							fields_same = false;
+							break;
+						}
+					}
+					frow.all_identical = fields_same;
+					frow.row_conflict_all = compute_conflict_all(frow.values);
+					frow.cell_conflict_this = compute_conflict_this(frow.values);
+
+					row.children.push_back(std::move(frow));
+				}
+			}
+
+			rows_.push_back(std::move(row));
+		}
+
+		if (!rows_.empty())
+		{
+			conflict_all_t worst = conflict_all_t::only_one;
+			for (size_t i = 1; i < rows_.size(); ++i)
+			{
+				if (rows_[i].row_conflict_all > worst)
+					worst = rows_[i].row_conflict_all;
+			}
+			rows_[0].row_conflict_all = worst;
+			rows_[0].all_identical = (worst <= conflict_all_t::no_conflict);
+		}
+
+		endResetModel();
+		return;
+	}
 	else
 	{
 		for (const auto & subs : all_sub_records)
@@ -1171,6 +1437,9 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 		{
 			if (index.column() == 0)
 				return QString::fromStdString(row.label);
+
+			if (!row.children.empty())
+				return {};
 
 			int col = index.column() - 1;
 			if (col < 0 || col >= static_cast<int>(row.values.size()))

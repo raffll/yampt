@@ -28,6 +28,7 @@ public slots:
 	void on_load_openmw_cfg();
 	void on_new_plugin();
 	void on_save_plugin();
+	void on_unload_all();
 
 private slots:
 	void on_create_merged_patch();

@@ -779,6 +779,17 @@ void editor_tab_t::on_save_plugin()
 	}
 }
 
+void editor_tab_t::on_unload_all()
+{
+	scan_ = plugin_scan_t();
+	view_model_->clear();
+	nav_model_->rebuild();
+	cmb_type_filter_->clear();
+	cmb_type_filter_->addItem("All Types");
+	update_status();
+	log_message("All plugins unloaded");
+}
+
 void editor_tab_t::on_create_merged_patch()
 {
 	if (scan_.plugin_count() < 2)

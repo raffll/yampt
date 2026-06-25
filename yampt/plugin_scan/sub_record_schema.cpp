@@ -605,7 +605,7 @@ static const field_def_t nam0_fields[] = {
 };
 
 static const field_def_t intv_4_fields[] = {
-	{ "Value", field_type_t::u32, 0, 4, nullptr, nullptr },
+	{ "Value", field_type_t::i32, 0, 4, nullptr, nullptr },
 };
 
 static const field_def_t soun_data_fields[] = {

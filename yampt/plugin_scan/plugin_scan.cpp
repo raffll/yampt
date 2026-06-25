@@ -610,6 +610,169 @@ void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 			per_slot_this.push_back(compute_conflict_this(slot_values));
 		}
 	}
+	else if (entry.rec_type == "FACT")
+	{
+		struct fact_entry_t
+		{
+			std::string faction_name;
+			size_t intv_idx;
+			size_t anam_idx;
+		};
+
+		std::vector<std::vector<fact_entry_t>> ver_entries(ver_count);
+		std::vector<std::string> all_faction_names;
+
+		for (size_t i = 0; i < ver_count; ++i)
+		{
+			for (size_t j = 0; j + 1 < parsed[i].size(); ++j)
+			{
+				if (parsed[i][j].type != "INTV" || parsed[i][j].size != 4)
+					continue;
+
+				if (parsed[i][j + 1].type != "ANAM")
+					continue;
+
+				std::string faction_name(parsed[i][j + 1].data, parsed[i][j + 1].size);
+				if (!faction_name.empty() && faction_name.back() == '\0')
+					faction_name.pop_back();
+
+				ver_entries[i].push_back({ faction_name, j, j + 1 });
+
+				bool found = false;
+				for (const auto & name : all_faction_names)
+				{
+					if (name == faction_name)
+					{
+						found = true;
+						break;
+					}
+				}
+
+				if (!found)
+					all_faction_names.push_back(faction_name);
+			}
+		}
+
+		using slot_key_t = std::pair<std::string, int>;
+		std::vector<slot_key_t> unified_slots;
+
+		for (size_t i = 0; i < ver_count; ++i)
+		{
+			std::map<std::string, int> occ_count;
+			for (const auto & sv : parsed[i])
+			{
+				if (sv.type == "INTV" && sv.size == 4)
+					continue;
+
+				if (sv.type == "ANAM")
+					continue;
+
+				int occ = occ_count[sv.type]++;
+				slot_key_t key = { sv.type, occ };
+				bool exists = false;
+				for (const auto & s : unified_slots)
+				{
+					if (s == key)
+					{
+						exists = true;
+						break;
+					}
+				}
+
+				if (!exists)
+					unified_slots.push_back(key);
+			}
+		}
+
+		int intv_occ_base = 0;
+		int anam_occ_base = 0;
+		for (const auto & slot : unified_slots)
+		{
+			if (slot.first == "INTV")
+				intv_occ_base = std::max(intv_occ_base, slot.second + 1);
+
+			if (slot.first == "ANAM")
+				anam_occ_base = std::max(anam_occ_base, slot.second + 1);
+		}
+
+		for (size_t idx = 0; idx < all_faction_names.size(); ++idx)
+		{
+			unified_slots.push_back({ "INTV", intv_occ_base + static_cast<int>(idx) });
+			unified_slots.push_back({ "ANAM", anam_occ_base + static_cast<int>(idx) });
+		}
+
+		for (const auto & slot : unified_slots)
+		{
+			std::vector<std::string> slot_values(ver_count);
+			bool is_faction_intv = (slot.first == "INTV" && slot.second >= intv_occ_base);
+			bool is_faction_anam = (slot.first == "ANAM" && slot.second >= anam_occ_base);
+
+			for (size_t vi = 0; vi < ver_count; ++vi)
+			{
+				if (is_faction_intv)
+				{
+					size_t item_idx = static_cast<size_t>(slot.second - intv_occ_base);
+					const auto & target_name = all_faction_names[item_idx];
+					for (const auto & e : ver_entries[vi])
+					{
+						if (e.faction_name != target_name)
+							continue;
+
+						const auto & sv = parsed[vi][e.intv_idx];
+						slot_values[vi] = std::string(sv.data, sv.size);
+						break;
+					}
+				}
+				else if (is_faction_anam)
+				{
+					size_t item_idx = static_cast<size_t>(slot.second - anam_occ_base);
+					const auto & target_name = all_faction_names[item_idx];
+					for (const auto & e : ver_entries[vi])
+					{
+						if (e.faction_name != target_name)
+							continue;
+
+						const auto & sv = parsed[vi][e.anam_idx];
+						slot_values[vi] = std::string(sv.data, sv.size);
+						break;
+					}
+				}
+				else
+				{
+					int target_occ = slot.second;
+					int current_occ = 0;
+					for (const auto & sv : parsed[vi])
+					{
+						if (sv.type == "INTV" && sv.size == 4)
+							continue;
+
+						if (sv.type == "ANAM")
+							continue;
+
+						if (sv.type != slot.first)
+							continue;
+
+						if (current_occ == target_occ)
+						{
+							slot_values[vi] = std::string(sv.data, sv.size);
+							break;
+						}
+
+						++current_occ;
+					}
+				}
+
+				if (is_deleted[vi])
+					slot_values[vi] = "\x01\x44\x45\x4C\x45";
+			}
+
+			const auto slot_level = compute_conflict_all(slot_values);
+			if (slot_level > worst_all)
+				worst_all = slot_level;
+
+			per_slot_this.push_back(compute_conflict_this(slot_values));
+		}
+	}
 	else
 	{
 		std::set<slot_key_t> seen;
