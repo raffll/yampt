@@ -344,6 +344,70 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 				for (size_t fi = 0; fi < schema->field_count; ++fi)
 				{
 					const auto & fdef = schema->fields[fi];
+
+					const bool is_flags = (fdef.type == field_type_t::flags_u8 ||
+					                       fdef.type == field_type_t::flags_u16 ||
+					                       fdef.type == field_type_t::flags_u32);
+
+					if (is_flags && fdef.flag_names && fdef.flag_count > 0)
+					{
+						for (int bit = 0; bit < fdef.flag_count; ++bit)
+						{
+							if (fdef.flag_names[bit][0] == '_')
+								continue;
+
+							field_row_t frow;
+							frow.name = fdef.flag_names[bit];
+							frow.values.resize(col_count);
+
+							for (size_t col = 0; col < col_count; ++col)
+							{
+								if (col >= all_sub_records.size())
+								{
+									frow.values[col] = "";
+									continue;
+								}
+
+								auto & indices = col_header_indices[col][slot.type];
+								if (slot.occurrence >= static_cast<int>(indices.size()))
+								{
+									frow.values[col] = "";
+									continue;
+								}
+
+								const auto & sv = all_sub_records[col][indices[slot.occurrence]];
+								if (fdef.offset >= sv.size)
+								{
+									frow.values[col] = "";
+									continue;
+								}
+
+								uint32_t val = 0;
+								size_t bytes = (fdef.type == field_type_t::flags_u8) ? 1 :
+								               (fdef.type == field_type_t::flags_u16) ? 2 : 4;
+								std::memcpy(&val, sv.data + fdef.offset, std::min(bytes, sv.size - fdef.offset));
+								frow.values[col] = (val & (1u << bit)) ? "1" : "0";
+							}
+
+							bool fields_same = true;
+							for (size_t col = 1; col < col_count; ++col)
+							{
+								if (frow.values[col] != frow.values[0])
+								{
+									fields_same = false;
+									break;
+								}
+							}
+							frow.all_identical = fields_same;
+							frow.row_conflict_all = compute_conflict_all(frow.values);
+							frow.cell_conflict_this = compute_conflict_this(frow.values);
+
+							row.children.push_back(std::move(frow));
+						}
+
+						continue;
+					}
+
 					field_row_t frow;
 					frow.name = fdef.name;
 					frow.values.resize(col_count);
@@ -379,6 +443,69 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 					frow.all_identical = fields_same;
 					frow.row_conflict_all = compute_conflict_all(frow.values);
 					frow.cell_conflict_this = compute_conflict_this(frow.values);
+					row.children.push_back(std::move(frow));
+				}
+			}
+			else if (
+			    first_data && first_size > 0 && !row.values.empty() && row.values[0].size() > 0 && row.values[0][0] == '<')
+			{
+				for (size_t offset = 0; offset < first_size; offset += 16)
+				{
+					field_row_t frow;
+					char name_buf[16];
+					std::snprintf(name_buf, sizeof(name_buf), "%04X", static_cast<unsigned>(offset));
+					frow.name = name_buf;
+					frow.values.resize(col_count);
+
+					for (size_t col = 0; col < col_count; ++col)
+					{
+						if (col >= all_sub_records.size())
+						{
+							frow.values[col] = "";
+							continue;
+						}
+
+						auto & indices = col_header_indices[col][slot.type];
+						if (slot.occurrence >= static_cast<int>(indices.size()))
+						{
+							frow.values[col] = "";
+							continue;
+						}
+
+						const auto & sv = all_sub_records[col][indices[slot.occurrence]];
+						if (offset >= sv.size)
+						{
+							frow.values[col] = "";
+							continue;
+						}
+
+						size_t chunk = std::min(static_cast<size_t>(16), sv.size - offset);
+						std::string hex;
+						for (size_t b = 0; b < chunk; ++b)
+						{
+							char hbuf[4];
+							std::snprintf(hbuf, sizeof(hbuf), "%02X", static_cast<unsigned char>(sv.data[offset + b]));
+							if (!hex.empty())
+								hex += ' ';
+
+							hex += hbuf;
+						}
+						frow.values[col] = hex;
+					}
+
+					bool fields_same = true;
+					for (size_t col = 1; col < col_count; ++col)
+					{
+						if (frow.values[col] != frow.values[0])
+						{
+							fields_same = false;
+							break;
+						}
+					}
+					frow.all_identical = fields_same;
+					frow.row_conflict_all = compute_conflict_all(frow.values);
+					frow.cell_conflict_this = compute_conflict_this(frow.values);
+
 					row.children.push_back(std::move(frow));
 				}
 			}
@@ -497,6 +624,90 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 					for (size_t fi = 0; fi < schema->field_count; ++fi)
 					{
 						const auto & fdef = schema->fields[fi];
+
+						const bool is_flags = (fdef.type == field_type_t::flags_u8 ||
+						                       fdef.type == field_type_t::flags_u16 ||
+						                       fdef.type == field_type_t::flags_u32);
+
+						if (is_flags && fdef.flag_names && fdef.flag_count > 0)
+						{
+							for (int bit = 0; bit < fdef.flag_count; ++bit)
+							{
+								if (fdef.flag_names[bit][0] == '_')
+									continue;
+
+								field_row_t frow;
+								frow.name = fdef.flag_names[bit];
+								frow.values.resize(col_count);
+
+								for (size_t col = 0; col < col_count; ++col)
+								{
+									if (col >= all_sub_records.size())
+									{
+										frow.values[col] = "";
+										continue;
+									}
+
+									bool col_found2 = false;
+									for (const auto & ref : col_refs[col])
+									{
+										if (ref.object_index != obj_idx)
+											continue;
+
+										int occ = 0;
+										for (size_t i = ref.start_idx; i < ref.end_idx; ++i)
+										{
+											const auto & sv = all_sub_records[col][i];
+											if (sv.type != slot.type)
+												continue;
+
+											if (occ == slot.occurrence)
+											{
+												if (fdef.offset >= sv.size)
+												{
+													frow.values[col] = "";
+												}
+												else
+												{
+													uint32_t val = 0;
+													size_t bytes = (fdef.type == field_type_t::flags_u8) ? 1 :
+													               (fdef.type == field_type_t::flags_u16) ? 2 : 4;
+													std::memcpy(&val, sv.data + fdef.offset, std::min(bytes, sv.size - fdef.offset));
+													frow.values[col] = (val & (1u << bit)) ? "1" : "0";
+												}
+												col_found2 = true;
+												break;
+											}
+
+											++occ;
+										}
+
+										break;
+									}
+
+									if (!col_found2)
+										frow.values[col] = "";
+								}
+
+								bool fields_same = true;
+								for (size_t col = 1; col < col_count; ++col)
+								{
+									if (frow.values[col] != frow.values[0])
+									{
+										fields_same = false;
+										break;
+									}
+								}
+								frow.all_identical = fields_same;
+								frow.row_conflict_all = compute_conflict_all(frow.values);
+								frow.cell_conflict_this = compute_conflict_this(frow.values);
+
+								row.children.push_back(std::move(frow));
+							}
+
+							continue;
+						}
+
 						field_row_t frow;
 						frow.name = fdef.name;
 						frow.values.resize(col_count);
@@ -551,6 +762,89 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 						frow.all_identical = fields_same;
 						frow.row_conflict_all = compute_conflict_all(frow.values);
 						frow.cell_conflict_this = compute_conflict_this(frow.values);
+						row.children.push_back(std::move(frow));
+					}
+				}
+				else if (
+				    first_data && first_size > 0 && !row.values.empty() && row.values[0].size() > 0 && row.values[0][0] == '<')
+				{
+					for (size_t offset = 0; offset < first_size; offset += 16)
+					{
+						field_row_t frow;
+						char name_buf[16];
+						std::snprintf(name_buf, sizeof(name_buf), "%04X", static_cast<unsigned>(offset));
+						frow.name = name_buf;
+						frow.values.resize(col_count);
+
+						for (size_t col = 0; col < col_count; ++col)
+						{
+							if (col >= all_sub_records.size())
+							{
+								frow.values[col] = "";
+								continue;
+							}
+
+							bool col_found2 = false;
+							for (const auto & ref : col_refs[col])
+							{
+								if (ref.object_index != obj_idx)
+									continue;
+
+								int occ = 0;
+								for (size_t i = ref.start_idx; i < ref.end_idx; ++i)
+								{
+									const auto & sv = all_sub_records[col][i];
+									if (sv.type != slot.type)
+										continue;
+
+									if (occ == slot.occurrence)
+									{
+										if (offset >= sv.size)
+										{
+											frow.values[col] = "";
+										}
+										else
+										{
+											size_t chunk = std::min(static_cast<size_t>(16), sv.size - offset);
+											std::string hex;
+											for (size_t b = 0; b < chunk; ++b)
+											{
+												char hbuf[4];
+												std::snprintf(hbuf, sizeof(hbuf), "%02X", static_cast<unsigned char>(sv.data[offset + b]));
+												if (!hex.empty())
+													hex += ' ';
+
+												hex += hbuf;
+											}
+											frow.values[col] = hex;
+										}
+										col_found2 = true;
+										break;
+									}
+
+									++occ;
+								}
+
+								break;
+							}
+
+							if (!col_found2)
+								frow.values[col] = "";
+						}
+
+						bool fields_same = true;
+						for (size_t col = 1; col < col_count; ++col)
+						{
+							if (frow.values[col] != frow.values[0])
+							{
+								fields_same = false;
+								break;
+							}
+						}
+						frow.all_identical = fields_same;
+						frow.row_conflict_all = compute_conflict_all(frow.values);
+						frow.cell_conflict_this = compute_conflict_this(frow.values);
+
 						row.children.push_back(std::move(frow));
 					}
 				}
@@ -772,6 +1066,76 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 				{
 					const auto & fdef = schema->fields[fi];
 
+					const bool is_flags = (fdef.type == field_type_t::flags_u8 ||
+					                       fdef.type == field_type_t::flags_u16 ||
+					                       fdef.type == field_type_t::flags_u32);
+
+					if (is_flags && fdef.flag_names && fdef.flag_count > 0)
+					{
+						for (int bit = 0; bit < fdef.flag_count; ++bit)
+						{
+							if (fdef.flag_names[bit][0] == '_')
+								continue;
+
+							field_row_t frow;
+							frow.name = fdef.flag_names[bit];
+							frow.values.resize(col_count);
+
+							for (size_t col = 0; col < col_count; ++col)
+							{
+								if (col >= all_sub_records.size())
+								{
+									frow.values[col] = "";
+									continue;
+								}
+
+								auto & indices2 = col_type_indices[col][slot.type];
+								if (slot.occurrence >= static_cast<int>(indices2.size()))
+								{
+									frow.values[col] = "";
+									continue;
+								}
+
+								size_t idx2 = indices2[slot.occurrence];
+								if (idx2 == SIZE_MAX)
+								{
+									frow.values[col] = "";
+									continue;
+								}
+
+								const auto & sv = all_sub_records[col][idx2];
+								if (fdef.offset >= sv.size)
+								{
+									frow.values[col] = "";
+									continue;
+								}
+
+								uint32_t val = 0;
+								size_t bytes = (fdef.type == field_type_t::flags_u8) ? 1 :
+								               (fdef.type == field_type_t::flags_u16) ? 2 : 4;
+								std::memcpy(&val, sv.data + fdef.offset, std::min(bytes, sv.size - fdef.offset));
+								frow.values[col] = (val & (1u << bit)) ? "1" : "0";
+							}
+
+							bool fields_same = true;
+							for (size_t col = 1; col < col_count; ++col)
+							{
+								if (frow.values[col] != frow.values[0])
+								{
+									fields_same = false;
+									break;
+								}
+							}
+							frow.all_identical = fields_same;
+							frow.row_conflict_all = compute_conflict_all(frow.values);
+							frow.cell_conflict_this = compute_conflict_this(frow.values);
+
+							row.children.push_back(std::move(frow));
+						}
+
+						continue;
+					}
+
 					field_row_t frow;
 					frow.name = fdef.name;
 					frow.values.resize(col_count);
@@ -800,6 +1164,76 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 
 						const auto & sv = all_sub_records[col][idx2];
 						frow.values[col] = decode_field(fdef, sv.data, sv.size);
+					}
+
+					bool fields_same = true;
+					for (size_t col = 1; col < col_count; ++col)
+					{
+						if (frow.values[col] != frow.values[0])
+						{
+							fields_same = false;
+							break;
+						}
+					}
+					frow.all_identical = fields_same;
+					frow.row_conflict_all = compute_conflict_all(frow.values);
+					frow.cell_conflict_this = compute_conflict_this(frow.values);
+
+					row.children.push_back(std::move(frow));
+				}
+			}
+			else if (
+			    first_data && first_size > 0 && !row.values.empty() && row.values[0].size() > 0 && row.values[0][0] == '<')
+			{
+				for (size_t offset = 0; offset < first_size; offset += 16)
+				{
+					field_row_t frow;
+					char name_buf[16];
+					std::snprintf(name_buf, sizeof(name_buf), "%04X", static_cast<unsigned>(offset));
+					frow.name = name_buf;
+					frow.values.resize(col_count);
+
+					for (size_t col = 0; col < col_count; ++col)
+					{
+						if (col >= all_sub_records.size())
+						{
+							frow.values[col] = "";
+							continue;
+						}
+
+						auto & indices2 = col_type_indices[col][slot.type];
+						if (slot.occurrence >= static_cast<int>(indices2.size()))
+						{
+							frow.values[col] = "";
+							continue;
+						}
+
+						size_t idx2 = indices2[slot.occurrence];
+						if (idx2 == SIZE_MAX)
+						{
+							frow.values[col] = "";
+							continue;
+						}
+
+						const auto & sv = all_sub_records[col][idx2];
+						if (offset >= sv.size)
+						{
+							frow.values[col] = "";
+							continue;
+						}
+
+						size_t chunk = std::min(static_cast<size_t>(16), sv.size - offset);
+						std::string hex;
+						for (size_t b = 0; b < chunk; ++b)
+						{
+							char hbuf[4];
+							std::snprintf(hbuf, sizeof(hbuf), "%02X", static_cast<unsigned char>(sv.data[offset + b]));
+							if (!hex.empty())
+								hex += ' ';
+
+							hex += hbuf;
+						}
+						frow.values[col] = hex;
 					}
 
 					bool fields_same = true;
@@ -1038,6 +1472,76 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 				{
 					const auto & fdef = schema->fields[fi];
 
+					const bool is_flags = (fdef.type == field_type_t::flags_u8 ||
+					                       fdef.type == field_type_t::flags_u16 ||
+					                       fdef.type == field_type_t::flags_u32);
+
+					if (is_flags && fdef.flag_names && fdef.flag_count > 0)
+					{
+						for (int bit = 0; bit < fdef.flag_count; ++bit)
+						{
+							if (fdef.flag_names[bit][0] == '_')
+								continue;
+
+							field_row_t frow;
+							frow.name = fdef.flag_names[bit];
+							frow.values.resize(col_count);
+
+							for (size_t col = 0; col < col_count; ++col)
+							{
+								if (col >= all_sub_records.size())
+								{
+									frow.values[col] = "";
+									continue;
+								}
+
+								auto & indices2 = col_type_indices[col][slot.type];
+								if (slot.occurrence >= static_cast<int>(indices2.size()))
+								{
+									frow.values[col] = "";
+									continue;
+								}
+
+								size_t idx2 = indices2[slot.occurrence];
+								if (idx2 == SIZE_MAX)
+								{
+									frow.values[col] = "";
+									continue;
+								}
+
+								const auto & sv = all_sub_records[col][idx2];
+								if (fdef.offset >= sv.size)
+								{
+									frow.values[col] = "";
+									continue;
+								}
+
+								uint32_t val = 0;
+								size_t bytes = (fdef.type == field_type_t::flags_u8) ? 1 :
+								               (fdef.type == field_type_t::flags_u16) ? 2 : 4;
+								std::memcpy(&val, sv.data + fdef.offset, std::min(bytes, sv.size - fdef.offset));
+								frow.values[col] = (val & (1u << bit)) ? "1" : "0";
+							}
+
+							bool fields_same = true;
+							for (size_t col = 1; col < col_count; ++col)
+							{
+								if (frow.values[col] != frow.values[0])
+								{
+									fields_same = false;
+									break;
+								}
+							}
+							frow.all_identical = fields_same;
+							frow.row_conflict_all = compute_conflict_all(frow.values);
+							frow.cell_conflict_this = compute_conflict_this(frow.values);
+
+							row.children.push_back(std::move(frow));
+						}
+
+						continue;
+					}
+
 					field_row_t frow;
 					frow.name = fdef.name;
 					frow.values.resize(col_count);
@@ -1066,6 +1570,465 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 
 						const auto & sv = all_sub_records[col][idx2];
 						frow.values[col] = decode_field(fdef, sv.data, sv.size);
+					}
+
+					bool fields_same = true;
+					for (size_t col = 1; col < col_count; ++col)
+					{
+						if (frow.values[col] != frow.values[0])
+						{
+							fields_same = false;
+							break;
+						}
+					}
+					frow.all_identical = fields_same;
+					frow.row_conflict_all = compute_conflict_all(frow.values);
+					frow.cell_conflict_this = compute_conflict_this(frow.values);
+
+					row.children.push_back(std::move(frow));
+				}
+			}
+			else if (
+			    first_data && first_size > 0 && !row.values.empty() && row.values[0].size() > 0 && row.values[0][0] == '<')
+			{
+				for (size_t offset = 0; offset < first_size; offset += 16)
+				{
+					field_row_t frow;
+					char name_buf[16];
+					std::snprintf(name_buf, sizeof(name_buf), "%04X", static_cast<unsigned>(offset));
+					frow.name = name_buf;
+					frow.values.resize(col_count);
+
+					for (size_t col = 0; col < col_count; ++col)
+					{
+						if (col >= all_sub_records.size())
+						{
+							frow.values[col] = "";
+							continue;
+						}
+
+						auto & indices2 = col_type_indices[col][slot.type];
+						if (slot.occurrence >= static_cast<int>(indices2.size()))
+						{
+							frow.values[col] = "";
+							continue;
+						}
+
+						size_t idx2 = indices2[slot.occurrence];
+						if (idx2 == SIZE_MAX)
+						{
+							frow.values[col] = "";
+							continue;
+						}
+
+						const auto & sv = all_sub_records[col][idx2];
+						if (offset >= sv.size)
+						{
+							frow.values[col] = "";
+							continue;
+						}
+
+						size_t chunk = std::min(static_cast<size_t>(16), sv.size - offset);
+						std::string hex;
+						for (size_t b = 0; b < chunk; ++b)
+						{
+							char hbuf[4];
+							std::snprintf(hbuf, sizeof(hbuf), "%02X", static_cast<unsigned char>(sv.data[offset + b]));
+							if (!hex.empty())
+								hex += ' ';
+
+							hex += hbuf;
+						}
+						frow.values[col] = hex;
+					}
+
+					bool fields_same = true;
+					for (size_t col = 1; col < col_count; ++col)
+					{
+						if (frow.values[col] != frow.values[0])
+						{
+							fields_same = false;
+							break;
+						}
+					}
+					frow.all_identical = fields_same;
+					frow.row_conflict_all = compute_conflict_all(frow.values);
+					frow.cell_conflict_this = compute_conflict_this(frow.values);
+
+					row.children.push_back(std::move(frow));
+				}
+			}
+
+			rows_.push_back(std::move(row));
+		}
+
+		if (!rows_.empty())
+		{
+			conflict_all_t worst = conflict_all_t::only_one;
+			for (size_t i = 1; i < rows_.size(); ++i)
+			{
+				if (rows_[i].row_conflict_all > worst)
+					worst = rows_[i].row_conflict_all;
+			}
+			rows_[0].row_conflict_all = worst;
+			rows_[0].all_identical = (worst <= conflict_all_t::no_conflict);
+		}
+
+		endResetModel();
+		return;
+	}
+	else if (record_type_ == "CONT" || record_type_ == "CREA" || record_type_ == "NPC_")
+	{
+		struct cont_entry_t
+		{
+			std::string item_id;
+			size_t npco_idx;
+		};
+
+		std::vector<std::vector<cont_entry_t>> col_entries(col_count);
+		std::vector<std::string> all_item_ids;
+
+		for (size_t col = 0; col < col_count; ++col)
+		{
+			if (col >= all_sub_records.size())
+				continue;
+
+			const auto & subs = all_sub_records[col];
+			for (size_t i = 0; i < subs.size(); ++i)
+			{
+				if (subs[i].type != "NPCO" || subs[i].size != 36)
+					continue;
+
+				std::string item_id(subs[i].data + 4, 32);
+				while (!item_id.empty() && item_id.back() == '\0')
+					item_id.pop_back();
+
+				col_entries[col].push_back({ item_id, i });
+
+				bool found = false;
+				for (const auto & id : all_item_ids)
+				{
+					if (id == item_id)
+					{
+						found = true;
+						break;
+					}
+				}
+
+				if (!found)
+					all_item_ids.push_back(item_id);
+			}
+		}
+
+		std::unordered_map<std::string, int> type_count;
+		for (size_t col = 0; col < col_count; ++col)
+		{
+			if (col >= all_sub_records.size())
+				continue;
+
+			for (const auto & sv : all_sub_records[col])
+			{
+				if (sv.type == "NPCO" && sv.size == 36)
+					continue;
+
+				int occ = type_count[sv.type]++;
+				bool found = false;
+				for (const auto & slot : unified_slots)
+				{
+					if (slot.type == sv.type && slot.occurrence == occ)
+					{
+						found = true;
+						break;
+					}
+				}
+
+				if (!found)
+					unified_slots.push_back({ sv.type, occ });
+			}
+			type_count.clear();
+		}
+
+		for (const auto & item_id : all_item_ids)
+		{
+			int npco_occ = -1;
+			for (const auto & slot : unified_slots)
+			{
+				if (slot.type == "NPCO")
+					npco_occ = std::max(npco_occ, slot.occurrence);
+			}
+
+			unified_slots.push_back({ "NPCO", npco_occ + 1 });
+		}
+
+		std::vector<std::unordered_map<std::string, std::vector<size_t>>> col_type_indices(col_count);
+		for (size_t col = 0; col < col_count; ++col)
+		{
+			if (col >= all_sub_records.size())
+				continue;
+
+			for (size_t i = 0; i < all_sub_records[col].size(); ++i)
+			{
+				const auto & sv = all_sub_records[col][i];
+				if (sv.type == "NPCO" && sv.size == 36)
+					continue;
+
+				col_type_indices[col][sv.type].push_back(i);
+			}
+
+			for (size_t entry_idx = 0; entry_idx < all_item_ids.size(); ++entry_idx)
+			{
+				const auto & target_id = all_item_ids[entry_idx];
+				bool matched = false;
+				for (const auto & e : col_entries[col])
+				{
+					if (e.item_id == target_id)
+					{
+						col_type_indices[col]["NPCO"].push_back(e.npco_idx);
+						matched = true;
+						break;
+					}
+				}
+
+				if (!matched)
+					col_type_indices[col]["NPCO"].push_back(SIZE_MAX);
+			}
+		}
+
+		for (const auto & slot : unified_slots)
+		{
+			sub_record_row_t row;
+			row.size = 0;
+			row.values.resize(col_count);
+
+			std::string sub_type = slot.type;
+			const char * first_data = nullptr;
+			size_t first_size = 0;
+
+			for (size_t col = 0; col < col_count; ++col)
+			{
+				if (col >= all_sub_records.size())
+				{
+					row.values[col] = "";
+					continue;
+				}
+
+				auto & indices = col_type_indices[col][slot.type];
+				if (slot.occurrence >= static_cast<int>(indices.size()))
+				{
+					row.values[col] = "";
+					continue;
+				}
+
+				size_t idx = indices[slot.occurrence];
+				if (idx == SIZE_MAX)
+				{
+					row.values[col] = "";
+					continue;
+				}
+
+				const auto & sv = all_sub_records[col][idx];
+
+				if (!first_data)
+				{
+					first_data = sv.data;
+					first_size = sv.size;
+					row.size = sv.size;
+				}
+
+				row.values[col] = format_value(sv.data, sv.size);
+			}
+
+			row.type = sub_type;
+			row.label = make_sub_label(sub_type, record_type_, first_size);
+
+			bool all_same = true;
+			for (size_t col = 1; col < col_count; ++col)
+			{
+				if (row.values[col] != row.values[0])
+				{
+					all_same = false;
+					break;
+				}
+			}
+			row.all_identical = all_same;
+			row.row_conflict_all = compute_conflict_all(row.values);
+			row.cell_conflict_this = compute_conflict_this(row.values);
+
+			const sub_record_schema_t * schema = find_schema(record_type_, sub_type, first_size);
+			if (schema && first_data)
+			{
+				for (size_t fi = 0; fi < schema->field_count; ++fi)
+				{
+					const auto & fdef = schema->fields[fi];
+
+					const bool is_flags = (fdef.type == field_type_t::flags_u8 ||
+					                       fdef.type == field_type_t::flags_u16 ||
+					                       fdef.type == field_type_t::flags_u32);
+
+					if (is_flags && fdef.flag_names && fdef.flag_count > 0)
+					{
+						for (int bit = 0; bit < fdef.flag_count; ++bit)
+						{
+							if (fdef.flag_names[bit][0] == '_')
+								continue;
+
+							field_row_t frow;
+							frow.name = fdef.flag_names[bit];
+							frow.values.resize(col_count);
+
+							for (size_t col = 0; col < col_count; ++col)
+							{
+								if (col >= all_sub_records.size())
+								{
+									frow.values[col] = "";
+									continue;
+								}
+
+								auto & indices2 = col_type_indices[col][slot.type];
+								if (slot.occurrence >= static_cast<int>(indices2.size()))
+								{
+									frow.values[col] = "";
+									continue;
+								}
+
+								size_t idx2 = indices2[slot.occurrence];
+								if (idx2 == SIZE_MAX)
+								{
+									frow.values[col] = "";
+									continue;
+								}
+
+								const auto & sv = all_sub_records[col][idx2];
+								if (fdef.offset >= sv.size)
+								{
+									frow.values[col] = "";
+									continue;
+								}
+
+								uint32_t val = 0;
+								size_t bytes = (fdef.type == field_type_t::flags_u8) ? 1 :
+								               (fdef.type == field_type_t::flags_u16) ? 2 : 4;
+								std::memcpy(&val, sv.data + fdef.offset, std::min(bytes, sv.size - fdef.offset));
+								frow.values[col] = (val & (1u << bit)) ? "1" : "0";
+							}
+
+							bool fields_same = true;
+							for (size_t col = 1; col < col_count; ++col)
+							{
+								if (frow.values[col] != frow.values[0])
+								{
+									fields_same = false;
+									break;
+								}
+							}
+							frow.all_identical = fields_same;
+							frow.row_conflict_all = compute_conflict_all(frow.values);
+							frow.cell_conflict_this = compute_conflict_this(frow.values);
+
+							row.children.push_back(std::move(frow));
+						}
+
+						continue;
+					}
+
+					field_row_t frow;
+					frow.name = fdef.name;
+					frow.values.resize(col_count);
+
+					for (size_t col = 0; col < col_count; ++col)
+					{
+						if (col >= all_sub_records.size())
+						{
+							frow.values[col] = "";
+							continue;
+						}
+
+						auto & indices2 = col_type_indices[col][slot.type];
+						if (slot.occurrence >= static_cast<int>(indices2.size()))
+						{
+							frow.values[col] = "";
+							continue;
+						}
+
+						size_t idx2 = indices2[slot.occurrence];
+						if (idx2 == SIZE_MAX)
+						{
+							frow.values[col] = "";
+							continue;
+						}
+
+						const auto & sv = all_sub_records[col][idx2];
+						frow.values[col] = decode_field(fdef, sv.data, sv.size);
+					}
+
+					bool fields_same = true;
+					for (size_t col = 1; col < col_count; ++col)
+					{
+						if (frow.values[col] != frow.values[0])
+						{
+							fields_same = false;
+							break;
+						}
+					}
+					frow.all_identical = fields_same;
+					frow.row_conflict_all = compute_conflict_all(frow.values);
+					frow.cell_conflict_this = compute_conflict_this(frow.values);
+
+					row.children.push_back(std::move(frow));
+				}
+			}
+			else if (
+			    first_data && first_size > 0 && !row.values.empty() && row.values[0].size() > 0 && row.values[0][0] == '<')
+			{
+				for (size_t offset = 0; offset < first_size; offset += 16)
+				{
+					field_row_t frow;
+					char name_buf[16];
+					std::snprintf(name_buf, sizeof(name_buf), "%04X", static_cast<unsigned>(offset));
+					frow.name = name_buf;
+					frow.values.resize(col_count);
+
+					for (size_t col = 0; col < col_count; ++col)
+					{
+						if (col >= all_sub_records.size())
+						{
+							frow.values[col] = "";
+							continue;
+						}
+
+						auto & indices2 = col_type_indices[col][slot.type];
+						if (slot.occurrence >= static_cast<int>(indices2.size()))
+						{
+							frow.values[col] = "";
+							continue;
+						}
+
+						size_t idx2 = indices2[slot.occurrence];
+						if (idx2 == SIZE_MAX)
+						{
+							frow.values[col] = "";
+							continue;
+						}
+
+						const auto & sv = all_sub_records[col][idx2];
+						if (offset >= sv.size)
+						{
+							frow.values[col] = "";
+							continue;
+						}
+
+						size_t chunk = std::min(static_cast<size_t>(16), sv.size - offset);
+						std::string hex;
+						for (size_t b = 0; b < chunk; ++b)
+						{
+							char hbuf[4];
+							std::snprintf(hbuf, sizeof(hbuf), "%02X", static_cast<unsigned char>(sv.data[offset + b]));
+							if (!hex.empty())
+								hex += ' ';
+
+							hex += hbuf;
+						}
+						frow.values[col] = hex;
 					}
 
 					bool fields_same = true;
@@ -1532,17 +2495,26 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 
 		if (role == Qt::BackgroundRole)
 		{
+			bool odd_group = (index.row() % 2 == 1);
+
 			if (row.row_conflict_all < conflict_all_t::no_conflict)
+			{
+				if (odd_group)
+					return QBrush(QColor(235, 235, 235));
+
 				return {};
+			}
+
+			double factor = odd_group ? 0.78 : 0.85;
 
 			if (index.column() > 0)
 			{
 				int col = index.column() - 1;
 				if (col >= 0 && col < static_cast<int>(row.values.size()) && row.values[col].empty())
-					return QBrush(lighter_hsl(conflict_all_color_raw(row.row_conflict_all), 0.93));
+					return QBrush(lighter_hsl(conflict_all_color_raw(row.row_conflict_all), factor + 0.08));
 			}
 
-			return QBrush(conflict_all_background(row.row_conflict_all));
+			return QBrush(lighter_hsl(conflict_all_color_raw(row.row_conflict_all), factor));
 		}
 
 		if (role == Qt::ForegroundRole)
@@ -1591,17 +2563,26 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 
 	if (role == Qt::BackgroundRole)
 	{
+		bool odd_group = (index.parent().row() % 2 == 1);
+
 		if (frow.row_conflict_all < conflict_all_t::no_conflict)
+		{
+			if (odd_group)
+				return QBrush(QColor(235, 235, 235));
+
 			return {};
+		}
+
+		double factor = odd_group ? 0.78 : 0.85;
 
 		if (index.column() > 0)
 		{
 			int col = index.column() - 1;
 			if (col >= 0 && col < static_cast<int>(frow.values.size()) && frow.values[col].empty())
-				return QBrush(lighter_hsl(conflict_all_color_raw(frow.row_conflict_all), 0.93));
+				return QBrush(lighter_hsl(conflict_all_color_raw(frow.row_conflict_all), factor + 0.08));
 		}
 
-		return QBrush(conflict_all_background(frow.row_conflict_all));
+		return QBrush(lighter_hsl(conflict_all_color_raw(frow.row_conflict_all), factor));
 	}
 
 	if (role == Qt::ForegroundRole)

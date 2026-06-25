@@ -773,6 +773,188 @@ void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 			per_slot_this.push_back(compute_conflict_this(slot_values));
 		}
 	}
+	else if (entry.rec_type == "CONT" || entry.rec_type == "CREA" || entry.rec_type == "NPC_")
+	{
+		struct cont_entry_t
+		{
+			std::string item_id;
+			size_t npco_idx;
+		};
+
+		std::vector<std::vector<cont_entry_t>> ver_entries(ver_count);
+		std::vector<std::string> all_item_ids;
+
+		for (size_t i = 0; i < ver_count; ++i)
+		{
+			for (size_t j = 0; j < parsed[i].size(); ++j)
+			{
+				if (parsed[i][j].type != "NPCO" || parsed[i][j].size != 36)
+					continue;
+
+				std::string item_id(parsed[i][j].data + 4, 32);
+				while (!item_id.empty() && item_id.back() == '\0')
+					item_id.pop_back();
+
+				ver_entries[i].push_back({ item_id, j });
+
+				bool found = false;
+				for (const auto & id : all_item_ids)
+				{
+					if (id == item_id)
+					{
+						found = true;
+						break;
+					}
+				}
+
+				if (!found)
+					all_item_ids.push_back(item_id);
+			}
+		}
+
+		using slot_key_t = std::pair<std::string, int>;
+		std::vector<slot_key_t> unified_slots;
+
+		for (size_t i = 0; i < ver_count; ++i)
+		{
+			std::map<std::string, int> occ_count;
+			for (const auto & sv : parsed[i])
+			{
+				if (sv.type == "NPCO" && sv.size == 36)
+					continue;
+
+				int occ = occ_count[sv.type]++;
+				slot_key_t key = { sv.type, occ };
+				bool exists = false;
+				for (const auto & s : unified_slots)
+				{
+					if (s == key)
+					{
+						exists = true;
+						break;
+					}
+				}
+
+				if (!exists)
+					unified_slots.push_back(key);
+			}
+		}
+
+		int npco_occ_base = 0;
+		for (const auto & slot : unified_slots)
+		{
+			if (slot.first == "NPCO")
+				npco_occ_base = std::max(npco_occ_base, slot.second + 1);
+		}
+
+		for (size_t idx = 0; idx < all_item_ids.size(); ++idx)
+			unified_slots.push_back({ "NPCO", npco_occ_base + static_cast<int>(idx) });
+
+		for (const auto & slot : unified_slots)
+		{
+			std::vector<std::string> slot_values(ver_count);
+			bool is_item_npco = (slot.first == "NPCO" && slot.second >= npco_occ_base);
+
+			for (size_t vi = 0; vi < ver_count; ++vi)
+			{
+				if (is_item_npco)
+				{
+					size_t item_idx = static_cast<size_t>(slot.second - npco_occ_base);
+					const auto & target_id = all_item_ids[item_idx];
+					for (const auto & e : ver_entries[vi])
+					{
+						if (e.item_id != target_id)
+							continue;
+
+						const auto & sv = parsed[vi][e.npco_idx];
+						slot_values[vi] = std::string(sv.data, sv.size);
+						break;
+					}
+				}
+				else
+				{
+					int target_occ = slot.second;
+					int current_occ = 0;
+					for (const auto & sv : parsed[vi])
+					{
+						if (sv.type == "NPCO" && sv.size == 36)
+							continue;
+
+						if (sv.type != slot.first)
+							continue;
+
+						if (current_occ == target_occ)
+						{
+							slot_values[vi] = std::string(sv.data, sv.size);
+							break;
+						}
+
+						++current_occ;
+					}
+				}
+
+				if (is_deleted[vi])
+					slot_values[vi] = "\x01\x44\x45\x4C\x45";
+			}
+
+			size_t first_size = 0;
+			for (size_t vi = 0; vi < ver_count; ++vi)
+			{
+				if (!slot_values[vi].empty() && slot_values[vi][0] != '\x01')
+				{
+					first_size = slot_values[vi].size();
+					break;
+				}
+			}
+
+			const auto * schema = find_schema(entry.rec_type, slot.first, first_size);
+			if (schema && schema->field_count > 0 && first_size > 0)
+			{
+				for (size_t fi = 0; fi < schema->field_count; ++fi)
+				{
+					const auto & fdef = schema->fields[fi];
+					std::vector<std::string> field_values(ver_count);
+
+					for (size_t vi = 0; vi < ver_count; ++vi)
+					{
+						if (is_deleted[vi])
+						{
+							field_values[vi] = "\x01\x44\x45\x4C\x45";
+							continue;
+						}
+
+						if (slot_values[vi].empty())
+							continue;
+
+						if (fdef.offset >= slot_values[vi].size())
+							continue;
+
+						size_t field_len = fdef.size;
+						if (fdef.type == field_type_t::string_var)
+							field_len = slot_values[vi].size() - fdef.offset;
+						else
+							field_len = std::min(fdef.size, slot_values[vi].size() - fdef.offset);
+
+						field_values[vi] = slot_values[vi].substr(fdef.offset, field_len);
+					}
+
+					const auto field_level = compute_conflict_all(field_values);
+					if (field_level > worst_all)
+						worst_all = field_level;
+
+					per_slot_this.push_back(compute_conflict_this(field_values));
+				}
+			}
+			else
+			{
+				const auto slot_level = compute_conflict_all(slot_values);
+				if (slot_level > worst_all)
+					worst_all = slot_level;
+
+				per_slot_this.push_back(compute_conflict_this(slot_values));
+			}
+		}
+	}
 	else
 	{
 		std::set<slot_key_t> seen;

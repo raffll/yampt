@@ -24,9 +24,6 @@ static const field_def_t npc_npdt_12_fields[] = {
 	{ "Disposition", field_type_t::u8, 2, 1, nullptr, nullptr },
 	{ "Reputation", field_type_t::u8, 3, 1, nullptr, nullptr },
 	{ "Rank", field_type_t::u8, 4, 1, nullptr, nullptr },
-	{ "Unknown1", field_type_t::u8, 5, 1, nullptr, nullptr },
-	{ "Unknown2", field_type_t::u8, 6, 1, nullptr, nullptr },
-	{ "Unknown3", field_type_t::u8, 7, 1, nullptr, nullptr },
 	{ "Gold", field_type_t::u32, 8, 4, nullptr, nullptr },
 };
 
@@ -48,7 +45,6 @@ static const field_def_t npc_npdt_52_fields[] = {
 	{ "Disposition", field_type_t::u8, 44, 1, nullptr, nullptr },
 	{ "Faction ID", field_type_t::u8, 45, 1, nullptr, nullptr },
 	{ "Rank", field_type_t::u8, 46, 1, nullptr, nullptr },
-	{ "Unknown", field_type_t::u8, 47, 1, nullptr, nullptr },
 	{ "Gold", field_type_t::u32, 48, 4, nullptr, nullptr },
 };
 
@@ -637,6 +633,20 @@ static const field_def_t indx_fields[] = {
 	{ "Index", field_type_t::u32, 0, 4, nullptr, nullptr },
 };
 
+static const char * const armo_part_names[] = {
+	"Helmet", "Cuirass", "Left Pauldron", "Right Pauldron", "Greaves",
+	"Boots", "Left Gauntlet", "Right Gauntlet", "Shield", "Left Bracer",
+	"Right Bracer", nullptr
+};
+
+static const field_def_t armo_indx_fields[] = {
+	{ "Part", field_type_t::enum_u8, 0, 1, armo_part_names, nullptr },
+};
+
+static const field_def_t text_fields[] = {
+	{ "Text", field_type_t::string_var, 0, 0, nullptr, nullptr },
+};
+
 static const std::vector<sub_record_schema_t> & build_schemas()
 {
 	static const std::vector<sub_record_schema_t> schemas = {
@@ -701,6 +711,8 @@ static const std::vector<sub_record_schema_t> & build_schemas()
 		{ "REGN", "SNAM", 33, regn_snam_fields, ARRAY_COUNT(regn_snam_fields) },
 		{ "REGN", "CNAM", 4, regn_cnam_fields, ARRAY_COUNT(regn_cnam_fields) },
 		{ "*", "INDX", 4, indx_fields, ARRAY_COUNT(indx_fields) },
+		{ "ARMO", "INDX", 1, armo_indx_fields, ARRAY_COUNT(armo_indx_fields) },
+		{ "BOOK", "TEXT", 0, text_fields, ARRAY_COUNT(text_fields) },
 	};
 	return schemas;
 }
