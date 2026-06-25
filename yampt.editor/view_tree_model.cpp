@@ -1247,23 +1247,14 @@ conflict_all_t view_tree_model_t::compute_row_conflict_all(const std::vector<std
 	if (all_same)
 		return conflict_all_t::no_conflict;
 
-	if (values.size() == 2)
-		return conflict_all_t::override_benign;
-
-	bool only_last_differs = true;
-	for (size_t i = 1; i < values.size() - 1; ++i)
+	const auto & winner = values.back();
+	for (size_t i = 0; i < values.size() - 1; ++i)
 	{
-		if (values[i] != values[0])
-		{
-			only_last_differs = false;
-			break;
-		}
+		if (values[i] != values[0] && values[i] != winner)
+			return conflict_all_t::conflict;
 	}
 
-	if (only_last_differs)
-		return conflict_all_t::override_benign;
-
-	return conflict_all_t::conflict;
+	return conflict_all_t::override_benign;
 }
 
 std::vector<conflict_this_t> view_tree_model_t::compute_row_conflict_this(const std::vector<std::string> & values) const
@@ -1281,7 +1272,17 @@ std::vector<conflict_this_t> view_tree_model_t::compute_row_conflict_this(const 
 
 	result[0] = values[0].empty() ? conflict_this_t::unknown : conflict_this_t::master;
 
-	size_t last_idx = values.size() - 1;
+	const auto & winner = values.back();
+	bool is_override = true;
+
+	for (size_t i = 0; i < values.size() - 1; ++i)
+	{
+		if (values[i] != values[0] && values[i] != winner)
+		{
+			is_override = false;
+			break;
+		}
+	}
 
 	for (size_t i = 1; i < values.size(); ++i)
 	{
@@ -1303,33 +1304,12 @@ std::vector<conflict_this_t> view_tree_model_t::compute_row_conflict_this(const 
 			continue;
 		}
 
-		if (i == last_idx)
+		if (is_override)
 			result[i] = conflict_this_t::override_wins;
+		else if (i == values.size() - 1)
+			result[i] = conflict_this_t::conflict_wins;
 		else
 			result[i] = conflict_this_t::conflict_loses;
-	}
-
-	bool any_differs = false;
-	int differ_count = 0;
-	for (size_t i = 1; i < values.size(); ++i)
-	{
-		if (result[i] != conflict_this_t::identical_to_master && result[i] != conflict_this_t::unknown)
-		{
-			any_differs = true;
-			++differ_count;
-		}
-	}
-
-	if (!any_differs)
-		return result;
-
-	if (differ_count > 1)
-	{
-		for (size_t i = 1; i < values.size(); ++i)
-		{
-			if (result[i] == conflict_this_t::override_wins)
-				result[i] = conflict_this_t::conflict_wins;
-		}
 	}
 
 	return result;

@@ -1,13 +1,14 @@
 #include "sub_record_schema.hpp"
 #include <cstring>
-#include <iterator>
+
+#define ARRAY_COUNT(x) (sizeof(x) / sizeof(x[0]))
 
 static const char * const cell_flags[] = {
 	"Interior", "Has Water", "Illegal to Sleep", "_", "_", "_", "_", "Behave like Exterior",
 };
 
 static const field_def_t cell_data_fields[] = {
-	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, cell_flags, std::size(cell_flags) },
+	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, cell_flags, ARRAY_COUNT(cell_flags) },
 	{ "Grid X", field_type_t::i32, 4, 4, nullptr, nullptr },
 	{ "Grid Y", field_type_t::i32, 8, 4, nullptr, nullptr },
 };
@@ -15,7 +16,7 @@ static const field_def_t cell_data_fields[] = {
 static const char * const npc_flags[] = { "Female", "Essential", "Respawn", "_", "Autocalc" };
 
 static const field_def_t npc_flag_fields[] = {
-	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, npc_flags, std::size(npc_flags) },
+	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, npc_flags, ARRAY_COUNT(npc_flags) },
 };
 
 static const field_def_t npc_npdt_12_fields[] = {
@@ -61,7 +62,7 @@ static const field_def_t npc_aidt_fields[] = {
 	{ "Fight", field_type_t::u8, 2, 1, nullptr, nullptr },
 	{ "Flee", field_type_t::u8, 3, 1, nullptr, nullptr },
 	{ "Alarm", field_type_t::u8, 4, 1, nullptr, nullptr },
-	{ "Services", field_type_t::flags_u32, 8, 4, nullptr, aidt_flags, std::size(aidt_flags) },
+	{ "Services", field_type_t::flags_u32, 8, 4, nullptr, aidt_flags, ARRAY_COUNT(aidt_flags) },
 };
 
 static const char * const weapon_types[] = {
@@ -120,6 +121,18 @@ static const field_def_t ench_endt_fields[] = {
 };
 
 static const char * const spell_effect_range[] = { "Self", "Touch", "Target", nullptr };
+
+static const char * const attribute_names[] = { "Strength",    "Intelligence", "Willpower", "Agility",
+	                                            "Speed",       "Endurance",    "Personality", "Luck", nullptr };
+
+static const char * const skill_names[] = {
+	"Block",       "Armorer",      "Medium Armor", "Heavy Armor",  "Blunt Weapon",
+	"Long Blade",  "Axe",          "Spear",        "Athletics",    "Enchant",
+	"Destruction", "Alteration",   "Illusion",     "Conjuration",  "Mysticism",
+	"Restoration", "Alchemy",      "Unarmored",    "Security",     "Sneak",
+	"Acrobatics",  "Light Armor",  "Short Blade",  "Marksman",     "Mercantile",
+	"Speechcraft", "Hand-to-hand", nullptr
+};
 
 static const char * const effect_names[] = {
 	"Water Breathing", "Swift Swim", "Water Walking", "Shield", "Fire Shield",
@@ -226,18 +239,6 @@ static const field_def_t fact_fadt_fields[] = {
 
 static const char * const class_specializations[] = { "Combat", "Magic", "Stealth", nullptr };
 
-static const char * const attribute_names[] = { "Strength",    "Intelligence", "Willpower", "Agility",
-	                                            "Speed",       "Endurance",    "Personality", "Luck", nullptr };
-
-static const char * const skill_names[] = {
-	"Block",       "Armorer",      "Medium Armor", "Heavy Armor",  "Blunt Weapon",
-	"Long Blade",  "Axe",          "Spear",        "Athletics",    "Enchant",
-	"Destruction", "Alteration",   "Illusion",     "Conjuration",  "Mysticism",
-	"Restoration", "Alchemy",      "Unarmored",    "Security",     "Sneak",
-	"Acrobatics",  "Light Armor",  "Short Blade",  "Marksman",     "Mercantile",
-	"Speechcraft", "Hand-to-hand", nullptr
-};
-
 static const char * const class_flags[] = { "Playable" };
 
 static const field_def_t clas_cldt_fields[] = {
@@ -254,7 +255,7 @@ static const field_def_t clas_cldt_fields[] = {
 	{ "Minor 3", field_type_t::enum_u32, 28, 4, skill_names, nullptr },
 	{ "Minor 4", field_type_t::enum_u32, 36, 4, skill_names, nullptr },
 	{ "Minor 5", field_type_t::enum_u32, 44, 4, skill_names, nullptr },
-	{ "Flags", field_type_t::flags_u32, 52, 4, nullptr, class_flags, std::size(class_flags) },
+	{ "Flags", field_type_t::flags_u32, 52, 4, nullptr, class_flags, ARRAY_COUNT(class_flags) },
 	{ "Auto Calc", field_type_t::u32, 56, 4, nullptr, nullptr },
 };
 
@@ -286,7 +287,7 @@ static const field_def_t race_radt_fields[] = {
 static const char * const leveled_flags[] = { "Calc from All Levels", "Calc for Each Item" };
 
 static const field_def_t levi_data_fields[] = {
-	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, leveled_flags, std::size(leveled_flags) },
+	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, leveled_flags, ARRAY_COUNT(leveled_flags) },
 };
 
 static const field_def_t gmst_strv_fields[] = {
@@ -324,7 +325,7 @@ static const char * const spell_flags[] = { "Auto Calc Cost", "PC Start Spell", 
 static const field_def_t spel_spdt_fields[] = {
 	{ "Type", field_type_t::enum_u32, 0, 4, spell_types, nullptr },
 	{ "Cost", field_type_t::u32, 4, 4, nullptr, nullptr },
-	{ "Flags", field_type_t::flags_u32, 8, 4, nullptr, spell_flags, std::size(spell_flags) },
+	{ "Flags", field_type_t::flags_u32, 8, 4, nullptr, spell_flags, ARRAY_COUNT(spell_flags) },
 };
 
 static const field_def_t npco_fields[] = {
@@ -342,7 +343,7 @@ static const char * const mgef_flags[] = {
 static const field_def_t mgef_medt_fields[] = {
 	{ "School", field_type_t::enum_u32, 0, 4, mgef_schools, nullptr },
 	{ "Base Cost", field_type_t::f32, 4, 4, nullptr, nullptr },
-	{ "Flags", field_type_t::flags_u32, 8, 4, nullptr, mgef_flags, std::size(mgef_flags) },
+	{ "Flags", field_type_t::flags_u32, 8, 4, nullptr, mgef_flags, ARRAY_COUNT(mgef_flags) },
 	{ "Red", field_type_t::u32, 12, 4, nullptr, nullptr },
 	{ "Blue", field_type_t::u32, 16, 4, nullptr, nullptr },
 	{ "Green", field_type_t::u32, 20, 4, nullptr, nullptr },
@@ -381,7 +382,7 @@ static const field_def_t cell_dodt_fields[] = {
 static const char * const cont_flags[] = { "Organic", "Respawns", "_", "Default" };
 
 static const field_def_t cont_flag_fields[] = {
-	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, cont_flags, std::size(cont_flags) },
+	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, cont_flags, ARRAY_COUNT(cont_flags) },
 };
 
 static const char * const crea_flags[] = {
@@ -390,7 +391,7 @@ static const char * const crea_flags[] = {
 };
 
 static const field_def_t crea_flag_fields[] = {
-	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, crea_flags, std::size(crea_flags) },
+	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, crea_flags, ARRAY_COUNT(crea_flags) },
 };
 
 static const field_def_t levi_intv_fields[] = {
@@ -419,7 +420,7 @@ static const field_def_t ligh_lhdt_fields[] = {
 	{ "Green", field_type_t::u8, 17, 1, nullptr, nullptr },
 	{ "Blue", field_type_t::u8, 18, 1, nullptr, nullptr },
 	{ "Null", field_type_t::u8, 19, 1, nullptr, nullptr },
-	{ "Flags", field_type_t::flags_u32, 20, 4, nullptr, light_flags, std::size(light_flags) },
+	{ "Flags", field_type_t::flags_u32, 20, 4, nullptr, light_flags, ARRAY_COUNT(light_flags) },
 };
 
 static const field_def_t ingr_irdt_fields[] = {
@@ -513,51 +514,51 @@ static const field_def_t ai_w_fields[] = {
 static const std::vector<sub_record_schema_t> & build_schemas()
 {
 	static const std::vector<sub_record_schema_t> schemas = {
-		{ "CELL", "DATA", 12, cell_data_fields, std::size(cell_data_fields) },
-		{ "CELL", "AMBI", 16, cell_ambi_fields, std::size(cell_ambi_fields) },
-		{ "CELL", "DODT", 24, cell_dodt_fields, std::size(cell_dodt_fields) },
-		{ "CELL", "DATA", 24, cell_ref_data_fields, std::size(cell_ref_data_fields) },
-		{ "NPC_", "FLAG", 4, npc_flag_fields, std::size(npc_flag_fields) },
-		{ "NPC_", "NPDT", 12, npc_npdt_12_fields, std::size(npc_npdt_12_fields) },
-		{ "NPC_", "NPDT", 52, npc_npdt_52_fields, std::size(npc_npdt_52_fields) },
-		{ "*", "AIDT", 12, npc_aidt_fields, std::size(npc_aidt_fields) },
-		{ "WEAP", "WPDT", 32, weap_wpdt_fields, std::size(weap_wpdt_fields) },
-		{ "ARMO", "AODT", 24, armo_aodt_fields, std::size(armo_aodt_fields) },
-		{ "ALCH", "ALDT", 12, alch_aldt_fields, std::size(alch_aldt_fields) },
-		{ "ENCH", "ENDT", 16, ench_endt_fields, std::size(ench_endt_fields) },
-		{ "*", "ENAM", 24, enam_fields, std::size(enam_fields) },
-		{ "*", "NPCO", 36, npco_fields, std::size(npco_fields) },
-		{ "BOOK", "BKDT", 20, book_bkdt_fields, std::size(book_bkdt_fields) },
-		{ "CREA", "NPDT", 96, crea_npdt_fields, std::size(crea_npdt_fields) },
-		{ "CREA", "FLAG", 4, crea_flag_fields, std::size(crea_flag_fields) },
-		{ "CONT", "CNDT", 4, cont_cndt_fields, std::size(cont_cndt_fields) },
-		{ "CONT", "FLAG", 4, cont_flag_fields, std::size(cont_flag_fields) },
-		{ "FACT", "FADT", 240, fact_fadt_fields, std::size(fact_fadt_fields) },
-		{ "CLAS", "CLDT", 60, clas_cldt_fields, std::size(clas_cldt_fields) },
-		{ "RACE", "RADT", 140, race_radt_fields, std::size(race_radt_fields) },
-		{ "LEVI", "DATA", 4, levi_data_fields, std::size(levi_data_fields) },
-		{ "LEVC", "DATA", 4, levi_data_fields, std::size(levi_data_fields) },
-		{ "LEVI", "INTV", 2, levi_intv_fields, std::size(levi_intv_fields) },
-		{ "LEVC", "INTV", 2, levi_intv_fields, std::size(levi_intv_fields) },
-		{ "GMST", "STRV", 0, gmst_strv_fields, std::size(gmst_strv_fields) },
-		{ "GMST", "INTV", 4, gmst_intv_fields, std::size(gmst_intv_fields) },
-		{ "GMST", "FLTV", 4, gmst_fltv_fields, std::size(gmst_fltv_fields) },
-		{ "INFO", "DATA", 12, info_data_fields, std::size(info_data_fields) },
-		{ "REGN", "WEAT", 8, regn_weat_fields, std::size(regn_weat_fields) },
-		{ "SPEL", "SPDT", 12, spel_spdt_fields, std::size(spel_spdt_fields) },
-		{ "MGEF", "MEDT", 36, mgef_medt_fields, std::size(mgef_medt_fields) },
-		{ "SKIL", "SKDT", 24, skil_skdt_fields, std::size(skil_skdt_fields) },
-		{ "CLOT", "CTDT", 12, clot_ctdt_fields, std::size(clot_ctdt_fields) },
-		{ "LIGH", "LHDT", 24, ligh_lhdt_fields, std::size(ligh_lhdt_fields) },
-		{ "INGR", "IRDT", 56, ingr_irdt_fields, std::size(ingr_irdt_fields) },
-		{ "SCPT", "SCHD", 52, scpt_schd_fields, std::size(scpt_schd_fields) },
-		{ "MISC", "MCDT", 12, misc_mcdt_fields, std::size(misc_mcdt_fields) },
-		{ "APPA", "AADT", 16, appa_aadt_fields, std::size(appa_aadt_fields) },
-		{ "REPA", "RIDT", 16, repa_ridt_fields, std::size(repa_ridt_fields) },
-		{ "LOCK", "LKDT", 16, repa_ridt_fields, std::size(repa_ridt_fields) },
-		{ "PROB", "PBDT", 16, repa_ridt_fields, std::size(repa_ridt_fields) },
-		{ "BODY", "BYDT", 4, body_bydt_fields, std::size(body_bydt_fields) },
-		{ "*", "AI_W", 14, ai_w_fields, std::size(ai_w_fields) },
+		{ "CELL", "DATA", 12, cell_data_fields, ARRAY_COUNT(cell_data_fields) },
+		{ "CELL", "AMBI", 16, cell_ambi_fields, ARRAY_COUNT(cell_ambi_fields) },
+		{ "CELL", "DODT", 24, cell_dodt_fields, ARRAY_COUNT(cell_dodt_fields) },
+		{ "CELL", "DATA", 24, cell_ref_data_fields, ARRAY_COUNT(cell_ref_data_fields) },
+		{ "NPC_", "FLAG", 4, npc_flag_fields, ARRAY_COUNT(npc_flag_fields) },
+		{ "NPC_", "NPDT", 12, npc_npdt_12_fields, ARRAY_COUNT(npc_npdt_12_fields) },
+		{ "NPC_", "NPDT", 52, npc_npdt_52_fields, ARRAY_COUNT(npc_npdt_52_fields) },
+		{ "*", "AIDT", 12, npc_aidt_fields, ARRAY_COUNT(npc_aidt_fields) },
+		{ "WEAP", "WPDT", 32, weap_wpdt_fields, ARRAY_COUNT(weap_wpdt_fields) },
+		{ "ARMO", "AODT", 24, armo_aodt_fields, ARRAY_COUNT(armo_aodt_fields) },
+		{ "ALCH", "ALDT", 12, alch_aldt_fields, ARRAY_COUNT(alch_aldt_fields) },
+		{ "ENCH", "ENDT", 16, ench_endt_fields, ARRAY_COUNT(ench_endt_fields) },
+		{ "*", "ENAM", 24, enam_fields, ARRAY_COUNT(enam_fields) },
+		{ "*", "NPCO", 36, npco_fields, ARRAY_COUNT(npco_fields) },
+		{ "BOOK", "BKDT", 20, book_bkdt_fields, ARRAY_COUNT(book_bkdt_fields) },
+		{ "CREA", "NPDT", 96, crea_npdt_fields, ARRAY_COUNT(crea_npdt_fields) },
+		{ "CREA", "FLAG", 4, crea_flag_fields, ARRAY_COUNT(crea_flag_fields) },
+		{ "CONT", "CNDT", 4, cont_cndt_fields, ARRAY_COUNT(cont_cndt_fields) },
+		{ "CONT", "FLAG", 4, cont_flag_fields, ARRAY_COUNT(cont_flag_fields) },
+		{ "FACT", "FADT", 240, fact_fadt_fields, ARRAY_COUNT(fact_fadt_fields) },
+		{ "CLAS", "CLDT", 60, clas_cldt_fields, ARRAY_COUNT(clas_cldt_fields) },
+		{ "RACE", "RADT", 140, race_radt_fields, ARRAY_COUNT(race_radt_fields) },
+		{ "LEVI", "DATA", 4, levi_data_fields, ARRAY_COUNT(levi_data_fields) },
+		{ "LEVC", "DATA", 4, levi_data_fields, ARRAY_COUNT(levi_data_fields) },
+		{ "LEVI", "INTV", 2, levi_intv_fields, ARRAY_COUNT(levi_intv_fields) },
+		{ "LEVC", "INTV", 2, levi_intv_fields, ARRAY_COUNT(levi_intv_fields) },
+		{ "GMST", "STRV", 0, gmst_strv_fields, ARRAY_COUNT(gmst_strv_fields) },
+		{ "GMST", "INTV", 4, gmst_intv_fields, ARRAY_COUNT(gmst_intv_fields) },
+		{ "GMST", "FLTV", 4, gmst_fltv_fields, ARRAY_COUNT(gmst_fltv_fields) },
+		{ "INFO", "DATA", 12, info_data_fields, ARRAY_COUNT(info_data_fields) },
+		{ "REGN", "WEAT", 8, regn_weat_fields, ARRAY_COUNT(regn_weat_fields) },
+		{ "SPEL", "SPDT", 12, spel_spdt_fields, ARRAY_COUNT(spel_spdt_fields) },
+		{ "MGEF", "MEDT", 36, mgef_medt_fields, ARRAY_COUNT(mgef_medt_fields) },
+		{ "SKIL", "SKDT", 24, skil_skdt_fields, ARRAY_COUNT(skil_skdt_fields) },
+		{ "CLOT", "CTDT", 12, clot_ctdt_fields, ARRAY_COUNT(clot_ctdt_fields) },
+		{ "LIGH", "LHDT", 24, ligh_lhdt_fields, ARRAY_COUNT(ligh_lhdt_fields) },
+		{ "INGR", "IRDT", 56, ingr_irdt_fields, ARRAY_COUNT(ingr_irdt_fields) },
+		{ "SCPT", "SCHD", 52, scpt_schd_fields, ARRAY_COUNT(scpt_schd_fields) },
+		{ "MISC", "MCDT", 12, misc_mcdt_fields, ARRAY_COUNT(misc_mcdt_fields) },
+		{ "APPA", "AADT", 16, appa_aadt_fields, ARRAY_COUNT(appa_aadt_fields) },
+		{ "REPA", "RIDT", 16, repa_ridt_fields, ARRAY_COUNT(repa_ridt_fields) },
+		{ "LOCK", "LKDT", 16, repa_ridt_fields, ARRAY_COUNT(repa_ridt_fields) },
+		{ "PROB", "PBDT", 16, repa_ridt_fields, ARRAY_COUNT(repa_ridt_fields) },
+		{ "BODY", "BYDT", 4, body_bydt_fields, ARRAY_COUNT(body_bydt_fields) },
+		{ "*", "AI_W", 14, ai_w_fields, ARRAY_COUNT(ai_w_fields) },
 	};
 	return schemas;
 }
