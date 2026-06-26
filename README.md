@@ -1,10 +1,10 @@
-# yampt — Yet Another Morrowind Plugin Tools
+# Yet Another Morrowind Plugin Tools
 
 A suite of tools for working with Morrowind plugins (ESM/ESP/omwgame/omwaddon). Includes a plugin conflict editor similar to xEdit, a translation workbench, and a CLI for batch operations.
 
 ## Applications
 
-### yEditor — Plugin Editor
+### yEditor — Plugin Editor (70% DONE)
 
 Qt6 GUI for viewing, comparing, and patching plugins. Similar to TES5Edit/xEdit.
 
@@ -14,11 +14,11 @@ Qt6 GUI for viewing, comparing, and patching plugins. Similar to TES5Edit/xEdit.
 - xEdit-style conflict coloring (background by conflict severity, text by override status)
 - Conflict categories: no conflict, benign override, critical conflict
 - Filter by conflict level, record type, record ID/name, deleted records
-- ITM (Identical to Master) detection and one-click removal
-- Merged patch creation with leveled list merging and dialogue merging
-- Drag-and-drop record copying to merged patch
+- ITM (Identical to Master) detection and one-click removal (WIP)
+- Merged patch creation with leveled list merging and dialogue merging (WIP)
+- Drag-and-drop record copying to merged patch (WIP)
 
-### yTranslator — Translation Workbench
+### yTranslator — Translation Workbench (90% DONE)
 
 Qt6 GUI for interactive plugin translation.
 
@@ -29,7 +29,7 @@ Qt6 GUI for interactive plugin translation.
 - Syntax highlighting for MWScript keywords, hyperlinks, and formatting tags
 - Spell checking (Hunspell) with per-language dictionaries
 - Grammar checking
-- Translation suggestions from three sources: local CTranslate2 model, DeepL API, Google API
+- Translation suggestions from three sources: local CTranslate2 model, DeepL API, Google API (WIP)
 - Annotation system showing hyperlinks, gender info, and glossary matches
 - History panel with undo support
 - Find & replace across the active dictionary
