@@ -207,6 +207,8 @@
     <ClCompile Include="tests.conflict_compute.cpp" />
     <ClCompile Include="tests.conflict_slots.cpp" />
     <ClCompile Include="tests.document.cpp" />
+    <ClCompile Include="tests.esm_reader.cpp" />
+    <ClCompile Include="tests.script_parser_scdt.cpp" />
     <ClCompile Include="..\yampt.translator\model\dict_document.cpp" />
     <ClCompile Include="..\yampt.translator\model\yaml_document.cpp" />
     <ClCompile Include="..\yampt.translator\io\yaml_l10n_reader.cpp" />

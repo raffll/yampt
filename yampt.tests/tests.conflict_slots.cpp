@@ -140,11 +140,17 @@ TEST_CASE("build_leveled_list_slots, LEVI with 3 items version 2 lacks middle", 
 
 TEST_CASE("build_leveled_list_slots, header INTV size != 2 stays in headers", "[u]")
 {
+	std::string data_4bytes(4, '\0');
+	data_4bytes[0] = '\x01';
+
+	std::string intv_4bytes(4, '\0');
+	intv_4bytes[0] = '\x05';
+
 	std::string v1 = make_record_content({
 		{"NAME", "list_id"},
-		{"DATA", "\x01\x00\x00\x00"},
-		{"INTV", "\x05\x00\x00\x00"},
-		{"NNAM", "\x01"},
+		{"DATA", data_4bytes},
+		{"INTV", intv_4bytes},
+		{"NNAM", std::string(1, '\x01')},
 		{"INTV", std::string(2, '\x01')}, {"INAM", "item_a"}
 	});
 

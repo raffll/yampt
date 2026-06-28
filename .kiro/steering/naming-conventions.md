@@ -124,3 +124,19 @@ copy += "_suffix";
 // Bad — unnecessary copy
 auto key_text = esm.get_key().text;
 ```
+
+## Qt Boundary Rule
+
+Qt-mandated names stay in camelCase. Everything you write fresh uses snake_case.
+
+| Context | Convention | Example |
+|---------|-----------|---------|
+| Qt virtual overrides | camelCase (Qt's name) | `keyPressEvent`, `eventFilter`, `data` |
+| Qt signal references in `connect()` | camelCase | `&QAction::triggered` |
+| Your own signals | snake_case | `row_selected`, `filters_changed` |
+| Your own slots / methods | snake_case | `on_row_selected`, `setup_toolbar` |
+| Qt base class API calls | camelCase (Qt's API) | `menuBar()`, `statusBar()`, `addWidget()` |
+| Your own classes | snake_case + `_t` | `main_window_t`, `filter_tree_t` |
+| Local Qt objects | snake_case | `auto * file_menu = menuBar()->addMenu(...)` |
+
+Rule: you do not rename what Qt gives you, you name what you create yourself. A developer reading `keyPressEvent` immediately knows it's a Qt override. A developer reading `on_row_selected` knows it's project code.
