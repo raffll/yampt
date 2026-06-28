@@ -48,6 +48,9 @@ std::vector<conflict_this_t> compute_conflict_this(const std::vector<std::string
 
 	for (size_t i = 0; i < values.size() - 1; ++i)
 	{
+		if (values[i].empty())
+			continue;
+
 		if (values[i] != values[0] && values[i] != winner)
 		{
 			is_override = false;

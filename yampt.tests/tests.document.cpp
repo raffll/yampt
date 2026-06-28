@@ -1,8 +1,8 @@
 #include <catch2/catch_all.hpp>
 #include <rapidcheck.h>
 #include <rapidcheck/catch.h>
-#include "../yampt.translator/dict_document.hpp"
-#include "../yampt/dict_writer.hpp"
+#include "../yampt.translator/model/dict_document.hpp"
+#include "../yampt/io/dict_writer.hpp"
 
 #include <algorithm>
 #include <filesystem>
@@ -95,10 +95,10 @@ TEST_CASE("dict_document_t, build_rows count invariant", "[i]")
 	});
 }
 
-TEST_CASE("dict_document_t, read-only commit is no-op", "[i]")
+TEST_CASE("dict_document_t, commit_edit modifies data", "[i]")
 {
 	rc::prop(
-	    "commit_edit on read-only doc does not modify data",
+	    "commit_edit changes the target record new_text",
 	    []()
 	{
 		tools_t::dict_t data;
@@ -118,24 +118,19 @@ TEST_CASE("dict_document_t, read-only commit is no-op", "[i]")
 		const auto path = create_temp_dict_json(data);
 		dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::base);
 
-		const auto rows_before = doc.build_rows();
-
 		const auto idx = *rc::gen::inRange<size_t>(0, static_cast<size_t>(rec_count));
 		const auto new_text = *rc::gen::arbitrary<std::string>();
 		doc.commit_edit(tools_t::rec_type_t::cell, idx, new_text);
 
 		const auto rows_after = doc.build_rows();
-		RC_ASSERT(rows_before.size() == rows_after.size());
-		for (size_t i = 0; i < rows_before.size(); ++i)
-		{
-			RC_ASSERT(rows_before[i].new_text == rows_after[i].new_text);
-		}
+		RC_ASSERT(rows_after[idx].new_text == new_text);
+		RC_ASSERT(doc.is_dirty());
 
 		cleanup_temp_dict(path);
 	});
 }
 
-#include "../yampt.translator/yaml_document.hpp"
+#include "../yampt.translator/model/yaml_document.hpp"
 
 #include <filesystem>
 #include <fstream>

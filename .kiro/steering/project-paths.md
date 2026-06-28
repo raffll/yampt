@@ -6,29 +6,107 @@
 yampt/
 ├── yampt/                  # Core library + CLI (C++)
 │   ├── main.cpp
-│   ├── tools.hpp / tools.cpp
-│   ├── dict_reader.hpp / dict_reader.cpp
-│   ├── dict_writer.hpp / dict_writer.cpp
-│   ├── dict_merger.hpp / dict_merger.cpp
-│   ├── dict_creator.hpp / dict_creator.cpp
-│   ├── esm_reader.hpp / esm_reader.cpp
-│   ├── esm_converter.hpp / esm_converter.cpp
-│   ├── script_parser.hpp / script_parser.cpp
-│   ├── user_interface.hpp / user_interface.cpp
-│   ├── translation_engine.hpp / translation_engine.cpp
-│   ├── file_list.hpp / file_list.cpp
+│   ├── io/                # File I/O layer
+│   │   ├── esm_reader.hpp / esm_reader.cpp
+│   │   ├── dict_reader.hpp / dict_reader.cpp
+│   │   ├── dict_writer.hpp / dict_writer.cpp
+│   │   ├── json_reader.hpp
+│   │   ├── file_list.hpp / file_list.cpp
+│   │   └── codepage.hpp / codepage.cpp
+│   ├── model/             # Domain logic
+│   │   ├── dict_merger.hpp / dict_merger.cpp
+│   │   ├── dict_creator.hpp / dict_creator.cpp
+│   │   ├── dict_creator_single.cpp
+│   │   ├── dict_creator_base.cpp
+│   │   ├── dict_creator_base_ordered.cpp
+│   │   ├── dict_kind.hpp
+│   │   ├── esm_converter.hpp / esm_converter.cpp
+│   │   ├── script_parser.hpp / script_parser.cpp
+│   │   └── translation_engine.hpp / translation_engine.cpp
+│   ├── utility/           # Pure helpers
+│   │   ├── tools.hpp / tools.cpp
+│   │   └── includes.hpp
+│   ├── interface/         # CLI boundary
+│   │   └── user_interface.hpp / user_interface.cpp
 │   ├── plugin_scan/       # Plugin comparison/conflict detection
-│   ├── includes.hpp
 │   └── yampt.vcxproj
 ├── yampt.translator/       # GUI translation workbench (Qt6)
 │   ├── main.cpp            # → yTranslator.exe
 │   ├── main_window.hpp / main_window.cpp
-│   ├── editor/            # Editor tab (xEdit-like plugin viewer)
-│   ├── dictionaries/      # Hunspell spell check dictionaries
+│   ├── session.hpp / session.cpp
+│   ├── model/             # Data models & documents
+│   │   ├── document.hpp
+│   │   ├── dict_document.hpp / dict_document.cpp
+│   │   ├── yaml_document.hpp / yaml_document.cpp
+│   │   ├── plugin_document.hpp
+│   │   ├── record_table_model.hpp / record_table_model.cpp
+│   │   ├── sidebar_model.hpp / sidebar_model.cpp
+│   │   ├── table_row.hpp
+│   │   └── table_builder.hpp / table_builder.cpp
+│   ├── view/              # Qt widgets & panels
+│   │   ├── record_table_view.hpp / record_table_view.cpp
+│   │   ├── table_display.hpp / table_display.cpp
+│   │   ├── sidebar_widget.hpp / sidebar_widget.cpp
+│   │   ├── editor_panel.hpp / editor_panel.cpp
+│   │   ├── editor_text_edit.hpp / editor_text_edit.cpp
+│   │   ├── line_number_gutter.hpp / line_number_gutter.cpp
+│   │   ├── annotations_panel.hpp / annotations_panel.cpp
+│   │   ├── history_panel.hpp / history_panel.cpp
+│   │   ├── log_tab.hpp / log_tab.cpp
+│   │   ├── book_preview.hpp / book_preview.cpp
+│   │   ├── validation_indicator.hpp / validation_indicator.cpp
+│   │   ├── filter_tree.hpp / filter_tree.cpp
+│   │   ├── status_filter_bar.hpp / status_filter_bar.cpp
+│   │   └── translation_suggestion_tab.hpp / translation_suggestion_tab.cpp
+│   ├── controller/        # Logic & orchestration
+│   │   ├── editor_controller.hpp / editor_controller.cpp
+│   │   ├── editor_config.hpp / editor_config.cpp
+│   │   ├── search_engine.hpp / search_engine.cpp
+│   │   ├── search_manager.hpp / search_manager.cpp
+│   │   ├── validation_manager.hpp / validation_manager.cpp
+│   │   ├── annotation_manager.hpp / annotation_manager.cpp
+│   │   ├── history_manager.hpp / history_manager.cpp
+│   │   ├── find_replace_service.hpp / find_replace_service.cpp
+│   │   └── operation_executor.hpp / operation_executor.cpp
+│   ├── dialog/            # Modal dialogs
+│   │   ├── find_replace_dialog.hpp / find_replace_dialog.cpp
+│   │   ├── dict_selection_dialog.hpp / dict_selection_dialog.cpp
+│   │   ├── first_run_dialog.hpp / first_run_dialog.cpp
+│   │   └── spell_context_menu.hpp / spell_context_menu.cpp
+│   ├── highlight/         # Text coloring
+│   │   ├── syntax_highlighter.hpp / syntax_highlighter.cpp
+│   │   ├── hyperlink_highlighter.hpp / hyperlink_highlighter.cpp
+│   │   ├── annotation_highlighter.hpp / annotation_highlighter.cpp
+│   │   └── composite_highlighter.hpp / composite_highlighter.cpp
+│   ├── provider/          # Translation backends
+│   │   ├── translation_provider.hpp
+│   │   ├── ctranslate2_provider.hpp / ctranslate2_provider.cpp
+│   │   ├── deepl_provider.hpp / deepl_provider.cpp
+│   │   ├── google_provider.hpp / google_provider.cpp
+│   │   └── model_downloader.hpp / model_downloader.cpp
+│   ├── utility/           # Helpers
+│   │   ├── status_colors.hpp
+│   │   ├── display_name.hpp / display_name.cpp
+│   │   ├── encoding_utils.hpp / encoding_utils.cpp
+│   │   ├── plugin_op.hpp
+│   │   ├── spell_checker.hpp / spell_checker.cpp
+│   │   └── grammar_checker.hpp / grammar_checker.cpp
+│   ├── io/                # File format readers/writers
+│   │   ├── yaml_l10n_reader.hpp / yaml_l10n_reader.cpp
+│   │   └── yaml_l10n_writer.hpp / yaml_l10n_writer.cpp
 │   └── yampt.translator.vcxproj
 ├── yampt.editor/           # Standalone editor app (Qt6)
 │   ├── main.cpp            # → yEditor.exe
 │   ├── editor_window.hpp / editor_window.cpp
+│   ├── model/
+│   │   ├── nav_tree_model.hpp / nav_tree_model.cpp
+│   │   └── view_tree_model.hpp / view_tree_model.cpp
+│   ├── view/
+│   │   ├── editor_tab.hpp / editor_tab.cpp
+│   │   └── messages_panel.hpp / messages_panel.cpp
+│   ├── dialog/
+│   │   ├── filter_dialog.hpp / filter_dialog.cpp
+│   │   └── plugin_select_dialog.hpp / plugin_select_dialog.cpp
 │   └── yampt.editor.vcxproj
 ├── yampt.tests/            # Catch2 unit tests
 │   └── yampt.tests.vcxproj
@@ -50,10 +128,16 @@ NEVER modify files directly in the `external/` folder. These are upstream third-
 ## Solution Filters
 
 vcxproj.filters must follow this structure:
-- **Root (no filter)** — project's own source files (files in the same directory as the vcxproj)
-- **yampt** — files referenced from `../yampt/`
-- **editor** — files from the `editor/` subfolder (yampt.translator and yampt.editor)
-- **external** — files from `../external/` (yyjson, catch)
+- **Root (no filter)** — project's own root source files (main.cpp, main_window.cpp, session.cpp)
+- **model** — files in the `model/` subfolder
+- **view** — files in the `view/` subfolder
+- **controller** — files in the `controller/` subfolder
+- **dialog** — files in the `dialog/` subfolder
+- **highlight** — files in the `highlight/` subfolder
+- **provider** — files in the `provider/` subfolder
+- **utility** — files in the `utility/` subfolder
+- **io** — files in the `io/` subfolder
+- **yampt** — files referenced from `../yampt/` (core library)
 
 Never use default VS filters like "Source Files", "Header Files", or "Resource Files".
 

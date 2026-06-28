@@ -1,8 +1,8 @@
 #include <catch2/catch_all.hpp>
 #include <rapidcheck.h>
 #include <rapidcheck/catch.h>
-#include "../yampt/file_list.hpp"
-#include "../yampt.translator/sidebar_model.hpp"
+#include "../yampt/io/file_list.hpp"
+#include "../yampt.translator/model/sidebar_model.hpp"
 #include "../yampt.translator/session.hpp"
 
 #include <algorithm>

@@ -1,6 +1,6 @@
 #include <catch2/catch_all.hpp>
-#include "../yampt/tools.hpp"
-#include "../yampt/dict_merger.hpp"
+#include "../yampt/utility/tools.hpp"
+#include "../yampt/model/dict_merger.hpp"
 
 TEST_CASE("dict_merger_t::add_record, inserts entry", "[u]")
 {

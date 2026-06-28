@@ -2,6 +2,7 @@
 <RunSettings>
   <Catch2Adapter>
     <FilenameFilter>yampt\.tests</FilenameFilter>
-    <ForceListContent>true</ForceListContent>
+    <DiscoverCommandLine>--list-tests *</DiscoverCommandLine>
+    <WorkingDirectory>$(SolutionDir)</WorkingDirectory>
   </Catch2Adapter>
 </RunSettings>

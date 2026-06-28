@@ -1,7 +1,7 @@
 #include "session.hpp"
-#include "dict_document.hpp"
-#include "plugin_document.hpp"
-#include "yaml_document.hpp"
+#include "model/dict_document.hpp"
+#include "model/plugin_document.hpp"
+#include "model/yaml_document.hpp"
 
 #include <algorithm>
 

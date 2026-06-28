@@ -4,9 +4,6 @@
     <Filter Include="yampt">
       <UniqueIdentifier>{C1000001-0000-0000-0000-000000000001}</UniqueIdentifier>
     </Filter>
-    <Filter Include="external">
-      <UniqueIdentifier>{C1000002-0000-0000-0000-000000000002}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="tests.main.cpp" />
@@ -18,95 +15,103 @@
     <ClCompile Include="tests.dict_creator.cpp" />
     <ClCompile Include="tests.codepage.cpp" />
     <ClCompile Include="tests.script_parser.cpp" />
-    <ClCompile Include="..\yampt\tools.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\dict_reader.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\dict_writer.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\dict_merger.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\dict_creator.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\dict_creator_single.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\dict_creator_base.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\dict_creator_base_ordered.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\esm_reader.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\script_parser.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\esm_converter.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\codepage.cpp" />
-    <ClCompile Include="..\yampt\translation_engine.cpp" />
-    <ClCompile Include="..\yampt\file_list.cpp" />
     <ClCompile Include="tests.conflict_compute.cpp" />
     <ClCompile Include="tests.conflict_slots.cpp" />
     <ClCompile Include="tests.document.cpp" />
+    <ClCompile Include="..\yampt\utility\tools.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\yampt\io\dict_reader.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\yampt\io\dict_writer.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\yampt\model\dict_merger.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\yampt\model\dict_creator.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\yampt\model\dict_creator_single.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\yampt\model\dict_creator_base.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\yampt\model\dict_creator_base_ordered.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\yampt\io\esm_reader.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\yampt\model\script_parser.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\yampt\model\esm_converter.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\yampt\io\codepage.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\yampt\model\translation_engine.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\yampt\io\file_list.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
     <ClCompile Include="..\yampt\plugin_scan\conflict_compute.cpp">
       <Filter>yampt</Filter>
     </ClCompile>
     <ClCompile Include="..\yampt\plugin_scan\conflict_slots.cpp">
       <Filter>yampt</Filter>
     </ClCompile>
-    <ClCompile Include="..\yampt.translator\dict_document.cpp" />
-    <ClCompile Include="..\yampt.translator\yaml_document.cpp" />
-    <ClCompile Include="..\yampt.translator\yaml_l10n_reader.cpp" />
-    <ClCompile Include="..\yampt.translator\yaml_l10n_writer.cpp" />
-    <ClCompile Include="..\yampt.translator\sidebar_model.cpp" />
-    <ClCompile Include="..\yampt.translator\display_name.cpp" />
+    <ClCompile Include="..\yampt.translator\model\dict_document.cpp" />
+    <ClCompile Include="..\yampt.translator\model\yaml_document.cpp" />
+    <ClCompile Include="..\yampt.translator\io\yaml_l10n_reader.cpp" />
+    <ClCompile Include="..\yampt.translator\io\yaml_l10n_writer.cpp" />
+    <ClCompile Include="..\yampt.translator\model\sidebar_model.cpp" />
+    <ClCompile Include="..\yampt.translator\utility\display_name.cpp" />
     <ClCompile Include="..\yampt.translator\session.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\yampt\tools.hpp">
+    <ClInclude Include="..\yampt\utility\tools.hpp">
       <Filter>yampt</Filter>
     </ClInclude>
-    <ClInclude Include="..\yampt\codepage.hpp">
+    <ClInclude Include="..\yampt\io\codepage.hpp">
       <Filter>yampt</Filter>
     </ClInclude>
-    <ClInclude Include="..\yampt\dict_kind.hpp">
+    <ClInclude Include="..\yampt\model\dict_kind.hpp">
       <Filter>yampt</Filter>
     </ClInclude>
-    <ClInclude Include="..\yampt\dict_reader.hpp">
+    <ClInclude Include="..\yampt\io\dict_reader.hpp">
       <Filter>yampt</Filter>
     </ClInclude>
-    <ClInclude Include="..\yampt\dict_writer.hpp">
+    <ClInclude Include="..\yampt\io\dict_writer.hpp">
       <Filter>yampt</Filter>
     </ClInclude>
-    <ClInclude Include="..\yampt\dict_merger.hpp">
+    <ClInclude Include="..\yampt\model\dict_merger.hpp">
       <Filter>yampt</Filter>
     </ClInclude>
-    <ClInclude Include="..\yampt\dict_creator.hpp">
+    <ClInclude Include="..\yampt\model\dict_creator.hpp">
       <Filter>yampt</Filter>
     </ClInclude>
-    <ClInclude Include="..\yampt\esm_reader.hpp">
+    <ClInclude Include="..\yampt\io\esm_reader.hpp">
       <Filter>yampt</Filter>
     </ClInclude>
-    <ClInclude Include="..\yampt\esm_converter.hpp">
+    <ClInclude Include="..\yampt\model\esm_converter.hpp">
       <Filter>yampt</Filter>
     </ClInclude>
-    <ClInclude Include="..\yampt\script_parser.hpp">
+    <ClInclude Include="..\yampt\model\script_parser.hpp">
       <Filter>yampt</Filter>
     </ClInclude>
-    <ClInclude Include="..\yampt\json_reader.hpp">
+    <ClInclude Include="..\yampt\io\json_reader.hpp">
       <Filter>yampt</Filter>
     </ClInclude>
-    <ClInclude Include="..\yampt\file_list.hpp" />
-    <ClInclude Include="..\yampt.translator\sidebar_model.hpp" />
+    <ClInclude Include="..\yampt\io\file_list.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\yampt.translator\model\sidebar_model.hpp" />
     <ClInclude Include="..\yampt.translator\session.hpp" />
   </ItemGroup>
   <ItemGroup>

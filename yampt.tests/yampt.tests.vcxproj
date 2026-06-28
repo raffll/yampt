@@ -94,7 +94,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;_SILENCE_CXX23_ALIGNED_STORAGE_DEPRECATION_WARNING;_SILENCE_CXX23_DENORM_DEPRECATION_WARNING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)external;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -110,7 +110,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;_SILENCE_CXX23_ALIGNED_STORAGE_DEPRECATION_WARNING;_SILENCE_CXX23_DENORM_DEPRECATION_WARNING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)external;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -128,7 +128,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;_SILENCE_CXX23_ALIGNED_STORAGE_DEPRECATION_WARNING;_SILENCE_CXX23_DENORM_DEPRECATION_WARNING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)external;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -148,7 +148,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;_SILENCE_CXX23_ALIGNED_STORAGE_DEPRECATION_WARNING;_SILENCE_CXX23_DENORM_DEPRECATION_WARNING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)external;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)external;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -163,36 +163,36 @@
     <None Include="cpp.hint" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\yampt\dict_creator.hpp" />
-    <ClInclude Include="..\yampt\dict_merger.hpp" />
-    <ClInclude Include="..\yampt\dict_reader.hpp" />
-    <ClInclude Include="..\yampt\dict_writer.hpp" />
-    <ClInclude Include="..\yampt\esm_converter.hpp" />
-    <ClInclude Include="..\yampt\esm_reader.hpp" />
-    <ClInclude Include="..\yampt\json_reader.hpp" />
-    <ClInclude Include="..\yampt\script_parser.hpp" />
-    <ClInclude Include="..\yampt\tools.hpp" />
-    <ClInclude Include="..\yampt\codepage.hpp" />
-    <ClInclude Include="..\yampt\dict_kind.hpp" />
-    <ClInclude Include="..\yampt\file_list.hpp" />
-    <ClInclude Include="..\yampt.translator\sidebar_model.hpp" />
+    <ClInclude Include="..\yampt\model\dict_creator.hpp" />
+    <ClInclude Include="..\yampt\model\dict_merger.hpp" />
+    <ClInclude Include="..\yampt\io\dict_reader.hpp" />
+    <ClInclude Include="..\yampt\io\dict_writer.hpp" />
+    <ClInclude Include="..\yampt\model\esm_converter.hpp" />
+    <ClInclude Include="..\yampt\io\esm_reader.hpp" />
+    <ClInclude Include="..\yampt\io\json_reader.hpp" />
+    <ClInclude Include="..\yampt\model\script_parser.hpp" />
+    <ClInclude Include="..\yampt\utility\tools.hpp" />
+    <ClInclude Include="..\yampt\io\codepage.hpp" />
+    <ClInclude Include="..\yampt\model\dict_kind.hpp" />
+    <ClInclude Include="..\yampt\io\file_list.hpp" />
+    <ClInclude Include="..\yampt.translator\model\sidebar_model.hpp" />
     <ClInclude Include="..\yampt.translator\session.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\yampt\dict_creator.cpp" />
-    <ClCompile Include="..\yampt\dict_creator_single.cpp" />
-    <ClCompile Include="..\yampt\dict_creator_base.cpp" />
-    <ClCompile Include="..\yampt\dict_creator_base_ordered.cpp" />
-    <ClCompile Include="..\yampt\dict_merger.cpp" />
-    <ClCompile Include="..\yampt\dict_reader.cpp" />
-    <ClCompile Include="..\yampt\dict_writer.cpp" />
-    <ClCompile Include="..\yampt\esm_converter.cpp" />
-    <ClCompile Include="..\yampt\esm_reader.cpp" />
-    <ClCompile Include="..\yampt\script_parser.cpp" />
-    <ClCompile Include="..\yampt\tools.cpp" />
-    <ClCompile Include="..\yampt\codepage.cpp" />
-    <ClCompile Include="..\yampt\translation_engine.cpp" />
-    <ClCompile Include="..\yampt\file_list.cpp" />
+    <ClCompile Include="..\yampt\model\dict_creator.cpp" />
+    <ClCompile Include="..\yampt\model\dict_creator_single.cpp" />
+    <ClCompile Include="..\yampt\model\dict_creator_base.cpp" />
+    <ClCompile Include="..\yampt\model\dict_creator_base_ordered.cpp" />
+    <ClCompile Include="..\yampt\model\dict_merger.cpp" />
+    <ClCompile Include="..\yampt\io\dict_reader.cpp" />
+    <ClCompile Include="..\yampt\io\dict_writer.cpp" />
+    <ClCompile Include="..\yampt\model\esm_converter.cpp" />
+    <ClCompile Include="..\yampt\io\esm_reader.cpp" />
+    <ClCompile Include="..\yampt\model\script_parser.cpp" />
+    <ClCompile Include="..\yampt\utility\tools.cpp" />
+    <ClCompile Include="..\yampt\io\codepage.cpp" />
+    <ClCompile Include="..\yampt\model\translation_engine.cpp" />
+    <ClCompile Include="..\yampt\io\file_list.cpp" />
     <ClCompile Include="..\yampt\plugin_scan\conflict_compute.cpp" />
     <ClCompile Include="..\yampt\plugin_scan\conflict_slots.cpp" />
     <ClCompile Include="tests.dict_merger.cpp" />
@@ -207,18 +207,18 @@
     <ClCompile Include="tests.conflict_compute.cpp" />
     <ClCompile Include="tests.conflict_slots.cpp" />
     <ClCompile Include="tests.document.cpp" />
-    <ClCompile Include="..\yampt.translator\dict_document.cpp" />
-    <ClCompile Include="..\yampt.translator\yaml_document.cpp" />
-    <ClCompile Include="..\yampt.translator\yaml_l10n_reader.cpp" />
-    <ClCompile Include="..\yampt.translator\yaml_l10n_writer.cpp" />
-    <ClCompile Include="..\yampt.translator\sidebar_model.cpp" />
-    <ClCompile Include="..\yampt.translator\display_name.cpp" />
+    <ClCompile Include="..\yampt.translator\model\dict_document.cpp" />
+    <ClCompile Include="..\yampt.translator\model\yaml_document.cpp" />
+    <ClCompile Include="..\yampt.translator\io\yaml_l10n_reader.cpp" />
+    <ClCompile Include="..\yampt.translator\io\yaml_l10n_writer.cpp" />
+    <ClCompile Include="..\yampt.translator\model\sidebar_model.cpp" />
+    <ClCompile Include="..\yampt.translator\utility\display_name.cpp" />
     <ClCompile Include="..\yampt.translator\session.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
-  <Target Name="CopyCTranslate2Dll" AfterTargets="Build">
+  <Target Name="CopyCTranslate2Dll" AfterTargets="Build" Condition="Exists('$(SolutionDir)external\CTranslate2\build\Release\ctranslate2.dll')">
     <Copy SourceFiles="$(SolutionDir)external\CTranslate2\build\Release\ctranslate2.dll" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
     <ItemGroup>
       <VcpkgDlls Include="$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\bin\*.dll" />

@@ -1,7 +1,7 @@
 #include <catch2/catch_all.hpp>
-#include "../yampt/tools.hpp"
-#include "../yampt/dict_merger.hpp"
-#include "../yampt/script_parser.hpp"
+#include "../yampt/utility/tools.hpp"
+#include "../yampt/model/dict_merger.hpp"
+#include "../yampt/model/script_parser.hpp"
 
 using namespace std;
 

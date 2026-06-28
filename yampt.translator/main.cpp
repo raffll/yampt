@@ -3,7 +3,7 @@
 #include <QApplication>
 #include <QStyleFactory>
 
-#include "../yampt/tools.hpp"
+#include "../yampt/utility/tools.hpp"
 
 int main(int argc, char * argv[])
 {

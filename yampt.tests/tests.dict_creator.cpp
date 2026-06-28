@@ -1,5 +1,5 @@
 #include <catch2/catch_all.hpp>
-#include "../yampt/dict_creator.hpp"
+#include "../yampt/model/dict_creator.hpp"
 
 #include <cstring>
 
@@ -43,10 +43,7 @@ TEST_CASE("dict_creator_t::adapt_translation, multiple digits", "[u]")
 	REQUIRE(result == "Poziom 35");
 }
 
-TEST_CASE(
-    "dict_creator_t::adapt_translation, size mismatch returns translation "
-    "unchanged",
-    "[u]")
+TEST_CASE("dict_creator_t::adapt_translation, size mismatch unchanged", "[u]")
 {
 	auto result = dict_creator_t::adapt_translation("AB", "ABC", "XYZ");
 	REQUIRE(result == "XYZ");
@@ -130,10 +127,7 @@ TEST_CASE("dict_creator_t::make_cell_key_text, deterministic", "[u]")
 	REQUIRE(a == b);
 }
 
-TEST_CASE(
-    "dict_creator_t::make_cell_key_text, different input produces different "
-    "hash",
-    "[u]")
+TEST_CASE("dict_creator_t::make_cell_key_text, different input produces different hash", "[u]")
 {
 	auto a = dict_creator_t::make_cell_key_text("Balmora");
 	auto b = dict_creator_t::make_cell_key_text("Vivec");

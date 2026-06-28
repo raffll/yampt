@@ -1,6 +1,6 @@
 #include <catch2/catch_all.hpp>
-#include "../yampt/tools.hpp"
-#include "../yampt/dict_reader.hpp"
+#include "../yampt/utility/tools.hpp"
+#include "../yampt/io/dict_reader.hpp"
 
 TEST_CASE("dict_reader_t, not loaded for nonexistent file", "[u]")
 {

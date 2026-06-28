@@ -1,8 +1,8 @@
 #include <catch2/catch_all.hpp>
-#include "../yampt/tools.hpp"
-#include "../yampt/dict_writer.hpp"
-#include "../yampt/dict_reader.hpp"
-#include "../yampt/dict_merger.hpp"
+#include "../yampt/utility/tools.hpp"
+#include "../yampt/io/dict_writer.hpp"
+#include "../yampt/io/dict_reader.hpp"
+#include "../yampt/model/dict_merger.hpp"
 
 #include <filesystem>
 #include <fstream>

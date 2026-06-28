@@ -107,7 +107,7 @@ The `chapter_t::old_text_index` is populated on `insert()` and only stores the f
 
 ## dict_creator Source File Split
 
-The `dict_creator_t` class is split across multiple `.cpp` files:
+The `dict_creator_t` class is split across multiple `.cpp` files in `yampt/model/`:
 
 - `dict_creator.cpp` — shared helpers used by multiple modes (constructors, `reset_counters`, `insert_duplicate`, `print_log_line`, `make_script_messages`, `differs_only_in_numbers_or_punct`, `adapt_translation`)
 - `dict_creator_single.cpp` — single-file mode logic (`make_dict_single`, `insert_entry_single`, `insert_entry_single_with_base`, `insert_as_untranslated`, `insert_with_status`, `insert_via_text_match`)

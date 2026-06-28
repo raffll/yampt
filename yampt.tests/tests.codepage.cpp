@@ -1,5 +1,5 @@
 #include <catch2/catch_all.hpp>
-#include "../yampt/codepage.hpp"
+#include "../yampt/io/codepage.hpp"
 
 TEST_CASE("codepage_t::decode_to_utf8, empty string", "[u]")
 {

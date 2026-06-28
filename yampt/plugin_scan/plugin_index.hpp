@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../esm_reader.hpp"
+#include "../io/esm_reader.hpp"
 #include <string>
 #include <unordered_map>
 #include <vector>

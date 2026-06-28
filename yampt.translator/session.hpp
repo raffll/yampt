@@ -1,7 +1,7 @@
 #pragma once
 
-#include "document.hpp"
-#include "../yampt/codepage.hpp"
+#include "model/document.hpp"
+#include "../yampt/io/codepage.hpp"
 #include <functional>
 #include <memory>
 #include <string>

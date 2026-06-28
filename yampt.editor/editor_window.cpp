@@ -1,5 +1,5 @@
 #include "editor_window.hpp"
-#include "editor_tab.hpp"
+#include "view/editor_tab.hpp"
 
 #include <QAction>
 #include <QCloseEvent>
