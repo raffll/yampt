@@ -60,8 +60,7 @@ static std::string extract_info_prefix(const std::string & key_text)
 static bool has_sub_type(tools_t::rec_type_t type)
 {
 	return type == tools_t::rec_type_t::info || type == tools_t::rec_type_t::bnam ||
-	       type == tools_t::rec_type_t::fnam || type == tools_t::rec_type_t::desc ||
-	       type == tools_t::rec_type_t::indx;
+	       type == tools_t::rec_type_t::fnam || type == tools_t::rec_type_t::desc || type == tools_t::rec_type_t::indx;
 }
 
 static std::string classify_sub_type(tools_t::rec_type_t type, const std::string & key_text)
@@ -106,7 +105,6 @@ static bool passes_sub_type_filter(const entry_identity_t & entry_id, const tabl
 
 	return false;
 }
-
 
 struct entry_context_t
 {
@@ -186,8 +184,7 @@ static void compute_progress(dict_counts_t & counts, const progress_input_t & in
 {
 	for (const auto & [type, chapter] : input.data)
 	{
-		const auto effective_type =
-		    (type == tools_t::rec_type_t::bnam) ? tools_t::rec_type_t::info : type;
+		const auto effective_type = (type == tools_t::rec_type_t::bnam) ? tools_t::rec_type_t::info : type;
 
 		if (!input.params.type_filter.empty() && input.params.type_filter.count(effective_type) == 0)
 			continue;
@@ -224,8 +221,7 @@ static void count_filtered_status(dict_counts_t & counts, const entry_context_t 
 		counts.filtered_status_counts[context.entry.status]++;
 }
 
-static std::unordered_multimap<std::string, size_t> build_bnam_prefix_map(
-    const tools_t::dict_t & data)
+static std::unordered_multimap<std::string, size_t> build_bnam_prefix_map(const tools_t::dict_t & data)
 {
 	std::unordered_multimap<std::string, size_t> bnam_prefix_map;
 	auto bnam_it = data.find(tools_t::rec_type_t::bnam);
@@ -243,9 +239,7 @@ static std::unordered_multimap<std::string, size_t> build_bnam_prefix_map(
 	return bnam_prefix_map;
 }
 
-table_build_result_t build_filtered_rows(
-    const tools_t::dict_t & data,
-    const table_filter_params_t & params)
+table_build_result_t build_filtered_rows(const tools_t::dict_t & data, const table_filter_params_t & params)
 {
 	table_build_result_t result;
 	auto & counts = result.counts;
@@ -255,18 +249,16 @@ table_build_result_t build_filtered_rows(
 
 	auto bnam_it = data.find(tools_t::rec_type_t::bnam);
 
-	const bool info_in_filter =
-	    params.type_filter.empty() || params.type_filter.count(tools_t::rec_type_t::info) > 0;
+	const bool info_in_filter = params.type_filter.empty() || params.type_filter.count(tools_t::rec_type_t::info) > 0;
 
 	for (const auto & [type, chapter] : data)
 	{
 		for (size_t i = 0; i < chapter.records.size(); ++i)
 		{
 			const auto & entry = chapter.records[i];
-			const auto count_type =
-			    (type == tools_t::rec_type_t::bnam) ? tools_t::rec_type_t::info : type;
+			const auto count_type = (type == tools_t::rec_type_t::bnam) ? tools_t::rec_type_t::info : type;
 
-			const entry_context_t context{ type, count_type, entry, i, params };
+			const entry_context_t context { type, count_type, entry, i, params };
 
 			count_entry_statistics(counts, context);
 
@@ -291,10 +283,9 @@ table_build_result_t build_filtered_rows(
 			result.rows.push_back(std::move(row_item));
 
 			const auto info_prefix = extract_info_prefix(entry.key_text);
-			if (type == tools_t::rec_type_t::info && info_in_filter &&
-			    bnam_it != data.end() && !info_prefix.empty())
+			if (type == tools_t::rec_type_t::info && info_in_filter && bnam_it != data.end() && !info_prefix.empty())
 			{
-				bnam_emit_context_t bnam_context{
+				bnam_emit_context_t bnam_context {
 					result.rows, consumed_bnams, bnam_it->second, bnam_prefix_map, params
 				};
 				emit_bnam_children(info_prefix, bnam_context);

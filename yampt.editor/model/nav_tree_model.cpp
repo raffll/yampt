@@ -16,12 +16,16 @@ static int natural_compare(const std::string & a, const std::string & b)
 
 		if (a_digit && b_digit)
 		{
-			while (i < a.size() && a[i] == '0') ++i;
-			while (j < b.size() && b[j] == '0') ++j;
+			while (i < a.size() && a[i] == '0')
+				++i;
+			while (j < b.size() && b[j] == '0')
+				++j;
 
 			size_t a_start = i, b_start = j;
-			while (i < a.size() && std::isdigit(static_cast<unsigned char>(a[i]))) ++i;
-			while (j < b.size() && std::isdigit(static_cast<unsigned char>(b[j]))) ++j;
+			while (i < a.size() && std::isdigit(static_cast<unsigned char>(a[i])))
+				++i;
+			while (j < b.size() && std::isdigit(static_cast<unsigned char>(b[j])))
+				++j;
 
 			size_t a_len = i - a_start;
 			size_t b_len = j - b_start;
@@ -48,8 +52,10 @@ static int natural_compare(const std::string & a, const std::string & b)
 		}
 	}
 
-	if (i < a.size()) return 1;
-	if (j < b.size()) return -1;
+	if (i < a.size())
+		return 1;
+	if (j < b.size())
+		return -1;
 	return 0;
 }
 

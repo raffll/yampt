@@ -208,6 +208,9 @@
     <ClCompile Include="..\yampt\model\script_parser.cpp">
       <Filter>yampt</Filter>
     </ClCompile>
+    <ClCompile Include="..\yampt\model\scdt_patcher.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
     <ClCompile Include="..\yampt\model\translation_engine.cpp">
       <Filter>yampt</Filter>
     </ClCompile>

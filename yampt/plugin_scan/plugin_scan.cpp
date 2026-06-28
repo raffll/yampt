@@ -9,6 +9,16 @@
 #include <set>
 #include <cstring>
 
+static constexpr float tes3_header_version = 1.3f;
+static constexpr size_t tes3_hedr_size = 300;
+static constexpr size_t tes3_author_offset = 8;
+static constexpr size_t tes3_author_max_len = 32;
+static constexpr size_t tes3_desc_offset = 40;
+static constexpr size_t tes3_desc_max_len = 256;
+static constexpr size_t tes3_numrec_offset = 296;
+static constexpr size_t tes3_flags_offset = 4;
+static constexpr size_t data_sub_record_size = 8;
+
 void plugin_scan_t::load_plugin(const std::string & path)
 {
 	auto p = std::make_unique<loaded_plugin_t>(path);
@@ -24,6 +34,36 @@ void plugin_scan_t::set_merge_plugin(const std::string & filename)
 	plugins_.push_back(std::move(p));
 
 	merge_records_.clear();
+}
+
+void plugin_scan_t::insert_or_update_version(version_descriptor_t desc)
+{
+	std::string key = desc.rec_type + std::string(1, '\0') + desc.record_id;
+	auto it = entry_lookup_.find(key);
+
+	if (it == entry_lookup_.end())
+	{
+		conflict_entry_t entry;
+		entry.rec_type = std::move(desc.rec_type);
+		entry.record_id = std::move(desc.record_id);
+		entry.display_name = std::move(desc.display_name);
+		entry.dial_name = std::move(desc.dial_name);
+		entry.conflict_all = conflict_all_t::only_one;
+
+		desc.version.status = conflict_this_t::master;
+		entry.versions.push_back(desc.version);
+
+		entry_lookup_[key] = entries_.size();
+		entries_.push_back(std::move(entry));
+		return;
+	}
+
+	auto & entry = entries_[it->second];
+	desc.version.status = conflict_this_t::unknown;
+	entry.versions.push_back(desc.version);
+
+	if (entry.display_name.empty() && !desc.display_name.empty())
+		entry.display_name = std::move(desc.display_name);
 }
 
 void plugin_scan_t::rebuild_conflicts()
@@ -42,40 +82,10 @@ void plugin_scan_t::rebuild_conflicts()
 			if (rec.rec_type == "TES3")
 				continue;
 
-			std::string key = rec.rec_type + std::string(1, '\0') + rec.record_id;
-			auto it = entry_lookup_.find(key);
-
-			if (it == entry_lookup_.end())
-			{
-				conflict_entry_t entry;
-				entry.rec_type = rec.rec_type;
-				entry.record_id = rec.record_id;
-				entry.display_name = rec.display_name;
-				entry.dial_name = rec.dial_name;
-				entry.conflict_all = conflict_all_t::only_one;
-
-				record_version_t ver;
-				ver.plugin_idx = pi;
-				ver.record_index = rec.record_index;
-				ver.status = conflict_this_t::master;
-				entry.versions.push_back(ver);
-
-				entry_lookup_[key] = entries_.size();
-				entries_.push_back(std::move(entry));
-			}
-			else
-			{
-				auto & entry = entries_[it->second];
-
-				record_version_t ver;
-				ver.plugin_idx = pi;
-				ver.record_index = rec.record_index;
-				ver.status = conflict_this_t::unknown;
-				entry.versions.push_back(ver);
-
-				if (entry.display_name.empty() && !rec.display_name.empty())
-					entry.display_name = rec.display_name;
-			}
+			record_version_t ver;
+			ver.plugin_idx = pi;
+			ver.record_index = rec.record_index;
+			insert_or_update_version({ rec.rec_type, rec.record_id, rec.display_name, rec.dial_name, ver });
 		}
 	}
 
@@ -84,35 +94,10 @@ void plugin_scan_t::rebuild_conflicts()
 		for (size_t mi = 0; mi < merge_records_.size(); ++mi)
 		{
 			const auto & mr = merge_records_[mi];
-			std::string key = mr.rec_type + std::string(1, '\0') + mr.record_id;
-			auto it = entry_lookup_.find(key);
-
-			if (it == entry_lookup_.end())
-			{
-				conflict_entry_t entry;
-				entry.rec_type = mr.rec_type;
-				entry.record_id = mr.record_id;
-				entry.conflict_all = conflict_all_t::only_one;
-
-				record_version_t ver;
-				ver.plugin_idx = merge_plugin_idx_;
-				ver.record_index = mi;
-				ver.status = conflict_this_t::master;
-				entry.versions.push_back(ver);
-
-				entry_lookup_[key] = entries_.size();
-				entries_.push_back(std::move(entry));
-			}
-			else
-			{
-				auto & entry = entries_[it->second];
-
-				record_version_t ver;
-				ver.plugin_idx = merge_plugin_idx_;
-				ver.record_index = mi;
-				ver.status = conflict_this_t::unknown;
-				entry.versions.push_back(ver);
-			}
+			record_version_t ver;
+			ver.plugin_idx = merge_plugin_idx_;
+			ver.record_index = mi;
+			insert_or_update_version({ mr.rec_type, mr.record_id, "", "", ver });
 		}
 	}
 
@@ -123,154 +108,111 @@ void plugin_scan_t::rebuild_conflicts()
 	}
 }
 
-void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
+struct conflict_accumulator_t
 {
-	const size_t ver_count = entry.versions.size();
-
-	std::vector<std::string> contents(ver_count);
-	std::vector<bool> is_deleted(ver_count, false);
-
-	for (size_t i = 0; i < ver_count; ++i)
-	{
-		auto & ver = entry.versions[i];
-
-		if (ver.plugin_idx == merge_plugin_idx_)
-		{
-			contents[i] = merge_records_[ver.record_index].content;
-		}
-		else
-		{
-			plugins_[ver.plugin_idx]->esm.select_record(ver.record_index);
-			contents[i] = plugins_[ver.plugin_idx]->esm.get_record().content;
-		}
-
-		if (ver.plugin_idx != merge_plugin_idx_)
-		{
-			const auto & plugin_entries = plugins_[ver.plugin_idx]->index.entries();
-			if (ver.record_index < plugin_entries.size() && plugin_entries[ver.record_index].has_dele)
-				is_deleted[i] = true;
-		}
-	}
-
-	entry.slot_result = std::make_unique<slot_result_t>(
-		build_conflict_slots(entry.rec_type, std::move(contents), is_deleted));
-
 	conflict_all_t worst_all = conflict_all_t::only_one;
 	std::vector<std::vector<conflict_this_t>> per_slot_this;
 
-	const auto & sr = *entry.slot_result;
-
-	for (const auto & slot : sr.aligned)
+	void accumulate(const std::vector<std::string> & values)
 	{
-		std::vector<std::string> slot_values(ver_count);
-		const char * first_data = nullptr;
-		size_t first_size = 0;
+		const auto level = compute_conflict_all(values);
+		if (level > worst_all)
+			worst_all = level;
 
+		per_slot_this.push_back(compute_conflict_this(values));
+	}
+};
+
+static size_t flag_byte_width(field_type_t field_type)
+{
+	if (field_type == field_type_t::flags_u8)
+		return 1;
+
+	if (field_type == field_type_t::flags_u16)
+		return 2;
+
+	return 4;
+}
+
+struct slot_eval_context_t
+{
+	const aligned_slot_t & slot;
+	const slot_result_t & sr;
+	const std::vector<bool> & is_deleted;
+	conflict_accumulator_t & accum;
+};
+
+static void evaluate_flag_bits(const field_def_t & fdef, const slot_eval_context_t & ctx)
+{
+	const size_t ver_count = ctx.is_deleted.size();
+	const size_t bytes = flag_byte_width(fdef.type);
+
+	for (int bit = 0; bit < fdef.flag_count; ++bit)
+	{
+		if (fdef.flag_names[bit][0] == '_')
+			continue;
+
+		std::vector<std::string> bit_values(ver_count);
 		for (size_t vi = 0; vi < ver_count; ++vi)
 		{
-			if (is_deleted[vi])
+			if (ctx.is_deleted[vi] || ctx.slot.indices[vi] == SIZE_MAX)
 				continue;
 
-			if (slot.indices[vi] == SIZE_MAX)
+			const auto & sv = ctx.sr.parsed[vi][ctx.slot.indices[vi]];
+			if (fdef.offset >= sv.size)
 				continue;
 
-			const auto & sv = sr.parsed[vi][slot.indices[vi]];
-			slot_values[vi] = format_value(sv.data, sv.size);
-			if (!first_data)
-			{
-				first_data = sv.data;
-				first_size = sv.size;
-			}
+			uint32_t val = 0;
+			std::memcpy(&val, sv.data + fdef.offset, std::min(bytes, sv.size - fdef.offset));
+			bit_values[vi] = (val & (1u << bit)) ? "1" : "0";
 		}
 
-		const auto * schema = find_schema(entry.rec_type, slot.key.type, first_size);
-		if (schema && schema->field_count > 0 && first_data)
-		{
-			for (size_t fi = 0; fi < schema->field_count; ++fi)
-			{
-				const auto & fdef = schema->fields[fi];
-
-				const bool is_flags = (fdef.type == field_type_t::flags_u8 ||
-				                       fdef.type == field_type_t::flags_u16 ||
-				                       fdef.type == field_type_t::flags_u32);
-
-				if (is_flags && fdef.flag_names && fdef.flag_count > 0)
-				{
-					for (int bit = 0; bit < fdef.flag_count; ++bit)
-					{
-						if (fdef.flag_names[bit][0] == '_')
-							continue;
-
-						std::vector<std::string> bit_values(ver_count);
-						for (size_t vi = 0; vi < ver_count; ++vi)
-						{
-							if (is_deleted[vi])
-								continue;
-
-							if (slot.indices[vi] == SIZE_MAX)
-								continue;
-
-							const auto & sv = sr.parsed[vi][slot.indices[vi]];
-							if (fdef.offset >= sv.size)
-								continue;
-
-							uint32_t val = 0;
-							size_t bytes = (fdef.type == field_type_t::flags_u8) ? 1 :
-							               (fdef.type == field_type_t::flags_u16) ? 2 : 4;
-							std::memcpy(&val, sv.data + fdef.offset, std::min(bytes, sv.size - fdef.offset));
-							bit_values[vi] = (val & (1u << bit)) ? "1" : "0";
-						}
-
-						const auto bit_level = compute_conflict_all(bit_values);
-						if (bit_level > worst_all)
-							worst_all = bit_level;
-
-						per_slot_this.push_back(compute_conflict_this(bit_values));
-					}
-
-					continue;
-				}
-
-				std::vector<std::string> field_values(ver_count);
-				for (size_t vi = 0; vi < ver_count; ++vi)
-				{
-					if (is_deleted[vi])
-						continue;
-
-					if (slot.indices[vi] == SIZE_MAX)
-						continue;
-
-					const auto & sv = sr.parsed[vi][slot.indices[vi]];
-					field_values[vi] = decode_field(fdef, sv.data, sv.size);
-				}
-
-				const auto field_level = compute_conflict_all(field_values);
-				if (field_level > worst_all)
-					worst_all = field_level;
-
-				per_slot_this.push_back(compute_conflict_this(field_values));
-			}
-		}
-		else
-		{
-			const auto slot_level = compute_conflict_all(slot_values);
-			if (slot_level > worst_all)
-				worst_all = slot_level;
-
-			per_slot_this.push_back(compute_conflict_this(slot_values));
-		}
+		ctx.accum.accumulate(bit_values);
 	}
+}
 
-	entry.conflict_all = worst_all;
+static void evaluate_schema_fields(const sub_record_schema_t * schema, const slot_eval_context_t & ctx)
+{
+	const size_t ver_count = ctx.is_deleted.size();
 
+	for (size_t fi = 0; fi < schema->field_count; ++fi)
+	{
+		const auto & fdef = schema->fields[fi];
 
-	if (worst_all <= conflict_all_t::only_one)
-		return;
+		const bool is_flags =
+		    (fdef.type == field_type_t::flags_u8 || fdef.type == field_type_t::flags_u16 ||
+		     fdef.type == field_type_t::flags_u32);
 
+		if (is_flags && fdef.flag_names && fdef.flag_count > 0)
+		{
+			evaluate_flag_bits(fdef, ctx);
+			continue;
+		}
+
+		std::vector<std::string> field_values(ver_count);
+		for (size_t vi = 0; vi < ver_count; ++vi)
+		{
+			if (ctx.is_deleted[vi] || ctx.slot.indices[vi] == SIZE_MAX)
+				continue;
+
+			const auto & sv = ctx.sr.parsed[vi][ctx.slot.indices[vi]];
+			field_values[vi] = decode_field(fdef, sv.data, sv.size);
+		}
+
+		ctx.accum.accumulate(field_values);
+	}
+}
+
+static void apply_worst_this(
+    conflict_entry_t & entry,
+    const conflict_accumulator_t & accum,
+    const std::vector<bool> & is_deleted)
+{
+	const size_t ver_count = entry.versions.size();
 	std::vector<conflict_this_t> worst_this(ver_count, conflict_this_t::unknown);
 	worst_this[0] = conflict_this_t::master;
 
-	for (const auto & slot_ct : per_slot_this)
+	for (const auto & slot_ct : accum.per_slot_this)
 	{
 		for (size_t i = 1; i < ver_count; ++i)
 		{
@@ -289,6 +231,72 @@ void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 
 		entry.versions[i].status = worst_this[i];
 	}
+}
+
+void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
+{
+	const size_t ver_count = entry.versions.size();
+
+	std::vector<std::string> contents(ver_count);
+	std::vector<bool> is_deleted(ver_count, false);
+
+	for (size_t i = 0; i < ver_count; ++i)
+	{
+		const auto & ver = entry.versions[i];
+
+		if (ver.plugin_idx == merge_plugin_idx_)
+			contents[i] = merge_records_[ver.record_index].content;
+		else
+		{
+			plugins_[ver.plugin_idx]->esm.select_record(ver.record_index);
+			contents[i] = plugins_[ver.plugin_idx]->esm.get_record().content;
+
+			const auto & plugin_entries = plugins_[ver.plugin_idx]->index.entries();
+			if (ver.record_index < plugin_entries.size() && plugin_entries[ver.record_index].has_dele)
+				is_deleted[i] = true;
+		}
+	}
+
+	entry.slot_result =
+	    std::make_unique<slot_result_t>(build_conflict_slots(entry.rec_type, std::move(contents), is_deleted));
+
+	conflict_accumulator_t accum;
+	const auto & sr = *entry.slot_result;
+
+	for (const auto & slot : sr.aligned)
+	{
+		std::vector<std::string> slot_values(ver_count);
+		const char * first_data = nullptr;
+		size_t first_size = 0;
+
+		for (size_t vi = 0; vi < ver_count; ++vi)
+		{
+			if (is_deleted[vi] || slot.indices[vi] == SIZE_MAX)
+				continue;
+
+			const auto & sv = sr.parsed[vi][slot.indices[vi]];
+			slot_values[vi] = format_value(sv.data, sv.size);
+			if (!first_data)
+			{
+				first_data = sv.data;
+				first_size = sv.size;
+			}
+		}
+
+		const auto * schema = find_schema(entry.rec_type, slot.key.type, first_size);
+		slot_eval_context_t ctx { slot, sr, is_deleted, accum };
+		if (schema && schema->field_count > 0 && first_data)
+			evaluate_schema_fields(schema, ctx);
+		else
+			accum.accumulate(slot_values);
+	}
+
+	entry.conflict_all = accum.worst_all;
+
+	if (accum.worst_all <= conflict_all_t::only_one)
+		return;
+
+	apply_worst_this(entry, accum, is_deleted);
 }
 
 size_t plugin_scan_t::plugin_count() const
@@ -444,110 +452,76 @@ void plugin_scan_t::copy_record_to_merge_raw(
 	merge_records_.push_back(std::move(mr));
 }
 
-void plugin_scan_t::merge_leveled_list(const conflict_entry_t & entry)
+struct list_item_t
 {
-	if (entry.versions.size() < 2)
-		return;
+	std::string ident;
+	uint16_t level;
+};
 
-	struct list_item_t
+static std::vector<list_item_t> extract_list_items(const std::string & content)
+{
+	std::vector<list_item_t> items;
+	sub_record_iter_t iter(content);
+	sub_record_view_t sub;
+	std::string current_id;
+
+	while (iter.next(sub))
 	{
-		std::string id;
-		uint16_t level;
-	};
-
-	auto extract_items = [&](const std::string & content) -> std::vector<list_item_t>
-	{
-		std::vector<list_item_t> items;
-		sub_record_iter_t iter(content);
-		sub_record_view_t sub;
-		std::string current_id;
-
-		while (iter.next(sub))
+		if (sub.type == "INAM" || sub.type == "CNAM")
 		{
-			if (sub.type == "INAM" || sub.type == "CNAM")
-			{
-				current_id = std::string(sub.data, sub.size);
-				current_id = tools_t::erase_null_chars(current_id);
-				continue;
-			}
-
-			if (sub.type == "INTV" && !current_id.empty())
-			{
-				uint16_t level = 0;
-				if (sub.size >= 2)
-					std::memcpy(&level, sub.data, 2);
-
-				items.push_back({ current_id, level });
-				current_id.clear();
-			}
-		}
-
-		return items;
-	};
-
-	auto get_content = [&](const record_version_t & ver) -> std::string
-	{
-		if (ver.plugin_idx == merge_plugin_idx_)
-			return merge_records_[ver.record_index].content;
-
-		plugins_[ver.plugin_idx]->esm.select_record(ver.record_index);
-		return plugins_[ver.plugin_idx]->esm.get_record().content;
-	};
-
-	std::string master_content = get_content(entry.versions[0]);
-	auto master_items = extract_items(master_content);
-
-	std::set<std::string> master_keys;
-	for (const auto & item : master_items)
-		master_keys.insert(item.id + "\x00" + std::to_string(item.level));
-
-	std::vector<list_item_t> merged = master_items;
-	std::set<std::string> merged_keys = master_keys;
-
-	for (size_t vi = 1; vi < entry.versions.size(); ++vi)
-	{
-		if (entry.versions[vi].plugin_idx == merge_plugin_idx_)
+			current_id = std::string(sub.data, sub.size);
+			current_id = tools_t::erase_null_chars(current_id);
 			continue;
+		}
 
-		std::string ver_content = get_content(entry.versions[vi]);
-		auto ver_items = extract_items(ver_content);
-
-		for (const auto & item : ver_items)
+		if (sub.type == "INTV" && !current_id.empty())
 		{
-			std::string key = item.id + "\x00" + std::to_string(item.level);
-			if (merged_keys.count(key))
-				continue;
+			uint16_t level = 0;
+			if (sub.size >= 2)
+				std::memcpy(&level, sub.data, 2);
 
-			merged.push_back(item);
-			merged_keys.insert(key);
+			items.push_back({ current_id, level });
+			current_id.clear();
 		}
 	}
 
+	return items;
+}
+
+static std::string extract_list_header(const std::string & content)
+{
 	std::string header_part;
-	{
-		sub_record_iter_t iter(master_content);
-		sub_record_view_t sub;
-		while (iter.next(sub))
-		{
-			if (sub.type == "INAM" || sub.type == "CNAM" || sub.type == "INTV")
-				break;
+	sub_record_iter_t iter(content);
+	sub_record_view_t sub;
 
-			header_part += sub.type;
-			header_part += tools_t::convert_uint_to_string_byte_array(sub.size);
-			header_part += std::string(sub.data, sub.size);
-		}
+	while (iter.next(sub))
+	{
+		if (sub.type == "INAM" || sub.type == "CNAM" || sub.type == "INTV")
+			break;
+
+		header_part += sub.type;
+		header_part += tools_t::convert_uint_to_string_byte_array(sub.size);
+		header_part += std::string(sub.data, sub.size);
 	}
 
+	return header_part;
+}
+
+static std::string build_merged_list_record(
+    const std::string & rec_type,
+    const std::string & header_part,
+    const std::vector<list_item_t> & merged_items)
+{
 	std::string indx_sub = "INDX";
-	uint32_t item_count = static_cast<uint32_t>(merged.size());
+	uint32_t item_count = static_cast<uint32_t>(merged_items.size());
 	indx_sub += tools_t::convert_uint_to_string_byte_array(4);
 	indx_sub += std::string(reinterpret_cast<const char *>(&item_count), 4);
 
+	const std::string & item_sub_type = (rec_type == "LEVI") ? "INAM" : "CNAM";
 	std::string items_part;
-	std::string item_sub_type = (entry.rec_type == "LEVI") ? "INAM" : "CNAM";
-	for (const auto & item : merged)
+	for (const auto & item : merged_items)
 	{
-		std::string id_data = item.id;
+		std::string id_data = item.ident;
 		id_data.push_back('\0');
 
 		items_part += item_sub_type;
@@ -562,11 +536,58 @@ void plugin_scan_t::merge_leveled_list(const conflict_entry_t & entry)
 	std::string body = header_part + indx_sub + items_part;
 
 	std::string record;
-	record += entry.rec_type;
+	record += rec_type;
 	record += tools_t::convert_uint_to_string_byte_array(body.size());
 	record += std::string(8, '\0');
 	record += body;
 
+	return record;
+}
+
+void plugin_scan_t::merge_leveled_list(const conflict_entry_t & entry)
+{
+	if (entry.versions.size() < 2)
+		return;
+
+	auto get_content = [&](const record_version_t & ver) -> std::string
+	{
+		if (ver.plugin_idx == merge_plugin_idx_)
+			return merge_records_[ver.record_index].content;
+
+		plugins_[ver.plugin_idx]->esm.select_record(ver.record_index);
+		return plugins_[ver.plugin_idx]->esm.get_record().content;
+	};
+
+	const std::string & master_content = get_content(entry.versions[0]);
+	auto master_items = extract_list_items(master_content);
+
+	std::set<std::string> merged_keys;
+	for (const auto & item : master_items)
+		merged_keys.insert(item.ident + "\x00" + std::to_string(item.level));
+
+	std::vector<list_item_t> merged = master_items;
+
+	for (size_t vi = 1; vi < entry.versions.size(); ++vi)
+	{
+		if (entry.versions[vi].plugin_idx == merge_plugin_idx_)
+			continue;
+
+		const std::string & ver_content = get_content(entry.versions[vi]);
+		auto ver_items = extract_list_items(ver_content);
+
+		for (const auto & item : ver_items)
+		{
+			std::string key = item.ident + "\x00" + std::to_string(item.level);
+			if (merged_keys.count(key))
+				continue;
+
+			merged.push_back(item);
+			merged_keys.insert(key);
+		}
+	}
+
+	const auto & header_part = extract_list_header(master_content);
+	const auto & record = build_merged_list_record(entry.rec_type, header_part, merged);
 	copy_record_to_merge_raw(entry.rec_type, entry.record_id, record);
 }
 
@@ -661,28 +682,35 @@ std::vector<const conflict_entry_t *> plugin_scan_t::itm_entries(int plugin_idx)
 	return result;
 }
 
-std::string plugin_scan_t::build_tes3_header(const std::string & author, const std::string & description)
+static std::string build_hedr_data(size_t record_count, const std::string & author, const std::string & description)
 {
-	std::string hedr_data(300, '\0');
+	std::string hedr_data(tes3_hedr_size, '\0');
 
-	float version = 1.3f;
+	float version = tes3_header_version;
 	std::memcpy(&hedr_data[0], &version, 4);
 
 	uint32_t flags = 0;
-	std::memcpy(&hedr_data[4], &flags, 4);
+	std::memcpy(&hedr_data[tes3_flags_offset], &flags, 4);
 
-	for (size_t i = 0; i < author.size() && i < 32; ++i)
-		hedr_data[8 + i] = author[i];
+	for (size_t i = 0; i < author.size() && i < tes3_author_max_len; ++i)
+		hedr_data[tes3_author_offset + i] = author[i];
 
-	for (size_t i = 0; i < description.size() && i < 256; ++i)
-		hedr_data[40 + i] = description[i];
+	for (size_t i = 0; i < description.size() && i < tes3_desc_max_len; ++i)
+		hedr_data[tes3_desc_offset + i] = description[i];
 
-	uint32_t num_records = static_cast<uint32_t>(merge_records_.size());
-	std::memcpy(&hedr_data[296], &num_records, 4);
+	uint32_t num_records = static_cast<uint32_t>(record_count);
+	std::memcpy(&hedr_data[tes3_numrec_offset], &num_records, 4);
+
+	return hedr_data;
+}
+
+std::string plugin_scan_t::build_tes3_header(const std::string & author, const std::string & description)
+{
+	const auto & hedr_data = build_hedr_data(merge_records_.size(), author, description);
 
 	std::string body;
 	body += "HEDR";
-	body += tools_t::convert_uint_to_string_byte_array(300);
+	body += tools_t::convert_uint_to_string_byte_array(tes3_hedr_size);
 	body += hedr_data;
 
 	for (int i = 0; i < static_cast<int>(plugins_.size()); ++i)
@@ -705,11 +733,11 @@ std::string plugin_scan_t::build_tes3_header(const std::string & author, const s
 		catch (...)
 		{}
 
-		std::string size_data(8, '\0');
-		std::memcpy(&size_data[0], &file_size, 8);
+		std::string size_data(data_sub_record_size, '\0');
+		std::memcpy(&size_data[0], &file_size, data_sub_record_size);
 
 		body += "DATA";
-		body += tools_t::convert_uint_to_string_byte_array(8);
+		body += tools_t::convert_uint_to_string_byte_array(data_sub_record_size);
 		body += size_data;
 	}
 

@@ -66,15 +66,11 @@ private:
 	std::vector<std::string> resolve_mo2_plugins(
 	    const std::vector<std::string> & plugin_names,
 	    const mo2_resolve_context_t & context);
-	std::string resolve_single_mo2_plugin(
-	    const std::string & plugin_name,
-	    const mo2_resolve_context_t & context);
+	std::string resolve_single_mo2_plugin(const std::string & plugin_name, const mo2_resolve_context_t & context);
 	std::vector<std::string> resolve_openmw_content(
 	    const std::vector<std::string> & content_names,
 	    const std::vector<std::string> & data_dirs);
-	std::string resolve_single_content(
-	    const std::string & content_name,
-	    const std::vector<std::string> & data_dirs);
+	std::string resolve_single_content(const std::string & content_name, const std::vector<std::string> & data_dirs);
 	int create_merge_records();
 	bool eventFilter(QObject * obj, QEvent * event) override;
 	bool handle_drop_on_view(QDropEvent * drop_event);

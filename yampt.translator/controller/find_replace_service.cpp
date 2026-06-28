@@ -34,16 +34,12 @@ std::optional<find_replace_service_t::search_params_t> find_replace_service_t::b
 		}
 	}
 
-	params.lower_query = case_sensitive
-	    ? QString::fromStdString(query)
-	    : QString::fromStdString(query).toLower();
+	params.lower_query = case_sensitive ? QString::fromStdString(query) : QString::fromStdString(query).toLower();
 
 	return params;
 }
 
-bool find_replace_service_t::matches_query(
-    const std::string & text_value,
-    const search_params_t & params)
+bool find_replace_service_t::matches_query(const std::string & text_value, const search_params_t & params)
 {
 	if (params.regex_opt)
 		return std::regex_search(text_value, *params.regex_opt);
@@ -76,9 +72,8 @@ std::optional<std::string> find_replace_service_t::apply_replacement(
 
 	while (true)
 	{
-		const auto & found_index = q_text.indexOf(
-		    q_query, position,
-		    params.case_sensitive ? Qt::CaseSensitive : Qt::CaseInsensitive);
+		const auto & found_index =
+		    q_text.indexOf(q_query, position, params.case_sensitive ? Qt::CaseSensitive : Qt::CaseInsensitive);
 
 		if (found_index < 0)
 			break;

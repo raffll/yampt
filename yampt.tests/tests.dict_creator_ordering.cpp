@@ -58,29 +58,24 @@ static std::string make_cell_data(bool interior, int32_t grid_x = 0, int32_t gri
 
 TEST_CASE("dict_creator_t, dial before info ordering", "[i]")
 {
-	auto native_dial_body =
-	    make_sub_record("DATA", make_dial_data_topic()) +
-	    make_sub_record("NAME", make_null_terminated("zwiadowca kwama"));
+	auto native_dial_body = make_sub_record("DATA", make_dial_data_topic()) +
+	                        make_sub_record("NAME", make_null_terminated("zwiadowca kwama"));
 	auto native_dial = make_record("DIAL", native_dial_body);
 
-	auto native_info_body =
-	    make_sub_record("INAM", make_null_terminated("12345")) +
-	    make_sub_record("NAME", make_null_terminated("To jest zwiadowca kwama."));
+	auto native_info_body = make_sub_record("INAM", make_null_terminated("12345")) +
+	                        make_sub_record("NAME", make_null_terminated("To jest zwiadowca kwama."));
 	auto native_info = make_record("INFO", native_info_body);
 
-	auto foreign_dial_body =
-	    make_sub_record("DATA", make_dial_data_topic()) +
-	    make_sub_record("NAME", make_null_terminated("kwama forager"));
+	auto foreign_dial_body = make_sub_record("DATA", make_dial_data_topic()) +
+	                         make_sub_record("NAME", make_null_terminated("kwama forager"));
 	auto foreign_dial = make_record("DIAL", foreign_dial_body);
 
-	auto foreign_info_body =
-	    make_sub_record("INAM", make_null_terminated("12345")) +
-	    make_sub_record("NAME", make_null_terminated("This is a kwama forager."));
+	auto foreign_info_body = make_sub_record("INAM", make_null_terminated("12345")) +
+	                         make_sub_record("NAME", make_null_terminated("This is a kwama forager."));
 	auto foreign_info = make_record("INFO", foreign_info_body);
 
 	auto dummy_gmst_body =
-	    make_sub_record("NAME", make_null_terminated("iDummy")) +
-	    make_sub_record("INTV", std::string(4, '\0'));
+	    make_sub_record("NAME", make_null_terminated("iDummy")) + make_sub_record("INTV", std::string(4, '\0'));
 	auto dummy_gmst = make_record("GMST", dummy_gmst_body);
 
 	auto native_content = make_tes3_record() + native_dial + native_info;
@@ -110,51 +105,40 @@ TEST_CASE("dict_creator_t, cell matching sequence", "[i]")
 	auto dodt_data = std::string(24, '\x01');
 	auto frmr_data = tools_t::convert_uint_to_string_byte_array(1);
 
-	auto native_exterior_body =
-	    make_sub_record("NAME", make_null_terminated("Poludniowy Mur")) +
-	    make_sub_record("DATA", make_cell_data(false, 5, -3));
+	auto native_exterior_body = make_sub_record("NAME", make_null_terminated("Poludniowy Mur")) +
+	                            make_sub_record("DATA", make_cell_data(false, 5, -3));
 	auto native_exterior = make_record("CELL", native_exterior_body);
 
-	auto native_interior_body =
-	    make_sub_record("NAME", make_null_terminated("Jaskinia Addamasartus")) +
-	    make_sub_record("DATA", make_cell_data(true)) +
-	    make_sub_record("FRMR", frmr_data) +
-	    make_sub_record("NAME", make_null_terminated("barrel_01")) +
-	    make_sub_record("DODT", dodt_data);
+	auto native_interior_body = make_sub_record("NAME", make_null_terminated("Jaskinia Addamasartus")) +
+	                            make_sub_record("DATA", make_cell_data(true)) + make_sub_record("FRMR", frmr_data) +
+	                            make_sub_record("NAME", make_null_terminated("barrel_01")) +
+	                            make_sub_record("DODT", dodt_data);
 	auto native_interior = make_record("CELL", native_interior_body);
 
 	auto native_heuristic_body =
-	    make_sub_record("NAME", make_null_terminated("Stara Kopalnia")) +
-	    make_sub_record("DATA", make_cell_data(true));
+	    make_sub_record("NAME", make_null_terminated("Stara Kopalnia")) + make_sub_record("DATA", make_cell_data(true));
 	auto native_heuristic = make_record("CELL", native_heuristic_body);
 
-	auto foreign_exterior_body =
-	    make_sub_record("NAME", make_null_terminated("South Wall")) +
-	    make_sub_record("DATA", make_cell_data(false, 5, -3));
+	auto foreign_exterior_body = make_sub_record("NAME", make_null_terminated("South Wall")) +
+	                             make_sub_record("DATA", make_cell_data(false, 5, -3));
 	auto foreign_exterior = make_record("CELL", foreign_exterior_body);
 
-	auto foreign_interior_body =
-	    make_sub_record("NAME", make_null_terminated("Addamasartus")) +
-	    make_sub_record("DATA", make_cell_data(true)) +
-	    make_sub_record("FRMR", frmr_data) +
-	    make_sub_record("NAME", make_null_terminated("barrel_01")) +
-	    make_sub_record("DODT", dodt_data);
+	auto foreign_interior_body = make_sub_record("NAME", make_null_terminated("Addamasartus")) +
+	                             make_sub_record("DATA", make_cell_data(true)) + make_sub_record("FRMR", frmr_data) +
+	                             make_sub_record("NAME", make_null_terminated("barrel_01")) +
+	                             make_sub_record("DODT", dodt_data);
 	auto foreign_interior = make_record("CELL", foreign_interior_body);
 
 	auto foreign_heuristic_body =
-	    make_sub_record("NAME", make_null_terminated("Old Mine")) +
-	    make_sub_record("DATA", make_cell_data(true));
+	    make_sub_record("NAME", make_null_terminated("Old Mine")) + make_sub_record("DATA", make_cell_data(true));
 	auto foreign_heuristic = make_record("CELL", foreign_heuristic_body);
 
 	auto dummy_gmst_body =
-	    make_sub_record("NAME", make_null_terminated("iDummy")) +
-	    make_sub_record("INTV", std::string(4, '\0'));
+	    make_sub_record("NAME", make_null_terminated("iDummy")) + make_sub_record("INTV", std::string(4, '\0'));
 	auto dummy_gmst = make_record("GMST", dummy_gmst_body);
 
-	auto native_content = make_tes3_record() +
-	                      native_exterior + native_interior + native_heuristic;
-	auto foreign_content = make_tes3_record() + dummy_gmst +
-	                       foreign_exterior + foreign_interior + foreign_heuristic;
+	auto native_content = make_tes3_record() + native_exterior + native_interior + native_heuristic;
+	auto foreign_content = make_tes3_record() + dummy_gmst + foreign_exterior + foreign_interior + foreign_heuristic;
 
 	const auto native_path = get_temp_path("yampt_test_cell_seq_native.esm");
 	const auto foreign_path = get_temp_path("yampt_test_cell_seq_foreign.esm");

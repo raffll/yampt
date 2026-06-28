@@ -101,8 +101,7 @@ void composite_highlighter_t::apply_spell_check(const QString & text)
 
 void composite_highlighter_t::highlightBlock(const QString & text)
 {
-	const bool has_syntax = record_type_ == tools_t::rec_type_t::sctx ||
-	                        record_type_ == tools_t::rec_type_t::bnam ||
+	const bool has_syntax = record_type_ == tools_t::rec_type_t::sctx || record_type_ == tools_t::rec_type_t::bnam ||
 	                        record_type_ == tools_t::rec_type_t::text;
 
 	if (has_syntax)

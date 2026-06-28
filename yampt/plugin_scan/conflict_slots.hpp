@@ -26,11 +26,11 @@ struct slot_result_t
 };
 
 slot_result_t build_conflict_slots(
-	const std::string & rec_type,
-	const std::vector<std::string> & version_contents,
-	const std::vector<bool> & version_deleted);
+    const std::string & rec_type,
+    const std::vector<std::string> & version_contents,
+    const std::vector<bool> & version_deleted);
 
 slot_result_t build_conflict_slots(
-	const std::string & rec_type,
-	std::vector<std::string> && version_contents,
-	const std::vector<bool> & version_deleted);
+    const std::string & rec_type,
+    std::vector<std::string> && version_contents,
+    const std::vector<bool> & version_deleted);

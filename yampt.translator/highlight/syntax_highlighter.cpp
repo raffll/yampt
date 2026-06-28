@@ -61,8 +61,11 @@ std::vector<token_t> syntax_highlighter_t::tokenize(const std::string & text, to
 	return { { 0, text.size(), token_type_t::normal } };
 }
 
-static void extract_strings_from_line(const std::string & text, size_t line_start, size_t line_end,
-                                      std::vector<token_t> & tokens)
+static void extract_strings_from_line(
+    const std::string & text,
+    size_t line_start,
+    size_t line_end,
+    std::vector<token_t> & tokens)
 {
 	size_t pos = line_start;
 	while (pos < line_end)
@@ -83,8 +86,11 @@ static void extract_strings_from_line(const std::string & text, size_t line_star
 	}
 }
 
-static void extract_keywords_from_line(const std::string & text, size_t line_start, size_t line_end,
-                                       std::vector<token_t> & tokens)
+static void extract_keywords_from_line(
+    const std::string & text,
+    size_t line_start,
+    size_t line_end,
+    std::vector<token_t> & tokens)
 {
 	static const std::string keywords[] = { "messagebox",   "say",          "journal",      "choice",
 		                                    "addtopic",     "getpccell",    "positioncell", "showmap",
@@ -108,8 +114,7 @@ static void extract_keywords_from_line(const std::string & text, size_t line_sta
 			if (found == std::string::npos)
 				break;
 
-			if (is_word_boundary(text, found, keyword.size()) &&
-			    !overlaps_any(tokens, found, found + keyword.size()))
+			if (is_word_boundary(text, found, keyword.size()) && !overlaps_any(tokens, found, found + keyword.size()))
 			{
 				tokens.push_back({ found, found + keyword.size(), token_type_t::mwscript_function });
 			}

@@ -448,7 +448,8 @@ std::string editor_tab_t::resolve_single_mo2_plugin(
 {
 	for (const auto & mod_name : context.enabled_mods)
 	{
-		const auto candidate = context.mods_path + "/" + QString::fromStdString(mod_name) + "/" + QString::fromStdString(plugin_name);
+		const auto candidate =
+		    context.mods_path + "/" + QString::fromStdString(mod_name) + "/" + QString::fromStdString(plugin_name);
 		if (QFile::exists(candidate))
 			return candidate.toStdString();
 	}

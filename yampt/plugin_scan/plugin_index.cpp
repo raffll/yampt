@@ -4,6 +4,156 @@
 #include <algorithm>
 #include <set>
 
+static constexpr size_t cell_data_min_size = 12;
+static constexpr size_t cell_flags_offset = 0;
+static constexpr size_t cell_grid_x_offset = 4;
+static constexpr size_t cell_grid_y_offset = 8;
+static constexpr size_t grid_coord_size = 4;
+static constexpr uint32_t interior_flag_bit = 0x01;
+static constexpr size_t indx_min_size = 4;
+static constexpr size_t schd_name_length = 32;
+static constexpr size_t land_intv_min_size = 8;
+
+static std::string derive_cell_id(sub_record_iter_t & iter, size_t fallback_index)
+{
+	std::string name_text;
+	bool has_name = false;
+	int32_t grid_x = 0;
+	int32_t grid_y = 0;
+	bool is_interior = false;
+	bool has_data = false;
+
+	sub_record_view_t sub;
+	while (iter.next(sub))
+	{
+		if (sub.type == "NAME")
+		{
+			name_text = std::string(sub.data, sub.size);
+			name_text = tools_t::erase_null_chars(name_text);
+			has_name = true;
+			continue;
+		}
+
+		if (sub.type == "DATA" && sub.size >= cell_data_min_size)
+		{
+			uint32_t flags =
+			    tools_t::convert_string_byte_array_to_uint(std::string(sub.data + cell_flags_offset, grid_coord_size));
+			is_interior = (flags & interior_flag_bit) != 0;
+			grid_x = static_cast<int32_t>(tools_t::convert_string_byte_array_to_uint(
+			    std::string(sub.data + cell_grid_x_offset, grid_coord_size)));
+			grid_y = static_cast<int32_t>(tools_t::convert_string_byte_array_to_uint(
+			    std::string(sub.data + cell_grid_y_offset, grid_coord_size)));
+			has_data = true;
+			break;
+		}
+	}
+
+	if (is_interior && has_name)
+		return name_text;
+
+	if (has_data && !is_interior)
+		return "GRID[" + std::to_string(grid_x) + "," + std::to_string(grid_y) + "]";
+
+	if (has_name)
+		return name_text;
+
+	return std::to_string(fallback_index);
+}
+
+static std::string derive_index_based_id(sub_record_iter_t & iter, size_t fallback_index)
+{
+	sub_record_view_t sub;
+	while (iter.next(sub))
+	{
+		if (sub.type != "INDX")
+			continue;
+
+		if (sub.size < indx_min_size)
+			break;
+
+		int32_t index_val =
+		    static_cast<int32_t>(tools_t::convert_string_byte_array_to_uint(std::string(sub.data, grid_coord_size)));
+		return std::to_string(index_val);
+	}
+
+	return std::to_string(fallback_index);
+}
+
+static std::string derive_script_id(sub_record_iter_t & iter, size_t fallback_index)
+{
+	sub_record_view_t sub;
+	while (iter.next(sub))
+	{
+		if (sub.type != "SCHD")
+			continue;
+
+		const size_t name_len = std::min(sub.size, schd_name_length);
+		std::string script_name(sub.data, name_len);
+		script_name = tools_t::erase_null_chars(script_name);
+		return script_name;
+	}
+
+	return std::to_string(fallback_index);
+}
+
+static std::string derive_sub_text_id(sub_record_iter_t & iter, const std::string & sub_type, size_t fallback_index)
+{
+	sub_record_view_t sub;
+	while (iter.next(sub))
+	{
+		if (sub.type != sub_type)
+			continue;
+
+		std::string text(sub.data, sub.size);
+		text = tools_t::erase_null_chars(text);
+		return text;
+	}
+
+	return std::to_string(fallback_index);
+}
+
+static std::string derive_land_id(sub_record_iter_t & iter, size_t fallback_index)
+{
+	sub_record_view_t sub;
+	while (iter.next(sub))
+	{
+		if (sub.type != "INTV")
+			continue;
+
+		if (sub.size < land_intv_min_size)
+			break;
+
+		int32_t grid_x =
+		    static_cast<int32_t>(tools_t::convert_string_byte_array_to_uint(std::string(sub.data, grid_coord_size)));
+		int32_t grid_y = static_cast<int32_t>(
+		    tools_t::convert_string_byte_array_to_uint(std::string(sub.data + grid_coord_size, grid_coord_size)));
+		return "GRID[" + std::to_string(grid_x) + "," + std::to_string(grid_y) + "]";
+	}
+
+	return std::to_string(fallback_index);
+}
+
+static std::string derive_pgrd_id(sub_record_iter_t & iter, size_t fallback_index)
+{
+	sub_record_view_t sub;
+	while (iter.next(sub))
+	{
+		if (sub.type != "DATA")
+			continue;
+
+		if (sub.size < land_intv_min_size)
+			break;
+
+		int32_t grid_x =
+		    static_cast<int32_t>(tools_t::convert_string_byte_array_to_uint(std::string(sub.data, grid_coord_size)));
+		int32_t grid_y = static_cast<int32_t>(
+		    tools_t::convert_string_byte_array_to_uint(std::string(sub.data + grid_coord_size, grid_coord_size)));
+		return "GRID[" + std::to_string(grid_x) + "," + std::to_string(grid_y) + "]";
+	}
+
+	return std::to_string(fallback_index);
+}
+
 plugin_index_t::plugin_index_t(esm_reader_t & esm)
 {
 	if (!esm.is_loaded())
@@ -20,7 +170,6 @@ plugin_index_t::plugin_index_t(esm_reader_t & esm)
 		indexed_record_t entry;
 		entry.rec_type = rec_type;
 		entry.record_index = i;
-
 		entry.record_id = derive_id(esm, i);
 		entry.display_name = derive_display_name(esm, i);
 
@@ -93,163 +242,29 @@ std::string plugin_index_t::derive_id(esm_reader_t & esm, size_t i)
 		return "";
 
 	sub_record_iter_t iter(content);
-	sub_record_view_t sub;
 
 	if (rec_type == "CELL")
-	{
-		std::string name_text;
-		bool has_name = false;
-		int32_t grid_x = 0;
-		int32_t grid_y = 0;
-		bool is_interior = false;
-		bool has_data = false;
-
-		while (iter.next(sub))
-		{
-			if (sub.type == "NAME")
-			{
-				name_text = std::string(sub.data, sub.size);
-				name_text = tools_t::erase_null_chars(name_text);
-				has_name = true;
-				continue;
-			}
-
-			if (sub.type == "DATA" && sub.size >= 12)
-			{
-				uint32_t flags = tools_t::convert_string_byte_array_to_uint(std::string(sub.data, 4));
-				is_interior = (flags & 0x01) != 0;
-				grid_x = static_cast<int32_t>(tools_t::convert_string_byte_array_to_uint(std::string(sub.data + 4, 4)));
-				grid_y = static_cast<int32_t>(tools_t::convert_string_byte_array_to_uint(std::string(sub.data + 8, 4)));
-				has_data = true;
-				break;
-			}
-		}
-
-		if (is_interior && has_name)
-			return name_text;
-
-		if (has_data && !is_interior)
-			return "GRID[" + std::to_string(grid_x) + "," + std::to_string(grid_y) + "]";
-
-		if (has_name)
-			return name_text;
-
-		return std::to_string(i);
-	}
+		return derive_cell_id(iter, i);
 
 	if (rec_type == "SKIL" || rec_type == "MGEF")
-	{
-		while (iter.next(sub))
-		{
-			if (sub.type != "INDX")
-				continue;
-
-			if (sub.size < 4)
-				break;
-
-			int32_t index_val =
-			    static_cast<int32_t>(tools_t::convert_string_byte_array_to_uint(std::string(sub.data, 4)));
-			return std::to_string(index_val);
-		}
-
-		return std::to_string(i);
-	}
+		return derive_index_based_id(iter, i);
 
 	if (rec_type == "SCPT")
-	{
-		while (iter.next(sub))
-		{
-			if (sub.type != "SCHD")
-				continue;
-
-			size_t name_len = std::min(sub.size, static_cast<size_t>(32));
-			std::string script_name(sub.data, name_len);
-			script_name = tools_t::erase_null_chars(script_name);
-			return script_name;
-		}
-
-		return std::to_string(i);
-	}
+		return derive_script_id(iter, i);
 
 	if (rec_type == "DIAL")
-	{
-		while (iter.next(sub))
-		{
-			if (sub.type != "NAME")
-				continue;
-
-			std::string text(sub.data, sub.size);
-			text = tools_t::erase_null_chars(text);
-			return text;
-		}
-
-		return std::to_string(i);
-	}
+		return derive_sub_text_id(iter, "NAME", i);
 
 	if (rec_type == "INFO")
-	{
-		while (iter.next(sub))
-		{
-			if (sub.type != "INAM")
-				continue;
-
-			std::string text(sub.data, sub.size);
-			text = tools_t::erase_null_chars(text);
-			return text;
-		}
-
-		return std::to_string(i);
-	}
+		return derive_sub_text_id(iter, "INAM", i);
 
 	if (rec_type == "LAND")
-	{
-		while (iter.next(sub))
-		{
-			if (sub.type != "INTV")
-				continue;
-
-			if (sub.size < 8)
-				break;
-
-			int32_t grid_x = static_cast<int32_t>(tools_t::convert_string_byte_array_to_uint(std::string(sub.data, 4)));
-			int32_t grid_y =
-			    static_cast<int32_t>(tools_t::convert_string_byte_array_to_uint(std::string(sub.data + 4, 4)));
-			return "GRID[" + std::to_string(grid_x) + "," + std::to_string(grid_y) + "]";
-		}
-
-		return std::to_string(i);
-	}
+		return derive_land_id(iter, i);
 
 	if (rec_type == "PGRD")
-	{
-		while (iter.next(sub))
-		{
-			if (sub.type != "DATA")
-				continue;
+		return derive_pgrd_id(iter, i);
 
-			if (sub.size < 8)
-				break;
-
-			int32_t grid_x = static_cast<int32_t>(tools_t::convert_string_byte_array_to_uint(std::string(sub.data, 4)));
-			int32_t grid_y =
-			    static_cast<int32_t>(tools_t::convert_string_byte_array_to_uint(std::string(sub.data + 4, 4)));
-			return "GRID[" + std::to_string(grid_x) + "," + std::to_string(grid_y) + "]";
-		}
-
-		return std::to_string(i);
-	}
-
-	while (iter.next(sub))
-	{
-		if (sub.type != "NAME")
-			continue;
-
-		std::string text(sub.data, sub.size);
-		text = tools_t::erase_null_chars(text);
-		return text;
-	}
-
-	return std::to_string(i);
+	return derive_sub_text_id(iter, "NAME", i);
 }
 
 std::string plugin_index_t::derive_display_name(esm_reader_t & esm, size_t i)
@@ -266,11 +281,11 @@ std::string plugin_index_t::derive_display_name(esm_reader_t & esm, size_t i)
 			if (sub.type != "INDX")
 				continue;
 
-			if (sub.size < 4)
+			if (sub.size < indx_min_size)
 				break;
 
-			int32_t index_val =
-			    static_cast<int32_t>(tools_t::convert_string_byte_array_to_uint(std::string(sub.data, 4)));
+			int32_t index_val = static_cast<int32_t>(
+			    tools_t::convert_string_byte_array_to_uint(std::string(sub.data, grid_coord_size)));
 
 			if (rec_type == "MGEF")
 			{

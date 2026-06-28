@@ -71,7 +71,7 @@ dict_creator_t::match_result_t dict_creator_t::compute_best_match(
     const std::vector<std::pair<size_t, std::string>> & candidates,
     const std::set<size_t> & matched_set)
 {
-	match_result_t result{ 0, 0, 0, 0, 0, {} };
+	match_result_t result { 0, 0, 0, 0, 0, {} };
 
 	for (size_t ni = 0; ni < candidates.size(); ++ni)
 	{
@@ -580,9 +580,8 @@ void dict_creator_t::match_sctx_messages(
 	if (native_messages.size() != foreign_messages.size())
 	{
 		tools_t::add_log(
-		    "[warning] SCTX line count mismatch: \"" + script_name +
-		    "\" (native=" + std::to_string(native_messages.size()) +
-		    ", foreign=" + std::to_string(foreign_messages.size()) + ")\r\n");
+		    "[warning] SCTX line count mismatch: \"" + script_name + "\" (native=" +
+		    std::to_string(native_messages.size()) + ", foreign=" + std::to_string(foreign_messages.size()) + ")\r\n");
 
 		for (const auto & msg : foreign_messages)
 		{
@@ -846,8 +845,7 @@ void dict_creator_t::match_dial_by_inam(
 		const auto & native_name = esm.get_value().text;
 
 		dial_native_to_foreign[native_name] = foreign_name;
-		insert_entry_base(
-		    foreign_name, foreign_name, native_name, tools_t::rec_type_t::dial, "info");
+		insert_entry_base(foreign_name, foreign_name, native_name, tools_t::rec_type_t::dial, "info");
 	}
 }
 
@@ -904,8 +902,7 @@ void dict_creator_t::match_dial_by_translation(
 			tools_t::add_log("[EXACT] \"" + foreign_name + "\"\r\n", true);
 
 			dial_native_to_foreign[foreign_name] = foreign_name;
-			insert_entry_base(
-			    foreign_name, foreign_name, foreign_name, tools_t::rec_type_t::dial, "exact");
+			insert_entry_base(foreign_name, foreign_name, foreign_name, tools_t::rec_type_t::dial, "exact");
 			break;
 		}
 	}
@@ -941,8 +938,7 @@ void dict_creator_t::match_dial_by_translation(
 			bool resolved = false;
 			if (match.count > 1)
 			{
-				resolved = check_all_same_name(
-				    compare_words, native_candidates, matched_native_idx, match);
+				resolved = check_all_same_name(compare_words, native_candidates, matched_native_idx, match);
 
 				if (resolved)
 				{
@@ -967,16 +963,15 @@ void dict_creator_t::match_dial_by_translation(
 				}
 
 				dial_native_to_foreign[match.name] = foreign_name;
-				insert_entry_base(
-				    foreign_name, foreign_name, match.name, tools_t::rec_type_t::dial, "heuristic");
+				insert_entry_base(foreign_name, foreign_name, match.name, tools_t::rec_type_t::dial, "heuristic");
 				progress = true;
 			}
 			else if (!resolved)
 			{
 				tools_t::add_log(
 				    "[TIE iter=" + std::to_string(iteration) + " orig=" + std::to_string(match.score_orig) +
-				    " model=" + std::to_string(match.score_model) + " count=" + std::to_string(match.count) +
-				    "] \"" + foreign_name + "\"\r\n");
+				    " model=" + std::to_string(match.score_model) + " count=" + std::to_string(match.count) + "] \"" +
+				    foreign_name + "\"\r\n");
 			}
 		}
 	}
@@ -1082,8 +1077,7 @@ void dict_creator_t::report_unmatched_dials(
 
 	for (const auto & [pos, name] : unmatched_foreign)
 	{
-		insert_entry_base(
-		    name, name, name, tools_t::rec_type_t::dial, tools_t::status_t::missing);
+		insert_entry_base(name, name, name, tools_t::rec_type_t::dial, tools_t::status_t::missing);
 
 		if (!candidates_str.empty())
 		{
@@ -1098,8 +1092,7 @@ void dict_creator_t::report_unmatched_dials(
 
 	if (!native_names.empty())
 	{
-		tools_t::add_log(
-		    "[info] unmatched native DIAL candidates (" + std::to_string(native_names.size()) + "):\r\n");
+		tools_t::add_log("[info] unmatched native DIAL candidates (" + std::to_string(native_names.size()) + "):\r\n");
 		for (const auto & name : native_names)
 			tools_t::add_log("  " + name + "\r\n");
 	}
@@ -1157,8 +1150,7 @@ void dict_creator_t::make_dict_cell_default()
 				{
 					const auto & old_text = esm_ref.get_value().text;
 					const auto & new_text = esm.get_value().text;
-					insert_entry_base(
-					    old_text, old_text, new_text, tools_t::rec_type_t::cell, "wilderness");
+					insert_entry_base(old_text, old_text, new_text, tools_t::rec_type_t::cell, "wilderness");
 
 					break;
 				}
@@ -1193,8 +1185,7 @@ void dict_creator_t::make_dict_cell_region()
 				{
 					const auto & old_text = esm_ref.get_value().text;
 					const auto & new_text = esm.get_value().text;
-					insert_entry_base(
-					    old_text, old_text, new_text, tools_t::rec_type_t::cell, "region");
+					insert_entry_base(old_text, old_text, new_text, tools_t::rec_type_t::cell, "region");
 
 					break;
 				}
@@ -1649,8 +1640,7 @@ void dict_creator_t::make_dict_cell_interior()
 		esm.set_value("NAME");
 		const auto & val_text = esm.get_value().text;
 
-		insert_entry_base(
-		    ref_cell_name, ref_cell_name, val_text, tools_t::rec_type_t::cell, "fingerprint");
+		insert_entry_base(ref_cell_name, ref_cell_name, val_text, tools_t::rec_type_t::cell, "fingerprint");
 	}
 
 	make_dict_cell_interior_heuristic(missing_cells, matched_native_records);
@@ -1715,8 +1705,7 @@ void dict_creator_t::make_dict_cell_interior_heuristic(
 
 			tools_t::add_log("[EXACT] \"" + foreign_name + "\"\r\n", true);
 
-			insert_entry_base(
-			    foreign_name, foreign_name, foreign_name, tools_t::rec_type_t::cell, "exact");
+			insert_entry_base(foreign_name, foreign_name, foreign_name, tools_t::rec_type_t::cell, "exact");
 			break;
 		}
 	}
@@ -1746,8 +1735,8 @@ void dict_creator_t::make_dict_cell_interior_heuristic(
 			auto original_words = split_words(foreign_name);
 			auto compare_words = build_compare_words(translated_words, original_words);
 
-			auto match = compute_best_match(
-			    compare_words, original_words, translated_words, native_cells, matched_native);
+			auto match =
+			    compute_best_match(compare_words, original_words, translated_words, native_cells, matched_native);
 
 			if (match.score <= 0)
 				continue;
@@ -1755,8 +1744,7 @@ void dict_creator_t::make_dict_cell_interior_heuristic(
 			bool resolved = false;
 			if (match.count > 1)
 			{
-				resolved = check_all_same_name(
-				    compare_words, native_cells, matched_native, match);
+				resolved = check_all_same_name(compare_words, native_cells, matched_native, match);
 
 				if (resolved)
 				{
@@ -1788,8 +1776,8 @@ void dict_creator_t::make_dict_cell_interior_heuristic(
 			{
 				tools_t::add_log(
 				    "[TIE iter=" + std::to_string(iteration) + " orig=" + std::to_string(match.score_orig) +
-				    " model=" + std::to_string(match.score_model) + " count=" + std::to_string(match.count) +
-				    "] \"" + foreign_name + "\"\r\n");
+				    " model=" + std::to_string(match.score_model) + " count=" + std::to_string(match.count) + "] \"" +
+				    foreign_name + "\"\r\n");
 			}
 		}
 	}
@@ -1884,9 +1872,10 @@ void dict_creator_t::insert_entry_base(
 			return;
 	}
 
-	const bool is_problem = (std::strcmp(status, tools_t::status_t::missing) == 0 ||
-	                         std::strcmp(status, tools_t::status_t::mismatch) == 0 ||
-	                         std::strcmp(status, tools_t::status_t::duplicate) == 0);
+	const bool is_problem =
+	    (std::strcmp(status, tools_t::status_t::missing) == 0 ||
+	     std::strcmp(status, tools_t::status_t::mismatch) == 0 ||
+	     std::strcmp(status, tools_t::status_t::duplicate) == 0);
 
 	const bool is_status = is_problem || std::strcmp(status, tools_t::status_t::heuristic) == 0;
 

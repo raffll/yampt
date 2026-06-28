@@ -242,6 +242,7 @@ if exist "$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\Qt6\plugins\tls"
     <ClCompile Include="..\yampt\model\dict_creator_base_ordered.cpp" />
     <ClCompile Include="..\yampt\model\esm_converter.cpp" />
     <ClCompile Include="..\yampt\model\script_parser.cpp" />
+    <ClCompile Include="..\yampt\model\scdt_patcher.cpp" />
     <ClCompile Include="..\yampt\model\translation_engine.cpp" />
     <ClCompile Include="..\yampt\plugin_scan\sub_record_schema.cpp" />
     <ClCompile Include="..\yampt\plugin_scan\plugin_index.cpp" />
@@ -285,6 +286,7 @@ if exist "$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\Qt6\plugins\tls"
     <ClInclude Include="..\yampt\model\dict_merger.hpp" />
     <ClInclude Include="..\yampt\model\esm_converter.hpp" />
     <ClInclude Include="..\yampt\model\script_parser.hpp" />
+    <ClInclude Include="..\yampt\model\scdt_patcher.hpp" />
     <ClInclude Include="..\yampt\model\translation_engine.hpp" />
     <ClInclude Include="..\yampt\plugin_scan\conflict_enums.hpp" />
     <ClInclude Include="..\yampt\plugin_scan\conflict_types.hpp" />

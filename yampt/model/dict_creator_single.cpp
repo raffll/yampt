@@ -178,9 +178,7 @@ void dict_creator_t::make_dict_single_indx()
 	}
 }
 
-void dict_creator_t::enrich_info_speaker(
-    const std::string & key_text,
-    size_t record_index)
+void dict_creator_t::enrich_info_speaker(const std::string & key_text, size_t record_index)
 {
 	esm.select_record(record_index);
 	esm.set_value("ONAM");
@@ -499,8 +497,7 @@ void dict_creator_t::insert_unapproved_changed(
 {
 	const auto & base_status = base_entry.status;
 
-	if (base_status == tools_t::status_t::in_progress ||
-	    base_status == tools_t::status_t::model ||
+	if (base_status == tools_t::status_t::in_progress || base_status == tools_t::status_t::model ||
 	    base_status == tools_t::status_t::error)
 	{
 		insert_with_status(key_text, old_text, base_entry.new_text, type, tools_t::status_t::outdated);

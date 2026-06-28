@@ -6,13 +6,19 @@
 class esm_reader_t
 {
 public:
-	void select_record(size_t i);
-	void replace_record(const std::string & content);
-	void set_modified(size_t i);
+	static constexpr size_t record_header_size = 16;
+	static constexpr size_t sub_record_header_size = 8;
+	static constexpr size_t sub_record_id_size = 4;
+	static constexpr size_t record_size_field_offset = 4;
+	static constexpr size_t record_size_field_length = 4;
 
-	void set_key(const std::string & id);
-	void set_value(const std::string & id);
-	void set_next_value(const std::string & id);
+	void select_record(size_t index);
+	void replace_record(const std::string & content);
+	void set_modified(size_t index);
+
+	void set_key(const std::string & sub_id);
+	void set_value(const std::string & sub_id);
+	void set_next_value(const std::string & sub_id);
 
 	const auto & is_loaded()
 	{
@@ -21,29 +27,29 @@ public:
 
 	const auto & get_name()
 	{
-		return name;
+		return name_;
 	}
 
 	const auto & get_time()
 	{
-		return time;
+		return time_;
 	}
 
 	const auto & get_records() const
 	{
-		return records;
+		return records_;
 	}
 
 	const auto & get_record()
 	{
-		return *rec;
+		return *ptr_record;
 	}
 
 	size_t get_modified_count();
 
 	struct sub_record_t
 	{
-		std::string id;
+		std::string sub_id;
 		std::string content;
 		std::string text;
 		size_t pos = 0;
@@ -54,12 +60,12 @@ public:
 
 	const auto & get_key()
 	{
-		return key;
+		return key_;
 	}
 
 	const auto & get_value()
 	{
-		return value;
+		return value_;
 	}
 
 	esm_reader_t() = default;
@@ -68,21 +74,17 @@ public:
 private:
 	void split_file(const std::string & content, const std::string & path);
 	void set_time(const std::string & path);
-	void main_loop(
-	    std::size_t & cur_pos,
-	    std::size_t & cur_size,
-	    std::string & cur_id,
-	    std::string & cur_text,
-	    esm_reader_t::sub_record_t & subrecord);
-	void handle_exception(const std::exception & e);
+	void scan_sub_records(size_t start_pos, sub_record_t & target);
+	void mark_not_found(sub_record_t & target);
+	void handle_exception(const std::exception & error);
 
-	std::vector<tools_t::record_t> records;
-	tools_t::name_t name;
-	std::filesystem::file_time_type time;
+	std::vector<tools_t::record_t> records_;
+	tools_t::name_t name_;
+	std::filesystem::file_time_type time_;
 	bool loaded_ = false;
 
-	tools_t::record_t * rec = nullptr;
+	tools_t::record_t * ptr_record = nullptr;
 
-	sub_record_t key;
-	sub_record_t value;
+	sub_record_t key_;
+	sub_record_t value_;
 };

@@ -59,7 +59,8 @@ TEST_CASE("editor_config_t::load, missing file leaves defaults", "[i]")
 TEST_CASE("editor_config_t::load, editor section parses all fields", "[i]")
 {
 	const auto path = temp_config_path();
-	write_config_file(path,
+	write_config_file(
+	    path,
 	    "[Editor]\n"
 	    "ActiveDictIndex=3\n"
 	    "ActiveDictPath=C:/dicts/test.json\n"
@@ -114,7 +115,8 @@ TEST_CASE("editor_config_t::load, editor section parses all fields", "[i]")
 TEST_CASE("editor_config_t::load, workspace roots section", "[i]")
 {
 	const auto path = temp_config_path();
-	write_config_file(path,
+	write_config_file(
+	    path,
 	    "[WorkspaceRoots]\n"
 	    "Count=3\n"
 	    "Path0=C:/workspace/first\n"
@@ -135,7 +137,8 @@ TEST_CASE("editor_config_t::load, workspace roots section", "[i]")
 TEST_CASE("editor_config_t::load, spell check section", "[i]")
 {
 	const auto path = temp_config_path();
-	write_config_file(path,
+	write_config_file(
+	    path,
 	    "[SpellCheck]\n"
 	    "AffPath=dictionaries/pl_PL.aff\n"
 	    "DicPath=dictionaries/pl_PL.dic\n"
@@ -154,7 +157,8 @@ TEST_CASE("editor_config_t::load, spell check section", "[i]")
 TEST_CASE("editor_config_t::load, merge order section", "[i]")
 {
 	const auto path = temp_config_path();
-	write_config_file(path,
+	write_config_file(
+	    path,
 	    "[MergeOrder]\n"
 	    "Count=2\n"
 	    "Path0=C:/dicts/morrowind.json\n"
@@ -173,7 +177,8 @@ TEST_CASE("editor_config_t::load, merge order section", "[i]")
 TEST_CASE("editor_config_t::load, encoding index clamps to valid range", "[i]")
 {
 	const auto path = temp_config_path();
-	write_config_file(path,
+	write_config_file(
+	    path,
 	    "[Editor]\n"
 	    "EncodingIndex=5\n");
 
@@ -188,7 +193,8 @@ TEST_CASE("editor_config_t::load, encoding index clamps to valid range", "[i]")
 TEST_CASE("editor_config_t::load, encoding index rejects negative", "[i]")
 {
 	const auto path = temp_config_path();
-	write_config_file(path,
+	write_config_file(
+	    path,
 	    "[Editor]\n"
 	    "EncodingIndex=-1\n");
 
@@ -203,7 +209,8 @@ TEST_CASE("editor_config_t::load, encoding index rejects negative", "[i]")
 TEST_CASE("editor_config_t::load, invalid integer keeps default", "[i]")
 {
 	const auto path = temp_config_path();
-	write_config_file(path,
+	write_config_file(
+	    path,
 	    "[Editor]\n"
 	    "ActiveDictIndex=not_a_number\n"
 	    "WindowX=garbage\n"
@@ -222,7 +229,8 @@ TEST_CASE("editor_config_t::load, invalid integer keeps default", "[i]")
 TEST_CASE("editor_config_t::load, column index out of range ignored", "[i]")
 {
 	const auto path = temp_config_path();
-	write_config_file(path,
+	write_config_file(
+	    path,
 	    "[Editor]\n"
 	    "Column99=500.0\n"
 	    "Column0=200.0\n");
@@ -241,7 +249,8 @@ TEST_CASE("editor_config_t::load, column index out of range ignored", "[i]")
 TEST_CASE("editor_config_t::load, whitespace around keys and values trimmed", "[i]")
 {
 	const auto path = temp_config_path();
-	write_config_file(path,
+	write_config_file(
+	    path,
 	    "[Editor]\n"
 	    "  ActiveDictIndex  =  7  \n"
 	    "  ActiveDictPath  =  C:/path/to/dict.json  \n");
@@ -258,7 +267,8 @@ TEST_CASE("editor_config_t::load, whitespace around keys and values trimmed", "[
 TEST_CASE("editor_config_t::load, empty lines and unknown keys ignored", "[i]")
 {
 	const auto path = temp_config_path();
-	write_config_file(path,
+	write_config_file(
+	    path,
 	    "[Editor]\n"
 	    "\n"
 	    "UnknownKey=some_value\n"
@@ -277,7 +287,8 @@ TEST_CASE("editor_config_t::load, empty lines and unknown keys ignored", "[i]")
 TEST_CASE("editor_config_t::load, boolean fields treat non-zero as true", "[i]")
 {
 	const auto path = temp_config_path();
-	write_config_file(path,
+	write_config_file(
+	    path,
 	    "[Editor]\n"
 	    "SidebarVisible=1\n"
 	    "BottomVisible=1\n"
@@ -410,7 +421,8 @@ TEST_CASE("editor_config_t::save, merge order section omitted when empty", "[i]"
 TEST_CASE("editor_config_t::load, multiple sections in single file", "[i]")
 {
 	const auto path = temp_config_path();
-	write_config_file(path,
+	write_config_file(
+	    path,
 	    "[WorkspaceRoots]\n"
 	    "Count=1\n"
 	    "Path0=C:/workspace\n"
@@ -447,7 +459,8 @@ TEST_CASE("editor_config_t::load, multiple sections in single file", "[i]")
 TEST_CASE("editor_config_t::load, workspace roots count resets vector", "[i]")
 {
 	const auto path = temp_config_path();
-	write_config_file(path,
+	write_config_file(
+	    path,
 	    "[WorkspaceRoots]\n"
 	    "Count=2\n"
 	    "Path0=first\n"
@@ -467,7 +480,8 @@ TEST_CASE("editor_config_t::load, workspace roots count resets vector", "[i]")
 TEST_CASE("editor_config_t::load, merge order count resets vector", "[i]")
 {
 	const auto path = temp_config_path();
-	write_config_file(path,
+	write_config_file(
+	    path,
 	    "[MergeOrder]\n"
 	    "Count=1\n"
 	    "Path0=only.json\n");

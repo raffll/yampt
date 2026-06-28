@@ -118,6 +118,68 @@ std::string format_value(const char * data, size_t size)
 	return std::string(buf);
 }
 
+static std::string format_flags(uint32_t value, const field_def_t & field, int max_bits)
+{
+	char buf[32];
+	std::snprintf(buf, sizeof(buf), "0x%X", value);
+	std::string result = buf;
+
+	if (!field.flag_names || field.flag_count <= 0)
+		return result;
+
+	std::string names;
+	for (int bit = 0; bit < max_bits && bit < field.flag_count; ++bit)
+	{
+		if (!(value & (1u << bit)))
+			continue;
+
+		if (field.flag_names[bit][0] == '_')
+			continue;
+
+		if (!names.empty())
+			names += " | ";
+
+		names += field.flag_names[bit];
+	}
+
+	if (!names.empty())
+		result += " (" + names + ")";
+
+	return result;
+}
+
+static std::string format_enum_lookup(uint32_t value, const char * const * enum_names)
+{
+	char buf[32];
+	std::snprintf(buf, sizeof(buf), "%u", value);
+	std::string result = buf;
+
+	if (!enum_names)
+		return result;
+
+	size_t count = 0;
+	while (enum_names[count])
+		++count;
+
+	if (value < count)
+		result += " (" + std::string(enum_names[value]) + ")";
+
+	return result;
+}
+
+static std::string read_fixed_string(const char * ptr, size_t field_size, size_t data_size, size_t field_offset)
+{
+	size_t len = 0;
+	for (size_t i = 0; i < field_size && field_offset + i < data_size; ++i)
+	{
+		if (ptr[i] == '\0')
+			break;
+
+		++len;
+	}
+	return std::string(ptr, len);
+}
+
 std::string decode_field(const field_def_t & field, const char * data, size_t data_size)
 {
 	if (field.offset + field.size > data_size && field.type != field_type_t::string_var)
@@ -194,277 +256,156 @@ std::string decode_field(const field_def_t & field, const char * data, size_t da
 		return buf;
 	}
 	case field_type_t::string_fixed:
-	{
-		size_t len = 0;
-		for (size_t i = 0; i < field.size && field.offset + i < data_size; ++i)
-		{
-			if (ptr[i] == '\0')
-				break;
+		return read_fixed_string(ptr, field.size, data_size, field.offset);
 
-			++len;
-		}
-		return std::string(ptr, len);
-	}
 	case field_type_t::string_var:
 	{
 		if (field.offset >= data_size)
 			return "";
 
-		size_t remaining = data_size - field.offset;
-		size_t len = 0;
-		for (size_t i = 0; i < remaining; ++i)
-		{
-			if (ptr[i] == '\0')
-				break;
-
-			++len;
-		}
-		return std::string(ptr, len);
+		const size_t remaining = data_size - field.offset;
+		return read_fixed_string(ptr, remaining, data_size, field.offset);
 	}
 	case field_type_t::flags_u8:
 	{
 		uint8_t val = 0;
 		std::memcpy(&val, ptr, 1);
-		std::snprintf(buf, sizeof(buf), "0x%X", val);
-		std::string result = buf;
-
-		if (field.flag_names && field.flag_count > 0)
-		{
-			std::string names;
-			for (int bit = 0; bit < 8 && bit < field.flag_count; ++bit)
-			{
-				if (!(val & (1u << bit)))
-					continue;
-
-				if (field.flag_names[bit][0] == '_')
-					continue;
-
-				if (!names.empty())
-					names += " | ";
-
-				names += field.flag_names[bit];
-			}
-
-			if (!names.empty())
-				result += " (" + names + ")";
-		}
-
-		return result;
+		return format_flags(val, field, 8);
 	}
 	case field_type_t::flags_u16:
 	{
 		uint16_t val = 0;
 		std::memcpy(&val, ptr, 2);
-		std::snprintf(buf, sizeof(buf), "0x%X", val);
-		std::string result = buf;
-
-		if (field.flag_names && field.flag_count > 0)
-		{
-			std::string names;
-			for (int bit = 0; bit < 16 && bit < field.flag_count; ++bit)
-			{
-				if (!(val & (1u << bit)))
-					continue;
-
-				if (field.flag_names[bit][0] == '_')
-					continue;
-
-				if (!names.empty())
-					names += " | ";
-
-				names += field.flag_names[bit];
-			}
-
-			if (!names.empty())
-				result += " (" + names + ")";
-		}
-
-		return result;
+		return format_flags(val, field, 16);
 	}
 	case field_type_t::flags_u32:
 	{
 		uint32_t val = 0;
 		std::memcpy(&val, ptr, 4);
-		std::snprintf(buf, sizeof(buf), "0x%X", val);
-		std::string result = buf;
-
-		if (field.flag_names && field.flag_count > 0)
-		{
-			std::string names;
-			for (int bit = 0; bit < 32 && bit < field.flag_count; ++bit)
-			{
-				if (!(val & (1u << bit)))
-					continue;
-
-				if (field.flag_names[bit][0] == '_')
-					continue;
-
-				if (!names.empty())
-					names += " | ";
-
-				names += field.flag_names[bit];
-			}
-
-			if (!names.empty())
-				result += " (" + names + ")";
-		}
-
-		return result;
+		return format_flags(val, field, 32);
 	}
 	case field_type_t::enum_u8:
 	{
 		uint8_t val = 0;
 		std::memcpy(&val, ptr, 1);
-		std::snprintf(buf, sizeof(buf), "%u", val);
-		std::string result = buf;
-
-		if (field.enum_names)
-		{
-			size_t count = 0;
-			while (field.enum_names[count])
-				++count;
-
-			if (val < count)
-				result += " (" + std::string(field.enum_names[val]) + ")";
-		}
-
-		return result;
+		return format_enum_lookup(val, field.enum_names);
 	}
 	case field_type_t::enum_u16:
 	{
 		uint16_t val = 0;
 		std::memcpy(&val, ptr, 2);
-		std::snprintf(buf, sizeof(buf), "%u", val);
-		std::string result = buf;
-
-		if (field.enum_names)
-		{
-			size_t count = 0;
-			while (field.enum_names[count])
-				++count;
-
-			if (val < count)
-				result += " (" + std::string(field.enum_names[val]) + ")";
-		}
-
-		return result;
+		return format_enum_lookup(val, field.enum_names);
 	}
 	case field_type_t::enum_u32:
 	{
 		uint32_t val = 0;
 		std::memcpy(&val, ptr, 4);
-		std::snprintf(buf, sizeof(buf), "%u", val);
-		std::string result = buf;
-
-		if (field.enum_names)
-		{
-			size_t count = 0;
-			while (field.enum_names[count])
-				++count;
-
-			if (val < count)
-				result += " (" + std::string(field.enum_names[val]) + ")";
-		}
-
-		return result;
+		return format_enum_lookup(val, field.enum_names);
 	}
 	case field_type_t::raw:
 	{
-		std::string hex;
-		size_t limit = std::min(field.size, static_cast<size_t>(64));
+		std::string hex_output;
+		constexpr size_t max_hex_bytes = 64;
+		const size_t limit = std::min(field.size, max_hex_bytes);
 		for (size_t i = 0; i < limit && field.offset + i < data_size; ++i)
 		{
 			char hbuf[4];
 			std::snprintf(hbuf, sizeof(hbuf), "%02X", static_cast<unsigned char>(ptr[i]));
-			if (!hex.empty())
-				hex += ' ';
+			if (!hex_output.empty())
+				hex_output += ' ';
 
-			hex += hbuf;
+			hex_output += hbuf;
 		}
 
-		if (field.size > 64)
-			hex += " ...";
+		if (field.size > max_hex_bytes)
+			hex_output += " ...";
 
-		return hex;
+		return hex_output;
 	}
 	}
 
 	return "";
 }
 
+static const std::map<std::pair<std::string, std::string>, const char *> & context_descriptions()
+{
+	static const std::map<std::pair<std::string, std::string>, const char *> descs = {
+		{ { "ARMO", "BNAM" }, "Male Part Name" }, { { "ARMO", "CNAM" }, "Female Part Name" },
+		{ { "CLOT", "BNAM" }, "Male Part Name" }, { { "CLOT", "CNAM" }, "Female Part Name" },
+		{ { "CELL", "ANAM" }, "Owner" },          { { "CELL", "BNAM" }, "Global/Rank" },
+		{ { "NPC_", "ANAM" }, "Faction" },        { { "NPC_", "BNAM" }, "Head Model" },
+		{ { "NPC_", "CNAM" }, "Class" },          { { "INFO", "ANAM" }, "Cell" },
+	};
+	return descs;
+}
+
+static const std::map<std::string, const char *> & record_display_names()
+{
+	static const std::map<std::string, const char *> names = {
+		{ "ACTI", "Activator" },
+		{ "ALCH", "Potion" },
+		{ "APPA", "Apparatus" },
+		{ "ARMO", "Armor" },
+		{ "BOOK", "Book" },
+		{ "CELL", "Cell" },
+		{ "CLAS", "Class" },
+		{ "CLOT", "Clothing" },
+		{ "CONT", "Container" },
+		{ "CREA", "Creature" },
+		{ "ENCH", "Enchantment" },
+		{ "FACT", "Faction" },
+		{ "GLOB", "Global" },
+		{ "INFO", "Info" },
+		{ "INGR", "Ingredient" },
+		{ "LEVI", "Leveled Item" },
+		{ "LEVC", "Leveled Creature" },
+		{ "LIGH", "Light" },
+		{ "LOCK", "Lockpick" },
+		{ "MGEF", "Magic Effect" },
+		{ "MISC", "Misc Item" },
+		{ "NPC_", "NPC" },
+		{ "PROB", "Probe" },
+		{ "RACE", "Race" },
+		{ "REGN", "Region" },
+		{ "REPA", "Repair Item" },
+		{ "SCPT", "Script" },
+		{ "SKIL", "Skill" },
+		{ "SPEL", "Spell" },
+		{ "WEAP", "Weapon" },
+	};
+	return names;
+}
+
+static std::string build_schema_label(
+    const std::string & sub_type,
+    const std::string & record_type,
+    const std::map<std::string, const char *> & descs)
+{
+	const auto & names = record_display_names();
+	auto rit = names.find(record_type);
+	const auto & parent_name = (rit != names.end()) ? std::string(rit->second) : record_type;
+
+	auto it = descs.find(sub_type);
+	if (it != descs.end())
+		return sub_type + " - " + parent_name + " " + it->second;
+
+	return sub_type + " - " + parent_name + " Data";
+}
+
 std::string make_sub_label(const std::string & sub_type, const std::string & record_type, size_t data_size)
 {
-	static const std::map<std::pair<std::string, std::string>, const char *> context_descs = {
-		{ { "ARMO", "BNAM" }, "Male Part Name" },
-		{ { "ARMO", "CNAM" }, "Female Part Name" },
-		{ { "CLOT", "BNAM" }, "Male Part Name" },
-		{ { "CLOT", "CNAM" }, "Female Part Name" },
-		{ { "CELL", "ANAM" }, "Owner" },
-		{ { "CELL", "BNAM" }, "Global/Rank" },
-		{ { "NPC_", "ANAM" }, "Faction" },
-		{ { "NPC_", "BNAM" }, "Head Model" },
-		{ { "NPC_", "CNAM" }, "Class" },
-		{ { "INFO", "ANAM" }, "Cell" },
-	};
-
-	auto ctx_it = context_descs.find({ record_type, sub_type });
-	if (ctx_it != context_descs.end())
+	const auto & ctx_descs = context_descriptions();
+	auto ctx_it = ctx_descs.find({ record_type, sub_type });
+	if (ctx_it != ctx_descs.end())
 		return sub_type + " - " + ctx_it->second;
 
 	const auto & descs = sub_record_descriptions();
-	auto it = descs.find(sub_type);
-
-	const sub_record_schema_t * schema = find_schema(record_type, sub_type, data_size);
+	const auto * schema = find_schema(record_type, sub_type, data_size);
 
 	if (schema)
-	{
-		std::string parent_name;
+		return build_schema_label(sub_type, record_type, descs);
 
-		static const std::map<std::string, const char *> record_names = {
-			{ "ACTI", "Activator" },
-			{ "ALCH", "Potion" },
-			{ "APPA", "Apparatus" },
-			{ "ARMO", "Armor" },
-			{ "BOOK", "Book" },
-			{ "CELL", "Cell" },
-			{ "CLAS", "Class" },
-			{ "CLOT", "Clothing" },
-			{ "CONT", "Container" },
-			{ "CREA", "Creature" },
-			{ "ENCH", "Enchantment" },
-			{ "FACT", "Faction" },
-			{ "GLOB", "Global" },
-			{ "INFO", "Info" },
-			{ "INGR", "Ingredient" },
-			{ "LEVI", "Leveled Item" },
-			{ "LEVC", "Leveled Creature" },
-			{ "LIGH", "Light" },
-			{ "LOCK", "Lockpick" },
-			{ "MGEF", "Magic Effect" },
-			{ "MISC", "Misc Item" },
-			{ "NPC_", "NPC" },
-			{ "PROB", "Probe" },
-			{ "RACE", "Race" },
-			{ "REGN", "Region" },
-			{ "REPA", "Repair Item" },
-			{ "SCPT", "Script" },
-			{ "SKIL", "Skill" },
-			{ "SPEL", "Spell" },
-			{ "WEAP", "Weapon" },
-		};
-
-		auto rit = record_names.find(record_type);
-		if (rit != record_names.end())
-			parent_name = rit->second;
-		else
-			parent_name = record_type;
-
-		if (it != descs.end())
-			return sub_type + " - " + parent_name + " " + it->second;
-
-		return sub_type + " - " + parent_name + " Data";
-	}
-
+	auto it = descs.find(sub_type);
 	if (it != descs.end())
 		return sub_type + " - " + it->second;
 

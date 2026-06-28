@@ -13,73 +13,49 @@ user_interface_t::user_interface_t(std::vector<std::string> & arg)
 	run_command();
 }
 
+void user_interface_t::collect_argument_value(const std::string & command, const std::string & value)
+{
+	if (command == "-f")
+		file_paths.push_back(value);
+
+	else if (command == "-d")
+		dict_paths.push_back(value);
+
+	else if (command == "-o")
+		output = value;
+
+	else if (command == "-s")
+		suffix = value;
+
+	else if (command == "--translate")
+		translate_model_path = value;
+}
+
 void user_interface_t::parse_command_line()
 {
-	std::string command;
-	std::vector<std::string> dict_path_reverse;
-	if (args.size() > 1)
-	{
-		for (size_t i = 2; i < args.size(); ++i)
-		{
-			if (args[i] == "--windows-1250")
-			{
-				encoding = codepage_t::windows_1250;
-			}
-			else if (args[i] == "--debug")
-			{
-				tools_t::set_debug(true);
-			}
-			else if (args[i] == "--partial")
-			{
-				partial_mode = true;
-			}
-			else if (args[i] == "-f")
-			{
-				command = "-f";
-			}
-			else if (args[i] == "-d")
-			{
-				command = "-d";
-			}
-			else if (args[i] == "-o")
-			{
-				command = "-o";
-			}
-			else if (args[i] == "-s")
-			{
-				command = "-s";
-			}
-			else if (args[i] == "--translate")
-			{
-				command = "--translate";
-			}
-			else
-			{
-				if (command == "-f")
-				{
-					file_paths.push_back(args[i]);
-				}
-				if (command == "-d")
-				{
-					dict_path_reverse.push_back(args[i]);
-				}
-				if (command == "-o")
-				{
-					output = args[i];
-				}
-				if (command == "-s")
-				{
-					suffix = args[i];
-				}
-				if (command == "--translate")
-				{
-					translate_model_path = args[i];
-				}
-			}
-		}
-	}
+	if (args.size() <= 1)
+		return;
 
-	dict_paths.insert(dict_paths.end(), dict_path_reverse.begin(), dict_path_reverse.end());
+	std::string command;
+	for (size_t i = 2; i < args.size(); ++i)
+	{
+		const auto & token = args[i];
+
+		if (token == "--windows-1250")
+			encoding = codepage_t::windows_1250;
+
+		else if (token == "--debug")
+			tools_t::set_debug(true);
+
+		else if (token == "--partial")
+			partial_mode = true;
+
+		else if (token == "-f" || token == "-d" || token == "-o" || token == "-s" || token == "--translate")
+			command = token;
+
+		else
+			collect_argument_value(command, token);
+	}
 }
 
 void user_interface_t::run_command()

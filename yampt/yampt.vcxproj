@@ -171,6 +171,7 @@
     <ClCompile Include="model\dict_creator_base_ordered.cpp" />
     <ClCompile Include="model\esm_converter.cpp" />
     <ClCompile Include="model\script_parser.cpp" />
+    <ClCompile Include="model\scdt_patcher.cpp" />
     <ClCompile Include="model\translation_engine.cpp" />
     <ClCompile Include="utility\tools.cpp" />
     <ClCompile Include="interface\user_interface.cpp" />
@@ -187,6 +188,7 @@
     <ClInclude Include="model\dict_kind.hpp" />
     <ClInclude Include="model\esm_converter.hpp" />
     <ClInclude Include="model\script_parser.hpp" />
+    <ClInclude Include="model\scdt_patcher.hpp" />
     <ClInclude Include="model\translation_engine.hpp" />
     <ClInclude Include="utility\tools.hpp" />
     <ClInclude Include="utility\includes.hpp" />

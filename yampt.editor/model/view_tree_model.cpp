@@ -45,8 +45,8 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 	const bool is_cell = (record_type_ == "CELL");
 	const bool is_leveled = (record_type_ == "LEVI" || record_type_ == "LEVC");
 	const bool is_faction = (record_type_ == "FACT");
-	const bool is_container = (record_type_ == "CONT" || record_type_ == "CREA" ||
-	                           record_type_ == "NPC_" || record_type_ == "BSGN");
+	const bool is_container =
+	    (record_type_ == "CONT" || record_type_ == "CREA" || record_type_ == "NPC_" || record_type_ == "BSGN");
 
 	if (is_cell)
 		set_record_cell(context);
@@ -68,8 +68,8 @@ size_t view_tree_model_t::setup_columns(plugin_scan_t & scan, const conflict_ent
 	for (const auto & ver : entry.versions)
 	{
 		char label_buf[64];
-		std::snprintf(label_buf, sizeof(label_buf), "[%02X] %s",
-		              ver.plugin_idx, scan.plugin_filename(ver.plugin_idx).c_str());
+		std::snprintf(
+		    label_buf, sizeof(label_buf), "[%02X] %s", ver.plugin_idx, scan.plugin_filename(ver.plugin_idx).c_str());
 		column_names_.push_back(label_buf);
 		plugin_conflict_this_.push_back(ver.status);
 		column_plugin_indices_.push_back(ver.plugin_idx);
@@ -77,8 +77,7 @@ size_t view_tree_model_t::setup_columns(plugin_scan_t & scan, const conflict_ent
 	return entry.versions.size();
 }
 
-void view_tree_model_t::setup_merge_column(
-    plugin_scan_t & scan, const conflict_entry_t & entry, size_t & col_count)
+void view_tree_model_t::setup_merge_column(plugin_scan_t & scan, const conflict_entry_t & entry, size_t & col_count)
 {
 	if (!scan.has_merge())
 		return;
@@ -103,8 +102,7 @@ void view_tree_model_t::setup_merge_column(
 	}
 
 	char label_buf[64];
-	std::snprintf(label_buf, sizeof(label_buf), "[%02X] %s *",
-	              merge_idx, scan.plugin_filename(merge_idx).c_str());
+	std::snprintf(label_buf, sizeof(label_buf), "[%02X] %s *", merge_idx, scan.plugin_filename(merge_idx).c_str());
 	column_names_.push_back(label_buf);
 	plugin_conflict_this_.push_back(conflict_this_t::unknown);
 	column_plugin_indices_.push_back(merge_idx);
@@ -186,7 +184,9 @@ void view_tree_model_t::build_header_row(plugin_scan_t & scan, const conflict_en
 }
 
 void view_tree_model_t::load_sub_records(
-    plugin_scan_t & scan, const conflict_entry_t & entry, record_context_t & context)
+    plugin_scan_t & scan,
+    const conflict_entry_t & entry,
+    record_context_t & context)
 {
 	for (const auto & ver : entry.versions)
 	{

@@ -1,6 +1,79 @@
 #include "script_parser.hpp"
 #include <regex>
 
+namespace {
+
+size_t find_whole_word(const std::string & text_line, const std::string & keyword)
+{
+	auto is_word_char = [](char value) { return std::isalnum(static_cast<unsigned char>(value)) || value == '_'; };
+
+	size_t search_from = 0;
+	while (true)
+	{
+		const auto found_pos = text_line.find(keyword, search_from);
+		if (found_pos == std::string::npos)
+			return std::string::npos;
+
+		if (found_pos > 0 && is_word_char(text_line[found_pos - 1]))
+		{
+			search_from = found_pos + 1;
+			continue;
+		}
+
+		const auto after_pos = found_pos + keyword.size();
+		if (after_pos < text_line.size() && is_word_char(text_line[after_pos]))
+		{
+			search_from = found_pos + 1;
+			continue;
+		}
+
+		return found_pos;
+	}
+}
+
+struct token_result_t
+{
+	std::string value;
+	size_t offset = 0;
+	bool found = false;
+};
+
+token_result_t extract_token_at(const std::string & text_input, const int position)
+{
+	static const std::regex token_regex("([\\w\\.\\-\\xD1]+|\".*?\")", std::regex::optimize);
+
+	std::sregex_iterator it_current(text_input.begin(), text_input.end(), token_regex);
+	std::sregex_iterator it_end;
+	std::smatch match_result;
+
+	int counter = -1;
+	while (it_current != it_end && counter != position)
+	{
+		match_result = *it_current;
+		++it_current;
+		++counter;
+	}
+
+	if (counter != position || match_result.empty())
+		return {};
+
+	return { match_result[1].str(), static_cast<size_t>(match_result.position(1)), true };
+}
+
+std::string strip_quotes(const std::string & text_input)
+{
+	static const std::regex quote_regex("\"(.*?)\"", std::regex::optimize);
+
+	std::smatch match_result;
+	std::regex_search(text_input, match_result, quote_regex);
+	if (!match_result.empty())
+		return match_result[1].str();
+
+	return text_input;
+}
+
+} // namespace
+
 script_parser_t::script_parser_t(
     const tools_t::rec_type_t type,
     const dict_merger_t & merger,
@@ -14,8 +87,10 @@ script_parser_t::script_parser_t(
     , file_name(file_name)
     , old_script(old_script)
     , old_scdt(old_scdt)
-    , new_scdt(old_scdt)
 {
+	if (type == tools_t::rec_type_t::sctx && !old_scdt.empty())
+		m_patcher = std::make_unique<scdt_patcher_t>(old_scdt);
+
 	convert_script();
 	trim_last_new_line_chars();
 }
@@ -95,27 +170,9 @@ void script_parser_t::convert_line(
     const int pos_in_expression,
     const tools_t::rec_type_t text_type)
 {
-	auto is_word_char = [](char c) { return std::isalnum(static_cast<unsigned char>(c)) || c == '_'; };
-
-	size_t search_from = 0;
-	while (true)
-	{
-		pos = line_lc.find(keyword, search_from);
-		if (pos == std::string::npos)
-			return;
-
-		if (pos > 0 && is_word_char(line_lc[pos - 1]))
-		{
-			search_from = pos + 1;
-			continue;
-		}
-		if (pos + keyword.size() < line_lc.size() && is_word_char(line_lc[pos + keyword.size()]))
-		{
-			search_from = pos + 1;
-			continue;
-		}
-		break;
-	}
+	pos = find_whole_word(line_lc, keyword);
+	if (pos == std::string::npos)
+		return;
 
 	if (line.size() == keyword.size())
 		return;
@@ -154,43 +211,29 @@ void script_parser_t::trim_line()
 
 void script_parser_t::extract_text(const int pos_in_expression)
 {
-	std::regex r1("([\\w\\.\\-\\xD1]+|\".*?\")", std::regex::optimize);
-	std::sregex_iterator next(old_text.begin(), old_text.end(), r1);
-	std::sregex_iterator end;
-	std::smatch found;
-
-	int ctr = -1;
-	while (next != end && ctr != pos_in_expression)
-	{
-		found = *next;
-		next++;
-		ctr++;
-	}
-
-	if (ctr != pos_in_expression || found.empty())
+	const auto result = extract_token_at(old_text, pos_in_expression);
+	if (!result.found)
 	{
 		tools_t::add_log(
 		    "[warning] extract_text: expected parameter at position " + std::to_string(pos_in_expression) +
-		        " but only found " + std::to_string(ctr + 1) + " token(s) in: " + old_text + "\r\n",
+		        " in: " + old_text + "\r\n",
 		    true);
 		error = true;
 		return;
 	}
 
-	old_text = found[1].str();
-	pos += found.position(1);
+	old_text = result.value;
+	pos += result.offset;
 
 	tools_t::add_log("2: " + old_text + "\r\n", true);
 }
 
 void script_parser_t::remove_quotes()
 {
-	std::regex r("\"(.*?)\"", std::regex::optimize);
-	std::smatch found;
-	std::regex_search(old_text, found, r);
-	if (!found.empty())
+	const auto stripped = strip_quotes(old_text);
+	if (stripped != old_text)
 	{
-		old_text = found[1].str();
+		old_text = stripped;
 		pos += 1;
 	}
 
@@ -251,84 +294,24 @@ void script_parser_t::convert_text_in_compiled(const bool is_getpccell)
 	if (type != tools_t::rec_type_t::sctx)
 		return;
 
-	if (new_scdt.empty())
+	if (!m_patcher || m_patcher->is_empty())
 	{
 		tools_t::add_log("[error] SCDT is empty\r\n", true);
 		error = true;
 		return;
 	}
 
-	pos_c = new_scdt.find(old_text, pos_c);
-	if (pos_c == std::string::npos)
+	const auto result = m_patcher->apply_text_patch(old_text, new_text, is_getpccell);
+
+	if (result.had_false_positive)
+	{
+		tools_t::add_log("[warning] false positive in " + script_name + " for: " + old_text + "\r\n", true);
+	}
+
+	if (!result.success)
 	{
 		tools_t::add_log("[error] not found in SCDT\r\n", true);
 		error = true;
-		return;
-	}
-
-	size_t old_size = tools_t::convert_string_byte_array_to_uint(new_scdt.substr(pos_c - 1, 1));
-
-	/* wtf! Sometimes old text can be null terminated */
-	while (old_size != old_text.size() && old_size != old_text.size() + 1)
-	{
-		tools_t::add_log(
-		    "[warning] " + std::to_string(old_size) + " != " + std::to_string(old_text.size()) + " " + old_text +
-		        " false positive in " + script_name + "\r\n",
-		    true);
-		error = true;
-
-		pos_c += old_text.size();
-		pos_c = new_scdt.find(old_text, pos_c);
-
-		if (pos_c == std::string::npos)
-		{
-			tools_t::add_log("[error] not found in SCDT\r\n", true);
-			error = true;
-			return;
-		}
-
-		old_size = tools_t::convert_string_byte_array_to_uint(new_scdt.substr(pos_c - 1, 1));
-	}
-
-	pos_c -= 1;
-	new_scdt.erase(pos_c, 1);
-	new_scdt.insert(pos_c, tools_t::convert_uint_to_string_byte_array(new_text.size()).substr(0, 1));
-	pos_c += 1;
-	new_scdt.erase(pos_c, old_text.size());
-	new_scdt.insert(pos_c, new_text);
-
-	if (is_getpccell)
-	{
-		/* additional getpccell size byte determines
-		   how many bytes from that byte to the end of expression
-		 */
-		size_t end_of_expr;
-		size_t expr_size;
-
-		if (new_scdt.substr(pos_c + new_text.size(), 1) != " ")
-		{
-			/* if expression ends exactly when inner text ends */
-			end_of_expr = pos_c + new_text.size();
-			pos_c = new_scdt.rfind('X', pos_c) - 2;
-			expr_size = end_of_expr - pos_c;
-		}
-		else
-		{
-			/* if expression ends with equals or inequal signs */
-			end_of_expr = pos_c + new_text.size();
-			while (end_of_expr < new_scdt.size() && new_scdt[end_of_expr] != '\0')
-				end_of_expr++;
-			pos_c = new_scdt.rfind('X', pos_c) - 2;
-			expr_size = end_of_expr - pos_c - 1;
-		}
-
-		new_scdt.erase(pos_c, 1);
-		new_scdt.insert(pos_c, tools_t::convert_uint_to_string_byte_array(expr_size).substr(0, 1));
-		pos_c += expr_size;
-	}
-	else
-	{
-		pos_c += new_text.size();
 	}
 }
 
@@ -388,7 +371,7 @@ void script_parser_t::convert_message_in_compiled()
 	if (type != tools_t::rec_type_t::sctx)
 		return;
 
-	if (new_scdt.empty())
+	if (!m_patcher || m_patcher->is_empty())
 	{
 		tools_t::add_log("[error] SCDT is empty\r\n", true);
 		error = true;
@@ -405,54 +388,17 @@ void script_parser_t::convert_message_in_compiled()
 		return;
 	}
 
-	for (size_t i = 0; i < splitted_line.size(); i++)
+	for (auto & segment : splitted_line)
+		replace_vertical_lines_by_new_line(segment);
+
+	for (auto & segment : splitted_new_line)
+		replace_vertical_lines_by_new_line(segment);
+
+	const auto result = m_patcher->apply_message_patch(splitted_line, splitted_new_line);
+	if (!result.success)
 	{
-		replace_vertical_lines_by_new_line(splitted_line[i]);
-		replace_vertical_lines_by_new_line(splitted_new_line[i]);
-
-		pos_c = new_scdt.find(splitted_line[i], pos_c);
-		if (pos_c == std::string::npos)
-		{
-			tools_t::add_log("[error] message not found in SCDT\r\n", true);
-			error = true;
-			return;
-		}
-
-		if (splitted_line[i] == splitted_new_line[i])
-		{
-			pos_c += splitted_line[i].size();
-			continue;
-		}
-
-		if (splitted_line[i] == " " || splitted_line[i] == "\t")
-		{
-			tools_t::add_log("[error] message is one whitespace character\r\n", true);
-			error = true;
-			return;
-		}
-
-		if (i == 0)
-		{
-			pos_c -= 2;
-			new_scdt.erase(pos_c, 2);
-			new_scdt.insert(
-			    pos_c, tools_t::convert_uint_to_string_byte_array(splitted_new_line[i].size()).substr(0, 2));
-			pos_c += 2;
-			new_scdt.erase(pos_c, splitted_line[i].size());
-			new_scdt.insert(pos_c, splitted_new_line[i]);
-			pos_c += splitted_new_line[i].size();
-		}
-		else
-		{
-			pos_c -= 1;
-			new_scdt.erase(pos_c, 1);
-			new_scdt.insert(
-			    pos_c, tools_t::convert_uint_to_string_byte_array(splitted_new_line[i].size() + 1).substr(0, 1));
-			pos_c += 1;
-			new_scdt.erase(pos_c, splitted_line[i].size());
-			new_scdt.insert(pos_c, splitted_new_line[i]);
-			pos_c += splitted_new_line[i].size();
-		}
+		tools_t::add_log("[error] message not found in SCDT\r\n", true);
+		error = true;
 	}
 }
 
@@ -506,7 +452,8 @@ void script_parser_t::dump_error()
 		    "\r\n----------------------------------------------------------"
 		    "\r\n",
 		    true);
-		tools_t::add_log(tools_t::replace_non_readable_chars_with_dot(new_scdt), true);
+		if (m_patcher)
+			tools_t::add_log(tools_t::replace_non_readable_chars_with_dot(m_patcher->get_scdt()), true);
 	}
 	tools_t::add_log("\r\n----------------------------------------------------------\r\n", true);
 	tools_t::add_log(old_script, true);

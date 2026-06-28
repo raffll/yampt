@@ -28,7 +28,8 @@ void cleanup_file(const std::string & path)
 
 TEST_CASE("yaml_l10n_reader_t::load, simple key-value pairs", "[i]")
 {
-	const auto path = create_temp_yaml("yaml_reader_simple.yaml",
+	const auto path = create_temp_yaml(
+	    "yaml_reader_simple.yaml",
 	    "greeting: Hello\n"
 	    "farewell: Goodbye\n");
 
@@ -47,7 +48,8 @@ TEST_CASE("yaml_l10n_reader_t::load, simple key-value pairs", "[i]")
 
 TEST_CASE("yaml_l10n_reader_t::load, block scalar with pipe", "[i]")
 {
-	const auto path = create_temp_yaml("yaml_reader_block.yaml",
+	const auto path = create_temp_yaml(
+	    "yaml_reader_block.yaml",
 	    "description: |\n"
 	    "  First line\n"
 	    "  Second line\n"
@@ -68,7 +70,8 @@ TEST_CASE("yaml_l10n_reader_t::load, block scalar with pipe", "[i]")
 
 TEST_CASE("yaml_l10n_reader_t::load, pipe-minus block scalar", "[i]")
 {
-	const auto path = create_temp_yaml("yaml_reader_strip.yaml",
+	const auto path = create_temp_yaml(
+	    "yaml_reader_strip.yaml",
 	    "message: |-\n"
 	    "  Hello world\n"
 	    "  End of message\n"
@@ -87,7 +90,8 @@ TEST_CASE("yaml_l10n_reader_t::load, pipe-minus block scalar", "[i]")
 
 TEST_CASE("yaml_l10n_reader_t::load, quoted strings", "[i]")
 {
-	const auto path = create_temp_yaml("yaml_reader_quoted.yaml",
+	const auto path = create_temp_yaml(
+	    "yaml_reader_quoted.yaml",
 	    "title: \"A quoted value\"\n"
 	    "plain: unquoted value\n");
 
@@ -106,7 +110,8 @@ TEST_CASE("yaml_l10n_reader_t::load, quoted strings", "[i]")
 
 TEST_CASE("yaml_l10n_reader_t::load, preserves key order", "[i]")
 {
-	const auto path = create_temp_yaml("yaml_reader_order.yaml",
+	const auto path = create_temp_yaml(
+	    "yaml_reader_order.yaml",
 	    "zebra: last\n"
 	    "alpha: first\n"
 	    "middle: center\n");
@@ -125,11 +130,13 @@ TEST_CASE("yaml_l10n_reader_t::load, preserves key order", "[i]")
 
 TEST_CASE("yaml_l10n_reader_t::load, source and target files", "[i]")
 {
-	const auto source_path = create_temp_yaml("yaml_reader_source.yaml",
+	const auto source_path = create_temp_yaml(
+	    "yaml_reader_source.yaml",
 	    "greeting: Hello\n"
 	    "farewell: Bye\n");
 
-	const auto target_path = create_temp_yaml("yaml_reader_target.yaml",
+	const auto target_path = create_temp_yaml(
+	    "yaml_reader_target.yaml",
 	    "greeting: Hallo\n"
 	    "farewell: Tschuss\n");
 

@@ -11,6 +11,7 @@ public:
 
 private:
 	void parse_command_line();
+	void collect_argument_value(const std::string & command, const std::string & value);
 	void run_command();
 
 	void make_dict_();

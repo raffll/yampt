@@ -123,7 +123,6 @@ main_window_t::main_window_t(QWidget * parent)
 	}
 }
 
-
 void main_window_t::set_unsaved_changes(bool dirty)
 {
 	if (has_unsaved_changes_ == dirty)
@@ -345,12 +344,8 @@ void main_window_t::rebuild_table_yaml(document_t * target_doc)
 
 void main_window_t::rebuild_table_dict(dict_document_t * dict_doc)
 {
-	const table_filter_params_t filter_params{
-		type_filter_,
-		filter_tree_->get_active_sub_types(),
-		status_filter_,
-		search_engine_,
-		type_filter_solo_
+	const table_filter_params_t filter_params {
+		type_filter_, filter_tree_->get_active_sub_types(), status_filter_, search_engine_, type_filter_solo_
 	};
 
 	auto result = build_filtered_rows(dict_doc->data(), filter_params);
@@ -430,8 +425,7 @@ void main_window_t::apply_translation_highlights(const table_row_t * row_data)
 	const highlight_config_t config { &annotations, false, highlight_sort_policy_t::hyperlink_first };
 	auto highlights = find_annotation_highlights(current_text, config);
 
-	extra_sel_translation_.annotations = build_highlight_selections(
-	    editor_panel_->translation_editor(), highlights);
+	extra_sel_translation_.annotations = build_highlight_selections(editor_panel_->translation_editor(), highlights);
 
 	extra_sel_translation_.grammar = grammar_check_->isChecked()
 	                                     ? grammar_checker_.check(editor_panel_->translation_editor(), row_data->type)
@@ -518,7 +512,10 @@ void main_window_t::commit_dict_edit(
 }
 
 // irreducible: 3 params required — document pointer per extraction constraint + row context + new value
-void main_window_t::commit_yaml_edit(document_t * target_doc, const table_row_t * row_data, const std::string & new_text_str)
+void main_window_t::commit_yaml_edit(
+    document_t * target_doc,
+    const table_row_t * row_data,
+    const std::string & new_text_str)
 {
 	target_doc->commit_edit(row_data->type, row_data->record_index, new_text_str);
 	table_model_->update_row(editor_controller_.current_row(), new_text_str, "in_progress");
@@ -623,8 +620,8 @@ void main_window_t::load_record(int row)
 	const highlight_config_t trans_config { &annotations, false, highlight_sort_policy_t::length_first };
 	auto trans_highlights = find_annotation_highlights(translation_text_lower, trans_config);
 
-	extra_sel_translation_.annotations = build_highlight_selections(
-	    editor_panel_->translation_editor(), trans_highlights);
+	extra_sel_translation_.annotations =
+	    build_highlight_selections(editor_panel_->translation_editor(), trans_highlights);
 	extra_sel_translation_.grammar = grammar_check_->isChecked()
 	                                     ? grammar_checker_.check(editor_panel_->translation_editor(), row_data->type)
 	                                     : QList<QTextEdit::ExtraSelection> {};
@@ -970,12 +967,8 @@ void main_window_t::update_status_counts()
 	if (!dict_doc)
 		return;
 
-	const table_filter_params_t filter_params{
-		type_filter_,
-		filter_tree_->get_active_sub_types(),
-		status_filter_,
-		search_engine_,
-		type_filter_solo_
+	const table_filter_params_t filter_params {
+		type_filter_, filter_tree_->get_active_sub_types(), status_filter_, search_engine_, type_filter_solo_
 	};
 
 	auto result = build_filtered_rows(dict_doc->data(), filter_params);
@@ -1216,12 +1209,7 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
 			return;
 
 		result = executor_.make_base(
-		    plugin_path,
-		    params->native_path,
-		    params->foreign_lang,
-		    params->native_lang,
-		    nullptr,
-		    params->base_mode);
+		    plugin_path, params->native_path, params->foreign_lang, params->native_lang, nullptr, params->base_mode);
 		break;
 	}
 	case plugin_op_t::convert:

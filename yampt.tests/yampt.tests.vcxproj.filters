@@ -29,11 +29,11 @@
     <ClCompile Include="tests.find_replace_service.cpp" />
     <ClCompile Include="tests.sidebar_model.cpp" />
     <ClCompile Include="tests.yaml_l10n_reader.cpp" />
-    <ClCompile Include="tests.editor_tab_parsing.cpp" />
     <ClCompile Include="tests.syntax_highlighter.cpp" />
     <ClCompile Include="tests.editor_controller.cpp" />
     <ClCompile Include="tests.display_helpers.cpp" />
     <ClCompile Include="tests.profile_reader.cpp" />
+    <ClCompile Include="tests.scdt_patcher.cpp" />
     <ClCompile Include="..\yampt.translator\controller\editor_config.cpp" />
     <ClCompile Include="..\yampt.translator\model\table_builder.cpp" />
     <ClCompile Include="..\yampt.translator\controller\search_engine.cpp" />
@@ -66,6 +66,9 @@
       <Filter>yampt</Filter>
     </ClCompile>
     <ClCompile Include="..\yampt\model\script_parser.cpp">
+      <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\yampt\model\scdt_patcher.cpp">
       <Filter>yampt</Filter>
     </ClCompile>
     <ClCompile Include="..\yampt\model\esm_converter.cpp">
@@ -129,6 +132,9 @@
       <Filter>yampt</Filter>
     </ClInclude>
     <ClInclude Include="..\yampt\model\script_parser.hpp">
+      <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\yampt\model\scdt_patcher.hpp">
       <Filter>yampt</Filter>
     </ClInclude>
     <ClInclude Include="..\yampt\io\json_reader.hpp">

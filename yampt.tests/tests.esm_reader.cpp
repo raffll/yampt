@@ -38,8 +38,8 @@ TEST_CASE("esm_reader_t::select_record, resets key and value", "[i]")
 	auto tes3_body = make_sub_record("HEDR", std::string(300, '\0'));
 	auto tes3 = make_record("TES3", tes3_body);
 
-	auto gmst_body = make_sub_record("NAME", std::string("sWelcome\0", 9)) +
-	                 make_sub_record("STRV", std::string("Hello\0", 6));
+	auto gmst_body =
+	    make_sub_record("NAME", std::string("sWelcome\0", 9)) + make_sub_record("STRV", std::string("Hello\0", 6));
 	auto gmst = make_record("GMST", gmst_body);
 
 	std::string file_content = tes3 + gmst;
@@ -74,10 +74,8 @@ TEST_CASE("esm_reader_t::set_next_value, counter increments", "[i]")
 	auto rnam2 = std::string("Rank Two\0", 9);
 	auto rnam3 = std::string("Rank Three\0", 11);
 
-	auto fact_body = make_sub_record("NAME", std::string("Fighters Guild\0", 15)) +
-	                 make_sub_record("RNAM", rnam1) +
-	                 make_sub_record("RNAM", rnam2) +
-	                 make_sub_record("RNAM", rnam3);
+	auto fact_body = make_sub_record("NAME", std::string("Fighters Guild\0", 15)) + make_sub_record("RNAM", rnam1) +
+	                 make_sub_record("RNAM", rnam2) + make_sub_record("RNAM", rnam3);
 	auto fact = make_record("FACT", fact_body);
 
 	std::string file_content = tes3 + fact;
@@ -114,8 +112,8 @@ TEST_CASE("esm_reader_t::set_key, independent of value state", "[i]")
 	auto tes3_body = make_sub_record("HEDR", std::string(300, '\0'));
 	auto tes3 = make_record("TES3", tes3_body);
 
-	auto gmst_body = make_sub_record("NAME", std::string("sSetting\0", 9)) +
-	                 make_sub_record("STRV", std::string("Value\0", 6));
+	auto gmst_body =
+	    make_sub_record("NAME", std::string("sSetting\0", 9)) + make_sub_record("STRV", std::string("Value\0", 6));
 	auto gmst = make_record("GMST", gmst_body);
 
 	std::string file_content = tes3 + gmst;
@@ -147,8 +145,7 @@ TEST_CASE("esm_reader_t::set_value, resets counter to zero", "[i]")
 	auto rnam1 = std::string("First\0", 6);
 	auto rnam2 = std::string("Second\0", 7);
 
-	auto fact_body = make_sub_record("NAME", std::string("Guild\0", 6)) +
-	                 make_sub_record("RNAM", rnam1) +
+	auto fact_body = make_sub_record("NAME", std::string("Guild\0", 6)) + make_sub_record("RNAM", rnam1) +
 	                 make_sub_record("RNAM", rnam2);
 	auto fact = make_record("FACT", fact_body);
 

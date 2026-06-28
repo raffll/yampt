@@ -130,7 +130,7 @@ static void sort_child_nodes(std::vector<sidebar_render_node_t> & nodes)
 	    nodes.begin(),
 	    nodes.end(),
 	    [](const sidebar_render_node_t & first, const sidebar_render_node_t & second)
-	    { return first.label < second.label; });
+	{ return first.label < second.label; });
 }
 
 struct tree_builder_t
@@ -196,9 +196,7 @@ static void populate_tree_from_entries(
 	}
 }
 
-static void assemble_root_nodes(
-    std::map<std::string, tree_builder_t> & roots_map,
-    sidebar_render_model_t & model)
+static void assemble_root_nodes(std::map<std::string, tree_builder_t> & roots_map, sidebar_render_model_t & model)
 {
 	for (auto & [root_path, root_builder] : roots_map)
 	{

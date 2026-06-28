@@ -617,7 +617,7 @@ void esm_converter_t::convert_scpt()
 			continue;
 
 		esm.set_value("SCDT");
-		old_scdt = esm.get_value().exist ? esm.get_value().content : std::string{};
+		old_scdt = esm.get_value().exist ? esm.get_value().content : std::string {};
 
 		esm.set_key("SCHD");
 		esm.set_value("SCTX");

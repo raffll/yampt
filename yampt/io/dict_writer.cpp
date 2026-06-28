@@ -46,6 +46,45 @@ static std::string escape_json(const std::string & s)
 	return result;
 }
 
+static void write_entry(std::ofstream & file, const tools_t::record_entry_t & entry, tools_t::rec_type_t type)
+{
+	file << "    {\n";
+	file << "      \"key\": \"" << escape_json(entry.key_text) << "\",\n";
+	file << "      \"old\": \"" << escape_json(entry.old_text) << "\",\n";
+	file << "      \"new\": \"" << escape_json(entry.new_text) << "\"";
+	file << ",\n";
+	file << "      \"status\": \"" << escape_json(entry.status) << "\"";
+
+	if (type == tools_t::rec_type_t::info)
+	{
+		if (!entry.speaker_name.empty())
+		{
+			file << ",\n";
+			file << "      \"speaker_name\": \"" << escape_json(entry.speaker_name) << "\"";
+		}
+		if (!entry.gender.empty())
+		{
+			file << ",\n";
+			file << "      \"gender\": \"" << escape_json(entry.gender) << "\"";
+		}
+	}
+
+	if (type == tools_t::rec_type_t::fnam && !entry.enchantment.empty())
+	{
+		file << ",\n";
+		file << "      \"enchantment\": \"" << escape_json(entry.enchantment) << "\"";
+	}
+
+	if (!entry.details.empty())
+	{
+		file << ",\n";
+		file << "      \"details\": \"" << escape_json(entry.details) << "\"";
+	}
+
+	file << "\n";
+	file << "    }";
+}
+
 void dict_writer_t::write(const tools_t::dict_t & dict, const std::string & path)
 {
 	tools_t::add_log("[info] writing \"" + path + "\"\r\n");
@@ -58,7 +97,6 @@ void dict_writer_t::write(const tools_t::dict_t & dict, const std::string & path
 	}
 
 	file << "{\n";
-
 	bool first_chapter = true;
 
 	for (const auto & [type, chapter] : dict)
@@ -72,48 +110,9 @@ void dict_writer_t::write(const tools_t::dict_t & dict, const std::string & path
 
 		file << "  \"" << tools_t::type_to_str(type) << "\": [\n";
 
-		bool is_info = (type == tools_t::rec_type_t::info);
-		bool is_fnam = (type == tools_t::rec_type_t::fnam);
-
 		for (size_t i = 0; i < chapter.records.size(); ++i)
 		{
-			const auto & entry = chapter.records[i];
-			file << "    {\n";
-			file << "      \"key\": \"" << escape_json(entry.key_text) << "\",\n";
-			file << "      \"old\": \"" << escape_json(entry.old_text) << "\",\n";
-			file << "      \"new\": \"" << escape_json(entry.new_text) << "\"";
-
-			file << ",\n";
-			file << "      \"status\": \"" << escape_json(entry.status) << "\"";
-
-			if (is_info)
-			{
-				if (!entry.speaker_name.empty())
-				{
-					file << ",\n";
-					file << "      \"speaker_name\": \"" << escape_json(entry.speaker_name) << "\"";
-				}
-				if (!entry.gender.empty())
-				{
-					file << ",\n";
-					file << "      \"gender\": \"" << escape_json(entry.gender) << "\"";
-				}
-			}
-
-			if (is_fnam && !entry.enchantment.empty())
-			{
-				file << ",\n";
-				file << "      \"enchantment\": \"" << escape_json(entry.enchantment) << "\"";
-			}
-
-			if (!entry.details.empty())
-			{
-				file << ",\n";
-				file << "      \"details\": \"" << escape_json(entry.details) << "\"";
-			}
-
-			file << "\n";
-			file << "    }";
+			write_entry(file, chapter.records[i], type);
 			if (i + 1 < chapter.records.size())
 				file << ",";
 			file << "\n";

@@ -3,6 +3,7 @@
 #include "../utility/includes.hpp"
 #include "../utility/tools.hpp"
 #include "dict_merger.hpp"
+#include "scdt_patcher.hpp"
 
 class script_parser_t
 {
@@ -16,7 +17,10 @@ public:
 
 	std::string get_new_scdt()
 	{
-		return new_scdt;
+		if (m_patcher)
+			return m_patcher->get_scdt();
+
+		return {};
 	}
 
 	script_parser_t(
@@ -52,7 +56,7 @@ private:
 	const std::string old_scdt;
 
 	std::string new_script;
-	std::string new_scdt;
+	std::unique_ptr<scdt_patcher_t> m_patcher;
 
 	bool is_done = false;
 	std::string line;
@@ -61,7 +65,6 @@ private:
 	std::string new_line;
 	std::string new_text;
 	size_t pos = 0;
-	size_t pos_c = 0;
 	size_t keyword_pos = 0;
 	std::string keyword;
 	bool error = false;

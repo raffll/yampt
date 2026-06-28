@@ -185,11 +185,11 @@ TEST_CASE("dict_writer_t + dict_reader_t, all statuses round-trip", "[i]")
 
 	tools_t::dict_t dict = tools_t::initialize_dict();
 	const std::vector<const char *> statuses = {
-		tools_t::status_t::translated,  tools_t::status_t::reused,      tools_t::status_t::untranslated,
-		tools_t::status_t::in_progress, tools_t::status_t::outdated,    tools_t::status_t::missing,
-		tools_t::status_t::duplicate,   tools_t::status_t::mismatch,    tools_t::status_t::adapted,
-		tools_t::status_t::changed,     tools_t::status_t::ambiguous,   tools_t::status_t::model,
-		tools_t::status_t::propagated,  tools_t::status_t::error,       tools_t::status_t::heuristic,
+		tools_t::status_t::translated,  tools_t::status_t::reused,    tools_t::status_t::untranslated,
+		tools_t::status_t::in_progress, tools_t::status_t::outdated,  tools_t::status_t::missing,
+		tools_t::status_t::duplicate,   tools_t::status_t::mismatch,  tools_t::status_t::adapted,
+		tools_t::status_t::changed,     tools_t::status_t::ambiguous, tools_t::status_t::model,
+		tools_t::status_t::propagated,  tools_t::status_t::error,     tools_t::status_t::heuristic,
 		tools_t::status_t::to_verify,
 	};
 

@@ -182,6 +182,7 @@ private:
 	fingerprint_index_t build_cell_fingerprint_index(esm_reader_t & esm_src);
 	fingerprint_index_t build_dial_inam_index(esm_reader_t & esm_src);
 	static std::string make_cell_fingerprint(esm_reader_t & esm_src);
+
 	struct match_result_t
 	{
 		int score;
@@ -228,9 +229,7 @@ private:
 	    const std::vector<std::string> & native_messages,
 	    const std::unordered_map<std::string, size_t> & schd_index);
 
-	void match_bnam_native_infos(
-	    const std::string & info_key,
-	    const std::vector<std::string> & native_messages);
+	void match_bnam_native_infos(const std::string & info_key, const std::vector<std::string> & native_messages);
 	void collect_bnam_missing_topics(const std::set<std::string> & matched_foreign_topics);
 
 	esm_reader_t esm;

@@ -23,7 +23,10 @@ document_t * session_t::open(const std::string & path)
 
 	auto extension = normalized.substr(dot_pos);
 	std::transform(
-	    extension.begin(), extension.end(), extension.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+	    extension.begin(),
+	    extension.end(),
+	    extension.begin(),
+	    [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
 
 	if (extension == ".esp" || extension == ".esm")
 		return handle_open_plugin(normalized);

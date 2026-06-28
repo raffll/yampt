@@ -4,6 +4,9 @@
     <Filter Include="external">
       <UniqueIdentifier>{B1000001-0000-0000-0000-000000000001}</UniqueIdentifier>
     </Filter>
+    <Filter Include="model">
+      <UniqueIdentifier>{B1000002-0000-0000-0000-000000000001}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -19,6 +22,9 @@
     <ClCompile Include="esm_converter.cpp" />
     <ClCompile Include="esm_reader.cpp" />
     <ClCompile Include="script_parser.cpp" />
+    <ClCompile Include="scdt_patcher.cpp">
+      <Filter>model</Filter>
+    </ClCompile>
     <ClCompile Include="user_interface.cpp" />
     <ClCompile Include="translation_engine.cpp" />
   </ItemGroup>
@@ -33,6 +39,9 @@
     <ClInclude Include="esm_converter.hpp" />
     <ClInclude Include="esm_reader.hpp" />
     <ClInclude Include="script_parser.hpp" />
+    <ClInclude Include="scdt_patcher.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
     <ClInclude Include="includes.hpp" />
     <ClInclude Include="json_reader.hpp" />
     <ClInclude Include="user_interface.hpp" />

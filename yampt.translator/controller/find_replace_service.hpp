@@ -54,7 +54,11 @@ private:
 		QString lower_query;
 	};
 
-	std::optional<search_params_t> build_search_params(const std::string & query, const std::string & replacement, bool case_sensitive, bool regex_mode);
+	std::optional<search_params_t> build_search_params(
+	    const std::string & query,
+	    const std::string & replacement,
+	    bool case_sensitive,
+	    bool regex_mode);
 	bool matches_query(const std::string & text_value, const search_params_t & params);
 	std::optional<std::string> apply_replacement(const std::string & source_text, const search_params_t & params);
 

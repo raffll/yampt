@@ -158,7 +158,8 @@ void model_downloader_t::connect_reply_signals(QNetworkReply * reply)
 	{
 		const auto & error_message = reply->errorString().toStdString();
 		if (on_progress_)
-			on_progress_("[error] network error " + std::to_string(static_cast<int>(code)) + ": " + error_message + "\r\n");
+			on_progress_(
+			    "[error] network error " + std::to_string(static_cast<int>(code)) + ": " + error_message + "\r\n");
 	});
 
 	connect(

@@ -36,7 +36,4 @@ struct table_filter_params_t
 	bool type_filter_solo;
 };
 
-table_build_result_t build_filtered_rows(
-    const tools_t::dict_t & data,
-    const table_filter_params_t & params);
-
+table_build_result_t build_filtered_rows(const tools_t::dict_t & data, const table_filter_params_t & params);

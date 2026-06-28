@@ -21,8 +21,9 @@ static std::string read_flag_value(const sub_record_view_t & sv, const field_def
 		return "";
 
 	uint32_t value = 0;
-	const size_t byte_count = (fdef.type == field_type_t::flags_u8)  ? 1 :
-	                          (fdef.type == field_type_t::flags_u16) ? 2 : 4;
+	const size_t byte_count = (fdef.type == field_type_t::flags_u8)    ? 1
+	                          : (fdef.type == field_type_t::flags_u16) ? 2
+	                                                                   : 4;
 	std::memcpy(&value, sv.data + fdef.offset, std::min(byte_count, sv.size - fdef.offset));
 	return (value & (1u << bit_index)) ? "1" : "0";
 }
@@ -136,9 +137,9 @@ void view_tree_model_t::decode_schema_children(
 	for (size_t field_idx = 0; field_idx < schema->field_count; ++field_idx)
 	{
 		const auto & fdef = schema->fields[field_idx];
-		const bool is_flags = (fdef.type == field_type_t::flags_u8 ||
-		                       fdef.type == field_type_t::flags_u16 ||
-		                       fdef.type == field_type_t::flags_u32);
+		const bool is_flags =
+		    (fdef.type == field_type_t::flags_u8 || fdef.type == field_type_t::flags_u16 ||
+		     fdef.type == field_type_t::flags_u32);
 
 		if (is_flags && fdef.flag_names && fdef.flag_count > 0)
 		{
@@ -198,8 +199,7 @@ void view_tree_model_t::decode_schema_children(
 			}
 
 			auto it_type = col_indices[col].find(slot.type);
-			if (it_type == col_indices[col].end() ||
-			    slot.occurrence >= static_cast<int>(it_type->second.size()))
+			if (it_type == col_indices[col].end() || slot.occurrence >= static_cast<int>(it_type->second.size()))
 			{
 				frow.values[col] = "";
 				continue;
@@ -250,8 +250,7 @@ void view_tree_model_t::decode_hex_children(
 			}
 
 			auto it_type = col_indices[col].find(slot.type);
-			if (it_type == col_indices[col].end() ||
-			    slot.occurrence >= static_cast<int>(it_type->second.size()))
+			if (it_type == col_indices[col].end() || slot.occurrence >= static_cast<int>(it_type->second.size()))
 			{
 				frow.values[col] = "";
 				continue;
@@ -289,9 +288,9 @@ void view_tree_model_t::decode_schema_children_ref(
 	for (size_t field_idx = 0; field_idx < schema->field_count; ++field_idx)
 	{
 		const auto & fdef = schema->fields[field_idx];
-		const bool is_flags = (fdef.type == field_type_t::flags_u8 ||
-		                       fdef.type == field_type_t::flags_u16 ||
-		                       fdef.type == field_type_t::flags_u32);
+		const bool is_flags =
+		    (fdef.type == field_type_t::flags_u8 || fdef.type == field_type_t::flags_u16 ||
+		     fdef.type == field_type_t::flags_u32);
 
 		if (is_flags && fdef.flag_names && fdef.flag_count > 0)
 		{
@@ -671,8 +670,7 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 					continue;
 				}
 
-				const auto sv = find_ref_sub_record(
-				    all_subs[col], col_refs[col], obj_idx, slot.type, slot.occurrence);
+				const auto sv = find_ref_sub_record(all_subs[col], col_refs[col], obj_idx, slot.type, slot.occurrence);
 
 				if (!sv.data)
 				{
@@ -697,8 +695,11 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 
 			const auto * schema = find_schema(record_type_, slot.type, first_size);
 			if (schema && first_data)
-				decode_schema_children_ref(row, schema, first_data, first_size, col_count, all_subs, col_refs, obj_idx, slot);
-			else if (first_data && first_size > 0 && !row.values.empty() && !row.values[0].empty() && row.values[0][0] == '<')
+				decode_schema_children_ref(
+				    row, schema, first_data, first_size, col_count, all_subs, col_refs, obj_idx, slot);
+			else if (
+			    first_data && first_size > 0 && !row.values.empty() && !row.values[0].empty() &&
+			    row.values[0][0] == '<')
 				decode_hex_children_ref(row, first_size, col_count, all_subs, col_refs, obj_idx, slot);
 
 			rows_.push_back(std::move(row));
@@ -732,7 +733,7 @@ static void build_col_indices_from_alignment(
 	}
 }
 
-template <typename Predicate>
+template<typename Predicate>
 static void build_non_excluded_slots(
     const std::vector<std::vector<sub_record_view_t>> & all_subs,
     size_t col_count,
@@ -808,7 +809,7 @@ static void append_single_slots(
 	}
 }
 
-template <typename Predicate>
+template<typename Predicate>
 static void build_non_excluded_indices(
     const std::vector<std::vector<sub_record_view_t>> & all_subs,
     size_t col_count,
@@ -1053,9 +1054,8 @@ void view_tree_model_t::collect_leveled_entries(record_context_t & context, slot
 		}
 	}
 
-	auto is_excluded = [](const sub_record_view_t & sv_rec) {
-		return (sv_rec.type == "INTV" && sv_rec.size == 2) || sv_rec.type == "INAM";
-	};
+	auto is_excluded = [](const sub_record_view_t & sv_rec)
+	{ return (sv_rec.type == "INTV" && sv_rec.size == 2) || sv_rec.type == "INAM"; };
 
 	build_non_excluded_slots(all_subs, col_count, is_excluded, build_ctx.unified_slots);
 	append_pair_slots(build_ctx.unified_slots, all_item_ids, "INTV", "INAM");
@@ -1094,9 +1094,8 @@ void view_tree_model_t::collect_faction_entries(record_context_t & context, slot
 		}
 	}
 
-	auto is_excluded = [](const sub_record_view_t & sv_rec) {
-		return (sv_rec.type == "INTV" && sv_rec.size == 4) || sv_rec.type == "ANAM";
-	};
+	auto is_excluded = [](const sub_record_view_t & sv_rec)
+	{ return (sv_rec.type == "INTV" && sv_rec.size == 4) || sv_rec.type == "ANAM"; };
 
 	build_non_excluded_slots(all_subs, col_count, is_excluded, build_ctx.unified_slots);
 	append_pair_slots(build_ctx.unified_slots, all_faction_names, "INTV", "ANAM");
@@ -1150,9 +1149,8 @@ void view_tree_model_t::collect_container_entries(record_context_t & context, sl
 		}
 	}
 
-	auto is_excluded = [](const sub_record_view_t & sv_rec) {
-		return (sv_rec.type == "NPCO" && sv_rec.size == 36) || (sv_rec.type == "NPCS" && sv_rec.size == 32);
-	};
+	auto is_excluded = [](const sub_record_view_t & sv_rec)
+	{ return (sv_rec.type == "NPCO" && sv_rec.size == 36) || (sv_rec.type == "NPCS" && sv_rec.size == 32); };
 	build_non_excluded_slots(all_subs, col_count, is_excluded, build_ctx.unified_slots);
 	append_single_slots(build_ctx.unified_slots, all_item_ids, "NPCO");
 	append_single_slots(build_ctx.unified_slots, all_spell_ids, "NPCS");

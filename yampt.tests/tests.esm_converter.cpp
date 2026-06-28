@@ -78,11 +78,7 @@ static void write_esm_file(const std::string & content, const std::string & path
 
 TEST_CASE("esm_converter_t::convert_cell, basic conversion", "[i]")
 {
-	auto merger = make_merger_with_entry(
-	    tools_t::rec_type_t::cell,
-	    "Balmora",
-	    "Balmora",
-	    "Balmora PL");
+	auto merger = make_merger_with_entry(tools_t::rec_type_t::cell, "Balmora", "Balmora", "Balmora PL");
 
 	auto cell_body = make_sub_record("NAME", std::string("Balmora\0", 8));
 	auto esm_content = make_tes3_record() + make_record("CELL", cell_body);
@@ -105,11 +101,7 @@ TEST_CASE("esm_converter_t::convert_cell, basic conversion", "[i]")
 
 TEST_CASE("esm_converter_t::convert_cell, empty name is skipped", "[i]")
 {
-	auto merger = make_merger_with_entry(
-	    tools_t::rec_type_t::cell,
-	    "",
-	    "",
-	    "Something");
+	auto merger = make_merger_with_entry(tools_t::rec_type_t::cell, "", "", "Something");
 
 	auto cell_body = make_sub_record("NAME", std::string("\0", 1));
 	auto esm_content = make_tes3_record() + make_record("CELL", cell_body);
@@ -130,14 +122,10 @@ TEST_CASE("esm_converter_t::convert_cell, empty name is skipped", "[i]")
 
 TEST_CASE("esm_converter_t::convert_fnam, basic conversion", "[i]")
 {
-	auto merger = make_merger_with_entry(
-	    tools_t::rec_type_t::fnam,
-	    "NPC_^fargoth",
-	    "Fargoth",
-	    "Fargoth PL");
+	auto merger = make_merger_with_entry(tools_t::rec_type_t::fnam, "NPC_^fargoth", "Fargoth", "Fargoth PL");
 
-	auto npc_body = make_sub_record("NAME", std::string("fargoth\0", 8)) +
-	                make_sub_record("FNAM", std::string("Fargoth\0", 8));
+	auto npc_body =
+	    make_sub_record("NAME", std::string("fargoth\0", 8)) + make_sub_record("FNAM", std::string("Fargoth\0", 8));
 	auto esm_content = make_tes3_record() + make_record("NPC_", npc_body);
 
 	const auto esm_path = get_temp_path("yampt_test_conv_fnam.esm");
@@ -156,14 +144,10 @@ TEST_CASE("esm_converter_t::convert_fnam, basic conversion", "[i]")
 
 TEST_CASE("esm_converter_t::convert_fnam, player record is skipped", "[i]")
 {
-	auto merger = make_merger_with_entry(
-	    tools_t::rec_type_t::fnam,
-	    "NPC_^player",
-	    "Player",
-	    "Gracz");
+	auto merger = make_merger_with_entry(tools_t::rec_type_t::fnam, "NPC_^player", "Player", "Gracz");
 
-	auto npc_body = make_sub_record("NAME", std::string("player\0", 7)) +
-	                make_sub_record("FNAM", std::string("Player\0", 7));
+	auto npc_body =
+	    make_sub_record("NAME", std::string("player\0", 7)) + make_sub_record("FNAM", std::string("Player\0", 7));
 	auto esm_content = make_tes3_record() + make_record("NPC_", npc_body);
 
 	const auto esm_path = get_temp_path("yampt_test_conv_fnam_player.esm");
@@ -182,14 +166,10 @@ TEST_CASE("esm_converter_t::convert_fnam, player record is skipped", "[i]")
 
 TEST_CASE("esm_converter_t::convert_gmst, string setting converted", "[i]")
 {
-	auto merger = make_merger_with_entry(
-	    tools_t::rec_type_t::gmst,
-	    "sWelcome",
-	    "Welcome",
-	    "Witaj");
+	auto merger = make_merger_with_entry(tools_t::rec_type_t::gmst, "sWelcome", "Welcome", "Witaj");
 
-	auto gmst_body = make_sub_record("NAME", std::string("sWelcome\0", 9)) +
-	                 make_sub_record("STRV", std::string("Welcome", 7));
+	auto gmst_body =
+	    make_sub_record("NAME", std::string("sWelcome\0", 9)) + make_sub_record("STRV", std::string("Welcome", 7));
 	auto esm_content = make_tes3_record() + make_record("GMST", gmst_body);
 
 	const auto esm_path = get_temp_path("yampt_test_conv_gmst.esm");
@@ -208,16 +188,11 @@ TEST_CASE("esm_converter_t::convert_gmst, string setting converted", "[i]")
 
 TEST_CASE("esm_converter_t::convert_gmst, non-string setting is skipped", "[i]")
 {
-	auto merger = make_merger_with_entry(
-	    tools_t::rec_type_t::gmst,
-	    "iMaxLevel",
-	    "100",
-	    "200");
+	auto merger = make_merger_with_entry(tools_t::rec_type_t::gmst, "iMaxLevel", "100", "200");
 
 	std::string int_value(4, '\0');
 	int_value[0] = 100;
-	auto gmst_body = make_sub_record("NAME", std::string("iMaxLevel\0", 10)) +
-	                 make_sub_record("INTV", int_value);
+	auto gmst_body = make_sub_record("NAME", std::string("iMaxLevel\0", 10)) + make_sub_record("INTV", int_value);
 	auto esm_content = make_tes3_record() + make_record("GMST", gmst_body);
 
 	const auto esm_path = get_temp_path("yampt_test_conv_gmst_int.esm");
@@ -235,15 +210,10 @@ TEST_CASE("esm_converter_t::convert_gmst, non-string setting is skipped", "[i]")
 
 TEST_CASE("esm_converter_t::convert_dial, topic type converted", "[i]")
 {
-	auto merger = make_merger_with_entry(
-	    tools_t::rec_type_t::dial,
-	    "background",
-	    "background",
-	    "tlo");
+	auto merger = make_merger_with_entry(tools_t::rec_type_t::dial, "background", "background", "tlo");
 
 	std::string dial_type(1, '\0');
-	auto dial_body = make_sub_record("NAME", std::string("background\0", 11)) +
-	                 make_sub_record("DATA", dial_type);
+	auto dial_body = make_sub_record("NAME", std::string("background\0", 11)) + make_sub_record("DATA", dial_type);
 	auto esm_content = make_tes3_record() + make_record("DIAL", dial_body);
 
 	const auto esm_path = get_temp_path("yampt_test_conv_dial.esm");
@@ -262,15 +232,10 @@ TEST_CASE("esm_converter_t::convert_dial, topic type converted", "[i]")
 
 TEST_CASE("esm_converter_t::convert_dial, journal type is skipped", "[i]")
 {
-	auto merger = make_merger_with_entry(
-	    tools_t::rec_type_t::dial,
-	    "quest_entry",
-	    "quest_entry",
-	    "wpis_zadania");
+	auto merger = make_merger_with_entry(tools_t::rec_type_t::dial, "quest_entry", "quest_entry", "wpis_zadania");
 
 	std::string journal_type(1, '\x04');
-	auto dial_body = make_sub_record("NAME", std::string("quest_entry\0", 12)) +
-	                 make_sub_record("DATA", journal_type);
+	auto dial_body = make_sub_record("NAME", std::string("quest_entry\0", 12)) + make_sub_record("DATA", journal_type);
 	auto esm_content = make_tes3_record() + make_record("DIAL", dial_body);
 
 	const auto esm_path = get_temp_path("yampt_test_conv_dial_journal.esm");
@@ -288,19 +253,14 @@ TEST_CASE("esm_converter_t::convert_dial, journal type is skipped", "[i]")
 
 TEST_CASE("esm_converter_t::convert_info, preceding DIAL sets key prefix", "[i]")
 {
-	auto merger = make_merger_with_entry(
-	    tools_t::rec_type_t::info,
-	    "T^background^info_001",
-	    "Hello there",
-	    "Witaj");
+	auto merger = make_merger_with_entry(tools_t::rec_type_t::info, "T^background^info_001", "Hello there", "Witaj");
 
 	std::string topic_type(1, '\0');
-	auto dial_body = make_sub_record("NAME", std::string("background\0", 11)) +
-	                 make_sub_record("DATA", topic_type);
+	auto dial_body = make_sub_record("NAME", std::string("background\0", 11)) + make_sub_record("DATA", topic_type);
 	auto dial_record = make_record("DIAL", dial_body);
 
-	auto info_body = make_sub_record("INAM", std::string("info_001\0", 9)) +
-	                 make_sub_record("NAME", std::string("Hello there", 11));
+	auto info_body =
+	    make_sub_record("INAM", std::string("info_001\0", 9)) + make_sub_record("NAME", std::string("Hello there", 11));
 	auto info_record = make_record("INFO", info_body);
 
 	auto esm_content = make_tes3_record() + dial_record + info_record;
@@ -321,19 +281,14 @@ TEST_CASE("esm_converter_t::convert_info, preceding DIAL sets key prefix", "[i]"
 
 TEST_CASE("esm_converter_t::convert_info, marks DIAL as modified", "[i]")
 {
-	auto merger = make_merger_with_entry(
-	    tools_t::rec_type_t::info,
-	    "T^greetings^resp_42",
-	    "Good day",
-	    "Dzien dobry");
+	auto merger = make_merger_with_entry(tools_t::rec_type_t::info, "T^greetings^resp_42", "Good day", "Dzien dobry");
 
 	std::string topic_type(1, '\0');
-	auto dial_body = make_sub_record("NAME", std::string("greetings\0", 10)) +
-	                 make_sub_record("DATA", topic_type);
+	auto dial_body = make_sub_record("NAME", std::string("greetings\0", 10)) + make_sub_record("DATA", topic_type);
 	auto dial_record = make_record("DIAL", dial_body);
 
-	auto info_body = make_sub_record("INAM", std::string("resp_42\0", 8)) +
-	                 make_sub_record("NAME", std::string("Good day", 8));
+	auto info_body =
+	    make_sub_record("INAM", std::string("resp_42\0", 8)) + make_sub_record("NAME", std::string("Good day", 8));
 	auto info_record = make_record("INFO", info_body);
 
 	auto esm_content = make_tes3_record() + dial_record + info_record;
@@ -353,9 +308,10 @@ TEST_CASE("esm_converter_t::convert_info, marks DIAL as modified", "[i]")
 
 TEST_CASE("esm_converter_t::convert_scpt, SCTX and SCDT patched", "[i]")
 {
-	auto merger = make_merger_with_entries({
-	    { tools_t::rec_type_t::cell, "Balmora", "Balmora", "Balmora PL" },
-	});
+	auto merger = make_merger_with_entries(
+	    {
+	        { tools_t::rec_type_t::cell, "Balmora", "Balmora", "Balmora PL" },
+	    });
 
 	std::string old_sctx = "GetPCCell \"Balmora\"";
 
@@ -372,9 +328,8 @@ TEST_CASE("esm_converter_t::convert_scpt, SCTX and SCDT patched", "[i]")
 	schd_content.erase(44, 4);
 	schd_content.insert(44, tools_t::convert_uint_to_string_byte_array(old_scdt.size()));
 
-	auto scpt_body = make_sub_record("SCHD", schd_content) +
-	                 make_sub_record("SCDT", old_scdt) +
-	                 make_sub_record("SCTX", old_sctx);
+	auto scpt_body =
+	    make_sub_record("SCHD", schd_content) + make_sub_record("SCDT", old_scdt) + make_sub_record("SCTX", old_sctx);
 	auto esm_content = make_tes3_record() + make_record("SCPT", scpt_body);
 
 	const auto esm_path = get_temp_path("yampt_test_conv_scpt.esm");

@@ -2,55 +2,53 @@
 
 esm_reader_t::esm_reader_t(const std::string & path)
 {
-	std::string content = tools_t::read_file(path);
+	const auto & content = tools_t::read_file(path);
 
 	if (!content.empty())
 		split_file(content, path);
 
-	name.set_name(path);
+	name_.set_name(path);
 	set_time(path);
 }
 
 void esm_reader_t::split_file(const std::string & content, const std::string & path)
 {
-	if (content.size() > 4 && content.substr(0, 4) == "TES3")
-	{
-		try
-		{
-			size_t rec_beg = 0;
-			size_t rec_size = 0;
-			size_t rec_end = 0;
-			while (rec_end != content.size())
-			{
-				rec_beg = rec_end;
-				rec_size = tools_t::convert_string_byte_array_to_uint(content.substr(rec_beg + 4, 4)) + 16;
-				rec_end = rec_beg + rec_size;
-
-				if (rec_end > content.size())
-				{
-					tools_t::add_log(
-					    "[warning] record at offset " + std::to_string(rec_beg) + " declares size " +
-					    std::to_string(rec_size) + " which exceeds file size, stopping\r\n");
-					break;
-				}
-
-				const auto & cnt = content.substr(rec_beg, rec_size);
-				const auto & size = cnt.size();
-				const auto & id = cnt.substr(0, 4);
-				records.push_back({ id, cnt, size, false });
-			}
-			loaded_ = true;
-		}
-		catch (const std::exception & e)
-		{
-			tools_t::add_log("[error] parsing \"" + path + "\" (possibly broken file or record)\r\n");
-			tools_t::add_log("[error] exception: " + std::string(e.what()) + "\r\n");
-			loaded_ = false;
-		}
-	}
-	else
+	if (content.size() <= sub_record_id_size || content.substr(0, sub_record_id_size) != "TES3")
 	{
 		tools_t::add_log("[error] parsing \"" + path + "\" (not a TES3 plugin)\r\n");
+		loaded_ = false;
+		return;
+	}
+
+	try
+	{
+		size_t record_begin = 0;
+		size_t record_end = 0;
+		while (record_end != content.size())
+		{
+			record_begin = record_end;
+			const auto & size_bytes = content.substr(record_begin + record_size_field_offset, record_size_field_length);
+			const auto record_size = tools_t::convert_string_byte_array_to_uint(size_bytes) + record_header_size;
+			record_end = record_begin + record_size;
+
+			if (record_end > content.size())
+			{
+				tools_t::add_log(
+				    "[warning] record at offset " + std::to_string(record_begin) + " declares size " +
+				    std::to_string(record_size) + " which exceeds file size, stopping\r\n");
+				break;
+			}
+
+			const auto & record_content = content.substr(record_begin, record_size);
+			const auto & record_id = record_content.substr(0, sub_record_id_size);
+			records_.push_back({ record_id, record_content, record_content.size(), false });
+		}
+		loaded_ = true;
+	}
+	catch (const std::exception & error)
+	{
+		tools_t::add_log("[error] parsing \"" + path + "\" (possibly broken file or record)\r\n");
+		tools_t::add_log("[error] exception: " + std::string(error.what()) + "\r\n");
 		loaded_ = false;
 	}
 }
@@ -58,179 +56,148 @@ void esm_reader_t::split_file(const std::string & content, const std::string & p
 void esm_reader_t::set_time(const std::string & path)
 {
 	if (loaded_)
-	{
-		time = std::filesystem::last_write_time(path);
-	}
+		time_ = std::filesystem::last_write_time(path);
 }
 
-void esm_reader_t::select_record(size_t i)
+void esm_reader_t::select_record(size_t index)
 {
-	if (loaded_)
-	{
-		rec = &records.at(i);
-		key = {};
-		value = {};
-	}
+	if (!loaded_)
+		return;
+
+	ptr_record = &records_.at(index);
+	key_ = {};
+	value_ = {};
 }
 
 void esm_reader_t::replace_record(const std::string & content)
 {
-	if (loaded_)
-	{
-		rec->content = content;
-		rec->modified = true;
-		rec->size = content.size();
-	}
+	if (!loaded_)
+		return;
+
+	ptr_record->content = content;
+	ptr_record->modified = true;
+	ptr_record->size = content.size();
 }
 
-void esm_reader_t::set_modified(size_t i)
+void esm_reader_t::set_modified(size_t index)
 {
 	if (loaded_)
+		records_.at(index).modified = true;
+}
+
+void esm_reader_t::set_key(const std::string & sub_id)
+{
+	if (!loaded_)
+		return;
+
+	key_.sub_id = sub_id;
+	try
 	{
-		records.at(i).modified = true;
+		scan_sub_records(record_header_size, key_);
+	}
+	catch (const std::exception & error)
+	{
+		handle_exception(error);
 	}
 }
 
-void esm_reader_t::set_key(const std::string & id)
+void esm_reader_t::set_value(const std::string & sub_id)
 {
-	if (loaded_)
-	{
-		size_t cur_pos = 16;
-		size_t cur_size = 0;
-		std::string cur_id;
-		std::string cur_text;
-		key.id = id;
+	if (!loaded_)
+		return;
 
-		try
-		{
-			main_loop(cur_pos, cur_size, cur_id, cur_text, key);
-		}
-		catch (const std::exception & e)
-		{
-			handle_exception(e);
-		}
+	value_.sub_id = sub_id;
+	value_.counter = 0;
+	try
+	{
+		scan_sub_records(record_header_size, value_);
+	}
+	catch (const std::exception & error)
+	{
+		handle_exception(error);
 	}
 }
 
-void esm_reader_t::set_value(const std::string & id)
+void esm_reader_t::set_next_value(const std::string & sub_id)
 {
-	if (loaded_)
-	{
-		size_t cur_pos = 16;
-		size_t cur_size = 0;
-		std::string cur_id;
-		std::string cur_text;
-		value.id = id;
-		value.counter = 0;
+	if (!loaded_ || !value_.exist)
+		return;
 
-		try
-		{
-			main_loop(cur_pos, cur_size, cur_id, cur_text, value);
-		}
-		catch (const std::exception & e)
-		{
-			handle_exception(e);
-		}
+	value_.sub_id = sub_id;
+	const auto current_size = tools_t::convert_string_byte_array_to_uint(
+	    ptr_record->content.substr(value_.pos + sub_record_id_size, sub_record_id_size));
+	const auto next_pos = value_.pos + sub_record_header_size + current_size;
+	value_.counter++;
+
+	try
+	{
+		scan_sub_records(next_pos, value_);
+	}
+	catch (const std::exception & error)
+	{
+		handle_exception(error);
 	}
 }
 
-void esm_reader_t::set_next_value(const std::string & id)
+void esm_reader_t::scan_sub_records(size_t start_pos, sub_record_t & target)
 {
-	if (loaded_ && value.exist)
+	auto scan_pos = start_pos;
+	const auto & record_content = ptr_record->content;
+	const auto record_length = record_content.size();
+
+	while (scan_pos < record_length)
 	{
-		size_t cur_pos;
-		size_t cur_size;
-		std::string cur_id;
-		std::string cur_text;
-		value.id = id;
-
-		cur_pos = value.pos;
-		cur_size = tools_t::convert_string_byte_array_to_uint(rec->content.substr(cur_pos + 4, 4));
-		cur_pos += 8 + cur_size;
-		value.counter++;
-
-		try
-		{
-			main_loop(cur_pos, cur_size, cur_id, cur_text, value);
-		}
-		catch (const std::exception & e)
-		{
-			handle_exception(e);
-		}
-	}
-}
-
-void esm_reader_t::main_loop(
-    std::size_t & cur_pos,
-    std::size_t & cur_size,
-    std::string & cur_id,
-    std::string & cur_text,
-    esm_reader_t::sub_record_t & subrecord)
-{
-	while (cur_pos != rec->content.size())
-	{
-		if (cur_pos + 8 > rec->content.size())
-		{
-			tools_t::add_log(
-			    "[warning] truncated sub-record header at offset " + std::to_string(cur_pos) + " in " + rec->id +
-			        " record\r\n",
-			    true);
+		if (scan_pos + sub_record_header_size > record_length)
 			break;
-		}
-		cur_id = rec->content.substr(cur_pos, 4);
-		cur_size = tools_t::convert_string_byte_array_to_uint(rec->content.substr(cur_pos + 4, 4));
-		if (cur_size == 0)
-		{
-			tools_t::add_log(
-			    "[warning] zero-size sub-record \"" + cur_id + "\" at offset " + std::to_string(cur_pos) + " in " +
-			        rec->id + " record\r\n",
-			    true);
+
+		const auto & found_id = record_content.substr(scan_pos, sub_record_id_size);
+		const auto found_size = tools_t::convert_string_byte_array_to_uint(
+		    record_content.substr(scan_pos + sub_record_id_size, sub_record_id_size));
+
+		if (found_size == 0)
 			break;
-		}
-		if (cur_pos + 8 + cur_size > rec->content.size())
-		{
-			tools_t::add_log(
-			    "[warning] sub-record \"" + cur_id + "\" at offset " + std::to_string(cur_pos) +
-			        " exceeds record size in " + rec->id + " record\r\n",
-			    true);
+
+		if (scan_pos + sub_record_header_size + found_size > record_length)
 			break;
-		}
-		if (cur_id == subrecord.id)
+
+		if (found_id == target.sub_id)
 		{
-			cur_text = rec->content.substr(cur_pos + 8, cur_size);
-			subrecord.content = cur_text;
-			subrecord.text = tools_t::erase_null_chars(subrecord.content);
-			subrecord.pos = cur_pos;
-			subrecord.size = cur_size;
-			subrecord.exist = true;
-			break;
+			target.content = record_content.substr(scan_pos + sub_record_header_size, found_size);
+			target.text = tools_t::erase_null_chars(target.content);
+			target.pos = scan_pos;
+			target.size = found_size;
+			target.exist = true;
+			return;
 		}
-		cur_pos += 8 + cur_size;
+
+		scan_pos += sub_record_header_size + found_size;
 	}
 
-	if (cur_pos == rec->content.size())
-	{
-		subrecord.content = "N/A";
-		subrecord.text = "N/A";
-		subrecord.pos = cur_pos;
-		subrecord.size = 0;
-		subrecord.exist = false;
-	}
+	mark_not_found(target);
 }
 
-void esm_reader_t::handle_exception(const std::exception & e)
+void esm_reader_t::mark_not_found(sub_record_t & target)
 {
-	std::string cur_rec = tools_t::replace_non_readable_chars_with_dot(rec->content);
+	target.content = "N/A";
+	target.text = "N/A";
+	target.pos = ptr_record->content.size();
+	target.size = 0;
+	target.exist = false;
+}
+
+void esm_reader_t::handle_exception(const std::exception & error)
+{
+	const auto & sanitized = tools_t::replace_non_readable_chars_with_dot(ptr_record->content);
 	tools_t::add_log("[error] in function (possibly broken record)\r\n");
-	tools_t::add_log(cur_rec + "\r\n");
-	tools_t::add_log("[error] exception: " + std::string(e.what()) + "\r\n");
+	tools_t::add_log(sanitized + "\r\n");
+	tools_t::add_log("[error] exception: " + std::string(error.what()) + "\r\n");
 	loaded_ = false;
 }
 
 size_t esm_reader_t::get_modified_count()
 {
 	size_t count = 0;
-	for (const auto & record : records)
+	for (const auto & record : records_)
 	{
 		if (record.modified)
 			count++;

@@ -18,8 +18,7 @@ bool annotation_manager_t::is_alpha(char c)
 
 bool annotation_manager_t::is_trusted_status(const std::string & status)
 {
-	return status == tools_t::status_t::translated ||
-	       status == tools_t::status_t::reused ||
+	return status == tools_t::status_t::translated || status == tools_t::status_t::reused ||
 	       status == tools_t::status_t::adapted;
 }
 
@@ -65,7 +64,7 @@ void annotation_manager_t::sort_by_length_descending(std::vector<topic_entry_t> 
 	    entries.begin(),
 	    entries.end(),
 	    [](const topic_entry_t & left, const topic_entry_t & right)
-	    { return left.key_lower.size() > right.key_lower.size(); });
+	{ return left.key_lower.size() > right.key_lower.size(); });
 }
 
 void annotation_manager_t::rebuild(const std::vector<dict_source_t> & sources)
@@ -132,7 +131,7 @@ void annotation_manager_t::update_vector(
 	    vec.end(),
 	    new_entry,
 	    [](const topic_entry_t & left, const topic_entry_t & right)
-	    { return left.key_lower.size() > right.key_lower.size(); });
+	{ return left.key_lower.size() > right.key_lower.size(); });
 	vec.insert(insert_pos, std::move(new_entry));
 }
 
@@ -141,9 +140,7 @@ void annotation_manager_t::remove_from_vector(std::vector<topic_entry_t> & vec, 
 	const auto & key_lower = to_lower(old_text);
 	vec.erase(
 	    std::remove_if(
-	        vec.begin(),
-	        vec.end(),
-	        [&key_lower](const topic_entry_t & entry) { return entry.key_lower == key_lower; }),
+	        vec.begin(), vec.end(), [&key_lower](const topic_entry_t & entry) { return entry.key_lower == key_lower; }),
 	    vec.end());
 }
 

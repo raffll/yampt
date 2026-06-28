@@ -153,7 +153,8 @@ TEST_CASE("resolve_plugin_in_mods, returns empty when not found", "[i]")
 TEST_CASE("parse_openmw_cfg_file, extracts data and content", "[i]")
 {
 	const auto path = temp_file("yampt_test_openmw.cfg");
-	write_text_file(path,
+	write_text_file(
+	    path,
 	    "data=\"/path/to/data1\"\n"
 	    "data=\"/path/to/data2\"\n"
 	    "content=Morrowind.esm\n"

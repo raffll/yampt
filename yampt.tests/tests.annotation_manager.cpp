@@ -18,8 +18,9 @@ tools_t::dict_t make_dict_with_dial(const std::vector<std::pair<std::string, std
 	return dict;
 }
 
-tools_t::dict_t make_dict_with_fnam(const std::vector<std::pair<std::string, std::string>> & entries,
-                                    const std::string & status = "translated")
+tools_t::dict_t make_dict_with_fnam(
+    const std::vector<std::pair<std::string, std::string>> & entries,
+    const std::string & status = "translated")
 {
 	tools_t::dict_t dict;
 	auto & chapter = dict[tools_t::rec_type_t::fnam];

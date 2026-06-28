@@ -249,8 +249,7 @@ void dict_creator_t::process_dial_ordered(size_t i, std::string & dial_type, std
 	if (dial_type != "T")
 		return;
 
-	insert_entry_base(
-	    dial_foreign_name, dial_foreign_name, native_name, tools_t::rec_type_t::dial, "matched");
+	insert_entry_base(dial_foreign_name, dial_foreign_name, native_name, tools_t::rec_type_t::dial, "matched");
 }
 
 void dict_creator_t::attach_speaker_metadata(const std::string & key_text, size_t record_index)

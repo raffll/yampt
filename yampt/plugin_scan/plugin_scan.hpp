@@ -61,7 +61,17 @@ public:
 	std::vector<const conflict_entry_t *> itm_entries(int plugin_idx) const;
 
 private:
+	struct version_descriptor_t
+	{
+		std::string rec_type;
+		std::string record_id;
+		std::string display_name;
+		std::string dial_name;
+		record_version_t version;
+	};
+
 	void compute_conflict(conflict_entry_t & entry);
+	void insert_or_update_version(version_descriptor_t desc);
 	std::string build_tes3_header(const std::string & author, const std::string & description);
 
 	struct loaded_plugin_t

@@ -1,5 +1,8 @@
 #include "tools.hpp"
 
+static constexpr size_t read_buffer_size = 16384;
+static constexpr size_t bytes_per_uint32 = 4;
+
 std::string tools_t::log1;
 bool tools_t::error_flag = false;
 bool tools_t::debug_flag = false;
@@ -63,7 +66,7 @@ std::string tools_t::read_file(const std::string & path)
 	if (file)
 	{
 		add_log("[info] loading \"" + path + "\"\r\n");
-		char buffer[16384];
+		char buffer[read_buffer_size];
 		file.seekg(0, std::ios::end);
 		auto file_size = file.tellg();
 		if (file_size == 0)
@@ -144,18 +147,18 @@ size_t tools_t::get_number_of_elements_in_dict(const dict_t & dict)
 
 size_t tools_t::convert_string_byte_array_to_uint(const std::string & str)
 {
-	assert(str.size() == 4 || str.size() == 1);
+	assert(str.size() == bytes_per_uint32 || str.size() == 1);
 
-	char buffer[4] = {};
-	unsigned char ubuffer[4];
+	char buffer[bytes_per_uint32] = {};
+	unsigned char ubuffer[bytes_per_uint32];
 	unsigned int x;
 	str.copy(buffer, str.size());
-	for (int i = 0; i < 4; i++)
+	for (size_t i = 0; i < bytes_per_uint32; i++)
 	{
 		ubuffer[i] = buffer[i];
 	}
 
-	if (str.size() == 4)
+	if (str.size() == bytes_per_uint32)
 	{
 		return x = (ubuffer[0] | ubuffer[1] << 8 | ubuffer[2] << 16 | ubuffer[3] << 24);
 	}
@@ -172,13 +175,13 @@ std::string tools_t::convert_uint_to_string_byte_array(const size_t size)
 {
 	auto x = static_cast<const unsigned>(size);
 
-	char bytes[4];
+	char bytes[bytes_per_uint32];
 	std::string str;
 	std::copy(
 	    static_cast<const char *>(static_cast<const void *>(&x)),
 	    static_cast<const char *>(static_cast<const void *>(&x)) + sizeof x,
 	    bytes);
-	for (int i = 0; i < 4; i++)
+	for (size_t i = 0; i < bytes_per_uint32; i++)
 	{
 		str.push_back(bytes[i]);
 	}

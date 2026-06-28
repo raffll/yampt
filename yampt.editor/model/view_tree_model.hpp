@@ -65,7 +65,6 @@ public:
 	};
 
 private:
-
 	struct record_context_t
 	{
 		std::vector<std::vector<sub_record_view_t>> & all_sub_records;
@@ -94,29 +93,46 @@ private:
 	void collect_faction_entries(record_context_t & context, slot_build_context_t & build_ctx);
 	void collect_container_entries(record_context_t & context, slot_build_context_t & build_ctx);
 
-	void decode_schema_children(sub_record_row_t & parent_row, const sub_record_schema_t * schema,
-	    const char * first_data, size_t first_size, size_t col_count,
+	void decode_schema_children(
+	    sub_record_row_t & parent_row,
+	    const sub_record_schema_t * schema,
+	    const char * first_data,
+	    size_t first_size,
+	    size_t col_count,
 	    const std::vector<std::vector<sub_record_view_t>> & all_subs,
 	    const std::vector<std::unordered_map<std::string, std::vector<size_t>>> & col_indices,
 	    const sub_slot_t & slot);
 
-	void decode_hex_children(sub_record_row_t & parent_row, size_t first_size, size_t col_count,
+	void decode_hex_children(
+	    sub_record_row_t & parent_row,
+	    size_t first_size,
+	    size_t col_count,
 	    const std::vector<std::vector<sub_record_view_t>> & all_subs,
 	    const std::vector<std::unordered_map<std::string, std::vector<size_t>>> & col_indices,
 	    const sub_slot_t & slot);
 
-	void decode_schema_children_ref(sub_record_row_t & parent_row, const sub_record_schema_t * schema,
-	    const char * first_data, size_t first_size, size_t col_count,
+	void decode_schema_children_ref(
+	    sub_record_row_t & parent_row,
+	    const sub_record_schema_t * schema,
+	    const char * first_data,
+	    size_t first_size,
+	    size_t col_count,
 	    const std::vector<std::vector<sub_record_view_t>> & all_subs,
 	    const std::vector<std::vector<struct cell_ref_group_t>> & col_refs,
-	    uint32_t object_index, const sub_slot_t & slot);
+	    uint32_t object_index,
+	    const sub_slot_t & slot);
 
-	void decode_hex_children_ref(sub_record_row_t & parent_row, size_t first_size, size_t col_count,
+	void decode_hex_children_ref(
+	    sub_record_row_t & parent_row,
+	    size_t first_size,
+	    size_t col_count,
 	    const std::vector<std::vector<sub_record_view_t>> & all_subs,
 	    const std::vector<std::vector<struct cell_ref_group_t>> & col_refs,
-	    uint32_t object_index, const sub_slot_t & slot);
+	    uint32_t object_index,
+	    const sub_slot_t & slot);
 
-	sub_record_row_t build_slot_row(size_t col_count,
+	sub_record_row_t build_slot_row(
+	    size_t col_count,
 	    const std::vector<std::vector<sub_record_view_t>> & all_subs,
 	    const std::vector<std::unordered_map<std::string, std::vector<size_t>>> & col_indices,
 	    const sub_slot_t & slot);
