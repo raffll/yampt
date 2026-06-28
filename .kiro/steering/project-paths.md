@@ -231,6 +231,7 @@ Rules:
 - If the test is about a specific method, include the method name after `::` before the comma
 - If the test is about general class behavior (not one method), use just the class name before the comma
 - Description after the comma is a short lowercase phrase
+- Total test name must be under 80 characters — the VS Catch2 test adapter truncates longer names and loses the tag, causing them to appear under "No Traits"
 
 ## Cell Heuristic Matching — Log Format
 

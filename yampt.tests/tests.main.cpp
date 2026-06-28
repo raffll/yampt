@@ -2,9 +2,12 @@
 #include <catch2/catch_all.hpp>
 
 #include "../yampt/utility/tools.hpp"
+#include <QCoreApplication>
 
 int main(int argc, char * argv[])
 {
+	QCoreApplication app(argc, argv);
+
 	Catch::Session session;
 
 	int ret = session.applyCommandLine(argc, argv);
