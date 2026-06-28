@@ -49,6 +49,94 @@ Parameter names in declarations (`.hpp`) must be identical to the corresponding 
 
 Never compare against raw status string literals (`"untranslated"`, `"translated"`, etc.). Always use the named constants from `tools_t::status_t::` — e.g. `tools_t::status_t::untranslated`, `tools_t::status_t::adapted`. This prevents typos and keeps all status values in one place.
 
+Target: replace the `const char *` constants with a proper `enum class status_t`. After migration, status cannot be compared to `std::string` directly — serialize/deserialize only at JSON boundaries.
+
+## View Class Suffix: `_view_t`
+
+All Qt widget classes in the `view/` folder use the `_view_t` suffix. Never use position-specific suffixes like `_panel`, `_tab`, `_bar`, `_widget` — layout can change and the name becomes misleading.
+
+Exceptions (describe what the widget IS, not where it sits):
+- `line_number_gutter_t` — it's a gutter
+
+Examples:
+```cpp
+// Good
+class annotations_view_t : public QWidget { ... };
+class history_view_t : public QWidget { ... };
+class log_view_t : public QWidget { ... };
+class sidebar_view_t : public QWidget { ... };
+class status_filter_view_t : public QWidget { ... };
+
+// Bad
+class annotations_panel_t : public QWidget { ... };
+class log_tab_t : public QWidget { ... };
+class status_filter_bar_t : public QWidget { ... };
+class sidebar_widget_t : public QWidget { ... };
+```
+
+## MVC Triplet Naming
+
+When a feature has all three MVC layers, name them with the same base and different suffixes:
+
+```
+record_table_view_t      (view/)
+record_table_model_t     (model/)
+record_table_controller_t (controller/)   — if it exists
+```
+
+The base name (`record_table`) is the feature. The suffix (`_view`, `_model`, `_controller`) is the role. File names follow: `record_table_view.hpp`, `record_table_model.hpp`, `record_table_controller.hpp`.
+
+This makes it obvious which files form a group. When only two layers exist (e.g. view + model, no controller), just use two files with matching base names.
+
+## No Duplicate File Names Across Projects
+
+Every source file name must be unique across the entire solution (yampt, yampt.translator, yampt.editor, yampt.tests). Even if files live in different folders, identical names cause confusion in search results, tabs, and build logs.
+
+## No Generic Class Names
+
+Avoid meaningless words in class names: `manager`, `provider`, `service`, `handler`, `helper`, `data`, `info`, `context`, `item`, `entry`, `state`.
+
+Acceptable suffixes: `_utils`, `_view`, `_model`, `_controller`.
+
+Name the class after what it IS or what it DOES:
+- `history_manager_t` → `edit_history_t` (it IS the history)
+- `annotation_manager_t` → `glossary_t` (it builds and queries a glossary)
+- `find_replace_service_t` → `find_replace_t` (it finds and replaces)
+- `translation_provider_t` → `translator_t` (it translates)
+- `search_engine_t` → `row_filter_t` (it filters rows)
+- `validation_manager_t` → `byte_limit_validator_t` (it validates byte length)
+
+Exception: `_controller_t` is acceptable for MVC controllers that mediate between view and model (e.g. `editor_controller_t`).
+
+## File Placement Rules
+
+Each folder has a clear responsibility. A file belongs to the folder that matches its single concern:
+
+| Folder | Contains | Does NOT contain |
+|--------|----------|------------------|
+| `io/` | File format readers/writers (disk ↔ memory) | Domain logic, GUI types, enums |
+| `model/` | Data structures, domain types, business logic | File I/O, Qt widgets, UI formatting |
+| `view/` | Qt widgets, display formatting, colors | Business logic, file I/O |
+| `controller/` | Orchestration, mediation between view + model | Pure I/O serialization, stateless helpers |
+| `utility/` | Pure helpers without domain or UI coupling | Qt colors, domain enums, file serialization |
+
+Specific rules:
+- Enums describing domain operations belong in `model/`, not `utility/`
+- Color mappings returning `QColor` belong in `view/`, not `utility/`
+- INI/config file serialization belongs in `io/`, not `controller/`
+- Session-level registries (file scanning, workspace state) belong in `model/`
+
+## No Duplicated Utility Functions
+
+Common string/path operations must live in one shared location (`yampt/utility/string_utils.hpp`). Never reimplement as local `static` functions or lambdas:
+
+- `to_lower(std::string_view) -> std::string`
+- `normalize_path(std::string_view) -> std::string` (backslash → forward slash)
+- `extract_filename(std::string_view) -> std::string_view`
+- `trim(std::string_view) -> std::string`
+
+If you need one of these, include `string_utils.hpp`. Do not write a local copy.
+
 ## No CLI Log Headers
 
 Do not use decorative ASCII separator lines or column headers in log output. Each log line must be self-describing with labeled counters:
