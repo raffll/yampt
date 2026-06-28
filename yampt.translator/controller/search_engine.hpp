@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../model/record_table_model.hpp"
+#include "../model/table_row.hpp"
 #include <optional>
 #include <regex>
 #include <set>

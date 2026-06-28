@@ -34,6 +34,10 @@ signals:
 	void navigate_prev();
 
 private:
+	bool handle_navigation_keys(QKeyEvent * event);
+	bool handle_multiline_guard(QKeyEvent * event);
+	void apply_auto_capitalize();
+
 	bool block_multiline_ = false;
 	bool auto_capitalize_ = false;
 	bool show_whitespace_ = false;

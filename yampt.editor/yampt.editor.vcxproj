@@ -168,6 +168,7 @@
     <ClCompile Include="view\editor_tab.cpp" />
     <ClCompile Include="model\nav_tree_model.cpp" />
     <ClCompile Include="model\view_tree_model.cpp" />
+    <ClCompile Include="model\view_tree_decode.cpp" />
     <ClCompile Include="..\yampt\plugin_scan\view_tree_format.cpp" />
     <ClCompile Include="dialog\plugin_select_dialog.cpp" />
     <ClCompile Include="dialog\filter_dialog.cpp" />

@@ -4,6 +4,9 @@
     <Filter Include="yampt">
       <UniqueIdentifier>{B2000001-0000-0000-0000-000000000001}</UniqueIdentifier>
     </Filter>
+    <Filter Include="model">
+      <UniqueIdentifier>{B2000004-0000-0000-0000-000000000004}</UniqueIdentifier>
+    </Filter>
     <Filter Include="external">
       <UniqueIdentifier>{B2000003-0000-0000-0000-000000000003}</UniqueIdentifier>
     </Filter>
@@ -14,6 +17,9 @@
     <ClCompile Include="editor_tab.cpp" />
     <ClCompile Include="nav_tree_model.cpp" />
     <ClCompile Include="view_tree_model.cpp" />
+    <ClCompile Include="view_tree_decode.cpp">
+      <Filter>model</Filter>
+    </ClCompile>
     <ClCompile Include="..\yampt\plugin_scan\view_tree_format.cpp">
       <Filter>yampt</Filter>
     </ClCompile>

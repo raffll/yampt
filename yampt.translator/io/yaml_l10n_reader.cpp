@@ -33,6 +33,55 @@ const std::vector<std::string> & yaml_l10n_reader_t::key_order() const
 	return key_order_;
 }
 
+std::string yaml_l10n_reader_t::parse_quoted_value(const std::string & raw_value) const
+{
+	auto close_pos = raw_value.find('"', 1);
+	if (close_pos != std::string::npos)
+		return raw_value.substr(1, close_pos - 1);
+
+	return raw_value.substr(1);
+}
+
+std::string yaml_l10n_reader_t::read_block_scalar(
+    std::ifstream & file,
+    bool strip_trailing,
+    std::string & lookahead_line,
+    bool & has_lookahead) const
+{
+	std::ostringstream block;
+	bool first_line = true;
+	std::string line;
+
+	while (std::getline(file, line))
+	{
+		if (!line.empty() && line.back() == '\r')
+			line.pop_back();
+
+		if (line.empty() || (line[0] != ' ' && line[0] != '\t'))
+		{
+			lookahead_line = line;
+			has_lookahead = true;
+			break;
+		}
+
+		size_t indent = 0;
+		while (indent < line.size() && (line[indent] == ' ' || line[indent] == '\t'))
+			++indent;
+
+		if (!first_line)
+			block << '\n';
+
+		block << line.substr(indent);
+		first_line = false;
+	}
+
+	auto assembled = block.str();
+	if (strip_trailing && !assembled.empty() && assembled.back() == '\n')
+		assembled.pop_back();
+
+	return assembled;
+}
+
 std::vector<l10n_entry_t> yaml_l10n_reader_t::parse_yaml(const std::string & path)
 {
 	std::vector<l10n_entry_t> entries;
@@ -42,15 +91,21 @@ std::vector<l10n_entry_t> yaml_l10n_reader_t::parse_yaml(const std::string & pat
 		return entries;
 
 	std::string line;
-	while (std::getline(file, line))
+	bool has_lookahead = false;
+	std::string lookahead_line;
+
+	while (has_lookahead || std::getline(file, line))
 	{
+		if (has_lookahead)
+		{
+			line = lookahead_line;
+			has_lookahead = false;
+		}
+
 		if (!line.empty() && line.back() == '\r')
 			line.pop_back();
 
-		if (line.empty())
-			continue;
-
-		if (line[0] == '#')
+		if (line.empty() || line[0] == '#')
 			continue;
 
 		auto delim_pos = line.find(": ");
@@ -60,105 +115,21 @@ std::vector<l10n_entry_t> yaml_l10n_reader_t::parse_yaml(const std::string & pat
 		std::string key = line.substr(0, delim_pos);
 		std::string raw_value = line.substr(delim_pos + 2);
 
-		std::string value;
-
 		if (!raw_value.empty() && raw_value[0] == '"')
 		{
-			auto close_pos = raw_value.find('"', 1);
-			if (close_pos != std::string::npos)
-				value = raw_value.substr(1, close_pos - 1);
-			else
-				value = raw_value.substr(1);
-		}
-		else if (raw_value == "|-" || raw_value == "|")
-		{
-			bool strip_trailing = (raw_value == "|-");
-			std::ostringstream block;
-			bool first_line = true;
-
-			while (std::getline(file, line))
-			{
-				if (!line.empty() && line.back() == '\r')
-					line.pop_back();
-
-				if (line.empty() || (line[0] != ' ' && line[0] != '\t'))
-				{
-					if (!line.empty() && line[0] != '#')
-					{
-						auto d = line.find(": ");
-						if (d != std::string::npos)
-						{
-							std::string next_key = line.substr(0, d);
-							std::string next_raw = line.substr(d + 2);
-
-							std::string assembled = block.str();
-							if (strip_trailing && !assembled.empty() && assembled.back() == '\n')
-								assembled.pop_back();
-
-							entries.push_back({ key, assembled });
-
-							key = next_key;
-
-							if (!next_raw.empty() && next_raw[0] == '"')
-							{
-								auto cp = next_raw.find('"', 1);
-								if (cp != std::string::npos)
-									value = next_raw.substr(1, cp - 1);
-								else
-									value = next_raw.substr(1);
-							}
-							else if (next_raw == "|-" || next_raw == "|")
-							{
-								strip_trailing = (next_raw == "|-");
-								block.str("");
-								block.clear();
-								first_line = true;
-								continue;
-							}
-							else
-							{
-								value = next_raw;
-							}
-
-							entries.push_back({ key, value });
-							goto next_entry;
-						}
-					}
-
-					std::string assembled = block.str();
-					if (strip_trailing && !assembled.empty() && assembled.back() == '\n')
-						assembled.pop_back();
-
-					entries.push_back({ key, assembled });
-					goto next_entry;
-				}
-
-				size_t indent = 0;
-				while (indent < line.size() && (line[indent] == ' ' || line[indent] == '\t'))
-					++indent;
-
-				if (!first_line)
-					block << '\n';
-
-				block << line.substr(indent);
-				first_line = false;
-			}
-
-			std::string assembled = block.str();
-			if (strip_trailing && !assembled.empty() && assembled.back() == '\n')
-				assembled.pop_back();
-
-			entries.push_back({ key, assembled });
+			entries.push_back({ key, parse_quoted_value(raw_value) });
 			continue;
 		}
-		else
+
+		if (raw_value == "|-" || raw_value == "|")
 		{
-			value = raw_value;
+			bool strip_trailing = (raw_value == "|-");
+			auto value = read_block_scalar(file, strip_trailing, lookahead_line, has_lookahead);
+			entries.push_back({ key, value });
+			continue;
 		}
 
-		entries.push_back({ key, value });
-
-	next_entry:;
+		entries.push_back({ key, raw_value });
 	}
 
 	return entries;

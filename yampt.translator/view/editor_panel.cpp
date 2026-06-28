@@ -20,12 +20,28 @@ editor_panel_t::editor_panel_t(QWidget * parent)
 	layout->setContentsMargins(0, 0, 0, 0);
 
 	splitter_ = new QSplitter(Qt::Horizontal, this);
+	splitter_->addWidget(setup_left_panel(splitter_));
+	splitter_->addWidget(setup_right_panel(splitter_));
+	splitter_->setSizes({ 500, 500 });
 
-	auto * left_widget = new QWidget(splitter_);
+	QFont editor_font("Segoe UI", 10);
+	original_view_->setFont(editor_font);
+	adapted_from_view_->setFont(editor_font);
+	translation_editor_->setFont(editor_font);
+
+	layout->addWidget(splitter_);
+	setup_connections();
+}
+
+QWidget * editor_panel_t::setup_left_panel(QSplitter * parent_splitter)
+{
+	auto * left_widget = new QWidget(parent_splitter);
 	auto * left_layout = new QVBoxLayout(left_widget);
 	left_layout->setContentsMargins(0, 0, 0, 0);
+
 	original_label_ = new QLabel("Original", left_widget);
 	original_label_->setAlignment(Qt::AlignCenter);
+
 	original_view_ = new editor_text_edit_t(left_widget);
 	original_view_->setReadOnly(true);
 	auto palette = original_view_->palette();
@@ -51,7 +67,6 @@ editor_panel_t::editor_panel_t(QWidget * parent)
 	adapted_hlayout->setSpacing(0);
 	adapted_hlayout->addWidget(new line_number_gutter_t(adapted_from_view_, adapted_from_container_));
 	adapted_hlayout->addWidget(adapted_from_view_);
-
 	adapted_from_container_->setVisible(false);
 
 	adapted_toggle_ = new QPushButton("Details", left_widget);
@@ -60,23 +75,25 @@ editor_panel_t::editor_panel_t(QWidget * parent)
 	adapted_toggle_->setToolTip("Show/hide adapted from panel");
 	adapted_toggle_->setVisible(false);
 
-	connect(
-	    adapted_toggle_,
-	    &QPushButton::toggled,
-	    this,
-	    [this](bool checked) { adapted_from_container_->setVisible(checked); });
-
 	left_layout->addWidget(original_label_);
 	left_layout->addWidget(original_container);
 	left_layout->addWidget(adapted_from_container_);
 	left_layout->addWidget(adapted_toggle_);
 
-	auto * right_widget = new QWidget(splitter_);
+	return left_widget;
+}
+
+QWidget * editor_panel_t::setup_right_panel(QSplitter * parent_splitter)
+{
+	auto * right_widget = new QWidget(parent_splitter);
 	auto * right_layout = new QVBoxLayout(right_widget);
 	right_layout->setContentsMargins(0, 0, 0, 0);
+
 	translation_label_ = new QLabel("Translation", right_widget);
 	translation_label_->setAlignment(Qt::AlignCenter);
+
 	translation_editor_ = new editor_text_edit_t(right_widget);
+
 	apply_button_ = new QPushButton("Next (Shift+Enter)", right_widget);
 	apply_button_->setToolTip("Apply changes and move to next entry");
 
@@ -91,19 +108,16 @@ editor_panel_t::editor_panel_t(QWidget * parent)
 	right_layout->addWidget(translation_container);
 	right_layout->addWidget(apply_button_);
 
-	QFont editor_font("Segoe UI", 10);
-	original_view_->setFont(editor_font);
-	original_container->setFont(editor_font);
-	adapted_from_view_->setFont(editor_font);
-	adapted_from_container_->setFont(editor_font);
-	translation_editor_->setFont(editor_font);
-	translation_container->setFont(editor_font);
+	return right_widget;
+}
 
-	splitter_->addWidget(left_widget);
-	splitter_->addWidget(right_widget);
-	splitter_->setSizes({ 500, 500 });
-
-	layout->addWidget(splitter_);
+void editor_panel_t::setup_connections()
+{
+	connect(
+	    adapted_toggle_,
+	    &QPushButton::toggled,
+	    this,
+	    [this](bool checked) { adapted_from_container_->setVisible(checked); });
 
 	connect(translation_editor_, &QPlainTextEdit::textChanged, this, &editor_panel_t::text_changed);
 	connect(apply_button_, &QPushButton::clicked, this, &editor_panel_t::apply_clicked);
@@ -188,6 +202,42 @@ void editor_panel_t::clear_details()
 	adapted_toggle_->setVisible(false);
 }
 
+std::vector<std::string> editor_panel_t::extract_quoted_strings(const std::string & source_text)
+{
+	std::vector<std::string> result;
+	size_t pos = 0;
+
+	while (pos < source_text.size())
+	{
+		auto i = source_text.find('"', pos);
+		if (i == std::string::npos)
+			break;
+
+		auto j = source_text.find('"', i + 1);
+		if (j == std::string::npos)
+			break;
+
+		result.push_back(source_text.substr(i + 1, j - i - 1));
+		pos = j + 1;
+	}
+
+	return result;
+}
+
+QString editor_panel_t::join_extracted_lines(const std::vector<std::string> & extracted)
+{
+	QString joined;
+	for (size_t k = 0; k < extracted.size(); ++k)
+	{
+		if (k > 0)
+			joined += '\n';
+
+		joined += QString::fromStdString(extracted[k]);
+	}
+
+	return joined;
+}
+
 void editor_panel_t::load_script_entry(const std::string & old_text, const std::string & new_text)
 {
 	script_template_t tmpl;
@@ -218,46 +268,11 @@ void editor_panel_t::load_script_entry(const std::string & old_text, const std::
 
 	script_template_ = tmpl;
 
-	std::vector<std::string> original_extracted;
-	for (size_t k = 0; k < tmpl.quote_starts.size(); ++k)
-		original_extracted.push_back(
-		    old_text.substr(tmpl.quote_starts[k] + 1, tmpl.quote_ends[k] - tmpl.quote_starts[k] - 1));
+	const auto original_extracted = extract_quoted_strings(old_text);
+	original_view_->setPlainText(join_extracted_lines(original_extracted));
 
-	QString original_stripped;
-	for (size_t k = 0; k < original_extracted.size(); ++k)
-	{
-		if (k > 0)
-			original_stripped += '\n';
-		original_stripped += QString::fromStdString(original_extracted[k]);
-	}
-
-	original_view_->setPlainText(original_stripped);
-
-	std::vector<std::string> extracted;
-	pos = 0;
-	while (pos < new_text.size())
-	{
-		auto i = new_text.find('"', pos);
-		if (i == std::string::npos)
-			break;
-
-		auto j = new_text.find('"', i + 1);
-		if (j == std::string::npos)
-			break;
-
-		extracted.push_back(new_text.substr(i + 1, j - i - 1));
-		pos = j + 1;
-	}
-
-	QString stripped;
-	for (size_t k = 0; k < extracted.size(); ++k)
-	{
-		if (k > 0)
-			stripped += '\n';
-		stripped += QString::fromStdString(extracted[k]);
-	}
-
-	translation_editor_->setPlainText(stripped);
+	const auto translation_extracted = extract_quoted_strings(new_text);
+	translation_editor_->setPlainText(join_extracted_lines(translation_extracted));
 }
 
 std::string editor_panel_t::reconstruct_script_line() const

@@ -13,6 +13,12 @@ find_replace_dialog_t::find_replace_dialog_t(QWidget * parent)
 	layout->setContentsMargins(4, 4, 4, 4);
 	layout->setSpacing(4);
 
+	setup_layout(layout);
+	connect_signals();
+}
+
+void find_replace_dialog_t::setup_layout(QGridLayout * layout)
+{
 	layout->addWidget(new QLabel("Find:", this), 0, 0);
 	find_field_ = new QLineEdit(this);
 	layout->addWidget(find_field_, 0, 1, 1, 3);
@@ -42,7 +48,10 @@ find_replace_dialog_t::find_replace_dialog_t(QWidget * parent)
 	note_label_ = new QLabel("Replace All affects all entries regardless of filters.", this);
 	note_label_->setStyleSheet("color: #888; font-style: italic;");
 	layout->addWidget(note_label_, 4, 0, 1, 4);
+}
 
+void find_replace_dialog_t::connect_signals()
+{
 	connect(
 	    find_next_btn_,
 	    &QPushButton::clicked,

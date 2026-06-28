@@ -82,6 +82,25 @@ filter_tree_t::filter_tree_t(QWidget * parent)
 	list_->setItemDelegate(new filter_delegate_t(list_));
 	layout->addWidget(list_);
 
+	build_rows();
+	update_styles();
+
+	connect(list_, &QListWidget::itemClicked, this, &filter_tree_t::on_item_clicked);
+	list_->setContextMenuPolicy(Qt::CustomContextMenu);
+	connect(
+	    list_,
+	    &QWidget::customContextMenuRequested,
+	    this,
+	    [this](const QPoint & pos)
+	{
+		auto * item = list_->itemAt(pos);
+		if (item)
+			on_item_right_clicked(item);
+	});
+}
+
+void filter_tree_t::build_rows()
+{
 	auto add_row =
 	    [this](item_kind_t kind, tools_t::rec_type_t type, const std::string & sub_type, const char * label) -> int
 	{
@@ -127,21 +146,6 @@ filter_tree_t::filter_tree_t(QWidget * parent)
 	yaml_row_ = add_row(item_kind_t::yaml, tools_t::rec_type_t::unknown, {}, "YAML");
 	rows_[yaml_row_].selected = false;
 	rows_[yaml_row_].item->setHidden(true);
-
-	update_styles();
-
-	connect(list_, &QListWidget::itemClicked, this, &filter_tree_t::on_item_clicked);
-	list_->setContextMenuPolicy(Qt::CustomContextMenu);
-	connect(
-	    list_,
-	    &QWidget::customContextMenuRequested,
-	    this,
-	    [this](const QPoint & pos)
-	{
-		auto * item = list_->itemAt(pos);
-		if (item)
-			on_item_right_clicked(item);
-	});
 }
 
 void filter_tree_t::on_item_clicked(QListWidgetItem * item)

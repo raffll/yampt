@@ -25,10 +25,12 @@
 #include "../yampt/io/file_list.hpp"
 
 #include <memory>
+#include <optional>
 #include <set>
 #include <unordered_map>
 
 #include <QMainWindow>
+#include <QStringList>
 #include <QTextEdit>
 
 class QFileSystemWatcher;
@@ -57,6 +59,7 @@ class QMenu;
 class QPushButton;
 class QSplitter;
 class QTabWidget;
+class QToolBar;
 
 struct filter_state_t
 {
@@ -64,6 +67,34 @@ struct filter_state_t
 	std::set<std::string> sub_type_filter;
 	std::set<std::string> status_filter;
 	bool type_filter_solo = false;
+};
+
+struct make_base_params_t
+{
+	std::string native_path;
+	std::string foreign_lang;
+	std::string native_lang;
+	base_mode_t base_mode;
+};
+
+struct annotation_highlight_t
+{
+	int start;
+	int length;
+	bool is_hyperlink;
+};
+
+enum class highlight_sort_policy_t
+{
+	length_first,
+	hyperlink_first,
+};
+
+struct highlight_config_t
+{
+	const std::vector<annotation_t> * annotations;
+	bool use_old_text;
+	highlight_sort_policy_t sort_policy;
 };
 
 struct extra_selections_state_t
@@ -108,6 +139,19 @@ private slots:
 	void on_delete_requested(const std::string & path);
 
 private:
+	void setup_central_widget();
+	void setup_menu_bar();
+	void setup_toolbar();
+	void setup_sidebar();
+	void setup_editor_panel();
+	void setup_status_bar();
+	void setup_table_display();
+
+	void connect_sidebar_signals();
+	void connect_editor_signals();
+	void connect_search_signals();
+	void connect_menu_signals();
+
 	void switch_document(document_t * new_doc);
 	void clear_editor_panels();
 	void rebuild_table();
@@ -130,12 +174,49 @@ private:
 	std::vector<dict_selection_dialog_t::dict_entry_t> build_dict_entries(const std::string & source_dir = {}) const;
 	void apply_extra_selections(editor_text_edit_t * editor, const extra_selections_state_t & state);
 
+	// rebuild_table helpers
+	void rebuild_table_yaml(document_t * target_doc);
+	void rebuild_table_dict(dict_document_t * dict_doc);
+
+	// load_record helpers
+	void load_record_clear(int row);
+	void load_record_script(const table_row_t * row_data);
+	void load_record_plain(const table_row_t * row_data);
+	std::vector<annotation_highlight_t> find_annotation_highlights(
+	    const QString & text_lower,
+	    const highlight_config_t & config);
+	QList<QTextEdit::ExtraSelection> build_highlight_selections(
+	    editor_text_edit_t * target_editor,
+	    const std::vector<annotation_highlight_t> & highlights);
+
+	// on_translation_changed helpers
+	void apply_translation_highlights(const table_row_t * row_data);
+
+	// commit_current_edit helpers
+	void commit_dict_edit(dict_document_t * dict_doc, const table_row_t * row_data, const std::string & new_text_str);
+	void commit_yaml_edit(document_t * target_doc, const table_row_t * row_data, const std::string & new_text_str);
+	void sync_propagated_rows(dict_document_t * dict_doc);
+
+	// on_plugin_operation helpers
+	std::optional<make_base_params_t> show_make_base_dialog(const std::string & plugin_path);
+	void start_batch_translation(dict_document_t * dict_doc);
+	void log_operation_result(
+	    const std::string & plugin_path,
+	    plugin_op_t op_type,
+	    const operation_executor_t::result_t & result);
+
+	// update_watcher_paths helper
+	void add_directory_recursive(QStringList & target_paths, const QString & directory);
+
 	QAction * add_folder_action_ = nullptr;
 	QAction * import_archive_action_ = nullptr;
 	QAction * save_action_ = nullptr;
 	QAction * save_all_action_ = nullptr;
+	QAction * quit_action_ = nullptr;
 	QAction * find_action_ = nullptr;
 	QAction * escape_action_ = nullptr;
+
+	QToolBar * toolbar_ = nullptr;
 
 	QAction * sidebar_toggle_ = nullptr;
 	QAction * bottom_panel_toggle_ = nullptr;

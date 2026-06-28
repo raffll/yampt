@@ -41,6 +41,7 @@ private slots:
 	void on_language_changed(int index);
 
 private:
+	void setup_controls();
 	void update_counter_label();
 	void load_model_for_language(int index);
 	void rebuild_language_combo();

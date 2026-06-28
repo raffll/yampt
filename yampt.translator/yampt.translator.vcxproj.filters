@@ -32,6 +32,7 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="main_window.cpp" />
+    <ClCompile Include="main_window_setup.cpp" />
     <ClCompile Include="session.cpp" />
     <ClCompile Include="model\record_table_model.cpp">
       <Filter>model</Filter>

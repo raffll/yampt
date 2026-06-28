@@ -30,7 +30,7 @@ void editor_text_edit_t::set_record_type(tools_t::rec_type_t type)
 	record_type_ = type;
 }
 
-void editor_text_edit_t::keyPressEvent(QKeyEvent * event)
+bool editor_text_edit_t::handle_navigation_keys(QKeyEvent * event)
 {
 	if (event->modifiers() == Qt::ShiftModifier && (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter))
 	{
@@ -46,77 +46,70 @@ void editor_text_edit_t::keyPressEvent(QKeyEvent * event)
 				cursor.movePosition(QTextCursor::StartOfBlock);
 				cursor.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
 				setTextCursor(cursor);
-				return;
+				return true;
 			}
 		}
 
 		emit navigate_next();
-		return;
+		return true;
 	}
 
 	if (event->modifiers() == Qt::ControlModifier && event->key() == Qt::Key_Down)
 	{
 		emit navigate_next();
-		return;
+		return true;
 	}
 
 	if (event->modifiers() == Qt::ControlModifier && event->key() == Qt::Key_Up)
 	{
 		emit navigate_prev();
-		return;
+		return true;
 	}
 
-	if (block_multiline_ && (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter))
-	{
-		event->ignore();
-		return;
-	}
+	return false;
+}
 
-	if (block_multiline_ && textCursor().hasSelection())
+bool editor_text_edit_t::handle_multiline_guard(QKeyEvent * event)
+{
+	if (!block_multiline_)
+		return false;
+
+	if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter)
+		return true;
+
+	if (textCursor().hasSelection())
 	{
 		auto selected = textCursor().selectedText();
 		if (selected.contains(QChar::ParagraphSeparator) || selected.contains('\n'))
 		{
 			if (event->key() == Qt::Key_Backspace || event->key() == Qt::Key_Delete || !event->text().isEmpty())
-			{
-				event->ignore();
-				return;
-			}
+				return true;
 		}
 	}
 
-	if (block_multiline_ && event->key() == Qt::Key_Backspace)
+	if (event->key() == Qt::Key_Backspace)
 	{
 		auto cursor = textCursor();
 		if (cursor.atBlockStart() && cursor.position() > 0)
-		{
-			event->ignore();
-			return;
-		}
+			return true;
 	}
 
-	if (block_multiline_ && event->key() == Qt::Key_Delete)
+	if (event->key() == Qt::Key_Delete)
 	{
 		auto cursor = textCursor();
 		if (cursor.atBlockEnd() && cursor.position() < document()->characterCount() - 1)
-		{
-			event->ignore();
-			return;
-		}
+			return true;
 	}
 
-	QPlainTextEdit::keyPressEvent(event);
+	return false;
+}
 
+void editor_text_edit_t::apply_auto_capitalize()
+{
 	if (!auto_capitalize_)
 		return;
 
 	if (record_type_ == tools_t::rec_type_t::sctx || record_type_ == tools_t::rec_type_t::bnam)
-		return;
-
-	if (event->text().length() != 1)
-		return;
-
-	if (!event->text()[0].isLetter())
 		return;
 
 	auto cursor = textCursor();
@@ -141,6 +134,28 @@ void editor_text_edit_t::keyPressEvent(QKeyEvent * event)
 	cursor.setPosition(pos - 1);
 	cursor.setPosition(pos, QTextCursor::KeepAnchor);
 	cursor.insertText(letter.toUpper());
+}
+
+void editor_text_edit_t::keyPressEvent(QKeyEvent * event)
+{
+	if (handle_navigation_keys(event))
+		return;
+
+	if (handle_multiline_guard(event))
+	{
+		event->ignore();
+		return;
+	}
+
+	QPlainTextEdit::keyPressEvent(event);
+
+	if (event->text().length() != 1)
+		return;
+
+	if (!event->text()[0].isLetter())
+		return;
+
+	apply_auto_capitalize();
 }
 
 void editor_text_edit_t::insertFromMimeData(const QMimeData * source)

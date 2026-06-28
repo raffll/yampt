@@ -44,6 +44,19 @@ public:
 	    bool regex_mode);
 
 private:
+	struct search_params_t
+	{
+		std::string query;
+		std::string replacement;
+		bool case_sensitive = false;
+		std::optional<std::regex> regex_opt;
+		QString lower_query;
+	};
+
+	std::optional<search_params_t> build_search_params(const std::string & query, const std::string & replacement, bool case_sensitive, bool regex_mode);
+	bool matches_query(const std::string & text_value, const search_params_t & params);
+	std::optional<std::string> apply_replacement(const std::string & source_text, const search_params_t & params);
+
 	record_table_model_t & model_;
 	document_t *& active_doc_;
 };

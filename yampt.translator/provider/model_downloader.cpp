@@ -98,35 +98,90 @@ void model_downloader_t::download(const std::string & target_dir, std::function<
 	download_next();
 }
 
+void model_downloader_t::finalize_download()
+{
+	namespace fs = std::filesystem;
+
+	const auto & model_dir = fs::path(target_dir_) / "nllb-200" / "model";
+	const auto & spm_path = (model_dir / "sentencepiece.bpe.model").string();
+
+	for (const auto & lang_pair : LANG_PAIRS)
+	{
+		const auto & pair_dir = fs::path(target_dir_) / lang_pair.dir_name;
+		const auto & destination = (pair_dir / "sentencepiece.bpe.model").string();
+
+		if (!fs::exists(destination))
+			fs::copy_file(spm_path, destination);
+
+		const auto & model_link = pair_dir / "model";
+		if (!fs::exists(model_link))
+		{
+			std::error_code error_code;
+			fs::create_directory_symlink(fs::absolute(model_dir), model_link, error_code);
+			if (error_code)
+				fs::copy(model_dir, model_link, fs::copy_options::recursive, error_code);
+		}
+	}
+
+	tools_t::add_log("[info] all files downloaded\r\n");
+	emit finished(true, "");
+}
+
+void model_downloader_t::connect_reply_signals(QNetworkReply * reply)
+{
+	connect(
+	    reply,
+	    &QNetworkReply::downloadProgress,
+	    this,
+	    [this](qint64 received, qint64 total)
+	{
+		if (total <= 0)
+			return;
+
+		const auto & percent = static_cast<int>(received * 100 / total);
+		auto filename = files_[current_index_].url;
+		const auto & separator = filename.find_last_of('/');
+		if (separator != std::string::npos)
+			filename = filename.substr(separator + 1);
+
+		if (on_progress_)
+			on_progress_(
+			    "[info] " + filename + " " + std::to_string(percent) + "% (" + std::to_string(received / 1024) + "/" +
+			    std::to_string(total / 1024) + " KB)\r\n");
+	});
+
+	connect(
+	    reply,
+	    &QNetworkReply::errorOccurred,
+	    this,
+	    [this, reply](QNetworkReply::NetworkError code)
+	{
+		const auto & error_message = reply->errorString().toStdString();
+		if (on_progress_)
+			on_progress_("[error] network error " + std::to_string(static_cast<int>(code)) + ": " + error_message + "\r\n");
+	});
+
+	connect(
+	    reply,
+	    &QNetworkReply::sslErrors,
+	    this,
+	    [this, reply](const QList<QSslError> & errors)
+	{
+		for (const auto & error : errors)
+			if (on_progress_)
+				on_progress_("[warning] SSL: " + error.errorString().toStdString() + "\r\n");
+
+		reply->ignoreSslErrors();
+	});
+
+	connect(reply, &QNetworkReply::finished, this, [this, reply]() { on_file_finished(reply); });
+}
+
 void model_downloader_t::download_next()
 {
 	if (current_index_ >= files_.size())
 	{
-		namespace fs = std::filesystem;
-
-		auto model_dir = fs::path(target_dir_) / "nllb-200" / "model";
-		auto spm_path = (model_dir / "sentencepiece.bpe.model").string();
-
-		for (const auto & lp : LANG_PAIRS)
-		{
-			auto pair_dir = fs::path(target_dir_) / lp.dir_name;
-			auto dst = (pair_dir / "sentencepiece.bpe.model").string();
-
-			if (!fs::exists(dst))
-				fs::copy_file(spm_path, dst);
-
-			auto model_link = pair_dir / "model";
-			if (!fs::exists(model_link))
-			{
-				std::error_code ec;
-				fs::create_directory_symlink(fs::absolute(model_dir), model_link, ec);
-				if (ec)
-					fs::copy(model_dir, model_link, fs::copy_options::recursive, ec);
-			}
-		}
-
-		tools_t::add_log("[info] all files downloaded\r\n");
-		emit finished(true, "");
+		finalize_download();
 		return;
 	}
 
@@ -142,59 +197,14 @@ void model_downloader_t::download_next()
 
 	if (reply->error() != QNetworkReply::NoError)
 	{
-		auto err = reply->errorString().toStdString();
-		tools_t::add_log("[error] immediate network error: " + err + "\r\n");
-		emit finished(false, err);
+		const auto & error_message = reply->errorString().toStdString();
+		tools_t::add_log("[error] immediate network error: " + error_message + "\r\n");
+		emit finished(false, error_message);
 		reply->deleteLater();
 		return;
 	}
 
-	connect(
-	    reply,
-	    &QNetworkReply::downloadProgress,
-	    this,
-	    [this](qint64 received, qint64 total)
-	{
-		if (total > 0)
-		{
-			int pct = static_cast<int>(received * 100 / total);
-			auto filename = files_[current_index_].url;
-			auto sep = filename.find_last_of('/');
-			if (sep != std::string::npos)
-				filename = filename.substr(sep + 1);
-
-			if (on_progress_)
-				on_progress_(
-				    "[info] " + filename + " " + std::to_string(pct) + "% (" + std::to_string(received / 1024) + "/" +
-				    std::to_string(total / 1024) + " KB)\r\n");
-		}
-	});
-
-	connect(
-	    reply,
-	    &QNetworkReply::errorOccurred,
-	    this,
-	    [this, reply](QNetworkReply::NetworkError code)
-	{
-		auto err = reply->errorString().toStdString();
-		if (on_progress_)
-			on_progress_("[error] network error " + std::to_string(static_cast<int>(code)) + ": " + err + "\r\n");
-	});
-
-	connect(
-	    reply,
-	    &QNetworkReply::sslErrors,
-	    this,
-	    [this, reply](const QList<QSslError> & errors)
-	{
-		for (const auto & e : errors)
-			if (on_progress_)
-				on_progress_("[warning] SSL: " + e.errorString().toStdString() + "\r\n");
-
-		reply->ignoreSslErrors();
-	});
-
-	connect(reply, &QNetworkReply::finished, this, [this, reply]() { on_file_finished(reply); });
+	connect_reply_signals(reply);
 }
 
 void model_downloader_t::on_file_finished(QNetworkReply * reply)

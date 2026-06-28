@@ -94,6 +94,7 @@ private:
 	void process_indx_ordered(size_t i);
 	void process_dial_ordered(size_t i, std::string & dial_type, std::string & dial_foreign_name);
 	void process_info_ordered(size_t i, const std::string & dial_type, const std::string & dial_foreign_name);
+	void attach_speaker_metadata(const std::string & key_text, size_t record_index);
 	void process_sctx_ordered(size_t i);
 	void process_bnam_ordered(
 	    size_t i,
@@ -131,6 +132,23 @@ private:
 	    const std::string & new_text,
 	    tools_t::rec_type_t type);
 
+	void insert_changed_entry(
+	    const std::string & key_text,
+	    const std::string & old_text,
+	    const tools_t::record_entry_t & base_entry,
+	    tools_t::rec_type_t type);
+	void insert_unapproved_changed(
+	    const std::string & key_text,
+	    const std::string & old_text,
+	    const tools_t::record_entry_t & base_entry,
+	    tools_t::rec_type_t type);
+	void insert_adapted_entry(
+	    const std::string & key_text,
+	    const std::string & old_text,
+	    const tools_t::record_entry_t & base_entry,
+	    tools_t::rec_type_t type);
+	void enrich_info_speaker(const std::string & key_text, size_t record_index);
+
 	void insert_as_untranslated(const std::string & key_text, const std::string & old_text, tools_t::rec_type_t type);
 	void insert_with_status(
 	    const std::string & key_text,
@@ -164,9 +182,56 @@ private:
 	fingerprint_index_t build_cell_fingerprint_index(esm_reader_t & esm_src);
 	fingerprint_index_t build_dial_inam_index(esm_reader_t & esm_src);
 	static std::string make_cell_fingerprint(esm_reader_t & esm_src);
+	struct match_result_t
+	{
+		int score;
+		int score_orig;
+		int score_model;
+		int count;
+		size_t index;
+		std::string name;
+	};
+
+	match_result_t compute_best_match(
+	    const std::vector<std::string> & compare_words,
+	    const std::vector<std::string> & original_words,
+	    const std::vector<std::string> & translated_words,
+	    const std::vector<std::pair<size_t, std::string>> & candidates,
+	    const std::set<size_t> & matched_set);
+
+	bool check_all_same_name(
+	    const std::vector<std::string> & compare_words,
+	    const std::vector<std::pair<size_t, std::string>> & candidates,
+	    const std::set<size_t> & matched_set,
+	    const match_result_t & result);
+
+	void match_dial_by_inam(
+	    const fingerprint_index_t & native_inam_index,
+	    std::vector<std::pair<size_t, std::string>> & unmatched_foreign,
+	    std::set<size_t> & matched_native_records);
+
+	void match_dial_by_translation(
+	    std::vector<std::pair<size_t, std::string>> & unmatched_foreign,
+	    const std::set<size_t> & matched_native_records);
+
+	void report_unmatched_dials(
+	    const std::vector<std::pair<size_t, std::string>> & unmatched_foreign,
+	    const std::set<size_t> & matched_native_records);
+
 	void make_dict_cell_interior_heuristic(
 	    std::vector<std::pair<size_t, std::string>> & missing_cells,
 	    const std::set<size_t> & matched_native_records);
+
+	void build_sctx_schd_index(std::unordered_map<std::string, size_t> & schd_index);
+	void match_sctx_messages(
+	    const std::string & script_name,
+	    const std::vector<std::string> & native_messages,
+	    const std::unordered_map<std::string, size_t> & schd_index);
+
+	void match_bnam_native_infos(
+	    const std::string & info_key,
+	    const std::vector<std::string> & native_messages);
+	void collect_bnam_missing_topics(const std::set<std::string> & matched_foreign_topics);
 
 	esm_reader_t esm;
 	esm_reader_t esm_ext;

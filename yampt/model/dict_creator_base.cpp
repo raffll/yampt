@@ -42,6 +42,85 @@ static int count_shared_words(const std::vector<std::string> & a, const std::vec
 	return count;
 }
 
+static std::vector<std::string> build_compare_words(
+    const std::vector<std::string> & translated_words,
+    const std::vector<std::string> & original_words)
+{
+	std::vector<std::string> compare_words = translated_words;
+	for (const auto & w : original_words)
+	{
+		bool found = false;
+		for (const auto & cw : compare_words)
+		{
+			if (cw == w)
+			{
+				found = true;
+				break;
+			}
+		}
+		if (!found)
+			compare_words.push_back(w);
+	}
+	return compare_words;
+}
+
+dict_creator_t::match_result_t dict_creator_t::compute_best_match(
+    const std::vector<std::string> & compare_words,
+    const std::vector<std::string> & original_words,
+    const std::vector<std::string> & translated_words,
+    const std::vector<std::pair<size_t, std::string>> & candidates,
+    const std::set<size_t> & matched_set)
+{
+	match_result_t result{ 0, 0, 0, 0, 0, {} };
+
+	for (size_t ni = 0; ni < candidates.size(); ++ni)
+	{
+		if (matched_set.count(ni))
+			continue;
+
+		auto native_words = split_words(candidates[ni].second);
+		int score_orig = count_shared_words(original_words, native_words);
+		int score_model = count_shared_words(translated_words, native_words);
+		int score = count_shared_words(compare_words, native_words);
+
+		if (score > result.score)
+		{
+			result.score = score;
+			result.score_orig = score_orig;
+			result.score_model = score_model;
+			result.count = 1;
+			result.index = ni;
+			result.name = candidates[ni].second;
+		}
+		else if (score == result.score && score > 0)
+		{
+			result.count++;
+		}
+	}
+
+	return result;
+}
+
+bool dict_creator_t::check_all_same_name(
+    const std::vector<std::string> & compare_words,
+    const std::vector<std::pair<size_t, std::string>> & candidates,
+    const std::set<size_t> & matched_set,
+    const match_result_t & result)
+{
+	for (size_t ni = 0; ni < candidates.size(); ++ni)
+	{
+		if (matched_set.count(ni))
+			continue;
+
+		auto native_words = split_words(candidates[ni].second);
+		int score = count_shared_words(compare_words, native_words);
+		if (score == result.score && candidates[ni].second != result.name)
+			return false;
+	}
+
+	return true;
+}
+
 void dict_creator_t::make_dict_base()
 {
 	load_english_dict();
@@ -379,9 +458,9 @@ void dict_creator_t::make_dict_base_info()
 			{
 				const auto & native_name = esm.get_value().text;
 				const auto dial_type = tools_t::get_dialog_type(esm.get_key().content);
-				auto map_it = dial_native_to_foreign.find(native_name);
-				if (map_it != dial_native_to_foreign.end())
-					key_prefix = dial_type + "^" + map_it->second;
+				auto it_map = dial_native_to_foreign.find(native_name);
+				if (it_map != dial_native_to_foreign.end())
+					key_prefix = dial_type + "^" + it_map->second;
 				else
 					key_prefix = dial_type + "^" + native_name;
 			}
@@ -423,11 +502,11 @@ void dict_creator_t::make_dict_base_info()
 			continue;
 
 		const auto & speaker_id = esm.get_value().text;
-		auto npc_search = npc_index.find(speaker_id);
-		if (npc_search == npc_index.end())
+		auto it_npc = npc_index.find(speaker_id);
+		if (it_npc == npc_index.end())
 			continue;
 
-		esm_ref.select_record(npc_search->second);
+		esm_ref.select_record(it_npc->second);
 		esm_ref.set_key("FNAM");
 		esm_ref.set_value("FLAG");
 
@@ -449,11 +528,8 @@ void dict_creator_t::make_dict_base_info()
 	}
 }
 
-void dict_creator_t::make_dict_base_sctx()
+void dict_creator_t::build_sctx_schd_index(std::unordered_map<std::string, size_t> & schd_index)
 {
-	reset_counters();
-
-	std::unordered_map<std::string, size_t> schd_index;
 	for (size_t i = 0; i < esm_ref.get_records().size(); ++i)
 	{
 		esm_ref.select_record(i);
@@ -466,6 +542,71 @@ void dict_creator_t::make_dict_base_sctx()
 
 		schd_index.insert({ esm_ref.get_key().text, i });
 	}
+}
+
+void dict_creator_t::match_sctx_messages(
+    const std::string & script_name,
+    const std::vector<std::string> & native_messages,
+    const std::unordered_map<std::string, size_t> & schd_index)
+{
+	auto search = schd_index.find(script_name);
+	if (search == schd_index.end())
+	{
+		tools_t::add_log("[warning] SCTX not found: \"" + script_name + "\"\r\n");
+		for (const auto & msg : native_messages)
+		{
+			const auto key_text = script_name + "^" + msg;
+			insert_entry_base(key_text, "", msg, tools_t::rec_type_t::sctx, tools_t::status_t::mismatch);
+		}
+		return;
+	}
+
+	esm_ref.select_record(search->second);
+	esm_ref.set_key("SCHD");
+	esm_ref.set_value("SCTX");
+	if (!esm_ref.get_value().exist)
+	{
+		tools_t::add_log("[warning] SCTX not found: \"" + script_name + "\"\r\n");
+		for (const auto & msg : native_messages)
+		{
+			const auto key_text = script_name + "^" + msg;
+			insert_entry_base(key_text, "", msg, tools_t::rec_type_t::sctx, tools_t::status_t::mismatch);
+		}
+		return;
+	}
+
+	const auto foreign_messages = make_script_messages(esm_ref.get_value().text);
+
+	if (native_messages.size() != foreign_messages.size())
+	{
+		tools_t::add_log(
+		    "[warning] SCTX line count mismatch: \"" + script_name +
+		    "\" (native=" + std::to_string(native_messages.size()) +
+		    ", foreign=" + std::to_string(foreign_messages.size()) + ")\r\n");
+
+		for (const auto & msg : foreign_messages)
+		{
+			const auto key_text = script_name + "^" + msg;
+			insert_entry_base(key_text, msg, msg, tools_t::rec_type_t::sctx, tools_t::status_t::mismatch);
+		}
+		return;
+	}
+
+	for (size_t k = 0; k < native_messages.size(); ++k)
+	{
+		const auto key_text = script_name + "^" + foreign_messages[k];
+		const auto & old_text = foreign_messages[k];
+		const auto & new_text = native_messages[k];
+		insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::sctx, "matched");
+	}
+}
+
+void dict_creator_t::make_dict_base_sctx()
+{
+	reset_counters();
+
+	std::unordered_map<std::string, size_t> schd_index;
+	build_sctx_schd_index(schd_index);
 
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
@@ -480,157 +621,61 @@ void dict_creator_t::make_dict_base_sctx()
 
 		const auto & script_name = esm.get_key().text;
 		const auto native_messages = make_script_messages(esm.get_value().text);
-
-		auto search = schd_index.find(script_name);
-		if (search == schd_index.end())
-		{
-			tools_t::add_log("[warning] SCTX not found: \"" + script_name + "\"\r\n");
-			for (const auto & msg : native_messages)
-			{
-				const auto key_text = script_name + "^" + msg;
-				insert_entry_base(key_text, "", msg, tools_t::rec_type_t::sctx, tools_t::status_t::mismatch);
-			}
-			continue;
-		}
-
-		esm_ref.select_record(search->second);
-		esm_ref.set_key("SCHD");
-		esm_ref.set_value("SCTX");
-		if (!esm_ref.get_value().exist)
-		{
-			tools_t::add_log("[warning] SCTX not found: \"" + script_name + "\"\r\n");
-			for (const auto & msg : native_messages)
-			{
-				const auto key_text = script_name + "^" + msg;
-				insert_entry_base(key_text, "", msg, tools_t::rec_type_t::sctx, tools_t::status_t::mismatch);
-			}
-			continue;
-		}
-
-		const auto foreign_messages = make_script_messages(esm_ref.get_value().text);
-
-		if (native_messages.size() != foreign_messages.size())
-		{
-			tools_t::add_log(
-			    "[warning] SCTX line count mismatch: \"" + script_name +
-			    "\" (native=" + std::to_string(native_messages.size()) +
-			    ", foreign=" + std::to_string(foreign_messages.size()) + ")\r\n");
-
-			for (const auto & msg : foreign_messages)
-			{
-				const auto key_text = script_name + "^" + msg;
-				insert_entry_base(key_text, msg, msg, tools_t::rec_type_t::sctx, tools_t::status_t::mismatch);
-			}
-			continue;
-		}
-
-		for (size_t k = 0; k < native_messages.size(); ++k)
-		{
-			const auto key_text = script_name + "^" + foreign_messages[k];
-			const auto & old_text = foreign_messages[k];
-			const auto & new_text = native_messages[k];
-			insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::sctx, "matched");
-		}
+		match_sctx_messages(script_name, native_messages, schd_index);
 	}
 }
 
-void dict_creator_t::make_dict_base_bnam()
+void dict_creator_t::match_bnam_native_infos(
+    const std::string & info_key,
+    const std::vector<std::string> & native_messages)
 {
-	std::string dial_type;
-	std::string dial_name;
-	std::string info_inam;
-	reset_counters();
-
-	std::set<std::string> matched_foreign_topics;
-	for (const auto & [native, foreign] : dial_native_to_foreign)
-		matched_foreign_topics.insert(foreign);
-
-	for (size_t i = 0; i < esm.get_records().size(); ++i)
+	auto search = info_index.find(info_key);
+	if (search == info_index.end())
 	{
-		esm.select_record(i);
-		const auto & rec_id = esm.get_record().id;
-
-		if (rec_id == "DIAL")
+		for (const auto & msg : native_messages)
 		{
-			esm.set_key("DATA");
-			esm.set_value("NAME");
-			if (esm.get_key().exist && esm.get_value().exist)
-			{
-				dial_type = tools_t::get_dialog_type(esm.get_key().content);
-				const auto & native_name = esm.get_value().text;
-				auto map_it = dial_native_to_foreign.find(native_name);
-				if (map_it != dial_native_to_foreign.end())
-					dial_name = map_it->second;
-				else
-					dial_name.clear();
-			}
-			continue;
+			const auto key_text = info_key + "^" + msg;
+			insert_entry_base(key_text, "", msg, tools_t::rec_type_t::bnam, tools_t::status_t::mismatch);
 		}
-
-		if (rec_id != "INFO")
-			continue;
-
-		if (dial_name.empty())
-			continue;
-
-		esm.set_key("INAM");
-		if (!esm.get_key().exist)
-			continue;
-
-		info_inam = esm.get_key().text;
-
-		esm.set_value("BNAM");
-		if (!esm.get_value().exist || esm.get_value().text.empty())
-			continue;
-
-		const auto native_messages = make_script_messages(esm.get_value().text);
-
-		const auto info_key = dial_type + "^" + dial_name + "^" + info_inam;
-		auto search = info_index.find(info_key);
-		if (search == info_index.end())
-		{
-			for (const auto & msg : native_messages)
-			{
-				const auto key_text = info_key + "^" + msg;
-				insert_entry_base(key_text, "", msg, tools_t::rec_type_t::bnam, tools_t::status_t::mismatch);
-			}
-			continue;
-		}
-
-		esm_ref.select_record(search->second);
-		esm_ref.set_value("BNAM");
-		if (!esm_ref.get_value().exist || esm_ref.get_value().text.empty())
-		{
-			for (const auto & msg : native_messages)
-			{
-				const auto key_text = info_key + "^" + msg;
-				insert_entry_base(key_text, "", msg, tools_t::rec_type_t::bnam, tools_t::status_t::mismatch);
-			}
-			continue;
-		}
-
-		const auto foreign_messages = make_script_messages(esm_ref.get_value().text);
-
-		if (native_messages.size() != foreign_messages.size())
-		{
-			tools_t::add_log("[warning] BNAM line count mismatch: \"" + info_key + "\"\r\n");
-			for (const auto & msg : foreign_messages)
-			{
-				const auto key_text = info_key + "^" + msg;
-				insert_entry_base(key_text, msg, msg, tools_t::rec_type_t::bnam, tools_t::status_t::mismatch);
-			}
-			continue;
-		}
-
-		for (size_t k = 0; k < native_messages.size(); ++k)
-		{
-			const auto key_text = info_key + "^" + foreign_messages[k];
-			const auto & old_text = foreign_messages[k];
-			const auto & new_text = native_messages[k];
-			insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::bnam, "matched");
-		}
+		return;
 	}
 
+	esm_ref.select_record(search->second);
+	esm_ref.set_value("BNAM");
+	if (!esm_ref.get_value().exist || esm_ref.get_value().text.empty())
+	{
+		for (const auto & msg : native_messages)
+		{
+			const auto key_text = info_key + "^" + msg;
+			insert_entry_base(key_text, "", msg, tools_t::rec_type_t::bnam, tools_t::status_t::mismatch);
+		}
+		return;
+	}
+
+	const auto foreign_messages = make_script_messages(esm_ref.get_value().text);
+
+	if (native_messages.size() != foreign_messages.size())
+	{
+		tools_t::add_log("[warning] BNAM line count mismatch: \"" + info_key + "\"\r\n");
+		for (const auto & msg : foreign_messages)
+		{
+			const auto key_text = info_key + "^" + msg;
+			insert_entry_base(key_text, msg, msg, tools_t::rec_type_t::bnam, tools_t::status_t::mismatch);
+		}
+		return;
+	}
+
+	for (size_t k = 0; k < native_messages.size(); ++k)
+	{
+		const auto key_text = info_key + "^" + foreign_messages[k];
+		const auto & old_text = foreign_messages[k];
+		const auto & new_text = native_messages[k];
+		insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::bnam, "matched");
+	}
+}
+
+void dict_creator_t::collect_bnam_missing_topics(const std::set<std::string> & matched_foreign_topics)
+{
 	std::string foreign_dial_type;
 	std::string foreign_dial_name;
 
@@ -676,21 +721,68 @@ void dict_creator_t::make_dict_base_bnam()
 	}
 }
 
-void dict_creator_t::make_dict_base_dial()
+void dict_creator_t::make_dict_base_bnam()
 {
-	const auto native_inam_index = build_dial_inam_index(esm);
-
-	struct dial_entry_t
-	{
-		size_t pos;
-		std::string name;
-		std::string inam;
-	};
-
-	std::vector<dial_entry_t> unmatched_foreign;
-	std::set<size_t> matched_native_records;
-
+	std::string dial_type;
+	std::string dial_name;
+	std::string info_inam;
 	reset_counters();
+
+	std::set<std::string> matched_foreign_topics;
+	for (const auto & [native, foreign] : dial_native_to_foreign)
+		matched_foreign_topics.insert(foreign);
+
+	for (size_t i = 0; i < esm.get_records().size(); ++i)
+	{
+		esm.select_record(i);
+		const auto & rec_id = esm.get_record().id;
+
+		if (rec_id == "DIAL")
+		{
+			esm.set_key("DATA");
+			esm.set_value("NAME");
+			if (esm.get_key().exist && esm.get_value().exist)
+			{
+				dial_type = tools_t::get_dialog_type(esm.get_key().content);
+				const auto & native_name = esm.get_value().text;
+				auto it_map = dial_native_to_foreign.find(native_name);
+				if (it_map != dial_native_to_foreign.end())
+					dial_name = it_map->second;
+				else
+					dial_name.clear();
+			}
+			continue;
+		}
+
+		if (rec_id != "INFO")
+			continue;
+
+		if (dial_name.empty())
+			continue;
+
+		esm.set_key("INAM");
+		if (!esm.get_key().exist)
+			continue;
+
+		info_inam = esm.get_key().text;
+
+		esm.set_value("BNAM");
+		if (!esm.get_value().exist || esm.get_value().text.empty())
+			continue;
+
+		const auto native_messages = make_script_messages(esm.get_value().text);
+		const auto info_key = dial_type + "^" + dial_name + "^" + info_inam;
+		match_bnam_native_infos(info_key, native_messages);
+	}
+
+	collect_bnam_missing_topics(matched_foreign_topics);
+}
+
+void dict_creator_t::match_dial_by_inam(
+    const fingerprint_index_t & native_inam_index,
+    std::vector<std::pair<size_t, std::string>> & unmatched_foreign,
+    std::set<size_t> & matched_native_records)
+{
 	for (size_t i = 0; i < esm_ref.get_records().size(); ++i)
 	{
 		esm_ref.select_record(i);
@@ -712,124 +804,58 @@ void dict_creator_t::make_dict_base_dial()
 
 		if (i + 1 >= esm_ref.get_records().size())
 		{
-			unmatched_foreign.push_back({ i, foreign_name, "" });
+			unmatched_foreign.push_back({ i, foreign_name });
 			continue;
 		}
 
 		esm_ref.select_record(i + 1);
 		if (esm_ref.get_record().id != "INFO")
 		{
-			unmatched_foreign.push_back({ i, foreign_name, "" });
+			unmatched_foreign.push_back({ i, foreign_name });
 			continue;
 		}
 
 		esm_ref.set_value("INAM");
 		if (!esm_ref.get_value().exist || esm_ref.get_value().text.empty())
 		{
-			unmatched_foreign.push_back({ i, foreign_name, "" });
+			unmatched_foreign.push_back({ i, foreign_name });
 			continue;
 		}
 
 		const auto inam = esm_ref.get_value().text;
 
-		auto match_it = native_inam_index.find(inam);
-		if (match_it == native_inam_index.end())
+		auto it_match = native_inam_index.find(inam);
+		if (it_match == native_inam_index.end())
 		{
-			unmatched_foreign.push_back({ i, foreign_name, inam });
+			unmatched_foreign.push_back({ i, foreign_name });
 			continue;
 		}
 
-		const auto & positions = match_it->second;
-		if (positions.size() == 1)
+		const auto & positions = it_match->second;
+		if (positions.size() != 1)
 		{
-			const auto native_pos = *positions.begin();
-			matched_native_records.insert(native_pos);
-
-			esm.select_record(native_pos);
-			esm.set_value("NAME");
-			const auto & native_name = esm.get_value().text;
-
-			dial_native_to_foreign[native_name] = foreign_name;
-			insert_entry_base(
-			    foreign_name, foreign_name, native_name, tools_t::rec_type_t::dial, "info");
+			unmatched_foreign.push_back({ i, foreign_name });
+			continue;
 		}
-		else
-		{
-			unmatched_foreign.push_back({ i, foreign_name, inam });
-		}
+
+		const auto native_pos = *positions.begin();
+		matched_native_records.insert(native_pos);
+
+		esm.select_record(native_pos);
+		esm.set_value("NAME");
+		const auto & native_name = esm.get_value().text;
+
+		dial_native_to_foreign[native_name] = foreign_name;
+		insert_entry_base(
+		    foreign_name, foreign_name, native_name, tools_t::rec_type_t::dial, "info");
 	}
+}
 
-	if (!translation_engine_ || !translation_engine_->is_loaded())
-	{
-		tools_t::add_log("[info] translation engine: inactive (DIAL heuristic skipped)\r\n");
-
-		std::vector<std::string> native_names;
-		for (size_t i = 0; i < esm.get_records().size(); ++i)
-		{
-			if (matched_native_records.count(i))
-				continue;
-
-			esm.select_record(i);
-			if (esm.get_record().id != "DIAL")
-				continue;
-
-			esm.set_key("DATA");
-			if (!esm.get_key().exist)
-				continue;
-
-			if (tools_t::get_dialog_type(esm.get_key().content) != "T")
-				continue;
-
-			esm.set_value("NAME");
-			if (!esm.get_value().exist)
-				continue;
-
-			native_names.push_back(esm.get_value().text);
-		}
-
-		std::string candidates_str;
-		for (const auto & name : native_names)
-		{
-			if (!candidates_str.empty())
-				candidates_str += "|";
-
-			candidates_str += name;
-		}
-
-		for (const auto & entry : unmatched_foreign)
-		{
-			insert_entry_base(
-			    entry.name, entry.name, entry.name, tools_t::rec_type_t::dial, tools_t::status_t::missing);
-
-			if (!candidates_str.empty())
-			{
-				auto * rec = dict.at(tools_t::rec_type_t::dial).find(entry.name);
-				if (rec)
-					rec->details = candidates_str;
-			}
-		}
-
-		for (const auto & entry : unmatched_foreign)
-			tools_t::add_log("[warning] missing DIAL: " + entry.name + "\r\n");
-
-		if (!native_names.empty())
-		{
-			tools_t::add_log(
-			    "[info] unmatched native DIAL candidates (" + std::to_string(native_names.size()) + "):\r\n");
-			for (const auto & name : native_names)
-				tools_t::add_log("  " + name + "\r\n");
-		}
-
-		return;
-	}
-
-	struct native_candidate_t
-	{
-		size_t pos;
-		std::string name;
-	};
-
-	std::vector<native_candidate_t> native_candidates;
+void dict_creator_t::match_dial_by_translation(
+    std::vector<std::pair<size_t, std::string>> & unmatched_foreign,
+    const std::set<size_t> & matched_native_records)
+{
+	std::vector<std::pair<size_t, std::string>> native_candidates;
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		if (matched_native_records.count(i))
@@ -863,24 +889,24 @@ void dict_creator_t::make_dict_base_dial()
 
 	for (size_t fi = 0; fi < unmatched_foreign.size(); ++fi)
 	{
-		const auto & foreign_name = unmatched_foreign[fi].name;
+		const auto & foreign_name = unmatched_foreign[fi].second;
 		for (size_t ni = 0; ni < native_candidates.size(); ++ni)
 		{
 			if (matched_native_idx.count(ni))
 				continue;
 
-			if (native_candidates[ni].name == foreign_name)
-			{
-				matched_foreign_idx.insert(fi);
-				matched_native_idx.insert(ni);
+			if (native_candidates[ni].second != foreign_name)
+				continue;
 
-				tools_t::add_log("[EXACT] \"" + foreign_name + "\"\r\n", true);
+			matched_foreign_idx.insert(fi);
+			matched_native_idx.insert(ni);
 
-				dial_native_to_foreign[foreign_name] = foreign_name;
-				insert_entry_base(
-				    foreign_name, foreign_name, foreign_name, tools_t::rec_type_t::dial, "exact");
-				break;
-			}
+			tools_t::add_log("[EXACT] \"" + foreign_name + "\"\r\n", true);
+
+			dial_native_to_foreign[foreign_name] = foreign_name;
+			insert_entry_base(
+			    foreign_name, foreign_name, foreign_name, tools_t::rec_type_t::dial, "exact");
+			break;
 		}
 	}
 
@@ -895,7 +921,7 @@ void dict_creator_t::make_dict_base_dial()
 			if (matched_foreign_idx.count(fi))
 				continue;
 
-			const auto & foreign_name = unmatched_foreign[fi].name;
+			const auto & foreign_name = unmatched_foreign[fi].second;
 
 			auto result = translation_engine_->translate(foreign_name);
 			if (!result.success)
@@ -904,107 +930,53 @@ void dict_creator_t::make_dict_base_dial()
 			const auto & translated_text = result.text;
 			auto translated_words = split_words(translated_text);
 			auto original_words = split_words(foreign_name);
+			auto compare_words = build_compare_words(translated_words, original_words);
 
-			std::vector<std::string> compare_words = translated_words;
-			for (const auto & w : original_words)
-			{
-				bool found = false;
-				for (const auto & cw : compare_words)
-				{
-					if (cw == w)
-					{
-						found = true;
-						break;
-					}
-				}
-				if (!found)
-					compare_words.push_back(w);
-			}
+			auto match = compute_best_match(
+			    compare_words, original_words, translated_words, native_candidates, matched_native_idx);
 
-			int best_score = 0;
-			int best_score_orig = 0;
-			int best_score_model = 0;
-			int best_count = 0;
-			size_t best_ni = 0;
-			std::string best_name;
-
-			for (size_t ni = 0; ni < native_candidates.size(); ++ni)
-			{
-				if (matched_native_idx.count(ni))
-					continue;
-
-				auto native_words = split_words(native_candidates[ni].name);
-				int score_orig = count_shared_words(original_words, native_words);
-				int score_model = count_shared_words(translated_words, native_words);
-				int score = count_shared_words(compare_words, native_words);
-				if (score > best_score)
-				{
-					best_score = score;
-					best_score_orig = score_orig;
-					best_score_model = score_model;
-					best_count = 1;
-					best_ni = ni;
-					best_name = native_candidates[ni].name;
-				}
-				else if (score == best_score && score > 0)
-				{
-					best_count++;
-				}
-			}
+			if (match.score <= 0)
+				continue;
 
 			bool resolved = false;
-
-			if (best_score > 0 && best_count > 1)
+			if (match.count > 1)
 			{
-				bool all_same_name = true;
-				for (size_t ni = 0; ni < native_candidates.size(); ++ni)
-				{
-					if (matched_native_idx.count(ni))
-						continue;
+				resolved = check_all_same_name(
+				    compare_words, native_candidates, matched_native_idx, match);
 
-					auto native_words = split_words(native_candidates[ni].name);
-					int score = count_shared_words(compare_words, native_words);
-					if (score == best_score && native_candidates[ni].name != best_name)
-					{
-						all_same_name = false;
-						break;
-					}
-				}
-
-				if (all_same_name)
+				if (resolved)
 				{
-					resolved = true;
 					tools_t::add_log(
-					    "[TIE-SAME iter=" + std::to_string(iteration) + " orig=" + std::to_string(best_score_orig) +
-					    " model=" + std::to_string(best_score_model) + " count=" + std::to_string(best_count) + "] \"" +
-					    foreign_name + "\" => \"" + translated_text + "\" -> \"" + best_name + "\"\r\n");
+					    "[TIE-SAME iter=" + std::to_string(iteration) + " orig=" + std::to_string(match.score_orig) +
+					    " model=" + std::to_string(match.score_model) + " count=" + std::to_string(match.count) +
+					    "] \"" + foreign_name + "\" => \"" + translated_text + "\" -> \"" + match.name + "\"\r\n");
 				}
 			}
 
-			if (best_score > 0 && (best_count == 1 || resolved))
+			if (match.count == 1 || resolved)
 			{
 				matched_foreign_idx.insert(fi);
-				matched_native_idx.insert(best_ni);
+				matched_native_idx.insert(match.index);
 
 				if (!resolved)
 				{
 					tools_t::add_log(
-					    "[TRANSLATE iter=" + std::to_string(iteration) + " orig=" + std::to_string(best_score_orig) +
-					    " model=" + std::to_string(best_score_model) + "] \"" + foreign_name + "\" => \"" +
-					    translated_text + "\" -> \"" + best_name + "\"\r\n");
+					    "[TRANSLATE iter=" + std::to_string(iteration) + " orig=" + std::to_string(match.score_orig) +
+					    " model=" + std::to_string(match.score_model) + "] \"" + foreign_name + "\" => \"" +
+					    translated_text + "\" -> \"" + match.name + "\"\r\n");
 				}
 
-				dial_native_to_foreign[best_name] = foreign_name;
+				dial_native_to_foreign[match.name] = foreign_name;
 				insert_entry_base(
-				    foreign_name, foreign_name, best_name, tools_t::rec_type_t::dial, "heuristic");
+				    foreign_name, foreign_name, match.name, tools_t::rec_type_t::dial, "heuristic");
 				progress = true;
 			}
-			else if (best_score > 0 && best_count > 1 && !resolved)
+			else if (!resolved)
 			{
 				tools_t::add_log(
-				    "[TIE iter=" + std::to_string(iteration) + " orig=" + std::to_string(best_score_orig) +
-				    " model=" + std::to_string(best_score_model) + " count=" + std::to_string(best_count) + "] \"" +
-				    foreign_name + "\"\r\n");
+				    "[TIE iter=" + std::to_string(iteration) + " orig=" + std::to_string(match.score_orig) +
+				    " model=" + std::to_string(match.score_model) + " count=" + std::to_string(match.count) +
+				    "] \"" + foreign_name + "\"\r\n");
 			}
 		}
 	}
@@ -1015,7 +987,7 @@ void dict_creator_t::make_dict_base_dial()
 	for (size_t ni = 0; ni < native_candidates.size(); ++ni)
 	{
 		if (!matched_native_idx.count(ni))
-			unmatched_native_names.push_back(native_candidates[ni].name);
+			unmatched_native_names.push_back(native_candidates[ni].second);
 	}
 
 	std::string candidates_str;
@@ -1032,7 +1004,7 @@ void dict_creator_t::make_dict_base_dial()
 		if (matched_foreign_idx.count(fi))
 			continue;
 
-		const auto & name = unmatched_foreign[fi].name;
+		const auto & name = unmatched_foreign[fi].second;
 		tools_t::add_log("  " + name + "\r\n", true);
 
 		insert_entry_base(name, name, name, tools_t::rec_type_t::dial, tools_t::status_t::missing);
@@ -1049,7 +1021,7 @@ void dict_creator_t::make_dict_base_dial()
 	for (size_t ni = 0; ni < native_candidates.size(); ++ni)
 	{
 		if (!matched_native_idx.count(ni))
-			tools_t::add_log("  " + native_candidates[ni].name + "\r\n", true);
+			tools_t::add_log("  " + native_candidates[ni].second + "\r\n", true);
 	}
 
 	for (size_t fi = 0; fi < unmatched_foreign.size(); ++fi)
@@ -1057,7 +1029,7 @@ void dict_creator_t::make_dict_base_dial()
 		if (matched_foreign_idx.count(fi))
 			continue;
 
-		tools_t::add_log("[warning] missing DIAL: " + unmatched_foreign[fi].name + "\r\n");
+		tools_t::add_log("[warning] missing DIAL: " + unmatched_foreign[fi].second + "\r\n");
 	}
 
 	if (!unmatched_native_names.empty())
@@ -1067,6 +1039,89 @@ void dict_creator_t::make_dict_base_dial()
 		for (const auto & name : unmatched_native_names)
 			tools_t::add_log("  " + name + "\r\n");
 	}
+}
+
+void dict_creator_t::report_unmatched_dials(
+    const std::vector<std::pair<size_t, std::string>> & unmatched_foreign,
+    const std::set<size_t> & matched_native_records)
+{
+	tools_t::add_log("[info] translation engine: inactive (DIAL heuristic skipped)\r\n");
+
+	std::vector<std::string> native_names;
+	for (size_t i = 0; i < esm.get_records().size(); ++i)
+	{
+		if (matched_native_records.count(i))
+			continue;
+
+		esm.select_record(i);
+		if (esm.get_record().id != "DIAL")
+			continue;
+
+		esm.set_key("DATA");
+		if (!esm.get_key().exist)
+			continue;
+
+		if (tools_t::get_dialog_type(esm.get_key().content) != "T")
+			continue;
+
+		esm.set_value("NAME");
+		if (!esm.get_value().exist)
+			continue;
+
+		native_names.push_back(esm.get_value().text);
+	}
+
+	std::string candidates_str;
+	for (const auto & name : native_names)
+	{
+		if (!candidates_str.empty())
+			candidates_str += "|";
+
+		candidates_str += name;
+	}
+
+	for (const auto & [pos, name] : unmatched_foreign)
+	{
+		insert_entry_base(
+		    name, name, name, tools_t::rec_type_t::dial, tools_t::status_t::missing);
+
+		if (!candidates_str.empty())
+		{
+			auto * entry = dict.at(tools_t::rec_type_t::dial).find(name);
+			if (entry)
+				entry->details = candidates_str;
+		}
+	}
+
+	for (const auto & [pos, name] : unmatched_foreign)
+		tools_t::add_log("[warning] missing DIAL: " + name + "\r\n");
+
+	if (!native_names.empty())
+	{
+		tools_t::add_log(
+		    "[info] unmatched native DIAL candidates (" + std::to_string(native_names.size()) + "):\r\n");
+		for (const auto & name : native_names)
+			tools_t::add_log("  " + name + "\r\n");
+	}
+}
+
+void dict_creator_t::make_dict_base_dial()
+{
+	const auto native_inam_index = build_dial_inam_index(esm);
+
+	std::vector<std::pair<size_t, std::string>> unmatched_foreign;
+	std::set<size_t> matched_native_records;
+
+	reset_counters();
+	match_dial_by_inam(native_inam_index, unmatched_foreign, matched_native_records);
+
+	if (!translation_engine_ || !translation_engine_->is_loaded())
+	{
+		report_unmatched_dials(unmatched_foreign, matched_native_records);
+		return;
+	}
+
+	match_dial_by_translation(unmatched_foreign, matched_native_records);
 }
 
 void dict_creator_t::make_dict_base_cell()
@@ -1518,15 +1573,15 @@ void dict_creator_t::make_dict_cell_exterior()
 			continue;
 		}
 
-		auto match_it = esm_index.find(coord_key);
-		if (match_it == esm_index.end())
+		auto it_match = esm_index.find(coord_key);
+		if (it_match == esm_index.end())
 		{
 			missing_cells.push_back({ i, ref_cell_name });
 			counter_missing++;
 			continue;
 		}
 
-		esm.select_record(match_it->second);
+		esm.select_record(it_match->second);
 		esm.set_value("NAME");
 		const auto & val_text = esm.get_value().text;
 		insert_entry_base(ref_cell_name, ref_cell_name, val_text, tools_t::rec_type_t::cell, "coords");
@@ -1571,15 +1626,15 @@ void dict_creator_t::make_dict_cell_interior()
 			continue;
 		}
 
-		auto match_it = cell_index_esm.find(fingerprint);
-		if (match_it == cell_index_esm.end())
+		auto it_match = cell_index_esm.find(fingerprint);
+		if (it_match == cell_index_esm.end())
 		{
 			missing_cells.push_back({ i, ref_cell_name });
 			counter_missing++;
 			continue;
 		}
 
-		const auto & positions = match_it->second;
+		const auto & positions = it_match->second;
 		if (positions.size() > 1)
 		{
 			missing_cells.push_back({ i, ref_cell_name });
@@ -1651,18 +1706,18 @@ void dict_creator_t::make_dict_cell_interior_heuristic(
 			if (matched_native.count(ni))
 				continue;
 
-			if (native_cells[ni].second == foreign_name)
-			{
-				matched_foreign.insert(fi);
-				matched_native.insert(ni);
-				matched_native_names.insert(foreign_name);
+			if (native_cells[ni].second != foreign_name)
+				continue;
 
-				tools_t::add_log("[EXACT] \"" + foreign_name + "\"\r\n", true);
+			matched_foreign.insert(fi);
+			matched_native.insert(ni);
+			matched_native_names.insert(foreign_name);
 
-				insert_entry_base(
-				    foreign_name, foreign_name, foreign_name, tools_t::rec_type_t::cell, "exact");
-				break;
-			}
+			tools_t::add_log("[EXACT] \"" + foreign_name + "\"\r\n", true);
+
+			insert_entry_base(
+			    foreign_name, foreign_name, foreign_name, tools_t::rec_type_t::cell, "exact");
+			break;
 		}
 	}
 
@@ -1678,9 +1733,6 @@ void dict_creator_t::make_dict_cell_interior_heuristic(
 				continue;
 
 			const auto & foreign_name = missing_cells[fi].second;
-			std::vector<std::string> compare_words;
-			bool used_translation = false;
-			std::string translated_text;
 
 			if (!translation_engine_ || !translation_engine_->is_loaded())
 				continue;
@@ -1689,109 +1741,55 @@ void dict_creator_t::make_dict_cell_interior_heuristic(
 			if (!result.success)
 				continue;
 
-			translated_text = result.text;
+			const auto & translated_text = result.text;
 			auto translated_words = split_words(translated_text);
 			auto original_words = split_words(foreign_name);
-			compare_words = translated_words;
-			for (const auto & w : original_words)
-			{
-				bool found = false;
-				for (const auto & cw : compare_words)
-				{
-					if (cw == w)
-					{
-						found = true;
-						break;
-					}
-				}
-				if (!found)
-					compare_words.push_back(w);
-			}
-			used_translation = true;
+			auto compare_words = build_compare_words(translated_words, original_words);
 
-			int best_score = 0;
-			int best_score_orig = 0;
-			int best_score_model = 0;
-			int best_count = 0;
-			size_t best_ni = 0;
-			std::string best_name;
+			auto match = compute_best_match(
+			    compare_words, original_words, translated_words, native_cells, matched_native);
 
-			for (size_t ni = 0; ni < native_cells.size(); ++ni)
-			{
-				if (matched_native.count(ni))
-					continue;
-
-				auto esm_words = split_words(native_cells[ni].second);
-				int score_orig = count_shared_words(original_words, esm_words);
-				int score_model = count_shared_words(translated_words, esm_words);
-				int score = count_shared_words(compare_words, esm_words);
-				if (score > best_score)
-				{
-					best_score = score;
-					best_score_orig = score_orig;
-					best_score_model = score_model;
-					best_count = 1;
-					best_ni = ni;
-					best_name = native_cells[ni].second;
-				}
-				else if (score == best_score && score > 0)
-				{
-					best_count++;
-				}
-			}
+			if (match.score <= 0)
+				continue;
 
 			bool resolved = false;
-
-			if (best_score > 0 && best_count > 1)
+			if (match.count > 1)
 			{
-				bool all_same_name = true;
-				for (size_t ni = 0; ni < native_cells.size(); ++ni)
-				{
-					if (matched_native.count(ni))
-						continue;
+				resolved = check_all_same_name(
+				    compare_words, native_cells, matched_native, match);
 
-					auto esm_words = split_words(native_cells[ni].second);
-					int score = count_shared_words(compare_words, esm_words);
-					if (score == best_score && native_cells[ni].second != best_name)
-					{
-						all_same_name = false;
-						break;
-					}
-				}
-
-				if (all_same_name)
+				if (resolved)
 				{
-					resolved = true;
 					tools_t::add_log(
-					    "[TIE-SAME iter=" + std::to_string(iteration) + " orig=" + std::to_string(best_score_orig) +
-					    " model=" + std::to_string(best_score_model) + " count=" + std::to_string(best_count) + "] \"" +
-					    foreign_name + "\" => \"" + translated_text + "\" -> \"" + best_name + "\"\r\n");
+					    "[TIE-SAME iter=" + std::to_string(iteration) + " orig=" + std::to_string(match.score_orig) +
+					    " model=" + std::to_string(match.score_model) + " count=" + std::to_string(match.count) +
+					    "] \"" + foreign_name + "\" => \"" + translated_text + "\" -> \"" + match.name + "\"\r\n");
 				}
 			}
 
-			if (best_score > 0 && (best_count == 1 || resolved))
+			if (match.count == 1 || resolved)
 			{
 				matched_foreign.insert(fi);
-				matched_native.insert(best_ni);
+				matched_native.insert(match.index);
 
 				if (!resolved)
 				{
 					tools_t::add_log(
-					    "[TRANSLATE iter=" + std::to_string(iteration) + " orig=" + std::to_string(best_score_orig) +
-					    " model=" + std::to_string(best_score_model) + "] \"" + foreign_name + "\" => \"" +
-					    translated_text + "\" -> \"" + best_name + "\"\r\n");
+					    "[TRANSLATE iter=" + std::to_string(iteration) + " orig=" + std::to_string(match.score_orig) +
+					    " model=" + std::to_string(match.score_model) + "] \"" + foreign_name + "\" => \"" +
+					    translated_text + "\" -> \"" + match.name + "\"\r\n");
 				}
 
 				const auto * cell_status = resolved ? "exact" : "heuristic";
-				insert_entry_base(foreign_name, foreign_name, best_name, tools_t::rec_type_t::cell, cell_status);
+				insert_entry_base(foreign_name, foreign_name, match.name, tools_t::rec_type_t::cell, cell_status);
 				progress = true;
 			}
-			else if (best_score > 0 && best_count > 1 && !resolved)
+			else if (!resolved)
 			{
 				tools_t::add_log(
-				    "[TIE iter=" + std::to_string(iteration) + " orig=" + std::to_string(best_score_orig) +
-				    " model=" + std::to_string(best_score_model) + " count=" + std::to_string(best_count) + "] \"" +
-				    foreign_name + "\"\r\n");
+				    "[TIE iter=" + std::to_string(iteration) + " orig=" + std::to_string(match.score_orig) +
+				    " model=" + std::to_string(match.score_model) + " count=" + std::to_string(match.count) +
+				    "] \"" + foreign_name + "\"\r\n");
 			}
 		}
 	}

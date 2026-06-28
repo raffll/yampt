@@ -51,6 +51,13 @@ signals:
 	void apply_clicked();
 
 private:
+	QWidget * setup_left_panel(QSplitter * parent_splitter);
+	QWidget * setup_right_panel(QSplitter * parent_splitter);
+	void setup_connections();
+
+	static std::vector<std::string> extract_quoted_strings(const std::string & source_text);
+	static QString join_extracted_lines(const std::vector<std::string> & extracted);
+
 	QSplitter * splitter_ = nullptr;
 	editor_text_edit_t * original_view_ = nullptr;
 	editor_text_edit_t * adapted_from_view_ = nullptr;

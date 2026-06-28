@@ -30,6 +30,7 @@ signals:
 private:
 	void on_status_clicked(const std::string & status);
 	void on_status_right_clicked(const std::string & status);
+	void add_status_group(const std::vector<std::string> & statuses);
 	void update_button_styles();
 
 	struct status_button_t

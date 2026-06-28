@@ -12,13 +12,13 @@
 
 #include <algorithm>
 #include <map>
-#include <set>
 
-static std::string normalize_path(std::string p)
+static std::string normalize_path(std::string input)
 {
-	std::replace(p.begin(), p.end(), '\\', '/');
-	std::transform(p.begin(), p.end(), p.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-	return p;
+	std::replace(input.begin(), input.end(), '\\', '/');
+	std::transform(
+	    input.begin(), input.end(), input.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+	return input;
 }
 
 dict_selection_dialog_t::dict_selection_dialog_t(
@@ -42,13 +42,20 @@ dict_selection_dialog_t::dict_selection_dialog_t(
 
 	order_list_ = new QListWidget(this);
 
-	struct root_builder_t
-	{
-		std::map<std::string, std::vector<const dict_entry_t *>> subfolder_items;
-		std::vector<const dict_entry_t *> root_items;
-	};
+	populate_tree(entries);
+	populate_order_list(entries, saved_order);
 
-	std::map<std::string, root_builder_t> roots;
+	layout->addWidget(new QLabel("Merge order (last wins):", this));
+	layout->addWidget(order_list_);
+
+	setup_buttons(layout);
+	connect_signals();
+	update_ok_button();
+}
+
+void dict_selection_dialog_t::populate_tree(const std::vector<dict_entry_t> & entries)
+{
+	std::map<std::string, root_content_t> roots;
 
 	for (const auto & entry : entries)
 	{
@@ -61,102 +68,105 @@ dict_selection_dialog_t::dict_selection_dialog_t(
 			roots[entry.root_path].subfolder_items[entry.subfolder].push_back(&entry);
 	}
 
-	auto add_dict_items = [&](QTreeWidgetItem * parent_item, const std::vector<const dict_entry_t *> & items)
+	for (const auto & [root_path, content] : roots)
+		add_tree_root_node(root_path, content);
+}
+
+void dict_selection_dialog_t::add_tree_root_node(const std::string & root_path, const root_content_t & content)
+{
+	auto root_label = root_path;
+	const auto & separator = root_label.find_last_of("/\\");
+	if (separator != std::string::npos)
+		root_label = root_label.substr(separator + 1);
+
+	if (root_label == "workspace")
+		root_label = workspace_label;
+
+	auto * root_node = new QTreeWidgetItem(tree_);
+	root_node->setText(0, QString::fromStdString(root_label));
+	root_node->setFlags(Qt::ItemIsEnabled);
+	QFont bold_font = root_node->font(0);
+	bold_font.setBold(true);
+	root_node->setFont(0, bold_font);
+
+	add_dict_tree_items(root_node, content.root_items);
+
+	for (const auto & [subfolder, sub_items] : content.subfolder_items)
 	{
-		for (const auto * e : items)
-		{
-			auto * item = new QTreeWidgetItem(parent_item);
+		auto * folder_node = new QTreeWidgetItem(root_node);
+		folder_node->setText(0, QString::fromStdString(subfolder));
+		folder_node->setFlags(Qt::ItemIsEnabled);
+		folder_node->setForeground(0, QColor(130, 130, 130));
 
-			display_name_t dname(e->name);
-			dname.set_kind(e->kind);
-			item->setText(0, QString::fromStdString(dname.to_string()));
-			item->setData(0, Qt::UserRole, QString::fromStdString(e->path));
-			item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
-			item->setCheckState(0, e->checked ? Qt::Checked : Qt::Unchecked);
-
-			if (e->kind == dict_kind_t::base)
-				item->setForeground(0, QColor(180, 140, 80));
-			else
-				item->setForeground(0, QColor(100, 160, 220));
-		}
-	};
-
-	for (const auto & [root_path, rb] : roots)
-	{
-		auto root_label = root_path;
-		auto sep = root_label.find_last_of("/\\");
-		if (sep != std::string::npos)
-			root_label = root_label.substr(sep + 1);
-
-		if (root_label == "workspace")
-			root_label = workspace_label;
-
-		auto * root_node = new QTreeWidgetItem(tree_);
-		root_node->setText(0, QString::fromStdString(root_label));
-		root_node->setFlags(Qt::ItemIsEnabled);
-		QFont bold = root_node->font(0);
-		bold.setBold(true);
-		root_node->setFont(0, bold);
-
-		add_dict_items(root_node, rb.root_items);
-
-		for (const auto & [subfolder, sub_items] : rb.subfolder_items)
-		{
-			auto * folder_node = new QTreeWidgetItem(root_node);
-			folder_node->setText(0, QString::fromStdString(subfolder));
-			folder_node->setFlags(Qt::ItemIsEnabled);
-			folder_node->setForeground(0, QColor(130, 130, 130));
-
-			add_dict_items(folder_node, sub_items);
-			folder_node->setExpanded(true);
-		}
-
-		root_node->setExpanded(true);
+		add_dict_tree_items(folder_node, sub_items);
+		folder_node->setExpanded(true);
 	}
 
-	std::set<std::string> saved_set;
-	for (const auto & p : saved_order)
-		saved_set.insert(normalize_path(p));
+	root_node->setExpanded(true);
+}
 
-	bool use_saved = !saved_order.empty();
+void dict_selection_dialog_t::add_dict_tree_items(
+    QTreeWidgetItem * parent_item,
+    const std::vector<const dict_entry_t *> & items)
+{
+	for (const auto * entry : items)
+	{
+		auto * item = new QTreeWidgetItem(parent_item);
+		display_name_t dname(entry->name);
+		dname.set_kind(entry->kind);
+		item->setText(0, QString::fromStdString(dname.to_string()));
+		item->setData(0, Qt::UserRole, QString::fromStdString(entry->path));
+		item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+		item->setCheckState(0, entry->checked ? Qt::Checked : Qt::Unchecked);
 
-	if (use_saved)
+		if (entry->kind == dict_kind_t::base)
+			item->setForeground(0, QColor(180, 140, 80));
+		else
+			item->setForeground(0, QColor(100, 160, 220));
+	}
+}
+
+void dict_selection_dialog_t::populate_order_list(
+    const std::vector<dict_entry_t> & entries,
+    const std::vector<std::string> & saved_order)
+{
+	if (!saved_order.empty())
 	{
 		for (const auto & saved_path : saved_order)
 		{
-			auto norm = normalize_path(saved_path);
-			for (const auto & e : entries)
+			const auto & normalized = normalize_path(saved_path);
+			for (const auto & entry : entries)
 			{
-				if (normalize_path(e.path) != norm)
+				if (normalize_path(entry.path) != normalized)
 					continue;
 
-				display_name_t dname(e.name);
-				dname.set_kind(e.kind);
+				display_name_t dname(entry.name);
+				dname.set_kind(entry.kind);
 				auto * order_item = new QListWidgetItem(QString::fromStdString(dname.to_string()));
-				order_item->setData(Qt::UserRole, QString::fromStdString(e.path));
+				order_item->setData(Qt::UserRole, QString::fromStdString(entry.path));
 				order_list_->addItem(order_item);
 				break;
 			}
 		}
+
+		return;
 	}
-	else
+
+	for (const auto & entry : entries)
 	{
-		for (const auto & e : entries)
-		{
-			if (!e.checked)
-				continue;
+		if (!entry.checked)
+			continue;
 
-			display_name_t dname(e.name);
-			dname.set_kind(e.kind);
-			auto * order_item = new QListWidgetItem(QString::fromStdString(dname.to_string()));
-			order_item->setData(Qt::UserRole, QString::fromStdString(e.path));
-			order_list_->addItem(order_item);
-		}
+		display_name_t dname(entry.name);
+		dname.set_kind(entry.kind);
+		auto * order_item = new QListWidgetItem(QString::fromStdString(dname.to_string()));
+		order_item->setData(Qt::UserRole, QString::fromStdString(entry.path));
+		order_list_->addItem(order_item);
 	}
+}
 
-	layout->addWidget(new QLabel("Merge order (last wins):", this));
-	layout->addWidget(order_list_);
-
+void dict_selection_dialog_t::setup_buttons(QVBoxLayout * layout)
+{
 	auto * order_buttons = new QHBoxLayout;
 	up_button_ = new QPushButton("Up", this);
 	down_button_ = new QPushButton("Down", this);
@@ -167,9 +177,10 @@ dict_selection_dialog_t::dict_selection_dialog_t(
 
 	button_box_ = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
 	layout->addWidget(button_box_);
+}
 
-	update_ok_button();
-
+void dict_selection_dialog_t::connect_signals()
+{
 	connect(tree_, &QTreeWidget::itemChanged, this, &dict_selection_dialog_t::on_tree_item_changed);
 	connect(up_button_, &QPushButton::clicked, this, &dict_selection_dialog_t::on_move_up);
 	connect(down_button_, &QPushButton::clicked, this, &dict_selection_dialog_t::on_move_down);
@@ -180,23 +191,23 @@ dict_selection_dialog_t::dict_selection_dialog_t(
 std::vector<std::string> dict_selection_dialog_t::get_selected_paths() const
 {
 	std::vector<std::string> result;
-	for (int i = 0; i < order_list_->count(); ++i)
-		result.push_back(order_list_->item(i)->data(Qt::UserRole).toString().toStdString());
+	for (int index = 0; index < order_list_->count(); ++index)
+		result.push_back(order_list_->item(index)->data(Qt::UserRole).toString().toStdString());
 
 	return result;
 }
 
 void dict_selection_dialog_t::on_tree_item_changed(QTreeWidgetItem * item, int)
 {
-	auto path_data = item->data(0, Qt::UserRole).toString();
+	const auto & path_data = item->data(0, Qt::UserRole).toString();
 	if (path_data.isEmpty())
 		return;
 
 	if (item->checkState(0) == Qt::Checked)
 	{
-		for (int i = 0; i < order_list_->count(); ++i)
+		for (int index = 0; index < order_list_->count(); ++index)
 		{
-			if (order_list_->item(i)->data(Qt::UserRole).toString() == path_data)
+			if (order_list_->item(index)->data(Qt::UserRole).toString() == path_data)
 				return;
 		}
 
@@ -206,11 +217,11 @@ void dict_selection_dialog_t::on_tree_item_changed(QTreeWidgetItem * item, int)
 	}
 	else
 	{
-		for (int i = 0; i < order_list_->count(); ++i)
+		for (int index = 0; index < order_list_->count(); ++index)
 		{
-			if (order_list_->item(i)->data(Qt::UserRole).toString() == path_data)
+			if (order_list_->item(index)->data(Qt::UserRole).toString() == path_data)
 			{
-				delete order_list_->takeItem(i);
+				delete order_list_->takeItem(index);
 				break;
 			}
 		}
@@ -221,24 +232,24 @@ void dict_selection_dialog_t::on_tree_item_changed(QTreeWidgetItem * item, int)
 
 void dict_selection_dialog_t::on_move_up()
 {
-	int row = order_list_->currentRow();
-	if (row <= 0)
+	int current_row = order_list_->currentRow();
+	if (current_row <= 0)
 		return;
 
-	auto * item = order_list_->takeItem(row);
-	order_list_->insertItem(row - 1, item);
-	order_list_->setCurrentRow(row - 1);
+	auto * item = order_list_->takeItem(current_row);
+	order_list_->insertItem(current_row - 1, item);
+	order_list_->setCurrentRow(current_row - 1);
 }
 
 void dict_selection_dialog_t::on_move_down()
 {
-	int row = order_list_->currentRow();
-	if (row < 0 || row >= order_list_->count() - 1)
+	int current_row = order_list_->currentRow();
+	if (current_row < 0 || current_row >= order_list_->count() - 1)
 		return;
 
-	auto * item = order_list_->takeItem(row);
-	order_list_->insertItem(row + 1, item);
-	order_list_->setCurrentRow(row + 1);
+	auto * item = order_list_->takeItem(current_row);
+	order_list_->insertItem(current_row + 1, item);
+	order_list_->setCurrentRow(current_row + 1);
 }
 
 void dict_selection_dialog_t::update_ok_button()

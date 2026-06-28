@@ -50,6 +50,11 @@ translation_suggestion_tab_t::translation_suggestion_tab_t(QWidget * parent)
 	counter_label_->setStyleSheet("color: rgb(120, 120, 120); font-size: 11px;");
 	layout->addWidget(counter_label_);
 
+	setup_controls();
+}
+
+void translation_suggestion_tab_t::setup_controls()
+{
 	ct2_provider_ = new ctranslate2_provider_t(this);
 	deepl_provider_ = new deepl_provider_t(this);
 	google_provider_ = new google_provider_t(this);

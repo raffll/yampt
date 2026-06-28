@@ -25,6 +25,14 @@ public:
 private:
 	std::vector<l10n_entry_t> parse_yaml(const std::string & path);
 
+	std::string parse_quoted_value(const std::string & raw_value) const;
+
+	std::string read_block_scalar(
+	    std::ifstream & file,
+	    bool strip_trailing,
+	    std::string & lookahead_line,
+	    bool & has_lookahead) const;
+
 	std::vector<l10n_entry_t> source_entries_;
 	std::vector<l10n_entry_t> target_entries_;
 	std::vector<std::string> key_order_;

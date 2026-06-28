@@ -27,10 +27,16 @@ struct table_build_result_t
 	dict_counts_t counts;
 };
 
+struct table_filter_params_t
+{
+	const std::set<tools_t::rec_type_t> & type_filter;
+	const std::set<std::string> & sub_type_filter;
+	const std::set<std::string> & status_filter;
+	const search_engine_t & search;
+	bool type_filter_solo;
+};
+
 table_build_result_t build_filtered_rows(
     const tools_t::dict_t & data,
-    const std::set<tools_t::rec_type_t> & type_filter,
-    const std::set<std::string> & sub_type_filter,
-    const std::set<std::string> & status_filter,
-    const search_engine_t & search,
-    bool type_filter_solo);
+    const table_filter_params_t & params);
+

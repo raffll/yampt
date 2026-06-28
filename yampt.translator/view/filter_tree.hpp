@@ -53,6 +53,7 @@ signals:
 private:
 	void on_item_clicked(QListWidgetItem * item);
 	void on_item_right_clicked(QListWidgetItem * item);
+	void build_rows();
 	void update_all_state();
 	void update_styles();
 

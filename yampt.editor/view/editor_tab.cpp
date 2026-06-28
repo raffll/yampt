@@ -22,6 +22,7 @@
 #include <QTextStream>
 #include <QVBoxLayout>
 
+#include <algorithm>
 #include <functional>
 #include <set>
 
@@ -52,6 +53,28 @@ editor_tab_t::editor_tab_t(QWidget * parent)
 	auto * main_layout = new QVBoxLayout(this);
 	main_layout->setContentsMargins(4, 4, 4, 4);
 
+	setup_toolbar();
+	setup_views();
+
+	main_layout->addWidget(btn_load_->parentWidget());
+	main_layout->addWidget(main_splitter_, 1);
+
+	status_label_ = new QLabel(this);
+	main_layout->addWidget(status_label_);
+
+	nav_model_ = new nav_tree_model_t(scan_, this);
+	view_model_ = new view_tree_model_t(this);
+	nav_view_->setModel(nav_model_);
+	view_view_->setModel(view_model_);
+	view_view_->header()->setStretchLastSection(true);
+	view_view_->header()->setMinimumSectionSize(120);
+
+	setup_connections();
+	load_plugin_paths();
+}
+
+void editor_tab_t::setup_toolbar()
+{
 	auto * toolbar = new QWidget(this);
 	auto * toolbar_layout = new QHBoxLayout(toolbar);
 	toolbar_layout->setContentsMargins(0, 0, 0, 0);
@@ -67,8 +90,8 @@ editor_tab_t::editor_tab_t(QWidget * parent)
 	btn_new_->setVisible(false);
 	btn_save_ = new QPushButton("Save", toolbar);
 	btn_save_->setVisible(false);
-	auto * btn_merge = new QPushButton("Create Merged Patch", toolbar);
-	btn_merge->setVisible(false);
+	btn_merge_ = new QPushButton("Create Merged Patch", toolbar);
+	btn_merge_->setVisible(false);
 	btn_filter_ = new QPushButton("Filter", toolbar);
 	btn_filter_->setVisible(false);
 	chk_conflicts_ = new QCheckBox("Conflicts Only", toolbar);
@@ -84,16 +107,17 @@ editor_tab_t::editor_tab_t(QWidget * parent)
 	toolbar_layout->addWidget(btn_load_);
 	toolbar_layout->addWidget(btn_new_);
 	toolbar_layout->addWidget(btn_save_);
-	toolbar_layout->addWidget(btn_merge);
+	toolbar_layout->addWidget(btn_merge_);
 	toolbar_layout->addWidget(btn_filter_);
 	toolbar_layout->addWidget(chk_conflicts_);
 	toolbar_layout->addWidget(cmb_type_filter_);
 	toolbar_layout->addWidget(edt_search_);
 	toolbar_layout->addWidget(lbl_count_);
 	toolbar_layout->addStretch();
+}
 
-	main_layout->addWidget(toolbar);
-
+void editor_tab_t::setup_views()
+{
 	main_splitter_ = new QSplitter(Qt::Vertical, this);
 	content_splitter_ = new QSplitter(Qt::Horizontal, main_splitter_);
 
@@ -126,22 +150,13 @@ editor_tab_t::editor_tab_t(QWidget * parent)
 	main_splitter_->addWidget(messages_);
 	main_splitter_->setSizes({ 600, 150 });
 	main_splitter_->setChildrenCollapsible(true);
+}
 
-	main_layout->addWidget(main_splitter_, 1);
-
-	status_label_ = new QLabel(this);
-	main_layout->addWidget(status_label_);
-
-	nav_model_ = new nav_tree_model_t(scan_, this);
-	view_model_ = new view_tree_model_t(this);
-	nav_view_->setModel(nav_model_);
-	view_view_->setModel(view_model_);
-	view_view_->header()->setStretchLastSection(true);
-	view_view_->header()->setMinimumSectionSize(120);
-
+void editor_tab_t::setup_connections()
+{
 	connect(btn_new_, &QPushButton::clicked, this, &editor_tab_t::on_new_plugin);
 	connect(btn_save_, &QPushButton::clicked, this, &editor_tab_t::on_save_plugin);
-	connect(btn_merge, &QPushButton::clicked, this, &editor_tab_t::on_create_merged_patch);
+	connect(btn_merge_, &QPushButton::clicked, this, &editor_tab_t::on_create_merged_patch);
 	connect(btn_filter_, &QPushButton::clicked, this, &editor_tab_t::on_advanced_filter);
 
 	connect(chk_conflicts_, &QCheckBox::checkStateChanged, this, &editor_tab_t::on_filter_changed);
@@ -161,8 +176,6 @@ editor_tab_t::editor_tab_t(QWidget * parent)
 
 	auto * copy_shortcut = new QShortcut(QKeySequence::Copy, view_view_);
 	connect(copy_shortcut, &QShortcut::activated, this, &editor_tab_t::on_view_copy);
-
-	load_plugin_paths();
 }
 
 void editor_tab_t::on_load_plugins()
@@ -312,12 +325,21 @@ void editor_tab_t::on_load_mo2_profile()
 	if (profile_dir.isEmpty())
 		return;
 
+	auto paths = parse_mo2_profile(profile_dir);
+	if (paths.empty())
+		return;
+
+	load_plugins_from_paths(paths);
+}
+
+std::vector<std::string> editor_tab_t::parse_mo2_profile(const QString & profile_dir)
+{
 	QString loadorder_path = profile_dir + "/loadorder.txt";
 	QFile loadorder_file(loadorder_path);
 	if (!loadorder_file.open(QIODevice::ReadOnly | QIODevice::Text))
 	{
 		log_message("Cannot open loadorder.txt in " + profile_dir.toStdString());
-		return;
+		return {};
 	}
 
 	std::vector<std::string> plugin_names;
@@ -340,70 +362,74 @@ void editor_tab_t::on_load_mo2_profile()
 	mo2_root.cdUp();
 	mo2_root.cdUp();
 
-	QString mods_path = mo2_root.absolutePath() + "/mods";
+	const auto mods_path = mo2_root.absolutePath() + "/mods";
 
 	QString game_data_path;
-	QString ini_path = mo2_root.absolutePath() + "/ModOrganizer.ini";
-	QFile ini_file(ini_path);
-	if (ini_file.open(QIODevice::ReadOnly | QIODevice::Text))
-	{
-		QTextStream ini_stream(&ini_file);
-		while (!ini_stream.atEnd())
-		{
-			auto line = ini_stream.readLine().trimmed();
-			if (line.startsWith("gamePath="))
-			{
-				auto value = line.mid(9);
-				if (value.startsWith("@ByteArray(") && value.endsWith(")"))
-					value = value.mid(11, value.size() - 12);
-				value.replace("\\\\", "/");
-				game_data_path = value + "/Data Files";
-				break;
-			}
-		}
-		ini_file.close();
-	}
+	QSettings mo2_ini(mo2_root.absolutePath() + "/ModOrganizer.ini", QSettings::IniFormat);
+	game_data_path = mo2_ini.value("General/gamePath").toString();
+	if (game_data_path.isEmpty())
+		game_data_path = mo2_ini.value("Settings/game_path").toString();
 
 	if (game_data_path.isEmpty())
-		game_data_path = mo2_root.absolutePath() + "/../Data Files";
+	{
+		QFile ini_file(mo2_root.absolutePath() + "/ModOrganizer.ini");
+		if (ini_file.open(QIODevice::ReadOnly | QIODevice::Text))
+		{
+			QTextStream ini_stream(&ini_file);
+			while (!ini_stream.atEnd())
+			{
+				auto ini_line = ini_stream.readLine().trimmed();
+				if (ini_line.startsWith("gamePath=") || ini_line.startsWith("gamePath ="))
+				{
+					game_data_path = ini_line.mid(ini_line.indexOf('=') + 1).trimmed();
+					if (game_data_path.startsWith("@ByteArray(") && game_data_path.endsWith(")"))
+						game_data_path = game_data_path.mid(11, game_data_path.size() - 12);
 
-	std::vector<std::string> enabled_mods;
+					break;
+				}
+			}
+			ini_file.close();
+		}
+	}
+
+	if (!game_data_path.isEmpty())
+	{
+		game_data_path.replace('\\', '/');
+		if (!game_data_path.endsWith("/Data Files"))
+			game_data_path += "/Data Files";
+	}
+
+	mo2_resolve_context_t context;
+
 	QString modlist_path = profile_dir + "/modlist.txt";
 	QFile modlist_file(modlist_path);
 	if (modlist_file.open(QIODevice::ReadOnly | QIODevice::Text))
 	{
-		QTextStream ms(&modlist_file);
-		while (!ms.atEnd())
+		QTextStream modlist_stream(&modlist_file);
+		while (!modlist_stream.atEnd())
 		{
-			auto line = ms.readLine().trimmed();
-			if (line.startsWith('+'))
-				enabled_mods.push_back(line.mid(1).toStdString());
+			auto mod_line = modlist_stream.readLine().trimmed();
+			if (mod_line.startsWith('+'))
+				context.enabled_mods.push_back(mod_line.mid(1).toStdString());
 		}
 		modlist_file.close();
+		std::reverse(context.enabled_mods.begin(), context.enabled_mods.end());
 	}
 
-	std::reverse(enabled_mods.begin(), enabled_mods.end());
+	context.mods_path = mods_path;
+	context.game_data_path = game_data_path;
 
-	auto resolve_plugin = [&](const std::string & name) -> std::string
-	{
-		for (const auto & mod : enabled_mods)
-		{
-			QString candidate = mods_path + "/" + QString::fromStdString(mod) + "/" + QString::fromStdString(name);
-			if (QFile::exists(candidate))
-				return candidate.toStdString();
-		}
+	return resolve_mo2_plugins(plugin_names, context);
+}
 
-		QString game_file = game_data_path + "/" + QString::fromStdString(name);
-		if (QFile::exists(game_file))
-			return game_file.toStdString();
-
-		return {};
-	};
-
+std::vector<std::string> editor_tab_t::resolve_mo2_plugins(
+    const std::vector<std::string> & plugin_names,
+    const mo2_resolve_context_t & context)
+{
 	std::vector<std::string> paths;
 	for (const auto & name : plugin_names)
 	{
-		auto resolved = resolve_plugin(name);
+		const auto & resolved = resolve_single_mo2_plugin(name, context);
 		if (!resolved.empty())
 			paths.push_back(resolved);
 		else
@@ -411,12 +437,27 @@ void editor_tab_t::on_load_mo2_profile()
 	}
 
 	if (paths.empty())
-	{
 		log_message("No plugins resolved from MO2 profile");
-		return;
+
+	return paths;
+}
+
+std::string editor_tab_t::resolve_single_mo2_plugin(
+    const std::string & plugin_name,
+    const mo2_resolve_context_t & context)
+{
+	for (const auto & mod_name : context.enabled_mods)
+	{
+		const auto candidate = context.mods_path + "/" + QString::fromStdString(mod_name) + "/" + QString::fromStdString(plugin_name);
+		if (QFile::exists(candidate))
+			return candidate.toStdString();
 	}
 
-	load_plugins_from_paths(paths);
+	const auto game_file = context.game_data_path + "/" + QString::fromStdString(plugin_name);
+	if (QFile::exists(game_file))
+		return game_file.toStdString();
+
+	return {};
 }
 
 void editor_tab_t::on_load_openmw_cfg()
@@ -426,11 +467,20 @@ void editor_tab_t::on_load_openmw_cfg()
 	if (cfg_path.isEmpty())
 		return;
 
+	auto paths = parse_openmw_cfg(cfg_path);
+	if (paths.empty())
+		return;
+
+	load_plugins_from_paths(paths);
+}
+
+std::vector<std::string> editor_tab_t::parse_openmw_cfg(const QString & cfg_path)
+{
 	QFile cfg_file(cfg_path);
 	if (!cfg_file.open(QIODevice::ReadOnly | QIODevice::Text))
 	{
 		log_message("Cannot open " + cfg_path.toStdString());
-		return;
+		return {};
 	}
 
 	std::vector<std::string> data_dirs;
@@ -457,22 +507,17 @@ void editor_tab_t::on_load_openmw_cfg()
 	}
 	cfg_file.close();
 
-	auto resolve_content = [&](const std::string & name) -> std::string
-	{
-		for (auto it = data_dirs.rbegin(); it != data_dirs.rend(); ++it)
-		{
-			QString candidate = QString::fromStdString(*it) + "/" + QString::fromStdString(name);
-			if (QFile::exists(candidate))
-				return candidate.toStdString();
-		}
+	return resolve_openmw_content(content_names, data_dirs);
+}
 
-		return {};
-	};
-
+std::vector<std::string> editor_tab_t::resolve_openmw_content(
+    const std::vector<std::string> & content_names,
+    const std::vector<std::string> & data_dirs)
+{
 	std::vector<std::string> paths;
 	for (const auto & name : content_names)
 	{
-		auto resolved = resolve_content(name);
+		const auto & resolved = resolve_single_content(name, data_dirs);
 		if (!resolved.empty())
 			paths.push_back(resolved);
 		else
@@ -480,12 +525,23 @@ void editor_tab_t::on_load_openmw_cfg()
 	}
 
 	if (paths.empty())
-	{
 		log_message("No plugins resolved from openmw.cfg");
-		return;
+
+	return paths;
+}
+
+std::string editor_tab_t::resolve_single_content(
+    const std::string & content_name,
+    const std::vector<std::string> & data_dirs)
+{
+	for (auto it_dir = data_dirs.rbegin(); it_dir != data_dirs.rend(); ++it_dir)
+	{
+		const auto candidate = QString::fromStdString(*it_dir) + "/" + QString::fromStdString(content_name);
+		if (QFile::exists(candidate))
+			return candidate.toStdString();
 	}
 
-	load_plugins_from_paths(paths);
+	return {};
 }
 
 void editor_tab_t::rebuild_after_load()
@@ -510,46 +566,45 @@ void editor_tab_t::rebuild_nav_preserving_state()
 	std::function<void(const QModelIndex &, const std::string &)> collect =
 	    [&](const QModelIndex & parent, const std::string & path)
 	{
-		int rows = nav_model_->rowCount(parent);
+		const auto rows = nav_model_->rowCount(parent);
 		for (int i = 0; i < rows; ++i)
 		{
-			auto idx = nav_model_->index(i, 0, parent);
+			const auto idx = nav_model_->index(i, 0, parent);
 			if (!idx.isValid())
 				continue;
 
-			auto text = nav_model_->data(idx, Qt::DisplayRole).toString().toStdString();
-			auto full_path = path + "/" + text;
+			const auto & text = nav_model_->data(idx, Qt::DisplayRole).toString().toStdString();
+			const auto & full_path = path + "/" + text;
 
-			if (nav_view_->isExpanded(idx))
-			{
-				expanded.insert(full_path);
-				collect(idx, full_path);
-			}
+			if (!nav_view_->isExpanded(idx))
+				continue;
+
+			expanded.insert(full_path);
+			collect(idx, full_path);
 		}
 	};
 
 	collect(QModelIndex(), "");
-
 	nav_model_->rebuild();
 
 	std::function<void(const QModelIndex &, const std::string &)> restore =
 	    [&](const QModelIndex & parent, const std::string & path)
 	{
-		int rows = nav_model_->rowCount(parent);
+		const auto rows = nav_model_->rowCount(parent);
 		for (int i = 0; i < rows; ++i)
 		{
-			auto idx = nav_model_->index(i, 0, parent);
+			const auto idx = nav_model_->index(i, 0, parent);
 			if (!idx.isValid())
 				continue;
 
-			auto text = nav_model_->data(idx, Qt::DisplayRole).toString().toStdString();
-			auto full_path = path + "/" + text;
+			const auto & text = nav_model_->data(idx, Qt::DisplayRole).toString().toStdString();
+			const auto & full_path = path + "/" + text;
 
-			if (expanded.count(full_path))
-			{
-				nav_view_->expand(idx);
-				restore(idx, full_path);
-			}
+			if (!expanded.count(full_path))
+				continue;
+
+			nav_view_->expand(idx);
+			restore(idx, full_path);
 		}
 	};
 
@@ -572,8 +627,7 @@ void editor_tab_t::on_nav_selection_changed(const QModelIndex & current)
 		return;
 	}
 
-	auto info = nav_model_->node_at(current);
-
+	const auto info = nav_model_->node_at(current);
 	if (info.record_id.empty())
 	{
 		view_model_->clear();
@@ -589,33 +643,7 @@ void editor_tab_t::on_nav_selection_changed(const QModelIndex & current)
 		return;
 	}
 
-	view_model_->set_record(scan_, *entry);
-	for (int i = 0; i < view_model_->rowCount({}); ++i)
-	{
-		auto idx = view_model_->index(i, 0, {});
-		if (view_model_->rowCount(idx) > 0)
-		{
-			auto child = view_model_->index(0, 0, idx);
-			auto name = child.data(Qt::DisplayRole).toString();
-			if (!name.isEmpty() && !name[0].isDigit())
-				view_view_->expand(idx);
-		}
-	}
-	for (int i = 0; i < view_model_->columnCount({}); ++i)
-		view_view_->resizeColumnToContents(i);
-
-	int total_width = view_view_->viewport()->width();
-	int col_count = view_model_->columnCount({});
-	if (col_count > 1 && total_width > 0)
-	{
-		int label_width = std::min(view_view_->columnWidth(0), total_width / 3);
-		int remaining = total_width - label_width;
-		int per_col = remaining / (col_count - 1);
-
-		view_view_->setColumnWidth(0, label_width);
-		for (int i = 1; i < col_count; ++i)
-			view_view_->setColumnWidth(i, per_col);
-	}
+	display_record_in_view(*entry);
 	update_status();
 }
 
@@ -795,6 +823,37 @@ void editor_tab_t::on_create_merged_patch()
 	if (!scan_.has_merge())
 		scan_.set_merge_plugin("Merged Patch.esp");
 
+	create_merge_records();
+	scan_.rebuild_conflicts();
+	rebuild_nav_preserving_state();
+
+	auto current = nav_view_->currentIndex();
+	if (!current.isValid())
+	{
+		update_status();
+		return;
+	}
+
+	const auto info = nav_model_->node_at(current);
+	if (info.record_id.empty())
+	{
+		update_status();
+		return;
+	}
+
+	const auto * updated = scan_.find(info.rec_type, info.record_id);
+	if (!updated)
+	{
+		update_status();
+		return;
+	}
+
+	display_record_in_view(*updated);
+	update_status();
+}
+
+int editor_tab_t::create_merge_records()
+{
 	const auto & entries = scan_.entries();
 	int copied = 0;
 	int merged_lists = 0;
@@ -837,50 +896,40 @@ void editor_tab_t::on_create_merged_patch()
 	    "Created merged patch: Merged Patch.esp (" + std::to_string(copied) + " records, " +
 	    std::to_string(merged_lists) + " leveled lists, " + std::to_string(merged_dial) + " dialogues)");
 
-	scan_.rebuild_conflicts();
-	rebuild_nav_preserving_state();
+	return copied + merged_lists + merged_dial;
+}
 
-	auto current = nav_view_->currentIndex();
-	if (current.isValid())
+void editor_tab_t::display_record_in_view(const conflict_entry_t & entry)
+{
+	view_model_->set_record(scan_, entry);
+
+	for (int i = 0; i < view_model_->rowCount({}); ++i)
 	{
-		auto info = nav_model_->node_at(current);
-		if (!info.record_id.empty())
-		{
-			const auto * updated = scan_.find(info.rec_type, info.record_id);
-			if (updated)
-			{
-				view_model_->set_record(scan_, *updated);
-				for (int i = 0; i < view_model_->rowCount({}); ++i)
-				{
-					auto idx = view_model_->index(i, 0, {});
-					if (view_model_->rowCount(idx) > 0)
-					{
-						auto child = view_model_->index(0, 0, idx);
-						auto name = child.data(Qt::DisplayRole).toString();
-						if (!name.isEmpty() && !name[0].isDigit())
-							view_view_->expand(idx);
-					}
-				}
-				for (int i = 0; i < view_model_->columnCount({}); ++i)
-					view_view_->resizeColumnToContents(i);
+		const auto & idx = view_model_->index(i, 0, {});
+		if (view_model_->rowCount(idx) == 0)
+			continue;
 
-				int total_width = view_view_->viewport()->width();
-				int col_count = view_model_->columnCount({});
-				if (col_count > 1 && total_width > 0)
-				{
-					int label_width = std::min(view_view_->columnWidth(0), total_width / 3);
-					int remaining = total_width - label_width;
-					int per_col = remaining / (col_count - 1);
-
-					view_view_->setColumnWidth(0, label_width);
-					for (int i = 1; i < col_count; ++i)
-						view_view_->setColumnWidth(i, per_col);
-				}
-			}
-		}
+		const auto & child = view_model_->index(0, 0, idx);
+		const auto & child_name = child.data(Qt::DisplayRole).toString();
+		if (!child_name.isEmpty() && !child_name[0].isDigit())
+			view_view_->expand(idx);
 	}
 
-	update_status();
+	for (int i = 0; i < view_model_->columnCount({}); ++i)
+		view_view_->resizeColumnToContents(i);
+
+	const auto total_width = view_view_->viewport()->width();
+	const auto col_count = view_model_->columnCount({});
+	if (col_count <= 1 || total_width <= 0)
+		return;
+
+	const auto label_width = std::min(view_view_->columnWidth(0), total_width / 3);
+	const auto remaining = total_width - label_width;
+	const auto per_col = remaining / (col_count - 1);
+
+	view_view_->setColumnWidth(0, label_width);
+	for (int i = 1; i < col_count; ++i)
+		view_view_->setColumnWidth(i, per_col);
 }
 
 void editor_tab_t::on_remove_itm()
@@ -1019,156 +1068,136 @@ bool editor_tab_t::eventFilter(QObject * obj, QEvent * event)
 	if (event->type() != QEvent::Drop)
 		return QWidget::eventFilter(obj, event);
 
-	auto * drop = static_cast<QDropEvent *>(event);
-	const auto * mime = drop->mimeData();
+	auto * drop_event = static_cast<QDropEvent *>(event);
+	if (!drop_event->mimeData()->hasFormat("application/x-yampt-record"))
+		return QWidget::eventFilter(obj, event);
 
 	if (!scan_.has_merge())
 		return QWidget::eventFilter(obj, event);
 
 	if (obj == view_view_->viewport())
-	{
-		if (!mime->hasFormat("application/x-yampt-record"))
-			return QWidget::eventFilter(obj, event);
-
-		auto payload = QString::fromUtf8(mime->data("application/x-yampt-record"));
-		auto parts = payload.split('\t');
-		if (parts.size() != 3)
-			return QWidget::eventFilter(obj, event);
-
-		int source_plugin = parts[0].toInt();
-		auto rec_type = parts[1].toStdString();
-		auto record_id = parts[2].toStdString();
-
-		const auto * entry = scan_.find(rec_type, record_id);
-		if (!entry)
-			return true;
-
-		bool already_in_merge = false;
-		for (const auto & v : entry->versions)
-		{
-			if (scan_.is_merge_plugin(v.plugin_idx))
-			{
-				already_in_merge = true;
-				break;
-			}
-		}
-
-		if (!already_in_merge)
-		{
-			int best_plugin = -1;
-			size_t best_index = 0;
-			for (const auto & v : entry->versions)
-			{
-				if (scan_.is_merge_plugin(v.plugin_idx))
-					continue;
-
-				best_plugin = v.plugin_idx;
-				best_index = v.record_index;
-			}
-
-			if (best_plugin >= 0)
-			{
-				scan_.copy_record_to_merge(best_plugin, best_index);
-				log_message("Copied " + rec_type + ":" + record_id + " to merge (winner)");
-			}
-		}
-		else
-		{
-			for (const auto & v : entry->versions)
-			{
-				if (v.plugin_idx != source_plugin)
-					continue;
-
-				scan_.copy_record_to_merge(source_plugin, v.record_index);
-				log_message("Copied " + rec_type + ":" + record_id + " to merge (override)");
-				break;
-			}
-		}
-
-		scan_.rebuild_conflicts();
-		rebuild_nav_preserving_state();
-
-		const auto * updated = scan_.find(rec_type, record_id);
-		if (updated)
-		{
-			view_model_->set_record(scan_, *updated);
-			for (int i = 0; i < view_model_->rowCount({}); ++i)
-			{
-				auto idx = view_model_->index(i, 0, {});
-				if (view_model_->rowCount(idx) > 0)
-				{
-					auto child = view_model_->index(0, 0, idx);
-					auto name = child.data(Qt::DisplayRole).toString();
-					if (!name.isEmpty() && !name[0].isDigit())
-						view_view_->expand(idx);
-				}
-			}
-			for (int i = 0; i < view_model_->columnCount({}); ++i)
-				view_view_->resizeColumnToContents(i);
-
-			int total_width = view_view_->viewport()->width();
-			int col_count = view_model_->columnCount({});
-			if (col_count > 1 && total_width > 0)
-			{
-				int label_width = std::min(view_view_->columnWidth(0), total_width / 3);
-				int remaining = total_width - label_width;
-				int per_col = remaining / (col_count - 1);
-
-				view_view_->setColumnWidth(0, label_width);
-				for (int i = 1; i < col_count; ++i)
-					view_view_->setColumnWidth(i, per_col);
-			}
-		}
-
-		update_status();
-		event->accept();
-		return true;
-	}
+		return handle_drop_on_view(drop_event);
 
 	if (obj == nav_view_->viewport())
-	{
-		if (!mime->hasFormat("application/x-yampt-record"))
-			return QWidget::eventFilter(obj, event);
-
-		auto target_index = nav_view_->indexAt(drop->position().toPoint());
-		if (!target_index.isValid())
-			return QWidget::eventFilter(obj, event);
-
-		auto target_info = nav_model_->node_at(target_index);
-		if (!scan_.is_merge_plugin(target_info.plugin_idx))
-			return QWidget::eventFilter(obj, event);
-
-		auto payload = QString::fromUtf8(mime->data("application/x-yampt-record"));
-		auto parts = payload.split('\t');
-		if (parts.size() != 3)
-			return QWidget::eventFilter(obj, event);
-
-		int source_plugin = parts[0].toInt();
-		auto rec_type = parts[1].toStdString();
-		auto record_id = parts[2].toStdString();
-
-		const auto * entry = scan_.find(rec_type, record_id);
-		if (!entry)
-			return true;
-
-		for (const auto & v : entry->versions)
-		{
-			if (v.plugin_idx != source_plugin)
-				continue;
-
-			scan_.copy_record_to_merge(source_plugin, v.record_index);
-			scan_.rebuild_conflicts();
-			rebuild_nav_preserving_state();
-			log_message("Copied " + rec_type + ":" + record_id + " to merge (drag)");
-			update_status();
-			break;
-		}
-
-		event->accept();
-		return true;
-	}
+		return handle_drop_on_nav(drop_event);
 
 	return QWidget::eventFilter(obj, event);
+}
+
+bool editor_tab_t::handle_drop_on_view(QDropEvent * drop_event)
+{
+	const auto & payload = QString::fromUtf8(drop_event->mimeData()->data("application/x-yampt-record"));
+	const auto & parts = payload.split('\t');
+	if (parts.size() != 3)
+		return false;
+
+	const auto source_plugin = parts[0].toInt();
+	const auto & rec_type = parts[1].toStdString();
+	const auto & record_id = parts[2].toStdString();
+
+	const auto * entry = scan_.find(rec_type, record_id);
+	if (!entry)
+		return true;
+
+	bool already_in_merge = false;
+	for (const auto & version : entry->versions)
+	{
+		if (scan_.is_merge_plugin(version.plugin_idx))
+		{
+			already_in_merge = true;
+			break;
+		}
+	}
+
+	if (!already_in_merge)
+	{
+		int best_plugin = -1;
+		size_t best_index = 0;
+		for (const auto & version : entry->versions)
+		{
+			if (scan_.is_merge_plugin(version.plugin_idx))
+				continue;
+
+			best_plugin = version.plugin_idx;
+			best_index = version.record_index;
+		}
+
+		if (best_plugin >= 0)
+		{
+			scan_.copy_record_to_merge(best_plugin, best_index);
+			log_message("Copied " + rec_type + ":" + record_id + " to merge (winner)");
+		}
+	}
+	else
+	{
+		for (const auto & version : entry->versions)
+		{
+			if (version.plugin_idx != source_plugin)
+				continue;
+
+			scan_.copy_record_to_merge(source_plugin, version.record_index);
+			log_message("Copied " + rec_type + ":" + record_id + " to merge (override)");
+			break;
+		}
+	}
+
+	refresh_after_merge(rec_type, record_id);
+	drop_event->accept();
+	return true;
+}
+
+bool editor_tab_t::handle_drop_on_nav(QDropEvent * drop_event)
+{
+	const auto & target_index = nav_view_->indexAt(drop_event->position().toPoint());
+	if (!target_index.isValid())
+		return false;
+
+	const auto & target_info = nav_model_->node_at(target_index);
+	if (!scan_.is_merge_plugin(target_info.plugin_idx))
+		return false;
+
+	const auto & payload = QString::fromUtf8(drop_event->mimeData()->data("application/x-yampt-record"));
+	const auto & parts = payload.split('\t');
+	if (parts.size() != 3)
+		return false;
+
+	const auto source_plugin = parts[0].toInt();
+	const auto & rec_type = parts[1].toStdString();
+	const auto & record_id = parts[2].toStdString();
+
+	const auto * entry = scan_.find(rec_type, record_id);
+	if (!entry)
+		return true;
+
+	for (const auto & version : entry->versions)
+	{
+		if (version.plugin_idx != source_plugin)
+			continue;
+
+		scan_.copy_record_to_merge(source_plugin, version.record_index);
+		log_message("Copied " + rec_type + ":" + record_id + " to merge (drag)");
+		break;
+	}
+
+	refresh_after_merge(rec_type, record_id);
+	drop_event->accept();
+	return true;
+}
+
+void editor_tab_t::refresh_after_merge(const std::string & rec_type, const std::string & record_id)
+{
+	scan_.rebuild_conflicts();
+	rebuild_nav_preserving_state();
+
+	const auto * updated = scan_.find(rec_type, record_id);
+	if (!updated)
+	{
+		update_status();
+		return;
+	}
+
+	display_record_in_view(*updated);
+	update_status();
 }
 
 void editor_tab_t::update_status()

@@ -26,7 +26,7 @@
 - Use one word for one meaning — e.g. if "model" refers to both MVC and AI, explicitly name them differently (e.g. `view_model` vs `translation_model`)
 - Design pattern names should be explicitly named as patterns (e.g. `_factory`, `_observer`)
 - Always name `first`/`second` explicitly via structured binding or `const auto &`
-- Use `m_` prefix for member variables
+- Use `m_` prefix for class member variables (not for POD/helper struct fields — those use plain snake_case)
 - Use `ptr_` prefix for pointers
 - Use `it_` prefix for iterators
 - All names must be meaningful — do not hesitate to create very long names
@@ -49,3 +49,5 @@
 - Do not cut corners or do things the easiest way
 - Every line of code must be understandable without reading the entire function
 - Modernize — use C++20
+- No comments unless the code cannot be explained by function or variable names alone. If a comment is unavoidable, keep it to one short line.
+- No decorative comment banners (dashed lines, boxes, ASCII art).

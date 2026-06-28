@@ -178,6 +178,40 @@ void dict_creator_t::make_dict_single_indx()
 	}
 }
 
+void dict_creator_t::enrich_info_speaker(
+    const std::string & key_text,
+    size_t record_index)
+{
+	esm.select_record(record_index);
+	esm.set_value("ONAM");
+	if (!esm.get_value().exist || esm.get_value().text.empty())
+		return;
+
+	const auto & speaker_id = esm.get_value().text;
+	auto npc_search = npc_index.find(speaker_id);
+	if (npc_search == npc_index.end())
+		return;
+
+	esm.select_record(npc_search->second);
+	esm.set_key("FNAM");
+	esm.set_value("FLAG");
+
+	std::string speaker_name;
+	if (esm.get_key().exist)
+		speaker_name = esm.get_key().text;
+
+	std::string gender;
+	if (esm.get_value().exist)
+		gender = ((tools_t::convert_string_byte_array_to_uint(esm.get_value().content) & 0x0001) != 0) ? "F" : "M";
+
+	auto * entry = dict.at(tools_t::rec_type_t::info).find(key_text);
+	if (!entry)
+		return;
+
+	entry->speaker_name = speaker_name;
+	entry->gender = gender;
+}
+
 void dict_creator_t::make_dict_single_info()
 {
 	std::string key_prefix;
@@ -214,34 +248,7 @@ void dict_creator_t::make_dict_single_info()
 		else
 			insert_entry_single(key_text, text, text, tools_t::rec_type_t::info);
 
-		esm.select_record(i);
-		esm.set_value("ONAM");
-		if (!esm.get_value().exist || esm.get_value().text.empty())
-			continue;
-
-		const auto & speaker_id = esm.get_value().text;
-		auto npc_search = npc_index.find(speaker_id);
-		if (npc_search == npc_index.end())
-			continue;
-
-		esm.select_record(npc_search->second);
-		esm.set_key("FNAM");
-		esm.set_value("FLAG");
-
-		std::string speaker_name;
-		if (esm.get_key().exist)
-			speaker_name = esm.get_key().text;
-
-		std::string gender;
-		if (esm.get_value().exist)
-			gender = ((tools_t::convert_string_byte_array_to_uint(esm.get_value().content) & 0x0001) != 0) ? "F" : "M";
-
-		auto * entry = dict.at(tools_t::rec_type_t::info).find(key_text);
-		if (!entry)
-			continue;
-
-		entry->speaker_name = speaker_name;
-		entry->gender = gender;
+		enrich_info_speaker(key_text, i);
 	}
 }
 
@@ -456,6 +463,89 @@ void dict_creator_t::insert_entry_single(
 	insert_duplicate(key_text, old_text, new_text, type, tools_t::status_t::untranslated);
 }
 
+void dict_creator_t::insert_changed_entry(
+    const std::string & key_text,
+    const std::string & old_text,
+    const tools_t::record_entry_t & base_entry,
+    tools_t::rec_type_t type)
+{
+	const auto & base_status = base_entry.status;
+	const bool is_approved = (base_status == tools_t::status_t::translated);
+
+	if (!is_approved)
+	{
+		insert_unapproved_changed(key_text, old_text, base_entry, type);
+		return;
+	}
+
+	if (differs_only_in_numbers_or_punct(old_text, base_entry.old_text))
+	{
+		insert_adapted_entry(key_text, old_text, base_entry, type);
+		return;
+	}
+
+	insert_with_status(key_text, old_text, base_entry.new_text, type, tools_t::status_t::changed);
+
+	auto * changed_entry = dict.at(type).find(key_text);
+	if (changed_entry)
+		changed_entry->details = base_entry.old_text;
+}
+
+void dict_creator_t::insert_unapproved_changed(
+    const std::string & key_text,
+    const std::string & old_text,
+    const tools_t::record_entry_t & base_entry,
+    tools_t::rec_type_t type)
+{
+	const auto & base_status = base_entry.status;
+
+	if (base_status == tools_t::status_t::in_progress ||
+	    base_status == tools_t::status_t::model ||
+	    base_status == tools_t::status_t::error)
+	{
+		insert_with_status(key_text, old_text, base_entry.new_text, type, tools_t::status_t::outdated);
+
+		auto * outdated_entry = dict.at(type).find(key_text);
+		if (outdated_entry)
+			outdated_entry->details = base_entry.old_text;
+
+		return;
+	}
+
+	if (base_status == tools_t::status_t::untranslated)
+	{
+		insert_with_status(key_text, old_text, old_text, type, tools_t::status_t::untranslated);
+		return;
+	}
+
+	insert_with_status(key_text, old_text, old_text, type, tools_t::status_t::changed);
+
+	auto * changed_entry = dict.at(type).find(key_text);
+	if (changed_entry)
+		changed_entry->details = base_entry.old_text;
+}
+
+void dict_creator_t::insert_adapted_entry(
+    const std::string & key_text,
+    const std::string & old_text,
+    const tools_t::record_entry_t & base_entry,
+    tools_t::rec_type_t type)
+{
+	const auto & adapted = adapt_translation(old_text, base_entry.old_text, base_entry.new_text);
+
+	if (adapted == base_entry.new_text)
+	{
+		insert_with_status(key_text, old_text, adapted, type, tools_t::status_t::translated);
+		return;
+	}
+
+	insert_with_status(key_text, old_text, adapted, type, tools_t::status_t::adapted);
+
+	auto * entry = dict.at(type).find(key_text);
+	if (entry)
+		entry->details = base_entry.new_text;
+}
+
 void dict_creator_t::insert_entry_single_with_base(
     const std::string & key_text,
     const std::string & old_text,
@@ -475,15 +565,14 @@ void dict_creator_t::insert_entry_single_with_base(
 			return;
 	}
 
-	auto it = base_dict->find(type);
-	if (it == base_dict->end())
+	auto it_chapter = base_dict->find(type);
+	if (it_chapter == base_dict->end())
 	{
 		insert_as_untranslated(key_text, old_text, type);
 		return;
 	}
 
-	const auto * base_entry = it->second.find(key_text);
-
+	const auto * base_entry = it_chapter->second.find(key_text);
 	if (!base_entry)
 	{
 		insert_via_text_match(key_text, old_text, type);
@@ -498,77 +587,24 @@ void dict_creator_t::insert_entry_single_with_base(
 
 	if (base_entry->old_text == old_text && base_entry->new_text == old_text)
 	{
-		const auto & s = base_entry->status;
-		insert_with_status(key_text, old_text, old_text, type, s.c_str());
+		insert_with_status(key_text, old_text, old_text, type, base_entry->status.c_str());
 		return;
 	}
 
 	if (base_entry->old_text == old_text)
 	{
-		const auto & s = base_entry->status;
+		const auto & base_status = base_entry->status;
 		const bool preserve =
-		    (s == tools_t::status_t::untranslated || s == tools_t::status_t::to_verify ||
-		     s == tools_t::status_t::in_progress || s == tools_t::status_t::model ||
-		     s == tools_t::status_t::propagated || s == tools_t::status_t::error ||
-		     s == tools_t::status_t::translated);
-		const char * status = preserve ? s.c_str() : tools_t::status_t::translated;
+		    (base_status == tools_t::status_t::untranslated || base_status == tools_t::status_t::to_verify ||
+		     base_status == tools_t::status_t::in_progress || base_status == tools_t::status_t::model ||
+		     base_status == tools_t::status_t::propagated || base_status == tools_t::status_t::error ||
+		     base_status == tools_t::status_t::translated);
+		const char * status = preserve ? base_status.c_str() : tools_t::status_t::translated;
 		insert_with_status(key_text, old_text, base_entry->new_text, type, status);
 		return;
 	}
 
-	const auto & s = base_entry->status;
-	const bool is_approved = (s == tools_t::status_t::translated);
-
-	if (!is_approved)
-	{
-		if (s == tools_t::status_t::in_progress || s == tools_t::status_t::model || s == tools_t::status_t::error)
-		{
-			insert_with_status(key_text, old_text, base_entry->new_text, type, tools_t::status_t::outdated);
-
-			auto * outdated_entry = dict.at(type).find(key_text);
-			if (outdated_entry)
-				outdated_entry->details = base_entry->old_text;
-		}
-		else if (s == tools_t::status_t::untranslated)
-		{
-			insert_with_status(key_text, old_text, old_text, type, tools_t::status_t::untranslated);
-		}
-		else
-		{
-			insert_with_status(key_text, old_text, old_text, type, tools_t::status_t::changed);
-
-			auto * changed_entry = dict.at(type).find(key_text);
-			if (changed_entry)
-				changed_entry->details = base_entry->old_text;
-		}
-
-		return;
-	}
-
-	if (differs_only_in_numbers_or_punct(old_text, base_entry->old_text))
-	{
-		const auto & adapted = adapt_translation(old_text, base_entry->old_text, base_entry->new_text);
-
-		if (adapted == base_entry->new_text)
-		{
-			insert_with_status(key_text, old_text, adapted, type, tools_t::status_t::translated);
-			return;
-		}
-
-		insert_with_status(key_text, old_text, adapted, type, tools_t::status_t::adapted);
-
-		auto * entry = dict.at(type).find(key_text);
-		if (entry)
-			entry->details = base_entry->new_text;
-
-		return;
-	}
-
-	insert_with_status(key_text, old_text, base_entry->new_text, type, tools_t::status_t::changed);
-
-	auto * changed_entry = dict.at(type).find(key_text);
-	if (changed_entry)
-		changed_entry->details = base_entry->old_text;
+	insert_changed_entry(key_text, old_text, *base_entry, type);
 }
 
 void dict_creator_t::insert_as_untranslated(

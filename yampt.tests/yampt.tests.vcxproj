@@ -175,6 +175,8 @@
     <ClInclude Include="..\yampt\io\codepage.hpp" />
     <ClInclude Include="..\yampt\model\dict_kind.hpp" />
     <ClInclude Include="..\yampt\io\file_list.hpp" />
+    <ClInclude Include="..\yampt.translator\controller\editor_config.hpp" />
+    <ClInclude Include="..\yampt.translator\controller\annotation_manager.hpp" />
     <ClInclude Include="..\yampt.translator\model\sidebar_model.hpp" />
     <ClInclude Include="..\yampt.translator\session.hpp" />
   </ItemGroup>
@@ -208,7 +210,16 @@
     <ClCompile Include="tests.conflict_slots.cpp" />
     <ClCompile Include="tests.document.cpp" />
     <ClCompile Include="tests.esm_reader.cpp" />
+    <ClCompile Include="tests.esm_converter.cpp" />
     <ClCompile Include="tests.script_parser_scdt.cpp" />
+    <ClCompile Include="tests.dict_creator_ordering.cpp" />
+    <ClCompile Include="tests.editor_config.cpp" />
+    <ClCompile Include="tests.annotation_manager.cpp" />
+    <ClCompile Include="tests.table_builder.cpp" />
+    <ClCompile Include="..\yampt.translator\controller\editor_config.cpp" />
+    <ClCompile Include="..\yampt.translator\model\table_builder.cpp" />
+    <ClCompile Include="..\yampt.translator\controller\search_engine.cpp" />
+    <ClCompile Include="..\yampt.translator\controller\annotation_manager.cpp" />
     <ClCompile Include="..\yampt.translator\model\dict_document.cpp" />
     <ClCompile Include="..\yampt.translator\model\yaml_document.cpp" />
     <ClCompile Include="..\yampt.translator\io\yaml_l10n_reader.cpp" />

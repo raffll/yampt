@@ -14,33 +14,33 @@ static QString first_line(const std::string & text)
 
 static std::string status_display_name(const std::string & status)
 {
-	if (status == "untranslated")
+	if (status == tools_t::status_t::untranslated)
 		return "Untranslated";
-	if (status == "missing")
+	if (status == tools_t::status_t::missing)
 		return "Missing";
-	if (status == "duplicate")
+	if (status == tools_t::status_t::duplicate)
 		return "Duplicate";
-	if (status == "error")
+	if (status == tools_t::status_t::error)
 		return "Error";
-	if (status == "translated")
+	if (status == tools_t::status_t::translated)
 		return "Translated";
-	if (status == "reused")
+	if (status == tools_t::status_t::reused)
 		return "Reused";
-	if (status == "adapted")
+	if (status == tools_t::status_t::adapted)
 		return "Adapted";
-	if (status == "changed")
+	if (status == tools_t::status_t::changed)
 		return "Changed";
-	if (status == "outdated")
+	if (status == tools_t::status_t::outdated)
 		return "Outdated";
-	if (status == "in_progress")
+	if (status == tools_t::status_t::in_progress)
 		return "In Progress";
 	if (status == tools_t::status_t::model)
 		return "Model";
-	if (status == "mismatch")
+	if (status == tools_t::status_t::mismatch)
 		return "Mismatch";
 	if (status == tools_t::status_t::propagated)
 		return "Propagated";
-	if (status == "ambiguous")
+	if (status == tools_t::status_t::ambiguous)
 		return "Ambiguous";
 	if (status == tools_t::status_t::heuristic)
 		return "Heuristic";
@@ -65,6 +65,51 @@ int record_table_model_t::columnCount(const QModelIndex & parent) const
 	return col_count;
 }
 
+static QString strip_leading_whitespace(QString text)
+{
+	int index = 0;
+	while (index < text.length() && (text[index] == ' ' || text[index] == '\t'))
+		++index;
+
+	return text.mid(index);
+}
+
+static bool is_script_type(tools_t::rec_type_t type)
+{
+	return type == tools_t::rec_type_t::sctx || type == tools_t::rec_type_t::bnam;
+}
+
+static QString format_key_display(const table_row_t & row)
+{
+	auto display = QString::fromStdString(row.key_text);
+	if (is_script_type(row.type))
+	{
+		auto parts = display.split('^');
+		for (auto & part : parts)
+			part = strip_leading_whitespace(part);
+
+		display = parts.join(QString::fromUtf8(" \xe2\x80\xa2 "));
+	}
+	else
+	{
+		display.replace('^', QString::fromUtf8(" \xe2\x80\xa2 "));
+	}
+
+	if (row.is_child)
+		return QString::fromUtf8("\xe2\x86\xb3 ") + display;
+
+	return display;
+}
+
+static QString format_text_column(const table_row_t & row, const std::string & source_text)
+{
+	auto text = first_line(source_text);
+	if (is_script_type(row.type))
+		text = strip_leading_whitespace(text);
+
+	return text;
+}
+
 QVariant record_table_model_t::data(const QModelIndex & index, int role) const
 {
 	if (!index.isValid())
@@ -82,57 +127,14 @@ QVariant record_table_model_t::data(const QModelIndex & index, int role) const
 		case col_id:
 			return QString::fromStdString(tools_t::type_to_str(row.type));
 		case col_key:
-		{
-			auto display = QString::fromStdString(row.key_text);
-			if (row.type == tools_t::rec_type_t::sctx || row.type == tools_t::rec_type_t::bnam)
-			{
-				auto parts = display.split('^');
-				for (auto & part : parts)
-				{
-					int i = 0;
-					while (i < part.length() && (part[i] == ' ' || part[i] == '\t'))
-						++i;
-					part = part.mid(i);
-				}
-				display = parts.join(QString::fromUtf8(" \xe2\x80\xa2 "));
-			}
-			else
-			{
-				display.replace('^', QString::fromUtf8(" \xe2\x80\xa2 "));
-			}
-
-			if (row.is_child)
-				return QString::fromUtf8("\xe2\x86\xb3 ") + display;
-
-			return display;
-		}
+			return format_key_display(row);
 		case col_original:
-		{
-			auto text = first_line(row.old_text);
-			if (row.type == tools_t::rec_type_t::sctx || row.type == tools_t::rec_type_t::bnam)
-			{
-				int i = 0;
-				while (i < text.length() && (text[i] == ' ' || text[i] == '\t'))
-					++i;
-				text = text.mid(i);
-			}
-			return text;
-		}
+			return format_text_column(row, row.old_text);
 		case col_translation:
-		{
-			if (row.status == "untranslated")
+			if (row.status == tools_t::status_t::untranslated)
 				return {};
 
-			auto text = first_line(row.new_text);
-			if (row.type == tools_t::rec_type_t::sctx || row.type == tools_t::rec_type_t::bnam)
-			{
-				int i = 0;
-				while (i < text.length() && (text[i] == ' ' || text[i] == '\t'))
-					++i;
-				text = text.mid(i);
-			}
-			return text;
-		}
+			return format_text_column(row, row.new_text);
 		case col_status:
 			return QString::fromStdString(status_display_name(row.status));
 		default:

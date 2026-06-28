@@ -45,6 +45,10 @@ The canonical field names for dictionary entries are `key_text`, `old_text`, `ne
 
 Parameter names in declarations (`.hpp`) must be identical to the corresponding definitions (`.cpp`). Never omit parameter names in declarations. When a mismatch exists, use the more descriptive snake_case name in both files.
 
+## Use Named Constants for Status Strings
+
+Never compare against raw status string literals (`"untranslated"`, `"translated"`, etc.). Always use the named constants from `tools_t::status_t::` — e.g. `tools_t::status_t::untranslated`, `tools_t::status_t::adapted`. This prevents typos and keeps all status values in one place.
+
 ## No CLI Log Headers
 
 Do not use decorative ASCII separator lines or column headers in log output. Each log line must be self-describing with labeled counters:

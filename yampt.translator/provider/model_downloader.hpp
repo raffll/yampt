@@ -23,6 +23,8 @@ signals:
 
 private:
 	void download_next();
+	void finalize_download();
+	void connect_reply_signals(QNetworkReply * reply);
 	void on_file_finished(QNetworkReply * reply);
 
 	struct download_file_t

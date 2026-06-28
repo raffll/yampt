@@ -2,6 +2,8 @@
 
 #include <unordered_map>
 
+static const std::set<std::string> done_statuses = { "translated" };
+
 static const std::map<std::pair<tools_t::rec_type_t, std::string>, std::string> prefix_to_sub_type = {
 	{ { tools_t::rec_type_t::info, "T" }, "Topic" },      { { tools_t::rec_type_t::info, "V" }, "Voice" },
 	{ { tools_t::rec_type_t::info, "G" }, "Greeting" },   { { tools_t::rec_type_t::info, "P" }, "Persuasion" },
@@ -58,206 +60,141 @@ static std::string extract_info_prefix(const std::string & key_text)
 static bool has_sub_type(tools_t::rec_type_t type)
 {
 	return type == tools_t::rec_type_t::info || type == tools_t::rec_type_t::bnam ||
-	       type == tools_t::rec_type_t::fnam || type == tools_t::rec_type_t::desc || type == tools_t::rec_type_t::indx;
+	       type == tools_t::rec_type_t::fnam || type == tools_t::rec_type_t::desc ||
+	       type == tools_t::rec_type_t::indx;
 }
 
 static std::string classify_sub_type(tools_t::rec_type_t type, const std::string & key_text)
 {
-	auto caret_pos = key_text.find('^');
+	const auto caret_pos = key_text.find('^');
 	if (caret_pos == std::string::npos || caret_pos == 0)
 		return {};
 
-	auto prefix = key_text.substr(0, caret_pos);
-	auto it = prefix_to_sub_type.find({ type, prefix });
-	if (it != prefix_to_sub_type.end())
-		return it->second;
+	const auto prefix = key_text.substr(0, caret_pos);
+	const auto found = prefix_to_sub_type.find({ type, prefix });
+	if (found != prefix_to_sub_type.end())
+		return found->second;
 
 	return {};
 }
 
-static bool passes_sub_type_filter(
-    tools_t::rec_type_t type,
-    const std::string & key_text,
-    const std::set<std::string> & sub_type_filter,
-    bool type_filter_solo)
+struct entry_identity_t
 {
-	if (!type_filter_solo)
+	tools_t::rec_type_t type;
+	const std::string & key_text;
+};
+
+static bool passes_sub_type_filter(const entry_identity_t & entry_id, const table_filter_params_t & params)
+{
+	if (!params.type_filter_solo)
 		return true;
 
-	if (!has_sub_type(type))
+	if (!has_sub_type(entry_id.type))
 		return true;
 
-	auto caret_pos = key_text.find('^');
+	const auto caret_pos = entry_id.key_text.find('^');
 	if (caret_pos == std::string::npos || caret_pos == 0)
 		return true;
 
-	auto prefix = key_text.substr(0, caret_pos);
-	for (const auto & sub : sub_type_filter)
+	const auto prefix = entry_id.key_text.substr(0, caret_pos);
+	for (const auto & sub_name : params.sub_type_filter)
 	{
-		auto it = sub_type_to_prefix.find(sub);
-		if (it != sub_type_to_prefix.end() && it->second == prefix)
+		const auto found = sub_type_to_prefix.find(sub_name);
+		if (found != sub_type_to_prefix.end() && found->second == prefix)
 			return true;
 	}
 
 	return false;
 }
 
-table_build_result_t build_filtered_rows(
-    const tools_t::dict_t & data,
-    const std::set<tools_t::rec_type_t> & type_filter,
-    const std::set<std::string> & sub_type_filter,
-    const std::set<std::string> & status_filter,
-    const search_engine_t & search,
-    bool type_filter_solo)
+
+struct entry_context_t
 {
-	static const std::set<std::string> done_statuses = { "translated" };
+	tools_t::rec_type_t type;
+	tools_t::rec_type_t count_type;
+	const tools_t::record_entry_t & entry;
+	size_t record_index;
+	const table_filter_params_t & params;
+};
 
-	table_build_result_t result;
-	auto & counts = result.counts;
+static void count_entry_statistics(dict_counts_t & counts, const entry_context_t & context)
+{
+	const auto & entry = context.entry;
 
-	std::unordered_multimap<std::string, size_t> bnam_prefix_map;
-	std::set<size_t> consumed_bnams;
+	counts.type_counts[context.count_type]++;
+	counts.total_status_counts[entry.status]++;
 
-	auto bnam_it = data.find(tools_t::rec_type_t::bnam);
-	if (bnam_it != data.end())
+	if (has_sub_type(context.type))
 	{
-		for (size_t i = 0; i < bnam_it->second.records.size(); ++i)
+		const auto sub_name = classify_sub_type(context.type, entry.key_text);
+		if (!sub_name.empty())
 		{
-			const auto & entry = bnam_it->second.records[i];
-			auto prefix = extract_info_prefix(entry.key_text);
-			if (!prefix.empty())
-				bnam_prefix_map.emplace(prefix, i);
-		}
-	}
-
-	const bool info_in_filter = type_filter.empty() || type_filter.count(tools_t::rec_type_t::info) > 0;
-
-	for (const auto & [type, chapter] : data)
-	{
-		for (size_t i = 0; i < chapter.records.size(); ++i)
-		{
-			const auto & entry = chapter.records[i];
-
-			const auto count_type = (type == tools_t::rec_type_t::bnam) ? tools_t::rec_type_t::info : type;
-
-			counts.type_counts[count_type]++;
-			counts.total_status_counts[entry.status]++;
-
-			if (has_sub_type(type))
-			{
-				const auto sub = classify_sub_type(type, entry.key_text);
-				if (!sub.empty())
-				{
-					counts.sub_type_total_counts[sub]++;
-					if (done_statuses.count(entry.status))
-						counts.sub_type_translated_counts[sub]++;
-				}
-			}
-
+			counts.sub_type_total_counts[sub_name]++;
 			if (done_statuses.count(entry.status))
-				counts.translated_counts[count_type]++;
-
-			// --- filter pipeline ---
-
-			// 1. type_filter check (for filtered_status_counts and row
-			// emission)
-			//    BNAMs pass when INFO is in filter (they're displayed under
-			//    INFO)
-			if (!type_filter.empty() && type_filter.count(count_type) == 0)
-				continue;
-
-			// 2. sub_type_filter check
-			if (!passes_sub_type_filter(type, entry.key_text, sub_type_filter, type_filter_solo))
-				continue;
-
-			// 3. count filtered_status_counts (passes type + sub_type + search,
-			// but NOT status)
-			//    Counted for ALL records including consumed BNAMs — this is
-			//    status-independent
-			{
-				table_row_t tmp_row;
-				tmp_row.type = type;
-				tmp_row.key_text = entry.key_text;
-				tmp_row.old_text = entry.old_text;
-				tmp_row.new_text = entry.new_text;
-				tmp_row.status = entry.status;
-				tmp_row.record_index = i;
-
-				if (!search.has_query() || search.matches(tmp_row))
-					counts.filtered_status_counts[entry.status]++;
-			}
-
-			// 4. skip consumed BNAMs (for row emission only — counting is done
-			// above)
-			if (type == tools_t::rec_type_t::bnam && consumed_bnams.count(i) > 0)
-				continue;
-
-			// 5. status_filter
-			if (!status_filter.empty() && status_filter.count(entry.status) == 0)
-				continue;
-
-			// 6. search
-			table_row_t row;
-			row.type = type;
-			row.key_text = entry.key_text;
-			row.old_text = entry.old_text;
-			row.new_text = entry.new_text;
-			row.status = entry.status;
-			row.record_index = i;
-
-			if (search.has_query() && !search.matches(row))
-				continue;
-
-			// 7. add to output
-			result.rows.push_back(std::move(row));
-
-			// BNAM interleaving: after an INFO row passes all filters, emit
-			// matching BNAMs
-			if (type == tools_t::rec_type_t::info && info_in_filter && bnam_it != data.end())
-			{
-				auto info_prefix = extract_info_prefix(entry.key_text);
-				if (info_prefix.empty())
-					continue;
-
-				auto [begin, end] = bnam_prefix_map.equal_range(info_prefix);
-				for (auto bit = begin; bit != end; ++bit)
-				{
-					const auto & bnam_entry = bnam_it->second.records[bit->second];
-
-					if (!status_filter.empty() && status_filter.count(bnam_entry.status) == 0)
-						continue;
-
-					table_row_t child;
-					child.type = tools_t::rec_type_t::bnam;
-					child.key_text = bnam_entry.key_text;
-					child.old_text = bnam_entry.old_text;
-					child.new_text = bnam_entry.new_text;
-					child.status = bnam_entry.status;
-					child.record_index = bit->second;
-					child.is_child = true;
-
-					if (search.has_query() && !search.matches(child))
-						continue;
-
-					result.rows.push_back(std::move(child));
-					consumed_bnams.insert(bit->second);
-				}
-			}
+				counts.sub_type_translated_counts[sub_name]++;
 		}
 	}
 
-	// progress computation: count type-filtered + sub-type-filtered records
-	// with done statuses
-	for (const auto & [type, chapter] : data)
-	{
-		const auto effective_type = (type == tools_t::rec_type_t::bnam) ? tools_t::rec_type_t::info : type;
+	if (done_statuses.count(entry.status))
+		counts.translated_counts[context.count_type]++;
+}
 
-		if (!type_filter.empty() && type_filter.count(effective_type) == 0)
+struct bnam_emit_context_t
+{
+	std::vector<table_row_t> & output_rows;
+	std::set<size_t> & consumed_bnams;
+	const tools_t::chapter_t & bnam_chapter;
+	const std::unordered_multimap<std::string, size_t> & bnam_prefix_map;
+	const table_filter_params_t & params;
+};
+
+static void emit_bnam_children(const std::string & info_prefix, bnam_emit_context_t & context)
+{
+	auto [range_begin, range_end] = context.bnam_prefix_map.equal_range(info_prefix);
+	for (auto bnam_iter = range_begin; bnam_iter != range_end; ++bnam_iter)
+	{
+		const auto & bnam_entry = context.bnam_chapter.records[bnam_iter->second];
+
+		const auto & status_filter = context.params.status_filter;
+		if (!status_filter.empty() && status_filter.count(bnam_entry.status) == 0)
+			continue;
+
+		table_row_t child;
+		child.type = tools_t::rec_type_t::bnam;
+		child.key_text = bnam_entry.key_text;
+		child.old_text = bnam_entry.old_text;
+		child.new_text = bnam_entry.new_text;
+		child.status = bnam_entry.status;
+		child.record_index = bnam_iter->second;
+		child.is_child = true;
+
+		if (context.params.search.has_query() && !context.params.search.matches(child))
+			continue;
+
+		context.output_rows.push_back(std::move(child));
+		context.consumed_bnams.insert(bnam_iter->second);
+	}
+}
+
+struct progress_input_t
+{
+	const tools_t::dict_t & data;
+	const table_filter_params_t & params;
+};
+
+static void compute_progress(dict_counts_t & counts, const progress_input_t & input)
+{
+	for (const auto & [type, chapter] : input.data)
+	{
+		const auto effective_type =
+		    (type == tools_t::rec_type_t::bnam) ? tools_t::rec_type_t::info : type;
+
+		if (!input.params.type_filter.empty() && input.params.type_filter.count(effective_type) == 0)
 			continue;
 
 		for (const auto & entry : chapter.records)
 		{
-			if (!passes_sub_type_filter(type, entry.key_text, sub_type_filter, type_filter_solo))
+			if (!passes_sub_type_filter({ type, entry.key_text }, input.params))
 				continue;
 
 			counts.progress_total++;
@@ -265,6 +202,106 @@ table_build_result_t build_filtered_rows(
 				counts.progress_translated++;
 		}
 	}
+}
 
+static table_row_t make_table_row(const entry_context_t & context)
+{
+	table_row_t row_item;
+	row_item.type = context.type;
+	row_item.key_text = context.entry.key_text;
+	row_item.old_text = context.entry.old_text;
+	row_item.new_text = context.entry.new_text;
+	row_item.status = context.entry.status;
+	row_item.record_index = context.record_index;
+	return row_item;
+}
+
+static void count_filtered_status(dict_counts_t & counts, const entry_context_t & context)
+{
+	const auto & search = context.params.search;
+	const auto tmp_row = make_table_row(context);
+	if (!search.has_query() || search.matches(tmp_row))
+		counts.filtered_status_counts[context.entry.status]++;
+}
+
+static std::unordered_multimap<std::string, size_t> build_bnam_prefix_map(
+    const tools_t::dict_t & data)
+{
+	std::unordered_multimap<std::string, size_t> bnam_prefix_map;
+	auto bnam_it = data.find(tools_t::rec_type_t::bnam);
+	if (bnam_it == data.end())
+		return bnam_prefix_map;
+
+	for (size_t i = 0; i < bnam_it->second.records.size(); ++i)
+	{
+		const auto & entry = bnam_it->second.records[i];
+		const auto prefix = extract_info_prefix(entry.key_text);
+		if (!prefix.empty())
+			bnam_prefix_map.emplace(prefix, i);
+	}
+
+	return bnam_prefix_map;
+}
+
+table_build_result_t build_filtered_rows(
+    const tools_t::dict_t & data,
+    const table_filter_params_t & params)
+{
+	table_build_result_t result;
+	auto & counts = result.counts;
+
+	auto bnam_prefix_map = build_bnam_prefix_map(data);
+	std::set<size_t> consumed_bnams;
+
+	auto bnam_it = data.find(tools_t::rec_type_t::bnam);
+
+	const bool info_in_filter =
+	    params.type_filter.empty() || params.type_filter.count(tools_t::rec_type_t::info) > 0;
+
+	for (const auto & [type, chapter] : data)
+	{
+		for (size_t i = 0; i < chapter.records.size(); ++i)
+		{
+			const auto & entry = chapter.records[i];
+			const auto count_type =
+			    (type == tools_t::rec_type_t::bnam) ? tools_t::rec_type_t::info : type;
+
+			const entry_context_t context{ type, count_type, entry, i, params };
+
+			count_entry_statistics(counts, context);
+
+			if (!params.type_filter.empty() && params.type_filter.count(count_type) == 0)
+				continue;
+
+			if (!passes_sub_type_filter({ type, entry.key_text }, params))
+				continue;
+
+			count_filtered_status(counts, context);
+
+			if (type == tools_t::rec_type_t::bnam && consumed_bnams.count(i) > 0)
+				continue;
+
+			if (!params.status_filter.empty() && params.status_filter.count(entry.status) == 0)
+				continue;
+
+			auto row_item = make_table_row(context);
+			if (params.search.has_query() && !params.search.matches(row_item))
+				continue;
+
+			result.rows.push_back(std::move(row_item));
+
+			const auto info_prefix = extract_info_prefix(entry.key_text);
+			if (type == tools_t::rec_type_t::info && info_in_filter &&
+			    bnam_it != data.end() && !info_prefix.empty())
+			{
+				bnam_emit_context_t bnam_context{
+					result.rows, consumed_bnams, bnam_it->second, bnam_prefix_map, params
+				};
+				emit_bnam_children(info_prefix, bnam_context);
+			}
+		}
+	}
+
+	compute_progress(counts, { data, params });
 	return result;
 }

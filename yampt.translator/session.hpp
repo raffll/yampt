@@ -35,6 +35,10 @@ public:
 	size_t dict_version() const;
 
 private:
+	document_t * handle_open_plugin(const std::string & normalized);
+	document_t * handle_open_dict(const std::string & normalized);
+	document_t * handle_open_yaml(const std::string & normalized);
+
 	static std::string normalize_path(const std::string & path);
 
 	std::vector<std::unique_ptr<document_t>> docs_;

@@ -14,6 +14,8 @@
 #include <QLabel>
 #include <QMenu>
 
+class QDropEvent;
+
 class editor_tab_t : public QWidget
 {
 	Q_OBJECT
@@ -40,6 +42,9 @@ private slots:
 	void on_view_copy();
 
 private:
+	void setup_toolbar();
+	void setup_views();
+	void setup_connections();
 	void rebuild_after_load();
 	void update_status();
 	void log_message(const std::string & msg);
@@ -47,13 +52,41 @@ private:
 	void load_plugin_paths();
 	void rebuild_nav_preserving_state();
 	void load_plugins_from_paths(const std::vector<std::string> & paths);
+	void display_record_in_view(const conflict_entry_t & entry);
+	std::vector<std::string> parse_mo2_profile(const QString & profile_dir);
+	std::vector<std::string> parse_openmw_cfg(const QString & cfg_path);
+
+	struct mo2_resolve_context_t
+	{
+		std::vector<std::string> enabled_mods;
+		QString mods_path;
+		QString game_data_path;
+	};
+
+	std::vector<std::string> resolve_mo2_plugins(
+	    const std::vector<std::string> & plugin_names,
+	    const mo2_resolve_context_t & context);
+	std::string resolve_single_mo2_plugin(
+	    const std::string & plugin_name,
+	    const mo2_resolve_context_t & context);
+	std::vector<std::string> resolve_openmw_content(
+	    const std::vector<std::string> & content_names,
+	    const std::vector<std::string> & data_dirs);
+	std::string resolve_single_content(
+	    const std::string & content_name,
+	    const std::vector<std::string> & data_dirs);
+	int create_merge_records();
 	bool eventFilter(QObject * obj, QEvent * event) override;
+	bool handle_drop_on_view(QDropEvent * drop_event);
+	bool handle_drop_on_nav(QDropEvent * drop_event);
+	void refresh_after_merge(const std::string & rec_type, const std::string & record_id);
 
 	plugin_scan_t scan_;
 
 	QPushButton * btn_load_ = nullptr;
 	QPushButton * btn_new_ = nullptr;
 	QPushButton * btn_save_ = nullptr;
+	QPushButton * btn_merge_ = nullptr;
 	QPushButton * btn_filter_ = nullptr;
 	QCheckBox * chk_conflicts_ = nullptr;
 	QComboBox * cmb_type_filter_ = nullptr;

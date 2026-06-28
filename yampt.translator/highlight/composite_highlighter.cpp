@@ -35,43 +35,42 @@ void composite_highlighter_t::set_spell_checker(spell_checker_t * checker)
 		rehighlight();
 }
 
-void composite_highlighter_t::highlightBlock(const QString & text)
+void composite_highlighter_t::apply_syntax_tokens(const QString & text)
 {
-	if (record_type_ == tools_t::rec_type_t::sctx || record_type_ == tools_t::rec_type_t::bnam ||
-	    record_type_ == tools_t::rec_type_t::text)
+	const auto utf8 = text.toStdString();
+	const auto & tokens = tokenizer_.tokenize(utf8, record_type_);
+
+	for (const auto & token : tokens)
 	{
-		const auto utf8 = text.toStdString();
-		const auto tokens = tokenizer_.tokenize(utf8, record_type_);
+		if (token.type == token_type_t::normal)
+			continue;
 
-		for (const auto & token : tokens)
+		const int start = QString::fromUtf8(utf8.data(), static_cast<int>(token.start)).length();
+		const int end = QString::fromUtf8(utf8.data(), static_cast<int>(token.end)).length();
+		const int length = end - start;
+
+		switch (token.type)
 		{
-			if (token.type == token_type_t::normal)
-				continue;
-
-			const int start = QString::fromUtf8(utf8.data(), static_cast<int>(token.start)).length();
-			const int end = QString::fromUtf8(utf8.data(), static_cast<int>(token.end)).length();
-			const int length = end - start;
-
-			switch (token.type)
-			{
-			case token_type_t::mwscript_function:
-				setFormat(start, length, format_function_);
-				break;
-			case token_type_t::mwscript_comment:
-				setFormat(start, length, format_comment_);
-				break;
-			case token_type_t::mwscript_string:
-				setFormat(start, length, format_string_);
-				break;
-			case token_type_t::html_tag:
-				setFormat(start, length, format_html_tag_);
-				break;
-			default:
-				break;
-			}
+		case token_type_t::mwscript_function:
+			setFormat(start, length, format_function_);
+			break;
+		case token_type_t::mwscript_comment:
+			setFormat(start, length, format_comment_);
+			break;
+		case token_type_t::mwscript_string:
+			setFormat(start, length, format_string_);
+			break;
+		case token_type_t::html_tag:
+			setFormat(start, length, format_html_tag_);
+			break;
+		default:
+			break;
 		}
 	}
+}
 
+void composite_highlighter_t::apply_forbidden_chars(const QString & text)
+{
 	for (int i = 0; i < text.length(); ++i)
 	{
 		const auto ch = text.at(i).unicode();
@@ -84,18 +83,35 @@ void composite_highlighter_t::highlightBlock(const QString & text)
 			setFormat(i, 1, merged);
 		}
 	}
+}
+
+void composite_highlighter_t::apply_spell_check(const QString & text)
+{
+	const auto & text_str = text.toStdString();
+	const auto & matches = spell_checker_->find_misspelled(text_str);
+
+	for (const auto & match : matches)
+	{
+		const int qchar_start = QString::fromUtf8(text_str.data(), static_cast<int>(match.start)).length();
+		const int qchar_len =
+		    QString::fromUtf8(text_str.data() + match.start, static_cast<int>(match.end - match.start)).length();
+		setFormat(qchar_start, qchar_len, format_misspelled_);
+	}
+}
+
+void composite_highlighter_t::highlightBlock(const QString & text)
+{
+	const bool has_syntax = record_type_ == tools_t::rec_type_t::sctx ||
+	                        record_type_ == tools_t::rec_type_t::bnam ||
+	                        record_type_ == tools_t::rec_type_t::text;
+
+	if (has_syntax)
+		apply_syntax_tokens(text);
+
+	apply_forbidden_chars(text);
 
 	if (!is_translation_ || !spell_checker_ || !spell_checker_->is_loaded())
 		return;
 
-	const auto text_str = text.toStdString();
-	const auto matches = spell_checker_->find_misspelled(text_str);
-
-	for (const auto & match : matches)
-	{
-		int qchar_start = QString::fromUtf8(text_str.data(), static_cast<int>(match.start)).length();
-		int qchar_len =
-		    QString::fromUtf8(text_str.data() + match.start, static_cast<int>(match.end - match.start)).length();
-		setFormat(qchar_start, qchar_len, format_misspelled_);
-	}
+	apply_spell_check(text);
 }

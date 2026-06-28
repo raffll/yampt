@@ -182,6 +182,7 @@ if exist "$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\Qt6\plugins\tls"
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="main_window.cpp" />
+    <ClCompile Include="main_window_setup.cpp" />
     <ClCompile Include="session.cpp" />
     <ClCompile Include="model\record_table_model.cpp" />
     <ClCompile Include="model\sidebar_model.cpp" />

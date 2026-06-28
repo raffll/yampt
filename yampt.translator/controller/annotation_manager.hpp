@@ -70,6 +70,11 @@ private:
 
 	static std::string to_lower(const std::string & str);
 	static bool is_alpha(char c);
+	static bool is_trusted_status(const std::string & status);
+
+	void collect_dial_entries(const dict_source_t & source);
+	void collect_glossary_entries(const dict_source_t & source, tools_t::rec_type_t record_type);
+	void sort_by_length_descending(std::vector<topic_entry_t> & entries);
 
 	void update_vector(std::vector<topic_entry_t> & vec, const std::string & old_text, const std::string & new_text);
 	void remove_from_vector(std::vector<topic_entry_t> & vec, const std::string & old_text);

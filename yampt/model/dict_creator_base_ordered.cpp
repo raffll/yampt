@@ -253,6 +253,38 @@ void dict_creator_t::process_dial_ordered(size_t i, std::string & dial_type, std
 	    dial_foreign_name, dial_foreign_name, native_name, tools_t::rec_type_t::dial, "matched");
 }
 
+void dict_creator_t::attach_speaker_metadata(const std::string & key_text, size_t record_index)
+{
+	esm.select_record(record_index);
+	esm.set_value("ONAM");
+	if (!esm.get_value().exist || esm.get_value().text.empty())
+		return;
+
+	const auto & speaker_id = esm.get_value().text;
+	const auto npc_search = npc_index.find(speaker_id);
+	if (npc_search == npc_index.end())
+		return;
+
+	esm_ref.select_record(npc_search->second);
+	esm_ref.set_key("FNAM");
+	esm_ref.set_value("FLAG");
+
+	std::string speaker_name;
+	if (esm_ref.get_key().exist)
+		speaker_name = esm_ref.get_key().text;
+
+	std::string gender;
+	if (esm_ref.get_value().exist)
+		gender = ((tools_t::convert_string_byte_array_to_uint(esm_ref.get_value().content) & 0x0001) != 0) ? "F" : "M";
+
+	auto * entry = dict.at(tools_t::rec_type_t::info).find(key_text);
+	if (!entry)
+		return;
+
+	entry->speaker_name = speaker_name;
+	entry->gender = gender;
+}
+
 void dict_creator_t::process_info_ordered(
     size_t i,
     const std::string & dial_type,
@@ -280,35 +312,7 @@ void dict_creator_t::process_info_ordered(
 	insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::info, "matched");
 
 	process_bnam_ordered(i, dial_type, dial_foreign_name, inam);
-
-	esm.select_record(i);
-	esm.set_value("ONAM");
-	if (!esm.get_value().exist || esm.get_value().text.empty())
-		return;
-
-	const auto & speaker_id = esm.get_value().text;
-	auto npc_search = npc_index.find(speaker_id);
-	if (npc_search == npc_index.end())
-		return;
-
-	esm_ref.select_record(npc_search->second);
-	esm_ref.set_key("FNAM");
-	esm_ref.set_value("FLAG");
-
-	std::string speaker_name;
-	if (esm_ref.get_key().exist)
-		speaker_name = esm_ref.get_key().text;
-
-	std::string gender;
-	if (esm_ref.get_value().exist)
-		gender = ((tools_t::convert_string_byte_array_to_uint(esm_ref.get_value().content) & 0x0001) != 0) ? "F" : "M";
-
-	auto * entry = dict.at(tools_t::rec_type_t::info).find(key_text);
-	if (!entry)
-		return;
-
-	entry->speaker_name = speaker_name;
-	entry->gender = gender;
+	attach_speaker_metadata(key_text, i);
 }
 
 void dict_creator_t::process_sctx_ordered(size_t i)

@@ -23,6 +23,10 @@ protected:
 	void highlightBlock(const QString & text) override;
 
 private:
+	void apply_syntax_tokens(const QString & text);
+	void apply_forbidden_chars(const QString & text);
+	void apply_spell_check(const QString & text);
+
 	tools_t::rec_type_t record_type_ = tools_t::rec_type_t::unknown;
 	bool is_translation_ = false;
 	spell_checker_t * spell_checker_ = nullptr;

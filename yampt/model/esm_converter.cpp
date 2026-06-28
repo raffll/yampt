@@ -124,45 +124,29 @@ void esm_converter_t::make_header()
 void esm_converter_t::convert_gmdt()
 {
 	reset_counters();
+	const auto & type = tools_t::rec_type_t::cell;
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
-		if (esm.get_record().id == "TES3")
-		{
-			esm.set_value("GMDT");
-			if (esm.get_value().exist)
-			{
-				const auto & prefix = esm.get_value().content.substr(0, 24);
-				const auto & suffix = esm.get_value().content.substr(88);
-				auto val_text = esm.get_value().content.substr(24, 64);
-				val_text = tools_t::erase_null_chars(val_text);
-				const auto & type = tools_t::rec_type_t::cell;
-				std::string new_text;
-				if (!make_new_text({ val_text, val_text, type }, new_text))
-					continue;
+		const auto & record_id = esm.get_record().id;
+		if (record_id != "TES3" && record_id != "GAME")
+			continue;
 
-				new_text.resize(64);
-				convert_record_content(prefix + new_text + suffix);
-			}
-		}
+		esm.set_value("GMDT");
+		if (!esm.get_value().exist)
+			continue;
 
-		if (esm.get_record().id == "GAME")
-		{
-			esm.set_value("GMDT");
-			if (esm.get_value().exist)
-			{
-				const auto & suffix = esm.get_value().content.substr(64);
-				auto val_text = esm.get_value().content.substr(0, 64);
-				val_text = tools_t::erase_null_chars(val_text);
-				const auto & type = tools_t::rec_type_t::cell;
-				std::string new_text;
-				if (!make_new_text({ val_text, val_text, type }, new_text))
-					continue;
+		const size_t name_offset = (record_id == "TES3") ? 24 : 0;
+		const auto & prefix = esm.get_value().content.substr(0, name_offset);
+		const auto & suffix = esm.get_value().content.substr(name_offset + 64);
+		auto val_text = esm.get_value().content.substr(name_offset, 64);
+		val_text = tools_t::erase_null_chars(val_text);
+		std::string new_text;
+		if (!make_new_text({ val_text, val_text, type }, new_text))
+			continue;
 
-				new_text.resize(64);
-				convert_record_content(new_text + suffix);
-			}
-		}
+		new_text.resize(64);
+		convert_record_content(prefix + new_text + suffix);
 	}
 	print_log_line(tools_t::rec_type_t::gmdt);
 }
@@ -259,19 +243,18 @@ void esm_converter_t::convert_scvr()
 		esm.set_value("SCVR");
 		while (esm.get_value().exist)
 		{
-			/* possible exceptions */
-			if (esm.get_value().text.substr(1, 1) == "B")
+			const auto & scvr_text = esm.get_value().text;
+			if (scvr_text.size() <= 5 || scvr_text[1] != 'B')
 			{
-				const auto & key_text = esm.get_value().text.substr(5);
-				const auto & val_text = esm.get_value().text.substr(5);
-				std::string new_text;
-				if (make_new_text({ key_text, val_text, type }, new_text))
-				{
-					/* not null terminated */
-					new_text = esm.get_value().text.substr(0, 5) + new_text;
-					convert_record_content(new_text);
-				}
+				esm.set_next_value("SCVR");
+				continue;
 			}
+
+			const auto & key_text = scvr_text.substr(5);
+			std::string new_text;
+			if (make_new_text({ key_text, key_text, type }, new_text))
+				convert_record_content(scvr_text.substr(0, 5) + new_text);
+
 			esm.set_next_value("SCVR");
 		}
 	}
@@ -285,21 +268,21 @@ void esm_converter_t::convert_dnam()
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
-		if (esm.get_record().id == "CELL" || esm.get_record().id == "NPC_")
+		if (esm.get_record().id != "CELL" && esm.get_record().id != "NPC_")
+			continue;
+
+		esm.set_value("DNAM");
+		while (esm.get_value().exist)
 		{
-			esm.set_value("DNAM");
-			while (esm.get_value().exist)
+			const auto & key_text = esm.get_value().text;
+			const auto & val_text = esm.get_value().text;
+			std::string new_text;
+			if (make_new_text({ key_text, val_text, type }, new_text))
 			{
-				const auto & key_text = esm.get_value().text;
-				const auto & val_text = esm.get_value().text;
-				std::string new_text;
-				if (make_new_text({ key_text, val_text, type }, new_text))
-				{
-					new_text += '\0';
-					convert_record_content(new_text);
-				}
-				esm.set_next_value("DNAM");
+				new_text += '\0';
+				convert_record_content(new_text);
 			}
+			esm.set_next_value("DNAM");
 		}
 	}
 	print_log_line(tools_t::rec_type_t::dnam);
@@ -396,33 +379,27 @@ void esm_converter_t::convert_desc()
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
-		if (esm.get_record().id == "BSGN" || esm.get_record().id == "CLAS" || esm.get_record().id == "RACE")
-		{
-			esm.set_key("NAME");
-			esm.set_value("DESC");
-			if (esm.get_key().exist && esm.get_value().exist)
-			{
-				const auto & key_text = esm.get_record().id + "^" + esm.get_key().text;
-				const auto & val_text = esm.get_value().text;
-				std::string new_text;
-				if (!make_new_text({ key_text, val_text, type }, new_text))
-					continue;
+		const auto & record_id = esm.get_record().id;
+		if (record_id != "BSGN" && record_id != "CLAS" && record_id != "RACE")
+			continue;
 
-				if (esm.get_record().id == "BSGN")
-				{
-					/* null terminated, don't exist if empty */
-					new_text += '\0';
-					convert_record_content(new_text);
-				}
+		esm.set_key("NAME");
+		esm.set_value("DESC");
+		if (!esm.get_key().exist || !esm.get_value().exist)
+			continue;
 
-				if (esm.get_record().id == "CLAS" || esm.get_record().id == "RACE")
-				{
-					/* not null terminated, don't exist if empty */
-					add_null_terminator_if_empty(new_text);
-					convert_record_content(new_text);
-				}
-			}
-		}
+		const auto & key_text = record_id + "^" + esm.get_key().text;
+		const auto & val_text = esm.get_value().text;
+		std::string new_text;
+		if (!make_new_text({ key_text, val_text, type }, new_text))
+			continue;
+
+		if (record_id == "BSGN")
+			new_text += '\0';
+		else
+			add_null_terminator_if_empty(new_text);
+
+		convert_record_content(new_text);
 	}
 	print_log_line(tools_t::rec_type_t::desc);
 }
@@ -494,23 +471,22 @@ void esm_converter_t::convert_indx()
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
-		if (esm.get_record().id == "SKIL" || esm.get_record().id == "MGEF")
-		{
-			esm.set_key("INDX");
-			esm.set_value("DESC");
-			if (esm.get_key().exist && esm.get_value().exist)
-			{
-				const auto & key_text = esm.get_record().id + "^" + tools_t::get_indx(esm.get_key().content);
-				const auto & val_text = esm.get_value().text;
-				std::string new_text;
-				if (!make_new_text({ key_text, val_text, type }, new_text))
-					continue;
+		if (esm.get_record().id != "SKIL" && esm.get_record().id != "MGEF")
+			continue;
 
-				/* not null terminated, don't exist if empty */
-				add_null_terminator_if_empty(new_text);
-				convert_record_content(new_text);
-			}
-		}
+		esm.set_key("INDX");
+		esm.set_value("DESC");
+		if (!esm.get_key().exist || !esm.get_value().exist)
+			continue;
+
+		const auto & key_text = esm.get_record().id + "^" + tools_t::get_indx(esm.get_key().content);
+		const auto & val_text = esm.get_value().text;
+		std::string new_text;
+		if (!make_new_text({ key_text, val_text, type }, new_text))
+			continue;
+
+		add_null_terminator_if_empty(new_text);
+		convert_record_content(new_text);
 	}
 	print_log_line(tools_t::rec_type_t::indx);
 }
@@ -562,26 +538,26 @@ void esm_converter_t::convert_info()
 				key_prefix = tools_t::get_dialog_type(esm.get_key().content) + "^" + esm.get_value().text;
 				dial_index = i;
 			}
+			continue;
 		}
 
-		if (esm.get_record().id == "INFO")
-		{
-			esm.set_key("INAM");
-			esm.set_value("NAME");
-			if (esm.get_key().exist && esm.get_value().exist)
-			{
-				const auto & key_text = key_prefix + "^" + esm.get_key().text;
-				const auto & val_text = esm.get_value().text;
-				std::string new_text;
-				if (make_new_text({ key_text, val_text, type }, new_text))
-				{
-					/* not null terminated, don't exist if empty */
-					add_null_terminator_if_empty(new_text);
-					convert_record_content(new_text);
-					esm.set_modified(dial_index);
-				}
-			}
-		}
+		if (esm.get_record().id != "INFO")
+			continue;
+
+		esm.set_key("INAM");
+		esm.set_value("NAME");
+		if (!esm.get_key().exist || !esm.get_value().exist)
+			continue;
+
+		const auto & key_text = key_prefix + "^" + esm.get_key().text;
+		const auto & val_text = esm.get_value().text;
+		std::string new_text;
+		if (!make_new_text({ key_text, val_text, type }, new_text))
+			continue;
+
+		add_null_terminator_if_empty(new_text);
+		convert_record_content(new_text);
+		esm.set_modified(dial_index);
 	}
 	print_log_line(tools_t::rec_type_t::info);
 }
@@ -600,35 +576,31 @@ void esm_converter_t::convert_bnam()
 			esm.set_key("DATA");
 			esm.set_value("NAME");
 			if (esm.get_key().exist && esm.get_value().exist)
-			{
 				dial_index = i;
-			}
+
+			continue;
 		}
 
-		if (esm.get_record().id == "INFO")
-		{
-			esm.set_key("INAM");
-			esm.set_value("BNAM");
-			if (esm.get_key().exist && esm.get_value().exist)
-			{
-				const auto & key_text = esm.get_key().text;
-				const auto & val_text = esm.get_value().text;
+		if (esm.get_record().id != "INFO")
+			continue;
 
-				const auto & script_name = key_text;
-				const auto & file_name = get_name().full;
-				const auto & old_script = val_text;
+		esm.set_key("INAM");
+		esm.set_value("BNAM");
+		if (!esm.get_key().exist || !esm.get_value().exist)
+			continue;
 
-				counter_all++;
-				script_parser_t parser(type, merger, script_name, file_name, old_script);
+		const auto & key_text = esm.get_key().text;
+		const auto & val_text = esm.get_value().text;
 
-				std::string new_text = parser.get_new_script();
-				if (is_identical(val_text, new_text))
-					continue;
+		counter_all++;
+		script_parser_t parser(type, merger, key_text, get_name().full, val_text);
 
-				convert_record_content(new_text);
-				esm.set_modified(dial_index);
-			}
-		}
+		std::string new_script = parser.get_new_script();
+		if (is_identical(val_text, new_script))
+			continue;
+
+		convert_record_content(new_script);
+		esm.set_modified(dial_index);
 	}
 	print_log_line(tools_t::rec_type_t::bnam);
 }
@@ -645,51 +617,33 @@ void esm_converter_t::convert_scpt()
 			continue;
 
 		esm.set_value("SCDT");
-		if (esm.get_value().exist)
-		{
-			old_scdt = esm.get_value().content;
-		}
-		else
-		{
-			old_scdt.clear();
-		}
+		old_scdt = esm.get_value().exist ? esm.get_value().content : std::string{};
 
 		esm.set_key("SCHD");
 		esm.set_value("SCTX");
-		if (esm.get_key().exist && esm.get_value().exist)
-		{
-			const auto & key_text = esm.get_key().text;
-			const auto & val_text = esm.get_value().text;
+		if (!esm.get_key().exist || !esm.get_value().exist)
+			continue;
 
-			const auto & script_name = key_text;
-			const auto & file_name = get_name().full;
-			const auto & old_script = val_text;
+		const auto & key_text = esm.get_key().text;
+		const auto & val_text = esm.get_value().text;
 
-			counter_all++;
-			script_parser_t parser(type, merger, script_name, file_name, old_script, old_scdt);
+		counter_all++;
+		script_parser_t parser(type, merger, key_text, get_name().full, val_text, old_scdt);
 
-			const auto & new_text = parser.get_new_script();
-			if (is_identical(val_text, new_text))
-				continue;
+		const auto & new_script = parser.get_new_script();
+		if (is_identical(val_text, new_script))
+			continue;
 
-			convert_record_content(new_text);
+		convert_record_content(new_script);
 
-			{
-				/* compiled script data */
-				esm.set_value("SCDT");
-				const auto & new_text = parser.get_new_scdt();
-				convert_record_content(new_text);
-			}
+		esm.set_value("SCDT");
+		convert_record_content(parser.get_new_scdt());
 
-			{
-				/* compiled script data size in script name */
-				esm.set_value("SCHD");
-				auto new_text = esm.get_value().content;
-				new_text.erase(44, 4);
-				new_text.insert(44, tools_t::convert_uint_to_string_byte_array(parser.get_new_scdt().size()));
-				convert_record_content(new_text);
-			}
-		}
+		esm.set_value("SCHD");
+		auto schd_content = esm.get_value().content;
+		schd_content.erase(44, 4);
+		schd_content.insert(44, tools_t::convert_uint_to_string_byte_array(parser.get_new_scdt().size()));
+		convert_record_content(schd_content);
 	}
 	print_log_line(tools_t::rec_type_t::sctx);
 }

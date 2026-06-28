@@ -4,7 +4,6 @@
 
 #include <algorithm>
 #include <filesystem>
-#include <functional>
 #include <map>
 
 static std::string extract_filename(const std::string & path)
@@ -86,69 +85,85 @@ std::string derive_output_dir(const file_entry_t & entry, const std::string & de
 	return default_dir;
 }
 
-sidebar_render_model_t build_render_model(
-    const file_list_t & file_list,
-    const session_t & session,
-    const std::string & active_path)
+static void sort_render_items(std::vector<sidebar_render_item_t> & items)
 {
-	sidebar_render_model_t model;
-	model.active_path = active_path;
-
-	auto sort_items = [](std::vector<sidebar_render_item_t> & items)
+	std::sort(
+	    items.begin(),
+	    items.end(),
+	    [](const sidebar_render_item_t & first, const sidebar_render_item_t & second)
 	{
-		std::sort(
-		    items.begin(),
-		    items.end(),
-		    [](const sidebar_render_item_t & a, const sidebar_render_item_t & b)
-		{
-			if (a.type != b.type)
-				return static_cast<int>(a.type) < static_cast<int>(b.type);
+		if (first.type != second.type)
+			return static_cast<int>(first.type) < static_cast<int>(second.type);
 
-			auto fname = [](const std::string & p)
-			{
-				auto pos = p.find_last_of("/\\");
-				return pos != std::string::npos ? p.substr(pos + 1) : p;
-			};
-			return fname(a.path) < fname(b.path);
-		});
-	};
+		return extract_filename(first.path) < extract_filename(second.path);
+	});
+}
 
-	auto split_path = [](const std::string & path) -> std::vector<std::string>
+static std::vector<std::string> split_path_segments(const std::string & path)
+{
+	std::vector<std::string> parts;
+	std::string segment;
+	for (const auto letter : path)
 	{
-		std::vector<std::string> parts;
-		std::string segment;
-		for (auto c : path)
+		if (letter == '/' || letter == '\\')
 		{
-			if (c == '/' || c == '\\')
+			if (!segment.empty())
 			{
-				if (!segment.empty())
-				{
-					parts.push_back(segment);
-					segment.clear();
-				}
-				continue;
+				parts.push_back(segment);
+				segment.clear();
 			}
-
-			segment += c;
+			continue;
 		}
 
-		if (!segment.empty())
-			parts.push_back(segment);
+		segment += letter;
+	}
 
-		return parts;
-	};
+	if (!segment.empty())
+		parts.push_back(segment);
 
-	struct tree_builder_t
-	{
-		std::vector<sidebar_render_item_t> items;
-		std::map<std::string, tree_builder_t> children;
-	};
+	return parts;
+}
 
-	std::map<std::string, tree_builder_t> roots_map;
+static void sort_child_nodes(std::vector<sidebar_render_node_t> & nodes)
+{
+	std::sort(
+	    nodes.begin(),
+	    nodes.end(),
+	    [](const sidebar_render_node_t & first, const sidebar_render_node_t & second)
+	    { return first.label < second.label; });
+}
 
-	for (const auto & root : file_list.get_roots())
-		roots_map[normalize_path(root)];
+struct tree_builder_t
+{
+	std::vector<sidebar_render_item_t> items;
+	std::map<std::string, tree_builder_t> children;
+};
 
+static sidebar_render_node_t build_child_node(
+    const std::string & label,
+    const std::string & parent_path,
+    tree_builder_t & builder)
+{
+	sidebar_render_node_t node;
+	node.label = label;
+	node.folder_path = parent_path.empty() ? "" : parent_path + "/" + label;
+
+	sort_render_items(builder.items);
+	node.items = std::move(builder.items);
+
+	const auto & current_path = node.folder_path.empty() ? parent_path : node.folder_path;
+	for (auto & [child_name, child_builder] : builder.children)
+		node.children.push_back(build_child_node(child_name, current_path, child_builder));
+
+	sort_child_nodes(node.children);
+	return node;
+}
+
+static void populate_tree_from_entries(
+    const file_list_t & file_list,
+    const session_t & session,
+    std::map<std::string, tree_builder_t> & roots_map)
+{
 	for (const auto * entry : file_list.all())
 	{
 		if (!entry->is_workspace)
@@ -172,38 +187,19 @@ sidebar_render_model_t build_render_model(
 			continue;
 		}
 
-		const auto segments = split_path(entry->workspace_subfolder);
+		const auto segments = split_path_segments(entry->workspace_subfolder);
 		auto * current = &root_builder;
-		for (const auto & seg : segments)
-			current = &current->children[seg];
+		for (const auto & segment : segments)
+			current = &current->children[segment];
 
 		current->items.push_back(std::move(item));
 	}
+}
 
-	std::function<sidebar_render_node_t(const std::string &, const std::string &, tree_builder_t &)> build_node;
-	build_node = [&](const std::string & label,
-	                 const std::string & parent_path,
-	                 tree_builder_t & builder) -> sidebar_render_node_t
-	{
-		sidebar_render_node_t node;
-		node.label = label;
-		node.folder_path = parent_path.empty() ? "" : parent_path + "/" + label;
-
-		sort_items(builder.items);
-		node.items = std::move(builder.items);
-
-		const auto & current_path = node.folder_path.empty() ? parent_path : node.folder_path;
-		for (auto & [child_name, child_builder] : builder.children)
-			node.children.push_back(build_node(child_name, current_path, child_builder));
-
-		std::sort(
-		    node.children.begin(),
-		    node.children.end(),
-		    [](const sidebar_render_node_t & a, const sidebar_render_node_t & b) { return a.label < b.label; });
-
-		return node;
-	};
-
+static void assemble_root_nodes(
+    std::map<std::string, tree_builder_t> & roots_map,
+    sidebar_render_model_t & model)
+{
 	for (auto & [root_path, root_builder] : roots_map)
 	{
 		auto label = extract_filename(root_path);
@@ -215,33 +211,45 @@ sidebar_render_model_t build_render_model(
 		root_node.root_path = root_path;
 		root_node.folder_path = root_path;
 
-		sort_items(root_builder.items);
+		sort_render_items(root_builder.items);
 		root_node.items = std::move(root_builder.items);
 
 		for (auto & [child_name, child_builder] : root_builder.children)
-			root_node.children.push_back(build_node(child_name, root_path, child_builder));
+			root_node.children.push_back(build_child_node(child_name, root_path, child_builder));
 
-		std::sort(
-		    root_node.children.begin(),
-		    root_node.children.end(),
-		    [](const sidebar_render_node_t & a, const sidebar_render_node_t & b) { return a.label < b.label; });
-
+		sort_child_nodes(root_node.children);
 		model.roots.push_back(std::move(root_node));
 	}
 
 	std::sort(
 	    model.roots.begin(),
 	    model.roots.end(),
-	    [](const sidebar_render_node_t & a, const sidebar_render_node_t & b)
+	    [](const sidebar_render_node_t & first, const sidebar_render_node_t & second)
 	{
-		if (a.label == workspace_label)
+		if (first.label == workspace_label)
 			return true;
 
-		if (b.label == workspace_label)
+		if (second.label == workspace_label)
 			return false;
 
-		return a.label < b.label;
+		return first.label < second.label;
 	});
+}
+
+sidebar_render_model_t build_render_model(
+    const file_list_t & file_list,
+    const session_t & session,
+    const std::string & active_path)
+{
+	sidebar_render_model_t model;
+	model.active_path = active_path;
+
+	std::map<std::string, tree_builder_t> roots_map;
+	for (const auto & root : file_list.get_roots())
+		roots_map[normalize_path(root)];
+
+	populate_tree_from_entries(file_list, session, roots_map);
+	assemble_root_nodes(roots_map, model);
 
 	return model;
 }

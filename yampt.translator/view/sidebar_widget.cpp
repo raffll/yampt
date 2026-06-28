@@ -1,6 +1,5 @@
 #include "sidebar_widget.hpp"
 
-#include <functional>
 #include <set>
 
 #include <QFileInfo>
@@ -31,64 +30,80 @@ sidebar_widget_t::sidebar_widget_t(QWidget * parent)
 	connect(tree_, &QTreeWidget::customContextMenuRequested, this, &sidebar_widget_t::on_context_menu);
 }
 
+static QColor get_file_type_color(file_type_t type)
+{
+	switch (type)
+	{
+	case file_type_t::plugin:
+		return QColor(100, 180, 100);
+	case file_type_t::base_dict:
+		return QColor(180, 140, 80);
+	case file_type_t::user_dict:
+		return QColor(100, 160, 220);
+	case file_type_t::yaml_l10n:
+		return QColor(180, 120, 180);
+	}
+
+	return QColor(80, 80, 80);
+}
+
+static void populate_node(QTreeWidgetItem * parent, const sidebar_render_node_t & node)
+{
+	for (const auto & file_item : node.items)
+	{
+		auto * child = new QTreeWidgetItem(parent);
+		child->setText(0, QString::fromStdString(file_item.display_text));
+		child->setToolTip(0, QString::fromStdString(file_item.path));
+		child->setData(0, role_path, QString::fromStdString(file_item.path));
+		child->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+		child->setForeground(0, get_file_type_color(file_item.type));
+	}
+
+	for (const auto & subfolder : node.children)
+	{
+		auto * folder_item = new QTreeWidgetItem(parent);
+		folder_item->setText(0, QString::fromStdString(subfolder.label));
+		folder_item->setFlags(Qt::ItemIsEnabled);
+		folder_item->setForeground(0, QColor(130, 130, 130));
+
+		if (!subfolder.folder_path.empty())
+			folder_item->setData(0, role_folder_path, QString::fromStdString(subfolder.folder_path));
+
+		populate_node(folder_item, subfolder);
+		folder_item->setExpanded(true);
+	}
+}
+
+static void select_active_item(QTreeWidget * tree, const std::string & active_path)
+{
+	if (active_path.empty())
+		return;
+
+	QTreeWidgetItemIterator it(tree);
+	while (*it)
+	{
+		const auto path = (*it)->data(0, role_path).toString().toStdString();
+		if (path == active_path)
+		{
+			tree->setCurrentItem(*it);
+			return;
+		}
+
+		++it;
+	}
+}
+
 void sidebar_widget_t::set_model(const sidebar_render_model_t & model)
 {
-	std::set<std::string> expanded_roots;
 	std::set<std::string> collapsed_roots;
 	for (int i = 0; i < tree_->topLevelItemCount(); ++i)
 	{
 		auto * item = tree_->topLevelItem(i);
-		const auto label = item->text(0).toStdString();
-		if (item->isExpanded())
-			expanded_roots.insert(label);
-		else
-			collapsed_roots.insert(label);
+		if (!item->isExpanded())
+			collapsed_roots.insert(item->text(0).toStdString());
 	}
 
 	tree_->clear();
-
-	std::function<void(QTreeWidgetItem *, const sidebar_render_node_t &)> add_node;
-	add_node = [&](QTreeWidgetItem * parent, const sidebar_render_node_t & node)
-	{
-		for (const auto & file_item : node.items)
-		{
-			auto * child = new QTreeWidgetItem(parent);
-			child->setText(0, QString::fromStdString(file_item.display_text));
-			child->setToolTip(0, QString::fromStdString(file_item.path));
-			child->setData(0, role_path, QString::fromStdString(file_item.path));
-			child->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
-
-			switch (file_item.type)
-			{
-			case file_type_t::plugin:
-				child->setForeground(0, QColor(100, 180, 100));
-				break;
-			case file_type_t::base_dict:
-				child->setForeground(0, QColor(180, 140, 80));
-				break;
-			case file_type_t::user_dict:
-				child->setForeground(0, QColor(100, 160, 220));
-				break;
-			case file_type_t::yaml_l10n:
-				child->setForeground(0, QColor(180, 120, 180));
-				break;
-			}
-		}
-
-		for (const auto & subfolder : node.children)
-		{
-			auto * folder_item = new QTreeWidgetItem(parent);
-			folder_item->setText(0, QString::fromStdString(subfolder.label));
-			folder_item->setFlags(Qt::ItemIsEnabled);
-			folder_item->setForeground(0, QColor(130, 130, 130));
-
-			if (!subfolder.folder_path.empty())
-				folder_item->setData(0, role_folder_path, QString::fromStdString(subfolder.folder_path));
-
-			add_node(folder_item, subfolder);
-			folder_item->setExpanded(true);
-		}
-	};
 
 	for (const auto & root : model.roots)
 	{
@@ -103,29 +118,12 @@ void sidebar_widget_t::set_model(const sidebar_render_model_t & model)
 		if (root.label != workspace_label)
 			root_item->setData(0, role_root_path, QString::fromStdString(root.root_path));
 
-		add_node(root_item, root);
+		populate_node(root_item, root);
 
-		if (collapsed_roots.count(root.label))
-			root_item->setExpanded(false);
-		else
-			root_item->setExpanded(true);
+		root_item->setExpanded(!collapsed_roots.count(root.label));
 	}
 
-	if (model.active_path.empty())
-		return;
-
-	QTreeWidgetItemIterator it(tree_);
-	while (*it)
-	{
-		const auto path = (*it)->data(0, role_path).toString().toStdString();
-		if (path == model.active_path)
-		{
-			tree_->setCurrentItem(*it);
-			return;
-		}
-
-		++it;
-	}
+	select_active_item(tree_, model.active_path);
 }
 
 void sidebar_widget_t::on_item_clicked(QTreeWidgetItem * item, int column)
@@ -153,30 +151,7 @@ void sidebar_widget_t::on_context_menu(const QPoint & pos)
 
 	if (!(item->flags() & Qt::ItemIsSelectable))
 	{
-		const auto root_path = item->data(0, role_root_path).toString();
-		if (!root_path.isEmpty())
-		{
-			QMenu menu(this);
-			auto * remove_action = menu.addAction("Remove Folder");
-			auto * selected = menu.exec(tree_->viewport()->mapToGlobal(pos));
-			if (selected == remove_action)
-				emit remove_folder_requested(root_path.toStdString());
-
-			return;
-		}
-
-		const auto folder_path = item->data(0, role_folder_path).toString();
-		if (!folder_path.isEmpty())
-		{
-			QMenu menu(this);
-			auto * delete_action = menu.addAction("Delete Folder");
-			auto * selected = menu.exec(tree_->viewport()->mapToGlobal(pos));
-			if (selected == delete_action)
-				emit delete_folder_requested(folder_path.toStdString());
-
-			return;
-		}
-
+		show_folder_context_menu(item, pos);
 		return;
 	}
 
@@ -187,66 +162,95 @@ void sidebar_widget_t::on_context_menu(const QPoint & pos)
 	const auto ext = QFileInfo(path).suffix().toLower();
 	auto path_str = path.toStdString();
 
-	QMenu menu(this);
-
 	if (ext == "esm" || ext == "esp" || ext == "omwgame" || ext == "omwaddon")
-	{
-		auto * make_dict_action = menu.addAction("Make Dict");
-		auto * make_dict_base_action = menu.addAction("Make Dict with Base");
-		auto * make_base_action = menu.addAction("Make Base");
-		menu.addSeparator();
-		auto * convert_action = menu.addAction("Convert");
-		auto * create_action = menu.addAction("Create");
-		menu.addSeparator();
-		auto * delete_action = menu.addAction("Delete");
+		show_plugin_context_menu(path_str, pos);
+	else if (ext == "json" || ext == "xml")
+		show_dict_context_menu(path_str, pos);
+	else if (ext == "yaml")
+		show_yaml_context_menu(path_str, pos);
+}
 
+void sidebar_widget_t::show_folder_context_menu(QTreeWidgetItem * item, const QPoint & pos)
+{
+	const auto root_path = item->data(0, role_root_path).toString();
+	if (!root_path.isEmpty())
+	{
+		QMenu menu(this);
+		auto * remove_action = menu.addAction("Remove Folder");
 		auto * selected = menu.exec(tree_->viewport()->mapToGlobal(pos));
-		if (selected == make_dict_action)
-			emit operation_requested(path_str, plugin_op_t::make_dict);
-		else if (selected == make_dict_base_action)
-			emit operation_requested(path_str, plugin_op_t::make_dict_with_base);
-		else if (selected == make_base_action)
-			emit operation_requested(path_str, plugin_op_t::make_base);
-		else if (selected == convert_action)
-			emit operation_requested(path_str, plugin_op_t::convert);
-		else if (selected == create_action)
-			emit operation_requested(path_str, plugin_op_t::create_plugin);
-		else if (selected == delete_action)
-			emit delete_requested(path_str);
+		if (selected == remove_action)
+			emit remove_folder_requested(root_path.toStdString());
 
 		return;
 	}
 
-	if (ext == "json" || ext == "xml")
+	const auto folder_path = item->data(0, role_folder_path).toString();
+	if (!folder_path.isEmpty())
 	{
-		auto * save_action = menu.addAction("Save");
-		menu.addSeparator();
-		auto * delete_action = menu.addAction("Delete");
-
+		QMenu menu(this);
+		auto * delete_action = menu.addAction("Delete Folder");
 		auto * selected = menu.exec(tree_->viewport()->mapToGlobal(pos));
-		if (selected == save_action)
-			emit save_requested(path_str);
-		else if (selected == delete_action)
-			emit delete_requested(path_str);
-
-		return;
+		if (selected == delete_action)
+			emit delete_folder_requested(folder_path.toStdString());
 	}
+}
 
-	if (ext == "yaml")
-	{
-		auto * save_action = menu.addAction("Save");
-		auto * export_action = menu.addAction("Export...");
-		menu.addSeparator();
-		auto * delete_action = menu.addAction("Delete");
+void sidebar_widget_t::show_plugin_context_menu(const std::string & path, const QPoint & pos)
+{
+	QMenu menu(this);
+	auto * make_dict_action = menu.addAction("Make Dict");
+	auto * make_dict_base_action = menu.addAction("Make Dict with Base");
+	auto * make_base_action = menu.addAction("Make Base");
+	menu.addSeparator();
+	auto * convert_action = menu.addAction("Convert");
+	auto * create_action = menu.addAction("Create");
+	menu.addSeparator();
+	auto * delete_action = menu.addAction("Delete");
 
-		auto * selected = menu.exec(tree_->viewport()->mapToGlobal(pos));
-		if (selected == save_action)
-			emit save_requested(path_str);
-		else if (selected == export_action)
-			emit save_as_requested(path_str);
-		else if (selected == delete_action)
-			emit delete_requested(path_str);
-	}
+	auto * selected = menu.exec(tree_->viewport()->mapToGlobal(pos));
+	if (selected == make_dict_action)
+		emit operation_requested(path, plugin_op_t::make_dict);
+	else if (selected == make_dict_base_action)
+		emit operation_requested(path, plugin_op_t::make_dict_with_base);
+	else if (selected == make_base_action)
+		emit operation_requested(path, plugin_op_t::make_base);
+	else if (selected == convert_action)
+		emit operation_requested(path, plugin_op_t::convert);
+	else if (selected == create_action)
+		emit operation_requested(path, plugin_op_t::create_plugin);
+	else if (selected == delete_action)
+		emit delete_requested(path);
+}
+
+void sidebar_widget_t::show_dict_context_menu(const std::string & path, const QPoint & pos)
+{
+	QMenu menu(this);
+	auto * save_action = menu.addAction("Save");
+	menu.addSeparator();
+	auto * delete_action = menu.addAction("Delete");
+
+	auto * selected = menu.exec(tree_->viewport()->mapToGlobal(pos));
+	if (selected == save_action)
+		emit save_requested(path);
+	else if (selected == delete_action)
+		emit delete_requested(path);
+}
+
+void sidebar_widget_t::show_yaml_context_menu(const std::string & path, const QPoint & pos)
+{
+	QMenu menu(this);
+	auto * save_action = menu.addAction("Save");
+	auto * export_action = menu.addAction("Export...");
+	menu.addSeparator();
+	auto * delete_action = menu.addAction("Delete");
+
+	auto * selected = menu.exec(tree_->viewport()->mapToGlobal(pos));
+	if (selected == save_action)
+		emit save_requested(path);
+	else if (selected == export_action)
+		emit save_as_requested(path);
+	else if (selected == delete_action)
+		emit delete_requested(path);
 }
 
 void sidebar_widget_t::update_item_text(const std::string & path, const std::string & display_text)

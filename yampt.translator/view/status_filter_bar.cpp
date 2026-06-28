@@ -6,33 +6,33 @@
 
 static const char * get_status_display_name_qt(const std::string & status)
 {
-	if (status == "untranslated")
+	if (status == tools_t::status_t::untranslated)
 		return "Untranslated";
-	if (status == "missing")
+	if (status == tools_t::status_t::missing)
 		return "Missing";
-	if (status == "duplicate")
+	if (status == tools_t::status_t::duplicate)
 		return "Duplicate";
-	if (status == "error")
+	if (status == tools_t::status_t::error)
 		return "Error";
-	if (status == "translated")
+	if (status == tools_t::status_t::translated)
 		return "Translated";
-	if (status == "reused")
+	if (status == tools_t::status_t::reused)
 		return "Reused";
-	if (status == "adapted")
+	if (status == tools_t::status_t::adapted)
 		return "Adapted";
-	if (status == "changed")
+	if (status == tools_t::status_t::changed)
 		return "Changed";
-	if (status == "outdated")
+	if (status == tools_t::status_t::outdated)
 		return "Outdated";
-	if (status == "in_progress")
+	if (status == tools_t::status_t::in_progress)
 		return "In Progress";
 	if (status == tools_t::status_t::model)
 		return "Model";
-	if (status == "mismatch")
+	if (status == tools_t::status_t::mismatch)
 		return "Mismatch";
 	if (status == tools_t::status_t::propagated)
 		return "Propagated";
-	if (status == "ambiguous")
+	if (status == tools_t::status_t::ambiguous)
 		return "Ambiguous";
 	if (status == tools_t::status_t::heuristic)
 		return "Heuristic";
@@ -43,33 +43,33 @@ static const char * get_status_display_name_qt(const std::string & status)
 
 static const char * get_status_tooltip(const std::string & status)
 {
-	if (status == "missing")
+	if (status == tools_t::status_t::missing)
 		return "No matching record found in the other ESM";
-	if (status == "duplicate")
+	if (status == tools_t::status_t::duplicate)
 		return "Multiple records share the same key";
-	if (status == "mismatch")
+	if (status == tools_t::status_t::mismatch)
 		return "Record exists but original text differs";
-	if (status == "translated")
+	if (status == tools_t::status_t::translated)
 		return "Translation present and unchanged";
-	if (status == "reused")
+	if (status == tools_t::status_t::reused)
 		return "Translation copied from another entry";
-	if (status == "adapted")
+	if (status == tools_t::status_t::adapted)
 		return "Translation adapted from a similar entry";
-	if (status == "changed")
+	if (status == tools_t::status_t::changed)
 		return "Original text changed since last translation";
-	if (status == "outdated")
+	if (status == tools_t::status_t::outdated)
 		return "Source text changed while translation was in progress";
-	if (status == "untranslated")
+	if (status == tools_t::status_t::untranslated)
 		return "No translation provided yet";
-	if (status == "in_progress")
+	if (status == tools_t::status_t::in_progress)
 		return "Translation edited but not finalized";
 	if (status == tools_t::status_t::model)
 		return "Translated by the translation model";
 	if (status == tools_t::status_t::propagated)
 		return "Translation propagated from another record";
-	if (status == "ambiguous")
+	if (status == tools_t::status_t::ambiguous)
 		return "Multiple conflicting translations found in base dicts";
-	if (status == "error")
+	if (status == tools_t::status_t::error)
 		return "Translation has a validation error";
 	if (status == tools_t::status_t::heuristic)
 		return "Matched by heuristic (needs verification)";
@@ -77,6 +77,16 @@ static const char * get_status_tooltip(const std::string & status)
 		return "Identical text, needs verification";
 	return "";
 }
+
+static const std::vector<std::vector<std::string>> status_groups = {
+	{ tools_t::status_t::translated,  tools_t::status_t::to_verify,   tools_t::status_t::untranslated },
+	{ tools_t::status_t::reused,      tools_t::status_t::adapted,     tools_t::status_t::ambiguous,
+	  tools_t::status_t::changed,     tools_t::status_t::outdated },
+	{ tools_t::status_t::duplicate,   tools_t::status_t::heuristic,   tools_t::status_t::missing,
+	  tools_t::status_t::mismatch },
+	{ tools_t::status_t::in_progress, tools_t::status_t::propagated,  tools_t::status_t::model,
+	  tools_t::status_t::error },
+};
 
 status_filter_bar_t::status_filter_bar_t(QWidget * parent)
     : QWidget(parent)
@@ -87,13 +97,6 @@ status_filter_bar_t::status_filter_bar_t(QWidget * parent)
 	layout_->setContentsMargins(0, 0, 0, 0);
 	layout_->setSpacing(2);
 
-	static const std::vector<std::vector<std::string>> status_groups = {
-		{ "translated", tools_t::status_t::to_verify, "untranslated" },
-		{ "reused", "adapted", "ambiguous", "changed", "outdated" },
-		{ "duplicate", tools_t::status_t::heuristic, "missing", "mismatch" },
-		{ "in_progress", tools_t::status_t::propagated, tools_t::status_t::model, "error" },
-	};
-
 	for (size_t g = 0; g < status_groups.size(); ++g)
 	{
 		if (g > 0)
@@ -103,30 +106,35 @@ status_filter_bar_t::status_filter_bar_t(QWidget * parent)
 			layout_->addWidget(sep);
 		}
 
-		for (const auto & status : status_groups[g])
-		{
-			status_button_t sb;
-			sb.status = status;
-			sb.count = 0;
-			sb.button = new QPushButton(get_status_display_name_qt(status), this);
-			sb.button->setContextMenuPolicy(Qt::CustomContextMenu);
-			sb.button->setToolTip(get_status_tooltip(status));
-
-			connect(sb.button, &QPushButton::clicked, this, [this, s = status]() { on_status_clicked(s); });
-
-			connect(
-			    sb.button,
-			    &QWidget::customContextMenuRequested,
-			    this,
-			    [this, s = status]() { on_status_right_clicked(s); });
-
-			layout_->addWidget(sb.button);
-			status_buttons_.push_back(sb);
-		}
+		add_status_group(status_groups[g]);
 	}
 
 	layout_->addStretch();
 	update_button_styles();
+}
+
+void status_filter_bar_t::add_status_group(const std::vector<std::string> & statuses)
+{
+	for (const auto & status : statuses)
+	{
+		status_button_t sb;
+		sb.status = status;
+		sb.count = 0;
+		sb.button = new QPushButton(get_status_display_name_qt(status), this);
+		sb.button->setContextMenuPolicy(Qt::CustomContextMenu);
+		sb.button->setToolTip(get_status_tooltip(status));
+
+		connect(sb.button, &QPushButton::clicked, this, [this, s = status]() { on_status_clicked(s); });
+
+		connect(
+		    sb.button,
+		    &QWidget::customContextMenuRequested,
+		    this,
+		    [this, s = status]() { on_status_right_clicked(s); });
+
+		layout_->addWidget(sb.button);
+		status_buttons_.push_back(sb);
+	}
 }
 
 void status_filter_bar_t::update_counts(

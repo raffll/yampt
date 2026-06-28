@@ -34,4 +34,11 @@ public:
 	int window_w = 1280;
 	int window_h = 720;
 	bool window_maximized = false;
+
+private:
+	void parse_workspace_roots(const std::string & key_text, const std::string & value_text);
+	void parse_editor_section(const std::string & key_text, const std::string & value_text);
+	void parse_editor_window(const std::string & key_text, const std::string & value_text);
+	void parse_spell_check(const std::string & key_text, const std::string & value_text);
+	void parse_merge_order(const std::string & key_text, const std::string & value_text);
 };

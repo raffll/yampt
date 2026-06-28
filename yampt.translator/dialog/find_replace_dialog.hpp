@@ -3,6 +3,7 @@
 #include <QWidget>
 
 class QCheckBox;
+class QGridLayout;
 class QLabel;
 class QLineEdit;
 class QPushButton;
@@ -24,6 +25,9 @@ signals:
 	    bool regex_mode);
 
 private:
+	void setup_layout(QGridLayout * layout);
+	void connect_signals();
+
 	QLineEdit * find_field_ = nullptr;
 	QLineEdit * replace_field_ = nullptr;
 	QCheckBox * case_check_ = nullptr;

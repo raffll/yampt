@@ -16,115 +16,77 @@ bool annotation_manager_t::is_alpha(char c)
 	return isalpha(static_cast<unsigned char>(c)) != 0;
 }
 
+bool annotation_manager_t::is_trusted_status(const std::string & status)
+{
+	return status == tools_t::status_t::translated ||
+	       status == tools_t::status_t::reused ||
+	       status == tools_t::status_t::adapted;
+}
+
+void annotation_manager_t::collect_dial_entries(const dict_source_t & source)
+{
+	auto dial_it = source.dict->find(tools_t::rec_type_t::dial);
+	if (dial_it == source.dict->end())
+		return;
+
+	for (const auto & entry : dial_it->second.records)
+	{
+		if (entry.old_text.empty())
+			continue;
+
+		dial_topics_.push_back({ to_lower(entry.old_text), entry.new_text, source.name });
+	}
+}
+
+void annotation_manager_t::collect_glossary_entries(const dict_source_t & source, tools_t::rec_type_t record_type)
+{
+	auto chapter_it = source.dict->find(record_type);
+	if (chapter_it == source.dict->end())
+		return;
+
+	for (const auto & entry : chapter_it->second.records)
+	{
+		if (entry.old_text.empty())
+			continue;
+
+		if (entry.old_text == entry.new_text)
+			continue;
+
+		if (!is_trusted_status(entry.status))
+			continue;
+
+		glossary_terms_.push_back({ to_lower(entry.old_text), entry.new_text, source.name });
+	}
+}
+
+void annotation_manager_t::sort_by_length_descending(std::vector<topic_entry_t> & entries)
+{
+	std::sort(
+	    entries.begin(),
+	    entries.end(),
+	    [](const topic_entry_t & left, const topic_entry_t & right)
+	    { return left.key_lower.size() > right.key_lower.size(); });
+}
+
 void annotation_manager_t::rebuild(const std::vector<dict_source_t> & sources)
 {
 	dial_topics_.clear();
 	glossary_terms_.clear();
 
-	for (const auto & src : sources)
+	for (const auto & source : sources)
 	{
-		if (!src.dict)
+		if (!source.dict)
 			continue;
 
-		auto dial_it = src.dict->find(tools_t::rec_type_t::dial);
-		if (dial_it != src.dict->end())
-		{
-			for (const auto & entry : dial_it->second.records)
-			{
-				if (entry.old_text.empty())
-					continue;
-
-				std::string key_lower = to_lower(entry.old_text);
-				dial_topics_.push_back({ key_lower, entry.new_text, src.name });
-			}
-		}
-
-		auto fnam_it = src.dict->find(tools_t::rec_type_t::fnam);
-		if (fnam_it != src.dict->end())
-		{
-			for (const auto & entry : fnam_it->second.records)
-			{
-				if (entry.old_text.empty())
-					continue;
-				if (entry.old_text == entry.new_text)
-					continue;
-				if (entry.status == "changed" || entry.status == "ambiguous" || entry.status == "in_progress" ||
-				    entry.status == tools_t::status_t::propagated || entry.status == tools_t::status_t::model ||
-				    entry.status == "error" || entry.status == tools_t::status_t::heuristic)
-					continue;
-
-				std::string key_lower = to_lower(entry.old_text);
-				glossary_terms_.push_back({ key_lower, entry.new_text, src.name });
-			}
-		}
-
-		auto cell_it = src.dict->find(tools_t::rec_type_t::cell);
-		if (cell_it != src.dict->end())
-		{
-			for (const auto & entry : cell_it->second.records)
-			{
-				if (entry.old_text.empty())
-					continue;
-				if (entry.old_text == entry.new_text)
-					continue;
-				if (entry.status == "changed" || entry.status == "ambiguous" || entry.status == "in_progress" ||
-				    entry.status == tools_t::status_t::propagated || entry.status == tools_t::status_t::model ||
-				    entry.status == "error" || entry.status == tools_t::status_t::heuristic)
-					continue;
-
-				std::string key_lower = to_lower(entry.old_text);
-				glossary_terms_.push_back({ key_lower, entry.new_text, src.name });
-			}
-		}
-
-		auto rnam_it = src.dict->find(tools_t::rec_type_t::rnam);
-		if (rnam_it != src.dict->end())
-		{
-			for (const auto & entry : rnam_it->second.records)
-			{
-				if (entry.old_text.empty())
-					continue;
-				if (entry.old_text == entry.new_text)
-					continue;
-				if (entry.status == "changed" || entry.status == "ambiguous" || entry.status == "in_progress" ||
-				    entry.status == tools_t::status_t::propagated || entry.status == tools_t::status_t::model ||
-				    entry.status == "error" || entry.status == tools_t::status_t::heuristic)
-					continue;
-
-				std::string key_lower = to_lower(entry.old_text);
-				glossary_terms_.push_back({ key_lower, entry.new_text, src.name });
-			}
-		}
-
-		auto indx_it = src.dict->find(tools_t::rec_type_t::indx);
-		if (indx_it != src.dict->end())
-		{
-			for (const auto & entry : indx_it->second.records)
-			{
-				if (entry.old_text.empty())
-					continue;
-				if (entry.old_text == entry.new_text)
-					continue;
-				if (entry.status == "changed" || entry.status == "ambiguous" || entry.status == "in_progress" ||
-				    entry.status == tools_t::status_t::propagated || entry.status == tools_t::status_t::model ||
-				    entry.status == "error" || entry.status == tools_t::status_t::heuristic)
-					continue;
-
-				std::string key_lower = to_lower(entry.old_text);
-				glossary_terms_.push_back({ key_lower, entry.new_text, src.name });
-			}
-		}
+		collect_dial_entries(source);
+		collect_glossary_entries(source, tools_t::rec_type_t::fnam);
+		collect_glossary_entries(source, tools_t::rec_type_t::cell);
+		collect_glossary_entries(source, tools_t::rec_type_t::rnam);
+		collect_glossary_entries(source, tools_t::rec_type_t::indx);
 	}
 
-	std::sort(
-	    dial_topics_.begin(),
-	    dial_topics_.end(),
-	    [](const topic_entry_t & a, const topic_entry_t & b) { return a.key_lower.size() > b.key_lower.size(); });
-
-	std::sort(
-	    glossary_terms_.begin(),
-	    glossary_terms_.end(),
-	    [](const topic_entry_t & a, const topic_entry_t & b) { return a.key_lower.size() > b.key_lower.size(); });
+	sort_by_length_descending(dial_topics_);
+	sort_by_length_descending(glossary_terms_);
 }
 
 void annotation_manager_t::update_term(
@@ -150,11 +112,11 @@ void annotation_manager_t::update_vector(
     const std::string & old_text,
     const std::string & new_text)
 {
-	std::string key = to_lower(old_text);
+	const auto & key_lower = to_lower(old_text);
 
 	for (auto & entry : vec)
 	{
-		if (entry.key_lower == key)
+		if (entry.key_lower == key_lower)
 		{
 			entry.new_text = new_text;
 			return;
@@ -164,20 +126,24 @@ void annotation_manager_t::update_vector(
 	if (new_text.empty())
 		return;
 
-	topic_entry_t new_entry { key, new_text, {} };
-	auto pos = std::lower_bound(
+	topic_entry_t new_entry { key_lower, new_text, {} };
+	auto insert_pos = std::lower_bound(
 	    vec.begin(),
 	    vec.end(),
 	    new_entry,
-	    [](const topic_entry_t & a, const topic_entry_t & b) { return a.key_lower.size() > b.key_lower.size(); });
-	vec.insert(pos, std::move(new_entry));
+	    [](const topic_entry_t & left, const topic_entry_t & right)
+	    { return left.key_lower.size() > right.key_lower.size(); });
+	vec.insert(insert_pos, std::move(new_entry));
 }
 
 void annotation_manager_t::remove_from_vector(std::vector<topic_entry_t> & vec, const std::string & old_text)
 {
-	std::string key = to_lower(old_text);
+	const auto & key_lower = to_lower(old_text);
 	vec.erase(
-	    std::remove_if(vec.begin(), vec.end(), [&key](const topic_entry_t & e) { return e.key_lower == key; }),
+	    std::remove_if(
+	        vec.begin(),
+	        vec.end(),
+	        [&key_lower](const topic_entry_t & entry) { return entry.key_lower == key_lower; }),
 	    vec.end());
 }
 
@@ -189,7 +155,7 @@ std::vector<annotation_t> annotation_manager_t::annotate(const std::string & tex
 	if (text.empty())
 		return results;
 
-	std::string text_lower = to_lower(text);
+	const auto & text_lower = to_lower(text);
 
 	std::vector<annotation_t> hyperlinks;
 	std::vector<annotation_t> glossary;
@@ -198,22 +164,22 @@ std::vector<annotation_t> annotation_manager_t::annotate(const std::string & tex
 	find_matches(text_lower, text, glossary_terms_, annotation_t::glossary_term, glossary);
 
 	results.reserve(hyperlinks.size() + glossary.size());
-	for (auto & ann : hyperlinks)
-		results.push_back(std::move(ann));
+	for (auto & annotation : hyperlinks)
+		results.push_back(std::move(annotation));
 
-	for (auto & ann : glossary)
+	for (auto & annotation : glossary)
 	{
 		bool overlaps = false;
-		for (const auto & h : hyperlinks)
+		for (const auto & hyperlink : hyperlinks)
 		{
-			if (ann.start < h.end && ann.end > h.start)
+			if (annotation.start < hyperlink.end && annotation.end > hyperlink.start)
 			{
 				overlaps = true;
 				break;
 			}
 		}
 		if (!overlaps)
-			results.push_back(std::move(ann));
+			results.push_back(std::move(annotation));
 	}
 
 	return results;
@@ -228,38 +194,38 @@ std::vector<annotation_t> annotation_manager_t::annotate_translated(const std::s
 	if (text.empty())
 		return results;
 
-	std::string text_lower = to_lower(text);
+	const auto & text_lower = to_lower(text);
 
-	std::set<std::string> seen;
+	std::set<std::string> seen_topics;
 
 	for (const auto & topic : dial_topics_)
 	{
 		if (topic.new_text.empty())
 			continue;
 
-		std::string new_lower = to_lower(topic.new_text);
-		if (!seen.insert(new_lower).second)
+		const auto & topic_lower = to_lower(topic.new_text);
+		if (!seen_topics.insert(topic_lower).second)
 			continue;
 
-		size_t pos = 0;
-		while ((pos = text_lower.find(new_lower, pos)) != std::string::npos)
+		size_t search_pos = 0;
+		while ((search_pos = text_lower.find(topic_lower, search_pos)) != std::string::npos)
 		{
-			if (pos > 0 && is_alpha(text_lower[pos - 1]))
+			if (search_pos > 0 && is_alpha(text_lower[search_pos - 1]))
 			{
-				pos += new_lower.size();
+				search_pos += topic_lower.size();
 				continue;
 			}
 
-			annotation_t ann;
-			ann.start = pos;
-			ann.end = pos + new_lower.size();
-			ann.kind = annotation_t::dial_topic;
-			ann.old_text = text.substr(pos, new_lower.size());
-			ann.new_text = topic.new_text;
-			ann.source = topic.source;
-			results.push_back(std::move(ann));
+			annotation_t annotation;
+			annotation.start = search_pos;
+			annotation.end = search_pos + topic_lower.size();
+			annotation.kind = annotation_t::dial_topic;
+			annotation.old_text = text.substr(search_pos, topic_lower.size());
+			annotation.new_text = topic.new_text;
+			annotation.source = topic.source;
+			results.push_back(std::move(annotation));
 
-			pos += new_lower.size();
+			search_pos += topic_lower.size();
 		}
 	}
 
@@ -278,25 +244,25 @@ void annotation_manager_t::find_matches(
 		if (term.key_lower.empty())
 			continue;
 
-		size_t pos = 0;
-		while ((pos = text_lower.find(term.key_lower, pos)) != std::string::npos)
+		size_t search_pos = 0;
+		while ((search_pos = text_lower.find(term.key_lower, search_pos)) != std::string::npos)
 		{
-			if (pos > 0 && is_alpha(text_lower[pos - 1]))
+			if (search_pos > 0 && is_alpha(text_lower[search_pos - 1]))
 			{
-				pos += term.key_lower.size();
+				search_pos += term.key_lower.size();
 				continue;
 			}
 
-			annotation_t ann;
-			ann.start = pos;
-			ann.end = pos + term.key_lower.size();
-			ann.kind = kind;
-			ann.old_text = text_original.substr(pos, term.key_lower.size());
-			ann.new_text = term.new_text;
-			ann.source = term.source;
-			results.push_back(std::move(ann));
+			annotation_t annotation;
+			annotation.start = search_pos;
+			annotation.end = search_pos + term.key_lower.size();
+			annotation.kind = kind;
+			annotation.old_text = text_original.substr(search_pos, term.key_lower.size());
+			annotation.new_text = term.new_text;
+			annotation.source = term.source;
+			results.push_back(std::move(annotation));
 
-			pos += term.key_lower.size();
+			search_pos += term.key_lower.size();
 		}
 	}
 }
@@ -307,10 +273,10 @@ void annotation_manager_t::load_npc_flags(const std::string &)
 const std::string & annotation_manager_t::get_speaker_gender(const std::string & npc_id) const
 {
 	static const std::string empty;
-	auto it = npc_flags_.find(npc_id);
-	if (it == npc_flags_.end())
+	auto it_flag = npc_flags_.find(npc_id);
+	if (it_flag == npc_flags_.end())
 		return empty;
-	return it->second;
+	return it_flag->second;
 }
 
 void annotation_manager_t::load_enchantments(const std::string & path)
@@ -321,12 +287,12 @@ void annotation_manager_t::load_enchantments(const std::string & path)
 	if (!reader.is_loaded())
 		return;
 
-	const auto & dict = reader.get_dict();
-	auto it = dict.find(tools_t::rec_type_t::fnam);
-	if (it == dict.end())
+	const auto & loaded_dict = reader.get_dict();
+	auto chapter_it = loaded_dict.find(tools_t::rec_type_t::fnam);
+	if (chapter_it == loaded_dict.end())
 		return;
 
-	const auto & chapter = it->second;
+	const auto & chapter = chapter_it->second;
 	for (const auto & entry : chapter.records)
 	{
 		if (entry.key_text.empty())
@@ -336,25 +302,25 @@ void annotation_manager_t::load_enchantments(const std::string & path)
 	}
 }
 
-const std::string & annotation_manager_t::get_enchantment(const std::string & key) const
+const std::string & annotation_manager_t::get_enchantment(const std::string & key_text) const
 {
 	static const std::string empty;
-	auto it = enchantments_.find(key);
-	if (it == enchantments_.end())
+	auto it_ench = enchantments_.find(key_text);
+	if (it_ench == enchantments_.end())
 		return empty;
-	return it->second;
+	return it_ench->second;
 }
 
-bool annotation_manager_t::has_enchantment(const std::string & key) const
+bool annotation_manager_t::has_enchantment(const std::string & key_text) const
 {
-	return enchantments_.count(key) > 0;
+	return enchantments_.count(key_text) > 0;
 }
 
 std::vector<annotation_manager_t::glossary_match_t> annotation_manager_t::find_glossary_matches(
     const std::string & source_text) const
 {
 	std::vector<glossary_match_t> matches;
-	std::string text_lower = to_lower(source_text);
+	const auto & text_lower = to_lower(source_text);
 	std::vector<bool> covered(source_text.size(), false);
 
 	for (const auto & term : glossary_terms_)
@@ -362,43 +328,43 @@ std::vector<annotation_manager_t::glossary_match_t> annotation_manager_t::find_g
 		if (term.key_lower.empty() || term.new_text.empty())
 			continue;
 
-		size_t pos = 0;
-		while ((pos = text_lower.find(term.key_lower, pos)) != std::string::npos)
+		size_t search_pos = 0;
+		while ((search_pos = text_lower.find(term.key_lower, search_pos)) != std::string::npos)
 		{
-			bool overlap = false;
-			for (size_t i = pos; i < pos + term.key_lower.size(); ++i)
+			bool has_overlap = false;
+			for (size_t index = search_pos; index < search_pos + term.key_lower.size(); ++index)
 			{
-				if (covered[i])
+				if (covered[index])
 				{
-					overlap = true;
+					has_overlap = true;
 					break;
 				}
 			}
 
-			if (overlap)
+			if (has_overlap)
 			{
-				pos += term.key_lower.size();
+				search_pos += term.key_lower.size();
 				continue;
 			}
 
-			if (pos > 0 && is_alpha(text_lower[pos - 1]))
+			if (search_pos > 0 && is_alpha(text_lower[search_pos - 1]))
 			{
-				pos += term.key_lower.size();
+				search_pos += term.key_lower.size();
 				continue;
 			}
 
-			size_t end_pos = pos + term.key_lower.size();
+			const auto end_pos = search_pos + term.key_lower.size();
 			if (end_pos < text_lower.size() && is_alpha(text_lower[end_pos]))
 			{
-				pos += term.key_lower.size();
+				search_pos += term.key_lower.size();
 				continue;
 			}
 
-			for (size_t i = pos; i < end_pos; ++i)
-				covered[i] = true;
+			for (size_t index = search_pos; index < end_pos; ++index)
+				covered[index] = true;
 
-			matches.push_back({ pos, term.key_lower.size(), term.new_text });
-			pos = end_pos;
+			matches.push_back({ search_pos, term.key_lower.size(), term.new_text });
+			search_pos = end_pos;
 		}
 	}
 
@@ -407,7 +373,7 @@ std::vector<annotation_manager_t::glossary_match_t> annotation_manager_t::find_g
 
 std::string annotation_manager_t::apply_glossary(const std::string & translated_text) const
 {
-	std::string text_lower = to_lower(translated_text);
+	auto text_lower = to_lower(translated_text);
 	std::string result = translated_text;
 
 	for (const auto & term : glossary_terms_)
@@ -415,25 +381,25 @@ std::string annotation_manager_t::apply_glossary(const std::string & translated_
 		if (term.key_lower.empty() || term.new_text.empty())
 			continue;
 
-		size_t pos = 0;
-		while ((pos = text_lower.find(term.key_lower, pos)) != std::string::npos)
+		size_t search_pos = 0;
+		while ((search_pos = text_lower.find(term.key_lower, search_pos)) != std::string::npos)
 		{
-			if (pos > 0 && is_alpha(text_lower[pos - 1]))
+			if (search_pos > 0 && is_alpha(text_lower[search_pos - 1]))
 			{
-				pos += term.key_lower.size();
+				search_pos += term.key_lower.size();
 				continue;
 			}
 
-			size_t end_pos = pos + term.key_lower.size();
+			const auto end_pos = search_pos + term.key_lower.size();
 			if (end_pos < text_lower.size() && is_alpha(text_lower[end_pos]))
 			{
-				pos += term.key_lower.size();
+				search_pos += term.key_lower.size();
 				continue;
 			}
 
-			result.replace(pos, term.key_lower.size(), term.new_text);
+			result.replace(search_pos, term.key_lower.size(), term.new_text);
 			text_lower = to_lower(result);
-			pos += term.new_text.size();
+			search_pos += term.new_text.size();
 		}
 	}
 
