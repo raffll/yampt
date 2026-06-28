@@ -2,8 +2,8 @@
 
 #include <QString>
 
-find_replace_service_t::find_replace_service_t(record_table_model_t & model, document_t *& active_doc)
-    : model_(model)
+find_replace_service_t::find_replace_service_t(row_provider_t & provider, document_t *& active_doc)
+    : provider_(provider)
     , active_doc_(active_doc)
 {}
 
@@ -103,7 +103,7 @@ find_replace_service_t::find_result_t find_replace_service_t::find_next(
 	if (query.empty())
 		return {};
 
-	const int count = model_.rowCount();
+	const int count = provider_.row_count();
 	if (count == 0)
 		return {};
 
@@ -114,7 +114,7 @@ find_replace_service_t::find_result_t find_replace_service_t::find_next(
 	for (int i = 1; i <= count; ++i)
 	{
 		const int row_index = (current_row + i) % count;
-		const auto * row_data = model_.row_at(row_index);
+		const auto * row_data = provider_.row_at(row_index);
 		if (!row_data)
 			continue;
 
@@ -142,7 +142,7 @@ find_replace_service_t::replace_result_t find_replace_service_t::replace_current
 	if (!dict_doc)
 		return {};
 
-	const auto * row_data = model_.row_at(current_row);
+	const auto * row_data = provider_.row_at(current_row);
 	if (!row_data)
 		return {};
 

@@ -66,7 +66,7 @@ void cleanup_file(const std::string & path)
 
 } // anonymous namespace
 
-TEST_CASE("session_t::open, json extension creates dict_document_t", "[i]")
+TEST_CASE("session_t::open, json extension creates dict_document_t", "[i][qt]")
 {
 	const auto path = create_temp_json("session_test_dict.json");
 	session_t session(codepage_t::windows_1252);
@@ -78,7 +78,7 @@ TEST_CASE("session_t::open, json extension creates dict_document_t", "[i]")
 	cleanup_file(path);
 }
 
-TEST_CASE("session_t::open, esp extension creates plugin_document_t", "[i]")
+TEST_CASE("session_t::open, esp extension creates plugin_document_t", "[i][qt]")
 {
 	const auto path = create_temp_esp("session_test_plugin.esp");
 	session_t session(codepage_t::windows_1252);
@@ -90,7 +90,7 @@ TEST_CASE("session_t::open, esp extension creates plugin_document_t", "[i]")
 	cleanup_file(path);
 }
 
-TEST_CASE("session_t::open, yaml extension creates yaml_document_t", "[i]")
+TEST_CASE("session_t::open, yaml extension creates yaml_document_t", "[i][qt]")
 {
 	const auto path = create_temp_yaml("session_test_l10n.yaml");
 	session_t session(codepage_t::windows_1252);
@@ -102,7 +102,7 @@ TEST_CASE("session_t::open, yaml extension creates yaml_document_t", "[i]")
 	cleanup_file(path);
 }
 
-TEST_CASE("session_t::open, unknown extension returns nullptr", "[u]")
+TEST_CASE("session_t::open, unknown extension returns nullptr", "[u][qt]")
 {
 	session_t session(codepage_t::windows_1252);
 
@@ -110,7 +110,7 @@ TEST_CASE("session_t::open, unknown extension returns nullptr", "[u]")
 	REQUIRE(document == nullptr);
 }
 
-TEST_CASE("session_t::open, same path twice returns existing document", "[i]")
+TEST_CASE("session_t::open, same path twice returns existing document", "[i][qt]")
 {
 	const auto path = create_temp_json("session_test_dup.json");
 	session_t session(codepage_t::windows_1252);
@@ -124,7 +124,7 @@ TEST_CASE("session_t::open, same path twice returns existing document", "[i]")
 	cleanup_file(path);
 }
 
-TEST_CASE("session_t::close, removes document and find returns nullptr", "[i]")
+TEST_CASE("session_t::close, removes document and find returns nullptr", "[i][qt]")
 {
 	const auto path = create_temp_json("session_test_close.json");
 	session_t session(codepage_t::windows_1252);
@@ -139,7 +139,7 @@ TEST_CASE("session_t::close, removes document and find returns nullptr", "[i]")
 	cleanup_file(path);
 }
 
-TEST_CASE("session_t::close_if, removes matching documents", "[i]")
+TEST_CASE("session_t::close_if, removes matching documents", "[i][qt]")
 {
 	const auto path_alpha = create_temp_json("session_closeif_a.json");
 	const auto path_beta = create_temp_yaml("session_closeif_b.yaml");
@@ -159,7 +159,7 @@ TEST_CASE("session_t::close_if, removes matching documents", "[i]")
 	cleanup_file(path_beta);
 }
 
-TEST_CASE("session_t::all_dicts, returns only dict documents", "[i]")
+TEST_CASE("session_t::all_dicts, returns only dict documents", "[i][qt]")
 {
 	const auto path_dict = create_temp_json("session_alldicts.json");
 	const auto path_yaml = create_temp_yaml("session_alldicts.yaml");
@@ -179,7 +179,7 @@ TEST_CASE("session_t::all_dicts, returns only dict documents", "[i]")
 	cleanup_file(path_plugin);
 }
 
-TEST_CASE("session_t::has_any_unsaved, false when no docs are dirty", "[i]")
+TEST_CASE("session_t::has_any_unsaved, false when no docs are dirty", "[i][qt]")
 {
 	const auto path = create_temp_json("session_unsaved.json");
 	session_t session(codepage_t::windows_1252);
@@ -190,7 +190,7 @@ TEST_CASE("session_t::has_any_unsaved, false when no docs are dirty", "[i]")
 	cleanup_file(path);
 }
 
-TEST_CASE("session_t::dict_version, increments on dict open and close", "[i]")
+TEST_CASE("session_t::dict_version, increments on dict open and close", "[i][qt]")
 {
 	const auto path = create_temp_json("session_version.json");
 	session_t session(codepage_t::windows_1252);

@@ -181,6 +181,13 @@
     <ClInclude Include="..\yampt.translator\controller\annotation_manager.hpp" />
     <ClInclude Include="..\yampt.translator\model\sidebar_model.hpp" />
     <ClInclude Include="..\yampt.translator\session.hpp" />
+    <ClInclude Include="..\yampt.translator\highlight\syntax_highlighter.hpp" />
+    <ClInclude Include="..\yampt.translator\controller\editor_controller.hpp" />
+    <ClInclude Include="..\yampt.translator\controller\history_manager.hpp" />
+    <ClInclude Include="..\yampt.translator\controller\validation_manager.hpp" />
+    <ClInclude Include="..\yampt.translator\controller\find_replace_service.hpp" />
+    <ClInclude Include="..\yampt.translator\model\row_provider.hpp" />
+    <ClInclude Include="..\yampt.editor\io\profile_reader.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\yampt\model\dict_creator.cpp" />
@@ -223,6 +230,10 @@
     <ClCompile Include="tests.sidebar_model.cpp" />
     <ClCompile Include="tests.yaml_l10n_reader.cpp" />
     <ClCompile Include="tests.editor_tab_parsing.cpp" />
+    <ClCompile Include="tests.syntax_highlighter.cpp" />
+    <ClCompile Include="tests.editor_controller.cpp" />
+    <ClCompile Include="tests.display_helpers.cpp" />
+    <ClCompile Include="tests.profile_reader.cpp" />
     <ClCompile Include="..\yampt.translator\controller\editor_config.cpp" />
     <ClCompile Include="..\yampt.translator\model\table_builder.cpp" />
     <ClCompile Include="..\yampt.translator\controller\search_engine.cpp" />
@@ -234,6 +245,12 @@
     <ClCompile Include="..\yampt.translator\model\sidebar_model.cpp" />
     <ClCompile Include="..\yampt.translator\utility\display_name.cpp" />
     <ClCompile Include="..\yampt.translator\session.cpp" />
+    <ClCompile Include="..\yampt.translator\highlight\syntax_highlighter.cpp" />
+    <ClCompile Include="..\yampt.translator\controller\editor_controller.cpp" />
+    <ClCompile Include="..\yampt.translator\controller\history_manager.cpp" />
+    <ClCompile Include="..\yampt.translator\controller\validation_manager.cpp" />
+    <ClCompile Include="..\yampt.translator\controller\find_replace_service.cpp" />
+    <ClCompile Include="..\yampt.editor\io\profile_reader.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

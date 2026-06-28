@@ -1,10 +1,11 @@
 #pragma once
 
+#include "row_provider.hpp"
 #include "table_row.hpp"
 #include <QAbstractTableModel>
 #include <vector>
 
-class record_table_model_t : public QAbstractTableModel
+class record_table_model_t : public QAbstractTableModel, public row_provider_t
 {
 	Q_OBJECT
 
@@ -18,7 +19,8 @@ public:
 	void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
 
 	void rebuild(std::vector<table_row_t> rows);
-	const table_row_t * row_at(int row) const;
+	const table_row_t * row_at(int row) const override;
+	int row_count() const override;
 	void update_row(int row, const std::string & new_text, const std::string & status);
 
 private:

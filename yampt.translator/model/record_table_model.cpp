@@ -247,6 +247,11 @@ void record_table_model_t::rebuild(std::vector<table_row_t> rows)
 	endResetModel();
 }
 
+int record_table_model_t::row_count() const
+{
+	return static_cast<int>(rows_.size());
+}
+
 const table_row_t * record_table_model_t::row_at(int row) const
 {
 	if (row < 0 || row >= static_cast<int>(rows_.size()))

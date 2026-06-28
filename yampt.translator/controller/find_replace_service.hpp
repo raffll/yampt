@@ -1,8 +1,9 @@
 #pragma once
 
-#include "../model/record_table_model.hpp"
+#include "../model/row_provider.hpp"
 #include "../model/dict_document.hpp"
 
+#include <QString>
 #include <optional>
 #include <regex>
 #include <string>
@@ -28,7 +29,7 @@ public:
 		int count = 0;
 	};
 
-	find_replace_service_t(record_table_model_t & model, document_t *& active_doc);
+	find_replace_service_t(row_provider_t & provider, document_t *& active_doc);
 
 	find_result_t find_next(const std::string & query, bool case_sensitive, bool regex_mode, int current_row);
 	replace_result_t replace_current(
@@ -57,6 +58,6 @@ private:
 	bool matches_query(const std::string & text_value, const search_params_t & params);
 	std::optional<std::string> apply_replacement(const std::string & source_text, const search_params_t & params);
 
-	record_table_model_t & model_;
+	row_provider_t & provider_;
 	document_t *& active_doc_;
 };

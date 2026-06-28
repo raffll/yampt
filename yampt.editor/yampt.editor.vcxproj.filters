@@ -10,6 +10,9 @@
     <Filter Include="external">
       <UniqueIdentifier>{B2000003-0000-0000-0000-000000000003}</UniqueIdentifier>
     </Filter>
+    <Filter Include="io">
+      <UniqueIdentifier>{B2000005-0000-0000-0000-000000000005}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -52,6 +55,9 @@
     </ClCompile>
     <ClCompile Include="..\yampt\plugin_scan\conflict_slots.cpp">
       <Filter>yampt</Filter>
+    </ClCompile>
+    <ClCompile Include="io\profile_reader.cpp">
+      <Filter>io</Filter>
     </ClCompile>
     <ClCompile Include="$(IntDir)moc_editor_window.cpp" />
     <ClCompile Include="$(IntDir)moc_editor_tab.cpp" />
@@ -103,6 +109,9 @@
     </ClInclude>
     <ClInclude Include="..\yampt\plugin_scan\conflict_slots.hpp">
       <Filter>yampt</Filter>
+    </ClInclude>
+    <ClInclude Include="io\profile_reader.hpp">
+      <Filter>io</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -182,6 +182,7 @@
     <ClCompile Include="..\yampt\plugin_scan\plugin_scan.cpp" />
     <ClCompile Include="..\yampt\plugin_scan\conflict_compute.cpp" />
     <ClCompile Include="..\yampt\plugin_scan\conflict_slots.cpp" />
+    <ClCompile Include="io\profile_reader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\yampt\plugin_scan\view_tree_format.hpp" />
@@ -198,6 +199,7 @@
     <ClInclude Include="..\yampt\plugin_scan\plugin_index.hpp" />
     <ClInclude Include="..\yampt\plugin_scan\plugin_scan.hpp" />
     <ClInclude Include="..\yampt\plugin_scan\conflict_compute.hpp" />
+    <ClInclude Include="io\profile_reader.hpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="editor_window.hpp">
