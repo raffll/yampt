@@ -53,3 +53,18 @@ Many sub-records still display as raw hex dumps (`<N bytes>` with `0000: XX XX X
 4. Per-slot: compare formatted strings across columns using the winner-based rule (all non-master values must be either master or winner → override_benign, else → conflict)
 5. Record-level conflict_all = max of all slot conflicts
 6. Left panel reads this result — guaranteed to match what the right panel shows
+
+## Merged Patch
+- default folder for folder/mo2/OpenMW
+- show button/dialog
+- make sure good conflicts are merged
+- show/hide merged patch column
+- allow drag and drop to merged patch
+
+## Version
+- first public release was build735
+- readme show 735 state
+- update readme
+- fix build folder structure
+- update documents
+- include documents
