@@ -39,6 +39,38 @@ Extract self-contained concerns into dedicated classes:
 - Commit+propagation logic → already in `editor_controller_t` but `main_window` still has `commit_dict_edit`, `commit_yaml_edit`, `sync_propagated_rows` — push into controller
 - Highlight management (`extra_selections_state_t`, `apply_extra_selections`, `find_annotation_highlights`, `build_highlight_selections`) → `highlight_coordinator_t`
 
+### Reduce `plugin_workspace_view_t` (1316 lines) in yEditor [S]
+Does loading, parsing, merging, filtering, drag-drop, persistence — all in one "view". Also embeds two child tree views (nav + record view) and a messages panel instead of composing separate widgets. Extract:
+- Plugin loading + unloading orchestration → `plugin_session_t` in `model/`
+- Merge patch creation (`create_merge_records`, `refresh_after_merge`) → `merge_patch_t` in `model/`
+- Nav tree (left panel) → `nav_tree_view_t` in `view/` (owns its `QTreeView` + nav_tree_model)
+- Record view tree (right panel) → `record_view_t` in `view/` (owns its `QTreeView` + view_tree_model)
+- The parent view keeps only: toolbar, splitter layout, connect signals between child views and model classes
+
+### Split `plugin_scan_t` god class (757 lines) [S]
+Mixes: loading, conflict detection, merge plugin management, TES3 binary header construction, leveled list merging, dialogue merging, ITM detection. Extract:
+- `merge_builder_t` — merge plugin management, `copy_record_to_merge`, `remove_from_merge`, `save_merge`, `build_tes3_header`
+- `merge_leveled_list()`, `merge_dialogue()` → free functions or a `merge_algorithms` module
+
+### Split `view_tree_decode.cpp` (1166 lines) in yEditor [S]
+Contains 5+ unrelated record-type decoders. Split by family:
+- `view_tree_decode_cell.cpp` — CELL ref groups, DODT matching, object indices
+- `view_tree_decode_lists.cpp` — leveled lists, factions, containers
+- `view_tree_decode_generic.cpp` — schema-based children, hex dump fallback
+
+### Split `conflict_slots.cpp` (742 lines) [S]
+Five independent strategy implementations behind one dispatch. Extract:
+- `conflict_slots_cell.cpp` — CELL ref group slot building (most complex)
+- Keep leveled/faction/container strategies in main file (shorter, similar pattern)
+
+### Split `esm_converter.cpp` (760 lines) [S]
+16 independent `convert_*` methods + shared helpers. Split:
+- `esm_converter.cpp` — constructor, dispatcher, shared helpers
+- `esm_converter_records.cpp` — all per-record-type conversion methods
+
+### Extract color logic from `nav_tree_model.cpp` (733 lines) [S]
+The model's `data()` method computes QBrush colors from conflict enums. Extract conflict-to-color mapping to a shared `conflict_colors.hpp` utility used by both nav_tree_model and view_tree_model.
+
 ### Settings dialog for both apps [S, PRIORITY]
 Settings dialog similar to Notepad++/Visual Studio. Covers both yTranslator and yEditor. Central place for keyboard shortcuts, paths, encoding, spell check language, translation provider API keys, theme preferences.
 
