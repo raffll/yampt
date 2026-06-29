@@ -157,12 +157,15 @@ Undo/revert in yTranslator should also restore the entry's status (not just the 
 
 ### Script parser: skip bytecode modification when no translation found [S]
 When `new_text == old_text` (cell/topic not in dictionary), the script parser still runs the full erase/insert cycle on SCTX and SCDT (which is a no-op but risks size byte validation false positives). After the size byte validation loop confirms the correct bytecode occurrence, check `if (new_text == old_text)` and advance `pos_c += old_text.size()` then return. The `insert_new_text` function should also early-return when `new_text == old_text`.
+- we need unit tests for that, so this chnage dont break anytrhing
 
 ### Better explanation of partial mode [S]
 Clarify in the GUI (tooltip, help text, or info panel) how the English dictionary comparison works in partial mode.
 
 ### Hyperlink spec [S]
 Document how hyperlinks work in Morrowind dialogues, how yampt detects and applies them during conversion, and how the annotation system highlights them.
+- annotations have to highlitht them same way
+- how @ is used, implement also
 
 ---
 
@@ -191,14 +194,17 @@ Import `.eet` files (ESP-ESM Translator binary format) and convert to yampt's JS
 
 ### Script parser: unquoted multi-word cell names [M]
 Commands like `ShowMap Ald Velothi` use unquoted multi-word cell names. The token extractor only grabs the first word. Need special handling for commands where the cell name is the last parameter — take everything to end-of-line. Low frequency in practice (most mods use quotes).
+- we need unit tests for that, so this chnage dont break anytrhing
 
 ### Version / Release [M]
 - First public release was build735
-- README show 735 state
+- current README show build735 state
 - Update readme
 - Fix build folder structure
 - Update documents
 - Include documents
+- we have hardcoded version 0.25 in code, in vcpkg.json
+- I want version to be 0.gitbuild, so 0.735 for example
 
 ---
 
@@ -238,3 +244,9 @@ add to steering:
 template argument use _t suffix
 pure interface use _i suffix
 remove not used function arguments
+
+support top, cel, mrk files, create those files base on dial/cell dictionary and language spell checker dictionary, include those files in annotations
+
+editor: lua handlers comparison/conflicts detector
+
+
