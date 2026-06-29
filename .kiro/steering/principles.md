@@ -15,6 +15,7 @@
 - Max 50 lines per function
 - Max 3 nesting levels per function
 - Max 2 function arguments — if more are needed, create a struct
+- Remove unused function arguments — do not leave unnamed or commented-out parameters
 - Always do testable interfaces
 - Unit test for every function
 
@@ -51,3 +52,4 @@
 - Modernize — use C++20
 - No comments unless the code cannot be explained by function or variable names alone. If a comment is unavoidable, keep it to one short line.
 - No decorative comment banners (dashed lines, boxes, ASCII art).
+- Always remove items from TODO.md that are done or cancelled — never leave stale entries.

@@ -127,17 +127,18 @@ NEVER modify files directly in the `external/` folder. These are upstream third-
 
 ## Solution Filters
 
-vcxproj.filters must follow this structure:
+vcxproj.filters must mirror the directory tree on disk. Each filter name corresponds 1:1 to a filesystem subfolder. Do not create virtual groupings that diverge from the actual folder structure.
+
 - **Root (no filter)** — project's own root source files (main.cpp, main_window.cpp, session.cpp)
 - **model** — files in the `model/` subfolder
 - **view** — files in the `view/` subfolder
 - **controller** — files in the `controller/` subfolder
 - **dialog** — files in the `dialog/` subfolder
 - **highlight** — files in the `highlight/` subfolder
-- **provider** — files in the `provider/` subfolder
+- **translate** — files in the `translate/` subfolder
 - **utility** — files in the `utility/` subfolder
 - **io** — files in the `io/` subfolder
-- **yampt** — files referenced from `../yampt/` (core library)
+- **yampt** — files referenced from `../yampt/` (core library). Sub-filters mirror the core library's directory tree (e.g. `yampt\io`, `yampt\model`, `yampt\utility`, `yampt\plugin_scan`)
 
 Never use default VS filters like "Source Files", "Header Files", or "Resource Files".
 

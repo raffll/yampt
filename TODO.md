@@ -37,14 +37,14 @@ Several class names use vague words (manager, provider, service, engine) or are 
 | `history_manager_t` | `edit_history_t` | It IS the history |
 | `annotation_manager_t` | `glossary_t` | Builds glossary and annotates text |
 | `find_replace_service_t` | `find_replace_t` | Drop "service" |
-| `translation_provider_t` | `translator_t` | Interface that translates text |
+| `translation_provider_t` | `translator_i` | Pure interface — uses `_i` suffix per convention |
 | `ctranslate2_provider_t` | `ctranslate2_translator_t` | Concrete translator |
 | `deepl_provider_t` | `deepl_translator_t` | Concrete translator |
 | `google_provider_t` | `google_translator_t` | Concrete translator |
 
-Also rename `provider/` folder to `translator/`.
+Also rename `provider/` folder to `translate/`.
 
-Move `file_list_t` from `yampt/io/` to `yampt.translator/model/`. It's a session-level file registry (workspace scan, classification, language detection) — not a file format reader. Only consumed by `yampt.translator` (sidebar_model, display_name, main_window).
+Move `file_list_t` from `yampt/io/` to `yampt/model/`. It's a session-level file registry (workspace scan, classification, language detection) — not a file format reader. Used by yampt.translator, yampt.editor, and yampt.tests — must stay in the shared core library.
 
 ### Extract duplicated static helpers to `tools.hpp` [S]
 Multiple files reimplement the same utilities as local statics or lambdas:
@@ -76,12 +76,12 @@ Comprehensive list of naming, placement, and duplication issues. Items split int
 | 4 | `history_manager_t` (translator/controller/) | `edit_history_t` | It IS the edit history |
 | 5 | `annotation_manager_t` (translator/controller/) | `glossary_t` | Builds glossary, annotates text |
 | 6 | `find_replace_service_t` (translator/controller/) | `find_replace_t` | Drop "service" |
-| 7 | `translation_provider_t` (translator/provider/) | `translator_t` | Strategy interface — it translates |
+| 7 | `translation_provider_t` (translator/provider/) | `translator_i` | Pure interface — uses `_i` suffix |
 | 8 | `ctranslate2_provider_t` | `ctranslate2_translator_t` | Concrete translator |
 | 9 | `deepl_provider_t` | `deepl_translator_t` | Concrete translator |
 | 10 | `google_provider_t` | `google_translator_t` | Concrete translator |
-| 11 | `provider/` folder | `translator/` | Contents are translation backends |
-| 12 | `file_list_t` (yampt/io/) | move to `yampt.translator/model/` | Session-level registry, not core I/O |
+| 11 | `provider/` folder | rename to `translate/` | Contents are translation backends |
+| 12 | `file_list_t` (yampt/io/) | move to `yampt/model/` | Session-level registry, not I/O. Used by translator + editor — stays in shared core |
 | 13 | `menu_action_t` (inside file_list.hpp) | extract to own file in `yampt.translator/model/` | GUI enum doesn't belong in core library |
 | 14 | `editor_config_t` (translator/controller/) | move to `yampt.translator/io/` | Pure INI file serialization, no orchestration |
 | 15 | `status_colors.hpp` (translator/utility/) | move to `translator/view/` | Returns QColor — it's a view helper |
@@ -171,9 +171,6 @@ Document how hyperlinks work in Morrowind dialogues, how yampt detects and appli
 
 ## M — a day or two
 
-### Enable model downloader in GUI [M] — CANCELLED
-~~Model will be shipped separately. Remove `model_downloader_t` instead (see S tasks).~~
-
 ### Better difference highlighting in adapted_from panel [M]
 Improve the diff highlighting between the current text and the adapted_from source to make changes more visible.
 
@@ -240,13 +237,12 @@ Parse OpenMW Lua scripts (l10n YAML, or string literals) to extract translatable
 ### Linux build support [XL]
 No Windows-only dependencies identified. Needs CMakeLists.txt for Linux.
 
-add to steering:
-template argument use _t suffix
-pure interface use _i suffix
-remove not used function arguments
+### Generate TOP/CEL/MRK files from dictionaries [XL]
+Create `.top`, `.cel`, `.mrk` files based on DIAL/CELL dictionaries and the language spell checker dictionary. These are OpenMW cell/topic name files used by the engine for localized map markers and journal topics. Include generated files as annotation sources in yTranslator.
 
-support top, cel, mrk files, create those files base on dial/cell dictionary and language spell checker dictionary, include those files in annotations
+### Lua handlers comparison/conflicts detector (yEditor) [XL]
+Detect conflicts between OpenMW Lua handler registrations across multiple mods (e.g. two mods registering `addSkillLevelUpHandler` that both return `false`). Show conflicts in yEditor's comparison view.
 
-editor: lua handlers comparison/conflicts detector
+
 
 
