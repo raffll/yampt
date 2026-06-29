@@ -4,10 +4,10 @@ static constexpr size_t read_buffer_size = 16384;
 static constexpr size_t bytes_per_uint32 = 4;
 
 std::string tools_t::m_log;
-bool tools_t::error_flag = false;
-bool tools_t::debug_flag = false;
-bool tools_t::quiet_flag = false;
-std::string tools_t::exe_dir_;
+bool tools_t::m_error_flag = false;
+bool tools_t::m_debug_flag = false;
+bool tools_t::m_quiet_flag = false;
+std::string tools_t::m_exe_dir;
 
 const std::vector<std::string> tools_t::keywords { "messagebox", "choice", "say" };
 
@@ -235,22 +235,22 @@ void tools_t::add_log(const std::string & entry, const bool silent)
 {
 	if (entry.find("[error]") == 0)
 	{
-		error_flag = true;
+		m_error_flag = true;
 	}
 
-	if (silent && !debug_flag)
+	if (silent && !m_debug_flag)
 		return;
 
 	m_log += entry;
 
-	if (!silent && !quiet_flag)
+	if (!silent && !m_quiet_flag)
 		std::cout << entry;
 }
 
 void tools_t::reset_log()
 {
 	m_log.clear();
-	error_flag = false;
+	m_error_flag = false;
 }
 
 tools_t::dict_t tools_t::initialize_dict()

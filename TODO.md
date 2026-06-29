@@ -233,3 +233,8 @@ Parse OpenMW Lua scripts (l10n YAML, or string literals) to extract translatable
 
 ### Linux build support [XL]
 No Windows-only dependencies identified. Needs CMakeLists.txt for Linux.
+
+add to steering:
+template argument use _t suffix
+pure interface use _i suffix
+remove not used function arguments

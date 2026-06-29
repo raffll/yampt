@@ -153,32 +153,32 @@ public:
 
 	static bool has_error()
 	{
-		return error_flag;
+		return m_error_flag;
 	}
 
 	static void set_debug(bool enabled)
 	{
-		debug_flag = enabled;
+		m_debug_flag = enabled;
 	}
 
 	static bool is_debug()
 	{
-		return debug_flag;
+		return m_debug_flag;
 	}
 
 	static void set_quiet(bool enabled)
 	{
-		quiet_flag = enabled;
+		m_quiet_flag = enabled;
 	}
 
 	static void set_exe_dir(const std::string & dir)
 	{
-		exe_dir_ = dir;
+		m_exe_dir = dir;
 	}
 
 	static const std::string & get_exe_dir()
 	{
-		return exe_dir_;
+		return m_exe_dir;
 	}
 
 	static void reset_log();
@@ -191,8 +191,8 @@ public:
 
 private:
 	static std::string m_log;
-	static bool error_flag;
-	static bool debug_flag;
-	static bool quiet_flag;
-	static std::string exe_dir_;
+	static bool m_error_flag;
+	static bool m_debug_flag;
+	static bool m_quiet_flag;
+	static std::string m_exe_dir;
 };
