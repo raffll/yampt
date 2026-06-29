@@ -1,6 +1,5 @@
 #include "grammar_checker.hpp"
 #include "../view/translation_edit_view.hpp"
-
 #include <QTextCursor>
 #include <QTextDocument>
 

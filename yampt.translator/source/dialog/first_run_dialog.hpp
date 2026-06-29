@@ -1,8 +1,8 @@
 #pragma once
 
-#include <QDialog>
 #include <string>
 #include <vector>
+#include <QDialog>
 
 class QComboBox;
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <utility/tools.hpp>
 #include "../controller/byte_limit_validator.hpp"
+#include <utility/tools.hpp>
 #include <QWidget>
 
 class QLabel;

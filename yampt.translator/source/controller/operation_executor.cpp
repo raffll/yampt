@@ -1,16 +1,13 @@
 #include "operation_executor.hpp"
-
+#include <io/dict_writer.hpp>
 #include <model/dict_creator.hpp>
 #include <model/dict_merger.hpp>
-#include <io/dict_writer.hpp>
 #include <model/esm_converter.hpp>
-
+#include <algorithm>
 #include <QCoreApplication>
 #include <QDateTime>
 #include <QDir>
 #include <QFileInfo>
-
-#include <algorithm>
 
 std::string operation_executor_t::make_output_path(const std::string & source_path, const std::string & ext) const
 {

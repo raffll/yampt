@@ -1,6 +1,5 @@
 #include "line_number_gutter.hpp"
 #include "translation_edit_view.hpp"
-
 #include <QFontMetrics>
 #include <QPainter>
 #include <QTextBlock>

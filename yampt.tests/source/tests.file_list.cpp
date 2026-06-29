@@ -1,14 +1,13 @@
 #include <catch2/catch_all.hpp>
-#include <rapidcheck.h>
-#include <rapidcheck/catch.h>
 #include <model/file_list.hpp>
 #include <model/sidebar_model.hpp>
-#include <session.hpp>
-
+#include <rapidcheck/catch.h>
 #include <algorithm>
 #include <cctype>
 #include <filesystem>
 #include <fstream>
+#include <rapidcheck.h>
+#include <session.hpp>
 #include <set>
 #include <unordered_map>
 

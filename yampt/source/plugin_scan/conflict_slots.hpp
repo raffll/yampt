@@ -1,9 +1,9 @@
 #pragma once
 
 #include "sub_record_iter.hpp"
+#include <cstddef>
 #include <string>
 #include <vector>
-#include <cstddef>
 
 struct slot_key_t
 {

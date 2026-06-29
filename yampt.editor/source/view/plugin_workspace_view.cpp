@@ -1,7 +1,9 @@
 #include "plugin_workspace_view.hpp"
 #include "../dialog/filter_dialog.hpp"
 #include "../dialog/plugin_select_dialog.hpp"
-
+#include <algorithm>
+#include <functional>
+#include <set>
 #include <QApplication>
 #include <QClipboard>
 #include <QDir>
@@ -21,10 +23,6 @@
 #include <QStyledItemDelegate>
 #include <QTextStream>
 #include <QVBoxLayout>
-
-#include <algorithm>
-#include <functional>
-#include <set>
 
 class grid_delegate_t : public QStyledItemDelegate
 {

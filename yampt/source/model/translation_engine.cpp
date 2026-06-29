@@ -1,9 +1,9 @@
 #include "translation_engine.hpp"
 #include "../utility/tools.hpp"
 #include <ctranslate2/translator.h>
-#include <sentencepiece_processor.h>
 #include <filesystem>
 #include <fstream>
+#include <sentencepiece_processor.h>
 
 struct translation_engine_t::impl_t
 {

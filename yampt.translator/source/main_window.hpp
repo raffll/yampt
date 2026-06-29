@@ -1,34 +1,31 @@
 #pragma once
 
+#include "controller/byte_limit_validator.hpp"
+#include "controller/edit_history.hpp"
+#include "controller/editor_controller.hpp"
+#include "controller/find_replace.hpp"
 #include "controller/glossary.hpp"
+#include "controller/grammar_checker.hpp"
+#include "controller/operation_executor.hpp"
+#include "controller/row_filter.hpp"
 #include "dialog/dict_selection_dialog.hpp"
+#include "io/editor_config.hpp"
 #include "model/dict_document.hpp"
 #include "model/document.hpp"
-#include "io/editor_config.hpp"
-#include "controller/editor_controller.hpp"
-#include <io/codepage.hpp>
-#include "controller/find_replace.hpp"
-#include "controller/grammar_checker.hpp"
-#include "controller/edit_history.hpp"
-#include "controller/operation_executor.hpp"
 #include "model/plugin_op.hpp"
 #include "model/record_table_model.hpp"
-#include "controller/row_filter.hpp"
-#include "session.hpp"
 #include "model/sidebar_model.hpp"
-#include "view/sidebar_view.hpp"
+#include "session.hpp"
 #include "utility/spell_checker.hpp"
+#include "view/sidebar_view.hpp"
 #include "view/table_view.hpp"
 #include "view/translation_suggestion_view.hpp"
-#include "controller/byte_limit_validator.hpp"
-
+#include <io/codepage.hpp>
 #include <model/file_list.hpp>
-
 #include <memory>
 #include <optional>
 #include <set>
 #include <unordered_map>
-
 #include <QMainWindow>
 #include <QStringList>
 #include <QTextEdit>

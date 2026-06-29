@@ -1,8 +1,8 @@
 #include "dict_selection_dialog.hpp"
-#include "../utility/display_name.hpp"
 #include "../model/sidebar_model.hpp"
+#include "../utility/display_name.hpp"
 #include <utility/string_utils.hpp>
-
+#include <map>
 #include <QDialogButtonBox>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -10,8 +10,6 @@
 #include <QPushButton>
 #include <QTreeWidget>
 #include <QVBoxLayout>
-
-#include <map>
 
 static std::string normalize_and_lower(std::string_view input)
 {

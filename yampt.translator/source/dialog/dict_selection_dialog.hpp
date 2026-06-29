@@ -1,11 +1,10 @@
 #pragma once
 
 #include <model/dict_kind.hpp>
-
-#include <QDialog>
 #include <map>
 #include <string>
 #include <vector>
+#include <QDialog>
 
 class QDialogButtonBox;
 class QListWidget;

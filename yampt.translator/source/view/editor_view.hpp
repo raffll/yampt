@@ -1,12 +1,11 @@
 #pragma once
 
 #include "translation_edit_view.hpp"
-
-#include <QTextEdit>
-#include <QWidget>
 #include <optional>
 #include <string>
 #include <vector>
+#include <QTextEdit>
+#include <QWidget>
 
 struct script_template_t
 {

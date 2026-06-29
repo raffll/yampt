@@ -1,6 +1,6 @@
 #include "spell_checker.hpp"
-#include <utility/tools.hpp>
 #include <hunspell/hunspell.hxx>
+#include <utility/tools.hpp>
 #include <algorithm>
 #include <cctype>
 

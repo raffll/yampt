@@ -1,8 +1,7 @@
 #pragma once
 
-#include <QWidget>
-
 #include <string>
+#include <QWidget>
 
 class QSplitter;
 class QTextBrowser;

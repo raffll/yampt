@@ -1,7 +1,6 @@
 #include "yaml_document.hpp"
 #include "../io/yaml_l10n_writer.hpp"
 #include <utility/string_utils.hpp>
-
 #include <filesystem>
 
 yaml_document_t::yaml_document_t(const std::string & file_path)

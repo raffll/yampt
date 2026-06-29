@@ -1,7 +1,6 @@
 #include "dict_creator.hpp"
-#include "translation_engine.hpp"
 #include "../utility/string_utils.hpp"
-
+#include "translation_engine.hpp"
 #include <hunspell/hunspell.hxx>
 
 dict_creator_t::dict_creator_t(const std::string & plugin_path, const tools_t::dict_t * base_dict)

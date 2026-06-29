@@ -1,10 +1,10 @@
 #pragma once
 
-#include <QWidget>
-#include <QPlainTextEdit>
-#include <QVBoxLayout>
 #include <chrono>
 #include <string>
+#include <QPlainTextEdit>
+#include <QVBoxLayout>
+#include <QWidget>
 
 class messages_view_t : public QWidget
 {

@@ -4,10 +4,10 @@
 #include "sub_record_schema.hpp"
 #include "view_tree_format.hpp"
 #include <algorithm>
+#include <cstring>
 #include <filesystem>
 #include <map>
 #include <set>
-#include <cstring>
 
 static constexpr float tes3_header_version = 1.3f;
 static constexpr size_t tes3_hedr_size = 300;

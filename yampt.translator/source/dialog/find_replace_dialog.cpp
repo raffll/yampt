@@ -1,5 +1,4 @@
 #include "find_replace_dialog.hpp"
-
 #include <QCheckBox>
 #include <QGridLayout>
 #include <QLabel>

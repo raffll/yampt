@@ -1,8 +1,7 @@
 #include "table_view.hpp"
-#include "filter_tree_view.hpp"
 #include "../model/record_table_model.hpp"
+#include "filter_tree_view.hpp"
 #include "status_filter_view.hpp"
-
 #include <QAbstractButton>
 #include <QLabel>
 #include <QLineEdit>

@@ -1,9 +1,8 @@
 #pragma once
 
+#include "tools.hpp"
 #include <array>
 #include <string_view>
-
-#include "tools.hpp"
 
 namespace record_types {
 

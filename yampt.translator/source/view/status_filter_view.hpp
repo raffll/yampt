@@ -1,11 +1,11 @@
 #pragma once
 
 #include <utility/status_types.hpp>
-#include <QWidget>
 #include <map>
 #include <set>
 #include <string>
 #include <vector>
+#include <QWidget>
 
 class QHBoxLayout;
 class QPushButton;

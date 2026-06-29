@@ -1,7 +1,7 @@
 #pragma once
 
-#include <QTableView>
 #include <vector>
+#include <QTableView>
 
 class record_table_view_t : public QTableView
 {

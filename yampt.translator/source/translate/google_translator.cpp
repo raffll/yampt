@@ -1,5 +1,4 @@
 #include "google_translator.hpp"
-
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QNetworkAccessManager>

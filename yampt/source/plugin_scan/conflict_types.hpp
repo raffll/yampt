@@ -1,7 +1,7 @@
 #pragma once
 #include "conflict_enums.hpp"
-#include <QColor>
 #include <algorithm>
+#include <QColor>
 
 inline QColor lighter_hsl(const QColor & color, double amount)
 {

@@ -1,6 +1,5 @@
 #include <catch2/catch_all.hpp>
 #include <model/dict_creator.hpp>
-
 #include <cstring>
 #include <filesystem>
 

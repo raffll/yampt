@@ -1,9 +1,8 @@
 #pragma once
 
-#include "table_row.hpp"
 #include "../controller/row_filter.hpp"
+#include "table_row.hpp"
 #include <utility/tools.hpp>
-
 #include <map>
 #include <set>
 #include <string>

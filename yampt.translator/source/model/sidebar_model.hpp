@@ -2,7 +2,6 @@
 
 #include "menu_action.hpp"
 #include <model/file_list.hpp>
-
 #include <string>
 #include <vector>
 

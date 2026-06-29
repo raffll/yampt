@@ -1,9 +1,7 @@
 #include "main_window.hpp"
-
+#include <utility/tools.hpp>
 #include <QApplication>
 #include <QStyleFactory>
-
-#include <utility/tools.hpp>
 
 int main(int argc, char * argv[])
 {

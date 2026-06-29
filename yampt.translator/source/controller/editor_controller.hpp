@@ -1,13 +1,11 @@
 #pragma once
 
-#include "glossary.hpp"
-#include "edit_history.hpp"
-#include "byte_limit_validator.hpp"
 #include "../model/table_row.hpp"
-
+#include "byte_limit_validator.hpp"
+#include "edit_history.hpp"
+#include "glossary.hpp"
 #include <string>
 #include <vector>
-
 #include <QString>
 
 class dict_document_t;

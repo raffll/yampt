@@ -1,7 +1,7 @@
 #pragma once
 
-#include <string>
 #include <functional>
+#include <string>
 
 #pragma warning(push, 0)
 #include <yyjson.h>

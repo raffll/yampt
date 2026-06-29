@@ -1,8 +1,8 @@
 #pragma once
 
-#include "plugin_index.hpp"
 #include "conflict_slots.hpp"
 #include "conflict_types.hpp"
+#include "plugin_index.hpp"
 #include <memory>
 #include <string>
 #include <vector>

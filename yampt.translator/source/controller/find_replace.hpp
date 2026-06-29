@@ -1,12 +1,11 @@
 #pragma once
 
-#include "../model/row_source.hpp"
 #include "../model/dict_document.hpp"
-
-#include <QString>
+#include "../model/row_source.hpp"
 #include <optional>
 #include <regex>
 #include <string>
+#include <QString>
 
 class find_replace_t
 {

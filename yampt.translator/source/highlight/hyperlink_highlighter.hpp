@@ -1,8 +1,8 @@
 #pragma once
 
-#include <QSyntaxHighlighter>
 #include <string>
 #include <vector>
+#include <QSyntaxHighlighter>
 
 class hyperlink_highlighter_t : public QSyntaxHighlighter
 {

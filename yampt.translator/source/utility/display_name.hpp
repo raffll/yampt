@@ -2,7 +2,6 @@
 
 #include <model/dict_kind.hpp>
 #include <model/file_list.hpp>
-
 #include <string>
 
 class display_name_t

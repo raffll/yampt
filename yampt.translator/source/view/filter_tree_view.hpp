@@ -1,11 +1,11 @@
 #pragma once
 
 #include <utility/tools.hpp>
-#include <QWidget>
 #include <map>
 #include <set>
 #include <string>
 #include <vector>
+#include <QWidget>
 
 class QListWidget;
 class QListWidgetItem;

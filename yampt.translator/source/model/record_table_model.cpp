@@ -1,8 +1,8 @@
 #include "record_table_model.hpp"
 #include "../view/status_colors.hpp"
 #include "../view/status_display.hpp"
-#include <QString>
 #include <algorithm>
+#include <QString>
 
 static QString first_line(const std::string & text)
 {

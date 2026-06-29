@@ -1,11 +1,10 @@
 #pragma once
 
-#include <QWidget>
-#include <string>
-#include <vector>
-
 #include "../model/plugin_op.hpp"
 #include "../model/sidebar_model.hpp"
+#include <string>
+#include <vector>
+#include <QWidget>
 
 class QTreeWidget;
 class QTreeWidgetItem;

@@ -1,27 +1,27 @@
-#include "main_window.hpp"
-#include "highlight/annotation_highlighter.hpp"
-#include "highlight/composite_highlighter.hpp"
-#include "translate/ctranslate2_translator.hpp"
-#include "model/dict_document.hpp"
-#include "utility/display_name.hpp"
 #include "dialog/dict_selection_dialog.hpp"
-#include "view/editor_view.hpp"
-#include "view/filter_tree_view.hpp"
 #include "dialog/find_replace_dialog.hpp"
 #include "dialog/first_run_dialog.hpp"
+#include "dialog/spell_context_menu.hpp"
+#include "highlight/annotation_highlighter.hpp"
+#include "highlight/composite_highlighter.hpp"
+#include "main_window.hpp"
+#include "model/dict_document.hpp"
+#include "model/yaml_document.hpp"
+#include "translate/ctranslate2_translator.hpp"
+#include "utility/display_name.hpp"
+#include "view/annotations_view.hpp"
+#include "view/book_preview_view.hpp"
+#include "view/editor_view.hpp"
+#include "view/filter_tree_view.hpp"
+#include "view/history_view.hpp"
 #include "view/log_view.hpp"
 #include "view/record_table_view.hpp"
 #include "view/sidebar_view.hpp"
-#include "dialog/spell_context_menu.hpp"
 #include "view/status_filter_view.hpp"
 #include "view/translation_suggestion_view.hpp"
 #include "view/validation_view.hpp"
-#include "view/annotations_view.hpp"
-#include "view/book_preview_view.hpp"
-#include "view/history_view.hpp"
-#include "model/yaml_document.hpp"
 #include <utility/string_utils.hpp>
-
+#include <algorithm>
 #include <QAction>
 #include <QActionGroup>
 #include <QCoreApplication>
@@ -30,6 +30,7 @@
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QFileSystemWatcher>
+#include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
 #include <QMenu>
@@ -40,12 +41,9 @@
 #include <QSplitter>
 #include <QStatusBar>
 #include <QTabWidget>
-#include <QToolBar>
 #include <QTimer>
-#include <QHBoxLayout>
+#include <QToolBar>
 #include <QVBoxLayout>
-
-#include <algorithm>
 
 void main_window_t::setup_menu_bar()
 {

@@ -3,7 +3,6 @@
 #include "model/plugin_document.hpp"
 #include "model/yaml_document.hpp"
 #include <utility/string_utils.hpp>
-
 #include <algorithm>
 
 session_t::session_t(codepage_t codepage)

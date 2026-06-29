@@ -1,6 +1,5 @@
 #include <catch2/catch_all.hpp>
 #include <model/translation_engine.hpp>
-
 #include <iostream>
 
 static const char * model_path = "../../models/en-de";

@@ -1,7 +1,7 @@
 #include <catch2/catch_all.hpp>
-#include <utility/tools.hpp>
 #include <model/dict_merger.hpp>
 #include <model/script_parser.hpp>
+#include <utility/tools.hpp>
 
 static std::string size_byte(size_t value)
 {

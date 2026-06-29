@@ -1,7 +1,6 @@
 #include <catch2/catch_all.hpp>
 #include <io/editor_config.hpp>
 #include <utility/string_utils.hpp>
-
 #include <filesystem>
 #include <fstream>
 

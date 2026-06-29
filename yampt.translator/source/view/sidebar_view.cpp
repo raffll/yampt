@@ -1,7 +1,5 @@
 #include "sidebar_view.hpp"
-
 #include <set>
-
 #include <QFileInfo>
 #include <QMenu>
 #include <QTreeWidget>

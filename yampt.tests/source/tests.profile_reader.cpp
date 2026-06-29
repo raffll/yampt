@@ -1,7 +1,6 @@
 #include <catch2/catch_all.hpp>
 #include <io/profile_reader.hpp>
 #include <utility/string_utils.hpp>
-
 #include <filesystem>
 #include <fstream>
 

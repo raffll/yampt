@@ -1,10 +1,8 @@
 #include "record_table_view.hpp"
-
+#include "../model/record_table_model.hpp"
 #include <QContextMenuEvent>
 #include <QHeaderView>
 #include <QMenu>
-
-#include "../model/record_table_model.hpp"
 
 record_table_view_t::record_table_view_t(QWidget * parent)
     : QTableView(parent)

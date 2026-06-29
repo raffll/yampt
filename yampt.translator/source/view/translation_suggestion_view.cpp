@@ -3,7 +3,8 @@
 #include "../translate/deepl_translator.hpp"
 #include "../translate/google_translator.hpp"
 #include <utility/tools.hpp>
-
+#include <filesystem>
+#include <fstream>
 #include <QComboBox>
 #include <QCoreApplication>
 #include <QHBoxLayout>
@@ -13,9 +14,6 @@
 #include <QScrollBar>
 #include <QTextCursor>
 #include <QVBoxLayout>
-
-#include <filesystem>
-#include <fstream>
 
 translation_suggestion_view_t::translation_suggestion_view_t(QWidget * parent)
     : QWidget(parent)

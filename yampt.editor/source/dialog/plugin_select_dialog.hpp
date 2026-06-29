@@ -1,12 +1,12 @@
 #pragma once
 
+#include <string>
+#include <vector>
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QListWidget>
 #include <QPushButton>
 #include <QVBoxLayout>
-#include <string>
-#include <vector>
 
 class plugin_select_dialog_t : public QDialog
 {

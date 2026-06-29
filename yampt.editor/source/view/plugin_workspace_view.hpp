@@ -4,15 +4,15 @@
 #include "../model/view_tree_model.hpp"
 #include "messages_view.hpp"
 #include <plugin_scan/plugin_scan.hpp>
-#include <QWidget>
-#include <QTreeView>
-#include <QSplitter>
-#include <QPushButton>
 #include <QCheckBox>
 #include <QComboBox>
-#include <QLineEdit>
 #include <QLabel>
+#include <QLineEdit>
 #include <QMenu>
+#include <QPushButton>
+#include <QSplitter>
+#include <QTreeView>
+#include <QWidget>
 
 class QDropEvent;
 

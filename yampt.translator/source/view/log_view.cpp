@@ -1,5 +1,4 @@
 #include "log_view.hpp"
-
 #include <QDateTime>
 #include <QPlainTextEdit>
 #include <QScrollBar>

@@ -1,5 +1,4 @@
 #include "first_run_dialog.hpp"
-
 #include <QComboBox>
 #include <QDialogButtonBox>
 #include <QLabel>

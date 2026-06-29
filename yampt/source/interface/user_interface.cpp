@@ -1,8 +1,8 @@
 #include "user_interface.hpp"
-#include "../model/dict_creator.hpp"
-#include "../model/dict_merger.hpp"
 #include "../io/dict_reader.hpp"
 #include "../io/dict_writer.hpp"
+#include "../model/dict_creator.hpp"
+#include "../model/dict_merger.hpp"
 #include "../model/esm_converter.hpp"
 #include "../model/translation_engine.hpp"
 

@@ -1,8 +1,7 @@
 #include "sidebar_model.hpp"
-#include "../utility/display_name.hpp"
 #include "../session.hpp"
+#include "../utility/display_name.hpp"
 #include <utility/string_utils.hpp>
-
 #include <algorithm>
 #include <filesystem>
 #include <map>

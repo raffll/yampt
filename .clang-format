@@ -53,11 +53,14 @@ ForEachMacros:
   - foreach
   - Q_FOREACH
   - BOOST_FOREACH
-IncludeBlocks: Regroup
+IncludeBlocks: Merge
 IncludeCategories:
   - Regex: '^"'
     Priority: 1
     SortPriority: 1
+  - Regex: '^<(Q|Qt)'
+    Priority: 4
+    SortPriority: 4
   - Regex: '^<[^/]+>$'
     Priority: 3
     SortPriority: 3

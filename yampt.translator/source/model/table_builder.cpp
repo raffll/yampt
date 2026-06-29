@@ -1,8 +1,6 @@
 #include "table_builder.hpp"
-
-#include <unordered_map>
-
 #include <utility/record_types.hpp>
+#include <unordered_map>
 
 static const std::set<status_t> done_statuses = { status_t::translated };
 

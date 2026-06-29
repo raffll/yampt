@@ -1,9 +1,9 @@
 #pragma once
 
-#include <utility/tools.hpp>
 #include "../controller/glossary.hpp"
-#include <QWidget>
+#include <utility/tools.hpp>
 #include <vector>
+#include <QWidget>
 
 class QListWidget;
 class QListWidgetItem;

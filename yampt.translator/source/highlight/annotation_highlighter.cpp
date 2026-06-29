@@ -1,7 +1,7 @@
 #include "annotation_highlighter.hpp"
 #include "../controller/glossary.hpp"
-#include <QTextCharFormat>
 #include <algorithm>
+#include <QTextCharFormat>
 
 annotation_highlighter_t::annotation_highlighter_t(QTextDocument * parent)
     : QSyntaxHighlighter(parent)

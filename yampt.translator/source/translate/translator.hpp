@@ -1,7 +1,7 @@
 #pragma once
 
-#include <QMetaType>
 #include <string>
+#include <QMetaType>
 
 struct translation_suggestion_t
 {

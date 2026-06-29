@@ -1,6 +1,5 @@
 #include "file_list.hpp"
 #include "../utility/string_utils.hpp"
-
 #include <algorithm>
 #include <filesystem>
 

@@ -1,5 +1,4 @@
 #include "book_preview_view.hpp"
-
 #include <QRegularExpression>
 #include <QSplitter>
 #include <QTextBrowser>

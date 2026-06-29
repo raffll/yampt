@@ -1,8 +1,7 @@
 #pragma once
 
-#include <utility/tools.hpp>
 #include "syntax_highlighter.hpp"
-
+#include <utility/tools.hpp>
 #include <QSyntaxHighlighter>
 #include <QTextCharFormat>
 

@@ -1,11 +1,10 @@
 #include <catch2/catch_all.hpp>
-#include <rapidcheck.h>
-#include <rapidcheck/catch.h>
-#include <model/dict_document.hpp>
 #include <io/dict_writer.hpp>
+#include <model/dict_document.hpp>
+#include <rapidcheck/catch.h>
 #include <utility/string_utils.hpp>
-
 #include <filesystem>
+#include <rapidcheck.h>
 #include <set>
 
 namespace {
@@ -130,7 +129,6 @@ TEST_CASE("dict_document_t, commit_edit modifies data", "[i]")
 }
 
 #include <model/yaml_document.hpp>
-
 #include <filesystem>
 #include <fstream>
 

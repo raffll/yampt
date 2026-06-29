@@ -1,7 +1,7 @@
 #include "conflict_slots.hpp"
-#include <unordered_map>
-#include <set>
 #include <cstring>
+#include <set>
+#include <unordered_map>
 
 struct sub_slot_t
 {

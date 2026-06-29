@@ -1,6 +1,6 @@
 #include <catch2/catch_all.hpp>
-#include <model/esm_converter.hpp>
 #include <io/dict_writer.hpp>
+#include <model/esm_converter.hpp>
 
 static std::string get_temp_path(const std::string & filename)
 {

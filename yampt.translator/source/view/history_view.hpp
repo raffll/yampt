@@ -1,8 +1,8 @@
 #pragma once
 
 #include <utility/tools.hpp>
-#include <QWidget>
 #include <vector>
+#include <QWidget>
 
 struct history_entry_t;
 

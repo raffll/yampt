@@ -1,5 +1,4 @@
 #include "find_replace.hpp"
-
 #include <QString>
 
 find_replace_t::find_replace_t(row_source_t & source, document_t *& active_doc)

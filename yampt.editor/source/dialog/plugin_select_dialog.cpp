@@ -1,7 +1,6 @@
 #include "plugin_select_dialog.hpp"
-
-#include <QHBoxLayout>
 #include <filesystem>
+#include <QHBoxLayout>
 
 plugin_select_dialog_t::plugin_select_dialog_t(const std::vector<std::string> & available_files, QWidget * parent)
     : QDialog(parent)

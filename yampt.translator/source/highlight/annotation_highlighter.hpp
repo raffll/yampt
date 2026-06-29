@@ -1,9 +1,9 @@
 #pragma once
 
-#include <utility/tools.hpp>
 #include "../controller/glossary.hpp"
-#include <QSyntaxHighlighter>
+#include <utility/tools.hpp>
 #include <vector>
+#include <QSyntaxHighlighter>
 
 class glossary_t;
 

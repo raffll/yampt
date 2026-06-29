@@ -1,7 +1,6 @@
 #pragma once
 
 #include <utility/tools.hpp>
-
 #include <QPlainTextEdit>
 
 class QKeyEvent;

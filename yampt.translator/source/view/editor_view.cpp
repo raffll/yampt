@@ -1,6 +1,6 @@
 #include "editor_view.hpp"
 #include "line_number_gutter.hpp"
-
+#include <algorithm>
 #include <QFont>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -10,8 +10,6 @@
 #include <QString>
 #include <QTextEdit>
 #include <QVBoxLayout>
-
-#include <algorithm>
 
 editor_view_t::editor_view_t(QWidget * parent)
     : QWidget(parent)

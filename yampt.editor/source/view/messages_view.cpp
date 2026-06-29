@@ -1,7 +1,7 @@
 #include "messages_view.hpp"
+#include <cstdio>
 #include <QFont>
 #include <QTextCursor>
-#include <cstdio>
 
 messages_view_t::messages_view_t(QWidget * parent)
     : QWidget(parent)

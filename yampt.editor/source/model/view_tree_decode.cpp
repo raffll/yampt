@@ -1,9 +1,9 @@
 #include "view_tree_model.hpp"
-#include <plugin_scan/view_tree_format.hpp>
 #include <plugin_scan/conflict_compute.hpp>
-#include <cstring>
-#include <cstdio>
+#include <plugin_scan/view_tree_format.hpp>
 #include <algorithm>
+#include <cstdio>
+#include <cstring>
 
 static bool check_all_identical(const std::vector<std::string> & values)
 {

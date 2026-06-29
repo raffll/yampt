@@ -1,6 +1,5 @@
 #define CATCH_CONFIG_RUNNER
 #include <catch2/catch_all.hpp>
-
 #include <utility/tools.hpp>
 #include <QCoreApplication>
 

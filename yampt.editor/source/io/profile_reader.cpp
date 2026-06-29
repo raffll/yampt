@@ -1,6 +1,5 @@
 #include "profile_reader.hpp"
 #include <utility/string_utils.hpp>
-
 #include <filesystem>
 #include <fstream>
 #include <string>

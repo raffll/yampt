@@ -1,9 +1,8 @@
 #include <catch2/catch_all.hpp>
 #include <model/sidebar_model.hpp>
-#include <session.hpp>
-
 #include <filesystem>
 #include <fstream>
+#include <session.hpp>
 
 TEST_CASE("derive_display_name, plugin with language tag", "[u]")
 {

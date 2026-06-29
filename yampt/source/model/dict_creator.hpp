@@ -1,10 +1,9 @@
 #pragma once
 
-#include <memory>
-
+#include "../io/esm_reader.hpp"
 #include "../utility/includes.hpp"
 #include "../utility/tools.hpp"
-#include "../io/esm_reader.hpp"
+#include <memory>
 
 class Hunspell;
 class translation_engine_t;

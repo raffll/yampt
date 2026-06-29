@@ -1,5 +1,4 @@
 #include "filter_dialog.hpp"
-
 #include <QVBoxLayout>
 
 filter_dialog_t::filter_dialog_t(const std::vector<std::string> & available_types, QWidget * parent)

@@ -1,5 +1,4 @@
 #include "editor_window.hpp"
-
 #include <QApplication>
 #include <QStyleFactory>
 

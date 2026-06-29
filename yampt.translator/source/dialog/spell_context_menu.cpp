@@ -1,11 +1,10 @@
 #include "spell_context_menu.hpp"
-#include "../view/translation_edit_view.hpp"
 #include "../utility/spell_checker.hpp"
-
+#include "../view/translation_edit_view.hpp"
+#include <QAction>
+#include <QMenu>
 #include <QSyntaxHighlighter>
 #include <QTextCursor>
-#include <QMenu>
-#include <QAction>
 
 spell_context_menu_t::spell_context_menu_t(spell_checker_t * checker, QSyntaxHighlighter * highlighter)
     : checker_(checker)

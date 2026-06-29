@@ -1,9 +1,8 @@
 #pragma once
 
-#include <string>
-
-#include <utility/tools.hpp>
 #include <io/codepage.hpp>
+#include <utility/tools.hpp>
+#include <string>
 
 enum class validation_level_t
 {

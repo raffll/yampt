@@ -1,15 +1,13 @@
 #include "annotations_view.hpp"
 #include <utility/string_utils.hpp>
-
+#include <algorithm>
+#include <set>
 #include <QApplication>
 #include <QClipboard>
 #include <QHBoxLayout>
 #include <QListWidget>
 #include <QPushButton>
 #include <QVBoxLayout>
-
-#include <algorithm>
-#include <set>
 
 annotations_view_t::annotations_view_t(QWidget * parent)
     : QWidget(parent)

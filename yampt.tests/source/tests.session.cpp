@@ -1,13 +1,12 @@
 #include <catch2/catch_all.hpp>
-#include <session.hpp>
+#include <io/dict_writer.hpp>
 #include <model/dict_document.hpp>
 #include <model/plugin_document.hpp>
 #include <model/yaml_document.hpp>
-#include <io/dict_writer.hpp>
 #include <utility/string_utils.hpp>
-
 #include <filesystem>
 #include <fstream>
+#include <session.hpp>
 
 namespace {
 

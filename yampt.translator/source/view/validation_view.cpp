@@ -1,5 +1,4 @@
 #include "validation_view.hpp"
-
 #include <QHBoxLayout>
 #include <QLabel>
 

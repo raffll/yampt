@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../utility/tools.hpp"
-#include <string>
 #include <cstddef>
+#include <string>
 
 struct sub_record_view_t
 {

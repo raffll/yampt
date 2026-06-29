@@ -2,7 +2,6 @@
 
 #include "../model/table_builder.hpp"
 #include <model/dict_kind.hpp>
-
 #include <string>
 #include <vector>
 

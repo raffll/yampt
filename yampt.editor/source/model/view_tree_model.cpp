@@ -1,12 +1,12 @@
 #include "view_tree_model.hpp"
-#include <plugin_scan/view_tree_format.hpp>
 #include <plugin_scan/conflict_compute.hpp>
+#include <plugin_scan/view_tree_format.hpp>
+#include <algorithm>
+#include <cstdio>
+#include <cstring>
+#include <map>
 #include <QBrush>
 #include <QMimeData>
-#include <cstring>
-#include <cstdio>
-#include <algorithm>
-#include <map>
 
 view_tree_model_t::view_tree_model_t(QObject * parent)
     : QAbstractItemModel(parent)

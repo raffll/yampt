@@ -1,6 +1,5 @@
 #include "editor_window.hpp"
 #include "view/plugin_workspace_view.hpp"
-
 #include <QAction>
 #include <QCloseEvent>
 #include <QMenuBar>

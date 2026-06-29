@@ -2,10 +2,9 @@
 
 #include "translator.hpp"
 #include <model/translation_engine.hpp>
-
-#include <QObject>
 #include <functional>
 #include <string>
+#include <QObject>
 
 class ctranslate2_translator_t : public QObject, public translator_t
 {

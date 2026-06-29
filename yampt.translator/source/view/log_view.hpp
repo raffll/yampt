@@ -1,7 +1,7 @@
 #pragma once
 
-#include <QWidget>
 #include <string>
+#include <QWidget>
 
 class QPlainTextEdit;
 

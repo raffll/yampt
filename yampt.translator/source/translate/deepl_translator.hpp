@@ -1,9 +1,8 @@
 #pragma once
 
 #include "translator.hpp"
-
-#include <QObject>
 #include <string>
+#include <QObject>
 
 class QNetworkAccessManager;
 class QNetworkReply;

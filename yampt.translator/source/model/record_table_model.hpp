@@ -2,8 +2,8 @@
 
 #include "row_source.hpp"
 #include "table_row.hpp"
-#include <QAbstractTableModel>
 #include <vector>
+#include <QAbstractTableModel>
 
 class record_table_model_t : public QAbstractTableModel, public row_source_t
 {

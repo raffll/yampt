@@ -1,11 +1,10 @@
 #pragma once
 
 #include "../translate/translator.hpp"
-
-#include <QWidget>
 #include <memory>
 #include <string>
 #include <vector>
+#include <QWidget>
 
 class QComboBox;
 class QLabel;

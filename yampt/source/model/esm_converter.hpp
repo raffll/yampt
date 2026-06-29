@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../utility/includes.hpp"
-#include "../utility/tools.hpp"
 #include "../io/codepage.hpp"
 #include "../io/esm_reader.hpp"
+#include "../utility/includes.hpp"
+#include "../utility/tools.hpp"
 #include "dict_merger.hpp"
 
 class esm_converter_t

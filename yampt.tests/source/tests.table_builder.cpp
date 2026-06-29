@@ -47,7 +47,8 @@ TEST_CASE("build_filtered_rows, empty dict returns empty result", "[u]")
 
 TEST_CASE("build_filtered_rows, single cell entry passes with no filters", "[u]")
 {
-	auto dict = make_single_entry_dict(tools_t::rec_type_t::cell, "key_hash_01", "Balmora", "Balmora", status_t::translated);
+	auto dict =
+	    make_single_entry_dict(tools_t::rec_type_t::cell, "key_hash_01", "Balmora", "Balmora", status_t::translated);
 	row_filter_t search;
 	std::set<tools_t::rec_type_t> type_filter;
 	std::set<std::string> sub_type_filter;
@@ -62,7 +63,8 @@ TEST_CASE("build_filtered_rows, single cell entry passes with no filters", "[u]"
 
 TEST_CASE("build_filtered_rows, type filter excludes non-matching types", "[u]")
 {
-	auto dict = make_single_entry_dict(tools_t::rec_type_t::cell, "key_hash_01", "Balmora", "Balmora", status_t::translated);
+	auto dict =
+	    make_single_entry_dict(tools_t::rec_type_t::cell, "key_hash_01", "Balmora", "Balmora", status_t::translated);
 	row_filter_t search;
 	std::set<tools_t::rec_type_t> type_filter = { tools_t::rec_type_t::fnam };
 	std::set<std::string> sub_type_filter;
@@ -75,7 +77,8 @@ TEST_CASE("build_filtered_rows, type filter excludes non-matching types", "[u]")
 
 TEST_CASE("build_filtered_rows, type filter includes matching type", "[u]")
 {
-	auto dict = make_single_entry_dict(tools_t::rec_type_t::cell, "key_hash_01", "Balmora", "Balmora", status_t::translated);
+	auto dict =
+	    make_single_entry_dict(tools_t::rec_type_t::cell, "key_hash_01", "Balmora", "Balmora", status_t::translated);
 	row_filter_t search;
 	std::set<tools_t::rec_type_t> type_filter = { tools_t::rec_type_t::cell };
 	std::set<std::string> sub_type_filter;
@@ -88,7 +91,8 @@ TEST_CASE("build_filtered_rows, type filter includes matching type", "[u]")
 
 TEST_CASE("build_filtered_rows, status filter excludes non-matching status", "[u]")
 {
-	auto dict = make_single_entry_dict(tools_t::rec_type_t::cell, "key_hash_01", "Balmora", "Balmora", status_t::untranslated);
+	auto dict =
+	    make_single_entry_dict(tools_t::rec_type_t::cell, "key_hash_01", "Balmora", "Balmora", status_t::untranslated);
 	row_filter_t search;
 	std::set<tools_t::rec_type_t> type_filter;
 	std::set<std::string> sub_type_filter;
@@ -101,7 +105,8 @@ TEST_CASE("build_filtered_rows, status filter excludes non-matching status", "[u
 
 TEST_CASE("build_filtered_rows, status filter includes matching status", "[u]")
 {
-	auto dict = make_single_entry_dict(tools_t::rec_type_t::cell, "key_hash_01", "Balmora", "Balmora", status_t::translated);
+	auto dict =
+	    make_single_entry_dict(tools_t::rec_type_t::cell, "key_hash_01", "Balmora", "Balmora", status_t::translated);
 	row_filter_t search;
 	std::set<tools_t::rec_type_t> type_filter;
 	std::set<std::string> sub_type_filter;
@@ -114,7 +119,8 @@ TEST_CASE("build_filtered_rows, status filter includes matching status", "[u]")
 
 TEST_CASE("build_filtered_rows, search filter excludes non-matching text", "[u]")
 {
-	auto dict = make_single_entry_dict(tools_t::rec_type_t::cell, "key_hash_01", "Balmora", "Balmora", status_t::translated);
+	auto dict =
+	    make_single_entry_dict(tools_t::rec_type_t::cell, "key_hash_01", "Balmora", "Balmora", status_t::translated);
 	row_filter_t search;
 	row_filter_t::config_t config;
 	config.query = "Vivec";
@@ -130,7 +136,8 @@ TEST_CASE("build_filtered_rows, search filter excludes non-matching text", "[u]"
 
 TEST_CASE("build_filtered_rows, search filter includes matching text", "[u]")
 {
-	auto dict = make_single_entry_dict(tools_t::rec_type_t::cell, "key_hash_01", "Balmora", "Balmora", status_t::translated);
+	auto dict =
+	    make_single_entry_dict(tools_t::rec_type_t::cell, "key_hash_01", "Balmora", "Balmora", status_t::translated);
 	row_filter_t search;
 	row_filter_t::config_t config;
 	config.query = "Balmora";

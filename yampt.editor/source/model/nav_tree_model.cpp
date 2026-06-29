@@ -1,10 +1,10 @@
 #include "nav_tree_model.hpp"
-#include <QBrush>
 #include <algorithm>
 #include <cctype>
 #include <cstdio>
 #include <cstring>
 #include <map>
+#include <QBrush>
 
 static int natural_compare(const std::string & a, const std::string & b)
 {

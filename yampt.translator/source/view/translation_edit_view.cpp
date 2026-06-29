@@ -1,5 +1,4 @@
 #include "translation_edit_view.hpp"
-
 #include <QKeyEvent>
 #include <QMimeData>
 #include <QPainter>

@@ -1,12 +1,12 @@
 #pragma once
 
-#include <plugin_scan/plugin_scan.hpp>
 #include <plugin_scan/conflict_types.hpp>
-#include <QAbstractItemModel>
-#include <QMimeData>
+#include <plugin_scan/plugin_scan.hpp>
 #include <set>
 #include <string>
 #include <vector>
+#include <QAbstractItemModel>
+#include <QMimeData>
 
 class nav_tree_model_t : public QAbstractItemModel
 {

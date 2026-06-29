@@ -1,7 +1,7 @@
 #include <catch2/catch_all.hpp>
 #include <plugin_scan/conflict_slots.hpp>
-#include <string>
 #include <cstring>
+#include <string>
 
 static std::string make_sub_record(const std::string & type, const std::string & data)
 {
