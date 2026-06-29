@@ -98,7 +98,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)source;$(SolutionDir)yampt\source;$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -114,7 +114,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)source;$(SolutionDir)yampt\source;$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -132,7 +132,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)source;$(SolutionDir)yampt\source;$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -152,7 +152,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)source;$(SolutionDir)yampt\source;$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -163,82 +163,82 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="editor_window.cpp" />
-    <ClCompile Include="view\editor_tab.cpp" />
-    <ClCompile Include="model\nav_tree_model.cpp" />
-    <ClCompile Include="model\view_tree_model.cpp" />
-    <ClCompile Include="model\view_tree_decode.cpp" />
-    <ClCompile Include="..\yampt\plugin_scan\view_tree_format.cpp" />
-    <ClCompile Include="dialog\plugin_select_dialog.cpp" />
-    <ClCompile Include="dialog\filter_dialog.cpp" />
-    <ClCompile Include="view\messages_panel.cpp" />
-    <ClCompile Include="..\yampt\utility\tools.cpp" />
-    <ClCompile Include="..\yampt\io\esm_reader.cpp" />
-    <ClCompile Include="..\yampt\io\codepage.cpp" />
-    <ClCompile Include="..\yampt\io\file_list.cpp" />
-    <ClCompile Include="..\yampt\plugin_scan\sub_record_schema.cpp" />
-    <ClCompile Include="..\yampt\plugin_scan\plugin_index.cpp" />
-    <ClCompile Include="..\yampt\plugin_scan\plugin_scan.cpp" />
-    <ClCompile Include="..\yampt\plugin_scan\conflict_compute.cpp" />
-    <ClCompile Include="..\yampt\plugin_scan\conflict_slots.cpp" />
-    <ClCompile Include="io\profile_reader.cpp" />
+    <ClCompile Include="source\main.cpp" />
+    <ClCompile Include="source\editor_window.cpp" />
+    <ClCompile Include="source\view\plugin_workspace_view.cpp" />
+    <ClCompile Include="source\model\nav_tree_model.cpp" />
+    <ClCompile Include="source\model\view_tree_model.cpp" />
+    <ClCompile Include="source\model\view_tree_decode.cpp" />
+    <ClCompile Include="..\yampt\source\plugin_scan\view_tree_format.cpp" />
+    <ClCompile Include="source\dialog\plugin_select_dialog.cpp" />
+    <ClCompile Include="source\dialog\filter_dialog.cpp" />
+    <ClCompile Include="source\view\messages_view.cpp" />
+    <ClCompile Include="..\yampt\source\utility\tools.cpp" />
+    <ClCompile Include="..\yampt\source\io\esm_reader.cpp" />
+    <ClCompile Include="..\yampt\source\io\codepage.cpp" />
+    <ClCompile Include="..\yampt\source\model\file_list.cpp" />
+    <ClCompile Include="..\yampt\source\plugin_scan\sub_record_schema.cpp" />
+    <ClCompile Include="..\yampt\source\plugin_scan\plugin_index.cpp" />
+    <ClCompile Include="..\yampt\source\plugin_scan\plugin_scan.cpp" />
+    <ClCompile Include="..\yampt\source\plugin_scan\conflict_compute.cpp" />
+    <ClCompile Include="..\yampt\source\plugin_scan\conflict_slots.cpp" />
+    <ClCompile Include="source\io\profile_reader.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\yampt\plugin_scan\view_tree_format.hpp" />
-    <ClInclude Include="..\yampt\utility\tools.hpp" />
-    <ClInclude Include="..\yampt\io\codepage.hpp" />
-    <ClInclude Include="..\yampt\io\esm_reader.hpp" />
-    <ClInclude Include="..\yampt\utility\includes.hpp" />
-    <ClInclude Include="..\yampt\io\file_list.hpp" />
-    <ClInclude Include="..\yampt\plugin_scan\conflict_enums.hpp" />
-    <ClInclude Include="..\yampt\plugin_scan\conflict_types.hpp" />
-    <ClInclude Include="..\yampt\plugin_scan\conflict_slots.hpp" />
-    <ClInclude Include="..\yampt\plugin_scan\sub_record_iter.hpp" />
-    <ClInclude Include="..\yampt\plugin_scan\sub_record_schema.hpp" />
-    <ClInclude Include="..\yampt\plugin_scan\plugin_index.hpp" />
-    <ClInclude Include="..\yampt\plugin_scan\plugin_scan.hpp" />
-    <ClInclude Include="..\yampt\plugin_scan\conflict_compute.hpp" />
-    <ClInclude Include="io\profile_reader.hpp" />
+    <ClInclude Include="..\yampt\source\plugin_scan\view_tree_format.hpp" />
+    <ClInclude Include="..\yampt\source\utility\tools.hpp" />
+    <ClInclude Include="..\yampt\source\io\codepage.hpp" />
+    <ClInclude Include="..\yampt\source\io\esm_reader.hpp" />
+    <ClInclude Include="..\yampt\source\utility\includes.hpp" />
+    <ClInclude Include="..\yampt\source\model\file_list.hpp" />
+    <ClInclude Include="..\yampt\source\plugin_scan\conflict_enums.hpp" />
+    <ClInclude Include="..\yampt\source\plugin_scan\conflict_types.hpp" />
+    <ClInclude Include="..\yampt\source\plugin_scan\conflict_slots.hpp" />
+    <ClInclude Include="..\yampt\source\plugin_scan\sub_record_iter.hpp" />
+    <ClInclude Include="..\yampt\source\plugin_scan\sub_record_schema.hpp" />
+    <ClInclude Include="..\yampt\source\plugin_scan\plugin_index.hpp" />
+    <ClInclude Include="..\yampt\source\plugin_scan\plugin_scan.hpp" />
+    <ClInclude Include="..\yampt\source\plugin_scan\conflict_compute.hpp" />
+    <ClInclude Include="source\io\profile_reader.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="editor_window.hpp">
+    <CustomBuild Include="source\editor_window.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
-    <CustomBuild Include="view\editor_tab.hpp">
+    <CustomBuild Include="source\view\plugin_workspace_view.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
-    <CustomBuild Include="model\nav_tree_model.hpp">
+    <CustomBuild Include="source\model\nav_tree_model.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
-    <CustomBuild Include="model\view_tree_model.hpp">
+    <CustomBuild Include="source\model\view_tree_model.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
-    <CustomBuild Include="dialog\plugin_select_dialog.hpp">
+    <CustomBuild Include="source\dialog\plugin_select_dialog.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
-    <CustomBuild Include="dialog\filter_dialog.hpp">
+    <CustomBuild Include="source\dialog\filter_dialog.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
-    <CustomBuild Include="view\messages_panel.hpp">
+    <CustomBuild Include="source\view\messages_view.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
@@ -247,12 +247,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(IntDir)moc_editor_window.cpp" />
-    <ClCompile Include="$(IntDir)moc_editor_tab.cpp" />
+    <ClCompile Include="$(IntDir)moc_plugin_workspace_view.cpp" />
     <ClCompile Include="$(IntDir)moc_nav_tree_model.cpp" />
     <ClCompile Include="$(IntDir)moc_view_tree_model.cpp" />
     <ClCompile Include="$(IntDir)moc_plugin_select_dialog.cpp" />
     <ClCompile Include="$(IntDir)moc_filter_dialog.cpp" />
-    <ClCompile Include="$(IntDir)moc_messages_panel.cpp" />
+    <ClCompile Include="$(IntDir)moc_messages_view.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

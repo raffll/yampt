@@ -1,236 +1,73 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="yampt">
-      <UniqueIdentifier>{A1000001-0000-0000-0000-000000000001}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="model">
-      <UniqueIdentifier>{A1000003-0000-0000-0000-000000000003}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="view">
-      <UniqueIdentifier>{A1000004-0000-0000-0000-000000000004}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="controller">
-      <UniqueIdentifier>{A1000005-0000-0000-0000-000000000005}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="dialog">
-      <UniqueIdentifier>{A1000006-0000-0000-0000-000000000006}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="highlight">
-      <UniqueIdentifier>{A1000007-0000-0000-0000-000000000007}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="provider">
-      <UniqueIdentifier>{A1000008-0000-0000-0000-000000000008}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="utility">
-      <UniqueIdentifier>{A1000009-0000-0000-0000-000000000009}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="io">
-      <UniqueIdentifier>{A100000A-0000-0000-0000-00000000000A}</UniqueIdentifier>
-    </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="main_window.cpp" />
-    <ClCompile Include="main_window_setup.cpp" />
-    <ClCompile Include="session.cpp" />
-    <ClCompile Include="model\record_table_model.cpp">
-      <Filter>model</Filter>
-    </ClCompile>
-    <ClCompile Include="model\sidebar_model.cpp">
-      <Filter>model</Filter>
-    </ClCompile>
-    <ClCompile Include="model\dict_document.cpp">
-      <Filter>model</Filter>
-    </ClCompile>
-    <ClCompile Include="model\yaml_document.cpp">
-      <Filter>model</Filter>
-    </ClCompile>
-    <ClCompile Include="model\table_builder.cpp">
-      <Filter>model</Filter>
-    </ClCompile>
-    <ClCompile Include="view\record_table_view.cpp">
-      <Filter>view</Filter>
-    </ClCompile>
-    <ClCompile Include="view\table_display.cpp">
-      <Filter>view</Filter>
-    </ClCompile>
-    <ClCompile Include="view\sidebar_widget.cpp">
-      <Filter>view</Filter>
-    </ClCompile>
-    <ClCompile Include="view\editor_panel.cpp">
-      <Filter>view</Filter>
-    </ClCompile>
-    <ClCompile Include="view\editor_text_edit.cpp">
-      <Filter>view</Filter>
-    </ClCompile>
-    <ClCompile Include="view\line_number_gutter.cpp">
-      <Filter>view</Filter>
-    </ClCompile>
-    <ClCompile Include="view\annotations_panel.cpp">
-      <Filter>view</Filter>
-    </ClCompile>
-    <ClCompile Include="view\history_panel.cpp">
-      <Filter>view</Filter>
-    </ClCompile>
-    <ClCompile Include="view\log_tab.cpp">
-      <Filter>view</Filter>
-    </ClCompile>
-    <ClCompile Include="view\book_preview.cpp">
-      <Filter>view</Filter>
-    </ClCompile>
-    <ClCompile Include="view\validation_indicator.cpp">
-      <Filter>view</Filter>
-    </ClCompile>
-    <ClCompile Include="view\filter_tree.cpp">
-      <Filter>view</Filter>
-    </ClCompile>
-    <ClCompile Include="view\status_filter_bar.cpp">
-      <Filter>view</Filter>
-    </ClCompile>
-    <ClCompile Include="view\translation_suggestion_tab.cpp">
-      <Filter>view</Filter>
-    </ClCompile>
-    <ClCompile Include="controller\editor_controller.cpp">
-      <Filter>controller</Filter>
-    </ClCompile>
-    <ClCompile Include="controller\editor_config.cpp">
-      <Filter>controller</Filter>
-    </ClCompile>
-    <ClCompile Include="controller\search_engine.cpp">
-      <Filter>controller</Filter>
-    </ClCompile>
-    <ClCompile Include="controller\search_manager.cpp">
-      <Filter>controller</Filter>
-    </ClCompile>
-    <ClCompile Include="controller\validation_manager.cpp">
-      <Filter>controller</Filter>
-    </ClCompile>
-    <ClCompile Include="controller\annotation_manager.cpp">
-      <Filter>controller</Filter>
-    </ClCompile>
-    <ClCompile Include="controller\history_manager.cpp">
-      <Filter>controller</Filter>
-    </ClCompile>
-    <ClCompile Include="controller\find_replace_service.cpp">
-      <Filter>controller</Filter>
-    </ClCompile>
-    <ClCompile Include="controller\operation_executor.cpp">
-      <Filter>controller</Filter>
-    </ClCompile>
-    <ClCompile Include="dialog\find_replace_dialog.cpp">
-      <Filter>dialog</Filter>
-    </ClCompile>
-    <ClCompile Include="dialog\dict_selection_dialog.cpp">
-      <Filter>dialog</Filter>
-    </ClCompile>
-    <ClCompile Include="dialog\first_run_dialog.cpp">
-      <Filter>dialog</Filter>
-    </ClCompile>
-    <ClCompile Include="dialog\spell_context_menu.cpp">
-      <Filter>dialog</Filter>
-    </ClCompile>
-    <ClCompile Include="highlight\syntax_highlighter.cpp">
-      <Filter>highlight</Filter>
-    </ClCompile>
-    <ClCompile Include="highlight\composite_highlighter.cpp">
-      <Filter>highlight</Filter>
-    </ClCompile>
-    <ClCompile Include="highlight\annotation_highlighter.cpp">
-      <Filter>highlight</Filter>
-    </ClCompile>
-    <ClCompile Include="highlight\hyperlink_highlighter.cpp">
-      <Filter>highlight</Filter>
-    </ClCompile>
-    <ClCompile Include="provider\ctranslate2_provider.cpp">
-      <Filter>provider</Filter>
-    </ClCompile>
-    <ClCompile Include="provider\deepl_provider.cpp">
-      <Filter>provider</Filter>
-    </ClCompile>
-    <ClCompile Include="provider\google_provider.cpp">
-      <Filter>provider</Filter>
-    </ClCompile>
-    <ClCompile Include="provider\model_downloader.cpp">
-      <Filter>provider</Filter>
-    </ClCompile>
-    <ClCompile Include="utility\spell_checker.cpp">
-      <Filter>utility</Filter>
-    </ClCompile>
-    <ClCompile Include="utility\grammar_checker.cpp">
-      <Filter>utility</Filter>
-    </ClCompile>
-    <ClCompile Include="utility\display_name.cpp">
-      <Filter>utility</Filter>
-    </ClCompile>
-    <ClCompile Include="io\yaml_l10n_reader.cpp">
-      <Filter>io</Filter>
-    </ClCompile>
-    <ClCompile Include="io\yaml_l10n_writer.cpp">
-      <Filter>io</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\utility\tools.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\io\dict_reader.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\io\dict_writer.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\io\codepage.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\io\esm_reader.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\io\file_list.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\model\dict_merger.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\model\dict_creator.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\model\dict_creator_single.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\model\dict_creator_base.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\model\dict_creator_base_ordered.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\model\esm_converter.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\model\script_parser.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\model\scdt_patcher.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\model\translation_engine.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\plugin_scan\sub_record_schema.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\plugin_scan\plugin_index.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\plugin_scan\plugin_scan.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\plugin_scan\conflict_compute.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\plugin_scan\conflict_slots.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\plugin_scan\view_tree_format.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
+    <ClCompile Include="source\main.cpp" />
+    <ClCompile Include="source\main_window.cpp" />
+    <ClCompile Include="source\main_window_setup.cpp" />
+    <ClCompile Include="source\session.cpp" />
+    <ClCompile Include="source\model\record_table_model.cpp" />
+    <ClCompile Include="source\model\sidebar_model.cpp" />
+    <ClCompile Include="source\model\dict_document.cpp" />
+    <ClCompile Include="source\model\yaml_document.cpp" />
+    <ClCompile Include="source\model\table_builder.cpp" />
+    <ClCompile Include="source\view\record_table_view.cpp" />
+    <ClCompile Include="source\view\table_view.cpp" />
+    <ClCompile Include="source\view\sidebar_view.cpp" />
+    <ClCompile Include="source\view\editor_view.cpp" />
+    <ClCompile Include="source\view\translation_edit_view.cpp" />
+    <ClCompile Include="source\view\line_number_gutter.cpp" />
+    <ClCompile Include="source\view\annotations_view.cpp" />
+    <ClCompile Include="source\view\history_view.cpp" />
+    <ClCompile Include="source\view\log_view.cpp" />
+    <ClCompile Include="source\view\book_preview_view.cpp" />
+    <ClCompile Include="source\view\validation_view.cpp" />
+    <ClCompile Include="source\view\filter_tree_view.cpp" />
+    <ClCompile Include="source\view\status_filter_view.cpp" />
+    <ClCompile Include="source\view\translation_suggestion_view.cpp" />
+    <ClCompile Include="source\controller\editor_controller.cpp" />
+    <ClCompile Include="source\controller\row_filter.cpp" />
+    <ClCompile Include="source\controller\byte_limit_validator.cpp" />
+    <ClCompile Include="source\controller\glossary.cpp" />
+    <ClCompile Include="source\controller\edit_history.cpp" />
+    <ClCompile Include="source\controller\find_replace.cpp" />
+    <ClCompile Include="source\controller\operation_executor.cpp" />
+    <ClCompile Include="source\controller\grammar_checker.cpp" />
+    <ClCompile Include="source\dialog\find_replace_dialog.cpp" />
+    <ClCompile Include="source\dialog\dict_selection_dialog.cpp" />
+    <ClCompile Include="source\dialog\first_run_dialog.cpp" />
+    <ClCompile Include="source\dialog\spell_context_menu.cpp" />
+    <ClCompile Include="source\highlight\syntax_highlighter.cpp" />
+    <ClCompile Include="source\highlight\composite_highlighter.cpp" />
+    <ClCompile Include="source\highlight\annotation_highlighter.cpp" />
+    <ClCompile Include="source\highlight\hyperlink_highlighter.cpp" />
+    <ClCompile Include="source\translate\ctranslate2_translator.cpp" />
+    <ClCompile Include="source\translate\deepl_translator.cpp" />
+    <ClCompile Include="source\translate\google_translator.cpp" />
+    <ClCompile Include="source\utility\spell_checker.cpp" />
+    <ClCompile Include="source\utility\display_name.cpp" />
+    <ClCompile Include="source\io\editor_config.cpp" />
+    <ClCompile Include="source\io\yaml_l10n_reader.cpp" />
+    <ClCompile Include="source\io\yaml_l10n_writer.cpp" />
+    <ClCompile Include="..\yampt\source\utility\tools.cpp" />
+    <ClCompile Include="..\yampt\source\io\dict_reader.cpp" />
+    <ClCompile Include="..\yampt\source\io\dict_writer.cpp" />
+    <ClCompile Include="..\yampt\source\io\codepage.cpp" />
+    <ClCompile Include="..\yampt\source\io\esm_reader.cpp" />
+    <ClCompile Include="..\yampt\source\model\file_list.cpp" />
+    <ClCompile Include="..\yampt\source\model\dict_merger.cpp" />
+    <ClCompile Include="..\yampt\source\model\dict_creator.cpp" />
+    <ClCompile Include="..\yampt\source\model\dict_creator_single.cpp" />
+    <ClCompile Include="..\yampt\source\model\dict_creator_base.cpp" />
+    <ClCompile Include="..\yampt\source\model\dict_creator_base_ordered.cpp" />
+    <ClCompile Include="..\yampt\source\model\esm_converter.cpp" />
+    <ClCompile Include="..\yampt\source\model\script_parser.cpp" />
+    <ClCompile Include="..\yampt\source\model\scdt_patcher.cpp" />
+    <ClCompile Include="..\yampt\source\model\translation_engine.cpp" />
+    <ClCompile Include="..\yampt\source\plugin_scan\sub_record_schema.cpp" />
+    <ClCompile Include="..\yampt\source\plugin_scan\plugin_index.cpp" />
+    <ClCompile Include="..\yampt\source\plugin_scan\plugin_scan.cpp" />
+    <ClCompile Include="..\yampt\source\plugin_scan\conflict_compute.cpp" />
+    <ClCompile Include="..\yampt\source\plugin_scan\conflict_slots.cpp" />
+    <ClCompile Include="..\yampt\source\plugin_scan\view_tree_format.cpp" />
   </ItemGroup>
 </Project>

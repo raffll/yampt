@@ -1,50 +1,52 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="external">
-      <UniqueIdentifier>{B1000001-0000-0000-0000-000000000001}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="model">
-      <UniqueIdentifier>{B1000002-0000-0000-0000-000000000001}</UniqueIdentifier>
-    </Filter>
+    <ClCompile Include="source\main.cpp" />
+    <ClCompile Include="source\utility\tools.cpp" />
+    <ClCompile Include="source\io\codepage.cpp" />
+    <ClCompile Include="source\io\dict_reader.cpp" />
+    <ClCompile Include="source\io\dict_writer.cpp" />
+    <ClCompile Include="source\io\esm_reader.cpp" />
+    <ClCompile Include="source\model\file_list.cpp" />
+    <ClCompile Include="source\model\dict_creator.cpp" />
+    <ClCompile Include="source\model\dict_creator_single.cpp" />
+    <ClCompile Include="source\model\dict_creator_base.cpp" />
+    <ClCompile Include="source\model\dict_creator_base_ordered.cpp" />
+    <ClCompile Include="source\model\dict_merger.cpp" />
+    <ClCompile Include="source\model\esm_converter.cpp" />
+    <ClCompile Include="source\model\script_parser.cpp" />
+    <ClCompile Include="source\model\scdt_patcher.cpp" />
+    <ClCompile Include="source\model\translation_engine.cpp" />
+    <ClCompile Include="source\interface\user_interface.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="tools.cpp" />
-    <ClCompile Include="codepage.cpp" />
-    <ClCompile Include="dict_creator.cpp" />
-    <ClCompile Include="dict_creator_single.cpp" />
-    <ClCompile Include="dict_creator_base.cpp" />
-    <ClCompile Include="dict_creator_base_ordered.cpp" />
-    <ClCompile Include="dict_merger.cpp" />
-    <ClCompile Include="dict_reader.cpp" />
-    <ClCompile Include="dict_writer.cpp" />
-    <ClCompile Include="esm_converter.cpp" />
-    <ClCompile Include="esm_reader.cpp" />
-    <ClCompile Include="script_parser.cpp" />
-    <ClCompile Include="scdt_patcher.cpp">
-      <Filter>model</Filter>
-    </ClCompile>
-    <ClCompile Include="user_interface.cpp" />
-    <ClCompile Include="translation_engine.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="tools.hpp" />
-    <ClInclude Include="codepage.hpp" />
-    <ClInclude Include="dict_kind.hpp" />
-    <ClInclude Include="dict_creator.hpp" />
-    <ClInclude Include="dict_merger.hpp" />
-    <ClInclude Include="dict_reader.hpp" />
-    <ClInclude Include="dict_writer.hpp" />
-    <ClInclude Include="esm_converter.hpp" />
-    <ClInclude Include="esm_reader.hpp" />
-    <ClInclude Include="script_parser.hpp" />
-    <ClInclude Include="scdt_patcher.hpp">
-      <Filter>model</Filter>
-    </ClInclude>
-    <ClInclude Include="includes.hpp" />
-    <ClInclude Include="json_reader.hpp" />
-    <ClInclude Include="user_interface.hpp" />
-    <ClInclude Include="translation_engine.hpp" />
+    <ClInclude Include="source\utility\tools.hpp" />
+    <ClInclude Include="source\utility\includes.hpp" />
+    <ClInclude Include="source\utility\string_utils.hpp" />
+    <ClInclude Include="source\utility\record_types.hpp" />
+    <ClInclude Include="source\utility\status_types.hpp" />
+    <ClInclude Include="source\io\codepage.hpp" />
+    <ClInclude Include="source\io\dict_reader.hpp" />
+    <ClInclude Include="source\io\dict_writer.hpp" />
+    <ClInclude Include="source\io\esm_reader.hpp" />
+    <ClInclude Include="source\io\json_reader.hpp" />
+    <ClInclude Include="source\model\file_list.hpp" />
+    <ClInclude Include="source\model\dict_kind.hpp" />
+    <ClInclude Include="source\model\dict_creator.hpp" />
+    <ClInclude Include="source\model\dict_merger.hpp" />
+    <ClInclude Include="source\model\esm_converter.hpp" />
+    <ClInclude Include="source\model\script_parser.hpp" />
+    <ClInclude Include="source\model\scdt_patcher.hpp" />
+    <ClInclude Include="source\model\translation_engine.hpp" />
+    <ClInclude Include="source\interface\user_interface.hpp" />
+    <ClInclude Include="source\plugin_scan\conflict_compute.hpp" />
+    <ClInclude Include="source\plugin_scan\conflict_enums.hpp" />
+    <ClInclude Include="source\plugin_scan\conflict_slots.hpp" />
+    <ClInclude Include="source\plugin_scan\conflict_types.hpp" />
+    <ClInclude Include="source\plugin_scan\plugin_index.hpp" />
+    <ClInclude Include="source\plugin_scan\plugin_scan.hpp" />
+    <ClInclude Include="source\plugin_scan\sub_record_iter.hpp" />
+    <ClInclude Include="source\plugin_scan\sub_record_schema.hpp" />
+    <ClInclude Include="source\plugin_scan\view_tree_format.hpp" />
   </ItemGroup>
 </Project>

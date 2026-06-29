@@ -4,15 +4,19 @@
 
 All identifiers use snake_case — variables, functions, methods, namespaces, file names.
 
-## `_t` Suffix for Classes and Types
+## `_t` Suffix for All Classes and Types
 
-All class names and type aliases use the `_t` suffix:
+All class names, type aliases, and interfaces use the `_t` suffix — no distinction between concrete and abstract:
 
 ```cpp
 class dict_reader_t { ... };
 class esm_converter_t { ... };
 struct record_entry_t { ... };
 using record_map_t = std::unordered_map<std::string, std::string>;
+
+class document_t { virtual ~document_t() = default; ... };  // pure interface
+class row_source_t { virtual ~row_source_t() = default; ... };  // pure interface
+class translator_t { virtual ~translator_t() = default; ... };  // pure interface
 ```
 
 Template arguments also use the `_t` suffix:
@@ -23,35 +27,6 @@ void process(const container_t & items);
 
 template <typename value_t, typename key_t>
 auto lookup(const key_t & key) -> value_t;
-```
-
-## `_i` Suffix for Pure Interfaces
-
-Abstract base classes that define a pure interface (all methods virtual, no data members, no implementation) use the `_i` suffix instead of `_t`:
-
-```cpp
-class translator_i
-{
-public:
-    virtual ~translator_i() = default;
-    virtual std::string translate(std::string_view text) = 0;
-    virtual bool is_available() const = 0;
-};
-
-class row_source_i
-{
-public:
-    virtual ~row_source_i() = default;
-    virtual size_t row_count() const = 0;
-    virtual const table_row_t & row_at(size_t index) const = 0;
-};
-```
-
-Concrete implementations that inherit from an `_i` interface use the regular `_t` suffix:
-
-```cpp
-class ctranslate2_translator_t : public translator_i { ... };
-class deepl_translator_t : public translator_i { ... };
 ```
 
 ## File Names
