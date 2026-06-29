@@ -88,19 +88,19 @@ class status_filter_bar_t : public QWidget { ... };
 class sidebar_widget_t : public QWidget { ... };
 ```
 
-## MVC Triplet Naming
+## Folder-Responsibility Naming
 
-When a feature has all three MVC layers, name them with the same base and different suffixes:
+Each file is named for its own responsibility, not forced to match a sibling. If two files happen to share a base name (like `sidebar_view` + `sidebar_model`), the shared prefix makes the relationship obvious — but it's not required.
 
-```
-record_table_view_t      (view/)
-record_table_model_t     (model/)
-record_table_controller_t (controller/)   — if it exists
-```
-
-The base name (`record_table`) is the feature. The suffix (`_view`, `_model`, `_controller`) is the role. File names follow: `record_table_view.hpp`, `record_table_model.hpp`, `record_table_controller.hpp`.
-
-This makes it obvious which files form a group. When only two layers exist (e.g. view + model, no controller), just use two files with matching base names.
+Folder placement determines the role:
+- `view/` — Qt widgets. Named after what they display.
+- `model/` — Data structures, documents, domain logic, row filtering. Named after what they hold or transform.
+- `edit/` — Editing orchestration. Named after what they do to the active record.
+- `highlight/` — Text coloring, annotations, glossary, grammar checks. Named after what they mark.
+- `dialog/` — Modal dialogs. Named after what they ask.
+- `translate/` — Translation backends. Named after the provider.
+- `io/` — File I/O, config persistence, external process invocation.
+- `utility/` — Pure helpers without domain or UI coupling.
 
 ## No Duplicate File Names Across Projects
 

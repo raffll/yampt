@@ -6,6 +6,39 @@ Sorted by effort. Settings dialog takes priority.
 
 ## S — a few hours
 
+### Split `glossary_t` into three classes [S]
+`glossary_t` currently does three unrelated things:
+1. Builds term index from dicts + annotates text → keep as `glossary_t` in `highlight/`
+2. NPC gender lookup (`load_npc_flags`, `get_speaker_gender`) → extract to `npc_lookup_t` in `model/`
+3. Enchantment lookup (`load_enchantments`, `get_enchantment`) → extract to `enchantment_lookup_t` in `model/`
+
+### Reorganize yampt.translator folders [S]
+Replace `controller/` with clearer groupings:
+- `edit/` — editor_controller, edit_history, find_replace, byte_limit_validator (editing flow)
+- `highlight/` — + glossary (feeds annotation highlighters), + grammar_checker (produces ExtraSelections like highlighters)
+- `model/` — + row_filter (filters model data, no Qt UI dependency)
+- `io/` — + operation_executor (runs external processes and produces file output)
+
+### Split `tools_t` into focused utilities [S]
+`tools_t` is a god class: data types (`dict_t`, `chapter_t`, `record_entry_t`, `rec_type_t`), file I/O (`read_file`, `write_text`, `write_file`), byte conversion, string manipulation, and global logging state. Split into:
+- `dict_types.hpp` — `dict_t`, `chapter_t`, `record_entry_t`, `rec_type_t` (already partially in `record_types.hpp`/`status_types.hpp`)
+- `esm_file_io.hpp` — `read_file`, `write_text`, `write_file`, `create_file`
+- `log.hpp` — `add_log`, `get_log`, `reset_log`, `has_error`, `set_debug`, `set_quiet`
+- `byte_utils.hpp` — `convert_string_byte_array_to_uint`, `convert_uint_to_string_byte_array`
+
+### Split `dict_creator_t` (header: 230 lines, base impl: 1937 lines) [S]
+The class mixes unrelated matching algorithms behind one interface. Extract:
+- Cell matching (fingerprint, heuristic, exterior coords, default, region) → `cell_matcher_t`
+- DIAL matching (INAM index, translation-based) → `dial_matcher_t`
+- Script matching (SCTX/BNAM native message pairing) → stays in `dict_creator_base.cpp` (less code)
+- Text-match index (adaptation, ambiguity detection) → `text_match_index_t`
+
+### Reduce `main_window_t` (1923 + 852 lines) [S]
+Extract self-contained concerns into dedicated classes:
+- Workspace/watcher logic → `workspace_watcher_t`
+- Commit+propagation logic → already in `editor_controller_t` but `main_window` still has `commit_dict_edit`, `commit_yaml_edit`, `sync_propagated_rows` — push into controller
+- Highlight management (`extra_selections_state_t`, `apply_extra_selections`, `find_annotation_highlights`, `build_highlight_selections`) → `highlight_coordinator_t`
+
 ### Settings dialog for both apps [S, PRIORITY]
 Settings dialog similar to Notepad++/Visual Studio. Covers both yTranslator and yEditor. Central place for keyboard shortcuts, paths, encoding, spell check language, translation provider API keys, theme preferences.
 
