@@ -3,7 +3,7 @@
 static constexpr size_t read_buffer_size = 16384;
 static constexpr size_t bytes_per_uint32 = 4;
 
-std::string tools_t::log1;
+std::string tools_t::m_log;
 bool tools_t::error_flag = false;
 bool tools_t::debug_flag = false;
 bool tools_t::quiet_flag = false;
@@ -241,7 +241,7 @@ void tools_t::add_log(const std::string & entry, const bool silent)
 	if (silent && !debug_flag)
 		return;
 
-	log1 += entry;
+	m_log += entry;
 
 	if (!silent && !quiet_flag)
 		std::cout << entry;
@@ -249,7 +249,7 @@ void tools_t::add_log(const std::string & entry, const bool silent)
 
 void tools_t::reset_log()
 {
-	log1.clear();
+	m_log.clear();
 	error_flag = false;
 }
 
@@ -303,7 +303,7 @@ std::string tools_t::type_to_str(tools_t::rec_type_t type)
 	case tools_t::rec_type_t::gmdt:
 		return "GMDT";
 
-	case tools_t::rec_type_t::default_val:
+	case tools_t::rec_type_t::wild:
 		return "CELL";
 	case tools_t::rec_type_t::regn:
 		return "REGN";

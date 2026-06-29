@@ -18,6 +18,7 @@ public:
 		text,
 		bnam,
 		sctx,
+
 		yaml,
 
 		pgrd,
@@ -27,7 +28,7 @@ public:
 		cndt,
 		gmdt,
 
-		default_val,
+		wild,
 		regn,
 
 		unknown,
@@ -147,7 +148,7 @@ public:
 
 	static std::string get_log()
 	{
-		return log1;
+		return m_log;
 	}
 
 	static bool has_error()
@@ -189,7 +190,7 @@ public:
 	static bool is_fnam(const std::string & rec_id);
 
 private:
-	static std::string log1;
+	static std::string m_log;
 	static bool error_flag;
 	static bool debug_flag;
 	static bool quiet_flag;
