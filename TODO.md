@@ -12,12 +12,55 @@ Sorted by effort. Settings dialog takes priority.
 2. NPC gender lookup (`load_npc_flags`, `get_speaker_gender`) → extract to `npc_lookup_t` in `model/`
 3. Enchantment lookup (`load_enchantments`, `get_enchantment`) → extract to `enchantment_lookup_t` in `model/`
 
-### Reorganize yampt.translator folders [S]
-Replace `controller/` with clearer groupings:
-- `edit/` — editor_controller, edit_history, find_replace, byte_limit_validator (editing flow)
-- `highlight/` — + glossary (feeds annotation highlighters), + grammar_checker (produces ExtraSelections like highlighters)
-- `model/` — + row_filter (filters model data, no Qt UI dependency)
-- `io/` — + operation_executor (runs external processes and produces file output)
+### Reorganize all project folders [S]
+Replace generic `model/` and `controller/` with noun-based folders split by responsibility.
+
+**yampt (core library):**
+```
+yampt/source/
+├── creator/       — dict_creator_t + splits, cell_matcher_t, dial_matcher_t, text_match_index_t
+├── merger/        — dict_merger_t
+├── converter/     — esm_converter_t, script_parser_t, scdt_patcher_t
+├── translator/    — translation_engine_t
+├── scanner/       — plugin_scan_t (slimmed, no merge), plugin_index_t, conflict_compute, conflict_enums, conflict_types
+├── decoder/       — conflict_slots, sub_record_iter, sub_record_schema, view_tree_format
+├── io/            — esm_reader, dict_reader, dict_writer, codepage, json_reader
+├── utility/       — tools, string_utils, record_types, status_types
+├── interface/     — CLI
+└── main.cpp
+```
+
+**yampt.translator:**
+```
+yampt.translator/source/
+├── document/      — document_t, dict_document_t, yaml_document_t, plugin_document_t
+├── table/         — record_table_model_t, table_builder_t, table_row_t, row_source_t
+├── workspace/     — sidebar_model_t, menu_action, plugin_op
+├── filter/        — row_filter_t, status_filter model (if extracted from view)
+├── editor/        — editor_controller_t, edit_history_t, find_replace_t, byte_limit_validator_t
+├── highlighter/   — composite, annotation, hyperlink, syntax highlighters, glossary_t, grammar_checker_t
+├── translator/    — translator.hpp, ctranslate2_translator, deepl_translator, google_translator
+├── view/          — all widgets (unchanged)
+├── dialog/        — (unchanged)
+├── io/            — operation_executor_t, config
+├── utility/       — display_name, spell_checker
+└── main_window (root)
+```
+
+**yampt.editor:**
+```
+yampt.editor/source/
+├── model/         — nav_tree_model_t, view_tree_model_t, plugin_session_t
+├── patcher/       — patch_builder_t (extracted from plugin_scan_t: copy/remove/save/header/leveled/dialogue)
+├── decoder/       — view_tree_decode splits (cell, lists, generic)
+├── view/          — plugin_workspace_view_t (slimmed), nav_tree_view_t, record_view_t, messages_view_t
+├── dialog/        — (unchanged)
+├── io/            — (unchanged)
+└── main + editor_window (root)
+```
+
+Key renames: `controller/` → `editor/`, `translate/` → `translator/`, `highlight/` → `highlighter/` (nouns only).
+Key splits: core `model/` → `creator/`, `merger/`, `converter/`, `translator/`; core `plugin_scan/` → `scanner/` + `decoder/`; translator `model/` → `document/` + `table/` + residual `model/`.
 
 ### Split `tools_t` into focused utilities [S]
 `tools_t` is a god class: data types (`dict_t`, `chapter_t`, `record_entry_t`, `rec_type_t`), file I/O (`read_file`, `write_text`, `write_file`), byte conversion, string manipulation, and global logging state. Split into:
@@ -42,15 +85,15 @@ Extract self-contained concerns into dedicated classes:
 ### Reduce `plugin_workspace_view_t` (1316 lines) in yEditor [S]
 Does loading, parsing, merging, filtering, drag-drop, persistence — all in one "view". Also embeds two child tree views (nav + record view) and a messages panel instead of composing separate widgets. Extract:
 - Plugin loading + unloading orchestration → `plugin_session_t` in `model/`
-- Merge patch creation (`create_merge_records`, `refresh_after_merge`) → `merge_patch_t` in `model/`
+- Merge patch creation (`create_merge_records`, `refresh_after_merge`) → `patch_builder_t` in `patcher/`
 - Nav tree (left panel) → `nav_tree_view_t` in `view/` (owns its `QTreeView` + nav_tree_model)
 - Record view tree (right panel) → `record_view_t` in `view/` (owns its `QTreeView` + view_tree_model)
 - The parent view keeps only: toolbar, splitter layout, connect signals between child views and model classes
 
 ### Split `plugin_scan_t` god class (757 lines) [S]
 Mixes: loading, conflict detection, merge plugin management, TES3 binary header construction, leveled list merging, dialogue merging, ITM detection. Extract:
-- `merge_builder_t` — merge plugin management, `copy_record_to_merge`, `remove_from_merge`, `save_merge`, `build_tes3_header`
-- `merge_leveled_list()`, `merge_dialogue()` → free functions or a `merge_algorithms` module
+- `patch_builder_t` in `yampt.editor/patcher/` — `copy_record_to_merge`, `remove_from_merge`, `save_merge`, `build_tes3_header`, `merge_leveled_list`, `merge_dialogue`
+- Slimmed `plugin_scan_t` stays in core `scanner/` — loading, indexing, conflict detection, ITM only
 
 ### Split `view_tree_decode.cpp` (1166 lines) in yEditor [S]
 Contains 5+ unrelated record-type decoders. Split by family:
