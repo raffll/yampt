@@ -147,7 +147,7 @@ TEST_CASE("script_parser_t, scdt message replacement with size prefix", "[u]")
 	const std::string output_line = "MessageBox \"Witaj Swiecie\"";
 
 	dict_merger_t merger;
-	merger.add_record(tools_t::rec_type_t::sctx, script_name + "^" + input_line, script_name + "^" + output_line);
+	merger.add_record(tools_t::rec_type_t::sctx, script_name + "^" + input_line, output_line);
 
 	std::string old_msg = "Hello World";
 	std::string new_msg = "Witaj Swiecie";

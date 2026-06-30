@@ -100,7 +100,7 @@ TEST_CASE("script_parser_t, messages", "[u]")
 	for (const auto & line : lines)
 	{
 		const std::string key = "^" + line.first;
-		const std::string val = "^" + line.second;
+		const std::string val = line.second;
 		merger.add_record(tools_t::rec_type_t::bnam, key, val);
 	}
 
@@ -119,7 +119,7 @@ TEST_CASE("script_parser_t, MessageBox replacement", "[u]")
 	const std::string expected_line = "MessageBox \"Witaj Swiecie\"";
 
 	const std::string key = script_name + "^" + input_line;
-	const std::string value = script_name + "^" + expected_line;
+	const std::string value = expected_line;
 
 	dict_merger_t merger;
 	merger.add_record(tools_t::rec_type_t::bnam, key, value);
@@ -188,4 +188,127 @@ TEST_CASE("script_parser_t, trailing CRLF not appended", "[u]")
 		REQUIRE(output.size() >= 2);
 		REQUIRE(output.substr(output.size() - 2) != "\r\n");
 	}
+}
+
+TEST_CASE("script_parser_t::find_new_message, short new_text", "[u]")
+{
+	const std::string script_name = "TR_m3_OE_TG_ChunzefkRockSCP";
+	const std::string input_line = "         MessageBox \"    5    \"";
+	const std::string translated_line = "         MessageBox \"    5    \"";
+
+	const std::string key = script_name + "^" + input_line;
+
+	dict_merger_t merger;
+	merger.add_record(tools_t::rec_type_t::bnam, key, translated_line);
+
+	script_parser_t parser(tools_t::rec_type_t::bnam, merger, script_name, "", input_line, "");
+
+	REQUIRE(parser.get_new_script() == translated_line);
+}
+
+TEST_CASE("script_parser_t::find_new_message, applies translation", "[u]")
+{
+	const std::string script_name = "TR_m4_VM_Headless_ReqsCheckSc";
+	const std::string input_line = "Choice \"Continue\" 2";
+	const std::string translated_line = "Choice \"Dalej\" 2";
+
+	const std::string key = script_name + "^" + input_line;
+
+	dict_merger_t merger;
+	merger.add_record(tools_t::rec_type_t::bnam, key, translated_line);
+
+	script_parser_t parser(tools_t::rec_type_t::bnam, merger, script_name, "", input_line, "");
+
+	REQUIRE(parser.get_new_script() == translated_line);
+}
+
+TEST_CASE("script_parser_t::find_new_message, long name short text", "[u]")
+{
+	const std::string script_name = "TR_m3_act_OE_LegHQnails_scpt";
+	const std::string input_line = "         MessageBox, \"You are here.\"";
+	const std::string translated_line = "         MessageBox, \"Jestes tutaj\"";
+
+	const std::string key = script_name + "^" + input_line;
+
+	dict_merger_t merger;
+	merger.add_record(tools_t::rec_type_t::bnam, key, translated_line);
+
+	script_parser_t parser(tools_t::rec_type_t::bnam, merger, script_name, "", input_line, "");
+
+	REQUIRE(parser.get_new_script() == translated_line);
+}
+
+TEST_CASE("script_parser_t::find_new_message, no match unchanged", "[u]")
+{
+	const std::string script_name = "SomeScript";
+	const std::string input_line = "MessageBox \"Unregistered text\"";
+
+	dict_merger_t merger;
+
+	script_parser_t parser(tools_t::rec_type_t::bnam, merger, script_name, "", input_line, "");
+
+	REQUIRE(parser.get_new_script() == input_line);
+}
+
+TEST_CASE("script_parser_t::find_new_message, identical skipped", "[u]")
+{
+	const std::string script_name = "TestScript";
+	const std::string input_line = "MessageBox \"Same text\"";
+
+	const std::string key = script_name + "^" + input_line;
+
+	dict_merger_t merger;
+	merger.add_record(tools_t::rec_type_t::bnam, key, input_line);
+
+	script_parser_t parser(tools_t::rec_type_t::bnam, merger, script_name, "", input_line, "");
+
+	REQUIRE(parser.get_new_script() == input_line);
+}
+
+TEST_CASE("script_parser_t::find_new_message, multi-quoted", "[u]")
+{
+	const std::string script_name = "TestScript";
+	const std::string input_line = "MessageBox \"Move shield?\" \"Yes\" \"No\"";
+	const std::string translated_line = "MessageBox \"Przesunac?\" \"Tak\" \"Nie\"";
+
+	const std::string key = script_name + "^" + input_line;
+
+	dict_merger_t merger;
+	merger.add_record(tools_t::rec_type_t::bnam, key, translated_line);
+
+	script_parser_t parser(tools_t::rec_type_t::bnam, merger, script_name, "", input_line, "");
+
+	REQUIRE(parser.get_new_script() == translated_line);
+}
+
+TEST_CASE("script_parser_t::find_new_message, choice with number", "[u]")
+{
+	const std::string script_name = "QuestScript";
+	const std::string input_line = "choice \"Nevermind.\" 2";
+	const std::string translated_line = "choice \"Zapomnij.\" 2";
+
+	const std::string key = script_name + "^" + input_line;
+
+	dict_merger_t merger;
+	merger.add_record(tools_t::rec_type_t::bnam, key, translated_line);
+
+	script_parser_t parser(tools_t::rec_type_t::bnam, merger, script_name, "", input_line, "");
+
+	REQUIRE(parser.get_new_script() == translated_line);
+}
+
+TEST_CASE("script_parser_t::find_new_message, longer translation", "[u]")
+{
+	const std::string script_name = "Sc";
+	const std::string input_line = "MessageBox \"Hi\"";
+	const std::string translated_line = "MessageBox \"Bardzo dluga przetlumaczona wiadomosc\"";
+
+	const std::string key = script_name + "^" + input_line;
+
+	dict_merger_t merger;
+	merger.add_record(tools_t::rec_type_t::bnam, key, translated_line);
+
+	script_parser_t parser(tools_t::rec_type_t::bnam, merger, script_name, "", input_line, "");
+
+	REQUIRE(parser.get_new_script() == translated_line);
 }

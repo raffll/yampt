@@ -25,7 +25,6 @@ New-Item -ItemType Directory -Force $packDir | Out-Null
 Copy-Item "$outDir\yampt.exe" $packDir
 Copy-Item "$outDir\yTranslator.exe" $packDir
 Copy-Item "$outDir\yEditor.exe" $packDir
-Copy-Item "$outDir\7za.exe" $packDir
 Copy-Item "$outDir\*.dll" $packDir
 
 if (Test-Path "$outDir\dictionaries") {
@@ -37,7 +36,10 @@ if (Test-Path "$outDir\platforms") {
     Copy-Item "$outDir\platforms\*.dll" "$packDir\platforms"
 }
 
-& $sevenZip a -t7z -mx=9 $zipName "$packDir\*"
+$zipFullPath = Join-Path (Resolve-Path $buildDir).Path "yampt_build$buildNum.7z"
+Push-Location $buildDir
+& $sevenZip a -t7z -mx=9 $zipFullPath "yampt_build$buildNum"
+Pop-Location
 
 Write-Host "Created $zipName (build $buildNum)"
 

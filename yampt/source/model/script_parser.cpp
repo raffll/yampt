@@ -356,9 +356,9 @@ void script_parser_t::find_new_message()
 	auto * search = merger->get_dict().at(type).find(script_name + "^" + line);
 	if (search)
 	{
-		if (line != search->new_text.substr(script_name.size() + 1))
+		if (line != search->new_text)
 		{
-			new_line = search->new_text.substr(script_name.size() + 1);
+			new_line = search->new_text;
 		}
 	}
 
