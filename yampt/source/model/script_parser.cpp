@@ -78,14 +78,14 @@ std::string strip_quotes(const std::string & text_input)
 script_parser_t::script_parser_t(
     const tools_t::rec_type_t type,
     const dict_merger_t & merger,
-    const std::string & script_name,
-    const std::string & file_name,
+    const std::string & record_key,
+    const std::string & source_path,
     const std::string & old_script,
     const std::string & old_scdt)
     : type(type)
     , merger(&merger)
-    , script_name(script_name)
-    , file_name(file_name)
+    , record_key(record_key)
+    , source_path(source_path)
     , old_script(old_script)
     , old_scdt(old_scdt)
 {
@@ -199,8 +199,8 @@ void script_parser_t::convert_line(
 void script_parser_t::trim_line()
 {
 	tools_t::add_log("\r\n\r\n", true);
-	tools_t::add_log(file_name + "\r\n", true);
-	tools_t::add_log(script_name + "\r\n", true);
+	tools_t::add_log(source_path + "\r\n", true);
+	tools_t::add_log(record_key + "\r\n", true);
 	tools_t::add_log("<<< " + line + "\r\n", true);
 
 	old_text = line.substr(pos);
@@ -304,7 +304,7 @@ void script_parser_t::convert_text_in_compiled(const bool is_getpccell)
 
 	if (result.had_false_positive)
 	{
-		tools_t::add_log("[warning] false positive in " + script_name + " for: " + old_text + "\r\n", true);
+		tools_t::add_log("[warning] false positive in " + record_key + " for: " + old_text + "\r\n", true);
 	}
 
 	if (!result.success)
@@ -349,11 +349,11 @@ void script_parser_t::find_keyword()
 void script_parser_t::find_new_message()
 {
 	tools_t::add_log("\r\n\r\n", true);
-	tools_t::add_log(file_name + "\r\n", true);
-	tools_t::add_log(script_name + "\r\n", true);
+	tools_t::add_log(source_path + "\r\n", true);
+	tools_t::add_log(record_key + "\r\n", true);
 	tools_t::add_log("<<< " + line + "\r\n", true);
 
-	auto * search = merger->get_dict().at(type).find(script_name + "^" + line);
+	auto * search = merger->get_dict().at(type).find(record_key + "^" + line);
 	if (search)
 	{
 		if (line != search->new_text)
@@ -433,7 +433,9 @@ std::vector<std::string> script_parser_t::split_line(const std::string & cur_lin
 
 void script_parser_t::trim_last_new_line_chars()
 {
-	/* check if last 2 chars are newline and strip them if necessary */
+	if (new_script.size() < 2)
+		return;
+
 	size_t last_nl_pos = old_script.rfind("\r\n");
 	if (last_nl_pos != old_script.size() - 2 || last_nl_pos == std::string::npos)
 	{

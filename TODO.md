@@ -8,9 +8,9 @@ Sorted by effort. Settings dialog takes priority.
 
 ### Split `glossary_t` into three classes [S]
 `glossary_t` currently does three unrelated things:
-1. Builds term index from dicts + annotates text → keep as `glossary_t` in `highlight/`
-2. NPC gender lookup (`load_npc_flags`, `get_speaker_gender`) → extract to `npc_lookup_t` in `model/`
-3. Enchantment lookup (`load_enchantments`, `get_enchantment`) → extract to `enchantment_lookup_t` in `model/`
+1. Builds term index from dicts + annotates text → keep as `glossary_t` in `highlighter/`
+2. NPC gender lookup (`load_npc_flags`, `get_speaker_gender`) → extract to `npc_lookup_t` in `highlighter/`
+3. Enchantment lookup (`load_enchantments`, `get_enchantment`) → extract to `enchantment_lookup_t` in `highlighter/`
 
 ### Reorganize all project folders [S]
 Replace generic `model/` and `controller/` with noun-based folders split by responsibility.
@@ -22,8 +22,8 @@ yampt/source/
 ├── merger/        — dict_merger_t
 ├── converter/     — esm_converter_t, script_parser_t, scdt_patcher_t
 ├── translator/    — translation_engine_t
-├── scanner/       — plugin_scan_t (slimmed, no merge), plugin_index_t, conflict_compute, conflict_enums, conflict_types
-├── decoder/       — conflict_slots, sub_record_iter, sub_record_schema, view_tree_format
+├── scanner/       — plugin_scanner_t (slimmed, no merge), plugin_index_t, conflict_compute, conflict_enums, conflict_types
+├── decoder/       — conflict_slots, sub_record_iterator, sub_record_schema, view_tree_format
 ├── io/            — esm_reader, dict_reader, dict_writer, codepage, json_reader
 ├── utility/       — tools, string_utils, record_types, status_types
 ├── interface/     — CLI
@@ -35,15 +35,15 @@ yampt/source/
 yampt.translator/source/
 ├── document/      — document_t, dict_document_t, yaml_document_t, plugin_document_t
 ├── table/         — record_table_model_t, table_builder_t, table_row_t, row_source_t
-├── workspace/     — sidebar_model_t, menu_action, plugin_op
+├── workspace/     — sidebar_model_t, menu_action, plugin_operations
 ├── filter/        — row_filter_t, status_filter model (if extracted from view)
 ├── editor/        — editor_controller_t, edit_history_t, find_replace_t, byte_limit_validator_t
-├── highlighter/   — composite, annotation, hyperlink, syntax highlighters, glossary_t, grammar_checker_t
-├── translator/    — translator.hpp, ctranslate2_translator, deepl_translator, google_translator
+├── highlighter/   — composite, annotation, hyperlink, syntax highlighters, glossary_t, 
+├── translator/    — translator.hpp, ctranslate2, deepl, google
 ├── view/          — all widgets (unchanged)
 ├── dialog/        — (unchanged)
 ├── io/            — operation_executor_t, config
-├── utility/       — display_name, spell_checker
+├── utility/       — display_name, spell_checker, grammar_checker_t
 └── main_window (root)
 ```
 
@@ -61,6 +61,12 @@ yampt.editor/source/
 
 Key renames: `controller/` → `editor/`, `translate/` → `translator/`, `highlight/` → `highlighter/` (nouns only).
 Key splits: core `model/` → `creator/`, `merger/`, `converter/`, `translator/`; core `plugin_scan/` → `scanner/` + `decoder/`; translator `model/` → `document/` + `table/` + residual `model/`.
+
+### Rename highlight files [S]
+- `composite_highlighter` → `editor_highlighter` (highlights editable translation panel; "composite" is a pattern name)
+- `syntax_highlighter` → `script_tokenizer` (tokenizes MWScript/HTML; not a Qt highlighter)
+- `annotation_highlighter` → `glossary_highlighter` (highlights glossary terms in both panels)
+- `hyperlink_highlighter` → `topic_highlighter` (highlights DIAL topic names)
 
 ### Split `tools_t` into focused utilities [S]
 `tools_t` is a god class: data types (`dict_t`, `chapter_t`, `record_entry_t`, `rec_type_t`), file I/O (`read_file`, `write_text`, `write_file`), byte conversion, string manipulation, and global logging state. Split into:
@@ -95,6 +101,8 @@ Mixes: loading, conflict detection, merge plugin management, TES3 binary header 
 - `patch_builder_t` in `yampt.editor/patcher/` — `copy_record_to_merge`, `remove_from_merge`, `save_merge`, `build_tes3_header`, `merge_leveled_list`, `merge_dialogue`
 - Slimmed `plugin_scan_t` stays in core `scanner/` — loading, indexing, conflict detection, ITM only
 
+
+view_tree_ -> record_tree
 ### Split `view_tree_decode.cpp` (1166 lines) in yEditor [S]
 Contains 5+ unrelated record-type decoders. Split by family:
 - `view_tree_decode_cell.cpp` — CELL ref groups, DODT matching, object indices
@@ -110,6 +118,9 @@ Five independent strategy implementations behind one dispatch. Extract:
 16 independent `convert_*` methods + shared helpers. Split:
 - `esm_converter.cpp` — constructor, dispatcher, shared helpers
 - `esm_converter_records.cpp` — all per-record-type conversion methods
+
+### Comprehensive esm_converter_t tests [S]
+The current converter tests use synthetic ESM files assembled in memory. Add a small real ESM file (a few records of each type) to the test data and verify all `convert_*` functions produce correct output. Cover every record type: SCTX, BNAM, CELL, FNAM, INFO, DIAL, GMST, DESC, TEXT, RNAM, INDX, PGRD, ANAM, SCVR, DNAM, CNDT.
 
 ### Extract color logic from `nav_tree_model.cpp` (733 lines) [S]
 The model's `data()` method computes QBrush colors from conflict enums. Extract conflict-to-color mapping to a shared `conflict_colors.hpp` utility used by both nav_tree_model and view_tree_model.

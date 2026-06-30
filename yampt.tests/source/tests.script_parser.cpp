@@ -312,3 +312,42 @@ TEST_CASE("script_parser_t::find_new_message, longer translation", "[u]")
 
 	REQUIRE(parser.get_new_script() == translated_line);
 }
+
+TEST_CASE("script_parser_t, bnam choice with composite key", "[u]")
+{
+	const std::string dial_type = "T";
+	const std::string dial_name = "some topic";
+	const std::string inam = "2483419585499221";
+	const std::string script_name = dial_type + "^" + dial_name + "^" + inam;
+
+	const std::string input_line = "choice \"Go away\" 1 \"Tell me more\" 2";
+	const std::string translated_line = "choice \"Odejdz\" 1 \"Powiedz wiecej\" 2";
+
+	const std::string key = script_name + "^" + input_line;
+
+	dict_merger_t merger;
+	merger.add_record(tools_t::rec_type_t::bnam, key, translated_line);
+
+	script_parser_t parser(tools_t::rec_type_t::bnam, merger, script_name, "", input_line, "");
+
+	REQUIRE(parser.get_new_script() == translated_line);
+}
+
+TEST_CASE("script_parser_t, bnam choice not found with wrong key", "[u]")
+{
+	const std::string inam = "2483419585499221";
+	const std::string full_key_prefix = "T^some topic^" + inam;
+	const std::string wrong_prefix = inam;
+
+	const std::string input_line = "choice \"Go away\" 1 \"Tell me more\" 2";
+	const std::string translated_line = "choice \"Odejdz\" 1 \"Powiedz wiecej\" 2";
+
+	const std::string key = full_key_prefix + "^" + input_line;
+
+	dict_merger_t merger;
+	merger.add_record(tools_t::rec_type_t::bnam, key, translated_line);
+
+	script_parser_t parser(tools_t::rec_type_t::bnam, merger, wrong_prefix, "", input_line, "");
+
+	REQUIRE(parser.get_new_script() == input_line);
+}

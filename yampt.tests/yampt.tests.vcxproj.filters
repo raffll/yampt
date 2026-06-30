@@ -26,6 +26,9 @@
     <ClCompile Include="source\tests.yaml_l10n_reader.cpp" />
     <ClCompile Include="source\tests.syntax_highlighter.cpp" />
     <ClCompile Include="source\tests.editor_controller.cpp" />
+    <ClCompile Include="source\tests.script_parser_rename.cpp" />
+    <ClCompile Include="source\tests.converter_counters.cpp" />
+    <ClCompile Include="source\tests.esm_converter_full.cpp" />
     <ClCompile Include="source\tests.display_helpers.cpp" />
     <ClCompile Include="source\tests.profile_reader.cpp" />
     <ClCompile Include="source\tests.scdt_patcher.cpp" />

@@ -94,7 +94,7 @@ public:
 	struct entry_t
 	{
 		const std::string key_text;
-		std::string val_text;
+		std::string old_text;
 		const tools_t::rec_type_t type;
 		const std::string optional = "";
 	};

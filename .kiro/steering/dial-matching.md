@@ -61,4 +61,4 @@ This is acceptable for vanilla (28 out of 1698 = 1.6%, all are obscure topics). 
 
 ## key_text for DIAL
 
-DIAL entries use a 16-char FNV-1a hash of the fingerprint (INAM bytes) as `key_text`. Same hashing approach as CELL records. The `old_text` field holds the actual topic name for display and `find_by_old_text()` lookups.
+DIAL entries use the topic name as `key_text` (same as `old_text`). The `find_by_old_text()` secondary index provides lookups by topic name during conversion.

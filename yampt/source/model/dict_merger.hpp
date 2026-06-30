@@ -20,7 +20,7 @@ public:
 	dict_merger_t();
 	dict_merger_t(const std::vector<std::string> & paths);
 
-	void add_record(const tools_t::rec_type_t type, const std::string & key_text, const std::string & val_text);
+	void add_record(const tools_t::rec_type_t type, const std::string & key_text, const std::string & new_text);
 
 private:
 	void merge_dict();

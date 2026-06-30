@@ -139,10 +139,10 @@ void esm_converter_t::convert_gmdt()
 		const size_t name_offset = (record_id == "TES3") ? 24 : 0;
 		const auto & prefix = esm.get_value().content.substr(0, name_offset);
 		const auto & suffix = esm.get_value().content.substr(name_offset + 64);
-		auto val_text = esm.get_value().content.substr(name_offset, 64);
-		val_text = tools_t::erase_null_chars(val_text);
+		auto old_text = esm.get_value().content.substr(name_offset, 64);
+		old_text = tools_t::erase_null_chars(old_text);
 		std::string new_text;
-		if (!make_new_text({ val_text, val_text, type }, new_text))
+		if (!make_new_text({ old_text, old_text, type }, new_text))
 			continue;
 
 		new_text.resize(64);
@@ -165,9 +165,9 @@ void esm_converter_t::convert_cell()
 		if (esm.get_value().exist && esm.get_value().text != "")
 		{
 			const auto & key_text = esm.get_value().text;
-			const auto & val_text = esm.get_value().text;
+			const auto & old_text = esm.get_value().text;
 			std::string new_text;
-			if (!make_new_text({ key_text, val_text, type }, new_text))
+			if (!make_new_text({ key_text, old_text, type }, new_text))
 				continue;
 
 			/* null terminated, can't be empty */
@@ -192,9 +192,9 @@ void esm_converter_t::convert_pgrd()
 		if (esm.get_value().exist && esm.get_value().text != "")
 		{
 			const auto & key_text = esm.get_value().text;
-			const auto & val_text = esm.get_value().text;
+			const auto & old_text = esm.get_value().text;
 			std::string new_text;
-			if (!make_new_text({ key_text, val_text, type }, new_text))
+			if (!make_new_text({ key_text, old_text, type }, new_text))
 				continue;
 
 			new_text += '\0';
@@ -218,9 +218,9 @@ void esm_converter_t::convert_anam()
 		if (esm.get_value().exist && esm.get_value().text != "")
 		{
 			const auto & key_text = esm.get_value().text;
-			const auto & val_text = esm.get_value().text;
+			const auto & old_text = esm.get_value().text;
 			std::string new_text;
-			if (!make_new_text({ key_text, val_text, type }, new_text))
+			if (!make_new_text({ key_text, old_text, type }, new_text))
 				continue;
 
 			new_text += '\0';
@@ -275,9 +275,9 @@ void esm_converter_t::convert_dnam()
 		while (esm.get_value().exist)
 		{
 			const auto & key_text = esm.get_value().text;
-			const auto & val_text = esm.get_value().text;
+			const auto & old_text = esm.get_value().text;
 			std::string new_text;
-			if (make_new_text({ key_text, val_text, type }, new_text))
+			if (make_new_text({ key_text, old_text, type }, new_text))
 			{
 				new_text += '\0';
 				convert_record_content(new_text);
@@ -302,9 +302,9 @@ void esm_converter_t::convert_cndt()
 		while (esm.get_value().exist)
 		{
 			const auto & key_text = esm.get_value().text;
-			const auto & val_text = esm.get_value().text;
+			const auto & old_text = esm.get_value().text;
 			std::string new_text;
-			if (make_new_text({ key_text, val_text, type }, new_text))
+			if (make_new_text({ key_text, old_text, type }, new_text))
 			{
 				new_text += '\0';
 				convert_record_content(new_text);
@@ -331,9 +331,9 @@ void esm_converter_t::convert_gmst()
 		    esm.get_key().text.substr(0, 1) == "s") /* possible exception */
 		{
 			const auto & key_text = esm.get_key().text;
-			const auto & val_text = esm.get_value().text;
+			const auto & old_text = esm.get_value().text;
 			std::string new_text;
-			if (!make_new_text({ key_text, val_text, type }, new_text))
+			if (!make_new_text({ key_text, old_text, type }, new_text))
 				continue;
 
 			/* null terminated only if empty */
@@ -359,9 +359,9 @@ void esm_converter_t::convert_fnam()
 		if (esm.get_key().exist && esm.get_value().exist && esm.get_key().text != "player")
 		{
 			const auto & key_text = esm.get_record().id + "^" + esm.get_key().text;
-			const auto & val_text = esm.get_value().text;
+			const auto & old_text = esm.get_value().text;
 			std::string new_text;
-			if (!make_new_text({ key_text, val_text, type }, new_text))
+			if (!make_new_text({ key_text, old_text, type }, new_text))
 				continue;
 
 			/* null terminated, don't exist if empty */
@@ -389,9 +389,9 @@ void esm_converter_t::convert_desc()
 			continue;
 
 		const auto & key_text = record_id + "^" + esm.get_key().text;
-		const auto & val_text = esm.get_value().text;
+		const auto & old_text = esm.get_value().text;
 		std::string new_text;
-		if (!make_new_text({ key_text, val_text, type }, new_text))
+		if (!make_new_text({ key_text, old_text, type }, new_text))
 			continue;
 
 		if (record_id == "BSGN")
@@ -419,9 +419,9 @@ void esm_converter_t::convert_text()
 		if (esm.get_key().exist && esm.get_value().exist)
 		{
 			const auto & key_text = esm.get_key().text;
-			const auto & val_text = esm.get_value().text;
+			const auto & old_text = esm.get_value().text;
 			std::string new_text;
-			if (!make_new_text({ key_text, val_text, type }, new_text))
+			if (!make_new_text({ key_text, old_text, type }, new_text))
 				continue;
 
 			/* not null terminated, don't exist if empty */
@@ -450,9 +450,9 @@ void esm_converter_t::convert_rnam()
 		while (esm.get_value().exist)
 		{
 			const auto & key_text = esm.get_key().text + "^" + std::to_string(esm.get_value().counter);
-			const auto & val_text = esm.get_value().text;
+			const auto & old_text = esm.get_value().text;
 			std::string new_text;
-			if (make_new_text({ key_text, val_text, type }, new_text))
+			if (make_new_text({ key_text, old_text, type }, new_text))
 			{
 				/* null terminated up to 32 */
 				new_text.resize(32);
@@ -480,9 +480,9 @@ void esm_converter_t::convert_indx()
 			continue;
 
 		const auto & key_text = esm.get_record().id + "^" + tools_t::get_indx(esm.get_key().content);
-		const auto & val_text = esm.get_value().text;
+		const auto & old_text = esm.get_value().text;
 		std::string new_text;
-		if (!make_new_text({ key_text, val_text, type }, new_text))
+		if (!make_new_text({ key_text, old_text, type }, new_text))
 			continue;
 
 		add_null_terminator_if_empty(new_text);
@@ -506,9 +506,9 @@ void esm_converter_t::convert_dial()
 		if (tools_t::get_dialog_type(esm.get_key().content) == "T" && esm.get_value().exist)
 		{
 			const auto & key_text = esm.get_value().text;
-			const auto & val_text = esm.get_value().text;
+			const auto & old_text = esm.get_value().text;
 			std::string new_text;
-			if (!make_new_text({ key_text, val_text, type }, new_text))
+			if (!make_new_text({ key_text, old_text, type }, new_text))
 				continue;
 
 			/* null terminated */
@@ -550,9 +550,9 @@ void esm_converter_t::convert_info()
 			continue;
 
 		const auto & key_text = key_prefix + "^" + esm.get_key().text;
-		const auto & val_text = esm.get_value().text;
+		const auto & old_text = esm.get_value().text;
 		std::string new_text;
-		if (!make_new_text({ key_text, val_text, type }, new_text))
+		if (!make_new_text({ key_text, old_text, type }, new_text))
 			continue;
 
 		add_null_terminator_if_empty(new_text);
@@ -565,6 +565,8 @@ void esm_converter_t::convert_info()
 void esm_converter_t::convert_bnam()
 {
 	size_t dial_index = 0;
+	std::string dial_type;
+	std::string dial_name;
 
 	reset_counters();
 	const auto & type = tools_t::rec_type_t::bnam;
@@ -576,7 +578,11 @@ void esm_converter_t::convert_bnam()
 			esm.set_key("DATA");
 			esm.set_value("NAME");
 			if (esm.get_key().exist && esm.get_value().exist)
+			{
 				dial_index = i;
+				dial_type = tools_t::get_dialog_type(esm.get_key().content);
+				dial_name = esm.get_value().text;
+			}
 
 			continue;
 		}
@@ -589,16 +595,18 @@ void esm_converter_t::convert_bnam()
 		if (!esm.get_key().exist || !esm.get_value().exist)
 			continue;
 
-		const auto & key_text = esm.get_key().text;
-		const auto & val_text = esm.get_value().text;
+		const auto & inam = esm.get_key().text;
+		const auto & key_text = dial_type + "^" + dial_name + "^" + inam;
+		const auto & old_script = esm.get_value().text;
 
 		counter_all++;
-		script_parser_t parser(type, merger, key_text, get_name().full, val_text);
+		script_parser_t parser(type, merger, key_text, get_name().full, old_script);
 
 		std::string new_script = parser.get_new_script();
-		if (is_identical(val_text, new_script))
+		if (is_identical(old_script, new_script))
 			continue;
 
+		counter_converted++;
 		convert_record_content(new_script);
 		esm.set_modified(dial_index);
 	}
@@ -625,15 +633,16 @@ void esm_converter_t::convert_scpt()
 			continue;
 
 		const auto & key_text = esm.get_key().text;
-		const auto & val_text = esm.get_value().text;
+		const auto & old_script = esm.get_value().text;
 
 		counter_all++;
-		script_parser_t parser(type, merger, key_text, get_name().full, val_text, old_scdt);
+		script_parser_t parser(type, merger, key_text, get_name().full, old_script, old_scdt);
 
 		const auto & new_script = parser.get_new_script();
-		if (is_identical(val_text, new_script))
+		if (is_identical(old_script, new_script))
 			continue;
 
+		counter_converted++;
 		convert_record_content(new_script);
 
 		esm.set_value("SCDT");
@@ -673,7 +682,11 @@ bool esm_converter_t::make_new_text(const tools_t::entry_t & entry, std::string 
 		}
 
 		new_text = found->new_text;
-		return !is_identical(entry.val_text, new_text);
+		if (is_identical(entry.old_text, new_text))
+			return false;
+
+		counter_converted++;
+		return true;
 	}
 
 	counter_unchanged++;
@@ -709,7 +722,6 @@ void esm_converter_t::convert_record_content(const std::string & new_text)
 	rec_content.erase(4, 4);
 	rec_content.insert(4, tools_t::convert_uint_to_string_byte_array(rec_size));
 	esm.replace_record(rec_content);
-	counter_converted++;
 }
 
 void esm_converter_t::print_log_line(const tools_t::rec_type_t type)
@@ -740,21 +752,21 @@ bool esm_converter_t::detect_encoding()
 	return false;
 }
 
-bool esm_converter_t::detect_windows_1250_encoding(const std::string & val_text)
+bool esm_converter_t::detect_windows_1250_encoding(const std::string & text)
 {
-	// 156 œ ś
-	// 159 Ÿ ź
-	// 179 ³ ł
-	// 185 ¹ ą
-	// 191 ¿ ż
-	// 230 æ ć
-	// 234 ê ę
-	// 241 ñ ń
-	// 243 ó ó <- found in Tamriel Rebuilt
+	// 156 Ĺ“ Ĺ›
+	// 159 Ĺ¸ Ĺş
+	// 179 Âł Ĺ‚
+	// 185 Âą Ä…
+	// 191 Âż ĹĽ
+	// 230 Ă¦ Ä‡
+	// 234 ĂŞ Ä™
+	// 241 Ă± Ĺ„
+	// 243 Ăł Ăł <- found in Tamriel Rebuilt
 
 	std::ostringstream ss;
 	ss << static_cast<char>(156) << static_cast<char>(159) << static_cast<char>(179) << static_cast<char>(185)
 	   << static_cast<char>(191) << static_cast<char>(230) << static_cast<char>(234) << static_cast<char>(241);
 
-	return val_text.find_first_of(ss.str()) != std::string::npos;
+	return text.find_first_of(ss.str()) != std::string::npos;
 }

@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.999-alpha] - 2026-06-21
+## [0.735] - 2026-06-21
 
 ### Added
 - yTranslator: GUI translation workbench with spell check, annotations, history, and translation suggestions

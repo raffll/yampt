@@ -22,12 +22,12 @@ dict_merger_t::dict_merger_t(const std::vector<std::string> & paths)
 void dict_merger_t::add_record(
     const tools_t::rec_type_t type,
     const std::string & key_text,
-    const std::string & val_text)
+    const std::string & new_text)
 {
 	tools_t::record_entry_t entry;
 	entry.key_text = key_text;
 	entry.old_text = key_text;
-	entry.new_text = val_text;
+	entry.new_text = new_text;
 	dict.at(type).insert(entry);
 }
 

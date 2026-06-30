@@ -1575,8 +1575,8 @@ void dict_creator_t::make_dict_cell_exterior()
 
 		esm.select_record(it_match->second);
 		esm.set_value("NAME");
-		const auto & val_text = esm.get_value().text;
-		insert_entry_base(ref_cell_name, ref_cell_name, val_text, tools_t::rec_type_t::cell, status_t::translated);
+		const auto & new_text = esm.get_value().text;
+		insert_entry_base(ref_cell_name, ref_cell_name, new_text, tools_t::rec_type_t::cell, status_t::translated);
 	}
 
 	make_dict_cell_add_missing(missing_cells);
@@ -1639,9 +1639,9 @@ void dict_creator_t::make_dict_cell_interior()
 
 		esm.select_record(native_pos);
 		esm.set_value("NAME");
-		const auto & val_text = esm.get_value().text;
+		const auto & new_text = esm.get_value().text;
 
-		insert_entry_base(ref_cell_name, ref_cell_name, val_text, tools_t::rec_type_t::cell, status_t::translated);
+		insert_entry_base(ref_cell_name, ref_cell_name, new_text, tools_t::rec_type_t::cell, status_t::translated);
 	}
 
 	make_dict_cell_interior_heuristic(missing_cells, matched_native_records);
@@ -1894,6 +1894,9 @@ void dict_creator_t::insert_entry_base(
 	auto * dup = dict.at(type).find(key_text);
 	if (dup)
 	{
+		if (dup->old_text == old_text && dup->new_text == new_text)
+			return;
+
 		dup->status = status_t::duplicate;
 		if (dup->details.empty())
 			dup->details = new_text;

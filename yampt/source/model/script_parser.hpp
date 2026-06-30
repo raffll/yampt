@@ -26,8 +26,8 @@ public:
 	script_parser_t(
 	    const tools_t::rec_type_t type,
 	    const dict_merger_t & merger,
-	    const std::string & script_name,
-	    const std::string & file_name,
+	    const std::string & record_key,
+	    const std::string & source_path,
 	    const std::string & old_script,
 	    const std::string & old_scdt = "");
 
@@ -50,8 +50,8 @@ private:
 
 	const tools_t::rec_type_t type;
 	const dict_merger_t * merger;
-	const std::string script_name;
-	const std::string file_name;
+	const std::string record_key;
+	const std::string source_path;
 	const std::string old_script;
 	const std::string old_scdt;
 
