@@ -213,7 +213,7 @@ if exist "$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\Qt6\plugins\tls"
     <ClCompile Include="source\dialog\find_replace_dialog.cpp" />
     <ClCompile Include="source\dialog\dict_selection_dialog.cpp" />
     <ClCompile Include="source\dialog\first_run_dialog.cpp" />
-    <ClCompile Include="source\dialog\settings_dialog.cpp" />
+    <ClCompile Include="source\dialog\translator_settings_dialog.cpp" />
     <ClCompile Include="source\dialog\language_settings_view.cpp" />
     <ClCompile Include="source\dialog\translation_settings_view.cpp" />
     <ClCompile Include="source\dialog\shortcuts_settings_view.cpp" />
@@ -427,7 +427,7 @@ if exist "$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\Qt6\plugins\tls"
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
-    <CustomBuild Include="source\dialog\settings_dialog.hpp">
+    <CustomBuild Include="source\dialog\translator_settings_dialog.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
@@ -483,94 +483,35 @@ if exist "$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\Qt6\plugins\tls"
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="$(IntDir)moc_main_window.cpp">
-      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_main_window.cpp')">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="$(IntDir)moc_record_table_model.cpp">
-      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_record_table_model.cpp')">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="$(IntDir)moc_translation_edit_view.cpp">
-      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_translation_edit_view.cpp')">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="$(IntDir)moc_editor_view.cpp">
-      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_editor_view.cpp')">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="$(IntDir)moc_filter_tree_view.cpp">
-      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_filter_tree_view.cpp')">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="$(IntDir)moc_status_filter_view.cpp">
-      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_status_filter_view.cpp')">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="$(IntDir)moc_record_table_view.cpp">
-      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_record_table_view.cpp')">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="$(IntDir)moc_editor_highlighter.cpp">
-      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_editor_highlighter.cpp')">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="$(IntDir)moc_validation_view.cpp">
-      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_validation_view.cpp')">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="$(IntDir)moc_glossary_highlighter.cpp">
-      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_glossary_highlighter.cpp')">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="$(IntDir)moc_topic_highlighter.cpp">
-      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_topic_highlighter.cpp')">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="$(IntDir)moc_book_preview_view.cpp">
-      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_book_preview_view.cpp')">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="$(IntDir)moc_sidebar_view.cpp">
-      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_sidebar_view.cpp')">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="$(IntDir)moc_annotations_view.cpp">
-      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_annotations_view.cpp')">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="$(IntDir)moc_history_view.cpp">
-      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_history_view.cpp')">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="$(IntDir)moc_log_view.cpp">
-      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_log_view.cpp')">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="$(IntDir)moc_dict_selection_dialog.cpp">
-      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_dict_selection_dialog.cpp')">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="$(IntDir)moc_line_number_gutter.cpp">
-      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_line_number_gutter.cpp')">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="$(IntDir)moc_first_run_dialog.cpp">
-      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_first_run_dialog.cpp')">true</ExcludedFromBuild>
-    </ClCompile>
-
-    <ClCompile Include="$(IntDir)moc_find_replace_dialog.cpp">
-      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_find_replace_dialog.cpp')">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="$(IntDir)moc_settings_dialog.cpp">
-      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_settings_dialog.cpp')">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="$(IntDir)moc_language_settings_view.cpp">
-      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_language_settings_view.cpp')">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="$(IntDir)moc_translation_settings_view.cpp">
-      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_translation_settings_view.cpp')">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="$(IntDir)moc_shortcuts_settings_view.cpp">
-      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_shortcuts_settings_view.cpp')">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="$(IntDir)moc_workspace_settings_view.cpp">
-      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_workspace_settings_view.cpp')">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="$(IntDir)moc_translation_suggestion_view.cpp">
-      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_translation_suggestion_view.cpp')">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="$(IntDir)moc_ctranslate2_translator.cpp">
-      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_ctranslate2_translator.cpp')">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="$(IntDir)moc_deepl_translator.cpp">
-      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_deepl_translator.cpp')">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="$(IntDir)moc_google_translator.cpp">
-      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_google_translator.cpp')">true</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="$(IntDir)moc_main_window.cpp" />
+    <ClCompile Include="$(IntDir)moc_record_table_model.cpp" />
+    <ClCompile Include="$(IntDir)moc_translation_edit_view.cpp" />
+    <ClCompile Include="$(IntDir)moc_editor_view.cpp" />
+    <ClCompile Include="$(IntDir)moc_filter_tree_view.cpp" />
+    <ClCompile Include="$(IntDir)moc_status_filter_view.cpp" />
+    <ClCompile Include="$(IntDir)moc_record_table_view.cpp" />
+    <ClCompile Include="$(IntDir)moc_editor_highlighter.cpp" />
+    <ClCompile Include="$(IntDir)moc_validation_view.cpp" />
+    <ClCompile Include="$(IntDir)moc_glossary_highlighter.cpp" />
+    <ClCompile Include="$(IntDir)moc_topic_highlighter.cpp" />
+    <ClCompile Include="$(IntDir)moc_book_preview_view.cpp" />
+    <ClCompile Include="$(IntDir)moc_sidebar_view.cpp" />
+    <ClCompile Include="$(IntDir)moc_annotations_view.cpp" />
+    <ClCompile Include="$(IntDir)moc_history_view.cpp" />
+    <ClCompile Include="$(IntDir)moc_log_view.cpp" />
+    <ClCompile Include="$(IntDir)moc_dict_selection_dialog.cpp" />
+    <ClCompile Include="$(IntDir)moc_line_number_gutter.cpp" />
+    <ClCompile Include="$(IntDir)moc_first_run_dialog.cpp" />
+    <ClCompile Include="$(IntDir)moc_find_replace_dialog.cpp" />
+    <ClCompile Include="$(IntDir)moc_translator_settings_dialog.cpp" />
+    <ClCompile Include="$(IntDir)moc_language_settings_view.cpp" />
+    <ClCompile Include="$(IntDir)moc_translation_settings_view.cpp" />
+    <ClCompile Include="$(IntDir)moc_shortcuts_settings_view.cpp" />
+    <ClCompile Include="$(IntDir)moc_workspace_settings_view.cpp" />
+    <ClCompile Include="$(IntDir)moc_translation_suggestion_view.cpp" />
+    <ClCompile Include="$(IntDir)moc_ctranslate2_translator.cpp" />
+    <ClCompile Include="$(IntDir)moc_deepl_translator.cpp" />
+    <ClCompile Include="$(IntDir)moc_google_translator.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

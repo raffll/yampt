@@ -3,7 +3,7 @@
 #include "dialog/dict_selection_dialog.hpp"
 #include "dialog/find_replace_dialog.hpp"
 #include "dialog/first_run_dialog.hpp"
-#include "dialog/settings_dialog.hpp"
+#include "dialog/translator_settings_dialog.hpp"
 #include "dialog/spell_context_menu.hpp"
 #include "highlighter/glossary_highlighter.hpp"
 #include "highlighter/editor_highlighter.hpp"
@@ -855,9 +855,9 @@ void main_window_t::on_encoding_changed(int index)
 void main_window_t::on_open_settings()
 {
 	const auto dict_dir = QCoreApplication::applicationDirPath().toStdString() + "/dictionaries";
-	settings_dialog_t dialog(settings_, dict_dir, settings_dialog_t::context_t::translator, this);
+	translator_settings_dialog_t dialog(settings_, dict_dir, this);
 
-	connect(&dialog, &settings_dialog_t::settings_applied, this, [this](const std::string & category)
+	connect(&dialog, &translator_settings_dialog_t::settings_applied, this, [this](const std::string & category)
 	{
 		on_settings_applied(category);
 	});

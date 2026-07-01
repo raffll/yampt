@@ -1,6 +1,7 @@
 #include "editor_window.hpp"
 #include "view/plugin_workspace_view.hpp"
-#include <dialog/settings_dialog.hpp>
+#include "dialog/editor_settings_dialog.hpp"
+#include <io/app_settings.hpp>
 #include <QAction>
 #include <QCloseEvent>
 #include <QMenuBar>
@@ -109,6 +110,6 @@ void editor_window_t::closeEvent(QCloseEvent * event)
 
 void editor_window_t::on_open_settings()
 {
-	settings_dialog_t dialog(settings_, "", settings_dialog_t::context_t::editor, this);
+	editor_settings_dialog_t dialog(settings_, this);
 	dialog.exec();
 }

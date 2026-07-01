@@ -35,7 +35,7 @@
     <ClCompile Include="source\dialog\find_replace_dialog.cpp" />
     <ClCompile Include="source\dialog\dict_selection_dialog.cpp" />
     <ClCompile Include="source\dialog\first_run_dialog.cpp" />
-    <ClCompile Include="source\dialog\settings_dialog.cpp" />
+    <ClCompile Include="source\dialog\translator_settings_dialog.cpp" />
     <ClCompile Include="source\dialog\language_settings_view.cpp" />
     <ClCompile Include="source\dialog\translation_settings_view.cpp" />
     <ClCompile Include="source\dialog\spell_context_menu.cpp" />
@@ -76,7 +76,7 @@
     <ClCompile Include="..\yampt\source\decoder\view_tree_format.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="source\dialog\settings_dialog.hpp" />
+    <ClInclude Include="source\dialog\translator_settings_dialog.hpp" />
     <ClInclude Include="source\dialog\language_settings_view.hpp" />
     <ClInclude Include="source\dialog\translation_settings_view.hpp" />
     <ClInclude Include="source\dialog\shortcuts_settings_view.hpp" />

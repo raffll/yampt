@@ -10,6 +10,8 @@
     <ClCompile Include="source\view\messages_view.cpp" />
     <ClCompile Include="source\dialog\plugin_select_dialog.cpp" />
     <ClCompile Include="source\dialog\filter_dialog.cpp" />
+    <ClCompile Include="source\dialog\editor_paths_view.cpp" />
+    <ClCompile Include="source\dialog\editor_settings_dialog.cpp" />
     <ClCompile Include="source\io\profile_reader.cpp" />
     <ClCompile Include="..\yampt\source\utility\tools.cpp" />
     <ClCompile Include="..\yampt\source\io\esm_reader.cpp" />
@@ -21,14 +23,6 @@
     <ClCompile Include="..\yampt\source\scanner\conflict_compute.cpp" />
     <ClCompile Include="..\yampt\source\decoder\conflict_slots.cpp" />
     <ClCompile Include="..\yampt\source\decoder\view_tree_format.cpp" />
-    <ClCompile Include="$(IntDir)moc_editor_window.cpp" />
-    <ClCompile Include="$(IntDir)moc_plugin_workspace_view.cpp" />
-    <ClCompile Include="$(IntDir)moc_nav_tree_model.cpp" />
-    <ClCompile Include="$(IntDir)moc_view_tree_model.cpp" />
-    <ClCompile Include="$(IntDir)moc_plugin_select_dialog.cpp" />
-    <ClCompile Include="$(IntDir)moc_filter_dialog.cpp" />
-    <ClCompile Include="$(IntDir)moc_messages_view.cpp" />
-    <ClCompile Include="source\dialog\editor_paths_view.cpp" />
-    <ClCompile Include="$(IntDir)moc_editor_paths_view.cpp" />
+    <ClCompile Include="..\yampt.core\source\io\app_settings.cpp" />
   </ItemGroup>
 </Project>
