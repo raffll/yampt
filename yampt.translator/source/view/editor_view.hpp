@@ -32,8 +32,7 @@ public:
 	void set_details(const std::string & text);
 	QList<QTextEdit::ExtraSelection> highlight_adapted_diff(
 	    const std::string & new_text,
-	    const std::string & adapted_from,
-	    bool use_original = false);
+	    const std::string & adapted_from);
 	void clear_details();
 
 	void load_script_entry(const std::string & old_text, const std::string & new_text);

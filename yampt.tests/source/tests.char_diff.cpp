@@ -86,3 +86,119 @@ TEST_CASE("compute_char_diff, completely different strings", "[u]")
 	REQUIRE(reconstructed_new == "xyz");
 	REQUIRE(reconstructed_old == "abc");
 }
+
+namespace
+{
+
+struct highlight_range_t
+{
+	int start;
+	int end;
+};
+
+std::vector<highlight_range_t> compute_changed_highlights(
+    const std::string & current_text,
+    const std::string & details_text)
+{
+	std::vector<highlight_range_t> ranges;
+	const auto segments = compute_char_diff(current_text, details_text);
+
+	int position = 0;
+	for (const auto & segment : segments)
+	{
+		const int length = static_cast<int>(segment.text.size());
+
+		if (segment.operation == diff_op_t::inserted)
+		{
+			ranges.push_back({ position, position + length });
+			position += length;
+		}
+		else if (segment.operation == diff_op_t::deleted)
+		{
+			const int mark_pos = position < static_cast<int>(details_text.size()) ? position : position - 1;
+			if (mark_pos >= 0 && mark_pos < static_cast<int>(details_text.size()))
+				ranges.push_back({ mark_pos, mark_pos + 1 });
+		}
+		else if (segment.operation == diff_op_t::unchanged)
+		{
+			position += length;
+		}
+	}
+	return ranges;
+}
+
+} // namespace
+
+TEST_CASE("compute_changed_highlights, identical texts produce no highlights", "[u]")
+{
+	const auto ranges = compute_changed_highlights("Balmora", "Balmora");
+	REQUIRE(ranges.empty());
+}
+
+TEST_CASE("compute_changed_highlights, single character change", "[u]")
+{
+	const auto ranges = compute_changed_highlights("cat", "car");
+	REQUIRE(ranges.size() == 1);
+	REQUIRE(ranges[0].start == 2);
+	REQUIRE(ranges[0].end == 3);
+}
+
+TEST_CASE("compute_changed_highlights, details text is shorter", "[u]")
+{
+	const auto ranges = compute_changed_highlights("hello", "heo");
+	REQUIRE(!ranges.empty());
+	for (const auto & r : ranges)
+	{
+		REQUIRE(r.start >= 0);
+		REQUIRE(r.end <= 3);
+	}
+}
+
+TEST_CASE("compute_changed_highlights, details text is longer", "[u]")
+{
+	const auto ranges = compute_changed_highlights("heo", "hello");
+	REQUIRE(!ranges.empty());
+	bool found_insertion = false;
+	for (const auto & r : ranges)
+	{
+		REQUIRE(r.start >= 0);
+		REQUIRE(r.end <= 5);
+		if (r.end - r.start > 0)
+			found_insertion = true;
+	}
+	REQUIRE(found_insertion);
+}
+
+TEST_CASE("compute_changed_highlights, deletion at end highlights last char", "[u]")
+{
+	const auto ranges = compute_changed_highlights("abcde", "abc");
+	bool has_highlight_near_end = false;
+	for (const auto & r : ranges)
+	{
+		if (r.start >= 2)
+			has_highlight_near_end = true;
+	}
+	REQUIRE(has_highlight_near_end);
+}
+
+TEST_CASE("compute_changed_highlights, deletion at start highlights first char", "[u]")
+{
+	const auto ranges = compute_changed_highlights("XXabc", "abc");
+	bool has_highlight_at_start = false;
+	for (const auto & r : ranges)
+	{
+		if (r.start == 0)
+			has_highlight_at_start = true;
+	}
+	REQUIRE(has_highlight_at_start);
+}
+
+TEST_CASE("compute_changed_highlights, completely different texts", "[u]")
+{
+	const auto ranges = compute_changed_highlights("abc", "xyz");
+	REQUIRE(!ranges.empty());
+	int total_highlighted = 0;
+	for (const auto & r : ranges)
+		total_highlighted += r.end - r.start;
+	REQUIRE(total_highlighted == 3);
+}

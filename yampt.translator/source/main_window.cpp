@@ -692,12 +692,12 @@ void main_window_t::load_record(int row)
 	if (row_data->status == status_t::adapted && !load_result.details.empty())
 	{
 		m_extra_sel_adapted.adapted_diff =
-		    m_editor_view->highlight_adapted_diff(row_data->new_text, load_result.details, false);
+		    m_editor_view->highlight_adapted_diff(row_data->new_text, load_result.details);
 	}
 	else if (row_data->status == status_t::changed && !load_result.details.empty())
 	{
 		m_extra_sel_adapted.adapted_diff =
-		    m_editor_view->highlight_adapted_diff(row_data->old_text, load_result.details, true);
+		    m_editor_view->highlight_adapted_diff(row_data->old_text, load_result.details);
 	}
 
 	apply_extra_selections(m_editor_view->details_view(), m_extra_sel_adapted);

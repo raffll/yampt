@@ -169,8 +169,7 @@ void editor_view_t::set_details(const std::string & text)
 
 QList<QTextEdit::ExtraSelection> editor_view_t::highlight_adapted_diff(
     const std::string & new_text,
-    const std::string & adapted_from,
-    bool /*use_original*/)
+    const std::string & adapted_from)
 {
 	QList<QTextEdit::ExtraSelection> selections;
 
@@ -183,24 +182,7 @@ QList<QTextEdit::ExtraSelection> editor_view_t::highlight_adapted_diff(
 		remainder = adapted_from.substr(pipe_pos);
 	}
 
-	const auto segments = compute_char_diff(first_segment, new_text);
-
-	std::string merged_text;
-	std::vector<std::pair<int, int>> inserted_ranges;
-	std::vector<std::pair<int, int>> deleted_ranges;
-
-	for (const auto & segment : segments)
-	{
-		const int start = static_cast<int>(merged_text.size());
-		merged_text += segment.text;
-		const int end = static_cast<int>(merged_text.size());
-
-		if (segment.operation == diff_op_t::inserted)
-			inserted_ranges.emplace_back(start, end);
-		else if (segment.operation == diff_op_t::deleted)
-			deleted_ranges.emplace_back(start, end);
-	}
-
+	std::string display_text = first_segment;
 	if (!remainder.empty())
 	{
 		auto remainder_display = remainder;
@@ -209,36 +191,51 @@ QList<QTextEdit::ExtraSelection> editor_view_t::highlight_adapted_diff(
 			if (ch == '|')
 				ch = '\n';
 		}
-		merged_text += remainder_display;
+		display_text += remainder_display;
 	}
+	m_adapted_from_view->setPlainText(QString::fromStdString(display_text));
 
-	m_adapted_from_view->setPlainText(QString::fromStdString(merged_text));
+	const auto q_display = QString::fromStdString(first_segment);
+	const auto q_new_text = QString::fromStdString(new_text);
+	const auto segments = compute_char_diff(q_new_text.toStdString(), q_display.toStdString());
 
-	QTextCharFormat inserted_format;
-	inserted_format.setBackground(QColor(180, 255, 180));
+	QTextCharFormat diff_format;
+	diff_format.setBackground(QColor(255, 200, 130));
 
-	QTextCharFormat deleted_format;
-	deleted_format.setBackground(QColor(255, 180, 180));
-	deleted_format.setFontStrikeOut(true);
-
-	for (const auto & [start, end] : inserted_ranges)
+	int char_position = 0;
+	for (const auto & segment : segments)
 	{
-		QTextEdit::ExtraSelection sel;
-		sel.format = inserted_format;
-		sel.cursor = m_adapted_from_view->textCursor();
-		sel.cursor.setPosition(start);
-		sel.cursor.setPosition(end, QTextCursor::KeepAnchor);
-		selections.append(sel);
-	}
+		const auto q_segment = QString::fromStdString(segment.text);
+		const int char_length = q_segment.size();
 
-	for (const auto & [start, end] : deleted_ranges)
-	{
-		QTextEdit::ExtraSelection sel;
-		sel.format = deleted_format;
-		sel.cursor = m_adapted_from_view->textCursor();
-		sel.cursor.setPosition(start);
-		sel.cursor.setPosition(end, QTextCursor::KeepAnchor);
-		selections.append(sel);
+		if (segment.operation == diff_op_t::inserted)
+		{
+			QTextEdit::ExtraSelection sel;
+			sel.format = diff_format;
+			sel.cursor = m_adapted_from_view->textCursor();
+			sel.cursor.setPosition(char_position);
+			sel.cursor.setPosition(char_position + char_length, QTextCursor::KeepAnchor);
+			selections.append(sel);
+			char_position += char_length;
+		}
+		else if (segment.operation == diff_op_t::deleted)
+		{
+			const int total_chars = q_display.size();
+			const int mark_pos = char_position < total_chars ? char_position : char_position - 1;
+			if (mark_pos >= 0 && mark_pos < total_chars)
+			{
+				QTextEdit::ExtraSelection sel;
+				sel.format = diff_format;
+				sel.cursor = m_adapted_from_view->textCursor();
+				sel.cursor.setPosition(mark_pos);
+				sel.cursor.setPosition(mark_pos + 1, QTextCursor::KeepAnchor);
+				selections.append(sel);
+			}
+		}
+		else if (segment.operation == diff_op_t::unchanged)
+		{
+			char_position += char_length;
+		}
 	}
 
 	return selections;

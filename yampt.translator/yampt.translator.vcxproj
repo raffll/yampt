@@ -170,15 +170,6 @@
       <AdditionalLibraryDirectories>$(SolutionDir)external\CTranslate2\build\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup>
-    <PostBuildEvent>
-      <Command>xcopy /Y /D "$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\bin\libssl-3-x64.dll" "$(OutDir)"
-xcopy /Y /D "$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\bin\libcrypto-3-x64.dll" "$(OutDir)"
-xcopy /Y /D "$(SolutionDir)external\CTranslate2\build\Release\ctranslate2.dll" "$(OutDir)"
-if exist "$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\Qt6\plugins\tls" xcopy /Y /D /I "$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\Qt6\plugins\tls\*.*" "$(OutDir)tls"</Command>
-      <Message>Copying runtime DLLs to output directory</Message>
-    </PostBuildEvent>
-  </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="source\main.cpp" />
     <ClCompile Include="source\main_window.cpp" />
@@ -544,5 +535,12 @@ if exist "$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\Qt6\plugins\tls"
       <QtPlatformPlugins Include="$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\Qt6\plugins\platforms\*.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(QtPlatformPlugins)" DestinationFolder="$(OutDir)platforms" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="CopyQtTlsPlugins" AfterTargets="Build" Condition="Exists('$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\Qt6\plugins\tls')">
+    <MakeDir Directories="$(OutDir)tls" />
+    <ItemGroup>
+      <QtTlsPlugins Include="$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\Qt6\plugins\tls\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(QtTlsPlugins)" DestinationFolder="$(OutDir)tls" SkipUnchangedFiles="true" />
   </Target>
 </Project>
