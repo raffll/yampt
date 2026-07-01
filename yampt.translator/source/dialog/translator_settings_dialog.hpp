@@ -11,7 +11,6 @@ class app_settings_t;
 class language_settings_view_t;
 class translation_settings_view_t;
 class shortcuts_settings_view_t;
-class workspace_settings_view_t;
 
 class translator_settings_dialog_t : public QDialog
 {
@@ -39,5 +38,4 @@ private:
     language_settings_view_t * m_language_view = nullptr;
     translation_settings_view_t * m_translation_view = nullptr;
     shortcuts_settings_view_t * m_shortcuts_view = nullptr;
-    workspace_settings_view_t * m_workspace_view = nullptr;
 };

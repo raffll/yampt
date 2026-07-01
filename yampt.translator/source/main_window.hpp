@@ -213,7 +213,6 @@ private:
 
 	QAction * m_add_folder_action = nullptr;
 	QAction * m_import_archive_action = nullptr;
-	QAction * m_merge_action = nullptr;
 	QAction * m_save_action = nullptr;
 	QAction * m_save_all_action = nullptr;
 	QAction * m_quit_action = nullptr;

@@ -57,12 +57,6 @@ void main_window_t::setup_menu_bar()
 
 	file_menu->addSeparator();
 
-	m_merge_action = new QAction("&Merge Dictionaries...", this);
-	m_merge_action->setToolTip("Merge multiple dictionaries into one");
-	file_menu->addAction(m_merge_action);
-
-	file_menu->addSeparator();
-
 	m_save_action = new QAction("&Save", this);
 	m_save_action->setShortcut(QKeySequence("Ctrl+S"));
 	file_menu->addAction(m_save_action);
@@ -72,16 +66,16 @@ void main_window_t::setup_menu_bar()
 
 	file_menu->addSeparator();
 
-	m_quit_action = new QAction("&Quit", this);
-	m_quit_action->setShortcut(QKeySequence("Alt+F4"));
-	file_menu->addAction(m_quit_action);
-
-	auto * edit_menu = menuBar()->addMenu("&Edit");
-
-	m_settings_action = edit_menu->addAction("Settings");
+	m_settings_action = file_menu->addAction("&Settings...");
 	m_settings_action->setShortcut(QKeySequence("Ctrl+,"));
 	m_settings_action->setToolTip("Open application settings");
 	connect(m_settings_action, &QAction::triggered, this, &main_window_t::on_open_settings);
+
+	file_menu->addSeparator();
+
+	m_quit_action = new QAction("&Quit", this);
+	m_quit_action->setShortcut(QKeySequence("Alt+F4"));
+	file_menu->addAction(m_quit_action);
 
 	auto * view_menu = menuBar()->addMenu("&View");
 	m_translator_view_menu = view_menu;
@@ -292,7 +286,6 @@ void main_window_t::connect_menu_signals()
 {
 	connect(m_save_action, &QAction::triggered, this, &main_window_t::on_save);
 	connect(m_save_all_action, &QAction::triggered, this, &main_window_t::on_save_all);
-	connect(m_merge_action, &QAction::triggered, this, &main_window_t::on_merge);
 	connect(m_quit_action, &QAction::triggered, this, &QWidget::close);
 	connect(m_find_action, &QAction::triggered, this, &main_window_t::on_find);
 	connect(m_escape_action, &QAction::triggered, this, &main_window_t::on_escape);
@@ -329,13 +322,12 @@ void main_window_t::connect_menu_signals()
 			return;
 
 		const auto path = folder.toStdString();
-		const auto roots = m_settings.workspace_roots();
+		auto roots = m_file_list.get_roots();
 		if (std::find(roots.begin(), roots.end(), path) != roots.end())
 			return;
 
-		auto updated_roots = roots;
-		updated_roots.push_back(path);
-		m_settings.set_workspace_roots(updated_roots);
+		roots.push_back(path);
+		m_file_list.scan_roots(roots);
 		scan_workspace();
 		save_config();
 		update_watcher_paths();
@@ -463,20 +455,9 @@ void main_window_t::connect_sidebar_signals()
 	connect(m_sidebar, &sidebar_view_t::item_clicked, this, &main_window_t::on_item_clicked);
 	connect(m_sidebar, &sidebar_view_t::operation_requested, this, &main_window_t::on_operation_requested);
 	connect(m_sidebar, &sidebar_view_t::save_requested, this, &main_window_t::on_save_requested);
+	connect(m_sidebar, &sidebar_view_t::merge_requested, this, &main_window_t::on_merge);
 	connect(m_sidebar, &sidebar_view_t::unload_requested, this, &main_window_t::on_unload_requested);
 	connect(m_sidebar, &sidebar_view_t::delete_requested, this, &main_window_t::on_delete_requested);
-
-	connect(
-	    m_annotations_view,
-	    &annotations_view_t::rebuild_requested,
-	    this,
-	    [this]()
-	{
-		rebuild_annotations();
-		m_last_annotation_version = m_session.dict_version();
-		if (m_editor_controller.current_row() >= 0)
-			load_record(m_editor_controller.current_row());
-	});
 
 	connect(
 	    m_sidebar,
@@ -514,21 +495,20 @@ void main_window_t::connect_sidebar_signals()
 	    this,
 	    [this](const std::string & root_path)
 	{
-		auto roots = m_settings.workspace_roots();
+		auto roots = m_file_list.get_roots();
 		roots.erase(std::remove(roots.begin(), roots.end(), root_path), roots.end());
-		m_settings.set_workspace_roots(roots);
+		m_file_list.scan_roots(roots);
 
 		if (m_active_doc)
 		{
 			const auto * fe = m_file_list.get(m_active_doc->path());
-			if (fe && fe->root_path == root_path)
+			if (!fe)
 				switch_document(nullptr);
 		}
 
 		m_session.close_if([this, &root_path](const document_t & doc)
 		{
-			const auto * fe = m_file_list.get(doc.path());
-			if (fe && fe->root_path == root_path)
+			if (doc.path().find(root_path) == 0)
 			{
 				m_filter_states.erase(doc.path());
 				return true;

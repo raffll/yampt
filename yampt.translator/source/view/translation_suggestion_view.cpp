@@ -7,7 +7,6 @@
 #include <filesystem>
 #include <fstream>
 #include <QComboBox>
-#include <QCoreApplication>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPlainTextEdit>
@@ -42,22 +41,14 @@ translation_suggestion_view_t::translation_suggestion_view_t(QWidget * parent)
 	top_row->addStretch();
 	layout->addLayout(top_row);
 
-	setup_status_bar(layout);
-
-	m_api_key_error_label = new QLabel(this);
-	m_api_key_error_label->setText(QString::fromUtf8("API key not configured \u2014 open Settings"));
-	m_api_key_error_label->setStyleSheet("color: rgb(200, 60, 60); font-size: 11px; margin-left: 4px;");
-	m_api_key_error_label->setVisible(false);
-	layout->addWidget(m_api_key_error_label);
-
 	m_result_text = new QPlainTextEdit(this);
 	m_result_text->setReadOnly(true);
 	m_result_text->setPlaceholderText("Translation suggestion will appear here");
 	layout->addWidget(m_result_text);
 
-	m_counter_label = new QLabel(this);
-	m_counter_label->setStyleSheet("color: rgb(120, 120, 120); font-size: 11px;");
-	layout->addWidget(m_counter_label);
+	m_status_label = new QLabel(this);
+	m_status_label->setStyleSheet("color: rgb(120, 120, 120); font-size: 11px;");
+	layout->addWidget(m_status_label);
 
 	setup_controls();
 }
@@ -93,27 +84,6 @@ void translation_suggestion_view_t::setup_controls()
 	update_provider_status();
 }
 
-void translation_suggestion_view_t::setup_status_bar(QVBoxLayout * layout)
-{
-	auto * status_row = new QHBoxLayout;
-	status_row->setSpacing(12);
-
-	m_ct2_status_label = new QLabel(this);
-	m_ct2_status_label->setStyleSheet("font-size: 11px;");
-	status_row->addWidget(m_ct2_status_label);
-
-	m_deepl_status_label = new QLabel(this);
-	m_deepl_status_label->setStyleSheet("font-size: 11px;");
-	status_row->addWidget(m_deepl_status_label);
-
-	m_google_status_label = new QLabel(this);
-	m_google_status_label->setStyleSheet("font-size: 11px;");
-	status_row->addWidget(m_google_status_label);
-
-	status_row->addStretch();
-	layout->addLayout(status_row);
-}
-
 void translation_suggestion_view_t::set_source_text(const std::string & text)
 {
 	m_source_text = text;
@@ -140,52 +110,44 @@ void translation_suggestion_view_t::apply_provider_settings(const app_settings_t
 	else if (!m_languages.empty())
 		load_model_for_language(0);
 
-	validate_api_key();
+
 	update_provider_status();
 }
 
 void translation_suggestion_view_t::update_provider_status()
 {
-	static const QString green_dot = "\u25CF ";
-	static const QString gray_dot = "\u25CF ";
-	static const QString active_style = "color: rgb(60, 160, 60); font-size: 11px;";
-	static const QString inactive_style = "color: rgb(140, 140, 140); font-size: 11px;";
-
-	if (m_ct2_provider->is_available())
+	auto * provider = active_provider();
+	if (!provider)
 	{
-		auto model_text = m_counter_label->text();
-		m_ct2_status_label->setStyleSheet(active_style);
-		m_ct2_status_label->setText(green_dot + "CT2: " + model_text);
-	}
-	else
-	{
-		m_ct2_status_label->setStyleSheet(inactive_style);
-		m_ct2_status_label->setText(gray_dot + "CT2: No model");
+		m_status_label->setText("");
+		return;
 	}
 
-	if (m_deepl_translator->is_available())
+	if (provider == m_ct2_provider)
 	{
-		const int remaining = m_deepl_translator->remaining_quota();
-		const int limit = 500000;
-		auto chars_text = QString("%L1 / %L2").arg(remaining).arg(limit);
-		m_deepl_status_label->setStyleSheet(active_style);
-		m_deepl_status_label->setText(green_dot + "DeepL: Active (" + chars_text + ")");
+		if (m_ct2_provider->is_available())
+			m_status_label->setText("CTranslate2: model loaded");
+		else
+			m_status_label->setText("CTranslate2: no model");
 	}
-	else
+	else if (provider == m_deepl_translator)
 	{
-		m_deepl_status_label->setStyleSheet(inactive_style);
-		m_deepl_status_label->setText(gray_dot + "DeepL: No API key");
+		if (m_deepl_translator->is_available())
+		{
+			const int remaining = m_deepl_translator->remaining_quota();
+			m_status_label->setText(QString("DeepL: %L1 chars remaining").arg(remaining));
+		}
+		else
+		{
+			m_status_label->setText("DeepL: no API key");
+		}
 	}
-
-	if (m_google_translator->is_available())
+	else if (provider == m_google_translator)
 	{
-		m_google_status_label->setStyleSheet(active_style);
-		m_google_status_label->setText(green_dot + "Google: Active");
-	}
-	else
-	{
-		m_google_status_label->setStyleSheet(inactive_style);
-		m_google_status_label->setText(gray_dot + "Google: No API key");
+		if (m_google_translator->is_available())
+			m_status_label->setText("Google: active");
+		else
+			m_status_label->setText("Google: no API key");
 	}
 }
 
@@ -244,21 +206,7 @@ void translation_suggestion_view_t::load_model_for_language(int index)
 	}
 
 	m_ct2_provider->load_model(lang.model_path);
-
-	if (m_ct2_provider->is_available())
-		m_counter_label->setText(QString::fromStdString("Model loaded: " + lang.display));
-	else
-		m_counter_label->setText("Failed to load model");
-
 	update_provider_status();
-}
-
-void translation_suggestion_view_t::update_counter_label()
-{
-	if (m_ct2_provider->is_available())
-		m_counter_label->setText("Model loaded");
-	else
-		m_counter_label->setText("No model loaded");
 }
 
 ctranslate2_translator_t * translation_suggestion_view_t::ct2_provider() const
@@ -295,19 +243,8 @@ void translation_suggestion_view_t::select_provider(int index)
 	if (m_provider_combo->currentIndex() != index)
 		m_provider_combo->setCurrentIndex(index);
 
-	validate_api_key();
-}
 
-void translation_suggestion_view_t::validate_api_key()
-{
-	auto * provider = active_provider();
-	if (!provider)
-		return;
-
-	bool needs_key = (provider == m_deepl_translator || provider == m_google_translator);
-	bool key_missing = needs_key && !provider->is_available();
-
-	m_api_key_error_label->setVisible(key_missing);
+	update_provider_status();
 }
 
 translator_t * translation_suggestion_view_t::active_provider() const

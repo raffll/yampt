@@ -4,9 +4,7 @@
 #include <set>
 #include <QApplication>
 #include <QClipboard>
-#include <QHBoxLayout>
 #include <QListWidget>
-#include <QPushButton>
 #include <QVBoxLayout>
 
 annotations_view_t::annotations_view_t(QWidget * parent)
@@ -16,20 +14,10 @@ annotations_view_t::annotations_view_t(QWidget * parent)
 	layout->setContentsMargins(4, 4, 4, 4);
 	layout->setSpacing(4);
 
-	auto * toolbar = new QHBoxLayout();
-	toolbar->setContentsMargins(0, 0, 0, 0);
-	m_rebuild_btn = new QPushButton("Rebuild", this);
-	m_rebuild_btn->setToolTip("Rebuild annotations from all loaded dicts");
-	m_rebuild_btn->setFixedHeight(22);
-	toolbar->addWidget(m_rebuild_btn);
-	toolbar->addStretch();
-	layout->addLayout(toolbar);
-
 	m_list = new QListWidget(this);
 	layout->addWidget(m_list);
 
 	connect(m_list, &QListWidget::itemClicked, this, &annotations_view_t::on_item_clicked);
-	connect(m_rebuild_btn, &QPushButton::clicked, this, &annotations_view_t::rebuild_requested);
 }
 
 struct annotation_entry_t

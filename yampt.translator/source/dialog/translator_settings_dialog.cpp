@@ -2,7 +2,6 @@
 #include "dialog/language_settings_view.hpp"
 #include "dialog/translation_settings_view.hpp"
 #include "dialog/shortcuts_settings_view.hpp"
-#include "dialog/workspace_settings_view.hpp"
 #include <io/app_settings.hpp>
 
 #include <QDialogButtonBox>
@@ -29,17 +28,14 @@ translator_settings_dialog_t::translator_settings_dialog_t(app_settings_t & sett
     m_language_view = new language_settings_view_t(dictionaries_dir, this);
     m_translation_view = new translation_settings_view_t(this);
     m_shortcuts_view = new shortcuts_settings_view_t(this);
-    m_workspace_view = new workspace_settings_view_t(this);
 
     m_category_list->addItem("Language");
-    m_category_list->addItem("Translation");
     m_category_list->addItem("Shortcuts");
-    m_category_list->addItem("Workspace");
+    m_category_list->addItem("Translation");
 
     m_content_stack->addWidget(m_language_view);
-    m_content_stack->addWidget(m_translation_view);
     m_content_stack->addWidget(m_shortcuts_view);
-    m_content_stack->addWidget(m_workspace_view);
+    m_content_stack->addWidget(m_translation_view);
 
     connect(m_category_list, &QListWidget::currentRowChanged,
             m_content_stack, &QStackedWidget::setCurrentIndex);
@@ -77,7 +73,6 @@ translator_settings_dialog_t::translator_settings_dialog_t(app_settings_t & sett
     m_language_view->load(m_settings);
     m_translation_view->load(m_settings);
     m_shortcuts_view->load(m_settings);
-    m_workspace_view->load(m_settings);
     m_category_list->setCurrentRow(0);
 }
 
@@ -86,7 +81,6 @@ void translator_settings_dialog_t::apply_all()
     m_language_view->apply(m_settings);
     m_translation_view->apply(m_settings);
     m_shortcuts_view->apply(m_settings);
-    m_workspace_view->apply(m_settings);
     m_settings.sync();
 }
 

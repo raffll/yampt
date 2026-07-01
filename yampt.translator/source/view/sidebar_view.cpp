@@ -224,12 +224,15 @@ void sidebar_view_t::show_dict_context_menu(const std::string & path, const QPoi
 {
 	QMenu menu(this);
 	auto * save_action = menu.addAction("Save");
+	auto * merge_action = menu.addAction("Merge...");
 	menu.addSeparator();
 	auto * delete_action = menu.addAction("Delete");
 
 	auto * selected = menu.exec(m_tree->viewport()->mapToGlobal(pos));
 	if (selected == save_action)
 		emit save_requested(path);
+	else if (selected == merge_action)
+		emit merge_requested();
 	else if (selected == delete_action)
 		emit delete_requested(path);
 }

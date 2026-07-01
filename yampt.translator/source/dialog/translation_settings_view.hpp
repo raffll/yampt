@@ -2,7 +2,6 @@
 
 #include <QWidget>
 
-class QComboBox;
 class QLineEdit;
 class QToolButton;
 class app_settings_t;
@@ -18,9 +17,6 @@ public:
     void apply(app_settings_t & settings) const;
 
 private:
-    void on_provider_changed(int index);
-
-    QComboBox * m_provider_combo = nullptr;
     QLineEdit * m_deepl_key_edit = nullptr;
     QToolButton * m_deepl_reveal_button = nullptr;
     QLineEdit * m_google_key_edit = nullptr;

@@ -218,7 +218,6 @@ if exist "$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\Qt6\plugins\tls"
     <ClCompile Include="source\dialog\language_settings_view.cpp" />
     <ClCompile Include="source\dialog\translation_settings_view.cpp" />
     <ClCompile Include="source\dialog\shortcuts_settings_view.cpp" />
-    <ClCompile Include="source\dialog\workspace_settings_view.cpp" />
 
     <ClCompile Include="source\dialog\spell_context_menu.cpp" />
 
@@ -256,6 +255,7 @@ if exist "$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\Qt6\plugins\tls"
     <ClCompile Include="..\yampt.core\source\decoder\sub_record_schema.cpp" />
     <ClCompile Include="..\yampt.core\source\scanner\plugin_index.cpp" />
     <ClCompile Include="..\yampt.core\source\scanner\plugin_scan.cpp" />
+    <ClCompile Include="..\yampt.core\source\scanner\plugin_scan_merge.cpp" />
     <ClCompile Include="..\yampt.core\source\scanner\conflict_compute.cpp" />
     <ClCompile Include="..\yampt.core\source\decoder\conflict_slots.cpp" />
     <ClCompile Include="..\yampt.core\source\decoder\conflict_slots_cell.cpp" />
@@ -465,12 +465,6 @@ if exist "$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\Qt6\plugins\tls"
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
-    <CustomBuild Include="source\dialog\workspace_settings_view.hpp">
-      <FileType>Document</FileType>
-      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
-      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
-      <Message>MOC %(Filename).hpp</Message>
-    </CustomBuild>
     <CustomBuild Include="source\view\translation_suggestion_view.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
@@ -522,7 +516,6 @@ if exist "$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\Qt6\plugins\tls"
     <ClCompile Include="$(IntDir)moc_language_settings_view.cpp" />
     <ClCompile Include="$(IntDir)moc_translation_settings_view.cpp" />
     <ClCompile Include="$(IntDir)moc_shortcuts_settings_view.cpp" />
-    <ClCompile Include="$(IntDir)moc_workspace_settings_view.cpp" />
     <ClCompile Include="$(IntDir)moc_translation_suggestion_view.cpp" />
     <ClCompile Include="$(IntDir)moc_ctranslate2_translator.cpp" />
     <ClCompile Include="$(IntDir)moc_deepl_translator.cpp" />

@@ -22,7 +22,7 @@ shortcuts_settings_view_t::shortcuts_settings_view_t(QWidget * parent)
     };
 
     m_readonly_entries = {
-        {"set_untranslated", "Set Untranslated (table focus)", "Del", false},
+        {"set_untranslated", "Set Untranslated (Table)", "Del", false},
         {"navigate_next", "Next Entry", "Shift+Return", false},
         {"navigate_prev", "Previous Entry", "Ctrl+Up", false},
     };

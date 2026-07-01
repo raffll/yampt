@@ -182,6 +182,7 @@
     <ClCompile Include="..\yampt.core\source\decoder\sub_record_schema.cpp" />
     <ClCompile Include="..\yampt.core\source\scanner\plugin_index.cpp" />
     <ClCompile Include="..\yampt.core\source\scanner\plugin_scan.cpp" />
+    <ClCompile Include="..\yampt.core\source\scanner\plugin_scan_merge.cpp" />
     <ClCompile Include="..\yampt.core\source\scanner\conflict_compute.cpp" />
     <ClCompile Include="..\yampt.core\source\decoder\conflict_slots.cpp" />
     <ClCompile Include="..\yampt.core\source\decoder\conflict_slots_cell.cpp" />

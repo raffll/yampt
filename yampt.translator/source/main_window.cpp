@@ -932,13 +932,6 @@ void main_window_t::on_settings_applied(const std::string & category)
 	if (category == "all" || category == "translation")
 		m_translation_tab->apply_provider_settings(m_settings);
 
-	if (category == "all" || category == "workspace")
-	{
-		m_file_list.scan_roots(m_settings.workspace_roots());
-		scan_workspace();
-		update_watcher_paths();
-	}
-
 	if (category == "all" || category == "shortcuts")
 		register_shortcuts();
 
@@ -1249,7 +1242,14 @@ void main_window_t::load_config()
 		col_widths.push_back(m_settings.column_width(i));
 	m_table_view->set_column_widths(col_widths);
 
-	m_file_list.scan_roots(m_settings.workspace_roots());
+	const auto workspace = (QCoreApplication::applicationDirPath() + "/workspace").toStdString();
+	std::vector<std::string> roots = { workspace };
+	for (const auto & r : m_settings.workspace_roots())
+	{
+		if (r != workspace)
+			roots.push_back(r);
+	}
+	m_file_list.scan_roots(roots);
 	scan_workspace();
 
 	const auto active_path = m_settings.active_dict_path();
@@ -1851,7 +1851,7 @@ void main_window_t::scan_workspace()
 
 	std::vector<std::string> roots;
 	roots.push_back(workspace);
-	for (const auto & r : m_settings.workspace_roots())
+	for (const auto & r : m_file_list.get_roots())
 	{
 		if (r != workspace)
 			roots.push_back(r);
@@ -1895,7 +1895,7 @@ void main_window_t::update_watcher_paths()
 	const auto workspace = QCoreApplication::applicationDirPath() + "/workspace";
 	add_directory_recursive(paths, workspace);
 
-	for (const auto & root : m_settings.workspace_roots())
+	for (const auto & root : m_file_list.get_roots())
 		add_directory_recursive(paths, QString::fromStdString(root));
 
 	if (!paths.isEmpty())
