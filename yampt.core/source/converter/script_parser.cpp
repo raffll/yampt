@@ -132,14 +132,16 @@ std::string extract_cell_name_after_numerics(const std::string & text_after_keyw
 
 	while (scan_pos < text_size)
 	{
-		while (scan_pos < text_size && (text_after_keyword[scan_pos] == ' ' || text_after_keyword[scan_pos] == '\t' || text_after_keyword[scan_pos] == ','))
+		while (scan_pos < text_size && (text_after_keyword[scan_pos] == ' ' || text_after_keyword[scan_pos] == '\t' ||
+		                                text_after_keyword[scan_pos] == ','))
 			++scan_pos;
 
 		if (scan_pos >= text_size)
 			break;
 
 		const auto token_start = scan_pos;
-		while (scan_pos < text_size && text_after_keyword[scan_pos] != ' ' && text_after_keyword[scan_pos] != '\t' && text_after_keyword[scan_pos] != ',')
+		while (scan_pos < text_size && text_after_keyword[scan_pos] != ' ' && text_after_keyword[scan_pos] != '\t' &&
+		       text_after_keyword[scan_pos] != ',')
 			++scan_pos;
 
 		const auto token = text_after_keyword.substr(token_start, scan_pos - token_start);
@@ -288,9 +290,7 @@ void script_parser_t::convert_line(
 	is_done = true;
 }
 
-void script_parser_t::convert_line_unquoted(
-    const std::string & keyword,
-    const tools_t::rec_type_t text_type)
+void script_parser_t::convert_line_unquoted(const std::string & keyword, const tools_t::rec_type_t text_type)
 {
 	pos = find_whole_word(line_lc, keyword);
 	if (pos == std::string::npos)
@@ -319,9 +319,8 @@ void script_parser_t::convert_line_unquoted(
 	const auto text_after_keyword = line.substr(content_start);
 
 	const auto is_showmap_family = (keyword == "showmap" || keyword == "centeroncell");
-	const auto cell_name = is_showmap_family
-	    ? extract_cell_name_to_eol(text_after_keyword)
-	    : extract_cell_name_after_numerics(text_after_keyword);
+	const auto cell_name = is_showmap_family ? extract_cell_name_to_eol(text_after_keyword)
+	                                         : extract_cell_name_after_numerics(text_after_keyword);
 
 	if (cell_name.empty())
 		return;

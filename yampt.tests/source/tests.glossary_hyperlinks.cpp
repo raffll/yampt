@@ -1,7 +1,7 @@
 #include <catch2/catch_all.hpp>
-#include <rapidcheck.h>
-#include <rapidcheck/catch.h>
 #include <editor/glossary.hpp>
+#include <rapidcheck/catch.h>
+#include <rapidcheck.h>
 
 namespace {
 
@@ -66,8 +66,8 @@ rc::Gen<std::string> gen_text_with_at_tokens(int token_count)
 TEST_CASE("glossary_t::annotate, at-prefix detection property", "[u]")
 {
 	rc::prop(
-		"all @-prefixed tokens are detected as dial_topic",
-		[]()
+	    "all @-prefixed tokens are detected as dial_topic",
+	    []()
 	{
 		const auto token_count = *rc::gen::inRange(1, 6);
 		const auto text = *gen_text_with_at_tokens(token_count);
@@ -96,8 +96,7 @@ TEST_CASE("glossary_t::annotate, at-prefix detection property", "[u]")
 			RC_ASSERT(annotation.end > annotation.start);
 			RC_ASSERT(text[annotation.start] == '@');
 
-			const auto extracted = text.substr(
-				annotation.start, annotation.end - annotation.start);
+			const auto extracted = text.substr(annotation.start, annotation.end - annotation.start);
 			RC_ASSERT(extracted == annotation.old_text);
 			RC_ASSERT(extracted.size() >= 2);
 		}

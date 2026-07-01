@@ -2,6 +2,13 @@
 
 Sorted by effort.
 
+## Hidden (to re-enable later)
+
+- Translation settings page (DeepL/Google API keys) — created but not shown in category list
+- Provider combo (DeepL/Google) — only CTranslate2 shown, combo hidden
+- Merge menu item — `on_merge()` and `merge_requested` signal exist but not wired to UI
+- Workspace settings page — removed entirely (files deleted), folder management via sidebar/File menu
+
 ## L — a week or more
 
 ### Merged Patch (yEditor) [L]

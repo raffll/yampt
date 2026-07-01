@@ -1,8 +1,8 @@
 #pragma once
 
+#include "../merger/dict_merger.hpp"
 #include "../utility/includes.hpp"
 #include "../utility/tools.hpp"
-#include "../merger/dict_merger.hpp"
 #include "scdt_patcher.hpp"
 
 class script_parser_t

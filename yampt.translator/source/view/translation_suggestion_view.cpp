@@ -27,10 +27,9 @@ translation_suggestion_view_t::translation_suggestion_view_t(QWidget * parent)
 
 	m_provider_combo = new QComboBox(this);
 	m_provider_combo->addItem("CTranslate2");
-	m_provider_combo->addItem("DeepL");
-	m_provider_combo->addItem("Google");
 	m_provider_combo->setToolTip("Select translation provider");
 	m_provider_combo->setFixedWidth(120);
+	m_provider_combo->setVisible(false);
 	top_row->addWidget(m_provider_combo);
 
 	m_translate_all_btn = new QPushButton("Translate 10", this);
@@ -67,18 +66,27 @@ void translation_suggestion_view_t::setup_controls()
 
 	connect(m_provider_combo, &QComboBox::currentIndexChanged, this, [this](int index) { select_provider(index); });
 
-	connect(m_ct2_provider, &ctranslate2_translator_t::translation_finished, this, [this](translation_suggestion_t result) {
-		display_translation_result(result);
-	});
+	connect(
+	    m_ct2_provider,
+	    &ctranslate2_translator_t::translation_finished,
+	    this,
+	    [this](translation_suggestion_t result) { display_translation_result(result); });
 
-	connect(m_deepl_translator, &deepl_translator_t::translation_finished, this, [this](translation_suggestion_t result) {
+	connect(
+	    m_deepl_translator,
+	    &deepl_translator_t::translation_finished,
+	    this,
+	    [this](translation_suggestion_t result)
+	{
 		display_translation_result(result);
 		update_provider_status();
 	});
 
-	connect(m_google_translator, &google_translator_t::translation_finished, this, [this](translation_suggestion_t result) {
-		display_translation_result(result);
-	});
+	connect(
+	    m_google_translator,
+	    &google_translator_t::translation_finished,
+	    this,
+	    [this](translation_suggestion_t result) { display_translation_result(result); });
 
 	rebuild_language_list();
 	update_provider_status();
@@ -109,7 +117,6 @@ void translation_suggestion_view_t::apply_provider_settings(const app_settings_t
 		load_model_for_language(language_index);
 	else if (!m_languages.empty())
 		load_model_for_language(0);
-
 
 	update_provider_status();
 }
@@ -242,7 +249,6 @@ void translation_suggestion_view_t::select_provider(int index)
 
 	if (m_provider_combo->currentIndex() != index)
 		m_provider_combo->setCurrentIndex(index);
-
 
 	update_provider_status();
 }

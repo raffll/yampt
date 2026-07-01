@@ -1,10 +1,10 @@
 #include <catch2/catch_all.hpp>
-#include <rapidcheck.h>
 #include <rapidcheck/catch.h>
 #include <utility/keyword_trie.hpp>
 #include <algorithm>
 #include <cctype>
 #include <map>
+#include <rapidcheck.h>
 #include <string>
 #include <vector>
 
@@ -171,12 +171,16 @@ std::vector<reference_match_t> ref_highlight_keywords(std::string_view text, con
 		const auto chosen_start = chosen.start;
 		const auto chosen_end = chosen_start + chosen.length;
 
-		std::erase_if(candidates, [chosen_start, chosen_end](const reference_match_t & match)
+		std::erase_if(
+		    candidates,
+		    [chosen_start, chosen_end](const reference_match_t & match)
 		{ return match.start < chosen_end && (match.start + match.length) > chosen_start; });
 	}
 
-	std::sort(output.begin(), output.end(), [](const reference_match_t & left, const reference_match_t & right)
-	{ return left.start < right.start; });
+	std::sort(
+	    output.begin(),
+	    output.end(),
+	    [](const reference_match_t & left, const reference_match_t & right) { return left.start < right.start; });
 
 	return output;
 }
@@ -235,16 +239,14 @@ rc::Gen<std::string> gen_dialogue_text(const std::vector<std::string> & topics)
 			const auto use_topic = *rc::gen::inRange(0, 3);
 			if (use_topic == 0 && !topics.empty())
 			{
-				const auto topic_index = *rc::gen::inRange(
-					static_cast<size_t>(0), topics.size());
+				const auto topic_index = *rc::gen::inRange(static_cast<size_t>(0), topics.size());
 				const auto & topic = topics[topic_index];
 
 				const auto capitalize = *rc::gen::arbitrary<bool>();
 				if (capitalize && !topic.empty())
 				{
 					std::string upper_topic = topic;
-					upper_topic[0] = static_cast<char>(
-						std::toupper(static_cast<unsigned char>(upper_topic[0])));
+					upper_topic[0] = static_cast<char>(std::toupper(static_cast<unsigned char>(upper_topic[0])));
 					result += upper_topic;
 				}
 				else
@@ -268,8 +270,8 @@ rc::Gen<std::string> gen_dialogue_text(const std::vector<std::string> & topics)
 TEST_CASE("keyword_trie_t::find_matches, OpenMW-accurate matching property", "[u]")
 {
 	rc::prop(
-		"trie finds longest matches at word boundaries identical to reference",
-		[]()
+	    "trie finds longest matches at word boundaries identical to reference",
+	    []()
 	{
 		const auto topic_count = *rc::gen::inRange(1, 10);
 		std::vector<std::string> topics;

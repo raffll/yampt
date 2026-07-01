@@ -47,8 +47,15 @@ public:
 
 	std::string apply_glossary(const std::string & translated_text) const;
 
-	void set_use_trie_matching(bool enabled) { m_use_trie_matching = enabled; }
-	bool get_use_trie_matching() const { return m_use_trie_matching; }
+	void set_use_trie_matching(bool enabled)
+	{
+		m_use_trie_matching = enabled;
+	}
+
+	bool get_use_trie_matching() const
+	{
+		return m_use_trie_matching;
+	}
 
 	struct glossary_match_t
 	{
@@ -86,13 +93,9 @@ private:
 	void update_vector(std::vector<topic_entry_t> & vec, const std::string & old_text, const std::string & new_text);
 	void remove_from_vector(std::vector<topic_entry_t> & vec, const std::string & old_text);
 
-	void find_at_prefix_hyperlinks(
-	    const std::string & text,
-	    std::vector<annotation_t> & results) const;
+	void find_at_prefix_hyperlinks(const std::string & text, std::vector<annotation_t> & results) const;
 
-	void find_matches_trie(
-	    const std::string & text_original,
-	    std::vector<annotation_t> & results) const;
+	void find_matches_trie(const std::string & text_original, std::vector<annotation_t> & results) const;
 
 	void find_matches_legacy(
 	    const std::string & text_lower,

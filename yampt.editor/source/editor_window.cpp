@@ -1,6 +1,6 @@
 #include "editor_window.hpp"
-#include "view/plugin_workspace_view.hpp"
 #include "dialog/editor_settings_dialog.hpp"
+#include "view/plugin_workspace_view.hpp"
 #include <io/app_settings.hpp>
 #include <QAction>
 #include <QCloseEvent>
@@ -109,7 +109,8 @@ void editor_window_t::setup_toolbar()
 	auto * merge_action = new QAction("Merge", this);
 	merge_action->setToolTip("Create a merged patch from loaded plugins");
 	toolbar->addAction(merge_action);
-	connect(merge_action, &QAction::triggered, m_plugin_workspace_view, &plugin_workspace_view_t::on_create_merged_patch);
+	connect(
+	    merge_action, &QAction::triggered, m_plugin_workspace_view, &plugin_workspace_view_t::on_create_merged_patch);
 
 	auto * filter_action = new QAction("Filter", this);
 	filter_action->setToolTip("Open the advanced filter dialog");

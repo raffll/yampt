@@ -707,8 +707,7 @@ QModelIndex nav_tree_model_t::find_index(const std::string & rec_type, const std
 				if (entry.record_id != record_id)
 					continue;
 
-				return createIndex(
-				    static_cast<int>(ri), 0, const_cast<type_group_t *>(&group));
+				return createIndex(static_cast<int>(ri), 0, const_cast<type_group_t *>(&group));
 			}
 		}
 	}

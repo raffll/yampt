@@ -1,6 +1,6 @@
 #include "view_tree_model.hpp"
-#include <scanner/conflict_compute.hpp>
 #include <decoder/view_tree_format.hpp>
+#include <scanner/conflict_compute.hpp>
 #include <cstdio>
 #include <cstring>
 

@@ -263,8 +263,7 @@ void esm_converter_t::convert_gmst()
 
 		esm.set_key("NAME");
 		esm.set_value("STRV");
-		if (esm.get_key().exist && esm.get_value().exist &&
-		    esm.get_key().text.substr(0, 1) == "s")
+		if (esm.get_key().exist && esm.get_value().exist && esm.get_key().text.substr(0, 1) == "s")
 		{
 			const auto & key_text = esm.get_key().text;
 			const auto & old_text = esm.get_value().text;

@@ -10,7 +10,8 @@ line_number_gutter_t::line_number_gutter_t(translation_edit_view_t * editor, QWi
 {
 	setFixedWidth(calculate_width());
 
-	connect(m_editor, &translation_edit_view_t::blockCountChanged, this, [this]() { setFixedWidth(calculate_width()); });
+	connect(
+	    m_editor, &translation_edit_view_t::blockCountChanged, this, [this]() { setFixedWidth(calculate_width()); });
 
 	connect(
 	    m_editor,

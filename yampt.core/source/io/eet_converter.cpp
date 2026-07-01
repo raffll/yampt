@@ -26,19 +26,19 @@ eet_converter_t::eet_converter_t(const std::vector<eet_reader_t::eet_entry_t> & 
 		++m_converted_count;
 	}
 
-	tools_t::add_log("[info] EET conversion: converted=" + std::to_string(m_converted_count)
-		+ ", skipped=" + std::to_string(m_skipped_count) + "\r\n");
+	tools_t::add_log(
+	    "[info] EET conversion: converted=" + std::to_string(m_converted_count) +
+	    ", skipped=" + std::to_string(m_skipped_count) + "\r\n");
 }
 
 tools_t::rec_type_t eet_converter_t::map_type(const std::string & rec_type, const std::string & sub_type) const
 {
 	if (sub_type == "FNAM")
 	{
-		if (rec_type == "NPC_" || rec_type == "SPEL" || rec_type == "ARMO" || rec_type == "BOOK"
-			|| rec_type == "CONT" || rec_type == "MISC" || rec_type == "CLOT" || rec_type == "CREA"
-			|| rec_type == "ALCH" || rec_type == "DOOR" || rec_type == "ACTI" || rec_type == "LIGH"
-			|| rec_type == "INGR" || rec_type == "CLAS" || rec_type == "FACT" || rec_type == "APPA"
-			|| rec_type == "REPA")
+		if (rec_type == "NPC_" || rec_type == "SPEL" || rec_type == "ARMO" || rec_type == "BOOK" ||
+		    rec_type == "CONT" || rec_type == "MISC" || rec_type == "CLOT" || rec_type == "CREA" ||
+		    rec_type == "ALCH" || rec_type == "DOOR" || rec_type == "ACTI" || rec_type == "LIGH" ||
+		    rec_type == "INGR" || rec_type == "CLAS" || rec_type == "FACT" || rec_type == "APPA" || rec_type == "REPA")
 		{
 			return tools_t::rec_type_t::fnam;
 		}
@@ -106,11 +106,11 @@ status_t eet_converter_t::map_status(uint8_t status_byte) const
 	return status_t::untranslated;
 }
 
-std::string eet_converter_t::build_key_text(
-	const eet_reader_t::eet_entry_t & entry, tools_t::rec_type_t yampt_type) const
+std::string eet_converter_t::build_key_text(const eet_reader_t::eet_entry_t & entry, tools_t::rec_type_t yampt_type)
+    const
 {
-	if (yampt_type == tools_t::rec_type_t::cell || yampt_type == tools_t::rec_type_t::dial
-		|| yampt_type == tools_t::rec_type_t::sctx || yampt_type == tools_t::rec_type_t::bnam)
+	if (yampt_type == tools_t::rec_type_t::cell || yampt_type == tools_t::rec_type_t::dial ||
+	    yampt_type == tools_t::rec_type_t::sctx || yampt_type == tools_t::rec_type_t::bnam)
 	{
 		return entry.orig;
 	}

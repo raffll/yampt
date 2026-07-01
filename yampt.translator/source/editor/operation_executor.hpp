@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../model/plugin_op.hpp"
-#include <io/codepage.hpp>
 #include <creator/dict_creator.hpp>
+#include <io/codepage.hpp>
 #include <utility/tools.hpp>
 #include <string>
 #include <vector>

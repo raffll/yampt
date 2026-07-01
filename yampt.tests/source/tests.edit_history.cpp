@@ -1,24 +1,24 @@
 #include <catch2/catch_all.hpp>
-#include <rapidcheck.h>
-#include <rapidcheck/catch.h>
 #include <editor/edit_history.hpp>
+#include <rapidcheck/catch.h>
 #include <utility/status_types.hpp>
 #include <utility/tools.hpp>
+#include <rapidcheck.h>
 
 namespace {
 
 rc::Gen<status_t> gen_status()
 {
 	return rc::gen::element(
-		status_t::translated,
-		status_t::untranslated,
-		status_t::in_progress,
-		status_t::model,
-		status_t::propagated,
-		status_t::adapted,
-		status_t::changed,
-		status_t::reused,
-		status_t::error);
+	    status_t::translated,
+	    status_t::untranslated,
+	    status_t::in_progress,
+	    status_t::model,
+	    status_t::propagated,
+	    status_t::adapted,
+	    status_t::changed,
+	    status_t::reused,
+	    status_t::error);
 }
 
 rc::Gen<std::string> gen_edit_text()
@@ -31,8 +31,8 @@ rc::Gen<std::string> gen_edit_text()
 TEST_CASE("edit_history_t::revert, restores status at index N", "[u]")
 {
 	rc::prop(
-		"reverting to index N restores both text and status recorded at that point",
-		[]()
+	    "reverting to index N restores both text and status recorded at that point",
+	    []()
 	{
 		const auto edit_count = *rc::gen::inRange(1, 20);
 		const auto revert_index = *rc::gen::inRange(0, edit_count);

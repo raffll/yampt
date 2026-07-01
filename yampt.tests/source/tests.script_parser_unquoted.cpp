@@ -1,6 +1,6 @@
 #include <catch2/catch_all.hpp>
-#include <merger/dict_merger.hpp>
 #include <converter/script_parser.hpp>
+#include <merger/dict_merger.hpp>
 #include <utility/tools.hpp>
 #include <random>
 
@@ -8,13 +8,10 @@ namespace {
 
 std::string random_multi_word_cell(std::mt19937 & rng)
 {
-	static const std::vector<std::string> prefixes = {
-		"Ald", "Bal", "Tel", "Sadr", "Maar", "Gnar", "Hla", "Dren"
-	};
+	static const std::vector<std::string> prefixes = { "Ald", "Bal", "Tel", "Sadr", "Maar", "Gnar", "Hla", "Dren" };
 
-	static const std::vector<std::string> suffixes = {
-		"Velothi", "mora", "Fyr", "Gandosa", "Neen", "Plantation", "Mine", "Tower"
-	};
+	static const std::vector<std::string> suffixes = { "Velothi", "mora",       "Fyr",  "Gandosa",
+		                                               "Neen",    "Plantation", "Mine", "Tower" };
 
 	std::uniform_int_distribution<size_t> prefix_dist(0, prefixes.size() - 1);
 	std::uniform_int_distribution<size_t> suffix_dist(0, suffixes.size() - 1);
@@ -24,13 +21,9 @@ std::string random_multi_word_cell(std::mt19937 & rng)
 
 std::string random_translated_cell(std::mt19937 & rng)
 {
-	static const std::vector<std::string> prefixes = {
-		"Nowy", "Stary", "Wielki", "Maly", "Gorny", "Dolny"
-	};
+	static const std::vector<std::string> prefixes = { "Nowy", "Stary", "Wielki", "Maly", "Gorny", "Dolny" };
 
-	static const std::vector<std::string> suffixes = {
-		"Zamek", "Wioska", "Kopalnia", "Plantacja", "Wieza", "Port"
-	};
+	static const std::vector<std::string> suffixes = { "Zamek", "Wioska", "Kopalnia", "Plantacja", "Wieza", "Port" };
 
 	std::uniform_int_distribution<size_t> prefix_dist(0, prefixes.size() - 1);
 	std::uniform_int_distribution<size_t> suffix_dist(0, suffixes.size() - 1);

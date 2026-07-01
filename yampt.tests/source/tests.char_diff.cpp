@@ -1,7 +1,7 @@
 #include <catch2/catch_all.hpp>
-#include <rapidcheck.h>
 #include <rapidcheck/catch.h>
 #include <utility/char_diff.hpp>
+#include <rapidcheck.h>
 #include <string>
 
 TEST_CASE("compute_char_diff, reconstruction property", "[u]")

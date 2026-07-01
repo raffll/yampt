@@ -1,5 +1,6 @@
 #pragma once
 
+#include "dialog/dict_selection_dialog.hpp"
 #include "editor/byte_limit_validator.hpp"
 #include "editor/edit_history.hpp"
 #include "editor/editor_controller.hpp"
@@ -8,7 +9,6 @@
 #include "editor/grammar_checker.hpp"
 #include "editor/operation_executor.hpp"
 #include "editor/row_filter.hpp"
-#include "dialog/dict_selection_dialog.hpp"
 #include "io/app_settings.hpp"
 #include "model/dict_document.hpp"
 #include "model/document.hpp"
@@ -286,7 +286,7 @@ private:
 	file_list_t m_file_list;
 	codepage_t m_current_codepage = codepage_t::windows_1252;
 	session_t m_session;
-	app_settings_t m_settings{"yTranslator.ini"};
+	app_settings_t m_settings { "yTranslator.ini" };
 	std::unordered_map<std::string, filter_state_t> m_filter_states;
 	size_t m_last_annotation_version = 0;
 

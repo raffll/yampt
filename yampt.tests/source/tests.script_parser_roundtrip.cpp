@@ -1,6 +1,6 @@
 #include <catch2/catch_all.hpp>
-#include <merger/dict_merger.hpp>
 #include <converter/script_parser.hpp>
+#include <merger/dict_merger.hpp>
 #include <utility/tools.hpp>
 #include <random>
 
@@ -20,15 +20,12 @@ struct generated_script_t
 
 std::string random_cell_name(std::mt19937 & rng)
 {
-	static const std::vector<std::string> prefixes = {
-		"Ald", "Bal", "Dren", "Tel", "Sadr", "Maar", "Gnar", "Hla",
-		"Ebonheart", "Vivec", "Seyda", "Caldera", "Pelagiad"
-	};
+	static const std::vector<std::string> prefixes = { "Ald",   "Bal",     "Dren",    "Tel",       "Sadr",
+		                                               "Maar",  "Gnar",    "Hla",     "Ebonheart", "Vivec",
+		                                               "Seyda", "Caldera", "Pelagiad" };
 
-	static const std::vector<std::string> suffixes = {
-		"Velothi", "mora", "ith Gor", " Plantation", " Mine",
-		"'Ruhn", " Gandosa", " Neen", " Fyr", " Tower"
-	};
+	static const std::vector<std::string> suffixes = { "Velothi", "mora",     "ith Gor", " Plantation", " Mine",
+		                                               "'Ruhn",   " Gandosa", " Neen",   " Fyr",        " Tower" };
 
 	std::uniform_int_distribution<size_t> prefix_dist(0, prefixes.size() - 1);
 	std::uniform_int_distribution<size_t> suffix_dist(0, suffixes.size() - 1);
@@ -38,9 +35,7 @@ std::string random_cell_name(std::mt19937 & rng)
 
 std::string random_keyword(std::mt19937 & rng)
 {
-	static const std::vector<std::string> keywords = {
-		"GetPCCell", "ShowMap", "PositionCell"
-	};
+	static const std::vector<std::string> keywords = { "GetPCCell", "ShowMap", "PositionCell" };
 
 	std::uniform_int_distribution<size_t> dist(0, keywords.size() - 1);
 	return keywords[dist(rng)];
@@ -128,12 +123,7 @@ TEST_CASE("script_parser_t, round-trip identity for untranslated cells", "[u]")
 	}
 
 	script_parser_t parser(
-	    tools_t::rec_type_t::sctx,
-	    merger,
-	    "TestScript",
-	    "test.esm",
-	    script_data.source,
-	    script_data.scdt);
+	    tools_t::rec_type_t::sctx, merger, "TestScript", "test.esm", script_data.source, script_data.scdt);
 
 	REQUIRE(parser.get_new_script() == script_data.source);
 	REQUIRE(parser.get_new_scdt() == script_data.scdt);

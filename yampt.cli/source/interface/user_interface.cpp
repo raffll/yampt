@@ -1,9 +1,9 @@
 #include "user_interface.hpp"
+#include <converter/esm_converter.hpp>
+#include <creator/dict_creator.hpp>
 #include <io/dict_reader.hpp>
 #include <io/dict_writer.hpp>
-#include <creator/dict_creator.hpp>
 #include <merger/dict_merger.hpp>
-#include <converter/esm_converter.hpp>
 #include <translator/translation_engine.hpp>
 
 user_interface_t::user_interface_t(std::vector<std::string> & arg)

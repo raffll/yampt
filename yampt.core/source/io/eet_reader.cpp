@@ -24,14 +24,15 @@ bool eet_reader_t::load(const std::string & path)
 	{
 		if (!parse_entry(content, offset))
 		{
-			tools_t::add_log("[error] EET parse stopped at entry " + std::to_string(index)
-				+ " of " + std::to_string(m_entry_count) + "\r\n");
+			tools_t::add_log(
+			    "[error] EET parse stopped at entry " + std::to_string(index) + " of " + std::to_string(m_entry_count) +
+			    "\r\n");
 			return false;
 		}
 	}
 
-	tools_t::add_log("[info] loaded EET file: " + std::to_string(m_entries.size())
-		+ " entries from \"" + path + "\"\r\n");
+	tools_t::add_log(
+	    "[info] loaded EET file: " + std::to_string(m_entries.size()) + " entries from \"" + path + "\"\r\n");
 
 	return true;
 }
@@ -45,8 +46,8 @@ bool eet_reader_t::parse_header(const std::string & content, size_t & offset)
 	constexpr size_t game_name_len_size = 2;
 	constexpr size_t line_tag_size = 4;
 	constexpr size_t entry_count_size = 4;
-	constexpr size_t minimum_header = magic_size + version_size + unknown_size
-		+ game_tag_size + game_name_len_size + line_tag_size + entry_count_size;
+	constexpr size_t minimum_header = magic_size + version_size + unknown_size + game_tag_size + game_name_len_size +
+	                                  line_tag_size + entry_count_size;
 
 	if (content.size() < minimum_header)
 	{
@@ -169,14 +170,11 @@ std::string eet_reader_t::read_length_prefixed_string(const std::string & conten
 
 uint32_t eet_reader_t::read_uint32(const std::string & content, size_t offset) const
 {
-	return static_cast<uint8_t>(content[offset])
-		| (static_cast<uint8_t>(content[offset + 1]) << 8)
-		| (static_cast<uint8_t>(content[offset + 2]) << 16)
-		| (static_cast<uint8_t>(content[offset + 3]) << 24);
+	return static_cast<uint8_t>(content[offset]) | (static_cast<uint8_t>(content[offset + 1]) << 8) |
+	       (static_cast<uint8_t>(content[offset + 2]) << 16) | (static_cast<uint8_t>(content[offset + 3]) << 24);
 }
 
 uint16_t eet_reader_t::read_uint16(const std::string & content, size_t offset) const
 {
-	return static_cast<uint8_t>(content[offset])
-		| (static_cast<uint8_t>(content[offset + 1]) << 8);
+	return static_cast<uint8_t>(content[offset]) | (static_cast<uint8_t>(content[offset + 1]) << 8);
 }

@@ -1,7 +1,7 @@
 #include <catch2/catch_all.hpp>
+#include <filesystem>
 #include <QSettings>
 #include <QTemporaryFile>
-#include <filesystem>
 
 namespace {
 

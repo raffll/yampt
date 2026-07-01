@@ -132,12 +132,16 @@ static void resolve_overlaps(std::vector<keyword_match_t> & matches, std::vector
 		const auto chosen_start = last_added.start;
 		const auto chosen_end = chosen_start + last_added.length;
 
-		std::erase_if(matches, [chosen_start, chosen_end](const keyword_match_t & match)
+		std::erase_if(
+		    matches,
+		    [chosen_start, chosen_end](const keyword_match_t & match)
 		{ return match.start < chosen_end && (match.start + match.length) > chosen_start; });
 	}
 
-	std::sort(output.begin(), output.end(), [](const keyword_match_t & left, const keyword_match_t & right)
-	{ return left.start < right.start; });
+	std::sort(
+	    output.begin(),
+	    output.end(),
+	    [](const keyword_match_t & left, const keyword_match_t & right) { return left.start < right.start; });
 }
 
 std::vector<keyword_match_t> keyword_trie_t::find_matches(std::string_view text) const

@@ -1,8 +1,8 @@
 #include "plugin_scan.hpp"
-#include "conflict_compute.hpp"
 #include "../decoder/sub_record_iter.hpp"
 #include "../decoder/sub_record_schema.hpp"
 #include "../decoder/view_tree_format.hpp"
+#include "conflict_compute.hpp"
 #include <algorithm>
 #include <cstring>
 #include <set>
@@ -329,4 +329,3 @@ std::vector<std::string> plugin_scan_t::all_types() const
 
 	return std::vector<std::string>(unique.begin(), unique.end());
 }
-

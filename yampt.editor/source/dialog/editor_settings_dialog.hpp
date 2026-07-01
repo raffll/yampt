@@ -12,23 +12,23 @@ class editor_paths_view_t;
 
 class editor_settings_dialog_t : public QDialog
 {
-    Q_OBJECT
+	Q_OBJECT
 
 public:
-    explicit editor_settings_dialog_t(app_settings_t & settings, QWidget * parent = nullptr);
+	explicit editor_settings_dialog_t(app_settings_t & settings, QWidget * parent = nullptr);
 
 signals:
-    void settings_applied(const std::string & category);
+	void settings_applied(const std::string & category);
 
 private:
-    void apply_all();
+	void apply_all();
 
-    app_settings_t & m_settings;
+	app_settings_t & m_settings;
 
-    QListWidget * m_category_list = nullptr;
-    QStackedWidget * m_content_stack = nullptr;
-    QDialogButtonBox * m_button_box = nullptr;
-    QPushButton * m_apply_button = nullptr;
+	QListWidget * m_category_list = nullptr;
+	QStackedWidget * m_content_stack = nullptr;
+	QDialogButtonBox * m_button_box = nullptr;
+	QPushButton * m_apply_button = nullptr;
 
-    editor_paths_view_t * m_paths_view = nullptr;
+	editor_paths_view_t * m_paths_view = nullptr;
 };

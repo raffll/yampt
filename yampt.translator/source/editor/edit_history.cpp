@@ -1,6 +1,6 @@
 #include "edit_history.hpp"
-#include <utility/status_types.hpp>
 #include <nlohmann/json.hpp>
+#include <utility/status_types.hpp>
 #include <chrono>
 #include <ctime>
 #include <fstream>

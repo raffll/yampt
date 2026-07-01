@@ -1,13 +1,13 @@
 #include "main_window.hpp"
-#include "editor/grammar_checker.hpp"
 #include "dialog/dict_selection_dialog.hpp"
 #include "dialog/find_replace_dialog.hpp"
 #include "dialog/first_run_dialog.hpp"
 #include "dialog/merge_dialog.hpp"
-#include "dialog/translator_settings_dialog.hpp"
 #include "dialog/spell_context_menu.hpp"
-#include "highlighter/glossary_highlighter.hpp"
+#include "dialog/translator_settings_dialog.hpp"
+#include "editor/grammar_checker.hpp"
 #include "highlighter/editor_highlighter.hpp"
+#include "highlighter/glossary_highlighter.hpp"
 #include "highlighter/topic_highlighter.hpp"
 #include "model/dict_document.hpp"
 #include "model/plugin_document.hpp"
@@ -36,8 +36,8 @@
 #include <unordered_map>
 #include <QAction>
 #include <QCloseEvent>
-#include <QCoreApplication>
 #include <QComboBox>
+#include <QCoreApplication>
 #include <QDateTime>
 #include <QDialogButtonBox>
 #include <QDir>
@@ -208,8 +208,8 @@ void main_window_t::on_merge()
 	const auto workspace_dir = QCoreApplication::applicationDirPath().toStdString() + "/workspace/";
 	QDir().mkpath(QString::fromStdString(workspace_dir));
 
-	const auto output_path = workspace_dir + "Merged_" +
-	    QDateTime::currentDateTime().toString("yyyyMMddHHmmss").toStdString() + ".json";
+	const auto output_path =
+	    workspace_dir + "Merged_" + QDateTime::currentDateTime().toString("yyyyMMddHHmmss").toStdString() + ".json";
 
 	dict_writer_t::write(merged_dict, output_path);
 
@@ -484,8 +484,8 @@ void main_window_t::apply_translation_highlights(const table_row_t * row_data)
 	m_extra_sel_translation.annotations = build_highlight_selections(m_editor_view->translation_editor(), highlights);
 
 	m_extra_sel_translation.grammar = m_grammar_check->isChecked()
-	                                     ? m_grammar_checker.check(m_editor_view->translation_editor(), row_data->type)
-	                                     : QList<QTextEdit::ExtraSelection> {};
+	                                      ? m_grammar_checker.check(m_editor_view->translation_editor(), row_data->type)
+	                                      : QList<QTextEdit::ExtraSelection> {};
 	apply_extra_selections(m_editor_view->translation_editor(), m_extra_sel_translation);
 }
 
@@ -630,7 +630,8 @@ void main_window_t::load_record(int row)
 		return;
 	}
 
-	const auto load_result = m_active_doc ? m_editor_controller.load(*m_active_doc, *row_data) : editor_load_result_t {};
+	const auto load_result =
+	    m_active_doc ? m_editor_controller.load(*m_active_doc, *row_data) : editor_load_result_t {};
 
 	if (row_data->type == tools_t::rec_type_t::sctx || row_data->type == tools_t::rec_type_t::bnam)
 		load_record_script(row_data);
@@ -679,8 +680,8 @@ void main_window_t::load_record(int row)
 	m_extra_sel_translation.annotations =
 	    build_highlight_selections(m_editor_view->translation_editor(), trans_highlights);
 	m_extra_sel_translation.grammar = m_grammar_check->isChecked()
-	                                     ? m_grammar_checker.check(m_editor_view->translation_editor(), row_data->type)
-	                                     : QList<QTextEdit::ExtraSelection> {};
+	                                      ? m_grammar_checker.check(m_editor_view->translation_editor(), row_data->type)
+	                                      : QList<QTextEdit::ExtraSelection> {};
 	m_extra_sel_translation.adapted_diff.clear();
 	apply_extra_selections(m_editor_view->translation_editor(), m_extra_sel_translation);
 
@@ -912,10 +913,11 @@ void main_window_t::on_open_settings()
 	const auto dict_dir = QCoreApplication::applicationDirPath().toStdString() + "/dictionaries";
 	translator_settings_dialog_t dialog(m_settings, dict_dir, this);
 
-	connect(&dialog, &translator_settings_dialog_t::settings_applied, this, [this](const std::string & category)
-	{
-		on_settings_applied(category);
-	});
+	connect(
+	    &dialog,
+	    &translator_settings_dialog_t::settings_applied,
+	    this,
+	    [this](const std::string & category) { on_settings_applied(category); });
 
 	dialog.exec();
 }
@@ -955,7 +957,11 @@ void main_window_t::register_shortcuts()
 		m_set_in_progress_action->setToolTip("Set status to In Progress (F9)");
 		m_set_in_progress_action->setShortcutContext(Qt::WindowShortcut);
 		addAction(m_set_in_progress_action);
-		connect(m_set_in_progress_action, &QAction::triggered, this, [this]() { shortcut_commit_status(status_t::in_progress); });
+		connect(
+		    m_set_in_progress_action,
+		    &QAction::triggered,
+		    this,
+		    [this]() { shortcut_commit_status(status_t::in_progress); });
 	}
 
 	if (!m_set_translated_action)
@@ -964,7 +970,11 @@ void main_window_t::register_shortcuts()
 		m_set_translated_action->setToolTip("Set status to Translated (F10)");
 		m_set_translated_action->setShortcutContext(Qt::WindowShortcut);
 		addAction(m_set_translated_action);
-		connect(m_set_translated_action, &QAction::triggered, this, [this]() { shortcut_commit_status(status_t::translated); });
+		connect(
+		    m_set_translated_action,
+		    &QAction::triggered,
+		    this,
+		    [this]() { shortcut_commit_status(status_t::translated); });
 	}
 
 	const auto resolve = [this](const std::string & action_name, const std::string & fallback)
@@ -1183,8 +1193,7 @@ void main_window_t::update_validation()
 }
 
 void main_window_t::scan_spell_dictionaries()
-{
-}
+{}
 
 void main_window_t::on_spell_lang_changed(int index)
 {
@@ -1363,7 +1372,13 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
 			return;
 
 		result = m_executor.make_base(
-		    plugin_path, params->native_path, params->foreign_lang, params->native_lang, nullptr, params->base_mode, params->dictionary_aff_path);
+		    plugin_path,
+		    params->native_path,
+		    params->foreign_lang,
+		    params->native_lang,
+		    nullptr,
+		    params->base_mode,
+		    params->dictionary_aff_path);
 		break;
 	}
 	case plugin_op_t::convert:
@@ -1618,9 +1633,7 @@ std::optional<make_base_params_t> main_window_t::show_make_base_dialog(const std
 
 				const auto stem = entry.path().stem().string();
 				const auto aff_path = entry.path().string();
-				dict_combo->addItem(
-				    QString::fromStdString(stem),
-				    QString::fromStdString(aff_path));
+				dict_combo->addItem(QString::fromStdString(stem), QString::fromStdString(aff_path));
 			}
 		}
 	}

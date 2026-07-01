@@ -1,5 +1,5 @@
-#include "dict_creator.hpp"
 #include "../translator/translation_engine.hpp"
+#include "dict_creator.hpp"
 #include <hunspell/hunspell.hxx>
 
 static std::vector<std::string> split_words(const std::string & name)

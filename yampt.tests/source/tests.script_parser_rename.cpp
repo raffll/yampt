@@ -1,6 +1,6 @@
 #include <catch2/catch_all.hpp>
-#include <merger/dict_merger.hpp>
 #include <converter/script_parser.hpp>
+#include <merger/dict_merger.hpp>
 #include <utility/tools.hpp>
 
 TEST_CASE("script_parser_t, record_key used for message lookup", "[u]")

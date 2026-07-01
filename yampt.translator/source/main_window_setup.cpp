@@ -2,8 +2,8 @@
 #include "dialog/find_replace_dialog.hpp"
 #include "dialog/first_run_dialog.hpp"
 #include "dialog/spell_context_menu.hpp"
-#include "highlighter/glossary_highlighter.hpp"
 #include "highlighter/editor_highlighter.hpp"
+#include "highlighter/glossary_highlighter.hpp"
 #include "main_window.hpp"
 #include "model/dict_document.hpp"
 #include "model/yaml_document.hpp"
@@ -66,13 +66,6 @@ void main_window_t::setup_menu_bar()
 
 	file_menu->addSeparator();
 
-	m_settings_action = file_menu->addAction("&Settings...");
-	m_settings_action->setShortcut(QKeySequence("Ctrl+,"));
-	m_settings_action->setToolTip("Open application settings");
-	connect(m_settings_action, &QAction::triggered, this, &main_window_t::on_open_settings);
-
-	file_menu->addSeparator();
-
 	m_quit_action = new QAction("&Quit", this);
 	m_quit_action->setShortcut(QKeySequence("Alt+F4"));
 	file_menu->addAction(m_quit_action);
@@ -100,6 +93,12 @@ void main_window_t::setup_menu_bar()
 	m_whitespace_check = new QAction("&Whitespace Markers", this);
 	m_whitespace_check->setCheckable(true);
 	view_menu->addAction(m_whitespace_check);
+
+	auto * tools_menu = menuBar()->addMenu("&Tools");
+	m_settings_action = tools_menu->addAction("&Preferences...");
+	m_settings_action->setShortcut(QKeySequence("Ctrl+,"));
+	m_settings_action->setToolTip("Open application settings");
+	connect(m_settings_action, &QAction::triggered, this, &main_window_t::on_open_settings);
 }
 
 void main_window_t::setup_toolbar()
@@ -306,8 +305,8 @@ void main_window_t::connect_menu_signals()
 		const auto * row_data = m_table_model->row_at(m_editor_controller.current_row());
 		auto type = row_data ? row_data->type : tools_t::rec_type_t::info;
 		m_extra_sel_translation.grammar = m_grammar_check->isChecked()
-		                                     ? m_grammar_checker.check(m_editor_view->translation_editor(), type)
-		                                     : QList<QTextEdit::ExtraSelection> {};
+		                                      ? m_grammar_checker.check(m_editor_view->translation_editor(), type)
+		                                      : QList<QTextEdit::ExtraSelection> {};
 		apply_extra_selections(m_editor_view->translation_editor(), m_extra_sel_translation);
 	});
 
@@ -397,8 +396,8 @@ void main_window_t::connect_menu_signals()
 	    this,
 	    [this](const QString & query, bool case_sensitive, bool regex_mode)
 	{
-		auto result =
-		    m_find_replace->find_next(query.toStdString(), case_sensitive, regex_mode, m_editor_controller.current_row());
+		auto result = m_find_replace->find_next(
+		    query.toStdString(), case_sensitive, regex_mode, m_editor_controller.current_row());
 
 		if (result.found)
 			on_row_selected(result.row);
@@ -455,7 +454,6 @@ void main_window_t::connect_sidebar_signals()
 	connect(m_sidebar, &sidebar_view_t::item_clicked, this, &main_window_t::on_item_clicked);
 	connect(m_sidebar, &sidebar_view_t::operation_requested, this, &main_window_t::on_operation_requested);
 	connect(m_sidebar, &sidebar_view_t::save_requested, this, &main_window_t::on_save_requested);
-	connect(m_sidebar, &sidebar_view_t::merge_requested, this, &main_window_t::on_merge);
 	connect(m_sidebar, &sidebar_view_t::unload_requested, this, &main_window_t::on_unload_requested);
 	connect(m_sidebar, &sidebar_view_t::delete_requested, this, &main_window_t::on_delete_requested);
 
@@ -610,7 +608,8 @@ void main_window_t::connect_sidebar_signals()
 		dict_doc->modified_records_insert(row_data->type, index_it->second);
 		set_unsaved_changes(true);
 
-		m_edit_history.record_change(row_data->type, row_data->key_text, current_value, record->new_text, current_status);
+		m_edit_history.record_change(
+		    row_data->type, row_data->key_text, current_value, record->new_text, current_status);
 
 		m_table_model->update_row(m_editor_controller.current_row(), record->new_text, record->status);
 		load_record(m_editor_controller.current_row());
@@ -621,7 +620,11 @@ void main_window_t::connect_editor_signals()
 {
 	connect(m_table_view, &record_table_view_t::row_selected, this, &main_window_t::on_row_selected);
 
-	connect(m_table_view, &record_table_view_t::delete_entry_requested, this, [this]()
+	connect(
+	    m_table_view,
+	    &record_table_view_t::delete_entry_requested,
+	    this,
+	    [this]()
 	{
 		if (m_editor_controller.current_row() < 0)
 			return;

@@ -23,5 +23,5 @@ private:
 	void on_open_settings();
 
 	plugin_workspace_view_t * m_plugin_workspace_view = nullptr;
-	app_settings_t m_settings{"yEditor.ini"};
+	app_settings_t m_settings { "yEditor.ini" };
 };

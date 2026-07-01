@@ -2,10 +2,10 @@
 
 #include "../io/codepage.hpp"
 #include "../io/esm_reader.hpp"
+#include "../merger/dict_merger.hpp"
 #include "../utility/includes.hpp"
 #include "../utility/keyword_trie.hpp"
 #include "../utility/tools.hpp"
-#include "../merger/dict_merger.hpp"
 
 class esm_converter_t
 {

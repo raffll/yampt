@@ -158,9 +158,7 @@ void glossary_t::rebuild_dial_trie()
 	}
 }
 
-void glossary_t::find_matches_trie(
-    const std::string & text_original,
-    std::vector<annotation_t> & results) const
+void glossary_t::find_matches_trie(const std::string & text_original, std::vector<annotation_t> & results) const
 {
 	const auto & matches = m_dial_trie.find_matches(text_original);
 
@@ -191,9 +189,7 @@ void glossary_t::find_matches_trie(
 	}
 }
 
-void glossary_t::find_at_prefix_hyperlinks(
-    const std::string & text,
-    std::vector<annotation_t> & results) const
+void glossary_t::find_at_prefix_hyperlinks(const std::string & text, std::vector<annotation_t> & results) const
 {
 	size_t pos = 0;
 	while (pos < text.size())

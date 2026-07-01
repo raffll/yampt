@@ -114,10 +114,7 @@ commit_result_t editor_controller_t::commit(
 	return result;
 }
 
-commit_result_t editor_controller_t::commit_status(
-    dict_document_t & doc,
-    const table_row_t & row,
-    status_t new_status)
+commit_result_t editor_controller_t::commit_status(dict_document_t & doc, const table_row_t & row, status_t new_status)
 {
 	commit_result_t result;
 

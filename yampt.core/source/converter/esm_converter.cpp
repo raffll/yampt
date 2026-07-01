@@ -1,6 +1,6 @@
 #include "esm_converter.hpp"
-#include "script_parser.hpp"
 #include "../utility/keyword_trie.hpp"
+#include "script_parser.hpp"
 
 static bool is_approved_status(status_t status)
 {
