@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="source\tests.main.cpp" />
@@ -24,7 +24,7 @@
     <ClCompile Include="source\tests.find_replace.cpp" />
     <ClCompile Include="source\tests.sidebar_model.cpp" />
     <ClCompile Include="source\tests.yaml_l10n_reader.cpp" />
-    <ClCompile Include="source\tests.syntax_highlighter.cpp" />
+    <ClCompile Include="source\tests.script_tokenizer.cpp" />
     <ClCompile Include="source\tests.editor_controller.cpp" />
     <ClCompile Include="source\tests.script_parser_rename.cpp" />
     <ClCompile Include="source\tests.converter_counters.cpp" />
@@ -38,18 +38,18 @@
     <ClCompile Include="..\yampt\source\io\dict_writer.cpp" />
     <ClCompile Include="..\yampt\source\io\esm_reader.cpp" />
     <ClCompile Include="..\yampt\source\io\codepage.cpp" />
-    <ClCompile Include="..\yampt\source\model\dict_merger.cpp" />
-    <ClCompile Include="..\yampt\source\model\dict_creator.cpp" />
-    <ClCompile Include="..\yampt\source\model\dict_creator_single.cpp" />
-    <ClCompile Include="..\yampt\source\model\dict_creator_base.cpp" />
-    <ClCompile Include="..\yampt\source\model\dict_creator_base_ordered.cpp" />
-    <ClCompile Include="..\yampt\source\model\esm_converter.cpp" />
-    <ClCompile Include="..\yampt\source\model\script_parser.cpp" />
-    <ClCompile Include="..\yampt\source\model\scdt_patcher.cpp" />
-    <ClCompile Include="..\yampt\source\model\translation_engine.cpp" />
-    <ClCompile Include="..\yampt\source\model\file_list.cpp" />
-    <ClCompile Include="..\yampt\source\plugin_scan\conflict_compute.cpp" />
-    <ClCompile Include="..\yampt\source\plugin_scan\conflict_slots.cpp" />
+    <ClCompile Include="..\yampt\source\merger\dict_merger.cpp" />
+    <ClCompile Include="..\yampt\source\creator\dict_creator.cpp" />
+    <ClCompile Include="..\yampt\source\creator\dict_creator_single.cpp" />
+    <ClCompile Include="..\yampt\source\creator\dict_creator_base.cpp" />
+    <ClCompile Include="..\yampt\source\creator\dict_creator_base_ordered.cpp" />
+    <ClCompile Include="..\yampt\source\converter\esm_converter.cpp" />
+    <ClCompile Include="..\yampt\source\converter\script_parser.cpp" />
+    <ClCompile Include="..\yampt\source\converter\scdt_patcher.cpp" />
+    <ClCompile Include="..\yampt\source\translator\translation_engine.cpp" />
+    <ClCompile Include="..\yampt\source\io\file_list.cpp" />
+    <ClCompile Include="..\yampt\source\scanner\conflict_compute.cpp" />
+    <ClCompile Include="..\yampt\source\decoder\conflict_slots.cpp" />
     <ClCompile Include="..\yampt.translator\source\io\editor_config.cpp" />
     <ClCompile Include="..\yampt.translator\source\io\yaml_l10n_reader.cpp" />
     <ClCompile Include="..\yampt.translator\source\io\yaml_l10n_writer.cpp" />
@@ -57,14 +57,14 @@
     <ClCompile Include="..\yampt.translator\source\model\dict_document.cpp" />
     <ClCompile Include="..\yampt.translator\source\model\yaml_document.cpp" />
     <ClCompile Include="..\yampt.translator\source\model\sidebar_model.cpp" />
-    <ClCompile Include="..\yampt.translator\source\controller\row_filter.cpp" />
-    <ClCompile Include="..\yampt.translator\source\controller\glossary.cpp" />
-    <ClCompile Include="..\yampt.translator\source\controller\editor_controller.cpp" />
-    <ClCompile Include="..\yampt.translator\source\controller\edit_history.cpp" />
-    <ClCompile Include="..\yampt.translator\source\controller\byte_limit_validator.cpp" />
-    <ClCompile Include="..\yampt.translator\source\controller\find_replace.cpp" />
+    <ClCompile Include="..\yampt.translator\source\editor\row_filter.cpp" />
+    <ClCompile Include="..\yampt.translator\source\editor\glossary.cpp" />
+    <ClCompile Include="..\yampt.translator\source\editor\editor_controller.cpp" />
+    <ClCompile Include="..\yampt.translator\source\editor\edit_history.cpp" />
+    <ClCompile Include="..\yampt.translator\source\editor\byte_limit_validator.cpp" />
+    <ClCompile Include="..\yampt.translator\source\editor\find_replace.cpp" />
     <ClCompile Include="..\yampt.translator\source\utility\display_name.cpp" />
-    <ClCompile Include="..\yampt.translator\source\highlight\syntax_highlighter.cpp" />
+    <ClCompile Include="..\yampt.translator\source\highlighter\script_tokenizer.cpp" />
     <ClCompile Include="..\yampt.translator\source\session.cpp" />
     <ClCompile Include="..\yampt.editor\source\io\profile_reader.cpp" />
   </ItemGroup>

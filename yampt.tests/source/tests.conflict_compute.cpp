@@ -1,5 +1,5 @@
 #include <catch2/catch_all.hpp>
-#include <plugin_scan/conflict_compute.hpp>
+#include <scanner/conflict_compute.hpp>
 
 TEST_CASE("compute_conflict_all, single value yields only_one", "[u]")
 {

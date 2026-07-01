@@ -1,18 +1,18 @@
 #pragma once
 
-#include "syntax_highlighter.hpp"
+#include "script_tokenizer.hpp"
 #include <utility/tools.hpp>
 #include <QSyntaxHighlighter>
 #include <QTextCharFormat>
 
 class spell_checker_t;
 
-class composite_highlighter_t : public QSyntaxHighlighter
+class editor_highlighter_t : public QSyntaxHighlighter
 {
 	Q_OBJECT
 
 public:
-	explicit composite_highlighter_t(QTextDocument * parent = nullptr);
+	explicit editor_highlighter_t(QTextDocument * parent = nullptr);
 
 	void set_record_type(tools_t::rec_type_t type);
 	void set_translation_mode(bool enabled);
@@ -29,7 +29,7 @@ private:
 	tools_t::rec_type_t record_type_ = tools_t::rec_type_t::unknown;
 	bool is_translation_ = false;
 	spell_checker_t * spell_checker_ = nullptr;
-	syntax_highlighter_t tokenizer_;
+	script_tokenizer_t tokenizer_;
 
 	QTextCharFormat format_function_;
 	QTextCharFormat format_comment_;

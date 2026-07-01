@@ -1,6 +1,6 @@
 #pragma once
 
-#include "conflict_slots.hpp"
+#include "../decoder/conflict_slots.hpp"
 #include "conflict_types.hpp"
 #include "plugin_index.hpp"
 #include <memory>

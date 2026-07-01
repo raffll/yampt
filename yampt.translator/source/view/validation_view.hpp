@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../controller/byte_limit_validator.hpp"
+#include "../editor/byte_limit_validator.hpp"
 #include <utility/tools.hpp>
 #include <QWidget>
 

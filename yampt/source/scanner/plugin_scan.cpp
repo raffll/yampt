@@ -1,8 +1,8 @@
 #include "plugin_scan.hpp"
 #include "conflict_compute.hpp"
-#include "sub_record_iter.hpp"
-#include "sub_record_schema.hpp"
-#include "view_tree_format.hpp"
+#include "../decoder/sub_record_iter.hpp"
+#include "../decoder/sub_record_schema.hpp"
+#include "../decoder/view_tree_format.hpp"
 #include <algorithm>
 #include <cstring>
 #include <filesystem>

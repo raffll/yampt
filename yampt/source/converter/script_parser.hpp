@@ -2,7 +2,7 @@
 
 #include "../utility/includes.hpp"
 #include "../utility/tools.hpp"
-#include "dict_merger.hpp"
+#include "../merger/dict_merger.hpp"
 #include "scdt_patcher.hpp"
 
 class script_parser_t

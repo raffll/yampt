@@ -20,7 +20,7 @@ struct token_t
 	token_type_t type;
 };
 
-class syntax_highlighter_t
+class script_tokenizer_t
 {
 public:
 	std::vector<token_t> tokenize(const std::string & text, tools_t::rec_type_t type) const;

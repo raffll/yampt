@@ -1,5 +1,5 @@
 #include <catch2/catch_all.hpp>
-#include <model/dict_creator.hpp>
+#include <creator/dict_creator.hpp>
 #include <cstring>
 
 TEST_CASE("dict_creator_t::differs_only_in_numbers_or_punct, identical strings", "[u]")

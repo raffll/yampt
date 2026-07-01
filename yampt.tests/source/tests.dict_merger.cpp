@@ -1,5 +1,5 @@
 #include <catch2/catch_all.hpp>
-#include <model/dict_merger.hpp>
+#include <merger/dict_merger.hpp>
 #include <utility/tools.hpp>
 
 TEST_CASE("dict_merger_t::add_record, inserts entry", "[u]")

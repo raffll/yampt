@@ -1,6 +1,6 @@
 #pragma once
 
-#include <model/dict_kind.hpp>
+#include <utility/dict_kind.hpp>
 #include <map>
 #include <string>
 #include <vector>

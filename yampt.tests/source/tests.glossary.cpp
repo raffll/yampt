@@ -1,5 +1,5 @@
 #include <catch2/catch_all.hpp>
-#include <controller/glossary.hpp>
+#include <editor/glossary.hpp>
 
 namespace {
 

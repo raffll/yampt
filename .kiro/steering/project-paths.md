@@ -6,22 +6,26 @@
 yampt/
 ├── yampt/                  # Core library + CLI (C++)
 │   ├── source/
-│   │   ├── io/            # File format readers/writers (ESM, JSON, codepage)
-│   │   ├── model/         # Domain logic (dict creation, merging, conversion, file registry)
-│   │   ├── utility/       # Pure helpers (tools, string_utils, record_types, status_types)
+│   │   ├── creator/       # dict_creator_t + splits (base, single, ordered)
+│   │   ├── merger/        # dict_merger_t
+│   │   ├── converter/     # esm_converter_t, script_parser_t, scdt_patcher_t
+│   │   ├── translator/    # translation_engine_t
+│   │   ├── scanner/       # plugin_scan_t, plugin_index_t, conflict_compute, conflict_enums, conflict_types
+│   │   ├── decoder/       # conflict_slots, sub_record_iter, sub_record_schema, view_tree_format
+│   │   ├── io/            # File format readers/writers (ESM, JSON, codepage, file_list)
+│   │   ├── utility/       # Pure helpers (tools, string_utils, record_types, status_types, dict_kind)
 │   │   ├── interface/     # CLI boundary
-│   │   ├── plugin_scan/   # Plugin comparison/conflict detection
 │   │   └── main.cpp
 │   └── yampt.vcxproj
 ├── yampt.translator/       # GUI translation workbench (Qt6) → yTranslator.exe
 │   ├── source/
 │   │   ├── model/         # Data models & documents
 │   │   ├── view/          # Qt widgets (all use _view_t suffix)
-│   │   ├── controller/    # Logic & orchestration
+│   │   ├── editor/        # Logic & orchestration (editor_controller, edit_history, find_replace, glossary, etc.)
 │   │   ├── dialog/        # Modal dialogs
-│   │   ├── highlight/     # Text coloring (syntax, hyperlinks, annotations)
-│   │   ├── translate/     # Translation backends (CTranslate2, DeepL, Google)
-│   │   ├── utility/       # Helpers (display_name, encoding, spell_checker)
+│   │   ├── highlighter/   # Text coloring (syntax, hyperlinks, annotations)
+│   │   ├── translator/    # Translation backends (CTranslate2, DeepL, Google)
+│   │   ├── utility/       # Helpers (display_name, spell_checker)
 │   │   ├── io/            # Config and YAML l10n readers/writers
 │   │   └── main.cpp
 │   └── yampt.translator.vcxproj

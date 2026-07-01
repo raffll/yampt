@@ -4,126 +4,11 @@ Sorted by effort. Settings dialog takes priority.
 
 ---
 
-## S — a few hours
+### ~~Reorganize all project folders [S]~~ ✓
+Completed. Core `model/` split into `creator/`, `merger/`, `converter/`, `translator/`. `plugin_scan/` split into `scanner/` + `decoder/`. `file_list` moved to `io/`, `dict_kind` moved to `utility/`. Translator: `controller/` → `editor/`, `translate/` → `translator/`, `highlight/` → `highlighter/`.
 
-### Split `glossary_t` into three classes [S]
-`glossary_t` currently does three unrelated things:
-1. Builds term index from dicts + annotates text → keep as `glossary_t` in `highlighter/`
-2. NPC gender lookup (`load_npc_flags`, `get_speaker_gender`) → extract to `npc_lookup_t` in `highlighter/`
-3. Enchantment lookup (`load_enchantments`, `get_enchantment`) → extract to `enchantment_lookup_t` in `highlighter/`
-
-### Reorganize all project folders [S]
-Replace generic `model/` and `controller/` with noun-based folders split by responsibility.
-
-**yampt (core library):**
-```
-yampt/source/
-├── creator/       — dict_creator_t + splits, cell_matcher_t, dial_matcher_t, text_match_index_t
-├── merger/        — dict_merger_t
-├── converter/     — esm_converter_t, script_parser_t, scdt_patcher_t
-├── translator/    — translation_engine_t
-├── scanner/       — plugin_scanner_t (slimmed, no merge), plugin_index_t, conflict_compute, conflict_enums, conflict_types
-├── decoder/       — conflict_slots, sub_record_iterator, sub_record_schema, view_tree_format
-├── io/            — esm_reader, dict_reader, dict_writer, codepage, json_reader
-├── utility/       — tools, string_utils, record_types, status_types
-├── interface/     — CLI
-└── main.cpp
-```
-
-**yampt.translator:**
-```
-yampt.translator/source/
-├── document/      — document_t, dict_document_t, yaml_document_t, plugin_document_t
-├── table/         — record_table_model_t, table_builder_t, table_row_t, row_source_t
-├── workspace/     — sidebar_model_t, menu_action, plugin_operations
-├── filter/        — row_filter_t, status_filter model (if extracted from view)
-├── editor/        — editor_controller_t, edit_history_t, find_replace_t, byte_limit_validator_t
-├── highlighter/   — composite, annotation, hyperlink, syntax highlighters, glossary_t, 
-├── translator/    — translator.hpp, ctranslate2, deepl, google
-├── view/          — all widgets (unchanged)
-├── dialog/        — (unchanged)
-├── io/            — operation_executor_t, config
-├── utility/       — display_name, spell_checker, grammar_checker_t
-└── main_window (root)
-```
-
-**yampt.editor:**
-```
-yampt.editor/source/
-├── model/         — nav_tree_model_t, view_tree_model_t, plugin_session_t
-├── patcher/       — patch_builder_t (extracted from plugin_scan_t: copy/remove/save/header/leveled/dialogue)
-├── decoder/       — view_tree_decode splits (cell, lists, generic)
-├── view/          — plugin_workspace_view_t (slimmed), nav_tree_view_t, record_view_t, messages_view_t
-├── dialog/        — (unchanged)
-├── io/            — (unchanged)
-└── main + editor_window (root)
-```
-
-Key renames: `controller/` → `editor/`, `translate/` → `translator/`, `highlight/` → `highlighter/` (nouns only).
-Key splits: core `model/` → `creator/`, `merger/`, `converter/`, `translator/`; core `plugin_scan/` → `scanner/` + `decoder/`; translator `model/` → `document/` + `table/` + residual `model/`.
-
-### Rename highlight files [S]
-- `composite_highlighter` → `editor_highlighter` (highlights editable translation panel; "composite" is a pattern name)
-- `syntax_highlighter` → `script_tokenizer` (tokenizes MWScript/HTML; not a Qt highlighter)
-- `annotation_highlighter` → `glossary_highlighter` (highlights glossary terms in both panels)
-- `hyperlink_highlighter` → `topic_highlighter` (highlights DIAL topic names)
-
-### Split `tools_t` into focused utilities [S]
-`tools_t` is a god class: data types (`dict_t`, `chapter_t`, `record_entry_t`, `rec_type_t`), file I/O (`read_file`, `write_text`, `write_file`), byte conversion, string manipulation, and global logging state. Split into:
-- `dict_types.hpp` — `dict_t`, `chapter_t`, `record_entry_t`, `rec_type_t` (already partially in `record_types.hpp`/`status_types.hpp`)
-- `esm_file_io.hpp` — `read_file`, `write_text`, `write_file`, `create_file`
-- `log.hpp` — `add_log`, `get_log`, `reset_log`, `has_error`, `set_debug`, `set_quiet`
-- `byte_utils.hpp` — `convert_string_byte_array_to_uint`, `convert_uint_to_string_byte_array`
-
-### Split `dict_creator_t` (header: 230 lines, base impl: 1937 lines) [S]
-The class mixes unrelated matching algorithms behind one interface. Extract:
-- Cell matching (fingerprint, heuristic, exterior coords, default, region) → `cell_matcher_t`
-- DIAL matching (INAM index, translation-based) → `dial_matcher_t`
-- Script matching (SCTX/BNAM native message pairing) → stays in `dict_creator_base.cpp` (less code)
-- Text-match index (adaptation, ambiguity detection) → `text_match_index_t`
-
-### Reduce `main_window_t` (1923 + 852 lines) [S]
-Extract self-contained concerns into dedicated classes:
-- Workspace/watcher logic → `workspace_watcher_t`
-- Commit+propagation logic → already in `editor_controller_t` but `main_window` still has `commit_dict_edit`, `commit_yaml_edit`, `sync_propagated_rows` — push into controller
-- Highlight management (`extra_selections_state_t`, `apply_extra_selections`, `find_annotation_highlights`, `build_highlight_selections`) → `highlight_coordinator_t`
-
-### Reduce `plugin_workspace_view_t` (1316 lines) in yEditor [S]
-Does loading, parsing, merging, filtering, drag-drop, persistence — all in one "view". Also embeds two child tree views (nav + record view) and a messages panel instead of composing separate widgets. Extract:
-- Plugin loading + unloading orchestration → `plugin_session_t` in `model/`
-- Merge patch creation (`create_merge_records`, `refresh_after_merge`) → `patch_builder_t` in `patcher/`
-- Nav tree (left panel) → `nav_tree_view_t` in `view/` (owns its `QTreeView` + nav_tree_model)
-- Record view tree (right panel) → `record_view_t` in `view/` (owns its `QTreeView` + view_tree_model)
-- The parent view keeps only: toolbar, splitter layout, connect signals between child views and model classes
-
-### Split `plugin_scan_t` god class (757 lines) [S]
-Mixes: loading, conflict detection, merge plugin management, TES3 binary header construction, leveled list merging, dialogue merging, ITM detection. Extract:
-- `patch_builder_t` in `yampt.editor/patcher/` — `copy_record_to_merge`, `remove_from_merge`, `save_merge`, `build_tes3_header`, `merge_leveled_list`, `merge_dialogue`
-- Slimmed `plugin_scan_t` stays in core `scanner/` — loading, indexing, conflict detection, ITM only
-
-
-view_tree_ -> record_tree
-### Split `view_tree_decode.cpp` (1166 lines) in yEditor [S]
-Contains 5+ unrelated record-type decoders. Split by family:
-- `view_tree_decode_cell.cpp` — CELL ref groups, DODT matching, object indices
-- `view_tree_decode_lists.cpp` — leveled lists, factions, containers
-- `view_tree_decode_generic.cpp` — schema-based children, hex dump fallback
-
-### Split `conflict_slots.cpp` (742 lines) [S]
-Five independent strategy implementations behind one dispatch. Extract:
-- `conflict_slots_cell.cpp` — CELL ref group slot building (most complex)
-- Keep leveled/faction/container strategies in main file (shorter, similar pattern)
-
-### Split `esm_converter.cpp` (760 lines) [S]
-16 independent `convert_*` methods + shared helpers. Split:
-- `esm_converter.cpp` — constructor, dispatcher, shared helpers
-- `esm_converter_records.cpp` — all per-record-type conversion methods
-
-### Comprehensive esm_converter_t tests [S]
-The current converter tests use synthetic ESM files assembled in memory. Add a small real ESM file (a few records of each type) to the test data and verify all `convert_*` functions produce correct output. Cover every record type: SCTX, BNAM, CELL, FNAM, INFO, DIAL, GMST, DESC, TEXT, RNAM, INDX, PGRD, ANAM, SCVR, DNAM, CNDT.
-
-### Extract color logic from `nav_tree_model.cpp` (733 lines) [S]
-The model's `data()` method computes QBrush colors from conflict enums. Extract conflict-to-color mapping to a shared `conflict_colors.hpp` utility used by both nav_tree_model and view_tree_model.
+### ~~Rename highlight files [S]~~ ✓
+Completed. `composite_highlighter` → `editor_highlighter`, `syntax_highlighter` → `script_tokenizer`, `annotation_highlighter` → `glossary_highlighter`, `hyperlink_highlighter` → `topic_highlighter`. Both file names and class names renamed across the entire solution.
 
 ### Settings dialog for both apps [S, PRIORITY]
 Settings dialog similar to Notepad++/Visual Studio. Covers both yTranslator and yEditor. Central place for keyboard shortcuts, paths, encoding, spell check language, translation provider API keys, theme preferences.
@@ -171,6 +56,9 @@ Clarify in the GUI (tooltip, help text, or info panel) how the English dictionar
 Document how hyperlinks work in Morrowind dialogues, how yampt detects and applies them during conversion, and how the annotation system highlights them.
 - annotations have to highlitht them same way
 - how @ is used, implement also
+
+### Comprehensive esm_converter_t tests [S]
+The current converter tests use synthetic ESM files assembled in memory. Add a small real ESM file (a few records of each type) to the test data and verify all `convert_*` functions produce correct output. Cover every record type: SCTX, BNAM, CELL, FNAM, INFO, DIAL, GMST, DESC, TEXT, RNAM, INDX, PGRD, ANAM, SCVR, DNAM, CNDT.
 
 ---
 
@@ -248,6 +136,194 @@ Create `.top`, `.cel`, `.mrk` files based on DIAL/CELL dictionaries and the lang
 ### Lua handlers comparison/conflicts detector (yEditor) [XL]
 Detect conflicts between OpenMW Lua handler registrations across multiple mods (e.g. two mods registering `addSkillLevelUpHandler` that both return `false`). Show conflicts in yEditor's comparison view.
 
+---
 
+## Refactoring — later
 
+### Split `tools_t` into focused utilities
+`tools_t` is a god class: data types (`dict_t`, `chapter_t`, `record_entry_t`, `rec_type_t`), file I/O (`read_file`, `write_text`, `write_file`), byte conversion, string manipulation, and global logging state. Split into:
+- `dict_types.hpp` — `dict_t`, `chapter_t`, `record_entry_t`, `rec_type_t` (already partially in `record_types.hpp`/`status_types.hpp`)
+- `esm_file_io.hpp` — `read_file`, `write_text`, `write_file`, `create_file`
+- `log.hpp` — `add_log`, `get_log`, `reset_log`, `has_error`, `set_debug`, `set_quiet`
+- `byte_utils.hpp` — `convert_string_byte_array_to_uint`, `convert_uint_to_string_byte_array`
 
+### Split `dict_creator_t` (header: 230 lines, base impl: 1937 lines)
+The class mixes unrelated matching algorithms behind one interface. Extract:
+- Cell matching (fingerprint, heuristic, exterior coords, default, region) → `cell_matcher_t`
+- DIAL matching (INAM index, translation-based) → `dial_matcher_t`
+- Script matching (SCTX/BNAM native message pairing) → stays in `dict_creator_base.cpp` (less code)
+- Text-match index (adaptation, ambiguity detection) → `text_match_index_t`
+
+### Reduce `main_window_t` (1923 + 852 lines)
+Extract self-contained concerns into dedicated classes:
+- Workspace/watcher logic → `workspace_watcher_t`
+- Commit+propagation logic → already in `editor_controller_t` but `main_window` still has `commit_dict_edit`, `commit_yaml_edit`, `sync_propagated_rows` — push into controller
+- Highlight management (`extra_selections_state_t`, `apply_extra_selections`, `find_annotation_highlights`, `build_highlight_selections`) → `highlight_coordinator_t`
+
+### Reduce `plugin_workspace_view_t` (1316 lines) in yEditor
+Does loading, parsing, merging, filtering, drag-drop, persistence — all in one "view". Also embeds two child tree views (nav + record view) and a messages panel instead of composing separate widgets. Extract:
+- Plugin loading + unloading orchestration → `plugin_session_t` in `model/`
+- Merge patch creation (`create_merge_records`, `refresh_after_merge`) → `patch_builder_t` in `patcher/`
+- Nav tree (left panel) → `nav_tree_view_t` in `view/` (owns its `QTreeView` + nav_tree_model)
+- Record view tree (right panel) → `record_view_t` in `view/` (owns its `QTreeView` + view_tree_model)
+- The parent view keeps only: toolbar, splitter layout, connect signals between child views and model classes
+
+### Split `plugin_scan_t` god class (757 lines)
+Mixes: loading, conflict detection, merge plugin management, TES3 binary header construction, leveled list merging, dialogue merging, ITM detection. Extract:
+- `patch_builder_t` in `yampt.editor/patcher/` — `copy_record_to_merge`, `remove_from_merge`, `save_merge`, `build_tes3_header`, `merge_leveled_list`, `merge_dialogue`
+- Slimmed `plugin_scan_t` stays in core `scanner/` — loading, indexing, conflict detection, ITM only
+
+### Split `view_tree_decode.cpp` (1166 lines) in yEditor
+Contains 5+ unrelated record-type decoders. Split by family:
+- `view_tree_decode_cell.cpp` — CELL ref groups, DODT matching, object indices
+- `view_tree_decode_lists.cpp` — leveled lists, factions, containers
+- `view_tree_decode_generic.cpp` — schema-based children, hex dump fallback
+
+### Split `conflict_slots.cpp` (742 lines)
+Five independent strategy implementations behind one dispatch. Extract:
+- `conflict_slots_cell.cpp` — CELL ref group slot building (most complex)
+- Keep leveled/faction/container strategies in main file (shorter, similar pattern)
+
+### Split `esm_converter.cpp` (760 lines)
+16 independent `convert_*` methods + shared helpers. Split:
+- `esm_converter.cpp` — constructor, dispatcher, shared helpers
+- `esm_converter_records.cpp` — all per-record-type conversion methods
+
+### Extract color logic from `nav_tree_model.cpp` (733 lines)
+The model's `data()` method computes QBrush colors from conflict enums. Extract conflict-to-color mapping to a shared `conflict_colors.hpp` utility used by both nav_tree_model and view_tree_model.
+
+### Rename: view_tree_ → record_tree
+Rename view_tree_model, view_tree_decode, and related types/files to record_tree_* for clarity.
+
+---
+
+## Feature Ideas — Replacing External Tools
+
+Features observed in xTranslator, EET4, TESTool, tes3cmd, MWEdit, TES3Merge, xEdit, Wrye Mash, and Enchanted Editor that yampt/yTranslator/yEditor could absorb.
+
+### Plugin Cleaning (TESTool, tes3cmd, xEdit)
+- Remove dirty GMST records (including the "evil 72")
+- Remove records identical to master (ITM — Identical To Master)
+- Remove identical cell references inside CELL records
+- Remove identical AMBI/WHGT fields from cells
+- Remove empty CELL records (no refs, no LAND/PGRD)
+- Remove empty DIAL records (no INFOs, unless journal type)
+- Remove duplicate objects (same ID, two records)
+- Restricted vs. aggressive cleaning modes
+- Batch clean multiple plugins at once
+- Preserve file timestamps option
+- yEditor already has ITM detection — expose as a one-click clean action
+
+### Conflict Report Generation (TESTool, xEdit)
+- Generate plain-text conflict report for a set of plugins
+- Show which records conflict across which plugins
+- Optionally skip mergeable conflicts (leveled lists, objects)
+- yEditor already shows this visually — add export-to-text option
+
+### Leveled List Merging (TESTool, TES3Merge)
+- Merge leveled creature + leveled item lists across active plugins
+- Only add new entries (minimum necessary to cover all sources)
+- Merge PC Level / Each Item flags (any-enabled wins)
+- None chance = minimum non-zero value across sources
+- yEditor already has this infrastructure — expose and polish
+
+### Object Merging (TESTool)
+- Identify records defined in multiple plugins with different field changes
+- Merge non-conflicting field changes (one mod changes weight, another changes model)
+- Attribute-level comparison for packed sub-records (WPDT, NPDT, AODT, etc.)
+- Last-modified-date wins for true conflicts
+- Generate Merged_Objects.esp
+- yEditor has partial support — extend to all object types
+
+### Dialogue Merging (TESTool)
+- Merge dialogue INFO ordering conflicts between plugins
+- Preserve correct INFO chain (PNAM/NNAM links)
+- Generate Merged_Dialogs.esp
+
+### Plugin Header Management (TESTool, Wrye Mash)
+- Update master file sizes in plugin headers
+- Update plugin version to 1.3
+- Reassign masters (Wrye Mash's master swap feature)
+- Change load order metadata
+
+### CSV Import/Export (MWEdit)
+- Export records (NPCs, weapons, spells, etc.) to CSV for spreadsheet editing
+- Import CSV back into plugin
+- Useful for bulk stat changes, item rebalancing, translation via spreadsheet
+
+### Script Compiler with Diagnostics (MWEdit)
+- Full MWScript compiler with better error messages than TESCS
+- Color-coded script editor
+- Function parameter type checking (expects NPC ID vs item ID)
+- Detect broken/deprecated functions
+- Warn about reserved words used as variables
+- Max length checks for variables and statements
+- Three warning levels (weak/default/strong)
+- Script import/export to text files
+- Script templates
+
+### Find Text Across All Records (MWEdit, xEdit)
+- Search all loaded records for text string matches
+- Results list with record ID, type, and context
+- Double-click to jump to/edit the record
+- Regex support (xTranslator)
+
+### Batch Auto-Translation (xTranslator)
+- Apply dictionary matches automatically to all untranslated entries
+- Heuristic matching with confidence threshold
+- Online translation API integration (already partially in yampt: DeepL, Google, CTranslate2)
+
+### Diff Viewer Between Plugin Versions (xTranslator)
+- Show differences between original and updated source strings
+- Useful when a mod updates and translations need review
+
+### BSA/BA2 Archive Extraction (xTranslator, xEdit)
+- Extract files from BSA archives for inspection
+- Useful for finding mesh/texture/sound paths referenced in records
+
+### Regex Search and Replace (xTranslator)
+- Regex-based find/replace across translations
+- Batch mode (apply to all matching entries)
+
+### Alias/Variable Integrity Check (xTranslator)
+- Verify that format variables (%s, %d, {0}, etc.) in translations match the source
+- Flag entries where placeholders are missing or reordered
+
+### Plugin Active List Management (TESTool, Wrye Mash)
+- View/edit active plugin list
+- Sort by load order, date, dependencies
+- One-click "fix load order" based on master dependencies
+
+### Record Copying Between Plugins (MWEdit)
+- Drag records from one loaded plugin to another
+- Copy/rename dialogue topics with all child INFOs
+- Duplicate INFO records within a topic
+
+### Automatic Backup on Save (MWEdit)
+- Sequential backup files (.001, .002, .003...)
+- Never overwrite a previous backup
+- Complete edit history through file versions
+
+### "Just Fix It" One-Click Mode (TESTool)
+- Single button that runs: clean all active plugins + merge leveled lists + merge objects
+- No user interaction needed beyond clicking the button
+- Good for end-users who don't understand individual operations
+
+### PEX Script Decompilation (xTranslator)
+- Decompile Papyrus PEX scripts for translation
+- Not directly relevant for Morrowind but relevant if yampt expands to Skyrim/Fallout
+
+### Custom Dictionary / Glossary During Translation (xTranslator)
+- Inline dictionary built from existing translation pairs
+- Suggests translations as you type
+- yampt already has annotations/glossary — could add autocomplete suggestions
+
+### Fuz (Voice File) Mapping and Player (xTranslator)
+- Map dialogue entries to their voice .fuz files
+- Play audio for the current entry to help with context
+- For Morrowind: map Say commands to .wav files
+
+### Encoding Detection and Conversion (xTranslator)
+- Support all known encodings for each game
+- Detect encoding automatically from file content
+- yampt already has Windows-1250/1251/1252 — could add more (Cyrillic, Asian)

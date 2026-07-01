@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../controller/glossary.hpp"
+#include "../editor/glossary.hpp"
 #include <utility/tools.hpp>
 #include <vector>
 #include <QWidget>

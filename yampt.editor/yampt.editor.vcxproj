@@ -169,36 +169,36 @@
     <ClCompile Include="source\model\nav_tree_model.cpp" />
     <ClCompile Include="source\model\view_tree_model.cpp" />
     <ClCompile Include="source\model\view_tree_decode.cpp" />
-    <ClCompile Include="..\yampt\source\plugin_scan\view_tree_format.cpp" />
+    <ClCompile Include="..\yampt\source\decoder\view_tree_format.cpp" />
     <ClCompile Include="source\dialog\plugin_select_dialog.cpp" />
     <ClCompile Include="source\dialog\filter_dialog.cpp" />
     <ClCompile Include="source\view\messages_view.cpp" />
     <ClCompile Include="..\yampt\source\utility\tools.cpp" />
     <ClCompile Include="..\yampt\source\io\esm_reader.cpp" />
     <ClCompile Include="..\yampt\source\io\codepage.cpp" />
-    <ClCompile Include="..\yampt\source\model\file_list.cpp" />
-    <ClCompile Include="..\yampt\source\plugin_scan\sub_record_schema.cpp" />
-    <ClCompile Include="..\yampt\source\plugin_scan\plugin_index.cpp" />
-    <ClCompile Include="..\yampt\source\plugin_scan\plugin_scan.cpp" />
-    <ClCompile Include="..\yampt\source\plugin_scan\conflict_compute.cpp" />
-    <ClCompile Include="..\yampt\source\plugin_scan\conflict_slots.cpp" />
+    <ClCompile Include="..\yampt\source\io\file_list.cpp" />
+    <ClCompile Include="..\yampt\source\decoder\sub_record_schema.cpp" />
+    <ClCompile Include="..\yampt\source\scanner\plugin_index.cpp" />
+    <ClCompile Include="..\yampt\source\scanner\plugin_scan.cpp" />
+    <ClCompile Include="..\yampt\source\scanner\conflict_compute.cpp" />
+    <ClCompile Include="..\yampt\source\decoder\conflict_slots.cpp" />
     <ClCompile Include="source\io\profile_reader.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\yampt\source\plugin_scan\view_tree_format.hpp" />
+    <ClInclude Include="..\yampt\source\decoder\view_tree_format.hpp" />
     <ClInclude Include="..\yampt\source\utility\tools.hpp" />
     <ClInclude Include="..\yampt\source\io\codepage.hpp" />
     <ClInclude Include="..\yampt\source\io\esm_reader.hpp" />
     <ClInclude Include="..\yampt\source\utility\includes.hpp" />
-    <ClInclude Include="..\yampt\source\model\file_list.hpp" />
-    <ClInclude Include="..\yampt\source\plugin_scan\conflict_enums.hpp" />
-    <ClInclude Include="..\yampt\source\plugin_scan\conflict_types.hpp" />
-    <ClInclude Include="..\yampt\source\plugin_scan\conflict_slots.hpp" />
-    <ClInclude Include="..\yampt\source\plugin_scan\sub_record_iter.hpp" />
-    <ClInclude Include="..\yampt\source\plugin_scan\sub_record_schema.hpp" />
-    <ClInclude Include="..\yampt\source\plugin_scan\plugin_index.hpp" />
-    <ClInclude Include="..\yampt\source\plugin_scan\plugin_scan.hpp" />
-    <ClInclude Include="..\yampt\source\plugin_scan\conflict_compute.hpp" />
+    <ClInclude Include="..\yampt\source\io\file_list.hpp" />
+    <ClInclude Include="..\yampt\source\scanner\conflict_enums.hpp" />
+    <ClInclude Include="..\yampt\source\scanner\conflict_types.hpp" />
+    <ClInclude Include="..\yampt\source\decoder\conflict_slots.hpp" />
+    <ClInclude Include="..\yampt\source\decoder\sub_record_iter.hpp" />
+    <ClInclude Include="..\yampt\source\decoder\sub_record_schema.hpp" />
+    <ClInclude Include="..\yampt\source\scanner\plugin_index.hpp" />
+    <ClInclude Include="..\yampt\source\scanner\plugin_scan.hpp" />
+    <ClInclude Include="..\yampt\source\scanner\conflict_compute.hpp" />
     <ClInclude Include="source\io\profile_reader.hpp" />
   </ItemGroup>
   <ItemGroup>

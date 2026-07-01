@@ -1,10 +1,10 @@
 #pragma once
 
-#include <plugin_scan/conflict_compute.hpp>
-#include <plugin_scan/conflict_types.hpp>
-#include <plugin_scan/plugin_scan.hpp>
-#include <plugin_scan/sub_record_iter.hpp>
-#include <plugin_scan/sub_record_schema.hpp>
+#include <scanner/conflict_compute.hpp>
+#include <scanner/conflict_types.hpp>
+#include <scanner/plugin_scan.hpp>
+#include <decoder/sub_record_iter.hpp>
+#include <decoder/sub_record_schema.hpp>
 #include <string>
 #include <unordered_map>
 #include <vector>

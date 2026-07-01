@@ -2,7 +2,7 @@
 
 #include "../model/plugin_op.hpp"
 #include <io/codepage.hpp>
-#include <model/dict_creator.hpp>
+#include <creator/dict_creator.hpp>
 #include <utility/tools.hpp>
 #include <string>
 #include <vector>

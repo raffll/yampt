@@ -2,12 +2,12 @@
 #include "dialog/find_replace_dialog.hpp"
 #include "dialog/first_run_dialog.hpp"
 #include "dialog/spell_context_menu.hpp"
-#include "highlight/annotation_highlighter.hpp"
-#include "highlight/composite_highlighter.hpp"
+#include "highlighter/glossary_highlighter.hpp"
+#include "highlighter/editor_highlighter.hpp"
 #include "main_window.hpp"
 #include "model/dict_document.hpp"
 #include "model/yaml_document.hpp"
-#include "translate/ctranslate2_translator.hpp"
+#include "translator/ctranslate2_translator.hpp"
 #include "utility/display_name.hpp"
 #include "view/annotations_view.hpp"
 #include "view/book_preview_view.hpp"
@@ -252,9 +252,9 @@ void main_window_t::setup_editor_panel()
 	central_splitter_->addWidget(right_splitter_);
 	central_splitter_->setSizes({ 250, 1030 });
 
-	hl_original_ = new composite_highlighter_t(editor_view_->original_view()->document());
-	hl_adapted_ = new composite_highlighter_t(editor_view_->details_view()->document());
-	hl_translation_ = new composite_highlighter_t(editor_view_->translation_editor()->document());
+	hl_original_ = new editor_highlighter_t(editor_view_->original_view()->document());
+	hl_adapted_ = new editor_highlighter_t(editor_view_->details_view()->document());
+	hl_translation_ = new editor_highlighter_t(editor_view_->translation_editor()->document());
 	hl_translation_->set_translation_mode(true);
 
 	spell_menu_ = new spell_context_menu_t(&spell_checker_, hl_translation_);

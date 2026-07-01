@@ -1,7 +1,7 @@
-#include "composite_highlighter.hpp"
+#include "editor_highlighter.hpp"
 #include "../utility/spell_checker.hpp"
 
-composite_highlighter_t::composite_highlighter_t(QTextDocument * parent)
+editor_highlighter_t::editor_highlighter_t(QTextDocument * parent)
     : QSyntaxHighlighter(parent)
 {
 	format_function_.setForeground(QColor(100, 180, 255));
@@ -14,7 +14,7 @@ composite_highlighter_t::composite_highlighter_t(QTextDocument * parent)
 	format_misspelled_.setUnderlineColor(QColor(220, 50, 50));
 }
 
-void composite_highlighter_t::set_record_type(tools_t::rec_type_t type)
+void editor_highlighter_t::set_record_type(tools_t::rec_type_t type)
 {
 	record_type_ = type;
 
@@ -22,12 +22,12 @@ void composite_highlighter_t::set_record_type(tools_t::rec_type_t type)
 		rehighlight();
 }
 
-void composite_highlighter_t::set_translation_mode(bool enabled)
+void editor_highlighter_t::set_translation_mode(bool enabled)
 {
 	is_translation_ = enabled;
 }
 
-void composite_highlighter_t::set_spell_checker(spell_checker_t * checker)
+void editor_highlighter_t::set_spell_checker(spell_checker_t * checker)
 {
 	spell_checker_ = checker;
 
@@ -35,7 +35,7 @@ void composite_highlighter_t::set_spell_checker(spell_checker_t * checker)
 		rehighlight();
 }
 
-void composite_highlighter_t::apply_syntax_tokens(const QString & text)
+void editor_highlighter_t::apply_syntax_tokens(const QString & text)
 {
 	const auto utf8 = text.toStdString();
 	const auto & tokens = tokenizer_.tokenize(utf8, record_type_);
@@ -69,7 +69,7 @@ void composite_highlighter_t::apply_syntax_tokens(const QString & text)
 	}
 }
 
-void composite_highlighter_t::apply_forbidden_chars(const QString & text)
+void editor_highlighter_t::apply_forbidden_chars(const QString & text)
 {
 	for (int i = 0; i < text.length(); ++i)
 	{
@@ -85,7 +85,7 @@ void composite_highlighter_t::apply_forbidden_chars(const QString & text)
 	}
 }
 
-void composite_highlighter_t::apply_spell_check(const QString & text)
+void editor_highlighter_t::apply_spell_check(const QString & text)
 {
 	const auto & text_str = text.toStdString();
 	const auto & matches = spell_checker_->find_misspelled(text_str);
@@ -99,7 +99,7 @@ void composite_highlighter_t::apply_spell_check(const QString & text)
 	}
 }
 
-void composite_highlighter_t::highlightBlock(const QString & text)
+void editor_highlighter_t::highlightBlock(const QString & text)
 {
 	const bool has_syntax = record_type_ == tools_t::rec_type_t::sctx || record_type_ == tools_t::rec_type_t::bnam ||
 	                        record_type_ == tools_t::rec_type_t::text;

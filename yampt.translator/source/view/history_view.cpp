@@ -1,5 +1,5 @@
 #include "history_view.hpp"
-#include "../controller/edit_history.hpp"
+#include "../editor/edit_history.hpp"
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>

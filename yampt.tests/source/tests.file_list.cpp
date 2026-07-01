@@ -1,5 +1,5 @@
 #include <catch2/catch_all.hpp>
-#include <model/file_list.hpp>
+#include <io/file_list.hpp>
 #include <model/sidebar_model.hpp>
 #include <rapidcheck/catch.h>
 #include <algorithm>

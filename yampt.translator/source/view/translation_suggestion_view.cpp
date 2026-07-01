@@ -1,7 +1,7 @@
 #include "translation_suggestion_view.hpp"
-#include "../translate/ctranslate2_translator.hpp"
-#include "../translate/deepl_translator.hpp"
-#include "../translate/google_translator.hpp"
+#include "../translator/ctranslate2_translator.hpp"
+#include "../translator/deepl_translator.hpp"
+#include "../translator/google_translator.hpp"
 #include <utility/tools.hpp>
 #include <filesystem>
 #include <fstream>

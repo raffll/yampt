@@ -1,8 +1,8 @@
 #include "operation_executor.hpp"
 #include <io/dict_writer.hpp>
-#include <model/dict_creator.hpp>
-#include <model/dict_merger.hpp>
-#include <model/esm_converter.hpp>
+#include <creator/dict_creator.hpp>
+#include <merger/dict_merger.hpp>
+#include <converter/esm_converter.hpp>
 #include <algorithm>
 #include <QCoreApplication>
 #include <QDateTime>

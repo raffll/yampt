@@ -1,13 +1,13 @@
 #pragma once
 
-#include "controller/byte_limit_validator.hpp"
-#include "controller/edit_history.hpp"
-#include "controller/editor_controller.hpp"
-#include "controller/find_replace.hpp"
-#include "controller/glossary.hpp"
-#include "controller/grammar_checker.hpp"
-#include "controller/operation_executor.hpp"
-#include "controller/row_filter.hpp"
+#include "editor/byte_limit_validator.hpp"
+#include "editor/edit_history.hpp"
+#include "editor/editor_controller.hpp"
+#include "editor/find_replace.hpp"
+#include "editor/glossary.hpp"
+#include "editor/grammar_checker.hpp"
+#include "editor/operation_executor.hpp"
+#include "editor/row_filter.hpp"
 #include "dialog/dict_selection_dialog.hpp"
 #include "io/editor_config.hpp"
 #include "model/dict_document.hpp"
@@ -21,7 +21,7 @@
 #include "view/table_view.hpp"
 #include "view/translation_suggestion_view.hpp"
 #include <io/codepage.hpp>
-#include <model/file_list.hpp>
+#include <io/file_list.hpp>
 #include <memory>
 #include <optional>
 #include <set>
@@ -35,7 +35,7 @@ class QTimer;
 
 class annotations_view_t;
 class book_preview_view_t;
-class composite_highlighter_t;
+class editor_highlighter_t;
 class editor_view_t;
 class translation_edit_view_t;
 class filter_tree_view_t;
@@ -258,9 +258,9 @@ private:
 	QLabel * active_file_label_ = nullptr;
 	QLabel * progress_label_ = nullptr;
 	validation_view_t * validation_view_ = nullptr;
-	composite_highlighter_t * hl_original_ = nullptr;
-	composite_highlighter_t * hl_adapted_ = nullptr;
-	composite_highlighter_t * hl_translation_ = nullptr;
+	editor_highlighter_t * hl_original_ = nullptr;
+	editor_highlighter_t * hl_adapted_ = nullptr;
+	editor_highlighter_t * hl_translation_ = nullptr;
 
 	grammar_checker_t grammar_checker_;
 	row_filter_t row_filter_;

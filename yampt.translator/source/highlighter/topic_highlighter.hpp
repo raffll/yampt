@@ -4,12 +4,12 @@
 #include <vector>
 #include <QSyntaxHighlighter>
 
-class hyperlink_highlighter_t : public QSyntaxHighlighter
+class topic_highlighter_t : public QSyntaxHighlighter
 {
 	Q_OBJECT
 
 public:
-	explicit hyperlink_highlighter_t(QTextDocument * parent = nullptr);
+	explicit topic_highlighter_t(QTextDocument * parent = nullptr);
 
 	void set_terms(const std::vector<std::string> & translated_terms);
 

@@ -1,5 +1,5 @@
 #include <catch2/catch_all.hpp>
-#include <plugin_scan/conflict_slots.hpp>
+#include <decoder/conflict_slots.hpp>
 #include <cstring>
 #include <string>
 

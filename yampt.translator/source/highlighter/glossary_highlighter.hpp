@@ -1,18 +1,18 @@
 #pragma once
 
-#include "../controller/glossary.hpp"
+#include "../editor/glossary.hpp"
 #include <utility/tools.hpp>
 #include <vector>
 #include <QSyntaxHighlighter>
 
 class glossary_t;
 
-class annotation_highlighter_t : public QSyntaxHighlighter
+class glossary_highlighter_t : public QSyntaxHighlighter
 {
 	Q_OBJECT
 
 public:
-	explicit annotation_highlighter_t(QTextDocument * parent = nullptr);
+	explicit glossary_highlighter_t(QTextDocument * parent = nullptr);
 
 	void set_annotation_manager(glossary_t * manager);
 	void set_record_type(tools_t::rec_type_t type);

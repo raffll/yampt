@@ -203,27 +203,27 @@ if exist "$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\Qt6\plugins\tls"
     <ClCompile Include="source\view\filter_tree_view.cpp" />
     <ClCompile Include="source\view\status_filter_view.cpp" />
     <ClCompile Include="source\view\translation_suggestion_view.cpp" />
-    <ClCompile Include="source\controller\editor_controller.cpp" />
+    <ClCompile Include="source\editor\editor_controller.cpp" />
     <ClCompile Include="source\io\editor_config.cpp" />
-    <ClCompile Include="source\controller\row_filter.cpp" />
-    <ClCompile Include="source\controller\byte_limit_validator.cpp" />
-    <ClCompile Include="source\controller\glossary.cpp" />
-    <ClCompile Include="source\controller\edit_history.cpp" />
-    <ClCompile Include="source\controller\find_replace.cpp" />
-    <ClCompile Include="source\controller\operation_executor.cpp" />
+    <ClCompile Include="source\editor\row_filter.cpp" />
+    <ClCompile Include="source\editor\byte_limit_validator.cpp" />
+    <ClCompile Include="source\editor\glossary.cpp" />
+    <ClCompile Include="source\editor\edit_history.cpp" />
+    <ClCompile Include="source\editor\find_replace.cpp" />
+    <ClCompile Include="source\editor\operation_executor.cpp" />
     <ClCompile Include="source\dialog\find_replace_dialog.cpp" />
     <ClCompile Include="source\dialog\dict_selection_dialog.cpp" />
     <ClCompile Include="source\dialog\first_run_dialog.cpp" />
     <ClCompile Include="source\dialog\spell_context_menu.cpp" />
-    <ClCompile Include="source\highlight\syntax_highlighter.cpp" />
-    <ClCompile Include="source\highlight\composite_highlighter.cpp" />
-    <ClCompile Include="source\highlight\annotation_highlighter.cpp" />
-    <ClCompile Include="source\highlight\hyperlink_highlighter.cpp" />
-    <ClCompile Include="source\translate\ctranslate2_translator.cpp" />
-    <ClCompile Include="source\translate\deepl_translator.cpp" />
-    <ClCompile Include="source\translate\google_translator.cpp" />
+    <ClCompile Include="source\highlighter\script_tokenizer.cpp" />
+    <ClCompile Include="source\highlighter\editor_highlighter.cpp" />
+    <ClCompile Include="source\highlighter\glossary_highlighter.cpp" />
+    <ClCompile Include="source\highlighter\topic_highlighter.cpp" />
+    <ClCompile Include="source\translator\ctranslate2_translator.cpp" />
+    <ClCompile Include="source\translator\deepl_translator.cpp" />
+    <ClCompile Include="source\translator\google_translator.cpp" />
     <ClCompile Include="source\utility\spell_checker.cpp" />
-    <ClCompile Include="source\controller\grammar_checker.cpp" />
+    <ClCompile Include="source\editor\grammar_checker.cpp" />
     <ClCompile Include="source\utility\display_name.cpp" />
     <ClCompile Include="source\io\yaml_l10n_reader.cpp" />
     <ClCompile Include="source\io\yaml_l10n_writer.cpp" />
@@ -232,22 +232,22 @@ if exist "$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\Qt6\plugins\tls"
     <ClCompile Include="..\yampt\source\io\dict_writer.cpp" />
     <ClCompile Include="..\yampt\source\io\codepage.cpp" />
     <ClCompile Include="..\yampt\source\io\esm_reader.cpp" />
-    <ClCompile Include="..\yampt\source\model\file_list.cpp" />
-    <ClCompile Include="..\yampt\source\model\dict_merger.cpp" />
-    <ClCompile Include="..\yampt\source\model\dict_creator.cpp" />
-    <ClCompile Include="..\yampt\source\model\dict_creator_single.cpp" />
-    <ClCompile Include="..\yampt\source\model\dict_creator_base.cpp" />
-    <ClCompile Include="..\yampt\source\model\dict_creator_base_ordered.cpp" />
-    <ClCompile Include="..\yampt\source\model\esm_converter.cpp" />
-    <ClCompile Include="..\yampt\source\model\script_parser.cpp" />
-    <ClCompile Include="..\yampt\source\model\scdt_patcher.cpp" />
-    <ClCompile Include="..\yampt\source\model\translation_engine.cpp" />
-    <ClCompile Include="..\yampt\source\plugin_scan\sub_record_schema.cpp" />
-    <ClCompile Include="..\yampt\source\plugin_scan\plugin_index.cpp" />
-    <ClCompile Include="..\yampt\source\plugin_scan\plugin_scan.cpp" />
-    <ClCompile Include="..\yampt\source\plugin_scan\conflict_compute.cpp" />
-    <ClCompile Include="..\yampt\source\plugin_scan\conflict_slots.cpp" />
-    <ClCompile Include="..\yampt\source\plugin_scan\view_tree_format.cpp" />
+    <ClCompile Include="..\yampt\source\io\file_list.cpp" />
+    <ClCompile Include="..\yampt\source\merger\dict_merger.cpp" />
+    <ClCompile Include="..\yampt\source\creator\dict_creator.cpp" />
+    <ClCompile Include="..\yampt\source\creator\dict_creator_single.cpp" />
+    <ClCompile Include="..\yampt\source\creator\dict_creator_base.cpp" />
+    <ClCompile Include="..\yampt\source\creator\dict_creator_base_ordered.cpp" />
+    <ClCompile Include="..\yampt\source\converter\esm_converter.cpp" />
+    <ClCompile Include="..\yampt\source\converter\script_parser.cpp" />
+    <ClCompile Include="..\yampt\source\converter\scdt_patcher.cpp" />
+    <ClCompile Include="..\yampt\source\translator\translation_engine.cpp" />
+    <ClCompile Include="..\yampt\source\decoder\sub_record_schema.cpp" />
+    <ClCompile Include="..\yampt\source\scanner\plugin_index.cpp" />
+    <ClCompile Include="..\yampt\source\scanner\plugin_scan.cpp" />
+    <ClCompile Include="..\yampt\source\scanner\conflict_compute.cpp" />
+    <ClCompile Include="..\yampt\source\decoder\conflict_slots.cpp" />
+    <ClCompile Include="..\yampt\source\decoder\view_tree_format.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\session.hpp" />
@@ -258,19 +258,19 @@ if exist "$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\Qt6\plugins\tls"
     <ClInclude Include="source\model\yaml_document.hpp" />    <ClInclude Include="source\model\sidebar_model.hpp" />
     <ClInclude Include="source\model\table_row.hpp" />
     <ClInclude Include="source\model\row_source.hpp" />
-    <ClInclude Include="source\model\table_builder.hpp" />    <ClInclude Include="source\view\table_view.hpp" />    <ClInclude Include="source\controller\editor_controller.hpp" />
+    <ClInclude Include="source\model\table_builder.hpp" />    <ClInclude Include="source\view\table_view.hpp" />    <ClInclude Include="source\editor\editor_controller.hpp" />
     <ClInclude Include="source\io\editor_config.hpp" />
-    <ClInclude Include="source\controller\row_filter.hpp" />
-    <ClInclude Include="source\controller\byte_limit_validator.hpp" />
-    <ClInclude Include="source\controller\glossary.hpp" />
-    <ClInclude Include="source\controller\edit_history.hpp" />
-    <ClInclude Include="source\controller\find_replace.hpp" />
-    <ClInclude Include="source\controller\operation_executor.hpp" />    <ClInclude Include="source\highlight\syntax_highlighter.hpp" />    <ClInclude Include="source\translate\translator.hpp" />    <ClInclude Include="source\view\status_colors.hpp" />
+    <ClInclude Include="source\editor\row_filter.hpp" />
+    <ClInclude Include="source\editor\byte_limit_validator.hpp" />
+    <ClInclude Include="source\editor\glossary.hpp" />
+    <ClInclude Include="source\editor\edit_history.hpp" />
+    <ClInclude Include="source\editor\find_replace.hpp" />
+    <ClInclude Include="source\editor\operation_executor.hpp" />    <ClInclude Include="source\highlighter\script_tokenizer.hpp" />    <ClInclude Include="source\translator\translator.hpp" />    <ClInclude Include="source\view\status_colors.hpp" />
     <ClInclude Include="source\view\status_display.hpp" />
     <ClInclude Include="source\utility\display_name.hpp" />
     <ClInclude Include="source\model\plugin_op.hpp" />
     <ClInclude Include="source\utility\spell_checker.hpp" />
-    <ClInclude Include="source\controller\grammar_checker.hpp" />
+    <ClInclude Include="source\editor\grammar_checker.hpp" />
     <ClInclude Include="source\io\yaml_l10n_reader.hpp" />
     <ClInclude Include="source\io\yaml_l10n_writer.hpp" />
     <ClInclude Include="..\yampt\source\utility\tools.hpp" />
@@ -280,23 +280,23 @@ if exist "$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\Qt6\plugins\tls"
     <ClInclude Include="..\yampt\source\io\dict_writer.hpp" />
     <ClInclude Include="..\yampt\source\io\esm_reader.hpp" />
     <ClInclude Include="..\yampt\source\io\json_reader.hpp" />
-    <ClInclude Include="..\yampt\source\model\file_list.hpp" />
-    <ClInclude Include="..\yampt\source\model\dict_kind.hpp" />
-    <ClInclude Include="..\yampt\source\model\dict_creator.hpp" />
-    <ClInclude Include="..\yampt\source\model\dict_merger.hpp" />
-    <ClInclude Include="..\yampt\source\model\esm_converter.hpp" />
-    <ClInclude Include="..\yampt\source\model\script_parser.hpp" />
-    <ClInclude Include="..\yampt\source\model\scdt_patcher.hpp" />
-    <ClInclude Include="..\yampt\source\model\translation_engine.hpp" />
-    <ClInclude Include="..\yampt\source\plugin_scan\conflict_enums.hpp" />
-    <ClInclude Include="..\yampt\source\plugin_scan\conflict_types.hpp" />
-    <ClInclude Include="..\yampt\source\plugin_scan\conflict_slots.hpp" />
-    <ClInclude Include="..\yampt\source\plugin_scan\view_tree_format.hpp" />
-    <ClInclude Include="..\yampt\source\plugin_scan\sub_record_iter.hpp" />
-    <ClInclude Include="..\yampt\source\plugin_scan\sub_record_schema.hpp" />
-    <ClInclude Include="..\yampt\source\plugin_scan\plugin_index.hpp" />
-    <ClInclude Include="..\yampt\source\plugin_scan\plugin_scan.hpp" />
-    <ClInclude Include="..\yampt\source\plugin_scan\conflict_compute.hpp" />
+    <ClInclude Include="..\yampt\source\io\file_list.hpp" />
+    <ClInclude Include="..\yampt\source\utility\dict_kind.hpp" />
+    <ClInclude Include="..\yampt\source\creator\dict_creator.hpp" />
+    <ClInclude Include="..\yampt\source\merger\dict_merger.hpp" />
+    <ClInclude Include="..\yampt\source\converter\esm_converter.hpp" />
+    <ClInclude Include="..\yampt\source\converter\script_parser.hpp" />
+    <ClInclude Include="..\yampt\source\converter\scdt_patcher.hpp" />
+    <ClInclude Include="..\yampt\source\translator\translation_engine.hpp" />
+    <ClInclude Include="..\yampt\source\scanner\conflict_enums.hpp" />
+    <ClInclude Include="..\yampt\source\scanner\conflict_types.hpp" />
+    <ClInclude Include="..\yampt\source\decoder\conflict_slots.hpp" />
+    <ClInclude Include="..\yampt\source\decoder\view_tree_format.hpp" />
+    <ClInclude Include="..\yampt\source\decoder\sub_record_iter.hpp" />
+    <ClInclude Include="..\yampt\source\decoder\sub_record_schema.hpp" />
+    <ClInclude Include="..\yampt\source\scanner\plugin_index.hpp" />
+    <ClInclude Include="..\yampt\source\scanner\plugin_scan.hpp" />
+    <ClInclude Include="..\yampt\source\scanner\conflict_compute.hpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="source\main_window.hpp">
@@ -341,7 +341,7 @@ if exist "$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\Qt6\plugins\tls"
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
-    <CustomBuild Include="source\highlight\composite_highlighter.hpp">
+    <CustomBuild Include="source\highlighter\editor_highlighter.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
@@ -353,13 +353,13 @@ if exist "$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\Qt6\plugins\tls"
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
-    <CustomBuild Include="source\highlight\annotation_highlighter.hpp">
+    <CustomBuild Include="source\highlighter\glossary_highlighter.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
-    <CustomBuild Include="source\highlight\hyperlink_highlighter.hpp">
+    <CustomBuild Include="source\highlighter\topic_highlighter.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
@@ -425,19 +425,19 @@ if exist "$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\Qt6\plugins\tls"
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
-    <CustomBuild Include="source\translate\ctranslate2_translator.hpp">
+    <CustomBuild Include="source\translator\ctranslate2_translator.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
-    <CustomBuild Include="source\translate\deepl_translator.hpp">
+    <CustomBuild Include="source\translator\deepl_translator.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
-    <CustomBuild Include="source\translate\google_translator.hpp">
+    <CustomBuild Include="source\translator\google_translator.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
@@ -466,17 +466,17 @@ if exist "$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\Qt6\plugins\tls"
     <ClCompile Include="$(IntDir)moc_record_table_view.cpp">
       <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_record_table_view.cpp')">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="$(IntDir)moc_composite_highlighter.cpp">
-      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_composite_highlighter.cpp')">true</ExcludedFromBuild>
+    <ClCompile Include="$(IntDir)moc_editor_highlighter.cpp">
+      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_editor_highlighter.cpp')">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="$(IntDir)moc_validation_view.cpp">
       <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_validation_view.cpp')">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="$(IntDir)moc_annotation_highlighter.cpp">
-      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_annotation_highlighter.cpp')">true</ExcludedFromBuild>
+    <ClCompile Include="$(IntDir)moc_glossary_highlighter.cpp">
+      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_glossary_highlighter.cpp')">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="$(IntDir)moc_hyperlink_highlighter.cpp">
-      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_hyperlink_highlighter.cpp')">true</ExcludedFromBuild>
+    <ClCompile Include="$(IntDir)moc_topic_highlighter.cpp">
+      <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_topic_highlighter.cpp')">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="$(IntDir)moc_book_preview_view.cpp">
       <ExcludedFromBuild Condition="!Exists('$(IntDir)moc_book_preview_view.cpp')">true</ExcludedFromBuild>

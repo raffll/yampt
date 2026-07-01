@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../controller/row_filter.hpp"
+#include "../editor/row_filter.hpp"
 #include "table_row.hpp"
 #include <utility/tools.hpp>
 #include <map>

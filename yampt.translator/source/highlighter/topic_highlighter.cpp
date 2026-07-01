@@ -1,13 +1,13 @@
-#include "hyperlink_highlighter.hpp"
+#include "topic_highlighter.hpp"
 #include <algorithm>
 
-hyperlink_highlighter_t::hyperlink_highlighter_t(QTextDocument * parent)
+topic_highlighter_t::topic_highlighter_t(QTextDocument * parent)
     : QSyntaxHighlighter(parent)
 {
 	format_.setBackground(QColor(200, 220, 255));
 }
 
-void hyperlink_highlighter_t::set_terms(const std::vector<std::string> & translated_terms)
+void topic_highlighter_t::set_terms(const std::vector<std::string> & translated_terms)
 {
 	terms_ = translated_terms;
 
@@ -15,7 +15,7 @@ void hyperlink_highlighter_t::set_terms(const std::vector<std::string> & transla
 		rehighlight();
 }
 
-void hyperlink_highlighter_t::highlightBlock(const QString & text)
+void topic_highlighter_t::highlightBlock(const QString & text)
 {
 	if (terms_.empty())
 		return;

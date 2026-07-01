@@ -1,23 +1,23 @@
-#include "annotation_highlighter.hpp"
-#include "../controller/glossary.hpp"
+#include "glossary_highlighter.hpp"
+#include "../editor/glossary.hpp"
 #include <algorithm>
 #include <QTextCharFormat>
 
-annotation_highlighter_t::annotation_highlighter_t(QTextDocument * parent)
+glossary_highlighter_t::glossary_highlighter_t(QTextDocument * parent)
     : QSyntaxHighlighter(parent)
 {}
 
-void annotation_highlighter_t::set_annotation_manager(glossary_t * manager)
+void glossary_highlighter_t::set_annotation_manager(glossary_t * manager)
 {
 	manager_ = manager;
 }
 
-void annotation_highlighter_t::set_record_type(tools_t::rec_type_t type)
+void glossary_highlighter_t::set_record_type(tools_t::rec_type_t type)
 {
 	record_type_ = type;
 }
 
-void annotation_highlighter_t::set_annotations(const std::vector<annotation_t> & annotations)
+void glossary_highlighter_t::set_annotations(const std::vector<annotation_t> & annotations)
 {
 	annotations_ = annotations;
 	rehighlight();
@@ -58,7 +58,7 @@ static QTextCharFormat format_for_annotation(const annotation_t & annotation)
 	return format;
 }
 
-void annotation_highlighter_t::highlightBlock(const QString & text)
+void glossary_highlighter_t::highlightBlock(const QString & text)
 {
 	if (annotations_.empty())
 		return;

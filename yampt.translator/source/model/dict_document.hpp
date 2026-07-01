@@ -2,7 +2,7 @@
 
 #include "document.hpp"
 #include <io/codepage.hpp>
-#include <model/dict_kind.hpp>
+#include <utility/dict_kind.hpp>
 #include <utility/tools.hpp>
 #include <set>
 #include <string>

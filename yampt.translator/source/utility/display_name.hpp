@@ -1,7 +1,7 @@
 #pragma once
 
-#include <model/dict_kind.hpp>
-#include <model/file_list.hpp>
+#include <utility/dict_kind.hpp>
+#include <io/file_list.hpp>
 #include <string>
 
 class display_name_t

@@ -1,7 +1,7 @@
 #include <catch2/catch_all.hpp>
 #include <io/dict_reader.hpp>
 #include <io/dict_writer.hpp>
-#include <model/dict_merger.hpp>
+#include <merger/dict_merger.hpp>
 #include <utility/string_utils.hpp>
 #include <utility/tools.hpp>
 #include <filesystem>

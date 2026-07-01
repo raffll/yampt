@@ -1,6 +1,6 @@
 #include <catch2/catch_all.hpp>
-#include <model/dict_merger.hpp>
-#include <model/script_parser.hpp>
+#include <merger/dict_merger.hpp>
+#include <converter/script_parser.hpp>
 #include <utility/tools.hpp>
 
 using namespace std;

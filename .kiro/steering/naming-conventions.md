@@ -95,10 +95,10 @@ Each file is named for its own responsibility, not forced to match a sibling. If
 Folder placement determines the role:
 - `view/` — Qt widgets. Named after what they display.
 - `model/` — Data structures, documents, domain logic, row filtering. Named after what they hold or transform.
-- `edit/` — Editing orchestration. Named after what they do to the active record.
-- `highlight/` — Text coloring, annotations, glossary, grammar checks. Named after what they mark.
+- `editor/` — Editing orchestration. Named after what they do to the active record.
+- `highlighter/` — Text coloring, annotations, glossary, grammar checks. Named after what they mark.
 - `dialog/` — Modal dialogs. Named after what they ask.
-- `translate/` — Translation backends. Named after the provider.
+- `translator/` — Translation backends. Named after the provider.
 - `io/` — File I/O, config persistence, external process invocation.
 - `utility/` — Pure helpers without domain or UI coupling.
 
@@ -131,13 +131,13 @@ Each folder has a clear responsibility. A file belongs to the folder that matche
 | `io/` | File format readers/writers (disk ↔ memory) | Domain logic, GUI types, enums |
 | `model/` | Data structures, domain types, business logic | File I/O, Qt widgets, UI formatting |
 | `view/` | Qt widgets, display formatting, colors | Business logic, file I/O |
-| `controller/` | Orchestration, mediation between view + model | Pure I/O serialization, stateless helpers |
+| `editor/` | Orchestration, mediation between view + model | Pure I/O serialization, stateless helpers |
 | `utility/` | Pure helpers without domain or UI coupling | Qt colors, domain enums, file serialization |
 
 Specific rules:
 - Enums describing domain operations belong in `model/`, not `utility/`
 - Color mappings returning `QColor` belong in `view/`, not `utility/`
-- INI/config file serialization belongs in `io/`, not `controller/`
+- INI/config file serialization belongs in `io/`, not `editor/`
 - Session-level registries (file scanning, workspace state) belong in `model/`
 
 ## No Duplicated Utility Functions

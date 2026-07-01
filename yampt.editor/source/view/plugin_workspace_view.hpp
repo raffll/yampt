@@ -3,7 +3,7 @@
 #include "../model/nav_tree_model.hpp"
 #include "../model/view_tree_model.hpp"
 #include "messages_view.hpp"
-#include <plugin_scan/plugin_scan.hpp>
+#include <scanner/plugin_scan.hpp>
 #include <QCheckBox>
 #include <QComboBox>
 #include <QLabel>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <plugin_scan/conflict_types.hpp>
+#include <scanner/conflict_types.hpp>
 #include <set>
 #include <string>
 #include <vector>

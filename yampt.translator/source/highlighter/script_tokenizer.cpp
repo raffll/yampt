@@ -1,4 +1,4 @@
-#include "syntax_highlighter.hpp"
+#include "script_tokenizer.hpp"
 #include <algorithm>
 #include <cctype>
 
@@ -50,7 +50,7 @@ static bool overlaps_any(const std::vector<token_t> & tokens, size_t start, size
 	return false;
 }
 
-std::vector<token_t> syntax_highlighter_t::tokenize(const std::string & text, tools_t::rec_type_t type) const
+std::vector<token_t> script_tokenizer_t::tokenize(const std::string & text, tools_t::rec_type_t type) const
 {
 	if (type == tools_t::rec_type_t::sctx)
 		return tokenize_sctx(text);
@@ -141,7 +141,7 @@ static std::vector<token_t> fill_normal_gaps(const std::vector<token_t> & tokens
 	return result;
 }
 
-std::vector<token_t> syntax_highlighter_t::tokenize_sctx(const std::string & text) const
+std::vector<token_t> script_tokenizer_t::tokenize_sctx(const std::string & text) const
 {
 	std::vector<token_t> tokens;
 
@@ -206,7 +206,7 @@ static bool try_match_html_tag(const std::string & text, size_t open, size_t & o
 	return false;
 }
 
-std::vector<token_t> syntax_highlighter_t::tokenize_text(const std::string & text) const
+std::vector<token_t> script_tokenizer_t::tokenize_text(const std::string & text) const
 {
 	std::vector<token_t> tokens;
 

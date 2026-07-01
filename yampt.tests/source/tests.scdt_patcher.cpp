@@ -1,5 +1,5 @@
 #include <catch2/catch_all.hpp>
-#include <model/scdt_patcher.hpp>
+#include <converter/scdt_patcher.hpp>
 #include <utility/tools.hpp>
 
 static std::string size_byte(size_t value)

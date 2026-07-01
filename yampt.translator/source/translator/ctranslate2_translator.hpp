@@ -1,7 +1,7 @@
 #pragma once
 
 #include "translator.hpp"
-#include <model/translation_engine.hpp>
+#include <translator/translation_engine.hpp>
 #include <functional>
 #include <string>
 #include <QObject>

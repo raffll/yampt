@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../translate/translator.hpp"
+#include "../translator/translator.hpp"
 #include <memory>
 #include <string>
 #include <vector>

@@ -1,6 +1,6 @@
 #include "plugin_index.hpp"
-#include "sub_record_iter.hpp"
-#include "sub_record_schema.hpp"
+#include "../decoder/sub_record_iter.hpp"
+#include "../decoder/sub_record_schema.hpp"
 #include <algorithm>
 #include <set>
 
