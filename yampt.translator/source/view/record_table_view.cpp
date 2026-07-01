@@ -1,7 +1,9 @@
 #include "record_table_view.hpp"
 #include "../model/record_table_model.hpp"
+#include <optional>
 #include <QContextMenuEvent>
 #include <QHeaderView>
+#include <QKeyEvent>
 #include <QMenu>
 
 record_table_view_t::record_table_view_t(QWidget * parent)
@@ -68,23 +70,23 @@ void record_table_view_t::contextMenuEvent(QContextMenuEvent * event)
 	auto * act_error = menu->addAction("Set Error");
 
 	auto * chosen = menu->exec(event->globalPos());
-	QString new_status;
+	std::optional<status_t> new_status;
 	if (chosen == act_translated)
-		new_status = "translated";
+		new_status = status_t::translated;
 	else if (chosen == act_in_progress)
-		new_status = "in_progress";
+		new_status = status_t::in_progress;
 	else if (chosen == act_untranslated)
-		new_status = "untranslated";
+		new_status = status_t::untranslated;
 	else if (chosen == act_error)
-		new_status = "error";
+		new_status = status_t::error;
 
-	if (!new_status.isEmpty())
+	if (new_status.has_value())
 	{
 		QList<int> rows;
 		for (const auto & idx : selected)
 			rows.append(idx.row());
 
-		emit batch_status_change_requested(rows, new_status);
+		emit batch_status_change_requested(rows, new_status.value());
 	}
 
 	delete menu;
@@ -113,4 +115,19 @@ std::vector<int> record_table_view_t::get_column_widths() const
 		widths.push_back(header->sectionSize(i));
 
 	return widths;
+}
+
+void record_table_view_t::keyPressEvent(QKeyEvent * event)
+{
+	if (event->key() == Qt::Key_Delete && !event->modifiers())
+	{
+		const auto selected = selectionModel()->selectedRows();
+		if (!selected.isEmpty())
+		{
+			emit delete_entry_requested();
+			return;
+		}
+	}
+
+	QTableView::keyPressEvent(event);
 }

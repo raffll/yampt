@@ -57,15 +57,15 @@ private:
 	static std::vector<std::string> extract_quoted_strings(const std::string & source_text);
 	static QString join_extracted_lines(const std::vector<std::string> & extracted);
 
-	QSplitter * splitter_ = nullptr;
-	translation_edit_view_t * original_view_ = nullptr;
-	translation_edit_view_t * adapted_from_view_ = nullptr;
-	QWidget * adapted_from_container_ = nullptr;
-	QPushButton * adapted_toggle_ = nullptr;
-	translation_edit_view_t * translation_editor_ = nullptr;
-	QLabel * original_label_ = nullptr;
-	QLabel * translation_label_ = nullptr;
-	QPushButton * apply_button_ = nullptr;
+	QSplitter * m_splitter = nullptr;
+	translation_edit_view_t * m_original_view = nullptr;
+	translation_edit_view_t * m_adapted_from_view = nullptr;
+	QWidget * m_adapted_from_container = nullptr;
+	QPushButton * m_adapted_toggle = nullptr;
+	translation_edit_view_t * m_translation_editor = nullptr;
+	QLabel * m_original_label = nullptr;
+	QLabel * m_translation_label = nullptr;
+	QPushButton * m_apply_button = nullptr;
 
-	std::optional<script_template_t> script_template_;
+	std::optional<script_template_t> m_script_template;
 };

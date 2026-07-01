@@ -43,29 +43,29 @@ public:
 	void set_state(const filter_state_t & state);
 
 private:
-	QGroupBox * grp_conflict_all_ = nullptr;
-	QCheckBox * chk_ca_only_one_ = nullptr;
-	QCheckBox * chk_ca_no_conflict_ = nullptr;
-	QCheckBox * chk_ca_override_ = nullptr;
-	QCheckBox * chk_ca_conflict_ = nullptr;
+	QGroupBox * m_grp_conflict_all = nullptr;
+	QCheckBox * m_chk_ca_only_one = nullptr;
+	QCheckBox * m_chk_ca_no_conflict = nullptr;
+	QCheckBox * m_chk_ca_override = nullptr;
+	QCheckBox * m_chk_ca_conflict = nullptr;
 
-	QGroupBox * grp_conflict_this_ = nullptr;
-	QCheckBox * chk_ct_master_ = nullptr;
-	QCheckBox * chk_ct_identical_ = nullptr;
-	QCheckBox * chk_ct_override_ = nullptr;
-	QCheckBox * chk_ct_wins_ = nullptr;
-	QCheckBox * chk_ct_loses_ = nullptr;
-	QCheckBox * chk_ct_deleted_ = nullptr;
+	QGroupBox * m_grp_conflict_this = nullptr;
+	QCheckBox * m_chk_ct_master = nullptr;
+	QCheckBox * m_chk_ct_identical = nullptr;
+	QCheckBox * m_chk_ct_override = nullptr;
+	QCheckBox * m_chk_ct_wins = nullptr;
+	QCheckBox * m_chk_ct_loses = nullptr;
+	QCheckBox * m_chk_ct_deleted = nullptr;
 
-	QCheckBox * chk_by_type_ = nullptr;
-	QListWidget * lst_types_ = nullptr;
+	QCheckBox * m_chk_by_type = nullptr;
+	QListWidget * m_lst_types = nullptr;
 
-	QCheckBox * chk_by_id_ = nullptr;
-	QLineEdit * edt_id_ = nullptr;
+	QCheckBox * m_chk_by_id = nullptr;
+	QLineEdit * m_edt_id = nullptr;
 
-	QCheckBox * chk_by_name_ = nullptr;
-	QLineEdit * edt_name_ = nullptr;
+	QCheckBox * m_chk_by_name = nullptr;
+	QLineEdit * m_edt_name = nullptr;
 
-	QCheckBox * chk_deleted_ = nullptr;
-	QCheckBox * chk_itm_ = nullptr;
+	QCheckBox * m_chk_deleted = nullptr;
+	QCheckBox * m_chk_itm = nullptr;
 };

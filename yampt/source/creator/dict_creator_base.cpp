@@ -920,7 +920,7 @@ void dict_creator_t::match_dial_by_translation(
 
 			const auto & foreign_name = unmatched_foreign[fi].second;
 
-			auto result = translation_engine_->translate(foreign_name);
+			auto result = m_translation_engine->translate(foreign_name);
 			if (!result.success)
 				continue;
 
@@ -1109,7 +1109,7 @@ void dict_creator_t::make_dict_base_dial()
 	reset_counters();
 	match_dial_by_inam(native_inam_index, unmatched_foreign, matched_native_records);
 
-	if (!translation_engine_ || !translation_engine_->is_loaded())
+	if (!m_translation_engine || !m_translation_engine->is_loaded())
 	{
 		report_unmatched_dials(unmatched_foreign, matched_native_records);
 		return;
@@ -1645,7 +1645,7 @@ void dict_creator_t::make_dict_cell_interior()
 	}
 
 	make_dict_cell_interior_heuristic(missing_cells, matched_native_records);
-	make_dict_cell_add_missing(missing_cells, cell_native_candidates_str_);
+	make_dict_cell_add_missing(missing_cells, m_cell_native_candidates_str);
 }
 
 void dict_creator_t::make_dict_cell_interior_heuristic(
@@ -1680,7 +1680,7 @@ void dict_creator_t::make_dict_cell_interior_heuristic(
 	tools_t::add_log("=== HEURISTIC START ===\r\n", true);
 	tools_t::add_log("Foreign missing: " + std::to_string(missing_cells.size()) + "\r\n", true);
 	tools_t::add_log("Native unmatched: " + std::to_string(native_cells.size()) + "\r\n", true);
-	if (translation_engine_ && translation_engine_->is_loaded())
+	if (m_translation_engine && m_translation_engine->is_loaded())
 		tools_t::add_log("[info] translation engine: active (cell heuristic)\r\n");
 	else
 		tools_t::add_log("[info] translation engine: inactive (cell heuristic skipped)\r\n");
@@ -1725,10 +1725,10 @@ void dict_creator_t::make_dict_cell_interior_heuristic(
 
 			const auto & foreign_name = missing_cells[fi].second;
 
-			if (!translation_engine_ || !translation_engine_->is_loaded())
+			if (!m_translation_engine || !m_translation_engine->is_loaded())
 				continue;
 
-			auto result = translation_engine_->translate(foreign_name);
+			auto result = m_translation_engine->translate(foreign_name);
 			if (!result.success)
 				continue;
 
@@ -1832,7 +1832,7 @@ void dict_creator_t::make_dict_cell_interior_heuristic(
 			candidates_str += name;
 		}
 
-		cell_native_candidates_str_ = candidates_str;
+		m_cell_native_candidates_str = candidates_str;
 	}
 }
 
@@ -1912,10 +1912,10 @@ status_t dict_creator_t::determine_status(const std::string & old_text, const st
 	if (old_text != new_text)
 		return status_t::translated;
 
-	if (base_mode_ == base_mode_t::full)
+	if (m_base_mode == base_mode_t::full)
 		return status_t::translated;
 
-	if (!english_dict_)
+	if (!m_english_dict)
 		return status_t::untranslated;
 
 	if (is_proper_noun(old_text))
@@ -1932,7 +1932,7 @@ bool dict_creator_t::is_proper_noun(const std::string & text) const
 		if (word.size() < 3)
 			continue;
 
-		if (english_dict_->spell(word))
+		if (m_english_dict->spell(word))
 			return false;
 	}
 

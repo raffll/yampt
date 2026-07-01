@@ -12,7 +12,7 @@ public:
 
 	const auto & is_loaded() const
 	{
-		return loaded_;
+		return m_loaded;
 	}
 
 	const auto & get_name() const
@@ -33,5 +33,5 @@ private:
 
 	file_path_parts_t name;
 	tools_t::dict_t dict;
-	bool loaded_ = false;
+	bool m_loaded = false;
 };

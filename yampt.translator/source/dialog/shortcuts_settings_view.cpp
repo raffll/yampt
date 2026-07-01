@@ -11,64 +11,100 @@
 shortcuts_settings_view_t::shortcuts_settings_view_t(QWidget * parent)
     : QWidget(parent)
 {
-    entries_ = {
-        {"copy_original", "Copy Original", "F8"},
-        {"set_in_progress", "Set In Progress", "F9"},
-        {"set_translated", "Set Translated", "F10"},
-        {"set_untranslated", "Set Untranslated", "Del"},
+    m_editable_entries = {
+        {"copy_original", "Copy Original", "F8", true},
+        {"set_in_progress", "Set In Progress", "F9", true},
+        {"set_translated", "Set Translated", "F10", true},
+        {"save", "Save", "Ctrl+S", true},
+        {"find", "Find / Replace", "Ctrl+F", true},
+        {"settings", "Open Settings", "Ctrl+,", true},
+        {"escape", "Escape", "Escape", true},
     };
+
+    m_readonly_entries = {
+        {"set_untranslated", "Set Untranslated (table focus)", "Del", false},
+        {"navigate_next", "Next Entry", "Shift+Return", false},
+        {"navigate_prev", "Previous Entry", "Ctrl+Up", false},
+    };
+
+    m_total_row_count = static_cast<int>(m_editable_entries.size() + m_readonly_entries.size());
 
     auto * layout = new QVBoxLayout(this);
 
-    table_ = new QTableWidget(static_cast<int>(entries_.size()), 2, this);
-    table_->setHorizontalHeaderLabels({"Action", "Shortcut"});
-    table_->horizontalHeader()->setStretchLastSection(true);
-    table_->verticalHeader()->setVisible(false);
-    table_->setSelectionBehavior(QAbstractItemView::SelectRows);
-    table_->setSelectionMode(QAbstractItemView::SingleSelection);
-    table_->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    auto * editable_label = new QLabel("Application Shortcuts (double-click to edit):", this);
+    layout->addWidget(editable_label);
 
-    for (int row = 0; row < static_cast<int>(entries_.size()); ++row)
+    m_table = new QTableWidget(m_total_row_count, 2, this);
+    m_table->setHorizontalHeaderLabels({"Action", "Shortcut"});
+    m_table->horizontalHeader()->setStretchLastSection(true);
+    m_table->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
+    m_table->verticalHeader()->setVisible(false);
+    m_table->setSelectionBehavior(QAbstractItemView::SelectRows);
+    m_table->setSelectionMode(QAbstractItemView::SingleSelection);
+    m_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+
+    int row = 0;
+
+    for (const auto & entry : m_editable_entries)
     {
-        const auto & entry = entries_[static_cast<size_t>(row)];
-
         auto * action_item = new QTableWidgetItem(
             QString::fromStdString(entry.display_name));
         action_item->setFlags(action_item->flags() & ~Qt::ItemIsEditable);
-        table_->setItem(row, 0, action_item);
+        m_table->setItem(row, 0, action_item);
 
         auto * shortcut_item = new QTableWidgetItem(
             QString::fromStdString(entry.default_sequence));
         shortcut_item->setFlags(shortcut_item->flags() & ~Qt::ItemIsEditable);
-        table_->setItem(row, 1, shortcut_item);
+        m_table->setItem(row, 1, shortcut_item);
+
+        ++row;
     }
 
-    layout->addWidget(table_);
+    for (const auto & entry : m_readonly_entries)
+    {
+        auto * action_item = new QTableWidgetItem(
+            QString::fromStdString(entry.display_name));
+        action_item->setFlags(action_item->flags() & ~Qt::ItemIsEditable);
+        action_item->setForeground(QColor(128, 128, 128));
+        m_table->setItem(row, 0, action_item);
 
-    conflict_label_ = new QLabel(this);
-    conflict_label_->setStyleSheet("color: red;");
-    conflict_label_->setVisible(false);
-    layout->addWidget(conflict_label_);
+        auto * shortcut_item = new QTableWidgetItem(
+            QString::fromStdString(entry.default_sequence));
+        shortcut_item->setFlags(shortcut_item->flags() & ~Qt::ItemIsEditable);
+        shortcut_item->setForeground(QColor(128, 128, 128));
+        m_table->setItem(row, 1, shortcut_item);
 
-    reset_button_ = new QPushButton("Reset to Defaults", this);
-    reset_button_->setToolTip("Restore all shortcuts to defaults");
-    layout->addWidget(reset_button_);
+        ++row;
+    }
 
-    connect(table_, &QTableWidget::cellDoubleClicked,
+    layout->addWidget(m_table);
+
+    m_conflict_label = new QLabel(this);
+    m_conflict_label->setStyleSheet("color: red;");
+    m_conflict_label->setVisible(false);
+    layout->addWidget(m_conflict_label);
+
+    m_reset_button = new QPushButton("Reset to Defaults", this);
+    m_reset_button->setToolTip("Restore all shortcuts to defaults");
+    layout->addWidget(m_reset_button);
+
+    connect(m_table, &QTableWidget::cellDoubleClicked,
             this, &shortcuts_settings_view_t::on_cell_double_clicked);
 
-    connect(reset_button_, &QPushButton::clicked,
+    connect(m_reset_button, &QPushButton::clicked,
             this, &shortcuts_settings_view_t::reset_to_defaults);
 }
 
 void shortcuts_settings_view_t::load(const app_settings_t & settings)
 {
-    for (int row = 0; row < static_cast<int>(entries_.size()); ++row)
+    const auto editable_count = static_cast<int>(m_editable_entries.size());
+
+    for (int row = 0; row < editable_count; ++row)
     {
-        const auto & entry = entries_[static_cast<size_t>(row)];
+        const auto & entry = m_editable_entries[static_cast<size_t>(row)];
         const auto sequence = settings.shortcut(entry.action_name);
         const auto & display = sequence.empty() ? entry.default_sequence : sequence;
-        table_->item(row, 1)->setText(QString::fromStdString(display));
+        m_table->item(row, 1)->setText(QString::fromStdString(display));
     }
 
     check_conflicts();
@@ -76,17 +112,19 @@ void shortcuts_settings_view_t::load(const app_settings_t & settings)
 
 void shortcuts_settings_view_t::apply(app_settings_t & settings) const
 {
-    for (int row = 0; row < static_cast<int>(entries_.size()); ++row)
+    const auto editable_count = static_cast<int>(m_editable_entries.size());
+
+    for (int row = 0; row < editable_count; ++row)
     {
-        const auto & entry = entries_[static_cast<size_t>(row)];
-        const auto sequence = table_->item(row, 1)->text().toStdString();
+        const auto & entry = m_editable_entries[static_cast<size_t>(row)];
+        const auto sequence = m_table->item(row, 1)->text().toStdString();
         settings.set_shortcut(entry.action_name, sequence);
     }
 }
 
 bool shortcuts_settings_view_t::has_conflicts() const
 {
-    return has_conflicts_;
+    return m_has_conflicts;
 }
 
 void shortcuts_settings_view_t::on_cell_double_clicked(int row, int column)
@@ -94,68 +132,75 @@ void shortcuts_settings_view_t::on_cell_double_clicked(int row, int column)
     if (column != 1)
         return;
 
-    auto * editor = new QKeySequenceEdit(table_);
-    const auto current_text = table_->item(row, 1)->text();
+    const auto editable_count = static_cast<int>(m_editable_entries.size());
+    if (row >= editable_count)
+        return;
+
+    auto * editor = new QKeySequenceEdit(m_table);
+    const auto current_text = m_table->item(row, 1)->text();
     editor->setKeySequence(QKeySequence(current_text));
-    table_->setCellWidget(row, 1, editor);
+    m_table->setCellWidget(row, 1, editor);
     editor->setFocus();
 
     connect(editor, &QKeySequenceEdit::editingFinished, this, [this, row, editor]() {
         const auto sequence = editor->keySequence().toString();
-        table_->removeCellWidget(row, 1);
-        table_->item(row, 1)->setText(sequence);
+        m_table->removeCellWidget(row, 1);
+        m_table->item(row, 1)->setText(sequence);
         check_conflicts();
     });
 }
 
 void shortcuts_settings_view_t::check_conflicts()
 {
-    const auto row_count = static_cast<int>(entries_.size());
+    const auto editable_count = static_cast<int>(m_editable_entries.size());
 
-    for (int row = 0; row < row_count; ++row)
-        table_->item(row, 1)->setBackground(QBrush());
+    for (int row = 0; row < editable_count; ++row)
+        m_table->item(row, 1)->setBackground(QBrush());
 
     bool found_conflict = false;
     QString conflict_message;
 
-    for (int first = 0; first < row_count - 1; ++first)
+    for (int first = 0; first < editable_count - 1; ++first)
     {
-        const auto first_text = table_->item(first, 1)->text();
+        const auto first_text = m_table->item(first, 1)->text();
         if (first_text.isEmpty())
             continue;
 
-        for (int second = first + 1; second < row_count; ++second)
+        for (int second = first + 1; second < editable_count; ++second)
         {
-            const auto second_text = table_->item(second, 1)->text();
+            const auto second_text = m_table->item(second, 1)->text();
             if (first_text != second_text)
                 continue;
 
-            table_->item(first, 1)->setBackground(QColor(255, 200, 200));
-            table_->item(second, 1)->setBackground(QColor(255, 200, 200));
+            m_table->item(first, 1)->setBackground(QColor(255, 200, 200));
+            m_table->item(second, 1)->setBackground(QColor(255, 200, 200));
             found_conflict = true;
 
-            const auto & conflicting_name = entries_[static_cast<size_t>(second)].display_name;
-            conflict_message = QString("Conflict with: %1")
+            const auto & conflicting_name = m_editable_entries[static_cast<size_t>(second)].display_name;
+            conflict_message = QString("Conflict: \"%1\" and \"%2\" share the same shortcut")
+                .arg(QString::fromStdString(m_editable_entries[static_cast<size_t>(first)].display_name))
                 .arg(QString::fromStdString(conflicting_name));
         }
     }
 
-    conflict_label_->setText(conflict_message);
-    conflict_label_->setVisible(found_conflict);
+    m_conflict_label->setText(conflict_message);
+    m_conflict_label->setVisible(found_conflict);
 
-    if (has_conflicts_ != found_conflict)
+    if (m_has_conflicts != found_conflict)
     {
-        has_conflicts_ = found_conflict;
-        emit conflict_state_changed(has_conflicts_);
+        m_has_conflicts = found_conflict;
+        emit conflict_state_changed(m_has_conflicts);
     }
 }
 
 void shortcuts_settings_view_t::reset_to_defaults()
 {
-    for (int row = 0; row < static_cast<int>(entries_.size()); ++row)
+    const auto editable_count = static_cast<int>(m_editable_entries.size());
+
+    for (int row = 0; row < editable_count; ++row)
     {
-        const auto & entry = entries_[static_cast<size_t>(row)];
-        table_->item(row, 1)->setText(QString::fromStdString(entry.default_sequence));
+        const auto & entry = m_editable_entries[static_cast<size_t>(row)];
+        m_table->item(row, 1)->setText(QString::fromStdString(entry.default_sequence));
     }
 
     check_conflicts();

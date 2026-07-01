@@ -45,8 +45,8 @@ public:
 
 private:
 	void scan_single_root(const std::string & root_path);
-	std::unordered_map<std::string, file_entry_t> entries_;
-	std::vector<std::string> roots_;
+	std::unordered_map<std::string, file_entry_t> m_entries;
+	std::vector<std::string> m_roots;
 };
 
 file_type_t classify(const std::string & path);

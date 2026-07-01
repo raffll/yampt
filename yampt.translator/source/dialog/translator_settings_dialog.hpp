@@ -29,15 +29,15 @@ private:
     void apply_all();
     void update_ok_button_state();
 
-    app_settings_t & settings_;
+    app_settings_t & m_settings;
 
-    QListWidget * category_list_ = nullptr;
-    QStackedWidget * content_stack_ = nullptr;
-    QDialogButtonBox * button_box_ = nullptr;
-    QPushButton * apply_button_ = nullptr;
+    QListWidget * m_category_list = nullptr;
+    QStackedWidget * m_content_stack = nullptr;
+    QDialogButtonBox * m_button_box = nullptr;
+    QPushButton * m_apply_button = nullptr;
 
-    language_settings_view_t * language_view_ = nullptr;
-    translation_settings_view_t * translation_view_ = nullptr;
-    shortcuts_settings_view_t * shortcuts_view_ = nullptr;
-    workspace_settings_view_t * workspace_view_ = nullptr;
+    language_settings_view_t * m_language_view = nullptr;
+    translation_settings_view_t * m_translation_view = nullptr;
+    shortcuts_settings_view_t * m_shortcuts_view = nullptr;
+    workspace_settings_view_t * m_workspace_view = nullptr;
 };

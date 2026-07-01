@@ -126,22 +126,22 @@ void populate_targets(QComboBox * combo)
 
 language_settings_view_t::language_settings_view_t(const std::string & dictionaries_dir, QWidget * parent)
     : QWidget(parent)
-    , dictionaries_dir_(dictionaries_dir)
+    , m_dictionaries_dir(dictionaries_dir)
 {
     auto * layout = new QVBoxLayout(this);
 
     auto * top_form = new QFormLayout;
-    native_language_combo_ = new QComboBox(this);
-    foreign_language_combo_ = new QComboBox(this);
+    m_native_language_combo = new QComboBox(this);
+    m_foreign_language_combo = new QComboBox(this);
 
     for (const auto & entry : languages)
     {
-        native_language_combo_->addItem(entry.display_name, QString(entry.code));
-        foreign_language_combo_->addItem(entry.display_name, QString(entry.code));
+        m_native_language_combo->addItem(entry.display_name, QString(entry.code));
+        m_foreign_language_combo->addItem(entry.display_name, QString(entry.code));
     }
 
-    top_form->addRow("Native Language:", native_language_combo_);
-    top_form->addRow("Foreign Language:", foreign_language_combo_);
+    top_form->addRow("Native Language:", m_native_language_combo);
+    top_form->addRow("Foreign Language:", m_foreign_language_combo);
     layout->addLayout(top_form);
 
     auto * separator = new QFrame(this);
@@ -155,39 +155,39 @@ language_settings_view_t::language_settings_view_t(const std::string & dictionar
 
     auto * auto_form = new QFormLayout;
 
-    encoding_combo_ = new QComboBox(this);
-    encoding_combo_->addItem("Windows-1250");
-    encoding_combo_->addItem("Windows-1251");
-    encoding_combo_->addItem("Windows-1252");
-    auto_form->addRow("Encoding:", encoding_combo_);
+    m_encoding_combo = new QComboBox(this);
+    m_encoding_combo->addItem("Windows-1250");
+    m_encoding_combo->addItem("Windows-1251");
+    m_encoding_combo->addItem("Windows-1252");
+    auto_form->addRow("Encoding:", m_encoding_combo);
 
-    spell_check_combo_ = new QComboBox(this);
-    auto_form->addRow("Spell Check Dictionary:", spell_check_combo_);
+    m_spell_check_combo = new QComboBox(this);
+    auto_form->addRow("Spell Check Dictionary:", m_spell_check_combo);
 
-    translation_target_combo_ = new QComboBox(this);
-    populate_targets(translation_target_combo_);
-    auto_form->addRow("Translation Target:", translation_target_combo_);
+    m_translation_target_combo = new QComboBox(this);
+    populate_targets(m_translation_target_combo);
+    auto_form->addRow("Translation Target:", m_translation_target_combo);
 
-    partial_dict_combo_ = new QComboBox(this);
-    auto_form->addRow("Partial-Mode Dictionary:", partial_dict_combo_);
+    m_partial_dict_combo = new QComboBox(this);
+    auto_form->addRow("Partial-Mode Dictionary:", m_partial_dict_combo);
 
-    native_tag_edit_ = new QLineEdit(this);
-    native_tag_edit_->setMaxLength(5);
-    auto_form->addRow("Native Language Tag:", native_tag_edit_);
+    m_native_tag_edit = new QLineEdit(this);
+    m_native_tag_edit->setMaxLength(5);
+    auto_form->addRow("Native Language Tag:", m_native_tag_edit);
 
-    foreign_tag_edit_ = new QLineEdit(this);
-    foreign_tag_edit_->setMaxLength(5);
-    auto_form->addRow("Foreign Language Tag:", foreign_tag_edit_);
+    m_foreign_tag_edit = new QLineEdit(this);
+    m_foreign_tag_edit->setMaxLength(5);
+    auto_form->addRow("Foreign Language Tag:", m_foreign_tag_edit);
 
     layout->addLayout(auto_form);
     layout->addStretch();
 
-    scan_dictionaries(dictionaries_dir_);
+    scan_dictionaries(m_dictionaries_dir);
 
-    connect(native_language_combo_, &QComboBox::currentIndexChanged,
+    connect(m_native_language_combo, &QComboBox::currentIndexChanged,
             this, &language_settings_view_t::on_native_language_changed);
 
-    connect(foreign_language_combo_, &QComboBox::currentIndexChanged,
+    connect(m_foreign_language_combo, &QComboBox::currentIndexChanged,
             this, &language_settings_view_t::on_foreign_language_changed);
 }
 
@@ -196,42 +196,42 @@ void language_settings_view_t::load(const app_settings_t & settings)
     const auto native_code = QString::fromStdString(settings.native_language());
     const auto foreign_code = QString::fromStdString(settings.foreign_language());
 
-    const int native_index = native_language_combo_->findData(native_code);
+    const int native_index = m_native_language_combo->findData(native_code);
     if (native_index >= 0)
-        native_language_combo_->setCurrentIndex(native_index);
+        m_native_language_combo->setCurrentIndex(native_index);
 
-    const int foreign_index = foreign_language_combo_->findData(foreign_code);
+    const int foreign_index = m_foreign_language_combo->findData(foreign_code);
     if (foreign_index >= 0)
-        foreign_language_combo_->setCurrentIndex(foreign_index);
+        m_foreign_language_combo->setCurrentIndex(foreign_index);
 
-    encoding_combo_->setCurrentIndex(settings.encoding_index());
+    m_encoding_combo->setCurrentIndex(settings.encoding_index());
 
     const auto spell_aff = QString::fromStdString(settings.spell_aff_path());
-    select_combo_by_data(spell_check_combo_, spell_aff);
+    select_combo_by_data(m_spell_check_combo, spell_aff);
 
     const auto target = QString::fromStdString(settings.translation_target());
-    const int target_index = translation_target_combo_->findText(target);
+    const int target_index = m_translation_target_combo->findText(target);
     if (target_index >= 0)
-        translation_target_combo_->setCurrentIndex(target_index);
+        m_translation_target_combo->setCurrentIndex(target_index);
 
     const auto partial_aff = QString::fromStdString(settings.partial_dict_aff_path());
-    select_combo_by_data(partial_dict_combo_, partial_aff);
+    select_combo_by_data(m_partial_dict_combo, partial_aff);
 
-    native_tag_edit_->setText(QString::fromStdString(settings.native_tag()));
-    foreign_tag_edit_->setText(QString::fromStdString(settings.foreign_tag()));
+    m_native_tag_edit->setText(QString::fromStdString(settings.native_tag()));
+    m_foreign_tag_edit->setText(QString::fromStdString(settings.foreign_tag()));
 }
 
 void language_settings_view_t::apply(app_settings_t & settings) const
 {
-    const auto native_code = native_language_combo_->currentData().toString().toStdString();
+    const auto native_code = m_native_language_combo->currentData().toString().toStdString();
     settings.set_native_language(native_code);
 
-    const auto foreign_code = foreign_language_combo_->currentData().toString().toStdString();
+    const auto foreign_code = m_foreign_language_combo->currentData().toString().toStdString();
     settings.set_foreign_language(foreign_code);
 
-    settings.set_encoding_index(encoding_combo_->currentIndex());
+    settings.set_encoding_index(m_encoding_combo->currentIndex());
 
-    const auto spell_aff = spell_check_combo_->currentData().toString().toStdString();
+    const auto spell_aff = m_spell_check_combo->currentData().toString().toStdString();
     settings.set_spell_aff_path(spell_aff);
 
     if (!spell_aff.empty())
@@ -248,9 +248,9 @@ void language_settings_view_t::apply(app_settings_t & settings) const
     }
 
     settings.set_translation_target(
-        translation_target_combo_->currentText().toStdString());
+        m_translation_target_combo->currentText().toStdString());
 
-    const auto partial_aff = partial_dict_combo_->currentData().toString().toStdString();
+    const auto partial_aff = m_partial_dict_combo->currentData().toString().toStdString();
     settings.set_partial_dict_aff_path(partial_aff);
 
     if (!partial_aff.empty())
@@ -266,44 +266,44 @@ void language_settings_view_t::apply(app_settings_t & settings) const
         settings.set_partial_dict_dic_path("");
     }
 
-    settings.set_native_tag(native_tag_edit_->text().toStdString());
-    settings.set_foreign_tag(foreign_tag_edit_->text().toStdString());
+    settings.set_native_tag(m_native_tag_edit->text().toStdString());
+    settings.set_foreign_tag(m_foreign_tag_edit->text().toStdString());
 }
 
 void language_settings_view_t::on_native_language_changed(int index)
 {
-    const auto code = native_language_combo_->itemData(index).toString();
+    const auto code = m_native_language_combo->itemData(index).toString();
 
-    encoding_combo_->setCurrentIndex(encoding_index_for_language(code));
+    m_encoding_combo->setCurrentIndex(encoding_index_for_language(code));
 
     const auto dict_prefix = spell_dict_prefix_for_language(code);
-    select_combo_by_prefix(spell_check_combo_, dict_prefix);
+    select_combo_by_prefix(m_spell_check_combo, dict_prefix);
 
     const auto target = translation_target_for_language(code);
-    const int target_index = translation_target_combo_->findText(target);
+    const int target_index = m_translation_target_combo->findText(target);
     if (target_index >= 0)
-        translation_target_combo_->setCurrentIndex(target_index);
+        m_translation_target_combo->setCurrentIndex(target_index);
 
-    native_tag_edit_->setText(code);
+    m_native_tag_edit->setText(code);
 }
 
 void language_settings_view_t::on_foreign_language_changed(int index)
 {
-    const auto code = foreign_language_combo_->itemData(index).toString();
+    const auto code = m_foreign_language_combo->itemData(index).toString();
 
     const auto dict_prefix = spell_dict_prefix_for_language(code);
-    select_combo_by_prefix(partial_dict_combo_, dict_prefix);
+    select_combo_by_prefix(m_partial_dict_combo, dict_prefix);
 
-    foreign_tag_edit_->setText(code);
+    m_foreign_tag_edit->setText(code);
 }
 
 void language_settings_view_t::scan_dictionaries(const std::string & directory)
 {
-    spell_check_combo_->clear();
-    partial_dict_combo_->clear();
+    m_spell_check_combo->clear();
+    m_partial_dict_combo->clear();
 
-    spell_check_combo_->addItem("None", QString(""));
-    partial_dict_combo_->addItem("None", QString(""));
+    m_spell_check_combo->addItem("None", QString(""));
+    m_partial_dict_combo->addItem("None", QString(""));
 
     if (directory.empty())
         return;
@@ -329,10 +329,10 @@ void language_settings_view_t::scan_dictionaries(const std::string & directory)
         const auto stem = entry.path().stem().string();
         const auto aff_path = entry.path().string();
 
-        spell_check_combo_->addItem(QString::fromStdString(stem),
+        m_spell_check_combo->addItem(QString::fromStdString(stem),
                                     QString::fromStdString(aff_path));
 
-        partial_dict_combo_->addItem(QString::fromStdString(stem),
+        m_partial_dict_combo->addItem(QString::fromStdString(stem),
                                      QString::fromStdString(aff_path));
     }
 }

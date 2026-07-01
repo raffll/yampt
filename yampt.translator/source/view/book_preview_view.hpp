@@ -19,7 +19,7 @@ public:
 private:
 	QString prepare_html(const std::string & html) const;
 
-	QSplitter * splitter_ = nullptr;
-	QTextBrowser * original_browser_ = nullptr;
-	QTextBrowser * translation_browser_ = nullptr;
+	QSplitter * m_splitter = nullptr;
+	QTextBrowser * m_original_browser = nullptr;
+	QTextBrowser * m_translation_browser = nullptr;
 };

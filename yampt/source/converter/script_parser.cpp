@@ -73,6 +73,86 @@ std::string strip_quotes(const std::string & text_input)
 	return text_input;
 }
 
+bool is_numeric_token(const std::string & token)
+{
+	if (token.empty())
+		return false;
+
+	size_t start = 0;
+	if (token[0] == '-' || token[0] == '+')
+		start = 1;
+
+	if (start >= token.size())
+		return false;
+
+	bool has_digit = false;
+	for (size_t index = start; index < token.size(); ++index)
+	{
+		if (std::isdigit(static_cast<unsigned char>(token[index])))
+		{
+			has_digit = true;
+			continue;
+		}
+
+		if (token[index] == '.')
+			continue;
+
+		return false;
+	}
+
+	return has_digit;
+}
+
+std::string extract_cell_name_to_eol(const std::string & text_after_keyword)
+{
+	auto cell_name = text_after_keyword;
+
+	const auto comment_pos = cell_name.find(';');
+	if (comment_pos != std::string::npos)
+		cell_name = cell_name.substr(0, comment_pos);
+
+	const auto cr_pos = cell_name.find('\r');
+	if (cr_pos != std::string::npos)
+		cell_name = cell_name.substr(0, cr_pos);
+
+	const auto lf_pos = cell_name.find('\n');
+	if (lf_pos != std::string::npos)
+		cell_name = cell_name.substr(0, lf_pos);
+
+	while (!cell_name.empty() && (cell_name.back() == ' ' || cell_name.back() == '\t'))
+		cell_name.pop_back();
+
+	return cell_name;
+}
+
+std::string extract_cell_name_after_numerics(const std::string & text_after_keyword)
+{
+	size_t scan_pos = 0;
+	const auto text_size = text_after_keyword.size();
+
+	while (scan_pos < text_size)
+	{
+		while (scan_pos < text_size && (text_after_keyword[scan_pos] == ' ' || text_after_keyword[scan_pos] == '\t' || text_after_keyword[scan_pos] == ','))
+			++scan_pos;
+
+		if (scan_pos >= text_size)
+			break;
+
+		const auto token_start = scan_pos;
+		while (scan_pos < text_size && text_after_keyword[scan_pos] != ' ' && text_after_keyword[scan_pos] != '\t' && text_after_keyword[scan_pos] != ',')
+			++scan_pos;
+
+		const auto token = text_after_keyword.substr(token_start, scan_pos - token_start);
+		if (!is_numeric_token(token))
+		{
+			const auto remainder = text_after_keyword.substr(token_start);
+			return extract_cell_name_to_eol(remainder);
+		}
+	}
+
+	return {};
+}
+
 } // namespace
 
 script_parser_t::script_parser_t(
@@ -126,8 +206,12 @@ void script_parser_t::convert_script()
 					convert_line("addtopic", 0, tools_t::rec_type_t::dial);
 
 				if (!is_done)
+					convert_line_unquoted("showmap", tools_t::rec_type_t::cell);
+				if (!is_done)
 					convert_line("showmap", 0, tools_t::rec_type_t::cell);
 
+				if (!is_done)
+					convert_line_unquoted("centeroncell", tools_t::rec_type_t::cell);
 				if (!is_done)
 					convert_line("centeroncell", 0, tools_t::rec_type_t::cell);
 
@@ -135,14 +219,22 @@ void script_parser_t::convert_script()
 					convert_line("getpccell", 0, tools_t::rec_type_t::cell);
 
 				if (!is_done)
+					convert_line_unquoted("aifollowcell", tools_t::rec_type_t::cell);
+				if (!is_done)
 					convert_line("aifollowcell", 1, tools_t::rec_type_t::cell);
 
+				if (!is_done)
+					convert_line_unquoted("aiescortcell", tools_t::rec_type_t::cell);
 				if (!is_done)
 					convert_line("aiescortcell", 1, tools_t::rec_type_t::cell);
 
 				if (!is_done)
+					convert_line_unquoted("placeitemcell", tools_t::rec_type_t::cell);
+				if (!is_done)
 					convert_line("placeitemcell", 1, tools_t::rec_type_t::cell);
 
+				if (!is_done)
+					convert_line_unquoted("positioncell", tools_t::rec_type_t::cell);
 				if (!is_done)
 					convert_line("positioncell", 4, tools_t::rec_type_t::cell);
 
@@ -192,6 +284,58 @@ void script_parser_t::convert_line(
 
 	const auto is_getpccell = keyword == "getpccell" ? true : false;
 	convert_text_in_compiled(is_getpccell);
+
+	is_done = true;
+}
+
+void script_parser_t::convert_line_unquoted(
+    const std::string & keyword,
+    const tools_t::rec_type_t text_type)
+{
+	pos = find_whole_word(line_lc, keyword);
+	if (pos == std::string::npos)
+		return;
+
+	if (line.size() == keyword.size())
+		return;
+
+	if (line.rfind(";", pos) != std::string::npos)
+		return;
+
+	const auto after_keyword = line.find_first_of(" \t", pos);
+	if (after_keyword == std::string::npos)
+		return;
+
+	const auto content_start = line.find_first_not_of(" \t", after_keyword);
+	if (content_start == std::string::npos)
+		return;
+
+	const auto comment_pos = line.find(';', content_start);
+	const auto search_end = (comment_pos != std::string::npos) ? comment_pos : line.size();
+
+	if (line.find('"', content_start) < search_end)
+		return;
+
+	const auto text_after_keyword = line.substr(content_start);
+
+	const auto is_showmap_family = (keyword == "showmap" || keyword == "centeroncell");
+	const auto cell_name = is_showmap_family
+	    ? extract_cell_name_to_eol(text_after_keyword)
+	    : extract_cell_name_after_numerics(text_after_keyword);
+
+	if (cell_name.empty())
+		return;
+
+	pos = content_start + (line.substr(content_start).find(cell_name));
+	old_text = cell_name;
+
+	tools_t::add_log("\r\n\r\n" + source_path + "\r\n" + record_key + "\r\n", true);
+	tools_t::add_log("<<< " + line + "\r\n", true);
+	tools_t::add_log("unquoted: " + old_text + "\r\n", true);
+
+	find_new_text(text_type);
+	insert_new_text();
+	convert_text_in_compiled(false);
 
 	is_done = true;
 }
@@ -282,6 +426,12 @@ void script_parser_t::find_new_text(const tools_t::rec_type_t text_type)
 
 void script_parser_t::insert_new_text()
 {
+	if (new_text == old_text)
+	{
+		pos += old_text.size();
+		return;
+	}
+
 	new_line.erase(pos, old_text.size());
 	new_line.insert(pos, new_text);
 
@@ -290,6 +440,9 @@ void script_parser_t::insert_new_text()
 
 void script_parser_t::convert_text_in_compiled(const bool is_getpccell)
 {
+	if (new_text == old_text)
+		return;
+
 	if (type != tools_t::rec_type_t::sctx)
 		return;
 

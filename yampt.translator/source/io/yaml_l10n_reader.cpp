@@ -4,33 +4,33 @@
 
 bool yaml_l10n_reader_t::load(const std::string & source_path, const std::string & target_path)
 {
-	source_entries_ = parse_yaml(source_path);
-	if (source_entries_.empty())
+	m_source_entries = parse_yaml(source_path);
+	if (m_source_entries.empty())
 		return false;
 
-	key_order_.clear();
-	for (const auto & entry : source_entries_)
-		key_order_.push_back(entry.key);
+	m_key_order.clear();
+	for (const auto & entry : m_source_entries)
+		m_key_order.push_back(entry.key);
 
 	if (!target_path.empty())
-		target_entries_ = parse_yaml(target_path);
+		m_target_entries = parse_yaml(target_path);
 
 	return true;
 }
 
 const std::vector<l10n_entry_t> & yaml_l10n_reader_t::source_entries() const
 {
-	return source_entries_;
+	return m_source_entries;
 }
 
 const std::vector<l10n_entry_t> & yaml_l10n_reader_t::target_entries() const
 {
-	return target_entries_;
+	return m_target_entries;
 }
 
 const std::vector<std::string> & yaml_l10n_reader_t::key_order() const
 {
-	return key_order_;
+	return m_key_order;
 }
 
 std::string yaml_l10n_reader_t::parse_quoted_value(const std::string & raw_value) const

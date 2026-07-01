@@ -30,6 +30,6 @@ signals:
 private:
 	void on_item_clicked(QListWidgetItem * item);
 
-	QListWidget * list_ = nullptr;
-	QPushButton * rebuild_btn_ = nullptr;
+	QListWidget * m_list = nullptr;
+	QPushButton * m_rebuild_btn = nullptr;
 };

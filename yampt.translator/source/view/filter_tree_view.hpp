@@ -74,9 +74,9 @@ private:
 		bool selected = true;
 	};
 
-	QListWidget * list_ = nullptr;
-	std::vector<row_t> rows_;
-	int all_row_ = -1;
-	int yaml_row_ = -1;
-	bool enabled_ = true;
+	QListWidget * m_list = nullptr;
+	std::vector<row_t> m_rows;
+	int m_all_row = -1;
+	int m_yaml_row = -1;
+	bool m_enabled = true;
 };

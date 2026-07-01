@@ -22,7 +22,7 @@ protected:
 	void highlightBlock(const QString & text) override;
 
 private:
-	glossary_t * manager_ = nullptr;
-	tools_t::rec_type_t record_type_ = tools_t::rec_type_t::unknown;
-	std::vector<annotation_t> annotations_;
+	glossary_t * m_manager = nullptr;
+	tools_t::rec_type_t m_record_type = tools_t::rec_type_t::unknown;
+	std::vector<annotation_t> m_annotations;
 };

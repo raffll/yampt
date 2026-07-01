@@ -46,14 +46,17 @@ public:
 
 	editor_load_result_t load(document_t & doc, const table_row_t & row);
 	commit_result_t commit(dict_document_t & doc, const table_row_t & row, const std::string & new_text);
+	commit_result_t commit_status(dict_document_t & doc, const table_row_t & row, status_t new_status);
+	void copy_original(dict_document_t & doc, const table_row_t & row);
+	void clear_and_untranslate(dict_document_t & doc, const table_row_t & row);
 	int propagate(dict_document_t & doc, const std::string & old_text, const std::string & new_text);
 
 private:
-	edit_history_t & history_;
-	byte_limit_validator_t & validation_;
-	glossary_t & annotations_;
+	edit_history_t & m_history;
+	byte_limit_validator_t & m_validation;
+	glossary_t & m_annotations;
 
-	int current_row_ = -1;
-	QString loaded_text_;
-	bool loading_record_ = false;
+	int m_current_row = -1;
+	QString m_loaded_text;
+	bool m_loading_record = false;
 };

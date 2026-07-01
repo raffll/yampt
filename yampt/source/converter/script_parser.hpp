@@ -33,6 +33,7 @@ public:
 
 private:
 	void convert_line(const std::string & keyword, const int pos_in_expression, const tools_t::rec_type_t text_type);
+	void convert_line_unquoted(const std::string & keyword, const tools_t::rec_type_t text_type);
 	void trim_line();
 	void extract_text(const int pos_in_expression);
 	void remove_quotes();

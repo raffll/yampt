@@ -22,22 +22,22 @@ public:
 
 	const auto & is_loaded()
 	{
-		return loaded_;
+		return m_loaded;
 	}
 
 	const auto & get_name()
 	{
-		return name_;
+		return m_name;
 	}
 
 	const auto & get_time()
 	{
-		return time_;
+		return m_time;
 	}
 
 	const auto & get_records() const
 	{
-		return records_;
+		return m_records;
 	}
 
 	const auto & get_record()
@@ -60,12 +60,12 @@ public:
 
 	const auto & get_key()
 	{
-		return key_;
+		return m_key;
 	}
 
 	const auto & get_value()
 	{
-		return value_;
+		return m_value;
 	}
 
 	esm_reader_t() = default;
@@ -78,13 +78,13 @@ private:
 	void mark_not_found(sub_record_t & target);
 	void handle_exception(const std::exception & error);
 
-	std::vector<tools_t::record_t> records_;
-	file_path_parts_t name_;
-	std::filesystem::file_time_type time_;
-	bool loaded_ = false;
+	std::vector<tools_t::record_t> m_records;
+	file_path_parts_t m_name;
+	std::filesystem::file_time_type m_time;
+	bool m_loaded = false;
 
 	tools_t::record_t * ptr_record = nullptr;
 
-	sub_record_t key_;
-	sub_record_t value_;
+	sub_record_t m_key;
+	sub_record_t m_value;
 };

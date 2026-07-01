@@ -16,15 +16,15 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 {
 	beginResetModel();
 
-	rows_.clear();
-	column_names_.clear();
-	plugin_conflict_this_.clear();
-	record_type_ = entry.rec_type;
-	record_id_ = entry.record_id;
-	column_plugin_indices_.clear();
-	filter_dirty_ = true;
-	has_merge_column_ = false;
-	merge_col_index_ = -1;
+	m_rows.clear();
+	m_column_names.clear();
+	m_plugin_conflict_this.clear();
+	m_record_type = entry.rec_type;
+	m_record_id = entry.record_id;
+	m_column_plugin_indices.clear();
+	m_filter_dirty = true;
+	m_has_merge_column = false;
+	m_merge_col_index = -1;
 
 	size_t col_count = setup_columns(scan, entry);
 	setup_merge_column(scan, entry, col_count);
@@ -42,11 +42,11 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 
 	load_sub_records(scan, entry, context);
 
-	const bool is_cell = (record_type_ == "CELL");
-	const bool is_leveled = (record_type_ == "LEVI" || record_type_ == "LEVC");
-	const bool is_faction = (record_type_ == "FACT");
+	const bool is_cell = (m_record_type == "CELL");
+	const bool is_leveled = (m_record_type == "LEVI" || m_record_type == "LEVC");
+	const bool is_faction = (m_record_type == "FACT");
 	const bool is_container =
-	    (record_type_ == "CONT" || record_type_ == "CREA" || record_type_ == "NPC_" || record_type_ == "BSGN");
+	    (m_record_type == "CONT" || m_record_type == "CREA" || m_record_type == "NPC_" || m_record_type == "BSGN");
 
 	if (is_cell)
 		set_record_cell(context);
@@ -70,9 +70,9 @@ size_t view_tree_model_t::setup_columns(plugin_scan_t & scan, const conflict_ent
 		char label_buf[64];
 		std::snprintf(
 		    label_buf, sizeof(label_buf), "[%02X] %s", ver.plugin_idx, scan.plugin_filename(ver.plugin_idx).c_str());
-		column_names_.push_back(label_buf);
-		plugin_conflict_this_.push_back(ver.status);
-		column_plugin_indices_.push_back(ver.plugin_idx);
+		m_column_names.push_back(label_buf);
+		m_plugin_conflict_this.push_back(ver.status);
+		m_column_plugin_indices.push_back(ver.plugin_idx);
 	}
 	return entry.versions.size();
 }
@@ -88,8 +88,8 @@ void view_tree_model_t::setup_merge_column(plugin_scan_t & scan, const conflict_
 			return;
 	}
 
-	has_merge_column_ = true;
-	merge_col_index_ = static_cast<int>(col_count);
+	m_has_merge_column = true;
+	m_merge_col_index = static_cast<int>(col_count);
 
 	int merge_idx = -1;
 	for (int i = 0; i < static_cast<int>(scan.plugin_count()); ++i)
@@ -103,9 +103,9 @@ void view_tree_model_t::setup_merge_column(plugin_scan_t & scan, const conflict_
 
 	char label_buf[64];
 	std::snprintf(label_buf, sizeof(label_buf), "[%02X] %s *", merge_idx, scan.plugin_filename(merge_idx).c_str());
-	column_names_.push_back(label_buf);
-	plugin_conflict_this_.push_back(conflict_this_t::unknown);
-	column_plugin_indices_.push_back(merge_idx);
+	m_column_names.push_back(label_buf);
+	m_plugin_conflict_this.push_back(conflict_this_t::unknown);
+	m_column_plugin_indices.push_back(merge_idx);
 	++col_count;
 }
 
@@ -149,7 +149,7 @@ static bool check_all_identical(const std::vector<std::string> & values)
 
 void view_tree_model_t::build_header_row(plugin_scan_t & scan, const conflict_entry_t & entry)
 {
-	const auto col_count = column_names_.size();
+	const auto col_count = m_column_names.size();
 
 	sub_record_row_t header_row;
 	header_row.type = "Record Header";
@@ -180,7 +180,7 @@ void view_tree_model_t::build_header_row(plugin_scan_t & scan, const conflict_en
 	flags_row.cell_conflict_this = compute_conflict_this(flags_row.values);
 	header_row.children.push_back(std::move(flags_row));
 
-	rows_.push_back(std::move(header_row));
+	m_rows.push_back(std::move(header_row));
 }
 
 void view_tree_model_t::load_sub_records(
@@ -226,75 +226,75 @@ void view_tree_model_t::load_sub_records(
 
 void view_tree_model_t::finalize_header_conflict()
 {
-	if (rows_.empty())
+	if (m_rows.empty())
 		return;
 
 	conflict_all_t worst = conflict_all_t::only_one;
-	for (size_t i = 1; i < rows_.size(); ++i)
+	for (size_t i = 1; i < m_rows.size(); ++i)
 	{
-		if (rows_[i].row_conflict_all > worst)
-			worst = rows_[i].row_conflict_all;
+		if (m_rows[i].row_conflict_all > worst)
+			worst = m_rows[i].row_conflict_all;
 	}
-	rows_[0].row_conflict_all = worst;
-	rows_[0].all_identical = (worst <= conflict_all_t::no_conflict);
+	m_rows[0].row_conflict_all = worst;
+	m_rows[0].all_identical = (worst <= conflict_all_t::no_conflict);
 }
 
 void view_tree_model_t::clear()
 {
 	beginResetModel();
-	rows_.clear();
-	column_names_.clear();
-	plugin_conflict_this_.clear();
-	column_plugin_indices_.clear();
-	record_type_.clear();
-	record_id_.clear();
-	has_merge_column_ = false;
-	merge_col_index_ = -1;
-	filter_dirty_ = true;
+	m_rows.clear();
+	m_column_names.clear();
+	m_plugin_conflict_this.clear();
+	m_column_plugin_indices.clear();
+	m_record_type.clear();
+	m_record_id.clear();
+	m_has_merge_column = false;
+	m_merge_col_index = -1;
+	m_filter_dirty = true;
 	endResetModel();
 }
 
 bool view_tree_model_t::is_merge_column(int section) const
 {
-	if (!has_merge_column_)
+	if (!m_has_merge_column)
 		return false;
 
-	return (section - 1) == merge_col_index_;
+	return (section - 1) == m_merge_col_index;
 }
 
 int view_tree_model_t::merge_column() const
 {
-	if (!has_merge_column_)
+	if (!m_has_merge_column)
 		return -1;
 
-	return merge_col_index_ + 1;
+	return m_merge_col_index + 1;
 }
 
 void view_tree_model_t::set_hide_no_conflict(bool hide)
 {
 	beginResetModel();
-	hide_no_conflict_ = hide;
-	filter_dirty_ = true;
+	m_hide_no_conflict = hide;
+	m_filter_dirty = true;
 	endResetModel();
 }
 
 const std::vector<view_tree_model_t::sub_record_row_t> & view_tree_model_t::visible_rows() const
 {
-	if (!hide_no_conflict_)
-		return rows_;
+	if (!m_hide_no_conflict)
+		return m_rows;
 
-	if (!filter_dirty_)
-		return filtered_rows_;
+	if (!m_filter_dirty)
+		return m_filtered_rows;
 
-	filtered_rows_.clear();
-	for (const auto & row : rows_)
+	m_filtered_rows.clear();
+	for (const auto & row : m_rows)
 	{
 		if (!row.all_identical)
-			filtered_rows_.push_back(row);
+			m_filtered_rows.push_back(row);
 	}
 
-	filter_dirty_ = false;
-	return filtered_rows_;
+	m_filter_dirty = false;
+	return m_filtered_rows;
 }
 
 QModelIndex view_tree_model_t::index(int row, int column, const QModelIndex & parent) const
@@ -354,7 +354,7 @@ int view_tree_model_t::rowCount(const QModelIndex & parent) const
 
 int view_tree_model_t::columnCount(const QModelIndex &) const
 {
-	return static_cast<int>(column_names_.size()) + 1;
+	return static_cast<int>(m_column_names.size()) + 1;
 }
 
 static QVariant sub_record_display(const view_tree_model_t::sub_record_row_t & row, int column)
@@ -462,7 +462,7 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 			return sub_record_background(row, index.column());
 
 		if (role == Qt::ForegroundRole)
-			return sub_record_foreground(row.cell_conflict_this, column_names_.size(), index.column());
+			return sub_record_foreground(row.cell_conflict_this, m_column_names.size(), index.column());
 
 		return {};
 	}
@@ -479,7 +479,7 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 		return field_row_background(frow, index.column());
 
 	if (role == Qt::ForegroundRole)
-		return sub_record_foreground(frow.cell_conflict_this, column_names_.size(), index.column());
+		return sub_record_foreground(frow.cell_conflict_this, m_column_names.size(), index.column());
 
 	return {};
 }
@@ -493,10 +493,10 @@ QVariant view_tree_model_t::headerData(int section, Qt::Orientation orientation,
 		return QStringLiteral("Sub-Record");
 
 	const int col = section - 1;
-	if (col < 0 || col >= static_cast<int>(column_names_.size()))
+	if (col < 0 || col >= static_cast<int>(m_column_names.size()))
 		return {};
 
-	return QString::fromStdString(column_names_[col]);
+	return QString::fromStdString(m_column_names[col]);
 }
 
 Qt::ItemFlags view_tree_model_t::flags(const QModelIndex & index) const
@@ -506,7 +506,7 @@ Qt::ItemFlags view_tree_model_t::flags(const QModelIndex & index) const
 
 	Qt::ItemFlags result = Qt::ItemIsEnabled | Qt::ItemIsSelectable;
 
-	if (index.column() > 0 && index.column() <= static_cast<int>(column_plugin_indices_.size()))
+	if (index.column() > 0 && index.column() <= static_cast<int>(m_column_plugin_indices.size()))
 	{
 		if (!is_merge_column(index.column()))
 			result |= Qt::ItemIsDragEnabled;
@@ -533,18 +533,18 @@ QMimeData * view_tree_model_t::mimeData(const QModelIndexList & indexes) const
 		return nullptr;
 
 	const int col = first_idx.column() - 1;
-	if (col < 0 || col >= static_cast<int>(column_plugin_indices_.size()))
+	if (col < 0 || col >= static_cast<int>(m_column_plugin_indices.size()))
 		return nullptr;
 
 	if (is_merge_column(first_idx.column()))
 		return nullptr;
 
-	const int plugin_idx = column_plugin_indices_[col];
+	const int plugin_idx = m_column_plugin_indices[col];
 	auto * mime_data = new QMimeData;
 	QString payload = QString("%1\t%2\t%3")
 	                      .arg(plugin_idx)
-	                      .arg(QString::fromStdString(record_type_))
-	                      .arg(QString::fromStdString(record_id_));
+	                      .arg(QString::fromStdString(m_record_type))
+	                      .arg(QString::fromStdString(m_record_id));
 	mime_data->setData("application/x-yampt-record", payload.toUtf8());
 	return mime_data;
 }
@@ -556,7 +556,7 @@ Qt::DropActions view_tree_model_t::supportedDropActions() const
 
 bool view_tree_model_t::canDropMimeData(const QMimeData * data, Qt::DropAction, int, int, const QModelIndex &) const
 {
-	if (!has_merge_column_)
+	if (!m_has_merge_column)
 		return false;
 
 	return data && data->hasFormat("application/x-yampt-record");

@@ -21,8 +21,8 @@ private:
     void on_browse_openmw();
     void on_browse_mo2();
 
-    QLineEdit * openmw_data_edit_ = nullptr;
-    QPushButton * openmw_browse_button_ = nullptr;
-    QLineEdit * mo2_profile_edit_ = nullptr;
-    QPushButton * mo2_browse_button_ = nullptr;
+    QLineEdit * m_openmw_data_edit = nullptr;
+    QPushButton * m_openmw_browse_button = nullptr;
+    QLineEdit * m_mo2_profile_edit = nullptr;
+    QPushButton * m_mo2_browse_button = nullptr;
 };

@@ -10,7 +10,7 @@
 
 deepl_translator_t::deepl_translator_t(QObject * parent)
     : QObject(parent)
-    , network_(new QNetworkAccessManager(this))
+    , m_network(new QNetworkAccessManager(this))
 {}
 
 std::string deepl_translator_t::name() const
@@ -20,7 +20,7 @@ std::string deepl_translator_t::name() const
 
 bool deepl_translator_t::is_available() const
 {
-	return !api_key_.empty();
+	return !m_api_key.empty();
 }
 
 bool deepl_translator_t::is_async() const
@@ -35,27 +35,27 @@ bool deepl_translator_t::has_quota() const
 
 int deepl_translator_t::remaining_quota() const
 {
-	return free_tier_limit_ - chars_used_;
+	return m_free_tier_limit - m_chars_used;
 }
 
 void deepl_translator_t::set_api_key(const std::string & key)
 {
-	api_key_ = key;
+	m_api_key = key;
 }
 
 void deepl_translator_t::set_chars_used(int chars)
 {
-	chars_used_ = chars;
+	m_chars_used = chars;
 }
 
 int deepl_translator_t::chars_used() const
 {
-	return chars_used_;
+	return m_chars_used;
 }
 
 void deepl_translator_t::translate(const std::string & text, const std::string & target_lang)
 {
-	if (api_key_.empty())
+	if (m_api_key.empty())
 	{
 		emit translation_finished({ "", false, "No API key configured" });
 		return;
@@ -66,14 +66,14 @@ void deepl_translator_t::translate(const std::string & text, const std::string &
 	QUrl url("https://api-free.deepl.com/v2/translate");
 	QNetworkRequest request(url);
 	request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
-	request.setRawHeader("Authorization", QByteArray("DeepL-Auth-Key ") + QByteArray::fromStdString(api_key_));
+	request.setRawHeader("Authorization", QByteArray("DeepL-Auth-Key ") + QByteArray::fromStdString(m_api_key));
 
 	QUrlQuery params;
 	params.addQueryItem("text", QString::fromStdString(text));
 	params.addQueryItem("target_lang", target);
 	params.addQueryItem("source_lang", "EN");
 
-	auto * reply = network_->post(request, params.query(QUrl::FullyEncoded).toUtf8());
+	auto * reply = m_network->post(request, params.query(QUrl::FullyEncoded).toUtf8());
 	connect(
 	    reply,
 	    &QNetworkReply::finished,
@@ -81,7 +81,7 @@ void deepl_translator_t::translate(const std::string & text, const std::string &
 	    [this, reply, text_len = static_cast<int>(text.size())]()
 	{
 		on_reply_finished(reply);
-		chars_used_ += text_len;
+		m_chars_used += text_len;
 	});
 }
 

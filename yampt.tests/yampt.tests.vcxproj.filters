@@ -33,6 +33,16 @@
     <ClCompile Include="source\tests.profile_reader.cpp" />
     <ClCompile Include="source\tests.scdt_patcher.cpp" />
     <ClCompile Include="source\tests.translation_engine.cpp" />
+    <ClCompile Include="source\tests.char_diff.cpp" />
+    <ClCompile Include="source\tests.script_parser_roundtrip.cpp" />
+    <ClCompile Include="source\tests.script_parser_unquoted.cpp" />
+    <ClCompile Include="source\tests.eet_converter.cpp" />
+    <ClCompile Include="source\tests.glossary_hyperlinks.cpp" />
+    <ClCompile Include="source\tests.edit_history.cpp" />
+    <ClCompile Include="source\tests.keyword_trie.cpp" />
+    <ClCompile Include="..\yampt\source\io\eet_converter.cpp" />
+    <ClCompile Include="..\yampt\source\io\eet_reader.cpp" />
+    <ClCompile Include="..\yampt\source\utility\char_diff.cpp" />
     <ClCompile Include="..\yampt\source\utility\tools.cpp" />
     <ClCompile Include="..\yampt\source\io\dict_reader.cpp" />
     <ClCompile Include="..\yampt\source\io\dict_writer.cpp" />
@@ -58,6 +68,7 @@
     <ClCompile Include="..\yampt.translator\source\model\sidebar_model.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\row_filter.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\glossary.cpp" />
+    <ClCompile Include="..\yampt\source\utility\keyword_trie.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\editor_controller.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\edit_history.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\byte_limit_validator.cpp" />

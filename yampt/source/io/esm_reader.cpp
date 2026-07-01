@@ -7,7 +7,7 @@ esm_reader_t::esm_reader_t(const std::string & path)
 	if (!content.empty())
 		split_file(content, path);
 
-	name_.set_name(path);
+	m_name.set_name(path);
 	set_time(path);
 }
 
@@ -16,7 +16,7 @@ void esm_reader_t::split_file(const std::string & content, const std::string & p
 	if (content.size() <= sub_record_id_size || content.substr(0, sub_record_id_size) != "TES3")
 	{
 		tools_t::add_log("[error] parsing \"" + path + "\" (not a TES3 plugin)\r\n");
-		loaded_ = false;
+		m_loaded = false;
 		return;
 	}
 
@@ -41,37 +41,37 @@ void esm_reader_t::split_file(const std::string & content, const std::string & p
 
 			const auto & record_content = content.substr(record_begin, record_size);
 			const auto & record_id = record_content.substr(0, sub_record_id_size);
-			records_.push_back({ record_id, record_content, record_content.size(), false });
+			m_records.push_back({ record_id, record_content, record_content.size(), false });
 		}
-		loaded_ = true;
+		m_loaded = true;
 	}
 	catch (const std::exception & error)
 	{
 		tools_t::add_log("[error] parsing \"" + path + "\" (possibly broken file or record)\r\n");
 		tools_t::add_log("[error] exception: " + std::string(error.what()) + "\r\n");
-		loaded_ = false;
+		m_loaded = false;
 	}
 }
 
 void esm_reader_t::set_time(const std::string & path)
 {
-	if (loaded_)
-		time_ = std::filesystem::last_write_time(path);
+	if (m_loaded)
+		m_time = std::filesystem::last_write_time(path);
 }
 
 void esm_reader_t::select_record(size_t index)
 {
-	if (!loaded_)
+	if (!m_loaded)
 		return;
 
-	ptr_record = &records_.at(index);
-	key_ = {};
-	value_ = {};
+	ptr_record = &m_records.at(index);
+	m_key = {};
+	m_value = {};
 }
 
 void esm_reader_t::replace_record(const std::string & content)
 {
-	if (!loaded_)
+	if (!m_loaded)
 		return;
 
 	ptr_record->content = content;
@@ -81,19 +81,19 @@ void esm_reader_t::replace_record(const std::string & content)
 
 void esm_reader_t::set_modified(size_t index)
 {
-	if (loaded_)
-		records_.at(index).modified = true;
+	if (m_loaded)
+		m_records.at(index).modified = true;
 }
 
 void esm_reader_t::set_key(const std::string & sub_id)
 {
-	if (!loaded_)
+	if (!m_loaded)
 		return;
 
-	key_.sub_id = sub_id;
+	m_key.sub_id = sub_id;
 	try
 	{
-		scan_sub_records(record_header_size, key_);
+		scan_sub_records(record_header_size, m_key);
 	}
 	catch (const std::exception & error)
 	{
@@ -103,14 +103,14 @@ void esm_reader_t::set_key(const std::string & sub_id)
 
 void esm_reader_t::set_value(const std::string & sub_id)
 {
-	if (!loaded_)
+	if (!m_loaded)
 		return;
 
-	value_.sub_id = sub_id;
-	value_.counter = 0;
+	m_value.sub_id = sub_id;
+	m_value.counter = 0;
 	try
 	{
-		scan_sub_records(record_header_size, value_);
+		scan_sub_records(record_header_size, m_value);
 	}
 	catch (const std::exception & error)
 	{
@@ -120,18 +120,18 @@ void esm_reader_t::set_value(const std::string & sub_id)
 
 void esm_reader_t::set_next_value(const std::string & sub_id)
 {
-	if (!loaded_ || !value_.exist)
+	if (!m_loaded || !m_value.exist)
 		return;
 
-	value_.sub_id = sub_id;
+	m_value.sub_id = sub_id;
 	const auto current_size = tools_t::convert_string_byte_array_to_uint(
-	    ptr_record->content.substr(value_.pos + sub_record_id_size, sub_record_id_size));
-	const auto next_pos = value_.pos + sub_record_header_size + current_size;
-	value_.counter++;
+	    ptr_record->content.substr(m_value.pos + sub_record_id_size, sub_record_id_size));
+	const auto next_pos = m_value.pos + sub_record_header_size + current_size;
+	m_value.counter++;
 
 	try
 	{
-		scan_sub_records(next_pos, value_);
+		scan_sub_records(next_pos, m_value);
 	}
 	catch (const std::exception & error)
 	{
@@ -191,13 +191,13 @@ void esm_reader_t::handle_exception(const std::exception & error)
 	tools_t::add_log("[error] in function (possibly broken record)\r\n");
 	tools_t::add_log(sanitized + "\r\n");
 	tools_t::add_log("[error] exception: " + std::string(error.what()) + "\r\n");
-	loaded_ = false;
+	m_loaded = false;
 }
 
 size_t esm_reader_t::get_modified_count()
 {
 	size_t count = 0;
-	for (const auto & record : records_)
+	for (const auto & record : m_records)
 	{
 		if (record.modified)
 			count++;

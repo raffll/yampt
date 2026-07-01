@@ -31,6 +31,6 @@ public:
 	bool has_query() const;
 
 private:
-	config_t config_;
-	std::optional<std::regex> compiled_regex_;
+	config_t m_config;
+	std::optional<std::regex> m_compiled_regex;
 };

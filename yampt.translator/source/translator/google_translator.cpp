@@ -9,7 +9,7 @@
 
 google_translator_t::google_translator_t(QObject * parent)
     : QObject(parent)
-    , network_(new QNetworkAccessManager(this))
+    , m_network(new QNetworkAccessManager(this))
 {}
 
 std::string google_translator_t::name() const
@@ -19,7 +19,12 @@ std::string google_translator_t::name() const
 
 bool google_translator_t::is_available() const
 {
-	return true;
+	return !m_api_key.empty();
+}
+
+void google_translator_t::set_api_key(const std::string & key)
+{
+	m_api_key = key;
 }
 
 bool google_translator_t::is_async() const
@@ -39,6 +44,12 @@ int google_translator_t::remaining_quota() const
 
 void google_translator_t::translate(const std::string & text, const std::string & target_lang)
 {
+	if (m_api_key.empty())
+	{
+		emit translation_finished({ "", false, "No API key configured" });
+		return;
+	}
+
 	auto tl = QString::fromStdString(target_lang).toLower();
 
 	QUrl url("https://translate.googleapis.com/translate_a/single");
@@ -53,7 +64,7 @@ void google_translator_t::translate(const std::string & text, const std::string 
 	QNetworkRequest request(url);
 	request.setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0");
 
-	auto * reply = network_->get(request);
+	auto * reply = m_network->get(request);
 	connect(reply, &QNetworkReply::finished, this, [this, reply]() { on_reply_finished(reply); });
 }
 

@@ -10,73 +10,73 @@ filter_dialog_t::filter_dialog_t(const std::vector<std::string> & available_type
 
 	auto * main_layout = new QVBoxLayout(this);
 
-	grp_conflict_all_ = new QGroupBox("Conflict All", this);
-	grp_conflict_all_->setCheckable(true);
-	grp_conflict_all_->setChecked(false);
-	auto * ca_layout = new QVBoxLayout(grp_conflict_all_);
-	chk_ca_only_one_ = new QCheckBox("Only One", grp_conflict_all_);
-	chk_ca_no_conflict_ = new QCheckBox("No Conflict", grp_conflict_all_);
-	chk_ca_override_ = new QCheckBox("Override", grp_conflict_all_);
-	chk_ca_conflict_ = new QCheckBox("Conflict", grp_conflict_all_);
-	ca_layout->addWidget(chk_ca_only_one_);
-	ca_layout->addWidget(chk_ca_no_conflict_);
-	ca_layout->addWidget(chk_ca_override_);
-	ca_layout->addWidget(chk_ca_conflict_);
-	main_layout->addWidget(grp_conflict_all_);
+	m_grp_conflict_all = new QGroupBox("Conflict All", this);
+	m_grp_conflict_all->setCheckable(true);
+	m_grp_conflict_all->setChecked(false);
+	auto * ca_layout = new QVBoxLayout(m_grp_conflict_all);
+	m_chk_ca_only_one = new QCheckBox("Only One", m_grp_conflict_all);
+	m_chk_ca_no_conflict = new QCheckBox("No Conflict", m_grp_conflict_all);
+	m_chk_ca_override = new QCheckBox("Override", m_grp_conflict_all);
+	m_chk_ca_conflict = new QCheckBox("Conflict", m_grp_conflict_all);
+	ca_layout->addWidget(m_chk_ca_only_one);
+	ca_layout->addWidget(m_chk_ca_no_conflict);
+	ca_layout->addWidget(m_chk_ca_override);
+	ca_layout->addWidget(m_chk_ca_conflict);
+	main_layout->addWidget(m_grp_conflict_all);
 
-	grp_conflict_this_ = new QGroupBox("Conflict This", this);
-	grp_conflict_this_->setCheckable(true);
-	grp_conflict_this_->setChecked(false);
-	auto * ct_layout = new QVBoxLayout(grp_conflict_this_);
-	chk_ct_master_ = new QCheckBox("Master", grp_conflict_this_);
-	chk_ct_identical_ = new QCheckBox("Identical to Master", grp_conflict_this_);
-	chk_ct_override_ = new QCheckBox("Override Wins", grp_conflict_this_);
-	chk_ct_wins_ = new QCheckBox("Conflict Wins", grp_conflict_this_);
-	chk_ct_loses_ = new QCheckBox("Conflict Loses", grp_conflict_this_);
-	chk_ct_deleted_ = new QCheckBox("Deleted", grp_conflict_this_);
-	ct_layout->addWidget(chk_ct_master_);
-	ct_layout->addWidget(chk_ct_identical_);
-	ct_layout->addWidget(chk_ct_override_);
-	ct_layout->addWidget(chk_ct_wins_);
-	ct_layout->addWidget(chk_ct_loses_);
-	ct_layout->addWidget(chk_ct_deleted_);
-	main_layout->addWidget(grp_conflict_this_);
+	m_grp_conflict_this = new QGroupBox("Conflict This", this);
+	m_grp_conflict_this->setCheckable(true);
+	m_grp_conflict_this->setChecked(false);
+	auto * ct_layout = new QVBoxLayout(m_grp_conflict_this);
+	m_chk_ct_master = new QCheckBox("Master", m_grp_conflict_this);
+	m_chk_ct_identical = new QCheckBox("Identical to Master", m_grp_conflict_this);
+	m_chk_ct_override = new QCheckBox("Override Wins", m_grp_conflict_this);
+	m_chk_ct_wins = new QCheckBox("Conflict Wins", m_grp_conflict_this);
+	m_chk_ct_loses = new QCheckBox("Conflict Loses", m_grp_conflict_this);
+	m_chk_ct_deleted = new QCheckBox("Deleted", m_grp_conflict_this);
+	ct_layout->addWidget(m_chk_ct_master);
+	ct_layout->addWidget(m_chk_ct_identical);
+	ct_layout->addWidget(m_chk_ct_override);
+	ct_layout->addWidget(m_chk_ct_wins);
+	ct_layout->addWidget(m_chk_ct_loses);
+	ct_layout->addWidget(m_chk_ct_deleted);
+	main_layout->addWidget(m_grp_conflict_this);
 
 	auto * grp_type = new QGroupBox("Record Type", this);
 	auto * type_layout = new QVBoxLayout(grp_type);
-	chk_by_type_ = new QCheckBox("Filter by Type", grp_type);
-	lst_types_ = new QListWidget(grp_type);
+	m_chk_by_type = new QCheckBox("Filter by Type", grp_type);
+	m_lst_types = new QListWidget(grp_type);
 	for (const auto & t : available_types)
 	{
 		auto * item = new QListWidgetItem(QString::fromStdString(t));
 		item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
 		item->setCheckState(Qt::Unchecked);
-		lst_types_->addItem(item);
+		m_lst_types->addItem(item);
 	}
-	type_layout->addWidget(chk_by_type_);
-	type_layout->addWidget(lst_types_);
+	type_layout->addWidget(m_chk_by_type);
+	type_layout->addWidget(m_lst_types);
 	main_layout->addWidget(grp_type);
 
 	auto * grp_id_name = new QGroupBox("Editor ID / Name", this);
 	auto * id_name_layout = new QVBoxLayout(grp_id_name);
-	chk_by_id_ = new QCheckBox("By Editor ID", grp_id_name);
-	edt_id_ = new QLineEdit(grp_id_name);
-	edt_id_->setPlaceholderText("Substring match (case-insensitive)");
-	chk_by_name_ = new QCheckBox("By Display Name", grp_id_name);
-	edt_name_ = new QLineEdit(grp_id_name);
-	edt_name_->setPlaceholderText("Substring match (case-insensitive)");
-	id_name_layout->addWidget(chk_by_id_);
-	id_name_layout->addWidget(edt_id_);
-	id_name_layout->addWidget(chk_by_name_);
-	id_name_layout->addWidget(edt_name_);
+	m_chk_by_id = new QCheckBox("By Editor ID", grp_id_name);
+	m_edt_id = new QLineEdit(grp_id_name);
+	m_edt_id->setPlaceholderText("Substring match (case-insensitive)");
+	m_chk_by_name = new QCheckBox("By Display Name", grp_id_name);
+	m_edt_name = new QLineEdit(grp_id_name);
+	m_edt_name->setPlaceholderText("Substring match (case-insensitive)");
+	id_name_layout->addWidget(m_chk_by_id);
+	id_name_layout->addWidget(m_edt_id);
+	id_name_layout->addWidget(m_chk_by_name);
+	id_name_layout->addWidget(m_edt_name);
 	main_layout->addWidget(grp_id_name);
 
 	auto * grp_special = new QGroupBox("Special", this);
 	auto * special_layout = new QVBoxLayout(grp_special);
-	chk_deleted_ = new QCheckBox("Deleted only", grp_special);
-	chk_itm_ = new QCheckBox("ITM only", grp_special);
-	special_layout->addWidget(chk_deleted_);
-	special_layout->addWidget(chk_itm_);
+	m_chk_deleted = new QCheckBox("Deleted only", grp_special);
+	m_chk_itm = new QCheckBox("ITM only", grp_special);
+	special_layout->addWidget(m_chk_deleted);
+	special_layout->addWidget(m_chk_itm);
 	main_layout->addWidget(grp_special);
 
 	auto * buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
@@ -90,89 +90,89 @@ filter_dialog_t::filter_state_t filter_dialog_t::state() const
 {
 	filter_state_t s;
 
-	s.filter_conflict_all = grp_conflict_all_->isChecked();
+	s.filter_conflict_all = m_grp_conflict_all->isChecked();
 	if (s.filter_conflict_all)
 	{
-		if (chk_ca_only_one_->isChecked())
+		if (m_chk_ca_only_one->isChecked())
 			s.conflict_all_set.insert(conflict_all_t::only_one);
-		if (chk_ca_no_conflict_->isChecked())
+		if (m_chk_ca_no_conflict->isChecked())
 			s.conflict_all_set.insert(conflict_all_t::no_conflict);
-		if (chk_ca_override_->isChecked())
+		if (m_chk_ca_override->isChecked())
 			s.conflict_all_set.insert(conflict_all_t::override_benign);
-		if (chk_ca_conflict_->isChecked())
+		if (m_chk_ca_conflict->isChecked())
 			s.conflict_all_set.insert(conflict_all_t::conflict);
 	}
 
-	s.filter_conflict_this = grp_conflict_this_->isChecked();
+	s.filter_conflict_this = m_grp_conflict_this->isChecked();
 	if (s.filter_conflict_this)
 	{
-		if (chk_ct_master_->isChecked())
+		if (m_chk_ct_master->isChecked())
 			s.conflict_this_set.insert(conflict_this_t::master);
-		if (chk_ct_identical_->isChecked())
+		if (m_chk_ct_identical->isChecked())
 			s.conflict_this_set.insert(conflict_this_t::identical_to_master);
-		if (chk_ct_override_->isChecked())
+		if (m_chk_ct_override->isChecked())
 			s.conflict_this_set.insert(conflict_this_t::override_wins);
-		if (chk_ct_wins_->isChecked())
+		if (m_chk_ct_wins->isChecked())
 			s.conflict_this_set.insert(conflict_this_t::conflict_wins);
-		if (chk_ct_loses_->isChecked())
+		if (m_chk_ct_loses->isChecked())
 			s.conflict_this_set.insert(conflict_this_t::conflict_loses);
-		if (chk_ct_deleted_->isChecked())
+		if (m_chk_ct_deleted->isChecked())
 			s.conflict_this_set.insert(conflict_this_t::deleted);
 	}
 
-	s.filter_by_type = chk_by_type_->isChecked();
+	s.filter_by_type = m_chk_by_type->isChecked();
 	if (s.filter_by_type)
 	{
-		for (int i = 0; i < lst_types_->count(); ++i)
+		for (int i = 0; i < m_lst_types->count(); ++i)
 		{
-			const auto * item = lst_types_->item(i);
+			const auto * item = m_lst_types->item(i);
 			if (item->checkState() == Qt::Checked)
 				s.type_set.insert(item->text().toStdString());
 		}
 	}
 
-	s.filter_by_id = chk_by_id_->isChecked();
-	s.id_text = edt_id_->text().toStdString();
+	s.filter_by_id = m_chk_by_id->isChecked();
+	s.id_text = m_edt_id->text().toStdString();
 
-	s.filter_by_name = chk_by_name_->isChecked();
-	s.name_text = edt_name_->text().toStdString();
+	s.filter_by_name = m_chk_by_name->isChecked();
+	s.name_text = m_edt_name->text().toStdString();
 
-	s.filter_deleted = chk_deleted_->isChecked();
-	s.filter_itm_only = chk_itm_->isChecked();
+	s.filter_deleted = m_chk_deleted->isChecked();
+	s.filter_itm_only = m_chk_itm->isChecked();
 
 	return s;
 }
 
 void filter_dialog_t::set_state(const filter_state_t & state)
 {
-	grp_conflict_all_->setChecked(state.filter_conflict_all);
-	chk_ca_only_one_->setChecked(state.conflict_all_set.count(conflict_all_t::only_one) > 0);
-	chk_ca_no_conflict_->setChecked(state.conflict_all_set.count(conflict_all_t::no_conflict) > 0);
-	chk_ca_override_->setChecked(state.conflict_all_set.count(conflict_all_t::override_benign) > 0);
-	chk_ca_conflict_->setChecked(state.conflict_all_set.count(conflict_all_t::conflict) > 0);
+	m_grp_conflict_all->setChecked(state.filter_conflict_all);
+	m_chk_ca_only_one->setChecked(state.conflict_all_set.count(conflict_all_t::only_one) > 0);
+	m_chk_ca_no_conflict->setChecked(state.conflict_all_set.count(conflict_all_t::no_conflict) > 0);
+	m_chk_ca_override->setChecked(state.conflict_all_set.count(conflict_all_t::override_benign) > 0);
+	m_chk_ca_conflict->setChecked(state.conflict_all_set.count(conflict_all_t::conflict) > 0);
 
-	grp_conflict_this_->setChecked(state.filter_conflict_this);
-	chk_ct_master_->setChecked(state.conflict_this_set.count(conflict_this_t::master) > 0);
-	chk_ct_identical_->setChecked(state.conflict_this_set.count(conflict_this_t::identical_to_master) > 0);
-	chk_ct_override_->setChecked(state.conflict_this_set.count(conflict_this_t::override_wins) > 0);
-	chk_ct_wins_->setChecked(state.conflict_this_set.count(conflict_this_t::conflict_wins) > 0);
-	chk_ct_loses_->setChecked(state.conflict_this_set.count(conflict_this_t::conflict_loses) > 0);
-	chk_ct_deleted_->setChecked(state.conflict_this_set.count(conflict_this_t::deleted) > 0);
+	m_grp_conflict_this->setChecked(state.filter_conflict_this);
+	m_chk_ct_master->setChecked(state.conflict_this_set.count(conflict_this_t::master) > 0);
+	m_chk_ct_identical->setChecked(state.conflict_this_set.count(conflict_this_t::identical_to_master) > 0);
+	m_chk_ct_override->setChecked(state.conflict_this_set.count(conflict_this_t::override_wins) > 0);
+	m_chk_ct_wins->setChecked(state.conflict_this_set.count(conflict_this_t::conflict_wins) > 0);
+	m_chk_ct_loses->setChecked(state.conflict_this_set.count(conflict_this_t::conflict_loses) > 0);
+	m_chk_ct_deleted->setChecked(state.conflict_this_set.count(conflict_this_t::deleted) > 0);
 
-	chk_by_type_->setChecked(state.filter_by_type);
-	for (int i = 0; i < lst_types_->count(); ++i)
+	m_chk_by_type->setChecked(state.filter_by_type);
+	for (int i = 0; i < m_lst_types->count(); ++i)
 	{
-		auto * item = lst_types_->item(i);
+		auto * item = m_lst_types->item(i);
 		const auto type_str = item->text().toStdString();
 		item->setCheckState(state.type_set.count(type_str) > 0 ? Qt::Checked : Qt::Unchecked);
 	}
 
-	chk_by_id_->setChecked(state.filter_by_id);
-	edt_id_->setText(QString::fromStdString(state.id_text));
+	m_chk_by_id->setChecked(state.filter_by_id);
+	m_edt_id->setText(QString::fromStdString(state.id_text));
 
-	chk_by_name_->setChecked(state.filter_by_name);
-	edt_name_->setText(QString::fromStdString(state.name_text));
+	m_chk_by_name->setChecked(state.filter_by_name);
+	m_edt_name->setText(QString::fromStdString(state.name_text));
 
-	chk_deleted_->setChecked(state.filter_deleted);
-	chk_itm_->setChecked(state.filter_itm_only);
+	m_chk_deleted->setChecked(state.filter_deleted);
+	m_chk_itm->setChecked(state.filter_itm_only);
 }

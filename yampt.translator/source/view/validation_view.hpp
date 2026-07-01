@@ -17,5 +17,5 @@ public:
 	void clear();
 
 private:
-	QLabel * label_ = nullptr;
+	QLabel * m_label = nullptr;
 };

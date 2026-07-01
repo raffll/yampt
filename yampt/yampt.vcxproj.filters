@@ -7,6 +7,8 @@
     <ClCompile Include="source\io\dict_reader.cpp" />
     <ClCompile Include="source\io\dict_writer.cpp" />
     <ClCompile Include="source\io\esm_reader.cpp" />
+    <ClCompile Include="source\io\eet_reader.cpp" />
+    <ClCompile Include="source\io\eet_converter.cpp" />
     <ClCompile Include="source\io\file_list.cpp" />
     <ClCompile Include="source\creator\dict_creator.cpp" />
     <ClCompile Include="source\creator\dict_creator_single.cpp" />
@@ -17,6 +19,8 @@
     <ClCompile Include="source\converter\script_parser.cpp" />
     <ClCompile Include="source\converter\scdt_patcher.cpp" />
     <ClCompile Include="source\translator\translation_engine.cpp" />
+    <ClCompile Include="source\utility\char_diff.cpp" />
+    <ClCompile Include="source\utility\keyword_trie.cpp" />
     <ClCompile Include="source\interface\user_interface.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -25,10 +29,14 @@
     <ClInclude Include="source\utility\string_utils.hpp" />
     <ClInclude Include="source\utility\record_types.hpp" />
     <ClInclude Include="source\utility\status_types.hpp" />
+    <ClInclude Include="source\utility\char_diff.hpp" />
+    <ClInclude Include="source\utility\keyword_trie.hpp" />
     <ClInclude Include="source\io\codepage.hpp" />
     <ClInclude Include="source\io\dict_reader.hpp" />
     <ClInclude Include="source\io\dict_writer.hpp" />
     <ClInclude Include="source\io\esm_reader.hpp" />
+    <ClInclude Include="source\io\eet_reader.hpp" />
+    <ClInclude Include="source\io\eet_converter.hpp" />
     <ClInclude Include="source\io\json_reader.hpp" />
     <ClInclude Include="source\io\file_list.hpp" />
     <ClInclude Include="source\utility\dict_kind.hpp" />

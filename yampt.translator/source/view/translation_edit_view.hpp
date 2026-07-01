@@ -37,8 +37,8 @@ private:
 	bool handle_multiline_guard(QKeyEvent * event);
 	void apply_auto_capitalize();
 
-	bool block_multiline_ = false;
-	bool auto_capitalize_ = false;
-	bool show_whitespace_ = false;
-	tools_t::rec_type_t record_type_ = tools_t::rec_type_t::unknown;
+	bool m_block_multiline = false;
+	bool m_auto_capitalize = false;
+	bool m_show_whitespace = false;
+	tools_t::rec_type_t m_record_type = tools_t::rec_type_t::unknown;
 };

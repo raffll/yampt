@@ -10,7 +10,7 @@ struct spell_checker_t::impl_t
 };
 
 spell_checker_t::spell_checker_t()
-    : impl_(std::make_unique<impl_t>())
+    : m_impl(std::make_unique<impl_t>())
 {}
 
 spell_checker_t::~spell_checker_t() = default;
@@ -22,19 +22,19 @@ bool spell_checker_t::load(const std::string & aff_path, const std::string & dic
 {
 	try
 	{
-		impl_->hunspell = std::make_unique<Hunspell>(aff_path.c_str(), dic_path.c_str());
+		m_impl->hunspell = std::make_unique<Hunspell>(aff_path.c_str(), dic_path.c_str());
 	}
 	catch (...)
 	{
-		impl_->hunspell.reset();
+		m_impl->hunspell.reset();
 		return false;
 	}
-	return impl_->hunspell != nullptr;
+	return m_impl->hunspell != nullptr;
 }
 
 bool spell_checker_t::is_loaded() const
 {
-	return impl_->hunspell != nullptr;
+	return m_impl->hunspell != nullptr;
 }
 
 bool spell_checker_t::check_word(const std::string & word) const
@@ -48,18 +48,18 @@ bool spell_checker_t::check_word(const std::string & word) const
 	if (is_mwscript_keyword(word))
 		return true;
 
-	if (!impl_->hunspell)
+	if (!m_impl->hunspell)
 		return true;
 
-	return impl_->hunspell->spell(word);
+	return m_impl->hunspell->spell(word);
 }
 
 std::vector<std::string> spell_checker_t::suggest(const std::string & word) const
 {
-	if (!impl_->hunspell)
+	if (!m_impl->hunspell)
 		return {};
 
-	return impl_->hunspell->suggest(word);
+	return m_impl->hunspell->suggest(word);
 }
 
 void spell_checker_t::add_to_user_dict(const std::string & word)
@@ -67,17 +67,17 @@ void spell_checker_t::add_to_user_dict(const std::string & word)
 	if (word.empty())
 		return;
 
-	user_dict_words_.push_back(word);
+	m_user_dict_words.push_back(word);
 
-	if (impl_->hunspell)
-		impl_->hunspell->add(word);
+	if (m_impl->hunspell)
+		m_impl->hunspell->add(word);
 }
 
 std::vector<spell_match_t> spell_checker_t::find_misspelled(const std::string & text) const
 {
 	std::vector<spell_match_t> results;
 
-	if (!impl_->hunspell)
+	if (!m_impl->hunspell)
 		return results;
 
 	size_t i = 0;
@@ -121,12 +121,12 @@ std::vector<spell_match_t> spell_checker_t::find_misspelled(const std::string & 
 
 void spell_checker_t::set_excluded_words(const std::vector<std::string> & words)
 {
-	excluded_words_ = words;
+	m_excluded_words = words;
 }
 
 bool spell_checker_t::is_excluded(const std::string & word) const
 {
-	for (const auto & excluded : excluded_words_)
+	for (const auto & excluded : m_excluded_words)
 	{
 		if (excluded.size() != word.size())
 			continue;

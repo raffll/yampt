@@ -2,8 +2,8 @@
 #include <QString>
 
 find_replace_t::find_replace_t(row_source_t & source, document_t *& active_doc)
-    : source_(source)
-    , active_doc_(active_doc)
+    : m_source(source)
+    , m_active_doc(active_doc)
 {}
 
 std::optional<find_replace_t::search_params_t> find_replace_t::build_search_params(
@@ -97,7 +97,7 @@ find_replace_t::find_result_t find_replace_t::find_next(
 	if (query.empty())
 		return {};
 
-	const int count = source_.row_count();
+	const int count = m_source.row_count();
 	if (count == 0)
 		return {};
 
@@ -108,7 +108,7 @@ find_replace_t::find_result_t find_replace_t::find_next(
 	for (int i = 1; i <= count; ++i)
 	{
 		const int row_index = (current_row + i) % count;
-		const auto * row_data = source_.row_at(row_index);
+		const auto * row_data = m_source.row_at(row_index);
 		if (!row_data)
 			continue;
 
@@ -132,11 +132,11 @@ find_replace_t::replace_result_t find_replace_t::replace_current(
 	if (current_row < 0)
 		return {};
 
-	auto * dict_doc = dynamic_cast<dict_document_t *>(active_doc_);
+	auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
 	if (!dict_doc)
 		return {};
 
-	const auto * row_data = source_.row_at(current_row);
+	const auto * row_data = m_source.row_at(current_row);
 	if (!row_data)
 		return {};
 
@@ -174,7 +174,7 @@ find_replace_t::replace_all_result_t find_replace_t::replace_all(
 	if (query.empty())
 		return {};
 
-	auto * dict_doc = dynamic_cast<dict_document_t *>(active_doc_);
+	auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
 	if (!dict_doc)
 		return {};
 

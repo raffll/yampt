@@ -33,7 +33,7 @@ private:
 	    std::string & lookahead_line,
 	    bool & has_lookahead) const;
 
-	std::vector<l10n_entry_t> source_entries_;
-	std::vector<l10n_entry_t> target_entries_;
-	std::vector<std::string> key_order_;
+	std::vector<l10n_entry_t> m_source_entries;
+	std::vector<l10n_entry_t> m_target_entries;
+	std::vector<std::string> m_key_order;
 };

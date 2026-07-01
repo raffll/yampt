@@ -29,6 +29,6 @@ private:
 	std::string derive_id(esm_reader_t & esm, size_t i);
 	std::string derive_display_name(esm_reader_t & esm, size_t i);
 
-	std::vector<indexed_record_t> entries_;
-	std::unordered_map<std::string, size_t> lookup_;
+	std::vector<indexed_record_t> m_entries;
+	std::unordered_map<std::string, size_t> m_lookup;
 };

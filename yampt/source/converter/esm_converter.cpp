@@ -1,5 +1,6 @@
 #include "esm_converter.hpp"
 #include "script_parser.hpp"
+#include "../utility/keyword_trie.hpp"
 
 static bool is_approved_status(status_t status)
 {
@@ -45,6 +46,7 @@ void esm_converter_t::convert_esm()
 
 	if (add_hyperlinks)
 	{
+		build_hyperlink_trie();
 		tools_t::add_log("[info] adding hyperlinks\r\n");
 	}
 
@@ -555,6 +557,16 @@ void esm_converter_t::convert_info()
 		if (!make_new_text({ key_text, old_text, type }, new_text))
 			continue;
 
+		if (add_hyperlinks)
+		{
+			auto marked_text = insert_hyperlink_markers(new_text);
+			if (marked_text != new_text)
+			{
+				new_text = std::move(marked_text);
+				counter_added++;
+			}
+		}
+
 		add_null_terminator_if_empty(new_text);
 		convert_record_content(new_text);
 		esm.set_modified(dial_index);
@@ -732,6 +744,47 @@ void esm_converter_t::print_log_line(const tools_t::rec_type_t type)
 	                   "\r\n";
 
 	tools_t::add_log(line);
+}
+
+void esm_converter_t::build_hyperlink_trie()
+{
+	const auto & dict = merger.get_dict();
+	auto dial_it = dict.find(tools_t::rec_type_t::dial);
+	if (dial_it == dict.end())
+		return;
+
+	for (const auto & entry : dial_it->second.records)
+	{
+		if (!is_approved_status(entry.status))
+			continue;
+
+		if (entry.new_text.empty())
+			continue;
+
+		m_hyperlink_trie.seed(entry.new_text, entry.new_text);
+	}
+}
+
+std::string esm_converter_t::insert_hyperlink_markers(const std::string & text) const
+{
+	const auto & matches = m_hyperlink_trie.find_matches(text);
+	if (matches.empty())
+		return text;
+
+	std::string result;
+	result.reserve(text.size() + matches.size());
+
+	size_t last_position = 0;
+	for (const auto & match : matches)
+	{
+		result.append(text, last_position, match.start - last_position);
+		result += '@';
+		result.append(text, match.start, match.length);
+		last_position = match.start + match.length;
+	}
+
+	result.append(text, last_position, text.size() - last_position);
+	return result;
 }
 
 bool esm_converter_t::detect_encoding()

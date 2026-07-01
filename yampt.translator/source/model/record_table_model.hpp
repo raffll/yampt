@@ -24,5 +24,5 @@ public:
 	void update_row(int row, const std::string & new_text, status_t status);
 
 private:
-	std::vector<table_row_t> rows_;
+	std::vector<table_row_t> m_rows;
 };

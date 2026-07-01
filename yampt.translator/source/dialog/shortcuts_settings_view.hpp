@@ -30,15 +30,18 @@ private:
         std::string action_name;
         std::string display_name;
         std::string default_sequence;
+        bool editable = true;
     };
 
     void reset_to_defaults();
     void on_cell_double_clicked(int row, int column);
     void check_conflicts();
 
-    QTableWidget * table_ = nullptr;
-    QLabel * conflict_label_ = nullptr;
-    QPushButton * reset_button_ = nullptr;
-    std::vector<shortcut_entry_t> entries_;
-    bool has_conflicts_ = false;
+    QTableWidget * m_table = nullptr;
+    QLabel * m_conflict_label = nullptr;
+    QPushButton * m_reset_button = nullptr;
+    std::vector<shortcut_entry_t> m_editable_entries;
+    std::vector<shortcut_entry_t> m_readonly_entries;
+    int m_total_row_count = 0;
+    bool m_has_conflicts = false;
 };

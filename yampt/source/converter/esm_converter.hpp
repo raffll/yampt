@@ -3,6 +3,7 @@
 #include "../io/codepage.hpp"
 #include "../io/esm_reader.hpp"
 #include "../utility/includes.hpp"
+#include "../utility/keyword_trie.hpp"
 #include "../utility/tools.hpp"
 #include "../merger/dict_merger.hpp"
 
@@ -68,12 +69,17 @@ private:
 	bool detect_encoding();
 	bool detect_windows_1250_encoding(const std::string & text);
 
+	void build_hyperlink_trie();
+	std::string insert_hyperlink_markers(const std::string & text) const;
+
 	esm_reader_t esm;
 	const dict_merger_t & merger;
 
 	bool add_hyperlinks;
 	const std::string file_suffix;
 	const bool create_header;
+
+	keyword_trie_t m_hyperlink_trie;
 
 	int counter_converted = 0;
 	int counter_identical = 0;

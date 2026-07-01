@@ -17,6 +17,6 @@ public:
 	void clear();
 
 private:
-	QPlainTextEdit * text_ = nullptr;
-	std::chrono::steady_clock::time_point start_time_;
+	QPlainTextEdit * m_text = nullptr;
+	std::chrono::steady_clock::time_point m_start_time;
 };

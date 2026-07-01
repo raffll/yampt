@@ -100,7 +100,7 @@ view_tree_model_t::sub_record_row_t view_tree_model_t::build_slot_row(
 	}
 
 	row.type = slot.type;
-	row.label = make_sub_label(slot.type, record_type_, first_size);
+	row.label = make_sub_label(slot.type, m_record_type, first_size);
 
 	bool all_same = true;
 	for (size_t col = 1; col < col_count; ++col)
@@ -115,7 +115,7 @@ view_tree_model_t::sub_record_row_t view_tree_model_t::build_slot_row(
 	row.row_conflict_all = compute_conflict_all(row.values);
 	row.cell_conflict_this = compute_conflict_this(row.values);
 
-	const auto * schema = find_schema(record_type_, slot.type, first_size);
+	const auto * schema = find_schema(m_record_type, slot.type, first_size);
 	if (schema && first_data)
 		decode_schema_children(row, schema, first_data, first_size, col_count, all_subs, col_indices, slot);
 	else if (first_data && first_size > 0 && !row.values.empty() && !row.values[0].empty() && row.values[0][0] == '<')
@@ -646,7 +646,7 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 	for (const auto & slot : header_slots)
 	{
 		auto row = build_slot_row(col_count, all_subs, col_header_indices, slot);
-		rows_.push_back(std::move(row));
+		m_rows.push_back(std::move(row));
 	}
 
 	for (const auto & obj_idx : all_object_indices)
@@ -688,12 +688,12 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 			}
 
 			row.type = slot.type;
-			row.label = make_sub_label(slot.type, record_type_, first_size);
+			row.label = make_sub_label(slot.type, m_record_type, first_size);
 			row.all_identical = check_all_identical(row.values);
 			row.row_conflict_all = compute_conflict_all(row.values);
 			row.cell_conflict_this = compute_conflict_this(row.values);
 
-			const auto * schema = find_schema(record_type_, slot.type, first_size);
+			const auto * schema = find_schema(m_record_type, slot.type, first_size);
 			if (schema && first_data)
 				decode_schema_children_ref(
 				    row, schema, first_data, first_size, col_count, all_subs, col_refs, obj_idx, slot);
@@ -702,7 +702,7 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 			    row.values[0][0] == '<')
 				decode_hex_children_ref(row, first_size, col_count, all_subs, col_refs, obj_idx, slot);
 
-			rows_.push_back(std::move(row));
+			m_rows.push_back(std::move(row));
 		}
 	}
 }
@@ -1020,7 +1020,7 @@ void view_tree_model_t::set_record_generic(record_context_t & context, const con
 	}
 
 	for (const auto & slot : unified_slots)
-		rows_.push_back(build_slot_row(col_count, all_subs, col_type_indices, slot));
+		m_rows.push_back(build_slot_row(col_count, all_subs, col_type_indices, slot));
 }
 
 void view_tree_model_t::collect_leveled_entries(record_context_t & context, slot_build_context_t & build_ctx)
@@ -1162,5 +1162,5 @@ void view_tree_model_t::collect_container_entries(record_context_t & context, sl
 void view_tree_model_t::emit_slot_rows(record_context_t & context, slot_build_context_t & build_ctx)
 {
 	for (const auto & slot : build_ctx.unified_slots)
-		rows_.push_back(build_slot_row(context.col_count, context.all_sub_records, build_ctx.col_type_indices, slot));
+		m_rows.push_back(build_slot_row(context.col_count, context.all_sub_records, build_ctx.col_type_indices, slot));
 }

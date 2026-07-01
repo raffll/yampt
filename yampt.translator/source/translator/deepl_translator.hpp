@@ -32,8 +32,8 @@ signals:
 private:
 	void on_reply_finished(QNetworkReply * reply);
 
-	QNetworkAccessManager * network_ = nullptr;
-	std::string api_key_;
-	int chars_used_ = 0;
-	static constexpr int free_tier_limit_ = 500000;
+	QNetworkAccessManager * m_network = nullptr;
+	std::string m_api_key;
+	int m_chars_used = 0;
+	static constexpr int m_free_tier_limit = 500000;
 };

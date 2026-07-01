@@ -17,10 +17,11 @@ protected:
 
 private:
 	void setup_menu_bar();
+	void setup_toolbar();
 	void load_config();
 	void save_config();
 	void on_open_settings();
 
-	plugin_workspace_view_t * plugin_workspace_view_ = nullptr;
-	app_settings_t settings_{"yEditor.ini"};
+	plugin_workspace_view_t * m_plugin_workspace_view = nullptr;
+	app_settings_t m_settings{"yEditor.ini"};
 };

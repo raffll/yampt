@@ -8,14 +8,14 @@ class plugin_document_t : public document_t
 {
 public:
 	explicit plugin_document_t(const std::string & path)
-	    : path_(path)
+	    : m_path(path)
 	{
-		std::replace(path_.begin(), path_.end(), '\\', '/');
+		std::replace(m_path.begin(), m_path.end(), '\\', '/');
 	}
 
 	std::string path() const override
 	{
-		return path_;
+		return m_path;
 	}
 
 	bool is_dirty() const override
@@ -53,5 +53,5 @@ public:
 	{}
 
 private:
-	std::string path_;
+	std::string m_path;
 };

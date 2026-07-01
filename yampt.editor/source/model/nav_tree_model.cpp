@@ -116,7 +116,7 @@ static const char * type_to_display_name(const std::string & type)
 
 nav_tree_model_t::nav_tree_model_t(plugin_scan_t & scan, QObject * parent)
     : QAbstractItemModel(parent)
-    , scan_(scan)
+    , m_scan(scan)
 {}
 
 void nav_tree_model_t::rebuild()
@@ -128,25 +128,25 @@ void nav_tree_model_t::rebuild()
 
 void nav_tree_model_t::set_filter(const filter_state_t & state)
 {
-	has_filter_ = true;
-	filter_ = state;
+	m_has_filter = true;
+	m_filter = state;
 	rebuild();
 }
 
 void nav_tree_model_t::clear_filter()
 {
-	has_filter_ = false;
-	filter_ = {};
+	m_has_filter = false;
+	m_filter = {};
 	rebuild();
 }
 
 void nav_tree_model_t::build_tree()
 {
-	tree_.clear();
+	m_tree.clear();
 
-	const auto & entries = scan_.entries();
+	const auto & entries = m_scan.entries();
 
-	for (int p = 0; p < static_cast<int>(scan_.plugin_count()); ++p)
+	for (int p = 0; p < static_cast<int>(m_scan.plugin_count()); ++p)
 	{
 		file_node_t file_node;
 		file_node.plugin_idx = p;
@@ -170,7 +170,7 @@ void nav_tree_model_t::build_tree()
 			if (!has_version)
 				continue;
 
-			if (has_filter_ && !passes_filter(entry, p))
+			if (m_has_filter && !passes_filter(entry, p))
 				continue;
 
 			type_map[entry.rec_type].push_back({ ei });
@@ -218,25 +218,25 @@ void nav_tree_model_t::build_tree()
 			return std::strcmp(sa, sb) < 0;
 		});
 
-		tree_.push_back(std::move(file_node));
+		m_tree.push_back(std::move(file_node));
 	}
 }
 
 bool nav_tree_model_t::passes_filter(const conflict_entry_t & entry, int plugin_idx) const
 {
-	if (filter_.filter_conflict_all && !filter_.conflict_all_set.empty())
+	if (m_filter.filter_conflict_all && !m_filter.conflict_all_set.empty())
 	{
-		if (filter_.conflict_all_set.find(entry.conflict_all) == filter_.conflict_all_set.end())
+		if (m_filter.conflict_all_set.find(entry.conflict_all) == m_filter.conflict_all_set.end())
 			return false;
 	}
 
-	if (filter_.filter_conflict_this && !filter_.conflict_this_set.empty())
+	if (m_filter.filter_conflict_this && !m_filter.conflict_this_set.empty())
 	{
 		bool found = false;
 		for (const auto & v : entry.versions)
 		{
 			if (v.plugin_idx == plugin_idx &&
-			    filter_.conflict_this_set.find(v.status) != filter_.conflict_this_set.end())
+			    m_filter.conflict_this_set.find(v.status) != m_filter.conflict_this_set.end())
 			{
 				found = true;
 				break;
@@ -247,16 +247,16 @@ bool nav_tree_model_t::passes_filter(const conflict_entry_t & entry, int plugin_
 			return false;
 	}
 
-	if (filter_.filter_by_type && !filter_.type_set.empty())
+	if (m_filter.filter_by_type && !m_filter.type_set.empty())
 	{
-		if (filter_.type_set.find(entry.rec_type) == filter_.type_set.end())
+		if (m_filter.type_set.find(entry.rec_type) == m_filter.type_set.end())
 			return false;
 	}
 
-	if (filter_.filter_by_id && !filter_.id_text.empty())
+	if (m_filter.filter_by_id && !m_filter.id_text.empty())
 	{
 		auto lower_id = entry.record_id;
-		auto lower_search = filter_.id_text;
+		auto lower_search = m_filter.id_text;
 		std::transform(
 		    lower_id.begin(),
 		    lower_id.end(),
@@ -272,10 +272,10 @@ bool nav_tree_model_t::passes_filter(const conflict_entry_t & entry, int plugin_
 			return false;
 	}
 
-	if (filter_.filter_by_name && !filter_.name_text.empty())
+	if (m_filter.filter_by_name && !m_filter.name_text.empty())
 	{
 		auto lower_name = entry.display_name;
-		auto lower_search = filter_.name_text;
+		auto lower_search = m_filter.name_text;
 		std::transform(
 		    lower_name.begin(),
 		    lower_name.end(),
@@ -291,7 +291,7 @@ bool nav_tree_model_t::passes_filter(const conflict_entry_t & entry, int plugin_
 			return false;
 	}
 
-	if (filter_.filter_deleted)
+	if (m_filter.filter_deleted)
 	{
 		bool has_deleted = false;
 		for (const auto & v : entry.versions)
@@ -307,7 +307,7 @@ bool nav_tree_model_t::passes_filter(const conflict_entry_t & entry, int plugin_
 			return false;
 	}
 
-	if (filter_.filter_itm_only)
+	if (m_filter.filter_itm_only)
 	{
 		bool has_itm = false;
 		for (const auto & v : entry.versions)
@@ -333,7 +333,7 @@ QModelIndex nav_tree_model_t::index(int row, int column, const QModelIndex & par
 
 	if (!parent.isValid())
 	{
-		if (row < 0 || row >= static_cast<int>(tree_.size()))
+		if (row < 0 || row >= static_cast<int>(m_tree.size()))
 			return {};
 
 		return createIndex(row, column, nullptr);
@@ -344,10 +344,10 @@ QModelIndex nav_tree_model_t::index(int row, int column, const QModelIndex & par
 	if (ptr == nullptr)
 	{
 		int file_idx = parent.row();
-		if (file_idx < 0 || file_idx >= static_cast<int>(tree_.size()))
+		if (file_idx < 0 || file_idx >= static_cast<int>(m_tree.size()))
 			return {};
 
-		const auto & file_node = tree_[static_cast<size_t>(file_idx)];
+		const auto & file_node = m_tree[static_cast<size_t>(file_idx)];
 		if (row < 0 || row >= static_cast<int>(file_node.groups.size()))
 			return {};
 
@@ -355,9 +355,9 @@ QModelIndex nav_tree_model_t::index(int row, int column, const QModelIndex & par
 	}
 
 	const auto * file_ptr = static_cast<const file_node_t *>(ptr);
-	for (size_t fi = 0; fi < tree_.size(); ++fi)
+	for (size_t fi = 0; fi < m_tree.size(); ++fi)
 	{
-		if (&tree_[fi] == file_ptr)
+		if (&m_tree[fi] == file_ptr)
 		{
 			int group_idx = parent.row();
 			if (group_idx < 0 || group_idx >= static_cast<int>(file_ptr->groups.size()))
@@ -384,15 +384,15 @@ QModelIndex nav_tree_model_t::parent(const QModelIndex & child) const
 	if (ptr == nullptr)
 		return {};
 
-	for (size_t fi = 0; fi < tree_.size(); ++fi)
+	for (size_t fi = 0; fi < m_tree.size(); ++fi)
 	{
-		if (ptr == &tree_[fi])
+		if (ptr == &m_tree[fi])
 			return createIndex(static_cast<int>(fi), 0, nullptr);
 
-		for (size_t gi = 0; gi < tree_[fi].groups.size(); ++gi)
+		for (size_t gi = 0; gi < m_tree[fi].groups.size(); ++gi)
 		{
-			if (ptr == &tree_[fi].groups[gi])
-				return createIndex(static_cast<int>(gi), 0, const_cast<file_node_t *>(&tree_[fi]));
+			if (ptr == &m_tree[fi].groups[gi])
+				return createIndex(static_cast<int>(gi), 0, const_cast<file_node_t *>(&m_tree[fi]));
 		}
 	}
 
@@ -405,28 +405,28 @@ int nav_tree_model_t::rowCount(const QModelIndex & parent) const
 		return 0;
 
 	if (!parent.isValid())
-		return static_cast<int>(tree_.size());
+		return static_cast<int>(m_tree.size());
 
 	void * ptr = parent.internalPointer();
 
 	if (ptr == nullptr)
 	{
 		int file_idx = parent.row();
-		if (file_idx < 0 || file_idx >= static_cast<int>(tree_.size()))
+		if (file_idx < 0 || file_idx >= static_cast<int>(m_tree.size()))
 			return 0;
 
-		return static_cast<int>(tree_[static_cast<size_t>(file_idx)].groups.size());
+		return static_cast<int>(m_tree[static_cast<size_t>(file_idx)].groups.size());
 	}
 
-	for (size_t fi = 0; fi < tree_.size(); ++fi)
+	for (size_t fi = 0; fi < m_tree.size(); ++fi)
 	{
-		if (ptr == &tree_[fi])
+		if (ptr == &m_tree[fi])
 		{
 			int group_idx = parent.row();
-			if (group_idx < 0 || group_idx >= static_cast<int>(tree_[fi].groups.size()))
+			if (group_idx < 0 || group_idx >= static_cast<int>(m_tree[fi].groups.size()))
 				return 0;
 
-			return static_cast<int>(tree_[fi].groups[static_cast<size_t>(group_idx)].records.size());
+			return static_cast<int>(m_tree[fi].groups[static_cast<size_t>(group_idx)].records.size());
 		}
 	}
 
@@ -460,16 +460,16 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 		return {};
 
 	void * ptr = index.internalPointer();
-	const auto & entries = scan_.entries();
+	const auto & entries = m_scan.entries();
 	int col = index.column();
 
 	if (ptr == nullptr)
 	{
 		int file_idx = index.row();
-		if (file_idx < 0 || file_idx >= static_cast<int>(tree_.size()))
+		if (file_idx < 0 || file_idx >= static_cast<int>(m_tree.size()))
 			return {};
 
-		const auto & file_node = tree_[static_cast<size_t>(file_idx)];
+		const auto & file_node = m_tree[static_cast<size_t>(file_idx)];
 
 		if (role == Qt::DisplayRole && col == 0)
 		{
@@ -479,7 +479,7 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 			    sizeof(buf),
 			    "[%02X] %s",
 			    file_node.plugin_idx,
-			    scan_.plugin_filename(file_node.plugin_idx).c_str());
+			    m_scan.plugin_filename(file_node.plugin_idx).c_str());
 			return QString::fromUtf8(buf);
 		}
 
@@ -526,7 +526,7 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 
 		if (role == Qt::ToolTipRole)
 		{
-			size_t itm = scan_.itm_count(file_node.plugin_idx);
+			size_t itm = m_scan.itm_count(file_node.plugin_idx);
 			if (itm > 0)
 				return QString("%1 ITM records").arg(itm);
 
@@ -536,15 +536,15 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 		return {};
 	}
 
-	for (size_t fi = 0; fi < tree_.size(); ++fi)
+	for (size_t fi = 0; fi < m_tree.size(); ++fi)
 	{
-		if (ptr == &tree_[fi])
+		if (ptr == &m_tree[fi])
 		{
 			int group_idx = index.row();
-			if (group_idx < 0 || group_idx >= static_cast<int>(tree_[fi].groups.size()))
+			if (group_idx < 0 || group_idx >= static_cast<int>(m_tree[fi].groups.size()))
 				return {};
 
-			const auto & group = tree_[fi].groups[static_cast<size_t>(group_idx)];
+			const auto & group = m_tree[fi].groups[static_cast<size_t>(group_idx)];
 
 			if (role == Qt::DisplayRole && col == 0)
 			{
@@ -579,7 +579,7 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 					const auto & e = entries[rec.entry_idx];
 					for (const auto & v : e.versions)
 					{
-						if (v.plugin_idx != tree_[fi].plugin_idx)
+						if (v.plugin_idx != m_tree[fi].plugin_idx)
 							continue;
 
 						if (v.status > worst_ct)
@@ -593,16 +593,16 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 			return {};
 		}
 
-		for (size_t gi = 0; gi < tree_[fi].groups.size(); ++gi)
+		for (size_t gi = 0; gi < m_tree[fi].groups.size(); ++gi)
 		{
-			if (ptr != &tree_[fi].groups[gi])
+			if (ptr != &m_tree[fi].groups[gi])
 				continue;
 
 			int rec_idx = index.row();
-			if (rec_idx < 0 || rec_idx >= static_cast<int>(tree_[fi].groups[gi].records.size()))
+			if (rec_idx < 0 || rec_idx >= static_cast<int>(m_tree[fi].groups[gi].records.size()))
 				return {};
 
-			const auto & vis = tree_[fi].groups[gi].records[static_cast<size_t>(rec_idx)];
+			const auto & vis = m_tree[fi].groups[gi].records[static_cast<size_t>(rec_idx)];
 			const auto & entry = entries[vis.entry_idx];
 
 			if (role == Qt::DisplayRole)
@@ -626,7 +626,7 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 			{
 				for (const auto & v : entry.versions)
 				{
-					if (v.plugin_idx != tree_[fi].plugin_idx)
+					if (v.plugin_idx != m_tree[fi].plugin_idx)
 						continue;
 
 					return QBrush(conflict_this_foreground(v.status));
@@ -649,11 +649,11 @@ Qt::ItemFlags nav_tree_model_t::flags(const QModelIndex & index) const
 
 	void * ptr = index.internalPointer();
 
-	for (size_t fi = 0; fi < tree_.size(); ++fi)
+	for (size_t fi = 0; fi < m_tree.size(); ++fi)
 	{
-		for (size_t gi = 0; gi < tree_[fi].groups.size(); ++gi)
+		for (size_t gi = 0; gi < m_tree[fi].groups.size(); ++gi)
 		{
-			if (ptr == &tree_[fi].groups[gi])
+			if (ptr == &m_tree[fi].groups[gi])
 				return f | Qt::ItemIsDragEnabled;
 		}
 	}
@@ -686,46 +686,76 @@ QMimeData * nav_tree_model_t::mimeData(const QModelIndexList & indexes) const
 	return mime;
 }
 
+QModelIndex nav_tree_model_t::find_index(const std::string & rec_type, const std::string & record_id) const
+{
+	if (rec_type.empty() || record_id.empty())
+		return {};
+
+	const auto & entries = m_scan.entries();
+
+	for (size_t fi = 0; fi < m_tree.size(); ++fi)
+	{
+		for (size_t gi = 0; gi < m_tree[fi].groups.size(); ++gi)
+		{
+			const auto & group = m_tree[fi].groups[gi];
+			if (group.type != rec_type)
+				continue;
+
+			for (size_t ri = 0; ri < group.records.size(); ++ri)
+			{
+				const auto & entry = entries[group.records[ri].entry_idx];
+				if (entry.record_id != record_id)
+					continue;
+
+				return createIndex(
+				    static_cast<int>(ri), 0, const_cast<type_group_t *>(&group));
+			}
+		}
+	}
+
+	return {};
+}
+
 nav_tree_model_t::node_info_t nav_tree_model_t::node_at(const QModelIndex & index) const
 {
 	if (!index.isValid())
 		return { -1, {}, {} };
 
 	void * ptr = index.internalPointer();
-	const auto & entries = scan_.entries();
+	const auto & entries = m_scan.entries();
 
 	if (ptr == nullptr)
 	{
 		int file_idx = index.row();
-		if (file_idx < 0 || file_idx >= static_cast<int>(tree_.size()))
+		if (file_idx < 0 || file_idx >= static_cast<int>(m_tree.size()))
 			return { -1, {}, {} };
 
-		return { tree_[static_cast<size_t>(file_idx)].plugin_idx, {}, {} };
+		return { m_tree[static_cast<size_t>(file_idx)].plugin_idx, {}, {} };
 	}
 
-	for (size_t fi = 0; fi < tree_.size(); ++fi)
+	for (size_t fi = 0; fi < m_tree.size(); ++fi)
 	{
-		if (ptr == &tree_[fi])
+		if (ptr == &m_tree[fi])
 		{
 			int group_idx = index.row();
-			if (group_idx < 0 || group_idx >= static_cast<int>(tree_[fi].groups.size()))
-				return { tree_[fi].plugin_idx, {}, {} };
+			if (group_idx < 0 || group_idx >= static_cast<int>(m_tree[fi].groups.size()))
+				return { m_tree[fi].plugin_idx, {}, {} };
 
-			return { tree_[fi].plugin_idx, tree_[fi].groups[static_cast<size_t>(group_idx)].type, {} };
+			return { m_tree[fi].plugin_idx, m_tree[fi].groups[static_cast<size_t>(group_idx)].type, {} };
 		}
 
-		for (size_t gi = 0; gi < tree_[fi].groups.size(); ++gi)
+		for (size_t gi = 0; gi < m_tree[fi].groups.size(); ++gi)
 		{
-			if (ptr != &tree_[fi].groups[gi])
+			if (ptr != &m_tree[fi].groups[gi])
 				continue;
 
 			int rec_idx = index.row();
-			if (rec_idx < 0 || rec_idx >= static_cast<int>(tree_[fi].groups[gi].records.size()))
-				return { tree_[fi].plugin_idx, tree_[fi].groups[gi].type, {} };
+			if (rec_idx < 0 || rec_idx >= static_cast<int>(m_tree[fi].groups[gi].records.size()))
+				return { m_tree[fi].plugin_idx, m_tree[fi].groups[gi].type, {} };
 
-			const auto & vis = tree_[fi].groups[gi].records[static_cast<size_t>(rec_idx)];
+			const auto & vis = m_tree[fi].groups[gi].records[static_cast<size_t>(rec_idx)];
 			const auto & entry = entries[vis.entry_idx];
-			return { tree_[fi].plugin_idx, entry.rec_type, entry.record_id };
+			return { m_tree[fi].plugin_idx, entry.rec_type, entry.record_id };
 		}
 	}
 

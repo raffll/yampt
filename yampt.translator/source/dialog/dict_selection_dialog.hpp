@@ -54,9 +54,9 @@ private:
 	void on_move_down();
 	void update_ok_button();
 
-	QTreeWidget * tree_ = nullptr;
-	QListWidget * order_list_ = nullptr;
-	QPushButton * up_button_ = nullptr;
-	QPushButton * down_button_ = nullptr;
-	QDialogButtonBox * button_box_ = nullptr;
+	QTreeWidget * m_tree = nullptr;
+	QListWidget * m_order_list = nullptr;
+	QPushButton * m_up_button = nullptr;
+	QPushButton * m_down_button = nullptr;
+	QDialogButtonBox * m_button_box = nullptr;
 };

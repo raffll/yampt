@@ -29,19 +29,19 @@ dict_selection_dialog_t::dict_selection_dialog_t(
 	auto * layout = new QVBoxLayout(this);
 	layout->addWidget(new QLabel("Available dictionaries:", this));
 
-	tree_ = new QTreeWidget(this);
-	tree_->setHeaderHidden(true);
-	tree_->setRootIsDecorated(true);
-	tree_->setIndentation(16);
-	layout->addWidget(tree_);
+	m_tree = new QTreeWidget(this);
+	m_tree->setHeaderHidden(true);
+	m_tree->setRootIsDecorated(true);
+	m_tree->setIndentation(16);
+	layout->addWidget(m_tree);
 
-	order_list_ = new QListWidget(this);
+	m_order_list = new QListWidget(this);
 
 	populate_tree(entries);
 	populate_order_list(entries, saved_order);
 
 	layout->addWidget(new QLabel("Merge order (last wins):", this));
-	layout->addWidget(order_list_);
+	layout->addWidget(m_order_list);
 
 	setup_buttons(layout);
 	connect_signals();
@@ -74,7 +74,7 @@ void dict_selection_dialog_t::add_tree_root_node(const std::string & root_path, 
 	if (root_label == "workspace")
 		root_label = workspace_label;
 
-	auto * root_node = new QTreeWidgetItem(tree_);
+	auto * root_node = new QTreeWidgetItem(m_tree);
 	root_node->setText(0, QString::fromStdString(root_label));
 	root_node->setFlags(Qt::ItemIsEnabled);
 	QFont bold_font = root_node->font(0);
@@ -136,7 +136,7 @@ void dict_selection_dialog_t::populate_order_list(
 				dname.set_kind(entry.kind);
 				auto * order_item = new QListWidgetItem(QString::fromStdString(dname.to_string()));
 				order_item->setData(Qt::UserRole, QString::fromStdString(entry.path));
-				order_list_->addItem(order_item);
+				m_order_list->addItem(order_item);
 				break;
 			}
 		}
@@ -153,38 +153,38 @@ void dict_selection_dialog_t::populate_order_list(
 		dname.set_kind(entry.kind);
 		auto * order_item = new QListWidgetItem(QString::fromStdString(dname.to_string()));
 		order_item->setData(Qt::UserRole, QString::fromStdString(entry.path));
-		order_list_->addItem(order_item);
+		m_order_list->addItem(order_item);
 	}
 }
 
 void dict_selection_dialog_t::setup_buttons(QVBoxLayout * layout)
 {
 	auto * order_buttons = new QHBoxLayout;
-	up_button_ = new QPushButton("Up", this);
-	down_button_ = new QPushButton("Down", this);
-	order_buttons->addWidget(up_button_);
-	order_buttons->addWidget(down_button_);
+	m_up_button = new QPushButton("Up", this);
+	m_down_button = new QPushButton("Down", this);
+	order_buttons->addWidget(m_up_button);
+	order_buttons->addWidget(m_down_button);
 	order_buttons->addStretch();
 	layout->addLayout(order_buttons);
 
-	button_box_ = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
-	layout->addWidget(button_box_);
+	m_button_box = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
+	layout->addWidget(m_button_box);
 }
 
 void dict_selection_dialog_t::connect_signals()
 {
-	connect(tree_, &QTreeWidget::itemChanged, this, &dict_selection_dialog_t::on_tree_item_changed);
-	connect(up_button_, &QPushButton::clicked, this, &dict_selection_dialog_t::on_move_up);
-	connect(down_button_, &QPushButton::clicked, this, &dict_selection_dialog_t::on_move_down);
-	connect(button_box_, &QDialogButtonBox::accepted, this, &QDialog::accept);
-	connect(button_box_, &QDialogButtonBox::rejected, this, &QDialog::reject);
+	connect(m_tree, &QTreeWidget::itemChanged, this, &dict_selection_dialog_t::on_tree_item_changed);
+	connect(m_up_button, &QPushButton::clicked, this, &dict_selection_dialog_t::on_move_up);
+	connect(m_down_button, &QPushButton::clicked, this, &dict_selection_dialog_t::on_move_down);
+	connect(m_button_box, &QDialogButtonBox::accepted, this, &QDialog::accept);
+	connect(m_button_box, &QDialogButtonBox::rejected, this, &QDialog::reject);
 }
 
 std::vector<std::string> dict_selection_dialog_t::get_selected_paths() const
 {
 	std::vector<std::string> result;
-	for (int index = 0; index < order_list_->count(); ++index)
-		result.push_back(order_list_->item(index)->data(Qt::UserRole).toString().toStdString());
+	for (int index = 0; index < m_order_list->count(); ++index)
+		result.push_back(m_order_list->item(index)->data(Qt::UserRole).toString().toStdString());
 
 	return result;
 }
@@ -197,23 +197,23 @@ void dict_selection_dialog_t::on_tree_item_changed(QTreeWidgetItem * item, int)
 
 	if (item->checkState(0) == Qt::Checked)
 	{
-		for (int index = 0; index < order_list_->count(); ++index)
+		for (int index = 0; index < m_order_list->count(); ++index)
 		{
-			if (order_list_->item(index)->data(Qt::UserRole).toString() == path_data)
+			if (m_order_list->item(index)->data(Qt::UserRole).toString() == path_data)
 				return;
 		}
 
 		auto * order_item = new QListWidgetItem(item->text(0));
 		order_item->setData(Qt::UserRole, path_data);
-		order_list_->addItem(order_item);
+		m_order_list->addItem(order_item);
 	}
 	else
 	{
-		for (int index = 0; index < order_list_->count(); ++index)
+		for (int index = 0; index < m_order_list->count(); ++index)
 		{
-			if (order_list_->item(index)->data(Qt::UserRole).toString() == path_data)
+			if (m_order_list->item(index)->data(Qt::UserRole).toString() == path_data)
 			{
-				delete order_list_->takeItem(index);
+				delete m_order_list->takeItem(index);
 				break;
 			}
 		}
@@ -224,27 +224,27 @@ void dict_selection_dialog_t::on_tree_item_changed(QTreeWidgetItem * item, int)
 
 void dict_selection_dialog_t::on_move_up()
 {
-	int current_row = order_list_->currentRow();
+	int current_row = m_order_list->currentRow();
 	if (current_row <= 0)
 		return;
 
-	auto * item = order_list_->takeItem(current_row);
-	order_list_->insertItem(current_row - 1, item);
-	order_list_->setCurrentRow(current_row - 1);
+	auto * item = m_order_list->takeItem(current_row);
+	m_order_list->insertItem(current_row - 1, item);
+	m_order_list->setCurrentRow(current_row - 1);
 }
 
 void dict_selection_dialog_t::on_move_down()
 {
-	int current_row = order_list_->currentRow();
-	if (current_row < 0 || current_row >= order_list_->count() - 1)
+	int current_row = m_order_list->currentRow();
+	if (current_row < 0 || current_row >= m_order_list->count() - 1)
 		return;
 
-	auto * item = order_list_->takeItem(current_row);
-	order_list_->insertItem(current_row + 1, item);
-	order_list_->setCurrentRow(current_row + 1);
+	auto * item = m_order_list->takeItem(current_row);
+	m_order_list->insertItem(current_row + 1, item);
+	m_order_list->setCurrentRow(current_row + 1);
 }
 
 void dict_selection_dialog_t::update_ok_button()
 {
-	button_box_->button(QDialogButtonBox::Ok)->setEnabled(order_list_->count() > 0);
+	m_button_box->button(QDialogButtonBox::Ok)->setEnabled(m_order_list->count() > 0);
 }

@@ -6,14 +6,14 @@
 
 line_number_gutter_t::line_number_gutter_t(translation_edit_view_t * editor, QWidget * parent)
     : QWidget(parent)
-    , editor_(editor)
+    , m_editor(editor)
 {
 	setFixedWidth(calculate_width());
 
-	connect(editor_, &translation_edit_view_t::blockCountChanged, this, [this]() { setFixedWidth(calculate_width()); });
+	connect(m_editor, &translation_edit_view_t::blockCountChanged, this, [this]() { setFixedWidth(calculate_width()); });
 
 	connect(
-	    editor_,
+	    m_editor,
 	    &translation_edit_view_t::updateRequest,
 	    this,
 	    [this](const QRect & rect, int dy)
@@ -35,9 +35,9 @@ void line_number_gutter_t::paintEvent(QPaintEvent * event)
 	QPainter painter(this);
 	painter.fillRect(event->rect(), QColor(230, 230, 230));
 
-	auto block = editor_->firstVisibleBlock();
-	int top = static_cast<int>(editor_->blockBoundingGeometry(block).translated(editor_->contentOffset()).top());
-	int bottom = top + static_cast<int>(editor_->blockBoundingRect(block).height());
+	auto block = m_editor->firstVisibleBlock();
+	int top = static_cast<int>(m_editor->blockBoundingGeometry(block).translated(m_editor->contentOffset()).top());
+	int bottom = top + static_cast<int>(m_editor->blockBoundingRect(block).height());
 
 	while (block.isValid() && top <= event->rect().bottom())
 	{
@@ -50,14 +50,14 @@ void line_number_gutter_t::paintEvent(QPaintEvent * event)
 
 		block = block.next();
 		top = bottom;
-		bottom = top + static_cast<int>(editor_->blockBoundingRect(block).height());
+		bottom = top + static_cast<int>(m_editor->blockBoundingRect(block).height());
 	}
 }
 
 int line_number_gutter_t::calculate_width() const
 {
 	int digits = 1;
-	int max = editor_->blockCount();
+	int max = m_editor->blockCount();
 	while (max >= 10)
 	{
 		max /= 10;

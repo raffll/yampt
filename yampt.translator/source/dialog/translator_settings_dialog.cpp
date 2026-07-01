@@ -16,83 +16,83 @@ translator_settings_dialog_t::translator_settings_dialog_t(app_settings_t & sett
                                                             const std::string & dictionaries_dir,
                                                             QWidget * parent)
     : QDialog(parent)
-    , settings_(settings)
+    , m_settings(settings)
 {
     setWindowTitle("Settings");
     setMinimumSize(600, 450);
 
-    category_list_ = new QListWidget(this);
-    category_list_->setFixedWidth(150);
+    m_category_list = new QListWidget(this);
+    m_category_list->setFixedWidth(150);
 
-    content_stack_ = new QStackedWidget(this);
+    m_content_stack = new QStackedWidget(this);
 
-    language_view_ = new language_settings_view_t(dictionaries_dir, this);
-    translation_view_ = new translation_settings_view_t(this);
-    shortcuts_view_ = new shortcuts_settings_view_t(this);
-    workspace_view_ = new workspace_settings_view_t(this);
+    m_language_view = new language_settings_view_t(dictionaries_dir, this);
+    m_translation_view = new translation_settings_view_t(this);
+    m_shortcuts_view = new shortcuts_settings_view_t(this);
+    m_workspace_view = new workspace_settings_view_t(this);
 
-    category_list_->addItem("Language");
-    category_list_->addItem("Translation");
-    category_list_->addItem("Shortcuts");
-    category_list_->addItem("Workspace");
+    m_category_list->addItem("Language");
+    m_category_list->addItem("Translation");
+    m_category_list->addItem("Shortcuts");
+    m_category_list->addItem("Workspace");
 
-    content_stack_->addWidget(language_view_);
-    content_stack_->addWidget(translation_view_);
-    content_stack_->addWidget(shortcuts_view_);
-    content_stack_->addWidget(workspace_view_);
+    m_content_stack->addWidget(m_language_view);
+    m_content_stack->addWidget(m_translation_view);
+    m_content_stack->addWidget(m_shortcuts_view);
+    m_content_stack->addWidget(m_workspace_view);
 
-    connect(category_list_, &QListWidget::currentRowChanged,
-            content_stack_, &QStackedWidget::setCurrentIndex);
+    connect(m_category_list, &QListWidget::currentRowChanged,
+            m_content_stack, &QStackedWidget::setCurrentIndex);
 
-    button_box_ = new QDialogButtonBox(
+    m_button_box = new QDialogButtonBox(
         QDialogButtonBox::Ok | QDialogButtonBox::Apply | QDialogButtonBox::Cancel, this);
 
-    apply_button_ = button_box_->button(QDialogButtonBox::Apply);
+    m_apply_button = m_button_box->button(QDialogButtonBox::Apply);
 
-    connect(button_box_, &QDialogButtonBox::accepted, this, [this]()
+    connect(m_button_box, &QDialogButtonBox::accepted, this, [this]()
     {
         apply_all();
         accept();
     });
 
-    connect(apply_button_, &QPushButton::clicked, this, [this]()
+    connect(m_apply_button, &QPushButton::clicked, this, [this]()
     {
         apply_all();
         emit settings_applied("all");
     });
 
-    connect(button_box_, &QDialogButtonBox::rejected, this, &QDialog::reject);
+    connect(m_button_box, &QDialogButtonBox::rejected, this, &QDialog::reject);
 
-    connect(shortcuts_view_, &shortcuts_settings_view_t::conflict_state_changed,
+    connect(m_shortcuts_view, &shortcuts_settings_view_t::conflict_state_changed,
             this, &translator_settings_dialog_t::update_ok_button_state);
 
     auto * content_layout = new QHBoxLayout;
-    content_layout->addWidget(category_list_);
-    content_layout->addWidget(content_stack_, 1);
+    content_layout->addWidget(m_category_list);
+    content_layout->addWidget(m_content_stack, 1);
 
     auto * main_layout = new QVBoxLayout(this);
     main_layout->addLayout(content_layout, 1);
-    main_layout->addWidget(button_box_);
+    main_layout->addWidget(m_button_box);
 
-    language_view_->load(settings_);
-    translation_view_->load(settings_);
-    shortcuts_view_->load(settings_);
-    workspace_view_->load(settings_);
-    category_list_->setCurrentRow(0);
+    m_language_view->load(m_settings);
+    m_translation_view->load(m_settings);
+    m_shortcuts_view->load(m_settings);
+    m_workspace_view->load(m_settings);
+    m_category_list->setCurrentRow(0);
 }
 
 void translator_settings_dialog_t::apply_all()
 {
-    language_view_->apply(settings_);
-    translation_view_->apply(settings_);
-    shortcuts_view_->apply(settings_);
-    workspace_view_->apply(settings_);
-    settings_.sync();
+    m_language_view->apply(m_settings);
+    m_translation_view->apply(m_settings);
+    m_shortcuts_view->apply(m_settings);
+    m_workspace_view->apply(m_settings);
+    m_settings.sync();
 }
 
 void translator_settings_dialog_t::update_ok_button_state()
 {
-    const bool has_conflicts = shortcuts_view_->has_conflicts();
-    button_box_->button(QDialogButtonBox::Ok)->setEnabled(!has_conflicts);
-    apply_button_->setEnabled(!has_conflicts);
+    const bool has_conflicts = m_shortcuts_view->has_conflicts();
+    m_button_box->button(QDialogButtonBox::Ok)->setEnabled(!has_conflicts);
+    m_apply_button->setEnabled(!has_conflicts);
 }

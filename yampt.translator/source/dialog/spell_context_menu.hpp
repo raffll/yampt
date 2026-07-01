@@ -15,8 +15,8 @@ public:
 	void show_menu(translation_edit_view_t * editor, const QPoint & pos);
 
 private:
-	spell_checker_t * checker_ = nullptr;
-	QSyntaxHighlighter * highlighter_ = nullptr;
+	spell_checker_t * m_checker = nullptr;
+	QSyntaxHighlighter * m_highlighter = nullptr;
 
 	std::string get_word_at_cursor(translation_edit_view_t * editor, const QPoint & pos, int & start, int & end) const;
 };

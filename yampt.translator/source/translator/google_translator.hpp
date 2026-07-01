@@ -22,11 +22,14 @@ public:
 
 	void translate(const std::string & text, const std::string & target_lang) override;
 
+	void set_api_key(const std::string & key);
+
 signals:
 	void translation_finished(translation_suggestion_t result);
 
 private:
 	void on_reply_finished(QNetworkReply * reply);
 
-	QNetworkAccessManager * network_ = nullptr;
+	QNetworkAccessManager * m_network = nullptr;
+	std::string m_api_key;
 };

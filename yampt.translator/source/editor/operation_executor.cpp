@@ -34,8 +34,8 @@ std::string operation_executor_t::get_output_dir() const
 {
 	QString dir_path;
 
-	if (!output_dir_.empty())
-		dir_path = QString::fromStdString(output_dir_);
+	if (!m_output_dir.empty())
+		dir_path = QString::fromStdString(m_output_dir);
 	else
 		dir_path = QCoreApplication::applicationDirPath() + "/workspace/";
 
@@ -89,11 +89,12 @@ operation_executor_t::result_t operation_executor_t::make_base(
     const std::string & foreign_lang,
     const std::string & native_lang,
     translation_engine_t * engine,
-    base_mode_t mode)
+    base_mode_t mode,
+    const std::string & dictionary_aff_path)
 {
 	tools_t::reset_log();
 
-	dict_creator_t creator(foreign_path, native_path, engine, mode);
+	dict_creator_t creator(foreign_path, native_path, engine, mode, dictionary_aff_path);
 
 	if (tools_t::has_error())
 		return { false, tools_t::get_log(), "" };

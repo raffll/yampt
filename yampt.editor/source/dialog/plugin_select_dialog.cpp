@@ -9,7 +9,7 @@ plugin_select_dialog_t::plugin_select_dialog_t(const std::vector<std::string> & 
 	setModal(true);
 	resize(400, 500);
 
-	list_ = new QListWidget(this);
+	m_list = new QListWidget(this);
 	for (const auto & path : available_files)
 	{
 		auto filename = std::filesystem::path(path).filename().string();
@@ -17,7 +17,7 @@ plugin_select_dialog_t::plugin_select_dialog_t(const std::vector<std::string> & 
 		item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
 		item->setCheckState(Qt::Checked);
 		item->setData(Qt::UserRole, QString::fromStdString(path));
-		list_->addItem(item);
+		m_list->addItem(item);
 	}
 
 	auto * btn_select_all = new QPushButton("Select All", this);
@@ -28,12 +28,12 @@ plugin_select_dialog_t::plugin_select_dialog_t(const std::vector<std::string> & 
 	select_layout->addWidget(btn_select_none);
 	select_layout->addStretch();
 
-	buttons_ = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
+	m_buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
 
 	auto * main_layout = new QVBoxLayout(this);
-	main_layout->addWidget(list_);
+	main_layout->addWidget(m_list);
 	main_layout->addLayout(select_layout);
-	main_layout->addWidget(buttons_);
+	main_layout->addWidget(m_buttons);
 
 	connect(
 	    btn_select_all,
@@ -41,8 +41,8 @@ plugin_select_dialog_t::plugin_select_dialog_t(const std::vector<std::string> & 
 	    this,
 	    [this]()
 	{
-		for (int i = 0; i < list_->count(); ++i)
-			list_->item(i)->setCheckState(Qt::Checked);
+		for (int i = 0; i < m_list->count(); ++i)
+			m_list->item(i)->setCheckState(Qt::Checked);
 	});
 
 	connect(
@@ -51,20 +51,20 @@ plugin_select_dialog_t::plugin_select_dialog_t(const std::vector<std::string> & 
 	    this,
 	    [this]()
 	{
-		for (int i = 0; i < list_->count(); ++i)
-			list_->item(i)->setCheckState(Qt::Unchecked);
+		for (int i = 0; i < m_list->count(); ++i)
+			m_list->item(i)->setCheckState(Qt::Unchecked);
 	});
 
-	connect(buttons_, &QDialogButtonBox::accepted, this, &QDialog::accept);
-	connect(buttons_, &QDialogButtonBox::rejected, this, &QDialog::reject);
+	connect(m_buttons, &QDialogButtonBox::accepted, this, &QDialog::accept);
+	connect(m_buttons, &QDialogButtonBox::rejected, this, &QDialog::reject);
 }
 
 std::vector<std::string> plugin_select_dialog_t::selected_paths() const
 {
 	std::vector<std::string> result;
-	for (int i = 0; i < list_->count(); ++i)
+	for (int i = 0; i < m_list->count(); ++i)
 	{
-		const auto * item = list_->item(i);
+		const auto * item = m_list->item(i);
 		if (item->checkState() == Qt::Checked)
 			result.push_back(item->data(Qt::UserRole).toString().toStdString());
 	}

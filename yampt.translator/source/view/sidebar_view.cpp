@@ -16,16 +16,16 @@ sidebar_view_t::sidebar_view_t(QWidget * parent)
 	auto * layout = new QVBoxLayout(this);
 	layout->setContentsMargins(0, 0, 0, 0);
 
-	tree_ = new QTreeWidget(this);
-	tree_->setHeaderHidden(true);
-	tree_->setColumnCount(1);
-	tree_->setRootIsDecorated(true);
-	tree_->setContextMenuPolicy(Qt::CustomContextMenu);
-	tree_->setIndentation(16);
-	layout->addWidget(tree_);
+	m_tree = new QTreeWidget(this);
+	m_tree->setHeaderHidden(true);
+	m_tree->setColumnCount(1);
+	m_tree->setRootIsDecorated(true);
+	m_tree->setContextMenuPolicy(Qt::CustomContextMenu);
+	m_tree->setIndentation(16);
+	layout->addWidget(m_tree);
 
-	connect(tree_, &QTreeWidget::itemClicked, this, &sidebar_view_t::on_item_clicked);
-	connect(tree_, &QTreeWidget::customContextMenuRequested, this, &sidebar_view_t::on_context_menu);
+	connect(m_tree, &QTreeWidget::itemClicked, this, &sidebar_view_t::on_item_clicked);
+	connect(m_tree, &QTreeWidget::customContextMenuRequested, this, &sidebar_view_t::on_context_menu);
 }
 
 static QColor get_file_type_color(file_type_t type)
@@ -94,18 +94,18 @@ static void select_active_item(QTreeWidget * tree, const std::string & active_pa
 void sidebar_view_t::set_model(const sidebar_render_model_t & model)
 {
 	std::set<std::string> collapsed_roots;
-	for (int i = 0; i < tree_->topLevelItemCount(); ++i)
+	for (int i = 0; i < m_tree->topLevelItemCount(); ++i)
 	{
-		auto * item = tree_->topLevelItem(i);
+		auto * item = m_tree->topLevelItem(i);
 		if (!item->isExpanded())
 			collapsed_roots.insert(item->text(0).toStdString());
 	}
 
-	tree_->clear();
+	m_tree->clear();
 
 	for (const auto & root : model.roots)
 	{
-		auto * root_item = new QTreeWidgetItem(tree_);
+		auto * root_item = new QTreeWidgetItem(m_tree);
 		root_item->setText(0, QString::fromStdString(root.label));
 		root_item->setFlags(Qt::ItemIsEnabled);
 
@@ -121,7 +121,7 @@ void sidebar_view_t::set_model(const sidebar_render_model_t & model)
 		root_item->setExpanded(!collapsed_roots.count(root.label));
 	}
 
-	select_active_item(tree_, model.active_path);
+	select_active_item(m_tree, model.active_path);
 }
 
 void sidebar_view_t::on_item_clicked(QTreeWidgetItem * item, int column)
@@ -143,7 +143,7 @@ void sidebar_view_t::on_item_clicked(QTreeWidgetItem * item, int column)
 
 void sidebar_view_t::on_context_menu(const QPoint & pos)
 {
-	auto * item = tree_->itemAt(pos);
+	auto * item = m_tree->itemAt(pos);
 	if (!item)
 		return;
 
@@ -175,7 +175,7 @@ void sidebar_view_t::show_folder_context_menu(QTreeWidgetItem * item, const QPoi
 	{
 		QMenu menu(this);
 		auto * remove_action = menu.addAction("Remove Folder");
-		auto * selected = menu.exec(tree_->viewport()->mapToGlobal(pos));
+		auto * selected = menu.exec(m_tree->viewport()->mapToGlobal(pos));
 		if (selected == remove_action)
 			emit remove_folder_requested(root_path.toStdString());
 
@@ -187,7 +187,7 @@ void sidebar_view_t::show_folder_context_menu(QTreeWidgetItem * item, const QPoi
 	{
 		QMenu menu(this);
 		auto * delete_action = menu.addAction("Delete Folder");
-		auto * selected = menu.exec(tree_->viewport()->mapToGlobal(pos));
+		auto * selected = menu.exec(m_tree->viewport()->mapToGlobal(pos));
 		if (selected == delete_action)
 			emit delete_folder_requested(folder_path.toStdString());
 	}
@@ -205,7 +205,7 @@ void sidebar_view_t::show_plugin_context_menu(const std::string & path, const QP
 	menu.addSeparator();
 	auto * delete_action = menu.addAction("Delete");
 
-	auto * selected = menu.exec(tree_->viewport()->mapToGlobal(pos));
+	auto * selected = menu.exec(m_tree->viewport()->mapToGlobal(pos));
 	if (selected == make_dict_action)
 		emit operation_requested(path, plugin_op_t::make_dict);
 	else if (selected == make_dict_base_action)
@@ -227,7 +227,7 @@ void sidebar_view_t::show_dict_context_menu(const std::string & path, const QPoi
 	menu.addSeparator();
 	auto * delete_action = menu.addAction("Delete");
 
-	auto * selected = menu.exec(tree_->viewport()->mapToGlobal(pos));
+	auto * selected = menu.exec(m_tree->viewport()->mapToGlobal(pos));
 	if (selected == save_action)
 		emit save_requested(path);
 	else if (selected == delete_action)
@@ -242,7 +242,7 @@ void sidebar_view_t::show_yaml_context_menu(const std::string & path, const QPoi
 	menu.addSeparator();
 	auto * delete_action = menu.addAction("Delete");
 
-	auto * selected = menu.exec(tree_->viewport()->mapToGlobal(pos));
+	auto * selected = menu.exec(m_tree->viewport()->mapToGlobal(pos));
 	if (selected == save_action)
 		emit save_requested(path);
 	else if (selected == export_action)
@@ -253,7 +253,7 @@ void sidebar_view_t::show_yaml_context_menu(const std::string & path, const QPoi
 
 void sidebar_view_t::update_item_text(const std::string & path, const std::string & display_text)
 {
-	QTreeWidgetItemIterator it(tree_);
+	QTreeWidgetItemIterator it(m_tree);
 	while (*it)
 	{
 		if ((*it)->data(0, role_path).toString().toStdString() == path)

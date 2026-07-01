@@ -1,5 +1,6 @@
 #pragma once
 
+#include <utility/keyword_trie.hpp>
 #include <utility/tools.hpp>
 #include <string>
 #include <unordered_map>
@@ -46,6 +47,9 @@ public:
 
 	std::string apply_glossary(const std::string & translated_text) const;
 
+	void set_use_trie_matching(bool enabled) { m_use_trie_matching = enabled; }
+	bool get_use_trie_matching() const { return m_use_trie_matching; }
+
 	struct glossary_match_t
 	{
 		size_t start;
@@ -63,10 +67,13 @@ private:
 		std::string source;
 	};
 
-	std::vector<topic_entry_t> dial_topics_;
-	std::vector<topic_entry_t> glossary_terms_;
-	std::unordered_map<std::string, std::string> npc_flags_;
-	std::unordered_map<std::string, std::string> enchantments_;
+	bool m_use_trie_matching = true;
+	keyword_trie_t m_dial_trie;
+
+	std::vector<topic_entry_t> m_dial_topics;
+	std::vector<topic_entry_t> m_glossary_terms;
+	std::unordered_map<std::string, std::string> m_npc_flags;
+	std::unordered_map<std::string, std::string> m_enchantments;
 
 	static bool is_alpha(char c);
 	static bool is_trusted_status(status_t status);
@@ -74,11 +81,20 @@ private:
 	void collect_dial_entries(const dict_source_t & source);
 	void collect_glossary_entries(const dict_source_t & source, tools_t::rec_type_t record_type);
 	void sort_by_length_descending(std::vector<topic_entry_t> & entries);
+	void rebuild_dial_trie();
 
 	void update_vector(std::vector<topic_entry_t> & vec, const std::string & old_text, const std::string & new_text);
 	void remove_from_vector(std::vector<topic_entry_t> & vec, const std::string & old_text);
 
-	void find_matches(
+	void find_at_prefix_hyperlinks(
+	    const std::string & text,
+	    std::vector<annotation_t> & results) const;
+
+	void find_matches_trie(
+	    const std::string & text_original,
+	    std::vector<annotation_t> & results) const;
+
+	void find_matches_legacy(
 	    const std::string & text_lower,
 	    const std::string & text_original,
 	    const std::vector<topic_entry_t> & terms,

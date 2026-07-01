@@ -4,19 +4,19 @@
 
 void row_filter_t::set_config(const config_t & cfg)
 {
-	config_ = cfg;
-	compiled_regex_ = std::nullopt;
+	m_config = cfg;
+	m_compiled_regex = std::nullopt;
 
-	if (!config_.regex_mode || config_.query.empty())
+	if (!m_config.regex_mode || m_config.query.empty())
 		return;
 
 	try
 	{
 		auto flags = std::regex_constants::ECMAScript;
-		if (!config_.case_sensitive)
+		if (!m_config.case_sensitive)
 			flags |= std::regex_constants::icase;
 
-		compiled_regex_ = std::regex(config_.query, flags);
+		m_compiled_regex = std::regex(m_config.query, flags);
 	}
 	catch (const std::regex_error &)
 	{}
@@ -24,12 +24,12 @@ void row_filter_t::set_config(const config_t & cfg)
 
 bool row_filter_t::has_query() const
 {
-	return !config_.query.empty();
+	return !m_config.query.empty();
 }
 
 bool row_filter_t::matches(const table_row_t & row) const
 {
-	if (config_.query.empty())
+	if (m_config.query.empty())
 		return true;
 
 	auto test_column = [&](search_column_t col) -> const std::string *
@@ -46,12 +46,12 @@ bool row_filter_t::matches(const table_row_t & row) const
 		return nullptr;
 	};
 
-	if (config_.regex_mode)
+	if (m_config.regex_mode)
 	{
-		if (!compiled_regex_)
+		if (!m_compiled_regex)
 			return false;
 
-		for (const auto & col : config_.columns)
+		for (const auto & col : m_config.columns)
 		{
 			const auto * text = test_column(col);
 			if (!text)
@@ -59,7 +59,7 @@ bool row_filter_t::matches(const table_row_t & row) const
 
 			try
 			{
-				if (std::regex_search(*text, *compiled_regex_))
+				if (std::regex_search(*text, *m_compiled_regex))
 					return true;
 			}
 			catch (const std::regex_error &)
@@ -68,15 +68,15 @@ bool row_filter_t::matches(const table_row_t & row) const
 		return false;
 	}
 
-	const auto query = config_.case_sensitive ? config_.query : string_utils::to_lower(config_.query);
+	const auto query = m_config.case_sensitive ? m_config.query : string_utils::to_lower(m_config.query);
 
-	for (const auto & col : config_.columns)
+	for (const auto & col : m_config.columns)
 	{
 		const auto * text = test_column(col);
 		if (!text)
 			continue;
 
-		const auto haystack = config_.case_sensitive ? *text : string_utils::to_lower(*text);
+		const auto haystack = m_config.case_sensitive ? *text : string_utils::to_lower(*text);
 		if (haystack.find(query) != std::string::npos)
 			return true;
 	}

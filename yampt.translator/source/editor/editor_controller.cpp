@@ -6,39 +6,39 @@ editor_controller_t::editor_controller_t(
     edit_history_t & history,
     byte_limit_validator_t & validation,
     glossary_t & annotations)
-    : history_(history)
-    , validation_(validation)
-    , annotations_(annotations)
+    : m_history(history)
+    , m_validation(validation)
+    , m_annotations(annotations)
 {}
 
 int editor_controller_t::current_row() const
 {
-	return current_row_;
+	return m_current_row;
 }
 
 const QString & editor_controller_t::loaded_text() const
 {
-	return loaded_text_;
+	return m_loaded_text;
 }
 
 bool editor_controller_t::is_loading() const
 {
-	return loading_record_;
+	return m_loading_record;
 }
 
 void editor_controller_t::set_current_row(int row)
 {
-	current_row_ = row;
+	m_current_row = row;
 }
 
 void editor_controller_t::set_loaded_text(const QString & text)
 {
-	loaded_text_ = text;
+	m_loaded_text = text;
 }
 
 void editor_controller_t::set_loading(bool loading)
 {
-	loading_record_ = loading;
+	m_loading_record = loading;
 }
 
 editor_load_result_t editor_controller_t::load(document_t & doc, const table_row_t & row)
@@ -48,7 +48,7 @@ editor_load_result_t editor_controller_t::load(document_t & doc, const table_row
 	result.new_text = row.new_text;
 	result.status = row.status;
 	result.is_read_only = doc.is_read_only();
-	result.annotations = annotations_.annotate(row.old_text, row.type);
+	result.annotations = m_annotations.annotate(row.old_text, row.type);
 
 	auto * dict_doc = dynamic_cast<dict_document_t *>(&doc);
 	if (!dict_doc)
@@ -86,9 +86,10 @@ commit_result_t editor_controller_t::commit(
 
 	auto & entry = it->second.records[row.record_index];
 
-	history_.record_change(row.type, row.key_text, loaded_text_.toStdString(), new_text);
+	const auto old_status = entry.status;
+	m_history.record_change(row.type, row.key_text, m_loaded_text.toStdString(), new_text, old_status);
 
-	const auto validation = validation_.validate(row.type, new_text);
+	const auto validation = m_validation.validate(row.type, new_text);
 	const auto commit_status =
 	    (validation.level == validation_level_t::error) ? status_t::error : status_t::in_progress;
 
@@ -97,7 +98,7 @@ commit_result_t editor_controller_t::commit(
 	doc.set_dirty(true);
 	doc.modified_records_insert(row.type, row.record_index);
 
-	annotations_.update_term(row.type, entry.old_text, new_text);
+	m_annotations.update_term(row.type, entry.old_text, new_text);
 
 	int propagated = 0;
 	if (new_text != entry.old_text)
@@ -111,6 +112,57 @@ commit_result_t editor_controller_t::commit(
 	result.propagated_count = propagated;
 	result.success = true;
 	return result;
+}
+
+commit_result_t editor_controller_t::commit_status(
+    dict_document_t & doc,
+    const table_row_t & row,
+    status_t new_status)
+{
+	commit_result_t result;
+
+	auto & data = doc.data_mut();
+	auto it = data.find(row.type);
+	if (it == data.end() || row.record_index >= it->second.records.size())
+		return result;
+
+	auto & entry = it->second.records[row.record_index];
+	entry.status = new_status;
+	doc.set_dirty(true);
+	doc.modified_records_insert(row.type, row.record_index);
+
+	result.new_text = entry.new_text;
+	result.status = new_status;
+	result.success = true;
+	return result;
+}
+
+void editor_controller_t::copy_original(dict_document_t & doc, const table_row_t & row)
+{
+	auto & data = doc.data_mut();
+	auto it = data.find(row.type);
+	if (it == data.end() || row.record_index >= it->second.records.size())
+		return;
+
+	auto & entry = it->second.records[row.record_index];
+	entry.new_text = entry.old_text;
+	entry.status = status_t::in_progress;
+	doc.set_dirty(true);
+	doc.modified_records_insert(row.type, row.record_index);
+}
+
+void editor_controller_t::clear_and_untranslate(dict_document_t & doc, const table_row_t & row)
+{
+	auto & data = doc.data_mut();
+	auto it = data.find(row.type);
+	if (it == data.end() || row.record_index >= it->second.records.size())
+		return;
+
+	auto & entry = it->second.records[row.record_index];
+	entry.new_text = entry.old_text;
+	entry.status = status_t::untranslated;
+	doc.set_dirty(true);
+	doc.modified_records_insert(row.type, row.record_index);
 }
 
 int editor_controller_t::propagate(dict_document_t & doc, const std::string & old_text, const std::string & new_text)

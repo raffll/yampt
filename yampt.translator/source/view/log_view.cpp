@@ -11,9 +11,9 @@ log_view_t::log_view_t(QWidget * parent)
 	auto * layout = new QVBoxLayout(this);
 	layout->setContentsMargins(0, 0, 0, 0);
 
-	text_edit_ = new QPlainTextEdit(this);
-	text_edit_->setReadOnly(true);
-	layout->addWidget(text_edit_);
+	m_text_edit = new QPlainTextEdit(this);
+	m_text_edit->setReadOnly(true);
+	layout->addWidget(m_text_edit);
 }
 
 void log_view_t::append_log(const std::string & operation_name, const std::string & log_text)
@@ -22,18 +22,18 @@ void log_view_t::append_log(const std::string & operation_name, const std::strin
 
 	auto header = "--- [" + operation_name + "] [" + timestamp + "] ---\n";
 
-	text_edit_->appendPlainText(QString::fromStdString(header + log_text));
-	text_edit_->verticalScrollBar()->setValue(text_edit_->verticalScrollBar()->maximum());
+	m_text_edit->appendPlainText(QString::fromStdString(header + log_text));
+	m_text_edit->verticalScrollBar()->setValue(m_text_edit->verticalScrollBar()->maximum());
 }
 
 void log_view_t::append_text(const std::string & text)
 {
-	text_edit_->moveCursor(QTextCursor::End);
-	text_edit_->insertPlainText(QString::fromStdString(text));
-	text_edit_->verticalScrollBar()->setValue(text_edit_->verticalScrollBar()->maximum());
+	m_text_edit->moveCursor(QTextCursor::End);
+	m_text_edit->insertPlainText(QString::fromStdString(text));
+	m_text_edit->verticalScrollBar()->setValue(m_text_edit->verticalScrollBar()->maximum());
 }
 
 void log_view_t::clear()
 {
-	text_edit_->clear();
+	m_text_edit->clear();
 }

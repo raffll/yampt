@@ -57,9 +57,9 @@ status_filter_view_t::status_filter_view_t(QWidget * parent)
 {
 	setFixedHeight(26);
 
-	layout_ = new QHBoxLayout(this);
-	layout_->setContentsMargins(0, 0, 0, 0);
-	layout_->setSpacing(2);
+	m_layout = new QHBoxLayout(this);
+	m_layout->setContentsMargins(0, 0, 0, 0);
+	m_layout->setSpacing(2);
 
 	for (size_t g = 0; g < status_groups.size(); ++g)
 	{
@@ -67,13 +67,13 @@ status_filter_view_t::status_filter_view_t(QWidget * parent)
 		{
 			auto * sep = new QLabel(QString::fromUtf8("\xe2\x80\xa2"), this);
 			sep->setStyleSheet("color: #aaa;");
-			layout_->addWidget(sep);
+			m_layout->addWidget(sep);
 		}
 
 		add_status_group(status_groups[g]);
 	}
 
-	layout_->addStretch();
+	m_layout->addStretch();
 	update_button_styles();
 }
 
@@ -96,8 +96,8 @@ void status_filter_view_t::add_status_group(const std::vector<status_t> & status
 		    this,
 		    [this, s = status]() { on_status_right_clicked(s); });
 
-		layout_->addWidget(sb.button);
-		status_buttons_.push_back(sb);
+		m_layout->addWidget(sb.button);
+		m_status_buttons.push_back(sb);
 	}
 }
 
@@ -105,9 +105,9 @@ void status_filter_view_t::update_counts(
     const std::map<status_t, size_t> & displayed_counts,
     const std::map<status_t, size_t> & total_counts)
 {
-	current_counts_ = total_counts;
+	m_current_counts = total_counts;
 
-	for (auto & sb : status_buttons_)
+	for (auto & sb : m_status_buttons)
 	{
 		size_t total = 0;
 
@@ -126,68 +126,68 @@ void status_filter_view_t::update_counts(
 
 std::set<status_t> status_filter_view_t::get_active_statuses() const
 {
-	return active_statuses_;
+	return m_active_statuses;
 }
 
 bool status_filter_view_t::has_filter() const
 {
-	return !active_statuses_.empty();
+	return !m_active_statuses.empty();
 }
 
 void status_filter_view_t::set_filter_state(const std::set<status_t> & statuses)
 {
-	active_statuses_ = statuses;
-	solo_ = false;
-	solo_status_ = status_t::untranslated;
+	m_active_statuses = statuses;
+	m_solo = false;
+	m_solo_status = status_t::untranslated;
 	update_button_styles();
 }
 
 void status_filter_view_t::on_status_clicked(status_t status)
 {
-	if (solo_ && solo_status_ == status)
+	if (m_solo && m_solo_status == status)
 	{
-		solo_ = false;
-		solo_status_ = status_t::untranslated;
-		active_statuses_ = saved_statuses_;
+		m_solo = false;
+		m_solo_status = status_t::untranslated;
+		m_active_statuses = m_saved_statuses;
 		update_button_styles();
 		emit filters_changed();
 		return;
 	}
 
-	saved_statuses_ = active_statuses_;
-	solo_ = true;
-	solo_status_ = status;
-	active_statuses_ = { status };
+	m_saved_statuses = m_active_statuses;
+	m_solo = true;
+	m_solo_status = status;
+	m_active_statuses = { status };
 	update_button_styles();
 	emit filters_changed();
 }
 
 void status_filter_view_t::on_status_right_clicked(status_t status)
 {
-	if (active_statuses_.empty())
+	if (m_active_statuses.empty())
 	{
-		for (const auto & sb : status_buttons_)
+		for (const auto & sb : m_status_buttons)
 		{
 			if (sb.status != status)
-				active_statuses_.insert(sb.status);
+				m_active_statuses.insert(sb.status);
 		}
 
-		solo_ = false;
-		solo_status_ = status_t::untranslated;
+		m_solo = false;
+		m_solo_status = status_t::untranslated;
 		update_button_styles();
 		emit filters_changed();
 		return;
 	}
 
-	solo_ = false;
-	solo_status_ = status_t::untranslated;
+	m_solo = false;
+	m_solo_status = status_t::untranslated;
 
-	bool active = active_statuses_.count(status) > 0;
+	bool active = m_active_statuses.count(status) > 0;
 
 	if (active)
-		active_statuses_.erase(status);
+		m_active_statuses.erase(status);
 	else
-		active_statuses_.insert(status);
+		m_active_statuses.insert(status);
 
 	update_button_styles();
 	emit filters_changed();
@@ -201,11 +201,11 @@ void status_filter_view_t::update_button_styles()
 	static const QString disabled_style = "border: 1px solid #bbb; border-radius: 2px; padding: 2px 6px; "
 	                                      "background: #f0f0f0; color: rgb(180,180,180);";
 
-	bool no_filter = active_statuses_.empty();
+	bool no_filter = m_active_statuses.empty();
 
-	for (const auto & sb : status_buttons_)
+	for (const auto & sb : m_status_buttons)
 	{
-		if (!document_open_)
+		if (!m_document_open)
 		{
 			sb.button->setStyleSheet(disabled_style);
 			sb.button->setEnabled(false);
@@ -214,7 +214,7 @@ void status_filter_view_t::update_button_styles()
 
 		sb.button->setEnabled(true);
 
-		bool active = no_filter || active_statuses_.count(sb.status) > 0;
+		bool active = no_filter || m_active_statuses.count(sb.status) > 0;
 
 		if (active)
 		{
@@ -242,6 +242,6 @@ void status_filter_view_t::update_button_styles()
 
 void status_filter_view_t::set_document_open(bool open)
 {
-	document_open_ = open;
+	m_document_open = open;
 	update_button_styles();
 }

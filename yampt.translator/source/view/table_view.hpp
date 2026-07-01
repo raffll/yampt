@@ -42,16 +42,16 @@ public:
 	void set_enabled(bool enabled);
 
 private:
-	filter_tree_view_t & filter_tree_;
-	status_filter_view_t & status_bar_;
-	record_table_model_t & model_;
-	QLabel & progress_;
-	QLabel & file_label_;
-	QLabel & search_label_;
-	QLineEdit & search_field_;
-	QAbstractButton & case_check_;
-	QAbstractButton & regex_check_;
-	QAbstractButton & col_key_;
-	QAbstractButton & col_orig_;
-	QAbstractButton & col_trans_;
+	filter_tree_view_t & m_filter_tree;
+	status_filter_view_t & m_status_bar;
+	record_table_model_t & m_model;
+	QLabel & m_progress;
+	QLabel & m_file_label;
+	QLabel & m_search_label;
+	QLineEdit & m_search_field;
+	QAbstractButton & m_case_check;
+	QAbstractButton & m_regex_check;
+	QAbstractButton & m_col_key;
+	QAbstractButton & m_col_orig;
+	QAbstractButton & m_col_trans;
 };

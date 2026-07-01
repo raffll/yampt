@@ -19,5 +19,5 @@ protected:
 private:
 	int calculate_width() const;
 
-	translation_edit_view_t * editor_ = nullptr;
+	translation_edit_view_t * m_editor = nullptr;
 };

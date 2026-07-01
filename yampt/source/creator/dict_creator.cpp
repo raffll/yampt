@@ -19,13 +19,15 @@ dict_creator_t::dict_creator_t(
     const std::string & path,
     const std::string & path_ext,
     translation_engine_t * translation_engine,
-    base_mode_t base_mode)
+    base_mode_t base_mode,
+    const std::string & dictionary_aff_path)
     : esm(path_ext)
     , esm_ext(path)
     , esm_ref(esm_ext)
     , mode(mode_t::base)
-    , translation_engine_(translation_engine)
-    , base_mode_(base_mode)
+    , m_translation_engine(translation_engine)
+    , m_base_mode(base_mode)
+    , m_dictionary_aff_path(dictionary_aff_path)
 {
 	dict = tools_t::initialize_dict();
 
@@ -60,16 +62,31 @@ dict_creator_t::~dict_creator_t() = default;
 
 void dict_creator_t::load_english_dict()
 {
-	if (base_mode_ != base_mode_t::partial)
+	if (m_base_mode != base_mode_t::partial)
 		return;
 
-	auto dir = tools_t::get_exe_dir();
-	if (!dir.empty() && dir.back() != '/' && dir.back() != '\\')
-		dir += '/';
+	std::string aff;
+	std::string dic;
 
-	auto aff = dir + "dictionaries/en_US.aff";
-	auto dic = dir + "dictionaries/en_US.dic";
-	english_dict_ = std::make_unique<Hunspell>(aff.c_str(), dic.c_str());
+	if (!m_dictionary_aff_path.empty())
+	{
+		aff = m_dictionary_aff_path;
+		dic = m_dictionary_aff_path;
+		auto dot_pos = dic.rfind(".aff");
+		if (dot_pos != std::string::npos)
+			dic.replace(dot_pos, 4, ".dic");
+	}
+	else
+	{
+		auto dir = tools_t::get_exe_dir();
+		if (!dir.empty() && dir.back() != '/' && dir.back() != '\\')
+			dir += '/';
+
+		aff = dir + "dictionaries/en_US.aff";
+		dic = dir + "dictionaries/en_US.dic";
+	}
+
+	m_english_dict = std::make_unique<Hunspell>(aff.c_str(), dic.c_str());
 }
 
 void dict_creator_t::build_npc_index()

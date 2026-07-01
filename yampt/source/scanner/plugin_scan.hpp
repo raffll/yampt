@@ -89,8 +89,8 @@ private:
 		plugin_index_t index { esm };
 	};
 
-	std::vector<std::unique_ptr<loaded_plugin_t>> plugins_;
-	int merge_plugin_idx_ = -1;
+	std::vector<std::unique_ptr<loaded_plugin_t>> m_plugins;
+	int m_merge_plugin_idx = -1;
 
 	struct merge_record_t
 	{
@@ -99,8 +99,8 @@ private:
 		std::string content;
 	};
 
-	std::vector<merge_record_t> merge_records_;
+	std::vector<merge_record_t> m_merge_records;
 
-	std::vector<conflict_entry_t> entries_;
-	std::unordered_map<std::string, size_t> entry_lookup_;
+	std::vector<conflict_entry_t> m_entries;
+	std::unordered_map<std::string, size_t> m_entry_lookup;
 };

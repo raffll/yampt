@@ -1,7 +1,10 @@
 #pragma once
 
+#include <utility/status_types.hpp>
 #include <vector>
 #include <QTableView>
+
+class QKeyEvent;
 
 class record_table_view_t : public QTableView
 {
@@ -16,8 +19,10 @@ public:
 
 signals:
 	void row_selected(int row);
-	void batch_status_change_requested(const QList<int> & rows, const QString & new_status);
+	void batch_status_change_requested(const QList<int> & rows, status_t new_status);
+	void delete_entry_requested();
 
 protected:
 	void contextMenuEvent(QContextMenuEvent * event) override;
+	void keyPressEvent(QKeyEvent * event) override;
 };

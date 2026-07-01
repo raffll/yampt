@@ -1,68 +1,68 @@
 #include "display_name.hpp"
 
 display_name_t::display_name_t(const std::string & filename)
-    : filename_(filename)
+    : m_filename(filename)
 {}
 
 void display_name_t::set_filename(const std::string & filename)
 {
-	filename_ = filename;
+	m_filename = filename;
 }
 
 void display_name_t::set_kind(dict_kind_t kind)
 {
-	kind_ = kind;
+	m_kind = kind;
 }
 
 void display_name_t::set_file_type(file_type_t type)
 {
-	file_type_ = type;
+	m_file_type = type;
 }
 
 void display_name_t::set_language(const std::string & lang)
 {
-	language_ = lang;
+	m_language = lang;
 }
 
 void display_name_t::set_dirty(bool dirty)
 {
-	dirty_ = dirty;
+	m_dirty = dirty;
 }
 
 void display_name_t::set_wip(bool wip)
 {
-	wip_ = wip;
+	m_wip = wip;
 }
 
 void display_name_t::set_unloaded(bool unloaded)
 {
-	unloaded_ = unloaded;
+	m_unloaded = unloaded;
 }
 
 std::string display_name_t::to_string() const
 {
 	std::string result;
 
-	if (dirty_)
+	if (m_dirty)
 		result += "* ";
 
-	if (unloaded_)
+	if (m_unloaded)
 		result += "[UNLOADED] ";
 
-	if (kind_ == dict_kind_t::base)
+	if (m_kind == dict_kind_t::base)
 		result += "[BASE] ";
 
-	if (wip_)
+	if (m_wip)
 		result += "[WIP] ";
 
-	if (!language_.empty())
-		result += "[" + language_ + "] ";
+	if (!m_language.empty())
+		result += "[" + m_language + "] ";
 
-	result += filename_;
+	result += m_filename;
 	return result;
 }
 
 const std::string & display_name_t::filename() const
 {
-	return filename_;
+	return m_filename;
 }

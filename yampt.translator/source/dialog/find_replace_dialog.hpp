@@ -28,12 +28,12 @@ private:
 	void setup_layout(QGridLayout * layout);
 	void connect_signals();
 
-	QLineEdit * find_field_ = nullptr;
-	QLineEdit * replace_field_ = nullptr;
-	QCheckBox * case_check_ = nullptr;
-	QCheckBox * regex_check_ = nullptr;
-	QPushButton * find_next_btn_ = nullptr;
-	QPushButton * replace_btn_ = nullptr;
-	QPushButton * replace_all_btn_ = nullptr;
-	QLabel * note_label_ = nullptr;
+	QLineEdit * m_find_field = nullptr;
+	QLineEdit * m_replace_field = nullptr;
+	QCheckBox * m_case_check = nullptr;
+	QCheckBox * m_regex_check = nullptr;
+	QPushButton * m_find_next_btn = nullptr;
+	QPushButton * m_replace_btn = nullptr;
+	QPushButton * m_replace_all_btn = nullptr;
+	QLabel * m_note_label = nullptr;
 };

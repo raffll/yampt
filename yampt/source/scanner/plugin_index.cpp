@@ -191,32 +191,32 @@ plugin_index_t::plugin_index_t(esm_reader_t & esm)
 		}
 
 		std::string key = rec_type + std::string(1, '\0') + entry.record_id;
-		if (lookup_.find(key) == lookup_.end())
-			lookup_[key] = entries_.size();
+		if (m_lookup.find(key) == m_lookup.end())
+			m_lookup[key] = m_entries.size();
 
-		entries_.push_back(std::move(entry));
+		m_entries.push_back(std::move(entry));
 	}
 }
 
 const std::vector<indexed_record_t> & plugin_index_t::entries() const
 {
-	return entries_;
+	return m_entries;
 }
 
 const indexed_record_t * plugin_index_t::find(const std::string & type, const std::string & id) const
 {
 	std::string key = type + std::string(1, '\0') + id;
-	auto it = lookup_.find(key);
-	if (it == lookup_.end())
+	auto it = m_lookup.find(key);
+	if (it == m_lookup.end())
 		return nullptr;
 
-	return &entries_[it->second];
+	return &m_entries[it->second];
 }
 
 std::vector<std::string> plugin_index_t::types() const
 {
 	std::set<std::string> unique;
-	for (const auto & entry : entries_)
+	for (const auto & entry : m_entries)
 		unique.insert(entry.rec_type);
 
 	return std::vector<std::string>(unique.begin(), unique.end());
@@ -225,7 +225,7 @@ std::vector<std::string> plugin_index_t::types() const
 size_t plugin_index_t::count_by_type(const std::string & type) const
 {
 	size_t count = 0;
-	for (const auto & entry : entries_)
+	for (const auto & entry : m_entries)
 	{
 		if (entry.rec_type == type)
 			++count;

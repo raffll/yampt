@@ -11,29 +11,29 @@ translation_edit_view_t::translation_edit_view_t(QWidget * parent)
 
 void translation_edit_view_t::set_block_multiline(bool value)
 {
-	block_multiline_ = value;
+	m_block_multiline = value;
 }
 
 void translation_edit_view_t::set_auto_capitalize(bool value)
 {
-	auto_capitalize_ = value;
+	m_auto_capitalize = value;
 }
 
 void translation_edit_view_t::set_show_whitespace(bool value)
 {
-	show_whitespace_ = value;
+	m_show_whitespace = value;
 }
 
 void translation_edit_view_t::set_record_type(tools_t::rec_type_t type)
 {
-	record_type_ = type;
+	m_record_type = type;
 }
 
 bool translation_edit_view_t::handle_navigation_keys(QKeyEvent * event)
 {
 	if (event->modifiers() == Qt::ShiftModifier && (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter))
 	{
-		if (block_multiline_)
+		if (m_block_multiline)
 		{
 			auto cursor = textCursor();
 			int current_block = cursor.blockNumber();
@@ -70,7 +70,7 @@ bool translation_edit_view_t::handle_navigation_keys(QKeyEvent * event)
 
 bool translation_edit_view_t::handle_multiline_guard(QKeyEvent * event)
 {
-	if (!block_multiline_)
+	if (!m_block_multiline)
 		return false;
 
 	if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter)
@@ -105,10 +105,10 @@ bool translation_edit_view_t::handle_multiline_guard(QKeyEvent * event)
 
 void translation_edit_view_t::apply_auto_capitalize()
 {
-	if (!auto_capitalize_)
+	if (!m_auto_capitalize)
 		return;
 
-	if (record_type_ == tools_t::rec_type_t::sctx || record_type_ == tools_t::rec_type_t::bnam)
+	if (m_record_type == tools_t::rec_type_t::sctx || m_record_type == tools_t::rec_type_t::bnam)
 		return;
 
 	auto cursor = textCursor();
@@ -159,7 +159,7 @@ void translation_edit_view_t::keyPressEvent(QKeyEvent * event)
 
 void translation_edit_view_t::insertFromMimeData(const QMimeData * source)
 {
-	if (!block_multiline_)
+	if (!m_block_multiline)
 	{
 		QPlainTextEdit::insertFromMimeData(source);
 		return;
@@ -175,7 +175,7 @@ void translation_edit_view_t::paintEvent(QPaintEvent * event)
 {
 	QPlainTextEdit::paintEvent(event);
 
-	if (!show_whitespace_)
+	if (!m_show_whitespace)
 		return;
 
 	QPainter painter(viewport());

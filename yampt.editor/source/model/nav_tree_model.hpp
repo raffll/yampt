@@ -57,9 +57,10 @@ public:
 	};
 
 	node_info_t node_at(const QModelIndex & index) const;
+	QModelIndex find_index(const std::string & rec_type, const std::string & record_id) const;
 
 private:
-	plugin_scan_t & scan_;
+	plugin_scan_t & m_scan;
 
 	struct visible_record_t
 	{
@@ -78,10 +79,10 @@ private:
 		std::vector<type_group_t> groups;
 	};
 
-	std::vector<file_node_t> tree_;
+	std::vector<file_node_t> m_tree;
 
-	filter_state_t filter_;
-	bool has_filter_ = false;
+	filter_state_t m_filter;
+	bool m_has_filter = false;
 
 	void build_tree();
 	bool passes_filter(const conflict_entry_t & entry, int plugin_idx) const;

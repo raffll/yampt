@@ -75,7 +75,7 @@ TEST_CASE("dict_document_t, build_rows count invariant", "[i]")
 			for (int r = 0; r < rec_count; ++r)
 			{
 				tools_t::record_entry_t entry;
-				entry.key_text = "key_" + std::to_string(t) + "_" + std::to_string(r);
+				entry.key_text = "m_key" + std::to_string(t) + "_" + std::to_string(r);
 				entry.old_text = *rc::gen::arbitrary<std::string>();
 				entry.new_text = *rc::gen::arbitrary<std::string>();
 				entry.status = status_t::untranslated;
@@ -106,7 +106,7 @@ TEST_CASE("dict_document_t, commit_edit modifies data", "[i]")
 		for (int i = 0; i < rec_count; ++i)
 		{
 			tools_t::record_entry_t entry;
-			entry.key_text = "key_" + std::to_string(i);
+			entry.key_text = "m_key" + std::to_string(i);
 			entry.old_text = "old_" + std::to_string(i);
 			entry.new_text = "new_" + std::to_string(i);
 			entry.status = status_t::untranslated;
@@ -182,7 +182,7 @@ TEST_CASE("yaml_document_t, dirty state consistency", "[i]")
 		const auto count = *rc::gen::inRange(1, 10);
 		std::vector<std::pair<std::string, std::string>> entries;
 		for (int i = 0; i < count; ++i)
-			entries.push_back({ "key_" + std::to_string(i), "val_" + std::to_string(i) });
+			entries.push_back({ "m_key" + std::to_string(i), "val_" + std::to_string(i) });
 
 		const auto path = create_temp_yaml(entries);
 		yaml_document_t doc(path);
@@ -209,7 +209,7 @@ TEST_CASE("yaml_document_t, commit-edit round-trip", "[i]")
 		const auto count = *rc::gen::inRange(1, 10);
 		std::vector<std::pair<std::string, std::string>> entries;
 		for (int i = 0; i < count; ++i)
-			entries.push_back({ "key_" + std::to_string(i), "val_" + std::to_string(i) });
+			entries.push_back({ "m_key" + std::to_string(i), "val_" + std::to_string(i) });
 
 		const auto path = create_temp_yaml(entries);
 		yaml_document_t doc(path);
@@ -234,7 +234,7 @@ TEST_CASE("yaml_document_t, translated count invariant", "[i]")
 		const auto count = *rc::gen::inRange(2, 15);
 		std::vector<std::pair<std::string, std::string>> entries;
 		for (int i = 0; i < count; ++i)
-			entries.push_back({ "key_" + std::to_string(i), "val_" + std::to_string(i) });
+			entries.push_back({ "m_key" + std::to_string(i), "val_" + std::to_string(i) });
 
 		const auto path = create_temp_yaml(entries);
 		yaml_document_t doc(path);

@@ -15,13 +15,17 @@
 #include <QWidget>
 
 class QDropEvent;
+class app_settings_t;
 
 class plugin_workspace_view_t : public QWidget
 {
 	Q_OBJECT
 
 public:
-	explicit plugin_workspace_view_t(QWidget * parent = nullptr);
+	explicit plugin_workspace_view_t(app_settings_t & settings, QWidget * parent = nullptr);
+
+	void save_session_state();
+	void restore_session_state();
 
 public slots:
 	void on_load_plugins();
@@ -31,12 +35,12 @@ public slots:
 	void on_new_plugin();
 	void on_save_plugin();
 	void on_unload_all();
+	void on_create_merged_patch();
+	void on_advanced_filter();
 
 private slots:
-	void on_create_merged_patch();
 	void on_nav_selection_changed(const QModelIndex & current);
 	void on_filter_changed();
-	void on_advanced_filter();
 	void on_remove_itm();
 	void on_nav_context_menu(const QPoint & pos);
 	void on_view_copy();
@@ -77,31 +81,32 @@ private:
 	bool handle_drop_on_nav(QDropEvent * drop_event);
 	void refresh_after_merge(const std::string & rec_type, const std::string & record_id);
 
-	plugin_scan_t scan_;
+	app_settings_t & m_settings;
+	plugin_scan_t m_scan;
 
-	QPushButton * btn_load_ = nullptr;
-	QPushButton * btn_new_ = nullptr;
-	QPushButton * btn_save_ = nullptr;
-	QPushButton * btn_merge_ = nullptr;
-	QPushButton * btn_filter_ = nullptr;
-	QCheckBox * chk_conflicts_ = nullptr;
-	QComboBox * cmb_type_filter_ = nullptr;
-	QLineEdit * edt_search_ = nullptr;
-	QLabel * lbl_count_ = nullptr;
+	QPushButton * m_btn_load = nullptr;
+	QPushButton * m_btn_new = nullptr;
+	QPushButton * m_btn_save = nullptr;
+	QPushButton * m_btn_merge = nullptr;
+	QPushButton * m_btn_filter = nullptr;
+	QCheckBox * m_chk_conflicts = nullptr;
+	QComboBox * m_cmb_type_filter = nullptr;
+	QLineEdit * m_edt_search = nullptr;
+	QLabel * m_lbl_count = nullptr;
 
-	QSplitter * main_splitter_ = nullptr;
-	QSplitter * content_splitter_ = nullptr;
-	QTreeView * nav_view_ = nullptr;
-	QTreeView * view_view_ = nullptr;
-	nav_tree_model_t * nav_model_ = nullptr;
-	view_tree_model_t * view_model_ = nullptr;
-	messages_view_t * messages_ = nullptr;
+	QSplitter * m_main_splitter = nullptr;
+	QSplitter * m_content_splitter = nullptr;
+	QTreeView * m_nav_view = nullptr;
+	QTreeView * m_view_view = nullptr;
+	nav_tree_model_t * m_nav_model = nullptr;
+	view_tree_model_t * m_view_model = nullptr;
+	messages_view_t * m_messages = nullptr;
 
-	QLabel * status_label_ = nullptr;
+	QLabel * m_status_label = nullptr;
 
-	bool filter_active_ = false;
-	nav_tree_model_t::filter_state_t last_filter_state_;
+	bool m_filter_active = false;
+	nav_tree_model_t::filter_state_t m_last_filter_state;
 
-	bool has_filter_active_ = false;
-	nav_tree_model_t::filter_state_t last_quick_filter_;
+	bool m_has_filter_active = false;
+	nav_tree_model_t::filter_state_t m_last_quick_filter;
 };

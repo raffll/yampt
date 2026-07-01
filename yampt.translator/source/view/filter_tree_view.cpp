@@ -48,25 +48,25 @@ filter_tree_view_t::filter_tree_view_t(QWidget * parent)
 	auto * layout = new QVBoxLayout(this);
 	layout->setContentsMargins(0, 0, 0, 0);
 
-	list_ = new QListWidget(this);
-	list_->setSelectionMode(QAbstractItemView::NoSelection);
-	list_->setFocusPolicy(Qt::NoFocus);
-	list_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-	list_->setItemDelegate(new filter_delegate_t(list_));
-	layout->addWidget(list_);
+	m_list = new QListWidget(this);
+	m_list->setSelectionMode(QAbstractItemView::NoSelection);
+	m_list->setFocusPolicy(Qt::NoFocus);
+	m_list->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+	m_list->setItemDelegate(new filter_delegate_t(m_list));
+	layout->addWidget(m_list);
 
 	build_rows();
 	update_styles();
 
-	connect(list_, &QListWidget::itemClicked, this, &filter_tree_view_t::on_item_clicked);
-	list_->setContextMenuPolicy(Qt::CustomContextMenu);
+	connect(m_list, &QListWidget::itemClicked, this, &filter_tree_view_t::on_item_clicked);
+	m_list->setContextMenuPolicy(Qt::CustomContextMenu);
 	connect(
-	    list_,
+	    m_list,
 	    &QWidget::customContextMenuRequested,
 	    this,
 	    [this](const QPoint & pos)
 	{
-		auto * item = list_->itemAt(pos);
+		auto * item = m_list->itemAt(pos);
 		if (item)
 			on_item_right_clicked(item);
 	});
@@ -77,14 +77,14 @@ void filter_tree_view_t::build_rows()
 	auto add_row =
 	    [this](item_kind_t kind, tools_t::rec_type_t type, const std::string & sub_type, const char * label) -> int
 	{
-		auto * item = new QListWidgetItem(label, list_);
+		auto * item = new QListWidgetItem(label, m_list);
 		item->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-		int idx = static_cast<int>(rows_.size());
-		rows_.push_back({ item, kind, type, sub_type, true });
+		int idx = static_cast<int>(m_rows.size());
+		m_rows.push_back({ item, kind, type, sub_type, true });
 		return idx;
 	};
 
-	all_row_ = add_row(item_kind_t::all, tools_t::rec_type_t::unknown, {}, "All");
+	m_all_row = add_row(item_kind_t::all, tools_t::rec_type_t::unknown, {}, "All");
 
 	for (const auto & [type, name] : type_order)
 	{
@@ -127,25 +127,25 @@ void filter_tree_view_t::build_rows()
 		}
 	}
 
-	yaml_row_ = add_row(item_kind_t::yaml, tools_t::rec_type_t::unknown, {}, "YAML");
-	rows_[yaml_row_].selected = false;
-	rows_[yaml_row_].item->setHidden(true);
+	m_yaml_row = add_row(item_kind_t::yaml, tools_t::rec_type_t::unknown, {}, "YAML");
+	m_rows[m_yaml_row].selected = false;
+	m_rows[m_yaml_row].item->setHidden(true);
 }
 
 void filter_tree_view_t::on_item_clicked(QListWidgetItem * item)
 {
-	if (!enabled_)
+	if (!m_enabled)
 		return;
 
-	int idx = list_->row(item);
-	if (idx < 0 || idx >= static_cast<int>(rows_.size()))
+	int idx = m_list->row(item);
+	if (idx < 0 || idx >= static_cast<int>(m_rows.size()))
 		return;
 
-	auto & row = rows_[idx];
+	auto & row = m_rows[idx];
 
 	if (row.kind == item_kind_t::all)
 	{
-		for (auto & r : rows_)
+		for (auto & r : m_rows)
 		{
 			if (r.kind == item_kind_t::all || r.kind == item_kind_t::yaml)
 				continue;
@@ -168,7 +168,7 @@ void filter_tree_view_t::on_item_clicked(QListWidgetItem * item)
 		return;
 	}
 
-	for (auto & r : rows_)
+	for (auto & r : m_rows)
 	{
 		if (r.kind == item_kind_t::all || r.kind == item_kind_t::yaml)
 			continue;
@@ -184,19 +184,19 @@ void filter_tree_view_t::on_item_clicked(QListWidgetItem * item)
 
 void filter_tree_view_t::on_item_right_clicked(QListWidgetItem * item)
 {
-	if (!enabled_)
+	if (!m_enabled)
 		return;
 
-	int idx = list_->row(item);
-	if (idx < 0 || idx >= static_cast<int>(rows_.size()))
+	int idx = m_list->row(item);
+	if (idx < 0 || idx >= static_cast<int>(m_rows.size()))
 		return;
 
-	auto & row = rows_[idx];
+	auto & row = m_rows[idx];
 
 	if (row.kind == item_kind_t::all)
 	{
 		bool any_deselected = false;
-		for (const auto & r : rows_)
+		for (const auto & r : m_rows)
 		{
 			if (r.kind == item_kind_t::all || r.kind == item_kind_t::yaml)
 				continue;
@@ -209,7 +209,7 @@ void filter_tree_view_t::on_item_right_clicked(QListWidgetItem * item)
 		}
 
 		bool new_state = any_deselected;
-		for (auto & r : rows_)
+		for (auto & r : m_rows)
 		{
 			if (r.kind == item_kind_t::all || r.kind == item_kind_t::yaml)
 				continue;
@@ -235,11 +235,11 @@ void filter_tree_view_t::on_item_right_clicked(QListWidgetItem * item)
 
 void filter_tree_view_t::update_all_state()
 {
-	if (all_row_ < 0)
+	if (m_all_row < 0)
 		return;
 
 	bool all_selected = true;
-	for (const auto & r : rows_)
+	for (const auto & r : m_rows)
 	{
 		if (r.kind == item_kind_t::all || r.kind == item_kind_t::yaml)
 			continue;
@@ -251,14 +251,14 @@ void filter_tree_view_t::update_all_state()
 		}
 	}
 
-	rows_[all_row_].selected = all_selected;
+	m_rows[m_all_row].selected = all_selected;
 }
 
 void filter_tree_view_t::update_styles()
 {
-	for (auto & r : rows_)
+	for (auto & r : m_rows)
 	{
-		if (!enabled_)
+		if (!m_enabled)
 		{
 			r.item->setForeground(QBrush(color_disabled_fg));
 			r.item->setBackground(QBrush());
@@ -282,7 +282,7 @@ void filter_tree_view_t::update_counts(
     const std::map<tools_t::rec_type_t, size_t> & total_counts,
     const std::map<tools_t::rec_type_t, size_t> & translated_counts)
 {
-	for (auto & r : rows_)
+	for (auto & r : m_rows)
 	{
 		if (r.kind != item_kind_t::type)
 			continue;
@@ -302,7 +302,7 @@ void filter_tree_view_t::update_sub_type_counts(
     const std::map<std::string, size_t> & sub_type_total_counts,
     const std::map<std::string, size_t> & sub_type_translated_counts)
 {
-	for (auto & r : rows_)
+	for (auto & r : m_rows)
 	{
 		if (r.kind != item_kind_t::sub_type)
 			continue;
@@ -320,17 +320,17 @@ void filter_tree_view_t::update_sub_type_counts(
 
 void filter_tree_view_t::set_total_count(size_t translated, size_t total)
 {
-	if (all_row_ < 0)
+	if (m_all_row < 0)
 		return;
 
-	rows_[all_row_].item->setData(role_counter, QString("%1/%2").arg(translated).arg(total));
+	m_rows[m_all_row].item->setData(role_counter, QString("%1/%2").arg(translated).arg(total));
 }
 
 std::set<tools_t::rec_type_t> filter_tree_view_t::get_active_types() const
 {
 	std::set<tools_t::rec_type_t> result;
 
-	for (const auto & r : rows_)
+	for (const auto & r : m_rows)
 	{
 		if (r.kind == item_kind_t::type && r.selected)
 			result.insert(r.type);
@@ -346,7 +346,7 @@ std::set<std::string> filter_tree_view_t::get_active_sub_types() const
 {
 	std::set<std::string> result;
 
-	for (const auto & r : rows_)
+	for (const auto & r : m_rows)
 	{
 		if (r.kind == item_kind_t::sub_type && r.selected)
 			result.insert(r.sub_type);
@@ -357,7 +357,7 @@ std::set<std::string> filter_tree_view_t::get_active_sub_types() const
 
 bool filter_tree_view_t::has_sub_type_filter() const
 {
-	for (const auto & r : rows_)
+	for (const auto & r : m_rows)
 	{
 		if (r.kind != item_kind_t::sub_type)
 			continue;
@@ -374,7 +374,7 @@ bool filter_tree_view_t::has_sub_type_filter() const
 
 void filter_tree_view_t::set_active_types(const std::set<tools_t::rec_type_t> & types)
 {
-	for (auto & r : rows_)
+	for (auto & r : m_rows)
 	{
 		if (r.kind == item_kind_t::all || r.kind == item_kind_t::yaml)
 			continue;
@@ -388,7 +388,7 @@ void filter_tree_view_t::set_active_types(const std::set<tools_t::rec_type_t> & 
 
 void filter_tree_view_t::set_active_sub_types(const std::set<std::string> & sub_types)
 {
-	for (auto & r : rows_)
+	for (auto & r : m_rows)
 	{
 		if (r.kind != item_kind_t::sub_type)
 			continue;
@@ -403,7 +403,7 @@ void filter_tree_view_t::set_active_sub_types(const std::set<std::string> & sub_
 bool filter_tree_view_t::is_solo() const
 {
 	int active_count = 0;
-	for (const auto & r : rows_)
+	for (const auto & r : m_rows)
 	{
 		if (r.kind == item_kind_t::all || r.kind == item_kind_t::yaml)
 			continue;
@@ -417,7 +417,7 @@ bool filter_tree_view_t::is_solo() const
 
 tools_t::rec_type_t filter_tree_view_t::get_solo_type() const
 {
-	for (const auto & r : rows_)
+	for (const auto & r : m_rows)
 	{
 		if (r.kind == item_kind_t::all || r.kind == item_kind_t::yaml)
 			continue;
@@ -431,32 +431,32 @@ tools_t::rec_type_t filter_tree_view_t::get_solo_type() const
 
 bool filter_tree_view_t::is_yaml_filter_active() const
 {
-	if (yaml_row_ < 0)
+	if (m_yaml_row < 0)
 		return false;
 
-	return rows_[yaml_row_].selected;
+	return m_rows[m_yaml_row].selected;
 }
 
 void filter_tree_view_t::set_yaml_filter_active(bool active)
 {
-	if (yaml_row_ < 0)
+	if (m_yaml_row < 0)
 		return;
 
-	rows_[yaml_row_].selected = active;
+	m_rows[m_yaml_row].selected = active;
 	update_styles();
 }
 
 void filter_tree_view_t::set_yaml_button_visible(bool visible)
 {
-	if (yaml_row_ < 0)
+	if (m_yaml_row < 0)
 		return;
 
-	rows_[yaml_row_].item->setHidden(!visible);
+	m_rows[m_yaml_row].item->setHidden(!visible);
 }
 
 void filter_tree_view_t::setEnabled(bool enabled)
 {
-	enabled_ = enabled;
+	m_enabled = enabled;
 	QWidget::setEnabled(enabled);
 	update_styles();
 }
@@ -466,17 +466,17 @@ void filter_tree_view_t::set_display_mode(display_mode_t mode)
 	switch (mode)
 	{
 	case display_mode_t::empty:
-		for (auto & r : rows_)
+		for (auto & r : m_rows)
 			r.item->setHidden(true);
 		break;
 
 	case display_mode_t::all_only:
-		for (auto & r : rows_)
+		for (auto & r : m_rows)
 			r.item->setHidden(r.kind != item_kind_t::all);
 		break;
 
 	case display_mode_t::full:
-		for (auto & r : rows_)
+		for (auto & r : m_rows)
 		{
 			if (r.kind == item_kind_t::yaml)
 				continue;

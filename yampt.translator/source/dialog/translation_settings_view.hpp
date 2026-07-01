@@ -20,9 +20,9 @@ public:
 private:
     void on_provider_changed(int index);
 
-    QComboBox * provider_combo_ = nullptr;
-    QLineEdit * deepl_key_edit_ = nullptr;
-    QToolButton * deepl_reveal_button_ = nullptr;
-    QLineEdit * google_key_edit_ = nullptr;
-    QToolButton * google_reveal_button_ = nullptr;
+    QComboBox * m_provider_combo = nullptr;
+    QLineEdit * m_deepl_key_edit = nullptr;
+    QToolButton * m_deepl_reveal_button = nullptr;
+    QLineEdit * m_google_key_edit = nullptr;
+    QToolButton * m_google_reveal_button = nullptr;
 };

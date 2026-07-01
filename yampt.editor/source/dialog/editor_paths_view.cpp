@@ -13,57 +13,57 @@ editor_paths_view_t::editor_paths_view_t(QWidget * parent)
     auto * layout = new QFormLayout(this);
 
     auto * openmw_row = new QHBoxLayout;
-    openmw_data_edit_ = new QLineEdit(this);
-    openmw_browse_button_ = new QPushButton("...", this);
-    openmw_browse_button_->setFixedWidth(30);
-    openmw_browse_button_->setToolTip("Browse for OpenMW data directory");
-    openmw_row->addWidget(openmw_data_edit_);
-    openmw_row->addWidget(openmw_browse_button_);
+    m_openmw_data_edit = new QLineEdit(this);
+    m_openmw_browse_button = new QPushButton("...", this);
+    m_openmw_browse_button->setFixedWidth(30);
+    m_openmw_browse_button->setToolTip("Browse for OpenMW data directory");
+    openmw_row->addWidget(m_openmw_data_edit);
+    openmw_row->addWidget(m_openmw_browse_button);
 
     auto * mo2_row = new QHBoxLayout;
-    mo2_profile_edit_ = new QLineEdit(this);
-    mo2_browse_button_ = new QPushButton("...", this);
-    mo2_browse_button_->setFixedWidth(30);
-    mo2_browse_button_->setToolTip("Browse for MO2 profile directory");
-    mo2_row->addWidget(mo2_profile_edit_);
-    mo2_row->addWidget(mo2_browse_button_);
+    m_mo2_profile_edit = new QLineEdit(this);
+    m_mo2_browse_button = new QPushButton("...", this);
+    m_mo2_browse_button->setFixedWidth(30);
+    m_mo2_browse_button->setToolTip("Browse for MO2 profile directory");
+    mo2_row->addWidget(m_mo2_profile_edit);
+    mo2_row->addWidget(m_mo2_browse_button);
 
     layout->addRow("OpenMW Data Directory:", openmw_row);
     layout->addRow("MO2 Profile Directory:", mo2_row);
 
-    connect(openmw_browse_button_, &QPushButton::clicked,
+    connect(m_openmw_browse_button, &QPushButton::clicked,
             this, &editor_paths_view_t::on_browse_openmw);
 
-    connect(mo2_browse_button_, &QPushButton::clicked,
+    connect(m_mo2_browse_button, &QPushButton::clicked,
             this, &editor_paths_view_t::on_browse_mo2);
 }
 
 void editor_paths_view_t::on_browse_openmw()
 {
     const auto dir = QFileDialog::getExistingDirectory(
-        this, "Select OpenMW Data Directory", openmw_data_edit_->text());
+        this, "Select OpenMW Data Directory", m_openmw_data_edit->text());
 
     if (!dir.isEmpty())
-        openmw_data_edit_->setText(dir);
+        m_openmw_data_edit->setText(dir);
 }
 
 void editor_paths_view_t::on_browse_mo2()
 {
     const auto dir = QFileDialog::getExistingDirectory(
-        this, "Select MO2 Profile Directory", mo2_profile_edit_->text());
+        this, "Select MO2 Profile Directory", m_mo2_profile_edit->text());
 
     if (!dir.isEmpty())
-        mo2_profile_edit_->setText(dir);
+        m_mo2_profile_edit->setText(dir);
 }
 
 void editor_paths_view_t::load(const app_settings_t & settings)
 {
-    openmw_data_edit_->setText(QString::fromStdString(settings.openmw_data_dir()));
-    mo2_profile_edit_->setText(QString::fromStdString(settings.mo2_profile_dir()));
+    m_openmw_data_edit->setText(QString::fromStdString(settings.openmw_data_dir()));
+    m_mo2_profile_edit->setText(QString::fromStdString(settings.mo2_profile_dir()));
 }
 
 void editor_paths_view_t::apply(app_settings_t & settings) const
 {
-    settings.set_openmw_data_dir(openmw_data_edit_->text().toStdString());
-    settings.set_mo2_profile_dir(mo2_profile_edit_->text().toStdString());
+    settings.set_openmw_data_dir(m_openmw_data_edit->text().toStdString());
+    settings.set_mo2_profile_dir(m_mo2_profile_edit->text().toStdString());
 }

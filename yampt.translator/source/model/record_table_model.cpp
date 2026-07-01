@@ -18,7 +18,7 @@ int record_table_model_t::rowCount(const QModelIndex & parent) const
 	if (parent.isValid())
 		return 0;
 
-	return static_cast<int>(rows_.size());
+	return static_cast<int>(m_rows.size());
 }
 
 int record_table_model_t::columnCount(const QModelIndex & parent) const
@@ -79,10 +79,10 @@ QVariant record_table_model_t::data(const QModelIndex & index, int role) const
 	if (!index.isValid())
 		return {};
 
-	if (index.row() < 0 || index.row() >= static_cast<int>(rows_.size()))
+	if (index.row() < 0 || index.row() >= static_cast<int>(m_rows.size()))
 		return {};
 
-	const auto & row = rows_[index.row()];
+	const auto & row = m_rows[index.row()];
 
 	if (role == Qt::DisplayRole)
 	{
@@ -174,7 +174,7 @@ void record_table_model_t::sort(int column, Qt::SortOrder order)
 	};
 
 	std::vector<std::vector<table_row_t>> groups;
-	for (auto & row : rows_)
+	for (auto & row : m_rows)
 	{
 		if (!row.is_child)
 			groups.push_back({});
@@ -194,11 +194,11 @@ void record_table_model_t::sort(int column, Qt::SortOrder order)
 		return cmp(a.front(), b.front());
 	});
 
-	rows_.clear();
+	m_rows.clear();
 	for (auto & group : groups)
 	{
 		for (auto & row : group)
-			rows_.push_back(std::move(row));
+			m_rows.push_back(std::move(row));
 	}
 
 	endResetModel();
@@ -207,29 +207,29 @@ void record_table_model_t::sort(int column, Qt::SortOrder order)
 void record_table_model_t::rebuild(std::vector<table_row_t> rows)
 {
 	beginResetModel();
-	rows_ = std::move(rows);
+	m_rows = std::move(rows);
 	endResetModel();
 }
 
 int record_table_model_t::row_count() const
 {
-	return static_cast<int>(rows_.size());
+	return static_cast<int>(m_rows.size());
 }
 
 const table_row_t * record_table_model_t::row_at(int row) const
 {
-	if (row < 0 || row >= static_cast<int>(rows_.size()))
+	if (row < 0 || row >= static_cast<int>(m_rows.size()))
 		return nullptr;
 
-	return &rows_[row];
+	return &m_rows[row];
 }
 
 void record_table_model_t::update_row(int row, const std::string & new_text, status_t status)
 {
-	if (row < 0 || row >= static_cast<int>(rows_.size()))
+	if (row < 0 || row >= static_cast<int>(m_rows.size()))
 		return;
 
-	rows_[row].new_text = new_text;
-	rows_[row].status = status;
+	m_rows[row].new_text = new_text;
+	m_rows[row].status = status;
 	emit dataChanged(index(row, col_id), index(row, col_status));
 }

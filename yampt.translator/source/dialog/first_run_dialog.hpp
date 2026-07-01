@@ -16,6 +16,6 @@ public:
 	std::string selected_native_language() const;
 
 private:
-	QComboBox * from_combo_ = nullptr;
-	QComboBox * to_combo_ = nullptr;
+	QComboBox * m_from_combo = nullptr;
+	QComboBox * m_to_combo = nullptr;
 };

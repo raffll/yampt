@@ -25,5 +25,5 @@ public:
 	void set_codepage(codepage_t cp);
 
 private:
-	codepage_t codepage_ = codepage_t::windows_1252;
+	codepage_t m_codepage = codepage_t::windows_1252;
 };

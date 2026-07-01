@@ -37,5 +37,5 @@ private:
 	void show_dict_context_menu(const std::string & path, const QPoint & pos);
 	void show_yaml_context_menu(const std::string & path, const QPoint & pos);
 
-	QTreeWidget * tree_ = nullptr;
+	QTreeWidget * m_tree = nullptr;
 };

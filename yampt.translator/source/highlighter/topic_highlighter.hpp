@@ -17,6 +17,6 @@ protected:
 	void highlightBlock(const QString & text) override;
 
 private:
-	std::vector<std::string> terms_;
-	QTextCharFormat format_;
+	std::vector<std::string> m_terms;
+	QTextCharFormat m_format;
 };

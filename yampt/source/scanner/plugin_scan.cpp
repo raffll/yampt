@@ -22,26 +22,26 @@ static constexpr size_t data_sub_record_size = 8;
 void plugin_scan_t::load_plugin(const std::string & path)
 {
 	auto p = std::make_unique<loaded_plugin_t>(path);
-	plugins_.push_back(std::move(p));
+	m_plugins.push_back(std::move(p));
 }
 
 void plugin_scan_t::set_merge_plugin(const std::string & filename)
 {
-	merge_plugin_idx_ = static_cast<int>(plugins_.size());
+	m_merge_plugin_idx = static_cast<int>(m_plugins.size());
 
 	auto p = std::make_unique<loaded_plugin_t>();
 	p->path = filename;
-	plugins_.push_back(std::move(p));
+	m_plugins.push_back(std::move(p));
 
-	merge_records_.clear();
+	m_merge_records.clear();
 }
 
 void plugin_scan_t::insert_or_update_version(version_descriptor_t desc)
 {
 	std::string key = desc.rec_type + std::string(1, '\0') + desc.record_id;
-	auto it = entry_lookup_.find(key);
+	auto it = m_entry_lookup.find(key);
 
-	if (it == entry_lookup_.end())
+	if (it == m_entry_lookup.end())
 	{
 		conflict_entry_t entry;
 		entry.rec_type = std::move(desc.rec_type);
@@ -53,12 +53,12 @@ void plugin_scan_t::insert_or_update_version(version_descriptor_t desc)
 		desc.version.status = conflict_this_t::master;
 		entry.versions.push_back(desc.version);
 
-		entry_lookup_[key] = entries_.size();
-		entries_.push_back(std::move(entry));
+		m_entry_lookup[key] = m_entries.size();
+		m_entries.push_back(std::move(entry));
 		return;
 	}
 
-	auto & entry = entries_[it->second];
+	auto & entry = m_entries[it->second];
 	desc.version.status = conflict_this_t::unknown;
 	entry.versions.push_back(desc.version);
 
@@ -68,15 +68,15 @@ void plugin_scan_t::insert_or_update_version(version_descriptor_t desc)
 
 void plugin_scan_t::rebuild_conflicts()
 {
-	entries_.clear();
-	entry_lookup_.clear();
+	m_entries.clear();
+	m_entry_lookup.clear();
 
-	for (int pi = 0; pi < static_cast<int>(plugins_.size()); ++pi)
+	for (int pi = 0; pi < static_cast<int>(m_plugins.size()); ++pi)
 	{
-		if (pi == merge_plugin_idx_)
+		if (pi == m_merge_plugin_idx)
 			continue;
 
-		const auto & idx = plugins_[pi]->index;
+		const auto & idx = m_plugins[pi]->index;
 		for (const auto & rec : idx.entries())
 		{
 			if (rec.rec_type == "TES3")
@@ -89,19 +89,19 @@ void plugin_scan_t::rebuild_conflicts()
 		}
 	}
 
-	if (merge_plugin_idx_ >= 0)
+	if (m_merge_plugin_idx >= 0)
 	{
-		for (size_t mi = 0; mi < merge_records_.size(); ++mi)
+		for (size_t mi = 0; mi < m_merge_records.size(); ++mi)
 		{
-			const auto & mr = merge_records_[mi];
+			const auto & mr = m_merge_records[mi];
 			record_version_t ver;
-			ver.plugin_idx = merge_plugin_idx_;
+			ver.plugin_idx = m_merge_plugin_idx;
 			ver.record_index = mi;
 			insert_or_update_version({ mr.rec_type, mr.record_id, "", "", ver });
 		}
 	}
 
-	for (auto & entry : entries_)
+	for (auto & entry : m_entries)
 	{
 		if (entry.versions.size() >= 2)
 			compute_conflict(entry);
@@ -244,14 +244,14 @@ void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 	{
 		const auto & ver = entry.versions[i];
 
-		if (ver.plugin_idx == merge_plugin_idx_)
-			contents[i] = merge_records_[ver.record_index].content;
+		if (ver.plugin_idx == m_merge_plugin_idx)
+			contents[i] = m_merge_records[ver.record_index].content;
 		else
 		{
-			plugins_[ver.plugin_idx]->esm.select_record(ver.record_index);
-			contents[i] = plugins_[ver.plugin_idx]->esm.get_record().content;
+			m_plugins[ver.plugin_idx]->esm.select_record(ver.record_index);
+			contents[i] = m_plugins[ver.plugin_idx]->esm.get_record().content;
 
-			const auto & plugin_entries = plugins_[ver.plugin_idx]->index.entries();
+			const auto & plugin_entries = m_plugins[ver.plugin_idx]->index.entries();
 			if (ver.record_index < plugin_entries.size() && plugin_entries[ver.record_index].has_dele)
 				is_deleted[i] = true;
 		}
@@ -301,53 +301,53 @@ void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 
 size_t plugin_scan_t::plugin_count() const
 {
-	return plugins_.size();
+	return m_plugins.size();
 }
 
 const std::string & plugin_scan_t::plugin_path(int idx) const
 {
-	return plugins_[idx]->path;
+	return m_plugins[idx]->path;
 }
 
 std::string plugin_scan_t::plugin_filename(int idx) const
 {
-	return std::filesystem::path(plugins_[idx]->path).filename().string();
+	return std::filesystem::path(m_plugins[idx]->path).filename().string();
 }
 
 const esm_reader_t & plugin_scan_t::plugin(int idx) const
 {
-	return plugins_[idx]->esm;
+	return m_plugins[idx]->esm;
 }
 
 const plugin_index_t & plugin_scan_t::index(int idx) const
 {
-	return plugins_[idx]->index;
+	return m_plugins[idx]->index;
 }
 
 bool plugin_scan_t::is_merge_plugin(int idx) const
 {
-	return idx == merge_plugin_idx_;
+	return idx == m_merge_plugin_idx;
 }
 
 const std::vector<conflict_entry_t> & plugin_scan_t::entries() const
 {
-	return entries_;
+	return m_entries;
 }
 
 const conflict_entry_t * plugin_scan_t::find(const std::string & type, const std::string & id) const
 {
 	std::string key = type + std::string(1, '\0') + id;
-	auto it = entry_lookup_.find(key);
-	if (it == entry_lookup_.end())
+	auto it = m_entry_lookup.find(key);
+	if (it == m_entry_lookup.end())
 		return nullptr;
 
-	return &entries_[it->second];
+	return &m_entries[it->second];
 }
 
 std::vector<std::string> plugin_scan_t::all_types() const
 {
 	std::set<std::string> unique;
-	for (const auto & entry : entries_)
+	for (const auto & entry : m_entries)
 		unique.insert(entry.rec_type);
 
 	return std::vector<std::string>(unique.begin(), unique.end());
@@ -355,13 +355,13 @@ std::vector<std::string> plugin_scan_t::all_types() const
 
 void plugin_scan_t::copy_record_to_merge(int source_plugin, size_t record_index)
 {
-	if (merge_plugin_idx_ < 0)
+	if (m_merge_plugin_idx < 0)
 		return;
 
-	plugins_[source_plugin]->esm.select_record(record_index);
-	const auto & rec = plugins_[source_plugin]->esm.get_record();
+	m_plugins[source_plugin]->esm.select_record(record_index);
+	const auto & rec = m_plugins[source_plugin]->esm.get_record();
 
-	const auto & plugin_entries = plugins_[source_plugin]->index.entries();
+	const auto & plugin_entries = m_plugins[source_plugin]->index.entries();
 	if (record_index >= plugin_entries.size())
 		return;
 
@@ -372,7 +372,7 @@ void plugin_scan_t::copy_record_to_merge(int source_plugin, size_t record_index)
 	mr.record_id = indexed.record_id;
 	mr.content = rec.content;
 
-	for (auto & existing : merge_records_)
+	for (auto & existing : m_merge_records)
 	{
 		if (existing.rec_type == mr.rec_type && existing.record_id == mr.record_id)
 		{
@@ -381,16 +381,16 @@ void plugin_scan_t::copy_record_to_merge(int source_plugin, size_t record_index)
 		}
 	}
 
-	merge_records_.push_back(std::move(mr));
+	m_merge_records.push_back(std::move(mr));
 }
 
 void plugin_scan_t::remove_from_merge(const std::string & type, const std::string & id)
 {
 	auto it = std::remove_if(
-	    merge_records_.begin(),
-	    merge_records_.end(),
+	    m_merge_records.begin(),
+	    m_merge_records.end(),
 	    [&](const merge_record_t & mr) { return mr.rec_type == type && mr.record_id == id; });
-	merge_records_.erase(it, merge_records_.end());
+	m_merge_records.erase(it, m_merge_records.end());
 }
 
 bool plugin_scan_t::save_merge(
@@ -398,7 +398,7 @@ bool plugin_scan_t::save_merge(
     const std::string & author,
     const std::string & description)
 {
-	if (merge_plugin_idx_ < 0)
+	if (m_merge_plugin_idx < 0)
 		return false;
 
 	std::string header_content = build_tes3_header(author, description);
@@ -406,7 +406,7 @@ bool plugin_scan_t::save_merge(
 	std::vector<tools_t::record_t> records;
 	records.push_back({ "TES3", header_content, header_content.size(), false });
 
-	for (const auto & mr : merge_records_)
+	for (const auto & mr : m_merge_records)
 		records.push_back({ mr.rec_type, mr.content, mr.content.size(), false });
 
 	tools_t::write_file(records, output_path);
@@ -415,17 +415,17 @@ bool plugin_scan_t::save_merge(
 
 bool plugin_scan_t::has_merge() const
 {
-	return merge_plugin_idx_ >= 0;
+	return m_merge_plugin_idx >= 0;
 }
 
 size_t plugin_scan_t::merge_record_count() const
 {
-	return merge_records_.size();
+	return m_merge_records.size();
 }
 
 const std::string & plugin_scan_t::merge_record_content(size_t index) const
 {
-	return merge_records_[index].content;
+	return m_merge_records[index].content;
 }
 
 void plugin_scan_t::copy_record_to_merge_raw(
@@ -433,10 +433,10 @@ void plugin_scan_t::copy_record_to_merge_raw(
     const std::string & record_id,
     const std::string & content)
 {
-	if (merge_plugin_idx_ < 0)
+	if (m_merge_plugin_idx < 0)
 		return;
 
-	for (auto & existing : merge_records_)
+	for (auto & existing : m_merge_records)
 	{
 		if (existing.rec_type == rec_type && existing.record_id == record_id)
 		{
@@ -449,7 +449,7 @@ void plugin_scan_t::copy_record_to_merge_raw(
 	mr.rec_type = rec_type;
 	mr.record_id = record_id;
 	mr.content = content;
-	merge_records_.push_back(std::move(mr));
+	m_merge_records.push_back(std::move(mr));
 }
 
 struct list_item_t
@@ -551,11 +551,11 @@ void plugin_scan_t::merge_leveled_list(const conflict_entry_t & entry)
 
 	auto get_content = [&](const record_version_t & ver) -> std::string
 	{
-		if (ver.plugin_idx == merge_plugin_idx_)
-			return merge_records_[ver.record_index].content;
+		if (ver.plugin_idx == m_merge_plugin_idx)
+			return m_merge_records[ver.record_index].content;
 
-		plugins_[ver.plugin_idx]->esm.select_record(ver.record_index);
-		return plugins_[ver.plugin_idx]->esm.get_record().content;
+		m_plugins[ver.plugin_idx]->esm.select_record(ver.record_index);
+		return m_plugins[ver.plugin_idx]->esm.get_record().content;
 	};
 
 	const std::string & master_content = get_content(entry.versions[0]);
@@ -569,7 +569,7 @@ void plugin_scan_t::merge_leveled_list(const conflict_entry_t & entry)
 
 	for (size_t vi = 1; vi < entry.versions.size(); ++vi)
 	{
-		if (entry.versions[vi].plugin_idx == merge_plugin_idx_)
+		if (entry.versions[vi].plugin_idx == m_merge_plugin_idx)
 			continue;
 
 		const std::string & ver_content = get_content(entry.versions[vi]);
@@ -598,11 +598,11 @@ void plugin_scan_t::merge_dialogue(const conflict_entry_t & entry)
 
 	auto get_content = [&](const record_version_t & ver) -> std::string
 	{
-		if (ver.plugin_idx == merge_plugin_idx_)
-			return merge_records_[ver.record_index].content;
+		if (ver.plugin_idx == m_merge_plugin_idx)
+			return m_merge_records[ver.record_index].content;
 
-		plugins_[ver.plugin_idx]->esm.select_record(ver.record_index);
-		return plugins_[ver.plugin_idx]->esm.get_record().content;
+		m_plugins[ver.plugin_idx]->esm.select_record(ver.record_index);
+		return m_plugins[ver.plugin_idx]->esm.get_record().content;
 	};
 
 	std::string winning_dial = get_content(entry.versions.back());
@@ -614,13 +614,13 @@ void plugin_scan_t::merge_dialogue(const conflict_entry_t & entry)
 	for (size_t vi = 0; vi < entry.versions.size(); ++vi)
 	{
 		const auto & ver = entry.versions[vi];
-		if (ver.plugin_idx == merge_plugin_idx_)
+		if (ver.plugin_idx == m_merge_plugin_idx)
 			continue;
 
 		int pi = ver.plugin_idx;
 		size_t dial_rec_idx = ver.record_index;
 
-		const auto & plugin_entries = plugins_[pi]->index.entries();
+		const auto & plugin_entries = m_plugins[pi]->index.entries();
 		for (size_t ei = dial_rec_idx + 1; ei < plugin_entries.size(); ++ei)
 		{
 			if (plugin_entries[ei].rec_type != "INFO")
@@ -631,8 +631,8 @@ void plugin_scan_t::merge_dialogue(const conflict_entry_t & entry)
 
 			const auto & info_id = plugin_entries[ei].record_id;
 
-			plugins_[pi]->esm.select_record(plugin_entries[ei].record_index);
-			std::string content = plugins_[pi]->esm.get_record().content;
+			m_plugins[pi]->esm.select_record(plugin_entries[ei].record_index);
+			std::string content = m_plugins[pi]->esm.get_record().content;
 
 			if (info_contents.find(info_id) == info_contents.end())
 				merged_info_ids.push_back(info_id);
@@ -651,7 +651,7 @@ void plugin_scan_t::merge_dialogue(const conflict_entry_t & entry)
 size_t plugin_scan_t::itm_count(int plugin_idx) const
 {
 	size_t count = 0;
-	for (const auto & entry : entries_)
+	for (const auto & entry : m_entries)
 	{
 		for (const auto & ver : entry.versions)
 		{
@@ -668,7 +668,7 @@ size_t plugin_scan_t::itm_count(int plugin_idx) const
 std::vector<const conflict_entry_t *> plugin_scan_t::itm_entries(int plugin_idx) const
 {
 	std::vector<const conflict_entry_t *> result;
-	for (const auto & entry : entries_)
+	for (const auto & entry : m_entries)
 	{
 		for (const auto & ver : entry.versions)
 		{
@@ -706,16 +706,16 @@ static std::string build_hedr_data(size_t record_count, const std::string & auth
 
 std::string plugin_scan_t::build_tes3_header(const std::string & author, const std::string & description)
 {
-	const auto & hedr_data = build_hedr_data(merge_records_.size(), author, description);
+	const auto & hedr_data = build_hedr_data(m_merge_records.size(), author, description);
 
 	std::string body;
 	body += "HEDR";
 	body += tools_t::convert_uint_to_string_byte_array(tes3_hedr_size);
 	body += hedr_data;
 
-	for (int i = 0; i < static_cast<int>(plugins_.size()); ++i)
+	for (int i = 0; i < static_cast<int>(m_plugins.size()); ++i)
 	{
-		if (i == merge_plugin_idx_)
+		if (i == m_merge_plugin_idx)
 			continue;
 
 		std::string filename = plugin_filename(i);
@@ -728,7 +728,7 @@ std::string plugin_scan_t::build_tes3_header(const std::string & author, const s
 		uint64_t file_size = 0;
 		try
 		{
-			file_size = std::filesystem::file_size(plugins_[i]->path);
+			file_size = std::filesystem::file_size(m_plugins[i]->path);
 		}
 		catch (...)
 		{}

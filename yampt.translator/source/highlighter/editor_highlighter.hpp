@@ -24,17 +24,19 @@ protected:
 private:
 	void apply_syntax_tokens(const QString & text);
 	void apply_forbidden_chars(const QString & text);
+	void apply_hyperlink_prefix(const QString & text);
 	void apply_spell_check(const QString & text);
 
-	tools_t::rec_type_t record_type_ = tools_t::rec_type_t::unknown;
-	bool is_translation_ = false;
-	spell_checker_t * spell_checker_ = nullptr;
-	script_tokenizer_t tokenizer_;
+	tools_t::rec_type_t m_record_type = tools_t::rec_type_t::unknown;
+	bool m_is_translation = false;
+	spell_checker_t * m_spell_checker = nullptr;
+	script_tokenizer_t m_tokenizer;
 
-	QTextCharFormat format_function_;
-	QTextCharFormat format_comment_;
-	QTextCharFormat format_string_;
-	QTextCharFormat format_html_tag_;
-	QTextCharFormat format_forbidden_;
-	QTextCharFormat format_misspelled_;
+	QTextCharFormat m_format_function;
+	QTextCharFormat m_format_comment;
+	QTextCharFormat m_format_string;
+	QTextCharFormat m_format_html_tag;
+	QTextCharFormat m_format_forbidden;
+	QTextCharFormat m_format_hyperlink;
+	QTextCharFormat m_format_misspelled;
 };

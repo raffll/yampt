@@ -141,19 +141,19 @@ private:
 
 	void finalize_header_conflict();
 
-	std::vector<sub_record_row_t> rows_;
-	std::vector<std::string> column_names_;
-	std::vector<conflict_this_t> plugin_conflict_this_;
-	bool hide_no_conflict_ = false;
-	bool has_merge_column_ = false;
-	int merge_col_index_ = -1;
-	std::string record_type_;
-	std::string record_id_;
-	std::vector<int> column_plugin_indices_;
+	std::vector<sub_record_row_t> m_rows;
+	std::vector<std::string> m_column_names;
+	std::vector<conflict_this_t> m_plugin_conflict_this;
+	bool m_hide_no_conflict = false;
+	bool m_has_merge_column = false;
+	int m_merge_col_index = -1;
+	std::string m_record_type;
+	std::string m_record_id;
+	std::vector<int> m_column_plugin_indices;
 
 	const std::vector<sub_record_row_t> & visible_rows() const;
-	mutable std::vector<sub_record_row_t> filtered_rows_;
-	mutable bool filter_dirty_ = true;
+	mutable std::vector<sub_record_row_t> m_filtered_rows;
+	mutable bool m_filter_dirty = true;
 };
 
 struct cell_ref_group_t

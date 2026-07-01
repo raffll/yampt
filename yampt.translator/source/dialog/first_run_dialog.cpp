@@ -16,24 +16,24 @@ first_run_dialog_t::first_run_dialog_t(QWidget * parent)
 	auto * combo_layout = new QHBoxLayout;
 
 	combo_layout->addWidget(new QLabel("From:"));
-	from_combo_ = new QComboBox(this);
-	from_combo_->addItem("English", QString("EN"));
-	from_combo_->addItem("Polish", QString("PL"));
-	from_combo_->addItem("German", QString("DE"));
-	from_combo_->addItem("French", QString("FR"));
-	from_combo_->addItem("Russian", QString("RU"));
-	from_combo_->setCurrentIndex(0);
-	combo_layout->addWidget(from_combo_);
+	m_from_combo = new QComboBox(this);
+	m_from_combo->addItem("English", QString("EN"));
+	m_from_combo->addItem("Polish", QString("PL"));
+	m_from_combo->addItem("German", QString("DE"));
+	m_from_combo->addItem("French", QString("FR"));
+	m_from_combo->addItem("Russian", QString("RU"));
+	m_from_combo->setCurrentIndex(0);
+	combo_layout->addWidget(m_from_combo);
 
 	combo_layout->addWidget(new QLabel("To:"));
-	to_combo_ = new QComboBox(this);
-	to_combo_->addItem("English", QString("EN"));
-	to_combo_->addItem("Polish", QString("PL"));
-	to_combo_->addItem("German", QString("DE"));
-	to_combo_->addItem("French", QString("FR"));
-	to_combo_->addItem("Russian", QString("RU"));
-	to_combo_->setCurrentIndex(1);
-	combo_layout->addWidget(to_combo_);
+	m_to_combo = new QComboBox(this);
+	m_to_combo->addItem("English", QString("EN"));
+	m_to_combo->addItem("Polish", QString("PL"));
+	m_to_combo->addItem("German", QString("DE"));
+	m_to_combo->addItem("French", QString("FR"));
+	m_to_combo->addItem("Russian", QString("RU"));
+	m_to_combo->setCurrentIndex(1);
+	combo_layout->addWidget(m_to_combo);
 
 	layout->addLayout(combo_layout);
 
@@ -44,10 +44,10 @@ first_run_dialog_t::first_run_dialog_t(QWidget * parent)
 
 std::string first_run_dialog_t::selected_foreign_language() const
 {
-	return from_combo_->currentData().toString().toStdString();
+	return m_from_combo->currentData().toString().toStdString();
 }
 
 std::string first_run_dialog_t::selected_native_language() const
 {
-	return to_combo_->currentData().toString().toStdString();
+	return m_to_combo->currentData().toString().toStdString();
 }

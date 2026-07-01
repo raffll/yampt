@@ -14,59 +14,59 @@ public:
 
 	~json_reader_t()
 	{
-		if (doc_)
-			yyjson_doc_free(doc_);
+		if (m_doc)
+			yyjson_doc_free(m_doc);
 	}
 
 	json_reader_t(const json_reader_t &) = delete;
 	json_reader_t & operator=(const json_reader_t &) = delete;
 
 	json_reader_t(json_reader_t && other) noexcept
-	    : doc_(other.doc_)
+	    : m_doc(other.m_doc)
 	{
-		other.doc_ = nullptr;
+		other.m_doc = nullptr;
 	}
 
 	json_reader_t & operator=(json_reader_t && other) noexcept
 	{
 		if (this != &other)
 		{
-			if (doc_)
-				yyjson_doc_free(doc_);
-			doc_ = other.doc_;
-			other.doc_ = nullptr;
+			if (m_doc)
+				yyjson_doc_free(m_doc);
+			m_doc = other.m_doc;
+			other.m_doc = nullptr;
 		}
 		return *this;
 	}
 
 	bool parse(const char * data, size_t length, bool allow_invalid_unicode)
 	{
-		if (doc_)
+		if (m_doc)
 		{
-			yyjson_doc_free(doc_);
-			doc_ = nullptr;
+			yyjson_doc_free(m_doc);
+			m_doc = nullptr;
 		}
 
 		yyjson_read_flag flags = YYJSON_READ_ALLOW_BOM;
 		if (allow_invalid_unicode)
 			flags |= YYJSON_READ_ALLOW_INVALID_UNICODE;
 
-		doc_ = yyjson_read(data, length, flags);
-		return doc_ != nullptr;
+		m_doc = yyjson_read(data, length, flags);
+		return m_doc != nullptr;
 	}
 
 	std::string get_error() const
 	{
-		if (doc_)
+		if (m_doc)
 			return {};
 		return "JSON parse error";
 	}
 
 	yyjson_val * root() const
 	{
-		if (!doc_)
+		if (!m_doc)
 			return nullptr;
-		return yyjson_doc_get_root(doc_);
+		return yyjson_doc_get_root(m_doc);
 	}
 
 	using obj_callback_t = std::function<void(const char * key, size_t key_len, yyjson_val * val)>;
@@ -120,5 +120,5 @@ public:
 	}
 
 private:
-	yyjson_doc * doc_ = nullptr;
+	yyjson_doc * m_doc = nullptr;
 };

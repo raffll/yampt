@@ -30,5 +30,5 @@ public:
 
 private:
 	struct impl_t;
-	std::unique_ptr<impl_t> impl_;
+	std::unique_ptr<impl_t> m_impl;
 };

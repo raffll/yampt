@@ -9,17 +9,17 @@ glossary_highlighter_t::glossary_highlighter_t(QTextDocument * parent)
 
 void glossary_highlighter_t::set_annotation_manager(glossary_t * manager)
 {
-	manager_ = manager;
+	m_manager = manager;
 }
 
 void glossary_highlighter_t::set_record_type(tools_t::rec_type_t type)
 {
-	record_type_ = type;
+	m_record_type = type;
 }
 
 void glossary_highlighter_t::set_annotations(const std::vector<annotation_t> & annotations)
 {
-	annotations_ = annotations;
+	m_annotations = annotations;
 	rehighlight();
 }
 
@@ -60,14 +60,14 @@ static QTextCharFormat format_for_annotation(const annotation_t & annotation)
 
 void glossary_highlighter_t::highlightBlock(const QString & text)
 {
-	if (annotations_.empty())
+	if (m_annotations.empty())
 		return;
 
 	const int block_start = currentBlock().position();
 	const int block_length = text.length();
 	const int block_end = block_start + block_length;
 
-	for (const auto & annotation : annotations_)
+	for (const auto & annotation : m_annotations)
 	{
 		const int ann_start = static_cast<int>(annotation.start);
 		const int ann_end = static_cast<int>(annotation.end);
@@ -82,7 +82,7 @@ void glossary_highlighter_t::highlightBlock(const QString & text)
 		if (length <= 0)
 			continue;
 
-		if (count_overlaps(annotations_, ann_start) > 3)
+		if (count_overlaps(m_annotations, ann_start) > 3)
 			continue;
 
 		const auto & format = format_for_annotation(annotation);

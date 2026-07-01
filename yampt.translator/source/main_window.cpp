@@ -3,6 +3,7 @@
 #include "dialog/dict_selection_dialog.hpp"
 #include "dialog/find_replace_dialog.hpp"
 #include "dialog/first_run_dialog.hpp"
+#include "dialog/merge_dialog.hpp"
 #include "dialog/translator_settings_dialog.hpp"
 #include "dialog/spell_context_menu.hpp"
 #include "highlighter/glossary_highlighter.hpp"
@@ -36,6 +37,8 @@
 #include <QAction>
 #include <QCloseEvent>
 #include <QCoreApplication>
+#include <QComboBox>
+#include <QDateTime>
 #include <QDialogButtonBox>
 #include <QDir>
 #include <QDirIterator>
@@ -67,14 +70,14 @@
 
 main_window_t::main_window_t(QWidget * parent)
     : QMainWindow(parent)
-    , session_(current_codepage_)
-    , editor_controller_(edit_history_, byte_limit_validator_, glossary_)
+    , m_session(m_current_codepage)
+    , m_editor_controller(m_edit_history, m_byte_limit_validator, m_glossary)
 {
 	setWindowTitle("yTranslator");
 	resize(1280, 720);
 	setMinimumSize(800, 600);
 
-	type_filter_ = {
+	m_type_filter = {
 		tools_t::rec_type_t::cell, tools_t::rec_type_t::dial, tools_t::rec_type_t::info, tools_t::rec_type_t::fnam,
 		tools_t::rec_type_t::text, tools_t::rec_type_t::gmst, tools_t::rec_type_t::desc, tools_t::rec_type_t::rnam,
 		tools_t::rec_type_t::indx, tools_t::rec_type_t::sctx,
@@ -95,7 +98,7 @@ main_window_t::main_window_t(QWidget * parent)
 
 	load_config();
 
-	bool first_run = settings_.native_language().empty();
+	bool first_run = m_settings.native_language().empty();
 
 	if (first_run)
 	{
@@ -105,10 +108,10 @@ main_window_t::main_window_t(QWidget * parent)
 			const auto native = dialog.selected_native_language();
 			const auto foreign = dialog.selected_foreign_language();
 
-			settings_.set_native_language(native);
-			settings_.set_foreign_language(foreign);
-			settings_.set_native_tag(native);
-			settings_.set_foreign_tag(foreign);
+			m_settings.set_native_language(native);
+			m_settings.set_foreign_language(foreign);
+			m_settings.set_native_tag(native);
+			m_settings.set_foreign_tag(foreign);
 
 			int encoding_index = 2;
 			if (native == "PL")
@@ -116,7 +119,7 @@ main_window_t::main_window_t(QWidget * parent)
 			else if (native == "RU")
 				encoding_index = 1;
 
-			settings_.set_encoding_index(encoding_index);
+			m_settings.set_encoding_index(encoding_index);
 			on_encoding_changed(encoding_index);
 
 			save_config();
@@ -126,30 +129,30 @@ main_window_t::main_window_t(QWidget * parent)
 
 void main_window_t::set_unsaved_changes(bool dirty)
 {
-	if (has_unsaved_changes_ == dirty)
+	if (m_has_unsaved_changes == dirty)
 		return;
 
-	has_unsaved_changes_ = dirty;
-	setWindowTitle(has_unsaved_changes_ ? "yTranslator *" : "yTranslator");
+	m_has_unsaved_changes = dirty;
+	setWindowTitle(m_has_unsaved_changes ? "yTranslator *" : "yTranslator");
 }
 
 void main_window_t::on_save()
 {
 	commit_current_edit();
 
-	if (!active_doc_)
+	if (!m_active_doc)
 		return;
 
-	if (!active_doc_->is_dirty())
+	if (!m_active_doc->is_dirty())
 		return;
 
-	active_doc_->save();
+	m_active_doc->save();
 
-	update_sidebar_item(active_doc_->path());
+	update_sidebar_item(m_active_doc->path());
 
-	log_view_->append_log("save", "saved \"" + active_doc_->path() + "\"\r\n");
+	m_log_view->append_log("save", "saved \"" + m_active_doc->path() + "\"\r\n");
 
-	if (!session_.has_any_unsaved())
+	if (!m_session.has_any_unsaved())
 		set_unsaved_changes(false);
 }
 
@@ -158,80 +161,132 @@ void main_window_t::on_save_all()
 	commit_current_edit();
 
 	std::string log_msg;
-	for (auto * doc : session_.all_dirty())
+	for (auto * doc : m_session.all_dirty())
 		log_msg += "saved \"" + doc->path() + "\"\r\n";
 
-	session_.save_all();
+	m_session.save_all();
 
-	for (auto * doc : session_.all())
+	for (auto * doc : m_session.all())
 		update_sidebar_item(doc->path());
 
 	if (!log_msg.empty())
-		log_view_->append_log("save all", log_msg);
+		m_log_view->append_log("save all", log_msg);
 
-	if (!session_.has_any_unsaved())
+	if (!m_session.has_any_unsaved())
 		set_unsaved_changes(false);
+}
+
+void main_window_t::on_merge()
+{
+	const auto all_dicts = m_session.all_dicts();
+	if (all_dicts.size() < 2)
+	{
+		QMessageBox::information(this, "Merge", "At least 2 dictionaries must be loaded to merge.");
+		return;
+	}
+
+	std::vector<merge_dialog_t::dict_entry_t> loaded_dicts;
+	for (const auto * dict_doc : all_dicts)
+	{
+		auto filename = std::string(string_utils::extract_filename(dict_doc->path()));
+		loaded_dicts.push_back({ filename, dict_doc->path(), dict_doc->kind() });
+	}
+
+	merge_dialog_t dialog(loaded_dicts, this);
+	if (dialog.exec() != QDialog::Accepted)
+		return;
+
+	const auto selected_paths = dialog.selected_paths();
+	if (selected_paths.size() < 2)
+		return;
+
+	tools_t::reset_log();
+
+	dict_merger_t merger(selected_paths);
+	const auto & merged_dict = merger.get_dict();
+
+	const auto workspace_dir = QCoreApplication::applicationDirPath().toStdString() + "/workspace/";
+	QDir().mkpath(QString::fromStdString(workspace_dir));
+
+	const auto output_path = workspace_dir + "Merged_" +
+	    QDateTime::currentDateTime().toString("yyyyMMddHHmmss").toStdString() + ".json";
+
+	dict_writer_t::write(merged_dict, output_path);
+
+	const auto log_text = tools_t::get_log();
+	m_log_view->append_log("merge", log_text);
+	m_record_tabs->setCurrentWidget(m_log_view);
+
+	scan_workspace();
+
+	const auto norm_output = string_utils::normalize_path(output_path);
+	auto * doc = m_session.find(norm_output);
+	if (doc)
+	{
+		switch_document(doc);
+		rebuild_sidebar();
+	}
 }
 
 void main_window_t::on_find()
 {
-	search_field_->setFocus();
-	search_field_->selectAll();
+	m_search_field->setFocus();
+	m_search_field->selectAll();
 }
 
 void main_window_t::on_escape()
 {
-	if (!search_field_->text().isEmpty())
-		search_field_->clear();
+	if (!m_search_field->text().isEmpty())
+		m_search_field->clear();
 }
 
 void main_window_t::on_search_changed(const QString & text)
 {
-	search_query_ = text;
+	m_search_query = text;
 
 	row_filter_t::config_t cfg;
 	cfg.query = text.toStdString();
-	cfg.case_sensitive = case_sensitive_check_ && case_sensitive_check_->isChecked();
-	cfg.regex_mode = regex_check_ && regex_check_->isChecked();
+	cfg.case_sensitive = m_case_sensitive_check && m_case_sensitive_check->isChecked();
+	cfg.regex_mode = m_regex_check && m_regex_check->isChecked();
 	cfg.columns.clear();
-	if (search_col_key_->isChecked())
+	if (m_search_col_key->isChecked())
 		cfg.columns.insert(search_column_t::key);
-	if (search_col_original_->isChecked())
+	if (m_search_col_original->isChecked())
 		cfg.columns.insert(search_column_t::original);
-	if (search_col_translation_->isChecked())
+	if (m_search_col_translation->isChecked())
 		cfg.columns.insert(search_column_t::translation);
-	row_filter_.set_config(cfg);
+	m_row_filter.set_config(cfg);
 
 	rebuild_table();
 }
 
 void main_window_t::on_case_sensitive_changed(int /*state*/)
 {
-	on_search_changed(search_query_);
+	on_search_changed(m_search_query);
 }
 
 void main_window_t::on_filters_changed()
 {
-	type_filter_ = filter_tree_view_->get_active_types();
-	type_filter_solo_ = filter_tree_view_->has_sub_type_filter();
+	m_type_filter = m_filter_tree_view->get_active_types();
+	m_type_filter_solo = m_filter_tree_view->has_sub_type_filter();
 	rebuild_table();
 }
 
 void main_window_t::on_status_filters_changed()
 {
-	status_filter_ = status_filter_view_->get_active_statuses();
+	m_status_filter = m_status_filter_view->get_active_statuses();
 	rebuild_table();
 }
 
 void main_window_t::clear_editor_panels()
 {
-	editor_view_->original_view()->clear();
-	editor_view_->translation_editor()->clear();
-	editor_view_->clear_details();
-	validation_view_->clear();
-	annotations_view_->clear();
-	history_view_->clear();
-	book_preview_view_->clear();
+	m_editor_view->original_view()->clear();
+	m_editor_view->translation_editor()->clear();
+	m_editor_view->clear_details();
+	m_validation_view->clear();
+	m_annotations_view->clear();
+	m_history_view->clear();
+	m_book_preview_view->clear();
 }
 
 void main_window_t::switch_document(document_t * new_doc)
@@ -239,36 +294,36 @@ void main_window_t::switch_document(document_t * new_doc)
 	commit_current_edit();
 	save_current_filter_state();
 
-	active_doc_ = new_doc;
-	editor_controller_.set_current_row(-1);
+	m_active_doc = new_doc;
+	m_editor_controller.set_current_row(-1);
 
-	if (!active_doc_)
+	if (!m_active_doc)
 	{
 		rebuild_table();
 		clear_editor_panels();
 		return;
 	}
 
-	restore_filter_state(active_doc_->path());
+	restore_filter_state(m_active_doc->path());
 
-	auto * dict_doc = dynamic_cast<dict_document_t *>(active_doc_);
+	auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
 	if (dict_doc)
 	{
-		filter_tree_view_->set_display_mode(filter_tree_view_t::display_mode_t::full);
-		if (session_.dict_version() != last_annotation_version_)
+		m_filter_tree_view->set_display_mode(filter_tree_view_t::display_mode_t::full);
+		if (m_session.dict_version() != m_last_annotation_version)
 		{
 			rebuild_annotations();
-			last_annotation_version_ = session_.dict_version();
+			m_last_annotation_version = m_session.dict_version();
 		}
 	}
-	else if (dynamic_cast<plugin_document_t *>(active_doc_))
+	else if (dynamic_cast<plugin_document_t *>(m_active_doc))
 	{
-		filter_tree_view_->set_display_mode(filter_tree_view_t::display_mode_t::empty);
-		filter_tree_view_->setEnabled(false);
+		m_filter_tree_view->set_display_mode(filter_tree_view_t::display_mode_t::empty);
+		m_filter_tree_view->setEnabled(false);
 	}
 	else
 	{
-		filter_tree_view_->set_display_mode(filter_tree_view_t::display_mode_t::all_only);
+		m_filter_tree_view->set_display_mode(filter_tree_view_t::display_mode_t::all_only);
 	}
 
 	rebuild_table();
@@ -277,29 +332,29 @@ void main_window_t::switch_document(document_t * new_doc)
 
 void main_window_t::rebuild_table()
 {
-	if (!table_model_)
+	if (!m_table_model)
 		return;
 
-	if (!active_doc_)
+	if (!m_active_doc)
 	{
-		table_display_->clear();
-		editor_controller_.set_current_row(-1);
+		m_table_display->clear();
+		m_editor_controller.set_current_row(-1);
 		clear_editor_panels();
 		return;
 	}
 
-	if (dynamic_cast<plugin_document_t *>(active_doc_))
+	if (dynamic_cast<plugin_document_t *>(m_active_doc))
 	{
-		table_display_->clear();
-		editor_controller_.set_current_row(-1);
+		m_table_display->clear();
+		m_editor_controller.set_current_row(-1);
 		clear_editor_panels();
 		return;
 	}
 
-	auto * dict_doc = dynamic_cast<dict_document_t *>(active_doc_);
+	auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
 	if (!dict_doc)
 	{
-		rebuild_table_yaml(active_doc_);
+		rebuild_table_yaml(m_active_doc);
 		return;
 	}
 
@@ -317,7 +372,7 @@ void main_window_t::rebuild_table_yaml(document_t * target_doc)
 	{
 		total_status_counts[row.status]++;
 
-		if (row_filter_.has_query() && !row_filter_.matches(row))
+		if (m_row_filter.has_query() && !m_row_filter.matches(row))
 			continue;
 
 		filtered_status_counts[row.status]++;
@@ -326,10 +381,10 @@ void main_window_t::rebuild_table_yaml(document_t * target_doc)
 	std::vector<table_row_t> rows;
 	for (const auto & row : raw_rows)
 	{
-		if (!status_filter_.empty() && status_filter_.count(row.status) == 0)
+		if (!m_status_filter.empty() && m_status_filter.count(row.status) == 0)
 			continue;
 
-		if (row_filter_.has_query() && !row_filter_.matches(row))
+		if (m_row_filter.has_query() && !m_row_filter.matches(row))
 			continue;
 
 		rows.push_back(row);
@@ -337,28 +392,28 @@ void main_window_t::rebuild_table_yaml(document_t * target_doc)
 
 	int total = target_doc->total_count();
 	int translated = target_doc->translated_count();
-	table_display_->apply_yaml(
+	m_table_display->apply_yaml(
 	    std::move(rows), total, translated, target_doc->path(), filtered_status_counts, total_status_counts);
-	editor_controller_.set_current_row(-1);
+	m_editor_controller.set_current_row(-1);
 	clear_editor_panels();
 }
 
 void main_window_t::rebuild_table_dict(dict_document_t * dict_doc)
 {
 	const table_filter_params_t filter_params {
-		type_filter_, filter_tree_view_->get_active_sub_types(), status_filter_, row_filter_, type_filter_solo_
+		m_type_filter, m_filter_tree_view->get_active_sub_types(), m_status_filter, m_row_filter, m_type_filter_solo
 	};
 
 	auto result = build_filtered_rows(dict_doc->data(), filter_params);
 
-	table_display_->apply(std::move(result), dict_doc->path(), dict_doc->kind());
-	editor_controller_.set_current_row(-1);
+	m_table_display->apply(std::move(result), dict_doc->path(), dict_doc->kind());
+	m_editor_controller.set_current_row(-1);
 	clear_editor_panels();
 }
 
 void main_window_t::on_row_selected(int row)
 {
-	if (row == editor_controller_.current_row())
+	if (row == m_editor_controller.current_row())
 		return;
 
 	commit_current_edit();
@@ -367,16 +422,16 @@ void main_window_t::on_row_selected(int row)
 
 void main_window_t::on_translation_changed()
 {
-	if (editor_controller_.is_loading())
+	if (m_editor_controller.is_loading())
 		return;
 
-	if (editor_controller_.current_row() < 0)
+	if (m_editor_controller.current_row() < 0)
 		return;
 
-	if (!active_doc_)
+	if (!m_active_doc)
 		return;
 
-	auto * yaml_doc = dynamic_cast<yaml_document_t *>(active_doc_);
+	auto * yaml_doc = dynamic_cast<yaml_document_t *>(m_active_doc);
 	if (yaml_doc)
 	{
 		if (!yaml_doc->is_dirty())
@@ -389,7 +444,7 @@ void main_window_t::on_translation_changed()
 		return;
 	}
 
-	auto * dict_doc = dynamic_cast<dict_document_t *>(active_doc_);
+	auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
 	if (dict_doc)
 	{
 		if (!dict_doc->is_dirty())
@@ -402,10 +457,10 @@ void main_window_t::on_translation_changed()
 	set_unsaved_changes(true);
 	update_validation();
 
-	if (editor_controller_.current_row() < 0)
+	if (m_editor_controller.current_row() < 0)
 		return;
 
-	const auto * row_data = table_model_->row_at(editor_controller_.current_row());
+	const auto * row_data = m_table_model->row_at(m_editor_controller.current_row());
 	if (!row_data)
 		return;
 
@@ -413,56 +468,56 @@ void main_window_t::on_translation_changed()
 
 	if (row_data->type == tools_t::rec_type_t::text)
 	{
-		const auto translation_text = editor_view_->translation_editor()->toPlainText().toStdString();
-		book_preview_view_->set_html(row_data->old_text, translation_text);
+		const auto translation_text = m_editor_view->translation_editor()->toPlainText().toStdString();
+		m_book_preview_view->set_html(row_data->old_text, translation_text);
 	}
 }
 
 void main_window_t::apply_translation_highlights(const table_row_t * row_data)
 {
-	const auto annotations = glossary_.annotate(row_data->old_text, row_data->type);
-	const auto current_text = editor_view_->translation_editor()->toPlainText().toLower();
+	const auto annotations = m_glossary.annotate(row_data->old_text, row_data->type);
+	const auto current_text = m_editor_view->translation_editor()->toPlainText().toLower();
 
 	const highlight_config_t config { &annotations, false, highlight_sort_policy_t::hyperlink_first };
 	auto highlights = find_annotation_highlights(current_text, config);
 
-	extra_sel_translation_.annotations = build_highlight_selections(editor_view_->translation_editor(), highlights);
+	m_extra_sel_translation.annotations = build_highlight_selections(m_editor_view->translation_editor(), highlights);
 
-	extra_sel_translation_.grammar = grammar_check_->isChecked()
-	                                     ? grammar_checker_.check(editor_view_->translation_editor(), row_data->type)
+	m_extra_sel_translation.grammar = m_grammar_check->isChecked()
+	                                     ? m_grammar_checker.check(m_editor_view->translation_editor(), row_data->type)
 	                                     : QList<QTextEdit::ExtraSelection> {};
-	apply_extra_selections(editor_view_->translation_editor(), extra_sel_translation_);
+	apply_extra_selections(m_editor_view->translation_editor(), m_extra_sel_translation);
 }
 
 void main_window_t::commit_current_edit()
 {
-	if (editor_controller_.current_row() < 0)
+	if (m_editor_controller.current_row() < 0)
 		return;
 
-	if (editor_controller_.is_loading())
+	if (m_editor_controller.is_loading())
 		return;
 
-	if (!editor_view_)
+	if (!m_editor_view)
 		return;
 
-	if (!active_doc_)
+	if (!m_active_doc)
 		return;
 
-	const auto & current_text = editor_view_->translation_editor()->toPlainText();
-	if (current_text == editor_controller_.loaded_text())
+	const auto & current_text = m_editor_view->translation_editor()->toPlainText();
+	if (current_text == m_editor_controller.loaded_text())
 		return;
 
-	const auto * row_data = table_model_->row_at(editor_controller_.current_row());
+	const auto * row_data = m_table_model->row_at(m_editor_controller.current_row());
 	if (!row_data)
 		return;
 
 	std::string new_text_str;
-	if (editor_view_->has_script_template())
+	if (m_editor_view->has_script_template())
 	{
-		new_text_str = editor_view_->reconstruct_script_line();
+		new_text_str = m_editor_view->reconstruct_script_line();
 
 		const auto lines = current_text.split('\n');
-		const size_t slot_count = editor_view_->script_slot_count();
+		const size_t slot_count = m_editor_view->script_slot_count();
 
 		if (static_cast<size_t>(lines.size()) != slot_count)
 		{
@@ -475,14 +530,14 @@ void main_window_t::commit_current_edit()
 		new_text_str = current_text.toStdString();
 	}
 
-	auto * dict_doc = dynamic_cast<dict_document_t *>(active_doc_);
+	auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
 	if (dict_doc)
 	{
 		commit_dict_edit(dict_doc, row_data, new_text_str);
 		return;
 	}
 
-	commit_yaml_edit(active_doc_, row_data, new_text_str);
+	commit_yaml_edit(m_active_doc, row_data, new_text_str);
 }
 
 // irreducible: 3 params required — document pointer per extraction constraint + row context + new value
@@ -491,24 +546,24 @@ void main_window_t::commit_dict_edit(
     const table_row_t * row_data,
     const std::string & new_text_str)
 {
-	const auto result = editor_controller_.commit(*dict_doc, *row_data, new_text_str);
+	const auto result = m_editor_controller.commit(*dict_doc, *row_data, new_text_str);
 	if (!result.success)
 		return;
 
 	if (result.propagated_count > 0)
 	{
 		statusBar()->showMessage(QString("Propagated to %1 entries").arg(result.propagated_count), 5000);
-		table_model_->update_row(editor_controller_.current_row(), result.new_text, result.status);
+		m_table_model->update_row(m_editor_controller.current_row(), result.new_text, result.status);
 		sync_propagated_rows(dict_doc);
 		set_unsaved_changes(dict_doc->is_dirty());
-		editor_controller_.set_loaded_text(editor_view_->translation_editor()->toPlainText());
+		m_editor_controller.set_loaded_text(m_editor_view->translation_editor()->toPlainText());
 		update_status_counts();
 		return;
 	}
 
-	table_model_->update_row(editor_controller_.current_row(), result.new_text, result.status);
+	m_table_model->update_row(m_editor_controller.current_row(), result.new_text, result.status);
 	set_unsaved_changes(dict_doc->is_dirty());
-	editor_controller_.set_loaded_text(editor_view_->translation_editor()->toPlainText());
+	m_editor_controller.set_loaded_text(m_editor_view->translation_editor()->toPlainText());
 	update_status_counts();
 }
 
@@ -519,14 +574,14 @@ void main_window_t::commit_yaml_edit(
     const std::string & new_text_str)
 {
 	target_doc->commit_edit(row_data->type, row_data->record_index, new_text_str);
-	table_model_->update_row(editor_controller_.current_row(), new_text_str, status_t::in_progress);
+	m_table_model->update_row(m_editor_controller.current_row(), new_text_str, status_t::in_progress);
 
 	auto * yaml_doc = dynamic_cast<yaml_document_t *>(target_doc);
 	if (yaml_doc)
 		yaml_doc->save_tmp();
 
 	set_unsaved_changes(target_doc->is_dirty());
-	editor_controller_.set_loaded_text(editor_view_->translation_editor()->toPlainText());
+	m_editor_controller.set_loaded_text(m_editor_view->translation_editor()->toPlainText());
 	update_status_counts();
 }
 
@@ -534,12 +589,12 @@ void main_window_t::sync_propagated_rows(dict_document_t * dict_doc)
 {
 	auto & data = dict_doc->data_mut();
 
-	for (int i = 0; i < table_model_->rowCount(); ++i)
+	for (int i = 0; i < m_table_model->rowCount(); ++i)
 	{
-		if (i == editor_controller_.current_row())
+		if (i == m_editor_controller.current_row())
 			continue;
 
-		const auto * row = table_model_->row_at(i);
+		const auto * row = m_table_model->row_at(i);
 		if (!row)
 			continue;
 
@@ -552,155 +607,155 @@ void main_window_t::sync_propagated_rows(dict_document_t * dict_doc)
 
 		const auto & record = chap_it->second.records[row->record_index];
 		if (record.new_text != row->new_text || record.status != row->status)
-			table_model_->update_row(i, record.new_text, record.status);
+			m_table_model->update_row(i, record.new_text, record.status);
 	}
 }
 
 // irreducible: sequential orchestrator — each step depends on prior state; no nesting to flatten
 void main_window_t::load_record(int row)
 {
-	editor_controller_.set_loading(true);
+	m_editor_controller.set_loading(true);
 
-	if (!table_model_ || !editor_view_)
+	if (!m_table_model || !m_editor_view)
 	{
-		editor_controller_.set_current_row(-1);
-		editor_controller_.set_loading(false);
+		m_editor_controller.set_current_row(-1);
+		m_editor_controller.set_loading(false);
 		return;
 	}
 
-	const auto * row_data = table_model_->row_at(row);
+	const auto * row_data = m_table_model->row_at(row);
 	if (!row_data)
 	{
 		load_record_clear(row);
 		return;
 	}
 
-	const auto load_result = active_doc_ ? editor_controller_.load(*active_doc_, *row_data) : editor_load_result_t {};
+	const auto load_result = m_active_doc ? m_editor_controller.load(*m_active_doc, *row_data) : editor_load_result_t {};
 
 	if (row_data->type == tools_t::rec_type_t::sctx || row_data->type == tools_t::rec_type_t::bnam)
 		load_record_script(row_data);
 	else
 		load_record_plain(row_data);
 
-	editor_view_->translation_editor()->setReadOnly(load_result.is_read_only);
+	m_editor_view->translation_editor()->setReadOnly(load_result.is_read_only);
 
-	hl_original_->set_record_type(row_data->type);
-	hl_adapted_->set_record_type(row_data->type);
-	hl_translation_->set_record_type(row_data->type);
+	m_hl_original->set_record_type(row_data->type);
+	m_hl_adapted->set_record_type(row_data->type);
+	m_hl_translation->set_record_type(row_data->type);
 
-	const auto validation_result = byte_limit_validator_.validate(row_data->type, row_data->new_text);
-	validation_view_->update_validation(validation_result);
+	const auto validation_result = m_byte_limit_validator.validate(row_data->type, row_data->new_text);
+	m_validation_view->update_validation(validation_result);
 
 	if (row_data->type == tools_t::rec_type_t::text)
-		book_preview_view_->set_html(row_data->old_text, row_data->new_text);
+		m_book_preview_view->set_html(row_data->old_text, row_data->new_text);
 	else
-		book_preview_view_->clear();
+		m_book_preview_view->clear();
 
-	annotations_view_->update_annotations(
+	m_annotations_view->update_annotations(
 	    load_result.annotations, load_result.speaker_name, load_result.gender, load_result.enchantment);
 
-	translation_tab_->set_source_text(row_data->old_text);
+	m_translation_tab->set_source_text(row_data->old_text);
 
 	if (!load_result.details.empty())
-		editor_view_->set_details(load_result.details);
+		m_editor_view->set_details(load_result.details);
 	else
-		editor_view_->clear_details();
+		m_editor_view->clear_details();
 
 	const auto & annotations = load_result.annotations;
-	const auto original_text_lower = editor_view_->original_view()->toPlainText().toLower();
-	const auto translation_text_lower = editor_view_->translation_editor()->toPlainText().toLower();
+	const auto original_text_lower = m_editor_view->original_view()->toPlainText().toLower();
+	const auto translation_text_lower = m_editor_view->translation_editor()->toPlainText().toLower();
 
 	const highlight_config_t orig_config { &annotations, true, highlight_sort_policy_t::length_first };
 	auto orig_highlights = find_annotation_highlights(original_text_lower, orig_config);
 
-	extra_sel_original_.annotations = build_highlight_selections(editor_view_->original_view(), orig_highlights);
-	extra_sel_original_.grammar.clear();
-	extra_sel_original_.adapted_diff.clear();
-	apply_extra_selections(editor_view_->original_view(), extra_sel_original_);
+	m_extra_sel_original.annotations = build_highlight_selections(m_editor_view->original_view(), orig_highlights);
+	m_extra_sel_original.grammar.clear();
+	m_extra_sel_original.adapted_diff.clear();
+	apply_extra_selections(m_editor_view->original_view(), m_extra_sel_original);
 
 	const highlight_config_t trans_config { &annotations, false, highlight_sort_policy_t::length_first };
 	auto trans_highlights = find_annotation_highlights(translation_text_lower, trans_config);
 
-	extra_sel_translation_.annotations =
-	    build_highlight_selections(editor_view_->translation_editor(), trans_highlights);
-	extra_sel_translation_.grammar = grammar_check_->isChecked()
-	                                     ? grammar_checker_.check(editor_view_->translation_editor(), row_data->type)
+	m_extra_sel_translation.annotations =
+	    build_highlight_selections(m_editor_view->translation_editor(), trans_highlights);
+	m_extra_sel_translation.grammar = m_grammar_check->isChecked()
+	                                     ? m_grammar_checker.check(m_editor_view->translation_editor(), row_data->type)
 	                                     : QList<QTextEdit::ExtraSelection> {};
-	extra_sel_translation_.adapted_diff.clear();
-	apply_extra_selections(editor_view_->translation_editor(), extra_sel_translation_);
+	m_extra_sel_translation.adapted_diff.clear();
+	apply_extra_selections(m_editor_view->translation_editor(), m_extra_sel_translation);
 
-	extra_sel_adapted_.annotations.clear();
-	extra_sel_adapted_.grammar.clear();
-	extra_sel_adapted_.adapted_diff.clear();
+	m_extra_sel_adapted.annotations.clear();
+	m_extra_sel_adapted.grammar.clear();
+	m_extra_sel_adapted.adapted_diff.clear();
 
 	if (row_data->status == status_t::adapted && !load_result.details.empty())
 	{
-		extra_sel_adapted_.adapted_diff =
-		    editor_view_->highlight_adapted_diff(row_data->new_text, load_result.details, false);
+		m_extra_sel_adapted.adapted_diff =
+		    m_editor_view->highlight_adapted_diff(row_data->new_text, load_result.details, false);
 	}
 	else if (row_data->status == status_t::changed && !load_result.details.empty())
 	{
-		extra_sel_adapted_.adapted_diff =
-		    editor_view_->highlight_adapted_diff(row_data->old_text, load_result.details, true);
+		m_extra_sel_adapted.adapted_diff =
+		    m_editor_view->highlight_adapted_diff(row_data->old_text, load_result.details, true);
 	}
 
-	apply_extra_selections(editor_view_->details_view(), extra_sel_adapted_);
+	apply_extra_selections(m_editor_view->details_view(), m_extra_sel_adapted);
 
-	const auto history = edit_history_.get_history(row_data->type, row_data->key_text);
-	history_view_->update_history(history, !load_result.is_read_only);
+	const auto history = m_edit_history.get_history(row_data->type, row_data->key_text);
+	m_history_view->update_history(history, !load_result.is_read_only);
 
-	editor_controller_.set_loaded_text(editor_view_->translation_editor()->toPlainText());
-	editor_controller_.set_current_row(row);
+	m_editor_controller.set_loaded_text(m_editor_view->translation_editor()->toPlainText());
+	m_editor_controller.set_current_row(row);
 
-	auto cursor = editor_view_->translation_editor()->textCursor();
+	auto cursor = m_editor_view->translation_editor()->textCursor();
 	cursor.movePosition(QTextCursor::End);
-	editor_view_->translation_editor()->setTextCursor(cursor);
+	m_editor_view->translation_editor()->setTextCursor(cursor);
 
-	editor_controller_.set_loading(false);
+	m_editor_controller.set_loading(false);
 }
 
 void main_window_t::load_record_clear(int /*row*/)
 {
-	editor_view_->original_view()->clear();
-	editor_view_->translation_editor()->clear();
-	validation_view_->clear();
-	annotations_view_->clear();
-	history_view_->clear();
-	book_preview_view_->clear();
-	editor_controller_.set_current_row(-1);
-	editor_controller_.set_loading(false);
+	m_editor_view->original_view()->clear();
+	m_editor_view->translation_editor()->clear();
+	m_validation_view->clear();
+	m_annotations_view->clear();
+	m_history_view->clear();
+	m_book_preview_view->clear();
+	m_editor_controller.set_current_row(-1);
+	m_editor_controller.set_loading(false);
 }
 
 void main_window_t::load_record_script(const table_row_t * row_data)
 {
-	editor_view_->load_script_entry(row_data->old_text, row_data->new_text);
-	editor_view_->translation_editor()->set_block_multiline(true);
+	m_editor_view->load_script_entry(row_data->old_text, row_data->new_text);
+	m_editor_view->translation_editor()->set_block_multiline(true);
 
 	if (row_data->status != status_t::untranslated)
 		return;
 
-	int line_count = editor_view_->script_slot_count();
+	int line_count = m_editor_view->script_slot_count();
 	QString empty_lines;
 	for (int i = 1; i < static_cast<int>(line_count); ++i)
 		empty_lines += '\n';
 
-	editor_view_->translation_editor()->setPlainText(empty_lines);
+	m_editor_view->translation_editor()->setPlainText(empty_lines);
 }
 
 void main_window_t::load_record_plain(const table_row_t * row_data)
 {
-	editor_view_->original_view()->setPlainText(QString::fromStdString(row_data->old_text));
-	editor_view_->clear_script_template();
+	m_editor_view->original_view()->setPlainText(QString::fromStdString(row_data->old_text));
+	m_editor_view->clear_script_template();
 
 	if (row_data->status == status_t::untranslated)
-		editor_view_->translation_editor()->setPlainText(QString());
+		m_editor_view->translation_editor()->setPlainText(QString());
 	else
-		editor_view_->translation_editor()->setPlainText(QString::fromStdString(row_data->new_text));
+		m_editor_view->translation_editor()->setPlainText(QString::fromStdString(row_data->new_text));
 
 	bool block_multiline =
 	    (row_data->type == tools_t::rec_type_t::cell || row_data->type == tools_t::rec_type_t::dial ||
 	     row_data->type == tools_t::rec_type_t::fnam);
-	editor_view_->translation_editor()->set_block_multiline(block_multiline);
+	m_editor_view->translation_editor()->set_block_multiline(block_multiline);
 }
 
 // irreducible: sort-then-overlap algorithm with two policy branches; further splitting obscures the logic
@@ -814,15 +869,15 @@ QList<QTextEdit::ExtraSelection> main_window_t::build_highlight_selections(
 
 void main_window_t::on_whitespace_toggled(bool checked)
 {
-	if (!editor_view_)
+	if (!m_editor_view)
 		return;
 
 	QTextOption opt;
 	if (checked)
 		opt.setFlags(QTextOption::ShowTabsAndSpaces);
 
-	editor_view_->original_view()->document()->setDefaultTextOption(opt);
-	editor_view_->translation_editor()->document()->setDefaultTextOption(opt);
+	m_editor_view->original_view()->document()->setDefaultTextOption(opt);
+	m_editor_view->translation_editor()->document()->setDefaultTextOption(opt);
 }
 
 void main_window_t::on_encoding_changed(int index)
@@ -837,13 +892,13 @@ void main_window_t::on_encoding_changed(int index)
 		return;
 
 	const auto new_codepage = codepages[index];
-	if (new_codepage == current_codepage_)
+	if (new_codepage == m_current_codepage)
 		return;
 
-	current_codepage_ = new_codepage;
-	session_.set_codepage(new_codepage);
-	byte_limit_validator_.set_codepage(new_codepage);
-	settings_.set_encoding_index(index);
+	m_current_codepage = new_codepage;
+	m_session.set_codepage(new_codepage);
+	m_byte_limit_validator.set_codepage(new_codepage);
+	m_settings.set_encoding_index(index);
 	save_config();
 
 	statusBar()->showMessage(
@@ -855,7 +910,7 @@ void main_window_t::on_encoding_changed(int index)
 void main_window_t::on_open_settings()
 {
 	const auto dict_dir = QCoreApplication::applicationDirPath().toStdString() + "/dictionaries";
-	translator_settings_dialog_t dialog(settings_, dict_dir, this);
+	translator_settings_dialog_t dialog(m_settings, dict_dir, this);
 
 	connect(&dialog, &translator_settings_dialog_t::settings_applied, this, [this](const std::string & category)
 	{
@@ -869,17 +924,17 @@ void main_window_t::on_settings_applied(const std::string & category)
 {
 	if (category == "all" || category == "language")
 	{
-		on_encoding_changed(settings_.encoding_index());
-		on_spell_lang_changed(settings_.spell_lang_index());
-		translation_tab_->apply_provider_settings(settings_);
+		on_encoding_changed(m_settings.encoding_index());
+		on_spell_lang_changed(m_settings.spell_lang_index());
+		m_translation_tab->apply_provider_settings(m_settings);
 	}
 
 	if (category == "all" || category == "translation")
-		translation_tab_->apply_provider_settings(settings_);
+		m_translation_tab->apply_provider_settings(m_settings);
 
 	if (category == "all" || category == "workspace")
 	{
-		file_list_.scan_roots(settings_.workspace_roots());
+		m_file_list.scan_roots(m_settings.workspace_roots());
 		scan_workspace();
 		update_watcher_paths();
 	}
@@ -892,93 +947,183 @@ void main_window_t::on_settings_applied(const std::string & category)
 
 void main_window_t::register_shortcuts()
 {
+	if (!m_copy_original_action)
+	{
+		m_copy_original_action = new QAction(this);
+		m_copy_original_action->setToolTip("Copy original text to translation (F8)");
+		m_copy_original_action->setShortcutContext(Qt::WindowShortcut);
+		addAction(m_copy_original_action);
+		connect(m_copy_original_action, &QAction::triggered, this, [this]() { shortcut_copy_original(); });
+	}
+
+	if (!m_set_in_progress_action)
+	{
+		m_set_in_progress_action = new QAction(this);
+		m_set_in_progress_action->setToolTip("Set status to In Progress (F9)");
+		m_set_in_progress_action->setShortcutContext(Qt::WindowShortcut);
+		addAction(m_set_in_progress_action);
+		connect(m_set_in_progress_action, &QAction::triggered, this, [this]() { shortcut_commit_status(status_t::in_progress); });
+	}
+
+	if (!m_set_translated_action)
+	{
+		m_set_translated_action = new QAction(this);
+		m_set_translated_action->setToolTip("Set status to Translated (F10)");
+		m_set_translated_action->setShortcutContext(Qt::WindowShortcut);
+		addAction(m_set_translated_action);
+		connect(m_set_translated_action, &QAction::triggered, this, [this]() { shortcut_commit_status(status_t::translated); });
+	}
+
+	const auto resolve = [this](const std::string & action_name, const std::string & fallback)
+	{
+		const auto stored = m_settings.shortcut(action_name);
+		return QKeySequence(QString::fromStdString(stored.empty() ? fallback : stored));
+	};
+
+	m_copy_original_action->setShortcut(resolve("copy_original", "F8"));
+	m_set_in_progress_action->setShortcut(resolve("set_in_progress", "F9"));
+	m_set_translated_action->setShortcut(resolve("set_translated", "F10"));
+
+	if (m_save_action)
+		m_save_action->setShortcut(resolve("save", "Ctrl+S"));
+
+	if (m_find_action)
+		m_find_action->setShortcut(resolve("find", "Ctrl+F"));
+
+	if (m_settings_action)
+		m_settings_action->setShortcut(resolve("settings", "Ctrl+,"));
+
+	if (m_escape_action)
+		m_escape_action->setShortcut(resolve("escape", "Escape"));
+}
+
+void main_window_t::shortcut_copy_original()
+{
+	if (m_editor_controller.current_row() < 0)
+		return;
+
+	auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
+	if (!dict_doc)
+		return;
+
+	const auto * row_data = m_table_model->row_at(m_editor_controller.current_row());
+	if (!row_data)
+		return;
+
+	m_editor_controller.copy_original(*dict_doc, *row_data);
+	m_table_model->update_row(m_editor_controller.current_row(), row_data->old_text, status_t::in_progress);
+	set_unsaved_changes(true);
+	update_status_counts();
+	load_record(m_editor_controller.current_row());
+}
+
+void main_window_t::shortcut_commit_status(status_t new_status)
+{
+	if (m_editor_controller.current_row() < 0)
+		return;
+
+	auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
+	if (!dict_doc)
+		return;
+
+	const auto * row_data = m_table_model->row_at(m_editor_controller.current_row());
+	if (!row_data)
+		return;
+
+	const auto result = m_editor_controller.commit_status(*dict_doc, *row_data, new_status);
+	if (!result.success)
+		return;
+
+	m_table_model->update_row(m_editor_controller.current_row(), result.new_text, result.status);
+	set_unsaved_changes(true);
+	update_status_counts();
 }
 
 void main_window_t::rebuild_annotations()
 {
 	std::vector<dict_source_t> sources;
-	for (auto * dict_doc : session_.all_dicts())
+	for (auto * dict_doc : m_session.all_dicts())
 		sources.push_back({ &dict_doc->data(), dict_doc->path() });
 
-	glossary_.rebuild(sources);
+	m_glossary.rebuild(sources);
 }
 
 void main_window_t::save_current_filter_state()
 {
-	if (!active_doc_)
+	if (!m_active_doc)
 		return;
 
 	filter_state_t state;
-	state.type_filter = type_filter_;
-	state.sub_type_filter = filter_tree_view_->get_active_sub_types();
-	state.status_filter = status_filter_;
-	state.type_filter_solo = type_filter_solo_;
-	filter_states_[active_doc_->path()] = std::move(state);
+	state.type_filter = m_type_filter;
+	state.sub_type_filter = m_filter_tree_view->get_active_sub_types();
+	state.status_filter = m_status_filter;
+	state.type_filter_solo = m_type_filter_solo;
+	m_filter_states[m_active_doc->path()] = std::move(state);
 }
 
 void main_window_t::restore_filter_state(const std::string & path)
 {
-	auto it = filter_states_.find(path);
-	if (it != filter_states_.end())
+	auto it = m_filter_states.find(path);
+	if (it != m_filter_states.end())
 	{
-		type_filter_ = it->second.type_filter;
-		status_filter_ = it->second.status_filter;
-		type_filter_solo_ = it->second.type_filter_solo;
-		filter_tree_view_->set_active_types(it->second.type_filter);
-		filter_tree_view_->set_active_sub_types(it->second.sub_type_filter);
+		m_type_filter = it->second.type_filter;
+		m_status_filter = it->second.status_filter;
+		m_type_filter_solo = it->second.type_filter_solo;
+		m_filter_tree_view->set_active_types(it->second.type_filter);
+		m_filter_tree_view->set_active_sub_types(it->second.sub_type_filter);
 	}
 	else
 	{
-		type_filter_ = {
+		m_type_filter = {
 			tools_t::rec_type_t::cell, tools_t::rec_type_t::dial, tools_t::rec_type_t::info, tools_t::rec_type_t::fnam,
 			tools_t::rec_type_t::text, tools_t::rec_type_t::gmst, tools_t::rec_type_t::desc, tools_t::rec_type_t::rnam,
 			tools_t::rec_type_t::indx, tools_t::rec_type_t::sctx,
 		};
-		status_filter_.clear();
-		type_filter_solo_ = false;
-		filter_tree_view_->set_active_types(type_filter_);
-		filter_tree_view_->set_active_sub_types({});
+		m_status_filter.clear();
+		m_type_filter_solo = false;
+		m_filter_tree_view->set_active_types(m_type_filter);
+		m_filter_tree_view->set_active_sub_types({});
 	}
 }
 
 void main_window_t::rebuild_sidebar()
 {
 	std::string active_path;
-	if (active_doc_)
-		active_path = active_doc_->path();
+	if (m_active_doc)
+		active_path = m_active_doc->path();
 
-	auto model = build_render_model(file_list_, session_, active_path);
-	sidebar_->set_model(model);
+	auto model = build_render_model(m_file_list, m_session, active_path);
+	m_sidebar->set_model(model);
 }
 
 void main_window_t::update_sidebar_item(const std::string & path)
 {
-	const auto * fe = file_list_.get(path);
+	const auto * fe = m_file_list.get(path);
 	if (!fe)
 		return;
 
-	const auto * doc = session_.find(path);
+	const auto * doc = m_session.find(path);
 	const bool is_loaded = (doc != nullptr);
 	const bool is_dirty = doc && doc->is_dirty();
-	sidebar_->update_item_text(fe->path, derive_display_name(*fe, is_loaded, is_dirty));
+	m_sidebar->update_item_text(fe->path, derive_display_name(*fe, is_loaded, is_dirty));
 }
 
 void main_window_t::update_annotations()
 {
-	if (editor_controller_.current_row() < 0)
+	if (m_editor_controller.current_row() < 0)
 		return;
 
-	const auto * row_data = table_model_->row_at(editor_controller_.current_row());
+	const auto * row_data = m_table_model->row_at(m_editor_controller.current_row());
 	if (!row_data)
 		return;
 
-	const auto annotations = glossary_.annotate(row_data->old_text, row_data->type);
+	const auto annotations = m_glossary.annotate(row_data->old_text, row_data->type);
 
 	std::string speaker_name;
 	std::string gender_str;
 	std::string enchantment_str;
 
-	auto * dict_doc = dynamic_cast<dict_document_t *>(active_doc_);
+	auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
 	if (dict_doc)
 	{
 		const auto & data = dict_doc->data();
@@ -992,7 +1137,7 @@ void main_window_t::update_annotations()
 		}
 	}
 
-	annotations_view_->update_annotations(annotations, speaker_name, gender_str, enchantment_str);
+	m_annotations_view->update_annotations(annotations, speaker_name, gender_str, enchantment_str);
 }
 
 void main_window_t::apply_extra_selections(translation_edit_view_t * editor, const extra_selections_state_t & state)
@@ -1006,12 +1151,12 @@ void main_window_t::apply_extra_selections(translation_edit_view_t * editor, con
 
 void main_window_t::update_status_counts()
 {
-	auto * dict_doc = dynamic_cast<dict_document_t *>(active_doc_);
+	auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
 	if (!dict_doc)
 		return;
 
 	const table_filter_params_t filter_params {
-		type_filter_, filter_tree_view_->get_active_sub_types(), status_filter_, row_filter_, type_filter_solo_
+		m_type_filter, m_filter_tree_view->get_active_sub_types(), m_status_filter, m_row_filter, m_type_filter_solo
 	};
 
 	auto result = build_filtered_rows(dict_doc->data(), filter_params);
@@ -1023,25 +1168,25 @@ void main_window_t::update_status_counts()
 	for (const auto & [t, c] : result.counts.translated_counts)
 		total_translated += c;
 
-	filter_tree_view_->update_counts(result.counts.type_counts, result.counts.translated_counts);
-	filter_tree_view_->update_sub_type_counts(
+	m_filter_tree_view->update_counts(result.counts.type_counts, result.counts.translated_counts);
+	m_filter_tree_view->update_sub_type_counts(
 	    result.counts.sub_type_total_counts, result.counts.sub_type_translated_counts);
-	filter_tree_view_->set_total_count(total_translated, total);
-	status_filter_view_->update_counts(result.counts.filtered_status_counts, result.counts.total_status_counts);
+	m_filter_tree_view->set_total_count(total_translated, total);
+	m_status_filter_view->update_counts(result.counts.filtered_status_counts, result.counts.total_status_counts);
 }
 
 void main_window_t::update_validation()
 {
-	if (editor_controller_.current_row() < 0)
+	if (m_editor_controller.current_row() < 0)
 		return;
 
-	const auto * row_data = table_model_->row_at(editor_controller_.current_row());
+	const auto * row_data = m_table_model->row_at(m_editor_controller.current_row());
 	if (!row_data)
 		return;
 
-	const auto current_text = editor_view_->translation_editor()->toPlainText().toStdString();
-	const auto result = byte_limit_validator_.validate(row_data->type, current_text);
-	validation_view_->update_validation(result);
+	const auto current_text = m_editor_view->translation_editor()->toPlainText().toStdString();
+	const auto result = m_byte_limit_validator.validate(row_data->type, current_text);
+	m_validation_view->update_validation(result);
 }
 
 void main_window_t::scan_spell_dictionaries()
@@ -1052,65 +1197,65 @@ void main_window_t::on_spell_lang_changed(int index)
 {
 	if (index <= 0)
 	{
-		hl_translation_->set_spell_checker(nullptr);
+		m_hl_translation->set_spell_checker(nullptr);
 		return;
 	}
 
-	const auto aff_path = settings_.spell_aff_path();
-	const auto dic_path = settings_.spell_dic_path();
+	const auto aff_path = m_settings.spell_aff_path();
+	const auto dic_path = m_settings.spell_dic_path();
 
 	if (aff_path.empty() || dic_path.empty())
 	{
-		hl_translation_->set_spell_checker(nullptr);
+		m_hl_translation->set_spell_checker(nullptr);
 		return;
 	}
 
-	if (!spell_checker_.load(aff_path, dic_path))
+	if (!m_spell_checker.load(aff_path, dic_path))
 		return;
 
-	hl_translation_->set_spell_checker(&spell_checker_);
+	m_hl_translation->set_spell_checker(&m_spell_checker);
 }
 
 void main_window_t::load_config()
 {
-	move(settings_.window_x(), settings_.window_y());
-	resize(settings_.window_width(), settings_.window_height());
+	move(m_settings.window_x(), m_settings.window_y());
+	resize(m_settings.window_width(), m_settings.window_height());
 
-	if (settings_.window_maximized())
+	if (m_settings.window_maximized())
 		showMaximized();
 
-	const int encoding_index = settings_.encoding_index();
+	const int encoding_index = m_settings.encoding_index();
 	constexpr codepage_t codepages_table[] = {
 		codepage_t::windows_1250,
 		codepage_t::windows_1251,
 		codepage_t::windows_1252,
 	};
 	if (encoding_index >= 0 && encoding_index < 3)
-		current_codepage_ = codepages_table[encoding_index];
+		m_current_codepage = codepages_table[encoding_index];
 
-	session_.set_codepage(current_codepage_);
+	m_session.set_codepage(m_current_codepage);
 
-	translation_tab_->apply_provider_settings(settings_);
+	m_translation_tab->apply_provider_settings(m_settings);
 
-	sidebar_toggle_->setChecked(settings_.sidebar_visible());
-	bottom_panel_toggle_->setChecked(settings_.bottom_visible());
+	m_sidebar_toggle->setChecked(m_settings.sidebar_visible());
+	m_bottom_panel_toggle->setChecked(m_settings.bottom_visible());
 
-	const float split_ratio = settings_.split_ratio();
+	const float split_ratio = m_settings.split_ratio();
 	if (split_ratio > 0.0f)
-		editor_view_->set_split_ratio(split_ratio);
+		m_editor_view->set_split_ratio(split_ratio);
 
 	std::vector<int> col_widths;
 	for (int i = 0; i < 4; ++i)
-		col_widths.push_back(settings_.column_width(i));
-	table_view_->set_column_widths(col_widths);
+		col_widths.push_back(m_settings.column_width(i));
+	m_table_view->set_column_widths(col_widths);
 
-	file_list_.scan_roots(settings_.workspace_roots());
+	m_file_list.scan_roots(m_settings.workspace_roots());
 	scan_workspace();
 
-	const auto active_path = settings_.active_dict_path();
+	const auto active_path = m_settings.active_dict_path();
 	if (!active_path.empty())
 	{
-		auto * doc = session_.open(active_path);
+		auto * doc = m_session.open(active_path);
 		if (doc)
 			switch_document(doc);
 	}
@@ -1118,7 +1263,7 @@ void main_window_t::load_config()
 	rebuild_sidebar();
 	rebuild_table();
 
-	const int spell_index = settings_.spell_lang_index();
+	const int spell_index = m_settings.spell_lang_index();
 	on_spell_lang_changed(spell_index);
 
 	update_watcher_paths();
@@ -1127,32 +1272,32 @@ void main_window_t::load_config()
 
 void main_window_t::save_config()
 {
-	settings_.set_window_x(pos().x());
-	settings_.set_window_y(pos().y());
-	settings_.set_window_width(size().width());
-	settings_.set_window_height(size().height());
-	settings_.set_window_maximized(isMaximized());
+	m_settings.set_window_x(pos().x());
+	m_settings.set_window_y(pos().y());
+	m_settings.set_window_width(size().width());
+	m_settings.set_window_height(size().height());
+	m_settings.set_window_maximized(isMaximized());
 
-	settings_.set_sidebar_visible(sidebar_toggle_->isChecked());
-	settings_.set_bottom_visible(bottom_panel_toggle_->isChecked());
+	m_settings.set_sidebar_visible(m_sidebar_toggle->isChecked());
+	m_settings.set_bottom_visible(m_bottom_panel_toggle->isChecked());
 
-	settings_.set_split_ratio(static_cast<float>(editor_view_->get_split_ratio()));
+	m_settings.set_split_ratio(static_cast<float>(m_editor_view->get_split_ratio()));
 
-	const auto col_widths = table_view_->get_column_widths();
+	const auto col_widths = m_table_view->get_column_widths();
 	for (int i = 0; i < static_cast<int>(col_widths.size()) && i < 4; ++i)
-		settings_.set_column_width(i, col_widths[i]);
+		m_settings.set_column_width(i, col_widths[i]);
 
-	settings_.set_active_dict_path(active_doc_ ? active_doc_->path() : std::string {});
-	settings_.set_workspace_roots(file_list_.get_roots());
+	m_settings.set_active_dict_path(m_active_doc ? m_active_doc->path() : std::string {});
+	m_settings.set_workspace_roots(m_file_list.get_roots());
 
-	settings_.sync();
+	m_settings.sync();
 }
 
 // irreducible: switch dispatch for 5 operation types; each branch contains distinct dialog/executor calls
 void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plugin_op_t op)
 {
 	const auto plugin_path = plugin_path_arg;
-	const auto encoding = current_codepage_;
+	const auto encoding = m_current_codepage;
 
 	auto path_sep = plugin_path.find_last_of("/\\");
 	auto plugin_dir = path_sep != std::string::npos ? plugin_path.substr(0, path_sep) : std::string {};
@@ -1161,11 +1306,11 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
 	const auto workspace_dir = QCoreApplication::applicationDirPath().toStdString() + "/workspace/";
 
 	if (op == plugin_op_t::convert || op == plugin_op_t::create_plugin)
-		executor_.set_output_dir(plugin_dir);
+		m_executor.set_output_dir(plugin_dir);
 	else
-		executor_.set_output_dir(workspace_dir);
+		m_executor.set_output_dir(workspace_dir);
 
-	if (session_.has_any_unsaved())
+	if (m_session.has_any_unsaved())
 	{
 		auto answer = QMessageBox::question(
 		    this,
@@ -1177,7 +1322,7 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
 			return;
 
 		if (answer == QMessageBox::Yes)
-			session_.save_all();
+			m_session.save_all();
 	}
 
 	operation_executor_t::result_t result;
@@ -1186,14 +1331,14 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
 	{
 	case plugin_op_t::make_dict:
 	{
-		result = executor_.make_dict(plugin_path, encoding);
+		result = m_executor.make_dict(plugin_path, encoding);
 		break;
 	}
 	case plugin_op_t::make_dict_with_base:
 	{
 		auto entries = build_dict_entries(plugin_dir);
 
-		dict_selection_dialog_t dialog(entries, settings_.last_merge_order(), this);
+		dict_selection_dialog_t dialog(entries, m_settings.last_merge_order(), this);
 		dialog.setWindowTitle("Select Dictionaries");
 		if (dialog.exec() != QDialog::Accepted)
 			return;
@@ -1202,13 +1347,13 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
 		if (selected.empty())
 			return;
 
-		settings_.set_last_merge_order(selected);
+		m_settings.set_last_merge_order(selected);
 
 		for (const auto & sel_path : selected)
-			session_.open(sel_path);
+			m_session.open(sel_path);
 
 		dict_merger_t merger(selected);
-		result = executor_.make_dict_with_base(plugin_path, merger.get_dict(), encoding);
+		result = m_executor.make_dict_with_base(plugin_path, merger.get_dict(), encoding);
 		break;
 	}
 	case plugin_op_t::make_base:
@@ -1217,15 +1362,15 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
 		if (!params.has_value())
 			return;
 
-		result = executor_.make_base(
-		    plugin_path, params->native_path, params->foreign_lang, params->native_lang, nullptr, params->base_mode);
+		result = m_executor.make_base(
+		    plugin_path, params->native_path, params->foreign_lang, params->native_lang, nullptr, params->base_mode, params->dictionary_aff_path);
 		break;
 	}
 	case plugin_op_t::convert:
 	{
 		auto entries = build_dict_entries(plugin_dir);
 
-		dict_selection_dialog_t dialog(entries, settings_.last_merge_order(), this);
+		dict_selection_dialog_t dialog(entries, m_settings.last_merge_order(), this);
 		dialog.setWindowTitle("Select Dictionaries for Convert");
 		if (dialog.exec() != QDialog::Accepted)
 			return;
@@ -1234,19 +1379,19 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
 		if (selected.empty())
 			return;
 
-		settings_.set_last_merge_order(selected);
+		m_settings.set_last_merge_order(selected);
 
 		for (const auto & sel_path : selected)
-			session_.open(sel_path);
+			m_session.open(sel_path);
 
-		result = executor_.convert(plugin_path, selected, encoding);
+		result = m_executor.convert(plugin_path, selected, encoding);
 		break;
 	}
 	case plugin_op_t::create_plugin:
 	{
 		auto entries = build_dict_entries(plugin_dir);
 
-		dict_selection_dialog_t dialog(entries, settings_.last_merge_order(), this);
+		dict_selection_dialog_t dialog(entries, m_settings.last_merge_order(), this);
 		dialog.setWindowTitle("Select Dictionaries for Create");
 		if (dialog.exec() != QDialog::Accepted)
 			return;
@@ -1255,12 +1400,12 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
 		if (selected.empty())
 			return;
 
-		settings_.set_last_merge_order(selected);
+		m_settings.set_last_merge_order(selected);
 
 		for (const auto & sel_path : selected)
-			session_.open(sel_path);
+			m_session.open(sel_path);
 
-		result = executor_.create_plugin(plugin_path, selected, encoding);
+		result = m_executor.create_plugin(plugin_path, selected, encoding);
 		break;
 	}
 	}
@@ -1271,10 +1416,10 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
 	{
 		auto norm_output = string_utils::normalize_path(result.output_path);
 
-		if (active_doc_ && active_doc_->path() == norm_output)
-			active_doc_ = nullptr;
+		if (m_active_doc && m_active_doc->path() == norm_output)
+			m_active_doc = nullptr;
 
-		session_.close(result.output_path);
+		m_session.close(result.output_path);
 	}
 
 	scan_workspace();
@@ -1303,7 +1448,7 @@ std::optional<make_base_params_t> main_window_t::show_make_base_dialog(const std
 
 	std::vector<plugin_item_t> plugins;
 
-	for (const auto * entry : file_list_.all())
+	for (const auto * entry : m_file_list.all())
 	{
 		if (entry->type != file_type_t::plugin)
 			continue;
@@ -1426,6 +1571,77 @@ std::optional<make_base_params_t> main_window_t::show_make_base_dialog(const std
 	radio_partial->setToolTip("Use to create base dictionary from a partially translated file");
 	mode_layout->addWidget(radio_full);
 	mode_layout->addWidget(radio_partial);
+
+	auto * partial_explanation = new QLabel(mode_group);
+	partial_explanation->setWordWrap(true);
+	partial_explanation->setText(
+	    "When old_text equals new_text, the text is tokenized by non-alphanumeric "
+	    "characters (tokens shorter than 3 characters are ignored). Each token is "
+	    "checked against the Hunspell dictionary:\n"
+	    "\u2022 If any token is found \u2192 status = Untranslated (contains source language words)\n"
+	    "\u2022 If no tokens are found \u2192 status = To Verify (likely a proper noun)");
+	partial_explanation->setStyleSheet("color: #888; margin-left: 20px; margin-top: 4px;");
+	partial_explanation->setVisible(false);
+	mode_layout->addWidget(partial_explanation);
+
+	auto * dict_label = new QLabel("Source dictionary:", mode_group);
+	dict_label->setStyleSheet("margin-left: 20px; margin-top: 4px;");
+	dict_label->setVisible(false);
+	mode_layout->addWidget(dict_label);
+
+	auto * dict_combo = new QComboBox(mode_group);
+	dict_combo->setToolTip("Hunspell dictionary used to detect untranslated words");
+	dict_combo->setVisible(false);
+	mode_layout->addWidget(dict_combo);
+
+	{
+		auto dict_dir = tools_t::get_exe_dir();
+		if (!dict_dir.empty() && dict_dir.back() != '/' && dict_dir.back() != '\\')
+			dict_dir += '/';
+		dict_dir += "dictionaries";
+
+		const std::filesystem::path dict_path(dict_dir);
+		if (std::filesystem::exists(dict_path))
+		{
+			for (const auto & entry : std::filesystem::directory_iterator(dict_path))
+			{
+				if (!entry.is_regular_file())
+					continue;
+
+				if (entry.path().extension().string() != ".aff")
+					continue;
+
+				auto dic_file = entry.path();
+				dic_file.replace_extension(".dic");
+				if (!std::filesystem::exists(dic_file))
+					continue;
+
+				const auto stem = entry.path().stem().string();
+				const auto aff_path = entry.path().string();
+				dict_combo->addItem(
+				    QString::fromStdString(stem),
+				    QString::fromStdString(aff_path));
+			}
+		}
+	}
+
+	const auto partial_aff_setting = m_settings.partial_dict_aff_path();
+	if (!partial_aff_setting.empty())
+	{
+		for (int i = 0; i < dict_combo->count(); ++i)
+		{
+			if (dict_combo->itemData(i).toString().toStdString() == partial_aff_setting)
+			{
+				dict_combo->setCurrentIndex(i);
+				break;
+			}
+		}
+	}
+
+	connect(radio_partial, &QRadioButton::toggled, partial_explanation, &QLabel::setVisible);
+	connect(radio_partial, &QRadioButton::toggled, dict_label, &QLabel::setVisible);
+	connect(radio_partial, &QRadioButton::toggled, dict_combo, &QComboBox::setVisible);
+
 	dlg_layout->addWidget(mode_group);
 
 	auto * buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dlg);
@@ -1451,10 +1667,10 @@ std::optional<make_base_params_t> main_window_t::show_make_base_dialog(const std
 		return std::nullopt;
 
 	const auto native_path = selected_item->data(0, Qt::UserRole).toString().toStdString();
-	const auto * native_entry = file_list_.get(native_path);
+	const auto * native_entry = m_file_list.get(native_path);
 
 	std::string foreign_lang;
-	const auto * foreign_entry = file_list_.get(plugin_path);
+	const auto * foreign_entry = m_file_list.get(plugin_path);
 	if (foreign_entry)
 		foreign_lang = foreign_entry->language_tag;
 
@@ -1467,6 +1683,8 @@ std::optional<make_base_params_t> main_window_t::show_make_base_dialog(const std
 	params.foreign_lang = foreign_lang;
 	params.native_lang = native_lang;
 	params.base_mode = radio_partial->isChecked() ? base_mode_t::partial : base_mode_t::full;
+	if (radio_partial->isChecked() && dict_combo->count() > 0)
+		params.dictionary_aff_path = dict_combo->currentData().toString().toStdString();
 	return params;
 }
 
@@ -1499,15 +1717,15 @@ void main_window_t::log_operation_result(
 		break;
 	}
 
-	log_view_->append_log(op_name, result.log_text);
-	record_tabs_->setCurrentWidget(log_view_);
+	m_log_view->append_log(op_name, result.log_text);
+	m_record_tabs->setCurrentWidget(m_log_view);
 }
 
 // Indivisible batch pattern: shared_ptr + QTimer + lambda
 void main_window_t::start_batch_translation(dict_document_t * dict_doc)
 {
-	translation_tab_->set_translate_all_enabled(false);
-	translation_tab_->append_log("[info] collecting untranslated entries...\n");
+	m_translation_tab->set_batch_in_progress(true);
+	m_translation_tab->append_log("[info] collecting untranslated entries...\n");
 
 	struct batch_state_t
 	{
@@ -1519,7 +1737,7 @@ void main_window_t::start_batch_translation(dict_document_t * dict_doc)
 	};
 
 	auto state = std::make_shared<batch_state_t>();
-	auto * provider = translation_tab_->ct2_provider();
+	auto * provider = m_translation_tab->ct2_provider();
 
 	auto & data = dict_doc->data_mut();
 	for (auto & [type, chapter] : data)
@@ -1539,12 +1757,12 @@ void main_window_t::start_batch_translation(dict_document_t * dict_doc)
 
 	if (state->work_items.empty())
 	{
-		translation_tab_->append_log("[info] no untranslated entries found\n");
-		translation_tab_->set_translate_all_enabled(true);
+		m_translation_tab->append_log("[info] no untranslated entries found\n");
+		m_translation_tab->set_batch_in_progress(false);
 		return;
 	}
 
-	translation_tab_->append_log("[info] translating " + std::to_string(state->work_items.size()) + " entries\n");
+	m_translation_tab->append_log("[info] translating " + std::to_string(state->work_items.size()) + " entries\n");
 
 	auto * timer = new QTimer(this);
 	timer->setInterval(0);
@@ -1563,13 +1781,13 @@ void main_window_t::start_batch_translation(dict_document_t * dict_doc)
 			set_unsaved_changes(true);
 			update_sidebar_item(dict_doc->path());
 
-			if (editor_controller_.current_row() >= 0)
-				load_record(editor_controller_.current_row());
+			if (m_editor_controller.current_row() >= 0)
+				load_record(m_editor_controller.current_row());
 
-			translation_tab_->append_log(
+			m_translation_tab->append_log(
 			    "[info] done: translated=" + std::to_string(state->translated_count) + " glossary=" +
 			    std::to_string(state->glossary_count) + " errors=" + std::to_string(state->error_count) + "\n");
-			translation_tab_->set_translate_all_enabled(true);
+			m_translation_tab->set_batch_in_progress(false);
 			return;
 		}
 
@@ -1587,14 +1805,14 @@ void main_window_t::start_batch_translation(dict_document_t * dict_doc)
 
 		if (!result.success)
 		{
-			translation_tab_->append_log(
+			m_translation_tab->append_log(
 			    "[error] \"" + record.old_text.substr(0, 40) + "...\" -> " + result.error + "\n");
 			++state->error_count;
 			++state->current;
 			return;
 		}
 
-		auto glossary_applied = glossary_.apply_glossary(result.text);
+		auto glossary_applied = m_glossary.apply_glossary(result.text);
 		bool had_glossary = (glossary_applied != result.text);
 
 		record.new_text = glossary_applied;
@@ -1602,12 +1820,12 @@ void main_window_t::start_batch_translation(dict_document_t * dict_doc)
 		dict_doc->modified_records_insert(type, idx);
 		++state->translated_count;
 
-		for (int row = 0; row < table_model_->rowCount(); ++row)
+		for (int row = 0; row < m_table_model->rowCount(); ++row)
 		{
-			const auto * r = table_model_->row_at(row);
+			const auto * r = m_table_model->row_at(row);
 			if (r && r->type == type && r->record_index == idx)
 			{
-				table_model_->update_row(row, record.new_text, record.status);
+				m_table_model->update_row(row, record.new_text, record.status);
 				break;
 			}
 		}
@@ -1622,7 +1840,7 @@ void main_window_t::start_batch_translation(dict_document_t * dict_doc)
 
 void main_window_t::on_plugin_unload(const std::string & path)
 {
-	file_list_.remove(path);
+	m_file_list.remove(path);
 	rebuild_sidebar();
 }
 
@@ -1633,16 +1851,16 @@ void main_window_t::scan_workspace()
 
 	std::vector<std::string> roots;
 	roots.push_back(workspace);
-	for (const auto & r : settings_.workspace_roots())
+	for (const auto & r : m_settings.workspace_roots())
 	{
 		if (r != workspace)
 			roots.push_back(r);
 	}
 
-	file_list_.scan_roots(roots);
+	m_file_list.scan_roots(roots);
 
 	bool any_loaded = false;
-	for (const auto * entry : file_list_.all())
+	for (const auto * entry : m_file_list.all())
 	{
 		if (!entry->is_workspace)
 			continue;
@@ -1650,17 +1868,17 @@ void main_window_t::scan_workspace()
 		if (entry->type != file_type_t::base_dict && entry->type != file_type_t::user_dict)
 			continue;
 
-		if (session_.find(entry->path))
+		if (m_session.find(entry->path))
 			continue;
 
-		if (session_.open(entry->path))
+		if (m_session.open(entry->path))
 			any_loaded = true;
 	}
 
 	if (any_loaded)
 	{
 		rebuild_annotations();
-		last_annotation_version_ = session_.dict_version();
+		m_last_annotation_version = m_session.dict_version();
 	}
 
 	rebuild_sidebar();
@@ -1668,20 +1886,20 @@ void main_window_t::scan_workspace()
 
 void main_window_t::update_watcher_paths()
 {
-	const auto current = fs_watcher_->directories();
+	const auto current = m_fs_watcher->directories();
 	if (!current.isEmpty())
-		fs_watcher_->removePaths(current);
+		m_fs_watcher->removePaths(current);
 
 	QStringList paths;
 
 	const auto workspace = QCoreApplication::applicationDirPath() + "/workspace";
 	add_directory_recursive(paths, workspace);
 
-	for (const auto & root : settings_.workspace_roots())
+	for (const auto & root : m_settings.workspace_roots())
 		add_directory_recursive(paths, QString::fromStdString(root));
 
 	if (!paths.isEmpty())
-		fs_watcher_->addPaths(paths);
+		m_fs_watcher->addPaths(paths);
 }
 
 void main_window_t::add_directory_recursive(QStringList & target_paths, const QString & directory)
@@ -1720,11 +1938,11 @@ std::vector<dict_selection_dialog_t::dict_entry_t> main_window_t::build_dict_ent
 	auto target = source_dir.empty() ? std::string {} : normalize(source_dir);
 
 	std::set<std::string> saved_order_set;
-	for (const auto & p : settings_.last_merge_order())
+	for (const auto & p : m_settings.last_merge_order())
 		saved_order_set.insert(normalize(p));
 	bool use_saved = !saved_order_set.empty();
 
-	for (const auto * dict_doc : session_.all_dicts())
+	for (const auto * dict_doc : m_session.all_dicts())
 	{
 		auto norm = normalize(dict_doc->path());
 		if (!seen.insert(norm).second)
@@ -1734,7 +1952,7 @@ std::vector<dict_selection_dialog_t::dict_entry_t> main_window_t::build_dict_ent
 
 		std::string root_path;
 		std::string subfolder;
-		const auto * fe = file_list_.get(dict_doc->path());
+		const auto * fe = m_file_list.get(dict_doc->path());
 		if (fe)
 		{
 			root_path = fe->root_path;
@@ -1750,7 +1968,7 @@ std::vector<dict_selection_dialog_t::dict_entry_t> main_window_t::build_dict_ent
 		      pre });
 	}
 
-	for (const auto * fe : file_list_.all())
+	for (const auto * fe : m_file_list.all())
 	{
 		if (fe->type != file_type_t::user_dict && fe->type != file_type_t::base_dict)
 			continue;
@@ -1770,16 +1988,16 @@ std::vector<dict_selection_dialog_t::dict_entry_t> main_window_t::build_dict_ent
 
 void main_window_t::on_item_clicked(const std::string & path)
 {
-	const auto * entry = file_list_.get(path);
+	const auto * entry = m_file_list.get(path);
 	if (!entry)
 		return;
 
 	auto norm_path = string_utils::normalize_path(path);
 
-	if (active_doc_ && active_doc_->path() == norm_path)
+	if (m_active_doc && m_active_doc->path() == norm_path)
 		return;
 
-	auto * doc = session_.open(path);
+	auto * doc = m_session.open(path);
 	if (!doc)
 		return;
 
@@ -1789,13 +2007,13 @@ void main_window_t::on_item_clicked(const std::string & path)
 
 void main_window_t::on_operation_requested(const std::string & path, plugin_op_t op)
 {
-	const auto * entry = file_list_.get(path);
+	const auto * entry = m_file_list.get(path);
 	if (!entry)
 		return;
 
 	const auto workspace_dir = QCoreApplication::applicationDirPath().toStdString() + "/workspace/";
 	const auto output_dir = derive_output_dir(*entry, workspace_dir);
-	executor_.set_output_dir(output_dir);
+	m_executor.set_output_dir(output_dir);
 
 	on_plugin_operation(path, op);
 }
@@ -1804,39 +2022,39 @@ void main_window_t::on_save_requested(const std::string & path)
 {
 	auto norm_path = string_utils::normalize_path(path);
 
-	if (active_doc_ && active_doc_->path() == norm_path)
+	if (m_active_doc && m_active_doc->path() == norm_path)
 	{
 		commit_current_edit();
-		active_doc_->save();
-		update_sidebar_item(active_doc_->path());
+		m_active_doc->save();
+		update_sidebar_item(m_active_doc->path());
 
-		log_view_->append_log("save", "saved \"" + active_doc_->path() + "\"\r\n");
+		m_log_view->append_log("save", "saved \"" + m_active_doc->path() + "\"\r\n");
 
-		if (!session_.has_any_unsaved())
+		if (!m_session.has_any_unsaved())
 			set_unsaved_changes(false);
 
 		return;
 	}
 
-	auto * doc = session_.find(path);
+	auto * doc = m_session.find(path);
 	if (!doc)
 		return;
 
 	doc->save();
 	update_sidebar_item(doc->path());
 
-	log_view_->append_log("save", "saved \"" + doc->path() + "\"\r\n");
+	m_log_view->append_log("save", "saved \"" + doc->path() + "\"\r\n");
 
-	if (!session_.has_any_unsaved())
+	if (!m_session.has_any_unsaved())
 		set_unsaved_changes(false);
 }
 
 void main_window_t::on_unload_requested(const std::string & path)
 {
-	auto * doc = session_.find(path);
+	auto * doc = m_session.find(path);
 	if (!doc)
 	{
-		file_list_.remove(path);
+		m_file_list.remove(path);
 		rebuild_sidebar();
 		return;
 	}
@@ -1856,16 +2074,16 @@ void main_window_t::on_unload_requested(const std::string & path)
 			doc->save();
 	}
 
-	if (active_doc_ && active_doc_->path() == doc->path())
+	if (m_active_doc && m_active_doc->path() == doc->path())
 		switch_document(nullptr);
 
-	session_.close(path);
+	m_session.close(path);
 
 	auto norm = string_utils::normalize_path(path);
-	filter_states_.erase(norm);
+	m_filter_states.erase(norm);
 
 	rebuild_annotations();
-	last_annotation_version_ = session_.dict_version();
+	m_last_annotation_version = m_session.dict_version();
 	rebuild_sidebar();
 	rebuild_table();
 }
@@ -1891,14 +2109,14 @@ void main_window_t::on_delete_requested(const std::string & path)
 	}
 
 	auto norm_del_path = string_utils::normalize_path(path);
-	if (active_doc_ && active_doc_->path() == norm_del_path)
+	if (m_active_doc && m_active_doc->path() == norm_del_path)
 		switch_document(nullptr);
 
-	session_.close(path);
-	filter_states_.erase(norm_del_path);
+	m_session.close(path);
+	m_filter_states.erase(norm_del_path);
 	rebuild_annotations();
-	last_annotation_version_ = session_.dict_version();
-	file_list_.remove(path);
+	m_last_annotation_version = m_session.dict_version();
+	m_file_list.remove(path);
 	rebuild_sidebar();
 	rebuild_table();
 	scan_workspace();
@@ -1906,7 +2124,7 @@ void main_window_t::on_delete_requested(const std::string & path)
 
 void main_window_t::closeEvent(QCloseEvent * event)
 {
-	if (session_.has_any_unsaved())
+	if (m_session.has_any_unsaved())
 	{
 		auto answer = QMessageBox::question(
 		    this,
@@ -1921,11 +2139,11 @@ void main_window_t::closeEvent(QCloseEvent * event)
 		}
 
 		if (answer == QMessageBox::Save)
-			session_.save_all();
+			m_session.save_all();
 	}
 
 	commit_current_edit();
-	if (auto * yaml_doc = dynamic_cast<yaml_document_t *>(active_doc_))
+	if (auto * yaml_doc = dynamic_cast<yaml_document_t *>(m_active_doc))
 		yaml_doc->save_tmp();
 
 	save_config();

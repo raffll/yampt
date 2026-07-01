@@ -4,8 +4,11 @@
 #include <io/app_settings.hpp>
 #include <QAction>
 #include <QCloseEvent>
+#include <QComboBox>
+#include <QLineEdit>
 #include <QMenuBar>
 #include <QSettings>
+#include <QToolBar>
 #include <QVBoxLayout>
 
 static const QString config_path = "yEditor.ini";
@@ -20,12 +23,13 @@ editor_window_t::editor_window_t(QWidget * parent)
 	auto * layout = new QVBoxLayout(central);
 	layout->setContentsMargins(0, 0, 0, 0);
 
-	plugin_workspace_view_ = new plugin_workspace_view_t(central);
-	layout->addWidget(plugin_workspace_view_);
+	m_plugin_workspace_view = new plugin_workspace_view_t(m_settings, central);
+	layout->addWidget(m_plugin_workspace_view);
 
 	setCentralWidget(central);
 
 	setup_menu_bar();
+	setup_toolbar();
 	load_config();
 }
 
@@ -37,35 +41,34 @@ void editor_window_t::setup_menu_bar()
 	load_action->setShortcut(QKeySequence("Ctrl+O"));
 	load_action->setToolTip("Load all plugins from a folder");
 	file_menu->addAction(load_action);
-	connect(load_action, &QAction::triggered, plugin_workspace_view_, &plugin_workspace_view_t::on_load_data_files);
+	connect(load_action, &QAction::triggered, m_plugin_workspace_view, &plugin_workspace_view_t::on_load_data_files);
 
 	auto * load_mo2_action = new QAction("Open &MO2 Profile...", this);
 	load_mo2_action->setToolTip("Load plugins from a Mod Organizer 2 profile");
 	file_menu->addAction(load_mo2_action);
 	connect(
-	    load_mo2_action, &QAction::triggered, plugin_workspace_view_, &plugin_workspace_view_t::on_load_mo2_profile);
+	    load_mo2_action, &QAction::triggered, m_plugin_workspace_view, &plugin_workspace_view_t::on_load_mo2_profile);
 
 	auto * load_openmw_action = new QAction("Open Open&MW Config...", this);
 	load_openmw_action->setToolTip("Load plugins from an openmw.cfg file");
 	file_menu->addAction(load_openmw_action);
 	connect(
-	    load_openmw_action, &QAction::triggered, plugin_workspace_view_, &plugin_workspace_view_t::on_load_openmw_cfg);
+	    load_openmw_action, &QAction::triggered, m_plugin_workspace_view, &plugin_workspace_view_t::on_load_openmw_cfg);
 
 	file_menu->addSeparator();
 
 	auto * save_action = new QAction("&Save Plugin", this);
 	save_action->setShortcut(QKeySequence("Ctrl+S"));
 	save_action->setToolTip("Save the active plugin to disk");
-	save_action->setVisible(false);
 	file_menu->addAction(save_action);
-	connect(save_action, &QAction::triggered, plugin_workspace_view_, &plugin_workspace_view_t::on_save_plugin);
+	connect(save_action, &QAction::triggered, m_plugin_workspace_view, &plugin_workspace_view_t::on_save_plugin);
 
 	file_menu->addSeparator();
 
 	auto * unload_action = new QAction("&Unload All", this);
 	unload_action->setToolTip("Unload all plugins and clear the list");
 	file_menu->addAction(unload_action);
-	connect(unload_action, &QAction::triggered, plugin_workspace_view_, &plugin_workspace_view_t::on_unload_all);
+	connect(unload_action, &QAction::triggered, m_plugin_workspace_view, &plugin_workspace_view_t::on_unload_all);
 
 	file_menu->addSeparator();
 
@@ -83,6 +86,48 @@ void editor_window_t::setup_menu_bar()
 	connect(settings_action, &QAction::triggered, this, &editor_window_t::on_open_settings);
 }
 
+void editor_window_t::setup_toolbar()
+{
+	auto * toolbar = addToolBar("Main");
+	toolbar->setMovable(false);
+
+	auto * load_action = new QAction("Load", this);
+	load_action->setToolTip("Load plugins from a folder or config");
+	toolbar->addAction(load_action);
+	connect(load_action, &QAction::triggered, m_plugin_workspace_view, &plugin_workspace_view_t::on_load_data_files);
+
+	auto * new_action = new QAction("New", this);
+	new_action->setToolTip("Create a new empty plugin");
+	toolbar->addAction(new_action);
+	connect(new_action, &QAction::triggered, m_plugin_workspace_view, &plugin_workspace_view_t::on_new_plugin);
+
+	auto * save_action = new QAction("Save", this);
+	save_action->setToolTip("Save the active plugin to disk");
+	toolbar->addAction(save_action);
+	connect(save_action, &QAction::triggered, m_plugin_workspace_view, &plugin_workspace_view_t::on_save_plugin);
+
+	auto * merge_action = new QAction("Merge", this);
+	merge_action->setToolTip("Create a merged patch from loaded plugins");
+	toolbar->addAction(merge_action);
+	connect(merge_action, &QAction::triggered, m_plugin_workspace_view, &plugin_workspace_view_t::on_create_merged_patch);
+
+	auto * filter_action = new QAction("Filter", this);
+	filter_action->setToolTip("Open the advanced filter dialog");
+	toolbar->addAction(filter_action);
+	connect(filter_action, &QAction::triggered, m_plugin_workspace_view, &plugin_workspace_view_t::on_advanced_filter);
+
+	auto * type_filter_combo = new QComboBox(this);
+	type_filter_combo->addItem("All Types");
+	type_filter_combo->setToolTip("Filter navigation tree by record type");
+	toolbar->addWidget(type_filter_combo);
+
+	auto * search_field = new QLineEdit(this);
+	search_field->setPlaceholderText("Search by ID...");
+	search_field->setMaximumWidth(200);
+	search_field->setToolTip("Search records by ID");
+	toolbar->addWidget(search_field);
+}
+
 void editor_window_t::load_config()
 {
 	QSettings settings(config_path, QSettings::IniFormat);
@@ -93,6 +138,8 @@ void editor_window_t::load_config()
 	auto state = settings.value("window/state").toByteArray();
 	if (!state.isEmpty())
 		restoreState(state);
+
+	m_plugin_workspace_view->restore_session_state();
 }
 
 void editor_window_t::save_config()
@@ -100,6 +147,8 @@ void editor_window_t::save_config()
 	QSettings settings(config_path, QSettings::IniFormat);
 	settings.setValue("window/geometry", saveGeometry());
 	settings.setValue("window/state", saveState());
+
+	m_plugin_workspace_view->save_session_state();
 }
 
 void editor_window_t::closeEvent(QCloseEvent * event)
@@ -110,6 +159,6 @@ void editor_window_t::closeEvent(QCloseEvent * event)
 
 void editor_window_t::on_open_settings()
 {
-	editor_settings_dialog_t dialog(settings_, this);
+	editor_settings_dialog_t dialog(m_settings, this);
 	dialog.exec();
 }

@@ -1,5 +1,6 @@
 #include "editor_view.hpp"
 #include "line_number_gutter.hpp"
+#include <utility/char_diff.hpp>
 #include <algorithm>
 #include <QFont>
 #include <QHBoxLayout>
@@ -17,17 +18,17 @@ editor_view_t::editor_view_t(QWidget * parent)
 	auto * layout = new QVBoxLayout(this);
 	layout->setContentsMargins(0, 0, 0, 0);
 
-	splitter_ = new QSplitter(Qt::Horizontal, this);
-	splitter_->addWidget(setup_left_panel(splitter_));
-	splitter_->addWidget(setup_right_panel(splitter_));
-	splitter_->setSizes({ 500, 500 });
+	m_splitter = new QSplitter(Qt::Horizontal, this);
+	m_splitter->addWidget(setup_left_panel(m_splitter));
+	m_splitter->addWidget(setup_right_panel(m_splitter));
+	m_splitter->setSizes({ 500, 500 });
 
 	QFont editor_font("Segoe UI", 10);
-	original_view_->setFont(editor_font);
-	adapted_from_view_->setFont(editor_font);
-	translation_editor_->setFont(editor_font);
+	m_original_view->setFont(editor_font);
+	m_adapted_from_view->setFont(editor_font);
+	m_translation_editor->setFont(editor_font);
 
-	layout->addWidget(splitter_);
+	layout->addWidget(m_splitter);
 	setup_connections();
 }
 
@@ -37,46 +38,46 @@ QWidget * editor_view_t::setup_left_panel(QSplitter * parent_splitter)
 	auto * left_layout = new QVBoxLayout(left_widget);
 	left_layout->setContentsMargins(0, 0, 0, 0);
 
-	original_label_ = new QLabel("Original", left_widget);
-	original_label_->setAlignment(Qt::AlignCenter);
+	m_original_label = new QLabel("Original", left_widget);
+	m_original_label->setAlignment(Qt::AlignCenter);
 
-	original_view_ = new translation_edit_view_t(left_widget);
-	original_view_->setReadOnly(true);
-	auto palette = original_view_->palette();
+	m_original_view = new translation_edit_view_t(left_widget);
+	m_original_view->setReadOnly(true);
+	auto palette = m_original_view->palette();
 	palette.setColor(QPalette::Base, QColor(245, 245, 245));
-	original_view_->setPalette(palette);
+	m_original_view->setPalette(palette);
 
 	auto * original_container = new QWidget(left_widget);
 	auto * original_hlayout = new QHBoxLayout(original_container);
 	original_hlayout->setContentsMargins(0, 0, 0, 0);
 	original_hlayout->setSpacing(0);
-	original_hlayout->addWidget(new line_number_gutter_t(original_view_, original_container));
-	original_hlayout->addWidget(original_view_);
+	original_hlayout->addWidget(new line_number_gutter_t(m_original_view, original_container));
+	original_hlayout->addWidget(m_original_view);
 
-	adapted_from_view_ = new translation_edit_view_t(left_widget);
-	adapted_from_view_->setReadOnly(true);
-	auto adapted_palette = adapted_from_view_->palette();
+	m_adapted_from_view = new translation_edit_view_t(left_widget);
+	m_adapted_from_view->setReadOnly(true);
+	auto adapted_palette = m_adapted_from_view->palette();
 	adapted_palette.setColor(QPalette::Base, QColor(240, 235, 250));
-	adapted_from_view_->setPalette(adapted_palette);
+	m_adapted_from_view->setPalette(adapted_palette);
 
-	adapted_from_container_ = new QWidget(left_widget);
-	auto * adapted_hlayout = new QHBoxLayout(adapted_from_container_);
+	m_adapted_from_container = new QWidget(left_widget);
+	auto * adapted_hlayout = new QHBoxLayout(m_adapted_from_container);
 	adapted_hlayout->setContentsMargins(0, 0, 0, 0);
 	adapted_hlayout->setSpacing(0);
-	adapted_hlayout->addWidget(new line_number_gutter_t(adapted_from_view_, adapted_from_container_));
-	adapted_hlayout->addWidget(adapted_from_view_);
-	adapted_from_container_->setVisible(false);
+	adapted_hlayout->addWidget(new line_number_gutter_t(m_adapted_from_view, m_adapted_from_container));
+	adapted_hlayout->addWidget(m_adapted_from_view);
+	m_adapted_from_container->setVisible(false);
 
-	adapted_toggle_ = new QPushButton("Details", left_widget);
-	adapted_toggle_->setCheckable(true);
-	adapted_toggle_->setChecked(true);
-	adapted_toggle_->setToolTip("Show/hide adapted from panel");
-	adapted_toggle_->setVisible(false);
+	m_adapted_toggle = new QPushButton("Details", left_widget);
+	m_adapted_toggle->setCheckable(true);
+	m_adapted_toggle->setChecked(true);
+	m_adapted_toggle->setToolTip("Show/hide adapted from panel");
+	m_adapted_toggle->setVisible(false);
 
-	left_layout->addWidget(original_label_);
+	left_layout->addWidget(m_original_label);
 	left_layout->addWidget(original_container);
-	left_layout->addWidget(adapted_from_container_);
-	left_layout->addWidget(adapted_toggle_);
+	left_layout->addWidget(m_adapted_from_container);
+	left_layout->addWidget(m_adapted_toggle);
 
 	return left_widget;
 }
@@ -87,24 +88,24 @@ QWidget * editor_view_t::setup_right_panel(QSplitter * parent_splitter)
 	auto * right_layout = new QVBoxLayout(right_widget);
 	right_layout->setContentsMargins(0, 0, 0, 0);
 
-	translation_label_ = new QLabel("Translation", right_widget);
-	translation_label_->setAlignment(Qt::AlignCenter);
+	m_translation_label = new QLabel("Translation", right_widget);
+	m_translation_label->setAlignment(Qt::AlignCenter);
 
-	translation_editor_ = new translation_edit_view_t(right_widget);
+	m_translation_editor = new translation_edit_view_t(right_widget);
 
-	apply_button_ = new QPushButton("Next (Shift+Enter)", right_widget);
-	apply_button_->setToolTip("Apply changes and move to next entry");
+	m_apply_button = new QPushButton("Next (Shift+Enter)", right_widget);
+	m_apply_button->setToolTip("Apply changes and move to next entry");
 
 	auto * translation_container = new QWidget(right_widget);
 	auto * translation_hlayout = new QHBoxLayout(translation_container);
 	translation_hlayout->setContentsMargins(0, 0, 0, 0);
 	translation_hlayout->setSpacing(0);
-	translation_hlayout->addWidget(new line_number_gutter_t(translation_editor_, translation_container));
-	translation_hlayout->addWidget(translation_editor_);
+	translation_hlayout->addWidget(new line_number_gutter_t(m_translation_editor, translation_container));
+	translation_hlayout->addWidget(m_translation_editor);
 
-	right_layout->addWidget(translation_label_);
+	right_layout->addWidget(m_translation_label);
 	right_layout->addWidget(translation_container);
-	right_layout->addWidget(apply_button_);
+	right_layout->addWidget(m_apply_button);
 
 	return right_widget;
 }
@@ -112,41 +113,41 @@ QWidget * editor_view_t::setup_right_panel(QSplitter * parent_splitter)
 void editor_view_t::setup_connections()
 {
 	connect(
-	    adapted_toggle_,
+	    m_adapted_toggle,
 	    &QPushButton::toggled,
 	    this,
-	    [this](bool checked) { adapted_from_container_->setVisible(checked); });
+	    [this](bool checked) { m_adapted_from_container->setVisible(checked); });
 
-	connect(translation_editor_, &QPlainTextEdit::textChanged, this, &editor_view_t::text_changed);
-	connect(apply_button_, &QPushButton::clicked, this, &editor_view_t::apply_clicked);
+	connect(m_translation_editor, &QPlainTextEdit::textChanged, this, &editor_view_t::text_changed);
+	connect(m_apply_button, &QPushButton::clicked, this, &editor_view_t::apply_clicked);
 }
 
 translation_edit_view_t * editor_view_t::original_view() const
 {
-	return original_view_;
+	return m_original_view;
 }
 
 translation_edit_view_t * editor_view_t::details_view() const
 {
-	return adapted_from_view_;
+	return m_adapted_from_view;
 }
 
 translation_edit_view_t * editor_view_t::translation_editor() const
 {
-	return translation_editor_;
+	return m_translation_editor;
 }
 
 void editor_view_t::set_split_ratio(double ratio)
 {
 	ratio = std::clamp(ratio, 0.2, 0.8);
-	const int total = splitter_->width();
+	const int total = m_splitter->width();
 	const int left = static_cast<int>(total * ratio);
-	splitter_->setSizes({ left, total - left });
+	m_splitter->setSizes({ left, total - left });
 }
 
 double editor_view_t::get_split_ratio() const
 {
-	const auto sizes = splitter_->sizes();
+	const auto sizes = m_splitter->sizes();
 	const int total = sizes[0] + sizes[1];
 	if (total == 0)
 		return 0.5;
@@ -158,11 +159,11 @@ void editor_view_t::set_details(const std::string & text)
 {
 	auto display = QString::fromStdString(text);
 	display.replace('|', '\n');
-	adapted_from_view_->setPlainText(display);
-	adapted_toggle_->setVisible(true);
-	if (adapted_toggle_->isChecked())
+	m_adapted_from_view->setPlainText(display);
+	m_adapted_toggle->setVisible(true);
+	if (m_adapted_toggle->isChecked())
 	{
-		adapted_from_container_->setVisible(true);
+		m_adapted_from_container->setVisible(true);
 	}
 }
 
@@ -171,33 +172,83 @@ QList<QTextEdit::ExtraSelection> editor_view_t::highlight_adapted_diff(
     const std::string & adapted_from,
     bool /*use_original*/)
 {
-	const auto new_str = QString::fromStdString(new_text);
-	const auto from_str = QString::fromStdString(adapted_from);
+	QList<QTextEdit::ExtraSelection> selections;
 
-	int prefix = 0;
-	int max_prefix = std::min(new_str.length(), from_str.length());
-	while (prefix < max_prefix && new_str[prefix] == from_str[prefix])
-		++prefix;
-
-	QList<QTextEdit::ExtraSelection> from_selections;
-	if (prefix < from_str.length())
+	auto first_segment = adapted_from;
+	std::string remainder;
+	const auto pipe_pos = adapted_from.find('|');
+	if (pipe_pos != std::string::npos)
 	{
-		QTextEdit::ExtraSelection sel;
-		sel.format.setBackground(QColor(255, 220, 150));
-		sel.cursor = adapted_from_view_->textCursor();
-		sel.cursor.setPosition(prefix);
-		sel.cursor.setPosition(from_str.length(), QTextCursor::KeepAnchor);
-		from_selections.append(sel);
+		first_segment = adapted_from.substr(0, pipe_pos);
+		remainder = adapted_from.substr(pipe_pos);
 	}
 
-	return from_selections;
+	const auto segments = compute_char_diff(first_segment, new_text);
+
+	std::string merged_text;
+	std::vector<std::pair<int, int>> inserted_ranges;
+	std::vector<std::pair<int, int>> deleted_ranges;
+
+	for (const auto & segment : segments)
+	{
+		const int start = static_cast<int>(merged_text.size());
+		merged_text += segment.text;
+		const int end = static_cast<int>(merged_text.size());
+
+		if (segment.operation == diff_op_t::inserted)
+			inserted_ranges.emplace_back(start, end);
+		else if (segment.operation == diff_op_t::deleted)
+			deleted_ranges.emplace_back(start, end);
+	}
+
+	if (!remainder.empty())
+	{
+		auto remainder_display = remainder;
+		for (auto & ch : remainder_display)
+		{
+			if (ch == '|')
+				ch = '\n';
+		}
+		merged_text += remainder_display;
+	}
+
+	m_adapted_from_view->setPlainText(QString::fromStdString(merged_text));
+
+	QTextCharFormat inserted_format;
+	inserted_format.setBackground(QColor(180, 255, 180));
+
+	QTextCharFormat deleted_format;
+	deleted_format.setBackground(QColor(255, 180, 180));
+	deleted_format.setFontStrikeOut(true);
+
+	for (const auto & [start, end] : inserted_ranges)
+	{
+		QTextEdit::ExtraSelection sel;
+		sel.format = inserted_format;
+		sel.cursor = m_adapted_from_view->textCursor();
+		sel.cursor.setPosition(start);
+		sel.cursor.setPosition(end, QTextCursor::KeepAnchor);
+		selections.append(sel);
+	}
+
+	for (const auto & [start, end] : deleted_ranges)
+	{
+		QTextEdit::ExtraSelection sel;
+		sel.format = deleted_format;
+		sel.cursor = m_adapted_from_view->textCursor();
+		sel.cursor.setPosition(start);
+		sel.cursor.setPosition(end, QTextCursor::KeepAnchor);
+		selections.append(sel);
+	}
+
+	return selections;
 }
 
 void editor_view_t::clear_details()
 {
-	adapted_from_view_->clear();
-	adapted_from_container_->setVisible(false);
-	adapted_toggle_->setVisible(false);
+	m_adapted_from_view->clear();
+	m_adapted_from_container->setVisible(false);
+	m_adapted_toggle->setVisible(false);
 }
 
 std::vector<std::string> editor_view_t::extract_quoted_strings(const std::string & source_text)
@@ -259,27 +310,27 @@ void editor_view_t::load_script_entry(const std::string & old_text, const std::s
 
 	if (tmpl.quote_starts.empty())
 	{
-		script_template_ = std::nullopt;
-		translation_editor_->setPlainText(QString::fromStdString(new_text));
+		m_script_template = std::nullopt;
+		m_translation_editor->setPlainText(QString::fromStdString(new_text));
 		return;
 	}
 
-	script_template_ = tmpl;
+	m_script_template = tmpl;
 
 	const auto original_extracted = extract_quoted_strings(old_text);
-	original_view_->setPlainText(join_extracted_lines(original_extracted));
+	m_original_view->setPlainText(join_extracted_lines(original_extracted));
 
 	const auto translation_extracted = extract_quoted_strings(new_text);
-	translation_editor_->setPlainText(join_extracted_lines(translation_extracted));
+	m_translation_editor->setPlainText(join_extracted_lines(translation_extracted));
 }
 
 std::string editor_view_t::reconstruct_script_line() const
 {
-	if (!script_template_)
-		return translation_editor_->toPlainText().toStdString();
+	if (!m_script_template)
+		return m_translation_editor->toPlainText().toStdString();
 
-	const auto & tmpl = *script_template_;
-	const auto lines = translation_editor_->toPlainText().split('\n');
+	const auto & tmpl = *m_script_template;
+	const auto lines = m_translation_editor->toPlainText().split('\n');
 	const size_t slot_count = tmpl.quote_starts.size();
 
 	std::string result = tmpl.full_line;
@@ -301,18 +352,18 @@ std::string editor_view_t::reconstruct_script_line() const
 
 bool editor_view_t::has_script_template() const
 {
-	return script_template_.has_value();
+	return m_script_template.has_value();
 }
 
 size_t editor_view_t::script_slot_count() const
 {
-	if (!script_template_)
+	if (!m_script_template)
 		return 0;
 
-	return script_template_->quote_starts.size();
+	return m_script_template->quote_starts.size();
 }
 
 void editor_view_t::clear_script_template()
 {
-	script_template_ = std::nullopt;
+	m_script_template = std::nullopt;
 }

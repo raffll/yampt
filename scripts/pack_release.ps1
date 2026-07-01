@@ -3,18 +3,21 @@ param(
 )
 
 $outDir = "x64\Release"
-$buildNum = (git rev-list --count HEAD)
+$version = & "$PSScriptRoot\get_version.ps1"
+$buildNum = $version -replace '^0\.', ''
 $buildDir = "build"
-$packDir = "$buildDir\yampt_build$buildNum"
-$zipName = "$buildDir\yampt_build$buildNum.7z"
+$packDir = "$buildDir\yampt_$version"
+$zipName = "$buildDir\yampt_$version.7z"
 $sevenZip = "$PSScriptRoot\7za.exe"
 $repo = "raffll/yampt"
-$tag = "build$buildNum"
+$tag = "v$version"
 
 if (!(Test-Path $sevenZip)) {
     Write-Error "7z.exe not found at: $sevenZip"
     exit 1
 }
+
+& "$PSScriptRoot\stamp_version.ps1"
 
 if (!(Test-Path $buildDir)) { New-Item -ItemType Directory -Force $buildDir | Out-Null }
 if (Test-Path $packDir) { Remove-Item -Recurse -Force $packDir }
@@ -36,12 +39,12 @@ if (Test-Path "$outDir\platforms") {
     Copy-Item "$outDir\platforms\*.dll" "$packDir\platforms"
 }
 
-$zipFullPath = Join-Path (Resolve-Path $buildDir).Path "yampt_build$buildNum.7z"
+$zipFullPath = Join-Path (Resolve-Path $buildDir).Path "yampt_$version.7z"
 Push-Location $buildDir
-& $sevenZip a -t7z -mx=9 $zipFullPath "yampt_build$buildNum"
+& $sevenZip a -t7z -mx=9 $zipFullPath "yampt_$version"
 Pop-Location
 
-Write-Host "Created $zipName (build $buildNum)"
+Write-Host "Created $zipName (version $version)"
 
 if (!$Upload) {
     exit 0
@@ -63,8 +66,8 @@ $commitSha = (git rev-parse HEAD)
 $body = @{
     tag_name         = $tag
     target_commitish = $commitSha
-    name             = "Build $buildNum"
-    body             = "Automated release build $buildNum"
+    name             = "yampt $version"
+    body             = "Release $version"
     draft            = $false
     prerelease       = $true
 } | ConvertTo-Json

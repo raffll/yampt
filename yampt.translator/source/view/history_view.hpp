@@ -22,6 +22,6 @@ signals:
 	void revert_requested(size_t history_index);
 
 private:
-	QVBoxLayout * entries_layout_ = nullptr;
-	QWidget * scroll_content_ = nullptr;
+	QVBoxLayout * m_entries_layout = nullptr;
+	QWidget * m_scroll_content = nullptr;
 };

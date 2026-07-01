@@ -22,11 +22,11 @@ public:
 	const std::string & filename() const;
 
 private:
-	std::string filename_;
-	dict_kind_t kind_ = dict_kind_t::user;
-	file_type_t file_type_ = file_type_t::user_dict;
-	std::string language_;
-	bool dirty_ = false;
-	bool wip_ = false;
-	bool unloaded_ = false;
+	std::string m_filename;
+	dict_kind_t m_kind = dict_kind_t::user;
+	file_type_t m_file_type = file_type_t::user_dict;
+	std::string m_language;
+	bool m_dirty = false;
+	bool m_wip = false;
+	bool m_unloaded = false;
 };

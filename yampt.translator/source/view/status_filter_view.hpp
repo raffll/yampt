@@ -41,12 +41,12 @@ private:
 		size_t count = 0;
 	};
 
-	QHBoxLayout * layout_ = nullptr;
-	std::vector<status_button_t> status_buttons_;
-	std::map<status_t, size_t> current_counts_;
-	std::set<status_t> active_statuses_;
-	std::set<status_t> saved_statuses_;
-	bool solo_ = false;
-	status_t solo_status_ = status_t::untranslated;
-	bool document_open_ = false;
+	QHBoxLayout * m_layout = nullptr;
+	std::vector<status_button_t> m_status_buttons;
+	std::map<status_t, size_t> m_current_counts;
+	std::set<status_t> m_active_statuses;
+	std::set<status_t> m_saved_statuses;
+	bool m_solo = false;
+	status_t m_solo_status = status_t::untranslated;
+	bool m_document_open = false;
 };

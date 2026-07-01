@@ -18,6 +18,6 @@ public:
 	std::vector<std::string> selected_paths() const;
 
 private:
-	QListWidget * list_ = nullptr;
-	QDialogButtonBox * buttons_ = nullptr;
+	QListWidget * m_list = nullptr;
+	QDialogButtonBox * m_buttons = nullptr;
 };

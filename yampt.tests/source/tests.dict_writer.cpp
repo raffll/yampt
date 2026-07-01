@@ -194,7 +194,7 @@ TEST_CASE("dict_writer_t + dict_reader_t, all statuses round-trip", "[i]")
 	int idx = 0;
 	for (const auto & status : statuses)
 	{
-		std::string key = "key_" + std::to_string(idx++);
+		std::string key = "m_key" + std::to_string(idx++);
 		dict.at(tools_t::rec_type_t::gmst).insert({ key, "old", "new", status });
 	}
 
@@ -208,7 +208,7 @@ TEST_CASE("dict_writer_t + dict_reader_t, all statuses round-trip", "[i]")
 	idx = 0;
 	for (const auto & status : statuses)
 	{
-		std::string key = "key_" + std::to_string(idx++);
+		std::string key = "m_key" + std::to_string(idx++);
 		const auto * e = reader.get_dict().at(tools_t::rec_type_t::gmst).find(key);
 		REQUIRE(e != nullptr);
 		REQUIRE(e->status == status);

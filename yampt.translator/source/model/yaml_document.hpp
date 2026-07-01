@@ -31,10 +31,10 @@ public:
 	void export_to(const std::string & output_path);
 
 private:
-	std::string path_;
-	std::string tmp_path_;
-	std::vector<l10n_entry_t> entries_;
-	std::vector<std::string> source_values_;
-	std::set<size_t> modified_indices_;
-	bool dirty_ = false;
+	std::string m_path;
+	std::string m_tmp_path;
+	std::vector<l10n_entry_t> m_entries;
+	std::vector<std::string> m_source_values;
+	std::set<size_t> m_modified_indices;
+	bool m_dirty = false;
 };

@@ -11,7 +11,7 @@ std::string ctranslate2_translator_t::name() const
 
 bool ctranslate2_translator_t::is_available() const
 {
-	return engine_.is_loaded();
+	return m_engine.is_loaded();
 }
 
 bool ctranslate2_translator_t::is_async() const
@@ -31,25 +31,25 @@ int ctranslate2_translator_t::remaining_quota() const
 
 void ctranslate2_translator_t::translate(const std::string & text, const std::string &)
 {
-	if (!engine_.is_loaded())
+	if (!m_engine.is_loaded())
 	{
 		emit translation_finished({ "", false, "Model not loaded" });
 		return;
 	}
 
-	auto result = engine_.translate(text);
+	auto result = m_engine.translate(text);
 	emit translation_finished({ result.text, result.success, result.error });
 }
 
 translation_result_t ctranslate2_translator_t::translate_sync(const std::string & text)
 {
-	if (!engine_.is_loaded())
+	if (!m_engine.is_loaded())
 		return { "", false, "Model not loaded" };
 
-	return engine_.translate(text);
+	return m_engine.translate(text);
 }
 
 bool ctranslate2_translator_t::load_model(const std::string & model_path)
 {
-	return engine_.load(model_path);
+	return m_engine.load(model_path);
 }

@@ -18,18 +18,18 @@ annotations_view_t::annotations_view_t(QWidget * parent)
 
 	auto * toolbar = new QHBoxLayout();
 	toolbar->setContentsMargins(0, 0, 0, 0);
-	rebuild_btn_ = new QPushButton("Rebuild", this);
-	rebuild_btn_->setToolTip("Rebuild annotations from all loaded dicts");
-	rebuild_btn_->setFixedHeight(22);
-	toolbar->addWidget(rebuild_btn_);
+	m_rebuild_btn = new QPushButton("Rebuild", this);
+	m_rebuild_btn->setToolTip("Rebuild annotations from all loaded dicts");
+	m_rebuild_btn->setFixedHeight(22);
+	toolbar->addWidget(m_rebuild_btn);
 	toolbar->addStretch();
 	layout->addLayout(toolbar);
 
-	list_ = new QListWidget(this);
-	layout->addWidget(list_);
+	m_list = new QListWidget(this);
+	layout->addWidget(m_list);
 
-	connect(list_, &QListWidget::itemClicked, this, &annotations_view_t::on_item_clicked);
-	connect(rebuild_btn_, &QPushButton::clicked, this, &annotations_view_t::rebuild_requested);
+	connect(m_list, &QListWidget::itemClicked, this, &annotations_view_t::on_item_clicked);
+	connect(m_rebuild_btn, &QPushButton::clicked, this, &annotations_view_t::rebuild_requested);
 }
 
 struct annotation_entry_t
@@ -106,25 +106,25 @@ void annotations_view_t::update_annotations(
     const std::string & gender,
     const std::string & enchantment)
 {
-	list_->clear();
+	m_list->clear();
 
 	if (!enchantment.empty())
 	{
 		auto * item = new QListWidgetItem(QString::fromStdString("Enchantment: " + enchantment));
-		list_->addItem(item);
+		m_list->addItem(item);
 	}
 
 	if (!speaker_name.empty())
 	{
 		auto * item = new QListWidgetItem(QString::fromStdString("Speaker: " + speaker_name + " (" + gender + ")"));
-		list_->addItem(item);
+		m_list->addItem(item);
 	}
 
 	const auto hyperlinks = deduplicate_and_sort(annotations, annotation_t::dial_topic);
-	add_annotation_section(list_, hyperlinks, "--- Hyperlinks ---", QColor(70, 130, 200));
+	add_annotation_section(m_list, hyperlinks, "--- Hyperlinks ---", QColor(70, 130, 200));
 
 	const auto glossary = deduplicate_and_sort(annotations, annotation_t::glossary_term);
-	add_annotation_section(list_, glossary, "--- Glossary ---", QColor(50, 150, 50));
+	add_annotation_section(m_list, glossary, "--- Glossary ---", QColor(50, 150, 50));
 }
 
 void annotations_view_t::on_item_clicked(QListWidgetItem * item)
@@ -142,5 +142,5 @@ void annotations_view_t::on_item_clicked(QListWidgetItem * item)
 
 void annotations_view_t::clear()
 {
-	list_->clear();
+	m_list->clear();
 }

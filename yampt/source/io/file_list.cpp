@@ -15,8 +15,8 @@ static std::string extract_extension(const std::string & path)
 
 const file_entry_t * file_list_t::get(const std::string & path) const
 {
-	const auto it = entries_.find(string_utils::normalize_path(path));
-	if (it == entries_.end())
+	const auto it = m_entries.find(string_utils::normalize_path(path));
+	if (it == m_entries.end())
 		return nullptr;
 
 	return &it->second;
@@ -24,8 +24,8 @@ const file_entry_t * file_list_t::get(const std::string & path) const
 
 file_entry_t * file_list_t::get(const std::string & path)
 {
-	auto it = entries_.find(string_utils::normalize_path(path));
-	if (it == entries_.end())
+	auto it = m_entries.find(string_utils::normalize_path(path));
+	if (it == m_entries.end())
 		return nullptr;
 
 	return &it->second;
@@ -33,14 +33,14 @@ file_entry_t * file_list_t::get(const std::string & path)
 
 bool file_list_t::contains(const std::string & path) const
 {
-	return entries_.count(string_utils::normalize_path(path)) > 0;
+	return m_entries.count(string_utils::normalize_path(path)) > 0;
 }
 
 std::vector<const file_entry_t *> file_list_t::all() const
 {
 	std::vector<const file_entry_t *> result;
-	result.reserve(entries_.size());
-	for (const auto & [key, entry] : entries_)
+	result.reserve(m_entries.size());
+	for (const auto & [key, entry] : m_entries)
 		result.push_back(&entry);
 
 	return result;
@@ -49,7 +49,7 @@ std::vector<const file_entry_t *> file_list_t::all() const
 std::vector<const file_entry_t *> file_list_t::workspace_files() const
 {
 	std::vector<const file_entry_t *> result;
-	for (const auto & [key, entry] : entries_)
+	for (const auto & [key, entry] : m_entries)
 		result.push_back(&entry);
 
 	return result;
@@ -58,8 +58,8 @@ std::vector<const file_entry_t *> file_list_t::workspace_files() const
 file_entry_t & file_list_t::add(const std::string & path)
 {
 	const auto normalized = string_utils::normalize_path(path);
-	auto it = entries_.find(normalized);
-	if (it != entries_.end())
+	auto it = m_entries.find(normalized);
+	if (it != m_entries.end())
 		return it->second;
 
 	file_entry_t entry;
@@ -67,13 +67,13 @@ file_entry_t & file_list_t::add(const std::string & path)
 	entry.filename = std::string(string_utils::extract_filename(normalized));
 	entry.type = classify(normalized);
 
-	auto [inserted_it, success] = entries_.emplace(normalized, std::move(entry));
+	auto [inserted_it, success] = m_entries.emplace(normalized, std::move(entry));
 	return inserted_it->second;
 }
 
 void file_list_t::remove(const std::string & path)
 {
-	entries_.erase(string_utils::normalize_path(path));
+	m_entries.erase(string_utils::normalize_path(path));
 }
 
 file_type_t file_list_t::classify(const std::string & path)
@@ -193,10 +193,10 @@ std::string detect_language(const std::string & filename, std::uintmax_t file_si
 
 void file_list_t::clear_workspace()
 {
-	for (auto it = entries_.begin(); it != entries_.end();)
+	for (auto it = m_entries.begin(); it != m_entries.end();)
 	{
 		if (it->second.is_workspace)
-			it = entries_.erase(it);
+			it = m_entries.erase(it);
 		else
 			++it;
 	}
@@ -205,7 +205,7 @@ void file_list_t::clear_workspace()
 void file_list_t::scan_roots(const std::vector<std::string> & root_paths)
 {
 	clear_workspace();
-	roots_ = root_paths;
+	m_roots = root_paths;
 
 	for (const auto & root : root_paths)
 		scan_single_root(root);
@@ -213,7 +213,7 @@ void file_list_t::scan_roots(const std::vector<std::string> & root_paths)
 
 const std::vector<std::string> & file_list_t::get_roots() const
 {
-	return roots_;
+	return m_roots;
 }
 
 void file_list_t::scan_single_root(const std::string & root_path)

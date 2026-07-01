@@ -17,5 +17,5 @@ public:
 	void clear();
 
 private:
-	QPlainTextEdit * text_edit_ = nullptr;
+	QPlainTextEdit * m_text_edit = nullptr;
 };

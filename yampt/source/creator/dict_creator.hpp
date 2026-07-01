@@ -41,7 +41,8 @@ public:
 	    const std::string & path,
 	    const std::string & path_ext,
 	    translation_engine_t * translation_engine = nullptr,
-	    base_mode_t base_mode = base_mode_t::full);
+	    base_mode_t base_mode = base_mode_t::full,
+	    const std::string & dictionary_aff_path = {});
 
 	~dict_creator_t();
 
@@ -237,9 +238,10 @@ private:
 	const tools_t::dict_t * base_dict = nullptr;
 	tools_t::dict_t dict;
 	mode_t mode = mode_t::single;
-	translation_engine_t * translation_engine_ = nullptr;
-	base_mode_t base_mode_ = base_mode_t::full;
-	std::unique_ptr<Hunspell> english_dict_;
+	translation_engine_t * m_translation_engine = nullptr;
+	base_mode_t m_base_mode = base_mode_t::full;
+	std::string m_dictionary_aff_path;
+	std::unique_ptr<Hunspell> m_english_dict;
 
 	int counter_created = 0;
 	int counter_missing = 0;
@@ -256,8 +258,8 @@ private:
 	std::unordered_map<std::string, size_t> npc_index;
 	std::unordered_map<std::string, size_t> info_index;
 	std::unordered_map<std::string, std::string> dial_native_to_foreign;
-	std::string cell_native_candidates_str_;
-	std::unordered_map<std::string, const tools_t::record_entry_t *> text_match_index_;
-	std::unordered_map<std::string, std::string> text_match_conflicts_;
-	std::unordered_map<std::string, std::string> text_match_first_;
+	std::string m_cell_native_candidates_str;
+	std::unordered_map<std::string, const tools_t::record_entry_t *> m_text_match_index;
+	std::unordered_map<std::string, std::string> m_text_match_conflicts;
+	std::unordered_map<std::string, std::string> m_text_match_first;
 };

@@ -2,12 +2,12 @@
 
 void byte_limit_validator_t::set_codepage(codepage_t cp)
 {
-	codepage_ = cp;
+	m_codepage = cp;
 }
 
 validation_result_t byte_limit_validator_t::validate(tools_t::rec_type_t type, const std::string & utf8_value) const
 {
-	const auto encoded = encode_from_utf8(utf8_value, codepage_);
+	const auto encoded = encode_from_utf8(utf8_value, m_codepage);
 	const size_t byte_count = encoded.size();
 
 	bool has_forbidden = false;

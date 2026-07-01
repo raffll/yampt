@@ -33,9 +33,9 @@ public:
 
 private:
 	struct impl_t;
-	std::unique_ptr<impl_t> impl_;
-	std::vector<std::string> excluded_words_;
-	std::vector<std::string> user_dict_words_;
+	std::unique_ptr<impl_t> m_impl;
+	std::vector<std::string> m_excluded_words;
+	std::vector<std::string> m_user_dict_words;
 
 	bool is_excluded(const std::string & word) const;
 	bool is_mwscript_keyword(const std::string & word) const;

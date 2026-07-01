@@ -26,12 +26,12 @@ public:
 
 	translation_engine_t * engine_ptr()
 	{
-		return &engine_;
+		return &m_engine;
 	}
 
 signals:
 	void translation_finished(translation_suggestion_t result);
 
 private:
-	translation_engine_t engine_;
+	translation_engine_t m_engine;
 };

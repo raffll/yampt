@@ -21,7 +21,7 @@ public:
 
 	void set_output_dir(const std::string & dir)
 	{
-		output_dir_ = dir;
+		m_output_dir = dir;
 	}
 
 	result_t make_dict(const std::string & plugin_path, codepage_t encoding);
@@ -35,7 +35,8 @@ public:
 	    const std::string & foreign_lang = {},
 	    const std::string & native_lang = {},
 	    translation_engine_t * engine = nullptr,
-	    base_mode_t mode = base_mode_t::full);
+	    base_mode_t mode = base_mode_t::full,
+	    const std::string & dictionary_aff_path = {});
 	result_t convert(const std::string & plugin_path, const std::vector<std::string> & dict_paths, codepage_t encoding);
 	result_t create_plugin(
 	    const std::string & plugin_path,
@@ -47,5 +48,5 @@ private:
 	std::string make_output_path(const std::string & base_name, const std::string & ext, bool) const;
 	std::string get_output_dir() const;
 
-	std::string output_dir_;
+	std::string m_output_dir;
 };

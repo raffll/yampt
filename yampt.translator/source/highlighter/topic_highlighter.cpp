@@ -4,12 +4,12 @@
 topic_highlighter_t::topic_highlighter_t(QTextDocument * parent)
     : QSyntaxHighlighter(parent)
 {
-	format_.setBackground(QColor(200, 220, 255));
+	m_format.setBackground(QColor(200, 220, 255));
 }
 
 void topic_highlighter_t::set_terms(const std::vector<std::string> & translated_terms)
 {
-	terms_ = translated_terms;
+	m_terms = translated_terms;
 
 	if (document())
 		rehighlight();
@@ -17,7 +17,7 @@ void topic_highlighter_t::set_terms(const std::vector<std::string> & translated_
 
 void topic_highlighter_t::highlightBlock(const QString & text)
 {
-	if (terms_.empty())
+	if (m_terms.empty())
 		return;
 
 	auto text_str = text.toStdString();
@@ -28,7 +28,7 @@ void topic_highlighter_t::highlightBlock(const QString & text)
 	    text_lower.begin(),
 	    [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
 
-	for (const auto & term : terms_)
+	for (const auto & term : m_terms)
 	{
 		std::string term_lower = term;
 		std::transform(
@@ -43,7 +43,7 @@ void topic_highlighter_t::highlightBlock(const QString & text)
 		size_t pos = 0;
 		while ((pos = text_lower.find(term_lower, pos)) != std::string::npos)
 		{
-			setFormat(static_cast<int>(pos), static_cast<int>(term_lower.size()), format_);
+			setFormat(static_cast<int>(pos), static_cast<int>(term_lower.size()), m_format);
 			pos += term_lower.size();
 		}
 	}

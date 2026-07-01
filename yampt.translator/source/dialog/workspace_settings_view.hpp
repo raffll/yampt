@@ -23,9 +23,9 @@ private:
     void on_move_down_clicked();
     void update_button_states();
 
-    QListWidget * path_list_ = nullptr;
-    QPushButton * add_button_ = nullptr;
-    QPushButton * remove_button_ = nullptr;
-    QPushButton * move_up_button_ = nullptr;
-    QPushButton * move_down_button_ = nullptr;
+    QListWidget * m_path_list = nullptr;
+    QPushButton * m_add_button = nullptr;
+    QPushButton * m_remove_button = nullptr;
+    QPushButton * m_move_up_button = nullptr;
+    QPushButton * m_move_down_button = nullptr;
 };

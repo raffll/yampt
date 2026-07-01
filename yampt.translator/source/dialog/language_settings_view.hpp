@@ -22,13 +22,13 @@ private:
     void on_foreign_language_changed(int index);
     void scan_dictionaries(const std::string & directory);
 
-    QComboBox * native_language_combo_ = nullptr;
-    QComboBox * foreign_language_combo_ = nullptr;
-    QComboBox * encoding_combo_ = nullptr;
-    QComboBox * spell_check_combo_ = nullptr;
-    QComboBox * translation_target_combo_ = nullptr;
-    QComboBox * partial_dict_combo_ = nullptr;
-    QLineEdit * native_tag_edit_ = nullptr;
-    QLineEdit * foreign_tag_edit_ = nullptr;
-    std::string dictionaries_dir_;
+    QComboBox * m_native_language_combo = nullptr;
+    QComboBox * m_foreign_language_combo = nullptr;
+    QComboBox * m_encoding_combo = nullptr;
+    QComboBox * m_spell_check_combo = nullptr;
+    QComboBox * m_translation_target_combo = nullptr;
+    QComboBox * m_partial_dict_combo = nullptr;
+    QLineEdit * m_native_tag_edit = nullptr;
+    QLineEdit * m_foreign_tag_edit = nullptr;
+    std::string m_dictionaries_dir;
 };

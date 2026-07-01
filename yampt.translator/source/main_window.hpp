@@ -71,6 +71,7 @@ struct make_base_params_t
 	std::string foreign_lang;
 	std::string native_lang;
 	base_mode_t base_mode;
+	std::string dictionary_aff_path;
 };
 
 struct annotation_highlight_t
@@ -115,6 +116,7 @@ protected:
 private slots:
 	void on_save();
 	void on_save_all();
+	void on_merge();
 	void on_plugin_operation(const std::string & plugin_path, plugin_op_t op);
 	void on_plugin_unload(const std::string & path);
 	void on_find();
@@ -170,6 +172,8 @@ private:
 	void scan_workspace();
 	void update_watcher_paths();
 	void register_shortcuts();
+	void shortcut_copy_original();
+	void shortcut_commit_status(status_t new_status);
 	std::vector<dict_selection_dialog_t::dict_entry_t> build_dict_entries(const std::string & source_dir = {}) const;
 	void apply_extra_selections(translation_edit_view_t * editor, const extra_selections_state_t & state);
 
@@ -207,97 +211,103 @@ private:
 	// update_watcher_paths helper
 	void add_directory_recursive(QStringList & target_paths, const QString & directory);
 
-	QAction * add_folder_action_ = nullptr;
-	QAction * import_archive_action_ = nullptr;
-	QAction * save_action_ = nullptr;
-	QAction * save_all_action_ = nullptr;
-	QAction * quit_action_ = nullptr;
-	QAction * find_action_ = nullptr;
-	QAction * escape_action_ = nullptr;
+	QAction * m_add_folder_action = nullptr;
+	QAction * m_import_archive_action = nullptr;
+	QAction * m_merge_action = nullptr;
+	QAction * m_save_action = nullptr;
+	QAction * m_save_all_action = nullptr;
+	QAction * m_quit_action = nullptr;
+	QAction * m_find_action = nullptr;
+	QAction * m_escape_action = nullptr;
+	QAction * m_settings_action = nullptr;
 
-	QToolBar * toolbar_ = nullptr;
+	QAction * m_copy_original_action = nullptr;
+	QAction * m_set_in_progress_action = nullptr;
+	QAction * m_set_translated_action = nullptr;
 
-	QAction * sidebar_toggle_ = nullptr;
-	QAction * bottom_panel_toggle_ = nullptr;
+	QToolBar * m_toolbar = nullptr;
 
-	QSplitter * central_splitter_ = nullptr;
+	QAction * m_sidebar_toggle = nullptr;
+	QAction * m_bottom_panel_toggle = nullptr;
 
-	QSplitter * left_splitter_ = nullptr;
-	QSplitter * right_splitter_ = nullptr;
-	QTabWidget * left_tabs_ = nullptr;
-	QTabWidget * info_tabs_ = nullptr;
-	QTabWidget * record_tabs_ = nullptr;
+	QSplitter * m_central_splitter = nullptr;
 
-	QLabel * search_label_ = nullptr;
-	QLineEdit * search_field_ = nullptr;
-	QPushButton * case_sensitive_check_ = nullptr;
-	QPushButton * regex_check_ = nullptr;
-	QPushButton * search_col_key_ = nullptr;
-	QPushButton * search_col_original_ = nullptr;
-	QPushButton * search_col_translation_ = nullptr;
-	QAction * grammar_check_ = nullptr;
-	QAction * whitespace_check_ = nullptr;
+	QSplitter * m_left_splitter = nullptr;
+	QSplitter * m_right_splitter = nullptr;
+	QTabWidget * m_left_tabs = nullptr;
+	QTabWidget * m_info_tabs = nullptr;
+	QTabWidget * m_record_tabs = nullptr;
 
-	QString search_query_;
+	QLabel * m_search_label = nullptr;
+	QLineEdit * m_search_field = nullptr;
+	QPushButton * m_case_sensitive_check = nullptr;
+	QPushButton * m_regex_check = nullptr;
+	QPushButton * m_search_col_key = nullptr;
+	QPushButton * m_search_col_original = nullptr;
+	QPushButton * m_search_col_translation = nullptr;
+	QAction * m_grammar_check = nullptr;
+	QAction * m_whitespace_check = nullptr;
 
-	bool has_unsaved_changes_ = false;
+	QString m_search_query;
 
-	std::set<tools_t::rec_type_t> type_filter_;
-	std::set<status_t> status_filter_;
-	bool type_filter_solo_ = false;
+	bool m_has_unsaved_changes = false;
 
-	record_table_model_t * table_model_ = nullptr;
-	editor_view_t * editor_view_ = nullptr;
+	std::set<tools_t::rec_type_t> m_type_filter;
+	std::set<status_t> m_status_filter;
+	bool m_type_filter_solo = false;
 
-	filter_tree_view_t * filter_tree_view_ = nullptr;
-	status_filter_view_t * status_filter_view_ = nullptr;
-	record_table_view_t * table_view_ = nullptr;
-	sidebar_view_t * sidebar_ = nullptr;
-	book_preview_view_t * book_preview_view_ = nullptr;
-	QLabel * active_file_label_ = nullptr;
-	QLabel * progress_label_ = nullptr;
-	validation_view_t * validation_view_ = nullptr;
-	editor_highlighter_t * hl_original_ = nullptr;
-	editor_highlighter_t * hl_adapted_ = nullptr;
-	editor_highlighter_t * hl_translation_ = nullptr;
+	record_table_model_t * m_table_model = nullptr;
+	editor_view_t * m_editor_view = nullptr;
 
-	grammar_checker_t grammar_checker_;
-	row_filter_t row_filter_;
-	spell_context_menu_t * spell_menu_ = nullptr;
-	annotations_view_t * annotations_view_ = nullptr;
-	history_view_t * history_view_ = nullptr;
-	translation_suggestion_view_t * translation_tab_ = nullptr;
+	filter_tree_view_t * m_filter_tree_view = nullptr;
+	status_filter_view_t * m_status_filter_view = nullptr;
+	record_table_view_t * m_table_view = nullptr;
+	sidebar_view_t * m_sidebar = nullptr;
+	book_preview_view_t * m_book_preview_view = nullptr;
+	QLabel * m_active_file_label = nullptr;
+	QLabel * m_progress_label = nullptr;
+	validation_view_t * m_validation_view = nullptr;
+	editor_highlighter_t * m_hl_original = nullptr;
+	editor_highlighter_t * m_hl_adapted = nullptr;
+	editor_highlighter_t * m_hl_translation = nullptr;
 
-	glossary_t glossary_;
-	edit_history_t edit_history_;
-	spell_checker_t spell_checker_;
-	byte_limit_validator_t byte_limit_validator_;
-	editor_controller_t editor_controller_;
+	grammar_checker_t m_grammar_checker;
+	row_filter_t m_row_filter;
+	spell_context_menu_t * m_spell_menu = nullptr;
+	annotations_view_t * m_annotations_view = nullptr;
+	history_view_t * m_history_view = nullptr;
+	translation_suggestion_view_t * m_translation_tab = nullptr;
 
-	file_list_t file_list_;
-	codepage_t current_codepage_ = codepage_t::windows_1252;
-	session_t session_;
-	app_settings_t settings_{"yTranslator.ini"};
-	std::unordered_map<std::string, filter_state_t> filter_states_;
-	size_t last_annotation_version_ = 0;
+	glossary_t m_glossary;
+	edit_history_t m_edit_history;
+	spell_checker_t m_spell_checker;
+	byte_limit_validator_t m_byte_limit_validator;
+	editor_controller_t m_editor_controller;
 
-	log_view_t * log_view_ = nullptr;
-	operation_executor_t executor_;
+	file_list_t m_file_list;
+	codepage_t m_current_codepage = codepage_t::windows_1252;
+	session_t m_session;
+	app_settings_t m_settings{"yTranslator.ini"};
+	std::unordered_map<std::string, filter_state_t> m_filter_states;
+	size_t m_last_annotation_version = 0;
 
-	std::unique_ptr<table_view_t> table_display_;
+	log_view_t * m_log_view = nullptr;
+	operation_executor_t m_executor;
 
-	extra_selections_state_t extra_sel_original_;
-	extra_selections_state_t extra_sel_adapted_;
-	extra_selections_state_t extra_sel_translation_;
+	std::unique_ptr<table_view_t> m_table_display;
 
-	find_replace_dialog_t * find_replace_dialog_ = nullptr;
-	find_replace_t * find_replace_ = nullptr;
+	extra_selections_state_t m_extra_sel_original;
+	extra_selections_state_t m_extra_sel_adapted;
+	extra_selections_state_t m_extra_sel_translation;
 
-	QFileSystemWatcher * fs_watcher_ = nullptr;
-	QTimer * rescan_timer_ = nullptr;
+	find_replace_dialog_t * m_find_replace_dialog = nullptr;
+	find_replace_t * m_find_replace = nullptr;
 
-	QMenu * translator_file_menu_ = nullptr;
-	QMenu * translator_view_menu_ = nullptr;
+	QFileSystemWatcher * m_fs_watcher = nullptr;
+	QTimer * m_rescan_timer = nullptr;
 
-	document_t * active_doc_ = nullptr;
+	QMenu * m_translator_file_menu = nullptr;
+	QMenu * m_translator_view_menu = nullptr;
+
+	document_t * m_active_doc = nullptr;
 };

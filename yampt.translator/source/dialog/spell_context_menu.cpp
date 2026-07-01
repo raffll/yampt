@@ -7,8 +7,8 @@
 #include <QTextCursor>
 
 spell_context_menu_t::spell_context_menu_t(spell_checker_t * checker, QSyntaxHighlighter * highlighter)
-    : checker_(checker)
-    , highlighter_(highlighter)
+    : m_checker(checker)
+    , m_highlighter(highlighter)
 {}
 
 void spell_context_menu_t::show_menu(translation_edit_view_t * editor, const QPoint & pos)
@@ -20,10 +20,10 @@ void spell_context_menu_t::show_menu(translation_edit_view_t * editor, const QPo
 	if (word.empty())
 		return;
 
-	if (checker_->check_word(word))
+	if (m_checker->check_word(word))
 		return;
 
-	auto suggestions = checker_->suggest(word);
+	auto suggestions = m_checker->suggest(word);
 	if (suggestions.size() > 10)
 		suggestions.resize(10);
 
@@ -41,8 +41,8 @@ void spell_context_menu_t::show_menu(translation_edit_view_t * editor, const QPo
 
 	if (selected == add_action)
 	{
-		checker_->add_to_user_dict(word);
-		highlighter_->rehighlight();
+		m_checker->add_to_user_dict(word);
+		m_highlighter->rehighlight();
 		return;
 	}
 

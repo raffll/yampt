@@ -17,13 +17,13 @@ history_view_t::history_view_t(QWidget * parent)
 	scroll_area->setWidgetResizable(true);
 	scroll_area->setFrameShape(QFrame::NoFrame);
 
-	scroll_content_ = new QWidget(scroll_area);
-	entries_layout_ = new QVBoxLayout(scroll_content_);
-	entries_layout_->setContentsMargins(4, 4, 4, 4);
-	entries_layout_->setSpacing(4);
-	entries_layout_->addStretch();
+	m_scroll_content = new QWidget(scroll_area);
+	m_entries_layout = new QVBoxLayout(m_scroll_content);
+	m_entries_layout->setContentsMargins(4, 4, 4, 4);
+	m_entries_layout->setSpacing(4);
+	m_entries_layout->addStretch();
 
-	scroll_area->setWidget(scroll_content_);
+	scroll_area->setWidget(m_scroll_content);
 	layout->addWidget(scroll_area);
 }
 
@@ -36,7 +36,7 @@ void history_view_t::update_history(const std::vector<history_entry_t> & entries
 		const auto & entry = entries[i - 1];
 		size_t history_index = i - 1;
 
-		auto * row = new QWidget(scroll_content_);
+		auto * row = new QWidget(m_scroll_content);
 		auto * row_layout = new QVBoxLayout(row);
 		row_layout->setContentsMargins(2, 2, 2, 2);
 		row_layout->setSpacing(2);
@@ -67,15 +67,15 @@ void history_view_t::update_history(const std::vector<history_entry_t> & entries
 			row_layout->addLayout(button_layout);
 		}
 
-		entries_layout_->insertWidget(entries_layout_->count() - 1, row);
+		m_entries_layout->insertWidget(m_entries_layout->count() - 1, row);
 	}
 }
 
 void history_view_t::clear()
 {
-	while (entries_layout_->count() > 1)
+	while (m_entries_layout->count() > 1)
 	{
-		auto * item = entries_layout_->takeAt(0);
+		auto * item = m_entries_layout->takeAt(0);
 		if (item->widget())
 		{
 			delete item->widget();

@@ -62,7 +62,7 @@ void dict_reader_t::parse_json(const std::string & content, const std::string & 
 	{
 		tools_t::add_log("[error] parsing \"" + path + "\"\r\n");
 		tools_t::add_log("[error] " + reader.get_error() + "\r\n");
-		loaded_ = false;
+		m_loaded = false;
 		return;
 	}
 
@@ -88,7 +88,7 @@ void dict_reader_t::parse_json(const std::string & content, const std::string & 
 		parse_chapter(arr, type, type_str);
 	});
 
-	loaded_ = true;
+	m_loaded = true;
 }
 
 void dict_reader_t::validate_entry(tools_t::record_entry_t & entry, tools_t::rec_type_t type)

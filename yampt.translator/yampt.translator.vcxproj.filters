@@ -34,6 +34,7 @@
     <ClCompile Include="source\editor\grammar_checker.cpp" />
     <ClCompile Include="source\dialog\find_replace_dialog.cpp" />
     <ClCompile Include="source\dialog\dict_selection_dialog.cpp" />
+    <ClCompile Include="source\dialog\merge_dialog.cpp" />
     <ClCompile Include="source\dialog\first_run_dialog.cpp" />
     <ClCompile Include="source\dialog\translator_settings_dialog.cpp" />
     <ClCompile Include="source\dialog\language_settings_view.cpp" />
@@ -53,6 +54,8 @@
     <ClCompile Include="source\io\yaml_l10n_reader.cpp" />
     <ClCompile Include="source\io\yaml_l10n_writer.cpp" />
     <ClCompile Include="..\yampt\source\utility\tools.cpp" />
+    <ClCompile Include="..\yampt\source\utility\keyword_trie.cpp" />
+    <ClCompile Include="..\yampt\source\utility\char_diff.cpp" />
     <ClCompile Include="..\yampt.core\source\io\app_settings.cpp" />
     <ClCompile Include="..\yampt\source\io\dict_reader.cpp" />
     <ClCompile Include="..\yampt\source\io\dict_writer.cpp" />

@@ -61,6 +61,6 @@ private:
 	bool matches_query(const std::string & text_value, const search_params_t & params);
 	std::optional<std::string> apply_replacement(const std::string & source_text, const search_params_t & params);
 
-	row_source_t & source_;
-	document_t *& active_doc_;
+	row_source_t & m_source;
+	document_t *& m_active_doc;
 };
