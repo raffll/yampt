@@ -31,11 +31,9 @@ translator_settings_dialog_t::translator_settings_dialog_t(app_settings_t & sett
 
     m_category_list->addItem("Language");
     m_category_list->addItem("Shortcuts");
-    m_category_list->addItem("Translation");
 
     m_content_stack->addWidget(m_language_view);
     m_content_stack->addWidget(m_shortcuts_view);
-    m_content_stack->addWidget(m_translation_view);
 
     connect(m_category_list, &QListWidget::currentRowChanged,
             m_content_stack, &QStackedWidget::setCurrentIndex);
