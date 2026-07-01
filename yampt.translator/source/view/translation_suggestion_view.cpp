@@ -32,8 +32,8 @@ translation_suggestion_view_t::translation_suggestion_view_t(QWidget * parent)
 	m_provider_combo->setVisible(false);
 	top_row->addWidget(m_provider_combo);
 
-	m_translate_all_btn = new QPushButton("Translate 10", this);
-	m_translate_all_btn->setToolTip("Translate next 10 untranslated entries");
+	m_translate_all_btn = new QPushButton("Translate", this);
+	m_translate_all_btn->setToolTip("Translate the selected entry");
 	m_translate_all_btn->setFixedWidth(100);
 	top_row->addWidget(m_translate_all_btn);
 

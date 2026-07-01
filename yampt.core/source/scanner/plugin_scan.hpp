@@ -30,6 +30,7 @@ class plugin_scan_t
 public:
 	void load_plugin(const std::string & path);
 	void set_merge_plugin(const std::string & filename);
+	void set_merge_plugin_from_loaded(int plugin_idx);
 	void rebuild_conflicts();
 
 	size_t plugin_count() const;

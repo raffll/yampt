@@ -65,6 +65,7 @@
 #include <QTextOption>
 #include <QTimer>
 #include <QToolBar>
+#include <QToolButton>
 #include <QTreeWidget>
 #include <QVBoxLayout>
 

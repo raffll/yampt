@@ -27,6 +27,25 @@ void plugin_scan_t::set_merge_plugin(const std::string & filename)
 	m_merge_records.clear();
 }
 
+void plugin_scan_t::set_merge_plugin_from_loaded(int plugin_idx)
+{
+	if (plugin_idx < 0 || plugin_idx >= static_cast<int>(m_plugins.size()))
+		return;
+
+	m_merge_plugin_idx = plugin_idx;
+	m_merge_records.clear();
+
+	const auto & plugin = *m_plugins[plugin_idx];
+	const auto & entries = plugin.index.entries();
+
+	for (size_t i = 0; i < entries.size(); ++i)
+	{
+		plugin.esm.select_record(entries[i].record_index);
+		const auto & rec = plugin.esm.get_record();
+		m_merge_records.push_back({ entries[i].rec_type, entries[i].record_id, rec.content });
+	}
+}
+
 void plugin_scan_t::copy_record_to_merge(int source_plugin, size_t record_index)
 {
 	if (m_merge_plugin_idx < 0)

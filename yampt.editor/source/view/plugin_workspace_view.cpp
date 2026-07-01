@@ -53,14 +53,15 @@ plugin_workspace_view_t::plugin_workspace_view_t(app_settings_t & settings, QWid
 	auto * main_layout = new QVBoxLayout(this);
 	main_layout->setContentsMargins(4, 4, 4, 4);
 
-	setup_toolbar();
+	m_chk_conflicts = new QCheckBox("Conflicts Only", this);
+	m_chk_conflicts->setToolTip("Show only conflicting records");
+	m_lbl_count = new QLabel(this);
+
 	setup_views();
 
-	main_layout->addWidget(m_btn_load->parentWidget());
 	main_layout->addWidget(m_main_splitter, 1);
 
 	m_status_label = new QLabel(this);
-	main_layout->addWidget(m_status_label);
 
 	m_nav_model = new nav_tree_model_t(m_scan, this);
 	m_view_model = new view_tree_model_t(this);
@@ -71,49 +72,6 @@ plugin_workspace_view_t::plugin_workspace_view_t(app_settings_t & settings, QWid
 
 	setup_connections();
 	load_plugin_paths();
-}
-
-void plugin_workspace_view_t::setup_toolbar()
-{
-	auto * toolbar = new QWidget(this);
-	auto * toolbar_layout = new QHBoxLayout(toolbar);
-	toolbar_layout->setContentsMargins(0, 0, 0, 0);
-
-	m_btn_load = new QPushButton("Load", toolbar);
-	auto * load_menu = new QMenu(m_btn_load);
-	load_menu->addAction("Open Folder...", this, &plugin_workspace_view_t::on_load_data_files);
-	load_menu->addAction("MO2 Profile...", this, &plugin_workspace_view_t::on_load_mo2_profile);
-	load_menu->addAction("OpenMW config...", this, &plugin_workspace_view_t::on_load_openmw_cfg);
-	m_btn_load->setMenu(load_menu);
-	m_btn_load->setVisible(false);
-	m_btn_new = new QPushButton("New", toolbar);
-	m_btn_new->setVisible(false);
-	m_btn_save = new QPushButton("Save", toolbar);
-	m_btn_save->setVisible(false);
-	m_btn_merge = new QPushButton("Create Merged Patch", toolbar);
-	m_btn_merge->setVisible(false);
-	m_btn_filter = new QPushButton("Filter", toolbar);
-	m_btn_filter->setVisible(false);
-	m_chk_conflicts = new QCheckBox("Conflicts Only", toolbar);
-	m_cmb_type_filter = new QComboBox(toolbar);
-	m_cmb_type_filter->addItem("All Types");
-	m_cmb_type_filter->setVisible(false);
-	m_edt_search = new QLineEdit(toolbar);
-	m_edt_search->setPlaceholderText("Search by ID...");
-	m_edt_search->setMaximumWidth(200);
-	m_edt_search->setVisible(false);
-	m_lbl_count = new QLabel(toolbar);
-
-	toolbar_layout->addWidget(m_btn_load);
-	toolbar_layout->addWidget(m_btn_new);
-	toolbar_layout->addWidget(m_btn_save);
-	toolbar_layout->addWidget(m_btn_merge);
-	toolbar_layout->addWidget(m_btn_filter);
-	toolbar_layout->addWidget(m_chk_conflicts);
-	toolbar_layout->addWidget(m_cmb_type_filter);
-	toolbar_layout->addWidget(m_edt_search);
-	toolbar_layout->addWidget(m_lbl_count);
-	toolbar_layout->addStretch();
 }
 
 void plugin_workspace_view_t::setup_views()
@@ -154,14 +112,7 @@ void plugin_workspace_view_t::setup_views()
 
 void plugin_workspace_view_t::setup_connections()
 {
-	connect(m_btn_new, &QPushButton::clicked, this, &plugin_workspace_view_t::on_new_plugin);
-	connect(m_btn_save, &QPushButton::clicked, this, &plugin_workspace_view_t::on_save_plugin);
-	connect(m_btn_merge, &QPushButton::clicked, this, &plugin_workspace_view_t::on_create_merged_patch);
-	connect(m_btn_filter, &QPushButton::clicked, this, &plugin_workspace_view_t::on_advanced_filter);
-
 	connect(m_chk_conflicts, &QCheckBox::checkStateChanged, this, &plugin_workspace_view_t::on_filter_changed);
-	connect(m_cmb_type_filter, &QComboBox::currentIndexChanged, this, &plugin_workspace_view_t::on_filter_changed);
-	connect(m_edt_search, &QLineEdit::textChanged, this, &plugin_workspace_view_t::on_filter_changed);
 
 	connect(m_nav_view, &QTreeView::customContextMenuRequested, this, &plugin_workspace_view_t::on_nav_context_menu);
 
@@ -257,6 +208,10 @@ void plugin_workspace_view_t::load_plugins_from_paths(const std::vector<std::str
 	if (selected.empty())
 		return;
 
+	m_scan = plugin_scan_t();
+	m_view_model->clear();
+	m_nav_model->rebuild();
+
 	for (const auto & path : selected)
 	{
 		try
@@ -285,7 +240,7 @@ void plugin_workspace_view_t::load_plugins_from_paths(const std::vector<std::str
 
 void plugin_workspace_view_t::on_load_data_files()
 {
-	const auto initial_dir = QString::fromStdString(m_settings.openmw_data_dir());
+	const auto initial_dir = QString::fromStdString(m_settings.last_directory());
 	QString dir = QFileDialog::getExistingDirectory(this, "Select Data Files Folder", initial_dir);
 
 	if (dir.isEmpty())
@@ -317,12 +272,15 @@ void plugin_workspace_view_t::on_load_data_files()
 	}
 
 	load_plugins_from_paths(paths);
-	m_settings.set_openmw_data_dir(dir.toStdString());
+	m_load_source = load_source_t::folder;
+	m_load_base_path = dir.toStdString();
+	m_settings.set_last_directory(dir.toStdString());
+	load_existing_merged_patch();
 }
 
 void plugin_workspace_view_t::on_load_mo2_profile()
 {
-	const auto initial_dir = QString::fromStdString(m_settings.mo2_profile_dir());
+	const auto initial_dir = QString::fromStdString(m_settings.last_directory());
 	QString profile_dir = QFileDialog::getExistingDirectory(this, "Select MO2 Profile Folder", initial_dir);
 
 	if (profile_dir.isEmpty())
@@ -333,7 +291,10 @@ void plugin_workspace_view_t::on_load_mo2_profile()
 		return;
 
 	load_plugins_from_paths(paths);
-	m_settings.set_mo2_profile_dir(profile_dir.toStdString());
+	m_load_source = load_source_t::mo2_profile;
+	m_load_base_path = profile_dir.toStdString();
+	m_settings.set_last_directory(profile_dir.toStdString());
+	load_existing_merged_patch();
 }
 
 std::vector<std::string> plugin_workspace_view_t::parse_mo2_profile(const QString & profile_dir)
@@ -467,14 +428,7 @@ std::string plugin_workspace_view_t::resolve_single_mo2_plugin(
 
 void plugin_workspace_view_t::on_load_openmw_cfg()
 {
-	QString initial_dir;
-	const auto data_dir = QString::fromStdString(m_settings.openmw_data_dir());
-	if (!data_dir.isEmpty())
-	{
-		QDir parent(data_dir);
-		parent.cdUp();
-		initial_dir = parent.absolutePath();
-	}
+	const auto initial_dir = QString::fromStdString(m_settings.last_directory());
 
 	QString cfg_path =
 	    QFileDialog::getOpenFileName(this, "Select openmw.cfg", initial_dir, "OpenMW config (openmw.cfg)");
@@ -487,6 +441,10 @@ void plugin_workspace_view_t::on_load_openmw_cfg()
 		return;
 
 	load_plugins_from_paths(paths);
+	m_load_source = load_source_t::openmw_cfg;
+	m_load_base_path = QFileInfo(cfg_path).absolutePath().toStdString();
+	m_settings.set_last_directory(m_load_base_path);
+	load_existing_merged_patch();
 }
 
 std::vector<std::string> plugin_workspace_view_t::parse_openmw_cfg(const QString & cfg_path)
@@ -563,13 +521,6 @@ void plugin_workspace_view_t::rebuild_after_load()
 {
 	m_nav_model->rebuild();
 	m_nav_view->setColumnWidth(0, 280);
-
-	m_cmb_type_filter->blockSignals(true);
-	m_cmb_type_filter->clear();
-	m_cmb_type_filter->addItem("All Types");
-	for (const auto & t : m_scan.all_types())
-		m_cmb_type_filter->addItem(QString::fromStdString(t));
-	m_cmb_type_filter->blockSignals(false);
 
 	update_status();
 }
@@ -673,22 +624,7 @@ void plugin_workspace_view_t::on_filter_changed()
 		state.conflict_all_set.insert(conflict_all_t::override_benign);
 	}
 
-	if (m_cmb_type_filter->currentIndex() > 0)
-	{
-		state.filter_by_type = true;
-		state.type_set.insert(m_cmb_type_filter->currentText().toStdString());
-	}
-
-	auto search_text = m_edt_search->text().toStdString();
-	if (!search_text.empty())
-	{
-		state.filter_by_id = true;
-		state.id_text = search_text;
-		state.filter_by_name = true;
-		state.name_text = search_text;
-	}
-
-	bool has_any = state.filter_conflict_all || state.filter_by_type || state.filter_by_id || state.filter_by_name;
+	bool has_any = state.filter_conflict_all;
 
 	if (has_any)
 	{
@@ -758,26 +694,8 @@ void plugin_workspace_view_t::on_advanced_filter()
 	m_filter_active = true;
 	m_has_filter_active = true;
 	m_last_quick_filter = nav_state;
-	m_btn_filter->setStyleSheet("background-color: #FFD700;");
 
 	m_nav_model->set_filter(nav_state);
-	update_status();
-}
-
-void plugin_workspace_view_t::on_new_plugin()
-{
-	bool ok = false;
-	QString filename = QInputDialog::getText(this, "New Plugin", "Filename:", QLineEdit::Normal, QString(), &ok);
-
-	if (!ok || filename.isEmpty())
-		return;
-
-	if (!filename.endsWith(".esp", Qt::CaseInsensitive))
-		filename += ".esp";
-
-	m_scan.set_merge_plugin(filename.toStdString());
-	rebuild_nav_preserving_state();
-	log_message("Created merge plugin: " + filename.toStdString());
 	update_status();
 }
 
@@ -786,7 +704,7 @@ void plugin_workspace_view_t::on_save_plugin()
 	if (!m_scan.has_merge())
 		return;
 
-	const auto initial_dir = QString::fromStdString(m_settings.openmw_data_dir());
+	const auto initial_dir = QString::fromStdString(m_settings.last_directory());
 	QString path = QFileDialog::getSaveFileName(this, "Save Merge Plugin", initial_dir, "ESP files (*.esp)");
 
 	if (path.isEmpty())
@@ -822,10 +740,61 @@ void plugin_workspace_view_t::on_unload_all()
 	m_scan = plugin_scan_t();
 	m_view_model->clear();
 	m_nav_model->rebuild();
-	m_cmb_type_filter->clear();
-	m_cmb_type_filter->addItem("All Types");
 	update_status();
+	save_plugin_paths();
 	log_message("All plugins unloaded");
+}
+
+std::string plugin_workspace_view_t::resolve_merge_output_path() const
+{
+	if (m_load_base_path.empty())
+		return {};
+
+	const auto merge_filename = m_settings.merge_output_path();
+	std::string relative_path;
+
+	switch (m_load_source)
+	{
+	case load_source_t::openmw_cfg:
+		relative_path = m_settings.openmw_merge_path();
+		break;
+	case load_source_t::mo2_profile:
+		relative_path = m_settings.mo2_merge_path();
+		break;
+	case load_source_t::folder:
+	case load_source_t::none:
+		relative_path = ".";
+		break;
+	}
+
+	auto output_dir = QDir(QString::fromStdString(m_load_base_path));
+	output_dir.cd(QString::fromStdString(relative_path));
+	return output_dir.filePath(QString::fromStdString(merge_filename)).toStdString();
+}
+
+void plugin_workspace_view_t::load_existing_merged_patch()
+{
+	const auto path = resolve_merge_output_path();
+	if (path.empty())
+		return;
+
+	if (!std::filesystem::exists(path))
+		return;
+
+	try
+	{
+		m_scan.load_plugin(path);
+		const int loaded_idx = static_cast<int>(m_scan.plugin_count()) - 1;
+		m_scan.set_merge_plugin_from_loaded(loaded_idx);
+		m_scan.rebuild_conflicts();
+		rebuild_after_load();
+		save_plugin_paths();
+		log_message("Loaded existing merged patch: " + path);
+	}
+	catch (const std::exception & e)
+	{
+		log_message("Error loading merged patch: " + std::string(e.what()));
+	}
 }
 
 void plugin_workspace_view_t::on_create_merged_patch()
@@ -842,6 +811,18 @@ void plugin_workspace_view_t::on_create_merged_patch()
 	create_merge_records();
 	m_scan.rebuild_conflicts();
 	rebuild_nav_preserving_state();
+
+	const auto output_path = resolve_merge_output_path();
+	if (!output_path.empty())
+	{
+		auto output_dir = QDir(QFileInfo(QString::fromStdString(output_path)).absolutePath());
+		output_dir.mkpath(".");
+		bool result = m_scan.save_merge(output_path, "yEditor", "Auto-generated merged patch");
+		if (result)
+			log_message("Saved " + output_path + " (" + std::to_string(m_scan.merge_record_count()) + " records)");
+		else
+			log_message("Error saving merged patch to " + output_path);
+	}
 
 	auto current = m_nav_view->currentIndex();
 	if (!current.isValid())

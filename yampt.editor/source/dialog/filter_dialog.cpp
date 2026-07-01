@@ -11,8 +11,6 @@ filter_dialog_t::filter_dialog_t(const std::vector<std::string> & available_type
 	auto * main_layout = new QVBoxLayout(this);
 
 	m_grp_conflict_all = new QGroupBox("Conflict All", this);
-	m_grp_conflict_all->setCheckable(true);
-	m_grp_conflict_all->setChecked(false);
 	auto * ca_layout = new QVBoxLayout(m_grp_conflict_all);
 	m_chk_ca_only_one = new QCheckBox("Only One", m_grp_conflict_all);
 	m_chk_ca_no_conflict = new QCheckBox("No Conflict", m_grp_conflict_all);
@@ -25,8 +23,6 @@ filter_dialog_t::filter_dialog_t(const std::vector<std::string> & available_type
 	main_layout->addWidget(m_grp_conflict_all);
 
 	m_grp_conflict_this = new QGroupBox("Conflict This", this);
-	m_grp_conflict_this->setCheckable(true);
-	m_grp_conflict_this->setChecked(false);
 	auto * ct_layout = new QVBoxLayout(m_grp_conflict_this);
 	m_chk_ct_master = new QCheckBox("Master", m_grp_conflict_this);
 	m_chk_ct_identical = new QCheckBox("Identical to Master", m_grp_conflict_this);
@@ -90,35 +86,29 @@ filter_dialog_t::filter_state_t filter_dialog_t::state() const
 {
 	filter_state_t s;
 
-	s.filter_conflict_all = m_grp_conflict_all->isChecked();
-	if (s.filter_conflict_all)
-	{
-		if (m_chk_ca_only_one->isChecked())
-			s.conflict_all_set.insert(conflict_all_t::only_one);
-		if (m_chk_ca_no_conflict->isChecked())
-			s.conflict_all_set.insert(conflict_all_t::no_conflict);
-		if (m_chk_ca_override->isChecked())
-			s.conflict_all_set.insert(conflict_all_t::override_benign);
-		if (m_chk_ca_conflict->isChecked())
-			s.conflict_all_set.insert(conflict_all_t::conflict);
-	}
+	if (m_chk_ca_only_one->isChecked())
+		s.conflict_all_set.insert(conflict_all_t::only_one);
+	if (m_chk_ca_no_conflict->isChecked())
+		s.conflict_all_set.insert(conflict_all_t::no_conflict);
+	if (m_chk_ca_override->isChecked())
+		s.conflict_all_set.insert(conflict_all_t::override_benign);
+	if (m_chk_ca_conflict->isChecked())
+		s.conflict_all_set.insert(conflict_all_t::conflict);
+	s.filter_conflict_all = !s.conflict_all_set.empty();
 
-	s.filter_conflict_this = m_grp_conflict_this->isChecked();
-	if (s.filter_conflict_this)
-	{
-		if (m_chk_ct_master->isChecked())
-			s.conflict_this_set.insert(conflict_this_t::master);
-		if (m_chk_ct_identical->isChecked())
-			s.conflict_this_set.insert(conflict_this_t::identical_to_master);
-		if (m_chk_ct_override->isChecked())
-			s.conflict_this_set.insert(conflict_this_t::override_wins);
-		if (m_chk_ct_wins->isChecked())
-			s.conflict_this_set.insert(conflict_this_t::conflict_wins);
-		if (m_chk_ct_loses->isChecked())
-			s.conflict_this_set.insert(conflict_this_t::conflict_loses);
-		if (m_chk_ct_deleted->isChecked())
-			s.conflict_this_set.insert(conflict_this_t::deleted);
-	}
+	if (m_chk_ct_master->isChecked())
+		s.conflict_this_set.insert(conflict_this_t::master);
+	if (m_chk_ct_identical->isChecked())
+		s.conflict_this_set.insert(conflict_this_t::identical_to_master);
+	if (m_chk_ct_override->isChecked())
+		s.conflict_this_set.insert(conflict_this_t::override_wins);
+	if (m_chk_ct_wins->isChecked())
+		s.conflict_this_set.insert(conflict_this_t::conflict_wins);
+	if (m_chk_ct_loses->isChecked())
+		s.conflict_this_set.insert(conflict_this_t::conflict_loses);
+	if (m_chk_ct_deleted->isChecked())
+		s.conflict_this_set.insert(conflict_this_t::deleted);
+	s.filter_conflict_this = !s.conflict_this_set.empty();
 
 	s.filter_by_type = m_chk_by_type->isChecked();
 	if (s.filter_by_type)
@@ -145,13 +135,11 @@ filter_dialog_t::filter_state_t filter_dialog_t::state() const
 
 void filter_dialog_t::set_state(const filter_state_t & state)
 {
-	m_grp_conflict_all->setChecked(state.filter_conflict_all);
 	m_chk_ca_only_one->setChecked(state.conflict_all_set.count(conflict_all_t::only_one) > 0);
 	m_chk_ca_no_conflict->setChecked(state.conflict_all_set.count(conflict_all_t::no_conflict) > 0);
 	m_chk_ca_override->setChecked(state.conflict_all_set.count(conflict_all_t::override_benign) > 0);
 	m_chk_ca_conflict->setChecked(state.conflict_all_set.count(conflict_all_t::conflict) > 0);
 
-	m_grp_conflict_this->setChecked(state.filter_conflict_this);
 	m_chk_ct_master->setChecked(state.conflict_this_set.count(conflict_this_t::master) > 0);
 	m_chk_ct_identical->setChecked(state.conflict_this_set.count(conflict_this_t::identical_to_master) > 0);
 	m_chk_ct_override->setChecked(state.conflict_this_set.count(conflict_this_t::override_wins) > 0);

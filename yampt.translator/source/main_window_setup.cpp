@@ -37,6 +37,7 @@
 #include <QMessageBox>
 #include <QProcess>
 #include <QPushButton>
+#include <QToolButton>
 #include <QSplitter>
 #include <QStatusBar>
 #include <QTabWidget>
@@ -106,7 +107,7 @@ void main_window_t::setup_toolbar()
 	m_toolbar = new QToolBar(this);
 	m_toolbar->setMovable(false);
 
-	m_search_label = new QLabel("Filter by:", this);
+	m_search_label = new QLabel("Filter by: ", this);
 	m_search_label->setStyleSheet("QLabel:disabled { color: rgb(180,180,180); }");
 	m_toolbar->addWidget(m_search_label);
 
@@ -114,38 +115,32 @@ void main_window_t::setup_toolbar()
 	m_search_field->setPlaceholderText("Search...");
 	m_toolbar->addWidget(m_search_field);
 
-	static const QString toggle_style = "QPushButton { border: 1px solid #bbb; border-radius: 2px; padding: "
-	                                    "2px 6px; background: #f0f0f0; }"
-	                                    "QPushButton:checked { background: #cde; border-color: #89a; }"
-	                                    "QPushButton:disabled { color: rgb(180,180,180); }";
-
-	m_case_sensitive_check = new QPushButton("Aa", this);
+	m_case_sensitive_check = new QToolButton(this);
+	m_case_sensitive_check->setText("Aa");
 	m_case_sensitive_check->setCheckable(true);
-	m_case_sensitive_check->setFlat(false);
-	m_case_sensitive_check->setStyleSheet(toggle_style);
 	m_toolbar->addWidget(m_case_sensitive_check);
 
-	m_regex_check = new QPushButton(".*", this);
+	m_regex_check = new QToolButton(this);
+	m_regex_check->setText(".*");
 	m_regex_check->setCheckable(true);
-	m_regex_check->setStyleSheet(toggle_style);
 	m_toolbar->addWidget(m_regex_check);
 
-	m_search_col_key = new QPushButton("Key", this);
+	m_search_col_key = new QToolButton(this);
+	m_search_col_key->setText("Key");
 	m_search_col_key->setCheckable(true);
 	m_search_col_key->setChecked(true);
-	m_search_col_key->setStyleSheet(toggle_style);
 	m_toolbar->addWidget(m_search_col_key);
 
-	m_search_col_original = new QPushButton("Original", this);
+	m_search_col_original = new QToolButton(this);
+	m_search_col_original->setText("Original");
 	m_search_col_original->setCheckable(true);
 	m_search_col_original->setChecked(true);
-	m_search_col_original->setStyleSheet(toggle_style);
 	m_toolbar->addWidget(m_search_col_original);
 
-	m_search_col_translation = new QPushButton("Translation", this);
+	m_search_col_translation = new QToolButton(this);
+	m_search_col_translation->setText("Translation");
 	m_search_col_translation->setCheckable(true);
 	m_search_col_translation->setChecked(true);
-	m_search_col_translation->setStyleSheet(toggle_style);
 	m_toolbar->addWidget(m_search_col_translation);
 
 	m_search_field->setToolTip("Search across entries");
@@ -808,20 +803,37 @@ void main_window_t::connect_editor_signals()
 			return;
 		}
 
-		start_batch_translation(dict_doc);
+		const int current_row = m_editor_controller.current_row();
+		if (current_row < 0)
+		{
+			m_translation_tab->append_log("[error] no row selected\n");
+			return;
+		}
+
+		const auto * row_data = m_table_model->row_at(current_row);
+		if (!row_data)
+			return;
+
+		if (row_data->status != status_t::untranslated)
+		{
+			m_translation_tab->append_log("[error] selected entry is not untranslated\n");
+			return;
+		}
+
+		m_translation_tab->set_source_text(row_data->old_text);
 	});
 }
 
 void main_window_t::connect_search_signals()
 {
 	connect(m_search_field, &QLineEdit::textChanged, this, &main_window_t::on_search_changed);
-	connect(m_case_sensitive_check, &QPushButton::toggled, this, [this]() { on_case_sensitive_changed(0); });
-	connect(m_regex_check, &QPushButton::toggled, this, [this]() { on_search_changed(m_search_query); });
+	connect(m_case_sensitive_check, &QToolButton::toggled, this, [this]() { on_case_sensitive_changed(0); });
+	connect(m_regex_check, &QToolButton::toggled, this, [this]() { on_search_changed(m_search_query); });
 
 	auto on_search_col_changed = [this]() { on_search_changed(m_search_query); };
-	connect(m_search_col_key, &QPushButton::toggled, this, on_search_col_changed);
-	connect(m_search_col_original, &QPushButton::toggled, this, on_search_col_changed);
-	connect(m_search_col_translation, &QPushButton::toggled, this, on_search_col_changed);
+	connect(m_search_col_key, &QToolButton::toggled, this, on_search_col_changed);
+	connect(m_search_col_original, &QToolButton::toggled, this, on_search_col_changed);
+	connect(m_search_col_translation, &QToolButton::toggled, this, on_search_col_changed);
 
 	connect(m_filter_tree_view, &filter_tree_view_t::filters_changed, this, &main_window_t::on_filters_changed);
 	connect(

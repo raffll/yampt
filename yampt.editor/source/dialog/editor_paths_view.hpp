@@ -1,10 +1,8 @@
 #pragma once
 
-#include <string>
 #include <QWidget>
 
 class QLineEdit;
-class QPushButton;
 class app_settings_t;
 
 class editor_paths_view_t : public QWidget
@@ -18,11 +16,7 @@ public:
 	void apply(app_settings_t & settings) const;
 
 private:
-	void on_browse_openmw();
-	void on_browse_mo2();
-
-	QLineEdit * m_openmw_data_edit = nullptr;
-	QPushButton * m_openmw_browse_button = nullptr;
-	QLineEdit * m_mo2_profile_edit = nullptr;
-	QPushButton * m_mo2_browse_button = nullptr;
+	QLineEdit * m_openmw_merge_path_edit = nullptr;
+	QLineEdit * m_mo2_merge_path_edit = nullptr;
+	QLineEdit * m_merge_filename_edit = nullptr;
 };

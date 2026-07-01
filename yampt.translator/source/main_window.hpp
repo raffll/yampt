@@ -53,6 +53,7 @@ class QLabel;
 class QLineEdit;
 class QMenu;
 class QPushButton;
+class QToolButton;
 class QSplitter;
 class QTabWidget;
 class QToolBar;
@@ -239,11 +240,11 @@ private:
 
 	QLabel * m_search_label = nullptr;
 	QLineEdit * m_search_field = nullptr;
-	QPushButton * m_case_sensitive_check = nullptr;
-	QPushButton * m_regex_check = nullptr;
-	QPushButton * m_search_col_key = nullptr;
-	QPushButton * m_search_col_original = nullptr;
-	QPushButton * m_search_col_translation = nullptr;
+	QToolButton * m_case_sensitive_check = nullptr;
+	QToolButton * m_regex_check = nullptr;
+	QToolButton * m_search_col_key = nullptr;
+	QToolButton * m_search_col_original = nullptr;
+	QToolButton * m_search_col_translation = nullptr;
 	QAction * m_grammar_check = nullptr;
 	QAction * m_whitespace_check = nullptr;
 

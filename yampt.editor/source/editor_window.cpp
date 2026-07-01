@@ -3,11 +3,11 @@
 #include "view/plugin_workspace_view.hpp"
 #include <io/app_settings.hpp>
 #include <QAction>
+#include <QCheckBox>
 #include <QCloseEvent>
-#include <QComboBox>
-#include <QLineEdit>
 #include <QMenuBar>
 #include <QSettings>
+#include <QStatusBar>
 #include <QToolBar>
 #include <QVBoxLayout>
 
@@ -57,14 +57,6 @@ void editor_window_t::setup_menu_bar()
 
 	file_menu->addSeparator();
 
-	auto * save_action = new QAction("&Save Plugin", this);
-	save_action->setShortcut(QKeySequence("Ctrl+S"));
-	save_action->setToolTip("Save the active plugin to disk");
-	file_menu->addAction(save_action);
-	connect(save_action, &QAction::triggered, m_plugin_workspace_view, &plugin_workspace_view_t::on_save_plugin);
-
-	file_menu->addSeparator();
-
 	auto * unload_action = new QAction("&Unload All", this);
 	unload_action->setToolTip("Unload all plugins and clear the list");
 	file_menu->addAction(unload_action);
@@ -78,11 +70,27 @@ void editor_window_t::setup_menu_bar()
 	file_menu->addAction(quit_action);
 	connect(quit_action, &QAction::triggered, this, &QMainWindow::close);
 
-	auto * edit_menu = menuBar()->addMenu("&Edit");
-	auto * settings_action = new QAction("Settings", this);
+	auto * view_menu = menuBar()->addMenu("&View");
+
+	auto * conflicts_action = new QAction("&Conflicts Only", this);
+	conflicts_action->setCheckable(true);
+	conflicts_action->setToolTip("Show only conflicting records");
+	view_menu->addAction(conflicts_action);
+	connect(conflicts_action, &QAction::toggled, m_plugin_workspace_view->conflicts_checkbox(), &QCheckBox::setChecked);
+	connect(m_plugin_workspace_view->conflicts_checkbox(), &QCheckBox::toggled, conflicts_action, &QAction::setChecked);
+
+	view_menu->addSeparator();
+
+	auto * filter_action = new QAction("&Filter...", this);
+	filter_action->setToolTip("Open the advanced filter dialog");
+	view_menu->addAction(filter_action);
+	connect(filter_action, &QAction::triggered, m_plugin_workspace_view, &plugin_workspace_view_t::on_advanced_filter);
+
+	auto * tools_menu = menuBar()->addMenu("&Tools");
+	auto * settings_action = new QAction("&Preferences...", this);
 	settings_action->setShortcut(QKeySequence("Ctrl+,"));
 	settings_action->setToolTip("Open application settings");
-	edit_menu->addAction(settings_action);
+	tools_menu->addAction(settings_action);
 	connect(settings_action, &QAction::triggered, this, &editor_window_t::on_open_settings);
 }
 
@@ -91,42 +99,14 @@ void editor_window_t::setup_toolbar()
 	auto * toolbar = addToolBar("Main");
 	toolbar->setMovable(false);
 
-	auto * load_action = new QAction("Load", this);
-	load_action->setToolTip("Load plugins from a folder or config");
-	toolbar->addAction(load_action);
-	connect(load_action, &QAction::triggered, m_plugin_workspace_view, &plugin_workspace_view_t::on_load_data_files);
-
-	auto * new_action = new QAction("New", this);
-	new_action->setToolTip("Create a new empty plugin");
-	toolbar->addAction(new_action);
-	connect(new_action, &QAction::triggered, m_plugin_workspace_view, &plugin_workspace_view_t::on_new_plugin);
-
-	auto * save_action = new QAction("Save", this);
-	save_action->setToolTip("Save the active plugin to disk");
-	toolbar->addAction(save_action);
-	connect(save_action, &QAction::triggered, m_plugin_workspace_view, &plugin_workspace_view_t::on_save_plugin);
-
-	auto * merge_action = new QAction("Merge", this);
+	auto * merge_action = new QAction("Create Merged Patch", this);
 	merge_action->setToolTip("Create a merged patch from loaded plugins");
 	toolbar->addAction(merge_action);
 	connect(
 	    merge_action, &QAction::triggered, m_plugin_workspace_view, &plugin_workspace_view_t::on_create_merged_patch);
 
-	auto * filter_action = new QAction("Filter", this);
-	filter_action->setToolTip("Open the advanced filter dialog");
-	toolbar->addAction(filter_action);
-	connect(filter_action, &QAction::triggered, m_plugin_workspace_view, &plugin_workspace_view_t::on_advanced_filter);
-
-	auto * type_filter_combo = new QComboBox(this);
-	type_filter_combo->addItem("All Types");
-	type_filter_combo->setToolTip("Filter navigation tree by record type");
-	toolbar->addWidget(type_filter_combo);
-
-	auto * search_field = new QLineEdit(this);
-	search_field->setPlaceholderText("Search by ID...");
-	search_field->setMaximumWidth(200);
-	search_field->setToolTip("Search records by ID");
-	toolbar->addWidget(search_field);
+	statusBar()->addWidget(m_plugin_workspace_view->status_label());
+	statusBar()->addPermanentWidget(m_plugin_workspace_view->count_label());
 }
 
 void editor_window_t::load_config()

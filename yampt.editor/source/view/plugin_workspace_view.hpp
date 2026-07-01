@@ -27,12 +27,15 @@ public:
 	void save_session_state();
 	void restore_session_state();
 
+	QCheckBox * conflicts_checkbox() const { return m_chk_conflicts; }
+	QLabel * count_label() const { return m_lbl_count; }
+	QLabel * status_label() const { return m_status_label; }
+
 public slots:
 	void on_load_plugins();
 	void on_load_data_files();
 	void on_load_mo2_profile();
 	void on_load_openmw_cfg();
-	void on_new_plugin();
 	void on_save_plugin();
 	void on_unload_all();
 	void on_create_merged_patch();
@@ -46,7 +49,6 @@ private slots:
 	void on_view_copy();
 
 private:
-	void setup_toolbar();
 	void setup_views();
 	void setup_connections();
 	void rebuild_after_load();
@@ -56,6 +58,8 @@ private:
 	void load_plugin_paths();
 	void rebuild_nav_preserving_state();
 	void load_plugins_from_paths(const std::vector<std::string> & paths);
+	void load_existing_merged_patch();
+	std::string resolve_merge_output_path() const;
 	void display_record_in_view(const conflict_entry_t & entry);
 	std::vector<std::string> parse_mo2_profile(const QString & profile_dir);
 	std::vector<std::string> parse_openmw_cfg(const QString & cfg_path);
@@ -84,14 +88,11 @@ private:
 	app_settings_t & m_settings;
 	plugin_scan_t m_scan;
 
-	QPushButton * m_btn_load = nullptr;
-	QPushButton * m_btn_new = nullptr;
-	QPushButton * m_btn_save = nullptr;
-	QPushButton * m_btn_merge = nullptr;
-	QPushButton * m_btn_filter = nullptr;
+	enum class load_source_t { none, folder, openmw_cfg, mo2_profile };
+	load_source_t m_load_source = load_source_t::none;
+	std::string m_load_base_path;
+
 	QCheckBox * m_chk_conflicts = nullptr;
-	QComboBox * m_cmb_type_filter = nullptr;
-	QLineEdit * m_edt_search = nullptr;
 	QLabel * m_lbl_count = nullptr;
 
 	QSplitter * m_main_splitter = nullptr;
