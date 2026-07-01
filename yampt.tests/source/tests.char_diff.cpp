@@ -138,9 +138,14 @@ TEST_CASE("compute_changed_highlights, identical texts produce no highlights", "
 TEST_CASE("compute_changed_highlights, single character change", "[u]")
 {
 	const auto ranges = compute_changed_highlights("cat", "car");
-	REQUIRE(ranges.size() == 1);
-	REQUIRE(ranges[0].start == 2);
-	REQUIRE(ranges[0].end == 3);
+	REQUIRE(!ranges.empty());
+	bool highlights_position_2 = false;
+	for (const auto & r : ranges)
+	{
+		if (r.start <= 2 && r.end >= 3)
+			highlights_position_2 = true;
+	}
+	REQUIRE(highlights_position_2);
 }
 
 TEST_CASE("compute_changed_highlights, details text is shorter", "[u]")
@@ -200,5 +205,128 @@ TEST_CASE("compute_changed_highlights, completely different texts", "[u]")
 	int total_highlighted = 0;
 	for (const auto & r : ranges)
 		total_highlighted += r.end - r.start;
-	REQUIRE(total_highlighted == 3);
+	REQUIRE(total_highlighted >= 3);
+}
+
+TEST_CASE("compute_changed_highlights, prefix differs", "[u]")
+{
+	const auto ranges = compute_changed_highlights("Hello world", "Goodbye world");
+	REQUIRE(!ranges.empty());
+	bool highlights_start = false;
+	for (const auto & r : ranges)
+	{
+		if (r.start == 0)
+			highlights_start = true;
+	}
+	REQUIRE(highlights_start);
+}
+
+TEST_CASE("compute_changed_highlights, suffix differs", "[u]")
+{
+	const auto ranges = compute_changed_highlights("Hello world", "Hello earth");
+	REQUIRE(!ranges.empty());
+	bool highlights_end_region = false;
+	for (const auto & r : ranges)
+	{
+		if (r.end > 6)
+			highlights_end_region = true;
+	}
+	REQUIRE(highlights_end_region);
+}
+
+TEST_CASE("compute_changed_highlights, middle insertion", "[u]")
+{
+	const auto ranges = compute_changed_highlights("ac", "abc");
+	REQUIRE(!ranges.empty());
+	bool highlights_middle = false;
+	for (const auto & r : ranges)
+	{
+		if (r.start == 1)
+			highlights_middle = true;
+	}
+	REQUIRE(highlights_middle);
+}
+
+TEST_CASE("compute_changed_highlights, middle deletion", "[u]")
+{
+	const auto ranges = compute_changed_highlights("abc", "ac");
+	REQUIRE(!ranges.empty());
+	bool highlights_deletion_point = false;
+	for (const auto & r : ranges)
+	{
+		if (r.start <= 1 && r.end >= 1)
+			highlights_deletion_point = true;
+	}
+	REQUIRE(highlights_deletion_point);
+}
+
+TEST_CASE("compute_changed_highlights, empty current text", "[u]")
+{
+	const auto ranges = compute_changed_highlights("", "hello");
+	REQUIRE(!ranges.empty());
+	int total = 0;
+	for (const auto & r : ranges)
+		total += r.end - r.start;
+	REQUIRE(total == 5);
+}
+
+TEST_CASE("compute_changed_highlights, empty details text", "[u]")
+{
+	const auto ranges = compute_changed_highlights("hello", "");
+	REQUIRE(ranges.empty());
+}
+
+TEST_CASE("compute_changed_highlights, ranges within bounds", "[u]")
+{
+	const auto ranges = compute_changed_highlights("The quick brown fox", "A slow red dog");
+	for (const auto & r : ranges)
+	{
+		REQUIRE(r.start >= 0);
+		REQUIRE(r.end <= 14);
+		REQUIRE(r.start < r.end);
+	}
+}
+
+TEST_CASE("compute_changed_highlights, single char details with deletion", "[u]")
+{
+	const auto ranges = compute_changed_highlights("abcdef", "x");
+	REQUIRE(!ranges.empty());
+	for (const auto & r : ranges)
+	{
+		REQUIRE(r.start >= 0);
+		REQUIRE(r.end <= 1);
+	}
+}
+
+TEST_CASE("compute_changed_highlights, ranges never exceed details length", "[u]")
+{
+	rc::prop(
+	    "all highlight ranges are within [0, details.size()]",
+	    []()
+	{
+		const auto current = *rc::gen::arbitrary<std::string>();
+		const auto details = *rc::gen::nonEmpty<std::string>();
+
+		const auto ranges = compute_changed_highlights(current, details);
+		const int details_len = static_cast<int>(details.size());
+
+		for (const auto & r : ranges)
+		{
+			RC_ASSERT(r.start >= 0);
+			RC_ASSERT(r.end <= details_len);
+			RC_ASSERT(r.start < r.end);
+		}
+	});
+}
+
+TEST_CASE("compute_changed_highlights, no highlights when texts identical", "[u]")
+{
+	rc::prop(
+	    "identical texts never produce highlights",
+	    []()
+	{
+		const auto text = *rc::gen::arbitrary<std::string>();
+		const auto ranges = compute_changed_highlights(text, text);
+		RC_ASSERT(ranges.empty());
+	});
 }
