@@ -4,7 +4,7 @@
 
 ```
 yampt/
-├── yampt/                  # Core library + CLI (C++)
+├── yampt.core/             # Core library (C++ static lib) → yampt.lib
 │   ├── source/
 │   │   ├── creator/       # dict_creator_t + splits (base, single, ordered)
 │   │   ├── merger/        # dict_merger_t
@@ -13,10 +13,14 @@ yampt/
 │   │   ├── scanner/       # plugin_scan_t, plugin_index_t, conflict_compute, conflict_enums, conflict_types
 │   │   ├── decoder/       # conflict_slots, sub_record_iter, sub_record_schema, view_tree_format
 │   │   ├── io/            # File format readers/writers (ESM, JSON, codepage, file_list)
-│   │   ├── utility/       # Pure helpers (tools, string_utils, record_types, status_types, dict_kind)
-│   │   ├── interface/     # CLI boundary
+│   │   └── utility/       # Pure helpers (tools, string_utils, record_types, status_types, dict_kind)
+│   └── yampt.core.vcxproj
+├── yampt.cli/              # CLI entry point → yampt.exe (links yampt.lib)
+│   ├── source/
+│   │   ├── interface/     # CLI boundary (user_interface_t)
+│   │   ├── io/            # app_settings_t (shared GUI settings)
 │   │   └── main.cpp
-│   └── yampt.vcxproj
+│   └── yampt.cli.vcxproj
 ├── yampt.translator/       # GUI translation workbench (Qt6) → yTranslator.exe
 │   ├── source/
 │   │   ├── model/         # Data models & documents
@@ -64,7 +68,7 @@ When adding, removing, or renaming a source file in any project, always update t
 - `#include "..."` (quotes) — same-project includes only
 - `#include <...>` (angle brackets) — cross-project includes (resolved via `AdditionalIncludeDirectories`)
 
-Each project's `AdditionalIncludeDirectories` contains `$(ProjectDir)source` for its own files, plus `$(SolutionDir)yampt\source` (and `$(SolutionDir)yampt.translator\source`, `$(SolutionDir)yampt.editor\source` for tests) for cross-project access.
+Each project's `AdditionalIncludeDirectories` contains `$(ProjectDir)source` for its own files, plus `$(SolutionDir)yampt.core\source` (and `$(SolutionDir)yampt.translator\source`, `$(SolutionDir)yampt.editor\source` for tests) for cross-project access.
 
 Never use relative paths like `../../yampt/...` or `../yampt.translator/...` in `#include` directives. Use `<folder/file.hpp>` instead — it's portable across platforms and survives folder restructuring.
 

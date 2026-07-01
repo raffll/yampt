@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -98,7 +98,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>$(ProjectDir)source;$(SolutionDir)yampt\source;$(SolutionDir)yampt.core\source;$(SolutionDir)yampt.editor\source;$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtNetwork;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)source;$(SolutionDir)yampt.core\source;$(SolutionDir)yampt.editor\source;$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtNetwork;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -116,7 +116,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>$(ProjectDir)source;$(SolutionDir)yampt\source;$(SolutionDir)yampt.core\source;$(SolutionDir)yampt.editor\source;$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtNetwork;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)source;$(SolutionDir)yampt.core\source;$(SolutionDir)yampt.editor\source;$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtNetwork;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -136,7 +136,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>$(ProjectDir)source;$(SolutionDir)yampt\source;$(SolutionDir)yampt.core\source;$(SolutionDir)yampt.editor\source;$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtNetwork;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)source;$(SolutionDir)yampt.core\source;$(SolutionDir)yampt.editor\source;$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtNetwork;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -158,7 +158,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>$(ProjectDir)source;$(SolutionDir)yampt\source;$(SolutionDir)yampt.core\source;$(SolutionDir)yampt.editor\source;$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtNetwork;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)source;$(SolutionDir)yampt.core\source;$(SolutionDir)yampt.editor\source;$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtNetwork;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -234,30 +234,32 @@ if exist "$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\Qt6\plugins\tls"
     <ClCompile Include="source\utility\display_name.cpp" />
     <ClCompile Include="source\io\yaml_l10n_reader.cpp" />
     <ClCompile Include="source\io\yaml_l10n_writer.cpp" />
-    <ClCompile Include="..\yampt\source\utility\tools.cpp" />
-    <ClCompile Include="..\yampt\source\utility\keyword_trie.cpp" />
-    <ClCompile Include="..\yampt\source\utility\char_diff.cpp" />
+    <ClCompile Include="..\yampt.core\source\utility\tools.cpp" />
+    <ClCompile Include="..\yampt.core\source\utility\keyword_trie.cpp" />
+    <ClCompile Include="..\yampt.core\source\utility\char_diff.cpp" />
     <ClCompile Include="..\yampt.core\source\io\app_settings.cpp" />
-    <ClCompile Include="..\yampt\source\io\dict_reader.cpp" />
-    <ClCompile Include="..\yampt\source\io\dict_writer.cpp" />
-    <ClCompile Include="..\yampt\source\io\codepage.cpp" />
-    <ClCompile Include="..\yampt\source\io\esm_reader.cpp" />
-    <ClCompile Include="..\yampt\source\io\file_list.cpp" />
-    <ClCompile Include="..\yampt\source\merger\dict_merger.cpp" />
-    <ClCompile Include="..\yampt\source\creator\dict_creator.cpp" />
-    <ClCompile Include="..\yampt\source\creator\dict_creator_single.cpp" />
-    <ClCompile Include="..\yampt\source\creator\dict_creator_base.cpp" />
-    <ClCompile Include="..\yampt\source\creator\dict_creator_base_ordered.cpp" />
-    <ClCompile Include="..\yampt\source\converter\esm_converter.cpp" />
-    <ClCompile Include="..\yampt\source\converter\script_parser.cpp" />
-    <ClCompile Include="..\yampt\source\converter\scdt_patcher.cpp" />
-    <ClCompile Include="..\yampt\source\translator\translation_engine.cpp" />
-    <ClCompile Include="..\yampt\source\decoder\sub_record_schema.cpp" />
-    <ClCompile Include="..\yampt\source\scanner\plugin_index.cpp" />
-    <ClCompile Include="..\yampt\source\scanner\plugin_scan.cpp" />
-    <ClCompile Include="..\yampt\source\scanner\conflict_compute.cpp" />
-    <ClCompile Include="..\yampt\source\decoder\conflict_slots.cpp" />
-    <ClCompile Include="..\yampt\source\decoder\view_tree_format.cpp" />
+    <ClCompile Include="..\yampt.core\source\io\dict_reader.cpp" />
+    <ClCompile Include="..\yampt.core\source\io\dict_writer.cpp" />
+    <ClCompile Include="..\yampt.core\source\io\codepage.cpp" />
+    <ClCompile Include="..\yampt.core\source\io\esm_reader.cpp" />
+    <ClCompile Include="..\yampt.core\source\io\file_list.cpp" />
+    <ClCompile Include="..\yampt.core\source\merger\dict_merger.cpp" />
+    <ClCompile Include="..\yampt.core\source\creator\dict_creator.cpp" />
+    <ClCompile Include="..\yampt.core\source\creator\dict_creator_single.cpp" />
+    <ClCompile Include="..\yampt.core\source\creator\dict_creator_base.cpp" />
+    <ClCompile Include="..\yampt.core\source\creator\dict_creator_base_ordered.cpp" />
+    <ClCompile Include="..\yampt.core\source\converter\esm_converter.cpp" />
+    <ClCompile Include="..\yampt.core\source\converter\esm_converter_records.cpp" />
+    <ClCompile Include="..\yampt.core\source\converter\script_parser.cpp" />
+    <ClCompile Include="..\yampt.core\source\converter\scdt_patcher.cpp" />
+    <ClCompile Include="..\yampt.core\source\translator\translation_engine.cpp" />
+    <ClCompile Include="..\yampt.core\source\decoder\sub_record_schema.cpp" />
+    <ClCompile Include="..\yampt.core\source\scanner\plugin_index.cpp" />
+    <ClCompile Include="..\yampt.core\source\scanner\plugin_scan.cpp" />
+    <ClCompile Include="..\yampt.core\source\scanner\conflict_compute.cpp" />
+    <ClCompile Include="..\yampt.core\source\decoder\conflict_slots.cpp" />
+    <ClCompile Include="..\yampt.core\source\decoder\conflict_slots_cell.cpp" />
+    <ClCompile Include="..\yampt.core\source\decoder\view_tree_format.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\session.hpp" />
@@ -282,33 +284,34 @@ if exist "$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\Qt6\plugins\tls"
     <ClInclude Include="source\editor\grammar_checker.hpp" />
     <ClInclude Include="source\io\yaml_l10n_reader.hpp" />
     <ClInclude Include="source\io\yaml_l10n_writer.hpp" />
-    <ClInclude Include="..\yampt\source\utility\tools.hpp" />
-    <ClInclude Include="..\yampt\source\utility\keyword_trie.hpp" />
-    <ClInclude Include="..\yampt\source\utility\char_diff.hpp" />
+    <ClInclude Include="..\yampt.core\source\utility\tools.hpp" />
+    <ClInclude Include="..\yampt.core\source\utility\keyword_trie.hpp" />
+    <ClInclude Include="..\yampt.core\source\utility\char_diff.hpp" />
     <ClInclude Include="..\yampt.core\source\io\app_settings.hpp" />
-    <ClInclude Include="..\yampt\source\utility\includes.hpp" />
-    <ClInclude Include="..\yampt\source\io\codepage.hpp" />
-    <ClInclude Include="..\yampt\source\io\dict_reader.hpp" />
-    <ClInclude Include="..\yampt\source\io\dict_writer.hpp" />
-    <ClInclude Include="..\yampt\source\io\esm_reader.hpp" />
-    <ClInclude Include="..\yampt\source\io\json_reader.hpp" />
-    <ClInclude Include="..\yampt\source\io\file_list.hpp" />
-    <ClInclude Include="..\yampt\source\utility\dict_kind.hpp" />
-    <ClInclude Include="..\yampt\source\creator\dict_creator.hpp" />
-    <ClInclude Include="..\yampt\source\merger\dict_merger.hpp" />
-    <ClInclude Include="..\yampt\source\converter\esm_converter.hpp" />
-    <ClInclude Include="..\yampt\source\converter\script_parser.hpp" />
-    <ClInclude Include="..\yampt\source\converter\scdt_patcher.hpp" />
-    <ClInclude Include="..\yampt\source\translator\translation_engine.hpp" />
-    <ClInclude Include="..\yampt\source\scanner\conflict_enums.hpp" />
-    <ClInclude Include="..\yampt\source\scanner\conflict_types.hpp" />
-    <ClInclude Include="..\yampt\source\decoder\conflict_slots.hpp" />
-    <ClInclude Include="..\yampt\source\decoder\view_tree_format.hpp" />
-    <ClInclude Include="..\yampt\source\decoder\sub_record_iter.hpp" />
-    <ClInclude Include="..\yampt\source\decoder\sub_record_schema.hpp" />
-    <ClInclude Include="..\yampt\source\scanner\plugin_index.hpp" />
-    <ClInclude Include="..\yampt\source\scanner\plugin_scan.hpp" />
-    <ClInclude Include="..\yampt\source\scanner\conflict_compute.hpp" />
+    <ClInclude Include="..\yampt.core\source\utility\includes.hpp" />
+    <ClInclude Include="..\yampt.core\source\io\codepage.hpp" />
+    <ClInclude Include="..\yampt.core\source\io\dict_reader.hpp" />
+    <ClInclude Include="..\yampt.core\source\io\dict_writer.hpp" />
+    <ClInclude Include="..\yampt.core\source\io\esm_reader.hpp" />
+    <ClInclude Include="..\yampt.core\source\io\json_reader.hpp" />
+    <ClInclude Include="..\yampt.core\source\io\file_list.hpp" />
+    <ClInclude Include="..\yampt.core\source\utility\dict_kind.hpp" />
+    <ClInclude Include="..\yampt.core\source\creator\dict_creator.hpp" />
+    <ClInclude Include="..\yampt.core\source\merger\dict_merger.hpp" />
+    <ClInclude Include="..\yampt.core\source\converter\esm_converter.hpp" />
+    <ClInclude Include="..\yampt.core\source\converter\script_parser.hpp" />
+    <ClInclude Include="..\yampt.core\source\converter\scdt_patcher.hpp" />
+    <ClInclude Include="..\yampt.core\source\translator\translation_engine.hpp" />
+    <ClInclude Include="..\yampt.core\source\scanner\conflict_enums.hpp" />
+    <ClInclude Include="..\yampt.core\source\scanner\conflict_types.hpp" />
+    <ClInclude Include="..\yampt.core\source\decoder\conflict_slots.hpp" />
+    <ClInclude Include="..\yampt.core\source\decoder\conflict_slots_cell.hpp" />
+    <ClInclude Include="..\yampt.core\source\decoder\view_tree_format.hpp" />
+    <ClInclude Include="..\yampt.core\source\decoder\sub_record_iter.hpp" />
+    <ClInclude Include="..\yampt.core\source\decoder\sub_record_schema.hpp" />
+    <ClInclude Include="..\yampt.core\source\scanner\plugin_index.hpp" />
+    <ClInclude Include="..\yampt.core\source\scanner\plugin_scan.hpp" />
+    <ClInclude Include="..\yampt.core\source\scanner\conflict_compute.hpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="source\main_window.hpp">

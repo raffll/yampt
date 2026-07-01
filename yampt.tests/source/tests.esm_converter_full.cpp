@@ -270,7 +270,7 @@ TEST_CASE("esm_converter_t::convert_fnam, no match leaves unchanged", "[u]")
 	REQUIRE(records[1].modified == false);
 }
 
-TEST_CASE("esm_converter_t::convert_fnam, player record is skipped", "[u]")
+TEST_CASE("esm_converter_t::convert_fnam, player NPC excluded", "[u]")
 {
 	auto merger = make_merger(
 	    {
@@ -376,7 +376,7 @@ TEST_CASE("esm_converter_t::convert_dial, no match leaves unchanged", "[u]")
 }
 
 
-TEST_CASE("esm_converter_t::convert_gmst, string setting converted", "[u]")
+TEST_CASE("esm_converter_t::convert_gmst, string setting value replaced", "[u]")
 {
 	auto merger = make_merger(
 	    {
@@ -391,7 +391,7 @@ TEST_CASE("esm_converter_t::convert_gmst, string setting converted", "[u]")
 	REQUIRE(result.find("Dzicz") != std::string::npos);
 }
 
-TEST_CASE("esm_converter_t::convert_gmst, non-string setting is skipped", "[u]")
+TEST_CASE("esm_converter_t::convert_gmst, non-string setting not modified", "[u]")
 {
 	auto merger = make_merger(
 	    {
@@ -697,7 +697,7 @@ TEST_CASE("esm_converter_t::convert_scvr, condition cell name converted", "[u]")
 	        { tools_t::rec_type_t::cell, "Balmora", "Balmora", "Balmora PL" },
 	    });
 
-	std::string scvr_content = "5sBCEBalmora";
+	std::string scvr_content = "5BLX0Balmora";
 	auto body = make_sub_record("INAM", std::string("info_01\0", 8)) +
 	            make_sub_record("SCVR", scvr_content);
 	auto esm_content = make_tes3_record() + make_record("INFO", body);
@@ -713,7 +713,7 @@ TEST_CASE("esm_converter_t::convert_scvr, non-B type prefix is skipped", "[u]")
 	        { tools_t::rec_type_t::cell, "Balmora", "Balmora", "Balmora PL" },
 	    });
 
-	std::string scvr_content = "5sACEBalmora";
+	std::string scvr_content = "5ALX0Balmora";
 	auto body = make_sub_record("INAM", std::string("info_01\0", 8)) +
 	            make_sub_record("SCVR", scvr_content);
 	auto esm_content = make_tes3_record() + make_record("INFO", body);
@@ -729,7 +729,7 @@ TEST_CASE("esm_converter_t::convert_scvr, no match leaves unchanged", "[u]")
 	        { tools_t::rec_type_t::cell, "Vivec", "Vivec", "Vivec PL" },
 	    });
 
-	std::string scvr_content = "5sBCEBalmora";
+	std::string scvr_content = "5BLX0Balmora";
 	auto body = make_sub_record("INAM", std::string("info_01\0", 8)) +
 	            make_sub_record("SCVR", scvr_content);
 	auto esm_content = make_tes3_record() + make_record("INFO", body);

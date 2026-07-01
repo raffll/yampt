@@ -1,6 +1,6 @@
 #include "interface/user_interface.hpp"
-#include "utility/includes.hpp"
-#include "utility/tools.hpp"
+#include <utility/includes.hpp>
+#include <utility/tools.hpp>
 
 int main(int argc, char * argv[])
 {

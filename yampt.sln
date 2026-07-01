@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.6.11822.322 stable
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "yampt", "yampt\yampt.vcxproj", "{9F1F5DCD-D3E1-4FDB-A9C7-62C307ED1E21}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "yampt.core", "yampt.core\yampt.core.vcxproj", "{9F1F5DCD-D3E1-4FDB-A9C7-62C307ED1E21}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "yampt.tests", "yampt.tests\yampt.tests.vcxproj", "{BAE19CC8-6C1F-4232-8AB6-E5B5F204FE75}"
 EndProject
@@ -11,7 +11,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "yampt.translator", "yampt.t
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "yampt.editor", "yampt.editor\yampt.editor.vcxproj", "{B2C3D4E5-F6A7-8901-BCDE-F12345678901}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "yampt.core", "yampt.core\yampt.core.vcxproj", "{C3D4E5F6-A7B8-9012-CDEF-234567890ABC}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "yampt.cli", "yampt.cli\yampt.cli.vcxproj", "{C3D4E5F6-A7B8-9012-CDEF-234567890ABC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../io/codepage.hpp"
-#include "../utility/includes.hpp"
-#include "../utility/tools.hpp"
+#include <io/codepage.hpp>
+#include <utility/includes.hpp>
+#include <utility/tools.hpp>
 
 class user_interface_t
 {
