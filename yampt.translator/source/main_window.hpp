@@ -9,7 +9,7 @@
 #include "editor/operation_executor.hpp"
 #include "editor/row_filter.hpp"
 #include "dialog/dict_selection_dialog.hpp"
-#include "io/editor_config.hpp"
+#include "io/app_settings.hpp"
 #include "model/dict_document.hpp"
 #include "model/document.hpp"
 #include "model/plugin_op.hpp"
@@ -48,7 +48,6 @@ class status_filter_view_t;
 class validation_view_t;
 
 class QAction;
-class QActionGroup;
 class QCloseEvent;
 class QLabel;
 class QLineEdit;
@@ -128,6 +127,8 @@ private slots:
 	void on_encoding_changed(int index);
 	void on_filters_changed();
 	void on_status_filters_changed();
+	void on_open_settings();
+	void on_settings_applied(const std::string & category);
 
 	void on_item_clicked(const std::string & path);
 	void on_operation_requested(const std::string & path, plugin_op_t op);
@@ -168,6 +169,7 @@ private:
 	void on_spell_lang_changed(int index);
 	void scan_workspace();
 	void update_watcher_paths();
+	void register_shortcuts();
 	std::vector<dict_selection_dialog_t::dict_entry_t> build_dict_entries(const std::string & source_dir = {}) const;
 	void apply_extra_selections(translation_edit_view_t * editor, const extra_selections_state_t & state);
 
@@ -233,9 +235,6 @@ private:
 	QPushButton * search_col_key_ = nullptr;
 	QPushButton * search_col_original_ = nullptr;
 	QPushButton * search_col_translation_ = nullptr;
-	QActionGroup * encoding_group_ = nullptr;
-	QMenu * spelling_menu_ = nullptr;
-	QActionGroup * spelling_group_ = nullptr;
 	QAction * grammar_check_ = nullptr;
 	QAction * whitespace_check_ = nullptr;
 
@@ -278,7 +277,7 @@ private:
 	file_list_t file_list_;
 	codepage_t current_codepage_ = codepage_t::windows_1252;
 	session_t session_;
-	editor_config_t config_;
+	app_settings_t settings_{"yTranslator.ini"};
 	std::unordered_map<std::string, filter_state_t> filter_states_;
 	size_t last_annotation_version_ = 0;
 

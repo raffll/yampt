@@ -3,6 +3,7 @@
 #include "dialog/dict_selection_dialog.hpp"
 #include "dialog/find_replace_dialog.hpp"
 #include "dialog/first_run_dialog.hpp"
+#include "dialog/settings_dialog.hpp"
 #include "dialog/spell_context_menu.hpp"
 #include "highlighter/glossary_highlighter.hpp"
 #include "highlighter/editor_highlighter.hpp"
@@ -33,7 +34,6 @@
 #include <set>
 #include <unordered_map>
 #include <QAction>
-#include <QActionGroup>
 #include <QCloseEvent>
 #include <QCoreApplication>
 #include <QDialogButtonBox>
@@ -93,28 +93,31 @@ main_window_t::main_window_t(QWidget * parent)
 	connect_editor_signals();
 	connect_search_signals();
 
-	const auto config_path = QCoreApplication::applicationDirPath() + "/yTranslator.ini";
-	bool first_run = !QFile::exists(config_path);
-
 	load_config();
+
+	bool first_run = settings_.native_language().empty();
 
 	if (first_run)
 	{
-		std::vector<std::string> spell_langs;
-		const auto & spell_actions = spelling_group_->actions();
-		for (int i = 1; i < spell_actions.size(); ++i)
-			spell_langs.push_back(spell_actions.at(i)->text().toStdString());
-
-		first_run_dialog_t dialog(spell_langs, this);
+		first_run_dialog_t dialog(this);
 		if (dialog.exec() == QDialog::Accepted)
 		{
-			const int enc_idx = dialog.selected_encoding_index();
-			if (enc_idx >= 0 && enc_idx < encoding_group_->actions().size())
-				encoding_group_->actions().at(enc_idx)->trigger();
+			const auto native = dialog.selected_native_language();
+			const auto foreign = dialog.selected_foreign_language();
 
-			const int spell_idx = dialog.selected_spell_lang_index();
-			if (spell_idx >= 0 && spell_idx < spell_actions.size())
-				spell_actions.at(spell_idx)->trigger();
+			settings_.set_native_language(native);
+			settings_.set_foreign_language(foreign);
+			settings_.set_native_tag(native);
+			settings_.set_foreign_tag(foreign);
+
+			int encoding_index = 2;
+			if (native == "PL")
+				encoding_index = 0;
+			else if (native == "RU")
+				encoding_index = 1;
+
+			settings_.set_encoding_index(encoding_index);
+			on_encoding_changed(encoding_index);
 
 			save_config();
 		}
@@ -840,13 +843,55 @@ void main_window_t::on_encoding_changed(int index)
 	current_codepage_ = new_codepage;
 	session_.set_codepage(new_codepage);
 	byte_limit_validator_.set_codepage(new_codepage);
-	config_.encoding_index = index;
+	settings_.set_encoding_index(index);
 	save_config();
 
 	statusBar()->showMessage(
 	    "Encoding changed. Open documents keep their original encoding until "
 	    "re-opened.",
 	    5000);
+}
+
+void main_window_t::on_open_settings()
+{
+	const auto dict_dir = QCoreApplication::applicationDirPath().toStdString() + "/dictionaries";
+	settings_dialog_t dialog(settings_, dict_dir, settings_dialog_t::context_t::translator, this);
+
+	connect(&dialog, &settings_dialog_t::settings_applied, this, [this](const std::string & category)
+	{
+		on_settings_applied(category);
+	});
+
+	dialog.exec();
+}
+
+void main_window_t::on_settings_applied(const std::string & category)
+{
+	if (category == "all" || category == "language")
+	{
+		on_encoding_changed(settings_.encoding_index());
+		on_spell_lang_changed(settings_.spell_lang_index());
+		translation_tab_->apply_provider_settings(settings_);
+	}
+
+	if (category == "all" || category == "translation")
+		translation_tab_->apply_provider_settings(settings_);
+
+	if (category == "all" || category == "workspace")
+	{
+		file_list_.scan_roots(settings_.workspace_roots());
+		scan_workspace();
+		update_watcher_paths();
+	}
+
+	if (category == "all" || category == "shortcuts")
+		register_shortcuts();
+
+	save_config();
+}
+
+void main_window_t::register_shortcuts()
+{
 }
 
 void main_window_t::rebuild_annotations()
@@ -1001,29 +1046,6 @@ void main_window_t::update_validation()
 
 void main_window_t::scan_spell_dictionaries()
 {
-	const auto app_dir = QCoreApplication::applicationDirPath();
-	QDir dict_dir(app_dir + "/dictionaries");
-
-	if (!dict_dir.exists())
-		return;
-
-	const auto aff_files = dict_dir.entryList({ "*.aff" }, QDir::Files);
-	int index = 1;
-	for (const auto & aff_file : aff_files)
-	{
-		auto base_name = aff_file;
-		base_name.chop(4);
-
-		const auto dic_path = dict_dir.filePath(base_name + ".dic");
-		if (!QFile::exists(dic_path))
-			continue;
-
-		auto * act = spelling_menu_->addAction(base_name);
-		act->setCheckable(true);
-		act->setData(index);
-		spelling_group_->addAction(act);
-		++index;
-	}
 }
 
 void main_window_t::on_spell_lang_changed(int index)
@@ -1034,16 +1056,16 @@ void main_window_t::on_spell_lang_changed(int index)
 		return;
 	}
 
-	const auto & actions = spelling_group_->actions();
-	if (index < 0 || index >= actions.size())
+	const auto aff_path = settings_.spell_aff_path();
+	const auto dic_path = settings_.spell_dic_path();
+
+	if (aff_path.empty() || dic_path.empty())
+	{
+		hl_translation_->set_spell_checker(nullptr);
 		return;
+	}
 
-	const auto lang_name = actions.at(index)->text();
-	const auto app_dir = QCoreApplication::applicationDirPath();
-	const auto aff_path = app_dir + "/dictionaries/" + lang_name + ".aff";
-	const auto dic_path = app_dir + "/dictionaries/" + lang_name + ".dic";
-
-	if (!spell_checker_.load(aff_path.toStdString(), dic_path.toStdString()))
+	if (!spell_checker_.load(aff_path, dic_path))
 		return;
 
 	hl_translation_->set_spell_checker(&spell_checker_);
@@ -1051,47 +1073,44 @@ void main_window_t::on_spell_lang_changed(int index)
 
 void main_window_t::load_config()
 {
-	const auto path = QCoreApplication::applicationDirPath() + "/yTranslator.ini";
-	config_.load(path.toStdString());
+	move(settings_.window_x(), settings_.window_y());
+	resize(settings_.window_width(), settings_.window_height());
 
-	move(config_.window_x, config_.window_y);
-	resize(config_.window_w, config_.window_h);
-
-	if (config_.window_maximized)
+	if (settings_.window_maximized())
 		showMaximized();
 
-	if (config_.encoding_index >= 0 && config_.encoding_index < encoding_group_->actions().size())
-		encoding_group_->actions().at(config_.encoding_index)->setChecked(true);
-
+	const int encoding_index = settings_.encoding_index();
 	constexpr codepage_t codepages_table[] = {
 		codepage_t::windows_1250,
 		codepage_t::windows_1251,
 		codepage_t::windows_1252,
 	};
-	if (config_.encoding_index >= 0 && config_.encoding_index < 3)
-		current_codepage_ = codepages_table[config_.encoding_index];
+	if (encoding_index >= 0 && encoding_index < 3)
+		current_codepage_ = codepages_table[encoding_index];
 
 	session_.set_codepage(current_codepage_);
 
-	translation_tab_->set_language_index(config_.translation_language_index);
+	translation_tab_->apply_provider_settings(settings_);
 
-	sidebar_toggle_->setChecked(config_.sidebar_visible);
-	bottom_panel_toggle_->setChecked(config_.bottom_visible);
+	sidebar_toggle_->setChecked(settings_.sidebar_visible());
+	bottom_panel_toggle_->setChecked(settings_.bottom_visible());
 
-	if (config_.split_ratio > 0.0f)
-		editor_view_->set_split_ratio(config_.split_ratio);
+	const float split_ratio = settings_.split_ratio();
+	if (split_ratio > 0.0f)
+		editor_view_->set_split_ratio(split_ratio);
 
 	std::vector<int> col_widths;
-	for (auto w : config_.column_widths)
-		col_widths.push_back(static_cast<int>(w));
+	for (int i = 0; i < 4; ++i)
+		col_widths.push_back(settings_.column_width(i));
 	table_view_->set_column_widths(col_widths);
 
-	file_list_.scan_roots(config_.workspace_roots);
+	file_list_.scan_roots(settings_.workspace_roots());
 	scan_workspace();
 
-	if (!config_.active_dict_path.empty())
+	const auto active_path = settings_.active_dict_path();
+	if (!active_path.empty())
 	{
-		auto * doc = session_.open(config_.active_dict_path);
+		auto * doc = session_.open(active_path);
 		if (doc)
 			switch_document(doc);
 	}
@@ -1099,43 +1118,34 @@ void main_window_t::load_config()
 	rebuild_sidebar();
 	rebuild_table();
 
-	if (config_.spell_lang_index > 0 && config_.spell_lang_index < spelling_group_->actions().size())
-		spelling_group_->actions().at(config_.spell_lang_index)->setChecked(true);
-
-	on_spell_lang_changed(config_.spell_lang_index);
+	const int spell_index = settings_.spell_lang_index();
+	on_spell_lang_changed(spell_index);
 
 	update_watcher_paths();
+	register_shortcuts();
 }
 
 void main_window_t::save_config()
 {
-	config_.window_x = pos().x();
-	config_.window_y = pos().y();
-	config_.window_w = size().width();
-	config_.window_h = size().height();
-	config_.window_maximized = isMaximized();
+	settings_.set_window_x(pos().x());
+	settings_.set_window_y(pos().y());
+	settings_.set_window_width(size().width());
+	settings_.set_window_height(size().height());
+	settings_.set_window_maximized(isMaximized());
 
-	config_.encoding_index =
-	    encoding_group_->checkedAction() ? encoding_group_->actions().indexOf(encoding_group_->checkedAction()) : 2;
-	config_.spell_lang_index =
-	    spelling_group_->checkedAction() ? spelling_group_->actions().indexOf(spelling_group_->checkedAction()) : 0;
+	settings_.set_sidebar_visible(sidebar_toggle_->isChecked());
+	settings_.set_bottom_visible(bottom_panel_toggle_->isChecked());
 
-	config_.sidebar_visible = sidebar_toggle_->isChecked();
-	config_.bottom_visible = bottom_panel_toggle_->isChecked();
-
-	config_.split_ratio = static_cast<float>(editor_view_->get_split_ratio());
+	settings_.set_split_ratio(static_cast<float>(editor_view_->get_split_ratio()));
 
 	const auto col_widths = table_view_->get_column_widths();
-	for (size_t i = 0; i < col_widths.size() && i < config_.column_widths.size(); ++i)
-		config_.column_widths[i] = static_cast<float>(col_widths[i]);
+	for (int i = 0; i < static_cast<int>(col_widths.size()) && i < 4; ++i)
+		settings_.set_column_width(i, col_widths[i]);
 
-	config_.active_dict_index = -1; // deprecated — use active_dict_path
-	config_.active_dict_path = active_doc_ ? active_doc_->path() : std::string {};
-	config_.translation_language_index = translation_tab_->language_index();
-	config_.workspace_roots = file_list_.get_roots();
+	settings_.set_active_dict_path(active_doc_ ? active_doc_->path() : std::string {});
+	settings_.set_workspace_roots(file_list_.get_roots());
 
-	const auto path = QCoreApplication::applicationDirPath() + "/yTranslator.ini";
-	config_.save(path.toStdString());
+	settings_.sync();
 }
 
 // irreducible: switch dispatch for 5 operation types; each branch contains distinct dialog/executor calls
@@ -1183,7 +1193,7 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
 	{
 		auto entries = build_dict_entries(plugin_dir);
 
-		dict_selection_dialog_t dialog(entries, config_.last_merge_order, this);
+		dict_selection_dialog_t dialog(entries, settings_.last_merge_order(), this);
 		dialog.setWindowTitle("Select Dictionaries");
 		if (dialog.exec() != QDialog::Accepted)
 			return;
@@ -1192,7 +1202,7 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
 		if (selected.empty())
 			return;
 
-		config_.last_merge_order = selected;
+		settings_.set_last_merge_order(selected);
 
 		for (const auto & sel_path : selected)
 			session_.open(sel_path);
@@ -1215,7 +1225,7 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
 	{
 		auto entries = build_dict_entries(plugin_dir);
 
-		dict_selection_dialog_t dialog(entries, config_.last_merge_order, this);
+		dict_selection_dialog_t dialog(entries, settings_.last_merge_order(), this);
 		dialog.setWindowTitle("Select Dictionaries for Convert");
 		if (dialog.exec() != QDialog::Accepted)
 			return;
@@ -1224,7 +1234,7 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
 		if (selected.empty())
 			return;
 
-		config_.last_merge_order = selected;
+		settings_.set_last_merge_order(selected);
 
 		for (const auto & sel_path : selected)
 			session_.open(sel_path);
@@ -1236,7 +1246,7 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
 	{
 		auto entries = build_dict_entries(plugin_dir);
 
-		dict_selection_dialog_t dialog(entries, config_.last_merge_order, this);
+		dict_selection_dialog_t dialog(entries, settings_.last_merge_order(), this);
 		dialog.setWindowTitle("Select Dictionaries for Create");
 		if (dialog.exec() != QDialog::Accepted)
 			return;
@@ -1245,7 +1255,7 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
 		if (selected.empty())
 			return;
 
-		config_.last_merge_order = selected;
+		settings_.set_last_merge_order(selected);
 
 		for (const auto & sel_path : selected)
 			session_.open(sel_path);
@@ -1623,7 +1633,7 @@ void main_window_t::scan_workspace()
 
 	std::vector<std::string> roots;
 	roots.push_back(workspace);
-	for (const auto & r : config_.workspace_roots)
+	for (const auto & r : settings_.workspace_roots())
 	{
 		if (r != workspace)
 			roots.push_back(r);
@@ -1667,7 +1677,7 @@ void main_window_t::update_watcher_paths()
 	const auto workspace = QCoreApplication::applicationDirPath() + "/workspace";
 	add_directory_recursive(paths, workspace);
 
-	for (const auto & root : config_.workspace_roots)
+	for (const auto & root : settings_.workspace_roots())
 		add_directory_recursive(paths, QString::fromStdString(root));
 
 	if (!paths.isEmpty())
@@ -1710,7 +1720,7 @@ std::vector<dict_selection_dialog_t::dict_entry_t> main_window_t::build_dict_ent
 	auto target = source_dir.empty() ? std::string {} : normalize(source_dir);
 
 	std::set<std::string> saved_order_set;
-	for (const auto & p : config_.last_merge_order)
+	for (const auto & p : settings_.last_merge_order())
 		saved_order_set.insert(normalize(p));
 	bool use_saved = !saved_order_set.empty();
 

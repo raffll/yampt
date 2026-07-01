@@ -6,11 +6,11 @@
 #include <vector>
 #include <QWidget>
 
-class QComboBox;
 class QLabel;
 class QPlainTextEdit;
 class QPushButton;
 
+class app_settings_t;
 class ctranslate2_translator_t;
 class deepl_translator_t;
 class google_translator_t;
@@ -26,8 +26,7 @@ public:
 	void set_models_dir(const std::string & dir);
 	void set_glossary_fn(std::function<std::string(const std::string &)> fn);
 
-	int language_index() const;
-	void set_language_index(int index);
+	void apply_provider_settings(const app_settings_t & settings);
 
 	ctranslate2_translator_t * ct2_provider() const;
 	void append_log(const std::string & msg);
@@ -36,17 +35,12 @@ public:
 signals:
 	void translate_all_requested();
 
-private slots:
-	void on_language_changed(int index);
-
 private:
 	void setup_controls();
 	void update_counter_label();
 	void load_model_for_language(int index);
-	void rebuild_language_combo();
+	void rebuild_language_list();
 
-	QComboBox * source_combo_ = nullptr;
-	QComboBox * language_combo_ = nullptr;
 	QPushButton * translate_all_btn_ = nullptr;
 	QPlainTextEdit * result_text_ = nullptr;
 	QLabel * counter_label_ = nullptr;

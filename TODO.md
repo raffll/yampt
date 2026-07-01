@@ -4,12 +4,6 @@ Sorted by effort. Settings dialog takes priority.
 
 ---
 
-### ~~Reorganize all project folders [S]~~ ✓
-Completed. Core `model/` split into `creator/`, `merger/`, `converter/`, `translator/`. `plugin_scan/` split into `scanner/` + `decoder/`. `file_list` moved to `io/`, `dict_kind` moved to `utility/`. Translator: `controller/` → `editor/`, `translate/` → `translator/`, `highlight/` → `highlighter/`.
-
-### ~~Rename highlight files [S]~~ ✓
-Completed. `composite_highlighter` → `editor_highlighter`, `syntax_highlighter` → `script_tokenizer`, `annotation_highlighter` → `glossary_highlighter`, `hyperlink_highlighter` → `topic_highlighter`. Both file names and class names renamed across the entire solution.
-
 ### Settings dialog for both apps [S, PRIORITY]
 Settings dialog similar to Notepad++/Visual Studio. Covers both yTranslator and yEditor. Central place for keyboard shortcuts, paths, encoding, spell check language, translation provider API keys, theme preferences.
 
@@ -72,9 +66,6 @@ Add explicit merge functionality in the GUI. Currently users can load multiple d
 
 ### Configurable source dictionary for partial mode [M]
 Allow changing the Hunspell dictionary used in partial mode from English to another language (e.g. German, French). Currently hardcoded to `en_US.aff`/`en_US.dic`. Add a dropdown or file selector in the make-base dialog.
-
-### Load TES3 top-level files and generate annotations [M]
-Parse loaded plugin's FNAM, CELL, DIAL names and use them as annotation/glossary sources for the current dict. `plugin_document_t` exists as a stub placeholder — all methods are empty/return defaults.
 
 ### Hyperlinks more accurate [M]
 Read OpenMW source code for exact hyperlink detection rules and improve matching accuracy in yampt's annotation/conversion system.

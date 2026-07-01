@@ -17,8 +17,8 @@
     <ClCompile Include="source\tests.esm_converter.cpp" />
     <ClCompile Include="source\tests.script_parser_scdt.cpp" />
     <ClCompile Include="source\tests.dict_creator_ordering.cpp" />
-    <ClCompile Include="source\tests.editor_config.cpp" />
     <ClCompile Include="source\tests.glossary.cpp" />
+    <ClCompile Include="source\tests.editor_config.cpp" />
     <ClCompile Include="source\tests.table_builder.cpp" />
     <ClCompile Include="source\tests.session.cpp" />
     <ClCompile Include="source\tests.find_replace.cpp" />
@@ -50,7 +50,6 @@
     <ClCompile Include="..\yampt\source\io\file_list.cpp" />
     <ClCompile Include="..\yampt\source\scanner\conflict_compute.cpp" />
     <ClCompile Include="..\yampt\source\decoder\conflict_slots.cpp" />
-    <ClCompile Include="..\yampt.translator\source\io\editor_config.cpp" />
     <ClCompile Include="..\yampt.translator\source\io\yaml_l10n_reader.cpp" />
     <ClCompile Include="..\yampt.translator\source\io\yaml_l10n_writer.cpp" />
     <ClCompile Include="..\yampt.translator\source\model\table_builder.cpp" />

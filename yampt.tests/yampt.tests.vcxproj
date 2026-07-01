@@ -178,7 +178,6 @@
     <ClInclude Include="..\yampt\source\io\codepage.hpp" />
     <ClInclude Include="..\yampt\source\utility\dict_kind.hpp" />
     <ClInclude Include="..\yampt\source\io\file_list.hpp" />
-    <ClInclude Include="..\yampt.translator\source\io\editor_config.hpp" />
     <ClInclude Include="..\yampt.translator\source\editor\glossary.hpp" />
     <ClInclude Include="..\yampt.translator\source\model\sidebar_model.hpp" />
     <ClInclude Include="..\yampt.translator\source\session.hpp" />
@@ -224,8 +223,8 @@
     <ClCompile Include="source\tests.esm_converter.cpp" />
     <ClCompile Include="source\tests.script_parser_scdt.cpp" />
     <ClCompile Include="source\tests.dict_creator_ordering.cpp" />
-    <ClCompile Include="source\tests.editor_config.cpp" />
     <ClCompile Include="source\tests.glossary.cpp" />
+    <ClCompile Include="source\tests.editor_config.cpp" />
     <ClCompile Include="source\tests.table_builder.cpp" />
     <ClCompile Include="source\tests.session.cpp" />
     <ClCompile Include="source\tests.find_replace.cpp" />
@@ -239,7 +238,6 @@
     <ClCompile Include="source\tests.esm_converter_full.cpp" />
     <ClCompile Include="source\tests.profile_reader.cpp" />
     <ClCompile Include="source\tests.scdt_patcher.cpp" />
-    <ClCompile Include="..\yampt.translator\source\io\editor_config.cpp" />
     <ClCompile Include="..\yampt.translator\source\model\table_builder.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\row_filter.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\glossary.cpp" />

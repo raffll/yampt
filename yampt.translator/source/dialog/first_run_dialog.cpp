@@ -1,42 +1,53 @@
 #include "first_run_dialog.hpp"
 #include <QComboBox>
 #include <QDialogButtonBox>
+#include <QHBoxLayout>
 #include <QLabel>
 #include <QVBoxLayout>
 
-first_run_dialog_t::first_run_dialog_t(const std::vector<std::string> & spell_languages, QWidget * parent)
+first_run_dialog_t::first_run_dialog_t(QWidget * parent)
     : QDialog(parent)
 {
-	setWindowTitle("Setup");
+	setWindowTitle("Language Setup");
 	setModal(true);
 
 	auto * layout = new QVBoxLayout(this);
 
-	layout->addWidget(new QLabel("Text Encoding:"));
-	encoding_combo_ = new QComboBox(this);
-	encoding_combo_->addItem("Windows-1250");
-	encoding_combo_->addItem("Windows-1251");
-	encoding_combo_->addItem("Windows-1252");
-	layout->addWidget(encoding_combo_);
+	auto * combo_layout = new QHBoxLayout;
 
-	layout->addWidget(new QLabel("Spell Check Language:"));
-	spell_lang_combo_ = new QComboBox(this);
-	spell_lang_combo_->addItem("None");
-	for (const auto & lang : spell_languages)
-		spell_lang_combo_->addItem(QString::fromStdString(lang));
-	layout->addWidget(spell_lang_combo_);
+	combo_layout->addWidget(new QLabel("From:"));
+	from_combo_ = new QComboBox(this);
+	from_combo_->addItem("English", QString("EN"));
+	from_combo_->addItem("Polish", QString("PL"));
+	from_combo_->addItem("German", QString("DE"));
+	from_combo_->addItem("French", QString("FR"));
+	from_combo_->addItem("Russian", QString("RU"));
+	from_combo_->setCurrentIndex(0);
+	combo_layout->addWidget(from_combo_);
+
+	combo_layout->addWidget(new QLabel("To:"));
+	to_combo_ = new QComboBox(this);
+	to_combo_->addItem("English", QString("EN"));
+	to_combo_->addItem("Polish", QString("PL"));
+	to_combo_->addItem("German", QString("DE"));
+	to_combo_->addItem("French", QString("FR"));
+	to_combo_->addItem("Russian", QString("RU"));
+	to_combo_->setCurrentIndex(1);
+	combo_layout->addWidget(to_combo_);
+
+	layout->addLayout(combo_layout);
 
 	auto * button_box = new QDialogButtonBox(QDialogButtonBox::Ok, this);
 	connect(button_box, &QDialogButtonBox::accepted, this, &QDialog::accept);
 	layout->addWidget(button_box);
 }
 
-int first_run_dialog_t::selected_encoding_index() const
+std::string first_run_dialog_t::selected_foreign_language() const
 {
-	return encoding_combo_->currentIndex();
+	return from_combo_->currentData().toString().toStdString();
 }
 
-int first_run_dialog_t::selected_spell_lang_index() const
+std::string first_run_dialog_t::selected_native_language() const
 {
-	return spell_lang_combo_->currentIndex();
+	return to_combo_->currentData().toString().toStdString();
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <io/app_settings.hpp>
 #include <QMainWindow>
 
 class plugin_workspace_view_t;
@@ -18,6 +19,8 @@ private:
 	void setup_menu_bar();
 	void load_config();
 	void save_config();
+	void on_open_settings();
 
 	plugin_workspace_view_t * plugin_workspace_view_ = nullptr;
+	app_settings_t settings_{"yEditor.ini"};
 };

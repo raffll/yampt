@@ -28,5 +28,7 @@
     <ClCompile Include="$(IntDir)moc_plugin_select_dialog.cpp" />
     <ClCompile Include="$(IntDir)moc_filter_dialog.cpp" />
     <ClCompile Include="$(IntDir)moc_messages_view.cpp" />
+    <ClCompile Include="source\dialog\editor_paths_view.cpp" />
+    <ClCompile Include="$(IntDir)moc_editor_paths_view.cpp" />
   </ItemGroup>
 </Project>

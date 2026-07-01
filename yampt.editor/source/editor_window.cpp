@@ -1,5 +1,6 @@
 #include "editor_window.hpp"
 #include "view/plugin_workspace_view.hpp"
+#include <dialog/settings_dialog.hpp>
 #include <QAction>
 #include <QCloseEvent>
 #include <QMenuBar>
@@ -72,6 +73,13 @@ void editor_window_t::setup_menu_bar()
 	quit_action->setToolTip("Exit the application");
 	file_menu->addAction(quit_action);
 	connect(quit_action, &QAction::triggered, this, &QMainWindow::close);
+
+	auto * edit_menu = menuBar()->addMenu("&Edit");
+	auto * settings_action = new QAction("Settings", this);
+	settings_action->setShortcut(QKeySequence("Ctrl+,"));
+	settings_action->setToolTip("Open application settings");
+	edit_menu->addAction(settings_action);
+	connect(settings_action, &QAction::triggered, this, &editor_window_t::on_open_settings);
 }
 
 void editor_window_t::load_config()
@@ -97,4 +105,10 @@ void editor_window_t::closeEvent(QCloseEvent * event)
 {
 	save_config();
 	event->accept();
+}
+
+void editor_window_t::on_open_settings()
+{
+	settings_dialog_t dialog(settings_, "", settings_dialog_t::context_t::editor, this);
+	dialog.exec();
 }

@@ -23,7 +23,6 @@
 #include <utility/string_utils.hpp>
 #include <algorithm>
 #include <QAction>
-#include <QActionGroup>
 #include <QCoreApplication>
 #include <QDir>
 #include <QDirIterator>
@@ -71,6 +70,13 @@ void main_window_t::setup_menu_bar()
 	quit_action_->setShortcut(QKeySequence("Alt+F4"));
 	file_menu->addAction(quit_action_);
 
+	auto * edit_menu = menuBar()->addMenu("&Edit");
+
+	auto * settings_action = edit_menu->addAction("Settings");
+	settings_action->setShortcut(QKeySequence("Ctrl+,"));
+	settings_action->setToolTip("Open application settings");
+	connect(settings_action, &QAction::triggered, this, &main_window_t::on_open_settings);
+
 	auto * view_menu = menuBar()->addMenu("&View");
 	translator_view_menu_ = view_menu;
 
@@ -94,28 +100,6 @@ void main_window_t::setup_menu_bar()
 	whitespace_check_ = new QAction("&Whitespace Markers", this);
 	whitespace_check_->setCheckable(true);
 	view_menu->addAction(whitespace_check_);
-
-	view_menu->addSeparator();
-
-	auto * encoding_menu = view_menu->addMenu("&Encoding");
-	encoding_group_ = new QActionGroup(this);
-	const QStringList encodings = { "Windows-1250", "Windows-1251", "Windows-1252" };
-	for (int i = 0; i < encodings.size(); ++i)
-	{
-		auto * act = encoding_menu->addAction(encodings[i]);
-		act->setCheckable(true);
-		act->setData(i);
-		encoding_group_->addAction(act);
-	}
-	encoding_group_->actions().last()->setChecked(true);
-
-	spelling_menu_ = view_menu->addMenu("&Spelling");
-	spelling_group_ = new QActionGroup(this);
-	auto * none_act = spelling_menu_->addAction("None");
-	none_act->setCheckable(true);
-	none_act->setChecked(true);
-	none_act->setData(0);
-	spelling_group_->addAction(none_act);
 }
 
 void main_window_t::setup_toolbar()
@@ -279,8 +263,6 @@ void main_window_t::setup_table_display()
 	rescan_timer_->setSingleShot(true);
 	rescan_timer_->setInterval(200);
 
-	scan_spell_dictionaries();
-
 	table_display_ = std::make_unique<table_view_t>(
 	    *filter_tree_view_,
 	    *status_filter_view_,
@@ -301,18 +283,6 @@ void main_window_t::setup_table_display()
 
 void main_window_t::connect_menu_signals()
 {
-	connect(
-	    encoding_group_,
-	    &QActionGroup::triggered,
-	    this,
-	    [this](QAction * act) { on_encoding_changed(act->data().toInt()); });
-
-	connect(
-	    spelling_group_,
-	    &QActionGroup::triggered,
-	    this,
-	    [this](QAction * act) { on_spell_lang_changed(act->data().toInt()); });
-
 	connect(save_action_, &QAction::triggered, this, &main_window_t::on_save);
 	connect(save_all_action_, &QAction::triggered, this, &main_window_t::on_save_all);
 	connect(quit_action_, &QAction::triggered, this, &QWidget::close);
@@ -351,11 +321,13 @@ void main_window_t::connect_menu_signals()
 			return;
 
 		const auto path = folder.toStdString();
-		const auto & roots = config_.workspace_roots;
+		const auto roots = settings_.workspace_roots();
 		if (std::find(roots.begin(), roots.end(), path) != roots.end())
 			return;
 
-		config_.workspace_roots.push_back(path);
+		auto updated_roots = roots;
+		updated_roots.push_back(path);
+		settings_.set_workspace_roots(updated_roots);
 		scan_workspace();
 		save_config();
 		update_watcher_paths();
@@ -534,8 +506,9 @@ void main_window_t::connect_sidebar_signals()
 	    this,
 	    [this](const std::string & root_path)
 	{
-		auto & roots = config_.workspace_roots;
+		auto roots = settings_.workspace_roots();
 		roots.erase(std::remove(roots.begin(), roots.end(), root_path), roots.end());
+		settings_.set_workspace_roots(roots);
 
 		if (active_doc_)
 		{

@@ -2,10 +2,10 @@
 #include "../translator/ctranslate2_translator.hpp"
 #include "../translator/deepl_translator.hpp"
 #include "../translator/google_translator.hpp"
+#include <io/app_settings.hpp>
 #include <utility/tools.hpp>
 #include <filesystem>
 #include <fstream>
-#include <QComboBox>
 #include <QCoreApplication>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -25,18 +25,12 @@ translation_suggestion_view_t::translation_suggestion_view_t(QWidget * parent)
 	auto * top_row = new QHBoxLayout;
 	top_row->setSpacing(4);
 
-	source_combo_ = new QComboBox(this);
-	source_combo_->setVisible(false);
-	top_row->addWidget(source_combo_);
-
-	language_combo_ = new QComboBox(this);
-	top_row->addWidget(language_combo_);
-
 	translate_all_btn_ = new QPushButton("Translate 10", this);
 	translate_all_btn_->setToolTip("Translate next 10 untranslated entries");
 	translate_all_btn_->setFixedWidth(100);
 	top_row->addWidget(translate_all_btn_);
 
+	top_row->addStretch();
 	layout->addLayout(top_row);
 
 	result_text_ = new QPlainTextEdit(this);
@@ -61,28 +55,9 @@ void translation_suggestion_view_t::setup_controls()
 	providers_.push_back(deepl_translator_);
 	providers_.push_back(google_translator_);
 
-	source_combo_->addItem(QString::fromStdString(ct2_provider_->name()));
-
 	connect(translate_all_btn_, &QPushButton::clicked, this, [this]() { emit translate_all_requested(); });
-	connect(
-	    source_combo_,
-	    qOverload<int>(&QComboBox::currentIndexChanged),
-	    this,
-	    [this](int)
-	{
-		rebuild_language_combo();
-		update_counter_label();
-	});
-	connect(
-	    language_combo_,
-	    qOverload<int>(&QComboBox::currentIndexChanged),
-	    this,
-	    &translation_suggestion_view_t::on_language_changed);
 
-	rebuild_language_combo();
-
-	if (language_combo_->count() > 0)
-		load_model_for_language(0);
+	rebuild_language_list();
 }
 
 void translation_suggestion_view_t::set_source_text(const std::string & text)
@@ -93,33 +68,24 @@ void translation_suggestion_view_t::set_source_text(const std::string & text)
 void translation_suggestion_view_t::set_models_dir(const std::string & dir)
 {
 	models_dir_ = dir;
-	rebuild_language_combo();
-
-	if (language_combo_->count() > 0 && !ct2_provider_->is_available())
-		load_model_for_language(language_combo_->currentIndex());
+	rebuild_language_list();
 }
 
-int translation_suggestion_view_t::language_index() const
+void translation_suggestion_view_t::apply_provider_settings(const app_settings_t & settings)
 {
-	return language_combo_->currentIndex();
+	const int language_index = settings.translation_language_index();
+
+	if (languages_.empty())
+		rebuild_language_list();
+
+	if (language_index >= 0 && language_index < static_cast<int>(languages_.size()))
+		load_model_for_language(language_index);
+	else if (!languages_.empty())
+		load_model_for_language(0);
 }
 
-void translation_suggestion_view_t::set_language_index(int index)
+void translation_suggestion_view_t::rebuild_language_list()
 {
-	if (index >= 0 && index < language_combo_->count())
-		language_combo_->setCurrentIndex(index);
-}
-
-void translation_suggestion_view_t::on_language_changed(int index)
-{
-	if (source_combo_->currentIndex() == 0)
-		load_model_for_language(index);
-}
-
-void translation_suggestion_view_t::rebuild_language_combo()
-{
-	language_combo_->blockSignals(true);
-	language_combo_->clear();
 	languages_.clear();
 
 	namespace fs = std::filesystem;
@@ -149,14 +115,11 @@ void translation_suggestion_view_t::rebuild_language_combo()
 			const auto & model_path = nllb_models[0];
 			for (const auto & [code, label] : nllb_targets)
 			{
-				auto display = QString("EN -> %1").arg(QString::fromStdString(label));
-				languages_.push_back({ code, display.toStdString(), model_path });
-				language_combo_->addItem(display);
+				auto display = "EN -> " + label;
+				languages_.push_back({ code, display, model_path });
 			}
 		}
 	}
-
-	language_combo_->blockSignals(false);
 }
 
 void translation_suggestion_view_t::load_model_for_language(int index)

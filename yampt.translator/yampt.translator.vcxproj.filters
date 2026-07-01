@@ -35,7 +35,12 @@
     <ClCompile Include="source\dialog\find_replace_dialog.cpp" />
     <ClCompile Include="source\dialog\dict_selection_dialog.cpp" />
     <ClCompile Include="source\dialog\first_run_dialog.cpp" />
+    <ClCompile Include="source\dialog\settings_dialog.cpp" />
+    <ClCompile Include="source\dialog\language_settings_view.cpp" />
+    <ClCompile Include="source\dialog\translation_settings_view.cpp" />
     <ClCompile Include="source\dialog\spell_context_menu.cpp" />
+    <ClCompile Include="source\dialog\shortcuts_settings_view.cpp" />
+    <ClCompile Include="source\dialog\workspace_settings_view.cpp" />
     <ClCompile Include="source\highlighter\script_tokenizer.cpp" />
     <ClCompile Include="source\highlighter\editor_highlighter.cpp" />
     <ClCompile Include="source\highlighter\glossary_highlighter.cpp" />
@@ -45,10 +50,10 @@
     <ClCompile Include="source\translator\google_translator.cpp" />
     <ClCompile Include="source\utility\spell_checker.cpp" />
     <ClCompile Include="source\utility\display_name.cpp" />
-    <ClCompile Include="source\io\editor_config.cpp" />
     <ClCompile Include="source\io\yaml_l10n_reader.cpp" />
     <ClCompile Include="source\io\yaml_l10n_writer.cpp" />
     <ClCompile Include="..\yampt\source\utility\tools.cpp" />
+    <ClCompile Include="..\yampt.core\source\io\app_settings.cpp" />
     <ClCompile Include="..\yampt\source\io\dict_reader.cpp" />
     <ClCompile Include="..\yampt\source\io\dict_writer.cpp" />
     <ClCompile Include="..\yampt\source\io\codepage.cpp" />
@@ -69,5 +74,12 @@
     <ClCompile Include="..\yampt\source\scanner\conflict_compute.cpp" />
     <ClCompile Include="..\yampt\source\decoder\conflict_slots.cpp" />
     <ClCompile Include="..\yampt\source\decoder\view_tree_format.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="source\dialog\settings_dialog.hpp" />
+    <ClInclude Include="source\dialog\language_settings_view.hpp" />
+    <ClInclude Include="source\dialog\translation_settings_view.hpp" />
+    <ClInclude Include="source\dialog\shortcuts_settings_view.hpp" />
+    <ClInclude Include="source\dialog\workspace_settings_view.hpp" />
   </ItemGroup>
 </Project>

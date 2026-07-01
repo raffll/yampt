@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include <vector>
 #include <QDialog>
 
 class QComboBox;
@@ -11,12 +10,12 @@ class first_run_dialog_t : public QDialog
 	Q_OBJECT
 
 public:
-	explicit first_run_dialog_t(const std::vector<std::string> & spell_languages, QWidget * parent = nullptr);
+	explicit first_run_dialog_t(QWidget * parent = nullptr);
 
-	int selected_encoding_index() const;
-	int selected_spell_lang_index() const;
+	std::string selected_foreign_language() const;
+	std::string selected_native_language() const;
 
 private:
-	QComboBox * encoding_combo_ = nullptr;
-	QComboBox * spell_lang_combo_ = nullptr;
+	QComboBox * from_combo_ = nullptr;
+	QComboBox * to_combo_ = nullptr;
 };
