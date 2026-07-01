@@ -196,16 +196,22 @@ void dict_creator_t::insert_duplicate(
     status_t status)
 {
 	auto * dup = dict.at(type).find(key_text);
-	if (dup)
-	{
-		dup->status = status_t::duplicate;
-		if (dup->details.empty())
-			dup->details = new_text;
-		else
-			dup->details += "|" + new_text;
+	if (!dup)
+		return;
 
-		counter_doubled++;
-	}
+	if (dup->old_text == old_text && dup->new_text == new_text)
+		return;
+
+	if (dup->new_text == new_text)
+		return;
+
+	dup->status = status_t::duplicate;
+	if (dup->details.empty())
+		dup->details = new_text;
+	else
+		dup->details += "|" + new_text;
+
+	counter_doubled++;
 }
 
 std::vector<std::string> dict_creator_t::make_script_messages(const std::string & script_text)
