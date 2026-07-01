@@ -35,7 +35,7 @@ void plugin_scan_t::set_merge_plugin_from_loaded(int plugin_idx)
 	m_merge_plugin_idx = plugin_idx;
 	m_merge_records.clear();
 
-	const auto & plugin = *m_plugins[plugin_idx];
+	auto & plugin = *m_plugins[plugin_idx];
 	const auto & entries = plugin.index.entries();
 
 	for (size_t i = 0; i < entries.size(); ++i)

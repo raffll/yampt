@@ -57,13 +57,9 @@ private:
 	QCheckBox * m_chk_ct_loses = nullptr;
 	QCheckBox * m_chk_ct_deleted = nullptr;
 
-	QCheckBox * m_chk_by_type = nullptr;
 	QListWidget * m_lst_types = nullptr;
 
-	QCheckBox * m_chk_by_id = nullptr;
 	QLineEdit * m_edt_id = nullptr;
-
-	QCheckBox * m_chk_by_name = nullptr;
 	QLineEdit * m_edt_name = nullptr;
 
 	QCheckBox * m_chk_deleted = nullptr;

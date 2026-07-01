@@ -1285,20 +1285,23 @@ void plugin_workspace_view_t::load_plugin_paths()
 		if (pos != std::string::npos)
 			filename = filename.substr(pos + 1);
 
-		if (filename == "Merged Patch.esp")
-		{
-			m_scan.set_merge_plugin("Merged Patch.esp");
-			log_message("Detected merge plugin: Merged Patch.esp");
-			continue;
-		}
-
 		try
 		{
 			m_scan.load_plugin(path);
-			const auto & idx = m_scan.index(static_cast<int>(m_scan.plugin_count()) - 1);
-			log_message(
-			    "Loaded " + m_scan.plugin_filename(static_cast<int>(m_scan.plugin_count()) - 1) + " (" +
-			    std::to_string(idx.entries().size()) + " records indexed)");
+			const int loaded_idx = static_cast<int>(m_scan.plugin_count()) - 1;
+
+			if (filename == m_settings.merge_output_path())
+			{
+				m_scan.set_merge_plugin_from_loaded(loaded_idx);
+				log_message("Loaded merge plugin: " + filename);
+			}
+			else
+			{
+				const auto & idx = m_scan.index(loaded_idx);
+				log_message(
+				    "Loaded " + m_scan.plugin_filename(loaded_idx) + " (" +
+				    std::to_string(idx.entries().size()) + " records indexed)");
+			}
 		}
 		catch (const std::exception & e)
 		{

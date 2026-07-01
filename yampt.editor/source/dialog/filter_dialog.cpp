@@ -1,4 +1,5 @@
 #include "filter_dialog.hpp"
+#include <QFormLayout>
 #include <QVBoxLayout>
 
 filter_dialog_t::filter_dialog_t(const std::vector<std::string> & available_types, QWidget * parent)
@@ -40,7 +41,6 @@ filter_dialog_t::filter_dialog_t(const std::vector<std::string> & available_type
 
 	auto * grp_type = new QGroupBox("Record Type", this);
 	auto * type_layout = new QVBoxLayout(grp_type);
-	m_chk_by_type = new QCheckBox("Filter by Type", grp_type);
 	m_lst_types = new QListWidget(grp_type);
 	for (const auto & t : available_types)
 	{
@@ -49,22 +49,17 @@ filter_dialog_t::filter_dialog_t(const std::vector<std::string> & available_type
 		item->setCheckState(Qt::Unchecked);
 		m_lst_types->addItem(item);
 	}
-	type_layout->addWidget(m_chk_by_type);
 	type_layout->addWidget(m_lst_types);
 	main_layout->addWidget(grp_type);
 
 	auto * grp_id_name = new QGroupBox("Editor ID / Name", this);
-	auto * id_name_layout = new QVBoxLayout(grp_id_name);
-	m_chk_by_id = new QCheckBox("By Editor ID", grp_id_name);
+	auto * id_name_layout = new QFormLayout(grp_id_name);
 	m_edt_id = new QLineEdit(grp_id_name);
-	m_edt_id->setPlaceholderText("Substring match (case-insensitive)");
-	m_chk_by_name = new QCheckBox("By Display Name", grp_id_name);
+	m_edt_id->setPlaceholderText("Substring, case-insensitive");
 	m_edt_name = new QLineEdit(grp_id_name);
-	m_edt_name->setPlaceholderText("Substring match (case-insensitive)");
-	id_name_layout->addWidget(m_chk_by_id);
-	id_name_layout->addWidget(m_edt_id);
-	id_name_layout->addWidget(m_chk_by_name);
-	id_name_layout->addWidget(m_edt_name);
+	m_edt_name->setPlaceholderText("Substring, case-insensitive");
+	id_name_layout->addRow("Editor ID:", m_edt_id);
+	id_name_layout->addRow("Display Name:", m_edt_name);
 	main_layout->addWidget(grp_id_name);
 
 	auto * grp_special = new QGroupBox("Special", this);
@@ -110,22 +105,19 @@ filter_dialog_t::filter_state_t filter_dialog_t::state() const
 		s.conflict_this_set.insert(conflict_this_t::deleted);
 	s.filter_conflict_this = !s.conflict_this_set.empty();
 
-	s.filter_by_type = m_chk_by_type->isChecked();
-	if (s.filter_by_type)
+	for (int i = 0; i < m_lst_types->count(); ++i)
 	{
-		for (int i = 0; i < m_lst_types->count(); ++i)
-		{
-			const auto * item = m_lst_types->item(i);
-			if (item->checkState() == Qt::Checked)
-				s.type_set.insert(item->text().toStdString());
-		}
+		const auto * item = m_lst_types->item(i);
+		if (item->checkState() == Qt::Checked)
+			s.type_set.insert(item->text().toStdString());
 	}
+	s.filter_by_type = !s.type_set.empty();
 
-	s.filter_by_id = m_chk_by_id->isChecked();
 	s.id_text = m_edt_id->text().toStdString();
+	s.filter_by_id = !s.id_text.empty();
 
-	s.filter_by_name = m_chk_by_name->isChecked();
 	s.name_text = m_edt_name->text().toStdString();
+	s.filter_by_name = !s.name_text.empty();
 
 	s.filter_deleted = m_chk_deleted->isChecked();
 	s.filter_itm_only = m_chk_itm->isChecked();
@@ -147,7 +139,6 @@ void filter_dialog_t::set_state(const filter_state_t & state)
 	m_chk_ct_loses->setChecked(state.conflict_this_set.count(conflict_this_t::conflict_loses) > 0);
 	m_chk_ct_deleted->setChecked(state.conflict_this_set.count(conflict_this_t::deleted) > 0);
 
-	m_chk_by_type->setChecked(state.filter_by_type);
 	for (int i = 0; i < m_lst_types->count(); ++i)
 	{
 		auto * item = m_lst_types->item(i);
@@ -155,10 +146,7 @@ void filter_dialog_t::set_state(const filter_state_t & state)
 		item->setCheckState(state.type_set.count(type_str) > 0 ? Qt::Checked : Qt::Unchecked);
 	}
 
-	m_chk_by_id->setChecked(state.filter_by_id);
 	m_edt_id->setText(QString::fromStdString(state.id_text));
-
-	m_chk_by_name->setChecked(state.filter_by_name);
 	m_edt_name->setText(QString::fromStdString(state.name_text));
 
 	m_chk_deleted->setChecked(state.filter_deleted);
