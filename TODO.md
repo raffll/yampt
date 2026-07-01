@@ -41,12 +41,8 @@ Detect conflicts between OpenMW Lua handler registrations across multiple mods (
 
 ## Refactoring — later
 
-### Split `tools_t` into focused utilities
-`tools_t` is a god class: data types (`dict_t`, `chapter_t`, `record_entry_t`, `rec_type_t`), file I/O (`read_file`, `write_text`, `write_file`), byte conversion, string manipulation, and global logging state. Split into:
-- `dict_types.hpp` — `dict_t`, `chapter_t`, `record_entry_t`, `rec_type_t` (already partially in `record_types.hpp`/`status_types.hpp`)
-- `esm_file_io.hpp` — `read_file`, `write_text`, `write_file`, `create_file`
-- `log.hpp` — `add_log`, `get_log`, `reset_log`, `has_error`, `set_debug`, `set_quiet`
-- `byte_utils.hpp` — `convert_string_byte_array_to_uint`, `convert_uint_to_string_byte_array`
+### Split `tools_t` into focused utilities — SKIPPED
+Class is only ~170 lines in header, ~280 in cpp. Not worth splitting — the disruption of changing every `tools_t::` call site across the codebase outweighs the benefit.
 
 ### Split `dict_creator_t` (header: 230 lines, base impl: 1937 lines)
 The class mixes unrelated matching algorithms behind one interface. Extract:
@@ -74,27 +70,20 @@ Mixes: loading, conflict detection, merge plugin management, TES3 binary header 
 - `patch_builder_t` in `yampt.editor/patcher/` — `copy_record_to_merge`, `remove_from_merge`, `save_merge`, `build_tes3_header`, `merge_leveled_list`, `merge_dialogue`
 - Slimmed `plugin_scan_t` stays in core `scanner/` — loading, indexing, conflict detection, ITM only
 
-### Split `view_tree_decode.cpp` (1166 lines) in yEditor
-Contains 5+ unrelated record-type decoders. Split by family:
-- `view_tree_decode_cell.cpp` — CELL ref groups, DODT matching, object indices
-- `view_tree_decode_lists.cpp` — leveled lists, factions, containers
-- `view_tree_decode_generic.cpp` — schema-based children, hex dump fallback
+### Split `view_tree_decode.cpp` (1166 lines) in yEditor — DONE
+Split into view_tree_decode.cpp (shared), view_tree_decode_cell.cpp, view_tree_decode_lists.cpp.
 
-### Split `conflict_slots.cpp` (742 lines)
-Five independent strategy implementations behind one dispatch. Extract:
-- `conflict_slots_cell.cpp` — CELL ref group slot building (most complex)
-- Keep leveled/faction/container strategies in main file (shorter, similar pattern)
+### Split `conflict_slots.cpp` (742 lines) — DONE
+Extracted conflict_slots_cell.cpp with dedicated conflict_slots_cell.hpp header.
 
-### Split `esm_converter.cpp` (760 lines)
-16 independent `convert_*` methods + shared helpers. Split:
-- `esm_converter.cpp` — constructor, dispatcher, shared helpers
-- `esm_converter_records.cpp` — all per-record-type conversion methods
+### Split `esm_converter.cpp` (760 lines) — DONE
+Split into esm_converter.cpp (shared helpers) and esm_converter_records.cpp.
 
-### Extract color logic from `nav_tree_model.cpp` (733 lines)
-The model's `data()` method computes QBrush colors from conflict enums. Extract conflict-to-color mapping to a shared `conflict_colors.hpp` utility used by both nav_tree_model and view_tree_model.
+### Extract color logic from `nav_tree_model.cpp` (733 lines) — DONE
+Already extracted to conflict_types.hpp (lighter_hsl, conflict_all_background, conflict_this_foreground).
 
-### Rename: view_tree_ → record_tree
-Rename view_tree_model, view_tree_decode, and related types/files to record_tree_* for clarity.
+### Rename: view_tree_ → record_tree — LATER
+Rename view_tree_model, view_tree_decode, and related types/files to record_tree_* for clarity. Deferred — large rename touching MOC files, best done with VS refactoring tools.
 
 ---
 
