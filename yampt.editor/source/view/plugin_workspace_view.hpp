@@ -75,6 +75,7 @@ private:
 		std::vector<std::string> enabled_mods;
 		QString mods_path;
 		QString game_data_path;
+		QString merge_path;
 	};
 
 	std::vector<std::string> resolve_mo2_plugins(

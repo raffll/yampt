@@ -9,7 +9,7 @@ const std::map<std::string, const char *> & sub_record_descriptions()
 	static const std::map<std::string, const char *> descs = {
 		{ "NAME", "ID" },
 		{ "FNAM", "Name" },
-		{ "MODL", "Model Filename" },
+		{ "MODL", "Model" },
 		{ "SCRI", "Script" },
 		{ "ITEX", "Icon" },
 		{ "ENAM", "Enchantment Effect" },
@@ -120,51 +120,47 @@ std::string format_value(const char * data, size_t size)
 
 static std::string format_flags(uint32_t value, const field_def_t & field, int max_bits)
 {
-	char buf[32];
-	std::snprintf(buf, sizeof(buf), "0x%X", value);
-	std::string result = buf;
-
-	if (!field.flag_names || field.flag_count <= 0)
-		return result;
-
-	std::string names;
-	for (int bit = 0; bit < max_bits && bit < field.flag_count; ++bit)
+	if (field.flag_names && field.flag_count > 0)
 	{
-		if (!(value & (1u << bit)))
-			continue;
+		std::string names;
+		for (int bit = 0; bit < max_bits && bit < field.flag_count; ++bit)
+		{
+			if (!(value & (1u << bit)))
+				continue;
 
-		if (field.flag_names[bit][0] == '_')
-			continue;
+			if (field.flag_names[bit][0] == '_')
+				continue;
+
+			if (!names.empty())
+				names += " | ";
+
+			names += field.flag_names[bit];
+		}
 
 		if (!names.empty())
-			names += " | ";
-
-		names += field.flag_names[bit];
+			return names;
 	}
 
-	if (!names.empty())
-		result += " (" + names + ")";
-
-	return result;
+	char buf[32];
+	std::snprintf(buf, sizeof(buf), "0x%08X", value);
+	return buf;
 }
 
 static std::string format_enum_lookup(uint32_t value, const char * const * enum_names)
 {
+	if (enum_names)
+	{
+		size_t count = 0;
+		while (enum_names[count])
+			++count;
+
+		if (value < count)
+			return std::string(enum_names[value]);
+	}
+
 	char buf[32];
 	std::snprintf(buf, sizeof(buf), "%u", value);
-	std::string result = buf;
-
-	if (!enum_names)
-		return result;
-
-	size_t count = 0;
-	while (enum_names[count])
-		++count;
-
-	if (value < count)
-		result += " (" + std::string(enum_names[value]) + ")";
-
-	return result;
+	return buf;
 }
 
 static std::string read_fixed_string(const char * ptr, size_t field_size, size_t data_size, size_t field_offset)
@@ -215,8 +211,6 @@ std::string decode_field(const field_def_t & field, const char * data, size_t da
 	{
 		int8_t val = 0;
 		std::memcpy(&val, ptr, 1);
-		std::snprintf(buf, sizeof(buf), "%d", val);
-		std::string result = buf;
 
 		if (field.enum_names && val >= 0)
 		{
@@ -225,14 +219,15 @@ std::string decode_field(const field_def_t & field, const char * data, size_t da
 				++count;
 
 			if (static_cast<size_t>(val) < count)
-				result += " (" + std::string(field.enum_names[val]) + ")";
+				return std::string(field.enum_names[val]);
 		}
 		else if (field.enum_names && val == -1)
 		{
-			result += " (None)";
+			return "None";
 		}
 
-		return result;
+		std::snprintf(buf, sizeof(buf), "%d", val);
+		return buf;
 	}
 	case field_type_t::i16:
 	{

@@ -384,7 +384,31 @@ std::vector<std::string> plugin_workspace_view_t::parse_mo2_profile(const QStrin
 	context.mods_path = mods_path;
 	context.game_data_path = game_data_path;
 
-	return resolve_mo2_plugins(plugin_names, context);
+	QDir profile_resolve_dir(profile_dir);
+	context.merge_path = profile_resolve_dir.absoluteFilePath(QString::fromStdString(m_settings.mo2_merge_path()));
+
+	auto paths = resolve_mo2_plugins(plugin_names, context);
+
+	const auto merge_filename = m_settings.merge_output_path();
+	const auto merge_full_path = context.merge_path + "/" + QString::fromStdString(merge_filename);
+	if (QFile::exists(merge_full_path))
+	{
+		const auto merge_std = merge_full_path.toStdString();
+		bool already_included = false;
+		for (const auto & resolved : paths)
+		{
+			if (resolved == merge_std)
+			{
+				already_included = true;
+				break;
+			}
+		}
+
+		if (!already_included)
+			paths.push_back(merge_std);
+	}
+
+	return paths;
 }
 
 std::vector<std::string> plugin_workspace_view_t::resolve_mo2_plugins(
@@ -417,6 +441,13 @@ std::string plugin_workspace_view_t::resolve_single_mo2_plugin(
 		    context.mods_path + "/" + QString::fromStdString(mod_name) + "/" + QString::fromStdString(plugin_name);
 		if (QFile::exists(candidate))
 			return candidate.toStdString();
+	}
+
+	if (!context.merge_path.isEmpty())
+	{
+		const auto merge_candidate = context.merge_path + "/" + QString::fromStdString(plugin_name);
+		if (QFile::exists(merge_candidate))
+			return merge_candidate.toStdString();
 	}
 
 	const auto game_file = context.game_data_path + "/" + QString::fromStdString(plugin_name);
@@ -829,6 +860,23 @@ void plugin_workspace_view_t::load_existing_merged_patch()
 
 	if (!std::filesystem::exists(path))
 		return;
+
+	if (m_scan.has_merge())
+		return;
+
+	auto merge_filename = std::filesystem::path(path).filename().string();
+
+	for (int i = 0; i < static_cast<int>(m_scan.plugin_count()); ++i)
+	{
+		if (m_scan.plugin_filename(i) == merge_filename)
+		{
+			m_scan.set_merge_plugin_from_loaded(i);
+			m_scan.rebuild_conflicts();
+			rebuild_after_load();
+			log_message("Tagged existing plugin as merge: " + merge_filename);
+			return;
+		}
+	}
 
 	try
 	{

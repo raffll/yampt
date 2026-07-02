@@ -120,6 +120,27 @@ view_tree_model_t::sub_record_row_t view_tree_model_t::build_slot_row(
 	else if (first_data && first_size > 0 && !row.values.empty() && !row.values[0].empty() && row.values[0][0] == '<')
 		decode_hex_children(row, first_size, col_count, all_subs, col_indices, slot);
 
+	if (!row.children.empty())
+	{
+		row.row_conflict_all = conflict_all_t::only_one;
+		for (const auto & child : row.children)
+		{
+			if (child.row_conflict_all > row.row_conflict_all)
+				row.row_conflict_all = child.row_conflict_all;
+		}
+
+		for (size_t col = 0; col < row.cell_conflict_this.size(); ++col)
+		{
+			conflict_this_t worst = conflict_this_t::unknown;
+			for (const auto & child : row.children)
+			{
+				if (col < child.cell_conflict_this.size() && child.cell_conflict_this[col] > worst)
+					worst = child.cell_conflict_this[col];
+			}
+			row.cell_conflict_this[col] = worst;
+		}
+	}
+
 	return row;
 }
 

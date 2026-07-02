@@ -137,3 +137,25 @@ Modified by conflict priority:
 - For sub-record rows: if all columns have the same formatted value → `no_conflict`. If only the last differs → `override_benign`. If multiple differ → `conflict`.
 - `conflict_this` per column: use the version's `conflict_this_t` from `plugin_scan_t` for all rows of that record. xEdit computes per-sub-record, but for our simplified model, using the record-level conflict_this per column is acceptable.
 - The label column (col 0) never gets the per-cell background override — it always gets the row-level background.
+
+## Panel Hierarchy and Color Inheritance
+
+### Left Panel (Navigation Tree)
+
+Hierarchy: **Plugin → Record Type → Record**
+
+Color propagates upward: Record → Record Type → Plugin. Each parent takes the worst-case `conflict_all` from its children.
+
+The Record node's `conflict_all` is NOT computed independently — it comes from the worst-case sub-record in the right panel. When the view tree is built for a record, the record's conflict is the maximum `conflict_all` across all its top-level sub-record rows (which themselves inherit from their children). This ensures the nav tree accurately reflects whether any field inside the record has a conflict.
+
+### Right Panel (View Tree)
+
+Hierarchy: **Sub-record → Field (sub-sub-record) → Nested field (if ever exists)**
+
+Color propagates upward: the lowest-level leaf field computes its own `conflict_all` from comparing column values. Parent sub-record rows do NOT compute their own `conflict_all` from raw hex comparison — they derive it exclusively from the worst-case of their children. If a sub-record has no decoded children (leaf sub-record with no schema), it computes `conflict_all` from its own values directly.
+
+Rules:
+- A parent row with children starts at `no_conflict` and takes the max `conflict_all` from all children
+- A leaf row (no children) computes `conflict_all` via `compute_conflict_all()` on its column values
+- This applies at every nesting level — if sub-sub-records ever have their own children, the same rule applies recursively
+- The Record Header row follows the same rule: its conflict comes from its children (Signature, Record Flags), not from sibling sub-records

@@ -232,14 +232,14 @@ void view_tree_model_t::finalize_header_conflict()
 	if (m_rows.empty())
 		return;
 
-	conflict_all_t worst = conflict_all_t::only_one;
-	for (size_t i = 1; i < m_rows.size(); ++i)
+	auto & header = m_rows[0];
+	header.row_conflict_all = conflict_all_t::only_one;
+	for (const auto & child : header.children)
 	{
-		if (m_rows[i].row_conflict_all > worst)
-			worst = m_rows[i].row_conflict_all;
+		if (child.row_conflict_all > header.row_conflict_all)
+			header.row_conflict_all = child.row_conflict_all;
 	}
-	m_rows[0].row_conflict_all = worst;
-	m_rows[0].all_identical = (worst <= conflict_all_t::no_conflict);
+	header.all_identical = (header.row_conflict_all <= conflict_all_t::no_conflict);
 }
 
 void view_tree_model_t::clear()

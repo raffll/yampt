@@ -473,6 +473,16 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 			    row.values[0][0] == '<')
 				decode_hex_children_ref(row, first_size, col_count, all_subs, col_refs, obj_idx, slot);
 
+			if (!row.children.empty())
+			{
+				row.row_conflict_all = conflict_all_t::only_one;
+				for (const auto & child : row.children)
+				{
+					if (child.row_conflict_all > row.row_conflict_all)
+						row.row_conflict_all = child.row_conflict_all;
+				}
+			}
+
 			m_rows.push_back(std::move(row));
 		}
 	}

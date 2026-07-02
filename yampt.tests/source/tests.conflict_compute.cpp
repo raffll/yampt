@@ -98,3 +98,89 @@ TEST_CASE("compute_conflict_this, empty cell in non-master", "[u]")
 	REQUIRE(result[1] == conflict_this_t::unknown);
 	REQUIRE(result[2] == conflict_this_t::override_wins);
 }
+
+TEST_CASE("compute_conflict_all, parent inherits worst from children", "[u]")
+{
+	std::vector<conflict_all_t> children = {
+		conflict_all_t::no_conflict,
+		conflict_all_t::no_conflict,
+		conflict_all_t::override_benign
+	};
+
+	conflict_all_t parent = conflict_all_t::only_one;
+	for (const auto & child : children)
+	{
+		if (child > parent)
+			parent = child;
+	}
+
+	REQUIRE(parent == conflict_all_t::override_benign);
+}
+
+TEST_CASE("compute_conflict_all, parent inherits conflict from one child", "[u]")
+{
+	std::vector<conflict_all_t> children = {
+		conflict_all_t::no_conflict,
+		conflict_all_t::conflict,
+		conflict_all_t::no_conflict
+	};
+
+	conflict_all_t parent = conflict_all_t::only_one;
+	for (const auto & child : children)
+	{
+		if (child > parent)
+			parent = child;
+	}
+
+	REQUIRE(parent == conflict_all_t::conflict);
+}
+
+TEST_CASE("compute_conflict_all, parent stays no_conflict when all children agree", "[u]")
+{
+	std::vector<conflict_all_t> children = {
+		conflict_all_t::no_conflict,
+		conflict_all_t::no_conflict,
+		conflict_all_t::no_conflict
+	};
+
+	conflict_all_t parent = conflict_all_t::only_one;
+	for (const auto & child : children)
+	{
+		if (child > parent)
+			parent = child;
+	}
+
+	REQUIRE(parent == conflict_all_t::no_conflict);
+}
+
+TEST_CASE("compute_conflict_all, parent with no children stays only_one", "[u]")
+{
+	std::vector<conflict_all_t> children = {};
+
+	conflict_all_t parent = conflict_all_t::only_one;
+	for (const auto & child : children)
+	{
+		if (child > parent)
+			parent = child;
+	}
+
+	REQUIRE(parent == conflict_all_t::only_one);
+}
+
+TEST_CASE("compute_conflict_all, parent ignores only_one children", "[u]")
+{
+	std::vector<conflict_all_t> children = {
+		conflict_all_t::only_one,
+		conflict_all_t::no_conflict,
+		conflict_all_t::only_one
+	};
+
+	conflict_all_t parent = conflict_all_t::only_one;
+	for (const auto & child : children)
+	{
+		if (child > parent)
+			parent = child;
+	}
+
+	REQUIRE(parent == conflict_all_t::no_conflict);
+}
