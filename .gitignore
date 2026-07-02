@@ -11,3 +11,4 @@ external/
 /vcpkg_installed
 /.kiro/specs
 /tests
+/enc_temp_folder

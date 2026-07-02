@@ -324,7 +324,25 @@ std::string view_tree_model_t::debug_dump() const
 					result += ", ";
 				result += conflict_this_name(child.cell_conflict_this[i]);
 			}
-			result += "]\n";
+			result += "]";
+			result += " vals=[";
+			for (size_t i = 0; i < child.values.size(); ++i)
+			{
+				if (i > 0)
+					result += " | ";
+				auto v = child.values[i];
+				if (v.size() > 60)
+					v = v.substr(0, 60) + "...";
+				for (auto & c : v)
+				{
+					auto uc = static_cast<unsigned char>(c);
+					if (uc < 32 || uc > 126)
+						c = '#';
+				}
+				result += v;
+			}
+			result += "]";
+			result += "\n";
 		}
 	}
 	return result;
