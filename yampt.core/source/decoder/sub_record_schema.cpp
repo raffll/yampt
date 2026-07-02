@@ -508,6 +508,29 @@ static const field_def_t gmst_fltv_fields[] = {
 	{ "Value", field_type_t::f32, 0, 4, nullptr, nullptr },
 };
 
+static const field_def_t glob_fnam_fields[] = {
+	{ "Type", field_type_t::u8, 0, 1, nullptr, nullptr },
+};
+
+static const field_def_t glob_fltv_fields[] = {
+	{ "Value", field_type_t::f32, 0, 4, nullptr, nullptr },
+};
+
+static const char * const sndg_types[] = {
+	"Left Foot", "Right Foot", "Swim Left", "Swim Right",
+	"Moan", "Roar", "Scream", "Land", nullptr
+};
+
+static const field_def_t sndg_data_fields[] = {
+	{ "Type", field_type_t::enum_u32, 0, 4, sndg_types, nullptr },
+};
+
+static const char * const land_flags[] = { "Heights & Normals", "Vertex Colors", "Textures" };
+
+static const field_def_t land_data_fields[] = {
+	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, land_flags, ARRAY_COUNT(land_flags) },
+};
+
 static const char * const info_gender[] = { "Male", "Female", nullptr };
 
 static const field_def_t info_data_fields[] = {
@@ -586,6 +609,21 @@ static const field_def_t cell_ambi_fields[] = {
 	{ "Sunlight Color", field_type_t::u32, 4, 4, nullptr, nullptr },
 	{ "Fog Color", field_type_t::u32, 8, 4, nullptr, nullptr },
 	{ "Fog Density", field_type_t::f32, 12, 4, nullptr, nullptr },
+};
+
+static const field_def_t cell_nam5_fields[] = {
+	{ "Red", field_type_t::u8, 0, 1, nullptr, nullptr },
+	{ "Green", field_type_t::u8, 1, 1, nullptr, nullptr },
+	{ "Blue", field_type_t::u8, 2, 1, nullptr, nullptr },
+	{ "Alpha", field_type_t::u8, 3, 1, nullptr, nullptr },
+};
+
+static const field_def_t cell_fltv_fields[] = {
+	{ "Lock Level", field_type_t::i32, 0, 4, nullptr, nullptr },
+};
+
+static const field_def_t cell_nam9_fields[] = {
+	{ "Stack Count", field_type_t::i32, 0, 4, nullptr, nullptr },
 };
 
 static const field_def_t cell_dodt_fields[] = {
@@ -734,12 +772,14 @@ static const field_def_t ai_w_fields[] = {
 	{ "Idle 6", field_type_t::u8, 10, 1, nullptr, nullptr },
 	{ "Idle 7", field_type_t::u8, 11, 1, nullptr, nullptr },
 	{ "Idle 8", field_type_t::u8, 12, 1, nullptr, nullptr },
+	{ "Should Repeat", field_type_t::u8, 13, 1, nullptr, nullptr },
 };
 
 static const field_def_t ai_t_fields[] = {
 	{ "X", field_type_t::f32, 0, 4, nullptr, nullptr },
 	{ "Y", field_type_t::f32, 4, 4, nullptr, nullptr },
 	{ "Z", field_type_t::f32, 8, 4, nullptr, nullptr },
+	{ "Should Repeat", field_type_t::u8, 12, 1, nullptr, nullptr },
 };
 
 static const field_def_t ai_f_fields[] = {
@@ -748,10 +788,12 @@ static const field_def_t ai_f_fields[] = {
 	{ "Z", field_type_t::f32, 8, 4, nullptr, nullptr },
 	{ "Duration", field_type_t::u16, 12, 2, nullptr, nullptr },
 	{ "ID", field_type_t::string_fixed, 14, 32, nullptr, nullptr },
+	{ "Should Repeat", field_type_t::u8, 46, 1, nullptr, nullptr },
 };
 
 static const field_def_t ai_a_fields[] = {
 	{ "ID", field_type_t::string_fixed, 0, 32, nullptr, nullptr },
+	{ "Should Repeat", field_type_t::u8, 32, 1, nullptr, nullptr },
 };
 
 static const char * const dial_types[] = { "Topic", "Voice", "Greeting", "Persuasion", "Journal", nullptr };
@@ -826,7 +868,7 @@ static const std::vector<sub_record_schema_t> & build_schemas()
 	static const std::vector<sub_record_schema_t> schemas = {
 		{ "CELL", "DATA", 12, cell_data_fields, ARRAY_COUNT(cell_data_fields) },
 		{ "CELL", "AMBI", 16, cell_ambi_fields, ARRAY_COUNT(cell_ambi_fields) },
-		{ "CELL", "DODT", 24, cell_dodt_fields, ARRAY_COUNT(cell_dodt_fields) },
+		{ "*", "DODT", 24, cell_dodt_fields, ARRAY_COUNT(cell_dodt_fields) },
 		{ "CELL", "DATA", 24, cell_ref_data_fields, ARRAY_COUNT(cell_ref_data_fields) },
 		{ "NPC_", "FLAG", 4, npc_flag_fields, ARRAY_COUNT(npc_flag_fields) },
 		{ "NPC_", "NPDT", 12, npc_npdt_12_fields, ARRAY_COUNT(npc_npdt_12_fields) },
@@ -888,6 +930,13 @@ static const std::vector<sub_record_schema_t> & build_schemas()
 		{ "*", "INDX", 4, indx_fields, ARRAY_COUNT(indx_fields) },
 		{ "ARMO", "INDX", 1, armo_indx_fields, ARRAY_COUNT(armo_indx_fields) },
 		{ "BOOK", "TEXT", 0, text_fields, ARRAY_COUNT(text_fields) },
+		{ "CELL", "NAM5", 4, cell_nam5_fields, ARRAY_COUNT(cell_nam5_fields) },
+		{ "CELL", "FLTV", 4, cell_fltv_fields, ARRAY_COUNT(cell_fltv_fields) },
+		{ "CELL", "NAM9", 4, cell_nam9_fields, ARRAY_COUNT(cell_nam9_fields) },
+		{ "GLOB", "FNAM", 1, glob_fnam_fields, ARRAY_COUNT(glob_fnam_fields) },
+		{ "GLOB", "FLTV", 4, glob_fltv_fields, ARRAY_COUNT(glob_fltv_fields) },
+		{ "SNDG", "DATA", 4, sndg_data_fields, ARRAY_COUNT(sndg_data_fields) },
+		{ "LAND", "DATA", 4, land_data_fields, ARRAY_COUNT(land_data_fields) },
 	};
 	return schemas;
 }

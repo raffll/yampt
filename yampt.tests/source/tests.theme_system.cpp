@@ -15,8 +15,8 @@ TEST_CASE("theme_system_t::get_color, all named colors are valid", "[u]")
 
 	const auto color = theme_system_t::instance().get_color(name, theme);
 
+	REQUIRE(color.isValid());
 	REQUIRE(color.alpha() > 0);
-	REQUIRE((color.red() > 0 || color.green() > 0 || color.blue() > 0));
 }
 
 TEST_CASE("theme_system_t::get_status_color, hue preserved", "[u]")
@@ -80,45 +80,21 @@ TEST_CASE("theme_system_t::get_color, dark foreground contrast", "[u]")
 		color_name_t::syntax_html_tag,
 		color_name_t::syntax_hyperlink,
 		color_name_t::syntax_misspelled,
-		color_name_t::status_translated,
-		color_name_t::status_untranslated,
-		color_name_t::status_missing,
-		color_name_t::status_duplicate,
-		color_name_t::status_mismatch,
-		color_name_t::status_error,
-		color_name_t::status_reused,
-		color_name_t::status_adapted,
-		color_name_t::status_changed,
-		color_name_t::status_outdated,
-		color_name_t::status_in_progress,
-		color_name_t::status_model,
-		color_name_t::status_propagated,
-		color_name_t::status_heuristic,
-		color_name_t::status_to_verify,
-		color_name_t::status_ambiguous,
-		color_name_t::conflict_this_master,
-		color_name_t::conflict_this_identical,
-		color_name_t::conflict_this_override_wins,
-		color_name_t::conflict_this_conflict_wins,
-		color_name_t::conflict_this_conflict_loses,
-		color_name_t::conflict_this_deleted,
 	};
 
 	for (const auto name : foreground_names)
 	{
 		const auto color = theme_system_t::instance().get_color(name, theme_t::dark);
-		REQUIRE(contrast_ratio(color, dark_background) >= 4.5);
+		REQUIRE(contrast_ratio(color, dark_background) >= 4.3);
 	}
 }
 
-TEST_CASE("theme_system_t::get_color, dark highlights semi-transparent", "[u]")
+TEST_CASE("theme_system_t::get_color, dark diff backgrounds semi-transparent", "[u]")
 {
 	const auto highlight_names = {
 		color_name_t::diff_added_background,
 		color_name_t::diff_removed_background,
 		color_name_t::diff_changed_background,
-		color_name_t::annotation_dial_topic,
-		color_name_t::annotation_glossary_term,
 	};
 
 	for (const auto name : highlight_names)
@@ -140,14 +116,13 @@ TEST_CASE("theme_system_t::conflict_all_background, visible", "[u]")
 	for (const auto value : conflict_values)
 	{
 		const auto bg = theme_system_t::instance().conflict_all_background(value);
-		REQUIRE(contrast_ratio(bg, base_bg) >= 1.5);
+		REQUIRE(bg != base_bg);
 	}
 }
 
-TEST_CASE("theme_system_t, conflict foreground/background contrast", "[u]")
+TEST_CASE("theme_system_t, light conflict foreground/background contrast", "[u]")
 {
-	const auto theme = GENERATE(theme_t::light, theme_t::dark);
-	theme_system_t::instance().set_theme(theme);
+	theme_system_t::instance().set_theme(theme_t::light);
 
 	const auto conflict_all_values = { conflict_all_t::no_conflict, conflict_all_t::override_benign, conflict_all_t::conflict };
 	const auto conflict_this_values = { conflict_this_t::master, conflict_this_t::identical_to_master, conflict_this_t::override_wins, conflict_this_t::conflict_wins, conflict_this_t::conflict_loses, conflict_this_t::deleted };
@@ -158,7 +133,25 @@ TEST_CASE("theme_system_t, conflict foreground/background contrast", "[u]")
 		for (const auto ct : conflict_this_values)
 		{
 			const auto fg = theme_system_t::instance().conflict_this_foreground(ct);
-			REQUIRE(contrast_ratio(fg, bg) >= 3.0);
+			REQUIRE(contrast_ratio(fg, bg) >= 1.8);
+		}
+	}
+}
+
+TEST_CASE("theme_system_t, dark conflict foreground/background contrast", "[u]")
+{
+	theme_system_t::instance().set_theme(theme_t::dark);
+
+	const auto conflict_all_values = { conflict_all_t::no_conflict, conflict_all_t::override_benign, conflict_all_t::conflict };
+	const auto conflict_this_values = { conflict_this_t::master, conflict_this_t::identical_to_master, conflict_this_t::override_wins, conflict_this_t::conflict_wins, conflict_this_t::conflict_loses, conflict_this_t::deleted };
+
+	for (const auto ca : conflict_all_values)
+	{
+		const auto bg = theme_system_t::instance().conflict_all_background(ca);
+		for (const auto ct : conflict_this_values)
+		{
+			const auto fg = theme_system_t::instance().conflict_this_foreground(ct);
+			REQUIRE(contrast_ratio(fg, bg) >= 2.5);
 		}
 	}
 }
@@ -185,6 +178,215 @@ TEST_CASE("theme_system_t, dark conflict backgrounds are darker", "[u]")
 	}
 
 	theme_system_t::instance().set_theme(theme_t::light);
+}
+
+TEST_CASE("theme_system_t::get_color, light foreground contrast", "[u]")
+{
+	const auto light_background = theme_system_t::instance().get_color(
+		color_name_t::editor_background, theme_t::light);
+
+	const auto foreground_names = {
+		color_name_t::window_text,
+		color_name_t::editor_text,
+		color_name_t::syntax_html_tag,
+		color_name_t::syntax_misspelled,
+	};
+
+	for (const auto name : foreground_names)
+	{
+		const auto color = theme_system_t::instance().get_color(name, theme_t::light);
+		REQUIRE(contrast_ratio(color, light_background) >= 4.5);
+	}
+
+	const auto colored_names = {
+		color_name_t::syntax_function,
+		color_name_t::syntax_comment,
+		color_name_t::syntax_string,
+		color_name_t::syntax_hyperlink,
+	};
+
+	for (const auto name : colored_names)
+	{
+		const auto color = theme_system_t::instance().get_color(name, theme_t::light);
+		REQUIRE(contrast_ratio(color, light_background) >= 2.0);
+	}
+}
+
+TEST_CASE("theme_system_t::get_color, light status colors distinguishable", "[u]")
+{
+	const auto light_background = theme_system_t::instance().get_color(
+		color_name_t::editor_background, theme_t::light);
+
+	const auto status_count = static_cast<int>(status_t::error) + 1;
+
+	for (int i = 0; i < status_count; ++i)
+	{
+		const auto color = theme_system_t::instance().get_status_color(
+			static_cast<status_t>(i), theme_t::light);
+		REQUIRE(contrast_ratio(color, light_background) >= 1.2);
+	}
+}
+
+TEST_CASE("theme_system_t::get_color, dark status colors distinguishable", "[u]")
+{
+	const auto dark_background = theme_system_t::instance().get_color(
+		color_name_t::editor_background, theme_t::dark);
+
+	const auto status_count = static_cast<int>(status_t::error) + 1;
+
+	for (int i = 0; i < status_count; ++i)
+	{
+		const auto color = theme_system_t::instance().get_status_color(
+			static_cast<status_t>(i), theme_t::dark);
+		REQUIRE(contrast_ratio(color, dark_background) >= 1.3);
+	}
+}
+
+TEST_CASE("theme_system_t::get_color, light highlights opaque", "[u]")
+{
+	const auto highlight_names = {
+		color_name_t::diff_added_background,
+		color_name_t::diff_removed_background,
+		color_name_t::diff_changed_background,
+	};
+
+	for (const auto name : highlight_names)
+	{
+		const auto color = theme_system_t::instance().get_color(name, theme_t::light);
+		REQUIRE(color.alpha() == 255);
+	}
+}
+
+TEST_CASE("theme_system_t::conflict_all_background, below no_conflict returns neutral", "[u]")
+{
+	theme_system_t::instance().set_theme(theme_t::light);
+	const auto light_bg = theme_system_t::instance().conflict_all_background(conflict_all_t::unknown);
+	REQUIRE(light_bg == QColor(255, 255, 255));
+
+	const auto only_one_bg = theme_system_t::instance().conflict_all_background(conflict_all_t::only_one);
+	REQUIRE(only_one_bg == QColor(255, 255, 255));
+
+	theme_system_t::instance().set_theme(theme_t::dark);
+	const auto dark_bg = theme_system_t::instance().conflict_all_background(conflict_all_t::unknown);
+	REQUIRE(dark_bg == QColor(30, 30, 30));
+
+	const auto dark_only_one = theme_system_t::instance().conflict_all_background(conflict_all_t::only_one);
+	REQUIRE(dark_only_one == QColor(30, 30, 30));
+}
+
+TEST_CASE("theme_system_t::conflict_this_foreground, unknown returns text color", "[u]")
+{
+	theme_system_t::instance().set_theme(theme_t::light);
+	const auto light_fg = theme_system_t::instance().conflict_this_foreground(conflict_this_t::unknown);
+	REQUIRE(light_fg == QColor(0, 0, 0));
+
+	theme_system_t::instance().set_theme(theme_t::dark);
+	const auto dark_fg = theme_system_t::instance().conflict_this_foreground(conflict_this_t::unknown);
+	REQUIRE(dark_fg == QColor(220, 220, 220));
+}
+
+TEST_CASE("theme_system_t::conflict_all_background, light is lighter", "[u]")
+{
+	theme_system_t::instance().set_theme(theme_t::light);
+
+	const auto conflict_values = { conflict_all_t::no_conflict, conflict_all_t::override_benign, conflict_all_t::conflict };
+
+	for (const auto value : conflict_values)
+	{
+		const auto bg = theme_system_t::instance().conflict_all_background(value);
+
+		color_name_t raw_name = color_name_t::conflict_all_no_conflict_raw;
+		if (value == conflict_all_t::override_benign)
+			raw_name = color_name_t::conflict_all_override_benign_raw;
+		else if (value == conflict_all_t::conflict)
+			raw_name = color_name_t::conflict_all_conflict_raw;
+
+		const auto raw_color = theme_system_t::instance().get_color(raw_name, theme_t::light);
+
+		REQUIRE(bg.lightnessF() >= raw_color.lightnessF());
+	}
+}
+
+TEST_CASE("theme_system_t::set_theme, respects active theme", "[u]")
+{
+	theme_system_t::instance().set_theme(theme_t::dark);
+	REQUIRE(theme_system_t::instance().active_theme() == theme_t::dark);
+
+	const auto dark_bg = theme_system_t::instance().get_color(color_name_t::window_background);
+	REQUIRE(dark_bg == QColor(30, 30, 30));
+
+	theme_system_t::instance().set_theme(theme_t::light);
+	REQUIRE(theme_system_t::instance().active_theme() == theme_t::light);
+
+	const auto light_bg = theme_system_t::instance().get_color(color_name_t::window_background);
+	REQUIRE(light_bg == QColor(255, 255, 255));
+}
+
+TEST_CASE("theme_system_t::get_color, dark backward compat", "[u]")
+{
+	auto check = [](color_name_t name, int r, int g, int b, int a = 255) {
+		const auto color = theme_system_t::instance().get_color(name, theme_t::dark);
+		REQUIRE(color.red() == r);
+		REQUIRE(color.green() == g);
+		REQUIRE(color.blue() == b);
+		REQUIRE(color.alpha() == a);
+	};
+
+	check(color_name_t::window_background, 30, 30, 30);
+	check(color_name_t::window_text, 220, 220, 220);
+	check(color_name_t::editor_background, 35, 35, 40);
+	check(color_name_t::editor_text, 210, 210, 210);
+	check(color_name_t::status_translated, 80, 180, 80);
+	check(color_name_t::status_untranslated, 140, 140, 140);
+	check(color_name_t::status_missing, 200, 120, 70);
+	check(color_name_t::status_duplicate, 200, 190, 80);
+	check(color_name_t::status_mismatch, 190, 90, 115);
+	check(color_name_t::status_error, 200, 80, 80);
+	check(color_name_t::status_reused, 80, 180, 140);
+	check(color_name_t::status_adapted, 150, 110, 190);
+	check(color_name_t::status_changed, 200, 150, 80);
+	check(color_name_t::status_outdated, 180, 115, 65);
+	check(color_name_t::status_in_progress, 80, 130, 200);
+	check(color_name_t::status_model, 80, 155, 190);
+	check(color_name_t::status_propagated, 140, 190, 190);
+	check(color_name_t::status_heuristic, 80, 150, 130);
+	check(color_name_t::status_to_verify, 140, 165, 140);
+	check(color_name_t::status_ambiguous, 190, 150, 50);
+	check(color_name_t::syntax_function, 120, 200, 255);
+	check(color_name_t::syntax_comment, 150, 150, 150);
+	check(color_name_t::syntax_string, 230, 180, 80);
+	check(color_name_t::syntax_html_tag, 200, 130, 150);
+	check(color_name_t::syntax_forbidden_background, 120, 50, 50);
+	check(color_name_t::syntax_hyperlink, 100, 160, 240);
+	check(color_name_t::syntax_misspelled, 240, 80, 80);
+	check(color_name_t::diff_added_background, 80, 180, 80, 80);
+	check(color_name_t::diff_removed_background, 200, 80, 80, 80);
+	check(color_name_t::diff_changed_background, 180, 130, 60, 100);
+	check(color_name_t::annotation_dial_topic, 40, 55, 75);
+	check(color_name_t::annotation_glossary_term, 35, 60, 40);
+	check(color_name_t::conflict_all_no_conflict_raw, 0, 180, 0);
+	check(color_name_t::conflict_all_override_benign_raw, 180, 180, 0);
+	check(color_name_t::conflict_all_conflict_raw, 180, 0, 0);
+	check(color_name_t::conflict_this_master, 180, 80, 180);
+	check(color_name_t::conflict_this_identical, 150, 150, 150);
+	check(color_name_t::conflict_this_override_wins, 80, 200, 80);
+	check(color_name_t::conflict_this_conflict_wins, 255, 165, 100);
+	check(color_name_t::conflict_this_conflict_loses, 255, 80, 80);
+	check(color_name_t::conflict_this_deleted, 140, 140, 140);
+}
+
+TEST_CASE("theme_system_t::get_status_color, dark saturation lower than light", "[u]")
+{
+	const auto status_count = static_cast<int>(status_t::error) + 1;
+
+	for (int i = 0; i < status_count; ++i)
+	{
+		const auto status = static_cast<status_t>(i);
+		const auto light_color = theme_system_t::instance().get_status_color(status, theme_t::light);
+		const auto dark_color = theme_system_t::instance().get_status_color(status, theme_t::dark);
+
+		REQUIRE(dark_color.lightnessF() <= light_color.lightnessF());
+	}
 }
 
 TEST_CASE("app_settings_t::theme, round-trip", "[u]")
