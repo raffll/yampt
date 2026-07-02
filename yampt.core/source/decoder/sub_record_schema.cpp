@@ -851,9 +851,13 @@ static const field_def_t indx_fields[] = {
 	{ "Index", field_type_t::u32, 0, 4, nullptr, nullptr },
 };
 
-static const char * const armo_part_names[] = { "Head",      "Hair",     "Neck",      "Chest", "Groin", "Hand",
-	                                            "Wrist",     "Forearm",  "Upper Arm", "Foot",  "Ankle", "Knee",
-	                                            "Upper Leg", "Clavicle", "Tail",      nullptr };
+static const char * const armo_part_names[] = {
+	"Head",            "Hair",            "Neck",             "Cuirass",        "Groin",
+	"Skirt",           "Right Hand",      "Left Hand",        "Right Wrist",    "Left Wrist",
+	"Shield",          "Right Forearm",   "Left Forearm",     "Right Upper Arm","Left Upper Arm",
+	"Right Foot",      "Left Foot",       "Right Ankle",      "Left Ankle",     "Right Knee",
+	"Left Knee",       "Right Upper Leg", "Left Upper Leg",   "Right Pauldron", "Left Pauldron",
+	"Weapon",          "Tail",            nullptr };
 
 static const field_def_t armo_indx_fields[] = {
 	{ "Part", field_type_t::enum_u8, 0, 1, armo_part_names, nullptr },
@@ -928,7 +932,7 @@ static const std::vector<sub_record_schema_t> & build_schemas()
 		{ "REGN", "SNAM", 33, regn_snam_fields, ARRAY_COUNT(regn_snam_fields) },
 		{ "REGN", "CNAM", 4, regn_cnam_fields, ARRAY_COUNT(regn_cnam_fields) },
 		{ "*", "INDX", 4, indx_fields, ARRAY_COUNT(indx_fields) },
-		{ "ARMO", "INDX", 1, armo_indx_fields, ARRAY_COUNT(armo_indx_fields) },
+		{ "*", "INDX", 1, armo_indx_fields, ARRAY_COUNT(armo_indx_fields) },
 		{ "BOOK", "TEXT", 0, text_fields, ARRAY_COUNT(text_fields) },
 		{ "CELL", "NAM5", 4, cell_nam5_fields, ARRAY_COUNT(cell_nam5_fields) },
 		{ "CELL", "FLTV", 4, cell_fltv_fields, ARRAY_COUNT(cell_fltv_fields) },

@@ -13,6 +13,9 @@ The merge infrastructure exists in yEditor (toolbar exposed, settings paths wire
 ### Expand all remaining hex sub-records in yEditor [L]
 Many sub-records still display as raw hex dumps. Add schemas for all common sub-records using OpenMW source as reference. Priority: DIAL DATA, DOOR DATA, LOCK DATA, AI_T, AI_F, AI_E, AI_A, BSGN, NAM0, WHGT, NAM5, XSCL, INTV, FLTV, INDX.
 
+### Show optional absent sub-records in grey [L]
+xEdit shows sub-records that are defined in the record schema but absent from the actual data as greyed-out placeholder rows (e.g. SCRI - ScriptID, CNAM - Female Body Part Name, ENAM - EnchantID). Requires a canonical sub-record order definition per record type. Missing entries appear in their expected position with grey text and empty plugin columns.
+
 ### Dark theme [L]
 - Dark theme
 - Unhardcode colors (status_colors.hpp, grammar_checker warning_format, etc.)

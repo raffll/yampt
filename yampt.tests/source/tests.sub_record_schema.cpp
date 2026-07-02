@@ -108,3 +108,35 @@ TEST_CASE("sub_record_schema_t::find_schema, LAND VHGT excluded", "[u]")
 	const auto * schema = find_schema("LAND", "VHGT", 4225);
 	REQUIRE(schema == nullptr);
 }
+
+TEST_CASE("sub_record_schema_t::find_schema, ARMO INDX 1-byte biped parts", "[u]")
+{
+	const auto * schema = find_schema("ARMO", "INDX", 1);
+	REQUIRE(schema != nullptr);
+	REQUIRE(schema->field_count == 1);
+	REQUIRE(schema->fields[0].enum_names != nullptr);
+	REQUIRE(std::string(schema->fields[0].enum_names[0]) == "Head");
+	REQUIRE(std::string(schema->fields[0].enum_names[3]) == "Cuirass");
+	REQUIRE(std::string(schema->fields[0].enum_names[5]) == "Skirt");
+	REQUIRE(std::string(schema->fields[0].enum_names[23]) == "Right Pauldron");
+	REQUIRE(std::string(schema->fields[0].enum_names[24]) == "Left Pauldron");
+	REQUIRE(std::string(schema->fields[0].enum_names[26]) == "Tail");
+	REQUIRE(schema->fields[0].enum_names[27] == nullptr);
+}
+
+TEST_CASE("sub_record_schema_t::find_schema, CLOT INDX 1-byte uses same biped parts", "[u]")
+{
+	const auto * schema = find_schema("CLOT", "INDX", 1);
+	REQUIRE(schema != nullptr);
+	REQUIRE(schema->field_count == 1);
+	REQUIRE(std::string(schema->fields[0].enum_names[6]) == "Right Hand");
+	REQUIRE(std::string(schema->fields[0].enum_names[10]) == "Shield");
+}
+
+TEST_CASE("sub_record_schema_t::find_schema, generic INDX 4-byte has no enum", "[u]")
+{
+	const auto * schema = find_schema("SPEL", "INDX", 4);
+	REQUIRE(schema != nullptr);
+	REQUIRE(schema->field_count == 1);
+	REQUIRE(schema->fields[0].enum_names == nullptr);
+}

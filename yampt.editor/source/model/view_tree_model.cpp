@@ -69,10 +69,7 @@ size_t view_tree_model_t::setup_columns(plugin_scan_t & scan, const conflict_ent
 {
 	for (const auto & ver : entry.versions)
 	{
-		char label_buf[64];
-		std::snprintf(
-		    label_buf, sizeof(label_buf), "[%02X] %s", ver.plugin_idx, scan.plugin_filename(ver.plugin_idx).c_str());
-		m_column_names.push_back(label_buf);
+		m_column_names.push_back(scan.plugin_filename(ver.plugin_idx));
 		m_plugin_conflict_this.push_back(ver.status);
 		m_column_plugin_indices.push_back(ver.plugin_idx);
 	}
@@ -105,7 +102,7 @@ void view_tree_model_t::setup_merge_column(plugin_scan_t & scan, const conflict_
 	}
 
 	char label_buf[64];
-	std::snprintf(label_buf, sizeof(label_buf), "[%02X] %s *", merge_idx, scan.plugin_filename(merge_idx).c_str());
+	std::snprintf(label_buf, sizeof(label_buf), "%s *", scan.plugin_filename(merge_idx).c_str());
 	m_column_names.push_back(label_buf);
 	m_plugin_conflict_this.push_back(conflict_this_t::unknown);
 	m_column_plugin_indices.push_back(merge_idx);
@@ -135,9 +132,28 @@ static std::string read_record_flags(plugin_scan_t & scan, const record_version_
 
 	uint32_t flags = 0;
 	std::memcpy(&flags, content.data() + flags_offset, 4);
-	char flags_buf[16];
-	std::snprintf(flags_buf, sizeof(flags_buf), "0x%08X", flags);
-	return flags_buf;
+
+	std::string result;
+	if (flags & 0x00000400)
+	{
+		if (!result.empty())
+			result += " | ";
+
+		result += "Persistent";
+	}
+
+	if (flags & 0x00002000)
+	{
+		if (!result.empty())
+			result += " | ";
+
+		result += "Blocked";
+	}
+
+	if (result.empty())
+		return "None";
+
+	return result;
 }
 
 static bool check_all_identical(const std::vector<std::string> & values)
@@ -509,17 +525,38 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 
 QVariant view_tree_model_t::headerData(int section, Qt::Orientation orientation, int role) const
 {
-	if (orientation != Qt::Horizontal || role != Qt::DisplayRole)
+	if (orientation != Qt::Horizontal)
 		return {};
 
-	if (section == 0)
-		return QStringLiteral("Sub-Record");
+	if (role == Qt::DisplayRole)
+	{
+		if (section == 0)
+			return QStringLiteral("Sub-Record");
 
-	const int col = section - 1;
-	if (col < 0 || col >= static_cast<int>(m_column_names.size()))
-		return {};
+		const int col = section - 1;
+		if (col < 0 || col >= static_cast<int>(m_column_names.size()))
+			return {};
 
-	return QString::fromStdString(m_column_names[col]);
+		return QString::fromStdString(m_column_names[col]);
+	}
+
+	if (role == Qt::ForegroundRole)
+	{
+		if (section == 0)
+			return {};
+
+		const int col = section - 1;
+		if (col < 0 || col >= static_cast<int>(m_plugin_conflict_this.size()))
+			return {};
+
+		if (m_column_names.size() <= 1)
+			return {};
+
+		const auto & theme = theme_system_t::instance();
+		return QBrush(theme.conflict_this_foreground(m_plugin_conflict_this[col]));
+	}
+
+	return {};
 }
 
 Qt::ItemFlags view_tree_model_t::flags(const QModelIndex & index) const

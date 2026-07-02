@@ -22,6 +22,7 @@
 #include <QSettings>
 #include <QShortcut>
 #include <QStyledItemDelegate>
+#include <QStyleOptionHeader>
 #include <QTextStream>
 #include <QVBoxLayout>
 
@@ -46,6 +47,39 @@ public:
 	}
 };
 
+class colored_header_t : public QHeaderView
+{
+public:
+	using QHeaderView::QHeaderView;
+
+protected:
+	void paintSection(QPainter * painter, const QRect & rect, int section) const override
+	{
+		auto fg = model()->headerData(section, Qt::Horizontal, Qt::ForegroundRole);
+		if (!fg.isValid())
+		{
+			QHeaderView::paintSection(painter, rect, section);
+			return;
+		}
+
+		painter->save();
+
+		QStyleOptionHeader opt;
+		initStyleOption(&opt);
+		opt.rect = rect;
+		opt.section = section;
+		opt.text = {};
+		style()->drawControl(QStyle::CE_Header, &opt, painter, this);
+
+		auto text = model()->headerData(section, Qt::Horizontal, Qt::DisplayRole).toString();
+		auto text_rect = style()->subElementRect(QStyle::SE_HeaderLabel, &opt, this);
+		painter->setPen(fg.value<QBrush>().color());
+		painter->drawText(text_rect, Qt::AlignVCenter | Qt::AlignLeft, text);
+
+		painter->restore();
+	}
+};
+
 plugin_workspace_view_t::plugin_workspace_view_t(app_settings_t & settings, QWidget * parent)
     : QWidget(parent)
     , m_settings(settings)
@@ -67,6 +101,7 @@ plugin_workspace_view_t::plugin_workspace_view_t(app_settings_t & settings, QWid
 	m_view_model = new view_tree_model_t(this);
 	m_nav_view->setModel(m_nav_model);
 	m_view_view->setModel(m_view_model);
+	m_view_view->setHeader(new colored_header_t(Qt::Horizontal, m_view_view));
 	m_view_view->header()->setStretchLastSection(true);
 	m_view_view->header()->setMinimumSectionSize(120);
 

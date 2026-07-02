@@ -4,6 +4,24 @@
 #include <cstdio>
 #include <cstring>
 
+static std::vector<std::string> exclude_column(const std::vector<std::string> & values, int excluded_col)
+{
+	if (excluded_col < 0 || excluded_col >= static_cast<int>(values.size()))
+		return values;
+
+	if (!values[excluded_col].empty())
+		return values;
+
+	std::vector<std::string> result;
+	result.reserve(values.size() - 1);
+	for (size_t i = 0; i < values.size(); ++i)
+	{
+		if (static_cast<int>(i) != excluded_col)
+			result.push_back(values[i]);
+	}
+	return result;
+}
+
 static bool check_all_identical(const std::vector<std::string> & values)
 {
 	for (size_t col = 1; col < values.size(); ++col)
@@ -111,8 +129,12 @@ view_tree_model_t::sub_record_row_t view_tree_model_t::build_slot_row(
 		}
 	}
 	row.all_identical = all_same;
-	row.row_conflict_all = compute_conflict_all(row.values);
-	row.cell_conflict_this = compute_conflict_this(row.values);
+	const auto & filtered = exclude_column(row.values, m_merge_col_index);
+	row.row_conflict_all = compute_conflict_all(filtered);
+	row.cell_conflict_this = compute_conflict_this(filtered);
+	if (m_merge_col_index >= 0 && filtered.size() < row.values.size())
+		row.cell_conflict_this.insert(
+		    row.cell_conflict_this.begin() + m_merge_col_index, conflict_this_t::unknown);
 
 	const auto * schema = find_schema(m_record_type, slot.type, first_size);
 	if (schema && first_data)

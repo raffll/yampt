@@ -184,3 +184,100 @@ TEST_CASE("compute_conflict_all, parent ignores only_one children", "[u]")
 
 	REQUIRE(parent == conflict_all_t::no_conflict);
 }
+
+TEST_CASE("compute_conflict_all, empty merge column excluded yields no_conflict", "[u]")
+{
+	std::vector<std::string> all_values = { "A", "A", "" };
+	int merge_col = 2;
+
+	std::vector<std::string> filtered;
+	for (size_t i = 0; i < all_values.size(); ++i)
+	{
+		if (static_cast<int>(i) != merge_col || !all_values[i].empty())
+			filtered.push_back(all_values[i]);
+	}
+
+	REQUIRE(compute_conflict_all(filtered) == conflict_all_t::no_conflict);
+}
+
+TEST_CASE("compute_conflict_all, populated merge column participates in conflict", "[u]")
+{
+	std::vector<std::string> all_values = { "A", "A", "B" };
+	int merge_col = 2;
+
+	std::vector<std::string> filtered;
+	for (size_t i = 0; i < all_values.size(); ++i)
+	{
+		if (static_cast<int>(i) != merge_col || !all_values[i].empty())
+			filtered.push_back(all_values[i]);
+	}
+
+	REQUIRE(compute_conflict_all(filtered) == conflict_all_t::override_benign);
+}
+
+TEST_CASE("compute_conflict_all, empty merge column excluded from real conflict", "[u]")
+{
+	std::vector<std::string> all_values = { "A", "B", "" };
+	int merge_col = 2;
+
+	std::vector<std::string> filtered;
+	for (size_t i = 0; i < all_values.size(); ++i)
+	{
+		if (static_cast<int>(i) != merge_col || !all_values[i].empty())
+			filtered.push_back(all_values[i]);
+	}
+
+	REQUIRE(compute_conflict_all(filtered) == conflict_all_t::override_benign);
+}
+
+TEST_CASE("compute_conflict_all, no merge column leaves values unchanged", "[u]")
+{
+	std::vector<std::string> all_values = { "A", "B", "C" };
+	int merge_col = -1;
+
+	std::vector<std::string> filtered;
+	for (size_t i = 0; i < all_values.size(); ++i)
+	{
+		if (static_cast<int>(i) != merge_col || !all_values[i].empty())
+			filtered.push_back(all_values[i]);
+	}
+
+	REQUIRE(compute_conflict_all(filtered) == conflict_all_t::conflict);
+}
+
+TEST_CASE("compute_conflict_this, empty merge column excluded preserves statuses", "[u]")
+{
+	std::vector<std::string> all_values = { "A", "A", "" };
+	int merge_col = 2;
+
+	std::vector<std::string> filtered;
+	for (size_t i = 0; i < all_values.size(); ++i)
+	{
+		if (static_cast<int>(i) != merge_col || !all_values[i].empty())
+			filtered.push_back(all_values[i]);
+	}
+
+	auto result = compute_conflict_this(filtered);
+	REQUIRE(result.size() == 2);
+	REQUIRE(result[0] == conflict_this_t::master);
+	REQUIRE(result[1] == conflict_this_t::identical_to_master);
+}
+
+TEST_CASE("compute_conflict_this, populated merge column gets status", "[u]")
+{
+	std::vector<std::string> all_values = { "A", "A", "B" };
+	int merge_col = 2;
+
+	std::vector<std::string> filtered;
+	for (size_t i = 0; i < all_values.size(); ++i)
+	{
+		if (static_cast<int>(i) != merge_col || !all_values[i].empty())
+			filtered.push_back(all_values[i]);
+	}
+
+	auto result = compute_conflict_this(filtered);
+	REQUIRE(result.size() == 3);
+	REQUIRE(result[0] == conflict_this_t::master);
+	REQUIRE(result[1] == conflict_this_t::identical_to_master);
+	REQUIRE(result[2] == conflict_this_t::override_wins);
+}

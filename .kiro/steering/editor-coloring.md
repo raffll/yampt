@@ -159,3 +159,28 @@ Rules:
 - A leaf row (no children) computes `conflict_all` via `compute_conflict_all()` on its column values
 - This applies at every nesting level — if sub-sub-records ever have their own children, the same rule applies recursively
 - The Record Header row follows the same rule: its conflict comes from its children (Signature, Record Flags), not from sibling sub-records
+
+### Right Panel Display Modes
+
+Sub-records are displayed differently depending on record type:
+
+| Display Mode | Record Types | Sorting |
+|---|---|---|
+| Cell | `CELL` | Grouped by referenced object (FRMR), sorted by object index |
+| Leveled | `LEVI`, `LEVC` | Entries aligned by item/creature ID (`INTV+INAM`/`INTV+CNAM` pairs matched across plugins) |
+| Faction | `FACT` | Rank entries aligned by faction name (`INTV+ANAM` pairs matched across plugins) |
+| Container | `CONT`, `CREA`, `NPC_`, `BSGN` | `NPCO` items aligned by item ID, `NPCS` spells aligned by spell ID |
+| Generic | Everything else | File order — sub-records appear in plugin order, aligned by type+occurrence |
+
+"Aligned" means entries from different plugins are matched by their semantic key (item ID, creature ID, faction name) so the same logical entry appears in the same row across columns — even if the plugins store them in different order. Unmatched entries show as empty cells in the plugins that don't have them.
+
+### Merge Column Conflict Exclusion
+
+The merged patch column is a "whiteboard" — it does not participate in conflict computation when empty. Rules:
+- If the merge column has **no value** (record not in merged patch): exclude it from `compute_conflict_all` and `compute_conflict_this`
+- If the merge column **has a value** (record is in merged patch): include it in conflict computation like any other plugin column
+- After move/delete to/from the merged patch: recompute all conflicts and propagate colors upward through both panels
+
+### Column Header Text Color
+
+Column headers in the right panel display the plugin filename with text colored by the plugin's record-level `conflict_this` status (purple for master, gray for identical, green for override wins, orange for conflict wins, red for conflict loses).
