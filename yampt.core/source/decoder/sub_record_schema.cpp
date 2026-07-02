@@ -411,14 +411,14 @@ static const field_def_t fact_fadt_fields[] = {
 	{ "Rank 10 Primary", field_type_t::u32, 196, 4, nullptr, nullptr },
 	{ "Rank 10 Favoured", field_type_t::u32, 200, 4, nullptr, nullptr },
 	{ "Rank 10 Reputation", field_type_t::u32, 204, 4, nullptr, nullptr },
-	{ "Skill 1", field_type_t::enum_u32, 208, 4, skill_names, nullptr },
-	{ "Skill 2", field_type_t::enum_u32, 212, 4, skill_names, nullptr },
-	{ "Skill 3", field_type_t::enum_u32, 216, 4, skill_names, nullptr },
-	{ "Skill 4", field_type_t::enum_u32, 220, 4, skill_names, nullptr },
-	{ "Skill 5", field_type_t::enum_u32, 224, 4, skill_names, nullptr },
-	{ "Skill 6", field_type_t::enum_u32, 228, 4, skill_names, nullptr },
-	{ "Skill 7", field_type_t::enum_u32, 232, 4, skill_names, nullptr },
-	{ "Is Hidden", field_type_t::u32, 236, 4, nullptr, nullptr },
+	{ "Skill 1", field_type_t::i32, 208, 4, skill_names, nullptr },
+	{ "Skill 2", field_type_t::i32, 212, 4, skill_names, nullptr },
+	{ "Skill 3", field_type_t::i32, 216, 4, skill_names, nullptr },
+	{ "Skill 4", field_type_t::i32, 220, 4, skill_names, nullptr },
+	{ "Skill 5", field_type_t::i32, 224, 4, skill_names, nullptr },
+	{ "Skill 6", field_type_t::i32, 228, 4, skill_names, nullptr },
+	{ "Skill 7", field_type_t::i32, 232, 4, skill_names, nullptr },
+	{ "Hidden", field_type_t::bool_bit, 236, 0, nullptr, nullptr },
 };
 
 static const field_def_t fact_rnam_fields[] = {
@@ -533,13 +533,16 @@ static const field_def_t land_data_fields[] = {
 
 static const char * const info_gender[] = { "Male", "Female", nullptr };
 
+static const char * const info_rank_names[] = { nullptr };
+
+static const char * const info_types[] = { "Topic", "Voice", "Greeting", "Persuasion", "Journal", nullptr };
+
 static const field_def_t info_data_fields[] = {
-	{ "Unknown1", field_type_t::u32, 0, 4, nullptr, nullptr },
+	{ "Type", field_type_t::enum_u32, 0, 4, info_types, nullptr },
 	{ "Disposition", field_type_t::u32, 4, 4, nullptr, nullptr },
-	{ "Rank", field_type_t::u8, 8, 1, nullptr, nullptr },
-	{ "Gender", field_type_t::enum_u8, 9, 1, info_gender, nullptr },
-	{ "PC Rank", field_type_t::u8, 10, 1, nullptr, nullptr },
-	{ "Unknown2", field_type_t::u8, 11, 1, nullptr, nullptr },
+	{ "Rank", field_type_t::i8, 8, 1, info_rank_names, nullptr },
+	{ "Gender", field_type_t::i8, 9, 1, info_gender, nullptr },
+	{ "PC Rank", field_type_t::i8, 10, 1, info_rank_names, nullptr },
 };
 
 static const field_def_t regn_weat_fields[] = {
@@ -866,6 +869,12 @@ static const field_def_t text_fields[] = {
 	{ "Text", field_type_t::string_var, 0, 0, nullptr, nullptr },
 };
 
+static const char * const quest_marker_names[] = { "No", "Yes", nullptr };
+
+static const field_def_t quest_marker_fields[] = {
+	{ "Value", field_type_t::enum_u8, 0, 1, quest_marker_names, nullptr },
+};
+
 static const std::vector<sub_record_schema_t> & build_schemas()
 {
 	static const std::vector<sub_record_schema_t> schemas = {
@@ -881,7 +890,10 @@ static const std::vector<sub_record_schema_t> & build_schemas()
 		{ "ARMO", "AODT", 24, armo_aodt_fields, ARRAY_COUNT(armo_aodt_fields) },
 		{ "ALCH", "ALDT", 12, alch_aldt_fields, ARRAY_COUNT(alch_aldt_fields) },
 		{ "ENCH", "ENDT", 16, ench_endt_fields, ARRAY_COUNT(ench_endt_fields) },
-		{ "*", "ENAM", 24, enam_fields, ARRAY_COUNT(enam_fields) },
+		{ "SPEL", "ENAM", 24, enam_fields, ARRAY_COUNT(enam_fields) },
+		{ "ENCH", "ENAM", 24, enam_fields, ARRAY_COUNT(enam_fields) },
+		{ "ALCH", "ENAM", 24, enam_fields, ARRAY_COUNT(enam_fields) },
+		{ "INGR", "ENAM", 24, enam_fields, ARRAY_COUNT(enam_fields) },
 		{ "*", "NPCO", 36, npco_fields, ARRAY_COUNT(npco_fields) },
 		{ "BOOK", "BKDT", 20, book_bkdt_fields, ARRAY_COUNT(book_bkdt_fields) },
 		{ "CREA", "NPDT", 96, crea_npdt_fields, ARRAY_COUNT(crea_npdt_fields) },
@@ -933,6 +945,9 @@ static const std::vector<sub_record_schema_t> & build_schemas()
 		{ "*", "INDX", 4, indx_fields, ARRAY_COUNT(indx_fields) },
 		{ "*", "INDX", 1, armo_indx_fields, ARRAY_COUNT(armo_indx_fields) },
 		{ "BOOK", "TEXT", 0, text_fields, ARRAY_COUNT(text_fields) },
+		{ "*", "QSTN", 1, quest_marker_fields, ARRAY_COUNT(quest_marker_fields) },
+		{ "*", "QSTF", 1, quest_marker_fields, ARRAY_COUNT(quest_marker_fields) },
+		{ "*", "QSTR", 1, quest_marker_fields, ARRAY_COUNT(quest_marker_fields) },
 		{ "CELL", "NAM5", 4, cell_nam5_fields, ARRAY_COUNT(cell_nam5_fields) },
 		{ "CELL", "FLTV", 4, cell_fltv_fields, ARRAY_COUNT(cell_fltv_fields) },
 		{ "CELL", "NAM9", 4, cell_nam9_fields, ARRAY_COUNT(cell_nam9_fields) },

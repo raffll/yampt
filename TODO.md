@@ -19,6 +19,18 @@ xEdit shows sub-records that are defined in the record schema but absent from th
 ### ARMO/CLOT body part group alignment [M]
 ARMO and CLOT records have repeating INDX+BNAM+CNAM groups (body part index, male part name, female part name). These should be aligned across plugins by the INDX value — same pattern as leveled lists align by item ID. Currently uses generic file-order display which breaks alignment when plugins have different body part ordering or different part counts.
 
+### Cell reference hierarchy in view tree [L]
+Cell references are currently displayed flat in the right panel. Refactor to show them nested:
+- Cell Header sub-records at top level (DATA, AMBI, WHGT, etc.)
+- Persistent group node (references before NAM0)
+- Temporary group node (references after NAM0)
+- Each reference as a collapsible node labeled with object index + NAME ID
+- Reference sub-records (FRMR, NAME, DODT, DNAM, XSCL, ANAM, DATA) as children of their reference node
+Matches xEdit's cell reference layout.
+
+### DIAL INFO list alignment in view tree [M]
+When a DIAL record is selected, show a list of INFO INAM IDs below the DIAL sub-records, aligned/paired across plugins by INAM key. Shows which INFOs each plugin has and where mods insert new entries in the INFO chain. Same alignment pattern as CELL FRMR references — matched by ID, unmatched entries show as empty in plugins that don't have them.
+
 ### Codepage-aware text display in yEditor [S]
 `format_value` currently hardcodes Windows-1252 for codepage-to-UTF-8 conversion. Should read the codepage from app settings (same setting as the merge/CLI uses: 1252 for English, 1250 for Polish, 1251 for Russian). Pass it through to the view tree formatting layer.
 

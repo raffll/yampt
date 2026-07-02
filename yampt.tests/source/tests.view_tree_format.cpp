@@ -170,3 +170,69 @@ TEST_CASE("decode_field, flags_u8 single flag shows name", "[u]")
 	auto result = decode_field(field, data, 1);
 	REQUIRE(result == "Playable");
 }
+
+TEST_CASE("decode_field, i8 value -1 with empty enum shows None", "[u]")
+{
+	static const char * const names[] = { nullptr };
+	field_def_t field { "Rank", field_type_t::i8, 0, 1, names, nullptr, 0 };
+
+	char data[1];
+	int8_t val = -1;
+	std::memcpy(data, &val, 1);
+	auto result = decode_field(field, data, 1);
+	REQUIRE(result == "None");
+}
+
+TEST_CASE("decode_field, i8 value 5 with empty enum shows number", "[u]")
+{
+	static const char * const names[] = { nullptr };
+	field_def_t field { "Rank", field_type_t::i8, 0, 1, names, nullptr, 0 };
+
+	char data[1] = { 5 };
+	auto result = decode_field(field, data, 1);
+	REQUIRE(result == "5");
+}
+
+TEST_CASE("decode_field, enum_u32 shows Yes for scroll", "[u]")
+{
+	static const char * const names[] = { "No", "Yes", nullptr };
+	field_def_t field { "Scroll", field_type_t::enum_u32, 0, 4, names, nullptr, 0 };
+
+	char data[4] = {};
+	uint32_t val = 1;
+	std::memcpy(data, &val, 4);
+	auto result = decode_field(field, data, 4);
+	REQUIRE(result == "Yes");
+}
+
+TEST_CASE("decode_field, enum_u32 shows No for non-scroll", "[u]")
+{
+	static const char * const names[] = { "No", "Yes", nullptr };
+	field_def_t field { "Scroll", field_type_t::enum_u32, 0, 4, names, nullptr, 0 };
+
+	char data[4] = {};
+	auto result = decode_field(field, data, 4);
+	REQUIRE(result == "No");
+}
+
+TEST_CASE("decode_field, i8 gender Male", "[u]")
+{
+	static const char * const names[] = { "Male", "Female", nullptr };
+	field_def_t field { "Gender", field_type_t::i8, 0, 1, names, nullptr, 0 };
+
+	char data[1] = { 0 };
+	auto result = decode_field(field, data, 1);
+	REQUIRE(result == "Male");
+}
+
+TEST_CASE("decode_field, i8 gender None for 0xFF", "[u]")
+{
+	static const char * const names[] = { "Male", "Female", nullptr };
+	field_def_t field { "Gender", field_type_t::i8, 0, 1, names, nullptr, 0 };
+
+	char data[1];
+	int8_t val = -1;
+	std::memcpy(data, &val, 1);
+	auto result = decode_field(field, data, 1);
+	REQUIRE(result == "None");
+}

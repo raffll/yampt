@@ -273,6 +273,63 @@ void view_tree_model_t::clear()
 	endResetModel();
 }
 
+static const char * conflict_all_name(conflict_all_t ca)
+{
+	switch (ca)
+	{
+	case conflict_all_t::unknown: return "unknown";
+	case conflict_all_t::only_one: return "only_one";
+	case conflict_all_t::no_conflict: return "no_conflict";
+	case conflict_all_t::override_benign: return "override_benign";
+	case conflict_all_t::conflict: return "conflict";
+	}
+	return "?";
+}
+
+static const char * conflict_this_name(conflict_this_t ct)
+{
+	switch (ct)
+	{
+	case conflict_this_t::unknown: return "unk";
+	case conflict_this_t::master: return "master";
+	case conflict_this_t::identical_to_master: return "identical";
+	case conflict_this_t::override_wins: return "override";
+	case conflict_this_t::conflict_wins: return "c_wins";
+	case conflict_this_t::conflict_loses: return "c_loses";
+	case conflict_this_t::deleted: return "deleted";
+	}
+	return "?";
+}
+
+std::string view_tree_model_t::debug_dump() const
+{
+	std::string result;
+	for (const auto & row : m_rows)
+	{
+		result += row.label + " | ca=" + conflict_all_name(row.row_conflict_all) + " | ct=[";
+		for (size_t i = 0; i < row.cell_conflict_this.size(); ++i)
+		{
+			if (i > 0)
+				result += ", ";
+			result += conflict_this_name(row.cell_conflict_this[i]);
+		}
+		result += "]\n";
+
+		for (const auto & child : row.children)
+		{
+			result += "  " + child.name + " | ca=" + conflict_all_name(child.row_conflict_all) + " | ct=[";
+			for (size_t i = 0; i < child.cell_conflict_this.size(); ++i)
+			{
+				if (i > 0)
+					result += ", ";
+				result += conflict_this_name(child.cell_conflict_this[i]);
+			}
+			result += "]\n";
+		}
+	}
+	return result;
+}
+
 bool view_tree_model_t::is_merge_column(int section) const
 {
 	if (!m_has_merge_column)
@@ -432,9 +489,16 @@ static QVariant sub_record_foreground(
 		conflict_this_t worst = conflict_this_t::unknown;
 		for (const auto & status : cell_conflicts)
 		{
+			if (status == conflict_this_t::identical_to_master)
+				continue;
+
 			if (status > worst)
 				worst = status;
 		}
+
+		if (worst == conflict_this_t::unknown || worst == conflict_this_t::master)
+			return {};
+
 		return QBrush(theme.conflict_this_foreground(worst));
 	}
 

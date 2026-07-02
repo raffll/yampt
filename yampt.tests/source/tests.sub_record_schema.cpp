@@ -158,3 +158,107 @@ TEST_CASE("sub_record_schema_t::find_schema, BODY BYDT has 5 fields from 4 bytes
 	REQUIRE(schema->fields[3].size == 1);
 	REQUIRE(std::string(schema->fields[4].name) == "Part Type");
 }
+
+TEST_CASE("sub_record_schema_t::find_schema, SPEL ENAM 24-byte matches", "[u]")
+{
+	const auto * schema = find_schema("SPEL", "ENAM", 24);
+	REQUIRE(schema != nullptr);
+	REQUIRE(schema->field_count > 0);
+	REQUIRE(std::string(schema->fields[0].name) == "Effect ID");
+}
+
+TEST_CASE("sub_record_schema_t::find_schema, CLOT ENAM does not match effect schema", "[u]")
+{
+	const auto * schema = find_schema("CLOT", "ENAM", 24);
+	REQUIRE(schema == nullptr);
+}
+
+TEST_CASE("sub_record_schema_t::find_schema, ARMO ENAM does not match effect schema", "[u]")
+{
+	const auto * schema = find_schema("ARMO", "ENAM", 24);
+	REQUIRE(schema == nullptr);
+}
+
+TEST_CASE("sub_record_schema_t::find_schema, ENCH ENAM 24-byte matches", "[u]")
+{
+	const auto * schema = find_schema("ENCH", "ENAM", 24);
+	REQUIRE(schema != nullptr);
+	REQUIRE(std::string(schema->fields[0].name) == "Effect ID");
+}
+
+TEST_CASE("sub_record_schema_t::find_schema, INFO DATA has 5 fields", "[u]")
+{
+	const auto * schema = find_schema("INFO", "DATA", 12);
+	REQUIRE(schema != nullptr);
+	REQUIRE(schema->field_count == 5);
+	REQUIRE(std::string(schema->fields[0].name) == "Type");
+	REQUIRE(schema->fields[0].type == field_type_t::enum_u32);
+	REQUIRE(std::string(schema->fields[2].name) == "Rank");
+	REQUIRE(schema->fields[2].type == field_type_t::i8);
+	REQUIRE(std::string(schema->fields[3].name) == "Gender");
+	REQUIRE(schema->fields[3].type == field_type_t::i8);
+	REQUIRE(std::string(schema->fields[4].name) == "PC Rank");
+}
+
+TEST_CASE("sub_record_schema_t::find_schema, QSTF 1-byte quest marker", "[u]")
+{
+	const auto * schema = find_schema("INFO", "QSTF", 1);
+	REQUIRE(schema != nullptr);
+	REQUIRE(schema->field_count == 1);
+	REQUIRE(std::string(schema->fields[0].name) == "Value");
+	REQUIRE(schema->fields[0].enum_names != nullptr);
+	REQUIRE(std::string(schema->fields[0].enum_names[0]) == "No");
+	REQUIRE(std::string(schema->fields[0].enum_names[1]) == "Yes");
+}
+
+TEST_CASE("sub_record_schema_t::find_schema, QSTN 1-byte quest marker", "[u]")
+{
+	const auto * schema = find_schema("INFO", "QSTN", 1);
+	REQUIRE(schema != nullptr);
+	REQUIRE(schema->field_count == 1);
+}
+
+TEST_CASE("sub_record_schema_t::find_schema, QSTR 1-byte quest marker", "[u]")
+{
+	const auto * schema = find_schema("INFO", "QSTR", 1);
+	REQUIRE(schema != nullptr);
+	REQUIRE(schema->field_count == 1);
+}
+
+TEST_CASE("sub_record_schema_t::find_schema, BOOK BKDT scroll field is enum_u32", "[u]")
+{
+	const auto * schema = find_schema("BOOK", "BKDT", 20);
+	REQUIRE(schema != nullptr);
+	REQUIRE(schema->field_count == 5);
+	REQUIRE(std::string(schema->fields[2].name) == "Scroll");
+	REQUIRE(schema->fields[2].type == field_type_t::enum_u32);
+	REQUIRE(schema->fields[2].enum_names != nullptr);
+	REQUIRE(std::string(schema->fields[2].enum_names[0]) == "No");
+	REQUIRE(std::string(schema->fields[2].enum_names[1]) == "Yes");
+	REQUIRE(std::string(schema->fields[4].name) == "Enchant Points");
+}
+
+TEST_CASE("sub_record_schema_t::find_schema, CLAS CLDT playable is bool_bit", "[u]")
+{
+	const auto * schema = find_schema("CLAS", "CLDT", 60);
+	REQUIRE(schema != nullptr);
+	bool found_playable = false;
+	bool found_services = false;
+	for (size_t i = 0; i < schema->field_count; ++i)
+	{
+		if (std::string(schema->fields[i].name) == "Playable")
+		{
+			REQUIRE(schema->fields[i].type == field_type_t::bool_bit);
+			REQUIRE(schema->fields[i].offset == 52);
+			REQUIRE(schema->fields[i].size == 0);
+			found_playable = true;
+		}
+		if (std::string(schema->fields[i].name) == "Services")
+		{
+			REQUIRE(schema->fields[i].type == field_type_t::flags_u32);
+			found_services = true;
+		}
+	}
+	REQUIRE(found_playable);
+	REQUIRE(found_services);
+}

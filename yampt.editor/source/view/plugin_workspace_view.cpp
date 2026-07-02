@@ -1076,6 +1076,9 @@ void plugin_workspace_view_t::display_record_in_view(const conflict_entry_t & en
 		m_view_model->set_record(m_scan, entry);
 	}
 
+	if (entry.record_id == "sLoadingMessage5")
+		log_message(m_view_model->debug_dump());
+
 	const auto merge_col = m_view_model->merge_column();
 	if (merge_col >= 0)
 	{

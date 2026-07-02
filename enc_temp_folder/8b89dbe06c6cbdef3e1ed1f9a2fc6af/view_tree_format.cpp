@@ -263,21 +263,6 @@ std::string decode_field(const field_def_t & field, const char * data, size_t da
 	{
 		int32_t val = 0;
 		std::memcpy(&val, ptr, 4);
-
-		if (field.enum_names && val >= 0)
-		{
-			size_t count = 0;
-			while (field.enum_names[count])
-				++count;
-
-			if (static_cast<size_t>(val) < count)
-				return std::string(field.enum_names[val]);
-		}
-		else if (field.enum_names && val == -1)
-		{
-			return "None";
-		}
-
 		std::snprintf(buf, sizeof(buf), "%d", val);
 		return buf;
 	}
@@ -376,7 +361,6 @@ static const std::map<std::pair<std::string, std::string>, const char *> & conte
 		{ { "NPC_", "ANAM" }, "Faction" },        { { "NPC_", "BNAM" }, "Head Model" },
 		{ { "NPC_", "CNAM" }, "Class" },          { { "INFO", "ANAM" }, "Cell" },
 		{ { "DOOR", "SNAM" }, "Open Sound" },     { { "DOOR", "ANAM" }, "Close Sound" },
-		{ { "FACT", "RNAM" }, "Rank Name" },
 	};
 	return descs;
 }

@@ -475,11 +475,22 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 
 			if (!row.children.empty())
 			{
-				row.row_conflict_all = conflict_all_t::only_one;
+				row.row_conflict_all = conflict_all_t::unknown;
 				for (const auto & child : row.children)
 				{
 					if (child.row_conflict_all > row.row_conflict_all)
 						row.row_conflict_all = child.row_conflict_all;
+				}
+
+				for (size_t col = 0; col < row.cell_conflict_this.size(); ++col)
+				{
+					conflict_this_t worst = conflict_this_t::unknown;
+					for (const auto & child : row.children)
+					{
+						if (col < child.cell_conflict_this.size() && child.cell_conflict_this[col] > worst)
+							worst = child.cell_conflict_this[col];
+					}
+					row.cell_conflict_this[col] = worst;
 				}
 			}
 
