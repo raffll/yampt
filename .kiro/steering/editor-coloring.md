@@ -2,6 +2,10 @@
 
 Exact reproduction of xEdit's (TES3Edit/TES5Edit) coloring behavior in both panels.
 
+## Rule: Color Changes Apply Everywhere
+
+When changing a color for a conflict status, apply it consistently to ALL places that status appears: left panel (nav tree — record, group, file nodes) and right panel (view tree). Never change a color in one panel without updating the other. Parent nodes always inherit the worst-case color from their children — same rules at every level.
+
 ## Rule: No Broad Color Changes
 
 When fixing a coloring issue, only change the color/background for the specific case that is wrong. Never change the logic for all rows or all columns to fix one scenario. Guard every color change with a condition that targets only the affected case (e.g. single-column, specific conflict_this value, specific row type). If a fix would affect other cases, add a narrower condition rather than broadening an existing one.

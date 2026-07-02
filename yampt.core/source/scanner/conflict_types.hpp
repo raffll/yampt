@@ -51,7 +51,7 @@ inline QColor conflict_this_foreground(conflict_this_t ct)
 	case conflict_this_t::conflict_loses:
 		return QColor(255, 0, 0);
 	case conflict_this_t::deleted:
-		return QColor(128, 128, 128);
+		return QColor(100, 100, 100);
 	default:
 		return QColor(0, 0, 0);
 	}

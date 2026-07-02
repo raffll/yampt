@@ -86,6 +86,8 @@ private:
 	bool m_has_filter = false;
 	bool m_hide_duplicates = false;
 
+	conflict_this_t record_foreground_for_plugin(const conflict_entry_t & entry, int plugin_idx) const;
+
 	void build_tree();
 	bool passes_filter(const conflict_entry_t & entry, int plugin_idx) const;
 };

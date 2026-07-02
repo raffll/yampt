@@ -55,7 +55,6 @@ private:
 	QCheckBox * m_chk_ct_override = nullptr;
 	QCheckBox * m_chk_ct_wins = nullptr;
 	QCheckBox * m_chk_ct_loses = nullptr;
-	QCheckBox * m_chk_ct_deleted = nullptr;
 
 	QListWidget * m_lst_types = nullptr;
 

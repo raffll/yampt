@@ -30,13 +30,11 @@ filter_dialog_t::filter_dialog_t(const std::vector<std::string> & available_type
 	m_chk_ct_override = new QCheckBox("Override Wins", m_grp_conflict_this);
 	m_chk_ct_wins = new QCheckBox("Conflict Wins", m_grp_conflict_this);
 	m_chk_ct_loses = new QCheckBox("Conflict Loses", m_grp_conflict_this);
-	m_chk_ct_deleted = new QCheckBox("Deleted", m_grp_conflict_this);
 	ct_layout->addWidget(m_chk_ct_master);
 	ct_layout->addWidget(m_chk_ct_identical);
 	ct_layout->addWidget(m_chk_ct_override);
 	ct_layout->addWidget(m_chk_ct_wins);
 	ct_layout->addWidget(m_chk_ct_loses);
-	ct_layout->addWidget(m_chk_ct_deleted);
 	main_layout->addWidget(m_grp_conflict_this);
 
 	auto * grp_type = new QGroupBox("Record Type", this);
@@ -101,8 +99,6 @@ filter_dialog_t::filter_state_t filter_dialog_t::state() const
 		s.conflict_this_set.insert(conflict_this_t::conflict_wins);
 	if (m_chk_ct_loses->isChecked())
 		s.conflict_this_set.insert(conflict_this_t::conflict_loses);
-	if (m_chk_ct_deleted->isChecked())
-		s.conflict_this_set.insert(conflict_this_t::deleted);
 	s.filter_conflict_this = !s.conflict_this_set.empty();
 
 	for (int i = 0; i < m_lst_types->count(); ++i)
@@ -137,7 +133,6 @@ void filter_dialog_t::set_state(const filter_state_t & state)
 	m_chk_ct_override->setChecked(state.conflict_this_set.count(conflict_this_t::override_wins) > 0);
 	m_chk_ct_wins->setChecked(state.conflict_this_set.count(conflict_this_t::conflict_wins) > 0);
 	m_chk_ct_loses->setChecked(state.conflict_this_set.count(conflict_this_t::conflict_loses) > 0);
-	m_chk_ct_deleted->setChecked(state.conflict_this_set.count(conflict_this_t::deleted) > 0);
 
 	for (int i = 0; i < m_lst_types->count(); ++i)
 	{
