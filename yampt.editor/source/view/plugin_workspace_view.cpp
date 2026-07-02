@@ -1531,7 +1531,7 @@ void plugin_workspace_view_t::save_session_state()
 	settings.setValue("session/merge_visible", m_merge_column_visible);
 
 	auto current = m_nav_view->currentIndex();
-	if (current.isValid())
+	if (current.isValid() && m_nav_view->visualRect(current).isValid())
 	{
 		const auto info = m_nav_model->node_at(current);
 		settings.setValue("session/nav_rec_type", QString::fromStdString(info.rec_type));

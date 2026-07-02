@@ -1,5 +1,7 @@
 # TODO
 
+from Global to check
+
 Sorted by effort.
 
 ## L — a week or more
@@ -18,6 +20,13 @@ xEdit shows sub-records that are defined in the record schema but absent from th
 
 ### ARMO/CLOT body part group alignment [M]
 ARMO and CLOT records have repeating INDX+BNAM+CNAM groups (body part index, male part name, female part name). These should be aligned across plugins by the INDX value — same pattern as leveled lists align by item ID. Currently uses generic file-order display which breaks alignment when plugins have different body part ordering or different part counts.
+
+### Leveled list entry nesting [M]
+LEVC and LEVI entries are shown flat (CNAM, CNAM, CNAM...). Should be grouped into numbered parent nodes like xEdit:
+- "Leveled Creature Entries" parent
+  - "Leveled Creature #0" with children: CNAM - Creature Name, INTV - Creature Level
+  - "Leveled Creature #1" ...
+Same for LEVI with "Leveled Item Entries" and INAM - Item Name.
 
 ### Cell reference hierarchy in view tree [L]
 Cell references are currently displayed flat in the right panel. Refactor to show them nested:

@@ -91,11 +91,21 @@ const std::map<std::string, const char *> & sub_record_descriptions()
 std::string format_value(const char * data, size_t size)
 {
 	bool printable = true;
+	bool found_null = false;
 	for (size_t i = 0; i < size; ++i)
 	{
 		unsigned char c = static_cast<unsigned char>(data[i]);
 		if (c == 0)
+		{
+			found_null = true;
 			continue;
+		}
+
+		if (found_null)
+		{
+			printable = false;
+			break;
+		}
 
 		if (c < 32 && c != '\t' && c != '\n' && c != '\r')
 		{
@@ -342,6 +352,12 @@ std::string decode_field(const field_def_t & field, const char * data, size_t da
 		int bit_index = static_cast<int>(field.size);
 		return (val & (1u << bit_index)) ? "Yes" : "No";
 	}
+	case field_type_t::binary:
+	{
+		char buf[64];
+		std::snprintf(buf, sizeof(buf), "<%zu bytes>", data_size - field.offset);
+		return buf;
+	}
 	case field_type_t::raw:
 	{
 		std::string hex_output;
@@ -377,6 +393,15 @@ static const std::map<std::pair<std::string, std::string>, const char *> & conte
 		{ { "NPC_", "CNAM" }, "Class" },          { { "INFO", "ANAM" }, "Cell" },
 		{ { "DOOR", "SNAM" }, "Open Sound" },     { { "DOOR", "ANAM" }, "Close Sound" },
 		{ { "FACT", "RNAM" }, "Rank Name" },
+		{ { "LTEX", "INTV" }, "Texture Index" },  { { "LTEX", "DATA" }, "Texture File" },
+		{ { "LAND", "INTV" }, "Grid" },           { { "LAND", "DATA" }, "Flags" },
+		{ { "LAND", "VNML" }, "Normals" },        { { "LAND", "VHGT" }, "Heights" },
+		{ { "LAND", "WNAM" }, "World Map" },      { { "LAND", "VCLR" }, "Vertex Colors" },
+		{ { "LAND", "VTEX" }, "Textures" },
+		{ { "LEVC", "CNAM" }, "Creature" },       { { "LEVC", "NNAM" }, "Chance None" },
+		{ { "LEVC", "INDX" }, "Count" },
+		{ { "LEVI", "INAM" }, "Item" },           { { "LEVI", "NNAM" }, "Chance None" },
+		{ { "LEVI", "INDX" }, "Count" },
 	};
 	return descs;
 }

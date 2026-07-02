@@ -509,7 +509,7 @@ static const field_def_t gmst_fltv_fields[] = {
 };
 
 static const field_def_t glob_fnam_fields[] = {
-	{ "Type", field_type_t::u8, 0, 1, nullptr, nullptr },
+	{ "Type", field_type_t::string_fixed, 0, 1, nullptr, nullptr },
 };
 
 static const field_def_t glob_fltv_fields[] = {
@@ -529,6 +529,15 @@ static const char * const land_flags[] = { "Heights & Normals", "Vertex Colors",
 
 static const field_def_t land_data_fields[] = {
 	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, land_flags, ARRAY_COUNT(land_flags) },
+};
+
+static const field_def_t land_intv_fields[] = {
+	{ "Grid X", field_type_t::i32, 0, 4, nullptr, nullptr },
+	{ "Grid Y", field_type_t::i32, 4, 4, nullptr, nullptr },
+};
+
+static const field_def_t land_binary_fields[] = {
+	{ "Data", field_type_t::binary, 0, 0, nullptr, nullptr },
 };
 
 static const char * const info_gender[] = { "Male", "Female", nullptr };
@@ -685,18 +694,18 @@ static const field_def_t ligh_lhdt_fields[] = {
 static const field_def_t ingr_irdt_fields[] = {
 	{ "Weight", field_type_t::f32, 0, 4, nullptr, nullptr },
 	{ "Value", field_type_t::u32, 4, 4, nullptr, nullptr },
-	{ "Effect 1", field_type_t::i32, 8, 4, nullptr, nullptr },
-	{ "Effect 2", field_type_t::i32, 12, 4, nullptr, nullptr },
-	{ "Effect 3", field_type_t::i32, 16, 4, nullptr, nullptr },
-	{ "Effect 4", field_type_t::i32, 20, 4, nullptr, nullptr },
-	{ "Skill 1", field_type_t::i32, 24, 4, nullptr, nullptr },
-	{ "Skill 2", field_type_t::i32, 28, 4, nullptr, nullptr },
-	{ "Skill 3", field_type_t::i32, 32, 4, nullptr, nullptr },
-	{ "Skill 4", field_type_t::i32, 36, 4, nullptr, nullptr },
-	{ "Attribute 1", field_type_t::i32, 40, 4, nullptr, nullptr },
-	{ "Attribute 2", field_type_t::i32, 44, 4, nullptr, nullptr },
-	{ "Attribute 3", field_type_t::i32, 48, 4, nullptr, nullptr },
-	{ "Attribute 4", field_type_t::i32, 52, 4, nullptr, nullptr },
+	{ "Effect 1", field_type_t::i32, 8, 4, effect_names, nullptr },
+	{ "Effect 2", field_type_t::i32, 12, 4, effect_names, nullptr },
+	{ "Effect 3", field_type_t::i32, 16, 4, effect_names, nullptr },
+	{ "Effect 4", field_type_t::i32, 20, 4, effect_names, nullptr },
+	{ "Skill 1", field_type_t::i32, 24, 4, skill_names, nullptr },
+	{ "Skill 2", field_type_t::i32, 28, 4, skill_names, nullptr },
+	{ "Skill 3", field_type_t::i32, 32, 4, skill_names, nullptr },
+	{ "Skill 4", field_type_t::i32, 36, 4, skill_names, nullptr },
+	{ "Attribute 1", field_type_t::i32, 40, 4, attribute_names, nullptr },
+	{ "Attribute 2", field_type_t::i32, 44, 4, attribute_names, nullptr },
+	{ "Attribute 3", field_type_t::i32, 48, 4, attribute_names, nullptr },
+	{ "Attribute 4", field_type_t::i32, 52, 4, attribute_names, nullptr },
 };
 
 static const field_def_t scpt_schd_fields[] = {
@@ -955,6 +964,12 @@ static const std::vector<sub_record_schema_t> & build_schemas()
 		{ "GLOB", "FLTV", 4, glob_fltv_fields, ARRAY_COUNT(glob_fltv_fields) },
 		{ "SNDG", "DATA", 4, sndg_data_fields, ARRAY_COUNT(sndg_data_fields) },
 		{ "LAND", "DATA", 4, land_data_fields, ARRAY_COUNT(land_data_fields) },
+		{ "LAND", "INTV", 8, land_intv_fields, ARRAY_COUNT(land_intv_fields) },
+		{ "LAND", "VNML", 0, land_binary_fields, ARRAY_COUNT(land_binary_fields) },
+		{ "LAND", "VHGT", 0, land_binary_fields, ARRAY_COUNT(land_binary_fields) },
+		{ "LAND", "WNAM", 0, land_binary_fields, ARRAY_COUNT(land_binary_fields) },
+		{ "LAND", "VCLR", 0, land_binary_fields, ARRAY_COUNT(land_binary_fields) },
+		{ "LAND", "VTEX", 0, land_binary_fields, ARRAY_COUNT(land_binary_fields) },
 	};
 	return schemas;
 }
