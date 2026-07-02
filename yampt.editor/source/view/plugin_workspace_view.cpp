@@ -648,6 +648,24 @@ void plugin_workspace_view_t::on_filter_changed()
 	update_status();
 }
 
+void plugin_workspace_view_t::set_hide_duplicates(bool hide)
+{
+	m_hide_duplicates = hide;
+	m_nav_model->set_hide_duplicates(hide);
+
+	auto current = m_nav_view->currentIndex();
+	if (!current.isValid())
+		return;
+
+	const auto info = m_nav_model->node_at(current);
+	if (info.record_id.empty())
+		return;
+
+	const auto * entry = m_scan.find(info.rec_type, info.record_id);
+	if (entry)
+		display_record_in_view(*entry);
+}
+
 void plugin_workspace_view_t::on_advanced_filter()
 {
 	auto types = m_scan.all_types();
@@ -898,7 +916,31 @@ int plugin_workspace_view_t::create_merge_records()
 
 void plugin_workspace_view_t::display_record_in_view(const conflict_entry_t & entry)
 {
-	m_view_model->set_record(m_scan, entry);
+	if (m_hide_duplicates && entry.versions.size() > 1)
+	{
+		conflict_entry_t filtered;
+		filtered.rec_type = entry.rec_type;
+		filtered.record_id = entry.record_id;
+		filtered.display_name = entry.display_name;
+		filtered.dial_name = entry.dial_name;
+		filtered.conflict_all = entry.conflict_all;
+
+		std::set<int> seen_plugins;
+		for (auto it = entry.versions.rbegin(); it != entry.versions.rend(); ++it)
+		{
+			if (seen_plugins.count(it->plugin_idx))
+				continue;
+
+			seen_plugins.insert(it->plugin_idx);
+			filtered.versions.insert(filtered.versions.begin(), *it);
+		}
+
+		m_view_model->set_record(m_scan, filtered);
+	}
+	else
+	{
+		m_view_model->set_record(m_scan, entry);
+	}
 
 	for (int i = 0; i < m_view_model->rowCount({}); ++i)
 	{

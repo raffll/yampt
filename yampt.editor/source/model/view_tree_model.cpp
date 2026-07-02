@@ -60,6 +60,7 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 		set_record_generic(context, entry);
 
 	finalize_header_conflict();
+
 	endResetModel();
 }
 
@@ -74,6 +75,7 @@ size_t view_tree_model_t::setup_columns(plugin_scan_t & scan, const conflict_ent
 		m_plugin_conflict_this.push_back(ver.status);
 		m_column_plugin_indices.push_back(ver.plugin_idx);
 	}
+
 	return entry.versions.size();
 }
 

@@ -3,6 +3,15 @@
 #include <cctype>
 #include <cstdio>
 #include <cstring>
+#include <set>
+
+static size_t unique_plugin_count(const conflict_entry_t & entry)
+{
+	std::set<int> plugins;
+	for (const auto & v : entry.versions)
+		plugins.insert(v.plugin_idx);
+	return plugins.size();
+}
 #include <map>
 #include <QBrush>
 
@@ -138,6 +147,12 @@ void nav_tree_model_t::clear_filter()
 	m_has_filter = false;
 	m_filter = {};
 	rebuild();
+}
+
+void nav_tree_model_t::set_hide_duplicates(bool hide)
+{
+	m_hide_duplicates = hide;
+	emit dataChanged(index(0, 0, {}), index(rowCount({}) - 1, columnCount({}) - 1, {}));
 }
 
 void nav_tree_model_t::build_tree()
@@ -491,6 +506,10 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 				for (const auto & rec : group.records)
 				{
 					const auto & e = entries[rec.entry_idx];
+
+					if (m_hide_duplicates && unique_plugin_count(e) <= 1)
+						continue;
+
 					if (e.conflict_all > worst)
 						worst = e.conflict_all;
 				}
@@ -510,6 +529,13 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 				for (const auto & rec : group.records)
 				{
 					const auto & e = entries[rec.entry_idx];
+
+					if (e.versions.size() <= 1)
+						continue;
+
+					if (m_hide_duplicates && unique_plugin_count(e) <= 1)
+						continue;
+
 					for (const auto & v : e.versions)
 					{
 						if (v.plugin_idx != file_node.plugin_idx)
@@ -520,6 +546,9 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 					}
 				}
 			}
+
+			if (worst_ct == conflict_this_t::unknown)
+				return {};
 
 			return QBrush(conflict_this_foreground(worst_ct));
 		}
@@ -561,6 +590,10 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 				for (const auto & rec : group.records)
 				{
 					const auto & e = entries[rec.entry_idx];
+
+					if (m_hide_duplicates && unique_plugin_count(e) <= 1)
+						continue;
+
 					if (e.conflict_all > worst)
 						worst = e.conflict_all;
 				}
@@ -577,6 +610,13 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 				for (const auto & rec : group.records)
 				{
 					const auto & e = entries[rec.entry_idx];
+
+					if (e.versions.size() <= 1)
+						continue;
+
+					if (m_hide_duplicates && unique_plugin_count(e) <= 1)
+						continue;
+
 					for (const auto & v : e.versions)
 					{
 						if (v.plugin_idx != m_tree[fi].plugin_idx)
@@ -586,6 +626,9 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 							worst_ct = v.status;
 					}
 				}
+
+				if (worst_ct == conflict_this_t::unknown)
+					return {};
 
 				return QBrush(conflict_this_foreground(worst_ct));
 			}
@@ -611,7 +654,12 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 					return QString::fromStdString(entry.record_id);
 
 				if (col == 1)
-					return QString::fromStdString(entry.display_name);
+				{
+					if (!entry.display_name.empty())
+						return QString::fromStdString(entry.display_name);
+
+					return QString::fromStdString(entry.dial_name);
+				}
 			}
 
 			if (role == Qt::BackgroundRole)
@@ -619,11 +667,20 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 				if (entry.conflict_all < conflict_all_t::no_conflict)
 					return {};
 
+				if (m_hide_duplicates && unique_plugin_count(entry) <= 1)
+					return {};
+
 				return QBrush(conflict_all_background(entry.conflict_all));
 			}
 
 			if (role == Qt::ForegroundRole)
 			{
+				if (entry.versions.size() <= 1)
+					return {};
+
+				if (m_hide_duplicates && unique_plugin_count(entry) <= 1)
+					return {};
+
 				for (const auto & v : entry.versions)
 				{
 					if (v.plugin_idx != m_tree[fi].plugin_idx)

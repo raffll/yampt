@@ -79,6 +79,12 @@ void editor_window_t::setup_menu_bar()
 	connect(conflicts_action, &QAction::toggled, m_plugin_workspace_view->conflicts_checkbox(), &QCheckBox::setChecked);
 	connect(m_plugin_workspace_view->conflicts_checkbox(), &QCheckBox::toggled, conflicts_action, &QAction::setChecked);
 
+	auto * hide_dup_action = new QAction("&Hide Duplicate Columns", this);
+	hide_dup_action->setCheckable(true);
+	hide_dup_action->setToolTip("Hide duplicate columns from the same plugin");
+	view_menu->addAction(hide_dup_action);
+	connect(hide_dup_action, &QAction::toggled, m_plugin_workspace_view, &plugin_workspace_view_t::set_hide_duplicates);
+
 	view_menu->addSeparator();
 
 	auto * filter_action = new QAction("&Filter...", this);

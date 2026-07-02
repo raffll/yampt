@@ -37,6 +37,7 @@ public:
 
 	void set_filter(const filter_state_t & state);
 	void clear_filter();
+	void set_hide_duplicates(bool hide);
 
 	QModelIndex index(int row, int column, const QModelIndex & parent) const override;
 	QModelIndex parent(const QModelIndex & child) const override;
@@ -83,6 +84,7 @@ private:
 
 	filter_state_t m_filter;
 	bool m_has_filter = false;
+	bool m_hide_duplicates = false;
 
 	void build_tree();
 	bool passes_filter(const conflict_entry_t & entry, int plugin_idx) const;

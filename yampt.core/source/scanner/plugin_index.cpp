@@ -177,7 +177,10 @@ plugin_index_t::plugin_index_t(esm_reader_t & esm)
 			current_dial = entry.record_id;
 
 		if (rec_type == "INFO")
+		{
 			entry.dial_name = current_dial;
+			entry.record_id = current_dial + "|" + entry.record_id;
+		}
 
 		sub_record_iter_t iter(esm.get_record().content);
 		sub_record_view_t sub;
@@ -308,6 +311,21 @@ std::string plugin_index_t::derive_display_name(esm_reader_t & esm, size_t i)
 
 	sub_record_iter_t iter(content);
 	sub_record_view_t sub;
+
+	if (rec_type == "INFO")
+	{
+		while (iter.next(sub))
+		{
+			if (sub.type != "ONAM")
+				continue;
+
+			std::string text(sub.data, sub.size);
+			text = tools_t::erase_null_chars(text);
+			return text;
+		}
+		return "";
+	}
+
 	while (iter.next(sub))
 	{
 		if (sub.type != "FNAM")

@@ -40,6 +40,7 @@ public slots:
 	void on_unload_all();
 	void on_create_merged_patch();
 	void on_advanced_filter();
+	void set_hide_duplicates(bool hide);
 
 private slots:
 	void on_nav_selection_changed(const QModelIndex & current);
@@ -110,4 +111,5 @@ private:
 
 	bool m_has_filter_active = false;
 	nav_tree_model_t::filter_state_t m_last_quick_filter;
+	bool m_hide_duplicates = false;
 };
