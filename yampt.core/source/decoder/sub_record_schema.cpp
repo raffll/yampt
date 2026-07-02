@@ -687,7 +687,7 @@ static const field_def_t ligh_lhdt_fields[] = {
 	{ "Red", field_type_t::u8, 16, 1, nullptr, nullptr },
 	{ "Green", field_type_t::u8, 17, 1, nullptr, nullptr },
 	{ "Blue", field_type_t::u8, 18, 1, nullptr, nullptr },
-	{ "Null", field_type_t::u8, 19, 1, nullptr, nullptr },
+	{ "Alpha", field_type_t::u8, 19, 1, nullptr, nullptr },
 	{ "Flags", field_type_t::flags_u32, 20, 4, nullptr, light_flags, ARRAY_COUNT(light_flags) },
 };
 
@@ -720,7 +720,7 @@ static const field_def_t scpt_schd_fields[] = {
 static const field_def_t misc_mcdt_fields[] = {
 	{ "Weight", field_type_t::f32, 0, 4, nullptr, nullptr },
 	{ "Value", field_type_t::u32, 4, 4, nullptr, nullptr },
-	{ "Unknown", field_type_t::u32, 8, 4, nullptr, nullptr },
+	{ "Key", field_type_t::bool_bit, 8, 0, nullptr, nullptr },
 };
 
 static const char * const appa_types[] = { "Mortar and Pestle", "Alembic", "Calcinator", "Retort", nullptr };
@@ -884,6 +884,10 @@ static const field_def_t quest_marker_fields[] = {
 	{ "Value", field_type_t::enum_u8, 0, 1, quest_marker_names, nullptr },
 };
 
+static const field_def_t nnam_chance_fields[] = {
+	{ "Value", field_type_t::u8, 0, 1, nullptr, nullptr },
+};
+
 static const std::vector<sub_record_schema_t> & build_schemas()
 {
 	static const std::vector<sub_record_schema_t> schemas = {
@@ -949,6 +953,10 @@ static const std::vector<sub_record_schema_t> & build_schemas()
 		{ "*", "INTV", 4, intv_4_fields, ARRAY_COUNT(intv_4_fields) },
 		{ "SOUN", "DATA", 3, soun_data_fields, ARRAY_COUNT(soun_data_fields) },
 		{ "PGRD", "DATA", 12, pgrd_data_fields, ARRAY_COUNT(pgrd_data_fields) },
+		{ "PGRD", "PGRP", 0, land_binary_fields, ARRAY_COUNT(land_binary_fields) },
+		{ "PGRD", "PGRC", 0, land_binary_fields, ARRAY_COUNT(land_binary_fields) },
+		{ "SCPT", "SCVR", 0, land_binary_fields, ARRAY_COUNT(land_binary_fields) },
+		{ "SCPT", "SCDT", 0, land_binary_fields, ARRAY_COUNT(land_binary_fields) },
 		{ "REGN", "SNAM", 33, regn_snam_fields, ARRAY_COUNT(regn_snam_fields) },
 		{ "REGN", "CNAM", 4, regn_cnam_fields, ARRAY_COUNT(regn_cnam_fields) },
 		{ "*", "INDX", 4, indx_fields, ARRAY_COUNT(indx_fields) },
@@ -957,6 +965,8 @@ static const std::vector<sub_record_schema_t> & build_schemas()
 		{ "*", "QSTN", 1, quest_marker_fields, ARRAY_COUNT(quest_marker_fields) },
 		{ "*", "QSTF", 1, quest_marker_fields, ARRAY_COUNT(quest_marker_fields) },
 		{ "*", "QSTR", 1, quest_marker_fields, ARRAY_COUNT(quest_marker_fields) },
+		{ "LEVC", "NNAM", 1, nnam_chance_fields, ARRAY_COUNT(nnam_chance_fields) },
+		{ "LEVI", "NNAM", 1, nnam_chance_fields, ARRAY_COUNT(nnam_chance_fields) },
 		{ "CELL", "NAM5", 4, cell_nam5_fields, ARRAY_COUNT(cell_nam5_fields) },
 		{ "CELL", "FLTV", 4, cell_fltv_fields, ARRAY_COUNT(cell_fltv_fields) },
 		{ "CELL", "NAM9", 4, cell_nam9_fields, ARRAY_COUNT(cell_nam9_fields) },

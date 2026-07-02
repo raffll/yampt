@@ -23,7 +23,6 @@ public:
 	void set_hide_no_conflict(bool hide);
 	bool is_merge_column(int section) const;
 	int merge_column() const;
-	std::string debug_dump() const;
 
 	QModelIndex index(int row, int column, const QModelIndex & parent) const override;
 	QModelIndex parent(const QModelIndex & child) const override;

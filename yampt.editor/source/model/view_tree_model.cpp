@@ -47,7 +47,7 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 	const bool is_leveled = (m_record_type == "LEVI" || m_record_type == "LEVC");
 	const bool is_faction = (m_record_type == "FACT");
 	const bool is_container =
-	    (m_record_type == "CONT" || m_record_type == "CREA" || m_record_type == "NPC_" || m_record_type == "BSGN");
+	    (m_record_type == "CONT" || m_record_type == "CREA" || m_record_type == "NPC_" || m_record_type == "BSGN" || m_record_type == "RACE");
 
 	if (is_cell)
 		set_record_cell(context);
@@ -271,81 +271,6 @@ void view_tree_model_t::clear()
 	m_merge_col_index = -1;
 	m_filter_dirty = true;
 	endResetModel();
-}
-
-static const char * conflict_all_name(conflict_all_t ca)
-{
-	switch (ca)
-	{
-	case conflict_all_t::unknown: return "unknown";
-	case conflict_all_t::only_one: return "only_one";
-	case conflict_all_t::no_conflict: return "no_conflict";
-	case conflict_all_t::override_benign: return "override_benign";
-	case conflict_all_t::conflict: return "conflict";
-	}
-	return "?";
-}
-
-static const char * conflict_this_name(conflict_this_t ct)
-{
-	switch (ct)
-	{
-	case conflict_this_t::unknown: return "unk";
-	case conflict_this_t::master: return "master";
-	case conflict_this_t::identical_to_master: return "identical";
-	case conflict_this_t::override_wins: return "override";
-	case conflict_this_t::conflict_wins: return "c_wins";
-	case conflict_this_t::conflict_loses: return "c_loses";
-	case conflict_this_t::deleted: return "deleted";
-	}
-	return "?";
-}
-
-std::string view_tree_model_t::debug_dump() const
-{
-	std::string result;
-	for (const auto & row : m_rows)
-	{
-		result += row.label + " | ca=" + conflict_all_name(row.row_conflict_all) + " | ct=[";
-		for (size_t i = 0; i < row.cell_conflict_this.size(); ++i)
-		{
-			if (i > 0)
-				result += ", ";
-			result += conflict_this_name(row.cell_conflict_this[i]);
-		}
-		result += "]\n";
-
-		for (const auto & child : row.children)
-		{
-			result += "  " + child.name + " | ca=" + conflict_all_name(child.row_conflict_all) + " | ct=[";
-			for (size_t i = 0; i < child.cell_conflict_this.size(); ++i)
-			{
-				if (i > 0)
-					result += ", ";
-				result += conflict_this_name(child.cell_conflict_this[i]);
-			}
-			result += "]";
-			result += " vals=[";
-			for (size_t i = 0; i < child.values.size(); ++i)
-			{
-				if (i > 0)
-					result += " | ";
-				auto v = child.values[i];
-				if (v.size() > 60)
-					v = v.substr(0, 60) + "...";
-				for (auto & c : v)
-				{
-					auto uc = static_cast<unsigned char>(c);
-					if (uc < 32 || uc > 126)
-						c = '#';
-				}
-				result += v;
-			}
-			result += "]";
-			result += "\n";
-		}
-	}
-	return result;
 }
 
 bool view_tree_model_t::is_merge_column(int section) const
