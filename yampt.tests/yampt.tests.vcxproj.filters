@@ -42,6 +42,7 @@
     <ClCompile Include="source\tests.keyword_trie.cpp" />
     <ClCompile Include="source\tests.theme_system.cpp" />
     <ClCompile Include="source\tests.sub_record_schema.cpp" />
+    <ClCompile Include="source\tests.plugin_scan_merge.cpp" />
     <ClCompile Include="..\yampt.core\source\io\app_settings.cpp" />
     <ClCompile Include="..\yampt.core\source\io\eet_converter.cpp" />
     <ClCompile Include="..\yampt.core\source\io\eet_reader.cpp" />
@@ -63,6 +64,10 @@
     <ClCompile Include="..\yampt.core\source\translator\translation_engine.cpp" />
     <ClCompile Include="..\yampt.core\source\io\file_list.cpp" />
     <ClCompile Include="..\yampt.core\source\scanner\conflict_compute.cpp" />
+    <ClCompile Include="..\yampt.core\source\scanner\plugin_scan.cpp" />
+    <ClCompile Include="..\yampt.core\source\scanner\plugin_scan_merge.cpp" />
+    <ClCompile Include="..\yampt.core\source\scanner\plugin_index.cpp" />
+    <ClCompile Include="..\yampt.core\source\decoder\view_tree_format.cpp" />
     <ClCompile Include="..\yampt.core\source\decoder\conflict_slots.cpp" />
     <ClCompile Include="..\yampt.core\source\decoder\conflict_slots_cell.cpp" />
     <ClCompile Include="..\yampt.core\source\decoder\sub_record_schema.cpp" />

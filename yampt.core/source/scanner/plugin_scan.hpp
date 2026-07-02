@@ -31,6 +31,7 @@ public:
 	void load_plugin(const std::string & path);
 	void set_merge_plugin(const std::string & filename);
 	void set_merge_plugin_from_loaded(int plugin_idx);
+	void clear_merge_records();
 	void rebuild_conflicts();
 
 	size_t plugin_count() const;

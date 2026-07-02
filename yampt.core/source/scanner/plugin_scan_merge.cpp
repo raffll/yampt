@@ -27,6 +27,11 @@ void plugin_scan_t::set_merge_plugin(const std::string & filename)
 	m_merge_records.clear();
 }
 
+void plugin_scan_t::clear_merge_records()
+{
+	m_merge_records.clear();
+}
+
 void plugin_scan_t::set_merge_plugin_from_loaded(int plugin_idx)
 {
 	if (plugin_idx < 0 || plugin_idx >= static_cast<int>(m_plugins.size()))
@@ -118,6 +123,9 @@ bool plugin_scan_t::save_merge(
 	if (m_merge_plugin_idx < 0)
 		return false;
 
+	if (m_merge_records.empty())
+		return false;
+
 	std::string header_content = build_tes3_header(author, description);
 
 	std::vector<tools_t::record_t> records;
@@ -126,8 +134,28 @@ bool plugin_scan_t::save_merge(
 	for (const auto & mr : m_merge_records)
 		records.push_back({ mr.rec_type, mr.content, mr.content.size(), false });
 
-	tools_t::write_file(records, output_path);
-	return true;
+	const auto temp_path = output_path + ".tmp";
+	tools_t::write_file(records, temp_path);
+
+	if (!std::filesystem::exists(temp_path))
+		return false;
+
+	std::error_code error_code;
+	std::filesystem::rename(temp_path, output_path, error_code);
+
+	if (!error_code)
+		return true;
+
+	std::filesystem::copy_file(
+	    temp_path, output_path,
+	    std::filesystem::copy_options::overwrite_existing, error_code);
+
+	std::filesystem::remove(temp_path, error_code);
+
+	if (std::filesystem::exists(output_path))
+		return true;
+
+	return false;
 }
 
 bool plugin_scan_t::has_merge() const

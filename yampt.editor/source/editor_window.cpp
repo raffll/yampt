@@ -92,6 +92,13 @@ void editor_window_t::setup_menu_bar()
 	view_menu->addAction(hide_dup_action);
 	connect(hide_dup_action, &QAction::toggled, m_plugin_workspace_view, &plugin_workspace_view_t::set_hide_duplicates);
 
+	auto * merge_col_action = new QAction("Show &Merge Column", this);
+	merge_col_action->setCheckable(true);
+	merge_col_action->setChecked(true);
+	merge_col_action->setToolTip("Show or hide the merged patch column");
+	view_menu->addAction(merge_col_action);
+	connect(merge_col_action, &QAction::toggled, m_plugin_workspace_view, &plugin_workspace_view_t::set_merge_column_visible);
+
 	view_menu->addSeparator();
 
 	auto * filter_action = new QAction("&Filter...", this);

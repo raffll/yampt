@@ -14,6 +14,7 @@
 #include <QTreeView>
 #include <QWidget>
 
+class QDragMoveEvent;
 class QDropEvent;
 class app_settings_t;
 
@@ -32,6 +33,8 @@ public:
 	QLabel * status_label() const { return m_status_label; }
 	void refresh_views();
 
+	bool is_merge_column_visible() const { return m_merge_column_visible; }
+
 public slots:
 	void on_load_plugins();
 	void on_load_data_files();
@@ -42,6 +45,7 @@ public slots:
 	void on_create_merged_patch();
 	void on_advanced_filter();
 	void set_hide_duplicates(bool hide);
+	void set_merge_column_visible(bool visible);
 
 private slots:
 	void on_nav_selection_changed(const QModelIndex & current);
@@ -83,6 +87,8 @@ private:
 	std::string resolve_single_content(const std::string & content_name, const std::vector<std::string> & data_dirs);
 	int create_merge_records();
 	bool eventFilter(QObject * obj, QEvent * event) override;
+	bool handle_drag_move_view(QDragMoveEvent * drag);
+	bool handle_drag_move_nav(QDragMoveEvent * drag);
 	bool handle_drop_on_view(QDropEvent * drop_event);
 	bool handle_drop_on_nav(QDropEvent * drop_event);
 	void refresh_after_merge(const std::string & rec_type, const std::string & record_id);
@@ -113,4 +119,5 @@ private:
 	bool m_has_filter_active = false;
 	nav_tree_model_t::filter_state_t m_last_quick_filter;
 	bool m_hide_duplicates = false;
+	bool m_merge_column_visible = true;
 };

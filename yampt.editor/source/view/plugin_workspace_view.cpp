@@ -666,6 +666,18 @@ void plugin_workspace_view_t::set_hide_duplicates(bool hide)
 		display_record_in_view(*entry);
 }
 
+void plugin_workspace_view_t::set_merge_column_visible(bool visible)
+{
+	m_merge_column_visible = visible;
+
+	const auto merge_col = m_view_model->merge_column();
+	if (merge_col < 0)
+		return;
+
+	const bool should_show = m_scan.has_merge() && visible;
+	m_view_view->header()->setSectionHidden(merge_col, !should_show);
+}
+
 void plugin_workspace_view_t::on_advanced_filter()
 {
 	auto types = m_scan.all_types();
@@ -720,36 +732,55 @@ void plugin_workspace_view_t::on_advanced_filter()
 void plugin_workspace_view_t::on_save_plugin()
 {
 	if (!m_scan.has_merge())
+	{
+		log_message("[error] no merged patch exists");
 		return;
+	}
 
-	const auto initial_dir = QString::fromStdString(m_settings.last_directory());
-	QString path = QFileDialog::getSaveFileName(this, "Save Merge Plugin", initial_dir, "ESP files (*.esp)");
-
-	if (path.isEmpty())
+	if (m_scan.merge_record_count() == 0)
+	{
+		log_message("[error] merged patch is empty");
 		return;
+	}
+
+	auto output_path = resolve_merge_output_path();
+	if (output_path.empty())
+	{
+		const auto initial_dir = QString::fromStdString(m_settings.last_directory());
+		const auto selected = QFileDialog::getSaveFileName(this, "Save Merge Plugin", initial_dir, "ESP files (*.esp)");
+		if (selected.isEmpty())
+			return;
+
+		output_path = selected.toStdString();
+	}
 
 	bool ok_author = false;
-	QString author = QInputDialog::getText(this, "Plugin Author", "Author:", QLineEdit::Normal, QString(), &ok_author);
+	auto author =
+	    QInputDialog::getText(this, "Plugin Author", "Author:", QLineEdit::Normal, QString(), &ok_author);
 
 	if (!ok_author)
 		return;
 
 	bool ok_desc = false;
-	QString description =
+	auto description =
 	    QInputDialog::getText(this, "Plugin Description", "Description:", QLineEdit::Normal, QString(), &ok_desc);
 
 	if (!ok_desc)
 		return;
 
-	bool result = m_scan.save_merge(path.toStdString(), author.toStdString(), description.toStdString());
+	auto output_dir = QDir(QFileInfo(QString::fromStdString(output_path)).absolutePath());
+	output_dir.mkpath(".");
+
+	const bool result = m_scan.save_merge(output_path, author.toStdString(), description.toStdString());
 
 	if (result)
 	{
-		log_message("Saved " + path.toStdString() + " (" + std::to_string(m_scan.merge_record_count()) + " records)");
+		log_message(
+		    "[info] saved " + output_path + " (" + std::to_string(m_scan.merge_record_count()) + " records)");
 	}
 	else
 	{
-		log_message("Error saving plugin");
+		log_message("[error] cannot write to " + output_path);
 	}
 }
 
@@ -869,6 +900,8 @@ void plugin_workspace_view_t::on_create_merged_patch()
 
 int plugin_workspace_view_t::create_merge_records()
 {
+	m_scan.clear_merge_records();
+
 	const auto & entries = m_scan.entries();
 	int copied = 0;
 	int merged_lists = 0;
@@ -889,22 +922,38 @@ int plugin_workspace_view_t::create_merge_records()
 		if (winner.status == conflict_this_t::identical_to_master)
 			continue;
 
-		if (entry.rec_type == "LEVI" || entry.rec_type == "LEVC")
-		{
-			m_scan.merge_leveled_list(entry);
-			++merged_lists;
-			continue;
-		}
+		const bool is_leveled = (entry.rec_type == "LEVI" || entry.rec_type == "LEVC");
+		const bool is_dialogue = (entry.rec_type == "DIAL");
 
-		if (entry.rec_type == "DIAL")
-		{
-			m_scan.merge_dialogue(entry);
-			++merged_dial;
+		if (entry.conflict_all == conflict_all_t::override_benign && !is_leveled && !is_dialogue)
 			continue;
-		}
 
-		m_scan.copy_record_to_merge(winner.plugin_idx, winner.record_index);
-		++copied;
+		try
+		{
+			if (is_leveled)
+			{
+				m_scan.merge_leveled_list(entry);
+				++merged_lists;
+			}
+			else if (is_dialogue)
+			{
+				m_scan.merge_dialogue(entry);
+				++merged_dial;
+			}
+			else
+			{
+				m_scan.copy_record_to_merge(winner.plugin_idx, winner.record_index);
+				++copied;
+			}
+		}
+		catch (const std::exception & e)
+		{
+			log_message("[error] cannot parse " + entry.rec_type + " record \"" + entry.record_id + "\": " + e.what());
+		}
+		catch (...)
+		{
+			log_message("[error] cannot parse " + entry.rec_type + " record \"" + entry.record_id + "\"");
+		}
 	}
 
 	log_message(
@@ -940,6 +989,13 @@ void plugin_workspace_view_t::display_record_in_view(const conflict_entry_t & en
 	else
 	{
 		m_view_model->set_record(m_scan, entry);
+	}
+
+	const auto merge_col = m_view_model->merge_column();
+	if (merge_col >= 0)
+	{
+		const bool should_show = m_scan.has_merge() && m_merge_column_visible;
+		m_view_view->header()->setSectionHidden(merge_col, !should_show);
 	}
 
 	for (int i = 0; i < m_view_model->rowCount({}); ++i)
@@ -987,15 +1043,17 @@ void plugin_workspace_view_t::on_remove_itm()
 		return;
 	}
 
-	auto itms = m_scan.itm_entries(info.plugin_idx);
-	int count = 0;
-	for (const auto * entry : itms)
-	{
-		m_scan.remove_from_merge(entry->rec_type, entry->record_id);
-		++count;
-	}
+	const auto itms = m_scan.itm_entries(info.plugin_idx);
+	const auto count_before = m_scan.merge_record_count();
 
-	log_message("Removed " + std::to_string(count) + " ITM records from merge plugin");
+	for (const auto * entry : itms)
+		m_scan.remove_from_merge(entry->rec_type, entry->record_id);
+
+	const auto removed = count_before - m_scan.merge_record_count();
+	if (removed == 0)
+		return;
+
+	log_message("Removed " + std::to_string(removed) + " ITM records from merge");
 	m_scan.rebuild_conflicts();
 	rebuild_nav_preserving_state();
 	update_status();
@@ -1084,7 +1142,10 @@ void plugin_workspace_view_t::on_view_copy()
 
 bool plugin_workspace_view_t::eventFilter(QObject * obj, QEvent * event)
 {
-	if (obj == m_view_view->viewport() && event->type() == QEvent::DragEnter)
+	const bool is_view = (obj == m_view_view->viewport());
+	const bool is_nav = (obj == m_nav_view->viewport());
+
+	if ((is_view || is_nav) && event->type() == QEvent::DragEnter)
 	{
 		auto * drag = static_cast<QDragEnterEvent *>(event);
 		if (drag->mimeData()->hasFormat("application/x-yampt-record") && m_scan.has_merge())
@@ -1094,15 +1155,11 @@ bool plugin_workspace_view_t::eventFilter(QObject * obj, QEvent * event)
 		}
 	}
 
-	if (obj == m_view_view->viewport() && event->type() == QEvent::DragMove)
-	{
-		auto * drag = static_cast<QDragMoveEvent *>(event);
-		if (drag->mimeData()->hasFormat("application/x-yampt-record") && m_scan.has_merge())
-		{
-			drag->acceptProposedAction();
-			return true;
-		}
-	}
+	if (is_view && event->type() == QEvent::DragMove)
+		return handle_drag_move_view(static_cast<QDragMoveEvent *>(event));
+
+	if (is_nav && event->type() == QEvent::DragMove)
+		return handle_drag_move_nav(static_cast<QDragMoveEvent *>(event));
 
 	if (event->type() != QEvent::Drop)
 		return QWidget::eventFilter(obj, event);
@@ -1112,15 +1169,57 @@ bool plugin_workspace_view_t::eventFilter(QObject * obj, QEvent * event)
 		return QWidget::eventFilter(obj, event);
 
 	if (!m_scan.has_merge())
-		return QWidget::eventFilter(obj, event);
+	{
+		log_message("[error] create a merged patch first");
+		drop_event->ignore();
+		return true;
+	}
 
-	if (obj == m_view_view->viewport())
+	if (is_view)
 		return handle_drop_on_view(drop_event);
 
-	if (obj == m_nav_view->viewport())
+	if (is_nav)
 		return handle_drop_on_nav(drop_event);
 
 	return QWidget::eventFilter(obj, event);
+}
+
+bool plugin_workspace_view_t::handle_drag_move_view(QDragMoveEvent * drag)
+{
+	if (!drag->mimeData()->hasFormat("application/x-yampt-record") || !m_scan.has_merge())
+	{
+		drag->ignore();
+		return true;
+	}
+
+	const int column = m_view_view->columnAt(drag->position().toPoint().x());
+	if (m_view_model->is_merge_column(column))
+	{
+		drag->acceptProposedAction();
+		return true;
+	}
+
+	drag->ignore();
+	return true;
+}
+
+bool plugin_workspace_view_t::handle_drag_move_nav(QDragMoveEvent * drag)
+{
+	if (!drag->mimeData()->hasFormat("application/x-yampt-record") || !m_scan.has_merge())
+	{
+		drag->ignore();
+		return true;
+	}
+
+	const auto & target = m_nav_view->indexAt(drag->position().toPoint());
+	if (target.isValid() && m_scan.is_merge_plugin(m_nav_model->node_at(target).plugin_idx))
+	{
+		drag->acceptProposedAction();
+		return true;
+	}
+
+	drag->ignore();
+	return true;
 }
 
 bool plugin_workspace_view_t::handle_drop_on_view(QDropEvent * drop_event)
@@ -1134,50 +1233,24 @@ bool plugin_workspace_view_t::handle_drop_on_view(QDropEvent * drop_event)
 	const auto & rec_type = parts[1].toStdString();
 	const auto & record_id = parts[2].toStdString();
 
+	if (m_scan.is_merge_plugin(source_plugin))
+	{
+		drop_event->ignore();
+		return true;
+	}
+
 	const auto * entry = m_scan.find(rec_type, record_id);
 	if (!entry)
 		return true;
 
-	bool already_in_merge = false;
 	for (const auto & version : entry->versions)
 	{
-		if (m_scan.is_merge_plugin(version.plugin_idx))
-		{
-			already_in_merge = true;
-			break;
-		}
-	}
+		if (version.plugin_idx != source_plugin)
+			continue;
 
-	if (!already_in_merge)
-	{
-		int best_plugin = -1;
-		size_t best_index = 0;
-		for (const auto & version : entry->versions)
-		{
-			if (m_scan.is_merge_plugin(version.plugin_idx))
-				continue;
-
-			best_plugin = version.plugin_idx;
-			best_index = version.record_index;
-		}
-
-		if (best_plugin >= 0)
-		{
-			m_scan.copy_record_to_merge(best_plugin, best_index);
-			log_message("Copied " + rec_type + ":" + record_id + " to merge (winner)");
-		}
-	}
-	else
-	{
-		for (const auto & version : entry->versions)
-		{
-			if (version.plugin_idx != source_plugin)
-				continue;
-
-			m_scan.copy_record_to_merge(source_plugin, version.record_index);
-			log_message("Copied " + rec_type + ":" + record_id + " to merge (override)");
-			break;
-		}
+		m_scan.copy_record_to_merge(source_plugin, version.record_index);
+		log_message("Copied " + rec_type + ":" + record_id + " to merge");
+		break;
 	}
 
 	refresh_after_merge(rec_type, record_id);
@@ -1204,6 +1277,12 @@ bool plugin_workspace_view_t::handle_drop_on_nav(QDropEvent * drop_event)
 	const auto & rec_type = parts[1].toStdString();
 	const auto & record_id = parts[2].toStdString();
 
+	if (m_scan.is_merge_plugin(source_plugin))
+	{
+		drop_event->ignore();
+		return true;
+	}
+
 	const auto * entry = m_scan.find(rec_type, record_id);
 	if (!entry)
 		return true;
@@ -1214,7 +1293,7 @@ bool plugin_workspace_view_t::handle_drop_on_nav(QDropEvent * drop_event)
 			continue;
 
 		m_scan.copy_record_to_merge(source_plugin, version.record_index);
-		log_message("Copied " + rec_type + ":" + record_id + " to merge (drag)");
+		log_message("Copied " + rec_type + ":" + record_id + " to merge");
 		break;
 	}
 
@@ -1290,38 +1369,38 @@ void plugin_workspace_view_t::save_plugin_paths()
 {
 	QSettings settings(QCoreApplication::applicationDirPath() + "/yEditor.ini", QSettings::IniFormat);
 
-	settings.beginWriteArray("editor/plugins");
+	QStringList plugin_paths;
 	for (int i = 0; i < static_cast<int>(m_scan.plugin_count()); ++i)
-	{
-		settings.setArrayIndex(i);
-		settings.setValue("path", QString::fromStdString(m_scan.plugin_path(i)));
-	}
-	settings.endArray();
+		plugin_paths.append(QString::fromStdString(m_scan.plugin_path(i)));
+
+	settings.setValue("session/plugin_paths", plugin_paths);
+	settings.setValue("session/load_source", static_cast<int>(m_load_source));
+	settings.setValue("session/load_base_path", QString::fromStdString(m_load_base_path));
 }
 
 void plugin_workspace_view_t::load_plugin_paths()
 {
 	QSettings settings(QCoreApplication::applicationDirPath() + "/yEditor.ini", QSettings::IniFormat);
 
-	int count = settings.beginReadArray("editor/plugins");
-	if (count == 0)
-	{
-		settings.endArray();
+	const auto paths = settings.value("session/plugin_paths").toStringList();
+	if (paths.isEmpty())
 		return;
-	}
 
-	std::vector<std::string> paths;
-	for (int i = 0; i < count; ++i)
-	{
-		settings.setArrayIndex(i);
-		auto path = settings.value("path").toString().toStdString();
-		if (!path.empty())
-			paths.push_back(path);
-	}
-	settings.endArray();
+	m_load_source = static_cast<load_source_t>(settings.value("session/load_source", 0).toInt());
+	m_load_base_path = settings.value("session/load_base_path").toString().toStdString();
 
-	for (const auto & path : paths)
+	for (const auto & qpath : paths)
 	{
+		const auto path = qpath.toStdString();
+		if (path.empty())
+			continue;
+
+		if (!QFile::exists(qpath))
+		{
+			log_message("[warning] skipping missing plugin: " + path);
+			continue;
+		}
+
 		auto filename = path;
 		auto pos = filename.find_last_of("/\\");
 		if (pos != std::string::npos)
@@ -1347,7 +1426,7 @@ void plugin_workspace_view_t::load_plugin_paths()
 		}
 		catch (const std::exception & e)
 		{
-			log_message("Error loading " + filename + ": " + e.what());
+			log_message("[error] loading " + filename + ": " + e.what());
 		}
 	}
 
@@ -1364,6 +1443,7 @@ void plugin_workspace_view_t::save_session_state()
 
 	settings.setValue("session/main_splitter", m_main_splitter->saveState());
 	settings.setValue("session/content_splitter", m_content_splitter->saveState());
+	settings.setValue("session/merge_visible", m_merge_column_visible);
 
 	auto current = m_nav_view->currentIndex();
 	if (current.isValid())
@@ -1390,6 +1470,8 @@ void plugin_workspace_view_t::restore_session_state()
 	auto content_state = settings.value("session/content_splitter").toByteArray();
 	if (!content_state.isEmpty())
 		m_content_splitter->restoreState(content_state);
+
+	m_merge_column_visible = settings.value("session/merge_visible", true).toBool();
 
 	auto rec_type = settings.value("session/nav_rec_type").toString().toStdString();
 	auto record_id = settings.value("session/nav_record_id").toString().toStdString();
