@@ -140,3 +140,21 @@ TEST_CASE("sub_record_schema_t::find_schema, generic INDX 4-byte has no enum", "
 	REQUIRE(schema->field_count == 1);
 	REQUIRE(schema->fields[0].enum_names == nullptr);
 }
+
+TEST_CASE("sub_record_schema_t::find_schema, BODY BYDT has 5 fields from 4 bytes", "[u]")
+{
+	const auto * schema = find_schema("BODY", "BYDT", 4);
+	REQUIRE(schema != nullptr);
+	REQUIRE(schema->field_count == 5);
+	REQUIRE(std::string(schema->fields[0].name) == "Part");
+	REQUIRE(std::string(schema->fields[1].name) == "Vampire");
+	REQUIRE(std::string(schema->fields[2].name) == "Female");
+	REQUIRE(schema->fields[2].type == field_type_t::bool_bit);
+	REQUIRE(schema->fields[2].offset == 2);
+	REQUIRE(schema->fields[2].size == 0);
+	REQUIRE(std::string(schema->fields[3].name) == "Playable");
+	REQUIRE(schema->fields[3].type == field_type_t::bool_bit);
+	REQUIRE(schema->fields[3].offset == 2);
+	REQUIRE(schema->fields[3].size == 1);
+	REQUIRE(std::string(schema->fields[4].name) == "Part Type");
+}

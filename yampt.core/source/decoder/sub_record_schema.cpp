@@ -101,7 +101,7 @@ static const field_def_t weap_wpdt_fields[] = {
 	{ "Health", field_type_t::u16, 10, 2, nullptr, nullptr },
 	{ "Speed", field_type_t::f32, 12, 4, nullptr, nullptr },
 	{ "Reach", field_type_t::f32, 16, 4, nullptr, nullptr },
-	{ "Enchant Pts", field_type_t::u16, 20, 2, nullptr, nullptr },
+	{ "Enchant Points", field_type_t::u16, 20, 2, nullptr, nullptr },
 	{ "Chop Min", field_type_t::u8, 22, 1, nullptr, nullptr },
 	{ "Chop Max", field_type_t::u8, 23, 1, nullptr, nullptr },
 	{ "Slash Min", field_type_t::u8, 24, 1, nullptr, nullptr },
@@ -120,7 +120,7 @@ static const field_def_t armo_aodt_fields[] = {
 	{ "Weight", field_type_t::f32, 4, 4, nullptr, nullptr },
 	{ "Value", field_type_t::u32, 8, 4, nullptr, nullptr },
 	{ "Health", field_type_t::u32, 12, 4, nullptr, nullptr },
-	{ "Enchant Pts", field_type_t::u32, 16, 4, nullptr, nullptr },
+	{ "Enchant Points", field_type_t::u32, 16, 4, nullptr, nullptr },
 	{ "Armor Rating", field_type_t::u32, 20, 4, nullptr, nullptr },
 };
 
@@ -315,12 +315,14 @@ static const field_def_t enam_fields[] = {
 	{ "Mag Max", field_type_t::u32, 20, 4, nullptr, nullptr },
 };
 
+static const char * const book_scroll[] = { "No", "Yes", nullptr };
+
 static const field_def_t book_bkdt_fields[] = {
 	{ "Weight", field_type_t::f32, 0, 4, nullptr, nullptr },
 	{ "Value", field_type_t::u32, 4, 4, nullptr, nullptr },
-	{ "Is Scroll", field_type_t::u32, 8, 4, nullptr, nullptr },
+	{ "Scroll", field_type_t::enum_u32, 8, 4, book_scroll, nullptr },
 	{ "Skill", field_type_t::i8, 12, 1, skill_names, nullptr },
-	{ "Enchant Pts", field_type_t::u32, 16, 4, nullptr, nullptr },
+	{ "Enchant Points", field_type_t::u32, 16, 4, nullptr, nullptr },
 };
 
 static const char * const creature_types[] = { "Creature", "Daedra", "Undead", "Humanoid", nullptr };
@@ -425,8 +427,6 @@ static const field_def_t fact_rnam_fields[] = {
 
 static const char * const class_specializations[] = { "Combat", "Magic", "Stealth", nullptr };
 
-static const char * const class_flags[] = { "Playable" };
-
 static const field_def_t clas_cldt_fields[] = {
 	{ "Attribute 1", field_type_t::enum_u32, 0, 4, attribute_names, nullptr },
 	{ "Attribute 2", field_type_t::enum_u32, 4, 4, attribute_names, nullptr },
@@ -441,8 +441,8 @@ static const field_def_t clas_cldt_fields[] = {
 	{ "Minor 3", field_type_t::enum_u32, 28, 4, skill_names, nullptr },
 	{ "Minor 4", field_type_t::enum_u32, 36, 4, skill_names, nullptr },
 	{ "Minor 5", field_type_t::enum_u32, 44, 4, skill_names, nullptr },
-	{ "Flags", field_type_t::flags_u32, 52, 4, nullptr, class_flags, ARRAY_COUNT(class_flags) },
-	{ "Services", field_type_t::u32, 56, 4, nullptr, nullptr },
+	{ "Playable", field_type_t::bool_bit, 52, 0, nullptr, nullptr },
+	{ "Services", field_type_t::flags_u32, 56, 4, nullptr, aidt_flags, ARRAY_COUNT(aidt_flags) },
 };
 
 static const char * const race_flags[] = { "Playable", "Beast" };
@@ -661,7 +661,7 @@ static const field_def_t clot_ctdt_fields[] = {
 	{ "Type", field_type_t::enum_u32, 0, 4, clothing_types, nullptr },
 	{ "Weight", field_type_t::f32, 4, 4, nullptr, nullptr },
 	{ "Value", field_type_t::u16, 8, 2, nullptr, nullptr },
-	{ "Enchant Pts", field_type_t::u16, 10, 2, nullptr, nullptr },
+	{ "Enchant Points", field_type_t::u16, 10, 2, nullptr, nullptr },
 };
 
 static const char * const light_flags[] = { "Dynamic",     "Can Carry",    "Negative", "Flicker",   "Fire",
@@ -749,14 +749,13 @@ static const char * const body_parts[] = { "Head",     "Hair",     "Neck",     "
 
 static const char * const body_vampire[] = { "No", "Yes", nullptr };
 
-static const char * const body_gender[] = { "Male", "Female", nullptr };
-
 static const char * const body_part_types[] = { "Skin", "Clothing", "Armor", nullptr };
 
 static const field_def_t body_bydt_fields[] = {
 	{ "Part", field_type_t::enum_u8, 0, 1, body_parts, nullptr },
 	{ "Vampire", field_type_t::enum_u8, 1, 1, body_vampire, nullptr },
-	{ "Gender", field_type_t::enum_u8, 2, 1, body_gender, nullptr },
+	{ "Female", field_type_t::bool_bit, 2, 0, nullptr, nullptr },
+	{ "Playable", field_type_t::bool_bit, 2, 1, nullptr, nullptr },
 	{ "Part Type", field_type_t::enum_u8, 3, 1, body_part_types, nullptr },
 };
 

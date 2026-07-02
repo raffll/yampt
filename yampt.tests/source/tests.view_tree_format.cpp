@@ -86,3 +86,87 @@ TEST_CASE("decode_field, i8 without enum shows number", "[u]")
 	auto result = decode_field(field, data, 1);
 	REQUIRE(result == "42");
 }
+
+TEST_CASE("decode_field, bool_bit 0 set shows Yes", "[u]")
+{
+	field_def_t field { "Female", field_type_t::bool_bit, 0, 0, nullptr, nullptr, 0 };
+
+	char data[1] = { 0x01 };
+	auto result = decode_field(field, data, 1);
+	REQUIRE(result == "Yes");
+}
+
+TEST_CASE("decode_field, bool_bit 0 unset shows No", "[u]")
+{
+	field_def_t field { "Female", field_type_t::bool_bit, 0, 0, nullptr, nullptr, 0 };
+
+	char data[1] = { 0x00 };
+	auto result = decode_field(field, data, 1);
+	REQUIRE(result == "No");
+}
+
+TEST_CASE("decode_field, bool_bit 1 set shows Yes", "[u]")
+{
+	field_def_t field { "Playable", field_type_t::bool_bit, 0, 1, nullptr, nullptr, 0 };
+
+	char data[1] = { 0x02 };
+	auto result = decode_field(field, data, 1);
+	REQUIRE(result == "Yes");
+}
+
+TEST_CASE("decode_field, bool_bit 1 unset shows No", "[u]")
+{
+	field_def_t field { "Playable", field_type_t::bool_bit, 0, 1, nullptr, nullptr, 0 };
+
+	char data[1] = { 0x01 };
+	auto result = decode_field(field, data, 1);
+	REQUIRE(result == "No");
+}
+
+TEST_CASE("decode_field, bool_bit both bits set", "[u]")
+{
+	field_def_t female { "Female", field_type_t::bool_bit, 0, 0, nullptr, nullptr, 0 };
+	field_def_t playable { "Playable", field_type_t::bool_bit, 0, 1, nullptr, nullptr, 0 };
+
+	char data[1] = { 0x03 };
+	REQUIRE(decode_field(female, data, 1) == "Yes");
+	REQUIRE(decode_field(playable, data, 1) == "Yes");
+}
+
+TEST_CASE("decode_field, bool_bit with offset", "[u]")
+{
+	field_def_t field { "Female", field_type_t::bool_bit, 2, 0, nullptr, nullptr, 0 };
+
+	char data[4] = { 0x00, 0x00, 0x01, 0x00 };
+	auto result = decode_field(field, data, 4);
+	REQUIRE(result == "Yes");
+}
+
+TEST_CASE("decode_field, bool_bit out of bounds returns empty", "[u]")
+{
+	field_def_t field { "Female", field_type_t::bool_bit, 5, 0, nullptr, nullptr, 0 };
+
+	char data[4] = { 0x01, 0x01, 0x01, 0x01 };
+	auto result = decode_field(field, data, 4);
+	REQUIRE(result == "");
+}
+
+TEST_CASE("decode_field, flags_u8 value zero shows hex", "[u]")
+{
+	static const char * const flag_names[] = { "Female", "Playable", nullptr };
+	field_def_t field { "Flags", field_type_t::flags_u8, 0, 1, nullptr, flag_names, 2 };
+
+	char data[1] = { 0x00 };
+	auto result = decode_field(field, data, 1);
+	REQUIRE(result == "0x00000000");
+}
+
+TEST_CASE("decode_field, flags_u8 single flag shows name", "[u]")
+{
+	static const char * const flag_names[] = { "Female", "Playable", nullptr };
+	field_def_t field { "Flags", field_type_t::flags_u8, 0, 1, nullptr, flag_names, 2 };
+
+	char data[1] = { 0x02 };
+	auto result = decode_field(field, data, 1);
+	REQUIRE(result == "Playable");
+}

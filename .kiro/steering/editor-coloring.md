@@ -170,6 +170,7 @@ Sub-records are displayed differently depending on record type:
 | Leveled | `LEVI`, `LEVC` | Entries aligned by item/creature ID (`INTV+INAM`/`INTV+CNAM` pairs matched across plugins) |
 | Faction | `FACT` | Rank entries aligned by faction name (`INTV+ANAM` pairs matched across plugins) |
 | Container | `CONT`, `CREA`, `NPC_`, `BSGN` | `NPCO` items aligned by item ID, `NPCS` spells aligned by spell ID |
+| Armor/Clothing | `ARMO`, `CLOT` | Body part groups (`INDX+BNAM+CNAM`) aligned by INDX value across plugins (TODO) |
 | Generic | Everything else | File order — sub-records appear in plugin order, aligned by type+occurrence |
 
 "Aligned" means entries from different plugins are matched by their semantic key (item ID, creature ID, faction name) so the same logical entry appears in the same row across columns — even if the plugins store them in different order. Unmatched entries show as empty cells in the plugins that don't have them.

@@ -125,6 +125,8 @@ void plugin_workspace_view_t::setup_views()
 	m_view_view->setSelectionBehavior(QAbstractItemView::SelectItems);
 	m_view_view->setRootIsDecorated(true);
 	m_view_view->setAlternatingRowColors(false);
+	m_view_view->setWordWrap(false);
+	m_view_view->setUniformRowHeights(true);
 	m_view_view->setDragEnabled(true);
 	m_view_view->setAcceptDrops(true);
 	m_view_view->setDragDropMode(QAbstractItemView::DragDrop);

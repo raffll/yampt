@@ -20,6 +20,7 @@ enum class field_type_t
 	enum_u8,
 	enum_u16,
 	enum_u32,
+	bool_bit,
 	raw
 };
 

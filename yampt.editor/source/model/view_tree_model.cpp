@@ -151,7 +151,7 @@ static std::string read_record_flags(plugin_scan_t & scan, const record_version_
 	}
 
 	if (result.empty())
-		return "None";
+		return "";
 
 	return result;
 }
@@ -398,7 +398,7 @@ static QVariant sub_record_background(const view_tree_model_t::sub_record_row_t 
 
 	const auto & theme = theme_system_t::instance();
 
-	if (column > 0)
+	if (column > 0 && row.children.empty())
 	{
 		const int col = column - 1;
 		if (col >= 0 && col < static_cast<int>(row.values.size()) && row.values[col].empty())
@@ -418,9 +418,11 @@ static QVariant sub_record_background(const view_tree_model_t::sub_record_row_t 
 static QVariant sub_record_foreground(
     const std::vector<conflict_this_t> & cell_conflicts,
     size_t column_count,
-    int column)
+    int column,
+    bool has_merge_column)
 {
-	if (column_count <= 1)
+	const size_t real_columns = has_merge_column ? column_count - 1 : column_count;
+	if (real_columns <= 1)
 		return {};
 
 	const auto & theme = theme_system_t::instance();
@@ -501,7 +503,7 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 			return sub_record_background(row, index.column());
 
 		if (role == Qt::ForegroundRole)
-			return sub_record_foreground(row.cell_conflict_this, m_column_names.size(), index.column());
+			return sub_record_foreground(row.cell_conflict_this, m_column_names.size(), index.column(), m_has_merge_column);
 
 		return {};
 	}
@@ -518,7 +520,7 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 		return field_row_background(frow, index.column());
 
 	if (role == Qt::ForegroundRole)
-		return sub_record_foreground(frow.cell_conflict_this, m_column_names.size(), index.column());
+		return sub_record_foreground(frow.cell_conflict_this, m_column_names.size(), index.column(), m_has_merge_column);
 
 	return {};
 }
@@ -531,7 +533,7 @@ QVariant view_tree_model_t::headerData(int section, Qt::Orientation orientation,
 	if (role == Qt::DisplayRole)
 	{
 		if (section == 0)
-			return QStringLiteral("Sub-Record");
+			return {};
 
 		const int col = section - 1;
 		if (col < 0 || col >= static_cast<int>(m_column_names.size()))

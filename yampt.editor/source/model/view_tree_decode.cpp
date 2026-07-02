@@ -42,7 +42,7 @@ static std::string read_flag_value(const sub_record_view_t & sv, const field_def
 	                          : (fdef.type == field_type_t::flags_u16) ? 2
 	                                                                   : 4;
 	std::memcpy(&value, sv.data + fdef.offset, std::min(byte_count, sv.size - fdef.offset));
-	return (value & (1u << bit_index)) ? "1" : "0";
+	return (value & (1u << bit_index)) ? "Yes" : "No";
 }
 
 static std::string format_hex_chunk(const char * data_ptr, size_t data_size, size_t offset)
@@ -144,7 +144,7 @@ view_tree_model_t::sub_record_row_t view_tree_model_t::build_slot_row(
 
 	if (!row.children.empty())
 	{
-		row.row_conflict_all = conflict_all_t::only_one;
+		row.row_conflict_all = conflict_all_t::unknown;
 		for (const auto & child : row.children)
 		{
 			if (child.row_conflict_all > row.row_conflict_all)
@@ -221,8 +221,12 @@ void view_tree_model_t::decode_schema_children(
 				}
 
 				frow.all_identical = check_all_identical(frow.values);
-				frow.row_conflict_all = compute_conflict_all(frow.values);
-				frow.cell_conflict_this = compute_conflict_this(frow.values);
+				const auto & flag_filtered = exclude_column(frow.values, m_merge_col_index);
+				frow.row_conflict_all = compute_conflict_all(flag_filtered);
+				frow.cell_conflict_this = compute_conflict_this(flag_filtered);
+				if (m_merge_col_index >= 0 && flag_filtered.size() < frow.values.size())
+					frow.cell_conflict_this.insert(
+					    frow.cell_conflict_this.begin() + m_merge_col_index, conflict_this_t::unknown);
 				parent_row.children.push_back(std::move(frow));
 			}
 			continue;

@@ -16,6 +16,20 @@ Many sub-records still display as raw hex dumps. Add schemas for all common sub-
 ### Show optional absent sub-records in grey [L]
 xEdit shows sub-records that are defined in the record schema but absent from the actual data as greyed-out placeholder rows (e.g. SCRI - ScriptID, CNAM - Female Body Part Name, ENAM - EnchantID). Requires a canonical sub-record order definition per record type. Missing entries appear in their expected position with grey text and empty plugin columns.
 
+### ARMO/CLOT body part group alignment [M]
+ARMO and CLOT records have repeating INDX+BNAM+CNAM groups (body part index, male part name, female part name). These should be aligned across plugins by the INDX value — same pattern as leveled lists align by item ID. Currently uses generic file-order display which breaks alignment when plugins have different body part ordering or different part counts.
+
+### Codepage-aware text display in yEditor [S]
+`format_value` currently hardcodes Windows-1252 for codepage-to-UTF-8 conversion. Should read the codepage from app settings (same setting as the merge/CLI uses: 1252 for English, 1250 for Polish, 1251 for Russian). Pass it through to the view tree formatting layer.
+
+### Grey text on single-plugin CELL sub-records [S]
+CELL sub-records that appear in only one plugin (WHGT, NAM0, FRMR refs) show grey label text instead of purple/black. Root cause unclear — needs runtime debugging to inspect the actual `cell_conflict_this` values being produced for these rows.
+
+### Truncate long text in view tree cells + preview pane [M]
+Multi-line sub-record values (BOOK TEXT, SCPT SCTX) misalign across columns because rows have different text lengths. Fix:
+1. Truncate to a single line in the tree cell (show first ~80 chars + ellipsis). Full text available via tooltip.
+2. Add a preview pane below the view tree that shows the full content of the selected cell. Clicking a TEXT cell displays its complete text in the preview.
+
 ### Dark theme [L]
 - Dark theme
 - Unhardcode colors (status_colors.hpp, grammar_checker warning_format, etc.)

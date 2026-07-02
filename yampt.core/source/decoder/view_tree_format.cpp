@@ -1,4 +1,5 @@
 #include "view_tree_format.hpp"
+#include <io/codepage.hpp>
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
@@ -93,7 +94,7 @@ std::string format_value(const char * data, size_t size)
 		if (c == 0)
 			continue;
 
-		if (c < 32 || c > 126)
+		if (c < 32 && c != '\t' && c != '\n' && c != '\r')
 		{
 			printable = false;
 			break;
@@ -110,7 +111,18 @@ std::string format_value(const char * data, size_t size)
 
 			++len;
 		}
-		return std::string(data, len);
+
+		std::string raw(data, len);
+		auto result = decode_to_utf8(raw, codepage_t::windows_1252);
+
+		auto line_end = result.find('\r');
+		if (line_end == std::string::npos)
+			line_end = result.find('\n');
+
+		if (line_end != std::string::npos)
+			result = result.substr(0, line_end);
+
+		return result;
 	}
 
 	char buf[64];
@@ -178,8 +190,16 @@ static std::string read_fixed_string(const char * ptr, size_t field_size, size_t
 
 std::string decode_field(const field_def_t & field, const char * data, size_t data_size)
 {
-	if (field.offset + field.size > data_size && field.type != field_type_t::string_var)
-		return "";
+	if (field.type == field_type_t::bool_bit)
+	{
+		if (field.offset >= data_size)
+			return "";
+	}
+	else if (field.type != field_type_t::string_var)
+	{
+		if (field.offset + field.size > data_size)
+			return "";
+	}
 
 	const char * ptr = data + field.offset;
 	char buf[128];
@@ -296,6 +316,13 @@ std::string decode_field(const field_def_t & field, const char * data, size_t da
 		uint32_t val = 0;
 		std::memcpy(&val, ptr, 4);
 		return format_enum_lookup(val, field.enum_names);
+	}
+	case field_type_t::bool_bit:
+	{
+		uint8_t val = 0;
+		std::memcpy(&val, ptr, 1);
+		int bit_index = static_cast<int>(field.size);
+		return (val & (1u << bit_index)) ? "Yes" : "No";
 	}
 	case field_type_t::raw:
 	{
