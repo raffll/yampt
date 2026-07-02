@@ -1,7 +1,5 @@
 # TODO
 
-from Global to check
-
 Sorted by effort.
 
 ## L — a week or more
@@ -11,9 +9,6 @@ The merge infrastructure exists in yEditor (toolbar exposed, settings paths wire
 - Make sure good conflicts are merged
 - Show/hide merged patch column
 - Allow drag and drop to merged patch
-
-### Expand all remaining hex sub-records in yEditor [L]
-Many sub-records still display as raw hex dumps. Add schemas for all common sub-records using OpenMW source as reference. Priority: DIAL DATA, DOOR DATA, LOCK DATA, AI_T, AI_F, AI_E, AI_A, BSGN, NAM0, WHGT, NAM5, XSCL, INTV, FLTV, INDX.
 
 ### Show optional absent sub-records in grey [L]
 xEdit shows sub-records that are defined in the record schema but absent from the actual data as greyed-out placeholder rows (e.g. SCRI - ScriptID, CNAM - Female Body Part Name, ENAM - EnchantID). Requires a canonical sub-record order definition per record type. Missing entries appear in their expected position with grey text and empty plugin columns.
@@ -42,9 +37,6 @@ When a DIAL record is selected, show a list of INFO INAM IDs below the DIAL sub-
 
 ### Codepage-aware text display in yEditor [S]
 `format_value` currently hardcodes Windows-1252 for codepage-to-UTF-8 conversion. Should read the codepage from app settings (same setting as the merge/CLI uses: 1252 for English, 1250 for Polish, 1251 for Russian). Pass it through to the view tree formatting layer.
-
-### Grey text on single-plugin CELL sub-records [S]
-CELL sub-records that appear in only one plugin (WHGT, NAM0, FRMR refs) show grey label text instead of purple/black. Root cause unclear — needs runtime debugging to inspect the actual `cell_conflict_this` values being produced for these rows.
 
 ### Truncate long text in view tree cells + preview pane [M]
 Multi-line sub-record values (BOOK TEXT, SCPT SCTX) misalign across columns because rows have different text lengths. Fix:
