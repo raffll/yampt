@@ -405,6 +405,20 @@ void app_settings_t::set_window_maximized(bool value)
 	m_settings.setValue("Window/Maximized", value);
 }
 
+theme_t app_settings_t::theme() const
+{
+	const auto text = m_settings.value("Appearance/Theme", "light").toString().toStdString();
+	if (text == "dark")
+		return theme_t::dark;
+	return theme_t::light;
+}
+
+void app_settings_t::set_theme(theme_t value)
+{
+	const auto text = (value == theme_t::dark) ? "dark" : "light";
+	m_settings.setValue("Appearance/Theme", text);
+}
+
 void app_settings_t::sync()
 {
 	m_settings.sync();

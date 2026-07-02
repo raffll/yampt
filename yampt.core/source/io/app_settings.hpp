@@ -4,6 +4,7 @@
 #include <vector>
 #include <QSettings>
 #include <QString>
+#include <utility/theme_enums.hpp>
 
 class app_settings_t
 {
@@ -120,6 +121,9 @@ public:
 
 	bool window_maximized() const;
 	void set_window_maximized(bool value);
+
+	theme_t theme() const;
+	void set_theme(theme_t value);
 
 	void sync();
 

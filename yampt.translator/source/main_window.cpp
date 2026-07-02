@@ -29,6 +29,7 @@
 #include <io/dict_writer.hpp>
 #include <merger/dict_merger.hpp>
 #include <utility/string_utils.hpp>
+#include <theme_system.hpp>
 #include <algorithm>
 #include <filesystem>
 #include <map>
@@ -96,6 +97,18 @@ main_window_t::main_window_t(QWidget * parent)
 	connect_sidebar_signals();
 	connect_editor_signals();
 	connect_search_signals();
+
+	connect(
+	    &theme_system_t::instance(),
+	    &theme_system_t::theme_changed,
+	    this,
+	    [this](theme_t)
+	{
+		theme_system_t::instance().apply_to_application();
+		m_status_filter_view->refresh_theme();
+		m_table_view->viewport()->update();
+		m_sidebar->update();
+	});
 
 	load_config();
 
@@ -541,7 +554,7 @@ void main_window_t::commit_current_edit()
 	commit_yaml_edit(m_active_doc, row_data, new_text_str);
 }
 
-// irreducible: 3 params required — document pointer per extraction constraint + row context + new value
+// irreducible: 3 params required â€” document pointer per extraction constraint + row context + new value
 void main_window_t::commit_dict_edit(
     dict_document_t * dict_doc,
     const table_row_t * row_data,
@@ -568,7 +581,7 @@ void main_window_t::commit_dict_edit(
 	update_status_counts();
 }
 
-// irreducible: 3 params required — document pointer per extraction constraint + row context + new value
+// irreducible: 3 params required â€” document pointer per extraction constraint + row context + new value
 void main_window_t::commit_yaml_edit(
     document_t * target_doc,
     const table_row_t * row_data,
@@ -612,7 +625,7 @@ void main_window_t::sync_propagated_rows(dict_document_t * dict_doc)
 	}
 }
 
-// irreducible: sequential orchestrator — each step depends on prior state; no nesting to flatten
+// irreducible: sequential orchestrator â€” each step depends on prior state; no nesting to flatten
 void main_window_t::load_record(int row)
 {
 	m_editor_controller.set_loading(true);
@@ -859,7 +872,12 @@ QList<QTextEdit::ExtraSelection> main_window_t::build_highlight_selections(
 	for (const auto & highlight : highlights)
 	{
 		QTextEdit::ExtraSelection sel;
-		sel.format.setBackground(highlight.is_hyperlink ? QColor(200, 220, 255) : QColor(200, 240, 200));
+
+		if (theme_system_t::instance().active_theme() == theme_t::dark)
+			sel.format.setBackground(highlight.is_hyperlink ? QColor(40, 55, 75) : QColor(35, 60, 40));
+		else
+			sel.format.setBackground(highlight.is_hyperlink ? QColor(200, 220, 255) : QColor(200, 240, 200));
+
 		sel.cursor = QTextCursor(target_editor->document());
 		sel.cursor.setPosition(highlight.start);
 		sel.cursor.setPosition(highlight.start + highlight.length, QTextCursor::KeepAnchor);
@@ -1441,7 +1459,7 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
 	scan_workspace();
 }
 
-// irreducible: self-contained modal dialog — UI construction is inherently verbose
+// irreducible: self-contained modal dialog â€” UI construction is inherently verbose
 std::optional<make_base_params_t> main_window_t::show_make_base_dialog(const std::string & plugin_path)
 {
 	auto source_sep = plugin_path.find_last_of("/\\");
@@ -1702,7 +1720,7 @@ std::optional<make_base_params_t> main_window_t::show_make_base_dialog(const std
 	return params;
 }
 
-// irreducible: 3 params — source path + operation type + result data
+// irreducible: 3 params â€” source path + operation type + result data
 void main_window_t::log_operation_result(
     const std::string & plugin_path,
     plugin_op_t op_type,

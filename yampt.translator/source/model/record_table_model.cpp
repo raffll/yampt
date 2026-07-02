@@ -1,5 +1,5 @@
 #include "record_table_model.hpp"
-#include "../view/status_colors.hpp"
+#include <theme_system.hpp>
 #include "../view/status_display.hpp"
 #include <algorithm>
 #include <QString>
@@ -108,7 +108,17 @@ QVariant record_table_model_t::data(const QModelIndex & index, int role) const
 
 	if (role == Qt::BackgroundRole)
 	{
-		const auto & color = get_status_color(row.status);
+		const auto & color = theme_system_t::instance().get_status_color(row.status);
+		const auto & theme = theme_system_t::instance();
+
+		if (theme.active_theme() == theme_t::dark)
+		{
+			return QColor(
+			    color.red() * 30 / 100,
+			    color.green() * 30 / 100,
+			    color.blue() * 30 / 100);
+		}
+
 		return QColor(
 		    255 - (255 - color.red()) * 20 / 100,
 		    255 - (255 - color.green()) * 20 / 100,

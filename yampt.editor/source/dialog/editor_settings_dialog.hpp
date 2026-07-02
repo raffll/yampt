@@ -8,6 +8,7 @@ class QListWidget;
 class QPushButton;
 class QStackedWidget;
 class app_settings_t;
+class appearance_settings_view_t;
 class editor_paths_view_t;
 
 class editor_settings_dialog_t : public QDialog
@@ -30,5 +31,6 @@ private:
 	QDialogButtonBox * m_button_box = nullptr;
 	QPushButton * m_apply_button = nullptr;
 
+	appearance_settings_view_t * m_appearance_view = nullptr;
 	editor_paths_view_t * m_paths_view = nullptr;
 };

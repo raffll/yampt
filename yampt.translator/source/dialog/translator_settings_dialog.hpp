@@ -8,6 +8,7 @@ class QListWidget;
 class QPushButton;
 class QStackedWidget;
 class app_settings_t;
+class appearance_settings_view_t;
 class language_settings_view_t;
 class translation_settings_view_t;
 class shortcuts_settings_view_t;
@@ -36,6 +37,7 @@ private:
 	QDialogButtonBox * m_button_box = nullptr;
 	QPushButton * m_apply_button = nullptr;
 
+	appearance_settings_view_t * m_appearance_view = nullptr;
 	language_settings_view_t * m_language_view = nullptr;
 	translation_settings_view_t * m_translation_view = nullptr;
 	shortcuts_settings_view_t * m_shortcuts_view = nullptr;

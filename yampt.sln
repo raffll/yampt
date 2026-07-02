@@ -13,6 +13,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "yampt.editor", "yampt.edito
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "yampt.cli", "yampt.cli\yampt.cli.vcxproj", "{C3D4E5F6-A7B8-9012-CDEF-234567890ABC}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "yampt.qt", "yampt.qt\yampt.qt.vcxproj", "{D4E5F6A7-B8C9-0123-DEFA-456789012345}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -61,6 +63,14 @@ Global
 		{C3D4E5F6-A7B8-9012-CDEF-234567890ABC}.Release|x64.Build.0 = Release|x64
 		{C3D4E5F6-A7B8-9012-CDEF-234567890ABC}.Release|x86.ActiveCfg = Release|Win32
 		{C3D4E5F6-A7B8-9012-CDEF-234567890ABC}.Release|x86.Build.0 = Release|Win32
+		{D4E5F6A7-B8C9-0123-DEFA-456789012345}.Debug|x64.ActiveCfg = Debug|x64
+		{D4E5F6A7-B8C9-0123-DEFA-456789012345}.Debug|x64.Build.0 = Debug|x64
+		{D4E5F6A7-B8C9-0123-DEFA-456789012345}.Debug|x86.ActiveCfg = Debug|Win32
+		{D4E5F6A7-B8C9-0123-DEFA-456789012345}.Debug|x86.Build.0 = Debug|Win32
+		{D4E5F6A7-B8C9-0123-DEFA-456789012345}.Release|x64.ActiveCfg = Release|x64
+		{D4E5F6A7-B8C9-0123-DEFA-456789012345}.Release|x64.Build.0 = Release|x64
+		{D4E5F6A7-B8C9-0123-DEFA-456789012345}.Release|x86.ActiveCfg = Release|Win32
+		{D4E5F6A7-B8C9-0123-DEFA-456789012345}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,5 +1,5 @@
 #include "status_filter_view.hpp"
-#include "status_colors.hpp"
+#include <theme_system.hpp>
 #include "status_display.hpp"
 #include <QHBoxLayout>
 #include <QLabel>
@@ -195,11 +195,19 @@ void status_filter_view_t::on_status_right_clicked(status_t status)
 
 void status_filter_view_t::update_button_styles()
 {
-	static const QString inactive_style = "border: 1px solid #bbb; border-radius: 2px; padding: 2px 6px; "
-	                                      "background: #f0f0f0; color: rgb(80,80,80);";
+	const bool is_dark = theme_system_t::instance().active_theme() == theme_t::dark;
 
-	static const QString disabled_style = "border: 1px solid #bbb; border-radius: 2px; padding: 2px 6px; "
-	                                      "background: #f0f0f0; color: rgb(180,180,180);";
+	const auto inactive_style = is_dark
+		? QString("border: 1px solid #555; border-radius: 2px; padding: 2px 6px; "
+		          "background: #2a2a2a; color: rgb(160,160,160);")
+		: QString("border: 1px solid #bbb; border-radius: 2px; padding: 2px 6px; "
+		          "background: #f0f0f0; color: rgb(80,80,80);");
+
+	const auto disabled_style = is_dark
+		? QString("border: 1px solid #444; border-radius: 2px; padding: 2px 6px; "
+		          "background: #222; color: rgb(80,80,80);")
+		: QString("border: 1px solid #bbb; border-radius: 2px; padding: 2px 6px; "
+		          "background: #f0f0f0; color: rgb(180,180,180);");
 
 	bool no_filter = m_active_statuses.empty();
 
@@ -218,7 +226,7 @@ void status_filter_view_t::update_button_styles()
 
 		if (active)
 		{
-			const auto & color = get_status_color(sb.status);
+			const auto & color = theme_system_t::instance().get_status_color(sb.status);
 			int text_brightness = (color.red() * 299 + color.green() * 587 + color.blue() * 114) / 1000;
 			QString text_color = (text_brightness > 150) ? "black" : "white";
 			sb.button->setStyleSheet(QString(
@@ -243,5 +251,10 @@ void status_filter_view_t::update_button_styles()
 void status_filter_view_t::set_document_open(bool open)
 {
 	m_document_open = open;
+	update_button_styles();
+}
+
+void status_filter_view_t::refresh_theme()
+{
 	update_button_styles();
 }

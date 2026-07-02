@@ -50,12 +50,13 @@
     <ClInclude Include="source\scanner\conflict_enums.hpp" />
     <ClInclude Include="source\decoder\conflict_slots.hpp" />
     <ClInclude Include="source\decoder\conflict_slots_cell.hpp" />
-    <ClInclude Include="source\scanner\conflict_types.hpp" />
     <ClInclude Include="source\scanner\plugin_index.hpp" />
     <ClInclude Include="source\scanner\plugin_scan.hpp" />
     <ClInclude Include="source\decoder\sub_record_iter.hpp" />
     <ClInclude Include="source\decoder\sub_record_schema.hpp" />
     <ClInclude Include="source\decoder\view_tree_format.hpp" />
     <ClInclude Include="source\io\app_settings.hpp" />
+    <ClInclude Include="source\utility\theme_enums.hpp" />
+    <ClInclude Include="source\utility\color_palette.hpp" />
   </ItemGroup>
 </Project>

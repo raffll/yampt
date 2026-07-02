@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../editor/glossary.hpp"
+#include <theme_system.hpp>
 #include <utility/tools.hpp>
 #include <vector>
 #include <QSyntaxHighlighter>
@@ -20,6 +21,9 @@ public:
 
 protected:
 	void highlightBlock(const QString & text) override;
+
+private slots:
+	void on_theme_changed();
 
 private:
 	glossary_t * m_manager = nullptr;

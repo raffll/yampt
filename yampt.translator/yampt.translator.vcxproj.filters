@@ -41,6 +41,7 @@
     <ClCompile Include="source\dialog\translation_settings_view.cpp" />
     <ClCompile Include="source\dialog\spell_context_menu.cpp" />
     <ClCompile Include="source\dialog\shortcuts_settings_view.cpp" />
+    <ClCompile Include="source\dialog\appearance_settings_view.cpp" />
     <ClCompile Include="source\highlighter\script_tokenizer.cpp" />
     <ClCompile Include="source\highlighter\editor_highlighter.cpp" />
     <ClCompile Include="source\highlighter\glossary_highlighter.cpp" />
@@ -85,5 +86,6 @@
     <ClInclude Include="source\dialog\language_settings_view.hpp" />
     <ClInclude Include="source\dialog\translation_settings_view.hpp" />
     <ClInclude Include="source\dialog\shortcuts_settings_view.hpp" />
+    <ClInclude Include="source\dialog\appearance_settings_view.hpp" />
   </ItemGroup>
 </Project>

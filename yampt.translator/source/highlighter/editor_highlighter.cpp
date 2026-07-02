@@ -4,16 +4,27 @@
 editor_highlighter_t::editor_highlighter_t(QTextDocument * parent)
     : QSyntaxHighlighter(parent)
 {
-	m_format_function.setForeground(QColor(100, 180, 255));
-	m_format_comment.setForeground(QColor(128, 128, 128));
-	m_format_string.setForeground(QColor(200, 150, 50));
-	m_format_html_tag.setForeground(QColor(100, 0, 20));
+	on_theme_changed();
+	connect(&theme_system_t::instance(), &theme_system_t::theme_changed,
+	        this, &editor_highlighter_t::on_theme_changed);
+}
+
+void editor_highlighter_t::on_theme_changed()
+{
+	auto & theme = theme_system_t::instance();
+	m_format_function.setForeground(theme.get_color(color_name_t::syntax_function));
+	m_format_comment.setForeground(theme.get_color(color_name_t::syntax_comment));
+	m_format_string.setForeground(theme.get_color(color_name_t::syntax_string));
+	m_format_html_tag.setForeground(theme.get_color(color_name_t::syntax_html_tag));
 	m_format_html_tag.setFontWeight(QFont::Bold);
-	m_format_forbidden.setBackground(QColor(255, 200, 180));
-	m_format_hyperlink.setForeground(QColor(70, 130, 220));
+	m_format_forbidden.setBackground(theme.get_color(color_name_t::syntax_forbidden_background));
+	m_format_hyperlink.setForeground(theme.get_color(color_name_t::syntax_hyperlink));
 	m_format_hyperlink.setFontUnderline(true);
 	m_format_misspelled.setUnderlineStyle(QTextCharFormat::WaveUnderline);
-	m_format_misspelled.setUnderlineColor(QColor(220, 50, 50));
+	m_format_misspelled.setUnderlineColor(theme.get_color(color_name_t::syntax_misspelled));
+
+	if (document())
+		rehighlight();
 }
 
 void editor_highlighter_t::set_record_type(tools_t::rec_type_t type)
@@ -83,7 +94,7 @@ void editor_highlighter_t::apply_forbidden_chars(const QString & text)
 		    (ch <= 0x1F && ch != 0x09 && ch != 0x0D && ch != 0x0A))
 		{
 			auto merged = format(i);
-			merged.setBackground(QColor(255, 200, 180));
+			merged.setBackground(theme_system_t::instance().get_color(color_name_t::syntax_forbidden_background));
 			setFormat(i, 1, merged);
 		}
 	}

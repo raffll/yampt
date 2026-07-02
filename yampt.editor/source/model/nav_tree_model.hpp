@@ -1,6 +1,6 @@
 #pragma once
 
-#include <scanner/conflict_types.hpp>
+#include <conflict_types.hpp>
 #include <scanner/plugin_scan.hpp>
 #include <set>
 #include <string>

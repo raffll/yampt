@@ -1,6 +1,7 @@
 #include "editor_view.hpp"
 #include "line_number_gutter.hpp"
 #include <utility/char_diff.hpp>
+#include <theme_system.hpp>
 #include <algorithm>
 #include <QFont>
 #include <QHBoxLayout>
@@ -43,9 +44,6 @@ QWidget * editor_view_t::setup_left_panel(QSplitter * parent_splitter)
 
 	m_original_view = new translation_edit_view_t(left_widget);
 	m_original_view->setReadOnly(true);
-	auto palette = m_original_view->palette();
-	palette.setColor(QPalette::Base, QColor(245, 245, 245));
-	m_original_view->setPalette(palette);
 
 	auto * original_container = new QWidget(left_widget);
 	auto * original_hlayout = new QHBoxLayout(original_container);
@@ -56,9 +54,6 @@ QWidget * editor_view_t::setup_left_panel(QSplitter * parent_splitter)
 
 	m_adapted_from_view = new translation_edit_view_t(left_widget);
 	m_adapted_from_view->setReadOnly(true);
-	auto adapted_palette = m_adapted_from_view->palette();
-	adapted_palette.setColor(QPalette::Base, QColor(240, 235, 250));
-	m_adapted_from_view->setPalette(adapted_palette);
 
 	m_adapted_from_container = new QWidget(left_widget);
 	auto * adapted_hlayout = new QHBoxLayout(m_adapted_from_container);
@@ -200,7 +195,7 @@ QList<QTextEdit::ExtraSelection> editor_view_t::highlight_adapted_diff(
 	const auto segments = compute_char_diff(q_new_text.toStdString(), q_display.toStdString());
 
 	QTextCharFormat diff_format;
-	diff_format.setBackground(QColor(255, 200, 130));
+	diff_format.setBackground(theme_system_t::instance().get_color(color_name_t::diff_changed_background));
 
 	int char_position = 0;
 	for (const auto & segment : segments)

@@ -1,6 +1,7 @@
 #include "view_tree_model.hpp"
 #include <decoder/view_tree_format.hpp>
 #include <scanner/conflict_compute.hpp>
+#include <theme_system.hpp>
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
@@ -379,14 +380,23 @@ static QVariant sub_record_background(const view_tree_model_t::sub_record_row_t 
 	if (row.row_conflict_all < conflict_all_t::no_conflict)
 		return {};
 
+	const auto & theme = theme_system_t::instance();
+
 	if (column > 0)
 	{
 		const int col = column - 1;
 		if (col >= 0 && col < static_cast<int>(row.values.size()) && row.values[col].empty())
-			return QBrush(lighter_hsl(conflict_all_color_raw(row.row_conflict_all), 0.93));
+		{
+			const auto active = theme.active_theme();
+			const auto raw = conflict_all_color_raw(row.row_conflict_all, active);
+			if (active == theme_t::dark)
+				return QBrush(darker_hsl(raw, 0.78));
+
+			return QBrush(lighter_hsl(raw, 0.93));
+		}
 	}
 
-	return QBrush(conflict_all_background(row.row_conflict_all));
+	return QBrush(theme.conflict_all_background(row.row_conflict_all));
 }
 
 static QVariant sub_record_foreground(
@@ -397,6 +407,8 @@ static QVariant sub_record_foreground(
 	if (column_count <= 1)
 		return {};
 
+	const auto & theme = theme_system_t::instance();
+
 	if (column == 0)
 	{
 		conflict_this_t worst = conflict_this_t::unknown;
@@ -405,14 +417,14 @@ static QVariant sub_record_foreground(
 			if (status > worst)
 				worst = status;
 		}
-		return QBrush(conflict_this_foreground(worst));
+		return QBrush(theme.conflict_this_foreground(worst));
 	}
 
 	const int col = column - 1;
 	if (col < 0 || col >= static_cast<int>(cell_conflicts.size()))
 		return {};
 
-	return QBrush(conflict_this_foreground(cell_conflicts[col]));
+	return QBrush(theme.conflict_this_foreground(cell_conflicts[col]));
 }
 
 static QVariant field_row_display(const view_tree_model_t::field_row_t & frow, int column)
@@ -432,14 +444,23 @@ static QVariant field_row_background(const view_tree_model_t::field_row_t & frow
 	if (frow.row_conflict_all < conflict_all_t::no_conflict)
 		return {};
 
+	const auto & theme = theme_system_t::instance();
+
 	if (column > 0)
 	{
 		const int col = column - 1;
 		if (col >= 0 && col < static_cast<int>(frow.values.size()) && frow.values[col].empty())
-			return QBrush(lighter_hsl(conflict_all_color_raw(frow.row_conflict_all), 0.93));
+		{
+			const auto active = theme.active_theme();
+			const auto raw = conflict_all_color_raw(frow.row_conflict_all, active);
+			if (active == theme_t::dark)
+				return QBrush(darker_hsl(raw, 0.78));
+
+			return QBrush(lighter_hsl(raw, 0.93));
+		}
 	}
 
-	return QBrush(conflict_all_background(frow.row_conflict_all));
+	return QBrush(theme.conflict_all_background(frow.row_conflict_all));
 }
 
 QVariant view_tree_model_t::data(const QModelIndex & index, int role) const

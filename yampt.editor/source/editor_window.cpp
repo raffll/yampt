@@ -2,6 +2,7 @@
 #include "dialog/editor_settings_dialog.hpp"
 #include "view/plugin_workspace_view.hpp"
 #include <io/app_settings.hpp>
+#include <theme_system.hpp>
 #include <QAction>
 #include <QCheckBox>
 #include <QCloseEvent>
@@ -31,6 +32,12 @@ editor_window_t::editor_window_t(QWidget * parent)
 	setup_menu_bar();
 	setup_toolbar();
 	load_config();
+
+	connect(&theme_system_t::instance(), &theme_system_t::theme_changed,
+	        this, [this](theme_t) {
+		theme_system_t::instance().apply_to_application();
+		m_plugin_workspace_view->refresh_views();
+	});
 }
 
 void editor_window_t::setup_menu_bar()

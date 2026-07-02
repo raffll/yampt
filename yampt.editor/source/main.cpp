@@ -1,4 +1,6 @@
 #include "editor_window.hpp"
+#include <io/app_settings.hpp>
+#include <theme_system.hpp>
 #include <QApplication>
 #include <QStyleFactory>
 
@@ -7,17 +9,9 @@ int main(int argc, char * argv[])
 	QApplication app(argc, argv);
 	app.setStyle(QStyleFactory::create("Fusion"));
 
-	QPalette palette;
-	palette.setColor(QPalette::Window, QColor(240, 240, 240));
-	palette.setColor(QPalette::WindowText, Qt::black);
-	palette.setColor(QPalette::Base, Qt::white);
-	palette.setColor(QPalette::AlternateBase, QColor(245, 245, 245));
-	palette.setColor(QPalette::Text, Qt::black);
-	palette.setColor(QPalette::Button, QColor(240, 240, 240));
-	palette.setColor(QPalette::ButtonText, Qt::black);
-	palette.setColor(QPalette::Highlight, QColor(70, 130, 200));
-	palette.setColor(QPalette::HighlightedText, Qt::white);
-	app.setPalette(palette);
+	app_settings_t startup_settings("yEditor.ini");
+	theme_system_t::instance().set_theme(startup_settings.theme());
+	theme_system_t::instance().apply_to_application();
 
 	editor_window_t window;
 	window.show();

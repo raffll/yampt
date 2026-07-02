@@ -1,6 +1,7 @@
 #pragma once
 
 #include "script_tokenizer.hpp"
+#include <theme_system.hpp>
 #include <utility/tools.hpp>
 #include <QSyntaxHighlighter>
 #include <QTextCharFormat>
@@ -20,6 +21,9 @@ public:
 
 protected:
 	void highlightBlock(const QString & text) override;
+
+private slots:
+	void on_theme_changed();
 
 private:
 	void apply_syntax_tokens(const QString & text);

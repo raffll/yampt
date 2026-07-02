@@ -1,4 +1,5 @@
 #include "nav_tree_model.hpp"
+#include <theme_system.hpp>
 #include <algorithm>
 #include <cctype>
 #include <cstdio>
@@ -572,7 +573,7 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 				if (worst_all < conflict_all_t::no_conflict)
 					return {};
 
-				return QBrush(conflict_all_background(worst_all));
+				return QBrush(theme_system_t::instance().conflict_all_background(worst_all));
 			}
 
 			if (role == Qt::ForegroundRole)
@@ -580,7 +581,7 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 				if (worst_this == conflict_this_t::unknown)
 					return {};
 
-				return QBrush(conflict_this_foreground(worst_this));
+				return QBrush(theme_system_t::instance().conflict_this_foreground(worst_this));
 			}
 
 			if (role == Qt::FontRole && worst_this == conflict_this_t::deleted)
@@ -645,7 +646,7 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 					if (worst_all < conflict_all_t::no_conflict)
 						return {};
 
-					return QBrush(conflict_all_background(worst_all));
+					return QBrush(theme_system_t::instance().conflict_all_background(worst_all));
 				}
 
 				if (role == Qt::ForegroundRole)
@@ -653,7 +654,7 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 					if (worst_this == conflict_this_t::unknown)
 						return {};
 
-					return QBrush(conflict_this_foreground(worst_this));
+					return QBrush(theme_system_t::instance().conflict_this_foreground(worst_this));
 				}
 
 				if (role == Qt::FontRole && worst_this == conflict_this_t::deleted)
@@ -705,7 +706,7 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 				if (m_hide_duplicates && unique_plugin_count(entry) <= 1)
 					return {};
 
-				return QBrush(conflict_all_background(entry.conflict_all));
+				return QBrush(theme_system_t::instance().conflict_all_background(entry.conflict_all));
 			}
 
 			if (role == Qt::ForegroundRole)
@@ -713,7 +714,7 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 				if (record_color == conflict_this_t::unknown)
 					return {};
 
-				return QBrush(conflict_this_foreground(record_color));
+				return QBrush(theme_system_t::instance().conflict_this_foreground(record_color));
 			}
 
 			if (role == Qt::FontRole && record_color == conflict_this_t::deleted)

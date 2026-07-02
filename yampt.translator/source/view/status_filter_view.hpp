@@ -24,6 +24,7 @@ public:
 	bool has_filter() const;
 	void set_filter_state(const std::set<status_t> & statuses);
 	void set_document_open(bool open);
+	void refresh_theme();
 
 signals:
 	void filters_changed();

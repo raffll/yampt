@@ -1,11 +1,21 @@
 #include "glossary_highlighter.hpp"
 #include "../editor/glossary.hpp"
+#include <theme_system.hpp>
 #include <algorithm>
 #include <QTextCharFormat>
 
 glossary_highlighter_t::glossary_highlighter_t(QTextDocument * parent)
     : QSyntaxHighlighter(parent)
-{}
+{
+	connect(&theme_system_t::instance(), &theme_system_t::theme_changed,
+	        this, &glossary_highlighter_t::on_theme_changed);
+}
+
+void glossary_highlighter_t::on_theme_changed()
+{
+	if (document())
+		rehighlight();
+}
 
 void glossary_highlighter_t::set_annotation_manager(glossary_t * manager)
 {
@@ -45,10 +55,10 @@ static QTextCharFormat format_for_annotation(const annotation_t & annotation)
 	switch (annotation.kind)
 	{
 	case annotation_t::dial_topic:
-		format.setBackground(QColor(70, 130, 200, 60));
+		format.setBackground(theme_system_t::instance().get_color(color_name_t::annotation_dial_topic));
 		break;
 	case annotation_t::glossary_term:
-		format.setBackground(QColor(70, 180, 70, 60));
+		format.setBackground(theme_system_t::instance().get_color(color_name_t::annotation_glossary_term));
 		break;
 	default:
 		return {};

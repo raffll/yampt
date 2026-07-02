@@ -1414,3 +1414,9 @@ void plugin_workspace_view_t::restore_session_state()
 	m_nav_view->setCurrentIndex(target_index);
 	m_nav_view->scrollTo(target_index);
 }
+
+void plugin_workspace_view_t::refresh_views()
+{
+	m_nav_view->viewport()->update();
+	m_view_view->viewport()->update();
+}

@@ -30,6 +30,7 @@ public:
 	QCheckBox * conflicts_checkbox() const { return m_chk_conflicts; }
 	QLabel * count_label() const { return m_lbl_count; }
 	QLabel * status_label() const { return m_status_label; }
+	void refresh_views();
 
 public slots:
 	void on_load_plugins();

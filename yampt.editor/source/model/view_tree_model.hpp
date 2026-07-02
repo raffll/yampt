@@ -3,7 +3,7 @@
 #include <decoder/sub_record_iter.hpp>
 #include <decoder/sub_record_schema.hpp>
 #include <scanner/conflict_compute.hpp>
-#include <scanner/conflict_types.hpp>
+#include <conflict_types.hpp>
 #include <scanner/plugin_scan.hpp>
 #include <string>
 #include <unordered_map>

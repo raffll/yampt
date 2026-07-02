@@ -34,7 +34,7 @@ QSize line_number_gutter_t::sizeHint() const
 void line_number_gutter_t::paintEvent(QPaintEvent * event)
 {
 	QPainter painter(this);
-	painter.fillRect(event->rect(), QColor(230, 230, 230));
+	painter.fillRect(event->rect(), palette().color(QPalette::AlternateBase));
 
 	auto block = m_editor->firstVisibleBlock();
 	int top = static_cast<int>(m_editor->blockBoundingGeometry(block).translated(m_editor->contentOffset()).top());
@@ -45,7 +45,7 @@ void line_number_gutter_t::paintEvent(QPaintEvent * event)
 		if (block.isVisible() && bottom >= event->rect().top())
 		{
 			const auto number = QString::number(block.blockNumber() + 1);
-			painter.setPen(QColor(100, 100, 100));
+			painter.setPen(palette().color(QPalette::Disabled, QPalette::Text));
 			painter.drawText(0, top, width() - 4, fontMetrics().height(), Qt::AlignRight, number);
 		}
 
