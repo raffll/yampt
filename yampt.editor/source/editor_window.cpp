@@ -94,10 +94,11 @@ void editor_window_t::setup_menu_bar()
 
 	auto * merge_col_action = new QAction("Show &Merge Column", this);
 	merge_col_action->setCheckable(true);
-	merge_col_action->setChecked(true);
+	merge_col_action->setChecked(m_settings.merge_column_visible());
 	merge_col_action->setToolTip("Show or hide the merged patch column");
 	view_menu->addAction(merge_col_action);
 	connect(merge_col_action, &QAction::toggled, m_plugin_workspace_view, &plugin_workspace_view_t::set_merge_column_visible);
+	m_toggle_merge_action = merge_col_action;
 
 	view_menu->addSeparator();
 
@@ -124,6 +125,16 @@ void editor_window_t::setup_toolbar()
 	toolbar->addAction(merge_action);
 	connect(
 	    merge_action, &QAction::triggered, m_plugin_workspace_view, &plugin_workspace_view_t::on_create_merged_patch);
+
+	toolbar->addSeparator();
+
+	auto * toggle_merge = new QAction("Show Merge", this);
+	toggle_merge->setCheckable(true);
+	toggle_merge->setChecked(m_settings.merge_column_visible());
+	toggle_merge->setToolTip("Show or hide the merged patch column");
+	toolbar->addAction(toggle_merge);
+	connect(toggle_merge, &QAction::toggled, m_toggle_merge_action, &QAction::setChecked);
+	connect(m_toggle_merge_action, &QAction::toggled, toggle_merge, &QAction::setChecked);
 
 	statusBar()->addWidget(m_plugin_workspace_view->status_label());
 	statusBar()->addPermanentWidget(m_plugin_workspace_view->count_label());

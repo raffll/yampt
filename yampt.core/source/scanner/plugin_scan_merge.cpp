@@ -32,6 +32,38 @@ void plugin_scan_t::clear_merge_records()
 	m_merge_records.clear();
 }
 
+std::vector<plugin_scan_t::merge_record_t> plugin_scan_t::collect_pinned_records() const
+{
+	std::vector<merge_record_t> pinned;
+	for (const auto & mr : m_merge_records)
+	{
+		if (mr.pinned)
+			pinned.push_back(mr);
+	}
+	return pinned;
+}
+
+void plugin_scan_t::restore_pinned_records(const std::vector<merge_record_t> & pinned)
+{
+	for (const auto & pr : pinned)
+	{
+		bool replaced = false;
+		for (auto & existing : m_merge_records)
+		{
+			if (existing.rec_type == pr.rec_type && existing.record_id == pr.record_id)
+			{
+				existing.content = pr.content;
+				existing.pinned = true;
+				replaced = true;
+				break;
+			}
+		}
+
+		if (!replaced)
+			m_merge_records.push_back(pr);
+	}
+}
+
 void plugin_scan_t::set_merge_plugin_from_loaded(int plugin_idx)
 {
 	if (plugin_idx < 0 || plugin_idx >= static_cast<int>(m_plugins.size()))
@@ -106,6 +138,42 @@ void plugin_scan_t::copy_record_to_merge_raw(
 	m_merge_records.push_back(std::move(mr));
 }
 
+void plugin_scan_t::pin_record_to_merge(
+    const std::string & rec_type,
+    const std::string & record_id,
+    const std::string & content)
+{
+	if (m_merge_plugin_idx < 0)
+		return;
+
+	for (auto & existing : m_merge_records)
+	{
+		if (existing.rec_type == rec_type && existing.record_id == record_id)
+		{
+			existing.content = content;
+			existing.pinned = true;
+			return;
+		}
+	}
+
+	merge_record_t mr;
+	mr.rec_type = rec_type;
+	mr.record_id = record_id;
+	mr.content = content;
+	mr.pinned = true;
+	m_merge_records.push_back(std::move(mr));
+}
+
+bool plugin_scan_t::is_merge_pinned(const std::string & rec_type, const std::string & record_id) const
+{
+	for (const auto & mr : m_merge_records)
+	{
+		if (mr.rec_type == rec_type && mr.record_id == record_id)
+			return mr.pinned;
+	}
+	return false;
+}
+
 void plugin_scan_t::remove_from_merge(const std::string & type, const std::string & id)
 {
 	auto it = std::remove_if(
@@ -113,6 +181,35 @@ void plugin_scan_t::remove_from_merge(const std::string & type, const std::strin
 	    m_merge_records.end(),
 	    [&](const merge_record_t & mr) { return mr.rec_type == type && mr.record_id == id; });
 	m_merge_records.erase(it, m_merge_records.end());
+}
+
+const std::string * plugin_scan_t::find_merge_content(
+    const std::string & rec_type,
+    const std::string & record_id) const
+{
+	for (const auto & mr : m_merge_records)
+	{
+		if (mr.rec_type == rec_type && mr.record_id == record_id)
+			return &mr.content;
+	}
+	return nullptr;
+}
+
+std::string plugin_scan_t::read_record_content(int plugin_idx, size_t record_index)
+{
+	if (plugin_idx == m_merge_plugin_idx)
+	{
+		if (record_index < m_merge_records.size())
+			return m_merge_records[record_index].content;
+
+		return {};
+	}
+
+	if (plugin_idx < 0 || plugin_idx >= static_cast<int>(m_plugins.size()))
+		return {};
+
+	m_plugins[plugin_idx]->esm.select_record(record_index);
+	return m_plugins[plugin_idx]->esm.get_record().content;
 }
 
 bool plugin_scan_t::save_merge(
@@ -171,6 +268,16 @@ size_t plugin_scan_t::merge_record_count() const
 const std::string & plugin_scan_t::merge_record_content(size_t index) const
 {
 	return m_merge_records[index].content;
+}
+
+const std::string & plugin_scan_t::merge_record_type(size_t index) const
+{
+	return m_merge_records[index].rec_type;
+}
+
+const std::string & plugin_scan_t::merge_record_id(size_t index) const
+{
+	return m_merge_records[index].record_id;
 }
 
 struct list_item_t
@@ -265,6 +372,90 @@ static std::string build_merged_list_record(
 	return record;
 }
 
+using item_count_map_t = std::map<std::pair<std::string, uint16_t>, size_t>;
+
+static item_count_map_t build_item_count_map(const std::vector<list_item_t> & items)
+{
+	item_count_map_t counts;
+	for (const auto & item : items)
+		++counts[{ item.ident, item.level }];
+
+	return counts;
+}
+
+static bool is_item_deleted(
+    const std::pair<std::string, uint16_t> & item_key,
+    const item_count_map_t & first_map,
+    const std::vector<item_count_map_t> & non_first_maps)
+{
+	const auto it_first = first_map.find(item_key);
+	if (it_first == first_map.end() || it_first->second == 0)
+		return false;
+
+	for (const auto & version_map : non_first_maps)
+	{
+		const auto it_ver = version_map.find(item_key);
+		if (it_ver == version_map.end())
+			return true;
+	}
+
+	return false;
+}
+
+static size_t compute_merged_count(
+    const std::pair<std::string, uint16_t> & item_key,
+    const std::vector<item_count_map_t> & non_first_maps)
+{
+	size_t max_count = 0;
+	for (const auto & version_map : non_first_maps)
+	{
+		const auto it_ver = version_map.find(item_key);
+		if (it_ver != version_map.end() && it_ver->second > max_count)
+			max_count = it_ver->second;
+	}
+
+	return max_count;
+}
+
+static std::vector<list_item_t> build_merged_items(
+    const item_count_map_t & first_map,
+    const std::vector<item_count_map_t> & non_first_maps)
+{
+	std::set<std::pair<std::string, uint16_t>> all_keys;
+	for (const auto & [key, count] : first_map)
+		all_keys.insert(key);
+
+	for (const auto & version_map : non_first_maps)
+	{
+		for (const auto & [key, count] : version_map)
+			all_keys.insert(key);
+	}
+
+	std::vector<list_item_t> merged;
+	for (const auto & item_key : all_keys)
+	{
+		if (is_item_deleted(item_key, first_map, non_first_maps))
+			continue;
+
+		const auto merged_count = compute_merged_count(item_key, non_first_maps);
+		for (size_t i = 0; i < merged_count; ++i)
+			merged.push_back({ item_key.first, item_key.second });
+	}
+
+	return merged;
+}
+
+static void sort_merged_items(std::vector<list_item_t> & items)
+{
+	std::sort(items.begin(), items.end(), [](const list_item_t & left, const list_item_t & right)
+	{
+		if (left.level != right.level)
+			return left.level < right.level;
+
+		return left.ident < right.ident;
+	});
+}
+
 void plugin_scan_t::merge_leveled_list(const conflict_entry_t & entry)
 {
 	if (entry.versions.size() < 2)
@@ -279,36 +470,49 @@ void plugin_scan_t::merge_leveled_list(const conflict_entry_t & entry)
 		return m_plugins[ver.plugin_idx]->esm.get_record().content;
 	};
 
-	const std::string & master_content = get_content(entry.versions[0]);
-	auto master_items = extract_list_items(master_content);
+	const auto first_content = get_content(entry.versions[0]);
+	const auto first_map = build_item_count_map(extract_list_items(first_content));
 
-	std::set<std::string> merged_keys;
-	for (const auto & item : master_items)
-		merged_keys.insert(item.ident + "\x00" + std::to_string(item.level));
-
-	std::vector<list_item_t> merged = master_items;
+	std::vector<item_count_map_t> non_first_maps;
+	std::vector<int> non_first_plugin_indices;
+	std::string winning_content;
 
 	for (size_t vi = 1; vi < entry.versions.size(); ++vi)
 	{
 		if (entry.versions[vi].plugin_idx == m_merge_plugin_idx)
 			continue;
 
-		const std::string & ver_content = get_content(entry.versions[vi]);
-		auto ver_items = extract_list_items(ver_content);
+		const auto ver_content = get_content(entry.versions[vi]);
+		non_first_maps.push_back(build_item_count_map(extract_list_items(ver_content)));
+		non_first_plugin_indices.push_back(entry.versions[vi].plugin_idx);
+		winning_content = ver_content;
+	}
 
-		for (const auto & item : ver_items)
+	if (non_first_maps.empty())
+		return;
+
+	for (const auto & [item_key, first_count] : first_map)
+	{
+		if (!is_item_deleted(item_key, first_map, non_first_maps))
+			continue;
+
+		for (size_t mi = 0; mi < non_first_maps.size(); ++mi)
 		{
-			std::string key = item.ident + "\x00" + std::to_string(item.level);
-			if (merged_keys.count(key))
-				continue;
-
-			merged.push_back(item);
-			merged_keys.insert(key);
+			if (non_first_maps[mi].find(item_key) == non_first_maps[mi].end())
+			{
+				tools_t::add_log(
+				    "[info] leveled list deletion: " + item_key.first +
+				    " at level " + std::to_string(item_key.second) +
+				    " by " + plugin_filename(non_first_plugin_indices[mi]) + "\r\n");
+			}
 		}
 	}
 
-	const auto & header_part = extract_list_header(master_content);
-	const auto & record = build_merged_list_record(entry.rec_type, header_part, merged);
+	auto merged = build_merged_items(first_map, non_first_maps);
+	sort_merged_items(merged);
+
+	const auto header_part = extract_list_header(winning_content);
+	const auto record = build_merged_list_record(entry.rec_type, header_part, merged);
 	copy_record_to_merge_raw(entry.rec_type, entry.record_id, record);
 }
 

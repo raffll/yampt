@@ -28,10 +28,22 @@ struct conflict_entry_t
 class plugin_scan_t
 {
 public:
+	struct merge_record_t
+	{
+		std::string rec_type;
+		std::string record_id;
+		std::string content;
+		bool pinned = false;
+	};
+
 	void load_plugin(const std::string & path);
 	void set_merge_plugin(const std::string & filename);
 	void set_merge_plugin_from_loaded(int plugin_idx);
 	void clear_merge_records();
+	std::vector<merge_record_t> collect_pinned_records() const;
+	void restore_pinned_records(const std::vector<merge_record_t> & pinned);
+	void set_merge_visible(bool visible);
+	bool is_merge_visible() const;
 	void rebuild_conflicts();
 
 	size_t plugin_count() const;
@@ -50,11 +62,20 @@ public:
 	    const std::string & rec_type,
 	    const std::string & record_id,
 	    const std::string & content);
+	void pin_record_to_merge(
+	    const std::string & rec_type,
+	    const std::string & record_id,
+	    const std::string & content);
+	bool is_merge_pinned(const std::string & rec_type, const std::string & record_id) const;
+	const std::string * find_merge_content(const std::string & rec_type, const std::string & record_id) const;
+	std::string read_record_content(int plugin_idx, size_t record_index);
 	void remove_from_merge(const std::string & type, const std::string & id);
 	bool save_merge(const std::string & output_path, const std::string & author, const std::string & description);
 	bool has_merge() const;
 	size_t merge_record_count() const;
 	const std::string & merge_record_content(size_t index) const;
+	const std::string & merge_record_type(size_t index) const;
+	const std::string & merge_record_id(size_t index) const;
 
 	void merge_leveled_list(const conflict_entry_t & entry);
 	void merge_dialogue(const conflict_entry_t & entry);
@@ -93,13 +114,7 @@ private:
 
 	std::vector<std::unique_ptr<loaded_plugin_t>> m_plugins;
 	int m_merge_plugin_idx = -1;
-
-	struct merge_record_t
-	{
-		std::string rec_type;
-		std::string record_id;
-		std::string content;
-	};
+	bool m_merge_visible = true;
 
 	std::vector<merge_record_t> m_merge_records;
 

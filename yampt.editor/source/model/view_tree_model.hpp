@@ -23,6 +23,8 @@ public:
 	void set_hide_no_conflict(bool hide);
 	bool is_merge_column(int section) const;
 	int merge_column() const;
+	const std::string & record_type() const { return m_record_type; }
+	const std::string & record_id() const { return m_record_id; }
 
 	QModelIndex index(int row, int column, const QModelIndex & parent) const override;
 	QModelIndex parent(const QModelIndex & child) const override;
@@ -147,6 +149,7 @@ private:
 	bool m_hide_no_conflict = false;
 	bool m_has_merge_column = false;
 	int m_merge_col_index = -1;
+	bool m_is_merge_pinned = false;
 	std::string m_record_type;
 	std::string m_record_id;
 	std::vector<int> m_column_plugin_indices;

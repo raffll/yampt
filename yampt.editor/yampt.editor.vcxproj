@@ -191,6 +191,7 @@
     <ClCompile Include="..\yampt.core\source\io\app_settings.cpp" />
     <ClCompile Include="source\dialog\editor_settings_dialog.cpp" />
     <ClCompile Include="source\dialog\appearance_settings_view.cpp" />
+    <ClCompile Include="source\dialog\merge_settings_view.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\yampt.core\source\decoder\view_tree_format.hpp" />
@@ -270,6 +271,12 @@
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
+    <CustomBuild Include="source\dialog\merge_settings_view.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(IntDir)moc_editor_window.cpp" />
@@ -282,6 +289,7 @@
     <ClCompile Include="$(IntDir)moc_editor_paths_view.cpp" />
     <ClCompile Include="$(IntDir)moc_editor_settings_dialog.cpp" />
     <ClCompile Include="$(IntDir)moc_appearance_settings_view.cpp" />
+    <ClCompile Include="$(IntDir)moc_merge_settings_view.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\yampt.qt\yampt.qt.vcxproj">

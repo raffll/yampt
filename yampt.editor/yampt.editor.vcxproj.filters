@@ -15,6 +15,7 @@
     <ClCompile Include="source\dialog\editor_paths_view.cpp" />
     <ClCompile Include="source\dialog\editor_settings_dialog.cpp" />
     <ClCompile Include="source\dialog\appearance_settings_view.cpp" />
+    <ClCompile Include="source\dialog\merge_settings_view.cpp" />
     <ClCompile Include="source\io\profile_reader.cpp" />
     <ClCompile Include="..\yampt.core\source\utility\tools.cpp" />
     <ClCompile Include="..\yampt.core\source\io\esm_reader.cpp" />

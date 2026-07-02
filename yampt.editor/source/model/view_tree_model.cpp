@@ -26,6 +26,7 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 	m_filter_dirty = true;
 	m_has_merge_column = false;
 	m_merge_col_index = -1;
+	m_is_merge_pinned = scan.is_merge_pinned(entry.rec_type, entry.record_id);
 
 	size_t col_count = setup_columns(scan, entry);
 	setup_merge_column(scan, entry, col_count);
@@ -80,6 +81,9 @@ size_t view_tree_model_t::setup_columns(plugin_scan_t & scan, const conflict_ent
 void view_tree_model_t::setup_merge_column(plugin_scan_t & scan, const conflict_entry_t & entry, size_t & col_count)
 {
 	if (!scan.has_merge())
+		return;
+
+	if (!scan.is_merge_visible())
 		return;
 
 	for (const auto & ver : entry.versions)
@@ -523,7 +527,12 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 			return sub_record_background(row, index.column());
 
 		if (role == Qt::ForegroundRole)
+		{
+			if (m_is_merge_pinned && is_merge_column(index.column()))
+				return QBrush(QColor(0, 128, 128));
+
 			return sub_record_foreground(row.cell_conflict_this, m_column_names.size(), index.column(), m_has_merge_column);
+		}
 
 		return {};
 	}
@@ -540,7 +549,12 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 		return field_row_background(frow, index.column());
 
 	if (role == Qt::ForegroundRole)
+	{
+		if (m_is_merge_pinned && is_merge_column(index.column()))
+			return QBrush(QColor(0, 128, 128));
+
 		return sub_record_foreground(frow.cell_conflict_this, m_column_names.size(), index.column(), m_has_merge_column);
+	}
 
 	return {};
 }
@@ -573,6 +587,9 @@ QVariant view_tree_model_t::headerData(int section, Qt::Orientation orientation,
 
 		if (m_column_names.size() <= 1)
 			return {};
+
+		if (m_is_merge_pinned && is_merge_column(section))
+			return QBrush(QColor(0, 128, 128));
 
 		const auto & theme = theme_system_t::instance();
 		return QBrush(theme.conflict_this_foreground(m_plugin_conflict_this[col]));

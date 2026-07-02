@@ -419,6 +419,84 @@ void app_settings_t::set_theme(theme_t value)
 	m_settings.setValue("Appearance/Theme", text);
 }
 
+bool app_settings_t::merge_type_enabled(const std::string & rec_type) const
+{
+	const auto disabled = m_settings.value("merge/disabled_types", "").toString();
+	if (disabled.isEmpty())
+		return true;
+
+	const auto types = disabled.split(',', Qt::SkipEmptyParts);
+	return !types.contains(QString::fromStdString(rec_type), Qt::CaseInsensitive);
+}
+
+void app_settings_t::set_merge_type_enabled(const std::string & rec_type, bool enabled)
+{
+	const auto disabled = m_settings.value("merge/disabled_types", "").toString();
+	auto types = disabled.split(',', Qt::SkipEmptyParts);
+	const auto qtype = QString::fromStdString(rec_type);
+
+	if (enabled)
+	{
+		types.removeAll(qtype);
+	}
+	else if (!types.contains(qtype, Qt::CaseInsensitive))
+	{
+		types.append(qtype);
+	}
+
+	m_settings.setValue("merge/disabled_types", types.join(','));
+}
+
+std::string app_settings_t::merge_exclusion_pattern() const
+{
+	return m_settings.value("merge/exclusion_pattern", "").toString().toStdString();
+}
+
+void app_settings_t::set_merge_exclusion_pattern(const std::string & pattern)
+{
+	m_settings.setValue("merge/exclusion_pattern", QString::fromStdString(pattern));
+}
+
+bool app_settings_t::merge_fog_fix_enabled() const
+{
+	return m_settings.value("merge/fog_fix", true).toBool();
+}
+
+void app_settings_t::set_merge_fog_fix_enabled(bool value)
+{
+	m_settings.setValue("merge/fog_fix", value);
+}
+
+bool app_settings_t::merge_summon_fix_enabled() const
+{
+	return m_settings.value("merge/summon_fix", true).toBool();
+}
+
+void app_settings_t::set_merge_summon_fix_enabled(bool value)
+{
+	m_settings.setValue("merge/summon_fix", value);
+}
+
+bool app_settings_t::merge_cell_name_fix_enabled() const
+{
+	return m_settings.value("merge/cell_name_fix", true).toBool();
+}
+
+void app_settings_t::set_merge_cell_name_fix_enabled(bool value)
+{
+	m_settings.setValue("merge/cell_name_fix", value);
+}
+
+bool app_settings_t::merge_column_visible() const
+{
+	return m_settings.value("merge/show_column", true).toBool();
+}
+
+void app_settings_t::set_merge_column_visible(bool value)
+{
+	m_settings.setValue("merge/show_column", value);
+}
+
 void app_settings_t::sync()
 {
 	m_settings.sync();

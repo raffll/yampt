@@ -184,6 +184,10 @@
     <ClCompile Include="source\utility\char_diff.cpp" />
     <ClCompile Include="source\utility\keyword_trie.cpp" />
     <ClCompile Include="source\io\app_settings.cpp" />
+    <ClCompile Include="source\scanner\sub_record_merge.cpp" />
+    <ClCompile Include="source\scanner\fog_fixer.cpp" />
+    <ClCompile Include="source\scanner\summon_fixer.cpp" />
+    <ClCompile Include="source\scanner\cell_name_fixer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\io\esm_reader.hpp" />
@@ -208,6 +212,10 @@
     <ClInclude Include="source\io\app_settings.hpp" />
     <ClInclude Include="source\utility\theme_enums.hpp" />
     <ClInclude Include="source\utility\color_palette.hpp" />
+    <ClInclude Include="source\scanner\sub_record_merge.hpp" />
+    <ClInclude Include="source\scanner\fog_fixer.hpp" />
+    <ClInclude Include="source\scanner\summon_fixer.hpp" />
+    <ClInclude Include="source\scanner\cell_name_fixer.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

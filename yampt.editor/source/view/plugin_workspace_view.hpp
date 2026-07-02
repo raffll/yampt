@@ -52,6 +52,7 @@ private slots:
 	void on_filter_changed();
 	void on_remove_itm();
 	void on_nav_context_menu(const QPoint & pos);
+	void on_view_context_menu(const QPoint & pos);
 	void on_view_copy();
 
 private:
@@ -93,6 +94,29 @@ private:
 	bool handle_drop_on_view(QDropEvent * drop_event);
 	bool handle_drop_on_nav(QDropEvent * drop_event);
 	void refresh_after_merge(const std::string & rec_type, const std::string & record_id);
+
+	struct merge_counters_t
+	{
+		int three_way = 0;
+		int lists = 0;
+		int dialogues = 0;
+	};
+
+	merge_counters_t merge_phase_one();
+	bool is_merge_candidate(const conflict_entry_t & entry) const;
+	void dispatch_merge_entry(const conflict_entry_t & entry, merge_counters_t & counters);
+	std::vector<std::string> build_version_contents(const conflict_entry_t & entry);
+	void merge_three_way(
+	    const conflict_entry_t & entry,
+	    std::vector<std::string> version_contents,
+	    merge_counters_t & counters);
+	int merge_phase_two();
+	void merge_phase_three();
+	int apply_fog_fixes();
+	int apply_summon_fixes();
+	int apply_cell_name_fixes();
+	std::string get_winning_content(const std::string & rec_type, const std::string & record_id);
+	std::string get_merge_or_winning_content(const std::string & rec_type, const std::string & record_id);
 
 	app_settings_t & m_settings;
 	plugin_scan_t m_scan;
