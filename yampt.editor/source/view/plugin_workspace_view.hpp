@@ -29,9 +29,21 @@ public:
 	void save_session_state();
 	void restore_session_state();
 
-	QCheckBox * conflicts_checkbox() const { return m_chk_conflicts; }
-	QLabel * count_label() const { return m_lbl_count; }
-	QLabel * status_label() const { return m_status_label; }
+	QCheckBox * conflicts_checkbox() const
+	{
+		return m_chk_conflicts;
+	}
+
+	QLabel * count_label() const
+	{
+		return m_lbl_count;
+	}
+
+	QLabel * status_label() const
+	{
+		return m_status_label;
+	}
+
 	void refresh_views();
 
 public slots:
@@ -93,10 +105,7 @@ private:
 	    size_t sub_size,
 	    int binary_idx,
 	    int field_idx);
-	std::string read_source_content(
-	    int plugin_idx,
-	    const std::string & rec_type,
-	    const std::string & record_id);
+	std::string read_source_content(int plugin_idx, const std::string & rec_type, const std::string & record_id);
 	std::string ensure_merge_record(
 	    int plugin_idx,
 	    const std::string & rec_type,
@@ -134,7 +143,13 @@ private:
 	app_settings_t & m_settings;
 	plugin_scan_t m_scan;
 
-	enum class load_source_t { none, folder, openmw_cfg, mo2_profile };
+	enum class load_source_t
+	{
+		none,
+		folder,
+		openmw_cfg,
+		mo2_profile
+	};
 	load_source_t m_load_source = load_source_t::none;
 	std::string m_load_base_path;
 

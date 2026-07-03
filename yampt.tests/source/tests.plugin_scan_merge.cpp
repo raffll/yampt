@@ -142,9 +142,7 @@ struct merge_test_fixture_t
 	std::string master_path;
 	std::string plugin_path;
 
-	merge_test_fixture_t(
-	    const std::string & master_levi,
-	    const std::string & plugin_levi)
+	merge_test_fixture_t(const std::string & master_levi, const std::string & plugin_levi)
 	{
 		master_path = get_temp_path("yampt_merge_test_master.esm");
 		plugin_path = get_temp_path("yampt_merge_test_plugin.esp");
@@ -193,16 +191,24 @@ struct merge_test_fixture_t
 
 TEST_CASE("plugin_scan_t::merge_leveled_list, additions-only preserving master", "[i]")
 {
-	auto master_levi = make_levi_record("lev_item_test", 1, 0, {
-	    { "iron_sword", 1 },
-	    { "steel_dagger", 3 },
-	});
+	auto master_levi = make_levi_record(
+	    "lev_item_test",
+	    1,
+	    0,
+	    {
+	        { "iron_sword", 1 },
+	        { "steel_dagger", 3 },
+	    });
 
-	auto plugin_levi = make_levi_record("lev_item_test", 1, 0, {
-	    { "iron_sword", 1 },
-	    { "steel_dagger", 3 },
-	    { "glass_blade", 5 },
-	});
+	auto plugin_levi = make_levi_record(
+	    "lev_item_test",
+	    1,
+	    0,
+	    {
+	        { "iron_sword", 1 },
+	        { "steel_dagger", 3 },
+	        { "glass_blade", 5 },
+	    });
 
 	merge_test_fixture_t fixture(master_levi, plugin_levi);
 	auto entry = fixture.make_conflict("lev_item_test");
@@ -213,23 +219,31 @@ TEST_CASE("plugin_scan_t::merge_leveled_list, additions-only preserving master",
 	auto items = extract_items_from_content(fixture.merged_content());
 
 	REQUIRE(items.size() == 3);
-	REQUIRE(items[0] == std::pair<std::string, uint16_t>{ "iron_sword", 1 });
-	REQUIRE(items[1] == std::pair<std::string, uint16_t>{ "steel_dagger", 3 });
-	REQUIRE(items[2] == std::pair<std::string, uint16_t>{ "glass_blade", 5 });
+	REQUIRE(items[0] == std::pair<std::string, uint16_t> { "iron_sword", 1 });
+	REQUIRE(items[1] == std::pair<std::string, uint16_t> { "steel_dagger", 3 });
+	REQUIRE(items[2] == std::pair<std::string, uint16_t> { "glass_blade", 5 });
 }
 
 TEST_CASE("plugin_scan_t::merge_leveled_list, deduplication by item and level", "[i]")
 {
-	auto master_levi = make_levi_record("lev_item_dup", 1, 0, {
-	    { "iron_sword", 1 },
-	    { "steel_sword", 5 },
-	});
+	auto master_levi = make_levi_record(
+	    "lev_item_dup",
+	    1,
+	    0,
+	    {
+	        { "iron_sword", 1 },
+	        { "steel_sword", 5 },
+	    });
 
-	auto plugin_levi = make_levi_record("lev_item_dup", 1, 0, {
-	    { "iron_sword", 1 },
-	    { "steel_sword", 5 },
-	    { "daedric_axe", 10 },
-	});
+	auto plugin_levi = make_levi_record(
+	    "lev_item_dup",
+	    1,
+	    0,
+	    {
+	        { "iron_sword", 1 },
+	        { "steel_sword", 5 },
+	        { "daedric_axe", 10 },
+	    });
 
 	merge_test_fixture_t fixture(master_levi, plugin_levi);
 	auto entry = fixture.make_conflict("lev_item_dup");
@@ -240,9 +254,9 @@ TEST_CASE("plugin_scan_t::merge_leveled_list, deduplication by item and level", 
 	auto items = extract_items_from_content(fixture.merged_content());
 
 	REQUIRE(items.size() == 3);
-	REQUIRE(items[0] == std::pair<std::string, uint16_t>{ "iron_sword", 1 });
-	REQUIRE(items[1] == std::pair<std::string, uint16_t>{ "steel_sword", 5 });
-	REQUIRE(items[2] == std::pair<std::string, uint16_t>{ "daedric_axe", 10 });
+	REQUIRE(items[0] == std::pair<std::string, uint16_t> { "iron_sword", 1 });
+	REQUIRE(items[1] == std::pair<std::string, uint16_t> { "steel_sword", 5 });
+	REQUIRE(items[2] == std::pair<std::string, uint16_t> { "daedric_axe", 10 });
 }
 
 TEST_CASE("plugin_scan_t::merge_leveled_list, header from winner", "[i]")
@@ -250,17 +264,25 @@ TEST_CASE("plugin_scan_t::merge_leveled_list, header from winner", "[i]")
 	uint32_t master_flags = 0x02;
 	uint8_t master_chance = 25;
 
-	auto master_levi = make_levi_record("lev_header_test", master_flags, master_chance, {
-	    { "iron_sword", 1 },
-	});
+	auto master_levi = make_levi_record(
+	    "lev_header_test",
+	    master_flags,
+	    master_chance,
+	    {
+	        { "iron_sword", 1 },
+	    });
 
 	uint32_t plugin_flags = 0x01;
 	uint8_t plugin_chance = 50;
 
-	auto plugin_levi = make_levi_record("lev_header_test", plugin_flags, plugin_chance, {
-	    { "iron_sword", 1 },
-	    { "glass_blade", 5 },
-	});
+	auto plugin_levi = make_levi_record(
+	    "lev_header_test",
+	    plugin_flags,
+	    plugin_chance,
+	    {
+	        { "iron_sword", 1 },
+	        { "glass_blade", 5 },
+	    });
 
 	merge_test_fixture_t fixture(master_levi, plugin_levi);
 	auto entry = fixture.make_conflict("lev_header_test");
@@ -280,15 +302,23 @@ TEST_CASE("plugin_scan_t::merge_leveled_list, header from winner", "[i]")
 
 TEST_CASE("plugin_scan_t::merge_leveled_list, same item different levels are distinct", "[i]")
 {
-	auto master_levi = make_levi_record("lev_item_levels", 1, 0, {
-	    { "iron_sword", 1 },
-	});
+	auto master_levi = make_levi_record(
+	    "lev_item_levels",
+	    1,
+	    0,
+	    {
+	        { "iron_sword", 1 },
+	    });
 
-	auto plugin_levi = make_levi_record("lev_item_levels", 1, 0, {
-	    { "iron_sword", 1 },
-	    { "iron_sword", 5 },
-	    { "iron_sword", 10 },
-	});
+	auto plugin_levi = make_levi_record(
+	    "lev_item_levels",
+	    1,
+	    0,
+	    {
+	        { "iron_sword", 1 },
+	        { "iron_sword", 5 },
+	        { "iron_sword", 10 },
+	    });
 
 	merge_test_fixture_t fixture(master_levi, plugin_levi);
 	auto entry = fixture.make_conflict("lev_item_levels");
@@ -299,9 +329,9 @@ TEST_CASE("plugin_scan_t::merge_leveled_list, same item different levels are dis
 	auto items = extract_items_from_content(fixture.merged_content());
 
 	REQUIRE(items.size() == 3);
-	REQUIRE(items[0] == std::pair<std::string, uint16_t>{ "iron_sword", 1 });
-	REQUIRE(items[1] == std::pair<std::string, uint16_t>{ "iron_sword", 5 });
-	REQUIRE(items[2] == std::pair<std::string, uint16_t>{ "iron_sword", 10 });
+	REQUIRE(items[0] == std::pair<std::string, uint16_t> { "iron_sword", 1 });
+	REQUIRE(items[1] == std::pair<std::string, uint16_t> { "iron_sword", 5 });
+	REQUIRE(items[2] == std::pair<std::string, uint16_t> { "iron_sword", 10 });
 }
 
 static std::string null_terminated(const std::string & text)
@@ -370,15 +400,17 @@ TEST_CASE("plugin_scan_t::merge_dialogue, DIAL content from last plugin", "[i]")
 {
 	merge_dialogue_fixture_t fixture;
 
-	const auto plugin_a = make_plugin({
-	    make_dial_record("greeting", 0),
-	    make_info_record("info1", "hello from A"),
-	});
+	const auto plugin_a = make_plugin(
+	    {
+	        make_dial_record("greeting", 0),
+	        make_info_record("info1", "hello from A"),
+	    });
 
-	const auto plugin_b = make_plugin({
-	    make_dial_record("greeting", 2),
-	    make_info_record("info1", "hello from B"),
-	});
+	const auto plugin_b = make_plugin(
+	    {
+	        make_dial_record("greeting", 2),
+	        make_info_record("info1", "hello from B"),
+	    });
 
 	fixture.add_plugin("yampt_test_dial_a.esp", plugin_a);
 	fixture.add_plugin("yampt_test_dial_b.esp", plugin_b);
@@ -400,17 +432,19 @@ TEST_CASE("plugin_scan_t::merge_dialogue, INFO ordering preserves first-seen pos
 {
 	merge_dialogue_fixture_t fixture;
 
-	const auto plugin_a = make_plugin({
-	    make_dial_record("topic"),
-	    make_info_record("alpha", "response alpha"),
-	    make_info_record("beta", "response beta"),
-	});
+	const auto plugin_a = make_plugin(
+	    {
+	        make_dial_record("topic"),
+	        make_info_record("alpha", "response alpha"),
+	        make_info_record("beta", "response beta"),
+	    });
 
-	const auto plugin_b = make_plugin({
-	    make_dial_record("topic"),
-	    make_info_record("beta", "response beta v2"),
-	    make_info_record("gamma", "response gamma"),
-	});
+	const auto plugin_b = make_plugin(
+	    {
+	        make_dial_record("topic"),
+	        make_info_record("beta", "response beta v2"),
+	        make_info_record("gamma", "response gamma"),
+	    });
 
 	fixture.add_plugin("yampt_test_order_a.esp", plugin_a);
 	fixture.add_plugin("yampt_test_order_b.esp", plugin_b);
@@ -436,21 +470,24 @@ TEST_CASE("plugin_scan_t::merge_dialogue, all distinct INFO IDs included", "[i]"
 {
 	merge_dialogue_fixture_t fixture;
 
-	const auto plugin_a = make_plugin({
-	    make_dial_record("quest"),
-	    make_info_record("info_x", "x text"),
-	    make_info_record("info_y", "y text"),
-	});
+	const auto plugin_a = make_plugin(
+	    {
+	        make_dial_record("quest"),
+	        make_info_record("info_x", "x text"),
+	        make_info_record("info_y", "y text"),
+	    });
 
-	const auto plugin_b = make_plugin({
-	    make_dial_record("quest"),
-	    make_info_record("info_z", "z text"),
-	});
+	const auto plugin_b = make_plugin(
+	    {
+	        make_dial_record("quest"),
+	        make_info_record("info_z", "z text"),
+	    });
 
-	const auto plugin_c = make_plugin({
-	    make_dial_record("quest"),
-	    make_info_record("info_w", "w text"),
-	});
+	const auto plugin_c = make_plugin(
+	    {
+	        make_dial_record("quest"),
+	        make_info_record("info_w", "w text"),
+	    });
 
 	fixture.add_plugin("yampt_test_all_a.esp", plugin_a);
 	fixture.add_plugin("yampt_test_all_b.esp", plugin_b);
@@ -479,15 +516,17 @@ TEST_CASE("plugin_scan_t::merge_dialogue, INFO content last-wins for duplicates"
 {
 	merge_dialogue_fixture_t fixture;
 
-	const auto plugin_a = make_plugin({
-	    make_dial_record("rumors"),
-	    make_info_record("shared", "old rumor text"),
-	});
+	const auto plugin_a = make_plugin(
+	    {
+	        make_dial_record("rumors"),
+	        make_info_record("shared", "old rumor text"),
+	    });
 
-	const auto plugin_b = make_plugin({
-	    make_dial_record("rumors"),
-	    make_info_record("shared", "updated rumor text"),
-	});
+	const auto plugin_b = make_plugin(
+	    {
+	        make_dial_record("rumors"),
+	        make_info_record("shared", "updated rumor text"),
+	    });
 
 	fixture.add_plugin("yampt_test_lastwins_a.esp", plugin_a);
 	fixture.add_plugin("yampt_test_lastwins_b.esp", plugin_b);
@@ -509,11 +548,12 @@ TEST_CASE("plugin_scan_t::merge_dialogue, orphan PNAM/NNAM references ignored", 
 {
 	merge_dialogue_fixture_t fixture;
 
-	const auto plugin_a = make_plugin({
-	    make_dial_record("lore"),
-	    make_info_record("real1", "lore text one", "", "ghost_id"),
-	    make_info_record("real2", "lore text two", "ghost_id", ""),
-	});
+	const auto plugin_a = make_plugin(
+	    {
+	        make_dial_record("lore"),
+	        make_info_record("real1", "lore text one", "", "ghost_id"),
+	        make_info_record("real2", "lore text two", "ghost_id", ""),
+	    });
 
 	fixture.add_plugin("yampt_test_orphan_a.esp", plugin_a);
 	fixture.setup_merge();

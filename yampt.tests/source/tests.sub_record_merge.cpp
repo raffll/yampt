@@ -65,7 +65,8 @@ static std::string make_bytes(const std::vector<uint8_t> & bytes)
 TEST_CASE("sub_record_merge_t::merge, 2 versions returns unchanged", "[u]")
 {
 	auto first = make_record("NPC_", make_sub("NAME", make_string("npc_id")) + make_sub("FNAM", make_string("Name")));
-	auto winner = make_record("NPC_", make_sub("NAME", make_string("npc_id")) + make_sub("FNAM", make_string("Changed")));
+	auto winner =
+	    make_record("NPC_", make_sub("NAME", make_string("npc_id")) + make_sub("FNAM", make_string("Changed")));
 
 	merge_input_t input;
 	input.rec_type = "NPC_";
@@ -80,9 +81,12 @@ TEST_CASE("sub_record_merge_t::merge, 2 versions returns unchanged", "[u]")
 
 TEST_CASE("sub_record_merge_t::merge, intermediate modifies winner unchanged", "[u]")
 {
-	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("Original")) + make_sub("RNAM", make_string("Imperial"));
-	auto subs_inter = make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("NewName")) + make_sub("RNAM", make_string("Imperial"));
-	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("Original")) + make_sub("RNAM", make_string("Breton"));
+	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("Original")) +
+	                  make_sub("RNAM", make_string("Imperial"));
+	auto subs_inter = make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("NewName")) +
+	                  make_sub("RNAM", make_string("Imperial"));
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("Original")) +
+	                   make_sub("RNAM", make_string("Breton"));
 
 	auto first = make_record("NPC_", subs_first);
 	auto inter = make_record("NPC_", subs_inter);
@@ -96,7 +100,10 @@ TEST_CASE("sub_record_merge_t::merge, intermediate modifies winner unchanged", "
 	auto result = sub_record_merge_t::merge(input);
 
 	REQUIRE(result.changed);
-	auto expected = make_record("NPC_", make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("NewName")) + make_sub("RNAM", make_string("Breton")));
+	auto expected = make_record(
+	    "NPC_",
+	    make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("NewName")) +
+	        make_sub("RNAM", make_string("Breton")));
 	REQUIRE(result.content == expected);
 }
 
@@ -140,10 +147,14 @@ TEST_CASE("sub_record_merge_t::merge, output identical to winner not changed", "
 
 TEST_CASE("sub_record_merge_t::merge, 4 versions later intermediate wins", "[u]")
 {
-	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("A")) + make_sub("DATA", make_bytes({ 10 }));
-	auto subs_inter1 = make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("B")) + make_sub("DATA", make_bytes({ 10 }));
-	auto subs_inter2 = make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("C")) + make_sub("DATA", make_bytes({ 10 }));
-	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("A")) + make_sub("DATA", make_bytes({ 20 }));
+	auto subs_first =
+	    make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("A")) + make_sub("DATA", make_bytes({ 10 }));
+	auto subs_inter1 =
+	    make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("B")) + make_sub("DATA", make_bytes({ 10 }));
+	auto subs_inter2 =
+	    make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("C")) + make_sub("DATA", make_bytes({ 10 }));
+	auto subs_winner =
+	    make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("A")) + make_sub("DATA", make_bytes({ 20 }));
 
 	merge_input_t input;
 	input.rec_type = "WEAP";
@@ -158,7 +169,10 @@ TEST_CASE("sub_record_merge_t::merge, 4 versions later intermediate wins", "[u]"
 	auto result = sub_record_merge_t::merge(input);
 
 	REQUIRE(result.changed);
-	auto expected = make_record("WEAP", make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("C")) + make_sub("DATA", make_bytes({ 20 })));
+	auto expected = make_record(
+	    "WEAP",
+	    make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("C")) +
+	        make_sub("DATA", make_bytes({ 20 })));
 	REQUIRE(result.content == expected);
 }
 
@@ -192,7 +206,8 @@ TEST_CASE("sub_record_merge_t::merge, preserves winner header flags", "[u]")
 TEST_CASE("sub_record_merge_t::merge, added sub-record preserved", "[u]")
 {
 	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("MODL", make_string("model.nif"));
-	auto subs_inter = make_sub("NAME", make_string("id")) + make_sub("MODL", make_string("model.nif")) + make_sub("CNAM", make_string("female_part"));
+	auto subs_inter = make_sub("NAME", make_string("id")) + make_sub("MODL", make_string("model.nif")) +
+	                  make_sub("CNAM", make_string("female_part"));
 	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("MODL", make_string("model.nif"));
 
 	merge_input_t input;
@@ -234,9 +249,12 @@ TEST_CASE("sub_record_merge_t::merge, added sub-record winner has it", "[u]")
 
 TEST_CASE("sub_record_merge_t::merge, added sub-record with existing data", "[u]")
 {
-	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("Name")) + make_sub("MODL", make_string("m.nif"));
-	auto subs_inter = make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("Name")) + make_sub("MODL", make_string("m.nif")) + make_sub("BNAM", make_string("added_part"));
-	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("Name")) + make_sub("MODL", make_string("m.nif"));
+	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("Name")) +
+	                  make_sub("MODL", make_string("m.nif"));
+	auto subs_inter = make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("Name")) +
+	                  make_sub("MODL", make_string("m.nif")) + make_sub("BNAM", make_string("added_part"));
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("Name")) +
+	                   make_sub("MODL", make_string("m.nif"));
 
 	merge_input_t input;
 	input.rec_type = "ARMO";
@@ -284,18 +302,15 @@ TEST_CASE("sub_record_merge_t::merge, two intermediates add different subs", "[u
 
 TEST_CASE("sub_record_merge_t::merge, steel_cuirass scenario tribunal adds CNAM", "[u]")
 {
-	auto subs_morrowind = make_sub("NAME", make_string("steel_cuirass"))
-	                    + make_sub("MODL", make_string("a\\A_Steel_Cuirass_GND.nif"))
-	                    + make_sub("FNAM", make_string("Steel Cuirass"))
-	                    + make_sub("INDX", make_string("Cuirass"))
-	                    + make_sub("BNAM", make_string("a_steel_cuirass"));
+	auto subs_morrowind = make_sub("NAME", make_string("steel_cuirass")) +
+	                      make_sub("MODL", make_string("a\\A_Steel_Cuirass_GND.nif")) +
+	                      make_sub("FNAM", make_string("Steel Cuirass")) + make_sub("INDX", make_string("Cuirass")) +
+	                      make_sub("BNAM", make_string("a_steel_cuirass"));
 
-	auto subs_tribunal = make_sub("NAME", make_string("steel_cuirass"))
-	                   + make_sub("MODL", make_string("a\\A_Steel_Cuirass_GND.nif"))
-	                   + make_sub("FNAM", make_string("Steel Cuirass"))
-	                   + make_sub("INDX", make_string("Cuirass"))
-	                   + make_sub("BNAM", make_string("a_steel_cuirass"))
-	                   + make_sub("CNAM", make_string("A_Steel_Cuir_Female"));
+	auto subs_tribunal =
+	    make_sub("NAME", make_string("steel_cuirass")) + make_sub("MODL", make_string("a\\A_Steel_Cuirass_GND.nif")) +
+	    make_sub("FNAM", make_string("Steel Cuirass")) + make_sub("INDX", make_string("Cuirass")) +
+	    make_sub("BNAM", make_string("a_steel_cuirass")) + make_sub("CNAM", make_string("A_Steel_Cuir_Female"));
 
 	auto subs_bloodmoon = subs_morrowind;
 
@@ -463,7 +478,13 @@ TEST_CASE("sub_record_merge_t::merge, CREA AI_W element-wise merge", "[u]")
 // Requirement 5: ENAM Per-Slot Merge
 // ============================================================================
 
-static std::string make_enam(uint16_t effect_id, uint8_t skill, uint8_t attrib, int32_t duration, int32_t min_mag, int32_t max_mag)
+static std::string make_enam(
+    uint16_t effect_id,
+    uint8_t skill,
+    uint8_t attrib,
+    int32_t duration,
+    int32_t min_mag,
+    int32_t max_mag)
 {
 	std::string result(24, '\0');
 	std::memcpy(result.data(), &effect_id, 2);
@@ -501,7 +522,8 @@ TEST_CASE("sub_record_merge_t::merge, ENAM intermediate modifies slot winner unc
 	auto result = sub_record_merge_t::merge(input);
 
 	REQUIRE(result.changed);
-	auto expected = make_record("SPEL", make_sub("NAME", make_string("id")) + make_sub("ENAM", enam1) + make_sub("ENAM", enam2_mod));
+	auto expected = make_record(
+	    "SPEL", make_sub("NAME", make_string("id")) + make_sub("ENAM", enam1) + make_sub("ENAM", enam2_mod));
 	REQUIRE(result.content == expected);
 }
 
@@ -526,7 +548,8 @@ TEST_CASE("sub_record_merge_t::merge, ENAM intermediate adds slot", "[u]")
 	auto result = sub_record_merge_t::merge(input);
 
 	REQUIRE(result.changed);
-	auto expected = make_record("ENCH", make_sub("NAME", make_string("id")) + make_sub("ENAM", enam1) + make_sub("ENAM", enam_new));
+	auto expected =
+	    make_record("ENCH", make_sub("NAME", make_string("id")) + make_sub("ENAM", enam1) + make_sub("ENAM", enam_new));
 	REQUIRE(result.content == expected);
 }
 
@@ -562,8 +585,10 @@ TEST_CASE("sub_record_merge_t::merge, ENAM winner removes slot removal stands", 
 TEST_CASE("sub_record_merge_t::merge, duplicate addition not appended twice", "[u]")
 {
 	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("MODL", make_string("m.nif"));
-	auto subs_inter1 = make_sub("NAME", make_string("id")) + make_sub("MODL", make_string("m.nif")) + make_sub("CNAM", make_string("part"));
-	auto subs_inter2 = make_sub("NAME", make_string("id")) + make_sub("MODL", make_string("m.nif")) + make_sub("CNAM", make_string("part"));
+	auto subs_inter1 = make_sub("NAME", make_string("id")) + make_sub("MODL", make_string("m.nif")) +
+	                   make_sub("CNAM", make_string("part"));
+	auto subs_inter2 = make_sub("NAME", make_string("id")) + make_sub("MODL", make_string("m.nif")) +
+	                   make_sub("CNAM", make_string("part"));
 	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("MODL", make_string("m.nif"));
 
 	merge_input_t input;
@@ -733,9 +758,12 @@ TEST_CASE("sub_record_merge_t::merge, NPCO adds intermediate items", "[u]")
 
 TEST_CASE("sub_record_merge_t::merge, CELL returns winner unchanged", "[u]")
 {
-	auto subs_first = make_sub("NAME", make_string("cell")) + make_sub("DATA", make_bytes({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}));
-	auto subs_inter = make_sub("NAME", make_string("cell")) + make_sub("DATA", make_bytes({1, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0}));
-	auto subs_winner = make_sub("NAME", make_string("cell")) + make_sub("DATA", make_bytes({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}));
+	auto subs_first =
+	    make_sub("NAME", make_string("cell")) + make_sub("DATA", make_bytes({ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }));
+	auto subs_inter =
+	    make_sub("NAME", make_string("cell")) + make_sub("DATA", make_bytes({ 1, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0 }));
+	auto subs_winner =
+	    make_sub("NAME", make_string("cell")) + make_sub("DATA", make_bytes({ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }));
 
 	auto first = make_record("CELL", subs_first);
 	auto inter = make_record("CELL", subs_inter);
@@ -758,15 +786,15 @@ TEST_CASE("sub_record_merge_t::merge, CELL returns winner unchanged", "[u]")
 
 TEST_CASE("sub_record_merge_t, patch single sub-record by index", "[u]")
 {
-	auto merge_content = make_record("WEAP",
-		make_sub("NAME", make_string("weapon_id")) +
-		make_sub("FNAM", make_string("Old Name")) +
-		make_sub("ENAM", make_string("old_enchant")));
+	auto merge_content = make_record(
+	    "WEAP",
+	    make_sub("NAME", make_string("weapon_id")) + make_sub("FNAM", make_string("Old Name")) +
+	        make_sub("ENAM", make_string("old_enchant")));
 
-	auto source_content = make_record("WEAP",
-		make_sub("NAME", make_string("weapon_id")) +
-		make_sub("FNAM", make_string("New Name")) +
-		make_sub("ENAM", make_string("new_enchant")));
+	auto source_content = make_record(
+	    "WEAP",
+	    make_sub("NAME", make_string("weapon_id")) + make_sub("FNAM", make_string("New Name")) +
+	        make_sub("ENAM", make_string("new_enchant")));
 
 	auto merge_subs = sub_record_merge_t::parse_sub_records(merge_content);
 	const auto source_subs = sub_record_merge_t::parse_sub_records(source_content);
@@ -787,14 +815,13 @@ TEST_CASE("sub_record_merge_t, patch single sub-record by index", "[u]")
 
 TEST_CASE("sub_record_merge_t, patch appends if not in merge", "[u]")
 {
-	auto merge_content = make_record("BSGN",
-		make_sub("NAME", make_string("sign_id")) +
-		make_sub("FNAM", make_string("Sign Name")));
+	auto merge_content =
+	    make_record("BSGN", make_sub("NAME", make_string("sign_id")) + make_sub("FNAM", make_string("Sign Name")));
 
-	auto source_content = make_record("BSGN",
-		make_sub("NAME", make_string("sign_id")) +
-		make_sub("FNAM", make_string("Sign Name")) +
-		make_sub("NPCS", make_string("new_ability")));
+	auto source_content = make_record(
+	    "BSGN",
+	    make_sub("NAME", make_string("sign_id")) + make_sub("FNAM", make_string("Sign Name")) +
+	        make_sub("NPCS", make_string("new_ability")));
 
 	auto merge_subs = sub_record_merge_t::parse_sub_records(merge_content);
 	const auto source_subs = sub_record_merge_t::parse_sub_records(source_content);
@@ -814,15 +841,15 @@ TEST_CASE("sub_record_merge_t, patch appends if not in merge", "[u]")
 
 TEST_CASE("sub_record_merge_t, patch second occurrence by index", "[u]")
 {
-	auto merge_content = make_record("BSGN",
-		make_sub("NAME", make_string("id")) +
-		make_sub("NPCS", make_string("ability_a")) +
-		make_sub("NPCS", make_string("ability_b")));
+	auto merge_content = make_record(
+	    "BSGN",
+	    make_sub("NAME", make_string("id")) + make_sub("NPCS", make_string("ability_a")) +
+	        make_sub("NPCS", make_string("ability_b")));
 
-	auto source_content = make_record("BSGN",
-		make_sub("NAME", make_string("id")) +
-		make_sub("NPCS", make_string("ability_a")) +
-		make_sub("NPCS", make_string("ability_c")));
+	auto source_content = make_record(
+	    "BSGN",
+	    make_sub("NAME", make_string("id")) + make_sub("NPCS", make_string("ability_a")) +
+	        make_sub("NPCS", make_string("ability_c")));
 
 	auto merge_subs = sub_record_merge_t::parse_sub_records(merge_content);
 	const auto source_subs = sub_record_merge_t::parse_sub_records(source_content);
@@ -855,10 +882,10 @@ TEST_CASE("sub_record_merge_t, patch second occurrence by index", "[u]")
 
 TEST_CASE("sub_record_merge_t, binary index generic no reorder", "[u]")
 {
-	auto content = make_record("WEAP",
-		make_sub("NAME", make_string("id")) +
-		make_sub("FNAM", make_string("Sword")) +
-		make_sub("ENAM", make_string("enchant")));
+	auto content = make_record(
+	    "WEAP",
+	    make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("Sword")) +
+	        make_sub("ENAM", make_string("enchant")));
 
 	const auto subs = sub_record_merge_t::parse_sub_records(content);
 
@@ -873,11 +900,10 @@ TEST_CASE("sub_record_merge_t, binary index generic no reorder", "[u]")
 
 TEST_CASE("sub_record_merge_t, binary index multiple same type", "[u]")
 {
-	auto content = make_record("BSGN",
-		make_sub("NAME", make_string("id")) +
-		make_sub("NPCS", make_string("ability_a")) +
-		make_sub("NPCS", make_string("ability_b")) +
-		make_sub("NPCS", make_string("ability_c")));
+	auto content = make_record(
+	    "BSGN",
+	    make_sub("NAME", make_string("id")) + make_sub("NPCS", make_string("ability_a")) +
+	        make_sub("NPCS", make_string("ability_b")) + make_sub("NPCS", make_string("ability_c")));
 
 	const auto subs = sub_record_merge_t::parse_sub_records(content);
 
@@ -897,17 +923,15 @@ TEST_CASE("sub_record_merge_t, binary index multiple same type", "[u]")
 
 TEST_CASE("sub_record_merge_t, patch by binary index not occurrence", "[u]")
 {
-	auto source_content = make_record("BSGN",
-		make_sub("NAME", make_string("id")) +
-		make_sub("NPCS", make_string("spell_x")) +
-		make_sub("NPCS", make_string("spell_y")) +
-		make_sub("NPCS", make_string("spell_z")));
+	auto source_content = make_record(
+	    "BSGN",
+	    make_sub("NAME", make_string("id")) + make_sub("NPCS", make_string("spell_x")) +
+	        make_sub("NPCS", make_string("spell_y")) + make_sub("NPCS", make_string("spell_z")));
 
-	auto merge_content = make_record("BSGN",
-		make_sub("NAME", make_string("id")) +
-		make_sub("NPCS", make_string("spell_x")) +
-		make_sub("NPCS", make_string("spell_old")) +
-		make_sub("NPCS", make_string("spell_z")));
+	auto merge_content = make_record(
+	    "BSGN",
+	    make_sub("NAME", make_string("id")) + make_sub("NPCS", make_string("spell_x")) +
+	        make_sub("NPCS", make_string("spell_old")) + make_sub("NPCS", make_string("spell_z")));
 
 	const auto source_subs = sub_record_merge_t::parse_sub_records(source_content);
 	auto merge_subs = sub_record_merge_t::parse_sub_records(merge_content);
@@ -924,8 +948,8 @@ TEST_CASE("sub_record_merge_t, patch by binary index not occurrence", "[u]")
 			++source_occurrence;
 	}
 
-	const auto merge_idx = sub_record_merge_t::find_by_type_and_occurrence(
-		merge_subs, source_sub.type, source_occurrence);
+	const auto merge_idx =
+	    sub_record_merge_t::find_by_type_and_occurrence(merge_subs, source_sub.type, source_occurrence);
 	REQUIRE(merge_idx == 2);
 
 	merge_subs[merge_idx].data = source_sub.data;
@@ -939,13 +963,11 @@ TEST_CASE("sub_record_merge_t, patch by binary index not occurrence", "[u]")
 
 TEST_CASE("sub_record_merge_t, reordered list binary index", "[u]")
 {
-	auto content = make_record("LEVC",
-		make_sub("CNAM", make_string("skeleton")) +
-		make_sub("INTV", make_uint16(3)) +
-		make_sub("CNAM", make_string("ancestor_ghost")) +
-		make_sub("INTV", make_uint16(1)) +
-		make_sub("CNAM", make_string("rat")) +
-		make_sub("INTV", make_uint16(1)));
+	auto content = make_record(
+	    "LEVC",
+	    make_sub("CNAM", make_string("skeleton")) + make_sub("INTV", make_uint16(3)) +
+	        make_sub("CNAM", make_string("ancestor_ghost")) + make_sub("INTV", make_uint16(1)) +
+	        make_sub("CNAM", make_string("rat")) + make_sub("INTV", make_uint16(1)));
 
 	const auto subs = sub_record_merge_t::parse_sub_records(content);
 
@@ -973,9 +995,15 @@ TEST_CASE("sub_record_merge_t, reordered list binary index", "[u]")
 
 TEST_CASE("sub_record_merge_t::merge, SCPT returns winner unchanged", "[u]")
 {
-	auto subs_first = make_sub("SCHD", make_bytes({23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x72, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}));
-	auto subs_inter = make_sub("SCHD", make_bytes({23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x74, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}));
-	auto subs_winner = make_sub("SCHD", make_bytes({23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x72, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}));
+	auto subs_first = make_sub(
+	    "SCHD", make_bytes({ 23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x72, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	                         0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }));
+	auto subs_inter = make_sub(
+	    "SCHD", make_bytes({ 23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x74, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	                         0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }));
+	auto subs_winner = make_sub(
+	    "SCHD", make_bytes({ 23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x72, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	                         0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }));
 
 	auto first = make_record("SCPT", subs_first);
 	auto inter = make_record("SCPT", subs_inter);
@@ -1117,7 +1145,8 @@ TEST_CASE("sub_record_merge_t::merge, CREA attack min/max paired", "[u]")
 
 TEST_CASE("leveled_list_merge_t::merge, LEVC creature list", "[u]")
 {
-	auto make_levc_entry = [](const std::string & creature, uint16_t level) {
+	auto make_levc_entry = [](const std::string & creature, uint16_t level)
+	{
 		std::string cnam_data = creature;
 		cnam_data.push_back('\0');
 		std::string intv_data(2, '\0');
@@ -1125,22 +1154,18 @@ TEST_CASE("leveled_list_merge_t::merge, LEVC creature list", "[u]")
 		return make_sub("CNAM", cnam_data) + make_sub("INTV", intv_data);
 	};
 
-	auto make_header = [](const std::string & name, uint32_t count) {
+	auto make_header = [](const std::string & name, uint32_t count)
+	{
 		std::string name_data = name + '\0';
 		uint32_t flags = 1;
 		uint8_t chance = 0;
-		return make_sub("NAME", name_data) +
-		       make_sub("DATA", make_uint32(flags)) +
+		return make_sub("NAME", name_data) + make_sub("DATA", make_uint32(flags)) +
 		       make_sub("NNAM", std::string(1, static_cast<char>(chance)));
 	};
 
-	auto first_subs = make_header("list", 2) +
-	                  make_levc_entry("rat", 1) +
-	                  make_levc_entry("skeleton", 3);
-	auto mod_subs = make_header("list", 3) +
-	               make_levc_entry("rat", 1) +
-	               make_levc_entry("skeleton", 3) +
-	               make_levc_entry("wolf", 5);
+	auto first_subs = make_header("list", 2) + make_levc_entry("rat", 1) + make_levc_entry("skeleton", 3);
+	auto mod_subs = make_header("list", 3) + make_levc_entry("rat", 1) + make_levc_entry("skeleton", 3) +
+	                make_levc_entry("wolf", 5);
 
 	leveled_list_input_t input;
 	input.rec_type = "LEVC";

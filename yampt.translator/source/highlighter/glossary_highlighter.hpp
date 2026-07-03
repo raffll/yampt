@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../editor/glossary.hpp"
-#include <theme_system.hpp>
 #include <utility/tools.hpp>
+#include <theme_system.hpp>
 #include <vector>
 #include <QSyntaxHighlighter>
 

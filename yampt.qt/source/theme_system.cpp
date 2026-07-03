@@ -34,9 +34,7 @@ QColor theme_system_t::get_color(color_name_t name, theme_t theme) const
 	if (index >= static_cast<size_t>(color_name_t::color_name_count))
 		return QColor(255, 0, 255);
 
-	const auto & rgb = (theme == theme_t::dark)
-		? dark_palette[index]
-		: light_palette[index];
+	const auto & rgb = (theme == theme_t::dark) ? dark_palette[index] : light_palette[index];
 
 	return QColor(rgb.red, rgb.green, rgb.blue, rgb.alpha);
 }
@@ -91,9 +89,7 @@ QColor theme_system_t::conflict_all_background(conflict_all_t value) const
 {
 	if (value < conflict_all_t::no_conflict)
 	{
-		return (m_active_theme == theme_t::dark)
-			? QColor(30, 30, 30)
-			: QColor(255, 255, 255);
+		return (m_active_theme == theme_t::dark) ? QColor(30, 30, 30) : QColor(255, 255, 255);
 	}
 
 	color_name_t raw_name = color_name_t::conflict_all_no_conflict_raw;
@@ -138,9 +134,7 @@ QColor theme_system_t::conflict_this_foreground(conflict_this_t value) const
 	case conflict_this_t::deleted:
 		return get_color(color_name_t::conflict_this_deleted);
 	default:
-		return (m_active_theme == theme_t::dark)
-			? QColor(220, 220, 220)
-			: QColor(0, 0, 0);
+		return (m_active_theme == theme_t::dark) ? QColor(220, 220, 220) : QColor(0, 0, 0);
 	}
 }
 
@@ -170,31 +164,20 @@ void theme_system_t::apply_palette() const
 	}
 	else
 	{
-		palette.setColor(QPalette::Window,
-			get_color(color_name_t::window_background));
-		palette.setColor(QPalette::WindowText,
-			get_color(color_name_t::window_text));
-		palette.setColor(QPalette::Base,
-			get_color(color_name_t::editor_background));
+		palette.setColor(QPalette::Window, get_color(color_name_t::window_background));
+		palette.setColor(QPalette::WindowText, get_color(color_name_t::window_text));
+		palette.setColor(QPalette::Base, get_color(color_name_t::editor_background));
 		palette.setColor(QPalette::AlternateBase, QColor(40, 40, 45));
-		palette.setColor(QPalette::Text,
-			get_color(color_name_t::editor_text));
+		palette.setColor(QPalette::Text, get_color(color_name_t::editor_text));
 		palette.setColor(QPalette::Button, QColor(45, 45, 50));
 		palette.setColor(QPalette::ButtonText, QColor(220, 220, 220));
-		palette.setColor(QPalette::Highlight,
-			get_color(color_name_t::selection_background));
-		palette.setColor(QPalette::HighlightedText,
-			get_color(color_name_t::selection_text));
-		palette.setColor(QPalette::Disabled, QPalette::Text,
-			get_color(color_name_t::disabled_text));
-		palette.setColor(QPalette::Disabled, QPalette::WindowText,
-			get_color(color_name_t::disabled_text));
-		palette.setColor(QPalette::Inactive, QPalette::Text,
-			get_color(color_name_t::editor_text));
-		palette.setColor(QPalette::Inactive, QPalette::Base,
-			get_color(color_name_t::editor_background));
-		palette.setColor(QPalette::Inactive, QPalette::Window,
-			get_color(color_name_t::window_background));
+		palette.setColor(QPalette::Highlight, get_color(color_name_t::selection_background));
+		palette.setColor(QPalette::HighlightedText, get_color(color_name_t::selection_text));
+		palette.setColor(QPalette::Disabled, QPalette::Text, get_color(color_name_t::disabled_text));
+		palette.setColor(QPalette::Disabled, QPalette::WindowText, get_color(color_name_t::disabled_text));
+		palette.setColor(QPalette::Inactive, QPalette::Text, get_color(color_name_t::editor_text));
+		palette.setColor(QPalette::Inactive, QPalette::Base, get_color(color_name_t::editor_background));
+		palette.setColor(QPalette::Inactive, QPalette::Window, get_color(color_name_t::window_background));
 	}
 
 	QApplication::setPalette(palette);
@@ -213,16 +196,22 @@ void theme_system_t::apply_stylesheet() const
 	const auto selection_text = get_color(color_name_t::selection_text);
 
 	const auto stylesheet = QString(
-		"QScrollBar::add-page, QScrollBar::sub-page {"
-		"  background: rgb(%1, %2, %3);"
-		"}"
-		"QMenu::item:selected, QMenuBar::item:selected {"
-		"  background-color: rgb(%4, %5, %6);"
-		"  color: rgb(%7, %8, %9);"
-		"}"
-	).arg(window_bg.red()).arg(window_bg.green()).arg(window_bg.blue())
-	 .arg(selection_bg.red()).arg(selection_bg.green()).arg(selection_bg.blue())
-	 .arg(selection_text.red()).arg(selection_text.green()).arg(selection_text.blue());
+	                            "QScrollBar::add-page, QScrollBar::sub-page {"
+	                            "  background: rgb(%1, %2, %3);"
+	                            "}"
+	                            "QMenu::item:selected, QMenuBar::item:selected {"
+	                            "  background-color: rgb(%4, %5, %6);"
+	                            "  color: rgb(%7, %8, %9);"
+	                            "}")
+	                            .arg(window_bg.red())
+	                            .arg(window_bg.green())
+	                            .arg(window_bg.blue())
+	                            .arg(selection_bg.red())
+	                            .arg(selection_bg.green())
+	                            .arg(selection_bg.blue())
+	                            .arg(selection_text.red())
+	                            .arg(selection_text.green())
+	                            .arg(selection_text.blue());
 
 	qApp->setStyleSheet(stylesheet);
 }

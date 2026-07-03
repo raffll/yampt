@@ -70,10 +70,10 @@ std::string cell_name_fixer_t::set_cell_name(const std::string & content, const 
 		result += new_name_with_null;
 		result += content.substr(view.offset + sub_record_header_size + old_data_size);
 
-		const auto old_record_body_size = tools_t::convert_string_byte_array_to_uint(
-			result.substr(record_body_size_offset, 4));
-		const auto new_record_body_size = static_cast<size_t>(
-			static_cast<int64_t>(old_record_body_size) + size_difference);
+		const auto old_record_body_size =
+		    tools_t::convert_string_byte_array_to_uint(result.substr(record_body_size_offset, 4));
+		const auto new_record_body_size =
+		    static_cast<size_t>(static_cast<int64_t>(old_record_body_size) + size_difference);
 		const auto body_size_array = tools_t::convert_uint_to_string_byte_array(new_record_body_size);
 		result.replace(record_body_size_offset, 4, body_size_array);
 
@@ -84,8 +84,8 @@ std::string cell_name_fixer_t::set_cell_name(const std::string & content, const 
 }
 
 std::string cell_name_fixer_t::find_last_intermediate_rename(
-	const std::vector<std::string> & version_contents,
-	const std::string & first_name)
+    const std::vector<std::string> & version_contents,
+    const std::string & first_name)
 {
 	const auto last_intermediate = static_cast<int64_t>(version_contents.size()) - 2;
 

@@ -33,9 +33,11 @@ public:
 	explicit record_conflicts_t(plugin_scan_t & scan);
 
 	void rebuild();
-	void include_merge_records(int merge_plugin_idx, const std::vector<std::string> & merge_types,
-	                           const std::vector<std::string> & merge_ids,
-	                           const std::vector<std::string> & merge_contents);
+	void include_merge_records(
+	    int merge_plugin_idx,
+	    const std::vector<std::string> & merge_types,
+	    const std::vector<std::string> & merge_ids,
+	    const std::vector<std::string> & merge_contents);
 
 	const std::vector<conflict_entry_t> & entries() const;
 	const conflict_entry_t * find(const std::string & type, const std::string & id) const;

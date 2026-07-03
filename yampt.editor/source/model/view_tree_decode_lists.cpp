@@ -318,8 +318,8 @@ void view_tree_model_t::set_record_armor(record_context_t & context, const confl
 
 	for (size_t i = 0; i < unified_slots.size(); ++i)
 	{
-		bool is_group = (unified_slots[i].type == "INDX") &&
-		                (i + 1 < unified_slots.size()) && (unified_slots[i + 1].type == "BNAM");
+		bool is_group = (unified_slots[i].type == "INDX") && (i + 1 < unified_slots.size()) &&
+		                (unified_slots[i + 1].type == "BNAM");
 
 		if (!is_group)
 		{
@@ -349,12 +349,14 @@ void view_tree_model_t::set_record_armor(record_context_t & context, const confl
 		group_row.children.push_back(std::move(indx_field));
 
 		size_t next = i + 1;
-		while (next < unified_slots.size() && (unified_slots[next].type == "BNAM" || unified_slots[next].type == "CNAM"))
+		while (next < unified_slots.size() &&
+		       (unified_slots[next].type == "BNAM" || unified_slots[next].type == "CNAM"))
 		{
 			auto part_row = build_slot_row(col_count, all_subs, col_type_indices, unified_slots[next]);
 
 			field_row_t part_field;
-			part_field.name = (unified_slots[next].type == "BNAM") ? "BNAM - Male Part Name" : "CNAM - Female Part Name";
+			part_field.name =
+			    (unified_slots[next].type == "BNAM") ? "BNAM - Male Part Name" : "CNAM - Female Part Name";
 			part_field.values = part_row.values;
 			part_field.all_identical = part_row.all_identical;
 			part_field.row_conflict_all = part_row.row_conflict_all;
@@ -593,7 +595,8 @@ void view_tree_model_t::emit_leveled_rows(record_context_t & context, slot_build
 
 		if (!is_pair)
 		{
-			m_rows.push_back(build_slot_row(col_count, context.all_sub_records, build_ctx.col_type_indices, unified[i]));
+			m_rows.push_back(
+			    build_slot_row(col_count, context.all_sub_records, build_ctx.col_type_indices, unified[i]));
 			continue;
 		}
 
@@ -632,7 +635,9 @@ void view_tree_model_t::emit_leveled_rows(record_context_t & context, slot_build
 		group_row.children.push_back(std::move(name_field));
 		group_row.children.push_back(std::move(level_field));
 
-		group_row.row_conflict_all = (id_row.row_conflict_all > level_row.row_conflict_all) ? id_row.row_conflict_all : level_row.row_conflict_all;
+		group_row.row_conflict_all = (id_row.row_conflict_all > level_row.row_conflict_all)
+		                                 ? id_row.row_conflict_all
+		                                 : level_row.row_conflict_all;
 		group_row.cell_conflict_this.resize(col_count);
 
 		for (size_t col = 0; col < col_count; ++col)

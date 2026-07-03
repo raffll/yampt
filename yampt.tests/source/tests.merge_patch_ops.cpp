@@ -48,15 +48,15 @@ static std::string make_data_12(uint32_t flags, int32_t grid_x, int32_t grid_y)
 
 TEST_CASE("merge_patch_ops_t::patch_sub_record, replaces existing sub-record", "[u]")
 {
-	auto merge = make_record("WEAP",
-	    make_sub("NAME", make_string("id")) +
-	    make_sub("FNAM", make_string("Old Name")) +
-	    make_sub("ENAM", make_string("old_ench")));
+	auto merge = make_record(
+	    "WEAP",
+	    make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("Old Name")) +
+	        make_sub("ENAM", make_string("old_ench")));
 
-	auto source = make_record("WEAP",
-	    make_sub("NAME", make_string("id")) +
-	    make_sub("FNAM", make_string("New Name")) +
-	    make_sub("ENAM", make_string("new_ench")));
+	auto source = make_record(
+	    "WEAP",
+	    make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("New Name")) +
+	        make_sub("ENAM", make_string("new_ench")));
 
 	auto result = merge_patch_ops_t::patch_sub_record(merge, source, "FNAM", 1);
 
@@ -68,14 +68,12 @@ TEST_CASE("merge_patch_ops_t::patch_sub_record, replaces existing sub-record", "
 
 TEST_CASE("merge_patch_ops_t::patch_sub_record, appends if not in merge", "[u]")
 {
-	auto merge = make_record("BSGN",
-	    make_sub("NAME", make_string("id")) +
-	    make_sub("FNAM", make_string("Sign")));
+	auto merge = make_record("BSGN", make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("Sign")));
 
-	auto source = make_record("BSGN",
-	    make_sub("NAME", make_string("id")) +
-	    make_sub("FNAM", make_string("Sign")) +
-	    make_sub("NPCS", make_string("ability")));
+	auto source = make_record(
+	    "BSGN",
+	    make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("Sign")) +
+	        make_sub("NPCS", make_string("ability")));
 
 	auto result = merge_patch_ops_t::patch_sub_record(merge, source, "NPCS", 2);
 
@@ -86,15 +84,15 @@ TEST_CASE("merge_patch_ops_t::patch_sub_record, appends if not in merge", "[u]")
 
 TEST_CASE("merge_patch_ops_t::patch_sub_record, second occurrence patched", "[u]")
 {
-	auto merge = make_record("BSGN",
-	    make_sub("NAME", make_string("id")) +
-	    make_sub("NPCS", make_string("first")) +
-	    make_sub("NPCS", make_string("second_old")));
+	auto merge = make_record(
+	    "BSGN",
+	    make_sub("NAME", make_string("id")) + make_sub("NPCS", make_string("first")) +
+	        make_sub("NPCS", make_string("second_old")));
 
-	auto source = make_record("BSGN",
-	    make_sub("NAME", make_string("id")) +
-	    make_sub("NPCS", make_string("first")) +
-	    make_sub("NPCS", make_string("second_new")));
+	auto source = make_record(
+	    "BSGN",
+	    make_sub("NAME", make_string("id")) + make_sub("NPCS", make_string("first")) +
+	        make_sub("NPCS", make_string("second_new")));
 
 	auto result = merge_patch_ops_t::patch_sub_record(merge, source, "NPCS", 2);
 
@@ -116,22 +114,20 @@ TEST_CASE("merge_patch_ops_t::patch_sub_record, binary_idx out of range fails", 
 
 TEST_CASE("merge_patch_ops_t::patch_group, patches multiple sub-records", "[u]")
 {
-	auto merge = make_record("ARMO",
-	    make_sub("NAME", make_string("id")) +
-	    make_sub("INDX", make_uint32(0)) +
-	    make_sub("BNAM", make_string("old_male")) +
-	    make_sub("CNAM", make_string("old_female")));
+	auto merge = make_record(
+	    "ARMO",
+	    make_sub("NAME", make_string("id")) + make_sub("INDX", make_uint32(0)) +
+	        make_sub("BNAM", make_string("old_male")) + make_sub("CNAM", make_string("old_female")));
 
-	auto source = make_record("ARMO",
-	    make_sub("NAME", make_string("id")) +
-	    make_sub("INDX", make_uint32(0)) +
-	    make_sub("BNAM", make_string("new_male")) +
-	    make_sub("CNAM", make_string("new_female")));
+	auto source = make_record(
+	    "ARMO",
+	    make_sub("NAME", make_string("id")) + make_sub("INDX", make_uint32(0)) +
+	        make_sub("BNAM", make_string("new_male")) + make_sub("CNAM", make_string("new_female")));
 
 	std::vector<std::pair<std::string, int>> indices = {
-	    { "INDX", 1 },
-	    { "BNAM", 2 },
-	    { "CNAM", 3 },
+		{ "INDX", 1 },
+		{ "BNAM", 2 },
+		{ "CNAM", 3 },
 	};
 
 	auto result = merge_patch_ops_t::patch_group(merge, source, indices);
@@ -145,20 +141,17 @@ TEST_CASE("merge_patch_ops_t::patch_group, patches multiple sub-records", "[u]")
 
 TEST_CASE("merge_patch_ops_t::patch_group, appends missing sub-records", "[u]")
 {
-	auto merge = make_record("ARMO",
-	    make_sub("NAME", make_string("id")) +
-	    make_sub("INDX", make_uint32(0)));
+	auto merge = make_record("ARMO", make_sub("NAME", make_string("id")) + make_sub("INDX", make_uint32(0)));
 
-	auto source = make_record("ARMO",
-	    make_sub("NAME", make_string("id")) +
-	    make_sub("INDX", make_uint32(0)) +
-	    make_sub("BNAM", make_string("male_part")) +
-	    make_sub("CNAM", make_string("female_part")));
+	auto source = make_record(
+	    "ARMO",
+	    make_sub("NAME", make_string("id")) + make_sub("INDX", make_uint32(0)) +
+	        make_sub("BNAM", make_string("male_part")) + make_sub("CNAM", make_string("female_part")));
 
 	std::vector<std::pair<std::string, int>> indices = {
-	    { "INDX", 1 },
-	    { "BNAM", 2 },
-	    { "CNAM", 3 },
+		{ "INDX", 1 },
+		{ "BNAM", 2 },
+		{ "CNAM", 3 },
 	};
 
 	auto result = merge_patch_ops_t::patch_group(merge, source, indices);
@@ -170,17 +163,13 @@ TEST_CASE("merge_patch_ops_t::patch_group, appends missing sub-records", "[u]")
 
 TEST_CASE("merge_patch_ops_t::patch_group, skips invalid binary indices", "[u]")
 {
-	auto merge = make_record("ARMO",
-	    make_sub("NAME", make_string("id")) +
-	    make_sub("INDX", make_uint32(0)));
+	auto merge = make_record("ARMO", make_sub("NAME", make_string("id")) + make_sub("INDX", make_uint32(0)));
 
-	auto source = make_record("ARMO",
-	    make_sub("NAME", make_string("id")) +
-	    make_sub("INDX", make_uint32(0)));
+	auto source = make_record("ARMO", make_sub("NAME", make_string("id")) + make_sub("INDX", make_uint32(0)));
 
 	std::vector<std::pair<std::string, int>> indices = {
-	    { "INDX", 1 },
-	    { "BNAM", 99 },
+		{ "INDX", 1 },
+		{ "BNAM", 99 },
 	};
 
 	auto result = merge_patch_ops_t::patch_group(merge, source, indices);
@@ -193,13 +182,9 @@ TEST_CASE("merge_patch_ops_t::patch_field, patches single field in CELL DATA", "
 	auto merge_data = make_data_12(0x01, 5, 10);
 	auto source_data = make_data_12(0x01, 99, 10);
 
-	auto merge = make_record("CELL",
-	    make_sub("NAME", make_string("cell")) +
-	    make_sub("DATA", merge_data));
+	auto merge = make_record("CELL", make_sub("NAME", make_string("cell")) + make_sub("DATA", merge_data));
 
-	auto source = make_record("CELL",
-	    make_sub("NAME", make_string("cell")) +
-	    make_sub("DATA", source_data));
+	auto source = make_record("CELL", make_sub("NAME", make_string("cell")) + make_sub("DATA", source_data));
 
 	auto result = merge_patch_ops_t::patch_field(merge, source, "CELL", "DATA", 12, 1, 1);
 
@@ -226,13 +211,9 @@ TEST_CASE("merge_patch_ops_t::patch_field, patches flags only", "[u]")
 	auto merge_data = make_data_12(0x01, 5, 10);
 	auto source_data = make_data_12(0x07, 5, 10);
 
-	auto merge = make_record("CELL",
-	    make_sub("NAME", make_string("cell")) +
-	    make_sub("DATA", merge_data));
+	auto merge = make_record("CELL", make_sub("NAME", make_string("cell")) + make_sub("DATA", merge_data));
 
-	auto source = make_record("CELL",
-	    make_sub("NAME", make_string("cell")) +
-	    make_sub("DATA", source_data));
+	auto source = make_record("CELL", make_sub("NAME", make_string("cell")) + make_sub("DATA", source_data));
 
 	auto result = merge_patch_ops_t::patch_field(merge, source, "CELL", "DATA", 12, 1, 0);
 
@@ -252,12 +233,9 @@ TEST_CASE("merge_patch_ops_t::patch_field, copies whole sub-record if not in mer
 {
 	auto source_data = make_data_12(0x01, 7, 3);
 
-	auto merge = make_record("CELL",
-	    make_sub("NAME", make_string("cell")));
+	auto merge = make_record("CELL", make_sub("NAME", make_string("cell")));
 
-	auto source = make_record("CELL",
-	    make_sub("NAME", make_string("cell")) +
-	    make_sub("DATA", source_data));
+	auto source = make_record("CELL", make_sub("NAME", make_string("cell")) + make_sub("DATA", source_data));
 
 	auto result = merge_patch_ops_t::patch_field(merge, source, "CELL", "DATA", 12, 1, 1);
 
@@ -271,13 +249,9 @@ TEST_CASE("merge_patch_ops_t::patch_field, copies whole sub-record if not in mer
 
 TEST_CASE("merge_patch_ops_t::patch_field, no schema returns failure", "[u]")
 {
-	auto merge = make_record("NPC_",
-	    make_sub("NAME", make_string("id")) +
-	    make_sub("XXXX", std::string(8, '\0')));
+	auto merge = make_record("NPC_", make_sub("NAME", make_string("id")) + make_sub("XXXX", std::string(8, '\0')));
 
-	auto source = make_record("NPC_",
-	    make_sub("NAME", make_string("id")) +
-	    make_sub("XXXX", std::string(8, '\0')));
+	auto source = make_record("NPC_", make_sub("NAME", make_string("id")) + make_sub("XXXX", std::string(8, '\0')));
 
 	auto result = merge_patch_ops_t::patch_field(merge, source, "NPC_", "XXXX", 8, 1, 0);
 
@@ -288,13 +262,9 @@ TEST_CASE("merge_patch_ops_t::patch_field, field_idx out of range fails", "[u]")
 {
 	auto data = make_data_12(0x01, 5, 10);
 
-	auto merge = make_record("CELL",
-	    make_sub("NAME", make_string("cell")) +
-	    make_sub("DATA", data));
+	auto merge = make_record("CELL", make_sub("NAME", make_string("cell")) + make_sub("DATA", data));
 
-	auto source = make_record("CELL",
-	    make_sub("NAME", make_string("cell")) +
-	    make_sub("DATA", data));
+	auto source = make_record("CELL", make_sub("NAME", make_string("cell")) + make_sub("DATA", data));
 
 	auto result = merge_patch_ops_t::patch_field(merge, source, "CELL", "DATA", 12, 1, 99);
 

@@ -1,14 +1,14 @@
 #include "glossary_highlighter.hpp"
 #include "../editor/glossary.hpp"
-#include <theme_system.hpp>
 #include <algorithm>
+#include <theme_system.hpp>
 #include <QTextCharFormat>
 
 glossary_highlighter_t::glossary_highlighter_t(QTextDocument * parent)
     : QSyntaxHighlighter(parent)
 {
-	connect(&theme_system_t::instance(), &theme_system_t::theme_changed,
-	        this, &glossary_highlighter_t::on_theme_changed);
+	connect(
+	    &theme_system_t::instance(), &theme_system_t::theme_changed, this, &glossary_highlighter_t::on_theme_changed);
 }
 
 void glossary_highlighter_t::on_theme_changed()

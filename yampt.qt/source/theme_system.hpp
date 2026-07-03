@@ -1,9 +1,9 @@
 #pragma once
 
-#include <utility/theme_enums.hpp>
-#include <utility/color_palette.hpp>
 #include <scanner/conflict_enums.hpp>
+#include <utility/color_palette.hpp>
 #include <utility/status_types.hpp>
+#include <utility/theme_enums.hpp>
 #include <QColor>
 #include <QObject>
 

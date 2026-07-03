@@ -13,6 +13,6 @@ private:
 	static std::string get_cell_name(const std::string & content);
 	static std::string set_cell_name(const std::string & content, const std::string & name);
 	static std::string find_last_intermediate_rename(
-		const std::vector<std::string> & version_contents,
-		const std::string & first_name);
+	    const std::vector<std::string> & version_contents,
+	    const std::string & first_name);
 };

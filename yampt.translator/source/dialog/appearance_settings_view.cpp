@@ -6,7 +6,7 @@
 #include <QVBoxLayout>
 
 appearance_settings_view_t::appearance_settings_view_t(QWidget * parent)
-	: QWidget(parent)
+    : QWidget(parent)
 {
 	auto * layout = new QVBoxLayout(this);
 

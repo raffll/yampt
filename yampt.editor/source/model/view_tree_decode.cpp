@@ -133,8 +133,7 @@ view_tree_model_t::sub_record_row_t view_tree_model_t::build_slot_row(
 	row.row_conflict_all = compute_conflict_all(filtered);
 	row.cell_conflict_this = compute_conflict_this(filtered);
 	if (m_merge_col_index >= 0 && filtered.size() < row.values.size())
-		row.cell_conflict_this.insert(
-		    row.cell_conflict_this.begin() + m_merge_col_index, conflict_this_t::unknown);
+		row.cell_conflict_this.insert(row.cell_conflict_this.begin() + m_merge_col_index, conflict_this_t::unknown);
 
 	const auto * schema = find_schema(m_record_type, slot.type, first_size);
 	if (schema && first_data)

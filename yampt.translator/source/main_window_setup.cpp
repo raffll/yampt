@@ -37,12 +37,12 @@
 #include <QMessageBox>
 #include <QProcess>
 #include <QPushButton>
-#include <QToolButton>
 #include <QSplitter>
 #include <QStatusBar>
 #include <QTabWidget>
 #include <QTimer>
 #include <QToolBar>
+#include <QToolButton>
 #include <QVBoxLayout>
 
 void main_window_t::setup_menu_bar()

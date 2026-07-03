@@ -101,11 +101,9 @@ TEST_CASE("compute_conflict_this, empty cell in non-master", "[u]")
 
 TEST_CASE("compute_conflict_all, parent inherits worst from children", "[u]")
 {
-	std::vector<conflict_all_t> children = {
-		conflict_all_t::no_conflict,
-		conflict_all_t::no_conflict,
-		conflict_all_t::override_benign
-	};
+	std::vector<conflict_all_t> children = { conflict_all_t::no_conflict,
+		                                     conflict_all_t::no_conflict,
+		                                     conflict_all_t::override_benign };
 
 	conflict_all_t parent = conflict_all_t::only_one;
 	for (const auto & child : children)
@@ -119,11 +117,9 @@ TEST_CASE("compute_conflict_all, parent inherits worst from children", "[u]")
 
 TEST_CASE("compute_conflict_all, parent inherits conflict from one child", "[u]")
 {
-	std::vector<conflict_all_t> children = {
-		conflict_all_t::no_conflict,
-		conflict_all_t::conflict,
-		conflict_all_t::no_conflict
-	};
+	std::vector<conflict_all_t> children = { conflict_all_t::no_conflict,
+		                                     conflict_all_t::conflict,
+		                                     conflict_all_t::no_conflict };
 
 	conflict_all_t parent = conflict_all_t::only_one;
 	for (const auto & child : children)
@@ -137,11 +133,9 @@ TEST_CASE("compute_conflict_all, parent inherits conflict from one child", "[u]"
 
 TEST_CASE("compute_conflict_all, parent stays no_conflict when all children agree", "[u]")
 {
-	std::vector<conflict_all_t> children = {
-		conflict_all_t::no_conflict,
-		conflict_all_t::no_conflict,
-		conflict_all_t::no_conflict
-	};
+	std::vector<conflict_all_t> children = { conflict_all_t::no_conflict,
+		                                     conflict_all_t::no_conflict,
+		                                     conflict_all_t::no_conflict };
 
 	conflict_all_t parent = conflict_all_t::only_one;
 	for (const auto & child : children)
@@ -169,11 +163,9 @@ TEST_CASE("compute_conflict_all, parent with no children stays only_one", "[u]")
 
 TEST_CASE("compute_conflict_all, parent ignores only_one children", "[u]")
 {
-	std::vector<conflict_all_t> children = {
-		conflict_all_t::only_one,
-		conflict_all_t::no_conflict,
-		conflict_all_t::only_one
-	};
+	std::vector<conflict_all_t> children = { conflict_all_t::only_one,
+		                                     conflict_all_t::no_conflict,
+		                                     conflict_all_t::only_one };
 
 	conflict_all_t parent = conflict_all_t::only_one;
 	for (const auto & child : children)

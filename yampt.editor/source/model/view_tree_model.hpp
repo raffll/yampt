@@ -3,8 +3,8 @@
 #include <decoder/sub_record_iter.hpp>
 #include <decoder/sub_record_schema.hpp>
 #include <scanner/conflict_compute.hpp>
-#include <conflict_types.hpp>
 #include <scanner/plugin_scan.hpp>
+#include <conflict_types.hpp>
 #include <set>
 #include <string>
 #include <unordered_map>
@@ -26,8 +26,16 @@ public:
 	void set_patch_plugins(const std::set<std::string> * patch);
 	bool is_merge_column(int section) const;
 	int merge_column() const;
-	const std::string & record_type() const { return m_record_type; }
-	const std::string & record_id() const { return m_record_id; }
+
+	const std::string & record_type() const
+	{
+		return m_record_type;
+	}
+
+	const std::string & record_id() const
+	{
+		return m_record_id;
+	}
 
 	QModelIndex index(int row, int column, const QModelIndex & parent) const override;
 	QModelIndex parent(const QModelIndex & child) const override;
@@ -70,8 +78,16 @@ public:
 	};
 
 	const std::vector<sub_record_row_t> & rows() const;
-	const std::vector<int> & column_plugin_indices() const { return m_column_plugin_indices; }
-	const std::vector<std::unordered_map<std::string, std::vector<size_t>>> & col_type_indices() const { return m_col_type_indices; }
+
+	const std::vector<int> & column_plugin_indices() const
+	{
+		return m_column_plugin_indices;
+	}
+
+	const std::vector<std::unordered_map<std::string, std::vector<size_t>>> & col_type_indices() const
+	{
+		return m_col_type_indices;
+	}
 
 private:
 	struct record_context_t

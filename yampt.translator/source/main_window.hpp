@@ -1,5 +1,6 @@
 #pragma once
 
+#include "app_settings.hpp"
 #include "dialog/dict_selection_dialog.hpp"
 #include "editor/byte_limit_validator.hpp"
 #include "editor/edit_history.hpp"
@@ -9,7 +10,6 @@
 #include "editor/grammar_checker.hpp"
 #include "editor/operation_executor.hpp"
 #include "editor/row_filter.hpp"
-#include "app_settings.hpp"
 #include "model/dict_document.hpp"
 #include "model/document.hpp"
 #include "model/plugin_op.hpp"

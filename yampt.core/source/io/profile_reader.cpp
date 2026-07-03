@@ -153,9 +153,7 @@ std::string profile_reader_t::resolve_mo2_plugin(
 	return {};
 }
 
-std::string profile_reader_t::resolve_merge_output_path(
-    load_source_kind_t source,
-    const std::string & base_path)
+std::string profile_reader_t::resolve_merge_output_path(load_source_kind_t source, const std::string & base_path)
 {
 	if (base_path.empty())
 		return {};

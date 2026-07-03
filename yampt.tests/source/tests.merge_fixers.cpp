@@ -1,7 +1,7 @@
 #include <catch2/catch_all.hpp>
+#include <scanner/cell_name_fixer.hpp>
 #include <scanner/fog_fixer.hpp>
 #include <scanner/summon_fixer.hpp>
-#include <scanner/cell_name_fixer.hpp>
 #include <utility/tools.hpp>
 #include <cstring>
 #include <string>
@@ -69,9 +69,8 @@ static std::string make_ambi(float fog_density)
 
 TEST_CASE("fog_fixer_t::apply, interior cell zero fog density gets fixed", "[u]")
 {
-	auto subs = make_sub("NAME", make_string("TestCell"))
-	          + make_sub("DATA", make_cell_data(0x01, 0, 0))
-	          + make_sub("AMBI", make_ambi(0.0f));
+	auto subs = make_sub("NAME", make_string("TestCell")) + make_sub("DATA", make_cell_data(0x01, 0, 0)) +
+	            make_sub("AMBI", make_ambi(0.0f));
 
 	auto content = make_record("CELL", subs);
 	auto result = fog_fixer_t::apply(content);
@@ -85,9 +84,8 @@ TEST_CASE("fog_fixer_t::apply, interior cell zero fog density gets fixed", "[u]"
 
 TEST_CASE("fog_fixer_t::apply, exterior cell skipped", "[u]")
 {
-	auto subs = make_sub("NAME", make_string(""))
-	          + make_sub("DATA", make_cell_data(0x00, 5, 10))
-	          + make_sub("AMBI", make_ambi(0.0f));
+	auto subs = make_sub("NAME", make_string("")) + make_sub("DATA", make_cell_data(0x00, 5, 10)) +
+	            make_sub("AMBI", make_ambi(0.0f));
 
 	auto content = make_record("CELL", subs);
 	auto result = fog_fixer_t::apply(content);
@@ -97,9 +95,8 @@ TEST_CASE("fog_fixer_t::apply, exterior cell skipped", "[u]")
 
 TEST_CASE("fog_fixer_t::apply, interior behave-exterior skipped", "[u]")
 {
-	auto subs = make_sub("NAME", make_string("TestCell"))
-	          + make_sub("DATA", make_cell_data(0x81, 0, 0))
-	          + make_sub("AMBI", make_ambi(0.0f));
+	auto subs = make_sub("NAME", make_string("TestCell")) + make_sub("DATA", make_cell_data(0x81, 0, 0)) +
+	            make_sub("AMBI", make_ambi(0.0f));
 
 	auto content = make_record("CELL", subs);
 	auto result = fog_fixer_t::apply(content);
@@ -109,9 +106,8 @@ TEST_CASE("fog_fixer_t::apply, interior behave-exterior skipped", "[u]")
 
 TEST_CASE("fog_fixer_t::apply, non-zero fog density skipped", "[u]")
 {
-	auto subs = make_sub("NAME", make_string("TestCell"))
-	          + make_sub("DATA", make_cell_data(0x01, 0, 0))
-	          + make_sub("AMBI", make_ambi(0.5f));
+	auto subs = make_sub("NAME", make_string("TestCell")) + make_sub("DATA", make_cell_data(0x01, 0, 0)) +
+	            make_sub("AMBI", make_ambi(0.5f));
 
 	auto content = make_record("CELL", subs);
 	auto result = fog_fixer_t::apply(content);
@@ -121,8 +117,7 @@ TEST_CASE("fog_fixer_t::apply, non-zero fog density skipped", "[u]")
 
 TEST_CASE("fog_fixer_t::apply, interior no AMBI sub-record skipped", "[u]")
 {
-	auto subs = make_sub("NAME", make_string("TestCell"))
-	          + make_sub("DATA", make_cell_data(0x01, 0, 0));
+	auto subs = make_sub("NAME", make_string("TestCell")) + make_sub("DATA", make_cell_data(0x01, 0, 0));
 
 	auto content = make_record("CELL", subs);
 	auto result = fog_fixer_t::apply(content);
@@ -196,12 +191,9 @@ TEST_CASE("summon_fixer_t::apply, preserves existing flags", "[u]")
 
 TEST_CASE("cell_name_fixer_t::apply, winner reverts rename gets fixed", "[u]")
 {
-	auto subs_first = make_sub("NAME", make_string(""))
-	                + make_sub("DATA", make_cell_data(0x00, 3, 5));
-	auto subs_inter = make_sub("NAME", make_string("My Town"))
-	                + make_sub("DATA", make_cell_data(0x00, 3, 5));
-	auto subs_winner = make_sub("NAME", make_string(""))
-	                 + make_sub("DATA", make_cell_data(0x00, 3, 5));
+	auto subs_first = make_sub("NAME", make_string("")) + make_sub("DATA", make_cell_data(0x00, 3, 5));
+	auto subs_inter = make_sub("NAME", make_string("My Town")) + make_sub("DATA", make_cell_data(0x00, 3, 5));
+	auto subs_winner = make_sub("NAME", make_string("")) + make_sub("DATA", make_cell_data(0x00, 3, 5));
 
 	std::vector<std::string> versions = {
 		make_record("CELL", subs_first),
@@ -217,12 +209,9 @@ TEST_CASE("cell_name_fixer_t::apply, winner reverts rename gets fixed", "[u]")
 
 TEST_CASE("cell_name_fixer_t::apply, interior cell skipped", "[u]")
 {
-	auto subs_first = make_sub("NAME", make_string("Cave"))
-	                + make_sub("DATA", make_cell_data(0x01, 0, 0));
-	auto subs_inter = make_sub("NAME", make_string("Renamed Cave"))
-	                + make_sub("DATA", make_cell_data(0x01, 0, 0));
-	auto subs_winner = make_sub("NAME", make_string("Cave"))
-	                 + make_sub("DATA", make_cell_data(0x01, 0, 0));
+	auto subs_first = make_sub("NAME", make_string("Cave")) + make_sub("DATA", make_cell_data(0x01, 0, 0));
+	auto subs_inter = make_sub("NAME", make_string("Renamed Cave")) + make_sub("DATA", make_cell_data(0x01, 0, 0));
+	auto subs_winner = make_sub("NAME", make_string("Cave")) + make_sub("DATA", make_cell_data(0x01, 0, 0));
 
 	std::vector<std::string> versions = {
 		make_record("CELL", subs_first),
@@ -237,12 +226,9 @@ TEST_CASE("cell_name_fixer_t::apply, interior cell skipped", "[u]")
 
 TEST_CASE("cell_name_fixer_t::apply, winner has own rename not reverted", "[u]")
 {
-	auto subs_first = make_sub("NAME", make_string(""))
-	                + make_sub("DATA", make_cell_data(0x00, 1, 1));
-	auto subs_inter = make_sub("NAME", make_string("Town A"))
-	                + make_sub("DATA", make_cell_data(0x00, 1, 1));
-	auto subs_winner = make_sub("NAME", make_string("Town B"))
-	                 + make_sub("DATA", make_cell_data(0x00, 1, 1));
+	auto subs_first = make_sub("NAME", make_string("")) + make_sub("DATA", make_cell_data(0x00, 1, 1));
+	auto subs_inter = make_sub("NAME", make_string("Town A")) + make_sub("DATA", make_cell_data(0x00, 1, 1));
+	auto subs_winner = make_sub("NAME", make_string("Town B")) + make_sub("DATA", make_cell_data(0x00, 1, 1));
 
 	std::vector<std::string> versions = {
 		make_record("CELL", subs_first),
@@ -257,14 +243,10 @@ TEST_CASE("cell_name_fixer_t::apply, winner has own rename not reverted", "[u]")
 
 TEST_CASE("cell_name_fixer_t::apply, multiple intermediates uses last", "[u]")
 {
-	auto subs_first = make_sub("NAME", make_string(""))
-	                + make_sub("DATA", make_cell_data(0x00, 2, 2));
-	auto subs_inter1 = make_sub("NAME", make_string("First Rename"))
-	                 + make_sub("DATA", make_cell_data(0x00, 2, 2));
-	auto subs_inter2 = make_sub("NAME", make_string("Second Rename"))
-	                 + make_sub("DATA", make_cell_data(0x00, 2, 2));
-	auto subs_winner = make_sub("NAME", make_string(""))
-	                 + make_sub("DATA", make_cell_data(0x00, 2, 2));
+	auto subs_first = make_sub("NAME", make_string("")) + make_sub("DATA", make_cell_data(0x00, 2, 2));
+	auto subs_inter1 = make_sub("NAME", make_string("First Rename")) + make_sub("DATA", make_cell_data(0x00, 2, 2));
+	auto subs_inter2 = make_sub("NAME", make_string("Second Rename")) + make_sub("DATA", make_cell_data(0x00, 2, 2));
+	auto subs_winner = make_sub("NAME", make_string("")) + make_sub("DATA", make_cell_data(0x00, 2, 2));
 
 	std::vector<std::string> versions = {
 		make_record("CELL", subs_first),
@@ -282,10 +264,8 @@ TEST_CASE("cell_name_fixer_t::apply, multiple intermediates uses last", "[u]")
 
 TEST_CASE("cell_name_fixer_t::apply, only 2 versions skipped", "[u]")
 {
-	auto subs_first = make_sub("NAME", make_string(""))
-	                + make_sub("DATA", make_cell_data(0x00, 0, 0));
-	auto subs_winner = make_sub("NAME", make_string(""))
-	                 + make_sub("DATA", make_cell_data(0x00, 0, 0));
+	auto subs_first = make_sub("NAME", make_string("")) + make_sub("DATA", make_cell_data(0x00, 0, 0));
+	auto subs_winner = make_sub("NAME", make_string("")) + make_sub("DATA", make_cell_data(0x00, 0, 0));
 
 	std::vector<std::string> versions = {
 		make_record("CELL", subs_first),

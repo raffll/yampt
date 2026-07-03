@@ -1,6 +1,6 @@
 #include "status_filter_view.hpp"
-#include <theme_system.hpp>
 #include "status_display.hpp"
+#include <theme_system.hpp>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
@@ -197,17 +197,19 @@ void status_filter_view_t::update_button_styles()
 {
 	const bool is_dark = theme_system_t::instance().active_theme() == theme_t::dark;
 
-	const auto inactive_style = is_dark
-		? QString("border: 1px solid #555; border-radius: 2px; padding: 2px 6px; "
-		          "background: #2a2a2a; color: rgb(160,160,160);")
-		: QString("border: 1px solid #bbb; border-radius: 2px; padding: 2px 6px; "
-		          "background: #f0f0f0; color: rgb(80,80,80);");
+	const auto inactive_style = is_dark ? QString(
+	                                          "border: 1px solid #555; border-radius: 2px; padding: 2px 6px; "
+	                                          "background: #2a2a2a; color: rgb(160,160,160);")
+	                                    : QString(
+	                                          "border: 1px solid #bbb; border-radius: 2px; padding: 2px 6px; "
+	                                          "background: #f0f0f0; color: rgb(80,80,80);");
 
-	const auto disabled_style = is_dark
-		? QString("border: 1px solid #444; border-radius: 2px; padding: 2px 6px; "
-		          "background: #222; color: rgb(80,80,80);")
-		: QString("border: 1px solid #bbb; border-radius: 2px; padding: 2px 6px; "
-		          "background: #f0f0f0; color: rgb(180,180,180);");
+	const auto disabled_style = is_dark ? QString(
+	                                          "border: 1px solid #444; border-radius: 2px; padding: 2px 6px; "
+	                                          "background: #222; color: rgb(80,80,80);")
+	                                    : QString(
+	                                          "border: 1px solid #bbb; border-radius: 2px; padding: 2px 6px; "
+	                                          "background: #f0f0f0; color: rgb(180,180,180);");
 
 	bool no_filter = m_active_statuses.empty();
 

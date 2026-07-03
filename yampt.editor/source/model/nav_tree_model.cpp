@@ -1,10 +1,10 @@
 #include "nav_tree_model.hpp"
-#include <theme_system.hpp>
 #include <algorithm>
 #include <cctype>
 #include <cstdio>
 #include <cstring>
 #include <set>
+#include <theme_system.hpp>
 #include <QFont>
 
 static int conflict_this_priority(conflict_this_t ct)
@@ -59,6 +59,7 @@ conflict_this_t nav_tree_model_t::record_foreground_for_plugin(const conflict_en
 
 	return conflict_this_t::unknown;
 }
+
 #include <map>
 #include <QBrush>
 
@@ -563,9 +564,8 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 			if (m_scan.is_merge_plugin(file_node.plugin_idx))
 				return QString::fromUtf8("\xE2\x9A\x99 ") + QString::fromUtf8(buf);
 
-			const bool is_master = filename.size() > 4 &&
-			    (filename.compare(filename.size() - 4, 4, ".esm") == 0 ||
-			     filename.compare(filename.size() - 4, 4, ".ESM") == 0);
+			const bool is_master = filename.size() > 4 && (filename.compare(filename.size() - 4, 4, ".esm") == 0 ||
+			                                               filename.compare(filename.size() - 4, 4, ".ESM") == 0);
 			if (is_master)
 				return QString::fromUtf8("\xF0\x9F\x93\x9C ") + QString::fromUtf8(buf);
 

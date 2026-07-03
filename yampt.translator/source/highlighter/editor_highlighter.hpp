@@ -1,8 +1,8 @@
 #pragma once
 
 #include "script_tokenizer.hpp"
-#include <theme_system.hpp>
 #include <utility/tools.hpp>
+#include <theme_system.hpp>
 #include <QSyntaxHighlighter>
 #include <QTextCharFormat>
 

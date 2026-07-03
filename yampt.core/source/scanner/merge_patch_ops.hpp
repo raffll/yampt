@@ -1,7 +1,7 @@
 #pragma once
 
-#include <scanner/sub_record_merge.hpp>
 #include <decoder/sub_record_schema.hpp>
+#include <scanner/sub_record_merge.hpp>
 #include <string>
 #include <vector>
 

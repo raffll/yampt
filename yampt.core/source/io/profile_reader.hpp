@@ -30,9 +30,7 @@ class profile_reader_t
 public:
 	static openmw_cfg_t parse_openmw_cfg_text(const std::string & text);
 
-	static mo2_profile_t parse_mo2_profile_text(
-	    const std::string & loadorder_text,
-	    const std::string & modlist_text);
+	static mo2_profile_t parse_mo2_profile_text(const std::string & loadorder_text, const std::string & modlist_text);
 
 	static std::vector<std::string> resolve_openmw_content(
 	    const std::vector<std::string> & content_names,
@@ -52,7 +50,5 @@ public:
 	    const std::string & game_data_path,
 	    const file_exists_fn_t & file_exists);
 
-	static std::string resolve_merge_output_path(
-	    load_source_kind_t source,
-	    const std::string & base_path);
+	static std::string resolve_merge_output_path(load_source_kind_t source, const std::string & base_path);
 };

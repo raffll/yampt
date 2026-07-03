@@ -55,12 +55,14 @@ static std::string make_levc_entry(const std::string & creature_id, uint16_t lev
 	return make_sub("CNAM", make_string(creature_id)) + make_sub("INTV", make_uint16(level));
 }
 
-static std::string make_levi_header(const std::string & list_id, uint32_t list_flags, uint8_t chance_none, uint32_t item_count)
+static std::string make_levi_header(
+    const std::string & list_id,
+    uint32_t list_flags,
+    uint8_t chance_none,
+    uint32_t item_count)
 {
-	return make_sub("NAME", make_string(list_id))
-	     + make_sub("DATA", make_uint32(list_flags))
-	     + make_sub("NNAM", std::string(1, static_cast<char>(chance_none)))
-	     + make_sub("INDX", make_uint32(item_count));
+	return make_sub("NAME", make_string(list_id)) + make_sub("DATA", make_uint32(list_flags)) +
+	       make_sub("NNAM", std::string(1, static_cast<char>(chance_none))) + make_sub("INDX", make_uint32(item_count));
 }
 
 // ============================================================================
@@ -70,10 +72,8 @@ static std::string make_levi_header(const std::string & list_id, uint32_t list_f
 TEST_CASE("leveled_list_merge, max occurrence preserved", "[u]")
 {
 	auto first_subs = make_levi_header("list_id", 1, 0, 1) + make_levi_entry("iron_sword", 1);
-	auto mod_subs = make_levi_header("list_id", 1, 0, 3)
-	              + make_levi_entry("iron_sword", 1)
-	              + make_levi_entry("iron_sword", 1)
-	              + make_levi_entry("iron_sword", 1);
+	auto mod_subs = make_levi_header("list_id", 1, 0, 3) + make_levi_entry("iron_sword", 1) +
+	                make_levi_entry("iron_sword", 1) + make_levi_entry("iron_sword", 1);
 	auto winner_subs = make_levi_header("list_id", 1, 0, 1) + make_levi_entry("iron_sword", 1);
 
 	leveled_list_input_t input;
@@ -102,12 +102,8 @@ TEST_CASE("leveled_list_merge, two mods add different items", "[u]")
 {
 	auto header = make_levi_header("list_id", 1, 0, 1);
 	auto first_subs = header + make_levi_entry("item_a", 1);
-	auto mod1_subs = make_levi_header("list_id", 1, 0, 2)
-	               + make_levi_entry("item_a", 1)
-	               + make_levi_entry("item_b", 1);
-	auto mod2_subs = make_levi_header("list_id", 1, 0, 2)
-	               + make_levi_entry("item_a", 1)
-	               + make_levi_entry("item_c", 5);
+	auto mod1_subs = make_levi_header("list_id", 1, 0, 2) + make_levi_entry("item_a", 1) + make_levi_entry("item_b", 1);
+	auto mod2_subs = make_levi_header("list_id", 1, 0, 2) + make_levi_entry("item_a", 1) + make_levi_entry("item_c", 5);
 
 	leveled_list_input_t input;
 	input.rec_type = "LEVI";
@@ -130,10 +126,8 @@ TEST_CASE("leveled_list_merge, sorted by level then ident", "[u]")
 {
 	auto header = make_levi_header("list_id", 1, 0, 1);
 	auto first_subs = header + make_levi_entry("zzz_item", 1);
-	auto mod_subs = make_levi_header("list_id", 1, 0, 3)
-	              + make_levi_entry("zzz_item", 1)
-	              + make_levi_entry("aaa_item", 5)
-	              + make_levi_entry("bbb_item", 3);
+	auto mod_subs = make_levi_header("list_id", 1, 0, 3) + make_levi_entry("zzz_item", 1) +
+	                make_levi_entry("aaa_item", 5) + make_levi_entry("bbb_item", 3);
 
 	leveled_list_input_t input;
 	input.rec_type = "LEVI";
@@ -180,11 +174,9 @@ TEST_CASE("leveled_list_merge, winner header used", "[u]")
 
 TEST_CASE("leveled_list_merge, mod removes item entirely", "[u]")
 {
-	auto first_subs = make_levi_header("list_id", 1, 0, 2)
-	                + make_levi_entry("keep_item", 1)
-	                + make_levi_entry("remove_me", 1);
-	auto mod_subs = make_levi_header("list_id", 1, 0, 1)
-	              + make_levi_entry("keep_item", 1);
+	auto first_subs =
+	    make_levi_header("list_id", 1, 0, 2) + make_levi_entry("keep_item", 1) + make_levi_entry("remove_me", 1);
+	auto mod_subs = make_levi_header("list_id", 1, 0, 1) + make_levi_entry("keep_item", 1);
 
 	leveled_list_input_t input;
 	input.rec_type = "LEVI";
@@ -202,12 +194,9 @@ TEST_CASE("leveled_list_merge, mod removes item entirely", "[u]")
 
 TEST_CASE("leveled_list_merge, mod reduces count partial", "[u]")
 {
-	auto first_subs = make_levi_header("list_id", 1, 0, 3)
-	                + make_levi_entry("item_a", 1)
-	                + make_levi_entry("item_a", 1)
-	                + make_levi_entry("item_a", 1);
-	auto mod_subs = make_levi_header("list_id", 1, 0, 1)
-	              + make_levi_entry("item_a", 1);
+	auto first_subs = make_levi_header("list_id", 1, 0, 3) + make_levi_entry("item_a", 1) +
+	                  make_levi_entry("item_a", 1) + make_levi_entry("item_a", 1);
+	auto mod_subs = make_levi_header("list_id", 1, 0, 1) + make_levi_entry("item_a", 1);
 
 	leveled_list_input_t input;
 	input.rec_type = "LEVI";
@@ -231,15 +220,11 @@ TEST_CASE("leveled_list_merge, mod reduces count partial", "[u]")
 
 TEST_CASE("leveled_list_merge, one mod removes one mod keeps deletion wins", "[u]")
 {
-	auto first_subs = make_levi_header("list_id", 1, 0, 2)
-	                + make_levi_entry("contested", 1)
-	                + make_levi_entry("safe_item", 1);
-	auto mod_remove = make_levi_header("list_id", 1, 0, 1)
-	                + make_levi_entry("safe_item", 1);
-	auto mod_keep = make_levi_header("list_id", 1, 0, 3)
-	              + make_levi_entry("contested", 1)
-	              + make_levi_entry("contested", 1)
-	              + make_levi_entry("safe_item", 1);
+	auto first_subs =
+	    make_levi_header("list_id", 1, 0, 2) + make_levi_entry("contested", 1) + make_levi_entry("safe_item", 1);
+	auto mod_remove = make_levi_header("list_id", 1, 0, 1) + make_levi_entry("safe_item", 1);
+	auto mod_keep = make_levi_header("list_id", 1, 0, 3) + make_levi_entry("contested", 1) +
+	                make_levi_entry("contested", 1) + make_levi_entry("safe_item", 1);
 
 	leveled_list_input_t input;
 	input.rec_type = "LEVI";
@@ -259,9 +244,7 @@ TEST_CASE("leveled_list_merge, one mod removes one mod keeps deletion wins", "[u
 TEST_CASE("leveled_list_merge, no deletion when all mods keep item", "[u]")
 {
 	auto first_subs = make_levi_header("list_id", 1, 0, 1) + make_levi_entry("item_a", 1);
-	auto mod1_subs = make_levi_header("list_id", 1, 0, 2)
-	               + make_levi_entry("item_a", 1)
-	               + make_levi_entry("item_a", 1);
+	auto mod1_subs = make_levi_header("list_id", 1, 0, 2) + make_levi_entry("item_a", 1) + make_levi_entry("item_a", 1);
 	auto mod2_subs = make_levi_header("list_id", 1, 0, 1) + make_levi_entry("item_a", 1);
 
 	leveled_list_input_t input;
@@ -281,9 +264,7 @@ TEST_CASE("leveled_list_merge, no deletion when all mods keep item", "[u]")
 TEST_CASE("leveled_list_merge, LEVC creature list works same", "[u]")
 {
 	auto first_subs = make_levi_header("crea_list", 1, 0, 1) + make_levc_entry("rat", 1);
-	auto mod_subs = make_levi_header("crea_list", 1, 0, 2)
-	              + make_levc_entry("rat", 1)
-	              + make_levc_entry("mudcrab", 3);
+	auto mod_subs = make_levi_header("crea_list", 1, 0, 2) + make_levc_entry("rat", 1) + make_levc_entry("mudcrab", 3);
 	auto winner_subs = make_levi_header("crea_list", 1, 0, 1) + make_levc_entry("rat", 1);
 
 	leveled_list_input_t input;

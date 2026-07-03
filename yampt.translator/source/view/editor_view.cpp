@@ -1,8 +1,8 @@
 #include "editor_view.hpp"
 #include "line_number_gutter.hpp"
 #include <utility/char_diff.hpp>
-#include <theme_system.hpp>
 #include <algorithm>
+#include <theme_system.hpp>
 #include <QFont>
 #include <QHBoxLayout>
 #include <QLabel>

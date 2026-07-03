@@ -1,11 +1,11 @@
 #include <catch2/catch_all.hpp>
-#include <theme_system.hpp>
 #include <utility/color_palette.hpp>
 #include <utility/theme_enums.hpp>
 #include <app_settings.hpp>
-#include <QCoreApplication>
 #include <cmath>
 #include <cstdlib>
+#include <theme_system.hpp>
+#include <QCoreApplication>
 
 TEST_CASE("theme_system_t::get_color, all named colors are valid", "[u]")
 {
@@ -41,14 +41,12 @@ TEST_CASE("theme_system_t::get_status_color, hue preserved", "[u]")
 	REQUIRE(hue_diff <= 15);
 }
 
-namespace
-{
+namespace {
 
 double relative_luminance(const QColor & color)
 {
-	auto linearize = [](double channel) {
-		return (channel <= 0.03928) ? channel / 12.92 : std::pow((channel + 0.055) / 1.055, 2.4);
-	};
+	auto linearize = [](double channel)
+	{ return (channel <= 0.03928) ? channel / 12.92 : std::pow((channel + 0.055) / 1.055, 2.4); };
 	double r = linearize(color.redF());
 	double g = linearize(color.greenF());
 	double b = linearize(color.blueF());
@@ -64,22 +62,16 @@ double contrast_ratio(const QColor & foreground, const QColor & background)
 	return (lighter + 0.05) / (darker + 0.05);
 }
 
-}
+} // namespace
 
 TEST_CASE("theme_system_t::get_color, dark foreground contrast", "[u]")
 {
-	const auto dark_background = theme_system_t::instance().get_color(
-		color_name_t::editor_background, theme_t::dark);
+	const auto dark_background = theme_system_t::instance().get_color(color_name_t::editor_background, theme_t::dark);
 
 	const auto foreground_names = {
-		color_name_t::window_text,
-		color_name_t::editor_text,
-		color_name_t::syntax_function,
-		color_name_t::syntax_comment,
-		color_name_t::syntax_string,
-		color_name_t::syntax_html_tag,
-		color_name_t::syntax_hyperlink,
-		color_name_t::syntax_misspelled,
+		color_name_t::window_text,      color_name_t::editor_text,       color_name_t::syntax_function,
+		color_name_t::syntax_comment,   color_name_t::syntax_string,     color_name_t::syntax_html_tag,
+		color_name_t::syntax_hyperlink, color_name_t::syntax_misspelled,
 	};
 
 	for (const auto name : foreground_names)
@@ -111,7 +103,9 @@ TEST_CASE("theme_system_t::conflict_all_background, visible", "[u]")
 
 	const auto base_bg = theme_system_t::instance().get_color(color_name_t::window_background);
 
-	const auto conflict_values = { conflict_all_t::no_conflict, conflict_all_t::override_benign, conflict_all_t::conflict };
+	const auto conflict_values = { conflict_all_t::no_conflict,
+		                           conflict_all_t::override_benign,
+		                           conflict_all_t::conflict };
 
 	for (const auto value : conflict_values)
 	{
@@ -124,8 +118,12 @@ TEST_CASE("theme_system_t, light conflict foreground/background contrast", "[u]"
 {
 	theme_system_t::instance().set_theme(theme_t::light);
 
-	const auto conflict_all_values = { conflict_all_t::no_conflict, conflict_all_t::override_benign, conflict_all_t::conflict };
-	const auto conflict_this_values = { conflict_this_t::master, conflict_this_t::identical_to_master, conflict_this_t::override_wins, conflict_this_t::conflict_wins, conflict_this_t::conflict_loses, conflict_this_t::deleted };
+	const auto conflict_all_values = { conflict_all_t::no_conflict,
+		                               conflict_all_t::override_benign,
+		                               conflict_all_t::conflict };
+	const auto conflict_this_values = { conflict_this_t::master,         conflict_this_t::identical_to_master,
+		                                conflict_this_t::override_wins,  conflict_this_t::conflict_wins,
+		                                conflict_this_t::conflict_loses, conflict_this_t::deleted };
 
 	for (const auto ca : conflict_all_values)
 	{
@@ -142,8 +140,12 @@ TEST_CASE("theme_system_t, dark conflict foreground/background contrast", "[u]")
 {
 	theme_system_t::instance().set_theme(theme_t::dark);
 
-	const auto conflict_all_values = { conflict_all_t::no_conflict, conflict_all_t::override_benign, conflict_all_t::conflict };
-	const auto conflict_this_values = { conflict_this_t::master, conflict_this_t::identical_to_master, conflict_this_t::override_wins, conflict_this_t::conflict_wins, conflict_this_t::conflict_loses, conflict_this_t::deleted };
+	const auto conflict_all_values = { conflict_all_t::no_conflict,
+		                               conflict_all_t::override_benign,
+		                               conflict_all_t::conflict };
+	const auto conflict_this_values = { conflict_this_t::master,         conflict_this_t::identical_to_master,
+		                                conflict_this_t::override_wins,  conflict_this_t::conflict_wins,
+		                                conflict_this_t::conflict_loses, conflict_this_t::deleted };
 
 	for (const auto ca : conflict_all_values)
 	{
@@ -160,7 +162,9 @@ TEST_CASE("theme_system_t, dark conflict backgrounds are darker", "[u]")
 {
 	theme_system_t::instance().set_theme(theme_t::dark);
 
-	const auto conflict_values = { conflict_all_t::no_conflict, conflict_all_t::override_benign, conflict_all_t::conflict };
+	const auto conflict_values = { conflict_all_t::no_conflict,
+		                           conflict_all_t::override_benign,
+		                           conflict_all_t::conflict };
 
 	for (const auto value : conflict_values)
 	{
@@ -182,8 +186,7 @@ TEST_CASE("theme_system_t, dark conflict backgrounds are darker", "[u]")
 
 TEST_CASE("theme_system_t::get_color, light foreground contrast", "[u]")
 {
-	const auto light_background = theme_system_t::instance().get_color(
-		color_name_t::editor_background, theme_t::light);
+	const auto light_background = theme_system_t::instance().get_color(color_name_t::editor_background, theme_t::light);
 
 	const auto foreground_names = {
 		color_name_t::window_text,
@@ -214,30 +217,26 @@ TEST_CASE("theme_system_t::get_color, light foreground contrast", "[u]")
 
 TEST_CASE("theme_system_t::get_color, light status colors distinguishable", "[u]")
 {
-	const auto light_background = theme_system_t::instance().get_color(
-		color_name_t::editor_background, theme_t::light);
+	const auto light_background = theme_system_t::instance().get_color(color_name_t::editor_background, theme_t::light);
 
 	const auto status_count = static_cast<int>(status_t::error) + 1;
 
 	for (int i = 0; i < status_count; ++i)
 	{
-		const auto color = theme_system_t::instance().get_status_color(
-			static_cast<status_t>(i), theme_t::light);
+		const auto color = theme_system_t::instance().get_status_color(static_cast<status_t>(i), theme_t::light);
 		REQUIRE(contrast_ratio(color, light_background) >= 1.2);
 	}
 }
 
 TEST_CASE("theme_system_t::get_color, dark status colors distinguishable", "[u]")
 {
-	const auto dark_background = theme_system_t::instance().get_color(
-		color_name_t::editor_background, theme_t::dark);
+	const auto dark_background = theme_system_t::instance().get_color(color_name_t::editor_background, theme_t::dark);
 
 	const auto status_count = static_cast<int>(status_t::error) + 1;
 
 	for (int i = 0; i < status_count; ++i)
 	{
-		const auto color = theme_system_t::instance().get_status_color(
-			static_cast<status_t>(i), theme_t::dark);
+		const auto color = theme_system_t::instance().get_status_color(static_cast<status_t>(i), theme_t::dark);
 		REQUIRE(contrast_ratio(color, dark_background) >= 1.3);
 	}
 }
@@ -289,7 +288,9 @@ TEST_CASE("theme_system_t::conflict_all_background, light is lighter", "[u]")
 {
 	theme_system_t::instance().set_theme(theme_t::light);
 
-	const auto conflict_values = { conflict_all_t::no_conflict, conflict_all_t::override_benign, conflict_all_t::conflict };
+	const auto conflict_values = { conflict_all_t::no_conflict,
+		                           conflict_all_t::override_benign,
+		                           conflict_all_t::conflict };
 
 	for (const auto value : conflict_values)
 	{
@@ -324,7 +325,8 @@ TEST_CASE("theme_system_t::set_theme, respects active theme", "[u]")
 
 TEST_CASE("theme_system_t::get_color, dark backward compat", "[u]")
 {
-	auto check = [](color_name_t name, int r, int g, int b, int a = 255) {
+	auto check = [](color_name_t name, int r, int g, int b, int a = 255)
+	{
 		const auto color = theme_system_t::instance().get_color(name, theme_t::dark);
 		REQUIRE(color.red() == r);
 		REQUIRE(color.green() == g);
@@ -417,7 +419,8 @@ TEST_CASE("app_settings_t::theme, invalid defaults to light", "[u]")
 
 TEST_CASE("theme_system_t::get_color, light backward compat", "[u]")
 {
-	auto check = [](color_name_t name, int r, int g, int b, int a = 255) {
+	auto check = [](color_name_t name, int r, int g, int b, int a = 255)
+	{
 		const auto color = theme_system_t::instance().get_color(name, theme_t::light);
 		REQUIRE(color.red() == r);
 		REQUIRE(color.green() == g);

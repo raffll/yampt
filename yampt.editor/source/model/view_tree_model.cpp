@@ -1,11 +1,11 @@
 #include "view_tree_model.hpp"
 #include <decoder/view_tree_format.hpp>
 #include <scanner/conflict_compute.hpp>
-#include <theme_system.hpp>
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
 #include <map>
+#include <theme_system.hpp>
 #include <QBrush>
 #include <QMimeData>
 
@@ -48,7 +48,8 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 	const bool is_leveled = (m_record_type == "LEVI" || m_record_type == "LEVC");
 	const bool is_faction = (m_record_type == "FACT");
 	const bool is_container =
-	    (m_record_type == "CONT" || m_record_type == "CREA" || m_record_type == "NPC_" || m_record_type == "BSGN" || m_record_type == "RACE");
+	    (m_record_type == "CONT" || m_record_type == "CREA" || m_record_type == "NPC_" || m_record_type == "BSGN" ||
+	     m_record_type == "RACE");
 	const bool is_armor = (m_record_type == "ARMO" || m_record_type == "CLOT");
 
 	if (is_cell)
@@ -557,7 +558,8 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 			if (m_is_merge_pinned && is_merge_column(index.column()))
 				return QBrush(QColor(0, 128, 128));
 
-			return sub_record_foreground(row.cell_conflict_this, m_column_names.size(), index.column(), m_has_merge_column);
+			return sub_record_foreground(
+			    row.cell_conflict_this, m_column_names.size(), index.column(), m_has_merge_column);
 		}
 
 		return {};
@@ -579,7 +581,8 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 		if (m_is_merge_pinned && is_merge_column(index.column()))
 			return QBrush(QColor(0, 128, 128));
 
-		return sub_record_foreground(frow.cell_conflict_this, m_column_names.size(), index.column(), m_has_merge_column);
+		return sub_record_foreground(
+		    frow.cell_conflict_this, m_column_names.size(), index.column(), m_has_merge_column);
 	}
 
 	return {};
@@ -612,7 +615,9 @@ QVariant view_tree_model_t::headerData(int section, Qt::Orientation orientation,
 				prefix = QString::fromUtf8("\xF0\x9F\x9B\xA1 ");
 			else if (m_scan_for_header && m_scan_for_header->is_merge_plugin(pi))
 				prefix = QString::fromUtf8("\xE2\x9A\x99 ");
-			else if (name.size() > 4 && (name.compare(name.size() - 4, 4, ".esm") == 0 || name.compare(name.size() - 4, 4, ".ESM") == 0))
+			else if (
+			    name.size() > 4 &&
+			    (name.compare(name.size() - 4, 4, ".esm") == 0 || name.compare(name.size() - 4, 4, ".ESM") == 0))
 				prefix = QString::fromUtf8("\xF0\x9F\x93\x9C ");
 		}
 

@@ -1,13 +1,13 @@
 #include "merge_compute.hpp"
-#include "fog_fixer.hpp"
-#include "summon_fixer.hpp"
 #include "cell_name_fixer.hpp"
+#include "fog_fixer.hpp"
 #include "plugin_scan.hpp"
+#include "summon_fixer.hpp"
 #include <regex>
 #include <unordered_map>
 
 merge_compute_t::merge_compute_t(plugin_scan_t & scan)
-	: m_scan(scan)
+    : m_scan(scan)
 {}
 
 void merge_compute_t::set_config(const merge_config_t & config)
@@ -26,10 +26,9 @@ merge_counters_t merge_compute_t::execute()
 	apply_fixes(counters);
 	prune_unchanged();
 
-	add_log("[info] merge: " + std::to_string(counters.three_way) + " merged, " +
-	        std::to_string(counters.lists) + " lists, " +
-	        std::to_string(counters.dialogues) + " dialogues, " +
-	        std::to_string(counters.fixes) + " fixes");
+	add_log(
+	    "[info] merge: " + std::to_string(counters.three_way) + " merged, " + std::to_string(counters.lists) +
+	    " lists, " + std::to_string(counters.dialogues) + " dialogues, " + std::to_string(counters.fixes) + " fixes");
 
 	return counters;
 }
@@ -61,11 +60,11 @@ void merge_compute_t::build_record_groups()
 			if (it_found == lookup.end())
 			{
 				lookup[key] = m_groups.size();
-				m_groups.push_back({rec.rec_type, rec.record_id, {{pi, rec.record_index}}});
+				m_groups.push_back({ rec.rec_type, rec.record_id, { { pi, rec.record_index } } });
 			}
 			else
 			{
-				m_groups[it_found->second].versions.push_back({pi, rec.record_index});
+				m_groups[it_found->second].versions.push_back({ pi, rec.record_index });
 			}
 		}
 	}
@@ -256,7 +255,8 @@ void merge_compute_t::apply_fog_fixes(merge_counters_t & counters)
 
 		const auto * merge_content = m_scan.find_merge_content("CELL", group.record_id);
 		const auto & last_ver = group.versions.back();
-		const auto content = merge_content ? *merge_content : m_scan.read_record_content(last_ver.plugin_idx, last_ver.record_index);
+		const auto content =
+		    merge_content ? *merge_content : m_scan.read_record_content(last_ver.plugin_idx, last_ver.record_index);
 
 		if (content.empty())
 			continue;
@@ -283,7 +283,8 @@ void merge_compute_t::apply_summon_fixes(merge_counters_t & counters)
 
 		const auto * merge_content = m_scan.find_merge_content("CREA", group.record_id);
 		const auto & last_ver = group.versions.back();
-		const auto content = merge_content ? *merge_content : m_scan.read_record_content(last_ver.plugin_idx, last_ver.record_index);
+		const auto content =
+		    merge_content ? *merge_content : m_scan.read_record_content(last_ver.plugin_idx, last_ver.record_index);
 
 		if (content.empty())
 			continue;
@@ -400,5 +401,5 @@ bool merge_compute_t::matches_exclusion(const std::string & record_id) const
 
 void merge_compute_t::add_log(const std::string & message)
 {
-	m_log.push_back({message});
+	m_log.push_back({ message });
 }

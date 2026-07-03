@@ -7,28 +7,21 @@
 #include <QLineEdit>
 #include <QVBoxLayout>
 
-namespace
-{
+namespace {
 
 constexpr int columns = 5;
 
-const char * record_types[] = {
-	"ACTI", "ALCH", "APPA", "ARMO", "BODY",
-	"BOOK", "BSGN", "CELL", "CLAS", "CLOT",
-	"CONT", "CREA", "DIAL", "DOOR", "ENCH",
-	"FACT", "GLOB", "GMST", "INGR", "LAND",
-	"LEVC", "LEVI", "LIGH", "LOCK", "MGEF",
-	"MISC", "NPC_", "PGRD", "REGN", "SCPT",
-	"SKIL", "SNDG", "SOUN", "SPEL", "STAT",
-	"WEAP"
-};
+const char * record_types[] = { "ACTI", "ALCH", "APPA", "ARMO", "BODY", "BOOK", "BSGN", "CELL", "CLAS",
+	                            "CLOT", "CONT", "CREA", "DIAL", "DOOR", "ENCH", "FACT", "GLOB", "GMST",
+	                            "INGR", "LAND", "LEVC", "LEVI", "LIGH", "LOCK", "MGEF", "MISC", "NPC_",
+	                            "PGRD", "REGN", "SCPT", "SKIL", "SNDG", "SOUN", "SPEL", "STAT", "WEAP" };
 
 constexpr int record_type_count = sizeof(record_types) / sizeof(record_types[0]);
 
 } // namespace
 
 merge_settings_view_t::merge_settings_view_t(QWidget * parent)
-	: QWidget(parent)
+    : QWidget(parent)
 {
 	auto * main_layout = new QVBoxLayout(this);
 	setup_record_types_group();

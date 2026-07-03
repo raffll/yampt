@@ -57,15 +57,13 @@ static std::string make_position(float x_pos, float y_pos, float z_pos)
 
 static std::string make_frmr_group(uint32_t index, const std::string & object_id, float x_pos, float y_pos, float z_pos)
 {
-	return make_sub("FRMR", make_uint32(index))
-	     + make_sub("NAME", make_string(object_id))
-	     + make_sub("DATA", make_position(x_pos, y_pos, z_pos));
+	return make_sub("FRMR", make_uint32(index)) + make_sub("NAME", make_string(object_id)) +
+	       make_sub("DATA", make_position(x_pos, y_pos, z_pos));
 }
 
 static std::string make_cell_header()
 {
-	return make_sub("NAME", make_string("TestCell"))
-	     + make_sub("DATA", make_cell_data(0x01, 0, 0));
+	return make_sub("NAME", make_string("TestCell")) + make_sub("DATA", make_cell_data(0x01, 0, 0));
 }
 
 static bool contains_frmr(const std::string & content, uint32_t frmr_index)
@@ -180,8 +178,8 @@ TEST_CASE("sub_record_merge_t::merge_cell_refs, 2 versions unchanged", "[u]")
 	input.rec_type = "CELL";
 	input.record_id = "TestCell";
 	input.version_contents = {
-	    make_record("CELL", hdr + ref1),
-	    make_record("CELL", hdr + ref1),
+		make_record("CELL", hdr + ref1),
+		make_record("CELL", hdr + ref1),
 	};
 
 	auto result = sub_record_merge_t::merge_cell_refs(input);
@@ -199,9 +197,9 @@ TEST_CASE("sub_record_merge_t::merge_cell_refs, intermediate adds ref", "[u]")
 	input.rec_type = "CELL";
 	input.record_id = "TestCell";
 	input.version_contents = {
-	    make_record("CELL", hdr + ref1),
-	    make_record("CELL", hdr + ref1 + ref2),
-	    make_record("CELL", hdr + ref1),
+		make_record("CELL", hdr + ref1),
+		make_record("CELL", hdr + ref1 + ref2),
+		make_record("CELL", hdr + ref1),
 	};
 
 	auto result = sub_record_merge_t::merge_cell_refs(input);
@@ -221,9 +219,9 @@ TEST_CASE("sub_record_merge_t::merge_cell_refs, intermediate moves ref", "[u]")
 	input.rec_type = "CELL";
 	input.record_id = "TestCell";
 	input.version_contents = {
-	    make_record("CELL", hdr + ref1_orig),
-	    make_record("CELL", hdr + ref1_moved),
-	    make_record("CELL", hdr + ref1_orig),
+		make_record("CELL", hdr + ref1_orig),
+		make_record("CELL", hdr + ref1_moved),
+		make_record("CELL", hdr + ref1_orig),
 	};
 
 	auto result = sub_record_merge_t::merge_cell_refs(input);
@@ -243,9 +241,9 @@ TEST_CASE("sub_record_merge_t::merge_cell_refs, winner removes ref", "[u]")
 	input.rec_type = "CELL";
 	input.record_id = "TestCell";
 	input.version_contents = {
-	    make_record("CELL", hdr + ref1 + ref2),
-	    make_record("CELL", hdr + ref1 + ref2_moved),
-	    make_record("CELL", hdr + ref1),
+		make_record("CELL", hdr + ref1 + ref2),
+		make_record("CELL", hdr + ref1 + ref2_moved),
+		make_record("CELL", hdr + ref1),
 	};
 
 	auto result = sub_record_merge_t::merge_cell_refs(input);
@@ -266,9 +264,9 @@ TEST_CASE("sub_record_merge_t::merge_cell_refs, both modify same ref winner wins
 	input.rec_type = "CELL";
 	input.record_id = "TestCell";
 	input.version_contents = {
-	    make_record("CELL", hdr + ref1_orig),
-	    make_record("CELL", hdr + ref1_inter),
-	    make_record("CELL", hdr + ref1_winner),
+		make_record("CELL", hdr + ref1_orig),
+		make_record("CELL", hdr + ref1_inter),
+		make_record("CELL", hdr + ref1_winner),
 	};
 
 	auto result = sub_record_merge_t::merge_cell_refs(input);
@@ -288,10 +286,10 @@ TEST_CASE("sub_record_merge_t::merge_cell_refs, two intermediates add different 
 	input.rec_type = "CELL";
 	input.record_id = "TestCell";
 	input.version_contents = {
-	    make_record("CELL", hdr + ref1),
-	    make_record("CELL", hdr + ref1 + ref2),
-	    make_record("CELL", hdr + ref1 + ref3),
-	    make_record("CELL", hdr + ref1),
+		make_record("CELL", hdr + ref1),
+		make_record("CELL", hdr + ref1 + ref2),
+		make_record("CELL", hdr + ref1 + ref3),
+		make_record("CELL", hdr + ref1),
 	};
 
 	auto result = sub_record_merge_t::merge_cell_refs(input);
@@ -321,9 +319,9 @@ TEST_CASE("sub_record_merge_t::merge_cell_refs, header merged alongside refs", "
 	input.rec_type = "CELL";
 	input.record_id = "TestCell";
 	input.version_contents = {
-	    make_record("CELL", hdr_first + ref1),
-	    make_record("CELL", hdr_inter + ref1 + ref2),
-	    make_record("CELL", hdr_winner + ref1),
+		make_record("CELL", hdr_first + ref1),
+		make_record("CELL", hdr_inter + ref1 + ref2),
+		make_record("CELL", hdr_winner + ref1),
 	};
 
 	auto result = sub_record_merge_t::merge_cell_refs(input);
@@ -354,9 +352,9 @@ TEST_CASE("sub_record_merge_t::merge_cell_refs, refs sorted by index", "[u]")
 	input.rec_type = "CELL";
 	input.record_id = "TestCell";
 	input.version_contents = {
-	    make_record("CELL", hdr + ref5),
-	    make_record("CELL", hdr + ref5 + ref2),
-	    make_record("CELL", hdr + ref5),
+		make_record("CELL", hdr + ref5),
+		make_record("CELL", hdr + ref5 + ref2),
+		make_record("CELL", hdr + ref5),
 	};
 
 	auto result = sub_record_merge_t::merge_cell_refs(input);

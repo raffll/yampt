@@ -1,7 +1,6 @@
 #include "sub_record_merge.hpp"
 #include "../decoder/sub_record_iter.hpp"
 #include "../utility/tools.hpp"
-
 #include <algorithm>
 #include <set>
 
@@ -14,7 +13,7 @@ sub_record_sequence_t sub_record_merge_t::parse_sub_records(const std::string & 
 	sub_record_view_t view;
 
 	while (iter.next(view))
-		sequence.push_back({view.type, std::string(view.data, view.size)});
+		sequence.push_back({ view.type, std::string(view.data, view.size) });
 
 	return sequence;
 }
@@ -25,7 +24,9 @@ std::string sub_record_merge_t::serialize_sub_record(const sub_record_entry_t & 
 	return entry.type + size_bytes + entry.data;
 }
 
-std::string sub_record_merge_t::reconstruct_record(const std::string & winner_content, const sub_record_sequence_t & output)
+std::string sub_record_merge_t::reconstruct_record(
+    const std::string & winner_content,
+    const sub_record_sequence_t & output)
 {
 	std::string body;
 	for (const auto & entry : output)
@@ -52,7 +53,10 @@ size_t sub_record_merge_t::find_occurrence_index(const sub_record_sequence_t & s
 	return count;
 }
 
-int sub_record_merge_t::find_by_type_and_occurrence(const sub_record_sequence_t & sequence, const std::string & type, size_t occurrence)
+int sub_record_merge_t::find_by_type_and_occurrence(
+    const sub_record_sequence_t & sequence,
+    const std::string & type,
+    size_t occurrence)
 {
 	size_t count = 0;
 
@@ -70,7 +74,10 @@ int sub_record_merge_t::find_by_type_and_occurrence(const sub_record_sequence_t 
 	return -1;
 }
 
-bool sub_record_merge_t::needs_element_wise(const std::string & rec_type, const std::string & sub_type, size_t data_size)
+bool sub_record_merge_t::needs_element_wise(
+    const std::string & rec_type,
+    const std::string & sub_type,
+    size_t data_size)
 {
 	if (rec_type == "NPC_" && sub_type == "NPDT" && (data_size == 52 || data_size == 12))
 		return true;
@@ -87,7 +94,11 @@ bool sub_record_merge_t::needs_element_wise(const std::string & rec_type, const 
 	return false;
 }
 
-std::string sub_record_merge_t::merge_bytes_three_way(const char * first, const char * inter, const char * winner, size_t size)
+std::string sub_record_merge_t::merge_bytes_three_way(
+    const char * first,
+    const char * inter,
+    const char * winner,
+    size_t size)
 {
 	std::string result(winner, size);
 
@@ -136,12 +147,12 @@ static bool field_changed(const std::string & source, const std::string & base, 
 }
 
 static void fix_paired_fields(
-	std::string & merged,
-	const std::string & first,
-	const std::string & inter,
-	const std::string & winner,
-	const field_pair_t * pairs,
-	size_t pair_count)
+    std::string & merged,
+    const std::string & first,
+    const std::string & inter,
+    const std::string & winner,
+    const field_pair_t * pairs,
+    size_t pair_count)
 {
 	for (size_t p = 0; p < pair_count; ++p)
 	{
@@ -169,11 +180,11 @@ static void fix_paired_fields(
 static constexpr field_pair_t enam_magnitude_pair = { 12, 16, 4 };
 
 static void fix_magnitude_pair(
-	std::string & result,
-	size_t slot_offset,
-	const std::string & first,
-	const std::string & inter,
-	const std::string & winner)
+    std::string & result,
+    size_t slot_offset,
+    const std::string & first,
+    const std::string & inter,
+    const std::string & winner)
 {
 	std::string merged_slot = result.substr(slot_offset, enam_slot_size);
 	fix_paired_fields(merged_slot, first, inter, winner, &enam_magnitude_pair, 1);
@@ -181,9 +192,9 @@ static void fix_magnitude_pair(
 }
 
 std::string sub_record_merge_t::merge_enam_slots(
-	const std::vector<std::string> & first_enams,
-	const std::vector<std::string> & inter_enams,
-	const std::vector<std::string> & winner_enams)
+    const std::vector<std::string> & first_enams,
+    const std::vector<std::string> & inter_enams,
+    const std::vector<std::string> & winner_enams)
 {
 	std::string result;
 
@@ -202,13 +213,10 @@ std::string sub_record_merge_t::merge_enam_slots(
 		}
 
 		result += merge_bytes_three_way(
-			first_enams[slot].data(),
-			inter_enams[slot].data(),
-			winner_enams[slot].data(),
-			enam_slot_size);
+		    first_enams[slot].data(), inter_enams[slot].data(), winner_enams[slot].data(), enam_slot_size);
 
-		fix_magnitude_pair(result, result.size() - enam_slot_size,
-		                   first_enams[slot], inter_enams[slot], winner_enams[slot]);
+		fix_magnitude_pair(
+		    result, result.size() - enam_slot_size, first_enams[slot], inter_enams[slot], winner_enams[slot]);
 	}
 
 	for (size_t slot = first_enams.size(); slot < inter_enams.size(); ++slot)
@@ -226,8 +234,8 @@ bool sub_record_merge_t::is_enam_record_type(const std::string & rec_type)
 }
 
 sub_record_sequence_t sub_record_merge_t::replace_enam_entries(
-	const sub_record_sequence_t & output,
-	const std::string & merged_enam_data)
+    const sub_record_sequence_t & output,
+    const std::string & merged_enam_data)
 {
 	sub_record_sequence_t result;
 
@@ -238,17 +246,17 @@ sub_record_sequence_t sub_record_merge_t::replace_enam_entries(
 	}
 
 	for (size_t offset = 0; offset + enam_slot_size <= merged_enam_data.size(); offset += enam_slot_size)
-		result.push_back({"ENAM", merged_enam_data.substr(offset, enam_slot_size)});
+		result.push_back({ "ENAM", merged_enam_data.substr(offset, enam_slot_size) });
 
 	return result;
 }
 
 void sub_record_merge_t::apply_intermediate(
-	sub_record_sequence_t & output,
-	const sub_record_sequence_t & first,
-	const sub_record_sequence_t & intermediate,
-	const sub_record_sequence_t & winner,
-	const std::string & rec_type)
+    sub_record_sequence_t & output,
+    const sub_record_sequence_t & first,
+    const sub_record_sequence_t & intermediate,
+    const sub_record_sequence_t & winner,
+    const std::string & rec_type)
 {
 	for (size_t i = 0; i < intermediate.size(); ++i)
 	{
@@ -292,20 +300,20 @@ void sub_record_merge_t::apply_intermediate(
 		    winner[winner_idx].data.size() == first[first_idx].data.size())
 		{
 			output[output_idx].data = merge_bytes_three_way(
-				first[first_idx].data.data(),
-				intermediate[i].data.data(),
-				winner[winner_idx].data.data(),
-				first[first_idx].data.size());
+			    first[first_idx].data.data(),
+			    intermediate[i].data.data(),
+			    winner[winner_idx].data.data(),
+			    first[first_idx].data.size());
 
 			if (rec_type == "CREA" && intermediate[i].type == "NPDT" && first[first_idx].data.size() == 96)
 			{
 				fix_paired_fields(
-					output[output_idx].data,
-					first[first_idx].data,
-					intermediate[i].data,
-					winner[winner_idx].data,
-					crea_npdt_attack_pairs,
-					3);
+				    output[output_idx].data,
+				    first[first_idx].data,
+				    intermediate[i].data,
+				    winner[winner_idx].data,
+				    crea_npdt_attack_pairs,
+				    3);
 			}
 
 			continue;
@@ -324,10 +332,10 @@ void sub_record_merge_t::apply_intermediate(
 merge_result_t sub_record_merge_t::merge(const merge_input_t & input)
 {
 	if (input.rec_type == "CELL")
-		return {false, input.version_contents.back()};
+		return { false, input.version_contents.back() };
 
 	if (input.rec_type == "SCPT")
-		return {false, input.version_contents.back()};
+		return { false, input.version_contents.back() };
 
 	return merge_generic(input);
 }
@@ -338,8 +346,7 @@ merge_result_t sub_record_merge_t::merge(const merge_input_t & input)
 
 uint32_t sub_record_merge_t::read_frmr_index(const sub_record_entry_t & frmr_entry)
 {
-	return static_cast<uint32_t>(
-		tools_t::convert_string_byte_array_to_uint(frmr_entry.data.substr(0, 4)));
+	return static_cast<uint32_t>(tools_t::convert_string_byte_array_to_uint(frmr_entry.data.substr(0, 4)));
 }
 
 cell_partition_t sub_record_merge_t::partition_cell(const std::string & content)
@@ -351,7 +358,7 @@ cell_partition_t sub_record_merge_t::partition_cell(const std::string & content)
 
 	while (iter.next(view))
 	{
-		sub_record_entry_t entry{view.type, std::string(view.data, view.size)};
+		sub_record_entry_t entry { view.type, std::string(view.data, view.size) };
 
 		if (view.type == "FRMR")
 		{
@@ -383,10 +390,10 @@ frmr_map_t sub_record_merge_t::build_frmr_map(const std::vector<frmr_group_t> & 
 }
 
 void sub_record_merge_t::apply_intermediate_to_group(
-	sub_record_sequence_t & output,
-	const sub_record_sequence_t & first,
-	const sub_record_sequence_t & intermediate,
-	const sub_record_sequence_t & winner)
+    sub_record_sequence_t & output,
+    const sub_record_sequence_t & first,
+    const sub_record_sequence_t & intermediate,
+    const sub_record_sequence_t & winner)
 {
 	for (size_t i = 0; i < intermediate.size(); ++i)
 	{
@@ -417,9 +424,9 @@ void sub_record_merge_t::apply_intermediate_to_group(
 }
 
 sub_record_sequence_t sub_record_merge_t::merge_frmr_group(
-	const sub_record_sequence_t & first_subs,
-	const sub_record_sequence_t & inter_subs,
-	const sub_record_sequence_t & winner_subs)
+    const sub_record_sequence_t & first_subs,
+    const sub_record_sequence_t & inter_subs,
+    const sub_record_sequence_t & winner_subs)
 {
 	auto output = winner_subs;
 	apply_intermediate_to_group(output, first_subs, inter_subs, winner_subs);
@@ -427,9 +434,9 @@ sub_record_sequence_t sub_record_merge_t::merge_frmr_group(
 }
 
 std::string sub_record_merge_t::reconstruct_cell(
-	const std::string & winner_content,
-	const sub_record_sequence_t & header,
-	const std::vector<frmr_group_t> & groups)
+    const std::string & winner_content,
+    const sub_record_sequence_t & header,
+    const std::vector<frmr_group_t> & groups)
 {
 	std::string body;
 
@@ -450,10 +457,10 @@ std::string sub_record_merge_t::reconstruct_cell(
 }
 
 void sub_record_merge_t::collect_intermediate_additions(
-	std::vector<frmr_group_t> & merged_groups,
-	const std::vector<std::string> & versions,
-	const frmr_map_t & first_map,
-	const frmr_map_t & winner_map)
+    std::vector<frmr_group_t> & merged_groups,
+    const std::vector<std::string> & versions,
+    const frmr_map_t & first_map,
+    const frmr_map_t & winner_map)
 {
 	for (size_t v = versions.size() - 2; v >= 1; --v)
 	{
@@ -485,10 +492,10 @@ void sub_record_merge_t::collect_intermediate_additions(
 }
 
 void sub_record_merge_t::merge_winner_frmr_groups(
-	std::vector<frmr_group_t> & merged_groups,
-	const std::vector<std::string> & versions,
-	const frmr_map_t & first_map,
-	const frmr_map_t & winner_map)
+    std::vector<frmr_group_t> & merged_groups,
+    const std::vector<std::string> & versions,
+    const frmr_map_t & first_map,
+    const frmr_map_t & winner_map)
 {
 	for (const auto & [index, winner_group] : winner_map)
 	{
@@ -511,11 +518,10 @@ void sub_record_merge_t::merge_winner_frmr_groups(
 			if (it_inter == inter_map.end())
 				continue;
 
-			merged_subs = merge_frmr_group(
-				it_first->second.sub_records, it_inter->second.sub_records, merged_subs);
+			merged_subs = merge_frmr_group(it_first->second.sub_records, it_inter->second.sub_records, merged_subs);
 		}
 
-		merged_groups.push_back({index, std::move(merged_subs)});
+		merged_groups.push_back({ index, std::move(merged_subs) });
 	}
 }
 
@@ -524,7 +530,7 @@ merge_result_t sub_record_merge_t::merge_cell_refs(const merge_input_t & input)
 	const auto & versions = input.version_contents;
 
 	if (versions.size() < 3)
-		return {false, versions.back()};
+		return { false, versions.back() };
 
 	const auto & first_content = versions.front();
 	const auto & winner_content = versions.back();
@@ -537,8 +543,7 @@ merge_result_t sub_record_merge_t::merge_cell_refs(const merge_input_t & input)
 	for (size_t v = versions.size() - 2; v >= 1; --v)
 	{
 		const auto inter_part = partition_cell(versions[v]);
-		apply_intermediate(
-			merged_header, first_part.header, inter_part.header, winner_part.header, "CELL");
+		apply_intermediate(merged_header, first_part.header, inter_part.header, winner_part.header, "CELL");
 	}
 
 	const auto first_map = build_frmr_map(first_part.groups);
@@ -548,18 +553,17 @@ merge_result_t sub_record_merge_t::merge_cell_refs(const merge_input_t & input)
 	merge_winner_frmr_groups(merged_groups, versions, first_map, winner_map);
 	collect_intermediate_additions(merged_groups, versions, first_map, winner_map);
 
-	std::sort(merged_groups.begin(), merged_groups.end(),
-		[](const frmr_group_t & lhs, const frmr_group_t & rhs)
-		{
-			return lhs.frmr_index < rhs.frmr_index;
-		});
+	std::sort(
+	    merged_groups.begin(),
+	    merged_groups.end(),
+	    [](const frmr_group_t & lhs, const frmr_group_t & rhs) { return lhs.frmr_index < rhs.frmr_index; });
 
 	const auto result = reconstruct_cell(winner_content, merged_header, merged_groups);
 
 	if (result == winner_content)
-		return {false, winner_content};
+		return { false, winner_content };
 
-	return {true, result};
+	return { true, result };
 }
 
 static constexpr size_t npco_item_id_offset = 4;
@@ -604,10 +608,10 @@ static bool has_npco_entries(const sub_record_sequence_t & sequence)
 }
 
 static std::vector<sub_record_entry_t> merge_npco_items(
-	const std::vector<sub_record_entry_t> & first_items,
-	const std::vector<sub_record_entry_t> & inter_items,
-	const std::vector<sub_record_entry_t> & winner_items,
-	bool is_patch_intermediate)
+    const std::vector<sub_record_entry_t> & first_items,
+    const std::vector<sub_record_entry_t> & inter_items,
+    const std::vector<sub_record_entry_t> & winner_items,
+    bool is_patch_intermediate)
 {
 	std::set<std::string> winner_ids;
 	for (const auto & item : winner_items)
@@ -639,8 +643,8 @@ static std::vector<sub_record_entry_t> merge_npco_items(
 }
 
 static sub_record_sequence_t replace_npco_entries(
-	const sub_record_sequence_t & output,
-	const std::vector<sub_record_entry_t> & merged_items)
+    const sub_record_sequence_t & output,
+    const std::vector<sub_record_entry_t> & merged_items)
 {
 	sub_record_sequence_t result;
 
@@ -683,7 +687,7 @@ merge_result_t sub_record_merge_t::merge_generic(const merge_input_t & input)
 	const auto & versions = input.version_contents;
 
 	if (versions.size() < 3)
-		return {false, versions.back()};
+		return { false, versions.back() };
 
 	const auto & first_content = versions.front();
 	const auto & winner_content = versions.back();
@@ -780,7 +784,7 @@ merge_result_t sub_record_merge_t::merge_generic(const merge_input_t & input)
 	const auto result = reconstruct_record(winner_content, output);
 
 	if (result == winner_content)
-		return {false, winner_content};
+		return { false, winner_content };
 
-	return {true, result};
+	return { true, result };
 }

@@ -184,9 +184,7 @@ void plugin_scan_t::remove_from_merge(const std::string & type, const std::strin
 	m_merge_records.erase(it, m_merge_records.end());
 }
 
-const std::string * plugin_scan_t::find_merge_content(
-    const std::string & rec_type,
-    const std::string & record_id) const
+const std::string * plugin_scan_t::find_merge_content(const std::string & rec_type, const std::string & record_id) const
 {
 	for (const auto & mr : m_merge_records)
 	{
@@ -244,9 +242,7 @@ bool plugin_scan_t::save_merge(
 	if (!error_code)
 		return true;
 
-	std::filesystem::copy_file(
-	    temp_path, output_path,
-	    std::filesystem::copy_options::overwrite_existing, error_code);
+	std::filesystem::copy_file(temp_path, output_path, std::filesystem::copy_options::overwrite_existing, error_code);
 
 	std::filesystem::remove(temp_path, error_code);
 
@@ -451,7 +447,10 @@ static std::vector<list_item_t> build_merged_items(
 
 static void sort_merged_items(std::vector<list_item_t> & items)
 {
-	std::sort(items.begin(), items.end(), [](const list_item_t & left, const list_item_t & right)
+	std::sort(
+	    items.begin(),
+	    items.end(),
+	    [](const list_item_t & left, const list_item_t & right)
 	{
 		if (left.level != right.level)
 			return left.level < right.level;
@@ -497,7 +496,7 @@ merge_result_t leveled_list_merge_t::merge(const merge_input_t & input)
 {
 	const auto & versions = input.version_contents;
 	if (versions.size() < 2)
-		return {false, {}};
+		return { false, {} };
 
 	const auto & first_content = versions.front();
 	const auto first_map = build_item_count_map(extract_list_items(first_content));
@@ -512,7 +511,7 @@ merge_result_t leveled_list_merge_t::merge(const merge_input_t & input)
 	}
 
 	if (non_first_maps.empty())
-		return {false, {}};
+		return { false, {} };
 
 	auto merged = build_merged_items(first_map, non_first_maps);
 	sort_merged_items(merged);
@@ -521,9 +520,9 @@ merge_result_t leveled_list_merge_t::merge(const merge_input_t & input)
 	const auto record = build_merged_list_record(input.rec_type, header_part, merged);
 
 	if (record == winning_content)
-		return {false, winning_content};
+		return { false, winning_content };
 
-	return {true, record};
+	return { true, record };
 }
 
 void plugin_scan_t::merge_dialogue(const conflict_entry_t & entry)

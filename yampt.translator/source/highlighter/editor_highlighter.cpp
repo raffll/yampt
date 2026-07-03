@@ -5,8 +5,7 @@ editor_highlighter_t::editor_highlighter_t(QTextDocument * parent)
     : QSyntaxHighlighter(parent)
 {
 	on_theme_changed();
-	connect(&theme_system_t::instance(), &theme_system_t::theme_changed,
-	        this, &editor_highlighter_t::on_theme_changed);
+	connect(&theme_system_t::instance(), &theme_system_t::theme_changed, this, &editor_highlighter_t::on_theme_changed);
 }
 
 void editor_highlighter_t::on_theme_changed()

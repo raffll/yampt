@@ -33,8 +33,12 @@ editor_window_t::editor_window_t(QWidget * parent)
 	setup_toolbar();
 	load_config();
 
-	connect(&theme_system_t::instance(), &theme_system_t::theme_changed,
-	        this, [this](theme_t) {
+	connect(
+	    &theme_system_t::instance(),
+	    &theme_system_t::theme_changed,
+	    this,
+	    [this](theme_t)
+	{
 		theme_system_t::instance().apply_to_application();
 		m_plugin_workspace_view->refresh_views();
 	});

@@ -1,10 +1,10 @@
 #pragma once
 
+#include <utility/theme_enums.hpp>
 #include <string>
 #include <vector>
 #include <QSettings>
 #include <QString>
-#include <utility/theme_enums.hpp>
 
 class app_settings_t
 {

@@ -1,7 +1,7 @@
 #pragma once
 #include <scanner/conflict_enums.hpp>
-#include <utility/theme_enums.hpp>
 #include <utility/color_palette.hpp>
+#include <utility/theme_enums.hpp>
 #include <algorithm>
 #include <QColor>
 

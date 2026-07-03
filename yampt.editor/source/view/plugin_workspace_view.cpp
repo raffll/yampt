@@ -1,14 +1,14 @@
 #include "plugin_workspace_view.hpp"
 #include "../dialog/filter_dialog.hpp"
 #include "../dialog/plugin_select_dialog.hpp"
-#include <app_settings.hpp>
+#include <scanner/cell_name_fixer.hpp>
+#include <scanner/fog_fixer.hpp>
+#include <scanner/merge_compute.hpp>
 #include <scanner/merge_patch_ops.hpp>
 #include <scanner/sub_record_merge.hpp>
-#include <scanner/merge_compute.hpp>
-#include <scanner/fog_fixer.hpp>
 #include <scanner/summon_fixer.hpp>
-#include <scanner/cell_name_fixer.hpp>
 #include <algorithm>
+#include <app_settings.hpp>
 #include <functional>
 #include <regex>
 #include <set>
@@ -177,7 +177,9 @@ void plugin_workspace_view_t::setup_connections()
 	connect(copy_shortcut, &QShortcut::activated, this, &plugin_workspace_view_t::on_view_copy);
 }
 
-void plugin_workspace_view_t::load_plugins_from_paths(const std::vector<std::string> & paths, const std::string & base_path)
+void plugin_workspace_view_t::load_plugins_from_paths(
+    const std::vector<std::string> & paths,
+    const std::string & base_path)
 {
 	plugin_select_dialog_t dlg(paths, this);
 	if (dlg.exec() != QDialog::Accepted)
@@ -225,8 +227,8 @@ void plugin_workspace_view_t::load_plugins_direct(const std::vector<std::string>
 			{
 				const auto & idx = m_scan.index(loaded_idx);
 				log_message(
-				    "Loaded " + m_scan.plugin_filename(loaded_idx) + " (" +
-				    std::to_string(idx.entries().size()) + " records indexed)");
+				    "Loaded " + m_scan.plugin_filename(loaded_idx) + " (" + std::to_string(idx.entries().size()) +
+				    " records indexed)");
 			}
 		}
 		catch (const std::exception & e)
@@ -394,9 +396,7 @@ std::vector<std::string> plugin_workspace_view_t::parse_mo2_profile(const QStrin
 
 	auto paths = resolve_mo2_plugins(plugin_names, context);
 
-	static const std::vector<std::string> master_files = {
-		"Morrowind.esm", "Tribunal.esm", "Bloodmoon.esm"
-	};
+	static const std::vector<std::string> master_files = { "Morrowind.esm", "Tribunal.esm", "Bloodmoon.esm" };
 
 	for (const auto & master : master_files)
 	{
@@ -413,7 +413,9 @@ std::vector<std::string> plugin_workspace_view_t::parse_mo2_profile(const QStrin
 		}
 
 		if (!found)
-			log_message("[warning] master file not found in load order: " + master + " (searched in " + context.game_data_path.toStdString() + ")");
+			log_message(
+			    "[warning] master file not found in load order: " + master + " (searched in " +
+			    context.game_data_path.toStdString() + ")");
 	}
 
 	const auto merge_full_path = context.overwrite_path + "/Merged Patch.esp";
@@ -802,8 +804,7 @@ void plugin_workspace_view_t::on_save_plugin()
 	}
 
 	bool ok_author = false;
-	auto author =
-	    QInputDialog::getText(this, "Plugin Author", "Author:", QLineEdit::Normal, QString(), &ok_author);
+	auto author = QInputDialog::getText(this, "Plugin Author", "Author:", QLineEdit::Normal, QString(), &ok_author);
 
 	if (!ok_author)
 		return;
@@ -822,8 +823,7 @@ void plugin_workspace_view_t::on_save_plugin()
 
 	if (result)
 	{
-		log_message(
-		    "[info] saved " + output_path + " (" + std::to_string(m_scan.merge_record_count()) + " records)");
+		log_message("[info] saved " + output_path + " (" + std::to_string(m_scan.merge_record_count()) + " records)");
 	}
 	else
 	{
@@ -1179,7 +1179,9 @@ void plugin_workspace_view_t::on_nav_context_menu(const QPoint & pos)
 
 		if (excluded)
 		{
-			menu.addAction("Include in Merge", [this, filename]()
+			menu.addAction(
+			    "Include in Merge",
+			    [this, filename]()
 			{
 				m_excluded_plugins.erase(filename);
 				save_excluded_plugins();
@@ -1188,7 +1190,9 @@ void plugin_workspace_view_t::on_nav_context_menu(const QPoint & pos)
 		}
 		else
 		{
-			menu.addAction("Exclude from Merge", [this, filename]()
+			menu.addAction(
+			    "Exclude from Merge",
+			    [this, filename]()
 			{
 				m_excluded_plugins.insert(filename);
 				save_excluded_plugins();
@@ -1198,7 +1202,9 @@ void plugin_workspace_view_t::on_nav_context_menu(const QPoint & pos)
 
 		if (is_patch)
 		{
-			menu.addAction("Unmark as Patch", [this, filename]()
+			menu.addAction(
+			    "Unmark as Patch",
+			    [this, filename]()
 			{
 				m_patch_plugins.erase(filename);
 				save_patch_plugins();
@@ -1207,7 +1213,9 @@ void plugin_workspace_view_t::on_nav_context_menu(const QPoint & pos)
 		}
 		else
 		{
-			menu.addAction("Mark as Patch", [this, filename]()
+			menu.addAction(
+			    "Mark as Patch",
+			    [this, filename]()
 			{
 				m_patch_plugins.insert(filename);
 				save_patch_plugins();
@@ -1290,8 +1298,7 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & pos)
 	if (col >= 0 && col < static_cast<int>(col_indices.size()))
 	{
 		auto it_type = col_indices[col].find(row.type);
-		if (it_type != col_indices[col].end() &&
-		    view_occurrence < static_cast<int>(it_type->second.size()) &&
+		if (it_type != col_indices[col].end() && view_occurrence < static_cast<int>(it_type->second.size()) &&
 		    it_type->second[view_occurrence] != SIZE_MAX)
 		{
 			binary_idx = static_cast<int>(it_type->second[view_occurrence]);
@@ -1307,37 +1314,37 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & pos)
 	if (!is_on_merge && is_sub_record_row && !is_field_row)
 	{
 		const auto sub_type = row.type;
-		menu.addAction("Copy Sub-Record to Merged Patch", [this, plugin_idx, rec_type, record_id, sub_type, binary_idx]()
-		{
-			copy_sub_record_to_merge(plugin_idx, rec_type, record_id, sub_type, binary_idx);
-		});
+		menu.addAction(
+		    "Copy Sub-Record to Merged Patch",
+		    [this, plugin_idx, rec_type, record_id, sub_type, binary_idx]()
+		{ copy_sub_record_to_merge(plugin_idx, rec_type, record_id, sub_type, binary_idx); });
 	}
 
 	if (!is_on_merge && is_schema_row && !is_field_row)
 	{
 		const auto sub_type = row.type;
-		menu.addAction("Copy Sub-Record to Merged Patch", [this, plugin_idx, rec_type, record_id, sub_type, binary_idx]()
-		{
-			copy_sub_record_to_merge(plugin_idx, rec_type, record_id, sub_type, binary_idx);
-		});
+		menu.addAction(
+		    "Copy Sub-Record to Merged Patch",
+		    [this, plugin_idx, rec_type, record_id, sub_type, binary_idx]()
+		{ copy_sub_record_to_merge(plugin_idx, rec_type, record_id, sub_type, binary_idx); });
 	}
 
 	if (!is_on_merge && is_group_row && !is_field_row)
 	{
-		menu.addAction("Copy Group to Merged Patch", [this, plugin_idx, rec_type, record_id, parent_row_idx]()
-		{
-			copy_group_to_merge(plugin_idx, rec_type, record_id, parent_row_idx);
-		});
+		menu.addAction(
+		    "Copy Group to Merged Patch",
+		    [this, plugin_idx, rec_type, record_id, parent_row_idx]()
+		{ copy_group_to_merge(plugin_idx, rec_type, record_id, parent_row_idx); });
 	}
 
 	if (!is_on_merge && is_field_row && is_schema_row)
 	{
 		const auto sub_type = row.type;
 		const auto sub_size = row.size;
-		menu.addAction("Copy Field to Merged Patch", [this, plugin_idx, rec_type, record_id, sub_type, sub_size, binary_idx, child_field_idx]()
-		{
-			copy_field_to_merge(plugin_idx, rec_type, record_id, sub_type, sub_size, binary_idx, child_field_idx);
-		});
+		menu.addAction(
+		    "Copy Field to Merged Patch",
+		    [this, plugin_idx, rec_type, record_id, sub_type, sub_size, binary_idx, child_field_idx]()
+		{ copy_field_to_merge(plugin_idx, rec_type, record_id, sub_type, sub_size, binary_idx, child_field_idx); });
 	}
 
 	if (!is_on_merge && is_field_row && is_group_row)
@@ -1369,11 +1376,10 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & pos)
 
 				if (child_binary_idx >= 0)
 				{
-					menu.addAction("Copy Sub-Record to Merged Patch",
+					menu.addAction(
+					    "Copy Sub-Record to Merged Patch",
 					    [this, plugin_idx, rec_type, record_id, child_sub_type, child_binary_idx]()
-					{
-						copy_sub_record_to_merge(plugin_idx, rec_type, record_id, child_sub_type, child_binary_idx);
-					});
+					{ copy_sub_record_to_merge(plugin_idx, rec_type, record_id, child_sub_type, child_binary_idx); });
 				}
 			}
 		}
@@ -1381,7 +1387,9 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & pos)
 
 	if (is_on_merge && (is_sub_record_row || is_schema_row) && !is_field_row)
 	{
-		menu.addAction("Remove Sub-Record", [this, rec_type, record_id, binary_idx]()
+		menu.addAction(
+		    "Remove Sub-Record",
+		    [this, rec_type, record_id, binary_idx]()
 		{
 			const auto * merge_content_ptr = m_scan.find_merge_content(rec_type, record_id);
 			if (!merge_content_ptr)
@@ -1401,7 +1409,9 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & pos)
 			save_merged_patch();
 		});
 
-		menu.addAction("Remove Record from Merge", [this, rec_type, record_id]()
+		menu.addAction(
+		    "Remove Record from Merge",
+		    [this, rec_type, record_id]()
 		{
 			m_scan.remove_from_merge(rec_type, record_id);
 			m_scan.rebuild_conflicts();

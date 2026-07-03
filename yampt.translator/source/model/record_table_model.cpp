@@ -1,7 +1,7 @@
 #include "record_table_model.hpp"
-#include <theme_system.hpp>
 #include "../view/status_display.hpp"
 #include <algorithm>
+#include <theme_system.hpp>
 #include <QString>
 
 static QString first_line(const std::string & text)
@@ -113,10 +113,7 @@ QVariant record_table_model_t::data(const QModelIndex & index, int role) const
 
 		if (theme.active_theme() == theme_t::dark)
 		{
-			return QColor(
-			    color.red() * 30 / 100,
-			    color.green() * 30 / 100,
-			    color.blue() * 30 / 100);
+			return QColor(color.red() * 30 / 100, color.green() * 30 / 100, color.blue() * 30 / 100);
 		}
 
 		return QColor(

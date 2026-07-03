@@ -8,8 +8,7 @@
 #include <QLineEdit>
 #include <QVBoxLayout>
 
-namespace
-{
+namespace {
 
 struct language_entry_t
 {
@@ -21,39 +20,39 @@ struct language_entry_t
 };
 
 constexpr language_entry_t languages[] = {
-	{"English",    "EN", "eng_Latn", "en_US", 2},
-	{"Polish",     "PL", "pol_Latn", "pl_PL", 0},
-	{"German",     "DE", "deu_Latn", "de_DE", 2},
-	{"French",     "FR", "fra_Latn", "fr_FR", 2},
-	{"Russian",    "RU", "rus_Cyrl", "ru_RU", 1},
-	{"Spanish",    "ES", "spa_Latn", "es_ES", 2},
-	{"Italian",    "IT", "ita_Latn", "it_IT", 2},
-	{"Portuguese", "PT", "por_Latn", "pt_PT", 2},
-	{"Dutch",      "NL", "nld_Latn", "nl_NL", 2},
-	{"Czech",      "CZ", "ces_Latn", "cs_CZ", 0},
-	{"Ukrainian",  "UA", "ukr_Cyrl", "uk_UA", 1},
-	{"Romanian",   "RO", "ron_Latn", "ro_RO", 2},
-	{"Hungarian",  "HU", "hun_Latn", "hu_HU", 0},
-	{"Bulgarian",  "BG", "bul_Cyrl", "bg_BG", 1},
-	{"Croatian",   "HR", "hrv_Latn", "hr_HR", 0},
-	{"Slovak",     "SK", "slk_Latn", "sk_SK", 0},
-	{"Slovenian",  "SI", "slv_Latn", "sl_SI", 0},
-	{"Serbian",    "RS", "srp_Cyrl", "sr_RS", 1},
-	{"Danish",     "DK", "dan_Latn", "da_DK", 2},
-	{"Finnish",    "FI", "fin_Latn", "fi_FI", 2},
-	{"Norwegian",  "NO", "nob_Latn", "nb_NO", 2},
-	{"Swedish",    "SE", "swe_Latn", "sv_SE", 2},
-	{"Turkish",    "TR", "tur_Latn", "tr_TR", 2},
-	{"Greek",      "GR", "ell_Grek", "el_GR", 2},
-	{"Japanese",   "JP", "jpn_Jpan", "ja_JP", 2},
-	{"Korean",     "KR", "kor_Hang", "ko_KR", 2},
-	{"Chinese (Simplified)",  "CN", "zho_Hans", "zh_CN", 2},
-	{"Chinese (Traditional)", "TW", "zho_Hant", "zh_TW", 2},
-	{"Arabic",     "AR", "arb_Arab", "ar_SA", 2},
-	{"Hindi",      "IN", "hin_Deva", "hi_IN", 2},
-	{"Vietnamese", "VN", "vie_Latn", "vi_VN", 2},
-	{"Thai",       "TH", "tha_Thai", "th_TH", 2},
-	{"Indonesian", "ID", "ind_Latn", "id_ID", 2},
+	{ "English", "EN", "eng_Latn", "en_US", 2 },
+	{ "Polish", "PL", "pol_Latn", "pl_PL", 0 },
+	{ "German", "DE", "deu_Latn", "de_DE", 2 },
+	{ "French", "FR", "fra_Latn", "fr_FR", 2 },
+	{ "Russian", "RU", "rus_Cyrl", "ru_RU", 1 },
+	{ "Spanish", "ES", "spa_Latn", "es_ES", 2 },
+	{ "Italian", "IT", "ita_Latn", "it_IT", 2 },
+	{ "Portuguese", "PT", "por_Latn", "pt_PT", 2 },
+	{ "Dutch", "NL", "nld_Latn", "nl_NL", 2 },
+	{ "Czech", "CZ", "ces_Latn", "cs_CZ", 0 },
+	{ "Ukrainian", "UA", "ukr_Cyrl", "uk_UA", 1 },
+	{ "Romanian", "RO", "ron_Latn", "ro_RO", 2 },
+	{ "Hungarian", "HU", "hun_Latn", "hu_HU", 0 },
+	{ "Bulgarian", "BG", "bul_Cyrl", "bg_BG", 1 },
+	{ "Croatian", "HR", "hrv_Latn", "hr_HR", 0 },
+	{ "Slovak", "SK", "slk_Latn", "sk_SK", 0 },
+	{ "Slovenian", "SI", "slv_Latn", "sl_SI", 0 },
+	{ "Serbian", "RS", "srp_Cyrl", "sr_RS", 1 },
+	{ "Danish", "DK", "dan_Latn", "da_DK", 2 },
+	{ "Finnish", "FI", "fin_Latn", "fi_FI", 2 },
+	{ "Norwegian", "NO", "nob_Latn", "nb_NO", 2 },
+	{ "Swedish", "SE", "swe_Latn", "sv_SE", 2 },
+	{ "Turkish", "TR", "tur_Latn", "tr_TR", 2 },
+	{ "Greek", "GR", "ell_Grek", "el_GR", 2 },
+	{ "Japanese", "JP", "jpn_Jpan", "ja_JP", 2 },
+	{ "Korean", "KR", "kor_Hang", "ko_KR", 2 },
+	{ "Chinese (Simplified)", "CN", "zho_Hans", "zh_CN", 2 },
+	{ "Chinese (Traditional)", "TW", "zho_Hant", "zh_TW", 2 },
+	{ "Arabic", "AR", "arb_Arab", "ar_SA", 2 },
+	{ "Hindi", "IN", "hin_Deva", "hi_IN", 2 },
+	{ "Vietnamese", "VN", "vie_Latn", "vi_VN", 2 },
+	{ "Thai", "TH", "tha_Thai", "th_TH", 2 },
+	{ "Indonesian", "ID", "ind_Latn", "id_ID", 2 },
 };
 
 constexpr int language_count = sizeof(languages) / sizeof(languages[0]);
@@ -155,11 +154,17 @@ language_settings_view_t::language_settings_view_t(const std::string & dictionar
 
 	scan_dictionaries(m_dictionaries_dir);
 
-	connect(m_native_language_combo, &QComboBox::currentIndexChanged,
-	        this, &language_settings_view_t::on_native_language_changed);
+	connect(
+	    m_native_language_combo,
+	    &QComboBox::currentIndexChanged,
+	    this,
+	    &language_settings_view_t::on_native_language_changed);
 
-	connect(m_foreign_language_combo, &QComboBox::currentIndexChanged,
-	        this, &language_settings_view_t::on_foreign_language_changed);
+	connect(
+	    m_foreign_language_combo,
+	    &QComboBox::currentIndexChanged,
+	    this,
+	    &language_settings_view_t::on_foreign_language_changed);
 }
 
 void language_settings_view_t::load(const app_settings_t & settings)

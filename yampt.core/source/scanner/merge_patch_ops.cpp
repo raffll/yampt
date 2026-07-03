@@ -52,7 +52,8 @@ patch_result_t merge_patch_ops_t::patch_group(
 				++source_occurrence;
 		}
 
-		const auto merge_idx = sub_record_merge_t::find_by_type_and_occurrence(merge_subs, child_sub_type, source_occurrence);
+		const auto merge_idx =
+		    sub_record_merge_t::find_by_type_and_occurrence(merge_subs, child_sub_type, source_occurrence);
 		if (merge_idx < 0)
 			merge_subs.push_back(source_sub);
 		else

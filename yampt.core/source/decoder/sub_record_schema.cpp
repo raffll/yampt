@@ -516,10 +516,8 @@ static const field_def_t glob_fltv_fields[] = {
 	{ "Value", field_type_t::f32, 0, 4, nullptr, nullptr },
 };
 
-static const char * const sndg_types[] = {
-	"Left Foot", "Right Foot", "Swim Left", "Swim Right",
-	"Moan", "Roar", "Scream", "Land", nullptr
-};
+static const char * const sndg_types[] = { "Left Foot", "Right Foot", "Swim Left", "Swim Right", "Moan",
+	                                       "Roar",      "Scream",     "Land",      nullptr };
 
 static const field_def_t sndg_data_fields[] = {
 	{ "Type", field_type_t::enum_u32, 0, 4, sndg_types, nullptr },
@@ -862,13 +860,20 @@ static const field_def_t indx_fields[] = {
 	{ "Index", field_type_t::u32, 0, 4, nullptr, nullptr },
 };
 
-static const char * const armo_part_names[] = {
-	"Head",            "Hair",            "Neck",             "Cuirass",        "Groin",
-	"Skirt",           "Right Hand",      "Left Hand",        "Right Wrist",    "Left Wrist",
-	"Shield",          "Right Forearm",   "Left Forearm",     "Right Upper Arm","Left Upper Arm",
-	"Right Foot",      "Left Foot",       "Right Ankle",      "Left Ankle",     "Right Knee",
-	"Left Knee",       "Right Upper Leg", "Left Upper Leg",   "Right Pauldron", "Left Pauldron",
-	"Weapon",          "Tail",            nullptr };
+static const char * const armo_part_names[] = { "Head",           "Hair",
+	                                            "Neck",           "Cuirass",
+	                                            "Groin",          "Skirt",
+	                                            "Right Hand",     "Left Hand",
+	                                            "Right Wrist",    "Left Wrist",
+	                                            "Shield",         "Right Forearm",
+	                                            "Left Forearm",   "Right Upper Arm",
+	                                            "Left Upper Arm", "Right Foot",
+	                                            "Left Foot",      "Right Ankle",
+	                                            "Left Ankle",     "Right Knee",
+	                                            "Left Knee",      "Right Upper Leg",
+	                                            "Left Upper Leg", "Right Pauldron",
+	                                            "Left Pauldron",  "Weapon",
+	                                            "Tail",           nullptr };
 
 static const field_def_t armo_indx_fields[] = {
 	{ "Part", field_type_t::enum_u8, 0, 1, armo_part_names, nullptr },

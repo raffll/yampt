@@ -1,7 +1,7 @@
 #include "main_window.hpp"
+#include <utility/tools.hpp>
 #include <app_settings.hpp>
 #include <theme_system.hpp>
-#include <utility/tools.hpp>
 #include <QApplication>
 #include <QStyleFactory>
 

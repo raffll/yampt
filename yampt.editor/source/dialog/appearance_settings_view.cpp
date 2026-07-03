@@ -1,14 +1,14 @@
 #include "dialog/appearance_settings_view.hpp"
-#include <app_settings.hpp>
 #include <utility/theme_enums.hpp>
+#include <app_settings.hpp>
 #include <theme_system.hpp>
 #include <QComboBox>
 #include <QLabel>
 #include <QVBoxLayout>
 
 appearance_settings_view_t::appearance_settings_view_t(QWidget * parent)
-	: QWidget(parent)
-	, m_initial_theme(theme_t::light)
+    : QWidget(parent)
+    , m_initial_theme(theme_t::light)
 {
 	auto * layout = new QVBoxLayout(this);
 

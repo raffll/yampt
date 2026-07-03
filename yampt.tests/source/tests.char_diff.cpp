@@ -87,8 +87,7 @@ TEST_CASE("compute_char_diff, completely different strings", "[u]")
 	REQUIRE(reconstructed_old == "abc");
 }
 
-namespace
-{
+namespace {
 
 struct highlight_range_t
 {

@@ -29,11 +29,11 @@
 #include <io/dict_writer.hpp>
 #include <merger/dict_merger.hpp>
 #include <utility/string_utils.hpp>
-#include <theme_system.hpp>
 #include <algorithm>
 #include <filesystem>
 #include <map>
 #include <set>
+#include <theme_system.hpp>
 #include <unordered_map>
 #include <QAction>
 #include <QCloseEvent>
