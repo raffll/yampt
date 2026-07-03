@@ -1212,16 +1212,19 @@ bool plugin_workspace_view_t::handle_subrecord_drop(QDropEvent * drop_event)
 	m_scan.copy_record_to_merge_raw(rec_type, record_id, patched);
 
 	log_message("[info] patched " + sub_type + " in " + rec_type + ":" + record_id);
-
-	m_scan.rebuild_conflicts();
-	rebuild_nav_preserving_state();
-	save_merged_patch();
-
-	const auto * updated = m_scan.find(rec_type, record_id);
-	if (updated)
-		display_record_in_view(*updated);
-
 	drop_event->accept();
+
+	QTimer::singleShot(0, this, [this, rec_type, record_id]()
+	{
+		m_scan.rebuild_conflicts();
+		rebuild_nav_preserving_state();
+		save_merged_patch();
+
+		const auto * updated = m_scan.find(rec_type, record_id);
+		if (updated)
+			display_record_in_view(*updated);
+	});
+
 	return true;
 }
 
