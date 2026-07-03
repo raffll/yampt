@@ -102,3 +102,7 @@ Every exit path in `rebuild_table()` calls `clear_editor_panels()` after `editor
 ## Details Panel
 
 The Details panel shows for ANY entry with non-empty `details` field (not just adapted/changed/ambiguous). For `translated` entries with method details (e.g. matched, fingerprint, heuristic), it shows the method name as plain text (no diff highlighting). Diff highlighting still only applies to `adapted` and `changed` statuses. For ambiguous entries, it displays all conflicting translations separated by ` / `.
+
+## Tree Expansion State — Never Modify
+
+Never call `expandAll()`, `collapseAll()`, or manually expand/collapse tree nodes as a side effect of any operation. Use `rebuild_nav_preserving_state()` which saves and restores the expansion state across rebuilds. The user's tree expansion is sacred — operations must not change it.

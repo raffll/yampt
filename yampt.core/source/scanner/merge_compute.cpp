@@ -73,6 +73,22 @@ void merge_compute_t::build_record_groups()
 
 void merge_compute_t::process_groups(merge_counters_t & counters)
 {
+	std::regex exclusion_regex;
+	bool has_exclusion = false;
+
+	if (!m_config.exclusion_pattern.empty())
+	{
+		try
+		{
+			exclusion_regex = std::regex(m_config.exclusion_pattern, std::regex::icase);
+			has_exclusion = true;
+		}
+		catch (...)
+		{
+			add_log("[error] invalid exclusion regex: " + m_config.exclusion_pattern);
+		}
+	}
+
 	for (const auto & group : m_groups)
 	{
 		if (group.versions.size() < 2)
@@ -84,7 +100,7 @@ void merge_compute_t::process_groups(merge_counters_t & counters)
 		if (group.rec_type == "INFO")
 			continue;
 
-		if (matches_exclusion(group.record_id))
+		if (has_exclusion && std::regex_search(group.record_id, exclusion_regex))
 			continue;
 
 		const bool is_leveled = (group.rec_type == "LEVI" || group.rec_type == "LEVC");
@@ -92,6 +108,17 @@ void merge_compute_t::process_groups(merge_counters_t & counters)
 
 		if (!is_leveled && !is_dialogue && group.versions.size() < 3)
 			continue;
+
+		if (is_leveled || is_dialogue)
+		{
+			const auto & first_ver = group.versions.front();
+			const auto & last_ver = group.versions.back();
+			const auto first_content = m_scan.read_record_content(first_ver.plugin_idx, first_ver.record_index);
+			const auto last_content = m_scan.read_record_content(last_ver.plugin_idx, last_ver.record_index);
+
+			if (first_content == last_content)
+				continue;
+		}
 
 		try
 		{

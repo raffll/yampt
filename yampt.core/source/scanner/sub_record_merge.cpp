@@ -3,6 +3,7 @@
 #include "../utility/tools.hpp"
 
 #include <algorithm>
+#include <set>
 
 static constexpr size_t enam_slot_size = 24;
 
@@ -118,16 +119,23 @@ std::string sub_record_merge_t::merge_enam_slots(
 
 	for (size_t slot = 0; slot < winner_enams.size(); ++slot)
 	{
-		if (slot < first_enams.size() &&
-			winner_enams[slot] == first_enams[slot] &&
-			slot < inter_enams.size() &&
-			inter_enams[slot] != first_enams[slot])
+		if (slot >= first_enams.size() || slot >= inter_enams.size())
 		{
-			result += inter_enams[slot];
+			result += winner_enams[slot];
 			continue;
 		}
 
-		result += winner_enams[slot];
+		if (inter_enams[slot] == first_enams[slot])
+		{
+			result += winner_enams[slot];
+			continue;
+		}
+
+		result += merge_bytes_three_way(
+			first_enams[slot].data(),
+			inter_enams[slot].data(),
+			winner_enams[slot].data(),
+			enam_slot_size);
 	}
 
 	for (size_t slot = first_enams.size(); slot < inter_enams.size(); ++slot)
@@ -174,6 +182,9 @@ void sub_record_merge_t::apply_intermediate(
 		if (is_enam_record_type(rec_type) && intermediate[i].type == "ENAM")
 			continue;
 
+		if (intermediate[i].type == "NPCO")
+			continue;
+
 		const auto occurrence = find_occurrence_index(intermediate, i);
 		const auto first_idx = find_by_type_and_occurrence(first, intermediate[i].type, occurrence);
 
@@ -181,7 +192,11 @@ void sub_record_merge_t::apply_intermediate(
 		{
 			const auto winner_idx = find_by_type_and_occurrence(winner, intermediate[i].type, occurrence);
 			if (winner_idx < 0)
-				output.push_back(intermediate[i]);
+			{
+				const auto output_idx = find_by_type_and_occurrence(output, intermediate[i].type, occurrence);
+				if (output_idx < 0)
+					output.push_back(intermediate[i]);
+			}
 
 			continue;
 		}
@@ -222,10 +237,14 @@ void sub_record_merge_t::apply_intermediate(
 merge_result_t sub_record_merge_t::merge(const merge_input_t & input)
 {
 	if (input.rec_type == "CELL")
-		return merge_cell_refs(input);
+		return {false, input.version_contents.back()};
 
 	return merge_generic(input);
 }
+
+// NOTE: merge_cell_refs is intentionally kept as dead code.
+// The engine handles FRMR merging natively at runtime.
+// This code may be needed in the future for non-engine use cases.
 
 uint32_t sub_record_merge_t::read_frmr_index(const sub_record_entry_t & frmr_entry)
 {
@@ -453,6 +472,96 @@ merge_result_t sub_record_merge_t::merge_cell_refs(const merge_input_t & input)
 	return {true, result};
 }
 
+static constexpr size_t npco_item_id_offset = 4;
+static constexpr size_t npco_item_id_length = 32;
+static constexpr size_t npco_sub_record_size = 36;
+
+static std::string extract_npco_item_id(const sub_record_entry_t & entry)
+{
+	if (entry.data.size() < npco_sub_record_size)
+		return {};
+
+	auto item_id = entry.data.substr(npco_item_id_offset, npco_item_id_length);
+	auto null_pos = item_id.find('\0');
+	if (null_pos != std::string::npos)
+		item_id.resize(null_pos);
+
+	return item_id;
+}
+
+static std::vector<sub_record_entry_t> collect_npco_entries(const sub_record_sequence_t & sequence)
+{
+	std::vector<sub_record_entry_t> result;
+
+	for (const auto & entry : sequence)
+	{
+		if (entry.type == "NPCO")
+			result.push_back(entry);
+	}
+
+	return result;
+}
+
+static bool has_npco_entries(const sub_record_sequence_t & sequence)
+{
+	for (const auto & entry : sequence)
+	{
+		if (entry.type == "NPCO")
+			return true;
+	}
+
+	return false;
+}
+
+static std::vector<sub_record_entry_t> merge_npco_items(
+	const std::vector<sub_record_entry_t> & first_items,
+	const std::vector<sub_record_entry_t> & inter_items,
+	const std::vector<sub_record_entry_t> & winner_items)
+{
+	std::set<std::string> first_ids;
+	for (const auto & item : first_items)
+		first_ids.insert(extract_npco_item_id(item));
+
+	std::set<std::string> winner_ids;
+	for (const auto & item : winner_items)
+		winner_ids.insert(extract_npco_item_id(item));
+
+	auto result = winner_items;
+
+	for (const auto & item : inter_items)
+	{
+		const auto item_id = extract_npco_item_id(item);
+		if (item_id.empty())
+			continue;
+
+		if (winner_ids.count(item_id))
+			continue;
+
+		if (!first_ids.count(item_id))
+			result.push_back(item);
+	}
+
+	return result;
+}
+
+static sub_record_sequence_t replace_npco_entries(
+	const sub_record_sequence_t & output,
+	const std::vector<sub_record_entry_t> & merged_items)
+{
+	sub_record_sequence_t result;
+
+	for (const auto & entry : output)
+	{
+		if (entry.type != "NPCO")
+			result.push_back(entry);
+	}
+
+	for (const auto & item : merged_items)
+		result.push_back(item);
+
+	return result;
+}
+
 merge_result_t sub_record_merge_t::merge_generic(const merge_input_t & input)
 {
 	const auto & versions = input.version_contents;
@@ -494,6 +603,21 @@ merge_result_t sub_record_merge_t::merge_generic(const merge_input_t & input)
 		}
 
 		output = replace_enam_entries(output, merged_enam_data);
+	}
+
+	if (has_npco_entries(first_subs))
+	{
+		const auto first_items = collect_npco_entries(first_subs);
+		auto merged_items = collect_npco_entries(winner_subs);
+
+		for (size_t v = versions.size() - 2; v >= 1; --v)
+		{
+			const auto inter_subs = parse_sub_records(versions[v]);
+			const auto inter_items = collect_npco_entries(inter_subs);
+			merged_items = merge_npco_items(first_items, inter_items, merged_items);
+		}
+
+		output = replace_npco_entries(output, merged_items);
 	}
 
 	const auto result = reconstruct_record(winner_content, output);

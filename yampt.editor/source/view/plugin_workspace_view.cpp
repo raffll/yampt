@@ -1159,11 +1159,6 @@ void plugin_workspace_view_t::on_nav_context_menu(const QPoint & pos)
 		});
 	}
 
-	if (is_file_node && !is_merge && m_scan.has_merge())
-	{
-		menu.addAction("Remove ITM from Merge", [this]() { on_remove_itm(); });
-	}
-
 	if (is_file_node && !is_merge)
 	{
 		const auto & filename = m_scan.plugin_filename(info.plugin_idx);
@@ -1175,8 +1170,7 @@ void plugin_workspace_view_t::on_nav_context_menu(const QPoint & pos)
 			{
 				m_excluded_plugins.erase(filename);
 				save_excluded_plugins();
-				m_nav_model->rebuild();
-				m_nav_view->expandAll();
+				rebuild_nav_preserving_state();
 			});
 		}
 		else
@@ -1185,8 +1179,7 @@ void plugin_workspace_view_t::on_nav_context_menu(const QPoint & pos)
 			{
 				m_excluded_plugins.insert(filename);
 				save_excluded_plugins();
-				m_nav_model->rebuild();
-				m_nav_view->expandAll();
+				rebuild_nav_preserving_state();
 			});
 		}
 	}
