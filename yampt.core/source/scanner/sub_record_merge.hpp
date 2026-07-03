@@ -22,6 +22,8 @@ struct sub_record_entry_t
 {
 	std::string type;
 	std::string data;
+
+	bool operator==(const sub_record_entry_t & other) const = default;
 };
 
 using sub_record_sequence_t = std::vector<sub_record_entry_t>;

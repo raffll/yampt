@@ -113,6 +113,73 @@ std::vector<std::string> sub_record_merge_t::collect_enam_data(const sub_record_
 	return slots;
 }
 
+static constexpr size_t enam_mag_min_offset = 12;
+static constexpr size_t enam_mag_max_offset = 16;
+static constexpr size_t enam_field_size = 4;
+
+struct field_pair_t
+{
+	size_t min_offset;
+	size_t max_offset;
+	size_t length;
+};
+
+static constexpr field_pair_t crea_npdt_attack_pairs[] = {
+	{ 68, 70, 2 },
+	{ 72, 74, 2 },
+	{ 76, 78, 2 },
+};
+
+static bool field_changed(const std::string & source, const std::string & base, size_t offset, size_t length)
+{
+	return source.compare(offset, length, base, offset, length) != 0;
+}
+
+static void fix_paired_fields(
+	std::string & merged,
+	const std::string & first,
+	const std::string & inter,
+	const std::string & winner,
+	const field_pair_t * pairs,
+	size_t pair_count)
+{
+	for (size_t p = 0; p < pair_count; ++p)
+	{
+		const auto & pair = pairs[p];
+		const bool inter_changed_min = field_changed(inter, first, pair.min_offset, pair.length);
+		const bool inter_changed_max = field_changed(inter, first, pair.max_offset, pair.length);
+		const bool winner_changed_min = field_changed(winner, first, pair.min_offset, pair.length);
+		const bool winner_changed_max = field_changed(winner, first, pair.max_offset, pair.length);
+
+		if (winner_changed_min || winner_changed_max)
+		{
+			merged.replace(pair.min_offset, pair.length, winner, pair.min_offset, pair.length);
+			merged.replace(pair.max_offset, pair.length, winner, pair.max_offset, pair.length);
+			continue;
+		}
+
+		if (inter_changed_min || inter_changed_max)
+		{
+			merged.replace(pair.min_offset, pair.length, inter, pair.min_offset, pair.length);
+			merged.replace(pair.max_offset, pair.length, inter, pair.max_offset, pair.length);
+		}
+	}
+}
+
+static constexpr field_pair_t enam_magnitude_pair = { 12, 16, 4 };
+
+static void fix_magnitude_pair(
+	std::string & result,
+	size_t slot_offset,
+	const std::string & first,
+	const std::string & inter,
+	const std::string & winner)
+{
+	std::string merged_slot = result.substr(slot_offset, enam_slot_size);
+	fix_paired_fields(merged_slot, first, inter, winner, &enam_magnitude_pair, 1);
+	result.replace(slot_offset, enam_slot_size, merged_slot);
+}
+
 std::string sub_record_merge_t::merge_enam_slots(
 	const std::vector<std::string> & first_enams,
 	const std::vector<std::string> & inter_enams,
@@ -139,6 +206,9 @@ std::string sub_record_merge_t::merge_enam_slots(
 			inter_enams[slot].data(),
 			winner_enams[slot].data(),
 			enam_slot_size);
+
+		fix_magnitude_pair(result, result.size() - enam_slot_size,
+		                   first_enams[slot], inter_enams[slot], winner_enams[slot]);
 	}
 
 	for (size_t slot = first_enams.size(); slot < inter_enams.size(); ++slot)
@@ -226,6 +296,18 @@ void sub_record_merge_t::apply_intermediate(
 				intermediate[i].data.data(),
 				winner[winner_idx].data.data(),
 				first[first_idx].data.size());
+
+			if (rec_type == "CREA" && intermediate[i].type == "NPDT" && first[first_idx].data.size() == 96)
+			{
+				fix_paired_fields(
+					output[output_idx].data,
+					first[first_idx].data,
+					intermediate[i].data,
+					winner[winner_idx].data,
+					crea_npdt_attack_pairs,
+					3);
+			}
+
 			continue;
 		}
 
@@ -619,7 +701,8 @@ merge_result_t sub_record_merge_t::merge_generic(const merge_input_t & input)
 	if (has_npco_entries(first_subs))
 	{
 		const auto first_items = collect_npco_entries(first_subs);
-		auto merged_items = collect_npco_entries(winner_subs);
+		const auto winner_items = collect_npco_entries(winner_subs);
+		auto merged_items = winner_items;
 
 		for (size_t v = versions.size() - 2; v >= 1; --v)
 		{
@@ -628,7 +711,8 @@ merge_result_t sub_record_merge_t::merge_generic(const merge_input_t & input)
 			merged_items = merge_npco_items(first_items, inter_items, merged_items);
 		}
 
-		output = replace_npco_entries(output, merged_items);
+		if (merged_items != winner_items)
+			output = replace_npco_entries(output, merged_items);
 	}
 
 	const auto result = reconstruct_record(winner_content, output);
