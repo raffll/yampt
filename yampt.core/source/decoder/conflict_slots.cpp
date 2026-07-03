@@ -221,13 +221,13 @@ static void extract_lev_entries(
 		const auto & subs = parsed[i];
 		for (size_t j = 0; j + 1 < subs.size(); ++j)
 		{
-			if (subs[j].type != "INTV" || subs[j].size != 2)
+			if (subs[j].type != id_sub_type)
 				continue;
 
-			if (subs[j + 1].type != id_sub_type)
+			if (subs[j + 1].type != "INTV" || subs[j + 1].size != 2)
 				continue;
 
-			auto item_id = extract_null_terminated(subs[j + 1].data, subs[j + 1].size);
+			auto item_id = extract_null_terminated(subs[j].data, subs[j].size);
 			ver_entries[i].push_back({ item_id, j, j + 1 });
 		}
 	}
@@ -251,10 +251,10 @@ static void build_leveled_list_slots(const std::string & rec_type, slot_result_t
 	collect_unified_slots(result.parsed, excluded, header_slots);
 	align_slots_to_result(result.parsed, excluded, header_slots, result);
 
-	const int intv_occ = count_slot_occurrences(header_slots, "INTV");
 	const int id_occ = count_slot_occurrences(header_slots, id_sub_type);
+	const int intv_occ = count_slot_occurrences(header_slots, "INTV");
 
-	align_paired_entries(ver_entries, all_item_ids, "INTV", id_sub_type, intv_occ, id_occ, result);
+	align_paired_entries(ver_entries, all_item_ids, id_sub_type, "INTV", id_occ, intv_occ, result);
 }
 
 static void extract_fact_entries(

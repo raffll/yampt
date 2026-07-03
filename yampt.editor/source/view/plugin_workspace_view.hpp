@@ -63,6 +63,8 @@ private:
 	void load_plugin_paths();
 	void save_excluded_plugins();
 	void load_excluded_plugins();
+	void save_patch_plugins();
+	void load_patch_plugins();
 	void rebuild_nav_preserving_state();
 	void load_plugins_from_paths(const std::vector<std::string> & paths, const std::string & base_path);
 	void load_existing_merged_patch();
@@ -123,4 +125,5 @@ private:
 	nav_tree_model_t::filter_state_t m_last_quick_filter;
 	bool m_hide_duplicates = false;
 	std::set<std::string> m_excluded_plugins;
+	std::set<std::string> m_patch_plugins;
 };

@@ -1,5 +1,6 @@
 #include "fog_fixer.hpp"
 #include "../decoder/sub_record_iter.hpp"
+#include "../utility/tools.hpp"
 #include <cstring>
 
 static constexpr uint32_t interior_flag = 0x01;
@@ -55,9 +56,14 @@ std::string fog_fixer_t::apply(const std::string & content)
 
 	sub_record_iter_t iter(content);
 	sub_record_view_t view;
+	size_t frmr_offset = 0;
+	size_t ambi_write_offset = 0;
 
 	while (iter.next(view))
 	{
+		if (view.type == "FRMR" && frmr_offset == 0)
+			frmr_offset = view.offset;
+
 		if (view.type != "AMBI" || view.size != ambi_sub_record_size)
 			continue;
 
@@ -65,12 +71,23 @@ std::string fog_fixer_t::apply(const std::string & content)
 		if (fog_bytes[0] != 0 || fog_bytes[1] != 0 || fog_bytes[2] != 0 || fog_bytes[3] != 0)
 			return {};
 
-		auto fixed = content;
-		const float default_fog_density = 0.01f;
-		const auto write_offset = view.offset + sub_record_header_size + fog_density_offset;
-		std::memcpy(&fixed[write_offset], &default_fog_density, sizeof(float));
-		return fixed;
+		ambi_write_offset = view.offset + sub_record_header_size + fog_density_offset;
 	}
 
-	return {};
+	if (ambi_write_offset == 0)
+		return {};
+
+	std::string fixed;
+	if (frmr_offset > 0)
+		fixed = content.substr(0, frmr_offset);
+	else
+		fixed = content;
+
+	const float default_fog_density = 0.01f;
+	std::memcpy(&fixed[ambi_write_offset], &default_fog_density, sizeof(float));
+
+	auto body_size = tools_t::convert_uint_to_string_byte_array(fixed.size() - 16);
+	fixed.replace(4, 4, body_size);
+
+	return fixed;
 }

@@ -328,6 +328,9 @@ static std::string extract_list_header(const std::string & content)
 		if (sub.type == "INAM" || sub.type == "CNAM" || sub.type == "INTV")
 			break;
 
+		if (sub.type == "INDX")
+			continue;
+
 		header_part += sub.type;
 		header_part += tools_t::convert_uint_to_string_byte_array(sub.size);
 		header_part += std::string(sub.data, sub.size);

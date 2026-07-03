@@ -214,7 +214,9 @@ void sub_record_merge_t::apply_intermediate(
 		if (output_idx < 0)
 			continue;
 
-		if (needs_element_wise(rec_type, intermediate[i].type, first[first_idx].data.size()))
+		if (needs_element_wise(rec_type, intermediate[i].type, first[first_idx].data.size()) &&
+		    intermediate[i].data.size() == first[first_idx].data.size() &&
+		    winner[winner_idx].data.size() == first[first_idx].data.size())
 		{
 			output[output_idx].data = merge_bytes_three_way(
 				first[first_idx].data.data(),
@@ -237,6 +239,9 @@ void sub_record_merge_t::apply_intermediate(
 merge_result_t sub_record_merge_t::merge(const merge_input_t & input)
 {
 	if (input.rec_type == "CELL")
+		return {false, input.version_contents.back()};
+
+	if (input.rec_type == "SCPT")
 		return {false, input.version_contents.back()};
 
 	return merge_generic(input);
@@ -518,30 +523,7 @@ static std::vector<sub_record_entry_t> merge_npco_items(
 	const std::vector<sub_record_entry_t> & inter_items,
 	const std::vector<sub_record_entry_t> & winner_items)
 {
-	std::set<std::string> first_ids;
-	for (const auto & item : first_items)
-		first_ids.insert(extract_npco_item_id(item));
-
-	std::set<std::string> winner_ids;
-	for (const auto & item : winner_items)
-		winner_ids.insert(extract_npco_item_id(item));
-
-	auto result = winner_items;
-
-	for (const auto & item : inter_items)
-	{
-		const auto item_id = extract_npco_item_id(item);
-		if (item_id.empty())
-			continue;
-
-		if (winner_ids.count(item_id))
-			continue;
-
-		if (!first_ids.count(item_id))
-			result.push_back(item);
-	}
-
-	return result;
+	return winner_items;
 }
 
 static sub_record_sequence_t replace_npco_entries(
@@ -562,6 +544,28 @@ static sub_record_sequence_t replace_npco_entries(
 	return result;
 }
 
+static size_t find_npdt_size(const sub_record_sequence_t & subs)
+{
+	for (const auto & entry : subs)
+	{
+		if (entry.type == "NPDT")
+			return entry.data.size();
+	}
+
+	return 0;
+}
+
+static bool has_mismatched_npdt(const sub_record_sequence_t & first, const sub_record_sequence_t & inter)
+{
+	const auto first_size = find_npdt_size(first);
+	const auto inter_size = find_npdt_size(inter);
+
+	if (first_size == 0 || inter_size == 0)
+		return false;
+
+	return first_size != inter_size;
+}
+
 merge_result_t sub_record_merge_t::merge_generic(const merge_input_t & input)
 {
 	const auto & versions = input.version_contents;
@@ -579,6 +583,10 @@ merge_result_t sub_record_merge_t::merge_generic(const merge_input_t & input)
 	for (size_t v = versions.size() - 2; v >= 1; --v)
 	{
 		const auto inter_subs = parse_sub_records(versions[v]);
+
+		if (input.rec_type == "NPC_" && has_mismatched_npdt(first_subs, inter_subs))
+			continue;
+
 		apply_intermediate(output, first_subs, inter_subs, winner_subs, input.rec_type);
 	}
 

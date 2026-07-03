@@ -172,7 +172,8 @@ All log messages use a unified prefix scheme:
 - `[error]` — unrecoverable errors (file not found, parse failure)
 - `[warning]` — non-fatal issues (duplicate record, replaced value)
 - `[info]` — progress and status (loading, writing, done)
-- No prefix — data lines (counter summaries, debug traces)
+- `[debug]` — temporary diagnostic messages (must be removed before commit)
+- No prefix — data lines (counter summaries)
 
 Rules:
 - Lowercase prefix tag, lowercase message body

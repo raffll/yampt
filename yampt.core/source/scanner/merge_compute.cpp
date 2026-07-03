@@ -167,9 +167,39 @@ void merge_compute_t::process_dialogue(const record_group_t & group, merge_count
 	++counters.dialogues;
 }
 
+void merge_compute_t::apply_patch_priority(const record_group_t & group, std::vector<std::string> & contents)
+{
+	if (m_config.patch_plugins.empty())
+		return;
+
+	if (contents.size() < 3)
+		return;
+
+	const auto & first = contents.front();
+	const auto & winner = contents.back();
+
+	if (winner != first)
+		return;
+
+	for (size_t v = contents.size() - 2; v >= 1; --v)
+	{
+		const auto & filename = m_scan.plugin_filename(group.versions[v].plugin_idx);
+		if (!m_config.patch_plugins.count(filename))
+			continue;
+
+		if (contents[v] == first)
+			continue;
+
+		contents.back() = contents[v];
+		add_log("[info] patch priority: " + group.rec_type + " \"" + group.record_id + "\" (" + filename + ")");
+		return;
+	}
+}
+
 void merge_compute_t::process_three_way(const record_group_t & group, merge_counters_t & counters)
 {
 	auto contents = read_version_contents(group);
+	apply_patch_priority(group, contents);
 
 	merge_input_t input;
 	input.rec_type = group.rec_type;

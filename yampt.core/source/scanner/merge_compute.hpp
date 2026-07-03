@@ -10,6 +10,7 @@ class plugin_scan_t;
 struct merge_config_t
 {
 	std::set<std::string> excluded_plugins;
+	std::set<std::string> patch_plugins;
 	std::string exclusion_pattern;
 	std::set<std::string> disabled_types;
 	bool fog_fix_enabled = true;
@@ -59,6 +60,7 @@ private:
 	void process_leveled_list(const record_group_t & group, merge_counters_t & counters);
 	void process_dialogue(const record_group_t & group, merge_counters_t & counters);
 	void process_three_way(const record_group_t & group, merge_counters_t & counters);
+	void apply_patch_priority(const record_group_t & group, std::vector<std::string> & contents);
 
 	void apply_fixes(merge_counters_t & counters);
 	void apply_fog_fixes(merge_counters_t & counters);

@@ -207,6 +207,11 @@ void nav_tree_model_t::set_excluded_plugins(const std::set<std::string> * exclud
 	m_excluded_plugins = excluded;
 }
 
+void nav_tree_model_t::set_patch_plugins(const std::set<std::string> * patch)
+{
+	m_patch_plugins = patch;
+}
+
 void nav_tree_model_t::build_tree()
 {
 	m_tree.clear();
@@ -551,6 +556,18 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 			const auto & filename = m_scan.plugin_filename(file_node.plugin_idx);
 			if (m_excluded_plugins && m_excluded_plugins->count(filename))
 				return QString::fromUtf8("\xF0\x9F\x94\x92 ") + QString::fromUtf8(buf);
+
+			if (m_patch_plugins && m_patch_plugins->count(filename))
+				return QString::fromUtf8("\xF0\x9F\x9B\xA1 ") + QString::fromUtf8(buf);
+
+			if (m_scan.is_merge_plugin(file_node.plugin_idx))
+				return QString::fromUtf8("\xE2\x9A\x99 ") + QString::fromUtf8(buf);
+
+			const bool is_master = filename.size() > 4 &&
+			    (filename.compare(filename.size() - 4, 4, ".esm") == 0 ||
+			     filename.compare(filename.size() - 4, 4, ".ESM") == 0);
+			if (is_master)
+				return QString::fromUtf8("\xF0\x9F\x93\x9C ") + QString::fromUtf8(buf);
 
 			return QString::fromUtf8(buf);
 		}

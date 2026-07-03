@@ -106,6 +106,7 @@ plugin_workspace_view_t::plugin_workspace_view_t(app_settings_t & settings, QWid
 
 	m_nav_model = new nav_tree_model_t(m_scan, this);
 	m_nav_model->set_excluded_plugins(&m_excluded_plugins);
+	m_nav_model->set_patch_plugins(&m_patch_plugins);
 	m_view_model = new view_tree_model_t(this);
 	m_nav_view->setModel(m_nav_model);
 	m_view_view->setModel(m_view_model);
@@ -115,6 +116,7 @@ plugin_workspace_view_t::plugin_workspace_view_t(app_settings_t & settings, QWid
 
 	setup_connections();
 	load_excluded_plugins();
+	load_patch_plugins();
 	load_plugin_paths();
 }
 
@@ -439,6 +441,28 @@ std::vector<std::string> plugin_workspace_view_t::parse_mo2_profile(const QStrin
 
 	auto paths = resolve_mo2_plugins(plugin_names, context);
 
+	static const std::vector<std::string> master_files = {
+		"Morrowind.esm", "Tribunal.esm", "Bloodmoon.esm"
+	};
+
+	for (const auto & master : master_files)
+	{
+		bool found = false;
+		for (const auto & resolved : paths)
+		{
+			auto pos = resolved.find_last_of("/\\");
+			auto filename = (pos != std::string::npos) ? resolved.substr(pos + 1) : resolved;
+			if (QString::fromStdString(filename).compare(QString::fromStdString(master), Qt::CaseInsensitive) == 0)
+			{
+				found = true;
+				break;
+			}
+		}
+
+		if (!found)
+			log_message("[warning] master file not found in load order: " + master + " (searched in " + context.game_data_path.toStdString() + ")");
+	}
+
 	const auto merge_filename = m_settings.merge_output_path();
 	const auto merge_full_path = context.merge_path + "/" + QString::fromStdString(merge_filename);
 	if (QFile::exists(merge_full_path))
@@ -456,6 +480,10 @@ std::vector<std::string> plugin_workspace_view_t::parse_mo2_profile(const QStrin
 
 		if (!already_included)
 			paths.push_back(merge_std);
+	}
+	else
+	{
+		log_message("[warning] merged patch not found: " + merge_full_path.toStdString());
 	}
 
 	return paths;
@@ -894,11 +922,18 @@ void plugin_workspace_view_t::save_merged_patch()
 {
 	const auto output_path = resolve_merge_output_path();
 	if (output_path.empty())
+	{
+		log_message("[error] cannot save merged patch: output path is empty (load_base_path=" + m_load_base_path + ")");
 		return;
+	}
 
 	auto output_dir = QDir(QFileInfo(QString::fromStdString(output_path)).absolutePath());
 	output_dir.mkpath(".");
-	m_scan.save_merge(output_path, "yEditor", "Auto-generated merged patch");
+	const bool saved = m_scan.save_merge(output_path, "yEditor", "Auto-generated merged patch");
+	if (saved)
+		log_message("[info] saved " + output_path + " (" + std::to_string(m_scan.merge_record_count()) + " records)");
+	else
+		log_message("[error] failed to save " + output_path);
 }
 
 void plugin_workspace_view_t::load_existing_merged_patch()
@@ -992,6 +1027,7 @@ int plugin_workspace_view_t::create_merge_records()
 
 	merge_config_t config;
 	config.excluded_plugins = m_excluded_plugins;
+	config.patch_plugins = m_patch_plugins;
 	config.exclusion_pattern = m_settings.merge_exclusion_pattern();
 	config.fog_fix_enabled = m_settings.merge_fog_fix_enabled();
 	config.summon_fix_enabled = m_settings.merge_summon_fix_enabled();
@@ -1163,6 +1199,7 @@ void plugin_workspace_view_t::on_nav_context_menu(const QPoint & pos)
 	{
 		const auto & filename = m_scan.plugin_filename(info.plugin_idx);
 		const bool excluded = m_excluded_plugins.count(filename) > 0;
+		const bool is_patch = m_patch_plugins.count(filename) > 0;
 
 		if (excluded)
 		{
@@ -1179,6 +1216,25 @@ void plugin_workspace_view_t::on_nav_context_menu(const QPoint & pos)
 			{
 				m_excluded_plugins.insert(filename);
 				save_excluded_plugins();
+				rebuild_nav_preserving_state();
+			});
+		}
+
+		if (is_patch)
+		{
+			menu.addAction("Unmark as Patch", [this, filename]()
+			{
+				m_patch_plugins.erase(filename);
+				save_patch_plugins();
+				rebuild_nav_preserving_state();
+			});
+		}
+		else
+		{
+			menu.addAction("Mark as Patch", [this, filename]()
+			{
+				m_patch_plugins.insert(filename);
+				save_patch_plugins();
 				rebuild_nav_preserving_state();
 			});
 		}
@@ -1512,6 +1568,25 @@ void plugin_workspace_view_t::load_excluded_plugins()
 	m_excluded_plugins.clear();
 	for (const auto & name : list)
 		m_excluded_plugins.insert(name.toStdString());
+}
+
+void plugin_workspace_view_t::save_patch_plugins()
+{
+	QSettings settings(QCoreApplication::applicationDirPath() + "/yEditor.ini", QSettings::IniFormat);
+	QStringList list;
+	for (const auto & name : m_patch_plugins)
+		list.append(QString::fromStdString(name));
+
+	settings.setValue("merge/patch_plugins", list);
+}
+
+void plugin_workspace_view_t::load_patch_plugins()
+{
+	QSettings settings(QCoreApplication::applicationDirPath() + "/yEditor.ini", QSettings::IniFormat);
+	const auto list = settings.value("merge/patch_plugins").toStringList();
+	m_patch_plugins.clear();
+	for (const auto & name : list)
+		m_patch_plugins.insert(name.toStdString());
 }
 
 void plugin_workspace_view_t::load_plugin_paths()

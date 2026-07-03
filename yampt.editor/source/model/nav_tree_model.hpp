@@ -17,6 +17,7 @@ public:
 
 	void rebuild();
 	void set_excluded_plugins(const std::set<std::string> * excluded);
+	void set_patch_plugins(const std::set<std::string> * patch);
 
 	struct filter_state_t
 	{
@@ -87,6 +88,7 @@ private:
 	bool m_has_filter = false;
 	bool m_hide_duplicates = false;
 	const std::set<std::string> * m_excluded_plugins = nullptr;
+	const std::set<std::string> * m_patch_plugins = nullptr;
 
 	conflict_this_t record_foreground_for_plugin(const conflict_entry_t & entry, int plugin_idx) const;
 

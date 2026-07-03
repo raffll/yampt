@@ -48,6 +48,7 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 	const bool is_faction = (m_record_type == "FACT");
 	const bool is_container =
 	    (m_record_type == "CONT" || m_record_type == "CREA" || m_record_type == "NPC_" || m_record_type == "BSGN" || m_record_type == "RACE");
+	const bool is_armor = (m_record_type == "ARMO" || m_record_type == "CLOT");
 
 	if (is_cell)
 		set_record_cell(context);
@@ -57,6 +58,8 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 		set_record_faction(context, entry);
 	else if (is_container)
 		set_record_container(context, entry);
+	else if (is_armor)
+		set_record_armor(context, entry);
 	else
 		set_record_generic(context, entry);
 

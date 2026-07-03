@@ -89,6 +89,7 @@ private:
 	void set_record_leveled(record_context_t & context, const conflict_entry_t & entry);
 	void set_record_faction(record_context_t & context, const conflict_entry_t & entry);
 	void set_record_container(record_context_t & context, const conflict_entry_t & entry);
+	void set_record_armor(record_context_t & context, const conflict_entry_t & entry);
 	void set_record_generic(record_context_t & context, const conflict_entry_t & entry);
 
 	void collect_leveled_entries(record_context_t & context, slot_build_context_t & build_ctx);
@@ -140,6 +141,7 @@ private:
 	    const sub_slot_t & slot);
 
 	void emit_slot_rows(record_context_t & context, slot_build_context_t & build_ctx);
+	void emit_leveled_rows(record_context_t & context, slot_build_context_t & build_ctx);
 
 	void finalize_header_conflict();
 

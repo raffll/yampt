@@ -546,3 +546,197 @@ TEST_CASE("sub_record_merge_t::merge, ENAM winner removes slot removal stands", 
 	REQUIRE_FALSE(result.changed);
 	REQUIRE(result.content == make_record("ALCH", make_sub("NAME", make_string("id")) + make_sub("ENAM", enam1)));
 }
+
+// ============================================================================
+// Duplicate addition prevention
+// ============================================================================
+
+TEST_CASE("sub_record_merge_t::merge, duplicate addition not appended twice", "[u]")
+{
+	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("MODL", make_string("m.nif"));
+	auto subs_inter1 = make_sub("NAME", make_string("id")) + make_sub("MODL", make_string("m.nif")) + make_sub("CNAM", make_string("part"));
+	auto subs_inter2 = make_sub("NAME", make_string("id")) + make_sub("MODL", make_string("m.nif")) + make_sub("CNAM", make_string("part"));
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("MODL", make_string("m.nif"));
+
+	merge_input_t input;
+	input.rec_type = "ARMO";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("ARMO", subs_first),
+		make_record("ARMO", subs_inter1),
+		make_record("ARMO", subs_inter2),
+		make_record("ARMO", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	size_t cnam_count = 0;
+	size_t pos = 0;
+	while ((pos = result.content.find("CNAM", pos)) != std::string::npos)
+	{
+		++cnam_count;
+		pos += 4;
+	}
+	REQUIRE(cnam_count == 1);
+}
+
+// ============================================================================
+// Autocalc NPC intermediate skipped
+// ============================================================================
+
+TEST_CASE("sub_record_merge_t::merge, autocalc intermediate skipped", "[u]")
+{
+	std::string npdt_52(52, '\0');
+	npdt_52[0] = 23;
+	npdt_52[4] = 100;
+
+	std::string npdt_12(12, '\0');
+	npdt_12[0] = 23;
+	npdt_12[4] = 50;
+
+	std::string npdt_52_winner(52, '\0');
+	npdt_52_winner[0] = 23;
+	npdt_52_winner[4] = 100;
+	npdt_52_winner[8] = 75;
+
+	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_52);
+	auto subs_inter = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_12);
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_52_winner);
+
+	merge_input_t input;
+	input.rec_type = "NPC_";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("NPC_", subs_first),
+		make_record("NPC_", subs_inter),
+		make_record("NPC_", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE_FALSE(result.changed);
+	REQUIRE(result.content == make_record("NPC_", subs_winner));
+}
+
+// ============================================================================
+// Element-wise merge requires same size
+// ============================================================================
+
+TEST_CASE("sub_record_merge_t::merge, element-wise skipped on size mismatch", "[u]")
+{
+	std::string npdt_52(52, '\0');
+	npdt_52[4] = 100;
+
+	std::string npdt_12(12, '\0');
+	npdt_12[4] = 50;
+
+	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_52);
+	auto subs_inter = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_12);
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_52);
+
+	merge_input_t input;
+	input.rec_type = "NPC_";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("NPC_", subs_first),
+		make_record("NPC_", subs_inter),
+		make_record("NPC_", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE_FALSE(result.changed);
+}
+
+// ============================================================================
+// ENAM byte-level merge (not whole-slot)
+// ============================================================================
+
+TEST_CASE("sub_record_merge_t::merge, ENAM per-byte merge", "[u]")
+{
+	auto enam_first = make_enam(79, 0, 0, 10, 2, 40);
+	auto enam_inter = make_enam(79, 0, 0, 10, 2, 20);
+	auto enam_winner = make_enam(79, 0, 0, 10, 1, 20);
+
+	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("ENAM", enam_first);
+	auto subs_inter = make_sub("NAME", make_string("id")) + make_sub("ENAM", enam_inter);
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("ENAM", enam_winner);
+
+	merge_input_t input;
+	input.rec_type = "SPEL";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("SPEL", subs_first),
+		make_record("SPEL", subs_inter),
+		make_record("SPEL", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	auto expected_enam = make_enam(79, 0, 0, 10, 1, 20);
+	auto expected = make_record("SPEL", make_sub("NAME", make_string("id")) + make_sub("ENAM", expected_enam));
+	REQUIRE(result.content == expected);
+}
+
+// ============================================================================
+// NPCO winner only
+// ============================================================================
+
+TEST_CASE("sub_record_merge_t::merge, NPCO uses winner only", "[u]")
+{
+	std::string npco_a(36, '\0');
+	npco_a[0] = 1;
+	std::memcpy(&npco_a[4], "item_a", 6);
+
+	std::string npco_b(36, '\0');
+	npco_b[0] = 1;
+	std::memcpy(&npco_b[4], "item_b", 6);
+
+	std::string npco_c(36, '\0');
+	npco_c[0] = 1;
+	std::memcpy(&npco_c[4], "item_c", 6);
+
+	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("NPCO", npco_a);
+	auto subs_inter = make_sub("NAME", make_string("id")) + make_sub("NPCO", npco_b) + make_sub("NPCO", npco_c);
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("NPCO", npco_a);
+
+	merge_input_t input;
+	input.rec_type = "NPC_";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("NPC_", subs_first),
+		make_record("NPC_", subs_inter),
+		make_record("NPC_", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE_FALSE(result.changed);
+}
+
+// ============================================================================
+// CELL records skipped from 3-way merge
+// ============================================================================
+
+TEST_CASE("sub_record_merge_t::merge, CELL returns winner unchanged", "[u]")
+{
+	auto subs_first = make_sub("NAME", make_string("cell")) + make_sub("DATA", make_bytes({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}));
+	auto subs_inter = make_sub("NAME", make_string("cell")) + make_sub("DATA", make_bytes({1, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0}));
+	auto subs_winner = make_sub("NAME", make_string("cell")) + make_sub("DATA", make_bytes({1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}));
+
+	auto first = make_record("CELL", subs_first);
+	auto inter = make_record("CELL", subs_inter);
+	auto winner = make_record("CELL", subs_winner);
+
+	merge_input_t input;
+	input.rec_type = "CELL";
+	input.record_id = "cell";
+	input.version_contents = { first, inter, winner };
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE_FALSE(result.changed);
+	REQUIRE(result.content == winner);
+}
