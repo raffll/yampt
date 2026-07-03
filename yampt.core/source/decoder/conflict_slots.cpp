@@ -210,6 +210,7 @@ static void align_paired_entries(
 
 static void extract_lev_entries(
     const std::vector<std::vector<sub_record_view_t>> & parsed,
+    const std::string & id_sub_type,
     std::vector<std::vector<paired_entry_t>> & ver_entries)
 {
 	const size_t ver_count = parsed.size();
@@ -223,7 +224,7 @@ static void extract_lev_entries(
 			if (subs[j].type != "INTV" || subs[j].size != 2)
 				continue;
 
-			if (subs[j + 1].type != "INAM")
+			if (subs[j + 1].type != id_sub_type)
 				continue;
 
 			auto item_id = extract_null_terminated(subs[j + 1].data, subs[j + 1].size);
@@ -232,12 +233,13 @@ static void extract_lev_entries(
 	}
 }
 
-static void build_leveled_list_slots(slot_result_t & result)
+static void build_leveled_list_slots(const std::string & rec_type, slot_result_t & result)
 {
 	const size_t ver_count = result.parsed.size();
+	const std::string id_sub_type = (rec_type == "LEVC") ? "CNAM" : "INAM";
 
 	std::vector<std::vector<paired_entry_t>> ver_entries;
-	extract_lev_entries(result.parsed, ver_entries);
+	extract_lev_entries(result.parsed, id_sub_type, ver_entries);
 
 	std::vector<std::string> all_item_ids;
 	collect_unique_ids(ver_entries, all_item_ids);
@@ -250,9 +252,9 @@ static void build_leveled_list_slots(slot_result_t & result)
 	align_slots_to_result(result.parsed, excluded, header_slots, result);
 
 	const int intv_occ = count_slot_occurrences(header_slots, "INTV");
-	const int inam_occ = count_slot_occurrences(header_slots, "INAM");
+	const int id_occ = count_slot_occurrences(header_slots, id_sub_type);
 
-	align_paired_entries(ver_entries, all_item_ids, "INTV", "INAM", intv_occ, inam_occ, result);
+	align_paired_entries(ver_entries, all_item_ids, "INTV", id_sub_type, intv_occ, id_occ, result);
 }
 
 static void extract_fact_entries(
@@ -475,7 +477,7 @@ static void dispatch_strategy(const std::string & rec_type, slot_result_t & resu
 		build_cell_slots(result);
 
 	else if (rec_type == "LEVI" || rec_type == "LEVC")
-		build_leveled_list_slots(result);
+		build_leveled_list_slots(rec_type, result);
 
 	else if (rec_type == "FACT")
 		build_fact_slots(result);

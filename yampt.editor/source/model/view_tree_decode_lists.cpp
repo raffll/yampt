@@ -327,6 +327,8 @@ void view_tree_model_t::collect_leveled_entries(record_context_t & context, slot
 	const auto col_count = context.col_count;
 	auto & all_subs = context.all_sub_records;
 
+	const std::string id_type = (m_record_type == "LEVC") ? "CNAM" : "INAM";
+
 	std::vector<std::vector<paired_entry_t>> col_entries(col_count);
 	std::vector<std::string> all_item_ids;
 
@@ -338,7 +340,7 @@ void view_tree_model_t::collect_leveled_entries(record_context_t & context, slot
 		const auto & subs = all_subs[col];
 		for (size_t i = 0; i + 1 < subs.size(); ++i)
 		{
-			if (subs[i].type != "INTV" || subs[i].size != leveled_intv_size || subs[i + 1].type != "INAM")
+			if (subs[i].type != "INTV" || subs[i].size != leveled_intv_size || subs[i + 1].type != id_type)
 				continue;
 
 			std::string item_id(subs[i + 1].data, subs[i + 1].size);
@@ -352,13 +354,13 @@ void view_tree_model_t::collect_leveled_entries(record_context_t & context, slot
 		}
 	}
 
-	auto is_excluded = [](const sub_record_view_t & sv_rec)
-	{ return (sv_rec.type == "INTV" && sv_rec.size == 2) || sv_rec.type == "INAM"; };
+	auto is_excluded = [&id_type](const sub_record_view_t & sv_rec)
+	{ return (sv_rec.type == "INTV" && sv_rec.size == 2) || sv_rec.type == id_type; };
 
 	build_non_excluded_slots(all_subs, col_count, is_excluded, build_ctx.unified_slots);
-	append_pair_slots(build_ctx.unified_slots, all_item_ids, "INTV", "INAM");
+	append_pair_slots(build_ctx.unified_slots, all_item_ids, "INTV", id_type);
 	build_non_excluded_indices(all_subs, col_count, is_excluded, build_ctx.col_type_indices);
-	match_paired_entries(col_entries, all_item_ids, "INTV", "INAM", col_count, build_ctx.col_type_indices);
+	match_paired_entries(col_entries, all_item_ids, "INTV", id_type, col_count, build_ctx.col_type_indices);
 }
 
 void view_tree_model_t::collect_faction_entries(record_context_t & context, slot_build_context_t & build_ctx)
