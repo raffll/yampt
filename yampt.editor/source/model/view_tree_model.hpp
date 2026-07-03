@@ -69,6 +69,9 @@ public:
 		int occurrence;
 	};
 
+	const std::vector<sub_record_row_t> & rows() const;
+	const std::vector<int> & column_plugin_indices() const { return m_column_plugin_indices; }
+
 private:
 	struct record_context_t
 	{

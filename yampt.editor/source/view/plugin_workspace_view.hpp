@@ -72,6 +72,7 @@ private:
 	void save_merged_patch();
 	void display_record_in_view(const conflict_entry_t & entry);
 	void resize_view_columns();
+	bool handle_subrecord_drop(QDropEvent * drop_event);
 	std::vector<std::string> parse_mo2_profile(const QString & profile_dir);
 	std::vector<std::string> parse_openmw_cfg(const QString & cfg_path);
 

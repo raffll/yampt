@@ -267,6 +267,11 @@ void view_tree_model_t::set_excluded_plugins(const std::set<std::string> * exclu
 	m_excluded_plugins = excluded;
 }
 
+const std::vector<view_tree_model_t::sub_record_row_t> & view_tree_model_t::rows() const
+{
+	return visible_rows();
+}
+
 void view_tree_model_t::set_patch_plugins(const std::set<std::string> * patch)
 {
 	m_patch_plugins = patch;
@@ -672,6 +677,21 @@ QMimeData * view_tree_model_t::mimeData(const QModelIndexList & indexes) const
 	                      .arg(QString::fromStdString(m_record_type))
 	                      .arg(QString::fromStdString(m_record_id));
 	mime_data->setData("application/x-yampt-record", payload.toUtf8());
+
+	const int row_idx = first_idx.row();
+	const auto & visible = visible_rows();
+	if (row_idx >= 0 && row_idx < static_cast<int>(visible.size()))
+	{
+		const auto & row = visible[row_idx];
+		QString sub_payload = QString("%1\t%2\t%3\t%4\t%5")
+		                          .arg(plugin_idx)
+		                          .arg(QString::fromStdString(m_record_type))
+		                          .arg(QString::fromStdString(m_record_id))
+		                          .arg(QString::fromStdString(row.type))
+		                          .arg(row_idx);
+		mime_data->setData("application/x-yampt-subrecord", sub_payload.toUtf8());
+	}
+
 	return mime_data;
 }
 
@@ -682,8 +702,14 @@ Qt::DropActions view_tree_model_t::supportedDropActions() const
 
 bool view_tree_model_t::canDropMimeData(const QMimeData * data, Qt::DropAction, int, int, const QModelIndex &) const
 {
-	if (!m_has_merge_column)
+	if (!data)
 		return false;
 
-	return data && data->hasFormat("application/x-yampt-record");
+	if (data->hasFormat("application/x-yampt-record"))
+		return true;
+
+	if (data->hasFormat("application/x-yampt-subrecord"))
+		return true;
+
+	return false;
 }

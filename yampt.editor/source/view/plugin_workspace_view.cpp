@@ -1134,6 +1134,97 @@ void plugin_workspace_view_t::resize_view_columns()
 		m_view_view->setColumnWidth(i, per_col);
 }
 
+bool plugin_workspace_view_t::handle_subrecord_drop(QDropEvent * drop_event)
+{
+	const auto & payload = QString::fromUtf8(drop_event->mimeData()->data("application/x-yampt-subrecord"));
+	const auto & parts = payload.split('\t');
+	if (parts.size() != 5)
+		return false;
+
+	const auto source_plugin = parts[0].toInt();
+	const auto & rec_type = parts[1].toStdString();
+	const auto & record_id = parts[2].toStdString();
+	const auto & sub_type = parts[3].toStdString();
+	const auto sub_row_idx = parts[4].toInt();
+
+	const auto * merge_content_ptr = m_scan.find_merge_content(rec_type, record_id);
+	std::string merge_content;
+	if (merge_content_ptr)
+	{
+		merge_content = *merge_content_ptr;
+	}
+	else
+	{
+		const auto * entry = m_scan.find(rec_type, record_id);
+		if (!entry || entry->versions.empty())
+			return false;
+
+		const auto & winner = entry->versions.back();
+		merge_content = m_scan.read_record_content(winner.plugin_idx, winner.record_index);
+	}
+
+	const auto * entry = m_scan.find(rec_type, record_id);
+	if (!entry)
+		return false;
+
+	std::string source_content;
+	for (const auto & ver : entry->versions)
+	{
+		if (ver.plugin_idx != source_plugin)
+			continue;
+
+		source_content = m_scan.read_record_content(source_plugin, ver.record_index);
+		break;
+	}
+
+	if (source_content.empty())
+		return false;
+
+	auto merge_subs = sub_record_merge_t::parse_sub_records(merge_content);
+	const auto source_subs = sub_record_merge_t::parse_sub_records(source_content);
+
+	int target_occurrence = 0;
+	for (int i = 0; i < sub_row_idx; ++i)
+	{
+		const auto & visible = m_view_model->rows();
+		if (i < static_cast<int>(visible.size()) && visible[i].type == sub_type)
+			++target_occurrence;
+	}
+
+	const auto source_idx = sub_record_merge_t::find_by_type_and_occurrence(source_subs, sub_type, target_occurrence);
+	if (source_idx < 0)
+	{
+		drop_event->ignore();
+		return true;
+	}
+
+	const auto merge_idx = sub_record_merge_t::find_by_type_and_occurrence(merge_subs, sub_type, target_occurrence);
+	if (merge_idx < 0)
+	{
+		merge_subs.push_back(source_subs[source_idx]);
+	}
+	else
+	{
+		merge_subs[merge_idx].data = source_subs[source_idx].data;
+	}
+
+	const auto patched = sub_record_merge_t::reconstruct_record(merge_content, merge_subs);
+	m_scan.copy_record_to_merge_raw(rec_type, record_id, patched);
+
+	log_message("[info] patched " + sub_type + " in " + rec_type + ":" + record_id);
+
+	m_scan.rebuild_conflicts();
+	rebuild_nav_preserving_state();
+	save_merged_patch();
+
+	const auto * updated = m_scan.find(rec_type, record_id);
+	if (updated)
+		display_record_in_view(*updated);
+
+	drop_event->accept();
+	return true;
+}
+
 void plugin_workspace_view_t::on_remove_itm()
 {
 	auto current = m_nav_view->currentIndex();
@@ -1334,7 +1425,9 @@ bool plugin_workspace_view_t::eventFilter(QObject * obj, QEvent * event)
 	if ((is_view || is_nav) && event->type() == QEvent::DragEnter)
 	{
 		auto * drag = static_cast<QDragEnterEvent *>(event);
-		if (drag->mimeData()->hasFormat("application/x-yampt-record") && m_scan.has_merge())
+		const bool has_data = drag->mimeData()->hasFormat("application/x-yampt-record") ||
+		                      drag->mimeData()->hasFormat("application/x-yampt-subrecord");
+		if (has_data && m_scan.has_merge())
 		{
 			drag->acceptProposedAction();
 			return true;
@@ -1351,7 +1444,9 @@ bool plugin_workspace_view_t::eventFilter(QObject * obj, QEvent * event)
 		return QWidget::eventFilter(obj, event);
 
 	auto * drop_event = static_cast<QDropEvent *>(event);
-	if (!drop_event->mimeData()->hasFormat("application/x-yampt-record"))
+	const bool has_drop_data = drop_event->mimeData()->hasFormat("application/x-yampt-record") ||
+	                           drop_event->mimeData()->hasFormat("application/x-yampt-subrecord");
+	if (!has_drop_data)
 		return QWidget::eventFilter(obj, event);
 
 	if (!m_scan.has_merge())
@@ -1372,17 +1467,26 @@ bool plugin_workspace_view_t::eventFilter(QObject * obj, QEvent * event)
 
 bool plugin_workspace_view_t::handle_drag_move_view(QDragMoveEvent * drag)
 {
-	if (!drag->mimeData()->hasFormat("application/x-yampt-record") || !m_scan.has_merge())
+	const bool has_record = drag->mimeData()->hasFormat("application/x-yampt-record");
+	const bool has_subrecord = drag->mimeData()->hasFormat("application/x-yampt-subrecord");
+
+	if ((!has_record && !has_subrecord) || !m_scan.has_merge())
 	{
 		drag->ignore();
 		return true;
 	}
 
 	const int column = m_view_view->columnAt(drag->position().toPoint().x());
-	if (m_view_model->is_merge_column(column))
+	const int col_idx = column - 1;
+
+	if (col_idx >= 0 && col_idx < static_cast<int>(m_view_model->column_plugin_indices().size()))
 	{
-		drag->acceptProposedAction();
-		return true;
+		const int plugin_idx = m_view_model->column_plugin_indices()[col_idx];
+		if (m_scan.is_merge_plugin(plugin_idx))
+		{
+			drag->acceptProposedAction();
+			return true;
+		}
 	}
 
 	drag->ignore();
@@ -1410,6 +1514,19 @@ bool plugin_workspace_view_t::handle_drag_move_nav(QDragMoveEvent * drag)
 
 bool plugin_workspace_view_t::handle_drop_on_view(QDropEvent * drop_event)
 {
+	const int column = m_view_view->columnAt(drop_event->position().toPoint().x());
+	const int col_idx = column - 1;
+	bool dropped_on_merge = false;
+
+	if (col_idx >= 0 && col_idx < static_cast<int>(m_view_model->column_plugin_indices().size()))
+	{
+		const int plugin_idx = m_view_model->column_plugin_indices()[col_idx];
+		dropped_on_merge = m_scan.is_merge_plugin(plugin_idx);
+	}
+
+	if (dropped_on_merge && drop_event->mimeData()->hasFormat("application/x-yampt-subrecord"))
+		return handle_subrecord_drop(drop_event);
+
 	const auto & payload = QString::fromUtf8(drop_event->mimeData()->data("application/x-yampt-record"));
 	const auto & parts = payload.split('\t');
 	if (parts.size() != 3)
@@ -1428,9 +1545,6 @@ bool plugin_workspace_view_t::handle_drop_on_view(QDropEvent * drop_event)
 	const auto * entry = m_scan.find(rec_type, record_id);
 	if (!entry)
 		return true;
-
-	const int column = m_view_view->columnAt(drop_event->position().toPoint().x());
-	const bool dropped_on_merge = m_view_model->is_merge_column(column);
 
 	for (const auto & version : entry->versions)
 	{
