@@ -84,7 +84,7 @@ TEST_CASE("leveled_list_merge, max occurrence preserved", "[u]")
 		make_record("LEVI", mod_subs),
 	};
 
-	auto result = merge_leveled_list(input);
+	auto result = leveled_list_merge_t::merge(input);
 
 	REQUIRE(result.changed);
 	size_t count = 0;
@@ -117,7 +117,7 @@ TEST_CASE("leveled_list_merge, two mods add different items", "[u]")
 		make_record("LEVI", mod2_subs),
 	};
 
-	auto result = merge_leveled_list(input);
+	auto result = leveled_list_merge_t::merge(input);
 
 	REQUIRE(result.changed);
 	REQUIRE(result.content.find("item_a") != std::string::npos);
@@ -142,7 +142,7 @@ TEST_CASE("leveled_list_merge, sorted by level then ident", "[u]")
 		make_record("LEVI", mod_subs),
 	};
 
-	auto result = merge_leveled_list(input);
+	auto result = leveled_list_merge_t::merge(input);
 
 	REQUIRE(result.changed);
 	size_t pos_zzz = result.content.find("zzz_item");
@@ -165,7 +165,7 @@ TEST_CASE("leveled_list_merge, winner header used", "[u]")
 		make_record("LEVI", winner_subs),
 	};
 
-	auto result = merge_leveled_list(input);
+	auto result = leveled_list_merge_t::merge(input);
 
 	size_t nnam_pos = result.content.find("NNAM");
 	REQUIRE(nnam_pos != std::string::npos);
@@ -193,7 +193,7 @@ TEST_CASE("leveled_list_merge, mod removes item entirely", "[u]")
 		make_record("LEVI", mod_subs),
 	};
 
-	auto result = merge_leveled_list(input);
+	auto result = leveled_list_merge_t::merge(input);
 
 	REQUIRE(result.content.find("keep_item") != std::string::npos);
 	REQUIRE(result.content.find("remove_me") == std::string::npos);
@@ -216,7 +216,7 @@ TEST_CASE("leveled_list_merge, mod reduces count partial", "[u]")
 		make_record("LEVI", mod_subs),
 	};
 
-	auto result = merge_leveled_list(input);
+	auto result = leveled_list_merge_t::merge(input);
 
 	size_t count = 0;
 	size_t search_pos = 0;
@@ -249,7 +249,7 @@ TEST_CASE("leveled_list_merge, one mod removes one mod keeps deletion wins", "[u
 		make_record("LEVI", mod_keep),
 	};
 
-	auto result = merge_leveled_list(input);
+	auto result = leveled_list_merge_t::merge(input);
 
 	REQUIRE(result.content.find("contested") == std::string::npos);
 	REQUIRE(result.content.find("safe_item") != std::string::npos);
@@ -272,7 +272,7 @@ TEST_CASE("leveled_list_merge, no deletion when all mods keep item", "[u]")
 		make_record("LEVI", mod2_subs),
 	};
 
-	auto result = merge_leveled_list(input);
+	auto result = leveled_list_merge_t::merge(input);
 
 	REQUIRE(result.content.find("item_a") != std::string::npos);
 }
@@ -292,7 +292,7 @@ TEST_CASE("leveled_list_merge, LEVC creature list works same", "[u]")
 		make_record("LEVC", mod_subs),
 	};
 
-	auto result = merge_leveled_list(input);
+	auto result = leveled_list_merge_t::merge(input);
 
 	REQUIRE(result.changed);
 	REQUIRE(result.content.find("rat") != std::string::npos);

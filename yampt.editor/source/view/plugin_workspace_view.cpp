@@ -195,6 +195,9 @@ void plugin_workspace_view_t::on_load_plugins()
 	if (selected.empty())
 		return;
 
+	m_load_source = load_source_t::folder;
+	m_load_base_path = QFileInfo(QString::fromStdString(selected.front())).absolutePath().toStdString();
+
 	for (const auto & path : selected)
 	{
 		try
@@ -244,7 +247,7 @@ void plugin_workspace_view_t::on_load_plugins()
 	save_plugin_paths();
 }
 
-void plugin_workspace_view_t::load_plugins_from_paths(const std::vector<std::string> & paths)
+void plugin_workspace_view_t::load_plugins_from_paths(const std::vector<std::string> & paths, const std::string & base_path)
 {
 	plugin_select_dialog_t dlg(paths, this);
 	if (dlg.exec() != QDialog::Accepted)
@@ -254,6 +257,7 @@ void plugin_workspace_view_t::load_plugins_from_paths(const std::vector<std::str
 	if (selected.empty())
 		return;
 
+	m_load_base_path = base_path;
 	m_scan = plugin_scan_t();
 	m_scan.set_merge_visible(m_merge_column_visible);
 	m_view_model->clear();
@@ -318,9 +322,8 @@ void plugin_workspace_view_t::on_load_data_files()
 		return;
 	}
 
-	load_plugins_from_paths(paths);
+	load_plugins_from_paths(paths, dir.toStdString());
 	m_load_source = load_source_t::folder;
-	m_load_base_path = dir.toStdString();
 	m_settings.set_last_directory(dir.toStdString());
 	load_existing_merged_patch();
 }
@@ -337,9 +340,8 @@ void plugin_workspace_view_t::on_load_mo2_profile()
 	if (paths.empty())
 		return;
 
-	load_plugins_from_paths(paths);
+	load_plugins_from_paths(paths, profile_dir.toStdString());
 	m_load_source = load_source_t::mo2_profile;
-	m_load_base_path = profile_dir.toStdString();
 	m_settings.set_last_directory(profile_dir.toStdString());
 	load_existing_merged_patch();
 }
@@ -518,10 +520,10 @@ void plugin_workspace_view_t::on_load_openmw_cfg()
 	if (paths.empty())
 		return;
 
-	load_plugins_from_paths(paths);
+	const auto base = QFileInfo(cfg_path).absolutePath().toStdString();
+	load_plugins_from_paths(paths, base);
 	m_load_source = load_source_t::openmw_cfg;
-	m_load_base_path = QFileInfo(cfg_path).absolutePath().toStdString();
-	m_settings.set_last_directory(m_load_base_path);
+	m_settings.set_last_directory(base);
 	load_existing_merged_patch();
 }
 
@@ -958,16 +960,23 @@ void plugin_workspace_view_t::on_create_merged_patch()
 	m_scan.rebuild_conflicts();
 	rebuild_nav_preserving_state();
 
+	log_message("[info] merge record count: " + std::to_string(m_scan.merge_record_count()));
+
 	const auto output_path = resolve_merge_output_path();
-	if (!output_path.empty())
+	if (output_path.empty())
 	{
+		log_message("[error] merge output path is empty");
+	}
+	else
+	{
+		log_message("[info] saving to: " + output_path);
 		auto output_dir = QDir(QFileInfo(QString::fromStdString(output_path)).absolutePath());
 		output_dir.mkpath(".");
 		bool result = m_scan.save_merge(output_path, "yEditor", "Auto-generated merged patch");
 		if (result)
-			log_message("Saved " + output_path + " (" + std::to_string(m_scan.merge_record_count()) + " records)");
+			log_message("[info] saved " + output_path + " (" + std::to_string(m_scan.merge_record_count()) + " records)");
 		else
-			log_message("Error saving merged patch to " + output_path);
+			log_message("[error] failed to save merged patch to " + output_path);
 	}
 
 	auto current = m_nav_view->currentIndex();

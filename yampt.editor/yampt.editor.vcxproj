@@ -183,6 +183,10 @@
     <ClCompile Include="..\yampt.core\source\scanner\plugin_index.cpp" />
     <ClCompile Include="..\yampt.core\source\scanner\plugin_scan.cpp" />
     <ClCompile Include="..\yampt.core\source\scanner\plugin_scan_merge.cpp" />
+    <ClCompile Include="..\yampt.core\source\scanner\sub_record_merge.cpp" />
+    <ClCompile Include="..\yampt.core\source\scanner\fog_fixer.cpp" />
+    <ClCompile Include="..\yampt.core\source\scanner\summon_fixer.cpp" />
+    <ClCompile Include="..\yampt.core\source\scanner\cell_name_fixer.cpp" />
     <ClCompile Include="..\yampt.core\source\scanner\conflict_compute.cpp" />
     <ClCompile Include="..\yampt.core\source\decoder\conflict_slots.cpp" />
     <ClCompile Include="..\yampt.core\source\decoder\conflict_slots_cell.cpp" />
@@ -208,6 +212,10 @@
     <ClInclude Include="..\yampt.core\source\scanner\plugin_index.hpp" />
     <ClInclude Include="..\yampt.core\source\scanner\plugin_scan.hpp" />
     <ClInclude Include="..\yampt.core\source\scanner\conflict_compute.hpp" />
+    <ClInclude Include="..\yampt.core\source\scanner\sub_record_merge.hpp" />
+    <ClInclude Include="..\yampt.core\source\scanner\fog_fixer.hpp" />
+    <ClInclude Include="..\yampt.core\source\scanner\summon_fixer.hpp" />
+    <ClInclude Include="..\yampt.core\source\scanner\cell_name_fixer.hpp" />
     <ClInclude Include="source\io\profile_reader.hpp" />
   </ItemGroup>
   <ItemGroup>

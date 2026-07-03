@@ -3,20 +3,10 @@
 #include "../utility/tools.hpp"
 
 #include <algorithm>
-#include <cstdint>
-#include <map>
-#include <string>
-#include <vector>
 
-struct sub_record_entry_t
-{
-	std::string type;
-	std::string data;
-};
+static constexpr size_t enam_slot_size = 24;
 
-using sub_record_sequence_t = std::vector<sub_record_entry_t>;
-
-static sub_record_sequence_t parse_sub_records(const std::string & content)
+sub_record_sequence_t sub_record_merge_t::parse_sub_records(const std::string & content)
 {
 	sub_record_sequence_t sequence;
 	sub_record_iter_t iter(content);
@@ -28,13 +18,13 @@ static sub_record_sequence_t parse_sub_records(const std::string & content)
 	return sequence;
 }
 
-static std::string serialize_sub_record(const sub_record_entry_t & entry)
+std::string sub_record_merge_t::serialize_sub_record(const sub_record_entry_t & entry)
 {
 	const auto size_bytes = tools_t::convert_uint_to_string_byte_array(entry.data.size());
 	return entry.type + size_bytes + entry.data;
 }
 
-static std::string reconstruct_record(const std::string & winner_content, const sub_record_sequence_t & output)
+std::string sub_record_merge_t::reconstruct_record(const std::string & winner_content, const sub_record_sequence_t & output)
 {
 	std::string body;
 	for (const auto & entry : output)
@@ -47,7 +37,7 @@ static std::string reconstruct_record(const std::string & winner_content, const 
 	return result;
 }
 
-static size_t find_occurrence_index(const sub_record_sequence_t & sequence, size_t index)
+size_t sub_record_merge_t::find_occurrence_index(const sub_record_sequence_t & sequence, size_t index)
 {
 	size_t count = 0;
 	const auto & target_type = sequence[index].type;
@@ -61,7 +51,7 @@ static size_t find_occurrence_index(const sub_record_sequence_t & sequence, size
 	return count;
 }
 
-static int find_by_type_and_occurrence(const sub_record_sequence_t & sequence, const std::string & type, size_t occurrence)
+int sub_record_merge_t::find_by_type_and_occurrence(const sub_record_sequence_t & sequence, const std::string & type, size_t occurrence)
 {
 	size_t count = 0;
 
@@ -79,7 +69,7 @@ static int find_by_type_and_occurrence(const sub_record_sequence_t & sequence, c
 	return -1;
 }
 
-static bool needs_element_wise(const std::string & rec_type, const std::string & sub_type, size_t data_size)
+bool sub_record_merge_t::needs_element_wise(const std::string & rec_type, const std::string & sub_type, size_t data_size)
 {
 	if (rec_type == "NPC_" && sub_type == "NPDT" && (data_size == 52 || data_size == 12))
 		return true;
@@ -93,7 +83,7 @@ static bool needs_element_wise(const std::string & rec_type, const std::string &
 	return false;
 }
 
-static std::string merge_bytes_three_way(const char * first, const char * inter, const char * winner, size_t size)
+std::string sub_record_merge_t::merge_bytes_three_way(const char * first, const char * inter, const char * winner, size_t size)
 {
 	std::string result(winner, size);
 
@@ -106,9 +96,7 @@ static std::string merge_bytes_three_way(const char * first, const char * inter,
 	return result;
 }
 
-static constexpr size_t enam_slot_size = 24;
-
-static std::vector<std::string> collect_enam_data(const sub_record_sequence_t & sequence)
+std::vector<std::string> sub_record_merge_t::collect_enam_data(const sub_record_sequence_t & sequence)
 {
 	std::vector<std::string> slots;
 
@@ -121,7 +109,7 @@ static std::vector<std::string> collect_enam_data(const sub_record_sequence_t & 
 	return slots;
 }
 
-static std::string merge_enam_slots(
+std::string sub_record_merge_t::merge_enam_slots(
 	const std::vector<std::string> & first_enams,
 	const std::vector<std::string> & inter_enams,
 	const std::vector<std::string> & winner_enams)
@@ -151,12 +139,30 @@ static std::string merge_enam_slots(
 	return result;
 }
 
-static bool is_enam_record_type(const std::string & rec_type)
+bool sub_record_merge_t::is_enam_record_type(const std::string & rec_type)
 {
 	return rec_type == "ENCH" || rec_type == "SPEL" || rec_type == "ALCH";
 }
 
-static void apply_intermediate(
+sub_record_sequence_t sub_record_merge_t::replace_enam_entries(
+	const sub_record_sequence_t & output,
+	const std::string & merged_enam_data)
+{
+	sub_record_sequence_t result;
+
+	for (const auto & entry : output)
+	{
+		if (entry.type != "ENAM")
+			result.push_back(entry);
+	}
+
+	for (size_t offset = 0; offset + enam_slot_size <= merged_enam_data.size(); offset += enam_slot_size)
+		result.push_back({"ENAM", merged_enam_data.substr(offset, enam_slot_size)});
+
+	return result;
+}
+
+void sub_record_merge_t::apply_intermediate(
 	sub_record_sequence_t & output,
 	const sub_record_sequence_t & first,
 	const sub_record_sequence_t & intermediate,
@@ -212,25 +218,13 @@ merge_result_t sub_record_merge_t::merge(const merge_input_t & input)
 	return merge_generic(input);
 }
 
-struct frmr_group_t
-{
-	uint32_t frmr_index;
-	sub_record_sequence_t sub_records;
-};
-
-struct cell_partition_t
-{
-	sub_record_sequence_t header;
-	std::vector<frmr_group_t> groups;
-};
-
-static uint32_t read_frmr_index(const sub_record_entry_t & frmr_entry)
+uint32_t sub_record_merge_t::read_frmr_index(const sub_record_entry_t & frmr_entry)
 {
 	return static_cast<uint32_t>(
 		tools_t::convert_string_byte_array_to_uint(frmr_entry.data.substr(0, 4)));
 }
 
-static cell_partition_t partition_cell(const std::string & content)
+cell_partition_t sub_record_merge_t::partition_cell(const std::string & content)
 {
 	cell_partition_t result;
 	sub_record_iter_t iter(content);
@@ -260,9 +254,7 @@ static cell_partition_t partition_cell(const std::string & content)
 	return result;
 }
 
-using frmr_map_t = std::map<uint32_t, frmr_group_t>;
-
-static frmr_map_t build_frmr_map(const std::vector<frmr_group_t> & groups)
+frmr_map_t sub_record_merge_t::build_frmr_map(const std::vector<frmr_group_t> & groups)
 {
 	frmr_map_t result;
 
@@ -272,7 +264,7 @@ static frmr_map_t build_frmr_map(const std::vector<frmr_group_t> & groups)
 	return result;
 }
 
-static void apply_intermediate_to_group(
+void sub_record_merge_t::apply_intermediate_to_group(
 	sub_record_sequence_t & output,
 	const sub_record_sequence_t & first,
 	const sub_record_sequence_t & intermediate,
@@ -306,7 +298,7 @@ static void apply_intermediate_to_group(
 	}
 }
 
-static sub_record_sequence_t merge_frmr_group(
+sub_record_sequence_t sub_record_merge_t::merge_frmr_group(
 	const sub_record_sequence_t & first_subs,
 	const sub_record_sequence_t & inter_subs,
 	const sub_record_sequence_t & winner_subs)
@@ -316,7 +308,7 @@ static sub_record_sequence_t merge_frmr_group(
 	return output;
 }
 
-static std::string reconstruct_cell(
+std::string sub_record_merge_t::reconstruct_cell(
 	const std::string & winner_content,
 	const sub_record_sequence_t & header,
 	const std::vector<frmr_group_t> & groups)
@@ -339,7 +331,7 @@ static std::string reconstruct_cell(
 	return result;
 }
 
-static void collect_intermediate_additions(
+void sub_record_merge_t::collect_intermediate_additions(
 	std::vector<frmr_group_t> & merged_groups,
 	const std::vector<std::string> & versions,
 	const frmr_map_t & first_map,
@@ -374,7 +366,7 @@ static void collect_intermediate_additions(
 	}
 }
 
-static void merge_winner_frmr_groups(
+void sub_record_merge_t::merge_winner_frmr_groups(
 	std::vector<frmr_group_t> & merged_groups,
 	const std::vector<std::string> & versions,
 	const frmr_map_t & first_map,
@@ -452,24 +444,6 @@ merge_result_t sub_record_merge_t::merge_cell_refs(const merge_input_t & input)
 	return {true, result};
 }
 
-static sub_record_sequence_t replace_enam_entries(
-	const sub_record_sequence_t & output,
-	const std::string & merged_enam_data)
-{
-	sub_record_sequence_t result;
-
-	for (const auto & entry : output)
-	{
-		if (entry.type != "ENAM")
-			result.push_back(entry);
-	}
-
-	for (size_t offset = 0; offset + enam_slot_size <= merged_enam_data.size(); offset += enam_slot_size)
-		result.push_back({"ENAM", merged_enam_data.substr(offset, enam_slot_size)});
-
-	return result;
-}
-
 merge_result_t sub_record_merge_t::merge_generic(const merge_input_t & input)
 {
 	const auto & versions = input.version_contents;
@@ -493,10 +467,9 @@ merge_result_t sub_record_merge_t::merge_generic(const merge_input_t & input)
 	if (is_enam_record_type(input.rec_type))
 	{
 		const auto first_enams = collect_enam_data(first_subs);
-		auto merged_enams = collect_enam_data(winner_subs);
 		std::string merged_enam_data;
 
-		for (const auto & slot : merged_enams)
+		for (const auto & slot : collect_enam_data(winner_subs))
 			merged_enam_data += slot;
 
 		for (size_t v = versions.size() - 2; v >= 1; --v)

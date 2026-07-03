@@ -128,14 +128,6 @@ void editor_window_t::setup_toolbar()
 
 	toolbar->addSeparator();
 
-	auto * toggle_merge = new QAction("Show Merge", this);
-	toggle_merge->setCheckable(true);
-	toggle_merge->setChecked(m_settings.merge_column_visible());
-	toggle_merge->setToolTip("Show or hide the merged patch column");
-	toolbar->addAction(toggle_merge);
-	connect(toggle_merge, &QAction::toggled, m_toggle_merge_action, &QAction::setChecked);
-	connect(m_toggle_merge_action, &QAction::toggled, toggle_merge, &QAction::setChecked);
-
 	statusBar()->addWidget(m_plugin_workspace_view->status_label());
 	statusBar()->addPermanentWidget(m_plugin_workspace_view->count_label());
 }

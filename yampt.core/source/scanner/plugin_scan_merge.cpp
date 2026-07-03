@@ -1,5 +1,6 @@
 #include "../decoder/sub_record_iter.hpp"
 #include "plugin_scan.hpp"
+#include "sub_record_merge.hpp"
 #include <algorithm>
 #include <cstring>
 #include <filesystem>
@@ -470,50 +471,56 @@ void plugin_scan_t::merge_leveled_list(const conflict_entry_t & entry)
 		return m_plugins[ver.plugin_idx]->esm.get_record().content;
 	};
 
-	const auto first_content = get_content(entry.versions[0]);
+	std::vector<std::string> version_contents;
+	for (const auto & ver : entry.versions)
+	{
+		if (ver.plugin_idx == m_merge_plugin_idx)
+			continue;
+
+		version_contents.push_back(get_content(ver));
+	}
+
+	merge_input_t input;
+	input.rec_type = entry.rec_type;
+	input.record_id = entry.record_id;
+	input.version_contents = std::move(version_contents);
+
+	const auto result = leveled_list_merge_t::merge(input);
+	if (!result.content.empty())
+		copy_record_to_merge_raw(entry.rec_type, entry.record_id, result.content);
+}
+
+merge_result_t leveled_list_merge_t::merge(const merge_input_t & input)
+{
+	const auto & versions = input.version_contents;
+	if (versions.size() < 2)
+		return {false, {}};
+
+	const auto & first_content = versions.front();
 	const auto first_map = build_item_count_map(extract_list_items(first_content));
 
 	std::vector<item_count_map_t> non_first_maps;
-	std::vector<int> non_first_plugin_indices;
 	std::string winning_content;
 
-	for (size_t vi = 1; vi < entry.versions.size(); ++vi)
+	for (size_t vi = 1; vi < versions.size(); ++vi)
 	{
-		if (entry.versions[vi].plugin_idx == m_merge_plugin_idx)
-			continue;
-
-		const auto ver_content = get_content(entry.versions[vi]);
-		non_first_maps.push_back(build_item_count_map(extract_list_items(ver_content)));
-		non_first_plugin_indices.push_back(entry.versions[vi].plugin_idx);
-		winning_content = ver_content;
+		non_first_maps.push_back(build_item_count_map(extract_list_items(versions[vi])));
+		winning_content = versions[vi];
 	}
 
 	if (non_first_maps.empty())
-		return;
-
-	for (const auto & [item_key, first_count] : first_map)
-	{
-		if (!is_item_deleted(item_key, first_map, non_first_maps))
-			continue;
-
-		for (size_t mi = 0; mi < non_first_maps.size(); ++mi)
-		{
-			if (non_first_maps[mi].find(item_key) == non_first_maps[mi].end())
-			{
-				tools_t::add_log(
-				    "[info] leveled list deletion: " + item_key.first +
-				    " at level " + std::to_string(item_key.second) +
-				    " by " + plugin_filename(non_first_plugin_indices[mi]) + "\r\n");
-			}
-		}
-	}
+		return {false, {}};
 
 	auto merged = build_merged_items(first_map, non_first_maps);
 	sort_merged_items(merged);
 
 	const auto header_part = extract_list_header(winning_content);
-	const auto record = build_merged_list_record(entry.rec_type, header_part, merged);
-	copy_record_to_merge_raw(entry.rec_type, entry.record_id, record);
+	const auto record = build_merged_list_record(input.rec_type, header_part, merged);
+
+	if (record == winning_content)
+		return {false, winning_content};
+
+	return {true, record};
 }
 
 void plugin_scan_t::merge_dialogue(const conflict_entry_t & entry)

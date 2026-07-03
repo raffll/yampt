@@ -18,6 +18,7 @@
 - Remove unused function arguments — do not leave unnamed or commented-out parameters
 - Always do testable interfaces
 - Unit test for every function
+- Every algorithm must be callable from a unit test without instantiating heavy dependencies (no file I/O, no UI, no loaded plugins). Extract pure logic into public static methods on a dedicated class (e.g. `sub_record_merge_t::merge()`, `leveled_list_merge_t::merge()`) that accept data via parameters and return results. Class methods that need infrastructure (loading files, accessing plugin arrays) are thin wrappers that collect data and delegate to the testable class.
 
 ## Naming
 
@@ -53,3 +54,4 @@
 - No comments unless the code cannot be explained by function or variable names alone. If a comment is unavoidable, keep it to one short line.
 - No decorative comment banners (dashed lines, boxes, ASCII art).
 - Always remove items from TODO.md that are done or cancelled — never leave stale entries.
+- No file-local `static` functions. All logic belongs as static methods on the owning class. A .cpp file implements one class — every function in it is a member of that class. No mixing of free functions, file-local statics, and class methods in the same file.
