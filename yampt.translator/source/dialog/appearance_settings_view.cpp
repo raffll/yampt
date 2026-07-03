@@ -1,5 +1,5 @@
 #include "dialog/appearance_settings_view.hpp"
-#include <io/app_settings.hpp>
+#include <app_settings.hpp>
 #include <theme_system.hpp>
 #include <QComboBox>
 #include <QLabel>

@@ -1,4 +1,4 @@
-#include "io/app_settings.hpp"
+#include "app_settings.hpp"
 #include <QCoreApplication>
 
 app_settings_t::app_settings_t(const QString & filename)

@@ -1,5 +1,5 @@
 #include "dialog/language_settings_view.hpp"
-#include <io/app_settings.hpp>
+#include <app_settings.hpp>
 #include <filesystem>
 #include <QComboBox>
 #include <QFormLayout>

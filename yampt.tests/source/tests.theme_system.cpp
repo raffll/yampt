@@ -2,7 +2,7 @@
 #include <theme_system.hpp>
 #include <utility/color_palette.hpp>
 #include <utility/theme_enums.hpp>
-#include <io/app_settings.hpp>
+#include <app_settings.hpp>
 #include <QCoreApplication>
 #include <cmath>
 #include <cstdlib>

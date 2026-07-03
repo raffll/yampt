@@ -2,6 +2,11 @@
 #include <algorithm>
 #include <sstream>
 
+static bool line_starts_with(const std::string & line, const char * prefix)
+{
+	return line.rfind(prefix, 0) == 0;
+}
+
 openmw_cfg_t profile_reader_t::parse_openmw_cfg_text(const std::string & text)
 {
 	openmw_cfg_t result;
@@ -16,7 +21,7 @@ openmw_cfg_t profile_reader_t::parse_openmw_cfg_text(const std::string & text)
 		while (!line.empty() && line.front() == ' ')
 			line.erase(line.begin());
 
-		if (line.starts_with("data=") || line.starts_with("data ="))
+		if (line_starts_with(line, "data=") || line_starts_with(line, "data ="))
 		{
 			auto value = line.substr(line.find('=') + 1);
 			while (!value.empty() && value.front() == ' ')
@@ -28,7 +33,7 @@ openmw_cfg_t profile_reader_t::parse_openmw_cfg_text(const std::string & text)
 			if (!value.empty())
 				result.data_dirs.push_back(value);
 		}
-		else if (line.starts_with("content=") || line.starts_with("content ="))
+		else if (line_starts_with(line, "content=") || line_starts_with(line, "content ="))
 		{
 			auto value = line.substr(line.find('=') + 1);
 			while (!value.empty() && value.front() == ' ')
@@ -77,7 +82,7 @@ mo2_profile_t profile_reader_t::parse_mo2_profile_text(
 		while (!line.empty() && line.front() == ' ')
 			line.erase(line.begin());
 
-		if (line.starts_with("+"))
+		if (line_starts_with(line, "+"))
 			result.enabled_mods.push_back(line.substr(1));
 	}
 

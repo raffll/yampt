@@ -1,7 +1,7 @@
 #include "plugin_workspace_view.hpp"
 #include "../dialog/filter_dialog.hpp"
 #include "../dialog/plugin_select_dialog.hpp"
-#include <io/app_settings.hpp>
+#include <app_settings.hpp>
 #include <scanner/merge_patch_ops.hpp>
 #include <scanner/sub_record_merge.hpp>
 #include <scanner/merge_compute.hpp>
@@ -187,35 +187,64 @@ void plugin_workspace_view_t::load_plugins_from_paths(const std::vector<std::str
 	if (selected.empty())
 		return;
 
+	load_plugins_direct(selected, base_path);
+	save_plugin_paths();
+}
+
+void plugin_workspace_view_t::load_plugins_direct(const std::vector<std::string> & paths, const std::string & base_path)
+{
 	m_load_base_path = base_path;
 	m_scan = plugin_scan_t();
 	m_view_model->clear();
 	m_nav_model->rebuild();
 
-	for (const auto & path : selected)
+	for (const auto & path : paths)
 	{
+		if (!QFile::exists(QString::fromStdString(path)))
+		{
+			log_message("[warning] skipping missing plugin: " + path);
+			continue;
+		}
+
+		auto filename = path;
+		auto pos = filename.find_last_of("/\\");
+		if (pos != std::string::npos)
+			filename = filename.substr(pos + 1);
+
 		try
 		{
 			m_scan.load_plugin(path);
-			const auto & idx = m_scan.index(static_cast<int>(m_scan.plugin_count()) - 1);
-			log_message(
-			    "Loaded " + m_scan.plugin_filename(static_cast<int>(m_scan.plugin_count()) - 1) + " (" +
-			    std::to_string(idx.entries().size()) + " records indexed)");
+			const int loaded_idx = static_cast<int>(m_scan.plugin_count()) - 1;
+
+			if (filename == "Merged Patch.esp")
+			{
+				m_scan.set_merge_plugin_from_loaded(loaded_idx);
+				log_message("Loaded merge plugin: " + filename);
+			}
+			else
+			{
+				const auto & idx = m_scan.index(loaded_idx);
+				log_message(
+				    "Loaded " + m_scan.plugin_filename(loaded_idx) + " (" +
+				    std::to_string(idx.entries().size()) + " records indexed)");
+			}
 		}
 		catch (const std::exception & e)
 		{
-			auto filename = path;
-			auto pos = filename.find_last_of("/\\");
-			if (pos != std::string::npos)
-				filename = filename.substr(pos + 1);
+			auto filename_err = path;
+			auto pos_err = filename_err.find_last_of("/\\");
+			if (pos_err != std::string::npos)
+				filename_err = filename_err.substr(pos_err + 1);
 
-			log_message("Error loading " + filename + ": " + e.what());
+			log_message("[error] loading " + filename_err + ": " + e.what());
 		}
 	}
 
+	if (m_scan.plugin_count() == 0)
+		return;
+
 	m_scan.rebuild_conflicts();
 	rebuild_after_load();
-	save_plugin_paths();
 }
 
 void plugin_workspace_view_t::on_load_data_files()
@@ -821,16 +850,16 @@ std::string plugin_workspace_view_t::resolve_merge_output_path() const
 
 	if (m_load_source == load_source_t::mo2_profile)
 	{
-		auto output_dir = QDir(QString::fromStdString(m_load_base_path));
-		output_dir.cd("../../overwrite");
-		return output_dir.filePath(QString::fromStdString(merge_filename)).toStdString();
+		auto output_path = QDir::cleanPath(
+		    QString::fromStdString(m_load_base_path) + "/../../overwrite/" + QString::fromStdString(merge_filename));
+		return output_path.toStdString();
 	}
 
 	if (m_load_source == load_source_t::openmw_cfg)
 	{
-		auto output_dir = QDir(QString::fromStdString(m_load_base_path));
-		output_dir.cd("data");
-		return output_dir.filePath(QString::fromStdString(merge_filename)).toStdString();
+		auto output_path = QDir::cleanPath(
+		    QString::fromStdString(m_load_base_path) + "/data/" + QString::fromStdString(merge_filename));
+		return output_path.toStdString();
 	}
 
 	auto output_dir = QDir(QString::fromStdString(m_load_base_path));
@@ -1788,12 +1817,6 @@ void plugin_workspace_view_t::log_message(const std::string & msg)
 void plugin_workspace_view_t::save_plugin_paths()
 {
 	QSettings settings(QCoreApplication::applicationDirPath() + "/yEditor.ini", QSettings::IniFormat);
-
-	QStringList plugin_paths;
-	for (int i = 0; i < static_cast<int>(m_scan.plugin_count()); ++i)
-		plugin_paths.append(QString::fromStdString(m_scan.plugin_path(i)));
-
-	settings.setValue("session/plugin_paths", plugin_paths);
 	settings.setValue("session/load_source", static_cast<int>(m_load_source));
 	settings.setValue("session/load_base_path", QString::fromStdString(m_load_base_path));
 }
@@ -1840,59 +1863,61 @@ void plugin_workspace_view_t::load_plugin_paths()
 {
 	QSettings settings(QCoreApplication::applicationDirPath() + "/yEditor.ini", QSettings::IniFormat);
 
-	const auto paths = settings.value("session/plugin_paths").toStringList();
-	if (paths.isEmpty())
-		return;
-
 	m_load_source = static_cast<load_source_t>(settings.value("session/load_source", 0).toInt());
 	m_load_base_path = settings.value("session/load_base_path").toString().toStdString();
 
-	for (const auto & qpath : paths)
-	{
-		const auto path = qpath.toStdString();
-		if (path.empty())
-			continue;
-
-		if (!QFile::exists(qpath))
-		{
-			log_message("[warning] skipping missing plugin: " + path);
-			continue;
-		}
-
-		auto filename = path;
-		auto pos = filename.find_last_of("/\\");
-		if (pos != std::string::npos)
-			filename = filename.substr(pos + 1);
-
-		try
-		{
-			m_scan.load_plugin(path);
-			const int loaded_idx = static_cast<int>(m_scan.plugin_count()) - 1;
-
-			if (filename == "Merged Patch.esp")
-			{
-				m_scan.set_merge_plugin_from_loaded(loaded_idx);
-				log_message("Loaded merge plugin: " + filename);
-			}
-			else
-			{
-				const auto & idx = m_scan.index(loaded_idx);
-				log_message(
-				    "Loaded " + m_scan.plugin_filename(loaded_idx) + " (" +
-				    std::to_string(idx.entries().size()) + " records indexed)");
-			}
-		}
-		catch (const std::exception & e)
-		{
-			log_message("[error] loading " + filename + ": " + e.what());
-		}
-	}
-
-	if (m_scan.plugin_count() == 0)
+	if (m_load_base_path.empty())
 		return;
 
-	m_scan.rebuild_conflicts();
-	rebuild_after_load();
+	switch (m_load_source)
+	{
+	case load_source_t::folder:
+	{
+		QDir data_dir(QString::fromStdString(m_load_base_path));
+		auto file_list = data_dir.entryInfoList({ "*.esm", "*.esp" }, QDir::Files, QDir::Time | QDir::Reversed);
+
+		std::vector<std::string> esms;
+		std::vector<std::string> esps;
+		for (const auto & fi : file_list)
+		{
+			if (fi.suffix().toLower() == "esm")
+				esms.push_back(fi.absoluteFilePath().toStdString());
+			else
+				esps.push_back(fi.absoluteFilePath().toStdString());
+		}
+
+		std::vector<std::string> paths;
+		paths.insert(paths.end(), esms.begin(), esms.end());
+		paths.insert(paths.end(), esps.begin(), esps.end());
+
+		if (paths.empty())
+			return;
+
+		load_plugins_direct(paths, m_load_base_path);
+		break;
+	}
+	case load_source_t::mo2_profile:
+	{
+		auto paths = parse_mo2_profile(QString::fromStdString(m_load_base_path));
+		if (paths.empty())
+			return;
+
+		load_plugins_direct(paths, m_load_base_path);
+		break;
+	}
+	case load_source_t::openmw_cfg:
+	{
+		const auto cfg_path = QString::fromStdString(m_load_base_path) + "/openmw.cfg";
+		auto paths = parse_openmw_cfg(cfg_path);
+		if (paths.empty())
+			return;
+
+		load_plugins_direct(paths, m_load_base_path);
+		break;
+	}
+	case load_source_t::none:
+		break;
+	}
 }
 
 void plugin_workspace_view_t::save_session_state()

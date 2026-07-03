@@ -69,12 +69,12 @@ static std::string make_levi_header(const std::string & list_id, uint32_t list_f
 
 TEST_CASE("leveled_list_merge, max occurrence preserved", "[u]")
 {
-	auto header = make_levi_header("list_id", 1, 0, 1);
-	auto first_subs = header + make_levi_entry("iron_sword", 1);
+	auto first_subs = make_levi_header("list_id", 1, 0, 1) + make_levi_entry("iron_sword", 1);
 	auto mod_subs = make_levi_header("list_id", 1, 0, 3)
 	              + make_levi_entry("iron_sword", 1)
 	              + make_levi_entry("iron_sword", 1)
 	              + make_levi_entry("iron_sword", 1);
+	auto winner_subs = make_levi_header("list_id", 1, 0, 1) + make_levi_entry("iron_sword", 1);
 
 	leveled_list_input_t input;
 	input.rec_type = "LEVI";
@@ -82,6 +82,7 @@ TEST_CASE("leveled_list_merge, max occurrence preserved", "[u]")
 	input.version_contents = {
 		make_record("LEVI", first_subs),
 		make_record("LEVI", mod_subs),
+		make_record("LEVI", winner_subs),
 	};
 
 	auto result = leveled_list_merge_t::merge(input);
@@ -283,6 +284,7 @@ TEST_CASE("leveled_list_merge, LEVC creature list works same", "[u]")
 	auto mod_subs = make_levi_header("crea_list", 1, 0, 2)
 	              + make_levc_entry("rat", 1)
 	              + make_levc_entry("mudcrab", 3);
+	auto winner_subs = make_levi_header("crea_list", 1, 0, 1) + make_levc_entry("rat", 1);
 
 	leveled_list_input_t input;
 	input.rec_type = "LEVC";
@@ -290,6 +292,7 @@ TEST_CASE("leveled_list_merge, LEVC creature list works same", "[u]")
 	input.version_contents = {
 		make_record("LEVC", first_subs),
 		make_record("LEVC", mod_subs),
+		make_record("LEVC", winner_subs),
 	};
 
 	auto result = leveled_list_merge_t::merge(input);

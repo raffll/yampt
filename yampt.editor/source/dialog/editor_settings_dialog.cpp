@@ -2,7 +2,7 @@
 #include "dialog/appearance_settings_view.hpp"
 #include "dialog/editor_paths_view.hpp"
 #include "dialog/merge_settings_view.hpp"
-#include <io/app_settings.hpp>
+#include <app_settings.hpp>
 #include <QDialogButtonBox>
 #include <QHBoxLayout>
 #include <QListWidget>

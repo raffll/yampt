@@ -1,5 +1,5 @@
 #include "dialog/translation_settings_view.hpp"
-#include <io/app_settings.hpp>
+#include <app_settings.hpp>
 #include <QFormLayout>
 #include <QHBoxLayout>
 #include <QLineEdit>

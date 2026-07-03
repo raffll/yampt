@@ -104,6 +104,8 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>yampt.core.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)x64\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -120,6 +122,8 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>yampt.core.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)x64\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -140,6 +144,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>yampt.core.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)x64\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -160,6 +166,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>yampt.core.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)x64\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -171,53 +179,16 @@
     <ClCompile Include="source\model\view_tree_decode.cpp" />
     <ClCompile Include="source\model\view_tree_decode_cell.cpp" />
     <ClCompile Include="source\model\view_tree_decode_lists.cpp" />
-    <ClCompile Include="..\yampt.core\source\decoder\view_tree_format.cpp" />
     <ClCompile Include="source\dialog\plugin_select_dialog.cpp" />
     <ClCompile Include="source\dialog\filter_dialog.cpp" />
     <ClCompile Include="source\view\messages_view.cpp" />
-    <ClCompile Include="..\yampt.core\source\utility\tools.cpp" />
-    <ClCompile Include="..\yampt.core\source\io\esm_reader.cpp" />
-    <ClCompile Include="..\yampt.core\source\io\codepage.cpp" />
-    <ClCompile Include="..\yampt.core\source\io\file_list.cpp" />
-    <ClCompile Include="..\yampt.core\source\decoder\sub_record_schema.cpp" />
-    <ClCompile Include="..\yampt.core\source\scanner\plugin_index.cpp" />
-    <ClCompile Include="..\yampt.core\source\scanner\plugin_scan.cpp" />
-    <ClCompile Include="..\yampt.core\source\scanner\plugin_scan_merge.cpp" />
-    <ClCompile Include="..\yampt.core\source\scanner\sub_record_merge.cpp" />
-    <ClCompile Include="..\yampt.core\source\scanner\merge_compute.cpp" />
-    <ClCompile Include="..\yampt.core\source\scanner\fog_fixer.cpp" />
-    <ClCompile Include="..\yampt.core\source\scanner\summon_fixer.cpp" />
-    <ClCompile Include="..\yampt.core\source\scanner\cell_name_fixer.cpp" />
-    <ClCompile Include="..\yampt.core\source\scanner\conflict_compute.cpp" />
-    <ClCompile Include="..\yampt.core\source\decoder\conflict_slots.cpp" />
-    <ClCompile Include="..\yampt.core\source\decoder\conflict_slots_cell.cpp" />
     <ClCompile Include="source\io\profile_reader.cpp" />
     <ClCompile Include="source\dialog\editor_paths_view.cpp" />
-    <ClCompile Include="..\yampt.core\source\io\app_settings.cpp" />
     <ClCompile Include="source\dialog\editor_settings_dialog.cpp" />
     <ClCompile Include="source\dialog\appearance_settings_view.cpp" />
     <ClCompile Include="source\dialog\merge_settings_view.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\yampt.core\source\decoder\view_tree_format.hpp" />
-    <ClInclude Include="..\yampt.core\source\utility\tools.hpp" />
-    <ClInclude Include="..\yampt.core\source\io\codepage.hpp" />
-    <ClInclude Include="..\yampt.core\source\io\esm_reader.hpp" />
-    <ClInclude Include="..\yampt.core\source\utility\includes.hpp" />
-    <ClInclude Include="..\yampt.core\source\io\file_list.hpp" />
-    <ClInclude Include="..\yampt.core\source\scanner\conflict_enums.hpp" />
-    <ClInclude Include="..\yampt.core\source\decoder\conflict_slots.hpp" />
-    <ClInclude Include="..\yampt.core\source\decoder\conflict_slots_cell.hpp" />
-    <ClInclude Include="..\yampt.core\source\decoder\sub_record_iter.hpp" />
-    <ClInclude Include="..\yampt.core\source\decoder\sub_record_schema.hpp" />
-    <ClInclude Include="..\yampt.core\source\scanner\plugin_index.hpp" />
-    <ClInclude Include="..\yampt.core\source\scanner\plugin_scan.hpp" />
-    <ClInclude Include="..\yampt.core\source\scanner\conflict_compute.hpp" />
-    <ClInclude Include="..\yampt.core\source\scanner\sub_record_merge.hpp" />
-    <ClInclude Include="..\yampt.core\source\scanner\merge_compute.hpp" />
-    <ClInclude Include="..\yampt.core\source\scanner\fog_fixer.hpp" />
-    <ClInclude Include="..\yampt.core\source\scanner\summon_fixer.hpp" />
-    <ClInclude Include="..\yampt.core\source\scanner\cell_name_fixer.hpp" />
     <ClInclude Include="source\io\profile_reader.hpp" />
   </ItemGroup>
   <ItemGroup>
@@ -302,6 +273,9 @@
     <ClCompile Include="$(IntDir)moc_merge_settings_view.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\yampt.core\yampt.core.vcxproj">
+      <Project>{9F1F5DCD-D3E1-4FDB-A9C7-62C307ED1E21}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\yampt.qt\yampt.qt.vcxproj">
       <Project>{D4E5F6A7-B8C9-0123-DEFA-456789012345}</Project>
     </ProjectReference>

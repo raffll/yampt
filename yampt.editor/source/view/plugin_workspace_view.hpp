@@ -66,6 +66,7 @@ private:
 	void load_patch_plugins();
 	void rebuild_nav_preserving_state();
 	void load_plugins_from_paths(const std::vector<std::string> & paths, const std::string & base_path);
+	void load_plugins_direct(const std::vector<std::string> & paths, const std::string & base_path);
 	void load_existing_merged_patch();
 	std::string resolve_merge_output_path() const;
 	void save_merged_patch();

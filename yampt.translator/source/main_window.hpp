@@ -9,7 +9,7 @@
 #include "editor/grammar_checker.hpp"
 #include "editor/operation_executor.hpp"
 #include "editor/row_filter.hpp"
-#include "io/app_settings.hpp"
+#include "app_settings.hpp"
 #include "model/dict_document.hpp"
 #include "model/document.hpp"
 #include "model/plugin_op.hpp"

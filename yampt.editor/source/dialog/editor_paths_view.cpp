@@ -1,5 +1,5 @@
 #include "dialog/editor_paths_view.hpp"
-#include <io/app_settings.hpp>
+#include <app_settings.hpp>
 #include <QFormLayout>
 #include <QLabel>
 

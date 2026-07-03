@@ -95,9 +95,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="source\theme_system.cpp" />
+    <ClCompile Include="source\app_settings.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\conflict_types.hpp" />
+    <ClInclude Include="source\app_settings.hpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="source\theme_system.hpp">

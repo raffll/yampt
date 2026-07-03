@@ -1,5 +1,5 @@
 #include "dialog/merge_settings_view.hpp"
-#include <io/app_settings.hpp>
+#include <app_settings.hpp>
 #include <QCheckBox>
 #include <QGridLayout>
 #include <QGroupBox>

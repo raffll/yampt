@@ -1,6 +1,6 @@
 #pragma once
 
-#include "conflict_types.hpp"
+#include "conflict_enums.hpp"
 #include "plugin_index.hpp"
 #include <memory>
 #include <string>

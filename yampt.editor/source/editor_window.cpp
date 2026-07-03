@@ -1,7 +1,7 @@
 #include "editor_window.hpp"
 #include "dialog/editor_settings_dialog.hpp"
 #include "view/plugin_workspace_view.hpp"
-#include <io/app_settings.hpp>
+#include <app_settings.hpp>
 #include <theme_system.hpp>
 #include <QAction>
 #include <QCheckBox>

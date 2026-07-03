@@ -1,6 +1,6 @@
 #pragma once
 
-#include <io/app_settings.hpp>
+#include <app_settings.hpp>
 #include <QMainWindow>
 
 class QAction;

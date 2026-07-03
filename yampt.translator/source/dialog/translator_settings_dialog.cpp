@@ -3,7 +3,7 @@
 #include "dialog/language_settings_view.hpp"
 #include "dialog/shortcuts_settings_view.hpp"
 #include "dialog/translation_settings_view.hpp"
-#include <io/app_settings.hpp>
+#include <app_settings.hpp>
 #include <QDialogButtonBox>
 #include <QHBoxLayout>
 #include <QListWidget>

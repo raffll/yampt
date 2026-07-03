@@ -298,3 +298,136 @@ TEST_CASE("profile_reader_t::resolve_merge_output_path, empty base returns empty
 
 	REQUIRE(result.empty());
 }
+
+#include <QDir>
+#include <QFile>
+#include <QString>
+#include <filesystem>
+#include <fstream>
+
+TEST_CASE("profile_reader_t, mo2 merge output path resolves via QDir", "[u]")
+{
+	auto result = QDir::cleanPath("C:/MO2/profiles/Default/../../overwrite/Merged Patch.esp").toStdString();
+
+	REQUIRE(result.find("overwrite") != std::string::npos);
+	REQUIRE(result.find("Merged Patch.esp") != std::string::npos);
+	REQUIRE(result.find("profiles") == std::string::npos);
+}
+
+TEST_CASE("profile_reader_t, openmw merge output path resolves via QDir", "[u]")
+{
+	auto result = QDir::cleanPath("/home/user/.config/openmw/data/Merged Patch.esp").toStdString();
+
+	REQUIRE(result == "/home/user/.config/openmw/data/Merged Patch.esp");
+}
+
+TEST_CASE("profile_reader_t, folder merge output path resolves via QDir", "[u]")
+{
+	auto base = QDir("C:/Games/Morrowind/Data Files");
+	auto result = base.filePath("Merged Patch.esp").toStdString();
+
+	REQUIRE(result == "C:/Games/Morrowind/Data Files/Merged Patch.esp");
+}
+
+TEST_CASE("profile_reader_t, mo2 overwrite resolves merged patch in load order", "[u]")
+{
+	std::set<std::string> existing = {
+	    "/MO2/overwrite/Merged Patch.esp",
+	    "/MO2/mods/ModA/Morrowind.esm",
+	    "/game/Data Files/Morrowind.esm",
+	};
+
+	auto file_exists = [&](const std::string & path) { return existing.count(path) > 0; };
+
+	auto resolved = profile_reader_t::resolve_mo2_plugin(
+	    "Merged Patch.esp",
+	    "/MO2/overwrite",
+	    { "ModA" },
+	    "/MO2/mods",
+	    "/game/Data Files",
+	    file_exists);
+
+	REQUIRE(resolved == "/MO2/overwrite/Merged Patch.esp");
+}
+
+TEST_CASE("profile_reader_t, mo2 merged patch not in overwrite returns empty", "[u]")
+{
+	std::set<std::string> existing = {
+	    "/MO2/mods/ModA/Morrowind.esm",
+	};
+
+	auto file_exists = [&](const std::string & path) { return existing.count(path) > 0; };
+
+	auto resolved = profile_reader_t::resolve_mo2_plugin(
+	    "Merged Patch.esp",
+	    "/MO2/overwrite",
+	    { "ModA" },
+	    "/MO2/mods",
+	    "/game/Data Files",
+	    file_exists);
+
+	REQUIRE(resolved.empty());
+}
+
+TEST_CASE("profile_reader_t, session restore creates and finds merge patch", "[i]")
+{
+	namespace fs = std::filesystem;
+	const auto temp_root = fs::temp_directory_path() / "yampt_test_session";
+	const auto data_dir = temp_root / "Data Files";
+	fs::create_directories(data_dir);
+
+	std::ofstream(data_dir / "Morrowind.esm", std::ios::binary).put('\0');
+	std::ofstream(data_dir / "Merged Patch.esp", std::ios::binary).put('\0');
+
+	auto base_path = data_dir.string();
+	std::replace(base_path.begin(), base_path.end(), '\\', '/');
+
+	auto merge_path = profile_reader_t::resolve_merge_output_path(
+	    load_source_kind_t::folder, base_path);
+
+	REQUIRE(QFile::exists(QString::fromStdString(merge_path)));
+
+	fs::remove_all(temp_root);
+}
+
+TEST_CASE("profile_reader_t, mo2 session restore finds merge in overwrite", "[i]")
+{
+	namespace fs = std::filesystem;
+	const auto temp_root = fs::temp_directory_path() / "yampt_test_mo2_session";
+	const auto profiles_dir = temp_root / "profiles" / "Default";
+	const auto overwrite_dir = temp_root / "overwrite";
+	fs::create_directories(profiles_dir);
+	fs::create_directories(overwrite_dir);
+
+	std::ofstream(overwrite_dir / "Merged Patch.esp", std::ios::binary).put('\0');
+
+	auto base_path = profiles_dir.string();
+	std::replace(base_path.begin(), base_path.end(), '\\', '/');
+
+	auto merge_path = profile_reader_t::resolve_merge_output_path(
+	    load_source_kind_t::mo2_profile, base_path);
+
+	REQUIRE(QFile::exists(QString::fromStdString(merge_path)));
+
+	fs::remove_all(temp_root);
+}
+
+TEST_CASE("profile_reader_t, openmw session restore finds merge in data", "[i]")
+{
+	namespace fs = std::filesystem;
+	const auto temp_root = fs::temp_directory_path() / "yampt_test_openmw_session";
+	const auto data_dir = temp_root / "data";
+	fs::create_directories(data_dir);
+
+	std::ofstream(data_dir / "Merged Patch.esp", std::ios::binary).put('\0');
+
+	auto base_path = temp_root.string();
+	std::replace(base_path.begin(), base_path.end(), '\\', '/');
+
+	auto merge_path = profile_reader_t::resolve_merge_output_path(
+	    load_source_kind_t::openmw_cfg, base_path);
+
+	REQUIRE(QFile::exists(QString::fromStdString(merge_path)));
+
+	fs::remove_all(temp_root);
+}

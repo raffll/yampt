@@ -81,9 +81,10 @@ public:
 	static frmr_map_t build_frmr_map(const std::vector<frmr_group_t> & groups);
 	static uint32_t read_frmr_index(const sub_record_entry_t & frmr_entry);
 
+	static merge_result_t merge_cell_refs(const merge_input_t & input);
+
 private:
 	static merge_result_t merge_generic(const merge_input_t & input);
-	static merge_result_t merge_cell_refs(const merge_input_t & input);
 
 	static void apply_intermediate_to_group(
 		sub_record_sequence_t & output,
