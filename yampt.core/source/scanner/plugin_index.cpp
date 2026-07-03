@@ -36,8 +36,8 @@ static std::string derive_cell_id(sub_record_iter_t & iter, size_t fallback_inde
 
 		if (sub.type == "DATA" && sub.size >= cell_data_min_size)
 		{
-			uint32_t flags =
-			    tools_t::convert_string_byte_array_to_uint(std::string(sub.data + cell_flags_offset, grid_coord_size));
+			uint32_t flags = static_cast<uint32_t>(
+			    tools_t::convert_string_byte_array_to_uint(std::string(sub.data + cell_flags_offset, grid_coord_size)));
 			is_interior = (flags & interior_flag_bit) != 0;
 			grid_x = static_cast<int32_t>(tools_t::convert_string_byte_array_to_uint(
 			    std::string(sub.data + cell_grid_x_offset, grid_coord_size)));
