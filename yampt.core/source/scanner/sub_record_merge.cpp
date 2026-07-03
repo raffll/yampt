@@ -81,6 +81,9 @@ bool sub_record_merge_t::needs_element_wise(const std::string & rec_type, const 
 	if (rec_type == "CREA" && sub_type == "AI_W" && data_size == 14)
 		return true;
 
+	if (sub_type == "AIDT" && data_size == 12)
+		return true;
+
 	return false;
 }
 
