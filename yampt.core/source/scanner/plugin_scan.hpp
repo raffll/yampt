@@ -42,8 +42,6 @@ public:
 	void clear_merge_records();
 	std::vector<merge_record_t> collect_pinned_records() const;
 	void restore_pinned_records(const std::vector<merge_record_t> & pinned);
-	void set_merge_visible(bool visible);
-	bool is_merge_visible() const;
 	void rebuild_conflicts();
 
 	size_t plugin_count() const;
@@ -114,7 +112,6 @@ private:
 
 	std::vector<std::unique_ptr<loaded_plugin_t>> m_plugins;
 	int m_merge_plugin_idx = -1;
-	bool m_merge_visible = true;
 
 	std::vector<merge_record_t> m_merge_records;
 

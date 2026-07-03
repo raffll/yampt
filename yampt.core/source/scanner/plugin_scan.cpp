@@ -43,16 +43,6 @@ void plugin_scan_t::insert_or_update_version(version_descriptor_t desc)
 		entry.display_name = std::move(desc.display_name);
 }
 
-void plugin_scan_t::set_merge_visible(bool visible)
-{
-	m_merge_visible = visible;
-}
-
-bool plugin_scan_t::is_merge_visible() const
-{
-	return m_merge_visible;
-}
-
 void plugin_scan_t::rebuild_conflicts()
 {
 	m_entries.clear();
@@ -76,7 +66,7 @@ void plugin_scan_t::rebuild_conflicts()
 		}
 	}
 
-	if (m_merge_plugin_idx >= 0 && m_merge_visible)
+	if (m_merge_plugin_idx >= 0)
 	{
 		for (size_t mi = 0; mi < m_merge_records.size(); ++mi)
 		{

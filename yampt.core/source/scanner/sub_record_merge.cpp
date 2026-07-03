@@ -178,7 +178,13 @@ void sub_record_merge_t::apply_intermediate(
 		const auto first_idx = find_by_type_and_occurrence(first, intermediate[i].type, occurrence);
 
 		if (first_idx < 0)
+		{
+			const auto winner_idx = find_by_type_and_occurrence(winner, intermediate[i].type, occurrence);
+			if (winner_idx < 0)
+				output.push_back(intermediate[i]);
+
 			continue;
+		}
 
 		if (intermediate[i].data == first[first_idx].data)
 			continue;
@@ -204,6 +210,9 @@ void sub_record_merge_t::apply_intermediate(
 		}
 
 		if (winner[winner_idx].data != first[first_idx].data)
+			continue;
+
+		if (output[output_idx].data != first[first_idx].data)
 			continue;
 
 		output[output_idx].data = intermediate[i].data;

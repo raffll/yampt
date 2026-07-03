@@ -154,23 +154,6 @@ TEST_CASE("sub_record_merge_t::merge, 4 versions later intermediate wins", "[u]"
 	REQUIRE(result.content == expected);
 }
 
-TEST_CASE("sub_record_merge_t::merge, INFO records excluded", "[u]")
-{
-	auto first = make_record("INFO", make_sub("INAM", make_string("id")) + make_sub("NAME", make_string("text1")));
-	auto inter = make_record("INFO", make_sub("INAM", make_string("id")) + make_sub("NAME", make_string("text2")));
-	auto winner = make_record("INFO", make_sub("INAM", make_string("id")) + make_sub("NAME", make_string("text1")));
-
-	merge_input_t input;
-	input.rec_type = "INFO";
-	input.record_id = "id";
-	input.version_contents = { first, inter, winner };
-
-	auto result = sub_record_merge_t::merge(input);
-
-	REQUIRE_FALSE(result.changed);
-	REQUIRE(result.content == winner);
-}
-
 TEST_CASE("sub_record_merge_t::merge, preserves winner header flags", "[u]")
 {
 	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("A"));
@@ -192,6 +175,136 @@ TEST_CASE("sub_record_merge_t::merge, preserves winner header flags", "[u]")
 	uint32_t output_flags = 0;
 	std::memcpy(&output_flags, result.content.data() + 12, 4);
 	REQUIRE(output_flags == 0x0400);
+}
+
+// ============================================================================
+// Sub-Record Additions by Intermediate
+// ============================================================================
+
+TEST_CASE("sub_record_merge_t::merge, added sub-record preserved", "[u]")
+{
+	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("MODL", make_string("model.nif"));
+	auto subs_inter = make_sub("NAME", make_string("id")) + make_sub("MODL", make_string("model.nif")) + make_sub("CNAM", make_string("female_part"));
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("MODL", make_string("model.nif"));
+
+	merge_input_t input;
+	input.rec_type = "ARMO";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("ARMO", subs_first),
+		make_record("ARMO", subs_inter),
+		make_record("ARMO", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(result.content.find("CNAM") != std::string::npos);
+	REQUIRE(result.content.find("female_part") != std::string::npos);
+}
+
+TEST_CASE("sub_record_merge_t::merge, added sub-record winner has it", "[u]")
+{
+	auto subs_first = make_sub("NAME", make_string("id"));
+	auto subs_inter = make_sub("NAME", make_string("id")) + make_sub("CNAM", make_string("inter_value"));
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("CNAM", make_string("winner_value"));
+
+	merge_input_t input;
+	input.rec_type = "ARMO";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("ARMO", subs_first),
+		make_record("ARMO", subs_inter),
+		make_record("ARMO", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE_FALSE(result.changed);
+	REQUIRE(result.content.find("winner_value") != std::string::npos);
+}
+
+TEST_CASE("sub_record_merge_t::merge, added sub-record with existing data", "[u]")
+{
+	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("Name")) + make_sub("MODL", make_string("m.nif"));
+	auto subs_inter = make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("Name")) + make_sub("MODL", make_string("m.nif")) + make_sub("BNAM", make_string("added_part"));
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("FNAM", make_string("Name")) + make_sub("MODL", make_string("m.nif"));
+
+	merge_input_t input;
+	input.rec_type = "ARMO";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("ARMO", subs_first),
+		make_record("ARMO", subs_inter),
+		make_record("ARMO", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(result.content.find("BNAM") != std::string::npos);
+	REQUIRE(result.content.find("added_part") != std::string::npos);
+	REQUIRE(result.content.find("Name") != std::string::npos);
+	REQUIRE(result.content.find("m.nif") != std::string::npos);
+}
+
+TEST_CASE("sub_record_merge_t::merge, two intermediates add different subs", "[u]")
+{
+	auto subs_first = make_sub("NAME", make_string("id"));
+	auto subs_inter1 = make_sub("NAME", make_string("id")) + make_sub("BNAM", make_string("part_a"));
+	auto subs_inter2 = make_sub("NAME", make_string("id")) + make_sub("CNAM", make_string("part_b"));
+	auto subs_winner = make_sub("NAME", make_string("id"));
+
+	merge_input_t input;
+	input.rec_type = "ARMO";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("ARMO", subs_first),
+		make_record("ARMO", subs_inter1),
+		make_record("ARMO", subs_inter2),
+		make_record("ARMO", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(result.content.find("BNAM") != std::string::npos);
+	REQUIRE(result.content.find("part_a") != std::string::npos);
+	REQUIRE(result.content.find("CNAM") != std::string::npos);
+	REQUIRE(result.content.find("part_b") != std::string::npos);
+}
+
+TEST_CASE("sub_record_merge_t::merge, steel_cuirass scenario tribunal adds CNAM", "[u]")
+{
+	auto subs_morrowind = make_sub("NAME", make_string("steel_cuirass"))
+	                    + make_sub("MODL", make_string("a\\A_Steel_Cuirass_GND.nif"))
+	                    + make_sub("FNAM", make_string("Steel Cuirass"))
+	                    + make_sub("INDX", make_string("Cuirass"))
+	                    + make_sub("BNAM", make_string("a_steel_cuirass"));
+
+	auto subs_tribunal = make_sub("NAME", make_string("steel_cuirass"))
+	                   + make_sub("MODL", make_string("a\\A_Steel_Cuirass_GND.nif"))
+	                   + make_sub("FNAM", make_string("Steel Cuirass"))
+	                   + make_sub("INDX", make_string("Cuirass"))
+	                   + make_sub("BNAM", make_string("a_steel_cuirass"))
+	                   + make_sub("CNAM", make_string("A_Steel_Cuir_Female"));
+
+	auto subs_bloodmoon = subs_morrowind;
+
+	merge_input_t input;
+	input.rec_type = "ARMO";
+	input.record_id = "steel_cuirass";
+	input.version_contents = {
+		make_record("ARMO", subs_morrowind),
+		make_record("ARMO", subs_tribunal),
+		make_record("ARMO", subs_bloodmoon),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(result.content.find("CNAM") != std::string::npos);
+	REQUIRE(result.content.find("A_Steel_Cuir_Female") != std::string::npos);
 }
 
 // ============================================================================

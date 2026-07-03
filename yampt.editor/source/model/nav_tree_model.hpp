@@ -16,6 +16,7 @@ public:
 	explicit nav_tree_model_t(plugin_scan_t & scan, QObject * parent = nullptr);
 
 	void rebuild();
+	void set_excluded_plugins(const std::set<std::string> * excluded);
 
 	struct filter_state_t
 	{
@@ -85,6 +86,7 @@ private:
 	filter_state_t m_filter;
 	bool m_has_filter = false;
 	bool m_hide_duplicates = false;
+	const std::set<std::string> * m_excluded_plugins = nullptr;
 
 	conflict_this_t record_foreground_for_plugin(const conflict_entry_t & entry, int plugin_idx) const;
 

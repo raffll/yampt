@@ -211,6 +211,7 @@
     <ClCompile Include="..\yampt.core\source\scanner\plugin_scan.cpp" />
     <ClCompile Include="..\yampt.core\source\scanner\plugin_scan_merge.cpp" />
     <ClCompile Include="..\yampt.core\source\scanner\sub_record_merge.cpp" />
+    <ClCompile Include="..\yampt.core\source\scanner\merge_compute.cpp" />
     <ClCompile Include="..\yampt.core\source\scanner\fog_fixer.cpp" />
     <ClCompile Include="..\yampt.core\source\scanner\summon_fixer.cpp" />
     <ClCompile Include="..\yampt.core\source\scanner\cell_name_fixer.cpp" />

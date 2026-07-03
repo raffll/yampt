@@ -29,7 +29,6 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 	m_is_merge_pinned = scan.is_merge_pinned(entry.rec_type, entry.record_id);
 
 	size_t col_count = setup_columns(scan, entry);
-	setup_merge_column(scan, entry, col_count);
 	if (col_count == 0)
 	{
 		endResetModel();
@@ -81,9 +80,6 @@ size_t view_tree_model_t::setup_columns(plugin_scan_t & scan, const conflict_ent
 void view_tree_model_t::setup_merge_column(plugin_scan_t & scan, const conflict_entry_t & entry, size_t & col_count)
 {
 	if (!scan.has_merge())
-		return;
-
-	if (!scan.is_merge_visible())
 		return;
 
 	for (const auto & ver : entry.versions)

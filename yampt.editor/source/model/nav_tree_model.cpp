@@ -202,6 +202,11 @@ void nav_tree_model_t::set_hide_duplicates(bool hide)
 	emit dataChanged(index(0, 0, {}), index(rowCount({}) - 1, columnCount({}) - 1, {}));
 }
 
+void nav_tree_model_t::set_excluded_plugins(const std::set<std::string> * excluded)
+{
+	m_excluded_plugins = excluded;
+}
+
 void nav_tree_model_t::build_tree()
 {
 	m_tree.clear();
@@ -542,6 +547,11 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 			    "[%02X] %s",
 			    file_node.plugin_idx,
 			    m_scan.plugin_filename(file_node.plugin_idx).c_str());
+
+			const auto & filename = m_scan.plugin_filename(file_node.plugin_idx);
+			if (m_excluded_plugins && m_excluded_plugins->count(filename))
+				return QString::fromUtf8("\xF0\x9F\x94\x92 ") + QString::fromUtf8(buf);
+
 			return QString::fromUtf8(buf);
 		}
 

@@ -4,6 +4,7 @@
 #include "../model/view_tree_model.hpp"
 #include "messages_view.hpp"
 #include <scanner/plugin_scan.hpp>
+#include <set>
 #include <QCheckBox>
 #include <QComboBox>
 #include <QLabel>
@@ -33,8 +34,6 @@ public:
 	QLabel * status_label() const { return m_status_label; }
 	void refresh_views();
 
-	bool is_merge_column_visible() const { return m_merge_column_visible; }
-
 public slots:
 	void on_load_plugins();
 	void on_load_data_files();
@@ -45,7 +44,6 @@ public slots:
 	void on_create_merged_patch();
 	void on_advanced_filter();
 	void set_hide_duplicates(bool hide);
-	void set_merge_column_visible(bool visible);
 
 private slots:
 	void on_nav_selection_changed(const QModelIndex & current);
@@ -63,10 +61,13 @@ private:
 	void log_message(const std::string & msg);
 	void save_plugin_paths();
 	void load_plugin_paths();
+	void save_excluded_plugins();
+	void load_excluded_plugins();
 	void rebuild_nav_preserving_state();
 	void load_plugins_from_paths(const std::vector<std::string> & paths, const std::string & base_path);
 	void load_existing_merged_patch();
 	std::string resolve_merge_output_path() const;
+	void save_merged_patch();
 	void display_record_in_view(const conflict_entry_t & entry);
 	std::vector<std::string> parse_mo2_profile(const QString & profile_dir);
 	std::vector<std::string> parse_openmw_cfg(const QString & cfg_path);
@@ -95,29 +96,6 @@ private:
 	bool handle_drop_on_nav(QDropEvent * drop_event);
 	void refresh_after_merge(const std::string & rec_type, const std::string & record_id);
 
-	struct merge_counters_t
-	{
-		int three_way = 0;
-		int lists = 0;
-		int dialogues = 0;
-	};
-
-	merge_counters_t merge_phase_one();
-	bool is_merge_candidate(const conflict_entry_t & entry) const;
-	void dispatch_merge_entry(const conflict_entry_t & entry, merge_counters_t & counters);
-	std::vector<std::string> build_version_contents(const conflict_entry_t & entry);
-	void merge_three_way(
-	    const conflict_entry_t & entry,
-	    std::vector<std::string> version_contents,
-	    merge_counters_t & counters);
-	int merge_phase_two();
-	void merge_phase_three();
-	int apply_fog_fixes();
-	int apply_summon_fixes();
-	int apply_cell_name_fixes();
-	std::string get_winning_content(const std::string & rec_type, const std::string & record_id);
-	std::string get_merge_or_winning_content(const std::string & rec_type, const std::string & record_id);
-
 	app_settings_t & m_settings;
 	plugin_scan_t m_scan;
 
@@ -144,5 +122,5 @@ private:
 	bool m_has_filter_active = false;
 	nav_tree_model_t::filter_state_t m_last_quick_filter;
 	bool m_hide_duplicates = false;
-	bool m_merge_column_visible = true;
+	std::set<std::string> m_excluded_plugins;
 };

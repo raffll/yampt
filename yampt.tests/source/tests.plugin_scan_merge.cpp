@@ -200,6 +200,7 @@ TEST_CASE("plugin_scan_t::merge_leveled_list, additions-only preserving master",
 
 	auto plugin_levi = make_levi_record("lev_item_test", 1, 0, {
 	    { "iron_sword", 1 },
+	    { "steel_dagger", 3 },
 	    { "glass_blade", 5 },
 	});
 
@@ -244,7 +245,7 @@ TEST_CASE("plugin_scan_t::merge_leveled_list, deduplication by item and level", 
 	REQUIRE(items[2] == std::pair<std::string, uint16_t>{ "daedric_axe", 10 });
 }
 
-TEST_CASE("plugin_scan_t::merge_leveled_list, header preserved from master", "[i]")
+TEST_CASE("plugin_scan_t::merge_leveled_list, header from winner", "[i]")
 {
 	uint32_t master_flags = 0x02;
 	uint8_t master_chance = 25;
@@ -270,11 +271,11 @@ TEST_CASE("plugin_scan_t::merge_leveled_list, header preserved from master", "[i
 
 	auto merged_data = find_sub_record(fixture.merged_content(), "DATA");
 	auto merged_nnam = find_sub_record(fixture.merged_content(), "NNAM");
-	auto master_data = find_sub_record(master_levi, "DATA");
-	auto master_nnam = find_sub_record(master_levi, "NNAM");
+	auto plugin_data = find_sub_record(plugin_levi, "DATA");
+	auto plugin_nnam = find_sub_record(plugin_levi, "NNAM");
 
-	REQUIRE(merged_data == master_data);
-	REQUIRE(merged_nnam == master_nnam);
+	REQUIRE(merged_data == plugin_data);
+	REQUIRE(merged_nnam == plugin_nnam);
 }
 
 TEST_CASE("plugin_scan_t::merge_leveled_list, same item different levels are distinct", "[i]")

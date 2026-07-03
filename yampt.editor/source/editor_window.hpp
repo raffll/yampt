@@ -25,5 +25,4 @@ private:
 
 	plugin_workspace_view_t * m_plugin_workspace_view = nullptr;
 	app_settings_t m_settings { "yEditor.ini" };
-	QAction * m_toggle_merge_action = nullptr;
 };
