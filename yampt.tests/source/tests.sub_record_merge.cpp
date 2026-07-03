@@ -3,6 +3,7 @@
 #include <utility/tools.hpp>
 #include <cstring>
 #include <string>
+#include <unordered_map>
 
 static std::string make_sub(const std::string & type, const std::string & data)
 {
@@ -35,6 +36,13 @@ static std::string make_uint32(uint32_t value)
 {
 	std::string result(4, '\0');
 	std::memcpy(result.data(), &value, 4);
+	return result;
+}
+
+static std::string make_uint16(uint16_t value)
+{
+	std::string result(2, '\0');
+	std::memcpy(result.data(), &value, 2);
 	return result;
 }
 
@@ -656,7 +664,7 @@ TEST_CASE("sub_record_merge_t::merge, element-wise skipped on size mismatch", "[
 TEST_CASE("sub_record_merge_t::merge, ENAM per-byte merge", "[u]")
 {
 	auto enam_first = make_enam(79, 0, 0, 10, 2, 40);
-	auto enam_inter = make_enam(79, 0, 0, 10, 2, 20);
+	auto enam_inter = make_enam(79, 0, 0, 30, 2, 40);
 	auto enam_winner = make_enam(79, 0, 0, 10, 1, 20);
 
 	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("ENAM", enam_first);
@@ -675,7 +683,7 @@ TEST_CASE("sub_record_merge_t::merge, ENAM per-byte merge", "[u]")
 	auto result = sub_record_merge_t::merge(input);
 
 	REQUIRE(result.changed);
-	auto expected_enam = make_enam(79, 0, 0, 10, 1, 20);
+	auto expected_enam = make_enam(79, 0, 0, 30, 1, 20);
 	auto expected = make_record("SPEL", make_sub("NAME", make_string("id")) + make_sub("ENAM", expected_enam));
 	REQUIRE(result.content == expected);
 }
@@ -684,7 +692,7 @@ TEST_CASE("sub_record_merge_t::merge, ENAM per-byte merge", "[u]")
 // NPCO winner only
 // ============================================================================
 
-TEST_CASE("sub_record_merge_t::merge, NPCO uses winner only", "[u]")
+TEST_CASE("sub_record_merge_t::merge, NPCO adds intermediate items", "[u]")
 {
 	std::string npco_a(36, '\0');
 	npco_a[0] = 1;
@@ -713,7 +721,10 @@ TEST_CASE("sub_record_merge_t::merge, NPCO uses winner only", "[u]")
 
 	auto result = sub_record_merge_t::merge(input);
 
-	REQUIRE_FALSE(result.changed);
+	REQUIRE(result.changed);
+	REQUIRE(result.content.find("item_a") != std::string::npos);
+	REQUIRE(result.content.find("item_b") != std::string::npos);
+	REQUIRE(result.content.find("item_c") != std::string::npos);
 }
 
 // ============================================================================
@@ -739,4 +750,410 @@ TEST_CASE("sub_record_merge_t::merge, CELL returns winner unchanged", "[u]")
 
 	REQUIRE_FALSE(result.changed);
 	REQUIRE(result.content == winner);
+}
+
+// ============================================================================
+// Sub-record patching (drag and drop operation)
+// ============================================================================
+
+TEST_CASE("sub_record_merge_t, patch single sub-record by index", "[u]")
+{
+	auto merge_content = make_record("WEAP",
+		make_sub("NAME", make_string("weapon_id")) +
+		make_sub("FNAM", make_string("Old Name")) +
+		make_sub("ENAM", make_string("old_enchant")));
+
+	auto source_content = make_record("WEAP",
+		make_sub("NAME", make_string("weapon_id")) +
+		make_sub("FNAM", make_string("New Name")) +
+		make_sub("ENAM", make_string("new_enchant")));
+
+	auto merge_subs = sub_record_merge_t::parse_sub_records(merge_content);
+	const auto source_subs = sub_record_merge_t::parse_sub_records(source_content);
+
+	const size_t binary_idx = 2;
+	const auto & source_sub = source_subs[binary_idx];
+
+	const auto merge_idx = sub_record_merge_t::find_by_type_and_occurrence(merge_subs, source_sub.type, 0);
+	REQUIRE(merge_idx >= 0);
+
+	merge_subs[merge_idx].data = source_sub.data;
+	const auto patched = sub_record_merge_t::reconstruct_record(merge_content, merge_subs);
+
+	REQUIRE(patched.find("new_enchant") != std::string::npos);
+	REQUIRE(patched.find("Old Name") != std::string::npos);
+	REQUIRE(patched.find("old_enchant") == std::string::npos);
+}
+
+TEST_CASE("sub_record_merge_t, patch appends if not in merge", "[u]")
+{
+	auto merge_content = make_record("BSGN",
+		make_sub("NAME", make_string("sign_id")) +
+		make_sub("FNAM", make_string("Sign Name")));
+
+	auto source_content = make_record("BSGN",
+		make_sub("NAME", make_string("sign_id")) +
+		make_sub("FNAM", make_string("Sign Name")) +
+		make_sub("NPCS", make_string("new_ability")));
+
+	auto merge_subs = sub_record_merge_t::parse_sub_records(merge_content);
+	const auto source_subs = sub_record_merge_t::parse_sub_records(source_content);
+
+	const size_t binary_idx = 2;
+	const auto & source_sub = source_subs[binary_idx];
+
+	const auto merge_idx = sub_record_merge_t::find_by_type_and_occurrence(merge_subs, source_sub.type, 0);
+	REQUIRE(merge_idx < 0);
+
+	merge_subs.push_back(source_sub);
+	const auto patched = sub_record_merge_t::reconstruct_record(merge_content, merge_subs);
+
+	REQUIRE(patched.find("new_ability") != std::string::npos);
+	REQUIRE(patched.find("Sign Name") != std::string::npos);
+}
+
+TEST_CASE("sub_record_merge_t, patch second occurrence by index", "[u]")
+{
+	auto merge_content = make_record("BSGN",
+		make_sub("NAME", make_string("id")) +
+		make_sub("NPCS", make_string("ability_a")) +
+		make_sub("NPCS", make_string("ability_b")));
+
+	auto source_content = make_record("BSGN",
+		make_sub("NAME", make_string("id")) +
+		make_sub("NPCS", make_string("ability_a")) +
+		make_sub("NPCS", make_string("ability_c")));
+
+	auto merge_subs = sub_record_merge_t::parse_sub_records(merge_content);
+	const auto source_subs = sub_record_merge_t::parse_sub_records(source_content);
+
+	const size_t binary_idx = 2;
+	const auto & source_sub = source_subs[binary_idx];
+
+	int source_occurrence = 0;
+	for (size_t s = 0; s < binary_idx; ++s)
+	{
+		if (source_subs[s].type == "NPCS")
+			++source_occurrence;
+	}
+	REQUIRE(source_occurrence == 1);
+
+	const auto merge_idx = sub_record_merge_t::find_by_type_and_occurrence(merge_subs, "NPCS", source_occurrence);
+	REQUIRE(merge_idx == 2);
+
+	merge_subs[merge_idx].data = source_sub.data;
+	const auto patched = sub_record_merge_t::reconstruct_record(merge_content, merge_subs);
+
+	REQUIRE(patched.find("ability_a") != std::string::npos);
+	REQUIRE(patched.find("ability_c") != std::string::npos);
+	REQUIRE(patched.find("ability_b") == std::string::npos);
+}
+
+// ============================================================================
+// Binary index resolution (col_type_indices mapping)
+// ============================================================================
+
+TEST_CASE("sub_record_merge_t, binary index generic no reorder", "[u]")
+{
+	auto content = make_record("WEAP",
+		make_sub("NAME", make_string("id")) +
+		make_sub("FNAM", make_string("Sword")) +
+		make_sub("ENAM", make_string("enchant")));
+
+	const auto subs = sub_record_merge_t::parse_sub_records(content);
+
+	std::unordered_map<std::string, std::vector<size_t>> type_indices;
+	for (size_t i = 0; i < subs.size(); ++i)
+		type_indices[subs[i].type].push_back(i);
+
+	REQUIRE(type_indices["NAME"][0] == 0);
+	REQUIRE(type_indices["FNAM"][0] == 1);
+	REQUIRE(type_indices["ENAM"][0] == 2);
+}
+
+TEST_CASE("sub_record_merge_t, binary index multiple same type", "[u]")
+{
+	auto content = make_record("BSGN",
+		make_sub("NAME", make_string("id")) +
+		make_sub("NPCS", make_string("ability_a")) +
+		make_sub("NPCS", make_string("ability_b")) +
+		make_sub("NPCS", make_string("ability_c")));
+
+	const auto subs = sub_record_merge_t::parse_sub_records(content);
+
+	std::unordered_map<std::string, std::vector<size_t>> type_indices;
+	for (size_t i = 0; i < subs.size(); ++i)
+		type_indices[subs[i].type].push_back(i);
+
+	REQUIRE(type_indices["NPCS"].size() == 3);
+	REQUIRE(type_indices["NPCS"][0] == 1);
+	REQUIRE(type_indices["NPCS"][1] == 2);
+	REQUIRE(type_indices["NPCS"][2] == 3);
+
+	REQUIRE(subs[type_indices["NPCS"][0]].data.find("ability_a") != std::string::npos);
+	REQUIRE(subs[type_indices["NPCS"][1]].data.find("ability_b") != std::string::npos);
+	REQUIRE(subs[type_indices["NPCS"][2]].data.find("ability_c") != std::string::npos);
+}
+
+TEST_CASE("sub_record_merge_t, patch by binary index not occurrence", "[u]")
+{
+	auto source_content = make_record("BSGN",
+		make_sub("NAME", make_string("id")) +
+		make_sub("NPCS", make_string("spell_x")) +
+		make_sub("NPCS", make_string("spell_y")) +
+		make_sub("NPCS", make_string("spell_z")));
+
+	auto merge_content = make_record("BSGN",
+		make_sub("NAME", make_string("id")) +
+		make_sub("NPCS", make_string("spell_x")) +
+		make_sub("NPCS", make_string("spell_old")) +
+		make_sub("NPCS", make_string("spell_z")));
+
+	const auto source_subs = sub_record_merge_t::parse_sub_records(source_content);
+	auto merge_subs = sub_record_merge_t::parse_sub_records(merge_content);
+
+	const size_t binary_idx = 2;
+	const auto & source_sub = source_subs[binary_idx];
+
+	REQUIRE(source_sub.data.find("spell_y") != std::string::npos);
+
+	int source_occurrence = 0;
+	for (size_t s = 0; s < binary_idx; ++s)
+	{
+		if (source_subs[s].type == source_sub.type)
+			++source_occurrence;
+	}
+
+	const auto merge_idx = sub_record_merge_t::find_by_type_and_occurrence(
+		merge_subs, source_sub.type, source_occurrence);
+	REQUIRE(merge_idx == 2);
+
+	merge_subs[merge_idx].data = source_sub.data;
+	const auto patched = sub_record_merge_t::reconstruct_record(merge_content, merge_subs);
+
+	REQUIRE(patched.find("spell_x") != std::string::npos);
+	REQUIRE(patched.find("spell_y") != std::string::npos);
+	REQUIRE(patched.find("spell_z") != std::string::npos);
+	REQUIRE(patched.find("spell_old") == std::string::npos);
+}
+
+TEST_CASE("sub_record_merge_t, reordered list binary index", "[u]")
+{
+	auto content = make_record("LEVC",
+		make_sub("CNAM", make_string("skeleton")) +
+		make_sub("INTV", make_uint16(3)) +
+		make_sub("CNAM", make_string("ancestor_ghost")) +
+		make_sub("INTV", make_uint16(1)) +
+		make_sub("CNAM", make_string("rat")) +
+		make_sub("INTV", make_uint16(1)));
+
+	const auto subs = sub_record_merge_t::parse_sub_records(content);
+
+	std::unordered_map<std::string, std::vector<size_t>> type_indices;
+	for (size_t i = 0; i < subs.size(); ++i)
+		type_indices[subs[i].type].push_back(i);
+
+	REQUIRE(type_indices["CNAM"][0] == 0);
+	REQUIRE(type_indices["CNAM"][1] == 2);
+	REQUIRE(type_indices["CNAM"][2] == 4);
+
+	REQUIRE(subs[type_indices["CNAM"][0]].data.find("skeleton") != std::string::npos);
+	REQUIRE(subs[type_indices["CNAM"][1]].data.find("ancestor_ghost") != std::string::npos);
+	REQUIRE(subs[type_indices["CNAM"][2]].data.find("rat") != std::string::npos);
+
+	size_t aligned_view_occurrence = 1;
+	size_t binary_idx_from_view = type_indices["CNAM"][aligned_view_occurrence];
+	REQUIRE(binary_idx_from_view == 2);
+	REQUIRE(subs[binary_idx_from_view].data.find("ancestor_ghost") != std::string::npos);
+}
+
+// ============================================================================
+// SCPT records skipped from merge
+// ============================================================================
+
+TEST_CASE("sub_record_merge_t::merge, SCPT returns winner unchanged", "[u]")
+{
+	auto subs_first = make_sub("SCHD", make_bytes({23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x72, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}));
+	auto subs_inter = make_sub("SCHD", make_bytes({23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x74, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}));
+	auto subs_winner = make_sub("SCHD", make_bytes({23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x72, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}));
+
+	auto first = make_record("SCPT", subs_first);
+	auto inter = make_record("SCPT", subs_inter);
+	auto winner = make_record("SCPT", subs_winner);
+
+	merge_input_t input;
+	input.rec_type = "SCPT";
+	input.record_id = "TestScript";
+	input.version_contents = { first, inter, winner };
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE_FALSE(result.changed);
+	REQUIRE(result.content == winner);
+}
+
+// ============================================================================
+// AIDT element-wise merge
+// ============================================================================
+
+TEST_CASE("sub_record_merge_t::merge, AIDT element-wise fight byte", "[u]")
+{
+	std::string aidt_first(12, '\0');
+	aidt_first[1] = 90;
+
+	std::string aidt_inter(12, '\0');
+	aidt_inter[1] = 85;
+
+	std::string aidt_winner(12, '\0');
+	aidt_winner[1] = 90;
+	aidt_winner[5] = 1;
+
+	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("AIDT", aidt_first);
+	auto subs_inter = make_sub("NAME", make_string("id")) + make_sub("AIDT", aidt_inter);
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("AIDT", aidt_winner);
+
+	merge_input_t input;
+	input.rec_type = "CREA";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("CREA", subs_first),
+		make_record("CREA", subs_inter),
+		make_record("CREA", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	auto result_subs = sub_record_merge_t::parse_sub_records(result.content);
+	auto aidt_idx = sub_record_merge_t::find_by_type_and_occurrence(result_subs, "AIDT", 0);
+	REQUIRE(aidt_idx >= 0);
+	REQUIRE(static_cast<uint8_t>(result_subs[aidt_idx].data[1]) == 85);
+	REQUIRE(static_cast<uint8_t>(result_subs[aidt_idx].data[5]) == 1);
+}
+
+// ============================================================================
+// ENAM magnitude pair fix
+// ============================================================================
+
+TEST_CASE("sub_record_merge_t::merge, ENAM mag min/max from same source", "[u]")
+{
+	auto enam_first = make_enam(79, 0, 0, 10, 40, 60);
+	auto enam_inter = make_enam(79, 0, 0, 10, 40, 40);
+	auto enam_winner = make_enam(79, 0, 0, 10, 60, 60);
+
+	merge_input_t input;
+	input.rec_type = "SPEL";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("SPEL", make_sub("NAME", make_string("id")) + make_sub("ENAM", enam_first)),
+		make_record("SPEL", make_sub("NAME", make_string("id")) + make_sub("ENAM", enam_inter)),
+		make_record("SPEL", make_sub("NAME", make_string("id")) + make_sub("ENAM", enam_winner)),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	auto result_subs = sub_record_merge_t::parse_sub_records(result.content);
+	auto enam_idx = sub_record_merge_t::find_by_type_and_occurrence(result_subs, "ENAM", 0);
+	REQUIRE(enam_idx >= 0);
+
+	int32_t min_mag = 0;
+	int32_t max_mag = 0;
+	std::memcpy(&min_mag, result_subs[enam_idx].data.data() + 12, 4);
+	std::memcpy(&max_mag, result_subs[enam_idx].data.data() + 16, 4);
+
+	REQUIRE(min_mag == max_mag);
+	REQUIRE((min_mag == 60 || min_mag == 40));
+}
+
+// ============================================================================
+// CREA NPDT attack pair fix
+// ============================================================================
+
+TEST_CASE("sub_record_merge_t::merge, CREA attack min/max paired", "[u]")
+{
+	std::string npdt_first(96, '\0');
+	npdt_first[68] = 2;
+	npdt_first[70] = 6;
+
+	std::string npdt_inter(96, '\0');
+	npdt_inter[68] = 5;
+	npdt_inter[70] = 10;
+
+	std::string npdt_winner(96, '\0');
+	npdt_winner[68] = 2;
+	npdt_winner[70] = 6;
+	npdt_winner[4] = 10;
+
+	auto subs_first = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_first);
+	auto subs_inter = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_inter);
+	auto subs_winner = make_sub("NAME", make_string("id")) + make_sub("NPDT", npdt_winner);
+
+	merge_input_t input;
+	input.rec_type = "CREA";
+	input.record_id = "id";
+	input.version_contents = {
+		make_record("CREA", subs_first),
+		make_record("CREA", subs_inter),
+		make_record("CREA", subs_winner),
+	};
+
+	auto result = sub_record_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	auto result_subs = sub_record_merge_t::parse_sub_records(result.content);
+	auto npdt_idx = sub_record_merge_t::find_by_type_and_occurrence(result_subs, "NPDT", 0);
+	REQUIRE(npdt_idx >= 0);
+
+	uint8_t atk1_min = static_cast<uint8_t>(result_subs[npdt_idx].data[68]);
+	uint8_t atk1_max = static_cast<uint8_t>(result_subs[npdt_idx].data[70]);
+
+	REQUIRE(atk1_min == 5);
+	REQUIRE(atk1_max == 10);
+}
+
+// ============================================================================
+// Leveled list merge LEVC
+// ============================================================================
+
+TEST_CASE("leveled_list_merge_t::merge, LEVC creature list", "[u]")
+{
+	auto make_levc_entry = [](const std::string & creature, uint16_t level) {
+		std::string cnam_data = creature;
+		cnam_data.push_back('\0');
+		std::string intv_data(2, '\0');
+		std::memcpy(intv_data.data(), &level, 2);
+		return make_sub("CNAM", cnam_data) + make_sub("INTV", intv_data);
+	};
+
+	auto make_header = [](const std::string & name, uint32_t count) {
+		std::string name_data = name + '\0';
+		uint32_t flags = 1;
+		uint8_t chance = 0;
+		return make_sub("NAME", name_data) +
+		       make_sub("DATA", make_uint32(flags)) +
+		       make_sub("NNAM", std::string(1, static_cast<char>(chance)));
+	};
+
+	auto first_subs = make_header("list", 2) +
+	                  make_levc_entry("rat", 1) +
+	                  make_levc_entry("skeleton", 3);
+	auto mod_subs = make_header("list", 3) +
+	               make_levc_entry("rat", 1) +
+	               make_levc_entry("skeleton", 3) +
+	               make_levc_entry("wolf", 5);
+
+	leveled_list_input_t input;
+	input.rec_type = "LEVC";
+	input.record_id = "list";
+	input.version_contents = {
+		make_record("LEVC", first_subs),
+		make_record("LEVC", mod_subs),
+	};
+
+	auto result = leveled_list_merge_t::merge(input);
+
+	REQUIRE(result.changed);
+	REQUIRE(result.content.find("rat") != std::string::npos);
+	REQUIRE(result.content.find("skeleton") != std::string::npos);
+	REQUIRE(result.content.find("wolf") != std::string::npos);
 }

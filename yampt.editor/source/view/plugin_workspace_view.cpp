@@ -20,7 +20,6 @@
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QHBoxLayout>
-#include <QTimer>
 #include <QHeaderView>
 #include <QInputDialog>
 #include <QMenu>
@@ -129,9 +128,8 @@ void plugin_workspace_view_t::setup_views()
 	m_content_splitter = new QSplitter(Qt::Horizontal, m_main_splitter);
 
 	m_nav_view = new QTreeView(m_content_splitter);
-	m_nav_view->setDragEnabled(true);
-	m_nav_view->setAcceptDrops(true);
-	m_nav_view->setDragDropMode(QAbstractItemView::DragDrop);
+	m_nav_view->setDragEnabled(false);
+	m_nav_view->setAcceptDrops(false);
 	m_nav_view->setContextMenuPolicy(Qt::CustomContextMenu);
 
 	m_view_view = new QTreeView(m_content_splitter);
@@ -141,12 +139,8 @@ void plugin_workspace_view_t::setup_views()
 	m_view_view->setAlternatingRowColors(false);
 	m_view_view->setWordWrap(false);
 	m_view_view->setUniformRowHeights(true);
-	m_view_view->setDragEnabled(true);
-	m_view_view->setAcceptDrops(true);
-	m_view_view->setDragDropMode(QAbstractItemView::DragDrop);
-	m_view_view->setDragDropOverwriteMode(true);
-	m_view_view->setDropIndicatorShown(false);
-	m_view_view->setDefaultDropAction(Qt::CopyAction);
+	m_view_view->setDragEnabled(false);
+	m_view_view->setAcceptDrops(false);
 	m_view_view->setItemDelegate(new grid_delegate_t(m_view_view));
 	m_view_view->setContextMenuPolicy(Qt::CustomContextMenu);
 
@@ -1136,95 +1130,7 @@ void plugin_workspace_view_t::resize_view_columns()
 
 bool plugin_workspace_view_t::handle_subrecord_drop(QDropEvent * drop_event)
 {
-	const auto & payload = QString::fromUtf8(drop_event->mimeData()->data("application/x-yampt-subrecord"));
-	const auto & parts = payload.split('\t');
-	if (parts.size() != 5)
-		return false;
-
-	const auto source_plugin = parts[0].toInt();
-	const auto & rec_type = parts[1].toStdString();
-	const auto & record_id = parts[2].toStdString();
-	const auto & sub_type = parts[3].toStdString();
-	const auto sub_row_idx = parts[4].toInt();
-
-	const auto * merge_content_ptr = m_scan.find_merge_content(rec_type, record_id);
-	std::string merge_content;
-	if (merge_content_ptr)
-	{
-		merge_content = *merge_content_ptr;
-	}
-	else
-	{
-		const auto * entry = m_scan.find(rec_type, record_id);
-		if (!entry || entry->versions.empty())
-			return false;
-
-		const auto & winner = entry->versions.back();
-		merge_content = m_scan.read_record_content(winner.plugin_idx, winner.record_index);
-	}
-
-	const auto * entry = m_scan.find(rec_type, record_id);
-	if (!entry)
-		return false;
-
-	std::string source_content;
-	for (const auto & ver : entry->versions)
-	{
-		if (ver.plugin_idx != source_plugin)
-			continue;
-
-		source_content = m_scan.read_record_content(source_plugin, ver.record_index);
-		break;
-	}
-
-	if (source_content.empty())
-		return false;
-
-	auto merge_subs = sub_record_merge_t::parse_sub_records(merge_content);
-	const auto source_subs = sub_record_merge_t::parse_sub_records(source_content);
-
-	int target_occurrence = 0;
-	for (int i = 0; i < sub_row_idx; ++i)
-	{
-		const auto & visible = m_view_model->rows();
-		if (i < static_cast<int>(visible.size()) && visible[i].type == sub_type)
-			++target_occurrence;
-	}
-
-	const auto source_idx = sub_record_merge_t::find_by_type_and_occurrence(source_subs, sub_type, target_occurrence);
-	if (source_idx < 0)
-	{
-		drop_event->ignore();
-		return true;
-	}
-
-	const auto merge_idx = sub_record_merge_t::find_by_type_and_occurrence(merge_subs, sub_type, target_occurrence);
-	if (merge_idx < 0)
-	{
-		merge_subs.push_back(source_subs[source_idx]);
-	}
-	else
-	{
-		merge_subs[merge_idx].data = source_subs[source_idx].data;
-	}
-
-	const auto patched = sub_record_merge_t::reconstruct_record(merge_content, merge_subs);
-	m_scan.copy_record_to_merge_raw(rec_type, record_id, patched);
-
-	log_message("[info] patched " + sub_type + " in " + rec_type + ":" + record_id);
-	drop_event->accept();
-
-	QTimer::singleShot(0, this, [this, rec_type, record_id]()
-	{
-		m_scan.rebuild_conflicts();
-		rebuild_nav_preserving_state();
-		save_merged_patch();
-
-		const auto * updated = m_scan.find(rec_type, record_id);
-		if (updated)
-			display_record_in_view(*updated);
-	});
-
+	drop_event->ignore();
 	return true;
 }
 
@@ -1388,34 +1294,159 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & pos)
 	if (!m_scan.has_merge())
 		return;
 
-	if (m_view_model->merge_column() < 0)
-		return;
-
 	auto index = m_view_view->indexAt(pos);
 	if (!index.isValid())
 		return;
 
-	if (!m_view_model->is_merge_column(index.column()))
+	const int col = index.column() - 1;
+	if (col < 0 || col >= static_cast<int>(m_view_model->column_plugin_indices().size()))
 		return;
 
-	QMenu menu(this);
-	auto * action = menu.addAction("Remove from merge");
-	action->setToolTip("Remove this record from the merged patch");
+	const int plugin_idx = m_view_model->column_plugin_indices()[col];
+	const bool is_on_merge = m_scan.is_merge_plugin(plugin_idx);
+	const auto & rec_type = m_view_model->record_type();
+	const auto & record_id = m_view_model->record_id();
 
-	connect(action, &QAction::triggered, this, [this]()
+	const auto & visible = m_view_model->rows();
+	const int row_idx = index.row();
+	if (row_idx < 0 || row_idx >= static_cast<int>(visible.size()))
+		return;
+
+	const auto & row = visible[row_idx];
+	int view_occurrence = 0;
+	for (int r = 0; r < row_idx; ++r)
 	{
-		const auto & rec_type = m_view_model->record_type();
-		const auto & record_id = m_view_model->record_id();
-		if (rec_type.empty() || record_id.empty())
-			return;
+		if (visible[r].type == row.type)
+			++view_occurrence;
+	}
 
-		m_scan.remove_from_merge(rec_type, record_id);
-		m_scan.rebuild_conflicts();
-		rebuild_nav_preserving_state();
-		save_merged_patch();
-		log_message("Removed " + rec_type + ":" + record_id + " from merge");
-		update_status();
-	});
+	const auto & col_indices = m_view_model->col_type_indices();
+	int binary_idx = -1;
+	if (col >= 0 && col < static_cast<int>(col_indices.size()))
+	{
+		auto it_type = col_indices[col].find(row.type);
+		if (it_type != col_indices[col].end() &&
+		    view_occurrence < static_cast<int>(it_type->second.size()) &&
+		    it_type->second[view_occurrence] != SIZE_MAX)
+		{
+			binary_idx = static_cast<int>(it_type->second[view_occurrence]);
+		}
+	}
+
+	QMenu menu(this);
+
+	if (!is_on_merge && !row.type.empty() && row.children.empty() && binary_idx >= 0)
+	{
+		menu.addAction("Copy Sub-Record to Merged Patch", [this, plugin_idx, rec_type, record_id, row, binary_idx]()
+		{
+			const auto * merge_content_ptr = m_scan.find_merge_content(rec_type, record_id);
+			std::string merge_content;
+			if (merge_content_ptr)
+			{
+				merge_content = *merge_content_ptr;
+			}
+			else
+			{
+				const auto * entry = m_scan.find(rec_type, record_id);
+				if (!entry || entry->versions.empty())
+					return;
+
+				const auto & winner = entry->versions.back();
+				merge_content = m_scan.read_record_content(winner.plugin_idx, winner.record_index);
+			}
+
+			const auto * entry = m_scan.find(rec_type, record_id);
+			if (!entry)
+				return;
+
+			std::string source_content;
+			for (const auto & ver : entry->versions)
+			{
+				if (ver.plugin_idx == plugin_idx)
+				{
+					source_content = m_scan.read_record_content(plugin_idx, ver.record_index);
+					break;
+				}
+			}
+
+			if (source_content.empty())
+				return;
+
+			auto merge_subs = sub_record_merge_t::parse_sub_records(merge_content);
+			const auto source_subs = sub_record_merge_t::parse_sub_records(source_content);
+
+			if (binary_idx >= static_cast<int>(source_subs.size()))
+				return;
+
+			const auto & source_sub = source_subs[binary_idx];
+			int source_occurrence = 0;
+			for (int s = 0; s < binary_idx; ++s)
+			{
+				if (source_subs[s].type == row.type)
+					++source_occurrence;
+			}
+
+			const auto merge_idx = sub_record_merge_t::find_by_type_and_occurrence(merge_subs, row.type, source_occurrence);
+			if (merge_idx < 0)
+				merge_subs.push_back(source_sub);
+			else
+				merge_subs[merge_idx].data = source_sub.data;
+
+			const auto patched = sub_record_merge_t::reconstruct_record(merge_content, merge_subs);
+			m_scan.copy_record_to_merge_raw(rec_type, record_id, patched);
+			log_message("[info] patched " + row.type + " in " + rec_type + ":" + record_id);
+
+			m_scan.rebuild_conflicts();
+			rebuild_nav_preserving_state();
+			save_merged_patch();
+
+			const auto * updated = m_scan.find(rec_type, record_id);
+			if (updated)
+				display_record_in_view(*updated);
+		});
+	}
+
+	if (is_on_merge && !row.type.empty() && row.children.empty() && binary_idx >= 0)
+	{
+		menu.addAction("Remove Sub-Record", [this, rec_type, record_id, binary_idx]()
+		{
+			const auto * merge_content_ptr = m_scan.find_merge_content(rec_type, record_id);
+			if (!merge_content_ptr)
+				return;
+
+			auto merge_subs = sub_record_merge_t::parse_sub_records(*merge_content_ptr);
+			if (binary_idx >= static_cast<int>(merge_subs.size()))
+				return;
+
+			merge_subs.erase(merge_subs.begin() + binary_idx);
+
+			merge_subs.erase(merge_subs.begin() + merge_idx);
+			const auto patched = sub_record_merge_t::reconstruct_record(*merge_content_ptr, merge_subs);
+			m_scan.copy_record_to_merge_raw(rec_type, record_id, patched);
+			log_message("[info] removed " + row.type + " from " + rec_type + ":" + record_id);
+
+			m_scan.rebuild_conflicts();
+			rebuild_nav_preserving_state();
+			save_merged_patch();
+
+			const auto * updated = m_scan.find(rec_type, record_id);
+			if (updated)
+				display_record_in_view(*updated);
+		});
+
+		menu.addAction("Remove Record from Merge", [this, rec_type, record_id]()
+		{
+			m_scan.remove_from_merge(rec_type, record_id);
+			m_scan.rebuild_conflicts();
+			rebuild_nav_preserving_state();
+			save_merged_patch();
+			log_message("Removed " + rec_type + ":" + record_id + " from merge");
+			update_status();
+		});
+	}
+
+	if (menu.actions().isEmpty())
+		return;
 
 	menu.exec(m_view_view->viewport()->mapToGlobal(pos));
 }
@@ -1470,28 +1501,6 @@ bool plugin_workspace_view_t::eventFilter(QObject * obj, QEvent * event)
 
 bool plugin_workspace_view_t::handle_drag_move_view(QDragMoveEvent * drag)
 {
-	const bool has_record = drag->mimeData()->hasFormat("application/x-yampt-record");
-	const bool has_subrecord = drag->mimeData()->hasFormat("application/x-yampt-subrecord");
-
-	if ((!has_record && !has_subrecord) || !m_scan.has_merge())
-	{
-		drag->ignore();
-		return true;
-	}
-
-	const int column = m_view_view->columnAt(drag->position().toPoint().x());
-	const int col_idx = column - 1;
-
-	if (col_idx >= 0 && col_idx < static_cast<int>(m_view_model->column_plugin_indices().size()))
-	{
-		const int plugin_idx = m_view_model->column_plugin_indices()[col_idx];
-		if (m_scan.is_merge_plugin(plugin_idx))
-		{
-			drag->acceptProposedAction();
-			return true;
-		}
-	}
-
 	drag->ignore();
 	return true;
 }
@@ -1526,9 +1535,6 @@ bool plugin_workspace_view_t::handle_drop_on_view(QDropEvent * drop_event)
 		const int plugin_idx = m_view_model->column_plugin_indices()[col_idx];
 		dropped_on_merge = m_scan.is_merge_plugin(plugin_idx);
 	}
-
-	if (dropped_on_merge && drop_event->mimeData()->hasFormat("application/x-yampt-subrecord"))
-		return handle_subrecord_drop(drop_event);
 
 	const auto & payload = QString::fromUtf8(drop_event->mimeData()->data("application/x-yampt-record"));
 	const auto & parts = payload.split('\t');

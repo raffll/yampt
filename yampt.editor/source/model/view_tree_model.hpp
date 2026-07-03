@@ -71,6 +71,7 @@ public:
 
 	const std::vector<sub_record_row_t> & rows() const;
 	const std::vector<int> & column_plugin_indices() const { return m_column_plugin_indices; }
+	const std::vector<std::unordered_map<std::string, std::vector<size_t>>> & col_type_indices() const { return m_col_type_indices; }
 
 private:
 	struct record_context_t
@@ -161,6 +162,7 @@ private:
 	std::string m_record_type;
 	std::string m_record_id;
 	std::vector<int> m_column_plugin_indices;
+	std::vector<std::unordered_map<std::string, std::vector<size_t>>> m_col_type_indices;
 
 	const std::vector<sub_record_row_t> & visible_rows() const;
 	mutable std::vector<sub_record_row_t> m_filtered_rows;

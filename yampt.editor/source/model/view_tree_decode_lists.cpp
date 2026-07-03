@@ -363,7 +363,7 @@ void view_tree_model_t::set_record_armor(record_context_t & context, const confl
 			++next;
 		}
 
-		group_row.row_conflict_all = conflict_all_t::no_conflict;
+		group_row.row_conflict_all = conflict_all_t::only_one;
 		group_row.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
 		for (const auto & child : group_row.children)
 		{

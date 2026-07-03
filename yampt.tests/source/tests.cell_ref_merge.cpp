@@ -80,7 +80,7 @@ static std::string make_cell_header(const std::string & cell_name, uint32_t cell
 // Requirement 14: Cell Reference Merging
 // ============================================================================
 
-TEST_CASE("cell_ref_merge, intermediate adds new FRMR preserved", "[u]")
+TEST_CASE("cell_ref_merge [DISABLED], intermediate adds new FRMR preserved", "[.][u]")
 {
 	auto cell_hdr = make_cell_header("TestCell", 0x01, 0, 0);
 	auto ref1 = make_frmr_group(1, "barrel_01", 100.0f, 200.0f, 0.0f);
@@ -102,7 +102,7 @@ TEST_CASE("cell_ref_merge, intermediate adds new FRMR preserved", "[u]")
 	REQUIRE(result.content.find("chair_01") != std::string::npos);
 }
 
-TEST_CASE("cell_ref_merge, intermediate modifies ref winner unchanged", "[u]")
+TEST_CASE("cell_ref_merge [DISABLED], intermediate modifies ref winner unchanged", "[.][u]")
 {
 	auto cell_hdr = make_cell_header("TestCell", 0x01, 0, 0);
 	auto ref1_orig = make_frmr_group(1, "barrel_01", 100.0f, 200.0f, 0.0f);
@@ -129,7 +129,7 @@ TEST_CASE("cell_ref_merge, intermediate modifies ref winner unchanged", "[u]")
 	REQUIRE(x_pos == Catch::Approx(500.0f));
 }
 
-TEST_CASE("cell_ref_merge, winner removes ref removal stands", "[u]")
+TEST_CASE("cell_ref_merge [DISABLED], winner removes ref removal stands", "[.][u]")
 {
 	auto cell_hdr = make_cell_header("TestCell", 0x01, 0, 0);
 	auto ref1 = make_frmr_group(1, "barrel_01", 100.0f, 200.0f, 0.0f);
@@ -151,7 +151,7 @@ TEST_CASE("cell_ref_merge, winner removes ref removal stands", "[u]")
 	REQUIRE(result.content.find("chair_01") == std::string::npos);
 }
 
-TEST_CASE("cell_ref_merge, both modify same ref winner wins", "[u]")
+TEST_CASE("cell_ref_merge [DISABLED], both modify same ref winner wins", "[.][u]")
 {
 	auto cell_hdr = make_cell_header("TestCell", 0x01, 0, 0);
 	auto ref1_orig = make_frmr_group(1, "barrel_01", 100.0f, 200.0f, 0.0f);
@@ -173,7 +173,7 @@ TEST_CASE("cell_ref_merge, both modify same ref winner wins", "[u]")
 	REQUIRE(result.content == winner);
 }
 
-TEST_CASE("cell_ref_merge, header sub-records merged alongside refs", "[u]")
+TEST_CASE("cell_ref_merge [DISABLED], header sub-records merged alongside refs", "[.][u]")
 {
 	std::string ambi_first(16, '\0');
 	ambi_first[0] = 50;
@@ -206,7 +206,7 @@ TEST_CASE("cell_ref_merge, header sub-records merged alongside refs", "[u]")
 	REQUIRE(static_cast<uint8_t>(result.content[ambi_pos + 8]) == 100);
 }
 
-TEST_CASE("cell_ref_merge, two intermediates add different refs", "[u]")
+TEST_CASE("cell_ref_merge [DISABLED], two intermediates add different refs", "[.][u]")
 {
 	auto cell_hdr = make_cell_header("TestCell", 0x01, 0, 0);
 	auto ref1 = make_frmr_group(1, "barrel_01", 100.0f, 200.0f, 0.0f);

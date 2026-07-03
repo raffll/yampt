@@ -66,6 +66,17 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 
 	finalize_header_conflict();
 
+	m_col_type_indices.clear();
+	m_col_type_indices.resize(col_count);
+	for (size_t col = 0; col < col_count; ++col)
+	{
+		if (col >= all_sub_records.size())
+			continue;
+
+		for (size_t i = 0; i < all_sub_records[col].size(); ++i)
+			m_col_type_indices[col][all_sub_records[col][i].type].push_back(i);
+	}
+
 	endResetModel();
 }
 
@@ -656,43 +667,8 @@ Qt::DropActions view_tree_model_t::supportedDragActions() const
 
 QMimeData * view_tree_model_t::mimeData(const QModelIndexList & indexes) const
 {
-	if (indexes.isEmpty())
-		return nullptr;
-
-	const auto & first_idx = indexes.first();
-	if (first_idx.column() <= 0)
-		return nullptr;
-
-	const int col = first_idx.column() - 1;
-	if (col < 0 || col >= static_cast<int>(m_column_plugin_indices.size()))
-		return nullptr;
-
-	if (is_merge_column(first_idx.column()))
-		return nullptr;
-
-	const int plugin_idx = m_column_plugin_indices[col];
-	auto * mime_data = new QMimeData;
-	QString payload = QString("%1\t%2\t%3")
-	                      .arg(plugin_idx)
-	                      .arg(QString::fromStdString(m_record_type))
-	                      .arg(QString::fromStdString(m_record_id));
-	mime_data->setData("application/x-yampt-record", payload.toUtf8());
-
-	const int row_idx = first_idx.row();
-	const auto & visible = visible_rows();
-	if (row_idx >= 0 && row_idx < static_cast<int>(visible.size()))
-	{
-		const auto & row = visible[row_idx];
-		QString sub_payload = QString("%1\t%2\t%3\t%4\t%5")
-		                          .arg(plugin_idx)
-		                          .arg(QString::fromStdString(m_record_type))
-		                          .arg(QString::fromStdString(m_record_id))
-		                          .arg(QString::fromStdString(row.type))
-		                          .arg(row_idx);
-		mime_data->setData("application/x-yampt-subrecord", sub_payload.toUtf8());
-	}
-
-	return mime_data;
+	Q_UNUSED(indexes);
+	return nullptr;
 }
 
 Qt::DropActions view_tree_model_t::supportedDropActions() const
