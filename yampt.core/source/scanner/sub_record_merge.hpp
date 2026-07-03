@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -10,6 +11,7 @@ struct merge_input_t
 	std::string rec_type;
 	std::string record_id;
 	std::vector<std::string> version_contents;
+	std::set<size_t> patch_version_indices;
 };
 
 struct merge_result_t

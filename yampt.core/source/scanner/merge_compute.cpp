@@ -206,6 +206,13 @@ void merge_compute_t::process_three_way(const record_group_t & group, merge_coun
 	input.record_id = group.record_id;
 	input.version_contents = std::move(contents);
 
+	for (size_t v = 1; v < group.versions.size() - 1; ++v)
+	{
+		const auto & filename = m_scan.plugin_filename(group.versions[v].plugin_idx);
+		if (m_config.patch_plugins.count(filename))
+			input.patch_version_indices.insert(v);
+	}
+
 	const auto result = sub_record_merge_t::merge(input);
 	if (!result.changed)
 		return;

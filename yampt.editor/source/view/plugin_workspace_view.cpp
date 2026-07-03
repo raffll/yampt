@@ -20,6 +20,7 @@
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QHBoxLayout>
+#include <QTimer>
 #include <QHeaderView>
 #include <QInputDialog>
 #include <QMenu>
@@ -108,6 +109,8 @@ plugin_workspace_view_t::plugin_workspace_view_t(app_settings_t & settings, QWid
 	m_nav_model->set_excluded_plugins(&m_excluded_plugins);
 	m_nav_model->set_patch_plugins(&m_patch_plugins);
 	m_view_model = new view_tree_model_t(this);
+	m_view_model->set_excluded_plugins(&m_excluded_plugins);
+	m_view_model->set_patch_plugins(&m_patch_plugins);
 	m_nav_view->setModel(m_nav_model);
 	m_view_view->setModel(m_view_model);
 	m_view_view->setHeader(new colored_header_t(Qt::Horizontal, m_view_view));
@@ -943,7 +946,10 @@ void plugin_workspace_view_t::load_existing_merged_patch()
 		return;
 
 	if (!std::filesystem::exists(path))
+	{
+		log_message("[warning] merged patch not found: " + path);
 		return;
+	}
 
 	if (m_scan.has_merge())
 		return;
@@ -974,7 +980,7 @@ void plugin_workspace_view_t::load_existing_merged_patch()
 	}
 	catch (const std::exception & e)
 	{
-		log_message("Error loading merged patch: " + std::string(e.what()));
+		log_message("[error] cannot load merged patch: " + std::string(e.what()));
 	}
 }
 
@@ -1092,6 +1098,25 @@ void plugin_workspace_view_t::display_record_in_view(const conflict_entry_t & en
 			m_view_view->expand(idx);
 	}
 
+	for (int i = 0; i < m_view_model->columnCount({}); ++i)
+		m_view_view->resizeColumnToContents(i);
+
+	const auto total_width = m_view_view->viewport()->width();
+	const auto col_count = m_view_model->columnCount({});
+	if (col_count <= 1 || total_width <= 0)
+		return;
+
+	const auto label_width = std::min(m_view_view->columnWidth(0), total_width / 3);
+	const auto remaining = total_width - label_width;
+	const auto per_col = remaining / (col_count - 1);
+
+	m_view_view->setColumnWidth(0, label_width);
+	for (int i = 1; i < col_count; ++i)
+		m_view_view->setColumnWidth(i, per_col);
+}
+
+void plugin_workspace_view_t::resize_view_columns()
+{
 	for (int i = 0; i < m_view_model->columnCount({}); ++i)
 		m_view_view->resizeColumnToContents(i);
 

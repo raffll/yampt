@@ -17,6 +17,7 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 {
 	beginResetModel();
 
+	m_scan_for_header = &scan;
 	m_rows.clear();
 	m_column_names.clear();
 	m_plugin_conflict_this.clear();
@@ -259,6 +260,16 @@ void view_tree_model_t::finalize_header_conflict()
 			header.row_conflict_all = child.row_conflict_all;
 	}
 	header.all_identical = (header.row_conflict_all <= conflict_all_t::no_conflict);
+}
+
+void view_tree_model_t::set_excluded_plugins(const std::set<std::string> * excluded)
+{
+	m_excluded_plugins = excluded;
+}
+
+void view_tree_model_t::set_patch_plugins(const std::set<std::string> * patch)
+{
+	m_patch_plugins = patch;
 }
 
 void view_tree_model_t::clear()
@@ -572,7 +583,24 @@ QVariant view_tree_model_t::headerData(int section, Qt::Orientation orientation,
 		if (col < 0 || col >= static_cast<int>(m_column_names.size()))
 			return {};
 
-		return QString::fromStdString(m_column_names[col]);
+		const auto & name = m_column_names[col];
+		QString prefix;
+
+		if (col < static_cast<int>(m_column_plugin_indices.size()))
+		{
+			const int pi = m_column_plugin_indices[col];
+
+			if (m_excluded_plugins && m_excluded_plugins->count(name))
+				prefix = QString::fromUtf8("\xF0\x9F\x94\x92 ");
+			else if (m_patch_plugins && m_patch_plugins->count(name))
+				prefix = QString::fromUtf8("\xF0\x9F\x9B\xA1 ");
+			else if (m_scan_for_header && m_scan_for_header->is_merge_plugin(pi))
+				prefix = QString::fromUtf8("\xE2\x9A\x99 ");
+			else if (name.size() > 4 && (name.compare(name.size() - 4, 4, ".esm") == 0 || name.compare(name.size() - 4, 4, ".ESM") == 0))
+				prefix = QString::fromUtf8("\xF0\x9F\x93\x9C ");
+		}
+
+		return prefix + QString::fromStdString(name);
 	}
 
 	if (role == Qt::ForegroundRole)

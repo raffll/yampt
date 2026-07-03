@@ -5,6 +5,7 @@
 #include <scanner/conflict_compute.hpp>
 #include <conflict_types.hpp>
 #include <scanner/plugin_scan.hpp>
+#include <set>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -21,6 +22,8 @@ public:
 	void set_record(plugin_scan_t & scan, const conflict_entry_t & entry);
 	void clear();
 	void set_hide_no_conflict(bool hide);
+	void set_excluded_plugins(const std::set<std::string> * excluded);
+	void set_patch_plugins(const std::set<std::string> * patch);
 	bool is_merge_column(int section) const;
 	int merge_column() const;
 	const std::string & record_type() const { return m_record_type; }
@@ -159,6 +162,9 @@ private:
 	const std::vector<sub_record_row_t> & visible_rows() const;
 	mutable std::vector<sub_record_row_t> m_filtered_rows;
 	mutable bool m_filter_dirty = true;
+	const std::set<std::string> * m_excluded_plugins = nullptr;
+	const std::set<std::string> * m_patch_plugins = nullptr;
+	plugin_scan_t * m_scan_for_header = nullptr;
 };
 
 struct cell_ref_group_t

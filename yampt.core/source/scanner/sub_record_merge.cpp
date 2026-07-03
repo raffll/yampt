@@ -606,9 +606,36 @@ static bool has_npco_entries(const sub_record_sequence_t & sequence)
 static std::vector<sub_record_entry_t> merge_npco_items(
 	const std::vector<sub_record_entry_t> & first_items,
 	const std::vector<sub_record_entry_t> & inter_items,
-	const std::vector<sub_record_entry_t> & winner_items)
+	const std::vector<sub_record_entry_t> & winner_items,
+	bool is_patch_intermediate)
 {
-	return winner_items;
+	std::set<std::string> winner_ids;
+	for (const auto & item : winner_items)
+		winner_ids.insert(extract_npco_item_id(item));
+
+	std::set<std::string> first_ids;
+	for (const auto & item : first_items)
+		first_ids.insert(extract_npco_item_id(item));
+
+	auto result = winner_items;
+
+	for (const auto & item : inter_items)
+	{
+		const auto item_id = extract_npco_item_id(item);
+		if (item_id.empty())
+			continue;
+
+		if (winner_ids.count(item_id))
+			continue;
+
+		if (!first_ids.count(item_id))
+		{
+			result.push_back(item);
+			winner_ids.insert(item_id);
+		}
+	}
+
+	return result;
 }
 
 static sub_record_sequence_t replace_npco_entries(
@@ -702,13 +729,48 @@ merge_result_t sub_record_merge_t::merge_generic(const merge_input_t & input)
 	{
 		const auto first_items = collect_npco_entries(first_subs);
 		const auto winner_items = collect_npco_entries(winner_subs);
-		auto merged_items = winner_items;
+
+		int patch_version_idx = -1;
+		for (size_t v = versions.size() - 2; v >= 1; --v)
+		{
+			if (input.patch_version_indices.count(v))
+			{
+				patch_version_idx = static_cast<int>(v);
+				break;
+			}
+		}
+
+		std::vector<sub_record_entry_t> base_items;
+		if (patch_version_idx >= 0)
+		{
+			const auto patch_subs = parse_sub_records(versions[patch_version_idx]);
+			base_items = collect_npco_entries(patch_subs);
+		}
+		else
+		{
+			base_items = winner_items;
+		}
+
+		auto merged_items = base_items;
 
 		for (size_t v = versions.size() - 2; v >= 1; --v)
 		{
+			if (static_cast<int>(v) == patch_version_idx)
+				continue;
+
 			const auto inter_subs = parse_sub_records(versions[v]);
 			const auto inter_items = collect_npco_entries(inter_subs);
-			merged_items = merge_npco_items(first_items, inter_items, merged_items);
+			merged_items = merge_npco_items(first_items, inter_items, merged_items, false);
+		}
+
+		if (patch_version_idx < 0)
+		{
+			merged_items = merge_npco_items(first_items, winner_items, merged_items, false);
+		}
+		else
+		{
+			const auto winner_additions = collect_npco_entries(winner_subs);
+			merged_items = merge_npco_items(first_items, winner_additions, merged_items, false);
 		}
 
 		if (merged_items != winner_items)
