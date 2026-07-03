@@ -253,36 +253,6 @@ void app_settings_t::set_mo2_profile_dir(const std::string & value)
 	m_settings.setValue("Paths/Mo2ProfileDir", QString::fromStdString(value));
 }
 
-std::string app_settings_t::merge_output_path() const
-{
-	return m_settings.value("Paths/MergeOutputPath", "Merged Patch.esp").toString().toStdString();
-}
-
-void app_settings_t::set_merge_output_path(const std::string & value)
-{
-	m_settings.setValue("Paths/MergeOutputPath", QString::fromStdString(value));
-}
-
-std::string app_settings_t::openmw_merge_path() const
-{
-	return m_settings.value("Paths/OpenMwMergePath", ".").toString().toStdString();
-}
-
-void app_settings_t::set_openmw_merge_path(const std::string & value)
-{
-	m_settings.setValue("Paths/OpenMwMergePath", QString::fromStdString(value));
-}
-
-std::string app_settings_t::mo2_merge_path() const
-{
-	return m_settings.value("Paths/Mo2MergePath", "../../overwrite").toString().toStdString();
-}
-
-void app_settings_t::set_mo2_merge_path(const std::string & value)
-{
-	m_settings.setValue("Paths/Mo2MergePath", QString::fromStdString(value));
-}
-
 float app_settings_t::split_ratio() const
 {
 	return m_settings.value("Editor/SplitRatio", 0.5f).toFloat();

@@ -2,6 +2,7 @@
 #include "../dialog/filter_dialog.hpp"
 #include "../dialog/plugin_select_dialog.hpp"
 #include <io/app_settings.hpp>
+#include <scanner/merge_patch_ops.hpp>
 #include <scanner/sub_record_merge.hpp>
 #include <scanner/merge_compute.hpp>
 #include <scanner/fog_fixer.hpp>
@@ -174,78 +175,6 @@ void plugin_workspace_view_t::setup_connections()
 
 	auto * copy_shortcut = new QShortcut(QKeySequence::Copy, m_view_view);
 	connect(copy_shortcut, &QShortcut::activated, this, &plugin_workspace_view_t::on_view_copy);
-}
-
-void plugin_workspace_view_t::on_load_plugins()
-{
-	QStringList files =
-	    QFileDialog::getOpenFileNames(this, "Select Plugins", QString(), "Plugin files (*.esm *.esp);;All files (*)");
-
-	if (files.isEmpty())
-		return;
-
-	std::vector<std::string> paths;
-	for (const auto & f : files)
-		paths.push_back(f.toStdString());
-
-	plugin_select_dialog_t dlg(paths, this);
-	if (dlg.exec() != QDialog::Accepted)
-		return;
-
-	const auto selected = dlg.selected_paths();
-	if (selected.empty())
-		return;
-
-	m_load_source = load_source_t::folder;
-	m_load_base_path = QFileInfo(QString::fromStdString(selected.front())).absolutePath().toStdString();
-
-	for (const auto & path : selected)
-	{
-		try
-		{
-			m_scan.load_plugin(path);
-			const auto & idx = m_scan.index(static_cast<int>(m_scan.plugin_count()) - 1);
-			log_message(
-			    "Loaded " + m_scan.plugin_filename(static_cast<int>(m_scan.plugin_count()) - 1) + " (" +
-			    std::to_string(idx.entries().size()) + " records indexed)");
-		}
-		catch (const std::exception & e)
-		{
-			auto filename = path;
-			auto pos = filename.find_last_of("/\\");
-			if (pos != std::string::npos)
-				filename = filename.substr(pos + 1);
-
-			log_message("Error loading " + filename + ": " + e.what());
-		}
-	}
-
-	m_scan.rebuild_conflicts();
-
-	const auto & entries = m_scan.entries();
-	size_t conflicts = 0;
-	size_t overrides = 0;
-	size_t identical = 0;
-	for (const auto & e : entries)
-	{
-		if (e.conflict_all == conflict_all_t::conflict)
-			++conflicts;
-		else if (e.conflict_all == conflict_all_t::override_benign)
-			++overrides;
-
-		for (const auto & v : e.versions)
-		{
-			if (v.status == conflict_this_t::identical_to_master)
-				++identical;
-		}
-	}
-
-	log_message(
-	    "Conflict detection complete: " + std::to_string(conflicts) + " conflicts, " + std::to_string(overrides) +
-	    " overrides, " + std::to_string(identical) + " identical");
-
-	rebuild_after_load();
-	save_plugin_paths();
 }
 
 void plugin_workspace_view_t::load_plugins_from_paths(const std::vector<std::string> & paths, const std::string & base_path)
@@ -432,9 +361,7 @@ std::vector<std::string> plugin_workspace_view_t::parse_mo2_profile(const QStrin
 
 	context.mods_path = mods_path;
 	context.game_data_path = game_data_path;
-
-	QDir profile_resolve_dir(profile_dir);
-	context.merge_path = profile_resolve_dir.absoluteFilePath(QString::fromStdString(m_settings.mo2_merge_path()));
+	context.overwrite_path = mo2_root.absolutePath() + "/overwrite";
 
 	auto paths = resolve_mo2_plugins(plugin_names, context);
 
@@ -460,8 +387,7 @@ std::vector<std::string> plugin_workspace_view_t::parse_mo2_profile(const QStrin
 			log_message("[warning] master file not found in load order: " + master + " (searched in " + context.game_data_path.toStdString() + ")");
 	}
 
-	const auto merge_filename = m_settings.merge_output_path();
-	const auto merge_full_path = context.merge_path + "/" + QString::fromStdString(merge_filename);
+	const auto merge_full_path = context.overwrite_path + "/Merged Patch.esp";
 	if (QFile::exists(merge_full_path))
 	{
 		const auto merge_std = merge_full_path.toStdString();
@@ -477,10 +403,6 @@ std::vector<std::string> plugin_workspace_view_t::parse_mo2_profile(const QStrin
 
 		if (!already_included)
 			paths.push_back(merge_std);
-	}
-	else
-	{
-		log_message("[warning] merged patch not found: " + merge_full_path.toStdString());
 	}
 
 	return paths;
@@ -510,19 +432,19 @@ std::string plugin_workspace_view_t::resolve_single_mo2_plugin(
     const std::string & plugin_name,
     const mo2_resolve_context_t & context)
 {
+	if (!context.overwrite_path.isEmpty())
+	{
+		const auto overwrite_candidate = context.overwrite_path + "/" + QString::fromStdString(plugin_name);
+		if (QFile::exists(overwrite_candidate))
+			return overwrite_candidate.toStdString();
+	}
+
 	for (const auto & mod_name : context.enabled_mods)
 	{
 		const auto candidate =
 		    context.mods_path + "/" + QString::fromStdString(mod_name) + "/" + QString::fromStdString(plugin_name);
 		if (QFile::exists(candidate))
 			return candidate.toStdString();
-	}
-
-	if (!context.merge_path.isEmpty())
-	{
-		const auto merge_candidate = context.merge_path + "/" + QString::fromStdString(plugin_name);
-		if (QFile::exists(merge_candidate))
-			return merge_candidate.toStdString();
 	}
 
 	const auto game_file = context.game_data_path + "/" + QString::fromStdString(plugin_name);
@@ -546,7 +468,9 @@ void plugin_workspace_view_t::on_load_openmw_cfg()
 	if (paths.empty())
 		return;
 
-	const auto base = QFileInfo(cfg_path).absolutePath().toStdString();
+	const auto cfg_dir = QFileInfo(cfg_path).absolutePath();
+	const auto base = cfg_dir.toStdString();
+
 	load_plugins_from_paths(paths, base);
 	m_load_source = load_source_t::openmw_cfg;
 	m_settings.set_last_directory(base);
@@ -893,25 +817,23 @@ std::string plugin_workspace_view_t::resolve_merge_output_path() const
 	if (m_load_base_path.empty())
 		return {};
 
-	const auto merge_filename = m_settings.merge_output_path();
-	std::string relative_path;
+	static const std::string merge_filename = "Merged Patch.esp";
 
-	switch (m_load_source)
+	if (m_load_source == load_source_t::mo2_profile)
 	{
-	case load_source_t::openmw_cfg:
-		relative_path = m_settings.openmw_merge_path();
-		break;
-	case load_source_t::mo2_profile:
-		relative_path = m_settings.mo2_merge_path();
-		break;
-	case load_source_t::folder:
-	case load_source_t::none:
-		relative_path = ".";
-		break;
+		auto output_dir = QDir(QString::fromStdString(m_load_base_path));
+		output_dir.cd("../../overwrite");
+		return output_dir.filePath(QString::fromStdString(merge_filename)).toStdString();
+	}
+
+	if (m_load_source == load_source_t::openmw_cfg)
+	{
+		auto output_dir = QDir(QString::fromStdString(m_load_base_path));
+		output_dir.cd("data");
+		return output_dir.filePath(QString::fromStdString(merge_filename)).toStdString();
 	}
 
 	auto output_dir = QDir(QString::fromStdString(m_load_base_path));
-	output_dir.cd(QString::fromStdString(relative_path));
 	return output_dir.filePath(QString::fromStdString(merge_filename)).toStdString();
 }
 
@@ -1307,14 +1229,28 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & pos)
 	const auto & rec_type = m_view_model->record_type();
 	const auto & record_id = m_view_model->record_id();
 
+	const bool is_field_row = index.parent().isValid();
 	const auto & visible = m_view_model->rows();
-	const int row_idx = index.row();
-	if (row_idx < 0 || row_idx >= static_cast<int>(visible.size()))
+
+	int parent_row_idx = -1;
+	int child_field_idx = -1;
+
+	if (is_field_row)
+	{
+		parent_row_idx = index.parent().row();
+		child_field_idx = index.row();
+	}
+	else
+	{
+		parent_row_idx = index.row();
+	}
+
+	if (parent_row_idx < 0 || parent_row_idx >= static_cast<int>(visible.size()))
 		return;
 
-	const auto & row = visible[row_idx];
+	const auto & row = visible[parent_row_idx];
 	int view_occurrence = 0;
-	for (int r = 0; r < row_idx; ++r)
+	for (int r = 0; r < parent_row_idx; ++r)
 	{
 		if (visible[r].type == row.type)
 			++view_occurrence;
@@ -1333,80 +1269,88 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & pos)
 		}
 	}
 
+	const bool is_group_row = !row.type.empty() && !row.children.empty() && row.size == 0;
+	const bool is_sub_record_row = !row.type.empty() && row.children.empty() && binary_idx >= 0;
+	const bool is_schema_row = !row.type.empty() && !row.children.empty() && row.size > 0 && binary_idx >= 0;
+
 	QMenu menu(this);
 
-	if (!is_on_merge && !row.type.empty() && row.children.empty() && binary_idx >= 0)
+	if (!is_on_merge && is_sub_record_row && !is_field_row)
 	{
-		menu.addAction("Copy Sub-Record to Merged Patch", [this, plugin_idx, rec_type, record_id, row, binary_idx]()
+		const auto sub_type = row.type;
+		menu.addAction("Copy Sub-Record to Merged Patch", [this, plugin_idx, rec_type, record_id, sub_type, binary_idx]()
 		{
-			const auto * merge_content_ptr = m_scan.find_merge_content(rec_type, record_id);
-			std::string merge_content;
-			if (merge_content_ptr)
-			{
-				merge_content = *merge_content_ptr;
-			}
-			else
-			{
-				const auto * entry = m_scan.find(rec_type, record_id);
-				if (!entry || entry->versions.empty())
-					return;
-
-				const auto & winner = entry->versions.back();
-				merge_content = m_scan.read_record_content(winner.plugin_idx, winner.record_index);
-			}
-
-			const auto * entry = m_scan.find(rec_type, record_id);
-			if (!entry)
-				return;
-
-			std::string source_content;
-			for (const auto & ver : entry->versions)
-			{
-				if (ver.plugin_idx == plugin_idx)
-				{
-					source_content = m_scan.read_record_content(plugin_idx, ver.record_index);
-					break;
-				}
-			}
-
-			if (source_content.empty())
-				return;
-
-			auto merge_subs = sub_record_merge_t::parse_sub_records(merge_content);
-			const auto source_subs = sub_record_merge_t::parse_sub_records(source_content);
-
-			if (binary_idx >= static_cast<int>(source_subs.size()))
-				return;
-
-			const auto & source_sub = source_subs[binary_idx];
-			int source_occurrence = 0;
-			for (int s = 0; s < binary_idx; ++s)
-			{
-				if (source_subs[s].type == row.type)
-					++source_occurrence;
-			}
-
-			const auto merge_idx = sub_record_merge_t::find_by_type_and_occurrence(merge_subs, row.type, source_occurrence);
-			if (merge_idx < 0)
-				merge_subs.push_back(source_sub);
-			else
-				merge_subs[merge_idx].data = source_sub.data;
-
-			const auto patched = sub_record_merge_t::reconstruct_record(merge_content, merge_subs);
-			m_scan.copy_record_to_merge_raw(rec_type, record_id, patched);
-			log_message("[info] patched " + row.type + " in " + rec_type + ":" + record_id);
-
-			m_scan.rebuild_conflicts();
-			rebuild_nav_preserving_state();
-			save_merged_patch();
-
-			const auto * updated = m_scan.find(rec_type, record_id);
-			if (updated)
-				display_record_in_view(*updated);
+			copy_sub_record_to_merge(plugin_idx, rec_type, record_id, sub_type, binary_idx);
 		});
 	}
 
-	if (is_on_merge && !row.type.empty() && row.children.empty() && binary_idx >= 0)
+	if (!is_on_merge && is_schema_row && !is_field_row)
+	{
+		const auto sub_type = row.type;
+		menu.addAction("Copy Sub-Record to Merged Patch", [this, plugin_idx, rec_type, record_id, sub_type, binary_idx]()
+		{
+			copy_sub_record_to_merge(plugin_idx, rec_type, record_id, sub_type, binary_idx);
+		});
+	}
+
+	if (!is_on_merge && is_group_row && !is_field_row)
+	{
+		menu.addAction("Copy Group to Merged Patch", [this, plugin_idx, rec_type, record_id, parent_row_idx]()
+		{
+			copy_group_to_merge(plugin_idx, rec_type, record_id, parent_row_idx);
+		});
+	}
+
+	if (!is_on_merge && is_field_row && is_schema_row)
+	{
+		const auto sub_type = row.type;
+		const auto sub_size = row.size;
+		menu.addAction("Copy Field to Merged Patch", [this, plugin_idx, rec_type, record_id, sub_type, sub_size, binary_idx, child_field_idx]()
+		{
+			copy_field_to_merge(plugin_idx, rec_type, record_id, sub_type, sub_size, binary_idx, child_field_idx);
+		});
+	}
+
+	if (!is_on_merge && is_field_row && is_group_row)
+	{
+		if (child_field_idx >= 0 && child_field_idx < static_cast<int>(row.children.size()))
+		{
+			const auto & child = row.children[child_field_idx];
+			const auto child_sub_type = merge_patch_ops_t::extract_sub_type_from_field_name(child.name);
+			if (!child_sub_type.empty())
+			{
+				int group_occurrence = 0;
+				for (int r = 0; r < parent_row_idx; ++r)
+				{
+					if (visible[r].type == row.type)
+						++group_occurrence;
+				}
+
+				int child_binary_idx = -1;
+				if (col >= 0 && col < static_cast<int>(col_indices.size()))
+				{
+					auto it_type = col_indices[col].find(child_sub_type);
+					if (it_type != col_indices[col].end() &&
+					    group_occurrence < static_cast<int>(it_type->second.size()) &&
+					    it_type->second[group_occurrence] != SIZE_MAX)
+					{
+						child_binary_idx = static_cast<int>(it_type->second[group_occurrence]);
+					}
+				}
+
+				if (child_binary_idx >= 0)
+				{
+					menu.addAction("Copy Sub-Record to Merged Patch",
+					    [this, plugin_idx, rec_type, record_id, child_sub_type, child_binary_idx]()
+					{
+						copy_sub_record_to_merge(plugin_idx, rec_type, record_id, child_sub_type, child_binary_idx);
+					});
+				}
+			}
+		}
+	}
+
+	if (is_on_merge && (is_sub_record_row || is_schema_row) && !is_field_row)
 	{
 		menu.addAction("Remove Sub-Record", [this, rec_type, record_id, binary_idx]()
 		{
@@ -1420,18 +1364,12 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & pos)
 
 			merge_subs.erase(merge_subs.begin() + binary_idx);
 
-			merge_subs.erase(merge_subs.begin() + merge_idx);
 			const auto patched = sub_record_merge_t::reconstruct_record(*merge_content_ptr, merge_subs);
 			m_scan.copy_record_to_merge_raw(rec_type, record_id, patched);
-			log_message("[info] removed " + row.type + " from " + rec_type + ":" + record_id);
+			log_message("[info] removed sub-record from " + rec_type + ":" + record_id);
 
-			m_scan.rebuild_conflicts();
-			rebuild_nav_preserving_state();
+			refresh_after_merge(rec_type, record_id);
 			save_merged_patch();
-
-			const auto * updated = m_scan.find(rec_type, record_id);
-			if (updated)
-				display_record_in_view(*updated);
 		});
 
 		menu.addAction("Remove Record from Merge", [this, rec_type, record_id]()
@@ -1449,6 +1387,167 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & pos)
 		return;
 
 	menu.exec(m_view_view->viewport()->mapToGlobal(pos));
+}
+
+void plugin_workspace_view_t::copy_sub_record_to_merge(
+    int plugin_idx,
+    const std::string & rec_type,
+    const std::string & record_id,
+    const std::string & sub_type,
+    int binary_idx)
+{
+	const auto source_content = read_source_content(plugin_idx, rec_type, record_id);
+	if (source_content.empty())
+		return;
+
+	const auto merge_content = ensure_merge_record(plugin_idx, rec_type, record_id, source_content);
+	if (merge_content.empty())
+		return;
+
+	const auto result = merge_patch_ops_t::patch_sub_record(merge_content, source_content, sub_type, binary_idx);
+	if (!result.success)
+		return;
+
+	m_scan.copy_record_to_merge_raw(rec_type, record_id, result.content);
+	log_message("[info] patched " + sub_type + " in " + rec_type + ":" + record_id);
+
+	refresh_after_merge(rec_type, record_id);
+	save_merged_patch();
+}
+
+void plugin_workspace_view_t::copy_group_to_merge(
+    int plugin_idx,
+    const std::string & rec_type,
+    const std::string & record_id,
+    int group_row_idx)
+{
+	const auto source_content = read_source_content(plugin_idx, rec_type, record_id);
+	if (source_content.empty())
+		return;
+
+	const auto merge_content = ensure_merge_record(plugin_idx, rec_type, record_id, source_content);
+	if (merge_content.empty())
+		return;
+
+	const auto & visible = m_view_model->rows();
+	if (group_row_idx < 0 || group_row_idx >= static_cast<int>(visible.size()))
+		return;
+
+	const auto & group_row = visible[group_row_idx];
+	const auto & col_indices = m_view_model->col_type_indices();
+	const int col = find_plugin_column(plugin_idx);
+	if (col < 0 || col >= static_cast<int>(col_indices.size()))
+		return;
+
+	int group_occurrence = 0;
+	for (int r = 0; r < group_row_idx; ++r)
+	{
+		if (visible[r].type == group_row.type)
+			++group_occurrence;
+	}
+
+	std::vector<std::pair<std::string, int>> group_binary_indices;
+	for (const auto & child : group_row.children)
+	{
+		const auto child_sub_type = merge_patch_ops_t::extract_sub_type_from_field_name(child.name);
+		if (child_sub_type.empty())
+			continue;
+
+		auto it_type = col_indices[col].find(child_sub_type);
+		if (it_type == col_indices[col].end())
+			continue;
+
+		if (group_occurrence >= static_cast<int>(it_type->second.size()))
+			continue;
+
+		if (it_type->second[group_occurrence] == SIZE_MAX)
+			continue;
+
+		group_binary_indices.emplace_back(child_sub_type, static_cast<int>(it_type->second[group_occurrence]));
+	}
+
+	const auto result = merge_patch_ops_t::patch_group(merge_content, source_content, group_binary_indices);
+	if (!result.success)
+		return;
+
+	m_scan.copy_record_to_merge_raw(rec_type, record_id, result.content);
+	log_message("[info] patched group in " + rec_type + ":" + record_id);
+
+	refresh_after_merge(rec_type, record_id);
+	save_merged_patch();
+}
+
+void plugin_workspace_view_t::copy_field_to_merge(
+    int plugin_idx,
+    const std::string & rec_type,
+    const std::string & record_id,
+    const std::string & sub_type,
+    size_t sub_size,
+    int binary_idx,
+    int field_idx)
+{
+	const auto source_content = read_source_content(plugin_idx, rec_type, record_id);
+	if (source_content.empty())
+		return;
+
+	const auto merge_content = ensure_merge_record(plugin_idx, rec_type, record_id, source_content);
+	if (merge_content.empty())
+		return;
+
+	const auto result = merge_patch_ops_t::patch_field(
+	    merge_content, source_content, rec_type, sub_type, sub_size, binary_idx, field_idx);
+	if (!result.success)
+		return;
+
+	m_scan.copy_record_to_merge_raw(rec_type, record_id, result.content);
+	log_message("[info] patched field " + result.description + " in " + sub_type + " of " + rec_type + ":" + record_id);
+
+	refresh_after_merge(rec_type, record_id);
+	save_merged_patch();
+}
+
+std::string plugin_workspace_view_t::read_source_content(
+    int plugin_idx,
+    const std::string & rec_type,
+    const std::string & record_id)
+{
+	const auto * entry = m_scan.find(rec_type, record_id);
+	if (!entry)
+		return {};
+
+	for (const auto & ver : entry->versions)
+	{
+		if (ver.plugin_idx == plugin_idx)
+			return m_scan.read_record_content(plugin_idx, ver.record_index);
+	}
+
+	return {};
+}
+
+std::string plugin_workspace_view_t::ensure_merge_record(
+    int plugin_idx,
+    const std::string & rec_type,
+    const std::string & record_id,
+    const std::string & source_content)
+{
+	const auto * merge_content_ptr = m_scan.find_merge_content(rec_type, record_id);
+	if (merge_content_ptr)
+		return *merge_content_ptr;
+
+	m_scan.copy_record_to_merge_raw(rec_type, record_id, source_content);
+	return source_content;
+}
+
+int plugin_workspace_view_t::find_plugin_column(int plugin_idx) const
+{
+	const auto & indices = m_view_model->column_plugin_indices();
+	for (int c = 0; c < static_cast<int>(indices.size()); ++c)
+	{
+		if (indices[c] == plugin_idx)
+			return c;
+	}
+
+	return -1;
 }
 
 bool plugin_workspace_view_t::eventFilter(QObject * obj, QEvent * event)
@@ -1770,7 +1869,7 @@ void plugin_workspace_view_t::load_plugin_paths()
 			m_scan.load_plugin(path);
 			const int loaded_idx = static_cast<int>(m_scan.plugin_count()) - 1;
 
-			if (filename == m_settings.merge_output_path())
+			if (filename == "Merged Patch.esp")
 			{
 				m_scan.set_merge_plugin_from_loaded(loaded_idx);
 				log_message("Loaded merge plugin: " + filename);

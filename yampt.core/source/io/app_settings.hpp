@@ -77,15 +77,6 @@ public:
 	std::string mo2_profile_dir() const;
 	void set_mo2_profile_dir(const std::string & value);
 
-	std::string openmw_merge_path() const;
-	void set_openmw_merge_path(const std::string & value);
-
-	std::string mo2_merge_path() const;
-	void set_mo2_merge_path(const std::string & value);
-
-	std::string merge_output_path() const;
-	void set_merge_output_path(const std::string & value);
-
 	float split_ratio() const;
 	void set_split_ratio(float value);
 

@@ -35,7 +35,6 @@ public:
 	void refresh_views();
 
 public slots:
-	void on_load_plugins();
 	void on_load_data_files();
 	void on_load_mo2_profile();
 	void on_load_openmw_cfg();
@@ -73,6 +72,37 @@ private:
 	void display_record_in_view(const conflict_entry_t & entry);
 	void resize_view_columns();
 	bool handle_subrecord_drop(QDropEvent * drop_event);
+
+	void copy_sub_record_to_merge(
+	    int plugin_idx,
+	    const std::string & rec_type,
+	    const std::string & record_id,
+	    const std::string & sub_type,
+	    int binary_idx);
+	void copy_group_to_merge(
+	    int plugin_idx,
+	    const std::string & rec_type,
+	    const std::string & record_id,
+	    int group_row_idx);
+	void copy_field_to_merge(
+	    int plugin_idx,
+	    const std::string & rec_type,
+	    const std::string & record_id,
+	    const std::string & sub_type,
+	    size_t sub_size,
+	    int binary_idx,
+	    int field_idx);
+	std::string read_source_content(
+	    int plugin_idx,
+	    const std::string & rec_type,
+	    const std::string & record_id);
+	std::string ensure_merge_record(
+	    int plugin_idx,
+	    const std::string & rec_type,
+	    const std::string & record_id,
+	    const std::string & source_content);
+	int find_plugin_column(int plugin_idx) const;
+
 	std::vector<std::string> parse_mo2_profile(const QString & profile_dir);
 	std::vector<std::string> parse_openmw_cfg(const QString & cfg_path);
 
@@ -81,7 +111,7 @@ private:
 		std::vector<std::string> enabled_mods;
 		QString mods_path;
 		QString game_data_path;
-		QString merge_path;
+		QString overwrite_path;
 	};
 
 	std::vector<std::string> resolve_mo2_plugins(
