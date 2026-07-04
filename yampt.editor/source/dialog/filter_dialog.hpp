@@ -36,7 +36,6 @@ public:
 		std::string name_text;
 
 		bool filter_deleted = false;
-		bool filter_itm_only = false;
 	};
 
 	filter_state_t state() const;
@@ -62,5 +61,4 @@ private:
 	QLineEdit * m_edt_name = nullptr;
 
 	QCheckBox * m_chk_deleted = nullptr;
-	QCheckBox * m_chk_itm = nullptr;
 };

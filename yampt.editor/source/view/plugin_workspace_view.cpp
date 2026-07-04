@@ -344,7 +344,6 @@ void plugin_workspace_view_t::on_advanced_filter()
 		dlg_state.filter_by_name = m_last_filter_state.filter_by_name;
 		dlg_state.name_text = m_last_filter_state.name_text;
 		dlg_state.filter_deleted = m_last_filter_state.filter_deleted;
-		dlg_state.filter_itm_only = m_last_filter_state.filter_itm_only;
 		dlg.set_state(dlg_state);
 	}
 
@@ -365,7 +364,6 @@ void plugin_workspace_view_t::on_advanced_filter()
 	nav_state.filter_by_name = state.filter_by_name;
 	nav_state.name_text = state.name_text;
 	nav_state.filter_deleted = state.filter_deleted;
-	nav_state.filter_itm_only = state.filter_itm_only;
 
 	m_last_filter_state = nav_state;
 	m_filter_active = true;
@@ -439,24 +437,22 @@ std::string plugin_workspace_view_t::resolve_merge_output_path() const
 	if (m_session->load_base_path().empty())
 		return {};
 
-	static const std::string merge_filename = "Merged Patch.esp";
+	const auto base = QString::fromStdString(m_session->load_base_path());
 
 	if (m_session->load_source() == plugin_session_t::load_source_t::mo2_profile)
 	{
-		auto output_path = QDir::cleanPath(
-		    QString::fromStdString(m_session->load_base_path()) + "/../../overwrite/" + QString::fromStdString(merge_filename));
-		return output_path.toStdString();
+		const auto relative = QString::fromStdString(m_settings.merge_path_mo2());
+		return QDir::cleanPath(base + "/" + relative).toStdString();
 	}
 
 	if (m_session->load_source() == plugin_session_t::load_source_t::openmw_cfg)
 	{
-		auto output_path = QDir::cleanPath(
-		    QString::fromStdString(m_session->load_base_path()) + "/data/" + QString::fromStdString(merge_filename));
-		return output_path.toStdString();
+		const auto relative = QString::fromStdString(m_settings.merge_path_openmw());
+		return QDir::cleanPath(base + "/" + relative).toStdString();
 	}
 
-	auto output_dir = QDir(QString::fromStdString(m_session->load_base_path()));
-	return output_dir.filePath(QString::fromStdString(merge_filename)).toStdString();
+	const auto relative = QString::fromStdString(m_settings.merge_path_folder());
+	return QDir::cleanPath(base + "/" + relative).toStdString();
 }
 
 void plugin_workspace_view_t::save_merged_patch()

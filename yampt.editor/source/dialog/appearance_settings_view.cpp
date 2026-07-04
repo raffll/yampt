@@ -25,9 +25,9 @@ appearance_settings_view_t::appearance_settings_view_t(QWidget * parent)
 	layout->addWidget(codepage_label);
 
 	m_codepage_combo = new QComboBox(this);
-	m_codepage_combo->addItem("Windows-1252 (English/Western)", 1252);
 	m_codepage_combo->addItem("Windows-1250 (Polish/Central European)", 1250);
 	m_codepage_combo->addItem("Windows-1251 (Russian/Cyrillic)", 1251);
+	m_codepage_combo->addItem("Windows-1252 (English/Western)", 1252);
 	m_codepage_combo->setToolTip("Codepage used for displaying plugin text");
 	layout->addWidget(m_codepage_combo);
 

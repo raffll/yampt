@@ -20,7 +20,6 @@ public:
 		bool filter_by_name = false;
 		std::string name_text;
 		bool filter_deleted = false;
-		bool filter_itm_only = false;
 
 		bool operator==(const filter_state_t &) const = default;
 	};

@@ -125,3 +125,8 @@ Legacy migration: old dictionaries with `identical` status are migrated to `tran
 - `session_t::save_all()` saves dirty documents regardless of kind
 
 All dictionaries are saveable and editable in yTranslator. The base/user distinction is purely visual.
+
+
+## Codepage Lists Must Be Sorted
+
+Whenever codepages are listed in a combo box or UI element, they must be in ascending numeric order (e.g. 1250, 1251, 1252). Never put a "default" or "most common" codepage first if it breaks numeric ordering.

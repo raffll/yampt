@@ -26,6 +26,8 @@ public:
 	void clear_filter();
 	void set_hide_duplicates(bool hide);
 
+	void sort(int column, Qt::SortOrder order) override;
+
 	QModelIndex index(int row, int column, const QModelIndex & parent) const override;
 	QModelIndex parent(const QModelIndex & child) const override;
 	int rowCount(const QModelIndex & parent) const override;
@@ -69,8 +71,11 @@ private:
 
 	std::vector<file_node_t> m_tree;
 	nav_tree_filter_t m_filter;
+	int m_sort_column = 1;
+	Qt::SortOrder m_sort_order = Qt::AscendingOrder;
 
 	conflict_this_t record_foreground_for_plugin(const conflict_entry_t & entry, int plugin_idx) const;
 
 	void build_tree();
+	void sort_records();
 };

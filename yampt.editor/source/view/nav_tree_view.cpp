@@ -16,6 +16,7 @@ nav_tree_view_t::nav_tree_view_t(plugin_scan_t & scan, QWidget * parent)
 	m_tree = new QTreeView(this);
 	m_tree->setDragEnabled(false);
 	m_tree->setAcceptDrops(false);
+	m_tree->setSortingEnabled(true);
 	m_tree->setContextMenuPolicy(Qt::CustomContextMenu);
 	layout->addWidget(m_tree);
 

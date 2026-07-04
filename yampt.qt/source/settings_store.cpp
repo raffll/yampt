@@ -120,6 +120,15 @@ void settings_store_t::set_openmw_data_dir(const std::string & value) { m_settin
 std::string settings_store_t::mo2_profile_dir() const { return m_settings.value("Paths/Mo2ProfileDir", "").toString().toStdString(); }
 void settings_store_t::set_mo2_profile_dir(const std::string & value) { m_settings.setValue("Paths/Mo2ProfileDir", QString::fromStdString(value)); }
 
+std::string settings_store_t::merge_path_folder() const { return m_settings.value("Paths/MergePathFolder", "Merged Patch.esp").toString().toStdString(); }
+void settings_store_t::set_merge_path_folder(const std::string & value) { m_settings.setValue("Paths/MergePathFolder", QString::fromStdString(value)); }
+
+std::string settings_store_t::merge_path_mo2() const { return m_settings.value("Paths/MergePathMo2", "../../overwrite/Merged Patch.esp").toString().toStdString(); }
+void settings_store_t::set_merge_path_mo2(const std::string & value) { m_settings.setValue("Paths/MergePathMo2", QString::fromStdString(value)); }
+
+std::string settings_store_t::merge_path_openmw() const { return m_settings.value("Paths/MergePathOpenmw", "data/Merged Patch.esp").toString().toStdString(); }
+void settings_store_t::set_merge_path_openmw(const std::string & value) { m_settings.setValue("Paths/MergePathOpenmw", QString::fromStdString(value)); }
+
 float settings_store_t::split_ratio() const { return m_settings.value("Editor/SplitRatio", 0.5f).toFloat(); }
 void settings_store_t::set_split_ratio(float value) { m_settings.setValue("Editor/SplitRatio", static_cast<double>(value)); }
 

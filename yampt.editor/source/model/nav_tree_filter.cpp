@@ -101,11 +101,5 @@ bool nav_tree_filter_t::passes(const conflict_entry_t & entry, int plugin_idx) c
 			return false;
 	}
 
-	if (m_filter.filter_itm_only)
-	{
-		if (!has_version_status(entry, plugin_idx, conflict_this_t::identical_to_master))
-			return false;
-	}
-
 	return true;
 }

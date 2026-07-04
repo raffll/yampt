@@ -98,7 +98,6 @@ nav_tree_filter_t::filter_state_t make_random_filter(const conflict_entry_t & en
 		state.name_text = *rc::gen::nonEmpty<std::string>();
 
 	state.filter_deleted = *rc::gen::arbitrary<bool>();
-	state.filter_itm_only = *rc::gen::arbitrary<bool>();
 
 	return state;
 }
@@ -162,15 +161,6 @@ bool passes_single_dimension_deleted(const conflict_entry_t & entry, const nav_t
 	return filter.passes(entry, 0);
 }
 
-bool passes_single_dimension_itm(const conflict_entry_t & entry, const nav_tree_filter_t::filter_state_t & full)
-{
-	nav_tree_filter_t filter;
-	nav_tree_filter_t::filter_state_t single;
-	single.filter_itm_only = full.filter_itm_only;
-	filter.set_filter(single);
-	return filter.passes(entry, 0);
-}
-
 }
 
 TEST_CASE("nav_tree_filter_t::passes, AND-composition", "[u][pbt]")
@@ -191,8 +181,7 @@ TEST_CASE("nav_tree_filter_t::passes, AND-composition", "[u][pbt]")
 			&& passes_single_dimension_type(entry, filter_state)
 			&& passes_single_dimension_id(entry, filter_state)
 			&& passes_single_dimension_name(entry, filter_state)
-			&& passes_single_dimension_deleted(entry, filter_state)
-			&& passes_single_dimension_itm(entry, filter_state);
+			&& passes_single_dimension_deleted(entry, filter_state);
 
 		RC_ASSERT(combined_result == expected);
 	});

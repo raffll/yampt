@@ -249,25 +249,6 @@ void nav_tree_model_t::build_tree()
 
 		for (auto & [type, recs] : type_map)
 		{
-			std::sort(
-			    recs.begin(),
-			    recs.end(),
-			    [&](const visible_record_t & a, const visible_record_t & b)
-			{
-				const auto & ea = entries[a.entry_idx];
-				const auto & eb = entries[b.entry_idx];
-				const auto & na = ea.display_name;
-				const auto & nb = eb.display_name;
-
-				if (!na.empty() && !nb.empty())
-					return natural_compare(na, nb) < 0;
-
-				if (na.empty() && nb.empty())
-					return natural_compare(ea.record_id, eb.record_id) < 0;
-
-				return !na.empty();
-			});
-
 			type_group_t group;
 			group.type = type;
 			group.records = std::move(recs);
@@ -291,6 +272,8 @@ void nav_tree_model_t::build_tree()
 
 		m_tree.push_back(std::move(file_node));
 	}
+
+	sort_records();
 }
 
 QModelIndex nav_tree_model_t::index(int row, int column, const QModelIndex & parent) const
@@ -413,7 +396,7 @@ QVariant nav_tree_model_t::headerData(int section, Qt::Orientation orientation, 
 	switch (section)
 	{
 	case 0:
-		return QStringLiteral("EditorID");
+		return QStringLiteral("ID");
 	case 1:
 		return QStringLiteral("Name");
 	}
@@ -771,4 +754,45 @@ nav_tree_model_t::node_info_t nav_tree_model_t::node_at(const QModelIndex & inde
 	}
 
 	return { -1, {}, {} };
+}
+
+void nav_tree_model_t::sort(int column, Qt::SortOrder order)
+{
+	if (column < 0 || column > 1)
+		return;
+
+	m_sort_column = column;
+	m_sort_order = order;
+
+	emit layoutAboutToBeChanged();
+	sort_records();
+	emit layoutChanged();
+}
+
+void nav_tree_model_t::sort_records()
+{
+	const auto & entries = m_scan.entries();
+	const int col = m_sort_column;
+	const bool ascending = (m_sort_order == Qt::AscendingOrder);
+
+	for (auto & file_node : m_tree)
+	{
+		for (auto & group : file_node.groups)
+		{
+			std::sort(
+			    group.records.begin(),
+			    group.records.end(),
+			    [&](const visible_record_t & a, const visible_record_t & b)
+			{
+				const auto & ea = entries[a.entry_idx];
+				const auto & eb = entries[b.entry_idx];
+
+				const std::string & sa = (col == 0) ? ea.record_id : ea.display_name;
+				const std::string & sb = (col == 0) ? eb.record_id : eb.display_name;
+
+				const int cmp = natural_compare(sa, sb);
+				return ascending ? (cmp < 0) : (cmp > 0);
+			});
+		}
+	}
 }
