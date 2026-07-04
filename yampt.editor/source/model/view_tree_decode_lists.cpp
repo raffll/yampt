@@ -305,21 +305,29 @@ void view_tree_model_t::set_record_armor(record_context_t & context, const confl
 	}
 
 	std::vector<std::unordered_map<std::string, std::vector<size_t>>> col_type_indices(col_count);
-	for (size_t col = 0; col < col_count; ++col)
+	if (entry.slot_result)
 	{
-		if (col >= all_subs.size())
-			continue;
+		build_col_indices_from_alignment(*entry.slot_result, col_count, col_type_indices);
+	}
+	else
+	{
+		for (size_t col = 0; col < col_count; ++col)
+		{
+			if (col >= all_subs.size())
+				continue;
 
-		for (size_t i = 0; i < all_subs[col].size(); ++i)
-			col_type_indices[col][all_subs[col][i].type].push_back(i);
+			for (size_t i = 0; i < all_subs[col].size(); ++i)
+				col_type_indices[col][all_subs[col][i].type].push_back(i);
+		}
 	}
 
 	int part_index = 0;
 
 	for (size_t i = 0; i < unified_slots.size(); ++i)
 	{
-		bool is_group = (unified_slots[i].type == "INDX") && (i + 1 < unified_slots.size()) &&
-		                (unified_slots[i + 1].type == "BNAM");
+		bool is_group = (unified_slots[i].type == "INDX") &&
+		                (i + 1 < unified_slots.size()) &&
+		                (unified_slots[i + 1].type == "BNAM" || unified_slots[i + 1].type == "CNAM");
 
 		if (!is_group)
 		{

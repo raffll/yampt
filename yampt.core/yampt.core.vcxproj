@@ -186,6 +186,7 @@
     <ClCompile Include="source\merger\dict_merger.cpp" />
     <ClCompile Include="source\scanner\cell_name_fixer.cpp" />
     <ClCompile Include="source\scanner\conflict_compute.cpp" />
+    <ClCompile Include="source\scanner\dial_info_align.cpp" />
     <ClCompile Include="source\scanner\fog_fixer.cpp" />
     <ClCompile Include="source\scanner\merge_compute.cpp" />
     <ClCompile Include="source\scanner\merge_patch_ops.cpp" />
@@ -221,6 +222,7 @@
     <ClInclude Include="source\merger\dict_merger.hpp" />
     <ClInclude Include="source\scanner\cell_name_fixer.hpp" />
     <ClInclude Include="source\scanner\conflict_compute.hpp" />
+    <ClInclude Include="source\scanner\dial_info_align.hpp" />
     <ClInclude Include="source\scanner\conflict_enums.hpp" />
     <ClInclude Include="source\scanner\fog_fixer.hpp" />
     <ClInclude Include="source\scanner\merge_compute.hpp" />

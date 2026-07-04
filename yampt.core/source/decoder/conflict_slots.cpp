@@ -471,6 +471,151 @@ static void parse_versions(slot_result_t & result)
 	}
 }
 
+struct armor_group_entry_t
+{
+	std::string indx_key;
+	size_t indx_idx;
+	size_t bnam_idx;
+	size_t cnam_idx;
+};
+
+static void extract_armor_groups(
+    const std::vector<std::vector<sub_record_view_t>> & parsed,
+    std::vector<std::vector<armor_group_entry_t>> & ver_groups,
+    std::vector<std::string> & all_indx_keys)
+{
+	const size_t ver_count = parsed.size();
+	ver_groups.resize(ver_count);
+
+	for (size_t i = 0; i < ver_count; ++i)
+	{
+		const auto & subs = parsed[i];
+		for (size_t j = 0; j < subs.size(); ++j)
+		{
+			if (subs[j].type != "INDX" || subs[j].size < 4)
+				continue;
+
+			bool has_bnam_or_cnam_after = (j + 1 < subs.size()) &&
+			    (subs[j + 1].type == "BNAM" || subs[j + 1].type == "CNAM");
+
+			if (!has_bnam_or_cnam_after)
+				continue;
+
+			uint32_t indx_value = 0;
+			std::memcpy(&indx_value, subs[j].data, 4);
+			auto indx_key = std::to_string(indx_value);
+
+			size_t bnam_idx = SIZE_MAX;
+			size_t cnam_idx = SIZE_MAX;
+
+			size_t next = j + 1;
+			while (next < subs.size() && (subs[next].type == "BNAM" || subs[next].type == "CNAM"))
+			{
+				if (subs[next].type == "BNAM" && bnam_idx == SIZE_MAX)
+					bnam_idx = next;
+				else if (subs[next].type == "CNAM" && cnam_idx == SIZE_MAX)
+					cnam_idx = next;
+
+				++next;
+			}
+
+			ver_groups[i].push_back({ indx_key, j, bnam_idx, cnam_idx });
+
+			bool found = false;
+			for (const auto & key : all_indx_keys)
+			{
+				if (key == indx_key)
+				{
+					found = true;
+					break;
+				}
+			}
+
+			if (!found)
+				all_indx_keys.push_back(indx_key);
+		}
+	}
+}
+
+static void build_armor_slots(slot_result_t & result)
+{
+	const size_t ver_count = result.parsed.size();
+
+	std::vector<std::vector<armor_group_entry_t>> ver_groups;
+	std::vector<std::string> all_indx_keys;
+	extract_armor_groups(result.parsed, ver_groups, all_indx_keys);
+
+	std::vector<std::set<size_t>> excluded(ver_count);
+	for (size_t i = 0; i < ver_count; ++i)
+	{
+		for (const auto & group : ver_groups[i])
+		{
+			excluded[i].insert(group.indx_idx);
+			if (group.bnam_idx != SIZE_MAX)
+				excluded[i].insert(group.bnam_idx);
+			if (group.cnam_idx != SIZE_MAX)
+				excluded[i].insert(group.cnam_idx);
+		}
+	}
+
+	std::vector<sub_slot_t> header_slots;
+	collect_unified_slots(result.parsed, excluded, header_slots);
+	align_slots_to_result(result.parsed, excluded, header_slots, result);
+
+	const int indx_occ_start = count_slot_occurrences(header_slots, "INDX");
+	const int bnam_occ_start = count_slot_occurrences(header_slots, "BNAM");
+	const int cnam_occ_start = count_slot_occurrences(header_slots, "CNAM");
+
+	int indx_occ = indx_occ_start;
+	int bnam_occ = bnam_occ_start;
+	int cnam_occ = cnam_occ_start;
+
+	for (const auto & target_key : all_indx_keys)
+	{
+		aligned_slot_t indx_slot;
+		indx_slot.key.type = "INDX";
+		indx_slot.key.occurrence = indx_occ++;
+		indx_slot.indices.resize(ver_count);
+
+		aligned_slot_t bnam_slot;
+		bnam_slot.key.type = "BNAM";
+		bnam_slot.key.occurrence = bnam_occ++;
+		bnam_slot.indices.resize(ver_count);
+
+		aligned_slot_t cnam_slot;
+		cnam_slot.key.type = "CNAM";
+		cnam_slot.key.occurrence = cnam_occ++;
+		cnam_slot.indices.resize(ver_count);
+
+		for (size_t i = 0; i < ver_count; ++i)
+		{
+			bool matched = false;
+			for (const auto & group : ver_groups[i])
+			{
+				if (group.indx_key == target_key)
+				{
+					indx_slot.indices[i] = group.indx_idx;
+					bnam_slot.indices[i] = group.bnam_idx;
+					cnam_slot.indices[i] = group.cnam_idx;
+					matched = true;
+					break;
+				}
+			}
+
+			if (!matched)
+			{
+				indx_slot.indices[i] = SIZE_MAX;
+				bnam_slot.indices[i] = SIZE_MAX;
+				cnam_slot.indices[i] = SIZE_MAX;
+			}
+		}
+
+		result.aligned.push_back(std::move(indx_slot));
+		result.aligned.push_back(std::move(bnam_slot));
+		result.aligned.push_back(std::move(cnam_slot));
+	}
+}
+
 static void dispatch_strategy(const std::string & rec_type, slot_result_t & result)
 {
 	if (rec_type == "CELL")
@@ -482,8 +627,11 @@ static void dispatch_strategy(const std::string & rec_type, slot_result_t & resu
 	else if (rec_type == "FACT")
 		build_fact_slots(result);
 
-	else if (rec_type == "CONT" || rec_type == "CREA" || rec_type == "NPC_" || rec_type == "BSGN")
+	else if (rec_type == "CONT" || rec_type == "CREA" || rec_type == "NPC_" || rec_type == "BSGN" || rec_type == "RACE")
 		build_container_slots(result);
+
+	else if (rec_type == "ARMO" || rec_type == "CLOT")
+		build_armor_slots(result);
 
 	else
 		build_generic_slots(result);

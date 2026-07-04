@@ -53,6 +53,7 @@
     <ClInclude Include="source\converter\scdt_patcher.hpp" />
     <ClInclude Include="source\translator\translation_engine.hpp" />
     <ClInclude Include="source\scanner\conflict_compute.hpp" />
+    <ClInclude Include="source\scanner\dial_info_align.hpp" />
     <ClInclude Include="source\scanner\conflict_enums.hpp" />
     <ClInclude Include="source\scanner\sub_record_merge.hpp" />
     <ClInclude Include="source\scanner\merge_patch_ops.hpp" />

@@ -4,24 +4,8 @@ Sorted by effort.
 
 ## L — a week or more
 
-### Merged Patch (yEditor) [L]
-The merge infrastructure exists in yEditor (toolbar exposed, settings paths wired, session state saved). Remaining:
-- Make sure good conflicts are merged
-- Show/hide merged patch column
-- Allow drag and drop to merged patch
-
 ### Show optional absent sub-records in grey [L]
 xEdit shows sub-records that are defined in the record schema but absent from the actual data as greyed-out placeholder rows (e.g. SCRI - ScriptID, CNAM - Female Body Part Name, ENAM - EnchantID). Requires a canonical sub-record order definition per record type. Missing entries appear in their expected position with grey text and empty plugin columns.
-
-### ARMO/CLOT body part group alignment [M]
-ARMO and CLOT records have repeating INDX+BNAM+CNAM groups (body part index, male part name, female part name). These should be aligned across plugins by the INDX value — same pattern as leveled lists align by item ID. Currently uses generic file-order display which breaks alignment when plugins have different body part ordering or different part counts.
-
-### Leveled list entry nesting [M]
-LEVC and LEVI entries are shown flat (CNAM, CNAM, CNAM...). Should be grouped into numbered parent nodes like xEdit:
-- "Leveled Creature Entries" parent
-  - "Leveled Creature #0" with children: CNAM - Creature Name, INTV - Creature Level
-  - "Leveled Creature #1" ...
-Same for LEVI with "Leveled Item Entries" and INAM - Item Name.
 
 ### Cell reference hierarchy in view tree [L]
 Cell references are currently displayed flat in the right panel. Refactor to show them nested:
@@ -70,9 +54,6 @@ Detect conflicts between OpenMW Lua handler registrations across multiple mods (
 ---
 
 ## Refactoring — later
-
-### Split `tools_t` into focused utilities — SKIPPED
-Class is only ~170 lines in header, ~280 in cpp. Not worth splitting — the disruption of changing every `tools_t::` call site across the codebase outweighs the benefit.
 
 ### Split `dict_creator_t` (header: 230 lines, base impl: 1937 lines)
 The class mixes unrelated matching algorithms behind one interface. Extract:
