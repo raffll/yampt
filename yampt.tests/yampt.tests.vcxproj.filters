@@ -58,8 +58,11 @@
     <ClCompile Include="source\tests.nav_tree_filter.cpp" />
     <ClCompile Include="source\tests.highlight_coordinator.cpp" />
     <ClCompile Include="source\tests.patch_builder.cpp" />
+    <ClCompile Include="source\tests.patch_builder_header.cpp" />
     <ClCompile Include="source\tests.plugin_session.cpp" />
     <ClCompile Include="source\tests.settings_store.cpp" />
+    <ClCompile Include="source\tests.path_resolver.cpp" />
+    <ClCompile Include="source\tests.workspace_watcher.cpp" />
     <ClCompile Include="..\yampt.core\source\io\eet_converter.cpp" />
     <ClCompile Include="..\yampt.core\source\io\eet_reader.cpp" />
     <ClCompile Include="..\yampt.core\source\utility\char_diff.cpp" />
@@ -103,6 +106,7 @@
     <ClCompile Include="..\yampt.translator\source\editor\glossary.cpp" />
     <ClCompile Include="..\yampt.core\source\utility\keyword_trie.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\editor_controller.cpp" />
+    <ClCompile Include="..\yampt.translator\source\editor\workspace_watcher.cpp" />
     <ClCompile Include="..\yampt.translator\source\model\record_table_model.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\edit_history.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\byte_limit_validator.cpp" />
