@@ -26,12 +26,12 @@ editor_settings_dialog_t::editor_settings_dialog_t(settings_store_t & settings, 
 	m_appearance_view = new appearance_settings_view_t(this);
 	m_merge_view = new merge_settings_view_t(this);
 
-	m_category_list->addItem("Paths");
 	m_category_list->addItem("Appearance");
+	m_category_list->addItem("Paths");
 	m_category_list->addItem("Merge");
 
-	m_content_stack->addWidget(m_paths_view);
 	m_content_stack->addWidget(m_appearance_view);
+	m_content_stack->addWidget(m_paths_view);
 	m_content_stack->addWidget(m_merge_view);
 
 	connect(m_category_list, &QListWidget::currentRowChanged, m_content_stack, &QStackedWidget::setCurrentIndex);
