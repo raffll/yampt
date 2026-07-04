@@ -75,6 +75,7 @@ private:
 	void load_existing_merged_patch();
 	std::string resolve_merge_output_path() const;
 	void save_merged_patch();
+	bool save_merge_to_file(const std::string & output_path, const std::string & author, const std::string & description);
 	void display_record_in_view(const conflict_entry_t & entry);
 	bool handle_subrecord_drop(QDropEvent * drop_event);
 

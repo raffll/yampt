@@ -3,6 +3,7 @@
 #include "fog_fixer.hpp"
 #include "plugin_scan.hpp"
 #include "summon_fixer.hpp"
+#include <map>
 #include <regex>
 #include <unordered_map>
 
@@ -162,7 +163,41 @@ void auto_merge_t::process_dialogue(const record_group_t & group, merge_counters
 	if (!scan_entry)
 		return;
 
-	m_scan.merge_dialogue(*scan_entry);
+	const auto & entry = *scan_entry;
+	const auto & winning_ver = entry.versions.back();
+	std::string winning_dial = m_scan.read_record_content(winning_ver.plugin_idx, winning_ver.record_index);
+	m_scan.copy_record_to_merge_raw("DIAL", entry.record_id, winning_dial);
+
+	std::vector<std::string> merged_info_ids;
+	std::map<std::string, std::string> info_contents;
+
+	for (const auto & ver : entry.versions)
+	{
+		if (m_scan.is_merge_plugin(ver.plugin_idx))
+			continue;
+
+		const auto & plugin_entries = m_scan.index(ver.plugin_idx).entries();
+		for (size_t ei = ver.record_index + 1; ei < plugin_entries.size(); ++ei)
+		{
+			if (plugin_entries[ei].rec_type != "INFO")
+				break;
+
+			if (plugin_entries[ei].dial_name != entry.record_id)
+				break;
+
+			const auto & info_id = plugin_entries[ei].record_id;
+			std::string content = m_scan.read_record_content(ver.plugin_idx, plugin_entries[ei].record_index);
+
+			if (info_contents.find(info_id) == info_contents.end())
+				merged_info_ids.push_back(info_id);
+
+			info_contents[info_id] = content;
+		}
+	}
+
+	for (const auto & info_id : merged_info_ids)
+		m_scan.copy_record_to_merge_raw("INFO", info_id, info_contents[info_id]);
+
 	++counters.dialogues;
 }
 

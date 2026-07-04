@@ -1,8 +1,10 @@
 #include <catch2/catch_all.hpp>
 #include <scanner/plugin_scan.hpp>
+#include <scanner/sub_record_merge.hpp>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <map>
 
 static std::string make_sub_record(const std::string & sub_id, const std::string & content)
 {
@@ -187,6 +189,22 @@ struct merge_test_fixture_t
 	{
 		return scan.merge_record_content(0);
 	}
+
+	void merge_leveled_list(const conflict_entry_t & entry)
+	{
+		std::vector<std::string> version_contents;
+		for (const auto & ver : entry.versions)
+			version_contents.push_back(scan.read_record_content(ver.plugin_idx, ver.record_index));
+
+		merge_input_t input;
+		input.rec_type = entry.rec_type;
+		input.record_id = entry.record_id;
+		input.version_contents = std::move(version_contents);
+
+		const auto result = leveled_list_merge_t::merge(input);
+		if (!result.content.empty())
+			scan.copy_record_to_merge_raw(entry.rec_type, entry.record_id, result.content);
+	}
 };
 
 TEST_CASE("plugin_scan_t::merge_leveled_list, additions-only preserving master", "[i]")
@@ -213,7 +231,7 @@ TEST_CASE("plugin_scan_t::merge_leveled_list, additions-only preserving master",
 	merge_test_fixture_t fixture(master_levi, plugin_levi);
 	auto entry = fixture.make_conflict("lev_item_test");
 
-	fixture.scan.merge_leveled_list(entry);
+	fixture.merge_leveled_list(entry);
 
 	REQUIRE(fixture.scan.merge_record_count() == 1);
 	auto items = extract_items_from_content(fixture.merged_content());
@@ -248,7 +266,7 @@ TEST_CASE("plugin_scan_t::merge_leveled_list, deduplication by item and level", 
 	merge_test_fixture_t fixture(master_levi, plugin_levi);
 	auto entry = fixture.make_conflict("lev_item_dup");
 
-	fixture.scan.merge_leveled_list(entry);
+	fixture.merge_leveled_list(entry);
 
 	REQUIRE(fixture.scan.merge_record_count() == 1);
 	auto items = extract_items_from_content(fixture.merged_content());
@@ -287,7 +305,7 @@ TEST_CASE("plugin_scan_t::merge_leveled_list, header from winner", "[i]")
 	merge_test_fixture_t fixture(master_levi, plugin_levi);
 	auto entry = fixture.make_conflict("lev_header_test");
 
-	fixture.scan.merge_leveled_list(entry);
+	fixture.merge_leveled_list(entry);
 
 	REQUIRE(fixture.scan.merge_record_count() == 1);
 
@@ -323,7 +341,7 @@ TEST_CASE("plugin_scan_t::merge_leveled_list, same item different levels are dis
 	merge_test_fixture_t fixture(master_levi, plugin_levi);
 	auto entry = fixture.make_conflict("lev_item_levels");
 
-	fixture.scan.merge_leveled_list(entry);
+	fixture.merge_leveled_list(entry);
 
 	REQUIRE(fixture.scan.merge_record_count() == 1);
 	auto items = extract_items_from_content(fixture.merged_content());
@@ -389,6 +407,43 @@ struct merge_dialogue_fixture_t
 		scan.rebuild_conflicts();
 	}
 
+	void merge_dialogue(const conflict_entry_t & entry)
+	{
+		const auto & winning_ver = entry.versions.back();
+		std::string winning_dial = scan.read_record_content(winning_ver.plugin_idx, winning_ver.record_index);
+		scan.copy_record_to_merge_raw("DIAL", entry.record_id, winning_dial);
+
+		std::vector<std::string> merged_info_ids;
+		std::map<std::string, std::string> info_contents;
+
+		for (const auto & ver : entry.versions)
+		{
+			if (scan.is_merge_plugin(ver.plugin_idx))
+				continue;
+
+			const auto & plugin_entries = scan.index(ver.plugin_idx).entries();
+			for (size_t ei = ver.record_index + 1; ei < plugin_entries.size(); ++ei)
+			{
+				if (plugin_entries[ei].rec_type != "INFO")
+					break;
+
+				if (plugin_entries[ei].dial_name != entry.record_id)
+					break;
+
+				const auto & info_id = plugin_entries[ei].record_id;
+				std::string content = scan.read_record_content(ver.plugin_idx, plugin_entries[ei].record_index);
+
+				if (info_contents.find(info_id) == info_contents.end())
+					merged_info_ids.push_back(info_id);
+
+				info_contents[info_id] = content;
+			}
+		}
+
+		for (const auto & info_id : merged_info_ids)
+			scan.copy_record_to_merge_raw("INFO", info_id, info_contents[info_id]);
+	}
+
 	~merge_dialogue_fixture_t()
 	{
 		for (const auto & path : temp_files)
@@ -419,7 +474,7 @@ TEST_CASE("plugin_scan_t::merge_dialogue, DIAL content from last plugin", "[i]")
 	const auto * entry = fixture.scan.find("DIAL", "greeting");
 	REQUIRE(entry != nullptr);
 
-	fixture.scan.merge_dialogue(*entry);
+	fixture.merge_dialogue(*entry);
 
 	REQUIRE(fixture.scan.merge_record_count() >= 1);
 
@@ -453,7 +508,7 @@ TEST_CASE("plugin_scan_t::merge_dialogue, INFO ordering preserves first-seen pos
 	const auto * entry = fixture.scan.find("DIAL", "topic");
 	REQUIRE(entry != nullptr);
 
-	fixture.scan.merge_dialogue(*entry);
+	fixture.merge_dialogue(*entry);
 
 	REQUIRE(fixture.scan.merge_record_count() == 4);
 
@@ -497,7 +552,7 @@ TEST_CASE("plugin_scan_t::merge_dialogue, all distinct INFO IDs included", "[i]"
 	const auto * entry = fixture.scan.find("DIAL", "quest");
 	REQUIRE(entry != nullptr);
 
-	fixture.scan.merge_dialogue(*entry);
+	fixture.merge_dialogue(*entry);
 
 	REQUIRE(fixture.scan.merge_record_count() == 5);
 
@@ -535,7 +590,7 @@ TEST_CASE("plugin_scan_t::merge_dialogue, INFO content last-wins for duplicates"
 	const auto * entry = fixture.scan.find("DIAL", "rumors");
 	REQUIRE(entry != nullptr);
 
-	fixture.scan.merge_dialogue(*entry);
+	fixture.merge_dialogue(*entry);
 
 	REQUIRE(fixture.scan.merge_record_count() == 2);
 
@@ -561,7 +616,7 @@ TEST_CASE("plugin_scan_t::merge_dialogue, orphan PNAM/NNAM references ignored", 
 	const auto * entry = fixture.scan.find("DIAL", "lore");
 	REQUIRE(entry != nullptr);
 
-	fixture.scan.merge_dialogue(*entry);
+	fixture.merge_dialogue(*entry);
 
 	REQUIRE(fixture.scan.merge_record_count() == 3);
 

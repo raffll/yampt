@@ -1,6 +1,7 @@
 #include "plugin_workspace_view.hpp"
 #include "../dialog/filter_dialog.hpp"
 #include "../dialog/plugin_select_dialog.hpp"
+#include "../patcher/patch_builder.hpp"
 #include <scanner/cell_name_fixer.hpp>
 #include <scanner/fog_fixer.hpp>
 #include <scanner/auto_merge.hpp>
@@ -9,6 +10,7 @@
 #include <decoder/view_tree_format.hpp>
 #include <scanner/summon_fixer.hpp>
 #include <algorithm>
+#include <filesystem>
 #include <settings_store.hpp>
 #include <set>
 #include <QApplication>
@@ -415,7 +417,7 @@ void plugin_workspace_view_t::on_save_plugin()
 	auto output_dir = QDir(QFileInfo(QString::fromStdString(output_path)).absolutePath());
 	output_dir.mkpath(".");
 
-	const bool result = m_session->scan().save_merge(output_path, author.toStdString(), description.toStdString());
+	const bool result = save_merge_to_file(output_path, author.toStdString(), description.toStdString());
 
 	if (result)
 	{
@@ -468,11 +470,53 @@ void plugin_workspace_view_t::save_merged_patch()
 
 	auto output_dir = QDir(QFileInfo(QString::fromStdString(output_path)).absolutePath());
 	output_dir.mkpath(".");
-	const bool saved = m_session->scan().save_merge(output_path, "yEditor", "Auto-generated merged patch");
+	const bool saved = save_merge_to_file(output_path, "yEditor", "Auto-generated merged patch");
 	if (saved)
 		log_message("[info] saved " + output_path + " (" + std::to_string(m_session->scan().merge_record_count()) + " records)");
 	else
 		log_message("[error] failed to save " + output_path);
+}
+
+bool plugin_workspace_view_t::save_merge_to_file(
+    const std::string & output_path,
+    const std::string & author,
+    const std::string & description)
+{
+	auto & scan = m_session->scan();
+	auto & builder = m_session->patch_builder();
+
+	if (!scan.has_merge())
+		return false;
+
+	if (scan.merge_record_count() == 0)
+		return false;
+
+	builder.clear();
+	for (size_t i = 0; i < scan.merge_record_count(); ++i)
+		builder.add_record_raw(scan.merge_record_type(i), scan.merge_record_id(i), scan.merge_record_content(i));
+
+	std::vector<patch_builder_t::master_entry_t> masters;
+	for (int i = 0; i < static_cast<int>(scan.plugin_count()); ++i)
+	{
+		if (scan.is_merge_plugin(i))
+			continue;
+
+		patch_builder_t::master_entry_t master;
+		master.filename = scan.plugin_filename(i);
+
+		try
+		{
+			master.file_size = std::filesystem::file_size(scan.plugin_path(i));
+		}
+		catch (...)
+		{
+			master.file_size = 0;
+		}
+
+		masters.push_back(std::move(master));
+	}
+
+	return builder.save(output_path, author, description, masters);
 }
 
 void plugin_workspace_view_t::load_existing_merged_patch()

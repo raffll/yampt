@@ -1,5 +1,6 @@
 #include "highlight_applier.hpp"
 #include "editor/highlight_coordinator.hpp"
+#include "translation_edit_view.hpp"
 #include <theme_system.hpp>
 #include <QPlainTextEdit>
 #include <QTextCursor>

@@ -197,9 +197,7 @@
   <ItemGroup>
     <ClInclude Include="source\io\profile_reader.hpp" />
     <ClInclude Include="source\model\nav_tree_filter.hpp" />
-    <ClInclude Include="source\model\plugin_session.hpp" />
     <ClInclude Include="source\patcher\patch_builder.hpp" />
-    <ClInclude Include="source\view\record_view.hpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="source\editor_window.hpp">

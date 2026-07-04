@@ -40,4 +40,9 @@
     <ClCompile Include="..\yampt.core\source\decoder\conflict_slots_cell.cpp" />
     <ClCompile Include="..\yampt.core\source\decoder\view_tree_format.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="source\io\profile_reader.hpp" />
+    <ClInclude Include="source\model\nav_tree_filter.hpp" />
+    <ClInclude Include="source\patcher\patch_builder.hpp" />
+  </ItemGroup>
 </Project>

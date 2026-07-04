@@ -90,7 +90,6 @@
     <ClInclude Include="source\dialog\shortcuts_settings_view.hpp" />
     <ClInclude Include="source\dialog\appearance_settings_view.hpp" />
     <ClInclude Include="source\editor\highlight_coordinator.hpp" />
-    <ClInclude Include="source\editor\workspace_watcher.hpp" />
     <ClInclude Include="source\view\highlight_applier.hpp" />
   </ItemGroup>
 </Project>

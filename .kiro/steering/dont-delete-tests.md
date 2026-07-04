@@ -2,6 +2,8 @@
 
 Never delete a failing test without explicit user approval. If a test fails, diagnose the root cause and fix either the test data or the code under test. Do not remove the test to make the suite pass.
 
+Never remove a test file or test entry from a vcxproj to fix build or linker errors. If a test doesn't compile or link, fix the underlying issue (add missing source files, fix includes, resolve MOC dependencies). Removing tests from the build is never an acceptable fix.
+
 If a test approach turns out to be fragile or unreliable, report the finding and propose an alternative — do not silently remove or skip the test.
 
 ## Synthetic ESM Tests Are Valid

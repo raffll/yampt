@@ -103,12 +103,11 @@
     <ClCompile Include="..\yampt.translator\source\editor\glossary.cpp" />
     <ClCompile Include="..\yampt.core\source\utility\keyword_trie.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\editor_controller.cpp" />
+    <ClCompile Include="..\yampt.translator\source\model\record_table_model.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\edit_history.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\byte_limit_validator.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\find_replace.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\highlight_coordinator.cpp" />
-    <ClCompile Include="..\yampt.translator\source\editor\workspace_watcher.cpp" />
-    <ClCompile Include="..\yampt.translator\source\view\highlight_applier.cpp" />
     <ClCompile Include="..\yampt.translator\source\utility\display_name.cpp" />
     <ClCompile Include="..\yampt.translator\source\highlighter\script_tokenizer.cpp" />
     <ClCompile Include="..\yampt.translator\source\session.cpp" />
@@ -116,8 +115,6 @@
     <ClCompile Include="..\yampt.editor\source\model\nav_tree_filter.cpp" />
     <ClCompile Include="..\yampt.editor\source\model\plugin_session.cpp" />
     <ClCompile Include="..\yampt.editor\source\patcher\patch_builder.cpp" />
-    <ClCompile Include="..\yampt.editor\source\view\nav_tree_view.cpp" />
-    <ClCompile Include="..\yampt.editor\source\view\record_view.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="source\cpp.hint" />

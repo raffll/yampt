@@ -253,7 +253,6 @@
     <ClInclude Include="source\io\yaml_l10n_reader.hpp" />
     <ClInclude Include="source\io\yaml_l10n_writer.hpp" />
     <ClInclude Include="source\editor\highlight_coordinator.hpp" />
-    <ClInclude Include="source\editor\workspace_watcher.hpp" />
     <ClInclude Include="source\view\highlight_applier.hpp" />
   </ItemGroup>
   <ItemGroup>

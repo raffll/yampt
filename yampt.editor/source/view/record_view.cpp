@@ -4,6 +4,7 @@
 #include <QPainter>
 #include <QStyledItemDelegate>
 #include <QStyleOptionHeader>
+#include <QTreeView>
 #include <QVBoxLayout>
 
 class record_grid_delegate_t : public QStyledItemDelegate

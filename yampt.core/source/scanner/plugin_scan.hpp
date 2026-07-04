@@ -65,15 +65,11 @@ public:
 	const std::string * find_merge_content(const std::string & rec_type, const std::string & record_id) const;
 	std::string read_record_content(int plugin_idx, size_t record_index);
 	void remove_from_merge(const std::string & type, const std::string & id);
-	bool save_merge(const std::string & output_path, const std::string & author, const std::string & description);
 	bool has_merge() const;
 	size_t merge_record_count() const;
 	const std::string & merge_record_content(size_t index) const;
 	const std::string & merge_record_type(size_t index) const;
 	const std::string & merge_record_id(size_t index) const;
-
-	void merge_leveled_list(const conflict_entry_t & entry);
-	void merge_dialogue(const conflict_entry_t & entry);
 
 	size_t itm_count(int plugin_idx) const;
 	std::vector<const conflict_entry_t *> itm_entries(int plugin_idx) const;
@@ -90,7 +86,6 @@ private:
 
 	void compute_conflict(conflict_entry_t & entry);
 	void insert_or_update_version(version_descriptor_t desc);
-	std::string build_tes3_header(const std::string & author, const std::string & description);
 
 	struct loaded_plugin_t
 	{
