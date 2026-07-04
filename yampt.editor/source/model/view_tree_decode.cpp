@@ -4,23 +4,7 @@
 #include <cstdio>
 #include <cstring>
 
-static std::vector<std::string> exclude_column(const std::vector<std::string> & values, int excluded_col)
-{
-	if (excluded_col < 0 || excluded_col >= static_cast<int>(values.size()))
-		return values;
-
-	if (!values[excluded_col].empty())
-		return values;
-
-	std::vector<std::string> result;
-	result.reserve(values.size() - 1);
-	for (size_t i = 0; i < values.size(); ++i)
-	{
-		if (static_cast<int>(i) != excluded_col)
-			result.push_back(values[i]);
-	}
-	return result;
-}
+static constexpr bool show_binary_positions = true;
 
 static bool check_all_identical(const std::vector<std::string> & values)
 {
@@ -121,6 +105,20 @@ view_tree_model_t::view_node_t view_tree_model_t::build_slot_row(
 	row.type = slot.type;
 	row.label = make_sub_label(slot.type, m_record_type, first_size);
 
+	if (show_binary_positions)
+	{
+		for (size_t col = 0; col < col_count; ++col)
+		{
+			if (col >= row.binary_ranges.size() || row.binary_ranges[col].start < 0)
+				continue;
+
+			if (row.values[col].empty())
+				continue;
+
+			row.values[col] = "[" + std::to_string(row.binary_ranges[col].start) + "] " + row.values[col];
+		}
+	}
+
 	bool all_same = true;
 	for (size_t col = 1; col < col_count; ++col)
 	{
@@ -131,11 +129,8 @@ view_tree_model_t::view_node_t view_tree_model_t::build_slot_row(
 		}
 	}
 	row.all_identical = all_same;
-	const auto & filtered = exclude_column(row.values, m_merge_col_index);
-	row.row_conflict_all = compute_conflict_all(filtered);
-	row.cell_conflict_this = compute_conflict_this(filtered);
-	if (m_merge_col_index >= 0 && filtered.size() < row.values.size())
-		row.cell_conflict_this.insert(row.cell_conflict_this.begin() + m_merge_col_index, conflict_this_t::unknown);
+	row.row_conflict_all = compute_conflict_all(row.values);
+	row.cell_conflict_this = compute_conflict_this(row.values);
 
 	const auto * schema = find_schema(m_record_type, slot.type, first_size);
 	if (schema && first_data)
@@ -222,12 +217,8 @@ void view_tree_model_t::decode_schema_children(
 				}
 
 				frow.all_identical = check_all_identical(frow.values);
-				const auto & flag_filtered = exclude_column(frow.values, m_merge_col_index);
-				frow.row_conflict_all = compute_conflict_all(flag_filtered);
-				frow.cell_conflict_this = compute_conflict_this(flag_filtered);
-				if (m_merge_col_index >= 0 && flag_filtered.size() < frow.values.size())
-					frow.cell_conflict_this.insert(
-					    frow.cell_conflict_this.begin() + m_merge_col_index, conflict_this_t::unknown);
+				frow.row_conflict_all = compute_conflict_all(frow.values);
+				frow.cell_conflict_this = compute_conflict_this(frow.values);
 				parent_row.children.push_back(std::move(frow));
 			}
 			continue;
@@ -261,6 +252,8 @@ void view_tree_model_t::decode_schema_children(
 
 			const auto & sv = all_subs[col][idx];
 			frow.values[col] = decode_field(fdef, sv.data, sv.size);
+			if (show_binary_positions)
+				frow.values[col] = "[" + std::to_string(idx) + "] " + frow.values[col];
 		}
 
 		frow.all_identical = check_all_identical(frow.values);

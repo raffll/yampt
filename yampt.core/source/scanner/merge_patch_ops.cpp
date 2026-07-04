@@ -43,28 +43,7 @@ patch_result_t merge_patch_ops_t::patch_sub_record(
 		}
 		else
 		{
-			int insert_pos = static_cast<int>(merge_subs.size());
-			for (int s = binary_idx - 1; s >= 0; --s)
-			{
-				const auto & preceding = source_subs[s];
-				int preceding_occurrence = 0;
-				for (int p = 0; p < s; ++p)
-				{
-					if (source_subs[p].type == preceding.type)
-						++preceding_occurrence;
-				}
-
-				const auto preceding_merge_idx =
-				    sub_record_merge_t::find_by_type_and_occurrence(merge_subs, preceding.type, preceding_occurrence);
-
-				if (preceding_merge_idx >= 0)
-				{
-					insert_pos = preceding_merge_idx + 1;
-					break;
-				}
-			}
-
-			merge_subs.insert(merge_subs.begin() + insert_pos, source_sub);
+			merge_subs.push_back(source_sub);
 		}
 	}
 

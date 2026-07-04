@@ -136,6 +136,19 @@ void view_tree_model_t::set_record_armor(record_context_t & context, const confl
 
 		compute_group_ranges(group_row, col_count);
 
+		group_row.label += " [";
+		for (size_t col = 0; col < col_count; ++col)
+		{
+			if (col > 0)
+				group_row.label += " ";
+
+			if (col < group_row.binary_ranges.size() && group_row.binary_ranges[col].start >= 0)
+				group_row.label += std::to_string(group_row.binary_ranges[col].start) + ".." + std::to_string(group_row.binary_ranges[col].end_pos);
+			else
+				group_row.label += "-";
+		}
+		group_row.label += "]";
+
 		m_rows.push_back(std::move(group_row));
 		++part_index;
 		i = next - 1;
@@ -332,6 +345,19 @@ void view_tree_model_t::emit_leveled_rows(record_context_t & context, slot_build
 		}
 
 		compute_group_ranges(group_row, col_count);
+
+		group_row.label += " [";
+		for (size_t col = 0; col < col_count; ++col)
+		{
+			if (col > 0)
+				group_row.label += " ";
+
+			if (col < group_row.binary_ranges.size() && group_row.binary_ranges[col].start >= 0)
+				group_row.label += std::to_string(group_row.binary_ranges[col].start) + ".." + std::to_string(group_row.binary_ranges[col].end_pos);
+			else
+				group_row.label += "-";
+		}
+		group_row.label += "]";
 
 		m_rows.push_back(std::move(group_row));
 		++entry_index;

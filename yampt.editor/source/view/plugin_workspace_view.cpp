@@ -1179,11 +1179,6 @@ void plugin_workspace_view_t::copy_group_to_merge(
 		return;
 	}
 
-	log_message("[debug] copy_group: row_idx=" + std::to_string(group_row_idx) +
-	    " label=\"" + group_row.label + "\"" +
-	    " type=" + group_row.type +
-	    " range=" + std::to_string(source_range.start) + ".." + std::to_string(source_range.end_pos));
-
 	const auto source_subs = sub_record_merge_t::parse_sub_records(source_content);
 	auto merge_subs = sub_record_merge_t::parse_sub_records(merge_content);
 
@@ -1192,9 +1187,6 @@ void plugin_workspace_view_t::copy_group_to_merge(
 		log_message("[error] copy_group: range exceeds source sub-records");
 		return;
 	}
-
-	for (int s = source_range.start; s < source_range.end_pos; ++s)
-		log_message("[debug]   [" + std::to_string(s) + "] " + source_subs[s].type + " (" + std::to_string(source_subs[s].data.size()) + " bytes)");
 
 	sub_record_sequence_t source_group(
 	    source_subs.begin() + source_range.start, source_subs.begin() + source_range.end_pos);
