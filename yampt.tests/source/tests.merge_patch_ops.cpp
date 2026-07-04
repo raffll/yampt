@@ -289,3 +289,62 @@ TEST_CASE("merge_patch_ops_t::extract_sub_type_from_field_name, too short return
 	REQUIRE(merge_patch_ops_t::extract_sub_type_from_field_name("AB") == "");
 	REQUIRE(merge_patch_ops_t::extract_sub_type_from_field_name("") == "");
 }
+
+TEST_CASE("merge_patch_ops_t::is_content_matched_type, NPCS and NPCO", "[u]")
+{
+	REQUIRE(merge_patch_ops_t::is_content_matched_type("NPCS"));
+	REQUIRE(merge_patch_ops_t::is_content_matched_type("NPCO"));
+	REQUIRE_FALSE(merge_patch_ops_t::is_content_matched_type("FNAM"));
+	REQUIRE_FALSE(merge_patch_ops_t::is_content_matched_type("DATA"));
+	REQUIRE_FALSE(merge_patch_ops_t::is_content_matched_type("NAME"));
+}
+
+TEST_CASE("merge_patch_ops_t::patch_sub_record, NPCS appends without replacing", "[u]")
+{
+	std::string npcs_data(32, '\0');
+	std::memcpy(npcs_data.data(), "blood of the north", 18);
+
+	std::string npcs_new(32, '\0');
+	std::memcpy(npcs_new.data(), "_trollkin", 9);
+
+	auto merge = make_record("BSGN",
+	    make_sub("NAME", make_string("id")) +
+	    make_sub("NPCS", npcs_data));
+
+	auto source = make_record("BSGN",
+	    make_sub("NAME", make_string("id")) +
+	    make_sub("NPCS", npcs_new));
+
+	auto result = merge_patch_ops_t::patch_sub_record(merge, source, "NPCS", 1);
+
+	REQUIRE(result.success);
+	REQUIRE(result.content.find("blood of the north") != std::string::npos);
+	REQUIRE(result.content.find("_trollkin") != std::string::npos);
+}
+
+TEST_CASE("merge_patch_ops_t::patch_sub_record, NPCS skips duplicate", "[u]")
+{
+	std::string npcs_data(32, '\0');
+	std::memcpy(npcs_data.data(), "same_spell", 10);
+
+	auto merge = make_record("BSGN",
+	    make_sub("NAME", make_string("id")) +
+	    make_sub("NPCS", npcs_data));
+
+	auto source = make_record("BSGN",
+	    make_sub("NAME", make_string("id")) +
+	    make_sub("NPCS", npcs_data));
+
+	auto result = merge_patch_ops_t::patch_sub_record(merge, source, "NPCS", 1);
+
+	REQUIRE(result.success);
+
+	size_t count = 0;
+	size_t search_pos = 0;
+	while ((search_pos = result.content.find("NPCS", search_pos)) != std::string::npos)
+	{
+		++count;
+		search_pos += 4;
+	}
+	REQUIRE(count == 1);
+}

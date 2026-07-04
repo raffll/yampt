@@ -224,6 +224,8 @@
     <ClCompile Include="source\tests.merge_fixers.cpp" />
     <ClCompile Include="source\tests.leveled_list_merge.cpp" />
     <ClCompile Include="source\tests.cell_ref_merge.cpp" />
+    <ClCompile Include="source\tests.armor_slots.cpp" />
+    <ClCompile Include="source\tests.dial_info_align.cpp" />
     <ClCompile Include="..\yampt.translator\source\model\table_builder.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\row_filter.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\glossary.cpp" />

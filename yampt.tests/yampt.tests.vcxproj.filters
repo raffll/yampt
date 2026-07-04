@@ -49,6 +49,8 @@
     <ClCompile Include="source\tests.merge_fixers.cpp" />
     <ClCompile Include="source\tests.leveled_list_merge.cpp" />
     <ClCompile Include="source\tests.cell_ref_merge.cpp" />
+    <ClCompile Include="source\tests.armor_slots.cpp" />
+    <ClCompile Include="source\tests.dial_info_align.cpp" />
     <ClCompile Include="..\yampt.core\source\io\app_settings.cpp" />
     <ClCompile Include="..\yampt.core\source\io\eet_converter.cpp" />
     <ClCompile Include="..\yampt.core\source\io\eet_reader.cpp" />

@@ -4,17 +4,6 @@ Sorted by effort.
 
 ## L — a week or more
 
-### Show optional absent sub-records in grey [L]
-xEdit shows sub-records that are defined in the record schema but absent from the actual data as greyed-out placeholder rows (e.g. SCRI - ScriptID, CNAM - Female Body Part Name, ENAM - EnchantID). Requires a canonical sub-record order definition per record type. Missing entries appear in their expected position with grey text and empty plugin columns.
-
-### Truncate long text in view tree cells + preview pane [M]
-Multi-line sub-record values (BOOK TEXT, SCPT SCTX) misalign across columns because rows have different text lengths. Fix:
-1. Truncate to a single line in the tree cell (show first ~80 chars + ellipsis). Full text available via tooltip.
-2. Add a preview pane below the view tree that shows the full content of the selected cell. Clicking a TEXT cell displays its complete text in the preview.
-
-### Polish UI localization [L]
-Move hardcoded UI strings to YAML l10n files so the interface can be displayed in Polish.
-
 ### Scan Lua files for translatable strings [L]
 Parse OpenMW Lua scripts (l10n YAML, or string literals) to extract translatable text for dictionary creation.
 
