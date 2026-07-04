@@ -24,13 +24,6 @@ Detect conflicts between OpenMW Lua handler registrations across multiple mods (
 
 ## Refactoring — later
 
-### Split `dict_creator_t` (header: 230 lines, base impl: 1937 lines)
-The class mixes unrelated matching algorithms behind one interface. Extract:
-- Cell matching (fingerprint, heuristic, exterior coords, default, region) → `cell_matcher_t`
-- DIAL matching (INAM index, translation-based) → `dial_matcher_t`
-- Script matching (SCTX/BNAM native message pairing) → stays in `dict_creator_base.cpp` (less code)
-- Text-match index (adaptation, ambiguity detection) → `text_match_index_t`
-
 ### Reduce `main_window_t` (1923 + 852 lines)
 Extract self-contained concerns into dedicated classes:
 - Workspace/watcher logic → `workspace_watcher_t`
@@ -49,21 +42,6 @@ Does loading, parsing, merging, filtering, drag-drop, persistence — all in one
 Mixes: loading, conflict detection, merge plugin management, TES3 binary header construction, leveled list merging, dialogue merging, ITM detection. Extract:
 - `patch_builder_t` in `yampt.editor/patcher/` — `copy_record_to_merge`, `remove_from_merge`, `save_merge`, `build_tes3_header`, `merge_leveled_list`, `merge_dialogue`
 - Slimmed `plugin_scan_t` stays in core `scanner/` — loading, indexing, conflict detection, ITM only
-
-### Split `view_tree_decode.cpp` (1166 lines) in yEditor — DONE
-Split into view_tree_decode.cpp (shared), view_tree_decode_cell.cpp, view_tree_decode_lists.cpp.
-
-### Split `conflict_slots.cpp` (742 lines) — DONE
-Extracted conflict_slots_cell.cpp with dedicated conflict_slots_cell.hpp header.
-
-### Split `esm_converter.cpp` (760 lines) — DONE
-Split into esm_converter.cpp (shared helpers) and esm_converter_records.cpp.
-
-### Extract color logic from `nav_tree_model.cpp` (733 lines) — DONE
-Already extracted to conflict_types.hpp (lighter_hsl, conflict_all_background, conflict_this_foreground).
-
-### Rename: view_tree_ → record_tree — LATER
-Rename view_tree_model, view_tree_decode, and related types/files to record_tree_* for clarity. Deferred — large rename touching MOC files, best done with VS refactoring tools.
 
 ---
 

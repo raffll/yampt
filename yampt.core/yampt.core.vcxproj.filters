@@ -9,10 +9,14 @@
     <ClCompile Include="source\io\eet_reader.cpp" />
     <ClCompile Include="source\io\eet_converter.cpp" />
     <ClCompile Include="source\io\file_list.cpp" />
+    <ClCompile Include="source\creator\cell_matcher.cpp" />
+    <ClCompile Include="source\creator\dial_matcher.cpp" />
     <ClCompile Include="source\creator\dict_creator.cpp" />
     <ClCompile Include="source\creator\dict_creator_single.cpp" />
     <ClCompile Include="source\creator\dict_creator_base.cpp" />
     <ClCompile Include="source\creator\dict_creator_base_ordered.cpp" />
+    <ClCompile Include="source\creator\text_match_index.cpp" />
+    <ClCompile Include="source\creator\word_match_utils.cpp" />
     <ClCompile Include="source\merger\dict_merger.cpp" />
     <ClCompile Include="source\converter\esm_converter.cpp" />
     <ClCompile Include="source\converter\esm_converter_records.cpp" />
@@ -46,7 +50,11 @@
     <ClInclude Include="source\io\json_reader.hpp" />
     <ClInclude Include="source\io\file_list.hpp" />
     <ClInclude Include="source\utility\dict_kind.hpp" />
+    <ClInclude Include="source\creator\cell_matcher.hpp" />
+    <ClInclude Include="source\creator\dial_matcher.hpp" />
     <ClInclude Include="source\creator\dict_creator.hpp" />
+    <ClInclude Include="source\creator\text_match_index.hpp" />
+    <ClInclude Include="source\creator\word_match_utils.hpp" />
     <ClInclude Include="source\merger\dict_merger.hpp" />
     <ClInclude Include="source\converter\esm_converter.hpp" />
     <ClInclude Include="source\converter\script_parser.hpp" />

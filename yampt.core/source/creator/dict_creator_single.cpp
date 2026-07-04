@@ -380,51 +380,10 @@ void dict_creator_t::make_dict_single_cell()
 
 void dict_creator_t::build_text_match_index()
 {
-	m_text_match_index.clear();
-	m_text_match_conflicts.clear();
-
 	if (!base_dict)
 		return;
 
-	for (const auto & [type, chapter] : *base_dict)
-	{
-		for (const auto & entry : chapter.records)
-		{
-			if (entry.old_text.empty())
-				continue;
-
-			if (entry.new_text == entry.old_text)
-				continue;
-
-			if (entry.status != status_t::translated)
-				continue;
-
-			auto it = m_text_match_index.find(entry.old_text);
-			if (it == m_text_match_index.end())
-			{
-				m_text_match_index[entry.old_text] = &entry;
-				continue;
-			}
-
-			if (it->second == nullptr)
-			{
-				auto conflict_it = m_text_match_conflicts.find(entry.old_text);
-				if (conflict_it != m_text_match_conflicts.end())
-				{
-					if (conflict_it->second.find(entry.new_text) == std::string::npos)
-						conflict_it->second += "|" + entry.new_text;
-				}
-				continue;
-			}
-
-			if (it->second->new_text != entry.new_text)
-			{
-				m_text_match_first[entry.old_text] = it->second->new_text;
-				m_text_match_conflicts[entry.old_text] = it->second->new_text + "|" + entry.new_text;
-				it->second = nullptr;
-			}
-		}
-	}
+	m_text_match_index.build(*base_dict);
 }
 
 void dict_creator_t::insert_entry_single(
@@ -650,28 +609,23 @@ void dict_creator_t::insert_via_text_match(
     const std::string & old_text,
     tools_t::rec_type_t type)
 {
-	auto text_it = m_text_match_index.find(old_text);
-	if (text_it != m_text_match_index.end())
+	const auto outcome = m_text_match_index.find(old_text);
+
+	if (outcome.result == text_match_index_t::find_result_t::found)
 	{
-		if (text_it->second)
-		{
-			insert_with_status(key_text, old_text, text_it->second->new_text, type, status_t::reused);
-			return;
-		}
+		insert_with_status(key_text, old_text, outcome.translation, type, status_t::reused);
+		return;
+	}
 
-		auto conflict_it = m_text_match_conflicts.find(old_text);
-		if (conflict_it != m_text_match_conflicts.end())
-		{
-			auto first_it = m_text_match_first.find(old_text);
-			const auto & first_text = (first_it != m_text_match_first.end()) ? first_it->second : old_text;
-			insert_with_status(key_text, old_text, first_text, type, status_t::ambiguous);
+	if (outcome.result == text_match_index_t::find_result_t::ambiguous)
+	{
+		insert_with_status(key_text, old_text, outcome.translation, type, status_t::ambiguous);
 
-			auto * entry = dict.at(type).find(key_text);
-			if (entry)
-				entry->details = conflict_it->second;
+		auto * entry = dict.at(type).find(key_text);
+		if (entry)
+			entry->details = outcome.conflicts;
 
-			return;
-		}
+		return;
 	}
 
 	insert_as_untranslated(key_text, old_text, type);

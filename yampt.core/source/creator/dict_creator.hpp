@@ -3,6 +3,9 @@
 #include "../io/esm_reader.hpp"
 #include "../utility/includes.hpp"
 #include "../utility/tools.hpp"
+#include "cell_matcher.hpp"
+#include "dial_matcher.hpp"
+#include "text_match_index.hpp"
 #include <memory>
 
 class Hunspell;
@@ -51,9 +54,6 @@ public:
 	    const std::string & source,
 	    const std::string & matched_source,
 	    const std::string & matched_translation);
-	static bool is_interior_cell(const std::string & data_content);
-	static std::string make_exterior_coord_key(const std::string & data_content);
-	static std::string make_cell_key_text(const std::string & fingerprint);
 
 private:
 	void make_dict_single();
@@ -170,59 +170,6 @@ private:
 	bool is_proper_noun(const std::string & text) const;
 	void load_english_dict();
 
-	void make_dict_cell_exterior();
-	void make_dict_cell_interior();
-	void make_dict_cell_default();
-	void make_dict_cell_region();
-	void make_dict_cell_add_missing(
-	    const std::vector<std::pair<size_t, std::string>> & missing_cells,
-	    const std::string & native_candidates_str = {});
-
-	using fingerprint_index_t = std::unordered_map<std::string, std::set<size_t>>;
-	fingerprint_index_t build_cell_fingerprint_index(esm_reader_t & esm_src);
-	fingerprint_index_t build_dial_inam_index(esm_reader_t & esm_src);
-	static std::string make_cell_fingerprint(esm_reader_t & esm_src);
-
-	struct match_result_t
-	{
-		int score;
-		int score_orig;
-		int score_model;
-		int count;
-		size_t index;
-		std::string name;
-	};
-
-	match_result_t compute_best_match(
-	    const std::vector<std::string> & compare_words,
-	    const std::vector<std::string> & original_words,
-	    const std::vector<std::string> & translated_words,
-	    const std::vector<std::pair<size_t, std::string>> & candidates,
-	    const std::set<size_t> & matched_set);
-
-	bool check_all_same_name(
-	    const std::vector<std::string> & compare_words,
-	    const std::vector<std::pair<size_t, std::string>> & candidates,
-	    const std::set<size_t> & matched_set,
-	    const match_result_t & result);
-
-	void match_dial_by_inam(
-	    const fingerprint_index_t & native_inam_index,
-	    std::vector<std::pair<size_t, std::string>> & unmatched_foreign,
-	    std::set<size_t> & matched_native_records);
-
-	void match_dial_by_translation(
-	    std::vector<std::pair<size_t, std::string>> & unmatched_foreign,
-	    const std::set<size_t> & matched_native_records);
-
-	void report_unmatched_dials(
-	    const std::vector<std::pair<size_t, std::string>> & unmatched_foreign,
-	    const std::set<size_t> & matched_native_records);
-
-	void make_dict_cell_interior_heuristic(
-	    std::vector<std::pair<size_t, std::string>> & missing_cells,
-	    const std::set<size_t> & matched_native_records);
-
 	void build_sctx_schd_index(std::unordered_map<std::string, size_t> & schd_index);
 	void match_sctx_messages(
 	    const std::string & script_name,
@@ -258,8 +205,5 @@ private:
 	std::unordered_map<std::string, size_t> npc_index;
 	std::unordered_map<std::string, size_t> info_index;
 	std::unordered_map<std::string, std::string> dial_native_to_foreign;
-	std::string m_cell_native_candidates_str;
-	std::unordered_map<std::string, const tools_t::record_entry_t *> m_text_match_index;
-	std::unordered_map<std::string, std::string> m_text_match_conflicts;
-	std::unordered_map<std::string, std::string> m_text_match_first;
+	text_match_index_t m_text_match_index;
 };

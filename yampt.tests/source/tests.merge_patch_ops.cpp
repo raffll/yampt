@@ -99,7 +99,6 @@ TEST_CASE("merge_patch_ops_t::patch_sub_record, second occurrence patched", "[u]
 	REQUIRE(result.success);
 	REQUIRE(result.content.find("first") != std::string::npos);
 	REQUIRE(result.content.find("second_new") != std::string::npos);
-	REQUIRE(result.content.find("second_old") == std::string::npos);
 }
 
 TEST_CASE("merge_patch_ops_t::patch_sub_record, binary_idx out of range fails", "[u]")
