@@ -73,6 +73,7 @@ view_tree_model_t::view_node_t view_tree_model_t::build_slot_row(
 	view_node_t row;
 	row.size = 0;
 	row.values.resize(col_count);
+	row.binary_indices.resize(col_count, -1);
 	const char * first_data = nullptr;
 	size_t first_size = 0;
 
@@ -105,6 +106,7 @@ view_tree_model_t::view_node_t view_tree_model_t::build_slot_row(
 			continue;
 		}
 
+		row.binary_indices[col] = static_cast<int>(idx);
 		const auto & sv = all_subs[col][idx];
 		if (!first_data)
 		{

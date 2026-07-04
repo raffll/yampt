@@ -347,6 +347,9 @@ void view_tree_model_t::set_record_armor(record_context_t & context, const confl
 
 		view_node_t indx_field;
 		indx_field.label = "INDX - Armor Index";
+		indx_field.type = indx_row.type;
+		indx_field.size = indx_row.size;
+		indx_field.binary_indices = indx_row.binary_indices;
 		if (!indx_row.children.empty())
 			indx_field.values = indx_row.children[0].values;
 		else
@@ -366,6 +369,9 @@ void view_tree_model_t::set_record_armor(record_context_t & context, const confl
 			view_node_t part_field;
 			part_field.label =
 			    (unified_slots[next].type == "BNAM") ? "BNAM - Male Part Name" : "CNAM - Female Part Name";
+			part_field.type = part_row.type;
+			part_field.size = part_row.size;
+			part_field.binary_indices = part_row.binary_indices;
 			part_field.values = part_row.values;
 			part_field.all_identical = part_row.all_identical;
 			part_field.row_conflict_all = part_row.row_conflict_all;
@@ -694,13 +700,19 @@ void view_tree_model_t::emit_leveled_rows(record_context_t & context, slot_build
 
 		view_node_t name_field;
 		name_field.label = is_creature ? "CNAM - Creature Name" : "INAM - Item";
+		name_field.type = id_row.type;
+		name_field.size = id_row.size;
 		name_field.values = id_row.values;
+		name_field.binary_indices = id_row.binary_indices;
 		name_field.all_identical = id_row.all_identical;
 		name_field.row_conflict_all = id_row.row_conflict_all;
 		name_field.cell_conflict_this = id_row.cell_conflict_this;
 
 		view_node_t level_field;
 		level_field.label = "INTV - PC Level";
+		level_field.type = level_row.type;
+		level_field.size = level_row.size;
+		level_field.binary_indices = level_row.binary_indices;
 		if (!level_row.children.empty())
 			level_field.values = level_row.children[0].values;
 		else

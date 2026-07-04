@@ -59,6 +59,7 @@ public:
 		std::string type;
 		size_t size = 0;
 		std::vector<std::string> values;
+		std::vector<int> binary_indices;
 		std::vector<conflict_this_t> cell_conflict_this;
 		conflict_all_t row_conflict_all = conflict_all_t::only_one;
 		bool all_identical = true;

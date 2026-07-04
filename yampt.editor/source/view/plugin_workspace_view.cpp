@@ -917,6 +917,15 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & global_pos, co
 		return;
 
 	const auto & row = visible[parent_row_idx];
+
+	auto get_binary_idx = [&](const view_tree_model_t::view_node_t & node) -> int
+	{
+		if (col < 0 || col >= static_cast<int>(node.binary_indices.size()))
+			return -1;
+
+		return node.binary_indices[col];
+	};
+
 	int view_occurrence = 0;
 	for (int r = 0; r < parent_row_idx; ++r)
 	{
@@ -924,17 +933,7 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & global_pos, co
 			++view_occurrence;
 	}
 
-	const auto & col_indices = m_record_view->model()->col_type_indices();
-	int binary_idx = -1;
-	if (col >= 0 && col < static_cast<int>(col_indices.size()))
-	{
-		auto it_type = col_indices[col].find(row.type);
-		if (it_type != col_indices[col].end() && view_occurrence < static_cast<int>(it_type->second.size()) &&
-		    it_type->second[view_occurrence] != SIZE_MAX)
-		{
-			binary_idx = static_cast<int>(it_type->second[view_occurrence]);
-		}
-	}
+	const int binary_idx = get_binary_idx(row);
 
 	const bool is_group_row = !row.type.empty() && !row.children.empty() && row.size == 0;
 	const bool is_sub_record_row = !row.type.empty() && row.children.empty() && binary_idx >= 0;
@@ -986,37 +985,22 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & global_pos, co
 		if (child_field_idx >= 0 && child_field_idx < static_cast<int>(row.children.size()))
 		{
 			const auto & child = row.children[child_field_idx];
-			const auto child_sub_type = merge_patch_ops_t::extract_sub_type_from_field_name(child.label);
-			if (!child_sub_type.empty())
+			const int child_binary_idx = get_binary_idx(child);
+			const auto & child_sub_type = child.type;
+
+			if (child_binary_idx >= 0 && !child_sub_type.empty())
 			{
-				int group_occurrence = 0;
-				for (int r = 0; r < parent_row_idx; ++r)
-				{
-					if (visible[r].type == row.type)
-						++group_occurrence;
-				}
-
-				int child_binary_idx = -1;
-				if (col >= 0 && col < static_cast<int>(col_indices.size()))
-				{
-					auto it_type = col_indices[col].find(child_sub_type);
-					if (it_type != col_indices[col].end() &&
-					    group_occurrence < static_cast<int>(it_type->second.size()) &&
-					    it_type->second[group_occurrence] != SIZE_MAX)
-					{
-						child_binary_idx = static_cast<int>(it_type->second[group_occurrence]);
-					}
-				}
-
-				if (child_binary_idx >= 0)
-				{
-					menu.addAction(
-					    "Copy Sub-Record to Merged Patch",
-					    [this, plugin_idx, rec_type, record_id, child_sub_type, child_binary_idx]()
-					{ copy_sub_record_to_merge(plugin_idx, rec_type, record_id, child_sub_type, child_binary_idx); });
-				}
+				menu.addAction(
+				    "Copy Sub-Record to Merged Patch",
+				    [this, plugin_idx, rec_type, record_id, child_sub_type, child_binary_idx]()
+				{ copy_sub_record_to_merge(plugin_idx, rec_type, record_id, child_sub_type, child_binary_idx); });
 			}
 		}
+
+		menu.addAction(
+		    "Copy Group to Merged Patch",
+		    [this, plugin_idx, rec_type, record_id, parent_row_idx]()
+		{ copy_group_to_merge(plugin_idx, rec_type, record_id, parent_row_idx); });
 	}
 
 	if (is_on_merge && (is_merge_sub_record || is_merge_schema_row) && !is_field_row)
@@ -1360,8 +1344,9 @@ std::string plugin_workspace_view_t::ensure_merge_record(
 	if (merge_content_ptr)
 		return *merge_content_ptr;
 
-	m_session->scan().copy_record_to_merge_raw(rec_type, record_id, source_content);
-	return source_content;
+	const auto header_only = sub_record_merge_t::reconstruct_record(source_content, {});
+	m_session->scan().copy_record_to_merge_raw(rec_type, record_id, header_only);
+	return header_only;
 }
 
 int plugin_workspace_view_t::find_plugin_column(int plugin_idx) const

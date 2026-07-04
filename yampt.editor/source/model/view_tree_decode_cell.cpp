@@ -183,7 +183,13 @@ static void build_ref_slots_for_object(
 	}
 }
 
-static sub_record_view_t find_ref_sub_record(
+struct ref_lookup_result_t
+{
+	sub_record_view_t view;
+	int binary_index = -1;
+};
+
+static ref_lookup_result_t find_ref_sub_record(
     const std::vector<sub_record_view_t> & subs,
     const std::vector<cell_ref_group_t> & refs,
     uint32_t object_index,
@@ -202,14 +208,14 @@ static sub_record_view_t find_ref_sub_record(
 				continue;
 
 			if (occur == slot_occurrence)
-				return subs[i];
+				return { subs[i], static_cast<int>(i) };
 
 			++occur;
 		}
 		break;
 	}
 
-	return { "", nullptr, 0, 0 };
+	return { { "", nullptr, 0, 0 }, -1 };
 }
 
 void view_tree_model_t::decode_schema_children_ref(
@@ -503,11 +509,11 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 				if (col >= all_subs.size())
 					continue;
 
-				const auto sv = find_ref_sub_record(all_subs[col], col_refs[col], obj_idx, slot.type, slot.occurrence);
-				if (sv.data && !first_data)
+				const auto result = find_ref_sub_record(all_subs[col], col_refs[col], obj_idx, slot.type, slot.occurrence);
+				if (result.view.data && !first_data)
 				{
-					first_data = sv.data;
-					first_size = sv.size;
+					first_data = result.view.data;
+					first_size = result.view.size;
 				}
 			}
 
@@ -522,7 +528,10 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 					const auto & fdef = schema->fields[field_idx];
 					view_node_t field_child;
 					field_child.label = std::string(slot.type) + " - " + fdef.name;
+					field_child.type = slot.type;
+					field_child.size = first_size;
 					field_child.values.resize(col_count);
+					field_child.binary_indices.resize(col_count, -1);
 
 					for (size_t col = 0; col < col_count; ++col)
 					{
@@ -532,11 +541,14 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 							continue;
 						}
 
-						const auto sv = find_ref_sub_record(all_subs[col], col_refs[col], obj_idx, slot.type, slot.occurrence);
-						if (!sv.data)
+						const auto result = find_ref_sub_record(all_subs[col], col_refs[col], obj_idx, slot.type, slot.occurrence);
+						if (!result.view.data)
 							field_child.values[col] = "";
 						else
-							field_child.values[col] = decode_field(fdef, sv.data, sv.size);
+						{
+							field_child.values[col] = decode_field(fdef, result.view.data, result.view.size);
+							field_child.binary_indices[col] = result.binary_index;
+						}
 					}
 
 					field_child.all_identical = check_all_identical(field_child.values);
@@ -558,7 +570,10 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 			else
 			{
 				view_node_t child_field;
+				child_field.type = slot.type;
+				child_field.size = first_size;
 				child_field.values.resize(col_count);
+				child_field.binary_indices.resize(col_count, -1);
 
 				for (size_t col = 0; col < col_count; ++col)
 				{
@@ -568,17 +583,18 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 						continue;
 					}
 
-					const auto sv = find_ref_sub_record(all_subs[col], col_refs[col], obj_idx, slot.type, slot.occurrence);
-					if (!sv.data)
+					const auto result = find_ref_sub_record(all_subs[col], col_refs[col], obj_idx, slot.type, slot.occurrence);
+					if (!result.view.data)
 					{
 						child_field.values[col] = "";
 						continue;
 					}
 
+					child_field.binary_indices[col] = result.binary_index;
 					if (schema && schema->field_count == 1)
-						child_field.values[col] = decode_field(schema->fields[0], sv.data, sv.size);
+						child_field.values[col] = decode_field(schema->fields[0], result.view.data, result.view.size);
 					else
-						child_field.values[col] = format_value(sv.data, sv.size, m_display_codepage);
+						child_field.values[col] = format_value(result.view.data, result.view.size, m_display_codepage);
 				}
 
 				child_field.label = slot.type + " - " + make_sub_label(slot.type, m_record_type, first_size);
