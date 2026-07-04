@@ -60,7 +60,6 @@ public:
 		std::vector<conflict_this_t> cell_conflict_this;
 		conflict_all_t row_conflict_all;
 		bool all_identical;
-		std::vector<field_row_t> children;
 	};
 
 	struct sub_record_row_t

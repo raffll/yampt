@@ -517,70 +517,43 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 
 			if (schema && schema->field_count > 1)
 			{
-				field_row_t group_field;
-				group_field.name = std::string(slot.type) + " - " + make_sub_label(slot.type, m_record_type, first_size);
-				group_field.values.resize(col_count);
-				group_field.row_conflict_all = conflict_all_t::only_one;
-				group_field.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
-
 				for (size_t field_idx = 0; field_idx < schema->field_count; ++field_idx)
 				{
 					const auto & fdef = schema->fields[field_idx];
-					field_row_t child;
-					child.name = fdef.name;
-					child.values.resize(col_count);
+					field_row_t field_child;
+					field_child.name = std::string(slot.type) + " - " + fdef.name;
+					field_child.values.resize(col_count);
 
 					for (size_t col = 0; col < col_count; ++col)
 					{
 						if (col >= all_subs.size())
 						{
-							child.values[col] = "";
+							field_child.values[col] = "";
 							continue;
 						}
 
 						const auto sv = find_ref_sub_record(all_subs[col], col_refs[col], obj_idx, slot.type, slot.occurrence);
 						if (!sv.data)
-							child.values[col] = "";
+							field_child.values[col] = "";
 						else
-							child.values[col] = decode_field(fdef, sv.data, sv.size);
+							field_child.values[col] = decode_field(fdef, sv.data, sv.size);
 					}
 
-					child.all_identical = check_all_identical(child.values);
-					child.row_conflict_all = compute_conflict_all(child.values);
-					child.cell_conflict_this = compute_conflict_this(child.values);
+					field_child.all_identical = check_all_identical(field_child.values);
+					field_child.row_conflict_all = compute_conflict_all(field_child.values);
+					field_child.cell_conflict_this = compute_conflict_this(field_child.values);
 
-					if (child.row_conflict_all > group_field.row_conflict_all)
-						group_field.row_conflict_all = child.row_conflict_all;
+					if (field_child.row_conflict_all > group_row.row_conflict_all)
+						group_row.row_conflict_all = field_child.row_conflict_all;
 
-					for (size_t col = 0; col < col_count && col < child.cell_conflict_this.size(); ++col)
+					for (size_t col = 0; col < col_count && col < field_child.cell_conflict_this.size(); ++col)
 					{
-						if (child.cell_conflict_this[col] > group_field.cell_conflict_this[col])
-							group_field.cell_conflict_this[col] = child.cell_conflict_this[col];
+						if (field_child.cell_conflict_this[col] > group_row.cell_conflict_this[col])
+							group_row.cell_conflict_this[col] = field_child.cell_conflict_this[col];
 					}
 
-					group_field.children.push_back(std::move(child));
+					group_row.children.push_back(std::move(field_child));
 				}
-
-				group_field.all_identical = true;
-				for (const auto & ch : group_field.children)
-				{
-					if (!ch.all_identical)
-					{
-						group_field.all_identical = false;
-						break;
-					}
-				}
-
-				if (group_field.row_conflict_all > group_row.row_conflict_all)
-					group_row.row_conflict_all = group_field.row_conflict_all;
-
-				for (size_t col = 0; col < col_count && col < group_field.cell_conflict_this.size(); ++col)
-				{
-					if (group_field.cell_conflict_this[col] > group_row.cell_conflict_this[col])
-						group_row.cell_conflict_this[col] = group_field.cell_conflict_this[col];
-				}
-
-				group_row.children.push_back(std::move(group_field));
 			}
 			else
 			{

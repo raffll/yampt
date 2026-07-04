@@ -835,8 +835,15 @@ void plugin_workspace_view_t::on_view_selection_changed(const QModelIndex & curr
 
 	const auto & visible = m_record_view->model()->rows();
 
-	const bool has_parent = current.parent().isValid();
-	const bool has_grandparent = has_parent && current.parent().parent().isValid();
+	const bool is_child = current.parent().isValid();
+	const int parent_row_idx = is_child ? current.parent().row() : current.row();
+	const int child_row_idx = is_child ? current.row() : -1;
+
+	if (parent_row_idx < 0 || parent_row_idx >= static_cast<int>(visible.size()))
+	{
+		m_preview->clear();
+		return;
+	}
 
 	auto read_view_value = [&](int target_col) -> std::string
 	{
@@ -844,58 +851,24 @@ void plugin_workspace_view_t::on_view_selection_changed(const QModelIndex & curr
 		if (value_col < 0)
 			return {};
 
-		if (has_grandparent)
+		const auto & parent_row = visible[parent_row_idx];
+
+		if (child_row_idx >= 0)
 		{
-			const int top_idx = current.parent().parent().row();
-			const int mid_idx = current.parent().row();
-			const int leaf_idx = current.row();
-
-			if (top_idx < 0 || top_idx >= static_cast<int>(visible.size()))
+			if (child_row_idx >= static_cast<int>(parent_row.children.size()))
 				return {};
 
-			const auto & parent_row = visible[top_idx];
-			if (mid_idx < 0 || mid_idx >= static_cast<int>(parent_row.children.size()))
-				return {};
-
-			const auto & mid_row = parent_row.children[mid_idx];
-			if (leaf_idx < 0 || leaf_idx >= static_cast<int>(mid_row.children.size()))
-				return {};
-
-			const auto & leaf = mid_row.children[leaf_idx];
-			if (value_col >= static_cast<int>(leaf.values.size()))
-				return {};
-
-			return leaf.values[value_col];
-		}
-
-		if (has_parent)
-		{
-			const int parent_idx = current.parent().row();
-			const int child_idx = current.row();
-
-			if (parent_idx < 0 || parent_idx >= static_cast<int>(visible.size()))
-				return {};
-
-			const auto & parent_row = visible[parent_idx];
-			if (child_idx < 0 || child_idx >= static_cast<int>(parent_row.children.size()))
-				return {};
-
-			const auto & child = parent_row.children[child_idx];
+			const auto & child = parent_row.children[child_row_idx];
 			if (value_col >= static_cast<int>(child.values.size()))
 				return {};
 
 			return child.values[value_col];
 		}
 
-		const int row_idx = current.row();
-		if (row_idx < 0 || row_idx >= static_cast<int>(visible.size()))
+		if (value_col >= static_cast<int>(parent_row.values.size()))
 			return {};
 
-		const auto & row = visible[row_idx];
-		if (value_col >= static_cast<int>(row.values.size()))
-			return {};
-
-		return row.values[value_col];
+		return parent_row.values[value_col];
 	};
 
 	const auto right_text = read_view_value(col);
