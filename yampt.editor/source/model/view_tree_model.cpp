@@ -286,6 +286,33 @@ void view_tree_model_t::finalize_header_conflict()
 	header.all_identical = (header.row_conflict_all <= conflict_all_t::no_conflict);
 }
 
+void view_tree_model_t::compute_group_ranges(view_node_t & group_node, size_t col_count)
+{
+	group_node.binary_ranges.resize(col_count);
+	for (const auto & child : group_node.children)
+	{
+		for (size_t col = 0; col < col_count && col < child.binary_ranges.size(); ++col)
+		{
+			const auto & child_range = child.binary_ranges[col];
+			if (child_range.start < 0)
+				continue;
+
+			auto & group_range = group_node.binary_ranges[col];
+			if (group_range.start < 0)
+			{
+				group_range = child_range;
+				continue;
+			}
+
+			if (child_range.start < group_range.start)
+				group_range.start = child_range.start;
+
+			if (child_range.end_pos > group_range.end_pos)
+				group_range.end_pos = child_range.end_pos;
+		}
+	}
+}
+
 void view_tree_model_t::set_excluded_plugins(const std::set<std::string> * excluded)
 {
 	m_excluded_plugins = excluded;

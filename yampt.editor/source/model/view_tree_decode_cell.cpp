@@ -472,7 +472,7 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 					field_child.type = slot.type;
 					field_child.size = first_size;
 					field_child.values.resize(col_count);
-					field_child.binary_indices.resize(col_count, -1);
+					field_child.binary_ranges.resize(col_count);
 
 					for (size_t col = 0; col < col_count; ++col)
 					{
@@ -488,7 +488,7 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 						else
 						{
 							field_child.values[col] = decode_field(fdef, result.view.data, result.view.size);
-							field_child.binary_indices[col] = result.binary_index;
+							field_child.binary_ranges[col] = { result.binary_index, result.binary_index + 1 };
 						}
 					}
 
@@ -514,7 +514,7 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 				child_field.type = slot.type;
 				child_field.size = first_size;
 				child_field.values.resize(col_count);
-				child_field.binary_indices.resize(col_count, -1);
+				child_field.binary_ranges.resize(col_count);
 
 				for (size_t col = 0; col < col_count; ++col)
 				{
@@ -531,7 +531,7 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 						continue;
 					}
 
-					child_field.binary_indices[col] = result.binary_index;
+					child_field.binary_ranges[col] = { result.binary_index, result.binary_index + 1 };
 					if (schema && schema->field_count == 1)
 						child_field.values[col] = decode_field(schema->fields[0], result.view.data, result.view.size);
 					else
@@ -586,6 +586,8 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 		group_row.all_identical = check_all_identical(group_row.values);
 		if (!present_in_any)
 			group_row.row_conflict_all = conflict_all_t::only_one;
+
+		compute_group_ranges(group_row, col_count);
 
 		m_rows.push_back(std::move(group_row));
 	}

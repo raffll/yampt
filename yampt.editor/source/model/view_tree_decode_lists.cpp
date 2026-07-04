@@ -14,11 +14,7 @@ void view_tree_model_t::set_record_leveled(record_context_t & context, const con
 	std::vector<std::unordered_map<std::string, std::vector<size_t>>> col_type_indices(col_count);
 	slot_build_context_t build_ctx { unified_slots, col_type_indices };
 
-	if (entry.slot_result && !m_has_merge_column)
-		content_alignment_t::build_from_slot_result(*entry.slot_result, col_count, unified_slots, col_type_indices);
-	else
-		collect_leveled_entries(context, build_ctx);
-
+	collect_leveled_entries(context, build_ctx);
 	emit_leveled_rows(context, build_ctx);
 }
 
@@ -30,11 +26,7 @@ void view_tree_model_t::set_record_faction(record_context_t & context, const con
 	std::vector<std::unordered_map<std::string, std::vector<size_t>>> col_type_indices(col_count);
 	slot_build_context_t build_ctx { unified_slots, col_type_indices };
 
-	if (entry.slot_result && !m_has_merge_column)
-		content_alignment_t::build_from_slot_result(*entry.slot_result, col_count, unified_slots, col_type_indices);
-	else
-		collect_faction_entries(context, build_ctx);
-
+	collect_faction_entries(context, build_ctx);
 	emit_slot_rows(context, build_ctx);
 }
 
@@ -46,11 +38,7 @@ void view_tree_model_t::set_record_container(record_context_t & context, const c
 	std::vector<std::unordered_map<std::string, std::vector<size_t>>> col_type_indices(col_count);
 	slot_build_context_t build_ctx { unified_slots, col_type_indices };
 
-	if (entry.slot_result && !m_has_merge_column)
-		content_alignment_t::build_from_slot_result(*entry.slot_result, col_count, unified_slots, col_type_indices);
-	else
-		collect_container_entries(context, build_ctx);
-
+	collect_container_entries(context, build_ctx);
 	emit_slot_rows(context, build_ctx);
 }
 
@@ -62,20 +50,13 @@ void view_tree_model_t::set_record_armor(record_context_t & context, const confl
 	std::vector<sub_slot_t> unified_slots;
 	std::vector<std::unordered_map<std::string, std::vector<size_t>>> col_type_indices(col_count);
 
-	if (entry.slot_result && !m_has_merge_column)
-	{
-		content_alignment_t::build_from_slot_result(*entry.slot_result, col_count, unified_slots, col_type_indices);
-	}
-	else
-	{
-		alignment_rule_t rule;
-		rule.anchor_type = "INDX";
-		rule.anchor_size = 0;
-		rule.trailing_types = { "BNAM", "CNAM" };
-		rule.key_source = alignment_rule_t::key_from_t::anchor;
+	alignment_rule_t rule;
+	rule.anchor_type = "INDX";
+	rule.anchor_size = 0;
+	rule.trailing_types = { "BNAM", "CNAM" };
+	rule.key_source = alignment_rule_t::key_from_t::anchor;
 
-		content_alignment_t::align(all_subs, col_count, rule, unified_slots, col_type_indices, m_merge_col_index);
-	}
+	content_alignment_t::align(all_subs, col_count, rule, unified_slots, col_type_indices, m_merge_col_index);
 
 	auto is_body_part_type = [](const std::string & slot_type)
 	{
@@ -112,7 +93,7 @@ void view_tree_model_t::set_record_armor(record_context_t & context, const confl
 		indx_field.label = "INDX - Armor Index";
 		indx_field.type = indx_row.type;
 		indx_field.size = indx_row.size;
-		indx_field.binary_indices = indx_row.binary_indices;
+		indx_field.binary_ranges = indx_row.binary_ranges;
 		indx_field.values = indx_row.children.empty() ? indx_row.values : indx_row.children[0].values;
 		indx_field.all_identical = indx_row.all_identical;
 		indx_field.row_conflict_all = indx_row.row_conflict_all;
@@ -130,7 +111,7 @@ void view_tree_model_t::set_record_armor(record_context_t & context, const confl
 			    (unified_slots[next].type == "BNAM") ? "BNAM - Male Part Name" : "CNAM - Female Part Name";
 			part_field.type = part_row.type;
 			part_field.size = part_row.size;
-			part_field.binary_indices = part_row.binary_indices;
+			part_field.binary_ranges = part_row.binary_ranges;
 			part_field.values = part_row.values;
 			part_field.all_identical = part_row.all_identical;
 			part_field.row_conflict_all = part_row.row_conflict_all;
@@ -152,6 +133,8 @@ void view_tree_model_t::set_record_armor(record_context_t & context, const confl
 					group_row.cell_conflict_this[col] = child.cell_conflict_this[col];
 			}
 		}
+
+		compute_group_ranges(group_row, col_count);
 
 		m_rows.push_back(std::move(group_row));
 		++part_index;
@@ -324,7 +307,7 @@ void view_tree_model_t::emit_leveled_rows(record_context_t & context, slot_build
 		name_field.type = id_row.type;
 		name_field.size = id_row.size;
 		name_field.values = id_row.values;
-		name_field.binary_indices = id_row.binary_indices;
+		name_field.binary_ranges = id_row.binary_ranges;
 		name_field.all_identical = id_row.all_identical;
 		name_field.row_conflict_all = id_row.row_conflict_all;
 		name_field.cell_conflict_this = id_row.cell_conflict_this;
@@ -333,7 +316,7 @@ void view_tree_model_t::emit_leveled_rows(record_context_t & context, slot_build
 		level_field.label = "INTV - PC Level";
 		level_field.type = level_row.type;
 		level_field.size = level_row.size;
-		level_field.binary_indices = level_row.binary_indices;
+		level_field.binary_ranges = level_row.binary_ranges;
 		level_field.values = level_row.children.empty() ? level_row.values : level_row.children[0].values;
 		level_field.all_identical = level_row.all_identical;
 		level_field.row_conflict_all = level_row.row_conflict_all;
@@ -350,6 +333,8 @@ void view_tree_model_t::emit_leveled_rows(record_context_t & context, slot_build
 			conflict_this_t lv_ct = (col < level_row.cell_conflict_this.size()) ? level_row.cell_conflict_this[col] : conflict_this_t::unknown;
 			group_row.cell_conflict_this[col] = std::max(id_ct, lv_ct);
 		}
+
+		compute_group_ranges(group_row, col_count);
 
 		m_rows.push_back(std::move(group_row));
 		++entry_index;

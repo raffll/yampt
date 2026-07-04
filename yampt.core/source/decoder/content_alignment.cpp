@@ -277,19 +277,16 @@ void content_alignment_t::align(
     const alignment_rule_t & rule,
     std::vector<sub_slot_t> & unified_slots,
     std::vector<std::unordered_map<std::string, std::vector<size_t>>> & col_type_indices,
-    int merge_column)
+    int)
 {
 	std::vector<std::vector<aligned_group_t>> col_groups(col_count);
 	std::vector<std::string> all_keys;
 
-	scan_groups(all_subs, col_count, rule, col_groups, all_keys, merge_column);
+	scan_groups(all_subs, col_count, rule, col_groups, all_keys, -1);
 	collect_non_excluded(all_subs, col_count, rule, unified_slots, col_type_indices);
 
 	for (const auto & key : all_keys)
-		emit_key_slots(key, col_groups, col_count, rule, unified_slots, col_type_indices, merge_column);
-
-	if (merge_column >= 0)
-		fit_merge_column(all_subs, col_groups, all_keys, merge_column, rule, unified_slots, col_type_indices);
+		emit_key_slots(key, col_groups, col_count, rule, unified_slots, col_type_indices, -1);
 }
 
 void content_alignment_t::fit_merge_column(

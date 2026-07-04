@@ -70,3 +70,8 @@ Every code change must comply with ALL rules in the steering files. Before writi
 - Blank line after `continue`, `return`, `break` (unless last in block)
 
 Never produce code that violates these rules even partially. If a change would exceed limits, split first, then implement.
+
+
+## Always Ask Before Implementing
+
+Never start implementing a solution without asking the user first. Propose the approach, explain it briefly, and wait for explicit approval before writing any code. This applies to every change — no exceptions.

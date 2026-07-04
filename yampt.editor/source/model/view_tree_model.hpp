@@ -54,13 +54,19 @@ public:
 	bool canDropMimeData(const QMimeData * data, Qt::DropAction action, int row, int column, const QModelIndex & parent)
 	    const override;
 
+	struct binary_range_t
+	{
+		int start = -1;
+		int end_pos = -1;
+	};
+
 	struct view_node_t
 	{
 		std::string label;
 		std::string type;
 		size_t size = 0;
 		std::vector<std::string> values;
-		std::vector<int> binary_indices;
+		std::vector<binary_range_t> binary_ranges;
 		std::vector<conflict_this_t> cell_conflict_this;
 		conflict_all_t row_conflict_all = conflict_all_t::only_one;
 		bool all_identical = true;
@@ -80,6 +86,8 @@ public:
 	}
 
 private:
+	static void compute_group_ranges(view_node_t & group_node, size_t col_count);
+
 	struct record_context_t
 	{
 		std::vector<std::vector<sub_record_view_t>> & all_sub_records;
