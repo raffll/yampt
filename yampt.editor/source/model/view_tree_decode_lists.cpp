@@ -324,11 +324,27 @@ void view_tree_model_t::set_record_armor(record_context_t & context, const confl
 
 	int part_index = 0;
 
+	auto is_body_part_type = [](const std::string & slot_type)
+	{
+		return slot_type == "INDX" || slot_type == "BNAM" || slot_type == "CNAM";
+	};
+
+	std::stable_sort(
+	    unified_slots.begin(),
+	    unified_slots.end(),
+	    [&](const sub_slot_t & left, const sub_slot_t & right)
+	{
+		const bool left_body = is_body_part_type(left.type);
+		const bool right_body = is_body_part_type(right.type);
+		if (left_body != right_body)
+			return !left_body;
+
+		return false;
+	});
+
 	for (size_t i = 0; i < unified_slots.size(); ++i)
 	{
-		bool is_group = (unified_slots[i].type == "INDX") &&
-		                (i + 1 < unified_slots.size()) &&
-		                (unified_slots[i + 1].type == "BNAM" || unified_slots[i + 1].type == "CNAM");
+		bool is_group = (unified_slots[i].type == "INDX");
 
 		if (!is_group)
 		{
@@ -694,9 +710,9 @@ void view_tree_model_t::emit_leveled_rows(record_context_t & context, slot_build
 		group_row.all_identical = id_row.all_identical && level_row.all_identical;
 
 		if (is_creature)
-			group_row.label = "Leveled Creature #" + std::to_string(entry_index);
+			group_row.label = "Creature #" + std::to_string(entry_index);
 		else
-			group_row.label = "Leveled Item #" + std::to_string(entry_index);
+			group_row.label = "Item #" + std::to_string(entry_index);
 
 		view_node_t name_field;
 		name_field.label = is_creature ? "CNAM - Creature Name" : "INAM - Item";

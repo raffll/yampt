@@ -431,7 +431,7 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 		std::vector<sub_slot_t> ref_slots;
 		build_ref_slots_for_object(col_count, all_subs, col_refs, obj_idx, ref_slots);
 
-		std::string ref_label = "#" + std::to_string(obj_idx);
+		std::string ref_label;
 		for (size_t col = 0; col < col_count; ++col)
 		{
 			if (col >= all_subs.size())
@@ -450,16 +450,19 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 						if (!name_text.empty() && name_text.back() == '\0')
 							name_text.pop_back();
 
-						ref_label += " - " + name_text;
+						ref_label = name_text + " #" + std::to_string(obj_idx);
 						break;
 					}
 				}
 				break;
 			}
 
-			if (ref_label.find(" - ") != std::string::npos)
+			if (!ref_label.empty())
 				break;
 		}
+
+		if (ref_label.empty())
+			ref_label = "#" + std::to_string(obj_idx);
 
 		view_node_t group_row;
 		group_row.type = "FRMR";

@@ -404,8 +404,10 @@ int view_tree_model_t::rowCount(const QModelIndex & parent) const
 	if (parent.row() < 0 || parent.row() >= static_cast<int>(vrows.size()))
 		return 0;
 
-	const auto & child_count = vrows[parent.row()].children.size();
-	if (child_count == 1)
+	const auto & node = vrows[parent.row()];
+	const auto & child_count = node.children.size();
+	const bool is_group = !node.type.empty() && node.size == 0 && !node.children.empty();
+	if (child_count == 1 && !is_group)
 		return 0;
 
 	return static_cast<int>(child_count);
@@ -421,7 +423,9 @@ static QVariant sub_record_display(const view_tree_model_t::view_node_t & row, i
 	if (column == 0)
 		return QString::fromStdString(row.label);
 
-	if (row.children.size() == 1)
+	const bool is_group = !row.type.empty() && row.size == 0 && !row.children.empty();
+
+	if (row.children.size() == 1 && !is_group)
 	{
 		const int col = column - 1;
 		if (col < 0 || col >= static_cast<int>(row.children[0].values.size()))

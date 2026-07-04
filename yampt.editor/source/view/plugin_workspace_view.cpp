@@ -1073,7 +1073,7 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & global_pos, co
 
 				const auto patched = sub_record_merge_t::reconstruct_record(merge_content, merge_subs);
 				m_session->scan().copy_record_to_merge_raw(rec_type, record_id, patched);
-				log_message("[info] removed sub-record from " + rec_type + ":" + record_id);
+				log_message("[info] removed " + row.type + " from merge (" + rec_type + ":" + record_id + ")");
 
 				refresh_after_merge(rec_type, record_id);
 				save_merged_patch();
@@ -1141,7 +1141,7 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & global_pos, co
 
 			const auto patched = sub_record_merge_t::reconstruct_record(merge_content, merge_subs);
 			m_session->scan().copy_record_to_merge_raw(rec_type, record_id, patched);
-			log_message("[info] removed group from " + rec_type + ":" + record_id);
+			log_message("[info] removed group " + group_type + " from merge (" + rec_type + ":" + record_id + ")");
 
 			refresh_after_merge(rec_type, record_id);
 			save_merged_patch();
@@ -1175,7 +1175,7 @@ void plugin_workspace_view_t::copy_sub_record_to_merge(
 		return;
 
 	m_session->scan().copy_record_to_merge_raw(rec_type, record_id, result.content);
-	log_message("[info] patched " + sub_type + " in " + rec_type + ":" + record_id);
+	log_message("[info] copied " + sub_type + " from " + m_session->scan().plugin_filename(plugin_idx) + " to merge (" + rec_type + ":" + record_id + ")");
 
 	refresh_after_merge(rec_type, record_id);
 	save_merged_patch();
@@ -1281,7 +1281,7 @@ void plugin_workspace_view_t::copy_group_to_merge(
 
 	const auto patched = sub_record_merge_t::reconstruct_record(merge_content, merge_subs);
 	m_session->scan().copy_record_to_merge_raw(rec_type, record_id, patched);
-	log_message("[info] patched group in " + rec_type + ":" + record_id);
+	log_message("[info] copied group \"" + group_row.label + "\" from " + m_session->scan().plugin_filename(plugin_idx) + " to merge (" + rec_type + ":" + record_id + ")");
 
 	refresh_after_merge(rec_type, record_id);
 	save_merged_patch();
@@ -1310,7 +1310,7 @@ void plugin_workspace_view_t::copy_field_to_merge(
 		return;
 
 	m_session->scan().copy_record_to_merge_raw(rec_type, record_id, result.content);
-	log_message("[info] patched field " + result.description + " in " + sub_type + " of " + rec_type + ":" + record_id);
+	log_message("[info] copied field " + result.description + " of " + sub_type + " from " + m_session->scan().plugin_filename(plugin_idx) + " to merge (" + rec_type + ":" + record_id + ")");
 
 	refresh_after_merge(rec_type, record_id);
 	save_merged_patch();
