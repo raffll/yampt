@@ -1,4 +1,4 @@
-#include "view_tree_model.hpp"
+﻿#include "view_tree_model.hpp"
 #include <decoder/view_tree_format.hpp>
 #include <scanner/record_conflict.hpp>
 #include <cstring>
@@ -213,7 +213,7 @@ static sub_record_view_t find_ref_sub_record(
 }
 
 void view_tree_model_t::decode_schema_children_ref(
-    sub_record_row_t & parent_row,
+    view_node_t & parent_row,
     const sub_record_schema_t * schema,
     const char *,
     size_t,
@@ -237,8 +237,8 @@ void view_tree_model_t::decode_schema_children_ref(
 				if (fdef.flag_names[bit][0] == '_')
 					continue;
 
-				field_row_t frow;
-				frow.name = fdef.flag_names[bit];
+				view_node_t frow;
+				frow.label = fdef.flag_names[bit];
 				frow.values.resize(col_count);
 
 				for (size_t col = 0; col < col_count; ++col)
@@ -281,8 +281,8 @@ void view_tree_model_t::decode_schema_children_ref(
 			continue;
 		}
 
-		field_row_t frow;
-		frow.name = fdef.name;
+		view_node_t frow;
+		frow.label = fdef.name;
 		frow.values.resize(col_count);
 
 		for (size_t col = 0; col < col_count; ++col)
@@ -325,7 +325,7 @@ void view_tree_model_t::decode_schema_children_ref(
 }
 
 void view_tree_model_t::decode_hex_children_ref(
-    sub_record_row_t & parent_row,
+    view_node_t & parent_row,
     size_t first_size,
     size_t col_count,
     const std::vector<std::vector<sub_record_view_t>> & all_subs,
@@ -337,10 +337,10 @@ void view_tree_model_t::decode_hex_children_ref(
 
 	for (size_t offset = 0; offset < first_size; offset += hex_line_bytes)
 	{
-		field_row_t frow;
+		view_node_t frow;
 		char name_buf[16];
 		std::snprintf(name_buf, sizeof(name_buf), "%04X", static_cast<unsigned>(offset));
-		frow.name = name_buf;
+		frow.label = name_buf;
 		frow.values.resize(col_count);
 
 		for (size_t col = 0; col < col_count; ++col)
@@ -455,7 +455,7 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 				break;
 		}
 
-		sub_record_row_t group_row;
+		view_node_t group_row;
 		group_row.type = "FRMR";
 		group_row.size = 0;
 
@@ -520,8 +520,8 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 				for (size_t field_idx = 0; field_idx < schema->field_count; ++field_idx)
 				{
 					const auto & fdef = schema->fields[field_idx];
-					field_row_t field_child;
-					field_child.name = std::string(slot.type) + " - " + fdef.name;
+					view_node_t field_child;
+					field_child.label = std::string(slot.type) + " - " + fdef.name;
 					field_child.values.resize(col_count);
 
 					for (size_t col = 0; col < col_count; ++col)
@@ -557,7 +557,7 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 			}
 			else
 			{
-				field_row_t child_field;
+				view_node_t child_field;
 				child_field.values.resize(col_count);
 
 				for (size_t col = 0; col < col_count; ++col)
@@ -581,7 +581,7 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 						child_field.values[col] = format_value(sv.data, sv.size, m_display_codepage);
 				}
 
-				child_field.name = slot.type + " - " + make_sub_label(slot.type, m_record_type, first_size);
+				child_field.label = slot.type + " - " + make_sub_label(slot.type, m_record_type, first_size);
 				child_field.all_identical = check_all_identical(child_field.values);
 				child_field.row_conflict_all = compute_conflict_all(child_field.values);
 				child_field.cell_conflict_this = compute_conflict_this(child_field.values);

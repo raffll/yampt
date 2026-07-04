@@ -53,25 +53,16 @@ public:
 	bool canDropMimeData(const QMimeData * data, Qt::DropAction action, int row, int column, const QModelIndex & parent)
 	    const override;
 
-	struct field_row_t
+	struct view_node_t
 	{
-		std::string name;
-		std::vector<std::string> values;
-		std::vector<conflict_this_t> cell_conflict_this;
-		conflict_all_t row_conflict_all;
-		bool all_identical;
-	};
-
-	struct sub_record_row_t
-	{
-		std::string type;
 		std::string label;
-		size_t size;
+		std::string type;
+		size_t size = 0;
 		std::vector<std::string> values;
 		std::vector<conflict_this_t> cell_conflict_this;
-		conflict_all_t row_conflict_all;
-		bool all_identical;
-		std::vector<field_row_t> children;
+		conflict_all_t row_conflict_all = conflict_all_t::only_one;
+		bool all_identical = true;
+		std::vector<view_node_t> children;
 	};
 
 	struct sub_slot_t
@@ -80,7 +71,7 @@ public:
 		int occurrence;
 	};
 
-	const std::vector<sub_record_row_t> & rows() const;
+	const std::vector<view_node_t> & rows() const;
 
 	const std::vector<int> & column_plugin_indices() const
 	{
@@ -124,7 +115,7 @@ private:
 	void collect_container_entries(record_context_t & context, slot_build_context_t & build_ctx);
 
 	void decode_schema_children(
-	    sub_record_row_t & parent_row,
+	    view_node_t & parent_row,
 	    const sub_record_schema_t * schema,
 	    const char * first_data,
 	    size_t first_size,
@@ -134,7 +125,7 @@ private:
 	    const sub_slot_t & slot);
 
 	void decode_hex_children(
-	    sub_record_row_t & parent_row,
+	    view_node_t & parent_row,
 	    size_t first_size,
 	    size_t col_count,
 	    const std::vector<std::vector<sub_record_view_t>> & all_subs,
@@ -142,7 +133,7 @@ private:
 	    const sub_slot_t & slot);
 
 	void decode_schema_children_ref(
-	    sub_record_row_t & parent_row,
+	    view_node_t & parent_row,
 	    const sub_record_schema_t * schema,
 	    const char * first_data,
 	    size_t first_size,
@@ -153,7 +144,7 @@ private:
 	    const sub_slot_t & slot);
 
 	void decode_hex_children_ref(
-	    sub_record_row_t & parent_row,
+	    view_node_t & parent_row,
 	    size_t first_size,
 	    size_t col_count,
 	    const std::vector<std::vector<sub_record_view_t>> & all_subs,
@@ -161,7 +152,7 @@ private:
 	    uint32_t object_index,
 	    const sub_slot_t & slot);
 
-	sub_record_row_t build_slot_row(
+	view_node_t build_slot_row(
 	    size_t col_count,
 	    const std::vector<std::vector<sub_record_view_t>> & all_subs,
 	    const std::vector<std::unordered_map<std::string, std::vector<size_t>>> & col_indices,
@@ -172,7 +163,7 @@ private:
 
 	void finalize_header_conflict();
 
-	std::vector<sub_record_row_t> m_rows;
+	std::vector<view_node_t> m_rows;
 	std::vector<std::string> m_column_names;
 	std::vector<conflict_this_t> m_plugin_conflict_this;
 	bool m_hide_no_conflict = false;
@@ -184,8 +175,8 @@ private:
 	std::vector<int> m_column_plugin_indices;
 	std::vector<std::unordered_map<std::string, std::vector<size_t>>> m_col_type_indices;
 
-	const std::vector<sub_record_row_t> & visible_rows() const;
-	mutable std::vector<sub_record_row_t> m_filtered_rows;
+	const std::vector<view_node_t> & visible_rows() const;
+	mutable std::vector<view_node_t> m_filtered_rows;
 	mutable bool m_filter_dirty = true;
 	const std::set<std::string> * m_excluded_plugins = nullptr;
 	const std::set<std::string> * m_patch_plugins = nullptr;

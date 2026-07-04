@@ -986,7 +986,7 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & global_pos, co
 		if (child_field_idx >= 0 && child_field_idx < static_cast<int>(row.children.size()))
 		{
 			const auto & child = row.children[child_field_idx];
-			const auto child_sub_type = merge_patch_ops_t::extract_sub_type_from_field_name(child.name);
+			const auto child_sub_type = merge_patch_ops_t::extract_sub_type_from_field_name(child.label);
 			if (!child_sub_type.empty())
 			{
 				int group_occurrence = 0;

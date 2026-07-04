@@ -1,4 +1,4 @@
-#include "view_tree_model.hpp"
+﻿#include "view_tree_model.hpp"
 #include <decoder/conflict_slots.hpp>
 #include <decoder/view_tree_format.hpp>
 #include <scanner/record_conflict.hpp>
@@ -338,15 +338,15 @@ void view_tree_model_t::set_record_armor(record_context_t & context, const confl
 
 		auto indx_row = build_slot_row(col_count, all_subs, col_type_indices, unified_slots[i]);
 
-		sub_record_row_t group_row;
+		view_node_t group_row;
 		group_row.type = "INDX";
 		group_row.size = 0;
 		group_row.label = "Body Part #" + std::to_string(part_index);
 		group_row.values = indx_row.values;
 		group_row.all_identical = indx_row.all_identical;
 
-		field_row_t indx_field;
-		indx_field.name = "INDX - Armor Index";
+		view_node_t indx_field;
+		indx_field.label = "INDX - Armor Index";
 		if (!indx_row.children.empty())
 			indx_field.values = indx_row.children[0].values;
 		else
@@ -363,8 +363,8 @@ void view_tree_model_t::set_record_armor(record_context_t & context, const confl
 		{
 			auto part_row = build_slot_row(col_count, all_subs, col_type_indices, unified_slots[next]);
 
-			field_row_t part_field;
-			part_field.name =
+			view_node_t part_field;
+			part_field.label =
 			    (unified_slots[next].type == "BNAM") ? "BNAM - Male Part Name" : "CNAM - Female Part Name";
 			part_field.values = part_row.values;
 			part_field.all_identical = part_row.all_identical;
@@ -404,7 +404,7 @@ void view_tree_model_t::set_record_dial(plugin_scan_t & scan, record_context_t &
 	if (info_result.entries.empty())
 		return;
 
-	sub_record_row_t separator_row;
+	view_node_t separator_row;
 	separator_row.type = "";
 	separator_row.size = 0;
 	separator_row.label = "--- INFO Chain ---";
@@ -416,7 +416,7 @@ void view_tree_model_t::set_record_dial(plugin_scan_t & scan, record_context_t &
 
 	for (const auto & info_entry : info_result.entries)
 	{
-		sub_record_row_t info_row;
+		view_node_t info_row;
 		info_row.type = "";
 		info_row.size = 0;
 		info_row.label = info_entry.display_name.empty()
@@ -681,7 +681,7 @@ void view_tree_model_t::emit_leveled_rows(record_context_t & context, slot_build
 		auto id_row = build_slot_row(col_count, context.all_sub_records, build_ctx.col_type_indices, unified[i]);
 		auto level_row = build_slot_row(col_count, context.all_sub_records, build_ctx.col_type_indices, unified[i + 1]);
 
-		sub_record_row_t group_row;
+		view_node_t group_row;
 		group_row.type = id_type;
 		group_row.size = 0;
 		group_row.values = id_row.values;
@@ -692,15 +692,15 @@ void view_tree_model_t::emit_leveled_rows(record_context_t & context, slot_build
 		else
 			group_row.label = "Leveled Item #" + std::to_string(entry_index);
 
-		field_row_t name_field;
-		name_field.name = is_creature ? "CNAM - Creature Name" : "INAM - Item";
+		view_node_t name_field;
+		name_field.label = is_creature ? "CNAM - Creature Name" : "INAM - Item";
 		name_field.values = id_row.values;
 		name_field.all_identical = id_row.all_identical;
 		name_field.row_conflict_all = id_row.row_conflict_all;
 		name_field.cell_conflict_this = id_row.cell_conflict_this;
 
-		field_row_t level_field;
-		level_field.name = "INTV - PC Level";
+		view_node_t level_field;
+		level_field.label = "INTV - PC Level";
 		if (!level_row.children.empty())
 			level_field.values = level_row.children[0].values;
 		else

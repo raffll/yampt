@@ -1,4 +1,4 @@
-#include "view_tree_model.hpp"
+﻿#include "view_tree_model.hpp"
 #include <decoder/view_tree_format.hpp>
 #include <scanner/record_conflict.hpp>
 #include <algorithm>
@@ -191,7 +191,7 @@ void view_tree_model_t::build_header_row(plugin_scan_t & scan, const conflict_en
 {
 	const auto col_count = m_column_names.size();
 
-	sub_record_row_t header_row;
+	view_node_t header_row;
 	header_row.type = "Record Header";
 	header_row.label = "Record Header";
 	header_row.size = 16;
@@ -200,16 +200,16 @@ void view_tree_model_t::build_header_row(plugin_scan_t & scan, const conflict_en
 	header_row.all_identical = true;
 	header_row.cell_conflict_this.resize(col_count, conflict_this_t::master);
 
-	field_row_t sig_row;
-	sig_row.name = "Signature";
+	view_node_t sig_row;
+	sig_row.label = "Signature";
 	sig_row.values.resize(col_count, entry.rec_type);
 	sig_row.row_conflict_all = compute_conflict_all(sig_row.values);
 	sig_row.all_identical = true;
 	sig_row.cell_conflict_this = compute_conflict_this(sig_row.values);
 	header_row.children.push_back(std::move(sig_row));
 
-	field_row_t flags_row;
-	flags_row.name = "Record Flags";
+	view_node_t flags_row;
+	flags_row.label = "Record Flags";
 	flags_row.values.resize(col_count);
 
 	for (size_t col = 0; col < entry.versions.size(); ++col)
@@ -284,7 +284,7 @@ void view_tree_model_t::set_excluded_plugins(const std::set<std::string> * exclu
 	m_excluded_plugins = excluded;
 }
 
-const std::vector<view_tree_model_t::sub_record_row_t> & view_tree_model_t::rows() const
+const std::vector<view_tree_model_t::view_node_t> & view_tree_model_t::rows() const
 {
 	return visible_rows();
 }
@@ -333,7 +333,7 @@ void view_tree_model_t::set_hide_no_conflict(bool hide)
 	endResetModel();
 }
 
-const std::vector<view_tree_model_t::sub_record_row_t> & view_tree_model_t::visible_rows() const
+const std::vector<view_tree_model_t::view_node_t> & view_tree_model_t::visible_rows() const
 {
 	if (!m_hide_no_conflict)
 		return m_rows;
@@ -367,7 +367,7 @@ QModelIndex view_tree_model_t::index(int row, int column, const QModelIndex & pa
 	if (parent.row() < 0 || parent.row() >= static_cast<int>(vrows.size()))
 		return {};
 
-	return createIndex(row, column, const_cast<sub_record_row_t *>(&vrows[parent.row()]));
+	return createIndex(row, column, const_cast<view_node_t *>(&vrows[parent.row()]));
 }
 
 QModelIndex view_tree_model_t::parent(const QModelIndex & child) const
@@ -375,7 +375,7 @@ QModelIndex view_tree_model_t::parent(const QModelIndex & child) const
 	if (!child.isValid())
 		return {};
 
-	auto * ptr = static_cast<sub_record_row_t *>(child.internalPointer());
+	auto * ptr = static_cast<view_node_t *>(child.internalPointer());
 	if (!ptr)
 		return {};
 
@@ -416,7 +416,7 @@ int view_tree_model_t::columnCount(const QModelIndex &) const
 	return static_cast<int>(m_column_names.size()) + 1;
 }
 
-static QVariant sub_record_display(const view_tree_model_t::sub_record_row_t & row, int column)
+static QVariant sub_record_display(const view_tree_model_t::view_node_t & row, int column)
 {
 	if (column == 0)
 		return QString::fromStdString(row.label);
@@ -440,7 +440,7 @@ static QVariant sub_record_display(const view_tree_model_t::sub_record_row_t & r
 	return QString::fromStdString(row.values[col]);
 }
 
-static QVariant sub_record_background(const view_tree_model_t::sub_record_row_t & row, int column)
+static QVariant sub_record_background(const view_tree_model_t::view_node_t & row, int column)
 {
 	if (row.row_conflict_all < conflict_all_t::no_conflict)
 		return {};
@@ -501,10 +501,10 @@ static QVariant sub_record_foreground(
 	return QBrush(theme.conflict_this_foreground(cell_conflicts[col]));
 }
 
-static QVariant field_row_display(const view_tree_model_t::field_row_t & frow, int column)
+static QVariant field_row_display(const view_tree_model_t::view_node_t & frow, int column)
 {
 	if (column == 0)
-		return QString::fromStdString(frow.name);
+		return QString::fromStdString(frow.label);
 
 	const int col = column - 1;
 	if (col < 0 || col >= static_cast<int>(frow.values.size()))
@@ -513,7 +513,7 @@ static QVariant field_row_display(const view_tree_model_t::field_row_t & frow, i
 	return QString::fromStdString(frow.values[col]);
 }
 
-static QVariant field_row_background(const view_tree_model_t::field_row_t & frow, int column)
+static QVariant field_row_background(const view_tree_model_t::view_node_t & frow, int column)
 {
 	if (frow.row_conflict_all < conflict_all_t::no_conflict)
 		return {};
@@ -542,7 +542,7 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 	if (!index.isValid())
 		return {};
 
-	auto * parent_ptr = static_cast<sub_record_row_t *>(index.internalPointer());
+	auto * parent_ptr = static_cast<view_node_t *>(index.internalPointer());
 
 	if (!parent_ptr)
 	{

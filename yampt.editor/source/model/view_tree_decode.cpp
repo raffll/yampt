@@ -1,4 +1,4 @@
-#include "view_tree_model.hpp"
+﻿#include "view_tree_model.hpp"
 #include <decoder/view_tree_format.hpp>
 #include <scanner/record_conflict.hpp>
 #include <cstdio>
@@ -64,13 +64,13 @@ static std::string format_hex_chunk(const char * data_ptr, size_t data_size, siz
 	return hex_text;
 }
 
-view_tree_model_t::sub_record_row_t view_tree_model_t::build_slot_row(
+view_tree_model_t::view_node_t view_tree_model_t::build_slot_row(
     size_t col_count,
     const std::vector<std::vector<sub_record_view_t>> & all_subs,
     const std::vector<std::unordered_map<std::string, std::vector<size_t>>> & col_indices,
     const sub_slot_t & slot)
 {
-	sub_record_row_t row;
+	view_node_t row;
 	row.size = 0;
 	row.values.resize(col_count);
 	const char * first_data = nullptr;
@@ -191,7 +191,7 @@ view_tree_model_t::sub_record_row_t view_tree_model_t::build_slot_row(
 }
 
 void view_tree_model_t::decode_schema_children(
-    sub_record_row_t & parent_row,
+    view_node_t & parent_row,
     const sub_record_schema_t * schema,
     const char *,
     size_t,
@@ -214,8 +214,8 @@ void view_tree_model_t::decode_schema_children(
 				if (fdef.flag_names[bit][0] == '_')
 					continue;
 
-				field_row_t frow;
-				frow.name = fdef.flag_names[bit];
+				view_node_t frow;
+				frow.label = fdef.flag_names[bit];
 				frow.values.resize(col_count);
 
 				for (size_t col = 0; col < col_count; ++col)
@@ -256,8 +256,8 @@ void view_tree_model_t::decode_schema_children(
 			continue;
 		}
 
-		field_row_t frow;
-		frow.name = fdef.name;
+		view_node_t frow;
+		frow.label = fdef.name;
 		frow.values.resize(col_count);
 
 		for (size_t col = 0; col < col_count; ++col)
@@ -294,7 +294,7 @@ void view_tree_model_t::decode_schema_children(
 }
 
 void view_tree_model_t::decode_hex_children(
-    sub_record_row_t & parent_row,
+    view_node_t & parent_row,
     size_t first_size,
     size_t col_count,
     const std::vector<std::vector<sub_record_view_t>> & all_subs,
@@ -305,10 +305,10 @@ void view_tree_model_t::decode_hex_children(
 
 	for (size_t offset = 0; offset < first_size; offset += hex_line_bytes)
 	{
-		field_row_t frow;
+		view_node_t frow;
 		char name_buf[16];
 		std::snprintf(name_buf, sizeof(name_buf), "%04X", static_cast<unsigned>(offset));
-		frow.name = name_buf;
+		frow.label = name_buf;
 		frow.values.resize(col_count);
 
 		for (size_t col = 0; col < col_count; ++col)
