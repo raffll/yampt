@@ -56,7 +56,7 @@ void view_tree_model_t::set_record_armor(record_context_t & context, const confl
 	rule.trailing_types = { "BNAM", "CNAM" };
 	rule.key_source = alignment_rule_t::key_from_t::anchor;
 
-	content_alignment_t::align(all_subs, col_count, rule, unified_slots, col_type_indices, m_merge_col_index);
+	content_alignment_t::align(all_subs, col_count, { rule }, unified_slots, col_type_indices);
 
 	auto is_body_part_type = [](const std::string & slot_type)
 	{
@@ -227,7 +227,7 @@ void view_tree_model_t::collect_leveled_entries(record_context_t & context, slot
 	rule.key_source = alignment_rule_t::key_from_t::anchor;
 
 	content_alignment_t::align(
-	    context.all_sub_records, context.col_count, rule, build_ctx.unified_slots, build_ctx.col_type_indices, m_merge_col_index);
+	    context.all_sub_records, context.col_count, { rule }, build_ctx.unified_slots, build_ctx.col_type_indices);
 }
 
 void view_tree_model_t::collect_faction_entries(record_context_t & context, slot_build_context_t & build_ctx)
@@ -240,7 +240,7 @@ void view_tree_model_t::collect_faction_entries(record_context_t & context, slot
 	rule.key_neighbor_type = "ANAM";
 
 	content_alignment_t::align(
-	    context.all_sub_records, context.col_count, rule, build_ctx.unified_slots, build_ctx.col_type_indices, m_merge_col_index);
+	    context.all_sub_records, context.col_count, { rule }, build_ctx.unified_slots, build_ctx.col_type_indices);
 }
 
 void view_tree_model_t::collect_container_entries(record_context_t & context, slot_build_context_t & build_ctx)
@@ -258,10 +258,7 @@ void view_tree_model_t::collect_container_entries(record_context_t & context, sl
 	npcs_rule.key_source = alignment_rule_t::key_from_t::anchor;
 
 	content_alignment_t::align(
-	    context.all_sub_records, context.col_count, npco_rule, build_ctx.unified_slots, build_ctx.col_type_indices, m_merge_col_index);
-
-	content_alignment_t::align(
-	    context.all_sub_records, context.col_count, npcs_rule, build_ctx.unified_slots, build_ctx.col_type_indices, m_merge_col_index);
+	    context.all_sub_records, context.col_count, { npco_rule, npcs_rule }, build_ctx.unified_slots, build_ctx.col_type_indices);
 }
 
 void view_tree_model_t::emit_slot_rows(record_context_t & context, slot_build_context_t & build_ctx)

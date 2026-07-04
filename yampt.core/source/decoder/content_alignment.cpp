@@ -38,19 +38,22 @@ std::string content_alignment_t::extract_key(
 void content_alignment_t::collect_non_excluded(
     const std::vector<std::vector<sub_record_view_t>> & all_subs,
     size_t col_count,
-    const alignment_rule_t & rule,
+    const std::vector<alignment_rule_t> & rules,
     std::vector<sub_slot_t> & unified_slots,
     std::vector<std::unordered_map<std::string, std::vector<size_t>>> & col_type_indices)
 {
-	auto is_excluded = [&rule](const sub_record_view_t & sv_rec) -> bool
+	auto is_excluded = [&rules](const sub_record_view_t & sv_rec) -> bool
 	{
-		if (sv_rec.type == rule.anchor_type && (rule.anchor_size == 0 || sv_rec.size == rule.anchor_size))
-			return true;
-
-		for (const auto & trailing_type : rule.trailing_types)
+		for (const auto & rule : rules)
 		{
-			if (sv_rec.type == trailing_type)
+			if (sv_rec.type == rule.anchor_type && (rule.anchor_size == 0 || sv_rec.size == rule.anchor_size))
 				return true;
+
+			for (const auto & trailing_type : rule.trailing_types)
+			{
+				if (sv_rec.type == trailing_type)
+					return true;
+			}
 		}
 
 		return false;
@@ -274,19 +277,22 @@ void content_alignment_t::fill_key_indices(
 void content_alignment_t::align(
     const std::vector<std::vector<sub_record_view_t>> & all_subs,
     size_t col_count,
-    const alignment_rule_t & rule,
+    const std::vector<alignment_rule_t> & rules,
     std::vector<sub_slot_t> & unified_slots,
-    std::vector<std::unordered_map<std::string, std::vector<size_t>>> & col_type_indices,
-    int)
+    std::vector<std::unordered_map<std::string, std::vector<size_t>>> & col_type_indices)
 {
-	std::vector<std::vector<aligned_group_t>> col_groups(col_count);
-	std::vector<std::string> all_keys;
+	collect_non_excluded(all_subs, col_count, rules, unified_slots, col_type_indices);
 
-	scan_groups(all_subs, col_count, rule, col_groups, all_keys, -1);
-	collect_non_excluded(all_subs, col_count, rule, unified_slots, col_type_indices);
+	for (const auto & rule : rules)
+	{
+		std::vector<std::vector<aligned_group_t>> col_groups(col_count);
+		std::vector<std::string> all_keys;
 
-	for (const auto & key : all_keys)
-		emit_key_slots(key, col_groups, col_count, rule, unified_slots, col_type_indices, -1);
+		scan_groups(all_subs, col_count, rule, col_groups, all_keys, -1);
+
+		for (const auto & key : all_keys)
+			emit_key_slots(key, col_groups, col_count, rule, unified_slots, col_type_indices, -1);
+	}
 }
 
 void content_alignment_t::fit_merge_column(

@@ -32,10 +32,9 @@ public:
 	static void align(
 	    const std::vector<std::vector<sub_record_view_t>> & all_subs,
 	    size_t col_count,
-	    const alignment_rule_t & rule,
+	    const std::vector<alignment_rule_t> & rules,
 	    std::vector<sub_slot_t> & unified_slots,
-	    std::vector<std::unordered_map<std::string, std::vector<size_t>>> & col_type_indices,
-	    int merge_column = -1);
+	    std::vector<std::unordered_map<std::string, std::vector<size_t>>> & col_type_indices);
 
 	static void build_from_slot_result(
 	    const slot_result_t & slot_result,
@@ -73,7 +72,7 @@ private:
 	static void collect_non_excluded(
 	    const std::vector<std::vector<sub_record_view_t>> & all_subs,
 	    size_t col_count,
-	    const alignment_rule_t & rule,
+	    const std::vector<alignment_rule_t> & rules,
 	    std::vector<sub_slot_t> & unified_slots,
 	    std::vector<std::unordered_map<std::string, std::vector<size_t>>> & col_type_indices);
 
