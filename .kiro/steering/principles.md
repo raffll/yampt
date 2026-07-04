@@ -55,3 +55,18 @@
 - No decorative comment banners (dashed lines, boxes, ASCII art).
 - Always remove items from TODO.md that are done or cancelled — never leave stale entries.
 - No file-local `static` functions. All logic belongs as static methods on the owning class. A .cpp file implements one class — every function in it is a member of that class. No mixing of free functions, file-local statics, and class methods in the same file.
+
+
+## Coding Standards Enforcement
+
+Every code change must comply with ALL rules in the steering files. Before writing any code, verify:
+- Max 50 lines per function
+- Max 3 nesting levels
+- Max 2 function arguments (use struct if more needed)
+- No file-local `static` functions — all logic as static methods on the owning class
+- No comments, no magic numbers, no abbreviations under 5 characters
+- `const auto &` by default
+- Early returns to flatten logic
+- Blank line after `continue`, `return`, `break` (unless last in block)
+
+Never produce code that violates these rules even partially. If a change would exceed limits, split first, then implement.

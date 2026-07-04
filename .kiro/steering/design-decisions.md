@@ -130,3 +130,8 @@ All dictionaries are saveable and editable in yTranslator. The base/user distinc
 ## Codepage Lists Must Be Sorted
 
 Whenever codepages are listed in a combo box or UI element, they must be in ascending numeric order (e.g. 1250, 1251, 1252). Never put a "default" or "most common" codepage first if it breaks numeric ordering.
+
+
+## Copy to Merged Patch — Individual Sub-Records Always Allowed
+
+Never restrict the user to copying only entire groups. Individual sub-record copy must always be available, even for sub-records that belong to a group. The merge operation must handle placing the sub-record at the correct position based on its content identity, not by occurrence order. If a sub-record belongs to a group that doesn't exist in the merge yet, the merge must create the appropriate structure to receive it — not silently misplace it or force the user to copy the whole group first.

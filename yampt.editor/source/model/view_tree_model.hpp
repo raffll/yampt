@@ -1,5 +1,6 @@
 #pragma once
 
+#include <decoder/content_alignment.hpp>
 #include <decoder/sub_record_iter.hpp>
 #include <decoder/sub_record_schema.hpp>
 #include <io/codepage.hpp>
@@ -64,12 +65,6 @@ public:
 		conflict_all_t row_conflict_all = conflict_all_t::only_one;
 		bool all_identical = true;
 		std::vector<view_node_t> children;
-	};
-
-	struct sub_slot_t
-	{
-		std::string type;
-		int occurrence;
 	};
 
 	const std::vector<view_node_t> & rows() const;

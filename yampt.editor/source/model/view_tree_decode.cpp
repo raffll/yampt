@@ -121,31 +121,6 @@ view_tree_model_t::view_node_t view_tree_model_t::build_slot_row(
 	row.type = slot.type;
 	row.label = make_sub_label(slot.type, m_record_type, first_size);
 
-	static constexpr bool show_slot_debug_info = true;
-	if (show_slot_debug_info)
-	{
-		row.label += " [occ=" + std::to_string(slot.occurrence);
-		for (size_t col = 0; col < col_count; ++col)
-		{
-			if (col >= col_indices.size())
-				continue;
-
-			auto it_type = col_indices[col].find(slot.type);
-			if (it_type == col_indices[col].end())
-				continue;
-
-			if (slot.occurrence >= static_cast<int>(it_type->second.size()))
-				continue;
-
-			size_t idx = it_type->second[slot.occurrence];
-			if (idx == SIZE_MAX)
-				row.label += " -";
-			else
-				row.label += " " + std::to_string(idx);
-		}
-		row.label += "]";
-	}
-
 	bool all_same = true;
 	for (size_t col = 1; col < col_count; ++col)
 	{

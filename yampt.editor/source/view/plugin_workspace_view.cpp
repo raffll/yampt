@@ -1044,9 +1044,10 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & global_pos, co
 
 		if (merge_binary_idx >= 0)
 		{
+			const auto removed_type = row.type;
 			menu.addAction(
 			    "Remove Sub-Record",
-			    [this, rec_type, record_id, merge_binary_idx]()
+			    [this, rec_type, record_id, merge_binary_idx, removed_type]()
 			{
 				const auto * entry = m_session->scan().find(rec_type, record_id);
 				if (!entry)
@@ -1073,7 +1074,7 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & global_pos, co
 
 				const auto patched = sub_record_merge_t::reconstruct_record(merge_content, merge_subs);
 				m_session->scan().copy_record_to_merge_raw(rec_type, record_id, patched);
-				log_message("[info] removed " + row.type + " from merge (" + rec_type + ":" + record_id + ")");
+				log_message("[info] removed " + removed_type + " from merge (" + rec_type + ":" + record_id + ")");
 
 				refresh_after_merge(rec_type, record_id);
 				save_merged_patch();

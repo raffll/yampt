@@ -88,11 +88,18 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 
 size_t view_tree_model_t::setup_columns(plugin_scan_t & scan, const conflict_entry_t & entry)
 {
-	for (const auto & ver : entry.versions)
+	for (size_t i = 0; i < entry.versions.size(); ++i)
 	{
+		const auto & ver = entry.versions[i];
 		m_column_names.push_back(scan.plugin_filename(ver.plugin_idx));
 		m_plugin_conflict_this.push_back(ver.status);
 		m_column_plugin_indices.push_back(ver.plugin_idx);
+
+		if (scan.is_merge_plugin(ver.plugin_idx))
+		{
+			m_has_merge_column = true;
+			m_merge_col_index = static_cast<int>(i);
+		}
 	}
 
 	return entry.versions.size();

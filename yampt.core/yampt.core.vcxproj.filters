@@ -35,6 +35,7 @@
     <ClCompile Include="source\scanner\auto_merge.cpp" />
     <ClCompile Include="source\decoder\sub_record_schema.cpp" />
     <ClCompile Include="source\decoder\view_group_def.cpp" />
+    <ClCompile Include="source\decoder\content_alignment.cpp" />
     <ClCompile Include="source\decoder\view_tree_format.cpp" />
     <ClCompile Include="source\decoder\conflict_slots.cpp" />
     <ClCompile Include="source\decoder\conflict_slots_cell.cpp" />
@@ -80,6 +81,7 @@
     <ClInclude Include="source\decoder\sub_record_iter.hpp" />
     <ClInclude Include="source\decoder\sub_record_schema.hpp" />
     <ClInclude Include="source\decoder\view_group_def.hpp" />
+    <ClInclude Include="source\decoder\content_alignment.hpp" />
     <ClInclude Include="source\decoder\view_tree_format.hpp" />
     <ClInclude Include="source\io\profile_reader.hpp" />
     <ClInclude Include="source\utility\theme_enums.hpp" />

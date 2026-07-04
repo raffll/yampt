@@ -115,32 +115,10 @@ static void build_cell_header_slots(
     size_t col_count,
     const std::vector<std::vector<sub_record_view_t>> & all_subs,
     const std::vector<size_t> & col_header_end,
-    std::vector<view_tree_model_t::sub_slot_t> & header_slots)
+    std::vector<sub_slot_t> & header_slots)
 {
-	for (size_t col = 0; col < col_count; ++col)
-	{
-		if (col >= all_subs.size())
-			continue;
-
-		std::unordered_map<std::string, int> type_count;
-		for (size_t i = 0; i < col_header_end[col]; ++i)
-		{
-			const auto & sv = all_subs[col][i];
-			int occur = type_count[sv.type]++;
-			bool found = false;
-			for (const auto & slot : header_slots)
-			{
-				if (slot.type == sv.type && slot.occurrence == occur)
-				{
-					found = true;
-					break;
-				}
-			}
-
-			if (!found)
-				header_slots.push_back({ sv.type, occur });
-		}
-	}
+	std::vector<size_t> col_start(col_count, 0);
+	content_alignment_t::build_occurrence_from_ranges(all_subs, col_count, col_start, col_header_end, header_slots);
 }
 
 static void build_ref_slots_for_object(
@@ -148,11 +126,14 @@ static void build_ref_slots_for_object(
     const std::vector<std::vector<sub_record_view_t>> & all_subs,
     const std::vector<std::vector<cell_ref_group_t>> & col_refs,
     uint32_t object_index,
-    std::vector<view_tree_model_t::sub_slot_t> & ref_slots)
+    std::vector<sub_slot_t> & ref_slots)
 {
+	std::vector<size_t> col_start(col_count, 0);
+	std::vector<size_t> col_end(col_count, 0);
+
 	for (size_t col = 0; col < col_count; ++col)
 	{
-		if (col >= all_subs.size())
+		if (col >= col_refs.size())
 			continue;
 
 		for (const auto & ref_group : col_refs[col])
@@ -160,27 +141,13 @@ static void build_ref_slots_for_object(
 			if (ref_group.object_index != object_index)
 				continue;
 
-			std::unordered_map<std::string, int> type_count;
-			for (size_t i = ref_group.start_idx; i < ref_group.end_idx; ++i)
-			{
-				const auto & sv = all_subs[col][i];
-				int occur = type_count[sv.type]++;
-				bool found = false;
-				for (const auto & slot : ref_slots)
-				{
-					if (slot.type == sv.type && slot.occurrence == occur)
-					{
-						found = true;
-						break;
-					}
-				}
-
-				if (!found)
-					ref_slots.push_back({ sv.type, occur });
-			}
+			col_start[col] = ref_group.start_idx;
+			col_end[col] = ref_group.end_idx;
 			break;
 		}
 	}
+
+	content_alignment_t::build_occurrence_from_ranges(all_subs, col_count, col_start, col_end, ref_slots);
 }
 
 struct ref_lookup_result_t
@@ -467,35 +434,6 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 		view_node_t group_row;
 		group_row.type = "FRMR";
 		group_row.size = 0;
-
-		static constexpr bool show_cell_debug_info = true;
-		if (show_cell_debug_info)
-		{
-			ref_label += " [";
-			for (size_t col = 0; col < col_count; ++col)
-			{
-				if (col > 0)
-					ref_label += " ";
-
-				bool found = false;
-				if (col < col_refs.size())
-				{
-					for (const auto & ref_group : col_refs[col])
-					{
-						if (ref_group.object_index == obj_idx)
-						{
-							ref_label += std::to_string(ref_group.start_idx) + "-" + std::to_string(ref_group.end_idx);
-							found = true;
-							break;
-						}
-					}
-				}
-
-				if (!found)
-					ref_label += "-";
-			}
-			ref_label += "]";
-		}
 
 		group_row.label = ref_label;
 		group_row.values.resize(col_count);
