@@ -95,11 +95,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="source\theme_system.cpp" />
-    <ClCompile Include="source\app_settings.cpp" />
+    <ClCompile Include="source\path_resolver.cpp" />
+    <ClCompile Include="source\settings_store.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\conflict_types.hpp" />
-    <ClInclude Include="source\app_settings.hpp" />
+    <ClInclude Include="source\path_resolver.hpp" />
+    <ClInclude Include="source\settings_store.hpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="source\theme_system.hpp">

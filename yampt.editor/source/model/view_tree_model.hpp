@@ -3,7 +3,7 @@
 #include <decoder/sub_record_iter.hpp>
 #include <decoder/sub_record_schema.hpp>
 #include <io/codepage.hpp>
-#include <scanner/conflict_compute.hpp>
+#include <scanner/record_conflict.hpp>
 #include <scanner/plugin_scan.hpp>
 #include <conflict_types.hpp>
 #include <set>

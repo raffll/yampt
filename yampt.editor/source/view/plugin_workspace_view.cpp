@@ -3,17 +3,14 @@
 #include "../dialog/plugin_select_dialog.hpp"
 #include <scanner/cell_name_fixer.hpp>
 #include <scanner/fog_fixer.hpp>
-#include <scanner/merge_compute.hpp>
+#include <scanner/auto_merge.hpp>
 #include <scanner/merge_patch_ops.hpp>
 #include <scanner/sub_record_merge.hpp>
 #include <decoder/view_tree_format.hpp>
 #include <scanner/summon_fixer.hpp>
 #include <algorithm>
-#include <app_settings.hpp>
-#include <functional>
-#include <regex>
+#include <settings_store.hpp>
 #include <set>
-#include <unordered_map>
 #include <QApplication>
 #include <QClipboard>
 #include <QDir>
@@ -32,7 +29,7 @@
 #include <QShortcut>
 #include <QStyledItemDelegate>
 #include <QStyleOptionHeader>
-#include <QTextStream>
+#include <QTreeView>
 #include <QVBoxLayout>
 
 class grid_delegate_t : public QStyledItemDelegate
@@ -89,7 +86,7 @@ protected:
 	}
 };
 
-plugin_workspace_view_t::plugin_workspace_view_t(app_settings_t & settings, QWidget * parent)
+plugin_workspace_view_t::plugin_workspace_view_t(settings_store_t & settings, QWidget * parent)
     : QWidget(parent)
     , m_settings(settings)
 {
@@ -100,56 +97,33 @@ plugin_workspace_view_t::plugin_workspace_view_t(app_settings_t & settings, QWid
 	m_chk_conflicts->setToolTip("Show only conflicting records");
 	m_lbl_count = new QLabel(this);
 
+	m_session = new plugin_session_t(this);
+
 	setup_views();
 
 	main_layout->addWidget(m_main_splitter, 1);
 
 	m_status_label = new QLabel(this);
 
-	m_nav_model = new nav_tree_model_t(m_scan, this);
-	m_nav_model->set_excluded_plugins(&m_excluded_plugins);
-	m_nav_model->set_patch_plugins(&m_patch_plugins);
-	m_view_model = new view_tree_model_t(this);
-	m_view_model->set_excluded_plugins(&m_excluded_plugins);
-	m_view_model->set_patch_plugins(&m_patch_plugins);
-	m_view_model->set_display_codepage(static_cast<codepage_t>(m_settings.display_codepage()));
-	m_nav_view->setModel(m_nav_model);
-	m_view_view->setModel(m_view_model);
-	m_view_view->setHeader(new colored_header_t(Qt::Horizontal, m_view_view));
-	m_view_view->header()->setStretchLastSection(true);
-	m_view_view->header()->setMinimumSectionSize(120);
+	m_nav_view = new nav_tree_view_t(m_session->scan(), this);
+	m_nav_view->set_excluded_plugins(&m_session->excluded_plugins());
+	m_nav_view->set_patch_plugins(&m_session->patch_plugins());
+	m_content_splitter->insertWidget(0, m_nav_view);
+	m_content_splitter->setSizes({ 300, 700 });
+	m_record_view = new record_view_t(this);
+	m_record_view->model()->set_excluded_plugins(&m_session->excluded_plugins());
+	m_record_view->model()->set_patch_plugins(&m_session->patch_plugins());
+	m_record_view->model()->set_display_codepage(static_cast<codepage_t>(m_settings.display_codepage()));
+	m_content_splitter->insertWidget(1, m_record_view);
 
 	setup_connections();
-	load_excluded_plugins();
-	load_patch_plugins();
-	load_plugin_paths();
+	m_session->restore_session_state(QCoreApplication::applicationDirPath() + "/yEditor.ini");
 }
 
 void plugin_workspace_view_t::setup_views()
 {
 	m_main_splitter = new QSplitter(Qt::Vertical, this);
 	m_content_splitter = new QSplitter(Qt::Horizontal, m_main_splitter);
-
-	m_nav_view = new QTreeView(m_content_splitter);
-	m_nav_view->setDragEnabled(false);
-	m_nav_view->setAcceptDrops(false);
-	m_nav_view->setContextMenuPolicy(Qt::CustomContextMenu);
-
-	m_view_view = new QTreeView(m_content_splitter);
-	m_view_view->setSelectionMode(QAbstractItemView::SingleSelection);
-	m_view_view->setSelectionBehavior(QAbstractItemView::SelectItems);
-	m_view_view->setRootIsDecorated(true);
-	m_view_view->setAlternatingRowColors(false);
-	m_view_view->setWordWrap(false);
-	m_view_view->setUniformRowHeights(true);
-	m_view_view->setDragEnabled(false);
-	m_view_view->setAcceptDrops(false);
-	m_view_view->setItemDelegate(new grid_delegate_t(m_view_view));
-	m_view_view->setContextMenuPolicy(Qt::CustomContextMenu);
-
-	m_content_splitter->addWidget(m_nav_view);
-	m_content_splitter->addWidget(m_view_view);
-	m_content_splitter->setSizes({ 300, 700 });
 
 	m_bottom_tabs = new QTabWidget(m_main_splitter);
 	m_messages = new messages_view_t(m_bottom_tabs);
@@ -167,28 +141,24 @@ void plugin_workspace_view_t::setup_connections()
 {
 	connect(m_chk_conflicts, &QCheckBox::checkStateChanged, this, &plugin_workspace_view_t::on_filter_changed);
 
-	connect(m_nav_view, &QTreeView::customContextMenuRequested, this, &plugin_workspace_view_t::on_nav_context_menu);
-	connect(m_view_view, &QTreeView::customContextMenuRequested, this, &plugin_workspace_view_t::on_view_context_menu);
+	connect(m_nav_view, &nav_tree_view_t::selection_changed, this, &plugin_workspace_view_t::on_nav_selection_changed);
+	connect(m_nav_view, &nav_tree_view_t::context_menu_requested, this, &plugin_workspace_view_t::on_nav_context_menu);
 
-	connect(
-	    m_view_view->selectionModel(),
-	    &QItemSelectionModel::currentChanged,
-	    this,
-	    [this](const QModelIndex & current)
+	connect(m_record_view, &record_view_t::context_menu_requested, this, &plugin_workspace_view_t::on_view_context_menu);
+	connect(m_record_view, &record_view_t::selection_changed, this, &plugin_workspace_view_t::on_view_selection_changed);
+
+	connect(m_session, &plugin_session_t::plugins_loaded, this, &plugin_workspace_view_t::rebuild_after_load);
+	connect(m_session, &plugin_session_t::plugins_unloaded, this, [this]()
 	{
-		on_view_selection_changed(current);
+		m_record_view->clear();
+		m_nav_view->rebuild();
+		update_status();
 	});
+	connect(m_session, &plugin_session_t::log_message, this, &plugin_workspace_view_t::log_message);
 
-	connect(
-	    m_nav_view->selectionModel(),
-	    &QItemSelectionModel::currentChanged,
-	    this,
-	    &plugin_workspace_view_t::on_nav_selection_changed);
+	m_record_view->tree()->viewport()->installEventFilter(this);
 
-	m_nav_view->viewport()->installEventFilter(this);
-	m_view_view->viewport()->installEventFilter(this);
-
-	auto * copy_shortcut = new QShortcut(QKeySequence::Copy, m_view_view);
+	auto * copy_shortcut = new QShortcut(QKeySequence::Copy, m_record_view->tree());
 	connect(copy_shortcut, &QShortcut::activated, this, &plugin_workspace_view_t::on_view_copy);
 }
 
@@ -204,64 +174,7 @@ void plugin_workspace_view_t::load_plugins_from_paths(
 	if (selected.empty())
 		return;
 
-	load_plugins_direct(selected, base_path);
-	save_plugin_paths();
-}
-
-void plugin_workspace_view_t::load_plugins_direct(const std::vector<std::string> & paths, const std::string & base_path)
-{
-	m_load_base_path = base_path;
-	m_scan = plugin_scan_t();
-	m_view_model->clear();
-	m_nav_model->rebuild();
-
-	for (const auto & path : paths)
-	{
-		if (!QFile::exists(QString::fromStdString(path)))
-		{
-			log_message("[warning] skipping missing plugin: " + path);
-			continue;
-		}
-
-		auto filename = path;
-		auto pos = filename.find_last_of("/\\");
-		if (pos != std::string::npos)
-			filename = filename.substr(pos + 1);
-
-		try
-		{
-			m_scan.load_plugin(path);
-			const int loaded_idx = static_cast<int>(m_scan.plugin_count()) - 1;
-
-			if (filename == "Merged Patch.esp")
-			{
-				m_scan.set_merge_plugin_from_loaded(loaded_idx);
-				log_message("Loaded merge plugin: " + filename);
-			}
-			else
-			{
-				const auto & idx = m_scan.index(loaded_idx);
-				log_message(
-				    "Loaded " + m_scan.plugin_filename(loaded_idx) + " (" + std::to_string(idx.entries().size()) +
-				    " records indexed)");
-			}
-		}
-		catch (const std::exception & e)
-		{
-			auto filename_err = path;
-			auto pos_err = filename_err.find_last_of("/\\");
-			if (pos_err != std::string::npos)
-				filename_err = filename_err.substr(pos_err + 1);
-
-			log_message("[error] loading " + filename_err + ": " + e.what());
-		}
-	}
-
-	if (m_scan.plugin_count() == 0)
-		return;
-
-	m_scan.rebuild_conflicts();
-	rebuild_after_load();
+	m_session->load_from_folder(selected, base_path);
 }
 
 void plugin_workspace_view_t::on_load_data_files()
@@ -298,7 +211,6 @@ void plugin_workspace_view_t::on_load_data_files()
 	}
 
 	load_plugins_from_paths(paths, dir.toStdString());
-	m_load_source = load_source_t::folder;
 	m_settings.set_last_directory(dir.toStdString());
 	load_existing_merged_patch();
 }
@@ -311,193 +223,8 @@ void plugin_workspace_view_t::on_load_mo2_profile()
 	if (profile_dir.isEmpty())
 		return;
 
-	auto paths = parse_mo2_profile(profile_dir);
-	if (paths.empty())
-		return;
-
-	load_plugins_from_paths(paths, profile_dir.toStdString());
-	m_load_source = load_source_t::mo2_profile;
+	m_session->load_from_mo2_profile(profile_dir);
 	m_settings.set_last_directory(profile_dir.toStdString());
-	load_existing_merged_patch();
-}
-
-std::vector<std::string> plugin_workspace_view_t::parse_mo2_profile(const QString & profile_dir)
-{
-	QString loadorder_path = profile_dir + "/loadorder.txt";
-	QFile loadorder_file(loadorder_path);
-	if (!loadorder_file.open(QIODevice::ReadOnly | QIODevice::Text))
-	{
-		log_message("Cannot open loadorder.txt in " + profile_dir.toStdString());
-		return {};
-	}
-
-	std::vector<std::string> plugin_names;
-	QTextStream stream(&loadorder_file);
-	while (!stream.atEnd())
-	{
-		auto line = stream.readLine().trimmed();
-		if (line.isEmpty() || line.startsWith('#'))
-			continue;
-
-		if (line.startsWith('*'))
-			line = line.mid(1);
-
-		plugin_names.push_back(line.toStdString());
-	}
-	loadorder_file.close();
-
-	QDir profile(profile_dir);
-	QDir mo2_root = profile;
-	mo2_root.cdUp();
-	mo2_root.cdUp();
-
-	const auto mods_path = mo2_root.absolutePath() + "/mods";
-
-	QString game_data_path;
-	QSettings mo2_ini(mo2_root.absolutePath() + "/ModOrganizer.ini", QSettings::IniFormat);
-	game_data_path = mo2_ini.value("General/gamePath").toString();
-	if (game_data_path.isEmpty())
-		game_data_path = mo2_ini.value("Settings/game_path").toString();
-
-	if (game_data_path.isEmpty())
-	{
-		QFile ini_file(mo2_root.absolutePath() + "/ModOrganizer.ini");
-		if (ini_file.open(QIODevice::ReadOnly | QIODevice::Text))
-		{
-			QTextStream ini_stream(&ini_file);
-			while (!ini_stream.atEnd())
-			{
-				auto ini_line = ini_stream.readLine().trimmed();
-				if (ini_line.startsWith("gamePath=") || ini_line.startsWith("gamePath ="))
-				{
-					game_data_path = ini_line.mid(ini_line.indexOf('=') + 1).trimmed();
-					if (game_data_path.startsWith("@ByteArray(") && game_data_path.endsWith(")"))
-						game_data_path = game_data_path.mid(11, game_data_path.size() - 12);
-
-					break;
-				}
-			}
-			ini_file.close();
-		}
-	}
-
-	if (!game_data_path.isEmpty())
-	{
-		game_data_path.replace('\\', '/');
-		if (!game_data_path.endsWith("/Data Files"))
-			game_data_path += "/Data Files";
-	}
-
-	mo2_resolve_context_t context;
-
-	QString modlist_path = profile_dir + "/modlist.txt";
-	QFile modlist_file(modlist_path);
-	if (modlist_file.open(QIODevice::ReadOnly | QIODevice::Text))
-	{
-		QTextStream modlist_stream(&modlist_file);
-		while (!modlist_stream.atEnd())
-		{
-			auto mod_line = modlist_stream.readLine().trimmed();
-			if (mod_line.startsWith('+'))
-				context.enabled_mods.push_back(mod_line.mid(1).toStdString());
-		}
-		modlist_file.close();
-		std::reverse(context.enabled_mods.begin(), context.enabled_mods.end());
-	}
-
-	context.mods_path = mods_path;
-	context.game_data_path = game_data_path;
-	context.overwrite_path = mo2_root.absolutePath() + "/overwrite";
-
-	auto paths = resolve_mo2_plugins(plugin_names, context);
-
-	static const std::vector<std::string> master_files = { "Morrowind.esm", "Tribunal.esm", "Bloodmoon.esm" };
-
-	for (const auto & master : master_files)
-	{
-		bool found = false;
-		for (const auto & resolved : paths)
-		{
-			auto pos = resolved.find_last_of("/\\");
-			auto filename = (pos != std::string::npos) ? resolved.substr(pos + 1) : resolved;
-			if (QString::fromStdString(filename).compare(QString::fromStdString(master), Qt::CaseInsensitive) == 0)
-			{
-				found = true;
-				break;
-			}
-		}
-
-		if (!found)
-			log_message(
-			    "[warning] master file not found in load order: " + master + " (searched in " +
-			    context.game_data_path.toStdString() + ")");
-	}
-
-	const auto merge_full_path = context.overwrite_path + "/Merged Patch.esp";
-	if (QFile::exists(merge_full_path))
-	{
-		const auto merge_std = merge_full_path.toStdString();
-		bool already_included = false;
-		for (const auto & resolved : paths)
-		{
-			if (resolved == merge_std)
-			{
-				already_included = true;
-				break;
-			}
-		}
-
-		if (!already_included)
-			paths.push_back(merge_std);
-	}
-
-	return paths;
-}
-
-std::vector<std::string> plugin_workspace_view_t::resolve_mo2_plugins(
-    const std::vector<std::string> & plugin_names,
-    const mo2_resolve_context_t & context)
-{
-	std::vector<std::string> paths;
-	for (const auto & name : plugin_names)
-	{
-		const auto & resolved = resolve_single_mo2_plugin(name, context);
-		if (!resolved.empty())
-			paths.push_back(resolved);
-		else
-			log_message("Cannot find: " + name);
-	}
-
-	if (paths.empty())
-		log_message("No plugins resolved from MO2 profile");
-
-	return paths;
-}
-
-std::string plugin_workspace_view_t::resolve_single_mo2_plugin(
-    const std::string & plugin_name,
-    const mo2_resolve_context_t & context)
-{
-	if (!context.overwrite_path.isEmpty())
-	{
-		const auto overwrite_candidate = context.overwrite_path + "/" + QString::fromStdString(plugin_name);
-		if (QFile::exists(overwrite_candidate))
-			return overwrite_candidate.toStdString();
-	}
-
-	for (const auto & mod_name : context.enabled_mods)
-	{
-		const auto candidate =
-		    context.mods_path + "/" + QString::fromStdString(mod_name) + "/" + QString::fromStdString(plugin_name);
-		if (QFile::exists(candidate))
-			return candidate.toStdString();
-	}
-
-	const auto game_file = context.game_data_path + "/" + QString::fromStdString(plugin_name);
-	if (QFile::exists(game_file))
-		return game_file.toStdString();
-
-	return {};
 }
 
 void plugin_workspace_view_t::on_load_openmw_cfg()
@@ -510,177 +237,35 @@ void plugin_workspace_view_t::on_load_openmw_cfg()
 	if (cfg_path.isEmpty())
 		return;
 
-	auto paths = parse_openmw_cfg(cfg_path);
-	if (paths.empty())
-		return;
-
+	m_session->load_from_openmw_cfg(cfg_path);
 	const auto cfg_dir = QFileInfo(cfg_path).absolutePath();
-	const auto base = cfg_dir.toStdString();
-
-	load_plugins_from_paths(paths, base);
-	m_load_source = load_source_t::openmw_cfg;
-	m_settings.set_last_directory(base);
-	load_existing_merged_patch();
-}
-
-std::vector<std::string> plugin_workspace_view_t::parse_openmw_cfg(const QString & cfg_path)
-{
-	QFile cfg_file(cfg_path);
-	if (!cfg_file.open(QIODevice::ReadOnly | QIODevice::Text))
-	{
-		log_message("Cannot open " + cfg_path.toStdString());
-		return {};
-	}
-
-	std::vector<std::string> data_dirs;
-	std::vector<std::string> content_names;
-
-	QTextStream stream(&cfg_file);
-	while (!stream.atEnd())
-	{
-		auto line = stream.readLine().trimmed();
-
-		if (line.startsWith("data=") || line.startsWith("data ="))
-		{
-			auto value = line.mid(line.indexOf('=') + 1).trimmed();
-			if (value.startsWith('"') && value.endsWith('"'))
-				value = value.mid(1, value.size() - 2);
-
-			data_dirs.push_back(value.toStdString());
-		}
-		else if (line.startsWith("content=") || line.startsWith("content ="))
-		{
-			auto value = line.mid(line.indexOf('=') + 1).trimmed();
-			content_names.push_back(value.toStdString());
-		}
-	}
-	cfg_file.close();
-
-	return resolve_openmw_content(content_names, data_dirs);
-}
-
-std::vector<std::string> plugin_workspace_view_t::resolve_openmw_content(
-    const std::vector<std::string> & content_names,
-    const std::vector<std::string> & data_dirs)
-{
-	std::vector<std::string> paths;
-	for (const auto & name : content_names)
-	{
-		const auto & resolved = resolve_single_content(name, data_dirs);
-		if (!resolved.empty())
-			paths.push_back(resolved);
-		else
-			log_message("Cannot find: " + name);
-	}
-
-	if (paths.empty())
-		log_message("No plugins resolved from openmw.cfg");
-
-	return paths;
-}
-
-std::string plugin_workspace_view_t::resolve_single_content(
-    const std::string & content_name,
-    const std::vector<std::string> & data_dirs)
-{
-	for (auto it_dir = data_dirs.rbegin(); it_dir != data_dirs.rend(); ++it_dir)
-	{
-		const auto candidate = QString::fromStdString(*it_dir) + "/" + QString::fromStdString(content_name);
-		if (QFile::exists(candidate))
-			return candidate.toStdString();
-	}
-
-	return {};
+	m_settings.set_last_directory(cfg_dir.toStdString());
 }
 
 void plugin_workspace_view_t::rebuild_after_load()
 {
-	m_nav_model->rebuild();
-	m_nav_view->setColumnWidth(0, 280);
-
+	m_nav_view->rebuild();
 	update_status();
 }
 
 void plugin_workspace_view_t::rebuild_nav_preserving_state()
 {
-	std::set<std::string> expanded;
-
-	std::function<void(const QModelIndex &, const std::string &)> collect =
-	    [&](const QModelIndex & parent, const std::string & path)
-	{
-		const auto rows = m_nav_model->rowCount(parent);
-		for (int i = 0; i < rows; ++i)
-		{
-			const auto idx = m_nav_model->index(i, 0, parent);
-			if (!idx.isValid())
-				continue;
-
-			const auto & text = m_nav_model->data(idx, Qt::DisplayRole).toString().toStdString();
-			const auto & full_path = path + "/" + text;
-
-			if (!m_nav_view->isExpanded(idx))
-				continue;
-
-			expanded.insert(full_path);
-			collect(idx, full_path);
-		}
-	};
-
-	collect(QModelIndex(), "");
-	m_nav_model->rebuild();
-
-	std::function<void(const QModelIndex &, const std::string &)> restore =
-	    [&](const QModelIndex & parent, const std::string & path)
-	{
-		const auto rows = m_nav_model->rowCount(parent);
-		for (int i = 0; i < rows; ++i)
-		{
-			const auto idx = m_nav_model->index(i, 0, parent);
-			if (!idx.isValid())
-				continue;
-
-			const auto & text = m_nav_model->data(idx, Qt::DisplayRole).toString().toStdString();
-			const auto & full_path = path + "/" + text;
-
-			if (!expanded.count(full_path))
-				continue;
-
-			m_nav_view->expand(idx);
-			restore(idx, full_path);
-		}
-	};
-
-	restore(QModelIndex(), "");
+	m_nav_view->rebuild_preserving_state();
 }
 
-void plugin_workspace_view_t::on_nav_selection_changed(const QModelIndex & current)
+void plugin_workspace_view_t::on_nav_selection_changed(const nav_tree_model_t::node_info_t & info)
 {
-	if (!current.isValid())
-	{
-		m_view_model->clear();
-		update_status();
-		return;
-	}
-
-	if (current.row() < 0 || current.row() >= m_nav_model->rowCount(current.parent()))
-	{
-		m_view_model->clear();
-		update_status();
-		return;
-	}
-
-	const auto info = m_nav_model->node_at(current);
 	if (info.record_id.empty())
 	{
-		m_view_model->clear();
+		m_record_view->clear();
 		update_status();
 		return;
 	}
 
-	const auto * entry = m_scan.find(info.rec_type, info.record_id);
+	const auto * entry = m_session->scan().find(info.rec_type, info.record_id);
 	if (!entry)
 	{
-		m_view_model->clear();
+		m_record_view->clear();
 		update_status();
 		return;
 	}
@@ -709,7 +294,7 @@ void plugin_workspace_view_t::on_filter_changed()
 
 		m_has_filter_active = true;
 		m_last_quick_filter = state;
-		m_nav_model->set_filter(state);
+		m_nav_view->set_filter(state);
 	}
 	else
 	{
@@ -718,7 +303,7 @@ void plugin_workspace_view_t::on_filter_changed()
 
 		m_has_filter_active = false;
 		m_last_quick_filter = {};
-		m_nav_model->clear_filter();
+		m_nav_view->clear_filter();
 	}
 
 	update_status();
@@ -727,24 +312,20 @@ void plugin_workspace_view_t::on_filter_changed()
 void plugin_workspace_view_t::set_hide_duplicates(bool hide)
 {
 	m_hide_duplicates = hide;
-	m_nav_model->set_hide_duplicates(hide);
+	m_nav_view->set_hide_duplicates(hide);
 
-	auto current = m_nav_view->currentIndex();
-	if (!current.isValid())
-		return;
-
-	const auto info = m_nav_model->node_at(current);
+	const auto info = m_nav_view->current_selection();
 	if (info.record_id.empty())
 		return;
 
-	const auto * entry = m_scan.find(info.rec_type, info.record_id);
+	const auto * entry = m_session->scan().find(info.rec_type, info.record_id);
 	if (entry)
 		display_record_in_view(*entry);
 }
 
 void plugin_workspace_view_t::on_advanced_filter()
 {
-	auto types = m_scan.all_types();
+	auto types = m_session->scan().all_types();
 	filter_dialog_t dlg(types, this);
 
 	if (m_filter_active)
@@ -789,19 +370,19 @@ void plugin_workspace_view_t::on_advanced_filter()
 	m_has_filter_active = true;
 	m_last_quick_filter = nav_state;
 
-	m_nav_model->set_filter(nav_state);
+	m_nav_view->set_filter(nav_state);
 	update_status();
 }
 
 void plugin_workspace_view_t::on_save_plugin()
 {
-	if (!m_scan.has_merge())
+	if (!m_session->scan().has_merge())
 	{
 		log_message("[error] no merged patch exists");
 		return;
 	}
 
-	if (m_scan.merge_record_count() == 0)
+	if (m_session->scan().merge_record_count() == 0)
 	{
 		log_message("[error] merged patch is empty");
 		return;
@@ -834,11 +415,11 @@ void plugin_workspace_view_t::on_save_plugin()
 	auto output_dir = QDir(QFileInfo(QString::fromStdString(output_path)).absolutePath());
 	output_dir.mkpath(".");
 
-	const bool result = m_scan.save_merge(output_path, author.toStdString(), description.toStdString());
+	const bool result = m_session->scan().save_merge(output_path, author.toStdString(), description.toStdString());
 
 	if (result)
 	{
-		log_message("[info] saved " + output_path + " (" + std::to_string(m_scan.merge_record_count()) + " records)");
+		log_message("[info] saved " + output_path + " (" + std::to_string(m_session->scan().merge_record_count()) + " records)");
 	}
 	else
 	{
@@ -848,36 +429,31 @@ void plugin_workspace_view_t::on_save_plugin()
 
 void plugin_workspace_view_t::on_unload_all()
 {
-	m_scan = plugin_scan_t();
-	m_view_model->clear();
-	m_nav_model->rebuild();
-	update_status();
-	save_plugin_paths();
-	log_message("All plugins unloaded");
+	m_session->unload_all();
 }
 
 std::string plugin_workspace_view_t::resolve_merge_output_path() const
 {
-	if (m_load_base_path.empty())
+	if (m_session->load_base_path().empty())
 		return {};
 
 	static const std::string merge_filename = "Merged Patch.esp";
 
-	if (m_load_source == load_source_t::mo2_profile)
+	if (m_session->load_source() == plugin_session_t::load_source_t::mo2_profile)
 	{
 		auto output_path = QDir::cleanPath(
-		    QString::fromStdString(m_load_base_path) + "/../../overwrite/" + QString::fromStdString(merge_filename));
+		    QString::fromStdString(m_session->load_base_path()) + "/../../overwrite/" + QString::fromStdString(merge_filename));
 		return output_path.toStdString();
 	}
 
-	if (m_load_source == load_source_t::openmw_cfg)
+	if (m_session->load_source() == plugin_session_t::load_source_t::openmw_cfg)
 	{
 		auto output_path = QDir::cleanPath(
-		    QString::fromStdString(m_load_base_path) + "/data/" + QString::fromStdString(merge_filename));
+		    QString::fromStdString(m_session->load_base_path()) + "/data/" + QString::fromStdString(merge_filename));
 		return output_path.toStdString();
 	}
 
-	auto output_dir = QDir(QString::fromStdString(m_load_base_path));
+	auto output_dir = QDir(QString::fromStdString(m_session->load_base_path()));
 	return output_dir.filePath(QString::fromStdString(merge_filename)).toStdString();
 }
 
@@ -886,15 +462,15 @@ void plugin_workspace_view_t::save_merged_patch()
 	const auto output_path = resolve_merge_output_path();
 	if (output_path.empty())
 	{
-		log_message("[error] cannot save merged patch: output path is empty (load_base_path=" + m_load_base_path + ")");
+		log_message("[error] cannot save merged patch: output path is empty (load_base_path=" + m_session->load_base_path() + ")");
 		return;
 	}
 
 	auto output_dir = QDir(QFileInfo(QString::fromStdString(output_path)).absolutePath());
 	output_dir.mkpath(".");
-	const bool saved = m_scan.save_merge(output_path, "yEditor", "Auto-generated merged patch");
+	const bool saved = m_session->scan().save_merge(output_path, "yEditor", "Auto-generated merged patch");
 	if (saved)
-		log_message("[info] saved " + output_path + " (" + std::to_string(m_scan.merge_record_count()) + " records)");
+		log_message("[info] saved " + output_path + " (" + std::to_string(m_session->scan().merge_record_count()) + " records)");
 	else
 		log_message("[error] failed to save " + output_path);
 }
@@ -911,17 +487,17 @@ void plugin_workspace_view_t::load_existing_merged_patch()
 		return;
 	}
 
-	if (m_scan.has_merge())
+	if (m_session->scan().has_merge())
 		return;
 
 	auto merge_filename = std::filesystem::path(path).filename().string();
 
-	for (int i = 0; i < static_cast<int>(m_scan.plugin_count()); ++i)
+	for (int i = 0; i < static_cast<int>(m_session->scan().plugin_count()); ++i)
 	{
-		if (m_scan.plugin_filename(i) == merge_filename)
+		if (m_session->scan().plugin_filename(i) == merge_filename)
 		{
-			m_scan.set_merge_plugin_from_loaded(i);
-			m_scan.rebuild_conflicts();
+			m_session->scan().set_merge_plugin_from_loaded(i);
+			m_session->scan().rebuild_conflicts();
 			rebuild_after_load();
 			log_message("Tagged existing plugin as merge: " + merge_filename);
 			return;
@@ -930,12 +506,12 @@ void plugin_workspace_view_t::load_existing_merged_patch()
 
 	try
 	{
-		m_scan.load_plugin(path);
-		const int loaded_idx = static_cast<int>(m_scan.plugin_count()) - 1;
-		m_scan.set_merge_plugin_from_loaded(loaded_idx);
-		m_scan.rebuild_conflicts();
+		m_session->scan().load_plugin(path);
+		const int loaded_idx = static_cast<int>(m_session->scan().plugin_count()) - 1;
+		m_session->scan().set_merge_plugin_from_loaded(loaded_idx);
+		m_session->scan().rebuild_conflicts();
 		rebuild_after_load();
-		save_plugin_paths();
+		m_session->save_session_state(QCoreApplication::applicationDirPath() + "/yEditor.ini");
 		log_message("Loaded existing merged patch: " + path);
 	}
 	catch (const std::exception & e)
@@ -946,37 +522,30 @@ void plugin_workspace_view_t::load_existing_merged_patch()
 
 void plugin_workspace_view_t::on_create_merged_patch()
 {
-	if (m_scan.plugin_count() < 2)
+	if (m_session->scan().plugin_count() < 2)
 	{
 		log_message("Need at least 2 plugins loaded to create a merged patch");
 		return;
 	}
 
-	if (!m_scan.has_merge())
-		m_scan.set_merge_plugin("Merged Patch.esp");
+	if (!m_session->scan().has_merge())
+		m_session->scan().set_merge_plugin("Merged Patch.esp");
 
 	create_merge_records();
-	m_scan.rebuild_conflicts();
+	m_session->scan().rebuild_conflicts();
 	rebuild_nav_preserving_state();
 
-	log_message("[info] merge record count: " + std::to_string(m_scan.merge_record_count()));
+	log_message("[info] merge record count: " + std::to_string(m_session->scan().merge_record_count()));
 	save_merged_patch();
 
-	auto current = m_nav_view->currentIndex();
-	if (!current.isValid())
-	{
-		update_status();
-		return;
-	}
-
-	const auto info = m_nav_model->node_at(current);
+	const auto info = m_nav_view->current_selection();
 	if (info.record_id.empty())
 	{
 		update_status();
 		return;
 	}
 
-	const auto * updated = m_scan.find(info.rec_type, info.record_id);
+	const auto * updated = m_session->scan().find(info.rec_type, info.record_id);
 	if (!updated)
 	{
 		update_status();
@@ -989,21 +558,21 @@ void plugin_workspace_view_t::on_create_merged_patch()
 
 int plugin_workspace_view_t::create_merge_records()
 {
-	auto pinned_records = m_scan.collect_pinned_records();
+	auto pinned_records = m_session->scan().collect_pinned_records();
 
 	merge_config_t config;
-	config.excluded_plugins = m_excluded_plugins;
-	config.patch_plugins = m_patch_plugins;
+	config.excluded_plugins = m_session->excluded_plugins();
+	config.patch_plugins = m_session->patch_plugins();
 	config.exclusion_pattern = m_settings.merge_exclusion_pattern();
 	config.fog_fix_enabled = m_settings.merge_fog_fix_enabled();
 	config.summon_fix_enabled = m_settings.merge_summon_fix_enabled();
 	config.cell_name_fix_enabled = m_settings.merge_cell_name_fix_enabled();
 
-	merge_compute_t merge(m_scan);
+	auto_merge_t merge(m_session->scan());
 	merge.set_config(config);
 	const auto counters = merge.execute();
 
-	m_scan.restore_pinned_records(pinned_records);
+	m_session->scan().restore_pinned_records(pinned_records);
 
 	for (const auto & entry : merge.log_entries())
 		log_message(entry.message);
@@ -1032,67 +601,15 @@ void plugin_workspace_view_t::display_record_in_view(const conflict_entry_t & en
 			filtered.versions.insert(filtered.versions.begin(), *it);
 		}
 
-		m_view_model->set_record(m_scan, filtered);
+		m_record_view->display_record(m_session->scan(), filtered);
 	}
 	else
 	{
-		m_view_model->set_record(m_scan, entry);
+		m_record_view->display_record(m_session->scan(), entry);
 	}
-
-	const auto merge_col = m_view_model->merge_column();
-	if (merge_col >= 0)
-	{
-		const bool should_show = m_scan.has_merge();
-		m_view_view->header()->setSectionHidden(merge_col, !should_show);
-	}
-
-	for (int i = 0; i < m_view_model->rowCount({}); ++i)
-	{
-		const auto & idx = m_view_model->index(i, 0, {});
-		if (m_view_model->rowCount(idx) == 0)
-			continue;
-
-		const auto & child = m_view_model->index(0, 0, idx);
-		const auto & child_name = child.data(Qt::DisplayRole).toString();
-		if (!child_name.isEmpty() && !child_name[0].isDigit())
-			m_view_view->expand(idx);
-	}
-
-	for (int i = 0; i < m_view_model->columnCount({}); ++i)
-		m_view_view->resizeColumnToContents(i);
-
-	const auto total_width = m_view_view->viewport()->width();
-	const auto col_count = m_view_model->columnCount({});
-	if (col_count <= 1 || total_width <= 0)
-		return;
-
-	const auto label_width = std::min(m_view_view->columnWidth(0), total_width / 3);
-	const auto remaining = total_width - label_width;
-	const auto per_col = remaining / (col_count - 1);
-
-	m_view_view->setColumnWidth(0, label_width);
-	for (int i = 1; i < col_count; ++i)
-		m_view_view->setColumnWidth(i, per_col);
 }
 
-void plugin_workspace_view_t::resize_view_columns()
-{
-	for (int i = 0; i < m_view_model->columnCount({}); ++i)
-		m_view_view->resizeColumnToContents(i);
 
-	const auto total_width = m_view_view->viewport()->width();
-	const auto col_count = m_view_model->columnCount({});
-	if (col_count <= 1 || total_width <= 0)
-		return;
-
-	const auto label_width = std::min(m_view_view->columnWidth(0), total_width / 3);
-	const auto remaining = total_width - label_width;
-	const auto per_col = remaining / (col_count - 1);
-
-	m_view_view->setColumnWidth(0, label_width);
-	for (int i = 1; i < col_count; ++i)
-		m_view_view->setColumnWidth(i, per_col);
-}
 
 bool plugin_workspace_view_t::handle_subrecord_drop(QDropEvent * drop_event)
 {
@@ -1102,43 +619,34 @@ bool plugin_workspace_view_t::handle_subrecord_drop(QDropEvent * drop_event)
 
 void plugin_workspace_view_t::on_remove_itm()
 {
-	auto current = m_nav_view->currentIndex();
-	if (!current.isValid())
-		return;
-
-	auto info = m_nav_model->node_at(current);
+	const auto info = m_nav_view->current_selection();
 	if (info.plugin_idx < 0)
 		return;
 
-	if (!m_scan.has_merge())
+	if (!m_session->scan().has_merge())
 	{
 		log_message("No merge plugin — create one first");
 		return;
 	}
 
-	const auto itms = m_scan.itm_entries(info.plugin_idx);
-	const auto count_before = m_scan.merge_record_count();
+	const auto itms = m_session->scan().itm_entries(info.plugin_idx);
+	const auto count_before = m_session->scan().merge_record_count();
 
 	for (const auto * entry : itms)
-		m_scan.remove_from_merge(entry->rec_type, entry->record_id);
+		m_session->scan().remove_from_merge(entry->rec_type, entry->record_id);
 
-	const auto removed = count_before - m_scan.merge_record_count();
+	const auto removed = count_before - m_session->scan().merge_record_count();
 	if (removed == 0)
 		return;
 
 	log_message("Removed " + std::to_string(removed) + " ITM records from merge");
-	m_scan.rebuild_conflicts();
+	m_session->scan().rebuild_conflicts();
 	rebuild_nav_preserving_state();
 	update_status();
 }
 
-void plugin_workspace_view_t::on_nav_context_menu(const QPoint & pos)
+void plugin_workspace_view_t::on_nav_context_menu(const QPoint & global_pos, const nav_tree_model_t::node_info_t & info)
 {
-	auto index = m_nav_view->indexAt(pos);
-	if (!index.isValid())
-		return;
-
-	auto info = m_nav_model->node_at(index);
 	if (info.plugin_idx < 0)
 		return;
 
@@ -1146,7 +654,7 @@ void plugin_workspace_view_t::on_nav_context_menu(const QPoint & pos)
 
 	bool is_record_node = !info.record_id.empty();
 	bool is_file_node = info.rec_type.empty() && info.record_id.empty();
-	bool is_merge = m_scan.is_merge_plugin(info.plugin_idx);
+	bool is_merge = m_session->scan().is_merge_plugin(info.plugin_idx);
 
 	if (is_record_node && is_merge)
 	{
@@ -1154,8 +662,8 @@ void plugin_workspace_view_t::on_nav_context_menu(const QPoint & pos)
 		    "Remove",
 		    [this, info]()
 		{
-			m_scan.remove_from_merge(info.rec_type, info.record_id);
-			m_scan.rebuild_conflicts();
+			m_session->scan().remove_from_merge(info.rec_type, info.record_id);
+			m_session->scan().rebuild_conflicts();
 			rebuild_nav_preserving_state();
 			save_merged_patch();
 			log_message("Removed " + info.rec_type + ":" + info.record_id + " from merge");
@@ -1163,22 +671,22 @@ void plugin_workspace_view_t::on_nav_context_menu(const QPoint & pos)
 		});
 	}
 
-	if (is_record_node && !is_merge && m_scan.has_merge())
+	if (is_record_node && !is_merge && m_session->scan().has_merge())
 	{
 		menu.addAction(
 		    "Copy to Merge",
 		    [this, info]()
 		{
-			for (const auto & v : m_scan.find(info.rec_type, info.record_id)->versions)
+			for (const auto & v : m_session->scan().find(info.rec_type, info.record_id)->versions)
 			{
 				if (v.plugin_idx != info.plugin_idx)
 					continue;
 
-				m_scan.copy_record_to_merge(info.plugin_idx, v.record_index);
+				m_session->scan().copy_record_to_merge(info.plugin_idx, v.record_index);
 				break;
 			}
 
-			m_scan.rebuild_conflicts();
+			m_session->scan().rebuild_conflicts();
 			rebuild_nav_preserving_state();
 			save_merged_patch();
 			log_message("Copied " + info.rec_type + ":" + info.record_id + " to merge");
@@ -1188,9 +696,9 @@ void plugin_workspace_view_t::on_nav_context_menu(const QPoint & pos)
 
 	if (is_file_node && !is_merge)
 	{
-		const auto & filename = m_scan.plugin_filename(info.plugin_idx);
-		const bool excluded = m_excluded_plugins.count(filename) > 0;
-		const bool is_patch = m_patch_plugins.count(filename) > 0;
+		const auto & filename = m_session->scan().plugin_filename(info.plugin_idx);
+		const bool excluded = m_session->excluded_plugins().count(filename) > 0;
+		const bool is_patch = m_session->patch_plugins().count(filename) > 0;
 
 		if (excluded)
 		{
@@ -1198,8 +706,10 @@ void plugin_workspace_view_t::on_nav_context_menu(const QPoint & pos)
 			    "Include in Merge",
 			    [this, filename]()
 			{
-				m_excluded_plugins.erase(filename);
-				save_excluded_plugins();
+				auto excluded_copy = m_session->excluded_plugins();
+				excluded_copy.erase(filename);
+				m_session->set_excluded_plugins(excluded_copy);
+				m_session->save_session_state(QCoreApplication::applicationDirPath() + "/yEditor.ini");
 				rebuild_nav_preserving_state();
 			});
 		}
@@ -1209,8 +719,10 @@ void plugin_workspace_view_t::on_nav_context_menu(const QPoint & pos)
 			    "Exclude from Merge",
 			    [this, filename]()
 			{
-				m_excluded_plugins.insert(filename);
-				save_excluded_plugins();
+				auto excluded_copy = m_session->excluded_plugins();
+				excluded_copy.insert(filename);
+				m_session->set_excluded_plugins(excluded_copy);
+				m_session->save_session_state(QCoreApplication::applicationDirPath() + "/yEditor.ini");
 				rebuild_nav_preserving_state();
 			});
 		}
@@ -1221,8 +733,10 @@ void plugin_workspace_view_t::on_nav_context_menu(const QPoint & pos)
 			    "Unmark as Patch",
 			    [this, filename]()
 			{
-				m_patch_plugins.erase(filename);
-				save_patch_plugins();
+				auto patch_copy = m_session->patch_plugins();
+				patch_copy.erase(filename);
+				m_session->set_patch_plugins(patch_copy);
+				m_session->save_session_state(QCoreApplication::applicationDirPath() + "/yEditor.ini");
 				rebuild_nav_preserving_state();
 			});
 		}
@@ -1232,8 +746,10 @@ void plugin_workspace_view_t::on_nav_context_menu(const QPoint & pos)
 			    "Mark as Patch",
 			    [this, filename]()
 			{
-				m_patch_plugins.insert(filename);
-				save_patch_plugins();
+				auto patch_copy = m_session->patch_plugins();
+				patch_copy.insert(filename);
+				m_session->set_patch_plugins(patch_copy);
+				m_session->save_session_state(QCoreApplication::applicationDirPath() + "/yEditor.ini");
 				rebuild_nav_preserving_state();
 			});
 		}
@@ -1242,12 +758,12 @@ void plugin_workspace_view_t::on_nav_context_menu(const QPoint & pos)
 	if (menu.actions().isEmpty())
 		return;
 
-	menu.exec(m_nav_view->viewport()->mapToGlobal(pos));
+	menu.exec(global_pos);
 }
 
 void plugin_workspace_view_t::on_view_copy()
 {
-	auto indexes = m_view_view->selectionModel()->selectedIndexes();
+	auto indexes = m_record_view->tree()->selectionModel()->selectedIndexes();
 	if (indexes.isEmpty())
 		return;
 
@@ -1272,13 +788,13 @@ void plugin_workspace_view_t::on_view_selection_changed(const QModelIndex & curr
 	}
 
 	const int col = current.column() - 1;
-	if (col < 0 || col >= static_cast<int>(m_view_model->column_plugin_indices().size()))
+	if (col < 0 || col >= static_cast<int>(m_record_view->model()->column_plugin_indices().size()))
 	{
 		m_preview->clear();
 		return;
 	}
 
-	const auto & visible = m_view_model->rows();
+	const auto & visible = m_record_view->model()->rows();
 	const int row_idx = current.parent().isValid() ? current.parent().row() : current.row();
 	if (row_idx < 0 || row_idx >= static_cast<int>(visible.size()))
 	{
@@ -1287,18 +803,18 @@ void plugin_workspace_view_t::on_view_selection_changed(const QModelIndex & curr
 	}
 
 	const auto & row = visible[row_idx];
-	const auto & rec_type = m_view_model->record_type();
-	const auto & record_id = m_view_model->record_id();
-	const int plugin_idx = m_view_model->column_plugin_indices()[col];
+	const auto & rec_type = m_record_view->model()->record_type();
+	const auto & record_id = m_record_view->model()->record_id();
+	const int plugin_idx = m_record_view->model()->column_plugin_indices()[col];
 
-	const auto * entry = m_scan.find(rec_type, record_id);
+	const auto * entry = m_session->scan().find(rec_type, record_id);
 	if (!entry)
 	{
 		m_preview->clear();
 		return;
 	}
 
-	const auto & col_indices = m_view_model->col_type_indices();
+	const auto & col_indices = m_record_view->model()->col_type_indices();
 	int view_occurrence = 0;
 	for (int r = 0; r < row_idx; ++r)
 	{
@@ -1322,14 +838,14 @@ void plugin_workspace_view_t::on_view_selection_changed(const QModelIndex & curr
 			return {};
 
 		const int binary_idx = static_cast<int>(it_type->second[view_occurrence]);
-		const int target_plugin = m_view_model->column_plugin_indices()[target_col];
+		const int target_plugin = m_record_view->model()->column_plugin_indices()[target_col];
 
 		for (const auto & ver : entry->versions)
 		{
 			if (ver.plugin_idx != target_plugin)
 				continue;
 
-			const auto content = m_scan.read_record_content(target_plugin, ver.record_index);
+			const auto content = m_session->scan().read_record_content(target_plugin, ver.record_index);
 			const auto subs = sub_record_merge_t::parse_sub_records(content);
 			if (binary_idx >= static_cast<int>(subs.size()))
 				return {};
@@ -1337,7 +853,7 @@ void plugin_workspace_view_t::on_view_selection_changed(const QModelIndex & curr
 			return format_value_full(
 			    subs[binary_idx].data.data(),
 			    subs[binary_idx].data.size(),
-			    m_view_model->display_codepage());
+			    m_record_view->model()->display_codepage());
 		}
 
 		return {};
@@ -1352,26 +868,25 @@ void plugin_workspace_view_t::on_view_selection_changed(const QModelIndex & curr
 		m_preview->show_comparison(left_text, right_text);
 }
 
-void plugin_workspace_view_t::on_view_context_menu(const QPoint & pos)
+void plugin_workspace_view_t::on_view_context_menu(const QPoint & global_pos, const QModelIndex & index)
 {
-	if (!m_scan.has_merge())
+	if (!m_session->scan().has_merge())
 		return;
 
-	auto index = m_view_view->indexAt(pos);
 	if (!index.isValid())
 		return;
 
 	const int col = index.column() - 1;
-	if (col < 0 || col >= static_cast<int>(m_view_model->column_plugin_indices().size()))
+	if (col < 0 || col >= static_cast<int>(m_record_view->model()->column_plugin_indices().size()))
 		return;
 
-	const int plugin_idx = m_view_model->column_plugin_indices()[col];
-	const bool is_on_merge = m_scan.is_merge_plugin(plugin_idx);
-	const auto & rec_type = m_view_model->record_type();
-	const auto & record_id = m_view_model->record_id();
+	const int plugin_idx = m_record_view->model()->column_plugin_indices()[col];
+	const bool is_on_merge = m_session->scan().is_merge_plugin(plugin_idx);
+	const auto & rec_type = m_record_view->model()->record_type();
+	const auto & record_id = m_record_view->model()->record_id();
 
 	const bool is_field_row = index.parent().isValid();
-	const auto & visible = m_view_model->rows();
+	const auto & visible = m_record_view->model()->rows();
 
 	int parent_row_idx = -1;
 	int child_field_idx = -1;
@@ -1397,7 +912,7 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & pos)
 			++view_occurrence;
 	}
 
-	const auto & col_indices = m_view_model->col_type_indices();
+	const auto & col_indices = m_record_view->model()->col_type_indices();
 	int binary_idx = -1;
 	if (col >= 0 && col < static_cast<int>(col_indices.size()))
 	{
@@ -1497,15 +1012,15 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & pos)
 		int merge_binary_idx = binary_idx;
 		if (merge_binary_idx < 0)
 		{
-			const auto * entry = m_scan.find(rec_type, record_id);
+			const auto * entry = m_session->scan().find(rec_type, record_id);
 			if (entry)
 			{
 				std::string merge_content;
 				for (const auto & ver : entry->versions)
 				{
-					if (m_scan.is_merge_plugin(ver.plugin_idx))
+					if (m_session->scan().is_merge_plugin(ver.plugin_idx))
 					{
-						merge_content = m_scan.read_record_content(ver.plugin_idx, ver.record_index);
+						merge_content = m_session->scan().read_record_content(ver.plugin_idx, ver.record_index);
 						break;
 					}
 				}
@@ -1537,16 +1052,16 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & pos)
 			    "Remove Sub-Record",
 			    [this, rec_type, record_id, merge_binary_idx]()
 			{
-				const auto * entry = m_scan.find(rec_type, record_id);
+				const auto * entry = m_session->scan().find(rec_type, record_id);
 				if (!entry)
 					return;
 
 				std::string merge_content;
 				for (const auto & ver : entry->versions)
 				{
-					if (m_scan.is_merge_plugin(ver.plugin_idx))
+					if (m_session->scan().is_merge_plugin(ver.plugin_idx))
 					{
-						merge_content = m_scan.read_record_content(ver.plugin_idx, ver.record_index);
+						merge_content = m_session->scan().read_record_content(ver.plugin_idx, ver.record_index);
 						break;
 					}
 				}
@@ -1561,7 +1076,7 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & pos)
 				merge_subs.erase(merge_subs.begin() + merge_binary_idx);
 
 				const auto patched = sub_record_merge_t::reconstruct_record(merge_content, merge_subs);
-				m_scan.copy_record_to_merge_raw(rec_type, record_id, patched);
+				m_session->scan().copy_record_to_merge_raw(rec_type, record_id, patched);
 				log_message("[info] removed sub-record from " + rec_type + ":" + record_id);
 
 				refresh_after_merge(rec_type, record_id);
@@ -1578,16 +1093,16 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & pos)
 		    "Remove Group",
 		    [this, rec_type, record_id, group_type, view_occurrence]()
 		{
-			const auto * entry = m_scan.find(rec_type, record_id);
+			const auto * entry = m_session->scan().find(rec_type, record_id);
 			if (!entry)
 				return;
 
 			std::string merge_content;
 			for (const auto & ver : entry->versions)
 			{
-				if (m_scan.is_merge_plugin(ver.plugin_idx))
+				if (m_session->scan().is_merge_plugin(ver.plugin_idx))
 				{
-					merge_content = m_scan.read_record_content(ver.plugin_idx, ver.record_index);
+					merge_content = m_session->scan().read_record_content(ver.plugin_idx, ver.record_index);
 					break;
 				}
 			}
@@ -1629,7 +1144,7 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & pos)
 			merge_subs.erase(merge_subs.begin() + group_start, merge_subs.begin() + group_end);
 
 			const auto patched = sub_record_merge_t::reconstruct_record(merge_content, merge_subs);
-			m_scan.copy_record_to_merge_raw(rec_type, record_id, patched);
+			m_session->scan().copy_record_to_merge_raw(rec_type, record_id, patched);
 			log_message("[info] removed group from " + rec_type + ":" + record_id);
 
 			refresh_after_merge(rec_type, record_id);
@@ -1641,7 +1156,7 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & pos)
 	if (menu.actions().isEmpty())
 		return;
 
-	menu.exec(m_view_view->viewport()->mapToGlobal(pos));
+	menu.exec(global_pos);
 }
 
 void plugin_workspace_view_t::copy_sub_record_to_merge(
@@ -1663,7 +1178,7 @@ void plugin_workspace_view_t::copy_sub_record_to_merge(
 	if (!result.success)
 		return;
 
-	m_scan.copy_record_to_merge_raw(rec_type, record_id, result.content);
+	m_session->scan().copy_record_to_merge_raw(rec_type, record_id, result.content);
 	log_message("[info] patched " + sub_type + " in " + rec_type + ":" + record_id);
 
 	refresh_after_merge(rec_type, record_id);
@@ -1684,7 +1199,7 @@ void plugin_workspace_view_t::copy_group_to_merge(
 	if (merge_content.empty())
 		return;
 
-	const auto & visible = m_view_model->rows();
+	const auto & visible = m_record_view->model()->rows();
 	if (group_row_idx < 0 || group_row_idx >= static_cast<int>(visible.size()))
 		return;
 
@@ -1769,7 +1284,7 @@ void plugin_workspace_view_t::copy_group_to_merge(
 	}
 
 	const auto patched = sub_record_merge_t::reconstruct_record(merge_content, merge_subs);
-	m_scan.copy_record_to_merge_raw(rec_type, record_id, patched);
+	m_session->scan().copy_record_to_merge_raw(rec_type, record_id, patched);
 	log_message("[info] patched group in " + rec_type + ":" + record_id);
 
 	refresh_after_merge(rec_type, record_id);
@@ -1798,7 +1313,7 @@ void plugin_workspace_view_t::copy_field_to_merge(
 	if (!result.success)
 		return;
 
-	m_scan.copy_record_to_merge_raw(rec_type, record_id, result.content);
+	m_session->scan().copy_record_to_merge_raw(rec_type, record_id, result.content);
 	log_message("[info] patched field " + result.description + " in " + sub_type + " of " + rec_type + ":" + record_id);
 
 	refresh_after_merge(rec_type, record_id);
@@ -1810,14 +1325,14 @@ std::string plugin_workspace_view_t::read_source_content(
     const std::string & rec_type,
     const std::string & record_id)
 {
-	const auto * entry = m_scan.find(rec_type, record_id);
+	const auto * entry = m_session->scan().find(rec_type, record_id);
 	if (!entry)
 		return {};
 
 	for (const auto & ver : entry->versions)
 	{
 		if (ver.plugin_idx == plugin_idx)
-			return m_scan.read_record_content(plugin_idx, ver.record_index);
+			return m_session->scan().read_record_content(plugin_idx, ver.record_index);
 	}
 
 	return {};
@@ -1829,17 +1344,17 @@ std::string plugin_workspace_view_t::ensure_merge_record(
     const std::string & record_id,
     const std::string & source_content)
 {
-	const auto * merge_content_ptr = m_scan.find_merge_content(rec_type, record_id);
+	const auto * merge_content_ptr = m_session->scan().find_merge_content(rec_type, record_id);
 	if (merge_content_ptr)
 		return *merge_content_ptr;
 
-	m_scan.copy_record_to_merge_raw(rec_type, record_id, source_content);
+	m_session->scan().copy_record_to_merge_raw(rec_type, record_id, source_content);
 	return source_content;
 }
 
 int plugin_workspace_view_t::find_plugin_column(int plugin_idx) const
 {
-	const auto & indices = m_view_model->column_plugin_indices();
+	const auto & indices = m_record_view->model()->column_plugin_indices();
 	for (int c = 0; c < static_cast<int>(indices.size()); ++c)
 	{
 		if (indices[c] == plugin_idx)
@@ -1851,15 +1366,15 @@ int plugin_workspace_view_t::find_plugin_column(int plugin_idx) const
 
 bool plugin_workspace_view_t::eventFilter(QObject * obj, QEvent * event)
 {
-	const bool is_view = (obj == m_view_view->viewport());
-	const bool is_nav = (obj == m_nav_view->viewport());
+	const bool is_view = (obj == m_record_view->tree()->viewport());
+	const bool is_nav = (obj == m_nav_view->tree_widget()->viewport());
 
 	if ((is_view || is_nav) && event->type() == QEvent::DragEnter)
 	{
 		auto * drag = static_cast<QDragEnterEvent *>(event);
 		const bool has_data = drag->mimeData()->hasFormat("application/x-yampt-record") ||
 		                      drag->mimeData()->hasFormat("application/x-yampt-subrecord");
-		if (has_data && m_scan.has_merge())
+		if (has_data && m_session->scan().has_merge())
 		{
 			drag->acceptProposedAction();
 			return true;
@@ -1881,7 +1396,7 @@ bool plugin_workspace_view_t::eventFilter(QObject * obj, QEvent * event)
 	if (!has_drop_data)
 		return QWidget::eventFilter(obj, event);
 
-	if (!m_scan.has_merge())
+	if (!m_session->scan().has_merge())
 	{
 		log_message("[error] create a merged patch first");
 		drop_event->ignore();
@@ -1905,14 +1420,14 @@ bool plugin_workspace_view_t::handle_drag_move_view(QDragMoveEvent * drag)
 
 bool plugin_workspace_view_t::handle_drag_move_nav(QDragMoveEvent * drag)
 {
-	if (!drag->mimeData()->hasFormat("application/x-yampt-record") || !m_scan.has_merge())
+	if (!drag->mimeData()->hasFormat("application/x-yampt-record") || !m_session->scan().has_merge())
 	{
 		drag->ignore();
 		return true;
 	}
 
-	const auto & target = m_nav_view->indexAt(drag->position().toPoint());
-	if (target.isValid() && m_scan.is_merge_plugin(m_nav_model->node_at(target).plugin_idx))
+	const auto & target = m_nav_view->tree_widget()->indexAt(drag->position().toPoint());
+	if (target.isValid() && m_session->scan().is_merge_plugin(m_nav_view->node_at(target).plugin_idx))
 	{
 		drag->acceptProposedAction();
 		return true;
@@ -1924,14 +1439,14 @@ bool plugin_workspace_view_t::handle_drag_move_nav(QDragMoveEvent * drag)
 
 bool plugin_workspace_view_t::handle_drop_on_view(QDropEvent * drop_event)
 {
-	const int column = m_view_view->columnAt(drop_event->position().toPoint().x());
+	const int column = m_record_view->tree()->columnAt(drop_event->position().toPoint().x());
 	const int col_idx = column - 1;
 	bool dropped_on_merge = false;
 
-	if (col_idx >= 0 && col_idx < static_cast<int>(m_view_model->column_plugin_indices().size()))
+	if (col_idx >= 0 && col_idx < static_cast<int>(m_record_view->model()->column_plugin_indices().size()))
 	{
-		const int plugin_idx = m_view_model->column_plugin_indices()[col_idx];
-		dropped_on_merge = m_scan.is_merge_plugin(plugin_idx);
+		const int plugin_idx = m_record_view->model()->column_plugin_indices()[col_idx];
+		dropped_on_merge = m_session->scan().is_merge_plugin(plugin_idx);
 	}
 
 	const auto & payload = QString::fromUtf8(drop_event->mimeData()->data("application/x-yampt-record"));
@@ -1943,13 +1458,13 @@ bool plugin_workspace_view_t::handle_drop_on_view(QDropEvent * drop_event)
 	const auto & rec_type = parts[1].toStdString();
 	const auto & record_id = parts[2].toStdString();
 
-	if (m_scan.is_merge_plugin(source_plugin))
+	if (m_session->scan().is_merge_plugin(source_plugin))
 	{
 		drop_event->ignore();
 		return true;
 	}
 
-	const auto * entry = m_scan.find(rec_type, record_id);
+	const auto * entry = m_session->scan().find(rec_type, record_id);
 	if (!entry)
 		return true;
 
@@ -1958,15 +1473,15 @@ bool plugin_workspace_view_t::handle_drop_on_view(QDropEvent * drop_event)
 		if (version.plugin_idx != source_plugin)
 			continue;
 
-		const auto content = m_scan.read_record_content(source_plugin, version.record_index);
+		const auto content = m_session->scan().read_record_content(source_plugin, version.record_index);
 		if (dropped_on_merge)
 		{
-			m_scan.pin_record_to_merge(rec_type, record_id, content);
+			m_session->scan().pin_record_to_merge(rec_type, record_id, content);
 			log_message("Pinned " + rec_type + ":" + record_id + " to merge");
 		}
 		else
 		{
-			m_scan.copy_record_to_merge(source_plugin, version.record_index);
+			m_session->scan().copy_record_to_merge(source_plugin, version.record_index);
 			log_message("Copied " + rec_type + ":" + record_id + " to merge");
 		}
 		break;
@@ -1979,12 +1494,12 @@ bool plugin_workspace_view_t::handle_drop_on_view(QDropEvent * drop_event)
 
 bool plugin_workspace_view_t::handle_drop_on_nav(QDropEvent * drop_event)
 {
-	const auto & target_index = m_nav_view->indexAt(drop_event->position().toPoint());
+	const auto & target_index = m_nav_view->tree_widget()->indexAt(drop_event->position().toPoint());
 	if (!target_index.isValid())
 		return false;
 
-	const auto & target_info = m_nav_model->node_at(target_index);
-	if (!m_scan.is_merge_plugin(target_info.plugin_idx))
+	const auto & target_info = m_nav_view->node_at(target_index);
+	if (!m_session->scan().is_merge_plugin(target_info.plugin_idx))
 		return false;
 
 	const auto & payload = QString::fromUtf8(drop_event->mimeData()->data("application/x-yampt-record"));
@@ -1996,13 +1511,13 @@ bool plugin_workspace_view_t::handle_drop_on_nav(QDropEvent * drop_event)
 	const auto & rec_type = parts[1].toStdString();
 	const auto & record_id = parts[2].toStdString();
 
-	if (m_scan.is_merge_plugin(source_plugin))
+	if (m_session->scan().is_merge_plugin(source_plugin))
 	{
 		drop_event->ignore();
 		return true;
 	}
 
-	const auto * entry = m_scan.find(rec_type, record_id);
+	const auto * entry = m_session->scan().find(rec_type, record_id);
 	if (!entry)
 		return true;
 
@@ -2011,7 +1526,7 @@ bool plugin_workspace_view_t::handle_drop_on_nav(QDropEvent * drop_event)
 		if (version.plugin_idx != source_plugin)
 			continue;
 
-		m_scan.copy_record_to_merge(source_plugin, version.record_index);
+		m_session->scan().copy_record_to_merge(source_plugin, version.record_index);
 		log_message("Copied " + rec_type + ":" + record_id + " to merge");
 		break;
 	}
@@ -2023,10 +1538,10 @@ bool plugin_workspace_view_t::handle_drop_on_nav(QDropEvent * drop_event)
 
 void plugin_workspace_view_t::refresh_after_merge(const std::string & rec_type, const std::string & record_id)
 {
-	m_scan.rebuild_conflicts();
+	m_session->scan().rebuild_conflicts();
 	rebuild_nav_preserving_state();
 
-	const auto * updated = m_scan.find(rec_type, record_id);
+	const auto * updated = m_session->scan().find(rec_type, record_id);
 	if (!updated)
 	{
 		update_status();
@@ -2039,11 +1554,11 @@ void plugin_workspace_view_t::refresh_after_merge(const std::string & rec_type, 
 
 void plugin_workspace_view_t::update_status()
 {
-	size_t plugin_count = m_scan.plugin_count();
-	size_t record_count = m_scan.entries().size();
+	size_t plugin_count = m_session->scan().plugin_count();
+	size_t record_count = m_session->scan().entries().size();
 	size_t conflict_count = 0;
 
-	for (const auto & e : m_scan.entries())
+	for (const auto & e : m_session->scan().entries())
 	{
 		if (e.conflict_all == conflict_all_t::conflict)
 			++conflict_count;
@@ -2052,10 +1567,9 @@ void plugin_workspace_view_t::update_status()
 	m_lbl_count->setText(
 	    QString("%1 plugins, %2 records, %3 conflicts").arg(plugin_count).arg(record_count).arg(conflict_count));
 
-	auto current = m_nav_view->currentIndex();
-	if (current.isValid())
+	const auto info = m_nav_view->current_selection();
+	if (info.plugin_idx >= 0)
 	{
-		auto info = m_nav_model->node_at(current);
 		if (!info.record_id.empty())
 		{
 			m_status_label->setText(QString::fromStdString(info.rec_type + " : " + info.record_id));
@@ -2064,13 +1578,9 @@ void plugin_workspace_view_t::update_status()
 		{
 			m_status_label->setText(QString::fromStdString(info.rec_type));
 		}
-		else if (info.plugin_idx >= 0)
-		{
-			m_status_label->setText(QString::fromStdString(m_scan.plugin_filename(info.plugin_idx)));
-		}
 		else
 		{
-			m_status_label->clear();
+			m_status_label->setText(QString::fromStdString(m_session->scan().plugin_filename(info.plugin_idx)));
 		}
 	}
 	else
@@ -2084,123 +1594,20 @@ void plugin_workspace_view_t::log_message(const std::string & msg)
 	m_messages->log(msg);
 }
 
-void plugin_workspace_view_t::save_plugin_paths()
-{
-	QSettings settings(QCoreApplication::applicationDirPath() + "/yEditor.ini", QSettings::IniFormat);
-	settings.setValue("session/load_source", static_cast<int>(m_load_source));
-	settings.setValue("session/load_base_path", QString::fromStdString(m_load_base_path));
-}
-
-void plugin_workspace_view_t::save_excluded_plugins()
-{
-	QSettings settings(QCoreApplication::applicationDirPath() + "/yEditor.ini", QSettings::IniFormat);
-	QStringList list;
-	for (const auto & name : m_excluded_plugins)
-		list.append(QString::fromStdString(name));
-
-	settings.setValue("merge/excluded_plugins", list);
-}
-
-void plugin_workspace_view_t::load_excluded_plugins()
-{
-	QSettings settings(QCoreApplication::applicationDirPath() + "/yEditor.ini", QSettings::IniFormat);
-	const auto list = settings.value("merge/excluded_plugins").toStringList();
-	m_excluded_plugins.clear();
-	for (const auto & name : list)
-		m_excluded_plugins.insert(name.toStdString());
-}
-
-void plugin_workspace_view_t::save_patch_plugins()
-{
-	QSettings settings(QCoreApplication::applicationDirPath() + "/yEditor.ini", QSettings::IniFormat);
-	QStringList list;
-	for (const auto & name : m_patch_plugins)
-		list.append(QString::fromStdString(name));
-
-	settings.setValue("merge/patch_plugins", list);
-}
-
-void plugin_workspace_view_t::load_patch_plugins()
-{
-	QSettings settings(QCoreApplication::applicationDirPath() + "/yEditor.ini", QSettings::IniFormat);
-	const auto list = settings.value("merge/patch_plugins").toStringList();
-	m_patch_plugins.clear();
-	for (const auto & name : list)
-		m_patch_plugins.insert(name.toStdString());
-}
-
-void plugin_workspace_view_t::load_plugin_paths()
-{
-	QSettings settings(QCoreApplication::applicationDirPath() + "/yEditor.ini", QSettings::IniFormat);
-
-	m_load_source = static_cast<load_source_t>(settings.value("session/load_source", 0).toInt());
-	m_load_base_path = settings.value("session/load_base_path").toString().toStdString();
-
-	if (m_load_base_path.empty())
-		return;
-
-	switch (m_load_source)
-	{
-	case load_source_t::folder:
-	{
-		QDir data_dir(QString::fromStdString(m_load_base_path));
-		auto file_list = data_dir.entryInfoList({ "*.esm", "*.esp" }, QDir::Files, QDir::Time | QDir::Reversed);
-
-		std::vector<std::string> esms;
-		std::vector<std::string> esps;
-		for (const auto & fi : file_list)
-		{
-			if (fi.suffix().toLower() == "esm")
-				esms.push_back(fi.absoluteFilePath().toStdString());
-			else
-				esps.push_back(fi.absoluteFilePath().toStdString());
-		}
-
-		std::vector<std::string> paths;
-		paths.insert(paths.end(), esms.begin(), esms.end());
-		paths.insert(paths.end(), esps.begin(), esps.end());
-
-		if (paths.empty())
-			return;
-
-		load_plugins_direct(paths, m_load_base_path);
-		break;
-	}
-	case load_source_t::mo2_profile:
-	{
-		auto paths = parse_mo2_profile(QString::fromStdString(m_load_base_path));
-		if (paths.empty())
-			return;
-
-		load_plugins_direct(paths, m_load_base_path);
-		break;
-	}
-	case load_source_t::openmw_cfg:
-	{
-		const auto cfg_path = QString::fromStdString(m_load_base_path) + "/openmw.cfg";
-		auto paths = parse_openmw_cfg(cfg_path);
-		if (paths.empty())
-			return;
-
-		load_plugins_direct(paths, m_load_base_path);
-		break;
-	}
-	case load_source_t::none:
-		break;
-	}
-}
-
 void plugin_workspace_view_t::save_session_state()
 {
-	QSettings settings(QCoreApplication::applicationDirPath() + "/yEditor.ini", QSettings::IniFormat);
+	const auto ini_path = QCoreApplication::applicationDirPath() + "/yEditor.ini";
+
+	m_session->save_session_state(ini_path);
+
+	QSettings settings(ini_path, QSettings::IniFormat);
 
 	settings.setValue("session/main_splitter", m_main_splitter->saveState());
 	settings.setValue("session/content_splitter", m_content_splitter->saveState());
 
-	auto current = m_nav_view->currentIndex();
-	if (current.isValid() && m_nav_view->visualRect(current).isValid())
+	const auto info = m_nav_view->current_selection();
+	if (info.plugin_idx >= 0 && !info.record_id.empty())
 	{
-		const auto info = m_nav_model->node_at(current);
 		settings.setValue("session/nav_rec_type", QString::fromStdString(info.rec_type));
 		settings.setValue("session/nav_record_id", QString::fromStdString(info.record_id));
 	}
@@ -2229,26 +1636,26 @@ void plugin_workspace_view_t::restore_session_state()
 	if (rec_type.empty() && record_id.empty())
 		return;
 
-	auto target_index = m_nav_model->find_index(rec_type, record_id);
+	auto target_index = m_nav_view->find_index(rec_type, record_id);
 	if (!target_index.isValid())
 		return;
 
-	auto parent_index = m_nav_model->parent(target_index);
-	if (parent_index.isValid())
+	auto parent = m_nav_view->parent_index(target_index);
+	if (parent.isValid())
 	{
-		auto grandparent = m_nav_model->parent(parent_index);
+		auto grandparent = m_nav_view->parent_index(parent);
 		if (grandparent.isValid())
-			m_nav_view->expand(grandparent);
+			m_nav_view->tree_widget()->expand(grandparent);
 
-		m_nav_view->expand(parent_index);
+		m_nav_view->tree_widget()->expand(parent);
 	}
 
-	m_nav_view->setCurrentIndex(target_index);
-	m_nav_view->scrollTo(target_index);
+	m_nav_view->tree_widget()->setCurrentIndex(target_index);
+	m_nav_view->tree_widget()->scrollTo(target_index);
 }
 
 void plugin_workspace_view_t::refresh_views()
 {
-	m_nav_view->viewport()->update();
-	m_view_view->viewport()->update();
+	m_nav_view->tree_widget()->viewport()->update();
+	m_record_view->tree()->viewport()->update();
 }

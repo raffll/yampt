@@ -25,13 +25,14 @@
     <ClCompile Include="source\translator\translation_engine.cpp" />
     <ClCompile Include="source\utility\char_diff.cpp" />
     <ClCompile Include="source\utility\keyword_trie.cpp" />
-    <ClCompile Include="source\io\app_settings.cpp" />
     <ClCompile Include="source\io\profile_reader.cpp" />
     <ClCompile Include="source\scanner\sub_record_merge.cpp" />
     <ClCompile Include="source\scanner\merge_patch_ops.cpp" />
     <ClCompile Include="source\scanner\fog_fixer.cpp" />
     <ClCompile Include="source\scanner\summon_fixer.cpp" />
     <ClCompile Include="source\scanner\cell_name_fixer.cpp" />
+    <ClCompile Include="source\scanner\record_conflict.cpp" />
+    <ClCompile Include="source\scanner\auto_merge.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\utility\tools.hpp" />
@@ -60,7 +61,7 @@
     <ClInclude Include="source\converter\script_parser.hpp" />
     <ClInclude Include="source\converter\scdt_patcher.hpp" />
     <ClInclude Include="source\translator\translation_engine.hpp" />
-    <ClInclude Include="source\scanner\conflict_compute.hpp" />
+    <ClInclude Include="source\scanner\record_conflict.hpp" />
     <ClInclude Include="source\scanner\dial_info_align.hpp" />
     <ClInclude Include="source\scanner\conflict_enums.hpp" />
     <ClInclude Include="source\scanner\sub_record_merge.hpp" />
@@ -72,12 +73,12 @@
     <ClInclude Include="source\decoder\sub_record_iter.hpp" />
     <ClInclude Include="source\decoder\sub_record_schema.hpp" />
     <ClInclude Include="source\decoder\view_tree_format.hpp" />
-    <ClInclude Include="source\io\app_settings.hpp" />
     <ClInclude Include="source\io\profile_reader.hpp" />
     <ClInclude Include="source\utility\theme_enums.hpp" />
     <ClInclude Include="source\utility\color_palette.hpp" />
     <ClInclude Include="source\scanner\fog_fixer.hpp" />
     <ClInclude Include="source\scanner\summon_fixer.hpp" />
     <ClInclude Include="source\scanner\cell_name_fixer.hpp" />
+    <ClInclude Include="source\scanner\auto_merge.hpp" />
   </ItemGroup>
 </Project>

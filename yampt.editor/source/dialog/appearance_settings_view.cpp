@@ -1,6 +1,6 @@
 #include "dialog/appearance_settings_view.hpp"
 #include <utility/theme_enums.hpp>
-#include <app_settings.hpp>
+#include <settings_store.hpp>
 #include <theme_system.hpp>
 #include <QComboBox>
 #include <QLabel>
@@ -34,7 +34,7 @@ appearance_settings_view_t::appearance_settings_view_t(QWidget * parent)
 	layout->addStretch();
 }
 
-void appearance_settings_view_t::load(const app_settings_t & settings)
+void appearance_settings_view_t::load(const settings_store_t & settings)
 {
 	m_initial_theme = settings.theme();
 	m_theme_combo->setCurrentIndex(static_cast<int>(m_initial_theme));
@@ -44,7 +44,7 @@ void appearance_settings_view_t::load(const app_settings_t & settings)
 	m_codepage_combo->setCurrentIndex(codepage_idx >= 0 ? codepage_idx : 0);
 }
 
-void appearance_settings_view_t::save(app_settings_t & settings) const
+void appearance_settings_view_t::save(settings_store_t & settings) const
 {
 	const auto theme = static_cast<theme_t>(m_theme_combo->currentIndex());
 	settings.set_theme(theme);

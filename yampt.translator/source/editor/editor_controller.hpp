@@ -10,6 +10,8 @@
 
 class dict_document_t;
 class document_t;
+class record_table_model_t;
+class yaml_document_t;
 
 struct editor_load_result_t
 {
@@ -32,6 +34,12 @@ struct commit_result_t
 	bool success = false;
 };
 
+struct dict_commit_result_t
+{
+	commit_result_t base_result;
+	std::vector<int> propagated_rows;
+};
+
 class editor_controller_t
 {
 public:
@@ -50,6 +58,20 @@ public:
 	void copy_original(dict_document_t & doc, const table_row_t & row);
 	void clear_and_untranslate(dict_document_t & doc, const table_row_t & row);
 	int propagate(dict_document_t & doc, const std::string & old_text, const std::string & new_text);
+
+	dict_commit_result_t commit_dict_full(
+	    dict_document_t & doc,
+	    const table_row_t & row,
+	    const std::string & new_text);
+
+	void commit_yaml(
+	    document_t & doc,
+	    const table_row_t & row,
+	    const std::string & new_text);
+
+	void sync_propagated_rows(
+	    record_table_model_t & model,
+	    dict_document_t & doc);
 
 private:
 	edit_history_t & m_history;

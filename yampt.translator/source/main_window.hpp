@@ -1,13 +1,15 @@
 #pragma once
 
-#include "app_settings.hpp"
+#include "settings_store.hpp"
 #include "dialog/dict_selection_dialog.hpp"
 #include "editor/byte_limit_validator.hpp"
 #include "editor/edit_history.hpp"
 #include "editor/editor_controller.hpp"
 #include "editor/find_replace.hpp"
+#include "editor/workspace_watcher.hpp"
 #include "editor/glossary.hpp"
 #include "editor/grammar_checker.hpp"
+#include "editor/highlight_coordinator.hpp"
 #include "editor/operation_executor.hpp"
 #include "editor/row_filter.hpp"
 #include "model/dict_document.hpp"
@@ -17,6 +19,7 @@
 #include "model/sidebar_model.hpp"
 #include "session.hpp"
 #include "utility/spell_checker.hpp"
+#include "view/highlight_applier.hpp"
 #include "view/sidebar_view.hpp"
 #include "view/table_view.hpp"
 #include "view/translation_suggestion_view.hpp"
@@ -29,9 +32,6 @@
 #include <QMainWindow>
 #include <QStringList>
 #include <QTextEdit>
-
-class QFileSystemWatcher;
-class QTimer;
 
 class annotations_view_t;
 class book_preview_view_t;
@@ -73,33 +73,6 @@ struct make_base_params_t
 	std::string native_lang;
 	base_mode_t base_mode;
 	std::string dictionary_aff_path;
-};
-
-struct annotation_highlight_t
-{
-	int start;
-	int length;
-	bool is_hyperlink;
-};
-
-enum class highlight_sort_policy_t
-{
-	length_first,
-	hyperlink_first,
-};
-
-struct highlight_config_t
-{
-	const std::vector<annotation_t> * annotations;
-	bool use_old_text;
-	highlight_sort_policy_t sort_policy;
-};
-
-struct extra_selections_state_t
-{
-	QList<QTextEdit::ExtraSelection> annotations;
-	QList<QTextEdit::ExtraSelection> grammar;
-	QList<QTextEdit::ExtraSelection> adapted_diff;
 };
 
 class main_window_t : public QMainWindow
@@ -171,12 +144,11 @@ private:
 	void scan_spell_dictionaries();
 	void on_spell_lang_changed(int index);
 	void scan_workspace();
-	void update_watcher_paths();
+	void update_watcher_roots();
 	void register_shortcuts();
 	void shortcut_copy_original();
 	void shortcut_commit_status(status_t new_status);
 	std::vector<dict_selection_dialog_t::dict_entry_t> build_dict_entries(const std::string & source_dir = {}) const;
-	void apply_extra_selections(translation_edit_view_t * editor, const extra_selections_state_t & state);
 
 	// rebuild_table helpers
 	void rebuild_table_yaml(document_t * target_doc);
@@ -186,20 +158,11 @@ private:
 	void load_record_clear(int row);
 	void load_record_script(const table_row_t * row_data);
 	void load_record_plain(const table_row_t * row_data);
-	std::vector<annotation_highlight_t> find_annotation_highlights(
-	    const QString & text_lower,
-	    const highlight_config_t & config);
-	QList<QTextEdit::ExtraSelection> build_highlight_selections(
-	    translation_edit_view_t * target_editor,
-	    const std::vector<annotation_highlight_t> & highlights);
 
 	// on_translation_changed helpers
 	void apply_translation_highlights(const table_row_t * row_data);
 
-	// commit_current_edit helpers
-	void commit_dict_edit(dict_document_t * dict_doc, const table_row_t * row_data, const std::string & new_text_str);
-	void commit_yaml_edit(document_t * target_doc, const table_row_t * row_data, const std::string & new_text_str);
-	void sync_propagated_rows(dict_document_t * dict_doc);
+
 
 	// on_plugin_operation helpers
 	std::optional<make_base_params_t> show_make_base_dialog(const std::string & plugin_path);
@@ -208,9 +171,6 @@ private:
 	    const std::string & plugin_path,
 	    plugin_op_t op_type,
 	    const operation_executor_t::result_t & result);
-
-	// update_watcher_paths helper
-	void add_directory_recursive(QStringList & target_paths, const QString & directory);
 
 	QAction * m_add_folder_action = nullptr;
 	QAction * m_import_archive_action = nullptr;
@@ -287,7 +247,7 @@ private:
 	file_list_t m_file_list;
 	codepage_t m_current_codepage = codepage_t::windows_1252;
 	session_t m_session;
-	app_settings_t m_settings { "yTranslator.ini" };
+	settings_store_t m_settings { "yTranslator.ini" };
 	std::unordered_map<std::string, filter_state_t> m_filter_states;
 	size_t m_last_annotation_version = 0;
 
@@ -303,8 +263,7 @@ private:
 	find_replace_dialog_t * m_find_replace_dialog = nullptr;
 	find_replace_t * m_find_replace = nullptr;
 
-	QFileSystemWatcher * m_fs_watcher = nullptr;
-	QTimer * m_rescan_timer = nullptr;
+	workspace_watcher_t * m_workspace_watcher = nullptr;
 
 	QMenu * m_translator_file_menu = nullptr;
 	QMenu * m_translator_view_menu = nullptr;

@@ -43,7 +43,7 @@ conflict_this_t nav_tree_model_t::record_foreground_for_plugin(const conflict_en
 	if (entry.versions.size() <= 1)
 		return conflict_this_t::unknown;
 
-	if (m_hide_duplicates && unique_plugin_count(entry) <= 1)
+	if (m_filter.hide_duplicates() && unique_plugin_count(entry) <= 1)
 		return conflict_this_t::unknown;
 
 	for (const auto & v : entry.versions)
@@ -185,32 +185,30 @@ void nav_tree_model_t::rebuild()
 
 void nav_tree_model_t::set_filter(const filter_state_t & state)
 {
-	m_has_filter = true;
-	m_filter = state;
+	m_filter.set_filter(state);
 	rebuild();
 }
 
 void nav_tree_model_t::clear_filter()
 {
-	m_has_filter = false;
-	m_filter = {};
+	m_filter.clear();
 	rebuild();
 }
 
 void nav_tree_model_t::set_hide_duplicates(bool hide)
 {
-	m_hide_duplicates = hide;
+	m_filter.set_hide_duplicates(hide);
 	emit dataChanged(index(0, 0, {}), index(rowCount({}) - 1, columnCount({}) - 1, {}));
 }
 
 void nav_tree_model_t::set_excluded_plugins(const std::set<std::string> * excluded)
 {
-	m_excluded_plugins = excluded;
+	m_filter.set_excluded_plugins(excluded);
 }
 
 void nav_tree_model_t::set_patch_plugins(const std::set<std::string> * patch)
 {
-	m_patch_plugins = patch;
+	m_filter.set_patch_plugins(patch);
 }
 
 void nav_tree_model_t::build_tree()
@@ -243,7 +241,7 @@ void nav_tree_model_t::build_tree()
 			if (!has_version)
 				continue;
 
-			if (m_has_filter && !passes_filter(entry, p))
+			if (!m_filter.passes(entry, p))
 				continue;
 
 			type_map[entry.rec_type].push_back({ ei });
@@ -293,110 +291,6 @@ void nav_tree_model_t::build_tree()
 
 		m_tree.push_back(std::move(file_node));
 	}
-}
-
-bool nav_tree_model_t::passes_filter(const conflict_entry_t & entry, int plugin_idx) const
-{
-	if (m_filter.filter_conflict_all && !m_filter.conflict_all_set.empty())
-	{
-		if (m_filter.conflict_all_set.find(entry.conflict_all) == m_filter.conflict_all_set.end())
-			return false;
-	}
-
-	if (m_filter.filter_conflict_this && !m_filter.conflict_this_set.empty())
-	{
-		bool found = false;
-		for (const auto & v : entry.versions)
-		{
-			if (v.plugin_idx == plugin_idx &&
-			    m_filter.conflict_this_set.find(v.status) != m_filter.conflict_this_set.end())
-			{
-				found = true;
-				break;
-			}
-		}
-
-		if (!found)
-			return false;
-	}
-
-	if (m_filter.filter_by_type && !m_filter.type_set.empty())
-	{
-		if (m_filter.type_set.find(entry.rec_type) == m_filter.type_set.end())
-			return false;
-	}
-
-	if (m_filter.filter_by_id && !m_filter.id_text.empty())
-	{
-		auto lower_id = entry.record_id;
-		auto lower_search = m_filter.id_text;
-		std::transform(
-		    lower_id.begin(),
-		    lower_id.end(),
-		    lower_id.begin(),
-		    [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-		std::transform(
-		    lower_search.begin(),
-		    lower_search.end(),
-		    lower_search.begin(),
-		    [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-
-		if (lower_id.find(lower_search) == std::string::npos)
-			return false;
-	}
-
-	if (m_filter.filter_by_name && !m_filter.name_text.empty())
-	{
-		auto lower_name = entry.display_name;
-		auto lower_search = m_filter.name_text;
-		std::transform(
-		    lower_name.begin(),
-		    lower_name.end(),
-		    lower_name.begin(),
-		    [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-		std::transform(
-		    lower_search.begin(),
-		    lower_search.end(),
-		    lower_search.begin(),
-		    [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-
-		if (lower_name.find(lower_search) == std::string::npos)
-			return false;
-	}
-
-	if (m_filter.filter_deleted)
-	{
-		bool has_deleted = false;
-		for (const auto & v : entry.versions)
-		{
-			if (v.plugin_idx == plugin_idx && v.status == conflict_this_t::deleted)
-			{
-				has_deleted = true;
-				break;
-			}
-		}
-
-		if (!has_deleted)
-			return false;
-	}
-
-	if (m_filter.filter_itm_only)
-	{
-		bool has_itm = false;
-		for (const auto & v : entry.versions)
-		{
-			if (v.plugin_idx == plugin_idx && v.status == conflict_this_t::identical_to_master)
-			{
-				has_itm = true;
-				break;
-			}
-		}
-
-		if (!has_itm)
-			return false;
-	}
-
-	return true;
 }
 
 QModelIndex nav_tree_model_t::index(int row, int column, const QModelIndex & parent) const
@@ -555,10 +449,10 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 			    m_scan.plugin_filename(file_node.plugin_idx).c_str());
 
 			const auto & filename = m_scan.plugin_filename(file_node.plugin_idx);
-			if (m_excluded_plugins && m_excluded_plugins->count(filename))
+			if (m_filter.excluded_plugins() && m_filter.excluded_plugins()->count(filename))
 				return QString::fromUtf8("\xF0\x9F\x94\x92 ") + QString::fromUtf8(buf);
 
-			if (m_patch_plugins && m_patch_plugins->count(filename))
+			if (m_filter.patch_plugins() && m_filter.patch_plugins()->count(filename))
 				return QString::fromUtf8("\xF0\x9F\x9B\xA1 ") + QString::fromUtf8(buf);
 
 			if (m_scan.is_merge_plugin(file_node.plugin_idx))
@@ -730,7 +624,7 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 				if (entry.conflict_all < conflict_all_t::no_conflict)
 					return {};
 
-				if (m_hide_duplicates && unique_plugin_count(entry) <= 1)
+				if (m_filter.hide_duplicates() && unique_plugin_count(entry) <= 1)
 					return {};
 
 				return QBrush(theme_system_t::instance().conflict_all_background(entry.conflict_all));

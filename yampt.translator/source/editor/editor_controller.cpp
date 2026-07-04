@@ -1,6 +1,8 @@
 #include "editor_controller.hpp"
 #include "../model/dict_document.hpp"
 #include "../model/document.hpp"
+#include "../model/record_table_model.hpp"
+#include "../model/yaml_document.hpp"
 
 editor_controller_t::editor_controller_t(
     edit_history_t & history,
@@ -202,4 +204,82 @@ int editor_controller_t::propagate(dict_document_t & doc, const std::string & ol
 		doc.set_dirty(true);
 
 	return count;
+}
+
+dict_commit_result_t editor_controller_t::commit_dict_full(
+    dict_document_t & doc,
+    const table_row_t & row,
+    const std::string & new_text)
+{
+	dict_commit_result_t result;
+	result.base_result = commit(doc, row, new_text);
+	if (!result.base_result.success)
+		return result;
+
+	if (result.base_result.propagated_count <= 0)
+		return result;
+
+	const auto & data = doc.data();
+	for (auto & [type, chapter] : data)
+	{
+		for (size_t i = 0; i < chapter.records.size(); ++i)
+		{
+			if (!doc.modified_records().count({type, i}))
+				continue;
+
+			if (type == row.type && i == row.record_index)
+				continue;
+
+			const auto & record = chapter.records[i];
+			if (record.status != status_t::propagated)
+				continue;
+
+			if (record.new_text != new_text)
+				continue;
+
+			result.propagated_rows.push_back(static_cast<int>(i));
+		}
+	}
+
+	return result;
+}
+
+void editor_controller_t::commit_yaml(
+    document_t & doc,
+    const table_row_t & row,
+    const std::string & new_text)
+{
+	doc.commit_edit(row.type, row.record_index, new_text);
+
+	auto * yaml_doc = dynamic_cast<yaml_document_t *>(&doc);
+	if (yaml_doc)
+		yaml_doc->save_tmp();
+}
+
+void editor_controller_t::sync_propagated_rows(
+    record_table_model_t & model,
+    dict_document_t & doc)
+{
+	const auto & data = doc.data();
+
+	for (int i = 0; i < model.rowCount(); ++i)
+	{
+		if (i == m_current_row)
+			continue;
+
+		const auto * row = model.row_at(i);
+		if (!row)
+			continue;
+
+		auto chap_it = data.find(row->type);
+		if (chap_it == data.end())
+			continue;
+
+		if (row->record_index >= chap_it->second.records.size())
+			continue;
+
+		const auto & record = chap_it->second.records[row->record_index];
+		if (record.new_text != row->new_text || record.status != row->status)
+			model.update_row(i, record.new_text, record.status);
+	}
 }

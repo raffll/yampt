@@ -2,7 +2,7 @@
 
 #include <QWidget>
 
-class app_settings_t;
+class settings_store_t;
 
 class editor_paths_view_t : public QWidget
 {
@@ -11,6 +11,6 @@ class editor_paths_view_t : public QWidget
 public:
 	explicit editor_paths_view_t(QWidget * parent = nullptr);
 
-	void load(const app_settings_t & settings);
-	void apply(app_settings_t & settings) const;
+	void load(const settings_store_t & settings);
+	void apply(settings_store_t & settings) const;
 };

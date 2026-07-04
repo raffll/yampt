@@ -1,4 +1,4 @@
-#include "conflict_compute.hpp"
+#include "record_conflict.hpp"
 
 conflict_all_t compute_conflict_all(const std::vector<std::string> & values)
 {

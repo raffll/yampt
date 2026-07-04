@@ -1,5 +1,5 @@
 #include "dialog/editor_paths_view.hpp"
-#include <app_settings.hpp>
+#include <settings_store.hpp>
 #include <QFormLayout>
 #include <QLabel>
 
@@ -15,8 +15,8 @@ editor_paths_view_t::editor_paths_view_t(QWidget * parent)
 	    this));
 }
 
-void editor_paths_view_t::load(const app_settings_t &)
+void editor_paths_view_t::load(const settings_store_t &)
 {}
 
-void editor_paths_view_t::apply(app_settings_t &) const
+void editor_paths_view_t::apply(settings_store_t &) const
 {}

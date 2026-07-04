@@ -7,7 +7,7 @@
 class QLabel;
 class QPushButton;
 class QTableWidget;
-class app_settings_t;
+class settings_store_t;
 
 class shortcuts_settings_view_t : public QWidget
 {
@@ -16,8 +16,8 @@ class shortcuts_settings_view_t : public QWidget
 public:
 	explicit shortcuts_settings_view_t(QWidget * parent = nullptr);
 
-	void load(const app_settings_t & settings);
-	void apply(app_settings_t & settings) const;
+	void load(const settings_store_t & settings);
+	void apply(settings_store_t & settings) const;
 
 	bool has_conflicts() const;
 

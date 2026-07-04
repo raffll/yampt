@@ -3,7 +3,7 @@
 #include "dialog/language_settings_view.hpp"
 #include "dialog/shortcuts_settings_view.hpp"
 #include "dialog/translation_settings_view.hpp"
-#include <app_settings.hpp>
+#include <settings_store.hpp>
 #include <QDialogButtonBox>
 #include <QHBoxLayout>
 #include <QListWidget>
@@ -12,7 +12,7 @@
 #include <QVBoxLayout>
 
 translator_settings_dialog_t::translator_settings_dialog_t(
-    app_settings_t & settings,
+    settings_store_t & settings,
     const std::string & dictionaries_dir,
     QWidget * parent)
     : QDialog(parent)

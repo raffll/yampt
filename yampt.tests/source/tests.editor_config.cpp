@@ -19,7 +19,7 @@ void cleanup_settings(const std::string & path)
 
 } // anonymous namespace
 
-TEST_CASE("app_settings_t::encoding_index, round-trip", "[i]")
+TEST_CASE("settings_store_t::encoding_index, round-trip", "[i]")
 {
 	const auto path = temp_settings_path();
 	cleanup_settings(path);
@@ -38,7 +38,7 @@ TEST_CASE("app_settings_t::encoding_index, round-trip", "[i]")
 	cleanup_settings(path);
 }
 
-TEST_CASE("app_settings_t::native_language, round-trip", "[i]")
+TEST_CASE("settings_store_t::native_language, round-trip", "[i]")
 {
 	const auto path = temp_settings_path();
 	cleanup_settings(path);
@@ -59,7 +59,7 @@ TEST_CASE("app_settings_t::native_language, round-trip", "[i]")
 	cleanup_settings(path);
 }
 
-TEST_CASE("app_settings_t::workspace_roots, round-trip", "[i]")
+TEST_CASE("settings_store_t::workspace_roots, round-trip", "[i]")
 {
 	const auto path = temp_settings_path();
 	cleanup_settings(path);
@@ -85,7 +85,7 @@ TEST_CASE("app_settings_t::workspace_roots, round-trip", "[i]")
 	cleanup_settings(path);
 }
 
-TEST_CASE("app_settings_t::last_merge_order, round-trip", "[i]")
+TEST_CASE("settings_store_t::last_merge_order, round-trip", "[i]")
 {
 	const auto path = temp_settings_path();
 	cleanup_settings(path);
@@ -109,7 +109,7 @@ TEST_CASE("app_settings_t::last_merge_order, round-trip", "[i]")
 	cleanup_settings(path);
 }
 
-TEST_CASE("app_settings_t::translation_keys, round-trip", "[i]")
+TEST_CASE("settings_store_t::translation_keys, round-trip", "[i]")
 {
 	const auto path = temp_settings_path();
 	cleanup_settings(path);
@@ -134,7 +134,7 @@ TEST_CASE("app_settings_t::translation_keys, round-trip", "[i]")
 	cleanup_settings(path);
 }
 
-TEST_CASE("app_settings_t::editor_layout, round-trip", "[i]")
+TEST_CASE("settings_store_t::editor_layout, round-trip", "[i]")
 {
 	const auto path = temp_settings_path();
 	cleanup_settings(path);
@@ -173,7 +173,7 @@ TEST_CASE("app_settings_t::editor_layout, round-trip", "[i]")
 	cleanup_settings(path);
 }
 
-TEST_CASE("app_settings_t::window_geometry, round-trip", "[i]")
+TEST_CASE("settings_store_t::window_geometry, round-trip", "[i]")
 {
 	const auto path = temp_settings_path();
 	cleanup_settings(path);
@@ -200,7 +200,7 @@ TEST_CASE("app_settings_t::window_geometry, round-trip", "[i]")
 	cleanup_settings(path);
 }
 
-TEST_CASE("app_settings_t::shortcuts, round-trip", "[i]")
+TEST_CASE("settings_store_t::shortcuts, round-trip", "[i]")
 {
 	const auto path = temp_settings_path();
 	cleanup_settings(path);
@@ -225,7 +225,7 @@ TEST_CASE("app_settings_t::shortcuts, round-trip", "[i]")
 	cleanup_settings(path);
 }
 
-TEST_CASE("app_settings_t::spell_check, round-trip", "[i]")
+TEST_CASE("settings_store_t::spell_check, round-trip", "[i]")
 {
 	const auto path = temp_settings_path();
 	cleanup_settings(path);
@@ -248,7 +248,7 @@ TEST_CASE("app_settings_t::spell_check, round-trip", "[i]")
 	cleanup_settings(path);
 }
 
-TEST_CASE("app_settings_t::defaults, missing file returns defaults", "[i]")
+TEST_CASE("settings_store_t::defaults, missing file returns defaults", "[i]")
 {
 	const auto path = temp_settings_path();
 	cleanup_settings(path);

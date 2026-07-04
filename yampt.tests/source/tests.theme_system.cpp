@@ -1,7 +1,7 @@
 #include <catch2/catch_all.hpp>
 #include <utility/color_palette.hpp>
 #include <utility/theme_enums.hpp>
-#include <app_settings.hpp>
+#include <settings_store.hpp>
 #include <cmath>
 #include <cstdlib>
 #include <theme_system.hpp>
@@ -391,29 +391,29 @@ TEST_CASE("theme_system_t::get_status_color, dark saturation lower than light", 
 	}
 }
 
-TEST_CASE("app_settings_t::theme, round-trip", "[u]")
+TEST_CASE("settings_store_t::theme, round-trip", "[u]")
 {
-	app_settings_t settings("test_theme_settings.ini");
+	settings_store_t settings("test_theme_settings.ini");
 	settings.set_theme(theme_t::dark);
 	REQUIRE(settings.theme() == theme_t::dark);
 	settings.set_theme(theme_t::light);
 	REQUIRE(settings.theme() == theme_t::light);
 }
 
-TEST_CASE("app_settings_t::theme, default is light", "[u]")
+TEST_CASE("settings_store_t::theme, default is light", "[u]")
 {
-	app_settings_t settings("test_theme_empty.ini");
+	settings_store_t settings("test_theme_empty.ini");
 	REQUIRE(settings.theme() == theme_t::light);
 }
 
-TEST_CASE("app_settings_t::theme, invalid defaults to light", "[u]")
+TEST_CASE("settings_store_t::theme, invalid defaults to light", "[u]")
 {
-	app_settings_t settings("test_theme_invalid.ini");
+	settings_store_t settings("test_theme_invalid.ini");
 	QSettings raw(QCoreApplication::applicationDirPath() + "/test_theme_invalid.ini", QSettings::IniFormat);
 	raw.setValue("Appearance/Theme", "garbage");
 	raw.sync();
 
-	app_settings_t settings2("test_theme_invalid.ini");
+	settings_store_t settings2("test_theme_invalid.ini");
 	REQUIRE(settings2.theme() == theme_t::light);
 }
 

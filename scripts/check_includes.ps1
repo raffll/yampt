@@ -17,7 +17,7 @@ foreach ($file in $coreFiles) {
         if ($line -match '^\s*#include.*yampt\.(qt|editor|translator)') {
             $errors += "$($file.FullName):$($i+1): cross-project include in yampt.core: $line"
         }
-        if ($line -match '^\s*#include\s*[<"](app_settings|theme_system|conflict_types)\.hpp') {
+        if ($line -match '^\s*#include\s*[<"](settings_store|path_resolver|theme_system|conflict_types)\.hpp') {
             $errors += "$($file.FullName):$($i+1): yampt.qt header in yampt.core: $line"
         }
     }

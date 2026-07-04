@@ -1,5 +1,6 @@
 #pragma once
 
+#include "nav_tree_filter.hpp"
 #include <scanner/plugin_scan.hpp>
 #include <conflict_types.hpp>
 #include <set>
@@ -19,23 +20,7 @@ public:
 	void set_excluded_plugins(const std::set<std::string> * excluded);
 	void set_patch_plugins(const std::set<std::string> * patch);
 
-	struct filter_state_t
-	{
-		bool filter_conflict_all = false;
-		std::set<conflict_all_t> conflict_all_set;
-		bool filter_conflict_this = false;
-		std::set<conflict_this_t> conflict_this_set;
-		bool filter_by_type = false;
-		std::set<std::string> type_set;
-		bool filter_by_id = false;
-		std::string id_text;
-		bool filter_by_name = false;
-		std::string name_text;
-		bool filter_deleted = false;
-		bool filter_itm_only = false;
-
-		bool operator==(const filter_state_t &) const = default;
-	};
+	using filter_state_t = nav_tree_filter_t::filter_state_t;
 
 	void set_filter(const filter_state_t & state);
 	void clear_filter();
@@ -83,15 +68,9 @@ private:
 	};
 
 	std::vector<file_node_t> m_tree;
-
-	filter_state_t m_filter;
-	bool m_has_filter = false;
-	bool m_hide_duplicates = false;
-	const std::set<std::string> * m_excluded_plugins = nullptr;
-	const std::set<std::string> * m_patch_plugins = nullptr;
+	nav_tree_filter_t m_filter;
 
 	conflict_this_t record_foreground_for_plugin(const conflict_entry_t & entry, int plugin_idx) const;
 
 	void build_tree();
-	bool passes_filter(const conflict_entry_t & entry, int plugin_idx) const;
 };

@@ -5,7 +5,7 @@
 
 class QComboBox;
 class QLineEdit;
-class app_settings_t;
+class settings_store_t;
 
 class language_settings_view_t : public QWidget
 {
@@ -14,8 +14,8 @@ class language_settings_view_t : public QWidget
 public:
 	explicit language_settings_view_t(const std::string & dictionaries_dir, QWidget * parent = nullptr);
 
-	void load(const app_settings_t & settings);
-	void apply(app_settings_t & settings) const;
+	void load(const settings_store_t & settings);
+	void apply(settings_store_t & settings) const;
 
 private:
 	void on_native_language_changed(int index);

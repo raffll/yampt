@@ -3,7 +3,7 @@
 #include "../translator/deepl_translator.hpp"
 #include "../translator/google_translator.hpp"
 #include <utility/tools.hpp>
-#include <app_settings.hpp>
+#include <settings_store.hpp>
 #include <filesystem>
 #include <fstream>
 #include <QComboBox>
@@ -103,7 +103,7 @@ void translation_suggestion_view_t::set_models_dir(const std::string & dir)
 	rebuild_language_list();
 }
 
-void translation_suggestion_view_t::apply_provider_settings(const app_settings_t & settings)
+void translation_suggestion_view_t::apply_provider_settings(const settings_store_t & settings)
 {
 	const int language_index = settings.translation_language_index();
 

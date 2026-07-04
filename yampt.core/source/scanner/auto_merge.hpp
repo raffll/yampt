@@ -31,10 +31,10 @@ struct merge_log_entry_t
 	std::string message;
 };
 
-class merge_compute_t
+class auto_merge_t
 {
 public:
-	explicit merge_compute_t(plugin_scan_t & scan);
+	explicit auto_merge_t(plugin_scan_t & scan);
 
 	void set_config(const merge_config_t & config);
 	merge_counters_t execute();

@@ -2,7 +2,7 @@
 #include "../decoder/sub_record_iter.hpp"
 #include "../decoder/sub_record_schema.hpp"
 #include "../decoder/view_tree_format.hpp"
-#include "conflict_compute.hpp"
+#include "record_conflict.hpp"
 #include <algorithm>
 #include <cstring>
 #include <set>

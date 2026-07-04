@@ -225,6 +225,9 @@
     <ClCompile Include="source\utility\display_name.cpp" />
     <ClCompile Include="source\io\yaml_l10n_reader.cpp" />
     <ClCompile Include="source\io\yaml_l10n_writer.cpp" />
+    <ClCompile Include="source\editor\highlight_coordinator.cpp" />
+    <ClCompile Include="source\editor\workspace_watcher.cpp" />
+    <ClCompile Include="source\view\highlight_applier.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\session.hpp" />
@@ -249,6 +252,9 @@
     <ClInclude Include="source\editor\grammar_checker.hpp" />
     <ClInclude Include="source\io\yaml_l10n_reader.hpp" />
     <ClInclude Include="source\io\yaml_l10n_writer.hpp" />
+    <ClInclude Include="source\editor\highlight_coordinator.hpp" />
+    <ClInclude Include="source\editor\workspace_watcher.hpp" />
+    <ClInclude Include="source\view\highlight_applier.hpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="source\main_window.hpp">
@@ -432,6 +438,12 @@
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
+    <CustomBuild Include="source\editor\workspace_watcher.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(IntDir)moc_main_window.cpp" />
@@ -464,6 +476,7 @@
     <ClCompile Include="$(IntDir)moc_ctranslate2_translator.cpp" />
     <ClCompile Include="$(IntDir)moc_deepl_translator.cpp" />
     <ClCompile Include="$(IntDir)moc_google_translator.cpp" />
+    <ClCompile Include="$(IntDir)moc_workspace_watcher.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\yampt.core\yampt.core.vcxproj">

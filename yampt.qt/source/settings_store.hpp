@@ -6,10 +6,10 @@
 #include <QSettings>
 #include <QString>
 
-class app_settings_t
+class settings_store_t
 {
 public:
-	explicit app_settings_t(const QString & filename);
+	explicit settings_store_t(const QString & filename);
 
 	int encoding_index() const;
 	void set_encoding_index(int index);

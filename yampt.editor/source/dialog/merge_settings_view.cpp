@@ -1,5 +1,5 @@
 #include "dialog/merge_settings_view.hpp"
-#include <app_settings.hpp>
+#include <settings_store.hpp>
 #include <QCheckBox>
 #include <QGridLayout>
 #include <QGroupBox>
@@ -85,7 +85,7 @@ void merge_settings_view_t::setup_fixes_group()
 	parent_layout->addWidget(group);
 }
 
-void merge_settings_view_t::load(const app_settings_t & settings)
+void merge_settings_view_t::load(const settings_store_t & settings)
 {
 	for (auto & [type_name, checkbox] : m_type_checkboxes)
 		checkbox->setChecked(settings.merge_type_enabled(type_name));
@@ -96,7 +96,7 @@ void merge_settings_view_t::load(const app_settings_t & settings)
 	m_cell_name_fix_check->setChecked(settings.merge_cell_name_fix_enabled());
 }
 
-void merge_settings_view_t::save(app_settings_t & settings) const
+void merge_settings_view_t::save(settings_store_t & settings) const
 {
 	for (const auto & [type_name, checkbox] : m_type_checkboxes)
 		settings.set_merge_type_enabled(type_name, checkbox->isChecked());

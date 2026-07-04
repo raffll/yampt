@@ -1,6 +1,6 @@
 #include "main_window.hpp"
 #include <utility/tools.hpp>
-#include <app_settings.hpp>
+#include <settings_store.hpp>
 #include <theme_system.hpp>
 #include <QApplication>
 #include <QStyleFactory>
@@ -12,7 +12,7 @@ int main(int argc, char * argv[])
 
 	tools_t::set_exe_dir(QCoreApplication::applicationDirPath().toStdString());
 
-	app_settings_t startup_settings("yTranslator.ini");
+	settings_store_t startup_settings("yTranslator.ini");
 	theme_system_t::instance().set_theme(startup_settings.theme());
 	theme_system_t::instance().apply_to_application();
 

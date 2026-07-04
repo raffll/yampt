@@ -6,7 +6,7 @@
 
 class QCheckBox;
 class QLineEdit;
-class app_settings_t;
+class settings_store_t;
 
 class merge_settings_view_t : public QWidget
 {
@@ -15,8 +15,8 @@ class merge_settings_view_t : public QWidget
 public:
 	explicit merge_settings_view_t(QWidget * parent = nullptr);
 
-	void load(const app_settings_t & settings);
-	void save(app_settings_t & settings) const;
+	void load(const settings_store_t & settings);
+	void save(settings_store_t & settings) const;
 
 private:
 	void setup_record_types_group();

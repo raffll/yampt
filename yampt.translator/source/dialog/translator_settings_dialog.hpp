@@ -7,7 +7,7 @@ class QDialogButtonBox;
 class QListWidget;
 class QPushButton;
 class QStackedWidget;
-class app_settings_t;
+class settings_store_t;
 class appearance_settings_view_t;
 class language_settings_view_t;
 class translation_settings_view_t;
@@ -19,7 +19,7 @@ class translator_settings_dialog_t : public QDialog
 
 public:
 	explicit translator_settings_dialog_t(
-	    app_settings_t & settings,
+	    settings_store_t & settings,
 	    const std::string & dictionaries_dir,
 	    QWidget * parent = nullptr);
 
@@ -30,7 +30,7 @@ private:
 	void apply_all();
 	void update_ok_button_state();
 
-	app_settings_t & m_settings;
+	settings_store_t & m_settings;
 
 	QListWidget * m_category_list = nullptr;
 	QStackedWidget * m_content_stack = nullptr;

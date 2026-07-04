@@ -3,7 +3,7 @@
 #include <QWidget>
 
 class QComboBox;
-class app_settings_t;
+class settings_store_t;
 enum class theme_t;
 
 class appearance_settings_view_t : public QWidget
@@ -13,8 +13,8 @@ class appearance_settings_view_t : public QWidget
 public:
 	explicit appearance_settings_view_t(QWidget * parent = nullptr);
 
-	void load(const app_settings_t & settings);
-	void save(app_settings_t & settings) const;
+	void load(const settings_store_t & settings);
+	void save(settings_store_t & settings) const;
 	bool is_modified() const;
 
 private:

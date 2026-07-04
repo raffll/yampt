@@ -17,6 +17,11 @@
     <ClCompile Include="source\dialog\appearance_settings_view.cpp" />
     <ClCompile Include="source\dialog\merge_settings_view.cpp" />
     <ClCompile Include="source\io\profile_reader.cpp" />
+    <ClCompile Include="source\model\nav_tree_filter.cpp" />
+    <ClCompile Include="source\model\plugin_session.cpp" />
+    <ClCompile Include="source\patcher\patch_builder.cpp" />
+    <ClCompile Include="source\view\nav_tree_view.cpp" />
+    <ClCompile Include="source\view\record_view.cpp" />
     <ClCompile Include="..\yampt.core\source\utility\tools.cpp" />
     <ClCompile Include="..\yampt.core\source\io\esm_reader.cpp" />
     <ClCompile Include="..\yampt.core\source\io\codepage.cpp" />
@@ -30,10 +35,9 @@
     <ClCompile Include="..\yampt.core\source\scanner\fog_fixer.cpp" />
     <ClCompile Include="..\yampt.core\source\scanner\summon_fixer.cpp" />
     <ClCompile Include="..\yampt.core\source\scanner\cell_name_fixer.cpp" />
-    <ClCompile Include="..\yampt.core\source\scanner\conflict_compute.cpp" />
+    <ClCompile Include="..\yampt.core\source\scanner\record_conflict.cpp" />
     <ClCompile Include="..\yampt.core\source\decoder\conflict_slots.cpp" />
     <ClCompile Include="..\yampt.core\source\decoder\conflict_slots_cell.cpp" />
     <ClCompile Include="..\yampt.core\source\decoder\view_tree_format.cpp" />
-    <ClCompile Include="..\yampt.core\source\io\app_settings.cpp" />
   </ItemGroup>
 </Project>

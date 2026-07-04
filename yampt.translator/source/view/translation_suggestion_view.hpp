@@ -13,7 +13,7 @@ class QPlainTextEdit;
 class QPushButton;
 class QVBoxLayout;
 
-class app_settings_t;
+class settings_store_t;
 class ctranslate2_translator_t;
 class deepl_translator_t;
 class google_translator_t;
@@ -29,7 +29,7 @@ public:
 	void set_models_dir(const std::string & dir);
 	void set_glossary_fn(std::function<std::string(const std::string &)> fn);
 
-	void apply_provider_settings(const app_settings_t & settings);
+	void apply_provider_settings(const settings_store_t & settings);
 	void update_provider_status();
 
 	void select_provider(int index);

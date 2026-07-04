@@ -25,10 +25,8 @@
 #include <QAction>
 #include <QCoreApplication>
 #include <QDir>
-#include <QDirIterator>
 #include <QFileDialog>
 #include <QFileInfo>
-#include <QFileSystemWatcher>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
@@ -40,7 +38,6 @@
 #include <QSplitter>
 #include <QStatusBar>
 #include <QTabWidget>
-#include <QTimer>
 #include <QToolBar>
 #include <QToolButton>
 #include <QVBoxLayout>
@@ -253,10 +250,7 @@ void main_window_t::setup_status_bar()
 
 void main_window_t::setup_table_display()
 {
-	m_fs_watcher = new QFileSystemWatcher(this);
-	m_rescan_timer = new QTimer(this);
-	m_rescan_timer->setSingleShot(true);
-	m_rescan_timer->setInterval(200);
+	m_workspace_watcher = new workspace_watcher_t(this);
 
 	m_table_display = std::make_unique<table_view_t>(
 	    *m_filter_tree_view,
@@ -302,7 +296,7 @@ void main_window_t::connect_menu_signals()
 		m_extra_sel_translation.grammar = m_grammar_check->isChecked()
 		                                      ? m_grammar_checker.check(m_editor_view->translation_editor(), type)
 		                                      : QList<QTextEdit::ExtraSelection> {};
-		apply_extra_selections(m_editor_view->translation_editor(), m_extra_sel_translation);
+		highlight_applier_t::apply(m_editor_view->translation_editor(), m_extra_sel_translation);
 	});
 
 	connect(
@@ -324,7 +318,7 @@ void main_window_t::connect_menu_signals()
 		m_file_list.scan_roots(roots);
 		scan_workspace();
 		save_config();
-		update_watcher_paths();
+		update_watcher_roots();
 	});
 
 	connect(
@@ -362,12 +356,12 @@ void main_window_t::connect_menu_signals()
 		}
 
 		scan_workspace();
-		update_watcher_paths();
+		update_watcher_roots();
 	});
 
 	connect(
-	    m_rescan_timer,
-	    &QTimer::timeout,
+	    m_workspace_watcher,
+	    &workspace_watcher_t::workspace_changed,
 	    this,
 	    [this]()
 	{
@@ -383,7 +377,6 @@ void main_window_t::connect_menu_signals()
 			m_last_annotation_version = m_session.dict_version();
 		}
 	});
-	connect(m_fs_watcher, &QFileSystemWatcher::directoryChanged, m_rescan_timer, qOverload<>(&QTimer::start));
 
 	connect(
 	    m_find_replace_dialog,
@@ -513,7 +506,7 @@ void main_window_t::connect_sidebar_signals()
 		m_last_annotation_version = m_session.dict_version();
 		scan_workspace();
 		save_config();
-		update_watcher_paths();
+		update_watcher_roots();
 	});
 
 	connect(

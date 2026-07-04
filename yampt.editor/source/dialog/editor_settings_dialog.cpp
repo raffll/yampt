@@ -2,7 +2,7 @@
 #include "dialog/appearance_settings_view.hpp"
 #include "dialog/editor_paths_view.hpp"
 #include "dialog/merge_settings_view.hpp"
-#include <app_settings.hpp>
+#include <settings_store.hpp>
 #include <QDialogButtonBox>
 #include <QHBoxLayout>
 #include <QListWidget>
@@ -10,7 +10,7 @@
 #include <QStackedWidget>
 #include <QVBoxLayout>
 
-editor_settings_dialog_t::editor_settings_dialog_t(app_settings_t & settings, QWidget * parent)
+editor_settings_dialog_t::editor_settings_dialog_t(settings_store_t & settings, QWidget * parent)
     : QDialog(parent)
     , m_settings(settings)
 {

@@ -1,4 +1,4 @@
-#include "merge_compute.hpp"
+#include "auto_merge.hpp"
 #include "cell_name_fixer.hpp"
 #include "fog_fixer.hpp"
 #include "plugin_scan.hpp"
@@ -6,16 +6,16 @@
 #include <regex>
 #include <unordered_map>
 
-merge_compute_t::merge_compute_t(plugin_scan_t & scan)
+auto_merge_t::auto_merge_t(plugin_scan_t & scan)
     : m_scan(scan)
 {}
 
-void merge_compute_t::set_config(const merge_config_t & config)
+void auto_merge_t::set_config(const merge_config_t & config)
 {
 	m_config = config;
 }
 
-merge_counters_t merge_compute_t::execute()
+merge_counters_t auto_merge_t::execute()
 {
 	m_log.clear();
 	m_scan.clear_merge_records();
@@ -33,12 +33,12 @@ merge_counters_t merge_compute_t::execute()
 	return counters;
 }
 
-const std::vector<merge_log_entry_t> & merge_compute_t::log_entries() const
+const std::vector<merge_log_entry_t> & auto_merge_t::log_entries() const
 {
 	return m_log;
 }
 
-void merge_compute_t::build_record_groups()
+void auto_merge_t::build_record_groups()
 {
 	m_groups.clear();
 	std::unordered_map<std::string, size_t> lookup;
@@ -70,7 +70,7 @@ void merge_compute_t::build_record_groups()
 	}
 }
 
-void merge_compute_t::process_groups(merge_counters_t & counters)
+void auto_merge_t::process_groups(merge_counters_t & counters)
 {
 	std::regex exclusion_regex;
 	bool has_exclusion = false;
@@ -139,7 +139,7 @@ void merge_compute_t::process_groups(merge_counters_t & counters)
 	}
 }
 
-void merge_compute_t::process_leveled_list(const record_group_t & group, merge_counters_t & counters)
+void auto_merge_t::process_leveled_list(const record_group_t & group, merge_counters_t & counters)
 {
 	auto contents = read_version_contents(group);
 
@@ -156,7 +156,7 @@ void merge_compute_t::process_leveled_list(const record_group_t & group, merge_c
 	++counters.lists;
 }
 
-void merge_compute_t::process_dialogue(const record_group_t & group, merge_counters_t & counters)
+void auto_merge_t::process_dialogue(const record_group_t & group, merge_counters_t & counters)
 {
 	const auto * scan_entry = m_scan.find(group.rec_type, group.record_id);
 	if (!scan_entry)
@@ -166,7 +166,7 @@ void merge_compute_t::process_dialogue(const record_group_t & group, merge_count
 	++counters.dialogues;
 }
 
-void merge_compute_t::apply_patch_priority(const record_group_t & group, std::vector<std::string> & contents)
+void auto_merge_t::apply_patch_priority(const record_group_t & group, std::vector<std::string> & contents)
 {
 	if (m_config.patch_plugins.empty())
 		return;
@@ -195,7 +195,7 @@ void merge_compute_t::apply_patch_priority(const record_group_t & group, std::ve
 	}
 }
 
-void merge_compute_t::process_three_way(const record_group_t & group, merge_counters_t & counters)
+void auto_merge_t::process_three_way(const record_group_t & group, merge_counters_t & counters)
 {
 	auto contents = read_version_contents(group);
 	apply_patch_priority(group, contents);
@@ -231,7 +231,7 @@ void merge_compute_t::process_three_way(const record_group_t & group, merge_coun
 	add_log("[info] merge 3-way: " + group.rec_type + " \"" + group.record_id + "\" (" + plugins + ")");
 }
 
-void merge_compute_t::apply_fixes(merge_counters_t & counters)
+void auto_merge_t::apply_fixes(merge_counters_t & counters)
 {
 	if (m_config.fog_fix_enabled)
 		apply_fog_fixes(counters);
@@ -243,7 +243,7 @@ void merge_compute_t::apply_fixes(merge_counters_t & counters)
 		apply_cell_name_fixes(counters);
 }
 
-void merge_compute_t::apply_fog_fixes(merge_counters_t & counters)
+void auto_merge_t::apply_fog_fixes(merge_counters_t & counters)
 {
 	for (const auto & group : m_groups)
 	{
@@ -271,7 +271,7 @@ void merge_compute_t::apply_fog_fixes(merge_counters_t & counters)
 	}
 }
 
-void merge_compute_t::apply_summon_fixes(merge_counters_t & counters)
+void auto_merge_t::apply_summon_fixes(merge_counters_t & counters)
 {
 	for (const auto & group : m_groups)
 	{
@@ -299,7 +299,7 @@ void merge_compute_t::apply_summon_fixes(merge_counters_t & counters)
 	}
 }
 
-void merge_compute_t::apply_cell_name_fixes(merge_counters_t & counters)
+void auto_merge_t::apply_cell_name_fixes(merge_counters_t & counters)
 {
 	for (const auto & group : m_groups)
 	{
@@ -328,7 +328,7 @@ void merge_compute_t::apply_cell_name_fixes(merge_counters_t & counters)
 	}
 }
 
-void merge_compute_t::prune_unchanged()
+void auto_merge_t::prune_unchanged()
 {
 	std::unordered_map<std::string, const record_group_t *> group_lookup;
 	for (const auto & group : m_groups)
@@ -358,7 +358,7 @@ void merge_compute_t::prune_unchanged()
 		m_scan.remove_from_merge(rec_type, record_id);
 }
 
-std::vector<std::string> merge_compute_t::read_version_contents(const record_group_t & group)
+std::vector<std::string> auto_merge_t::read_version_contents(const record_group_t & group)
 {
 	std::vector<std::string> result;
 	result.reserve(group.versions.size());
@@ -369,7 +369,7 @@ std::vector<std::string> merge_compute_t::read_version_contents(const record_gro
 	return result;
 }
 
-bool merge_compute_t::is_plugin_included(int plugin_idx) const
+bool auto_merge_t::is_plugin_included(int plugin_idx) const
 {
 	if (m_scan.is_merge_plugin(plugin_idx))
 		return false;
@@ -378,12 +378,12 @@ bool merge_compute_t::is_plugin_included(int plugin_idx) const
 	return m_config.excluded_plugins.count(filename) == 0;
 }
 
-bool merge_compute_t::is_type_enabled(const std::string & rec_type) const
+bool auto_merge_t::is_type_enabled(const std::string & rec_type) const
 {
 	return m_config.disabled_types.count(rec_type) == 0;
 }
 
-bool merge_compute_t::matches_exclusion(const std::string & record_id) const
+bool auto_merge_t::matches_exclusion(const std::string & record_id) const
 {
 	if (m_config.exclusion_pattern.empty())
 		return false;
@@ -399,7 +399,7 @@ bool merge_compute_t::matches_exclusion(const std::string & record_id) const
 	}
 }
 
-void merge_compute_t::add_log(const std::string & message)
+void auto_merge_t::add_log(const std::string & message)
 {
 	m_log.push_back({ message });
 }

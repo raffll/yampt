@@ -1,4 +1,4 @@
-#include "main_window.hpp"
+﻿#include "main_window.hpp"
 #include "dialog/dict_selection_dialog.hpp"
 #include "dialog/find_replace_dialog.hpp"
 #include "dialog/first_run_dialog.hpp"
@@ -42,9 +42,7 @@
 #include <QDateTime>
 #include <QDialogButtonBox>
 #include <QDir>
-#include <QDirIterator>
 #include <QFileDialog>
-#include <QFileSystemWatcher>
 #include <QGroupBox>
 #include <QHBoxLayout>
 #include <QHeaderView>
@@ -490,17 +488,17 @@ void main_window_t::on_translation_changed()
 void main_window_t::apply_translation_highlights(const table_row_t * row_data)
 {
 	const auto annotations = m_glossary.annotate(row_data->old_text, row_data->type);
-	const auto current_text = m_editor_view->translation_editor()->toPlainText().toLower();
+	const auto current_text = m_editor_view->translation_editor()->toPlainText().toLower().toStdString();
 
-	const highlight_config_t config { &annotations, false, highlight_sort_policy_t::hyperlink_first };
-	auto highlights = find_annotation_highlights(current_text, config);
+	const highlight_request_t request { &annotations, false, highlight_sort_policy_t::hyperlink_first };
+	auto highlights = highlight_coordinator_t::find_annotation_highlights(current_text, request);
 
-	m_extra_sel_translation.annotations = build_highlight_selections(m_editor_view->translation_editor(), highlights);
+	m_extra_sel_translation.annotations = highlight_applier_t::build_selections(m_editor_view->translation_editor(), highlights);
 
 	m_extra_sel_translation.grammar = m_grammar_check->isChecked()
 	                                      ? m_grammar_checker.check(m_editor_view->translation_editor(), row_data->type)
 	                                      : QList<QTextEdit::ExtraSelection> {};
-	apply_extra_selections(m_editor_view->translation_editor(), m_extra_sel_translation);
+	highlight_applier_t::apply(m_editor_view->translation_editor(), m_extra_sel_translation);
 }
 
 void main_window_t::commit_current_edit()
@@ -547,85 +545,32 @@ void main_window_t::commit_current_edit()
 	auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
 	if (dict_doc)
 	{
-		commit_dict_edit(dict_doc, row_data, new_text_str);
-		return;
-	}
+		const auto result = m_editor_controller.commit_dict_full(*dict_doc, *row_data, new_text_str);
+		if (!result.base_result.success)
+			return;
 
-	commit_yaml_edit(m_active_doc, row_data, new_text_str);
-}
+		m_table_model->update_row(m_editor_controller.current_row(), result.base_result.new_text, result.base_result.status);
 
-// irreducible: 3 params required â€” document pointer per extraction constraint + row context + new value
-void main_window_t::commit_dict_edit(
-    dict_document_t * dict_doc,
-    const table_row_t * row_data,
-    const std::string & new_text_str)
-{
-	const auto result = m_editor_controller.commit(*dict_doc, *row_data, new_text_str);
-	if (!result.success)
-		return;
+		if (result.base_result.propagated_count > 0)
+		{
+			statusBar()->showMessage(QString("Propagated to %1 entries").arg(result.base_result.propagated_count), 5000);
+			m_editor_controller.sync_propagated_rows(*m_table_model, *dict_doc);
+		}
 
-	if (result.propagated_count > 0)
-	{
-		statusBar()->showMessage(QString("Propagated to %1 entries").arg(result.propagated_count), 5000);
-		m_table_model->update_row(m_editor_controller.current_row(), result.new_text, result.status);
-		sync_propagated_rows(dict_doc);
 		set_unsaved_changes(dict_doc->is_dirty());
 		m_editor_controller.set_loaded_text(m_editor_view->translation_editor()->toPlainText());
 		update_status_counts();
 		return;
 	}
 
-	m_table_model->update_row(m_editor_controller.current_row(), result.new_text, result.status);
-	set_unsaved_changes(dict_doc->is_dirty());
-	m_editor_controller.set_loaded_text(m_editor_view->translation_editor()->toPlainText());
-	update_status_counts();
-}
-
-// irreducible: 3 params required â€” document pointer per extraction constraint + row context + new value
-void main_window_t::commit_yaml_edit(
-    document_t * target_doc,
-    const table_row_t * row_data,
-    const std::string & new_text_str)
-{
-	target_doc->commit_edit(row_data->type, row_data->record_index, new_text_str);
+	m_editor_controller.commit_yaml(*m_active_doc, *row_data, new_text_str);
 	m_table_model->update_row(m_editor_controller.current_row(), new_text_str, status_t::in_progress);
-
-	auto * yaml_doc = dynamic_cast<yaml_document_t *>(target_doc);
-	if (yaml_doc)
-		yaml_doc->save_tmp();
-
-	set_unsaved_changes(target_doc->is_dirty());
+	set_unsaved_changes(m_active_doc->is_dirty());
 	m_editor_controller.set_loaded_text(m_editor_view->translation_editor()->toPlainText());
 	update_status_counts();
 }
 
-void main_window_t::sync_propagated_rows(dict_document_t * dict_doc)
-{
-	auto & data = dict_doc->data_mut();
-
-	for (int i = 0; i < m_table_model->rowCount(); ++i)
-	{
-		if (i == m_editor_controller.current_row())
-			continue;
-
-		const auto * row = m_table_model->row_at(i);
-		if (!row)
-			continue;
-
-		auto chap_it = data.find(row->type);
-		if (chap_it == data.end())
-			continue;
-
-		if (row->record_index >= chap_it->second.records.size())
-			continue;
-
-		const auto & record = chap_it->second.records[row->record_index];
-		if (record.new_text != row->new_text || record.status != row->status)
-			m_table_model->update_row(i, record.new_text, record.status);
-	}
-}
-
-// irreducible: sequential orchestrator â€” each step depends on prior state; no nesting to flatten
+// irreducible: sequential orchestrator Ă˘â‚¬â€ť each step depends on prior state; no nesting to flatten
 void main_window_t::load_record(int row)
 {
 	m_editor_controller.set_loading(true);
@@ -677,27 +622,27 @@ void main_window_t::load_record(int row)
 		m_editor_view->clear_details();
 
 	const auto & annotations = load_result.annotations;
-	const auto original_text_lower = m_editor_view->original_view()->toPlainText().toLower();
-	const auto translation_text_lower = m_editor_view->translation_editor()->toPlainText().toLower();
+	const auto original_text_lower = m_editor_view->original_view()->toPlainText().toLower().toStdString();
+	const auto translation_text_lower = m_editor_view->translation_editor()->toPlainText().toLower().toStdString();
 
-	const highlight_config_t orig_config { &annotations, true, highlight_sort_policy_t::length_first };
-	auto orig_highlights = find_annotation_highlights(original_text_lower, orig_config);
+	const highlight_request_t orig_request { &annotations, true, highlight_sort_policy_t::length_first };
+	auto orig_highlights = highlight_coordinator_t::find_annotation_highlights(original_text_lower, orig_request);
 
-	m_extra_sel_original.annotations = build_highlight_selections(m_editor_view->original_view(), orig_highlights);
+	m_extra_sel_original.annotations = highlight_applier_t::build_selections(m_editor_view->original_view(), orig_highlights);
 	m_extra_sel_original.grammar.clear();
 	m_extra_sel_original.adapted_diff.clear();
-	apply_extra_selections(m_editor_view->original_view(), m_extra_sel_original);
+	highlight_applier_t::apply(m_editor_view->original_view(), m_extra_sel_original);
 
-	const highlight_config_t trans_config { &annotations, false, highlight_sort_policy_t::length_first };
-	auto trans_highlights = find_annotation_highlights(translation_text_lower, trans_config);
+	const highlight_request_t trans_request { &annotations, false, highlight_sort_policy_t::length_first };
+	auto trans_highlights = highlight_coordinator_t::find_annotation_highlights(translation_text_lower, trans_request);
 
 	m_extra_sel_translation.annotations =
-	    build_highlight_selections(m_editor_view->translation_editor(), trans_highlights);
+	    highlight_applier_t::build_selections(m_editor_view->translation_editor(), trans_highlights);
 	m_extra_sel_translation.grammar = m_grammar_check->isChecked()
 	                                      ? m_grammar_checker.check(m_editor_view->translation_editor(), row_data->type)
 	                                      : QList<QTextEdit::ExtraSelection> {};
 	m_extra_sel_translation.adapted_diff.clear();
-	apply_extra_selections(m_editor_view->translation_editor(), m_extra_sel_translation);
+	highlight_applier_t::apply(m_editor_view->translation_editor(), m_extra_sel_translation);
 
 	m_extra_sel_adapted.annotations.clear();
 	m_extra_sel_adapted.grammar.clear();
@@ -714,7 +659,7 @@ void main_window_t::load_record(int row)
 		    m_editor_view->highlight_adapted_diff(row_data->old_text, load_result.details);
 	}
 
-	apply_extra_selections(m_editor_view->details_view(), m_extra_sel_adapted);
+	highlight_applier_t::apply(m_editor_view->details_view(), m_extra_sel_adapted);
 
 	const auto history = m_edit_history.get_history(row_data->type, row_data->key_text);
 	m_history_view->update_history(history, !load_result.is_read_only);
@@ -771,120 +716,6 @@ void main_window_t::load_record_plain(const table_row_t * row_data)
 	    (row_data->type == tools_t::rec_type_t::cell || row_data->type == tools_t::rec_type_t::dial ||
 	     row_data->type == tools_t::rec_type_t::fnam);
 	m_editor_view->translation_editor()->set_block_multiline(block_multiline);
-}
-
-// irreducible: sort-then-overlap algorithm with two policy branches; further splitting obscures the logic
-std::vector<annotation_highlight_t> main_window_t::find_annotation_highlights(
-    const QString & text_lower,
-    const highlight_config_t & config)
-{
-	struct candidate_t
-	{
-		int start;
-		int length;
-		bool is_hyperlink;
-	};
-
-	std::vector<candidate_t> candidates;
-
-	for (const auto & ann : *config.annotations)
-	{
-		const auto & raw = config.use_old_text ? ann.old_text : ann.new_text;
-		if (raw.empty())
-			continue;
-
-		bool is_hl = (ann.kind == annotation_t::dial_topic);
-		const auto term = QString::fromStdString(raw).toLower();
-		int pos = 0;
-		while ((pos = text_lower.indexOf(term, pos)) != -1)
-		{
-			candidates.push_back({ pos, static_cast<int>(term.length()), is_hl });
-			pos += static_cast<int>(term.length());
-		}
-	}
-
-	if (config.sort_policy == highlight_sort_policy_t::hyperlink_first)
-	{
-		std::sort(
-		    candidates.begin(),
-		    candidates.end(),
-		    [](const candidate_t & a, const candidate_t & b)
-		{
-			if (a.is_hyperlink != b.is_hyperlink)
-				return a.is_hyperlink;
-
-			if (a.length != b.length)
-				return a.length > b.length;
-
-			return a.start < b.start;
-		});
-	}
-	else
-	{
-		std::sort(
-		    candidates.begin(),
-		    candidates.end(),
-		    [](const candidate_t & a, const candidate_t & b)
-		{
-			if (a.length != b.length)
-				return a.length > b.length;
-
-			if (a.is_hyperlink != b.is_hyperlink)
-				return a.is_hyperlink;
-
-			return a.start < b.start;
-		});
-	}
-
-	std::vector<bool> covered(text_lower.length(), false);
-	std::vector<annotation_highlight_t> results;
-
-	for (const auto & c : candidates)
-	{
-		bool overlap = false;
-		for (int i = c.start; i < c.start + c.length; ++i)
-		{
-			if (covered[i])
-			{
-				overlap = true;
-				break;
-			}
-		}
-
-		if (overlap)
-			continue;
-
-		for (int i = c.start; i < c.start + c.length; ++i)
-			covered[i] = true;
-
-		results.push_back({ c.start, c.length, c.is_hyperlink });
-	}
-
-	return results;
-}
-
-QList<QTextEdit::ExtraSelection> main_window_t::build_highlight_selections(
-    translation_edit_view_t * target_editor,
-    const std::vector<annotation_highlight_t> & highlights)
-{
-	QList<QTextEdit::ExtraSelection> selections;
-
-	for (const auto & highlight : highlights)
-	{
-		QTextEdit::ExtraSelection sel;
-
-		if (theme_system_t::instance().active_theme() == theme_t::dark)
-			sel.format.setBackground(highlight.is_hyperlink ? QColor(40, 55, 75) : QColor(35, 60, 40));
-		else
-			sel.format.setBackground(highlight.is_hyperlink ? QColor(200, 220, 255) : QColor(200, 240, 200));
-
-		sel.cursor = QTextCursor(target_editor->document());
-		sel.cursor.setPosition(highlight.start);
-		sel.cursor.setPosition(highlight.start + highlight.length, QTextCursor::KeepAnchor);
-		selections.append(sel);
-	}
-
-	return selections;
 }
 
 void main_window_t::on_whitespace_toggled(bool checked)
@@ -1162,15 +993,6 @@ void main_window_t::update_annotations()
 	m_annotations_view->update_annotations(annotations, speaker_name, gender_str, enchantment_str);
 }
 
-void main_window_t::apply_extra_selections(translation_edit_view_t * editor, const extra_selections_state_t & state)
-{
-	QList<QTextEdit::ExtraSelection> merged;
-	merged.append(state.annotations);
-	merged.append(state.grammar);
-	merged.append(state.adapted_diff);
-	editor->setExtraSelections(merged);
-}
-
 void main_window_t::update_status_counts()
 {
 	auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
@@ -1294,7 +1116,7 @@ void main_window_t::load_config()
 	const int spell_index = m_settings.spell_lang_index();
 	on_spell_lang_changed(spell_index);
 
-	update_watcher_paths();
+	update_watcher_roots();
 	register_shortcuts();
 }
 
@@ -1459,7 +1281,7 @@ void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plu
 	scan_workspace();
 }
 
-// irreducible: self-contained modal dialog â€” UI construction is inherently verbose
+// irreducible: self-contained modal dialog Ă˘â‚¬â€ť UI construction is inherently verbose
 std::optional<make_base_params_t> main_window_t::show_make_base_dialog(const std::string & plugin_path)
 {
 	auto source_sep = plugin_path.find_last_of("/\\");
@@ -1720,7 +1542,7 @@ std::optional<make_base_params_t> main_window_t::show_make_base_dialog(const std
 	return params;
 }
 
-// irreducible: 3 params â€” source path + operation type + result data
+// irreducible: 3 params Ă˘â‚¬â€ť source path + operation type + result data
 void main_window_t::log_operation_result(
     const std::string & plugin_path,
     plugin_op_t op_type,
@@ -1916,35 +1738,17 @@ void main_window_t::scan_workspace()
 	rebuild_sidebar();
 }
 
-void main_window_t::update_watcher_paths()
+void main_window_t::update_watcher_roots()
 {
-	const auto current = m_fs_watcher->directories();
-	if (!current.isEmpty())
-		m_fs_watcher->removePaths(current);
-
-	QStringList paths;
+	QStringList roots;
 
 	const auto workspace = QCoreApplication::applicationDirPath() + "/workspace";
-	add_directory_recursive(paths, workspace);
+	roots.append(workspace);
 
 	for (const auto & root : m_file_list.get_roots())
-		add_directory_recursive(paths, QString::fromStdString(root));
+		roots.append(QString::fromStdString(root));
 
-	if (!paths.isEmpty())
-		m_fs_watcher->addPaths(paths);
-}
-
-void main_window_t::add_directory_recursive(QStringList & target_paths, const QString & directory)
-{
-	QDir qdir(directory);
-	if (!qdir.exists())
-		return;
-
-	target_paths.append(directory);
-
-	QDirIterator it(directory, QDir::Dirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
-	while (it.hasNext())
-		target_paths.append(it.next());
+	m_workspace_watcher->set_watch_roots(roots);
 }
 
 std::vector<dict_selection_dialog_t::dict_entry_t> main_window_t::build_dict_entries(

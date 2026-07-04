@@ -2,6 +2,8 @@
 #include "../decoder/sub_record_iter.hpp"
 #include "../utility/tools.hpp"
 #include <algorithm>
+#include <cstring>
+#include <map>
 #include <set>
 
 static constexpr size_t enam_slot_size = 24;
@@ -787,4 +789,221 @@ merge_result_t sub_record_merge_t::merge_generic(const merge_input_t & input)
 		return { false, winner_content };
 
 	return { true, result };
+}
+
+// leveled_list_merge_t implementation
+
+struct list_item_t
+{
+	std::string ident;
+	uint16_t level;
+};
+
+static std::vector<list_item_t> extract_list_items(const std::string & content)
+{
+	std::vector<list_item_t> items;
+	sub_record_iter_t iter(content);
+	sub_record_view_t sub;
+	std::string current_id;
+
+	while (iter.next(sub))
+	{
+		if (sub.type == "INAM" || sub.type == "CNAM")
+		{
+			current_id = std::string(sub.data, sub.size);
+			current_id = tools_t::erase_null_chars(current_id);
+			continue;
+		}
+
+		if (sub.type == "INTV" && !current_id.empty())
+		{
+			uint16_t level = 0;
+			if (sub.size >= 2)
+				std::memcpy(&level, sub.data, 2);
+
+			items.push_back({ current_id, level });
+			current_id.clear();
+		}
+	}
+
+	return items;
+}
+
+static std::string extract_list_header(const std::string & content)
+{
+	std::string header_part;
+	sub_record_iter_t iter(content);
+	sub_record_view_t sub;
+
+	while (iter.next(sub))
+	{
+		if (sub.type == "INAM" || sub.type == "CNAM" || sub.type == "INTV")
+			break;
+
+		if (sub.type == "INDX")
+			continue;
+
+		header_part += sub.type;
+		header_part += tools_t::convert_uint_to_string_byte_array(sub.size);
+		header_part += std::string(sub.data, sub.size);
+	}
+
+	return header_part;
+}
+
+static std::string build_merged_list_record(
+    const std::string & rec_type,
+    const std::string & header_part,
+    const std::vector<list_item_t> & merged_items)
+{
+	std::string indx_sub = "INDX";
+	uint32_t item_count = static_cast<uint32_t>(merged_items.size());
+	indx_sub += tools_t::convert_uint_to_string_byte_array(4);
+	indx_sub += std::string(reinterpret_cast<const char *>(&item_count), 4);
+
+	const std::string & item_sub_type = (rec_type == "LEVI") ? "INAM" : "CNAM";
+	std::string items_part;
+	for (const auto & item : merged_items)
+	{
+		std::string id_data = item.ident;
+		id_data.push_back('\0');
+
+		items_part += item_sub_type;
+		items_part += tools_t::convert_uint_to_string_byte_array(id_data.size());
+		items_part += id_data;
+
+		items_part += "INTV";
+		items_part += tools_t::convert_uint_to_string_byte_array(2);
+		items_part += std::string(reinterpret_cast<const char *>(&item.level), 2);
+	}
+
+	std::string body = header_part + indx_sub + items_part;
+
+	std::string record;
+	record += rec_type;
+	record += tools_t::convert_uint_to_string_byte_array(body.size());
+	record += std::string(8, '\0');
+	record += body;
+
+	return record;
+}
+
+using item_count_map_t = std::map<std::pair<std::string, uint16_t>, size_t>;
+
+static item_count_map_t build_item_count_map(const std::vector<list_item_t> & items)
+{
+	item_count_map_t counts;
+	for (const auto & item : items)
+		++counts[{ item.ident, item.level }];
+
+	return counts;
+}
+
+static bool is_item_deleted(
+    const std::pair<std::string, uint16_t> & item_key,
+    const item_count_map_t & first_map,
+    const std::vector<item_count_map_t> & non_first_maps)
+{
+	const auto it_first = first_map.find(item_key);
+	if (it_first == first_map.end() || it_first->second == 0)
+		return false;
+
+	for (const auto & version_map : non_first_maps)
+	{
+		const auto it_ver = version_map.find(item_key);
+		if (it_ver == version_map.end())
+			return true;
+	}
+
+	return false;
+}
+
+static size_t compute_merged_count(
+    const std::pair<std::string, uint16_t> & item_key,
+    const std::vector<item_count_map_t> & non_first_maps)
+{
+	size_t max_count = 0;
+	for (const auto & version_map : non_first_maps)
+	{
+		const auto it_ver = version_map.find(item_key);
+		if (it_ver != version_map.end() && it_ver->second > max_count)
+			max_count = it_ver->second;
+	}
+
+	return max_count;
+}
+
+static std::vector<list_item_t> build_merged_items(
+    const item_count_map_t & first_map,
+    const std::vector<item_count_map_t> & non_first_maps)
+{
+	std::set<std::pair<std::string, uint16_t>> all_keys;
+	for (const auto & [key, count] : first_map)
+		all_keys.insert(key);
+
+	for (const auto & version_map : non_first_maps)
+	{
+		for (const auto & [key, count] : version_map)
+			all_keys.insert(key);
+	}
+
+	std::vector<list_item_t> merged;
+	for (const auto & item_key : all_keys)
+	{
+		if (is_item_deleted(item_key, first_map, non_first_maps))
+			continue;
+
+		const auto merged_count = compute_merged_count(item_key, non_first_maps);
+		for (size_t i = 0; i < merged_count; ++i)
+			merged.push_back({ item_key.first, item_key.second });
+	}
+
+	return merged;
+}
+
+static void sort_merged_items(std::vector<list_item_t> & items)
+{
+	std::sort(
+	    items.begin(),
+	    items.end(),
+	    [](const list_item_t & left, const list_item_t & right)
+	{
+		if (left.level != right.level)
+			return left.level < right.level;
+
+		return left.ident < right.ident;
+	});
+}
+
+merge_result_t leveled_list_merge_t::merge(const merge_input_t & input)
+{
+	const auto & versions = input.version_contents;
+	if (versions.size() < 2)
+		return { false, {} };
+
+	const auto & first_content = versions.front();
+	const auto first_map = build_item_count_map(extract_list_items(first_content));
+
+	std::vector<item_count_map_t> non_first_maps;
+	std::string winning_content;
+
+	for (size_t vi = 1; vi < versions.size(); ++vi)
+	{
+		non_first_maps.push_back(build_item_count_map(extract_list_items(versions[vi])));
+		winning_content = versions[vi];
+	}
+
+	if (non_first_maps.empty())
+		return { false, {} };
+
+	auto merged = build_merged_items(first_map, non_first_maps);
+	sort_merged_items(merged);
+
+	const auto header_part = extract_list_header(winning_content);
+	const auto record = build_merged_list_record(input.rec_type, header_part, merged);
+
+	if (record == winning_content)
+		return { false, winning_content };
+
+	return { true, record };
 }

@@ -1,5 +1,5 @@
 #include "dialog/shortcuts_settings_view.hpp"
-#include <app_settings.hpp>
+#include <settings_store.hpp>
 #include <QHeaderView>
 #include <QKeySequenceEdit>
 #include <QLabel>
@@ -88,7 +88,7 @@ shortcuts_settings_view_t::shortcuts_settings_view_t(QWidget * parent)
 	connect(m_reset_button, &QPushButton::clicked, this, &shortcuts_settings_view_t::reset_to_defaults);
 }
 
-void shortcuts_settings_view_t::load(const app_settings_t & settings)
+void shortcuts_settings_view_t::load(const settings_store_t & settings)
 {
 	const auto editable_count = static_cast<int>(m_editable_entries.size());
 
@@ -103,7 +103,7 @@ void shortcuts_settings_view_t::load(const app_settings_t & settings)
 	check_conflicts();
 }
 
-void shortcuts_settings_view_t::apply(app_settings_t & settings) const
+void shortcuts_settings_view_t::apply(settings_store_t & settings) const
 {
 	const auto editable_count = static_cast<int>(m_editable_entries.size());
 

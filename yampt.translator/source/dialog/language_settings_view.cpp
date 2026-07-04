@@ -1,5 +1,5 @@
 #include "dialog/language_settings_view.hpp"
-#include <app_settings.hpp>
+#include <settings_store.hpp>
 #include <filesystem>
 #include <QComboBox>
 #include <QFormLayout>
@@ -167,7 +167,7 @@ language_settings_view_t::language_settings_view_t(const std::string & dictionar
 	    &language_settings_view_t::on_foreign_language_changed);
 }
 
-void language_settings_view_t::load(const app_settings_t & settings)
+void language_settings_view_t::load(const settings_store_t & settings)
 {
 	const auto native_code = QString::fromStdString(settings.native_language());
 	const auto foreign_code = QString::fromStdString(settings.foreign_language());
@@ -202,7 +202,7 @@ void language_settings_view_t::load(const app_settings_t & settings)
 	m_foreign_tag_edit->setText(QString::fromStdString(settings.foreign_tag()));
 }
 
-void language_settings_view_t::apply(app_settings_t & settings) const
+void language_settings_view_t::apply(settings_store_t & settings) const
 {
 	const auto native_code = m_native_language_combo->currentData().toString().toStdString();
 	settings.set_native_language(native_code);

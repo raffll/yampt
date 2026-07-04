@@ -1,7 +1,7 @@
 #include "view_tree_model.hpp"
 #include <decoder/conflict_slots.hpp>
 #include <decoder/view_tree_format.hpp>
-#include <scanner/conflict_compute.hpp>
+#include <scanner/record_conflict.hpp>
 #include <scanner/dial_info_align.hpp>
 #include <algorithm>
 #include <cstring>

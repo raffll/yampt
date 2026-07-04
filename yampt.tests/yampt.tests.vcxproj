@@ -186,7 +186,7 @@
     <ClCompile Include="source\tests.script_parser.cpp" />
     <ClCompile Include="source\tests.tools.cpp" />
     <ClCompile Include="source\tests.file_list.cpp" />
-    <ClCompile Include="source\tests.conflict_compute.cpp" />
+    <ClCompile Include="source\tests.record_conflict.cpp" />
     <ClCompile Include="source\tests.conflict_slots.cpp" />
     <ClCompile Include="source\tests.document.cpp" />
     <ClCompile Include="source\tests.esm_reader.cpp" />
@@ -230,6 +230,11 @@
     <ClCompile Include="source\tests.text_match_index.cpp" />
     <ClCompile Include="source\tests.cell_matcher.cpp" />
     <ClCompile Include="source\tests.dial_matcher.cpp" />
+    <ClCompile Include="source\tests.nav_tree_filter.cpp" />
+    <ClCompile Include="source\tests.highlight_coordinator.cpp" />
+    <ClCompile Include="source\tests.patch_builder.cpp" />
+    <ClCompile Include="source\tests.plugin_session.cpp" />
+    <ClCompile Include="source\tests.settings_store.cpp" />
     <ClCompile Include="..\yampt.translator\source\model\table_builder.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\row_filter.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\glossary.cpp" />
@@ -245,7 +250,15 @@
     <ClCompile Include="..\yampt.translator\source\editor\edit_history.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\byte_limit_validator.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\find_replace.cpp" />
+    <ClCompile Include="..\yampt.translator\source\editor\highlight_coordinator.cpp" />
+    <ClCompile Include="..\yampt.translator\source\editor\workspace_watcher.cpp" />
+    <ClCompile Include="..\yampt.translator\source\view\highlight_applier.cpp" />
     <ClCompile Include="..\yampt.editor\source\io\profile_reader.cpp" />
+    <ClCompile Include="..\yampt.editor\source\model\nav_tree_filter.cpp" />
+    <ClCompile Include="..\yampt.editor\source\model\plugin_session.cpp" />
+    <ClCompile Include="..\yampt.editor\source\patcher\patch_builder.cpp" />
+    <ClCompile Include="..\yampt.editor\source\view\nav_tree_view.cpp" />
+    <ClCompile Include="..\yampt.editor\source\view\record_view.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\yampt.core\yampt.core.vcxproj">
