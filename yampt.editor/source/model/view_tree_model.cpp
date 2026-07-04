@@ -361,7 +361,21 @@ QModelIndex view_tree_model_t::index(int row, int column, const QModelIndex & pa
 		return createIndex(row, column, nullptr);
 
 	if (parent.internalPointer() != nullptr)
+	{
+		auto * sub_ptr = static_cast<sub_record_row_t *>(parent.internalPointer());
+		const auto & vrows = visible_rows();
+		for (size_t i = 0; i < vrows.size(); ++i)
+		{
+			if (&vrows[i] != sub_ptr)
+				continue;
+
+			if (parent.row() < 0 || parent.row() >= static_cast<int>(sub_ptr->children.size()))
+				return {};
+
+			return createIndex(row, column, const_cast<field_row_t *>(&sub_ptr->children[parent.row()]));
+		}
 		return {};
+	}
 
 	const auto & vrows = visible_rows();
 	if (parent.row() < 0 || parent.row() >= static_cast<int>(vrows.size()))
@@ -375,15 +389,22 @@ QModelIndex view_tree_model_t::parent(const QModelIndex & child) const
 	if (!child.isValid())
 		return {};
 
-	auto * ptr = static_cast<sub_record_row_t *>(child.internalPointer());
+	void * ptr = child.internalPointer();
 	if (!ptr)
 		return {};
 
 	const auto & vrows = visible_rows();
+
 	for (int i = 0; i < static_cast<int>(vrows.size()); ++i)
 	{
-		if (&vrows[i] == ptr)
+		if (ptr == &vrows[i])
 			return createIndex(i, 0, nullptr);
+
+		for (int j = 0; j < static_cast<int>(vrows[i].children.size()); ++j)
+		{
+			if (ptr == &vrows[i].children[j])
+				return createIndex(j, 0, const_cast<sub_record_row_t *>(&vrows[i]));
+		}
 	}
 
 	return {};
@@ -397,18 +418,35 @@ int view_tree_model_t::rowCount(const QModelIndex & parent) const
 	if (!parent.isValid())
 		return static_cast<int>(visible_rows().size());
 
-	if (parent.internalPointer() != nullptr)
-		return 0;
-
+	void * ptr = parent.internalPointer();
 	const auto & vrows = visible_rows();
-	if (parent.row() < 0 || parent.row() >= static_cast<int>(vrows.size()))
-		return 0;
 
-	const auto & child_count = vrows[parent.row()].children.size();
-	if (child_count == 1)
-		return 0;
+	if (ptr == nullptr)
+	{
+		if (parent.row() < 0 || parent.row() >= static_cast<int>(vrows.size()))
+			return 0;
 
-	return static_cast<int>(child_count);
+		const auto & children = vrows[parent.row()].children;
+		if (children.size() == 1 && children[0].children.empty())
+			return 0;
+
+		return static_cast<int>(children.size());
+	}
+
+	auto * sub_ptr = static_cast<sub_record_row_t *>(ptr);
+	for (size_t i = 0; i < vrows.size(); ++i)
+	{
+		if (&vrows[i] != sub_ptr)
+			continue;
+
+		if (parent.row() < 0 || parent.row() >= static_cast<int>(sub_ptr->children.size()))
+			return 0;
+
+		const auto & field = sub_ptr->children[parent.row()];
+		return static_cast<int>(field.children.size());
+	}
+
+	return 0;
 }
 
 int view_tree_model_t::columnCount(const QModelIndex &) const
@@ -542,9 +580,9 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 	if (!index.isValid())
 		return {};
 
-	auto * parent_ptr = static_cast<sub_record_row_t *>(index.internalPointer());
+	void * ptr = index.internalPointer();
 
-	if (!parent_ptr)
+	if (!ptr)
 	{
 		const auto & vrows = visible_rows();
 		if (index.row() < 0 || index.row() >= static_cast<int>(vrows.size()))
@@ -570,24 +608,62 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 		return {};
 	}
 
-	if (index.row() < 0 || index.row() >= static_cast<int>(parent_ptr->children.size()))
-		return {};
+	const auto & vrows = visible_rows();
 
-	const auto & frow = parent_ptr->children[index.row()];
-
-	if (role == Qt::DisplayRole)
-		return field_row_display(frow, index.column());
-
-	if (role == Qt::BackgroundRole)
-		return field_row_background(frow, index.column());
-
-	if (role == Qt::ForegroundRole)
+	for (size_t i = 0; i < vrows.size(); ++i)
 	{
-		if (m_is_merge_pinned && is_merge_column(index.column()))
-			return QBrush(QColor(0, 128, 128));
+		if (ptr == &vrows[i])
+		{
+			if (index.row() < 0 || index.row() >= static_cast<int>(vrows[i].children.size()))
+				return {};
 
-		return sub_record_foreground(
-		    frow.cell_conflict_this, m_column_names.size(), index.column(), m_has_merge_column);
+			const auto & frow = vrows[i].children[index.row()];
+
+			if (role == Qt::DisplayRole)
+				return field_row_display(frow, index.column());
+
+			if (role == Qt::BackgroundRole)
+				return field_row_background(frow, index.column());
+
+			if (role == Qt::ForegroundRole)
+			{
+				if (m_is_merge_pinned && is_merge_column(index.column()))
+					return QBrush(QColor(0, 128, 128));
+
+				return sub_record_foreground(
+				    frow.cell_conflict_this, m_column_names.size(), index.column(), m_has_merge_column);
+			}
+
+			return {};
+		}
+
+		for (size_t j = 0; j < vrows[i].children.size(); ++j)
+		{
+			if (ptr != &vrows[i].children[j])
+				continue;
+
+			if (index.row() < 0 || index.row() >= static_cast<int>(vrows[i].children[j].children.size()))
+				return {};
+
+			const auto & grand = vrows[i].children[j].children[index.row()];
+
+			if (role == Qt::DisplayRole)
+				return field_row_display(grand, index.column());
+
+			if (role == Qt::BackgroundRole)
+				return field_row_background(grand, index.column());
+
+			if (role == Qt::ForegroundRole)
+			{
+				if (m_is_merge_pinned && is_merge_column(index.column()))
+					return QBrush(QColor(0, 128, 128));
+
+				return sub_record_foreground(
+				    grand.cell_conflict_this, m_column_names.size(), index.column(), m_has_merge_column);
+			}
+
+			return {};
+		}
 	}
 
 	return {};

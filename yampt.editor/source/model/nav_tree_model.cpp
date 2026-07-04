@@ -427,7 +427,7 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 			std::snprintf(
 			    buf,
 			    sizeof(buf),
-			    "[%02X] %s",
+			    "[%03d] %s",
 			    file_node.plugin_idx,
 			    m_scan.plugin_filename(file_node.plugin_idx).c_str());
 
@@ -446,7 +446,7 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 			if (is_master)
 				return QString::fromUtf8("\xF0\x9F\x93\x9C ") + QString::fromUtf8(buf);
 
-			return QString::fromUtf8(buf);
+			return QString::fromUtf8("\xF0\x9F\x93\x84 ") + QString::fromUtf8(buf);
 		}
 
 		if (role == Qt::BackgroundRole || role == Qt::ForegroundRole || role == Qt::FontRole)

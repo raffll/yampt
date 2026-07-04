@@ -178,6 +178,7 @@
     <ClCompile Include="source\decoder\conflict_slots.cpp" />
     <ClCompile Include="source\decoder\conflict_slots_cell.cpp" />
     <ClCompile Include="source\decoder\sub_record_schema.cpp" />
+    <ClCompile Include="source\decoder\view_group_def.cpp" />
     <ClCompile Include="source\decoder\view_tree_format.cpp" />
     <ClCompile Include="source\io\codepage.cpp" />
     <ClCompile Include="source\io\dict_reader.cpp" />
@@ -217,6 +218,7 @@
     <ClInclude Include="source\decoder\conflict_slots_cell.hpp" />
     <ClInclude Include="source\decoder\sub_record_iter.hpp" />
     <ClInclude Include="source\decoder\sub_record_schema.hpp" />
+    <ClInclude Include="source\decoder\view_group_def.hpp" />
     <ClInclude Include="source\decoder\view_tree_format.hpp" />
     <ClInclude Include="source\io\codepage.hpp" />
     <ClInclude Include="source\io\dict_reader.hpp" />

@@ -637,12 +637,12 @@ static const field_def_t cell_nam9_fields[] = {
 };
 
 static const field_def_t cell_dodt_fields[] = {
-	{ "X Pos", field_type_t::f32, 0, 4, nullptr, nullptr },
-	{ "Y Pos", field_type_t::f32, 4, 4, nullptr, nullptr },
-	{ "Z Pos", field_type_t::f32, 8, 4, nullptr, nullptr },
-	{ "X Rotate", field_type_t::f32, 12, 4, nullptr, nullptr },
-	{ "Y Rotate", field_type_t::f32, 16, 4, nullptr, nullptr },
-	{ "Z Rotate", field_type_t::f32, 20, 4, nullptr, nullptr },
+	{ "X Position", field_type_t::f32, 0, 4, nullptr, nullptr },
+	{ "Y Position", field_type_t::f32, 4, 4, nullptr, nullptr },
+	{ "Z Position", field_type_t::f32, 8, 4, nullptr, nullptr },
+	{ "X Rotation", field_type_t::f32, 12, 4, nullptr, nullptr },
+	{ "Y Rotation", field_type_t::f32, 16, 4, nullptr, nullptr },
+	{ "Z Rotation", field_type_t::f32, 20, 4, nullptr, nullptr },
 };
 
 static const char * const cont_flags[] = { "Organic", "Respawns", "_", "Unknown" };
@@ -745,12 +745,12 @@ static const field_def_t lock_lkdt_fields[] = {
 };
 
 static const field_def_t cell_ref_data_fields[] = {
-	{ "X Pos", field_type_t::f32, 0, 4, nullptr, nullptr },
-	{ "Y Pos", field_type_t::f32, 4, 4, nullptr, nullptr },
-	{ "Z Pos", field_type_t::f32, 8, 4, nullptr, nullptr },
-	{ "X Rotate", field_type_t::f32, 12, 4, nullptr, nullptr },
-	{ "Y Rotate", field_type_t::f32, 16, 4, nullptr, nullptr },
-	{ "Z Rotate", field_type_t::f32, 20, 4, nullptr, nullptr },
+	{ "X Position", field_type_t::f32, 0, 4, nullptr, nullptr },
+	{ "Y Position", field_type_t::f32, 4, 4, nullptr, nullptr },
+	{ "Z Position", field_type_t::f32, 8, 4, nullptr, nullptr },
+	{ "X Rotation", field_type_t::f32, 12, 4, nullptr, nullptr },
+	{ "Y Rotation", field_type_t::f32, 16, 4, nullptr, nullptr },
+	{ "Z Rotation", field_type_t::f32, 20, 4, nullptr, nullptr },
 };
 
 static const char * const body_parts[] = { "Head",     "Hair",     "Neck",     "Chest", "Groin", "Hand",

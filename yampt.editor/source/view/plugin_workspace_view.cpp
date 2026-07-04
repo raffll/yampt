@@ -7,7 +7,6 @@
 #include <scanner/auto_merge.hpp>
 #include <scanner/merge_patch_ops.hpp>
 #include <scanner/sub_record_merge.hpp>
-#include <decoder/view_tree_format.hpp>
 #include <scanner/summon_fixer.hpp>
 #include <algorithm>
 #include <filesystem>
@@ -835,72 +834,72 @@ void plugin_workspace_view_t::on_view_selection_changed(const QModelIndex & curr
 	}
 
 	const auto & visible = m_record_view->model()->rows();
-	const int row_idx = current.parent().isValid() ? current.parent().row() : current.row();
-	if (row_idx < 0 || row_idx >= static_cast<int>(visible.size()))
-	{
-		m_preview->clear();
-		return;
-	}
 
-	const auto & row = visible[row_idx];
-	const auto & rec_type = m_record_view->model()->record_type();
-	const auto & record_id = m_record_view->model()->record_id();
-	const int plugin_idx = m_record_view->model()->column_plugin_indices()[col];
+	const bool has_parent = current.parent().isValid();
+	const bool has_grandparent = has_parent && current.parent().parent().isValid();
 
-	const auto * entry = m_session->scan().find(rec_type, record_id);
-	if (!entry)
+	auto read_view_value = [&](int target_col) -> std::string
 	{
-		m_preview->clear();
-		return;
-	}
-
-	const auto & col_indices = m_record_view->model()->col_type_indices();
-	int view_occurrence = 0;
-	for (int r = 0; r < row_idx; ++r)
-	{
-		if (visible[r].type == row.type)
-			++view_occurrence;
-	}
-
-	auto read_full_value = [&](int target_col) -> std::string
-	{
-		if (target_col < 0 || target_col >= static_cast<int>(col_indices.size()))
+		const int value_col = target_col + 1;
+		if (value_col < 0)
 			return {};
 
-		auto it_type = col_indices[target_col].find(row.type);
-		if (it_type == col_indices[target_col].end())
-			return {};
-
-		if (view_occurrence >= static_cast<int>(it_type->second.size()))
-			return {};
-
-		if (it_type->second[view_occurrence] == SIZE_MAX)
-			return {};
-
-		const int binary_idx = static_cast<int>(it_type->second[view_occurrence]);
-		const int target_plugin = m_record_view->model()->column_plugin_indices()[target_col];
-
-		for (const auto & ver : entry->versions)
+		if (has_grandparent)
 		{
-			if (ver.plugin_idx != target_plugin)
-				continue;
+			const int top_idx = current.parent().parent().row();
+			const int mid_idx = current.parent().row();
+			const int leaf_idx = current.row();
 
-			const auto content = m_session->scan().read_record_content(target_plugin, ver.record_index);
-			const auto subs = sub_record_merge_t::parse_sub_records(content);
-			if (binary_idx >= static_cast<int>(subs.size()))
+			if (top_idx < 0 || top_idx >= static_cast<int>(visible.size()))
 				return {};
 
-			return format_value_full(
-			    subs[binary_idx].data.data(),
-			    subs[binary_idx].data.size(),
-			    m_record_view->model()->display_codepage());
+			const auto & parent_row = visible[top_idx];
+			if (mid_idx < 0 || mid_idx >= static_cast<int>(parent_row.children.size()))
+				return {};
+
+			const auto & mid_row = parent_row.children[mid_idx];
+			if (leaf_idx < 0 || leaf_idx >= static_cast<int>(mid_row.children.size()))
+				return {};
+
+			const auto & leaf = mid_row.children[leaf_idx];
+			if (value_col >= static_cast<int>(leaf.values.size()))
+				return {};
+
+			return leaf.values[value_col];
 		}
 
-		return {};
+		if (has_parent)
+		{
+			const int parent_idx = current.parent().row();
+			const int child_idx = current.row();
+
+			if (parent_idx < 0 || parent_idx >= static_cast<int>(visible.size()))
+				return {};
+
+			const auto & parent_row = visible[parent_idx];
+			if (child_idx < 0 || child_idx >= static_cast<int>(parent_row.children.size()))
+				return {};
+
+			const auto & child = parent_row.children[child_idx];
+			if (value_col >= static_cast<int>(child.values.size()))
+				return {};
+
+			return child.values[value_col];
+		}
+
+		const int row_idx = current.row();
+		if (row_idx < 0 || row_idx >= static_cast<int>(visible.size()))
+			return {};
+
+		const auto & row = visible[row_idx];
+		if (value_col >= static_cast<int>(row.values.size()))
+			return {};
+
+		return row.values[value_col];
 	};
 
-	const auto right_text = read_full_value(col);
-	const auto left_text = (col > 0) ? read_full_value(col - 1) : std::string{};
+	const auto right_text = read_view_value(col);
+	const auto left_text = (col > 0) ? read_view_value(col - 1) : std::string{};
 
 	if (right_text.empty() && left_text.empty())
 		m_preview->clear();
