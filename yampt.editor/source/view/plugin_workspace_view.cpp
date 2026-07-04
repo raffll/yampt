@@ -1309,6 +1309,9 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & pos)
 	const bool is_sub_record_row = !row.type.empty() && row.children.empty() && binary_idx >= 0;
 	const bool is_schema_row = !row.type.empty() && !row.children.empty() && row.size > 0 && binary_idx >= 0;
 
+	const bool is_merge_sub_record = is_on_merge && !row.type.empty() && row.children.empty();
+	const bool is_merge_schema_row = is_on_merge && !row.type.empty() && !row.children.empty() && row.size > 0;
+
 	QMenu menu(this);
 
 	if (!is_on_merge && is_sub_record_row && !is_field_row)
@@ -1385,25 +1388,157 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & pos)
 		}
 	}
 
-	if (is_on_merge && (is_sub_record_row || is_schema_row) && !is_field_row)
+	if (is_on_merge && (is_merge_sub_record || is_merge_schema_row) && !is_field_row)
+	{
+		int merge_binary_idx = binary_idx;
+		if (merge_binary_idx < 0)
+		{
+			const auto * entry = m_scan.find(rec_type, record_id);
+			if (entry)
+			{
+				std::string merge_content;
+				for (const auto & ver : entry->versions)
+				{
+					if (m_scan.is_merge_plugin(ver.plugin_idx))
+					{
+						merge_content = m_scan.read_record_content(ver.plugin_idx, ver.record_index);
+						break;
+					}
+				}
+
+				if (!merge_content.empty())
+				{
+					auto merge_subs = sub_record_merge_t::parse_sub_records(merge_content);
+					int occurrence = 0;
+					for (size_t s = 0; s < merge_subs.size(); ++s)
+					{
+						if (merge_subs[s].type == row.type)
+						{
+							if (occurrence == view_occurrence)
+							{
+								merge_binary_idx = static_cast<int>(s);
+								break;
+							}
+
+							++occurrence;
+						}
+					}
+				}
+			}
+		}
+
+		if (merge_binary_idx >= 0)
+		{
+			menu.addAction(
+			    "Remove Sub-Record",
+			    [this, rec_type, record_id, merge_binary_idx]()
+			{
+				const auto * entry = m_scan.find(rec_type, record_id);
+				if (!entry)
+					return;
+
+				std::string merge_content;
+				for (const auto & ver : entry->versions)
+				{
+					if (m_scan.is_merge_plugin(ver.plugin_idx))
+					{
+						merge_content = m_scan.read_record_content(ver.plugin_idx, ver.record_index);
+						break;
+					}
+				}
+
+				if (merge_content.empty())
+					return;
+
+				auto merge_subs = sub_record_merge_t::parse_sub_records(merge_content);
+				if (merge_binary_idx >= static_cast<int>(merge_subs.size()))
+					return;
+
+				merge_subs.erase(merge_subs.begin() + merge_binary_idx);
+
+				const auto patched = sub_record_merge_t::reconstruct_record(merge_content, merge_subs);
+				m_scan.copy_record_to_merge_raw(rec_type, record_id, patched);
+				log_message("[info] removed sub-record from " + rec_type + ":" + record_id);
+
+				refresh_after_merge(rec_type, record_id);
+				save_merged_patch();
+			});
+		}
+
+		menu.addAction(
+		    "Remove Record from Merge",
+		    [this, rec_type, record_id]()
+		{
+			m_scan.remove_from_merge(rec_type, record_id);
+			m_scan.rebuild_conflicts();
+			rebuild_nav_preserving_state();
+			save_merged_patch();
+			log_message("Removed " + rec_type + ":" + record_id + " from merge");
+			update_status();
+		});
+	}
+
+	if (is_on_merge && is_group_row && !is_field_row)
 	{
 		menu.addAction(
-		    "Remove Sub-Record",
-		    [this, rec_type, record_id, binary_idx]()
+		    "Remove Group",
+		    [this, rec_type, record_id, parent_row_idx, view_occurrence]()
 		{
-			const auto * merge_content_ptr = m_scan.find_merge_content(rec_type, record_id);
-			if (!merge_content_ptr)
+			const auto & visible = m_view_model->rows();
+			if (parent_row_idx < 0 || parent_row_idx >= static_cast<int>(visible.size()))
 				return;
 
-			auto merge_subs = sub_record_merge_t::parse_sub_records(*merge_content_ptr);
-			if (binary_idx >= static_cast<int>(merge_subs.size()))
+			const auto & group_row = visible[parent_row_idx];
+
+			const auto * entry = m_scan.find(rec_type, record_id);
+			if (!entry)
 				return;
 
-			merge_subs.erase(merge_subs.begin() + binary_idx);
+			std::string merge_content;
+			for (const auto & ver : entry->versions)
+			{
+				if (m_scan.is_merge_plugin(ver.plugin_idx))
+				{
+					merge_content = m_scan.read_record_content(ver.plugin_idx, ver.record_index);
+					break;
+				}
+			}
 
-			const auto patched = sub_record_merge_t::reconstruct_record(*merge_content_ptr, merge_subs);
+			if (merge_content.empty())
+				return;
+
+			auto merge_subs = sub_record_merge_t::parse_sub_records(merge_content);
+
+			std::vector<int> indices_to_remove;
+			for (const auto & child : group_row.children)
+			{
+				const auto child_sub_type = merge_patch_ops_t::extract_sub_type_from_field_name(child.name);
+				if (child_sub_type.empty())
+					continue;
+
+				int occurrence = 0;
+				for (size_t s = 0; s < merge_subs.size(); ++s)
+				{
+					if (merge_subs[s].type == child_sub_type)
+					{
+						if (occurrence == view_occurrence)
+						{
+							indices_to_remove.push_back(static_cast<int>(s));
+							break;
+						}
+
+						++occurrence;
+					}
+				}
+			}
+
+			std::sort(indices_to_remove.rbegin(), indices_to_remove.rend());
+			for (const auto idx : indices_to_remove)
+				merge_subs.erase(merge_subs.begin() + idx);
+
+			const auto patched = sub_record_merge_t::reconstruct_record(merge_content, merge_subs);
 			m_scan.copy_record_to_merge_raw(rec_type, record_id, patched);
-			log_message("[info] removed sub-record from " + rec_type + ":" + record_id);
+			log_message("[info] removed group from " + rec_type + ":" + record_id);
 
 			refresh_after_merge(rec_type, record_id);
 			save_merged_patch();
