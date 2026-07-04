@@ -3,6 +3,7 @@
 #include "../model/nav_tree_model.hpp"
 #include "../model/view_tree_model.hpp"
 #include "messages_view.hpp"
+#include "preview_view.hpp"
 #include <scanner/plugin_scan.hpp>
 #include <set>
 #include <QCheckBox>
@@ -12,6 +13,7 @@
 #include <QMenu>
 #include <QPushButton>
 #include <QSplitter>
+#include <QTabWidget>
 #include <QTreeView>
 #include <QWidget>
 
@@ -63,6 +65,7 @@ private slots:
 	void on_nav_context_menu(const QPoint & pos);
 	void on_view_context_menu(const QPoint & pos);
 	void on_view_copy();
+	void on_view_selection_changed(const QModelIndex & current);
 
 private:
 	void setup_views();
@@ -163,6 +166,8 @@ private:
 	nav_tree_model_t * m_nav_model = nullptr;
 	view_tree_model_t * m_view_model = nullptr;
 	messages_view_t * m_messages = nullptr;
+	preview_view_t * m_preview = nullptr;
+	QTabWidget * m_bottom_tabs = nullptr;
 
 	QLabel * m_status_label = nullptr;
 

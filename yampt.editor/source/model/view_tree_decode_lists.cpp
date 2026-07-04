@@ -2,6 +2,7 @@
 #include <decoder/conflict_slots.hpp>
 #include <decoder/view_tree_format.hpp>
 #include <scanner/conflict_compute.hpp>
+#include <scanner/dial_info_align.hpp>
 #include <algorithm>
 #include <cstring>
 
@@ -393,6 +394,73 @@ void view_tree_model_t::set_record_armor(record_context_t & context, const confl
 	}
 }
 
+void view_tree_model_t::set_record_dial(plugin_scan_t & scan, record_context_t & context, const conflict_entry_t & entry)
+{
+	set_record_generic(context, entry);
+
+	const auto col_count = context.col_count;
+	const auto info_result = dial_info_align_t::build(scan, entry.record_id);
+
+	if (info_result.entries.empty())
+		return;
+
+	sub_record_row_t separator_row;
+	separator_row.type = "";
+	separator_row.size = 0;
+	separator_row.label = "--- INFO Chain ---";
+	separator_row.values.resize(col_count);
+	separator_row.all_identical = true;
+	separator_row.row_conflict_all = conflict_all_t::only_one;
+	separator_row.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
+	m_rows.push_back(std::move(separator_row));
+
+	for (const auto & info_entry : info_result.entries)
+	{
+		sub_record_row_t info_row;
+		info_row.type = "";
+		info_row.size = 0;
+		info_row.label = info_entry.display_name.empty()
+		    ? info_entry.inam
+		    : info_entry.display_name;
+		info_row.values.resize(col_count);
+		info_row.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
+
+		bool all_same = true;
+		bool any_present = false;
+
+		for (size_t col = 0; col < col_count; ++col)
+		{
+			const int plugin_idx = (col < m_column_plugin_indices.size())
+			    ? m_column_plugin_indices[col]
+			    : -1;
+
+			if (plugin_idx < 0 || plugin_idx >= static_cast<int>(info_entry.present_in_plugin.size()))
+			{
+				info_row.values[col] = "";
+				continue;
+			}
+
+			if (info_entry.present_in_plugin[plugin_idx])
+			{
+				info_row.values[col] = "\xE2\x9C\x93";
+				any_present = true;
+			}
+			else
+			{
+				info_row.values[col] = "";
+				all_same = false;
+			}
+		}
+
+		info_row.all_identical = all_same;
+		info_row.row_conflict_all = (any_present && !all_same)
+		    ? conflict_all_t::override_benign
+		    : conflict_all_t::no_conflict;
+
+		m_rows.push_back(std::move(info_row));
+	}
+}
+
 void view_tree_model_t::set_record_generic(record_context_t & context, const conflict_entry_t & entry)
 {
 	const auto col_count = context.col_count;
@@ -587,6 +655,8 @@ void view_tree_model_t::emit_slot_rows(record_context_t & context, slot_build_co
 {
 	for (const auto & slot : build_ctx.unified_slots)
 		m_rows.push_back(build_slot_row(context.col_count, context.all_sub_records, build_ctx.col_type_indices, slot));
+
+	m_col_type_indices = build_ctx.col_type_indices;
 }
 
 void view_tree_model_t::emit_leveled_rows(record_context_t & context, slot_build_context_t & build_ctx)
@@ -666,4 +736,6 @@ void view_tree_model_t::emit_leveled_rows(record_context_t & context, slot_build
 		++entry_index;
 		++i;
 	}
+
+	m_col_type_indices = build_ctx.col_type_indices;
 }

@@ -14,21 +14,42 @@ patch_result_t merge_patch_ops_t::patch_sub_record(
 		return { false, {}, "binary_idx out of range" };
 
 	const auto & source_sub = source_subs[binary_idx];
-	int source_occurrence = 0;
-	for (int s = 0; s < binary_idx; ++s)
-	{
-		if (source_subs[s].type == sub_type)
-			++source_occurrence;
-	}
 
-	const auto merge_idx = sub_record_merge_t::find_by_type_and_occurrence(merge_subs, sub_type, source_occurrence);
-	if (merge_idx < 0)
+	bool is_multi_occurrence = is_content_matched_type(sub_type);
+
+	if (is_multi_occurrence)
+	{
+		for (const auto & existing : merge_subs)
+		{
+			if (existing.type == sub_type && existing.data == source_sub.data)
+				return { true, merge_content, sub_type };
+		}
+
 		merge_subs.push_back(source_sub);
+	}
 	else
-		merge_subs[merge_idx].data = source_sub.data;
+	{
+		int source_occurrence = 0;
+		for (int s = 0; s < binary_idx; ++s)
+		{
+			if (source_subs[s].type == sub_type)
+				++source_occurrence;
+		}
+
+		const auto merge_idx = sub_record_merge_t::find_by_type_and_occurrence(merge_subs, sub_type, source_occurrence);
+		if (merge_idx < 0)
+			merge_subs.push_back(source_sub);
+		else
+			merge_subs[merge_idx].data = source_sub.data;
+	}
 
 	auto patched = sub_record_merge_t::reconstruct_record(merge_content, merge_subs);
 	return { true, std::move(patched), sub_type };
+}
+
+bool merge_patch_ops_t::is_content_matched_type(const std::string & sub_type)
+{
+	return sub_type == "NPCS" || sub_type == "NPCO";
 }
 
 patch_result_t merge_patch_ops_t::patch_group(

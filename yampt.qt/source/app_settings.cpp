@@ -467,6 +467,16 @@ void app_settings_t::set_merge_column_visible(bool value)
 	m_settings.setValue("merge/show_column", value);
 }
 
+int app_settings_t::display_codepage() const
+{
+	return m_settings.value("Editor/DisplayCodepage", 1252).toInt();
+}
+
+void app_settings_t::set_display_codepage(int value)
+{
+	m_settings.setValue("Editor/DisplayCodepage", value);
+}
+
 void app_settings_t::sync()
 {
 	m_settings.sync();

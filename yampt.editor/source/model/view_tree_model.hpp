@@ -2,6 +2,7 @@
 
 #include <decoder/sub_record_iter.hpp>
 #include <decoder/sub_record_schema.hpp>
+#include <io/codepage.hpp>
 #include <scanner/conflict_compute.hpp>
 #include <scanner/plugin_scan.hpp>
 #include <conflict_types.hpp>
@@ -22,6 +23,8 @@ public:
 	void set_record(plugin_scan_t & scan, const conflict_entry_t & entry);
 	void clear();
 	void set_hide_no_conflict(bool hide);
+	void set_display_codepage(codepage_t codepage) { m_display_codepage = codepage; }
+	codepage_t display_codepage() const { return m_display_codepage; }
 	void set_excluded_plugins(const std::set<std::string> * excluded);
 	void set_patch_plugins(const std::set<std::string> * patch);
 	bool is_merge_column(int section) const;
@@ -113,6 +116,7 @@ private:
 	void set_record_faction(record_context_t & context, const conflict_entry_t & entry);
 	void set_record_container(record_context_t & context, const conflict_entry_t & entry);
 	void set_record_armor(record_context_t & context, const conflict_entry_t & entry);
+	void set_record_dial(plugin_scan_t & scan, record_context_t & context, const conflict_entry_t & entry);
 	void set_record_generic(record_context_t & context, const conflict_entry_t & entry);
 
 	void collect_leveled_entries(record_context_t & context, slot_build_context_t & build_ctx);
@@ -186,6 +190,7 @@ private:
 	const std::set<std::string> * m_excluded_plugins = nullptr;
 	const std::set<std::string> * m_patch_plugins = nullptr;
 	plugin_scan_t * m_scan_for_header = nullptr;
+	codepage_t m_display_codepage = codepage_t::windows_1252;
 };
 
 struct cell_ref_group_t

@@ -36,4 +36,5 @@ public:
 	    int field_idx);
 
 	static std::string extract_sub_type_from_field_name(const std::string & field_name);
+	static bool is_content_matched_type(const std::string & sub_type);
 };

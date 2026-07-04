@@ -6,6 +6,7 @@
 #include <scanner/merge_compute.hpp>
 #include <scanner/merge_patch_ops.hpp>
 #include <scanner/sub_record_merge.hpp>
+#include <decoder/view_tree_format.hpp>
 #include <scanner/summon_fixer.hpp>
 #include <algorithm>
 #include <app_settings.hpp>
@@ -111,6 +112,7 @@ plugin_workspace_view_t::plugin_workspace_view_t(app_settings_t & settings, QWid
 	m_view_model = new view_tree_model_t(this);
 	m_view_model->set_excluded_plugins(&m_excluded_plugins);
 	m_view_model->set_patch_plugins(&m_patch_plugins);
+	m_view_model->set_display_codepage(static_cast<codepage_t>(m_settings.display_codepage()));
 	m_nav_view->setModel(m_nav_model);
 	m_view_view->setModel(m_view_model);
 	m_view_view->setHeader(new colored_header_t(Qt::Horizontal, m_view_view));
@@ -149,10 +151,14 @@ void plugin_workspace_view_t::setup_views()
 	m_content_splitter->addWidget(m_view_view);
 	m_content_splitter->setSizes({ 300, 700 });
 
-	m_messages = new messages_view_t(m_main_splitter);
+	m_bottom_tabs = new QTabWidget(m_main_splitter);
+	m_messages = new messages_view_t(m_bottom_tabs);
+	m_preview = new preview_view_t(m_bottom_tabs);
+	m_bottom_tabs->addTab(m_messages, "Log");
+	m_bottom_tabs->addTab(m_preview, "Preview");
 
 	m_main_splitter->addWidget(m_content_splitter);
-	m_main_splitter->addWidget(m_messages);
+	m_main_splitter->addWidget(m_bottom_tabs);
 	m_main_splitter->setSizes({ 600, 150 });
 	m_main_splitter->setChildrenCollapsible(true);
 }
@@ -163,6 +169,15 @@ void plugin_workspace_view_t::setup_connections()
 
 	connect(m_nav_view, &QTreeView::customContextMenuRequested, this, &plugin_workspace_view_t::on_nav_context_menu);
 	connect(m_view_view, &QTreeView::customContextMenuRequested, this, &plugin_workspace_view_t::on_view_context_menu);
+
+	connect(
+	    m_view_view->selectionModel(),
+	    &QItemSelectionModel::currentChanged,
+	    this,
+	    [this](const QModelIndex & current)
+	{
+		on_view_selection_changed(current);
+	});
 
 	connect(
 	    m_nav_view->selectionModel(),
@@ -1248,6 +1263,95 @@ void plugin_workspace_view_t::on_view_copy()
 		QApplication::clipboard()->setText(texts.join("\t"));
 }
 
+void plugin_workspace_view_t::on_view_selection_changed(const QModelIndex & current)
+{
+	if (!current.isValid() || !m_preview)
+	{
+		m_preview->clear();
+		return;
+	}
+
+	const int col = current.column() - 1;
+	if (col < 0 || col >= static_cast<int>(m_view_model->column_plugin_indices().size()))
+	{
+		m_preview->clear();
+		return;
+	}
+
+	const auto & visible = m_view_model->rows();
+	const int row_idx = current.parent().isValid() ? current.parent().row() : current.row();
+	if (row_idx < 0 || row_idx >= static_cast<int>(visible.size()))
+	{
+		m_preview->clear();
+		return;
+	}
+
+	const auto & row = visible[row_idx];
+	const auto & rec_type = m_view_model->record_type();
+	const auto & record_id = m_view_model->record_id();
+	const int plugin_idx = m_view_model->column_plugin_indices()[col];
+
+	const auto * entry = m_scan.find(rec_type, record_id);
+	if (!entry)
+	{
+		m_preview->clear();
+		return;
+	}
+
+	const auto & col_indices = m_view_model->col_type_indices();
+	int view_occurrence = 0;
+	for (int r = 0; r < row_idx; ++r)
+	{
+		if (visible[r].type == row.type)
+			++view_occurrence;
+	}
+
+	auto read_full_value = [&](int target_col) -> std::string
+	{
+		if (target_col < 0 || target_col >= static_cast<int>(col_indices.size()))
+			return {};
+
+		auto it_type = col_indices[target_col].find(row.type);
+		if (it_type == col_indices[target_col].end())
+			return {};
+
+		if (view_occurrence >= static_cast<int>(it_type->second.size()))
+			return {};
+
+		if (it_type->second[view_occurrence] == SIZE_MAX)
+			return {};
+
+		const int binary_idx = static_cast<int>(it_type->second[view_occurrence]);
+		const int target_plugin = m_view_model->column_plugin_indices()[target_col];
+
+		for (const auto & ver : entry->versions)
+		{
+			if (ver.plugin_idx != target_plugin)
+				continue;
+
+			const auto content = m_scan.read_record_content(target_plugin, ver.record_index);
+			const auto subs = sub_record_merge_t::parse_sub_records(content);
+			if (binary_idx >= static_cast<int>(subs.size()))
+				return {};
+
+			return format_value_full(
+			    subs[binary_idx].data.data(),
+			    subs[binary_idx].data.size(),
+			    m_view_model->display_codepage());
+		}
+
+		return {};
+	};
+
+	const auto right_text = read_full_value(col);
+	const auto left_text = (col > 0) ? read_full_value(col - 1) : std::string{};
+
+	if (right_text.empty() && left_text.empty())
+		m_preview->clear();
+	else
+		m_preview->show_comparison(left_text, right_text);
+}
+
 void plugin_workspace_view_t::on_view_context_menu(const QPoint & pos)
 {
 	if (!m_scan.has_merge())
@@ -1465,31 +1569,15 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & pos)
 			});
 		}
 
-		menu.addAction(
-		    "Remove Record from Merge",
-		    [this, rec_type, record_id]()
-		{
-			m_scan.remove_from_merge(rec_type, record_id);
-			m_scan.rebuild_conflicts();
-			rebuild_nav_preserving_state();
-			save_merged_patch();
-			log_message("Removed " + rec_type + ":" + record_id + " from merge");
-			update_status();
-		});
 	}
 
 	if (is_on_merge && is_group_row && !is_field_row)
 	{
+		const auto group_type = row.type;
 		menu.addAction(
 		    "Remove Group",
-		    [this, rec_type, record_id, parent_row_idx, view_occurrence]()
+		    [this, rec_type, record_id, group_type, view_occurrence]()
 		{
-			const auto & visible = m_view_model->rows();
-			if (parent_row_idx < 0 || parent_row_idx >= static_cast<int>(visible.size()))
-				return;
-
-			const auto & group_row = visible[parent_row_idx];
-
 			const auto * entry = m_scan.find(rec_type, record_id);
 			if (!entry)
 				return;
@@ -1509,32 +1597,36 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & pos)
 
 			auto merge_subs = sub_record_merge_t::parse_sub_records(merge_content);
 
-			std::vector<int> indices_to_remove;
-			for (const auto & child : group_row.children)
+			int occurrence = 0;
+			int group_start = -1;
+			for (size_t s = 0; s < merge_subs.size(); ++s)
 			{
-				const auto child_sub_type = merge_patch_ops_t::extract_sub_type_from_field_name(child.name);
-				if (child_sub_type.empty())
+				if (merge_subs[s].type != group_type)
 					continue;
 
-				int occurrence = 0;
-				for (size_t s = 0; s < merge_subs.size(); ++s)
+				if (occurrence == view_occurrence)
 				{
-					if (merge_subs[s].type == child_sub_type)
-					{
-						if (occurrence == view_occurrence)
-						{
-							indices_to_remove.push_back(static_cast<int>(s));
-							break;
-						}
+					group_start = static_cast<int>(s);
+					break;
+				}
 
-						++occurrence;
-					}
+				++occurrence;
+			}
+
+			if (group_start < 0)
+				return;
+
+			int group_end = static_cast<int>(merge_subs.size());
+			for (int s = group_start + 1; s < static_cast<int>(merge_subs.size()); ++s)
+			{
+				if (merge_subs[s].type == group_type)
+				{
+					group_end = s;
+					break;
 				}
 			}
 
-			std::sort(indices_to_remove.rbegin(), indices_to_remove.rend());
-			for (const auto idx : indices_to_remove)
-				merge_subs.erase(merge_subs.begin() + idx);
+			merge_subs.erase(merge_subs.begin() + group_start, merge_subs.begin() + group_end);
 
 			const auto patched = sub_record_merge_t::reconstruct_record(merge_content, merge_subs);
 			m_scan.copy_record_to_merge_raw(rec_type, record_id, patched);
@@ -1544,17 +1636,6 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & pos)
 			save_merged_patch();
 		});
 
-		menu.addAction(
-		    "Remove Record from Merge",
-		    [this, rec_type, record_id]()
-		{
-			m_scan.remove_from_merge(rec_type, record_id);
-			m_scan.rebuild_conflicts();
-			rebuild_nav_preserving_state();
-			save_merged_patch();
-			log_message("Removed " + rec_type + ":" + record_id + " from merge");
-			update_status();
-		});
 	}
 
 	if (menu.actions().isEmpty())
@@ -1608,10 +1689,6 @@ void plugin_workspace_view_t::copy_group_to_merge(
 		return;
 
 	const auto & group_row = visible[group_row_idx];
-	const auto & col_indices = m_view_model->col_type_indices();
-	const int col = find_plugin_column(plugin_idx);
-	if (col < 0 || col >= static_cast<int>(col_indices.size()))
-		return;
 
 	int group_occurrence = 0;
 	for (int r = 0; r < group_row_idx; ++r)
@@ -1620,31 +1697,79 @@ void plugin_workspace_view_t::copy_group_to_merge(
 			++group_occurrence;
 	}
 
-	std::vector<std::pair<std::string, int>> group_binary_indices;
-	for (const auto & child : group_row.children)
+	const auto source_subs = sub_record_merge_t::parse_sub_records(source_content);
+	auto merge_subs = sub_record_merge_t::parse_sub_records(merge_content);
+
+	int source_start = -1;
+	int occurrence = 0;
+	for (size_t s = 0; s < source_subs.size(); ++s)
 	{
-		const auto child_sub_type = merge_patch_ops_t::extract_sub_type_from_field_name(child.name);
-		if (child_sub_type.empty())
+		if (source_subs[s].type != group_row.type)
 			continue;
 
-		auto it_type = col_indices[col].find(child_sub_type);
-		if (it_type == col_indices[col].end())
-			continue;
+		if (occurrence == group_occurrence)
+		{
+			source_start = static_cast<int>(s);
+			break;
+		}
 
-		if (group_occurrence >= static_cast<int>(it_type->second.size()))
-			continue;
-
-		if (it_type->second[group_occurrence] == SIZE_MAX)
-			continue;
-
-		group_binary_indices.emplace_back(child_sub_type, static_cast<int>(it_type->second[group_occurrence]));
+		++occurrence;
 	}
 
-	const auto result = merge_patch_ops_t::patch_group(merge_content, source_content, group_binary_indices);
-	if (!result.success)
+	if (source_start < 0)
 		return;
 
-	m_scan.copy_record_to_merge_raw(rec_type, record_id, result.content);
+	int source_end = static_cast<int>(source_subs.size());
+	for (int s = source_start + 1; s < static_cast<int>(source_subs.size()); ++s)
+	{
+		if (source_subs[s].type == group_row.type)
+		{
+			source_end = s;
+			break;
+		}
+	}
+
+	int merge_start = -1;
+	occurrence = 0;
+	for (size_t s = 0; s < merge_subs.size(); ++s)
+	{
+		if (merge_subs[s].type != group_row.type)
+			continue;
+
+		if (occurrence == group_occurrence)
+		{
+			merge_start = static_cast<int>(s);
+			break;
+		}
+
+		++occurrence;
+	}
+
+	sub_record_sequence_t source_group(
+	    source_subs.begin() + source_start, source_subs.begin() + source_end);
+
+	if (merge_start >= 0)
+	{
+		int merge_end = static_cast<int>(merge_subs.size());
+		for (int s = merge_start + 1; s < static_cast<int>(merge_subs.size()); ++s)
+		{
+			if (merge_subs[s].type == group_row.type)
+			{
+				merge_end = s;
+				break;
+			}
+		}
+
+		merge_subs.erase(merge_subs.begin() + merge_start, merge_subs.begin() + merge_end);
+		merge_subs.insert(merge_subs.begin() + merge_start, source_group.begin(), source_group.end());
+	}
+	else
+	{
+		merge_subs.insert(merge_subs.end(), source_group.begin(), source_group.end());
+	}
+
+	const auto patched = sub_record_merge_t::reconstruct_record(merge_content, merge_subs);
+	m_scan.copy_record_to_merge_raw(rec_type, record_id, patched);
 	log_message("[info] patched group in " + rec_type + ":" + record_id);
 
 	refresh_after_merge(rec_type, record_id);

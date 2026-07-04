@@ -19,5 +19,7 @@ public:
 
 private:
 	QComboBox * m_theme_combo = nullptr;
+	QComboBox * m_codepage_combo = nullptr;
 	theme_t m_initial_theme;
+	int m_initial_codepage = 1252;
 };

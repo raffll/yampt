@@ -132,6 +132,9 @@ public:
 	bool merge_column_visible() const;
 	void set_merge_column_visible(bool value);
 
+	int display_codepage() const;
+	void set_display_codepage(int value);
+
 	void sync();
 
 private:

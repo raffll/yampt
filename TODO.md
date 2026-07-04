@@ -7,30 +7,10 @@ Sorted by effort.
 ### Show optional absent sub-records in grey [L]
 xEdit shows sub-records that are defined in the record schema but absent from the actual data as greyed-out placeholder rows (e.g. SCRI - ScriptID, CNAM - Female Body Part Name, ENAM - EnchantID). Requires a canonical sub-record order definition per record type. Missing entries appear in their expected position with grey text and empty plugin columns.
 
-### Cell reference hierarchy in view tree [L]
-Cell references are currently displayed flat in the right panel. Refactor to show them nested:
-- Cell Header sub-records at top level (DATA, AMBI, WHGT, etc.)
-- Persistent group node (references before NAM0)
-- Temporary group node (references after NAM0)
-- Each reference as a collapsible node labeled with object index + NAME ID
-- Reference sub-records (FRMR, NAME, DODT, DNAM, XSCL, ANAM, DATA) as children of their reference node
-Matches xEdit's cell reference layout.
-
-### DIAL INFO list alignment in view tree [M]
-When a DIAL record is selected, show a list of INFO INAM IDs below the DIAL sub-records, aligned/paired across plugins by INAM key. Shows which INFOs each plugin has and where mods insert new entries in the INFO chain. Same alignment pattern as CELL FRMR references — matched by ID, unmatched entries show as empty in plugins that don't have them.
-
-### Codepage-aware text display in yEditor [S]
-`format_value` currently hardcodes Windows-1252 for codepage-to-UTF-8 conversion. Should read the codepage from app settings (same setting as the merge/CLI uses: 1252 for English, 1250 for Polish, 1251 for Russian). Pass it through to the view tree formatting layer.
-
 ### Truncate long text in view tree cells + preview pane [M]
 Multi-line sub-record values (BOOK TEXT, SCPT SCTX) misalign across columns because rows have different text lengths. Fix:
 1. Truncate to a single line in the tree cell (show first ~80 chars + ellipsis). Full text available via tooltip.
 2. Add a preview pane below the view tree that shows the full content of the selected cell. Clicking a TEXT cell displays its complete text in the preview.
-
-### Dark theme [L]
-- Dark theme
-- Unhardcode colors (status_colors.hpp, grammar_checker warning_format, etc.)
-- Match better colors for dark theme
 
 ### Polish UI localization [L]
 Move hardcoded UI strings to YAML l10n files so the interface can be displayed in Polish.

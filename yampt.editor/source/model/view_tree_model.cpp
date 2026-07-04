@@ -51,6 +51,7 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 	    (m_record_type == "CONT" || m_record_type == "CREA" || m_record_type == "NPC_" || m_record_type == "BSGN" ||
 	     m_record_type == "RACE");
 	const bool is_armor = (m_record_type == "ARMO" || m_record_type == "CLOT");
+	const bool is_dial = false;
 
 	if (is_cell)
 		set_record_cell(context);
@@ -62,20 +63,24 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 		set_record_container(context, entry);
 	else if (is_armor)
 		set_record_armor(context, entry);
+	else if (is_dial)
+		set_record_dial(scan, context, entry);
 	else
 		set_record_generic(context, entry);
 
 	finalize_header_conflict();
 
-	m_col_type_indices.clear();
-	m_col_type_indices.resize(col_count);
-	for (size_t col = 0; col < col_count; ++col)
+	if (m_col_type_indices.empty())
 	{
-		if (col >= all_sub_records.size())
-			continue;
+		m_col_type_indices.resize(col_count);
+		for (size_t col = 0; col < col_count; ++col)
+		{
+			if (col >= all_sub_records.size())
+				continue;
 
-		for (size_t i = 0; i < all_sub_records[col].size(); ++i)
-			m_col_type_indices[col][all_sub_records[col][i].type].push_back(i);
+			for (size_t i = 0; i < all_sub_records[col].size(); ++i)
+				m_col_type_indices[col][all_sub_records[col][i].type].push_back(i);
+		}
 	}
 
 	endResetModel();

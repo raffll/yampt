@@ -425,76 +425,211 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 		std::vector<sub_slot_t> ref_slots;
 		build_ref_slots_for_object(col_count, all_subs, col_refs, obj_idx, ref_slots);
 
+		std::string ref_label = "#" + std::to_string(obj_idx);
+		for (size_t col = 0; col < col_count; ++col)
+		{
+			if (col >= all_subs.size())
+				continue;
+
+			for (const auto & ref_group : col_refs[col])
+			{
+				if (ref_group.object_index != obj_idx)
+					continue;
+
+				for (size_t i = ref_group.start_idx; i < ref_group.end_idx; ++i)
+				{
+					if (all_subs[col][i].type == "NAME")
+					{
+						std::string name_text(all_subs[col][i].data, all_subs[col][i].size);
+						if (!name_text.empty() && name_text.back() == '\0')
+							name_text.pop_back();
+
+						ref_label += " - " + name_text;
+						break;
+					}
+				}
+				break;
+			}
+
+			if (ref_label.find(" - ") != std::string::npos)
+				break;
+		}
+
+		sub_record_row_t group_row;
+		group_row.type = "FRMR";
+		group_row.size = 0;
+
+		static constexpr bool show_cell_debug_info = true;
+		if (show_cell_debug_info)
+		{
+			ref_label += " [";
+			for (size_t col = 0; col < col_count; ++col)
+			{
+				if (col > 0)
+					ref_label += " ";
+
+				bool found = false;
+				if (col < col_refs.size())
+				{
+					for (const auto & ref_group : col_refs[col])
+					{
+						if (ref_group.object_index == obj_idx)
+						{
+							ref_label += std::to_string(ref_group.start_idx) + "-" + std::to_string(ref_group.end_idx);
+							found = true;
+							break;
+						}
+					}
+				}
+
+				if (!found)
+					ref_label += "-";
+			}
+			ref_label += "]";
+		}
+
+		group_row.label = ref_label;
+		group_row.values.resize(col_count);
+		group_row.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
+		group_row.row_conflict_all = conflict_all_t::only_one;
+
 		for (const auto & slot : ref_slots)
 		{
-			sub_record_row_t row;
-			row.size = 0;
-			row.values.resize(col_count);
 			const char * first_data = nullptr;
 			size_t first_size = 0;
 
 			for (size_t col = 0; col < col_count; ++col)
 			{
 				if (col >= all_subs.size())
-				{
-					row.values[col] = "";
 					continue;
-				}
 
 				const auto sv = find_ref_sub_record(all_subs[col], col_refs[col], obj_idx, slot.type, slot.occurrence);
-
-				if (!sv.data)
-				{
-					row.values[col] = "";
-					continue;
-				}
-
-				if (!first_data)
+				if (sv.data && !first_data)
 				{
 					first_data = sv.data;
 					first_size = sv.size;
-					row.size = sv.size;
 				}
-				row.values[col] = format_value(sv.data, sv.size);
 			}
 
-			row.type = slot.type;
-			row.label = make_sub_label(slot.type, m_record_type, first_size);
-			row.all_identical = check_all_identical(row.values);
-			row.row_conflict_all = compute_conflict_all(row.values);
-			row.cell_conflict_this = compute_conflict_this(row.values);
+			const auto * schema = first_data ? find_schema(m_record_type, slot.type, first_size) : nullptr;
+			if (!schema && first_data)
+				schema = find_schema("*", slot.type, first_size);
 
-			const auto * schema = find_schema(m_record_type, slot.type, first_size);
-			if (schema && first_data)
-				decode_schema_children_ref(
-				    row, schema, first_data, first_size, col_count, all_subs, col_refs, obj_idx, slot);
-			else if (
-			    first_data && first_size > 0 && !row.values.empty() && !row.values[0].empty() &&
-			    row.values[0][0] == '<')
-				decode_hex_children_ref(row, first_size, col_count, all_subs, col_refs, obj_idx, slot);
-
-			if (!row.children.empty())
+			if (schema && schema->field_count > 1)
 			{
-				row.row_conflict_all = conflict_all_t::unknown;
-				for (const auto & child : row.children)
+				for (size_t field_idx = 0; field_idx < schema->field_count; ++field_idx)
 				{
-					if (child.row_conflict_all > row.row_conflict_all)
-						row.row_conflict_all = child.row_conflict_all;
+					const auto & fdef = schema->fields[field_idx];
+					field_row_t field_child;
+					field_child.name = std::string(slot.type) + " - " + fdef.name;
+					field_child.values.resize(col_count);
+
+					for (size_t col = 0; col < col_count; ++col)
+					{
+						if (col >= all_subs.size())
+						{
+							field_child.values[col] = "";
+							continue;
+						}
+
+						const auto sv = find_ref_sub_record(all_subs[col], col_refs[col], obj_idx, slot.type, slot.occurrence);
+						if (!sv.data)
+							field_child.values[col] = "";
+						else
+							field_child.values[col] = decode_field(fdef, sv.data, sv.size);
+					}
+
+					field_child.all_identical = check_all_identical(field_child.values);
+					field_child.row_conflict_all = compute_conflict_all(field_child.values);
+					field_child.cell_conflict_this = compute_conflict_this(field_child.values);
+
+					if (field_child.row_conflict_all > group_row.row_conflict_all)
+						group_row.row_conflict_all = field_child.row_conflict_all;
+
+					for (size_t col = 0; col < col_count && col < field_child.cell_conflict_this.size(); ++col)
+					{
+						if (field_child.cell_conflict_this[col] > group_row.cell_conflict_this[col])
+							group_row.cell_conflict_this[col] = field_child.cell_conflict_this[col];
+					}
+
+					group_row.children.push_back(std::move(field_child));
+				}
+			}
+			else
+			{
+				field_row_t child_field;
+				child_field.values.resize(col_count);
+
+				for (size_t col = 0; col < col_count; ++col)
+				{
+					if (col >= all_subs.size())
+					{
+						child_field.values[col] = "";
+						continue;
+					}
+
+					const auto sv = find_ref_sub_record(all_subs[col], col_refs[col], obj_idx, slot.type, slot.occurrence);
+					if (!sv.data)
+					{
+						child_field.values[col] = "";
+						continue;
+					}
+
+					if (schema && schema->field_count == 1)
+						child_field.values[col] = decode_field(schema->fields[0], sv.data, sv.size);
+					else
+						child_field.values[col] = format_value(sv.data, sv.size, m_display_codepage);
 				}
 
-				for (size_t col = 0; col < row.cell_conflict_this.size(); ++col)
+				child_field.name = slot.type + " - " + make_sub_label(slot.type, m_record_type, first_size);
+				child_field.all_identical = check_all_identical(child_field.values);
+				child_field.row_conflict_all = compute_conflict_all(child_field.values);
+				child_field.cell_conflict_this = compute_conflict_this(child_field.values);
+
+				if (child_field.row_conflict_all > group_row.row_conflict_all)
+					group_row.row_conflict_all = child_field.row_conflict_all;
+
+				for (size_t col = 0; col < col_count && col < child_field.cell_conflict_this.size(); ++col)
 				{
-					conflict_this_t worst = conflict_this_t::unknown;
-					for (const auto & child : row.children)
+					if (child_field.cell_conflict_this[col] > group_row.cell_conflict_this[col])
+						group_row.cell_conflict_this[col] = child_field.cell_conflict_this[col];
+				}
+
+				group_row.children.push_back(std::move(child_field));
+			}
+		}
+
+		bool present_in_any = false;
+		for (size_t col = 0; col < col_count; ++col)
+		{
+			bool present = false;
+			if (col < col_refs.size())
+			{
+				for (const auto & ref_group : col_refs[col])
+				{
+					if (ref_group.object_index == obj_idx)
 					{
-						if (col < child.cell_conflict_this.size() && child.cell_conflict_this[col] > worst)
-							worst = child.cell_conflict_this[col];
+						present = true;
+						break;
 					}
-					row.cell_conflict_this[col] = worst;
 				}
 			}
 
-			m_rows.push_back(std::move(row));
+			if (present)
+			{
+				group_row.values[col] = ref_label;
+				present_in_any = true;
+			}
+			else
+			{
+				group_row.values[col] = "";
+			}
 		}
+
+		group_row.all_identical = check_all_identical(group_row.values);
+		if (!present_in_any)
+			group_row.row_conflict_all = conflict_all_t::only_one;
+
+		m_rows.push_back(std::move(group_row));
 	}
 }

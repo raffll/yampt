@@ -88,7 +88,7 @@ const std::map<std::string, const char *> & sub_record_descriptions()
 	return descs;
 }
 
-std::string format_value(const char * data, size_t size)
+std::string format_value(const char * data, size_t size, codepage_t codepage)
 {
 	bool printable = true;
 	bool found_null = false;
@@ -126,7 +126,7 @@ std::string format_value(const char * data, size_t size)
 		}
 
 		std::string raw(data, len);
-		auto result = decode_to_utf8(raw, codepage_t::windows_1252);
+		auto result = decode_to_utf8(raw, codepage);
 
 		auto line_end = result.find('\r');
 		if (line_end == std::string::npos)
@@ -135,7 +135,57 @@ std::string format_value(const char * data, size_t size)
 		if (line_end != std::string::npos)
 			result = result.substr(0, line_end);
 
+		static constexpr size_t max_display_length = 120;
+		if (result.size() > max_display_length)
+			result = result.substr(0, max_display_length) + "\xE2\x80\xA6";
+
 		return result;
+	}
+
+	char buf[64];
+	std::snprintf(buf, sizeof(buf), "<%zu bytes>", size);
+	return std::string(buf);
+}
+
+std::string format_value_full(const char * data, size_t size, codepage_t codepage)
+{
+	bool printable = true;
+	bool found_null = false;
+	for (size_t i = 0; i < size; ++i)
+	{
+		unsigned char c = static_cast<unsigned char>(data[i]);
+		if (c == 0)
+		{
+			found_null = true;
+			continue;
+		}
+
+		if (found_null)
+		{
+			printable = false;
+			break;
+		}
+
+		if (c < 32 && c != '\t' && c != '\n' && c != '\r')
+		{
+			printable = false;
+			break;
+		}
+	}
+
+	if (printable)
+	{
+		size_t len = 0;
+		for (size_t i = 0; i < size; ++i)
+		{
+			if (data[i] == '\0')
+				break;
+
+			++len;
+		}
+
+		std::string raw(data, len);
+		return decode_to_utf8(raw, codepage);
 	}
 
 	char buf[64];

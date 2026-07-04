@@ -819,6 +819,10 @@ static const field_def_t frmr_fields[] = {
 	{ "Object Index", field_type_t::u32, 0, 4, nullptr, nullptr },
 };
 
+static const field_def_t dele_fields[] = {
+	{ "Deleted", field_type_t::u32, 0, 4, nullptr, nullptr },
+};
+
 static const field_def_t whgt_fields[] = {
 	{ "Water Height", field_type_t::f32, 0, 4, nullptr, nullptr },
 };
@@ -953,6 +957,7 @@ static const std::vector<sub_record_schema_t> & build_schemas()
 		{ "DIAL", "DATA", 1, dial_data_fields, ARRAY_COUNT(dial_data_fields) },
 		{ "*", "XSCL", 4, xscl_fields, ARRAY_COUNT(xscl_fields) },
 		{ "*", "FRMR", 4, frmr_fields, ARRAY_COUNT(frmr_fields) },
+		{ "*", "DELE", 4, dele_fields, ARRAY_COUNT(dele_fields) },
 		{ "CELL", "WHGT", 4, whgt_fields, ARRAY_COUNT(whgt_fields) },
 		{ "CELL", "NAM0", 4, nam0_fields, ARRAY_COUNT(nam0_fields) },
 		{ "*", "INTV", 4, intv_4_fields, ARRAY_COUNT(intv_4_fields) },
