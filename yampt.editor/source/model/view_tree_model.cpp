@@ -502,9 +502,9 @@ int view_tree_model_t::columnCount(const QModelIndex &) const
 	return static_cast<int>(m_column_names.size()) + 1;
 }
 
-static bool is_cell_empty(const std::string & value)
+static bool is_cell_not_present(const std::string & value)
 {
-	return value.empty() || value == non_existent_value;
+	return value == non_existent_value;
 }
 
 static QString truncate_for_display(const std::string & value)
@@ -560,7 +560,7 @@ static QVariant sub_record_background(const view_tree_model_t::view_node_t & row
 	if (column > 0)
 	{
 		const int col = column - 1;
-		if (col >= 0 && col < static_cast<int>(row.values.size()) && is_cell_empty(row.values[col]))
+		if (col >= 0 && col < static_cast<int>(row.values.size()) && is_cell_not_present(row.values[col]))
 		{
 			const auto active = theme.active_theme();
 			const auto raw = conflict_all_color_raw(row.row_conflict_all, active);

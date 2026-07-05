@@ -65,28 +65,28 @@ view_tree_model_t::view_node_t view_tree_model_t::build_slot_row(
 	{
 		if (col >= all_subs.size())
 		{
-			row.values[col] = policy.skip_non_existent ? non_existent_value : "";
+			row.values[col] = non_existent_value;
 			continue;
 		}
 
 		auto it_type = col_indices[col].find(slot.type);
 		if (it_type == col_indices[col].end())
 		{
-			row.values[col] = policy.skip_non_existent ? non_existent_value : "";
+			row.values[col] = non_existent_value;
 			continue;
 		}
 
 		const auto & indices = it_type->second;
 		if (slot.occurrence >= static_cast<int>(indices.size()))
 		{
-			row.values[col] = policy.skip_non_existent ? non_existent_value : "";
+			row.values[col] = non_existent_value;
 			continue;
 		}
 
 		size_t idx = indices[slot.occurrence];
 		if (idx == SIZE_MAX)
 		{
-			row.values[col] = policy.skip_non_existent ? non_existent_value : "";
+			row.values[col] = non_existent_value;
 			continue;
 		}
 
@@ -198,7 +198,7 @@ void view_tree_model_t::decode_schema_children(
 				{
 					if (col >= all_subs.size())
 					{
-						frow.values[col] = policy.skip_non_existent ? non_existent_value : "";
+						frow.values[col] = non_existent_value;
 						continue;
 					}
 
@@ -206,14 +206,14 @@ void view_tree_model_t::decode_schema_children(
 					if (it_type == col_indices[col].end() ||
 					    slot.occurrence >= static_cast<int>(it_type->second.size()))
 					{
-						frow.values[col] = policy.skip_non_existent ? non_existent_value : "";
+						frow.values[col] = non_existent_value;
 						continue;
 					}
 
 					size_t idx = it_type->second[slot.occurrence];
 					if (idx == SIZE_MAX)
 					{
-						frow.values[col] = policy.skip_non_existent ? non_existent_value : "";
+						frow.values[col] = non_existent_value;
 						continue;
 					}
 
@@ -240,21 +240,21 @@ void view_tree_model_t::decode_schema_children(
 		{
 			if (col >= all_subs.size())
 			{
-				frow.values[col] = policy.skip_non_existent ? non_existent_value : "";
+				frow.values[col] = non_existent_value;
 				continue;
 			}
 
 			auto it_type = col_indices[col].find(slot.type);
 			if (it_type == col_indices[col].end() || slot.occurrence >= static_cast<int>(it_type->second.size()))
 			{
-				frow.values[col] = policy.skip_non_existent ? non_existent_value : "";
+				frow.values[col] = non_existent_value;
 				continue;
 			}
 
 			size_t idx = it_type->second[slot.occurrence];
 			if (idx == SIZE_MAX)
 			{
-				frow.values[col] = policy.skip_non_existent ? non_existent_value : "";
+				frow.values[col] = non_existent_value;
 				continue;
 			}
 
@@ -296,21 +296,21 @@ void view_tree_model_t::decode_hex_children(
 		{
 			if (col >= all_subs.size())
 			{
-				frow.values[col] = policy.skip_non_existent ? non_existent_value : "";
+				frow.values[col] = non_existent_value;
 				continue;
 			}
 
 			auto it_type = col_indices[col].find(slot.type);
 			if (it_type == col_indices[col].end() || slot.occurrence >= static_cast<int>(it_type->second.size()))
 			{
-				frow.values[col] = policy.skip_non_existent ? non_existent_value : "";
+				frow.values[col] = non_existent_value;
 				continue;
 			}
 
 			size_t idx = it_type->second[slot.occurrence];
 			if (idx == SIZE_MAX)
 			{
-				frow.values[col] = policy.skip_non_existent ? non_existent_value : "";
+				frow.values[col] = non_existent_value;
 				continue;
 			}
 

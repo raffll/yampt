@@ -447,6 +447,8 @@ static const std::map<std::pair<std::string, std::string>, const char *> & conte
 		{ { "CELL", "ANAM" }, "Owner" },
 		{ { "CELL", "BNAM" }, "Global/Rank" },
 		{ { "CELL", "CNAM" }, "Previous Owner" },
+		{ { "CELL", "CNDT" }, "Moved Destination" },
+		{ { "CELL", "MVRF" }, "Moved Reference" },
 		{ { "CELL", "XCHG" }, "Charge" },
 		{ { "CELL", "XSOL" }, "Soul" },
 		{ { "NPC_", "ANAM" }, "Faction" },

@@ -106,6 +106,25 @@ private:
 	    const std::string & record_id,
 	    const std::string & source_content);
 	int find_plugin_column(int plugin_idx) const;
+	void copy_cell_record_to_merge(
+	    int plugin_idx,
+	    const std::string & rec_type,
+	    const std::string & record_id,
+	    const QModelIndex & clicked_index,
+	    int clicked_col);
+	void copy_whole_record_to_merge(
+	    int plugin_idx,
+	    const std::string & rec_type,
+	    const std::string & record_id);
+	void remove_sub_record_from_merge(
+	    const std::string & rec_type,
+	    const std::string & record_id,
+	    int binary_idx,
+	    const std::string & removed_type);
+	void remove_group_from_merge(
+	    const std::string & rec_type,
+	    const std::string & record_id,
+	    view_tree_model_t::binary_range_t range);
 
 	int create_merge_records();
 	bool eventFilter(QObject * obj, QEvent * event) override;

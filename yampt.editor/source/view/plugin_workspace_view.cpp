@@ -702,13 +702,41 @@ void plugin_workspace_view_t::on_nav_context_menu(const QPoint & global_pos, con
 	if (info.plugin_idx < 0)
 		return;
 
+	// ── Node kind ────────────────────────────────────────────────────
+
+	enum class node_kind_t { record_on_merge, record_on_source, file_on_source, other };
+
+	const bool is_merge = m_session->scan().is_merge_plugin(info.plugin_idx);
+
+	const auto node_kind = [&]() -> node_kind_t
+	{
+		if (!info.record_id.empty() && is_merge)
+			return node_kind_t::record_on_merge;
+
+		if (!info.record_id.empty() && !is_merge && m_session->scan().has_merge())
+			return node_kind_t::record_on_source;
+
+		if (info.rec_type.empty() && info.record_id.empty() && !is_merge)
+			return node_kind_t::file_on_source;
+
+		return node_kind_t::other;
+	}();
+
+	// ── Decision table ───────────────────────────────────────────────
+	//
+	// node_kind         | action
+	// ─────────────────────────────────────────────────────────────────
+	// record_on_merge   | Remove
+	// record_on_source  | Copy to Merge
+	// file_on_source    | Include/Exclude from Merge (toggle)
+	// file_on_source    | Mark/Unmark as Patch (toggle)
+	// ─────────────────────────────────────────────────────────────────
+
 	QMenu menu(this);
 
-	bool is_record_node = !info.record_id.empty();
-	bool is_file_node = info.rec_type.empty() && info.record_id.empty();
-	bool is_merge = m_session->scan().is_merge_plugin(info.plugin_idx);
-
-	if (is_record_node && is_merge)
+	switch (node_kind)
+	{
+	case node_kind_t::record_on_merge:
 	{
 		menu.addAction(
 		    "Remove",
@@ -721,20 +749,21 @@ void plugin_workspace_view_t::on_nav_context_menu(const QPoint & global_pos, con
 			log_message("Removed " + info.rec_type + ":" + info.record_id + " from merge");
 			update_status();
 		});
+		break;
 	}
 
-	if (is_record_node && !is_merge && m_session->scan().has_merge())
+	case node_kind_t::record_on_source:
 	{
 		menu.addAction(
 		    "Copy to Merge",
 		    [this, info]()
 		{
-			for (const auto & v : m_session->scan().find(info.rec_type, info.record_id)->versions)
+			for (const auto & ver : m_session->scan().find(info.rec_type, info.record_id)->versions)
 			{
-				if (v.plugin_idx != info.plugin_idx)
+				if (ver.plugin_idx != info.plugin_idx)
 					continue;
 
-				m_session->scan().copy_record_to_merge(info.plugin_idx, v.record_index);
+				m_session->scan().copy_record_to_merge(info.plugin_idx, ver.record_index);
 				break;
 			}
 
@@ -744,67 +773,49 @@ void plugin_workspace_view_t::on_nav_context_menu(const QPoint & global_pos, con
 			log_message("Copied " + info.rec_type + ":" + info.record_id + " to merge");
 			update_status();
 		});
+		break;
 	}
 
-	if (is_file_node && !is_merge)
+	case node_kind_t::file_on_source:
 	{
 		const auto & filename = m_session->scan().plugin_filename(info.plugin_idx);
 		const bool excluded = m_session->excluded_plugins().count(filename) > 0;
 		const bool is_patch = m_session->patch_plugins().count(filename) > 0;
 
-		if (excluded)
+		menu.addAction(
+		    excluded ? "Include in Merge" : "Exclude from Merge",
+		    [this, filename, excluded]()
 		{
-			menu.addAction(
-			    "Include in Merge",
-			    [this, filename]()
-			{
-				auto excluded_copy = m_session->excluded_plugins();
+			auto excluded_copy = m_session->excluded_plugins();
+			if (excluded)
 				excluded_copy.erase(filename);
-				m_session->set_excluded_plugins(excluded_copy);
-				m_session->save_session_state(QCoreApplication::applicationDirPath() + "/yEditor.ini");
-				rebuild_nav_preserving_state();
-			});
-		}
-		else
-		{
-			menu.addAction(
-			    "Exclude from Merge",
-			    [this, filename]()
-			{
-				auto excluded_copy = m_session->excluded_plugins();
+			else
 				excluded_copy.insert(filename);
-				m_session->set_excluded_plugins(excluded_copy);
-				m_session->save_session_state(QCoreApplication::applicationDirPath() + "/yEditor.ini");
-				rebuild_nav_preserving_state();
-			});
-		}
 
-		if (is_patch)
+			m_session->set_excluded_plugins(excluded_copy);
+			m_session->save_session_state(QCoreApplication::applicationDirPath() + "/yEditor.ini");
+			rebuild_nav_preserving_state();
+		});
+
+		menu.addAction(
+		    is_patch ? "Unmark as Patch" : "Mark as Patch",
+		    [this, filename, is_patch]()
 		{
-			menu.addAction(
-			    "Unmark as Patch",
-			    [this, filename]()
-			{
-				auto patch_copy = m_session->patch_plugins();
+			auto patch_copy = m_session->patch_plugins();
+			if (is_patch)
 				patch_copy.erase(filename);
-				m_session->set_patch_plugins(patch_copy);
-				m_session->save_session_state(QCoreApplication::applicationDirPath() + "/yEditor.ini");
-				rebuild_nav_preserving_state();
-			});
-		}
-		else
-		{
-			menu.addAction(
-			    "Mark as Patch",
-			    [this, filename]()
-			{
-				auto patch_copy = m_session->patch_plugins();
+			else
 				patch_copy.insert(filename);
-				m_session->set_patch_plugins(patch_copy);
-				m_session->save_session_state(QCoreApplication::applicationDirPath() + "/yEditor.ini");
-				rebuild_nav_preserving_state();
-			});
-		}
+
+			m_session->set_patch_plugins(patch_copy);
+			m_session->save_session_state(QCoreApplication::applicationDirPath() + "/yEditor.ini");
+			rebuild_nav_preserving_state();
+		});
+		break;
+	}
+
+	case node_kind_t::other:
+		break;
 	}
 
 	if (menu.actions().isEmpty())
@@ -887,7 +898,6 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & global_pos, co
 		return;
 
 	const int plugin_idx = m_record_view->model()->column_plugin_indices()[col];
-	const bool is_on_merge = m_session->scan().is_merge_plugin(plugin_idx);
 	const auto & rec_type = m_record_view->model()->record_type();
 	const auto & record_id = m_record_view->model()->record_id();
 
@@ -896,211 +906,204 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & global_pos, co
 		return;
 
 	const auto & row = *node;
-
-	auto get_binary_idx = [&](const view_tree_model_t::view_node_t & target_node) -> int
-	{
-		if (col < 0 || col >= static_cast<int>(target_node.binary_ranges.size()))
-			return -1;
-
-		return target_node.binary_ranges[col].start;
-	};
-
-	const int binary_idx = get_binary_idx(row);
-
-	const bool is_group_row = !row.type.empty() && !row.children.empty() && row.size == 0;
-	const bool is_sub_record_row = !row.type.empty() && row.children.empty() && binary_idx >= 0;
-	const bool is_schema_row = !row.type.empty() && !row.children.empty() && row.size > 0 && binary_idx >= 0;
-
-	const bool is_merge_sub_record = is_on_merge && !row.type.empty() && row.children.empty();
-	const bool is_merge_schema_row = is_on_merge && !row.type.empty() && !row.children.empty() && row.size > 0;
-
 	const bool is_field_row = index.parent().isValid();
 	const int parent_row_idx = is_field_row ? index.parent().row() : index.row();
-	const int child_field_idx = is_field_row ? index.row() : -1;
 
 	const auto & visible = m_record_view->model()->rows();
 	if (parent_row_idx < 0 || parent_row_idx >= static_cast<int>(visible.size()))
 		return;
 
+	auto binary_start = [&](const view_tree_model_t::view_node_t & target) -> int
+	{
+		if (col < 0 || col >= static_cast<int>(target.binary_ranges.size()))
+			return -1;
+
+		return target.binary_ranges[col].start;
+	};
+
+	const int bin_idx = binary_start(row);
+
+	// ── Column state ─────────────────────────────────────────────────
+
+	enum class col_state_t { not_in_merge, source, merge };
+
+	const bool is_on_merge = m_session->scan().is_merge_plugin(plugin_idx);
+	const bool record_in_merge = m_session->scan().find_merge_content(rec_type, record_id) != nullptr;
+
+	const auto col_state = [&]() -> col_state_t
+	{
+		if (is_on_merge)
+			return col_state_t::merge;
+
+		if (!record_in_merge)
+			return col_state_t::not_in_merge;
+
+		return col_state_t::source;
+	}();
+
+	// ── Row kind ─────────────────────────────────────────────────────
+
+	enum class row_kind_t { sub_record, schema_record, group, field_of_schema, field_of_group, other };
+
+	const auto kind = [&]() -> row_kind_t
+	{
+		if (row.type.empty())
+			return row_kind_t::other;
+
+		if (is_field_row && !row.children.empty() && row.size == 0)
+			return row_kind_t::field_of_group;
+
+		if (is_field_row)
+			return row_kind_t::field_of_schema;
+
+		if (!row.children.empty() && row.size == 0)
+			return row_kind_t::group;
+
+		if (!row.children.empty() && row.size > 0 && bin_idx >= 0)
+			return row_kind_t::schema_record;
+
+		if (row.children.empty() && bin_idx >= 0)
+			return row_kind_t::sub_record;
+
+		return row_kind_t::other;
+	}();
+
+	// ── Decision table ───────────────────────────────────────────────
+	//
+	// col_state     | row_kind        | action
+	// ─────────────────────────────────────────────────────────────────
+	// not_in_merge  | *               | Copy Record to Merged Patch
+	// source        | sub_record      | Copy Sub-Record to Merged Patch
+	// source        | schema_record   | Copy Sub-Record to Merged Patch
+	// source        | group           | Copy Group to Merged Patch
+	// source        | field_of_schema | Copy Field to Merged Patch
+	// source        | field_of_group  | Copy Group to Merged Patch
+	// merge         | sub_record      | Remove Sub-Record
+	// merge         | schema_record   | Remove Sub-Record
+	// merge         | group           | Remove Group
+	// merge         | field_of_group  | Remove Group
+	// ─────────────────────────────────────────────────────────────────
+
 	QMenu menu(this);
 
-	if (!is_on_merge && is_sub_record_row && !is_field_row)
+	switch (col_state)
 	{
-		const auto sub_type = row.type;
-		menu.addAction(
-		    "Copy Sub-Record to Merged Patch",
-		    [this, plugin_idx, rec_type, record_id, sub_type, binary_idx]()
-		{ copy_sub_record_to_merge(plugin_idx, rec_type, record_id, sub_type, binary_idx); });
-	}
-
-	if (!is_on_merge && is_schema_row && !is_field_row)
+	case col_state_t::not_in_merge:
 	{
-		const auto sub_type = row.type;
-		menu.addAction(
-		    "Copy Sub-Record to Merged Patch",
-		    [this, plugin_idx, rec_type, record_id, sub_type, binary_idx]()
-		{ copy_sub_record_to_merge(plugin_idx, rec_type, record_id, sub_type, binary_idx); });
-	}
-
-	if (!is_on_merge && is_group_row && !is_field_row)
-	{
-		menu.addAction(
-		    "Copy Group to Merged Patch",
-		    [this, plugin_idx, rec_type, record_id, parent_row_idx]()
-		{ copy_group_to_merge(plugin_idx, rec_type, record_id, parent_row_idx); });
-	}
-
-	if (!is_on_merge && is_field_row && is_schema_row)
-	{
-		const auto sub_type = row.type;
-		const auto sub_size = row.size;
-		menu.addAction(
-		    "Copy Field to Merged Patch",
-		    [this, plugin_idx, rec_type, record_id, sub_type, sub_size, binary_idx, child_field_idx]()
-		{ copy_field_to_merge(plugin_idx, rec_type, record_id, sub_type, sub_size, binary_idx, child_field_idx); });
-	}
-
-	if (!is_on_merge && is_field_row && is_group_row)
-	{
-		menu.addAction(
-		    "Copy Group to Merged Patch",
-		    [this, plugin_idx, rec_type, record_id, parent_row_idx]()
-		{ copy_group_to_merge(plugin_idx, rec_type, record_id, parent_row_idx); });
-	}
-
-	if (is_on_merge && (is_merge_sub_record || is_merge_schema_row) && !is_field_row)
-	{
-		const int merge_start = get_binary_idx(row);
-		if (merge_start >= 0)
-		{
-			const auto removed_type = row.type;
-			menu.addAction(
-			    "Remove Sub-Record",
-			    [this, rec_type, record_id, merge_start, removed_type]()
-			{
-				const auto * entry = m_session->scan().find(rec_type, record_id);
-				if (!entry)
-					return;
-
-				std::string merge_content;
-				for (const auto & ver : entry->versions)
-				{
-					if (m_session->scan().is_merge_plugin(ver.plugin_idx))
-					{
-						merge_content = m_session->scan().read_record_content(ver.plugin_idx, ver.record_index);
-						break;
-					}
-				}
-
-				if (merge_content.empty())
-					return;
-
-				auto merge_subs = sub_record_merge_t::parse_sub_records(merge_content);
-				if (merge_start >= static_cast<int>(merge_subs.size()))
-					return;
-
-				merge_subs.erase(merge_subs.begin() + merge_start);
-
-				const auto patched = sub_record_merge_t::reconstruct_record(merge_content, merge_subs);
-				m_session->scan().copy_record_to_merge_raw(rec_type, record_id, patched);
-				log_message("[info] removed " + removed_type + " from merge (" + rec_type + ":" + record_id + ")");
-
-				refresh_after_merge(rec_type, record_id);
-				save_merged_patch();
-			});
-		}
-	}
-
-	if (is_on_merge && is_group_row)
-	{
-		const int merge_col = find_plugin_column(plugin_idx);
-		auto merge_range = (merge_col >= 0 && merge_col < static_cast<int>(row.binary_ranges.size()))
-		    ? row.binary_ranges[merge_col]
-		    : view_tree_model_t::binary_range_t{};
-
-		if (merge_range.start >= 0)
+		if (rec_type == "CELL")
 		{
 			menu.addAction(
-			    "Remove Group",
-			    [this, rec_type, record_id, merge_range]()
-			{
-				const auto * entry = m_session->scan().find(rec_type, record_id);
-				if (!entry)
-					return;
-
-				std::string merge_content;
-				for (const auto & ver : entry->versions)
-				{
-					if (m_session->scan().is_merge_plugin(ver.plugin_idx))
-					{
-						merge_content = m_session->scan().read_record_content(ver.plugin_idx, ver.record_index);
-						break;
-					}
-				}
-
-				if (merge_content.empty())
-					return;
-
-				auto merge_subs = sub_record_merge_t::parse_sub_records(merge_content);
-				if (merge_range.end_pos > static_cast<int>(merge_subs.size()))
-					return;
-
-				merge_subs.erase(merge_subs.begin() + merge_range.start, merge_subs.begin() + merge_range.end_pos);
-
-				const auto patched = sub_record_merge_t::reconstruct_record(merge_content, merge_subs);
-				m_session->scan().copy_record_to_merge_raw(rec_type, record_id, patched);
-				log_message("[info] removed group from merge (" + rec_type + ":" + record_id + ")");
-
-				refresh_after_merge(rec_type, record_id);
-				save_merged_patch();
-			});
+			    "Copy Record to Merged Patch",
+			    [this, plugin_idx, rec_type, record_id, index, col]()
+			{ copy_cell_record_to_merge(plugin_idx, rec_type, record_id, index, col); });
 		}
-	}
-
-	if (is_on_merge && is_field_row && is_group_row)
-	{
-		const int merge_col = find_plugin_column(plugin_idx);
-		auto merge_range = (merge_col >= 0 && merge_col < static_cast<int>(row.binary_ranges.size()))
-		    ? row.binary_ranges[merge_col]
-		    : view_tree_model_t::binary_range_t{};
-
-		if (merge_range.start >= 0)
+		else
 		{
 			menu.addAction(
-			    "Remove Group",
-			    [this, rec_type, record_id, merge_range]()
-			{
-				const auto * entry = m_session->scan().find(rec_type, record_id);
-				if (!entry)
-					return;
-
-				std::string merge_content;
-				for (const auto & ver : entry->versions)
-				{
-					if (m_session->scan().is_merge_plugin(ver.plugin_idx))
-					{
-						merge_content = m_session->scan().read_record_content(ver.plugin_idx, ver.record_index);
-						break;
-					}
-				}
-
-				if (merge_content.empty())
-					return;
-
-				auto merge_subs = sub_record_merge_t::parse_sub_records(merge_content);
-				if (merge_range.end_pos > static_cast<int>(merge_subs.size()))
-					return;
-
-				merge_subs.erase(merge_subs.begin() + merge_range.start, merge_subs.begin() + merge_range.end_pos);
-
-				const auto patched = sub_record_merge_t::reconstruct_record(merge_content, merge_subs);
-				m_session->scan().copy_record_to_merge_raw(rec_type, record_id, patched);
-				log_message("[info] removed group from merge (" + rec_type + ":" + record_id + ")");
-
-				refresh_after_merge(rec_type, record_id);
-				save_merged_patch();
-			});
+			    "Copy Record to Merged Patch",
+			    [this, plugin_idx, rec_type, record_id]()
+			{ copy_whole_record_to_merge(plugin_idx, rec_type, record_id); });
 		}
+
+		break;
+	}
+
+	case col_state_t::source:
+	{
+		switch (kind)
+		{
+		case row_kind_t::sub_record:
+		case row_kind_t::schema_record:
+		{
+			const auto sub_type = row.type;
+			menu.addAction(
+			    "Copy Sub-Record to Merged Patch",
+			    [this, plugin_idx, rec_type, record_id, sub_type, bin_idx]()
+			{ copy_sub_record_to_merge(plugin_idx, rec_type, record_id, sub_type, bin_idx); });
+			break;
+		}
+
+		case row_kind_t::group:
+		{
+			menu.addAction(
+			    "Copy Group to Merged Patch",
+			    [this, plugin_idx, rec_type, record_id, parent_row_idx]()
+			{ copy_group_to_merge(plugin_idx, rec_type, record_id, parent_row_idx); });
+			break;
+		}
+
+		case row_kind_t::field_of_schema:
+		{
+			const auto sub_type = row.type;
+			const auto sub_size = row.size;
+			const int child_field_idx = index.row();
+			menu.addAction(
+			    "Copy Field to Merged Patch",
+			    [this, plugin_idx, rec_type, record_id, sub_type, sub_size, bin_idx, child_field_idx]()
+			{ copy_field_to_merge(plugin_idx, rec_type, record_id, sub_type, sub_size, bin_idx, child_field_idx); });
+			break;
+		}
+
+		case row_kind_t::field_of_group:
+		{
+			menu.addAction(
+			    "Copy Group to Merged Patch",
+			    [this, plugin_idx, rec_type, record_id, parent_row_idx]()
+			{ copy_group_to_merge(plugin_idx, rec_type, record_id, parent_row_idx); });
+			break;
+		}
+
+		case row_kind_t::other:
+			break;
+		}
+
+		break;
+	}
+
+	case col_state_t::merge:
+	{
+		switch (kind)
+		{
+		case row_kind_t::sub_record:
+		case row_kind_t::schema_record:
+		{
+			if (bin_idx >= 0)
+			{
+				const auto removed_type = row.type;
+				menu.addAction(
+				    "Remove Sub-Record",
+				    [this, rec_type, record_id, bin_idx, removed_type]()
+				{ remove_sub_record_from_merge(rec_type, record_id, bin_idx, removed_type); });
+			}
+
+			break;
+		}
+
+		case row_kind_t::group:
+		case row_kind_t::field_of_group:
+		{
+			auto merge_range = (kind == row_kind_t::field_of_group)
+			    ? visible[parent_row_idx].binary_ranges[col]
+			    : row.binary_ranges[col];
+
+			if (merge_range.start >= 0)
+			{
+				menu.addAction(
+				    "Remove Group",
+				    [this, rec_type, record_id, merge_range]()
+				{ remove_group_from_merge(rec_type, record_id, merge_range); });
+			}
+
+			break;
+		}
+
+		case row_kind_t::field_of_schema:
+		case row_kind_t::other:
+			break;
+		}
+
+		break;
+	}
 	}
 
 	if (menu.actions().isEmpty())
@@ -1260,6 +1263,160 @@ int plugin_workspace_view_t::find_plugin_column(int plugin_idx) const
 	}
 
 	return -1;
+}
+
+void plugin_workspace_view_t::copy_whole_record_to_merge(
+    int plugin_idx,
+    const std::string & rec_type,
+    const std::string & record_id)
+{
+	const auto * entry = m_session->scan().find(rec_type, record_id);
+	if (!entry)
+		return;
+
+	for (const auto & ver : entry->versions)
+	{
+		if (ver.plugin_idx != plugin_idx)
+			continue;
+
+		m_session->scan().copy_record_to_merge(plugin_idx, ver.record_index);
+		break;
+	}
+
+	log_message("[info] copied record to merge (" + rec_type + ":" + record_id + ")");
+	refresh_after_merge(rec_type, record_id);
+	save_merged_patch();
+}
+
+void plugin_workspace_view_t::copy_cell_record_to_merge(
+    int plugin_idx,
+    const std::string & rec_type,
+    const std::string & record_id,
+    const QModelIndex & clicked_index,
+    int clicked_col)
+{
+	const auto source_content = read_source_content(plugin_idx, rec_type, record_id);
+	if (source_content.empty())
+		return;
+
+	auto partition = sub_record_merge_t::partition_cell(source_content);
+
+	uint32_t selected_frmr = 0;
+	bool found_frmr = false;
+
+	QModelIndex walk = clicked_index;
+	while (walk.isValid())
+	{
+		const auto * walk_node = m_record_view->model()->node_from_index(walk);
+		if (walk_node && walk_node->type == "FRMR" && walk_node->size == 0)
+		{
+			if (clicked_col >= 0 &&
+			    clicked_col < static_cast<int>(walk_node->values.size()) &&
+			    !walk_node->values[clicked_col].empty())
+			{
+				selected_frmr = static_cast<uint32_t>(std::stoul(walk_node->values[clicked_col]));
+				found_frmr = true;
+			}
+
+			break;
+		}
+
+		walk = walk.parent();
+	}
+
+	sub_record_sequence_t output = partition.header;
+
+	if (found_frmr)
+	{
+		for (const auto & group : partition.groups)
+		{
+			if (group.frmr_index != selected_frmr)
+				continue;
+
+			output.insert(output.end(), group.sub_records.begin(), group.sub_records.end());
+			break;
+		}
+	}
+
+	const auto result = sub_record_merge_t::reconstruct_record(source_content, output);
+	m_session->scan().copy_record_to_merge_raw(rec_type, record_id, result);
+	log_message("[info] copied CELL record to merge (" + record_id + ")");
+
+	refresh_after_merge(rec_type, record_id);
+	save_merged_patch();
+}
+
+void plugin_workspace_view_t::remove_sub_record_from_merge(
+    const std::string & rec_type,
+    const std::string & record_id,
+    int binary_idx,
+    const std::string & removed_type)
+{
+	const auto * entry = m_session->scan().find(rec_type, record_id);
+	if (!entry)
+		return;
+
+	std::string merge_content;
+	for (const auto & ver : entry->versions)
+	{
+		if (!m_session->scan().is_merge_plugin(ver.plugin_idx))
+			continue;
+
+		merge_content = m_session->scan().read_record_content(ver.plugin_idx, ver.record_index);
+		break;
+	}
+
+	if (merge_content.empty())
+		return;
+
+	auto merge_subs = sub_record_merge_t::parse_sub_records(merge_content);
+	if (binary_idx >= static_cast<int>(merge_subs.size()))
+		return;
+
+	merge_subs.erase(merge_subs.begin() + binary_idx);
+
+	const auto patched = sub_record_merge_t::reconstruct_record(merge_content, merge_subs);
+	m_session->scan().copy_record_to_merge_raw(rec_type, record_id, patched);
+	log_message("[info] removed " + removed_type + " from merge (" + rec_type + ":" + record_id + ")");
+
+	refresh_after_merge(rec_type, record_id);
+	save_merged_patch();
+}
+
+void plugin_workspace_view_t::remove_group_from_merge(
+    const std::string & rec_type,
+    const std::string & record_id,
+    view_tree_model_t::binary_range_t range)
+{
+	const auto * entry = m_session->scan().find(rec_type, record_id);
+	if (!entry)
+		return;
+
+	std::string merge_content;
+	for (const auto & ver : entry->versions)
+	{
+		if (!m_session->scan().is_merge_plugin(ver.plugin_idx))
+			continue;
+
+		merge_content = m_session->scan().read_record_content(ver.plugin_idx, ver.record_index);
+		break;
+	}
+
+	if (merge_content.empty())
+		return;
+
+	auto merge_subs = sub_record_merge_t::parse_sub_records(merge_content);
+	if (range.end_pos > static_cast<int>(merge_subs.size()))
+		return;
+
+	merge_subs.erase(merge_subs.begin() + range.start, merge_subs.begin() + range.end_pos);
+
+	const auto patched = sub_record_merge_t::reconstruct_record(merge_content, merge_subs);
+	m_session->scan().copy_record_to_merge_raw(rec_type, record_id, patched);
+	log_message("[info] removed group from merge (" + rec_type + ":" + record_id + ")");
+
+	refresh_after_merge(rec_type, record_id);
+	save_merged_patch();
 }
 
 bool plugin_workspace_view_t::eventFilter(QObject * obj, QEvent * event)

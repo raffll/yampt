@@ -174,7 +174,7 @@ void view_tree_model_t::set_record_dial(plugin_scan_t & scan, record_context_t &
 
 			if (plugin_idx < 0 || plugin_idx >= static_cast<int>(info_entry.present_in_plugin.size()))
 			{
-				info_row.values[col] = "";
+				info_row.values[col] = non_existent_value;
 				continue;
 			}
 
@@ -185,7 +185,7 @@ void view_tree_model_t::set_record_dial(plugin_scan_t & scan, record_context_t &
 			}
 			else
 			{
-				info_row.values[col] = "";
+				info_row.values[col] = non_existent_value;
 				all_same = false;
 			}
 		}

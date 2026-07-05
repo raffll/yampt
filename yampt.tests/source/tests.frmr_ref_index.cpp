@@ -242,3 +242,77 @@ TEST_CASE("non_existent_value, cannot collide with format_value_full", "[u]")
 	REQUIRE(non_existent_value[0] == '\0');
 	REQUIRE(non_existent_value.size() == 4);
 }
+
+TEST_CASE("find_conflict_policy, CELL NAME inherits wildcard", "[u]")
+{
+	const auto policy = find_conflict_policy("CELL", "NAME");
+	REQUIRE(policy.skip_non_existent == true);
+	REQUIRE(policy.ignore_conflict == false);
+}
+
+TEST_CASE("find_conflict_policy, CELL WHGT inherits wildcard", "[u]")
+{
+	const auto policy = find_conflict_policy("CELL", "WHGT");
+	REQUIRE(policy.skip_non_existent == true);
+	REQUIRE(policy.ignore_conflict == false);
+}
+
+TEST_CASE("find_conflict_policy, NAM0 overrides wildcard", "[u]")
+{
+	const auto policy = find_conflict_policy("CELL", "NAM0");
+	REQUIRE(policy.skip_non_existent == false);
+	REQUIRE(policy.ignore_conflict == true);
+}
+
+TEST_CASE("find_conflict_policy, NPC_ FNAM returns default", "[u]")
+{
+	const auto policy = find_conflict_policy("NPC_", "FNAM");
+	REQUIRE(policy.skip_non_existent == false);
+	REQUIRE(policy.ignore_conflict == false);
+}
+
+TEST_CASE("find_conflict_policy, DIAL NAME returns default", "[u]")
+{
+	const auto policy = find_conflict_policy("DIAL", "NAME");
+	REQUIRE(policy.skip_non_existent == false);
+	REQUIRE(policy.ignore_conflict == false);
+}
+
+TEST_CASE("compute_conflict_all_skip_empty, two present same with gap", "[u]")
+{
+	std::vector<std::string> values = { "X", non_existent_value, non_existent_value, "X" };
+	REQUIRE(compute_conflict_all_skip_empty(values) == conflict_all_t::no_conflict);
+}
+
+TEST_CASE("compute_conflict_all_skip_empty, two present differ with gap", "[u]")
+{
+	std::vector<std::string> values = { "X", non_existent_value, "Y" };
+	REQUIRE(compute_conflict_all_skip_empty(values) == conflict_all_t::override_benign);
+}
+
+TEST_CASE("compute_conflict_this_skip_empty, all non-existent yields unknown", "[u]")
+{
+	std::vector<std::string> values = { non_existent_value, non_existent_value };
+	const auto result = compute_conflict_this_skip_empty(values);
+	REQUIRE(result[0] == conflict_this_t::unknown);
+	REQUIRE(result[1] == conflict_this_t::unknown);
+}
+
+TEST_CASE("compute_conflict_this_skip_empty, override with non-existent middle", "[u]")
+{
+	std::vector<std::string> values = { "A", non_existent_value, "B" };
+	const auto result = compute_conflict_this_skip_empty(values);
+	REQUIRE(result[0] == conflict_this_t::master);
+	REQUIRE(result[1] == conflict_this_t::unknown);
+	REQUIRE(result[2] == conflict_this_t::override_wins);
+}
+
+TEST_CASE("compute_conflict_this_skip_empty, conflict with three present", "[u]")
+{
+	std::vector<std::string> values = { "A", "B", non_existent_value, "C" };
+	const auto result = compute_conflict_this_skip_empty(values);
+	REQUIRE(result[0] == conflict_this_t::master);
+	REQUIRE(result[1] == conflict_this_t::conflict_loses);
+	REQUIRE(result[2] == conflict_this_t::unknown);
+	REQUIRE(result[3] == conflict_this_t::conflict_wins);
+}

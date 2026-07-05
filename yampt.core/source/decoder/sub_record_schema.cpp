@@ -819,6 +819,14 @@ static const field_def_t frmr_fields[] = {
 	{ "Object Index", field_type_t::u32, 0, 4, nullptr, nullptr },
 };
 
+static const field_def_t mvrf_fields[] = {
+	{ "Moved Reference", field_type_t::u32, 0, 4, nullptr, nullptr },
+};
+
+static const field_def_t cell_cndt_fields[] = {
+	{ "Destination Cell", field_type_t::string_var, 0, 0, nullptr, nullptr },
+};
+
 static const field_def_t dele_fields[] = {
 	{ "Deleted", field_type_t::u32, 0, 4, nullptr, nullptr },
 };
@@ -957,6 +965,8 @@ static const std::vector<sub_record_schema_t> & build_schemas()
 		{ "DIAL", "DATA", 1, dial_data_fields, ARRAY_COUNT(dial_data_fields) },
 		{ "*", "XSCL", 4, xscl_fields, ARRAY_COUNT(xscl_fields) },
 		{ "*", "FRMR", 4, frmr_fields, ARRAY_COUNT(frmr_fields) },
+		{ "CELL", "MVRF", 4, mvrf_fields, ARRAY_COUNT(mvrf_fields) },
+		{ "CELL", "CNDT", 0, cell_cndt_fields, ARRAY_COUNT(cell_cndt_fields) },
 		{ "*", "DELE", 4, dele_fields, ARRAY_COUNT(dele_fields) },
 		{ "CELL", "WHGT", 4, whgt_fields, ARRAY_COUNT(whgt_fields) },
 		{ "CELL", "NAM0", 4, nam0_fields, ARRAY_COUNT(nam0_fields) },
