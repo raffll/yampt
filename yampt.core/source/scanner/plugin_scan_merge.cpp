@@ -159,7 +159,22 @@ void plugin_scan_t::recompute_single_conflict(const std::string & rec_type, cons
 	const std::string lookup_key = rec_type + std::string(1, '\0') + record_id;
 	auto it_entry = m_entry_lookup.find(lookup_key);
 	if (it_entry == m_entry_lookup.end())
+	{
+		for (size_t mi = 0; mi < m_merge_records.size(); ++mi)
+		{
+			const auto & merge_rec = m_merge_records[mi];
+			if (merge_rec.rec_type != rec_type || merge_rec.record_id != record_id)
+				continue;
+
+			record_version_t ver;
+			ver.plugin_idx = m_merge_plugin_idx;
+			ver.record_index = mi;
+			insert_or_update_version({ rec_type, record_id, "", "", ver });
+			break;
+		}
+
 		return;
+	}
 
 	auto & entry = m_entries[it_entry->second];
 

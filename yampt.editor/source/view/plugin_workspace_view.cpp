@@ -502,12 +502,43 @@ bool plugin_workspace_view_t::save_merge_to_file(
 
 	builder.clear();
 	for (size_t i = 0; i < scan.merge_record_count(); ++i)
+	{
+		if (scan.merge_record_type(i) == "TES3")
+			continue;
+
 		builder.add_record_raw(scan.merge_record_type(i), scan.merge_record_id(i), scan.merge_record_content(i));
+	}
+
+	std::set<int> contributing_plugins;
+	for (const auto & entry : scan.entries())
+	{
+		bool in_merge = false;
+		for (const auto & ver : entry.versions)
+		{
+			if (scan.is_merge_plugin(ver.plugin_idx))
+			{
+				in_merge = true;
+				break;
+			}
+		}
+
+		if (!in_merge)
+			continue;
+
+		for (const auto & ver : entry.versions)
+		{
+			if (!scan.is_merge_plugin(ver.plugin_idx))
+				contributing_plugins.insert(ver.plugin_idx);
+		}
+	}
 
 	std::vector<patch_builder_t::master_entry_t> masters;
 	for (int i = 0; i < static_cast<int>(scan.plugin_count()); ++i)
 	{
 		if (scan.is_merge_plugin(i))
+			continue;
+
+		if (contributing_plugins.find(i) == contributing_plugins.end())
 			continue;
 
 		patch_builder_t::master_entry_t master;
@@ -525,7 +556,23 @@ bool plugin_workspace_view_t::save_merge_to_file(
 		masters.push_back(std::move(master));
 	}
 
-	return builder.save(output_path, author, description, masters);
+	const auto merge_filename = std::filesystem::path(output_path).filename().string();
+	const bool tes3_is_new = (scan.find_merge_content("TES3", merge_filename) == nullptr);
+
+	const auto header_content = patch_builder_t::build_tes3_header(
+	    author, description, builder.record_count(), masters);
+
+	scan.copy_record_to_merge_raw("TES3", merge_filename, header_content);
+
+	const bool saved = builder.save(output_path, author, description, masters);
+
+	if (saved && tes3_is_new)
+	{
+		scan.recompute_single_conflict("TES3", merge_filename);
+		m_nav_view->rebuild_preserving_state();
+	}
+
+	return saved;
 }
 
 void plugin_workspace_view_t::load_existing_merged_patch()

@@ -138,7 +138,10 @@ view_tree_model_t::view_node_t view_tree_model_t::build_slot_row(
 	if (schema && first_data)
 		decode_schema_children(row, schema, first_data, first_size, col_count, all_subs, col_indices, slot);
 	else if (first_data && first_size > 0 && !row.values.empty() && !row.values[0].empty() && row.values[0][0] == '<')
+	{
 		decode_hex_children(row, first_size, col_count, all_subs, col_indices, slot);
+		row.start_collapsed = true;
+	}
 
 	if (!row.children.empty() && !policy.ignore_conflict)
 	{

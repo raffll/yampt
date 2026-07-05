@@ -151,6 +151,25 @@ QTreeView * record_view_t::tree() const
 void record_view_t::expand_non_numeric_groups()
 {
 	m_tree->expandAll();
+
+	for (int i = 0; i < m_model->rowCount({}); ++i)
+	{
+		const auto & top_idx = m_model->index(i, 0, {});
+		const auto * top_node = m_model->node_from_index(top_idx);
+		if (top_node && top_node->start_collapsed)
+		{
+			m_tree->collapse(top_idx);
+			continue;
+		}
+
+		for (int j = 0; j < m_model->rowCount(top_idx); ++j)
+		{
+			const auto & child_idx = m_model->index(j, 0, top_idx);
+			const auto * child_node = m_model->node_from_index(child_idx);
+			if (child_node && child_node->start_collapsed)
+				m_tree->collapse(child_idx);
+		}
+	}
 }
 
 void record_view_t::apply_column_sizing()

@@ -500,6 +500,18 @@ static const field_def_t gmst_strv_fields[] = {
 	{ "Value", field_type_t::string_var, 0, 0, nullptr, nullptr },
 };
 
+static const field_def_t tes3_hedr_fields[] = {
+	{ "Version", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr },
+	{ "Flags", field_type_t::u32, 4, 4, nullptr, nullptr, 0, nullptr },
+	{ "Author", field_type_t::string_fixed, 8, 32, nullptr, nullptr, 0, nullptr },
+	{ "Description", field_type_t::string_fixed, 40, 256, nullptr, nullptr, 0, nullptr },
+	{ "Record Count", field_type_t::u32, 296, 4, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t tes3_data_fields[] = {
+	{ "File Size", field_type_t::u32, 0, 8, nullptr, nullptr, 0, nullptr },
+};
+
 static const field_def_t gmst_intv_fields[] = {
 	{ "Value", field_type_t::i32, 0, 4, nullptr, nullptr },
 };
@@ -908,6 +920,8 @@ static const field_def_t nnam_chance_fields[] = {
 static const std::vector<sub_record_schema_t> & build_schemas()
 {
 	static const std::vector<sub_record_schema_t> schemas = {
+		{ "TES3", "HEDR", 300, tes3_hedr_fields, ARRAY_COUNT(tes3_hedr_fields) },
+		{ "TES3", "DATA", 8, tes3_data_fields, ARRAY_COUNT(tes3_data_fields) },
 		{ "CELL", "DATA", 12, cell_data_fields, ARRAY_COUNT(cell_data_fields) },
 		{ "CELL", "AMBI", 16, cell_ambi_fields, ARRAY_COUNT(cell_ambi_fields) },
 		{ "*", "DODT", 24, cell_dodt_fields, ARRAY_COUNT(cell_dodt_fields) },
