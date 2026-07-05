@@ -97,7 +97,7 @@ bool nav_tree_filter_t::passes(const conflict_entry_t & entry, int plugin_idx) c
 
 	if (m_filter.filter_deleted)
 	{
-		if (!has_version_status(entry, plugin_idx, conflict_this_t::deleted))
+		if (!entry.has_dele)
 			return false;
 	}
 

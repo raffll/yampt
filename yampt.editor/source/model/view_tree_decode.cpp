@@ -97,7 +97,9 @@ view_tree_model_t::view_node_t view_tree_model_t::build_slot_row(
 			row.size = sv.size;
 		}
 
-		row.values[col] = format_value_full(sv.data, sv.size, m_display_codepage);
+		row.values[col] = (slot.type == "DELE")
+		    ? "DELETED"
+		    : format_value_full(sv.data, sv.size, m_display_codepage);
 	}
 
 	row.type = slot.type;

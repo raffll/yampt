@@ -290,6 +290,12 @@ void plugin_workspace_view_t::set_show_positions(bool value)
 	}
 }
 
+void plugin_workspace_view_t::set_show_deleted_strikeout(bool value)
+{
+	m_record_view->model()->set_show_deleted_strikeout(value);
+	m_nav_view->set_show_deleted_strikeout(value);
+}
+
 void plugin_workspace_view_t::on_filter_changed()
 {
 	nav_tree_model_t::filter_state_t state;

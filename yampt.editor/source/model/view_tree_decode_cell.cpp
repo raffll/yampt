@@ -673,12 +673,6 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 			}
 		}
 
-		if (group_row.is_deleted)
-		{
-			for (auto & child : group_row.children)
-				mark_deleted_recursive(child);
-		}
-
 		compute_group_ranges(group_row, col_count);
 
 		if (m_show_positions)

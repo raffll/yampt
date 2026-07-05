@@ -84,6 +84,11 @@ void nav_tree_view_t::set_hide_duplicates(bool hide)
 	m_model->set_hide_duplicates(hide);
 }
 
+void nav_tree_view_t::set_show_deleted_strikeout(bool value)
+{
+	m_model->set_show_deleted_strikeout(value);
+}
+
 void nav_tree_view_t::set_excluded_plugins(const std::set<std::string> * excluded)
 {
 	m_model->set_excluded_plugins(excluded);

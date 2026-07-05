@@ -101,6 +101,13 @@ void editor_window_t::setup_menu_bar()
 	view_menu->addAction(show_pos_action);
 	connect(show_pos_action, &QAction::toggled, m_plugin_workspace_view, &plugin_workspace_view_t::set_show_positions);
 
+	auto * show_deleted_action = new QAction("Show &Deleted Strikeout", this);
+	show_deleted_action->setCheckable(true);
+	show_deleted_action->setChecked(true);
+	show_deleted_action->setToolTip("Strikeout deleted records and cell references");
+	view_menu->addAction(show_deleted_action);
+	connect(show_deleted_action, &QAction::toggled, m_plugin_workspace_view, &plugin_workspace_view_t::set_show_deleted_strikeout);
+
 	view_menu->addSeparator();
 
 	auto * filter_action = new QAction("&Filter...", this);

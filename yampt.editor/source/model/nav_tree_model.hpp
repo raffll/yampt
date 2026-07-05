@@ -25,6 +25,7 @@ public:
 	void set_filter(const filter_state_t & state);
 	void clear_filter();
 	void set_hide_duplicates(bool hide);
+	void set_show_deleted_strikeout(bool value);
 
 	void sort(int column, Qt::SortOrder order) override;
 
@@ -73,6 +74,7 @@ private:
 	nav_tree_filter_t m_filter;
 	int m_sort_column = 1;
 	Qt::SortOrder m_sort_order = Qt::AscendingOrder;
+	bool m_show_deleted_strikeout = true;
 
 	conflict_this_t record_foreground_for_plugin(const conflict_entry_t & entry, int plugin_idx) const;
 

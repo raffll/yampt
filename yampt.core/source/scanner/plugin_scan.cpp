@@ -114,6 +114,14 @@ void plugin_scan_t::rebuild_conflicts()
 				record_id = plugin_filename(pi);
 
 			insert_or_update_version({ rec.rec_type, record_id, rec.display_name, rec.dial_name, ver });
+
+			if (rec.has_dele)
+			{
+				const std::string lookup_key = rec.rec_type + std::string(1, '\0') + record_id;
+				auto it_entry = m_entry_lookup.find(lookup_key);
+				if (it_entry != m_entry_lookup.end())
+					m_entries[it_entry->second].has_dele = true;
+			}
 		}
 	}
 
@@ -250,15 +258,7 @@ static void apply_worst_this(
 	}
 
 	for (size_t i = 1; i < ver_count; ++i)
-	{
-		if (is_deleted[i])
-		{
-			entry.versions[i].status = conflict_this_t::deleted;
-			continue;
-		}
-
 		entry.versions[i].status = worst_this[i];
-	}
 }
 
 void plugin_scan_t::compute_conflict(conflict_entry_t & entry)

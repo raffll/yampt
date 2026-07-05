@@ -375,6 +375,12 @@ void view_tree_model_t::set_hide_no_conflict(bool hide)
 	endResetModel();
 }
 
+void view_tree_model_t::set_show_deleted_strikeout(bool value)
+{
+	m_show_deleted_strikeout = value;
+	emit dataChanged(QModelIndex(), QModelIndex(), { Qt::FontRole });
+}
+
 const std::vector<view_tree_model_t::view_node_t> & view_tree_model_t::visible_rows() const
 {
 	if (!m_hide_no_conflict)
@@ -621,7 +627,7 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 		    node->cell_conflict_this, m_column_names.size(), index.column(), m_has_merge_column);
 	}
 
-	if (role == Qt::FontRole && node->is_deleted)
+	if (role == Qt::FontRole && m_show_deleted_strikeout && node->is_deleted)
 	{
 		QFont font;
 		font.setStrikeOut(true);

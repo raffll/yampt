@@ -51,9 +51,6 @@ conflict_this_t nav_tree_model_t::record_foreground_for_plugin(const conflict_en
 		if (v.plugin_idx != plugin_idx)
 			continue;
 
-		if (v.status == conflict_this_t::deleted)
-			return conflict_this_t::deleted;
-
 		return v.status;
 	}
 
@@ -199,6 +196,12 @@ void nav_tree_model_t::set_hide_duplicates(bool hide)
 {
 	m_filter.set_hide_duplicates(hide);
 	emit dataChanged(index(0, 0, {}), index(rowCount({}) - 1, columnCount({}) - 1, {}));
+}
+
+void nav_tree_model_t::set_show_deleted_strikeout(bool value)
+{
+	m_show_deleted_strikeout = value;
+	emit dataChanged(index(0, 0, {}), index(rowCount({}) - 1, columnCount({}) - 1, {}), { Qt::FontRole });
 }
 
 void nav_tree_model_t::set_excluded_plugins(const std::set<std::string> * excluded)
@@ -485,11 +488,20 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 				return QBrush(theme_system_t::instance().conflict_this_foreground(worst_this));
 			}
 
-			if (role == Qt::FontRole && worst_this == conflict_this_t::deleted)
+			if (role == Qt::FontRole && m_show_deleted_strikeout)
 			{
-				QFont font;
-				font.setStrikeOut(true);
-				return font;
+				for (const auto & group : file_node.groups)
+				{
+					for (const auto & rec : group.records)
+					{
+						if (entries[rec.entry_idx].has_dele)
+						{
+							QFont font;
+							font.setStrikeOut(true);
+							return font;
+						}
+					}
+				}
 			}
 		}
 
@@ -555,11 +567,17 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 					return QBrush(theme_system_t::instance().conflict_this_foreground(worst_this));
 				}
 
-				if (role == Qt::FontRole && worst_this == conflict_this_t::deleted)
+				if (role == Qt::FontRole && m_show_deleted_strikeout)
 				{
-					QFont font;
-					font.setStrikeOut(true);
-					return font;
+					for (const auto & rec : group.records)
+					{
+						if (entries[rec.entry_idx].has_dele)
+						{
+							QFont font;
+							font.setStrikeOut(true);
+							return font;
+						}
+					}
 				}
 			}
 
@@ -582,7 +600,11 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 			if (role == Qt::DisplayRole)
 			{
 				if (col == 0)
-					return QString::fromStdString(entry.record_id);
+				{
+					auto display_id = QString::fromStdString(entry.record_id);
+					display_id.replace('|', " #");
+					return display_id;
+				}
 
 				if (col == 1)
 				{
@@ -612,7 +634,7 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 				return QBrush(theme_system_t::instance().conflict_this_foreground(record_color));
 			}
 
-			if (role == Qt::FontRole && record_color == conflict_this_t::deleted)
+			if (role == Qt::FontRole && m_show_deleted_strikeout && entry.has_dele)
 			{
 				QFont font;
 				font.setStrikeOut(true);

@@ -28,6 +28,8 @@ public:
 	codepage_t display_codepage() const { return m_display_codepage; }
 	void set_show_positions(bool value) { m_show_positions = value; }
 	bool show_positions() const { return m_show_positions; }
+	void set_show_deleted_strikeout(bool value);
+	bool show_deleted_strikeout() const { return m_show_deleted_strikeout; }
 	void set_excluded_plugins(const std::set<std::string> * excluded);
 	void set_patch_plugins(const std::set<std::string> * patch);
 	bool is_merge_column(int section) const;
@@ -193,6 +195,7 @@ private:
 	plugin_scan_t * m_scan_for_header = nullptr;
 	codepage_t m_display_codepage = codepage_t::windows_1252;
 	bool m_show_positions = false;
+	bool m_show_deleted_strikeout = true;
 };
 
 struct cell_ref_view_t
