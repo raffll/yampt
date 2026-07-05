@@ -52,29 +52,42 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 
 	load_sub_records(scan, entry, context);
 
-	const bool is_cell = (m_record_type == "CELL");
-	const bool is_leveled = (m_record_type == "LEVI" || m_record_type == "LEVC");
-	const bool is_faction = (m_record_type == "FACT");
-	const bool is_container =
-	    (m_record_type == "CONT" || m_record_type == "CREA" || m_record_type == "NPC_" || m_record_type == "BSGN" ||
-	     m_record_type == "RACE");
-	const bool is_armor = (m_record_type == "ARMO" || m_record_type == "CLOT");
-	const bool is_dial = false;
+	enum class decode_mode_t { cell, leveled, faction, container, armor, dial, generic };
 
-	if (is_cell)
-		set_record_cell(context);
-	else if (is_leveled)
-		set_record_leveled(context, entry);
-	else if (is_faction)
-		set_record_faction(context, entry);
-	else if (is_container)
-		set_record_container(context, entry);
-	else if (is_armor)
-		set_record_armor(context, entry);
-	else if (is_dial)
-		set_record_dial(scan, context, entry);
-	else
-		set_record_generic(context, entry);
+	static const std::pair<const char *, decode_mode_t> decode_table[] = {
+		{ "CELL", decode_mode_t::cell },
+		{ "LEVI", decode_mode_t::leveled },
+		{ "LEVC", decode_mode_t::leveled },
+		{ "FACT", decode_mode_t::faction },
+		{ "CONT", decode_mode_t::container },
+		{ "CREA", decode_mode_t::container },
+		{ "NPC_", decode_mode_t::container },
+		{ "BSGN", decode_mode_t::container },
+		{ "RACE", decode_mode_t::container },
+		{ "ARMO", decode_mode_t::armor },
+		{ "CLOT", decode_mode_t::armor },
+	};
+
+	auto mode = decode_mode_t::generic;
+	for (const auto & [type, decode_mode] : decode_table)
+	{
+		if (m_record_type == type)
+		{
+			mode = decode_mode;
+			break;
+		}
+	}
+
+	switch (mode)
+	{
+	case decode_mode_t::cell:      set_record_cell(context); break;
+	case decode_mode_t::leveled:   set_record_leveled(context, entry); break;
+	case decode_mode_t::faction:   set_record_faction(context, entry); break;
+	case decode_mode_t::container: set_record_container(context, entry); break;
+	case decode_mode_t::armor:     set_record_armor(context, entry); break;
+	case decode_mode_t::dial:      set_record_dial(scan, context, entry); break;
+	case decode_mode_t::generic:   set_record_generic(context, entry); break;
+	}
 
 	finalize_header_conflict();
 
@@ -620,13 +633,15 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 	if (!node)
 		return {};
 
-	if (role == Qt::DisplayRole)
+	switch (role)
+	{
+	case Qt::DisplayRole:
 		return sub_record_display(*node, index.column());
 
-	if (role == Qt::BackgroundRole)
+	case Qt::BackgroundRole:
 		return sub_record_background(*node, index.column());
 
-	if (role == Qt::ForegroundRole)
+	case Qt::ForegroundRole:
 	{
 		if (m_is_merge_pinned && is_merge_column(index.column()))
 			return QBrush(QColor(0, 128, 128));
@@ -635,14 +650,21 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 		    node->cell_conflict_this, m_column_names.size(), index.column(), m_has_merge_column);
 	}
 
-	if (role == Qt::FontRole && m_show_deleted_strikeout && node->is_deleted)
+	case Qt::FontRole:
 	{
-		QFont font;
-		font.setStrikeOut(true);
-		return font;
+		if (m_show_deleted_strikeout && node->is_deleted)
+		{
+			QFont font;
+			font.setStrikeOut(true);
+			return font;
+		}
+
+		return {};
 	}
 
-	return {};
+	default:
+		return {};
+	}
 }
 
 QVariant view_tree_model_t::headerData(int section, Qt::Orientation orientation, int role) const

@@ -1,6 +1,7 @@
 #include <catch2/catch_all.hpp>
 #include <decoder/sub_record_iter.hpp>
 #include <decoder/conflict_slots.hpp>
+#include <scanner/record_conflict.hpp>
 #include <cstring>
 #include <string>
 

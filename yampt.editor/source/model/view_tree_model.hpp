@@ -162,6 +162,13 @@ private:
 	    uint32_t object_index,
 	    const sub_slot_t & slot);
 
+	view_node_t build_ref_child(
+	    size_t col_count,
+	    const std::vector<std::vector<sub_record_view_t>> & all_subs,
+	    const std::vector<std::vector<struct cell_ref_view_t>> & col_refs,
+	    uint32_t object_index,
+	    const sub_slot_t & slot);
+
 	view_node_t build_slot_row(
 	    size_t col_count,
 	    const std::vector<std::vector<sub_record_view_t>> & all_subs,

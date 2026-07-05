@@ -14,6 +14,21 @@ static bool check_all_identical(const std::vector<std::string> & values)
 	return true;
 }
 
+static void propagate_conflict_upward(
+    view_tree_model_t::view_node_t & parent,
+    const view_tree_model_t::view_node_t & child,
+    size_t col_count)
+{
+	if (child.row_conflict_all > parent.row_conflict_all)
+		parent.row_conflict_all = child.row_conflict_all;
+
+	for (size_t col = 0; col < col_count && col < child.cell_conflict_this.size(); ++col)
+	{
+		if (child.cell_conflict_this[col] > parent.cell_conflict_this[col])
+			parent.cell_conflict_this[col] = child.cell_conflict_this[col];
+	}
+}
+
 static std::string read_flag_value(const sub_record_view_t & sv, const field_def_t & fdef, int bit_index)
 {
 	if (fdef.offset >= sv.size)
@@ -207,6 +222,9 @@ void view_tree_model_t::decode_schema_children_ref(
     uint32_t object_index,
     const sub_slot_t & slot)
 {
+	static const std::vector<sub_record_view_t> empty_subs;
+	static const std::vector<cell_ref_view_t> empty_refs;
+
 	for (size_t field_idx = 0; field_idx < schema->field_count; ++field_idx)
 	{
 		const auto & fdef = schema->fields[field_idx];
@@ -227,34 +245,13 @@ void view_tree_model_t::decode_schema_children_ref(
 
 				for (size_t col = 0; col < col_count; ++col)
 				{
-					if (col >= all_subs.size())
-					{
-						frow.values[col] = non_existent_value;
-						continue;
-					}
+					const auto & subs = col < all_subs.size() ? all_subs[col] : empty_subs;
+					const auto & refs = col < col_refs.size() ? col_refs[col] : empty_refs;
+					const auto result = find_ref_sub_record(subs, refs, object_index, slot.type, slot.occurrence);
 
-					frow.values[col] = non_existent_value;
-					for (const auto & ref_group : col_refs[col])
-					{
-						if (ref_group.object_index != object_index)
-							continue;
-
-						int occur = 0;
-						for (size_t i = ref_group.start_idx; i < ref_group.end_idx; ++i)
-						{
-							const auto & sv = all_subs[col][i];
-							if (sv.type != slot.type)
-								continue;
-
-							if (occur == slot.occurrence)
-							{
-								frow.values[col] = read_flag_value(sv, fdef, bit);
-								break;
-							}
-							++occur;
-						}
-						break;
-					}
+					frow.values[col] = result.view.data
+					    ? read_flag_value(result.view, fdef, bit)
+					    : non_existent_value;
 				}
 
 				frow.all_identical = check_all_identical(frow.values);
@@ -271,34 +268,13 @@ void view_tree_model_t::decode_schema_children_ref(
 
 		for (size_t col = 0; col < col_count; ++col)
 		{
-			if (col >= all_subs.size())
-			{
-				frow.values[col] = non_existent_value;
-				continue;
-			}
+			const auto & subs = col < all_subs.size() ? all_subs[col] : empty_subs;
+			const auto & refs = col < col_refs.size() ? col_refs[col] : empty_refs;
+			const auto result = find_ref_sub_record(subs, refs, object_index, slot.type, slot.occurrence);
 
-			frow.values[col] = non_existent_value;
-			for (const auto & ref_group : col_refs[col])
-			{
-				if (ref_group.object_index != object_index)
-					continue;
-
-				int occur = 0;
-				for (size_t i = ref_group.start_idx; i < ref_group.end_idx; ++i)
-				{
-					const auto & sv = all_subs[col][i];
-					if (sv.type != slot.type)
-						continue;
-
-					if (occur == slot.occurrence)
-					{
-						frow.values[col] = decode_field(fdef, sv.data, sv.size);
-						break;
-					}
-					++occur;
-				}
-				break;
-			}
+			frow.values[col] = result.view.data
+			    ? decode_field(fdef, result.view.data, result.view.size)
+			    : non_existent_value;
 		}
 
 		frow.all_identical = check_all_identical(frow.values);
@@ -317,6 +293,8 @@ void view_tree_model_t::decode_hex_children_ref(
     uint32_t object_index,
     const sub_slot_t & slot)
 {
+	static const std::vector<sub_record_view_t> empty_subs;
+	static const std::vector<cell_ref_view_t> empty_refs;
 	static constexpr size_t hex_line_bytes = 16;
 
 	for (size_t offset = 0; offset < first_size; offset += hex_line_bytes)
@@ -329,34 +307,13 @@ void view_tree_model_t::decode_hex_children_ref(
 
 		for (size_t col = 0; col < col_count; ++col)
 		{
-			if (col >= all_subs.size())
-			{
-				frow.values[col] = non_existent_value;
-				continue;
-			}
+			const auto & subs = col < all_subs.size() ? all_subs[col] : empty_subs;
+			const auto & refs = col < col_refs.size() ? col_refs[col] : empty_refs;
+			const auto result = find_ref_sub_record(subs, refs, object_index, slot.type, slot.occurrence);
 
-			frow.values[col] = non_existent_value;
-			for (const auto & ref_group : col_refs[col])
-			{
-				if (ref_group.object_index != object_index)
-					continue;
-
-				int occur = 0;
-				for (size_t i = ref_group.start_idx; i < ref_group.end_idx; ++i)
-				{
-					const auto & sv = all_subs[col][i];
-					if (sv.type != slot.type)
-						continue;
-
-					if (occur == slot.occurrence)
-					{
-						frow.values[col] = format_hex_chunk(sv.data, sv.size, offset);
-						break;
-					}
-					++occur;
-				}
-				break;
-			}
+			frow.values[col] = result.view.data
+			    ? format_hex_chunk(result.view.data, result.view.size, offset)
+			    : non_existent_value;
 		}
 
 		frow.all_identical = check_all_identical(frow.values);
@@ -382,6 +339,111 @@ static bool is_ref_persistent(
 	}
 
 	return false;
+}
+
+view_tree_model_t::view_node_t view_tree_model_t::build_ref_child(
+    size_t col_count,
+    const std::vector<std::vector<sub_record_view_t>> & all_subs,
+    const std::vector<std::vector<cell_ref_view_t>> & col_refs,
+    uint32_t object_index,
+    const sub_slot_t & slot)
+{
+	const char * first_data = nullptr;
+	size_t first_size = 0;
+
+	for (size_t col = 0; col < col_count; ++col)
+	{
+		if (col >= all_subs.size())
+			continue;
+
+		const auto result = find_ref_sub_record(all_subs[col], col_refs[col], object_index, slot.type, slot.occurrence);
+		if (result.view.data && !first_data)
+		{
+			first_data = result.view.data;
+			first_size = result.view.size;
+		}
+	}
+
+	const auto * schema = first_data ? find_schema(m_record_type, slot.type, first_size) : nullptr;
+	if (!schema && first_data)
+		schema = find_schema("*", slot.type, first_size);
+
+	if (schema && schema->field_count > 1)
+	{
+		view_node_t sub_group;
+		sub_group.type = slot.type;
+		sub_group.size = 0;
+		sub_group.label = slot.type;
+		sub_group.values.resize(col_count);
+		sub_group.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
+		sub_group.row_conflict_all = conflict_all_t::only_one;
+
+		decode_schema_children_ref(sub_group, schema, first_data, first_size, col_count, all_subs, col_refs, object_index, slot);
+
+		for (size_t col = 0; col < col_count; ++col)
+		{
+			bool present = false;
+			if (col < col_refs.size())
+			{
+				for (const auto & ref_group : col_refs[col])
+				{
+					if (ref_group.object_index == object_index)
+					{
+						present = true;
+						break;
+					}
+				}
+			}
+
+			sub_group.values[col] = present ? slot.type : non_existent_value;
+		}
+
+		sub_group.all_identical = check_all_identical(sub_group.values);
+
+		for (const auto & child : sub_group.children)
+			propagate_conflict_upward(sub_group, child, col_count);
+
+		compute_group_ranges(sub_group, col_count);
+		return sub_group;
+	}
+
+	view_node_t child_field;
+	child_field.type = slot.type;
+	child_field.size = first_size;
+	child_field.values.resize(col_count);
+	child_field.binary_ranges.resize(col_count);
+
+	for (size_t col = 0; col < col_count; ++col)
+	{
+		if (col >= all_subs.size())
+		{
+			child_field.values[col] = non_existent_value;
+			continue;
+		}
+
+		const auto result = find_ref_sub_record(all_subs[col], col_refs[col], object_index, slot.type, slot.occurrence);
+		if (!result.view.data)
+		{
+			child_field.values[col] = non_existent_value;
+			continue;
+		}
+
+		child_field.binary_ranges[col] = { result.binary_index, result.binary_index + 1 };
+		if (slot.type == "FRMR")
+			child_field.values[col] = std::to_string(read_frmr_ref_index(result.view.data, result.view.size));
+		else if (slot.type == "DELE")
+			child_field.values[col] = "DELETED";
+		else if (schema && schema->field_count == 1)
+			child_field.values[col] = decode_field(schema->fields[0], result.view.data, result.view.size);
+		else
+			child_field.values[col] = format_value_full(result.view.data, result.view.size, m_display_codepage);
+	}
+
+	child_field.label = make_sub_label(slot.type, m_record_type, first_size);
+	child_field.all_identical = check_all_identical(child_field.values);
+	child_field.row_conflict_all = compute_conflict_all_skip_empty(child_field.values);
+	child_field.cell_conflict_this = compute_conflict_this_skip_empty(child_field.values);
+	return child_field;
 }
 
 void view_tree_model_t::set_record_cell(record_context_t & context)
@@ -478,7 +540,7 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 		group_row.type = "FRMR";
 		group_row.size = 0;
 		group_row.label = ref_label;
-		group_row.values.resize(col_count);
+		group_row.values.resize(col_count, non_existent_value);
 		group_row.binary_ranges.resize(col_count);
 		group_row.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
 		group_row.row_conflict_all = conflict_all_t::only_one;
@@ -501,133 +563,9 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 
 		for (const auto & slot : ref_slots)
 		{
-			const char * first_data = nullptr;
-			size_t first_size = 0;
-
-			for (size_t col = 0; col < col_count; ++col)
-			{
-				if (col >= all_subs.size())
-					continue;
-
-				const auto result = find_ref_sub_record(all_subs[col], col_refs[col], obj_idx, slot.type, slot.occurrence);
-				if (result.view.data && !first_data)
-				{
-					first_data = result.view.data;
-					first_size = result.view.size;
-				}
-			}
-
-			const auto * schema = first_data ? find_schema(m_record_type, slot.type, first_size) : nullptr;
-			if (!schema && first_data)
-				schema = find_schema("*", slot.type, first_size);
-
-			if (schema && schema->field_count > 1)
-			{
-				view_node_t sub_group;
-				sub_group.type = slot.type;
-				sub_group.size = 0;
-				sub_group.label = slot.type;
-				sub_group.values.resize(col_count);
-				sub_group.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
-				sub_group.row_conflict_all = conflict_all_t::only_one;
-
-				decode_schema_children_ref(sub_group, schema, first_data, first_size, col_count, all_subs, col_refs, obj_idx, slot);
-
-				for (size_t col = 0; col < col_count; ++col)
-				{
-					bool present = false;
-					if (col < col_refs.size())
-					{
-						for (const auto & ref_group : col_refs[col])
-						{
-							if (ref_group.object_index == obj_idx)
-							{
-								present = true;
-								break;
-							}
-						}
-					}
-
-					sub_group.values[col] = present ? slot.type : "";
-				}
-
-				sub_group.all_identical = check_all_identical(sub_group.values);
-
-				for (const auto & child : sub_group.children)
-				{
-					if (child.row_conflict_all > sub_group.row_conflict_all)
-						sub_group.row_conflict_all = child.row_conflict_all;
-
-					for (size_t col = 0; col < col_count && col < child.cell_conflict_this.size(); ++col)
-					{
-						if (child.cell_conflict_this[col] > sub_group.cell_conflict_this[col])
-							sub_group.cell_conflict_this[col] = child.cell_conflict_this[col];
-					}
-				}
-
-				compute_group_ranges(sub_group, col_count);
-
-				if (sub_group.row_conflict_all > group_row.row_conflict_all)
-					group_row.row_conflict_all = sub_group.row_conflict_all;
-
-				for (size_t col = 0; col < col_count && col < sub_group.cell_conflict_this.size(); ++col)
-				{
-					if (sub_group.cell_conflict_this[col] > group_row.cell_conflict_this[col])
-						group_row.cell_conflict_this[col] = sub_group.cell_conflict_this[col];
-				}
-
-				group_row.children.push_back(std::move(sub_group));
-			}
-			else
-			{
-				view_node_t child_field;
-				child_field.type = slot.type;
-				child_field.size = first_size;
-				child_field.values.resize(col_count);
-				child_field.binary_ranges.resize(col_count);
-
-				for (size_t col = 0; col < col_count; ++col)
-				{
-					if (col >= all_subs.size())
-					{
-						child_field.values[col] = non_existent_value;
-						continue;
-					}
-
-					const auto result = find_ref_sub_record(all_subs[col], col_refs[col], obj_idx, slot.type, slot.occurrence);
-					if (!result.view.data)
-					{
-						child_field.values[col] = non_existent_value;
-						continue;
-					}
-
-					child_field.binary_ranges[col] = { result.binary_index, result.binary_index + 1 };
-					if (slot.type == "FRMR")
-						child_field.values[col] = std::to_string(read_frmr_ref_index(result.view.data, result.view.size));
-					else if (slot.type == "DELE")
-						child_field.values[col] = "DELETED";
-					else if (schema && schema->field_count == 1)
-						child_field.values[col] = decode_field(schema->fields[0], result.view.data, result.view.size);
-					else
-						child_field.values[col] = format_value_full(result.view.data, result.view.size, m_display_codepage);
-				}
-
-				child_field.label = make_sub_label(slot.type, m_record_type, first_size);
-				child_field.all_identical = check_all_identical(child_field.values);
-				child_field.row_conflict_all = compute_conflict_all_skip_empty(child_field.values);
-				child_field.cell_conflict_this = compute_conflict_this_skip_empty(child_field.values);
-
-				if (child_field.row_conflict_all > group_row.row_conflict_all)
-					group_row.row_conflict_all = child_field.row_conflict_all;
-
-				for (size_t col = 0; col < col_count && col < child_field.cell_conflict_this.size(); ++col)
-				{
-					if (child_field.cell_conflict_this[col] > group_row.cell_conflict_this[col])
-						group_row.cell_conflict_this[col] = child_field.cell_conflict_this[col];
-				}
-
-				group_row.children.push_back(std::move(child_field));
-			}
+			auto child = build_ref_child(col_count, all_subs, col_refs, obj_idx, slot);
+			propagate_conflict_upward(group_row, child, col_count);
+			group_row.children.push_back(std::move(child));
 		}
 
 		group_row.all_identical = check_all_identical(group_row.values);
@@ -635,7 +573,7 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 		bool present_in_any = false;
 		for (size_t col = 0; col < col_count; ++col)
 		{
-			if (!group_row.values[col].empty())
+			if (group_row.values[col] != non_existent_value)
 			{
 				present_in_any = true;
 				break;
@@ -672,16 +610,7 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 		for (const auto & obj_idx : indices)
 		{
 			auto ref_group = build_ref_group(obj_idx);
-
-			if (ref_group.row_conflict_all > section.row_conflict_all)
-				section.row_conflict_all = ref_group.row_conflict_all;
-
-			for (size_t col = 0; col < col_count && col < ref_group.cell_conflict_this.size(); ++col)
-			{
-				if (ref_group.cell_conflict_this[col] > section.cell_conflict_this[col])
-					section.cell_conflict_this[col] = ref_group.cell_conflict_this[col];
-			}
-
+			propagate_conflict_upward(section, ref_group, col_count);
 			section.children.push_back(std::move(ref_group));
 		}
 
@@ -708,7 +637,7 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 
 			char count_buf[32];
 			std::snprintf(count_buf, sizeof(count_buf), "%zu references", indices.size());
-			section.values[col] = any_present ? std::string(count_buf) : "";
+			section.values[col] = any_present ? std::string(count_buf) : non_existent_value;
 		}
 
 		section.all_identical = check_all_identical(section.values);
