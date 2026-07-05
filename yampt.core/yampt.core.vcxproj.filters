@@ -25,6 +25,7 @@
     <ClCompile Include="source\translator\translation_engine.cpp" />
     <ClCompile Include="source\utility\char_diff.cpp" />
     <ClCompile Include="source\utility\keyword_trie.cpp" />
+    <ClCompile Include="source\utility\record_behavior.cpp" />
     <ClCompile Include="source\io\profile_reader.cpp" />
     <ClCompile Include="source\scanner\sub_record_merge.cpp" />
     <ClCompile Include="source\scanner\merge_patch_ops.cpp" />
@@ -50,6 +51,7 @@
     <ClInclude Include="source\utility\status_types.hpp" />
     <ClInclude Include="source\utility\char_diff.hpp" />
     <ClInclude Include="source\utility\keyword_trie.hpp" />
+    <ClInclude Include="source\utility\record_behavior.hpp" />
     <ClInclude Include="source\io\codepage.hpp" />
     <ClInclude Include="source\io\dict_reader.hpp" />
     <ClInclude Include="source\io\dict_writer.hpp" />

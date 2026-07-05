@@ -175,6 +175,7 @@ void view_tree_model_t::decode_schema_children(
     const sub_slot_t & slot)
 {
 	const auto policy = find_conflict_policy(m_record_type, slot.type);
+	view_node_t * current_group = nullptr;
 
 	for (size_t field_idx = 0; field_idx < schema->field_count; ++field_idx)
 	{
@@ -185,6 +186,14 @@ void view_tree_model_t::decode_schema_children(
 
 		if (is_flags && fdef.flag_names && fdef.flag_count > 0)
 		{
+			current_group = nullptr;
+
+			view_node_t flags_group;
+			flags_group.label = fdef.name;
+			flags_group.values.resize(col_count);
+			flags_group.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
+			flags_group.row_conflict_all = conflict_all_t::only_one;
+
 			for (int bit = 0; bit < fdef.flag_count; ++bit)
 			{
 				if (fdef.flag_names[bit][0] == '_')
@@ -196,28 +205,18 @@ void view_tree_model_t::decode_schema_children(
 
 				for (size_t col = 0; col < col_count; ++col)
 				{
-					if (col >= all_subs.size())
-					{
-						frow.values[col] = non_existent_value;
-						continue;
-					}
-
+					const auto & subs = col < all_subs.size() ? all_subs[col] : std::vector<sub_record_view_t>{};
 					auto it_type = col_indices[col].find(slot.type);
-					if (it_type == col_indices[col].end() ||
-					    slot.occurrence >= static_cast<int>(it_type->second.size()))
+
+					if (col >= all_subs.size() || it_type == col_indices[col].end() ||
+					    slot.occurrence >= static_cast<int>(it_type->second.size()) ||
+					    it_type->second[slot.occurrence] == SIZE_MAX)
 					{
 						frow.values[col] = non_existent_value;
 						continue;
 					}
 
-					size_t idx = it_type->second[slot.occurrence];
-					if (idx == SIZE_MAX)
-					{
-						frow.values[col] = non_existent_value;
-						continue;
-					}
-
-					frow.values[col] = read_flag_value(all_subs[col][idx], fdef, bit);
+					frow.values[col] = read_flag_value(subs[it_type->second[slot.occurrence]], fdef, bit);
 				}
 
 				frow.all_identical = check_all_identical(frow.values);
@@ -227,13 +226,27 @@ void view_tree_model_t::decode_schema_children(
 				frow.cell_conflict_this = policy.skip_non_existent
 				    ? compute_conflict_this_skip_empty(frow.values)
 				    : compute_conflict_this(frow.values);
-				parent_row.children.push_back(std::move(frow));
+
+				if (frow.row_conflict_all > flags_group.row_conflict_all)
+					flags_group.row_conflict_all = frow.row_conflict_all;
+
+				for (size_t col = 0; col < col_count && col < frow.cell_conflict_this.size(); ++col)
+				{
+					if (frow.cell_conflict_this[col] > flags_group.cell_conflict_this[col])
+						flags_group.cell_conflict_this[col] = frow.cell_conflict_this[col];
+				}
+
+				flags_group.children.push_back(std::move(frow));
 			}
+
+			flags_group.all_identical = (flags_group.row_conflict_all <= conflict_all_t::no_conflict);
+			parent_row.children.push_back(std::move(flags_group));
 			continue;
 		}
 
 		view_node_t frow;
 		frow.label = fdef.name;
+		frow.schema_field_index = static_cast<int>(field_idx);
 		frow.values.resize(col_count);
 
 		for (size_t col = 0; col < col_count; ++col)
@@ -269,7 +282,35 @@ void view_tree_model_t::decode_schema_children(
 		frow.cell_conflict_this = policy.skip_non_existent
 		    ? compute_conflict_this_skip_empty(frow.values)
 		    : compute_conflict_this(frow.values);
-		parent_row.children.push_back(std::move(frow));
+
+		if (!fdef.group)
+		{
+			current_group = nullptr;
+			parent_row.children.push_back(std::move(frow));
+			continue;
+		}
+
+		if (!current_group || current_group->label != fdef.group)
+		{
+			view_node_t group_node;
+			group_node.label = fdef.group;
+			group_node.values.resize(col_count);
+			group_node.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
+			group_node.row_conflict_all = conflict_all_t::only_one;
+			parent_row.children.push_back(std::move(group_node));
+			current_group = &parent_row.children.back();
+		}
+
+		if (frow.row_conflict_all > current_group->row_conflict_all)
+			current_group->row_conflict_all = frow.row_conflict_all;
+
+		for (size_t col = 0; col < col_count && col < frow.cell_conflict_this.size(); ++col)
+		{
+			if (frow.cell_conflict_this[col] > current_group->cell_conflict_this[col])
+				current_group->cell_conflict_this[col] = frow.cell_conflict_this[col];
+		}
+
+		current_group->children.push_back(std::move(frow));
 	}
 }
 

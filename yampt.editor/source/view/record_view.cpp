@@ -150,17 +150,7 @@ QTreeView * record_view_t::tree() const
 
 void record_view_t::expand_non_numeric_groups()
 {
-	for (int i = 0; i < m_model->rowCount({}); ++i)
-	{
-		const auto & idx = m_model->index(i, 0, {});
-		if (m_model->rowCount(idx) == 0)
-			continue;
-
-		const auto & child = m_model->index(0, 0, idx);
-		const auto & child_name = child.data(Qt::DisplayRole).toString();
-		if (!child_name.isEmpty() && !child_name[0].isDigit())
-			m_tree->expand(idx);
-	}
+	m_tree->expandAll();
 }
 
 void record_view_t::apply_column_sizing()

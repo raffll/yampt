@@ -1,6 +1,7 @@
 ﻿#include "view_tree_model.hpp"
 #include <decoder/view_tree_format.hpp>
 #include <scanner/record_conflict.hpp>
+#include <utility/record_behavior.hpp>
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
@@ -52,34 +53,9 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 
 	load_sub_records(scan, entry, context);
 
-	enum class decode_mode_t { cell, leveled, faction, container, armor, dial, info, generic };
+	const auto * behavior = find_record_behavior(m_record_type);
 
-	static const std::pair<const char *, decode_mode_t> decode_table[] = {
-		{ "CELL", decode_mode_t::cell },
-		{ "LEVI", decode_mode_t::leveled },
-		{ "LEVC", decode_mode_t::leveled },
-		{ "FACT", decode_mode_t::faction },
-		{ "CONT", decode_mode_t::container },
-		{ "CREA", decode_mode_t::container },
-		{ "NPC_", decode_mode_t::container },
-		{ "BSGN", decode_mode_t::container },
-		{ "RACE", decode_mode_t::container },
-		{ "ARMO", decode_mode_t::armor },
-		{ "CLOT", decode_mode_t::armor },
-		{ "INFO", decode_mode_t::info },
-	};
-
-	auto mode = decode_mode_t::generic;
-	for (const auto & [type, decode_mode] : decode_table)
-	{
-		if (m_record_type == type)
-		{
-			mode = decode_mode;
-			break;
-		}
-	}
-
-	switch (mode)
+	switch (behavior->decode_mode)
 	{
 	case decode_mode_t::cell:      set_record_cell(context); break;
 	case decode_mode_t::leveled:   set_record_leveled(context, entry); break;
@@ -506,7 +482,8 @@ int view_tree_model_t::rowCount(const QModelIndex & parent) const
 		return 0;
 
 	const bool is_group = !node->type.empty() && node->size == 0 && !node->children.empty();
-	if (node->children.size() == 1 && !is_group)
+	const bool single_leaf_child = node->children.size() == 1 && node->children[0].children.empty();
+	if (single_leaf_child && !is_group)
 		return 0;
 
 	return static_cast<int>(node->children.size());
@@ -545,8 +522,9 @@ static QVariant sub_record_display(const view_tree_model_t::view_node_t & row, i
 		return QString::fromStdString(row.label);
 
 	const bool is_group = !row.type.empty() && row.size == 0 && !row.children.empty();
+	const bool single_leaf_child = row.children.size() == 1 && row.children[0].children.empty();
 
-	if (row.children.size() == 1 && !is_group)
+	if (single_leaf_child && !is_group)
 	{
 		const int col = column - 1;
 		if (col < 0 || col >= static_cast<int>(row.children[0].values.size()))

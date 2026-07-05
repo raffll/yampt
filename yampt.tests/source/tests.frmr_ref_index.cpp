@@ -317,3 +317,93 @@ TEST_CASE("compute_conflict_this_skip_empty, conflict with three present", "[u]"
 	REQUIRE(result[2] == conflict_this_t::unknown);
 	REQUIRE(result[3] == conflict_this_t::conflict_wins);
 }
+
+TEST_CASE("build_cell_slots, NAM0 appears in header slots", "[u]")
+{
+	auto header_subs = make_sub("NAME", make_string("TestCell"))
+	                 + make_sub("DATA", std::string(12, '\0'))
+	                 + make_sub("NAM0", make_uint32(5));
+
+	auto ref = make_sub("FRMR", make_uint32(1))
+	         + make_sub("NAME", make_string("object_01"))
+	         + make_sub("DATA", make_position());
+
+	auto content = make_record("CELL", header_subs + ref);
+
+	std::vector<std::string> versions = { content };
+	std::vector<bool> deleted = { false };
+	auto result = build_conflict_slots("CELL", versions, deleted);
+
+	bool found_nam0 = false;
+	for (const auto & slot : result.aligned)
+	{
+		if (slot.key.type == "NAM0")
+		{
+			found_nam0 = true;
+			break;
+		}
+	}
+
+	REQUIRE(found_nam0);
+}
+
+TEST_CASE("build_cell_slots, header sub-records before first FRMR", "[u]")
+{
+	auto header_subs = make_sub("NAME", make_string("Interior"))
+	                 + make_sub("DATA", std::string(12, '\0'))
+	                 + make_sub("WHGT", std::string(4, '\0'))
+	                 + make_sub("AMBI", std::string(16, '\0'));
+
+	auto ref = make_sub("FRMR", make_uint32(100))
+	         + make_sub("NAME", make_string("chest"))
+	         + make_sub("DATA", make_position());
+
+	auto content = make_record("CELL", header_subs + ref);
+
+	std::vector<std::string> versions = { content };
+	std::vector<bool> deleted = { false };
+	auto result = build_conflict_slots("CELL", versions, deleted);
+
+	int header_types_found = 0;
+	for (const auto & slot : result.aligned)
+	{
+		if (slot.key.type == "NAME" || slot.key.type == "DATA" ||
+		    slot.key.type == "WHGT" || slot.key.type == "AMBI")
+			++header_types_found;
+	}
+
+	REQUIRE(header_types_found == 4);
+}
+
+TEST_CASE("compute_conflict_all, non_existent_value differs from empty", "[u]")
+{
+	std::vector<std::string> values = { "", non_existent_value };
+	REQUIRE(compute_conflict_all(values) == conflict_all_t::override_benign);
+}
+
+TEST_CASE("compute_conflict_all_skip_empty, empty string causes conflict", "[u]")
+{
+	std::vector<std::string> values = { "value", "", "value" };
+	REQUIRE(compute_conflict_all_skip_empty(values) == conflict_all_t::conflict);
+}
+
+TEST_CASE("find_conflict_policy, CELL AMBI inherits wildcard", "[u]")
+{
+	const auto policy = find_conflict_policy("CELL", "AMBI");
+	REQUIRE(policy.skip_non_existent == true);
+	REQUIRE(policy.ignore_conflict == false);
+}
+
+TEST_CASE("find_conflict_policy, CELL FRMR inherits wildcard", "[u]")
+{
+	const auto policy = find_conflict_policy("CELL", "FRMR");
+	REQUIRE(policy.skip_non_existent == true);
+	REQUIRE(policy.ignore_conflict == false);
+}
+
+TEST_CASE("find_conflict_policy, LEVI INAM returns default", "[u]")
+{
+	const auto policy = find_conflict_policy("LEVI", "INAM");
+	REQUIRE(policy.skip_non_existent == false);
+	REQUIRE(policy.ignore_conflict == false);
+}

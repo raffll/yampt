@@ -273,3 +273,72 @@ TEST_CASE("compute_conflict_this, populated merge column gets status", "[u]")
 	REQUIRE(result[1] == conflict_this_t::identical_to_master);
 	REQUIRE(result[2] == conflict_this_t::override_wins);
 }
+
+TEST_CASE("compute_conflict_all, non_existent_value treated as real value", "[u]")
+{
+	std::vector<std::string> values = { "hello", non_existent_value, "hello" };
+	REQUIRE(compute_conflict_all(values) == conflict_all_t::conflict);
+}
+
+TEST_CASE("compute_conflict_all, first differs from rest yields conflict", "[u]")
+{
+	std::vector<std::string> values = { "X", "Y", "Y" };
+	REQUIRE(compute_conflict_all(values) == conflict_all_t::override_benign);
+}
+
+TEST_CASE("compute_conflict_all, four values all same", "[u]")
+{
+	std::vector<std::string> values = { "A", "A", "A", "A" };
+	REQUIRE(compute_conflict_all(values) == conflict_all_t::no_conflict);
+}
+
+TEST_CASE("compute_conflict_all, four values last differs", "[u]")
+{
+	std::vector<std::string> values = { "A", "A", "A", "B" };
+	REQUIRE(compute_conflict_all(values) == conflict_all_t::override_benign);
+}
+
+TEST_CASE("compute_conflict_all, four values middle differs", "[u]")
+{
+	std::vector<std::string> values = { "A", "B", "A", "A" };
+	REQUIRE(compute_conflict_all(values) == conflict_all_t::conflict);
+}
+
+TEST_CASE("compute_conflict_this, four values override pattern", "[u]")
+{
+	std::vector<std::string> values = { "A", "A", "A", "B" };
+	auto result = compute_conflict_this(values);
+	REQUIRE(result[0] == conflict_this_t::master);
+	REQUIRE(result[1] == conflict_this_t::identical_to_master);
+	REQUIRE(result[2] == conflict_this_t::identical_to_master);
+	REQUIRE(result[3] == conflict_this_t::override_wins);
+}
+
+TEST_CASE("compute_conflict_this, four values conflict pattern", "[u]")
+{
+	std::vector<std::string> values = { "A", "B", "C", "D" };
+	auto result = compute_conflict_this(values);
+	REQUIRE(result[0] == conflict_this_t::master);
+	REQUIRE(result[1] == conflict_this_t::conflict_loses);
+	REQUIRE(result[2] == conflict_this_t::conflict_loses);
+	REQUIRE(result[3] == conflict_this_t::conflict_wins);
+}
+
+TEST_CASE("compute_conflict_this, master same as winner others differ", "[u]")
+{
+	std::vector<std::string> values = { "A", "B", "C", "A" };
+	auto result = compute_conflict_this(values);
+	REQUIRE(result[0] == conflict_this_t::master);
+	REQUIRE(result[1] == conflict_this_t::conflict_loses);
+	REQUIRE(result[2] == conflict_this_t::conflict_loses);
+	REQUIRE(result[3] == conflict_this_t::conflict_wins);
+}
+
+TEST_CASE("compute_conflict_this, all empty yields all unknown", "[u]")
+{
+	std::vector<std::string> values = { "", "", "" };
+	auto result = compute_conflict_this(values);
+	REQUIRE(result[0] == conflict_this_t::unknown);
+	REQUIRE(result[1] == conflict_this_t::identical_to_master);
+	REQUIRE(result[2] == conflict_this_t::identical_to_master);
+}

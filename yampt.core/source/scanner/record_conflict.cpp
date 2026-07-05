@@ -1,4 +1,5 @@
 #include "record_conflict.hpp"
+#include "../utility/record_behavior.hpp"
 
 conflict_all_t compute_conflict_all(const std::vector<std::string> & values)
 {
@@ -200,33 +201,16 @@ std::vector<conflict_this_t> compute_conflict_this_skip_empty(const std::vector<
 	return result;
 }
 
-struct conflict_policy_entry_t
-{
-	const char * record_type;
-	const char * sub_type;
-	conflict_policy_t policy;
-};
-
-static constexpr conflict_policy_entry_t conflict_policy_table[] = {
-	{ "CELL", "*",    { true,  false } },
-	{ "CELL", "NAM0", { false, true  } },
-};
-
 conflict_policy_t find_conflict_policy(const std::string & record_type, const std::string & sub_type)
 {
-	conflict_policy_t result;
+	const auto * behavior = find_record_behavior(record_type);
+	const auto * rule = find_sub_record_rule(behavior, sub_type, 0);
 
-	for (const auto & entry : conflict_policy_table)
-	{
-		if (record_type != entry.record_type)
-			continue;
+	if (!rule)
+		return {};
 
-		if (std::string(entry.sub_type) == sub_type)
-			return entry.policy;
-
-		if (std::string(entry.sub_type) == "*")
-			result = entry.policy;
-	}
-
-	return result;
+	return {
+		has_flag(rule->flags, sub_rule_flag_t::skip_non_existent),
+		has_flag(rule->flags, sub_rule_flag_t::ignore_conflict)
+	};
 }

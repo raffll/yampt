@@ -204,6 +204,7 @@
     <ClCompile Include="source\translator\translation_engine.cpp" />
     <ClCompile Include="source\utility\char_diff.cpp" />
     <ClCompile Include="source\utility\keyword_trie.cpp" />
+    <ClCompile Include="source\utility\record_behavior.cpp" />
     <ClCompile Include="source\utility\tools.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -250,6 +251,7 @@
     <ClInclude Include="source\utility\dict_kind.hpp" />
     <ClInclude Include="source\utility\includes.hpp" />
     <ClInclude Include="source\utility\keyword_trie.hpp" />
+    <ClInclude Include="source\utility\record_behavior.hpp" />
     <ClInclude Include="source\utility\record_types.hpp" />
     <ClInclude Include="source\utility\status_types.hpp" />
     <ClInclude Include="source\utility\string_utils.hpp" />

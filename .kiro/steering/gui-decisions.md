@@ -105,4 +105,8 @@ The Details panel shows for ANY entry with non-empty `details` field (not just a
 
 ## Tree Expansion State — Never Modify
 
-Never call `expandAll()`, `collapseAll()`, or manually expand/collapse tree nodes as a side effect of any operation. Use `rebuild_nav_preserving_state()` which saves and restores the expansion state across rebuilds. The user's tree expansion is sacred — operations must not change it.
+Never call `expandAll()`, `collapseAll()`, or manually expand/collapse tree nodes as a side effect of any operation except `display_record`. Use `rebuild_nav_preserving_state()` which saves and restores the expansion state across rebuilds. The user's tree expansion is sacred — operations must not change it.
+
+Default expansion:
+- Left panel (nav tree): collapsed
+- Right panel (view tree): expanded via `expandAll()` on each new record display

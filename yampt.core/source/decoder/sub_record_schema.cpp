@@ -79,11 +79,11 @@ static const char * const aidt_flags[] = { "Weapon",        "Armor",     "Clothi
 	                                       "Spellmaking",   "Enchanting" };
 
 static const field_def_t npc_aidt_fields[] = {
-	{ "Hello", field_type_t::u16, 0, 2, nullptr, nullptr },
-	{ "Fight", field_type_t::u8, 2, 1, nullptr, nullptr },
-	{ "Flee", field_type_t::u8, 3, 1, nullptr, nullptr },
-	{ "Alarm", field_type_t::u8, 4, 1, nullptr, nullptr },
-	{ "Services", field_type_t::flags_u32, 8, 4, nullptr, aidt_flags, ARRAY_COUNT(aidt_flags) },
+	{ "Hello", field_type_t::u16, 0, 2, nullptr, nullptr, 0, "Disposition" },
+	{ "Fight", field_type_t::u8, 2, 1, nullptr, nullptr, 0, "Disposition" },
+	{ "Flee", field_type_t::u8, 3, 1, nullptr, nullptr, 0, "Disposition" },
+	{ "Alarm", field_type_t::u8, 4, 1, nullptr, nullptr, 0, "Disposition" },
+	{ "Services", field_type_t::flags_u32, 8, 4, nullptr, aidt_flags, ARRAY_COUNT(aidt_flags), nullptr },
 };
 
 static const char * const weapon_types[] = {
@@ -328,30 +328,30 @@ static const field_def_t book_bkdt_fields[] = {
 static const char * const creature_types[] = { "Creature", "Daedra", "Undead", "Humanoid", nullptr };
 
 static const field_def_t crea_npdt_fields[] = {
-	{ "Type", field_type_t::enum_u32, 0, 4, creature_types, nullptr },
-	{ "Level", field_type_t::u32, 4, 4, nullptr, nullptr },
-	{ "Strength", field_type_t::u32, 8, 4, nullptr, nullptr },
-	{ "Intelligence", field_type_t::u32, 12, 4, nullptr, nullptr },
-	{ "Willpower", field_type_t::u32, 16, 4, nullptr, nullptr },
-	{ "Agility", field_type_t::u32, 20, 4, nullptr, nullptr },
-	{ "Speed", field_type_t::u32, 24, 4, nullptr, nullptr },
-	{ "Endurance", field_type_t::u32, 28, 4, nullptr, nullptr },
-	{ "Personality", field_type_t::u32, 32, 4, nullptr, nullptr },
-	{ "Luck", field_type_t::u32, 36, 4, nullptr, nullptr },
-	{ "Health", field_type_t::u32, 40, 4, nullptr, nullptr },
-	{ "Magicka", field_type_t::u32, 44, 4, nullptr, nullptr },
-	{ "Fatigue", field_type_t::u32, 48, 4, nullptr, nullptr },
-	{ "Soul", field_type_t::u32, 52, 4, nullptr, nullptr },
-	{ "Combat", field_type_t::u32, 56, 4, nullptr, nullptr },
-	{ "Magic", field_type_t::u32, 60, 4, nullptr, nullptr },
-	{ "Stealth", field_type_t::u32, 64, 4, nullptr, nullptr },
-	{ "Attack 1 Min", field_type_t::u32, 68, 4, nullptr, nullptr },
-	{ "Attack 1 Max", field_type_t::u32, 72, 4, nullptr, nullptr },
-	{ "Attack 2 Min", field_type_t::u32, 76, 4, nullptr, nullptr },
-	{ "Attack 2 Max", field_type_t::u32, 80, 4, nullptr, nullptr },
-	{ "Attack 3 Min", field_type_t::u32, 84, 4, nullptr, nullptr },
-	{ "Attack 3 Max", field_type_t::u32, 88, 4, nullptr, nullptr },
-	{ "Gold", field_type_t::u32, 92, 4, nullptr, nullptr },
+	{ "Type", field_type_t::enum_u32, 0, 4, creature_types, nullptr, 0, nullptr },
+	{ "Level", field_type_t::u32, 4, 4, nullptr, nullptr, 0, nullptr },
+	{ "Strength", field_type_t::u32, 8, 4, nullptr, nullptr, 0, "Attributes" },
+	{ "Intelligence", field_type_t::u32, 12, 4, nullptr, nullptr, 0, "Attributes" },
+	{ "Willpower", field_type_t::u32, 16, 4, nullptr, nullptr, 0, "Attributes" },
+	{ "Agility", field_type_t::u32, 20, 4, nullptr, nullptr, 0, "Attributes" },
+	{ "Speed", field_type_t::u32, 24, 4, nullptr, nullptr, 0, "Attributes" },
+	{ "Endurance", field_type_t::u32, 28, 4, nullptr, nullptr, 0, "Attributes" },
+	{ "Personality", field_type_t::u32, 32, 4, nullptr, nullptr, 0, "Attributes" },
+	{ "Luck", field_type_t::u32, 36, 4, nullptr, nullptr, 0, "Attributes" },
+	{ "Health", field_type_t::u32, 40, 4, nullptr, nullptr, 0, "Stats" },
+	{ "Magicka", field_type_t::u32, 44, 4, nullptr, nullptr, 0, "Stats" },
+	{ "Fatigue", field_type_t::u32, 48, 4, nullptr, nullptr, 0, "Stats" },
+	{ "Soul", field_type_t::u32, 52, 4, nullptr, nullptr, 0, "Stats" },
+	{ "Combat", field_type_t::u32, 56, 4, nullptr, nullptr, 0, "Skills" },
+	{ "Magic", field_type_t::u32, 60, 4, nullptr, nullptr, 0, "Skills" },
+	{ "Stealth", field_type_t::u32, 64, 4, nullptr, nullptr, 0, "Skills" },
+	{ "Attack 1 Min", field_type_t::u32, 68, 4, nullptr, nullptr, 0, "Attacks" },
+	{ "Attack 1 Max", field_type_t::u32, 72, 4, nullptr, nullptr, 0, "Attacks" },
+	{ "Attack 2 Min", field_type_t::u32, 76, 4, nullptr, nullptr, 0, "Attacks" },
+	{ "Attack 2 Max", field_type_t::u32, 80, 4, nullptr, nullptr, 0, "Attacks" },
+	{ "Attack 3 Min", field_type_t::u32, 84, 4, nullptr, nullptr, 0, "Attacks" },
+	{ "Attack 3 Max", field_type_t::u32, 88, 4, nullptr, nullptr, 0, "Attacks" },
+	{ "Gold", field_type_t::u32, 92, 4, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t cont_cndt_fields[] = {
@@ -428,21 +428,21 @@ static const field_def_t fact_rnam_fields[] = {
 static const char * const class_specializations[] = { "Combat", "Magic", "Stealth", nullptr };
 
 static const field_def_t clas_cldt_fields[] = {
-	{ "Attribute 1", field_type_t::enum_u32, 0, 4, attribute_names, nullptr },
-	{ "Attribute 2", field_type_t::enum_u32, 4, 4, attribute_names, nullptr },
-	{ "Specialization", field_type_t::enum_u32, 8, 4, class_specializations, nullptr },
-	{ "Major 1", field_type_t::enum_u32, 16, 4, skill_names, nullptr },
-	{ "Major 2", field_type_t::enum_u32, 24, 4, skill_names, nullptr },
-	{ "Major 3", field_type_t::enum_u32, 32, 4, skill_names, nullptr },
-	{ "Major 4", field_type_t::enum_u32, 40, 4, skill_names, nullptr },
-	{ "Major 5", field_type_t::enum_u32, 48, 4, skill_names, nullptr },
-	{ "Minor 1", field_type_t::enum_u32, 12, 4, skill_names, nullptr },
-	{ "Minor 2", field_type_t::enum_u32, 20, 4, skill_names, nullptr },
-	{ "Minor 3", field_type_t::enum_u32, 28, 4, skill_names, nullptr },
-	{ "Minor 4", field_type_t::enum_u32, 36, 4, skill_names, nullptr },
-	{ "Minor 5", field_type_t::enum_u32, 44, 4, skill_names, nullptr },
-	{ "Playable", field_type_t::bool_bit, 52, 0, nullptr, nullptr },
-	{ "Services", field_type_t::flags_u32, 56, 4, nullptr, aidt_flags, ARRAY_COUNT(aidt_flags) },
+	{ "Attribute 1", field_type_t::enum_u32, 0, 4, attribute_names, nullptr, 0, nullptr },
+	{ "Attribute 2", field_type_t::enum_u32, 4, 4, attribute_names, nullptr, 0, nullptr },
+	{ "Specialization", field_type_t::enum_u32, 8, 4, class_specializations, nullptr, 0, nullptr },
+	{ "Major 1", field_type_t::enum_u32, 16, 4, skill_names, nullptr, 0, "Major Skills" },
+	{ "Major 2", field_type_t::enum_u32, 24, 4, skill_names, nullptr, 0, "Major Skills" },
+	{ "Major 3", field_type_t::enum_u32, 32, 4, skill_names, nullptr, 0, "Major Skills" },
+	{ "Major 4", field_type_t::enum_u32, 40, 4, skill_names, nullptr, 0, "Major Skills" },
+	{ "Major 5", field_type_t::enum_u32, 48, 4, skill_names, nullptr, 0, "Major Skills" },
+	{ "Minor 1", field_type_t::enum_u32, 12, 4, skill_names, nullptr, 0, "Minor Skills" },
+	{ "Minor 2", field_type_t::enum_u32, 20, 4, skill_names, nullptr, 0, "Minor Skills" },
+	{ "Minor 3", field_type_t::enum_u32, 28, 4, skill_names, nullptr, 0, "Minor Skills" },
+	{ "Minor 4", field_type_t::enum_u32, 36, 4, skill_names, nullptr, 0, "Minor Skills" },
+	{ "Minor 5", field_type_t::enum_u32, 44, 4, skill_names, nullptr, 0, "Minor Skills" },
+	{ "Playable", field_type_t::bool_bit, 52, 0, nullptr, nullptr, 0, nullptr },
+	{ "Services", field_type_t::flags_u32, 56, 4, nullptr, aidt_flags, ARRAY_COUNT(aidt_flags), nullptr },
 };
 
 static const char * const race_flags[] = { "Playable", "Beast" };
@@ -770,18 +770,18 @@ static const field_def_t body_bydt_fields[] = {
 };
 
 static const field_def_t ai_w_fields[] = {
-	{ "Distance", field_type_t::u16, 0, 2, nullptr, nullptr },
-	{ "Duration", field_type_t::u16, 2, 2, nullptr, nullptr },
-	{ "Time of Day", field_type_t::u8, 4, 1, nullptr, nullptr },
-	{ "Idle 1", field_type_t::u8, 5, 1, nullptr, nullptr },
-	{ "Idle 2", field_type_t::u8, 6, 1, nullptr, nullptr },
-	{ "Idle 3", field_type_t::u8, 7, 1, nullptr, nullptr },
-	{ "Idle 4", field_type_t::u8, 8, 1, nullptr, nullptr },
-	{ "Idle 5", field_type_t::u8, 9, 1, nullptr, nullptr },
-	{ "Idle 6", field_type_t::u8, 10, 1, nullptr, nullptr },
-	{ "Idle 7", field_type_t::u8, 11, 1, nullptr, nullptr },
-	{ "Idle 8", field_type_t::u8, 12, 1, nullptr, nullptr },
-	{ "Should Repeat", field_type_t::u8, 13, 1, nullptr, nullptr },
+	{ "Distance", field_type_t::u16, 0, 2, nullptr, nullptr, 0, nullptr },
+	{ "Duration", field_type_t::u16, 2, 2, nullptr, nullptr, 0, nullptr },
+	{ "Time of Day", field_type_t::u8, 4, 1, nullptr, nullptr, 0, nullptr },
+	{ "Idle 1", field_type_t::u8, 5, 1, nullptr, nullptr, 0, "Idle" },
+	{ "Idle 2", field_type_t::u8, 6, 1, nullptr, nullptr, 0, "Idle" },
+	{ "Idle 3", field_type_t::u8, 7, 1, nullptr, nullptr, 0, "Idle" },
+	{ "Idle 4", field_type_t::u8, 8, 1, nullptr, nullptr, 0, "Idle" },
+	{ "Idle 5", field_type_t::u8, 9, 1, nullptr, nullptr, 0, "Idle" },
+	{ "Idle 6", field_type_t::u8, 10, 1, nullptr, nullptr, 0, "Idle" },
+	{ "Idle 7", field_type_t::u8, 11, 1, nullptr, nullptr, 0, "Idle" },
+	{ "Idle 8", field_type_t::u8, 12, 1, nullptr, nullptr, 0, "Idle" },
+	{ "Should Repeat", field_type_t::u8, 13, 1, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t ai_t_fields[] = {

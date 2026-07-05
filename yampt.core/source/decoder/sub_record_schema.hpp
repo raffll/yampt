@@ -34,6 +34,7 @@ struct field_def_t
 	const char * const * enum_names;
 	const char * const * flag_names;
 	int flag_count;
+	const char * group;
 };
 
 struct sub_record_schema_t

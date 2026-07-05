@@ -8,6 +8,7 @@
 #include <scanner/merge_patch_ops.hpp>
 #include <scanner/record_conflict.hpp>
 #include <scanner/sub_record_merge.hpp>
+#include <utility/record_behavior.hpp>
 #include <scanner/summon_fixer.hpp>
 #include <algorithm>
 #include <filesystem>
@@ -753,7 +754,6 @@ void plugin_workspace_view_t::on_nav_context_menu(const QPoint & global_pos, con
 
 	case node_kind_t::record_on_source:
 		break;
-	}
 
 	case node_kind_t::file_on_source:
 	{
@@ -964,6 +964,7 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & global_pos, co
 	// merge         | schema_record   | Remove Sub-Record
 	// merge         | group           | Remove Group
 	// merge         | field_of_group  | Remove Group
+	// merge         | field_of_schema | Remove Sub-Record (parent)
 	//
 	// field_of_schema includes children with empty type (schema fields)
 	// ─────────────────────────────────────────────────────────────────
@@ -974,7 +975,9 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & global_pos, co
 	{
 	case col_state_t::not_in_merge:
 	{
-		if (rec_type == "CELL")
+		const auto * behavior = find_record_behavior(rec_type);
+
+		if (behavior->copy_strategy == copy_strategy_t::header_and_selected_group)
 		{
 			menu.addAction(
 			    "Copy Record to Merged Patch",
@@ -1018,12 +1021,25 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & global_pos, co
 
 		case row_kind_t::field_of_schema:
 		{
-			const auto & parent_node = visible[parent_row_idx];
-			const auto sub_type = row.type.empty() ? parent_node.type : row.type;
-			const auto sub_size = row.type.empty() ? parent_node.size : row.size;
-			const int parent_bin = binary_start(parent_node);
-			const int field_bin = row.type.empty() ? parent_bin : bin_idx;
-			const int child_field_idx = index.row();
+			QModelIndex sub_record_index = index.parent();
+			const auto * sub_record_node = m_record_view->model()->node_from_index(sub_record_index);
+
+			while (sub_record_node && sub_record_node->type.empty() && sub_record_index.parent().isValid())
+			{
+				sub_record_index = sub_record_index.parent();
+				sub_record_node = m_record_view->model()->node_from_index(sub_record_index);
+			}
+
+			if (!sub_record_node || sub_record_node->type.empty())
+				break;
+
+			if (row.schema_field_index < 0)
+				break;
+
+			const auto sub_type = sub_record_node->type;
+			const auto sub_size = sub_record_node->size;
+			const int field_bin = binary_start(*sub_record_node);
+			const int child_field_idx = row.schema_field_index;
 			menu.addAction(
 			    "Copy Field to Merged Patch",
 			    [this, plugin_idx, rec_type, record_id, sub_type, sub_size, field_bin, child_field_idx]()
@@ -1085,6 +1101,32 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & global_pos, co
 		}
 
 		case row_kind_t::field_of_schema:
+		{
+			QModelIndex sub_record_index = index.parent();
+			const auto * sub_record_node = m_record_view->model()->node_from_index(sub_record_index);
+
+			while (sub_record_node && sub_record_node->type.empty() && sub_record_index.parent().isValid())
+			{
+				sub_record_index = sub_record_index.parent();
+				sub_record_node = m_record_view->model()->node_from_index(sub_record_index);
+			}
+
+			if (sub_record_node && !sub_record_node->type.empty())
+			{
+				const int merge_bin = binary_start(*sub_record_node);
+				if (merge_bin >= 0)
+				{
+					const auto removed_type = sub_record_node->type;
+					menu.addAction(
+					    "Remove Sub-Record",
+					    [this, rec_type, record_id, merge_bin, removed_type]()
+					{ remove_sub_record_from_merge(rec_type, record_id, merge_bin, removed_type); });
+				}
+			}
+
+			break;
+		}
+
 		case row_kind_t::other:
 			break;
 		}
