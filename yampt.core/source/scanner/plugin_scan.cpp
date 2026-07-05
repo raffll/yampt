@@ -108,7 +108,12 @@ void plugin_scan_t::rebuild_conflicts()
 			record_version_t ver;
 			ver.plugin_idx = pi;
 			ver.record_index = rec.record_index;
-			insert_or_update_version({ rec.rec_type, rec.record_id, rec.display_name, rec.dial_name, ver });
+
+			auto record_id = rec.record_id;
+			if (rec.rec_type == "TES3")
+				record_id = plugin_filename(pi);
+
+			insert_or_update_version({ rec.rec_type, record_id, rec.display_name, rec.dial_name, ver });
 		}
 	}
 
