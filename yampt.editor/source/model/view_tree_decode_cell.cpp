@@ -472,7 +472,7 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 
 		std::string ref_label = object_name.empty()
 		    ? "#" + std::to_string(obj_idx)
-		    : object_name + " #" + std::to_string(obj_idx);
+		    : "#" + std::to_string(obj_idx) + " " + object_name;
 
 		view_node_t group_row;
 		group_row.type = "FRMR";
@@ -620,6 +620,8 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 					child_field.binary_ranges[col] = { result.binary_index, result.binary_index + 1 };
 					if (slot.type == "FRMR")
 						child_field.values[col] = std::to_string(read_frmr_ref_index(result.view.data, result.view.size));
+					else if (slot.type == "DELE")
+						child_field.values[col] = "DELETED";
 					else if (schema && schema->field_count == 1)
 						child_field.values[col] = decode_field(schema->fields[0], result.view.data, result.view.size);
 					else

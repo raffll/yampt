@@ -49,6 +49,7 @@
     <ClCompile Include="source\tests.merge_fixers.cpp" />
     <ClCompile Include="source\tests.leveled_list_merge.cpp" />
     <ClCompile Include="source\tests.cell_ref_merge.cpp" />
+    <ClCompile Include="source\tests.frmr_ref_index.cpp" />
     <ClCompile Include="source\tests.armor_slots.cpp" />
     <ClCompile Include="source\tests.dial_info_align.cpp" />
     <ClCompile Include="source\tests.word_match_utils.cpp" />
