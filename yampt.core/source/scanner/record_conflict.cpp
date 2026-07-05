@@ -28,6 +28,41 @@ conflict_all_t compute_conflict_all(const std::vector<std::string> & values)
 	return conflict_all_t::override_benign;
 }
 
+conflict_all_t compute_conflict_all_skip_empty(const std::vector<std::string> & values)
+{
+	std::vector<std::string> present;
+	for (const auto & value : values)
+	{
+		if (!value.empty())
+			present.push_back(value);
+	}
+
+	if (present.size() <= 1)
+		return conflict_all_t::only_one;
+
+	bool all_same = true;
+	for (size_t i = 1; i < present.size(); ++i)
+	{
+		if (present[i] != present[0])
+		{
+			all_same = false;
+			break;
+		}
+	}
+
+	if (all_same)
+		return conflict_all_t::no_conflict;
+
+	const auto & winner = present.back();
+	for (size_t i = 0; i < present.size() - 1; ++i)
+	{
+		if (present[i] != present[0] && present[i] != winner)
+			return conflict_all_t::conflict;
+	}
+
+	return conflict_all_t::override_benign;
+}
+
 std::vector<conflict_this_t> compute_conflict_this(const std::vector<std::string> & values)
 {
 	std::vector<conflict_this_t> result(values.size(), conflict_this_t::unknown);

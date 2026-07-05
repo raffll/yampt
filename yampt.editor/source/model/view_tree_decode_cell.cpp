@@ -258,7 +258,7 @@ void view_tree_model_t::decode_schema_children_ref(
 				}
 
 				frow.all_identical = check_all_identical(frow.values);
-				frow.row_conflict_all = compute_conflict_all(frow.values);
+				frow.row_conflict_all = compute_conflict_all_skip_empty(frow.values);
 				frow.cell_conflict_this = compute_conflict_this(frow.values);
 				parent_row.children.push_back(std::move(frow));
 			}
@@ -302,7 +302,7 @@ void view_tree_model_t::decode_schema_children_ref(
 		}
 
 		frow.all_identical = check_all_identical(frow.values);
-		frow.row_conflict_all = compute_conflict_all(frow.values);
+		frow.row_conflict_all = compute_conflict_all_skip_empty(frow.values);
 		frow.cell_conflict_this = compute_conflict_this(frow.values);
 		parent_row.children.push_back(std::move(frow));
 	}
@@ -360,7 +360,7 @@ void view_tree_model_t::decode_hex_children_ref(
 		}
 
 		frow.all_identical = check_all_identical(frow.values);
-		frow.row_conflict_all = compute_conflict_all(frow.values);
+		frow.row_conflict_all = compute_conflict_all_skip_empty(frow.values);
 		frow.cell_conflict_this = compute_conflict_this(frow.values);
 		parent_row.children.push_back(std::move(frow));
 	}
@@ -614,7 +614,7 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 
 				child_field.label = make_sub_label(slot.type, m_record_type, first_size);
 				child_field.all_identical = check_all_identical(child_field.values);
-				child_field.row_conflict_all = compute_conflict_all(child_field.values);
+				child_field.row_conflict_all = compute_conflict_all_skip_empty(child_field.values);
 				child_field.cell_conflict_this = compute_conflict_this(child_field.values);
 
 				if (child_field.row_conflict_all > group_row.row_conflict_all)
