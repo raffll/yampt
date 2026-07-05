@@ -68,6 +68,7 @@ public:
 	const std::string * find_merge_content(const std::string & rec_type, const std::string & record_id) const;
 	std::string read_record_content(int plugin_idx, size_t record_index);
 	void remove_from_merge(const std::string & type, const std::string & id);
+	void recompute_single_conflict(const std::string & rec_type, const std::string & record_id);
 	bool has_merge() const;
 	size_t merge_record_count() const;
 	const std::string & merge_record_content(size_t index) const;

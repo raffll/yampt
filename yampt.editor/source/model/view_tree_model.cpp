@@ -52,7 +52,7 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 
 	load_sub_records(scan, entry, context);
 
-	enum class decode_mode_t { cell, leveled, faction, container, armor, dial, generic };
+	enum class decode_mode_t { cell, leveled, faction, container, armor, dial, info, generic };
 
 	static const std::pair<const char *, decode_mode_t> decode_table[] = {
 		{ "CELL", decode_mode_t::cell },
@@ -66,6 +66,7 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 		{ "RACE", decode_mode_t::container },
 		{ "ARMO", decode_mode_t::armor },
 		{ "CLOT", decode_mode_t::armor },
+		{ "INFO", decode_mode_t::info },
 	};
 
 	auto mode = decode_mode_t::generic;
@@ -86,6 +87,7 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 	case decode_mode_t::container: set_record_container(context, entry); break;
 	case decode_mode_t::armor:     set_record_armor(context, entry); break;
 	case decode_mode_t::dial:      set_record_dial(scan, context, entry); break;
+	case decode_mode_t::info:      set_record_info(context, entry); break;
 	case decode_mode_t::generic:   set_record_generic(context, entry); break;
 	}
 

@@ -154,6 +154,42 @@ void plugin_scan_t::remove_from_merge(const std::string & type, const std::strin
 	m_merge_records.erase(it, m_merge_records.end());
 }
 
+void plugin_scan_t::recompute_single_conflict(const std::string & rec_type, const std::string & record_id)
+{
+	const std::string lookup_key = rec_type + std::string(1, '\0') + record_id;
+	auto it_entry = m_entry_lookup.find(lookup_key);
+	if (it_entry == m_entry_lookup.end())
+		return;
+
+	auto & entry = m_entries[it_entry->second];
+
+	entry.versions.erase(
+	    std::remove_if(
+	        entry.versions.begin(),
+	        entry.versions.end(),
+	        [this](const record_version_t & ver) { return ver.plugin_idx == m_merge_plugin_idx; }),
+	    entry.versions.end());
+
+	for (size_t mi = 0; mi < m_merge_records.size(); ++mi)
+	{
+		const auto & merge_rec = m_merge_records[mi];
+		if (merge_rec.rec_type != rec_type || merge_rec.record_id != record_id)
+			continue;
+
+		record_version_t ver;
+		ver.plugin_idx = m_merge_plugin_idx;
+		ver.record_index = mi;
+		entry.versions.push_back(ver);
+		break;
+	}
+
+	entry.conflict_all = conflict_all_t::only_one;
+	entry.slot_result.reset();
+
+	if (entry.versions.size() >= 2)
+		compute_conflict(entry);
+}
+
 std::string plugin_scan_t::read_record_content(int plugin_idx, size_t record_index)
 {
 	if (plugin_idx == m_merge_plugin_idx)

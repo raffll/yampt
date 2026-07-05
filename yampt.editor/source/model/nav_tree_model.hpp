@@ -17,6 +17,7 @@ public:
 	explicit nav_tree_model_t(plugin_scan_t & scan, QObject * parent = nullptr);
 
 	void rebuild();
+	void refresh_colors();
 	void set_excluded_plugins(const std::set<std::string> * excluded);
 	void set_patch_plugins(const std::set<std::string> * patch);
 

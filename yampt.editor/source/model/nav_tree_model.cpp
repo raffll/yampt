@@ -180,6 +180,14 @@ void nav_tree_model_t::rebuild()
 	endResetModel();
 }
 
+void nav_tree_model_t::refresh_colors()
+{
+	emit dataChanged(
+	    index(0, 0, {}),
+	    index(rowCount({}) - 1, columnCount({}) - 1, {}),
+	    { Qt::BackgroundRole, Qt::ForegroundRole });
+}
+
 void nav_tree_model_t::set_filter(const filter_state_t & state)
 {
 	m_filter.set_filter(state);
@@ -610,6 +618,9 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 				{
 					if (!entry.display_name.empty())
 						return QString::fromStdString(entry.display_name);
+
+					if (entry.rec_type == "INFO")
+						return {};
 
 					return QString::fromStdString(entry.dial_name);
 				}

@@ -117,6 +117,7 @@ private:
 	void set_record_faction(record_context_t & context, const conflict_entry_t & entry);
 	void set_record_container(record_context_t & context, const conflict_entry_t & entry);
 	void set_record_armor(record_context_t & context, const conflict_entry_t & entry);
+	void set_record_info(record_context_t & context, const conflict_entry_t & entry);
 	void set_record_dial(plugin_scan_t & scan, record_context_t & context, const conflict_entry_t & entry);
 	void set_record_generic(record_context_t & context, const conflict_entry_t & entry);
 

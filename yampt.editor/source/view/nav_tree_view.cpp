@@ -69,6 +69,11 @@ void nav_tree_view_t::rebuild_preserving_state()
 	restore_expansion_state();
 }
 
+void nav_tree_view_t::refresh_colors()
+{
+	m_model->refresh_colors();
+}
+
 void nav_tree_view_t::set_filter(const nav_tree_model_t::filter_state_t & state)
 {
 	m_model->set_filter(state);

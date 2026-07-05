@@ -17,6 +17,7 @@ public:
 
 	void rebuild();
 	void rebuild_preserving_state();
+	void refresh_colors();
 	void set_filter(const nav_tree_model_t::filter_state_t & state);
 	void clear_filter();
 	void set_hide_duplicates(bool hide);

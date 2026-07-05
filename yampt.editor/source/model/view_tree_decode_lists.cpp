@@ -216,6 +216,107 @@ void view_tree_model_t::set_record_generic(record_context_t & context, const con
 		m_rows.push_back(build_slot_row(col_count, all_subs, col_type_indices, slot));
 }
 
+void view_tree_model_t::set_record_info(record_context_t & context, const conflict_entry_t & entry)
+{
+	const auto col_count = context.col_count;
+	auto & all_subs = context.all_sub_records;
+
+	std::vector<sub_slot_t> unified_slots;
+	std::vector<std::unordered_map<std::string, std::vector<size_t>>> col_type_indices(col_count);
+
+	alignment_rule_t rule;
+	rule.anchor_type = "SCVR";
+	rule.anchor_size = 0;
+	rule.trailing_types = { "INTV", "FLTV" };
+	rule.key_source = alignment_rule_t::key_from_t::anchor;
+
+	content_alignment_t::align(all_subs, col_count, { rule }, unified_slots, col_type_indices);
+
+	auto is_condition_type = [](const std::string & slot_type)
+	{
+		return slot_type == "SCVR" || slot_type == "INTV" || slot_type == "FLTV";
+	};
+
+	std::stable_sort(
+	    unified_slots.begin(),
+	    unified_slots.end(),
+	    [&](const sub_slot_t & left, const sub_slot_t & right)
+	{
+		return !is_condition_type(left.type) && is_condition_type(right.type);
+	});
+
+	int condition_index = 0;
+	for (size_t i = 0; i < unified_slots.size(); ++i)
+	{
+		if (unified_slots[i].type != "SCVR")
+		{
+			m_rows.push_back(build_slot_row(col_count, all_subs, col_type_indices, unified_slots[i]));
+			continue;
+		}
+
+		auto scvr_row = build_slot_row(col_count, all_subs, col_type_indices, unified_slots[i]);
+
+		view_node_t group_row;
+		group_row.type = "SCVR";
+		group_row.size = 0;
+		group_row.label = "Condition #" + std::to_string(condition_index);
+		group_row.values = scvr_row.values;
+		group_row.all_identical = scvr_row.all_identical;
+
+		view_node_t scvr_field;
+		scvr_field.label = "SCVR - Script Variable";
+		scvr_field.type = scvr_row.type;
+		scvr_field.size = scvr_row.size;
+		scvr_field.binary_ranges = scvr_row.binary_ranges;
+		scvr_field.values = scvr_row.children.empty() ? scvr_row.values : scvr_row.children[0].values;
+		scvr_field.all_identical = scvr_row.all_identical;
+		scvr_field.row_conflict_all = scvr_row.row_conflict_all;
+		scvr_field.cell_conflict_this = scvr_row.cell_conflict_this;
+		group_row.children.push_back(std::move(scvr_field));
+
+		size_t next = i + 1;
+		while (next < unified_slots.size() &&
+		       (unified_slots[next].type == "INTV" || unified_slots[next].type == "FLTV"))
+		{
+			auto value_row = build_slot_row(col_count, all_subs, col_type_indices, unified_slots[next]);
+
+			view_node_t value_field;
+			value_field.label = (unified_slots[next].type == "INTV")
+			    ? "INTV - Comparison Value"
+			    : "FLTV - Comparison Value";
+			value_field.type = value_row.type;
+			value_field.size = value_row.size;
+			value_field.binary_ranges = value_row.binary_ranges;
+			value_field.values = value_row.values;
+			value_field.all_identical = value_row.all_identical;
+			value_field.row_conflict_all = value_row.row_conflict_all;
+			value_field.cell_conflict_this = value_row.cell_conflict_this;
+			group_row.children.push_back(std::move(value_field));
+			++next;
+		}
+
+		group_row.row_conflict_all = conflict_all_t::only_one;
+		group_row.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
+		for (const auto & child : group_row.children)
+		{
+			if (child.row_conflict_all > group_row.row_conflict_all)
+				group_row.row_conflict_all = child.row_conflict_all;
+
+			for (size_t col = 0; col < col_count && col < child.cell_conflict_this.size(); ++col)
+			{
+				if (child.cell_conflict_this[col] > group_row.cell_conflict_this[col])
+					group_row.cell_conflict_this[col] = child.cell_conflict_this[col];
+			}
+		}
+
+		compute_group_ranges(group_row, col_count);
+
+		m_rows.push_back(std::move(group_row));
+		++condition_index;
+		i = next - 1;
+	}
+}
+
 void view_tree_model_t::collect_leveled_entries(record_context_t & context, slot_build_context_t & build_ctx)
 {
 	const std::string id_type = (m_record_type == "LEVC") ? "CNAM" : "INAM";

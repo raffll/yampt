@@ -727,7 +727,6 @@ void plugin_workspace_view_t::on_nav_context_menu(const QPoint & global_pos, con
 	// node_kind         | action
 	// ─────────────────────────────────────────────────────────────────
 	// record_on_merge   | Remove
-	// record_on_source  | Copy to Merge
 	// file_on_source    | Include/Exclude from Merge (toggle)
 	// file_on_source    | Mark/Unmark as Patch (toggle)
 	// ─────────────────────────────────────────────────────────────────
@@ -753,26 +752,6 @@ void plugin_workspace_view_t::on_nav_context_menu(const QPoint & global_pos, con
 	}
 
 	case node_kind_t::record_on_source:
-	{
-		menu.addAction(
-		    "Copy to Merge",
-		    [this, info]()
-		{
-			for (const auto & ver : m_session->scan().find(info.rec_type, info.record_id)->versions)
-			{
-				if (ver.plugin_idx != info.plugin_idx)
-					continue;
-
-				m_session->scan().copy_record_to_merge(info.plugin_idx, ver.record_index);
-				break;
-			}
-
-			m_session->scan().rebuild_conflicts();
-			rebuild_nav_preserving_state();
-			save_merged_patch();
-			log_message("Copied " + info.rec_type + ":" + info.record_id + " to merge");
-			update_status();
-		});
 		break;
 	}
 
@@ -947,6 +926,9 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & global_pos, co
 
 	const auto kind = [&]() -> row_kind_t
 	{
+		if (is_field_row && row.type.empty())
+			return row_kind_t::field_of_schema;
+
 		if (row.type.empty())
 			return row_kind_t::other;
 
@@ -982,6 +964,8 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & global_pos, co
 	// merge         | schema_record   | Remove Sub-Record
 	// merge         | group           | Remove Group
 	// merge         | field_of_group  | Remove Group
+	//
+	// field_of_schema includes children with empty type (schema fields)
 	// ─────────────────────────────────────────────────────────────────
 
 	QMenu menu(this);
@@ -1034,13 +1018,16 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & global_pos, co
 
 		case row_kind_t::field_of_schema:
 		{
-			const auto sub_type = row.type;
-			const auto sub_size = row.size;
+			const auto & parent_node = visible[parent_row_idx];
+			const auto sub_type = row.type.empty() ? parent_node.type : row.type;
+			const auto sub_size = row.type.empty() ? parent_node.size : row.size;
+			const int parent_bin = binary_start(parent_node);
+			const int field_bin = row.type.empty() ? parent_bin : bin_idx;
 			const int child_field_idx = index.row();
 			menu.addAction(
 			    "Copy Field to Merged Patch",
-			    [this, plugin_idx, rec_type, record_id, sub_type, sub_size, bin_idx, child_field_idx]()
-			{ copy_field_to_merge(plugin_idx, rec_type, record_id, sub_type, sub_size, bin_idx, child_field_idx); });
+			    [this, plugin_idx, rec_type, record_id, sub_type, sub_size, field_bin, child_field_idx]()
+			{ copy_field_to_merge(plugin_idx, rec_type, record_id, sub_type, sub_size, field_bin, child_field_idx); });
 			break;
 		}
 
@@ -1593,8 +1580,8 @@ bool plugin_workspace_view_t::handle_drop_on_nav(QDropEvent * drop_event)
 
 void plugin_workspace_view_t::refresh_after_merge(const std::string & rec_type, const std::string & record_id)
 {
-	m_session->scan().rebuild_conflicts();
-	rebuild_nav_preserving_state();
+	m_session->scan().recompute_single_conflict(rec_type, record_id);
+	m_nav_view->refresh_colors();
 
 	const auto * updated = m_session->scan().find(rec_type, record_id);
 	if (!updated)
