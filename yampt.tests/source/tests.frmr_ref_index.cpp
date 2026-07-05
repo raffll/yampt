@@ -151,3 +151,94 @@ TEST_CASE("build_cell_slots, different refs stay separate", "[u]")
 
 	REQUIRE(frmr_slot_count == 2);
 }
+
+TEST_CASE("compute_conflict_all_skip_empty, ignores non-existent", "[u]")
+{
+	std::vector<std::string> values = { "hello", non_existent_value, "hello" };
+	REQUIRE(compute_conflict_all_skip_empty(values) == conflict_all_t::no_conflict);
+}
+
+TEST_CASE("compute_conflict_all_skip_empty, real empty is not skipped", "[u]")
+{
+	std::vector<std::string> values = { "hello", "", "hello" };
+	REQUIRE(compute_conflict_all_skip_empty(values) != conflict_all_t::no_conflict);
+}
+
+TEST_CASE("compute_conflict_all_skip_empty, all non-existent", "[u]")
+{
+	std::vector<std::string> values = { non_existent_value, non_existent_value, non_existent_value };
+	REQUIRE(compute_conflict_all_skip_empty(values) == conflict_all_t::only_one);
+}
+
+TEST_CASE("compute_conflict_all_skip_empty, single present value", "[u]")
+{
+	std::vector<std::string> values = { non_existent_value, "data", non_existent_value };
+	REQUIRE(compute_conflict_all_skip_empty(values) == conflict_all_t::only_one);
+}
+
+TEST_CASE("compute_conflict_all_skip_empty, override detected", "[u]")
+{
+	std::vector<std::string> values = { "old", non_existent_value, "new" };
+	REQUIRE(compute_conflict_all_skip_empty(values) == conflict_all_t::override_benign);
+}
+
+TEST_CASE("compute_conflict_all_skip_empty, conflict detected", "[u]")
+{
+	std::vector<std::string> values = { "aaa", "bbb", "ccc" };
+	REQUIRE(compute_conflict_all_skip_empty(values) == conflict_all_t::conflict);
+}
+
+TEST_CASE("compute_conflict_this_skip_empty, non-existent gets unknown", "[u]")
+{
+	std::vector<std::string> values = { "master", non_existent_value, "override" };
+	const auto result = compute_conflict_this_skip_empty(values);
+
+	REQUIRE(result[0] == conflict_this_t::master);
+	REQUIRE(result[1] == conflict_this_t::unknown);
+	REQUIRE(result[2] == conflict_this_t::override_wins);
+}
+
+TEST_CASE("compute_conflict_this_skip_empty, identical across present", "[u]")
+{
+	std::vector<std::string> values = { "same", non_existent_value, "same" };
+	const auto result = compute_conflict_this_skip_empty(values);
+
+	REQUIRE(result[0] == conflict_this_t::master);
+	REQUIRE(result[1] == conflict_this_t::unknown);
+	REQUIRE(result[2] == conflict_this_t::identical_to_master);
+}
+
+TEST_CASE("compute_conflict_this_skip_empty, real empty is a value", "[u]")
+{
+	std::vector<std::string> values = { "text", "", "text" };
+	const auto result = compute_conflict_this_skip_empty(values);
+
+	REQUIRE(result[1] == conflict_this_t::conflict_loses);
+}
+
+TEST_CASE("find_conflict_policy, CELL wildcard returns skip", "[u]")
+{
+	const auto policy = find_conflict_policy("CELL", "DATA");
+	REQUIRE(policy.skip_non_existent == true);
+	REQUIRE(policy.ignore_conflict == false);
+}
+
+TEST_CASE("find_conflict_policy, CELL NAM0 returns ignore", "[u]")
+{
+	const auto policy = find_conflict_policy("CELL", "NAM0");
+	REQUIRE(policy.skip_non_existent == false);
+	REQUIRE(policy.ignore_conflict == true);
+}
+
+TEST_CASE("find_conflict_policy, unknown type returns default", "[u]")
+{
+	const auto policy = find_conflict_policy("NPC_", "DATA");
+	REQUIRE(policy.skip_non_existent == false);
+	REQUIRE(policy.ignore_conflict == false);
+}
+
+TEST_CASE("non_existent_value, cannot collide with format_value_full", "[u]")
+{
+	REQUIRE(non_existent_value[0] == '\0');
+	REQUIRE(non_existent_value.size() == 4);
+}

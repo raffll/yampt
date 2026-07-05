@@ -33,7 +33,7 @@ conflict_all_t compute_conflict_all_skip_empty(const std::vector<std::string> & 
 	std::vector<std::string> present;
 	for (const auto & value : values)
 	{
-		if (!value.empty())
+		if (value != non_existent_value)
 			present.push_back(value);
 	}
 
@@ -138,7 +138,7 @@ std::vector<conflict_this_t> compute_conflict_this_skip_empty(const std::vector<
 
 	for (size_t i = 0; i < values.size(); ++i)
 	{
-		if (values[i].empty())
+		if (values[i] == non_existent_value)
 			continue;
 
 		if (first_idx == SIZE_MAX)
@@ -165,7 +165,7 @@ std::vector<conflict_this_t> compute_conflict_this_skip_empty(const std::vector<
 	bool is_override = true;
 	for (size_t i = 0; i < values.size(); ++i)
 	{
-		if (values[i].empty())
+		if (values[i] == non_existent_value)
 			continue;
 
 		if (values[i] != first_present && values[i] != last_present)
@@ -180,7 +180,7 @@ std::vector<conflict_this_t> compute_conflict_this_skip_empty(const std::vector<
 		if (i == first_idx)
 			continue;
 
-		if (values[i].empty())
+		if (values[i] == non_existent_value)
 			continue;
 
 		if (values[i] == first_present)
@@ -195,6 +195,37 @@ std::vector<conflict_this_t> compute_conflict_this_skip_empty(const std::vector<
 			result[i] = conflict_this_t::conflict_wins;
 		else
 			result[i] = conflict_this_t::conflict_loses;
+	}
+
+	return result;
+}
+
+struct conflict_policy_entry_t
+{
+	const char * record_type;
+	const char * sub_type;
+	conflict_policy_t policy;
+};
+
+static constexpr conflict_policy_entry_t conflict_policy_table[] = {
+	{ "CELL", "*",    { true,  false } },
+	{ "CELL", "NAM0", { false, true  } },
+};
+
+conflict_policy_t find_conflict_policy(const std::string & record_type, const std::string & sub_type)
+{
+	conflict_policy_t result;
+
+	for (const auto & entry : conflict_policy_table)
+	{
+		if (record_type != entry.record_type)
+			continue;
+
+		if (std::string(entry.sub_type) == sub_type)
+			return entry.policy;
+
+		if (std::string(entry.sub_type) == "*")
+			result = entry.policy;
 	}
 
 	return result;

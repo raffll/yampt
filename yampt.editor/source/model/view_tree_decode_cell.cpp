@@ -229,11 +229,11 @@ void view_tree_model_t::decode_schema_children_ref(
 				{
 					if (col >= all_subs.size())
 					{
-						frow.values[col] = "";
+						frow.values[col] = non_existent_value;
 						continue;
 					}
 
-					frow.values[col] = "";
+					frow.values[col] = non_existent_value;
 					for (const auto & ref_group : col_refs[col])
 					{
 						if (ref_group.object_index != object_index)
@@ -273,11 +273,11 @@ void view_tree_model_t::decode_schema_children_ref(
 		{
 			if (col >= all_subs.size())
 			{
-				frow.values[col] = "";
+				frow.values[col] = non_existent_value;
 				continue;
 			}
 
-			frow.values[col] = "";
+			frow.values[col] = non_existent_value;
 			for (const auto & ref_group : col_refs[col])
 			{
 				if (ref_group.object_index != object_index)
@@ -331,11 +331,11 @@ void view_tree_model_t::decode_hex_children_ref(
 		{
 			if (col >= all_subs.size())
 			{
-				frow.values[col] = "";
+				frow.values[col] = non_existent_value;
 				continue;
 			}
 
-			frow.values[col] = "";
+			frow.values[col] = non_existent_value;
 			for (const auto & ref_group : col_refs[col])
 			{
 				if (ref_group.object_index != object_index)
@@ -590,14 +590,14 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 				{
 					if (col >= all_subs.size())
 					{
-						child_field.values[col] = "";
+						child_field.values[col] = non_existent_value;
 						continue;
 					}
 
 					const auto result = find_ref_sub_record(all_subs[col], col_refs[col], obj_idx, slot.type, slot.occurrence);
 					if (!result.view.data)
 					{
-						child_field.values[col] = "";
+						child_field.values[col] = non_existent_value;
 						continue;
 					}
 

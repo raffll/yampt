@@ -29,9 +29,9 @@ editor_window_t::editor_window_t(QWidget * parent)
 
 	setCentralWidget(central);
 
+	load_config();
 	setup_menu_bar();
 	setup_toolbar();
-	load_config();
 
 	connect(
 	    &theme_system_t::instance(),
