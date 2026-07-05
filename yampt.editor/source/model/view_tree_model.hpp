@@ -72,6 +72,7 @@ public:
 		std::vector<conflict_this_t> cell_conflict_this;
 		conflict_all_t row_conflict_all = conflict_all_t::only_one;
 		bool all_identical = true;
+		bool is_deleted = false;
 		std::vector<view_node_t> children;
 	};
 
@@ -91,6 +92,7 @@ public:
 
 private:
 	static void compute_group_ranges(view_node_t & group_node, size_t col_count);
+	static void mark_deleted_recursive(view_node_t & node);
 
 	struct record_context_t
 	{

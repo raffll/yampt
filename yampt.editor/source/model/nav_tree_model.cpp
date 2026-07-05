@@ -1,4 +1,4 @@
-#include "nav_tree_model.hpp"
+﻿#include "nav_tree_model.hpp"
 #include <algorithm>
 #include <cctype>
 #include <cstdio>
@@ -471,9 +471,6 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 
 			if (role == Qt::BackgroundRole)
 			{
-				if (worst_this == conflict_this_t::deleted)
-					return QBrush(lighter_hsl(QColor(160, 0, 160), 0.85));
-
 				if (worst_all < conflict_all_t::no_conflict)
 					return {};
 
@@ -544,9 +541,6 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 
 				if (role == Qt::BackgroundRole)
 				{
-					if (worst_this == conflict_this_t::deleted)
-						return QBrush(lighter_hsl(QColor(160, 0, 160), 0.85));
-
 					if (worst_all < conflict_all_t::no_conflict)
 						return {};
 
@@ -601,9 +595,6 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 
 			if (role == Qt::BackgroundRole)
 			{
-				if (record_color == conflict_this_t::deleted)
-					return QBrush(lighter_hsl(QColor(160, 0, 160), 0.85));
-
 				if (entry.conflict_all < conflict_all_t::no_conflict)
 					return {};
 

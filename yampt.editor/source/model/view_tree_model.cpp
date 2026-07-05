@@ -7,11 +7,19 @@
 #include <map>
 #include <theme_system.hpp>
 #include <QBrush>
+#include <QFont>
 #include <QMimeData>
 
 view_tree_model_t::view_tree_model_t(QObject * parent)
     : QAbstractItemModel(parent)
 {}
+
+void view_tree_model_t::mark_deleted_recursive(view_node_t & node)
+{
+	node.is_deleted = true;
+	for (auto & child : node.children)
+		mark_deleted_recursive(child);
+}
 
 void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t & entry)
 {
@@ -611,6 +619,13 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 
 		return sub_record_foreground(
 		    node->cell_conflict_this, m_column_names.size(), index.column(), m_has_merge_column);
+	}
+
+	if (role == Qt::FontRole && node->is_deleted)
+	{
+		QFont font;
+		font.setStrikeOut(true);
+		return font;
 	}
 
 	return {};

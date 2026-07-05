@@ -633,6 +633,21 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 		if (!present_in_any)
 			group_row.row_conflict_all = conflict_all_t::only_one;
 
+		for (const auto & child : group_row.children)
+		{
+			if (child.type == "DELE")
+			{
+				group_row.is_deleted = true;
+				break;
+			}
+		}
+
+		if (group_row.is_deleted)
+		{
+			for (auto & child : group_row.children)
+				mark_deleted_recursive(child);
+		}
+
 		compute_group_ranges(group_row, col_count);
 
 		if (m_show_positions)
@@ -724,6 +739,9 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 			if (all_subs[col][i].type != "NAM0")
 				continue;
 
+			if (i < col_header_end[col])
+				break;
+
 			view_node_t nam0_row;
 			nam0_row.type = "NAM0";
 			nam0_row.values.resize(col_count);
@@ -742,7 +760,7 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 				}
 
 				bool found_nam0 = false;
-				for (size_t k = 0; k < all_subs[c].size(); ++k)
+				for (size_t k = col_header_end[c]; k < all_subs[c].size(); ++k)
 				{
 					if (all_subs[c][k].type == "NAM0")
 					{
