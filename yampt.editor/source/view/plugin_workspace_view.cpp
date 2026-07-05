@@ -283,6 +283,11 @@ void plugin_workspace_view_t::set_show_deleted_strikeout(bool value)
 	m_nav_view->set_show_deleted_strikeout(value);
 }
 
+bool plugin_workspace_view_t::is_show_deleted_strikeout() const
+{
+	return m_record_view->model()->show_deleted_strikeout();
+}
+
 void plugin_workspace_view_t::on_filter_changed()
 {
 	nav_tree_model_t::filter_state_t state;
@@ -1493,6 +1498,9 @@ void plugin_workspace_view_t::save_session_state()
 
 	settings.setValue("session/main_splitter", m_main_splitter->saveState());
 	settings.setValue("session/content_splitter", m_content_splitter->saveState());
+	settings.setValue("view/conflicts_only", m_conflicts_only);
+	settings.setValue("view/hide_duplicates", m_hide_duplicates);
+	settings.setValue("view/show_deleted_strikeout", m_record_view->model()->show_deleted_strikeout());
 
 	const auto info = m_nav_view->current_selection();
 	if (info.plugin_idx >= 0 && !info.record_id.empty())
@@ -1510,6 +1518,14 @@ void plugin_workspace_view_t::save_session_state()
 void plugin_workspace_view_t::restore_session_state()
 {
 	QSettings settings(QCoreApplication::applicationDirPath() + "/yEditor.ini", QSettings::IniFormat);
+
+	m_conflicts_only = settings.value("view/conflicts_only", false).toBool();
+	m_hide_duplicates = settings.value("view/hide_duplicates", false).toBool();
+	const bool show_strikeout = settings.value("view/show_deleted_strikeout", true).toBool();
+
+	set_conflicts_only(m_conflicts_only);
+	set_hide_duplicates(m_hide_duplicates);
+	set_show_deleted_strikeout(show_strikeout);
 
 	auto main_state = settings.value("session/main_splitter").toByteArray();
 	if (!main_state.isEmpty())

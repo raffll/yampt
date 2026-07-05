@@ -30,6 +30,10 @@ public:
 	void set_conflicts_only(bool value);
 	void set_show_deleted_strikeout(bool value);
 
+	bool is_conflicts_only() const { return m_conflicts_only; }
+	bool is_hide_duplicates() const { return m_hide_duplicates; }
+	bool is_show_deleted_strikeout() const;
+
 	QLabel * count_label() const
 	{
 		return m_lbl_count;

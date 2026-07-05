@@ -549,7 +549,7 @@ static QVariant sub_record_background(const view_tree_model_t::view_node_t & row
 
 	const auto & theme = theme_system_t::instance();
 
-	if (column > 0 && row.children.empty())
+	if (column > 0)
 	{
 		const int col = column - 1;
 		if (col >= 0 && col < static_cast<int>(row.values.size()) && row.values[col].empty())

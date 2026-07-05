@@ -85,19 +85,21 @@ void editor_window_t::setup_menu_bar()
 
 	auto * conflicts_action = new QAction("&Conflicts Only", this);
 	conflicts_action->setCheckable(true);
+	conflicts_action->setChecked(m_plugin_workspace_view->is_conflicts_only());
 	conflicts_action->setToolTip("Show only conflicting records");
 	view_menu->addAction(conflicts_action);
 	connect(conflicts_action, &QAction::toggled, m_plugin_workspace_view, &plugin_workspace_view_t::set_conflicts_only);
 
 	auto * hide_dup_action = new QAction("&Hide Duplicate Columns", this);
 	hide_dup_action->setCheckable(true);
+	hide_dup_action->setChecked(m_plugin_workspace_view->is_hide_duplicates());
 	hide_dup_action->setToolTip("Hide duplicate columns from the same plugin");
 	view_menu->addAction(hide_dup_action);
 	connect(hide_dup_action, &QAction::toggled, m_plugin_workspace_view, &plugin_workspace_view_t::set_hide_duplicates);
 
 	auto * show_deleted_action = new QAction("Show &Deleted Strikeout", this);
 	show_deleted_action->setCheckable(true);
-	show_deleted_action->setChecked(true);
+	show_deleted_action->setChecked(m_plugin_workspace_view->is_show_deleted_strikeout());
 	show_deleted_action->setToolTip("Strikeout deleted records and cell references");
 	view_menu->addAction(show_deleted_action);
 	connect(show_deleted_action, &QAction::toggled, m_plugin_workspace_view, &plugin_workspace_view_t::set_show_deleted_strikeout);
