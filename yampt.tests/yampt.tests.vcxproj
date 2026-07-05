@@ -28,26 +28,26 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -71,6 +71,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <LocalDebuggerWorkingDirectory>$(SolutionDir)</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
@@ -80,29 +81,46 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <LocalDebuggerWorkingDirectory>$(SolutionDir)</LocalDebuggerWorkingDirectory>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg">
+    <VcpkgEnableManifest>true</VcpkgEnableManifest>
+    <VcpkgTriplet Condition="'$(Platform)'=='x64'">x64-windows</VcpkgTriplet>
+  </PropertyGroup>
+  <PropertyGroup Label="QtToolsPath">
+    <QtToolsPath>$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\tools\Qt6\bin</QtToolsPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_SILENCE_CXX23_ALIGNED_STORAGE_DEPRECATION_WARNING;_SILENCE_CXX23_DENORM_DEPRECATION_WARNING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>$(ProjectDir)source;$(SolutionDir)yampt.core\source;$(SolutionDir)yampt.qt\source;$(SolutionDir)yampt.translator\source;$(SolutionDir)yampt.editor\source;$(SolutionDir)external;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtTest;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>yampt.core.lib;ctranslate2.lib;Qt6Cored.lib;Qt6Testd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)x64\$(Configuration);$(SolutionDir)external\CTranslate2\build\Release;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\debug\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_SILENCE_CXX23_ALIGNED_STORAGE_DEPRECATION_WARNING;_SILENCE_CXX23_DENORM_DEPRECATION_WARNING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir)source;$(SolutionDir)yampt.core\source;$(SolutionDir)yampt.qt\source;$(SolutionDir)yampt.translator\source;$(SolutionDir)yampt.editor\source;$(SolutionDir)external;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtTest;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>yampt.core.lib;ctranslate2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)x64\$(Configuration);$(SolutionDir)external\CTranslate2\build\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -111,14 +129,18 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;_SILENCE_CXX23_ALIGNED_STORAGE_DEPRECATION_WARNING;_SILENCE_CXX23_DENORM_DEPRECATION_WARNING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir)source;$(SolutionDir)yampt.core\source;$(SolutionDir)yampt.qt\source;$(SolutionDir)yampt.translator\source;$(SolutionDir)yampt.editor\source;$(SolutionDir)external;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtTest;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>yampt.core.lib;ctranslate2.lib;Qt6Core.lib;Qt6Test.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)x64\$(Configuration);$(SolutionDir)external\CTranslate2\build\Release;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -127,53 +149,169 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;_SILENCE_CXX23_ALIGNED_STORAGE_DEPRECATION_WARNING;_SILENCE_CXX23_DENORM_DEPRECATION_WARNING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>$(ProjectDir)source;$(SolutionDir)yampt.core\source;$(SolutionDir)yampt.qt\source;$(SolutionDir)yampt.translator\source;$(SolutionDir)yampt.editor\source;$(SolutionDir)external;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtTest;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>yampt.core.lib;ctranslate2.lib;Qt6Core.lib;Qt6Test.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)x64\$(Configuration);$(SolutionDir)external\CTranslate2\build\Release;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="cpp.hint" />
-    <None Include="packages.config" />
+    <None Include="source\cpp.hint" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\yampt\dictcreator.hpp" />
-    <ClInclude Include="..\yampt\dictmerger.hpp" />
-    <ClInclude Include="..\yampt\dictreader.hpp" />
-    <ClInclude Include="..\yampt\esmreader.hpp" />
-    <ClInclude Include="..\yampt\scriptparser.hpp" />
-    <ClInclude Include="..\yampt\tools.hpp" />
-    <ClInclude Include="catch.hpp" />
+    <ClInclude Include="..\yampt.translator\source\editor\glossary.hpp" />
+    <ClInclude Include="..\yampt.translator\source\model\sidebar_model.hpp" />
+    <ClInclude Include="..\yampt.translator\source\session.hpp" />
+    <ClInclude Include="..\yampt.translator\source\highlighter\script_tokenizer.hpp" />
+    <ClInclude Include="..\yampt.translator\source\editor\editor_controller.hpp" />
+    <ClInclude Include="..\yampt.translator\source\editor\edit_history.hpp" />
+    <ClInclude Include="..\yampt.translator\source\editor\byte_limit_validator.hpp" />
+    <ClInclude Include="..\yampt.translator\source\editor\find_replace.hpp" />
+    <ClInclude Include="..\yampt.translator\source\model\row_source.hpp" />
+    <ClInclude Include="..\yampt.editor\source\io\profile_reader.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\yampt\dictcreator.cpp" />
-    <ClCompile Include="..\yampt\dictmerger.cpp" />
-    <ClCompile Include="..\yampt\dictreader.cpp" />
-    <ClCompile Include="..\yampt\esmreader.cpp" />
-    <ClCompile Include="..\yampt\scriptparser.cpp" />
-    <ClCompile Include="..\yampt\tools.cpp" />
-    <ClCompile Include="tests.dictcreator.cpp" />
-    <ClCompile Include="tests.dictreader.cpp" />
-    <ClCompile Include="tests.esmreader.cpp" />
-    <ClCompile Include="tests.main.cpp" />
-    <ClCompile Include="tests.scriptparser.cpp" />
-    <ClCompile Include="tests.tools.cpp" />
+    <ClCompile Include="source\tests.dict_merger.cpp" />
+    <ClCompile Include="source\tests.dict_reader.cpp" />
+    <ClCompile Include="source\tests.dict_writer.cpp" />
+    <ClCompile Include="source\tests.dict_creator.cpp" />
+    <ClCompile Include="source\tests.codepage.cpp" />
+    <ClCompile Include="source\tests.main.cpp" />
+    <ClCompile Include="source\tests.script_parser.cpp" />
+    <ClCompile Include="source\tests.tools.cpp" />
+    <ClCompile Include="source\tests.file_list.cpp" />
+    <ClCompile Include="source\tests.record_conflict.cpp" />
+    <ClCompile Include="source\tests.conflict_slots.cpp" />
+    <ClCompile Include="source\tests.document.cpp" />
+    <ClCompile Include="source\tests.esm_reader.cpp" />
+    <ClCompile Include="source\tests.esm_converter.cpp" />
+    <ClCompile Include="source\tests.script_parser_scdt.cpp" />
+    <ClCompile Include="source\tests.dict_creator_ordering.cpp" />
+    <ClCompile Include="source\tests.glossary.cpp" />
+    <ClCompile Include="source\tests.editor_config.cpp" />
+    <ClCompile Include="source\tests.table_builder.cpp" />
+    <ClCompile Include="source\tests.session.cpp" />
+    <ClCompile Include="source\tests.find_replace.cpp" />
+    <ClCompile Include="source\tests.sidebar_model.cpp" />
+    <ClCompile Include="source\tests.yaml_l10n_reader.cpp" />
+    <ClCompile Include="source\tests.script_tokenizer.cpp" />
+    <ClCompile Include="source\tests.editor_controller.cpp" />
+    <ClCompile Include="source\tests.display_helpers.cpp" />
+    <ClCompile Include="source\tests.script_parser_rename.cpp" />
+    <ClCompile Include="source\tests.converter_counters.cpp" />
+    <ClCompile Include="source\tests.esm_converter_full.cpp" />
+    <ClCompile Include="source\tests.profile_reader.cpp" />
+    <ClCompile Include="source\tests.scdt_patcher.cpp" />
+    <ClCompile Include="source\tests.char_diff.cpp" />
+    <ClCompile Include="source\tests.script_parser_roundtrip.cpp" />
+    <ClCompile Include="source\tests.script_parser_unquoted.cpp" />
+    <ClCompile Include="source\tests.eet_converter.cpp" />
+    <ClCompile Include="source\tests.glossary_hyperlinks.cpp" />
+    <ClCompile Include="source\tests.edit_history.cpp" />
+    <ClCompile Include="source\tests.keyword_trie.cpp" />
+    <ClCompile Include="source\tests.theme_system.cpp" />
+    <ClCompile Include="source\tests.sub_record_schema.cpp" />
+    <ClCompile Include="source\tests.view_tree_format.cpp" />
+    <ClCompile Include="source\tests.plugin_scan_merge.cpp" />
+    <ClCompile Include="source\tests.sub_record_merge.cpp" />
+    <ClCompile Include="source\tests.merge_patch_ops.cpp" />
+    <ClCompile Include="source\tests.merge_fixers.cpp" />
+    <ClCompile Include="source\tests.leveled_list_merge.cpp" />
+    <ClCompile Include="source\tests.cell_ref_merge.cpp" />
+    <ClCompile Include="source\tests.frmr_ref_index.cpp" />
+    <ClCompile Include="source\tests.armor_slots.cpp" />
+    <ClCompile Include="source\tests.dial_info_align.cpp" />
+    <ClCompile Include="source\tests.word_match_utils.cpp" />
+    <ClCompile Include="source\tests.text_match_index.cpp" />
+    <ClCompile Include="source\tests.cell_matcher.cpp" />
+    <ClCompile Include="source\tests.dial_matcher.cpp" />
+    <ClCompile Include="source\tests.nav_tree_filter.cpp" />
+    <ClCompile Include="source\tests.highlight_coordinator.cpp" />
+    <ClCompile Include="source\tests.patch_builder.cpp" />
+    <ClCompile Include="source\tests.patch_builder_header.cpp" />
+    <ClCompile Include="source\tests.plugin_session.cpp" />
+    <ClCompile Include="source\tests.settings_store.cpp" />
+    <ClCompile Include="source\tests.path_resolver.cpp" />
+    <ClCompile Include="source\tests.workspace_watcher.cpp" />
+    <ClCompile Include="..\yampt.translator\source\model\table_builder.cpp" />
+    <ClCompile Include="..\yampt.translator\source\editor\row_filter.cpp" />
+    <ClCompile Include="..\yampt.translator\source\editor\glossary.cpp" />
+    <ClCompile Include="..\yampt.translator\source\model\dict_document.cpp" />
+    <ClCompile Include="..\yampt.translator\source\model\yaml_document.cpp" />
+    <ClCompile Include="..\yampt.translator\source\io\yaml_l10n_reader.cpp" />
+    <ClCompile Include="..\yampt.translator\source\io\yaml_l10n_writer.cpp" />
+    <ClCompile Include="..\yampt.translator\source\model\sidebar_model.cpp" />
+    <ClCompile Include="..\yampt.translator\source\utility\display_name.cpp" />
+    <ClCompile Include="..\yampt.translator\source\session.cpp" />
+    <ClCompile Include="..\yampt.translator\source\highlighter\script_tokenizer.cpp" />
+    <ClCompile Include="..\yampt.translator\source\editor\edit_history.cpp" />
+    <ClCompile Include="..\yampt.translator\source\editor\byte_limit_validator.cpp" />
+    <ClCompile Include="..\yampt.translator\source\editor\find_replace.cpp" />
+    <ClCompile Include="..\yampt.translator\source\editor\highlight_coordinator.cpp" />
+    <ClCompile Include="..\yampt.translator\source\editor\workspace_watcher.cpp" />
+    <ClCompile Include="..\yampt.translator\source\editor\editor_controller.cpp" />
+    <ClCompile Include="..\yampt.translator\source\model\record_table_model.cpp" />
+    <ClCompile Include="..\yampt.editor\source\io\profile_reader.cpp" />
+    <ClCompile Include="..\yampt.editor\source\model\nav_tree_filter.cpp" />
+    <ClCompile Include="..\yampt.editor\source\model\plugin_session.cpp" />
+    <ClCompile Include="..\yampt.editor\source\patcher\patch_builder.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\yampt.editor\source\model\plugin_session.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include" -I"$(SolutionDir)yampt.core\source" -I"$(SolutionDir)yampt.editor\source"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\yampt.translator\source\model\record_table_model.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include" -I"$(SolutionDir)yampt.core\source" -I"$(SolutionDir)yampt.translator\source"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\yampt.translator\source\editor\workspace_watcher.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(IntDir)moc_plugin_session.cpp">
+      <ObjectFileName>$(IntDir)moc_plugin_session.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="$(IntDir)moc_record_table_model.cpp">
+      <ObjectFileName>$(IntDir)moc_record_table_model.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="$(IntDir)moc_workspace_watcher.cpp">
+      <ObjectFileName>$(IntDir)moc_workspace_watcher.obj</ObjectFileName>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\yampt.core\yampt.core.vcxproj">
+      <Project>{9F1F5DCD-D3E1-4FDB-A9C7-62C307ED1E21}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\yampt.qt\yampt.qt.vcxproj">
+      <Project>{D4E5F6A7-B8C9-0123-DEFA-456789012345}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\packages\boost.1.71.0.0\build\boost.targets" Condition="Exists('..\packages\boost.1.71.0.0\build\boost.targets')" />
-    <Import Project="..\packages\boost_filesystem-vc142.1.71.0.0\build\boost_filesystem-vc142.targets" Condition="Exists('..\packages\boost_filesystem-vc142.1.71.0.0\build\boost_filesystem-vc142.targets')" />
   </ImportGroup>
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\boost.1.71.0.0\build\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost.1.71.0.0\build\boost.targets'))" />
-    <Error Condition="!Exists('..\packages\boost_filesystem-vc142.1.71.0.0\build\boost_filesystem-vc142.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost_filesystem-vc142.1.71.0.0\build\boost_filesystem-vc142.targets'))" />
+  <Target Name="CopyCTranslate2Dll" AfterTargets="Build" Condition="Exists('$(SolutionDir)external\CTranslate2\build\Release\ctranslate2.dll')">
+    <Copy SourceFiles="$(SolutionDir)external\CTranslate2\build\Release\ctranslate2.dll" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+    <ItemGroup>
+      <VcpkgDlls Include="$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\bin\*.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(VcpkgDlls)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
   </Target>
 </Project>

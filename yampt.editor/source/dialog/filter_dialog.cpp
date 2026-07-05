@@ -1,0 +1,158 @@
+#include "filter_dialog.hpp"
+#include <QFormLayout>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+
+filter_dialog_t::filter_dialog_t(const std::vector<std::string> & available_types, QWidget * parent)
+    : QDialog(parent)
+{
+	setWindowTitle("Advanced Filter");
+	setModal(true);
+	resize(560, 500);
+
+	auto * outer_layout = new QVBoxLayout(this);
+	auto * columns_layout = new QHBoxLayout();
+
+	auto * left_column = new QVBoxLayout();
+
+	m_grp_conflict_all = new QGroupBox("Conflict All", this);
+	auto * ca_layout = new QVBoxLayout(m_grp_conflict_all);
+	m_chk_ca_only_one = new QCheckBox("Only One", m_grp_conflict_all);
+	m_chk_ca_no_conflict = new QCheckBox("No Conflict", m_grp_conflict_all);
+	m_chk_ca_override = new QCheckBox("Override", m_grp_conflict_all);
+	m_chk_ca_conflict = new QCheckBox("Conflict", m_grp_conflict_all);
+	ca_layout->addWidget(m_chk_ca_only_one);
+	ca_layout->addWidget(m_chk_ca_no_conflict);
+	ca_layout->addWidget(m_chk_ca_override);
+	ca_layout->addWidget(m_chk_ca_conflict);
+	left_column->addWidget(m_grp_conflict_all);
+
+	m_grp_conflict_this = new QGroupBox("Conflict This", this);
+	auto * ct_layout = new QVBoxLayout(m_grp_conflict_this);
+	m_chk_ct_master = new QCheckBox("Master", m_grp_conflict_this);
+	m_chk_ct_identical = new QCheckBox("Identical to Master", m_grp_conflict_this);
+	m_chk_ct_override = new QCheckBox("Override Wins", m_grp_conflict_this);
+	m_chk_ct_wins = new QCheckBox("Conflict Wins", m_grp_conflict_this);
+	m_chk_ct_loses = new QCheckBox("Conflict Loses", m_grp_conflict_this);
+	ct_layout->addWidget(m_chk_ct_master);
+	ct_layout->addWidget(m_chk_ct_identical);
+	ct_layout->addWidget(m_chk_ct_override);
+	ct_layout->addWidget(m_chk_ct_wins);
+	ct_layout->addWidget(m_chk_ct_loses);
+	left_column->addWidget(m_grp_conflict_this);
+
+	auto * grp_id_name = new QGroupBox("ID / Name", this);
+	auto * id_name_layout = new QFormLayout(grp_id_name);
+	m_edt_id = new QLineEdit(grp_id_name);
+	m_edt_id->setPlaceholderText("Substring, case-insensitive");
+	m_edt_name = new QLineEdit(grp_id_name);
+	m_edt_name->setPlaceholderText("Substring, case-insensitive");
+	id_name_layout->addRow("ID:", m_edt_id);
+	id_name_layout->addRow("Name:", m_edt_name);
+	left_column->addWidget(grp_id_name);
+
+	auto * grp_special = new QGroupBox("Special", this);
+	auto * special_layout = new QVBoxLayout(grp_special);
+	m_chk_deleted = new QCheckBox("Deleted only", grp_special);
+	special_layout->addWidget(m_chk_deleted);
+	left_column->addWidget(grp_special);
+
+	left_column->addStretch();
+
+	auto * right_column = new QVBoxLayout();
+
+	auto * grp_type = new QGroupBox("Record Type", this);
+	auto * type_layout = new QVBoxLayout(grp_type);
+	m_lst_types = new QListWidget(grp_type);
+	for (const auto & t : available_types)
+	{
+		auto * item = new QListWidgetItem(QString::fromStdString(t));
+		item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+		item->setCheckState(Qt::Checked);
+		m_lst_types->addItem(item);
+	}
+	type_layout->addWidget(m_lst_types);
+	right_column->addWidget(grp_type);
+
+	columns_layout->addLayout(left_column);
+	columns_layout->addLayout(right_column);
+
+	outer_layout->addLayout(columns_layout);
+
+	auto * buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
+	outer_layout->addWidget(buttons);
+
+	connect(buttons, &QDialogButtonBox::accepted, this, &QDialog::accept);
+	connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::reject);
+}
+
+filter_dialog_t::filter_state_t filter_dialog_t::state() const
+{
+	filter_state_t s;
+
+	if (m_chk_ca_only_one->isChecked())
+		s.conflict_all_set.insert(conflict_all_t::only_one);
+	if (m_chk_ca_no_conflict->isChecked())
+		s.conflict_all_set.insert(conflict_all_t::no_conflict);
+	if (m_chk_ca_override->isChecked())
+		s.conflict_all_set.insert(conflict_all_t::override_benign);
+	if (m_chk_ca_conflict->isChecked())
+		s.conflict_all_set.insert(conflict_all_t::conflict);
+	s.filter_conflict_all = !s.conflict_all_set.empty();
+
+	if (m_chk_ct_master->isChecked())
+		s.conflict_this_set.insert(conflict_this_t::master);
+	if (m_chk_ct_identical->isChecked())
+		s.conflict_this_set.insert(conflict_this_t::identical_to_master);
+	if (m_chk_ct_override->isChecked())
+		s.conflict_this_set.insert(conflict_this_t::override_wins);
+	if (m_chk_ct_wins->isChecked())
+		s.conflict_this_set.insert(conflict_this_t::conflict_wins);
+	if (m_chk_ct_loses->isChecked())
+		s.conflict_this_set.insert(conflict_this_t::conflict_loses);
+	s.filter_conflict_this = !s.conflict_this_set.empty();
+
+	for (int i = 0; i < m_lst_types->count(); ++i)
+	{
+		const auto * item = m_lst_types->item(i);
+		if (item->checkState() == Qt::Checked)
+			s.type_set.insert(item->text().toStdString());
+	}
+	s.filter_by_type = !s.type_set.empty() && static_cast<int>(s.type_set.size()) < m_lst_types->count();
+
+	s.id_text = m_edt_id->text().toStdString();
+	s.filter_by_id = !s.id_text.empty();
+
+	s.name_text = m_edt_name->text().toStdString();
+	s.filter_by_name = !s.name_text.empty();
+
+	s.filter_deleted = m_chk_deleted->isChecked();
+
+	return s;
+}
+
+void filter_dialog_t::set_state(const filter_state_t & state)
+{
+	m_chk_ca_only_one->setChecked(state.conflict_all_set.count(conflict_all_t::only_one) > 0);
+	m_chk_ca_no_conflict->setChecked(state.conflict_all_set.count(conflict_all_t::no_conflict) > 0);
+	m_chk_ca_override->setChecked(state.conflict_all_set.count(conflict_all_t::override_benign) > 0);
+	m_chk_ca_conflict->setChecked(state.conflict_all_set.count(conflict_all_t::conflict) > 0);
+
+	m_chk_ct_master->setChecked(state.conflict_this_set.count(conflict_this_t::master) > 0);
+	m_chk_ct_identical->setChecked(state.conflict_this_set.count(conflict_this_t::identical_to_master) > 0);
+	m_chk_ct_override->setChecked(state.conflict_this_set.count(conflict_this_t::override_wins) > 0);
+	m_chk_ct_wins->setChecked(state.conflict_this_set.count(conflict_this_t::conflict_wins) > 0);
+	m_chk_ct_loses->setChecked(state.conflict_this_set.count(conflict_this_t::conflict_loses) > 0);
+
+	for (int i = 0; i < m_lst_types->count(); ++i)
+	{
+		auto * item = m_lst_types->item(i);
+		const auto type_str = item->text().toStdString();
+		item->setCheckState(state.type_set.count(type_str) > 0 ? Qt::Checked : Qt::Unchecked);
+	}
+
+	m_edt_id->setText(QString::fromStdString(state.id_text));
+	m_edt_name->setText(QString::fromStdString(state.name_text));
+
+	m_chk_deleted->setChecked(state.filter_deleted);
+}

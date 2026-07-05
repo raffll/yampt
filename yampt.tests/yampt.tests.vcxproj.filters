@@ -1,59 +1,127 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="yampt">
-      <UniqueIdentifier>{5c30878f-bb6d-41b8-b9e6-ff684ed490e8}</UniqueIdentifier>
-    </Filter>
+    <ClCompile Include="source\tests.main.cpp" />
+    <ClCompile Include="source\tests.tools.cpp" />
+    <ClCompile Include="source\tests.file_list.cpp" />
+    <ClCompile Include="source\tests.dict_reader.cpp" />
+    <ClCompile Include="source\tests.dict_writer.cpp" />
+    <ClCompile Include="source\tests.dict_merger.cpp" />
+    <ClCompile Include="source\tests.dict_creator.cpp" />
+    <ClCompile Include="source\tests.codepage.cpp" />
+    <ClCompile Include="source\tests.script_parser.cpp" />
+    <ClCompile Include="source\tests.record_conflict.cpp" />
+    <ClCompile Include="source\tests.conflict_slots.cpp" />
+    <ClCompile Include="source\tests.document.cpp" />
+    <ClCompile Include="source\tests.esm_reader.cpp" />
+    <ClCompile Include="source\tests.esm_converter.cpp" />
+    <ClCompile Include="source\tests.script_parser_scdt.cpp" />
+    <ClCompile Include="source\tests.dict_creator_ordering.cpp" />
+    <ClCompile Include="source\tests.glossary.cpp" />
+    <ClCompile Include="source\tests.editor_config.cpp" />
+    <ClCompile Include="source\tests.table_builder.cpp" />
+    <ClCompile Include="source\tests.session.cpp" />
+    <ClCompile Include="source\tests.find_replace.cpp" />
+    <ClCompile Include="source\tests.sidebar_model.cpp" />
+    <ClCompile Include="source\tests.yaml_l10n_reader.cpp" />
+    <ClCompile Include="source\tests.script_tokenizer.cpp" />
+    <ClCompile Include="source\tests.editor_controller.cpp" />
+    <ClCompile Include="source\tests.script_parser_rename.cpp" />
+    <ClCompile Include="source\tests.converter_counters.cpp" />
+    <ClCompile Include="source\tests.esm_converter_full.cpp" />
+    <ClCompile Include="source\tests.display_helpers.cpp" />
+    <ClCompile Include="source\tests.profile_reader.cpp" />
+    <ClCompile Include="source\tests.scdt_patcher.cpp" />
+    <ClCompile Include="source\tests.translation_engine.cpp" />
+    <ClCompile Include="source\tests.char_diff.cpp" />
+    <ClCompile Include="source\tests.script_parser_roundtrip.cpp" />
+    <ClCompile Include="source\tests.script_parser_unquoted.cpp" />
+    <ClCompile Include="source\tests.eet_converter.cpp" />
+    <ClCompile Include="source\tests.glossary_hyperlinks.cpp" />
+    <ClCompile Include="source\tests.edit_history.cpp" />
+    <ClCompile Include="source\tests.keyword_trie.cpp" />
+    <ClCompile Include="source\tests.theme_system.cpp" />
+    <ClCompile Include="source\tests.sub_record_schema.cpp" />
+    <ClCompile Include="source\tests.view_tree_format.cpp" />
+    <ClCompile Include="source\tests.plugin_scan_merge.cpp" />
+    <ClCompile Include="source\tests.sub_record_merge.cpp" />
+    <ClCompile Include="source\tests.merge_patch_ops.cpp" />
+    <ClCompile Include="source\tests.merge_fixers.cpp" />
+    <ClCompile Include="source\tests.leveled_list_merge.cpp" />
+    <ClCompile Include="source\tests.cell_ref_merge.cpp" />
+    <ClCompile Include="source\tests.frmr_ref_index.cpp" />
+    <ClCompile Include="source\tests.armor_slots.cpp" />
+    <ClCompile Include="source\tests.dial_info_align.cpp" />
+    <ClCompile Include="source\tests.word_match_utils.cpp" />
+    <ClCompile Include="source\tests.text_match_index.cpp" />
+    <ClCompile Include="source\tests.cell_matcher.cpp" />
+    <ClCompile Include="source\tests.dial_matcher.cpp" />
+    <ClCompile Include="source\tests.nav_tree_filter.cpp" />
+    <ClCompile Include="source\tests.highlight_coordinator.cpp" />
+    <ClCompile Include="source\tests.patch_builder.cpp" />
+    <ClCompile Include="source\tests.patch_builder_header.cpp" />
+    <ClCompile Include="source\tests.plugin_session.cpp" />
+    <ClCompile Include="source\tests.settings_store.cpp" />
+    <ClCompile Include="source\tests.path_resolver.cpp" />
+    <ClCompile Include="source\tests.workspace_watcher.cpp" />
+    <ClCompile Include="..\yampt.core\source\io\eet_converter.cpp" />
+    <ClCompile Include="..\yampt.core\source\io\eet_reader.cpp" />
+    <ClCompile Include="..\yampt.core\source\utility\char_diff.cpp" />
+    <ClCompile Include="..\yampt.core\source\utility\tools.cpp" />
+    <ClCompile Include="..\yampt.core\source\io\dict_reader.cpp" />
+    <ClCompile Include="..\yampt.core\source\io\dict_writer.cpp" />
+    <ClCompile Include="..\yampt.core\source\io\esm_reader.cpp" />
+    <ClCompile Include="..\yampt.core\source\io\codepage.cpp" />
+    <ClCompile Include="..\yampt.core\source\merger\dict_merger.cpp" />
+    <ClCompile Include="..\yampt.core\source\creator\dict_creator.cpp" />
+    <ClCompile Include="..\yampt.core\source\creator\dict_creator_single.cpp" />
+    <ClCompile Include="..\yampt.core\source\creator\dict_creator_base.cpp" />
+    <ClCompile Include="..\yampt.core\source\creator\dict_creator_base_ordered.cpp" />
+    <ClCompile Include="..\yampt.core\source\converter\esm_converter.cpp" />
+    <ClCompile Include="..\yampt.core\source\converter\esm_converter_records.cpp" />
+    <ClCompile Include="..\yampt.core\source\converter\script_parser.cpp" />
+    <ClCompile Include="..\yampt.core\source\converter\scdt_patcher.cpp" />
+    <ClCompile Include="..\yampt.core\source\translator\translation_engine.cpp" />
+    <ClCompile Include="..\yampt.core\source\io\file_list.cpp" />
+    <ClCompile Include="..\yampt.core\source\scanner\record_conflict.cpp" />
+    <ClCompile Include="..\yampt.core\source\scanner\plugin_scan.cpp" />
+    <ClCompile Include="..\yampt.core\source\scanner\plugin_scan_merge.cpp" />
+    <ClCompile Include="..\yampt.core\source\scanner\sub_record_merge.cpp" />
+    <ClCompile Include="..\yampt.core\source\scanner\merge_patch_ops.cpp" />
+    <ClCompile Include="..\yampt.core\source\io\profile_reader.cpp" />
+    <ClCompile Include="..\yampt.core\source\scanner\fog_fixer.cpp" />
+    <ClCompile Include="..\yampt.core\source\scanner\summon_fixer.cpp" />
+    <ClCompile Include="..\yampt.core\source\scanner\cell_name_fixer.cpp" />
+    <ClCompile Include="..\yampt.core\source\scanner\plugin_index.cpp" />
+    <ClCompile Include="..\yampt.core\source\decoder\view_tree_format.cpp" />
+    <ClCompile Include="..\yampt.core\source\decoder\conflict_slots.cpp" />
+    <ClCompile Include="..\yampt.core\source\decoder\conflict_slots_cell.cpp" />
+    <ClCompile Include="..\yampt.core\source\decoder\sub_record_schema.cpp" />
+    <ClCompile Include="..\yampt.translator\source\io\yaml_l10n_reader.cpp" />
+    <ClCompile Include="..\yampt.translator\source\io\yaml_l10n_writer.cpp" />
+    <ClCompile Include="..\yampt.translator\source\model\table_builder.cpp" />
+    <ClCompile Include="..\yampt.translator\source\model\dict_document.cpp" />
+    <ClCompile Include="..\yampt.translator\source\model\yaml_document.cpp" />
+    <ClCompile Include="..\yampt.translator\source\model\sidebar_model.cpp" />
+    <ClCompile Include="..\yampt.translator\source\editor\row_filter.cpp" />
+    <ClCompile Include="..\yampt.translator\source\editor\glossary.cpp" />
+    <ClCompile Include="..\yampt.core\source\utility\keyword_trie.cpp" />
+    <ClCompile Include="..\yampt.translator\source\editor\editor_controller.cpp" />
+    <ClCompile Include="..\yampt.translator\source\editor\workspace_watcher.cpp" />
+    <ClCompile Include="..\yampt.translator\source\model\record_table_model.cpp" />
+    <ClCompile Include="..\yampt.translator\source\editor\edit_history.cpp" />
+    <ClCompile Include="..\yampt.translator\source\editor\byte_limit_validator.cpp" />
+    <ClCompile Include="..\yampt.translator\source\editor\find_replace.cpp" />
+    <ClCompile Include="..\yampt.translator\source\editor\highlight_coordinator.cpp" />
+    <ClCompile Include="..\yampt.translator\source\utility\display_name.cpp" />
+    <ClCompile Include="..\yampt.translator\source\highlighter\script_tokenizer.cpp" />
+    <ClCompile Include="..\yampt.translator\source\session.cpp" />
+    <ClCompile Include="..\yampt.editor\source\io\profile_reader.cpp" />
+    <ClCompile Include="..\yampt.editor\source\model\nav_tree_filter.cpp" />
+    <ClCompile Include="..\yampt.editor\source\model\plugin_session.cpp" />
+    <ClCompile Include="..\yampt.editor\source\patcher\patch_builder.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
-    <None Include="cpp.hint" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="catch.hpp" />
-    <ClInclude Include="..\yampt\dictcreator.hpp">
-      <Filter>yampt</Filter>
-    </ClInclude>
-    <ClInclude Include="..\yampt\dictmerger.hpp">
-      <Filter>yampt</Filter>
-    </ClInclude>
-    <ClInclude Include="..\yampt\dictreader.hpp">
-      <Filter>yampt</Filter>
-    </ClInclude>
-    <ClInclude Include="..\yampt\esmreader.hpp">
-      <Filter>yampt</Filter>
-    </ClInclude>
-    <ClInclude Include="..\yampt\tools.hpp">
-      <Filter>yampt</Filter>
-    </ClInclude>
-    <ClInclude Include="..\yampt\scriptparser.hpp">
-      <Filter>yampt</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\yampt\dictcreator.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\dictmerger.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\dictreader.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\esmreader.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\yampt\tools.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
-    <ClCompile Include="tests.dictreader.cpp" />
-    <ClCompile Include="tests.dictcreator.cpp" />
-    <ClCompile Include="tests.main.cpp" />
-    <ClCompile Include="tests.scriptparser.cpp" />
-    <ClCompile Include="tests.tools.cpp" />
-    <ClCompile Include="tests.esmreader.cpp" />
-    <ClCompile Include="..\yampt\scriptparser.cpp">
-      <Filter>yampt</Filter>
-    </ClCompile>
+    <None Include="source\cpp.hint" />
   </ItemGroup>
 </Project>

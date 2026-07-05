@@ -1,0 +1,755 @@
+﻿#include "view_tree_model.hpp"
+#include <decoder/view_tree_format.hpp>
+#include <scanner/record_conflict.hpp>
+#include <utility/record_behavior.hpp>
+#include <algorithm>
+#include <cstdio>
+#include <cstring>
+#include <map>
+#include <theme_system.hpp>
+#include <QBrush>
+#include <QFont>
+#include <QMimeData>
+
+view_tree_model_t::view_tree_model_t(QObject * parent)
+    : QAbstractItemModel(parent)
+{}
+
+void view_tree_model_t::mark_deleted_recursive(view_node_t & node)
+{
+	node.is_deleted = true;
+	for (auto & child : node.children)
+		mark_deleted_recursive(child);
+}
+
+void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t & entry)
+{
+	beginResetModel();
+
+	m_scan_for_header = &scan;
+	m_rows.clear();
+	m_column_names.clear();
+	m_plugin_conflict_this.clear();
+	m_record_type = entry.rec_type;
+	m_record_id = entry.record_id;
+	m_column_plugin_indices.clear();
+	m_filter_dirty = true;
+	m_has_merge_column = false;
+	m_merge_col_index = -1;
+	m_is_merge_pinned = scan.is_merge_pinned(entry.rec_type, entry.record_id);
+
+	size_t col_count = setup_columns(scan, entry);
+	if (col_count == 0)
+	{
+		endResetModel();
+		return;
+	}
+
+	build_header_row(scan, entry);
+
+	std::vector<std::vector<sub_record_view_t>> all_sub_records;
+	std::vector<std::string> content_storage;
+	record_context_t context { all_sub_records, content_storage, col_count };
+
+	load_sub_records(scan, entry, context);
+
+	const auto * behavior = find_record_behavior(m_record_type);
+
+	switch (behavior->decode_mode)
+	{
+	case decode_mode_t::cell:      set_record_cell(context); break;
+	case decode_mode_t::leveled:   set_record_leveled(context, entry); break;
+	case decode_mode_t::faction:   set_record_faction(context, entry); break;
+	case decode_mode_t::container: set_record_container(context, entry); break;
+	case decode_mode_t::armor:     set_record_armor(context, entry); break;
+	case decode_mode_t::dial:      set_record_dial(scan, context, entry); break;
+	case decode_mode_t::info:      set_record_info(context, entry); break;
+	case decode_mode_t::generic:   set_record_generic(context, entry); break;
+	}
+
+	finalize_header_conflict();
+
+	if (m_col_type_indices.empty())
+	{
+		m_col_type_indices.resize(col_count);
+		for (size_t col = 0; col < col_count; ++col)
+		{
+			if (col >= all_sub_records.size())
+				continue;
+
+			for (size_t i = 0; i < all_sub_records[col].size(); ++i)
+				m_col_type_indices[col][all_sub_records[col][i].type].push_back(i);
+		}
+	}
+
+	endResetModel();
+}
+
+size_t view_tree_model_t::setup_columns(plugin_scan_t & scan, const conflict_entry_t & entry)
+{
+	for (size_t i = 0; i < entry.versions.size(); ++i)
+	{
+		const auto & ver = entry.versions[i];
+		m_column_names.push_back(scan.plugin_filename(ver.plugin_idx));
+		m_plugin_conflict_this.push_back(ver.status);
+		m_column_plugin_indices.push_back(ver.plugin_idx);
+
+		if (scan.is_merge_plugin(ver.plugin_idx))
+		{
+			m_has_merge_column = true;
+			m_merge_col_index = static_cast<int>(i);
+		}
+	}
+
+	return entry.versions.size();
+}
+
+void view_tree_model_t::setup_merge_column(plugin_scan_t & scan, const conflict_entry_t & entry, size_t & col_count)
+{
+	if (!scan.has_merge())
+		return;
+
+	for (const auto & ver : entry.versions)
+	{
+		if (scan.is_merge_plugin(ver.plugin_idx))
+			return;
+	}
+
+	m_has_merge_column = true;
+	m_merge_col_index = static_cast<int>(col_count);
+
+	int merge_idx = -1;
+	for (int i = 0; i < static_cast<int>(scan.plugin_count()); ++i)
+	{
+		if (scan.is_merge_plugin(i))
+		{
+			merge_idx = i;
+			break;
+		}
+	}
+
+	char label_buf[64];
+	std::snprintf(label_buf, sizeof(label_buf), "%s *", scan.plugin_filename(merge_idx).c_str());
+	m_column_names.push_back(label_buf);
+	m_plugin_conflict_this.push_back(conflict_this_t::unknown);
+	m_column_plugin_indices.push_back(merge_idx);
+	++col_count;
+}
+
+static std::string read_record_flags(plugin_scan_t & scan, const record_version_t & ver)
+{
+	static constexpr size_t record_header_size = 16;
+	static constexpr size_t flags_offset = 12;
+
+	std::string content;
+	if (scan.is_merge_plugin(ver.plugin_idx))
+	{
+		if (ver.record_index < scan.merge_record_count())
+			content = scan.merge_record_content(ver.record_index);
+	}
+	else
+	{
+		const auto & records = scan.plugin(ver.plugin_idx).get_records();
+		if (ver.record_index < records.size())
+			content = records[ver.record_index].content;
+	}
+
+	if (content.size() < record_header_size)
+		return "";
+
+	uint32_t flags = 0;
+	std::memcpy(&flags, content.data() + flags_offset, 4);
+
+	std::string result;
+	if (flags & 0x00000400)
+	{
+		if (!result.empty())
+			result += " | ";
+
+		result += "Persistent";
+	}
+
+	if (flags & 0x00002000)
+	{
+		if (!result.empty())
+			result += " | ";
+
+		result += "Blocked";
+	}
+
+	if (result.empty())
+		return "";
+
+	return result;
+}
+
+static bool check_all_identical(const std::vector<std::string> & values)
+{
+	for (size_t col = 1; col < values.size(); ++col)
+	{
+		if (values[col] != values[0])
+			return false;
+	}
+	return true;
+}
+
+void view_tree_model_t::build_header_row(plugin_scan_t & scan, const conflict_entry_t & entry)
+{
+	const auto col_count = m_column_names.size();
+
+	view_node_t header_row;
+	header_row.type = "Record Header";
+	header_row.label = "Record Header";
+	header_row.size = 16;
+	header_row.values.resize(col_count);
+	header_row.row_conflict_all = conflict_all_t::only_one;
+	header_row.all_identical = true;
+	header_row.cell_conflict_this.resize(col_count, conflict_this_t::master);
+
+	view_node_t sig_row;
+	sig_row.label = "Signature";
+	sig_row.values.resize(col_count, entry.rec_type);
+	sig_row.row_conflict_all = compute_conflict_all(sig_row.values);
+	sig_row.all_identical = true;
+	sig_row.cell_conflict_this = compute_conflict_this(sig_row.values);
+	header_row.children.push_back(std::move(sig_row));
+
+	view_node_t flags_row;
+	flags_row.label = "Record Flags";
+	flags_row.values.resize(col_count);
+
+	for (size_t col = 0; col < entry.versions.size(); ++col)
+		flags_row.values[col] = read_record_flags(scan, entry.versions[col]);
+
+	flags_row.all_identical = check_all_identical(flags_row.values);
+	flags_row.row_conflict_all = compute_conflict_all(flags_row.values);
+	flags_row.cell_conflict_this = compute_conflict_this(flags_row.values);
+	header_row.children.push_back(std::move(flags_row));
+
+	m_rows.push_back(std::move(header_row));
+}
+
+void view_tree_model_t::load_sub_records(
+    plugin_scan_t & scan,
+    const conflict_entry_t & entry,
+    record_context_t & context)
+{
+	for (const auto & ver : entry.versions)
+	{
+		std::string content;
+
+		if (scan.is_merge_plugin(ver.plugin_idx))
+		{
+			if (ver.record_index < scan.merge_record_count())
+				content = scan.merge_record_content(ver.record_index);
+		}
+		else
+		{
+			const auto & records = scan.plugin(ver.plugin_idx).get_records();
+			if (ver.record_index < records.size())
+				content = records[ver.record_index].content;
+		}
+
+		if (content.size() < 16)
+		{
+			context.all_sub_records.push_back({});
+			context.content_storage.push_back({});
+			continue;
+		}
+
+		context.content_storage.push_back(std::move(content));
+		const auto & stored = context.content_storage.back();
+
+		std::vector<sub_record_view_t> subs;
+		sub_record_iter_t iter(stored);
+		sub_record_view_t sv;
+		while (iter.next(sv))
+			subs.push_back(sv);
+
+		context.all_sub_records.push_back(std::move(subs));
+	}
+}
+
+void view_tree_model_t::finalize_header_conflict()
+{
+	if (m_rows.empty())
+		return;
+
+	auto & header = m_rows[0];
+	header.row_conflict_all = conflict_all_t::only_one;
+	for (const auto & child : header.children)
+	{
+		if (child.row_conflict_all > header.row_conflict_all)
+			header.row_conflict_all = child.row_conflict_all;
+	}
+	header.all_identical = (header.row_conflict_all <= conflict_all_t::no_conflict);
+}
+
+void view_tree_model_t::compute_group_ranges(view_node_t & group_node, size_t col_count)
+{
+	group_node.binary_ranges.resize(col_count);
+	for (const auto & child : group_node.children)
+	{
+		for (size_t col = 0; col < col_count && col < child.binary_ranges.size(); ++col)
+		{
+			const auto & child_range = child.binary_ranges[col];
+			if (child_range.start < 0)
+				continue;
+
+			auto & group_range = group_node.binary_ranges[col];
+			if (group_range.start < 0)
+			{
+				group_range = child_range;
+				continue;
+			}
+
+			if (child_range.start < group_range.start)
+				group_range.start = child_range.start;
+
+			if (child_range.end_pos > group_range.end_pos)
+				group_range.end_pos = child_range.end_pos;
+		}
+	}
+}
+
+void view_tree_model_t::set_excluded_plugins(const std::set<std::string> * excluded)
+{
+	m_excluded_plugins = excluded;
+}
+
+const std::vector<view_tree_model_t::view_node_t> & view_tree_model_t::rows() const
+{
+	return visible_rows();
+}
+
+void view_tree_model_t::set_patch_plugins(const std::set<std::string> * patch)
+{
+	m_patch_plugins = patch;
+}
+
+void view_tree_model_t::clear()
+{
+	beginResetModel();
+	m_rows.clear();
+	m_column_names.clear();
+	m_plugin_conflict_this.clear();
+	m_column_plugin_indices.clear();
+	m_record_type.clear();
+	m_record_id.clear();
+	m_has_merge_column = false;
+	m_merge_col_index = -1;
+	m_filter_dirty = true;
+	endResetModel();
+}
+
+bool view_tree_model_t::is_merge_column(int section) const
+{
+	if (!m_has_merge_column)
+		return false;
+
+	return (section - 1) == m_merge_col_index;
+}
+
+int view_tree_model_t::merge_column() const
+{
+	if (!m_has_merge_column)
+		return -1;
+
+	return m_merge_col_index + 1;
+}
+
+void view_tree_model_t::set_hide_no_conflict(bool hide)
+{
+	beginResetModel();
+	m_hide_no_conflict = hide;
+	m_filter_dirty = true;
+	endResetModel();
+}
+
+void view_tree_model_t::set_show_deleted_strikeout(bool value)
+{
+	m_show_deleted_strikeout = value;
+	emit dataChanged(QModelIndex(), QModelIndex(), { Qt::FontRole });
+}
+
+const std::vector<view_tree_model_t::view_node_t> & view_tree_model_t::visible_rows() const
+{
+	if (!m_hide_no_conflict)
+		return m_rows;
+
+	if (!m_filter_dirty)
+		return m_filtered_rows;
+
+	m_filtered_rows.clear();
+	for (const auto & row : m_rows)
+	{
+		if (!row.all_identical)
+			m_filtered_rows.push_back(row);
+	}
+
+	m_filter_dirty = false;
+	return m_filtered_rows;
+}
+
+const view_tree_model_t::view_node_t * view_tree_model_t::node_from_index(const QModelIndex & index) const
+{
+	if (!index.isValid())
+		return nullptr;
+
+	auto * parent_ptr = static_cast<view_node_t *>(index.internalPointer());
+	if (!parent_ptr)
+	{
+		const auto & vrows = visible_rows();
+		if (index.row() < 0 || index.row() >= static_cast<int>(vrows.size()))
+			return nullptr;
+
+		return &vrows[index.row()];
+	}
+
+	if (index.row() < 0 || index.row() >= static_cast<int>(parent_ptr->children.size()))
+		return nullptr;
+
+	return &parent_ptr->children[index.row()];
+}
+
+QModelIndex view_tree_model_t::index(int row, int column, const QModelIndex & parent) const
+{
+	if (!hasIndex(row, column, parent))
+		return {};
+
+	if (!parent.isValid())
+		return createIndex(row, column, nullptr);
+
+	const auto * parent_node = node_from_index(parent);
+	if (!parent_node)
+		return {};
+
+	if (row < 0 || row >= static_cast<int>(parent_node->children.size()))
+		return {};
+
+	return createIndex(row, column, const_cast<view_node_t *>(parent_node));
+}
+
+QModelIndex view_tree_model_t::parent(const QModelIndex & child) const
+{
+	if (!child.isValid())
+		return {};
+
+	auto * parent_ptr = static_cast<view_node_t *>(child.internalPointer());
+	if (!parent_ptr)
+		return {};
+
+	const auto & vrows = visible_rows();
+	for (int i = 0; i < static_cast<int>(vrows.size()); ++i)
+	{
+		if (&vrows[i] == parent_ptr)
+			return createIndex(i, 0, nullptr);
+	}
+
+	for (int i = 0; i < static_cast<int>(vrows.size()); ++i)
+	{
+		const auto & top = vrows[i];
+		for (int j = 0; j < static_cast<int>(top.children.size()); ++j)
+		{
+			if (&top.children[j] == parent_ptr)
+				return createIndex(j, 0, const_cast<view_node_t *>(&top));
+		}
+
+		for (int j = 0; j < static_cast<int>(top.children.size()); ++j)
+		{
+			const auto & mid = top.children[j];
+			for (int k = 0; k < static_cast<int>(mid.children.size()); ++k)
+			{
+				if (&mid.children[k] == parent_ptr)
+					return createIndex(k, 0, const_cast<view_node_t *>(&mid));
+			}
+		}
+	}
+
+	return {};
+}
+
+int view_tree_model_t::rowCount(const QModelIndex & parent) const
+{
+	if (parent.column() > 0)
+		return 0;
+
+	if (!parent.isValid())
+		return static_cast<int>(visible_rows().size());
+
+	const auto * node = node_from_index(parent);
+	if (!node)
+		return 0;
+
+	const bool is_group = !node->type.empty() && node->size == 0 && !node->children.empty();
+	const bool single_leaf_child = node->children.size() == 1 && node->children[0].children.empty();
+	if (single_leaf_child && !is_group)
+		return 0;
+
+	return static_cast<int>(node->children.size());
+}
+
+int view_tree_model_t::columnCount(const QModelIndex &) const
+{
+	return static_cast<int>(m_column_names.size()) + 1;
+}
+
+static bool is_cell_not_present(const std::string & value)
+{
+	return value == non_existent_value;
+}
+
+static QString truncate_for_display(const std::string & value)
+{
+	if (value == non_existent_value)
+		return {};
+
+	auto text = QString::fromStdString(value);
+	const int newline_pos = text.indexOf('\n');
+	if (newline_pos >= 0)
+		text = text.left(newline_pos);
+
+	static constexpr int max_display_length = 120;
+	if (text.size() > max_display_length)
+		text = text.left(max_display_length) + QChar(0x2026);
+
+	return text;
+}
+
+static QVariant sub_record_display(const view_tree_model_t::view_node_t & row, int column)
+{
+	if (column == 0)
+		return QString::fromStdString(row.label);
+
+	const bool is_group = !row.type.empty() && row.size == 0 && !row.children.empty();
+	const bool single_leaf_child = row.children.size() == 1 && row.children[0].children.empty();
+
+	if (single_leaf_child && !is_group)
+	{
+		const int col = column - 1;
+		if (col < 0 || col >= static_cast<int>(row.children[0].values.size()))
+			return {};
+
+		return truncate_for_display(row.children[0].values[col]);
+	}
+
+	if (!row.children.empty())
+		return {};
+
+	const int col = column - 1;
+	if (col < 0 || col >= static_cast<int>(row.values.size()))
+		return {};
+
+	return truncate_for_display(row.values[col]);
+}
+
+static QVariant sub_record_background(const view_tree_model_t::view_node_t & row, int column)
+{
+	if (row.row_conflict_all < conflict_all_t::no_conflict)
+		return {};
+
+	const auto & theme = theme_system_t::instance();
+
+	if (column > 0)
+	{
+		const int col = column - 1;
+		if (col >= 0 && col < static_cast<int>(row.values.size()) && is_cell_not_present(row.values[col]))
+		{
+			const auto active = theme.active_theme();
+			const auto raw = conflict_all_color_raw(row.row_conflict_all, active);
+			if (active == theme_t::dark)
+				return QBrush(darker_hsl(raw, 0.78));
+
+			return QBrush(lighter_hsl(raw, 0.93));
+		}
+	}
+
+	return QBrush(theme.conflict_all_background(row.row_conflict_all));
+}
+
+static QVariant sub_record_foreground(
+    const std::vector<conflict_this_t> & cell_conflicts,
+    size_t column_count,
+    int column,
+    bool has_merge_column)
+{
+	const size_t real_columns = has_merge_column ? column_count - 1 : column_count;
+	if (real_columns <= 1)
+		return {};
+
+	const auto & theme = theme_system_t::instance();
+
+	if (column == 0)
+	{
+		conflict_this_t worst = conflict_this_t::unknown;
+		for (const auto & status : cell_conflicts)
+		{
+			if (status == conflict_this_t::identical_to_master)
+				continue;
+
+			if (status > worst)
+				worst = status;
+		}
+
+		if (worst == conflict_this_t::unknown || worst == conflict_this_t::master)
+			return {};
+
+		return QBrush(theme.conflict_this_foreground(worst));
+	}
+
+	const int col = column - 1;
+	if (col < 0 || col >= static_cast<int>(cell_conflicts.size()))
+		return {};
+
+	return QBrush(theme.conflict_this_foreground(cell_conflicts[col]));
+}
+
+QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
+{
+	if (!index.isValid())
+		return {};
+
+	const auto * node = node_from_index(index);
+	if (!node)
+		return {};
+
+	switch (role)
+	{
+	case Qt::DisplayRole:
+		return sub_record_display(*node, index.column());
+
+	case Qt::BackgroundRole:
+		return sub_record_background(*node, index.column());
+
+	case Qt::ForegroundRole:
+	{
+		if (m_is_merge_pinned && is_merge_column(index.column()))
+			return QBrush(QColor(0, 128, 128));
+
+		return sub_record_foreground(
+		    node->cell_conflict_this, m_column_names.size(), index.column(), m_has_merge_column);
+	}
+
+	case Qt::FontRole:
+	{
+		if (m_show_deleted_strikeout && node->is_deleted)
+		{
+			QFont font;
+			font.setStrikeOut(true);
+			return font;
+		}
+
+		return {};
+	}
+
+	default:
+		return {};
+	}
+}
+
+QVariant view_tree_model_t::headerData(int section, Qt::Orientation orientation, int role) const
+{
+	if (orientation != Qt::Horizontal)
+		return {};
+
+	if (role == Qt::DisplayRole)
+	{
+		if (section == 0)
+			return {};
+
+		const int col = section - 1;
+		if (col < 0 || col >= static_cast<int>(m_column_names.size()))
+			return {};
+
+		const auto & name = m_column_names[col];
+		QString prefix;
+
+		if (col < static_cast<int>(m_column_plugin_indices.size()))
+		{
+			const int pi = m_column_plugin_indices[col];
+
+			if (m_excluded_plugins && m_excluded_plugins->count(name))
+				prefix = QString::fromUtf8("\xF0\x9F\x94\x92 ");
+			else if (m_patch_plugins && m_patch_plugins->count(name))
+				prefix = QString::fromUtf8("\xF0\x9F\x9B\xA1 ");
+			else if (m_scan_for_header && m_scan_for_header->is_merge_plugin(pi))
+				prefix = QString::fromUtf8("\xE2\x9A\x99 ");
+			else if (
+			    name.size() > 4 &&
+			    (name.compare(name.size() - 4, 4, ".esm") == 0 || name.compare(name.size() - 4, 4, ".ESM") == 0))
+				prefix = QString::fromUtf8("\xF0\x9F\x93\x9C ");
+		}
+
+		return prefix + QString::fromStdString(name);
+	}
+
+	if (role == Qt::ForegroundRole)
+	{
+		if (section == 0)
+			return {};
+
+		const int col = section - 1;
+		if (col < 0 || col >= static_cast<int>(m_plugin_conflict_this.size()))
+			return {};
+
+		if (m_column_names.size() <= 1)
+			return {};
+
+		if (m_is_merge_pinned && is_merge_column(section))
+			return QBrush(QColor(0, 128, 128));
+
+		const auto & theme = theme_system_t::instance();
+		return QBrush(theme.conflict_this_foreground(m_plugin_conflict_this[col]));
+	}
+
+	return {};
+}
+
+Qt::ItemFlags view_tree_model_t::flags(const QModelIndex & index) const
+{
+	if (!index.isValid())
+		return Qt::NoItemFlags;
+
+	Qt::ItemFlags result = Qt::ItemIsEnabled | Qt::ItemIsSelectable;
+
+	if (index.column() > 0 && index.column() <= static_cast<int>(m_column_plugin_indices.size()))
+	{
+		if (!is_merge_column(index.column()))
+			result |= Qt::ItemIsDragEnabled;
+
+		if (is_merge_column(index.column()))
+			result |= Qt::ItemIsDropEnabled;
+	}
+
+	return result;
+}
+
+Qt::DropActions view_tree_model_t::supportedDragActions() const
+{
+	return Qt::CopyAction;
+}
+
+QMimeData * view_tree_model_t::mimeData(const QModelIndexList & indexes) const
+{
+	Q_UNUSED(indexes);
+	return nullptr;
+}
+
+Qt::DropActions view_tree_model_t::supportedDropActions() const
+{
+	return Qt::CopyAction;
+}
+
+bool view_tree_model_t::canDropMimeData(const QMimeData * data, Qt::DropAction, int, int, const QModelIndex &) const
+{
+	if (!data)
+		return false;
+
+	if (data->hasFormat("application/x-yampt-record"))
+		return true;
+
+	if (data->hasFormat("application/x-yampt-subrecord"))
+		return true;
+
+	return false;
+}

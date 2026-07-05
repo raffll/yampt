@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="source\main.cpp" />
+    <ClCompile Include="source\editor_window.cpp" />
+    <ClCompile Include="source\model\nav_tree_model.cpp" />
+    <ClCompile Include="source\model\view_tree_model.cpp" />
+    <ClCompile Include="source\model\view_tree_decode.cpp" />
+    <ClCompile Include="source\model\view_tree_decode_cell.cpp" />
+    <ClCompile Include="source\model\view_tree_decode_lists.cpp" />
+    <ClCompile Include="source\view\plugin_workspace_view.cpp" />
+    <ClCompile Include="source\view\messages_view.cpp" />
+    <ClCompile Include="source\dialog\plugin_select_dialog.cpp" />
+    <ClCompile Include="source\dialog\filter_dialog.cpp" />
+    <ClCompile Include="source\dialog\editor_paths_view.cpp" />
+    <ClCompile Include="source\dialog\editor_settings_dialog.cpp" />
+    <ClCompile Include="source\dialog\appearance_settings_view.cpp" />
+    <ClCompile Include="source\dialog\merge_settings_view.cpp" />
+    <ClCompile Include="source\io\profile_reader.cpp" />
+    <ClCompile Include="source\model\nav_tree_filter.cpp" />
+    <ClCompile Include="source\model\plugin_session.cpp" />
+    <ClCompile Include="source\patcher\patch_builder.cpp" />
+    <ClCompile Include="source\view\nav_tree_view.cpp" />
+    <ClCompile Include="source\view\record_view.cpp" />
+    <ClCompile Include="..\yampt.core\source\utility\tools.cpp" />
+    <ClCompile Include="..\yampt.core\source\io\esm_reader.cpp" />
+    <ClCompile Include="..\yampt.core\source\io\codepage.cpp" />
+    <ClCompile Include="..\yampt.core\source\io\file_list.cpp" />
+    <ClCompile Include="..\yampt.core\source\decoder\sub_record_schema.cpp" />
+    <ClCompile Include="..\yampt.core\source\scanner\plugin_index.cpp" />
+    <ClCompile Include="..\yampt.core\source\scanner\plugin_scan.cpp" />
+    <ClCompile Include="..\yampt.core\source\scanner\plugin_scan_merge.cpp" />
+    <ClCompile Include="..\yampt.core\source\scanner\sub_record_merge.cpp" />
+    <ClCompile Include="..\yampt.core\source\scanner\merge_patch_ops.cpp" />
+    <ClCompile Include="..\yampt.core\source\scanner\fog_fixer.cpp" />
+    <ClCompile Include="..\yampt.core\source\scanner\summon_fixer.cpp" />
+    <ClCompile Include="..\yampt.core\source\scanner\cell_name_fixer.cpp" />
+    <ClCompile Include="..\yampt.core\source\scanner\record_conflict.cpp" />
+    <ClCompile Include="..\yampt.core\source\decoder\conflict_slots.cpp" />
+    <ClCompile Include="..\yampt.core\source\decoder\conflict_slots_cell.cpp" />
+    <ClCompile Include="..\yampt.core\source\decoder\view_tree_format.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="source\io\profile_reader.hpp" />
+    <ClInclude Include="source\model\nav_tree_filter.hpp" />
+    <ClInclude Include="source\patcher\patch_builder.hpp" />
+  </ItemGroup>
+</Project>

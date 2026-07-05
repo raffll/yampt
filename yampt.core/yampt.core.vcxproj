@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <ProjectGuid>{9F1F5DCD-D3E1-4FDB-A9C7-62C307ED1E21}</ProjectGuid>
+    <RootNamespace>yampt_core</RootNamespace>
+    <TargetName>yampt.core</TargetName>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg">
+    <VcpkgEnableManifest>true</VcpkgEnableManifest>
+    <VcpkgTriplet Condition="'$(Platform)'=='x64'">x64-windows</VcpkgTriplet>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_SILENCE_CXX23_DENORM_DEPRECATION_WARNING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>$(ProjectDir)source;$(SolutionDir)external;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>ctranslate2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)external\CTranslate2\build\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_SILENCE_CXX23_DENORM_DEPRECATION_WARNING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>$(ProjectDir)source;$(SolutionDir)external;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>ctranslate2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)external\CTranslate2\build\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;_SILENCE_CXX23_DENORM_DEPRECATION_WARNING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>$(ProjectDir)source;$(SolutionDir)external;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>ctranslate2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)external\CTranslate2\build\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;_SILENCE_CXX23_DENORM_DEPRECATION_WARNING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>$(ProjectDir)source;$(SolutionDir)external;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>ctranslate2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)external\CTranslate2\build\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="source\converter\esm_converter.cpp" />
+    <ClCompile Include="source\converter\esm_converter_records.cpp" />
+    <ClCompile Include="source\converter\scdt_patcher.cpp" />
+    <ClCompile Include="source\converter\script_parser.cpp" />
+    <ClCompile Include="source\creator\cell_matcher.cpp" />
+    <ClCompile Include="source\creator\dial_matcher.cpp" />
+    <ClCompile Include="source\creator\dict_creator.cpp" />
+    <ClCompile Include="source\creator\dict_creator_base.cpp" />
+    <ClCompile Include="source\creator\dict_creator_base_ordered.cpp" />
+    <ClCompile Include="source\creator\dict_creator_single.cpp" />
+    <ClCompile Include="source\creator\text_match_index.cpp" />
+    <ClCompile Include="source\creator\word_match_utils.cpp" />
+    <ClCompile Include="source\decoder\conflict_slots.cpp" />
+    <ClCompile Include="source\decoder\conflict_slots_cell.cpp" />
+    <ClCompile Include="source\decoder\sub_record_schema.cpp" />
+    <ClCompile Include="source\decoder\view_group_def.cpp" />
+    <ClCompile Include="source\decoder\content_alignment.cpp" />
+    <ClCompile Include="source\decoder\view_tree_format.cpp" />
+    <ClCompile Include="source\io\codepage.cpp" />
+    <ClCompile Include="source\io\dict_reader.cpp" />
+    <ClCompile Include="source\io\dict_writer.cpp" />
+    <ClCompile Include="source\io\eet_converter.cpp" />
+    <ClCompile Include="source\io\eet_reader.cpp" />
+    <ClCompile Include="source\io\esm_reader.cpp" />
+    <ClCompile Include="source\io\file_list.cpp" />
+    <ClCompile Include="source\io\profile_reader.cpp" />
+    <ClCompile Include="source\merger\dict_merger.cpp" />
+    <ClCompile Include="source\scanner\cell_name_fixer.cpp" />
+    <ClCompile Include="source\scanner\record_conflict.cpp" />
+    <ClCompile Include="source\scanner\dial_info_align.cpp" />
+    <ClCompile Include="source\scanner\fog_fixer.cpp" />
+    <ClCompile Include="source\scanner\auto_merge.cpp" />
+    <ClCompile Include="source\scanner\merge_patch_ops.cpp" />
+    <ClCompile Include="source\scanner\plugin_index.cpp" />
+    <ClCompile Include="source\scanner\plugin_scan.cpp" />
+    <ClCompile Include="source\scanner\plugin_scan_merge.cpp" />
+    <ClCompile Include="source\scanner\sub_record_merge.cpp" />
+    <ClCompile Include="source\scanner\summon_fixer.cpp" />
+    <ClCompile Include="source\translator\translation_engine.cpp" />
+    <ClCompile Include="source\utility\char_diff.cpp" />
+    <ClCompile Include="source\utility\keyword_trie.cpp" />
+    <ClCompile Include="source\utility\record_behavior.cpp" />
+    <ClCompile Include="source\utility\tools.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="source\converter\esm_converter.hpp" />
+    <ClInclude Include="source\converter\scdt_patcher.hpp" />
+    <ClInclude Include="source\converter\script_parser.hpp" />
+    <ClInclude Include="source\creator\cell_matcher.hpp" />
+    <ClInclude Include="source\creator\dial_matcher.hpp" />
+    <ClInclude Include="source\creator\dict_creator.hpp" />
+    <ClInclude Include="source\creator\text_match_index.hpp" />
+    <ClInclude Include="source\creator\word_match_utils.hpp" />
+    <ClInclude Include="source\decoder\conflict_slots.hpp" />
+    <ClInclude Include="source\decoder\conflict_slots_cell.hpp" />
+    <ClInclude Include="source\decoder\sub_record_iter.hpp" />
+    <ClInclude Include="source\decoder\sub_record_schema.hpp" />
+    <ClInclude Include="source\decoder\view_group_def.hpp" />
+    <ClInclude Include="source\decoder\content_alignment.hpp" />
+    <ClInclude Include="source\decoder\view_tree_format.hpp" />
+    <ClInclude Include="source\io\codepage.hpp" />
+    <ClInclude Include="source\io\dict_reader.hpp" />
+    <ClInclude Include="source\io\dict_writer.hpp" />
+    <ClInclude Include="source\io\eet_converter.hpp" />
+    <ClInclude Include="source\io\eet_reader.hpp" />
+    <ClInclude Include="source\io\esm_reader.hpp" />
+    <ClInclude Include="source\io\file_list.hpp" />
+    <ClInclude Include="source\io\json_reader.hpp" />
+    <ClInclude Include="source\io\profile_reader.hpp" />
+    <ClInclude Include="source\merger\dict_merger.hpp" />
+    <ClInclude Include="source\scanner\cell_name_fixer.hpp" />
+    <ClInclude Include="source\scanner\record_conflict.hpp" />
+    <ClInclude Include="source\scanner\dial_info_align.hpp" />
+    <ClInclude Include="source\scanner\conflict_enums.hpp" />
+    <ClInclude Include="source\scanner\fog_fixer.hpp" />
+    <ClInclude Include="source\scanner\auto_merge.hpp" />
+    <ClInclude Include="source\scanner\merge_patch_ops.hpp" />
+    <ClInclude Include="source\scanner\plugin_index.hpp" />
+    <ClInclude Include="source\scanner\plugin_scan.hpp" />
+    <ClInclude Include="source\scanner\record_conflicts.hpp" />
+    <ClInclude Include="source\scanner\sub_record_merge.hpp" />
+    <ClInclude Include="source\scanner\summon_fixer.hpp" />
+    <ClInclude Include="source\translator\translation_engine.hpp" />
+    <ClInclude Include="source\utility\char_diff.hpp" />
+    <ClInclude Include="source\utility\color_palette.hpp" />
+    <ClInclude Include="source\utility\dict_kind.hpp" />
+    <ClInclude Include="source\utility\includes.hpp" />
+    <ClInclude Include="source\utility\keyword_trie.hpp" />
+    <ClInclude Include="source\utility\record_behavior.hpp" />
+    <ClInclude Include="source\utility\record_types.hpp" />
+    <ClInclude Include="source\utility\status_types.hpp" />
+    <ClInclude Include="source\utility\string_utils.hpp" />
+    <ClInclude Include="source\utility\theme_enums.hpp" />
+    <ClInclude Include="source\utility\tools.hpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

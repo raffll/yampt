@@ -1,0 +1,214 @@
+#pragma once
+
+#include <decoder/content_alignment.hpp>
+#include <decoder/sub_record_iter.hpp>
+#include <decoder/sub_record_schema.hpp>
+#include <io/codepage.hpp>
+#include <scanner/record_conflict.hpp>
+#include <scanner/plugin_scan.hpp>
+#include <conflict_types.hpp>
+#include <set>
+#include <string>
+#include <unordered_map>
+#include <vector>
+#include <QAbstractItemModel>
+#include <QMimeData>
+
+class view_tree_model_t : public QAbstractItemModel
+{
+	Q_OBJECT
+
+public:
+	explicit view_tree_model_t(QObject * parent = nullptr);
+
+	void set_record(plugin_scan_t & scan, const conflict_entry_t & entry);
+	void clear();
+	void set_hide_no_conflict(bool hide);
+	void set_display_codepage(codepage_t codepage) { m_display_codepage = codepage; }
+	codepage_t display_codepage() const { return m_display_codepage; }
+	void set_show_deleted_strikeout(bool value);
+	bool show_deleted_strikeout() const { return m_show_deleted_strikeout; }
+	void set_excluded_plugins(const std::set<std::string> * excluded);
+	void set_patch_plugins(const std::set<std::string> * patch);
+	bool is_merge_column(int section) const;
+	int merge_column() const;
+
+	const std::string & record_type() const
+	{
+		return m_record_type;
+	}
+
+	const std::string & record_id() const
+	{
+		return m_record_id;
+	}
+
+	QModelIndex index(int row, int column, const QModelIndex & parent) const override;
+	QModelIndex parent(const QModelIndex & child) const override;
+	int rowCount(const QModelIndex & parent) const override;
+	int columnCount(const QModelIndex & parent) const override;
+	QVariant data(const QModelIndex & index, int role) const override;
+	QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
+	Qt::ItemFlags flags(const QModelIndex & index) const override;
+	Qt::DropActions supportedDragActions() const override;
+	Qt::DropActions supportedDropActions() const override;
+	QMimeData * mimeData(const QModelIndexList & indexes) const override;
+	bool canDropMimeData(const QMimeData * data, Qt::DropAction action, int row, int column, const QModelIndex & parent)
+	    const override;
+
+	struct binary_range_t
+	{
+		int start = -1;
+		int end_pos = -1;
+	};
+
+	struct view_node_t
+	{
+		std::string label;
+		std::string type;
+		size_t size = 0;
+		int schema_field_index = -1;
+		bool start_collapsed = false;
+		std::vector<std::string> values;
+		std::vector<binary_range_t> binary_ranges;
+		std::vector<conflict_this_t> cell_conflict_this;
+		conflict_all_t row_conflict_all = conflict_all_t::only_one;
+		bool all_identical = true;
+		bool is_deleted = false;
+		std::vector<view_node_t> children;
+	};
+
+	const std::vector<view_node_t> & rows() const;
+
+	const std::vector<int> & column_plugin_indices() const
+	{
+		return m_column_plugin_indices;
+	}
+
+	const std::vector<std::unordered_map<std::string, std::vector<size_t>>> & col_type_indices() const
+	{
+		return m_col_type_indices;
+	}
+
+	const view_node_t * node_from_index(const QModelIndex & index) const;
+
+private:
+	static void compute_group_ranges(view_node_t & group_node, size_t col_count);
+	static void mark_deleted_recursive(view_node_t & node);
+
+	struct record_context_t
+	{
+		std::vector<std::vector<sub_record_view_t>> & all_sub_records;
+		std::vector<std::string> & content_storage;
+		size_t col_count;
+	};
+
+	struct slot_build_context_t
+	{
+		std::vector<sub_slot_t> & unified_slots;
+		std::vector<std::unordered_map<std::string, std::vector<size_t>>> & col_type_indices;
+	};
+
+	size_t setup_columns(plugin_scan_t & scan, const conflict_entry_t & entry);
+	void setup_merge_column(plugin_scan_t & scan, const conflict_entry_t & entry, size_t & col_count);
+	void build_header_row(plugin_scan_t & scan, const conflict_entry_t & entry);
+	void load_sub_records(plugin_scan_t & scan, const conflict_entry_t & entry, record_context_t & context);
+
+	void set_record_cell(record_context_t & context);
+	void set_record_leveled(record_context_t & context, const conflict_entry_t & entry);
+	void set_record_faction(record_context_t & context, const conflict_entry_t & entry);
+	void set_record_container(record_context_t & context, const conflict_entry_t & entry);
+	void set_record_armor(record_context_t & context, const conflict_entry_t & entry);
+	void set_record_info(record_context_t & context, const conflict_entry_t & entry);
+	void set_record_dial(plugin_scan_t & scan, record_context_t & context, const conflict_entry_t & entry);
+	void set_record_generic(record_context_t & context, const conflict_entry_t & entry);
+
+	void collect_leveled_entries(record_context_t & context, slot_build_context_t & build_ctx);
+	void collect_faction_entries(record_context_t & context, slot_build_context_t & build_ctx);
+	void collect_container_entries(record_context_t & context, slot_build_context_t & build_ctx);
+
+	void decode_schema_children(
+	    view_node_t & parent_row,
+	    const sub_record_schema_t * schema,
+	    const char * first_data,
+	    size_t first_size,
+	    size_t col_count,
+	    const std::vector<std::vector<sub_record_view_t>> & all_subs,
+	    const std::vector<std::unordered_map<std::string, std::vector<size_t>>> & col_indices,
+	    const sub_slot_t & slot);
+
+	void decode_hex_children(
+	    view_node_t & parent_row,
+	    size_t first_size,
+	    size_t col_count,
+	    const std::vector<std::vector<sub_record_view_t>> & all_subs,
+	    const std::vector<std::unordered_map<std::string, std::vector<size_t>>> & col_indices,
+	    const sub_slot_t & slot);
+
+	void decode_schema_children_ref(
+	    view_node_t & parent_row,
+	    const sub_record_schema_t * schema,
+	    const char * first_data,
+	    size_t first_size,
+	    size_t col_count,
+	    const std::vector<std::vector<sub_record_view_t>> & all_subs,
+	    const std::vector<std::vector<struct cell_ref_view_t>> & col_refs,
+	    uint32_t object_index,
+	    const sub_slot_t & slot);
+
+	void decode_hex_children_ref(
+	    view_node_t & parent_row,
+	    size_t first_size,
+	    size_t col_count,
+	    const std::vector<std::vector<sub_record_view_t>> & all_subs,
+	    const std::vector<std::vector<struct cell_ref_view_t>> & col_refs,
+	    uint32_t object_index,
+	    const sub_slot_t & slot);
+
+	view_node_t build_ref_child(
+	    size_t col_count,
+	    const std::vector<std::vector<sub_record_view_t>> & all_subs,
+	    const std::vector<std::vector<struct cell_ref_view_t>> & col_refs,
+	    uint32_t object_index,
+	    const sub_slot_t & slot);
+
+	view_node_t build_slot_row(
+	    size_t col_count,
+	    const std::vector<std::vector<sub_record_view_t>> & all_subs,
+	    const std::vector<std::unordered_map<std::string, std::vector<size_t>>> & col_indices,
+	    const sub_slot_t & slot);
+
+	void emit_slot_rows(record_context_t & context, slot_build_context_t & build_ctx);
+	void emit_leveled_rows(record_context_t & context, slot_build_context_t & build_ctx);
+
+	void finalize_header_conflict();
+
+	std::vector<view_node_t> m_rows;
+	std::vector<std::string> m_column_names;
+	std::vector<conflict_this_t> m_plugin_conflict_this;
+	bool m_hide_no_conflict = false;
+	bool m_has_merge_column = false;
+	int m_merge_col_index = -1;
+	bool m_is_merge_pinned = false;
+	std::string m_record_type;
+	std::string m_record_id;
+	std::vector<int> m_column_plugin_indices;
+	std::vector<std::unordered_map<std::string, std::vector<size_t>>> m_col_type_indices;
+
+	const std::vector<view_node_t> & visible_rows() const;
+	mutable std::vector<view_node_t> m_filtered_rows;
+	mutable bool m_filter_dirty = true;
+	const std::set<std::string> * m_excluded_plugins = nullptr;
+	const std::set<std::string> * m_patch_plugins = nullptr;
+	plugin_scan_t * m_scan_for_header = nullptr;
+	codepage_t m_display_codepage = codepage_t::windows_1252;
+	bool m_show_deleted_strikeout = true;
+};
+
+struct cell_ref_view_t
+{
+	uint32_t object_index;
+	size_t start_idx;
+	size_t end_idx;
+	bool persistent;
+};

@@ -1,0 +1,16 @@
+{
+  "name": "yampt",
+  "version": "0.841",
+  "dependencies": [
+    {
+      "name": "qtbase",
+      "features": ["openssl"]
+    },
+    "catch2",
+    "hunspell",
+    "nlohmann-json",
+    "rapidcheck",
+    "sentencepiece",
+    "yyjson"
+  ]
+}

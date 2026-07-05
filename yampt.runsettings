@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <Catch2Adapter>
+    <FilenameFilter>yampt\.tests</FilenameFilter>
+    <DiscoverCommandLine>--list-tests *</DiscoverCommandLine>
+    <WorkingDirectory>$(SolutionDir)</WorkingDirectory>
+  </Catch2Adapter>
+</RunSettings>
