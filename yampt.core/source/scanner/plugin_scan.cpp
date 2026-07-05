@@ -149,13 +149,17 @@ struct conflict_accumulator_t
 	conflict_all_t worst_all = conflict_all_t::only_one;
 	std::vector<std::vector<conflict_this_t>> per_slot_this;
 
-	void accumulate(const std::vector<std::string> & values)
+	void accumulate(const std::vector<std::string> & values, bool skip_non_existent = false)
 	{
-		const auto level = compute_conflict_all(values);
+		const auto level = skip_non_existent
+		    ? compute_conflict_all_skip_empty(values)
+		    : compute_conflict_all(values);
+
 		if (level > worst_all)
 			worst_all = level;
 
-		per_slot_this.push_back(compute_conflict_this(values));
+		per_slot_this.push_back(
+		    skip_non_existent ? compute_conflict_this_skip_empty(values) : compute_conflict_this(values));
 	}
 };
 
@@ -176,6 +180,7 @@ struct slot_eval_context_t
 	const slot_result_t & sr;
 	const std::vector<bool> & is_deleted;
 	conflict_accumulator_t & accum;
+	bool skip_non_existent = false;
 };
 
 static void evaluate_flag_bits(const field_def_t & fdef, const slot_eval_context_t & ctx)
@@ -192,7 +197,12 @@ static void evaluate_flag_bits(const field_def_t & fdef, const slot_eval_context
 		for (size_t vi = 0; vi < ver_count; ++vi)
 		{
 			if (ctx.is_deleted[vi] || ctx.slot.indices[vi] == SIZE_MAX)
+			{
+				if (ctx.skip_non_existent)
+					bit_values[vi] = non_existent_value;
+
 				continue;
+			}
 
 			const auto & sv = ctx.sr.parsed[vi][ctx.slot.indices[vi]];
 			if (fdef.offset >= sv.size)
@@ -203,7 +213,7 @@ static void evaluate_flag_bits(const field_def_t & fdef, const slot_eval_context
 			bit_values[vi] = (val & (1u << bit)) ? "1" : "0";
 		}
 
-		ctx.accum.accumulate(bit_values);
+		ctx.accum.accumulate(bit_values, ctx.skip_non_existent);
 	}
 }
 
@@ -229,13 +239,18 @@ static void evaluate_schema_fields(const sub_record_schema_t * schema, const slo
 		for (size_t vi = 0; vi < ver_count; ++vi)
 		{
 			if (ctx.is_deleted[vi] || ctx.slot.indices[vi] == SIZE_MAX)
+			{
+				if (ctx.skip_non_existent)
+					field_values[vi] = non_existent_value;
+
 				continue;
+			}
 
 			const auto & sv = ctx.sr.parsed[vi][ctx.slot.indices[vi]];
 			field_values[vi] = decode_field(fdef, sv.data, sv.size);
 		}
 
-		ctx.accum.accumulate(field_values);
+		ctx.accum.accumulate(field_values, ctx.skip_non_existent);
 	}
 }
 
@@ -293,6 +308,10 @@ void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 
 	for (const auto & slot : sr.aligned)
 	{
+		const auto policy = find_conflict_policy(entry.rec_type, slot.key.type);
+		if (policy.ignore_conflict)
+			continue;
+
 		std::vector<std::string> slot_values(ver_count);
 		const char * first_data = nullptr;
 		size_t first_size = 0;
@@ -300,7 +319,12 @@ void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 		for (size_t vi = 0; vi < ver_count; ++vi)
 		{
 			if (is_deleted[vi] || slot.indices[vi] == SIZE_MAX)
+			{
+				if (policy.skip_non_existent)
+					slot_values[vi] = non_existent_value;
+
 				continue;
+			}
 
 			const auto & sv = sr.parsed[vi][slot.indices[vi]];
 			slot_values[vi] = format_value(sv.data, sv.size);
@@ -312,11 +336,11 @@ void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 		}
 
 		const auto * schema = find_schema(entry.rec_type, slot.key.type, first_size);
-		slot_eval_context_t ctx { slot, sr, is_deleted, accum };
+		slot_eval_context_t ctx { slot, sr, is_deleted, accum, policy.skip_non_existent };
 		if (schema && schema->field_count > 0 && first_data)
 			evaluate_schema_fields(schema, ctx);
 		else
-			accum.accumulate(slot_values);
+			accum.accumulate(slot_values, policy.skip_non_existent);
 	}
 
 	entry.conflict_all = accum.worst_all;

@@ -59,32 +59,34 @@ view_tree_model_t::view_node_t view_tree_model_t::build_slot_row(
 	const char * first_data = nullptr;
 	size_t first_size = 0;
 
+	const auto policy = find_conflict_policy(m_record_type, slot.type);
+
 	for (size_t col = 0; col < col_count; ++col)
 	{
 		if (col >= all_subs.size())
 		{
-			row.values[col] = "";
+			row.values[col] = policy.skip_non_existent ? non_existent_value : "";
 			continue;
 		}
 
 		auto it_type = col_indices[col].find(slot.type);
 		if (it_type == col_indices[col].end())
 		{
-			row.values[col] = "";
+			row.values[col] = policy.skip_non_existent ? non_existent_value : "";
 			continue;
 		}
 
 		const auto & indices = it_type->second;
 		if (slot.occurrence >= static_cast<int>(indices.size()))
 		{
-			row.values[col] = "";
+			row.values[col] = policy.skip_non_existent ? non_existent_value : "";
 			continue;
 		}
 
 		size_t idx = indices[slot.occurrence];
 		if (idx == SIZE_MAX)
 		{
-			row.values[col] = "";
+			row.values[col] = policy.skip_non_existent ? non_existent_value : "";
 			continue;
 		}
 
@@ -115,8 +117,22 @@ view_tree_model_t::view_node_t view_tree_model_t::build_slot_row(
 		}
 	}
 	row.all_identical = all_same;
-	row.row_conflict_all = compute_conflict_all(row.values);
-	row.cell_conflict_this = compute_conflict_this(row.values);
+
+	if (policy.ignore_conflict)
+	{
+		row.row_conflict_all = conflict_all_t::no_conflict;
+		row.cell_conflict_this.assign(col_count, conflict_this_t::identical_to_master);
+	}
+	else if (policy.skip_non_existent)
+	{
+		row.row_conflict_all = compute_conflict_all_skip_empty(row.values);
+		row.cell_conflict_this = compute_conflict_this_skip_empty(row.values);
+	}
+	else
+	{
+		row.row_conflict_all = compute_conflict_all(row.values);
+		row.cell_conflict_this = compute_conflict_this(row.values);
+	}
 
 	const auto * schema = find_schema(m_record_type, slot.type, first_size);
 	if (schema && first_data)
@@ -124,7 +140,7 @@ view_tree_model_t::view_node_t view_tree_model_t::build_slot_row(
 	else if (first_data && first_size > 0 && !row.values.empty() && !row.values[0].empty() && row.values[0][0] == '<')
 		decode_hex_children(row, first_size, col_count, all_subs, col_indices, slot);
 
-	if (!row.children.empty())
+	if (!row.children.empty() && !policy.ignore_conflict)
 	{
 		row.row_conflict_all = conflict_all_t::unknown;
 		for (const auto & child : row.children)
@@ -158,6 +174,8 @@ void view_tree_model_t::decode_schema_children(
     const std::vector<std::unordered_map<std::string, std::vector<size_t>>> & col_indices,
     const sub_slot_t & slot)
 {
+	const auto policy = find_conflict_policy(m_record_type, slot.type);
+
 	for (size_t field_idx = 0; field_idx < schema->field_count; ++field_idx)
 	{
 		const auto & fdef = schema->fields[field_idx];
@@ -180,7 +198,7 @@ void view_tree_model_t::decode_schema_children(
 				{
 					if (col >= all_subs.size())
 					{
-						frow.values[col] = "";
+						frow.values[col] = policy.skip_non_existent ? non_existent_value : "";
 						continue;
 					}
 
@@ -188,14 +206,14 @@ void view_tree_model_t::decode_schema_children(
 					if (it_type == col_indices[col].end() ||
 					    slot.occurrence >= static_cast<int>(it_type->second.size()))
 					{
-						frow.values[col] = "";
+						frow.values[col] = policy.skip_non_existent ? non_existent_value : "";
 						continue;
 					}
 
 					size_t idx = it_type->second[slot.occurrence];
 					if (idx == SIZE_MAX)
 					{
-						frow.values[col] = "";
+						frow.values[col] = policy.skip_non_existent ? non_existent_value : "";
 						continue;
 					}
 
@@ -203,8 +221,12 @@ void view_tree_model_t::decode_schema_children(
 				}
 
 				frow.all_identical = check_all_identical(frow.values);
-				frow.row_conflict_all = compute_conflict_all(frow.values);
-				frow.cell_conflict_this = compute_conflict_this(frow.values);
+				frow.row_conflict_all = policy.skip_non_existent
+				    ? compute_conflict_all_skip_empty(frow.values)
+				    : compute_conflict_all(frow.values);
+				frow.cell_conflict_this = policy.skip_non_existent
+				    ? compute_conflict_this_skip_empty(frow.values)
+				    : compute_conflict_this(frow.values);
 				parent_row.children.push_back(std::move(frow));
 			}
 			continue;
@@ -218,21 +240,21 @@ void view_tree_model_t::decode_schema_children(
 		{
 			if (col >= all_subs.size())
 			{
-				frow.values[col] = "";
+				frow.values[col] = policy.skip_non_existent ? non_existent_value : "";
 				continue;
 			}
 
 			auto it_type = col_indices[col].find(slot.type);
 			if (it_type == col_indices[col].end() || slot.occurrence >= static_cast<int>(it_type->second.size()))
 			{
-				frow.values[col] = "";
+				frow.values[col] = policy.skip_non_existent ? non_existent_value : "";
 				continue;
 			}
 
 			size_t idx = it_type->second[slot.occurrence];
 			if (idx == SIZE_MAX)
 			{
-				frow.values[col] = "";
+				frow.values[col] = policy.skip_non_existent ? non_existent_value : "";
 				continue;
 			}
 
@@ -241,8 +263,12 @@ void view_tree_model_t::decode_schema_children(
 		}
 
 		frow.all_identical = check_all_identical(frow.values);
-		frow.row_conflict_all = compute_conflict_all(frow.values);
-		frow.cell_conflict_this = compute_conflict_this(frow.values);
+		frow.row_conflict_all = policy.skip_non_existent
+		    ? compute_conflict_all_skip_empty(frow.values)
+		    : compute_conflict_all(frow.values);
+		frow.cell_conflict_this = policy.skip_non_existent
+		    ? compute_conflict_this_skip_empty(frow.values)
+		    : compute_conflict_this(frow.values);
 		parent_row.children.push_back(std::move(frow));
 	}
 }
@@ -256,6 +282,7 @@ void view_tree_model_t::decode_hex_children(
     const sub_slot_t & slot)
 {
 	static constexpr size_t hex_line_bytes = 16;
+	const auto policy = find_conflict_policy(m_record_type, slot.type);
 
 	for (size_t offset = 0; offset < first_size; offset += hex_line_bytes)
 	{
@@ -269,21 +296,21 @@ void view_tree_model_t::decode_hex_children(
 		{
 			if (col >= all_subs.size())
 			{
-				frow.values[col] = "";
+				frow.values[col] = policy.skip_non_existent ? non_existent_value : "";
 				continue;
 			}
 
 			auto it_type = col_indices[col].find(slot.type);
 			if (it_type == col_indices[col].end() || slot.occurrence >= static_cast<int>(it_type->second.size()))
 			{
-				frow.values[col] = "";
+				frow.values[col] = policy.skip_non_existent ? non_existent_value : "";
 				continue;
 			}
 
 			size_t idx = it_type->second[slot.occurrence];
 			if (idx == SIZE_MAX)
 			{
-				frow.values[col] = "";
+				frow.values[col] = policy.skip_non_existent ? non_existent_value : "";
 				continue;
 			}
 
@@ -292,8 +319,12 @@ void view_tree_model_t::decode_hex_children(
 		}
 
 		frow.all_identical = check_all_identical(frow.values);
-		frow.row_conflict_all = compute_conflict_all(frow.values);
-		frow.cell_conflict_this = compute_conflict_this(frow.values);
+		frow.row_conflict_all = policy.skip_non_existent
+		    ? compute_conflict_all_skip_empty(frow.values)
+		    : compute_conflict_all(frow.values);
+		frow.cell_conflict_this = policy.skip_non_existent
+		    ? compute_conflict_this_skip_empty(frow.values)
+		    : compute_conflict_this(frow.values);
 		parent_row.children.push_back(std::move(frow));
 	}
 }
