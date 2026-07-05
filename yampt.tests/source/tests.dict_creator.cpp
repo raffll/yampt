@@ -120,7 +120,7 @@ TEST_CASE("cell_matcher_t::make_cell_key_text, produces 16-char hex string", "[u
 	}
 }
 
-TEST_CASE("cell_matcher_t::make_cell_key_text, deterministic", "[u]")
+TEST_CASE("cell_matcher_t::make_cell_key_text, same input same result", "[u]")
 {
 	auto a = cell_matcher_t::make_cell_key_text("Balmora fingerprint");
 	auto b = cell_matcher_t::make_cell_key_text("Balmora fingerprint");

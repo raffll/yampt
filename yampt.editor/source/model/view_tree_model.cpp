@@ -452,6 +452,20 @@ int view_tree_model_t::columnCount(const QModelIndex &) const
 	return static_cast<int>(m_column_names.size()) + 1;
 }
 
+static QString truncate_for_display(const std::string & value)
+{
+	auto text = QString::fromStdString(value);
+	const int newline_pos = text.indexOf('\n');
+	if (newline_pos >= 0)
+		text = text.left(newline_pos);
+
+	static constexpr int max_display_length = 120;
+	if (text.size() > max_display_length)
+		text = text.left(max_display_length) + QChar(0x2026);
+
+	return text;
+}
+
 static QVariant sub_record_display(const view_tree_model_t::view_node_t & row, int column)
 {
 	if (column == 0)
@@ -465,7 +479,7 @@ static QVariant sub_record_display(const view_tree_model_t::view_node_t & row, i
 		if (col < 0 || col >= static_cast<int>(row.children[0].values.size()))
 			return {};
 
-		return QString::fromStdString(row.children[0].values[col]);
+		return truncate_for_display(row.children[0].values[col]);
 	}
 
 	if (!row.children.empty())
@@ -475,7 +489,7 @@ static QVariant sub_record_display(const view_tree_model_t::view_node_t & row, i
 	if (col < 0 || col >= static_cast<int>(row.values.size()))
 		return {};
 
-	return QString::fromStdString(row.values[col]);
+	return truncate_for_display(row.values[col]);
 }
 
 static QVariant sub_record_background(const view_tree_model_t::view_node_t & row, int column)
@@ -548,7 +562,7 @@ static QVariant field_row_display(const view_tree_model_t::view_node_t & frow, i
 	if (col < 0 || col >= static_cast<int>(frow.values.size()))
 		return {};
 
-	return QString::fromStdString(frow.values[col]);
+	return truncate_for_display(frow.values[col]);
 }
 
 static QVariant field_row_background(const view_tree_model_t::view_node_t & frow, int column)

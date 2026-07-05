@@ -8,7 +8,6 @@
 #include "record_view.hpp"
 #include <scanner/plugin_scan.hpp>
 #include <set>
-#include <QCheckBox>
 #include <QLabel>
 #include <QSplitter>
 #include <QTabWidget>
@@ -28,10 +27,8 @@ public:
 	void save_session_state();
 	void restore_session_state();
 
-	QCheckBox * conflicts_checkbox() const
-	{
-		return m_chk_conflicts;
-	}
+	void set_conflicts_only(bool value);
+	void set_show_positions(bool value);
 
 	QLabel * count_label() const
 	{
@@ -117,7 +114,7 @@ private:
 	settings_store_t & m_settings;
 	plugin_session_t * m_session = nullptr;
 
-	QCheckBox * m_chk_conflicts = nullptr;
+	bool m_conflicts_only = false;
 	QLabel * m_lbl_count = nullptr;
 
 	QSplitter * m_main_splitter = nullptr;

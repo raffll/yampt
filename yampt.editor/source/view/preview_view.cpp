@@ -31,6 +31,13 @@ void preview_view_t::show_comparison(const std::string & left_text, const std::s
 		return;
 	}
 
+	if (right_text.empty())
+	{
+		m_left_edit->setPlainText(QString::fromStdString(left_text));
+		m_right_edit->clear();
+		return;
+	}
+
 	if (left_text == right_text)
 	{
 		m_left_edit->setPlainText(QString::fromStdString(left_text));

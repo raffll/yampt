@@ -3,8 +3,6 @@
 #include <scanner/record_conflict.hpp>
 #include <cstring>
 
-static constexpr bool show_binary_positions = true;
-
 static bool check_all_identical(const std::vector<std::string> & values)
 {
 	for (size_t col = 1; col < values.size(); ++col)
@@ -491,7 +489,7 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 						{
 							field_child.values[col] = decode_field(fdef, result.view.data, result.view.size);
 							field_child.binary_ranges[col] = { result.binary_index, result.binary_index + 1 };
-							if (show_binary_positions)
+							if (m_show_positions)
 								field_child.values[col] = "[" + std::to_string(result.binary_index) + "] " + field_child.values[col];
 						}
 					}
@@ -539,9 +537,9 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 					if (schema && schema->field_count == 1)
 						child_field.values[col] = decode_field(schema->fields[0], result.view.data, result.view.size);
 					else
-						child_field.values[col] = format_value(result.view.data, result.view.size, m_display_codepage);
+						child_field.values[col] = format_value_full(result.view.data, result.view.size, m_display_codepage);
 
-					if (show_binary_positions)
+					if (m_show_positions)
 						child_field.values[col] = "[" + std::to_string(result.binary_index) + "] " + child_field.values[col];
 				}
 
@@ -596,18 +594,21 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 
 		compute_group_ranges(group_row, col_count);
 
-		group_row.label += " [";
-		for (size_t col = 0; col < col_count; ++col)
+		if (m_show_positions)
 		{
-			if (col > 0)
-				group_row.label += " ";
+			group_row.label += " [";
+			for (size_t col = 0; col < col_count; ++col)
+			{
+				if (col > 0)
+					group_row.label += " ";
 
-			if (col < group_row.binary_ranges.size() && group_row.binary_ranges[col].start >= 0)
-				group_row.label += std::to_string(group_row.binary_ranges[col].start) + ".." + std::to_string(group_row.binary_ranges[col].end_pos);
-			else
-				group_row.label += "-";
+				if (col < group_row.binary_ranges.size() && group_row.binary_ranges[col].start >= 0)
+					group_row.label += std::to_string(group_row.binary_ranges[col].start) + ".." + std::to_string(group_row.binary_ranges[col].end_pos);
+				else
+					group_row.label += "-";
+			}
+			group_row.label += "]";
 		}
-		group_row.label += "]";
 
 		m_rows.push_back(std::move(group_row));
 	}

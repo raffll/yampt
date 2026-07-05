@@ -4,8 +4,6 @@
 #include <cstdio>
 #include <cstring>
 
-static constexpr bool show_binary_positions = true;
-
 static bool check_all_identical(const std::vector<std::string> & values)
 {
 	for (size_t col = 1; col < values.size(); ++col)
@@ -99,13 +97,13 @@ view_tree_model_t::view_node_t view_tree_model_t::build_slot_row(
 			row.size = sv.size;
 		}
 
-		row.values[col] = format_value(sv.data, sv.size, m_display_codepage);
+		row.values[col] = format_value_full(sv.data, sv.size, m_display_codepage);
 	}
 
 	row.type = slot.type;
 	row.label = make_sub_label(slot.type, m_record_type, first_size);
 
-	if (show_binary_positions)
+	if (m_show_positions)
 	{
 		for (size_t col = 0; col < col_count; ++col)
 		{
@@ -252,7 +250,7 @@ void view_tree_model_t::decode_schema_children(
 
 			const auto & sv = all_subs[col][idx];
 			frow.values[col] = decode_field(fdef, sv.data, sv.size);
-			if (show_binary_positions)
+			if (m_show_positions)
 				frow.values[col] = "[" + std::to_string(idx) + "] " + frow.values[col];
 		}
 

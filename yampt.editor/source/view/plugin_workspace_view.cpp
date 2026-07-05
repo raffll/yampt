@@ -94,8 +94,6 @@ plugin_workspace_view_t::plugin_workspace_view_t(settings_store_t & settings, QW
 	auto * main_layout = new QVBoxLayout(this);
 	main_layout->setContentsMargins(4, 4, 4, 4);
 
-	m_chk_conflicts = new QCheckBox("Conflicts Only", this);
-	m_chk_conflicts->setToolTip("Show only conflicting records");
 	m_lbl_count = new QLabel(this);
 
 	m_session = new plugin_session_t(this);
@@ -140,8 +138,6 @@ void plugin_workspace_view_t::setup_views()
 
 void plugin_workspace_view_t::setup_connections()
 {
-	connect(m_chk_conflicts, &QCheckBox::checkStateChanged, this, &plugin_workspace_view_t::on_filter_changed);
-
 	connect(m_nav_view, &nav_tree_view_t::selection_changed, this, &plugin_workspace_view_t::on_nav_selection_changed);
 	connect(m_nav_view, &nav_tree_view_t::context_menu_requested, this, &plugin_workspace_view_t::on_nav_context_menu);
 
@@ -275,11 +271,30 @@ void plugin_workspace_view_t::on_nav_selection_changed(const nav_tree_model_t::n
 	update_status();
 }
 
+void plugin_workspace_view_t::set_conflicts_only(bool value)
+{
+	m_conflicts_only = value;
+	on_filter_changed();
+}
+
+void plugin_workspace_view_t::set_show_positions(bool value)
+{
+	m_record_view->model()->set_show_positions(value);
+
+	const auto info = m_nav_view->current_selection();
+	if (!info.record_id.empty())
+	{
+		const auto * entry = m_session->scan().find(info.rec_type, info.record_id);
+		if (entry)
+			display_record_in_view(*entry);
+	}
+}
+
 void plugin_workspace_view_t::on_filter_changed()
 {
 	nav_tree_model_t::filter_state_t state;
 
-	if (m_chk_conflicts->isChecked())
+	if (m_conflicts_only)
 	{
 		state.filter_conflict_all = true;
 		state.conflict_all_set.insert(conflict_all_t::conflict);
@@ -847,8 +862,7 @@ void plugin_workspace_view_t::on_view_selection_changed(const QModelIndex & curr
 
 	auto read_view_value = [&](int target_col) -> std::string
 	{
-		const int value_col = target_col + 1;
-		if (value_col < 0)
+		if (target_col < 0)
 			return {};
 
 		const auto & parent_row = visible[parent_row_idx];
@@ -859,16 +873,16 @@ void plugin_workspace_view_t::on_view_selection_changed(const QModelIndex & curr
 				return {};
 
 			const auto & child = parent_row.children[child_row_idx];
-			if (value_col >= static_cast<int>(child.values.size()))
+			if (target_col >= static_cast<int>(child.values.size()))
 				return {};
 
-			return child.values[value_col];
+			return child.values[target_col];
 		}
 
-		if (value_col >= static_cast<int>(parent_row.values.size()))
+		if (target_col >= static_cast<int>(parent_row.values.size()))
 			return {};
 
-		return parent_row.values[value_col];
+		return parent_row.values[target_col];
 	};
 
 	const auto right_text = read_view_value(col);
