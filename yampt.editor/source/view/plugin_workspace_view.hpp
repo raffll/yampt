@@ -28,7 +28,6 @@ public:
 	void restore_session_state();
 
 	void set_conflicts_only(bool value);
-	void set_show_positions(bool value);
 	void set_show_deleted_strikeout(bool value);
 
 	QLabel * count_label() const

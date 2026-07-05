@@ -567,22 +567,6 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 
 				compute_group_ranges(sub_group, col_count);
 
-				if (m_show_positions)
-				{
-					sub_group.label += " [";
-					for (size_t col = 0; col < col_count; ++col)
-					{
-						if (col > 0)
-							sub_group.label += " ";
-
-						if (col < sub_group.binary_ranges.size() && sub_group.binary_ranges[col].start >= 0)
-							sub_group.label += std::to_string(sub_group.binary_ranges[col].start) + ".." + std::to_string(sub_group.binary_ranges[col].end_pos);
-						else
-							sub_group.label += "-";
-					}
-					sub_group.label += "]";
-				}
-
 				if (sub_group.row_conflict_all > group_row.row_conflict_all)
 					group_row.row_conflict_all = sub_group.row_conflict_all;
 
@@ -626,9 +610,6 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 						child_field.values[col] = decode_field(schema->fields[0], result.view.data, result.view.size);
 					else
 						child_field.values[col] = format_value_full(result.view.data, result.view.size, m_display_codepage);
-
-					if (m_show_positions)
-						child_field.values[col] = "[" + std::to_string(result.binary_index) + "] " + child_field.values[col];
 				}
 
 				child_field.label = make_sub_label(slot.type, m_record_type, first_size);
@@ -674,22 +655,6 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 		}
 
 		compute_group_ranges(group_row, col_count);
-
-		if (m_show_positions)
-		{
-			group_row.label += " [";
-			for (size_t col = 0; col < col_count; ++col)
-			{
-				if (col > 0)
-					group_row.label += " ";
-
-				if (col < group_row.binary_ranges.size() && group_row.binary_ranges[col].start >= 0)
-					group_row.label += std::to_string(group_row.binary_ranges[col].start) + ".." + std::to_string(group_row.binary_ranges[col].end_pos);
-				else
-					group_row.label += "-";
-			}
-			group_row.label += "]";
-		}
 
 		return group_row;
 	};

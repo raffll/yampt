@@ -277,19 +277,6 @@ void plugin_workspace_view_t::set_conflicts_only(bool value)
 	on_filter_changed();
 }
 
-void plugin_workspace_view_t::set_show_positions(bool value)
-{
-	m_record_view->model()->set_show_positions(value);
-
-	const auto info = m_nav_view->current_selection();
-	if (!info.record_id.empty())
-	{
-		const auto * entry = m_session->scan().find(info.rec_type, info.record_id);
-		if (entry)
-			display_record_in_view(*entry);
-	}
-}
-
 void plugin_workspace_view_t::set_show_deleted_strikeout(bool value)
 {
 	m_record_view->model()->set_show_deleted_strikeout(value);

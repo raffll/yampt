@@ -95,12 +95,6 @@ void editor_window_t::setup_menu_bar()
 	view_menu->addAction(hide_dup_action);
 	connect(hide_dup_action, &QAction::toggled, m_plugin_workspace_view, &plugin_workspace_view_t::set_hide_duplicates);
 
-	auto * show_pos_action = new QAction("Show Binary &Positions", this);
-	show_pos_action->setCheckable(true);
-	show_pos_action->setToolTip("Show sub-record binary positions in values");
-	view_menu->addAction(show_pos_action);
-	connect(show_pos_action, &QAction::toggled, m_plugin_workspace_view, &plugin_workspace_view_t::set_show_positions);
-
 	auto * show_deleted_action = new QAction("Show &Deleted Strikeout", this);
 	show_deleted_action->setCheckable(true);
 	show_deleted_action->setChecked(true);

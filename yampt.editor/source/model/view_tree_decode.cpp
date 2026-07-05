@@ -105,20 +105,6 @@ view_tree_model_t::view_node_t view_tree_model_t::build_slot_row(
 	row.type = slot.type;
 	row.label = make_sub_label(slot.type, m_record_type, first_size);
 
-	if (m_show_positions)
-	{
-		for (size_t col = 0; col < col_count; ++col)
-		{
-			if (col >= row.binary_ranges.size() || row.binary_ranges[col].start < 0)
-				continue;
-
-			if (row.values[col].empty())
-				continue;
-
-			row.values[col] = "[" + std::to_string(row.binary_ranges[col].start) + "] " + row.values[col];
-		}
-	}
-
 	bool all_same = true;
 	for (size_t col = 1; col < col_count; ++col)
 	{
@@ -252,8 +238,6 @@ void view_tree_model_t::decode_schema_children(
 
 			const auto & sv = all_subs[col][idx];
 			frow.values[col] = decode_field(fdef, sv.data, sv.size);
-			if (m_show_positions)
-				frow.values[col] = "[" + std::to_string(idx) + "] " + frow.values[col];
 		}
 
 		frow.all_identical = check_all_identical(frow.values);
