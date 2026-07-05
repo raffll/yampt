@@ -2,7 +2,19 @@
 
 #include "../utility/tools.hpp"
 #include <cstddef>
+#include <cstring>
 #include <string>
+
+static constexpr uint32_t frmr_ref_index_mask = 0x00FFFFFF;
+
+inline uint32_t read_frmr_ref_index(const char * data, size_t size)
+{
+	uint32_t raw_value = 0;
+	if (size >= 4)
+		std::memcpy(&raw_value, data, 4);
+
+	return raw_value & frmr_ref_index_mask;
+}
 
 struct sub_record_view_t
 {

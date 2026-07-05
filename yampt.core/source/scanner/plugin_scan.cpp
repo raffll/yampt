@@ -13,6 +13,55 @@ void plugin_scan_t::load_plugin(const std::string & path)
 	m_plugins.push_back(std::move(p));
 }
 
+void plugin_scan_t::loaded_plugin_t::parse_master_list()
+{
+	if (!esm.is_loaded() || esm.get_records().empty())
+		return;
+
+	esm.select_record(0);
+	const auto & content = esm.get_record().content;
+	sub_record_iter_t iter(content);
+	sub_record_view_t sub;
+
+	while (iter.next(sub))
+	{
+		if (sub.type != "MAST")
+			continue;
+
+		std::string master_name(sub.data, sub.size);
+		master_name = tools_t::erase_null_chars(master_name);
+		master_files.push_back(std::move(master_name));
+	}
+}
+
+const std::vector<std::string> & plugin_scan_t::master_list(int idx) const
+{
+	return m_plugins[idx]->master_files;
+}
+
+uint64_t plugin_scan_t::resolve_frmr(int plugin_idx, uint32_t raw_frmr) const
+{
+	const uint32_t local_master = (raw_frmr & 0xFF000000) >> 24;
+	const uint32_t ref_index = raw_frmr & 0x00FFFFFF;
+
+	if (local_master == 0)
+		return (static_cast<uint64_t>(plugin_idx) << 32) | ref_index;
+
+	const auto & masters = m_plugins[plugin_idx]->master_files;
+	const size_t master_array_idx = local_master - 1;
+	if (master_array_idx >= masters.size())
+		return (static_cast<uint64_t>(plugin_idx) << 32) | ref_index;
+
+	const auto & master_filename = masters[master_array_idx];
+	for (int i = 0; i < static_cast<int>(m_plugins.size()); ++i)
+	{
+		if (plugin_filename(i) == master_filename)
+			return (static_cast<uint64_t>(i) << 32) | ref_index;
+	}
+
+	return (static_cast<uint64_t>(plugin_idx) << 32) | ref_index;
+}
+
 void plugin_scan_t::insert_or_update_version(version_descriptor_t desc)
 {
 	std::string key = desc.rec_type + std::string(1, '\0') + desc.record_id;
@@ -56,9 +105,6 @@ void plugin_scan_t::rebuild_conflicts()
 		const auto & idx = m_plugins[pi]->index;
 		for (const auto & rec : idx.entries())
 		{
-			if (rec.rec_type == "TES3")
-				continue;
-
 			record_version_t ver;
 			ver.plugin_idx = pi;
 			ver.record_index = rec.record_index;

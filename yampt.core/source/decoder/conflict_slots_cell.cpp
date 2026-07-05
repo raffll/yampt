@@ -1,6 +1,5 @@
 #include "conflict_slots_cell.hpp"
 #include <algorithm>
-#include <cstring>
 #include <unordered_map>
 
 struct cell_sub_slot_t
@@ -36,9 +35,7 @@ static void extract_cell_refs(
 			if (ver_refs[i].empty())
 				ver_header_end[i] = j;
 
-			uint32_t obj_idx = 0;
-			if (parsed[i][j].size >= 4)
-				std::memcpy(&obj_idx, parsed[i][j].data, 4);
+			uint32_t obj_idx = read_frmr_ref_index(parsed[i][j].data, parsed[i][j].size);
 
 			size_t end_pos = parsed[i].size();
 			for (size_t k = j + 1; k < parsed[i].size(); ++k)

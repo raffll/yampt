@@ -252,7 +252,7 @@ void plugin_workspace_view_t::rebuild_nav_preserving_state()
 
 void plugin_workspace_view_t::on_nav_selection_changed(const nav_tree_model_t::node_info_t & info)
 {
-	if (info.record_id.empty())
+	if (info.rec_type.empty())
 	{
 		m_record_view->clear();
 		update_status();

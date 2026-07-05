@@ -50,6 +50,8 @@ public:
 	const esm_reader_t & plugin(int idx) const;
 	const plugin_index_t & index(int idx) const;
 	bool is_merge_plugin(int idx) const;
+	const std::vector<std::string> & master_list(int idx) const;
+	uint64_t resolve_frmr(int plugin_idx, uint32_t raw_frmr) const;
 
 	const std::vector<conflict_entry_t> & entries() const;
 	const conflict_entry_t * find(const std::string & type, const std::string & id) const;
@@ -95,11 +97,17 @@ private:
 		    : path(file_path)
 		    , esm(file_path)
 		    , index(esm)
-		{}
+		{
+			parse_master_list();
+		}
 
 		std::string path;
 		esm_reader_t esm;
 		plugin_index_t index { esm };
+		std::vector<std::string> master_files;
+
+	private:
+		void parse_master_list();
 	};
 
 	std::vector<std::unique_ptr<loaded_plugin_t>> m_plugins;

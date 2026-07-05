@@ -48,12 +48,7 @@ static std::string format_hex_chunk(const char * data_ptr, size_t data_size, siz
 
 static uint32_t read_object_index(const sub_record_view_t & sub_rec)
 {
-	static constexpr size_t frmr_data_size = 4;
-	uint32_t obj_idx = 0;
-	if (sub_rec.size >= frmr_data_size)
-		std::memcpy(&obj_idx, sub_rec.data, frmr_data_size);
-
-	return obj_idx;
+	return read_frmr_ref_index(sub_rec.data, sub_rec.size);
 }
 
 static void collect_cell_ref_groups(
@@ -423,6 +418,9 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 
 	for (const auto & slot : header_slots)
 	{
+		if (slot.type == "NAM0")
+			continue;
+
 		auto row = build_slot_row(col_count, all_subs, col_header_indices, slot);
 		m_rows.push_back(std::move(row));
 	}
@@ -443,21 +441,66 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 		std::vector<sub_slot_t> ref_slots;
 		build_ref_slots_for_object(col_count, all_subs, col_refs, obj_idx, ref_slots);
 
-		const auto ref_label = "#" + std::to_string(obj_idx);
+		std::string object_name;
+		for (size_t col = 0; col < col_count; ++col)
+		{
+			if (col >= all_subs.size())
+				continue;
+
+			for (const auto & ref_group : col_refs[col])
+			{
+				if (ref_group.object_index != obj_idx)
+					continue;
+
+				for (size_t i = ref_group.start_idx; i < ref_group.end_idx; ++i)
+				{
+					if (all_subs[col][i].type != "NAME")
+						continue;
+
+					object_name = std::string(all_subs[col][i].data, all_subs[col][i].size);
+					if (!object_name.empty() && object_name.back() == '\0')
+						object_name.pop_back();
+
+					break;
+				}
+				break;
+			}
+
+			if (!object_name.empty())
+				break;
+		}
+
+		std::string ref_label = object_name.empty()
+		    ? "#" + std::to_string(obj_idx)
+		    : object_name + " #" + std::to_string(obj_idx);
 
 		view_node_t group_row;
 		group_row.type = "FRMR";
 		group_row.size = 0;
 		group_row.label = ref_label;
 		group_row.values.resize(col_count);
+		group_row.binary_ranges.resize(col_count);
 		group_row.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
 		group_row.row_conflict_all = conflict_all_t::only_one;
 
-		for (const auto & slot : ref_slots)
+		for (size_t col = 0; col < col_count; ++col)
 		{
-			if (slot.type == "FRMR")
+			if (col >= col_refs.size())
 				continue;
 
+			for (const auto & ref_group : col_refs[col])
+			{
+				if (ref_group.object_index != obj_idx)
+					continue;
+
+				group_row.values[col] = std::to_string(obj_idx);
+				group_row.binary_ranges[col] = { static_cast<int>(ref_group.start_idx), static_cast<int>(ref_group.start_idx) + 1 };
+				break;
+			}
+		}
+
+		for (const auto & slot : ref_slots)
+		{
 			const char * first_data = nullptr;
 			size_t first_size = 0;
 
@@ -575,7 +618,9 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 					}
 
 					child_field.binary_ranges[col] = { result.binary_index, result.binary_index + 1 };
-					if (schema && schema->field_count == 1)
+					if (slot.type == "FRMR")
+						child_field.values[col] = std::to_string(read_frmr_ref_index(result.view.data, result.view.size));
+					else if (schema && schema->field_count == 1)
 						child_field.values[col] = decode_field(schema->fields[0], result.view.data, result.view.size);
 					else
 						child_field.values[col] = format_value_full(result.view.data, result.view.size, m_display_codepage);
@@ -602,34 +647,18 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 			}
 		}
 
+		group_row.all_identical = check_all_identical(group_row.values);
+
 		bool present_in_any = false;
 		for (size_t col = 0; col < col_count; ++col)
 		{
-			bool present = false;
-			if (col < col_refs.size())
+			if (!group_row.values[col].empty())
 			{
-				for (const auto & ref_group : col_refs[col])
-				{
-					if (ref_group.object_index == obj_idx)
-					{
-						present = true;
-						break;
-					}
-				}
-			}
-
-			if (present)
-			{
-				group_row.values[col] = ref_label;
 				present_in_any = true;
-			}
-			else
-			{
-				group_row.values[col] = "";
+				break;
 			}
 		}
 
-		group_row.all_identical = check_all_identical(group_row.values);
 		if (!present_in_any)
 			group_row.row_conflict_all = conflict_all_t::only_one;
 
@@ -729,66 +758,13 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 	if (!persistent_indices.empty())
 		m_rows.push_back(build_section_group("Persistent", persistent_indices));
 
-	for (size_t col = 0; col < col_count; ++col)
+	for (const auto & slot : header_slots)
 	{
-		if (col >= all_subs.size())
+		if (slot.type != "NAM0")
 			continue;
 
-		for (size_t i = 0; i < all_subs[col].size(); ++i)
-		{
-			if (all_subs[col][i].type != "NAM0")
-				continue;
-
-			if (i < col_header_end[col])
-				break;
-
-			view_node_t nam0_row;
-			nam0_row.type = "NAM0";
-			nam0_row.values.resize(col_count);
-			nam0_row.binary_ranges.resize(col_count);
-
-			const auto & sv = all_subs[col][i];
-			nam0_row.size = sv.size;
-
-			const auto * schema = find_schema(m_record_type, "NAM0", sv.size);
-			for (size_t c = 0; c < col_count; ++c)
-			{
-				if (c >= all_subs.size())
-				{
-					nam0_row.values[c] = "";
-					continue;
-				}
-
-				bool found_nam0 = false;
-				for (size_t k = col_header_end[c]; k < all_subs[c].size(); ++k)
-				{
-					if (all_subs[c][k].type == "NAM0")
-					{
-						const auto & nsv = all_subs[c][k];
-						nam0_row.binary_ranges[c] = { static_cast<int>(k), static_cast<int>(k) + 1 };
-						if (schema && schema->field_count == 1)
-							nam0_row.values[c] = decode_field(schema->fields[0], nsv.data, nsv.size);
-						else
-							nam0_row.values[c] = format_value_full(nsv.data, nsv.size, m_display_codepage);
-
-						found_nam0 = true;
-						break;
-					}
-				}
-
-				if (!found_nam0)
-					nam0_row.values[c] = "";
-			}
-
-			nam0_row.label = make_sub_label("NAM0", m_record_type, sv.size);
-			nam0_row.all_identical = check_all_identical(nam0_row.values);
-			nam0_row.row_conflict_all = compute_conflict_all(nam0_row.values);
-			nam0_row.cell_conflict_this = compute_conflict_this(nam0_row.values);
-			m_rows.push_back(std::move(nam0_row));
-			break;
-		}
-
-		break;
+		auto row = build_slot_row(col_count, all_subs, col_header_indices, slot);
+		m_rows.push_back(std::move(row));
 	}
 
 	if (!temporary_indices.empty())
