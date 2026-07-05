@@ -77,14 +77,18 @@ static void collect_cell_ref_groups(
 			continue;
 
 		if (out_refs.empty())
+		{
 			out_header_end = i;
+			if (nam0_pos != SIZE_MAX && nam0_pos < i)
+				out_header_end = i;
+		}
 
 		const auto obj_idx = read_object_index(subs[i]);
 
 		size_t group_end = subs.size();
 		for (size_t j = i + 1; j < subs.size(); ++j)
 		{
-			if (subs[j].type == "FRMR")
+			if (subs[j].type == "FRMR" || subs[j].type == "NAM0")
 			{
 				group_end = j;
 				break;
@@ -709,6 +713,65 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 
 	if (!persistent_indices.empty())
 		m_rows.push_back(build_section_group("Persistent", persistent_indices));
+
+	for (size_t col = 0; col < col_count; ++col)
+	{
+		if (col >= all_subs.size())
+			continue;
+
+		for (size_t i = 0; i < all_subs[col].size(); ++i)
+		{
+			if (all_subs[col][i].type != "NAM0")
+				continue;
+
+			view_node_t nam0_row;
+			nam0_row.type = "NAM0";
+			nam0_row.values.resize(col_count);
+			nam0_row.binary_ranges.resize(col_count);
+
+			const auto & sv = all_subs[col][i];
+			nam0_row.size = sv.size;
+
+			const auto * schema = find_schema(m_record_type, "NAM0", sv.size);
+			for (size_t c = 0; c < col_count; ++c)
+			{
+				if (c >= all_subs.size())
+				{
+					nam0_row.values[c] = "";
+					continue;
+				}
+
+				bool found_nam0 = false;
+				for (size_t k = 0; k < all_subs[c].size(); ++k)
+				{
+					if (all_subs[c][k].type == "NAM0")
+					{
+						const auto & nsv = all_subs[c][k];
+						nam0_row.binary_ranges[c] = { static_cast<int>(k), static_cast<int>(k) + 1 };
+						if (schema && schema->field_count == 1)
+							nam0_row.values[c] = decode_field(schema->fields[0], nsv.data, nsv.size);
+						else
+							nam0_row.values[c] = format_value_full(nsv.data, nsv.size, m_display_codepage);
+
+						found_nam0 = true;
+						break;
+					}
+				}
+
+				if (!found_nam0)
+					nam0_row.values[c] = "";
+			}
+
+			nam0_row.label = make_sub_label("NAM0", m_record_type, sv.size);
+			nam0_row.all_identical = check_all_identical(nam0_row.values);
+			nam0_row.row_conflict_all = compute_conflict_all(nam0_row.values);
+			nam0_row.cell_conflict_this = compute_conflict_this(nam0_row.values);
+			m_rows.push_back(std::move(nam0_row));
+			break;
+		}
+
+		break;
+	}
 
 	if (!temporary_indices.empty())
 		m_rows.push_back(build_section_group("Temporary", temporary_indices));
