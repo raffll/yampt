@@ -540,6 +540,7 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 		group_row.type = "FRMR";
 		group_row.size = 0;
 		group_row.label = ref_label;
+		group_row.start_collapsed = true;
 		group_row.values.resize(col_count, non_existent_value);
 		group_row.binary_ranges.resize(col_count);
 		group_row.cell_conflict_this.resize(col_count, conflict_this_t::unknown);

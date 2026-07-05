@@ -242,6 +242,7 @@ void plugin_workspace_view_t::on_load_openmw_cfg()
 
 void plugin_workspace_view_t::rebuild_after_load()
 {
+	rebuild_nav_preserving_state();
 	on_filter_changed();
 	update_status();
 }
