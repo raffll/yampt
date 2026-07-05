@@ -123,3 +123,79 @@ std::vector<conflict_this_t> compute_conflict_this(const std::vector<std::string
 
 	return result;
 }
+
+std::vector<conflict_this_t> compute_conflict_this_skip_empty(const std::vector<std::string> & values)
+{
+	std::vector<conflict_this_t> result(values.size(), conflict_this_t::unknown);
+
+	if (values.empty())
+		return result;
+
+	std::string first_present;
+	size_t first_idx = SIZE_MAX;
+	std::string last_present;
+	size_t last_idx = SIZE_MAX;
+
+	for (size_t i = 0; i < values.size(); ++i)
+	{
+		if (values[i].empty())
+			continue;
+
+		if (first_idx == SIZE_MAX)
+		{
+			first_present = values[i];
+			first_idx = i;
+		}
+
+		last_present = values[i];
+		last_idx = i;
+	}
+
+	if (first_idx == SIZE_MAX)
+		return result;
+
+	if (first_idx == last_idx)
+	{
+		result[first_idx] = conflict_this_t::master;
+		return result;
+	}
+
+	result[first_idx] = conflict_this_t::master;
+
+	bool is_override = true;
+	for (size_t i = 0; i < values.size(); ++i)
+	{
+		if (values[i].empty())
+			continue;
+
+		if (values[i] != first_present && values[i] != last_present)
+		{
+			is_override = false;
+			break;
+		}
+	}
+
+	for (size_t i = 0; i < values.size(); ++i)
+	{
+		if (i == first_idx)
+			continue;
+
+		if (values[i].empty())
+			continue;
+
+		if (values[i] == first_present)
+		{
+			result[i] = conflict_this_t::identical_to_master;
+			continue;
+		}
+
+		if (is_override)
+			result[i] = conflict_this_t::override_wins;
+		else if (i == last_idx)
+			result[i] = conflict_this_t::conflict_wins;
+		else
+			result[i] = conflict_this_t::conflict_loses;
+	}
+
+	return result;
+}
