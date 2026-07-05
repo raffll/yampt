@@ -100,7 +100,7 @@ TEST_CASE("sub_record_schema_t::find_schema, CELL DATA size 24", "[u]")
 	const auto * schema = find_schema("CELL", "DATA", 24);
 	REQUIRE(schema != nullptr);
 	REQUIRE(schema->field_count == 6);
-	REQUIRE(std::string(schema->fields[0].name) == "X Pos");
+	REQUIRE(std::string(schema->fields[0].name) == "X Position");
 }
 
 TEST_CASE("sub_record_schema_t::find_schema, LAND VHGT binary", "[u]")

@@ -367,6 +367,9 @@ TEST_CASE("build_cell_slots, header sub-records before first FRMR", "[u]")
 	int header_types_found = 0;
 	for (const auto & slot : result.aligned)
 	{
+		if (slot.key.type == "FRMR")
+			break;
+
 		if (slot.key.type == "NAME" || slot.key.type == "DATA" ||
 		    slot.key.type == "WHGT" || slot.key.type == "AMBI")
 			++header_types_found;

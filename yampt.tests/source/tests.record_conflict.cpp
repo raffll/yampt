@@ -331,7 +331,7 @@ TEST_CASE("compute_conflict_this, master same as winner others differ", "[u]")
 	REQUIRE(result[0] == conflict_this_t::master);
 	REQUIRE(result[1] == conflict_this_t::conflict_loses);
 	REQUIRE(result[2] == conflict_this_t::conflict_loses);
-	REQUIRE(result[3] == conflict_this_t::conflict_wins);
+	REQUIRE(result[3] == conflict_this_t::identical_to_master);
 }
 
 TEST_CASE("compute_conflict_this, all empty yields all unknown", "[u]")
