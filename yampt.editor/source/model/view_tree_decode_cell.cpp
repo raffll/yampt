@@ -1,6 +1,7 @@
 ﻿#include "view_tree_model.hpp"
 #include <decoder/view_tree_format.hpp>
 #include <scanner/record_conflict.hpp>
+#include <cstdio>
 #include <cstring>
 
 static bool check_all_identical(const std::vector<std::string> & values)
@@ -57,9 +58,19 @@ static uint32_t read_object_index(const sub_record_view_t & sub_rec)
 
 static void collect_cell_ref_groups(
     const std::vector<sub_record_view_t> & subs,
-    std::vector<cell_ref_group_t> & out_refs,
+    std::vector<cell_ref_view_t> & out_refs,
     size_t & out_header_end)
 {
+	size_t nam0_pos = SIZE_MAX;
+	for (size_t i = 0; i < subs.size(); ++i)
+	{
+		if (subs[i].type == "NAM0")
+		{
+			nam0_pos = i;
+			break;
+		}
+	}
+
 	for (size_t i = 0; i < subs.size(); ++i)
 	{
 		if (subs[i].type != "FRMR")
@@ -80,7 +91,8 @@ static void collect_cell_ref_groups(
 			}
 		}
 
-		out_refs.push_back({ obj_idx, i, group_end });
+		const bool is_persistent = (nam0_pos == SIZE_MAX) || (i < nam0_pos);
+		out_refs.push_back({ obj_idx, i, group_end, is_persistent });
 	}
 
 	if (out_refs.empty())
@@ -88,7 +100,7 @@ static void collect_cell_ref_groups(
 }
 
 static void collect_unique_object_indices(
-    const std::vector<std::vector<cell_ref_group_t>> & col_refs,
+    const std::vector<std::vector<cell_ref_view_t>> & col_refs,
     std::vector<uint32_t> & all_indices)
 {
 	for (const auto & refs : col_refs)
@@ -124,7 +136,7 @@ static void build_cell_header_slots(
 static void build_ref_slots_for_object(
     size_t col_count,
     const std::vector<std::vector<sub_record_view_t>> & all_subs,
-    const std::vector<std::vector<cell_ref_group_t>> & col_refs,
+    const std::vector<std::vector<cell_ref_view_t>> & col_refs,
     uint32_t object_index,
     std::vector<sub_slot_t> & ref_slots)
 {
@@ -158,7 +170,7 @@ struct ref_lookup_result_t
 
 static ref_lookup_result_t find_ref_sub_record(
     const std::vector<sub_record_view_t> & subs,
-    const std::vector<cell_ref_group_t> & refs,
+    const std::vector<cell_ref_view_t> & refs,
     uint32_t object_index,
     const std::string & slot_type,
     int slot_occurrence)
@@ -192,7 +204,7 @@ void view_tree_model_t::decode_schema_children_ref(
     size_t,
     size_t col_count,
     const std::vector<std::vector<sub_record_view_t>> & all_subs,
-    const std::vector<std::vector<cell_ref_group_t>> & col_refs,
+    const std::vector<std::vector<cell_ref_view_t>> & col_refs,
     uint32_t object_index,
     const sub_slot_t & slot)
 {
@@ -302,7 +314,7 @@ void view_tree_model_t::decode_hex_children_ref(
     size_t first_size,
     size_t col_count,
     const std::vector<std::vector<sub_record_view_t>> & all_subs,
-    const std::vector<std::vector<cell_ref_group_t>> & col_refs,
+    const std::vector<std::vector<cell_ref_view_t>> & col_refs,
     uint32_t object_index,
     const sub_slot_t & slot)
 {
@@ -355,12 +367,30 @@ void view_tree_model_t::decode_hex_children_ref(
 	}
 }
 
+static bool is_ref_persistent(
+    const std::vector<std::vector<cell_ref_view_t>> & col_refs,
+    uint32_t object_index)
+{
+	for (const auto & refs : col_refs)
+	{
+		for (const auto & ref_group : refs)
+		{
+			if (ref_group.object_index != object_index)
+				continue;
+
+			return ref_group.persistent;
+		}
+	}
+
+	return false;
+}
+
 void view_tree_model_t::set_record_cell(record_context_t & context)
 {
 	const auto col_count = context.col_count;
 	auto & all_subs = context.all_sub_records;
 
-	std::vector<std::vector<cell_ref_group_t>> col_refs(col_count);
+	std::vector<std::vector<cell_ref_view_t>> col_refs(col_count);
 	std::vector<size_t> col_header_end(col_count, 0);
 	std::vector<uint32_t> all_object_indices;
 
@@ -393,48 +423,27 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 		m_rows.push_back(std::move(row));
 	}
 
+	std::vector<uint32_t> persistent_indices;
+	std::vector<uint32_t> temporary_indices;
+
 	for (const auto & obj_idx : all_object_indices)
+	{
+		if (is_ref_persistent(col_refs, obj_idx))
+			persistent_indices.push_back(obj_idx);
+		else
+			temporary_indices.push_back(obj_idx);
+	}
+
+	auto build_ref_group = [&](uint32_t obj_idx) -> view_node_t
 	{
 		std::vector<sub_slot_t> ref_slots;
 		build_ref_slots_for_object(col_count, all_subs, col_refs, obj_idx, ref_slots);
 
-		std::string ref_label;
-		for (size_t col = 0; col < col_count; ++col)
-		{
-			if (col >= all_subs.size())
-				continue;
-
-			for (const auto & ref_group : col_refs[col])
-			{
-				if (ref_group.object_index != obj_idx)
-					continue;
-
-				for (size_t i = ref_group.start_idx; i < ref_group.end_idx; ++i)
-				{
-					if (all_subs[col][i].type == "NAME")
-					{
-						std::string name_text(all_subs[col][i].data, all_subs[col][i].size);
-						if (!name_text.empty() && name_text.back() == '\0')
-							name_text.pop_back();
-
-						ref_label = name_text + " #" + std::to_string(obj_idx);
-						break;
-					}
-				}
-				break;
-			}
-
-			if (!ref_label.empty())
-				break;
-		}
-
-		if (ref_label.empty())
-			ref_label = "#" + std::to_string(obj_idx);
+		const auto ref_label = "#" + std::to_string(obj_idx);
 
 		view_node_t group_row;
 		group_row.type = "FRMR";
 		group_row.size = 0;
-
 		group_row.label = ref_label;
 		group_row.values.resize(col_count);
 		group_row.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
@@ -442,6 +451,9 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 
 		for (const auto & slot : ref_slots)
 		{
+			if (slot.type == "FRMR")
+				continue;
+
 			const char * first_data = nullptr;
 			size_t first_size = 0;
 
@@ -464,51 +476,76 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 
 			if (schema && schema->field_count > 1)
 			{
-				for (size_t field_idx = 0; field_idx < schema->field_count; ++field_idx)
-				{
-					const auto & fdef = schema->fields[field_idx];
-					view_node_t field_child;
-					field_child.label = std::string(slot.type) + " - " + fdef.name;
-					field_child.type = slot.type;
-					field_child.size = first_size;
-					field_child.values.resize(col_count);
-					field_child.binary_ranges.resize(col_count);
+				view_node_t sub_group;
+				sub_group.type = slot.type;
+				sub_group.size = 0;
+				sub_group.label = slot.type;
+				sub_group.values.resize(col_count);
+				sub_group.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
+				sub_group.row_conflict_all = conflict_all_t::only_one;
 
+				decode_schema_children_ref(sub_group, schema, first_data, first_size, col_count, all_subs, col_refs, obj_idx, slot);
+
+				for (size_t col = 0; col < col_count; ++col)
+				{
+					bool present = false;
+					if (col < col_refs.size())
+					{
+						for (const auto & ref_group : col_refs[col])
+						{
+							if (ref_group.object_index == obj_idx)
+							{
+								present = true;
+								break;
+							}
+						}
+					}
+
+					sub_group.values[col] = present ? slot.type : "";
+				}
+
+				sub_group.all_identical = check_all_identical(sub_group.values);
+
+				for (const auto & child : sub_group.children)
+				{
+					if (child.row_conflict_all > sub_group.row_conflict_all)
+						sub_group.row_conflict_all = child.row_conflict_all;
+
+					for (size_t col = 0; col < col_count && col < child.cell_conflict_this.size(); ++col)
+					{
+						if (child.cell_conflict_this[col] > sub_group.cell_conflict_this[col])
+							sub_group.cell_conflict_this[col] = child.cell_conflict_this[col];
+					}
+				}
+
+				compute_group_ranges(sub_group, col_count);
+
+				if (m_show_positions)
+				{
+					sub_group.label += " [";
 					for (size_t col = 0; col < col_count; ++col)
 					{
-						if (col >= all_subs.size())
-						{
-							field_child.values[col] = "";
-							continue;
-						}
+						if (col > 0)
+							sub_group.label += " ";
 
-						const auto result = find_ref_sub_record(all_subs[col], col_refs[col], obj_idx, slot.type, slot.occurrence);
-						if (!result.view.data)
-							field_child.values[col] = "";
+						if (col < sub_group.binary_ranges.size() && sub_group.binary_ranges[col].start >= 0)
+							sub_group.label += std::to_string(sub_group.binary_ranges[col].start) + ".." + std::to_string(sub_group.binary_ranges[col].end_pos);
 						else
-						{
-							field_child.values[col] = decode_field(fdef, result.view.data, result.view.size);
-							field_child.binary_ranges[col] = { result.binary_index, result.binary_index + 1 };
-							if (m_show_positions)
-								field_child.values[col] = "[" + std::to_string(result.binary_index) + "] " + field_child.values[col];
-						}
+							sub_group.label += "-";
 					}
-
-					field_child.all_identical = check_all_identical(field_child.values);
-					field_child.row_conflict_all = compute_conflict_all(field_child.values);
-					field_child.cell_conflict_this = compute_conflict_this(field_child.values);
-
-					if (field_child.row_conflict_all > group_row.row_conflict_all)
-						group_row.row_conflict_all = field_child.row_conflict_all;
-
-					for (size_t col = 0; col < col_count && col < field_child.cell_conflict_this.size(); ++col)
-					{
-						if (field_child.cell_conflict_this[col] > group_row.cell_conflict_this[col])
-							group_row.cell_conflict_this[col] = field_child.cell_conflict_this[col];
-					}
-
-					group_row.children.push_back(std::move(field_child));
+					sub_group.label += "]";
 				}
+
+				if (sub_group.row_conflict_all > group_row.row_conflict_all)
+					group_row.row_conflict_all = sub_group.row_conflict_all;
+
+				for (size_t col = 0; col < col_count && col < sub_group.cell_conflict_this.size(); ++col)
+				{
+					if (sub_group.cell_conflict_this[col] > group_row.cell_conflict_this[col])
+						group_row.cell_conflict_this[col] = sub_group.cell_conflict_this[col];
+				}
+
+				group_row.children.push_back(std::move(sub_group));
 			}
 			else
 			{
@@ -543,7 +580,7 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 						child_field.values[col] = "[" + std::to_string(result.binary_index) + "] " + child_field.values[col];
 				}
 
-				child_field.label = slot.type + " - " + make_sub_label(slot.type, m_record_type, first_size);
+				child_field.label = make_sub_label(slot.type, m_record_type, first_size);
 				child_field.all_identical = check_all_identical(child_field.values);
 				child_field.row_conflict_all = compute_conflict_all(child_field.values);
 				child_field.cell_conflict_this = compute_conflict_this(child_field.values);
@@ -610,6 +647,69 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 			group_row.label += "]";
 		}
 
-		m_rows.push_back(std::move(group_row));
-	}
+		return group_row;
+	};
+
+	auto build_section_group = [&](const std::string & section_label, const std::vector<uint32_t> & indices) -> view_node_t
+	{
+		view_node_t section;
+		section.type = "FRMR";
+		section.size = 0;
+		section.label = section_label;
+		section.values.resize(col_count);
+		section.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
+		section.row_conflict_all = conflict_all_t::only_one;
+
+		for (const auto & obj_idx : indices)
+		{
+			auto ref_group = build_ref_group(obj_idx);
+
+			if (ref_group.row_conflict_all > section.row_conflict_all)
+				section.row_conflict_all = ref_group.row_conflict_all;
+
+			for (size_t col = 0; col < col_count && col < ref_group.cell_conflict_this.size(); ++col)
+			{
+				if (ref_group.cell_conflict_this[col] > section.cell_conflict_this[col])
+					section.cell_conflict_this[col] = ref_group.cell_conflict_this[col];
+			}
+
+			section.children.push_back(std::move(ref_group));
+		}
+
+		for (size_t col = 0; col < col_count; ++col)
+		{
+			bool any_present = false;
+			if (col < col_refs.size())
+			{
+				for (const auto & ref_group : col_refs[col])
+				{
+					for (const auto & idx : indices)
+					{
+						if (ref_group.object_index == idx)
+						{
+							any_present = true;
+							break;
+						}
+					}
+
+					if (any_present)
+						break;
+				}
+			}
+
+			char count_buf[32];
+			std::snprintf(count_buf, sizeof(count_buf), "%zu references", indices.size());
+			section.values[col] = any_present ? std::string(count_buf) : "";
+		}
+
+		section.all_identical = check_all_identical(section.values);
+		compute_group_ranges(section, col_count);
+		return section;
+	};
+
+	if (!persistent_indices.empty())
+		m_rows.push_back(build_section_group("Persistent", persistent_indices));
+
+	if (!temporary_indices.empty())
+		m_rows.push_back(build_section_group("Temporary", temporary_indices));
 }

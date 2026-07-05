@@ -87,6 +87,8 @@ public:
 		return m_col_type_indices;
 	}
 
+	const view_node_t * node_from_index(const QModelIndex & index) const;
+
 private:
 	static void compute_group_ranges(view_node_t & group_node, size_t col_count);
 
@@ -145,7 +147,7 @@ private:
 	    size_t first_size,
 	    size_t col_count,
 	    const std::vector<std::vector<sub_record_view_t>> & all_subs,
-	    const std::vector<std::vector<struct cell_ref_group_t>> & col_refs,
+	    const std::vector<std::vector<struct cell_ref_view_t>> & col_refs,
 	    uint32_t object_index,
 	    const sub_slot_t & slot);
 
@@ -154,7 +156,7 @@ private:
 	    size_t first_size,
 	    size_t col_count,
 	    const std::vector<std::vector<sub_record_view_t>> & all_subs,
-	    const std::vector<std::vector<struct cell_ref_group_t>> & col_refs,
+	    const std::vector<std::vector<struct cell_ref_view_t>> & col_refs,
 	    uint32_t object_index,
 	    const sub_slot_t & slot);
 
@@ -191,9 +193,10 @@ private:
 	bool m_show_positions = false;
 };
 
-struct cell_ref_group_t
+struct cell_ref_view_t
 {
 	uint32_t object_index;
 	size_t start_idx;
 	size_t end_idx;
+	bool persistent;
 };

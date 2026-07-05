@@ -848,45 +848,23 @@ void plugin_workspace_view_t::on_view_selection_changed(const QModelIndex & curr
 		return;
 	}
 
-	const auto & visible = m_record_view->model()->rows();
-
-	const bool is_child = current.parent().isValid();
-	const int parent_row_idx = is_child ? current.parent().row() : current.row();
-	const int child_row_idx = is_child ? current.row() : -1;
-
-	if (parent_row_idx < 0 || parent_row_idx >= static_cast<int>(visible.size()))
+	const auto * node = m_record_view->model()->node_from_index(current);
+	if (!node)
 	{
 		m_preview->clear();
 		return;
 	}
 
-	auto read_view_value = [&](int target_col) -> std::string
+	auto read_node_value = [&](int target_col) -> std::string
 	{
-		if (target_col < 0)
+		if (target_col < 0 || target_col >= static_cast<int>(node->values.size()))
 			return {};
 
-		const auto & parent_row = visible[parent_row_idx];
-
-		if (child_row_idx >= 0)
-		{
-			if (child_row_idx >= static_cast<int>(parent_row.children.size()))
-				return {};
-
-			const auto & child = parent_row.children[child_row_idx];
-			if (target_col >= static_cast<int>(child.values.size()))
-				return {};
-
-			return child.values[target_col];
-		}
-
-		if (target_col >= static_cast<int>(parent_row.values.size()))
-			return {};
-
-		return parent_row.values[target_col];
+		return node->values[target_col];
 	};
 
-	const auto right_text = read_view_value(col);
-	const auto left_text = (col > 0) ? read_view_value(col - 1) : std::string{};
+	const auto right_text = read_node_value(col);
+	const auto left_text = (col > 0) ? read_node_value(col - 1) : std::string{};
 
 	if (right_text.empty() && left_text.empty())
 		m_preview->clear();
@@ -911,33 +889,18 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & global_pos, co
 	const auto & rec_type = m_record_view->model()->record_type();
 	const auto & record_id = m_record_view->model()->record_id();
 
-	const bool is_field_row = index.parent().isValid();
-	const auto & visible = m_record_view->model()->rows();
-
-	int parent_row_idx = -1;
-	int child_field_idx = -1;
-
-	if (is_field_row)
-	{
-		parent_row_idx = index.parent().row();
-		child_field_idx = index.row();
-	}
-	else
-	{
-		parent_row_idx = index.row();
-	}
-
-	if (parent_row_idx < 0 || parent_row_idx >= static_cast<int>(visible.size()))
+	const auto * node = m_record_view->model()->node_from_index(index);
+	if (!node)
 		return;
 
-	const auto & row = visible[parent_row_idx];
+	const auto & row = *node;
 
-	auto get_binary_idx = [&](const view_tree_model_t::view_node_t & node) -> int
+	auto get_binary_idx = [&](const view_tree_model_t::view_node_t & target_node) -> int
 	{
-		if (col < 0 || col >= static_cast<int>(node.binary_ranges.size()))
+		if (col < 0 || col >= static_cast<int>(target_node.binary_ranges.size()))
 			return -1;
 
-		return node.binary_ranges[col].start;
+		return target_node.binary_ranges[col].start;
 	};
 
 	const int binary_idx = get_binary_idx(row);
@@ -948,6 +911,14 @@ void plugin_workspace_view_t::on_view_context_menu(const QPoint & global_pos, co
 
 	const bool is_merge_sub_record = is_on_merge && !row.type.empty() && row.children.empty();
 	const bool is_merge_schema_row = is_on_merge && !row.type.empty() && !row.children.empty() && row.size > 0;
+
+	const bool is_field_row = index.parent().isValid();
+	const int parent_row_idx = is_field_row ? index.parent().row() : index.row();
+	const int child_field_idx = is_field_row ? index.row() : -1;
+
+	const auto & visible = m_record_view->model()->rows();
+	if (parent_row_idx < 0 || parent_row_idx >= static_cast<int>(visible.size()))
+		return;
 
 	QMenu menu(this);
 

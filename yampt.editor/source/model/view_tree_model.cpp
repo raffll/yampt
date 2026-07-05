@@ -386,6 +386,27 @@ const std::vector<view_tree_model_t::view_node_t> & view_tree_model_t::visible_r
 	return m_filtered_rows;
 }
 
+const view_tree_model_t::view_node_t * view_tree_model_t::node_from_index(const QModelIndex & index) const
+{
+	if (!index.isValid())
+		return nullptr;
+
+	auto * parent_ptr = static_cast<view_node_t *>(index.internalPointer());
+	if (!parent_ptr)
+	{
+		const auto & vrows = visible_rows();
+		if (index.row() < 0 || index.row() >= static_cast<int>(vrows.size()))
+			return nullptr;
+
+		return &vrows[index.row()];
+	}
+
+	if (index.row() < 0 || index.row() >= static_cast<int>(parent_ptr->children.size()))
+		return nullptr;
+
+	return &parent_ptr->children[index.row()];
+}
+
 QModelIndex view_tree_model_t::index(int row, int column, const QModelIndex & parent) const
 {
 	if (!hasIndex(row, column, parent))
@@ -394,14 +415,14 @@ QModelIndex view_tree_model_t::index(int row, int column, const QModelIndex & pa
 	if (!parent.isValid())
 		return createIndex(row, column, nullptr);
 
-	if (parent.internalPointer() != nullptr)
+	const auto * parent_node = node_from_index(parent);
+	if (!parent_node)
 		return {};
 
-	const auto & vrows = visible_rows();
-	if (parent.row() < 0 || parent.row() >= static_cast<int>(vrows.size()))
+	if (row < 0 || row >= static_cast<int>(parent_node->children.size()))
 		return {};
 
-	return createIndex(row, column, const_cast<view_node_t *>(&vrows[parent.row()]));
+	return createIndex(row, column, const_cast<view_node_t *>(parent_node));
 }
 
 QModelIndex view_tree_model_t::parent(const QModelIndex & child) const
@@ -409,15 +430,35 @@ QModelIndex view_tree_model_t::parent(const QModelIndex & child) const
 	if (!child.isValid())
 		return {};
 
-	auto * ptr = static_cast<view_node_t *>(child.internalPointer());
-	if (!ptr)
+	auto * parent_ptr = static_cast<view_node_t *>(child.internalPointer());
+	if (!parent_ptr)
 		return {};
 
 	const auto & vrows = visible_rows();
 	for (int i = 0; i < static_cast<int>(vrows.size()); ++i)
 	{
-		if (&vrows[i] == ptr)
+		if (&vrows[i] == parent_ptr)
 			return createIndex(i, 0, nullptr);
+	}
+
+	for (int i = 0; i < static_cast<int>(vrows.size()); ++i)
+	{
+		const auto & top = vrows[i];
+		for (int j = 0; j < static_cast<int>(top.children.size()); ++j)
+		{
+			if (&top.children[j] == parent_ptr)
+				return createIndex(j, 0, const_cast<view_node_t *>(&top));
+		}
+
+		for (int j = 0; j < static_cast<int>(top.children.size()); ++j)
+		{
+			const auto & mid = top.children[j];
+			for (int k = 0; k < static_cast<int>(mid.children.size()); ++k)
+			{
+				if (&mid.children[k] == parent_ptr)
+					return createIndex(k, 0, const_cast<view_node_t *>(&mid));
+			}
+		}
 	}
 
 	return {};
@@ -431,20 +472,15 @@ int view_tree_model_t::rowCount(const QModelIndex & parent) const
 	if (!parent.isValid())
 		return static_cast<int>(visible_rows().size());
 
-	if (parent.internalPointer() != nullptr)
+	const auto * node = node_from_index(parent);
+	if (!node)
 		return 0;
 
-	const auto & vrows = visible_rows();
-	if (parent.row() < 0 || parent.row() >= static_cast<int>(vrows.size()))
+	const bool is_group = !node->type.empty() && node->size == 0 && !node->children.empty();
+	if (node->children.size() == 1 && !is_group)
 		return 0;
 
-	const auto & node = vrows[parent.row()];
-	const auto & child_count = node.children.size();
-	const bool is_group = !node.type.empty() && node.size == 0 && !node.children.empty();
-	if (child_count == 1 && !is_group)
-		return 0;
-
-	return static_cast<int>(child_count);
+	return static_cast<int>(node->children.size());
 }
 
 int view_tree_model_t::columnCount(const QModelIndex &) const
@@ -553,85 +589,20 @@ static QVariant sub_record_foreground(
 	return QBrush(theme.conflict_this_foreground(cell_conflicts[col]));
 }
 
-static QVariant field_row_display(const view_tree_model_t::view_node_t & frow, int column)
-{
-	if (column == 0)
-		return QString::fromStdString(frow.label);
-
-	const int col = column - 1;
-	if (col < 0 || col >= static_cast<int>(frow.values.size()))
-		return {};
-
-	return truncate_for_display(frow.values[col]);
-}
-
-static QVariant field_row_background(const view_tree_model_t::view_node_t & frow, int column)
-{
-	if (frow.row_conflict_all < conflict_all_t::no_conflict)
-		return {};
-
-	const auto & theme = theme_system_t::instance();
-
-	if (column > 0)
-	{
-		const int col = column - 1;
-		if (col >= 0 && col < static_cast<int>(frow.values.size()) && frow.values[col].empty())
-		{
-			const auto active = theme.active_theme();
-			const auto raw = conflict_all_color_raw(frow.row_conflict_all, active);
-			if (active == theme_t::dark)
-				return QBrush(darker_hsl(raw, 0.78));
-
-			return QBrush(lighter_hsl(raw, 0.93));
-		}
-	}
-
-	return QBrush(theme.conflict_all_background(frow.row_conflict_all));
-}
-
 QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 {
 	if (!index.isValid())
 		return {};
 
-	auto * parent_ptr = static_cast<view_node_t *>(index.internalPointer());
-
-	if (!parent_ptr)
-	{
-		const auto & vrows = visible_rows();
-		if (index.row() < 0 || index.row() >= static_cast<int>(vrows.size()))
-			return {};
-
-		const auto & row = vrows[index.row()];
-
-		if (role == Qt::DisplayRole)
-			return sub_record_display(row, index.column());
-
-		if (role == Qt::BackgroundRole)
-			return sub_record_background(row, index.column());
-
-		if (role == Qt::ForegroundRole)
-		{
-			if (m_is_merge_pinned && is_merge_column(index.column()))
-				return QBrush(QColor(0, 128, 128));
-
-			return sub_record_foreground(
-			    row.cell_conflict_this, m_column_names.size(), index.column(), m_has_merge_column);
-		}
-
+	const auto * node = node_from_index(index);
+	if (!node)
 		return {};
-	}
-
-	if (index.row() < 0 || index.row() >= static_cast<int>(parent_ptr->children.size()))
-		return {};
-
-	const auto & frow = parent_ptr->children[index.row()];
 
 	if (role == Qt::DisplayRole)
-		return field_row_display(frow, index.column());
+		return sub_record_display(*node, index.column());
 
 	if (role == Qt::BackgroundRole)
-		return field_row_background(frow, index.column());
+		return sub_record_background(*node, index.column());
 
 	if (role == Qt::ForegroundRole)
 	{
@@ -639,7 +610,7 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 			return QBrush(QColor(0, 128, 128));
 
 		return sub_record_foreground(
-		    frow.cell_conflict_this, m_column_names.size(), index.column(), m_has_merge_column);
+		    node->cell_conflict_this, m_column_names.size(), index.column(), m_has_merge_column);
 	}
 
 	return {};

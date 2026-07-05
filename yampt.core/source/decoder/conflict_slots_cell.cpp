@@ -1,4 +1,5 @@
 #include "conflict_slots_cell.hpp"
+#include <algorithm>
 #include <cstring>
 #include <unordered_map>
 
@@ -142,7 +143,8 @@ static void collect_ref_group_slots(
 				continue;
 
 			std::unordered_map<std::string, int> type_count;
-			for (size_t j = ref.start_idx; j < ref.end_idx; ++j)
+			const size_t safe_end = std::min(ref.end_idx, parsed[i].size());
+			for (size_t j = ref.start_idx; j < safe_end; ++j)
 			{
 				const auto & sv = parsed[i][j];
 				int occ = type_count[sv.type]++;
@@ -182,7 +184,8 @@ static void align_ref_group_slots(
 			if (ref.object_index != object_index)
 				continue;
 
-			for (size_t j = ref.start_idx; j < ref.end_idx; ++j)
+			const size_t safe_end = std::min(ref.end_idx, parsed[i].size());
+			for (size_t j = ref.start_idx; j < safe_end; ++j)
 				ver_ref_indices[i][parsed[i][j].type].push_back(j);
 
 			break;
