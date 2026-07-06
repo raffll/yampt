@@ -292,35 +292,27 @@ Total: 275 source files, 33,251 lines of code across 5 projects.
 
 ## Architectural Issues
 
-### Issue 1: `tools_t` — God Class in Utility Clothing
+### Issue 1: `tools_t` — God Class in Utility Clothing (RESOLVED)
 
-**Problem:** `tools_t` (484 lines) is the most coupled class in the project. It holds:
-- Core domain types (`dict_t`, `chapter_t`, `record_entry_t`, `record_t`, `entry_t`)
-- Global mutable state (logger, error flag, debug flag, exe dir)
-- File I/O functions (`read_file`, `write_text`, `write_file`, `create_file`)
-- Byte conversion utilities
-- String manipulation helpers
-- Record type enumeration and conversion
-- Dialog type parsing
+**Resolution:** `tools_t` eliminated entirely. Replaced by:
+- `domain_types.hpp/.cpp` — Pure domain types (`rec_type_t`, `dict_t`, `chapter_t`, `record_entry_t`, `entry_t`, `record_t`) + `domain_types_t` static helpers (type conversion, byte conversion)
+- `app_logger.hpp/.cpp` — Global logger state (`add_log`, `reset_log`, `get_log`, error/debug/quiet flags, exe_dir)
+- `binary_file_io.hpp/.cpp` — Binary file read/write operations
+- `string_utils.hpp` (extended) — All string utilities (`erase_null_chars`, `trim_cr`, `replace_non_printable_with_dot`, `case_insensitive_equal`)
 
-Everything in the project depends on `tools_t`. The domain types embedded inside it force coupling even for code that only needs `dict_t` or `rec_type_t`.
+31 headers switched from `tools.hpp` to `domain_types.hpp`. Zero coupling to logger/IO for type-only consumers.
 
-**Proposed extraction:**
-1. `domain_types.hpp` — Move `dict_t`, `chapter_t`, `record_entry_t`, `entry_t` out as standalone types
-2. `record_io_t` — Move `read_file`, `write_text`, `write_file`, `create_file` into a dedicated file I/O class
-3. `app_logger_t` — Move `add_log`, `reset_log`, `get_log`, error/debug/quiet flags into a proper logger class
-4. Keep `tools_t` as a pure namespace-like static utility with only the stateless conversion functions
+### Issue 2: `dict_creator_t` — Strategy Pattern Extraction (RESOLVED)
 
-### Issue 2: `dict_creator_t` — One Class Split Across 4 .cpp Files (2,013 lines)
+**Resolution:** Split into a facade + 3 strategy classes + shared infrastructure:
+- `dict_creator.hpp/.cpp` (45+59 lines) — Thin facade, picks strategy based on mode detection
+- `creator_context.hpp` (82 lines) — Shared state struct (ESM readers, indexes, counters, dict)
+- `creator_helpers.hpp/.cpp` (64+721 lines) — All shared logic (insert methods, index builders, script parsing, adapt_translation, determine_status)
+- `creator_single.hpp/.cpp` (26+356 lines) — Single-file mode strategy
+- `creator_base.hpp/.cpp` (40+684 lines) — Unordered base mode strategy
+- `creator_ordered.hpp/.cpp` (35+518 lines) — Ordered base mode strategy
 
-**Problem:** Violates the steering rule "never split a single class across multiple .cpp files." The header alone has 60+ methods and 8+ index maps. Three distinct operational modes (single, base, base_ordered) coexist in one class.
-
-**Proposed extraction:**
-1. `dict_creator_single_t` — Extract single-mode logic into its own class
-2. `dict_creator_base_t` — Extract base-mode logic into its own class
-3. `dict_creator_base_ordered_t` — Extract ordered-base-mode into its own class
-4. `dict_creator_t` — Keep as factory/facade that constructs the appropriate strategy
-5. Index building (8 index maps) → `esm_index_builder_t` shared between modes
+Each mode is its own class with its own `.hpp/.cpp` pair. No class is split across multiple files.
 
 ### Issue 3: `view_tree_model_t` — One Class Split Across 4 .cpp Files (2,127 lines)
 
@@ -395,16 +387,16 @@ Everything in the project depends on `tools_t`. The domain types embedded inside
 
 ## Priority Ranking
 
-| # | Issue | Impact | Effort |
-|---|-------|--------|--------|
-| 1 | `tools_t` domain type extraction | High (reduces coupling everywhere) | Medium |
-| 2 | `dict_creator_t` split into strategy classes | High (largest class, most complex) | High |
-| 3 | `view_tree_model_t` decoder extraction | Medium (editor-only, already working) | Medium |
-| 4 | `main_window_t` further decomposition | Medium (translator-only) | Medium |
-| 5 | `plugin_scan_t` merge extraction | Medium (editor-only) | Low |
-| 6 | File-local static → class methods | Low (style, no functional change) | Low-Medium |
-| 7 | `record_conflict` → class | Low (small file) | Low |
-| 8 | `conflict_slots` → class | Low (working correctly) | Low |
+| # | Issue | Impact | Effort | Status |
+|---|-------|--------|--------|--------|
+| 1 | `tools_t` domain type extraction | High (reduces coupling everywhere) | Medium | **DONE** |
+| 2 | `dict_creator_t` split into strategy classes | High (largest class, most complex) | High | **DONE** |
+| 3 | `view_tree_model_t` decoder extraction | Medium (editor-only, already working) | Medium | |
+| 4 | `main_window_t` further decomposition | Medium (translator-only) | Medium | |
+| 5 | `plugin_scan_t` merge extraction | Medium (editor-only) | Low | |
+| 6 | File-local static → class methods | Low (style, no functional change) | Low-Medium | |
+| 7 | `record_conflict` → class | Low (small file) | Low | |
+| 8 | `conflict_slots` → class | Low (working correctly) | Low | |
 
 ---
 

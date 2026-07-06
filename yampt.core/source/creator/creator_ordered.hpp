@@ -2,6 +2,8 @@
 
 #include "creator_context.hpp"
 
+#include <string>
+
 class creator_ordered_t
 {
 public:
@@ -25,6 +27,9 @@ private:
 	void process_cell(size_t index);
 	void process_cell_default();
 	void process_cell_region();
+
+	void insert_entry_base(const std::string & key_text, const std::string & old_text,
+	    const std::string & new_text, rec_type_t type, status_t status);
 
 	creator_context_t & m_ctx;
 };

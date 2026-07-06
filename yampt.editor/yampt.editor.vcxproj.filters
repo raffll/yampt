@@ -25,7 +25,6 @@
     <ClCompile Include="source\patcher\patch_builder.cpp" />
     <ClCompile Include="source\view\nav_tree_view.cpp" />
     <ClCompile Include="source\view\record_view.cpp" />
-    <ClCompile Include="..\yampt.core\source\utility\tools.cpp" />
     <ClCompile Include="..\yampt.core\source\io\esm_reader.cpp" />
     <ClCompile Include="..\yampt.core\source\io\codepage.cpp" />
     <ClCompile Include="..\yampt.core\source\io\file_list.cpp" />

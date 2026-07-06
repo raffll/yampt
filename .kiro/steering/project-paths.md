@@ -6,14 +6,14 @@
 yampt/
 ├── yampt.core/             # Core library (C++ static lib) → yampt.lib
 │   ├── source/
-│   │   ├── creator/       # dict_creator_t + splits (base, single, ordered)
+│   │   ├── creator/       # dict_creator_t facade + strategy classes (single, base, ordered)
 │   │   ├── merger/        # dict_merger_t
 │   │   ├── converter/     # esm_converter_t, script_parser_t, scdt_patcher_t
 │   │   ├── translator/    # translation_engine_t
 │   │   ├── scanner/       # plugin_scan_t, plugin_index_t, record_conflict, conflict_enums, conflict_types
 │   │   ├── decoder/       # conflict_slots, sub_record_iter, sub_record_schema, view_tree_format
-│   │   ├── io/            # File format readers/writers (ESM, JSON, codepage, file_list, yaml_l10n)
-│   │   └── utility/       # Pure helpers (tools, string_utils, record_types, status_types, dict_kind)
+│   │   ├── io/            # File format readers/writers (ESM, JSON, codepage, file_list, yaml_l10n, binary_file_io)
+│   │   └── utility/       # Pure helpers (domain_types, app_logger, string_utils, record_types, status_types, dict_kind)
 │   └── yampt.core.vcxproj
 ├── yampt.cli/              # CLI entry point → yampt.exe (links yampt.lib)
 │   ├── source/

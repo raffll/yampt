@@ -74,9 +74,6 @@
     <ClCompile Include="..\yampt.core\source\io\codepage.cpp" />
     <ClCompile Include="..\yampt.core\source\merger\dict_merger.cpp" />
     <ClCompile Include="..\yampt.core\source\creator\dict_creator.cpp" />
-    <ClCompile Include="..\yampt.core\source\creator\dict_creator_single.cpp" />
-    <ClCompile Include="..\yampt.core\source\creator\dict_creator_base.cpp" />
-    <ClCompile Include="..\yampt.core\source\creator\dict_creator_base_ordered.cpp" />
     <ClCompile Include="..\yampt.core\source\converter\esm_converter.cpp" />
     <ClCompile Include="..\yampt.core\source\converter\esm_converter_records.cpp" />
     <ClCompile Include="..\yampt.core\source\converter\script_parser.cpp" />

@@ -58,7 +58,6 @@
     <ClCompile Include="source\session\sidebar_controller.cpp" />
     <ClCompile Include="source\session\plugin_operations_controller.cpp" />
     <ClCompile Include="source\highlighter\highlight_applier.cpp" />
-    <ClCompile Include="..\yampt.core\source\utility\tools.cpp" />
     <ClCompile Include="..\yampt.core\source\utility\keyword_trie.cpp" />
     <ClCompile Include="..\yampt.core\source\utility\char_diff.cpp" />
     <ClCompile Include="..\yampt.core\source\io\dict_reader.cpp" />
@@ -68,9 +67,6 @@
     <ClCompile Include="..\yampt.core\source\io\file_list.cpp" />
     <ClCompile Include="..\yampt.core\source\merger\dict_merger.cpp" />
     <ClCompile Include="..\yampt.core\source\creator\dict_creator.cpp" />
-    <ClCompile Include="..\yampt.core\source\creator\dict_creator_single.cpp" />
-    <ClCompile Include="..\yampt.core\source\creator\dict_creator_base.cpp" />
-    <ClCompile Include="..\yampt.core\source\creator\dict_creator_base_ordered.cpp" />
     <ClCompile Include="..\yampt.core\source\converter\esm_converter.cpp" />
     <ClCompile Include="..\yampt.core\source\converter\esm_converter_records.cpp" />
     <ClCompile Include="..\yampt.core\source\converter\script_parser.cpp" />

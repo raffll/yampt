@@ -4,6 +4,8 @@
 #include <hunspell/hunspell.hxx>
 #include <sstream>
 
+creator_context_t::~creator_context_t() = default;
+
 static bool is_number_or_punct(char c)
 {
 	return (c >= '0' && c <= '9');

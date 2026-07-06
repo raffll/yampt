@@ -2,6 +2,10 @@
 
 #include "creator_context.hpp"
 
+#include <set>
+#include <unordered_map>
+#include <vector>
+
 class creator_base_t
 {
 public:
@@ -20,6 +24,9 @@ private:
 	void make_bnam();
 	void make_dial();
 	void make_cell();
+
+	void insert_entry_base(const std::string & key_text, const std::string & old_text,
+	    const std::string & new_text, rec_type_t type, status_t status);
 
 	void build_sctx_schd_index(std::unordered_map<std::string, size_t> & schd_index);
 	void match_sctx_messages(const std::string & script_name,

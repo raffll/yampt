@@ -4,11 +4,11 @@
 #include "../utility/domain_types.hpp"
 #include "text_match_index.hpp"
 
+#include <hunspell/hunspell.hxx>
 #include <memory>
 #include <set>
 #include <unordered_map>
 
-class Hunspell;
 class translation_engine_t;
 
 enum class base_mode_t
@@ -61,6 +61,8 @@ struct creator_context_t
 		dict = domain_types_t::initialize_dict();
 	}
 
+	~creator_context_t();
+
 	void reset_counters()
 	{
 		counter_created = 0;
@@ -70,12 +72,12 @@ struct creator_context_t
 		counter_all = 0;
 	}
 
-	bool is_loaded() const
+	bool is_loaded()
 	{
 		return esm.is_loaded();
 	}
 
-	bool is_both_loaded() const
+	bool is_both_loaded()
 	{
 		return esm.is_loaded() && esm_ext.is_loaded();
 	}
