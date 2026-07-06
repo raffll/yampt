@@ -1,8 +1,8 @@
 #include <catch2/catch_all.hpp>
-#include <utility/app_logger.hpp>
 #include <controller/editor_controller.hpp>
 #include <io/dict_writer.hpp>
 #include <model/dict_document.hpp>
+#include <utility/app_logger.hpp>
 #include <utility/string_utils.hpp>
 #include <filesystem>
 

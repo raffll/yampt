@@ -28,7 +28,7 @@ rc::Gen<std::set<std::string>> gen_plugin_set()
 
 } // namespace
 
-TEST_CASE("plugin_session_t, persistence round-trip", "[pbt]")
+TEST_CASE("plugin_session_t::save, persistence round-trip", "[pbt]")
 {
 	rc::prop(
 	    "excluded and patch plugins survive save/restore cycle",

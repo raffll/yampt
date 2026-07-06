@@ -1,7 +1,7 @@
 #include "esm_reader.hpp"
+#include "../utility/app_logger.hpp"
 #include "../utility/string_utils.hpp"
 #include "binary_file_io.hpp"
-#include "../utility/app_logger.hpp"
 
 esm_reader_t::esm_reader_t(const std::string & path)
 {

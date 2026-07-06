@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../utility/domain_types.hpp"
-
 #include <string>
 #include <vector>
 

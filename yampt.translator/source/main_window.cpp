@@ -1,5 +1,4 @@
 #include "main_window.hpp"
-#include <utility/app_logger.hpp>
 #include "dialog/dict_selection_dialog.hpp"
 #include "dialog/find_replace_dialog.hpp"
 #include "dialog/first_run_dialog.hpp"
@@ -30,6 +29,7 @@
 #include "view/validation_view.hpp"
 #include <io/dict_writer.hpp>
 #include <merger/dict_merger.hpp>
+#include <utility/app_logger.hpp>
 #include <utility/string_utils.hpp>
 #include <algorithm>
 #include <filesystem>
@@ -80,9 +80,8 @@ main_window_t::main_window_t(QWidget * parent)
 	setMinimumSize(800, 600);
 
 	m_type_filter = {
-		rec_type_t::cell, rec_type_t::dial, rec_type_t::info, rec_type_t::fnam,
-		rec_type_t::text, rec_type_t::gmst, rec_type_t::desc, rec_type_t::rnam,
-		rec_type_t::indx, rec_type_t::sctx,
+		rec_type_t::cell, rec_type_t::dial, rec_type_t::info, rec_type_t::fnam, rec_type_t::text,
+		rec_type_t::gmst, rec_type_t::desc, rec_type_t::rnam, rec_type_t::indx, rec_type_t::sctx,
 	};
 
 	setup_menu_bar();
@@ -754,9 +753,8 @@ void main_window_t::restore_filter_state(const std::string & path)
 	else
 	{
 		m_type_filter = {
-			rec_type_t::cell, rec_type_t::dial, rec_type_t::info, rec_type_t::fnam,
-			rec_type_t::text, rec_type_t::gmst, rec_type_t::desc, rec_type_t::rnam,
-			rec_type_t::indx, rec_type_t::sctx,
+			rec_type_t::cell, rec_type_t::dial, rec_type_t::info, rec_type_t::fnam, rec_type_t::text,
+			rec_type_t::gmst, rec_type_t::desc, rec_type_t::rnam, rec_type_t::indx, rec_type_t::sctx,
 		};
 		m_status_filter.clear();
 		m_type_filter_solo = false;

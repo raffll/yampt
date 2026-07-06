@@ -1,6 +1,6 @@
 #include "dict_reader.hpp"
-#include "binary_file_io.hpp"
 #include "../utility/app_logger.hpp"
+#include "binary_file_io.hpp"
 #include "json_reader.hpp"
 
 dict_reader_t::dict_reader_t(const std::string & path)
@@ -98,21 +98,24 @@ void dict_reader_t::validate_entry(record_entry_t & entry, rec_type_t type)
 	if (type == rec_type_t::cell && entry.new_text.size() > 63)
 	{
 		app_logger_t::add_log(
-		    "[warning] " + domain_types::type_to_str(type) + ": invalid, more than 63 bytes in " + entry.key_text + "\r\n");
+		    "[warning] " + domain_types::type_to_str(type) + ": invalid, more than 63 bytes in " + entry.key_text +
+		    "\r\n");
 		return;
 	}
 
 	if (type == rec_type_t::rnam && entry.new_text.size() > 32)
 	{
 		app_logger_t::add_log(
-		    "[warning] " + domain_types::type_to_str(type) + ": invalid, more than 32 bytes in " + entry.key_text + "\r\n");
+		    "[warning] " + domain_types::type_to_str(type) + ": invalid, more than 32 bytes in " + entry.key_text +
+		    "\r\n");
 		return;
 	}
 
 	if (type == rec_type_t::fnam && entry.new_text.size() > 31)
 	{
 		app_logger_t::add_log(
-		    "[warning] " + domain_types::type_to_str(type) + ": invalid, more than 31 bytes in " + entry.key_text + "\r\n");
+		    "[warning] " + domain_types::type_to_str(type) + ": invalid, more than 31 bytes in " + entry.key_text +
+		    "\r\n");
 		return;
 	}
 

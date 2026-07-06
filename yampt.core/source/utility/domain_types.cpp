@@ -1,7 +1,6 @@
 #include "domain_types.hpp"
 #include "record_types.hpp"
 #include "string_utils.hpp"
-
 #include <cassert>
 #include <iomanip>
 #include <sstream>
@@ -61,10 +60,9 @@ const record_entry_t * chapter_t::find_by_old_text(const std::string & old_text)
 dict_t domain_types::initialize_dict()
 {
 	return {
-		{ rec_type_t::cell, {} }, { rec_type_t::dial, {} }, { rec_type_t::indx, {} },
-		{ rec_type_t::rnam, {} }, { rec_type_t::desc, {} }, { rec_type_t::gmst, {} },
-		{ rec_type_t::fnam, {} }, { rec_type_t::info, {} }, { rec_type_t::text, {} },
-		{ rec_type_t::bnam, {} }, { rec_type_t::sctx, {} },
+		{ rec_type_t::cell, {} }, { rec_type_t::dial, {} }, { rec_type_t::indx, {} }, { rec_type_t::rnam, {} },
+		{ rec_type_t::desc, {} }, { rec_type_t::gmst, {} }, { rec_type_t::fnam, {} }, { rec_type_t::info, {} },
+		{ rec_type_t::text, {} }, { rec_type_t::bnam, {} }, { rec_type_t::sctx, {} },
 	};
 }
 
@@ -131,12 +129,10 @@ std::string domain_types::type_to_str(rec_type_t type)
 rec_type_t domain_types::str_to_type(const std::string & str)
 {
 	static const std::map<std::string, rec_type_t> str2type {
-		{ "CELL", rec_type_t::cell }, { "DIAL", rec_type_t::dial },
-		{ "INDX", rec_type_t::indx }, { "RNAM", rec_type_t::rnam },
-		{ "DESC", rec_type_t::desc }, { "GMST", rec_type_t::gmst },
-		{ "FNAM", rec_type_t::fnam }, { "INFO", rec_type_t::info },
-		{ "TEXT", rec_type_t::text }, { "BNAM", rec_type_t::bnam },
-		{ "SCTX", rec_type_t::sctx },
+		{ "CELL", rec_type_t::cell }, { "DIAL", rec_type_t::dial }, { "INDX", rec_type_t::indx },
+		{ "RNAM", rec_type_t::rnam }, { "DESC", rec_type_t::desc }, { "GMST", rec_type_t::gmst },
+		{ "FNAM", rec_type_t::fnam }, { "INFO", rec_type_t::info }, { "TEXT", rec_type_t::text },
+		{ "BNAM", rec_type_t::bnam }, { "SCTX", rec_type_t::sctx },
 	};
 
 	auto search = str2type.find(str);

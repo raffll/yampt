@@ -16,8 +16,7 @@
 
 dict_operations_controller_t::dict_operations_controller_t(dict_operations_deps_t deps)
     : m_deps(std::move(deps))
-{
-}
+{}
 
 void dict_operations_controller_t::on_merge()
 {
@@ -111,8 +110,7 @@ void dict_operations_controller_t::start_batch_translation(dict_document_t * dic
 		return;
 	}
 
-	m_deps.translation_view.append_log(
-	    "[info] translating " + std::to_string(state->work_items.size()) + " entries\n");
+	m_deps.translation_view.append_log("[info] translating " + std::to_string(state->work_items.size()) + " entries\n");
 
 	auto * timer = new QTimer(m_deps.parent_widget);
 	timer->setInterval(0);

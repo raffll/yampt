@@ -25,10 +25,7 @@ public:
 	}
 
 	result_t make_dict(const std::string & plugin_path, codepage_t encoding);
-	result_t make_dict_with_base(
-	    const std::string & plugin_path,
-	    const dict_t & base_dict,
-	    codepage_t encoding);
+	result_t make_dict_with_base(const std::string & plugin_path, const dict_t & base_dict, codepage_t encoding);
 	result_t make_base(
 	    const std::string & foreign_path,
 	    const std::string & native_path,

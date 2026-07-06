@@ -1,11 +1,10 @@
 #include "creator_ordered.hpp"
-#include "creator_helpers.hpp"
 #include "../utility/app_logger.hpp"
+#include "creator_helpers.hpp"
 
 creator_ordered_t::creator_ordered_t(creator_context_t & context)
     : m_ctx(context)
-{
-}
+{}
 
 void creator_ordered_t::run()
 {
@@ -256,8 +255,7 @@ void creator_ordered_t::process_dial(size_t i, std::string & dial_type, std::str
 	if (dial_type != "T")
 		return;
 
-	insert_entry_base(
-	    dial_foreign_name, dial_foreign_name, native_name, rec_type_t::dial, status_t::translated);
+	insert_entry_base(dial_foreign_name, dial_foreign_name, native_name, rec_type_t::dial, status_t::translated);
 }
 
 void creator_ordered_t::attach_speaker_metadata(const std::string & key_text, size_t record_index)
@@ -282,7 +280,9 @@ void creator_ordered_t::attach_speaker_metadata(const std::string & key_text, si
 
 	std::string gender;
 	if (m_ctx.esm_ref.get_value().exist)
-		gender = ((domain_types::convert_string_byte_array_to_uint(m_ctx.esm_ref.get_value().content) & 0x0001) != 0) ? "F" : "M";
+		gender = ((domain_types::convert_string_byte_array_to_uint(m_ctx.esm_ref.get_value().content) & 0x0001) != 0)
+		             ? "F"
+		             : "M";
 
 	auto * entry = m_ctx.dict.at(rec_type_t::info).find(key_text);
 	if (!entry)
@@ -292,10 +292,7 @@ void creator_ordered_t::attach_speaker_metadata(const std::string & key_text, si
 	entry->gender = gender;
 }
 
-void creator_ordered_t::process_info(
-    size_t i,
-    const std::string & dial_type,
-    const std::string & dial_foreign_name)
+void creator_ordered_t::process_info(size_t i, const std::string & dial_type, const std::string & dial_foreign_name)
 {
 	m_ctx.esm.set_key("INAM");
 	if (!m_ctx.esm.get_key().exist)
@@ -479,8 +476,7 @@ void creator_ordered_t::insert_entry_base(
 	m_ctx.counter_all++;
 
 	const bool is_text_keyed =
-	    (type == rec_type_t::cell || type == rec_type_t::dial || type == rec_type_t::sctx ||
-	     type == rec_type_t::bnam);
+	    (type == rec_type_t::cell || type == rec_type_t::dial || type == rec_type_t::sctx || type == rec_type_t::bnam);
 
 	auto * existing = m_ctx.dict.at(type).find(key_text);
 	if (existing && is_text_keyed)

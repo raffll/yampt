@@ -1,7 +1,7 @@
 #include "interface/user_interface.hpp"
 #include <io/binary_file_io.hpp>
-#include <utility/includes.hpp>
 #include <utility/app_logger.hpp>
+#include <utility/includes.hpp>
 
 int main(int argc, char * argv[])
 {

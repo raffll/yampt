@@ -76,7 +76,7 @@ rc::Gen<operation_t> gen_operation()
 
 } // namespace
 
-TEST_CASE("patch_builder_t, collection invariants", "[pbt]")
+TEST_CASE("patch_builder_t::add_record, collection invariants", "[pbt]")
 {
 	rc::prop(
 	    "Validates: Requirements 5.1 - add increases count and find_content returns content",

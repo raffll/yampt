@@ -1,10 +1,10 @@
 #include "plugin_scan.hpp"
-#include "../utility/string_utils.hpp"
-#include "../utility/includes.hpp"
-#include "../utility/app_logger.hpp"
 #include "../decoder/sub_record_iter.hpp"
 #include "../decoder/sub_record_schema.hpp"
 #include "../decoder/view_tree_format.hpp"
+#include "../utility/app_logger.hpp"
+#include "../utility/includes.hpp"
+#include "../utility/string_utils.hpp"
 #include "record_conflict.hpp"
 #include <algorithm>
 #include <cstring>
@@ -155,13 +155,15 @@ struct conflict_accumulator_t
 
 	void accumulate(const std::vector<std::string> & values, bool skip_non_existent = false)
 	{
-		const auto level = skip_non_existent ? record_conflict::compute_conflict_all_skip_empty(values) : record_conflict::compute_conflict_all(values);
+		const auto level = skip_non_existent ? record_conflict::compute_conflict_all_skip_empty(values)
+		                                     : record_conflict::compute_conflict_all(values);
 
 		if (level > worst_all)
 			worst_all = level;
 
 		per_slot_this.push_back(
-		    skip_non_existent ? record_conflict::compute_conflict_this_skip_empty(values) : record_conflict::compute_conflict_this(values));
+		    skip_non_existent ? record_conflict::compute_conflict_this_skip_empty(values)
+		                      : record_conflict::compute_conflict_this(values));
 	}
 };
 

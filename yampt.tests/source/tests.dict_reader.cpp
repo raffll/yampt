@@ -2,7 +2,7 @@
 #include <io/dict_reader.hpp>
 #include <utility/app_logger.hpp>
 
-TEST_CASE("dict_reader_t, not loaded for nonexistent file", "[u]")
+TEST_CASE("dict_reader_t::load, not loaded for nonexistent file", "[u]")
 {
 	dict_reader_t reader("nonexistent_file_12345.json");
 	REQUIRE(reader.is_loaded() == false);

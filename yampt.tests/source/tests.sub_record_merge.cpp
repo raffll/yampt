@@ -59,7 +59,7 @@ static std::string make_bytes(const std::vector<uint8_t> & bytes)
 }
 
 // ============================================================================
-// Requirement 1: Three-Way Sub-Record Merge — Generic
+// Requirement 1: Three-Way Sub-Record Merge â€” Generic
 // ============================================================================
 
 TEST_CASE("sub_record_merge_t::merge, 2 versions returns unchanged", "[u]")
@@ -784,7 +784,7 @@ TEST_CASE("sub_record_merge_t::merge, CELL returns winner unchanged", "[u]")
 // Sub-record patching (drag and drop operation)
 // ============================================================================
 
-TEST_CASE("sub_record_merge_t, patch single sub-record by index", "[u]")
+TEST_CASE("sub_record_merge_t::patch, single sub-record by index", "[u]")
 {
 	auto merge_content = make_record(
 	    "WEAP",
@@ -813,7 +813,7 @@ TEST_CASE("sub_record_merge_t, patch single sub-record by index", "[u]")
 	REQUIRE(patched.find("old_enchant") == std::string::npos);
 }
 
-TEST_CASE("sub_record_merge_t, patch appends if not in merge", "[u]")
+TEST_CASE("sub_record_merge_t::patch, appends if not in merge", "[u]")
 {
 	auto merge_content =
 	    make_record("BSGN", make_sub("NAME", make_string("sign_id")) + make_sub("FNAM", make_string("Sign Name")));
@@ -839,7 +839,7 @@ TEST_CASE("sub_record_merge_t, patch appends if not in merge", "[u]")
 	REQUIRE(patched.find("Sign Name") != std::string::npos);
 }
 
-TEST_CASE("sub_record_merge_t, patch second occurrence by index", "[u]")
+TEST_CASE("sub_record_merge_t::patch, second occurrence by index", "[u]")
 {
 	auto merge_content = make_record(
 	    "BSGN",
@@ -880,7 +880,7 @@ TEST_CASE("sub_record_merge_t, patch second occurrence by index", "[u]")
 // Binary index resolution (col_type_indices mapping)
 // ============================================================================
 
-TEST_CASE("sub_record_merge_t, binary index generic no reorder", "[u]")
+TEST_CASE("sub_record_merge_t::patch, binary index generic no reorder", "[u]")
 {
 	auto content = make_record(
 	    "WEAP",
@@ -898,7 +898,7 @@ TEST_CASE("sub_record_merge_t, binary index generic no reorder", "[u]")
 	REQUIRE(type_indices["ENAM"][0] == 2);
 }
 
-TEST_CASE("sub_record_merge_t, binary index multiple same type", "[u]")
+TEST_CASE("sub_record_merge_t::patch, binary index multiple same type", "[u]")
 {
 	auto content = make_record(
 	    "BSGN",
@@ -921,7 +921,7 @@ TEST_CASE("sub_record_merge_t, binary index multiple same type", "[u]")
 	REQUIRE(subs[type_indices["NPCS"][2]].data.find("ability_c") != std::string::npos);
 }
 
-TEST_CASE("sub_record_merge_t, patch by binary index not occurrence", "[u]")
+TEST_CASE("sub_record_merge_t::patch, by binary index not occurrence", "[u]")
 {
 	auto source_content = make_record(
 	    "BSGN",
@@ -961,7 +961,7 @@ TEST_CASE("sub_record_merge_t, patch by binary index not occurrence", "[u]")
 	REQUIRE(patched.find("spell_old") == std::string::npos);
 }
 
-TEST_CASE("sub_record_merge_t, reordered list binary index", "[u]")
+TEST_CASE("sub_record_merge_t::patch, reordered list binary index", "[u]")
 {
 	auto content = make_record(
 	    "LEVC",

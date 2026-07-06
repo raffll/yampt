@@ -45,8 +45,8 @@ static std::string extract_info_prefix(const std::string & key_text)
 
 static bool has_sub_type(rec_type_t type)
 {
-	return type == rec_type_t::info || type == rec_type_t::bnam ||
-	       type == rec_type_t::fnam || type == rec_type_t::desc || type == rec_type_t::indx;
+	return type == rec_type_t::info || type == rec_type_t::bnam || type == rec_type_t::fnam ||
+	       type == rec_type_t::desc || type == rec_type_t::indx;
 }
 
 static std::string_view lookup_display_name(rec_type_t type, std::string_view prefix)

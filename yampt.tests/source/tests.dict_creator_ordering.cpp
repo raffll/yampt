@@ -1,7 +1,7 @@
 #include <catch2/catch_all.hpp>
+#include <creator/dict_creator.hpp>
 #include <io/binary_file_io.hpp>
 #include <utility/app_logger.hpp>
-#include <creator/dict_creator.hpp>
 #include <cstring>
 #include <filesystem>
 
@@ -57,7 +57,7 @@ static std::string make_cell_data(bool interior, int32_t grid_x = 0, int32_t gri
 	return data;
 }
 
-TEST_CASE("dict_creator_t, dial before info ordering", "[i]")
+TEST_CASE("dict_creator_t::make_dict, dial before info ordering", "[i]")
 {
 	auto native_dial_body = make_sub_record("DATA", make_dial_data_topic()) +
 	                        make_sub_record("NAME", make_null_terminated("zwiadowca kwama"));
@@ -101,7 +101,7 @@ TEST_CASE("dict_creator_t, dial before info ordering", "[i]")
 	REQUIRE(entry.new_text == "To jest zwiadowca kwama.");
 }
 
-TEST_CASE("dict_creator_t, cell matching sequence", "[i]")
+TEST_CASE("dict_creator_t::make_dict, cell matching sequence", "[i]")
 {
 	auto dodt_data = std::string(24, '\x01');
 	auto frmr_data = domain_types::convert_uint_to_string_byte_array(1);

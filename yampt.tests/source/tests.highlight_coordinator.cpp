@@ -4,7 +4,7 @@
 #include <rapidcheck/catch.h>
 #include <rapidcheck.h>
 
-TEST_CASE("highlight_coordinator_t, position bounds", "[pbt]")
+TEST_CASE("highlight_coordinator_t::find_annotation_highlights, position bounds", "[pbt]")
 {
 	rc::prop(
 	    "all highlights are bounded by input text",

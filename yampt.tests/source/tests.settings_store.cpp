@@ -43,7 +43,7 @@ rc::Gen<theme_t> gen_theme()
 
 } // namespace
 
-TEST_CASE("settings_store_t, round-trip", "[pbt]")
+TEST_CASE("settings_store_t::save, round-trip", "[pbt]")
 {
 	rc::prop(
 	    "Validates: Requirements 15.1",

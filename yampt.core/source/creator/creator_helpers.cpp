@@ -21,8 +21,7 @@ void creator_helpers::insert_entry_single(
 	ctx.counter_all++;
 
 	const bool is_text_keyed =
-	    (type == rec_type_t::cell || type == rec_type_t::dial || type == rec_type_t::sctx ||
-	     type == rec_type_t::bnam);
+	    (type == rec_type_t::cell || type == rec_type_t::dial || type == rec_type_t::sctx || type == rec_type_t::bnam);
 
 	auto * existing = ctx.dict.at(type).find(key_text);
 	if (existing && is_text_keyed)
@@ -57,8 +56,7 @@ void creator_helpers::insert_entry_base(
 	ctx.counter_all++;
 
 	const bool is_text_keyed =
-	    (type == rec_type_t::cell || type == rec_type_t::dial || type == rec_type_t::sctx ||
-	     type == rec_type_t::bnam);
+	    (type == rec_type_t::cell || type == rec_type_t::dial || type == rec_type_t::sctx || type == rec_type_t::bnam);
 
 	auto * existing = ctx.dict.at(type).find(key_text);
 	if (existing && is_text_keyed)
@@ -279,8 +277,7 @@ void creator_helpers::insert_entry_single_with_base(
 	ctx.counter_all++;
 
 	const bool is_text_keyed =
-	    (type == rec_type_t::cell || type == rec_type_t::dial || type == rec_type_t::sctx ||
-	     type == rec_type_t::bnam);
+	    (type == rec_type_t::cell || type == rec_type_t::dial || type == rec_type_t::sctx || type == rec_type_t::bnam);
 
 	auto * existing = ctx.dict.at(type).find(key_text);
 	if (existing && is_text_keyed)
@@ -353,8 +350,7 @@ std::vector<std::string> creator_helpers::make_script_messages(const std::string
 				continue;
 
 			if (keyword_pos > 0 &&
-			    (std::isalnum(static_cast<unsigned char>(line_lc[keyword_pos - 1])) ||
-			     line_lc[keyword_pos - 1] == '_'))
+			    (std::isalnum(static_cast<unsigned char>(line_lc[keyword_pos - 1])) || line_lc[keyword_pos - 1] == '_'))
 				continue;
 
 			if (keyword_pos + keyword.size() < line_lc.size() &&
@@ -491,8 +487,7 @@ void creator_helpers::build_rnam_index(creator_context_t & ctx)
 		ctx.esm_ref.set_value("RNAM");
 		while (ctx.esm_ref.get_value().exist)
 		{
-			const auto key = ctx.esm_ref.get_key().text + "^" +
-			                 std::to_string(ctx.esm_ref.get_value().counter);
+			const auto key = ctx.esm_ref.get_key().text + "^" + std::to_string(ctx.esm_ref.get_value().counter);
 			ctx.rnam_index.insert({ key, ctx.esm_ref.get_value().text });
 			ctx.esm_ref.set_next_value("RNAM");
 		}
@@ -528,8 +523,8 @@ void creator_helpers::build_info_index(creator_context_t & ctx)
 			ctx.esm_ref.set_key("DATA");
 			ctx.esm_ref.set_value("NAME");
 			if (ctx.esm_ref.get_key().exist && ctx.esm_ref.get_value().exist)
-				dial_prefix = domain_types::get_dialog_type(ctx.esm_ref.get_key().content) + "^" +
-				              ctx.esm_ref.get_value().text;
+				dial_prefix =
+				    domain_types::get_dialog_type(ctx.esm_ref.get_key().content) + "^" + ctx.esm_ref.get_value().text;
 
 			continue;
 		}
@@ -687,10 +682,7 @@ std::string creator_helpers::adapt_translation(
 	return result;
 }
 
-void creator_helpers::enrich_info_speaker(
-    creator_context_t & ctx,
-    const std::string & key_text,
-    size_t record_index)
+void creator_helpers::enrich_info_speaker(creator_context_t & ctx, const std::string & key_text, size_t record_index)
 {
 	ctx.esm.select_record(record_index);
 	ctx.esm.set_value("ONAM");
@@ -712,7 +704,8 @@ void creator_helpers::enrich_info_speaker(
 
 	std::string gender;
 	if (ctx.esm.get_value().exist)
-		gender = ((domain_types::convert_string_byte_array_to_uint(ctx.esm.get_value().content) & 0x0001) != 0) ? "F" : "M";
+		gender =
+		    ((domain_types::convert_string_byte_array_to_uint(ctx.esm.get_value().content) & 0x0001) != 0) ? "F" : "M";
 
 	auto * entry = ctx.dict.at(rec_type_t::info).find(key_text);
 	if (!entry)

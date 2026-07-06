@@ -101,7 +101,8 @@ bool esm_converter_t::make_new_text(const entry_t & entry, std::string & new_tex
 	}
 
 	counter_unchanged++;
-	app_logger_t::add_log("[warning] unchanged " + domain_types::type_to_str(entry.type) + ": " + entry.key_text + "\r\n", true);
+	app_logger_t::add_log(
+	    "[warning] unchanged " + domain_types::type_to_str(entry.type) + ": " + entry.key_text + "\r\n", true);
 	return false;
 }
 

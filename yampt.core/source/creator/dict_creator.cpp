@@ -1,6 +1,6 @@
 #include "dict_creator.hpp"
-#include "../utility/app_logger.hpp"
 #include "../translator/translation_engine.hpp"
+#include "../utility/app_logger.hpp"
 #include "creator_base.hpp"
 #include "creator_ordered.hpp"
 #include "creator_single.hpp"

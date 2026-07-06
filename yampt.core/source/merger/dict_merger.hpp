@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../io/dict_reader.hpp"
-#include "../utility/includes.hpp"
 #include "../utility/domain_types.hpp"
+#include "../utility/includes.hpp"
 
 class dict_merger_t
 {

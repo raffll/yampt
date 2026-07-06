@@ -1,7 +1,7 @@
 #pragma once
 
-#include <utility/keyword_trie.hpp>
 #include <utility/domain_types.hpp>
+#include <utility/keyword_trie.hpp>
 #include <string>
 #include <unordered_map>
 #include <vector>

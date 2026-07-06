@@ -1,7 +1,7 @@
 #pragma once
 
-#include <utility/status_types.hpp>
 #include <utility/domain_types.hpp>
+#include <utility/status_types.hpp>
 #include <set>
 #include <string>
 #include <unordered_map>

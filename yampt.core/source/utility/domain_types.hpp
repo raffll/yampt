@@ -1,7 +1,6 @@
 #pragma once
 
 #include "status_types.hpp"
-
 #include <map>
 #include <string>
 #include <unordered_map>

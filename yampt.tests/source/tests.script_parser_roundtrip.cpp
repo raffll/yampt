@@ -109,7 +109,7 @@ generated_script_t generate_script(std::mt19937 & rng)
 
 } // namespace
 
-TEST_CASE("script_parser_t, round-trip identity for untranslated cells", "[u]")
+TEST_CASE("script_parser_t::convert_script, round-trip identity for untranslated cells", "[u]")
 {
 	const auto seed = GENERATE(range(0, 100));
 	std::mt19937 rng(static_cast<unsigned>(seed));
@@ -122,8 +122,7 @@ TEST_CASE("script_parser_t, round-trip identity for untranslated cells", "[u]")
 		merger.add_record(rec_type_t::cell, cell_name, cell_name);
 	}
 
-	script_parser_t parser(
-	    rec_type_t::sctx, merger, "TestScript", "test.esm", script_data.source, script_data.scdt);
+	script_parser_t parser(rec_type_t::sctx, merger, "TestScript", "test.esm", script_data.source, script_data.scdt);
 
 	REQUIRE(parser.get_new_script() == script_data.source);
 	REQUIRE(parser.get_new_scdt() == script_data.scdt);

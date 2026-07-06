@@ -43,7 +43,7 @@ static std::string make_body_part(uint32_t index, const std::string & male, cons
 	       make_sub("CNAM", make_string(female));
 }
 
-TEST_CASE("build_armor_slots, aligns body parts by INDX value", "[u]")
+TEST_CASE("conflict_slots::build, aligns body parts by INDX value", "[u]")
 {
 	auto v1_subs = make_sub("NAME", make_string("armor_id")) + make_body_part(0, "head_m", "head_f") +
 	               make_body_part(2, "chest_m", "chest_f");
@@ -89,7 +89,7 @@ TEST_CASE("build_armor_slots, aligns body parts by INDX value", "[u]")
 	REQUIRE(found_indx_2);
 }
 
-TEST_CASE("build_armor_slots, missing part shows SIZE_MAX", "[u]")
+TEST_CASE("conflict_slots::build, missing part shows SIZE_MAX", "[u]")
 {
 	auto v1_subs = make_sub("NAME", make_string("armor_id")) + make_body_part(0, "head_m", "head_f") +
 	               make_body_part(1, "hair_m", "hair_f");
@@ -120,7 +120,7 @@ TEST_CASE("build_armor_slots, missing part shows SIZE_MAX", "[u]")
 	REQUIRE(found_missing);
 }
 
-TEST_CASE("build_armor_slots, header sub-records not in body part groups", "[u]")
+TEST_CASE("conflict_slots::build, header sub-records not in body part groups", "[u]")
 {
 	auto subs = make_sub("NAME", make_string("armor_id")) + make_sub("FNAM", make_string("Display Name")) +
 	            make_body_part(0, "head_m", "head_f");

@@ -60,7 +60,7 @@ rc::Gen<std::string> gen_non_empty_text()
 
 } // namespace
 
-TEST_CASE("eet_converter_t, import round-trip property", "[u]")
+TEST_CASE("eet_converter_t::import, round-trip property", "[u]")
 {
 	rc::prop(
 	    "old_text == orig and new_text == trans for all valid entries",

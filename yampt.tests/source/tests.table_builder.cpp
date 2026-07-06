@@ -30,7 +30,7 @@ static table_build_result_t build_filtered_rows(
 	return ::build_filtered_rows(data, params);
 }
 
-TEST_CASE("build_filtered_rows, empty dict returns empty result", "[u]")
+TEST_CASE("table_builder::build_filtered_rows, empty dict returns empty result", "[u]")
 {
 	dict_t empty_dict;
 	row_filter_t search;
@@ -45,10 +45,9 @@ TEST_CASE("build_filtered_rows, empty dict returns empty result", "[u]")
 	REQUIRE(result.counts.progress_translated == 0);
 }
 
-TEST_CASE("build_filtered_rows, single cell entry passes with no filters", "[u]")
+TEST_CASE("table_builder::build_filtered_rows, single cell entry passes with no filters", "[u]")
 {
-	auto dict =
-	    make_single_entry_dict(rec_type_t::cell, "key_hash_01", "Balmora", "Balmora", status_t::translated);
+	auto dict = make_single_entry_dict(rec_type_t::cell, "key_hash_01", "Balmora", "Balmora", status_t::translated);
 	row_filter_t search;
 	std::set<rec_type_t> type_filter;
 	std::set<std::string> sub_type_filter;
@@ -61,10 +60,9 @@ TEST_CASE("build_filtered_rows, single cell entry passes with no filters", "[u]"
 	REQUIRE(result.rows[0].type == rec_type_t::cell);
 }
 
-TEST_CASE("build_filtered_rows, type filter excludes non-matching types", "[u]")
+TEST_CASE("table_builder::build_filtered_rows, type filter excludes non-matching types", "[u]")
 {
-	auto dict =
-	    make_single_entry_dict(rec_type_t::cell, "key_hash_01", "Balmora", "Balmora", status_t::translated);
+	auto dict = make_single_entry_dict(rec_type_t::cell, "key_hash_01", "Balmora", "Balmora", status_t::translated);
 	row_filter_t search;
 	std::set<rec_type_t> type_filter = { rec_type_t::fnam };
 	std::set<std::string> sub_type_filter;
@@ -75,10 +73,9 @@ TEST_CASE("build_filtered_rows, type filter excludes non-matching types", "[u]")
 	REQUIRE(result.rows.empty());
 }
 
-TEST_CASE("build_filtered_rows, type filter includes matching type", "[u]")
+TEST_CASE("table_builder::build_filtered_rows, type filter includes matching type", "[u]")
 {
-	auto dict =
-	    make_single_entry_dict(rec_type_t::cell, "key_hash_01", "Balmora", "Balmora", status_t::translated);
+	auto dict = make_single_entry_dict(rec_type_t::cell, "key_hash_01", "Balmora", "Balmora", status_t::translated);
 	row_filter_t search;
 	std::set<rec_type_t> type_filter = { rec_type_t::cell };
 	std::set<std::string> sub_type_filter;
@@ -89,10 +86,9 @@ TEST_CASE("build_filtered_rows, type filter includes matching type", "[u]")
 	REQUIRE(result.rows.size() == 1);
 }
 
-TEST_CASE("build_filtered_rows, status filter excludes non-matching status", "[u]")
+TEST_CASE("table_builder::build_filtered_rows, status filter excludes non-matching status", "[u]")
 {
-	auto dict =
-	    make_single_entry_dict(rec_type_t::cell, "key_hash_01", "Balmora", "Balmora", status_t::untranslated);
+	auto dict = make_single_entry_dict(rec_type_t::cell, "key_hash_01", "Balmora", "Balmora", status_t::untranslated);
 	row_filter_t search;
 	std::set<rec_type_t> type_filter;
 	std::set<std::string> sub_type_filter;
@@ -103,10 +99,9 @@ TEST_CASE("build_filtered_rows, status filter excludes non-matching status", "[u
 	REQUIRE(result.rows.empty());
 }
 
-TEST_CASE("build_filtered_rows, status filter includes matching status", "[u]")
+TEST_CASE("table_builder::build_filtered_rows, status filter includes matching status", "[u]")
 {
-	auto dict =
-	    make_single_entry_dict(rec_type_t::cell, "key_hash_01", "Balmora", "Balmora", status_t::translated);
+	auto dict = make_single_entry_dict(rec_type_t::cell, "key_hash_01", "Balmora", "Balmora", status_t::translated);
 	row_filter_t search;
 	std::set<rec_type_t> type_filter;
 	std::set<std::string> sub_type_filter;
@@ -117,10 +112,9 @@ TEST_CASE("build_filtered_rows, status filter includes matching status", "[u]")
 	REQUIRE(result.rows.size() == 1);
 }
 
-TEST_CASE("build_filtered_rows, search filter excludes non-matching text", "[u]")
+TEST_CASE("table_builder::build_filtered_rows, search filter excludes non-matching text", "[u]")
 {
-	auto dict =
-	    make_single_entry_dict(rec_type_t::cell, "key_hash_01", "Balmora", "Balmora", status_t::translated);
+	auto dict = make_single_entry_dict(rec_type_t::cell, "key_hash_01", "Balmora", "Balmora", status_t::translated);
 	row_filter_t search;
 	row_filter_t::config_t config;
 	config.query = "Vivec";
@@ -134,10 +128,9 @@ TEST_CASE("build_filtered_rows, search filter excludes non-matching text", "[u]"
 	REQUIRE(result.rows.empty());
 }
 
-TEST_CASE("build_filtered_rows, search filter includes matching text", "[u]")
+TEST_CASE("table_builder::build_filtered_rows, search filter includes matching text", "[u]")
 {
-	auto dict =
-	    make_single_entry_dict(rec_type_t::cell, "key_hash_01", "Balmora", "Balmora", status_t::translated);
+	auto dict = make_single_entry_dict(rec_type_t::cell, "key_hash_01", "Balmora", "Balmora", status_t::translated);
 	row_filter_t search;
 	row_filter_t::config_t config;
 	config.query = "Balmora";
@@ -151,7 +144,7 @@ TEST_CASE("build_filtered_rows, search filter includes matching text", "[u]")
 	REQUIRE(result.rows.size() == 1);
 }
 
-TEST_CASE("build_filtered_rows, counts translated entries correctly", "[u]")
+TEST_CASE("table_builder::build_filtered_rows, counts translated entries correctly", "[u]")
 {
 	dict_t dict;
 	record_entry_t entry_one;
@@ -179,7 +172,7 @@ TEST_CASE("build_filtered_rows, counts translated entries correctly", "[u]")
 	REQUIRE(result.counts.type_counts.at(rec_type_t::cell) == 2);
 }
 
-TEST_CASE("build_filtered_rows, progress counts respect type filter", "[u]")
+TEST_CASE("table_builder::build_filtered_rows, progress counts respect type filter", "[u]")
 {
 	dict_t dict;
 	record_entry_t cell_entry;
@@ -207,7 +200,7 @@ TEST_CASE("build_filtered_rows, progress counts respect type filter", "[u]")
 	REQUIRE(result.counts.progress_translated == 1);
 }
 
-TEST_CASE("build_filtered_rows, bnam counts under info type", "[u]")
+TEST_CASE("table_builder::build_filtered_rows, bnam counts under info type", "[u]")
 {
 	dict_t dict;
 	record_entry_t bnam_entry;
@@ -228,7 +221,7 @@ TEST_CASE("build_filtered_rows, bnam counts under info type", "[u]")
 	REQUIRE(result.counts.type_counts.at(rec_type_t::info) == 1);
 }
 
-TEST_CASE("build_filtered_rows, bnam interleaved after matching info", "[u]")
+TEST_CASE("table_builder::build_filtered_rows, bnam interleaved after matching info", "[u]")
 {
 	dict_t dict;
 	record_entry_t info_entry;
@@ -258,7 +251,7 @@ TEST_CASE("build_filtered_rows, bnam interleaved after matching info", "[u]")
 	REQUIRE(result.rows[1].is_child == true);
 }
 
-TEST_CASE("build_filtered_rows, sub type counts for info records", "[u]")
+TEST_CASE("table_builder::build_filtered_rows, sub type counts for info records", "[u]")
 {
 	dict_t dict;
 	record_entry_t topic_entry;
@@ -288,7 +281,7 @@ TEST_CASE("build_filtered_rows, sub type counts for info records", "[u]")
 	REQUIRE(result.counts.sub_type_translated_counts.count("Voice") == 0);
 }
 
-TEST_CASE("build_filtered_rows, filtered status counts ignore status filter", "[u]")
+TEST_CASE("table_builder::build_filtered_rows, filtered status counts ignore status filter", "[u]")
 {
 	dict_t dict;
 	record_entry_t entry_one;
@@ -317,7 +310,7 @@ TEST_CASE("build_filtered_rows, filtered status counts ignore status filter", "[
 	REQUIRE(result.counts.filtered_status_counts.at(status_t::untranslated) == 1);
 }
 
-TEST_CASE("build_filtered_rows, sub type filter active when solo mode", "[u]")
+TEST_CASE("table_builder::build_filtered_rows, sub type filter active when solo mode", "[u]")
 {
 	dict_t dict;
 	record_entry_t topic_entry;
@@ -345,7 +338,7 @@ TEST_CASE("build_filtered_rows, sub type filter active when solo mode", "[u]")
 	REQUIRE(result.rows[0].old_text == "Hello");
 }
 
-TEST_CASE("build_filtered_rows, sub type filter inactive when not solo", "[u]")
+TEST_CASE("table_builder::build_filtered_rows, sub type filter inactive when not solo", "[u]")
 {
 	dict_t dict;
 	record_entry_t topic_entry;
@@ -372,7 +365,7 @@ TEST_CASE("build_filtered_rows, sub type filter inactive when not solo", "[u]")
 	REQUIRE(result.rows.size() == 2);
 }
 
-TEST_CASE("build_filtered_rows, multiple types counted independently", "[u]")
+TEST_CASE("table_builder::build_filtered_rows, multiple types counted independently", "[u]")
 {
 	dict_t dict;
 	record_entry_t cell_entry;

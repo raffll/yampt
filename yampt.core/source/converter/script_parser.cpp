@@ -259,10 +259,7 @@ void script_parser_t::convert_script()
 	}
 }
 
-void script_parser_t::convert_line(
-    const std::string & keyword,
-    const int pos_in_expression,
-    const rec_type_t text_type)
+void script_parser_t::convert_line(const std::string & keyword, const int pos_in_expression, const rec_type_t text_type)
 {
 	pos = find_whole_word(line_lc, keyword);
 	if (pos == std::string::npos)

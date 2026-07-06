@@ -2,8 +2,7 @@
 
 shortcuts_controller_t::shortcuts_controller_t(shortcuts_deps_t deps)
     : m_deps(std::move(deps))
-{
-}
+{}
 
 void shortcuts_controller_t::copy_original()
 {

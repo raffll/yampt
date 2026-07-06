@@ -3,7 +3,6 @@
 #include "../io/esm_reader.hpp"
 #include "../utility/domain_types.hpp"
 #include "text_match_index.hpp"
-
 #include <hunspell/hunspell.hxx>
 #include <memory>
 #include <set>

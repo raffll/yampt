@@ -1,10 +1,10 @@
 #include <catch2/catch_all.hpp>
-#include <utility/app_logger.hpp>
 #include <io/dict_writer.hpp>
 #include <model/dict_document.hpp>
 #include <model/plugin_document.hpp>
 #include <model/yaml_document.hpp>
 #include <session/session.hpp>
+#include <utility/app_logger.hpp>
 #include <utility/string_utils.hpp>
 #include <filesystem>
 #include <fstream>

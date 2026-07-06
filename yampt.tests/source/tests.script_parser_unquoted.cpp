@@ -33,7 +33,7 @@ std::string random_translated_cell(std::mt19937 & rng)
 
 } // namespace
 
-TEST_CASE("script_parser_t, ShowMap unquoted cell replaced", "[u]")
+TEST_CASE("script_parser_t::convert_script, ShowMap unquoted cell replaced", "[u]")
 {
 	const auto seed = GENERATE(range(0, 100));
 	std::mt19937 rng(static_cast<unsigned>(seed));
@@ -52,7 +52,7 @@ TEST_CASE("script_parser_t, ShowMap unquoted cell replaced", "[u]")
 	REQUIRE(parser.get_new_script() == expected);
 }
 
-TEST_CASE("script_parser_t, PositionCell unquoted cell replaced", "[u]")
+TEST_CASE("script_parser_t::convert_script, PositionCell unquoted cell replaced", "[u]")
 {
 	const auto seed = GENERATE(range(0, 100));
 	std::mt19937 rng(static_cast<unsigned>(seed));
@@ -71,7 +71,7 @@ TEST_CASE("script_parser_t, PositionCell unquoted cell replaced", "[u]")
 	REQUIRE(parser.get_new_script() == expected);
 }
 
-TEST_CASE("script_parser_t, quoted cell not handled by unquoted path", "[u]")
+TEST_CASE("script_parser_t::convert_script, quoted cell not handled by unquoted path", "[u]")
 {
 	const auto seed = GENERATE(range(0, 100));
 	std::mt19937 rng(static_cast<unsigned>(seed));
@@ -90,7 +90,7 @@ TEST_CASE("script_parser_t, quoted cell not handled by unquoted path", "[u]")
 	REQUIRE(parser.get_new_script() == expected);
 }
 
-TEST_CASE("script_parser_t, ShowMap unquoted with comment stripped", "[u]")
+TEST_CASE("script_parser_t::convert_script, ShowMap unquoted with comment stripped", "[u]")
 {
 	const auto seed = GENERATE(range(0, 100));
 	std::mt19937 rng(static_cast<unsigned>(seed));

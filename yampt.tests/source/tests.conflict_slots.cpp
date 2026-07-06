@@ -21,7 +21,7 @@ static std::string make_record_content(const std::vector<std::pair<std::string, 
 	return header;
 }
 
-TEST_CASE("build_generic_slots, two versions identical sub-records", "[u]")
+TEST_CASE("conflict_slots::build, two versions identical sub-records", "[u]")
 {
 	std::string v1 = make_record_content({ { "NAME", "abc" }, { "DATA", "1234" } });
 	std::string v2 = make_record_content({ { "NAME", "abc" }, { "DATA", "1234" } });
@@ -39,7 +39,7 @@ TEST_CASE("build_generic_slots, two versions identical sub-records", "[u]")
 	REQUIRE(result.aligned[1].indices[1] != SIZE_MAX);
 }
 
-TEST_CASE("build_generic_slots, version 2 lacks a sub-record type", "[u]")
+TEST_CASE("conflict_slots::build, version 2 lacks a sub-record type", "[u]")
 {
 	std::string v1 = make_record_content({ { "NAME", "abc" }, { "DATA", "1234" }, { "FNAM", "xyz" } });
 	std::string v2 = make_record_content({ { "NAME", "abc" }, { "DATA", "1234" } });
@@ -53,7 +53,7 @@ TEST_CASE("build_generic_slots, version 2 lacks a sub-record type", "[u]")
 	REQUIRE(result.aligned[2].indices[1] == SIZE_MAX);
 }
 
-TEST_CASE("build_generic_slots, multiple occurrences aligned by occurrence order", "[u]")
+TEST_CASE("conflict_slots::build, multiple occurrences aligned by occurrence order", "[u]")
 {
 	std::string v1 = make_record_content({ { "NAME", "a" }, { "NAME", "b" }, { "NAME", "c" } });
 	std::string v2 = make_record_content({ { "NAME", "x" }, { "NAME", "y" } });
@@ -77,7 +77,7 @@ TEST_CASE("build_generic_slots, multiple occurrences aligned by occurrence order
 	REQUIRE(result.aligned[2].indices[1] == SIZE_MAX);
 }
 
-TEST_CASE("build_generic_slots, empty content yields empty parsed and all SIZE_MAX", "[u]")
+TEST_CASE("conflict_slots::build, empty content yields empty parsed and all SIZE_MAX", "[u]")
 {
 	std::string v1(10, '\0');
 	std::string v2 = make_record_content({ { "NAME", "abc" } });
@@ -90,7 +90,7 @@ TEST_CASE("build_generic_slots, empty content yields empty parsed and all SIZE_M
 	REQUIRE(result.aligned[0].indices[1] == 0);
 }
 
-TEST_CASE("build_leveled_list_slots, LEVI with 3 items version 2 lacks middle", "[u]")
+TEST_CASE("conflict_slots::build, LEVI with 3 items version 2 lacks middle", "[u]")
 {
 	auto intv2 = [](uint16_t level)
 	{
@@ -143,7 +143,7 @@ TEST_CASE("build_leveled_list_slots, LEVI with 3 items version 2 lacks middle", 
 	REQUIRE(found_b_intv);
 }
 
-TEST_CASE("build_leveled_list_slots, header INTV size != 2 stays in headers", "[u]")
+TEST_CASE("conflict_slots::build, header INTV size != 2 stays in headers", "[u]")
 {
 	std::string data_4bytes(4, '\0');
 	data_4bytes[0] = '\x01';
@@ -174,7 +174,7 @@ TEST_CASE("build_leveled_list_slots, header INTV size != 2 stays in headers", "[
 	REQUIRE(found_header_intv);
 }
 
-TEST_CASE("build_container_slots, NPCO item ID extracted from bytes 4..36", "[u]")
+TEST_CASE("conflict_slots::build, NPCO item ID extracted from bytes 4..36", "[u]")
 {
 	std::string npco_data(36, '\0');
 	uint32_t count = 5;
@@ -199,7 +199,7 @@ TEST_CASE("build_container_slots, NPCO item ID extracted from bytes 4..36", "[u]
 	REQUIRE(found_npco);
 }
 
-TEST_CASE("build_cell_slots, header ends before first FRMR", "[u]")
+TEST_CASE("conflict_slots::build, header ends before first FRMR", "[u]")
 {
 	uint32_t obj1 = 100;
 	std::string frmr_data(4, '\0');
@@ -230,7 +230,7 @@ TEST_CASE("build_cell_slots, header ends before first FRMR", "[u]")
 	REQUIRE(found_frmr);
 }
 
-TEST_CASE("build_conflict_slots, pointer stability after construction", "[u]")
+TEST_CASE("conflict_slots::build, pointer stability after construction", "[u]")
 {
 	std::string v1 = make_record_content({ { "NAME", "test_data_123456789" } });
 	std::string v2 = make_record_content({ { "NAME", "other_value_abcdefgh" } });
@@ -252,7 +252,7 @@ TEST_CASE("build_conflict_slots, pointer stability after construction", "[u]")
 	REQUIRE(std::string(ptr1, result.parsed[1][0].size) == "other_value_abcdefgh");
 }
 
-TEST_CASE("build_conflict_slots, is_deleted flags stored correctly", "[u]")
+TEST_CASE("conflict_slots::build, is_deleted flags stored correctly", "[u]")
 {
 	std::string v1 = make_record_content({ { "NAME", "abc" } });
 	std::string v2 = make_record_content({ { "NAME", "abc" } });
@@ -264,7 +264,7 @@ TEST_CASE("build_conflict_slots, is_deleted flags stored correctly", "[u]")
 	REQUIRE(result.is_deleted[1] == true);
 }
 
-TEST_CASE("build_fact_slots, faction paired by ANAM content", "[u]")
+TEST_CASE("conflict_slots::build, faction paired by ANAM content", "[u]")
 {
 	auto intv4 = [](uint32_t val)
 	{

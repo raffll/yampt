@@ -1,8 +1,8 @@
 #include <catch2/catch_all.hpp>
-#include <utility/includes.hpp>
 #include <io/binary_file_io.hpp>
-#include <utility/app_logger.hpp>
 #include <io/esm_reader.hpp>
+#include <utility/app_logger.hpp>
+#include <utility/includes.hpp>
 
 static std::string get_temp_path(const std::string & filename)
 {

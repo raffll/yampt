@@ -201,9 +201,7 @@ std::vector<conflict_this_t> record_conflict::compute_conflict_this_skip_empty(c
 	return result;
 }
 
-conflict_policy_t record_conflict::find_conflict_policy(
-    const std::string & record_type,
-    const std::string & sub_type)
+conflict_policy_t record_conflict::find_conflict_policy(const std::string & record_type, const std::string & sub_type)
 {
 	const auto * behavior = find_record_behavior(record_type);
 	const auto * rule = find_sub_record_rule(behavior, sub_type, 0);

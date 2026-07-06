@@ -1,8 +1,8 @@
 #pragma once
 
 #include <io/codepage.hpp>
-#include <utility/includes.hpp>
 #include <utility/domain_types.hpp>
+#include <utility/includes.hpp>
 
 class user_interface_t
 {

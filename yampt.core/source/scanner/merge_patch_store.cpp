@@ -6,10 +6,7 @@ void merge_patch_store_t::clear()
 	m_records.clear();
 }
 
-void merge_patch_store_t::add(
-    const std::string & rec_type,
-    const std::string & record_id,
-    const std::string & content)
+void merge_patch_store_t::add(const std::string & rec_type, const std::string & record_id, const std::string & content)
 {
 	m_records.push_back({ rec_type, record_id, content, false });
 }
@@ -27,8 +24,7 @@ void merge_patch_store_t::remove(const std::string & rec_type, const std::string
 	auto it = std::remove_if(
 	    m_records.begin(),
 	    m_records.end(),
-	    [&](const merge_record_t & record)
-	    { return record.rec_type == rec_type && record.record_id == record_id; });
+	    [&](const merge_record_t & record) { return record.rec_type == rec_type && record.record_id == record_id; });
 	m_records.erase(it, m_records.end());
 }
 
@@ -77,9 +73,7 @@ bool merge_patch_store_t::is_pinned(const std::string & rec_type, const std::str
 	return false;
 }
 
-const std::string * merge_patch_store_t::find_content(
-    const std::string & rec_type,
-    const std::string & record_id) const
+const std::string * merge_patch_store_t::find_content(const std::string & rec_type, const std::string & record_id) const
 {
 	for (const auto & record : m_records)
 	{

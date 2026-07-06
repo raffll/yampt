@@ -1,7 +1,6 @@
 #include <catch2/catch_all.hpp>
 #include <utility/domain_types.hpp>
 #include <utility/string_utils.hpp>
-
 #include <set>
 
 TEST_CASE("domain_types::convert_string_byte_array_to_uint, basic conversions", "[u]")
@@ -115,9 +114,8 @@ TEST_CASE("chapter_t::empty, reflects entry count", "[u]")
 TEST_CASE("domain_types::type_to_str and str_to_type, round-trip", "[u]")
 {
 	const std::vector<rec_type_t> defined_types {
-		rec_type_t::cell, rec_type_t::dial, rec_type_t::indx, rec_type_t::rnam,
-		rec_type_t::desc, rec_type_t::gmst, rec_type_t::fnam, rec_type_t::info,
-		rec_type_t::text, rec_type_t::bnam, rec_type_t::sctx,
+		rec_type_t::cell, rec_type_t::dial, rec_type_t::indx, rec_type_t::rnam, rec_type_t::desc, rec_type_t::gmst,
+		rec_type_t::fnam, rec_type_t::info, rec_type_t::text, rec_type_t::bnam, rec_type_t::sctx,
 	};
 
 	for (const auto & type : defined_types)
@@ -144,15 +142,15 @@ TEST_CASE("domain_types::get_dialog_type, all values", "[u]")
 
 TEST_CASE("domain_types::get_indx, zero-padded output", "[u]")
 {
-	// 4-byte little-endian encoding of 1 → "001"
+	// 4-byte little-endian encoding of 1 â†’ "001"
 	std::string one = domain_types::convert_uint_to_string_byte_array(1);
 	REQUIRE(domain_types::get_indx(one) == "001");
 
-	// 4-byte little-endian encoding of 42 → "042"
+	// 4-byte little-endian encoding of 42 â†’ "042"
 	std::string fortytwo = domain_types::convert_uint_to_string_byte_array(42);
 	REQUIRE(domain_types::get_indx(fortytwo) == "042");
 
-	// 4-byte little-endian encoding of 255 → "255"
+	// 4-byte little-endian encoding of 255 â†’ "255"
 	std::string twofiftyfive = domain_types::convert_uint_to_string_byte_array(255);
 	REQUIRE(domain_types::get_indx(twofiftyfive) == "255");
 }
@@ -189,7 +187,8 @@ TEST_CASE("domain_types::convert, round-trip all byte patterns", "[u]")
 	};
 	for (unsigned int x : values)
 	{
-		REQUIRE(domain_types::convert_string_byte_array_to_uint(domain_types::convert_uint_to_string_byte_array(x)) == x);
+		REQUIRE(
+		    domain_types::convert_string_byte_array_to_uint(domain_types::convert_uint_to_string_byte_array(x)) == x);
 	}
 }
 
@@ -296,7 +295,7 @@ TEST_CASE("domain_types::get_number_of_elements_in_dict, counts inserted entries
 	dict_t dict = domain_types::initialize_dict();
 	dict.at(rec_type_t::cell).insert({ "Balmora", "Balmora", "Balmora", status_t::translated });
 	dict.at(rec_type_t::cell).insert({ "Vivec", "Vivec", "Vivec", status_t::translated });
-	dict.at(rec_type_t::dial).insert({ "clanfear", "clanfear", "postrach klanów", status_t::translated });
+	dict.at(rec_type_t::dial).insert({ "clanfear", "clanfear", "postrach klanĂłw", status_t::translated });
 	REQUIRE(domain_types::get_number_of_elements_in_dict(dict) == 3);
 }
 
@@ -305,12 +304,12 @@ TEST_CASE("domain_types::get_number_of_elements_in_dict, correct total", "[u]")
 	dict_t dict = domain_types::initialize_dict();
 	dict.at(rec_type_t::cell).insert({ "Balmora", "Balmora", "Balmora", status_t::translated });
 	dict.at(rec_type_t::cell).insert({ "Vivec", "Vivec", "Vivec", status_t::translated });
-	dict.at(rec_type_t::dial).insert({ "clanfear", "clanfear", "postrach klanów", status_t::translated });
+	dict.at(rec_type_t::dial).insert({ "clanfear", "clanfear", "postrach klanĂłw", status_t::translated });
 	dict.at(rec_type_t::info).insert({ "info_key", "info_orig", "info_val", status_t::untranslated });
 	REQUIRE(domain_types::get_number_of_elements_in_dict(dict) == 4);
 }
 
-TEST_CASE("status_t, all values have distinct non-empty string representations", "[u]")
+TEST_CASE("status_t::to_string, all values distinct non-empty", "[u]")
 {
 	std::vector<status_t> all_statuses {
 		status_t::translated,   status_t::missing,    status_t::duplicate,   status_t::mismatch,
@@ -332,14 +331,14 @@ TEST_CASE("status_t, all values have distinct non-empty string representations",
 	REQUIRE(unique_set.size() == all_statuses.size());
 }
 
-TEST_CASE("record_entry_t, speaker fields default to empty", "[u]")
+TEST_CASE("record_entry_t::speaker_name, defaults to empty", "[u]")
 {
 	record_entry_t entry { "key", "old", "new", status_t::untranslated };
 	REQUIRE(entry.speaker_name.empty());
 	REQUIRE(entry.gender.empty());
 }
 
-TEST_CASE("record_entry_t, with speaker fields", "[u]")
+TEST_CASE("record_entry_t::speaker_name, stores value", "[u]")
 {
 	record_entry_t entry { "key", "old", "new", status_t::translated, "Fargoth", "M" };
 	REQUIRE(entry.speaker_name == "Fargoth");
@@ -349,7 +348,7 @@ TEST_CASE("record_entry_t, with speaker fields", "[u]")
 TEST_CASE("chapter_t::insert, with speaker fields", "[u]")
 {
 	chapter_t chapter;
-	bool result = chapter.insert({ "info_1", "Hello", "Cześć", status_t::translated, "Fargoth", "M" });
+	bool result = chapter.insert({ "info_1", "Hello", "CzeĹ›Ä‡", status_t::translated, "Fargoth", "M" });
 	REQUIRE(result == true);
 
 	auto * entry = chapter.find("info_1");

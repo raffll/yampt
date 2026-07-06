@@ -3,7 +3,7 @@
 #include <merger/dict_merger.hpp>
 #include <utility/app_logger.hpp>
 
-TEST_CASE("script_parser_t, record_key used for message lookup", "[u]")
+TEST_CASE("script_parser_t::convert_script, record_key used for message lookup", "[u]")
 {
 	const std::string record_key = "T^some topic^12345";
 	const std::string input_line = "MessageBox \"Original\"";
@@ -17,7 +17,7 @@ TEST_CASE("script_parser_t, record_key used for message lookup", "[u]")
 	REQUIRE(parser.get_new_script() == translated_line);
 }
 
-TEST_CASE("script_parser_t, empty record_key still finds messages", "[u]")
+TEST_CASE("script_parser_t::convert_script, empty record_key still finds messages", "[u]")
 {
 	const std::string input_line = "MessageBox \"Original\"";
 	const std::string translated_line = "MessageBox \"Przetlumaczony\"";
@@ -30,7 +30,7 @@ TEST_CASE("script_parser_t, empty record_key still finds messages", "[u]")
 	REQUIRE(parser.get_new_script() == translated_line);
 }
 
-TEST_CASE("script_parser_t, wrong record_key prevents match", "[u]")
+TEST_CASE("script_parser_t::convert_script, wrong record_key prevents match", "[u]")
 {
 	const std::string correct_key = "T^topic^111";
 	const std::string wrong_key = "T^topic^222";
@@ -45,7 +45,7 @@ TEST_CASE("script_parser_t, wrong record_key prevents match", "[u]")
 	REQUIRE(parser.get_new_script() == input_line);
 }
 
-TEST_CASE("script_parser_t, source_path does not affect conversion", "[u]")
+TEST_CASE("script_parser_t::convert_script, source_path does not affect conversion", "[u]")
 {
 	dict_merger_t merger;
 	merger.add_record(rec_type_t::dial, "Test", "Result");
@@ -60,7 +60,7 @@ TEST_CASE("script_parser_t, source_path does not affect conversion", "[u]")
 	REQUIRE(parser_empty_path.get_new_script() == expected);
 }
 
-TEST_CASE("script_parser_t, empty input produces empty output", "[u]")
+TEST_CASE("script_parser_t::convert_script, empty input produces empty output", "[u]")
 {
 	dict_merger_t merger;
 	merger.add_record(rec_type_t::dial, "Test", "Result");
@@ -70,7 +70,7 @@ TEST_CASE("script_parser_t, empty input produces empty output", "[u]")
 	REQUIRE(parser.get_new_script().empty());
 }
 
-TEST_CASE("script_parser_t, single line input without CRLF", "[u]")
+TEST_CASE("script_parser_t::convert_script, single line input without CRLF", "[u]")
 {
 	dict_merger_t merger;
 	merger.add_record(rec_type_t::dial, "Test", "Result");
@@ -83,7 +83,7 @@ TEST_CASE("script_parser_t, single line input without CRLF", "[u]")
 	REQUIRE(parser.get_new_script() == expected);
 }
 
-TEST_CASE("script_parser_t, input with no translatable content unchanged", "[u]")
+TEST_CASE("script_parser_t::convert_script, input with no translatable content unchanged", "[u]")
 {
 	dict_merger_t merger;
 	merger.add_record(rec_type_t::dial, "Test", "Result");
@@ -95,7 +95,7 @@ TEST_CASE("script_parser_t, input with no translatable content unchanged", "[u]"
 	REQUIRE(parser.get_new_script() == input);
 }
 
-TEST_CASE("script_parser_t, empty merger leaves everything unchanged", "[u]")
+TEST_CASE("script_parser_t::convert_script, empty merger leaves everything unchanged", "[u]")
 {
 	dict_merger_t merger;
 
@@ -106,7 +106,7 @@ TEST_CASE("script_parser_t, empty merger leaves everything unchanged", "[u]")
 	REQUIRE(parser.get_new_script() == input);
 }
 
-TEST_CASE("script_parser_t, sctx type with empty scdt skips compiled patching", "[u]")
+TEST_CASE("script_parser_t::convert_script, sctx type with empty scdt skips compiled patching", "[u]")
 {
 	dict_merger_t merger;
 	merger.add_record(rec_type_t::dial, "Hello", "Witaj");
@@ -120,7 +120,7 @@ TEST_CASE("script_parser_t, sctx type with empty scdt skips compiled patching", 
 	REQUIRE(parser.get_new_scdt().empty());
 }
 
-TEST_CASE("script_parser_t, multiple keywords on separate lines", "[u]")
+TEST_CASE("script_parser_t::convert_script, multiple keywords on separate lines", "[u]")
 {
 	dict_merger_t merger;
 	merger.add_record(rec_type_t::dial, "TopicA", "TematA");
@@ -134,7 +134,7 @@ TEST_CASE("script_parser_t, multiple keywords on separate lines", "[u]")
 	REQUIRE(parser.get_new_script() == expected);
 }
 
-TEST_CASE("script_parser_t, line after end keyword is not processed", "[u]")
+TEST_CASE("script_parser_t::convert_script, line after end keyword is not processed", "[u]")
 {
 	dict_merger_t merger;
 	merger.add_record(rec_type_t::dial, "Before", "Przed");
@@ -148,7 +148,7 @@ TEST_CASE("script_parser_t, line after end keyword is not processed", "[u]")
 	REQUIRE(parser.get_new_script() == expected);
 }
 
-TEST_CASE("script_parser_t, case insensitive cell lookup", "[u]")
+TEST_CASE("script_parser_t::convert_script, case insensitive cell lookup", "[u]")
 {
 	dict_merger_t merger;
 	merger.add_record(rec_type_t::cell, "balmora", "Balmora PL");
@@ -161,7 +161,7 @@ TEST_CASE("script_parser_t, case insensitive cell lookup", "[u]")
 	REQUIRE(parser.get_new_script() == expected);
 }
 
-TEST_CASE("script_parser_t, case insensitive dial lookup", "[u]")
+TEST_CASE("script_parser_t::convert_script, case insensitive dial lookup", "[u]")
 {
 	dict_merger_t merger;
 	merger.add_record(rec_type_t::dial, "background", "tlo");

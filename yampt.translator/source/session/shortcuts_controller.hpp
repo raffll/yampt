@@ -3,8 +3,8 @@
 #include "../controller/editor_controller.hpp"
 #include "../model/dict_document.hpp"
 #include "../model/record_table_model.hpp"
-#include <functional>
 #include <utility/domain_types.hpp>
+#include <functional>
 
 struct shortcuts_deps_t
 {

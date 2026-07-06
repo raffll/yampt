@@ -56,7 +56,7 @@ TEST_CASE("file_list_t::classify, correctness", "[u]")
 	});
 }
 
-TEST_CASE("file_list_t, insert/lookup/remove invariant", "[u]")
+TEST_CASE("file_list_t::insert, insert/lookup/remove invariant", "[u]")
 {
 	rc::prop(
 	    "get returns non-null iff add was last operation for path",
@@ -348,7 +348,7 @@ TEST_CASE("file_list_t::derive_context_menu, decision table", "[u]")
 	}
 }
 
-TEST_CASE("file_list_t, container operations", "[u]")
+TEST_CASE("file_list_t::insert, container operations", "[u]")
 {
 	file_list_t list;
 
@@ -390,7 +390,7 @@ TEST_CASE("file_list_t, container operations", "[u]")
 	}
 }
 
-TEST_CASE("file_list_t, section grouping", "[u]")
+TEST_CASE("file_list_t::scan, section grouping", "[u]")
 {
 	rc::prop(
 	    "build_render_model groups entries by root_path",
@@ -492,7 +492,7 @@ TEST_CASE("file_list_t, section grouping", "[u]")
 	});
 }
 
-TEST_CASE("file_list_t, workspace scan round-trip", "[i]")
+TEST_CASE("file_list_t::scan, workspace round-trip", "[i]")
 {
 	namespace fs = std::filesystem;
 
@@ -549,7 +549,7 @@ TEST_CASE("file_list_t, workspace scan round-trip", "[i]")
 	fs::remove_all(temp_dir);
 }
 
-TEST_CASE("file_list_t, scan finds nested files", "[i]")
+TEST_CASE("file_list_t::scan, finds nested files", "[i]")
 {
 	namespace fs = std::filesystem;
 
@@ -571,7 +571,7 @@ TEST_CASE("file_list_t, scan finds nested files", "[i]")
 	fs::remove_all(temp_dir);
 }
 
-TEST_CASE("file_list_t, rescan after file deletion", "[i]")
+TEST_CASE("file_list_t::scan, rescan after file deletion", "[i]")
 {
 	namespace fs = std::filesystem;
 

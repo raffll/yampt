@@ -30,11 +30,10 @@ public:
 };
 
 static const std::vector<std::pair<rec_type_t, const char *>> type_order = {
-	{ rec_type_t::cell, "Cells" },        { rec_type_t::dial, "Topics" },
-	{ rec_type_t::info, "Dialogues" },    { rec_type_t::fnam, "Names" },
-	{ rec_type_t::text, "Books" },        { rec_type_t::gmst, "Settings" },
-	{ rec_type_t::desc, "Descriptions" }, { rec_type_t::rnam, "Factions" },
-	{ rec_type_t::indx, "Index" },        { rec_type_t::sctx, "Scripts" },
+	{ rec_type_t::cell, "Cells" },        { rec_type_t::dial, "Topics" },   { rec_type_t::info, "Dialogues" },
+	{ rec_type_t::fnam, "Names" },        { rec_type_t::text, "Books" },    { rec_type_t::gmst, "Settings" },
+	{ rec_type_t::desc, "Descriptions" }, { rec_type_t::rnam, "Factions" }, { rec_type_t::indx, "Index" },
+	{ rec_type_t::sctx, "Scripts" },
 };
 
 static const QColor color_selected_bg(90, 155, 230);
@@ -74,8 +73,7 @@ filter_tree_view_t::filter_tree_view_t(QWidget * parent)
 
 void filter_tree_view_t::build_rows()
 {
-	auto add_row =
-	    [this](item_kind_t kind, rec_type_t type, const std::string & sub_type, const char * label) -> int
+	auto add_row = [this](item_kind_t kind, rec_type_t type, const std::string & sub_type, const char * label) -> int
 	{
 		auto * item = new QListWidgetItem(label, m_list);
 		item->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);

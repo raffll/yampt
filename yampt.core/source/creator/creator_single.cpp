@@ -4,8 +4,7 @@
 creator_single_t::creator_single_t(creator_context_t & context)
     : m_ctx(context)
     , m_with_base(context.base_dict != nullptr)
-{
-}
+{}
 
 void creator_single_t::run()
 {
@@ -147,8 +146,7 @@ void creator_single_t::make_rnam()
 
 		while (m_ctx.esm.get_value().exist)
 		{
-			const auto key_text = m_ctx.esm.get_key().text + "^" +
-			                      std::to_string(m_ctx.esm.get_value().counter);
+			const auto key_text = m_ctx.esm.get_key().text + "^" + std::to_string(m_ctx.esm.get_value().counter);
 			const auto & text = m_ctx.esm.get_value().text;
 
 			if (m_with_base)
@@ -198,8 +196,8 @@ void creator_single_t::make_info()
 			m_ctx.esm.set_key("DATA");
 			m_ctx.esm.set_value("NAME");
 			if (m_ctx.esm.get_key().exist && m_ctx.esm.get_value().exist)
-				key_prefix = domain_types::get_dialog_type(m_ctx.esm.get_key().content) + "^" +
-				             m_ctx.esm.get_value().text;
+				key_prefix =
+				    domain_types::get_dialog_type(m_ctx.esm.get_key().content) + "^" + m_ctx.esm.get_value().text;
 
 			continue;
 		}

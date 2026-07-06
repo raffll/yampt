@@ -1,6 +1,6 @@
 #include "dial_matcher.hpp"
-#include "../utility/app_logger.hpp"
 #include "../translator/translation_engine.hpp"
+#include "../utility/app_logger.hpp"
 #include "word_match_utils.hpp"
 
 dial_matcher_t::dial_matcher_t(
@@ -424,7 +424,8 @@ void dial_matcher_t::report_unmatched(
 
 	if (!native_names.empty())
 	{
-		app_logger_t::add_log("[info] unmatched native DIAL candidates (" + std::to_string(native_names.size()) + "):\r\n");
+		app_logger_t::add_log(
+		    "[info] unmatched native DIAL candidates (" + std::to_string(native_names.size()) + "):\r\n");
 		for (const auto & name : native_names)
 			app_logger_t::add_log("  " + name + "\r\n");
 	}

@@ -1,8 +1,8 @@
 #include <catch2/catch_all.hpp>
-#include <utility/string_utils.hpp>
-#include <utility/app_logger.hpp>
 #include <scanner/plugin_scan.hpp>
 #include <scanner/sub_record_merge.hpp>
+#include <utility/app_logger.hpp>
+#include <utility/string_utils.hpp>
 #include <cstring>
 #include <filesystem>
 #include <fstream>

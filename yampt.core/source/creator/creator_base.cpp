@@ -1,16 +1,15 @@
+#include "creator_base.hpp"
 #include "../translator/translation_engine.hpp"
 #include "../utility/app_logger.hpp"
 #include "cell_matcher.hpp"
-#include "dial_matcher.hpp"
-#include "creator_base.hpp"
 #include "creator_helpers.hpp"
+#include "dial_matcher.hpp"
 #include "word_match_utils.hpp"
 #include <hunspell/hunspell.hxx>
 
 creator_base_t::creator_base_t(creator_context_t & context)
     : m_ctx(context)
-{
-}
+{}
 
 void creator_base_t::run()
 {
@@ -408,7 +407,9 @@ void creator_base_t::make_info()
 		std::string gender;
 		if (m_ctx.esm_ref.get_value().exist)
 			gender =
-			    ((domain_types::convert_string_byte_array_to_uint(m_ctx.esm_ref.get_value().content) & 0x0001) != 0) ? "F" : "M";
+			    ((domain_types::convert_string_byte_array_to_uint(m_ctx.esm_ref.get_value().content) & 0x0001) != 0)
+			        ? "F"
+			        : "M";
 
 		auto * entry = m_ctx.dict.at(rec_type_t::info).find(key_text);
 		if (!entry)
@@ -699,8 +700,7 @@ void creator_base_t::insert_entry_base(
 	m_ctx.counter_all++;
 
 	const bool is_text_keyed =
-	    (type == rec_type_t::cell || type == rec_type_t::dial || type == rec_type_t::sctx ||
-	     type == rec_type_t::bnam);
+	    (type == rec_type_t::cell || type == rec_type_t::dial || type == rec_type_t::sctx || type == rec_type_t::bnam);
 
 	auto * existing = m_ctx.dict.at(type).find(key_text);
 	if (existing && is_text_keyed)

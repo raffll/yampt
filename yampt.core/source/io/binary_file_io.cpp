@@ -1,6 +1,5 @@
 #include "binary_file_io.hpp"
 #include "../utility/app_logger.hpp"
-
 #include <fstream>
 
 static constexpr size_t read_buffer_size = 16384;

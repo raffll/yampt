@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../utility/includes.hpp"
 #include "../utility/domain_types.hpp"
+#include "../utility/includes.hpp"
 
 struct text_patch_result_t
 {

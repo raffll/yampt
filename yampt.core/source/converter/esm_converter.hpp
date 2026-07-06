@@ -3,9 +3,9 @@
 #include "../io/codepage.hpp"
 #include "../io/esm_reader.hpp"
 #include "../merger/dict_merger.hpp"
+#include "../utility/domain_types.hpp"
 #include "../utility/includes.hpp"
 #include "../utility/keyword_trie.hpp"
-#include "../utility/domain_types.hpp"
 
 class esm_converter_t
 {

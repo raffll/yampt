@@ -114,7 +114,7 @@ TEST_CASE("theme_system_t::conflict_all_background, visible", "[u]")
 	}
 }
 
-TEST_CASE("theme_system_t, light conflict foreground/background contrast", "[u]")
+TEST_CASE("theme_system_t::conflict_this_foreground, light contrast", "[u]")
 {
 	theme_system_t::instance().set_theme(theme_t::light);
 
@@ -136,7 +136,7 @@ TEST_CASE("theme_system_t, light conflict foreground/background contrast", "[u]"
 	}
 }
 
-TEST_CASE("theme_system_t, dark conflict foreground/background contrast", "[u]")
+TEST_CASE("theme_system_t::conflict_this_foreground, dark contrast", "[u]")
 {
 	theme_system_t::instance().set_theme(theme_t::dark);
 
@@ -158,7 +158,7 @@ TEST_CASE("theme_system_t, dark conflict foreground/background contrast", "[u]")
 	}
 }
 
-TEST_CASE("theme_system_t, dark conflict backgrounds are darker", "[u]")
+TEST_CASE("theme_system_t::conflict_all_background, dark is darker", "[u]")
 {
 	theme_system_t::instance().set_theme(theme_t::dark);
 

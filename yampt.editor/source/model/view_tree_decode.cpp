@@ -221,10 +221,12 @@ void view_tree_model_t::decode_schema_children(
 				}
 
 				frow.all_identical = check_all_identical(frow.values);
-				frow.row_conflict_all = policy.skip_non_existent ? record_conflict::compute_conflict_all_skip_empty(frow.values)
-				                                                 : record_conflict::compute_conflict_all(frow.values);
-				frow.cell_conflict_this = policy.skip_non_existent ? record_conflict::compute_conflict_this_skip_empty(frow.values)
-				                                                   : record_conflict::compute_conflict_this(frow.values);
+				frow.row_conflict_all = policy.skip_non_existent
+				                            ? record_conflict::compute_conflict_all_skip_empty(frow.values)
+				                            : record_conflict::compute_conflict_all(frow.values);
+				frow.cell_conflict_this = policy.skip_non_existent
+				                              ? record_conflict::compute_conflict_this_skip_empty(frow.values)
+				                              : record_conflict::compute_conflict_this(frow.values);
 
 				if (frow.row_conflict_all > flags_group.row_conflict_all)
 					flags_group.row_conflict_all = frow.row_conflict_all;
@@ -275,10 +277,11 @@ void view_tree_model_t::decode_schema_children(
 		}
 
 		frow.all_identical = check_all_identical(frow.values);
-		frow.row_conflict_all =
-		    policy.skip_non_existent ? record_conflict::compute_conflict_all_skip_empty(frow.values) : record_conflict::compute_conflict_all(frow.values);
-		frow.cell_conflict_this = policy.skip_non_existent ? record_conflict::compute_conflict_this_skip_empty(frow.values)
-		                                                   : record_conflict::compute_conflict_this(frow.values);
+		frow.row_conflict_all = policy.skip_non_existent ? record_conflict::compute_conflict_all_skip_empty(frow.values)
+		                                                 : record_conflict::compute_conflict_all(frow.values);
+		frow.cell_conflict_this = policy.skip_non_existent
+		                              ? record_conflict::compute_conflict_this_skip_empty(frow.values)
+		                              : record_conflict::compute_conflict_this(frow.values);
 
 		if (!fdef.group)
 		{
@@ -357,10 +360,11 @@ void view_tree_model_t::decode_hex_children(
 		}
 
 		frow.all_identical = check_all_identical(frow.values);
-		frow.row_conflict_all =
-		    policy.skip_non_existent ? record_conflict::compute_conflict_all_skip_empty(frow.values) : record_conflict::compute_conflict_all(frow.values);
-		frow.cell_conflict_this = policy.skip_non_existent ? record_conflict::compute_conflict_this_skip_empty(frow.values)
-		                                                   : record_conflict::compute_conflict_this(frow.values);
+		frow.row_conflict_all = policy.skip_non_existent ? record_conflict::compute_conflict_all_skip_empty(frow.values)
+		                                                 : record_conflict::compute_conflict_all(frow.values);
+		frow.cell_conflict_this = policy.skip_non_existent
+		                              ? record_conflict::compute_conflict_this_skip_empty(frow.values)
+		                              : record_conflict::compute_conflict_this(frow.values);
 		parent_row.children.push_back(std::move(frow));
 	}
 }

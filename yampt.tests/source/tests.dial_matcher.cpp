@@ -58,7 +58,7 @@ TEST_CASE("cell_matcher_t::make_exterior_coord_key, coord roundtrip", "[u][pbt]"
 	});
 }
 
-TEST_CASE("dial_matcher_t, fingerprint_index_t resolves correctly", "[u]")
+TEST_CASE("dial_matcher_t::match_by_inam, fingerprint resolves correctly", "[u]")
 {
 	dial_matcher_t::fingerprint_index_t index;
 	index["test_inam"].insert(0);

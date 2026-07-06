@@ -69,7 +69,7 @@ static std::string make_levi_header(
 // Requirement 2: Occurrence-Counted Leveled List Merge
 // ============================================================================
 
-TEST_CASE("leveled_list_merge, max occurrence preserved", "[u]")
+TEST_CASE("leveled_list_merge_t::merge, max occurrence preserved", "[u]")
 {
 	auto first_subs = make_levi_header("list_id", 1, 0, 1) + make_levi_entry("iron_sword", 1);
 	auto mod_subs = make_levi_header("list_id", 1, 0, 3) + make_levi_entry("iron_sword", 1) +
@@ -98,7 +98,7 @@ TEST_CASE("leveled_list_merge, max occurrence preserved", "[u]")
 	REQUIRE(count == 3);
 }
 
-TEST_CASE("leveled_list_merge, two mods add different items", "[u]")
+TEST_CASE("leveled_list_merge_t::merge, two mods add different items", "[u]")
 {
 	auto header = make_levi_header("list_id", 1, 0, 1);
 	auto first_subs = header + make_levi_entry("item_a", 1);
@@ -122,7 +122,7 @@ TEST_CASE("leveled_list_merge, two mods add different items", "[u]")
 	REQUIRE(result.content.find("item_c") != std::string::npos);
 }
 
-TEST_CASE("leveled_list_merge, sorted by level then ident", "[u]")
+TEST_CASE("leveled_list_merge_t::merge, sorted by level then ident", "[u]")
 {
 	auto header = make_levi_header("list_id", 1, 0, 1);
 	auto first_subs = header + make_levi_entry("zzz_item", 1);
@@ -147,7 +147,7 @@ TEST_CASE("leveled_list_merge, sorted by level then ident", "[u]")
 	REQUIRE(pos_bbb < pos_aaa);
 }
 
-TEST_CASE("leveled_list_merge, winner header used", "[u]")
+TEST_CASE("leveled_list_merge_t::merge, winner header used", "[u]")
 {
 	auto first_subs = make_levi_header("list_id", 1, 0, 1) + make_levi_entry("item_a", 1);
 	auto winner_subs = make_levi_header("list_id", 3, 50, 1) + make_levi_entry("item_a", 1);
@@ -172,7 +172,7 @@ TEST_CASE("leveled_list_merge, winner header used", "[u]")
 // Requirement 15: Leveled List Deletion Detection
 // ============================================================================
 
-TEST_CASE("leveled_list_merge, mod removes item entirely", "[u]")
+TEST_CASE("leveled_list_merge_t::merge, mod removes item entirely", "[u]")
 {
 	auto first_subs =
 	    make_levi_header("list_id", 1, 0, 2) + make_levi_entry("keep_item", 1) + make_levi_entry("remove_me", 1);
@@ -192,7 +192,7 @@ TEST_CASE("leveled_list_merge, mod removes item entirely", "[u]")
 	REQUIRE(result.content.find("remove_me") == std::string::npos);
 }
 
-TEST_CASE("leveled_list_merge, mod reduces count partial", "[u]")
+TEST_CASE("leveled_list_merge_t::merge, mod reduces count partial", "[u]")
 {
 	auto first_subs = make_levi_header("list_id", 1, 0, 3) + make_levi_entry("item_a", 1) +
 	                  make_levi_entry("item_a", 1) + make_levi_entry("item_a", 1);
@@ -218,7 +218,7 @@ TEST_CASE("leveled_list_merge, mod reduces count partial", "[u]")
 	REQUIRE(count == 1);
 }
 
-TEST_CASE("leveled_list_merge, one mod removes one mod keeps deletion wins", "[u]")
+TEST_CASE("leveled_list_merge_t::merge, one mod removes one mod keeps deletion wins", "[u]")
 {
 	auto first_subs =
 	    make_levi_header("list_id", 1, 0, 2) + make_levi_entry("contested", 1) + make_levi_entry("safe_item", 1);
@@ -241,7 +241,7 @@ TEST_CASE("leveled_list_merge, one mod removes one mod keeps deletion wins", "[u
 	REQUIRE(result.content.find("safe_item") != std::string::npos);
 }
 
-TEST_CASE("leveled_list_merge, no deletion when all mods keep item", "[u]")
+TEST_CASE("leveled_list_merge_t::merge, no deletion when all mods keep item", "[u]")
 {
 	auto first_subs = make_levi_header("list_id", 1, 0, 1) + make_levi_entry("item_a", 1);
 	auto mod1_subs = make_levi_header("list_id", 1, 0, 2) + make_levi_entry("item_a", 1) + make_levi_entry("item_a", 1);
@@ -261,7 +261,7 @@ TEST_CASE("leveled_list_merge, no deletion when all mods keep item", "[u]")
 	REQUIRE(result.content.find("item_a") != std::string::npos);
 }
 
-TEST_CASE("leveled_list_merge, LEVC creature list works same", "[u]")
+TEST_CASE("leveled_list_merge_t::merge, LEVC creature list works same", "[u]")
 {
 	auto first_subs = make_levi_header("crea_list", 1, 0, 1) + make_levc_entry("rat", 1);
 	auto mod_subs = make_levi_header("crea_list", 1, 0, 2) + make_levc_entry("rat", 1) + make_levc_entry("mudcrab", 3);

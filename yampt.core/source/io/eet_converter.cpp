@@ -107,11 +107,10 @@ status_t eet_converter_t::map_status(uint8_t status_byte) const
 	return status_t::untranslated;
 }
 
-std::string eet_converter_t::build_key_text(const eet_reader_t::eet_entry_t & entry, rec_type_t yampt_type)
-    const
+std::string eet_converter_t::build_key_text(const eet_reader_t::eet_entry_t & entry, rec_type_t yampt_type) const
 {
-	if (yampt_type == rec_type_t::cell || yampt_type == rec_type_t::dial ||
-	    yampt_type == rec_type_t::sctx || yampt_type == rec_type_t::bnam)
+	if (yampt_type == rec_type_t::cell || yampt_type == rec_type_t::dial || yampt_type == rec_type_t::sctx ||
+	    yampt_type == rec_type_t::bnam)
 	{
 		return entry.orig;
 	}

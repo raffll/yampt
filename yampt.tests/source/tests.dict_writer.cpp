@@ -2,8 +2,8 @@
 #include <io/dict_reader.hpp>
 #include <io/dict_writer.hpp>
 #include <merger/dict_merger.hpp>
-#include <utility/string_utils.hpp>
 #include <utility/app_logger.hpp>
+#include <utility/string_utils.hpp>
 #include <filesystem>
 #include <fstream>
 
@@ -22,7 +22,7 @@ static void cleanup(const std::string & path)
 	fs::remove(path, ec);
 }
 
-TEST_CASE("dict_writer_t + dict_reader_t, empty dict round-trip", "[i]")
+TEST_CASE("dict_writer_t::write, empty dict round-trip", "[i]")
 {
 	const auto path = temp_path("yampt_test_empty.json");
 	app_logger_t::reset_log();
@@ -38,7 +38,7 @@ TEST_CASE("dict_writer_t + dict_reader_t, empty dict round-trip", "[i]")
 	cleanup(path);
 }
 
-TEST_CASE("dict_writer_t + dict_reader_t, multiple types round-trip", "[i]")
+TEST_CASE("dict_writer_t::write, multiple types round-trip", "[i]")
 {
 	const auto path = temp_path("yampt_test_multi.json");
 	app_logger_t::reset_log();
@@ -47,8 +47,7 @@ TEST_CASE("dict_writer_t + dict_reader_t, multiple types round-trip", "[i]")
 	dict.at(rec_type_t::cell).insert({ "key_cell", "Balmora", "Balmora_PL", status_t::translated });
 	dict.at(rec_type_t::dial).insert({ "key_dial", "background", "tlo", status_t::translated });
 	dict.at(rec_type_t::fnam).insert({ "key_fnam", "Iron Dagger", "Zelazny Sztylet", status_t::translated });
-	dict.at(rec_type_t::info)
-	    .insert({ "key_info", "Hello there", "Witaj", status_t::translated, "Fargoth", "M" });
+	dict.at(rec_type_t::info).insert({ "key_info", "Hello there", "Witaj", status_t::translated, "Fargoth", "M" });
 
 	dict_writer_t::write(dict, path);
 	REQUIRE(fs::exists(path));
@@ -71,7 +70,7 @@ TEST_CASE("dict_writer_t + dict_reader_t, multiple types round-trip", "[i]")
 	cleanup(path);
 }
 
-TEST_CASE("dict_writer_t + dict_reader_t, special characters round-trip", "[i]")
+TEST_CASE("dict_writer_t::write, special characters round-trip", "[i]")
 {
 	const auto path = temp_path("yampt_test_special.json");
 	app_logger_t::reset_log();
@@ -81,8 +80,7 @@ TEST_CASE("dict_writer_t + dict_reader_t, special characters round-trip", "[i]")
 	    .insert({ "key_quotes", "He said \"hello\"", "On powiedzial \"czesc\"", status_t::translated });
 	dict.at(rec_type_t::gmst)
 	    .insert({ "key_newlines", "Line1\r\nLine2\r\nLine3", "Linia1\r\nLinia2\r\nLinia3", status_t::translated });
-	dict.at(rec_type_t::gmst)
-	    .insert({ "key_backslash", "path\\to\\file", "sciezka\\do\\pliku", status_t::translated });
+	dict.at(rec_type_t::gmst).insert({ "key_backslash", "path\\to\\file", "sciezka\\do\\pliku", status_t::translated });
 	dict.at(rec_type_t::gmst).insert({ "key_tab", "col1\tcol2", "kol1\tkol2", status_t::translated });
 
 	dict_writer_t::write(dict, path);
@@ -112,7 +110,7 @@ TEST_CASE("dict_writer_t + dict_reader_t, special characters round-trip", "[i]")
 	cleanup(path);
 }
 
-TEST_CASE("dict_writer_t + dict_reader_t, adapted_from field round-trip", "[i]")
+TEST_CASE("dict_writer_t::write, adapted_from field round-trip", "[i]")
 {
 	const auto path = temp_path("yampt_test_adapted.json");
 	app_logger_t::reset_log();
@@ -151,7 +149,7 @@ TEST_CASE("dict_writer_t + dict_reader_t, adapted_from field round-trip", "[i]")
 	cleanup(path);
 }
 
-TEST_CASE("dict_writer_t + dict_reader_t, enchantment field round-trip", "[i]")
+TEST_CASE("dict_writer_t::write, enchantment field round-trip", "[i]")
 {
 	const auto path = temp_path("yampt_test_enchant.json");
 	app_logger_t::reset_log();
@@ -178,7 +176,7 @@ TEST_CASE("dict_writer_t + dict_reader_t, enchantment field round-trip", "[i]")
 	cleanup(path);
 }
 
-TEST_CASE("dict_writer_t + dict_reader_t, all statuses round-trip", "[i]")
+TEST_CASE("dict_writer_t::write, all statuses round-trip", "[i]")
 {
 	const auto path = temp_path("yampt_test_statuses.json");
 	app_logger_t::reset_log();
@@ -217,7 +215,7 @@ TEST_CASE("dict_writer_t + dict_reader_t, all statuses round-trip", "[i]")
 	cleanup(path);
 }
 
-TEST_CASE("dict_reader_t, malformed JSON returns not loaded", "[i]")
+TEST_CASE("dict_reader_t::load, malformed JSON returns not loaded", "[i]")
 {
 	const auto path = temp_path("yampt_test_malformed.json");
 	{
@@ -232,7 +230,7 @@ TEST_CASE("dict_reader_t, malformed JSON returns not loaded", "[i]")
 	cleanup(path);
 }
 
-TEST_CASE("dict_reader_t, empty JSON object returns loaded with no entries", "[i]")
+TEST_CASE("dict_reader_t::load, empty JSON object loaded no entries", "[i]")
 {
 	const auto path = temp_path("yampt_test_empty_obj.json");
 	{
@@ -248,7 +246,7 @@ TEST_CASE("dict_reader_t, empty JSON object returns loaded with no entries", "[i
 	cleanup(path);
 }
 
-TEST_CASE("dict_merger_t, file-based merge last-listed wins", "[i]")
+TEST_CASE("dict_merger_t::merge_dict, file-based last-listed wins", "[i]")
 {
 	const auto path1 = temp_path("yampt_test_merge1.json");
 	const auto path2 = temp_path("yampt_test_merge2.json");
@@ -287,7 +285,7 @@ TEST_CASE("dict_merger_t, file-based merge last-listed wins", "[i]")
 	cleanup(path2);
 }
 
-TEST_CASE("dict_merger_t, three-file merge element count", "[i]")
+TEST_CASE("dict_merger_t::merge_dict, three-file element count", "[i]")
 {
 	const auto path1 = temp_path("yampt_test_m3_1.json");
 	const auto path2 = temp_path("yampt_test_m3_2.json");
@@ -319,7 +317,7 @@ TEST_CASE("dict_merger_t, three-file merge element count", "[i]")
 	cleanup(path3);
 }
 
-TEST_CASE("dict_writer_t + dict_reader_t, raw codepage bytes survive round-trip", "[i]")
+TEST_CASE("dict_writer_t::write, raw codepage bytes survive round-trip", "[i]")
 {
 	const auto path = temp_path("yampt_test_raw_bytes.json");
 	app_logger_t::reset_log();

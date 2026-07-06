@@ -1,7 +1,6 @@
 #pragma once
 
 #include "creator_context.hpp"
-
 #include <string>
 
 class creator_ordered_t
@@ -22,14 +21,21 @@ private:
 	void process_info(size_t index, const std::string & dial_type, const std::string & dial_foreign_name);
 	void attach_speaker_metadata(const std::string & key_text, size_t record_index);
 	void process_sctx(size_t index);
-	void process_bnam(size_t index, const std::string & dial_type,
-	    const std::string & dial_foreign_name, const std::string & info_inam);
+	void process_bnam(
+	    size_t index,
+	    const std::string & dial_type,
+	    const std::string & dial_foreign_name,
+	    const std::string & info_inam);
 	void process_cell(size_t index);
 	void process_cell_default();
 	void process_cell_region();
 
-	void insert_entry_base(const std::string & key_text, const std::string & old_text,
-	    const std::string & new_text, rec_type_t type, status_t status);
+	void insert_entry_base(
+	    const std::string & key_text,
+	    const std::string & old_text,
+	    const std::string & new_text,
+	    rec_type_t type,
+	    status_t status);
 
 	creator_context_t & m_ctx;
 };

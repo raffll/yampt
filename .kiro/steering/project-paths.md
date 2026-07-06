@@ -161,7 +161,7 @@ Examples:
 - `"chapter_t::insert, new and duplicate keys"`
 - `"domain_types::is_fnam, true IDs"`
 - `"dict_merger_t::add_record, inserts entry"`
-- `"script_parser_t, dial keywords"`
+- `"script_parser_t::convert_script, dial keywords"`
 - `"file_list_t::classify, edge cases"`
 - `"string_utils::trim_cr, no CR present"`
 - `"record_conflict::compute_conflict_all, override detected"`
@@ -169,12 +169,13 @@ Examples:
 - `"app_logger_t::add_log, sets error flag"`
 
 Rules:
+- Every test name must contain `::` — format is always `owner::member, description`
 - First part is the fully-qualified owner using `::` separators — class (`_t` suffix) or namespace
-- If the test is about a specific method/function, include its name after `::` before the comma
-- If the test is about general class behavior (not one method), use just the class name before the comma
-- Every test name must have a `class_t::` or `namespace::` prefix — never a bare function name
+- After `::` comes the method or function name being tested
+- Never use just the class name before the comma without `::` — pick the primary method the test exercises
+- Never use a bare function name without a class or namespace prefix
 - Description after the comma is a short lowercase phrase
-- Total test name must be under 80 characters — the VS Catch2 test adapter truncates longer names and loses the tag, causing them to appear under "No Traits"
+- Total test name has no hard length limit — the `.runsettings` uses `--reporter xml` for discovery which handles any length. Keep names concise for readability but don't truncate for tooling.
 
 ## Cell Heuristic Matching — Log Format
 

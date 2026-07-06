@@ -1,6 +1,6 @@
 #include "cell_matcher.hpp"
-#include "../utility/app_logger.hpp"
 #include "../translator/translation_engine.hpp"
+#include "../utility/app_logger.hpp"
 #include "word_match_utils.hpp"
 #include <algorithm>
 #include <cstdio>

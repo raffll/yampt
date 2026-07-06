@@ -1,6 +1,6 @@
 #include "dict_writer.hpp"
-#include "../utility/includes.hpp"
 #include "../utility/app_logger.hpp"
+#include "../utility/includes.hpp"
 
 static std::string escape_json(const std::string & s)
 {

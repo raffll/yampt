@@ -1,8 +1,8 @@
 #include <catch2/catch_all.hpp>
-#include <utility/includes.hpp>
-#include <utility/app_logger.hpp>
 #include <converter/esm_converter.hpp>
 #include <io/dict_writer.hpp>
+#include <utility/app_logger.hpp>
+#include <utility/includes.hpp>
 #include <random>
 
 static std::string get_temp_path(const std::string & filename)
@@ -799,7 +799,7 @@ TEST_CASE("esm_converter_t::convert_cndt, no match leaves unchanged", "[u]")
 	REQUIRE(records[1].modified == false);
 }
 
-TEST_CASE("esm_converter_t, only translated status is applied", "[u]")
+TEST_CASE("esm_converter_t::convert_esm, only translated status applied", "[u]")
 {
 	const std::vector<status_t> rejected_statuses = {
 		status_t::untranslated, status_t::missing,     status_t::duplicate, status_t::mismatch,   status_t::heuristic,
@@ -836,7 +836,7 @@ TEST_CASE("esm_converter_t, only translated status is applied", "[u]")
 	}
 }
 
-TEST_CASE("esm_converter_t, translated status is applied", "[u]")
+TEST_CASE("esm_converter_t::convert_esm, translated status applied", "[u]")
 {
 	auto merger = make_merger(
 	    {
@@ -850,7 +850,7 @@ TEST_CASE("esm_converter_t, translated status is applied", "[u]")
 	REQUIRE(result.find("Balmora PL") != std::string::npos);
 }
 
-TEST_CASE("esm_converter_t, identical old and new text is not applied", "[u]")
+TEST_CASE("esm_converter_t::convert_esm, identical old and new not applied", "[u]")
 {
 	auto merger = make_merger(
 	    {
@@ -864,7 +864,7 @@ TEST_CASE("esm_converter_t, identical old and new text is not applied", "[u]")
 	REQUIRE(records[1].modified == false);
 }
 
-TEST_CASE("esm_converter_t, round-trip yields dict new_text for all record types", "[u]")
+TEST_CASE("esm_converter_t::convert_esm, round-trip all record types", "[u]")
 {
 	const auto iteration = GENERATE(range(0, 100));
 
@@ -1057,7 +1057,7 @@ TEST_CASE("esm_converter_t, round-trip yields dict new_text for all record types
 	REQUIRE(result.find(test_case.new_text) != std::string::npos);
 }
 
-TEST_CASE("esm_converter_t, identity for unmatched records", "[u]")
+TEST_CASE("esm_converter_t::convert_esm, identity for unmatched records", "[u]")
 {
 	const auto iteration = GENERATE(range(0, 100));
 
@@ -1238,7 +1238,7 @@ TEST_CASE("esm_converter_t, identity for unmatched records", "[u]")
 	REQUIRE(records[built.target_record_index].content == input_record_content);
 }
 
-TEST_CASE("esm_converter_t, CELL round-trip with random names", "[u]")
+TEST_CASE("esm_converter_t::convert_cell, round-trip random names", "[u]")
 {
 	const auto seed = GENERATE(range(0, 100));
 	std::mt19937 rng(static_cast<unsigned>(seed * 7919 + 104729));
@@ -1276,7 +1276,7 @@ TEST_CASE("esm_converter_t, CELL round-trip with random names", "[u]")
 	REQUIRE(result.find(translated) != std::string::npos);
 }
 
-TEST_CASE("esm_converter_t, identity unmatched CELL random", "[u]")
+TEST_CASE("esm_converter_t::convert_cell, identity unmatched random", "[u]")
 {
 	const auto seed = GENERATE(range(0, 100));
 	std::mt19937 rng(static_cast<unsigned>(seed * 6991 + 83497));

@@ -20,10 +20,7 @@ dict_merger_t::dict_merger_t(const std::vector<std::string> & paths)
 	print_summary_log();
 }
 
-void dict_merger_t::add_record(
-    const rec_type_t type,
-    const std::string & key_text,
-    const std::string & new_text)
+void dict_merger_t::add_record(const rec_type_t type, const std::string & key_text, const std::string & new_text)
 {
 	record_entry_t entry;
 	entry.key_text = key_text;

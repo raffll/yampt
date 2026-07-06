@@ -1,7 +1,7 @@
 #include "sub_record_merge.hpp"
-#include "../utility/string_utils.hpp"
 #include "../decoder/sub_record_iter.hpp"
 #include "../utility/app_logger.hpp"
+#include "../utility/string_utils.hpp"
 #include <algorithm>
 #include <cstring>
 #include <map>

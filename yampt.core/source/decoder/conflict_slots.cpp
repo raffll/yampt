@@ -3,7 +3,6 @@
 #include <set>
 #include <unordered_map>
 
-
 struct sub_slot_t
 {
 	std::string type;

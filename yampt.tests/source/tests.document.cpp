@@ -1,8 +1,8 @@
 #include <catch2/catch_all.hpp>
-#include <utility/app_logger.hpp>
 #include <io/dict_writer.hpp>
 #include <model/dict_document.hpp>
 #include <rapidcheck/catch.h>
+#include <utility/app_logger.hpp>
 #include <utility/string_utils.hpp>
 #include <filesystem>
 #include <rapidcheck.h>
@@ -31,7 +31,7 @@ void cleanup_temp_dict(const std::string & path)
 
 } // anonymous namespace
 
-TEST_CASE("dict_document_t, path round-trip", "[i]")
+TEST_CASE("dict_document_t::path, round-trip", "[i]")
 {
 	rc::prop(
 	    "path() returns normalized path",
@@ -56,7 +56,7 @@ TEST_CASE("dict_document_t, path round-trip", "[i]")
 	});
 }
 
-TEST_CASE("dict_document_t, build_rows count invariant", "[i]")
+TEST_CASE("dict_document_t::build_rows, count invariant", "[i]")
 {
 	rc::prop(
 	    "build_rows().size() == total_count()",
@@ -94,7 +94,7 @@ TEST_CASE("dict_document_t, build_rows count invariant", "[i]")
 	});
 }
 
-TEST_CASE("dict_document_t, commit_edit modifies data", "[i]")
+TEST_CASE("dict_document_t::commit_edit, modifies data", "[i]")
 {
 	rc::prop(
 	    "commit_edit changes the target record new_text",
@@ -157,7 +157,7 @@ void cleanup_temp_yaml(const std::string & path)
 
 } // anonymous namespace
 
-TEST_CASE("yaml_document_t, path round-trip", "[i]")
+TEST_CASE("yaml_document_t::path, round-trip", "[i]")
 {
 	rc::prop(
 	    "path() returns normalized file path",
@@ -174,7 +174,7 @@ TEST_CASE("yaml_document_t, path round-trip", "[i]")
 	});
 }
 
-TEST_CASE("yaml_document_t, dirty state consistency", "[i]")
+TEST_CASE("yaml_document_t::is_dirty, state consistency", "[i]")
 {
 	rc::prop(
 	    "set_dirty round-trips; commit_edit sets dirty",
@@ -201,7 +201,7 @@ TEST_CASE("yaml_document_t, dirty state consistency", "[i]")
 	});
 }
 
-TEST_CASE("yaml_document_t, commit-edit round-trip", "[i]")
+TEST_CASE("yaml_document_t::commit_edit, round-trip", "[i]")
 {
 	rc::prop(
 	    "after commit_edit, build_rows()[idx].new_text == text",
@@ -226,7 +226,7 @@ TEST_CASE("yaml_document_t, commit-edit round-trip", "[i]")
 	});
 }
 
-TEST_CASE("yaml_document_t, translated count invariant", "[i]")
+TEST_CASE("yaml_document_t::translated_count, invariant", "[i]")
 {
 	rc::prop(
 	    "after K distinct edits, translated_count() == K",

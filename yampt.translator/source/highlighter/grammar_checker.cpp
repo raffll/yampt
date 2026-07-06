@@ -10,8 +10,7 @@ QTextCharFormat grammar_checker_t::warning_format()
 	return fmt;
 }
 
-QList<QTextEdit::ExtraSelection> grammar_checker_t::check(translation_edit_view_t * editor, rec_type_t type)
-    const
+QList<QTextEdit::ExtraSelection> grammar_checker_t::check(translation_edit_view_t * editor, rec_type_t type) const
 {
 	QList<QTextEdit::ExtraSelection> selections;
 

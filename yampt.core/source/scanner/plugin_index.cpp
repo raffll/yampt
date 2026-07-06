@@ -1,8 +1,8 @@
 #include "plugin_index.hpp"
-#include "../utility/string_utils.hpp"
-#include "../utility/app_logger.hpp"
 #include "../decoder/sub_record_iter.hpp"
 #include "../decoder/sub_record_schema.hpp"
+#include "../utility/app_logger.hpp"
+#include "../utility/string_utils.hpp"
 #include <algorithm>
 #include <set>
 
@@ -38,8 +38,8 @@ static std::string derive_cell_id(sub_record_iter_t & iter, size_t fallback_inde
 
 		if (sub.type == "DATA" && sub.size >= cell_data_min_size)
 		{
-			uint32_t flags = static_cast<uint32_t>(
-			    domain_types::convert_string_byte_array_to_uint(std::string(sub.data + cell_flags_offset, grid_coord_size)));
+			uint32_t flags = static_cast<uint32_t>(domain_types::convert_string_byte_array_to_uint(
+			    std::string(sub.data + cell_flags_offset, grid_coord_size)));
 			is_interior = (flags & interior_flag_bit) != 0;
 			grid_x = static_cast<int32_t>(domain_types::convert_string_byte_array_to_uint(
 			    std::string(sub.data + cell_grid_x_offset, grid_coord_size)));
@@ -73,8 +73,8 @@ static std::string derive_index_based_id(sub_record_iter_t & iter, size_t fallba
 		if (sub.size < indx_min_size)
 			break;
 
-		int32_t index_val =
-		    static_cast<int32_t>(domain_types::convert_string_byte_array_to_uint(std::string(sub.data, grid_coord_size)));
+		int32_t index_val = static_cast<int32_t>(
+		    domain_types::convert_string_byte_array_to_uint(std::string(sub.data, grid_coord_size)));
 		return std::to_string(index_val);
 	}
 
@@ -125,8 +125,8 @@ static std::string derive_land_id(sub_record_iter_t & iter, size_t fallback_inde
 		if (sub.size < land_intv_min_size)
 			break;
 
-		int32_t grid_x =
-		    static_cast<int32_t>(domain_types::convert_string_byte_array_to_uint(std::string(sub.data, grid_coord_size)));
+		int32_t grid_x = static_cast<int32_t>(
+		    domain_types::convert_string_byte_array_to_uint(std::string(sub.data, grid_coord_size)));
 		int32_t grid_y = static_cast<int32_t>(
 		    domain_types::convert_string_byte_array_to_uint(std::string(sub.data + grid_coord_size, grid_coord_size)));
 		return "GRID[" + std::to_string(grid_x) + "," + std::to_string(grid_y) + "]";
@@ -146,8 +146,8 @@ static std::string derive_pgrd_id(sub_record_iter_t & iter, size_t fallback_inde
 		if (sub.size < land_intv_min_size)
 			break;
 
-		int32_t grid_x =
-		    static_cast<int32_t>(domain_types::convert_string_byte_array_to_uint(std::string(sub.data, grid_coord_size)));
+		int32_t grid_x = static_cast<int32_t>(
+		    domain_types::convert_string_byte_array_to_uint(std::string(sub.data, grid_coord_size)));
 		int32_t grid_y = static_cast<int32_t>(
 		    domain_types::convert_string_byte_array_to_uint(std::string(sub.data + grid_coord_size, grid_coord_size)));
 		return "GRID[" + std::to_string(grid_x) + "," + std::to_string(grid_y) + "]";

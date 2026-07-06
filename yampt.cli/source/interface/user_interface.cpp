@@ -1,12 +1,12 @@
 #include "user_interface.hpp"
-#include <io/binary_file_io.hpp>
-#include <utility/app_logger.hpp>
 #include <converter/esm_converter.hpp>
 #include <creator/dict_creator.hpp>
+#include <io/binary_file_io.hpp>
 #include <io/dict_reader.hpp>
 #include <io/dict_writer.hpp>
 #include <merger/dict_merger.hpp>
 #include <translator/translation_engine.hpp>
+#include <utility/app_logger.hpp>
 
 user_interface_t::user_interface_t(std::vector<std::string> & arg)
     : args(arg)
@@ -155,7 +155,8 @@ void user_interface_t::make_dict_base()
 		}
 		else
 		{
-			app_logger_t::add_log("[warning] failed to load translation model from \"" + translate_model_path + "\"\r\n");
+			app_logger_t::add_log(
+			    "[warning] failed to load translation model from \"" + translate_model_path + "\"\r\n");
 		}
 	}
 

@@ -1,8 +1,8 @@
 #include <catch2/catch_all.hpp>
-#include <utility/includes.hpp>
-#include <utility/app_logger.hpp>
 #include <converter/esm_converter.hpp>
 #include <io/dict_writer.hpp>
+#include <utility/app_logger.hpp>
+#include <utility/includes.hpp>
 
 static std::string get_temp_path(const std::string & filename)
 {
@@ -94,7 +94,7 @@ static counter_values_t parse_log_counters(const std::string & log, const std::s
 	return result;
 }
 
-TEST_CASE("esm_converter_t, SCTX counters sum correctly", "[i]")
+TEST_CASE("esm_converter_t::convert_scpt, SCTX counters sum correctly", "[i]")
 {
 	auto merger = make_merger(
 	    {
@@ -157,7 +157,7 @@ TEST_CASE("esm_converter_t, SCTX counters sum correctly", "[i]")
 	REQUIRE(counters.converted + counters.identical + counters.unchanged == counters.total);
 }
 
-TEST_CASE("esm_converter_t, BNAM counters sum correctly", "[i]")
+TEST_CASE("esm_converter_t::convert_bnam, BNAM counters sum correctly", "[i]")
 {
 	std::string topic_type(1, '\0');
 	auto dial_record =
@@ -207,7 +207,7 @@ TEST_CASE("esm_converter_t, BNAM counters sum correctly", "[i]")
 	REQUIRE(counters.converted + counters.identical + counters.unchanged == counters.total);
 }
 
-TEST_CASE("esm_converter_t, CELL counters sum correctly", "[i]")
+TEST_CASE("esm_converter_t::convert_cell, CELL counters sum correctly", "[i]")
 {
 	auto merger = make_merger(
 	    {

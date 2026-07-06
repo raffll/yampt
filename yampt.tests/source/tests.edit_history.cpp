@@ -1,8 +1,8 @@
 #include <catch2/catch_all.hpp>
 #include <editor/edit_history.hpp>
 #include <rapidcheck/catch.h>
-#include <utility/status_types.hpp>
 #include <utility/app_logger.hpp>
+#include <utility/status_types.hpp>
 #include <rapidcheck.h>
 
 namespace {

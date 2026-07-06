@@ -1,6 +1,6 @@
 #include "eet_reader.hpp"
-#include "binary_file_io.hpp"
 #include "../utility/app_logger.hpp"
+#include "binary_file_io.hpp"
 
 bool eet_reader_t::load(const std::string & path)
 {
