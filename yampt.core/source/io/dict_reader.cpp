@@ -5,9 +5,9 @@
 
 dict_reader_t::dict_reader_t(const std::string & path)
 {
-	dict = domain_types_t::initialize_dict();
+	dict = domain_types::initialize_dict();
 
-	std::string content = binary_file_io_t::read_file(path);
+	std::string content = binary_file_io::read_file(path);
 	if (!content.empty())
 	{
 		parse_json(content, path);
@@ -79,7 +79,7 @@ void dict_reader_t::parse_json(const std::string & content, const std::string & 
 		if (type_str == "encoding")
 			return;
 
-		rec_type_t type = domain_types_t::str_to_type(type_str);
+		rec_type_t type = domain_types::str_to_type(type_str);
 
 		if (type == rec_type_t::unknown)
 		{
@@ -98,34 +98,34 @@ void dict_reader_t::validate_entry(record_entry_t & entry, rec_type_t type)
 	if (type == rec_type_t::cell && entry.new_text.size() > 63)
 	{
 		app_logger_t::add_log(
-		    "[warning] " + domain_types_t::type_to_str(type) + ": invalid, more than 63 bytes in " + entry.key_text + "\r\n");
+		    "[warning] " + domain_types::type_to_str(type) + ": invalid, more than 63 bytes in " + entry.key_text + "\r\n");
 		return;
 	}
 
 	if (type == rec_type_t::rnam && entry.new_text.size() > 32)
 	{
 		app_logger_t::add_log(
-		    "[warning] " + domain_types_t::type_to_str(type) + ": invalid, more than 32 bytes in " + entry.key_text + "\r\n");
+		    "[warning] " + domain_types::type_to_str(type) + ": invalid, more than 32 bytes in " + entry.key_text + "\r\n");
 		return;
 	}
 
 	if (type == rec_type_t::fnam && entry.new_text.size() > 31)
 	{
 		app_logger_t::add_log(
-		    "[warning] " + domain_types_t::type_to_str(type) + ": invalid, more than 31 bytes in " + entry.key_text + "\r\n");
+		    "[warning] " + domain_types::type_to_str(type) + ": invalid, more than 31 bytes in " + entry.key_text + "\r\n");
 		return;
 	}
 
 	if (type == rec_type_t::info && entry.new_text.size() > 1024)
 	{
 		app_logger_t::add_log(
-		    "[warning] " + domain_types_t::type_to_str(type) + ": invalid, more than 1024 bytes in " + entry.key_text +
+		    "[warning] " + domain_types::type_to_str(type) + ": invalid, more than 1024 bytes in " + entry.key_text +
 		    "\r\n");
 		return;
 	}
 
 	if (!dict.at(type).insert(entry))
 	{
-		app_logger_t::add_log("[warning] " + domain_types_t::type_to_str(type) + ": doubled " + entry.key_text + "\r\n");
+		app_logger_t::add_log("[warning] " + domain_types::type_to_str(type) + ": doubled " + entry.key_text + "\r\n");
 	}
 }

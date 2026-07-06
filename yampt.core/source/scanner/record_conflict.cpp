@@ -1,7 +1,7 @@
 #include "record_conflict.hpp"
 #include "../utility/record_behavior.hpp"
 
-conflict_all_t record_conflict_t::compute_conflict_all(const std::vector<std::string> & values)
+conflict_all_t record_conflict::compute_conflict_all(const std::vector<std::string> & values)
 {
 	if (values.size() <= 1)
 		return conflict_all_t::only_one;
@@ -29,7 +29,7 @@ conflict_all_t record_conflict_t::compute_conflict_all(const std::vector<std::st
 	return conflict_all_t::override_benign;
 }
 
-conflict_all_t record_conflict_t::compute_conflict_all_skip_empty(const std::vector<std::string> & values)
+conflict_all_t record_conflict::compute_conflict_all_skip_empty(const std::vector<std::string> & values)
 {
 	std::vector<std::string> present;
 	for (const auto & value : values)
@@ -64,7 +64,7 @@ conflict_all_t record_conflict_t::compute_conflict_all_skip_empty(const std::vec
 	return conflict_all_t::override_benign;
 }
 
-std::vector<conflict_this_t> record_conflict_t::compute_conflict_this(const std::vector<std::string> & values)
+std::vector<conflict_this_t> record_conflict::compute_conflict_this(const std::vector<std::string> & values)
 {
 	std::vector<conflict_this_t> result(values.size(), conflict_this_t::unknown);
 
@@ -125,7 +125,7 @@ std::vector<conflict_this_t> record_conflict_t::compute_conflict_this(const std:
 	return result;
 }
 
-std::vector<conflict_this_t> record_conflict_t::compute_conflict_this_skip_empty(const std::vector<std::string> & values)
+std::vector<conflict_this_t> record_conflict::compute_conflict_this_skip_empty(const std::vector<std::string> & values)
 {
 	std::vector<conflict_this_t> result(values.size(), conflict_this_t::unknown);
 
@@ -201,7 +201,7 @@ std::vector<conflict_this_t> record_conflict_t::compute_conflict_this_skip_empty
 	return result;
 }
 
-conflict_policy_t record_conflict_t::find_conflict_policy(
+conflict_policy_t record_conflict::find_conflict_policy(
     const std::string & record_type,
     const std::string & sub_type)
 {

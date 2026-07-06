@@ -65,7 +65,7 @@ dial_matcher_t::fingerprint_index_t dial_matcher_t::build_inam_index(esm_reader_
 		if (!esm_source.get_key().exist)
 			continue;
 
-		if (domain_types_t::get_dialog_type(esm_source.get_key().content) != "T")
+		if (domain_types::get_dialog_type(esm_source.get_key().content) != "T")
 			continue;
 
 		if (i + 1 >= esm_source.get_records().size())
@@ -122,7 +122,7 @@ void dial_matcher_t::match_by_inam(
 		if (!m_esm_foreign.get_key().exist)
 			continue;
 
-		if (domain_types_t::get_dialog_type(m_esm_foreign.get_key().content) != "T")
+		if (domain_types::get_dialog_type(m_esm_foreign.get_key().content) != "T")
 			continue;
 
 		m_esm_foreign.set_value("NAME");
@@ -197,7 +197,7 @@ void dial_matcher_t::match_by_translation(
 		if (!m_esm_native.get_key().exist)
 			continue;
 
-		if (domain_types_t::get_dialog_type(m_esm_native.get_key().content) != "T")
+		if (domain_types::get_dialog_type(m_esm_native.get_key().content) != "T")
 			continue;
 
 		m_esm_native.set_value("NAME");
@@ -387,7 +387,7 @@ void dial_matcher_t::report_unmatched(
 		if (!m_esm_native.get_key().exist)
 			continue;
 
-		if (domain_types_t::get_dialog_type(m_esm_native.get_key().content) != "T")
+		if (domain_types::get_dialog_type(m_esm_native.get_key().content) != "T")
 			continue;
 
 		m_esm_native.set_value("NAME");

@@ -205,7 +205,7 @@ void user_interface_t::convert_esm()
 		if (converter.is_loaded())
 		{
 			const auto & name = converter.get_name().name + suffix + converter.get_name().ext;
-			binary_file_io_t::write_file(converter.get_records(), name);
+			binary_file_io::write_file(converter.get_records(), name);
 			std::filesystem::last_write_time(name, converter.get_time());
 		}
 		else
@@ -226,7 +226,7 @@ void user_interface_t::create_esm()
 		if (converter.is_loaded())
 		{
 			const auto & name = converter.get_name().name + ".CREATED" + converter.get_name().ext;
-			binary_file_io_t::create_file(converter.get_records(), name);
+			binary_file_io::create_file(converter.get_records(), name);
 			std::filesystem::last_write_time(name, converter.get_time() + std::chrono::seconds(1));
 		}
 		else

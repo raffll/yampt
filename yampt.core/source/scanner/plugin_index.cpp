@@ -39,11 +39,11 @@ static std::string derive_cell_id(sub_record_iter_t & iter, size_t fallback_inde
 		if (sub.type == "DATA" && sub.size >= cell_data_min_size)
 		{
 			uint32_t flags = static_cast<uint32_t>(
-			    domain_types_t::convert_string_byte_array_to_uint(std::string(sub.data + cell_flags_offset, grid_coord_size)));
+			    domain_types::convert_string_byte_array_to_uint(std::string(sub.data + cell_flags_offset, grid_coord_size)));
 			is_interior = (flags & interior_flag_bit) != 0;
-			grid_x = static_cast<int32_t>(domain_types_t::convert_string_byte_array_to_uint(
+			grid_x = static_cast<int32_t>(domain_types::convert_string_byte_array_to_uint(
 			    std::string(sub.data + cell_grid_x_offset, grid_coord_size)));
-			grid_y = static_cast<int32_t>(domain_types_t::convert_string_byte_array_to_uint(
+			grid_y = static_cast<int32_t>(domain_types::convert_string_byte_array_to_uint(
 			    std::string(sub.data + cell_grid_y_offset, grid_coord_size)));
 			has_data = true;
 			break;
@@ -74,7 +74,7 @@ static std::string derive_index_based_id(sub_record_iter_t & iter, size_t fallba
 			break;
 
 		int32_t index_val =
-		    static_cast<int32_t>(domain_types_t::convert_string_byte_array_to_uint(std::string(sub.data, grid_coord_size)));
+		    static_cast<int32_t>(domain_types::convert_string_byte_array_to_uint(std::string(sub.data, grid_coord_size)));
 		return std::to_string(index_val);
 	}
 
@@ -126,9 +126,9 @@ static std::string derive_land_id(sub_record_iter_t & iter, size_t fallback_inde
 			break;
 
 		int32_t grid_x =
-		    static_cast<int32_t>(domain_types_t::convert_string_byte_array_to_uint(std::string(sub.data, grid_coord_size)));
+		    static_cast<int32_t>(domain_types::convert_string_byte_array_to_uint(std::string(sub.data, grid_coord_size)));
 		int32_t grid_y = static_cast<int32_t>(
-		    domain_types_t::convert_string_byte_array_to_uint(std::string(sub.data + grid_coord_size, grid_coord_size)));
+		    domain_types::convert_string_byte_array_to_uint(std::string(sub.data + grid_coord_size, grid_coord_size)));
 		return "GRID[" + std::to_string(grid_x) + "," + std::to_string(grid_y) + "]";
 	}
 
@@ -147,9 +147,9 @@ static std::string derive_pgrd_id(sub_record_iter_t & iter, size_t fallback_inde
 			break;
 
 		int32_t grid_x =
-		    static_cast<int32_t>(domain_types_t::convert_string_byte_array_to_uint(std::string(sub.data, grid_coord_size)));
+		    static_cast<int32_t>(domain_types::convert_string_byte_array_to_uint(std::string(sub.data, grid_coord_size)));
 		int32_t grid_y = static_cast<int32_t>(
-		    domain_types_t::convert_string_byte_array_to_uint(std::string(sub.data + grid_coord_size, grid_coord_size)));
+		    domain_types::convert_string_byte_array_to_uint(std::string(sub.data + grid_coord_size, grid_coord_size)));
 		return "GRID[" + std::to_string(grid_x) + "," + std::to_string(grid_y) + "]";
 	}
 
@@ -290,7 +290,7 @@ std::string plugin_index_t::derive_display_name(esm_reader_t & esm, size_t i)
 				break;
 
 			int32_t index_val = static_cast<int32_t>(
-			    domain_types_t::convert_string_byte_array_to_uint(std::string(sub.data, grid_coord_size)));
+			    domain_types::convert_string_byte_array_to_uint(std::string(sub.data, grid_coord_size)));
 
 			if (rec_type == "MGEF")
 			{

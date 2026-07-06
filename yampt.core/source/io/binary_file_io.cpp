@@ -5,7 +5,7 @@
 
 static constexpr size_t read_buffer_size = 16384;
 
-std::string binary_file_io_t::read_file(const std::string & path)
+std::string binary_file_io::read_file(const std::string & path)
 {
 	std::string content;
 	std::ifstream file(path, std::ios::binary);
@@ -35,7 +35,7 @@ std::string binary_file_io_t::read_file(const std::string & path)
 	return content;
 }
 
-void binary_file_io_t::write_text(const std::string & text, const std::string & path)
+void binary_file_io::write_text(const std::string & text, const std::string & path)
 {
 	std::ofstream file(path, std::ios::binary);
 	if (!file.is_open())
@@ -47,7 +47,7 @@ void binary_file_io_t::write_text(const std::string & text, const std::string & 
 	app_logger_t::add_log("[info] writing \"" + path + "\"\r\n");
 }
 
-void binary_file_io_t::write_file(const std::vector<record_t> & records, const std::string & path)
+void binary_file_io::write_file(const std::vector<record_t> & records, const std::string & path)
 {
 	std::ofstream file(path, std::ios::binary);
 	if (!file.is_open())
@@ -62,7 +62,7 @@ void binary_file_io_t::write_file(const std::vector<record_t> & records, const s
 	app_logger_t::add_log("[info] writing \"" + path + "\"\r\n");
 }
 
-void binary_file_io_t::create_file(const std::vector<record_t> & records, const std::string & path)
+void binary_file_io::create_file(const std::vector<record_t> & records, const std::string & path)
 {
 	std::ofstream file(path, std::ios::binary);
 	if (!file.is_open())

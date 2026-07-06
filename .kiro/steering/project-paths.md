@@ -155,20 +155,24 @@ tests/
 
 ## Unit Test Naming Convention
 
-Format: `"class_t::method, description"` or `"class_t::nested_t::method, description"`
+Format: `"class_t::method, description"` or `"namespace::function, description"`
 
 Examples:
-- `"tools_t::chapter_t::insert, new and duplicate keys"`
-- `"tools_t::is_fnam, true IDs"`
+- `"chapter_t::insert, new and duplicate keys"`
+- `"domain_types::is_fnam, true IDs"`
 - `"dict_merger_t::add_record, inserts entry"`
 - `"script_parser_t, dial keywords"`
 - `"file_list_t::classify, edge cases"`
-- `"dict_document_t, path round-trip"`
+- `"string_utils::trim_cr, no CR present"`
+- `"record_conflict::compute_conflict_all, override detected"`
+- `"merge_patch_store_t::add, inserts record"`
+- `"app_logger_t::add_log, sets error flag"`
 
 Rules:
-- First part is the fully-qualified type path using `::` separators (with `_t` suffix)
-- If the test is about a specific method, include the method name after `::` before the comma
+- First part is the fully-qualified owner using `::` separators — class (`_t` suffix) or namespace
+- If the test is about a specific method/function, include its name after `::` before the comma
 - If the test is about general class behavior (not one method), use just the class name before the comma
+- Every test name must have a `class_t::` or `namespace::` prefix — never a bare function name
 - Description after the comma is a short lowercase phrase
 - Total test name must be under 80 characters — the VS Catch2 test adapter truncates longer names and loses the tag, causing them to appear under "No Traits"
 

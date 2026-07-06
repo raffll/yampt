@@ -619,7 +619,7 @@ static void build_armor_slots(slot_result_t & result)
 static void dispatch_strategy(const std::string & rec_type, slot_result_t & result)
 {
 	if (rec_type == "CELL")
-		conflict_slot_builder_t::build_cell(result);
+		conflict_slots::build_cell(result);
 
 	else if (rec_type == "LEVI" || rec_type == "LEVC")
 		build_leveled_list_slots(rec_type, result);
@@ -637,7 +637,7 @@ static void dispatch_strategy(const std::string & rec_type, slot_result_t & resu
 		build_generic_slots(result);
 }
 
-slot_result_t conflict_slot_builder_t::build(
+slot_result_t conflict_slots::build(
     const std::string & rec_type,
     const std::vector<std::string> & version_contents,
     const std::vector<bool> & version_deleted)
@@ -652,7 +652,7 @@ slot_result_t conflict_slot_builder_t::build(
 	return result;
 }
 
-slot_result_t conflict_slot_builder_t::build(
+slot_result_t conflict_slots::build(
     const std::string & rec_type,
     std::vector<std::string> && version_contents,
     const std::vector<bool> & version_deleted)
@@ -887,7 +887,7 @@ static void align_cell_ref_group(
 	align_ref_group_slots(parsed, ver_refs, object_index, ref_slots, result);
 }
 
-void conflict_slot_builder_t::build_cell(slot_result_t & result)
+void conflict_slots::build_cell(slot_result_t & result)
 {
 	std::vector<std::vector<cell_ref_group_t>> ver_refs;
 	std::vector<size_t> ver_header_end;

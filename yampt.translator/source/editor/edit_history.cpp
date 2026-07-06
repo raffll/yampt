@@ -7,7 +7,7 @@
 
 static std::string make_key(rec_type_t type, const std::string & key)
 {
-	return domain_types_t::type_to_str(type) + ":" + key;
+	return domain_types::type_to_str(type) + ":" + key;
 }
 
 static std::string make_timestamp()

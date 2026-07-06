@@ -3,12 +3,12 @@
 
 dict_merger_t::dict_merger_t()
 {
-	dict = domain_types_t::initialize_dict();
+	dict = domain_types::initialize_dict();
 }
 
 dict_merger_t::dict_merger_t(const std::vector<std::string> & paths)
 {
-	dict = domain_types_t::initialize_dict();
+	dict = domain_types::initialize_dict();
 
 	for (auto it = paths.rbegin(); it != paths.rend(); ++it)
 	{

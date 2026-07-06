@@ -3,6 +3,8 @@
   <ItemGroup>
     <ClCompile Include="source\tests.main.cpp" />
     <ClCompile Include="source\tests.tools.cpp" />
+    <ClCompile Include="source\tests.app_logger.cpp" />
+    <ClCompile Include="source\tests.merge_patch_store.cpp" />
     <ClCompile Include="source\tests.file_list.cpp" />
     <ClCompile Include="source\tests.dict_reader.cpp" />
     <ClCompile Include="source\tests.dict_writer.cpp" />

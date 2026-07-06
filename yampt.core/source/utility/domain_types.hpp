@@ -108,18 +108,18 @@ struct record_t
 	bool modified = false;
 };
 
-class domain_types_t
-{
-public:
-	static const std::vector<std::string> script_keywords;
+namespace domain_types {
 
-	static dict_t initialize_dict();
-	static size_t get_number_of_elements_in_dict(const dict_t & dict);
-	static std::string type_to_str(rec_type_t type);
-	static rec_type_t str_to_type(const std::string & str);
-	static std::string get_dialog_type(const std::string & content);
-	static std::string get_indx(const std::string & content);
-	static bool is_fnam(const std::string & rec_id);
-	static size_t convert_string_byte_array_to_uint(const std::string & str);
-	static std::string convert_uint_to_string_byte_array(size_t size);
-};
+extern const std::vector<std::string> script_keywords;
+
+dict_t initialize_dict();
+size_t get_number_of_elements_in_dict(const dict_t & dict);
+std::string type_to_str(rec_type_t type);
+rec_type_t str_to_type(const std::string & str);
+std::string get_dialog_type(const std::string & content);
+std::string get_indx(const std::string & content);
+bool is_fnam(const std::string & rec_id);
+size_t convert_string_byte_array_to_uint(const std::string & str);
+std::string convert_uint_to_string_byte_array(size_t size);
+
+} // namespace domain_types

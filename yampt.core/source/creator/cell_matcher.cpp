@@ -106,7 +106,7 @@ std::string cell_matcher_t::make_cell_fingerprint(esm_reader_t & esm_src)
 	while (pos + 8 <= content.size())
 	{
 		std::string sub_id = content.substr(pos, 4);
-		size_t sub_size = domain_types_t::convert_string_byte_array_to_uint(content.substr(pos + 4, 4));
+		size_t sub_size = domain_types::convert_string_byte_array_to_uint(content.substr(pos + 4, 4));
 		if (sub_size == 0)
 			break;
 

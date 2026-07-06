@@ -89,7 +89,7 @@ QVariant record_table_model_t::data(const QModelIndex & index, int role) const
 		switch (index.column())
 		{
 		case col_id:
-			return QString::fromStdString(domain_types_t::type_to_str(row.type));
+			return QString::fromStdString(domain_types::type_to_str(row.type));
 		case col_key:
 			return format_key_display(row);
 		case col_original:

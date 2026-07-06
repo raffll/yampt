@@ -50,7 +50,7 @@ struct creator_context_t
 	    : esm(path)
 	    , esm_ref(esm)
 	{
-		dict = domain_types_t::initialize_dict();
+		dict = domain_types::initialize_dict();
 	}
 
 	creator_context_t(const std::string & native_path, const std::string & foreign_path)
@@ -58,7 +58,7 @@ struct creator_context_t
 	    , esm_ext(native_path)
 	    , esm_ref(esm_ext)
 	{
-		dict = domain_types_t::initialize_dict();
+		dict = domain_types::initialize_dict();
 	}
 
 	~creator_context_t();

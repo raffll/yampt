@@ -65,16 +65,16 @@ std::string cell_name_fixer_t::set_cell_name(const std::string & content, const 
 
 		auto result = content.substr(0, view.offset + 4);
 
-		const auto size_as_array = domain_types_t::convert_uint_to_string_byte_array(new_data_size);
+		const auto size_as_array = domain_types::convert_uint_to_string_byte_array(new_data_size);
 		result += size_as_array;
 		result += new_name_with_null;
 		result += content.substr(view.offset + sub_record_header_size + old_data_size);
 
 		const auto old_record_body_size =
-		    domain_types_t::convert_string_byte_array_to_uint(result.substr(record_body_size_offset, 4));
+		    domain_types::convert_string_byte_array_to_uint(result.substr(record_body_size_offset, 4));
 		const auto new_record_body_size =
 		    static_cast<size_t>(static_cast<int64_t>(old_record_body_size) + size_difference);
-		const auto body_size_array = domain_types_t::convert_uint_to_string_byte_array(new_record_body_size);
+		const auto body_size_array = domain_types::convert_uint_to_string_byte_array(new_record_body_size);
 		result.replace(record_body_size_offset, 4, body_size_array);
 
 		return result;

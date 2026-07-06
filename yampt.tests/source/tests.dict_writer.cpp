@@ -27,13 +27,13 @@ TEST_CASE("dict_writer_t + dict_reader_t, empty dict round-trip", "[i]")
 	const auto path = temp_path("yampt_test_empty.json");
 	app_logger_t::reset_log();
 
-	dict_t dict = domain_types_t::initialize_dict();
+	dict_t dict = domain_types::initialize_dict();
 	dict_writer_t::write(dict, path);
 	REQUIRE(fs::exists(path));
 
 	dict_reader_t reader(path);
 	REQUIRE(reader.is_loaded());
-	REQUIRE(domain_types_t::get_number_of_elements_in_dict(reader.get_dict()) == 0);
+	REQUIRE(domain_types::get_number_of_elements_in_dict(reader.get_dict()) == 0);
 
 	cleanup(path);
 }
@@ -43,7 +43,7 @@ TEST_CASE("dict_writer_t + dict_reader_t, multiple types round-trip", "[i]")
 	const auto path = temp_path("yampt_test_multi.json");
 	app_logger_t::reset_log();
 
-	dict_t dict = domain_types_t::initialize_dict();
+	dict_t dict = domain_types::initialize_dict();
 	dict.at(rec_type_t::cell).insert({ "key_cell", "Balmora", "Balmora_PL", status_t::translated });
 	dict.at(rec_type_t::dial).insert({ "key_dial", "background", "tlo", status_t::translated });
 	dict.at(rec_type_t::fnam).insert({ "key_fnam", "Iron Dagger", "Zelazny Sztylet", status_t::translated });
@@ -55,7 +55,7 @@ TEST_CASE("dict_writer_t + dict_reader_t, multiple types round-trip", "[i]")
 
 	dict_reader_t reader(path);
 	REQUIRE(reader.is_loaded());
-	REQUIRE(domain_types_t::get_number_of_elements_in_dict(reader.get_dict()) == 4);
+	REQUIRE(domain_types::get_number_of_elements_in_dict(reader.get_dict()) == 4);
 
 	const auto * cell = reader.get_dict().at(rec_type_t::cell).find("key_cell");
 	REQUIRE(cell != nullptr);
@@ -76,7 +76,7 @@ TEST_CASE("dict_writer_t + dict_reader_t, special characters round-trip", "[i]")
 	const auto path = temp_path("yampt_test_special.json");
 	app_logger_t::reset_log();
 
-	dict_t dict = domain_types_t::initialize_dict();
+	dict_t dict = domain_types::initialize_dict();
 	dict.at(rec_type_t::gmst)
 	    .insert({ "key_quotes", "He said \"hello\"", "On powiedzial \"czesc\"", status_t::translated });
 	dict.at(rec_type_t::gmst)
@@ -90,7 +90,7 @@ TEST_CASE("dict_writer_t + dict_reader_t, special characters round-trip", "[i]")
 
 	dict_reader_t reader(path);
 	REQUIRE(reader.is_loaded());
-	REQUIRE(domain_types_t::get_number_of_elements_in_dict(reader.get_dict()) == 4);
+	REQUIRE(domain_types::get_number_of_elements_in_dict(reader.get_dict()) == 4);
 
 	const auto * quotes = reader.get_dict().at(rec_type_t::gmst).find("key_quotes");
 	REQUIRE(quotes != nullptr);
@@ -117,7 +117,7 @@ TEST_CASE("dict_writer_t + dict_reader_t, adapted_from field round-trip", "[i]")
 	const auto path = temp_path("yampt_test_adapted.json");
 	app_logger_t::reset_log();
 
-	dict_t dict = domain_types_t::initialize_dict();
+	dict_t dict = domain_types::initialize_dict();
 	record_entry_t entry;
 	entry.key_text = "key_adapted";
 	entry.old_text = "Old Text";
@@ -156,7 +156,7 @@ TEST_CASE("dict_writer_t + dict_reader_t, enchantment field round-trip", "[i]")
 	const auto path = temp_path("yampt_test_enchant.json");
 	app_logger_t::reset_log();
 
-	dict_t dict = domain_types_t::initialize_dict();
+	dict_t dict = domain_types::initialize_dict();
 	record_entry_t entry;
 	entry.key_text = "key_enchanted";
 	entry.old_text = "Glass Dagger";
@@ -183,7 +183,7 @@ TEST_CASE("dict_writer_t + dict_reader_t, all statuses round-trip", "[i]")
 	const auto path = temp_path("yampt_test_statuses.json");
 	app_logger_t::reset_log();
 
-	dict_t dict = domain_types_t::initialize_dict();
+	dict_t dict = domain_types::initialize_dict();
 	const std::vector<status_t> statuses = {
 		status_t::translated, status_t::reused,  status_t::untranslated, status_t::in_progress,
 		status_t::outdated,   status_t::missing, status_t::duplicate,    status_t::mismatch,
@@ -203,7 +203,7 @@ TEST_CASE("dict_writer_t + dict_reader_t, all statuses round-trip", "[i]")
 
 	dict_reader_t reader(path);
 	REQUIRE(reader.is_loaded());
-	REQUIRE(domain_types_t::get_number_of_elements_in_dict(reader.get_dict()) == statuses.size());
+	REQUIRE(domain_types::get_number_of_elements_in_dict(reader.get_dict()) == statuses.size());
 
 	idx = 0;
 	for (const auto & status : statuses)
@@ -243,7 +243,7 @@ TEST_CASE("dict_reader_t, empty JSON object returns loaded with no entries", "[i
 
 	dict_reader_t reader(path);
 	REQUIRE(reader.is_loaded());
-	REQUIRE(domain_types_t::get_number_of_elements_in_dict(reader.get_dict()) == 0);
+	REQUIRE(domain_types::get_number_of_elements_in_dict(reader.get_dict()) == 0);
 
 	cleanup(path);
 }
@@ -254,14 +254,14 @@ TEST_CASE("dict_merger_t, file-based merge last-listed wins", "[i]")
 	const auto path2 = temp_path("yampt_test_merge2.json");
 	app_logger_t::reset_log();
 
-	dict_t dict1 = domain_types_t::initialize_dict();
+	dict_t dict1 = domain_types::initialize_dict();
 	dict1.at(rec_type_t::cell).insert({ "Balmora", "Balmora", "First", status_t::translated });
 	dict1.at(rec_type_t::cell).insert({ "Vivec", "Vivec", "OnlyInFirst", status_t::translated });
 	dict_writer_t::write(dict1, path1);
 
 	app_logger_t::reset_log();
 
-	dict_t dict2 = domain_types_t::initialize_dict();
+	dict_t dict2 = domain_types::initialize_dict();
 	dict2.at(rec_type_t::cell).insert({ "Balmora", "Balmora", "Second", status_t::translated });
 	dict2.at(rec_type_t::cell).insert({ "Ald-ruhn", "Ald-ruhn", "OnlyInSecond", status_t::translated });
 	dict_writer_t::write(dict2, path2);
@@ -294,25 +294,25 @@ TEST_CASE("dict_merger_t, three-file merge element count", "[i]")
 	const auto path3 = temp_path("yampt_test_m3_3.json");
 	app_logger_t::reset_log();
 
-	dict_t d1 = domain_types_t::initialize_dict();
+	dict_t d1 = domain_types::initialize_dict();
 	d1.at(rec_type_t::cell).insert({ "A", "A", "A_val", status_t::translated });
 	d1.at(rec_type_t::cell).insert({ "B", "B", "B_val", status_t::translated });
 	dict_writer_t::write(d1, path1);
 	app_logger_t::reset_log();
 
-	dict_t d2 = domain_types_t::initialize_dict();
+	dict_t d2 = domain_types::initialize_dict();
 	d2.at(rec_type_t::cell).insert({ "B", "B", "B_override", status_t::translated });
 	d2.at(rec_type_t::cell).insert({ "C", "C", "C_val", status_t::translated });
 	dict_writer_t::write(d2, path2);
 	app_logger_t::reset_log();
 
-	dict_t d3 = domain_types_t::initialize_dict();
+	dict_t d3 = domain_types::initialize_dict();
 	d3.at(rec_type_t::dial).insert({ "D", "D", "D_val", status_t::translated });
 	dict_writer_t::write(d3, path3);
 	app_logger_t::reset_log();
 
 	dict_merger_t merger({ path1, path2, path3 });
-	REQUIRE(domain_types_t::get_number_of_elements_in_dict(merger.get_dict()) == 4);
+	REQUIRE(domain_types::get_number_of_elements_in_dict(merger.get_dict()) == 4);
 
 	cleanup(path1);
 	cleanup(path2);
@@ -325,7 +325,7 @@ TEST_CASE("dict_writer_t + dict_reader_t, raw codepage bytes survive round-trip"
 	app_logger_t::reset_log();
 
 	std::string raw_1250 = "Zdr\xF3j \xB9\x9C\x9F";
-	dict_t dict = domain_types_t::initialize_dict();
+	dict_t dict = domain_types::initialize_dict();
 	dict.at(rec_type_t::cell).insert({ "key_raw", raw_1250, raw_1250, status_t::translated });
 
 	dict_writer_t::write(dict, path);

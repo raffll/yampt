@@ -45,6 +45,6 @@ int main(int argc, char * argv[])
 	std::strftime(time_str, sizeof(time_str), "%Y%m%d_%H%M%S", &tm);
 	auto log_path = exe_dir / (std::string("yampt_") + time_str + ".log");
 
-	binary_file_io_t::write_text(app_logger_t::get_log(), log_path.string());
+	binary_file_io::write_text(app_logger_t::get_log(), log_path.string());
 	return app_logger_t::has_error() ? 1 : 0;
 }

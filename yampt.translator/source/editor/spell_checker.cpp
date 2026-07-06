@@ -152,7 +152,7 @@ bool spell_checker_t::is_excluded(const std::string & word) const
 
 bool spell_checker_t::is_mwscript_keyword(const std::string & word) const
 {
-	for (const auto & keyword : domain_types_t::script_keywords)
+	for (const auto & keyword : domain_types::script_keywords)
 	{
 		if (keyword.size() != word.size())
 			continue;

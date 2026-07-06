@@ -13,7 +13,7 @@ static std::string make_sub_record(const std::string & sub_id, const std::string
 {
 	std::string result;
 	result += sub_id;
-	result += domain_types_t::convert_uint_to_string_byte_array(data.size());
+	result += domain_types::convert_uint_to_string_byte_array(data.size());
 	result += data;
 	return result;
 }
@@ -22,9 +22,9 @@ static std::string make_record(const std::string & rec_id, const std::string & s
 {
 	std::string header;
 	header += rec_id;
-	header += domain_types_t::convert_uint_to_string_byte_array(sub_records.size());
-	header += domain_types_t::convert_uint_to_string_byte_array(0);
-	header += domain_types_t::convert_uint_to_string_byte_array(0);
+	header += domain_types::convert_uint_to_string_byte_array(sub_records.size());
+	header += domain_types::convert_uint_to_string_byte_array(0);
+	header += domain_types::convert_uint_to_string_byte_array(0);
 	return header + sub_records;
 }
 
@@ -48,7 +48,7 @@ TEST_CASE("esm_reader_t::select_record, resets key and value", "[i]")
 	std::string file_content = tes3 + gmst;
 
 	const auto temp_path = get_temp_path("yampt_test_select_record.esm");
-	binary_file_io_t::write_text(file_content, temp_path);
+	binary_file_io::write_text(file_content, temp_path);
 	esm_reader_t reader(temp_path);
 	std::filesystem::remove(temp_path);
 
@@ -84,7 +84,7 @@ TEST_CASE("esm_reader_t::set_next_value, counter increments", "[i]")
 	std::string file_content = tes3 + fact;
 
 	const auto temp_path = get_temp_path("yampt_test_counter.esm");
-	binary_file_io_t::write_text(file_content, temp_path);
+	binary_file_io::write_text(file_content, temp_path);
 	esm_reader_t reader(temp_path);
 	std::filesystem::remove(temp_path);
 
@@ -122,7 +122,7 @@ TEST_CASE("esm_reader_t::set_key, independent of value state", "[i]")
 	std::string file_content = tes3 + gmst;
 
 	const auto temp_path = get_temp_path("yampt_test_key_indep.esm");
-	binary_file_io_t::write_text(file_content, temp_path);
+	binary_file_io::write_text(file_content, temp_path);
 	esm_reader_t reader(temp_path);
 	std::filesystem::remove(temp_path);
 
@@ -155,7 +155,7 @@ TEST_CASE("esm_reader_t::set_value, resets counter to zero", "[i]")
 	std::string file_content = tes3 + fact;
 
 	const auto temp_path = get_temp_path("yampt_test_value_reset.esm");
-	binary_file_io_t::write_text(file_content, temp_path);
+	binary_file_io::write_text(file_content, temp_path);
 	esm_reader_t reader(temp_path);
 	std::filesystem::remove(temp_path);
 

@@ -5,7 +5,7 @@
 
 static std::string size_byte(size_t value)
 {
-	return domain_types_t::convert_uint_to_string_byte_array(value).substr(0, 1);
+	return domain_types::convert_uint_to_string_byte_array(value).substr(0, 1);
 }
 
 TEST_CASE("script_parser_t, scdt single replacement", "[u]")
@@ -154,7 +154,7 @@ TEST_CASE("script_parser_t, scdt message replacement with size prefix", "[u]")
 
 	std::string scdt;
 	scdt += std::string(4, '\x00');
-	scdt += domain_types_t::convert_uint_to_string_byte_array(old_msg.size()).substr(0, 2);
+	scdt += domain_types::convert_uint_to_string_byte_array(old_msg.size()).substr(0, 2);
 	scdt += old_msg;
 	scdt += std::string(5, '\x00');
 

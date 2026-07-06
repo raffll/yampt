@@ -101,7 +101,7 @@ bool esm_converter_t::make_new_text(const entry_t & entry, std::string & new_tex
 	}
 
 	counter_unchanged++;
-	app_logger_t::add_log("[warning] unchanged " + domain_types_t::type_to_str(entry.type) + ": " + entry.key_text + "\r\n", true);
+	app_logger_t::add_log("[warning] unchanged " + domain_types::type_to_str(entry.type) + ": " + entry.key_text + "\r\n", true);
 	return false;
 }
 
@@ -128,16 +128,16 @@ void esm_converter_t::convert_record_content(const std::string & new_text)
 	rec_content.erase(esm.get_value().pos + 8, esm.get_value().size);
 	rec_content.insert(esm.get_value().pos + 8, new_text);
 	rec_content.erase(esm.get_value().pos + 4, 4);
-	rec_content.insert(esm.get_value().pos + 4, domain_types_t::convert_uint_to_string_byte_array(new_text.size()));
+	rec_content.insert(esm.get_value().pos + 4, domain_types::convert_uint_to_string_byte_array(new_text.size()));
 	size_t rec_size = rec_content.size() - 16;
 	rec_content.erase(4, 4);
-	rec_content.insert(4, domain_types_t::convert_uint_to_string_byte_array(rec_size));
+	rec_content.insert(4, domain_types::convert_uint_to_string_byte_array(rec_size));
 	esm.replace_record(rec_content);
 }
 
 void esm_converter_t::print_log_line(const rec_type_t type)
 {
-	std::string line = domain_types_t::type_to_str(type) + ": converted=" + std::to_string(counter_converted) +
+	std::string line = domain_types::type_to_str(type) + ": converted=" + std::to_string(counter_converted) +
 	                   ", identical=" + std::to_string(counter_identical) +
 	                   ", unchanged=" + std::to_string(counter_unchanged) + ", total=" + std::to_string(counter_all) +
 	                   "\r\n";
@@ -250,21 +250,21 @@ void esm_converter_t::make_header()
 	description.resize(256);
 
 	size_t num = esm.get_modified_count();
-	rec_num = domain_types_t::convert_uint_to_string_byte_array(num);
+	rec_num = domain_types::convert_uint_to_string_byte_array(num);
 
 	hedr = version + type + author + description + rec_num;
 	convert_record_content(hedr);
 
 	std::string rec_content = esm.get_record().content;
 	std::string mast = get_name().full + '\0';
-	rec_content += "MAST" + domain_types_t::convert_uint_to_string_byte_array(mast.size()) + mast;
+	rec_content += "MAST" + domain_types::convert_uint_to_string_byte_array(mast.size()) + mast;
 	std::string data;
 	data.resize(8);
-	rec_content += "DATA" + domain_types_t::convert_uint_to_string_byte_array(data.size()) + data;
+	rec_content += "DATA" + domain_types::convert_uint_to_string_byte_array(data.size()) + data;
 
 	size_t rec_size = rec_content.size() - 16;
 	rec_content.erase(4, 4);
-	rec_content.insert(4, domain_types_t::convert_uint_to_string_byte_array(rec_size));
+	rec_content.insert(4, domain_types::convert_uint_to_string_byte_array(rec_size));
 	esm.replace_record(rec_content);
 
 	app_logger_t::add_log("[info] creating new header\r\n");
@@ -497,7 +497,7 @@ void esm_converter_t::convert_fnam()
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
-		if (!domain_types_t::is_fnam(esm.get_record().id))
+		if (!domain_types::is_fnam(esm.get_record().id))
 			continue;
 
 		esm.set_key("NAME");
@@ -622,7 +622,7 @@ void esm_converter_t::convert_indx()
 		if (!esm.get_key().exist || !esm.get_value().exist)
 			continue;
 
-		const auto & key_text = esm.get_record().id + "^" + domain_types_t::get_indx(esm.get_key().content);
+		const auto & key_text = esm.get_record().id + "^" + domain_types::get_indx(esm.get_key().content);
 		const auto & old_text = esm.get_value().text;
 		std::string new_text;
 		if (!make_new_text({ key_text, old_text, type }, new_text))
@@ -646,7 +646,7 @@ void esm_converter_t::convert_dial()
 
 		esm.set_key("DATA");
 		esm.set_value("NAME");
-		if (domain_types_t::get_dialog_type(esm.get_key().content) == "T" && esm.get_value().exist)
+		if (domain_types::get_dialog_type(esm.get_key().content) == "T" && esm.get_value().exist)
 		{
 			const auto & key_text = esm.get_value().text;
 			const auto & old_text = esm.get_value().text;
@@ -677,7 +677,7 @@ void esm_converter_t::convert_info()
 			esm.set_value("NAME");
 			if (esm.get_key().exist && esm.get_value().exist)
 			{
-				key_prefix = domain_types_t::get_dialog_type(esm.get_key().content) + "^" + esm.get_value().text;
+				key_prefix = domain_types::get_dialog_type(esm.get_key().content) + "^" + esm.get_value().text;
 				dial_index = i;
 			}
 			continue;
@@ -732,7 +732,7 @@ void esm_converter_t::convert_bnam()
 			if (esm.get_key().exist && esm.get_value().exist)
 			{
 				dial_index = i;
-				dial_type = domain_types_t::get_dialog_type(esm.get_key().content);
+				dial_type = domain_types::get_dialog_type(esm.get_key().content);
 				dial_name = esm.get_value().text;
 			}
 
@@ -803,7 +803,7 @@ void esm_converter_t::convert_scpt()
 		esm.set_value("SCHD");
 		auto schd_content = esm.get_value().content;
 		schd_content.erase(44, 4);
-		schd_content.insert(44, domain_types_t::convert_uint_to_string_byte_array(parser.get_new_scdt().size()));
+		schd_content.insert(44, domain_types::convert_uint_to_string_byte_array(parser.get_new_scdt().size()));
 		convert_record_content(schd_content);
 	}
 	print_log_line(rec_type_t::sctx);

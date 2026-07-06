@@ -14,7 +14,7 @@ static std::string make_sub_record(const std::string & sub_id, const std::string
 {
 	std::string result;
 	result += sub_id;
-	result += domain_types_t::convert_uint_to_string_byte_array(data.size());
+	result += domain_types::convert_uint_to_string_byte_array(data.size());
 	result += data;
 	return result;
 }
@@ -23,9 +23,9 @@ static std::string make_record(const std::string & rec_id, const std::string & s
 {
 	std::string header;
 	header += rec_id;
-	header += domain_types_t::convert_uint_to_string_byte_array(sub_records.size());
-	header += domain_types_t::convert_uint_to_string_byte_array(0);
-	header += domain_types_t::convert_uint_to_string_byte_array(0);
+	header += domain_types::convert_uint_to_string_byte_array(sub_records.size());
+	header += domain_types::convert_uint_to_string_byte_array(0);
+	header += domain_types::convert_uint_to_string_byte_array(0);
 	return header + sub_records;
 }
 
@@ -84,8 +84,8 @@ TEST_CASE("dict_creator_t, dial before info ordering", "[i]")
 
 	const auto native_path = get_temp_path("yampt_test_dial_order_native.esm");
 	const auto foreign_path = get_temp_path("yampt_test_dial_order_foreign.esm");
-	binary_file_io_t::write_text(native_content, native_path);
-	binary_file_io_t::write_text(foreign_content, foreign_path);
+	binary_file_io::write_text(native_content, native_path);
+	binary_file_io::write_text(foreign_content, foreign_path);
 
 	dict_creator_t creator(foreign_path, native_path);
 
@@ -104,7 +104,7 @@ TEST_CASE("dict_creator_t, dial before info ordering", "[i]")
 TEST_CASE("dict_creator_t, cell matching sequence", "[i]")
 {
 	auto dodt_data = std::string(24, '\x01');
-	auto frmr_data = domain_types_t::convert_uint_to_string_byte_array(1);
+	auto frmr_data = domain_types::convert_uint_to_string_byte_array(1);
 
 	auto native_exterior_body = make_sub_record("NAME", make_null_terminated("Poludniowy Mur")) +
 	                            make_sub_record("DATA", make_cell_data(false, 5, -3));
@@ -143,8 +143,8 @@ TEST_CASE("dict_creator_t, cell matching sequence", "[i]")
 
 	const auto native_path = get_temp_path("yampt_test_cell_seq_native.esm");
 	const auto foreign_path = get_temp_path("yampt_test_cell_seq_foreign.esm");
-	binary_file_io_t::write_text(native_content, native_path);
-	binary_file_io_t::write_text(foreign_content, foreign_path);
+	binary_file_io::write_text(native_content, native_path);
+	binary_file_io::write_text(foreign_content, foreign_path);
 
 	dict_creator_t creator(foreign_path, native_path);
 

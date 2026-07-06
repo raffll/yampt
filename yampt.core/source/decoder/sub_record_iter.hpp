@@ -39,7 +39,7 @@ public:
 		out.type = m_content.substr(m_pos, 4);
 		out.offset = m_pos;
 
-		size_t declared_size = domain_types_t::convert_string_byte_array_to_uint(m_content.substr(m_pos + 4, 4));
+		size_t declared_size = domain_types::convert_string_byte_array_to_uint(m_content.substr(m_pos + 4, 4));
 		out.size = (declared_size == 0) ? 1 : declared_size;
 
 		if (m_pos + 8 + out.size > m_content.size())

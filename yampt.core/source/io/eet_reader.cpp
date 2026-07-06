@@ -7,7 +7,7 @@ bool eet_reader_t::load(const std::string & path)
 	m_entries.clear();
 	m_entry_count = 0;
 
-	const auto content = binary_file_io_t::read_file(path);
+	const auto content = binary_file_io::read_file(path);
 	if (content.empty())
 	{
 		app_logger_t::add_log("[error] cannot read EET file: \"" + path + "\"\r\n");

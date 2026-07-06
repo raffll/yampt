@@ -4,23 +4,23 @@
 
 #include <set>
 
-TEST_CASE("domain_types_t::convert_string_byte_array_to_uint, basic conversions", "[u]")
+TEST_CASE("domain_types::convert_string_byte_array_to_uint, basic conversions", "[u]")
 {
 	std::string text = "DEAD";
-	REQUIRE(domain_types_t::convert_string_byte_array_to_uint(text) == 1145128260);
+	REQUIRE(domain_types::convert_string_byte_array_to_uint(text) == 1145128260);
 	text = "D";
-	REQUIRE(domain_types_t::convert_string_byte_array_to_uint(text) == 68);
+	REQUIRE(domain_types::convert_string_byte_array_to_uint(text) == 68);
 	for (int i = 0; i < 3; ++i)
 	{
 		text += '\0';
 	}
 	REQUIRE(text.size() == 4);
-	REQUIRE(domain_types_t::convert_string_byte_array_to_uint(text) == 68);
+	REQUIRE(domain_types::convert_string_byte_array_to_uint(text) == 68);
 }
 
-TEST_CASE("domain_types_t::convert_uint_to_string_byte_array, basic conversion", "[u]")
+TEST_CASE("domain_types::convert_uint_to_string_byte_array, basic conversion", "[u]")
 {
-	REQUIRE(domain_types_t::convert_uint_to_string_byte_array(1145128260) == "DEAD");
+	REQUIRE(domain_types::convert_uint_to_string_byte_array(1145128260) == "DEAD");
 }
 
 TEST_CASE("string_utils::case_insensitive_equal, matches and mismatches", "[u]")
@@ -112,7 +112,7 @@ TEST_CASE("chapter_t::empty, reflects entry count", "[u]")
 	REQUIRE(chapter.empty() == false);
 }
 
-TEST_CASE("domain_types_t::type_to_str and str_to_type, round-trip", "[u]")
+TEST_CASE("domain_types::type_to_str and str_to_type, round-trip", "[u]")
 {
 	const std::vector<rec_type_t> defined_types {
 		rec_type_t::cell, rec_type_t::dial, rec_type_t::indx, rec_type_t::rnam,
@@ -122,42 +122,42 @@ TEST_CASE("domain_types_t::type_to_str and str_to_type, round-trip", "[u]")
 
 	for (const auto & type : defined_types)
 	{
-		REQUIRE(domain_types_t::str_to_type(domain_types_t::type_to_str(type)) == type);
+		REQUIRE(domain_types::str_to_type(domain_types::type_to_str(type)) == type);
 	}
 
 	SECTION("str_to_type returns Unknown for unrecognized string")
 	{
-		REQUIRE(domain_types_t::str_to_type("XYZZY") == rec_type_t::unknown);
-		REQUIRE(domain_types_t::str_to_type("") == rec_type_t::unknown);
-		REQUIRE(domain_types_t::str_to_type("cell") == rec_type_t::unknown);
+		REQUIRE(domain_types::str_to_type("XYZZY") == rec_type_t::unknown);
+		REQUIRE(domain_types::str_to_type("") == rec_type_t::unknown);
+		REQUIRE(domain_types::str_to_type("cell") == rec_type_t::unknown);
 	}
 }
 
-TEST_CASE("domain_types_t::get_dialog_type, all values", "[u]")
+TEST_CASE("domain_types::get_dialog_type, all values", "[u]")
 {
-	REQUIRE(domain_types_t::get_dialog_type(std::string(1, '\x00')) == "T");
-	REQUIRE(domain_types_t::get_dialog_type(std::string(1, '\x01')) == "V");
-	REQUIRE(domain_types_t::get_dialog_type(std::string(1, '\x02')) == "G");
-	REQUIRE(domain_types_t::get_dialog_type(std::string(1, '\x03')) == "P");
-	REQUIRE(domain_types_t::get_dialog_type(std::string(1, '\x04')) == "J");
+	REQUIRE(domain_types::get_dialog_type(std::string(1, '\x00')) == "T");
+	REQUIRE(domain_types::get_dialog_type(std::string(1, '\x01')) == "V");
+	REQUIRE(domain_types::get_dialog_type(std::string(1, '\x02')) == "G");
+	REQUIRE(domain_types::get_dialog_type(std::string(1, '\x03')) == "P");
+	REQUIRE(domain_types::get_dialog_type(std::string(1, '\x04')) == "J");
 }
 
-TEST_CASE("domain_types_t::get_indx, zero-padded output", "[u]")
+TEST_CASE("domain_types::get_indx, zero-padded output", "[u]")
 {
 	// 4-byte little-endian encoding of 1 → "001"
-	std::string one = domain_types_t::convert_uint_to_string_byte_array(1);
-	REQUIRE(domain_types_t::get_indx(one) == "001");
+	std::string one = domain_types::convert_uint_to_string_byte_array(1);
+	REQUIRE(domain_types::get_indx(one) == "001");
 
 	// 4-byte little-endian encoding of 42 → "042"
-	std::string fortytwo = domain_types_t::convert_uint_to_string_byte_array(42);
-	REQUIRE(domain_types_t::get_indx(fortytwo) == "042");
+	std::string fortytwo = domain_types::convert_uint_to_string_byte_array(42);
+	REQUIRE(domain_types::get_indx(fortytwo) == "042");
 
 	// 4-byte little-endian encoding of 255 → "255"
-	std::string twofiftyfive = domain_types_t::convert_uint_to_string_byte_array(255);
-	REQUIRE(domain_types_t::get_indx(twofiftyfive) == "255");
+	std::string twofiftyfive = domain_types::convert_uint_to_string_byte_array(255);
+	REQUIRE(domain_types::get_indx(twofiftyfive) == "255");
 }
 
-TEST_CASE("domain_types_t::is_fnam, true IDs", "[u]")
+TEST_CASE("domain_types::is_fnam, true IDs", "[u]")
 {
 	const std::vector<std::string> true_ids {
 		"ACTI", "ALCH", "APPA", "ARMO", "BOOK", "BSGN", "CLAS", "CLOT", "CONT", "CREA", "DOOR", "FACT",
@@ -166,18 +166,18 @@ TEST_CASE("domain_types_t::is_fnam, true IDs", "[u]")
 
 	for (const auto & id : true_ids)
 	{
-		REQUIRE(domain_types_t::is_fnam(id) == true);
+		REQUIRE(domain_types::is_fnam(id) == true);
 	}
 }
 
-TEST_CASE("domain_types_t::is_fnam, false IDs", "[u]")
+TEST_CASE("domain_types::is_fnam, false IDs", "[u]")
 {
-	REQUIRE(domain_types_t::is_fnam("CELL") == false);
-	REQUIRE(domain_types_t::is_fnam("INFO") == false);
-	REQUIRE(domain_types_t::is_fnam("DIAL") == false);
+	REQUIRE(domain_types::is_fnam("CELL") == false);
+	REQUIRE(domain_types::is_fnam("INFO") == false);
+	REQUIRE(domain_types::is_fnam("DIAL") == false);
 }
 
-TEST_CASE("domain_types_t::convert, round-trip all byte patterns", "[u]")
+TEST_CASE("domain_types::convert, round-trip all byte patterns", "[u]")
 {
 	const unsigned int values[] = {
 		0u,          1u, 127u, 128u, 255u, 256u, 65535u, 65536u, 0x7FFFFFFFu, 0xFFFFFFFFu,
@@ -189,7 +189,7 @@ TEST_CASE("domain_types_t::convert, round-trip all byte patterns", "[u]")
 	};
 	for (unsigned int x : values)
 	{
-		REQUIRE(domain_types_t::convert_string_byte_array_to_uint(domain_types_t::convert_uint_to_string_byte_array(x)) == x);
+		REQUIRE(domain_types::convert_string_byte_array_to_uint(domain_types::convert_uint_to_string_byte_array(x)) == x);
 	}
 }
 
@@ -256,9 +256,9 @@ TEST_CASE("string_utils::replace_non_printable_with_dot, all bytes", "[u]")
 	}
 }
 
-TEST_CASE("domain_types_t::initialize_dict, has all expected keys", "[u]")
+TEST_CASE("domain_types::initialize_dict, has all expected keys", "[u]")
 {
-	dict_t dict = domain_types_t::initialize_dict();
+	dict_t dict = domain_types::initialize_dict();
 
 	REQUIRE(dict.count(rec_type_t::cell) == 1);
 	REQUIRE(dict.count(rec_type_t::dial) == 1);
@@ -275,9 +275,9 @@ TEST_CASE("domain_types_t::initialize_dict, has all expected keys", "[u]")
 	REQUIRE(dict.size() == 11);
 }
 
-TEST_CASE("domain_types_t::initialize_dict, all chapters empty", "[u]")
+TEST_CASE("domain_types::initialize_dict, all chapters empty", "[u]")
 {
-	dict_t dict = domain_types_t::initialize_dict();
+	dict_t dict = domain_types::initialize_dict();
 
 	for (const auto & chapter : dict)
 	{
@@ -285,29 +285,29 @@ TEST_CASE("domain_types_t::initialize_dict, all chapters empty", "[u]")
 	}
 }
 
-TEST_CASE("domain_types_t::get_number_of_elements_in_dict, zero for empty dict", "[u]")
+TEST_CASE("domain_types::get_number_of_elements_in_dict, zero for empty dict", "[u]")
 {
-	dict_t dict = domain_types_t::initialize_dict();
-	REQUIRE(domain_types_t::get_number_of_elements_in_dict(dict) == 0);
+	dict_t dict = domain_types::initialize_dict();
+	REQUIRE(domain_types::get_number_of_elements_in_dict(dict) == 0);
 }
 
-TEST_CASE("domain_types_t::get_number_of_elements_in_dict, counts inserted entries", "[u]")
+TEST_CASE("domain_types::get_number_of_elements_in_dict, counts inserted entries", "[u]")
 {
-	dict_t dict = domain_types_t::initialize_dict();
+	dict_t dict = domain_types::initialize_dict();
 	dict.at(rec_type_t::cell).insert({ "Balmora", "Balmora", "Balmora", status_t::translated });
 	dict.at(rec_type_t::cell).insert({ "Vivec", "Vivec", "Vivec", status_t::translated });
 	dict.at(rec_type_t::dial).insert({ "clanfear", "clanfear", "postrach klanów", status_t::translated });
-	REQUIRE(domain_types_t::get_number_of_elements_in_dict(dict) == 3);
+	REQUIRE(domain_types::get_number_of_elements_in_dict(dict) == 3);
 }
 
-TEST_CASE("domain_types_t::get_number_of_elements_in_dict, correct total", "[u]")
+TEST_CASE("domain_types::get_number_of_elements_in_dict, correct total", "[u]")
 {
-	dict_t dict = domain_types_t::initialize_dict();
+	dict_t dict = domain_types::initialize_dict();
 	dict.at(rec_type_t::cell).insert({ "Balmora", "Balmora", "Balmora", status_t::translated });
 	dict.at(rec_type_t::cell).insert({ "Vivec", "Vivec", "Vivec", status_t::translated });
 	dict.at(rec_type_t::dial).insert({ "clanfear", "clanfear", "postrach klanów", status_t::translated });
 	dict.at(rec_type_t::info).insert({ "info_key", "info_orig", "info_val", status_t::untranslated });
-	REQUIRE(domain_types_t::get_number_of_elements_in_dict(dict) == 4);
+	REQUIRE(domain_types::get_number_of_elements_in_dict(dict) == 4);
 }
 
 TEST_CASE("status_t, all values have distinct non-empty string representations", "[u]")
@@ -358,9 +358,9 @@ TEST_CASE("chapter_t::insert, with speaker fields", "[u]")
 	REQUIRE(entry->gender == "M");
 }
 
-TEST_CASE("domain_types_t::initialize_dict, excludes non-dict types", "[u]")
+TEST_CASE("domain_types::initialize_dict, excludes non-dict types", "[u]")
 {
-	dict_t dict = domain_types_t::initialize_dict();
+	dict_t dict = domain_types::initialize_dict();
 	for (const auto & chapter : dict)
 	{
 		REQUIRE(chapter.first != rec_type_t::pgrd);

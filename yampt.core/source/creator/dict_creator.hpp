@@ -29,7 +29,7 @@ public:
 
 	static bool differs_only_in_numbers_or_punct(const std::string & a, const std::string & b)
 	{
-		return creator_helpers_t::differs_only_in_numbers_or_punct(a, b);
+		return creator_helpers::differs_only_in_numbers_or_punct(a, b);
 	}
 
 	static std::string adapt_translation(
@@ -37,7 +37,7 @@ public:
 	    const std::string & matched_source,
 	    const std::string & matched_translation)
 	{
-		return creator_helpers_t::adapt_translation(source, matched_source, matched_translation);
+		return creator_helpers::adapt_translation(source, matched_source, matched_translation);
 	}
 
 private:

@@ -4,12 +4,12 @@
 
 static std::string size_byte(size_t value)
 {
-	return domain_types_t::convert_uint_to_string_byte_array(value).substr(0, 1);
+	return domain_types::convert_uint_to_string_byte_array(value).substr(0, 1);
 }
 
 static std::string size_word(size_t value)
 {
-	return domain_types_t::convert_uint_to_string_byte_array(value).substr(0, 2);
+	return domain_types::convert_uint_to_string_byte_array(value).substr(0, 2);
 }
 
 TEST_CASE("scdt_patcher_t::apply_text_patch, single replacement", "[u]")

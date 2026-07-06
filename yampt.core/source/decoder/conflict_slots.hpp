@@ -25,18 +25,18 @@ struct slot_result_t
 	std::vector<bool> is_deleted;
 };
 
-class conflict_slot_builder_t
-{
-public:
-	static slot_result_t build(
-	    const std::string & rec_type,
-	    const std::vector<std::string> & version_contents,
-	    const std::vector<bool> & version_deleted);
+namespace conflict_slots {
 
-	static slot_result_t build(
-	    const std::string & rec_type,
-	    std::vector<std::string> && version_contents,
-	    const std::vector<bool> & version_deleted);
+slot_result_t build(
+    const std::string & rec_type,
+    const std::vector<std::string> & version_contents,
+    const std::vector<bool> & version_deleted);
 
-	static void build_cell(slot_result_t & result);
-};
+slot_result_t build(
+    const std::string & rec_type,
+    std::vector<std::string> && version_contents,
+    const std::vector<bool> & version_deleted);
+
+void build_cell(slot_result_t & result);
+
+} // namespace conflict_slots

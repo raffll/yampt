@@ -5,7 +5,7 @@
 
 esm_reader_t::esm_reader_t(const std::string & path)
 {
-	const auto & content = binary_file_io_t::read_file(path);
+	const auto & content = binary_file_io::read_file(path);
 
 	if (!content.empty())
 		split_file(content, path);
@@ -31,7 +31,7 @@ void esm_reader_t::split_file(const std::string & content, const std::string & p
 		{
 			record_begin = record_end;
 			const auto & size_bytes = content.substr(record_begin + record_size_field_offset, record_size_field_length);
-			const auto record_size = domain_types_t::convert_string_byte_array_to_uint(size_bytes) + record_header_size;
+			const auto record_size = domain_types::convert_string_byte_array_to_uint(size_bytes) + record_header_size;
 			record_end = record_begin + record_size;
 
 			if (record_end > content.size())
@@ -127,7 +127,7 @@ void esm_reader_t::set_next_value(const std::string & sub_id)
 		return;
 
 	m_value.sub_id = sub_id;
-	const auto current_size = domain_types_t::convert_string_byte_array_to_uint(
+	const auto current_size = domain_types::convert_string_byte_array_to_uint(
 	    ptr_record->content.substr(m_value.pos + sub_record_id_size, sub_record_id_size));
 	const auto next_pos = m_value.pos + sub_record_header_size + current_size;
 	m_value.counter++;
@@ -154,7 +154,7 @@ void esm_reader_t::scan_sub_records(size_t start_pos, sub_record_t & target)
 			break;
 
 		const auto & found_id = record_content.substr(scan_pos, sub_record_id_size);
-		const auto found_size = domain_types_t::convert_string_byte_array_to_uint(
+		const auto found_size = domain_types::convert_string_byte_array_to_uint(
 		    record_content.substr(scan_pos + sub_record_id_size, sub_record_id_size));
 
 		if (found_size == 0)

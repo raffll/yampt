@@ -59,7 +59,7 @@ view_tree_model_t::view_node_t view_tree_model_t::build_slot_row(
 	const char * first_data = nullptr;
 	size_t first_size = 0;
 
-	const auto policy = record_conflict_t::find_conflict_policy(m_record_type, slot.type);
+	const auto policy = record_conflict::find_conflict_policy(m_record_type, slot.type);
 
 	for (size_t col = 0; col < col_count; ++col)
 	{
@@ -123,13 +123,13 @@ view_tree_model_t::view_node_t view_tree_model_t::build_slot_row(
 	}
 	else if (policy.skip_non_existent)
 	{
-		row.row_conflict_all = record_conflict_t::compute_conflict_all_skip_empty(row.values);
-		row.cell_conflict_this = record_conflict_t::compute_conflict_this_skip_empty(row.values);
+		row.row_conflict_all = record_conflict::compute_conflict_all_skip_empty(row.values);
+		row.cell_conflict_this = record_conflict::compute_conflict_this_skip_empty(row.values);
 	}
 	else
 	{
-		row.row_conflict_all = record_conflict_t::compute_conflict_all(row.values);
-		row.cell_conflict_this = record_conflict_t::compute_conflict_this(row.values);
+		row.row_conflict_all = record_conflict::compute_conflict_all(row.values);
+		row.cell_conflict_this = record_conflict::compute_conflict_this(row.values);
 	}
 
 	const auto * schema = find_schema(m_record_type, slot.type, first_size);
@@ -175,7 +175,7 @@ void view_tree_model_t::decode_schema_children(
     const std::vector<std::unordered_map<std::string, std::vector<size_t>>> & col_indices,
     const sub_slot_t & slot)
 {
-	const auto policy = record_conflict_t::find_conflict_policy(m_record_type, slot.type);
+	const auto policy = record_conflict::find_conflict_policy(m_record_type, slot.type);
 	view_node_t * current_group = nullptr;
 
 	for (size_t field_idx = 0; field_idx < schema->field_count; ++field_idx)
@@ -221,10 +221,10 @@ void view_tree_model_t::decode_schema_children(
 				}
 
 				frow.all_identical = check_all_identical(frow.values);
-				frow.row_conflict_all = policy.skip_non_existent ? record_conflict_t::compute_conflict_all_skip_empty(frow.values)
-				                                                 : record_conflict_t::compute_conflict_all(frow.values);
-				frow.cell_conflict_this = policy.skip_non_existent ? record_conflict_t::compute_conflict_this_skip_empty(frow.values)
-				                                                   : record_conflict_t::compute_conflict_this(frow.values);
+				frow.row_conflict_all = policy.skip_non_existent ? record_conflict::compute_conflict_all_skip_empty(frow.values)
+				                                                 : record_conflict::compute_conflict_all(frow.values);
+				frow.cell_conflict_this = policy.skip_non_existent ? record_conflict::compute_conflict_this_skip_empty(frow.values)
+				                                                   : record_conflict::compute_conflict_this(frow.values);
 
 				if (frow.row_conflict_all > flags_group.row_conflict_all)
 					flags_group.row_conflict_all = frow.row_conflict_all;
@@ -276,9 +276,9 @@ void view_tree_model_t::decode_schema_children(
 
 		frow.all_identical = check_all_identical(frow.values);
 		frow.row_conflict_all =
-		    policy.skip_non_existent ? record_conflict_t::compute_conflict_all_skip_empty(frow.values) : record_conflict_t::compute_conflict_all(frow.values);
-		frow.cell_conflict_this = policy.skip_non_existent ? record_conflict_t::compute_conflict_this_skip_empty(frow.values)
-		                                                   : record_conflict_t::compute_conflict_this(frow.values);
+		    policy.skip_non_existent ? record_conflict::compute_conflict_all_skip_empty(frow.values) : record_conflict::compute_conflict_all(frow.values);
+		frow.cell_conflict_this = policy.skip_non_existent ? record_conflict::compute_conflict_this_skip_empty(frow.values)
+		                                                   : record_conflict::compute_conflict_this(frow.values);
 
 		if (!fdef.group)
 		{
@@ -320,7 +320,7 @@ void view_tree_model_t::decode_hex_children(
     const sub_slot_t & slot)
 {
 	static constexpr size_t hex_line_bytes = 16;
-	const auto policy = record_conflict_t::find_conflict_policy(m_record_type, slot.type);
+	const auto policy = record_conflict::find_conflict_policy(m_record_type, slot.type);
 
 	for (size_t offset = 0; offset < first_size; offset += hex_line_bytes)
 	{
@@ -358,9 +358,9 @@ void view_tree_model_t::decode_hex_children(
 
 		frow.all_identical = check_all_identical(frow.values);
 		frow.row_conflict_all =
-		    policy.skip_non_existent ? record_conflict_t::compute_conflict_all_skip_empty(frow.values) : record_conflict_t::compute_conflict_all(frow.values);
-		frow.cell_conflict_this = policy.skip_non_existent ? record_conflict_t::compute_conflict_this_skip_empty(frow.values)
-		                                                   : record_conflict_t::compute_conflict_this(frow.values);
+		    policy.skip_non_existent ? record_conflict::compute_conflict_all_skip_empty(frow.values) : record_conflict::compute_conflict_all(frow.values);
+		frow.cell_conflict_this = policy.skip_non_existent ? record_conflict::compute_conflict_this_skip_empty(frow.values)
+		                                                   : record_conflict::compute_conflict_this(frow.values);
 		parent_row.children.push_back(std::move(frow));
 	}
 }

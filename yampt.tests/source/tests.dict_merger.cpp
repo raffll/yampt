@@ -40,5 +40,5 @@ TEST_CASE("dict_merger_t::add_record, different types same key", "[u]")
 TEST_CASE("dict_merger_t, default constructor creates empty dict", "[u]")
 {
 	dict_merger_t merger;
-	REQUIRE(domain_types_t::get_number_of_elements_in_dict(merger.get_dict()) == 0);
+	REQUIRE(domain_types::get_number_of_elements_in_dict(merger.get_dict()) == 0);
 }

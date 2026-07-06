@@ -110,7 +110,7 @@ void dict_writer_t::write(const dict_t & dict, const std::string & path)
 			file << ",\n";
 		first_chapter = false;
 
-		file << "  \"" << domain_types_t::type_to_str(type) << "\": [\n";
+		file << "  \"" << domain_types::type_to_str(type) << "\": [\n";
 
 		for (size_t i = 0; i < chapter.records.size(); ++i)
 		{
@@ -127,6 +127,6 @@ void dict_writer_t::write(const dict_t & dict, const std::string & path)
 	file.close();
 
 	app_logger_t::add_log(
-	    "[info] done writing \"" + path + "\" (" + std::to_string(domain_types_t::get_number_of_elements_in_dict(dict)) +
+	    "[info] done writing \"" + path + "\" (" + std::to_string(domain_types::get_number_of_elements_in_dict(dict)) +
 	    " entries)\r\n");
 }

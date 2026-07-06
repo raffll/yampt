@@ -14,7 +14,7 @@ static std::string make_sub_record(const std::string & sub_id, const std::string
 {
 	std::string result;
 	result += sub_id;
-	result += domain_types_t::convert_uint_to_string_byte_array(content.size());
+	result += domain_types::convert_uint_to_string_byte_array(content.size());
 	result += content;
 	return result;
 }
@@ -23,9 +23,9 @@ static std::string make_record(const std::string & rec_id, const std::string & s
 {
 	std::string header;
 	header += rec_id;
-	header += domain_types_t::convert_uint_to_string_byte_array(sub_records.size());
-	header += domain_types_t::convert_uint_to_string_byte_array(0);
-	header += domain_types_t::convert_uint_to_string_byte_array(0);
+	header += domain_types::convert_uint_to_string_byte_array(sub_records.size());
+	header += domain_types::convert_uint_to_string_byte_array(0);
+	header += domain_types::convert_uint_to_string_byte_array(0);
 	return header + sub_records;
 }
 
@@ -40,7 +40,7 @@ static dict_merger_t make_merger(
 	const auto dict_path = get_temp_path("yampt_test_full_conv_dict.json");
 	app_logger_t::reset_log();
 
-	dict_t dict = domain_types_t::initialize_dict();
+	dict_t dict = domain_types::initialize_dict();
 	for (const auto & [record_type, key_text, old_text, new_text] : entries)
 		dict.at(record_type).insert({ key_text, old_text, new_text, status_t::translated });
 
@@ -99,7 +99,7 @@ TEST_CASE("esm_converter_t::convert_scpt, SCTX with matching cell", "[u]")
 	std::string script_name = "TestScript";
 	schd_content.replace(0, script_name.size(), script_name);
 	schd_content.erase(44, 4);
-	schd_content.insert(44, domain_types_t::convert_uint_to_string_byte_array(old_scdt.size()));
+	schd_content.insert(44, domain_types::convert_uint_to_string_byte_array(old_scdt.size()));
 
 	auto scpt_body =
 	    make_sub_record("SCHD", schd_content) + make_sub_record("SCDT", old_scdt) + make_sub_record("SCTX", old_sctx);
@@ -124,7 +124,7 @@ TEST_CASE("esm_converter_t::convert_scpt, SCTX no match leaves unchanged", "[u]"
 	std::string script_name = "TestScript2";
 	schd_content.replace(0, script_name.size(), script_name);
 	schd_content.erase(44, 4);
-	schd_content.insert(44, domain_types_t::convert_uint_to_string_byte_array(old_scdt.size()));
+	schd_content.insert(44, domain_types::convert_uint_to_string_byte_array(old_scdt.size()));
 
 	auto scpt_body =
 	    make_sub_record("SCHD", schd_content) + make_sub_record("SCDT", old_scdt) + make_sub_record("SCTX", old_sctx);
@@ -812,7 +812,7 @@ TEST_CASE("esm_converter_t, only translated status is applied", "[u]")
 		const auto dict_path = get_temp_path("yampt_test_full_conv_dict.json");
 		app_logger_t::reset_log();
 
-		dict_t dict = domain_types_t::initialize_dict();
+		dict_t dict = domain_types::initialize_dict();
 		dict.at(rec_type_t::cell).insert({ "Balmora", "Balmora", "Balmora PL", status });
 		dict_writer_t::write(dict, dict_path);
 

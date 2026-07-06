@@ -11,7 +11,7 @@ static bool is_number_or_punct(char c)
 	return (c >= '0' && c <= '9');
 }
 
-void creator_helpers_t::insert_entry_single(
+void creator_helpers::insert_entry_single(
     creator_context_t & ctx,
     const std::string & key_text,
     const std::string & old_text,
@@ -46,7 +46,7 @@ void creator_helpers_t::insert_entry_single(
 	insert_duplicate(ctx, key_text, old_text, new_text, type, status_t::untranslated);
 }
 
-void creator_helpers_t::insert_entry_base(
+void creator_helpers::insert_entry_base(
     creator_context_t & ctx,
     const std::string & key_text,
     const std::string & old_text,
@@ -86,7 +86,7 @@ void creator_helpers_t::insert_entry_base(
 	insert_duplicate(ctx, key_text, old_text, new_text, type, final_status);
 }
 
-void creator_helpers_t::insert_duplicate(
+void creator_helpers::insert_duplicate(
     creator_context_t & ctx,
     const std::string & key_text,
     const std::string & old_text,
@@ -113,7 +113,7 @@ void creator_helpers_t::insert_duplicate(
 	ctx.counter_doubled++;
 }
 
-void creator_helpers_t::insert_as_untranslated(
+void creator_helpers::insert_as_untranslated(
     creator_context_t & ctx,
     const std::string & key_text,
     const std::string & old_text,
@@ -134,7 +134,7 @@ void creator_helpers_t::insert_as_untranslated(
 	insert_duplicate(ctx, key_text, old_text, old_text, type, status_t::untranslated);
 }
 
-void creator_helpers_t::insert_with_status(
+void creator_helpers::insert_with_status(
     creator_context_t & ctx,
     const std::string & key_text,
     const std::string & old_text,
@@ -157,7 +157,7 @@ void creator_helpers_t::insert_with_status(
 	insert_duplicate(ctx, key_text, old_text, new_text, type, status);
 }
 
-void creator_helpers_t::insert_via_text_match(
+void creator_helpers::insert_via_text_match(
     creator_context_t & ctx,
     const std::string & key_text,
     const std::string & old_text,
@@ -167,13 +167,13 @@ void creator_helpers_t::insert_via_text_match(
 
 	if (outcome.result == text_match_index_t::find_result_t::found)
 	{
-		creator_helpers_t::insert_with_status(ctx, key_text, old_text, outcome.translation, type, status_t::reused);
+		creator_helpers::insert_with_status(ctx, key_text, old_text, outcome.translation, type, status_t::reused);
 		return;
 	}
 
 	if (outcome.result == text_match_index_t::find_result_t::ambiguous)
 	{
-		creator_helpers_t::insert_with_status(ctx, key_text, old_text, outcome.translation, type, status_t::ambiguous);
+		creator_helpers::insert_with_status(ctx, key_text, old_text, outcome.translation, type, status_t::ambiguous);
 
 		auto * entry = ctx.dict.at(type).find(key_text);
 		if (entry)
@@ -185,7 +185,7 @@ void creator_helpers_t::insert_via_text_match(
 	insert_as_untranslated(ctx, key_text, old_text, type);
 }
 
-void creator_helpers_t::insert_changed_entry(
+void creator_helpers::insert_changed_entry(
     creator_context_t & ctx,
     const std::string & key_text,
     const std::string & old_text,
@@ -207,14 +207,14 @@ void creator_helpers_t::insert_changed_entry(
 		return;
 	}
 
-	creator_helpers_t::insert_with_status(ctx, key_text, old_text, base_entry.new_text, type, status_t::changed);
+	creator_helpers::insert_with_status(ctx, key_text, old_text, base_entry.new_text, type, status_t::changed);
 
 	auto * changed_entry = ctx.dict.at(type).find(key_text);
 	if (changed_entry)
 		changed_entry->details = base_entry.old_text;
 }
 
-void creator_helpers_t::insert_unapproved_changed(
+void creator_helpers::insert_unapproved_changed(
     creator_context_t & ctx,
     const std::string & key_text,
     const std::string & old_text,
@@ -225,7 +225,7 @@ void creator_helpers_t::insert_unapproved_changed(
 
 	if (base_status == status_t::in_progress || base_status == status_t::model || base_status == status_t::error)
 	{
-		creator_helpers_t::insert_with_status(ctx, key_text, old_text, base_entry.new_text, type, status_t::outdated);
+		creator_helpers::insert_with_status(ctx, key_text, old_text, base_entry.new_text, type, status_t::outdated);
 
 		auto * outdated_entry = ctx.dict.at(type).find(key_text);
 		if (outdated_entry)
@@ -236,40 +236,40 @@ void creator_helpers_t::insert_unapproved_changed(
 
 	if (base_status == status_t::untranslated)
 	{
-		creator_helpers_t::insert_with_status(ctx, key_text, old_text, old_text, type, status_t::untranslated);
+		creator_helpers::insert_with_status(ctx, key_text, old_text, old_text, type, status_t::untranslated);
 		return;
 	}
 
-	creator_helpers_t::insert_with_status(ctx, key_text, old_text, old_text, type, status_t::changed);
+	creator_helpers::insert_with_status(ctx, key_text, old_text, old_text, type, status_t::changed);
 
 	auto * changed_entry = ctx.dict.at(type).find(key_text);
 	if (changed_entry)
 		changed_entry->details = base_entry.old_text;
 }
 
-void creator_helpers_t::insert_adapted_entry(
+void creator_helpers::insert_adapted_entry(
     creator_context_t & ctx,
     const std::string & key_text,
     const std::string & old_text,
     const record_entry_t & base_entry,
     rec_type_t type)
 {
-	const auto & adapted = creator_helpers_t::adapt_translation(old_text, base_entry.old_text, base_entry.new_text);
+	const auto & adapted = creator_helpers::adapt_translation(old_text, base_entry.old_text, base_entry.new_text);
 
 	if (adapted == base_entry.new_text)
 	{
-		creator_helpers_t::insert_with_status(ctx, key_text, old_text, adapted, type, status_t::translated);
+		creator_helpers::insert_with_status(ctx, key_text, old_text, adapted, type, status_t::translated);
 		return;
 	}
 
-	creator_helpers_t::insert_with_status(ctx, key_text, old_text, adapted, type, status_t::adapted);
+	creator_helpers::insert_with_status(ctx, key_text, old_text, adapted, type, status_t::adapted);
 
 	auto * entry = ctx.dict.at(type).find(key_text);
 	if (entry)
 		entry->details = base_entry.new_text;
 }
 
-void creator_helpers_t::insert_entry_single_with_base(
+void creator_helpers::insert_entry_single_with_base(
     creator_context_t & ctx,
     const std::string & key_text,
     const std::string & old_text,
@@ -305,13 +305,13 @@ void creator_helpers_t::insert_entry_single_with_base(
 
 	if (base_entry->status == status_t::mismatch)
 	{
-		creator_helpers_t::insert_with_status(ctx, key_text, old_text, base_entry->new_text, type, status_t::mismatch);
+		creator_helpers::insert_with_status(ctx, key_text, old_text, base_entry->new_text, type, status_t::mismatch);
 		return;
 	}
 
 	if (base_entry->old_text == old_text && base_entry->new_text == old_text)
 	{
-		creator_helpers_t::insert_with_status(ctx, key_text, old_text, old_text, type, base_entry->status);
+		creator_helpers::insert_with_status(ctx, key_text, old_text, old_text, type, base_entry->status);
 		return;
 	}
 
@@ -324,14 +324,14 @@ void creator_helpers_t::insert_entry_single_with_base(
 		     base_status == status_t::propagated || base_status == status_t::error ||
 		     base_status == status_t::translated);
 		const auto status = preserve ? base_status : status_t::translated;
-		creator_helpers_t::insert_with_status(ctx, key_text, old_text, base_entry->new_text, type, status);
+		creator_helpers::insert_with_status(ctx, key_text, old_text, base_entry->new_text, type, status);
 		return;
 	}
 
 	insert_changed_entry(ctx, key_text, old_text, *base_entry, type);
 }
 
-std::vector<std::string> creator_helpers_t::make_script_messages(const std::string & script_text)
+std::vector<std::string> creator_helpers::make_script_messages(const std::string & script_text)
 {
 	std::vector<std::string> messages;
 	std::string line;
@@ -346,7 +346,7 @@ std::vector<std::string> creator_helpers_t::make_script_messages(const std::stri
 		size_t keyword_pos;
 		std::set<size_t> keyword_pos_coll;
 
-		for (const auto & keyword : domain_types_t::script_keywords)
+		for (const auto & keyword : domain_types::script_keywords)
 		{
 			keyword_pos = line_lc.find(keyword);
 			if (keyword_pos == std::string::npos)
@@ -379,7 +379,7 @@ std::vector<std::string> creator_helpers_t::make_script_messages(const std::stri
 	return messages;
 }
 
-void creator_helpers_t::build_npc_index(creator_context_t & ctx)
+void creator_helpers::build_npc_index(creator_context_t & ctx)
 {
 	for (size_t i = 0; i < ctx.esm_ref.get_records().size(); ++i)
 	{
@@ -395,7 +395,7 @@ void creator_helpers_t::build_npc_index(creator_context_t & ctx)
 	}
 }
 
-void creator_helpers_t::build_text_match_index(creator_context_t & ctx)
+void creator_helpers::build_text_match_index(creator_context_t & ctx)
 {
 	if (!ctx.base_dict)
 		return;
@@ -403,7 +403,7 @@ void creator_helpers_t::build_text_match_index(creator_context_t & ctx)
 	ctx.text_match_index.build(*ctx.base_dict);
 }
 
-void creator_helpers_t::build_gmst_index(creator_context_t & ctx)
+void creator_helpers::build_gmst_index(creator_context_t & ctx)
 {
 	for (size_t i = 0; i < ctx.esm_ref.get_records().size(); ++i)
 	{
@@ -422,12 +422,12 @@ void creator_helpers_t::build_gmst_index(creator_context_t & ctx)
 	}
 }
 
-void creator_helpers_t::build_fnam_index(creator_context_t & ctx)
+void creator_helpers::build_fnam_index(creator_context_t & ctx)
 {
 	for (size_t i = 0; i < ctx.esm_ref.get_records().size(); ++i)
 	{
 		ctx.esm_ref.select_record(i);
-		if (!domain_types_t::is_fnam(ctx.esm_ref.get_record().id))
+		if (!domain_types::is_fnam(ctx.esm_ref.get_record().id))
 			continue;
 
 		ctx.esm_ref.set_key("NAME");
@@ -442,7 +442,7 @@ void creator_helpers_t::build_fnam_index(creator_context_t & ctx)
 	}
 }
 
-void creator_helpers_t::build_desc_index(creator_context_t & ctx)
+void creator_helpers::build_desc_index(creator_context_t & ctx)
 {
 	for (size_t i = 0; i < ctx.esm_ref.get_records().size(); ++i)
 	{
@@ -460,7 +460,7 @@ void creator_helpers_t::build_desc_index(creator_context_t & ctx)
 	}
 }
 
-void creator_helpers_t::build_text_index(creator_context_t & ctx)
+void creator_helpers::build_text_index(creator_context_t & ctx)
 {
 	for (size_t i = 0; i < ctx.esm_ref.get_records().size(); ++i)
 	{
@@ -476,7 +476,7 @@ void creator_helpers_t::build_text_index(creator_context_t & ctx)
 	}
 }
 
-void creator_helpers_t::build_rnam_index(creator_context_t & ctx)
+void creator_helpers::build_rnam_index(creator_context_t & ctx)
 {
 	for (size_t i = 0; i < ctx.esm_ref.get_records().size(); ++i)
 	{
@@ -499,7 +499,7 @@ void creator_helpers_t::build_rnam_index(creator_context_t & ctx)
 	}
 }
 
-void creator_helpers_t::build_indx_index(creator_context_t & ctx)
+void creator_helpers::build_indx_index(creator_context_t & ctx)
 {
 	for (size_t i = 0; i < ctx.esm_ref.get_records().size(); ++i)
 	{
@@ -512,12 +512,12 @@ void creator_helpers_t::build_indx_index(creator_context_t & ctx)
 		if (!ctx.esm_ref.get_key().exist)
 			continue;
 
-		const auto key = rec_id + "^" + domain_types_t::get_indx(ctx.esm_ref.get_key().content);
+		const auto key = rec_id + "^" + domain_types::get_indx(ctx.esm_ref.get_key().content);
 		ctx.indx_index.insert({ key, i });
 	}
 }
 
-void creator_helpers_t::build_info_index(creator_context_t & ctx)
+void creator_helpers::build_info_index(creator_context_t & ctx)
 {
 	std::string dial_prefix;
 	for (size_t i = 0; i < ctx.esm_ref.get_records().size(); ++i)
@@ -528,7 +528,7 @@ void creator_helpers_t::build_info_index(creator_context_t & ctx)
 			ctx.esm_ref.set_key("DATA");
 			ctx.esm_ref.set_value("NAME");
 			if (ctx.esm_ref.get_key().exist && ctx.esm_ref.get_value().exist)
-				dial_prefix = domain_types_t::get_dialog_type(ctx.esm_ref.get_key().content) + "^" +
+				dial_prefix = domain_types::get_dialog_type(ctx.esm_ref.get_key().content) + "^" +
 				              ctx.esm_ref.get_value().text;
 
 			continue;
@@ -546,7 +546,7 @@ void creator_helpers_t::build_info_index(creator_context_t & ctx)
 	}
 }
 
-void creator_helpers_t::load_english_dict(creator_context_t & ctx)
+void creator_helpers::load_english_dict(creator_context_t & ctx)
 {
 	if (ctx.base_mode != base_mode_t::partial)
 		return;
@@ -575,7 +575,7 @@ void creator_helpers_t::load_english_dict(creator_context_t & ctx)
 	ctx.english_dict = std::make_unique<Hunspell>(aff.c_str(), dic.c_str());
 }
 
-status_t creator_helpers_t::determine_status(
+status_t creator_helpers::determine_status(
     const creator_context_t & ctx,
     const std::string & old_text,
     const std::string & new_text)
@@ -592,7 +592,7 @@ status_t creator_helpers_t::determine_status(
 	return status_t::untranslated;
 }
 
-bool creator_helpers_t::is_proper_noun(const creator_context_t & ctx, const std::string & text)
+bool creator_helpers::is_proper_noun(const creator_context_t & ctx, const std::string & text)
 {
 	if (!ctx.english_dict)
 		return true;
@@ -618,7 +618,7 @@ bool creator_helpers_t::is_proper_noun(const creator_context_t & ctx, const std:
 	return true;
 }
 
-bool creator_helpers_t::differs_only_in_numbers_or_punct(const std::string & a, const std::string & b)
+bool creator_helpers::differs_only_in_numbers_or_punct(const std::string & a, const std::string & b)
 {
 	if (a.size() != b.size())
 		return false;
@@ -639,7 +639,7 @@ bool creator_helpers_t::differs_only_in_numbers_or_punct(const std::string & a, 
 	return has_difference;
 }
 
-std::string creator_helpers_t::adapt_translation(
+std::string creator_helpers::adapt_translation(
     const std::string & source,
     const std::string & matched_source,
     const std::string & matched_translation)
@@ -687,7 +687,7 @@ std::string creator_helpers_t::adapt_translation(
 	return result;
 }
 
-void creator_helpers_t::enrich_info_speaker(
+void creator_helpers::enrich_info_speaker(
     creator_context_t & ctx,
     const std::string & key_text,
     size_t record_index)
@@ -712,7 +712,7 @@ void creator_helpers_t::enrich_info_speaker(
 
 	std::string gender;
 	if (ctx.esm.get_value().exist)
-		gender = ((domain_types_t::convert_string_byte_array_to_uint(ctx.esm.get_value().content) & 0x0001) != 0) ? "F" : "M";
+		gender = ((domain_types::convert_string_byte_array_to_uint(ctx.esm.get_value().content) & 0x0001) != 0) ? "F" : "M";
 
 	auto * entry = ctx.dict.at(rec_type_t::info).find(key_text);
 	if (!entry)

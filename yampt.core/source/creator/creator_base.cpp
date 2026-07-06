@@ -14,16 +14,16 @@ creator_base_t::creator_base_t(creator_context_t & context)
 
 void creator_base_t::run()
 {
-	creator_helpers_t::load_english_dict(m_ctx);
+	creator_helpers::load_english_dict(m_ctx);
 
-	creator_helpers_t::build_gmst_index(m_ctx);
-	creator_helpers_t::build_fnam_index(m_ctx);
-	creator_helpers_t::build_desc_index(m_ctx);
-	creator_helpers_t::build_text_index(m_ctx);
-	creator_helpers_t::build_rnam_index(m_ctx);
-	creator_helpers_t::build_indx_index(m_ctx);
-	creator_helpers_t::build_npc_index(m_ctx);
-	creator_helpers_t::build_info_index(m_ctx);
+	creator_helpers::build_gmst_index(m_ctx);
+	creator_helpers::build_fnam_index(m_ctx);
+	creator_helpers::build_desc_index(m_ctx);
+	creator_helpers::build_text_index(m_ctx);
+	creator_helpers::build_rnam_index(m_ctx);
+	creator_helpers::build_indx_index(m_ctx);
+	creator_helpers::build_npc_index(m_ctx);
+	creator_helpers::build_info_index(m_ctx);
 
 	make_gmst();
 	make_fnam();
@@ -99,7 +99,7 @@ void creator_base_t::make_fnam()
 	for (size_t i = 0; i < m_ctx.esm.get_records().size(); ++i)
 	{
 		m_ctx.esm.select_record(i);
-		if (!domain_types_t::is_fnam(m_ctx.esm.get_record().id))
+		if (!domain_types::is_fnam(m_ctx.esm.get_record().id))
 			continue;
 
 		m_ctx.esm.set_key("NAME");
@@ -300,7 +300,7 @@ void creator_base_t::make_indx()
 		if (!m_ctx.esm.get_key().exist || !m_ctx.esm.get_value().exist)
 			continue;
 
-		const auto key_text = rec_id + "^" + domain_types_t::get_indx(m_ctx.esm.get_key().content);
+		const auto key_text = rec_id + "^" + domain_types::get_indx(m_ctx.esm.get_key().content);
 		const auto & new_text = m_ctx.esm.get_value().text;
 
 		auto search = m_ctx.indx_index.find(key_text);
@@ -348,7 +348,7 @@ void creator_base_t::make_info()
 			if (m_ctx.esm.get_key().exist && m_ctx.esm.get_value().exist)
 			{
 				const auto & native_name = m_ctx.esm.get_value().text;
-				const auto dial_type = domain_types_t::get_dialog_type(m_ctx.esm.get_key().content);
+				const auto dial_type = domain_types::get_dialog_type(m_ctx.esm.get_key().content);
 				auto it_map = m_ctx.dial_native_to_foreign.find(native_name);
 				if (it_map != m_ctx.dial_native_to_foreign.end())
 					key_prefix = dial_type + "^" + it_map->second;
@@ -408,7 +408,7 @@ void creator_base_t::make_info()
 		std::string gender;
 		if (m_ctx.esm_ref.get_value().exist)
 			gender =
-			    ((domain_types_t::convert_string_byte_array_to_uint(m_ctx.esm_ref.get_value().content) & 0x0001) != 0) ? "F" : "M";
+			    ((domain_types::convert_string_byte_array_to_uint(m_ctx.esm_ref.get_value().content) & 0x0001) != 0) ? "F" : "M";
 
 		auto * entry = m_ctx.dict.at(rec_type_t::info).find(key_text);
 		if (!entry)
@@ -466,7 +466,7 @@ void creator_base_t::match_sctx_messages(
 		return;
 	}
 
-	const auto foreign_messages = creator_helpers_t::make_script_messages(m_ctx.esm_ref.get_value().text);
+	const auto foreign_messages = creator_helpers::make_script_messages(m_ctx.esm_ref.get_value().text);
 
 	if (native_messages.size() != foreign_messages.size())
 	{
@@ -510,7 +510,7 @@ void creator_base_t::make_sctx()
 			continue;
 
 		const auto & script_name = m_ctx.esm.get_key().text;
-		const auto native_messages = creator_helpers_t::make_script_messages(m_ctx.esm.get_value().text);
+		const auto native_messages = creator_helpers::make_script_messages(m_ctx.esm.get_value().text);
 		match_sctx_messages(script_name, native_messages, schd_index);
 	}
 }
@@ -542,7 +542,7 @@ void creator_base_t::match_bnam_native_infos(
 		return;
 	}
 
-	const auto foreign_messages = creator_helpers_t::make_script_messages(m_ctx.esm_ref.get_value().text);
+	const auto foreign_messages = creator_helpers::make_script_messages(m_ctx.esm_ref.get_value().text);
 
 	if (native_messages.size() != foreign_messages.size())
 	{
@@ -580,7 +580,7 @@ void creator_base_t::collect_bnam_missing_topics(const std::set<std::string> & m
 			m_ctx.esm_ref.set_value("NAME");
 			if (m_ctx.esm_ref.get_key().exist && m_ctx.esm_ref.get_value().exist)
 			{
-				foreign_dial_type = domain_types_t::get_dialog_type(m_ctx.esm_ref.get_key().content);
+				foreign_dial_type = domain_types::get_dialog_type(m_ctx.esm_ref.get_key().content);
 				foreign_dial_name = m_ctx.esm_ref.get_value().text;
 			}
 			continue;
@@ -602,7 +602,7 @@ void creator_base_t::collect_bnam_missing_topics(const std::set<std::string> & m
 		if (!m_ctx.esm_ref.get_value().exist || m_ctx.esm_ref.get_value().text.empty())
 			continue;
 
-		const auto foreign_messages = creator_helpers_t::make_script_messages(m_ctx.esm_ref.get_value().text);
+		const auto foreign_messages = creator_helpers::make_script_messages(m_ctx.esm_ref.get_value().text);
 		for (const auto & msg : foreign_messages)
 		{
 			const auto key_text = foreign_dial_type + "^" + foreign_dial_name + "^" + inam + "^" + msg;
@@ -633,7 +633,7 @@ void creator_base_t::make_bnam()
 			m_ctx.esm.set_value("NAME");
 			if (m_ctx.esm.get_key().exist && m_ctx.esm.get_value().exist)
 			{
-				dial_type = domain_types_t::get_dialog_type(m_ctx.esm.get_key().content);
+				dial_type = domain_types::get_dialog_type(m_ctx.esm.get_key().content);
 				const auto & native_name = m_ctx.esm.get_value().text;
 				auto it_map = m_ctx.dial_native_to_foreign.find(native_name);
 				if (it_map != m_ctx.dial_native_to_foreign.end())
@@ -660,7 +660,7 @@ void creator_base_t::make_bnam()
 		if (!m_ctx.esm.get_value().exist || m_ctx.esm.get_value().text.empty())
 			continue;
 
-		const auto native_messages = creator_helpers_t::make_script_messages(m_ctx.esm.get_value().text);
+		const auto native_messages = creator_helpers::make_script_messages(m_ctx.esm.get_value().text);
 		const auto info_key = dial_type + "^" + dial_name + "^" + info_inam;
 		match_bnam_native_infos(info_key, native_messages);
 	}
@@ -672,7 +672,7 @@ void creator_base_t::make_dial()
 {
 	m_ctx.reset_counters();
 	auto status_fn = [this](const std::string & old_text, const std::string & new_text)
-	{ return creator_helpers_t::determine_status(m_ctx, old_text, new_text); };
+	{ return creator_helpers::determine_status(m_ctx, old_text, new_text); };
 	dial_matcher_t dial_matcher(m_ctx.esm, m_ctx.esm_ref, m_ctx.translation_engine, m_ctx.dict, status_fn);
 	dial_matcher.match_topics();
 	m_ctx.dial_native_to_foreign = dial_matcher.get_native_to_foreign();
@@ -681,7 +681,7 @@ void creator_base_t::make_dial()
 void creator_base_t::make_cell()
 {
 	auto status_fn = [this](const std::string & old_text, const std::string & new_text)
-	{ return creator_helpers_t::determine_status(m_ctx, old_text, new_text); };
+	{ return creator_helpers::determine_status(m_ctx, old_text, new_text); };
 	cell_matcher_t cell_matcher(m_ctx.esm, m_ctx.esm_ref, m_ctx.translation_engine, m_ctx.dict, status_fn);
 	cell_matcher.match_exterior_cells();
 	cell_matcher.match_interior_cells();
@@ -718,7 +718,7 @@ void creator_base_t::insert_entry_base(
 	entry.key_text = key_text;
 	entry.old_text = old_text;
 	entry.new_text = new_text;
-	entry.status = is_status ? status : creator_helpers_t::determine_status(m_ctx, old_text, new_text);
+	entry.status = is_status ? status : creator_helpers::determine_status(m_ctx, old_text, new_text);
 
 	if (m_ctx.dict.at(type).insert(entry))
 	{

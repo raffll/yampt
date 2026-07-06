@@ -253,8 +253,8 @@ void view_tree_model_t::decode_schema_children_ref(
 				}
 
 				frow.all_identical = check_all_identical(frow.values);
-				frow.row_conflict_all = record_conflict_t::compute_conflict_all_skip_empty(frow.values);
-				frow.cell_conflict_this = record_conflict_t::compute_conflict_this_skip_empty(frow.values);
+				frow.row_conflict_all = record_conflict::compute_conflict_all_skip_empty(frow.values);
+				frow.cell_conflict_this = record_conflict::compute_conflict_this_skip_empty(frow.values);
 				parent_row.children.push_back(std::move(frow));
 			}
 			continue;
@@ -275,8 +275,8 @@ void view_tree_model_t::decode_schema_children_ref(
 		}
 
 		frow.all_identical = check_all_identical(frow.values);
-		frow.row_conflict_all = record_conflict_t::compute_conflict_all_skip_empty(frow.values);
-		frow.cell_conflict_this = record_conflict_t::compute_conflict_this_skip_empty(frow.values);
+		frow.row_conflict_all = record_conflict::compute_conflict_all_skip_empty(frow.values);
+		frow.cell_conflict_this = record_conflict::compute_conflict_this_skip_empty(frow.values);
 		parent_row.children.push_back(std::move(frow));
 	}
 }
@@ -313,8 +313,8 @@ void view_tree_model_t::decode_hex_children_ref(
 		}
 
 		frow.all_identical = check_all_identical(frow.values);
-		frow.row_conflict_all = record_conflict_t::compute_conflict_all_skip_empty(frow.values);
-		frow.cell_conflict_this = record_conflict_t::compute_conflict_this_skip_empty(frow.values);
+		frow.row_conflict_all = record_conflict::compute_conflict_all_skip_empty(frow.values);
+		frow.cell_conflict_this = record_conflict::compute_conflict_this_skip_empty(frow.values);
 		parent_row.children.push_back(std::move(frow));
 	}
 }
@@ -436,8 +436,8 @@ view_tree_model_t::view_node_t view_tree_model_t::build_ref_child(
 
 	child_field.label = make_sub_label(slot.type, m_record_type, first_size);
 	child_field.all_identical = check_all_identical(child_field.values);
-	child_field.row_conflict_all = record_conflict_t::compute_conflict_all_skip_empty(child_field.values);
-	child_field.cell_conflict_this = record_conflict_t::compute_conflict_this_skip_empty(child_field.values);
+	child_field.row_conflict_all = record_conflict::compute_conflict_all_skip_empty(child_field.values);
+	child_field.cell_conflict_this = record_conflict::compute_conflict_this_skip_empty(child_field.values);
 	return child_field;
 }
 

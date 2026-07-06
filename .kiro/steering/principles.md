@@ -68,9 +68,28 @@ If a new feature needs orchestration (showing dialogs, running operations, updat
 - No comments unless the code cannot be explained by function or variable names alone. If a comment is unavoidable, keep it to one short line.
 - No decorative comment banners (dashed lines, boxes, ASCII art).
 - Always remove items from TODO.md that are done or cancelled — never leave stale entries.
-- Prefer file-local `static` functions over private static class methods for implementation-only helpers. Keep headers minimal — only declare methods that callers or tests need. A `.cpp` file implements one class but may contain file-local helpers that serve its methods. Internal-only types (structs used by one function chain) live in the `.cpp`, never the header. If a helper can't be a simple file-local `static` in one `.cpp` (e.g. needed by multiple files), it belongs on a class — never use free functions with external linkage.
 - One class = one `.hpp` + one `.cpp`. Never split a class across multiple `.cpp` files. If a class exceeds 1000 lines, it has more than one responsibility — extract a new class, don't add a second `.cpp`.
 
+## Classes vs Namespaces
+
+- **Class (`_t` suffix)** — has mutable state (member variables, including static mutable). Gets instantiated or manages a resource.
+- **Namespace (`snake_case`)** — groups related functions with no shared mutable state. Constants (including `extern const`) are fine.
+- **Struct (`_t` suffix)** — POD/data carriers with no behavior beyond trivial accessors.
+
+Decision:
+1. Does it hold mutable state? → class
+2. Does it get instantiated? → class
+3. Is it just functions + constants? → namespace
+
+Never use a class with only static methods — use a namespace instead.
+
+## Function Placement
+
+- File-local `static` functions in `.cpp` — implementation-only helpers that serve one file. Internal types used by these helpers also live in the `.cpp`.
+- Namespace functions in `.hpp` — shared logic callable from multiple files. Declared in a namespace in the header, defined in the `.cpp`.
+- Class methods — behavior that operates on the class's own state.
+
+Keep headers minimal. Only declare what external callers or tests need.
 
 ## Coding Standards Enforcement
 
@@ -78,7 +97,7 @@ Every code change must comply with ALL rules in the steering files. Before writi
 - Max 50 lines per function
 - Max 3 nesting levels
 - Max 2 function arguments (use struct if more needed)
-- Prefer file-local `static` helpers over private static declarations in headers — if needed across files, use a class method
+- File-local `static` for internal helpers, namespace functions for shared logic
 - One class = one `.hpp` + one `.cpp` — never split across multiple `.cpp` files
 - No comments, no magic numbers, no abbreviations under 5 characters
 - `const auto &` by default

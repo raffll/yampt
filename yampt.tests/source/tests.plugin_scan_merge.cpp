@@ -12,7 +12,7 @@ static std::string make_sub_record(const std::string & sub_id, const std::string
 {
 	std::string result;
 	result += sub_id;
-	result += domain_types_t::convert_uint_to_string_byte_array(content.size());
+	result += domain_types::convert_uint_to_string_byte_array(content.size());
 	result += content;
 	return result;
 }
@@ -21,9 +21,9 @@ static std::string make_record(const std::string & rec_id, const std::string & s
 {
 	std::string header;
 	header += rec_id;
-	header += domain_types_t::convert_uint_to_string_byte_array(sub_records.size());
-	header += domain_types_t::convert_uint_to_string_byte_array(0);
-	header += domain_types_t::convert_uint_to_string_byte_array(0);
+	header += domain_types::convert_uint_to_string_byte_array(sub_records.size());
+	header += domain_types::convert_uint_to_string_byte_array(0);
+	header += domain_types::convert_uint_to_string_byte_array(0);
 	return header + sub_records;
 }
 

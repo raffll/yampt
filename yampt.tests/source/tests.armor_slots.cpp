@@ -55,7 +55,7 @@ TEST_CASE("build_armor_slots, aligns body parts by INDX value", "[u]")
 	auto v2 = make_record("ARMO", v2_subs);
 
 	std::vector<bool> deleted = { false, false };
-	auto result = conflict_slot_builder_t::build("ARMO", { v1, v2 }, deleted);
+	auto result = conflict_slots::build("ARMO", { v1, v2 }, deleted);
 
 	bool found_indx_0 = false;
 	bool found_indx_2 = false;
@@ -100,7 +100,7 @@ TEST_CASE("build_armor_slots, missing part shows SIZE_MAX", "[u]")
 	auto v2 = make_record("ARMO", v2_subs);
 
 	std::vector<bool> deleted = { false, false };
-	auto result = conflict_slot_builder_t::build("ARMO", { v1, v2 }, deleted);
+	auto result = conflict_slots::build("ARMO", { v1, v2 }, deleted);
 
 	bool found_missing = false;
 	for (const auto & slot : result.aligned)
@@ -128,7 +128,7 @@ TEST_CASE("build_armor_slots, header sub-records not in body part groups", "[u]"
 	auto content = make_record("ARMO", subs);
 
 	std::vector<bool> deleted = { false };
-	auto result = conflict_slot_builder_t::build("ARMO", { content }, deleted);
+	auto result = conflict_slots::build("ARMO", { content }, deleted);
 
 	bool found_name = false;
 	bool found_fnam = false;

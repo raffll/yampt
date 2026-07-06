@@ -489,7 +489,7 @@ void script_parser_t::convert_line()
 void script_parser_t::find_keyword()
 {
 	std::map<size_t, std::string> keyword_pos_coll;
-	for (const auto & keyword : domain_types_t::script_keywords)
+	for (const auto & keyword : domain_types::script_keywords)
 	{
 		keyword_pos = line_lc.find(keyword);
 		keyword_pos_coll.insert({ keyword_pos, keyword });

@@ -3,7 +3,7 @@
 
 eet_converter_t::eet_converter_t(const std::vector<eet_reader_t::eet_entry_t> & entries)
 {
-	m_dict = domain_types_t::initialize_dict();
+	m_dict = domain_types::initialize_dict();
 
 	for (const auto & entry : entries)
 	{

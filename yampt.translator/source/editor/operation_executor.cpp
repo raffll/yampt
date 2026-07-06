@@ -139,7 +139,7 @@ operation_executor_t::result_t operation_executor_t::convert(
 	const auto ext = info.suffix().toStdString();
 	const auto output_path = make_output_path(plugin_path, ext);
 
-	binary_file_io_t::write_file(converter.get_records(), output_path);
+	binary_file_io::write_file(converter.get_records(), output_path);
 
 	return { true, app_logger_t::get_log(), output_path };
 }
@@ -162,7 +162,7 @@ operation_executor_t::result_t operation_executor_t::create_plugin(
 	const auto ext = info.suffix().toStdString();
 	const auto output_path = make_output_path(plugin_path, ext);
 
-	binary_file_io_t::create_file(converter.get_records(), output_path);
+	binary_file_io::create_file(converter.get_records(), output_path);
 
 	return { true, app_logger_t::get_log(), output_path };
 }

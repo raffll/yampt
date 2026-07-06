@@ -8,7 +8,7 @@ namespace {
 
 static std::string size_byte(size_t value)
 {
-	return domain_types_t::convert_uint_to_string_byte_array(value).substr(0, 1);
+	return domain_types::convert_uint_to_string_byte_array(value).substr(0, 1);
 }
 
 struct generated_script_t

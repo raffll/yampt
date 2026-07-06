@@ -9,9 +9,9 @@ creator_ordered_t::creator_ordered_t(creator_context_t & context)
 
 void creator_ordered_t::run()
 {
-	creator_helpers_t::load_english_dict(m_ctx);
+	creator_helpers::load_english_dict(m_ctx);
 
-	creator_helpers_t::build_npc_index(m_ctx);
+	creator_helpers::build_npc_index(m_ctx);
 	build_dial_map();
 
 	std::string dial_type;
@@ -48,7 +48,7 @@ void creator_ordered_t::run()
 		m_ctx.esm.select_record(i);
 		m_ctx.esm_ref.select_record(i);
 
-		if (!domain_types_t::is_fnam(m_ctx.esm.get_record().id))
+		if (!domain_types::is_fnam(m_ctx.esm.get_record().id))
 			continue;
 
 		process_fnam(i);
@@ -70,7 +70,7 @@ void creator_ordered_t::build_dial_map()
 		if (!m_ctx.esm.get_key().exist)
 			continue;
 
-		if (domain_types_t::get_dialog_type(m_ctx.esm.get_key().content) != "T")
+		if (domain_types::get_dialog_type(m_ctx.esm.get_key().content) != "T")
 			continue;
 
 		m_ctx.esm.set_value("NAME");
@@ -205,7 +205,7 @@ void creator_ordered_t::process_indx(size_t i)
 	if (!m_ctx.esm.get_key().exist || !m_ctx.esm.get_value().exist)
 		return;
 
-	const auto key_text = m_ctx.esm.get_record().id + "^" + domain_types_t::get_indx(m_ctx.esm.get_key().content);
+	const auto key_text = m_ctx.esm.get_record().id + "^" + domain_types::get_indx(m_ctx.esm.get_key().content);
 	const auto & new_text = m_ctx.esm.get_value().text;
 
 	m_ctx.esm_ref.set_key("INDX");
@@ -239,7 +239,7 @@ void creator_ordered_t::process_dial(size_t i, std::string & dial_type, std::str
 	if (!m_ctx.esm.get_key().exist)
 		return;
 
-	dial_type = domain_types_t::get_dialog_type(m_ctx.esm.get_key().content);
+	dial_type = domain_types::get_dialog_type(m_ctx.esm.get_key().content);
 
 	m_ctx.esm.set_value("NAME");
 	if (!m_ctx.esm.get_value().exist)
@@ -282,7 +282,7 @@ void creator_ordered_t::attach_speaker_metadata(const std::string & key_text, si
 
 	std::string gender;
 	if (m_ctx.esm_ref.get_value().exist)
-		gender = ((domain_types_t::convert_string_byte_array_to_uint(m_ctx.esm_ref.get_value().content) & 0x0001) != 0) ? "F" : "M";
+		gender = ((domain_types::convert_string_byte_array_to_uint(m_ctx.esm_ref.get_value().content) & 0x0001) != 0) ? "F" : "M";
 
 	auto * entry = m_ctx.dict.at(rec_type_t::info).find(key_text);
 	if (!entry)
@@ -330,7 +330,7 @@ void creator_ordered_t::process_sctx(size_t i)
 		return;
 
 	const auto & script_name = m_ctx.esm.get_key().text;
-	const auto native_messages = creator_helpers_t::make_script_messages(m_ctx.esm.get_value().text);
+	const auto native_messages = creator_helpers::make_script_messages(m_ctx.esm.get_value().text);
 
 	m_ctx.esm_ref.set_key("SCHD");
 	m_ctx.esm_ref.set_value("SCTX");
@@ -342,7 +342,7 @@ void creator_ordered_t::process_sctx(size_t i)
 		return;
 	}
 
-	const auto foreign_messages = creator_helpers_t::make_script_messages(m_ctx.esm_ref.get_value().text);
+	const auto foreign_messages = creator_helpers::make_script_messages(m_ctx.esm_ref.get_value().text);
 
 	if (native_messages.size() != foreign_messages.size())
 	{
@@ -374,7 +374,7 @@ void creator_ordered_t::process_bnam(
 	if (!m_ctx.esm.get_value().exist || m_ctx.esm.get_value().text.empty())
 		return;
 
-	const auto native_messages = creator_helpers_t::make_script_messages(m_ctx.esm.get_value().text);
+	const auto native_messages = creator_helpers::make_script_messages(m_ctx.esm.get_value().text);
 
 	m_ctx.esm_ref.set_value("BNAM");
 	if (!m_ctx.esm_ref.get_value().exist || m_ctx.esm_ref.get_value().text.empty())
@@ -389,7 +389,7 @@ void creator_ordered_t::process_bnam(
 		return;
 	}
 
-	const auto foreign_messages = creator_helpers_t::make_script_messages(m_ctx.esm_ref.get_value().text);
+	const auto foreign_messages = creator_helpers::make_script_messages(m_ctx.esm_ref.get_value().text);
 
 	if (native_messages.size() != foreign_messages.size())
 	{
@@ -498,7 +498,7 @@ void creator_ordered_t::insert_entry_base(
 	entry.key_text = key_text;
 	entry.old_text = old_text;
 	entry.new_text = new_text;
-	entry.status = is_status ? status : creator_helpers_t::determine_status(m_ctx, old_text, new_text);
+	entry.status = is_status ? status : creator_helpers::determine_status(m_ctx, old_text, new_text);
 
 	if (m_ctx.dict.at(type).insert(entry))
 	{

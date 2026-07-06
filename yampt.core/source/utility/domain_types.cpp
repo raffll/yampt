@@ -8,7 +8,7 @@
 
 static constexpr size_t bytes_per_uint32 = 4;
 
-const std::vector<std::string> domain_types_t::script_keywords { "messagebox", "choice", "say" };
+const std::vector<std::string> domain_types::script_keywords { "messagebox", "choice", "say" };
 
 bool chapter_t::insert(const record_entry_t & entry)
 {
@@ -58,7 +58,7 @@ const record_entry_t * chapter_t::find_by_old_text(const std::string & old_text)
 	return &records[it->second];
 }
 
-dict_t domain_types_t::initialize_dict()
+dict_t domain_types::initialize_dict()
 {
 	return {
 		{ rec_type_t::cell, {} }, { rec_type_t::dial, {} }, { rec_type_t::indx, {} },
@@ -68,7 +68,7 @@ dict_t domain_types_t::initialize_dict()
 	};
 }
 
-size_t domain_types_t::get_number_of_elements_in_dict(const dict_t & dict)
+size_t domain_types::get_number_of_elements_in_dict(const dict_t & dict)
 {
 	size_t total = 0;
 	for (const auto & chapter : dict)
@@ -78,7 +78,7 @@ size_t domain_types_t::get_number_of_elements_in_dict(const dict_t & dict)
 	return total;
 }
 
-std::string domain_types_t::type_to_str(rec_type_t type)
+std::string domain_types::type_to_str(rec_type_t type)
 {
 	switch (type)
 	{
@@ -128,7 +128,7 @@ std::string domain_types_t::type_to_str(rec_type_t type)
 	}
 }
 
-rec_type_t domain_types_t::str_to_type(const std::string & str)
+rec_type_t domain_types::str_to_type(const std::string & str)
 {
 	static const std::map<std::string, rec_type_t> str2type {
 		{ "CELL", rec_type_t::cell }, { "DIAL", rec_type_t::dial },
@@ -146,14 +146,14 @@ rec_type_t domain_types_t::str_to_type(const std::string & str)
 	return rec_type_t::unknown;
 }
 
-std::string domain_types_t::get_dialog_type(const std::string & content)
+std::string domain_types::get_dialog_type(const std::string & content)
 {
 	static const std::vector<std::string> dialog_type { "T", "V", "G", "P", "J" };
 	size_t type = convert_string_byte_array_to_uint(content.substr(0, 1));
 	return dialog_type.at(type);
 }
 
-std::string domain_types_t::get_indx(const std::string & content)
+std::string domain_types::get_indx(const std::string & content)
 {
 	size_t indx = convert_string_byte_array_to_uint(content);
 	std::ostringstream stream;
@@ -161,12 +161,12 @@ std::string domain_types_t::get_indx(const std::string & content)
 	return stream.str();
 }
 
-bool domain_types_t::is_fnam(const std::string & rec_id)
+bool domain_types::is_fnam(const std::string & rec_id)
 {
 	return record_types::is_fnam_eligible(rec_id);
 }
 
-size_t domain_types_t::convert_string_byte_array_to_uint(const std::string & str)
+size_t domain_types::convert_string_byte_array_to_uint(const std::string & str)
 {
 	assert(str.size() == bytes_per_uint32 || str.size() == 1);
 
@@ -192,7 +192,7 @@ size_t domain_types_t::convert_string_byte_array_to_uint(const std::string & str
 	return std::string::npos;
 }
 
-std::string domain_types_t::convert_uint_to_string_byte_array(size_t size)
+std::string domain_types::convert_uint_to_string_byte_array(size_t size)
 {
 	auto value = static_cast<const unsigned>(size);
 

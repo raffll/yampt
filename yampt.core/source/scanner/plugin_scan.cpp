@@ -155,13 +155,13 @@ struct conflict_accumulator_t
 
 	void accumulate(const std::vector<std::string> & values, bool skip_non_existent = false)
 	{
-		const auto level = skip_non_existent ? record_conflict_t::compute_conflict_all_skip_empty(values) : record_conflict_t::compute_conflict_all(values);
+		const auto level = skip_non_existent ? record_conflict::compute_conflict_all_skip_empty(values) : record_conflict::compute_conflict_all(values);
 
 		if (level > worst_all)
 			worst_all = level;
 
 		per_slot_this.push_back(
-		    skip_non_existent ? record_conflict_t::compute_conflict_this_skip_empty(values) : record_conflict_t::compute_conflict_this(values));
+		    skip_non_existent ? record_conflict::compute_conflict_this_skip_empty(values) : record_conflict::compute_conflict_this(values));
 	}
 };
 
@@ -303,14 +303,14 @@ void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 	}
 
 	entry.slot_result =
-	    std::make_unique<slot_result_t>(conflict_slot_builder_t::build(entry.rec_type, std::move(contents), is_deleted));
+	    std::make_unique<slot_result_t>(conflict_slots::build(entry.rec_type, std::move(contents), is_deleted));
 
 	conflict_accumulator_t accum;
 	const auto & sr = *entry.slot_result;
 
 	for (const auto & slot : sr.aligned)
 	{
-		const auto policy = record_conflict_t::find_conflict_policy(entry.rec_type, slot.key.type);
+		const auto policy = record_conflict::find_conflict_policy(entry.rec_type, slot.key.type);
 		if (policy.ignore_conflict)
 			continue;
 
