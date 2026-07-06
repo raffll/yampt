@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../utility/tools.hpp"
+#include "../utility/domain_types.hpp"
 
 class dict_writer_t
 {
 public:
-	static void write(const tools_t::dict_t & dict, const std::string & path);
+	static void write(const dict_t & dict, const std::string & path);
 };

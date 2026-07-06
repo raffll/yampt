@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../utility/includes.hpp"
-#include "../utility/tools.hpp"
+#include "../utility/domain_types.hpp"
 
 struct yyjson_val;
 
@@ -27,11 +27,11 @@ public:
 
 private:
 	void parse_json(const std::string & content, const std::string & path);
-	void parse_chapter(yyjson_val * array, tools_t::rec_type_t type, const std::string & type_str);
-	void parse_record(yyjson_val * record, tools_t::rec_type_t type, const std::string & type_str);
-	void validate_entry(tools_t::record_entry_t & entry, tools_t::rec_type_t type);
+	void parse_chapter(yyjson_val * array, rec_type_t type, const std::string & type_str);
+	void parse_record(yyjson_val * record, rec_type_t type, const std::string & type_str);
+	void validate_entry(record_entry_t & entry, rec_type_t type);
 
 	file_path_parts_t name;
-	tools_t::dict_t dict;
+	dict_t dict;
 	bool m_loaded = false;
 };

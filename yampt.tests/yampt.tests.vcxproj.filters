@@ -68,7 +68,6 @@
     <ClCompile Include="..\yampt.core\source\io\eet_converter.cpp" />
     <ClCompile Include="..\yampt.core\source\io\eet_reader.cpp" />
     <ClCompile Include="..\yampt.core\source\utility\char_diff.cpp" />
-    <ClCompile Include="..\yampt.core\source\utility\tools.cpp" />
     <ClCompile Include="..\yampt.core\source\io\dict_reader.cpp" />
     <ClCompile Include="..\yampt.core\source\io\dict_writer.cpp" />
     <ClCompile Include="..\yampt.core\source\io\esm_reader.cpp" />

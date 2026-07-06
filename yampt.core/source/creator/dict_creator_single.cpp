@@ -39,9 +39,9 @@ void dict_creator_t::make_dict_single_gmst()
 		const auto & text = esm.get_value().text;
 
 		if (mode == mode_t::single_with_base)
-			insert_entry_single_with_base(key_text, text, text, tools_t::rec_type_t::gmst);
+			insert_entry_single_with_base(key_text, text, text, rec_type_t::gmst);
 		else
-			insert_entry_single(key_text, text, text, tools_t::rec_type_t::gmst);
+			insert_entry_single(key_text, text, text, rec_type_t::gmst);
 	}
 }
 
@@ -51,7 +51,7 @@ void dict_creator_t::make_dict_single_fnam()
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
-		if (!tools_t::is_fnam(esm.get_record().id))
+		if (!domain_types_t::is_fnam(esm.get_record().id))
 			continue;
 
 		esm.set_key("NAME");
@@ -69,9 +69,9 @@ void dict_creator_t::make_dict_single_fnam()
 		const auto & text = esm.get_value().text;
 
 		if (mode == mode_t::single_with_base)
-			insert_entry_single_with_base(key_text, text, text, tools_t::rec_type_t::fnam);
+			insert_entry_single_with_base(key_text, text, text, rec_type_t::fnam);
 		else
-			insert_entry_single(key_text, text, text, tools_t::rec_type_t::fnam);
+			insert_entry_single(key_text, text, text, rec_type_t::fnam);
 	}
 }
 
@@ -94,9 +94,9 @@ void dict_creator_t::make_dict_single_desc()
 		const auto & text = esm.get_value().text;
 
 		if (mode == mode_t::single_with_base)
-			insert_entry_single_with_base(key_text, text, text, tools_t::rec_type_t::desc);
+			insert_entry_single_with_base(key_text, text, text, rec_type_t::desc);
 		else
-			insert_entry_single(key_text, text, text, tools_t::rec_type_t::desc);
+			insert_entry_single(key_text, text, text, rec_type_t::desc);
 	}
 }
 
@@ -118,9 +118,9 @@ void dict_creator_t::make_dict_single_text()
 		const auto & text = esm.get_value().text;
 
 		if (mode == mode_t::single_with_base)
-			insert_entry_single_with_base(key_text, text, text, tools_t::rec_type_t::text);
+			insert_entry_single_with_base(key_text, text, text, rec_type_t::text);
 		else
-			insert_entry_single(key_text, text, text, tools_t::rec_type_t::text);
+			insert_entry_single(key_text, text, text, rec_type_t::text);
 	}
 }
 
@@ -144,9 +144,9 @@ void dict_creator_t::make_dict_single_rnam()
 			const auto & text = esm.get_value().text;
 
 			if (mode == mode_t::single_with_base)
-				insert_entry_single_with_base(key_text, text, text, tools_t::rec_type_t::rnam);
+				insert_entry_single_with_base(key_text, text, text, rec_type_t::rnam);
 			else
-				insert_entry_single(key_text, text, text, tools_t::rec_type_t::rnam);
+				insert_entry_single(key_text, text, text, rec_type_t::rnam);
 
 			esm.set_next_value("RNAM");
 		}
@@ -168,13 +168,13 @@ void dict_creator_t::make_dict_single_indx()
 		if (!esm.get_key().exist || !esm.get_value().exist)
 			continue;
 
-		const auto key_text = rec_id + "^" + tools_t::get_indx(esm.get_key().content);
+		const auto key_text = rec_id + "^" + domain_types_t::get_indx(esm.get_key().content);
 		const auto & text = esm.get_value().text;
 
 		if (mode == mode_t::single_with_base)
-			insert_entry_single_with_base(key_text, text, text, tools_t::rec_type_t::indx);
+			insert_entry_single_with_base(key_text, text, text, rec_type_t::indx);
 		else
-			insert_entry_single(key_text, text, text, tools_t::rec_type_t::indx);
+			insert_entry_single(key_text, text, text, rec_type_t::indx);
 	}
 }
 
@@ -200,9 +200,9 @@ void dict_creator_t::enrich_info_speaker(const std::string & key_text, size_t re
 
 	std::string gender;
 	if (esm.get_value().exist)
-		gender = ((tools_t::convert_string_byte_array_to_uint(esm.get_value().content) & 0x0001) != 0) ? "F" : "M";
+		gender = ((domain_types_t::convert_string_byte_array_to_uint(esm.get_value().content) & 0x0001) != 0) ? "F" : "M";
 
-	auto * entry = dict.at(tools_t::rec_type_t::info).find(key_text);
+	auto * entry = dict.at(rec_type_t::info).find(key_text);
 	if (!entry)
 		return;
 
@@ -222,7 +222,7 @@ void dict_creator_t::make_dict_single_info()
 			esm.set_key("DATA");
 			esm.set_value("NAME");
 			if (esm.get_key().exist && esm.get_value().exist)
-				key_prefix = tools_t::get_dialog_type(esm.get_key().content) + "^" + esm.get_value().text;
+				key_prefix = domain_types_t::get_dialog_type(esm.get_key().content) + "^" + esm.get_value().text;
 
 			continue;
 		}
@@ -242,9 +242,9 @@ void dict_creator_t::make_dict_single_info()
 		const auto & text = esm.get_value().text;
 
 		if (mode == mode_t::single_with_base)
-			insert_entry_single_with_base(key_text, text, text, tools_t::rec_type_t::info);
+			insert_entry_single_with_base(key_text, text, text, rec_type_t::info);
 		else
-			insert_entry_single(key_text, text, text, tools_t::rec_type_t::info);
+			insert_entry_single(key_text, text, text, rec_type_t::info);
 
 		enrich_info_speaker(key_text, i);
 	}
@@ -273,9 +273,9 @@ void dict_creator_t::make_dict_single_sctx()
 			const auto & old_text = messages[k];
 
 			if (mode == mode_t::single_with_base)
-				insert_entry_single_with_base(key_text, old_text, old_text, tools_t::rec_type_t::sctx);
+				insert_entry_single_with_base(key_text, old_text, old_text, rec_type_t::sctx);
 			else
-				insert_entry_single(key_text, old_text, old_text, tools_t::rec_type_t::sctx);
+				insert_entry_single(key_text, old_text, old_text, rec_type_t::sctx);
 		}
 	}
 }
@@ -297,7 +297,7 @@ void dict_creator_t::make_dict_single_bnam()
 			esm.set_value("NAME");
 			if (esm.get_key().exist && esm.get_value().exist)
 			{
-				dial_type = tools_t::get_dialog_type(esm.get_key().content);
+				dial_type = domain_types_t::get_dialog_type(esm.get_key().content);
 				dial_name = esm.get_value().text;
 			}
 			continue;
@@ -323,9 +323,9 @@ void dict_creator_t::make_dict_single_bnam()
 			const auto & old_text = messages[k];
 
 			if (mode == mode_t::single_with_base)
-				insert_entry_single_with_base(key_text, old_text, old_text, tools_t::rec_type_t::bnam);
+				insert_entry_single_with_base(key_text, old_text, old_text, rec_type_t::bnam);
 			else
-				insert_entry_single(key_text, old_text, old_text, tools_t::rec_type_t::bnam);
+				insert_entry_single(key_text, old_text, old_text, rec_type_t::bnam);
 		}
 	}
 }
@@ -341,7 +341,7 @@ void dict_creator_t::make_dict_single_dial()
 
 		esm.set_key("DATA");
 		esm.set_value("NAME");
-		if (tools_t::get_dialog_type(esm.get_key().content) != "T")
+		if (domain_types_t::get_dialog_type(esm.get_key().content) != "T")
 			continue;
 
 		if (!esm.get_value().exist)
@@ -350,9 +350,9 @@ void dict_creator_t::make_dict_single_dial()
 		const auto & text = esm.get_value().text;
 
 		if (mode == mode_t::single_with_base)
-			insert_entry_single_with_base(text, text, text, tools_t::rec_type_t::dial);
+			insert_entry_single_with_base(text, text, text, rec_type_t::dial);
 		else
-			insert_entry_single(text, text, text, tools_t::rec_type_t::dial);
+			insert_entry_single(text, text, text, rec_type_t::dial);
 	}
 }
 
@@ -372,9 +372,9 @@ void dict_creator_t::make_dict_single_cell()
 		const auto & text = esm.get_value().text;
 
 		if (mode == mode_t::single_with_base)
-			insert_entry_single_with_base(text, text, text, tools_t::rec_type_t::cell);
+			insert_entry_single_with_base(text, text, text, rec_type_t::cell);
 		else
-			insert_entry_single(text, text, text, tools_t::rec_type_t::cell);
+			insert_entry_single(text, text, text, rec_type_t::cell);
 	}
 }
 
@@ -390,13 +390,13 @@ void dict_creator_t::insert_entry_single(
     const std::string & key_text,
     const std::string & old_text,
     const std::string & new_text,
-    tools_t::rec_type_t type)
+    rec_type_t type)
 {
 	counter_all++;
 
 	const bool is_text_keyed =
-	    (type == tools_t::rec_type_t::cell || type == tools_t::rec_type_t::dial || type == tools_t::rec_type_t::sctx ||
-	     type == tools_t::rec_type_t::bnam);
+	    (type == rec_type_t::cell || type == rec_type_t::dial || type == rec_type_t::sctx ||
+	     type == rec_type_t::bnam);
 
 	auto * existing = dict.at(type).find(key_text);
 	if (existing && is_text_keyed)
@@ -405,7 +405,7 @@ void dict_creator_t::insert_entry_single(
 			return;
 	}
 
-	tools_t::record_entry_t entry;
+	record_entry_t entry;
 	entry.key_text = key_text;
 	entry.old_text = old_text;
 	entry.new_text = new_text;
@@ -423,8 +423,8 @@ void dict_creator_t::insert_entry_single(
 void dict_creator_t::insert_changed_entry(
     const std::string & key_text,
     const std::string & old_text,
-    const tools_t::record_entry_t & base_entry,
-    tools_t::rec_type_t type)
+    const record_entry_t & base_entry,
+    rec_type_t type)
 {
 	const auto & base_status = base_entry.status;
 	const bool is_approved = (base_status == status_t::translated);
@@ -451,8 +451,8 @@ void dict_creator_t::insert_changed_entry(
 void dict_creator_t::insert_unapproved_changed(
     const std::string & key_text,
     const std::string & old_text,
-    const tools_t::record_entry_t & base_entry,
-    tools_t::rec_type_t type)
+    const record_entry_t & base_entry,
+    rec_type_t type)
 {
 	const auto & base_status = base_entry.status;
 
@@ -483,8 +483,8 @@ void dict_creator_t::insert_unapproved_changed(
 void dict_creator_t::insert_adapted_entry(
     const std::string & key_text,
     const std::string & old_text,
-    const tools_t::record_entry_t & base_entry,
-    tools_t::rec_type_t type)
+    const record_entry_t & base_entry,
+    rec_type_t type)
 {
 	const auto & adapted = adapt_translation(old_text, base_entry.old_text, base_entry.new_text);
 
@@ -505,13 +505,13 @@ void dict_creator_t::insert_entry_single_with_base(
     const std::string & key_text,
     const std::string & old_text,
     const std::string & new_text,
-    tools_t::rec_type_t type)
+    rec_type_t type)
 {
 	counter_all++;
 
 	const bool is_text_keyed =
-	    (type == tools_t::rec_type_t::cell || type == tools_t::rec_type_t::dial || type == tools_t::rec_type_t::sctx ||
-	     type == tools_t::rec_type_t::bnam);
+	    (type == rec_type_t::cell || type == rec_type_t::dial || type == rec_type_t::sctx ||
+	     type == rec_type_t::bnam);
 
 	auto * existing = dict.at(type).find(key_text);
 	if (existing && is_text_keyed)
@@ -565,9 +565,9 @@ void dict_creator_t::insert_entry_single_with_base(
 void dict_creator_t::insert_as_untranslated(
     const std::string & key_text,
     const std::string & old_text,
-    tools_t::rec_type_t type)
+    rec_type_t type)
 {
-	tools_t::record_entry_t entry;
+	record_entry_t entry;
 	entry.key_text = key_text;
 	entry.old_text = old_text;
 	entry.new_text = old_text;
@@ -586,10 +586,10 @@ void dict_creator_t::insert_with_status(
     const std::string & key_text,
     const std::string & old_text,
     const std::string & new_text,
-    tools_t::rec_type_t type,
+    rec_type_t type,
     status_t status)
 {
-	tools_t::record_entry_t entry;
+	record_entry_t entry;
 	entry.key_text = key_text;
 	entry.old_text = old_text;
 	entry.new_text = new_text;
@@ -607,7 +607,7 @@ void dict_creator_t::insert_with_status(
 void dict_creator_t::insert_via_text_match(
     const std::string & key_text,
     const std::string & old_text,
-    tools_t::rec_type_t type)
+    rec_type_t type)
 {
 	const auto outcome = m_text_match_index.find(old_text);
 

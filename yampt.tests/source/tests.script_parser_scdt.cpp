@@ -1,17 +1,17 @@
 #include <catch2/catch_all.hpp>
 #include <converter/script_parser.hpp>
 #include <merger/dict_merger.hpp>
-#include <utility/tools.hpp>
+#include <utility/app_logger.hpp>
 
 static std::string size_byte(size_t value)
 {
-	return tools_t::convert_uint_to_string_byte_array(value).substr(0, 1);
+	return domain_types_t::convert_uint_to_string_byte_array(value).substr(0, 1);
 }
 
 TEST_CASE("script_parser_t, scdt single replacement", "[u]")
 {
 	dict_merger_t merger;
-	merger.add_record(tools_t::rec_type_t::cell, "Balmora", "Balmora PL");
+	merger.add_record(rec_type_t::cell, "Balmora", "Balmora PL");
 
 	std::string scdt;
 	scdt += std::string(10, '\x00');
@@ -21,7 +21,7 @@ TEST_CASE("script_parser_t, scdt single replacement", "[u]")
 
 	std::string input_script = "GetPCCell \"Balmora\"";
 
-	script_parser_t parser(tools_t::rec_type_t::sctx, merger, "TestScript", "test.esm", input_script, scdt);
+	script_parser_t parser(rec_type_t::sctx, merger, "TestScript", "test.esm", input_script, scdt);
 
 	const auto & new_scdt = parser.get_new_scdt();
 	auto found_pos = new_scdt.find("Balmora PL");
@@ -34,7 +34,7 @@ TEST_CASE("script_parser_t, scdt single replacement", "[u]")
 TEST_CASE("script_parser_t, scdt multiple replacements", "[u]")
 {
 	dict_merger_t merger;
-	merger.add_record(tools_t::rec_type_t::dial, "Test", "Result");
+	merger.add_record(rec_type_t::dial, "Test", "Result");
 
 	std::string scdt;
 	scdt += std::string(5, '\x00');
@@ -47,7 +47,7 @@ TEST_CASE("script_parser_t, scdt multiple replacements", "[u]")
 
 	std::string input_script = "AddTopic \"Test\"\r\nAddTopic \"Test\"";
 
-	script_parser_t parser(tools_t::rec_type_t::sctx, merger, "TestScript", "test.esm", input_script, scdt);
+	script_parser_t parser(rec_type_t::sctx, merger, "TestScript", "test.esm", input_script, scdt);
 
 	const auto & new_scdt = parser.get_new_scdt();
 
@@ -68,7 +68,7 @@ TEST_CASE("script_parser_t, scdt multiple replacements", "[u]")
 TEST_CASE("script_parser_t, scdt getpccell size update", "[u]")
 {
 	dict_merger_t merger;
-	merger.add_record(tools_t::rec_type_t::cell, "Balmora", "Bal Molagmer Hall");
+	merger.add_record(rec_type_t::cell, "Balmora", "Bal Molagmer Hall");
 
 	std::string old_text = "Balmora";
 	std::string new_text = "Bal Molagmer Hall";
@@ -89,7 +89,7 @@ TEST_CASE("script_parser_t, scdt getpccell size update", "[u]")
 
 	std::string input_script = "if ( GetPCCell \"Balmora\" == 1 )";
 
-	script_parser_t parser(tools_t::rec_type_t::sctx, merger, "TestScript", "test.esm", input_script, scdt);
+	script_parser_t parser(rec_type_t::sctx, merger, "TestScript", "test.esm", input_script, scdt);
 
 	const auto & new_scdt = parser.get_new_scdt();
 
@@ -111,8 +111,8 @@ TEST_CASE("script_parser_t, scdt getpccell size update", "[u]")
 TEST_CASE("script_parser_t, scdt length change shifts subsequent positions", "[u]")
 {
 	dict_merger_t merger;
-	merger.add_record(tools_t::rec_type_t::dial, "Short", "MuchLongerName");
-	merger.add_record(tools_t::rec_type_t::dial, "After", "AfterResult");
+	merger.add_record(rec_type_t::dial, "Short", "MuchLongerName");
+	merger.add_record(rec_type_t::dial, "After", "AfterResult");
 
 	std::string scdt;
 	scdt += std::string(3, '\x00');
@@ -125,7 +125,7 @@ TEST_CASE("script_parser_t, scdt length change shifts subsequent positions", "[u
 
 	std::string input_script = "AddTopic \"Short\"\r\nAddTopic \"After\"";
 
-	script_parser_t parser(tools_t::rec_type_t::sctx, merger, "TestScript", "test.esm", input_script, scdt);
+	script_parser_t parser(rec_type_t::sctx, merger, "TestScript", "test.esm", input_script, scdt);
 
 	const auto & new_scdt = parser.get_new_scdt();
 
@@ -147,18 +147,18 @@ TEST_CASE("script_parser_t, scdt message replacement with size prefix", "[u]")
 	const std::string output_line = "MessageBox \"Witaj Swiecie\"";
 
 	dict_merger_t merger;
-	merger.add_record(tools_t::rec_type_t::sctx, script_name + "^" + input_line, output_line);
+	merger.add_record(rec_type_t::sctx, script_name + "^" + input_line, output_line);
 
 	std::string old_msg = "Hello World";
 	std::string new_msg = "Witaj Swiecie";
 
 	std::string scdt;
 	scdt += std::string(4, '\x00');
-	scdt += tools_t::convert_uint_to_string_byte_array(old_msg.size()).substr(0, 2);
+	scdt += domain_types_t::convert_uint_to_string_byte_array(old_msg.size()).substr(0, 2);
 	scdt += old_msg;
 	scdt += std::string(5, '\x00');
 
-	script_parser_t parser(tools_t::rec_type_t::sctx, merger, script_name, "test.esm", input_line, scdt);
+	script_parser_t parser(rec_type_t::sctx, merger, script_name, "test.esm", input_line, scdt);
 
 	const auto & new_scdt = parser.get_new_scdt();
 

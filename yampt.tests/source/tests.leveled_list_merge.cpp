@@ -1,6 +1,6 @@
 #include <catch2/catch_all.hpp>
 #include <scanner/sub_record_merge.hpp>
-#include <utility/tools.hpp>
+#include <utility/app_logger.hpp>
 #include <cstring>
 #include <string>
 

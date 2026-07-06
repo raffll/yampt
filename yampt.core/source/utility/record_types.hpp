@@ -1,6 +1,6 @@
 #pragma once
 
-#include "tools.hpp"
+#include "domain_types.hpp"
 #include <array>
 #include <string_view>
 
@@ -43,60 +43,60 @@ struct sub_type_t
 {
 	std::string_view prefix;
 	std::string_view display_name;
-	tools_t::rec_type_t parent_type;
+	rec_type_t parent_type;
 };
 
 constexpr std::array info_sub_types = {
-	sub_type_t{ "T", "Topic",      tools_t::rec_type_t::info },
-	sub_type_t{ "V", "Voice",      tools_t::rec_type_t::info },
-	sub_type_t{ "G", "Greeting",   tools_t::rec_type_t::info },
-	sub_type_t{ "P", "Persuasion", tools_t::rec_type_t::info },
-	sub_type_t{ "J", "Journal",    tools_t::rec_type_t::info },
+	sub_type_t{ "T", "Topic",      rec_type_t::info },
+	sub_type_t{ "V", "Voice",      rec_type_t::info },
+	sub_type_t{ "G", "Greeting",   rec_type_t::info },
+	sub_type_t{ "P", "Persuasion", rec_type_t::info },
+	sub_type_t{ "J", "Journal",    rec_type_t::info },
 };
 
 constexpr std::array bnam_sub_types = {
-	sub_type_t{ "T", "Topic",      tools_t::rec_type_t::bnam },
-	sub_type_t{ "V", "Voice",      tools_t::rec_type_t::bnam },
-	sub_type_t{ "G", "Greeting",   tools_t::rec_type_t::bnam },
-	sub_type_t{ "P", "Persuasion", tools_t::rec_type_t::bnam },
-	sub_type_t{ "J", "Journal",    tools_t::rec_type_t::bnam },
+	sub_type_t{ "T", "Topic",      rec_type_t::bnam },
+	sub_type_t{ "V", "Voice",      rec_type_t::bnam },
+	sub_type_t{ "G", "Greeting",   rec_type_t::bnam },
+	sub_type_t{ "P", "Persuasion", rec_type_t::bnam },
+	sub_type_t{ "J", "Journal",    rec_type_t::bnam },
 };
 
 constexpr std::array fnam_sub_types = {
-	sub_type_t{ "ACTI", "ACTI", tools_t::rec_type_t::fnam },
-	sub_type_t{ "ALCH", "ALCH", tools_t::rec_type_t::fnam },
-	sub_type_t{ "APPA", "APPA", tools_t::rec_type_t::fnam },
-	sub_type_t{ "ARMO", "ARMO", tools_t::rec_type_t::fnam },
-	sub_type_t{ "BOOK", "BOOK", tools_t::rec_type_t::fnam },
-	sub_type_t{ "BSGN", "BSGN", tools_t::rec_type_t::fnam },
-	sub_type_t{ "CLAS", "CLAS", tools_t::rec_type_t::fnam },
-	sub_type_t{ "CLOT", "CLOT", tools_t::rec_type_t::fnam },
-	sub_type_t{ "CONT", "CONT", tools_t::rec_type_t::fnam },
-	sub_type_t{ "CREA", "CREA", tools_t::rec_type_t::fnam },
-	sub_type_t{ "DOOR", "DOOR", tools_t::rec_type_t::fnam },
-	sub_type_t{ "FACT", "FACT", tools_t::rec_type_t::fnam },
-	sub_type_t{ "INGR", "INGR", tools_t::rec_type_t::fnam },
-	sub_type_t{ "LIGH", "LIGH", tools_t::rec_type_t::fnam },
-	sub_type_t{ "LOCK", "LOCK", tools_t::rec_type_t::fnam },
-	sub_type_t{ "MISC", "MISC", tools_t::rec_type_t::fnam },
-	sub_type_t{ "NPC_", "NPC_", tools_t::rec_type_t::fnam },
-	sub_type_t{ "PROB", "PROB", tools_t::rec_type_t::fnam },
-	sub_type_t{ "RACE", "RACE", tools_t::rec_type_t::fnam },
-	sub_type_t{ "REGN", "REGN", tools_t::rec_type_t::fnam },
-	sub_type_t{ "REPA", "REPA", tools_t::rec_type_t::fnam },
-	sub_type_t{ "SPEL", "SPEL", tools_t::rec_type_t::fnam },
-	sub_type_t{ "WEAP", "WEAP", tools_t::rec_type_t::fnam },
+	sub_type_t{ "ACTI", "ACTI", rec_type_t::fnam },
+	sub_type_t{ "ALCH", "ALCH", rec_type_t::fnam },
+	sub_type_t{ "APPA", "APPA", rec_type_t::fnam },
+	sub_type_t{ "ARMO", "ARMO", rec_type_t::fnam },
+	sub_type_t{ "BOOK", "BOOK", rec_type_t::fnam },
+	sub_type_t{ "BSGN", "BSGN", rec_type_t::fnam },
+	sub_type_t{ "CLAS", "CLAS", rec_type_t::fnam },
+	sub_type_t{ "CLOT", "CLOT", rec_type_t::fnam },
+	sub_type_t{ "CONT", "CONT", rec_type_t::fnam },
+	sub_type_t{ "CREA", "CREA", rec_type_t::fnam },
+	sub_type_t{ "DOOR", "DOOR", rec_type_t::fnam },
+	sub_type_t{ "FACT", "FACT", rec_type_t::fnam },
+	sub_type_t{ "INGR", "INGR", rec_type_t::fnam },
+	sub_type_t{ "LIGH", "LIGH", rec_type_t::fnam },
+	sub_type_t{ "LOCK", "LOCK", rec_type_t::fnam },
+	sub_type_t{ "MISC", "MISC", rec_type_t::fnam },
+	sub_type_t{ "NPC_", "NPC_", rec_type_t::fnam },
+	sub_type_t{ "PROB", "PROB", rec_type_t::fnam },
+	sub_type_t{ "RACE", "RACE", rec_type_t::fnam },
+	sub_type_t{ "REGN", "REGN", rec_type_t::fnam },
+	sub_type_t{ "REPA", "REPA", rec_type_t::fnam },
+	sub_type_t{ "SPEL", "SPEL", rec_type_t::fnam },
+	sub_type_t{ "WEAP", "WEAP", rec_type_t::fnam },
 };
 
 constexpr std::array desc_sub_types = {
-	sub_type_t{ "BSGN", "Birthsigns", tools_t::rec_type_t::desc },
-	sub_type_t{ "CLAS", "Classes",    tools_t::rec_type_t::desc },
-	sub_type_t{ "RACE", "Races",      tools_t::rec_type_t::desc },
+	sub_type_t{ "BSGN", "Birthsigns", rec_type_t::desc },
+	sub_type_t{ "CLAS", "Classes",    rec_type_t::desc },
+	sub_type_t{ "RACE", "Races",      rec_type_t::desc },
 };
 
 constexpr std::array indx_sub_types = {
-	sub_type_t{ "SKIL", "Skills",        tools_t::rec_type_t::indx },
-	sub_type_t{ "MGEF", "Magic Effects", tools_t::rec_type_t::indx },
+	sub_type_t{ "SKIL", "Skills",        rec_type_t::indx },
+	sub_type_t{ "MGEF", "Magic Effects", rec_type_t::indx },
 };
 // clang-format on
 

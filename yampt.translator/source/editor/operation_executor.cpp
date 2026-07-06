@@ -1,4 +1,6 @@
 #include "operation_executor.hpp"
+#include <io/binary_file_io.hpp>
+#include <utility/app_logger.hpp>
 #include <converter/esm_converter.hpp>
 #include <creator/dict_creator.hpp>
 #include <io/dict_writer.hpp>
@@ -52,35 +54,35 @@ std::string operation_executor_t::get_output_dir() const
 
 operation_executor_t::result_t operation_executor_t::make_dict(const std::string & plugin_path, codepage_t encoding)
 {
-	tools_t::reset_log();
+	app_logger_t::reset_log();
 
 	dict_creator_t creator(plugin_path);
 
-	if (tools_t::has_error())
-		return { false, tools_t::get_log(), "" };
+	if (app_logger_t::has_error())
+		return { false, app_logger_t::get_log(), "" };
 
 	const auto output_path = make_output_path(plugin_path, "json");
 	dict_writer_t::write(creator.get_dict(), output_path);
 
-	return { !tools_t::has_error(), tools_t::get_log(), output_path };
+	return { !app_logger_t::has_error(), app_logger_t::get_log(), output_path };
 }
 
 operation_executor_t::result_t operation_executor_t::make_dict_with_base(
     const std::string & plugin_path,
-    const tools_t::dict_t & base_dict,
+    const dict_t & base_dict,
     codepage_t encoding)
 {
-	tools_t::reset_log();
+	app_logger_t::reset_log();
 
 	dict_creator_t creator(plugin_path, &base_dict);
 
-	if (tools_t::has_error())
-		return { false, tools_t::get_log(), "" };
+	if (app_logger_t::has_error())
+		return { false, app_logger_t::get_log(), "" };
 
 	const auto output_path = make_output_path(plugin_path, "json");
 	dict_writer_t::write(creator.get_dict(), output_path);
 
-	return { !tools_t::has_error(), tools_t::get_log(), output_path };
+	return { !app_logger_t::has_error(), app_logger_t::get_log(), output_path };
 }
 
 operation_executor_t::result_t operation_executor_t::make_base(
@@ -92,12 +94,12 @@ operation_executor_t::result_t operation_executor_t::make_base(
     base_mode_t mode,
     const std::string & dictionary_aff_path)
 {
-	tools_t::reset_log();
+	app_logger_t::reset_log();
 
 	dict_creator_t creator(foreign_path, native_path, engine, mode, dictionary_aff_path);
 
-	if (tools_t::has_error())
-		return { false, tools_t::get_log(), "" };
+	if (app_logger_t::has_error())
+		return { false, app_logger_t::get_log(), "" };
 
 	const auto foreign_info = QFileInfo(QString::fromStdString(foreign_path));
 	const auto native_info = QFileInfo(QString::fromStdString(native_path));
@@ -116,7 +118,7 @@ operation_executor_t::result_t operation_executor_t::make_base(
 	const auto output_path = make_output_path(output_name, "json", true);
 	dict_writer_t::write(creator.get_dict(), output_path);
 
-	return { !tools_t::has_error(), tools_t::get_log(), output_path };
+	return { !app_logger_t::has_error(), app_logger_t::get_log(), output_path };
 }
 
 operation_executor_t::result_t operation_executor_t::convert(
@@ -124,22 +126,22 @@ operation_executor_t::result_t operation_executor_t::convert(
     const std::vector<std::string> & dict_paths,
     codepage_t encoding)
 {
-	tools_t::reset_log();
+	app_logger_t::reset_log();
 
 	dict_merger_t merger(dict_paths);
 
 	esm_converter_t converter(plugin_path, merger, false, "", encoding, false);
 
 	if (!converter.is_loaded())
-		return { false, tools_t::get_log(), "" };
+		return { false, app_logger_t::get_log(), "" };
 
 	const auto info = QFileInfo(QString::fromStdString(plugin_path));
 	const auto ext = info.suffix().toStdString();
 	const auto output_path = make_output_path(plugin_path, ext);
 
-	tools_t::write_file(converter.get_records(), output_path);
+	binary_file_io_t::write_file(converter.get_records(), output_path);
 
-	return { true, tools_t::get_log(), output_path };
+	return { true, app_logger_t::get_log(), output_path };
 }
 
 operation_executor_t::result_t operation_executor_t::create_plugin(
@@ -147,20 +149,20 @@ operation_executor_t::result_t operation_executor_t::create_plugin(
     const std::vector<std::string> & dict_paths,
     codepage_t encoding)
 {
-	tools_t::reset_log();
+	app_logger_t::reset_log();
 
 	dict_merger_t merger(dict_paths);
 
 	esm_converter_t converter(plugin_path, merger, false, "", encoding, true);
 
 	if (!converter.is_loaded())
-		return { false, tools_t::get_log(), "" };
+		return { false, app_logger_t::get_log(), "" };
 
 	const auto info = QFileInfo(QString::fromStdString(plugin_path));
 	const auto ext = info.suffix().toStdString();
 	const auto output_path = make_output_path(plugin_path, ext);
 
-	tools_t::create_file(converter.get_records(), output_path);
+	binary_file_io_t::create_file(converter.get_records(), output_path);
 
-	return { true, tools_t::get_log(), output_path };
+	return { true, app_logger_t::get_log(), output_path };
 }

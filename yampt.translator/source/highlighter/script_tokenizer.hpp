@@ -1,6 +1,6 @@
 #pragma once
 
-#include <utility/tools.hpp>
+#include <utility/domain_types.hpp>
 #include <string>
 #include <vector>
 
@@ -23,7 +23,7 @@ struct token_t
 class script_tokenizer_t
 {
 public:
-	std::vector<token_t> tokenize(const std::string & text, tools_t::rec_type_t type) const;
+	std::vector<token_t> tokenize(const std::string & text, rec_type_t type) const;
 
 private:
 	std::vector<token_t> tokenize_sctx(const std::string & text) const;

@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="source\utility\tools.cpp" />
+    <ClCompile Include="source\utility\domain_types.cpp" />
+    <ClCompile Include="source\utility\app_logger.cpp" />
     <ClCompile Include="source\io\codepage.cpp" />
     <ClCompile Include="source\io\dict_reader.cpp" />
     <ClCompile Include="source\io\dict_writer.cpp" />
     <ClCompile Include="source\io\esm_reader.cpp" />
+    <ClCompile Include="source\io\binary_file_io.cpp" />
     <ClCompile Include="source\io\eet_reader.cpp" />
     <ClCompile Include="source\io\eet_converter.cpp" />
     <ClCompile Include="source\io\file_list.cpp" />
@@ -46,7 +48,8 @@
     <ClCompile Include="source\scanner\plugin_scan.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="source\utility\tools.hpp" />
+    <ClInclude Include="source\utility\domain_types.hpp" />
+    <ClInclude Include="source\utility\app_logger.hpp" />
     <ClInclude Include="source\utility\includes.hpp" />
     <ClInclude Include="source\utility\string_utils.hpp" />
     <ClInclude Include="source\utility\record_types.hpp" />
@@ -58,6 +61,7 @@
     <ClInclude Include="source\io\dict_reader.hpp" />
     <ClInclude Include="source\io\dict_writer.hpp" />
     <ClInclude Include="source\io\esm_reader.hpp" />
+    <ClInclude Include="source\io\binary_file_io.hpp" />
     <ClInclude Include="source\io\eet_reader.hpp" />
     <ClInclude Include="source\io\eet_converter.hpp" />
     <ClInclude Include="source\io\json_reader.hpp" />

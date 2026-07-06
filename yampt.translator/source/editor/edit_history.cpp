@@ -5,9 +5,9 @@
 #include <ctime>
 #include <fstream>
 
-static std::string make_key(tools_t::rec_type_t type, const std::string & key)
+static std::string make_key(rec_type_t type, const std::string & key)
 {
-	return tools_t::type_to_str(type) + ":" + key;
+	return domain_types_t::type_to_str(type) + ":" + key;
 }
 
 static std::string make_timestamp()
@@ -22,7 +22,7 @@ static std::string make_timestamp()
 }
 
 void edit_history_t::record_change(
-    tools_t::rec_type_t type,
+    rec_type_t type,
     const std::string & key,
     const std::string & old_value,
     const std::string & new_value,
@@ -37,7 +37,7 @@ void edit_history_t::record_change(
 	m_session_modified.insert(compound_key);
 }
 
-std::vector<history_entry_t> edit_history_t::get_history(tools_t::rec_type_t type, const std::string & key) const
+std::vector<history_entry_t> edit_history_t::get_history(rec_type_t type, const std::string & key) const
 {
 	auto compound_key = make_key(type, key);
 	auto it = m_entries.find(compound_key);
@@ -46,7 +46,7 @@ std::vector<history_entry_t> edit_history_t::get_history(tools_t::rec_type_t typ
 	return it->second;
 }
 
-revert_result_t edit_history_t::revert(tools_t::rec_type_t type, const std::string & key, size_t history_index)
+revert_result_t edit_history_t::revert(rec_type_t type, const std::string & key, size_t history_index)
 {
 	auto compound_key = make_key(type, key);
 	auto it = m_entries.find(compound_key);
@@ -109,7 +109,7 @@ void edit_history_t::save_to_file(const std::string & path) const
 	file << j.dump(2);
 }
 
-bool edit_history_t::is_modified_this_session(tools_t::rec_type_t type, const std::string & key) const
+bool edit_history_t::is_modified_this_session(rec_type_t type, const std::string & key) const
 {
 	return m_session_modified.count(make_key(type, key)) > 0;
 }

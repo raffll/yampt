@@ -1,4 +1,6 @@
 #include <catch2/catch_all.hpp>
+#include <utility/includes.hpp>
+#include <utility/app_logger.hpp>
 #include <converter/esm_converter.hpp>
 #include <io/dict_writer.hpp>
 #include <random>
@@ -12,7 +14,7 @@ static std::string make_sub_record(const std::string & sub_id, const std::string
 {
 	std::string result;
 	result += sub_id;
-	result += tools_t::convert_uint_to_string_byte_array(content.size());
+	result += domain_types_t::convert_uint_to_string_byte_array(content.size());
 	result += content;
 	return result;
 }
@@ -21,9 +23,9 @@ static std::string make_record(const std::string & rec_id, const std::string & s
 {
 	std::string header;
 	header += rec_id;
-	header += tools_t::convert_uint_to_string_byte_array(sub_records.size());
-	header += tools_t::convert_uint_to_string_byte_array(0);
-	header += tools_t::convert_uint_to_string_byte_array(0);
+	header += domain_types_t::convert_uint_to_string_byte_array(sub_records.size());
+	header += domain_types_t::convert_uint_to_string_byte_array(0);
+	header += domain_types_t::convert_uint_to_string_byte_array(0);
 	return header + sub_records;
 }
 
@@ -33,20 +35,20 @@ static std::string make_tes3_record()
 }
 
 static dict_merger_t make_merger(
-    const std::vector<std::tuple<tools_t::rec_type_t, std::string, std::string, std::string>> & entries)
+    const std::vector<std::tuple<rec_type_t, std::string, std::string, std::string>> & entries)
 {
 	const auto dict_path = get_temp_path("yampt_test_full_conv_dict.json");
-	tools_t::reset_log();
+	app_logger_t::reset_log();
 
-	tools_t::dict_t dict = tools_t::initialize_dict();
+	dict_t dict = domain_types_t::initialize_dict();
 	for (const auto & [record_type, key_text, old_text, new_text] : entries)
 		dict.at(record_type).insert({ key_text, old_text, new_text, status_t::translated });
 
 	dict_writer_t::write(dict, dict_path);
 
-	tools_t::reset_log();
+	app_logger_t::reset_log();
 	dict_merger_t merger({ dict_path });
-	tools_t::reset_log();
+	app_logger_t::reset_log();
 	std::filesystem::remove(dict_path);
 	return merger;
 }
@@ -61,7 +63,7 @@ static std::string run_converter(const std::string & esm_content, const dict_mer
 {
 	const auto esm_path = get_temp_path("yampt_test_full_conv.esm");
 	write_esm_file(esm_content, esm_path);
-	tools_t::reset_log();
+	app_logger_t::reset_log();
 
 	esm_converter_t converter(esm_path, merger, false, "", codepage_t::windows_1252, false);
 	std::filesystem::remove(esm_path);
@@ -70,11 +72,11 @@ static std::string run_converter(const std::string & esm_content, const dict_mer
 	return converter.get_records().back().content;
 }
 
-static std::vector<tools_t::record_t> run_converter_all(const std::string & esm_content, const dict_merger_t & merger)
+static std::vector<record_t> run_converter_all(const std::string & esm_content, const dict_merger_t & merger)
 {
 	const auto esm_path = get_temp_path("yampt_test_full_conv.esm");
 	write_esm_file(esm_content, esm_path);
-	tools_t::reset_log();
+	app_logger_t::reset_log();
 
 	esm_converter_t converter(esm_path, merger, false, "", codepage_t::windows_1252, false);
 	std::filesystem::remove(esm_path);
@@ -87,7 +89,7 @@ TEST_CASE("esm_converter_t::convert_scpt, SCTX with matching cell", "[u]")
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::cell, "Balmora", "Balmora", "Balmora PL" },
+	        { rec_type_t::cell, "Balmora", "Balmora", "Balmora PL" },
 	    });
 
 	std::string old_sctx = "if ( GetPCCell \"Balmora\" == 1 )\r\nset x to 1\r\nendif";
@@ -97,7 +99,7 @@ TEST_CASE("esm_converter_t::convert_scpt, SCTX with matching cell", "[u]")
 	std::string script_name = "TestScript";
 	schd_content.replace(0, script_name.size(), script_name);
 	schd_content.erase(44, 4);
-	schd_content.insert(44, tools_t::convert_uint_to_string_byte_array(old_scdt.size()));
+	schd_content.insert(44, domain_types_t::convert_uint_to_string_byte_array(old_scdt.size()));
 
 	auto scpt_body =
 	    make_sub_record("SCHD", schd_content) + make_sub_record("SCDT", old_scdt) + make_sub_record("SCTX", old_sctx);
@@ -112,7 +114,7 @@ TEST_CASE("esm_converter_t::convert_scpt, SCTX no match leaves unchanged", "[u]"
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::cell, "Ald-ruhn", "Ald-ruhn", "Ald-ruhn PL" },
+	        { rec_type_t::cell, "Ald-ruhn", "Ald-ruhn", "Ald-ruhn PL" },
 	    });
 
 	std::string old_sctx = "if ( GetPCCell \"Balmora\" == 1 )\r\nset x to 1\r\nendif";
@@ -122,7 +124,7 @@ TEST_CASE("esm_converter_t::convert_scpt, SCTX no match leaves unchanged", "[u]"
 	std::string script_name = "TestScript2";
 	schd_content.replace(0, script_name.size(), script_name);
 	schd_content.erase(44, 4);
-	schd_content.insert(44, tools_t::convert_uint_to_string_byte_array(old_scdt.size()));
+	schd_content.insert(44, domain_types_t::convert_uint_to_string_byte_array(old_scdt.size()));
 
 	auto scpt_body =
 	    make_sub_record("SCHD", schd_content) + make_sub_record("SCDT", old_scdt) + make_sub_record("SCTX", old_sctx);
@@ -136,7 +138,7 @@ TEST_CASE("esm_converter_t::convert_bnam, INFO script with AddTopic", "[u]")
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::dial, "background", "background", "tlo" },
+	        { rec_type_t::dial, "background", "background", "tlo" },
 	    });
 
 	std::string topic_type(1, '\0');
@@ -158,7 +160,7 @@ TEST_CASE("esm_converter_t::convert_bnam, no match leaves script unchanged", "[u
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::dial, "unrelated", "unrelated", "niezwiazany" },
+	        { rec_type_t::dial, "unrelated", "unrelated", "niezwiazany" },
 	    });
 
 	std::string topic_type(1, '\0');
@@ -179,7 +181,7 @@ TEST_CASE("esm_converter_t::convert_cell, interior cell name converted", "[u]")
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::cell,
+	        { rec_type_t::cell,
 	          "Balmora, Guild of Fighters",
 	          "Balmora, Guild of Fighters",
 	          "Balmora, Gildia Wojownikow" },
@@ -196,7 +198,7 @@ TEST_CASE("esm_converter_t::convert_cell, no match leaves unchanged", "[u]")
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::cell, "Ald-ruhn", "Ald-ruhn", "Ald-ruhn PL" },
+	        { rec_type_t::cell, "Ald-ruhn", "Ald-ruhn", "Ald-ruhn PL" },
 	    });
 
 	auto body = make_sub_record("NAME", std::string("Balmora\0", 8));
@@ -210,7 +212,7 @@ TEST_CASE("esm_converter_t::convert_cell, empty NAME is skipped", "[u]")
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::cell, "", "", "Something" },
+	        { rec_type_t::cell, "", "", "Something" },
 	    });
 
 	auto body = make_sub_record("NAME", std::string("\0", 1));
@@ -224,7 +226,7 @@ TEST_CASE("esm_converter_t::convert_fnam, NPC display name converted", "[u]")
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::fnam, "NPC_^hlaalu_guard", "Guard", "Straznik" },
+	        { rec_type_t::fnam, "NPC_^hlaalu_guard", "Guard", "Straznik" },
 	    });
 
 	auto body =
@@ -239,7 +241,7 @@ TEST_CASE("esm_converter_t::convert_fnam, SPEL name converted", "[u]")
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::fnam, "SPEL^fireball", "Fireball", "Kula Ognia" },
+	        { rec_type_t::fnam, "SPEL^fireball", "Fireball", "Kula Ognia" },
 	    });
 
 	auto body =
@@ -254,7 +256,7 @@ TEST_CASE("esm_converter_t::convert_fnam, no match leaves unchanged", "[u]")
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::fnam, "NPC_^other_npc", "Other", "Inny" },
+	        { rec_type_t::fnam, "NPC_^other_npc", "Other", "Inny" },
 	    });
 
 	auto body =
@@ -269,7 +271,7 @@ TEST_CASE("esm_converter_t::convert_fnam, player NPC excluded", "[u]")
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::fnam, "NPC_^player", "Player", "Gracz" },
+	        { rec_type_t::fnam, "NPC_^player", "Player", "Gracz" },
 	    });
 
 	auto body =
@@ -284,7 +286,7 @@ TEST_CASE("esm_converter_t::convert_info, dialogue response converted", "[u]")
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::info, "T^background^info_01", "I am from Morrowind.", "Jestem z Morrowind." },
+	        { rec_type_t::info, "T^background^info_01", "I am from Morrowind.", "Jestem z Morrowind." },
 	    });
 
 	std::string topic_type(1, '\0');
@@ -306,7 +308,7 @@ TEST_CASE("esm_converter_t::convert_info, no match leaves unchanged", "[u]")
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::info, "T^background^info_99", "Other text", "Inny tekst" },
+	        { rec_type_t::info, "T^background^info_99", "Other text", "Inny tekst" },
 	    });
 
 	std::string topic_type(1, '\0');
@@ -327,7 +329,7 @@ TEST_CASE("esm_converter_t::convert_dial, topic name converted", "[u]")
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::dial, "background", "background", "tlo" },
+	        { rec_type_t::dial, "background", "background", "tlo" },
 	    });
 
 	std::string topic_type(1, '\x00');
@@ -342,7 +344,7 @@ TEST_CASE("esm_converter_t::convert_dial, non-topic type is skipped", "[u]")
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::dial, "greeting 1", "greeting 1", "powitanie 1" },
+	        { rec_type_t::dial, "greeting 1", "greeting 1", "powitanie 1" },
 	    });
 
 	std::string greeting_type(1, '\x02');
@@ -357,7 +359,7 @@ TEST_CASE("esm_converter_t::convert_dial, no match leaves unchanged", "[u]")
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::dial, "other topic", "other topic", "inny temat" },
+	        { rec_type_t::dial, "other topic", "other topic", "inny temat" },
 	    });
 
 	std::string topic_type(1, '\x00');
@@ -372,7 +374,7 @@ TEST_CASE("esm_converter_t::convert_gmst, string setting value replaced", "[u]")
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::gmst, "sDefaultCellname", "Wilderness", "Dzicz" },
+	        { rec_type_t::gmst, "sDefaultCellname", "Wilderness", "Dzicz" },
 	    });
 
 	auto body = make_sub_record("NAME", std::string("sDefaultCellname\0", 17)) +
@@ -387,7 +389,7 @@ TEST_CASE("esm_converter_t::convert_gmst, non-string setting not modified", "[u]
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::gmst, "iMaxLevel", "100", "200" },
+	        { rec_type_t::gmst, "iMaxLevel", "100", "200" },
 	    });
 
 	auto body =
@@ -402,7 +404,7 @@ TEST_CASE("esm_converter_t::convert_gmst, no match leaves unchanged", "[u]")
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::gmst, "sOtherSetting", "Other", "Inne" },
+	        { rec_type_t::gmst, "sOtherSetting", "Other", "Inne" },
 	    });
 
 	auto body = make_sub_record("NAME", std::string("sDefaultCellname\0", 17)) +
@@ -417,7 +419,7 @@ TEST_CASE("esm_converter_t::convert_desc, BSGN description converted", "[u]")
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::desc, "BSGN^The Lady", "Fortify Personality", "Wzmocnienie Osobowosci" },
+	        { rec_type_t::desc, "BSGN^The Lady", "Fortify Personality", "Wzmocnienie Osobowosci" },
 	    });
 
 	auto body = make_sub_record("NAME", std::string("The Lady\0", 9)) +
@@ -432,7 +434,7 @@ TEST_CASE("esm_converter_t::convert_desc, CLAS description converted", "[u]")
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::desc, "CLAS^Warrior", "Favors strength", "Preferuje sile" },
+	        { rec_type_t::desc, "CLAS^Warrior", "Favors strength", "Preferuje sile" },
 	    });
 
 	auto body = make_sub_record("NAME", std::string("Warrior\0", 8)) +
@@ -447,7 +449,7 @@ TEST_CASE("esm_converter_t::convert_desc, RACE description converted", "[u]")
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::desc, "RACE^Dark Elf", "The dark elves", "Ciemne elfy" },
+	        { rec_type_t::desc, "RACE^Dark Elf", "The dark elves", "Ciemne elfy" },
 	    });
 
 	auto body = make_sub_record("NAME", std::string("Dark Elf\0", 9)) +
@@ -462,7 +464,7 @@ TEST_CASE("esm_converter_t::convert_desc, no match leaves unchanged", "[u]")
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::desc, "BSGN^The Warrior", "Fortify Attack", "Wzmocnienie Ataku" },
+	        { rec_type_t::desc, "BSGN^The Warrior", "Fortify Attack", "Wzmocnienie Ataku" },
 	    });
 
 	auto body = make_sub_record("NAME", std::string("The Lady\0", 9)) +
@@ -477,7 +479,7 @@ TEST_CASE("esm_converter_t::convert_text, BOOK text converted", "[u]")
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::text, "book_001", "Once upon a time", "Dawno dawno temu" },
+	        { rec_type_t::text, "book_001", "Once upon a time", "Dawno dawno temu" },
 	    });
 
 	auto body = make_sub_record("NAME", std::string("book_001\0", 9)) +
@@ -492,7 +494,7 @@ TEST_CASE("esm_converter_t::convert_text, no match leaves unchanged", "[u]")
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::text, "book_999", "Other book text", "Inny tekst ksiazki" },
+	        { rec_type_t::text, "book_999", "Other book text", "Inny tekst ksiazki" },
 	    });
 
 	auto body = make_sub_record("NAME", std::string("book_001\0", 9)) +
@@ -510,7 +512,7 @@ TEST_CASE("esm_converter_t::convert_rnam, faction rank converted", "[u]")
 
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::rnam, "Fighters Guild^0", "Associate", "Stowarzyszony" },
+	        { rec_type_t::rnam, "Fighters Guild^0", "Associate", "Stowarzyszony" },
 	    });
 
 	auto body = make_sub_record("NAME", std::string("Fighters Guild\0", 15)) + make_sub_record("RNAM", rank_name);
@@ -527,7 +529,7 @@ TEST_CASE("esm_converter_t::convert_rnam, no match leaves unchanged", "[u]")
 
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::rnam, "Thieves Guild^0", "Toad", "Ropucha" },
+	        { rec_type_t::rnam, "Thieves Guild^0", "Toad", "Ropucha" },
 	    });
 
 	auto body = make_sub_record("NAME", std::string("Fighters Guild\0", 15)) + make_sub_record("RNAM", rank_name);
@@ -544,7 +546,7 @@ TEST_CASE("esm_converter_t::convert_indx, SKIL description converted", "[u]")
 
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::indx, "SKIL^005", "Destruction magic", "Magia Destrukcji" },
+	        { rec_type_t::indx, "SKIL^005", "Destruction magic", "Magia Destrukcji" },
 	    });
 
 	auto body = make_sub_record("INDX", indx_content) + make_sub_record("DESC", std::string("Destruction magic", 17));
@@ -561,7 +563,7 @@ TEST_CASE("esm_converter_t::convert_indx, MGEF description converted", "[u]")
 
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::indx, "MGEF^003", "Absorb Fatigue", "Absorpcja Zmeczenia" },
+	        { rec_type_t::indx, "MGEF^003", "Absorb Fatigue", "Absorpcja Zmeczenia" },
 	    });
 
 	auto body = make_sub_record("INDX", indx_content) + make_sub_record("DESC", std::string("Absorb Fatigue", 14));
@@ -578,7 +580,7 @@ TEST_CASE("esm_converter_t::convert_indx, no match leaves unchanged", "[u]")
 
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::indx, "SKIL^010", "Enchant", "Zaklinanie" },
+	        { rec_type_t::indx, "SKIL^010", "Enchant", "Zaklinanie" },
 	    });
 
 	auto body = make_sub_record("INDX", indx_content) + make_sub_record("DESC", std::string("Destruction magic", 17));
@@ -592,7 +594,7 @@ TEST_CASE("esm_converter_t::convert_pgrd, cell name in pathgrid converted", "[u]
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::cell, "Balmora", "Balmora", "Balmora PL" },
+	        { rec_type_t::cell, "Balmora", "Balmora", "Balmora PL" },
 	    });
 
 	auto body = make_sub_record("NAME", std::string("Balmora\0", 8));
@@ -606,7 +608,7 @@ TEST_CASE("esm_converter_t::convert_pgrd, empty NAME is skipped", "[u]")
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::cell, "", "", "Something" },
+	        { rec_type_t::cell, "", "", "Something" },
 	    });
 
 	auto body = make_sub_record("NAME", std::string("\0", 1));
@@ -620,7 +622,7 @@ TEST_CASE("esm_converter_t::convert_pgrd, no match leaves unchanged", "[u]")
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::cell, "Vivec", "Vivec", "Vivec PL" },
+	        { rec_type_t::cell, "Vivec", "Vivec", "Vivec PL" },
 	    });
 
 	auto body = make_sub_record("NAME", std::string("Balmora\0", 8));
@@ -634,7 +636,7 @@ TEST_CASE("esm_converter_t::convert_anam, INFO cell filter converted", "[u]")
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::cell, "Balmora", "Balmora", "Balmora PL" },
+	        { rec_type_t::cell, "Balmora", "Balmora", "Balmora PL" },
 	    });
 
 	auto body =
@@ -649,7 +651,7 @@ TEST_CASE("esm_converter_t::convert_anam, empty ANAM is skipped", "[u]")
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::cell, "", "", "Something" },
+	        { rec_type_t::cell, "", "", "Something" },
 	    });
 
 	auto body = make_sub_record("INAM", std::string("info_01\0", 8)) + make_sub_record("ANAM", std::string("\0", 1));
@@ -663,7 +665,7 @@ TEST_CASE("esm_converter_t::convert_anam, no match leaves unchanged", "[u]")
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::cell, "Vivec", "Vivec", "Vivec PL" },
+	        { rec_type_t::cell, "Vivec", "Vivec", "Vivec PL" },
 	    });
 
 	auto body =
@@ -678,7 +680,7 @@ TEST_CASE("esm_converter_t::convert_scvr, condition cell name converted", "[u]")
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::cell, "Balmora", "Balmora", "Balmora PL" },
+	        { rec_type_t::cell, "Balmora", "Balmora", "Balmora PL" },
 	    });
 
 	std::string scvr_content = "5BLX0Balmora";
@@ -693,7 +695,7 @@ TEST_CASE("esm_converter_t::convert_scvr, non-B type prefix is skipped", "[u]")
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::cell, "Balmora", "Balmora", "Balmora PL" },
+	        { rec_type_t::cell, "Balmora", "Balmora", "Balmora PL" },
 	    });
 
 	std::string scvr_content = "5ALX0Balmora";
@@ -708,7 +710,7 @@ TEST_CASE("esm_converter_t::convert_scvr, no match leaves unchanged", "[u]")
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::cell, "Vivec", "Vivec", "Vivec PL" },
+	        { rec_type_t::cell, "Vivec", "Vivec", "Vivec PL" },
 	    });
 
 	std::string scvr_content = "5BLX0Balmora";
@@ -723,7 +725,7 @@ TEST_CASE("esm_converter_t::convert_dnam, door destination in CELL converted", "
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::cell,
+	        { rec_type_t::cell,
 	          "Balmora, Guild of Fighters",
 	          "Balmora, Guild of Fighters",
 	          "Balmora, Gildia Wojownikow" },
@@ -741,7 +743,7 @@ TEST_CASE("esm_converter_t::convert_dnam, DNAM in NPC_ record converted", "[u]")
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::cell, "Vivec", "Vivec", "Vivec PL" },
+	        { rec_type_t::cell, "Vivec", "Vivec", "Vivec PL" },
 	    });
 
 	auto body =
@@ -756,7 +758,7 @@ TEST_CASE("esm_converter_t::convert_dnam, no match leaves unchanged", "[u]")
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::cell, "Ald-ruhn", "Ald-ruhn", "Ald-ruhn PL" },
+	        { rec_type_t::cell, "Ald-ruhn", "Ald-ruhn", "Ald-ruhn PL" },
 	    });
 
 	auto body =
@@ -771,7 +773,7 @@ TEST_CASE("esm_converter_t::convert_cndt, NPC escort cell converted", "[u]")
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::cell, "Vivec", "Vivec", "Vivec PL" },
+	        { rec_type_t::cell, "Vivec", "Vivec", "Vivec PL" },
 	    });
 
 	auto body =
@@ -786,7 +788,7 @@ TEST_CASE("esm_converter_t::convert_cndt, no match leaves unchanged", "[u]")
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::cell, "Ald-ruhn", "Ald-ruhn", "Ald-ruhn PL" },
+	        { rec_type_t::cell, "Ald-ruhn", "Ald-ruhn", "Ald-ruhn PL" },
 	    });
 
 	auto body =
@@ -808,15 +810,15 @@ TEST_CASE("esm_converter_t, only translated status is applied", "[u]")
 	for (const auto & status : rejected_statuses)
 	{
 		const auto dict_path = get_temp_path("yampt_test_full_conv_dict.json");
-		tools_t::reset_log();
+		app_logger_t::reset_log();
 
-		tools_t::dict_t dict = tools_t::initialize_dict();
-		dict.at(tools_t::rec_type_t::cell).insert({ "Balmora", "Balmora", "Balmora PL", status });
+		dict_t dict = domain_types_t::initialize_dict();
+		dict.at(rec_type_t::cell).insert({ "Balmora", "Balmora", "Balmora PL", status });
 		dict_writer_t::write(dict, dict_path);
 
-		tools_t::reset_log();
+		app_logger_t::reset_log();
 		dict_merger_t merger({ dict_path });
-		tools_t::reset_log();
+		app_logger_t::reset_log();
 		std::filesystem::remove(dict_path);
 
 		auto cell_body = make_sub_record("NAME", std::string("Balmora\0", 8));
@@ -824,7 +826,7 @@ TEST_CASE("esm_converter_t, only translated status is applied", "[u]")
 
 		const auto esm_path = get_temp_path("yampt_test_full_conv.esm");
 		write_esm_file(esm_content, esm_path);
-		tools_t::reset_log();
+		app_logger_t::reset_log();
 
 		esm_converter_t converter(esm_path, merger, false, "", codepage_t::windows_1252, false);
 		std::filesystem::remove(esm_path);
@@ -838,7 +840,7 @@ TEST_CASE("esm_converter_t, translated status is applied", "[u]")
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::cell, "Balmora", "Balmora", "Balmora PL" },
+	        { rec_type_t::cell, "Balmora", "Balmora", "Balmora PL" },
 	    });
 
 	auto cell_body = make_sub_record("NAME", std::string("Balmora\0", 8));
@@ -852,7 +854,7 @@ TEST_CASE("esm_converter_t, identical old and new text is not applied", "[u]")
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::cell, "Balmora", "Balmora", "Balmora" },
+	        { rec_type_t::cell, "Balmora", "Balmora", "Balmora" },
 	    });
 
 	auto cell_body = make_sub_record("NAME", std::string("Balmora\0", 8));
@@ -868,7 +870,7 @@ TEST_CASE("esm_converter_t, round-trip yields dict new_text for all record types
 
 	struct round_trip_case_t
 	{
-		tools_t::rec_type_t record_type;
+		rec_type_t record_type;
 		std::string key_text;
 		std::string old_text;
 		std::string new_text;
@@ -881,7 +883,7 @@ TEST_CASE("esm_converter_t, round-trip yields dict new_text for all record types
 		const auto name = "TestCell_" + suffix;
 		const auto translated = "Komorka_" + suffix;
 		auto body = make_sub_record("NAME", name + '\0');
-		return { tools_t::rec_type_t::cell, name, name, translated, make_record("CELL", body) };
+		return { rec_type_t::cell, name, name, translated, make_record("CELL", body) };
 	};
 
 	const auto make_fnam_case = [](int variant) -> round_trip_case_t
@@ -892,7 +894,7 @@ TEST_CASE("esm_converter_t, round-trip yields dict new_text for all record types
 		const auto translated = "Straznik_" + suffix;
 		const auto key = "NPC_^" + npc_id;
 		auto body = make_sub_record("NAME", npc_id + '\0') + make_sub_record("FNAM", display + '\0');
-		return { tools_t::rec_type_t::fnam, key, display, translated, make_record("NPC_", body) };
+		return { rec_type_t::fnam, key, display, translated, make_record("NPC_", body) };
 	};
 
 	const auto make_dial_case = [](int variant) -> round_trip_case_t
@@ -902,7 +904,7 @@ TEST_CASE("esm_converter_t, round-trip yields dict new_text for all record types
 		const auto translated = "temat_" + suffix;
 		std::string topic_type(1, '\x00');
 		auto body = make_sub_record("NAME", topic + '\0') + make_sub_record("DATA", topic_type);
-		return { tools_t::rec_type_t::dial, topic, topic, translated, make_record("DIAL", body) };
+		return { rec_type_t::dial, topic, topic, translated, make_record("DIAL", body) };
 	};
 
 	const auto make_gmst_case = [](int variant) -> round_trip_case_t
@@ -912,7 +914,7 @@ TEST_CASE("esm_converter_t, round-trip yields dict new_text for all record types
 		const auto value = "Value_" + suffix;
 		const auto translated = "Wartosc_" + suffix;
 		auto body = make_sub_record("NAME", setting_name + '\0') + make_sub_record("STRV", value);
-		return { tools_t::rec_type_t::gmst, setting_name, value, translated, make_record("GMST", body) };
+		return { rec_type_t::gmst, setting_name, value, translated, make_record("GMST", body) };
 	};
 
 	const auto make_text_case = [](int variant) -> round_trip_case_t
@@ -922,7 +924,7 @@ TEST_CASE("esm_converter_t, round-trip yields dict new_text for all record types
 		const auto text = "BookText_" + suffix;
 		const auto translated = "TekstKsiazki_" + suffix;
 		auto body = make_sub_record("NAME", book_id + '\0') + make_sub_record("TEXT", text);
-		return { tools_t::rec_type_t::text, book_id, text, translated, make_record("BOOK", body) };
+		return { rec_type_t::text, book_id, text, translated, make_record("BOOK", body) };
 	};
 
 	const auto make_desc_case = [](int variant) -> round_trip_case_t
@@ -933,7 +935,7 @@ TEST_CASE("esm_converter_t, round-trip yields dict new_text for all record types
 		const auto translated = "Opis_" + suffix;
 		const auto key = "RACE^" + race_id;
 		auto body = make_sub_record("NAME", race_id + '\0') + make_sub_record("DESC", desc);
-		return { tools_t::rec_type_t::desc, key, desc, translated, make_record("RACE", body) };
+		return { rec_type_t::desc, key, desc, translated, make_record("RACE", body) };
 	};
 
 	const auto make_rnam_case = [](int variant) -> round_trip_case_t
@@ -946,7 +948,7 @@ TEST_CASE("esm_converter_t, round-trip yields dict new_text for all record types
 		std::string rank_content(32, '\0');
 		rank.copy(rank_content.data(), rank.size());
 		auto body = make_sub_record("NAME", faction + '\0') + make_sub_record("RNAM", rank_content);
-		return { tools_t::rec_type_t::rnam, key, rank, translated, make_record("FACT", body) };
+		return { rec_type_t::rnam, key, rank, translated, make_record("FACT", body) };
 	};
 
 	const auto make_indx_case = [](int variant) -> round_trip_case_t
@@ -961,7 +963,7 @@ TEST_CASE("esm_converter_t, round-trip yields dict new_text for all record types
 		std::snprintf(key_buf, sizeof(key_buf), "SKIL^%03d", index_value);
 		const auto key = std::string(key_buf);
 		auto body = make_sub_record("INDX", indx_content) + make_sub_record("DESC", desc);
-		return { tools_t::rec_type_t::indx, key, desc, translated, make_record("SKIL", body) };
+		return { rec_type_t::indx, key, desc, translated, make_record("SKIL", body) };
 	};
 
 	const auto make_pgrd_case = [](int variant) -> round_trip_case_t
@@ -970,7 +972,7 @@ TEST_CASE("esm_converter_t, round-trip yields dict new_text for all record types
 		const auto cell_name = "PgrdCell_" + suffix;
 		const auto translated = "SciePgrd_" + suffix;
 		auto body = make_sub_record("NAME", cell_name + '\0');
-		return { tools_t::rec_type_t::cell, cell_name, cell_name, translated, make_record("PGRD", body) };
+		return { rec_type_t::cell, cell_name, cell_name, translated, make_record("PGRD", body) };
 	};
 
 	const auto make_dnam_case = [](int variant) -> round_trip_case_t
@@ -979,7 +981,7 @@ TEST_CASE("esm_converter_t, round-trip yields dict new_text for all record types
 		const auto cell_name = "DoorDest_" + suffix;
 		const auto translated = "CelDrzwi_" + suffix;
 		auto body = make_sub_record("NAME", std::string("some_cell\0", 10)) + make_sub_record("DNAM", cell_name + '\0');
-		return { tools_t::rec_type_t::cell, cell_name, cell_name, translated, make_record("CELL", body) };
+		return { rec_type_t::cell, cell_name, cell_name, translated, make_record("CELL", body) };
 	};
 
 	const auto make_anam_case = [](int variant) -> round_trip_case_t
@@ -988,7 +990,7 @@ TEST_CASE("esm_converter_t, round-trip yields dict new_text for all record types
 		const auto cell_name = "AnamCell_" + suffix;
 		const auto translated = "KomorkaAnam_" + suffix;
 		auto body = make_sub_record("INAM", std::string("info_01\0", 8)) + make_sub_record("ANAM", cell_name + '\0');
-		return { tools_t::rec_type_t::cell, cell_name, cell_name, translated, make_record("INFO", body) };
+		return { rec_type_t::cell, cell_name, cell_name, translated, make_record("INFO", body) };
 	};
 
 	const auto make_cndt_case = [](int variant) -> round_trip_case_t
@@ -997,7 +999,7 @@ TEST_CASE("esm_converter_t, round-trip yields dict new_text for all record types
 		const auto cell_name = "CndtCell_" + suffix;
 		const auto translated = "KomorkaCndt_" + suffix;
 		auto body = make_sub_record("NAME", std::string("npc_id\0", 7)) + make_sub_record("CNDT", cell_name + '\0');
-		return { tools_t::rec_type_t::cell, cell_name, cell_name, translated, make_record("NPC_", body) };
+		return { rec_type_t::cell, cell_name, cell_name, translated, make_record("NPC_", body) };
 	};
 
 	constexpr int type_count = 12;
@@ -1208,19 +1210,19 @@ TEST_CASE("esm_converter_t, identity for unmatched records", "[u]")
 
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::cell, "NeverMatchingKey_XYZ", "NeverMatchingText", "Translation" },
-	        { tools_t::rec_type_t::fnam, "NPC_^never_matching_npc", "NeverMatching", "Nigdy" },
-	        { tools_t::rec_type_t::dial, "never_matching_topic", "never_matching_topic", "nigdy_temat" },
-	        { tools_t::rec_type_t::gmst, "sNeverMatching", "NeverMatch", "NigdyPasuje" },
-	        { tools_t::rec_type_t::desc, "BSGN^NeverMatchSign", "NeverDesc", "NigdyOpis" },
-	        { tools_t::rec_type_t::text, "never_match_book", "NeverText", "NigdyTekst" },
-	        { tools_t::rec_type_t::rnam, "NeverFaction^0", "NeverRank", "NigdyRanga" },
-	        { tools_t::rec_type_t::indx, "SKIL^099", "NeverSkill", "NigdyUmiejetnosc" },
+	        { rec_type_t::cell, "NeverMatchingKey_XYZ", "NeverMatchingText", "Translation" },
+	        { rec_type_t::fnam, "NPC_^never_matching_npc", "NeverMatching", "Nigdy" },
+	        { rec_type_t::dial, "never_matching_topic", "never_matching_topic", "nigdy_temat" },
+	        { rec_type_t::gmst, "sNeverMatching", "NeverMatch", "NigdyPasuje" },
+	        { rec_type_t::desc, "BSGN^NeverMatchSign", "NeverDesc", "NigdyOpis" },
+	        { rec_type_t::text, "never_match_book", "NeverText", "NigdyTekst" },
+	        { rec_type_t::rnam, "NeverFaction^0", "NeverRank", "NigdyRanga" },
+	        { rec_type_t::indx, "SKIL^099", "NeverSkill", "NigdyUmiejetnosc" },
 	    });
 
 	const auto esm_path = get_temp_path("yampt_test_identity_" + std::to_string(iteration) + ".esm");
 	write_esm_file(built.esm_content, esm_path);
-	tools_t::reset_log();
+	app_logger_t::reset_log();
 
 	esm_converter_t converter(esm_path, merger, false, "", codepage_t::windows_1252, false);
 	std::filesystem::remove(esm_path);
@@ -1264,7 +1266,7 @@ TEST_CASE("esm_converter_t, CELL round-trip with random names", "[u]")
 
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::cell, cell_name, cell_name, translated },
+	        { rec_type_t::cell, cell_name, cell_name, translated },
 	    });
 
 	auto body = make_sub_record("NAME", cell_name + '\0');
@@ -1302,7 +1304,7 @@ TEST_CASE("esm_converter_t, identity unmatched CELL random", "[u]")
 
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::cell, dict_cell_name, dict_cell_name, "Translated_" + dict_cell_name },
+	        { rec_type_t::cell, dict_cell_name, dict_cell_name, "Translated_" + dict_cell_name },
 	    });
 
 	auto body = make_sub_record("NAME", esm_cell_name + '\0');
@@ -1310,7 +1312,7 @@ TEST_CASE("esm_converter_t, identity unmatched CELL random", "[u]")
 
 	const auto esm_path = get_temp_path("yampt_test_id_cell_" + std::to_string(seed) + ".esm");
 	write_esm_file(esm_content, esm_path);
-	tools_t::reset_log();
+	app_logger_t::reset_log();
 
 	esm_converter_t converter(esm_path, merger, false, "", codepage_t::windows_1252, false);
 	std::filesystem::remove(esm_path);

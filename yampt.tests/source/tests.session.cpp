@@ -1,4 +1,5 @@
 #include <catch2/catch_all.hpp>
+#include <utility/app_logger.hpp>
 #include <io/dict_writer.hpp>
 #include <model/dict_document.hpp>
 #include <model/plugin_document.hpp>
@@ -16,18 +17,18 @@ std::string create_temp_json(const std::string & filename)
 	auto path = (fs::temp_directory_path() / filename).string();
 	path = string_utils::normalize_path(path);
 
-	tools_t::dict_t data;
-	auto & chapter = data[tools_t::rec_type_t::cell];
-	tools_t::record_entry_t entry;
+	dict_t data;
+	auto & chapter = data[rec_type_t::cell];
+	record_entry_t entry;
 	entry.key_text = "test_key";
 	entry.old_text = "old_text";
 	entry.new_text = "new_text";
 	entry.status = status_t::translated;
 	chapter.records.push_back(std::move(entry));
 
-	tools_t::reset_log();
+	app_logger_t::reset_log();
 	dict_writer_t::write(data, path);
-	tools_t::reset_log();
+	app_logger_t::reset_log();
 	return path;
 }
 

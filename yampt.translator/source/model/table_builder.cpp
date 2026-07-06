@@ -43,32 +43,32 @@ static std::string extract_info_prefix(const std::string & key_text)
 	return key_text.substr(0, third);
 }
 
-static bool has_sub_type(tools_t::rec_type_t type)
+static bool has_sub_type(rec_type_t type)
 {
-	return type == tools_t::rec_type_t::info || type == tools_t::rec_type_t::bnam ||
-	       type == tools_t::rec_type_t::fnam || type == tools_t::rec_type_t::desc || type == tools_t::rec_type_t::indx;
+	return type == rec_type_t::info || type == rec_type_t::bnam ||
+	       type == rec_type_t::fnam || type == rec_type_t::desc || type == rec_type_t::indx;
 }
 
-static std::string_view lookup_display_name(tools_t::rec_type_t type, std::string_view prefix)
+static std::string_view lookup_display_name(rec_type_t type, std::string_view prefix)
 {
 	switch (type)
 	{
-	case tools_t::rec_type_t::info:
+	case rec_type_t::info:
 		return find_display_name_by_prefix(record_types::info_sub_types, prefix);
-	case tools_t::rec_type_t::bnam:
+	case rec_type_t::bnam:
 		return find_display_name_by_prefix(record_types::bnam_sub_types, prefix);
-	case tools_t::rec_type_t::fnam:
+	case rec_type_t::fnam:
 		return find_display_name_by_prefix(record_types::fnam_sub_types, prefix);
-	case tools_t::rec_type_t::desc:
+	case rec_type_t::desc:
 		return find_display_name_by_prefix(record_types::desc_sub_types, prefix);
-	case tools_t::rec_type_t::indx:
+	case rec_type_t::indx:
 		return find_display_name_by_prefix(record_types::indx_sub_types, prefix);
 	default:
 		return {};
 	}
 }
 
-static std::string classify_sub_type(tools_t::rec_type_t type, const std::string & key_text)
+static std::string classify_sub_type(rec_type_t type, const std::string & key_text)
 {
 	const auto caret_pos = key_text.find('^');
 	if (caret_pos == std::string::npos || caret_pos == 0)
@@ -81,23 +81,23 @@ static std::string classify_sub_type(tools_t::rec_type_t type, const std::string
 
 struct entry_identity_t
 {
-	tools_t::rec_type_t type;
+	rec_type_t type;
 	const std::string & key_text;
 };
 
-static std::string_view lookup_prefix_by_display_name(tools_t::rec_type_t type, std::string_view display_name)
+static std::string_view lookup_prefix_by_display_name(rec_type_t type, std::string_view display_name)
 {
 	switch (type)
 	{
-	case tools_t::rec_type_t::info:
+	case rec_type_t::info:
 		return find_prefix_by_display_name(record_types::info_sub_types, display_name);
-	case tools_t::rec_type_t::bnam:
+	case rec_type_t::bnam:
 		return find_prefix_by_display_name(record_types::bnam_sub_types, display_name);
-	case tools_t::rec_type_t::fnam:
+	case rec_type_t::fnam:
 		return find_prefix_by_display_name(record_types::fnam_sub_types, display_name);
-	case tools_t::rec_type_t::desc:
+	case rec_type_t::desc:
 		return find_prefix_by_display_name(record_types::desc_sub_types, display_name);
-	case tools_t::rec_type_t::indx:
+	case rec_type_t::indx:
 		return find_prefix_by_display_name(record_types::indx_sub_types, display_name);
 	default:
 		return {};
@@ -129,9 +129,9 @@ static bool passes_sub_type_filter(const entry_identity_t & entry_id, const tabl
 
 struct entry_context_t
 {
-	tools_t::rec_type_t type;
-	tools_t::rec_type_t count_type;
-	const tools_t::record_entry_t & entry;
+	rec_type_t type;
+	rec_type_t count_type;
+	const record_entry_t & entry;
 	size_t record_index;
 	const table_filter_params_t & params;
 };
@@ -162,7 +162,7 @@ struct bnam_emit_context_t
 {
 	std::vector<table_row_t> & output_rows;
 	std::set<size_t> & consumed_bnams;
-	const tools_t::chapter_t & bnam_chapter;
+	const chapter_t & bnam_chapter;
 	const std::unordered_multimap<std::string, size_t> & bnam_prefix_map;
 	const table_filter_params_t & params;
 };
@@ -179,7 +179,7 @@ static void emit_bnam_children(const std::string & info_prefix, bnam_emit_contex
 			continue;
 
 		table_row_t child;
-		child.type = tools_t::rec_type_t::bnam;
+		child.type = rec_type_t::bnam;
 		child.key_text = bnam_entry.key_text;
 		child.old_text = bnam_entry.old_text;
 		child.new_text = bnam_entry.new_text;
@@ -197,7 +197,7 @@ static void emit_bnam_children(const std::string & info_prefix, bnam_emit_contex
 
 struct progress_input_t
 {
-	const tools_t::dict_t & data;
+	const dict_t & data;
 	const table_filter_params_t & params;
 };
 
@@ -205,7 +205,7 @@ static void compute_progress(dict_counts_t & counts, const progress_input_t & in
 {
 	for (const auto & [type, chapter] : input.data)
 	{
-		const auto effective_type = (type == tools_t::rec_type_t::bnam) ? tools_t::rec_type_t::info : type;
+		const auto effective_type = (type == rec_type_t::bnam) ? rec_type_t::info : type;
 
 		if (!input.params.type_filter.empty() && input.params.type_filter.count(effective_type) == 0)
 			continue;
@@ -242,10 +242,10 @@ static void count_filtered_status(dict_counts_t & counts, const entry_context_t 
 		counts.filtered_status_counts[context.entry.status]++;
 }
 
-static std::unordered_multimap<std::string, size_t> build_bnam_prefix_map(const tools_t::dict_t & data)
+static std::unordered_multimap<std::string, size_t> build_bnam_prefix_map(const dict_t & data)
 {
 	std::unordered_multimap<std::string, size_t> bnam_prefix_map;
-	auto bnam_it = data.find(tools_t::rec_type_t::bnam);
+	auto bnam_it = data.find(rec_type_t::bnam);
 	if (bnam_it == data.end())
 		return bnam_prefix_map;
 
@@ -260,7 +260,7 @@ static std::unordered_multimap<std::string, size_t> build_bnam_prefix_map(const 
 	return bnam_prefix_map;
 }
 
-table_build_result_t build_filtered_rows(const tools_t::dict_t & data, const table_filter_params_t & params)
+table_build_result_t build_filtered_rows(const dict_t & data, const table_filter_params_t & params)
 {
 	table_build_result_t result;
 	auto & counts = result.counts;
@@ -268,16 +268,16 @@ table_build_result_t build_filtered_rows(const tools_t::dict_t & data, const tab
 	auto bnam_prefix_map = build_bnam_prefix_map(data);
 	std::set<size_t> consumed_bnams;
 
-	auto bnam_it = data.find(tools_t::rec_type_t::bnam);
+	auto bnam_it = data.find(rec_type_t::bnam);
 
-	const bool info_in_filter = params.type_filter.empty() || params.type_filter.count(tools_t::rec_type_t::info) > 0;
+	const bool info_in_filter = params.type_filter.empty() || params.type_filter.count(rec_type_t::info) > 0;
 
 	for (const auto & [type, chapter] : data)
 	{
 		for (size_t i = 0; i < chapter.records.size(); ++i)
 		{
 			const auto & entry = chapter.records[i];
-			const auto count_type = (type == tools_t::rec_type_t::bnam) ? tools_t::rec_type_t::info : type;
+			const auto count_type = (type == rec_type_t::bnam) ? rec_type_t::info : type;
 
 			const entry_context_t context { type, count_type, entry, i, params };
 
@@ -291,7 +291,7 @@ table_build_result_t build_filtered_rows(const tools_t::dict_t & data, const tab
 
 			count_filtered_status(counts, context);
 
-			if (type == tools_t::rec_type_t::bnam && consumed_bnams.count(i) > 0)
+			if (type == rec_type_t::bnam && consumed_bnams.count(i) > 0)
 				continue;
 
 			if (!params.status_filter.empty() && params.status_filter.count(entry.status) == 0)
@@ -304,7 +304,7 @@ table_build_result_t build_filtered_rows(const tools_t::dict_t & data, const tab
 			result.rows.push_back(std::move(row_item));
 
 			const auto info_prefix = extract_info_prefix(entry.key_text);
-			if (type == tools_t::rec_type_t::info && info_in_filter && bnam_it != data.end() && !info_prefix.empty())
+			if (type == rec_type_t::info && info_in_filter && bnam_it != data.end() && !info_prefix.empty())
 			{
 				bnam_emit_context_t bnam_context {
 					result.rows, consumed_bnams, bnam_it->second, bnam_prefix_map, params

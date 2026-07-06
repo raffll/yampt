@@ -2,7 +2,7 @@
 
 #include "../io/esm_reader.hpp"
 #include "../utility/includes.hpp"
-#include "../utility/tools.hpp"
+#include "../utility/domain_types.hpp"
 #include "cell_matcher.hpp"
 #include "dial_matcher.hpp"
 #include "text_match_index.hpp"
@@ -38,7 +38,7 @@ public:
 		return dict;
 	}
 
-	dict_creator_t(const std::string & plugin_path, const tools_t::dict_t * base_dict = nullptr);
+	dict_creator_t(const std::string & plugin_path, const dict_t * base_dict = nullptr);
 
 	dict_creator_t(
 	    const std::string & path,
@@ -119,50 +119,50 @@ private:
 	    const std::string & key_text,
 	    const std::string & old_text,
 	    const std::string & new_text,
-	    tools_t::rec_type_t type);
+	    rec_type_t type);
 	void insert_entry_base(
 	    const std::string & key_text,
 	    const std::string & old_text,
 	    const std::string & new_text,
-	    tools_t::rec_type_t type,
+	    rec_type_t type,
 	    status_t status);
 	void insert_entry_single_with_base(
 	    const std::string & key_text,
 	    const std::string & old_text,
 	    const std::string & new_text,
-	    tools_t::rec_type_t type);
+	    rec_type_t type);
 
 	void insert_changed_entry(
 	    const std::string & key_text,
 	    const std::string & old_text,
-	    const tools_t::record_entry_t & base_entry,
-	    tools_t::rec_type_t type);
+	    const record_entry_t & base_entry,
+	    rec_type_t type);
 	void insert_unapproved_changed(
 	    const std::string & key_text,
 	    const std::string & old_text,
-	    const tools_t::record_entry_t & base_entry,
-	    tools_t::rec_type_t type);
+	    const record_entry_t & base_entry,
+	    rec_type_t type);
 	void insert_adapted_entry(
 	    const std::string & key_text,
 	    const std::string & old_text,
-	    const tools_t::record_entry_t & base_entry,
-	    tools_t::rec_type_t type);
+	    const record_entry_t & base_entry,
+	    rec_type_t type);
 	void enrich_info_speaker(const std::string & key_text, size_t record_index);
 
-	void insert_as_untranslated(const std::string & key_text, const std::string & old_text, tools_t::rec_type_t type);
+	void insert_as_untranslated(const std::string & key_text, const std::string & old_text, rec_type_t type);
 	void insert_with_status(
 	    const std::string & key_text,
 	    const std::string & old_text,
 	    const std::string & new_text,
-	    tools_t::rec_type_t type,
+	    rec_type_t type,
 	    status_t status);
 	void insert_duplicate(
 	    const std::string & key_text,
 	    const std::string & old_text,
 	    const std::string & new_text,
-	    tools_t::rec_type_t type,
+	    rec_type_t type,
 	    status_t status);
-	void insert_via_text_match(const std::string & key_text, const std::string & old_text, tools_t::rec_type_t type);
+	void insert_via_text_match(const std::string & key_text, const std::string & old_text, rec_type_t type);
 
 	std::vector<std::string> make_script_messages(const std::string & script_text);
 
@@ -182,8 +182,8 @@ private:
 	esm_reader_t esm;
 	esm_reader_t esm_ext;
 	esm_reader_t & esm_ref;
-	const tools_t::dict_t * base_dict = nullptr;
-	tools_t::dict_t dict;
+	const dict_t * base_dict = nullptr;
+	dict_t dict;
 	mode_t mode = mode_t::single;
 	translation_engine_t * m_translation_engine = nullptr;
 	base_mode_t m_base_mode = base_mode_t::full;

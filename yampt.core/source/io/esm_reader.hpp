@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../utility/includes.hpp"
-#include "../utility/tools.hpp"
+#include "../utility/domain_types.hpp"
 
 class esm_reader_t
 {
@@ -78,12 +78,12 @@ private:
 	void mark_not_found(sub_record_t & target);
 	void handle_exception(const std::exception & error);
 
-	std::vector<tools_t::record_t> m_records;
+	std::vector<record_t> m_records;
 	file_path_parts_t m_name;
 	std::filesystem::file_time_type m_time;
 	bool m_loaded = false;
 
-	tools_t::record_t * ptr_record = nullptr;
+	record_t * ptr_record = nullptr;
 
 	sub_record_t m_key;
 	sub_record_t m_value;

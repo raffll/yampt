@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../io/esm_reader.hpp"
-#include "../utility/tools.hpp"
+#include "../utility/domain_types.hpp"
 #include <functional>
 #include <set>
 #include <string>
@@ -28,7 +28,7 @@ public:
 	    esm_reader_t & esm_native,
 	    esm_reader_t & esm_foreign,
 	    translation_engine_t * translation_engine,
-	    tools_t::dict_t & output_dict,
+	    dict_t & output_dict,
 	    determine_status_fn determine_status);
 
 	void match_exterior_cells();
@@ -60,7 +60,7 @@ private:
 	esm_reader_t & m_esm_native;
 	esm_reader_t & m_esm_foreign;
 	translation_engine_t * m_translation_engine;
-	tools_t::dict_t & m_output_dict;
+	dict_t & m_output_dict;
 	determine_status_fn m_determine_status;
 	counters_t m_counters;
 	std::string m_native_candidates_str;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <utility/tools.hpp>
+#include <utility/domain_types.hpp>
 #include <QTextEdit>
 
 class translation_edit_view_t;
@@ -10,7 +10,7 @@ class grammar_checker_t
 public:
 	grammar_checker_t() = default;
 
-	QList<QTextEdit::ExtraSelection> check(translation_edit_view_t * editor, tools_t::rec_type_t type) const;
+	QList<QTextEdit::ExtraSelection> check(translation_edit_view_t * editor, rec_type_t type) const;
 
 private:
 	void check_double_spaces(
@@ -32,7 +32,7 @@ private:
 	    QList<QTextEdit::ExtraSelection> & selections,
 	    const QString & text,
 	    QTextDocument * document,
-	    tools_t::rec_type_t type) const;
+	    rec_type_t type) const;
 
 	static QTextCharFormat warning_format();
 };

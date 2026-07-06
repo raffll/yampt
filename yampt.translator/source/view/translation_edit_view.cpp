@@ -24,7 +24,7 @@ void translation_edit_view_t::set_show_whitespace(bool value)
 	m_show_whitespace = value;
 }
 
-void translation_edit_view_t::set_record_type(tools_t::rec_type_t type)
+void translation_edit_view_t::set_record_type(rec_type_t type)
 {
 	m_record_type = type;
 }
@@ -108,7 +108,7 @@ void translation_edit_view_t::apply_auto_capitalize()
 	if (!m_auto_capitalize)
 		return;
 
-	if (m_record_type == tools_t::rec_type_t::sctx || m_record_type == tools_t::rec_type_t::bnam)
+	if (m_record_type == rec_type_t::sctx || m_record_type == rec_type_t::bnam)
 		return;
 
 	auto cursor = textCursor();

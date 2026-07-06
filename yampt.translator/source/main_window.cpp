@@ -1,4 +1,5 @@
-﻿#include "main_window.hpp"
+#include "main_window.hpp"
+#include <utility/app_logger.hpp>
 #include "dialog/dict_selection_dialog.hpp"
 #include "dialog/find_replace_dialog.hpp"
 #include "dialog/first_run_dialog.hpp"
@@ -79,9 +80,9 @@ main_window_t::main_window_t(QWidget * parent)
 	setMinimumSize(800, 600);
 
 	m_type_filter = {
-		tools_t::rec_type_t::cell, tools_t::rec_type_t::dial, tools_t::rec_type_t::info, tools_t::rec_type_t::fnam,
-		tools_t::rec_type_t::text, tools_t::rec_type_t::gmst, tools_t::rec_type_t::desc, tools_t::rec_type_t::rnam,
-		tools_t::rec_type_t::indx, tools_t::rec_type_t::sctx,
+		rec_type_t::cell, rec_type_t::dial, rec_type_t::info, rec_type_t::fnam,
+		rec_type_t::text, rec_type_t::gmst, rec_type_t::desc, rec_type_t::rnam,
+		rec_type_t::indx, rec_type_t::sctx,
 	};
 
 	setup_menu_bar();
@@ -260,7 +261,7 @@ void main_window_t::on_merge()
 	if (selected_paths.size() < 2)
 		return;
 
-	tools_t::reset_log();
+	app_logger_t::reset_log();
 
 	dict_merger_t merger(selected_paths);
 	const auto & merged_dict = merger.get_dict();
@@ -273,7 +274,7 @@ void main_window_t::on_merge()
 
 	dict_writer_t::write(merged_dict, output_path);
 
-	const auto log_text = tools_t::get_log();
+	const auto log_text = app_logger_t::get_log();
 	m_log_view->append_log("merge", log_text);
 	m_record_tabs->setCurrentWidget(m_log_view);
 
@@ -526,7 +527,7 @@ void main_window_t::on_translation_changed()
 
 	apply_translation_highlights(row_data);
 
-	if (row_data->type == tools_t::rec_type_t::text)
+	if (row_data->type == rec_type_t::text)
 	{
 		const auto translation_text = m_editor_view->translation_editor()->toPlainText().toStdString();
 		m_book_preview_view->set_html(row_data->old_text, translation_text);
@@ -832,9 +833,9 @@ void main_window_t::restore_filter_state(const std::string & path)
 	else
 	{
 		m_type_filter = {
-			tools_t::rec_type_t::cell, tools_t::rec_type_t::dial, tools_t::rec_type_t::info, tools_t::rec_type_t::fnam,
-			tools_t::rec_type_t::text, tools_t::rec_type_t::gmst, tools_t::rec_type_t::desc, tools_t::rec_type_t::rnam,
-			tools_t::rec_type_t::indx, tools_t::rec_type_t::sctx,
+			rec_type_t::cell, rec_type_t::dial, rec_type_t::info, rec_type_t::fnam,
+			rec_type_t::text, rec_type_t::gmst, rec_type_t::desc, rec_type_t::rnam,
+			rec_type_t::indx, rec_type_t::sctx,
 		};
 		m_status_filter.clear();
 		m_type_filter_solo = false;
@@ -1023,7 +1024,7 @@ void main_window_t::start_batch_translation(dict_document_t * dict_doc)
 
 	struct batch_state_t
 	{
-		std::vector<std::pair<tools_t::rec_type_t, size_t>> work_items;
+		std::vector<std::pair<rec_type_t, size_t>> work_items;
 		size_t current = 0;
 		int translated_count = 0;
 		int glossary_count = 0;

@@ -2,7 +2,7 @@
 
 #include "../io/dict_reader.hpp"
 #include "../utility/includes.hpp"
-#include "../utility/tools.hpp"
+#include "../utility/domain_types.hpp"
 
 class dict_merger_t
 {
@@ -20,14 +20,14 @@ public:
 	dict_merger_t();
 	dict_merger_t(const std::vector<std::string> & paths);
 
-	void add_record(const tools_t::rec_type_t type, const std::string & key_text, const std::string & new_text);
+	void add_record(const rec_type_t type, const std::string & key_text, const std::string & new_text);
 
 private:
 	void merge_dict();
 	void print_summary_log();
 
 	std::vector<dict_reader_t> readers;
-	tools_t::dict_t dict;
+	dict_t dict;
 
 	int counter_merged = 0;
 	int counter_rejected = 0;

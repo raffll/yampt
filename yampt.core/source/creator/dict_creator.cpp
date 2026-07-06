@@ -1,15 +1,16 @@
 #include "dict_creator.hpp"
+#include "../utility/app_logger.hpp"
 #include "../translator/translation_engine.hpp"
 #include "../utility/string_utils.hpp"
 #include <hunspell/hunspell.hxx>
 
-dict_creator_t::dict_creator_t(const std::string & plugin_path, const tools_t::dict_t * base_dict)
+dict_creator_t::dict_creator_t(const std::string & plugin_path, const dict_t * base_dict)
     : esm(plugin_path)
     , esm_ref(esm)
     , base_dict(base_dict)
     , mode(base_dict ? mode_t::single_with_base : mode_t::single)
 {
-	dict = tools_t::initialize_dict();
+	dict = domain_types_t::initialize_dict();
 
 	if (esm.is_loaded())
 		make_dict_single();
@@ -29,7 +30,7 @@ dict_creator_t::dict_creator_t(
     , m_base_mode(base_mode)
     , m_dictionary_aff_path(dictionary_aff_path)
 {
-	dict = tools_t::initialize_dict();
+	dict = domain_types_t::initialize_dict();
 
 	if (esm.is_loaded() && esm_ext.is_loaded())
 	{
@@ -46,13 +47,13 @@ dict_creator_t::dict_creator_t(
 		if (native_ids == foreign_ids)
 		{
 			mode = mode_t::base_ordered;
-			tools_t::add_log("[info] record order: identical\r\n");
+			app_logger_t::add_log("[info] record order: identical\r\n");
 			make_dict_base_ordered();
 		}
 		else
 		{
 			mode = mode_t::base;
-			tools_t::add_log("[info] record order: different\r\n");
+			app_logger_t::add_log("[info] record order: different\r\n");
 			make_dict_base();
 		}
 	}
@@ -78,7 +79,7 @@ void dict_creator_t::load_english_dict()
 	}
 	else
 	{
-		auto dir = tools_t::get_exe_dir();
+		auto dir = app_logger_t::get_exe_dir();
 		if (!dir.empty() && dir.back() != '/' && dir.back() != '\\')
 			dir += '/';
 
@@ -192,7 +193,7 @@ void dict_creator_t::insert_duplicate(
     const std::string & key_text,
     const std::string & old_text,
     const std::string & new_text,
-    tools_t::rec_type_t type,
+    rec_type_t type,
     status_t status)
 {
 	auto * dup = dict.at(type).find(key_text);
@@ -223,13 +224,13 @@ std::vector<std::string> dict_creator_t::make_script_messages(const std::string 
 
 	while (std::getline(ss, line))
 	{
-		line = tools_t::trim_cr(line);
+		line = string_utils::trim_cr(line);
 		line_lc = string_utils::to_lower(line);
 
 		size_t keyword_pos;
 		std::set<size_t> keyword_pos_coll;
 
-		for (const auto & keyword : tools_t::keywords)
+		for (const auto & keyword : domain_types_t::script_keywords)
 		{
 			keyword_pos = line_lc.find(keyword);
 			if (keyword_pos == std::string::npos)

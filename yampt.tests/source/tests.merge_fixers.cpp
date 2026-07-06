@@ -2,7 +2,7 @@
 #include <scanner/cell_name_fixer.hpp>
 #include <scanner/fog_fixer.hpp>
 #include <scanner/summon_fixer.hpp>
-#include <utility/tools.hpp>
+#include <utility/app_logger.hpp>
 #include <cstring>
 #include <string>
 

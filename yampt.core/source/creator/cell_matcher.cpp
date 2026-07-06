@@ -1,4 +1,5 @@
 #include "cell_matcher.hpp"
+#include "../utility/app_logger.hpp"
 #include "../translator/translation_engine.hpp"
 #include "word_match_utils.hpp"
 #include <algorithm>
@@ -9,7 +10,7 @@ cell_matcher_t::cell_matcher_t(
     esm_reader_t & esm_native,
     esm_reader_t & esm_foreign,
     translation_engine_t * translation_engine,
-    tools_t::dict_t & output_dict,
+    dict_t & output_dict,
     determine_status_fn determine_status)
     : m_esm_native(esm_native)
     , m_esm_foreign(esm_foreign)
@@ -29,20 +30,20 @@ void cell_matcher_t::insert_entry(
     const std::string & new_text,
     status_t status)
 {
-	auto * existing = m_output_dict[tools_t::rec_type_t::cell].find(key_text);
+	auto * existing = m_output_dict[rec_type_t::cell].find(key_text);
 	if (existing)
 	{
 		if (existing->old_text == old_text && existing->new_text == new_text)
 			return;
 	}
 
-	tools_t::record_entry_t entry;
+	record_entry_t entry;
 	entry.key_text = key_text;
 	entry.old_text = old_text;
 	entry.new_text = new_text;
 	entry.status = status;
 
-	if (m_output_dict[tools_t::rec_type_t::cell].insert(entry))
+	if (m_output_dict[rec_type_t::cell].insert(entry))
 	{
 		m_counters.created++;
 		if (old_text == new_text && status == status_t::translated)
@@ -51,7 +52,7 @@ void cell_matcher_t::insert_entry(
 		return;
 	}
 
-	auto * duplicate = m_output_dict[tools_t::rec_type_t::cell].find(key_text);
+	auto * duplicate = m_output_dict[rec_type_t::cell].find(key_text);
 	if (duplicate && duplicate->old_text == old_text && duplicate->new_text == new_text)
 		return;
 
@@ -105,7 +106,7 @@ std::string cell_matcher_t::make_cell_fingerprint(esm_reader_t & esm_src)
 	while (pos + 8 <= content.size())
 	{
 		std::string sub_id = content.substr(pos, 4);
-		size_t sub_size = tools_t::convert_string_byte_array_to_uint(content.substr(pos + 4, 4));
+		size_t sub_size = domain_types_t::convert_string_byte_array_to_uint(content.substr(pos + 4, 4));
 		if (sub_size == 0)
 			break;
 
@@ -179,7 +180,7 @@ cell_matcher_t::fingerprint_index_t cell_matcher_t::build_cell_fingerprint_index
 		{
 			esm_src.set_value("NAME");
 			std::string cell_name = esm_src.get_value().exist ? esm_src.get_value().text : "<unnamed>";
-			tools_t::add_log("[warning] cell index: duplicate fingerprint in CELL \"" + cell_name + "\"\r\n");
+			app_logger_t::add_log("[warning] cell index: duplicate fingerprint in CELL \"" + cell_name + "\"\r\n");
 		}
 		positions.insert(i);
 	}
@@ -241,7 +242,7 @@ void cell_matcher_t::match_exterior_cells()
 		auto coord_key = make_exterior_coord_key(m_esm_foreign.get_value().content);
 		if (coord_key.empty())
 		{
-			tools_t::add_log("[warning] malformed DATA in exterior cell: \"" + ref_cell_name + "\"\r\n", true);
+			app_logger_t::add_log("[warning] malformed DATA in exterior cell: \"" + ref_cell_name + "\"\r\n", true);
 			missing_cells.push_back({ i, ref_cell_name });
 			m_counters.missing++;
 			continue;
@@ -293,7 +294,7 @@ void cell_matcher_t::match_interior_cells()
 		auto fingerprint = make_cell_fingerprint(m_esm_foreign);
 		if (fingerprint.empty())
 		{
-			tools_t::add_log("[warning] empty fingerprint for interior cell: \"" + ref_cell_name + "\"\r\n", true);
+			app_logger_t::add_log("[warning] empty fingerprint for interior cell: \"" + ref_cell_name + "\"\r\n", true);
 			missing_cells.push_back({ i, ref_cell_name });
 			m_counters.missing++;
 			continue;
@@ -358,13 +359,13 @@ void cell_matcher_t::match_interior_cells_heuristic(
 		native_cells.push_back({ i, m_esm_native.get_value().text });
 	}
 
-	tools_t::add_log("=== HEURISTIC START ===\r\n", true);
-	tools_t::add_log("Foreign missing: " + std::to_string(missing_cells.size()) + "\r\n", true);
-	tools_t::add_log("Native unmatched: " + std::to_string(native_cells.size()) + "\r\n", true);
+	app_logger_t::add_log("=== HEURISTIC START ===\r\n", true);
+	app_logger_t::add_log("Foreign missing: " + std::to_string(missing_cells.size()) + "\r\n", true);
+	app_logger_t::add_log("Native unmatched: " + std::to_string(native_cells.size()) + "\r\n", true);
 	if (m_translation_engine && m_translation_engine->is_loaded())
-		tools_t::add_log("[info] translation engine: active (cell heuristic)\r\n");
+		app_logger_t::add_log("[info] translation engine: active (cell heuristic)\r\n");
 	else
-		tools_t::add_log("[info] translation engine: inactive (cell heuristic skipped)\r\n");
+		app_logger_t::add_log("[info] translation engine: inactive (cell heuristic skipped)\r\n");
 
 	std::set<size_t> matched_native;
 	std::set<size_t> matched_foreign;
@@ -385,7 +386,7 @@ void cell_matcher_t::match_interior_cells_heuristic(
 			matched_native.insert(ni);
 			matched_native_names.insert(foreign_name);
 
-			tools_t::add_log("[EXACT] \"" + foreign_name + "\"\r\n", true);
+			app_logger_t::add_log("[EXACT] \"" + foreign_name + "\"\r\n", true);
 
 			insert_entry(foreign_name, foreign_name, foreign_name, status_t::translated);
 			break;
@@ -430,7 +431,7 @@ void cell_matcher_t::match_interior_cells_heuristic(
 
 				if (resolved)
 				{
-					tools_t::add_log(
+					app_logger_t::add_log(
 					    "[TIE-SAME iter=" + std::to_string(iteration) + " orig=" + std::to_string(match.score_orig) +
 					    " model=" + std::to_string(match.score_model) + " count=" + std::to_string(match.count) +
 					    "] \"" + foreign_name + "\" => \"" + translated_text + "\" -> \"" + match.name + "\"\r\n");
@@ -444,7 +445,7 @@ void cell_matcher_t::match_interior_cells_heuristic(
 
 				if (!resolved)
 				{
-					tools_t::add_log(
+					app_logger_t::add_log(
 					    "[TRANSLATE iter=" + std::to_string(iteration) + " orig=" + std::to_string(match.score_orig) +
 					    " model=" + std::to_string(match.score_model) + "] \"" + foreign_name + "\" => \"" +
 					    translated_text + "\" -> \"" + match.name + "\"\r\n");
@@ -456,7 +457,7 @@ void cell_matcher_t::match_interior_cells_heuristic(
 			}
 			else if (!resolved)
 			{
-				tools_t::add_log(
+				app_logger_t::add_log(
 				    "[TIE iter=" + std::to_string(iteration) + " orig=" + std::to_string(match.score_orig) +
 				    " model=" + std::to_string(match.score_model) + " count=" + std::to_string(match.count) + "] \"" +
 				    foreign_name + "\"\r\n");
@@ -464,18 +465,18 @@ void cell_matcher_t::match_interior_cells_heuristic(
 		}
 	}
 
-	tools_t::add_log("--- UNMATCHED FOREIGN ---\r\n", true);
+	app_logger_t::add_log("--- UNMATCHED FOREIGN ---\r\n", true);
 	for (size_t fi = 0; fi < missing_cells.size(); ++fi)
 	{
 		if (!matched_foreign.count(fi))
-			tools_t::add_log("  " + missing_cells[fi].second + "\r\n", true);
+			app_logger_t::add_log("  " + missing_cells[fi].second + "\r\n", true);
 	}
 
-	tools_t::add_log("--- UNMATCHED NATIVE ---\r\n", true);
+	app_logger_t::add_log("--- UNMATCHED NATIVE ---\r\n", true);
 	for (size_t ni = 0; ni < native_cells.size(); ++ni)
 	{
 		if (!matched_native.count(ni) && !matched_native_names.count(native_cells[ni].second))
-			tools_t::add_log("  " + native_cells[ni].second + "\r\n", true);
+			app_logger_t::add_log("  " + native_cells[ni].second + "\r\n", true);
 	}
 
 	std::vector<std::pair<size_t, std::string>> still_missing;
@@ -498,10 +499,10 @@ void cell_matcher_t::match_interior_cells_heuristic(
 
 	if (!unmatched_native_names.empty())
 	{
-		tools_t::add_log(
+		app_logger_t::add_log(
 		    "[info] unmatched native CELL candidates (" + std::to_string(unmatched_native_names.size()) + "):\r\n");
 		for (const auto & name : unmatched_native_names)
-			tools_t::add_log("  " + name + "\r\n");
+			app_logger_t::add_log("  " + name + "\r\n");
 	}
 
 	std::string candidates_str;
@@ -523,11 +524,11 @@ void cell_matcher_t::add_missing_cells(
 	for (const auto & [rec_index, cell_name] : missing_cells)
 	{
 		insert_entry(cell_name, cell_name, cell_name, status_t::missing);
-		tools_t::add_log("[warning] missing CELL: " + cell_name + "\r\n");
+		app_logger_t::add_log("[warning] missing CELL: " + cell_name + "\r\n");
 
 		if (!native_candidates_str.empty())
 		{
-			auto * entry = m_output_dict[tools_t::rec_type_t::cell].find_by_old_text(cell_name);
+			auto * entry = m_output_dict[rec_type_t::cell].find_by_old_text(cell_name);
 			if (entry)
 				entry->details = native_candidates_str;
 		}

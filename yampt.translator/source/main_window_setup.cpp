@@ -292,7 +292,7 @@ void main_window_t::connect_menu_signals()
 			return;
 
 		const auto * row_data = m_table_model->row_at(m_editor_controller.current_row());
-		auto type = row_data ? row_data->type : tools_t::rec_type_t::info;
+		auto type = row_data ? row_data->type : rec_type_t::info;
 		m_extra_sel_translation.grammar = m_grammar_check->isChecked()
 		                                      ? m_grammar_checker.check(m_editor_view->translation_editor(), type)
 		                                      : QList<QTextEdit::ExtraSelection> {};

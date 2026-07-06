@@ -1,7 +1,7 @@
 #include <catch2/catch_all.hpp>
 #include <io/eet_converter.hpp>
 #include <rapidcheck/catch.h>
-#include <utility/tools.hpp>
+#include <utility/app_logger.hpp>
 #include <rapidcheck.h>
 
 namespace {
@@ -111,28 +111,28 @@ TEST_CASE("eet_converter_t::map_type, exhaustive type mapping", "[u]")
 	{
 		std::string rec_type;
 		std::string sub_type;
-		tools_t::rec_type_t expected;
+		rec_type_t expected;
 	};
 
 	const std::vector<mapping_t> known_mappings = {
-		{ "NPC_", "FNAM", tools_t::rec_type_t::fnam }, { "SPEL", "FNAM", tools_t::rec_type_t::fnam },
-		{ "ARMO", "FNAM", tools_t::rec_type_t::fnam }, { "BOOK", "FNAM", tools_t::rec_type_t::fnam },
-		{ "CONT", "FNAM", tools_t::rec_type_t::fnam }, { "MISC", "FNAM", tools_t::rec_type_t::fnam },
-		{ "CLOT", "FNAM", tools_t::rec_type_t::fnam }, { "CREA", "FNAM", tools_t::rec_type_t::fnam },
-		{ "ALCH", "FNAM", tools_t::rec_type_t::fnam }, { "DOOR", "FNAM", tools_t::rec_type_t::fnam },
-		{ "ACTI", "FNAM", tools_t::rec_type_t::fnam }, { "LIGH", "FNAM", tools_t::rec_type_t::fnam },
-		{ "INGR", "FNAM", tools_t::rec_type_t::fnam }, { "CLAS", "FNAM", tools_t::rec_type_t::fnam },
-		{ "FACT", "FNAM", tools_t::rec_type_t::fnam }, { "APPA", "FNAM", tools_t::rec_type_t::fnam },
-		{ "REPA", "FNAM", tools_t::rec_type_t::fnam }, { "CELL", "NAME", tools_t::rec_type_t::cell },
-		{ "REGN", "NAME", tools_t::rec_type_t::cell }, { "PGRD", "NAME", tools_t::rec_type_t::cell },
-		{ "CELL", "FNAM", tools_t::rec_type_t::cell }, { "REGN", "FNAM", tools_t::rec_type_t::cell },
-		{ "CELL", "DNAM", tools_t::rec_type_t::cell }, { "NPC_", "DNAM", tools_t::rec_type_t::fnam },
-		{ "NPC_", "CNDT", tools_t::rec_type_t::fnam }, { "BOOK", "TEXT", tools_t::rec_type_t::text },
-		{ "SCPT", "SCTX", tools_t::rec_type_t::sctx }, { "SCPT", "MSGB", tools_t::rec_type_t::bnam },
-		{ "SCPT", "CELL", tools_t::rec_type_t::bnam }, { "SCPT", "SAY_", tools_t::rec_type_t::bnam },
-		{ "SCPT", "DIAL", tools_t::rec_type_t::bnam }, { "MGEF", "DESC", tools_t::rec_type_t::desc },
-		{ "CLAS", "DESC", tools_t::rec_type_t::desc }, { "FACT", "RNAM", tools_t::rec_type_t::rnam },
-		{ "GMST", "STRV", tools_t::rec_type_t::gmst }, { "DIAL", "NAME", tools_t::rec_type_t::dial },
+		{ "NPC_", "FNAM", rec_type_t::fnam }, { "SPEL", "FNAM", rec_type_t::fnam },
+		{ "ARMO", "FNAM", rec_type_t::fnam }, { "BOOK", "FNAM", rec_type_t::fnam },
+		{ "CONT", "FNAM", rec_type_t::fnam }, { "MISC", "FNAM", rec_type_t::fnam },
+		{ "CLOT", "FNAM", rec_type_t::fnam }, { "CREA", "FNAM", rec_type_t::fnam },
+		{ "ALCH", "FNAM", rec_type_t::fnam }, { "DOOR", "FNAM", rec_type_t::fnam },
+		{ "ACTI", "FNAM", rec_type_t::fnam }, { "LIGH", "FNAM", rec_type_t::fnam },
+		{ "INGR", "FNAM", rec_type_t::fnam }, { "CLAS", "FNAM", rec_type_t::fnam },
+		{ "FACT", "FNAM", rec_type_t::fnam }, { "APPA", "FNAM", rec_type_t::fnam },
+		{ "REPA", "FNAM", rec_type_t::fnam }, { "CELL", "NAME", rec_type_t::cell },
+		{ "REGN", "NAME", rec_type_t::cell }, { "PGRD", "NAME", rec_type_t::cell },
+		{ "CELL", "FNAM", rec_type_t::cell }, { "REGN", "FNAM", rec_type_t::cell },
+		{ "CELL", "DNAM", rec_type_t::cell }, { "NPC_", "DNAM", rec_type_t::fnam },
+		{ "NPC_", "CNDT", rec_type_t::fnam }, { "BOOK", "TEXT", rec_type_t::text },
+		{ "SCPT", "SCTX", rec_type_t::sctx }, { "SCPT", "MSGB", rec_type_t::bnam },
+		{ "SCPT", "CELL", rec_type_t::bnam }, { "SCPT", "SAY_", rec_type_t::bnam },
+		{ "SCPT", "DIAL", rec_type_t::bnam }, { "MGEF", "DESC", rec_type_t::desc },
+		{ "CLAS", "DESC", rec_type_t::desc }, { "FACT", "RNAM", rec_type_t::rnam },
+		{ "GMST", "STRV", rec_type_t::gmst }, { "DIAL", "NAME", rec_type_t::dial },
 	};
 
 	REQUIRE(known_mappings.size() == 36);

@@ -5,7 +5,7 @@
 #include "../merger/dict_merger.hpp"
 #include "../utility/includes.hpp"
 #include "../utility/keyword_trie.hpp"
-#include "../utility/tools.hpp"
+#include "../utility/domain_types.hpp"
 
 class esm_converter_t
 {
@@ -43,9 +43,9 @@ private:
 	void reset_counters();
 	void convert_record_content(const std::string & new_text);
 	void add_null_terminator_if_empty(std::string & new_text);
-	bool make_new_text(const tools_t::entry_t & entry, std::string & new_text);
+	bool make_new_text(const entry_t & entry, std::string & new_text);
 	bool is_identical(const std::string & old_text, const std::string & new_text);
-	void print_log_line(const tools_t::rec_type_t type);
+	void print_log_line(const rec_type_t type);
 	void convert_mast();
 	void make_header();
 	void convert_cell();

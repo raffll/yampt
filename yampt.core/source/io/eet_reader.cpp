@@ -1,15 +1,16 @@
 #include "eet_reader.hpp"
-#include "../utility/tools.hpp"
+#include "binary_file_io.hpp"
+#include "../utility/app_logger.hpp"
 
 bool eet_reader_t::load(const std::string & path)
 {
 	m_entries.clear();
 	m_entry_count = 0;
 
-	const auto content = tools_t::read_file(path);
+	const auto content = binary_file_io_t::read_file(path);
 	if (content.empty())
 	{
-		tools_t::add_log("[error] cannot read EET file: \"" + path + "\"\r\n");
+		app_logger_t::add_log("[error] cannot read EET file: \"" + path + "\"\r\n");
 		return false;
 	}
 
@@ -24,14 +25,14 @@ bool eet_reader_t::load(const std::string & path)
 	{
 		if (!parse_entry(content, offset))
 		{
-			tools_t::add_log(
+			app_logger_t::add_log(
 			    "[error] EET parse stopped at entry " + std::to_string(index) + " of " + std::to_string(m_entry_count) +
 			    "\r\n");
 			return false;
 		}
 	}
 
-	tools_t::add_log(
+	app_logger_t::add_log(
 	    "[info] loaded EET file: " + std::to_string(m_entries.size()) + " entries from \"" + path + "\"\r\n");
 
 	return true;
@@ -51,14 +52,14 @@ bool eet_reader_t::parse_header(const std::string & content, size_t & offset)
 
 	if (content.size() < minimum_header)
 	{
-		tools_t::add_log("[error] invalid EET file: too short for header\r\n");
+		app_logger_t::add_log("[error] invalid EET file: too short for header\r\n");
 		return false;
 	}
 
 	const auto magic = content.substr(offset, magic_size);
 	if (magic != "EET_")
 	{
-		tools_t::add_log("[error] invalid EET file: bad magic\r\n");
+		app_logger_t::add_log("[error] invalid EET file: bad magic\r\n");
 		return false;
 	}
 	offset += magic_size;
@@ -79,7 +80,7 @@ bool eet_reader_t::parse_header_game_and_line(const std::string & content, size_
 	const auto game_tag = content.substr(offset, game_tag_size);
 	if (game_tag != "GAME")
 	{
-		tools_t::add_log("[error] invalid EET file: bad game tag\r\n");
+		app_logger_t::add_log("[error] invalid EET file: bad game tag\r\n");
 		return false;
 	}
 	offset += game_tag_size;
@@ -89,7 +90,7 @@ bool eet_reader_t::parse_header_game_and_line(const std::string & content, size_
 
 	if (offset + game_name_length > content.size())
 	{
-		tools_t::add_log("[error] invalid EET file: truncated game name\r\n");
+		app_logger_t::add_log("[error] invalid EET file: truncated game name\r\n");
 		return false;
 	}
 	offset += game_name_length;
@@ -97,14 +98,14 @@ bool eet_reader_t::parse_header_game_and_line(const std::string & content, size_
 	const auto line_tag = content.substr(offset, line_tag_size);
 	if (line_tag != "LINE")
 	{
-		tools_t::add_log("[error] invalid EET file: bad line tag\r\n");
+		app_logger_t::add_log("[error] invalid EET file: bad line tag\r\n");
 		return false;
 	}
 	offset += line_tag_size;
 
 	if (offset + entry_count_size > content.size())
 	{
-		tools_t::add_log("[error] invalid EET file: truncated entry count\r\n");
+		app_logger_t::add_log("[error] invalid EET file: truncated entry count\r\n");
 		return false;
 	}
 

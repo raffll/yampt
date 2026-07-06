@@ -1,13 +1,14 @@
 #include "dict_merger.hpp"
+#include "../utility/app_logger.hpp"
 
 dict_merger_t::dict_merger_t()
 {
-	dict = tools_t::initialize_dict();
+	dict = domain_types_t::initialize_dict();
 }
 
 dict_merger_t::dict_merger_t(const std::vector<std::string> & paths)
 {
-	dict = tools_t::initialize_dict();
+	dict = domain_types_t::initialize_dict();
 
 	for (auto it = paths.rbegin(); it != paths.rend(); ++it)
 	{
@@ -20,11 +21,11 @@ dict_merger_t::dict_merger_t(const std::vector<std::string> & paths)
 }
 
 void dict_merger_t::add_record(
-    const tools_t::rec_type_t type,
+    const rec_type_t type,
     const std::string & key_text,
     const std::string & new_text)
 {
-	tools_t::record_entry_t entry;
+	record_entry_t entry;
 	entry.key_text = key_text;
 	entry.old_text = key_text;
 	entry.new_text = new_text;
@@ -65,5 +66,5 @@ void dict_merger_t::print_summary_log()
 	                   ", rejected=" + std::to_string(counter_rejected) +
 	                   ", identical=" + std::to_string(counter_identical) + "\r\n";
 
-	tools_t::add_log(line);
+	app_logger_t::add_log(line);
 }

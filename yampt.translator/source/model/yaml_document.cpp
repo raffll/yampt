@@ -65,7 +65,7 @@ std::vector<table_row_t> yaml_document_t::build_rows() const
 	for (size_t i = 0; i < m_entries.size(); ++i)
 	{
 		table_row_t row;
-		row.type = tools_t::rec_type_t::yaml;
+		row.type = rec_type_t::yaml;
 		row.key_text = m_entries[i].key;
 		row.old_text = (i < m_source_values.size()) ? m_source_values[i] : "";
 		row.new_text = m_modified_indices.count(i) ? m_entries[i].value : "";
@@ -82,7 +82,7 @@ std::vector<table_row_t> yaml_document_t::build_rows() const
 	return rows;
 }
 
-void yaml_document_t::commit_edit(tools_t::rec_type_t type, size_t record_index, const std::string & new_text)
+void yaml_document_t::commit_edit(rec_type_t type, size_t record_index, const std::string & new_text)
 {
 	if (record_index >= m_entries.size())
 		return;

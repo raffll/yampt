@@ -1,6 +1,7 @@
 #include "sub_record_merge.hpp"
+#include "../utility/string_utils.hpp"
 #include "../decoder/sub_record_iter.hpp"
-#include "../utility/tools.hpp"
+#include "../utility/app_logger.hpp"
 #include <algorithm>
 #include <cstring>
 #include <map>
@@ -22,7 +23,7 @@ sub_record_sequence_t sub_record_merge_t::parse_sub_records(const std::string & 
 
 std::string sub_record_merge_t::serialize_sub_record(const sub_record_entry_t & entry)
 {
-	const auto size_bytes = tools_t::convert_uint_to_string_byte_array(entry.data.size());
+	const auto size_bytes = domain_types_t::convert_uint_to_string_byte_array(entry.data.size());
 	return entry.type + size_bytes + entry.data;
 }
 
@@ -35,7 +36,7 @@ std::string sub_record_merge_t::reconstruct_record(
 		body += serialize_sub_record(entry);
 
 	std::string result = winner_content.substr(0, 16);
-	const auto body_size = tools_t::convert_uint_to_string_byte_array(body.size());
+	const auto body_size = domain_types_t::convert_uint_to_string_byte_array(body.size());
 	result.replace(4, 4, body_size);
 	result += body;
 	return result;
@@ -348,7 +349,7 @@ merge_result_t sub_record_merge_t::merge(const merge_input_t & input)
 
 uint32_t sub_record_merge_t::read_frmr_index(const sub_record_entry_t & frmr_entry)
 {
-	return static_cast<uint32_t>(tools_t::convert_string_byte_array_to_uint(frmr_entry.data.substr(0, 4)));
+	return static_cast<uint32_t>(domain_types_t::convert_string_byte_array_to_uint(frmr_entry.data.substr(0, 4)));
 }
 
 cell_partition_t sub_record_merge_t::partition_cell(const std::string & content)
@@ -452,7 +453,7 @@ std::string sub_record_merge_t::reconstruct_cell(
 	}
 
 	std::string result = winner_content.substr(0, 16);
-	const auto body_size = tools_t::convert_uint_to_string_byte_array(body.size());
+	const auto body_size = domain_types_t::convert_uint_to_string_byte_array(body.size());
 	result.replace(4, 4, body_size);
 	result += body;
 	return result;
@@ -811,7 +812,7 @@ static std::vector<list_item_t> extract_list_items(const std::string & content)
 		if (sub.type == "INAM" || sub.type == "CNAM")
 		{
 			current_id = std::string(sub.data, sub.size);
-			current_id = tools_t::erase_null_chars(current_id);
+			current_id = string_utils::erase_null_chars(current_id);
 			continue;
 		}
 
@@ -844,7 +845,7 @@ static std::string extract_list_header(const std::string & content)
 			continue;
 
 		header_part += sub.type;
-		header_part += tools_t::convert_uint_to_string_byte_array(sub.size);
+		header_part += domain_types_t::convert_uint_to_string_byte_array(sub.size);
 		header_part += std::string(sub.data, sub.size);
 	}
 
@@ -858,7 +859,7 @@ static std::string build_merged_list_record(
 {
 	std::string indx_sub = "INDX";
 	uint32_t item_count = static_cast<uint32_t>(merged_items.size());
-	indx_sub += tools_t::convert_uint_to_string_byte_array(4);
+	indx_sub += domain_types_t::convert_uint_to_string_byte_array(4);
 	indx_sub += std::string(reinterpret_cast<const char *>(&item_count), 4);
 
 	const std::string & item_sub_type = (rec_type == "LEVI") ? "INAM" : "CNAM";
@@ -869,11 +870,11 @@ static std::string build_merged_list_record(
 		id_data.push_back('\0');
 
 		items_part += item_sub_type;
-		items_part += tools_t::convert_uint_to_string_byte_array(id_data.size());
+		items_part += domain_types_t::convert_uint_to_string_byte_array(id_data.size());
 		items_part += id_data;
 
 		items_part += "INTV";
-		items_part += tools_t::convert_uint_to_string_byte_array(2);
+		items_part += domain_types_t::convert_uint_to_string_byte_array(2);
 		items_part += std::string(reinterpret_cast<const char *>(&item.level), 2);
 	}
 
@@ -881,7 +882,7 @@ static std::string build_merged_list_record(
 
 	std::string record;
 	record += rec_type;
-	record += tools_t::convert_uint_to_string_byte_array(body.size());
+	record += domain_types_t::convert_uint_to_string_byte_array(body.size());
 	record += std::string(8, '\0');
 	record += body;
 

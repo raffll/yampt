@@ -1,4 +1,5 @@
 #include "script_parser.hpp"
+#include "../utility/app_logger.hpp"
 #include "../utility/string_utils.hpp"
 #include <regex>
 
@@ -158,7 +159,7 @@ std::string extract_cell_name_after_numerics(const std::string & text_after_keyw
 } // namespace
 
 script_parser_t::script_parser_t(
-    const tools_t::rec_type_t type,
+    const rec_type_t type,
     const dict_merger_t & merger,
     const std::string & record_key,
     const std::string & source_path,
@@ -171,7 +172,7 @@ script_parser_t::script_parser_t(
     , old_script(old_script)
     , old_scdt(old_scdt)
 {
-	if (type == tools_t::rec_type_t::sctx && !old_scdt.empty())
+	if (type == rec_type_t::sctx && !old_scdt.empty())
 		m_patcher = std::make_unique<scdt_patcher_t>(old_scdt);
 
 	convert_script();
@@ -186,7 +187,7 @@ void script_parser_t::convert_script()
 	while (std::getline(ss, line))
 	{
 		is_done = false;
-		line = tools_t::trim_cr(line);
+		line = string_utils::trim_cr(line);
 		line_lc = string_utils::to_lower(line);
 		new_line = line;
 		new_text.erase();
@@ -205,48 +206,48 @@ void script_parser_t::convert_script()
 			try
 			{
 				if (!is_done)
-					convert_line("addtopic", 0, tools_t::rec_type_t::dial);
+					convert_line("addtopic", 0, rec_type_t::dial);
 
 				if (!is_done)
-					convert_line_unquoted("showmap", tools_t::rec_type_t::cell);
+					convert_line_unquoted("showmap", rec_type_t::cell);
 				if (!is_done)
-					convert_line("showmap", 0, tools_t::rec_type_t::cell);
+					convert_line("showmap", 0, rec_type_t::cell);
 
 				if (!is_done)
-					convert_line_unquoted("centeroncell", tools_t::rec_type_t::cell);
+					convert_line_unquoted("centeroncell", rec_type_t::cell);
 				if (!is_done)
-					convert_line("centeroncell", 0, tools_t::rec_type_t::cell);
+					convert_line("centeroncell", 0, rec_type_t::cell);
 
 				if (!is_done)
-					convert_line("getpccell", 0, tools_t::rec_type_t::cell);
+					convert_line("getpccell", 0, rec_type_t::cell);
 
 				if (!is_done)
-					convert_line_unquoted("aifollowcell", tools_t::rec_type_t::cell);
+					convert_line_unquoted("aifollowcell", rec_type_t::cell);
 				if (!is_done)
-					convert_line("aifollowcell", 1, tools_t::rec_type_t::cell);
+					convert_line("aifollowcell", 1, rec_type_t::cell);
 
 				if (!is_done)
-					convert_line_unquoted("aiescortcell", tools_t::rec_type_t::cell);
+					convert_line_unquoted("aiescortcell", rec_type_t::cell);
 				if (!is_done)
-					convert_line("aiescortcell", 1, tools_t::rec_type_t::cell);
+					convert_line("aiescortcell", 1, rec_type_t::cell);
 
 				if (!is_done)
-					convert_line_unquoted("placeitemcell", tools_t::rec_type_t::cell);
+					convert_line_unquoted("placeitemcell", rec_type_t::cell);
 				if (!is_done)
-					convert_line("placeitemcell", 1, tools_t::rec_type_t::cell);
+					convert_line("placeitemcell", 1, rec_type_t::cell);
 
 				if (!is_done)
-					convert_line_unquoted("positioncell", tools_t::rec_type_t::cell);
+					convert_line_unquoted("positioncell", rec_type_t::cell);
 				if (!is_done)
-					convert_line("positioncell", 4, tools_t::rec_type_t::cell);
+					convert_line("positioncell", 4, rec_type_t::cell);
 
 				if (!is_done)
 					convert_line();
 			}
 			catch (...)
 			{
-				tools_t::add_log("[error] unknown error in script parser\r\n");
-				tools_t::add_log("line: " + line + "\r\n");
+				app_logger_t::add_log("[error] unknown error in script parser\r\n");
+				app_logger_t::add_log("line: " + line + "\r\n");
 				error = true;
 			}
 		}
@@ -261,7 +262,7 @@ void script_parser_t::convert_script()
 void script_parser_t::convert_line(
     const std::string & keyword,
     const int pos_in_expression,
-    const tools_t::rec_type_t text_type)
+    const rec_type_t text_type)
 {
 	pos = find_whole_word(line_lc, keyword);
 	if (pos == std::string::npos)
@@ -290,7 +291,7 @@ void script_parser_t::convert_line(
 	is_done = true;
 }
 
-void script_parser_t::convert_line_unquoted(const std::string & keyword, const tools_t::rec_type_t text_type)
+void script_parser_t::convert_line_unquoted(const std::string & keyword, const rec_type_t text_type)
 {
 	pos = find_whole_word(line_lc, keyword);
 	if (pos == std::string::npos)
@@ -328,9 +329,9 @@ void script_parser_t::convert_line_unquoted(const std::string & keyword, const t
 	pos = content_start + (line.substr(content_start).find(cell_name));
 	old_text = cell_name;
 
-	tools_t::add_log("\r\n\r\n" + source_path + "\r\n" + record_key + "\r\n", true);
-	tools_t::add_log("<<< " + line + "\r\n", true);
-	tools_t::add_log("unquoted: " + old_text + "\r\n", true);
+	app_logger_t::add_log("\r\n\r\n" + source_path + "\r\n" + record_key + "\r\n", true);
+	app_logger_t::add_log("<<< " + line + "\r\n", true);
+	app_logger_t::add_log("unquoted: " + old_text + "\r\n", true);
 
 	find_new_text(text_type);
 	insert_new_text();
@@ -341,14 +342,14 @@ void script_parser_t::convert_line_unquoted(const std::string & keyword, const t
 
 void script_parser_t::trim_line()
 {
-	tools_t::add_log("\r\n\r\n", true);
-	tools_t::add_log(source_path + "\r\n", true);
-	tools_t::add_log(record_key + "\r\n", true);
-	tools_t::add_log("<<< " + line + "\r\n", true);
+	app_logger_t::add_log("\r\n\r\n", true);
+	app_logger_t::add_log(source_path + "\r\n", true);
+	app_logger_t::add_log(record_key + "\r\n", true);
+	app_logger_t::add_log("<<< " + line + "\r\n", true);
 
 	old_text = line.substr(pos);
 
-	tools_t::add_log("1: " + old_text + "\r\n", true);
+	app_logger_t::add_log("1: " + old_text + "\r\n", true);
 }
 
 void script_parser_t::extract_text(const int pos_in_expression)
@@ -356,7 +357,7 @@ void script_parser_t::extract_text(const int pos_in_expression)
 	const auto result = extract_token_at(old_text, pos_in_expression);
 	if (!result.found)
 	{
-		tools_t::add_log(
+		app_logger_t::add_log(
 		    "[warning] extract_text: expected parameter at position " + std::to_string(pos_in_expression) +
 		        " in: " + old_text + "\r\n",
 		    true);
@@ -367,7 +368,7 @@ void script_parser_t::extract_text(const int pos_in_expression)
 	old_text = result.value;
 	pos += result.offset;
 
-	tools_t::add_log("2: " + old_text + "\r\n", true);
+	app_logger_t::add_log("2: " + old_text + "\r\n", true);
 }
 
 void script_parser_t::remove_quotes()
@@ -379,10 +380,10 @@ void script_parser_t::remove_quotes()
 		pos += 1;
 	}
 
-	tools_t::add_log("3: " + old_text + "\r\n", true);
+	app_logger_t::add_log("3: " + old_text + "\r\n", true);
 }
 
-void script_parser_t::find_new_text(const tools_t::rec_type_t text_type)
+void script_parser_t::find_new_text(const rec_type_t text_type)
 {
 	new_text = old_text;
 
@@ -392,11 +393,11 @@ void script_parser_t::find_new_text(const tools_t::rec_type_t text_type)
 	{
 		new_text = search->new_text;
 	}
-	else if (text_type != tools_t::rec_type_t::cell)
+	else if (text_type != rec_type_t::cell)
 	{
 		for (const auto & elem : merger->get_dict().at(text_type).records)
 		{
-			if (tools_t::case_insensitive_string_cmp(old_text, elem.key_text))
+			if (string_utils::case_insensitive_equal(old_text, elem.key_text))
 			{
 				new_text = elem.new_text;
 				break;
@@ -407,7 +408,7 @@ void script_parser_t::find_new_text(const tools_t::rec_type_t text_type)
 	{
 		for (const auto & elem : merger->get_dict().at(text_type).records)
 		{
-			if (tools_t::case_insensitive_string_cmp(old_text, elem.old_text))
+			if (string_utils::case_insensitive_equal(old_text, elem.old_text))
 			{
 				new_text = elem.new_text;
 				break;
@@ -415,10 +416,10 @@ void script_parser_t::find_new_text(const tools_t::rec_type_t text_type)
 		}
 	}
 
-	tools_t::add_log("4: " + new_text + "\r\n", true);
+	app_logger_t::add_log("4: " + new_text + "\r\n", true);
 	if (new_text.size() < 2)
 	{
-		tools_t::add_log("[error] result is too short\r\n", true);
+		app_logger_t::add_log("[error] result is too short\r\n", true);
 		error = true;
 	}
 }
@@ -434,7 +435,7 @@ void script_parser_t::insert_new_text()
 	new_line.erase(pos, old_text.size());
 	new_line.insert(pos, new_text);
 
-	tools_t::add_log(">>> " + new_line + "\r\n", true);
+	app_logger_t::add_log(">>> " + new_line + "\r\n", true);
 }
 
 void script_parser_t::convert_text_in_compiled(const bool is_getpccell)
@@ -442,12 +443,12 @@ void script_parser_t::convert_text_in_compiled(const bool is_getpccell)
 	if (new_text == old_text)
 		return;
 
-	if (type != tools_t::rec_type_t::sctx)
+	if (type != rec_type_t::sctx)
 		return;
 
 	if (!m_patcher || m_patcher->is_empty())
 	{
-		tools_t::add_log("[error] SCDT is empty\r\n", true);
+		app_logger_t::add_log("[error] SCDT is empty\r\n", true);
 		error = true;
 		return;
 	}
@@ -456,12 +457,12 @@ void script_parser_t::convert_text_in_compiled(const bool is_getpccell)
 
 	if (result.had_false_positive)
 	{
-		tools_t::add_log("[warning] false positive in " + record_key + " for: " + old_text + "\r\n", true);
+		app_logger_t::add_log("[warning] false positive in " + record_key + " for: " + old_text + "\r\n", true);
 	}
 
 	if (!result.success)
 	{
-		tools_t::add_log("[error] not found in SCDT\r\n", true);
+		app_logger_t::add_log("[error] not found in SCDT\r\n", true);
 		error = true;
 	}
 }
@@ -488,7 +489,7 @@ void script_parser_t::convert_line()
 void script_parser_t::find_keyword()
 {
 	std::map<size_t, std::string> keyword_pos_coll;
-	for (const auto & keyword : tools_t::keywords)
+	for (const auto & keyword : domain_types_t::script_keywords)
 	{
 		keyword_pos = line_lc.find(keyword);
 		keyword_pos_coll.insert({ keyword_pos, keyword });
@@ -500,10 +501,10 @@ void script_parser_t::find_keyword()
 
 void script_parser_t::find_new_message()
 {
-	tools_t::add_log("\r\n\r\n", true);
-	tools_t::add_log(source_path + "\r\n", true);
-	tools_t::add_log(record_key + "\r\n", true);
-	tools_t::add_log("<<< " + line + "\r\n", true);
+	app_logger_t::add_log("\r\n\r\n", true);
+	app_logger_t::add_log(source_path + "\r\n", true);
+	app_logger_t::add_log(record_key + "\r\n", true);
+	app_logger_t::add_log("<<< " + line + "\r\n", true);
 
 	auto * search = merger->get_dict().at(type).find(record_key + "^" + line);
 	if (search)
@@ -514,17 +515,17 @@ void script_parser_t::find_new_message()
 		}
 	}
 
-	tools_t::add_log(">>> " + new_line + "\r\n", true);
+	app_logger_t::add_log(">>> " + new_line + "\r\n", true);
 }
 
 void script_parser_t::convert_message_in_compiled()
 {
-	if (type != tools_t::rec_type_t::sctx)
+	if (type != rec_type_t::sctx)
 		return;
 
 	if (!m_patcher || m_patcher->is_empty())
 	{
-		tools_t::add_log("[error] SCDT is empty\r\n", true);
+		app_logger_t::add_log("[error] SCDT is empty\r\n", true);
 		error = true;
 		return;
 	}
@@ -534,7 +535,7 @@ void script_parser_t::convert_message_in_compiled()
 
 	if (splitted_line.size() != splitted_new_line.size())
 	{
-		tools_t::add_log("[error] incompatible messages\r\n", true);
+		app_logger_t::add_log("[error] incompatible messages\r\n", true);
 		error = true;
 		return;
 	}
@@ -548,7 +549,7 @@ void script_parser_t::convert_message_in_compiled()
 	const auto result = m_patcher->apply_message_patch(splitted_line, splitted_new_line);
 	if (!result.success)
 	{
-		tools_t::add_log("[error] message not found in SCDT\r\n", true);
+		app_logger_t::add_log("[error] message not found in SCDT\r\n", true);
 		error = true;
 	}
 }
@@ -597,20 +598,20 @@ void script_parser_t::trim_last_new_line_chars()
 
 void script_parser_t::dump_error()
 {
-	if (type == tools_t::rec_type_t::sctx)
+	if (type == rec_type_t::sctx)
 	{
-		tools_t::add_log("----------------------------------------------------------\r\n", true);
-		tools_t::add_log(tools_t::replace_non_readable_chars_with_dot(old_scdt), true);
-		tools_t::add_log(
+		app_logger_t::add_log("----------------------------------------------------------\r\n", true);
+		app_logger_t::add_log(string_utils::replace_non_printable_with_dot(old_scdt), true);
+		app_logger_t::add_log(
 		    "\r\n----------------------------------------------------------"
 		    "\r\n",
 		    true);
 		if (m_patcher)
-			tools_t::add_log(tools_t::replace_non_readable_chars_with_dot(m_patcher->get_scdt()), true);
+			app_logger_t::add_log(string_utils::replace_non_printable_with_dot(m_patcher->get_scdt()), true);
 	}
-	tools_t::add_log("\r\n----------------------------------------------------------\r\n", true);
-	tools_t::add_log(old_script, true);
-	tools_t::add_log("\r\n----------------------------------------------------------\r\n", true);
+	app_logger_t::add_log("\r\n----------------------------------------------------------\r\n", true);
+	app_logger_t::add_log(old_script, true);
+	app_logger_t::add_log("\r\n----------------------------------------------------------\r\n", true);
 }
 
 void script_parser_t::replace_vertical_lines_by_new_line(std::string & message)

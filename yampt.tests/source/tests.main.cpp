@@ -1,6 +1,6 @@
 #define CATCH_CONFIG_RUNNER
 #include <catch2/catch_all.hpp>
-#include <utility/tools.hpp>
+#include <utility/app_logger.hpp>
 #include <QCoreApplication>
 
 int main(int argc, char * argv[])
@@ -13,7 +13,7 @@ int main(int argc, char * argv[])
 	if (ret != 0)
 		return ret;
 
-	tools_t::set_quiet(false);
+	app_logger_t::set_quiet(false);
 
 	return session.run();
 }

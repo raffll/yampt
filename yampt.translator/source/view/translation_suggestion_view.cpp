@@ -2,7 +2,7 @@
 #include "../translator/ctranslate2_translator.hpp"
 #include "../translator/deepl_translator.hpp"
 #include "../translator/google_translator.hpp"
-#include <utility/tools.hpp>
+#include <utility/app_logger.hpp>
 #include <filesystem>
 #include <fstream>
 #include <settings_store.hpp>

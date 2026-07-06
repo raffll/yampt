@@ -1,4 +1,5 @@
 #include "../translator/translation_engine.hpp"
+#include "../utility/app_logger.hpp"
 #include "cell_matcher.hpp"
 #include "dial_matcher.hpp"
 #include "dict_creator.hpp"
@@ -61,11 +62,11 @@ void dict_creator_t::make_dict_base_gmst()
 			esm_ref.set_key("NAME");
 			esm_ref.set_value("STRV");
 			const auto & old_text = esm_ref.get_value().text;
-			insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::gmst, status_t::translated);
+			insert_entry_base(key_text, old_text, new_text, rec_type_t::gmst, status_t::translated);
 		}
 		else
 		{
-			insert_entry_base(key_text, "", new_text, tools_t::rec_type_t::gmst, status_t::mismatch);
+			insert_entry_base(key_text, "", new_text, rec_type_t::gmst, status_t::mismatch);
 		}
 	}
 
@@ -80,7 +81,7 @@ void dict_creator_t::make_dict_base_gmst()
 			continue;
 
 		const auto & old_text = esm_ref.get_value().text;
-		insert_entry_base(key, old_text, old_text, tools_t::rec_type_t::gmst, status_t::missing);
+		insert_entry_base(key, old_text, old_text, rec_type_t::gmst, status_t::missing);
 	}
 }
 
@@ -92,7 +93,7 @@ void dict_creator_t::make_dict_base_fnam()
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
-		if (!tools_t::is_fnam(esm.get_record().id))
+		if (!domain_types_t::is_fnam(esm.get_record().id))
 			continue;
 
 		esm.set_key("NAME");
@@ -117,11 +118,11 @@ void dict_creator_t::make_dict_base_fnam()
 			esm_ref.set_key("NAME");
 			esm_ref.set_value("FNAM");
 			const auto & old_text = esm_ref.get_value().text;
-			insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::fnam, status_t::translated);
+			insert_entry_base(key_text, old_text, new_text, rec_type_t::fnam, status_t::translated);
 		}
 		else
 		{
-			insert_entry_base(key_text, "", new_text, tools_t::rec_type_t::fnam, status_t::mismatch);
+			insert_entry_base(key_text, "", new_text, rec_type_t::fnam, status_t::mismatch);
 		}
 	}
 
@@ -136,7 +137,7 @@ void dict_creator_t::make_dict_base_fnam()
 			continue;
 
 		const auto & old_text = esm_ref.get_value().text;
-		insert_entry_base(key, old_text, old_text, tools_t::rec_type_t::fnam, status_t::missing);
+		insert_entry_base(key, old_text, old_text, rec_type_t::fnam, status_t::missing);
 	}
 }
 
@@ -168,11 +169,11 @@ void dict_creator_t::make_dict_base_desc()
 			esm_ref.set_key("NAME");
 			esm_ref.set_value("DESC");
 			const auto & old_text = esm_ref.get_value().text;
-			insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::desc, status_t::translated);
+			insert_entry_base(key_text, old_text, new_text, rec_type_t::desc, status_t::translated);
 		}
 		else
 		{
-			insert_entry_base(key_text, "", new_text, tools_t::rec_type_t::desc, status_t::mismatch);
+			insert_entry_base(key_text, "", new_text, rec_type_t::desc, status_t::mismatch);
 		}
 	}
 
@@ -187,7 +188,7 @@ void dict_creator_t::make_dict_base_desc()
 			continue;
 
 		const auto & old_text = esm_ref.get_value().text;
-		insert_entry_base(key, old_text, old_text, tools_t::rec_type_t::desc, status_t::missing);
+		insert_entry_base(key, old_text, old_text, rec_type_t::desc, status_t::missing);
 	}
 }
 
@@ -218,11 +219,11 @@ void dict_creator_t::make_dict_base_text()
 			esm_ref.set_key("NAME");
 			esm_ref.set_value("TEXT");
 			const auto & old_text = esm_ref.get_value().text;
-			insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::text, status_t::translated);
+			insert_entry_base(key_text, old_text, new_text, rec_type_t::text, status_t::translated);
 		}
 		else
 		{
-			insert_entry_base(key_text, "", new_text, tools_t::rec_type_t::text, status_t::mismatch);
+			insert_entry_base(key_text, "", new_text, rec_type_t::text, status_t::mismatch);
 		}
 	}
 
@@ -237,7 +238,7 @@ void dict_creator_t::make_dict_base_text()
 			continue;
 
 		const auto & old_text = esm_ref.get_value().text;
-		insert_entry_base(key, old_text, old_text, tools_t::rec_type_t::text, status_t::missing);
+		insert_entry_base(key, old_text, old_text, rec_type_t::text, status_t::missing);
 	}
 }
 
@@ -264,11 +265,11 @@ void dict_creator_t::make_dict_base_rnam()
 			if (search != rnam_index.end())
 			{
 				const auto & old_text = search->second;
-				insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::rnam, status_t::translated);
+				insert_entry_base(key_text, old_text, new_text, rec_type_t::rnam, status_t::translated);
 			}
 			else
 			{
-				insert_entry_base(key_text, "", new_text, tools_t::rec_type_t::rnam, status_t::mismatch);
+				insert_entry_base(key_text, "", new_text, rec_type_t::rnam, status_t::mismatch);
 			}
 
 			esm.set_next_value("RNAM");
@@ -293,7 +294,7 @@ void dict_creator_t::make_dict_base_indx()
 		if (!esm.get_key().exist || !esm.get_value().exist)
 			continue;
 
-		const auto key_text = rec_id + "^" + tools_t::get_indx(esm.get_key().content);
+		const auto key_text = rec_id + "^" + domain_types_t::get_indx(esm.get_key().content);
 		const auto & new_text = esm.get_value().text;
 
 		auto search = indx_index.find(key_text);
@@ -304,11 +305,11 @@ void dict_creator_t::make_dict_base_indx()
 			esm_ref.set_key("INDX");
 			esm_ref.set_value("DESC");
 			const auto & old_text = esm_ref.get_value().text;
-			insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::indx, status_t::translated);
+			insert_entry_base(key_text, old_text, new_text, rec_type_t::indx, status_t::translated);
 		}
 		else
 		{
-			insert_entry_base(key_text, "", new_text, tools_t::rec_type_t::indx, status_t::mismatch);
+			insert_entry_base(key_text, "", new_text, rec_type_t::indx, status_t::mismatch);
 		}
 	}
 
@@ -323,7 +324,7 @@ void dict_creator_t::make_dict_base_indx()
 			continue;
 
 		const auto & old_text = esm_ref.get_value().text;
-		insert_entry_base(key, old_text, old_text, tools_t::rec_type_t::indx, status_t::missing);
+		insert_entry_base(key, old_text, old_text, rec_type_t::indx, status_t::missing);
 	}
 }
 
@@ -341,7 +342,7 @@ void dict_creator_t::make_dict_base_info()
 			if (esm.get_key().exist && esm.get_value().exist)
 			{
 				const auto & native_name = esm.get_value().text;
-				const auto dial_type = tools_t::get_dialog_type(esm.get_key().content);
+				const auto dial_type = domain_types_t::get_dialog_type(esm.get_key().content);
 				auto it_map = dial_native_to_foreign.find(native_name);
 				if (it_map != dial_native_to_foreign.end())
 					key_prefix = dial_type + "^" + it_map->second;
@@ -373,11 +374,11 @@ void dict_creator_t::make_dict_base_info()
 			esm_ref.set_key("INAM");
 			esm_ref.set_value("NAME");
 			const auto & old_text = esm_ref.get_value().text;
-			insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::info, status_t::translated);
+			insert_entry_base(key_text, old_text, new_text, rec_type_t::info, status_t::translated);
 		}
 		else
 		{
-			insert_entry_base(key_text, "", new_text, tools_t::rec_type_t::info, status_t::mismatch);
+			insert_entry_base(key_text, "", new_text, rec_type_t::info, status_t::mismatch);
 		}
 
 		esm.select_record(i);
@@ -401,9 +402,9 @@ void dict_creator_t::make_dict_base_info()
 		std::string gender;
 		if (esm_ref.get_value().exist)
 			gender =
-			    ((tools_t::convert_string_byte_array_to_uint(esm_ref.get_value().content) & 0x0001) != 0) ? "F" : "M";
+			    ((domain_types_t::convert_string_byte_array_to_uint(esm_ref.get_value().content) & 0x0001) != 0) ? "F" : "M";
 
-		auto * entry = dict.at(tools_t::rec_type_t::info).find(key_text);
+		auto * entry = dict.at(rec_type_t::info).find(key_text);
 		if (!entry)
 			continue;
 
@@ -436,11 +437,11 @@ void dict_creator_t::match_sctx_messages(
 	auto search = schd_index.find(script_name);
 	if (search == schd_index.end())
 	{
-		tools_t::add_log("[warning] SCTX not found: \"" + script_name + "\"\r\n");
+		app_logger_t::add_log("[warning] SCTX not found: \"" + script_name + "\"\r\n");
 		for (const auto & msg : native_messages)
 		{
 			const auto key_text = script_name + "^" + msg;
-			insert_entry_base(key_text, "", msg, tools_t::rec_type_t::sctx, status_t::mismatch);
+			insert_entry_base(key_text, "", msg, rec_type_t::sctx, status_t::mismatch);
 		}
 		return;
 	}
@@ -450,11 +451,11 @@ void dict_creator_t::match_sctx_messages(
 	esm_ref.set_value("SCTX");
 	if (!esm_ref.get_value().exist)
 	{
-		tools_t::add_log("[warning] SCTX not found: \"" + script_name + "\"\r\n");
+		app_logger_t::add_log("[warning] SCTX not found: \"" + script_name + "\"\r\n");
 		for (const auto & msg : native_messages)
 		{
 			const auto key_text = script_name + "^" + msg;
-			insert_entry_base(key_text, "", msg, tools_t::rec_type_t::sctx, status_t::mismatch);
+			insert_entry_base(key_text, "", msg, rec_type_t::sctx, status_t::mismatch);
 		}
 		return;
 	}
@@ -463,14 +464,14 @@ void dict_creator_t::match_sctx_messages(
 
 	if (native_messages.size() != foreign_messages.size())
 	{
-		tools_t::add_log(
+		app_logger_t::add_log(
 		    "[warning] SCTX line count mismatch: \"" + script_name + "\" (native=" +
 		    std::to_string(native_messages.size()) + ", foreign=" + std::to_string(foreign_messages.size()) + ")\r\n");
 
 		for (const auto & msg : foreign_messages)
 		{
 			const auto key_text = script_name + "^" + msg;
-			insert_entry_base(key_text, msg, msg, tools_t::rec_type_t::sctx, status_t::mismatch);
+			insert_entry_base(key_text, msg, msg, rec_type_t::sctx, status_t::mismatch);
 		}
 		return;
 	}
@@ -480,7 +481,7 @@ void dict_creator_t::match_sctx_messages(
 		const auto key_text = script_name + "^" + foreign_messages[k];
 		const auto & old_text = foreign_messages[k];
 		const auto & new_text = native_messages[k];
-		insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::sctx, status_t::translated);
+		insert_entry_base(key_text, old_text, new_text, rec_type_t::sctx, status_t::translated);
 	}
 }
 
@@ -518,7 +519,7 @@ void dict_creator_t::match_bnam_native_infos(
 		for (const auto & msg : native_messages)
 		{
 			const auto key_text = info_key + "^" + msg;
-			insert_entry_base(key_text, "", msg, tools_t::rec_type_t::bnam, status_t::mismatch);
+			insert_entry_base(key_text, "", msg, rec_type_t::bnam, status_t::mismatch);
 		}
 		return;
 	}
@@ -530,7 +531,7 @@ void dict_creator_t::match_bnam_native_infos(
 		for (const auto & msg : native_messages)
 		{
 			const auto key_text = info_key + "^" + msg;
-			insert_entry_base(key_text, "", msg, tools_t::rec_type_t::bnam, status_t::mismatch);
+			insert_entry_base(key_text, "", msg, rec_type_t::bnam, status_t::mismatch);
 		}
 		return;
 	}
@@ -539,11 +540,11 @@ void dict_creator_t::match_bnam_native_infos(
 
 	if (native_messages.size() != foreign_messages.size())
 	{
-		tools_t::add_log("[warning] BNAM line count mismatch: \"" + info_key + "\"\r\n");
+		app_logger_t::add_log("[warning] BNAM line count mismatch: \"" + info_key + "\"\r\n");
 		for (const auto & msg : foreign_messages)
 		{
 			const auto key_text = info_key + "^" + msg;
-			insert_entry_base(key_text, msg, msg, tools_t::rec_type_t::bnam, status_t::mismatch);
+			insert_entry_base(key_text, msg, msg, rec_type_t::bnam, status_t::mismatch);
 		}
 		return;
 	}
@@ -553,7 +554,7 @@ void dict_creator_t::match_bnam_native_infos(
 		const auto key_text = info_key + "^" + foreign_messages[k];
 		const auto & old_text = foreign_messages[k];
 		const auto & new_text = native_messages[k];
-		insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::bnam, status_t::translated);
+		insert_entry_base(key_text, old_text, new_text, rec_type_t::bnam, status_t::translated);
 	}
 }
 
@@ -573,7 +574,7 @@ void dict_creator_t::collect_bnam_missing_topics(const std::set<std::string> & m
 			esm_ref.set_value("NAME");
 			if (esm_ref.get_key().exist && esm_ref.get_value().exist)
 			{
-				foreign_dial_type = tools_t::get_dialog_type(esm_ref.get_key().content);
+				foreign_dial_type = domain_types_t::get_dialog_type(esm_ref.get_key().content);
 				foreign_dial_name = esm_ref.get_value().text;
 			}
 			continue;
@@ -599,7 +600,7 @@ void dict_creator_t::collect_bnam_missing_topics(const std::set<std::string> & m
 		for (const auto & msg : foreign_messages)
 		{
 			const auto key_text = foreign_dial_type + "^" + foreign_dial_name + "^" + inam + "^" + msg;
-			insert_entry_base(key_text, msg, msg, tools_t::rec_type_t::bnam, status_t::missing);
+			insert_entry_base(key_text, msg, msg, rec_type_t::bnam, status_t::missing);
 		}
 	}
 }
@@ -626,7 +627,7 @@ void dict_creator_t::make_dict_base_bnam()
 			esm.set_value("NAME");
 			if (esm.get_key().exist && esm.get_value().exist)
 			{
-				dial_type = tools_t::get_dialog_type(esm.get_key().content);
+				dial_type = domain_types_t::get_dialog_type(esm.get_key().content);
 				const auto & native_name = esm.get_value().text;
 				auto it_map = dial_native_to_foreign.find(native_name);
 				if (it_map != dial_native_to_foreign.end())
@@ -686,14 +687,14 @@ void dict_creator_t::insert_entry_base(
     const std::string & key_text,
     const std::string & old_text,
     const std::string & new_text,
-    tools_t::rec_type_t type,
+    rec_type_t type,
     status_t status)
 {
 	counter_all++;
 
 	const bool is_text_keyed =
-	    (type == tools_t::rec_type_t::cell || type == tools_t::rec_type_t::dial || type == tools_t::rec_type_t::sctx ||
-	     type == tools_t::rec_type_t::bnam);
+	    (type == rec_type_t::cell || type == rec_type_t::dial || type == rec_type_t::sctx ||
+	     type == rec_type_t::bnam);
 
 	auto * existing = dict.at(type).find(key_text);
 	if (existing && is_text_keyed)
@@ -707,7 +708,7 @@ void dict_creator_t::insert_entry_base(
 
 	const bool is_status = is_problem || status == status_t::heuristic;
 
-	tools_t::record_entry_t entry;
+	record_entry_t entry;
 	entry.key_text = key_text;
 	entry.old_text = old_text;
 	entry.new_text = new_text;
@@ -759,7 +760,7 @@ void dict_creator_t::build_fnam_index()
 	for (size_t i = 0; i < esm_ref.get_records().size(); ++i)
 	{
 		esm_ref.select_record(i);
-		if (!tools_t::is_fnam(esm_ref.get_record().id))
+		if (!domain_types_t::is_fnam(esm_ref.get_record().id))
 			continue;
 
 		esm_ref.set_key("NAME");
@@ -842,7 +843,7 @@ void dict_creator_t::build_indx_index()
 		if (!esm_ref.get_key().exist)
 			continue;
 
-		indx_index.insert({ rec_id + "^" + tools_t::get_indx(esm_ref.get_key().content), i });
+		indx_index.insert({ rec_id + "^" + domain_types_t::get_indx(esm_ref.get_key().content), i });
 	}
 }
 
@@ -861,7 +862,7 @@ void dict_creator_t::build_info_index()
 			if (!esm_ref.get_key().exist || !esm_ref.get_value().exist)
 				continue;
 
-			info_prefix = tools_t::get_dialog_type(esm_ref.get_key().content) + "^" + esm_ref.get_value().text;
+			info_prefix = domain_types_t::get_dialog_type(esm_ref.get_key().content) + "^" + esm_ref.get_value().text;
 			continue;
 		}
 

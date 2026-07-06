@@ -3,7 +3,7 @@
 #include "../model/plugin_op.hpp"
 #include <creator/dict_creator.hpp>
 #include <io/codepage.hpp>
-#include <utility/tools.hpp>
+#include <utility/domain_types.hpp>
 #include <string>
 #include <vector>
 
@@ -27,7 +27,7 @@ public:
 	result_t make_dict(const std::string & plugin_path, codepage_t encoding);
 	result_t make_dict_with_base(
 	    const std::string & plugin_path,
-	    const tools_t::dict_t & base_dict,
+	    const dict_t & base_dict,
 	    codepage_t encoding);
 	result_t make_base(
 	    const std::string & foreign_path,

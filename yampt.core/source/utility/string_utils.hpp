@@ -69,4 +69,40 @@ inline int utf8_byte_to_char_offset(const std::string & utf8_text, int byte_offs
 	return char_count;
 }
 
+inline bool case_insensitive_equal(std::string_view lhs, std::string_view rhs)
+{
+	return to_lower(lhs) == to_lower(rhs);
+}
+
+inline std::string erase_null_chars(std::string str)
+{
+	const auto pos = str.find('\0');
+	if (pos != std::string::npos)
+		str.erase(pos);
+
+	return str;
+}
+
+inline std::string trim_cr(std::string str)
+{
+	if (!str.empty() && str.back() == '\r')
+		str.pop_back();
+
+	return str;
+}
+
+inline std::string replace_non_printable_with_dot(const std::string & str)
+{
+	std::string result;
+	result.reserve(str.size());
+	for (const auto ch : str)
+	{
+		if (std::isprint(static_cast<unsigned char>(ch)))
+			result += ch;
+		else
+			result += '.';
+	}
+	return result;
+}
+
 } // namespace string_utils

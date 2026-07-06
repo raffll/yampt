@@ -1,4 +1,6 @@
 #include "esm_converter.hpp"
+#include "../utility/string_utils.hpp"
+#include "../utility/app_logger.hpp"
 #include "script_parser.hpp"
 
 void esm_converter_t::convert_mast()
@@ -38,30 +40,30 @@ void esm_converter_t::make_header()
 	description.resize(256);
 
 	size_t num = esm.get_modified_count();
-	rec_num = tools_t::convert_uint_to_string_byte_array(num);
+	rec_num = domain_types_t::convert_uint_to_string_byte_array(num);
 
 	hedr = version + type + author + description + rec_num;
 	convert_record_content(hedr);
 
 	std::string rec_content = esm.get_record().content;
 	std::string mast = get_name().full + '\0';
-	rec_content += "MAST" + tools_t::convert_uint_to_string_byte_array(mast.size()) + mast;
+	rec_content += "MAST" + domain_types_t::convert_uint_to_string_byte_array(mast.size()) + mast;
 	std::string data;
 	data.resize(8);
-	rec_content += "DATA" + tools_t::convert_uint_to_string_byte_array(data.size()) + data;
+	rec_content += "DATA" + domain_types_t::convert_uint_to_string_byte_array(data.size()) + data;
 
 	size_t rec_size = rec_content.size() - 16;
 	rec_content.erase(4, 4);
-	rec_content.insert(4, tools_t::convert_uint_to_string_byte_array(rec_size));
+	rec_content.insert(4, domain_types_t::convert_uint_to_string_byte_array(rec_size));
 	esm.replace_record(rec_content);
 
-	tools_t::add_log("[info] creating new header\r\n");
+	app_logger_t::add_log("[info] creating new header\r\n");
 }
 
 void esm_converter_t::convert_gmdt()
 {
 	reset_counters();
-	const auto & type = tools_t::rec_type_t::cell;
+	const auto & type = rec_type_t::cell;
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
@@ -77,7 +79,7 @@ void esm_converter_t::convert_gmdt()
 		const auto & prefix = esm.get_value().content.substr(0, name_offset);
 		const auto & suffix = esm.get_value().content.substr(name_offset + 64);
 		auto old_text = esm.get_value().content.substr(name_offset, 64);
-		old_text = tools_t::erase_null_chars(old_text);
+		old_text = string_utils::erase_null_chars(old_text);
 		std::string new_text;
 		if (!make_new_text({ old_text, old_text, type }, new_text))
 			continue;
@@ -85,13 +87,13 @@ void esm_converter_t::convert_gmdt()
 		new_text.resize(64);
 		convert_record_content(prefix + new_text + suffix);
 	}
-	print_log_line(tools_t::rec_type_t::gmdt);
+	print_log_line(rec_type_t::gmdt);
 }
 
 void esm_converter_t::convert_cell()
 {
 	reset_counters();
-	const auto & type = tools_t::rec_type_t::cell;
+	const auto & type = rec_type_t::cell;
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
@@ -111,13 +113,13 @@ void esm_converter_t::convert_cell()
 			convert_record_content(new_text);
 		}
 	}
-	print_log_line(tools_t::rec_type_t::cell);
+	print_log_line(rec_type_t::cell);
 }
 
 void esm_converter_t::convert_pgrd()
 {
 	reset_counters();
-	const auto & type = tools_t::rec_type_t::cell;
+	const auto & type = rec_type_t::cell;
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
@@ -137,13 +139,13 @@ void esm_converter_t::convert_pgrd()
 			convert_record_content(new_text);
 		}
 	}
-	print_log_line(tools_t::rec_type_t::pgrd);
+	print_log_line(rec_type_t::pgrd);
 }
 
 void esm_converter_t::convert_anam()
 {
 	reset_counters();
-	const auto & type = tools_t::rec_type_t::cell;
+	const auto & type = rec_type_t::cell;
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
@@ -163,13 +165,13 @@ void esm_converter_t::convert_anam()
 			convert_record_content(new_text);
 		}
 	}
-	print_log_line(tools_t::rec_type_t::anam);
+	print_log_line(rec_type_t::anam);
 }
 
 void esm_converter_t::convert_scvr()
 {
 	reset_counters();
-	const auto & type = tools_t::rec_type_t::cell;
+	const auto & type = rec_type_t::cell;
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
@@ -194,13 +196,13 @@ void esm_converter_t::convert_scvr()
 			esm.set_next_value("SCVR");
 		}
 	}
-	print_log_line(tools_t::rec_type_t::scvr);
+	print_log_line(rec_type_t::scvr);
 }
 
 void esm_converter_t::convert_dnam()
 {
 	reset_counters();
-	const auto & type = tools_t::rec_type_t::cell;
+	const auto & type = rec_type_t::cell;
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
@@ -221,13 +223,13 @@ void esm_converter_t::convert_dnam()
 			esm.set_next_value("DNAM");
 		}
 	}
-	print_log_line(tools_t::rec_type_t::dnam);
+	print_log_line(rec_type_t::dnam);
 }
 
 void esm_converter_t::convert_cndt()
 {
 	reset_counters();
-	const auto & type = tools_t::rec_type_t::cell;
+	const auto & type = rec_type_t::cell;
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
@@ -248,13 +250,13 @@ void esm_converter_t::convert_cndt()
 			esm.set_next_value("CNDT");
 		}
 	}
-	print_log_line(tools_t::rec_type_t::cndt);
+	print_log_line(rec_type_t::cndt);
 }
 
 void esm_converter_t::convert_gmst()
 {
 	reset_counters();
-	const auto & type = tools_t::rec_type_t::gmst;
+	const auto & type = rec_type_t::gmst;
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
@@ -275,17 +277,17 @@ void esm_converter_t::convert_gmst()
 			convert_record_content(new_text);
 		}
 	}
-	print_log_line(tools_t::rec_type_t::gmst);
+	print_log_line(rec_type_t::gmst);
 }
 
 void esm_converter_t::convert_fnam()
 {
 	reset_counters();
-	const auto & type = tools_t::rec_type_t::fnam;
+	const auto & type = rec_type_t::fnam;
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
-		if (!tools_t::is_fnam(esm.get_record().id))
+		if (!domain_types_t::is_fnam(esm.get_record().id))
 			continue;
 
 		esm.set_key("NAME");
@@ -302,13 +304,13 @@ void esm_converter_t::convert_fnam()
 			convert_record_content(new_text);
 		}
 	}
-	print_log_line(tools_t::rec_type_t::fnam);
+	print_log_line(rec_type_t::fnam);
 }
 
 void esm_converter_t::convert_desc()
 {
 	reset_counters();
-	const auto & type = tools_t::rec_type_t::desc;
+	const auto & type = rec_type_t::desc;
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
@@ -334,13 +336,13 @@ void esm_converter_t::convert_desc()
 
 		convert_record_content(new_text);
 	}
-	print_log_line(tools_t::rec_type_t::desc);
+	print_log_line(rec_type_t::desc);
 }
 
 void esm_converter_t::convert_text()
 {
 	reset_counters();
-	const auto & type = tools_t::rec_type_t::text;
+	const auto & type = rec_type_t::text;
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
@@ -361,13 +363,13 @@ void esm_converter_t::convert_text()
 			convert_record_content(new_text);
 		}
 	}
-	print_log_line(tools_t::rec_type_t::text);
+	print_log_line(rec_type_t::text);
 }
 
 void esm_converter_t::convert_rnam()
 {
 	reset_counters();
-	const auto & type = tools_t::rec_type_t::rnam;
+	const auto & type = rec_type_t::rnam;
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
@@ -392,13 +394,13 @@ void esm_converter_t::convert_rnam()
 			esm.set_next_value("RNAM");
 		}
 	}
-	print_log_line(tools_t::rec_type_t::rnam);
+	print_log_line(rec_type_t::rnam);
 }
 
 void esm_converter_t::convert_indx()
 {
 	reset_counters();
-	const auto & type = tools_t::rec_type_t::indx;
+	const auto & type = rec_type_t::indx;
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
@@ -410,7 +412,7 @@ void esm_converter_t::convert_indx()
 		if (!esm.get_key().exist || !esm.get_value().exist)
 			continue;
 
-		const auto & key_text = esm.get_record().id + "^" + tools_t::get_indx(esm.get_key().content);
+		const auto & key_text = esm.get_record().id + "^" + domain_types_t::get_indx(esm.get_key().content);
 		const auto & old_text = esm.get_value().text;
 		std::string new_text;
 		if (!make_new_text({ key_text, old_text, type }, new_text))
@@ -419,13 +421,13 @@ void esm_converter_t::convert_indx()
 		add_null_terminator_if_empty(new_text);
 		convert_record_content(new_text);
 	}
-	print_log_line(tools_t::rec_type_t::indx);
+	print_log_line(rec_type_t::indx);
 }
 
 void esm_converter_t::convert_dial()
 {
 	reset_counters();
-	const auto & type = tools_t::rec_type_t::dial;
+	const auto & type = rec_type_t::dial;
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
@@ -434,7 +436,7 @@ void esm_converter_t::convert_dial()
 
 		esm.set_key("DATA");
 		esm.set_value("NAME");
-		if (tools_t::get_dialog_type(esm.get_key().content) == "T" && esm.get_value().exist)
+		if (domain_types_t::get_dialog_type(esm.get_key().content) == "T" && esm.get_value().exist)
 		{
 			const auto & key_text = esm.get_value().text;
 			const auto & old_text = esm.get_value().text;
@@ -446,7 +448,7 @@ void esm_converter_t::convert_dial()
 			convert_record_content(new_text);
 		}
 	}
-	print_log_line(tools_t::rec_type_t::dial);
+	print_log_line(rec_type_t::dial);
 }
 
 void esm_converter_t::convert_info()
@@ -455,7 +457,7 @@ void esm_converter_t::convert_info()
 	size_t dial_index = 0;
 
 	reset_counters();
-	const auto & type = tools_t::rec_type_t::info;
+	const auto & type = rec_type_t::info;
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
@@ -465,7 +467,7 @@ void esm_converter_t::convert_info()
 			esm.set_value("NAME");
 			if (esm.get_key().exist && esm.get_value().exist)
 			{
-				key_prefix = tools_t::get_dialog_type(esm.get_key().content) + "^" + esm.get_value().text;
+				key_prefix = domain_types_t::get_dialog_type(esm.get_key().content) + "^" + esm.get_value().text;
 				dial_index = i;
 			}
 			continue;
@@ -499,7 +501,7 @@ void esm_converter_t::convert_info()
 		convert_record_content(new_text);
 		esm.set_modified(dial_index);
 	}
-	print_log_line(tools_t::rec_type_t::info);
+	print_log_line(rec_type_t::info);
 }
 
 void esm_converter_t::convert_bnam()
@@ -509,7 +511,7 @@ void esm_converter_t::convert_bnam()
 	std::string dial_name;
 
 	reset_counters();
-	const auto & type = tools_t::rec_type_t::bnam;
+	const auto & type = rec_type_t::bnam;
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
@@ -520,7 +522,7 @@ void esm_converter_t::convert_bnam()
 			if (esm.get_key().exist && esm.get_value().exist)
 			{
 				dial_index = i;
-				dial_type = tools_t::get_dialog_type(esm.get_key().content);
+				dial_type = domain_types_t::get_dialog_type(esm.get_key().content);
 				dial_name = esm.get_value().text;
 			}
 
@@ -550,14 +552,14 @@ void esm_converter_t::convert_bnam()
 		convert_record_content(new_script);
 		esm.set_modified(dial_index);
 	}
-	print_log_line(tools_t::rec_type_t::bnam);
+	print_log_line(rec_type_t::bnam);
 }
 
 void esm_converter_t::convert_scpt()
 {
 	std::string old_scdt;
 	reset_counters();
-	const auto & type = tools_t::rec_type_t::sctx;
+	const auto & type = rec_type_t::sctx;
 	for (size_t i = 0; i < esm.get_records().size(); ++i)
 	{
 		esm.select_record(i);
@@ -591,8 +593,8 @@ void esm_converter_t::convert_scpt()
 		esm.set_value("SCHD");
 		auto schd_content = esm.get_value().content;
 		schd_content.erase(44, 4);
-		schd_content.insert(44, tools_t::convert_uint_to_string_byte_array(parser.get_new_scdt().size()));
+		schd_content.insert(44, domain_types_t::convert_uint_to_string_byte_array(parser.get_new_scdt().size()));
 		convert_record_content(schd_content);
 	}
-	print_log_line(tools_t::rec_type_t::sctx);
+	print_log_line(rec_type_t::sctx);
 }

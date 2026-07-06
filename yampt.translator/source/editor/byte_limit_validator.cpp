@@ -5,7 +5,7 @@ void byte_limit_validator_t::set_codepage(codepage_t cp)
 	m_codepage = cp;
 }
 
-validation_result_t byte_limit_validator_t::validate(tools_t::rec_type_t type, const std::string & utf8_value) const
+validation_result_t byte_limit_validator_t::validate(rec_type_t type, const std::string & utf8_value) const
 {
 	const auto encoded = encode_from_utf8(utf8_value, m_codepage);
 	const size_t byte_count = encoded.size();
@@ -26,7 +26,7 @@ validation_result_t byte_limit_validator_t::validate(tools_t::rec_type_t type, c
 			break;
 		}
 
-		if (ch == '"' && (type == tools_t::rec_type_t::sctx || type == tools_t::rec_type_t::bnam))
+		if (ch == '"' && (type == rec_type_t::sctx || type == rec_type_t::bnam))
 		{
 			has_forbidden = true;
 			break;
@@ -36,28 +36,28 @@ validation_result_t byte_limit_validator_t::validate(tools_t::rec_type_t type, c
 	if (has_forbidden)
 		return { validation_level_t::error, byte_count, 0 };
 
-	if (type == tools_t::rec_type_t::cell)
+	if (type == rec_type_t::cell)
 	{
 		if (byte_count > 63)
 			return { validation_level_t::error, byte_count, 63 };
 		return { validation_level_t::ok, byte_count, 63 };
 	}
 
-	if (type == tools_t::rec_type_t::fnam)
+	if (type == rec_type_t::fnam)
 	{
 		if (byte_count > 31)
 			return { validation_level_t::error, byte_count, 31 };
 		return { validation_level_t::ok, byte_count, 31 };
 	}
 
-	if (type == tools_t::rec_type_t::rnam)
+	if (type == rec_type_t::rnam)
 	{
 		if (byte_count > 32)
 			return { validation_level_t::error, byte_count, 32 };
 		return { validation_level_t::ok, byte_count, 32 };
 	}
 
-	if (type == tools_t::rec_type_t::info)
+	if (type == rec_type_t::info)
 	{
 		if (byte_count > 1024)
 			return { validation_level_t::error, byte_count, 1024 };

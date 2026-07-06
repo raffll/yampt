@@ -10,7 +10,7 @@ QTextCharFormat grammar_checker_t::warning_format()
 	return fmt;
 }
 
-QList<QTextEdit::ExtraSelection> grammar_checker_t::check(translation_edit_view_t * editor, tools_t::rec_type_t type)
+QList<QTextEdit::ExtraSelection> grammar_checker_t::check(translation_edit_view_t * editor, rec_type_t type)
     const
 {
 	QList<QTextEdit::ExtraSelection> selections;
@@ -119,9 +119,9 @@ void grammar_checker_t::check_missing_punctuation(
     QList<QTextEdit::ExtraSelection> & selections,
     const QString & text,
     QTextDocument * document,
-    tools_t::rec_type_t type) const
+    rec_type_t type) const
 {
-	if (type != tools_t::rec_type_t::info && type != tools_t::rec_type_t::text)
+	if (type != rec_type_t::info && type != rec_type_t::text)
 		return;
 
 	const auto last = text[text.size() - 1];

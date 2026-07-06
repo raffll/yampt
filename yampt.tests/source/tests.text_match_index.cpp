@@ -11,8 +11,8 @@ TEST_CASE("text_match_index_t::find, not found for absent keys", "[u][pbt]")
 	    []()
 	{
 		const auto entry_count = *rc::gen::inRange(1, 10);
-		tools_t::dict_t dict;
-		auto & chapter = dict[tools_t::rec_type_t::fnam];
+		dict_t dict;
+		auto & chapter = dict[rec_type_t::fnam];
 
 		std::set<std::string> inserted_texts;
 		for (int i = 0; i < entry_count; ++i)
@@ -20,7 +20,7 @@ TEST_CASE("text_match_index_t::find, not found for absent keys", "[u][pbt]")
 			auto old_text = "old_" + std::to_string(i) + "_" + std::to_string(*rc::gen::inRange(0, 10000));
 			auto new_text = "new_" + std::to_string(i) + "_" + std::to_string(*rc::gen::inRange(0, 10000));
 
-			tools_t::record_entry_t entry;
+			record_entry_t entry;
 			entry.key_text = "key_" + std::to_string(i);
 			entry.old_text = old_text;
 			entry.new_text = new_text;
@@ -48,8 +48,8 @@ TEST_CASE("text_match_index_t::find, found for unique entries", "[u][pbt]")
 	    []()
 	{
 		const auto entry_count = *rc::gen::inRange(1, 10);
-		tools_t::dict_t dict;
-		auto & chapter = dict[tools_t::rec_type_t::fnam];
+		dict_t dict;
+		auto & chapter = dict[rec_type_t::fnam];
 
 		std::vector<std::pair<std::string, std::string>> pairs;
 		std::set<std::string> used_texts;
@@ -63,7 +63,7 @@ TEST_CASE("text_match_index_t::find, found for unique entries", "[u][pbt]")
 
 			std::string new_text = "translated_" + std::to_string(i);
 
-			tools_t::record_entry_t entry;
+			record_entry_t entry;
 			entry.key_text = "key_" + std::to_string(i);
 			entry.old_text = old_text;
 			entry.new_text = new_text;
@@ -97,17 +97,17 @@ TEST_CASE("text_match_index_t::find, ambiguous for conflicts", "[u][pbt]")
 		RC_PRE(new_text_1 != old_text);
 		RC_PRE(new_text_2 != old_text);
 
-		tools_t::dict_t dict;
-		auto & chapter = dict[tools_t::rec_type_t::fnam];
+		dict_t dict;
+		auto & chapter = dict[rec_type_t::fnam];
 
-		tools_t::record_entry_t entry_1;
+		record_entry_t entry_1;
 		entry_1.key_text = "key_1";
 		entry_1.old_text = old_text;
 		entry_1.new_text = new_text_1;
 		entry_1.status = status_t::translated;
 		chapter.records.push_back(std::move(entry_1));
 
-		tools_t::record_entry_t entry_2;
+		record_entry_t entry_2;
 		entry_2.key_text = "key_2";
 		entry_2.old_text = old_text;
 		entry_2.new_text = new_text_2;
@@ -133,10 +133,10 @@ TEST_CASE("text_match_index_t::find, skips untranslated entries", "[u][pbt]")
 	{
 		std::string text = "identical_" + std::to_string(*rc::gen::inRange(0, 10000));
 
-		tools_t::dict_t dict;
-		auto & chapter = dict[tools_t::rec_type_t::fnam];
+		dict_t dict;
+		auto & chapter = dict[rec_type_t::fnam];
 
-		tools_t::record_entry_t entry;
+		record_entry_t entry;
 		entry.key_text = "key_identical";
 		entry.old_text = text;
 		entry.new_text = text;

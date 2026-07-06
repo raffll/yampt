@@ -26,7 +26,7 @@ void editor_highlighter_t::on_theme_changed()
 		rehighlight();
 }
 
-void editor_highlighter_t::set_record_type(tools_t::rec_type_t type)
+void editor_highlighter_t::set_record_type(rec_type_t type)
 {
 	m_record_type = type;
 
@@ -134,8 +134,8 @@ void editor_highlighter_t::apply_spell_check(const QString & text)
 
 void editor_highlighter_t::highlightBlock(const QString & text)
 {
-	const bool has_syntax = m_record_type == tools_t::rec_type_t::sctx || m_record_type == tools_t::rec_type_t::bnam ||
-	                        m_record_type == tools_t::rec_type_t::text;
+	const bool has_syntax = m_record_type == rec_type_t::sctx || m_record_type == rec_type_t::bnam ||
+	                        m_record_type == rec_type_t::text;
 
 	if (has_syntax)
 		apply_syntax_tokens(text);

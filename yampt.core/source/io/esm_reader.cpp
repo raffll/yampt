@@ -1,8 +1,11 @@
 #include "esm_reader.hpp"
+#include "../utility/string_utils.hpp"
+#include "binary_file_io.hpp"
+#include "../utility/app_logger.hpp"
 
 esm_reader_t::esm_reader_t(const std::string & path)
 {
-	const auto & content = tools_t::read_file(path);
+	const auto & content = binary_file_io_t::read_file(path);
 
 	if (!content.empty())
 		split_file(content, path);
@@ -15,7 +18,7 @@ void esm_reader_t::split_file(const std::string & content, const std::string & p
 {
 	if (content.size() <= sub_record_id_size || content.substr(0, sub_record_id_size) != "TES3")
 	{
-		tools_t::add_log("[error] parsing \"" + path + "\" (not a TES3 plugin)\r\n");
+		app_logger_t::add_log("[error] parsing \"" + path + "\" (not a TES3 plugin)\r\n");
 		m_loaded = false;
 		return;
 	}
@@ -28,12 +31,12 @@ void esm_reader_t::split_file(const std::string & content, const std::string & p
 		{
 			record_begin = record_end;
 			const auto & size_bytes = content.substr(record_begin + record_size_field_offset, record_size_field_length);
-			const auto record_size = tools_t::convert_string_byte_array_to_uint(size_bytes) + record_header_size;
+			const auto record_size = domain_types_t::convert_string_byte_array_to_uint(size_bytes) + record_header_size;
 			record_end = record_begin + record_size;
 
 			if (record_end > content.size())
 			{
-				tools_t::add_log(
+				app_logger_t::add_log(
 				    "[warning] record at offset " + std::to_string(record_begin) + " declares size " +
 				    std::to_string(record_size) + " which exceeds file size, stopping\r\n");
 				break;
@@ -47,8 +50,8 @@ void esm_reader_t::split_file(const std::string & content, const std::string & p
 	}
 	catch (const std::exception & error)
 	{
-		tools_t::add_log("[error] parsing \"" + path + "\" (possibly broken file or record)\r\n");
-		tools_t::add_log("[error] exception: " + std::string(error.what()) + "\r\n");
+		app_logger_t::add_log("[error] parsing \"" + path + "\" (possibly broken file or record)\r\n");
+		app_logger_t::add_log("[error] exception: " + std::string(error.what()) + "\r\n");
 		m_loaded = false;
 	}
 }
@@ -124,7 +127,7 @@ void esm_reader_t::set_next_value(const std::string & sub_id)
 		return;
 
 	m_value.sub_id = sub_id;
-	const auto current_size = tools_t::convert_string_byte_array_to_uint(
+	const auto current_size = domain_types_t::convert_string_byte_array_to_uint(
 	    ptr_record->content.substr(m_value.pos + sub_record_id_size, sub_record_id_size));
 	const auto next_pos = m_value.pos + sub_record_header_size + current_size;
 	m_value.counter++;
@@ -151,7 +154,7 @@ void esm_reader_t::scan_sub_records(size_t start_pos, sub_record_t & target)
 			break;
 
 		const auto & found_id = record_content.substr(scan_pos, sub_record_id_size);
-		const auto found_size = tools_t::convert_string_byte_array_to_uint(
+		const auto found_size = domain_types_t::convert_string_byte_array_to_uint(
 		    record_content.substr(scan_pos + sub_record_id_size, sub_record_id_size));
 
 		if (found_size == 0)
@@ -163,7 +166,7 @@ void esm_reader_t::scan_sub_records(size_t start_pos, sub_record_t & target)
 		if (found_id == target.sub_id)
 		{
 			target.content = record_content.substr(scan_pos + sub_record_header_size, found_size);
-			target.text = tools_t::erase_null_chars(target.content);
+			target.text = string_utils::erase_null_chars(target.content);
 			target.pos = scan_pos;
 			target.size = found_size;
 			target.exist = true;
@@ -187,10 +190,10 @@ void esm_reader_t::mark_not_found(sub_record_t & target)
 
 void esm_reader_t::handle_exception(const std::exception & error)
 {
-	const auto & sanitized = tools_t::replace_non_readable_chars_with_dot(ptr_record->content);
-	tools_t::add_log("[error] in function (possibly broken record)\r\n");
-	tools_t::add_log(sanitized + "\r\n");
-	tools_t::add_log("[error] exception: " + std::string(error.what()) + "\r\n");
+	const auto & sanitized = string_utils::replace_non_printable_with_dot(ptr_record->content);
+	app_logger_t::add_log("[error] in function (possibly broken record)\r\n");
+	app_logger_t::add_log(sanitized + "\r\n");
+	app_logger_t::add_log("[error] exception: " + std::string(error.what()) + "\r\n");
 	m_loaded = false;
 }
 

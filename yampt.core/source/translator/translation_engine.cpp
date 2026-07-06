@@ -1,5 +1,5 @@
 #include "translation_engine.hpp"
-#include "../utility/tools.hpp"
+#include "../utility/app_logger.hpp"
 #include <ctranslate2/translator.h>
 #include <filesystem>
 #include <fstream>
@@ -32,7 +32,7 @@ bool translation_engine_t::load(const std::string & model_pack_path)
 
 	namespace fs = std::filesystem;
 
-	tools_t::add_log("[info] loading translation model \"" + model_pack_path + "\"\r\n");
+	app_logger_t::add_log("[info] loading translation model \"" + model_pack_path + "\"\r\n");
 
 	if (!fs::exists(model_pack_path))
 		return false;
@@ -75,7 +75,7 @@ bool translation_engine_t::load(const std::string & model_pack_path)
 	if (m_impl->source_lang.empty())
 		m_impl->source_lang = "eng_Latn";
 
-	tools_t::add_log("[info] translation model loaded: " + m_impl->source_lang + " -> " + m_impl->target_lang + "\r\n");
+	app_logger_t::add_log("[info] translation model loaded: " + m_impl->source_lang + " -> " + m_impl->target_lang + "\r\n");
 	return true;
 }
 

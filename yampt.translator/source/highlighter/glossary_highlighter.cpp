@@ -22,7 +22,7 @@ void glossary_highlighter_t::set_annotation_manager(glossary_t * manager)
 	m_manager = manager;
 }
 
-void glossary_highlighter_t::set_record_type(tools_t::rec_type_t type)
+void glossary_highlighter_t::set_record_type(rec_type_t type)
 {
 	m_record_type = type;
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <utility/tools.hpp>
+#include <utility/domain_types.hpp>
 #include <string>
 
 enum table_col_t
@@ -15,7 +15,7 @@ enum table_col_t
 
 struct table_row_t
 {
-	tools_t::rec_type_t type;
+	rec_type_t type;
 	std::string key_text;
 	bool is_child = false;
 	std::string old_text;

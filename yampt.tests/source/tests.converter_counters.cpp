@@ -1,4 +1,6 @@
 #include <catch2/catch_all.hpp>
+#include <utility/includes.hpp>
+#include <utility/app_logger.hpp>
 #include <converter/esm_converter.hpp>
 #include <io/dict_writer.hpp>
 
@@ -11,7 +13,7 @@ static std::string make_sub_record(const std::string & sub_id, const std::string
 {
 	std::string result;
 	result += sub_id;
-	result += tools_t::convert_uint_to_string_byte_array(content.size());
+	result += domain_types_t::convert_uint_to_string_byte_array(content.size());
 	result += content;
 	return result;
 }
@@ -20,9 +22,9 @@ static std::string make_record(const std::string & rec_id, const std::string & s
 {
 	std::string header;
 	header += rec_id;
-	header += tools_t::convert_uint_to_string_byte_array(sub_records.size());
-	header += tools_t::convert_uint_to_string_byte_array(0);
-	header += tools_t::convert_uint_to_string_byte_array(0);
+	header += domain_types_t::convert_uint_to_string_byte_array(sub_records.size());
+	header += domain_types_t::convert_uint_to_string_byte_array(0);
+	header += domain_types_t::convert_uint_to_string_byte_array(0);
 	return header + sub_records;
 }
 
@@ -32,20 +34,20 @@ static std::string make_tes3_record()
 }
 
 static dict_merger_t make_merger(
-    const std::vector<std::tuple<tools_t::rec_type_t, std::string, std::string, std::string>> & entries)
+    const std::vector<std::tuple<rec_type_t, std::string, std::string, std::string>> & entries)
 {
 	const auto dict_path = get_temp_path("yampt_test_counters_dict.json");
-	tools_t::reset_log();
+	app_logger_t::reset_log();
 
-	tools_t::dict_t dict = tools_t::initialize_dict();
+	dict_t dict = domain_types_t::initialize_dict();
 	for (const auto & [record_type, key_text, old_text, new_text] : entries)
 		dict.at(record_type).insert({ key_text, old_text, new_text, status_t::translated });
 
 	dict_writer_t::write(dict, dict_path);
 
-	tools_t::reset_log();
+	app_logger_t::reset_log();
 	dict_merger_t merger({ dict_path });
-	tools_t::reset_log();
+	app_logger_t::reset_log();
 	std::filesystem::remove(dict_path);
 	return merger;
 }
@@ -96,7 +98,7 @@ TEST_CASE("esm_converter_t, SCTX counters sum correctly", "[i]")
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::cell, "Balmora", "Balmora", "Balmora PL" },
+	        { rec_type_t::cell, "Balmora", "Balmora", "Balmora PL" },
 	    });
 
 	std::string old_sctx_changed = "GetPCCell \"Balmora\"";
@@ -117,7 +119,7 @@ TEST_CASE("esm_converter_t, SCTX counters sum correctly", "[i]")
 		std::string schd(48, '\0');
 		schd.replace(0, name.size(), name);
 		schd.erase(44, 4);
-		schd.insert(44, tools_t::convert_uint_to_string_byte_array(scdt_size));
+		schd.insert(44, domain_types_t::convert_uint_to_string_byte_array(scdt_size));
 		return schd;
 	};
 
@@ -138,14 +140,14 @@ TEST_CASE("esm_converter_t, SCTX counters sum correctly", "[i]")
 
 	const auto esm_path = get_temp_path("yampt_test_sctx_counters.esm");
 	write_esm_file(esm_content, esm_path);
-	tools_t::reset_log();
+	app_logger_t::reset_log();
 
 	esm_converter_t converter(esm_path, merger, false, "", codepage_t::windows_1252, false);
 	std::filesystem::remove(esm_path);
 
 	REQUIRE(converter.is_loaded());
 
-	const auto & log = tools_t::get_log();
+	const auto & log = app_logger_t::get_log();
 	auto counters = parse_log_counters(log, "SCTX");
 
 	REQUIRE(counters.total == 2);
@@ -176,27 +178,27 @@ TEST_CASE("esm_converter_t, BNAM counters sum correctly", "[i]")
 	auto esm_content = make_tes3_record() + dial_record + info_changed + info_identical + info_no_bnam;
 
 	const auto dict_path = get_temp_path("yampt_test_bnam_counters_dict.json");
-	tools_t::reset_log();
+	app_logger_t::reset_log();
 
-	tools_t::dict_t dict = tools_t::initialize_dict();
-	dict.at(tools_t::rec_type_t::dial).insert({ "Hello", "Hello", "Witaj", status_t::translated });
+	dict_t dict = domain_types_t::initialize_dict();
+	dict.at(rec_type_t::dial).insert({ "Hello", "Hello", "Witaj", status_t::translated });
 	dict_writer_t::write(dict, dict_path);
 
-	tools_t::reset_log();
+	app_logger_t::reset_log();
 	dict_merger_t merger({ dict_path });
-	tools_t::reset_log();
+	app_logger_t::reset_log();
 	std::filesystem::remove(dict_path);
 
 	const auto esm_path = get_temp_path("yampt_test_bnam_counters.esm");
 	write_esm_file(esm_content, esm_path);
-	tools_t::reset_log();
+	app_logger_t::reset_log();
 
 	esm_converter_t converter(esm_path, merger, false, "", codepage_t::windows_1252, false);
 	std::filesystem::remove(esm_path);
 
 	REQUIRE(converter.is_loaded());
 
-	const auto & log = tools_t::get_log();
+	const auto & log = app_logger_t::get_log();
 	auto counters = parse_log_counters(log, "BNAM");
 
 	REQUIRE(counters.total == 2);
@@ -209,7 +211,7 @@ TEST_CASE("esm_converter_t, CELL counters sum correctly", "[i]")
 {
 	auto merger = make_merger(
 	    {
-	        { tools_t::rec_type_t::cell, "Balmora", "Balmora", "Balmora PL" },
+	        { rec_type_t::cell, "Balmora", "Balmora", "Balmora PL" },
 	    });
 
 	auto cell_changed = make_record("CELL", make_sub_record("NAME", std::string("Balmora\0", 8)));
@@ -219,14 +221,14 @@ TEST_CASE("esm_converter_t, CELL counters sum correctly", "[i]")
 
 	const auto esm_path = get_temp_path("yampt_test_cell_counters.esm");
 	write_esm_file(esm_content, esm_path);
-	tools_t::reset_log();
+	app_logger_t::reset_log();
 
 	esm_converter_t converter(esm_path, merger, false, "", codepage_t::windows_1252, false);
 	std::filesystem::remove(esm_path);
 
 	REQUIRE(converter.is_loaded());
 
-	const auto & log = tools_t::get_log();
+	const auto & log = app_logger_t::get_log();
 	auto counters = parse_log_counters(log, "CELL");
 
 	REQUIRE(counters.total == 2);

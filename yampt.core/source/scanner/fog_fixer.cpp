@@ -1,6 +1,6 @@
 #include "fog_fixer.hpp"
 #include "../decoder/sub_record_iter.hpp"
-#include "../utility/tools.hpp"
+#include "../utility/app_logger.hpp"
 #include <cstring>
 
 static constexpr uint32_t interior_flag = 0x01;
@@ -86,7 +86,7 @@ std::string fog_fixer_t::apply(const std::string & content)
 	const float default_fog_density = 0.01f;
 	std::memcpy(&fixed[ambi_write_offset], &default_fog_density, sizeof(float));
 
-	auto body_size = tools_t::convert_uint_to_string_byte_array(fixed.size() - 16);
+	auto body_size = domain_types_t::convert_uint_to_string_byte_array(fixed.size() - 16);
 	fixed.replace(4, 4, body_size);
 
 	return fixed;

@@ -2,7 +2,7 @@
 
 #include <io/codepage.hpp>
 #include <utility/includes.hpp>
-#include <utility/tools.hpp>
+#include <utility/domain_types.hpp>
 
 class user_interface_t
 {

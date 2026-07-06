@@ -1,4 +1,6 @@
 #include "dict_writer.hpp"
+#include "../utility/includes.hpp"
+#include "../utility/app_logger.hpp"
 
 static std::string escape_json(const std::string & s)
 {
@@ -46,7 +48,7 @@ static std::string escape_json(const std::string & s)
 	return result;
 }
 
-static void write_entry(std::ofstream & file, const tools_t::record_entry_t & entry, tools_t::rec_type_t type)
+static void write_entry(std::ofstream & file, const record_entry_t & entry, rec_type_t type)
 {
 	file << "    {\n";
 	file << "      \"key\": \"" << escape_json(entry.key_text) << "\",\n";
@@ -55,7 +57,7 @@ static void write_entry(std::ofstream & file, const tools_t::record_entry_t & en
 	file << ",\n";
 	file << "      \"status\": \"" << status_to_string(entry.status) << "\"";
 
-	if (type == tools_t::rec_type_t::info)
+	if (type == rec_type_t::info)
 	{
 		if (!entry.speaker_name.empty())
 		{
@@ -69,7 +71,7 @@ static void write_entry(std::ofstream & file, const tools_t::record_entry_t & en
 		}
 	}
 
-	if (type == tools_t::rec_type_t::fnam && !entry.enchantment.empty())
+	if (type == rec_type_t::fnam && !entry.enchantment.empty())
 	{
 		file << ",\n";
 		file << "      \"enchantment\": \"" << escape_json(entry.enchantment) << "\"";
@@ -85,14 +87,14 @@ static void write_entry(std::ofstream & file, const tools_t::record_entry_t & en
 	file << "    }";
 }
 
-void dict_writer_t::write(const tools_t::dict_t & dict, const std::string & path)
+void dict_writer_t::write(const dict_t & dict, const std::string & path)
 {
-	tools_t::add_log("[info] writing \"" + path + "\"\r\n");
+	app_logger_t::add_log("[info] writing \"" + path + "\"\r\n");
 
 	std::ofstream file(path, std::ios::binary);
 	if (!file.is_open())
 	{
-		tools_t::add_log("[error] cannot open \"" + path + "\" for writing\r\n");
+		app_logger_t::add_log("[error] cannot open \"" + path + "\" for writing\r\n");
 		return;
 	}
 
@@ -108,7 +110,7 @@ void dict_writer_t::write(const tools_t::dict_t & dict, const std::string & path
 			file << ",\n";
 		first_chapter = false;
 
-		file << "  \"" << tools_t::type_to_str(type) << "\": [\n";
+		file << "  \"" << domain_types_t::type_to_str(type) << "\": [\n";
 
 		for (size_t i = 0; i < chapter.records.size(); ++i)
 		{
@@ -124,7 +126,7 @@ void dict_writer_t::write(const tools_t::dict_t & dict, const std::string & path
 	file << "\n}\n";
 	file.close();
 
-	tools_t::add_log(
-	    "[info] done writing \"" + path + "\" (" + std::to_string(tools_t::get_number_of_elements_in_dict(dict)) +
+	app_logger_t::add_log(
+	    "[info] done writing \"" + path + "\" (" + std::to_string(domain_types_t::get_number_of_elements_in_dict(dict)) +
 	    " entries)\r\n");
 }

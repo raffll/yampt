@@ -1,7 +1,7 @@
 #pragma once
 
 #include <utility/keyword_trie.hpp>
-#include <utility/tools.hpp>
+#include <utility/domain_types.hpp>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -26,7 +26,7 @@ struct annotation_t
 
 struct dict_source_t
 {
-	const tools_t::dict_t * dict;
+	const dict_t * dict;
 	std::string name;
 };
 
@@ -34,9 +34,9 @@ class glossary_t
 {
 public:
 	void rebuild(const std::vector<dict_source_t> & sources);
-	void update_term(tools_t::rec_type_t type, const std::string & old_text, const std::string & new_text);
-	std::vector<annotation_t> annotate(const std::string & text, tools_t::rec_type_t type) const;
-	std::vector<annotation_t> annotate_translated(const std::string & text, tools_t::rec_type_t type) const;
+	void update_term(rec_type_t type, const std::string & old_text, const std::string & new_text);
+	std::vector<annotation_t> annotate(const std::string & text, rec_type_t type) const;
+	std::vector<annotation_t> annotate_translated(const std::string & text, rec_type_t type) const;
 
 	void load_npc_flags(const std::string & path);
 	void load_enchantments(const std::string & path);
@@ -86,7 +86,7 @@ private:
 	static bool is_trusted_status(status_t status);
 
 	void collect_dial_entries(const dict_source_t & source);
-	void collect_glossary_entries(const dict_source_t & source, tools_t::rec_type_t record_type);
+	void collect_glossary_entries(const dict_source_t & source, rec_type_t record_type);
 	void sort_by_length_descending(std::vector<topic_entry_t> & entries);
 	void rebuild_dial_trie();
 

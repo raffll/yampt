@@ -33,7 +33,7 @@ public:
 		return {};
 	}
 
-	void commit_edit(tools_t::rec_type_t, size_t, const std::string &) override
+	void commit_edit(rec_type_t, size_t, const std::string &) override
 	{}
 
 	void save() override

@@ -1,4 +1,5 @@
 #include <catch2/catch_all.hpp>
+#include <utility/app_logger.hpp>
 #include <io/dict_writer.hpp>
 #include <model/dict_document.hpp>
 #include <rapidcheck/catch.h>
@@ -9,21 +10,21 @@
 
 namespace {
 
-std::string create_temp_dict_json(const tools_t::dict_t & data)
+std::string create_temp_dict_json(const dict_t & data)
 {
 	namespace fs = std::filesystem;
 	auto path = (fs::temp_directory_path() / "yampt_test_dict.json").string();
 	path = string_utils::normalize_path(path);
 
-	tools_t::reset_log();
+	app_logger_t::reset_log();
 	dict_writer_t::write(data, path);
-	tools_t::reset_log();
+	app_logger_t::reset_log();
 	return path;
 }
 
 void cleanup_temp_dict(const std::string & path)
 {
-	tools_t::reset_log();
+	app_logger_t::reset_log();
 	std::error_code ec;
 	std::filesystem::remove(path, ec);
 }
@@ -36,9 +37,9 @@ TEST_CASE("dict_document_t, path round-trip", "[i]")
 	    "path() returns normalized path",
 	    []()
 	{
-		tools_t::dict_t data;
-		auto & chapter = data[tools_t::rec_type_t::cell];
-		tools_t::record_entry_t entry;
+		dict_t data;
+		auto & chapter = data[rec_type_t::cell];
+		record_entry_t entry;
 		entry.key_text = "test_key";
 		entry.old_text = "old";
 		entry.new_text = "new";
@@ -61,11 +62,11 @@ TEST_CASE("dict_document_t, build_rows count invariant", "[i]")
 	    "build_rows().size() == total_count()",
 	    []()
 	{
-		tools_t::dict_t data;
+		dict_t data;
 
 		const auto type_count = *rc::gen::inRange(0, 4);
-		const std::vector<tools_t::rec_type_t> types = {
-			tools_t::rec_type_t::cell, tools_t::rec_type_t::dial, tools_t::rec_type_t::info, tools_t::rec_type_t::fnam
+		const std::vector<rec_type_t> types = {
+			rec_type_t::cell, rec_type_t::dial, rec_type_t::info, rec_type_t::fnam
 		};
 
 		for (int t = 0; t < type_count; ++t)
@@ -74,7 +75,7 @@ TEST_CASE("dict_document_t, build_rows count invariant", "[i]")
 			auto & chapter = data[types[t]];
 			for (int r = 0; r < rec_count; ++r)
 			{
-				tools_t::record_entry_t entry;
+				record_entry_t entry;
 				entry.key_text = "m_key" + std::to_string(t) + "_" + std::to_string(r);
 				entry.old_text = *rc::gen::arbitrary<std::string>();
 				entry.new_text = *rc::gen::arbitrary<std::string>();
@@ -99,13 +100,13 @@ TEST_CASE("dict_document_t, commit_edit modifies data", "[i]")
 	    "commit_edit changes the target record new_text",
 	    []()
 	{
-		tools_t::dict_t data;
-		auto & chapter = data[tools_t::rec_type_t::cell];
+		dict_t data;
+		auto & chapter = data[rec_type_t::cell];
 
 		const auto rec_count = *rc::gen::inRange(1, 10);
 		for (int i = 0; i < rec_count; ++i)
 		{
-			tools_t::record_entry_t entry;
+			record_entry_t entry;
 			entry.key_text = "m_key" + std::to_string(i);
 			entry.old_text = "old_" + std::to_string(i);
 			entry.new_text = "new_" + std::to_string(i);
@@ -118,7 +119,7 @@ TEST_CASE("dict_document_t, commit_edit modifies data", "[i]")
 
 		const auto idx = *rc::gen::inRange<size_t>(0, static_cast<size_t>(rec_count));
 		const auto new_text = *rc::gen::arbitrary<std::string>();
-		doc.commit_edit(tools_t::rec_type_t::cell, idx, new_text);
+		doc.commit_edit(rec_type_t::cell, idx, new_text);
 
 		const auto rows_after = doc.build_rows();
 		RC_ASSERT(rows_after[idx].new_text == new_text);
@@ -193,7 +194,7 @@ TEST_CASE("yaml_document_t, dirty state consistency", "[i]")
 
 		doc.set_dirty(false);
 		const auto idx = *rc::gen::inRange<size_t>(0, static_cast<size_t>(count));
-		doc.commit_edit(tools_t::rec_type_t::yaml, idx, "edited");
+		doc.commit_edit(rec_type_t::yaml, idx, "edited");
 		RC_ASSERT(doc.is_dirty() == true);
 
 		cleanup_temp_yaml(path);
@@ -216,7 +217,7 @@ TEST_CASE("yaml_document_t, commit-edit round-trip", "[i]")
 
 		const auto idx = *rc::gen::inRange<size_t>(0, static_cast<size_t>(count));
 		const auto new_text = *rc::gen::nonEmpty(rc::gen::arbitrary<std::string>());
-		doc.commit_edit(tools_t::rec_type_t::yaml, idx, new_text);
+		doc.commit_edit(rec_type_t::yaml, idx, new_text);
 
 		const auto rows = doc.build_rows();
 		RC_ASSERT(rows[idx].new_text == new_text);
@@ -244,7 +245,7 @@ TEST_CASE("yaml_document_t, translated count invariant", "[i]")
 		for (int e = 0; e < edit_count; ++e)
 		{
 			const auto idx = *rc::gen::inRange<size_t>(0, static_cast<size_t>(count));
-			doc.commit_edit(tools_t::rec_type_t::yaml, idx, "edited_" + std::to_string(e));
+			doc.commit_edit(rec_type_t::yaml, idx, "edited_" + std::to_string(e));
 			edited.insert(idx);
 		}
 

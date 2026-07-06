@@ -2,7 +2,7 @@
 #include <editor/edit_history.hpp>
 #include <rapidcheck/catch.h>
 #include <utility/status_types.hpp>
-#include <utility/tools.hpp>
+#include <utility/app_logger.hpp>
 #include <rapidcheck.h>
 
 namespace {
@@ -38,7 +38,7 @@ TEST_CASE("edit_history_t::revert, restores status at index N", "[u]")
 		const auto revert_index = *rc::gen::inRange(0, edit_count);
 
 		edit_history_t history;
-		const auto record_type = tools_t::rec_type_t::info;
+		const auto record_type = rec_type_t::info;
 		const std::string record_key = "test_record_key";
 
 		std::vector<std::string> recorded_values;

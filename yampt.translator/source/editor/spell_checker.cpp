@@ -1,6 +1,7 @@
 #include "spell_checker.hpp"
 #include <hunspell/hunspell.hxx>
-#include <utility/tools.hpp>
+#include <utility/app_logger.hpp>
+#include <utility/domain_types.hpp>
 #include <algorithm>
 #include <cctype>
 
@@ -151,7 +152,7 @@ bool spell_checker_t::is_excluded(const std::string & word) const
 
 bool spell_checker_t::is_mwscript_keyword(const std::string & word) const
 {
-	for (const auto & keyword : tools_t::keywords)
+	for (const auto & keyword : domain_types_t::script_keywords)
 	{
 		if (keyword.size() != word.size())
 			continue;

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../editor/glossary.hpp"
-#include <utility/tools.hpp>
+#include <utility/domain_types.hpp>
 #include <theme_system.hpp>
 #include <vector>
 #include <QSyntaxHighlighter>
@@ -16,7 +16,7 @@ public:
 	explicit glossary_highlighter_t(QTextDocument * parent = nullptr);
 
 	void set_annotation_manager(glossary_t * manager);
-	void set_record_type(tools_t::rec_type_t type);
+	void set_record_type(rec_type_t type);
 	void set_annotations(const std::vector<annotation_t> & annotations);
 
 protected:
@@ -27,6 +27,6 @@ private slots:
 
 private:
 	glossary_t * m_manager = nullptr;
-	tools_t::rec_type_t m_record_type = tools_t::rec_type_t::unknown;
+	rec_type_t m_record_type = rec_type_t::unknown;
 	std::vector<annotation_t> m_annotations;
 };

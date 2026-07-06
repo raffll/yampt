@@ -1,7 +1,7 @@
 #include <catch2/catch_all.hpp>
 #include <converter/script_parser.hpp>
 #include <merger/dict_merger.hpp>
-#include <utility/tools.hpp>
+#include <utility/app_logger.hpp>
 #include <random>
 
 namespace {
@@ -42,12 +42,12 @@ TEST_CASE("script_parser_t, ShowMap unquoted cell replaced", "[u]")
 	const auto translated = random_translated_cell(rng);
 
 	dict_merger_t merger;
-	merger.add_record(tools_t::rec_type_t::cell, cell_name, translated);
+	merger.add_record(rec_type_t::cell, cell_name, translated);
 
 	const std::string input = "ShowMap " + cell_name;
 	const std::string expected = "ShowMap " + translated;
 
-	script_parser_t parser(tools_t::rec_type_t::bnam, merger, "", "", input, "");
+	script_parser_t parser(rec_type_t::bnam, merger, "", "", input, "");
 
 	REQUIRE(parser.get_new_script() == expected);
 }
@@ -61,12 +61,12 @@ TEST_CASE("script_parser_t, PositionCell unquoted cell replaced", "[u]")
 	const auto translated = random_translated_cell(rng);
 
 	dict_merger_t merger;
-	merger.add_record(tools_t::rec_type_t::cell, cell_name, translated);
+	merger.add_record(rec_type_t::cell, cell_name, translated);
 
 	const std::string input = "PositionCell, 0, 0, 0, 0, " + cell_name;
 	const std::string expected = "PositionCell, 0, 0, 0, 0, " + translated;
 
-	script_parser_t parser(tools_t::rec_type_t::bnam, merger, "", "", input, "");
+	script_parser_t parser(rec_type_t::bnam, merger, "", "", input, "");
 
 	REQUIRE(parser.get_new_script() == expected);
 }
@@ -80,12 +80,12 @@ TEST_CASE("script_parser_t, quoted cell not handled by unquoted path", "[u]")
 	const auto translated = random_translated_cell(rng);
 
 	dict_merger_t merger;
-	merger.add_record(tools_t::rec_type_t::cell, cell_name, translated);
+	merger.add_record(rec_type_t::cell, cell_name, translated);
 
 	const std::string input = "ShowMap \"" + cell_name + "\"";
 	const std::string expected = "ShowMap \"" + translated + "\"";
 
-	script_parser_t parser(tools_t::rec_type_t::bnam, merger, "", "", input, "");
+	script_parser_t parser(rec_type_t::bnam, merger, "", "", input, "");
 
 	REQUIRE(parser.get_new_script() == expected);
 }
@@ -99,12 +99,12 @@ TEST_CASE("script_parser_t, ShowMap unquoted with comment stripped", "[u]")
 	const auto translated = random_translated_cell(rng);
 
 	dict_merger_t merger;
-	merger.add_record(tools_t::rec_type_t::cell, cell_name, translated);
+	merger.add_record(rec_type_t::cell, cell_name, translated);
 
 	const std::string input = "ShowMap " + cell_name + " ; comment here";
 	const std::string expected = "ShowMap " + translated + " ; comment here";
 
-	script_parser_t parser(tools_t::rec_type_t::bnam, merger, "", "", input, "");
+	script_parser_t parser(rec_type_t::bnam, merger, "", "", input, "");
 
 	REQUIRE(parser.get_new_script() == expected);
 }

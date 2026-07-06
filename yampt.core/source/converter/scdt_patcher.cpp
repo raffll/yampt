@@ -84,7 +84,7 @@ bool scdt_patcher_t::validate_text_size(const std::string & old_text)
 {
 	const auto size_byte_pos = m_cursor - text_size_field_length;
 	const auto declared_size =
-	    tools_t::convert_string_byte_array_to_uint(m_scdt.substr(size_byte_pos, text_size_field_length));
+	    domain_types_t::convert_string_byte_array_to_uint(m_scdt.substr(size_byte_pos, text_size_field_length));
 
 	return declared_size == old_text.size() || declared_size == old_text.size() + 1;
 }
@@ -92,7 +92,7 @@ bool scdt_patcher_t::validate_text_size(const std::string & old_text)
 void scdt_patcher_t::patch_text_size_byte(const std::string & new_text)
 {
 	const auto size_byte_pos = m_cursor - text_size_field_length;
-	const auto encoded_size = tools_t::convert_uint_to_string_byte_array(new_text.size());
+	const auto encoded_size = domain_types_t::convert_uint_to_string_byte_array(new_text.size());
 
 	m_scdt.erase(size_byte_pos, text_size_field_length);
 	m_scdt.insert(size_byte_pos, encoded_size.substr(0, text_size_field_length));
@@ -131,7 +131,7 @@ void scdt_patcher_t::patch_getpccell_expr_size(const std::string & new_text)
 		m_cursor = expr_size_pos;
 	}
 
-	const auto encoded_size = tools_t::convert_uint_to_string_byte_array(expression_size);
+	const auto encoded_size = domain_types_t::convert_uint_to_string_byte_array(expression_size);
 	m_scdt.erase(m_cursor, text_size_field_length);
 	m_scdt.insert(m_cursor, encoded_size.substr(0, text_size_field_length));
 	m_cursor += expression_size;
@@ -140,7 +140,7 @@ void scdt_patcher_t::patch_getpccell_expr_size(const std::string & new_text)
 void scdt_patcher_t::patch_first_message_segment(const std::string & segment_old, const std::string & segment_new)
 {
 	const auto size_field_pos = m_cursor - message_first_size_field_length;
-	const auto encoded_size = tools_t::convert_uint_to_string_byte_array(segment_new.size());
+	const auto encoded_size = domain_types_t::convert_uint_to_string_byte_array(segment_new.size());
 
 	m_scdt.erase(size_field_pos, message_first_size_field_length);
 	m_scdt.insert(size_field_pos, encoded_size.substr(0, message_first_size_field_length));
@@ -153,7 +153,7 @@ void scdt_patcher_t::patch_later_message_segment(const std::string & segment_old
 {
 	const auto size_field_pos = m_cursor - message_other_size_field_length;
 	const auto new_size_with_null = segment_new.size() + message_other_null_terminator;
-	const auto encoded_size = tools_t::convert_uint_to_string_byte_array(new_size_with_null);
+	const auto encoded_size = domain_types_t::convert_uint_to_string_byte_array(new_size_with_null);
 
 	m_scdt.erase(size_field_pos, message_other_size_field_length);
 	m_scdt.insert(size_field_pos, encoded_size.substr(0, message_other_size_field_length));

@@ -5,7 +5,7 @@
 #include "../view/translation_suggestion_view.hpp"
 #include <merger/dict_merger.hpp>
 #include <utility/string_utils.hpp>
-#include <utility/tools.hpp>
+#include <utility/app_logger.hpp>
 #include <algorithm>
 #include <filesystem>
 #include <map>

@@ -1,4 +1,6 @@
 #include <catch2/catch_all.hpp>
+#include <utility/string_utils.hpp>
+#include <utility/app_logger.hpp>
 #include <scanner/plugin_scan.hpp>
 #include <scanner/sub_record_merge.hpp>
 #include <cstring>
@@ -10,7 +12,7 @@ static std::string make_sub_record(const std::string & sub_id, const std::string
 {
 	std::string result;
 	result += sub_id;
-	result += tools_t::convert_uint_to_string_byte_array(content.size());
+	result += domain_types_t::convert_uint_to_string_byte_array(content.size());
 	result += content;
 	return result;
 }
@@ -19,9 +21,9 @@ static std::string make_record(const std::string & rec_id, const std::string & s
 {
 	std::string header;
 	header += rec_id;
-	header += tools_t::convert_uint_to_string_byte_array(sub_records.size());
-	header += tools_t::convert_uint_to_string_byte_array(0);
-	header += tools_t::convert_uint_to_string_byte_array(0);
+	header += domain_types_t::convert_uint_to_string_byte_array(sub_records.size());
+	header += domain_types_t::convert_uint_to_string_byte_array(0);
+	header += domain_types_t::convert_uint_to_string_byte_array(0);
 	return header + sub_records;
 }
 
@@ -97,7 +99,7 @@ static std::vector<std::pair<std::string, uint16_t>> extract_items_from_content(
 		if (sub_type == "INAM" || sub_type == "CNAM")
 		{
 			std::string raw(content.data() + pos + 8, sub_size);
-			current_id = tools_t::erase_null_chars(raw);
+			current_id = string_utils::erase_null_chars(raw);
 		}
 		else if (sub_type == "INTV" && !current_id.empty())
 		{

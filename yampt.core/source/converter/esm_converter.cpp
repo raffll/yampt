@@ -1,4 +1,5 @@
 #include "esm_converter.hpp"
+#include "../utility/app_logger.hpp"
 #include "../utility/keyword_trie.hpp"
 #include "script_parser.hpp"
 
@@ -47,7 +48,7 @@ void esm_converter_t::convert_esm()
 	if (add_hyperlinks)
 	{
 		build_hyperlink_trie();
-		tools_t::add_log("[info] adding hyperlinks\r\n");
+		app_logger_t::add_log("[info] adding hyperlinks\r\n");
 	}
 
 	convert_info();
@@ -75,7 +76,7 @@ void esm_converter_t::reset_counters()
 	counter_added = 0;
 }
 
-bool esm_converter_t::make_new_text(const tools_t::entry_t & entry, std::string & new_text)
+bool esm_converter_t::make_new_text(const entry_t & entry, std::string & new_text)
 {
 	counter_all++;
 	new_text.clear();
@@ -99,7 +100,7 @@ bool esm_converter_t::make_new_text(const tools_t::entry_t & entry, std::string 
 	}
 
 	counter_unchanged++;
-	tools_t::add_log("[warning] unchanged " + tools_t::type_to_str(entry.type) + ": " + entry.key_text + "\r\n", true);
+	app_logger_t::add_log("[warning] unchanged " + domain_types_t::type_to_str(entry.type) + ": " + entry.key_text + "\r\n", true);
 	return false;
 }
 
@@ -126,27 +127,27 @@ void esm_converter_t::convert_record_content(const std::string & new_text)
 	rec_content.erase(esm.get_value().pos + 8, esm.get_value().size);
 	rec_content.insert(esm.get_value().pos + 8, new_text);
 	rec_content.erase(esm.get_value().pos + 4, 4);
-	rec_content.insert(esm.get_value().pos + 4, tools_t::convert_uint_to_string_byte_array(new_text.size()));
+	rec_content.insert(esm.get_value().pos + 4, domain_types_t::convert_uint_to_string_byte_array(new_text.size()));
 	size_t rec_size = rec_content.size() - 16;
 	rec_content.erase(4, 4);
-	rec_content.insert(4, tools_t::convert_uint_to_string_byte_array(rec_size));
+	rec_content.insert(4, domain_types_t::convert_uint_to_string_byte_array(rec_size));
 	esm.replace_record(rec_content);
 }
 
-void esm_converter_t::print_log_line(const tools_t::rec_type_t type)
+void esm_converter_t::print_log_line(const rec_type_t type)
 {
-	std::string line = tools_t::type_to_str(type) + ": converted=" + std::to_string(counter_converted) +
+	std::string line = domain_types_t::type_to_str(type) + ": converted=" + std::to_string(counter_converted) +
 	                   ", identical=" + std::to_string(counter_identical) +
 	                   ", unchanged=" + std::to_string(counter_unchanged) + ", total=" + std::to_string(counter_all) +
 	                   "\r\n";
 
-	tools_t::add_log(line);
+	app_logger_t::add_log(line);
 }
 
 void esm_converter_t::build_hyperlink_trie()
 {
 	const auto & dict = merger.get_dict();
-	auto dial_it = dict.find(tools_t::rec_type_t::dial);
+	auto dial_it = dict.find(rec_type_t::dial);
 	if (dial_it == dict.end())
 		return;
 
@@ -194,8 +195,8 @@ bool esm_converter_t::detect_encoding()
 
 		if (detect_windows_1250_encoding(esm.get_value().text))
 		{
-			tools_t::add_log("[warning] windows-1250 encoding detected\r\n");
-			tools_t::add_log(esm.get_value().text + "\r\n", true);
+			app_logger_t::add_log("[warning] windows-1250 encoding detected\r\n");
+			app_logger_t::add_log(esm.get_value().text + "\r\n", true);
 			return true;
 		}
 	}

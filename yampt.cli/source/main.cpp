@@ -1,6 +1,7 @@
 #include "interface/user_interface.hpp"
+#include <io/binary_file_io.hpp>
 #include <utility/includes.hpp>
-#include <utility/tools.hpp>
+#include <utility/app_logger.hpp>
 
 int main(int argc, char * argv[])
 {
@@ -8,7 +9,7 @@ int main(int argc, char * argv[])
 	if (exe_path.empty())
 		exe_path = std::filesystem::current_path();
 
-	tools_t::set_exe_dir(exe_path.string());
+	app_logger_t::set_exe_dir(exe_path.string());
 
 	try
 	{
@@ -21,11 +22,11 @@ int main(int argc, char * argv[])
 	}
 	catch (const std::exception & e)
 	{
-		tools_t::add_log("[error] " + std::string(e.what()) + "\r\n");
+		app_logger_t::add_log("[error] " + std::string(e.what()) + "\r\n");
 	}
 	catch (...)
 	{
-		tools_t::add_log("[error] unknown error\r\n");
+		app_logger_t::add_log("[error] unknown error\r\n");
 	}
 
 	auto exe_dir = std::filesystem::path(argv[0]).parent_path();
@@ -44,6 +45,6 @@ int main(int argc, char * argv[])
 	std::strftime(time_str, sizeof(time_str), "%Y%m%d_%H%M%S", &tm);
 	auto log_path = exe_dir / (std::string("yampt_") + time_str + ".log");
 
-	tools_t::write_text(tools_t::get_log(), log_path.string());
-	return tools_t::has_error() ? 1 : 0;
+	binary_file_io_t::write_text(app_logger_t::get_log(), log_path.string());
+	return app_logger_t::has_error() ? 1 : 0;
 }

@@ -29,12 +29,12 @@ public:
 	}
 };
 
-static const std::vector<std::pair<tools_t::rec_type_t, const char *>> type_order = {
-	{ tools_t::rec_type_t::cell, "Cells" },        { tools_t::rec_type_t::dial, "Topics" },
-	{ tools_t::rec_type_t::info, "Dialogues" },    { tools_t::rec_type_t::fnam, "Names" },
-	{ tools_t::rec_type_t::text, "Books" },        { tools_t::rec_type_t::gmst, "Settings" },
-	{ tools_t::rec_type_t::desc, "Descriptions" }, { tools_t::rec_type_t::rnam, "Factions" },
-	{ tools_t::rec_type_t::indx, "Index" },        { tools_t::rec_type_t::sctx, "Scripts" },
+static const std::vector<std::pair<rec_type_t, const char *>> type_order = {
+	{ rec_type_t::cell, "Cells" },        { rec_type_t::dial, "Topics" },
+	{ rec_type_t::info, "Dialogues" },    { rec_type_t::fnam, "Names" },
+	{ rec_type_t::text, "Books" },        { rec_type_t::gmst, "Settings" },
+	{ rec_type_t::desc, "Descriptions" }, { rec_type_t::rnam, "Factions" },
+	{ rec_type_t::indx, "Index" },        { rec_type_t::sctx, "Scripts" },
 };
 
 static const QColor color_selected_bg(90, 155, 230);
@@ -75,7 +75,7 @@ filter_tree_view_t::filter_tree_view_t(QWidget * parent)
 void filter_tree_view_t::build_rows()
 {
 	auto add_row =
-	    [this](item_kind_t kind, tools_t::rec_type_t type, const std::string & sub_type, const char * label) -> int
+	    [this](item_kind_t kind, rec_type_t type, const std::string & sub_type, const char * label) -> int
 	{
 		auto * item = new QListWidgetItem(label, m_list);
 		item->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
@@ -84,11 +84,11 @@ void filter_tree_view_t::build_rows()
 		return idx;
 	};
 
-	m_all_row = add_row(item_kind_t::all, tools_t::rec_type_t::unknown, {}, "All");
+	m_all_row = add_row(item_kind_t::all, rec_type_t::unknown, {}, "All");
 
 	for (const auto & [type, name] : type_order)
 	{
-		if (type == tools_t::rec_type_t::info)
+		if (type == rec_type_t::info)
 		{
 			for (const auto & entry : record_types::info_sub_types)
 			{
@@ -96,7 +96,7 @@ void filter_tree_view_t::build_rows()
 				add_row(item_kind_t::sub_type, type, std::string(entry.display_name), label.c_str());
 			}
 		}
-		else if (type == tools_t::rec_type_t::fnam)
+		else if (type == rec_type_t::fnam)
 		{
 			for (const auto & entry : record_types::fnam_sub_types)
 			{
@@ -105,7 +105,7 @@ void filter_tree_view_t::build_rows()
 				add_row(item_kind_t::sub_type, type, std::string(entry.display_name), label.c_str());
 			}
 		}
-		else if (type == tools_t::rec_type_t::desc)
+		else if (type == rec_type_t::desc)
 		{
 			for (const auto & entry : record_types::desc_sub_types)
 			{
@@ -113,7 +113,7 @@ void filter_tree_view_t::build_rows()
 				add_row(item_kind_t::sub_type, type, std::string(entry.display_name), label.c_str());
 			}
 		}
-		else if (type == tools_t::rec_type_t::indx)
+		else if (type == rec_type_t::indx)
 		{
 			for (const auto & entry : record_types::indx_sub_types)
 			{
@@ -127,7 +127,7 @@ void filter_tree_view_t::build_rows()
 		}
 	}
 
-	m_yaml_row = add_row(item_kind_t::yaml, tools_t::rec_type_t::unknown, {}, "YAML");
+	m_yaml_row = add_row(item_kind_t::yaml, rec_type_t::unknown, {}, "YAML");
 	m_rows[m_yaml_row].selected = false;
 	m_rows[m_yaml_row].item->setHidden(true);
 }
@@ -279,8 +279,8 @@ void filter_tree_view_t::update_styles()
 }
 
 void filter_tree_view_t::update_counts(
-    const std::map<tools_t::rec_type_t, size_t> & total_counts,
-    const std::map<tools_t::rec_type_t, size_t> & translated_counts)
+    const std::map<rec_type_t, size_t> & total_counts,
+    const std::map<rec_type_t, size_t> & translated_counts)
 {
 	for (auto & r : m_rows)
 	{
@@ -326,9 +326,9 @@ void filter_tree_view_t::set_total_count(size_t translated, size_t total)
 	m_rows[m_all_row].item->setData(role_counter, QString("%1/%2").arg(translated).arg(total));
 }
 
-std::set<tools_t::rec_type_t> filter_tree_view_t::get_active_types() const
+std::set<rec_type_t> filter_tree_view_t::get_active_types() const
 {
-	std::set<tools_t::rec_type_t> result;
+	std::set<rec_type_t> result;
 
 	for (const auto & r : m_rows)
 	{
@@ -372,7 +372,7 @@ bool filter_tree_view_t::has_sub_type_filter() const
 	return false;
 }
 
-void filter_tree_view_t::set_active_types(const std::set<tools_t::rec_type_t> & types)
+void filter_tree_view_t::set_active_types(const std::set<rec_type_t> & types)
 {
 	for (auto & r : m_rows)
 	{
@@ -415,7 +415,7 @@ bool filter_tree_view_t::is_solo() const
 	return active_count == 1;
 }
 
-tools_t::rec_type_t filter_tree_view_t::get_solo_type() const
+rec_type_t filter_tree_view_t::get_solo_type() const
 {
 	for (const auto & r : m_rows)
 	{
@@ -426,7 +426,7 @@ tools_t::rec_type_t filter_tree_view_t::get_solo_type() const
 			return r.type;
 	}
 
-	return tools_t::rec_type_t::unknown;
+	return rec_type_t::unknown;
 }
 
 bool filter_tree_view_t::is_yaml_filter_active() const

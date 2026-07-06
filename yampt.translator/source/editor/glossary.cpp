@@ -16,7 +16,7 @@ bool glossary_t::is_trusted_status(status_t status)
 
 void glossary_t::collect_dial_entries(const dict_source_t & source)
 {
-	auto dial_it = source.dict->find(tools_t::rec_type_t::dial);
+	auto dial_it = source.dict->find(rec_type_t::dial);
 	if (dial_it == source.dict->end())
 		return;
 
@@ -29,7 +29,7 @@ void glossary_t::collect_dial_entries(const dict_source_t & source)
 	}
 }
 
-void glossary_t::collect_glossary_entries(const dict_source_t & source, tools_t::rec_type_t record_type)
+void glossary_t::collect_glossary_entries(const dict_source_t & source, rec_type_t record_type)
 {
 	auto chapter_it = source.dict->find(record_type);
 	if (chapter_it == source.dict->end())
@@ -70,10 +70,10 @@ void glossary_t::rebuild(const std::vector<dict_source_t> & sources)
 			continue;
 
 		collect_dial_entries(source);
-		collect_glossary_entries(source, tools_t::rec_type_t::fnam);
-		collect_glossary_entries(source, tools_t::rec_type_t::cell);
-		collect_glossary_entries(source, tools_t::rec_type_t::rnam);
-		collect_glossary_entries(source, tools_t::rec_type_t::indx);
+		collect_glossary_entries(source, rec_type_t::fnam);
+		collect_glossary_entries(source, rec_type_t::cell);
+		collect_glossary_entries(source, rec_type_t::rnam);
+		collect_glossary_entries(source, rec_type_t::indx);
 	}
 
 	sort_by_length_descending(m_dial_topics);
@@ -81,14 +81,14 @@ void glossary_t::rebuild(const std::vector<dict_source_t> & sources)
 	rebuild_dial_trie();
 }
 
-void glossary_t::update_term(tools_t::rec_type_t type, const std::string & old_text, const std::string & new_text)
+void glossary_t::update_term(rec_type_t type, const std::string & old_text, const std::string & new_text)
 {
-	if (type == tools_t::rec_type_t::dial)
+	if (type == rec_type_t::dial)
 	{
 		update_vector(m_dial_topics, old_text, new_text);
 		rebuild_dial_trie();
 	}
-	else if (type == tools_t::rec_type_t::fnam || type == tools_t::rec_type_t::cell)
+	else if (type == rec_type_t::fnam || type == rec_type_t::cell)
 	{
 		if (old_text == new_text || new_text.empty())
 			remove_from_vector(m_glossary_terms, old_text);
@@ -234,7 +234,7 @@ static bool overlaps_any(const annotation_t & candidate, const std::vector<annot
 	return false;
 }
 
-std::vector<annotation_t> glossary_t::annotate(const std::string & text, tools_t::rec_type_t type) const
+std::vector<annotation_t> glossary_t::annotate(const std::string & text, rec_type_t type) const
 {
 	(void)type;
 	std::vector<annotation_t> results;
@@ -277,7 +277,7 @@ std::vector<annotation_t> glossary_t::annotate(const std::string & text, tools_t
 	return results;
 }
 
-std::vector<annotation_t> glossary_t::annotate_translated(const std::string & text, tools_t::rec_type_t type) const
+std::vector<annotation_t> glossary_t::annotate_translated(const std::string & text, rec_type_t type) const
 {
 	(void)type;
 	std::vector<annotation_t> results;
@@ -379,7 +379,7 @@ void glossary_t::load_enchantments(const std::string & path)
 		return;
 
 	const auto & loaded_dict = reader.get_dict();
-	auto chapter_it = loaded_dict.find(tools_t::rec_type_t::fnam);
+	auto chapter_it = loaded_dict.find(rec_type_t::fnam);
 	if (chapter_it == loaded_dict.end())
 		return;
 

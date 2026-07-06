@@ -27,7 +27,7 @@ void record_display_controller_t::load_record(int row, document_t * active_doc)
 	const auto load_result =
 	    active_doc ? m_deps.editor_controller.load(*active_doc, *row_data) : editor_load_result_t {};
 
-	if (row_data->type == tools_t::rec_type_t::sctx || row_data->type == tools_t::rec_type_t::bnam)
+	if (row_data->type == rec_type_t::sctx || row_data->type == rec_type_t::bnam)
 		load_record_script(row_data);
 	else
 		load_record_plain(row_data);
@@ -37,7 +37,7 @@ void record_display_controller_t::load_record(int row, document_t * active_doc)
 	const auto validation_result = m_deps.byte_limit_validator.validate(row_data->type, row_data->new_text);
 	m_deps.validation_view.update_validation(validation_result);
 
-	if (row_data->type == tools_t::rec_type_t::text)
+	if (row_data->type == rec_type_t::text)
 		m_deps.book_preview_view.set_html(row_data->old_text, row_data->new_text);
 	else
 		m_deps.book_preview_view.clear();
@@ -146,8 +146,8 @@ void record_display_controller_t::load_record_plain(const table_row_t * row_data
 		m_deps.editor_view.translation_editor()->setPlainText(QString::fromStdString(row_data->new_text));
 
 	const bool block_multiline =
-	    (row_data->type == tools_t::rec_type_t::cell || row_data->type == tools_t::rec_type_t::dial ||
-	     row_data->type == tools_t::rec_type_t::fnam);
+	    (row_data->type == rec_type_t::cell || row_data->type == rec_type_t::dial ||
+	     row_data->type == rec_type_t::fnam);
 	m_deps.editor_view.translation_editor()->set_block_multiline(block_multiline);
 }
 

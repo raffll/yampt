@@ -186,7 +186,7 @@ private:
 
 	bool m_has_unsaved_changes = false;
 
-	std::set<tools_t::rec_type_t> m_type_filter;
+	std::set<rec_type_t> m_type_filter;
 	std::set<status_t> m_status_filter;
 	bool m_type_filter_solo = false;
 

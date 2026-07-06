@@ -1,4 +1,7 @@
 #include "plugin_scan.hpp"
+#include "../utility/string_utils.hpp"
+#include "../utility/includes.hpp"
+#include "../utility/app_logger.hpp"
 #include "../decoder/sub_record_iter.hpp"
 #include "../decoder/sub_record_schema.hpp"
 #include "../decoder/view_tree_format.hpp"
@@ -29,7 +32,7 @@ void plugin_scan_t::loaded_plugin_t::parse_master_list()
 			continue;
 
 		std::string master_name(sub.data, sub.size);
-		master_name = tools_t::erase_null_chars(master_name);
+		master_name = string_utils::erase_null_chars(master_name);
 		master_files.push_back(std::move(master_name));
 	}
 }

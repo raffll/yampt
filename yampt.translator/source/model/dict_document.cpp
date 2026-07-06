@@ -68,7 +68,7 @@ std::vector<table_row_t> dict_document_t::build_rows() const
 	return rows;
 }
 
-void dict_document_t::commit_edit(tools_t::rec_type_t type, size_t record_index, const std::string & new_text)
+void dict_document_t::commit_edit(rec_type_t type, size_t record_index, const std::string & new_text)
 {
 	auto it = m_data.find(type);
 	if (it == m_data.end())
@@ -83,13 +83,13 @@ void dict_document_t::commit_edit(tools_t::rec_type_t type, size_t record_index,
 
 void dict_document_t::save()
 {
-	tools_t::dict_t encoded;
+	dict_t encoded;
 
 	for (const auto & [type, chapter] : m_data)
 	{
 		for (const auto & rec : chapter.records)
 		{
-			tools_t::record_entry_t entry;
+			record_entry_t entry;
 			entry.key_text = encode_from_utf8(rec.key_text, m_codepage);
 			entry.old_text = encode_from_utf8(rec.old_text, m_codepage);
 			entry.new_text = encode_from_utf8(rec.new_text, m_codepage);
@@ -144,22 +144,22 @@ dict_kind_t dict_document_t::kind() const
 	return m_kind;
 }
 
-const tools_t::dict_t & dict_document_t::data() const
+const dict_t & dict_document_t::data() const
 {
 	return m_data;
 }
 
-tools_t::dict_t & dict_document_t::data_mut()
+dict_t & dict_document_t::data_mut()
 {
 	return m_data;
 }
 
-const std::set<std::pair<tools_t::rec_type_t, size_t>> & dict_document_t::modified_records() const
+const std::set<std::pair<rec_type_t, size_t>> & dict_document_t::modified_records() const
 {
 	return m_modified_records;
 }
 
-void dict_document_t::modified_records_insert(tools_t::rec_type_t type, size_t record_index)
+void dict_document_t::modified_records_insert(rec_type_t type, size_t record_index)
 {
 	m_modified_records.insert({ type, record_index });
 }

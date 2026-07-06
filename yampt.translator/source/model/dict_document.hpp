@@ -3,7 +3,7 @@
 #include "document.hpp"
 #include <io/codepage.hpp>
 #include <utility/dict_kind.hpp>
-#include <utility/tools.hpp>
+#include <utility/domain_types.hpp>
 #include <set>
 #include <string>
 #include <utility>
@@ -18,7 +18,7 @@ public:
 	bool is_read_only() const override;
 
 	std::vector<table_row_t> build_rows() const override;
-	void commit_edit(tools_t::rec_type_t type, size_t record_index, const std::string & new_text) override;
+	void commit_edit(rec_type_t type, size_t record_index, const std::string & new_text) override;
 	void save() override;
 
 	int translated_count() const override;
@@ -27,16 +27,16 @@ public:
 	void set_dirty(bool dirty) override;
 
 	dict_kind_t kind() const;
-	const tools_t::dict_t & data() const;
-	tools_t::dict_t & data_mut();
-	const std::set<std::pair<tools_t::rec_type_t, size_t>> & modified_records() const;
-	void modified_records_insert(tools_t::rec_type_t type, size_t record_index);
+	const dict_t & data() const;
+	dict_t & data_mut();
+	const std::set<std::pair<rec_type_t, size_t>> & modified_records() const;
+	void modified_records_insert(rec_type_t type, size_t record_index);
 
 private:
 	std::string m_path;
 	codepage_t m_codepage;
 	dict_kind_t m_kind;
-	tools_t::dict_t m_data;
+	dict_t m_data;
 	bool m_dirty = false;
-	std::set<std::pair<tools_t::rec_type_t, size_t>> m_modified_records;
+	std::set<std::pair<rec_type_t, size_t>> m_modified_records;
 };

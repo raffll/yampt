@@ -1,6 +1,6 @@
 #include "text_match_index.hpp"
 
-void text_match_index_t::build(const tools_t::dict_t & base_dict)
+void text_match_index_t::build(const dict_t & base_dict)
 {
 	m_index.clear();
 	m_conflicts.clear();

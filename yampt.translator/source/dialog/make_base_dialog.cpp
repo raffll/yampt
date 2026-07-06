@@ -1,7 +1,7 @@
 #include "make_base_dialog.hpp"
 #include "../model/sidebar_model.hpp"
 #include "../view/display_name.hpp"
-#include <utility/tools.hpp>
+#include <utility/app_logger.hpp>
 #include <algorithm>
 #include <filesystem>
 #include <map>
@@ -276,7 +276,7 @@ void make_base_dialog_t::populate_dictionary_combo()
 	if (!dict_combo)
 		return;
 
-	auto dict_dir = tools_t::get_exe_dir();
+	auto dict_dir = app_logger_t::get_exe_dir();
 	if (!dict_dir.empty() && dict_dir.back() != '/' && dict_dir.back() != '\\')
 		dict_dir += '/';
 	dict_dir += "dictionaries";

@@ -187,6 +187,7 @@
     <ClCompile Include="source\io\eet_converter.cpp" />
     <ClCompile Include="source\io\eet_reader.cpp" />
     <ClCompile Include="source\io\esm_reader.cpp" />
+    <ClCompile Include="source\io\binary_file_io.cpp" />
     <ClCompile Include="source\io\file_list.cpp" />
     <ClCompile Include="source\io\profile_reader.cpp" />
     <ClCompile Include="source\io\yaml_l10n_reader.cpp" />
@@ -207,7 +208,8 @@
     <ClCompile Include="source\utility\char_diff.cpp" />
     <ClCompile Include="source\utility\keyword_trie.cpp" />
     <ClCompile Include="source\utility\record_behavior.cpp" />
-    <ClCompile Include="source\utility\tools.cpp" />
+    <ClCompile Include="source\utility\domain_types.cpp" />
+    <ClCompile Include="source\utility\app_logger.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\converter\esm_converter.hpp" />
@@ -231,6 +233,7 @@
     <ClInclude Include="source\io\eet_converter.hpp" />
     <ClInclude Include="source\io\eet_reader.hpp" />
     <ClInclude Include="source\io\esm_reader.hpp" />
+    <ClInclude Include="source\io\binary_file_io.hpp" />
     <ClInclude Include="source\io\file_list.hpp" />
     <ClInclude Include="source\io\json_reader.hpp" />
     <ClInclude Include="source\io\profile_reader.hpp" />
@@ -258,7 +261,8 @@
     <ClInclude Include="source\utility\status_types.hpp" />
     <ClInclude Include="source\utility\string_utils.hpp" />
     <ClInclude Include="source\utility\theme_enums.hpp" />
-    <ClInclude Include="source\utility\tools.hpp" />
+    <ClInclude Include="source\utility\domain_types.hpp" />
+    <ClInclude Include="source\utility\app_logger.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

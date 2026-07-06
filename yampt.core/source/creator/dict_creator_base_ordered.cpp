@@ -1,4 +1,5 @@
 #include "dict_creator.hpp"
+#include "../utility/app_logger.hpp"
 
 void dict_creator_t::make_dict_base_ordered()
 {
@@ -41,7 +42,7 @@ void dict_creator_t::make_dict_base_ordered()
 		esm.select_record(i);
 		esm_ref.select_record(i);
 
-		if (!tools_t::is_fnam(esm.get_record().id))
+		if (!domain_types_t::is_fnam(esm.get_record().id))
 			continue;
 
 		process_fnam_ordered(i);
@@ -63,7 +64,7 @@ void dict_creator_t::build_dial_map_ordered()
 		if (!esm.get_key().exist)
 			continue;
 
-		if (tools_t::get_dialog_type(esm.get_key().content) != "T")
+		if (domain_types_t::get_dialog_type(esm.get_key().content) != "T")
 			continue;
 
 		esm.set_value("NAME");
@@ -94,7 +95,7 @@ void dict_creator_t::process_gmst_ordered(size_t i)
 		return;
 
 	const auto & old_text = esm_ref.get_value().text;
-	insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::gmst, status_t::translated);
+	insert_entry_base(key_text, old_text, new_text, rec_type_t::gmst, status_t::translated);
 }
 
 void dict_creator_t::process_fnam_ordered(size_t i)
@@ -119,7 +120,7 @@ void dict_creator_t::process_fnam_ordered(size_t i)
 		return;
 
 	const auto & old_text = esm_ref.get_value().text;
-	insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::fnam, status_t::translated);
+	insert_entry_base(key_text, old_text, new_text, rec_type_t::fnam, status_t::translated);
 }
 
 void dict_creator_t::process_desc_ordered(size_t i)
@@ -138,7 +139,7 @@ void dict_creator_t::process_desc_ordered(size_t i)
 		return;
 
 	const auto & old_text = esm_ref.get_value().text;
-	insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::desc, status_t::translated);
+	insert_entry_base(key_text, old_text, new_text, rec_type_t::desc, status_t::translated);
 }
 
 void dict_creator_t::process_text_ordered(size_t i)
@@ -157,7 +158,7 @@ void dict_creator_t::process_text_ordered(size_t i)
 		return;
 
 	const auto & old_text = esm_ref.get_value().text;
-	insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::text, status_t::translated);
+	insert_entry_base(key_text, old_text, new_text, rec_type_t::text, status_t::translated);
 }
 
 void dict_creator_t::process_rnam_ordered(size_t i)
@@ -178,13 +179,13 @@ void dict_creator_t::process_rnam_ordered(size_t i)
 		if (esm_ref.get_value().exist)
 		{
 			const auto & old_text = esm_ref.get_value().text;
-			insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::rnam, status_t::translated);
+			insert_entry_base(key_text, old_text, new_text, rec_type_t::rnam, status_t::translated);
 			esm_ref.set_next_value("RNAM");
 		}
 		else
 		{
-			tools_t::add_log("[warning] RNAM count mismatch: \"" + esm.get_key().text + "\"\r\n");
-			insert_entry_base(key_text, "", new_text, tools_t::rec_type_t::rnam, status_t::mismatch);
+			app_logger_t::add_log("[warning] RNAM count mismatch: \"" + esm.get_key().text + "\"\r\n");
+			insert_entry_base(key_text, "", new_text, rec_type_t::rnam, status_t::mismatch);
 		}
 
 		esm.set_next_value("RNAM");
@@ -198,7 +199,7 @@ void dict_creator_t::process_indx_ordered(size_t i)
 	if (!esm.get_key().exist || !esm.get_value().exist)
 		return;
 
-	const auto key_text = esm.get_record().id + "^" + tools_t::get_indx(esm.get_key().content);
+	const auto key_text = esm.get_record().id + "^" + domain_types_t::get_indx(esm.get_key().content);
 	const auto & new_text = esm.get_value().text;
 
 	esm_ref.set_key("INDX");
@@ -207,7 +208,7 @@ void dict_creator_t::process_indx_ordered(size_t i)
 		return;
 
 	const auto & old_text = esm_ref.get_value().text;
-	insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::indx, status_t::translated);
+	insert_entry_base(key_text, old_text, new_text, rec_type_t::indx, status_t::translated);
 }
 
 void dict_creator_t::process_cell_ordered(size_t i)
@@ -223,7 +224,7 @@ void dict_creator_t::process_cell_ordered(size_t i)
 		return;
 
 	const auto & old_text = esm_ref.get_value().text;
-	insert_entry_base(old_text, old_text, new_text, tools_t::rec_type_t::cell, status_t::translated);
+	insert_entry_base(old_text, old_text, new_text, rec_type_t::cell, status_t::translated);
 }
 
 void dict_creator_t::process_dial_ordered(size_t i, std::string & dial_type, std::string & dial_foreign_name)
@@ -232,7 +233,7 @@ void dict_creator_t::process_dial_ordered(size_t i, std::string & dial_type, std
 	if (!esm.get_key().exist)
 		return;
 
-	dial_type = tools_t::get_dialog_type(esm.get_key().content);
+	dial_type = domain_types_t::get_dialog_type(esm.get_key().content);
 
 	esm.set_value("NAME");
 	if (!esm.get_value().exist)
@@ -250,7 +251,7 @@ void dict_creator_t::process_dial_ordered(size_t i, std::string & dial_type, std
 		return;
 
 	insert_entry_base(
-	    dial_foreign_name, dial_foreign_name, native_name, tools_t::rec_type_t::dial, status_t::translated);
+	    dial_foreign_name, dial_foreign_name, native_name, rec_type_t::dial, status_t::translated);
 }
 
 void dict_creator_t::attach_speaker_metadata(const std::string & key_text, size_t record_index)
@@ -275,9 +276,9 @@ void dict_creator_t::attach_speaker_metadata(const std::string & key_text, size_
 
 	std::string gender;
 	if (esm_ref.get_value().exist)
-		gender = ((tools_t::convert_string_byte_array_to_uint(esm_ref.get_value().content) & 0x0001) != 0) ? "F" : "M";
+		gender = ((domain_types_t::convert_string_byte_array_to_uint(esm_ref.get_value().content) & 0x0001) != 0) ? "F" : "M";
 
-	auto * entry = dict.at(tools_t::rec_type_t::info).find(key_text);
+	auto * entry = dict.at(rec_type_t::info).find(key_text);
 	if (!entry)
 		return;
 
@@ -309,7 +310,7 @@ void dict_creator_t::process_info_ordered(
 	const auto & old_text = esm_ref.get_value().text;
 
 	const auto key_text = dial_type + "^" + dial_foreign_name + "^" + inam;
-	insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::info, status_t::translated);
+	insert_entry_base(key_text, old_text, new_text, rec_type_t::info, status_t::translated);
 
 	process_bnam_ordered(i, dial_type, dial_foreign_name, inam);
 	attach_speaker_metadata(key_text, i);
@@ -329,9 +330,9 @@ void dict_creator_t::process_sctx_ordered(size_t i)
 	esm_ref.set_value("SCTX");
 	if (!esm_ref.get_value().exist)
 	{
-		tools_t::add_log("[warning] SCTX not found: \"" + script_name + "\"\r\n");
+		app_logger_t::add_log("[warning] SCTX not found: \"" + script_name + "\"\r\n");
 		for (const auto & msg : native_messages)
-			insert_entry_base(script_name + "^" + msg, "", msg, tools_t::rec_type_t::sctx, status_t::mismatch);
+			insert_entry_base(script_name + "^" + msg, "", msg, rec_type_t::sctx, status_t::mismatch);
 		return;
 	}
 
@@ -339,9 +340,9 @@ void dict_creator_t::process_sctx_ordered(size_t i)
 
 	if (native_messages.size() != foreign_messages.size())
 	{
-		tools_t::add_log("[warning] SCTX line count mismatch: \"" + script_name + "\"\r\n");
+		app_logger_t::add_log("[warning] SCTX line count mismatch: \"" + script_name + "\"\r\n");
 		for (const auto & msg : foreign_messages)
-			insert_entry_base(script_name + "^" + msg, msg, msg, tools_t::rec_type_t::sctx, status_t::mismatch);
+			insert_entry_base(script_name + "^" + msg, msg, msg, rec_type_t::sctx, status_t::mismatch);
 		return;
 	}
 
@@ -350,7 +351,7 @@ void dict_creator_t::process_sctx_ordered(size_t i)
 		    script_name + "^" + foreign_messages[k],
 		    foreign_messages[k],
 		    native_messages[k],
-		    tools_t::rec_type_t::sctx,
+		    rec_type_t::sctx,
 		    status_t::translated);
 }
 
@@ -373,11 +374,11 @@ void dict_creator_t::process_bnam_ordered(
 	if (!esm_ref.get_value().exist || esm_ref.get_value().text.empty())
 	{
 		const auto info_key = dial_type + "^" + dial_foreign_name + "^" + info_inam;
-		tools_t::add_log("[warning] BNAM not found: \"" + info_key + "\"\r\n");
+		app_logger_t::add_log("[warning] BNAM not found: \"" + info_key + "\"\r\n");
 		for (const auto & msg : native_messages)
 		{
 			const auto key_text = dial_type + "^" + dial_foreign_name + "^" + info_inam + "^" + msg;
-			insert_entry_base(key_text, "", msg, tools_t::rec_type_t::bnam, status_t::mismatch);
+			insert_entry_base(key_text, "", msg, rec_type_t::bnam, status_t::mismatch);
 		}
 		return;
 	}
@@ -387,11 +388,11 @@ void dict_creator_t::process_bnam_ordered(
 	if (native_messages.size() != foreign_messages.size())
 	{
 		const auto info_key = dial_type + "^" + dial_foreign_name + "^" + info_inam;
-		tools_t::add_log("[warning] BNAM line count mismatch: \"" + info_key + "\"\r\n");
+		app_logger_t::add_log("[warning] BNAM line count mismatch: \"" + info_key + "\"\r\n");
 		for (const auto & msg : foreign_messages)
 		{
 			const auto key_text = dial_type + "^" + dial_foreign_name + "^" + info_inam + "^" + msg;
-			insert_entry_base(key_text, msg, msg, tools_t::rec_type_t::bnam, status_t::mismatch);
+			insert_entry_base(key_text, msg, msg, rec_type_t::bnam, status_t::mismatch);
 		}
 		return;
 	}
@@ -401,7 +402,7 @@ void dict_creator_t::process_bnam_ordered(
 		const auto key_text = dial_type + "^" + dial_foreign_name + "^" + info_inam + "^" + foreign_messages[k];
 		const auto & old_text = foreign_messages[k];
 		const auto & new_text = native_messages[k];
-		insert_entry_base(key_text, old_text, new_text, tools_t::rec_type_t::bnam, status_t::translated);
+		insert_entry_base(key_text, old_text, new_text, rec_type_t::bnam, status_t::translated);
 	}
 }
 
@@ -433,7 +434,7 @@ void dict_creator_t::process_cell_default_ordered()
 			break;
 
 		const auto & old_text = esm_ref.get_value().text;
-		insert_entry_base(old_text, old_text, new_text, tools_t::rec_type_t::cell, status_t::translated);
+		insert_entry_base(old_text, old_text, new_text, rec_type_t::cell, status_t::translated);
 		break;
 	}
 }
@@ -458,6 +459,6 @@ void dict_creator_t::process_cell_region_ordered()
 			continue;
 
 		const auto & old_text = esm_ref.get_value().text;
-		insert_entry_base(old_text, old_text, new_text, tools_t::rec_type_t::cell, status_t::translated);
+		insert_entry_base(old_text, old_text, new_text, rec_type_t::cell, status_t::translated);
 	}
 }

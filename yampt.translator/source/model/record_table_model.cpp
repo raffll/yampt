@@ -38,9 +38,9 @@ static QString strip_leading_whitespace(QString text)
 	return text.mid(index);
 }
 
-static bool is_script_type(tools_t::rec_type_t type)
+static bool is_script_type(rec_type_t type)
 {
-	return type == tools_t::rec_type_t::sctx || type == tools_t::rec_type_t::bnam;
+	return type == rec_type_t::sctx || type == rec_type_t::bnam;
 }
 
 static QString format_key_display(const table_row_t & row)
@@ -89,7 +89,7 @@ QVariant record_table_model_t::data(const QModelIndex & index, int role) const
 		switch (index.column())
 		{
 		case col_id:
-			return QString::fromStdString(tools_t::type_to_str(row.type));
+			return QString::fromStdString(domain_types_t::type_to_str(row.type));
 		case col_key:
 			return format_key_display(row);
 		case col_original:

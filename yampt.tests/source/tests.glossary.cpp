@@ -3,13 +3,13 @@
 
 namespace {
 
-tools_t::dict_t make_dict_with_dial(const std::vector<std::pair<std::string, std::string>> & entries)
+dict_t make_dict_with_dial(const std::vector<std::pair<std::string, std::string>> & entries)
 {
-	tools_t::dict_t dict;
-	auto & chapter = dict[tools_t::rec_type_t::dial];
+	dict_t dict;
+	auto & chapter = dict[rec_type_t::dial];
 	for (const auto & [old_val, new_val] : entries)
 	{
-		tools_t::record_entry_t entry;
+		record_entry_t entry;
 		entry.old_text = old_val;
 		entry.new_text = new_val;
 		entry.status = status_t::translated;
@@ -18,15 +18,15 @@ tools_t::dict_t make_dict_with_dial(const std::vector<std::pair<std::string, std
 	return dict;
 }
 
-tools_t::dict_t make_dict_with_fnam(
+dict_t make_dict_with_fnam(
     const std::vector<std::pair<std::string, std::string>> & entries,
     status_t status = status_t::translated)
 {
-	tools_t::dict_t dict;
-	auto & chapter = dict[tools_t::rec_type_t::fnam];
+	dict_t dict;
+	auto & chapter = dict[rec_type_t::fnam];
 	for (const auto & [old_val, new_val] : entries)
 	{
-		tools_t::record_entry_t entry;
+		record_entry_t entry;
 		entry.old_text = old_val;
 		entry.new_text = new_val;
 		entry.status = status;
@@ -43,7 +43,7 @@ TEST_CASE("glossary_t::annotate, finds dial topic in text", "[u]")
 	glossary_t manager;
 	manager.rebuild({ { &dict, "test.json" } });
 
-	const auto results = manager.annotate("I saw a kwama forager today", tools_t::rec_type_t::info);
+	const auto results = manager.annotate("I saw a kwama forager today", rec_type_t::info);
 
 	REQUIRE(results.size() == 1);
 	REQUIRE(results[0].start == 8);
@@ -59,7 +59,7 @@ TEST_CASE("glossary_t::annotate, case insensitive matching", "[u]")
 	glossary_t manager;
 	manager.rebuild({ { &dict, "base.json" } });
 
-	const auto results = manager.annotate("Welcome to balmora", tools_t::rec_type_t::info);
+	const auto results = manager.annotate("Welcome to balmora", rec_type_t::info);
 
 	REQUIRE(results.size() == 1);
 	REQUIRE(results[0].start == 11);
@@ -72,7 +72,7 @@ TEST_CASE("glossary_t::annotate, no match inside word", "[u]")
 	glossary_t manager;
 	manager.rebuild({ { &dict, "base.json" } });
 
-	const auto results = manager.annotate("He started running", tools_t::rec_type_t::info);
+	const auto results = manager.annotate("He started running", rec_type_t::info);
 
 	REQUIRE(results.empty());
 }
@@ -83,24 +83,24 @@ TEST_CASE("glossary_t::annotate, empty text returns empty", "[u]")
 	glossary_t manager;
 	manager.rebuild({ { &dict, "base.json" } });
 
-	const auto results = manager.annotate("", tools_t::rec_type_t::info);
+	const auto results = manager.annotate("", rec_type_t::info);
 
 	REQUIRE(results.empty());
 }
 
 TEST_CASE("glossary_t::annotate, glossary does not overlap hyperlinks", "[u]")
 {
-	tools_t::dict_t dict;
+	dict_t dict;
 
-	auto & dial_chapter = dict[tools_t::rec_type_t::dial];
-	tools_t::record_entry_t dial_entry;
+	auto & dial_chapter = dict[rec_type_t::dial];
+	record_entry_t dial_entry;
 	dial_entry.old_text = "kwama forager";
 	dial_entry.new_text = "zwiadowca kwama";
 	dial_entry.status = status_t::translated;
 	dial_chapter.records.push_back(std::move(dial_entry));
 
-	auto & fnam_chapter = dict[tools_t::rec_type_t::fnam];
-	tools_t::record_entry_t fnam_entry;
+	auto & fnam_chapter = dict[rec_type_t::fnam];
+	record_entry_t fnam_entry;
 	fnam_entry.old_text = "kwama";
 	fnam_entry.new_text = "kwama_pl";
 	fnam_entry.status = status_t::translated;
@@ -109,7 +109,7 @@ TEST_CASE("glossary_t::annotate, glossary does not overlap hyperlinks", "[u]")
 	glossary_t manager;
 	manager.rebuild({ { &dict, "base.json" } });
 
-	const auto results = manager.annotate("the kwama forager attacks", tools_t::rec_type_t::info);
+	const auto results = manager.annotate("the kwama forager attacks", rec_type_t::info);
 
 	bool has_topic = false;
 	bool has_glossary_overlap = false;
@@ -132,7 +132,7 @@ TEST_CASE("glossary_t::annotate, multiple matches in text", "[u]")
 	glossary_t manager;
 	manager.rebuild({ { &dict, "base.json" } });
 
-	const auto results = manager.annotate("test and test again", tools_t::rec_type_t::info);
+	const auto results = manager.annotate("test and test again", rec_type_t::info);
 
 	REQUIRE(results.size() == 2);
 	REQUIRE(results[0].start == 0);
@@ -145,7 +145,7 @@ TEST_CASE("glossary_t::annotate, skips excluded statuses for glossary", "[u]")
 	glossary_t manager;
 	manager.rebuild({ { &dict, "base.json" } });
 
-	const auto results = manager.annotate("the Sword is sharp", tools_t::rec_type_t::info);
+	const auto results = manager.annotate("the Sword is sharp", rec_type_t::info);
 
 	REQUIRE(results.empty());
 }
@@ -156,7 +156,7 @@ TEST_CASE("glossary_t::annotate, includes adapted status in glossary", "[u]")
 	glossary_t manager;
 	manager.rebuild({ { &dict, "base.json" } });
 
-	const auto results = manager.annotate("the Sword is sharp", tools_t::rec_type_t::info);
+	const auto results = manager.annotate("the Sword is sharp", rec_type_t::info);
 
 	REQUIRE(results.size() == 1);
 	REQUIRE(results[0].kind == annotation_t::glossary_term);
@@ -227,7 +227,7 @@ TEST_CASE("glossary_t::update_term, updates existing glossary entry", "[u]")
 	glossary_t manager;
 	manager.rebuild({ { &dict, "base.json" } });
 
-	manager.update_term(tools_t::rec_type_t::fnam, "sword", "szpada");
+	manager.update_term(rec_type_t::fnam, "sword", "szpada");
 	const auto result = manager.apply_glossary("take the sword");
 
 	REQUIRE(result == "take the szpada");
@@ -239,7 +239,7 @@ TEST_CASE("glossary_t::update_term, removes entry when new equals old", "[u]")
 	glossary_t manager;
 	manager.rebuild({ { &dict, "base.json" } });
 
-	manager.update_term(tools_t::rec_type_t::fnam, "sword", "sword");
+	manager.update_term(rec_type_t::fnam, "sword", "sword");
 	const auto result = manager.apply_glossary("take the sword");
 
 	REQUIRE(result == "take the sword");
@@ -247,12 +247,12 @@ TEST_CASE("glossary_t::update_term, removes entry when new equals old", "[u]")
 
 TEST_CASE("glossary_t::update_term, adds new dial topic", "[u]")
 {
-	tools_t::dict_t dict;
+	dict_t dict;
 	glossary_t manager;
 	manager.rebuild({ { &dict, "base.json" } });
 
-	manager.update_term(tools_t::rec_type_t::dial, "thieves guild", "gildia zlodziei");
-	const auto results = manager.annotate("join the thieves guild", tools_t::rec_type_t::info);
+	manager.update_term(rec_type_t::dial, "thieves guild", "gildia zlodziei");
+	const auto results = manager.annotate("join the thieves guild", rec_type_t::info);
 
 	REQUIRE(results.size() == 1);
 	REQUIRE(results[0].kind == annotation_t::dial_topic);
@@ -265,7 +265,7 @@ TEST_CASE("glossary_t::annotate_translated, finds translated topic in text", "[u
 	glossary_t manager;
 	manager.rebuild({ { &dict, "base.json" } });
 
-	const auto results = manager.annotate_translated("widzialem zwiadowca kwama", tools_t::rec_type_t::info);
+	const auto results = manager.annotate_translated("widzialem zwiadowca kwama", rec_type_t::info);
 
 	REQUIRE(results.size() == 1);
 	REQUIRE(results[0].start == 10);
@@ -279,7 +279,7 @@ TEST_CASE("glossary_t::rebuild, longer terms match first", "[u]")
 	glossary_t manager;
 	manager.rebuild({ { &dict, "base.json" } });
 
-	const auto results = manager.annotate("use the battle ax", tools_t::rec_type_t::info);
+	const auto results = manager.annotate("use the battle ax", rec_type_t::info);
 
 	bool found_long = false;
 	for (const auto & result : results)

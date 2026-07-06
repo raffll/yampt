@@ -2,7 +2,7 @@
 
 #include "../merger/dict_merger.hpp"
 #include "../utility/includes.hpp"
-#include "../utility/tools.hpp"
+#include "../utility/domain_types.hpp"
 #include "scdt_patcher.hpp"
 
 class script_parser_t
@@ -24,7 +24,7 @@ public:
 	}
 
 	script_parser_t(
-	    const tools_t::rec_type_t type,
+	    const rec_type_t type,
 	    const dict_merger_t & merger,
 	    const std::string & record_key,
 	    const std::string & source_path,
@@ -32,12 +32,12 @@ public:
 	    const std::string & old_scdt = "");
 
 private:
-	void convert_line(const std::string & keyword, const int pos_in_expression, const tools_t::rec_type_t text_type);
-	void convert_line_unquoted(const std::string & keyword, const tools_t::rec_type_t text_type);
+	void convert_line(const std::string & keyword, const int pos_in_expression, const rec_type_t text_type);
+	void convert_line_unquoted(const std::string & keyword, const rec_type_t text_type);
 	void trim_line();
 	void extract_text(const int pos_in_expression);
 	void remove_quotes();
-	void find_new_text(const tools_t::rec_type_t text_type);
+	void find_new_text(const rec_type_t text_type);
 	void insert_new_text();
 	void convert_text_in_compiled(const bool is_getpccell);
 	void convert_line();
@@ -49,7 +49,7 @@ private:
 	void dump_error();
 	void replace_vertical_lines_by_new_line(std::string & message);
 
-	const tools_t::rec_type_t type;
+	const rec_type_t type;
 	const dict_merger_t * merger;
 	const std::string record_key;
 	const std::string source_path;
