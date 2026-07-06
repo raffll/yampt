@@ -55,8 +55,8 @@ make_base_dialog_t::make_base_dialog_t(
 	    "When old_text equals new_text, the text is tokenized by non-alphanumeric "
 	    "characters (tokens shorter than 3 characters are ignored). Each token is "
 	    "checked against the Hunspell dictionary:\n"
-	    "\u2022 If any token is found \u2192 status = Untranslated (contains source language words)\n"
-	    "\u2022 If no tokens are found \u2192 status = To Verify (likely a proper noun)");
+	    "\xe2\x80\xa2 If any token is found -> status = Untranslated (contains source language words)\n"
+	    "\xe2\x80\xa2 If no tokens are found -> status = To Verify (likely a proper noun)");
 	partial_explanation->setStyleSheet("color: #888; margin-left: 20px; margin-top: 4px;");
 	partial_explanation->setVisible(false);
 	mode_layout->addWidget(partial_explanation);

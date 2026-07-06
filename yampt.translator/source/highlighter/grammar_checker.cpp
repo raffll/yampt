@@ -35,20 +35,20 @@ void grammar_checker_t::check_double_spaces(
 {
 	const auto fmt = warning_format();
 
-	for (int i = 0; i < text.size() - 1; ++i)
+	for (qsizetype i = 0; i < text.size() - 1; ++i)
 	{
 		if (text[i] != ' ' || text[i + 1] != ' ')
 			continue;
 
-		int start = i + 1;
+		qsizetype start = i + 1;
 		while (i + 1 < text.size() && text[i + 1] == ' ')
 			++i;
 
 		QTextEdit::ExtraSelection sel;
 		sel.format = fmt;
 		sel.cursor = QTextCursor(document);
-		sel.cursor.setPosition(start);
-		sel.cursor.setPosition(i + 1, QTextCursor::KeepAnchor);
+		sel.cursor.setPosition(static_cast<int>(start));
+		sel.cursor.setPosition(static_cast<int>(i + 1), QTextCursor::KeepAnchor);
 		selections.append(sel);
 	}
 }
@@ -60,12 +60,12 @@ void grammar_checker_t::check_unmatched_quotes(
 {
 	int quote_count = 0;
 	int last_quote = -1;
-	for (int i = 0; i < text.size(); ++i)
+	for (qsizetype i = 0; i < text.size(); ++i)
 	{
 		if (text[i] == '"')
 		{
 			++quote_count;
-			last_quote = i;
+			last_quote = static_cast<int>(i);
 		}
 	}
 
@@ -87,7 +87,7 @@ void grammar_checker_t::check_unmatched_parens(
 {
 	int open_count = 0;
 	int close_count = 0;
-	for (int i = 0; i < text.size(); ++i)
+	for (qsizetype i = 0; i < text.size(); ++i)
 	{
 		if (text[i] == '(')
 			++open_count;
@@ -100,7 +100,7 @@ void grammar_checker_t::check_unmatched_parens(
 
 	const auto fmt = warning_format();
 
-	for (int i = 0; i < text.size(); ++i)
+	for (qsizetype i = 0; i < text.size(); ++i)
 	{
 		if (text[i] != '(' && text[i] != ')')
 			continue;
@@ -108,8 +108,8 @@ void grammar_checker_t::check_unmatched_parens(
 		QTextEdit::ExtraSelection sel;
 		sel.format = fmt;
 		sel.cursor = QTextCursor(document);
-		sel.cursor.setPosition(i);
-		sel.cursor.setPosition(i + 1, QTextCursor::KeepAnchor);
+		sel.cursor.setPosition(static_cast<int>(i));
+		sel.cursor.setPosition(static_cast<int>(i + 1), QTextCursor::KeepAnchor);
 		selections.append(sel);
 	}
 }

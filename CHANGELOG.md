@@ -1,5 +1,9 @@
 # Changelog
 
+## [xxx]
+- Transaltor -> annottaion highlight misaligmnet fix
+
+
 ## [0.842] - 2026-07-05
 
 ### Added — yEditor

@@ -201,7 +201,7 @@ QList<QTextEdit::ExtraSelection> editor_view_t::highlight_adapted_diff(
 	for (const auto & segment : segments)
 	{
 		const auto q_segment = QString::fromStdString(segment.text);
-		const int char_length = q_segment.size();
+		const int char_length = static_cast<int>(q_segment.size());
 
 		if (segment.operation == diff_op_t::inserted)
 		{
@@ -215,7 +215,7 @@ QList<QTextEdit::ExtraSelection> editor_view_t::highlight_adapted_diff(
 		}
 		else if (segment.operation == diff_op_t::deleted)
 		{
-			const int total_chars = q_display.size();
+			const int total_chars = static_cast<int>(q_display.size());
 			const int mark_pos = char_position < total_chars ? char_position : char_position - 1;
 			if (mark_pos >= 0 && mark_pos < total_chars)
 			{
