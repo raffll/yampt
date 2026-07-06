@@ -1,4 +1,4 @@
-#include "conflict_slots_cell.hpp"
+#include "conflict_slots.hpp"
 #include <algorithm>
 #include <unordered_map>
 
@@ -220,7 +220,7 @@ static void align_cell_ref_group(
 	align_ref_group_slots(parsed, ver_refs, object_index, ref_slots, result);
 }
 
-void build_cell_slots(slot_result_t & result)
+void conflict_slot_builder_t::build_cell(slot_result_t & result)
 {
 	std::vector<std::vector<cell_ref_group_t>> ver_refs;
 	std::vector<size_t> ver_header_end;

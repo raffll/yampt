@@ -1,4 +1,4 @@
-﻿#include "view_tree_model.hpp"
+#include "view_tree_model.hpp"
 #include <decoder/view_tree_format.hpp>
 #include <scanner/record_conflict.hpp>
 #include <utility/record_behavior.hpp>
@@ -225,9 +225,9 @@ void view_tree_model_t::build_header_row(plugin_scan_t & scan, const conflict_en
 	view_node_t sig_row;
 	sig_row.label = "Signature";
 	sig_row.values.resize(col_count, entry.rec_type);
-	sig_row.row_conflict_all = compute_conflict_all(sig_row.values);
+	sig_row.row_conflict_all = record_conflict_t::compute_conflict_all(sig_row.values);
 	sig_row.all_identical = true;
-	sig_row.cell_conflict_this = compute_conflict_this(sig_row.values);
+	sig_row.cell_conflict_this = record_conflict_t::compute_conflict_this(sig_row.values);
 	header_row.children.push_back(std::move(sig_row));
 
 	view_node_t flags_row;
@@ -238,8 +238,8 @@ void view_tree_model_t::build_header_row(plugin_scan_t & scan, const conflict_en
 		flags_row.values[col] = read_record_flags(scan, entry.versions[col]);
 
 	flags_row.all_identical = check_all_identical(flags_row.values);
-	flags_row.row_conflict_all = compute_conflict_all(flags_row.values);
-	flags_row.cell_conflict_this = compute_conflict_this(flags_row.values);
+	flags_row.row_conflict_all = record_conflict_t::compute_conflict_all(flags_row.values);
+	flags_row.cell_conflict_this = record_conflict_t::compute_conflict_this(flags_row.values);
 	header_row.children.push_back(std::move(flags_row));
 
 	m_rows.push_back(std::move(header_row));

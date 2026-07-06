@@ -228,7 +228,6 @@
     <ClInclude Include="source\creator\text_match_index.hpp" />
     <ClInclude Include="source\creator\word_match_utils.hpp" />
     <ClInclude Include="source\decoder\conflict_slots.hpp" />
-    <ClInclude Include="source\decoder\conflict_slots_cell.hpp" />
     <ClInclude Include="source\decoder\sub_record_iter.hpp" />
     <ClInclude Include="source\decoder\sub_record_schema.hpp" />
     <ClInclude Include="source\decoder\view_group_def.hpp" />

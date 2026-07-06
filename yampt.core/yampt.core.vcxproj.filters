@@ -90,7 +90,6 @@
     <ClInclude Include="source\scanner\sub_record_merge.hpp" />
     <ClInclude Include="source\scanner\merge_patch_ops.hpp" />
     <ClInclude Include="source\decoder\conflict_slots.hpp" />
-    <ClInclude Include="source\decoder\conflict_slots_cell.hpp" />
     <ClInclude Include="source\scanner\plugin_index.hpp" />
     <ClInclude Include="source\scanner\plugin_scan.hpp" />
     <ClInclude Include="source\scanner\merge_patch_store.hpp" />
