@@ -2,6 +2,7 @@
 
 #include "../decoder/conflict_slots.hpp"
 #include "conflict_enums.hpp"
+#include "merge_patch_store.hpp"
 #include "plugin_index.hpp"
 #include <memory>
 #include <string>
@@ -29,14 +30,6 @@ struct conflict_entry_t
 class plugin_scan_t
 {
 public:
-	struct merge_record_t
-	{
-		std::string rec_type;
-		std::string record_id;
-		std::string content;
-		bool pinned = false;
-	};
-
 	void load_plugin(const std::string & path);
 	void set_merge_plugin(const std::string & filename);
 	void set_merge_plugin_from_loaded(int plugin_idx);
@@ -74,6 +67,16 @@ public:
 	const std::string & merge_record_content(size_t index) const;
 	const std::string & merge_record_type(size_t index) const;
 	const std::string & merge_record_id(size_t index) const;
+
+	merge_patch_store_t & merge_store()
+	{
+		return m_merge_store;
+	}
+
+	const merge_patch_store_t & merge_store() const
+	{
+		return m_merge_store;
+	}
 
 	size_t itm_count(int plugin_idx) const;
 	std::vector<const conflict_entry_t *> itm_entries(int plugin_idx) const;
@@ -115,7 +118,7 @@ private:
 	std::vector<std::unique_ptr<loaded_plugin_t>> m_plugins;
 	int m_merge_plugin_idx = -1;
 
-	std::vector<merge_record_t> m_merge_records;
+	merge_patch_store_t m_merge_store;
 
 	std::vector<conflict_entry_t> m_entries;
 	std::unordered_map<std::string, size_t> m_entry_lookup;

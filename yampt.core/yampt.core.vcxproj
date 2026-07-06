@@ -203,6 +203,7 @@
     <ClCompile Include="source\scanner\plugin_index.cpp" />
     <ClCompile Include="source\scanner\plugin_scan.cpp" />
     <ClCompile Include="source\scanner\plugin_scan_merge.cpp" />
+    <ClCompile Include="source\scanner\merge_patch_store.cpp" />
     <ClCompile Include="source\scanner\sub_record_merge.cpp" />
     <ClCompile Include="source\scanner\summon_fixer.cpp" />
     <ClCompile Include="source\translator\translation_engine.cpp" />
@@ -253,6 +254,7 @@
     <ClInclude Include="source\scanner\merge_patch_ops.hpp" />
     <ClInclude Include="source\scanner\plugin_index.hpp" />
     <ClInclude Include="source\scanner\plugin_scan.hpp" />
+    <ClInclude Include="source\scanner\merge_patch_store.hpp" />
     <ClInclude Include="source\scanner\record_conflicts.hpp" />
     <ClInclude Include="source\scanner\sub_record_merge.hpp" />
     <ClInclude Include="source\scanner\summon_fixer.hpp" />

@@ -130,13 +130,14 @@ void plugin_scan_t::rebuild_conflicts()
 
 	if (m_merge_plugin_idx >= 0)
 	{
-		for (size_t mi = 0; mi < m_merge_records.size(); ++mi)
+		const auto & store_records = m_merge_store.records();
+		for (size_t mi = 0; mi < store_records.size(); ++mi)
 		{
-			const auto & mr = m_merge_records[mi];
+			const auto & merge_rec = store_records[mi];
 			record_version_t ver;
 			ver.plugin_idx = m_merge_plugin_idx;
 			ver.record_index = mi;
-			insert_or_update_version({ mr.rec_type, mr.record_id, "", "", ver });
+			insert_or_update_version({ merge_rec.rec_type, merge_rec.record_id, "", "", ver });
 		}
 	}
 
@@ -289,7 +290,7 @@ void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 		const auto & ver = entry.versions[i];
 
 		if (ver.plugin_idx == m_merge_plugin_idx)
-			contents[i] = m_merge_records[ver.record_index].content;
+			contents[i] = m_merge_store.record_content(ver.record_index);
 		else
 		{
 			m_plugins[ver.plugin_idx]->esm.select_record(ver.record_index);

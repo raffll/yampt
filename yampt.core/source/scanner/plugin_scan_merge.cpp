@@ -9,7 +9,7 @@ void plugin_scan_t::set_merge_plugin(const std::string & filename)
 	plugin->path = filename;
 	m_plugins.push_back(std::move(plugin));
 
-	m_merge_records.clear();
+	m_merge_store.clear();
 }
 
 void plugin_scan_t::set_merge_plugin_from_loaded(int plugin_idx)
@@ -18,7 +18,7 @@ void plugin_scan_t::set_merge_plugin_from_loaded(int plugin_idx)
 		return;
 
 	m_merge_plugin_idx = plugin_idx;
-	m_merge_records.clear();
+	m_merge_store.clear();
 
 	auto & plugin = *m_plugins[plugin_idx];
 	const auto & entries = plugin.index.entries();
@@ -27,45 +27,23 @@ void plugin_scan_t::set_merge_plugin_from_loaded(int plugin_idx)
 	{
 		plugin.esm.select_record(entries[i].record_index);
 		const auto & rec = plugin.esm.get_record();
-		m_merge_records.push_back({ entries[i].rec_type, entries[i].record_id, rec.content });
+		m_merge_store.add(entries[i].rec_type, entries[i].record_id, rec.content);
 	}
 }
 
 void plugin_scan_t::clear_merge_records()
 {
-	m_merge_records.clear();
+	m_merge_store.clear();
 }
 
-std::vector<plugin_scan_t::merge_record_t> plugin_scan_t::collect_pinned_records() const
+std::vector<merge_record_t> plugin_scan_t::collect_pinned_records() const
 {
-	std::vector<merge_record_t> pinned;
-	for (const auto & record : m_merge_records)
-	{
-		if (record.pinned)
-			pinned.push_back(record);
-	}
-	return pinned;
+	return m_merge_store.collect_pinned();
 }
 
 void plugin_scan_t::restore_pinned_records(const std::vector<merge_record_t> & pinned)
 {
-	for (const auto & pinned_record : pinned)
-	{
-		bool replaced = false;
-		for (auto & existing : m_merge_records)
-		{
-			if (existing.rec_type == pinned_record.rec_type && existing.record_id == pinned_record.record_id)
-			{
-				existing.content = pinned_record.content;
-				existing.pinned = true;
-				replaced = true;
-				break;
-			}
-		}
-
-		if (!replaced)
-			m_merge_records.push_back(pinned_record);
-	}
+	m_merge_store.restore_pinned(pinned);
 }
 
 void plugin_scan_t::copy_record_to_merge(int source_plugin, size_t record_index)
@@ -92,16 +70,7 @@ void plugin_scan_t::copy_record_to_merge_raw(
 	if (m_merge_plugin_idx < 0)
 		return;
 
-	for (auto & existing : m_merge_records)
-	{
-		if (existing.rec_type == rec_type && existing.record_id == record_id)
-		{
-			existing.content = content;
-			return;
-		}
-	}
-
-	m_merge_records.push_back({ rec_type, record_id, content, false });
+	m_merge_store.update_or_add(rec_type, record_id, content);
 }
 
 void plugin_scan_t::pin_record_to_merge(
@@ -112,46 +81,22 @@ void plugin_scan_t::pin_record_to_merge(
 	if (m_merge_plugin_idx < 0)
 		return;
 
-	for (auto & existing : m_merge_records)
-	{
-		if (existing.rec_type == rec_type && existing.record_id == record_id)
-		{
-			existing.content = content;
-			existing.pinned = true;
-			return;
-		}
-	}
-
-	m_merge_records.push_back({ rec_type, record_id, content, true });
+	m_merge_store.update_or_add_pinned(rec_type, record_id, content);
 }
 
 bool plugin_scan_t::is_merge_pinned(const std::string & rec_type, const std::string & record_id) const
 {
-	for (const auto & record : m_merge_records)
-	{
-		if (record.rec_type == rec_type && record.record_id == record_id)
-			return record.pinned;
-	}
-	return false;
+	return m_merge_store.is_pinned(rec_type, record_id);
 }
 
 const std::string * plugin_scan_t::find_merge_content(const std::string & rec_type, const std::string & record_id) const
 {
-	for (const auto & record : m_merge_records)
-	{
-		if (record.rec_type == rec_type && record.record_id == record_id)
-			return &record.content;
-	}
-	return nullptr;
+	return m_merge_store.find_content(rec_type, record_id);
 }
 
 void plugin_scan_t::remove_from_merge(const std::string & type, const std::string & id)
 {
-	auto it = std::remove_if(
-	    m_merge_records.begin(),
-	    m_merge_records.end(),
-	    [&](const merge_record_t & record) { return record.rec_type == type && record.record_id == id; });
-	m_merge_records.erase(it, m_merge_records.end());
+	m_merge_store.remove(type, id);
 }
 
 void plugin_scan_t::recompute_single_conflict(const std::string & rec_type, const std::string & record_id)
@@ -160,9 +105,10 @@ void plugin_scan_t::recompute_single_conflict(const std::string & rec_type, cons
 	auto it_entry = m_entry_lookup.find(lookup_key);
 	if (it_entry == m_entry_lookup.end())
 	{
-		for (size_t mi = 0; mi < m_merge_records.size(); ++mi)
+		const auto & store_records = m_merge_store.records();
+		for (size_t mi = 0; mi < store_records.size(); ++mi)
 		{
-			const auto & merge_rec = m_merge_records[mi];
+			const auto & merge_rec = store_records[mi];
 			if (merge_rec.rec_type != rec_type || merge_rec.record_id != record_id)
 				continue;
 
@@ -185,9 +131,10 @@ void plugin_scan_t::recompute_single_conflict(const std::string & rec_type, cons
 	        [this](const record_version_t & ver) { return ver.plugin_idx == m_merge_plugin_idx; }),
 	    entry.versions.end());
 
-	for (size_t mi = 0; mi < m_merge_records.size(); ++mi)
+	const auto & store_records = m_merge_store.records();
+	for (size_t mi = 0; mi < store_records.size(); ++mi)
 	{
-		const auto & merge_rec = m_merge_records[mi];
+		const auto & merge_rec = store_records[mi];
 		if (merge_rec.rec_type != rec_type || merge_rec.record_id != record_id)
 			continue;
 
@@ -209,8 +156,8 @@ std::string plugin_scan_t::read_record_content(int plugin_idx, size_t record_ind
 {
 	if (plugin_idx == m_merge_plugin_idx)
 	{
-		if (record_index < m_merge_records.size())
-			return m_merge_records[record_index].content;
+		if (record_index < m_merge_store.count())
+			return m_merge_store.record_content(record_index);
 
 		return {};
 	}
@@ -229,22 +176,22 @@ bool plugin_scan_t::has_merge() const
 
 size_t plugin_scan_t::merge_record_count() const
 {
-	return m_merge_records.size();
+	return m_merge_store.count();
 }
 
 const std::string & plugin_scan_t::merge_record_content(size_t index) const
 {
-	return m_merge_records[index].content;
+	return m_merge_store.record_content(index);
 }
 
 const std::string & plugin_scan_t::merge_record_type(size_t index) const
 {
-	return m_merge_records[index].rec_type;
+	return m_merge_store.record_type(index);
 }
 
 const std::string & plugin_scan_t::merge_record_id(size_t index) const
 {
-	return m_merge_records[index].record_id;
+	return m_merge_store.record_id(index);
 }
 
 size_t plugin_scan_t::itm_count(int plugin_idx) const
