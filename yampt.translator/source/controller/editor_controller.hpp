@@ -1,9 +1,9 @@
 #pragma once
 
+#include "../editor/byte_limit_validator.hpp"
+#include "../editor/edit_history.hpp"
+#include "../editor/glossary.hpp"
 #include "../model/table_row.hpp"
-#include "byte_limit_validator.hpp"
-#include "edit_history.hpp"
-#include "glossary.hpp"
 #include <string>
 #include <vector>
 #include <QString>

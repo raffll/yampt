@@ -60,7 +60,3 @@ Batch tool for automated dictionary and conversion workflows.
 - JSON dictionary format with status tracking
 - Handles all translatable record types
 - Converts compiled script data without needing to recompile in TES CS
-
-## License
-
-MIT

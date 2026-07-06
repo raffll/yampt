@@ -12,7 +12,7 @@ yampt/
 │   │   ├── translator/    # translation_engine_t
 │   │   ├── scanner/       # plugin_scan_t, plugin_index_t, record_conflict, conflict_enums, conflict_types
 │   │   ├── decoder/       # conflict_slots, sub_record_iter, sub_record_schema, view_tree_format
-│   │   ├── io/            # File format readers/writers (ESM, JSON, codepage, file_list)
+│   │   ├── io/            # File format readers/writers (ESM, JSON, codepage, file_list, yaml_l10n)
 │   │   └── utility/       # Pure helpers (tools, string_utils, record_types, status_types, dict_kind)
 │   └── yampt.core.vcxproj
 ├── yampt.cli/              # CLI entry point → yampt.exe (links yampt.lib)
@@ -23,22 +23,26 @@ yampt/
 │   └── yampt.cli.vcxproj
 ├── yampt.translator/       # GUI translation workbench (Qt6) → yTranslator.exe
 │   ├── source/
-│   │   ├── model/         # Data models & documents
-│   │   ├── view/          # Qt widgets (all use _view_t suffix)
-│   │   ├── editor/        # Logic & orchestration (editor_controller, edit_history, find_replace, glossary, etc.)
+│   │   ├── controller/    # Orchestration (editor_controller, record_display_controller)
+│   │   ├── model/         # Data models & documents (dict_document, yaml_document, table, sidebar, filter_state)
+│   │   ├── view/          # Qt widgets (all use _view_t suffix) + display_name
+│   │   ├── editor/        # Editing services (edit_history, find_replace, glossary, spell_checker, row_filter, byte_limit_validator, operation_executor)
+│   │   ├── session/       # Session lifecycle (session, workspace_watcher, sidebar_controller, plugin_operations_controller)
 │   │   ├── dialog/        # Modal dialogs
-│   │   ├── highlighter/   # Text coloring (syntax, hyperlinks, annotations)
+│   │   │   └── settings/  # Settings dialog pages
+│   │   ├── highlighter/   # Text coloring (syntax, hyperlinks, annotations, grammar, highlight_applier, highlight_coordinator)
 │   │   ├── translator/    # Translation backends (CTranslate2, DeepL, Google)
-│   │   ├── utility/       # Helpers (display_name, spell_checker)
-│   │   ├── io/            # Config and YAML l10n readers/writers
 │   │   └── main.cpp
 │   └── yampt.translator.vcxproj
 ├── yampt.editor/           # Standalone editor app (Qt6) → yEditor.exe
 │   ├── source/
-│   │   ├── model/
-│   │   ├── view/
-│   │   ├── dialog/
-│   │   ├── io/
+│   │   ├── controller/    # Orchestration (merge_controller, view_context_menu)
+│   │   ├── model/         # Data models (nav_tree_model, view_tree_model, decode logic)
+│   │   ├── view/          # Qt widgets + editor_delegates
+│   │   ├── patcher/       # Patch building (patch_builder, plugin_cleaner)
+│   │   ├── session/       # Session lifecycle (plugin_session, profile_reader)
+│   │   ├── dialog/        # Modal dialogs
+│   │   │   └── settings/  # Settings dialog pages
 │   │   └── main.cpp
 │   └── yampt.editor.vcxproj
 ├── yampt.tests/            # Catch2 unit tests

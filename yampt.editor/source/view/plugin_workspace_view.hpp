@@ -1,13 +1,13 @@
 #pragma once
 
+#include "../controller/merge_controller.hpp"
+#include "../controller/view_context_menu.hpp"
 #include "../model/nav_tree_model.hpp"
-#include "../patcher/merge_controller.hpp"
 #include "../session/plugin_session.hpp"
 #include "messages_view.hpp"
 #include "nav_tree_view.hpp"
 #include "preview_view.hpp"
 #include "record_view.hpp"
-#include "view_context_menu.hpp"
 #include <scanner/plugin_scan.hpp>
 #include <QLabel>
 #include <QSplitter>

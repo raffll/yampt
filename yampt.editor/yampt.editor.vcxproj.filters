@@ -9,8 +9,8 @@
     <ClCompile Include="source\model\view_tree_decode_cell.cpp" />
     <ClCompile Include="source\model\view_tree_decode_lists.cpp" />
     <ClCompile Include="source\view\plugin_workspace_view.cpp" />
-    <ClCompile Include="source\view\view_context_menu.cpp" />
-    <ClCompile Include="source\patcher\merge_controller.cpp" />
+    <ClCompile Include="source\controller\view_context_menu.cpp" />
+    <ClCompile Include="source\controller\merge_controller.cpp" />
     <ClCompile Include="source\patcher\plugin_cleaner.cpp" />
     <ClCompile Include="source\session\profile_reader.cpp" />
     <ClCompile Include="source\session\plugin_session.cpp" />

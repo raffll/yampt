@@ -452,107 +452,20 @@ void main_window_t::connect_sidebar_signals()
 	    [this](const std::string & path)
 	{
 		commit_current_edit();
-
-		auto * yaml_doc = dynamic_cast<yaml_document_t *>(m_active_doc);
-		if (!yaml_doc)
-			return;
-
-		auto sep = path.find_last_of("/\\");
-		auto default_dir = sep != std::string::npos ? path.substr(0, sep) : std::string {};
-
-		auto save_path = QFileDialog::getSaveFileName(
-		    this, "Save Translated YAML", QString::fromStdString(default_dir), "YAML files (*.yaml)");
-
-		if (save_path.isEmpty())
-			return;
-
-		yaml_doc->export_to(save_path.toStdString());
-		m_log_view->append_log("save as", "saved \"" + save_path.toStdString() + "\"\r\n");
-
-		update_sidebar_item(yaml_doc->path());
-
-		switch_document(nullptr);
-		set_unsaved_changes(false);
+		m_sidebar_controller->on_save_as_requested(path);
 	});
 
 	connect(
 	    m_sidebar,
 	    &sidebar_view_t::remove_folder_requested,
 	    this,
-	    [this](const std::string & root_path)
-	{
-		auto roots = m_file_list.get_roots();
-		roots.erase(std::remove(roots.begin(), roots.end(), root_path), roots.end());
-		m_file_list.scan_roots(roots);
-
-		if (m_active_doc)
-		{
-			const auto * fe = m_file_list.get(m_active_doc->path());
-			if (!fe)
-				switch_document(nullptr);
-		}
-
-		m_session.close_if([this, &root_path](const document_t & doc)
-		{
-			if (doc.path().find(root_path) == 0)
-			{
-				m_filter_states.erase(doc.path());
-				return true;
-			}
-			return false;
-		});
-
-		rebuild_annotations();
-		m_last_annotation_version = m_session.dict_version();
-		scan_workspace();
-		save_config();
-		update_watcher_roots();
-	});
+	    [this](const std::string & root_path) { m_sidebar_controller->on_remove_folder_requested(root_path); });
 
 	connect(
 	    m_sidebar,
 	    &sidebar_view_t::delete_folder_requested,
 	    this,
-	    [this](const std::string & folder_path)
-	{
-		auto sep = folder_path.find_last_of("/\\");
-		auto folder_name = sep != std::string::npos ? folder_path.substr(sep + 1) : folder_path;
-
-		auto answer = QMessageBox::question(
-		    this,
-		    "Delete Folder",
-		    QString("Delete \"%1\" and all its contents from disk?").arg(QString::fromStdString(folder_name)),
-		    QMessageBox::Yes | QMessageBox::No);
-
-		if (answer != QMessageBox::Yes)
-			return;
-
-		if (m_active_doc)
-		{
-			auto folder_norm = string_utils::normalize_path(folder_path);
-			const auto & doc_path = m_active_doc->path();
-			if (doc_path.find(folder_norm + "/") == 0 || doc_path == folder_norm)
-				switch_document(nullptr);
-		}
-
-		auto folder_norm = string_utils::normalize_path(folder_path);
-
-		m_session.close_if([this, &folder_norm](const document_t & doc)
-		{
-			const auto & p = doc.path();
-			if (p.find(folder_norm + "/") == 0 || p == folder_norm)
-			{
-				m_filter_states.erase(p);
-				return true;
-			}
-			return false;
-		});
-
-		rebuild_annotations();
-		m_last_annotation_version = m_session.dict_version();
-		QDir(QString::fromStdString(folder_path)).removeRecursively();
-		scan_workspace();
-	});
+	    [this](const std::string & folder_path) { m_sidebar_controller->on_delete_folder_requested(folder_path); });
 
 	connect(
 	    m_history_view,

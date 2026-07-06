@@ -2,6 +2,7 @@
 #include "dialog/dict_selection_dialog.hpp"
 #include "dialog/find_replace_dialog.hpp"
 #include "dialog/first_run_dialog.hpp"
+#include "dialog/make_base_dialog.hpp"
 #include "dialog/merge_dialog.hpp"
 #include "dialog/settings/translator_settings_dialog.hpp"
 #include "dialog/spell_context_menu.hpp"
@@ -90,6 +91,53 @@ main_window_t::main_window_t(QWidget * parent)
 	setup_editor_panel();
 	setup_status_bar();
 	setup_table_display();
+
+	m_sidebar_controller = std::make_unique<sidebar_controller_t>(
+	    sidebar_controller_deps_t { m_session,
+	                                m_file_list,
+	                                *m_workspace_watcher,
+	                                *m_sidebar,
+	                                *m_log_view,
+	                                m_filter_states,
+	                                m_last_annotation_version,
+	                                m_active_doc,
+	                                this,
+	                                { [this](document_t * doc) { switch_document(doc); },
+	                                  [this]() { rebuild_annotations(); },
+	                                  [this]() { save_config(); },
+	                                  [this](bool dirty) { set_unsaved_changes(dirty); } } });
+
+	m_plugin_ops_controller = std::make_unique<plugin_operations_controller_t>(
+	    plugin_operations_deps_t { m_session,
+	                               m_file_list,
+	                               m_settings,
+	                               m_executor,
+	                               *m_log_view,
+	                               *m_translation_tab,
+	                               *m_record_tabs,
+	                               m_current_codepage,
+	                               this,
+	                               { [this]() { m_sidebar_controller->scan_workspace(); },
+	                                 [this](const std::string & path) { return show_make_base_dialog(path); },
+	                                 [this](dict_document_t * doc) { start_batch_translation(doc); } } });
+
+	m_record_display_controller =
+	    std::make_unique<record_display_controller_t>(record_display_deps_t { *m_editor_view,
+	                                                                          *m_table_model,
+	                                                                          m_editor_controller,
+	                                                                          m_glossary,
+	                                                                          m_grammar_checker,
+	                                                                          m_byte_limit_validator,
+	                                                                          m_edit_history,
+	                                                                          *m_annotations_view,
+	                                                                          *m_history_view,
+	                                                                          *m_book_preview_view,
+	                                                                          *m_validation_view,
+	                                                                          *m_translation_tab,
+	                                                                          m_extra_sel_original,
+	                                                                          m_extra_sel_adapted,
+	                                                                          m_extra_sel_translation,
+	                                                                          *m_grammar_check });
 
 	connect_menu_signals();
 	connect_sidebar_signals();
@@ -487,19 +535,7 @@ void main_window_t::on_translation_changed()
 
 void main_window_t::apply_translation_highlights(const table_row_t * row_data)
 {
-	const auto annotations = m_glossary.annotate(row_data->old_text, row_data->type);
-	const auto current_text = m_editor_view->translation_editor()->toPlainText().toLower().toStdString();
-
-	const highlight_request_t request { &annotations, false, highlight_sort_policy_t::hyperlink_first };
-	auto highlights = highlight_coordinator_t::find_annotation_highlights(current_text, request);
-
-	m_extra_sel_translation.annotations =
-	    highlight_applier_t::build_selections(m_editor_view->translation_editor(), highlights);
-
-	m_extra_sel_translation.grammar = m_grammar_check->isChecked()
-	                                      ? m_grammar_checker.check(m_editor_view->translation_editor(), row_data->type)
-	                                      : QList<QTextEdit::ExtraSelection> {};
-	highlight_applier_t::apply(m_editor_view->translation_editor(), m_extra_sel_translation);
+	m_record_display_controller->apply_translation_highlights(row_data);
 }
 
 void main_window_t::commit_current_edit()
@@ -573,153 +609,17 @@ void main_window_t::commit_current_edit()
 	update_status_counts();
 }
 
-// irreducible: sequential orchestrator Ă˘â‚¬â€ť each step depends on prior state; no nesting to flatten
 void main_window_t::load_record(int row)
 {
-	m_editor_controller.set_loading(true);
-
-	if (!m_table_model || !m_editor_view)
-	{
-		m_editor_controller.set_current_row(-1);
-		m_editor_controller.set_loading(false);
-		return;
-	}
+	m_record_display_controller->load_record(row, m_active_doc);
 
 	const auto * row_data = m_table_model->row_at(row);
-	if (!row_data)
+	if (row_data)
 	{
-		load_record_clear(row);
-		return;
+		m_hl_original->set_record_type(row_data->type);
+		m_hl_adapted->set_record_type(row_data->type);
+		m_hl_translation->set_record_type(row_data->type);
 	}
-
-	const auto load_result =
-	    m_active_doc ? m_editor_controller.load(*m_active_doc, *row_data) : editor_load_result_t {};
-
-	if (row_data->type == tools_t::rec_type_t::sctx || row_data->type == tools_t::rec_type_t::bnam)
-		load_record_script(row_data);
-	else
-		load_record_plain(row_data);
-
-	m_editor_view->translation_editor()->setReadOnly(load_result.is_read_only);
-
-	m_hl_original->set_record_type(row_data->type);
-	m_hl_adapted->set_record_type(row_data->type);
-	m_hl_translation->set_record_type(row_data->type);
-
-	const auto validation_result = m_byte_limit_validator.validate(row_data->type, row_data->new_text);
-	m_validation_view->update_validation(validation_result);
-
-	if (row_data->type == tools_t::rec_type_t::text)
-		m_book_preview_view->set_html(row_data->old_text, row_data->new_text);
-	else
-		m_book_preview_view->clear();
-
-	m_annotations_view->update_annotations(
-	    load_result.annotations, load_result.speaker_name, load_result.gender, load_result.enchantment);
-
-	m_translation_tab->set_source_text(row_data->old_text);
-
-	if (!load_result.details.empty())
-		m_editor_view->set_details(load_result.details);
-	else
-		m_editor_view->clear_details();
-
-	const auto & annotations = load_result.annotations;
-	const auto original_text_lower = m_editor_view->original_view()->toPlainText().toLower().toStdString();
-	const auto translation_text_lower = m_editor_view->translation_editor()->toPlainText().toLower().toStdString();
-
-	const highlight_request_t orig_request { &annotations, true, highlight_sort_policy_t::length_first };
-	auto orig_highlights = highlight_coordinator_t::find_annotation_highlights(original_text_lower, orig_request);
-
-	m_extra_sel_original.annotations =
-	    highlight_applier_t::build_selections(m_editor_view->original_view(), orig_highlights);
-	m_extra_sel_original.grammar.clear();
-	m_extra_sel_original.adapted_diff.clear();
-	highlight_applier_t::apply(m_editor_view->original_view(), m_extra_sel_original);
-
-	const highlight_request_t trans_request { &annotations, false, highlight_sort_policy_t::length_first };
-	auto trans_highlights = highlight_coordinator_t::find_annotation_highlights(translation_text_lower, trans_request);
-
-	m_extra_sel_translation.annotations =
-	    highlight_applier_t::build_selections(m_editor_view->translation_editor(), trans_highlights);
-	m_extra_sel_translation.grammar = m_grammar_check->isChecked()
-	                                      ? m_grammar_checker.check(m_editor_view->translation_editor(), row_data->type)
-	                                      : QList<QTextEdit::ExtraSelection> {};
-	m_extra_sel_translation.adapted_diff.clear();
-	highlight_applier_t::apply(m_editor_view->translation_editor(), m_extra_sel_translation);
-
-	m_extra_sel_adapted.annotations.clear();
-	m_extra_sel_adapted.grammar.clear();
-	m_extra_sel_adapted.adapted_diff.clear();
-
-	if (row_data->status == status_t::adapted && !load_result.details.empty())
-	{
-		m_extra_sel_adapted.adapted_diff =
-		    m_editor_view->highlight_adapted_diff(row_data->new_text, load_result.details);
-	}
-	else if (row_data->status == status_t::changed && !load_result.details.empty())
-	{
-		m_extra_sel_adapted.adapted_diff =
-		    m_editor_view->highlight_adapted_diff(row_data->old_text, load_result.details);
-	}
-
-	highlight_applier_t::apply(m_editor_view->details_view(), m_extra_sel_adapted);
-
-	const auto history = m_edit_history.get_history(row_data->type, row_data->key_text);
-	m_history_view->update_history(history, !load_result.is_read_only);
-
-	m_editor_controller.set_loaded_text(m_editor_view->translation_editor()->toPlainText());
-	m_editor_controller.set_current_row(row);
-
-	auto cursor = m_editor_view->translation_editor()->textCursor();
-	cursor.movePosition(QTextCursor::End);
-	m_editor_view->translation_editor()->setTextCursor(cursor);
-
-	m_editor_controller.set_loading(false);
-}
-
-void main_window_t::load_record_clear(int /*row*/)
-{
-	m_editor_view->original_view()->clear();
-	m_editor_view->translation_editor()->clear();
-	m_validation_view->clear();
-	m_annotations_view->clear();
-	m_history_view->clear();
-	m_book_preview_view->clear();
-	m_editor_controller.set_current_row(-1);
-	m_editor_controller.set_loading(false);
-}
-
-void main_window_t::load_record_script(const table_row_t * row_data)
-{
-	m_editor_view->load_script_entry(row_data->old_text, row_data->new_text);
-	m_editor_view->translation_editor()->set_block_multiline(true);
-
-	if (row_data->status != status_t::untranslated)
-		return;
-
-	int line_count = m_editor_view->script_slot_count();
-	QString empty_lines;
-	for (int i = 1; i < static_cast<int>(line_count); ++i)
-		empty_lines += '\n';
-
-	m_editor_view->translation_editor()->setPlainText(empty_lines);
-}
-
-void main_window_t::load_record_plain(const table_row_t * row_data)
-{
-	m_editor_view->original_view()->setPlainText(QString::fromStdString(row_data->old_text));
-	m_editor_view->clear_script_template();
-
-	if (row_data->status == status_t::untranslated)
-		m_editor_view->translation_editor()->setPlainText(QString());
-	else
-		m_editor_view->translation_editor()->setPlainText(QString::fromStdString(row_data->new_text));
-
-	bool block_multiline =
-	    (row_data->type == tools_t::rec_type_t::cell || row_data->type == tools_t::rec_type_t::dial ||
-	     row_data->type == tools_t::rec_type_t::fnam);
-	m_editor_view->translation_editor()->set_block_multiline(block_multiline);
 }
 
 void main_window_t::on_whitespace_toggled(bool checked)
@@ -945,56 +845,17 @@ void main_window_t::restore_filter_state(const std::string & path)
 
 void main_window_t::rebuild_sidebar()
 {
-	std::string active_path;
-	if (m_active_doc)
-		active_path = m_active_doc->path();
-
-	auto model = build_render_model(m_file_list, m_session, active_path);
-	m_sidebar->set_model(model);
+	m_sidebar_controller->rebuild_sidebar();
 }
 
 void main_window_t::update_sidebar_item(const std::string & path)
 {
-	const auto * fe = m_file_list.get(path);
-	if (!fe)
-		return;
-
-	const auto * doc = m_session.find(path);
-	const bool is_loaded = (doc != nullptr);
-	const bool is_dirty = doc && doc->is_dirty();
-	m_sidebar->update_item_text(fe->path, derive_display_name(*fe, is_loaded, is_dirty));
+	m_sidebar_controller->update_sidebar_item(path);
 }
 
 void main_window_t::update_annotations()
 {
-	if (m_editor_controller.current_row() < 0)
-		return;
-
-	const auto * row_data = m_table_model->row_at(m_editor_controller.current_row());
-	if (!row_data)
-		return;
-
-	const auto annotations = m_glossary.annotate(row_data->old_text, row_data->type);
-
-	std::string speaker_name;
-	std::string gender_str;
-	std::string enchantment_str;
-
-	auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
-	if (dict_doc)
-	{
-		const auto & data = dict_doc->data();
-		auto it = data.find(row_data->type);
-		if (it != data.end() && row_data->record_index < it->second.records.size())
-		{
-			const auto & entry = it->second.records[row_data->record_index];
-			speaker_name = entry.speaker_name;
-			gender_str = entry.gender;
-			enchantment_str = entry.enchantment;
-		}
-	}
-
-	m_annotations_view->update_annotations(annotations, speaker_name, gender_str, enchantment_str);
+	m_record_display_controller->update_annotations(m_active_doc);
 }
 
 void main_window_t::update_status_counts()
@@ -1025,16 +886,7 @@ void main_window_t::update_status_counts()
 
 void main_window_t::update_validation()
 {
-	if (m_editor_controller.current_row() < 0)
-		return;
-
-	const auto * row_data = m_table_model->row_at(m_editor_controller.current_row());
-	if (!row_data)
-		return;
-
-	const auto current_text = m_editor_view->translation_editor()->toPlainText().toStdString();
-	const auto result = m_byte_limit_validator.validate(row_data->type, current_text);
-	m_validation_view->update_validation(result);
+	m_record_display_controller->update_validation();
 }
 
 void main_window_t::scan_spell_dictionaries()
@@ -1147,439 +999,23 @@ void main_window_t::save_config()
 	m_settings.sync();
 }
 
-// irreducible: switch dispatch for 5 operation types; each branch contains distinct dialog/executor calls
 void main_window_t::on_plugin_operation(const std::string & plugin_path_arg, plugin_op_t op)
 {
-	const auto plugin_path = plugin_path_arg;
-	const auto encoding = m_current_codepage;
+	m_plugin_ops_controller->on_plugin_operation(plugin_path_arg, op);
 
-	auto path_sep = plugin_path.find_last_of("/\\");
-	auto plugin_dir = path_sep != std::string::npos ? plugin_path.substr(0, path_sep) : std::string {};
-	plugin_dir = string_utils::normalize_path(plugin_dir);
-
-	const auto workspace_dir = QCoreApplication::applicationDirPath().toStdString() + "/workspace/";
-
-	if (op == plugin_op_t::convert || op == plugin_op_t::create_plugin)
-		m_executor.set_output_dir(plugin_dir);
-	else
-		m_executor.set_output_dir(workspace_dir);
-
-	if (m_session.has_any_unsaved())
-	{
-		auto answer = QMessageBox::question(
-		    this,
-		    "Unsaved Changes",
-		    "Some dictionaries have unsaved changes. Save before proceeding?",
-		    QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
-
-		if (answer == QMessageBox::Cancel)
-			return;
-
-		if (answer == QMessageBox::Yes)
-			m_session.save_all();
-	}
-
-	operation_executor_t::result_t result;
-
-	switch (op)
-	{
-	case plugin_op_t::make_dict:
-	{
-		result = m_executor.make_dict(plugin_path, encoding);
-		break;
-	}
-	case plugin_op_t::make_dict_with_base:
-	{
-		auto entries = build_dict_entries(plugin_dir);
-
-		dict_selection_dialog_t dialog(entries, m_settings.last_merge_order(), this);
-		dialog.setWindowTitle("Select Dictionaries");
-		if (dialog.exec() != QDialog::Accepted)
-			return;
-
-		const auto selected = dialog.get_selected_paths();
-		if (selected.empty())
-			return;
-
-		m_settings.set_last_merge_order(selected);
-
-		for (const auto & sel_path : selected)
-			m_session.open(sel_path);
-
-		dict_merger_t merger(selected);
-		result = m_executor.make_dict_with_base(plugin_path, merger.get_dict(), encoding);
-		break;
-	}
-	case plugin_op_t::make_base:
-	{
-		auto params = show_make_base_dialog(plugin_path);
-		if (!params.has_value())
-			return;
-
-		result = m_executor.make_base(
-		    plugin_path,
-		    params->native_path,
-		    params->foreign_lang,
-		    params->native_lang,
-		    nullptr,
-		    params->base_mode,
-		    params->dictionary_aff_path);
-		break;
-	}
-	case plugin_op_t::convert:
-	{
-		auto entries = build_dict_entries(plugin_dir);
-
-		dict_selection_dialog_t dialog(entries, m_settings.last_merge_order(), this);
-		dialog.setWindowTitle("Select Dictionaries for Convert");
-		if (dialog.exec() != QDialog::Accepted)
-			return;
-
-		const auto selected = dialog.get_selected_paths();
-		if (selected.empty())
-			return;
-
-		m_settings.set_last_merge_order(selected);
-
-		for (const auto & sel_path : selected)
-			m_session.open(sel_path);
-
-		result = m_executor.convert(plugin_path, selected, encoding);
-		break;
-	}
-	case plugin_op_t::create_plugin:
-	{
-		auto entries = build_dict_entries(plugin_dir);
-
-		dict_selection_dialog_t dialog(entries, m_settings.last_merge_order(), this);
-		dialog.setWindowTitle("Select Dictionaries for Create");
-		if (dialog.exec() != QDialog::Accepted)
-			return;
-
-		const auto selected = dialog.get_selected_paths();
-		if (selected.empty())
-			return;
-
-		m_settings.set_last_merge_order(selected);
-
-		for (const auto & sel_path : selected)
-			m_session.open(sel_path);
-
-		result = m_executor.create_plugin(plugin_path, selected, encoding);
-		break;
-	}
-	}
-
-	log_operation_result(plugin_path, op, result);
-
-	if (!result.output_path.empty())
-	{
-		auto norm_output = string_utils::normalize_path(result.output_path);
-
-		if (m_active_doc && m_active_doc->path() == norm_output)
-			m_active_doc = nullptr;
-
-		m_session.close(result.output_path);
-	}
-
-	scan_workspace();
+	if (m_active_doc && !m_session.find(m_active_doc->path()))
+		m_active_doc = nullptr;
 }
 
-// irreducible: self-contained modal dialog Ă˘â‚¬â€ť UI construction is inherently verbose
 std::optional<make_base_params_t> main_window_t::show_make_base_dialog(const std::string & plugin_path)
 {
-	auto source_sep = plugin_path.find_last_of("/\\");
-	auto source_filename = source_sep != std::string::npos ? plugin_path.substr(source_sep + 1) : plugin_path;
-	auto source_lower = source_filename;
-	std::transform(
-	    source_lower.begin(),
-	    source_lower.end(),
-	    source_lower.begin(),
-	    [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-
-	struct plugin_item_t
-	{
-		std::string path;
-		std::string display;
-		std::string filename;
-		std::string root_path;
-		std::string subfolder;
-	};
-
-	std::vector<plugin_item_t> plugins;
-
-	for (const auto * entry : m_file_list.all())
-	{
-		if (entry->type != file_type_t::plugin)
-			continue;
-
-		if (entry->path == plugin_path)
-			continue;
-
-		plugins.push_back(
-		    { entry->path,
-		      derive_display_name(*entry, false, false),
-		      entry->filename,
-		      entry->root_path,
-		      entry->workspace_subfolder });
-	}
-
-	if (plugins.empty())
+	make_base_dialog_t dialog(m_file_list, m_settings, plugin_path, this);
+	if (dialog.exec() != QDialog::Accepted)
 		return std::nullopt;
 
-	std::sort(
-	    plugins.begin(),
-	    plugins.end(),
-	    [](const plugin_item_t & a, const plugin_item_t & b) { return a.filename < b.filename; });
-
-	QDialog dlg(this);
-	dlg.setWindowTitle("Make Base");
-	dlg.setModal(true);
-	dlg.resize(400, 350);
-
-	auto * dlg_layout = new QVBoxLayout(&dlg);
-	dlg_layout->addWidget(new QLabel("Select the native ESM:", &dlg));
-
-	auto * tree = new QTreeWidget(&dlg);
-	tree->setHeaderHidden(true);
-	tree->setRootIsDecorated(true);
-	tree->setIndentation(16);
-	dlg_layout->addWidget(tree);
-
-	struct root_builder_t
-	{
-		std::map<std::string, std::vector<plugin_item_t *>> subfolder_items;
-		std::vector<plugin_item_t *> root_items;
-	};
-
-	std::map<std::string, root_builder_t> roots;
-	for (auto & p : plugins)
-	{
-		auto & rb = roots[p.root_path];
-		if (p.subfolder.empty())
-			rb.root_items.push_back(&p);
-		else
-			rb.subfolder_items[p.subfolder].push_back(&p);
-	}
-
-	QTreeWidgetItem * best_match_item = nullptr;
-
-	for (auto & [root_path, rb] : roots)
-	{
-		auto root_label = root_path;
-		auto sep = root_label.find_last_of("/\\");
-		if (sep != std::string::npos)
-			root_label = root_label.substr(sep + 1);
-
-		if (root_label == "workspace")
-			root_label = workspace_label;
-
-		auto * root_node = new QTreeWidgetItem(tree);
-		root_node->setText(0, QString::fromStdString(root_label));
-		root_node->setFlags(Qt::ItemIsEnabled);
-		QFont bold = root_node->font(0);
-		bold.setBold(true);
-		root_node->setFont(0, bold);
-
-		auto add_plugin_items = [&](QTreeWidgetItem * parent, std::vector<plugin_item_t *> & items)
-		{
-			for (auto * p : items)
-			{
-				auto * item = new QTreeWidgetItem(parent);
-				item->setText(0, QString::fromStdString(p->display));
-				item->setData(0, Qt::UserRole, QString::fromStdString(p->path));
-				item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
-				item->setForeground(0, QColor(100, 180, 100));
-
-				auto name_lower = p->filename;
-				std::transform(
-				    name_lower.begin(),
-				    name_lower.end(),
-				    name_lower.begin(),
-				    [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-
-				if (name_lower == source_lower && !best_match_item)
-					best_match_item = item;
-			}
-		};
-
-		add_plugin_items(root_node, rb.root_items);
-
-		for (auto & [subfolder, items] : rb.subfolder_items)
-		{
-			auto * folder_node = new QTreeWidgetItem(root_node);
-			folder_node->setText(0, QString::fromStdString(subfolder));
-			folder_node->setFlags(Qt::ItemIsEnabled);
-			folder_node->setForeground(0, QColor(130, 130, 130));
-
-			add_plugin_items(folder_node, items);
-			folder_node->setExpanded(true);
-		}
-
-		root_node->setExpanded(true);
-	}
-
-	if (best_match_item)
-		tree->setCurrentItem(best_match_item);
-
-	auto * mode_group = new QGroupBox("Identical text handling", &dlg);
-	auto * mode_layout = new QVBoxLayout(mode_group);
-	auto * radio_full = new QRadioButton("Full (identical marked as Translated)", mode_group);
-	auto * radio_partial = new QRadioButton("Partial (identical marked as Untranslated)", mode_group);
-	radio_full->setChecked(true);
-	radio_full->setToolTip("Use to create base dictionary from a fully translated file");
-	radio_partial->setToolTip("Use to create base dictionary from a partially translated file");
-	mode_layout->addWidget(radio_full);
-	mode_layout->addWidget(radio_partial);
-
-	auto * partial_explanation = new QLabel(mode_group);
-	partial_explanation->setWordWrap(true);
-	partial_explanation->setText(
-	    "When old_text equals new_text, the text is tokenized by non-alphanumeric "
-	    "characters (tokens shorter than 3 characters are ignored). Each token is "
-	    "checked against the Hunspell dictionary:\n"
-	    "\u2022 If any token is found \u2192 status = Untranslated (contains source language words)\n"
-	    "\u2022 If no tokens are found \u2192 status = To Verify (likely a proper noun)");
-	partial_explanation->setStyleSheet("color: #888; margin-left: 20px; margin-top: 4px;");
-	partial_explanation->setVisible(false);
-	mode_layout->addWidget(partial_explanation);
-
-	auto * dict_label = new QLabel("Source dictionary:", mode_group);
-	dict_label->setStyleSheet("margin-left: 20px; margin-top: 4px;");
-	dict_label->setVisible(false);
-	mode_layout->addWidget(dict_label);
-
-	auto * dict_combo = new QComboBox(mode_group);
-	dict_combo->setToolTip("Hunspell dictionary used to detect untranslated words");
-	dict_combo->setVisible(false);
-	mode_layout->addWidget(dict_combo);
-
-	{
-		auto dict_dir = tools_t::get_exe_dir();
-		if (!dict_dir.empty() && dict_dir.back() != '/' && dict_dir.back() != '\\')
-			dict_dir += '/';
-		dict_dir += "dictionaries";
-
-		const std::filesystem::path dict_path(dict_dir);
-		if (std::filesystem::exists(dict_path))
-		{
-			for (const auto & entry : std::filesystem::directory_iterator(dict_path))
-			{
-				if (!entry.is_regular_file())
-					continue;
-
-				if (entry.path().extension().string() != ".aff")
-					continue;
-
-				auto dic_file = entry.path();
-				dic_file.replace_extension(".dic");
-				if (!std::filesystem::exists(dic_file))
-					continue;
-
-				const auto stem = entry.path().stem().string();
-				const auto aff_path = entry.path().string();
-				dict_combo->addItem(QString::fromStdString(stem), QString::fromStdString(aff_path));
-			}
-		}
-	}
-
-	const auto partial_aff_setting = m_settings.partial_dict_aff_path();
-	if (!partial_aff_setting.empty())
-	{
-		for (int i = 0; i < dict_combo->count(); ++i)
-		{
-			if (dict_combo->itemData(i).toString().toStdString() == partial_aff_setting)
-			{
-				dict_combo->setCurrentIndex(i);
-				break;
-			}
-		}
-	}
-
-	connect(radio_partial, &QRadioButton::toggled, partial_explanation, &QLabel::setVisible);
-	connect(radio_partial, &QRadioButton::toggled, dict_label, &QLabel::setVisible);
-	connect(radio_partial, &QRadioButton::toggled, dict_combo, &QComboBox::setVisible);
-
-	dlg_layout->addWidget(mode_group);
-
-	auto * buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dlg);
-	dlg_layout->addWidget(buttons);
-
-	connect(buttons, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
-	connect(buttons, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
-	connect(
-	    tree,
-	    &QTreeWidget::itemDoubleClicked,
-	    &dlg,
-	    [&dlg](QTreeWidgetItem * item, int)
-	{
-		if (item && (item->flags() & Qt::ItemIsSelectable))
-			dlg.accept();
-	});
-
-	if (dlg.exec() != QDialog::Accepted)
-		return std::nullopt;
-
-	auto * selected_item = tree->currentItem();
-	if (!selected_item || !(selected_item->flags() & Qt::ItemIsSelectable))
-		return std::nullopt;
-
-	const auto native_path = selected_item->data(0, Qt::UserRole).toString().toStdString();
-	const auto * native_entry = m_file_list.get(native_path);
-
-	std::string foreign_lang;
-	const auto * foreign_entry = m_file_list.get(plugin_path);
-	if (foreign_entry)
-		foreign_lang = foreign_entry->language_tag;
-
-	std::string native_lang;
-	if (native_entry)
-		native_lang = native_entry->language_tag;
-
-	make_base_params_t params;
-	params.native_path = native_path;
-	params.foreign_lang = foreign_lang;
-	params.native_lang = native_lang;
-	params.base_mode = radio_partial->isChecked() ? base_mode_t::partial : base_mode_t::full;
-	if (radio_partial->isChecked() && dict_combo->count() > 0)
-		params.dictionary_aff_path = dict_combo->currentData().toString().toStdString();
-	return params;
+	return dialog.result();
 }
 
-// irreducible: 3 params Ă˘â‚¬â€ť source path + operation type + result data
-void main_window_t::log_operation_result(
-    const std::string & plugin_path,
-    plugin_op_t op_type,
-    const operation_executor_t::result_t & result)
-{
-	auto sep = plugin_path.find_last_of("/\\");
-	auto plugin_name = sep != std::string::npos ? plugin_path.substr(sep + 1) : plugin_path;
-
-	std::string op_name;
-	switch (op_type)
-	{
-	case plugin_op_t::make_dict:
-		op_name = "make dict: " + plugin_name;
-		break;
-	case plugin_op_t::make_dict_with_base:
-		op_name = "make dict with base: " + plugin_name;
-		break;
-	case plugin_op_t::make_base:
-		op_name = "make base: " + plugin_name;
-		break;
-	case plugin_op_t::convert:
-		op_name = "convert: " + plugin_name;
-		break;
-	case plugin_op_t::create_plugin:
-		op_name = "create: " + plugin_name;
-		break;
-	}
-
-	m_log_view->append_log(op_name, result.log_text);
-	m_record_tabs->setCurrentWidget(m_log_view);
-}
-
-// Indivisible batch pattern: shared_ptr + QTimer + lambda
 void main_window_t::start_batch_translation(dict_document_t * dict_doc)
 {
 	m_translation_tab->set_batch_in_progress(true);
@@ -1704,145 +1140,17 @@ void main_window_t::on_plugin_unload(const std::string & path)
 
 void main_window_t::scan_workspace()
 {
-	const auto workspace = (QCoreApplication::applicationDirPath() + "/workspace").toStdString();
-	QDir().mkpath(QString::fromStdString(workspace));
-
-	std::vector<std::string> roots;
-	roots.push_back(workspace);
-	for (const auto & r : m_file_list.get_roots())
-	{
-		if (r != workspace)
-			roots.push_back(r);
-	}
-
-	m_file_list.scan_roots(roots);
-
-	bool any_loaded = false;
-	for (const auto * entry : m_file_list.all())
-	{
-		if (!entry->is_workspace)
-			continue;
-
-		if (entry->type != file_type_t::base_dict && entry->type != file_type_t::user_dict)
-			continue;
-
-		if (m_session.find(entry->path))
-			continue;
-
-		if (m_session.open(entry->path))
-			any_loaded = true;
-	}
-
-	if (any_loaded)
-	{
-		rebuild_annotations();
-		m_last_annotation_version = m_session.dict_version();
-	}
-
-	rebuild_sidebar();
+	m_sidebar_controller->scan_workspace();
 }
 
 void main_window_t::update_watcher_roots()
 {
-	QStringList roots;
-
-	const auto workspace = QCoreApplication::applicationDirPath() + "/workspace";
-	roots.append(workspace);
-
-	for (const auto & root : m_file_list.get_roots())
-		roots.append(QString::fromStdString(root));
-
-	m_workspace_watcher->set_watch_roots(roots);
-}
-
-std::vector<dict_selection_dialog_t::dict_entry_t> main_window_t::build_dict_entries(
-    const std::string & source_dir) const
-{
-	std::set<std::string> seen;
-	std::vector<dict_selection_dialog_t::dict_entry_t> entries;
-
-	auto normalize = [](std::string_view p) { return string_utils::to_lower(string_utils::normalize_path(p)); };
-
-	auto matches_source_dir = [&](const std::string & norm, const std::string & target)
-	{
-		if (target.empty())
-			return false;
-
-		auto dir_sep = norm.find_last_of('/');
-		if (dir_sep == std::string::npos)
-			return false;
-
-		return norm.substr(0, dir_sep) == target;
-	};
-
-	auto target = source_dir.empty() ? std::string {} : normalize(source_dir);
-
-	std::set<std::string> saved_order_set;
-	for (const auto & p : m_settings.last_merge_order())
-		saved_order_set.insert(normalize(p));
-	bool use_saved = !saved_order_set.empty();
-
-	for (const auto * dict_doc : m_session.all_dicts())
-	{
-		auto norm = normalize(dict_doc->path());
-		if (!seen.insert(norm).second)
-			continue;
-
-		bool pre = use_saved ? (saved_order_set.count(norm) > 0) : matches_source_dir(norm, target);
-
-		std::string root_path;
-		std::string subfolder;
-		const auto * fe = m_file_list.get(dict_doc->path());
-		if (fe)
-		{
-			root_path = fe->root_path;
-			subfolder = fe->workspace_subfolder;
-		}
-
-		entries.push_back(
-		    { std::string(string_utils::extract_filename(dict_doc->path())),
-		      dict_doc->path(),
-		      dict_doc->kind(),
-		      root_path,
-		      subfolder,
-		      pre });
-	}
-
-	for (const auto * fe : m_file_list.all())
-	{
-		if (fe->type != file_type_t::user_dict && fe->type != file_type_t::base_dict)
-			continue;
-
-		auto norm = normalize(fe->path);
-		if (!seen.insert(norm).second)
-			continue;
-
-		bool pre = use_saved ? (saved_order_set.count(norm) > 0) : matches_source_dir(norm, target);
-
-		auto kind = (fe->type == file_type_t::base_dict) ? dict_kind_t::base : dict_kind_t::user;
-		entries.push_back({ fe->filename, fe->path, kind, fe->root_path, fe->workspace_subfolder, pre });
-	}
-
-	return entries;
+	m_sidebar_controller->update_watcher_roots();
 }
 
 void main_window_t::on_item_clicked(const std::string & path)
 {
-	const auto * entry = m_file_list.get(path);
-	if (!entry)
-		return;
-
-	auto norm_path = string_utils::normalize_path(path);
-
-	if (m_active_doc && m_active_doc->path() == norm_path)
-		return;
-
-	auto * doc = m_session.open(path);
-	if (!doc)
-		return;
-
-	switch_document(doc);
-	rebuild_sidebar();
+	m_sidebar_controller->on_item_clicked(path);
 }
 
 void main_window_t::on_operation_requested(const std::string & path, plugin_op_t op)
@@ -1851,115 +1159,25 @@ void main_window_t::on_operation_requested(const std::string & path, plugin_op_t
 	if (!entry)
 		return;
 
-	const auto workspace_dir = QCoreApplication::applicationDirPath().toStdString() + "/workspace/";
-	const auto output_dir = derive_output_dir(*entry, workspace_dir);
-	m_executor.set_output_dir(output_dir);
-
 	on_plugin_operation(path, op);
 }
 
 void main_window_t::on_save_requested(const std::string & path)
 {
-	auto norm_path = string_utils::normalize_path(path);
-
-	if (m_active_doc && m_active_doc->path() == norm_path)
-	{
-		commit_current_edit();
-		m_active_doc->save();
-		update_sidebar_item(m_active_doc->path());
-
-		m_log_view->append_log("save", "saved \"" + m_active_doc->path() + "\"\r\n");
-
-		if (!m_session.has_any_unsaved())
-			set_unsaved_changes(false);
-
-		return;
-	}
-
-	auto * doc = m_session.find(path);
-	if (!doc)
-		return;
-
-	doc->save();
-	update_sidebar_item(doc->path());
-
-	m_log_view->append_log("save", "saved \"" + doc->path() + "\"\r\n");
-
-	if (!m_session.has_any_unsaved())
-		set_unsaved_changes(false);
+	commit_current_edit();
+	m_sidebar_controller->on_save_requested(path);
 }
 
 void main_window_t::on_unload_requested(const std::string & path)
 {
-	auto * doc = m_session.find(path);
-	if (!doc)
-	{
-		m_file_list.remove(path);
-		rebuild_sidebar();
-		return;
-	}
-
-	if (doc->is_dirty())
-	{
-		auto answer = QMessageBox::question(
-		    this,
-		    "Unsaved Changes",
-		    "This dictionary has unsaved changes. Save before unloading?",
-		    QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
-
-		if (answer == QMessageBox::Cancel)
-			return;
-
-		if (answer == QMessageBox::Save)
-			doc->save();
-	}
-
-	if (m_active_doc && m_active_doc->path() == doc->path())
-		switch_document(nullptr);
-
-	m_session.close(path);
-
-	auto norm = string_utils::normalize_path(path);
-	m_filter_states.erase(norm);
-
-	rebuild_annotations();
-	m_last_annotation_version = m_session.dict_version();
-	rebuild_sidebar();
+	m_sidebar_controller->on_unload_requested(path);
 	rebuild_table();
 }
 
 void main_window_t::on_delete_requested(const std::string & path)
 {
-	auto sep = path.find_last_of("/\\");
-	auto filename = sep != std::string::npos ? path.substr(sep + 1) : path;
-
-	auto answer = QMessageBox::question(
-	    this,
-	    "Delete File",
-	    QString("Delete \"%1\" from disk?").arg(QString::fromStdString(filename)),
-	    QMessageBox::Yes | QMessageBox::No);
-
-	if (answer != QMessageBox::Yes)
-		return;
-
-	if (!QFile::remove(QString::fromStdString(path)))
-	{
-		QMessageBox::warning(this, "Error", QString("Failed to delete \"%1\".").arg(QString::fromStdString(filename)));
-		return;
-	}
-
-	auto norm_del_path = string_utils::normalize_path(path);
-	if (m_active_doc && m_active_doc->path() == norm_del_path)
-		switch_document(nullptr);
-
-	m_session.close(path);
-	m_filter_states.erase(norm_del_path);
-	rebuild_annotations();
-	m_last_annotation_version = m_session.dict_version();
-	m_file_list.remove(path);
-	rebuild_sidebar();
+	m_sidebar_controller->on_delete_requested(path);
 	rebuild_table();
-	scan_workspace();
 }
 
 void main_window_t::closeEvent(QCloseEvent * event)

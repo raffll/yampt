@@ -1,9 +1,10 @@
 #pragma once
 
+#include "controller/editor_controller.hpp"
+#include "controller/record_display_controller.hpp"
 #include "dialog/dict_selection_dialog.hpp"
 #include "editor/byte_limit_validator.hpp"
 #include "editor/edit_history.hpp"
-#include "editor/editor_controller.hpp"
 #include "editor/find_replace.hpp"
 #include "editor/glossary.hpp"
 #include "editor/operation_executor.hpp"
@@ -14,10 +15,14 @@
 #include "highlighter/highlight_coordinator.hpp"
 #include "model/dict_document.hpp"
 #include "model/document.hpp"
+#include "model/filter_state.hpp"
+#include "model/make_base_params.hpp"
 #include "model/plugin_op.hpp"
 #include "model/record_table_model.hpp"
 #include "model/sidebar_model.hpp"
+#include "session/plugin_operations_controller.hpp"
 #include "session/session.hpp"
+#include "session/sidebar_controller.hpp"
 #include "session/workspace_watcher.hpp"
 #include "settings_store.hpp"
 #include "view/sidebar_view.hpp"
@@ -57,23 +62,6 @@ class QToolButton;
 class QSplitter;
 class QTabWidget;
 class QToolBar;
-
-struct filter_state_t
-{
-	std::set<tools_t::rec_type_t> type_filter;
-	std::set<std::string> sub_type_filter;
-	std::set<status_t> status_filter;
-	bool type_filter_solo = false;
-};
-
-struct make_base_params_t
-{
-	std::string native_path;
-	std::string foreign_lang;
-	std::string native_lang;
-	base_mode_t base_mode;
-	std::string dictionary_aff_path;
-};
 
 class main_window_t : public QMainWindow
 {
@@ -148,27 +136,15 @@ private:
 	void register_shortcuts();
 	void shortcut_copy_original();
 	void shortcut_commit_status(status_t new_status);
-	std::vector<dict_selection_dialog_t::dict_entry_t> build_dict_entries(const std::string & source_dir = {}) const;
 
 	// rebuild_table helpers
 	void rebuild_table_yaml(document_t * target_doc);
 	void rebuild_table_dict(dict_document_t * dict_doc);
 
-	// load_record helpers
-	void load_record_clear(int row);
-	void load_record_script(const table_row_t * row_data);
-	void load_record_plain(const table_row_t * row_data);
-
-	// on_translation_changed helpers
 	void apply_translation_highlights(const table_row_t * row_data);
 
-	// on_plugin_operation helpers
 	std::optional<make_base_params_t> show_make_base_dialog(const std::string & plugin_path);
 	void start_batch_translation(dict_document_t * dict_doc);
-	void log_operation_result(
-	    const std::string & plugin_path,
-	    plugin_op_t op_type,
-	    const operation_executor_t::result_t & result);
 
 	QAction * m_add_folder_action = nullptr;
 	QAction * m_import_archive_action = nullptr;
@@ -267,4 +243,8 @@ private:
 	QMenu * m_translator_view_menu = nullptr;
 
 	document_t * m_active_doc = nullptr;
+
+	std::unique_ptr<sidebar_controller_t> m_sidebar_controller;
+	std::unique_ptr<plugin_operations_controller_t> m_plugin_ops_controller;
+	std::unique_ptr<record_display_controller_t> m_record_display_controller;
 };

@@ -1,8 +1,8 @@
 #include "view_context_menu.hpp"
-#include "../patcher/merge_controller.hpp"
 #include "../session/plugin_session.hpp"
-#include "nav_tree_view.hpp"
-#include "record_view.hpp"
+#include "../view/nav_tree_view.hpp"
+#include "../view/record_view.hpp"
+#include "merge_controller.hpp"
 #include <scanner/record_conflict.hpp>
 #include <utility/record_behavior.hpp>
 #include <QCoreApplication>

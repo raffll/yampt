@@ -194,7 +194,8 @@
     <ClCompile Include="source\view\filter_tree_view.cpp" />
     <ClCompile Include="source\view\status_filter_view.cpp" />
     <ClCompile Include="source\view\translation_suggestion_view.cpp" />
-    <ClCompile Include="source\editor\editor_controller.cpp" />
+    <ClCompile Include="source\controller\editor_controller.cpp" />
+    <ClCompile Include="source\controller\record_display_controller.cpp" />
     <ClCompile Include="source\editor\row_filter.cpp" />
     <ClCompile Include="source\editor\byte_limit_validator.cpp" />
     <ClCompile Include="source\editor\glossary.cpp" />
@@ -204,6 +205,7 @@
     <ClCompile Include="source\dialog\find_replace_dialog.cpp" />
     <ClCompile Include="source\dialog\dict_selection_dialog.cpp" />
     <ClCompile Include="source\dialog\merge_dialog.cpp" />
+    <ClCompile Include="source\dialog\make_base_dialog.cpp" />
     <ClCompile Include="source\dialog\first_run_dialog.cpp" />
     <ClCompile Include="source\dialog\settings\translator_settings_dialog.cpp" />
     <ClCompile Include="source\dialog\settings\language_settings_view.cpp" />
@@ -225,6 +227,8 @@
     <ClCompile Include="source\view\display_name.cpp" />
     <ClCompile Include="source\highlighter\highlight_coordinator.cpp" />
     <ClCompile Include="source\session\workspace_watcher.cpp" />
+    <ClCompile Include="source\session\sidebar_controller.cpp" />
+    <ClCompile Include="source\session\plugin_operations_controller.cpp" />
     <ClCompile Include="source\highlighter\highlight_applier.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -236,7 +240,7 @@
     <ClInclude Include="source\model\yaml_document.hpp" />    <ClInclude Include="source\model\sidebar_model.hpp" />
     <ClInclude Include="source\model\table_row.hpp" />
     <ClInclude Include="source\model\row_source.hpp" />
-    <ClInclude Include="source\model\table_builder.hpp" />    <ClInclude Include="source\view\table_view.hpp" />    <ClInclude Include="source\editor\editor_controller.hpp" />
+    <ClInclude Include="source\model\table_builder.hpp" />    <ClInclude Include="source\view\table_view.hpp" />    <ClInclude Include="source\controller\editor_controller.hpp" />
     <ClInclude Include="source\editor\row_filter.hpp" />
     <ClInclude Include="source\editor\byte_limit_validator.hpp" />
     <ClInclude Include="source\editor\glossary.hpp" />
@@ -360,6 +364,12 @@
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
+    <CustomBuild Include="source\dialog\make_base_dialog.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
     <CustomBuild Include="source\view\line_number_gutter.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
@@ -459,6 +469,7 @@
     <ClCompile Include="$(IntDir)moc_log_view.cpp" />
     <ClCompile Include="$(IntDir)moc_dict_selection_dialog.cpp" />
     <ClCompile Include="$(IntDir)moc_merge_dialog.cpp" />
+    <ClCompile Include="$(IntDir)moc_make_base_dialog.cpp" />
     <ClCompile Include="$(IntDir)moc_line_number_gutter.cpp" />
     <ClCompile Include="$(IntDir)moc_first_run_dialog.cpp" />
     <ClCompile Include="$(IntDir)moc_find_replace_dialog.cpp" />

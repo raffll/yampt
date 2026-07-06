@@ -105,14 +105,13 @@
     <ClCompile Include="..\yampt.translator\source\editor\row_filter.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\glossary.cpp" />
     <ClCompile Include="..\yampt.core\source\utility\keyword_trie.cpp" />
-    <ClCompile Include="..\yampt.translator\source\editor\editor_controller.cpp" />
+    <ClCompile Include="..\yampt.translator\source\controller\editor_controller.cpp" />
     <ClCompile Include="..\yampt.translator\source\session\workspace_watcher.cpp" />
     <ClCompile Include="..\yampt.translator\source\model\record_table_model.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\edit_history.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\byte_limit_validator.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\find_replace.cpp" />
     <ClCompile Include="..\yampt.translator\source\highlighter\highlight_coordinator.cpp" />
-    <ClCompile Include="..\yampt.translator\source\highlighter\highlight_applier.cpp" />
     <ClCompile Include="..\yampt.translator\source\view\display_name.cpp" />
     <ClCompile Include="..\yampt.translator\source\highlighter\script_tokenizer.cpp" />
     <ClCompile Include="..\yampt.translator\source\session\session.cpp" />

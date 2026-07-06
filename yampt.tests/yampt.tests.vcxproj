@@ -170,9 +170,9 @@
   <ItemGroup>
     <ClInclude Include="..\yampt.translator\source\editor\glossary.hpp" />
     <ClInclude Include="..\yampt.translator\source\model\sidebar_model.hpp" />
-    <ClInclude Include="..\yampt.translator\source\session.hpp" />
+    <ClInclude Include="..\yampt.translator\source\session\session.hpp" />
     <ClInclude Include="..\yampt.translator\source\highlighter\script_tokenizer.hpp" />
-    <ClInclude Include="..\yampt.translator\source\editor\editor_controller.hpp" />
+    <ClInclude Include="..\yampt.translator\source\controller\editor_controller.hpp" />
     <ClInclude Include="..\yampt.translator\source\editor\edit_history.hpp" />
     <ClInclude Include="..\yampt.translator\source\editor\byte_limit_validator.hpp" />
     <ClInclude Include="..\yampt.translator\source\editor\find_replace.hpp" />
@@ -256,9 +256,8 @@
     <ClCompile Include="..\yampt.translator\source\editor\byte_limit_validator.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\find_replace.cpp" />
     <ClCompile Include="..\yampt.translator\source\highlighter\highlight_coordinator.cpp" />
-    <ClCompile Include="..\yampt.translator\source\highlighter\highlight_applier.cpp" />
     <ClCompile Include="..\yampt.translator\source\session\workspace_watcher.cpp" />
-    <ClCompile Include="..\yampt.translator\source\editor\editor_controller.cpp" />
+    <ClCompile Include="..\yampt.translator\source\controller\editor_controller.cpp" />
     <ClCompile Include="..\yampt.translator\source\model\record_table_model.cpp" />
     <ClCompile Include="..\yampt.editor\source\session\profile_reader.cpp" />
     <ClCompile Include="..\yampt.editor\source\model\nav_tree_filter.cpp" />
