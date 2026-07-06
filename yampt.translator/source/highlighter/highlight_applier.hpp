@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include <vector>
 #include <QList>
 #include <QTextEdit>
@@ -22,4 +23,6 @@ public:
 	    const std::vector<highlight_position_t> & highlights);
 
 	static void apply(translation_edit_view_t * editor, const extra_selections_state_t & state);
+
+	static int utf8_byte_to_char_offset(const std::string & utf8_text, int byte_offset);
 };

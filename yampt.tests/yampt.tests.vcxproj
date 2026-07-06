@@ -236,6 +236,7 @@
     <ClCompile Include="source\tests.dial_matcher.cpp" />
     <ClCompile Include="source\tests.nav_tree_filter.cpp" />
     <ClCompile Include="source\tests.highlight_coordinator.cpp" />
+    <ClCompile Include="source\tests.highlight_applier.cpp" />
     <ClCompile Include="source\tests.patch_builder.cpp" />
     <ClCompile Include="source\tests.patch_builder_header.cpp" />
     <ClCompile Include="source\tests.plugin_session.cpp" />
@@ -255,6 +256,7 @@
     <ClCompile Include="..\yampt.translator\source\editor\byte_limit_validator.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\find_replace.cpp" />
     <ClCompile Include="..\yampt.translator\source\highlighter\highlight_coordinator.cpp" />
+    <ClCompile Include="..\yampt.translator\source\highlighter\highlight_applier.cpp" />
     <ClCompile Include="..\yampt.translator\source\session\workspace_watcher.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\editor_controller.cpp" />
     <ClCompile Include="..\yampt.translator\source\model\record_table_model.cpp" />
