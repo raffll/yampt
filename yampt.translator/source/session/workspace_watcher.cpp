@@ -1,5 +1,4 @@
 #include "workspace_watcher.hpp"
-
 #include <QDir>
 #include <QDirIterator>
 #include <QFileSystemWatcher>

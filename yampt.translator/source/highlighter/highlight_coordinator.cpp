@@ -1,6 +1,5 @@
 #include "highlight_coordinator.hpp"
-
-#include "glossary.hpp"
+#include "../editor/glossary.hpp"
 #include <algorithm>
 
 struct highlight_candidate_t
@@ -47,7 +46,9 @@ std::vector<highlight_position_t> highlight_coordinator_t::find_annotation_highl
 
 	if (request.sort_policy == highlight_sort_policy_t::hyperlink_first)
 	{
-		std::sort(candidates.begin(), candidates.end(),
+		std::sort(
+		    candidates.begin(),
+		    candidates.end(),
 		    [](const highlight_candidate_t & first, const highlight_candidate_t & second)
 		{
 			if (first.is_hyperlink != second.is_hyperlink)
@@ -61,7 +62,9 @@ std::vector<highlight_position_t> highlight_coordinator_t::find_annotation_highl
 	}
 	else
 	{
-		std::sort(candidates.begin(), candidates.end(),
+		std::sort(
+		    candidates.begin(),
+		    candidates.end(),
 		    [](const highlight_candidate_t & first, const highlight_candidate_t & second)
 		{
 			if (first.length != second.length)

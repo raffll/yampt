@@ -1,6 +1,6 @@
 #include "dial_matcher.hpp"
-#include "word_match_utils.hpp"
 #include "../translator/translation_engine.hpp"
+#include "word_match_utils.hpp"
 
 dial_matcher_t::dial_matcher_t(
     esm_reader_t & esm_native,
@@ -13,8 +13,7 @@ dial_matcher_t::dial_matcher_t(
     , m_translation_engine(translation_engine)
     , m_output_dict(output_dict)
     , m_determine_status(std::move(determine_status))
-{
-}
+{}
 
 const std::unordered_map<std::string, std::string> & dial_matcher_t::get_native_to_foreign() const
 {
@@ -273,12 +272,9 @@ void dial_matcher_t::match_by_translation(
 				if (resolved)
 				{
 					tools_t::add_log(
-					    "[TIE-SAME iter=" + std::to_string(iteration) +
-					    " orig=" + std::to_string(match.score_orig) +
-					    " model=" + std::to_string(match.score_model) +
-					    " count=" + std::to_string(match.count) +
-					    "] \"" + foreign_name + "\" => \"" + translated_text +
-					    "\" -> \"" + match.name + "\"\r\n");
+					    "[TIE-SAME iter=" + std::to_string(iteration) + " orig=" + std::to_string(match.score_orig) +
+					    " model=" + std::to_string(match.score_model) + " count=" + std::to_string(match.count) +
+					    "] \"" + foreign_name + "\" => \"" + translated_text + "\" -> \"" + match.name + "\"\r\n");
 				}
 			}
 
@@ -290,11 +286,9 @@ void dial_matcher_t::match_by_translation(
 				if (!resolved)
 				{
 					tools_t::add_log(
-					    "[TRANSLATE iter=" + std::to_string(iteration) +
-					    " orig=" + std::to_string(match.score_orig) +
-					    " model=" + std::to_string(match.score_model) +
-					    "] \"" + foreign_name + "\" => \"" + translated_text +
-					    "\" -> \"" + match.name + "\"\r\n");
+					    "[TRANSLATE iter=" + std::to_string(iteration) + " orig=" + std::to_string(match.score_orig) +
+					    " model=" + std::to_string(match.score_model) + "] \"" + foreign_name + "\" => \"" +
+					    translated_text + "\" -> \"" + match.name + "\"\r\n");
 				}
 
 				m_native_to_foreign[match.name] = foreign_name;
@@ -304,11 +298,9 @@ void dial_matcher_t::match_by_translation(
 			else if (!resolved)
 			{
 				tools_t::add_log(
-				    "[TIE iter=" + std::to_string(iteration) +
-				    " orig=" + std::to_string(match.score_orig) +
-				    " model=" + std::to_string(match.score_model) +
-				    " count=" + std::to_string(match.count) +
-				    "] \"" + foreign_name + "\"\r\n");
+				    "[TIE iter=" + std::to_string(iteration) + " orig=" + std::to_string(match.score_orig) +
+				    " model=" + std::to_string(match.score_model) + " count=" + std::to_string(match.count) + "] \"" +
+				    foreign_name + "\"\r\n");
 			}
 		}
 	}
@@ -368,8 +360,7 @@ void dial_matcher_t::match_by_translation(
 	if (!unmatched_native_names.empty())
 	{
 		tools_t::add_log(
-		    "[info] unmatched native DIAL candidates (" +
-		    std::to_string(unmatched_native_names.size()) + "):\r\n");
+		    "[info] unmatched native DIAL candidates (" + std::to_string(unmatched_native_names.size()) + "):\r\n");
 		for (const auto & name : unmatched_native_names)
 			tools_t::add_log("  " + name + "\r\n");
 	}
@@ -432,9 +423,7 @@ void dial_matcher_t::report_unmatched(
 
 	if (!native_names.empty())
 	{
-		tools_t::add_log(
-		    "[info] unmatched native DIAL candidates (" +
-		    std::to_string(native_names.size()) + "):\r\n");
+		tools_t::add_log("[info] unmatched native DIAL candidates (" + std::to_string(native_names.size()) + "):\r\n");
 		for (const auto & name : native_names)
 			tools_t::add_log("  " + name + "\r\n");
 	}

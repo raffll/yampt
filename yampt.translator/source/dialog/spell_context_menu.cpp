@@ -1,5 +1,5 @@
 #include "spell_context_menu.hpp"
-#include "../utility/spell_checker.hpp"
+#include "../editor/spell_checker.hpp"
 #include "../view/translation_edit_view.hpp"
 #include <QAction>
 #include <QMenu>

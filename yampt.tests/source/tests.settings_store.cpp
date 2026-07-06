@@ -1,12 +1,12 @@
 #include <catch2/catch_all.hpp>
 #include <rapidcheck/catch.h>
+#include <cmath>
 #include <rapidcheck.h>
 #include <settings_store.hpp>
-#include <QCoreApplication>
-#include <QFile>
-#include <cmath>
 #include <string>
 #include <vector>
+#include <QCoreApplication>
+#include <QFile>
 
 namespace {
 
@@ -46,8 +46,8 @@ rc::Gen<theme_t> gen_theme()
 TEST_CASE("settings_store_t, round-trip", "[pbt]")
 {
 	rc::prop(
-		"Validates: Requirements 15.1",
-		[]()
+	    "Validates: Requirements 15.1",
+	    []()
 	{
 		const auto filename = QString("yampt_pbt_settings_store_test.ini");
 

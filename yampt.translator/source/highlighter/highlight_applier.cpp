@@ -1,6 +1,6 @@
 #include "highlight_applier.hpp"
-#include "editor/highlight_coordinator.hpp"
-#include "translation_edit_view.hpp"
+#include "../view/translation_edit_view.hpp"
+#include "highlight_coordinator.hpp"
 #include <theme_system.hpp>
 #include <QPlainTextEdit>
 #include <QTextCursor>
@@ -30,9 +30,7 @@ QList<QTextEdit::ExtraSelection> highlight_applier_t::build_selections(
 	return selections;
 }
 
-void highlight_applier_t::apply(
-    translation_edit_view_t * editor,
-    const extra_selections_state_t & state)
+void highlight_applier_t::apply(translation_edit_view_t * editor, const extra_selections_state_t & state)
 {
 	QList<QTextEdit::ExtraSelection> merged;
 	merged.append(state.annotations);

@@ -21,7 +21,5 @@ public:
 	    translation_edit_view_t * editor,
 	    const std::vector<highlight_position_t> & highlights);
 
-	static void apply(
-	    translation_edit_view_t * editor,
-	    const extra_selections_state_t & state);
+	static void apply(translation_edit_view_t * editor, const extra_selections_state_t & state);
 };

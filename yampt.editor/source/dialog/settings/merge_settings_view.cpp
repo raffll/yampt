@@ -1,4 +1,4 @@
-#include "dialog/merge_settings_view.hpp"
+#include "merge_settings_view.hpp"
 #include <settings_store.hpp>
 #include <QCheckBox>
 #include <QGridLayout>

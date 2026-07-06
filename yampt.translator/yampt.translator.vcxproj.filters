@@ -4,7 +4,7 @@
     <ClCompile Include="source\main.cpp" />
     <ClCompile Include="source\main_window.cpp" />
     <ClCompile Include="source\main_window_setup.cpp" />
-    <ClCompile Include="source\session.cpp" />
+    <ClCompile Include="source\session\session.cpp" />
     <ClCompile Include="source\model\record_table_model.cpp" />
     <ClCompile Include="source\model\sidebar_model.cpp" />
     <ClCompile Include="source\model\dict_document.cpp" />
@@ -31,17 +31,17 @@
     <ClCompile Include="source\editor\edit_history.cpp" />
     <ClCompile Include="source\editor\find_replace.cpp" />
     <ClCompile Include="source\editor\operation_executor.cpp" />
-    <ClCompile Include="source\editor\grammar_checker.cpp" />
+    <ClCompile Include="source\highlighter\grammar_checker.cpp" />
     <ClCompile Include="source\dialog\find_replace_dialog.cpp" />
     <ClCompile Include="source\dialog\dict_selection_dialog.cpp" />
     <ClCompile Include="source\dialog\merge_dialog.cpp" />
     <ClCompile Include="source\dialog\first_run_dialog.cpp" />
-    <ClCompile Include="source\dialog\translator_settings_dialog.cpp" />
-    <ClCompile Include="source\dialog\language_settings_view.cpp" />
-    <ClCompile Include="source\dialog\translation_settings_view.cpp" />
+    <ClCompile Include="source\dialog\settings\translator_settings_dialog.cpp" />
+    <ClCompile Include="source\dialog\settings\language_settings_view.cpp" />
+    <ClCompile Include="source\dialog\settings\translation_settings_view.cpp" />
     <ClCompile Include="source\dialog\spell_context_menu.cpp" />
-    <ClCompile Include="source\dialog\shortcuts_settings_view.cpp" />
-    <ClCompile Include="source\dialog\appearance_settings_view.cpp" />
+    <ClCompile Include="source\dialog\settings\shortcuts_settings_view.cpp" />
+    <ClCompile Include="source\dialog\settings\appearance_settings_view.cpp" />
     <ClCompile Include="source\highlighter\script_tokenizer.cpp" />
     <ClCompile Include="source\highlighter\editor_highlighter.cpp" />
     <ClCompile Include="source\highlighter\glossary_highlighter.cpp" />
@@ -49,13 +49,11 @@
     <ClCompile Include="source\translator\ctranslate2_translator.cpp" />
     <ClCompile Include="source\translator\deepl_translator.cpp" />
     <ClCompile Include="source\translator\google_translator.cpp" />
-    <ClCompile Include="source\utility\spell_checker.cpp" />
-    <ClCompile Include="source\utility\display_name.cpp" />
-    <ClCompile Include="source\io\yaml_l10n_reader.cpp" />
-    <ClCompile Include="source\io\yaml_l10n_writer.cpp" />
-    <ClCompile Include="source\editor\highlight_coordinator.cpp" />
-    <ClCompile Include="source\editor\workspace_watcher.cpp" />
-    <ClCompile Include="source\view\highlight_applier.cpp" />
+    <ClCompile Include="source\editor\spell_checker.cpp" />
+    <ClCompile Include="source\view\display_name.cpp" />
+    <ClCompile Include="source\highlighter\highlight_coordinator.cpp" />
+    <ClCompile Include="source\session\workspace_watcher.cpp" />
+    <ClCompile Include="source\highlighter\highlight_applier.cpp" />
     <ClCompile Include="..\yampt.core\source\utility\tools.cpp" />
     <ClCompile Include="..\yampt.core\source\utility\keyword_trie.cpp" />
     <ClCompile Include="..\yampt.core\source\utility\char_diff.cpp" />
@@ -84,12 +82,12 @@
     <ClCompile Include="..\yampt.core\source\decoder\view_tree_format.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="source\dialog\translator_settings_dialog.hpp" />
-    <ClInclude Include="source\dialog\language_settings_view.hpp" />
-    <ClInclude Include="source\dialog\translation_settings_view.hpp" />
-    <ClInclude Include="source\dialog\shortcuts_settings_view.hpp" />
-    <ClInclude Include="source\dialog\appearance_settings_view.hpp" />
-    <ClInclude Include="source\editor\highlight_coordinator.hpp" />
-    <ClInclude Include="source\view\highlight_applier.hpp" />
+    <ClInclude Include="source\dialog\settings\translator_settings_dialog.hpp" />
+    <ClInclude Include="source\dialog\settings\language_settings_view.hpp" />
+    <ClInclude Include="source\dialog\settings\translation_settings_view.hpp" />
+    <ClInclude Include="source\dialog\settings\shortcuts_settings_view.hpp" />
+    <ClInclude Include="source\dialog\settings\appearance_settings_view.hpp" />
+    <ClInclude Include="source\highlighter\highlight_coordinator.hpp" />
+    <ClInclude Include="source\highlighter\highlight_applier.hpp" />
   </ItemGroup>
 </Project>

@@ -1,4 +1,4 @@
-#include "dialog/translation_settings_view.hpp"
+#include "translation_settings_view.hpp"
 #include <settings_store.hpp>
 #include <QFormLayout>
 #include <QHBoxLayout>

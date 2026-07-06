@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../io/yaml_l10n_reader.hpp"
 #include "document.hpp"
+#include <io/yaml_l10n_reader.hpp>
 #include <set>
 #include <string>
 #include <unordered_map>

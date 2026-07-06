@@ -51,17 +51,17 @@ text_match_index_t::find_outcome_t text_match_index_t::find(const std::string & 
 {
 	auto it = m_index.find(old_text);
 	if (it == m_index.end())
-		return {find_result_t::not_found, {}, {}};
+		return { find_result_t::not_found, {}, {} };
 
 	if (it->second != nullptr)
-		return {find_result_t::found, it->second->new_text, {}};
+		return { find_result_t::found, it->second->new_text, {} };
 
 	auto it_conflict = m_conflicts.find(old_text);
 	if (it_conflict == m_conflicts.end())
-		return {find_result_t::not_found, {}, {}};
+		return { find_result_t::not_found, {}, {} };
 
 	auto it_first = m_first_translation.find(old_text);
 	const auto & translation = (it_first != m_first_translation.end()) ? it_first->second : old_text;
 
-	return {find_result_t::ambiguous, translation, it_conflict->second};
+	return { find_result_t::ambiguous, translation, it_conflict->second };
 }

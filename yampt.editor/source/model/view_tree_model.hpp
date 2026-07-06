@@ -4,8 +4,8 @@
 #include <decoder/sub_record_iter.hpp>
 #include <decoder/sub_record_schema.hpp>
 #include <io/codepage.hpp>
-#include <scanner/record_conflict.hpp>
 #include <scanner/plugin_scan.hpp>
+#include <scanner/record_conflict.hpp>
 #include <conflict_types.hpp>
 #include <set>
 #include <string>
@@ -24,10 +24,24 @@ public:
 	void set_record(plugin_scan_t & scan, const conflict_entry_t & entry);
 	void clear();
 	void set_hide_no_conflict(bool hide);
-	void set_display_codepage(codepage_t codepage) { m_display_codepage = codepage; }
-	codepage_t display_codepage() const { return m_display_codepage; }
+
+	void set_display_codepage(codepage_t codepage)
+	{
+		m_display_codepage = codepage;
+	}
+
+	codepage_t display_codepage() const
+	{
+		return m_display_codepage;
+	}
+
 	void set_show_deleted_strikeout(bool value);
-	bool show_deleted_strikeout() const { return m_show_deleted_strikeout; }
+
+	bool show_deleted_strikeout() const
+	{
+		return m_show_deleted_strikeout;
+	}
+
 	void set_excluded_plugins(const std::set<std::string> * excluded);
 	void set_patch_plugins(const std::set<std::string> * patch);
 	bool is_merge_column(int section) const;

@@ -1,7 +1,7 @@
-#include "dialog/editor_settings_dialog.hpp"
-#include "dialog/appearance_settings_view.hpp"
-#include "dialog/editor_paths_view.hpp"
-#include "dialog/merge_settings_view.hpp"
+#include "editor_settings_dialog.hpp"
+#include "appearance_settings_view.hpp"
+#include "editor_paths_view.hpp"
+#include "merge_settings_view.hpp"
 #include <settings_store.hpp>
 #include <QDialogButtonBox>
 #include <QHBoxLayout>

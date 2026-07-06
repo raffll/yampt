@@ -1,5 +1,5 @@
 #include "editor_highlighter.hpp"
-#include "../utility/spell_checker.hpp"
+#include "../editor/spell_checker.hpp"
 
 editor_highlighter_t::editor_highlighter_t(QTextDocument * parent)
     : QSyntaxHighlighter(parent)

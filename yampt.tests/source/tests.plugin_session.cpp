@@ -1,8 +1,8 @@
 #include <catch2/catch_all.hpp>
 #include <rapidcheck/catch.h>
-#include <rapidcheck.h>
-#include <model/plugin_session.hpp>
+#include <session/plugin_session.hpp>
 #include <filesystem>
+#include <rapidcheck.h>
 
 namespace {
 
@@ -31,8 +31,8 @@ rc::Gen<std::set<std::string>> gen_plugin_set()
 TEST_CASE("plugin_session_t, persistence round-trip", "[pbt]")
 {
 	rc::prop(
-		"excluded and patch plugins survive save/restore cycle",
-		[]()
+	    "excluded and patch plugins survive save/restore cycle",
+	    []()
 	{
 		const auto excluded = *gen_plugin_set();
 		const auto patch = *gen_plugin_set();

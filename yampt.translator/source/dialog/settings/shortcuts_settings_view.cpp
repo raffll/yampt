@@ -1,4 +1,4 @@
-#include "dialog/shortcuts_settings_view.hpp"
+#include "shortcuts_settings_view.hpp"
 #include <settings_store.hpp>
 #include <QHeaderView>
 #include <QKeySequenceEdit>

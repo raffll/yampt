@@ -218,8 +218,8 @@ void plugin_session_t::load_plugins_internal(const std::vector<std::string> & pa
 			{
 				const auto & idx = m_scan.index(loaded_idx);
 				emit log_message(
-				    "Loaded " + m_scan.plugin_filename(loaded_idx) + " (" +
-				    std::to_string(idx.entries().size()) + " records indexed)");
+				    "Loaded " + m_scan.plugin_filename(loaded_idx) + " (" + std::to_string(idx.entries().size()) +
+				    " records indexed)");
 			}
 		}
 		catch (const std::exception & exception)
@@ -343,8 +343,8 @@ std::vector<std::string> plugin_session_t::parse_mo2_profile(const QString & pro
 
 		if (!found)
 			emit log_message(
-			    "[warning] master file not found in load order: " + master +
-			    " (searched in " + context.game_data_path.toStdString() + ")");
+			    "[warning] master file not found in load order: " + master + " (searched in " +
+			    context.game_data_path.toStdString() + ")");
 	}
 
 	const auto merge_full_path = context.overwrite_path + "/Merged Patch.esp";

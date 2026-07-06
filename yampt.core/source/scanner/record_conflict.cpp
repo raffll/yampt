@@ -209,8 +209,6 @@ conflict_policy_t find_conflict_policy(const std::string & record_type, const st
 	if (!rule)
 		return {};
 
-	return {
-		has_flag(rule->flags, sub_rule_flag_t::skip_non_existent),
-		has_flag(rule->flags, sub_rule_flag_t::ignore_conflict)
-	};
+	return { has_flag(rule->flags, sub_rule_flag_t::skip_non_existent),
+		     has_flag(rule->flags, sub_rule_flag_t::ignore_conflict) };
 }

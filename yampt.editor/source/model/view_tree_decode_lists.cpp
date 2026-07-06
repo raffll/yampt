@@ -1,9 +1,9 @@
 ﻿#include "view_tree_model.hpp"
-#include <decoder/content_alignment.hpp>
 #include <decoder/conflict_slots.hpp>
+#include <decoder/content_alignment.hpp>
 #include <decoder/view_tree_format.hpp>
-#include <scanner/record_conflict.hpp>
 #include <scanner/dial_info_align.hpp>
+#include <scanner/record_conflict.hpp>
 #include <algorithm>
 
 void view_tree_model_t::set_record_leveled(record_context_t & context, const conflict_entry_t & entry)
@@ -59,17 +59,13 @@ void view_tree_model_t::set_record_armor(record_context_t & context, const confl
 	content_alignment_t::align(all_subs, col_count, { rule }, unified_slots, col_type_indices);
 
 	auto is_body_part_type = [](const std::string & slot_type)
-	{
-		return slot_type == "INDX" || slot_type == "BNAM" || slot_type == "CNAM";
-	};
+	{ return slot_type == "INDX" || slot_type == "BNAM" || slot_type == "CNAM"; };
 
 	std::stable_sort(
 	    unified_slots.begin(),
 	    unified_slots.end(),
 	    [&](const sub_slot_t & left, const sub_slot_t & right)
-	{
-		return !is_body_part_type(left.type) && is_body_part_type(right.type);
-	});
+	{ return !is_body_part_type(left.type) && is_body_part_type(right.type); });
 
 	int part_index = 0;
 	for (size_t i = 0; i < unified_slots.size(); ++i)
@@ -142,7 +138,10 @@ void view_tree_model_t::set_record_armor(record_context_t & context, const confl
 	}
 }
 
-void view_tree_model_t::set_record_dial(plugin_scan_t & scan, record_context_t & context, const conflict_entry_t & entry)
+void view_tree_model_t::set_record_dial(
+    plugin_scan_t & scan,
+    record_context_t & context,
+    const conflict_entry_t & entry)
 {
 	set_record_generic(context, entry);
 
@@ -191,9 +190,8 @@ void view_tree_model_t::set_record_dial(plugin_scan_t & scan, record_context_t &
 		}
 
 		info_row.all_identical = all_same;
-		info_row.row_conflict_all = (any_present && !all_same)
-		    ? conflict_all_t::override_benign
-		    : conflict_all_t::no_conflict;
+		info_row.row_conflict_all =
+		    (any_present && !all_same) ? conflict_all_t::override_benign : conflict_all_t::no_conflict;
 
 		m_rows.push_back(std::move(info_row));
 	}
@@ -233,17 +231,13 @@ void view_tree_model_t::set_record_info(record_context_t & context, const confli
 	content_alignment_t::align(all_subs, col_count, { rule }, unified_slots, col_type_indices);
 
 	auto is_condition_type = [](const std::string & slot_type)
-	{
-		return slot_type == "SCVR" || slot_type == "INTV" || slot_type == "FLTV";
-	};
+	{ return slot_type == "SCVR" || slot_type == "INTV" || slot_type == "FLTV"; };
 
 	std::stable_sort(
 	    unified_slots.begin(),
 	    unified_slots.end(),
 	    [&](const sub_slot_t & left, const sub_slot_t & right)
-	{
-		return !is_condition_type(left.type) && is_condition_type(right.type);
-	});
+	{ return !is_condition_type(left.type) && is_condition_type(right.type); });
 
 	int condition_index = 0;
 	for (size_t i = 0; i < unified_slots.size(); ++i)
@@ -281,9 +275,8 @@ void view_tree_model_t::set_record_info(record_context_t & context, const confli
 			auto value_row = build_slot_row(col_count, all_subs, col_type_indices, unified_slots[next]);
 
 			view_node_t value_field;
-			value_field.label = (unified_slots[next].type == "INTV")
-			    ? "INTV - Comparison Value"
-			    : "FLTV - Comparison Value";
+			value_field.label =
+			    (unified_slots[next].type == "INTV") ? "INTV - Comparison Value" : "FLTV - Comparison Value";
 			value_field.type = value_row.type;
 			value_field.size = value_row.size;
 			value_field.binary_ranges = value_row.binary_ranges;
@@ -359,7 +352,11 @@ void view_tree_model_t::collect_container_entries(record_context_t & context, sl
 	npcs_rule.key_source = alignment_rule_t::key_from_t::anchor;
 
 	content_alignment_t::align(
-	    context.all_sub_records, context.col_count, { npco_rule, npcs_rule }, build_ctx.unified_slots, build_ctx.col_type_indices);
+	    context.all_sub_records,
+	    context.col_count,
+	    { npco_rule, npcs_rule },
+	    build_ctx.unified_slots,
+	    build_ctx.col_type_indices);
 }
 
 void view_tree_model_t::emit_slot_rows(record_context_t & context, slot_build_context_t & build_ctx)
@@ -380,13 +377,12 @@ void view_tree_model_t::emit_leveled_rows(record_context_t & context, slot_build
 
 	for (size_t i = 0; i < unified.size(); ++i)
 	{
-		bool is_pair = (unified[i].type == id_type) &&
-		               (i + 1 < unified.size()) &&
-		               (unified[i + 1].type == "INTV");
+		bool is_pair = (unified[i].type == id_type) && (i + 1 < unified.size()) && (unified[i + 1].type == "INTV");
 
 		if (!is_pair)
 		{
-			m_rows.push_back(build_slot_row(col_count, context.all_sub_records, build_ctx.col_type_indices, unified[i]));
+			m_rows.push_back(
+			    build_slot_row(col_count, context.all_sub_records, build_ctx.col_type_indices, unified[i]));
 			continue;
 		}
 
@@ -427,8 +423,10 @@ void view_tree_model_t::emit_leveled_rows(record_context_t & context, slot_build
 		group_row.cell_conflict_this.resize(col_count);
 		for (size_t col = 0; col < col_count; ++col)
 		{
-			conflict_this_t id_ct = (col < id_row.cell_conflict_this.size()) ? id_row.cell_conflict_this[col] : conflict_this_t::unknown;
-			conflict_this_t lv_ct = (col < level_row.cell_conflict_this.size()) ? level_row.cell_conflict_this[col] : conflict_this_t::unknown;
+			conflict_this_t id_ct =
+			    (col < id_row.cell_conflict_this.size()) ? id_row.cell_conflict_this[col] : conflict_this_t::unknown;
+			conflict_this_t lv_ct = (col < level_row.cell_conflict_this.size()) ? level_row.cell_conflict_this[col]
+			                                                                    : conflict_this_t::unknown;
 			group_row.cell_conflict_this[col] = std::max(id_ct, lv_ct);
 		}
 

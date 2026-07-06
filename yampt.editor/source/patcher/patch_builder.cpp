@@ -1,5 +1,4 @@
 #include "patch_builder.hpp"
-
 #include <scanner/sub_record_merge.hpp>
 #include <utility/tools.hpp>
 #include <algorithm>
@@ -117,9 +116,7 @@ bool patch_builder_t::is_pinned(const std::string & rec_type, const std::string 
 	return false;
 }
 
-const std::string * patch_builder_t::find_content(
-    const std::string & rec_type,
-    const std::string & record_id) const
+const std::string * patch_builder_t::find_content(const std::string & rec_type, const std::string & record_id) const
 {
 	for (const auto & record : m_records)
 	{
@@ -216,11 +213,7 @@ bool patch_builder_t::save(
 	if (!error_code)
 		return true;
 
-	std::filesystem::copy_file(
-	    temp_path,
-	    output_path,
-	    std::filesystem::copy_options::overwrite_existing,
-	    error_code);
+	std::filesystem::copy_file(temp_path, output_path, std::filesystem::copy_options::overwrite_existing, error_code);
 
 	std::filesystem::remove(temp_path, error_code);
 	return std::filesystem::exists(output_path);

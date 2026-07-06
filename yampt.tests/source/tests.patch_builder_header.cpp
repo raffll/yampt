@@ -1,8 +1,8 @@
 #include <catch2/catch_all.hpp>
-#include <rapidcheck/catch.h>
-#include <rapidcheck.h>
 #include <patcher/patch_builder.hpp>
+#include <rapidcheck/catch.h>
 #include <cstring>
+#include <rapidcheck.h>
 #include <string>
 
 namespace {
@@ -27,13 +27,13 @@ uint32_t read_uint32(const std::string & data, size_t offset)
 	return value;
 }
 
-}
+} // namespace
 
 TEST_CASE("patch_builder_t::build_tes3_header, starts with TES3", "[pbt]")
 {
 	rc::prop(
-		"first 4 bytes are TES3",
-		[]()
+	    "first 4 bytes are TES3",
+	    []()
 	{
 		const auto author = *gen_short_string();
 		const auto description = *gen_short_string();
@@ -49,8 +49,8 @@ TEST_CASE("patch_builder_t::build_tes3_header, starts with TES3", "[pbt]")
 TEST_CASE("patch_builder_t::build_tes3_header, contains HEDR sub-record", "[pbt]")
 {
 	rc::prop(
-		"HEDR sub-record has valid size",
-		[]()
+	    "HEDR sub-record has valid size",
+	    []()
 	{
 		const auto author = *gen_short_string();
 		const auto description = *gen_short_string();
@@ -71,8 +71,8 @@ TEST_CASE("patch_builder_t::build_tes3_header, contains HEDR sub-record", "[pbt]
 TEST_CASE("patch_builder_t::build_tes3_header, author is null-terminated in HEDR", "[pbt]")
 {
 	rc::prop(
-		"author appears within HEDR data",
-		[]()
+	    "author appears within HEDR data",
+	    []()
 	{
 		const auto author = *gen_short_string();
 		const auto description = *gen_short_string();
@@ -97,8 +97,8 @@ TEST_CASE("patch_builder_t::build_tes3_header, author is null-terminated in HEDR
 TEST_CASE("patch_builder_t::build_tes3_header, record count stored at correct offset", "[pbt]")
 {
 	rc::prop(
-		"numrecords field matches input",
-		[]()
+	    "numrecords field matches input",
+	    []()
 	{
 		const auto record_count = static_cast<size_t>(*rc::gen::inRange(1, 5000));
 
@@ -116,8 +116,8 @@ TEST_CASE("patch_builder_t::build_tes3_header, record count stored at correct of
 TEST_CASE("patch_builder_t::build_tes3_header, MAST sub-records for masters", "[pbt]")
 {
 	rc::prop(
-		"each master produces MAST + DATA sub-records",
-		[]()
+	    "each master produces MAST + DATA sub-records",
+	    []()
 	{
 		const auto master_count = *rc::gen::inRange(1, 5);
 		std::vector<patch_builder_t::master_entry_t> masters;

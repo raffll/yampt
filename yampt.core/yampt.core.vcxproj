@@ -189,6 +189,8 @@
     <ClCompile Include="source\io\esm_reader.cpp" />
     <ClCompile Include="source\io\file_list.cpp" />
     <ClCompile Include="source\io\profile_reader.cpp" />
+    <ClCompile Include="source\io\yaml_l10n_reader.cpp" />
+    <ClCompile Include="source\io\yaml_l10n_writer.cpp" />
     <ClCompile Include="source\merger\dict_merger.cpp" />
     <ClCompile Include="source\scanner\cell_name_fixer.cpp" />
     <ClCompile Include="source\scanner\record_conflict.cpp" />

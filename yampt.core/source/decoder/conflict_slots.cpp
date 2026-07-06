@@ -495,8 +495,8 @@ static void extract_armor_groups(
 			if (subs[j].type != "INDX" || subs[j].size < 4)
 				continue;
 
-			bool has_bnam_or_cnam_after = (j + 1 < subs.size()) &&
-			    (subs[j + 1].type == "BNAM" || subs[j + 1].type == "CNAM");
+			bool has_bnam_or_cnam_after =
+			    (j + 1 < subs.size()) && (subs[j + 1].type == "BNAM" || subs[j + 1].type == "CNAM");
 
 			if (!has_bnam_or_cnam_after)
 				continue;

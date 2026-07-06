@@ -249,9 +249,7 @@ void view_tree_model_t::decode_schema_children_ref(
 					const auto & refs = col < col_refs.size() ? col_refs[col] : empty_refs;
 					const auto result = find_ref_sub_record(subs, refs, object_index, slot.type, slot.occurrence);
 
-					frow.values[col] = result.view.data
-					    ? read_flag_value(result.view, fdef, bit)
-					    : non_existent_value;
+					frow.values[col] = result.view.data ? read_flag_value(result.view, fdef, bit) : non_existent_value;
 				}
 
 				frow.all_identical = check_all_identical(frow.values);
@@ -272,9 +270,8 @@ void view_tree_model_t::decode_schema_children_ref(
 			const auto & refs = col < col_refs.size() ? col_refs[col] : empty_refs;
 			const auto result = find_ref_sub_record(subs, refs, object_index, slot.type, slot.occurrence);
 
-			frow.values[col] = result.view.data
-			    ? decode_field(fdef, result.view.data, result.view.size)
-			    : non_existent_value;
+			frow.values[col] =
+			    result.view.data ? decode_field(fdef, result.view.data, result.view.size) : non_existent_value;
 		}
 
 		frow.all_identical = check_all_identical(frow.values);
@@ -311,9 +308,8 @@ void view_tree_model_t::decode_hex_children_ref(
 			const auto & refs = col < col_refs.size() ? col_refs[col] : empty_refs;
 			const auto result = find_ref_sub_record(subs, refs, object_index, slot.type, slot.occurrence);
 
-			frow.values[col] = result.view.data
-			    ? format_hex_chunk(result.view.data, result.view.size, offset)
-			    : non_existent_value;
+			frow.values[col] =
+			    result.view.data ? format_hex_chunk(result.view.data, result.view.size, offset) : non_existent_value;
 		}
 
 		frow.all_identical = check_all_identical(frow.values);
@@ -323,9 +319,7 @@ void view_tree_model_t::decode_hex_children_ref(
 	}
 }
 
-static bool is_ref_persistent(
-    const std::vector<std::vector<cell_ref_view_t>> & col_refs,
-    uint32_t object_index)
+static bool is_ref_persistent(const std::vector<std::vector<cell_ref_view_t>> & col_refs, uint32_t object_index)
 {
 	for (const auto & refs : col_refs)
 	{
@@ -378,7 +372,8 @@ view_tree_model_t::view_node_t view_tree_model_t::build_ref_child(
 		sub_group.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
 		sub_group.row_conflict_all = conflict_all_t::only_one;
 
-		decode_schema_children_ref(sub_group, schema, first_data, first_size, col_count, all_subs, col_refs, object_index, slot);
+		decode_schema_children_ref(
+		    sub_group, schema, first_data, first_size, col_count, all_subs, col_refs, object_index, slot);
 
 		for (size_t col = 0; col < col_count; ++col)
 		{
@@ -532,9 +527,8 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 				break;
 		}
 
-		std::string ref_label = object_name.empty()
-		    ? "#" + std::to_string(obj_idx)
-		    : "#" + std::to_string(obj_idx) + " " + object_name;
+		std::string ref_label =
+		    object_name.empty() ? "#" + std::to_string(obj_idx) : "#" + std::to_string(obj_idx) + " " + object_name;
 
 		view_node_t group_row;
 		group_row.type = "FRMR";
@@ -557,7 +551,8 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 					continue;
 
 				group_row.values[col] = std::to_string(obj_idx);
-				group_row.binary_ranges[col] = { static_cast<int>(ref_group.start_idx), static_cast<int>(ref_group.start_idx) + 1 };
+				group_row.binary_ranges[col] = { static_cast<int>(ref_group.start_idx),
+					                             static_cast<int>(ref_group.start_idx) + 1 };
 				break;
 			}
 		}
@@ -598,7 +593,8 @@ void view_tree_model_t::set_record_cell(record_context_t & context)
 		return group_row;
 	};
 
-	auto build_section_group = [&](const std::string & section_label, const std::vector<uint32_t> & indices) -> view_node_t
+	auto build_section_group = [&](const std::string & section_label,
+	                               const std::vector<uint32_t> & indices) -> view_node_t
 	{
 		view_node_t section;
 		section.type = "FRMR";

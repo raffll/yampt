@@ -7,10 +7,14 @@ bool nav_tree_filter_t::contains_case_insensitive(const std::string & haystack, 
 	if (needle.size() > haystack.size())
 		return false;
 
-	return std::search(haystack.begin(), haystack.end(), needle.begin(), needle.end(),
-	    [](char a, char b)
-	    { return std::tolower(static_cast<unsigned char>(a)) == std::tolower(static_cast<unsigned char>(b)); })
-	    != haystack.end();
+	return std::search(
+	           haystack.begin(),
+	           haystack.end(),
+	           needle.begin(),
+	           needle.end(),
+	           [](char a, char b)
+	{ return std::tolower(static_cast<unsigned char>(a)) == std::tolower(static_cast<unsigned char>(b)); }) !=
+	       haystack.end();
 }
 
 void nav_tree_filter_t::set_filter(const filter_state_t & state)
@@ -25,19 +29,40 @@ void nav_tree_filter_t::clear()
 	m_filter = {};
 }
 
-void nav_tree_filter_t::set_hide_duplicates(bool hide) { m_hide_duplicates = hide; }
+void nav_tree_filter_t::set_hide_duplicates(bool hide)
+{
+	m_hide_duplicates = hide;
+}
 
-void nav_tree_filter_t::set_excluded_plugins(const std::set<std::string> * excluded) { m_excluded_plugins = excluded; }
+void nav_tree_filter_t::set_excluded_plugins(const std::set<std::string> * excluded)
+{
+	m_excluded_plugins = excluded;
+}
 
-void nav_tree_filter_t::set_patch_plugins(const std::set<std::string> * patch) { m_patch_plugins = patch; }
+void nav_tree_filter_t::set_patch_plugins(const std::set<std::string> * patch)
+{
+	m_patch_plugins = patch;
+}
 
-bool nav_tree_filter_t::has_active_filter() const { return m_has_filter; }
+bool nav_tree_filter_t::has_active_filter() const
+{
+	return m_has_filter;
+}
 
-bool nav_tree_filter_t::hide_duplicates() const { return m_hide_duplicates; }
+bool nav_tree_filter_t::hide_duplicates() const
+{
+	return m_hide_duplicates;
+}
 
-const std::set<std::string> * nav_tree_filter_t::excluded_plugins() const { return m_excluded_plugins; }
+const std::set<std::string> * nav_tree_filter_t::excluded_plugins() const
+{
+	return m_excluded_plugins;
+}
 
-const std::set<std::string> * nav_tree_filter_t::patch_plugins() const { return m_patch_plugins; }
+const std::set<std::string> * nav_tree_filter_t::patch_plugins() const
+{
+	return m_patch_plugins;
+}
 
 bool nav_tree_filter_t::has_version_status(const conflict_entry_t & entry, int plugin_idx, conflict_this_t status)
 {

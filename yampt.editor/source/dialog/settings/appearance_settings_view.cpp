@@ -1,4 +1,4 @@
-#include "dialog/appearance_settings_view.hpp"
+#include "appearance_settings_view.hpp"
 #include <utility/theme_enums.hpp>
 #include <settings_store.hpp>
 #include <theme_system.hpp>

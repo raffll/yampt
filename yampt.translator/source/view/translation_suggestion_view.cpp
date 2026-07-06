@@ -3,9 +3,9 @@
 #include "../translator/deepl_translator.hpp"
 #include "../translator/google_translator.hpp"
 #include <utility/tools.hpp>
-#include <settings_store.hpp>
 #include <filesystem>
 #include <fstream>
+#include <settings_store.hpp>
 #include <QComboBox>
 #include <QHBoxLayout>
 #include <QLabel>

@@ -4,8 +4,8 @@
 
 enum class sub_rule_flag_t : unsigned
 {
-	none              = 0,
-	ignore_conflict   = 1 << 0,
+	none = 0,
+	ignore_conflict = 1 << 0,
 	skip_non_existent = 1 << 1,
 	exclude_from_merge = 1 << 2,
 	skip_if_size_differs = 1 << 3,
@@ -75,4 +75,7 @@ struct record_behavior_t
 };
 
 const record_behavior_t * find_record_behavior(const std::string & record_type);
-const sub_record_rule_t * find_sub_record_rule(const record_behavior_t * behavior, const std::string & sub_type, size_t data_size);
+const sub_record_rule_t * find_sub_record_rule(
+    const record_behavior_t * behavior,
+    const std::string & sub_type,
+    size_t data_size);

@@ -1,5 +1,5 @@
 #include <catch2/catch_all.hpp>
-#include <utility/display_name.hpp>
+#include <view/display_name.hpp>
 
 TEST_CASE("display_name_t::to_string, filename only", "[u]")
 {

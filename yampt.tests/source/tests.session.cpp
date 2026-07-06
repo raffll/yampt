@@ -3,10 +3,10 @@
 #include <model/dict_document.hpp>
 #include <model/plugin_document.hpp>
 #include <model/yaml_document.hpp>
+#include <session/session.hpp>
 #include <utility/string_utils.hpp>
 #include <filesystem>
 #include <fstream>
-#include <session.hpp>
 
 namespace {
 

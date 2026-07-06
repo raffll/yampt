@@ -107,10 +107,7 @@ void record_view_t::setup_tree()
 	    m_tree->selectionModel(),
 	    &QItemSelectionModel::currentChanged,
 	    this,
-	    [this](const QModelIndex & current)
-	{
-		emit selection_changed(current);
-	});
+	    [this](const QModelIndex & current) { emit selection_changed(current); });
 }
 
 void record_view_t::display_record(plugin_scan_t & scan, const conflict_entry_t & entry)

@@ -1,12 +1,10 @@
 #include "path_resolver.hpp"
-
 #include <QDir>
 #include <QFileInfo>
 
 path_resolver_t::path_resolver_t(const search_config_t & config)
-	: m_config(config)
-{
-}
+    : m_config(config)
+{}
 
 std::string path_resolver_t::resolve_workspace_path(const std::string & relative_path) const
 {
@@ -66,11 +64,9 @@ std::string path_resolver_t::resolve_game_data_path() const
 			return data_files.toStdString();
 	}
 
-	const QStringList standard_paths = {
-		"C:/Program Files (x86)/Steam/steamapps/common/Morrowind/Data Files",
-		"C:/Program Files/Steam/steamapps/common/Morrowind/Data Files",
-		"C:/GOG Games/Morrowind/Data Files"
-	};
+	const QStringList standard_paths = { "C:/Program Files (x86)/Steam/steamapps/common/Morrowind/Data Files",
+		                                 "C:/Program Files/Steam/steamapps/common/Morrowind/Data Files",
+		                                 "C:/GOG Games/Morrowind/Data Files" };
 
 	for (const auto & path : standard_paths)
 	{

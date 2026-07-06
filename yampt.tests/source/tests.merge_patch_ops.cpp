@@ -306,13 +306,9 @@ TEST_CASE("merge_patch_ops_t::patch_sub_record, NPCS appends without replacing",
 	std::string npcs_new(32, '\0');
 	std::memcpy(npcs_new.data(), "_trollkin", 9);
 
-	auto merge = make_record("BSGN",
-	    make_sub("NAME", make_string("id")) +
-	    make_sub("NPCS", npcs_data));
+	auto merge = make_record("BSGN", make_sub("NAME", make_string("id")) + make_sub("NPCS", npcs_data));
 
-	auto source = make_record("BSGN",
-	    make_sub("NAME", make_string("id")) +
-	    make_sub("NPCS", npcs_new));
+	auto source = make_record("BSGN", make_sub("NAME", make_string("id")) + make_sub("NPCS", npcs_new));
 
 	auto result = merge_patch_ops_t::patch_sub_record(merge, source, "NPCS", 1);
 
@@ -326,13 +322,9 @@ TEST_CASE("merge_patch_ops_t::patch_sub_record, NPCS skips duplicate", "[u]")
 	std::string npcs_data(32, '\0');
 	std::memcpy(npcs_data.data(), "same_spell", 10);
 
-	auto merge = make_record("BSGN",
-	    make_sub("NAME", make_string("id")) +
-	    make_sub("NPCS", npcs_data));
+	auto merge = make_record("BSGN", make_sub("NAME", make_string("id")) + make_sub("NPCS", npcs_data));
 
-	auto source = make_record("BSGN",
-	    make_sub("NAME", make_string("id")) +
-	    make_sub("NPCS", npcs_data));
+	auto source = make_record("BSGN", make_sub("NAME", make_string("id")) + make_sub("NPCS", npcs_data));
 
 	auto result = merge_patch_ops_t::patch_sub_record(merge, source, "NPCS", 1);
 

@@ -3,20 +3,20 @@
 #include "dialog/find_replace_dialog.hpp"
 #include "dialog/first_run_dialog.hpp"
 #include "dialog/merge_dialog.hpp"
+#include "dialog/settings/translator_settings_dialog.hpp"
 #include "dialog/spell_context_menu.hpp"
-#include "dialog/translator_settings_dialog.hpp"
-#include "editor/grammar_checker.hpp"
 #include "highlighter/editor_highlighter.hpp"
 #include "highlighter/glossary_highlighter.hpp"
+#include "highlighter/grammar_checker.hpp"
 #include "highlighter/topic_highlighter.hpp"
 #include "model/dict_document.hpp"
 #include "model/plugin_document.hpp"
 #include "model/table_builder.hpp"
 #include "model/yaml_document.hpp"
 #include "translator/ctranslate2_translator.hpp"
-#include "utility/display_name.hpp"
 #include "view/annotations_view.hpp"
 #include "view/book_preview_view.hpp"
+#include "view/display_name.hpp"
 #include "view/editor_view.hpp"
 #include "view/filter_tree_view.hpp"
 #include "view/history_view.hpp"
@@ -493,7 +493,8 @@ void main_window_t::apply_translation_highlights(const table_row_t * row_data)
 	const highlight_request_t request { &annotations, false, highlight_sort_policy_t::hyperlink_first };
 	auto highlights = highlight_coordinator_t::find_annotation_highlights(current_text, request);
 
-	m_extra_sel_translation.annotations = highlight_applier_t::build_selections(m_editor_view->translation_editor(), highlights);
+	m_extra_sel_translation.annotations =
+	    highlight_applier_t::build_selections(m_editor_view->translation_editor(), highlights);
 
 	m_extra_sel_translation.grammar = m_grammar_check->isChecked()
 	                                      ? m_grammar_checker.check(m_editor_view->translation_editor(), row_data->type)
@@ -549,11 +550,13 @@ void main_window_t::commit_current_edit()
 		if (!result.base_result.success)
 			return;
 
-		m_table_model->update_row(m_editor_controller.current_row(), result.base_result.new_text, result.base_result.status);
+		m_table_model->update_row(
+		    m_editor_controller.current_row(), result.base_result.new_text, result.base_result.status);
 
 		if (result.base_result.propagated_count > 0)
 		{
-			statusBar()->showMessage(QString("Propagated to %1 entries").arg(result.base_result.propagated_count), 5000);
+			statusBar()->showMessage(
+			    QString("Propagated to %1 entries").arg(result.base_result.propagated_count), 5000);
 			m_editor_controller.sync_propagated_rows(*m_table_model, *dict_doc);
 		}
 
@@ -628,7 +631,8 @@ void main_window_t::load_record(int row)
 	const highlight_request_t orig_request { &annotations, true, highlight_sort_policy_t::length_first };
 	auto orig_highlights = highlight_coordinator_t::find_annotation_highlights(original_text_lower, orig_request);
 
-	m_extra_sel_original.annotations = highlight_applier_t::build_selections(m_editor_view->original_view(), orig_highlights);
+	m_extra_sel_original.annotations =
+	    highlight_applier_t::build_selections(m_editor_view->original_view(), orig_highlights);
 	m_extra_sel_original.grammar.clear();
 	m_extra_sel_original.adapted_diff.clear();
 	highlight_applier_t::apply(m_editor_view->original_view(), m_extra_sel_original);

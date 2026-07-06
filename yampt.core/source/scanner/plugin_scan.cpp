@@ -151,9 +151,7 @@ struct conflict_accumulator_t
 
 	void accumulate(const std::vector<std::string> & values, bool skip_non_existent = false)
 	{
-		const auto level = skip_non_existent
-		    ? compute_conflict_all_skip_empty(values)
-		    : compute_conflict_all(values);
+		const auto level = skip_non_existent ? compute_conflict_all_skip_empty(values) : compute_conflict_all(values);
 
 		if (level > worst_all)
 			worst_all = level;

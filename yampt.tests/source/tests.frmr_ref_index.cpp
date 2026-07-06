@@ -1,6 +1,6 @@
 #include <catch2/catch_all.hpp>
-#include <decoder/sub_record_iter.hpp>
 #include <decoder/conflict_slots.hpp>
+#include <decoder/sub_record_iter.hpp>
 #include <scanner/record_conflict.hpp>
 #include <cstring>
 #include <string>
@@ -89,16 +89,13 @@ TEST_CASE("read_frmr_ref_index, max 24bit value", "[u]")
 
 TEST_CASE("build_cell_slots, refs with same lower 24 bits aligned", "[u]")
 {
-	auto header_subs = make_sub("NAME", make_string("TestCell"))
-	                 + make_sub("DATA", std::string(12, '\0'));
+	auto header_subs = make_sub("NAME", make_string("TestCell")) + make_sub("DATA", std::string(12, '\0'));
 
-	auto ref_morrowind = make_sub("FRMR", make_uint32(0x00020164))
-	                   + make_sub("NAME", make_string("door_01"))
-	                   + make_sub("DATA", make_position());
+	auto ref_morrowind = make_sub("FRMR", make_uint32(0x00020164)) + make_sub("NAME", make_string("door_01")) +
+	                     make_sub("DATA", make_position());
 
-	auto ref_plugin = make_sub("FRMR", make_uint32(0x01020164))
-	                + make_sub("NAME", make_string("door_01"))
-	                + make_sub("DATA", make_position());
+	auto ref_plugin = make_sub("FRMR", make_uint32(0x01020164)) + make_sub("NAME", make_string("door_01")) +
+	                  make_sub("DATA", make_position());
 
 	auto content_v1 = make_record("CELL", header_subs + ref_morrowind);
 	auto content_v2 = make_record("CELL", header_subs + ref_plugin);
@@ -125,16 +122,13 @@ TEST_CASE("build_cell_slots, refs with same lower 24 bits aligned", "[u]")
 
 TEST_CASE("build_cell_slots, different refs stay separate", "[u]")
 {
-	auto header_subs = make_sub("NAME", make_string("TestCell"))
-	                 + make_sub("DATA", std::string(12, '\0'));
+	auto header_subs = make_sub("NAME", make_string("TestCell")) + make_sub("DATA", std::string(12, '\0'));
 
-	auto ref_a = make_sub("FRMR", make_uint32(0x00000001))
-	           + make_sub("NAME", make_string("item_a"))
-	           + make_sub("DATA", make_position());
+	auto ref_a = make_sub("FRMR", make_uint32(0x00000001)) + make_sub("NAME", make_string("item_a")) +
+	             make_sub("DATA", make_position());
 
-	auto ref_b = make_sub("FRMR", make_uint32(0x00000002))
-	           + make_sub("NAME", make_string("item_b"))
-	           + make_sub("DATA", make_position());
+	auto ref_b = make_sub("FRMR", make_uint32(0x00000002)) + make_sub("NAME", make_string("item_b")) +
+	             make_sub("DATA", make_position());
 
 	auto content_v1 = make_record("CELL", header_subs + ref_a);
 	auto content_v2 = make_record("CELL", header_subs + ref_b);
@@ -320,13 +314,11 @@ TEST_CASE("compute_conflict_this_skip_empty, conflict with three present", "[u]"
 
 TEST_CASE("build_cell_slots, NAM0 appears in header slots", "[u]")
 {
-	auto header_subs = make_sub("NAME", make_string("TestCell"))
-	                 + make_sub("DATA", std::string(12, '\0'))
-	                 + make_sub("NAM0", make_uint32(5));
+	auto header_subs = make_sub("NAME", make_string("TestCell")) + make_sub("DATA", std::string(12, '\0')) +
+	                   make_sub("NAM0", make_uint32(5));
 
-	auto ref = make_sub("FRMR", make_uint32(1))
-	         + make_sub("NAME", make_string("object_01"))
-	         + make_sub("DATA", make_position());
+	auto ref = make_sub("FRMR", make_uint32(1)) + make_sub("NAME", make_string("object_01")) +
+	           make_sub("DATA", make_position());
 
 	auto content = make_record("CELL", header_subs + ref);
 
@@ -349,14 +341,11 @@ TEST_CASE("build_cell_slots, NAM0 appears in header slots", "[u]")
 
 TEST_CASE("build_cell_slots, header sub-records before first FRMR", "[u]")
 {
-	auto header_subs = make_sub("NAME", make_string("Interior"))
-	                 + make_sub("DATA", std::string(12, '\0'))
-	                 + make_sub("WHGT", std::string(4, '\0'))
-	                 + make_sub("AMBI", std::string(16, '\0'));
+	auto header_subs = make_sub("NAME", make_string("Interior")) + make_sub("DATA", std::string(12, '\0')) +
+	                   make_sub("WHGT", std::string(4, '\0')) + make_sub("AMBI", std::string(16, '\0'));
 
-	auto ref = make_sub("FRMR", make_uint32(100))
-	         + make_sub("NAME", make_string("chest"))
-	         + make_sub("DATA", make_position());
+	auto ref =
+	    make_sub("FRMR", make_uint32(100)) + make_sub("NAME", make_string("chest")) + make_sub("DATA", make_position());
 
 	auto content = make_record("CELL", header_subs + ref);
 
@@ -370,8 +359,7 @@ TEST_CASE("build_cell_slots, header sub-records before first FRMR", "[u]")
 		if (slot.key.type == "FRMR")
 			break;
 
-		if (slot.key.type == "NAME" || slot.key.type == "DATA" ||
-		    slot.key.type == "WHGT" || slot.key.type == "AMBI")
+		if (slot.key.type == "NAME" || slot.key.type == "DATA" || slot.key.type == "WHGT" || slot.key.type == "AMBI")
 			++header_types_found;
 	}
 

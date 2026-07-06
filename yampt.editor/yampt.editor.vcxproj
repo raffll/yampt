@@ -174,6 +174,11 @@
     <ClCompile Include="source\main.cpp" />
     <ClCompile Include="source\editor_window.cpp" />
     <ClCompile Include="source\view\plugin_workspace_view.cpp" />
+    <ClCompile Include="source\view\view_context_menu.cpp" />
+    <ClCompile Include="source\patcher\merge_controller.cpp" />
+    <ClCompile Include="source\patcher\plugin_cleaner.cpp" />
+    <ClCompile Include="source\session\profile_reader.cpp" />
+    <ClCompile Include="source\session\plugin_session.cpp" />
     <ClCompile Include="source\model\nav_tree_model.cpp" />
     <ClCompile Include="source\model\view_tree_model.cpp" />
     <ClCompile Include="source\model\view_tree_decode.cpp" />
@@ -183,19 +188,16 @@
     <ClCompile Include="source\dialog\filter_dialog.cpp" />
     <ClCompile Include="source\view\messages_view.cpp" />
     <ClCompile Include="source\view\preview_view.cpp" />
-    <ClCompile Include="source\io\profile_reader.cpp" />
-    <ClCompile Include="source\dialog\editor_paths_view.cpp" />
-    <ClCompile Include="source\dialog\editor_settings_dialog.cpp" />
-    <ClCompile Include="source\dialog\appearance_settings_view.cpp" />
-    <ClCompile Include="source\dialog\merge_settings_view.cpp" />
+    <ClCompile Include="source\dialog\settings\editor_paths_view.cpp" />
+    <ClCompile Include="source\dialog\settings\editor_settings_dialog.cpp" />
+    <ClCompile Include="source\dialog\settings\appearance_settings_view.cpp" />
+    <ClCompile Include="source\dialog\settings\merge_settings_view.cpp" />
     <ClCompile Include="source\model\nav_tree_filter.cpp" />
-    <ClCompile Include="source\model\plugin_session.cpp" />
     <ClCompile Include="source\patcher\patch_builder.cpp" />
     <ClCompile Include="source\view\nav_tree_view.cpp" />
     <ClCompile Include="source\view\record_view.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="source\io\profile_reader.hpp" />
     <ClInclude Include="source\model\nav_tree_filter.hpp" />
     <ClInclude Include="source\patcher\patch_builder.hpp" />
   </ItemGroup>
@@ -248,25 +250,25 @@
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
-    <CustomBuild Include="source\dialog\editor_paths_view.hpp">
+    <CustomBuild Include="source\dialog\settings\editor_paths_view.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
-    <CustomBuild Include="source\dialog\editor_settings_dialog.hpp">
+    <CustomBuild Include="source\dialog\settings\editor_settings_dialog.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
-    <CustomBuild Include="source\dialog\appearance_settings_view.hpp">
+    <CustomBuild Include="source\dialog\settings\appearance_settings_view.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
-    <CustomBuild Include="source\dialog\merge_settings_view.hpp">
+    <CustomBuild Include="source\dialog\settings\merge_settings_view.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
@@ -278,7 +280,7 @@
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
-    <CustomBuild Include="source\model\plugin_session.hpp">
+    <CustomBuild Include="source\session\plugin_session.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>

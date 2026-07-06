@@ -1,42 +1,42 @@
 #include <catch2/catch_all.hpp>
-#include <rapidcheck/catch.h>
-#include <rapidcheck.h>
 #include <model/nav_tree_filter.hpp>
+#include <rapidcheck/catch.h>
 #include <scanner/plugin_scan.hpp>
+#include <rapidcheck.h>
 
 namespace rc {
 
-template <>
+template<>
 struct Arbitrary<conflict_all_t>
 {
 	static Gen<conflict_all_t> arbitrary()
 	{
 		return gen::element(
-			conflict_all_t::unknown,
-			conflict_all_t::only_one,
-			conflict_all_t::no_conflict,
-			conflict_all_t::override_benign,
-			conflict_all_t::conflict);
+		    conflict_all_t::unknown,
+		    conflict_all_t::only_one,
+		    conflict_all_t::no_conflict,
+		    conflict_all_t::override_benign,
+		    conflict_all_t::conflict);
 	}
 };
 
-template <>
+template<>
 struct Arbitrary<conflict_this_t>
 {
 	static Gen<conflict_this_t> arbitrary()
 	{
 		return gen::element(
-			conflict_this_t::unknown,
-			conflict_this_t::master,
-			conflict_this_t::identical_to_master,
-			conflict_this_t::override_wins,
-			conflict_this_t::conflict_wins,
-			conflict_this_t::conflict_loses,
-			conflict_this_t::deleted);
+		    conflict_this_t::unknown,
+		    conflict_this_t::master,
+		    conflict_this_t::identical_to_master,
+		    conflict_this_t::override_wins,
+		    conflict_this_t::conflict_wins,
+		    conflict_this_t::conflict_loses,
+		    conflict_this_t::deleted);
 	}
 };
 
-}
+} // namespace rc
 
 namespace {
 
@@ -44,7 +44,13 @@ conflict_entry_t make_random_entry()
 {
 	conflict_entry_t entry;
 	entry.conflict_all = *rc::gen::arbitrary<conflict_all_t>();
-	entry.rec_type = *rc::gen::element(std::string("NPC_"), std::string("CELL"), std::string("ARMO"), std::string("WEAP"), std::string("BOOK"), std::string("DIAL"));
+	entry.rec_type = *rc::gen::element(
+	    std::string("NPC_"),
+	    std::string("CELL"),
+	    std::string("ARMO"),
+	    std::string("WEAP"),
+	    std::string("BOOK"),
+	    std::string("DIAL"));
 	entry.record_id = *rc::gen::arbitrary<std::string>();
 	entry.display_name = *rc::gen::arbitrary<std::string>();
 
@@ -86,7 +92,13 @@ nav_tree_filter_t::filter_state_t make_random_filter(const conflict_entry_t & en
 	{
 		const auto count = *rc::gen::inRange(1, 3);
 		for (int index = 0; index < count; ++index)
-			state.type_set.insert(*rc::gen::element(std::string("NPC_"), std::string("CELL"), std::string("ARMO"), std::string("WEAP"), std::string("BOOK"), std::string("DIAL")));
+			state.type_set.insert(*rc::gen::element(
+			    std::string("NPC_"),
+			    std::string("CELL"),
+			    std::string("ARMO"),
+			    std::string("WEAP"),
+			    std::string("BOOK"),
+			    std::string("DIAL")));
 	}
 
 	state.filter_by_id = *rc::gen::arbitrary<bool>();
@@ -102,7 +114,9 @@ nav_tree_filter_t::filter_state_t make_random_filter(const conflict_entry_t & en
 	return state;
 }
 
-bool passes_single_dimension_conflict_all(const conflict_entry_t & entry, const nav_tree_filter_t::filter_state_t & full)
+bool passes_single_dimension_conflict_all(
+    const conflict_entry_t & entry,
+    const nav_tree_filter_t::filter_state_t & full)
 {
 	nav_tree_filter_t filter;
 	nav_tree_filter_t::filter_state_t single;
@@ -112,7 +126,9 @@ bool passes_single_dimension_conflict_all(const conflict_entry_t & entry, const 
 	return filter.passes(entry, 0);
 }
 
-bool passes_single_dimension_conflict_this(const conflict_entry_t & entry, const nav_tree_filter_t::filter_state_t & full)
+bool passes_single_dimension_conflict_this(
+    const conflict_entry_t & entry,
+    const nav_tree_filter_t::filter_state_t & full)
 {
 	nav_tree_filter_t filter;
 	nav_tree_filter_t::filter_state_t single;
@@ -161,13 +177,13 @@ bool passes_single_dimension_deleted(const conflict_entry_t & entry, const nav_t
 	return filter.passes(entry, 0);
 }
 
-}
+} // namespace
 
 TEST_CASE("nav_tree_filter_t::passes, AND-composition", "[u][pbt]")
 {
 	rc::prop(
-		"combined filter equals AND of each dimension independently",
-		[]()
+	    "combined filter equals AND of each dimension independently",
+	    []()
 	{
 		const auto entry = make_random_entry();
 		const auto filter_state = make_random_filter(entry);
@@ -176,12 +192,11 @@ TEST_CASE("nav_tree_filter_t::passes, AND-composition", "[u][pbt]")
 		combined.set_filter(filter_state);
 		const auto combined_result = combined.passes(entry, 0);
 
-		const auto expected = passes_single_dimension_conflict_all(entry, filter_state)
-			&& passes_single_dimension_conflict_this(entry, filter_state)
-			&& passes_single_dimension_type(entry, filter_state)
-			&& passes_single_dimension_id(entry, filter_state)
-			&& passes_single_dimension_name(entry, filter_state)
-			&& passes_single_dimension_deleted(entry, filter_state);
+		const auto expected =
+		    passes_single_dimension_conflict_all(entry, filter_state) &&
+		    passes_single_dimension_conflict_this(entry, filter_state) &&
+		    passes_single_dimension_type(entry, filter_state) && passes_single_dimension_id(entry, filter_state) &&
+		    passes_single_dimension_name(entry, filter_state) && passes_single_dimension_deleted(entry, filter_state);
 
 		RC_ASSERT(combined_result == expected);
 	});

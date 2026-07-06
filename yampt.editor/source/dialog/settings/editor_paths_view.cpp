@@ -1,4 +1,4 @@
-#include "dialog/editor_paths_view.hpp"
+#include "editor_paths_view.hpp"
 #include <settings_store.hpp>
 #include <QLabel>
 #include <QLineEdit>

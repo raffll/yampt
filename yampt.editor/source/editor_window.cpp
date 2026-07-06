@@ -1,5 +1,5 @@
 #include "editor_window.hpp"
-#include "dialog/editor_settings_dialog.hpp"
+#include "dialog/settings/editor_settings_dialog.hpp"
 #include "view/plugin_workspace_view.hpp"
 #include <settings_store.hpp>
 #include <theme_system.hpp>
@@ -102,7 +102,11 @@ void editor_window_t::setup_menu_bar()
 	show_deleted_action->setChecked(m_plugin_workspace_view->is_show_deleted_strikeout());
 	show_deleted_action->setToolTip("Strikeout deleted records and cell references");
 	view_menu->addAction(show_deleted_action);
-	connect(show_deleted_action, &QAction::toggled, m_plugin_workspace_view, &plugin_workspace_view_t::set_show_deleted_strikeout);
+	connect(
+	    show_deleted_action,
+	    &QAction::toggled,
+	    m_plugin_workspace_view,
+	    &plugin_workspace_view_t::set_show_deleted_strikeout);
 
 	view_menu->addSeparator();
 

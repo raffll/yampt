@@ -183,9 +183,7 @@ void nav_tree_model_t::rebuild()
 void nav_tree_model_t::refresh_colors()
 {
 	emit dataChanged(
-	    index(0, 0, {}),
-	    index(rowCount({}) - 1, columnCount({}) - 1, {}),
-	    { Qt::BackgroundRole, Qt::ForegroundRole });
+	    index(0, 0, {}), index(rowCount({}) - 1, columnCount({}) - 1, {}), { Qt::BackgroundRole, Qt::ForegroundRole });
 }
 
 void nav_tree_model_t::set_filter(const filter_state_t & state)

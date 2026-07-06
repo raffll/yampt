@@ -57,14 +57,30 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 
 	switch (behavior->decode_mode)
 	{
-	case decode_mode_t::cell:      set_record_cell(context); break;
-	case decode_mode_t::leveled:   set_record_leveled(context, entry); break;
-	case decode_mode_t::faction:   set_record_faction(context, entry); break;
-	case decode_mode_t::container: set_record_container(context, entry); break;
-	case decode_mode_t::armor:     set_record_armor(context, entry); break;
-	case decode_mode_t::dial:      set_record_dial(scan, context, entry); break;
-	case decode_mode_t::info:      set_record_info(context, entry); break;
-	case decode_mode_t::generic:   set_record_generic(context, entry); break;
+	case decode_mode_t::cell:
+		set_record_cell(context);
+		break;
+	case decode_mode_t::leveled:
+		set_record_leveled(context, entry);
+		break;
+	case decode_mode_t::faction:
+		set_record_faction(context, entry);
+		break;
+	case decode_mode_t::container:
+		set_record_container(context, entry);
+		break;
+	case decode_mode_t::armor:
+		set_record_armor(context, entry);
+		break;
+	case decode_mode_t::dial:
+		set_record_dial(scan, context, entry);
+		break;
+	case decode_mode_t::info:
+		set_record_info(context, entry);
+		break;
+	case decode_mode_t::generic:
+		set_record_generic(context, entry);
+		break;
 	}
 
 	finalize_header_conflict();

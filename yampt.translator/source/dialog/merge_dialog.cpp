@@ -1,5 +1,5 @@
 #include "merge_dialog.hpp"
-#include "../utility/display_name.hpp"
+#include "../view/display_name.hpp"
 #include <QDialogButtonBox>
 #include <QHBoxLayout>
 #include <QLabel>

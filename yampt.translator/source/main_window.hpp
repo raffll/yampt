@@ -1,25 +1,25 @@
 #pragma once
 
-#include "settings_store.hpp"
 #include "dialog/dict_selection_dialog.hpp"
 #include "editor/byte_limit_validator.hpp"
 #include "editor/edit_history.hpp"
 #include "editor/editor_controller.hpp"
 #include "editor/find_replace.hpp"
-#include "editor/workspace_watcher.hpp"
 #include "editor/glossary.hpp"
-#include "editor/grammar_checker.hpp"
-#include "editor/highlight_coordinator.hpp"
 #include "editor/operation_executor.hpp"
 #include "editor/row_filter.hpp"
+#include "editor/spell_checker.hpp"
+#include "highlighter/grammar_checker.hpp"
+#include "highlighter/highlight_applier.hpp"
+#include "highlighter/highlight_coordinator.hpp"
 #include "model/dict_document.hpp"
 #include "model/document.hpp"
 #include "model/plugin_op.hpp"
 #include "model/record_table_model.hpp"
 #include "model/sidebar_model.hpp"
-#include "session.hpp"
-#include "utility/spell_checker.hpp"
-#include "view/highlight_applier.hpp"
+#include "session/session.hpp"
+#include "session/workspace_watcher.hpp"
+#include "settings_store.hpp"
 #include "view/sidebar_view.hpp"
 #include "view/table_view.hpp"
 #include "view/translation_suggestion_view.hpp"
@@ -161,8 +161,6 @@ private:
 
 	// on_translation_changed helpers
 	void apply_translation_highlights(const table_row_t * row_data);
-
-
 
 	// on_plugin_operation helpers
 	std::optional<make_base_params_t> show_make_base_dialog(const std::string & plugin_path);

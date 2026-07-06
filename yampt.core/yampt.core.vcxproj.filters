@@ -9,6 +9,8 @@
     <ClCompile Include="source\io\eet_reader.cpp" />
     <ClCompile Include="source\io\eet_converter.cpp" />
     <ClCompile Include="source\io\file_list.cpp" />
+    <ClCompile Include="source\io\yaml_l10n_reader.cpp" />
+    <ClCompile Include="source\io\yaml_l10n_writer.cpp" />
     <ClCompile Include="source\creator\cell_matcher.cpp" />
     <ClCompile Include="source\creator\dial_matcher.cpp" />
     <ClCompile Include="source\creator\dict_creator.cpp" />

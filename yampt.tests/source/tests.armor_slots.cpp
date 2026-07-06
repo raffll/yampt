@@ -39,20 +39,17 @@ static std::string make_uint32(uint32_t value)
 
 static std::string make_body_part(uint32_t index, const std::string & male, const std::string & female)
 {
-	return make_sub("INDX", make_uint32(index))
-	     + make_sub("BNAM", make_string(male))
-	     + make_sub("CNAM", make_string(female));
+	return make_sub("INDX", make_uint32(index)) + make_sub("BNAM", make_string(male)) +
+	       make_sub("CNAM", make_string(female));
 }
 
 TEST_CASE("build_armor_slots, aligns body parts by INDX value", "[u]")
 {
-	auto v1_subs = make_sub("NAME", make_string("armor_id"))
-	             + make_body_part(0, "head_m", "head_f")
-	             + make_body_part(2, "chest_m", "chest_f");
+	auto v1_subs = make_sub("NAME", make_string("armor_id")) + make_body_part(0, "head_m", "head_f") +
+	               make_body_part(2, "chest_m", "chest_f");
 
-	auto v2_subs = make_sub("NAME", make_string("armor_id"))
-	             + make_body_part(2, "chest_m_v2", "chest_f_v2")
-	             + make_body_part(0, "head_m", "head_f");
+	auto v2_subs = make_sub("NAME", make_string("armor_id")) + make_body_part(2, "chest_m_v2", "chest_f_v2") +
+	               make_body_part(0, "head_m", "head_f");
 
 	auto v1 = make_record("ARMO", v1_subs);
 	auto v2 = make_record("ARMO", v2_subs);
@@ -94,12 +91,10 @@ TEST_CASE("build_armor_slots, aligns body parts by INDX value", "[u]")
 
 TEST_CASE("build_armor_slots, missing part shows SIZE_MAX", "[u]")
 {
-	auto v1_subs = make_sub("NAME", make_string("armor_id"))
-	             + make_body_part(0, "head_m", "head_f")
-	             + make_body_part(1, "hair_m", "hair_f");
+	auto v1_subs = make_sub("NAME", make_string("armor_id")) + make_body_part(0, "head_m", "head_f") +
+	               make_body_part(1, "hair_m", "hair_f");
 
-	auto v2_subs = make_sub("NAME", make_string("armor_id"))
-	             + make_body_part(0, "head_m", "head_f");
+	auto v2_subs = make_sub("NAME", make_string("armor_id")) + make_body_part(0, "head_m", "head_f");
 
 	auto v1 = make_record("ARMO", v1_subs);
 	auto v2 = make_record("ARMO", v2_subs);
@@ -127,9 +122,8 @@ TEST_CASE("build_armor_slots, missing part shows SIZE_MAX", "[u]")
 
 TEST_CASE("build_armor_slots, header sub-records not in body part groups", "[u]")
 {
-	auto subs = make_sub("NAME", make_string("armor_id"))
-	          + make_sub("FNAM", make_string("Display Name"))
-	          + make_body_part(0, "head_m", "head_f");
+	auto subs = make_sub("NAME", make_string("armor_id")) + make_sub("FNAM", make_string("Display Name")) +
+	            make_body_part(0, "head_m", "head_f");
 
 	auto content = make_record("ARMO", subs);
 

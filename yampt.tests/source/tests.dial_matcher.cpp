@@ -1,15 +1,15 @@
 #include <catch2/catch_all.hpp>
-#include <rapidcheck/catch.h>
-#include <rapidcheck.h>
 #include <creator/cell_matcher.hpp>
 #include <creator/dial_matcher.hpp>
+#include <rapidcheck/catch.h>
 #include <cstring>
+#include <rapidcheck.h>
 
 TEST_CASE("cell_matcher_t::is_interior_cell, short input", "[u][pbt]")
 {
 	rc::prop(
-		"strings shorter than 4 bytes always return false",
-		[]()
+	    "strings shorter than 4 bytes always return false",
+	    []()
 	{
 		const auto length = *rc::gen::inRange(0, 4);
 		auto data_content = *rc::gen::arbitrary<std::string>();
@@ -22,8 +22,8 @@ TEST_CASE("cell_matcher_t::is_interior_cell, short input", "[u][pbt]")
 TEST_CASE("cell_matcher_t::make_cell_key_text, collision resistant", "[u][pbt]")
 {
 	rc::prop(
-		"two different non-empty fingerprints produce different key_text",
-		[]()
+	    "two different non-empty fingerprints produce different key_text",
+	    []()
 	{
 		auto fp_a = *rc::gen::arbitrary<std::string>();
 		auto fp_b = *rc::gen::arbitrary<std::string>();
@@ -42,8 +42,8 @@ TEST_CASE("cell_matcher_t::make_cell_key_text, collision resistant", "[u][pbt]")
 TEST_CASE("cell_matcher_t::make_exterior_coord_key, coord roundtrip", "[u][pbt]")
 {
 	rc::prop(
-		"coord key contains the encoded GridX and GridY values",
-		[]()
+	    "coord key contains the encoded GridX and GridY values",
+	    []()
 	{
 		const auto grid_x = *rc::gen::arbitrary<int32_t>();
 		const auto grid_y = *rc::gen::arbitrary<int32_t>();

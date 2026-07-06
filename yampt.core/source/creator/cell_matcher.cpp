@@ -1,6 +1,6 @@
 #include "cell_matcher.hpp"
-#include "word_match_utils.hpp"
 #include "../translator/translation_engine.hpp"
+#include "word_match_utils.hpp"
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
@@ -16,8 +16,7 @@ cell_matcher_t::cell_matcher_t(
     , m_translation_engine(translation_engine)
     , m_output_dict(output_dict)
     , m_determine_status(std::move(determine_status))
-{
-}
+{}
 
 const cell_matcher_t::counters_t & cell_matcher_t::get_counters() const
 {
@@ -180,8 +179,7 @@ cell_matcher_t::fingerprint_index_t cell_matcher_t::build_cell_fingerprint_index
 		{
 			esm_src.set_value("NAME");
 			std::string cell_name = esm_src.get_value().exist ? esm_src.get_value().text : "<unnamed>";
-			tools_t::add_log(
-			    "[warning] cell index: duplicate fingerprint in CELL \"" + cell_name + "\"\r\n");
+			tools_t::add_log("[warning] cell index: duplicate fingerprint in CELL \"" + cell_name + "\"\r\n");
 		}
 		positions.insert(i);
 	}
@@ -243,8 +241,7 @@ void cell_matcher_t::match_exterior_cells()
 		auto coord_key = make_exterior_coord_key(m_esm_foreign.get_value().content);
 		if (coord_key.empty())
 		{
-			tools_t::add_log(
-			    "[warning] malformed DATA in exterior cell: \"" + ref_cell_name + "\"\r\n", true);
+			tools_t::add_log("[warning] malformed DATA in exterior cell: \"" + ref_cell_name + "\"\r\n", true);
 			missing_cells.push_back({ i, ref_cell_name });
 			m_counters.missing++;
 			continue;
@@ -296,8 +293,7 @@ void cell_matcher_t::match_interior_cells()
 		auto fingerprint = make_cell_fingerprint(m_esm_foreign);
 		if (fingerprint.empty())
 		{
-			tools_t::add_log(
-			    "[warning] empty fingerprint for interior cell: \"" + ref_cell_name + "\"\r\n", true);
+			tools_t::add_log("[warning] empty fingerprint for interior cell: \"" + ref_cell_name + "\"\r\n", true);
 			missing_cells.push_back({ i, ref_cell_name });
 			m_counters.missing++;
 			continue;
@@ -421,8 +417,8 @@ void cell_matcher_t::match_interior_cells_heuristic(
 			auto original_words = split_words(foreign_name);
 			auto compare_words = build_compare_words(translated_words, original_words);
 
-			auto match = compute_best_match(
-			    compare_words, original_words, translated_words, native_cells, matched_native);
+			auto match =
+			    compute_best_match(compare_words, original_words, translated_words, native_cells, matched_native);
 
 			if (match.score <= 0)
 				continue;
@@ -435,12 +431,9 @@ void cell_matcher_t::match_interior_cells_heuristic(
 				if (resolved)
 				{
 					tools_t::add_log(
-					    "[TIE-SAME iter=" + std::to_string(iteration) +
-					    " orig=" + std::to_string(match.score_orig) +
-					    " model=" + std::to_string(match.score_model) +
-					    " count=" + std::to_string(match.count) +
-					    "] \"" + foreign_name + "\" => \"" + translated_text +
-					    "\" -> \"" + match.name + "\"\r\n");
+					    "[TIE-SAME iter=" + std::to_string(iteration) + " orig=" + std::to_string(match.score_orig) +
+					    " model=" + std::to_string(match.score_model) + " count=" + std::to_string(match.count) +
+					    "] \"" + foreign_name + "\" => \"" + translated_text + "\" -> \"" + match.name + "\"\r\n");
 				}
 			}
 
@@ -452,11 +445,9 @@ void cell_matcher_t::match_interior_cells_heuristic(
 				if (!resolved)
 				{
 					tools_t::add_log(
-					    "[TRANSLATE iter=" + std::to_string(iteration) +
-					    " orig=" + std::to_string(match.score_orig) +
-					    " model=" + std::to_string(match.score_model) +
-					    "] \"" + foreign_name + "\" => \"" + translated_text +
-					    "\" -> \"" + match.name + "\"\r\n");
+					    "[TRANSLATE iter=" + std::to_string(iteration) + " orig=" + std::to_string(match.score_orig) +
+					    " model=" + std::to_string(match.score_model) + "] \"" + foreign_name + "\" => \"" +
+					    translated_text + "\" -> \"" + match.name + "\"\r\n");
 				}
 
 				const auto cell_status = resolved ? status_t::translated : status_t::heuristic;
@@ -466,11 +457,9 @@ void cell_matcher_t::match_interior_cells_heuristic(
 			else if (!resolved)
 			{
 				tools_t::add_log(
-				    "[TIE iter=" + std::to_string(iteration) +
-				    " orig=" + std::to_string(match.score_orig) +
-				    " model=" + std::to_string(match.score_model) +
-				    " count=" + std::to_string(match.count) +
-				    "] \"" + foreign_name + "\"\r\n");
+				    "[TIE iter=" + std::to_string(iteration) + " orig=" + std::to_string(match.score_orig) +
+				    " model=" + std::to_string(match.score_model) + " count=" + std::to_string(match.count) + "] \"" +
+				    foreign_name + "\"\r\n");
 			}
 		}
 	}
@@ -510,8 +499,7 @@ void cell_matcher_t::match_interior_cells_heuristic(
 	if (!unmatched_native_names.empty())
 	{
 		tools_t::add_log(
-		    "[info] unmatched native CELL candidates (" +
-		    std::to_string(unmatched_native_names.size()) + "):\r\n");
+		    "[info] unmatched native CELL candidates (" + std::to_string(unmatched_native_names.size()) + "):\r\n");
 		for (const auto & name : unmatched_native_names)
 			tools_t::add_log("  " + name + "\r\n");
 	}

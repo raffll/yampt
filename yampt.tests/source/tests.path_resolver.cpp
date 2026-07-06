@@ -1,9 +1,9 @@
 #include <catch2/catch_all.hpp>
+#include <filesystem>
 #include <path_resolver.hpp>
 #include <QCoreApplication>
 #include <QDir>
 #include <QFile>
-#include <filesystem>
 
 namespace {
 
@@ -21,7 +21,7 @@ void cleanup_temp_dir(const std::string & path)
 	std::filesystem::remove_all(path, error_code);
 }
 
-}
+} // namespace
 
 TEST_CASE("path_resolver_t::resolve_workspace_path, finds file in first root", "[u][qt]")
 {

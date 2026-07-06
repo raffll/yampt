@@ -1,9 +1,9 @@
 #include <catch2/catch_all.hpp>
 #include <utility/color_palette.hpp>
 #include <utility/theme_enums.hpp>
-#include <settings_store.hpp>
 #include <cmath>
 #include <cstdlib>
+#include <settings_store.hpp>
 #include <theme_system.hpp>
 #include <QCoreApplication>
 

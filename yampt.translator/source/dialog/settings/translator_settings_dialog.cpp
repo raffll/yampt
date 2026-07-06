@@ -1,8 +1,8 @@
-#include "dialog/translator_settings_dialog.hpp"
-#include "dialog/appearance_settings_view.hpp"
-#include "dialog/language_settings_view.hpp"
-#include "dialog/shortcuts_settings_view.hpp"
-#include "dialog/translation_settings_view.hpp"
+#include "translator_settings_dialog.hpp"
+#include "appearance_settings_view.hpp"
+#include "language_settings_view.hpp"
+#include "shortcuts_settings_view.hpp"
+#include "translation_settings_view.hpp"
 #include <settings_store.hpp>
 #include <QDialogButtonBox>
 #include <QHBoxLayout>

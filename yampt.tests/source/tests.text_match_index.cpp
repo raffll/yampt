@@ -1,14 +1,14 @@
 #include <catch2/catch_all.hpp>
+#include <creator/text_match_index.hpp>
 #include <rapidcheck/catch.h>
 #include <rapidcheck.h>
-#include <creator/text_match_index.hpp>
 #include <set>
 
 TEST_CASE("text_match_index_t::find, not found for absent keys", "[u][pbt]")
 {
 	rc::prop(
-		"querying a key never inserted returns not_found",
-		[]()
+	    "querying a key never inserted returns not_found",
+	    []()
 	{
 		const auto entry_count = *rc::gen::inRange(1, 10);
 		tools_t::dict_t dict;
@@ -44,8 +44,8 @@ TEST_CASE("text_match_index_t::find, not found for absent keys", "[u][pbt]")
 TEST_CASE("text_match_index_t::find, found for unique entries", "[u][pbt]")
 {
 	rc::prop(
-		"unique old_text with different new_text returns found",
-		[]()
+	    "unique old_text with different new_text returns found",
+	    []()
 	{
 		const auto entry_count = *rc::gen::inRange(1, 10);
 		tools_t::dict_t dict;
@@ -87,8 +87,8 @@ TEST_CASE("text_match_index_t::find, found for unique entries", "[u][pbt]")
 TEST_CASE("text_match_index_t::find, ambiguous for conflicts", "[u][pbt]")
 {
 	rc::prop(
-		"same old_text with different new_text values returns ambiguous",
-		[]()
+	    "same old_text with different new_text values returns ambiguous",
+	    []()
 	{
 		std::string old_text = "shared_old_" + std::to_string(*rc::gen::inRange(0, 10000));
 		std::string new_text_1 = "translation_A_" + std::to_string(*rc::gen::inRange(0, 10000));
@@ -128,8 +128,8 @@ TEST_CASE("text_match_index_t::find, ambiguous for conflicts", "[u][pbt]")
 TEST_CASE("text_match_index_t::find, skips untranslated entries", "[u][pbt]")
 {
 	rc::prop(
-		"entries with old_text == new_text are not indexed",
-		[]()
+	    "entries with old_text == new_text are not indexed",
+	    []()
 	{
 		std::string text = "identical_" + std::to_string(*rc::gen::inRange(0, 10000));
 

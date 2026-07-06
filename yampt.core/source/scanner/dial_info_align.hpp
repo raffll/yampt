@@ -23,7 +23,5 @@ class plugin_scan_t;
 class dial_info_align_t
 {
 public:
-	static dial_info_align_result_t build(
-	    const plugin_scan_t & scan,
-	    const std::string & dial_record_id);
+	static dial_info_align_result_t build(const plugin_scan_t & scan, const std::string & dial_record_id);
 };

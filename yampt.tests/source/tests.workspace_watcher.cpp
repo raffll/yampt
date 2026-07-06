@@ -1,11 +1,11 @@
 #include <catch2/catch_all.hpp>
-#include <editor/workspace_watcher.hpp>
+#include <session/workspace_watcher.hpp>
+#include <filesystem>
 #include <QCoreApplication>
 #include <QDir>
 #include <QFile>
 #include <QSignalSpy>
 #include <QTest>
-#include <filesystem>
 
 namespace {
 
@@ -23,7 +23,7 @@ void cleanup_temp_dir(const std::string & path)
 	std::filesystem::remove_all(path, error_code);
 }
 
-}
+} // namespace
 
 TEST_CASE("workspace_watcher_t::set_watch_roots, does not crash on empty list", "[u][qt]")
 {

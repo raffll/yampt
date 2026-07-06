@@ -1,6 +1,6 @@
 #include <catch2/catch_all.hpp>
-#include <rapidcheck/catch.h>
 #include <patcher/patch_builder.hpp>
+#include <rapidcheck/catch.h>
 #include <rapidcheck.h>
 #include <string>
 #include <tuple>
@@ -48,7 +48,12 @@ rc::Gen<std::string> gen_content()
 
 struct operation_t
 {
-	enum class kind_t { add, remove, pin };
+	enum class kind_t
+	{
+		add,
+		remove,
+		pin
+	};
 
 	kind_t kind;
 	std::string rec_type;

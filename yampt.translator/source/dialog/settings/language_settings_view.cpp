@@ -1,6 +1,6 @@
-#include "dialog/language_settings_view.hpp"
-#include <settings_store.hpp>
+#include "language_settings_view.hpp"
 #include <filesystem>
+#include <settings_store.hpp>
 #include <QComboBox>
 #include <QFormLayout>
 #include <QFrame>

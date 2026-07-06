@@ -224,7 +224,7 @@ dict_commit_result_t editor_controller_t::commit_dict_full(
 	{
 		for (size_t i = 0; i < chapter.records.size(); ++i)
 		{
-			if (!doc.modified_records().count({type, i}))
+			if (!doc.modified_records().count({ type, i }))
 				continue;
 
 			if (type == row.type && i == row.record_index)
@@ -244,10 +244,7 @@ dict_commit_result_t editor_controller_t::commit_dict_full(
 	return result;
 }
 
-void editor_controller_t::commit_yaml(
-    document_t & doc,
-    const table_row_t & row,
-    const std::string & new_text)
+void editor_controller_t::commit_yaml(document_t & doc, const table_row_t & row, const std::string & new_text)
 {
 	doc.commit_edit(row.type, row.record_index, new_text);
 
@@ -256,9 +253,7 @@ void editor_controller_t::commit_yaml(
 		yaml_doc->save_tmp();
 }
 
-void editor_controller_t::sync_propagated_rows(
-    record_table_model_t & model,
-    dict_document_t & doc)
+void editor_controller_t::sync_propagated_rows(record_table_model_t & model, dict_document_t & doc)
 {
 	const auto & data = doc.data();
 

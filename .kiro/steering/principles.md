@@ -9,6 +9,7 @@
 - Utility classes and functions separated from model classes
 - Extract all types, enums, and lists of names into separate miscellaneous classes
 - Extract all names and messages into YAML
+- When splitting a large file, always extract into a new class with its own .hpp/.cpp pair — never split a single class across multiple .cpp files
 
 ## Function Design
 

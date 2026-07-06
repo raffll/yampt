@@ -1,9 +1,7 @@
 #include "dial_info_align.hpp"
 #include "plugin_scan.hpp"
 
-dial_info_align_result_t dial_info_align_t::build(
-    const plugin_scan_t & scan,
-    const std::string & dial_record_id)
+dial_info_align_result_t dial_info_align_t::build(const plugin_scan_t & scan, const std::string & dial_record_id)
 {
 	dial_info_align_result_t result;
 	result.dial_record_id = dial_record_id;
@@ -23,9 +21,8 @@ dial_info_align_result_t dial_info_align_t::build(
 			continue;
 
 		auto separator_pos = entry.record_id.find('|');
-		std::string inam = (separator_pos != std::string::npos)
-		    ? entry.record_id.substr(separator_pos + 1)
-		    : entry.record_id;
+		std::string inam =
+		    (separator_pos != std::string::npos) ? entry.record_id.substr(separator_pos + 1) : entry.record_id;
 
 		info_align_entry_t align_entry;
 		align_entry.inam = inam;

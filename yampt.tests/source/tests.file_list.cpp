@@ -2,12 +2,12 @@
 #include <io/file_list.hpp>
 #include <model/sidebar_model.hpp>
 #include <rapidcheck/catch.h>
+#include <session/session.hpp>
 #include <algorithm>
 #include <cctype>
 #include <filesystem>
 #include <fstream>
 #include <rapidcheck.h>
-#include <session.hpp>
 #include <set>
 #include <unordered_map>
 

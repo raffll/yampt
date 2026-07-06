@@ -664,9 +664,8 @@ void dict_creator_t::make_dict_base_bnam()
 void dict_creator_t::make_dict_base_dial()
 {
 	reset_counters();
-	auto status_fn = [this](const std::string & old_text, const std::string & new_text) {
-		return determine_status(old_text, new_text);
-	};
+	auto status_fn = [this](const std::string & old_text, const std::string & new_text)
+	{ return determine_status(old_text, new_text); };
 	dial_matcher_t dial_matcher(esm, esm_ref, m_translation_engine, dict, status_fn);
 	dial_matcher.match_topics();
 	dial_native_to_foreign = dial_matcher.get_native_to_foreign();
@@ -674,9 +673,8 @@ void dict_creator_t::make_dict_base_dial()
 
 void dict_creator_t::make_dict_base_cell()
 {
-	auto status_fn = [this](const std::string & old_text, const std::string & new_text) {
-		return determine_status(old_text, new_text);
-	};
+	auto status_fn = [this](const std::string & old_text, const std::string & new_text)
+	{ return determine_status(old_text, new_text); };
 	cell_matcher_t cell_matcher(esm, esm_ref, m_translation_engine, dict, status_fn);
 	cell_matcher.match_exterior_cells();
 	cell_matcher.match_interior_cells();

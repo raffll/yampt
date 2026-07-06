@@ -1,6 +1,6 @@
 #include "dict_selection_dialog.hpp"
 #include "../model/sidebar_model.hpp"
-#include "../utility/display_name.hpp"
+#include "../view/display_name.hpp"
 #include <utility/string_utils.hpp>
 #include <map>
 #include <QDialogButtonBox>

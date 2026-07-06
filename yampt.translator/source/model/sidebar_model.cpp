@@ -1,6 +1,6 @@
 #include "sidebar_model.hpp"
-#include "../session.hpp"
-#include "../utility/display_name.hpp"
+#include "../session/session.hpp"
+#include "../view/display_name.hpp"
 #include <utility/string_utils.hpp>
 #include <algorithm>
 #include <filesystem>

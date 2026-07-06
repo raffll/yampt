@@ -207,7 +207,8 @@ void content_alignment_t::emit_key_slots(
 		trailing_slot_types.push_back(trailing_type);
 	}
 
-	fill_key_indices(key, col_groups, col_count, rule, max_trailing, trailing_slot_types, col_type_indices, merge_column);
+	fill_key_indices(
+	    key, col_groups, col_count, rule, max_trailing, trailing_slot_types, col_type_indices, merge_column);
 }
 
 std::string content_alignment_t::resolve_trailing_type(

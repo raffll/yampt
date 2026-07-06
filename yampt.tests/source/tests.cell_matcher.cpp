@@ -1,14 +1,14 @@
 #include <catch2/catch_all.hpp>
+#include <creator/cell_matcher.hpp>
 #include <rapidcheck/catch.h>
 #include <rapidcheck.h>
-#include <creator/cell_matcher.hpp>
 #include <regex>
 
 TEST_CASE("cell_matcher_t::is_interior_cell, flags bit check", "[u][pbt]")
 {
 	rc::prop(
-		"result matches bit 0 of first byte",
-		[]()
+	    "result matches bit 0 of first byte",
+	    []()
 	{
 		auto data_content = *rc::gen::arbitrary<std::string>();
 		while (data_content.size() < 4)
@@ -24,8 +24,8 @@ TEST_CASE("cell_matcher_t::is_interior_cell, flags bit check", "[u][pbt]")
 TEST_CASE("cell_matcher_t::make_exterior_coord_key, deterministic", "[u][pbt]")
 {
 	rc::prop(
-		"same input always produces same output",
-		[]()
+	    "same input always produces same output",
+	    []()
 	{
 		auto data_content = *rc::gen::arbitrary<std::string>();
 		while (data_content.size() < 12)
@@ -40,8 +40,8 @@ TEST_CASE("cell_matcher_t::make_exterior_coord_key, deterministic", "[u][pbt]")
 TEST_CASE("cell_matcher_t::make_exterior_coord_key, format", "[u][pbt]")
 {
 	rc::prop(
-		"result matches GRID[int,int] format",
-		[]()
+	    "result matches GRID[int,int] format",
+	    []()
 	{
 		auto data_content = *rc::gen::arbitrary<std::string>();
 		while (data_content.size() < 12)
@@ -57,8 +57,8 @@ TEST_CASE("cell_matcher_t::make_exterior_coord_key, format", "[u][pbt]")
 TEST_CASE("cell_matcher_t::make_exterior_coord_key, short input", "[u][pbt]")
 {
 	rc::prop(
-		"strings shorter than 12 bytes return empty",
-		[]()
+	    "strings shorter than 12 bytes return empty",
+	    []()
 	{
 		const auto length = *rc::gen::inRange(0, 12);
 		auto data_content = *rc::gen::arbitrary<std::string>();
@@ -72,8 +72,8 @@ TEST_CASE("cell_matcher_t::make_exterior_coord_key, short input", "[u][pbt]")
 TEST_CASE("cell_matcher_t::make_cell_key_text, deterministic", "[u][pbt]")
 {
 	rc::prop(
-		"same input always produces same output",
-		[]()
+	    "same input always produces same output",
+	    []()
 	{
 		const auto fingerprint = *rc::gen::arbitrary<std::string>();
 		const auto result_1 = cell_matcher_t::make_cell_key_text(fingerprint);
@@ -85,8 +85,8 @@ TEST_CASE("cell_matcher_t::make_cell_key_text, deterministic", "[u][pbt]")
 TEST_CASE("cell_matcher_t::make_cell_key_text, fixed length", "[u][pbt]")
 {
 	rc::prop(
-		"output is always exactly 16 hex characters",
-		[]()
+	    "output is always exactly 16 hex characters",
+	    []()
 	{
 		const auto fingerprint = *rc::gen::arbitrary<std::string>();
 		const auto result = cell_matcher_t::make_cell_key_text(fingerprint);

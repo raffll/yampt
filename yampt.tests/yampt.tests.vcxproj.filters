@@ -97,8 +97,6 @@
     <ClCompile Include="..\yampt.core\source\decoder\conflict_slots.cpp" />
     <ClCompile Include="..\yampt.core\source\decoder\conflict_slots_cell.cpp" />
     <ClCompile Include="..\yampt.core\source\decoder\sub_record_schema.cpp" />
-    <ClCompile Include="..\yampt.translator\source\io\yaml_l10n_reader.cpp" />
-    <ClCompile Include="..\yampt.translator\source\io\yaml_l10n_writer.cpp" />
     <ClCompile Include="..\yampt.translator\source\model\table_builder.cpp" />
     <ClCompile Include="..\yampt.translator\source\model\dict_document.cpp" />
     <ClCompile Include="..\yampt.translator\source\model\yaml_document.cpp" />
@@ -107,18 +105,18 @@
     <ClCompile Include="..\yampt.translator\source\editor\glossary.cpp" />
     <ClCompile Include="..\yampt.core\source\utility\keyword_trie.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\editor_controller.cpp" />
-    <ClCompile Include="..\yampt.translator\source\editor\workspace_watcher.cpp" />
+    <ClCompile Include="..\yampt.translator\source\session\workspace_watcher.cpp" />
     <ClCompile Include="..\yampt.translator\source\model\record_table_model.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\edit_history.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\byte_limit_validator.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\find_replace.cpp" />
-    <ClCompile Include="..\yampt.translator\source\editor\highlight_coordinator.cpp" />
-    <ClCompile Include="..\yampt.translator\source\utility\display_name.cpp" />
+    <ClCompile Include="..\yampt.translator\source\highlighter\highlight_coordinator.cpp" />
+    <ClCompile Include="..\yampt.translator\source\view\display_name.cpp" />
     <ClCompile Include="..\yampt.translator\source\highlighter\script_tokenizer.cpp" />
-    <ClCompile Include="..\yampt.translator\source\session.cpp" />
-    <ClCompile Include="..\yampt.editor\source\io\profile_reader.cpp" />
+    <ClCompile Include="..\yampt.translator\source\session\session.cpp" />
+    <ClCompile Include="..\yampt.editor\source\session\profile_reader.cpp" />
     <ClCompile Include="..\yampt.editor\source\model\nav_tree_filter.cpp" />
-    <ClCompile Include="..\yampt.editor\source\model\plugin_session.cpp" />
+    <ClCompile Include="..\yampt.editor\source\session\plugin_session.cpp" />
     <ClCompile Include="..\yampt.editor\source\patcher\patch_builder.cpp" />
   </ItemGroup>
   <ItemGroup>

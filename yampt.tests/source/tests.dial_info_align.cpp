@@ -40,7 +40,9 @@ static std::string make_tes3_record()
 
 static std::string make_dial_record(const std::string & topic_name, uint8_t dial_type)
 {
-	return make_record("DIAL", make_sub("NAME", make_string(topic_name)) + make_sub("DATA", std::string(1, static_cast<char>(dial_type))));
+	return make_record(
+	    "DIAL",
+	    make_sub("NAME", make_string(topic_name)) + make_sub("DATA", std::string(1, static_cast<char>(dial_type))));
 }
 
 static std::string make_info_record(const std::string & inam, const std::string & onam)
@@ -67,12 +69,9 @@ TEST_CASE("dial_info_align_t::build, collects INFOs for a DIAL", "[i]")
 {
 	namespace fs = std::filesystem;
 
-	auto plugin_content = make_tes3_record()
-	                    + make_dial_record("Khajiit", 0)
-	                    + make_info_record("info1", "NPC_A")
-	                    + make_info_record("info2", "NPC_B")
-	                    + make_dial_record("Other", 0)
-	                    + make_info_record("info3", "NPC_C");
+	auto plugin_content = make_tes3_record() + make_dial_record("Khajiit", 0) + make_info_record("info1", "NPC_A") +
+	                      make_info_record("info2", "NPC_B") + make_dial_record("Other", 0) +
+	                      make_info_record("info3", "NPC_C");
 
 	auto path = get_temp_path("yampt_test_dial_align.esm");
 	write_binary_file(path, plugin_content);
@@ -98,9 +97,7 @@ TEST_CASE("dial_info_align_t::build, empty for unknown DIAL", "[i]")
 {
 	namespace fs = std::filesystem;
 
-	auto plugin_content = make_tes3_record()
-	                    + make_dial_record("Khajiit", 0)
-	                    + make_info_record("info1", "");
+	auto plugin_content = make_tes3_record() + make_dial_record("Khajiit", 0) + make_info_record("info1", "");
 
 	auto path = get_temp_path("yampt_test_dial_align2.esm");
 	write_binary_file(path, plugin_content);
