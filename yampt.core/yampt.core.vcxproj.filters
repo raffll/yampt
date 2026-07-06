@@ -24,7 +24,6 @@
     <ClCompile Include="source\creator\word_match_utils.cpp" />
     <ClCompile Include="source\merger\dict_merger.cpp" />
     <ClCompile Include="source\converter\esm_converter.cpp" />
-    <ClCompile Include="source\converter\esm_converter_records.cpp" />
     <ClCompile Include="source\converter\script_parser.cpp" />
     <ClCompile Include="source\converter\scdt_patcher.cpp" />
     <ClCompile Include="source\translator\translation_engine.cpp" />
@@ -44,7 +43,6 @@
     <ClCompile Include="source\decoder\content_alignment.cpp" />
     <ClCompile Include="source\decoder\view_tree_format.cpp" />
     <ClCompile Include="source\decoder\conflict_slots.cpp" />
-    <ClCompile Include="source\decoder\conflict_slots_cell.cpp" />
     <ClCompile Include="source\scanner\plugin_index.cpp" />
     <ClCompile Include="source\scanner\plugin_scan.cpp" />
     <ClCompile Include="source\scanner\merge_patch_store.cpp" />

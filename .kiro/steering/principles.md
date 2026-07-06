@@ -11,6 +11,19 @@
 - Extract all names and messages into YAML
 - When splitting a large file, always extract into a new class with its own .hpp/.cpp pair — never split a single class across multiple .cpp files
 
+Exceptions to the one-class-one-file rule:
+- **Qt main windows** — a `_setup.cpp` companion file is acceptable for UI construction boilerplate (setup_*, connect_* methods). The class has one responsibility but Qt widget creation is verbose.
+- **Qt tree models with complex decode** — a single model class may exceed 1000 lines if the decode logic is inseparable from the model's presentation role and has no external consumers.
+
+## Main Window Anti-Gravity Rule
+
+Never add new logic directly to `main_window_t` or `editor_window_t`. These classes are signal routers — they connect UI events to controllers. New features go on the appropriate controller or a new controller. The main window only:
+- Constructs views and controllers
+- Connects signals to controller methods
+- Reads controller results to update views
+
+If a new feature needs orchestration (showing dialogs, running operations, updating multiple views), create or extend a controller for it. The main window calls one method on the controller — it does not contain the logic itself.
+
 ## Function Design
 
 - Max 50 lines per function

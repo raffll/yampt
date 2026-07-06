@@ -239,54 +239,7 @@ void main_window_t::on_save_all()
 
 void main_window_t::on_merge()
 {
-	const auto all_dicts = m_session.all_dicts();
-	if (all_dicts.size() < 2)
-	{
-		QMessageBox::information(this, "Merge", "At least 2 dictionaries must be loaded to merge.");
-		return;
-	}
-
-	std::vector<merge_dialog_t::dict_entry_t> loaded_dicts;
-	for (const auto * dict_doc : all_dicts)
-	{
-		auto filename = std::string(string_utils::extract_filename(dict_doc->path()));
-		loaded_dicts.push_back({ filename, dict_doc->path(), dict_doc->kind() });
-	}
-
-	merge_dialog_t dialog(loaded_dicts, this);
-	if (dialog.exec() != QDialog::Accepted)
-		return;
-
-	const auto selected_paths = dialog.selected_paths();
-	if (selected_paths.size() < 2)
-		return;
-
-	app_logger_t::reset_log();
-
-	dict_merger_t merger(selected_paths);
-	const auto & merged_dict = merger.get_dict();
-
-	const auto workspace_dir = QCoreApplication::applicationDirPath().toStdString() + "/workspace/";
-	QDir().mkpath(QString::fromStdString(workspace_dir));
-
-	const auto output_path =
-	    workspace_dir + "Merged_" + QDateTime::currentDateTime().toString("yyyyMMddHHmmss").toStdString() + ".json";
-
-	dict_writer_t::write(merged_dict, output_path);
-
-	const auto log_text = app_logger_t::get_log();
-	m_log_view->append_log("merge", log_text);
-	m_record_tabs->setCurrentWidget(m_log_view);
-
-	scan_workspace();
-
-	const auto norm_output = string_utils::normalize_path(output_path);
-	auto * doc = m_session.find(norm_output);
-	if (doc)
-	{
-		switch_document(doc);
-		rebuild_sidebar();
-	}
+	m_dict_ops_controller->on_merge();
 }
 
 void main_window_t::on_find()
@@ -757,44 +710,12 @@ void main_window_t::register_shortcuts()
 
 void main_window_t::shortcut_copy_original()
 {
-	if (m_editor_controller.current_row() < 0)
-		return;
-
-	auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
-	if (!dict_doc)
-		return;
-
-	const auto * row_data = m_table_model->row_at(m_editor_controller.current_row());
-	if (!row_data)
-		return;
-
-	m_editor_controller.copy_original(*dict_doc, *row_data);
-	m_table_model->update_row(m_editor_controller.current_row(), row_data->old_text, status_t::in_progress);
-	set_unsaved_changes(true);
-	update_status_counts();
-	load_record(m_editor_controller.current_row());
+	m_shortcuts_controller->copy_original();
 }
 
 void main_window_t::shortcut_commit_status(status_t new_status)
 {
-	if (m_editor_controller.current_row() < 0)
-		return;
-
-	auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
-	if (!dict_doc)
-		return;
-
-	const auto * row_data = m_table_model->row_at(m_editor_controller.current_row());
-	if (!row_data)
-		return;
-
-	const auto result = m_editor_controller.commit_status(*dict_doc, *row_data, new_status);
-	if (!result.success)
-		return;
-
-	m_table_model->update_row(m_editor_controller.current_row(), result.new_text, result.status);
-	set_unsaved_changes(true);
-	update_status_counts();
+	m_shortcuts_controller->commit_status(new_status);
 }
 
 void main_window_t::rebuild_annotations()
@@ -1019,118 +940,7 @@ std::optional<make_base_params_t> main_window_t::show_make_base_dialog(const std
 
 void main_window_t::start_batch_translation(dict_document_t * dict_doc)
 {
-	m_translation_tab->set_batch_in_progress(true);
-	m_translation_tab->append_log("[info] collecting untranslated entries...\n");
-
-	struct batch_state_t
-	{
-		std::vector<std::pair<rec_type_t, size_t>> work_items;
-		size_t current = 0;
-		int translated_count = 0;
-		int glossary_count = 0;
-		int error_count = 0;
-	};
-
-	auto state = std::make_shared<batch_state_t>();
-	auto * provider = m_translation_tab->ct2_provider();
-
-	auto & data = dict_doc->data_mut();
-	for (auto & [type, chapter] : data)
-	{
-		for (size_t i = 0; i < chapter.records.size(); ++i)
-		{
-			if (chapter.records[i].status == status_t::untranslated && !chapter.records[i].old_text.empty())
-				state->work_items.push_back({ type, i });
-
-			if (state->work_items.size() >= 10)
-				break;
-		}
-
-		if (state->work_items.size() >= 10)
-			break;
-	}
-
-	if (state->work_items.empty())
-	{
-		m_translation_tab->append_log("[info] no untranslated entries found\n");
-		m_translation_tab->set_batch_in_progress(false);
-		return;
-	}
-
-	m_translation_tab->append_log("[info] translating " + std::to_string(state->work_items.size()) + " entries\n");
-
-	auto * timer = new QTimer(this);
-	timer->setInterval(0);
-	connect(
-	    timer,
-	    &QTimer::timeout,
-	    this,
-	    [this, state, dict_doc, provider, timer]()
-	{
-		if (state->current >= state->work_items.size())
-		{
-			timer->stop();
-			timer->deleteLater();
-
-			dict_doc->set_dirty(true);
-			set_unsaved_changes(true);
-			update_sidebar_item(dict_doc->path());
-
-			if (m_editor_controller.current_row() >= 0)
-				load_record(m_editor_controller.current_row());
-
-			m_translation_tab->append_log(
-			    "[info] done: translated=" + std::to_string(state->translated_count) + " glossary=" +
-			    std::to_string(state->glossary_count) + " errors=" + std::to_string(state->error_count) + "\n");
-			m_translation_tab->set_batch_in_progress(false);
-			return;
-		}
-
-		const auto & [type, idx] = state->work_items[state->current];
-		auto & data_ref = dict_doc->data_mut();
-		auto type_it = data_ref.find(type);
-		if (type_it == data_ref.end() || idx >= type_it->second.records.size())
-		{
-			++state->current;
-			return;
-		}
-
-		auto & record = type_it->second.records[idx];
-		auto result = provider->translate_sync(record.old_text);
-
-		if (!result.success)
-		{
-			m_translation_tab->append_log(
-			    "[error] \"" + record.old_text.substr(0, 40) + "...\" -> " + result.error + "\n");
-			++state->error_count;
-			++state->current;
-			return;
-		}
-
-		auto glossary_applied = m_glossary.apply_glossary(result.text);
-		bool had_glossary = (glossary_applied != result.text);
-
-		record.new_text = glossary_applied;
-		record.status = status_t::model;
-		dict_doc->modified_records_insert(type, idx);
-		++state->translated_count;
-
-		for (int row = 0; row < m_table_model->rowCount(); ++row)
-		{
-			const auto * r = m_table_model->row_at(row);
-			if (r && r->type == type && r->record_index == idx)
-			{
-				m_table_model->update_row(row, record.new_text, record.status);
-				break;
-			}
-		}
-
-		if (had_glossary)
-			++state->glossary_count;
-
-		++state->current;
-	});
-	timer->start();
+	m_dict_ops_controller->start_batch_translation(dict_doc);
 }
 
 void main_window_t::on_plugin_unload(const std::string & path)

@@ -229,6 +229,8 @@
     <ClCompile Include="source\session\workspace_watcher.cpp" />
     <ClCompile Include="source\session\sidebar_controller.cpp" />
     <ClCompile Include="source\session\plugin_operations_controller.cpp" />
+    <ClCompile Include="source\session\dict_operations_controller.cpp" />
+    <ClCompile Include="source\session\shortcuts_controller.cpp" />
     <ClCompile Include="source\highlighter\highlight_applier.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -254,6 +256,8 @@
     <ClInclude Include="source\highlighter\grammar_checker.hpp" />
     <ClInclude Include="source\highlighter\highlight_coordinator.hpp" />
     <ClInclude Include="source\highlighter\highlight_applier.hpp" />
+    <ClInclude Include="source\session\dict_operations_controller.hpp" />
+    <ClInclude Include="source\session\shortcuts_controller.hpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="source\main_window.hpp">

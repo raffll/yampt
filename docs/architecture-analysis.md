@@ -391,8 +391,8 @@ Each mode is its own class with its own `.hpp/.cpp` pair. No class is split acro
 |---|-------|--------|--------|--------|
 | 1 | `tools_t` domain type extraction | High (reduces coupling everywhere) | Medium | **DONE** |
 | 2 | `dict_creator_t` split into strategy classes | High (largest class, most complex) | High | **DONE** |
-| 3 | `view_tree_model_t` decoder extraction | Medium (editor-only, already working) | Medium | |
-| 4 | `main_window_t` further decomposition | Medium (translator-only) | Medium | |
+| 3 | `view_tree_model_t` decoder extraction | Medium (editor-only, already working) | Medium | **KEPT** — one cohesive responsibility, split would be artificial |
+| 4 | `main_window_t` further decomposition | Medium (translator-only) | Medium | **KEPT** — Qt main window pattern, setup file is acceptable |
 | 5 | `plugin_scan_t` merge extraction | Medium (editor-only) | Low | **DONE** |
 | 6 | File-local static → class methods | Low (style, no functional change) | Low-Medium | **REVERSED** — rule changed to prefer file-local statics |
 | 7 | `record_conflict` → class | Low (small file) | Low | **DONE** |

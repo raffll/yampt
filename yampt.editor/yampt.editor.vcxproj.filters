@@ -31,7 +31,6 @@
     <ClCompile Include="..\yampt.core\source\decoder\sub_record_schema.cpp" />
     <ClCompile Include="..\yampt.core\source\scanner\plugin_index.cpp" />
     <ClCompile Include="..\yampt.core\source\scanner\plugin_scan.cpp" />
-    <ClCompile Include="..\yampt.core\source\scanner\plugin_scan_merge.cpp" />
     <ClCompile Include="..\yampt.core\source\scanner\sub_record_merge.cpp" />
     <ClCompile Include="..\yampt.core\source\scanner\merge_patch_ops.cpp" />
     <ClCompile Include="..\yampt.core\source\scanner\fog_fixer.cpp" />
@@ -39,7 +38,6 @@
     <ClCompile Include="..\yampt.core\source\scanner\cell_name_fixer.cpp" />
     <ClCompile Include="..\yampt.core\source\scanner\record_conflict.cpp" />
     <ClCompile Include="..\yampt.core\source\decoder\conflict_slots.cpp" />
-    <ClCompile Include="..\yampt.core\source\decoder\conflict_slots_cell.cpp" />
     <ClCompile Include="..\yampt.core\source\decoder\view_tree_format.cpp" />
   </ItemGroup>
   <ItemGroup>

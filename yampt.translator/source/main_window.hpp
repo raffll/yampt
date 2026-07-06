@@ -21,6 +21,8 @@
 #include "model/record_table_model.hpp"
 #include "model/sidebar_model.hpp"
 #include "session/plugin_operations_controller.hpp"
+#include "session/dict_operations_controller.hpp"
+#include "session/shortcuts_controller.hpp"
 #include "session/session.hpp"
 #include "session/sidebar_controller.hpp"
 #include "session/workspace_watcher.hpp"
@@ -247,4 +249,6 @@ private:
 	std::unique_ptr<sidebar_controller_t> m_sidebar_controller;
 	std::unique_ptr<plugin_operations_controller_t> m_plugin_ops_controller;
 	std::unique_ptr<record_display_controller_t> m_record_display_controller;
+	std::unique_ptr<dict_operations_controller_t> m_dict_ops_controller;
+	std::unique_ptr<shortcuts_controller_t> m_shortcuts_controller;
 };

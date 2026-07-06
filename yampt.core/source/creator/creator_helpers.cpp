@@ -167,13 +167,13 @@ void creator_helpers_t::insert_via_text_match(
 
 	if (outcome.result == text_match_index_t::find_result_t::found)
 	{
-		insert_with_status(ctx, key_text, old_text, outcome.translation, type, status_t::reused);
+		creator_helpers_t::insert_with_status(ctx, key_text, old_text, outcome.translation, type, status_t::reused);
 		return;
 	}
 
 	if (outcome.result == text_match_index_t::find_result_t::ambiguous)
 	{
-		insert_with_status(ctx, key_text, old_text, outcome.translation, type, status_t::ambiguous);
+		creator_helpers_t::insert_with_status(ctx, key_text, old_text, outcome.translation, type, status_t::ambiguous);
 
 		auto * entry = ctx.dict.at(type).find(key_text);
 		if (entry)
@@ -207,14 +207,14 @@ void creator_helpers_t::insert_changed_entry(
 		return;
 	}
 
-	insert_with_status(ctx, key_text, old_text, base_entry.new_text, type, status_t::changed);
+	creator_helpers_t::insert_with_status(ctx, key_text, old_text, base_entry.new_text, type, status_t::changed);
 
 	auto * changed_entry = ctx.dict.at(type).find(key_text);
 	if (changed_entry)
 		changed_entry->details = base_entry.old_text;
 }
 
-static void insert_unapproved_changed(
+void creator_helpers_t::insert_unapproved_changed(
     creator_context_t & ctx,
     const std::string & key_text,
     const std::string & old_text,
@@ -225,7 +225,7 @@ static void insert_unapproved_changed(
 
 	if (base_status == status_t::in_progress || base_status == status_t::model || base_status == status_t::error)
 	{
-		insert_with_status(ctx, key_text, old_text, base_entry.new_text, type, status_t::outdated);
+		creator_helpers_t::insert_with_status(ctx, key_text, old_text, base_entry.new_text, type, status_t::outdated);
 
 		auto * outdated_entry = ctx.dict.at(type).find(key_text);
 		if (outdated_entry)
@@ -236,33 +236,33 @@ static void insert_unapproved_changed(
 
 	if (base_status == status_t::untranslated)
 	{
-		insert_with_status(ctx, key_text, old_text, old_text, type, status_t::untranslated);
+		creator_helpers_t::insert_with_status(ctx, key_text, old_text, old_text, type, status_t::untranslated);
 		return;
 	}
 
-	insert_with_status(ctx, key_text, old_text, old_text, type, status_t::changed);
+	creator_helpers_t::insert_with_status(ctx, key_text, old_text, old_text, type, status_t::changed);
 
 	auto * changed_entry = ctx.dict.at(type).find(key_text);
 	if (changed_entry)
 		changed_entry->details = base_entry.old_text;
 }
 
-static void insert_adapted_entry(
+void creator_helpers_t::insert_adapted_entry(
     creator_context_t & ctx,
     const std::string & key_text,
     const std::string & old_text,
     const record_entry_t & base_entry,
     rec_type_t type)
 {
-	const auto & adapted = adapt_translation(old_text, base_entry.old_text, base_entry.new_text);
+	const auto & adapted = creator_helpers_t::adapt_translation(old_text, base_entry.old_text, base_entry.new_text);
 
 	if (adapted == base_entry.new_text)
 	{
-		insert_with_status(ctx, key_text, old_text, adapted, type, status_t::translated);
+		creator_helpers_t::insert_with_status(ctx, key_text, old_text, adapted, type, status_t::translated);
 		return;
 	}
 
-	insert_with_status(ctx, key_text, old_text, adapted, type, status_t::adapted);
+	creator_helpers_t::insert_with_status(ctx, key_text, old_text, adapted, type, status_t::adapted);
 
 	auto * entry = ctx.dict.at(type).find(key_text);
 	if (entry)
@@ -305,13 +305,13 @@ void creator_helpers_t::insert_entry_single_with_base(
 
 	if (base_entry->status == status_t::mismatch)
 	{
-		insert_with_status(ctx, key_text, old_text, base_entry->new_text, type, status_t::mismatch);
+		creator_helpers_t::insert_with_status(ctx, key_text, old_text, base_entry->new_text, type, status_t::mismatch);
 		return;
 	}
 
 	if (base_entry->old_text == old_text && base_entry->new_text == old_text)
 	{
-		insert_with_status(ctx, key_text, old_text, old_text, type, base_entry->status);
+		creator_helpers_t::insert_with_status(ctx, key_text, old_text, old_text, type, base_entry->status);
 		return;
 	}
 
@@ -324,7 +324,7 @@ void creator_helpers_t::insert_entry_single_with_base(
 		     base_status == status_t::propagated || base_status == status_t::error ||
 		     base_status == status_t::translated);
 		const auto status = preserve ? base_status : status_t::translated;
-		insert_with_status(ctx, key_text, old_text, base_entry->new_text, type, status);
+		creator_helpers_t::insert_with_status(ctx, key_text, old_text, base_entry->new_text, type, status);
 		return;
 	}
 
@@ -592,7 +592,7 @@ status_t creator_helpers_t::determine_status(
 	return status_t::untranslated;
 }
 
-static bool is_proper_noun(const creator_context_t & ctx, const std::string & text)
+bool creator_helpers_t::is_proper_noun(const creator_context_t & ctx, const std::string & text)
 {
 	if (!ctx.english_dict)
 		return true;

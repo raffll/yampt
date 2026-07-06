@@ -53,4 +53,13 @@ public:
 	    const std::string & matched_source, const std::string & matched_translation);
 
 	static void enrich_info_speaker(creator_context_t & ctx, const std::string & key_text, size_t record_index);
+
+private:
+	static void insert_unapproved_changed(creator_context_t & ctx, const std::string & key_text,
+	    const std::string & old_text, const record_entry_t & base_entry, rec_type_t type);
+
+	static void insert_adapted_entry(creator_context_t & ctx, const std::string & key_text,
+	    const std::string & old_text, const record_entry_t & base_entry, rec_type_t type);
+
+	static bool is_proper_noun(const creator_context_t & ctx, const std::string & text);
 };

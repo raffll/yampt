@@ -57,6 +57,8 @@
     <ClCompile Include="source\session\workspace_watcher.cpp" />
     <ClCompile Include="source\session\sidebar_controller.cpp" />
     <ClCompile Include="source\session\plugin_operations_controller.cpp" />
+    <ClCompile Include="source\session\dict_operations_controller.cpp" />
+    <ClCompile Include="source\session\shortcuts_controller.cpp" />
     <ClCompile Include="source\highlighter\highlight_applier.cpp" />
     <ClCompile Include="..\yampt.core\source\utility\keyword_trie.cpp" />
     <ClCompile Include="..\yampt.core\source\utility\char_diff.cpp" />
@@ -68,17 +70,14 @@
     <ClCompile Include="..\yampt.core\source\merger\dict_merger.cpp" />
     <ClCompile Include="..\yampt.core\source\creator\dict_creator.cpp" />
     <ClCompile Include="..\yampt.core\source\converter\esm_converter.cpp" />
-    <ClCompile Include="..\yampt.core\source\converter\esm_converter_records.cpp" />
     <ClCompile Include="..\yampt.core\source\converter\script_parser.cpp" />
     <ClCompile Include="..\yampt.core\source\converter\scdt_patcher.cpp" />
     <ClCompile Include="..\yampt.core\source\translator\translation_engine.cpp" />
     <ClCompile Include="..\yampt.core\source\decoder\sub_record_schema.cpp" />
     <ClCompile Include="..\yampt.core\source\scanner\plugin_index.cpp" />
     <ClCompile Include="..\yampt.core\source\scanner\plugin_scan.cpp" />
-    <ClCompile Include="..\yampt.core\source\scanner\plugin_scan_merge.cpp" />
     <ClCompile Include="..\yampt.core\source\scanner\record_conflict.cpp" />
     <ClCompile Include="..\yampt.core\source\decoder\conflict_slots.cpp" />
-    <ClCompile Include="..\yampt.core\source\decoder\conflict_slots_cell.cpp" />
     <ClCompile Include="..\yampt.core\source\decoder\view_tree_format.cpp" />
   </ItemGroup>
   <ItemGroup>
