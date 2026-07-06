@@ -47,18 +47,10 @@ public:
 	static void load_english_dict(creator_context_t & ctx);
 	static status_t determine_status(const creator_context_t & ctx,
 	    const std::string & old_text, const std::string & new_text);
-	static bool is_proper_noun(const creator_context_t & ctx, const std::string & text);
 
 	static bool differs_only_in_numbers_or_punct(const std::string & a, const std::string & b);
 	static std::string adapt_translation(const std::string & source,
 	    const std::string & matched_source, const std::string & matched_translation);
 
 	static void enrich_info_speaker(creator_context_t & ctx, const std::string & key_text, size_t record_index);
-
-private:
-	static void insert_unapproved_changed(creator_context_t & ctx, const std::string & key_text,
-	    const std::string & old_text, const record_entry_t & base_entry, rec_type_t type);
-
-	static void insert_adapted_entry(creator_context_t & ctx, const std::string & key_text,
-	    const std::string & old_text, const record_entry_t & base_entry, rec_type_t type);
 };

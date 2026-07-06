@@ -394,7 +394,7 @@ Each mode is its own class with its own `.hpp/.cpp` pair. No class is split acro
 | 3 | `view_tree_model_t` decoder extraction | Medium (editor-only, already working) | Medium | |
 | 4 | `main_window_t` further decomposition | Medium (translator-only) | Medium | |
 | 5 | `plugin_scan_t` merge extraction | Medium (editor-only) | Low | **DONE** |
-| 6 | File-local static → class methods | Low (style, no functional change) | Low-Medium | |
+| 6 | File-local static → class methods | Low (style, no functional change) | Low-Medium | **REVERSED** — rule changed to prefer file-local statics |
 | 7 | `record_conflict` → class | Low (small file) | Low | **DONE** |
 | 8 | `conflict_slots` → class | Low (working correctly) | Low | **DONE** |
 

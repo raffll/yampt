@@ -214,7 +214,7 @@ void creator_helpers_t::insert_changed_entry(
 		changed_entry->details = base_entry.old_text;
 }
 
-void creator_helpers_t::insert_unapproved_changed(
+static void insert_unapproved_changed(
     creator_context_t & ctx,
     const std::string & key_text,
     const std::string & old_text,
@@ -247,7 +247,7 @@ void creator_helpers_t::insert_unapproved_changed(
 		changed_entry->details = base_entry.old_text;
 }
 
-void creator_helpers_t::insert_adapted_entry(
+static void insert_adapted_entry(
     creator_context_t & ctx,
     const std::string & key_text,
     const std::string & old_text,
@@ -592,7 +592,7 @@ status_t creator_helpers_t::determine_status(
 	return status_t::untranslated;
 }
 
-bool creator_helpers_t::is_proper_noun(const creator_context_t & ctx, const std::string & text)
+static bool is_proper_noun(const creator_context_t & ctx, const std::string & text)
 {
 	if (!ctx.english_dict)
 		return true;

@@ -55,7 +55,8 @@
 - No comments unless the code cannot be explained by function or variable names alone. If a comment is unavoidable, keep it to one short line.
 - No decorative comment banners (dashed lines, boxes, ASCII art).
 - Always remove items from TODO.md that are done or cancelled — never leave stale entries.
-- No file-local `static` functions. All logic belongs as static methods on the owning class. A .cpp file implements one class — every function in it is a member of that class. No mixing of free functions, file-local statics, and class methods in the same file.
+- Prefer file-local `static` functions over private static class methods for implementation-only helpers. Keep headers minimal — only declare methods that callers or tests need. A `.cpp` file implements one class but may contain file-local helpers that serve its methods. Internal-only types (structs used by one function chain) live in the `.cpp`, never the header. If a helper can't be a simple file-local `static` in one `.cpp` (e.g. needed by multiple files), it belongs on a class — never use free functions with external linkage.
+- One class = one `.hpp` + one `.cpp`. Never split a class across multiple `.cpp` files. If a class exceeds 1000 lines, it has more than one responsibility — extract a new class, don't add a second `.cpp`.
 
 
 ## Coding Standards Enforcement
@@ -64,7 +65,8 @@ Every code change must comply with ALL rules in the steering files. Before writi
 - Max 50 lines per function
 - Max 3 nesting levels
 - Max 2 function arguments (use struct if more needed)
-- No file-local `static` functions — all logic as static methods on the owning class
+- Prefer file-local `static` helpers over private static declarations in headers — if needed across files, use a class method
+- One class = one `.hpp` + one `.cpp` — never split across multiple `.cpp` files
 - No comments, no magic numbers, no abbreviations under 5 characters
 - `const auto &` by default
 - Early returns to flatten logic
