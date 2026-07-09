@@ -21,14 +21,13 @@ private:
 	void on_native_language_changed(int index);
 	void on_foreign_language_changed(int index);
 	void scan_dictionaries(const std::string & directory);
+	void update_spell_combo(QComboBox * combo, const char * prefix);
 
-	QComboBox * m_native_language_combo = nullptr;
 	QComboBox * m_foreign_language_combo = nullptr;
-	QComboBox * m_encoding_combo = nullptr;
-	QComboBox * m_spell_check_combo = nullptr;
-	QComboBox * m_translation_target_combo = nullptr;
-	QComboBox * m_partial_dict_combo = nullptr;
-	QLineEdit * m_native_tag_edit = nullptr;
+	QComboBox * m_native_language_combo = nullptr;
+	QComboBox * m_foreign_spell_combo = nullptr;
+	QComboBox * m_native_spell_combo = nullptr;
 	QLineEdit * m_foreign_tag_edit = nullptr;
+	QLineEdit * m_native_tag_edit = nullptr;
 	std::string m_dictionaries_dir;
 };

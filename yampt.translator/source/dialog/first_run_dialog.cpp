@@ -22,6 +22,8 @@ first_run_dialog_t::first_run_dialog_t(QWidget * parent)
 	m_from_combo->addItem("German", QString("DE"));
 	m_from_combo->addItem("French", QString("FR"));
 	m_from_combo->addItem("Russian", QString("RU"));
+	m_from_combo->addItem("Italian", QString("IT"));
+	m_from_combo->addItem("Hungarian", QString("HU"));
 	m_from_combo->setCurrentIndex(0);
 	combo_layout->addWidget(m_from_combo);
 
@@ -32,6 +34,8 @@ first_run_dialog_t::first_run_dialog_t(QWidget * parent)
 	m_to_combo->addItem("German", QString("DE"));
 	m_to_combo->addItem("French", QString("FR"));
 	m_to_combo->addItem("Russian", QString("RU"));
+	m_to_combo->addItem("Italian", QString("IT"));
+	m_to_combo->addItem("Hungarian", QString("HU"));
 	m_to_combo->setCurrentIndex(1);
 	combo_layout->addWidget(m_to_combo);
 

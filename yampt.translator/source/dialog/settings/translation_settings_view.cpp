@@ -1,9 +1,7 @@
 #include "translation_settings_view.hpp"
 #include <settings_store.hpp>
 #include <QFormLayout>
-#include <QHBoxLayout>
 #include <QLineEdit>
-#include <QToolButton>
 #include <QVBoxLayout>
 
 translation_settings_view_t::translation_settings_view_t(QWidget * parent)
@@ -12,50 +10,16 @@ translation_settings_view_t::translation_settings_view_t(QWidget * parent)
 	auto * layout = new QVBoxLayout(this);
 	auto * form = new QFormLayout;
 
-	auto * deepl_row = new QHBoxLayout;
 	m_deepl_key_edit = new QLineEdit(this);
 	m_deepl_key_edit->setEchoMode(QLineEdit::Password);
-	m_deepl_reveal_button = new QToolButton(this);
-	m_deepl_reveal_button->setText("Show");
-	m_deepl_reveal_button->setToolTip("Toggle DeepL API key visibility");
-	m_deepl_reveal_button->setCheckable(true);
-	deepl_row->addWidget(m_deepl_key_edit);
-	deepl_row->addWidget(m_deepl_reveal_button);
-	form->addRow("DeepL API Key:", deepl_row);
+	form->addRow("DeepL API Key:", m_deepl_key_edit);
 
-	auto * google_row = new QHBoxLayout;
 	m_google_key_edit = new QLineEdit(this);
 	m_google_key_edit->setEchoMode(QLineEdit::Password);
-	m_google_reveal_button = new QToolButton(this);
-	m_google_reveal_button->setText("Show");
-	m_google_reveal_button->setToolTip("Toggle Google API key visibility");
-	m_google_reveal_button->setCheckable(true);
-	google_row->addWidget(m_google_key_edit);
-	google_row->addWidget(m_google_reveal_button);
-	form->addRow("Google API Key:", google_row);
+	form->addRow("Google API Key:", m_google_key_edit);
 
 	layout->addLayout(form);
 	layout->addStretch();
-
-	connect(
-	    m_deepl_reveal_button,
-	    &QToolButton::toggled,
-	    this,
-	    [this](bool checked)
-	{
-		m_deepl_key_edit->setEchoMode(checked ? QLineEdit::Normal : QLineEdit::Password);
-		m_deepl_reveal_button->setText(checked ? "Hide" : "Show");
-	});
-
-	connect(
-	    m_google_reveal_button,
-	    &QToolButton::toggled,
-	    this,
-	    [this](bool checked)
-	{
-		m_google_key_edit->setEchoMode(checked ? QLineEdit::Normal : QLineEdit::Password);
-		m_google_reveal_button->setText(checked ? "Hide" : "Show");
-	});
 }
 
 void translation_settings_view_t::load(const settings_store_t & settings)

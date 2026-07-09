@@ -174,13 +174,46 @@ main_window_t::main_window_t(QWidget * parent)
 			m_settings.set_foreign_tag(foreign);
 
 			int encoding_index = 2;
-			if (native == "PL")
+			if (native == "PL" || native == "HU")
 				encoding_index = 0;
 			else if (native == "RU")
 				encoding_index = 1;
 
 			m_settings.set_encoding_index(encoding_index);
 			on_encoding_changed(encoding_index);
+
+			const auto dict_dir = QCoreApplication::applicationDirPath().toStdString() + "/dictionaries/";
+			auto set_spell_paths = [&](const std::string & lang_code, bool is_native)
+			{
+				static const std::map<std::string, std::string> prefix_map = {
+					{ "EN", "en_US" }, { "PL", "pl_PL" }, { "DE", "de_DE" },
+					{ "FR", "fr_FR" }, { "RU", "ru_RU" }, { "IT", "it_IT" }, { "HU", "hu_HU" },
+				};
+
+				auto it_prefix = prefix_map.find(lang_code);
+				if (it_prefix == prefix_map.end())
+					return;
+
+				const auto aff_path = dict_dir + it_prefix->second + ".aff";
+				const auto dic_path = dict_dir + it_prefix->second + ".dic";
+
+				if (!std::filesystem::exists(aff_path) || !std::filesystem::exists(dic_path))
+					return;
+
+				if (is_native)
+				{
+					m_settings.set_spell_aff_path(aff_path);
+					m_settings.set_spell_dic_path(dic_path);
+				}
+				else
+				{
+					m_settings.set_partial_dict_aff_path(aff_path);
+					m_settings.set_partial_dict_dic_path(dic_path);
+				}
+			};
+
+			set_spell_paths(native, true);
+			set_spell_paths(foreign, false);
 
 			save_config();
 		}
@@ -442,6 +475,10 @@ void main_window_t::on_translation_changed()
 		return;
 
 	if (!m_active_doc)
+		return;
+
+	const auto current_text = m_editor_view->translation_editor()->toPlainText();
+	if (current_text == m_editor_controller.loaded_text())
 		return;
 
 	auto * yaml_doc = dynamic_cast<yaml_document_t *>(m_active_doc);

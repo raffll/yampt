@@ -2,6 +2,7 @@
 
 ## [xxx]
 - Transaltor -> annottaion highlight misaligmnet fix
+- Translator -> support for more languages
 
 
 ## [0.842] - 2026-07-05
@@ -29,22 +30,18 @@
 - Navigation tree inherits worst-case conflict color from children up to file level
 - Entries from different plugins aligned by content identity (item ID, object index, rank) instead of file order
 
-### Added — Both Apps
-- Dark mode
-
 ### Improved — yTranslator
 - Consistent syntax coloring across all editor panels
+
+### Added — Both Apps
+- Dark mode
 
 ## [0.735] - 2026-06-21
 
 ### Added
 - yTranslator: translation workbench with spell check, annotations, history, and translation suggestions
 - yEditor: plugin conflict viewer and merged patch creator (xEdit-like)
-- Field decoding for all major record types in yEditor
-- Load plugins from MO2 profiles or OpenMW config in yEditor
-- Neural translation engine (CTranslate2) for cell name matching
 - JSON dictionary format with per-entry status tracking
 
 ### Changed
 - Rewritten from scratch as a Qt6 application suite
-- Renamed executables: yTranslator.exe, yEditor.exe (CLI stays yampt.exe)
