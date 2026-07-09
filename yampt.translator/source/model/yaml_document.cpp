@@ -100,6 +100,11 @@ std::string yaml_document_t::path() const
 	return m_path;
 }
 
+document_kind_t yaml_document_t::kind() const
+{
+	return document_kind_t::yaml;
+}
+
 bool yaml_document_t::is_dirty() const
 {
 	return m_dirty;
@@ -113,9 +118,9 @@ bool yaml_document_t::is_read_only() const
 document_permissions_t yaml_document_t::permissions() const
 {
 	if (m_is_native_file)
-		return { true, true, false, true };
+		return { true, true, false, true, false };
 
-	return { false, false, true, false };
+	return { false, false, true, false, false };
 }
 
 std::vector<table_row_t> yaml_document_t::build_rows() const
@@ -177,6 +182,31 @@ commit_result_t yaml_document_t::commit(const table_row_t & row, const std::stri
 
 	result.new_text = new_text;
 	result.status = intent;
+	result.success = true;
+	return result;
+}
+
+commit_result_t yaml_document_t::commit_status(const table_row_t & row, status_t new_status)
+{
+	return commit(row, row.new_text.empty() ? m_native_values[row.record_index] : row.new_text, new_status);
+}
+
+commit_result_t yaml_document_t::reset_to_original(const table_row_t & row)
+{
+	commit_result_t result;
+
+	if (!m_is_native_file)
+		return result;
+
+	if (row.record_index >= m_keys.size())
+		return result;
+
+	m_native_values[row.record_index] = "";
+	m_modified_indices.erase(row.record_index);
+	m_dirty = true;
+
+	result.new_text = m_foreign_values[row.record_index];
+	result.status = status_t::untranslated;
 	result.success = true;
 	return result;
 }

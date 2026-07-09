@@ -352,8 +352,7 @@ void main_window_t::switch_document(document_t * new_doc)
 
 	restore_filter_state(m_active_doc->path());
 
-	auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
-	if (dict_doc)
+	if (m_active_doc->kind() == document_kind_t::dict)
 	{
 		m_filter_tree_view->set_display_mode(filter_tree_view_t::display_mode_t::full);
 		if (m_session.dict_version() != m_last_annotation_version)
@@ -362,7 +361,7 @@ void main_window_t::switch_document(document_t * new_doc)
 			m_last_annotation_version = m_session.dict_version();
 		}
 	}
-	else if (dynamic_cast<plugin_document_t *>(m_active_doc))
+	else if (m_active_doc->kind() == document_kind_t::plugin)
 	{
 		m_filter_tree_view->set_display_mode(filter_tree_view_t::display_mode_t::empty);
 		m_filter_tree_view->setEnabled(false);
@@ -371,6 +370,8 @@ void main_window_t::switch_document(document_t * new_doc)
 	{
 		m_filter_tree_view->set_display_mode(filter_tree_view_t::display_mode_t::all_only);
 	}
+
+	m_table_view->set_context_menu_enabled(m_active_doc->permissions().status_changeable);
 
 	rebuild_table();
 	clear_editor_panels();
@@ -391,7 +392,7 @@ void main_window_t::rebuild_table()
 		return;
 	}
 
-	if (dynamic_cast<plugin_document_t *>(m_active_doc))
+	if (m_active_doc->kind() == document_kind_t::plugin)
 	{
 		m_table_display->clear();
 		m_editor_controller.set_current_row(-1);
@@ -400,13 +401,13 @@ void main_window_t::rebuild_table()
 	}
 
 	auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
-	if (!dict_doc)
+	if (dict_doc)
 	{
-		rebuild_table_yaml(m_active_doc);
+		rebuild_table_dict(dict_doc);
 		return;
 	}
 
-	rebuild_table_dict(dict_doc);
+	rebuild_table_yaml(m_active_doc);
 }
 
 void main_window_t::rebuild_table_yaml(document_t * target_doc)
@@ -456,7 +457,7 @@ void main_window_t::rebuild_table_dict(dict_document_t * dict_doc)
 
 	auto result = build_filtered_rows(dict_doc->data(), filter_params);
 
-	m_table_display->apply(std::move(result), dict_doc->path(), dict_doc->kind());
+	m_table_display->apply(std::move(result), dict_doc->path(), dict_doc->dict_kind());
 	m_editor_controller.set_current_row(-1);
 	clear_editor_panels();
 }
@@ -485,27 +486,10 @@ void main_window_t::on_translation_changed()
 	if (current_text == m_editor_controller.loaded_text())
 		return;
 
-	auto * yaml_doc = dynamic_cast<yaml_document_t *>(m_active_doc);
-	if (yaml_doc)
+	if (!m_active_doc->is_dirty())
 	{
-		if (!yaml_doc->is_dirty())
-		{
-			yaml_doc->set_dirty(true);
-			update_sidebar_item(yaml_doc->path());
-			set_unsaved_changes(true);
-		}
-
-		return;
-	}
-
-	auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
-	if (dict_doc)
-	{
-		if (!dict_doc->is_dirty())
-		{
-			dict_doc->set_dirty(true);
-			update_sidebar_item(dict_doc->path());
-		}
+		m_active_doc->set_dirty(true);
+		update_sidebar_item(m_active_doc->path());
 	}
 
 	set_unsaved_changes(true);
@@ -585,12 +569,14 @@ void main_window_t::commit_current_edit()
 
 	m_table_model->update_row(m_editor_controller.current_row(), result.new_text, result.status);
 
-	auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
-	if (dict_doc && result.propagated_count > 0)
+	if (result.propagated_count > 0)
 	{
 		statusBar()->showMessage(
 		    QString("Propagated to %1 entries").arg(result.propagated_count), 5000);
-		m_editor_controller.sync_propagated_rows(*m_table_model, *dict_doc);
+
+		auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
+		if (dict_doc)
+			m_editor_controller.sync_propagated_rows(*m_table_model, *dict_doc);
 	}
 
 	set_unsaved_changes(m_active_doc->is_dirty());
@@ -745,11 +731,17 @@ void main_window_t::register_shortcuts()
 
 void main_window_t::shortcut_copy_original()
 {
+	if (!m_shortcuts_controller)
+		return;
+
 	m_shortcuts_controller->copy_original();
 }
 
 void main_window_t::shortcut_commit_status(status_t new_status)
 {
+	if (!m_shortcuts_controller)
+		return;
+
 	m_shortcuts_controller->commit_status(new_status);
 }
 
@@ -816,6 +808,15 @@ void main_window_t::update_annotations()
 
 void main_window_t::update_status_counts()
 {
+	if (!m_active_doc)
+		return;
+
+	if (m_active_doc->kind() == document_kind_t::yaml)
+	{
+		rebuild_table();
+		return;
+	}
+
 	auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
 	if (!dict_doc)
 		return;

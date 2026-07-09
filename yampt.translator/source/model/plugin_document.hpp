@@ -13,6 +13,11 @@ public:
 		std::replace(m_path.begin(), m_path.end(), '\\', '/');
 	}
 
+	document_kind_t kind() const override
+	{
+		return document_kind_t::plugin;
+	}
+
 	std::string path() const override
 	{
 		return m_path;
@@ -30,7 +35,7 @@ public:
 
 	document_permissions_t permissions() const override
 	{
-		return { false, false, false, false };
+		return { false, false, false, false, false };
 	}
 
 	std::vector<table_row_t> build_rows() const override
@@ -42,6 +47,16 @@ public:
 	{}
 
 	commit_result_t commit(const table_row_t &, const std::string &, status_t) override
+	{
+		return {};
+	}
+
+	commit_result_t commit_status(const table_row_t &, status_t) override
+	{
+		return {};
+	}
+
+	commit_result_t reset_to_original(const table_row_t &) override
 	{
 		return {};
 	}

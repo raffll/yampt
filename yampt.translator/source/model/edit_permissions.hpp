@@ -16,6 +16,7 @@ struct document_permissions_t
 	bool saveable;
 	bool exportable;
 	bool inline_editable;
+	bool status_changeable;
 };
 
 namespace edit_permissions {

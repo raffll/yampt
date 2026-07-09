@@ -551,6 +551,15 @@ void main_window_t::connect_editor_signals()
 		set_unsaved_changes(m_active_doc->is_dirty());
 		update_sidebar_item(m_active_doc->path());
 		update_status_counts();
+
+		int next_row = row + 1;
+		if (next_row < m_table_model->rowCount())
+		{
+			auto idx = m_table_model->index(next_row, 0);
+			m_table_view->selectionModel()->setCurrentIndex(
+			    idx, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+			on_row_selected(next_row);
+		}
 	});
 
 	connect(
@@ -562,16 +571,18 @@ void main_window_t::connect_editor_signals()
 		if (m_editor_controller.current_row() < 0)
 			return;
 
-		auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
-		if (!dict_doc)
+		if (!m_active_doc)
 			return;
 
 		const auto * row_data = m_table_model->row_at(m_editor_controller.current_row());
 		if (!row_data)
 			return;
 
-		m_editor_controller.clear_and_untranslate(*dict_doc, *row_data);
-		m_table_model->update_row(m_editor_controller.current_row(), row_data->old_text, status_t::untranslated);
+		const auto result = m_active_doc->reset_to_original(*row_data);
+		if (!result.success)
+			return;
+
+		m_table_model->update_row(m_editor_controller.current_row(), result.new_text, result.status);
 		set_unsaved_changes(true);
 		update_status_counts();
 		load_record(m_editor_controller.current_row());
@@ -583,31 +594,21 @@ void main_window_t::connect_editor_signals()
 	    this,
 	    [this](const QList<int> & rows, status_t new_status)
 	{
-		auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
-		if (!dict_doc)
+		if (!m_active_doc)
 			return;
-
-		auto & data = dict_doc->data_mut();
 
 		for (int row : rows)
 		{
-			auto * row_data = m_table_model->row_at(row);
+			const auto * row_data = m_table_model->row_at(row);
 			if (!row_data)
 				continue;
 
-			auto it = data.find(row_data->type);
-			if (it == data.end())
-				continue;
-
-			if (row_data->record_index >= it->second.records.size())
-				continue;
-
-			it->second.records[row_data->record_index].status = new_status;
-			m_table_model->update_row(row, row_data->new_text, new_status);
+			const auto result = m_active_doc->commit_status(*row_data, new_status);
+			if (result.success)
+				m_table_model->update_row(row, result.new_text, result.status);
 		}
 
-		dict_doc->set_dirty(true);
-		set_unsaved_changes(true);
+		set_unsaved_changes(m_active_doc->is_dirty());
 		update_status_counts();
 	});
 

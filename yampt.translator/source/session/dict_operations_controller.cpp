@@ -31,7 +31,7 @@ void dict_operations_controller_t::on_merge()
 	for (const auto * dict_doc : all_dicts)
 	{
 		auto filename = std::string(string_utils::extract_filename(dict_doc->path()));
-		loaded_dicts.push_back({ filename, dict_doc->path(), dict_doc->kind() });
+		loaded_dicts.push_back({ filename, dict_doc->path(), dict_doc->dict_kind() });
 	}
 
 	merge_dialog_t dialog(loaded_dicts, m_deps.parent_widget);

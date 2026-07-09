@@ -63,11 +63,6 @@ void plugin_operations_controller_t::on_plugin_operation(const std::string & plu
 	{
 	case plugin_op_t::make_dict:
 	{
-		result = m_deps.executor.make_dict(plugin_path, encoding);
-		break;
-	}
-	case plugin_op_t::make_dict_with_base:
-	{
 		auto entries = build_dict_entries(plugin_dir);
 
 		dict_selection_dialog_t dialog(entries, m_deps.settings.last_merge_order(), m_deps.parent_widget);
@@ -77,15 +72,19 @@ void plugin_operations_controller_t::on_plugin_operation(const std::string & plu
 
 		const auto selected = dialog.get_selected_paths();
 		if (selected.empty())
-			return;
+		{
+			result = m_deps.executor.make_dict(plugin_path, encoding);
+		}
+		else
+		{
+			m_deps.settings.set_last_merge_order(selected);
 
-		m_deps.settings.set_last_merge_order(selected);
+			for (const auto & sel_path : selected)
+				m_deps.session.open(sel_path);
 
-		for (const auto & sel_path : selected)
-			m_deps.session.open(sel_path);
-
-		dict_merger_t merger(selected);
-		result = m_deps.executor.make_dict_with_base(plugin_path, merger.get_dict(), encoding);
+			dict_merger_t merger(selected);
+			result = m_deps.executor.make_dict_with_base(plugin_path, merger.get_dict(), encoding);
+		}
 		break;
 	}
 	case plugin_op_t::make_base:
@@ -170,9 +169,6 @@ void plugin_operations_controller_t::log_operation_result(
 	case plugin_op_t::make_dict:
 		operation_name = "make dict: " + plugin_name;
 		break;
-	case plugin_op_t::make_dict_with_base:
-		operation_name = "make dict with base: " + plugin_name;
-		break;
 	case plugin_op_t::make_base:
 		operation_name = "make base: " + plugin_name;
 		break;
@@ -236,7 +232,7 @@ std::vector<dict_selection_dialog_t::dict_entry_t> plugin_operations_controller_
 		entries.push_back(
 		    { std::string(string_utils::extract_filename(dict_doc->path())),
 		      dict_doc->path(),
-		      dict_doc->kind(),
+		      dict_doc->dict_kind(),
 		      root_path,
 		      subfolder,
 		      pre });

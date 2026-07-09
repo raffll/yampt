@@ -196,8 +196,7 @@ void sidebar_view_t::show_folder_context_menu(QTreeWidgetItem * item, const QPoi
 void sidebar_view_t::show_plugin_context_menu(const std::string & path, const QPoint & pos)
 {
 	QMenu menu(this);
-	auto * make_dict_action = menu.addAction("Make Dict");
-	auto * make_dict_base_action = menu.addAction("Make Dict with Base");
+	auto * make_dict_action = menu.addAction("Make Dictionary");
 	auto * make_base_action = menu.addAction("Make Base");
 	menu.addSeparator();
 	auto * convert_action = menu.addAction("Convert");
@@ -208,8 +207,6 @@ void sidebar_view_t::show_plugin_context_menu(const std::string & path, const QP
 	auto * selected = menu.exec(m_tree->viewport()->mapToGlobal(pos));
 	if (selected == make_dict_action)
 		emit operation_requested(path, plugin_op_t::make_dict);
-	else if (selected == make_dict_base_action)
-		emit operation_requested(path, plugin_op_t::make_dict_with_base);
 	else if (selected == make_base_action)
 		emit operation_requested(path, plugin_op_t::make_base);
 	else if (selected == convert_action)

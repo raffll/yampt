@@ -35,6 +35,11 @@ std::string dict_document_t::path() const
 	return m_path;
 }
 
+document_kind_t dict_document_t::kind() const
+{
+	return document_kind_t::dict;
+}
+
 bool dict_document_t::is_dirty() const
 {
 	return m_dirty;
@@ -47,7 +52,7 @@ bool dict_document_t::is_read_only() const
 
 document_permissions_t dict_document_t::permissions() const
 {
-	return { true, true, false, true };
+	return { true, true, false, true, true };
 }
 
 std::vector<table_row_t> dict_document_t::build_rows() const
@@ -136,6 +141,45 @@ int dict_document_t::propagate(rec_type_t source_type, const std::string & old_t
 	return count;
 }
 
+commit_result_t dict_document_t::commit_status(const table_row_t & row, status_t new_status)
+{
+	commit_result_t result;
+
+	auto it = m_data.find(row.type);
+	if (it == m_data.end() || row.record_index >= it->second.records.size())
+		return result;
+
+	auto & entry = it->second.records[row.record_index];
+	entry.status = new_status;
+	m_dirty = true;
+	m_modified_records.insert({ row.type, row.record_index });
+
+	result.new_text = entry.new_text;
+	result.status = new_status;
+	result.success = true;
+	return result;
+}
+
+commit_result_t dict_document_t::reset_to_original(const table_row_t & row)
+{
+	commit_result_t result;
+
+	auto it = m_data.find(row.type);
+	if (it == m_data.end() || row.record_index >= it->second.records.size())
+		return result;
+
+	auto & entry = it->second.records[row.record_index];
+	entry.new_text = entry.old_text;
+	entry.status = status_t::untranslated;
+	m_dirty = true;
+	m_modified_records.insert({ row.type, row.record_index });
+
+	result.new_text = entry.old_text;
+	result.status = status_t::untranslated;
+	result.success = true;
+	return result;
+}
+
 void dict_document_t::save()
 {
 	dict_t encoded;
@@ -194,7 +238,7 @@ void dict_document_t::set_dirty(bool dirty)
 	m_dirty = dirty;
 }
 
-dict_kind_t dict_document_t::kind() const
+dict_kind_t dict_document_t::dict_kind() const
 {
 	return m_kind;
 }

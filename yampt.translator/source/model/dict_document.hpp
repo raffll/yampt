@@ -13,6 +13,7 @@ class dict_document_t : public document_t
 public:
 	dict_document_t(const std::string & path, codepage_t codepage, dict_kind_t kind);
 
+	document_kind_t kind() const override;
 	std::string path() const override;
 	bool is_dirty() const override;
 	bool is_read_only() const override;
@@ -21,6 +22,8 @@ public:
 	std::vector<table_row_t> build_rows() const override;
 	void commit_edit(rec_type_t type, size_t record_index, const std::string & new_text) override;
 	commit_result_t commit(const table_row_t & row, const std::string & new_text, status_t intent) override;
+	commit_result_t commit_status(const table_row_t & row, status_t new_status) override;
+	commit_result_t reset_to_original(const table_row_t & row) override;
 	void save() override;
 
 	int translated_count() const override;
@@ -28,7 +31,7 @@ public:
 
 	void set_dirty(bool dirty) override;
 
-	dict_kind_t kind() const;
+	dict_kind_t dict_kind() const;
 	const dict_t & data() const;
 	dict_t & data_mut();
 	const std::set<std::pair<rec_type_t, size_t>> & modified_records() const;

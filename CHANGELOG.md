@@ -25,6 +25,11 @@
 ### Changed — yTranslator
 - Translation button populates the translation editor with result
 - Translation button only works on untranslated entries
+- Translation button commits immediately and advances to the next row
+- Translation button works for YAML documents (not just dict)
+- Inline table editing advances to the next row after commit
+- Polymorphic document commit: unified commit flow for all document types
+- Document permissions control context menu and shortcut availability
 - API key fields: removed Show/Hide toggle buttons (always masked)
 - Convert/Create: preserves original file timestamp
 
@@ -33,6 +38,11 @@
 - Dictionary marked dirty on row click without editing
 - SCTX/BNAM validation: quotes no longer flagged as forbidden characters
 - Whitespace markers: newline indicator now visible at line breaks
+- Spell check: dictionary now loads correctly on startup
+- Grammar check: missing punctuation no longer flagged while cursor is at end of text
+- Translation log: newline separator between result and subsequent messages
+- Filter counters cleared when switching from dict to YAML document
+- View menu: added Spell Check toggle
 
 
 ## [0.842] - 2026-07-05

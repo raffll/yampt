@@ -12,6 +12,7 @@ class yaml_document_t : public document_t
 public:
 	yaml_document_t(const std::string & clicked_path, const std::string & native_language_code);
 
+	document_kind_t kind() const override;
 	std::string path() const override;
 	bool is_dirty() const override;
 	bool is_read_only() const override;
@@ -20,6 +21,8 @@ public:
 	std::vector<table_row_t> build_rows() const override;
 	void commit_edit(rec_type_t type, size_t record_index, const std::string & new_text) override;
 	commit_result_t commit(const table_row_t & row, const std::string & new_text, status_t intent) override;
+	commit_result_t commit_status(const table_row_t & row, status_t new_status) override;
+	commit_result_t reset_to_original(const table_row_t & row) override;
 	void save() override;
 
 	int translated_count() const override;

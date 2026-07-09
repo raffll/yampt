@@ -60,8 +60,16 @@ void record_table_view_t::setModel(QAbstractItemModel * model)
 	});
 }
 
+void record_table_view_t::set_context_menu_enabled(bool enabled)
+{
+	m_context_menu_enabled = enabled;
+}
+
 void record_table_view_t::contextMenuEvent(QContextMenuEvent * event)
 {
+	if (!m_context_menu_enabled)
+		return;
+
 	const auto selected = selectionModel()->selectedRows();
 	if (selected.isEmpty())
 		return;
