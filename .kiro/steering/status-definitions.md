@@ -68,6 +68,10 @@ Assigned by user actions in yTranslator.
 | `propagated` | Translation auto-filled from another record with same old_text |
 | `error` | Entry has a validation error |
 
+## Translate Button Behavior
+
+The Translate button always sets the entry status to `model` after a successful translation. This applies regardless of document type (dict or YAML). The status is set via `set_pending_status(status_t::model)` before the translation call, and `commit_current_edit()` applies it immediately after the result is placed in the editor.
+
 ## Details Field
 
 The `details` field (renamed from `adapted_from`) uses `|` (pipe) as separator for multiple values. The GUI displays each value on a separate line in the Details panel.

@@ -741,10 +741,9 @@ void main_window_t::connect_editor_signals()
 	    this,
 	    [this]()
 	{
-		auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
-		if (!dict_doc)
+		if (!m_active_doc)
 		{
-			m_translation_tab->append_log("[error] no dictionary loaded\n");
+			m_translation_tab->append_log("[error] no document loaded\n");
 			return;
 		}
 
@@ -773,8 +772,6 @@ void main_window_t::connect_editor_signals()
 		}
 
 		m_translation_tab->set_source_text(row_data->old_text);
-
-		m_editor_controller.set_pending_status(status_t::model);
 
 		if (m_editor_view->has_script_template())
 		{
@@ -816,6 +813,18 @@ void main_window_t::connect_editor_signals()
 
 			m_editor_view->translation_editor()->setPlainText(QString::fromStdString(result.text));
 			m_translation_tab->display_translation_result({ result.text, true, "" });
+		}
+
+		m_editor_controller.set_pending_status(status_t::model);
+		commit_current_edit();
+
+		int next_row = current_row + 1;
+		if (next_row < m_table_model->rowCount())
+		{
+			auto idx = m_table_model->index(next_row, 0);
+			m_table_view->selectionModel()->setCurrentIndex(
+			    idx, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+			on_row_selected(next_row);
 		}
 	});
 }

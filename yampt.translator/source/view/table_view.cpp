@@ -85,6 +85,9 @@ void table_view_t::apply_yaml(
 	m_file_label.setText(QString::fromStdString(file_path));
 	m_filter_tree.setEnabled(true);
 	m_filter_tree.set_display_mode(filter_tree_view_t::display_mode_t::all_only);
+	m_filter_tree.update_counts({}, {});
+	m_filter_tree.update_sub_type_counts({}, {});
+	m_filter_tree.set_total_count(static_cast<size_t>(translated), static_cast<size_t>(total));
 	m_status_bar.set_document_open(true);
 	set_enabled(true);
 

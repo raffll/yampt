@@ -233,6 +233,10 @@ ctranslate2_translator_t * translation_suggestion_view_t::ct2_provider() const
 
 void translation_suggestion_view_t::append_log(const std::string & msg)
 {
+	auto * doc = m_result_text->document();
+	if (doc->characterCount() > 1 && !doc->toPlainText().endsWith('\n'))
+		m_result_text->appendPlainText(QString());
+
 	m_result_text->moveCursor(QTextCursor::End);
 	m_result_text->insertPlainText(QString::fromStdString(msg));
 	m_result_text->verticalScrollBar()->setValue(m_result_text->verticalScrollBar()->maximum());

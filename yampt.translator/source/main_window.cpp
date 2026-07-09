@@ -601,8 +601,9 @@ void main_window_t::commit_current_edit()
 		return;
 	}
 
+	const auto yaml_status = m_editor_controller.take_pending_status().value_or(status_t::in_progress);
 	m_editor_controller.commit_yaml(*m_active_doc, *row_data, new_text_str);
-	m_table_model->update_row(m_editor_controller.current_row(), new_text_str, status_t::in_progress);
+	m_table_model->update_row(m_editor_controller.current_row(), new_text_str, yaml_status);
 	set_unsaved_changes(m_active_doc->is_dirty());
 	m_editor_controller.set_loaded_text(m_editor_view->translation_editor()->toPlainText());
 	update_status_counts();
