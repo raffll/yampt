@@ -15,7 +15,6 @@ public:
 
 	void set_block_multiline(bool value);
 	void set_auto_capitalize(bool value);
-	void set_show_whitespace(bool value);
 	void set_record_type(rec_type_t type);
 
 	using QPlainTextEdit::blockBoundingGeometry;
@@ -26,7 +25,6 @@ public:
 protected:
 	void keyPressEvent(QKeyEvent * event) override;
 	void insertFromMimeData(const QMimeData * source) override;
-	void paintEvent(QPaintEvent * event) override;
 
 signals:
 	void navigate_next();
@@ -39,6 +37,5 @@ private:
 
 	bool m_block_multiline = false;
 	bool m_auto_capitalize = false;
-	bool m_show_whitespace = false;
 	rec_type_t m_record_type = rec_type_t::unknown;
 };

@@ -32,7 +32,8 @@ private:
 	    QList<QTextEdit::ExtraSelection> & selections,
 	    const QString & text,
 	    QTextDocument * document,
-	    rec_type_t type) const;
+	    rec_type_t type,
+	    int cursor_position) const;
 
 	static QTextCharFormat warning_format();
 };

@@ -181,6 +181,7 @@ private:
 	QToolButton * m_search_col_key = nullptr;
 	QToolButton * m_search_col_original = nullptr;
 	QToolButton * m_search_col_translation = nullptr;
+	QAction * m_spell_check = nullptr;
 	QAction * m_grammar_check = nullptr;
 	QAction * m_whitespace_check = nullptr;
 

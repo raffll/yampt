@@ -17,6 +17,10 @@
 - First run dialog: added Italian and Hungarian languages
 - Spell check dictionaries: added de_DE, fr_FR, ru_RU, it_IT, hu_HU
 - Script editor: `say` keyword sound file path hidden from display and translation
+- Lua l10n workflow: auto-pairs foreign/native YAML files in the same directory
+- Lua l10n workflow: opening a native YAML allows editing, opening a foreign YAML shows read-only reference
+- Lua l10n workflow: save writes only translated entries to the native file
+- Lua l10n workflow: export creates a scaffold native file with all keys
 
 ### Changed — yTranslator
 - Translation button populates the translation editor with result
@@ -28,6 +32,7 @@
 - Annotation highlight misalignment
 - Dictionary marked dirty on row click without editing
 - SCTX/BNAM validation: quotes no longer flagged as forbidden characters
+- Whitespace markers: newline indicator now visible at line breaks
 
 
 ## [0.842] - 2026-07-05

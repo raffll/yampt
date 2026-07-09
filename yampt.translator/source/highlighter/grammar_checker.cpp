@@ -23,7 +23,7 @@ QList<QTextEdit::ExtraSelection> grammar_checker_t::check(translation_edit_view_
 	check_double_spaces(selections, text, document);
 	check_unmatched_quotes(selections, text, document);
 	check_unmatched_parens(selections, text, document);
-	check_missing_punctuation(selections, text, document, type);
+	check_missing_punctuation(selections, text, document, type, editor->textCursor().position());
 
 	return selections;
 }
@@ -118,9 +118,13 @@ void grammar_checker_t::check_missing_punctuation(
     QList<QTextEdit::ExtraSelection> & selections,
     const QString & text,
     QTextDocument * document,
-    rec_type_t type) const
+    rec_type_t type,
+    int cursor_position) const
 {
 	if (type != rec_type_t::info && type != rec_type_t::text)
+		return;
+
+	if (cursor_position >= text.size())
 		return;
 
 	const auto last = text[text.size() - 1];

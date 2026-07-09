@@ -82,6 +82,11 @@ void main_window_t::setup_menu_bar()
 
 	view_menu->addSeparator();
 
+	m_spell_check = new QAction("&Spell Check", this);
+	m_spell_check->setCheckable(true);
+	m_spell_check->setChecked(true);
+	view_menu->addAction(m_spell_check);
+
 	m_grammar_check = new QAction("&Grammar Check", this);
 	m_grammar_check->setCheckable(true);
 	m_grammar_check->setChecked(true);
@@ -281,6 +286,18 @@ void main_window_t::connect_menu_signals()
 	connect(m_sidebar_toggle, &QAction::toggled, m_left_splitter, &QWidget::setVisible);
 	connect(m_bottom_panel_toggle, &QAction::toggled, m_editor_view, &QWidget::setVisible);
 	connect(m_whitespace_check, &QAction::toggled, this, &main_window_t::on_whitespace_toggled);
+
+	connect(
+	    m_spell_check,
+	    &QAction::toggled,
+	    this,
+	    [this](bool checked)
+	{
+		if (checked)
+			m_hl_translation->set_spell_checker(&m_spell_checker);
+		else
+			m_hl_translation->set_spell_checker(nullptr);
+	});
 
 	connect(
 	    m_grammar_check,

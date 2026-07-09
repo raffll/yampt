@@ -1,9 +1,6 @@
 #include "translation_edit_view.hpp"
 #include <QKeyEvent>
 #include <QMimeData>
-#include <QPainter>
-#include <QPaintEvent>
-#include <QTextBlock>
 
 translation_edit_view_t::translation_edit_view_t(QWidget * parent)
     : QPlainTextEdit(parent)
@@ -17,11 +14,6 @@ void translation_edit_view_t::set_block_multiline(bool value)
 void translation_edit_view_t::set_auto_capitalize(bool value)
 {
 	m_auto_capitalize = value;
-}
-
-void translation_edit_view_t::set_show_whitespace(bool value)
-{
-	m_show_whitespace = value;
 }
 
 void translation_edit_view_t::set_record_type(rec_type_t type)
@@ -169,36 +161,4 @@ void translation_edit_view_t::insertFromMimeData(const QMimeData * source)
 	text.replace('\n', ' ');
 	text.replace('\r', ' ');
 	insertPlainText(text);
-}
-
-void translation_edit_view_t::paintEvent(QPaintEvent * event)
-{
-	QPlainTextEdit::paintEvent(event);
-
-	if (!m_show_whitespace)
-		return;
-
-	QPainter painter(viewport());
-	painter.setPen(QColor(180, 180, 180));
-	painter.setFont(document()->defaultFont());
-
-	auto block = firstVisibleBlock();
-	while (block.isValid())
-	{
-		const auto geom = blockBoundingGeometry(block).translated(contentOffset());
-		if (geom.top() > event->rect().bottom())
-			break;
-
-		if (block.isVisible())
-		{
-			const auto & text = block.text();
-			const auto fm = QFontMetrics(document()->defaultFont());
-			const auto text_width = fm.horizontalAdvance(text);
-			const auto x = geom.left() + text_width;
-			const auto y = geom.top() + fm.ascent();
-			painter.drawText(QPointF(x, y), QStringLiteral("\u00B6"));
-		}
-
-		block = block.next();
-	}
 }

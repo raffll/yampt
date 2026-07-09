@@ -628,7 +628,7 @@ void main_window_t::on_whitespace_toggled(bool checked)
 
 	QTextOption opt;
 	if (checked)
-		opt.setFlags(QTextOption::ShowTabsAndSpaces);
+		opt.setFlags(QTextOption::ShowTabsAndSpaces | QTextOption::ShowLineAndParagraphSeparators);
 
 	m_editor_view->original_view()->document()->setDefaultTextOption(opt);
 	m_editor_view->translation_editor()->document()->setDefaultTextOption(opt);
@@ -858,14 +858,8 @@ void main_window_t::update_validation()
 void main_window_t::scan_spell_dictionaries()
 {}
 
-void main_window_t::on_spell_lang_changed(int index)
+void main_window_t::on_spell_lang_changed(int)
 {
-	if (index <= 0)
-	{
-		m_hl_translation->set_spell_checker(nullptr);
-		return;
-	}
-
 	const auto aff_path = m_settings.spell_aff_path();
 	const auto dic_path = m_settings.spell_dic_path();
 
@@ -878,7 +872,8 @@ void main_window_t::on_spell_lang_changed(int index)
 	if (!m_spell_checker.load(aff_path, dic_path))
 		return;
 
-	m_hl_translation->set_spell_checker(&m_spell_checker);
+	if (m_spell_check && m_spell_check->isChecked())
+		m_hl_translation->set_spell_checker(&m_spell_checker);
 }
 
 void main_window_t::load_config()
