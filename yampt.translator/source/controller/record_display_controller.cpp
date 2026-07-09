@@ -39,6 +39,8 @@ void record_display_controller_t::load_record(int row, document_t * active_doc)
 
 	if (row_data->type == rec_type_t::text)
 		m_deps.book_preview_view.set_html(row_data->old_text, row_data->new_text);
+	else if (row_data->type == rec_type_t::sctx || row_data->type == rec_type_t::bnam)
+		m_deps.book_preview_view.set_script(row_data->old_text, row_data->new_text);
 	else
 		m_deps.book_preview_view.clear();
 

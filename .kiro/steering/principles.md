@@ -110,3 +110,12 @@ Never produce code that violates these rules even partially. If a change would e
 ## Always Ask Before Implementing
 
 Never start implementing a solution without asking the user first. Propose the approach, explain it briefly, and wait for explicit approval before writing any code. This applies to every change — no exceptions.
+
+
+## Changelog and README Rules
+
+- Never include unit tests, test files, or test-related changes in the CHANGELOG or README.
+- Never include scripts (PowerShell, Python, automation) in the CHANGELOG or README.
+- Never include build system changes (vcxproj, paths, MSBuild targets) in the CHANGELOG or README.
+- Only user-visible features, fixes, and behavioral changes belong in the CHANGELOG.
+- The README describes what the application does for end users — not internal tooling.

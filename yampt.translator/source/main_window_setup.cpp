@@ -521,6 +521,24 @@ void main_window_t::connect_editor_signals()
 {
 	connect(m_table_view, &record_table_view_t::row_selected, this, &main_window_t::on_row_selected);
 
+	connect(m_table_model, &record_table_model_t::inline_edit_committed, this, [this](int row, const std::string & new_text)
+	{
+		auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
+		if (!dict_doc)
+			return;
+
+		const auto * row_data = m_table_model->row_at(row);
+		if (!row_data)
+			return;
+
+		auto result = m_editor_controller.commit(*dict_doc, *row_data, new_text);
+		if (result.success)
+			m_table_model->update_row(row, result.new_text, result.status);
+
+		set_unsaved_changes(dict_doc->is_dirty());
+		update_status_counts();
+	});
+
 	connect(
 	    m_table_view,
 	    &record_table_view_t::delete_entry_requested,

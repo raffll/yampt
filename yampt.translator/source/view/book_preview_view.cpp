@@ -1,4 +1,5 @@
 #include "book_preview_view.hpp"
+#include "../highlighter/script_tokenizer.hpp"
 #include <QRegularExpression>
 #include <QSplitter>
 #include <QTextBrowser>
@@ -49,6 +50,12 @@ void book_preview_view_t::set_html(const std::string & original_html, const std:
 	m_translation_browser->setHtml(prepare_html(translation_html));
 }
 
+void book_preview_view_t::set_script(const std::string & original_script, const std::string & translated_script)
+{
+	m_original_browser->setHtml(highlight_script(original_script));
+	m_translation_browser->setHtml(highlight_script(translated_script));
+}
+
 void book_preview_view_t::clear()
 {
 	m_original_browser->setHtml("<p style='color: gray;'>Select a book record</p>");
@@ -66,4 +73,51 @@ QString book_preview_view_t::prepare_html(const std::string & html) const
 	content.replace(color_re, "COLOR=\"#\\1\"");
 
 	return content;
+}
+
+QString book_preview_view_t::highlight_script(const std::string & script) const
+{
+	script_tokenizer_t tokenizer;
+	const auto tokens = tokenizer.tokenize(script, rec_type_t::sctx);
+
+	QString result;
+	size_t last_end = 0;
+
+	for (const auto & token : tokens)
+	{
+		if (token.start > last_end)
+		{
+			auto segment = QString::fromStdString(script.substr(last_end, token.start - last_end));
+			result += segment.toHtmlEscaped();
+		}
+
+		auto segment = QString::fromStdString(script.substr(token.start, token.end - token.start));
+		auto escaped = segment.toHtmlEscaped();
+
+		switch (token.type)
+		{
+		case token_type_t::mwscript_function:
+			result += "<span style='color: #569cd6;'>" + escaped + "</span>";
+			break;
+		case token_type_t::mwscript_string:
+			result += "<span style='color: #ce9178;'>" + escaped + "</span>";
+			break;
+		case token_type_t::mwscript_comment:
+			result += "<span style='color: #6a9955;'>" + escaped + "</span>";
+			break;
+		default:
+			result += escaped;
+			break;
+		}
+
+		last_end = token.end;
+	}
+
+	if (last_end < script.size())
+	{
+		auto tail = QString::fromStdString(script.substr(last_end));
+		result += tail.toHtmlEscaped();
+	}
+
+	return "<pre style='font-family: Consolas, monospace; font-size: 10pt; margin: 4px;'>" + result + "</pre>";
 }

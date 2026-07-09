@@ -1,8 +1,33 @@
 # Changelog
 
 ## [xxx]
-- Transaltor -> annottaion highlight misaligmnet fix
-- Translator -> support for more languages
+
+### Added — yTranslator
+- Translation engine: pre-substitution of glossary terms before sending to AI model
+- Translation engine: SCTX/BNAM tokenization — only translatable strings are sent to model
+- Translation engine: status `model` assigned to AI-translated entries
+- Translation engine: model-translated entries do not propagate automatically
+- Translation panel: DeepL and Google providers shown in combo (marked as not supported)
+- Book Preview: MWScript syntax highlighting for SCTX/BNAM entries (keywords, strings, comments)
+- Book Preview: live update while editing script entries
+- Inline table editing: double-click Translation column to edit single-line entries directly
+- Language settings: simplified panel (foreign/native language, spell check, tags)
+- Language settings: encoding and translation target auto-derived from language selection
+- Language settings: spell check auto-set to None when dictionary not found
+- First run dialog: added Italian and Hungarian languages
+- Spell check dictionaries: added de_DE, fr_FR, ru_RU, it_IT, hu_HU
+- Script editor: `say` keyword sound file path hidden from display and translation
+
+### Changed — yTranslator
+- Translation button populates the translation editor with result
+- Translation button only works on untranslated entries
+- API key fields: removed Show/Hide toggle buttons (always masked)
+- Convert/Create: preserves original file timestamp
+
+### Fixed — yTranslator
+- Annotation highlight misalignment
+- Dictionary marked dirty on row click without editing
+- SCTX/BNAM validation: quotes no longer flagged as forbidden characters
 
 
 ## [0.842] - 2026-07-05

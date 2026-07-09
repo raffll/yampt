@@ -6,6 +6,8 @@
 #include <merger/dict_merger.hpp>
 #include <utility/app_logger.hpp>
 #include <algorithm>
+#include <chrono>
+#include <filesystem>
 #include <QCoreApplication>
 #include <QDateTime>
 #include <QDir>
@@ -140,6 +142,7 @@ operation_executor_t::result_t operation_executor_t::convert(
 	const auto output_path = make_output_path(plugin_path, ext);
 
 	binary_file_io::write_file(converter.get_records(), output_path);
+	std::filesystem::last_write_time(output_path, converter.get_time());
 
 	return { true, app_logger_t::get_log(), output_path };
 }
@@ -163,6 +166,7 @@ operation_executor_t::result_t operation_executor_t::create_plugin(
 	const auto output_path = make_output_path(plugin_path, ext);
 
 	binary_file_io::create_file(converter.get_records(), output_path);
+	std::filesystem::last_write_time(output_path, converter.get_time() + std::chrono::seconds(1));
 
 	return { true, app_logger_t::get_log(), output_path };
 }

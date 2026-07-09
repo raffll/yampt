@@ -23,6 +23,12 @@ public:
 	int row_count() const override;
 	void update_row(int row, const std::string & new_text, status_t status);
 
+	Qt::ItemFlags flags(const QModelIndex & index) const override;
+	bool setData(const QModelIndex & index, const QVariant & value, int role = Qt::EditRole) override;
+
+signals:
+	void inline_edit_committed(int row, const std::string & new_text);
+
 private:
 	std::vector<table_row_t> m_rows;
 };

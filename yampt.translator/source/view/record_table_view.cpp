@@ -13,6 +13,7 @@ record_table_view_t::record_table_view_t(QWidget * parent)
 	setSelectionMode(QAbstractItemView::ExtendedSelection);
 	setSortingEnabled(true);
 	setAlternatingRowColors(false);
+	setEditTriggers(QAbstractItemView::DoubleClicked);
 	verticalHeader()->setVisible(false);
 	verticalHeader()->setDefaultSectionSize(20);
 	verticalHeader()->setMinimumSectionSize(20);
@@ -33,12 +34,15 @@ void record_table_view_t::setModel(QAbstractItemModel * model)
 	{
 		header->setSectionResizeMode(col_id, QHeaderView::Interactive);
 		header->setSectionResizeMode(col_key, QHeaderView::Interactive);
-		header->setSectionResizeMode(col_original, QHeaderView::Stretch);
-		header->setSectionResizeMode(col_translation, QHeaderView::Stretch);
+		header->setSectionResizeMode(col_original, QHeaderView::Interactive);
+		header->setSectionResizeMode(col_translation, QHeaderView::Interactive);
 		header->setSectionResizeMode(col_status, QHeaderView::Interactive);
+		header->setStretchLastSection(true);
 
 		header->resizeSection(col_id, 50);
 		header->resizeSection(col_key, 200);
+		header->resizeSection(col_original, 300);
+		header->resizeSection(col_translation, 300);
 		header->resizeSection(col_status, 80);
 	}
 

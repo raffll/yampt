@@ -521,6 +521,11 @@ void main_window_t::on_translation_changed()
 		const auto translation_text = m_editor_view->translation_editor()->toPlainText().toStdString();
 		m_book_preview_view->set_html(row_data->old_text, translation_text);
 	}
+	else if (row_data->type == rec_type_t::sctx || row_data->type == rec_type_t::bnam)
+	{
+		const auto translated_script = m_editor_view->reconstruct_script_line();
+		m_book_preview_view->set_script(row_data->old_text, translated_script);
+	}
 }
 
 void main_window_t::apply_translation_highlights(const table_row_t * row_data)

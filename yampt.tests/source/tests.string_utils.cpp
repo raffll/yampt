@@ -55,6 +55,6 @@ TEST_CASE("string_utils::replace_non_printable_with_dot, mixed content", "[u]")
 {
 	REQUIRE(string_utils::replace_non_printable_with_dot("hello") == "hello");
 	REQUIRE(string_utils::replace_non_printable_with_dot("a\x01""b") == "a.b");
-	REQUIRE(string_utils::replace_non_printable_with_dot("\x00\x1F") == "..");
+	REQUIRE(string_utils::replace_non_printable_with_dot(std::string("\x00\x1F", 2)) == "..");
 	REQUIRE(string_utils::replace_non_printable_with_dot("") == "");
 }

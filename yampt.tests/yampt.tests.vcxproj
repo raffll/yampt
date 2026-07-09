@@ -252,6 +252,8 @@
     <ClCompile Include="source\tests.string_utils.cpp" />
     <ClCompile Include="source\tests.byte_limit_validator.cpp" />
     <ClCompile Include="source\tests.row_filter.cpp" />
+    <ClCompile Include="source\tests.pending_status.cpp" />
+    <ClCompile Include="source\tests.script_tokenizer_extended.cpp" />
     <ClCompile Include="..\yampt.translator\source\model\table_builder.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\row_filter.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\glossary.cpp" />

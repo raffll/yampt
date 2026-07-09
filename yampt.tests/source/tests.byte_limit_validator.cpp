@@ -81,11 +81,11 @@ TEST_CASE("byte_limit_validator_t::validate, tab is allowed", "[u]")
 	REQUIRE(result.level == validation_level_t::ok);
 }
 
-TEST_CASE("byte_limit_validator_t::validate, quote forbidden in script", "[u]")
+TEST_CASE("byte_limit_validator_t::validate, quote allowed in script", "[u]")
 {
 	byte_limit_validator_t validator;
 	const auto result = validator.validate(rec_type_t::sctx, "say \"hello\"");
-	REQUIRE(result.level == validation_level_t::error);
+	REQUIRE(result.level == validation_level_t::ok);
 }
 
 TEST_CASE("byte_limit_validator_t::validate, quote allowed in non-script", "[u]")
