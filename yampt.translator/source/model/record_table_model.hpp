@@ -22,6 +22,7 @@ public:
 	const table_row_t * row_at(int row) const override;
 	int row_count() const override;
 	void update_row(int row, const std::string & new_text, status_t status);
+	void set_editable(bool editable);
 
 	Qt::ItemFlags flags(const QModelIndex & index) const override;
 	bool setData(const QModelIndex & index, const QVariant & value, int role = Qt::EditRole) override;
@@ -31,4 +32,5 @@ signals:
 
 private:
 	std::vector<table_row_t> m_rows;
+	bool m_editable = true;
 };

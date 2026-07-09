@@ -89,10 +89,6 @@ document_t * session_t::find(const std::string & path)
 	{
 		if (doc->path() == normalized)
 			return doc.get();
-
-		auto * yaml_doc = dynamic_cast<yaml_document_t *>(doc.get());
-		if (yaml_doc && yaml_doc->native_path() == normalized)
-			return doc.get();
 	}
 
 	return nullptr;
@@ -105,10 +101,6 @@ const document_t * session_t::find(const std::string & path) const
 	for (const auto & doc : m_docs)
 	{
 		if (doc->path() == normalized)
-			return doc.get();
-
-		const auto * yaml_doc = dynamic_cast<const yaml_document_t *>(doc.get());
-		if (yaml_doc && yaml_doc->native_path() == normalized)
 			return doc.get();
 	}
 

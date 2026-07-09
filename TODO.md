@@ -16,9 +16,6 @@ yEditor already shows conflicts visually with full coloring. Add "Export to Text
 ### Leveled List Merge Polish (yEditor) [S]
 `auto_merge_t` already merges leveled lists, dialogues, and three-way objects. The "Create Merged Patch" button exists. Polish: add progress feedback, a summary dialog showing what was merged, and make the one-click experience smoother.
 
-### YAML Translation: Save Directly as Target Language File (yTranslator) [S]
-Stop using a tmp file. Since we know the native language from settings, save the YAML translation directly as `pl.yaml` (or `de.yaml`, etc.) in the workspace folder. When translating a YAML opened from outside the workspace, store a metadata association (source mod path → output file path) so yTranslator knows where the translation belongs on subsequent opens. The `yaml_document_t` already handles save — just needs proper naming and path resolution.
-
 ---
 
 ## Priority 2 — Medium effort, directly extends existing code
@@ -42,15 +39,6 @@ Search all loaded plugins for a text string. Results list: record type, ID, plug
 ### Dialogue Merging (yEditor) [L]
 `merge_dialogue()` already exists in `plugin_scan_t` and `auto_merge_t`. Extend to handle INFO chain ordering conflicts (PNAM/NNAM link repair). `dial_info_align.hpp` already aligns INFO records across plugins — build the merge logic on top.
 
-### CSV Export/Import for Bulk Editing (yampt.core + yTranslator) [L]
-Export dictionary entries (or raw ESM records) to CSV for spreadsheet-based mass edits (NPC stats, item values, translation batches). Import back with validation. Useful for rebalancing mods and translation teams.
-
-### Regex Find/Replace in Translations (yTranslator) [L]
-`find_replace_t` already handles literal find/replace across all entries. Extend with `std::regex` support. Batch mode: apply to all matching entries with preview. Useful for systematic text corrections across thousands of entries.
-
-### Diff Viewer Between Plugin Versions (yTranslator) [L]
-When a mod updates, show which source strings changed between old and new ESM. Uses existing `dict_creator_t` to extract both versions, then diff. Highlights entries needing re-translation. `char_diff_t` already provides character-level diffing.
-
 ### Plugin Header Management (yEditor or yampt.cli) [L]
 - Update master file sizes in headers (Wrye Mash feature — needed after cleaning)
 - Update plugin version to 1.3
@@ -67,26 +55,8 @@ Parse OpenMW Lua scripts (l10n YAML, or string literals) to extract translatable
 ### Generate TOP/CEL/MRK Files from Dictionaries [XL]
 Create `.top`, `.cel`, `.mrk` files based on DIAL/CELL dictionaries and the language spell checker dictionary. These are OpenMW cell/topic name files used by the engine for localized map markers and journal topics. Include generated files as annotation sources in yTranslator.
 
-### Script Compiler with Diagnostics [XL]
-Full MWScript parser with better error messages than TESCS. Color-coded script display (already partially in yTranslator's `script_tokenizer`). Function parameter type checking, length checks, deprecated function warnings. Builds on existing `script_parser_t`.
-
 ### Lua Handlers Comparison/Conflicts Detector (yEditor) [XL]
 Detect conflicts between OpenMW Lua handler registrations across multiple mods (e.g. two mods registering `addSkillLevelUpHandler` that both return `false`). Show conflicts in yEditor's comparison view.
 
 ### Linux Build Support [XL]
 No Windows-only dependencies identified. Needs CMakeLists.txt for Linux.
-
----
-
-## Excluded — Not a good fit
-
-These were considered but don't make sense for yampt's apps:
-
-- **BSA Archive Extraction** — unrelated to translation or conflict resolution; dedicated tools (BSA Browser) do this better
-- **Plugin Active List Management** — MO2 and OpenMW launcher already handle this; duplicating would create confusion
-- **Automatic Backup on Save** — OS-level or VCS-level concern, not an app responsibility
-- **PEX Script Decompilation** — Skyrim/Fallout only, yampt is Morrowind-focused
-- **Fuz Voice File Mapping** — Morrowind uses simple .wav files referenced in Say commands; already handled by script parser displaying the filename
-- **Record Copying Between Plugins** — yEditor's drag-and-drop to merge patch already covers this use case
-- **Alias/Variable Integrity Check** — Morrowind doesn't use format variables in dialogue; irrelevant for TES3
-- **Encoding Detection and Conversion** — already solved (Windows-1250/1251/1252 + UTF-8 detection); adding Asian encodings has no Morrowind use case

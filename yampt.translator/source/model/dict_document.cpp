@@ -45,6 +45,11 @@ bool dict_document_t::is_read_only() const
 	return false;
 }
 
+document_permissions_t dict_document_t::permissions() const
+{
+	return { true, true, false, true };
+}
+
 std::vector<table_row_t> dict_document_t::build_rows() const
 {
 	std::vector<table_row_t> rows;

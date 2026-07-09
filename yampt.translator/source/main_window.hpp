@@ -152,6 +152,7 @@ private:
 	QAction * m_import_archive_action = nullptr;
 	QAction * m_save_action = nullptr;
 	QAction * m_save_all_action = nullptr;
+	QAction * m_export_native_action = nullptr;
 	QAction * m_quit_action = nullptr;
 	QAction * m_find_action = nullptr;
 	QAction * m_escape_action = nullptr;

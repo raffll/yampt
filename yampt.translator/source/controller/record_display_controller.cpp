@@ -128,7 +128,7 @@ void record_display_controller_t::load_record_script(const table_row_t * row_dat
 	if (row_data->status != status_t::untranslated)
 		return;
 
-	const int line_count = m_deps.editor_view.script_slot_count();
+	const auto line_count = static_cast<int>(m_deps.editor_view.script_slot_count());
 	QString empty_lines;
 	for (int i = 1; i < line_count; ++i)
 		empty_lines += '\n';

@@ -62,6 +62,11 @@ void main_window_t::setup_menu_bar()
 	m_save_all_action = new QAction("Save A&ll", this);
 	file_menu->addAction(m_save_all_action);
 
+	m_export_native_action = new QAction("Create &Translation File", this);
+	m_export_native_action->setToolTip("Create native language YAML from current source file");
+	m_export_native_action->setEnabled(false);
+	file_menu->addAction(m_export_native_action);
+
 	file_menu->addSeparator();
 
 	m_quit_action = new QAction("&Quit", this);
@@ -274,6 +279,17 @@ void main_window_t::connect_menu_signals()
 {
 	connect(m_save_action, &QAction::triggered, this, &main_window_t::on_save);
 	connect(m_save_all_action, &QAction::triggered, this, &main_window_t::on_save_all);
+	connect(m_export_native_action, &QAction::triggered, this, [this]()
+	{
+		auto * yaml_doc = dynamic_cast<yaml_document_t *>(m_active_doc);
+		if (!yaml_doc || yaml_doc->is_native_file())
+			return;
+
+		yaml_doc->export_native();
+		m_sidebar_controller->scan_workspace();
+		statusBar()->showMessage(
+		    QString("Created %1").arg(QString::fromStdString(yaml_doc->native_path())), 5000);
+	});
 	connect(m_quit_action, &QAction::triggered, this, &QWidget::close);
 	connect(m_find_action, &QAction::triggered, this, &main_window_t::on_find);
 	connect(m_escape_action, &QAction::triggered, this, &main_window_t::on_escape);
@@ -524,18 +540,31 @@ void main_window_t::connect_editor_signals()
 	connect(m_table_model, &record_table_model_t::inline_edit_committed, this, [this](int row, const std::string & new_text)
 	{
 		auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
-		if (!dict_doc)
+		if (dict_doc)
+		{
+			const auto * row_data = m_table_model->row_at(row);
+			if (!row_data)
+				return;
+
+			auto result = m_editor_controller.commit(*dict_doc, *row_data, new_text);
+			if (result.success)
+				m_table_model->update_row(row, result.new_text, result.status);
+
+			set_unsaved_changes(dict_doc->is_dirty());
+			update_status_counts();
+			return;
+		}
+
+		if (!m_active_doc)
 			return;
 
 		const auto * row_data = m_table_model->row_at(row);
 		if (!row_data)
 			return;
 
-		auto result = m_editor_controller.commit(*dict_doc, *row_data, new_text);
-		if (result.success)
-			m_table_model->update_row(row, result.new_text, result.status);
-
-		set_unsaved_changes(dict_doc->is_dirty());
+		m_active_doc->commit_edit(row_data->type, row_data->record_index, new_text);
+		m_table_model->update_row(row, new_text, status_t::in_progress);
+		set_unsaved_changes(m_active_doc->is_dirty());
 		update_status_counts();
 	});
 

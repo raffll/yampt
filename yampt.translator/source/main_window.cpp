@@ -343,6 +343,9 @@ void main_window_t::switch_document(document_t * new_doc)
 	m_active_doc = new_doc;
 	m_editor_controller.set_current_row(-1);
 
+	auto * yaml_doc = dynamic_cast<yaml_document_t *>(m_active_doc);
+	m_export_native_action->setEnabled(m_active_doc && m_active_doc->permissions().exportable);
+
 	if (!m_active_doc)
 	{
 		rebuild_table();
@@ -381,6 +384,8 @@ void main_window_t::rebuild_table()
 	if (!m_table_model)
 		return;
 
+	m_table_model->set_editable(true);
+
 	if (!m_active_doc)
 	{
 		m_table_display->clear();
@@ -409,6 +414,8 @@ void main_window_t::rebuild_table()
 
 void main_window_t::rebuild_table_yaml(document_t * target_doc)
 {
+	m_table_model->set_editable(target_doc->permissions().inline_editable);
+
 	const auto raw_rows = target_doc->build_rows();
 
 	std::map<status_t, size_t> total_status_counts;

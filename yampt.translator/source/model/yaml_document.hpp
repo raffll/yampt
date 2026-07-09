@@ -15,6 +15,7 @@ public:
 	std::string path() const override;
 	bool is_dirty() const override;
 	bool is_read_only() const override;
+	document_permissions_t permissions() const override;
 
 	std::vector<table_row_t> build_rows() const override;
 	void commit_edit(rec_type_t type, size_t record_index, const std::string & new_text) override;
@@ -27,16 +28,20 @@ public:
 
 	const std::string & foreign_path() const;
 	const std::string & native_path() const;
+	bool is_native_file() const;
+	void export_native();
 	void export_to(const std::string & output_path);
 
 private:
-	void resolve_paths(const std::string & clicked_path, const std::string & native_code);
-	void load_foreign();
-	void load_native();
+	void load_as_native();
+	void load_as_foreign();
 
+	std::string m_path;
 	std::string m_foreign_path;
 	std::string m_native_path;
+	std::string m_clicked_path;
 	std::string m_native_code;
+	bool m_is_native_file = false;
 
 	std::vector<std::string> m_keys;
 	std::vector<std::string> m_foreign_values;

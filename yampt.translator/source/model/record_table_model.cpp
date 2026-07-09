@@ -1,5 +1,6 @@
 #include "record_table_model.hpp"
 #include "../view/status_display.hpp"
+#include "edit_permissions.hpp"
 #include <algorithm>
 #include <theme_system.hpp>
 #include <QString>
@@ -256,6 +257,9 @@ Qt::ItemFlags record_table_model_t::flags(const QModelIndex & index) const
 	if (!index.isValid())
 		return base_flags;
 
+	if (!m_editable)
+		return base_flags;
+
 	if (index.column() != col_translation)
 		return base_flags;
 
@@ -264,13 +268,17 @@ Qt::ItemFlags record_table_model_t::flags(const QModelIndex & index) const
 		return base_flags;
 
 	const auto & row = m_rows[row_idx];
-	if (is_script_type(row.type))
-		return base_flags;
+	const auto permissions = edit_permissions::get_record(row.type);
 
-	if (row.old_text.find_first_of("\r\n") != std::string::npos)
+	if (!permissions.editable_inline)
 		return base_flags;
 
 	return base_flags | Qt::ItemIsEditable;
+}
+
+void record_table_model_t::set_editable(bool editable)
+{
+	m_editable = editable;
 }
 
 bool record_table_model_t::setData(const QModelIndex & index, const QVariant & value, int role)

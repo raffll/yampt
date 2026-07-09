@@ -28,6 +28,11 @@ public:
 		return true;
 	}
 
+	document_permissions_t permissions() const override
+	{
+		return { false, false, false, false };
+	}
+
 	std::vector<table_row_t> build_rows() const override
 	{
 		return {};
