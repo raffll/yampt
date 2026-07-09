@@ -722,11 +722,55 @@ void main_window_t::connect_editor_signals()
 
 		if (row_data->status != status_t::untranslated)
 		{
-			m_translation_tab->append_log("[error] selected entry is not untranslated\n");
+			m_translation_tab->append_log("[info] only untranslated entries can be translated\n");
 			return;
 		}
 
 		m_translation_tab->set_source_text(row_data->old_text);
+
+		m_editor_controller.set_pending_status(status_t::model);
+
+		if (m_editor_view->has_script_template())
+		{
+			const auto lines = m_editor_view->original_view()->toPlainText().split('\n');
+			QStringList translated_lines;
+
+			for (const auto & line : lines)
+			{
+				const auto source = line.toStdString();
+				if (source.empty())
+				{
+					translated_lines.append(QString());
+					continue;
+				}
+
+				const auto prepared = m_glossary.apply_glossary(source);
+				auto line_result = provider->translate_sync(prepared);
+				if (!line_result.success)
+				{
+					m_translation_tab->append_log("[error] " + line_result.error + "\n");
+					return;
+				}
+
+				translated_lines.append(QString::fromStdString(line_result.text));
+			}
+
+			m_editor_view->translation_editor()->setPlainText(translated_lines.join('\n'));
+		}
+		else
+		{
+			const auto prepared = m_glossary.apply_glossary(row_data->old_text);
+			auto result = provider->translate_sync(prepared);
+
+			if (!result.success)
+			{
+				m_translation_tab->append_log("[error] " + result.error + "\n");
+				return;
+			}
+
+			m_editor_view->translation_editor()->setPlainText(QString::fromStdString(result.text));
+			m_translation_tab->display_translation_result({ result.text, true, "" });
+		}
 	});
 }
 

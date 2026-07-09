@@ -247,7 +247,21 @@ std::vector<std::string> editor_view_t::extract_quoted_strings(const std::string
 {
 	std::vector<std::string> result;
 	size_t pos = 0;
+	bool skip_first = false;
 
+	auto lower = source_text;
+	std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char c) { return std::tolower(c); });
+
+	auto arrow_pos = lower.find("->");
+	auto keyword_start = (arrow_pos != std::string::npos) ? arrow_pos + 2 : 0;
+
+	while (keyword_start < lower.size() && (lower[keyword_start] == ' ' || lower[keyword_start] == '\t'))
+		++keyword_start;
+
+	if (lower.compare(keyword_start, 3, "say") == 0)
+		skip_first = true;
+
+	bool first = true;
 	while (pos < source_text.size())
 	{
 		auto i = source_text.find('"', pos);
@@ -258,6 +272,14 @@ std::vector<std::string> editor_view_t::extract_quoted_strings(const std::string
 		if (j == std::string::npos)
 			break;
 
+		if (first && skip_first)
+		{
+			first = false;
+			pos = j + 1;
+			continue;
+		}
+
+		first = false;
 		result.push_back(source_text.substr(i + 1, j - i - 1));
 		pos = j + 1;
 	}
@@ -284,7 +306,19 @@ void editor_view_t::load_script_entry(const std::string & old_text, const std::s
 	script_template_t tmpl;
 	tmpl.full_line = old_text;
 
+	auto lower = old_text;
+	std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char c) { return std::tolower(c); });
+
+	auto arrow_pos = lower.find("->");
+	auto keyword_start = (arrow_pos != std::string::npos) ? arrow_pos + 2 : size_t(0);
+
+	while (keyword_start < lower.size() && (lower[keyword_start] == ' ' || lower[keyword_start] == '\t'))
+		++keyword_start;
+
+	bool skip_first = (lower.compare(keyword_start, 3, "say") == 0);
+
 	size_t pos = 0;
+	bool first = true;
 	while (pos < old_text.size())
 	{
 		auto i = old_text.find('"', pos);
@@ -295,6 +329,14 @@ void editor_view_t::load_script_entry(const std::string & old_text, const std::s
 		if (j == std::string::npos)
 			break;
 
+		if (first && skip_first)
+		{
+			first = false;
+			pos = j + 1;
+			continue;
+		}
+
+		first = false;
 		tmpl.quote_starts.push_back(i);
 		tmpl.quote_ends.push_back(j);
 		pos = j + 1;

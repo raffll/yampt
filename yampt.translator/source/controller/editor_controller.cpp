@@ -3,6 +3,7 @@
 #include "../model/document.hpp"
 #include "../model/record_table_model.hpp"
 #include "../model/yaml_document.hpp"
+#include <optional>
 
 editor_controller_t::editor_controller_t(
     edit_history_t & history,
@@ -41,6 +42,18 @@ void editor_controller_t::set_loaded_text(const QString & text)
 void editor_controller_t::set_loading(bool loading)
 {
 	m_loading_record = loading;
+}
+
+void editor_controller_t::set_pending_status(status_t status)
+{
+	m_pending_status = status;
+}
+
+std::optional<status_t> editor_controller_t::take_pending_status()
+{
+	auto result = m_pending_status;
+	m_pending_status = std::nullopt;
+	return result;
 }
 
 editor_load_result_t editor_controller_t::load(document_t & doc, const table_row_t & row)
@@ -92,8 +105,10 @@ commit_result_t editor_controller_t::commit(
 	m_history.record_change(row.type, row.key_text, m_loaded_text.toStdString(), new_text, old_status);
 
 	const auto validation = m_validation.validate(row.type, new_text);
+	const auto pending = take_pending_status();
 	const auto commit_status =
-	    (validation.level == validation_level_t::error) ? status_t::error : status_t::in_progress;
+	    (validation.level == validation_level_t::error) ? status_t::error
+	                                                    : pending.value_or(status_t::in_progress);
 
 	entry.new_text = new_text;
 	entry.status = commit_status;
@@ -103,7 +118,7 @@ commit_result_t editor_controller_t::commit(
 	m_annotations.update_term(row.type, entry.old_text, new_text);
 
 	int propagated = 0;
-	if (new_text != entry.old_text)
+	if (commit_status != status_t::model && new_text != entry.old_text)
 	{
 		propagated = propagate(doc, entry.old_text, new_text);
 		if (propagated > 0)

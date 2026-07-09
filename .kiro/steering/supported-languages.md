@@ -48,3 +48,4 @@ yampt must support all 3 codepages for reading/writing ESM/ESP files. The codepa
 - The GUI language selector must offer all 6 target languages.
 - Fine-tuning data is currently PL-only, but the base NLLB model handles all 6 without fine-tuning.
 - All 3 codepages (1250, 1251, 1252) must be supported for ESM/ESP reading and writing.
+- The Translate button only works on entries with status `untranslated`. For all other statuses, it shows an info message and does nothing. Do NOT remove or bypass this restriction.

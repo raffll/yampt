@@ -28,8 +28,7 @@ validation_result_t byte_limit_validator_t::validate(rec_type_t type, const std:
 
 		if (ch == '"' && (type == rec_type_t::sctx || type == rec_type_t::bnam))
 		{
-			has_forbidden = true;
-			break;
+			continue;
 		}
 	}
 

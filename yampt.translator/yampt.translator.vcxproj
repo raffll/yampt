@@ -517,11 +517,11 @@
     </ItemGroup>
     <Copy SourceFiles="@(DictFiles)" DestinationFolder="$(OutDir)dictionaries" SkipUnchangedFiles="true" />
   </Target>
-  <Target Name="CopyModels" AfterTargets="Build" Condition="Exists('$(SolutionDir)external\models\nllb-600M')">
+  <Target Name="CopyModels" AfterTargets="Build" Condition="Exists('$(SolutionDir)external\models\nllb-600M')" Inputs="$(SolutionDir)external\models\nllb-600M\**\*" Outputs="$(OutDir)models\nllb-600M\sentencepiece.bpe.model">
     <MakeDir Directories="$(OutDir)models\nllb-600M\model" />
     <ItemGroup>
-      <ModelRootFiles Include="$(SolutionDir)external\models\nllb-600M\*.*" />
-      <ModelBinFiles Include="$(SolutionDir)external\models\nllb-600M\model\*.*" />
+      <ModelRootFiles Include="$(SolutionDir)external\models\nllb-600M\*" Exclude="$(SolutionDir)external\models\nllb-600M\.cache\**" />
+      <ModelBinFiles Include="$(SolutionDir)external\models\nllb-600M\model\*" />
     </ItemGroup>
     <Copy SourceFiles="@(ModelRootFiles)" DestinationFolder="$(OutDir)models\nllb-600M" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(ModelBinFiles)" DestinationFolder="$(OutDir)models\nllb-600M\model" SkipUnchangedFiles="true" />

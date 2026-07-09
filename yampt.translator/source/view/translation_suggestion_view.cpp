@@ -27,9 +27,10 @@ translation_suggestion_view_t::translation_suggestion_view_t(QWidget * parent)
 
 	m_provider_combo = new QComboBox(this);
 	m_provider_combo->addItem("CTranslate2");
+	m_provider_combo->addItem("DeepL (not supported)");
+	m_provider_combo->addItem("Google (not supported)");
 	m_provider_combo->setToolTip("Select translation provider");
-	m_provider_combo->setFixedWidth(120);
-	m_provider_combo->setVisible(false);
+	m_provider_combo->setFixedWidth(180);
 	top_row->addWidget(m_provider_combo);
 
 	m_translate_all_btn = new QPushButton("Translate", this);
@@ -64,7 +65,16 @@ void translation_suggestion_view_t::setup_controls()
 
 	connect(m_translate_all_btn, &QPushButton::clicked, this, [this]() { emit translate_all_requested(); });
 
-	connect(m_provider_combo, &QComboBox::currentIndexChanged, this, [this](int index) { select_provider(index); });
+	connect(m_provider_combo, &QComboBox::currentIndexChanged, this, [this](int index)
+	{
+		select_provider(index);
+		m_translate_all_btn->setEnabled(index == 0);
+
+		if (index > 0)
+			m_status_label->setText("Provider not supported yet");
+		else
+			update_provider_status();
+	});
 
 	connect(
 	    m_ct2_provider,

@@ -37,6 +37,7 @@ public:
 
 	ctranslate2_translator_t * ct2_provider() const;
 	void append_log(const std::string & msg);
+	void display_translation_result(const translation_suggestion_t & result);
 	void set_translate_all_enabled(bool enabled);
 	void set_batch_in_progress(bool in_progress);
 
@@ -47,7 +48,6 @@ private:
 	void setup_controls();
 	void load_model_for_language(int index);
 	void rebuild_language_list();
-	void display_translation_result(const translation_suggestion_t & result);
 
 	QComboBox * m_provider_combo = nullptr;
 	QPushButton * m_translate_all_btn = nullptr;

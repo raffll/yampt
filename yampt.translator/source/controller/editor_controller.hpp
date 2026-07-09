@@ -4,6 +4,7 @@
 #include "../editor/edit_history.hpp"
 #include "../editor/glossary.hpp"
 #include "../model/table_row.hpp"
+#include <optional>
 #include <string>
 #include <vector>
 #include <QString>
@@ -65,6 +66,9 @@ public:
 
 	void sync_propagated_rows(record_table_model_t & model, dict_document_t & doc);
 
+	void set_pending_status(status_t status);
+	std::optional<status_t> take_pending_status();
+
 private:
 	edit_history_t & m_history;
 	byte_limit_validator_t & m_validation;
@@ -73,4 +77,5 @@ private:
 	int m_current_row = -1;
 	QString m_loaded_text;
 	bool m_loading_record = false;
+	std::optional<status_t> m_pending_status;
 };
