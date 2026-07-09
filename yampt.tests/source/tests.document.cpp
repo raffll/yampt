@@ -135,24 +135,29 @@ TEST_CASE("dict_document_t::commit_edit, modifies data", "[i]")
 
 namespace {
 
-std::string create_temp_yaml(const std::vector<std::pair<std::string, std::string>> & entries)
+std::string create_temp_yaml_native(const std::vector<std::pair<std::string, std::string>> & entries)
 {
 	namespace fs = std::filesystem;
-	auto path = (fs::temp_directory_path() / "yampt_test_doc.yaml").string();
-	path = string_utils::normalize_path(path);
+	const auto temp_dir = fs::temp_directory_path() / "yampt_yaml_doc_test";
+	fs::create_directories(temp_dir);
 
-	std::ofstream out(path);
+	auto en_path = string_utils::normalize_path((temp_dir / "en.yaml").string());
+	std::ofstream en_out(en_path);
 	for (const auto & [key, value] : entries)
-		out << key << ": " << value << "\n";
+		en_out << key << ": " << value << "\n";
 
-	return path;
+	auto native_path = string_utils::normalize_path((temp_dir / "xx.yaml").string());
+	std::ofstream(native_path) << "";
+
+	return native_path;
 }
 
 void cleanup_temp_yaml(const std::string & path)
 {
+	namespace fs = std::filesystem;
 	std::error_code ec;
-	std::filesystem::remove(path, ec);
-	std::filesystem::remove(path + ".tmp", ec);
+	const auto temp_dir = fs::temp_directory_path() / "yampt_yaml_doc_test";
+	fs::remove_all(temp_dir, ec);
 }
 
 } // anonymous namespace
@@ -165,7 +170,7 @@ TEST_CASE("yaml_document_t::path, round-trip", "[i]")
 	{
 		const auto entries =
 		    std::vector<std::pair<std::string, std::string>> { { "key1", "value1" }, { "key2", "value2" } };
-		const auto path = create_temp_yaml(entries);
+		const auto path = create_temp_yaml_native(entries);
 
 		yaml_document_t doc(path, "xx");
 		RC_ASSERT(doc.path() == path);
@@ -185,7 +190,7 @@ TEST_CASE("yaml_document_t::is_dirty, state consistency", "[i]")
 		for (int i = 0; i < count; ++i)
 			entries.push_back({ "m_key" + std::to_string(i), "val_" + std::to_string(i) });
 
-		const auto path = create_temp_yaml(entries);
+		const auto path = create_temp_yaml_native(entries);
 		yaml_document_t doc(path, "xx");
 
 		const auto b = *rc::gen::arbitrary<bool>();
@@ -212,7 +217,7 @@ TEST_CASE("yaml_document_t::commit_edit, round-trip", "[i]")
 		for (int i = 0; i < count; ++i)
 			entries.push_back({ "m_key" + std::to_string(i), "val_" + std::to_string(i) });
 
-		const auto path = create_temp_yaml(entries);
+		const auto path = create_temp_yaml_native(entries);
 		yaml_document_t doc(path, "xx");
 
 		const auto idx = *rc::gen::inRange<size_t>(0, static_cast<size_t>(count));
@@ -237,7 +242,7 @@ TEST_CASE("yaml_document_t::translated_count, invariant", "[i]")
 		for (int i = 0; i < count; ++i)
 			entries.push_back({ "m_key" + std::to_string(i), "val_" + std::to_string(i) });
 
-		const auto path = create_temp_yaml(entries);
+		const auto path = create_temp_yaml_native(entries);
 		yaml_document_t doc(path, "xx");
 
 		const auto edit_count = *rc::gen::inRange(1, count);
