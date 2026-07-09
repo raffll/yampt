@@ -23,7 +23,7 @@ signals:
 	void item_clicked(const std::string & path);
 	void operation_requested(const std::string & path, plugin_op_t op);
 	void save_requested(const std::string & path);
-	void save_as_requested(const std::string & path);
+	void export_native_requested(const std::string & path);
 	void merge_requested();
 	void unload_requested(const std::string & path);
 	void delete_requested(const std::string & path);

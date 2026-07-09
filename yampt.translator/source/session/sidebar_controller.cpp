@@ -10,7 +10,6 @@
 #include <QCoreApplication>
 #include <QDir>
 #include <QFile>
-#include <QFileDialog>
 #include <QMessageBox>
 
 sidebar_controller_t::sidebar_controller_t(sidebar_controller_deps_t deps)
@@ -210,26 +209,19 @@ void sidebar_controller_t::update_sidebar_item(const std::string & path)
 	m_deps.sidebar_view.update_item_text(entry->path, derive_display_name(*entry, is_loaded, is_dirty));
 }
 
-void sidebar_controller_t::on_save_as_requested(const std::string & path)
+void sidebar_controller_t::on_export_native_requested(const std::string & path)
 {
-	auto * yaml_doc = dynamic_cast<yaml_document_t *>(m_deps.active_doc);
-	if (!yaml_doc)
+	auto * doc = m_deps.session.find(path);
+	if (!doc)
+		doc = m_deps.session.open(path);
+
+	auto * yaml_doc = dynamic_cast<yaml_document_t *>(doc);
+	if (!yaml_doc || yaml_doc->is_native_file())
 		return;
 
-	const auto sep = path.find_last_of("/\\");
-	const auto default_dir = sep != std::string::npos ? path.substr(0, sep) : std::string {};
-
-	auto save_path = QFileDialog::getSaveFileName(
-	    m_deps.parent_widget, "Save Translated YAML", QString::fromStdString(default_dir), "YAML files (*.yaml)");
-
-	if (save_path.isEmpty())
-		return;
-
-	yaml_doc->export_to(save_path.toStdString());
-	m_deps.log_view.append_log("save as", "saved \"" + save_path.toStdString() + "\"\r\n");
-	update_sidebar_item(yaml_doc->path());
-	m_deps.callbacks.switch_document(nullptr);
-	m_deps.callbacks.set_unsaved_changes(false);
+	yaml_doc->export_native();
+	scan_workspace();
+	m_deps.log_view.append_log("export", "created \"" + yaml_doc->native_path() + "\"\r\n");
 }
 
 void sidebar_controller_t::on_remove_folder_requested(const std::string & root_path)

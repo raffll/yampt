@@ -238,15 +238,16 @@ void sidebar_view_t::show_yaml_context_menu(const std::string & path, const QPoi
 {
 	QMenu menu(this);
 	auto * save_action = menu.addAction("Save");
-	auto * export_action = menu.addAction("Export...");
+	auto * export_native_action = menu.addAction("Export");
+	export_native_action->setToolTip("Create native language YAML from this source file");
 	menu.addSeparator();
 	auto * delete_action = menu.addAction("Delete");
 
 	auto * selected = menu.exec(m_tree->viewport()->mapToGlobal(pos));
 	if (selected == save_action)
 		emit save_requested(path);
-	else if (selected == export_action)
-		emit save_as_requested(path);
+	else if (selected == export_native_action)
+		emit export_native_requested(path);
 	else if (selected == delete_action)
 		emit delete_requested(path);
 }

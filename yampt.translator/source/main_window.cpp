@@ -343,9 +343,6 @@ void main_window_t::switch_document(document_t * new_doc)
 	m_active_doc = new_doc;
 	m_editor_controller.set_current_row(-1);
 
-	auto * yaml_doc = dynamic_cast<yaml_document_t *>(m_active_doc);
-	m_export_native_action->setEnabled(m_active_doc && m_active_doc->permissions().exportable);
-
 	if (!m_active_doc)
 	{
 		rebuild_table();

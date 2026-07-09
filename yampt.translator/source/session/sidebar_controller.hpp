@@ -44,11 +44,11 @@ public:
 	void on_save_requested(const std::string & path);
 	void on_unload_requested(const std::string & path);
 	void on_delete_requested(const std::string & path);
+	void on_export_native_requested(const std::string & path);
 	void scan_workspace();
 	void update_watcher_roots();
 	void rebuild_sidebar();
 	void update_sidebar_item(const std::string & path);
-	void on_save_as_requested(const std::string & path);
 	void on_remove_folder_requested(const std::string & root_path);
 	void on_delete_folder_requested(const std::string & folder_path);
 

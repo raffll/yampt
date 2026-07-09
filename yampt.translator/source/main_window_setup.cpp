@@ -6,7 +6,6 @@
 #include "highlighter/glossary_highlighter.hpp"
 #include "main_window.hpp"
 #include "model/dict_document.hpp"
-#include "model/yaml_document.hpp"
 #include "translator/ctranslate2_translator.hpp"
 #include "view/annotations_view.hpp"
 #include "view/book_preview_view.hpp"
@@ -61,11 +60,6 @@ void main_window_t::setup_menu_bar()
 
 	m_save_all_action = new QAction("Save A&ll", this);
 	file_menu->addAction(m_save_all_action);
-
-	m_export_native_action = new QAction("Create &Translation File", this);
-	m_export_native_action->setToolTip("Create native language YAML from current source file");
-	m_export_native_action->setEnabled(false);
-	file_menu->addAction(m_export_native_action);
 
 	file_menu->addSeparator();
 
@@ -279,17 +273,7 @@ void main_window_t::connect_menu_signals()
 {
 	connect(m_save_action, &QAction::triggered, this, &main_window_t::on_save);
 	connect(m_save_all_action, &QAction::triggered, this, &main_window_t::on_save_all);
-	connect(m_export_native_action, &QAction::triggered, this, [this]()
-	{
-		auto * yaml_doc = dynamic_cast<yaml_document_t *>(m_active_doc);
-		if (!yaml_doc || yaml_doc->is_native_file())
-			return;
 
-		yaml_doc->export_native();
-		m_sidebar_controller->scan_workspace();
-		statusBar()->showMessage(
-		    QString("Created %1").arg(QString::fromStdString(yaml_doc->native_path())), 5000);
-	});
 	connect(m_quit_action, &QAction::triggered, this, &QWidget::close);
 	connect(m_find_action, &QAction::triggered, this, &main_window_t::on_find);
 	connect(m_escape_action, &QAction::triggered, this, &main_window_t::on_escape);
@@ -463,13 +447,9 @@ void main_window_t::connect_sidebar_signals()
 
 	connect(
 	    m_sidebar,
-	    &sidebar_view_t::save_as_requested,
+	    &sidebar_view_t::export_native_requested,
 	    this,
-	    [this](const std::string & path)
-	{
-		commit_current_edit();
-		m_sidebar_controller->on_save_as_requested(path);
-	});
+	    [this](const std::string & path) { m_sidebar_controller->on_export_native_requested(path); });
 
 	connect(
 	    m_sidebar,
@@ -551,6 +531,7 @@ void main_window_t::connect_editor_signals()
 				m_table_model->update_row(row, result.new_text, result.status);
 
 			set_unsaved_changes(dict_doc->is_dirty());
+			update_sidebar_item(dict_doc->path());
 			update_status_counts();
 			return;
 		}
@@ -565,6 +546,7 @@ void main_window_t::connect_editor_signals()
 		m_active_doc->commit_edit(row_data->type, row_data->record_index, new_text);
 		m_table_model->update_row(row, new_text, status_t::in_progress);
 		set_unsaved_changes(m_active_doc->is_dirty());
+		update_sidebar_item(m_active_doc->path());
 		update_status_counts();
 	});
 
