@@ -42,3 +42,35 @@ TEST_CASE("dict_merger_t::get_dict, default constructor empty dict", "[u]")
 	dict_merger_t merger;
 	REQUIRE(domain_types::get_number_of_elements_in_dict(merger.get_dict()) == 0);
 }
+
+TEST_CASE("dict_merger_t::add_record, multiple types accumulate", "[u]")
+{
+	dict_merger_t merger;
+	merger.add_record(rec_type_t::cell, "CellKey", "CellValue");
+	merger.add_record(rec_type_t::fnam, "FnamKey", "FnamValue");
+	merger.add_record(rec_type_t::info, "InfoKey", "InfoValue");
+	merger.add_record(rec_type_t::dial, "DialKey", "DialValue");
+
+	REQUIRE(domain_types::get_number_of_elements_in_dict(merger.get_dict()) == 4);
+}
+
+TEST_CASE("dict_merger_t::add_record, first-wins preserves old_text", "[u]")
+{
+	dict_merger_t merger;
+	merger.add_record(rec_type_t::info, "topic_123", "FirstTranslation");
+	merger.add_record(rec_type_t::info, "topic_123", "SecondTranslation");
+
+	const auto * entry = merger.get_dict().at(rec_type_t::info).find("topic_123");
+	REQUIRE(entry != nullptr);
+	REQUIRE(entry->new_text == "FirstTranslation");
+}
+
+TEST_CASE("dict_merger_t::add_record, empty value allowed", "[u]")
+{
+	dict_merger_t merger;
+	merger.add_record(rec_type_t::gmst, "sKey", "");
+
+	const auto * entry = merger.get_dict().at(rec_type_t::gmst).find("sKey");
+	REQUIRE(entry != nullptr);
+	REQUIRE(entry->new_text.empty());
+}

@@ -35,6 +35,32 @@ TEST_CASE("string_utils::trim, whitespace removal", "[u]")
 	REQUIRE(string_utils::trim("   ") == "");
 }
 
+TEST_CASE("string_utils::case_insensitive_equal, various inputs", "[u]")
+{
+	REQUIRE(string_utils::case_insensitive_equal("Hello", "hello") == true);
+	REQUIRE(string_utils::case_insensitive_equal("ABC", "abc") == true);
+	REQUIRE(string_utils::case_insensitive_equal("", "") == true);
+	REQUIRE(string_utils::case_insensitive_equal("Hello", "World") == false);
+	REQUIRE(string_utils::case_insensitive_equal("short", "longer") == false);
+}
+
+TEST_CASE("string_utils::erase_null_chars, removes from first null", "[u]")
+{
+	REQUIRE(string_utils::erase_null_chars("hello") == "hello");
+	REQUIRE(string_utils::erase_null_chars(std::string("he\0llo", 6)) == "he");
+	REQUIRE(string_utils::erase_null_chars(std::string("\0abc", 4)) == "");
+	REQUIRE(string_utils::erase_null_chars("") == "");
+}
+
+TEST_CASE("string_utils::trim_cr, trailing carriage return", "[u]")
+{
+	REQUIRE(string_utils::trim_cr("hello\r") == "hello");
+	REQUIRE(string_utils::trim_cr("hello") == "hello");
+	REQUIRE(string_utils::trim_cr("\r") == "");
+	REQUIRE(string_utils::trim_cr("") == "");
+	REQUIRE(string_utils::trim_cr("multi\r\r") == "multi\r");
+}
+
 TEST_CASE("string_utils::utf8_byte_to_char_offset, ascii only", "[u]")
 {
 	REQUIRE(string_utils::utf8_byte_to_char_offset("hello", 0) == 0);

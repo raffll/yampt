@@ -254,3 +254,155 @@ TEST_CASE("yaml_document_t::translated_count, invariant", "[i]")
 		cleanup_temp_yaml(path);
 	});
 }
+
+TEST_CASE("yaml_document_t::is_native_file, foreign file detection", "[i]")
+{
+	namespace fs = std::filesystem;
+	const auto temp_dir = fs::temp_directory_path() / "yampt_yaml_native_test";
+	fs::create_directories(temp_dir);
+
+	const auto en_path = string_utils::normalize_path((temp_dir / "en.yaml").string());
+	std::ofstream(en_path) << "greeting: Hello\n";
+
+	yaml_document_t doc(en_path, "pl");
+	REQUIRE(doc.is_native_file() == false);
+
+	std::error_code ec;
+	fs::remove_all(temp_dir, ec);
+}
+
+TEST_CASE("yaml_document_t::is_native_file, native file detection", "[i]")
+{
+	namespace fs = std::filesystem;
+	const auto temp_dir = fs::temp_directory_path() / "yampt_yaml_native_test2";
+	fs::create_directories(temp_dir);
+
+	const auto en_path = (temp_dir / "en.yaml").string();
+	std::ofstream(en_path) << "greeting: Hello\n";
+
+	const auto pl_path = string_utils::normalize_path((temp_dir / "pl.yaml").string());
+	std::ofstream(pl_path) << "greeting: Czesc\n";
+
+	yaml_document_t doc(pl_path, "pl");
+	REQUIRE(doc.is_native_file() == true);
+
+	std::error_code ec;
+	fs::remove_all(temp_dir, ec);
+}
+
+TEST_CASE("yaml_document_t::permissions, foreign file is exportable", "[i]")
+{
+	namespace fs = std::filesystem;
+	const auto temp_dir = fs::temp_directory_path() / "yampt_yaml_perm_test";
+	fs::create_directories(temp_dir);
+
+	const auto en_path = string_utils::normalize_path((temp_dir / "en.yaml").string());
+	std::ofstream(en_path) << "key: value\n";
+
+	yaml_document_t doc(en_path, "pl");
+	const auto perms = doc.permissions();
+	REQUIRE(perms.exportable == true);
+	REQUIRE(perms.editable == false);
+
+	std::error_code ec;
+	fs::remove_all(temp_dir, ec);
+}
+
+TEST_CASE("yaml_document_t::permissions, native file is editable", "[i]")
+{
+	namespace fs = std::filesystem;
+	const auto temp_dir = fs::temp_directory_path() / "yampt_yaml_perm_test2";
+	fs::create_directories(temp_dir);
+
+	const auto en_path = (temp_dir / "en.yaml").string();
+	std::ofstream(en_path) << "key: value\n";
+
+	const auto pl_path = string_utils::normalize_path((temp_dir / "pl.yaml").string());
+	std::ofstream(pl_path) << "key: wartosc\n";
+
+	yaml_document_t doc(pl_path, "pl");
+	const auto perms = doc.permissions();
+	REQUIRE(perms.exportable == false);
+	REQUIRE(perms.editable == true);
+	REQUIRE(perms.saveable == true);
+
+	std::error_code ec;
+	fs::remove_all(temp_dir, ec);
+}
+
+TEST_CASE("yaml_document_t::export_native, creates native file", "[i]")
+{
+	namespace fs = std::filesystem;
+	const auto temp_dir = fs::temp_directory_path() / "yampt_yaml_export_test";
+	fs::create_directories(temp_dir);
+
+	const auto en_path = string_utils::normalize_path((temp_dir / "en.yaml").string());
+	std::ofstream(en_path) << "greeting: Hello\nfarewell: Goodbye\n";
+
+	yaml_document_t doc(en_path, "de");
+	doc.export_native();
+
+	const auto de_path = (temp_dir / "de.yaml").string();
+	REQUIRE(fs::exists(de_path));
+
+	std::error_code ec;
+	fs::remove_all(temp_dir, ec);
+}
+
+TEST_CASE("yaml_document_t::total_count, matches key count", "[i]")
+{
+	namespace fs = std::filesystem;
+	const auto temp_dir = fs::temp_directory_path() / "yampt_yaml_count_test";
+	fs::create_directories(temp_dir);
+
+	const auto en_path = string_utils::normalize_path((temp_dir / "en.yaml").string());
+	std::ofstream(en_path) << "alpha: one\nbeta: two\ngamma: three\n";
+
+	yaml_document_t doc(en_path, "pl");
+	REQUIRE(doc.total_count() == 3);
+
+	std::error_code ec;
+	fs::remove_all(temp_dir, ec);
+}
+
+TEST_CASE("dict_document_t::is_dirty, false after construction", "[i]")
+{
+	dict_t data;
+	auto & chapter = data[rec_type_t::fnam];
+	record_entry_t entry;
+	entry.key_text = "test_key";
+	entry.old_text = "original";
+	entry.new_text = "translated";
+	entry.status = status_t::translated;
+	chapter.records.push_back(std::move(entry));
+
+	const auto path = create_temp_dict_json(data);
+	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
+
+	REQUIRE(doc.is_dirty() == false);
+	REQUIRE(doc.is_read_only() == false);
+
+	cleanup_temp_dict(path);
+}
+
+TEST_CASE("dict_document_t::permissions, always editable", "[i]")
+{
+	dict_t data;
+	auto & chapter = data[rec_type_t::cell];
+	record_entry_t entry;
+	entry.key_text = "cell_key";
+	entry.old_text = "old";
+	entry.new_text = "new";
+	entry.status = status_t::untranslated;
+	chapter.records.push_back(std::move(entry));
+
+	const auto path = create_temp_dict_json(data);
+
+	dict_document_t user_doc(path, codepage_t::windows_1252, dict_kind_t::user);
+	REQUIRE(user_doc.permissions().editable == true);
+
+	dict_document_t base_doc(path, codepage_t::windows_1252, dict_kind_t::base);
+	REQUIRE(base_doc.permissions().editable == true);
+
+	cleanup_temp_dict(path);
+}
