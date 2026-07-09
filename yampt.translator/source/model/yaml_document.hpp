@@ -19,6 +19,7 @@ public:
 
 	std::vector<table_row_t> build_rows() const override;
 	void commit_edit(rec_type_t type, size_t record_index, const std::string & new_text) override;
+	commit_result_t commit(const table_row_t & row, const std::string & new_text, status_t intent) override;
 	void save() override;
 
 	int translated_count() const override;

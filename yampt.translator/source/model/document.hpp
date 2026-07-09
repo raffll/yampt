@@ -5,6 +5,14 @@
 #include <string>
 #include <vector>
 
+struct commit_result_t
+{
+	std::string new_text;
+	status_t status = status_t::untranslated;
+	int propagated_count = 0;
+	bool success = false;
+};
+
 class document_t
 {
 public:
@@ -17,6 +25,7 @@ public:
 
 	virtual std::vector<table_row_t> build_rows() const = 0;
 	virtual void commit_edit(rec_type_t type, size_t record_index, const std::string & new_text) = 0;
+	virtual commit_result_t commit(const table_row_t & row, const std::string & new_text, status_t intent) = 0;
 	virtual void save() = 0;
 
 	virtual int translated_count() const = 0;

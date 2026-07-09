@@ -20,6 +20,7 @@ public:
 
 	std::vector<table_row_t> build_rows() const override;
 	void commit_edit(rec_type_t type, size_t record_index, const std::string & new_text) override;
+	commit_result_t commit(const table_row_t & row, const std::string & new_text, status_t intent) override;
 	void save() override;
 
 	int translated_count() const override;
@@ -34,6 +35,8 @@ public:
 	void modified_records_insert(rec_type_t type, size_t record_index);
 
 private:
+	int propagate(rec_type_t source_type, const std::string & old_text, const std::string & new_text);
+
 	std::string m_path;
 	codepage_t m_codepage;
 	dict_kind_t m_kind;

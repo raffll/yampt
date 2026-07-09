@@ -578,32 +578,21 @@ void main_window_t::commit_current_edit()
 		new_text_str = current_text.toStdString();
 	}
 
-	auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
-	if (dict_doc)
-	{
-		const auto result = m_editor_controller.commit_dict_full(*dict_doc, *row_data, new_text_str);
-		if (!result.base_result.success)
-			return;
-
-		m_table_model->update_row(
-		    m_editor_controller.current_row(), result.base_result.new_text, result.base_result.status);
-
-		if (result.base_result.propagated_count > 0)
-		{
-			statusBar()->showMessage(
-			    QString("Propagated to %1 entries").arg(result.base_result.propagated_count), 5000);
-			m_editor_controller.sync_propagated_rows(*m_table_model, *dict_doc);
-		}
-
-		set_unsaved_changes(dict_doc->is_dirty());
-		m_editor_controller.set_loaded_text(m_editor_view->translation_editor()->toPlainText());
-		update_status_counts();
+	const auto intent = m_editor_controller.take_pending_status().value_or(status_t::in_progress);
+	const auto result = m_active_doc->commit(*row_data, new_text_str, intent);
+	if (!result.success)
 		return;
+
+	m_table_model->update_row(m_editor_controller.current_row(), result.new_text, result.status);
+
+	auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
+	if (dict_doc && result.propagated_count > 0)
+	{
+		statusBar()->showMessage(
+		    QString("Propagated to %1 entries").arg(result.propagated_count), 5000);
+		m_editor_controller.sync_propagated_rows(*m_table_model, *dict_doc);
 	}
 
-	const auto yaml_status = m_editor_controller.take_pending_status().value_or(status_t::in_progress);
-	m_editor_controller.commit_yaml(*m_active_doc, *row_data, new_text_str);
-	m_table_model->update_row(m_editor_controller.current_row(), new_text_str, yaml_status);
 	set_unsaved_changes(m_active_doc->is_dirty());
 	m_editor_controller.set_loaded_text(m_editor_view->translation_editor()->toPlainText());
 	update_status_counts();

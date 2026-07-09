@@ -161,6 +161,26 @@ void yaml_document_t::commit_edit(rec_type_t, size_t record_index, const std::st
 	m_dirty = true;
 }
 
+commit_result_t yaml_document_t::commit(const table_row_t & row, const std::string & new_text, status_t intent)
+{
+	commit_result_t result;
+
+	if (!m_is_native_file)
+		return result;
+
+	if (row.record_index >= m_keys.size())
+		return result;
+
+	m_native_values[row.record_index] = new_text;
+	m_modified_indices.insert(row.record_index);
+	m_dirty = true;
+
+	result.new_text = new_text;
+	result.status = intent;
+	result.success = true;
+	return result;
+}
+
 void yaml_document_t::save()
 {
 	if (!m_is_native_file)

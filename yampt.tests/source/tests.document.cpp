@@ -411,3 +411,281 @@ TEST_CASE("dict_document_t::permissions, always editable", "[i]")
 
 	cleanup_temp_dict(path);
 }
+
+TEST_CASE("dict_document_t::commit, intent in_progress sets status", "[i]")
+{
+	dict_t data;
+	auto & chapter = data[rec_type_t::cell];
+	record_entry_t entry;
+	entry.key_text = "key_a";
+	entry.old_text = "Original";
+	entry.new_text = "Original";
+	entry.status = status_t::untranslated;
+	chapter.records.push_back(std::move(entry));
+
+	const auto path = create_temp_dict_json(data);
+	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
+
+	table_row_t row;
+	row.type = rec_type_t::cell;
+	row.key_text = "key_a";
+	row.old_text = "Original";
+	row.record_index = 0;
+
+	const auto result = doc.commit(row, "Translated", status_t::in_progress);
+
+	REQUIRE(result.success);
+	REQUIRE(result.status == status_t::in_progress);
+	REQUIRE(result.new_text == "Translated");
+	REQUIRE(doc.is_dirty());
+
+	cleanup_temp_dict(path);
+}
+
+TEST_CASE("dict_document_t::commit, intent model sets status", "[i]")
+{
+	dict_t data;
+	auto & chapter = data[rec_type_t::info];
+	record_entry_t entry;
+	entry.key_text = "key_b";
+	entry.old_text = "Hello";
+	entry.new_text = "Hello";
+	entry.status = status_t::untranslated;
+	chapter.records.push_back(std::move(entry));
+
+	const auto path = create_temp_dict_json(data);
+	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
+
+	table_row_t row;
+	row.type = rec_type_t::info;
+	row.key_text = "key_b";
+	row.old_text = "Hello";
+	row.record_index = 0;
+
+	const auto result = doc.commit(row, "Czesc", status_t::model);
+
+	REQUIRE(result.success);
+	REQUIRE(result.status == status_t::model);
+	REQUIRE(result.new_text == "Czesc");
+
+	cleanup_temp_dict(path);
+}
+
+TEST_CASE("dict_document_t::commit, propagates to matching entries", "[i]")
+{
+	dict_t data;
+	auto & chapter = data[rec_type_t::cell];
+
+	record_entry_t entry_a;
+	entry_a.key_text = "key_a";
+	entry_a.old_text = "Same Text";
+	entry_a.new_text = "Same Text";
+	entry_a.status = status_t::untranslated;
+	chapter.records.push_back(std::move(entry_a));
+
+	record_entry_t entry_b;
+	entry_b.key_text = "key_b";
+	entry_b.old_text = "Same Text";
+	entry_b.new_text = "Same Text";
+	entry_b.status = status_t::untranslated;
+	chapter.records.push_back(std::move(entry_b));
+
+	const auto path = create_temp_dict_json(data);
+	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
+
+	table_row_t row;
+	row.type = rec_type_t::cell;
+	row.key_text = "key_a";
+	row.old_text = "Same Text";
+	row.record_index = 0;
+
+	const auto result = doc.commit(row, "New Value", status_t::in_progress);
+
+	REQUIRE(result.success);
+	REQUIRE(result.propagated_count == 1);
+	REQUIRE(doc.data().at(rec_type_t::cell).records[1].new_text == "New Value");
+	REQUIRE(doc.data().at(rec_type_t::cell).records[1].status == status_t::propagated);
+
+	cleanup_temp_dict(path);
+}
+
+TEST_CASE("dict_document_t::commit, model intent skips propagation", "[i]")
+{
+	dict_t data;
+	auto & chapter = data[rec_type_t::fnam];
+
+	record_entry_t entry_a;
+	entry_a.key_text = "key_a";
+	entry_a.old_text = "Shared";
+	entry_a.new_text = "Shared";
+	entry_a.status = status_t::untranslated;
+	chapter.records.push_back(std::move(entry_a));
+
+	record_entry_t entry_b;
+	entry_b.key_text = "key_b";
+	entry_b.old_text = "Shared";
+	entry_b.new_text = "Shared";
+	entry_b.status = status_t::untranslated;
+	chapter.records.push_back(std::move(entry_b));
+
+	const auto path = create_temp_dict_json(data);
+	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
+
+	table_row_t row;
+	row.type = rec_type_t::fnam;
+	row.key_text = "key_a";
+	row.old_text = "Shared";
+	row.record_index = 0;
+
+	const auto result = doc.commit(row, "Model Result", status_t::model);
+
+	REQUIRE(result.success);
+	REQUIRE(result.propagated_count == 0);
+	REQUIRE(doc.data().at(rec_type_t::fnam).records[1].new_text == "Shared");
+
+	cleanup_temp_dict(path);
+}
+
+TEST_CASE("dict_document_t::commit, invalid record_index fails", "[i]")
+{
+	dict_t data;
+	auto & chapter = data[rec_type_t::cell];
+	record_entry_t entry;
+	entry.key_text = "key_a";
+	entry.old_text = "Text";
+	entry.new_text = "Text";
+	entry.status = status_t::untranslated;
+	chapter.records.push_back(std::move(entry));
+
+	const auto path = create_temp_dict_json(data);
+	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
+
+	table_row_t row;
+	row.type = rec_type_t::cell;
+	row.key_text = "bad";
+	row.old_text = "x";
+	row.record_index = 999;
+
+	const auto result = doc.commit(row, "Anything", status_t::in_progress);
+
+	REQUIRE_FALSE(result.success);
+	REQUIRE_FALSE(doc.is_dirty());
+
+	cleanup_temp_dict(path);
+}
+
+TEST_CASE("yaml_document_t::commit, intent in_progress sets status", "[i]")
+{
+	namespace fs = std::filesystem;
+	const auto temp_dir = fs::temp_directory_path() / "yampt_yaml_commit_test1";
+	fs::create_directories(temp_dir);
+
+	const auto en_path = (temp_dir / "en.yaml").string();
+	std::ofstream(en_path) << "greeting: Hello\n";
+
+	const auto pl_path = string_utils::normalize_path((temp_dir / "pl.yaml").string());
+	std::ofstream(pl_path) << "";
+
+	yaml_document_t doc(pl_path, "pl");
+
+	table_row_t row;
+	row.type = rec_type_t::yaml;
+	row.key_text = "greeting";
+	row.old_text = "Hello";
+	row.record_index = 0;
+
+	const auto result = doc.commit(row, "Czesc", status_t::in_progress);
+
+	REQUIRE(result.success);
+	REQUIRE(result.status == status_t::in_progress);
+	REQUIRE(result.new_text == "Czesc");
+	REQUIRE(doc.is_dirty());
+
+	std::error_code ec;
+	fs::remove_all(temp_dir, ec);
+}
+
+TEST_CASE("yaml_document_t::commit, intent model sets status", "[i]")
+{
+	namespace fs = std::filesystem;
+	const auto temp_dir = fs::temp_directory_path() / "yampt_yaml_commit_test2";
+	fs::create_directories(temp_dir);
+
+	const auto en_path = (temp_dir / "en.yaml").string();
+	std::ofstream(en_path) << "farewell: Goodbye\n";
+
+	const auto pl_path = string_utils::normalize_path((temp_dir / "pl.yaml").string());
+	std::ofstream(pl_path) << "";
+
+	yaml_document_t doc(pl_path, "pl");
+
+	table_row_t row;
+	row.type = rec_type_t::yaml;
+	row.key_text = "farewell";
+	row.old_text = "Goodbye";
+	row.record_index = 0;
+
+	const auto result = doc.commit(row, "Do widzenia", status_t::model);
+
+	REQUIRE(result.success);
+	REQUIRE(result.status == status_t::model);
+	REQUIRE(result.new_text == "Do widzenia");
+	REQUIRE(result.propagated_count == 0);
+
+	std::error_code ec;
+	fs::remove_all(temp_dir, ec);
+}
+
+TEST_CASE("yaml_document_t::commit, read-only foreign file fails", "[i]")
+{
+	namespace fs = std::filesystem;
+	const auto temp_dir = fs::temp_directory_path() / "yampt_yaml_commit_test3";
+	fs::create_directories(temp_dir);
+
+	const auto en_path = string_utils::normalize_path((temp_dir / "en.yaml").string());
+	std::ofstream(en_path) << "key: value\n";
+
+	yaml_document_t doc(en_path, "pl");
+
+	table_row_t row;
+	row.type = rec_type_t::yaml;
+	row.key_text = "key";
+	row.old_text = "value";
+	row.record_index = 0;
+
+	const auto result = doc.commit(row, "wartosc", status_t::in_progress);
+
+	REQUIRE_FALSE(result.success);
+	REQUIRE_FALSE(doc.is_dirty());
+
+	std::error_code ec;
+	fs::remove_all(temp_dir, ec);
+}
+
+TEST_CASE("yaml_document_t::commit, invalid record_index fails", "[i]")
+{
+	namespace fs = std::filesystem;
+	const auto temp_dir = fs::temp_directory_path() / "yampt_yaml_commit_test4";
+	fs::create_directories(temp_dir);
+
+	const auto en_path = (temp_dir / "en.yaml").string();
+	std::ofstream(en_path) << "key: value\n";
+
+	const auto pl_path = string_utils::normalize_path((temp_dir / "pl.yaml").string());
+	std::ofstream(pl_path) << "";
+
+	yaml_document_t doc(pl_path, "pl");
+
+	table_row_t row;
+	row.type = rec_type_t::yaml;
+	row.key_text = "bad";
+	row.old_text = "x";
+	row.record_index = 999;
+
+	const auto result = doc.commit(row, "anything", status_t::in_progress);
+
+	REQUIRE_FALSE(result.success);
+
+	std::error_code ec;
+	fs::remove_all(temp_dir, ec);
+}

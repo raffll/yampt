@@ -41,6 +41,11 @@ public:
 	void commit_edit(rec_type_t, size_t, const std::string &) override
 	{}
 
+	commit_result_t commit(const table_row_t &, const std::string &, status_t) override
+	{
+		return {};
+	}
+
 	void save() override
 	{}
 

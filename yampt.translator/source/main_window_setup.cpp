@@ -536,23 +536,6 @@ void main_window_t::connect_editor_signals()
 
 	connect(m_table_model, &record_table_model_t::inline_edit_committed, this, [this](int row, const std::string & new_text)
 	{
-		auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
-		if (dict_doc)
-		{
-			const auto * row_data = m_table_model->row_at(row);
-			if (!row_data)
-				return;
-
-			auto result = m_editor_controller.commit(*dict_doc, *row_data, new_text);
-			if (result.success)
-				m_table_model->update_row(row, result.new_text, result.status);
-
-			set_unsaved_changes(dict_doc->is_dirty());
-			update_sidebar_item(dict_doc->path());
-			update_status_counts();
-			return;
-		}
-
 		if (!m_active_doc)
 			return;
 
@@ -560,8 +543,11 @@ void main_window_t::connect_editor_signals()
 		if (!row_data)
 			return;
 
-		m_active_doc->commit_edit(row_data->type, row_data->record_index, new_text);
-		m_table_model->update_row(row, new_text, status_t::in_progress);
+		const auto result = m_active_doc->commit(*row_data, new_text, status_t::in_progress);
+		if (!result.success)
+			return;
+
+		m_table_model->update_row(row, result.new_text, result.status);
 		set_unsaved_changes(m_active_doc->is_dirty());
 		update_sidebar_item(m_active_doc->path());
 		update_status_counts();

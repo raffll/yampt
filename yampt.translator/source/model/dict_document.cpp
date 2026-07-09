@@ -86,6 +86,56 @@ void dict_document_t::commit_edit(rec_type_t type, size_t record_index, const st
 	m_dirty = true;
 }
 
+commit_result_t dict_document_t::commit(const table_row_t & row, const std::string & new_text, status_t intent)
+{
+	commit_result_t result;
+
+	auto it = m_data.find(row.type);
+	if (it == m_data.end() || row.record_index >= it->second.records.size())
+		return result;
+
+	auto & entry = it->second.records[row.record_index];
+
+	entry.new_text = new_text;
+	entry.status = intent;
+	m_dirty = true;
+	m_modified_records.insert({ row.type, row.record_index });
+
+	if (intent != status_t::model && new_text != entry.old_text)
+		result.propagated_count = propagate(row.type, entry.old_text, new_text);
+
+	result.new_text = new_text;
+	result.status = entry.status;
+	result.success = true;
+	return result;
+}
+
+int dict_document_t::propagate(rec_type_t source_type, const std::string & old_text, const std::string & new_text)
+{
+	int count = 0;
+
+	for (auto & [type, chapter] : m_data)
+	{
+		for (size_t i = 0; i < chapter.records.size(); ++i)
+		{
+			auto & record = chapter.records[i];
+
+			if (record.new_text == new_text)
+				continue;
+
+			if (record.old_text != old_text)
+				continue;
+
+			record.new_text = new_text;
+			record.status = status_t::propagated;
+			m_modified_records.insert({ type, i });
+			++count;
+		}
+	}
+
+	return count;
+}
+
 void dict_document_t::save()
 {
 	dict_t encoded;

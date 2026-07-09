@@ -3,6 +3,7 @@
 #include "../editor/byte_limit_validator.hpp"
 #include "../editor/edit_history.hpp"
 #include "../editor/glossary.hpp"
+#include "../model/document.hpp"
 #include "../model/table_row.hpp"
 #include <optional>
 #include <string>
@@ -25,14 +26,6 @@ struct editor_load_result_t
 	std::string details;
 	std::vector<annotation_t> annotations;
 	bool is_read_only = false;
-};
-
-struct commit_result_t
-{
-	std::string new_text;
-	status_t status = status_t::untranslated;
-	int propagated_count = 0;
-	bool success = false;
 };
 
 struct dict_commit_result_t
