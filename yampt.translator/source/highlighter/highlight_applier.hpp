@@ -12,6 +12,7 @@ struct extra_selections_state_t
 	QList<QTextEdit::ExtraSelection> annotations;
 	QList<QTextEdit::ExtraSelection> grammar;
 	QList<QTextEdit::ExtraSelection> adapted_diff;
+	QList<QTextEdit::ExtraSelection> overflow;
 };
 
 class highlight_applier_t

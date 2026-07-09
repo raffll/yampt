@@ -2,7 +2,6 @@
 #include "../model/dict_document.hpp"
 #include "../model/document.hpp"
 #include "../model/record_table_model.hpp"
-#include "../model/yaml_document.hpp"
 #include <optional>
 
 editor_controller_t::editor_controller_t(
@@ -262,10 +261,6 @@ dict_commit_result_t editor_controller_t::commit_dict_full(
 void editor_controller_t::commit_yaml(document_t & doc, const table_row_t & row, const std::string & new_text)
 {
 	doc.commit_edit(row.type, row.record_index, new_text);
-
-	auto * yaml_doc = dynamic_cast<yaml_document_t *>(&doc);
-	if (yaml_doc)
-		yaml_doc->save_tmp();
 }
 
 void editor_controller_t::sync_propagated_rows(record_table_model_t & model, dict_document_t & doc)

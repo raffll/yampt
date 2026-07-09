@@ -32,6 +32,9 @@ public:
 	void set_codepage(codepage_t cp);
 	codepage_t codepage() const;
 
+	void set_native_language(const std::string & code);
+	const std::string & native_language() const;
+
 	size_t dict_version() const;
 
 private:
@@ -41,5 +44,6 @@ private:
 
 	std::vector<std::unique_ptr<document_t>> m_docs;
 	codepage_t m_codepage;
+	std::string m_native_language;
 	size_t m_dict_version = 0;
 };

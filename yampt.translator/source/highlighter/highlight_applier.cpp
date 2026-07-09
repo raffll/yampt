@@ -42,6 +42,7 @@ void highlight_applier_t::apply(translation_edit_view_t * editor, const extra_se
 	merged.append(state.annotations);
 	merged.append(state.grammar);
 	merged.append(state.adapted_diff);
+	merged.append(state.overflow);
 
 	auto * plain_edit = static_cast<QPlainTextEdit *>(editor);
 	plain_edit->setExtraSelections(merged);

@@ -71,7 +71,11 @@ document_t * session_t::handle_open_dict(const std::string & normalized)
 
 document_t * session_t::handle_open_yaml(const std::string & normalized)
 {
-	auto document = std::make_unique<yaml_document_t>(normalized);
+	auto native_code = m_native_language.empty() ? "pl" : m_native_language;
+	std::transform(native_code.begin(), native_code.end(), native_code.begin(),
+	    [](unsigned char c) { return std::tolower(c); });
+
+	auto document = std::make_unique<yaml_document_t>(normalized, native_code);
 	auto * raw_ptr = document.get();
 	m_docs.push_back(std::move(document));
 	return raw_ptr;
@@ -85,6 +89,10 @@ document_t * session_t::find(const std::string & path)
 	{
 		if (doc->path() == normalized)
 			return doc.get();
+
+		auto * yaml_doc = dynamic_cast<yaml_document_t *>(doc.get());
+		if (yaml_doc && yaml_doc->native_path() == normalized)
+			return doc.get();
 	}
 
 	return nullptr;
@@ -97,6 +105,10 @@ const document_t * session_t::find(const std::string & path) const
 	for (const auto & doc : m_docs)
 	{
 		if (doc->path() == normalized)
+			return doc.get();
+
+		const auto * yaml_doc = dynamic_cast<const yaml_document_t *>(doc.get());
+		if (yaml_doc && yaml_doc->native_path() == normalized)
 			return doc.get();
 	}
 
@@ -221,6 +233,16 @@ void session_t::set_codepage(codepage_t cp)
 codepage_t session_t::codepage() const
 {
 	return m_codepage;
+}
+
+void session_t::set_native_language(const std::string & code)
+{
+	m_native_language = code;
+}
+
+const std::string & session_t::native_language() const
+{
+	return m_native_language;
 }
 
 size_t session_t::dict_version() const

@@ -23,6 +23,7 @@ class byte_limit_validator_t
 public:
 	validation_result_t validate(rec_type_t type, const std::string & utf8_value) const;
 	void set_codepage(codepage_t cp);
+	codepage_t codepage() const;
 
 private:
 	codepage_t m_codepage = codepage_t::windows_1252;

@@ -167,7 +167,7 @@ TEST_CASE("yaml_document_t::path, round-trip", "[i]")
 		    std::vector<std::pair<std::string, std::string>> { { "key1", "value1" }, { "key2", "value2" } };
 		const auto path = create_temp_yaml(entries);
 
-		yaml_document_t doc(path);
+		yaml_document_t doc(path, "xx");
 		RC_ASSERT(doc.path() == path);
 
 		cleanup_temp_yaml(path);
@@ -186,7 +186,7 @@ TEST_CASE("yaml_document_t::is_dirty, state consistency", "[i]")
 			entries.push_back({ "m_key" + std::to_string(i), "val_" + std::to_string(i) });
 
 		const auto path = create_temp_yaml(entries);
-		yaml_document_t doc(path);
+		yaml_document_t doc(path, "xx");
 
 		const auto b = *rc::gen::arbitrary<bool>();
 		doc.set_dirty(b);
@@ -213,7 +213,7 @@ TEST_CASE("yaml_document_t::commit_edit, round-trip", "[i]")
 			entries.push_back({ "m_key" + std::to_string(i), "val_" + std::to_string(i) });
 
 		const auto path = create_temp_yaml(entries);
-		yaml_document_t doc(path);
+		yaml_document_t doc(path, "xx");
 
 		const auto idx = *rc::gen::inRange<size_t>(0, static_cast<size_t>(count));
 		const auto new_text = *rc::gen::nonEmpty(rc::gen::arbitrary<std::string>());
@@ -238,7 +238,7 @@ TEST_CASE("yaml_document_t::translated_count, invariant", "[i]")
 			entries.push_back({ "m_key" + std::to_string(i), "val_" + std::to_string(i) });
 
 		const auto path = create_temp_yaml(entries);
-		yaml_document_t doc(path);
+		yaml_document_t doc(path, "xx");
 
 		const auto edit_count = *rc::gen::inRange(1, count);
 		std::set<size_t> edited;

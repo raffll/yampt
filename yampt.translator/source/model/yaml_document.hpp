@@ -10,7 +10,7 @@
 class yaml_document_t : public document_t
 {
 public:
-	explicit yaml_document_t(const std::string & file_path);
+	yaml_document_t(const std::string & clicked_path, const std::string & native_language_code);
 
 	std::string path() const override;
 	bool is_dirty() const override;
@@ -25,16 +25,22 @@ public:
 
 	void set_dirty(bool dirty) override;
 
-	bool has_tmp() const;
-	const std::string & tmp_path() const;
-	void save_tmp();
+	const std::string & foreign_path() const;
+	const std::string & native_path() const;
 	void export_to(const std::string & output_path);
 
 private:
-	std::string m_path;
-	std::string m_tmp_path;
-	std::vector<l10n_entry_t> m_entries;
-	std::vector<std::string> m_source_values;
+	void resolve_paths(const std::string & clicked_path, const std::string & native_code);
+	void load_foreign();
+	void load_native();
+
+	std::string m_foreign_path;
+	std::string m_native_path;
+	std::string m_native_code;
+
+	std::vector<std::string> m_keys;
+	std::vector<std::string> m_foreign_values;
+	std::vector<std::string> m_native_values;
 	std::set<size_t> m_modified_indices;
 	bool m_dirty = false;
 };

@@ -5,6 +5,11 @@ void byte_limit_validator_t::set_codepage(codepage_t cp)
 	m_codepage = cp;
 }
 
+codepage_t byte_limit_validator_t::codepage() const
+{
+	return m_codepage;
+}
+
 validation_result_t byte_limit_validator_t::validate(rec_type_t type, const std::string & utf8_value) const
 {
 	const auto encoded = encode_from_utf8(utf8_value, m_codepage);

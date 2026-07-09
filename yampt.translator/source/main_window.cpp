@@ -895,6 +895,7 @@ void main_window_t::load_config()
 		m_current_codepage = codepages_table[encoding_index];
 
 	m_session.set_codepage(m_current_codepage);
+	m_session.set_native_language(m_settings.native_language());
 
 	m_translation_tab->apply_provider_settings(m_settings);
 
@@ -1052,8 +1053,6 @@ void main_window_t::closeEvent(QCloseEvent * event)
 	}
 
 	commit_current_edit();
-	if (auto * yaml_doc = dynamic_cast<yaml_document_t *>(m_active_doc))
-		yaml_doc->save_tmp();
 
 	save_config();
 	QMainWindow::closeEvent(event);

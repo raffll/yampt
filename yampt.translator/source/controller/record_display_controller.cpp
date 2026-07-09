@@ -34,9 +34,6 @@ void record_display_controller_t::load_record(int row, document_t * active_doc)
 
 	m_deps.editor_view.translation_editor()->setReadOnly(load_result.is_read_only);
 
-	const auto validation_result = m_deps.byte_limit_validator.validate(row_data->type, row_data->new_text);
-	m_deps.validation_view.update_validation(validation_result);
-
 	if (row_data->type == rec_type_t::text)
 		m_deps.book_preview_view.set_html(row_data->old_text, row_data->new_text);
 	else if (row_data->type == rec_type_t::sctx || row_data->type == rec_type_t::bnam)
@@ -101,6 +98,8 @@ void record_display_controller_t::load_record(int row, document_t * active_doc)
 
 	m_deps.editor_controller.set_loaded_text(m_deps.editor_view.translation_editor()->toPlainText());
 	m_deps.editor_controller.set_current_row(row);
+
+	update_validation();
 
 	auto cursor = m_deps.editor_view.translation_editor()->textCursor();
 	cursor.movePosition(QTextCursor::End);
@@ -184,6 +183,39 @@ void record_display_controller_t::update_validation()
 	const auto current_text = m_deps.editor_view.translation_editor()->toPlainText().toStdString();
 	const auto result = m_deps.byte_limit_validator.validate(row_data->type, current_text);
 	m_deps.validation_view.update_validation(result);
+
+	m_deps.extra_sel_translation.overflow.clear();
+
+	if (result.limit > 0 && result.byte_count > result.limit)
+	{
+		const auto plain_text = m_deps.editor_view.translation_editor()->toPlainText();
+		const auto codepage = m_deps.byte_limit_validator.codepage();
+		size_t codepage_bytes = 0;
+		int char_start = plain_text.length();
+
+		for (int i = 0; i < plain_text.length(); ++i)
+		{
+			const auto ch_utf8 = plain_text.mid(i, 1).toStdString();
+			const auto ch_encoded = encode_from_utf8(ch_utf8, codepage);
+			codepage_bytes += ch_encoded.size();
+
+			if (codepage_bytes > result.limit)
+			{
+				char_start = i;
+				break;
+			}
+		}
+
+		QTextEdit::ExtraSelection sel;
+		sel.format.setBackground(QColor(180, 40, 40));
+		sel.format.setForeground(QColor(255, 255, 255));
+		sel.cursor = QTextCursor(m_deps.editor_view.translation_editor()->document());
+		sel.cursor.setPosition(char_start);
+		sel.cursor.setPosition(plain_text.length(), QTextCursor::KeepAnchor);
+		m_deps.extra_sel_translation.overflow.append(sel);
+	}
+
+	highlight_applier_t::apply(m_deps.editor_view.translation_editor(), m_deps.extra_sel_translation);
 }
 
 void record_display_controller_t::update_annotations(document_t * active_doc)
