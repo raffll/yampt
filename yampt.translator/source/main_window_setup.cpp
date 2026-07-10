@@ -99,7 +99,12 @@ void main_window_t::setup_menu_bar()
 	auto * tools_menu = menuBar()->addMenu(tr("&Tools"));
 	auto * merge_action = tools_menu->addAction(tr("&Merge Dictionaries..."));
 	merge_action->setToolTip(tr("Merge loaded dictionaries into one"));
-	connect(merge_action, &QAction::triggered, this, [this]() {
+	connect(
+	    merge_action,
+	    &QAction::triggered,
+	    this,
+	    [this]()
+	{
 		if (m_dict_ops_controller)
 			m_dict_ops_controller->on_merge();
 	});
@@ -468,7 +473,12 @@ void main_window_t::connect_sidebar_signals()
 	connect(m_sidebar, &sidebar_view_t::save_requested, this, &main_window_t::on_save_requested);
 	connect(m_sidebar, &sidebar_view_t::unload_requested, this, &main_window_t::on_unload_requested);
 	connect(m_sidebar, &sidebar_view_t::delete_requested, this, &main_window_t::on_delete_requested);
-	connect(m_sidebar, &sidebar_view_t::merge_requested, this, [this]() {
+	connect(
+	    m_sidebar,
+	    &sidebar_view_t::merge_requested,
+	    this,
+	    [this]()
+	{
 		if (m_dict_ops_controller)
 			m_dict_ops_controller->on_merge();
 	});
@@ -545,7 +555,11 @@ void main_window_t::connect_editor_signals()
 {
 	connect(m_table_view, &record_table_view_t::row_selected, this, &main_window_t::on_row_selected);
 
-	connect(m_table_model, &record_table_model_t::inline_edit_committed, this, [this](int row, const std::string & new_text)
+	connect(
+	    m_table_model,
+	    &record_table_model_t::inline_edit_committed,
+	    this,
+	    [this](int row, const std::string & new_text)
 	{
 		if (!m_active_doc)
 			return;
@@ -554,7 +568,8 @@ void main_window_t::connect_editor_signals()
 		if (!row_data)
 			return;
 
-		m_edit_history.record_change(row_data->type, row_data->key_text, row_data->new_text, new_text, row_data->status);
+		m_edit_history.record_change(
+		    row_data->type, row_data->key_text, row_data->new_text, new_text, row_data->status);
 
 		const auto result = m_active_doc->commit(*row_data, new_text, status_t::in_progress);
 		if (!result.success)

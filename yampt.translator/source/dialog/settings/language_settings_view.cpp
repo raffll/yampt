@@ -19,12 +19,9 @@ struct language_entry_t
 };
 
 constexpr language_entry_t languages[] = {
-	{ "English", "EN", "eng_Latn", "en_US", 2 },
-	{ "Polish", "PL", "pol_Latn", "pl_PL", 0 },
-	{ "German", "DE", "deu_Latn", "de_DE", 2 },
-	{ "French", "FR", "fra_Latn", "fr_FR", 2 },
-	{ "Russian", "RU", "rus_Cyrl", "ru_RU", 1 },
-	{ "Italian", "IT", "ita_Latn", "it_IT", 2 },
+	{ "English", "EN", "eng_Latn", "en_US", 2 },   { "Polish", "PL", "pol_Latn", "pl_PL", 0 },
+	{ "German", "DE", "deu_Latn", "de_DE", 2 },    { "French", "FR", "fra_Latn", "fr_FR", 2 },
+	{ "Russian", "RU", "rus_Cyrl", "ru_RU", 1 },   { "Italian", "IT", "ita_Latn", "it_IT", 2 },
 	{ "Hungarian", "HU", "hun_Latn", "hu_HU", 0 },
 };
 

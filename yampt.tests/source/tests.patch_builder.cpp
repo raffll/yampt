@@ -1,6 +1,7 @@
 #include <catch2/catch_all.hpp>
 #include <patcher/patch_builder.hpp>
 #include <rapidcheck/catch.h>
+#include <filesystem>
 #include <rapidcheck.h>
 #include <string>
 #include <tuple>
@@ -240,7 +241,9 @@ TEST_CASE("patch_builder_t::save, creates ESP file on disk", "[i]")
 
 	REQUIRE(saved);
 	REQUIRE(fs::exists(output_path));
-	REQUIRE(fs::file_size(output_path) > 0);
+
+	const auto file_size = fs::file_size(output_path);
+	REQUIRE(file_size > 0);
 
 	std::error_code error_code;
 	fs::remove(output_path, error_code);

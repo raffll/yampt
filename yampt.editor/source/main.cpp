@@ -15,7 +15,8 @@ int main(int argc, char * argv[])
 	const auto ui_languages = QLocale::system().uiLanguages();
 	for (const auto & locale : ui_languages)
 	{
-		if (translator.load("yEditor_" + QLocale(locale).name(), QCoreApplication::applicationDirPath() + "/translations"))
+		if (translator.load(
+		        "yEditor_" + QLocale(locale).name(), QCoreApplication::applicationDirPath() + "/translations"))
 		{
 			app.installTranslator(&translator);
 			break;

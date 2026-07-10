@@ -72,8 +72,8 @@ document_t * session_t::handle_open_dict(const std::string & normalized)
 document_t * session_t::handle_open_yaml(const std::string & normalized)
 {
 	auto native_code = m_native_language.empty() ? "pl" : m_native_language;
-	std::transform(native_code.begin(), native_code.end(), native_code.begin(),
-	    [](unsigned char c) { return std::tolower(c); });
+	std::transform(
+	    native_code.begin(), native_code.end(), native_code.begin(), [](unsigned char c) { return std::tolower(c); });
 
 	auto document = std::make_unique<yaml_document_t>(normalized, native_code);
 	auto * raw_ptr = document.get();

@@ -106,8 +106,7 @@ commit_result_t editor_controller_t::commit(
 	const auto validation = m_validation.validate(row.type, new_text);
 	const auto pending = take_pending_status();
 	const auto commit_status =
-	    (validation.level == validation_level_t::error) ? status_t::error
-	                                                    : pending.value_or(status_t::in_progress);
+	    (validation.level == validation_level_t::error) ? status_t::error : pending.value_or(status_t::in_progress);
 
 	entry.new_text = new_text;
 	entry.status = commit_status;

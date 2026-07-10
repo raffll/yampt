@@ -23,7 +23,10 @@ void dict_operations_controller_t::on_merge()
 	const auto all_dicts = m_deps.session.all_dicts();
 	if (all_dicts.size() < 2)
 	{
-		QMessageBox::information(m_deps.parent_widget, QCoreApplication::translate("yTranslator", "Merge"), QCoreApplication::translate("yTranslator", "At least 2 dictionaries must be loaded to merge."));
+		QMessageBox::information(
+		    m_deps.parent_widget,
+		    QCoreApplication::translate("yTranslator", "Merge"),
+		    QCoreApplication::translate("yTranslator", "At least 2 dictionaries must be loaded to merge."));
 		return;
 	}
 

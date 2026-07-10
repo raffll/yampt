@@ -3,6 +3,7 @@
 #include <rapidcheck/catch.h>
 #include <utility/app_logger.hpp>
 #include <utility/status_types.hpp>
+#include <filesystem>
 #include <rapidcheck.h>
 
 namespace {
@@ -153,11 +154,11 @@ TEST_CASE("edit_history_t::save_to_file and load_from_file, round-trip", "[i]")
 	fs::remove(temp_path, error_code);
 }
 
-TEST_CASE("edit_history_t::load_from_file, missing file does nothing", "[i]")
+TEST_CASE("edit_history_t::load_from_file, missing file preserves entries", "[i]")
 {
 	edit_history_t history;
 	history.record_change(rec_type_t::cell, "key", "old", "new", status_t::untranslated);
 	history.load_from_file("nonexistent_path_that_does_not_exist.json");
 
-	REQUIRE(history.get_history(rec_type_t::cell, "key").empty());
+	REQUIRE(history.get_history(rec_type_t::cell, "key").size() == 1);
 }

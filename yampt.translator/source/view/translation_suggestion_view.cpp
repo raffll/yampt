@@ -65,7 +65,11 @@ void translation_suggestion_view_t::setup_controls()
 
 	connect(m_translate_all_btn, &QPushButton::clicked, this, [this]() { emit translate_all_requested(); });
 
-	connect(m_provider_combo, &QComboBox::currentIndexChanged, this, [this](int index)
+	connect(
+	    m_provider_combo,
+	    &QComboBox::currentIndexChanged,
+	    this,
+	    [this](int index)
 	{
 		select_provider(index);
 		m_translate_all_btn->setEnabled(index == 0);

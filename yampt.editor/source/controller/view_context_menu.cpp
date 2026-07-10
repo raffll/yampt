@@ -50,7 +50,9 @@ void view_context_menu_t::show_nav_menu(const QPoint & global_pos, const nav_tre
 	{
 	case node_kind_t::record_on_merge:
 	{
-		menu.addAction(QCoreApplication::translate("yEditor", "Remove"), [this, info]() { m_merge.remove_record_from_merge(info.rec_type, info.record_id); });
+		menu.addAction(
+		    QCoreApplication::translate("yEditor", "Remove"),
+		    [this, info]() { m_merge.remove_record_from_merge(info.rec_type, info.record_id); });
 		break;
 	}
 

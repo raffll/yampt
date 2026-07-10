@@ -1,4 +1,5 @@
 #include <catch2/catch_all.hpp>
+#include <patcher/patch_builder.hpp>
 #include <rapidcheck/catch.h>
 #include <session/plugin_session.hpp>
 #include <filesystem>

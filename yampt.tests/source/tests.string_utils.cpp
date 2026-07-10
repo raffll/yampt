@@ -80,7 +80,10 @@ TEST_CASE("string_utils::utf8_byte_to_char_offset, multi-byte chars", "[u]")
 TEST_CASE("string_utils::replace_non_printable_with_dot, mixed content", "[u]")
 {
 	REQUIRE(string_utils::replace_non_printable_with_dot("hello") == "hello");
-	REQUIRE(string_utils::replace_non_printable_with_dot("a\x01""b") == "a.b");
+	REQUIRE(
+	    string_utils::replace_non_printable_with_dot(
+	        "a\x01"
+	        "b") == "a.b");
 	REQUIRE(string_utils::replace_non_printable_with_dot(std::string("\x00\x1F", 2)) == "..");
 	REQUIRE(string_utils::replace_non_printable_with_dot("") == "");
 }

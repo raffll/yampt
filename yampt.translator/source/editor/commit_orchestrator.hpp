@@ -1,10 +1,10 @@
 #pragma once
 
+#include "../model/document.hpp"
+#include "../model/table_row.hpp"
 #include "byte_limit_validator.hpp"
 #include "edit_history.hpp"
 #include "glossary.hpp"
-#include "../model/document.hpp"
-#include "../model/table_row.hpp"
 #include <string>
 
 struct commit_input_t

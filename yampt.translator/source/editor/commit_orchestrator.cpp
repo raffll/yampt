@@ -10,11 +10,9 @@ commit_output_t commit_orchestrator::execute(
 	commit_output_t output;
 
 	const auto validation = validator.validate(input.row.type, input.new_text);
-	const auto effective_intent =
-	    (validation.level == validation_level_t::error) ? status_t::error : input.intent;
+	const auto effective_intent = (validation.level == validation_level_t::error) ? status_t::error : input.intent;
 
-	history.record_change(
-	    input.row.type, input.row.key_text, input.old_text, input.new_text, input.row.status);
+	history.record_change(input.row.type, input.row.key_text, input.old_text, input.new_text, input.row.status);
 
 	output.result = document.commit(input.row, input.new_text, effective_intent);
 	if (!output.result.success)

@@ -3,10 +3,10 @@
 #include "dialog/find_replace_dialog.hpp"
 #include "dialog/first_run_dialog.hpp"
 #include "dialog/make_base_dialog.hpp"
-#include "editor/commit_orchestrator.hpp"
 #include "dialog/merge_dialog.hpp"
 #include "dialog/settings/translator_settings_dialog.hpp"
 #include "dialog/spell_context_menu.hpp"
+#include "editor/commit_orchestrator.hpp"
 #include "highlighter/editor_highlighter.hpp"
 #include "highlighter/glossary_highlighter.hpp"
 #include "highlighter/grammar_checker.hpp"
@@ -202,8 +202,8 @@ main_window_t::main_window_t(QWidget * parent)
 			auto set_spell_paths = [&](const std::string & lang_code, bool is_native)
 			{
 				static const std::map<std::string, std::string> prefix_map = {
-					{ "EN", "en_US" }, { "PL", "pl_PL" }, { "DE", "de_DE" },
-					{ "FR", "fr_FR" }, { "RU", "ru_RU" }, { "IT", "it_IT" }, { "HU", "hu_HU" },
+					{ "EN", "en_US" }, { "PL", "pl_PL" }, { "DE", "de_DE" }, { "FR", "fr_FR" },
+					{ "RU", "ru_RU" }, { "IT", "it_IT" }, { "HU", "hu_HU" },
 				};
 
 				auto it_prefix = prefix_map.find(lang_code);
@@ -590,12 +590,12 @@ void main_window_t::commit_current_edit()
 	if (!commit_output.result.success)
 		return;
 
-	m_table_model->update_row(m_editor_controller.current_row(), commit_output.result.new_text, commit_output.result.status);
+	m_table_model->update_row(
+	    m_editor_controller.current_row(), commit_output.result.new_text, commit_output.result.status);
 
 	if (commit_output.result.propagated_count > 0)
 	{
-		statusBar()->showMessage(
-		    tr("Propagated to %1 entries").arg(commit_output.result.propagated_count), 5000);
+		statusBar()->showMessage(tr("Propagated to %1 entries").arg(commit_output.result.propagated_count), 5000);
 
 		auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
 		if (dict_doc)
@@ -655,8 +655,7 @@ void main_window_t::on_encoding_changed(int index)
 	save_config();
 
 	statusBar()->showMessage(
-	    tr("Encoding changed. Open documents keep their original encoding until re-opened."),
-	    5000);
+	    tr("Encoding changed. Open documents keep their original encoding until re-opened."), 5000);
 }
 
 void main_window_t::on_open_settings()

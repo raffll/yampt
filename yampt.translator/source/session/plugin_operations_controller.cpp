@@ -47,7 +47,8 @@ void plugin_operations_controller_t::on_plugin_operation(const std::string & plu
 		auto answer = QMessageBox::question(
 		    m_deps.parent_widget,
 		    QCoreApplication::translate("yTranslator", "Unsaved Changes"),
-		    QCoreApplication::translate("yTranslator", "Some dictionaries have unsaved changes. Save before proceeding?"),
+		    QCoreApplication::translate(
+		        "yTranslator", "Some dictionaries have unsaved changes. Save before proceeding?"),
 		    QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
 
 		if (answer == QMessageBox::Cancel)

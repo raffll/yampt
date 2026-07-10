@@ -67,8 +67,7 @@ TEST_CASE("commit_orchestrator::execute, records history", "[i][qt]")
 
 	const auto row = make_row("Original", status_t::untranslated);
 	const auto output = commit_orchestrator::execute(
-	    { row, "Original", "Translated", status_t::in_progress },
-	    doc, history, validator, glossary);
+	    { row, "Original", "Translated", status_t::in_progress }, doc, history, validator, glossary);
 
 	REQUIRE(output.result.success);
 
@@ -94,8 +93,7 @@ TEST_CASE("commit_orchestrator::execute, validation overrides to error", "[i][qt
 
 	std::string long_text(600, 'A');
 	const auto output = commit_orchestrator::execute(
-	    { row, "Old", long_text, status_t::in_progress },
-	    doc, history, validator, glossary);
+	    { row, "Old", long_text, status_t::in_progress }, doc, history, validator, glossary);
 
 	REQUIRE(output.result.success);
 	REQUIRE(output.result.status == status_t::error);
@@ -114,9 +112,8 @@ TEST_CASE("commit_orchestrator::execute, intent model preserved when valid", "[i
 	glossary_t glossary;
 
 	const auto row = make_row("Hello", status_t::untranslated);
-	const auto output = commit_orchestrator::execute(
-	    { row, "Hello", "Czesc", status_t::model },
-	    doc, history, validator, glossary);
+	const auto output =
+	    commit_orchestrator::execute({ row, "Hello", "Czesc", status_t::model }, doc, history, validator, glossary);
 
 	REQUIRE(output.result.success);
 	REQUIRE(output.result.status == status_t::model);
@@ -151,8 +148,7 @@ TEST_CASE("commit_orchestrator::execute, updates glossary for dict", "[i][qt]")
 	row.record_index = 0;
 
 	const auto output = commit_orchestrator::execute(
-	    { row, "Sword", "Miecz", status_t::in_progress },
-	    doc, history, validator, glossary);
+	    { row, "Sword", "Miecz", status_t::in_progress }, doc, history, validator, glossary);
 
 	REQUIRE(output.result.success);
 	REQUIRE(output.glossary_updated);
@@ -186,9 +182,8 @@ TEST_CASE("commit_orchestrator::execute, does not update glossary for yaml", "[i
 	row.status = status_t::untranslated;
 	row.record_index = 0;
 
-	const auto output = commit_orchestrator::execute(
-	    { row, "", "Czesc", status_t::in_progress },
-	    doc, history, validator, glossary);
+	const auto output =
+	    commit_orchestrator::execute({ row, "", "Czesc", status_t::in_progress }, doc, history, validator, glossary);
 
 	REQUIRE(output.result.success);
 	REQUIRE_FALSE(output.glossary_updated);
@@ -232,8 +227,7 @@ TEST_CASE("commit_orchestrator::execute, propagates for dict in_progress", "[i][
 	row.record_index = 0;
 
 	const auto output = commit_orchestrator::execute(
-	    { row, "Same", "New Value", status_t::in_progress },
-	    doc, history, validator, glossary);
+	    { row, "Same", "New Value", status_t::in_progress }, doc, history, validator, glossary);
 
 	REQUIRE(output.result.success);
 	REQUIRE(output.result.propagated_count == 1);
@@ -276,8 +270,7 @@ TEST_CASE("commit_orchestrator::execute, skips propagation for model intent", "[
 	row.record_index = 0;
 
 	const auto output = commit_orchestrator::execute(
-	    { row, "Same", "Model Result", status_t::model },
-	    doc, history, validator, glossary);
+	    { row, "Same", "Model Result", status_t::model }, doc, history, validator, glossary);
 
 	REQUIRE(output.result.success);
 	REQUIRE(output.result.propagated_count == 0);
