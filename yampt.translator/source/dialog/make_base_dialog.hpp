@@ -23,7 +23,6 @@ public:
 
 private:
 	void populate_plugin_tree(const std::string & source_plugin_path);
-	void populate_dictionary_combo();
 
 	const file_list_t & m_file_list;
 	const settings_store_t & m_settings;

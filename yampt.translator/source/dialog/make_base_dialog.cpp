@@ -6,7 +6,6 @@
 #include <filesystem>
 #include <map>
 #include <settings_store.hpp>
-#include <QComboBox>
 #include <QDialogButtonBox>
 #include <QFont>
 #include <QGroupBox>
@@ -26,7 +25,7 @@ make_base_dialog_t::make_base_dialog_t(
 {
 	setWindowTitle("Make Base");
 	setModal(true);
-	resize(400, 350);
+	resize(450, 400);
 
 	auto * layout = new QVBoxLayout(this);
 	layout->addWidget(new QLabel("Select the native ESM:", this));
@@ -49,47 +48,6 @@ make_base_dialog_t::make_base_dialog_t(
 	mode_layout->addWidget(radio_full);
 	mode_layout->addWidget(radio_partial);
 
-	auto * partial_explanation = new QLabel(mode_group);
-	partial_explanation->setWordWrap(true);
-	partial_explanation->setText(
-	    "When old_text equals new_text, the text is tokenized by non-alphanumeric "
-	    "characters (tokens shorter than 3 characters are ignored). Each token is "
-	    "checked against the Hunspell dictionary:\n"
-	    "\xe2\x80\xa2 If any token is found -> status = Untranslated (contains source language words)\n"
-	    "\xe2\x80\xa2 If no tokens are found -> status = To Verify (likely a proper noun)");
-	partial_explanation->setStyleSheet("color: #888; margin-left: 20px; margin-top: 4px;");
-	partial_explanation->setVisible(false);
-	mode_layout->addWidget(partial_explanation);
-
-	auto * dict_label = new QLabel("Source dictionary:", mode_group);
-	dict_label->setStyleSheet("margin-left: 20px; margin-top: 4px;");
-	dict_label->setVisible(false);
-	mode_layout->addWidget(dict_label);
-
-	auto * dict_combo = new QComboBox(mode_group);
-	dict_combo->setToolTip("Hunspell dictionary used to detect untranslated words");
-	dict_combo->setVisible(false);
-	mode_layout->addWidget(dict_combo);
-
-	populate_dictionary_combo();
-
-	const auto partial_aff_setting = m_settings.partial_dict_aff_path();
-	if (!partial_aff_setting.empty())
-	{
-		for (int i = 0; i < dict_combo->count(); ++i)
-		{
-			if (dict_combo->itemData(i).toString().toStdString() == partial_aff_setting)
-			{
-				dict_combo->setCurrentIndex(i);
-				break;
-			}
-		}
-	}
-
-	connect(radio_partial, &QRadioButton::toggled, partial_explanation, &QLabel::setVisible);
-	connect(radio_partial, &QRadioButton::toggled, dict_label, &QLabel::setVisible);
-	connect(radio_partial, &QRadioButton::toggled, dict_combo, &QComboBox::setVisible);
-
 	layout->addWidget(mode_group);
 
 	auto * buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
@@ -111,7 +69,7 @@ make_base_dialog_t::make_base_dialog_t(
 	    this,
 	    &QDialog::accepted,
 	    this,
-	    [this, tree, radio_partial, dict_combo, &source_plugin_path]()
+	    [this, tree, radio_partial, &source_plugin_path]()
 	{
 		auto * selected_item = tree->currentItem();
 		if (!selected_item || !(selected_item->flags() & Qt::ItemIsSelectable))
@@ -134,8 +92,8 @@ make_base_dialog_t::make_base_dialog_t(
 		params.foreign_lang = foreign_lang;
 		params.native_lang = native_lang;
 		params.base_mode = radio_partial->isChecked() ? base_mode_t::partial : base_mode_t::full;
-		if (radio_partial->isChecked() && dict_combo->count() > 0)
-			params.dictionary_aff_path = dict_combo->currentData().toString().toStdString();
+		if (radio_partial->isChecked())
+			params.dictionary_aff_path = m_settings.partial_dict_aff_path();
 
 		m_result = params;
 	});
@@ -268,38 +226,4 @@ void make_base_dialog_t::populate_plugin_tree(const std::string & source_plugin_
 
 	if (best_match_item)
 		tree->setCurrentItem(best_match_item);
-}
-
-void make_base_dialog_t::populate_dictionary_combo()
-{
-	auto * dict_combo = findChild<QComboBox *>();
-	if (!dict_combo)
-		return;
-
-	auto dict_dir = app_logger_t::get_exe_dir();
-	if (!dict_dir.empty() && dict_dir.back() != '/' && dict_dir.back() != '\\')
-		dict_dir += '/';
-	dict_dir += "dictionaries";
-
-	const std::filesystem::path dict_path(dict_dir);
-	if (!std::filesystem::exists(dict_path))
-		return;
-
-	for (const auto & entry : std::filesystem::directory_iterator(dict_path))
-	{
-		if (!entry.is_regular_file())
-			continue;
-
-		if (entry.path().extension().string() != ".aff")
-			continue;
-
-		auto dic_file = entry.path();
-		dic_file.replace_extension(".dic");
-		if (!std::filesystem::exists(dic_file))
-			continue;
-
-		const auto stem = entry.path().stem().string();
-		const auto aff_path = entry.path().string();
-		dict_combo->addItem(QString::fromStdString(stem), QString::fromStdString(aff_path));
-	}
 }

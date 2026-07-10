@@ -24,7 +24,7 @@ dict_selection_dialog_t::dict_selection_dialog_t(
 {
 	setWindowTitle("Select Dictionaries");
 	setModal(true);
-	resize(450, 500);
+	resize(450, 400);
 
 	auto * layout = new QVBoxLayout(this);
 	layout->addWidget(new QLabel("Available dictionaries:", this));
