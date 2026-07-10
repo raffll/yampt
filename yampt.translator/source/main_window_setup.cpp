@@ -97,6 +97,13 @@ void main_window_t::setup_menu_bar()
 	view_menu->addAction(m_whitespace_check);
 
 	auto * tools_menu = menuBar()->addMenu("&Tools");
+	auto * merge_action = tools_menu->addAction("&Merge Dictionaries...");
+	merge_action->setToolTip("Merge loaded dictionaries into one");
+	connect(merge_action, &QAction::triggered, this, [this]() {
+		if (m_dict_ops_controller)
+			m_dict_ops_controller->on_merge();
+	});
+	tools_menu->addSeparator();
 	m_settings_action = tools_menu->addAction("&Preferences...");
 	m_settings_action->setShortcut(QKeySequence("Ctrl+,"));
 	m_settings_action->setToolTip("Open application settings");
@@ -461,6 +468,10 @@ void main_window_t::connect_sidebar_signals()
 	connect(m_sidebar, &sidebar_view_t::save_requested, this, &main_window_t::on_save_requested);
 	connect(m_sidebar, &sidebar_view_t::unload_requested, this, &main_window_t::on_unload_requested);
 	connect(m_sidebar, &sidebar_view_t::delete_requested, this, &main_window_t::on_delete_requested);
+	connect(m_sidebar, &sidebar_view_t::merge_requested, this, [this]() {
+		if (m_dict_ops_controller)
+			m_dict_ops_controller->on_merge();
+	});
 
 	connect(
 	    m_sidebar,

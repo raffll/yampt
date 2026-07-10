@@ -121,6 +121,21 @@ main_window_t::main_window_t(QWidget * parent)
 	                                 [this](const std::string & path) { return show_make_base_dialog(path); },
 	                                 [this](dict_document_t * doc) { start_batch_translation(doc); } } });
 
+	m_dict_ops_controller = std::make_unique<dict_operations_controller_t>(
+	    dict_operations_deps_t { m_session,
+	                             m_glossary,
+	                             *m_log_view,
+	                             *m_translation_tab,
+	                             *m_record_tabs,
+	                             this,
+	                             [this]() { m_sidebar_controller->scan_workspace(); },
+	                             [this](document_t * doc) { switch_document(doc); },
+	                             [this]() { rebuild_sidebar(); },
+	                             [this](const std::string & path) { update_sidebar_item(path); },
+	                             [this](bool dirty) { set_unsaved_changes(dirty); },
+	                             [this](int row) { load_record(row); },
+	                             [this]() { return m_editor_controller.current_row(); } });
+
 	m_record_display_controller =
 	    std::make_unique<record_display_controller_t>(record_display_deps_t { *m_editor_view,
 	                                                                          *m_table_model,
