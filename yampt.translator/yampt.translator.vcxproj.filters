@@ -28,6 +28,7 @@
     <ClCompile Include="source\controller\record_display_controller.cpp" />
     <ClCompile Include="source\editor\row_filter.cpp" />
     <ClCompile Include="source\editor\byte_limit_validator.cpp" />
+    <ClCompile Include="source\editor\commit_orchestrator.cpp" />
     <ClCompile Include="source\editor\glossary.cpp" />
     <ClCompile Include="source\editor\edit_history.cpp" />
     <ClCompile Include="source\editor\find_replace.cpp" />

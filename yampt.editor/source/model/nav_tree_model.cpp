@@ -1,4 +1,5 @@
 ﻿#include "nav_tree_model.hpp"
+#include <io/codepage.hpp>
 #include <algorithm>
 #include <cctype>
 #include <cstdio>
@@ -208,6 +209,12 @@ void nav_tree_model_t::set_show_deleted_strikeout(bool value)
 {
 	m_show_deleted_strikeout = value;
 	emit dataChanged(index(0, 0, {}), index(rowCount({}) - 1, columnCount({}) - 1, {}), { Qt::FontRole });
+}
+
+void nav_tree_model_t::set_display_codepage(codepage_t codepage)
+{
+	m_display_codepage = codepage;
+	rebuild();
 }
 
 void nav_tree_model_t::set_excluded_plugins(const std::set<std::string> * excluded)
@@ -607,7 +614,7 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 			{
 				if (col == 0)
 				{
-					auto display_id = QString::fromStdString(entry.record_id);
+					auto display_id = QString::fromUtf8(decode_to_utf8(entry.record_id, m_display_codepage));
 					display_id.replace('|', " #");
 					return display_id;
 				}
@@ -615,12 +622,12 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 				if (col == 1)
 				{
 					if (!entry.display_name.empty())
-						return QString::fromStdString(entry.display_name);
+						return QString::fromUtf8(decode_to_utf8(entry.display_name, m_display_codepage));
 
 					if (entry.rec_type == "INFO")
 						return {};
 
-					return QString::fromStdString(entry.dial_name);
+					return QString::fromUtf8(decode_to_utf8(entry.dial_name, m_display_codepage));
 				}
 			}
 

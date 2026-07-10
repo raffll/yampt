@@ -202,6 +202,7 @@
     <ClCompile Include="source\controller\record_display_controller.cpp" />
     <ClCompile Include="source\editor\row_filter.cpp" />
     <ClCompile Include="source\editor\byte_limit_validator.cpp" />
+    <ClCompile Include="source\editor\commit_orchestrator.cpp" />
     <ClCompile Include="source\editor\glossary.cpp" />
     <ClCompile Include="source\editor\edit_history.cpp" />
     <ClCompile Include="source\editor\find_replace.cpp" />
@@ -249,6 +250,7 @@
     <ClInclude Include="source\model\table_builder.hpp" />    <ClInclude Include="source\view\table_view.hpp" />    <ClInclude Include="source\controller\editor_controller.hpp" />
     <ClInclude Include="source\editor\row_filter.hpp" />
     <ClInclude Include="source\editor\byte_limit_validator.hpp" />
+    <ClInclude Include="source\editor\commit_orchestrator.hpp" />
     <ClInclude Include="source\editor\glossary.hpp" />
     <ClInclude Include="source\editor\edit_history.hpp" />
     <ClInclude Include="source\editor\find_replace.hpp" />

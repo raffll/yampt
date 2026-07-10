@@ -56,3 +56,52 @@ TEST_CASE("plugin_session_t::save, persistence round-trip", "[pbt]")
 		RC_ASSERT(restored.patch_plugins() == patch);
 	});
 }
+
+TEST_CASE("plugin_session_t::load_source, none by default", "[u][qt]")
+{
+	plugin_session_t session;
+	REQUIRE(session.load_source() == plugin_session_t::load_source_t::none);
+	REQUIRE(session.load_base_path().empty());
+}
+
+TEST_CASE("plugin_session_t::scan, empty before load", "[u][qt]")
+{
+	plugin_session_t session;
+	REQUIRE(session.scan().plugin_count() == 0);
+}
+
+TEST_CASE("plugin_session_t::unload_all, resets state", "[u][qt]")
+{
+	plugin_session_t session;
+	session.set_excluded_plugins({ "test.esp" });
+	session.unload_all();
+
+	REQUIRE(session.load_source() == plugin_session_t::load_source_t::none);
+	REQUIRE(session.load_base_path().empty());
+	REQUIRE(session.scan().plugin_count() == 0);
+}
+
+TEST_CASE("plugin_session_t::excluded_plugins, round-trip", "[u][qt]")
+{
+	plugin_session_t session;
+	std::set<std::string> excluded = { "mod_a.esp", "mod_b.esp" };
+	session.set_excluded_plugins(excluded);
+
+	REQUIRE(session.excluded_plugins() == excluded);
+}
+
+TEST_CASE("plugin_session_t::patch_plugins, round-trip", "[u][qt]")
+{
+	plugin_session_t session;
+	std::set<std::string> patch = { "patch_one.esp", "patch_two.esp" };
+	session.set_patch_plugins(patch);
+
+	REQUIRE(session.patch_plugins() == patch);
+}
+
+TEST_CASE("plugin_session_t::patch_builder, accessible and empty", "[u][qt]")
+{
+	plugin_session_t session;
+	REQUIRE_FALSE(session.patch_builder().has_records());
+	REQUIRE(session.patch_builder().record_count() == 0);
+}

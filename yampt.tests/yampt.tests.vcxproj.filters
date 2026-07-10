@@ -28,6 +28,7 @@
     <ClCompile Include="source\tests.yaml_l10n_reader.cpp" />
     <ClCompile Include="source\tests.script_tokenizer.cpp" />
     <ClCompile Include="source\tests.editor_controller.cpp" />
+    <ClCompile Include="source\tests.commit_orchestrator.cpp" />
     <ClCompile Include="source\tests.script_parser_rename.cpp" />
     <ClCompile Include="source\tests.converter_counters.cpp" />
     <ClCompile Include="source\tests.esm_converter_full.cpp" />

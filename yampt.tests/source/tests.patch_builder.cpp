@@ -223,3 +223,96 @@ TEST_CASE("patch_builder_t::add_record, collection invariants", "[pbt]")
 		}
 	});
 }
+
+TEST_CASE("patch_builder_t::save, creates ESP file on disk", "[i]")
+{
+	namespace fs = std::filesystem;
+	const auto output_path = (fs::temp_directory_path() / "yampt_pb_save_test.esp").string();
+
+	patch_builder_t builder;
+	builder.add_record_raw("NPC_", "test_npc", std::string(32, 'A'));
+	builder.add_record_raw("CELL", "test_cell", std::string(64, 'B'));
+
+	std::vector<patch_builder_t::master_entry_t> masters;
+	masters.push_back({ "Morrowind.esm", 79837557 });
+
+	const bool saved = builder.save(output_path, "TestAuthor", "TestDesc", masters);
+
+	REQUIRE(saved);
+	REQUIRE(fs::exists(output_path));
+	REQUIRE(fs::file_size(output_path) > 0);
+
+	std::error_code error_code;
+	fs::remove(output_path, error_code);
+}
+
+TEST_CASE("patch_builder_t::save, empty builder returns false", "[u]")
+{
+	patch_builder_t builder;
+	const bool saved = builder.save("should_not_exist.esp", "Author", "Desc", {});
+	REQUIRE_FALSE(saved);
+}
+
+TEST_CASE("patch_builder_t::add_record, duplicate key updates content", "[u]")
+{
+	patch_builder_t builder;
+	builder.add_record("NPC_", "npc_id", "content_v1");
+	builder.add_record("NPC_", "npc_id", "content_v2");
+
+	REQUIRE(builder.record_count() == 1);
+
+	const auto * found = builder.find_content("NPC_", "npc_id");
+	REQUIRE(found != nullptr);
+	REQUIRE(*found == "content_v2");
+}
+
+TEST_CASE("patch_builder_t::add_record, pinned record not overwritten by add", "[u]")
+{
+	patch_builder_t builder;
+	builder.pin_record("NPC_", "npc_id", "pinned_content");
+	builder.add_record("NPC_", "npc_id", "new_content");
+
+	const auto * found = builder.find_content("NPC_", "npc_id");
+	REQUIRE(found != nullptr);
+	REQUIRE(*found == "pinned_content");
+}
+
+TEST_CASE("patch_builder_t::add_record_raw, overwrites even pinned records", "[u]")
+{
+	patch_builder_t builder;
+	builder.pin_record("NPC_", "npc_id", "pinned_content");
+	builder.add_record_raw("NPC_", "npc_id", "raw_override");
+
+	const auto * found = builder.find_content("NPC_", "npc_id");
+	REQUIRE(found != nullptr);
+	REQUIRE(*found == "raw_override");
+}
+
+TEST_CASE("patch_builder_t::clear, empties all records", "[u]")
+{
+	patch_builder_t builder;
+	builder.add_record("NPC_", "a", "content_a");
+	builder.pin_record("CELL", "b", "content_b");
+
+	REQUIRE(builder.record_count() == 2);
+
+	builder.clear();
+
+	REQUIRE(builder.record_count() == 0);
+	REQUIRE_FALSE(builder.has_records());
+}
+
+TEST_CASE("patch_builder_t::record_accessors, correct indexing", "[u]")
+{
+	patch_builder_t builder;
+	builder.add_record_raw("NPC_", "npc_one", "content_one");
+	builder.add_record_raw("CELL", "cell_two", "content_two");
+
+	REQUIRE(builder.record_type(0) == "NPC_");
+	REQUIRE(builder.record_id(0) == "npc_one");
+	REQUIRE(builder.record_content(0) == "content_one");
+
+	REQUIRE(builder.record_type(1) == "CELL");
+	REQUIRE(builder.record_id(1) == "cell_two");
+	REQUIRE(builder.record_content(1) == "content_two");
+}

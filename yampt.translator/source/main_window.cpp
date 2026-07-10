@@ -3,6 +3,7 @@
 #include "dialog/find_replace_dialog.hpp"
 #include "dialog/first_run_dialog.hpp"
 #include "dialog/make_base_dialog.hpp"
+#include "editor/commit_orchestrator.hpp"
 #include "dialog/merge_dialog.hpp"
 #include "dialog/settings/translator_settings_dialog.hpp"
 #include "dialog/spell_context_menu.hpp"
@@ -579,26 +580,22 @@ void main_window_t::commit_current_edit()
 
 	const auto intent = m_editor_controller.take_pending_status().value_or(status_t::in_progress);
 
-	const auto validation_result = m_byte_limit_validator.validate(row_data->type, new_text_str);
-	const auto effective_intent =
-	    (validation_result.level == validation_level_t::error) ? status_t::error : intent;
+	const auto commit_output = commit_orchestrator::execute(
+	    { *row_data, m_editor_controller.loaded_text().toStdString(), new_text_str, intent },
+	    *m_active_doc,
+	    m_edit_history,
+	    m_byte_limit_validator,
+	    m_glossary);
 
-	m_edit_history.record_change(
-	    row_data->type, row_data->key_text, m_editor_controller.loaded_text().toStdString(), new_text_str, row_data->status);
-
-	const auto result = m_active_doc->commit(*row_data, new_text_str, effective_intent);
-	if (!result.success)
+	if (!commit_output.result.success)
 		return;
 
-	if (m_active_doc->kind() == document_kind_t::dict)
-		m_glossary.update_term(row_data->type, row_data->old_text, new_text_str);
+	m_table_model->update_row(m_editor_controller.current_row(), commit_output.result.new_text, commit_output.result.status);
 
-	m_table_model->update_row(m_editor_controller.current_row(), result.new_text, result.status);
-
-	if (result.propagated_count > 0)
+	if (commit_output.result.propagated_count > 0)
 	{
 		statusBar()->showMessage(
-		    tr("Propagated to %1 entries").arg(result.propagated_count), 5000);
+		    tr("Propagated to %1 entries").arg(commit_output.result.propagated_count), 5000);
 
 		auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
 		if (dict_doc)

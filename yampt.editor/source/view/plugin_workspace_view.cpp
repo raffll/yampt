@@ -44,6 +44,7 @@ plugin_workspace_view_t::plugin_workspace_view_t(settings_store_t & settings, QW
 	m_record_view->model()->set_excluded_plugins(&m_session->excluded_plugins());
 	m_record_view->model()->set_patch_plugins(&m_session->patch_plugins());
 	m_record_view->model()->set_display_codepage(static_cast<codepage_t>(m_settings.display_codepage()));
+	m_nav_view->set_display_codepage(static_cast<codepage_t>(m_settings.display_codepage()));
 	m_content_splitter->insertWidget(1, m_record_view);
 
 	m_merge_controller = new merge_controller_t(

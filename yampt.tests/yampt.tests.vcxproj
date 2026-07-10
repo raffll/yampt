@@ -211,6 +211,7 @@
     <ClCompile Include="source\tests.yaml_l10n_reader.cpp" />
     <ClCompile Include="source\tests.script_tokenizer.cpp" />
     <ClCompile Include="source\tests.editor_controller.cpp" />
+    <ClCompile Include="source\tests.commit_orchestrator.cpp" />
     <ClCompile Include="source\tests.display_helpers.cpp" />
     <ClCompile Include="source\tests.script_parser_rename.cpp" />
     <ClCompile Include="source\tests.converter_counters.cpp" />
@@ -257,6 +258,7 @@
     <ClCompile Include="..\yampt.translator\source\model\table_builder.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\row_filter.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\glossary.cpp" />
+    <ClCompile Include="..\yampt.translator\source\editor\commit_orchestrator.cpp" />
     <ClCompile Include="..\yampt.translator\source\model\dict_document.cpp" />
     <ClCompile Include="..\yampt.translator\source\model\yaml_document.cpp" />
     <ClCompile Include="..\yampt.translator\source\model\sidebar_model.cpp" />

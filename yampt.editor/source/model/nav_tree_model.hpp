@@ -1,6 +1,7 @@
 #pragma once
 
 #include "nav_tree_filter.hpp"
+#include <io/codepage.hpp>
 #include <scanner/plugin_scan.hpp>
 #include <conflict_types.hpp>
 #include <set>
@@ -27,6 +28,7 @@ public:
 	void clear_filter();
 	void set_hide_duplicates(bool hide);
 	void set_show_deleted_strikeout(bool value);
+	void set_display_codepage(codepage_t codepage);
 
 	void sort(int column, Qt::SortOrder order) override;
 
@@ -76,6 +78,7 @@ private:
 	int m_sort_column = 1;
 	Qt::SortOrder m_sort_order = Qt::AscendingOrder;
 	bool m_show_deleted_strikeout = true;
+	codepage_t m_display_codepage = codepage_t::windows_1252;
 
 	conflict_this_t record_foreground_for_plugin(const conflict_entry_t & entry, int plugin_idx) const;
 

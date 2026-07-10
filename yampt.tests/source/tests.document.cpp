@@ -689,3 +689,157 @@ TEST_CASE("yaml_document_t::commit, invalid record_index fails", "[i]")
 	std::error_code ec;
 	fs::remove_all(temp_dir, ec);
 }
+
+TEST_CASE("dict_document_t::kind, returns dict", "[i]")
+{
+	dict_t data;
+	auto & chapter = data[rec_type_t::cell];
+	record_entry_t entry;
+	entry.key_text = "key";
+	entry.old_text = "old";
+	entry.new_text = "old";
+	entry.status = status_t::untranslated;
+	chapter.records.push_back(std::move(entry));
+
+	const auto path = create_temp_dict_json(data);
+	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
+
+	REQUIRE(doc.kind() == document_kind_t::dict);
+
+	cleanup_temp_dict(path);
+}
+
+TEST_CASE("yaml_document_t::kind, returns yaml", "[i]")
+{
+	namespace fs = std::filesystem;
+	const auto temp_dir = fs::temp_directory_path() / "yampt_yaml_kind_test";
+	fs::create_directories(temp_dir);
+
+	const auto en_path = (temp_dir / "en.yaml").string();
+	std::ofstream(en_path) << "key: value\n";
+
+	const auto pl_path = string_utils::normalize_path((temp_dir / "pl.yaml").string());
+	std::ofstream(pl_path) << "";
+
+	yaml_document_t doc(pl_path, "pl");
+	REQUIRE(doc.kind() == document_kind_t::yaml);
+
+	std::error_code ec;
+	fs::remove_all(temp_dir, ec);
+}
+
+TEST_CASE("dict_document_t::commit_status, changes status only", "[i]")
+{
+	dict_t data;
+	auto & chapter = data[rec_type_t::info];
+	record_entry_t entry;
+	entry.key_text = "key_a";
+	entry.old_text = "Hello";
+	entry.new_text = "Czesc";
+	entry.status = status_t::in_progress;
+	chapter.records.push_back(std::move(entry));
+
+	const auto path = create_temp_dict_json(data);
+	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
+
+	table_row_t row;
+	row.type = rec_type_t::info;
+	row.key_text = "key_a";
+	row.old_text = "Hello";
+	row.new_text = "Czesc";
+	row.record_index = 0;
+
+	const auto result = doc.commit_status(row, status_t::translated);
+
+	REQUIRE(result.success);
+	REQUIRE(result.status == status_t::translated);
+	REQUIRE(result.new_text == "Czesc");
+	REQUIRE(doc.data().at(rec_type_t::info).records[0].status == status_t::translated);
+
+	cleanup_temp_dict(path);
+}
+
+TEST_CASE("dict_document_t::reset_to_original, restores old_text and sets untranslated", "[i]")
+{
+	dict_t data;
+	auto & chapter = data[rec_type_t::fnam];
+	record_entry_t entry;
+	entry.key_text = "key_a";
+	entry.old_text = "Sword";
+	entry.new_text = "Miecz";
+	entry.status = status_t::translated;
+	chapter.records.push_back(std::move(entry));
+
+	const auto path = create_temp_dict_json(data);
+	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
+
+	table_row_t row;
+	row.type = rec_type_t::fnam;
+	row.key_text = "key_a";
+	row.old_text = "Sword";
+	row.new_text = "Miecz";
+	row.record_index = 0;
+
+	const auto result = doc.reset_to_original(row);
+
+	REQUIRE(result.success);
+	REQUIRE(result.status == status_t::untranslated);
+	REQUIRE(result.new_text == "Sword");
+	REQUIRE(doc.data().at(rec_type_t::fnam).records[0].new_text == "Sword");
+	REQUIRE(doc.data().at(rec_type_t::fnam).records[0].status == status_t::untranslated);
+
+	cleanup_temp_dict(path);
+}
+
+TEST_CASE("dict_document_t::dict_kind, returns correct kind", "[i]")
+{
+	dict_t data;
+	auto & chapter = data[rec_type_t::cell];
+	record_entry_t entry;
+	entry.key_text = "key";
+	entry.old_text = "old";
+	entry.new_text = "old";
+	entry.status = status_t::untranslated;
+	chapter.records.push_back(std::move(entry));
+
+	const auto path = create_temp_dict_json(data);
+
+	dict_document_t user_doc(path, codepage_t::windows_1252, dict_kind_t::user);
+	REQUIRE(user_doc.dict_kind() == dict_kind_t::user);
+
+	dict_document_t base_doc(path, codepage_t::windows_1252, dict_kind_t::base);
+	REQUIRE(base_doc.dict_kind() == dict_kind_t::base);
+
+	cleanup_temp_dict(path);
+}
+
+TEST_CASE("yaml_document_t::reset_to_original, clears native value", "[i]")
+{
+	namespace fs = std::filesystem;
+	const auto temp_dir = fs::temp_directory_path() / "yampt_yaml_reset_test";
+	fs::create_directories(temp_dir);
+
+	const auto en_path = (temp_dir / "en.yaml").string();
+	std::ofstream(en_path) << "greeting: Hello\n";
+
+	const auto pl_path = string_utils::normalize_path((temp_dir / "pl.yaml").string());
+	std::ofstream(pl_path) << "greeting: Czesc\n";
+
+	yaml_document_t doc(pl_path, "pl");
+
+	table_row_t row;
+	row.type = rec_type_t::yaml;
+	row.key_text = "greeting";
+	row.old_text = "Hello";
+	row.new_text = "Czesc";
+	row.record_index = 0;
+
+	const auto result = doc.reset_to_original(row);
+
+	REQUIRE(result.success);
+	REQUIRE(result.status == status_t::untranslated);
+	REQUIRE(result.new_text == "Hello");
+
+	std::error_code ec;
+	fs::remove_all(temp_dir, ec);
+}

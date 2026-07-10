@@ -21,6 +21,11 @@
 - Lua l10n workflow: opening a native YAML allows editing, opening a foreign YAML shows read-only reference
 - Lua l10n workflow: save writes only translated entries to the native file
 - Lua l10n workflow: export creates a scaffold native file with all keys
+- Merge Dictionaries moved to Tools menu
+- View menu: Spell Check toggle
+
+### Added — Both Apps
+- Localization support: all UI strings wrapped with `tr()` for Qt translation system
 
 ### Changed — yTranslator
 - Translation button populates the translation editor with result
@@ -30,6 +35,9 @@
 - Inline table editing advances to the next row after commit
 - Polymorphic document commit: unified commit flow for all document types
 - Document permissions control context menu and shortcut availability
+- Make Dict and Make Dict with Base merged into single "Make Dictionary" menu item
+- Make Base dialog: removed dictionary combo box (uses language settings)
+- All operation dialogs use consistent 450×400 initial size
 - API key fields: removed Show/Hide toggle buttons (always masked)
 - Convert/Create: preserves original file timestamp
 
@@ -42,7 +50,9 @@
 - Grammar check: missing punctuation no longer flagged while cursor is at end of text
 - Translation log: newline separator between result and subsequent messages
 - Filter counters cleared when switching from dict to YAML document
-- View menu: added Spell Check toggle
+- Edit history recorded for inline table editing and regular editing
+- Glossary annotation updated on commit (regression from refactor)
+- Keyboard shortcuts no longer crash on null controller
 
 
 ## [0.842] - 2026-07-05
