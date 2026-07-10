@@ -578,9 +578,20 @@ void main_window_t::commit_current_edit()
 	}
 
 	const auto intent = m_editor_controller.take_pending_status().value_or(status_t::in_progress);
-	const auto result = m_active_doc->commit(*row_data, new_text_str, intent);
+
+	const auto validation_result = m_byte_limit_validator.validate(row_data->type, new_text_str);
+	const auto effective_intent =
+	    (validation_result.level == validation_level_t::error) ? status_t::error : intent;
+
+	m_edit_history.record_change(
+	    row_data->type, row_data->key_text, m_editor_controller.loaded_text().toStdString(), new_text_str, row_data->status);
+
+	const auto result = m_active_doc->commit(*row_data, new_text_str, effective_intent);
 	if (!result.success)
 		return;
+
+	if (m_active_doc->kind() == document_kind_t::dict)
+		m_glossary.update_term(row_data->type, row_data->old_text, new_text_str);
 
 	m_table_model->update_row(m_editor_controller.current_row(), result.new_text, result.status);
 

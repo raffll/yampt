@@ -554,6 +554,8 @@ void main_window_t::connect_editor_signals()
 		if (!row_data)
 			return;
 
+		m_edit_history.record_change(row_data->type, row_data->key_text, row_data->new_text, new_text, row_data->status);
+
 		const auto result = m_active_doc->commit(*row_data, new_text, status_t::in_progress);
 		if (!result.success)
 			return;
