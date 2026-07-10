@@ -22,12 +22,12 @@ dict_selection_dialog_t::dict_selection_dialog_t(
     QWidget * parent)
     : QDialog(parent)
 {
-	setWindowTitle("Select Dictionaries");
+	setWindowTitle(tr("Select Dictionaries"));
 	setModal(true);
 	resize(450, 400);
 
 	auto * layout = new QVBoxLayout(this);
-	layout->addWidget(new QLabel("Available dictionaries:", this));
+	layout->addWidget(new QLabel(tr("Available dictionaries:"), this));
 
 	m_tree = new QTreeWidget(this);
 	m_tree->setHeaderHidden(true);
@@ -40,7 +40,7 @@ dict_selection_dialog_t::dict_selection_dialog_t(
 	populate_tree(entries);
 	populate_order_list(entries, saved_order);
 
-	layout->addWidget(new QLabel("Merge order (last wins):", this));
+	layout->addWidget(new QLabel(tr("Merge order (last wins):"), this));
 	layout->addWidget(m_order_list);
 
 	setup_buttons(layout);
@@ -160,8 +160,8 @@ void dict_selection_dialog_t::populate_order_list(
 void dict_selection_dialog_t::setup_buttons(QVBoxLayout * layout)
 {
 	auto * order_buttons = new QHBoxLayout;
-	m_up_button = new QPushButton("Up", this);
-	m_down_button = new QPushButton("Down", this);
+	m_up_button = new QPushButton(tr("Up"), this);
+	m_down_button = new QPushButton(tr("Down"), this);
 	order_buttons->addWidget(m_up_button);
 	order_buttons->addWidget(m_down_button);
 	order_buttons->addStretch();

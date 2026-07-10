@@ -70,6 +70,17 @@ If a new feature needs orchestration (showing dialogs, running operations, updat
 - Always remove items from TODO.md that are done or cancelled — never leave stale entries.
 - One class = one `.hpp` + one `.cpp`. Never split a class across multiple `.cpp` files. If a class exceeds 1000 lines, it has more than one responsibility — extract a new class, don't add a second `.cpp`.
 
+## Localization
+
+All user-visible strings in yampt.translator and yampt.editor must be wrapped for Qt translation:
+
+- QWidget subclasses: `tr("text")`
+- Non-QObject classes: `QCoreApplication::translate("yTranslator", "text")` or `"yEditor"`
+- Never leave raw string literals in UI code (menus, tooltips, labels, messages, dialog titles, button text)
+- Log messages (`app_logger_t`, `append_log`) stay English — they are developer-facing
+- Shortcut key sequences (`"Ctrl+S"`, `"F10"`) are not translated
+- Settings keys and internal identifiers are not translated
+
 ## Classes vs Namespaces
 
 - **Class (`_t` suffix)** — has mutable state (member variables, including static mutable). Gets instantiated or manages a resource.

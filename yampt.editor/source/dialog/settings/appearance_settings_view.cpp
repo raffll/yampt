@@ -12,23 +12,23 @@ appearance_settings_view_t::appearance_settings_view_t(QWidget * parent)
 {
 	auto * layout = new QVBoxLayout(this);
 
-	auto * label = new QLabel("Theme:", this);
+	auto * label = new QLabel(tr("Theme:"), this);
 	layout->addWidget(label);
 
 	m_theme_combo = new QComboBox(this);
 	m_theme_combo->addItem("Light");
 	m_theme_combo->addItem("Dark");
-	m_theme_combo->setToolTip("Switch between light and dark color theme");
+	m_theme_combo->setToolTip(tr("Switch between light and dark color theme"));
 	layout->addWidget(m_theme_combo);
 
-	auto * codepage_label = new QLabel("Text Codepage:", this);
+	auto * codepage_label = new QLabel(tr("Text Codepage:"), this);
 	layout->addWidget(codepage_label);
 
 	m_codepage_combo = new QComboBox(this);
 	m_codepage_combo->addItem("Windows-1250 (Polish/Central European)", 1250);
 	m_codepage_combo->addItem("Windows-1251 (Russian/Cyrillic)", 1251);
 	m_codepage_combo->addItem("Windows-1252 (English/Western)", 1252);
-	m_codepage_combo->setToolTip("Codepage used for displaying plugin text");
+	m_codepage_combo->setToolTip(tr("Codepage used for displaying plugin text"));
 	layout->addWidget(m_codepage_combo);
 
 	layout->addStretch();

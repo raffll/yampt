@@ -5,7 +5,7 @@
 plugin_select_dialog_t::plugin_select_dialog_t(const std::vector<std::string> & available_files, QWidget * parent)
     : QDialog(parent)
 {
-	setWindowTitle("Select Plugins");
+	setWindowTitle(tr("Select Plugins"));
 	setModal(true);
 	resize(400, 500);
 
@@ -20,8 +20,8 @@ plugin_select_dialog_t::plugin_select_dialog_t(const std::vector<std::string> & 
 		m_list->addItem(item);
 	}
 
-	auto * btn_select_all = new QPushButton("Select All", this);
-	auto * btn_select_none = new QPushButton("Select None", this);
+	auto * btn_select_all = new QPushButton(tr("Select All"), this);
+	auto * btn_select_none = new QPushButton(tr("Select None"), this);
 
 	auto * select_layout = new QHBoxLayout;
 	select_layout->addWidget(btn_select_all);

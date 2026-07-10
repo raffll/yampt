@@ -68,7 +68,7 @@ void merge_controller_t::save_plugin()
 	{
 		const auto initial_dir = QString::fromStdString(m_settings.last_directory());
 		const auto selected =
-		    QFileDialog::getSaveFileName(nullptr, "Save Merge Plugin", initial_dir, "ESP files (*.esp)");
+		    QFileDialog::getSaveFileName(nullptr, QCoreApplication::translate("yEditor", "Save Merge Plugin"), initial_dir, "ESP files (*.esp)");
 		if (selected.isEmpty())
 			return;
 

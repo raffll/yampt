@@ -9,31 +9,31 @@ editor_paths_view_t::editor_paths_view_t(QWidget * parent)
 {
 	auto * layout = new QVBoxLayout(this);
 
-	auto * header = new QLabel("Merged patch output path (relative to base directory):", this);
+	auto * header = new QLabel(tr("Merged patch output path (relative to base directory):"), this);
 	layout->addWidget(header);
 
 	layout->addSpacing(8);
 
-	auto * folder_label = new QLabel("Folder mode:", this);
+	auto * folder_label = new QLabel(tr("Folder mode:"), this);
 	layout->addWidget(folder_label);
 	m_edt_folder_path = new QLineEdit(this);
-	m_edt_folder_path->setPlaceholderText("Merged Patch.esp");
+	m_edt_folder_path->setPlaceholderText(tr("Merged Patch.esp"));
 	layout->addWidget(m_edt_folder_path);
 
 	layout->addSpacing(8);
 
-	auto * mo2_label = new QLabel("MO2 mode:", this);
+	auto * mo2_label = new QLabel(tr("MO2 mode:"), this);
 	layout->addWidget(mo2_label);
 	m_edt_mo2_path = new QLineEdit(this);
-	m_edt_mo2_path->setPlaceholderText("../../overwrite/Merged Patch.esp");
+	m_edt_mo2_path->setPlaceholderText(tr("../../overwrite/Merged Patch.esp"));
 	layout->addWidget(m_edt_mo2_path);
 
 	layout->addSpacing(8);
 
-	auto * openmw_label = new QLabel("OpenMW mode:", this);
+	auto * openmw_label = new QLabel(tr("OpenMW mode:"), this);
 	layout->addWidget(openmw_label);
 	m_edt_openmw_path = new QLineEdit(this);
-	m_edt_openmw_path->setPlaceholderText("data/Merged Patch.esp");
+	m_edt_openmw_path->setPlaceholderText(tr("data/Merged Patch.esp"));
 	layout->addWidget(m_edt_openmw_path);
 
 	layout->addStretch();

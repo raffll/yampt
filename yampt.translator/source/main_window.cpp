@@ -75,7 +75,7 @@ main_window_t::main_window_t(QWidget * parent)
     , m_session(m_current_codepage)
     , m_editor_controller(m_edit_history, m_byte_limit_validator, m_glossary)
 {
-	setWindowTitle("yTranslator");
+	setWindowTitle(tr("yTranslator"));
 	resize(1280, 720);
 	setMinimumSize(800, 600);
 
@@ -569,7 +569,7 @@ void main_window_t::commit_current_edit()
 		if (static_cast<size_t>(lines.size()) != slot_count)
 		{
 			statusBar()->showMessage(
-			    QString("Warning: expected %1 strings, got %2").arg(slot_count).arg(lines.size()), 5000);
+			    tr("Warning: expected %1 strings, got %2").arg(slot_count).arg(lines.size()), 5000);
 		}
 	}
 	else
@@ -587,7 +587,7 @@ void main_window_t::commit_current_edit()
 	if (result.propagated_count > 0)
 	{
 		statusBar()->showMessage(
-		    QString("Propagated to %1 entries").arg(result.propagated_count), 5000);
+		    tr("Propagated to %1 entries").arg(result.propagated_count), 5000);
 
 		auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
 		if (dict_doc)
@@ -647,8 +647,7 @@ void main_window_t::on_encoding_changed(int index)
 	save_config();
 
 	statusBar()->showMessage(
-	    "Encoding changed. Open documents keep their original encoding until "
-	    "re-opened.",
+	    tr("Encoding changed. Open documents keep their original encoding until re-opened."),
 	    5000);
 }
 
@@ -689,7 +688,7 @@ void main_window_t::register_shortcuts()
 	if (!m_copy_original_action)
 	{
 		m_copy_original_action = new QAction(this);
-		m_copy_original_action->setToolTip("Copy original text to translation (F8)");
+		m_copy_original_action->setToolTip(tr("Copy original text to translation (F8)"));
 		m_copy_original_action->setShortcutContext(Qt::WindowShortcut);
 		addAction(m_copy_original_action);
 		connect(m_copy_original_action, &QAction::triggered, this, [this]() { shortcut_copy_original(); });
@@ -698,7 +697,7 @@ void main_window_t::register_shortcuts()
 	if (!m_set_in_progress_action)
 	{
 		m_set_in_progress_action = new QAction(this);
-		m_set_in_progress_action->setToolTip("Set status to In Progress (F9)");
+		m_set_in_progress_action->setToolTip(tr("Set status to In Progress (F9)"));
 		m_set_in_progress_action->setShortcutContext(Qt::WindowShortcut);
 		addAction(m_set_in_progress_action);
 		connect(
@@ -711,7 +710,7 @@ void main_window_t::register_shortcuts()
 	if (!m_set_translated_action)
 	{
 		m_set_translated_action = new QAction(this);
-		m_set_translated_action->setToolTip("Set status to Translated (F10)");
+		m_set_translated_action->setToolTip(tr("Set status to Translated (F10)"));
 		m_set_translated_action->setShortcutContext(Qt::WindowShortcut);
 		addAction(m_set_translated_action);
 		connect(
@@ -1043,8 +1042,8 @@ void main_window_t::closeEvent(QCloseEvent * event)
 	{
 		auto answer = QMessageBox::question(
 		    this,
-		    "Unsaved Changes",
-		    "You have unsaved dictionary changes. What would you like to do?",
+		    tr("Unsaved Changes"),
+		    tr("You have unsaved dictionary changes. What would you like to do?"),
 		    QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
 
 		if (answer == QMessageBox::Cancel)

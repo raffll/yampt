@@ -39,7 +39,7 @@ QWidget * editor_view_t::setup_left_panel(QSplitter * parent_splitter)
 	auto * left_layout = new QVBoxLayout(left_widget);
 	left_layout->setContentsMargins(0, 0, 0, 0);
 
-	m_original_label = new QLabel("Original", left_widget);
+	m_original_label = new QLabel(tr("Original"), left_widget);
 	m_original_label->setAlignment(Qt::AlignCenter);
 
 	m_original_view = new translation_edit_view_t(left_widget);
@@ -63,10 +63,10 @@ QWidget * editor_view_t::setup_left_panel(QSplitter * parent_splitter)
 	adapted_hlayout->addWidget(m_adapted_from_view);
 	m_adapted_from_container->setVisible(false);
 
-	m_adapted_toggle = new QPushButton("Details", left_widget);
+	m_adapted_toggle = new QPushButton(tr("Details"), left_widget);
 	m_adapted_toggle->setCheckable(true);
 	m_adapted_toggle->setChecked(true);
-	m_adapted_toggle->setToolTip("Show/hide adapted from panel");
+	m_adapted_toggle->setToolTip(tr("Show/hide adapted from panel"));
 	m_adapted_toggle->setVisible(false);
 
 	left_layout->addWidget(m_original_label);
@@ -83,13 +83,13 @@ QWidget * editor_view_t::setup_right_panel(QSplitter * parent_splitter)
 	auto * right_layout = new QVBoxLayout(right_widget);
 	right_layout->setContentsMargins(0, 0, 0, 0);
 
-	m_translation_label = new QLabel("Translation", right_widget);
+	m_translation_label = new QLabel(tr("Translation"), right_widget);
 	m_translation_label->setAlignment(Qt::AlignCenter);
 
 	m_translation_editor = new translation_edit_view_t(right_widget);
 
-	m_apply_button = new QPushButton("Next (Shift+Enter)", right_widget);
-	m_apply_button->setToolTip("Apply changes and move to next entry");
+	m_apply_button = new QPushButton(tr("Next (Shift+Enter)"), right_widget);
+	m_apply_button->setToolTip(tr("Apply changes and move to next entry"));
 
 	auto * translation_container = new QWidget(right_widget);
 	auto * translation_hlayout = new QHBoxLayout(translation_container);

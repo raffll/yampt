@@ -62,8 +62,8 @@ void plugin_workspace_view_t::setup_views()
 	m_bottom_tabs = new QTabWidget(m_main_splitter);
 	m_messages = new messages_view_t(m_bottom_tabs);
 	m_preview = new preview_view_t(m_bottom_tabs);
-	m_bottom_tabs->addTab(m_messages, "Log");
-	m_bottom_tabs->addTab(m_preview, "Preview");
+	m_bottom_tabs->addTab(m_messages, tr("Log"));
+	m_bottom_tabs->addTab(m_preview, tr("Preview"));
 
 	m_main_splitter->addWidget(m_content_splitter);
 	m_main_splitter->addWidget(m_bottom_tabs);
@@ -116,7 +116,7 @@ void plugin_workspace_view_t::load_plugins_from_paths(
 void plugin_workspace_view_t::on_load_data_files()
 {
 	const auto initial_dir = QString::fromStdString(m_settings.last_directory());
-	QString dir = QFileDialog::getExistingDirectory(this, "Select Data Files Folder", initial_dir);
+	QString dir = QFileDialog::getExistingDirectory(this, tr("Select Data Files Folder"), initial_dir);
 
 	if (dir.isEmpty())
 		return;
@@ -154,7 +154,7 @@ void plugin_workspace_view_t::on_load_data_files()
 void plugin_workspace_view_t::on_load_mo2_profile()
 {
 	const auto initial_dir = QString::fromStdString(m_settings.last_directory());
-	QString profile_dir = QFileDialog::getExistingDirectory(this, "Select MO2 Profile Folder", initial_dir);
+	QString profile_dir = QFileDialog::getExistingDirectory(this, tr("Select MO2 Profile Folder"), initial_dir);
 
 	if (profile_dir.isEmpty())
 		return;
@@ -168,7 +168,7 @@ void plugin_workspace_view_t::on_load_openmw_cfg()
 	const auto initial_dir = QString::fromStdString(m_settings.last_directory());
 
 	QString cfg_path =
-	    QFileDialog::getOpenFileName(this, "Select openmw.cfg", initial_dir, "OpenMW config (openmw.cfg)");
+	    QFileDialog::getOpenFileName(this, tr("Select openmw.cfg"), initial_dir, "OpenMW config (openmw.cfg)");
 
 	if (cfg_path.isEmpty())
 		return;

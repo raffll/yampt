@@ -12,11 +12,11 @@ preview_view_t::preview_view_t(QWidget * parent)
 
 	m_left_edit = new QTextEdit(this);
 	m_left_edit->setReadOnly(true);
-	m_left_edit->setPlaceholderText("Previous plugin");
+	m_left_edit->setPlaceholderText(tr("Previous plugin"));
 
 	m_right_edit = new QTextEdit(this);
 	m_right_edit->setReadOnly(true);
-	m_right_edit->setPlaceholderText("Selected plugin");
+	m_right_edit->setPlaceholderText(tr("Selected plugin"));
 
 	layout->addWidget(m_left_edit);
 	layout->addWidget(m_right_edit);

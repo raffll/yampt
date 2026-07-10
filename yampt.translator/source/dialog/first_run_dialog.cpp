@@ -8,14 +8,14 @@
 first_run_dialog_t::first_run_dialog_t(QWidget * parent)
     : QDialog(parent)
 {
-	setWindowTitle("Language Setup");
+	setWindowTitle(tr("Language Setup"));
 	setModal(true);
 
 	auto * layout = new QVBoxLayout(this);
 
 	auto * combo_layout = new QHBoxLayout;
 
-	combo_layout->addWidget(new QLabel("From:"));
+	combo_layout->addWidget(new QLabel(tr("From:")));
 	m_from_combo = new QComboBox(this);
 	m_from_combo->addItem("English", QString("EN"));
 	m_from_combo->addItem("Polish", QString("PL"));
@@ -27,7 +27,7 @@ first_run_dialog_t::first_run_dialog_t(QWidget * parent)
 	m_from_combo->setCurrentIndex(0);
 	combo_layout->addWidget(m_from_combo);
 
-	combo_layout->addWidget(new QLabel("To:"));
+	combo_layout->addWidget(new QLabel(tr("To:")));
 	m_to_combo = new QComboBox(this);
 	m_to_combo->addItem("English", QString("EN"));
 	m_to_combo->addItem("Polish", QString("PL"));

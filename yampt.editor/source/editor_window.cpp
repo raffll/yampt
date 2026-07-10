@@ -17,7 +17,7 @@ static const QString config_path = "yEditor.ini";
 editor_window_t::editor_window_t(QWidget * parent)
     : QMainWindow(parent)
 {
-	setWindowTitle("yEditor");
+	setWindowTitle(tr("yEditor"));
 	resize(1400, 900);
 
 	auto * central = new QWidget(this);
@@ -46,61 +46,61 @@ editor_window_t::editor_window_t(QWidget * parent)
 
 void editor_window_t::setup_menu_bar()
 {
-	auto * file_menu = menuBar()->addMenu("&File");
+	auto * file_menu = menuBar()->addMenu(tr("&File"));
 
-	auto * load_action = new QAction("Open &Folder...", this);
+	auto * load_action = new QAction(tr("Open &Folder..."), this);
 	load_action->setShortcut(QKeySequence("Ctrl+O"));
-	load_action->setToolTip("Load all plugins from a folder");
+	load_action->setToolTip(tr("Load all plugins from a folder"));
 	file_menu->addAction(load_action);
 	connect(load_action, &QAction::triggered, m_plugin_workspace_view, &plugin_workspace_view_t::on_load_data_files);
 
-	auto * load_mo2_action = new QAction("Open &MO2 Profile...", this);
-	load_mo2_action->setToolTip("Load plugins from a Mod Organizer 2 profile");
+	auto * load_mo2_action = new QAction(tr("Open &MO2 Profile..."), this);
+	load_mo2_action->setToolTip(tr("Load plugins from a Mod Organizer 2 profile"));
 	file_menu->addAction(load_mo2_action);
 	connect(
 	    load_mo2_action, &QAction::triggered, m_plugin_workspace_view, &plugin_workspace_view_t::on_load_mo2_profile);
 
-	auto * load_openmw_action = new QAction("Open Open&MW Config...", this);
-	load_openmw_action->setToolTip("Load plugins from an openmw.cfg file");
+	auto * load_openmw_action = new QAction(tr("Open Open&MW Config..."), this);
+	load_openmw_action->setToolTip(tr("Load plugins from an openmw.cfg file"));
 	file_menu->addAction(load_openmw_action);
 	connect(
 	    load_openmw_action, &QAction::triggered, m_plugin_workspace_view, &plugin_workspace_view_t::on_load_openmw_cfg);
 
 	file_menu->addSeparator();
 
-	auto * unload_action = new QAction("&Unload All", this);
-	unload_action->setToolTip("Unload all plugins and clear the list");
+	auto * unload_action = new QAction(tr("&Unload All"), this);
+	unload_action->setToolTip(tr("Unload all plugins and clear the list"));
 	file_menu->addAction(unload_action);
 	connect(unload_action, &QAction::triggered, m_plugin_workspace_view, &plugin_workspace_view_t::on_unload_all);
 
 	file_menu->addSeparator();
 
-	auto * quit_action = new QAction("&Quit", this);
+	auto * quit_action = new QAction(tr("&Quit"), this);
 	quit_action->setShortcut(QKeySequence("Alt+F4"));
-	quit_action->setToolTip("Exit the application");
+	quit_action->setToolTip(tr("Exit the application"));
 	file_menu->addAction(quit_action);
 	connect(quit_action, &QAction::triggered, this, &QMainWindow::close);
 
-	auto * view_menu = menuBar()->addMenu("&View");
+	auto * view_menu = menuBar()->addMenu(tr("&View"));
 
-	auto * conflicts_action = new QAction("&Conflicts Only", this);
+	auto * conflicts_action = new QAction(tr("&Conflicts Only"), this);
 	conflicts_action->setCheckable(true);
 	conflicts_action->setChecked(m_plugin_workspace_view->is_conflicts_only());
-	conflicts_action->setToolTip("Show only conflicting records");
+	conflicts_action->setToolTip(tr("Show only conflicting records"));
 	view_menu->addAction(conflicts_action);
 	connect(conflicts_action, &QAction::toggled, m_plugin_workspace_view, &plugin_workspace_view_t::set_conflicts_only);
 
-	auto * hide_dup_action = new QAction("&Hide Duplicate Columns", this);
+	auto * hide_dup_action = new QAction(tr("&Hide Duplicate Columns"), this);
 	hide_dup_action->setCheckable(true);
 	hide_dup_action->setChecked(m_plugin_workspace_view->is_hide_duplicates());
-	hide_dup_action->setToolTip("Hide duplicate columns from the same plugin");
+	hide_dup_action->setToolTip(tr("Hide duplicate columns from the same plugin"));
 	view_menu->addAction(hide_dup_action);
 	connect(hide_dup_action, &QAction::toggled, m_plugin_workspace_view, &plugin_workspace_view_t::set_hide_duplicates);
 
-	auto * show_deleted_action = new QAction("Show &Deleted Strikeout", this);
+	auto * show_deleted_action = new QAction(tr("Show &Deleted Strikeout"), this);
 	show_deleted_action->setCheckable(true);
 	show_deleted_action->setChecked(m_plugin_workspace_view->is_show_deleted_strikeout());
-	show_deleted_action->setToolTip("Strikeout deleted records and cell references");
+	show_deleted_action->setToolTip(tr("Strikeout deleted records and cell references"));
 	view_menu->addAction(show_deleted_action);
 	connect(
 	    show_deleted_action,
@@ -110,15 +110,15 @@ void editor_window_t::setup_menu_bar()
 
 	view_menu->addSeparator();
 
-	auto * filter_action = new QAction("&Filter...", this);
-	filter_action->setToolTip("Open the advanced filter dialog");
+	auto * filter_action = new QAction(tr("&Filter..."), this);
+	filter_action->setToolTip(tr("Open the advanced filter dialog"));
 	view_menu->addAction(filter_action);
 	connect(filter_action, &QAction::triggered, m_plugin_workspace_view, &plugin_workspace_view_t::on_advanced_filter);
 
-	auto * tools_menu = menuBar()->addMenu("&Tools");
-	auto * settings_action = new QAction("&Preferences...", this);
+	auto * tools_menu = menuBar()->addMenu(tr("&Tools"));
+	auto * settings_action = new QAction(tr("&Preferences..."), this);
 	settings_action->setShortcut(QKeySequence("Ctrl+,"));
-	settings_action->setToolTip("Open application settings");
+	settings_action->setToolTip(tr("Open application settings"));
 	tools_menu->addAction(settings_action);
 	connect(settings_action, &QAction::triggered, this, &editor_window_t::on_open_settings);
 }
@@ -128,8 +128,8 @@ void editor_window_t::setup_toolbar()
 	auto * toolbar = addToolBar("Main");
 	toolbar->setMovable(false);
 
-	auto * merge_action = new QAction("Create Merged Patch", this);
-	merge_action->setToolTip("Create a merged patch from loaded plugins");
+	auto * merge_action = new QAction(tr("Create Merged Patch"), this);
+	merge_action->setToolTip(tr("Create a merged patch from loaded plugins"));
 	toolbar->addAction(merge_action);
 	connect(
 	    merge_action, &QAction::triggered, m_plugin_workspace_view, &plugin_workspace_view_t::on_create_merged_patch);

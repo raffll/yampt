@@ -14,7 +14,7 @@ editor_settings_dialog_t::editor_settings_dialog_t(settings_store_t & settings, 
     : QDialog(parent)
     , m_settings(settings)
 {
-	setWindowTitle("Settings");
+	setWindowTitle(tr("Settings"));
 	setMinimumSize(600, 450);
 
 	m_category_list = new QListWidget(this);

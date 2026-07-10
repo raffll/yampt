@@ -43,70 +43,70 @@
 
 void main_window_t::setup_menu_bar()
 {
-	auto * file_menu = menuBar()->addMenu("&File");
+	auto * file_menu = menuBar()->addMenu(tr("&File"));
 	m_translator_file_menu = file_menu;
 
-	m_add_folder_action = new QAction("Add &Folder...", this);
+	m_add_folder_action = new QAction(tr("Add &Folder..."), this);
 	file_menu->addAction(m_add_folder_action);
 
-	m_import_archive_action = new QAction("&Import Archive...", this);
+	m_import_archive_action = new QAction(tr("&Import Archive..."), this);
 	file_menu->addAction(m_import_archive_action);
 
 	file_menu->addSeparator();
 
-	m_save_action = new QAction("&Save", this);
+	m_save_action = new QAction(tr("&Save"), this);
 	m_save_action->setShortcut(QKeySequence("Ctrl+S"));
 	file_menu->addAction(m_save_action);
 
-	m_save_all_action = new QAction("Save A&ll", this);
+	m_save_all_action = new QAction(tr("Save A&ll"), this);
 	file_menu->addAction(m_save_all_action);
 
 	file_menu->addSeparator();
 
-	m_quit_action = new QAction("&Quit", this);
+	m_quit_action = new QAction(tr("&Quit"), this);
 	m_quit_action->setShortcut(QKeySequence("Alt+F4"));
 	file_menu->addAction(m_quit_action);
 
-	auto * view_menu = menuBar()->addMenu("&View");
+	auto * view_menu = menuBar()->addMenu(tr("&View"));
 	m_translator_view_menu = view_menu;
 
-	m_sidebar_toggle = new QAction("Toggle &Sidebar", this);
+	m_sidebar_toggle = new QAction(tr("Toggle &Sidebar"), this);
 	m_sidebar_toggle->setCheckable(true);
 	m_sidebar_toggle->setChecked(true);
 	view_menu->addAction(m_sidebar_toggle);
 
-	m_bottom_panel_toggle = new QAction("Toggle &Bottom Panel", this);
+	m_bottom_panel_toggle = new QAction(tr("Toggle &Bottom Panel"), this);
 	m_bottom_panel_toggle->setCheckable(true);
 	m_bottom_panel_toggle->setChecked(true);
 	view_menu->addAction(m_bottom_panel_toggle);
 
 	view_menu->addSeparator();
 
-	m_spell_check = new QAction("&Spell Check", this);
+	m_spell_check = new QAction(tr("&Spell Check"), this);
 	m_spell_check->setCheckable(true);
 	m_spell_check->setChecked(true);
 	view_menu->addAction(m_spell_check);
 
-	m_grammar_check = new QAction("&Grammar Check", this);
+	m_grammar_check = new QAction(tr("&Grammar Check"), this);
 	m_grammar_check->setCheckable(true);
 	m_grammar_check->setChecked(true);
 	view_menu->addAction(m_grammar_check);
 
-	m_whitespace_check = new QAction("&Whitespace Markers", this);
+	m_whitespace_check = new QAction(tr("&Whitespace Markers"), this);
 	m_whitespace_check->setCheckable(true);
 	view_menu->addAction(m_whitespace_check);
 
-	auto * tools_menu = menuBar()->addMenu("&Tools");
-	auto * merge_action = tools_menu->addAction("&Merge Dictionaries...");
-	merge_action->setToolTip("Merge loaded dictionaries into one");
+	auto * tools_menu = menuBar()->addMenu(tr("&Tools"));
+	auto * merge_action = tools_menu->addAction(tr("&Merge Dictionaries..."));
+	merge_action->setToolTip(tr("Merge loaded dictionaries into one"));
 	connect(merge_action, &QAction::triggered, this, [this]() {
 		if (m_dict_ops_controller)
 			m_dict_ops_controller->on_merge();
 	});
 	tools_menu->addSeparator();
-	m_settings_action = tools_menu->addAction("&Preferences...");
+	m_settings_action = tools_menu->addAction(tr("&Preferences..."));
 	m_settings_action->setShortcut(QKeySequence("Ctrl+,"));
-	m_settings_action->setToolTip("Open application settings");
+	m_settings_action->setToolTip(tr("Open application settings"));
 	connect(m_settings_action, &QAction::triggered, this, &main_window_t::on_open_settings);
 }
 
@@ -115,48 +115,48 @@ void main_window_t::setup_toolbar()
 	m_toolbar = new QToolBar(this);
 	m_toolbar->setMovable(false);
 
-	m_search_label = new QLabel("Filter by: ", this);
+	m_search_label = new QLabel(tr("Filter by: "), this);
 	m_search_label->setStyleSheet("QLabel:disabled { color: rgb(180,180,180); }");
 	m_toolbar->addWidget(m_search_label);
 
 	m_search_field = new QLineEdit(this);
-	m_search_field->setPlaceholderText("Search...");
+	m_search_field->setPlaceholderText(tr("Search..."));
 	m_toolbar->addWidget(m_search_field);
 
 	m_case_sensitive_check = new QToolButton(this);
-	m_case_sensitive_check->setText("Aa");
+	m_case_sensitive_check->setText(tr("Aa"));
 	m_case_sensitive_check->setCheckable(true);
 	m_toolbar->addWidget(m_case_sensitive_check);
 
 	m_regex_check = new QToolButton(this);
-	m_regex_check->setText(".*");
+	m_regex_check->setText(tr(".*"));
 	m_regex_check->setCheckable(true);
 	m_toolbar->addWidget(m_regex_check);
 
 	m_search_col_key = new QToolButton(this);
-	m_search_col_key->setText("Key");
+	m_search_col_key->setText(tr("Key"));
 	m_search_col_key->setCheckable(true);
 	m_search_col_key->setChecked(true);
 	m_toolbar->addWidget(m_search_col_key);
 
 	m_search_col_original = new QToolButton(this);
-	m_search_col_original->setText("Original");
+	m_search_col_original->setText(tr("Original"));
 	m_search_col_original->setCheckable(true);
 	m_search_col_original->setChecked(true);
 	m_toolbar->addWidget(m_search_col_original);
 
 	m_search_col_translation = new QToolButton(this);
-	m_search_col_translation->setText("Translation");
+	m_search_col_translation->setText(tr("Translation"));
 	m_search_col_translation->setCheckable(true);
 	m_search_col_translation->setChecked(true);
 	m_toolbar->addWidget(m_search_col_translation);
 
-	m_search_field->setToolTip("Search across entries");
-	m_case_sensitive_check->setToolTip("Case-sensitive search");
-	m_regex_check->setToolTip("Regular expression search");
-	m_search_col_key->setToolTip("Search in key column");
-	m_search_col_original->setToolTip("Search in original column");
-	m_search_col_translation->setToolTip("Search in translation column");
+	m_search_field->setToolTip(tr("Search across entries"));
+	m_case_sensitive_check->setToolTip(tr("Case-sensitive search"));
+	m_regex_check->setToolTip(tr("Regular expression search"));
+	m_search_col_key->setToolTip(tr("Search in key column"));
+	m_search_col_original->setToolTip(tr("Search in original column"));
+	m_search_col_translation->setToolTip(tr("Search in translation column"));
 
 	m_find_action = new QAction(this);
 	m_find_action->setShortcut(QKeySequence("Ctrl+F"));
@@ -192,8 +192,8 @@ void main_window_t::setup_sidebar()
 
 	m_left_tabs = new QTabWidget(m_left_splitter);
 	m_sidebar = new sidebar_view_t(m_left_tabs);
-	m_left_tabs->addTab(m_sidebar, "Files");
-	m_left_tabs->addTab(m_filter_tree_view, "Filters");
+	m_left_tabs->addTab(m_sidebar, tr("Files"));
+	m_left_tabs->addTab(m_filter_tree_view, tr("Filters"));
 	m_left_splitter->addWidget(m_left_tabs);
 
 	m_info_tabs = new QTabWidget(m_left_splitter);
@@ -204,9 +204,9 @@ void main_window_t::setup_sidebar()
 	m_translation_tab->set_glossary_fn([this](const std::string & text) { return m_glossary.apply_glossary(text); });
 	m_find_replace_dialog = new find_replace_dialog_t(this);
 	m_find_replace_dialog->setVisible(false);
-	m_info_tabs->addTab(m_annotations_view, "Annotations");
-	m_info_tabs->addTab(m_history_view, "History");
-	m_info_tabs->addTab(m_translation_tab, "Translate");
+	m_info_tabs->addTab(m_annotations_view, tr("Annotations"));
+	m_info_tabs->addTab(m_history_view, tr("History"));
+	m_info_tabs->addTab(m_translation_tab, tr("Translate"));
 	m_left_splitter->addWidget(m_info_tabs);
 }
 
@@ -225,9 +225,9 @@ void main_window_t::setup_editor_panel()
 	m_table_view->setModel(m_table_model);
 	m_book_preview_view = new book_preview_view_t(m_record_tabs);
 	m_log_view = new log_view_t(m_record_tabs);
-	m_record_tabs->addTab(m_table_view, "Records");
-	m_record_tabs->addTab(m_book_preview_view, "Book Preview");
-	m_record_tabs->addTab(m_log_view, "Log");
+	m_record_tabs->addTab(m_table_view, tr("Records"));
+	m_record_tabs->addTab(m_book_preview_view, tr("Book Preview"));
+	m_record_tabs->addTab(m_log_view, tr("Log"));
 	right_top_layout->addWidget(m_record_tabs, 1);
 
 	m_right_splitter->addWidget(right_top_widget);
@@ -329,7 +329,7 @@ void main_window_t::connect_menu_signals()
 	    this,
 	    [this]()
 	{
-		const auto folder = QFileDialog::getExistingDirectory(this, "Add Folder");
+		const auto folder = QFileDialog::getExistingDirectory(this, tr("Add Folder"));
 		if (folder.isEmpty())
 			return;
 
@@ -414,7 +414,7 @@ void main_window_t::connect_menu_signals()
 		if (result.found)
 			on_row_selected(result.row);
 		else
-			statusBar()->showMessage("No match found", 3000);
+			statusBar()->showMessage(tr("No match found"), 3000);
 	});
 
 	connect(
@@ -457,7 +457,7 @@ void main_window_t::connect_menu_signals()
 				load_record(m_editor_controller.current_row());
 		}
 
-		statusBar()->showMessage(QString("Replaced in %1 entries").arg(result.count), 5000);
+		statusBar()->showMessage(tr("Replaced in %1 entries").arg(result.count), 5000);
 	});
 }
 

@@ -174,7 +174,7 @@ void sidebar_view_t::show_folder_context_menu(QTreeWidgetItem * item, const QPoi
 	if (!root_path.isEmpty())
 	{
 		QMenu menu(this);
-		auto * remove_action = menu.addAction("Remove Folder");
+		auto * remove_action = menu.addAction(tr("Remove Folder"));
 		auto * selected = menu.exec(m_tree->viewport()->mapToGlobal(pos));
 		if (selected == remove_action)
 			emit remove_folder_requested(root_path.toStdString());
@@ -186,7 +186,7 @@ void sidebar_view_t::show_folder_context_menu(QTreeWidgetItem * item, const QPoi
 	if (!folder_path.isEmpty())
 	{
 		QMenu menu(this);
-		auto * delete_action = menu.addAction("Delete Folder");
+		auto * delete_action = menu.addAction(tr("Delete Folder"));
 		auto * selected = menu.exec(m_tree->viewport()->mapToGlobal(pos));
 		if (selected == delete_action)
 			emit delete_folder_requested(folder_path.toStdString());
@@ -196,13 +196,13 @@ void sidebar_view_t::show_folder_context_menu(QTreeWidgetItem * item, const QPoi
 void sidebar_view_t::show_plugin_context_menu(const std::string & path, const QPoint & pos)
 {
 	QMenu menu(this);
-	auto * make_dict_action = menu.addAction("Make Dictionary");
-	auto * make_base_action = menu.addAction("Make Base");
+	auto * make_dict_action = menu.addAction(tr("Make Dictionary"));
+	auto * make_base_action = menu.addAction(tr("Make Base"));
 	menu.addSeparator();
-	auto * convert_action = menu.addAction("Convert");
-	auto * create_action = menu.addAction("Create");
+	auto * convert_action = menu.addAction(tr("Convert"));
+	auto * create_action = menu.addAction(tr("Create"));
 	menu.addSeparator();
-	auto * delete_action = menu.addAction("Delete");
+	auto * delete_action = menu.addAction(tr("Delete"));
 
 	auto * selected = menu.exec(m_tree->viewport()->mapToGlobal(pos));
 	if (selected == make_dict_action)
@@ -220,9 +220,9 @@ void sidebar_view_t::show_plugin_context_menu(const std::string & path, const QP
 void sidebar_view_t::show_dict_context_menu(const std::string & path, const QPoint & pos)
 {
 	QMenu menu(this);
-	auto * save_action = menu.addAction("Save");
+	auto * save_action = menu.addAction(tr("Save"));
 	menu.addSeparator();
-	auto * delete_action = menu.addAction("Delete");
+	auto * delete_action = menu.addAction(tr("Delete"));
 
 	auto * selected = menu.exec(m_tree->viewport()->mapToGlobal(pos));
 	if (selected == save_action)
@@ -234,11 +234,11 @@ void sidebar_view_t::show_dict_context_menu(const std::string & path, const QPoi
 void sidebar_view_t::show_yaml_context_menu(const std::string & path, const QPoint & pos)
 {
 	QMenu menu(this);
-	auto * save_action = menu.addAction("Save");
-	auto * export_native_action = menu.addAction("Export");
-	export_native_action->setToolTip("Create native language YAML from this source file");
+	auto * save_action = menu.addAction(tr("Save"));
+	auto * export_native_action = menu.addAction(tr("Export"));
+	export_native_action->setToolTip(tr("Create native language YAML from this source file"));
 	menu.addSeparator();
-	auto * delete_action = menu.addAction("Delete");
+	auto * delete_action = menu.addAction(tr("Delete"));
 
 	auto * selected = menu.exec(m_tree->viewport()->mapToGlobal(pos));
 	if (selected == save_action)

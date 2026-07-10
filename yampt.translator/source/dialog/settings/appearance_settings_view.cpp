@@ -10,13 +10,13 @@ appearance_settings_view_t::appearance_settings_view_t(QWidget * parent)
 {
 	auto * layout = new QVBoxLayout(this);
 
-	auto * label = new QLabel("Theme:", this);
+	auto * label = new QLabel(tr("Theme:"), this);
 	layout->addWidget(label);
 
 	m_theme_combo = new QComboBox(this);
 	m_theme_combo->addItem("Light");
 	m_theme_combo->addItem("Dark");
-	m_theme_combo->setToolTip("Switch between light and dark color theme");
+	m_theme_combo->setToolTip(tr("Switch between light and dark color theme"));
 	layout->addWidget(m_theme_combo);
 
 	layout->addStretch();

@@ -33,7 +33,7 @@ merge_settings_view_t::merge_settings_view_t(QWidget * parent)
 void merge_settings_view_t::setup_record_types_group()
 {
 	auto * parent_layout = qobject_cast<QVBoxLayout *>(layout());
-	auto * group = new QGroupBox("Record Types", this);
+	auto * group = new QGroupBox(tr("Record Types"), this);
 	auto * grid = new QGridLayout(group);
 
 	for (int i = 0; i < record_type_count; ++i)
@@ -53,33 +53,33 @@ void merge_settings_view_t::setup_exclusion_group()
 {
 	auto * parent_layout = qobject_cast<QVBoxLayout *>(layout());
 
-	auto * label = new QLabel("Exclusion pattern (regex):", this);
+	auto * label = new QLabel(tr("Exclusion pattern (regex):"), this);
 	parent_layout->addWidget(label);
 
 	m_exclusion_edit = new QLineEdit(this);
-	m_exclusion_edit->setToolTip("Records matching this regex are excluded from merge");
+	m_exclusion_edit->setToolTip(tr("Records matching this regex are excluded from merge"));
 	parent_layout->addWidget(m_exclusion_edit);
 }
 
 void merge_settings_view_t::setup_fixes_group()
 {
 	auto * parent_layout = qobject_cast<QVBoxLayout *>(layout());
-	auto * group = new QGroupBox("Bug Fixes", this);
+	auto * group = new QGroupBox(tr("Bug Fixes"), this);
 	auto * fixes_layout = new QVBoxLayout(group);
 
 	m_fog_fix_check = new QCheckBox("Fix fog density", group);
 	m_fog_fix_check->setChecked(true);
-	m_fog_fix_check->setToolTip("Fix zero fog density in interior cells");
+	m_fog_fix_check->setToolTip(tr("Fix zero fog density in interior cells"));
 	fixes_layout->addWidget(m_fog_fix_check);
 
 	m_summon_fix_check = new QCheckBox("Fix summon persistence", group);
 	m_summon_fix_check->setChecked(true);
-	m_summon_fix_check->setToolTip("Add persistent flag to summoned creatures");
+	m_summon_fix_check->setToolTip(tr("Add persistent flag to summoned creatures"));
 	fixes_layout->addWidget(m_summon_fix_check);
 
 	m_cell_name_fix_check = new QCheckBox("Fix cell name reversion", group);
 	m_cell_name_fix_check->setChecked(true);
-	m_cell_name_fix_check->setToolTip("Prevent cell name reversions by later plugins");
+	m_cell_name_fix_check->setToolTip(tr("Prevent cell name reversions by later plugins"));
 	fixes_layout->addWidget(m_cell_name_fix_check);
 
 	parent_layout->addWidget(group);

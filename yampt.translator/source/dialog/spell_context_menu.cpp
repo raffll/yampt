@@ -2,6 +2,7 @@
 #include "../editor/spell_checker.hpp"
 #include "../view/translation_edit_view.hpp"
 #include <QAction>
+#include <QCoreApplication>
 #include <QMenu>
 #include <QSyntaxHighlighter>
 #include <QTextCursor>
@@ -33,7 +34,7 @@ void spell_context_menu_t::show_menu(translation_edit_view_t * editor, const QPo
 		menu.addAction(QString::fromStdString(suggestion));
 
 	menu.addSeparator();
-	auto * add_action = menu.addAction("Add to dictionary");
+	auto * add_action = menu.addAction(QCoreApplication::translate("yTranslator", "Add to dictionary"));
 
 	auto * selected = menu.exec(editor->mapToGlobal(pos));
 	if (!selected)

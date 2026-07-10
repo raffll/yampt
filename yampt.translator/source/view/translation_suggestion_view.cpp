@@ -29,12 +29,12 @@ translation_suggestion_view_t::translation_suggestion_view_t(QWidget * parent)
 	m_provider_combo->addItem("CTranslate2");
 	m_provider_combo->addItem("DeepL (not supported)");
 	m_provider_combo->addItem("Google (not supported)");
-	m_provider_combo->setToolTip("Select translation provider");
+	m_provider_combo->setToolTip(tr("Select translation provider"));
 	m_provider_combo->setFixedWidth(180);
 	top_row->addWidget(m_provider_combo);
 
-	m_translate_all_btn = new QPushButton("Translate", this);
-	m_translate_all_btn->setToolTip("Translate the selected entry");
+	m_translate_all_btn = new QPushButton(tr("Translate"), this);
+	m_translate_all_btn->setToolTip(tr("Translate the selected entry"));
 	m_translate_all_btn->setFixedWidth(100);
 	top_row->addWidget(m_translate_all_btn);
 
@@ -43,7 +43,7 @@ translation_suggestion_view_t::translation_suggestion_view_t(QWidget * parent)
 
 	m_result_text = new QPlainTextEdit(this);
 	m_result_text->setReadOnly(true);
-	m_result_text->setPlaceholderText("Translation suggestion will appear here");
+	m_result_text->setPlaceholderText(tr("Translation suggestion will appear here"));
 	layout->addWidget(m_result_text);
 
 	m_status_label = new QLabel(this);
@@ -71,7 +71,7 @@ void translation_suggestion_view_t::setup_controls()
 		m_translate_all_btn->setEnabled(index == 0);
 
 		if (index > 0)
-			m_status_label->setText("Provider not supported yet");
+			m_status_label->setText(tr("Provider not supported yet"));
 		else
 			update_provider_status();
 	});
@@ -143,9 +143,9 @@ void translation_suggestion_view_t::update_provider_status()
 	if (provider == m_ct2_provider)
 	{
 		if (m_ct2_provider->is_available())
-			m_status_label->setText("CTranslate2: model loaded");
+			m_status_label->setText(tr("CTranslate2: model loaded"));
 		else
-			m_status_label->setText("CTranslate2: no model");
+			m_status_label->setText(tr("CTranslate2: no model"));
 	}
 	else if (provider == m_deepl_translator)
 	{
@@ -156,15 +156,15 @@ void translation_suggestion_view_t::update_provider_status()
 		}
 		else
 		{
-			m_status_label->setText("DeepL: no API key");
+			m_status_label->setText(tr("DeepL: no API key"));
 		}
 	}
 	else if (provider == m_google_translator)
 	{
 		if (m_google_translator->is_available())
-			m_status_label->setText("Google: active");
+			m_status_label->setText(tr("Google: active"));
 		else
-			m_status_label->setText("Google: no API key");
+			m_status_label->setText(tr("Google: no API key"));
 	}
 }
 

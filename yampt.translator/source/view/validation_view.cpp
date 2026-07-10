@@ -8,7 +8,7 @@ validation_view_t::validation_view_t(QWidget * parent)
 	auto * layout = new QHBoxLayout(this);
 	layout->setContentsMargins(0, 0, 0, 0);
 
-	m_label = new QLabel("0 / 0", this);
+	m_label = new QLabel(tr("0 / 0"), this);
 	layout->addWidget(m_label);
 }
 

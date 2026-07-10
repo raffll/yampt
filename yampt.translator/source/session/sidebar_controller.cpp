@@ -117,7 +117,7 @@ void sidebar_controller_t::on_delete_requested(const std::string & path)
 	if (!QFile::remove(QString::fromStdString(path)))
 	{
 		QMessageBox::warning(
-		    m_deps.parent_widget, "Error", QString("Failed to delete \"%1\".").arg(QString::fromStdString(filename)));
+		    m_deps.parent_widget, QCoreApplication::translate("yTranslator", "Error"), QString("Failed to delete \"%1\".").arg(QString::fromStdString(filename)));
 		return;
 	}
 

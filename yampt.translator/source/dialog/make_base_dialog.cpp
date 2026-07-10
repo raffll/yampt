@@ -23,12 +23,12 @@ make_base_dialog_t::make_base_dialog_t(
     , m_file_list(file_list)
     , m_settings(settings)
 {
-	setWindowTitle("Make Base");
+	setWindowTitle(tr("Make Base"));
 	setModal(true);
 	resize(450, 400);
 
 	auto * layout = new QVBoxLayout(this);
-	layout->addWidget(new QLabel("Select the native ESM:", this));
+	layout->addWidget(new QLabel(tr("Select the native ESM:"), this));
 
 	auto * tree = new QTreeWidget(this);
 	tree->setHeaderHidden(true);
@@ -38,13 +38,13 @@ make_base_dialog_t::make_base_dialog_t(
 
 	populate_plugin_tree(source_plugin_path);
 
-	auto * mode_group = new QGroupBox("Identical text handling", this);
+	auto * mode_group = new QGroupBox(tr("Identical text handling"), this);
 	auto * mode_layout = new QVBoxLayout(mode_group);
-	auto * radio_full = new QRadioButton("Full (identical marked as Translated)", mode_group);
-	auto * radio_partial = new QRadioButton("Partial (identical marked as Untranslated)", mode_group);
+	auto * radio_full = new QRadioButton(tr("Full (identical marked as Translated)"), mode_group);
+	auto * radio_partial = new QRadioButton(tr("Partial (identical marked as Untranslated)"), mode_group);
 	radio_full->setChecked(true);
-	radio_full->setToolTip("Use to create base dictionary from a fully translated file");
-	radio_partial->setToolTip("Use to create base dictionary from a partially translated file");
+	radio_full->setToolTip(tr("Use to create base dictionary from a fully translated file"));
+	radio_partial->setToolTip(tr("Use to create base dictionary from a partially translated file"));
 	mode_layout->addWidget(radio_full);
 	mode_layout->addWidget(radio_partial);
 

@@ -18,7 +18,7 @@ translator_settings_dialog_t::translator_settings_dialog_t(
     : QDialog(parent)
     , m_settings(settings)
 {
-	setWindowTitle("Settings");
+	setWindowTitle(tr("Settings"));
 	setMinimumSize(600, 450);
 
 	m_category_list = new QListWidget(this);

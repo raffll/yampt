@@ -76,10 +76,10 @@ void record_table_view_t::contextMenuEvent(QContextMenuEvent * event)
 
 	auto * menu = new QMenu(this);
 
-	auto * act_translated = menu->addAction("Set Translated");
-	auto * act_in_progress = menu->addAction("Set In Progress");
-	auto * act_untranslated = menu->addAction("Set Untranslated");
-	auto * act_error = menu->addAction("Set Error");
+	auto * act_translated = menu->addAction(tr("Set Translated"));
+	auto * act_in_progress = menu->addAction(tr("Set In Progress"));
+	auto * act_untranslated = menu->addAction(tr("Set Untranslated"));
+	auto * act_error = menu->addAction(tr("Set Error"));
 
 	auto * chosen = menu->exec(event->globalPos());
 	std::optional<status_t> new_status;

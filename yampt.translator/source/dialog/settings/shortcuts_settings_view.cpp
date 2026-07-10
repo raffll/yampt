@@ -30,7 +30,7 @@ shortcuts_settings_view_t::shortcuts_settings_view_t(QWidget * parent)
 
 	auto * layout = new QVBoxLayout(this);
 
-	auto * editable_label = new QLabel("Application Shortcuts (double-click to edit):", this);
+	auto * editable_label = new QLabel(tr("Application Shortcuts (double-click to edit):"), this);
 	layout->addWidget(editable_label);
 
 	m_table = new QTableWidget(m_total_row_count, 2, this);
@@ -79,8 +79,8 @@ shortcuts_settings_view_t::shortcuts_settings_view_t(QWidget * parent)
 	m_conflict_label->setVisible(false);
 	layout->addWidget(m_conflict_label);
 
-	m_reset_button = new QPushButton("Reset to Defaults", this);
-	m_reset_button->setToolTip("Restore all shortcuts to defaults");
+	m_reset_button = new QPushButton(tr("Reset to Defaults"), this);
+	m_reset_button->setToolTip(tr("Restore all shortcuts to defaults"));
 	layout->addWidget(m_reset_button);
 
 	connect(m_table, &QTableWidget::cellDoubleClicked, this, &shortcuts_settings_view_t::on_cell_double_clicked);

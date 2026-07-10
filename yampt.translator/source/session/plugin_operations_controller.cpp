@@ -46,8 +46,8 @@ void plugin_operations_controller_t::on_plugin_operation(const std::string & plu
 	{
 		auto answer = QMessageBox::question(
 		    m_deps.parent_widget,
-		    "Unsaved Changes",
-		    "Some dictionaries have unsaved changes. Save before proceeding?",
+		    QCoreApplication::translate("yTranslator", "Unsaved Changes"),
+		    QCoreApplication::translate("yTranslator", "Some dictionaries have unsaved changes. Save before proceeding?"),
 		    QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
 
 		if (answer == QMessageBox::Cancel)
@@ -66,7 +66,7 @@ void plugin_operations_controller_t::on_plugin_operation(const std::string & plu
 		auto entries = build_dict_entries(plugin_dir);
 
 		dict_selection_dialog_t dialog(entries, m_deps.settings.last_merge_order(), m_deps.parent_widget);
-		dialog.setWindowTitle("Select Dictionaries");
+		dialog.setWindowTitle(QCoreApplication::translate("yTranslator", "Select Dictionaries"));
 		if (dialog.exec() != QDialog::Accepted)
 			return;
 
@@ -108,7 +108,7 @@ void plugin_operations_controller_t::on_plugin_operation(const std::string & plu
 		auto entries = build_dict_entries(plugin_dir);
 
 		dict_selection_dialog_t dialog(entries, m_deps.settings.last_merge_order(), m_deps.parent_widget);
-		dialog.setWindowTitle("Select Dictionaries for Convert");
+		dialog.setWindowTitle(QCoreApplication::translate("yTranslator", "Select Dictionaries for Convert"));
 		if (dialog.exec() != QDialog::Accepted)
 			return;
 
@@ -129,7 +129,7 @@ void plugin_operations_controller_t::on_plugin_operation(const std::string & plu
 		auto entries = build_dict_entries(plugin_dir);
 
 		dict_selection_dialog_t dialog(entries, m_deps.settings.last_merge_order(), m_deps.parent_widget);
-		dialog.setWindowTitle("Select Dictionaries for Create");
+		dialog.setWindowTitle(QCoreApplication::translate("yTranslator", "Select Dictionaries for Create"));
 		if (dialog.exec() != QDialog::Accepted)
 			return;
 
