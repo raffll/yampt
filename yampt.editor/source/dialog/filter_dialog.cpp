@@ -68,7 +68,7 @@ filter_dialog_t::filter_dialog_t(const std::vector<std::string> & available_type
 	{
 		auto * item = new QListWidgetItem(QString::fromStdString(t));
 		item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
-		item->setCheckState(Qt::Checked);
+		item->setCheckState(Qt::Unchecked);
 		m_lst_types->addItem(item);
 	}
 	type_layout->addWidget(m_lst_types);

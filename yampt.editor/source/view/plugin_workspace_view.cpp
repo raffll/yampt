@@ -475,19 +475,46 @@ void plugin_workspace_view_t::update_status()
 	    QString("%1 plugins, %2 records, %3 conflicts").arg(plugin_count).arg(record_count).arg(conflict_count));
 
 	const auto info = m_nav_view->current_selection();
+
+	auto mode_prefix = build_mode_prefix();
+
 	if (info.plugin_idx >= 0)
 	{
 		if (!info.record_id.empty())
-			m_status_label->setText(QString::fromStdString(info.rec_type + " : " + info.record_id));
+			m_status_label->setText(mode_prefix + QString::fromStdString(info.rec_type + " : " + info.record_id));
 		else if (!info.rec_type.empty())
-			m_status_label->setText(QString::fromStdString(info.rec_type));
+			m_status_label->setText(mode_prefix + QString::fromStdString(info.rec_type));
 		else
-			m_status_label->setText(QString::fromStdString(m_session->scan().plugin_filename(info.plugin_idx)));
+			m_status_label->setText(mode_prefix + QString::fromStdString(m_session->scan().plugin_filename(info.plugin_idx)));
 	}
 	else
 	{
-		m_status_label->clear();
+		m_status_label->setText(mode_prefix.trimmed());
 	}
+}
+
+QString plugin_workspace_view_t::build_mode_prefix() const
+{
+	if (!m_session || m_session->load_base_path().empty())
+		return {};
+
+	QString mode_tag;
+	switch (m_session->load_source())
+	{
+	case plugin_session_t::load_source_t::folder:
+		mode_tag = "[Folder]";
+		break;
+	case plugin_session_t::load_source_t::mo2_profile:
+		mode_tag = "[MO2]";
+		break;
+	case plugin_session_t::load_source_t::openmw_cfg:
+		mode_tag = "[OpenMW]";
+		break;
+	default:
+		return {};
+	}
+
+	return mode_tag + " " + QString::fromStdString(m_session->load_base_path()) + " : ";
 }
 
 void plugin_workspace_view_t::log_message(const std::string & msg)

@@ -21,8 +21,12 @@
 - Lua l10n workflow: opening a native YAML allows editing, opening a foreign YAML shows read-only reference
 - Lua l10n workflow: save writes only translated entries to the native file
 - Lua l10n workflow: export creates a scaffold native file with all keys
-- Merge Dictionaries moved to Tools menu
+- Merge Dictionaries in Tools menu
 - View menu: Spell Check toggle
+
+### Added — yEditor
+- Guard Patch: plugins before guard are excluded from merge for records the guard contains
+- Status bar shows load mode and path
 
 ### Added — Both Apps
 - Localization support: all UI strings wrapped with `tr()` for Qt translation system
@@ -41,6 +45,11 @@
 - API key fields: removed Show/Hide toggle buttons (always masked)
 - Convert/Create: preserves original file timestamp
 
+### Changed — yEditor
+- Right panel columns redistribute on resize to fill available width
+- Nav tree decodes codepage characters correctly
+- Filter dialog: record type list unchecked by default (all unchecked = show all)
+
 ### Fixed — yTranslator
 - Annotation highlight misalignment
 - Dictionary marked dirty on row click without editing
@@ -48,11 +57,6 @@
 - Whitespace markers: newline indicator now visible at line breaks
 - Spell check: dictionary now loads correctly on startup
 - Grammar check: missing punctuation no longer flagged while cursor is at end of text
-- Translation log: newline separator between result and subsequent messages
-- Filter counters cleared when switching from dict to YAML document
-- Edit history recorded for inline table editing and regular editing
-- Glossary annotation updated on commit (regression from refactor)
-- Keyboard shortcuts no longer crash on null controller
 
 
 ## [0.842] - 2026-07-05

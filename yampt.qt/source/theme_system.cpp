@@ -159,6 +159,7 @@ void theme_system_t::apply_palette() const
 		palette.setColor(QPalette::ButtonText, Qt::black);
 		palette.setColor(QPalette::Mid, QColor(160, 160, 160));
 		palette.setColor(QPalette::Dark, QColor(130, 130, 130));
+		palette.setColor(QPalette::Shadow, QColor(80, 80, 80));
 		palette.setColor(QPalette::Highlight, QColor(70, 130, 200));
 		palette.setColor(QPalette::HighlightedText, Qt::white);
 	}

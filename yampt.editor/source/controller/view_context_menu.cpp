@@ -78,7 +78,7 @@ void view_context_menu_t::show_nav_menu(const QPoint & global_pos, const nav_tre
 		});
 
 		menu.addAction(
-		    is_patch ? "Unmark as Patch" : "Mark as Patch",
+		    is_patch ? "Unmark as Guard Patch" : "Mark as Guard Patch",
 		    [this, filename, is_patch]()
 		{
 			auto patch_copy = m_session.patch_plugins();

@@ -2,7 +2,9 @@
 #include <scanner/plugin_scan.hpp>
 #include <QHeaderView>
 #include <QPainter>
+#include <QResizeEvent>
 #include <QStyledItemDelegate>
+#include <QTimer>
 #include <QStyleOptionHeader>
 #include <QTreeView>
 #include <QVBoxLayout>
@@ -122,7 +124,7 @@ void record_view_t::display_record(plugin_scan_t & scan, const conflict_entry_t 
 	}
 
 	expand_non_numeric_groups();
-	apply_column_sizing();
+	QTimer::singleShot(0, this, [this]() { apply_column_sizing(); });
 }
 
 void record_view_t::clear()
@@ -186,4 +188,12 @@ void record_view_t::apply_column_sizing()
 	m_tree->setColumnWidth(0, label_width);
 	for (int i = 1; i < col_count; ++i)
 		m_tree->setColumnWidth(i, per_col);
+}
+
+void record_view_t::resizeEvent(QResizeEvent * event)
+{
+	QWidget::resizeEvent(event);
+
+	if (m_model->columnCount({}) > 1)
+		apply_column_sizing();
 }

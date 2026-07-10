@@ -277,3 +277,103 @@ TEST_CASE("commit_orchestrator::execute, skips propagation for model intent", "[
 
 	cleanup(path);
 }
+
+TEST_CASE("commit_orchestrator::execute, empty text commits successfully", "[i][qt]")
+{
+	auto data = make_dict_with_entry("Hello", status_t::untranslated);
+	const auto path = create_dict(data);
+	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
+
+	edit_history_t history;
+	byte_limit_validator_t validator;
+	glossary_t glossary;
+
+	const auto row = make_row("Hello", status_t::untranslated);
+	const auto output = commit_orchestrator::execute(
+	    { row, "Hello", "", status_t::in_progress },
+	    doc, history, validator, glossary);
+
+	REQUIRE(output.result.success);
+	REQUIRE(output.result.new_text.empty());
+
+	cleanup(path);
+}
+
+TEST_CASE("commit_orchestrator::execute, same text as old still commits", "[i][qt]")
+{
+	auto data = make_dict_with_entry("Same", status_t::untranslated);
+	const auto path = create_dict(data);
+	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
+
+	edit_history_t history;
+	byte_limit_validator_t validator;
+	glossary_t glossary;
+
+	const auto row = make_row("Same", status_t::untranslated);
+	const auto output = commit_orchestrator::execute(
+	    { row, "Same", "Same", status_t::in_progress },
+	    doc, history, validator, glossary);
+
+	REQUIRE(output.result.success);
+	REQUIRE(output.result.propagated_count == 0);
+
+	cleanup(path);
+}
+
+TEST_CASE("commit_orchestrator::execute, history records old text not new", "[i][qt]")
+{
+	auto data = make_dict_with_entry("Original", status_t::untranslated);
+	const auto path = create_dict(data);
+	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
+
+	edit_history_t history;
+	byte_limit_validator_t validator;
+	glossary_t glossary;
+
+	const auto row = make_row("Original", status_t::untranslated);
+	commit_orchestrator::execute(
+	    { row, "Previous", "New", status_t::in_progress },
+	    doc, history, validator, glossary);
+
+	const auto entries = history.get_history(rec_type_t::cell, "test_key");
+	REQUIRE(entries.size() == 1);
+	REQUIRE(entries[0].value == "Previous");
+	REQUIRE(entries[0].status == status_t::untranslated);
+
+	cleanup(path);
+}
+
+TEST_CASE("commit_orchestrator::execute, multiple commits build history", "[i][qt]")
+{
+	auto data = make_dict_with_entry("Start", status_t::untranslated);
+	const auto path = create_dict(data);
+	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
+
+	edit_history_t history;
+	byte_limit_validator_t validator;
+	glossary_t glossary;
+
+	const auto row = make_row("Start", status_t::untranslated);
+
+	commit_orchestrator::execute(
+	    { row, "Start", "Middle", status_t::in_progress },
+	    doc, history, validator, glossary);
+
+	table_row_t row2;
+	row2.type = rec_type_t::cell;
+	row2.key_text = "test_key";
+	row2.old_text = "Start";
+	row2.status = status_t::in_progress;
+	row2.record_index = 0;
+
+	commit_orchestrator::execute(
+	    { row2, "Middle", "Final", status_t::model },
+	    doc, history, validator, glossary);
+
+	const auto entries = history.get_history(rec_type_t::cell, "test_key");
+	REQUIRE(entries.size() == 2);
+	REQUIRE(entries[0].value == "Start");
+	REQUIRE(entries[1].value == "Middle");
+
+	cleanup(path);
+}

@@ -80,6 +80,7 @@ private:
 	void rebuild_nav_preserving_state();
 	void load_plugins_from_paths(const std::vector<std::string> & paths, const std::string & base_path);
 	void display_record_in_view(const conflict_entry_t & entry);
+	QString build_mode_prefix() const;
 
 	settings_store_t & m_settings;
 	plugin_session_t * m_session = nullptr;

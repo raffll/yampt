@@ -44,6 +44,26 @@ void auto_merge_t::build_record_groups()
 	m_groups.clear();
 	std::unordered_map<std::string, size_t> lookup;
 
+	int guard_index = -1;
+	for (int i = 0; i < static_cast<int>(m_scan.plugin_count()); ++i)
+	{
+		if (m_config.patch_plugins.count(m_scan.plugin_filename(i)) > 0)
+			guard_index = i;
+	}
+
+	std::set<std::string> guard_records;
+	if (guard_index >= 0)
+	{
+		const auto & guard_idx = m_scan.index(guard_index);
+		for (const auto & rec : guard_idx.entries())
+		{
+			if (rec.rec_type == "TES3")
+				continue;
+
+			guard_records.insert(rec.rec_type + "\x00" + rec.record_id);
+		}
+	}
+
 	for (int pi = 0; pi < static_cast<int>(m_scan.plugin_count()); ++pi)
 	{
 		if (!is_plugin_included(pi))
@@ -56,6 +76,10 @@ void auto_merge_t::build_record_groups()
 				continue;
 
 			const auto key = rec.rec_type + "\x00" + rec.record_id;
+
+			if (guard_index >= 0 && pi < guard_index && guard_records.count(key) > 0)
+				continue;
+
 			auto it_found = lookup.find(key);
 
 			if (it_found == lookup.end())

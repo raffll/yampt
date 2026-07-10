@@ -110,3 +110,16 @@ Never call `expandAll()`, `collapseAll()`, or manually expand/collapse tree node
 Default expansion:
 - Left panel (nav tree): collapsed
 - Right panel (view tree): expanded via `expandAll()` on each new record display
+
+## QMenu Checkbox Indicator — Known Qt Bug
+
+In Qt6 Fusion style (light theme), unchecked checkable menu actions have no visible indicator border — the checkbox area is invisible until checked. This is a known Qt limitation.
+
+Attempted fixes that did NOT work:
+- `QMenu::indicator:unchecked { border: 1px solid ... }` — breaks entire menu rendering
+- `QPalette::Shadow` set to darker value — no effect on menu indicators
+- `QCheckBox::indicator` stylesheet — targets wrong widget type, menu uses different rendering
+
+The only viable fix would be a `QProxyStyle` overriding `drawPrimitive(PE_IndicatorMenuCheckMark)` — significant boilerplate for a cosmetic issue. Not worth implementing unless switching to a fully custom style.
+
+Do NOT attempt stylesheet-based fixes for this — they all break the theme.
