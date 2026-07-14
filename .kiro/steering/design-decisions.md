@@ -92,14 +92,16 @@ The `chapter_t::old_text_index` is populated on `insert()` and only stores the f
 
 ## dict_creator Source File Split
 
-The `dict_creator_t` class is split across multiple `.cpp` files in `yampt/creator/`:
+The `dict_creator_t` is a thin facade in `yampt.core/source/creator/`. The actual logic is split into strategy classes:
 
-- `dict_creator.cpp` — shared helpers used by multiple modes (constructors, `reset_counters`, `insert_duplicate`, `print_log_line`, `make_script_messages`, `differs_only_in_numbers_or_punct`, `adapt_translation`)
-- `dict_creator_single.cpp` — single-file mode logic (`make_dict_single`, `insert_entry_single`, `insert_entry_single_with_base`, `insert_as_untranslated`, `insert_with_status`, `insert_via_text_match`)
-- `dict_creator_base.cpp` — base mode logic (`make_dict_base`, `insert_entry_base`, cell matching, DIAL matching)
-- `dict_creator_base_ordered.cpp` — ordered base mode logic (`make_dict_base_ordered`)
+- `dict_creator.hpp/.cpp` — Thin facade, picks strategy based on mode detection
+- `creator_context.hpp` — Shared state struct (ESM readers, indexes, counters, dict)
+- `creator_helpers.hpp/.cpp` — All shared logic (insert methods, index builders, script parsing, adapt_translation, determine_status)
+- `creator_single.hpp/.cpp` — Single-file mode strategy
+- `creator_base.hpp/.cpp` — Unordered base mode strategy
+- `creator_ordered.hpp/.cpp` — Ordered base mode strategy
 
-Rule: if a member function is called from more than one `.cpp` file, it belongs in `dict_creator.cpp`. Mode-specific functions stay in their respective files.
+Each mode is its own class with its own `.hpp/.cpp` pair.
 
 
 ## Identical-Text Entries Are Now Approved

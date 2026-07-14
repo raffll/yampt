@@ -10,15 +10,14 @@ yampt/
 │   │   ├── merger/        # dict_merger_t
 │   │   ├── converter/     # esm_converter_t, script_parser_t, scdt_patcher_t
 │   │   ├── translator/    # translation_engine_t
-│   │   ├── scanner/       # plugin_scan_t, plugin_index_t, record_conflict, conflict_enums, conflict_types
-│   │   ├── decoder/       # conflict_slots, sub_record_iter, sub_record_schema, view_tree_format
+│   │   ├── scanner/       # plugin_scan_t, plugin_index_t, record_conflict, merge_patch_store, merge_patch_ops, auto_merge, sub_record_merge, batch_cleaner, fixers
+│   │   ├── decoder/       # conflict_slots, sub_record_iter, sub_record_schema, view_tree_format, content_alignment, view_group_def
 │   │   ├── io/            # File format readers/writers (ESM, JSON, codepage, file_list, yaml_l10n, binary_file_io)
 │   │   └── utility/       # Pure helpers (domain_types, app_logger, string_utils, record_types, status_types, dict_kind)
 │   └── yampt.core.vcxproj
 ├── yampt.cli/              # CLI entry point → yampt.exe (links yampt.lib)
 │   ├── source/
 │   │   ├── interface/     # CLI boundary (user_interface_t)
-│   │   ├── io/            # app_settings_t (shared GUI settings)
 │   │   └── main.cpp
 │   └── yampt.cli.vcxproj
 ├── yampt.translator/       # GUI translation workbench (Qt6) → yTranslator.exe

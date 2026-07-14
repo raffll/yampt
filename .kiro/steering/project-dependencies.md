@@ -30,7 +30,7 @@ yampt.qt (StaticLibrary → yampt.qt.lib)
 
 - **Depends on**: yampt.core (headers only via include path) + Qt6
 - **Contains**: Qt-dependent utilities that wrap or extend core types with Qt features
-- **Current contents**: `theme_system`, `conflict_types` (QColor helpers), `app_settings` (QSettings wrapper)
+- **Current contents**: `theme_system`, `conflict_types` (QColor helpers), `settings_store` (QSettings wrapper), `path_resolver` (platform-aware path resolution)
 - **Include paths**: `$(ProjectDir)source`, `$(SolutionDir)yampt.core\source`, Qt6 includes
 - When adding a Qt-dependent class that other projects need, put it here.
 
