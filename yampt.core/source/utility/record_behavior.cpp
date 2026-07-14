@@ -23,11 +23,21 @@ static constexpr paired_merge_rule_t crea_paired_rules[] = {
 static constexpr sub_record_rule_t npc_sub_rules[] = {
 	{ "NPDT", 52, skip_if_size_differs | element_wise_merge },
 	{ "NPDT", 12, skip_if_size_differs | element_wise_merge },
+	{ "AIDT", 12, element_wise_merge },
 };
 
 static constexpr sub_record_rule_t crea_sub_rules[] = {
 	{ "NPDT", 96, element_wise_merge },
 	{ "AI_W", 14, element_wise_merge },
+	{ "AIDT", 12, element_wise_merge },
+};
+
+static constexpr sub_record_rule_t weap_sub_rules[] = {
+	{ "WPDT", 32, element_wise_merge },
+};
+
+static constexpr sub_record_rule_t armo_sub_rules[] = {
+	{ "AODT", 24, element_wise_merge },
 };
 
 static constexpr sub_record_rule_t generic_sub_rules[] = {
@@ -49,16 +59,17 @@ static constexpr record_behavior_t behavior_table[] = {
 	{ "CONT", decode_mode_t::container, copy_strategy_t::whole_record, nullptr, 0, nullptr, nullptr, 0 },
 	{ "BSGN", decode_mode_t::container, copy_strategy_t::whole_record, nullptr, 0, nullptr, nullptr, 0 },
 	{ "RACE", decode_mode_t::container, copy_strategy_t::whole_record, nullptr, 0, nullptr, nullptr, 0 },
-	{ "NPC_", decode_mode_t::container, copy_strategy_t::whole_record, npc_sub_rules, 2, nullptr, nullptr, 0 },
+	{ "NPC_", decode_mode_t::container, copy_strategy_t::whole_record, npc_sub_rules, 3, nullptr, nullptr, 0 },
 	{ "CREA",
 	  decode_mode_t::container,
 	  copy_strategy_t::whole_record,
 	  crea_sub_rules,
-	  2,
+	  3,
 	  nullptr,
 	  crea_paired_rules,
 	  1 },
-	{ "ARMO", decode_mode_t::armor, copy_strategy_t::whole_record, nullptr, 0, nullptr, nullptr, 0 },
+	{ "WEAP", decode_mode_t::generic, copy_strategy_t::whole_record, weap_sub_rules, 1, nullptr, nullptr, 0 },
+	{ "ARMO", decode_mode_t::armor, copy_strategy_t::whole_record, armo_sub_rules, 1, nullptr, nullptr, 0 },
 	{ "CLOT", decode_mode_t::armor, copy_strategy_t::whole_record, nullptr, 0, nullptr, nullptr, 0 },
 	{ "INFO", decode_mode_t::info, copy_strategy_t::whole_record, nullptr, 0, nullptr, nullptr, 0 },
 };

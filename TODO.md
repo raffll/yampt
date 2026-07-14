@@ -1,5 +1,23 @@
 # TODO
 
+readme, feature categories
+
+nexus api -> auto upload, auto description
+github -> remove obsolete releases
+
+ship model, at least polish
+
+wire up eet convert
+shortcuts, leave del
+detail button should show better name depends on what is in panel
+implement statuses on yaml
+
+settings
+panel with all exceptions configurable
+
+yampt <- remove –win1250 
+
+
 Sorted by effort within each priority tier. Priority is based on: (1) how much infrastructure already exists, (2) practical value for the Morrowind modding workflow, (3) uniqueness vs already-solved-by-other-tools.
 
 ## Priority 1 — Low effort, high payoff (infrastructure already exists)
@@ -9,22 +27,12 @@ yEditor already detects ITM via `plugin_scan_t::itm_count()` and `itm_entries()`
 
 ### Plugin Cleaning: Remove Evil GMSTs (yEditor) [S]
 Known list of 72 GMST IDs that TESCS injects. Compare against master values — if identical, remove. Trivial record-type filter on top of existing ITM logic. Can share the same "Clean Plugin" button.
-
-### Conflict Report Export (yEditor) [S]
-yEditor already shows conflicts visually with full coloring. Add "Export to Text" that dumps the nav tree + per-record conflict summary to a plain-text or markdown file. No new analysis needed.
-
-### Leveled List Merge Polish (yEditor) [S]
-`auto_merge_t` already merges leveled lists, dialogues, and three-way objects. The "Create Merged Patch" button exists. Polish: add progress feedback, a summary dialog showing what was merged, and make the one-click experience smoother.
-
 ---
 
 ## Priority 2 — Medium effort, directly extends existing code
 
 ### Plugin Cleaning: Remove Junk Cells (yEditor) [M]
 Detect empty CELL records (no FRMR refs, no LAND/PGRD) that aren't needed. Extends the ITM detection with a content-size check on cell partition. `cell_partition_t` parsing already exists in `sub_record_merge_t`.
-
-### Object Three-Way Merge Expansion (yEditor) [M]
-`sub_record_merge_t::merge()` handles generic three-way merge + cell refs + leveled lists + ENAM slots. Extend coverage to more packed sub-records (WPDT, NPDT, AODT) where two mods change different fields of the same record. The framework is there — needs per-type field layout tables.
 
 ### Batch Clean (yEditor) [M]
 Combine ITM removal + evil GMST removal + junk cells into a single "Clean All" that processes every loaded plugin in sequence. Log results per-plugin. Fog fix and summon fix already run as part of merged patch — no need for standalone actions.

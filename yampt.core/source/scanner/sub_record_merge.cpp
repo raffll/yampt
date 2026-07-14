@@ -1,6 +1,7 @@
 #include "sub_record_merge.hpp"
 #include "../decoder/sub_record_iter.hpp"
 #include "../utility/app_logger.hpp"
+#include "../utility/record_behavior.hpp"
 #include "../utility/string_utils.hpp"
 #include <algorithm>
 #include <cstring>
@@ -82,19 +83,13 @@ bool sub_record_merge_t::needs_element_wise(
     const std::string & sub_type,
     size_t data_size)
 {
-	if (rec_type == "NPC_" && sub_type == "NPDT" && (data_size == 52 || data_size == 12))
-		return true;
+	const auto * behavior = find_record_behavior(rec_type);
+	const auto * rule = find_sub_record_rule(behavior, sub_type, data_size);
 
-	if (rec_type == "CREA" && sub_type == "NPDT" && data_size == 96)
-		return true;
+	if (!rule)
+		return false;
 
-	if (rec_type == "CREA" && sub_type == "AI_W" && data_size == 14)
-		return true;
-
-	if (sub_type == "AIDT" && data_size == 12)
-		return true;
-
-	return false;
+	return has_flag(rule->flags, sub_rule_flag_t::element_wise_merge);
 }
 
 std::string sub_record_merge_t::merge_bytes_three_way(
@@ -127,23 +122,6 @@ std::vector<std::string> sub_record_merge_t::collect_enam_data(const sub_record_
 	return slots;
 }
 
-static constexpr size_t enam_mag_min_offset = 12;
-static constexpr size_t enam_mag_max_offset = 16;
-static constexpr size_t enam_field_size = 4;
-
-struct field_pair_t
-{
-	size_t min_offset;
-	size_t max_offset;
-	size_t length;
-};
-
-static constexpr field_pair_t crea_npdt_attack_pairs[] = {
-	{ 68, 70, 2 },
-	{ 72, 74, 2 },
-	{ 76, 78, 2 },
-};
-
 static bool field_changed(const std::string & source, const std::string & base, size_t offset, size_t length)
 {
 	return source.compare(offset, length, base, offset, length) != 0;
@@ -154,33 +132,33 @@ static void fix_paired_fields(
     const std::string & first,
     const std::string & inter,
     const std::string & winner,
-    const field_pair_t * pairs,
+    const field_pair_rule_t * pairs,
     size_t pair_count)
 {
 	for (size_t p = 0; p < pair_count; ++p)
 	{
 		const auto & pair = pairs[p];
-		const bool inter_changed_min = field_changed(inter, first, pair.min_offset, pair.length);
-		const bool inter_changed_max = field_changed(inter, first, pair.max_offset, pair.length);
-		const bool winner_changed_min = field_changed(winner, first, pair.min_offset, pair.length);
-		const bool winner_changed_max = field_changed(winner, first, pair.max_offset, pair.length);
+		const bool inter_changed_min = field_changed(inter, first, pair.min_offset, pair.field_size);
+		const bool inter_changed_max = field_changed(inter, first, pair.max_offset, pair.field_size);
+		const bool winner_changed_min = field_changed(winner, first, pair.min_offset, pair.field_size);
+		const bool winner_changed_max = field_changed(winner, first, pair.max_offset, pair.field_size);
 
 		if (winner_changed_min || winner_changed_max)
 		{
-			merged.replace(pair.min_offset, pair.length, winner, pair.min_offset, pair.length);
-			merged.replace(pair.max_offset, pair.length, winner, pair.max_offset, pair.length);
+			merged.replace(pair.min_offset, pair.field_size, winner, pair.min_offset, pair.field_size);
+			merged.replace(pair.max_offset, pair.field_size, winner, pair.max_offset, pair.field_size);
 			continue;
 		}
 
 		if (inter_changed_min || inter_changed_max)
 		{
-			merged.replace(pair.min_offset, pair.length, inter, pair.min_offset, pair.length);
-			merged.replace(pair.max_offset, pair.length, inter, pair.max_offset, pair.length);
+			merged.replace(pair.min_offset, pair.field_size, inter, pair.min_offset, pair.field_size);
+			merged.replace(pair.max_offset, pair.field_size, inter, pair.max_offset, pair.field_size);
 		}
 	}
 }
 
-static constexpr field_pair_t enam_magnitude_pair = { 12, 16, 4 };
+static constexpr field_pair_rule_t enam_magnitude_pair = { 12, 16, 4 };
 
 static void fix_magnitude_pair(
     std::string & result,
@@ -308,15 +286,26 @@ void sub_record_merge_t::apply_intermediate(
 			    winner[winner_idx].data.data(),
 			    first[first_idx].data.size());
 
-			if (rec_type == "CREA" && intermediate[i].type == "NPDT" && first[first_idx].data.size() == 96)
+			const auto * behavior = find_record_behavior(rec_type);
+			if (behavior && behavior->paired_rules)
 			{
-				fix_paired_fields(
-				    output[output_idx].data,
-				    first[first_idx].data,
-				    intermediate[i].data,
-				    winner[winner_idx].data,
-				    crea_npdt_attack_pairs,
-				    3);
+				for (size_t r = 0; r < behavior->paired_rule_count; ++r)
+				{
+					const auto & paired = behavior->paired_rules[r];
+					if (intermediate[i].type != paired.sub_type)
+						continue;
+
+					if (first[first_idx].data.size() != paired.expected_size)
+						continue;
+
+					fix_paired_fields(
+					    output[output_idx].data,
+					    first[first_idx].data,
+					    intermediate[i].data,
+					    winner[winner_idx].data,
+					    paired.pairs,
+					    paired.pair_count);
+				}
 			}
 
 			continue;
