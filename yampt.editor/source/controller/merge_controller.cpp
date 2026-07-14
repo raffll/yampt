@@ -459,6 +459,15 @@ std::string merge_controller_t::resolve_merge_output_path() const
 	return QDir::cleanPath(base + "/" + relative).toStdString();
 }
 
+std::string merge_controller_t::resolve_output_directory() const
+{
+	const auto merge_path = resolve_merge_output_path();
+	if (merge_path.empty())
+		return {};
+
+	return std::filesystem::path(merge_path).parent_path().string();
+}
+
 void merge_controller_t::save_merged_patch()
 {
 	const auto output_path = resolve_merge_output_path();

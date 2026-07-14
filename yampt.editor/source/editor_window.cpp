@@ -134,6 +134,12 @@ void editor_window_t::setup_toolbar()
 	connect(
 	    merge_action, &QAction::triggered, m_plugin_workspace_view, &plugin_workspace_view_t::on_create_merged_patch);
 
+	// WIP: Clean All button hidden until ITM detection issues are resolved
+	// auto * clean_action = new QAction(tr("Clean All"), this);
+	// clean_action->setToolTip(tr("Remove ITMs, evil GMSTs, and junk cells from all plugins"));
+	// toolbar->addAction(clean_action);
+	// connect(clean_action, &QAction::triggered, m_plugin_workspace_view, &plugin_workspace_view_t::on_clean_all);
+
 	toolbar->addSeparator();
 
 	statusBar()->addWidget(m_plugin_workspace_view->status_label());

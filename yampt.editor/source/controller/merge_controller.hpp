@@ -25,6 +25,7 @@ public:
 	void create_merged_patch();
 	void save_plugin();
 	void load_existing_merged_patch();
+	std::string resolve_output_directory() const;
 
 	void copy_whole_record(int plugin_idx, const std::string & rec_type, const std::string & record_id);
 	void copy_cell_record(

@@ -38,6 +38,7 @@
     <ClCompile Include="source\scanner\cell_name_fixer.cpp" />
     <ClCompile Include="source\scanner\record_conflict.cpp" />
     <ClCompile Include="source\scanner\auto_merge.cpp" />
+    <ClCompile Include="source\scanner\batch_cleaner.cpp" />
     <ClCompile Include="source\decoder\sub_record_schema.cpp" />
     <ClCompile Include="source\decoder\view_group_def.cpp" />
     <ClCompile Include="source\decoder\content_alignment.cpp" />
@@ -103,5 +104,6 @@
     <ClInclude Include="source\scanner\summon_fixer.hpp" />
     <ClInclude Include="source\scanner\cell_name_fixer.hpp" />
     <ClInclude Include="source\scanner\auto_merge.hpp" />
+    <ClInclude Include="source\scanner\batch_cleaner.hpp" />
   </ItemGroup>
 </Project>

@@ -2,6 +2,7 @@
 #include "../dialog/filter_dialog.hpp"
 #include "../dialog/plugin_select_dialog.hpp"
 #include "editor_delegates.hpp"
+#include <scanner/batch_cleaner.hpp>
 #include <scanner/record_conflict.hpp>
 #include <set>
 #include <settings_store.hpp>
@@ -209,6 +210,27 @@ void plugin_workspace_view_t::on_create_merged_patch()
 
 	display_record_in_view(*updated);
 	update_status();
+}
+
+void plugin_workspace_view_t::on_clean_all()
+{
+	if (m_session->scan().plugin_count() < 2)
+	{
+		log_message("[error] need at least 2 plugins loaded to clean");
+		return;
+	}
+
+	const auto output_path = m_merge_controller->resolve_output_directory();
+	if (output_path.empty())
+	{
+		log_message("[error] cannot determine output directory");
+		return;
+	}
+
+	batch_cleaner_t cleaner(
+	    m_session->scan(), [this](const std::string & message) { log_message(message); });
+
+	cleaner.clean_all(output_path);
 }
 
 void plugin_workspace_view_t::rebuild_after_load()

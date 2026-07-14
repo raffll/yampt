@@ -60,6 +60,7 @@ public slots:
 	void on_save_plugin();
 	void on_unload_all();
 	void on_create_merged_patch();
+	void on_clean_all();
 	void on_advanced_filter();
 	void set_hide_duplicates(bool hide);
 
