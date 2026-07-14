@@ -2,7 +2,6 @@
 
 ## Release tasks
 
-- readme, feature categories
 - nexus api: auto upload, auto description
 - github: remove obsolete releases
 - ship model, at least polish
