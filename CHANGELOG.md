@@ -58,7 +58,6 @@
 - Spell check: dictionary now loads correctly on startup
 - Grammar check: missing punctuation no longer flagged while cursor is at end of text
 
-
 ## [0.842] - 2026-07-05
 
 ### Added — yEditor
