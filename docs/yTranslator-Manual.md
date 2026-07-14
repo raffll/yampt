@@ -1,128 +1,121 @@
 # yTranslator — User Manual
 
-Translation workbench for Morrowind ESM/ESP plugins. Extracts translatable text, builds translation dictionaries, applies translations back to plugins, and provides an editing environment with spell check, machine translation, and glossary support.
+Translation workbench for Morrowind ESM/ESP plugins.
 
 ## Getting Started
 
-1. Launch `yTranslator.exe`
-2. Add a workspace folder via File → Add Folder (point to a directory containing plugins and/or dictionaries)
-3. The sidebar shows all discovered files. Click a dictionary to open it for editing, or right-click a plugin to run operations.
+1. File → Add Folder — point to a directory containing plugins and/or dictionaries
+2. The sidebar shows discovered files. Click a dictionary to open it, or right-click a plugin to run operations.
 
-## Window Layout
+## Main Layout
 
-- **Left panel (top)**: Files tab (sidebar tree) and Filters tab (record type filter)
-- **Left panel (bottom)**: Annotations, History, and Translate tabs
-- **Right panel (top)**: Records table, Book Preview, and Log tabs
-- **Right panel (bottom)**: Editor with Original text, Details, and Translation panels
-- **Toolbar**: Search bar with case-sensitive, regex, and column filter toggles
-- **Status filter bar**: Colored buttons for each translation status
+- **Left top**: Files tab (sidebar) and Filters tab (record type list)
+- **Left bottom**: Annotations, History, and Translate tabs
+- **Right top**: Records table, Book Preview, and Log tabs
+- **Right bottom**: Editor (Original text, Details, Translation)
+- **Toolbar**: Search bar with filter toggles (Aa = case-sensitive, .* = regex, Key/Original/Translation column selectors)
+- **Status bar**: Status filter buttons (colored by translation status)
 
 ## Sidebar
 
-The sidebar shows workspace folders and their contents. Items display tags:
+Files are color-coded: green = plugin, gold = base dictionary, blue = user dictionary, purple = YAML.
 
-- `[BASE]` — dictionary loaded as a base reference
-- `[EN]`, `[PL]`, `[DE]`, `[FR]`, `[RU]` — detected language (ESM files only)
-- `*` prefix — unsaved changes
-- `[UNLOADED]` — workspace file not yet loaded into memory
+Right-click context menus:
 
-Right-click items for context menus:
+**Plugins** (ESM/ESP):
+- Make Dictionary — extract translatable text
+- Make Base — compare two language versions to produce translation pairs
+- Convert — apply translations back to a plugin
+- Create — produce a new plugin with only translated records
+- Delete
 
-- **Plugin files**: Make Dict, Make Base, Convert, Create
-- **Dictionary files**: Save, Save As, Unload
-- **Workspace files**: Delete
+**Dictionaries** (JSON/XML):
+- Save
+- Delete
+
+**YAML files**:
+- Save
+- Export (create native language version)
+- Delete
+
+**Folders**:
+- Remove Folder / Delete Folder
 
 ## Operations
 
-### Make Dict
-Extracts all translatable text from a single plugin into a new dictionary. Each entry has `old_text` = `new_text` (untranslated).
+### Make Dictionary
+Extracts all translatable text from a plugin. Each entry starts as untranslated (old = new).
 
 ### Make Base
-Compares two language versions of the same ESM (e.g. English Morrowind.esm vs Polish Morrowind.esm) to create translation pairs automatically. Two modes:
-
-- **Full mode**: All entries get status `translated` (identical entries are proper nouns)
-- **Partial mode**: Identical entries are checked against an English dictionary — English words are marked `untranslated`, non-English words are marked `to_verify`
-
-### Make Dict with Base
-Creates a dictionary for a plugin using an existing base dictionary as reference. Matches entries by key and by text content, producing statuses like `translated`, `adapted`, `changed`, `reused`, `ambiguous`.
+Compares a foreign-language ESM against a native-language ESM. Produces matched translation pairs. Two modes:
+- **Full**: identical text = proper noun (status: translated)
+- **Partial**: identical text checked against English dictionary — English words = untranslated, non-English = to_verify
 
 ### Convert
-Applies translations from loaded dictionaries to a plugin. Only entries with status `translated` are applied. Writes a new ESP file.
+Applies translations from loaded dictionaries to a plugin. Only `translated` entries are used. Writes a new file.
 
 ### Create
-Like Convert, but produces a plugin containing only the modified records (omwaddon-style).
+Like Convert but the output contains only modified records.
 
-### Merge Dictionaries
-Combines multiple dictionaries into one. Available via Tools → Merge Dictionaries or sidebar context menu. Last-listed dictionary has highest priority.
+### Merge Dictionaries (Tools menu)
+Combines multiple dictionaries. Last in the list has highest priority.
 
-## Editing Translations
+## Editing
 
 1. Click a row in the Records table
-2. The Original panel shows the source text, the Translation panel is editable
-3. Type your translation, then press the Apply button or Tab to advance to the next entry
-4. Press Ctrl+S to save
+2. Edit the Translation panel
+3. Press Apply (or Tab) to commit and advance
+4. Ctrl+S to save
 
-### Editor Features
+The editor shows:
+- **Original**: source text (read-only)
+- **Details**: adaptation source or match info (when available)
+- **Translation**: your translation (editable)
 
-- **Spell check**: Red underline on misspelled words (toggle via View → Spell Check)
-- **Grammar check**: Highlights grammar issues (toggle via View → Grammar Check)
-- **Annotations**: Green highlights show glossary matches (NPC names, items, cells from base dictionaries)
-- **Topic links**: Blue highlights show DIAL topic references
-- **Forbidden characters**: Orange background on characters invalid in Morrowind's encoding
-- **Byte limit validation**: Status bar warning when translation exceeds sub-record size limits
-- **Script mode**: For SCTX/BNAM records, only quoted strings are editable — the script structure is preserved
+For script records (SCTX/BNAM), only quoted strings are editable — the script structure is preserved automatically.
 
-### Keyboard Shortcuts
+## Toolbar Search
+
+Type in the search field to filter the records table. Toggle which columns are searched (Key, Original, Translation). Supports case-sensitive and regex modes.
+
+## Status Filter Bar
+
+Colored buttons below the toolbar. Click to filter by status, right-click to solo. Only statuses with entries are shown.
+
+## Type Filter (Filters tab)
+
+Left panel has a list of record types (CELL, DIAL, INFO, FNAM, TEXT, GMST, etc.). Click to toggle, right-click to solo.
+
+## View Menu
+
+- **Toggle Sidebar** — show/hide left panel
+- **Toggle Bottom Panel** — show/hide editor
+- **Spell Check** — underline misspelled words in translation
+- **Grammar Check** — highlight grammar issues
+- **Whitespace Markers** — show spaces and line endings
+
+## Keyboard Shortcuts
 
 - `Ctrl+S` — Save
 - `Ctrl+F` — Find/Replace
 - `F8` — Copy original to translation
 - `F9` — Set status to In Progress
 - `F10` — Set status to Translated
-- `Tab` — Commit and advance to next entry
-- `Shift+Tab` — Commit and go to previous entry
-- `Escape` — Clear search / close dialog
+- `Tab` — Commit and next entry
+- `Shift+Tab` — Previous entry
+- `Escape` — Clear search
 
-## Machine Translation
+## Machine Translation (Translate tab)
 
-The Translate tab provides automatic translation via CTranslate2 (NLLB-600M model, offline).
+Uses CTranslate2 with NLLB-600M model (offline, supports PL/DE/FR/RU/IT/HU).
 
-1. Select an `untranslated` entry
-2. Click the Translate button — the model produces a suggestion
-3. Edit if needed, then commit
+- Select an untranslated entry → click Translate
+- Batch mode: translates all untranslated entries in sequence
+- Status is set to `model` after translation
 
-Batch translation: translates all `untranslated` entries in sequence. Entries are set to status `model` after translation.
+## Settings (Ctrl+,)
 
-## Filtering
-
-### Type filter (Filters tab)
-Click record types to show/hide them. Right-click to solo a type. Types: CELL, DIAL, INFO, FNAM, TEXT, GMST, DESC, RNAM, INDX, SCTX, BNAM.
-
-### Status filter bar
-Click status buttons to filter by translation status. Right-click to solo. Statuses with zero count are hidden.
-
-### Search bar
-Free-text search across Key, Original, and/or Translation columns. Supports case-sensitive and regex modes.
-
-## Settings
-
-Preferences (Ctrl+,) has four pages:
-
-- **Appearance**: Light/dark theme
-- **Shortcuts**: Customizable keybindings
-- **Language**: Native/foreign language selection, spell check dictionaries, language tags
-- **Translation**: DeepL and Google API keys for alternative translation providers
-
-## File Formats
-
-- **JSON dictionaries** (`.json`): Primary format. Contains entries with key, old, new, status, details fields.
-- **XML dictionaries** (`.xml`): Legacy format, read-only compatibility.
-- **YAML l10n files**: OpenMW localization files, editable in yTranslator.
-- **ESM/ESP plugins**: Binary Morrowind plugin files, used as input for operations.
-
-## Tips
-
-- Base dictionaries provide annotations and glossary matches — load them alongside your working dictionary for better context
-- Use partial mode for Make Base when working with partially translated ESMs (e.g. EET imports)
-- The Book Preview tab shows TEXT records rendered with Morrowind formatting tags
-- Import Archive (File menu) extracts zip/rar archives directly into the workspace folder
+- **Appearance**: Theme
+- **Shortcuts**: Keybindings
+- **Language**: Native/foreign language, spell check dictionaries
+- **Translation**: API keys for DeepL and Google (alternative providers)
