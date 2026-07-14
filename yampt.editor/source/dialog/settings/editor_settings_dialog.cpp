@@ -28,7 +28,7 @@ editor_settings_dialog_t::editor_settings_dialog_t(settings_store_t & settings, 
 
 	m_category_list->addItem("Appearance");
 	m_category_list->addItem("Paths");
-	m_category_list->addItem("Merge");
+	m_category_list->addItem("Merged Patch");
 
 	m_content_stack->addWidget(m_appearance_view);
 	m_content_stack->addWidget(m_paths_view);

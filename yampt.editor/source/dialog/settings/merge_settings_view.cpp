@@ -41,7 +41,7 @@ void merge_settings_view_t::setup_record_types_group()
 		const auto * type_name = record_types[i];
 		auto * checkbox = new QCheckBox(type_name, group);
 		checkbox->setChecked(true);
-		checkbox->setToolTip(QString("Include %1 records in merge").arg(type_name));
+		checkbox->setToolTip(QString("Include %1 records in merged patch").arg(type_name));
 		grid->addWidget(checkbox, i / columns, i % columns);
 		m_type_checkboxes[type_name] = checkbox;
 	}
@@ -57,7 +57,7 @@ void merge_settings_view_t::setup_exclusion_group()
 	parent_layout->addWidget(label);
 
 	m_exclusion_edit = new QLineEdit(this);
-	m_exclusion_edit->setToolTip(tr("Records matching this regex are excluded from merge"));
+	m_exclusion_edit->setToolTip(tr("Records matching this regex are excluded from merged patch"));
 	parent_layout->addWidget(m_exclusion_edit);
 }
 

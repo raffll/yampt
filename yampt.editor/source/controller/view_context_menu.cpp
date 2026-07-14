@@ -63,7 +63,7 @@ void view_context_menu_t::show_nav_menu(const QPoint & global_pos, const nav_tre
 		const bool is_patch = m_session.patch_plugins().count(filename) > 0;
 
 		menu.addAction(
-		    excluded ? "Include in Merge" : "Exclude from Merge",
+		    excluded ? "Include in Merged Patch" : "Exclude from Merged Patch",
 		    [this, filename, excluded]()
 		{
 			auto excluded_copy = m_session.excluded_plugins();

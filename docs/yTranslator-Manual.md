@@ -43,6 +43,9 @@ Right-click context menus:
 
 ## Operations
 
+### Import Archive
+File → Import Archive — extracts a zip or rar archive into the workspace folder. Requires 7za.exe next to the application. After extraction, the workspace auto-scans for new files.
+
 ### Make Dictionary
 Extracts all translatable text from a plugin. Each entry starts as untranslated (old = new).
 
@@ -97,7 +100,6 @@ Left panel has a list of record types (CELL, DIAL, INFO, FNAM, TEXT, GMST, etc.)
 ## Keyboard Shortcuts
 
 - `Ctrl+S` — Save
-- `Ctrl+F` — Find/Replace
 - `F8` — Copy original to translation
 - `F9` — Set status to In Progress
 - `F10` — Set status to Translated
@@ -110,8 +112,35 @@ Left panel has a list of record types (CELL, DIAL, INFO, FNAM, TEXT, GMST, etc.)
 Uses CTranslate2 with NLLB-600M model (offline, supports PL/DE/FR/RU/IT/HU).
 
 - Select an untranslated entry → click Translate
-- Batch mode: translates all untranslated entries in sequence
 - Status is set to `model` after translation
+
+## Entry Statuses
+
+Each dictionary entry has a status that determines whether it's applied during Convert/Create.
+
+**Applied to plugin** (only these produce output):
+- **Translated** — finished, human-approved translation
+- **Matched** — paired automatically during make-base
+- **Heuristic** — matched by the translation engine during make-base
+
+**Needs work:**
+- **Untranslated** — no translation yet
+- **In Progress** — editing started but not finalized
+- **Model** — machine-translated, awaiting review
+- **Changed** — source text updated since translation was made
+- **Adapted** — source differs in numbers/punctuation, translation auto-adjusted
+- **Outdated** — source changed while translation was still unfinished
+- **Ambiguous** — multiple conflicting translations exist
+
+**Informational:**
+- **Reused** — translation borrowed from another entry with the same text
+- **Propagated** — auto-filled from another entry
+- **Missing** — no native match found during make-base
+- **Duplicate** — same key appeared multiple times
+- **Mismatch** — extra native content with no foreign counterpart
+- **Error** — validation problem
+
+See [Dictionary Entry Statuses](Dictionary-Entry-Statuses.md) for the full reference.
 
 ## Settings (Ctrl+,)
 

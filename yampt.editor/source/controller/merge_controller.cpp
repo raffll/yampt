@@ -68,7 +68,7 @@ void merge_controller_t::save_plugin()
 	{
 		const auto initial_dir = QString::fromStdString(m_settings.last_directory());
 		const auto selected = QFileDialog::getSaveFileName(
-		    nullptr, QCoreApplication::translate("yEditor", "Save Merge Plugin"), initial_dir, "ESP files (*.esp)");
+		    nullptr, QCoreApplication::translate("yEditor", "Save Merged Patch"), initial_dir, "ESP files (*.esp)");
 		if (selected.isEmpty())
 			return;
 
@@ -409,7 +409,7 @@ void merge_controller_t::remove_record_from_merge(const std::string & rec_type, 
 	m_session.scan().rebuild_conflicts();
 	m_nav_view.rebuild_preserving_state();
 	save_merged_patch();
-	m_log("Removed " + rec_type + ":" + record_id + " from merge");
+	m_log("Removed " + rec_type + ":" + record_id + " from merged patch");
 }
 
 int merge_controller_t::create_merge_records()

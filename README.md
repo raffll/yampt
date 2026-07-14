@@ -22,15 +22,13 @@ Qt6 GUI for interactive plugin translation.
 - Sidebar with workspace folders, auto-refresh on filesystem changes
 - Record table filtered by type, sub-type, and translation status
 - Three-panel editor: original text, adapted text, editable translation
-- Find and replace with regex support
 - Entry validation, status tracking, history with undo/revert
 - Multi-layer syntax highlighting: MWScript keywords, hyperlinks, glossary terms, forbidden characters
 - Spell checking with per-language Hunspell dictionaries
 - Annotation system: hyperlinks, gender info, glossary matches from loaded base dicts
 - Book content preview with live update
-- Offline machine translation via CTranslate2 (NLLB-600M), batch mode
+- Offline machine translation via CTranslate2 (NLLB-600M)
 - Supports Polish, German, French, Russian, Italian, Hungarian
-- EET file format import
 - All CLI operations accessible from the GUI
 
 ## yampt.exe — Command Line
