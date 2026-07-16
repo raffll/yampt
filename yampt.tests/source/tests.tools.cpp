@@ -115,7 +115,7 @@ TEST_CASE("domain_types::type_to_str and str_to_type, round-trip", "[u]")
 {
 	const std::vector<rec_type_t> defined_types {
 		rec_type_t::cell, rec_type_t::dial, rec_type_t::indx, rec_type_t::rnam, rec_type_t::desc, rec_type_t::gmst,
-		rec_type_t::fnam, rec_type_t::info, rec_type_t::text, rec_type_t::bnam, rec_type_t::sctx,
+		rec_type_t::fnam, rec_type_t::info, rec_type_t::text, rec_type_t::bnam, rec_type_t::sctx, rec_type_t::script,
 	};
 
 	for (const auto & type : defined_types)
@@ -307,6 +307,23 @@ TEST_CASE("domain_types::get_number_of_elements_in_dict, correct total", "[u]")
 	dict.at(rec_type_t::dial).insert({ "clanfear", "clanfear", "postrach klanĂłw", status_t::translated });
 	dict.at(rec_type_t::info).insert({ "info_key", "info_orig", "info_val", status_t::untranslated });
 	REQUIRE(domain_types::get_number_of_elements_in_dict(dict) == 4);
+}
+
+TEST_CASE("domain_types::initialize_dict, contains script chapter", "[u]")
+{
+	dict_t dict = domain_types::initialize_dict();
+	REQUIRE(dict.count(rec_type_t::script) == 1);
+	REQUIRE(dict.at(rec_type_t::script).empty());
+}
+
+TEST_CASE("domain_types::type_to_str, script type", "[u]")
+{
+	REQUIRE(domain_types::type_to_str(rec_type_t::script) == "SCRIPT");
+}
+
+TEST_CASE("domain_types::str_to_type, script type", "[u]")
+{
+	REQUIRE(domain_types::str_to_type("SCRIPT") == rec_type_t::script);
 }
 
 TEST_CASE("status_t::to_string, all values distinct non-empty", "[u]")

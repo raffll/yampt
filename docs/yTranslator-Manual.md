@@ -10,7 +10,7 @@ Translation workbench for Morrowind ESM/ESP plugins.
 ## Main Layout
 
 - **Left top**: Files tab (sidebar), Filters tab (record type list), and Statuses tab (status filter)
-- **Left bottom**: Annotations, History, and Translate tabs
+- **Left bottom**: Annotations, History, and AI Translate tabs
 - **Right top**: Records table, Preview, and Log tabs
 - **Right bottom**: Editor (Original text, Details, Translation)
 - **Toolbar**: Search bar with filter toggles (Aa = case-sensitive, .* = regex, Key/Original/Translation column selectors)
@@ -110,7 +110,7 @@ Left panel has a list of record types (CELL, DIAL, INFO, FNAM, TEXT, GMST, etc.)
 - `Shift+Tab` — Previous entry
 - `Escape` — Clear search
 
-## Machine Translation (Translate tab)
+## Machine Translation (AI Translate tab)
 
 Two providers available (select from combo box):
 
@@ -119,7 +119,7 @@ Two providers available (select from combo box):
 
 Usage:
 - Select an untranslated entry → click Translate
-- Status is set to `model` after translation
+- Status is set to `AI Translated` after translation
 
 ## Entry Statuses
 
@@ -133,7 +133,7 @@ Each dictionary entry has a status that determines whether it's applied during C
 **Needs work:**
 - **Untranslated** — no translation yet
 - **In Progress** — editing started but not finalized
-- **Model** — machine-translated, awaiting review
+- **AI Translated** — machine-translated, awaiting review
 - **Changed** — source text updated since translation was made
 - **Adapted** — source differs in numbers/punctuation, translation auto-adjusted
 - **Outdated** — source changed while translation was still unfinished

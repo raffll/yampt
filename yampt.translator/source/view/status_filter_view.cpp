@@ -144,7 +144,7 @@ static const char * get_status_tooltip(status_t status)
 	case status_t::propagated:
 		return "Translation propagated from another record";
 	case status_t::model:
-		return "Translated by the translation model";
+		return "Translated by the AI translation engine";
 	case status_t::error:
 		return "Translation has a validation error";
 	}

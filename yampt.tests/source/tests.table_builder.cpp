@@ -393,3 +393,61 @@ TEST_CASE("table_builder::build_filtered_rows, multiple types counted independen
 	REQUIRE(result.counts.type_counts.at(rec_type_t::cell) == 1);
 	REQUIRE(result.counts.type_counts.at(rec_type_t::gmst) == 1);
 }
+
+TEST_CASE("table_builder::build_filtered_rows, script entries excluded from rows", "[u]")
+{
+	dict_t dict;
+
+	record_entry_t cell_entry;
+	cell_entry.key_text = "key_cell";
+	cell_entry.old_text = "Balmora";
+	cell_entry.new_text = "Balmora";
+	cell_entry.status = status_t::translated;
+	dict[rec_type_t::cell].records.push_back(cell_entry);
+
+	record_entry_t script_entry;
+	script_entry.key_text = "TestScript";
+	script_entry.old_text = "Begin TestScript\r\n\tmessagebox \"Hello\"\r\nEnd";
+	script_entry.new_text = "";
+	script_entry.status = status_t::translated;
+	dict[rec_type_t::script].records.push_back(script_entry);
+
+	row_filter_t search;
+	std::set<rec_type_t> type_filter;
+	std::set<std::string> sub_type_filter;
+	std::set<status_t> status_filter;
+
+	const auto & result = build_filtered_rows(dict, type_filter, sub_type_filter, status_filter, search, false);
+
+	REQUIRE(result.rows.size() == 1);
+	REQUIRE(result.rows[0].type == rec_type_t::cell);
+}
+
+TEST_CASE("table_builder::build_filtered_rows, script entries excluded from progress", "[u]")
+{
+	dict_t dict;
+
+	record_entry_t cell_entry;
+	cell_entry.key_text = "key_cell";
+	cell_entry.old_text = "Balmora";
+	cell_entry.new_text = "Balmora";
+	cell_entry.status = status_t::translated;
+	dict[rec_type_t::cell].records.push_back(cell_entry);
+
+	record_entry_t script_entry;
+	script_entry.key_text = "TestScript";
+	script_entry.old_text = "Begin TestScript\r\nEnd";
+	script_entry.new_text = "";
+	script_entry.status = status_t::translated;
+	dict[rec_type_t::script].records.push_back(script_entry);
+
+	row_filter_t search;
+	std::set<rec_type_t> type_filter;
+	std::set<std::string> sub_type_filter;
+	std::set<status_t> status_filter;
+
+	const auto & result = build_filtered_rows(dict, type_filter, sub_type_filter, status_filter, search, false);
+
+	REQUIRE(result.counts.progress_total == 1);
+	REQUIRE(result.counts.progress_translated == 1);
+}

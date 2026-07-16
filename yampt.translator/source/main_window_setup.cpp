@@ -219,7 +219,7 @@ void main_window_t::setup_sidebar()
 	m_find_replace_dialog->setVisible(false);
 	m_info_tabs->addTab(m_annotations_view, tr("Annotations"));
 	m_info_tabs->addTab(m_history_view, tr("History"));
-	m_info_tabs->addTab(m_translation_tab, tr("Translate"));
+	m_info_tabs->addTab(m_translation_tab, tr("AI Translate"));
 	m_left_splitter->addWidget(m_info_tabs);
 }
 
