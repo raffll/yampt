@@ -69,6 +69,7 @@ If a new feature needs orchestration (showing dialogs, running operations, updat
 - No decorative comment banners (dashed lines, boxes, ASCII art).
 - Always remove items from TODO.md that are done or cancelled — never leave stale entries.
 - One class = one `.hpp` + one `.cpp`. Never split a class across multiple `.cpp` files. If a class exceeds 1000 lines, it has more than one responsibility — extract a new class, don't add a second `.cpp`.
+- When hiding a UI feature (settings page, combo box, panel), fully remove it from the layout — do not just call `setVisible(false)`. Hidden widgets still occupy space, intercept events, and cause visual glitches. Remove the `addWidget`/`addTab` call entirely; keep the object alive only if its API is still used internally.
 
 ## Localization
 

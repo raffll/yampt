@@ -24,6 +24,7 @@ QList<QTextEdit::ExtraSelection> grammar_checker_t::check(translation_edit_view_
 	check_unmatched_quotes(selections, text, document);
 	check_unmatched_parens(selections, text, document);
 	check_missing_punctuation(selections, text, document, type, editor->textCursor().position());
+	highlight_quoted_text(selections, text, document);
 
 	return selections;
 }
@@ -143,4 +144,46 @@ void grammar_checker_t::check_missing_punctuation(
 	sel.cursor.setPosition(text.size() - 1);
 	sel.cursor.setPosition(text.size(), QTextCursor::KeepAnchor);
 	selections.append(sel);
+}
+
+QTextCharFormat grammar_checker_t::quote_format()
+{
+	QTextCharFormat fmt;
+	fmt.setForeground(QColor(140, 160, 180));
+	return fmt;
+}
+
+void grammar_checker_t::highlight_quoted_text(
+    QList<QTextEdit::ExtraSelection> & selections,
+    const QString & text,
+    QTextDocument * document) const
+{
+	const auto fmt = quote_format();
+	bool inside_tag = false;
+	qsizetype quote_start = -1;
+
+	for (qsizetype i = 0; i < text.size(); ++i)
+	{
+		if (text[i] == '<')
+			inside_tag = true;
+		else if (text[i] == '>')
+			inside_tag = false;
+		else if (text[i] == '"' && !inside_tag)
+		{
+			if (quote_start < 0)
+			{
+				quote_start = i;
+			}
+			else
+			{
+				QTextEdit::ExtraSelection sel;
+				sel.format = fmt;
+				sel.cursor = QTextCursor(document);
+				sel.cursor.setPosition(static_cast<int>(quote_start));
+				sel.cursor.setPosition(static_cast<int>(i + 1), QTextCursor::KeepAnchor);
+				selections.append(sel);
+				quote_start = -1;
+			}
+		}
+	}
 }

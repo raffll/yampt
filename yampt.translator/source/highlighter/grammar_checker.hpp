@@ -35,5 +35,11 @@ private:
 	    rec_type_t type,
 	    int cursor_position) const;
 
+	void highlight_quoted_text(
+	    QList<QTextEdit::ExtraSelection> & selections,
+	    const QString & text,
+	    QTextDocument * document) const;
+
 	static QTextCharFormat warning_format();
+	static QTextCharFormat quote_format();
 };

@@ -107,7 +107,11 @@ commit_result_t dict_document_t::commit(const table_row_t & row, const std::stri
 	m_modified_records.insert({ row.type, row.record_index });
 
 	if (intent != status_t::model && new_text != entry.old_text)
+	{
 		result.propagated_count = propagate(row.type, entry.old_text, new_text);
+		if (result.propagated_count > 0)
+			entry.status = status_t::propagated;
+	}
 
 	result.new_text = new_text;
 	result.status = entry.status;
