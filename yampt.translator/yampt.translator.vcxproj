@@ -225,9 +225,8 @@
     <ClCompile Include="source\highlighter\glossary_highlighter.cpp" />
     <ClCompile Include="source\highlighter\topic_highlighter.cpp" />
     <ClCompile Include="source\translator\ctranslate2_translator.cpp" />
-    <ClCompile Include="source\translator\claude_translator.cpp" />
-    <ClCompile Include="source\translator\deepl_translator.cpp" />
-    <ClCompile Include="source\translator\google_translator.cpp" />
+    <ClCompile Include="source\translator\web_translator.cpp" />
+    <ClCompile Include="source\translator\web_translator_config.cpp" />
     <ClCompile Include="source\editor\spell_checker.cpp" />
     <ClCompile Include="source\highlighter\grammar_checker.cpp" />
     <ClCompile Include="source\view\display_name.cpp" />
@@ -256,6 +255,7 @@
     <ClInclude Include="source\editor\edit_history.hpp" />
     <ClInclude Include="source\editor\find_replace.hpp" />
     <ClInclude Include="source\editor\operation_executor.hpp" />    <ClInclude Include="source\highlighter\script_tokenizer.hpp" />    <ClInclude Include="source\translator\translator.hpp" />
+    <ClInclude Include="source\translator\web_translator_config.hpp" />
     <ClInclude Include="source\view\status_display.hpp" />
     <ClInclude Include="source\view\display_name.hpp" />
     <ClInclude Include="source\model\plugin_op.hpp" />
@@ -442,19 +442,7 @@
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
-    <CustomBuild Include="source\translator\deepl_translator.hpp">
-      <FileType>Document</FileType>
-      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
-      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
-      <Message>MOC %(Filename).hpp</Message>
-    </CustomBuild>
-    <CustomBuild Include="source\translator\claude_translator.hpp">
-      <FileType>Document</FileType>
-      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
-      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
-      <Message>MOC %(Filename).hpp</Message>
-    </CustomBuild>
-    <CustomBuild Include="source\translator\google_translator.hpp">
+    <CustomBuild Include="source\translator\web_translator.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
@@ -497,9 +485,7 @@
     <ClCompile Include="$(IntDir)moc_appearance_settings_view.cpp" />
     <ClCompile Include="$(IntDir)moc_translation_suggestion_view.cpp" />
     <ClCompile Include="$(IntDir)moc_ctranslate2_translator.cpp" />
-    <ClCompile Include="$(IntDir)moc_claude_translator.cpp" />
-    <ClCompile Include="$(IntDir)moc_deepl_translator.cpp" />
-    <ClCompile Include="$(IntDir)moc_google_translator.cpp" />
+    <ClCompile Include="$(IntDir)moc_web_translator.cpp" />
     <ClCompile Include="$(IntDir)moc_workspace_watcher.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -549,5 +535,12 @@
       <QtTlsPlugins Include="$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\Qt6\plugins\tls\*.*" />
     </ItemGroup>
     <Copy SourceFiles="@(QtTlsPlugins)" DestinationFolder="$(OutDir)tls" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="CopyProviders" AfterTargets="Build" Condition="Exists('$(SolutionDir)providers')">
+    <MakeDir Directories="$(OutDir)providers" />
+    <ItemGroup>
+      <ProviderFiles Include="$(SolutionDir)providers\*.json" />
+    </ItemGroup>
+    <Copy SourceFiles="@(ProviderFiles)" DestinationFolder="$(OutDir)providers" SkipUnchangedFiles="true" />
   </Target>
 </Project>

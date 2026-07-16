@@ -1,0 +1,19 @@
+{
+    "name": "Claude",
+    "kind": "chat_completion",
+    "endpoint": "https://api.anthropic.com/v1/messages",
+    "method": "POST",
+    "body_format": "json",
+    "headers": {
+        "Content-Type": "application/json",
+        "x-api-key": "{{api_key}}",
+        "anthropic-version": "2023-06-01"
+    },
+    "body": {
+        "model": "claude-sonnet-4-20250514",
+        "max_tokens": "4096"
+    },
+    "response_path": "content[0].text",
+    "system_prompt": "You are a translator for the video game Morrowind. Translate the given text from English to {{target_lang}}. Output only the translated text, nothing else. Preserve all HTML tags, line breaks, and formatting exactly as they appear.",
+    "quota_limit": 0
+}

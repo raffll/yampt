@@ -145,6 +145,18 @@ void settings_store_t::set_claude_api_key(const std::string & value)
 	m_settings.setValue("Translation/ClaudeApiKey", QString::fromStdString(value));
 }
 
+std::string settings_store_t::web_api_key(const std::string & provider_id) const
+{
+	const auto key = QString("WebTranslators/") + QString::fromStdString(provider_id);
+	return m_settings.value(key, "").toString().toStdString();
+}
+
+void settings_store_t::set_web_api_key(const std::string & provider_id, const std::string & value)
+{
+	const auto key = QString("WebTranslators/") + QString::fromStdString(provider_id);
+	m_settings.setValue(key, QString::fromStdString(value));
+}
+
 int settings_store_t::translation_source_index() const
 {
 	return m_settings.value("Translation/SourceIndex", 0).toInt();

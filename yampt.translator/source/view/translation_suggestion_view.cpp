@@ -1,6 +1,6 @@
 #include "translation_suggestion_view.hpp"
-#include "../translator/claude_translator.hpp"
 #include "../translator/ctranslate2_translator.hpp"
+#include "../translator/web_translator.hpp"
 #include <utility/app_logger.hpp>
 #include <filesystem>
 #include <fstream>
@@ -25,8 +25,6 @@ translation_suggestion_view_t::translation_suggestion_view_t(QWidget * parent)
 	top_row->setSpacing(4);
 
 	m_provider_combo = new QComboBox(this);
-	m_provider_combo->addItem("CTranslate2");
-	m_provider_combo->addItem("Claude");
 	m_provider_combo->setToolTip(tr("Select translation provider"));
 	m_provider_combo->setFixedWidth(180);
 	top_row->addWidget(m_provider_combo);
@@ -54,10 +52,8 @@ translation_suggestion_view_t::translation_suggestion_view_t(QWidget * parent)
 void translation_suggestion_view_t::setup_controls()
 {
 	m_ct2_provider = new ctranslate2_translator_t(this);
-	m_claude_translator = new claude_translator_t(this);
-
 	m_providers.push_back(m_ct2_provider);
-	m_providers.push_back(m_claude_translator);
+	m_provider_combo->addItem("CTranslate2");
 
 	connect(m_translate_all_btn, &QPushButton::clicked, this, [this]() { emit translate_all_requested(); });
 
@@ -77,18 +73,48 @@ void translation_suggestion_view_t::setup_controls()
 	    this,
 	    [this](translation_suggestion_t result) { display_translation_result(result); });
 
-	connect(
-	    m_claude_translator,
-	    &claude_translator_t::translation_finished,
-	    this,
-	    [this](translation_suggestion_t result)
-	{
-		display_translation_result(result);
-		update_provider_status();
-	});
-
 	rebuild_language_list();
 	update_provider_status();
+}
+
+void translation_suggestion_view_t::set_providers_dir(const std::string & dir)
+{
+	m_providers_dir = dir;
+	rebuild_web_providers();
+}
+
+void translation_suggestion_view_t::rebuild_web_providers()
+{
+	for (auto * web_provider : m_web_providers)
+		web_provider->deleteLater();
+
+	m_web_providers.clear();
+
+	while (m_provider_combo->count() > 1)
+		m_provider_combo->removeItem(m_provider_combo->count() - 1);
+
+	m_providers.resize(1);
+
+	auto configs = web_translator_config::load_all(m_providers_dir);
+
+	for (auto & config : configs)
+	{
+		auto * provider = new web_translator_t(config, this);
+		provider->set_glossary_fn(m_glossary_fn);
+		m_web_providers.push_back(provider);
+		m_providers.push_back(provider);
+		m_provider_combo->addItem(QString::fromStdString(config.display_name));
+
+		connect(
+		    provider,
+		    &web_translator_t::translation_finished,
+		    this,
+		    [this](translation_suggestion_t result)
+		{
+			display_translation_result(result);
+			update_provider_status();
+		});
+	}
 }
 
 void translation_suggestion_view_t::set_source_text(const std::string & text)
@@ -106,8 +132,12 @@ void translation_suggestion_view_t::apply_provider_settings(const settings_store
 {
 	const int language_index = settings.translation_language_index();
 
-	m_claude_translator->set_api_key(settings.claude_api_key());
-	m_claude_translator->set_glossary_fn(m_glossary_fn);
+	for (auto * web_provider : m_web_providers)
+	{
+		const auto & config = web_provider->config();
+		const auto stored_key = settings.web_api_key(config.identifier);
+		web_provider->set_api_key(stored_key);
+	}
 
 	if (m_languages.empty())
 		rebuild_language_list();
@@ -135,20 +165,26 @@ void translation_suggestion_view_t::update_provider_status()
 			m_status_label->setText(tr("CTranslate2: model loaded"));
 		else
 			m_status_label->setText(tr("CTranslate2: no model"));
+
+		return;
 	}
-	else if (provider == m_claude_translator)
+
+	if (provider->is_available())
 	{
-		if (m_claude_translator->is_available())
+		if (provider->has_quota())
 		{
 			m_status_label->setText(
-			    QString("Claude: %L1 input / %L2 output tokens")
-			        .arg(m_claude_translator->input_tokens_used())
-			        .arg(m_claude_translator->output_tokens_used()));
+			    QString::fromStdString(provider->name()) +
+			    QString(": %L1 chars remaining").arg(provider->remaining_quota()));
 		}
 		else
 		{
-			m_status_label->setText(tr("Claude: no API key"));
+			m_status_label->setText(QString::fromStdString(provider->name()) + ": ready");
 		}
+	}
+	else
+	{
+		m_status_label->setText(QString::fromStdString(provider->name()) + ": no API key");
 	}
 }
 
@@ -202,8 +238,8 @@ void translation_suggestion_view_t::load_model_for_language(int index)
 	namespace fs = std::filesystem;
 	auto lang_file = fs::path(lang.model_path) / "languages.txt";
 	{
-		std::ofstream f(lang_file);
-		f << "eng_Latn\n" << lang.code << "\n";
+		std::ofstream file_stream(lang_file);
+		file_stream << "eng_Latn\n" << lang.code << "\n";
 	}
 
 	m_ct2_provider->load_model(lang.model_path);
@@ -217,8 +253,8 @@ ctranslate2_translator_t * translation_suggestion_view_t::ct2_provider() const
 
 void translation_suggestion_view_t::append_log(const std::string & msg)
 {
-	auto * doc = m_result_text->document();
-	if (doc->characterCount() > 1 && !doc->toPlainText().endsWith('\n'))
+	auto * document = m_result_text->document();
+	if (document->characterCount() > 1 && !document->toPlainText().endsWith('\n'))
 		m_result_text->appendPlainText(QString());
 
 	m_result_text->moveCursor(QTextCursor::End);
@@ -262,6 +298,9 @@ translator_t * translation_suggestion_view_t::active_provider() const
 void translation_suggestion_view_t::set_glossary_fn(std::function<std::string(const std::string &)> fn)
 {
 	m_glossary_fn = std::move(fn);
+
+	for (auto * web_provider : m_web_providers)
+		web_provider->set_glossary_fn(m_glossary_fn);
 }
 
 void translation_suggestion_view_t::display_translation_result(const translation_suggestion_t & result)
@@ -272,14 +311,5 @@ void translation_suggestion_view_t::display_translation_result(const translation
 		return;
 	}
 
-	auto display_text = result.text;
-
-	if (m_glossary_fn)
-	{
-		auto glossary_result = m_glossary_fn(result.text);
-		if (!glossary_result.empty() && glossary_result != result.text)
-			display_text += "\n\n[glossary]\n" + glossary_result;
-	}
-
-	m_result_text->setPlainText(QString::fromStdString(display_text));
+	m_result_text->setPlainText(QString::fromStdString(result.text));
 }

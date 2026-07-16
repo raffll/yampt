@@ -4,6 +4,7 @@
 #include "shortcuts_settings_view.hpp"
 #include "translation_settings_view.hpp"
 #include <settings_store.hpp>
+#include <QCoreApplication>
 #include <QDialogButtonBox>
 #include <QHBoxLayout>
 #include <QListWidget>
@@ -29,7 +30,9 @@ translator_settings_dialog_t::translator_settings_dialog_t(
 
 	m_appearance_view = new appearance_settings_view_t(this);
 	m_language_view = new language_settings_view_t(dictionaries_dir, this);
-	m_translation_view = new translation_settings_view_t(this);
+
+	auto providers_dir = QCoreApplication::applicationDirPath().toStdString() + "/providers";
+	m_translation_view = new translation_settings_view_t(providers_dir, this);
 	m_shortcuts_view = new shortcuts_settings_view_t(this);
 
 	m_category_list->addItem("Appearance");

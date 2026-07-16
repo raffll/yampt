@@ -50,9 +50,8 @@
     <ClCompile Include="source\highlighter\glossary_highlighter.cpp" />
     <ClCompile Include="source\highlighter\topic_highlighter.cpp" />
     <ClCompile Include="source\translator\ctranslate2_translator.cpp" />
-    <ClCompile Include="source\translator\claude_translator.cpp" />
-    <ClCompile Include="source\translator\deepl_translator.cpp" />
-    <ClCompile Include="source\translator\google_translator.cpp" />
+    <ClCompile Include="source\translator\web_translator.cpp" />
+    <ClCompile Include="source\translator\web_translator_config.cpp" />
     <ClCompile Include="source\editor\spell_checker.cpp" />
     <ClCompile Include="source\view\display_name.cpp" />
     <ClCompile Include="source\highlighter\highlight_coordinator.cpp" />

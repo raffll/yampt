@@ -1,0 +1,19 @@
+{
+    "name": "Google Translate",
+    "kind": "simple",
+    "endpoint": "https://translation.googleapis.com/language/translate/v2",
+    "method": "POST",
+    "body_format": "json",
+    "headers": {
+        "Content-Type": "application/json",
+        "x-goog-api-key": "{{api_key}}"
+    },
+    "body": {
+        "q": "{{text}}",
+        "target": "{{target_lang}}",
+        "source": "en",
+        "format": "text"
+    },
+    "response_path": "data.translations[0].translatedText",
+    "quota_limit": 0
+}

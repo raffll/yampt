@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../translator/translator.hpp"
+#include "../translator/web_translator_config.hpp"
 #include <functional>
 #include <memory>
 #include <string>
@@ -15,7 +16,7 @@ class QVBoxLayout;
 
 class settings_store_t;
 class ctranslate2_translator_t;
-class claude_translator_t;
+class web_translator_t;
 
 class translation_suggestion_view_t : public QWidget
 {
@@ -26,6 +27,7 @@ public:
 
 	void set_source_text(const std::string & text);
 	void set_models_dir(const std::string & dir);
+	void set_providers_dir(const std::string & dir);
 	void set_glossary_fn(std::function<std::string(const std::string &)> fn);
 
 	void apply_provider_settings(const settings_store_t & settings);
@@ -47,6 +49,7 @@ private:
 	void setup_controls();
 	void load_model_for_language(int index);
 	void rebuild_language_list();
+	void rebuild_web_providers();
 
 	QComboBox * m_provider_combo = nullptr;
 	QPushButton * m_translate_all_btn = nullptr;
@@ -55,10 +58,11 @@ private:
 
 	std::string m_source_text;
 	std::string m_models_dir;
+	std::string m_providers_dir;
 	std::function<std::string(const std::string &)> m_glossary_fn;
 
 	ctranslate2_translator_t * m_ct2_provider = nullptr;
-	claude_translator_t * m_claude_translator = nullptr;
+	std::vector<web_translator_t *> m_web_providers;
 	std::vector<translator_t *> m_providers;
 	int m_active_provider_index = 0;
 	bool m_batch_in_progress = false;
