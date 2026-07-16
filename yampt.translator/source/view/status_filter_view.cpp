@@ -323,7 +323,7 @@ void status_filter_view_t::update_counts(
 		auto found = total_counts.find(current_row.status);
 		size_t count = (found != total_counts.end()) ? found->second : 0;
 
-		current_row.item->setHidden(false);
+		current_row.item->setHidden(m_visible_statuses.count(current_row.status) == 0);
 
 		if (count > 0)
 			current_row.item->setData(role_counter, QString::number(count));
@@ -389,32 +389,20 @@ void status_filter_view_t::set_document_open(bool open)
 	update_styles();
 }
 
-void status_filter_view_t::set_yaml_mode(bool yaml_only)
+void status_filter_view_t::set_visible_statuses(const std::set<status_t> & visible)
 {
-	m_yaml_mode = yaml_only;
+	m_visible_statuses = visible;
 
 	for (auto & current_row : m_rows)
 	{
 		if (current_row.is_all)
+		{
+			current_row.item->setHidden(visible.empty());
 			continue;
+		}
 
-		if (yaml_only)
-		{
-			const bool is_yaml_status =
-			    (current_row.status == status_t::translated || current_row.status == status_t::untranslated);
-			current_row.item->setHidden(!is_yaml_status);
-		}
-		else
-		{
-			current_row.item->setHidden(false);
-		}
+		current_row.item->setHidden(visible.count(current_row.status) == 0);
 	}
-}
-
-void status_filter_view_t::set_visible_all(bool visible)
-{
-	for (auto & current_row : m_rows)
-		current_row.item->setHidden(!visible);
 }
 
 void status_filter_view_t::refresh_theme()

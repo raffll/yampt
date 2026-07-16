@@ -23,8 +23,7 @@ public:
 	bool has_filter() const;
 	void set_filter_state(const std::set<status_t> & statuses);
 	void set_document_open(bool open);
-	void set_yaml_mode(bool yaml_only);
-	void set_visible_all(bool visible);
+	void set_visible_statuses(const std::set<status_t> & visible);
 	void refresh_theme();
 
 signals:
@@ -50,5 +49,5 @@ private:
 	int m_all_row = -1;
 	bool m_enabled = true;
 	bool m_document_open = false;
-	bool m_yaml_mode = false;
+	std::set<status_t> m_visible_statuses;
 };

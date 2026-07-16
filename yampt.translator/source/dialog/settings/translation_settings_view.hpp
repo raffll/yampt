@@ -16,6 +16,5 @@ public:
 	void apply(settings_store_t & settings) const;
 
 private:
-	QLineEdit * m_deepl_key_edit = nullptr;
-	QLineEdit * m_google_key_edit = nullptr;
+	QLineEdit * m_claude_key_edit = nullptr;
 };

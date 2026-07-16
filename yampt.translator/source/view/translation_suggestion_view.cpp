@@ -1,7 +1,6 @@
 #include "translation_suggestion_view.hpp"
+#include "../translator/claude_translator.hpp"
 #include "../translator/ctranslate2_translator.hpp"
-#include "../translator/deepl_translator.hpp"
-#include "../translator/google_translator.hpp"
 #include <utility/app_logger.hpp>
 #include <filesystem>
 #include <fstream>
@@ -27,8 +26,7 @@ translation_suggestion_view_t::translation_suggestion_view_t(QWidget * parent)
 
 	m_provider_combo = new QComboBox(this);
 	m_provider_combo->addItem("CTranslate2");
-	m_provider_combo->addItem("DeepL (not supported)");
-	m_provider_combo->addItem("Google (not supported)");
+	m_provider_combo->addItem("Claude");
 	m_provider_combo->setToolTip(tr("Select translation provider"));
 	m_provider_combo->setFixedWidth(180);
 	top_row->addWidget(m_provider_combo);
@@ -56,12 +54,10 @@ translation_suggestion_view_t::translation_suggestion_view_t(QWidget * parent)
 void translation_suggestion_view_t::setup_controls()
 {
 	m_ct2_provider = new ctranslate2_translator_t(this);
-	m_deepl_translator = new deepl_translator_t(this);
-	m_google_translator = new google_translator_t(this);
+	m_claude_translator = new claude_translator_t(this);
 
 	m_providers.push_back(m_ct2_provider);
-	m_providers.push_back(m_deepl_translator);
-	m_providers.push_back(m_google_translator);
+	m_providers.push_back(m_claude_translator);
 
 	connect(m_translate_all_btn, &QPushButton::clicked, this, [this]() { emit translate_all_requested(); });
 
@@ -72,12 +68,7 @@ void translation_suggestion_view_t::setup_controls()
 	    [this](int index)
 	{
 		select_provider(index);
-		m_translate_all_btn->setEnabled(index == 0);
-
-		if (index > 0)
-			m_status_label->setText(tr("Provider not supported yet"));
-		else
-			update_provider_status();
+		update_provider_status();
 	});
 
 	connect(
@@ -87,20 +78,14 @@ void translation_suggestion_view_t::setup_controls()
 	    [this](translation_suggestion_t result) { display_translation_result(result); });
 
 	connect(
-	    m_deepl_translator,
-	    &deepl_translator_t::translation_finished,
+	    m_claude_translator,
+	    &claude_translator_t::translation_finished,
 	    this,
 	    [this](translation_suggestion_t result)
 	{
 		display_translation_result(result);
 		update_provider_status();
 	});
-
-	connect(
-	    m_google_translator,
-	    &google_translator_t::translation_finished,
-	    this,
-	    [this](translation_suggestion_t result) { display_translation_result(result); });
 
 	rebuild_language_list();
 	update_provider_status();
@@ -121,8 +106,8 @@ void translation_suggestion_view_t::apply_provider_settings(const settings_store
 {
 	const int language_index = settings.translation_language_index();
 
-	m_deepl_translator->set_api_key(settings.deepl_api_key());
-	m_google_translator->set_api_key(settings.google_api_key());
+	m_claude_translator->set_api_key(settings.claude_api_key());
+	m_claude_translator->set_glossary_fn(m_glossary_fn);
 
 	if (m_languages.empty())
 		rebuild_language_list();
@@ -151,24 +136,19 @@ void translation_suggestion_view_t::update_provider_status()
 		else
 			m_status_label->setText(tr("CTranslate2: no model"));
 	}
-	else if (provider == m_deepl_translator)
+	else if (provider == m_claude_translator)
 	{
-		if (m_deepl_translator->is_available())
+		if (m_claude_translator->is_available())
 		{
-			const int remaining = m_deepl_translator->remaining_quota();
-			m_status_label->setText(QString("DeepL: %L1 chars remaining").arg(remaining));
+			m_status_label->setText(
+			    QString("Claude: %L1 input / %L2 output tokens")
+			        .arg(m_claude_translator->input_tokens_used())
+			        .arg(m_claude_translator->output_tokens_used()));
 		}
 		else
 		{
-			m_status_label->setText(tr("DeepL: no API key"));
+			m_status_label->setText(tr("Claude: no API key"));
 		}
-	}
-	else if (provider == m_google_translator)
-	{
-		if (m_google_translator->is_available())
-			m_status_label->setText(tr("Google: active"));
-		else
-			m_status_label->setText(tr("Google: no API key"));
 	}
 }
 

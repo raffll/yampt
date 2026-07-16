@@ -15,8 +15,7 @@ class QVBoxLayout;
 
 class settings_store_t;
 class ctranslate2_translator_t;
-class deepl_translator_t;
-class google_translator_t;
+class claude_translator_t;
 
 class translation_suggestion_view_t : public QWidget
 {
@@ -59,8 +58,7 @@ private:
 	std::function<std::string(const std::string &)> m_glossary_fn;
 
 	ctranslate2_translator_t * m_ct2_provider = nullptr;
-	deepl_translator_t * m_deepl_translator = nullptr;
-	google_translator_t * m_google_translator = nullptr;
+	claude_translator_t * m_claude_translator = nullptr;
 	std::vector<translator_t *> m_providers;
 	int m_active_provider_index = 0;
 	bool m_batch_in_progress = false;

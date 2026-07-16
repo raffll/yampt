@@ -8,6 +8,8 @@
 - Script source stored as reference data in dictionaries for context lookup
 - Sync Scrolling: View menu toggle to bind scrolling between original and translation panes
 - Grammar check: quoted text highlighted in lighter color for visual distinction
+- Claude translation provider: AI-powered translation with glossary context in prompt
+- Translation settings page: Claude API key configuration
 - Translation engine: pre-substitution of glossary terms before sending to AI model
 - Translation engine: SCTX/BNAM tokenization — only translatable strings are sent to model
 - Translation engine: status `model` assigned to AI-translated entries

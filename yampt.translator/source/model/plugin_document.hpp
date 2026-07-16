@@ -74,6 +74,16 @@ public:
 		return 0;
 	}
 
+	std::set<rec_type_t> supported_types() const override
+	{
+		return {};
+	}
+
+	std::set<status_t> supported_statuses() const override
+	{
+		return {};
+	}
+
 	void set_dirty(bool) override
 	{}
 

@@ -112,8 +112,12 @@ Left panel has a list of record types (CELL, DIAL, INFO, FNAM, TEXT, GMST, etc.)
 
 ## Machine Translation (Translate tab)
 
-Uses CTranslate2 with NLLB-600M model (offline, supports PL/DE/FR/RU/IT/HU).
+Two providers available (select from combo box):
 
+- **CTranslate2** — offline NLLB-600M model (supports PL/DE/FR/RU/IT/HU). No internet required.
+- **Claude** — Anthropic API. Requires API key (Settings → Translation). Glossary terms are included in the prompt for context-aware translation. Token usage shown in status bar.
+
+Usage:
 - Select an untranslated entry → click Translate
 - Status is set to `model` after translation
 
@@ -150,3 +154,4 @@ See [Dictionary Entry Statuses](Dictionary-Entry-Statuses.md) for the full refer
 - **Appearance**: Theme
 - **Shortcuts**: Keybindings
 - **Language**: Native/foreign language, spell check dictionaries
+- **Translation**: Claude API key

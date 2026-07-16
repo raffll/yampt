@@ -29,6 +29,9 @@ public:
 	int translated_count() const override;
 	int total_count() const override;
 
+	std::set<rec_type_t> supported_types() const override;
+	std::set<status_t> supported_statuses() const override;
+
 	void set_dirty(bool dirty) override;
 
 	dict_kind_t dict_kind() const;

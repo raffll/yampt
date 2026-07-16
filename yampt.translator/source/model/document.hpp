@@ -2,6 +2,7 @@
 
 #include "edit_permissions.hpp"
 #include "table_row.hpp"
+#include <set>
 #include <string>
 #include <vector>
 
@@ -40,6 +41,9 @@ public:
 
 	virtual int translated_count() const = 0;
 	virtual int total_count() const = 0;
+
+	virtual std::set<rec_type_t> supported_types() const = 0;
+	virtual std::set<status_t> supported_statuses() const = 0;
 
 	virtual void set_dirty(bool dirty) = 0;
 };

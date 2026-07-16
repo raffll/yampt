@@ -135,6 +135,16 @@ void settings_store_t::set_google_api_key(const std::string & value)
 	m_settings.setValue("Translation/GoogleApiKey", QString::fromStdString(value));
 }
 
+std::string settings_store_t::claude_api_key() const
+{
+	return m_settings.value("Translation/ClaudeApiKey", "").toString().toStdString();
+}
+
+void settings_store_t::set_claude_api_key(const std::string & value)
+{
+	m_settings.setValue("Translation/ClaudeApiKey", QString::fromStdString(value));
+}
+
 int settings_store_t::translation_source_index() const
 {
 	return m_settings.value("Translation/SourceIndex", 0).toInt();

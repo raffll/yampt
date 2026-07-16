@@ -371,7 +371,7 @@ void main_window_t::switch_document(document_t * new_doc)
 	if (m_active_doc->kind() == document_kind_t::dict)
 	{
 		m_filter_tree_view->set_display_mode(filter_tree_view_t::display_mode_t::full);
-		m_status_filter_view->set_yaml_mode(false);
+		m_status_filter_view->set_visible_statuses(m_active_doc->supported_statuses());
 		if (m_session.dict_version() != m_last_annotation_version)
 		{
 			rebuild_annotations();
@@ -382,12 +382,12 @@ void main_window_t::switch_document(document_t * new_doc)
 	{
 		m_filter_tree_view->set_display_mode(filter_tree_view_t::display_mode_t::empty);
 		m_filter_tree_view->setEnabled(false);
-		m_status_filter_view->set_visible_all(false);
+		m_status_filter_view->set_visible_statuses(m_active_doc->supported_statuses());
 	}
 	else
 	{
 		m_filter_tree_view->set_display_mode(filter_tree_view_t::display_mode_t::all_only);
-		m_status_filter_view->set_yaml_mode(true);
+		m_status_filter_view->set_visible_statuses(m_active_doc->supported_statuses());
 	}
 
 	m_table_view->set_context_menu_enabled(m_active_doc->permissions().status_changeable);

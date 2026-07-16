@@ -251,6 +251,24 @@ int dict_document_t::total_count() const
 	return count;
 }
 
+std::set<rec_type_t> dict_document_t::supported_types() const
+{
+	return {
+		rec_type_t::cell, rec_type_t::dial, rec_type_t::info, rec_type_t::fnam, rec_type_t::text,
+		rec_type_t::gmst, rec_type_t::desc, rec_type_t::rnam, rec_type_t::indx, rec_type_t::sctx,
+	};
+}
+
+std::set<status_t> dict_document_t::supported_statuses() const
+{
+	return {
+		status_t::translated,  status_t::to_verify,    status_t::untranslated, status_t::reused,
+		status_t::adapted,     status_t::ambiguous,    status_t::changed,      status_t::outdated,
+		status_t::duplicate,   status_t::heuristic,    status_t::missing,      status_t::mismatch,
+		status_t::in_progress, status_t::propagated,   status_t::model,        status_t::error,
+	};
+}
+
 void dict_document_t::set_dirty(bool dirty)
 {
 	m_dirty = dirty;

@@ -255,6 +255,16 @@ int yaml_document_t::total_count() const
 	return static_cast<int>(m_keys.size());
 }
 
+std::set<rec_type_t> yaml_document_t::supported_types() const
+{
+	return { rec_type_t::yaml };
+}
+
+std::set<status_t> yaml_document_t::supported_statuses() const
+{
+	return { status_t::translated, status_t::untranslated };
+}
+
 void yaml_document_t::set_dirty(bool dirty)
 {
 	m_dirty = dirty;

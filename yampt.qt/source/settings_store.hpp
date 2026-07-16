@@ -50,6 +50,9 @@ public:
 	std::string google_api_key() const;
 	void set_google_api_key(const std::string & value);
 
+	std::string claude_api_key() const;
+	void set_claude_api_key(const std::string & value);
+
 	int translation_source_index() const;
 	void set_translation_source_index(int index);
 
