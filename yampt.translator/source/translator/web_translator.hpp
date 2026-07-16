@@ -27,6 +27,9 @@ public:
 	void set_api_key(const std::string & key);
 	std::string api_key() const;
 
+	void set_source_language(const std::string & language);
+	std::string source_language() const;
+
 	const web_translator_config_t & config() const;
 
 	void set_glossary_fn(std::function<std::string(const std::string &)> glossary_fn);
@@ -44,6 +47,7 @@ private:
 	web_translator_config_t m_config;
 	QNetworkAccessManager * m_network = nullptr;
 	std::string m_api_key;
+	std::string m_source_language = "en";
 	int m_chars_used = 0;
 	std::function<std::string(const std::string &)> m_glossary_fn;
 };

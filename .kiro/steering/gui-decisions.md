@@ -70,7 +70,7 @@ Current mapping:
 - `changed` → "Changed"
 - `outdated` → "Outdated"
 - `in_progress` → "In Progress"
-- `model` → "AI Translated"
+- `model` → "Generated"
 - `mismatch` → "Mismatch"
 - `propagated` → "Propagated"
 - `ambiguous` → "Ambiguous"

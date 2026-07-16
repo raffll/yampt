@@ -10,7 +10,7 @@ Translation workbench for Morrowind ESM/ESP plugins.
 ## Main Layout
 
 - **Left top**: Files tab (sidebar), Filters tab (record type list), and Statuses tab (status filter)
-- **Left bottom**: Annotations, History, and AI Translate tabs
+- **Left bottom**: Annotations, History, and Auto Translate tabs
 - **Right top**: Records table, Preview, and Log tabs
 - **Right bottom**: Editor (Original text, Details, Translation)
 - **Toolbar**: Search bar with filter toggles (Aa = case-sensitive, .* = regex, Key/Original/Translation column selectors)
@@ -110,48 +110,42 @@ Left panel has a list of record types (CELL, DIAL, INFO, FNAM, TEXT, GMST, etc.)
 - `Shift+Tab` — Previous entry
 - `Escape` — Clear search
 
-## Machine Translation (AI Translate tab)
+## Machine Translation (Auto Translate tab)
 
-Two providers available (select from combo box):
+Select a provider from the combo box:
 
-- **CTranslate2** — offline NLLB-600M model (supports PL/DE/FR/RU/IT/HU). No internet required.
-- **Claude** — Anthropic API. Requires API key (Settings → Translation). Glossary terms are included in the prompt for context-aware translation. Token usage shown in status bar.
+- **CTranslate2** — offline model (supports PL/DE/FR/RU/IT/HU). No internet required.
+- **Web providers** — DeepL, Google Translate, Claude, and others. Requires API key (Settings → Translation).
 
 Usage:
 - Select an untranslated entry → click Translate
-- Status is set to `AI Translated` after translation
+- Status is set to `Generated` after translation
+
+Additional providers can be added by placing a configuration file in the `providers/` folder next to the application.
 
 ## Entry Statuses
 
-Each dictionary entry has a status that determines whether it's applied during Convert/Create.
+Each dictionary entry has a status. Only **Translated** entries are applied during Convert/Create — all others are skipped. You can manually set **Translated**, **In Progress**, or **Untranslated** via right-click context menu.
 
-**Applied to plugin** (only these produce output):
-- **Translated** — finished, human-approved translation
-- **Matched** — paired automatically during make-base
-- **Heuristic** — matched by the translation engine during make-base
-
-**Needs work:**
-- **Untranslated** — no translation yet
-- **In Progress** — editing started but not finalized
-- **AI Translated** — machine-translated, awaiting review
-- **Changed** — source text updated since translation was made
-- **Adapted** — source differs in numbers/punctuation, translation auto-adjusted
-- **Outdated** — source changed while translation was still unfinished
-- **Ambiguous** — multiple conflicting translations exist
-
-**Informational:**
-- **Reused** — translation borrowed from another entry with the same text
-- **Propagated** — auto-filled from another entry
-- **Missing** — no native match found during make-base
-- **Duplicate** — same key appeared multiple times
-- **Mismatch** — extra native content with no foreign counterpart
-- **Error** — validation problem
-
-See [Dictionary Entry Statuses](Dictionary-Entry-Statuses.md) for the full reference.
+- **Translated** — the translation is approved. This is the only status that produces output when running Convert or Create.
+- **Untranslated** — no translation exists. The original and translation fields contain the same text.
+- **In Progress** — assigned automatically when you edit a translation. Indicates work has started but the entry is not yet approved.
+- **Generated** — assigned when the Auto Translate button fills in a translation. Review the result, then set to Translated if correct.
+- **To Verify** — assigned during Make Base (partial mode) when the original and native text are identical but no English words were detected. May be a proper noun that needs no translation, or may be an untranslated entry in a language that shares words with English. Check manually.
+- **Changed** — the original text in the source plugin differs from what was originally translated. The existing translation may no longer be accurate. Compare the current original with the old original shown in the Details panel.
+- **Adapted** — no entry with a matching key was found in the base dictionary, but another entry with identical original text provided a translation. The translation may not fit this context. The Details panel shows which entry it was adapted from.
+- **Outdated** — like Changed, but the entry had not been approved as Translated before the source text changed.
+- **Ambiguous** — multiple entries in the base dictionary offer different translations for the same original text. The Details panel lists all candidates. Pick the correct one and set to Translated.
+- **Reused** — the base dictionary contained a matching original text under a different key. The translation was copied from that entry.
+- **Propagated** — after you committed a translation, all other entries sharing the same original text were updated to match.
+- **Missing** — during Make Base, this record existed in the foreign file but no corresponding record was found in the native file. Requires manual translation.
+- **Duplicate** — the same key appeared more than once in the source plugin. Only the first occurrence is stored.
+- **Mismatch** — during Make Base, a record existed in the native file with no corresponding record in the foreign file. Informational; no action needed.
+- **Error** — the translation exceeds the maximum byte length allowed for this sub-record type and cannot be written to the plugin. Shorten the translation.
 
 ## Settings (Ctrl+,)
 
 - **Appearance**: Theme
 - **Shortcuts**: Keybindings
 - **Language**: Native/foreign language, spell check dictionaries
-- **Translation**: Claude API key
+- **Translation**: API keys table for web providers (DeepL, Google, Claude, etc.)

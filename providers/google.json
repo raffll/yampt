@@ -11,7 +11,7 @@
     "body": {
         "q": "{{text}}",
         "target": "{{target_lang}}",
-        "source": "en",
+        "source": "{{source_lang}}",
         "format": "text"
     },
     "response_path": "data.translations[0].translatedText",

@@ -67,6 +67,7 @@
     <ClCompile Include="source\tests.settings_store.cpp" />
     <ClCompile Include="source\tests.path_resolver.cpp" />
     <ClCompile Include="source\tests.workspace_watcher.cpp" />
+    <ClCompile Include="source\tests.web_translator_config.cpp" />
     <ClCompile Include="..\yampt.core\source\io\eet_converter.cpp" />
     <ClCompile Include="..\yampt.core\source\io\eet_reader.cpp" />
     <ClCompile Include="..\yampt.core\source\utility\char_diff.cpp" />
@@ -114,6 +115,7 @@
     <ClCompile Include="..\yampt.editor\source\model\nav_tree_filter.cpp" />
     <ClCompile Include="..\yampt.editor\source\session\plugin_session.cpp" />
     <ClCompile Include="..\yampt.editor\source\patcher\patch_builder.cpp" />
+    <ClCompile Include="..\yampt.translator\source\translator\web_translator_config.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="source\cpp.hint" />

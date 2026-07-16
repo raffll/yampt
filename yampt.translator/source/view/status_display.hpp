@@ -34,7 +34,7 @@ inline QString status_display_name(status_t status)
 	case status_t::in_progress:
 		return QStringLiteral("In Progress");
 	case status_t::model:
-		return QStringLiteral("AI Translated");
+		return QStringLiteral("Generated");
 	case status_t::propagated:
 		return QStringLiteral("Propagated");
 	case status_t::error:

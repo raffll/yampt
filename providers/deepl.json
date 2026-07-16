@@ -11,7 +11,7 @@
     "body": {
         "text": "{{text}}",
         "target_lang": "{{target_lang_upper}}",
-        "source_lang": "EN"
+        "source_lang": "{{source_lang_upper}}"
     },
     "response_path": "translations[0].text",
     "quota_limit": 500000

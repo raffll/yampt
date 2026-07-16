@@ -255,6 +255,7 @@
     <ClCompile Include="source\tests.row_filter.cpp" />
     <ClCompile Include="source\tests.pending_status.cpp" />
     <ClCompile Include="source\tests.script_tokenizer_extended.cpp" />
+    <ClCompile Include="source\tests.web_translator_config.cpp" />
     <ClCompile Include="..\yampt.translator\source\model\table_builder.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\row_filter.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\glossary.cpp" />
@@ -276,6 +277,7 @@
     <ClCompile Include="..\yampt.editor\source\model\nav_tree_filter.cpp" />
     <ClCompile Include="..\yampt.editor\source\session\plugin_session.cpp" />
     <ClCompile Include="..\yampt.editor\source\patcher\patch_builder.cpp" />
+    <ClCompile Include="..\yampt.translator\source\translator\web_translator_config.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\yampt.editor\source\session\plugin_session.hpp">

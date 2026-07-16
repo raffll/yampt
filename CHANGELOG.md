@@ -7,8 +7,8 @@
 - [NEW] Script source stored as reference data in dictionaries for context lookup
 - [NEW] Sync Scrolling: View menu toggle to bind scrolling between original and translation panes
 - [NEW] Grammar check: quoted text highlighted in lighter color for visual distinction
-- [NEW] Claude translation provider: AI-powered translation with glossary context in prompt
-- [NEW] Translation settings page: Claude API key configuration
+- [NEW] Web translation providers: config-driven architecture (DeepL, Google, Claude via JSON config files)
+- [NEW] Translation settings page: table showing all providers with API key fields
 - [NEW] Translation engine: pre-substitution of glossary terms before sending to AI model
 - [NEW] Translation engine: SCTX/BNAM tokenization — only translatable strings are sent to model
 - [NEW] Inline table editing: double-click Translation column to edit single-line entries directly
@@ -24,8 +24,8 @@
 - [CHANGE] Language settings: simplified panel (foreign/native language, spell check, tags)
 - [CHANGE] Script editor: `say` keyword sound file path hidden from display and translation
 - [CHANGE] Book Preview tab renamed to Preview
-- [CHANGE] Translate tab renamed to AI Translate
-- [CHANGE] "Model" status display renamed to "AI Translated"
+- [CHANGE] Translate tab renamed to Auto Translate
+- [CHANGE] "Model" status display renamed to "Generated"
 - [CHANGE] Filters and Statuses are now fully independent (no cross-reset)
 - [CHANGE] YAML context menu: foreign files show "Make Translation", native files show "Save"
 - [CHANGE] YAML files in workspace auto-loaded on startup

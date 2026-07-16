@@ -131,12 +131,14 @@ void translation_suggestion_view_t::set_models_dir(const std::string & dir)
 void translation_suggestion_view_t::apply_provider_settings(const settings_store_t & settings)
 {
 	const int language_index = settings.translation_language_index();
+	const auto source_language = settings.foreign_language();
 
 	for (auto * web_provider : m_web_providers)
 	{
 		const auto & config = web_provider->config();
 		const auto stored_key = settings.web_api_key(config.identifier);
 		web_provider->set_api_key(stored_key);
+		web_provider->set_source_language(source_language);
 	}
 
 	if (m_languages.empty())

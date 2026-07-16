@@ -52,6 +52,16 @@ std::string web_translator_t::api_key() const
 	return m_api_key;
 }
 
+void web_translator_t::set_source_language(const std::string & language)
+{
+	m_source_language = language;
+}
+
+std::string web_translator_t::source_language() const
+{
+	return m_source_language;
+}
+
 const web_translator_config_t & web_translator_t::config() const
 {
 	return m_config;
@@ -96,9 +106,13 @@ std::string web_translator_t::expand_template(
 	replace_all("{{api_key}}", m_api_key);
 	replace_all("{{text}}", text);
 	replace_all("{{target_lang}}", target_lang);
+	replace_all("{{source_lang}}", m_source_language);
 
 	auto upper_lang = QString::fromStdString(target_lang).toUpper().toStdString();
 	replace_all("{{target_lang_upper}}", upper_lang);
+
+	auto upper_source = QString::fromStdString(m_source_language).toUpper().toStdString();
+	replace_all("{{source_lang_upper}}", upper_source);
 
 	return result;
 }
