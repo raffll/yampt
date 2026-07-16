@@ -67,7 +67,6 @@
 - Whitespace markers: newline indicator now visible at line breaks
 - Spell check: dictionary now loads correctly on startup
 - Grammar check: missing punctuation no longer flagged while cursor is at end of text
-- Grammar check: unmatched quotes no longer triggered by HTML attributes in book records
 - Propagation: entries with leading/trailing whitespace differences now match correctly
 
 ## [0.842] - 2026-07-05
