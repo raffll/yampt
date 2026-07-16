@@ -1,6 +1,8 @@
 #include "book_preview_view.hpp"
 #include "../highlighter/script_tokenizer.hpp"
+#include <QHBoxLayout>
 #include <QRegularExpression>
+#include <QScrollBar>
 #include <QSplitter>
 #include <QTextBrowser>
 #include <QVBoxLayout>
@@ -42,6 +44,33 @@ book_preview_view_t::book_preview_view_t(QWidget * parent)
 	m_splitter->setSizes({ 500, 500 });
 
 	layout->addWidget(m_splitter);
+
+	m_syncing = false;
+
+	auto sync_from_browser = [this](QTextBrowser * source_browser, QTextBrowser * target_browser)
+	{
+		if (m_syncing || !m_scroll_sync_enabled)
+			return;
+
+		m_syncing = true;
+		auto * source_v = source_browser->verticalScrollBar();
+		auto * target_v = target_browser->verticalScrollBar();
+		if (source_v->maximum() > 0)
+			target_v->setValue(static_cast<int>(static_cast<double>(source_v->value()) / source_v->maximum() * target_v->maximum()));
+
+		target_browser->horizontalScrollBar()->setValue(source_browser->horizontalScrollBar()->value());
+		m_syncing = false;
+	};
+
+	connect(m_original_browser->verticalScrollBar(), &QScrollBar::valueChanged, this, [this, sync_from_browser]() { sync_from_browser(m_original_browser, m_translation_browser); });
+	connect(m_original_browser->horizontalScrollBar(), &QScrollBar::valueChanged, this, [this, sync_from_browser]() { sync_from_browser(m_original_browser, m_translation_browser); });
+	connect(m_translation_browser->verticalScrollBar(), &QScrollBar::valueChanged, this, [this, sync_from_browser]() { sync_from_browser(m_translation_browser, m_original_browser); });
+	connect(m_translation_browser->horizontalScrollBar(), &QScrollBar::valueChanged, this, [this, sync_from_browser]() { sync_from_browser(m_translation_browser, m_original_browser); });
+}
+
+void book_preview_view_t::set_scroll_sync(bool enabled)
+{
+	m_scroll_sync_enabled = enabled;
 }
 
 void book_preview_view_t::set_html(const std::string & original_html, const std::string & translation_html)

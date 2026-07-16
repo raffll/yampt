@@ -9,12 +9,11 @@ Translation workbench for Morrowind ESM/ESP plugins.
 
 ## Main Layout
 
-- **Left top**: Files tab (sidebar) and Filters tab (record type list)
+- **Left top**: Files tab (sidebar), Filters tab (record type list), and Statuses tab (status filter)
 - **Left bottom**: Annotations, History, and Translate tabs
-- **Right top**: Records table, Book Preview, and Log tabs
+- **Right top**: Records table, Preview, and Log tabs
 - **Right bottom**: Editor (Original text, Details, Translation)
 - **Toolbar**: Search bar with filter toggles (Aa = case-sensitive, .* = regex, Key/Original/Translation column selectors)
-- **Status bar**: Status filter buttons (colored by translation status)
 
 ## Sidebar
 
@@ -33,9 +32,12 @@ Right-click context menus:
 - Save
 - Delete
 
-**YAML files**:
+**YAML files** (foreign):
+- Make Translation (create native language scaffold)
+- Delete
+
+**YAML files** (native):
 - Save
-- Export (create native language version)
 - Delete
 
 **Folders**:
@@ -81,9 +83,9 @@ For script records (SCTX/BNAM), only quoted strings are editable — the script 
 
 Type in the search field to filter the records table. Toggle which columns are searched (Key, Original, Translation). Supports case-sensitive and regex modes.
 
-## Status Filter Bar
+## Status Filter (Statuses tab)
 
-Colored buttons below the toolbar. Click to filter by status, right-click to solo. Only statuses with entries are shown.
+List of all statuses with colored bullet indicators and counters. Click to solo one status, right-click to toggle. "All" row resets the filter. Filters and Statuses are independent.
 
 ## Type Filter (Filters tab)
 
@@ -96,6 +98,7 @@ Left panel has a list of record types (CELL, DIAL, INFO, FNAM, TEXT, GMST, etc.)
 - **Spell Check** — underline misspelled words in translation
 - **Grammar Check** — highlight grammar issues
 - **Whitespace Markers** — show spaces and line endings
+- **Sync Scrolling** — bind scrolling between original and translation panes (editor and preview)
 
 ## Keyboard Shortcuts
 
@@ -147,4 +150,3 @@ See [Dictionary Entry Statuses](Dictionary-Entry-Statuses.md) for the full refer
 - **Appearance**: Theme
 - **Shortcuts**: Keybindings
 - **Language**: Native/foreign language, spell check dictionaries
-- **Translation**: API keys for DeepL and Google (alternative providers)

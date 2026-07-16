@@ -15,6 +15,7 @@ public:
 
 	void set_html(const std::string & original_html, const std::string & translation_html);
 	void set_script(const std::string & original_script, const std::string & translated_script);
+	void set_scroll_sync(bool enabled);
 	void clear();
 
 private:
@@ -24,4 +25,6 @@ private:
 	QSplitter * m_splitter = nullptr;
 	QTextBrowser * m_original_browser = nullptr;
 	QTextBrowser * m_translation_browser = nullptr;
+	bool m_syncing = false;
+	bool m_scroll_sync_enabled = true;
 };

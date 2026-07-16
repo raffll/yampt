@@ -60,9 +60,15 @@ void grammar_checker_t::check_unmatched_quotes(
 {
 	int quote_count = 0;
 	int last_quote = -1;
+	bool inside_tag = false;
+
 	for (qsizetype i = 0; i < text.size(); ++i)
 	{
-		if (text[i] == '"')
+		if (text[i] == '<')
+			inside_tag = true;
+		else if (text[i] == '>')
+			inside_tag = false;
+		else if (text[i] == '"' && !inside_tag)
 		{
 			++quote_count;
 			last_quote = static_cast<int>(i);

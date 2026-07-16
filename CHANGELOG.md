@@ -6,6 +6,7 @@
 - Status filter moved to a dedicated Statuses tab (same interaction as Filters tab)
 - Full script preview: selecting a script entry shows the entire script source in Preview tab
 - Script source stored as reference data in dictionaries for context lookup
+- Sync Scrolling: View menu toggle to bind scrolling between original and translation panes
 - Translation engine: pre-substitution of glossary terms before sending to AI model
 - Translation engine: SCTX/BNAM tokenization — only translatable strings are sent to model
 - Translation engine: status `model` assigned to AI-translated entries
@@ -22,7 +23,7 @@
 - Lua l10n workflow: auto-pairs foreign/native YAML files in the same directory
 - Lua l10n workflow: opening a native YAML allows editing, opening a foreign YAML shows read-only reference
 - Lua l10n workflow: save writes only translated entries to the native file
-- Lua l10n workflow: export creates a scaffold native file with all keys
+- Lua l10n workflow: Make Translation creates a scaffold native file with all keys
 - Merge Dictionaries in Tools menu
 - View menu: Spell Check toggle
 
@@ -36,6 +37,8 @@
 ### Changed — yTranslator
 - Book Preview tab renamed to Preview
 - Filters and Statuses are now fully independent (no cross-reset)
+- YAML context menu: foreign files show "Make Translation", native files show "Save"
+- YAML files in workspace auto-loaded on startup
 - Translation button populates the translation editor with result
 - Translation button only works on untranslated entries
 - Translation button commits immediately and advances to the next row

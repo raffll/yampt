@@ -184,6 +184,7 @@ private:
 	QAction * m_spell_check = nullptr;
 	QAction * m_grammar_check = nullptr;
 	QAction * m_whitespace_check = nullptr;
+	QAction * m_sync_scroll_check = nullptr;
 
 	QString m_search_query;
 

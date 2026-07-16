@@ -119,6 +119,13 @@ int dict_document_t::propagate(rec_type_t source_type, const std::string & old_t
 {
 	int count = 0;
 
+	auto trimmed_source = old_text;
+	while (!trimmed_source.empty() && (trimmed_source.front() == ' ' || trimmed_source.front() == '\t'))
+		trimmed_source.erase(trimmed_source.begin());
+
+	while (!trimmed_source.empty() && (trimmed_source.back() == ' ' || trimmed_source.back() == '\t'))
+		trimmed_source.pop_back();
+
 	for (auto & [type, chapter] : m_data)
 	{
 		for (size_t i = 0; i < chapter.records.size(); ++i)
@@ -128,7 +135,14 @@ int dict_document_t::propagate(rec_type_t source_type, const std::string & old_t
 			if (record.new_text == new_text)
 				continue;
 
-			if (record.old_text != old_text)
+			auto trimmed = record.old_text;
+			while (!trimmed.empty() && (trimmed.front() == ' ' || trimmed.front() == '\t'))
+				trimmed.erase(trimmed.begin());
+
+			while (!trimmed.empty() && (trimmed.back() == ' ' || trimmed.back() == '\t'))
+				trimmed.pop_back();
+
+			if (trimmed != trimmed_source)
 				continue;
 
 			record.new_text = new_text;

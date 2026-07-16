@@ -96,6 +96,14 @@ void main_window_t::setup_menu_bar()
 	m_whitespace_check->setCheckable(true);
 	view_menu->addAction(m_whitespace_check);
 
+	view_menu->addSeparator();
+
+	m_sync_scroll_check = new QAction(tr("S&ync Scrolling"), this);
+	m_sync_scroll_check->setCheckable(true);
+	m_sync_scroll_check->setChecked(true);
+	m_sync_scroll_check->setToolTip(tr("Sync scrolling between original and translation panes"));
+	view_menu->addAction(m_sync_scroll_check);
+
 	auto * tools_menu = menuBar()->addMenu(tr("&Tools"));
 	auto * merge_action = tools_menu->addAction(tr("&Merge Dictionaries..."));
 	merge_action->setToolTip(tr("Merge loaded dictionaries into one"));
@@ -298,6 +306,16 @@ void main_window_t::connect_menu_signals()
 	connect(m_sidebar_toggle, &QAction::toggled, m_left_splitter, &QWidget::setVisible);
 	connect(m_bottom_panel_toggle, &QAction::toggled, m_editor_view, &QWidget::setVisible);
 	connect(m_whitespace_check, &QAction::toggled, this, &main_window_t::on_whitespace_toggled);
+
+	connect(
+	    m_sync_scroll_check,
+	    &QAction::toggled,
+	    this,
+	    [this](bool checked)
+	{
+		m_editor_view->set_scroll_sync(checked);
+		m_book_preview_view->set_scroll_sync(checked);
+	});
 
 	connect(
 	    m_spell_check,

@@ -8,6 +8,7 @@
 #include <QLabel>
 #include <QPalette>
 #include <QPushButton>
+#include <QScrollBar>
 #include <QSplitter>
 #include <QString>
 #include <QTextEdit>
@@ -115,6 +116,42 @@ void editor_view_t::setup_connections()
 
 	connect(m_translation_editor, &QPlainTextEdit::textChanged, this, &editor_view_t::text_changed);
 	connect(m_apply_button, &QPushButton::clicked, this, &editor_view_t::apply_clicked);
+
+	auto sync_from = [this](QAbstractScrollArea * source_widget)
+	{
+		if (m_scroll_syncing || !m_scroll_sync_enabled)
+			return;
+
+		m_scroll_syncing = true;
+
+		QAbstractScrollArea * others[] = { m_original_view, m_translation_editor, m_adapted_from_view };
+
+		auto * source_v = source_widget->verticalScrollBar();
+		auto * source_h = source_widget->horizontalScrollBar();
+
+		for (auto * other : others)
+		{
+			if (other == source_widget)
+				continue;
+
+			if (source_v->maximum() > 0)
+			{
+				double ratio = static_cast<double>(source_v->value()) / source_v->maximum();
+				other->verticalScrollBar()->setValue(static_cast<int>(ratio * other->verticalScrollBar()->maximum()));
+			}
+
+			other->horizontalScrollBar()->setValue(source_h->value());
+		}
+
+		m_scroll_syncing = false;
+	};
+
+	connect(m_original_view->verticalScrollBar(), &QScrollBar::valueChanged, this, [this, sync_from]() { sync_from(m_original_view); });
+	connect(m_original_view->horizontalScrollBar(), &QScrollBar::valueChanged, this, [this, sync_from]() { sync_from(m_original_view); });
+	connect(m_translation_editor->verticalScrollBar(), &QScrollBar::valueChanged, this, [this, sync_from]() { sync_from(m_translation_editor); });
+	connect(m_translation_editor->horizontalScrollBar(), &QScrollBar::valueChanged, this, [this, sync_from]() { sync_from(m_translation_editor); });
+	connect(m_adapted_from_view->verticalScrollBar(), &QScrollBar::valueChanged, this, [this, sync_from]() { sync_from(m_adapted_from_view); });
+	connect(m_adapted_from_view->horizontalScrollBar(), &QScrollBar::valueChanged, this, [this, sync_from]() { sync_from(m_adapted_from_view); });
 }
 
 translation_edit_view_t * editor_view_t::original_view() const
@@ -400,4 +437,9 @@ size_t editor_view_t::script_slot_count() const
 void editor_view_t::clear_script_template()
 {
 	m_script_template = std::nullopt;
+}
+
+void editor_view_t::set_scroll_sync(bool enabled)
+{
+	m_scroll_sync_enabled = enabled;
 }
