@@ -843,3 +843,116 @@ TEST_CASE("yaml_document_t::reset_to_original, clears native value", "[i]")
 	std::error_code ec;
 	fs::remove_all(temp_dir, ec);
 }
+
+TEST_CASE("dict_document_t::commit, propagation trims whitespace", "[i]")
+{
+	dict_t data;
+	auto & chapter = data[rec_type_t::sctx];
+
+	record_entry_t entry_a;
+	entry_a.key_text = "ScriptA^messagebox \"Hello\"";
+	entry_a.old_text = "messagebox \"Hello\"";
+	entry_a.new_text = "messagebox \"Hello\"";
+	entry_a.status = status_t::untranslated;
+	chapter.records.push_back(std::move(entry_a));
+
+	record_entry_t entry_b;
+	entry_b.key_text = "ScriptB^\tmessagebox \"Hello\"";
+	entry_b.old_text = "\tmessagebox \"Hello\"";
+	entry_b.new_text = "\tmessagebox \"Hello\"";
+	entry_b.status = status_t::untranslated;
+	chapter.records.push_back(std::move(entry_b));
+
+	const auto path = create_temp_dict_json(data);
+	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
+
+	table_row_t row;
+	row.type = rec_type_t::sctx;
+	row.key_text = "ScriptA^messagebox \"Hello\"";
+	row.old_text = "messagebox \"Hello\"";
+	row.record_index = 0;
+
+	const auto result = doc.commit(row, "messagebox \"Czesc\"", status_t::in_progress);
+
+	REQUIRE(result.success);
+	REQUIRE(result.propagated_count == 1);
+	REQUIRE(doc.data().at(rec_type_t::sctx).records[1].new_text == "messagebox \"Czesc\"");
+	REQUIRE(doc.data().at(rec_type_t::sctx).records[1].status == status_t::propagated);
+
+	cleanup_temp_dict(path);
+}
+
+TEST_CASE("dict_document_t::commit, source gets propagated status when others match", "[i]")
+{
+	dict_t data;
+	auto & chapter = data[rec_type_t::cell];
+
+	record_entry_t entry_a;
+	entry_a.key_text = "key_a";
+	entry_a.old_text = "Shared";
+	entry_a.new_text = "Shared";
+	entry_a.status = status_t::untranslated;
+	chapter.records.push_back(std::move(entry_a));
+
+	record_entry_t entry_b;
+	entry_b.key_text = "key_b";
+	entry_b.old_text = "Shared";
+	entry_b.new_text = "Shared";
+	entry_b.status = status_t::untranslated;
+	chapter.records.push_back(std::move(entry_b));
+
+	const auto path = create_temp_dict_json(data);
+	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
+
+	table_row_t row;
+	row.type = rec_type_t::cell;
+	row.key_text = "key_a";
+	row.old_text = "Shared";
+	row.record_index = 0;
+
+	const auto result = doc.commit(row, "Translated", status_t::in_progress);
+
+	REQUIRE(result.success);
+	REQUIRE(result.propagated_count == 1);
+	REQUIRE(doc.data().at(rec_type_t::cell).records[0].status == status_t::propagated);
+	REQUIRE(doc.data().at(rec_type_t::cell).records[1].status == status_t::propagated);
+
+	cleanup_temp_dict(path);
+}
+
+TEST_CASE("dict_document_t::commit, no propagation keeps intent status", "[i]")
+{
+	dict_t data;
+	auto & chapter = data[rec_type_t::cell];
+
+	record_entry_t entry_a;
+	entry_a.key_text = "key_a";
+	entry_a.old_text = "Unique";
+	entry_a.new_text = "Unique";
+	entry_a.status = status_t::untranslated;
+	chapter.records.push_back(std::move(entry_a));
+
+	record_entry_t entry_b;
+	entry_b.key_text = "key_b";
+	entry_b.old_text = "Different";
+	entry_b.new_text = "Different";
+	entry_b.status = status_t::untranslated;
+	chapter.records.push_back(std::move(entry_b));
+
+	const auto path = create_temp_dict_json(data);
+	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
+
+	table_row_t row;
+	row.type = rec_type_t::cell;
+	row.key_text = "key_a";
+	row.old_text = "Unique";
+	row.record_index = 0;
+
+	const auto result = doc.commit(row, "Translated", status_t::in_progress);
+
+	REQUIRE(result.success);
+	REQUIRE(result.propagated_count == 0);
+	REQUIRE(doc.data().at(rec_type_t::cell).records[0].status == status_t::in_progress);
+
+	cleanup_temp_dict(path);
+}

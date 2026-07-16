@@ -7,6 +7,7 @@
 - Full script preview: selecting a script entry shows the entire script source in Preview tab
 - Script source stored as reference data in dictionaries for context lookup
 - Sync Scrolling: View menu toggle to bind scrolling between original and translation panes
+- Grammar check: quoted text highlighted in lighter color for visual distinction
 - Translation engine: pre-substitution of glossary terms before sending to AI model
 - Translation engine: SCTX/BNAM tokenization — only translatable strings are sent to model
 - Translation engine: status `model` assigned to AI-translated entries
@@ -64,6 +65,8 @@
 - Whitespace markers: newline indicator now visible at line breaks
 - Spell check: dictionary now loads correctly on startup
 - Grammar check: missing punctuation no longer flagged while cursor is at end of text
+- Grammar check: unmatched quotes no longer triggered by HTML attributes in book records
+- Propagation: entries with leading/trailing whitespace differences now match correctly
 
 ## [0.842] - 2026-07-05
 

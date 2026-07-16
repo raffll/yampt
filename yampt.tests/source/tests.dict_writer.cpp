@@ -339,3 +339,24 @@ TEST_CASE("dict_writer_t::write, raw codepage bytes survive round-trip", "[i]")
 
 	cleanup(path);
 }
+
+TEST_CASE("dict_writer_t::write, script type round-trip", "[i]")
+{
+	const auto path = temp_path("yampt_test_script.json");
+
+	dict_t dict = domain_types::initialize_dict();
+	dict.at(rec_type_t::script).insert({ "TestScript", "Begin TestScript\r\n\tmessagebox \"Hello\"\r\nEnd", "", status_t::translated });
+
+	dict_writer_t::write(dict, path);
+
+	dict_reader_t reader(path);
+	REQUIRE(reader.is_loaded());
+
+	const auto * entry = reader.get_dict().at(rec_type_t::script).find("TestScript");
+	REQUIRE(entry != nullptr);
+	REQUIRE(entry->old_text == "Begin TestScript\r\n\tmessagebox \"Hello\"\r\nEnd");
+	REQUIRE(entry->new_text.empty());
+	REQUIRE(entry->status == status_t::translated);
+
+	cleanup(path);
+}

@@ -96,7 +96,7 @@ Left panel has a list of record types (CELL, DIAL, INFO, FNAM, TEXT, GMST, etc.)
 - **Toggle Sidebar** — show/hide left panel
 - **Toggle Bottom Panel** — show/hide editor
 - **Spell Check** — underline misspelled words in translation
-- **Grammar Check** — highlight grammar issues
+- **Grammar Check** — highlight grammar issues (double spaces, unmatched quotes/parens, missing punctuation, quoted text in lighter color)
 - **Whitespace Markers** — show spaces and line endings
 - **Sync Scrolling** — bind scrolling between original and translation panes (editor and preview)
 

@@ -31,6 +31,7 @@ translation_suggestion_view_t::translation_suggestion_view_t(QWidget * parent)
 	m_provider_combo->addItem("Google (not supported)");
 	m_provider_combo->setToolTip(tr("Select translation provider"));
 	m_provider_combo->setFixedWidth(180);
+	top_row->addWidget(m_provider_combo);
 
 	m_translate_all_btn = new QPushButton(tr("Translate"), this);
 	m_translate_all_btn->setToolTip(tr("Translate the selected entry"));
