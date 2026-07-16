@@ -3,7 +3,7 @@
 ## [xxx]
 
 ### yTranslator
-- [NEW] Status filter moved to a dedicated Statuses tab (same interaction as Filters tab)
+- [CHANGE] Status filter moved to a dedicated Statuses tab (same interaction as Filters tab)
 - [NEW] Full script preview: selecting a script entry shows the entire script source in Preview tab
 - [NEW] Script source stored as reference data in dictionaries for context lookup
 - [NEW] Sync Scrolling: View menu toggle to bind scrolling between original and translation panes
@@ -12,9 +12,6 @@
 - [NEW] Translation settings page: Claude API key configuration
 - [NEW] Translation engine: pre-substitution of glossary terms before sending to AI model
 - [NEW] Translation engine: SCTX/BNAM tokenization — only translatable strings are sent to model
-- [NEW] Translation engine: status `model` assigned to AI-translated entries
-- [NEW] Translation engine: model-translated entries do not propagate automatically
-- [NEW] MWScript syntax highlighting for SCTX/BNAM entries (keywords, strings, comments)
 - [NEW] Inline table editing: double-click Translation column to edit single-line entries directly
 - [CHANGE] Language settings: simplified panel (foreign/native language, spell check, tags)
 - [CHANGE] Script editor: `say` keyword sound file path hidden from display and translation

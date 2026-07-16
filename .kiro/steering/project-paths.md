@@ -307,6 +307,7 @@ What is included:
 - All DLLs from the output dir (including `ctranslate2.dll`)
 - `dictionaries/` folder (spell check dictionaries)
 - `platforms/` folder (Qt platform plugins)
+- `docs/` folder (README.md, CHANGELOG.md, manuals)
 
 What is NOT included:
 - `models/` — translation engine models are too large for distribution; users download them separately via `download_models.py`
