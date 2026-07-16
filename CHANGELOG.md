@@ -3,7 +3,6 @@
 ## [xxx]
 
 ### yTranslator
-- [CHANGE] Status filter moved to a dedicated Statuses tab (same interaction as Filters tab)
 - [NEW] Full script preview: selecting a script entry shows the entire script source in Preview tab
 - [NEW] Script source stored as reference data in dictionaries for context lookup
 - [NEW] Sync Scrolling: View menu toggle to bind scrolling between original and translation panes
@@ -13,8 +12,6 @@
 - [NEW] Translation engine: pre-substitution of glossary terms before sending to AI model
 - [NEW] Translation engine: SCTX/BNAM tokenization — only translatable strings are sent to model
 - [NEW] Inline table editing: double-click Translation column to edit single-line entries directly
-- [CHANGE] Language settings: simplified panel (foreign/native language, spell check, tags)
-- [CHANGE] Script editor: `say` keyword sound file path hidden from display and translation
 - [NEW] Lua l10n workflow: auto-pairs foreign/native YAML files in the same directory
 - [NEW] Lua l10n workflow: opening a native YAML allows editing, opening a foreign YAML shows read-only reference
 - [NEW] Lua l10n workflow: save writes only translated entries to the native file
@@ -23,6 +20,9 @@
 - [NEW] View menu: Spell Check toggle
 - [NEW] Spell check dictionaries: added de_DE, fr_FR, ru_RU, it_IT, hu_HU
 - [NEW] First run dialog: added Italian and Hungarian languages
+- [CHANGE] Status filter moved to a dedicated Statuses tab (same interaction as Filters tab)
+- [CHANGE] Language settings: simplified panel (foreign/native language, spell check, tags)
+- [CHANGE] Script editor: `say` keyword sound file path hidden from display and translation
 - [CHANGE] Book Preview tab renamed to Preview
 - [CHANGE] Translate tab renamed to AI Translate
 - [CHANGE] "Model" status display renamed to "AI Translated"
