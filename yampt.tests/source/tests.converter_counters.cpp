@@ -1,4 +1,4 @@
-#include <catch2/catch_all.hpp>
+﻿#include <catch2/catch_all.hpp>
 #include <converter/esm_converter.hpp>
 #include <io/dict_writer.hpp>
 #include <utility/app_logger.hpp>
@@ -142,7 +142,7 @@ TEST_CASE("esm_converter_t::convert_scpt, SCTX counters sum correctly", "[i]")
 	write_esm_file(esm_content, esm_path);
 	app_logger_t::reset_log();
 
-	esm_converter_t converter(esm_path, merger, false, "", codepage_t::windows_1252, false);
+	esm_converter_t converter(esm_path, merger, false, "", false);
 	std::filesystem::remove(esm_path);
 
 	REQUIRE(converter.is_loaded());
@@ -193,7 +193,7 @@ TEST_CASE("esm_converter_t::convert_bnam, BNAM counters sum correctly", "[i]")
 	write_esm_file(esm_content, esm_path);
 	app_logger_t::reset_log();
 
-	esm_converter_t converter(esm_path, merger, false, "", codepage_t::windows_1252, false);
+	esm_converter_t converter(esm_path, merger, false, "", false);
 	std::filesystem::remove(esm_path);
 
 	REQUIRE(converter.is_loaded());
@@ -223,7 +223,7 @@ TEST_CASE("esm_converter_t::convert_cell, CELL counters sum correctly", "[i]")
 	write_esm_file(esm_content, esm_path);
 	app_logger_t::reset_log();
 
-	esm_converter_t converter(esm_path, merger, false, "", codepage_t::windows_1252, false);
+	esm_converter_t converter(esm_path, merger, false, "", false);
 	std::filesystem::remove(esm_path);
 
 	REQUIRE(converter.is_loaded());

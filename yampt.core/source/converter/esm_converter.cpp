@@ -14,7 +14,6 @@ esm_converter_t::esm_converter_t(
     const dict_merger_t & merger,
     const bool add_hyperlinks,
     const std::string & file_suffix,
-    const codepage_t encoding,
     const bool create_header)
     : esm(path)
     , merger(merger)
@@ -22,14 +21,6 @@ esm_converter_t::esm_converter_t(
     , file_suffix(file_suffix)
     , create_header(create_header)
 {
-	if (encoding == codepage_t::windows_1250)
-	{
-		if (detect_encoding())
-		{
-			this->add_hyperlinks = false;
-		}
-	}
-
 	if (esm.is_loaded())
 		convert_esm();
 }
@@ -185,33 +176,6 @@ std::string esm_converter_t::insert_hyperlink_markers(const std::string & text) 
 
 	result.append(text, last_position, text.size() - last_position);
 	return result;
-}
-
-bool esm_converter_t::detect_encoding()
-{
-	for (size_t i = 0; i < esm.get_records().size(); ++i)
-	{
-		esm.select_record(i);
-		if (esm.get_record().id == "INFO")
-			esm.set_value("NAME");
-
-		if (detect_windows_1250_encoding(esm.get_value().text))
-		{
-			app_logger_t::add_log("[warning] windows-1250 encoding detected\r\n");
-			app_logger_t::add_log(esm.get_value().text + "\r\n", true);
-			return true;
-		}
-	}
-	return false;
-}
-
-bool esm_converter_t::detect_windows_1250_encoding(const std::string & text)
-{
-	std::ostringstream ss;
-	ss << static_cast<char>(156) << static_cast<char>(159) << static_cast<char>(179) << static_cast<char>(185)
-	   << static_cast<char>(191) << static_cast<char>(230) << static_cast<char>(234) << static_cast<char>(241);
-
-	return text.find_first_of(ss.str()) != std::string::npos;
 }
 
 void esm_converter_t::convert_mast()

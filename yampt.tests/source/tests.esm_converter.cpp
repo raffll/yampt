@@ -1,4 +1,4 @@
-#include <catch2/catch_all.hpp>
+﻿#include <catch2/catch_all.hpp>
 #include <converter/esm_converter.hpp>
 #include <io/dict_writer.hpp>
 #include <utility/app_logger.hpp>
@@ -89,7 +89,7 @@ TEST_CASE("esm_converter_t::convert_cell, basic conversion", "[i]")
 	write_esm_file(esm_content, esm_path);
 	app_logger_t::reset_log();
 
-	esm_converter_t converter(esm_path, merger, false, "", codepage_t::windows_1252, false);
+	esm_converter_t converter(esm_path, merger, false, "", false);
 	std::filesystem::remove(esm_path);
 
 	REQUIRE(converter.is_loaded());
@@ -112,7 +112,7 @@ TEST_CASE("esm_converter_t::convert_cell, empty name is skipped", "[i]")
 	write_esm_file(esm_content, esm_path);
 	app_logger_t::reset_log();
 
-	esm_converter_t converter(esm_path, merger, false, "", codepage_t::windows_1252, false);
+	esm_converter_t converter(esm_path, merger, false, "", false);
 	std::filesystem::remove(esm_path);
 
 	REQUIRE(converter.is_loaded());
@@ -134,7 +134,7 @@ TEST_CASE("esm_converter_t::convert_fnam, basic conversion", "[i]")
 	write_esm_file(esm_content, esm_path);
 	app_logger_t::reset_log();
 
-	esm_converter_t converter(esm_path, merger, false, "", codepage_t::windows_1252, false);
+	esm_converter_t converter(esm_path, merger, false, "", false);
 	std::filesystem::remove(esm_path);
 
 	REQUIRE(converter.is_loaded());
@@ -156,7 +156,7 @@ TEST_CASE("esm_converter_t::convert_fnam, player record is skipped", "[i]")
 	write_esm_file(esm_content, esm_path);
 	app_logger_t::reset_log();
 
-	esm_converter_t converter(esm_path, merger, false, "", codepage_t::windows_1252, false);
+	esm_converter_t converter(esm_path, merger, false, "", false);
 	std::filesystem::remove(esm_path);
 
 	REQUIRE(converter.is_loaded());
@@ -178,7 +178,7 @@ TEST_CASE("esm_converter_t::convert_gmst, string setting converted", "[i]")
 	write_esm_file(esm_content, esm_path);
 	app_logger_t::reset_log();
 
-	esm_converter_t converter(esm_path, merger, false, "", codepage_t::windows_1252, false);
+	esm_converter_t converter(esm_path, merger, false, "", false);
 	std::filesystem::remove(esm_path);
 
 	REQUIRE(converter.is_loaded());
@@ -201,7 +201,7 @@ TEST_CASE("esm_converter_t::convert_gmst, non-string setting is skipped", "[i]")
 	write_esm_file(esm_content, esm_path);
 	app_logger_t::reset_log();
 
-	esm_converter_t converter(esm_path, merger, false, "", codepage_t::windows_1252, false);
+	esm_converter_t converter(esm_path, merger, false, "", false);
 	std::filesystem::remove(esm_path);
 
 	REQUIRE(converter.is_loaded());
@@ -222,7 +222,7 @@ TEST_CASE("esm_converter_t::convert_dial, topic type converted", "[i]")
 	write_esm_file(esm_content, esm_path);
 	app_logger_t::reset_log();
 
-	esm_converter_t converter(esm_path, merger, false, "", codepage_t::windows_1252, false);
+	esm_converter_t converter(esm_path, merger, false, "", false);
 	std::filesystem::remove(esm_path);
 
 	REQUIRE(converter.is_loaded());
@@ -244,7 +244,7 @@ TEST_CASE("esm_converter_t::convert_dial, journal type is skipped", "[i]")
 	write_esm_file(esm_content, esm_path);
 	app_logger_t::reset_log();
 
-	esm_converter_t converter(esm_path, merger, false, "", codepage_t::windows_1252, false);
+	esm_converter_t converter(esm_path, merger, false, "", false);
 	std::filesystem::remove(esm_path);
 
 	REQUIRE(converter.is_loaded());
@@ -271,7 +271,7 @@ TEST_CASE("esm_converter_t::convert_info, preceding DIAL sets key prefix", "[i]"
 	write_esm_file(esm_content, esm_path);
 	app_logger_t::reset_log();
 
-	esm_converter_t converter(esm_path, merger, false, "", codepage_t::windows_1252, false);
+	esm_converter_t converter(esm_path, merger, false, "", false);
 	std::filesystem::remove(esm_path);
 
 	REQUIRE(converter.is_loaded());
@@ -299,7 +299,7 @@ TEST_CASE("esm_converter_t::convert_info, marks DIAL as modified", "[i]")
 	write_esm_file(esm_content, esm_path);
 	app_logger_t::reset_log();
 
-	esm_converter_t converter(esm_path, merger, false, "", codepage_t::windows_1252, false);
+	esm_converter_t converter(esm_path, merger, false, "", false);
 	std::filesystem::remove(esm_path);
 
 	REQUIRE(converter.is_loaded());
@@ -338,7 +338,7 @@ TEST_CASE("esm_converter_t::convert_scpt, SCTX and SCDT patched", "[i]")
 	write_esm_file(esm_content, esm_path);
 	app_logger_t::reset_log();
 
-	esm_converter_t converter(esm_path, merger, false, "", codepage_t::windows_1252, false);
+	esm_converter_t converter(esm_path, merger, false, "", false);
 	std::filesystem::remove(esm_path);
 
 	REQUIRE(converter.is_loaded());

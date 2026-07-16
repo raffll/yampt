@@ -1,6 +1,5 @@
 #pragma once
 
-#include <io/codepage.hpp>
 #include <utility/domain_types.hpp>
 #include <utility/includes.hpp>
 
@@ -27,6 +26,5 @@ private:
 	std::string suffix;
 	std::string translate_model_path;
 
-	codepage_t encoding = codepage_t::windows_1252;
 	bool partial_mode = false;
 };

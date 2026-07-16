@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../io/codepage.hpp"
 #include "../io/esm_reader.hpp"
 #include "../merger/dict_merger.hpp"
 #include "../utility/domain_types.hpp"
@@ -35,7 +34,6 @@ public:
 	    const dict_merger_t & merger,
 	    const bool add_hyperlinks,
 	    const std::string & file_suffix,
-	    const codepage_t encoding,
 	    const bool create_header);
 
 private:
@@ -65,9 +63,6 @@ private:
 	void convert_bnam();
 	void convert_scpt();
 	void convert_gmdt();
-
-	bool detect_encoding();
-	bool detect_windows_1250_encoding(const std::string & text);
 
 	void build_hyperlink_trie();
 	std::string insert_hyperlink_markers(const std::string & text) const;

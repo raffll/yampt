@@ -307,6 +307,7 @@ What is included:
 - All DLLs from the output dir (including `ctranslate2.dll`)
 - `dictionaries/` folder (spell check dictionaries)
 - `platforms/` folder (Qt platform plugins)
+- `providers/` folder (web translation provider configs)
 - `docs/` folder (README.md, CHANGELOG.md, manuals)
 
 What is NOT included:

@@ -116,7 +116,6 @@ main_window_t::main_window_t(QWidget * parent)
 	                               *m_log_view,
 	                               *m_translation_tab,
 	                               *m_record_tabs,
-	                               m_current_codepage,
 	                               this,
 	                               { [this]() { m_sidebar_controller->scan_workspace(); },
 	                                 [this](const std::string & path) { return show_make_base_dialog(path); },

@@ -29,7 +29,6 @@ plugin_operations_controller_t::plugin_operations_controller_t(plugin_operations
 void plugin_operations_controller_t::on_plugin_operation(const std::string & plugin_path_arg, plugin_op_t operation)
 {
 	const auto plugin_path = plugin_path_arg;
-	const auto encoding = m_deps.codepage;
 
 	const auto path_sep = plugin_path.find_last_of("/\\");
 	auto plugin_dir = path_sep != std::string::npos ? plugin_path.substr(0, path_sep) : std::string {};
@@ -74,7 +73,7 @@ void plugin_operations_controller_t::on_plugin_operation(const std::string & plu
 		const auto selected = dialog.get_selected_paths();
 		if (selected.empty())
 		{
-			result = m_deps.executor.make_dict(plugin_path, encoding);
+			result = m_deps.executor.make_dict(plugin_path);
 		}
 		else
 		{
@@ -84,7 +83,7 @@ void plugin_operations_controller_t::on_plugin_operation(const std::string & plu
 				m_deps.session.open(sel_path);
 
 			dict_merger_t merger(selected);
-			result = m_deps.executor.make_dict_with_base(plugin_path, merger.get_dict(), encoding);
+			result = m_deps.executor.make_dict_with_base(plugin_path, merger.get_dict());
 		}
 		break;
 	}
@@ -122,7 +121,7 @@ void plugin_operations_controller_t::on_plugin_operation(const std::string & plu
 		for (const auto & sel_path : selected)
 			m_deps.session.open(sel_path);
 
-		result = m_deps.executor.convert(plugin_path, selected, encoding);
+		result = m_deps.executor.convert(plugin_path, selected);
 		break;
 	}
 	case plugin_op_t::create_plugin:
@@ -143,7 +142,7 @@ void plugin_operations_controller_t::on_plugin_operation(const std::string & plu
 		for (const auto & sel_path : selected)
 			m_deps.session.open(sel_path);
 
-		result = m_deps.executor.create_plugin(plugin_path, selected, encoding);
+		result = m_deps.executor.create_plugin(plugin_path, selected);
 		break;
 	}
 	}

@@ -54,7 +54,7 @@ std::string operation_executor_t::get_output_dir() const
 	return result;
 }
 
-operation_executor_t::result_t operation_executor_t::make_dict(const std::string & plugin_path, codepage_t encoding)
+operation_executor_t::result_t operation_executor_t::make_dict(const std::string & plugin_path)
 {
 	app_logger_t::reset_log();
 
@@ -71,8 +71,7 @@ operation_executor_t::result_t operation_executor_t::make_dict(const std::string
 
 operation_executor_t::result_t operation_executor_t::make_dict_with_base(
     const std::string & plugin_path,
-    const dict_t & base_dict,
-    codepage_t encoding)
+    const dict_t & base_dict)
 {
 	app_logger_t::reset_log();
 
@@ -125,14 +124,13 @@ operation_executor_t::result_t operation_executor_t::make_base(
 
 operation_executor_t::result_t operation_executor_t::convert(
     const std::string & plugin_path,
-    const std::vector<std::string> & dict_paths,
-    codepage_t encoding)
+    const std::vector<std::string> & dict_paths)
 {
 	app_logger_t::reset_log();
 
 	dict_merger_t merger(dict_paths);
 
-	esm_converter_t converter(plugin_path, merger, false, "", encoding, false);
+	esm_converter_t converter(plugin_path, merger, false, "", false);
 
 	if (!converter.is_loaded())
 		return { false, app_logger_t::get_log(), "" };
@@ -149,14 +147,13 @@ operation_executor_t::result_t operation_executor_t::convert(
 
 operation_executor_t::result_t operation_executor_t::create_plugin(
     const std::string & plugin_path,
-    const std::vector<std::string> & dict_paths,
-    codepage_t encoding)
+    const std::vector<std::string> & dict_paths)
 {
 	app_logger_t::reset_log();
 
 	dict_merger_t merger(dict_paths);
 
-	esm_converter_t converter(plugin_path, merger, false, "", encoding, true);
+	esm_converter_t converter(plugin_path, merger, false, "", true);
 
 	if (!converter.is_loaded())
 		return { false, app_logger_t::get_log(), "" };

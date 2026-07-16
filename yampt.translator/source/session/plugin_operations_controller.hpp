@@ -5,7 +5,6 @@
 #include "../model/make_base_params.hpp"
 #include "../model/plugin_op.hpp"
 #include "session.hpp"
-#include <io/codepage.hpp>
 #include <io/file_list.hpp>
 #include <functional>
 #include <optional>
@@ -35,7 +34,6 @@ struct plugin_operations_deps_t
 	log_view_t & log_view;
 	translation_suggestion_view_t & translation_suggestion_view;
 	QTabWidget & record_tabs;
-	codepage_t & codepage;
 	QWidget * parent_widget;
 	plugin_operations_callbacks_t callbacks;
 };

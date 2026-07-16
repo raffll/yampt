@@ -1,4 +1,4 @@
-#include <catch2/catch_all.hpp>
+﻿#include <catch2/catch_all.hpp>
 #include <converter/esm_converter.hpp>
 #include <io/dict_writer.hpp>
 #include <utility/app_logger.hpp>
@@ -65,7 +65,7 @@ static std::string run_converter(const std::string & esm_content, const dict_mer
 	write_esm_file(esm_content, esm_path);
 	app_logger_t::reset_log();
 
-	esm_converter_t converter(esm_path, merger, false, "", codepage_t::windows_1252, false);
+	esm_converter_t converter(esm_path, merger, false, "", false);
 	std::filesystem::remove(esm_path);
 
 	REQUIRE(converter.is_loaded());
@@ -78,7 +78,7 @@ static std::vector<record_t> run_converter_all(const std::string & esm_content, 
 	write_esm_file(esm_content, esm_path);
 	app_logger_t::reset_log();
 
-	esm_converter_t converter(esm_path, merger, false, "", codepage_t::windows_1252, false);
+	esm_converter_t converter(esm_path, merger, false, "", false);
 	std::filesystem::remove(esm_path);
 
 	REQUIRE(converter.is_loaded());
@@ -828,7 +828,7 @@ TEST_CASE("esm_converter_t::convert_esm, only translated status applied", "[u]")
 		write_esm_file(esm_content, esm_path);
 		app_logger_t::reset_log();
 
-		esm_converter_t converter(esm_path, merger, false, "", codepage_t::windows_1252, false);
+		esm_converter_t converter(esm_path, merger, false, "", false);
 		std::filesystem::remove(esm_path);
 
 		REQUIRE(converter.is_loaded());
@@ -1224,7 +1224,7 @@ TEST_CASE("esm_converter_t::convert_esm, identity for unmatched records", "[u]")
 	write_esm_file(built.esm_content, esm_path);
 	app_logger_t::reset_log();
 
-	esm_converter_t converter(esm_path, merger, false, "", codepage_t::windows_1252, false);
+	esm_converter_t converter(esm_path, merger, false, "", false);
 	std::filesystem::remove(esm_path);
 
 	REQUIRE(converter.is_loaded());
@@ -1314,7 +1314,7 @@ TEST_CASE("esm_converter_t::convert_cell, identity unmatched random", "[u]")
 	write_esm_file(esm_content, esm_path);
 	app_logger_t::reset_log();
 
-	esm_converter_t converter(esm_path, merger, false, "", codepage_t::windows_1252, false);
+	esm_converter_t converter(esm_path, merger, false, "", false);
 	std::filesystem::remove(esm_path);
 
 	REQUIRE(converter.is_loaded());

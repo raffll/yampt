@@ -13,9 +13,6 @@ Wire up EET file import/convert.
 ### Settings Panel (yTranslator)
 Panel with all exceptions configurable.
 
-### Remove --win1250 (yampt.cli)
-Drop the legacy codepage flag from CLI.
-
 ### Plugin Header Management (yEditor or yampt.cli) [L]
 - Update master file sizes in headers (Wrye Mash feature — needed after cleaning)
 - Update plugin version to 1.3

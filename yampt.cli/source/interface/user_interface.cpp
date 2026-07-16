@@ -43,10 +43,7 @@ void user_interface_t::parse_command_line()
 	{
 		const auto & token = args[i];
 
-		if (token == "--windows-1250")
-			encoding = codepage_t::windows_1250;
-
-		else if (token == "--debug")
+		if (token == "--debug")
 			app_logger_t::set_debug(true);
 
 		else if (token == "--partial")
@@ -202,7 +199,7 @@ void user_interface_t::convert_esm()
 	dict_merger_t merger(dict_paths);
 	for (const auto & file_path : file_paths)
 	{
-		esm_converter_t converter(file_path, merger, false, suffix, encoding, false);
+		esm_converter_t converter(file_path, merger, false, suffix, false);
 		if (converter.is_loaded())
 		{
 			const auto & name = converter.get_name().name + suffix + converter.get_name().ext;
@@ -223,7 +220,7 @@ void user_interface_t::create_esm()
 	dict_merger_t merger(dict_paths);
 	for (const auto & file_path : file_paths)
 	{
-		esm_converter_t converter(file_path, merger, false, suffix, encoding, true);
+		esm_converter_t converter(file_path, merger, false, suffix, true);
 		if (converter.is_loaded())
 		{
 			const auto & name = converter.get_name().name + ".CREATED" + converter.get_name().ext;
