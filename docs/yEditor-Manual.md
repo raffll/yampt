@@ -4,67 +4,78 @@ Plugin conflict viewer and merged patch creator for Morrowind.
 
 ## Loading Plugins
 
-File menu:
+Open File menu and choose one of three loading methods:
 
-- **Open Folder** (Ctrl+O) — select a folder with ESM/ESP files, then pick which plugins to load
-- **Open MO2 Profile** — select a Mod Organizer 2 profile directory (reads loadorder.txt automatically)
-- **Open OpenMW Config** — select an openmw.cfg file
-- **Unload All** — close everything
+- **Open Folder** (Ctrl+O) — select a folder containing ESM/ESP files. A dialog appears listing all plugins found. Check the ones you want to load. They are sorted by modification date (simulating load order).
+- **Open MO2 Profile** — select a Mod Organizer 2 profile directory. The application reads loadorder.txt and modlist.txt to determine which plugins to load and in what order. Plugins are resolved through MO2's virtual filesystem (overwrite folder, mod folders).
+- **Open OpenMW Config** — select an openmw.cfg file. The application reads all `data=` and `content=` lines to build the load order.
+
+Use **Unload All** to close everything and start fresh.
 
 ## Main Layout
 
-- **Left**: Navigation tree (plugins → record types → records)
-- **Right**: Record view (sub-records in columns, one column per plugin)
-- **Bottom**: Log and Preview tabs
+- **Left** — Navigation tree. Plugins are listed at the top level. Under each plugin, records are grouped by type (ACTI, ARMO, CELL, NPC_, etc.). Under each type, individual records are listed by ID.
+- **Right** — Record view. When you click a record in the nav tree, this area shows all sub-records in a multi-column tree. Each column represents one plugin's version of that record. The leftmost column is the master definition, subsequent columns are overrides in load order.
+- **Bottom** — Log tab (operation output) and Preview tab.
 
 ## Navigation Tree
 
-Records are grouped under their owning plugin, then by record type. Colors indicate conflict status:
+The tree uses colors to communicate conflict information at a glance.
 
-- Green background — no conflict (all plugins agree)
-- Yellow background — benign override
-- Red background — real conflict between plugins
-- Purple text — master record
-- Gray text — identical to master
-- Green text — winning override
-- Orange text — conflict winner (last loaded plugin wins)
-- Red text — conflict loser
+Background colors indicate the overall conflict severity for a record (worst-case across all sub-records):
 
-## View Menu
+- **Green** — no conflict. All plugins that touch this record agree on its content.
+- **Yellow** — benign override. A later plugin changes the record but the change is non-destructive (e.g. moving a reference slightly).
+- **Red** — real conflict. Multiple plugins make incompatible changes to the same record.
 
-- **Conflicts Only** — hide records where all plugins agree
-- **Hide Duplicate Columns** — collapse identical plugin versions (a record can appear multiple times in the same plugin when later entries override earlier ones)
-- **Show Deleted Strikeout** — strikethrough deleted records
-- **Filter** — advanced filter by conflict level, record type, ID, or name
+Text colors indicate how each specific plugin version relates to others:
+
+- **Purple** — this is the master definition (first plugin to define the record).
+- **Gray** — this plugin's version is identical to the master. No effective change.
+- **Green** — this plugin overrides the master and wins (it's the last loaded).
+- **Orange** — this plugin has a conflicting change and wins by load order.
+- **Red** — this plugin has a conflicting change but loses (a later plugin overwrites it).
+
+Records with no conflict (only one plugin defines them) show with no background color and black text.
 
 ## Record View
 
-Clicking a record in the nav tree shows all its sub-records in a multi-column tree. Each column represents one plugin's version. Sub-records are decoded into readable fields where possible.
+Clicking a record in the nav tree displays its full content in the record view. Sub-records are decoded into readable fields where the format is known (names, positions, flags, stats). Unknown or binary sub-records display as raw byte counts.
 
-Right-click in the record view to:
+Each column represents one plugin's version. Column headers show the plugin filename, colored by that plugin's conflict status for this record. Cells with differing values across plugins are highlighted to make conflicts visible.
 
-- **Copy Record/Sub-Record/Group/Field to Merged Patch** — from a source plugin column
-- **Remove Sub-Record/Group** — from the merged patch column
+Empty cells mean that plugin does not include the sub-record. This happens when a plugin only modifies some fields of a record.
 
-Right-click on a plugin node in the nav tree to:
+## Context Menus
 
-- **Exclude from Merged Patch** / **Include in Merged Patch** — excluded plugins are completely ignored during auto-merge (their records won't appear in the merged patch).
-- **Mark as Guard Patch** — during auto-merge, the guard patch acts as a priority barrier. Earlier plugins that modify the same records are ignored — only the guard's version and plugins loaded after it are considered. Additionally, if the final plugin's version matches master (effectively reverting a change), the guard patch's version is used in the merged output instead.
+Right-click in the record view to access merge operations:
+
+- **Copy Record to Merged Patch** — copies the entire record from the selected plugin column into the merged patch.
+- **Copy Sub-Record to Merged Patch** — copies a single sub-record (one row) from a plugin column.
+- **Copy Group to Merged Patch** — copies a group of related sub-records (e.g. all fields of a referenced object in a cell).
+- **Remove Sub-Record** / **Remove Group** — removes content from the merged patch column.
+
+Right-click a plugin node in the navigation tree for plugin-level options:
+
+- **Exclude from Merged Patch** / **Include in Merged Patch** — excluded plugins are completely ignored during auto-merge. Their records will not appear in the merged patch regardless of conflicts.
+- **Mark as Guard Patch** — the guard patch acts as a priority barrier during auto-merge. Plugins loaded before the guard that modify the same records are ignored. Only the guard's version and later plugins are considered. If the final plugin's version matches master (reverting a change), the guard's version is used instead of letting the revert through.
 
 ## Creating a Merged Patch
 
-Click **Create Merged Patch** in the toolbar. The auto-merge:
+Click **Create Merged Patch** in the toolbar to run the automatic merge. The auto-merge performs several operations:
 
-- Merges leveled lists (combines entries from all plugins)
-- Three-way merges object records (combines non-conflicting field changes)
-- Applies bug fixes (fog density, summon persistence, cell name reversion)
+- **Leveled list merge** — combines entries from all plugins that modify leveled item or creature lists. No entries are lost; duplicates are removed.
+- **Three-way record merge** — for object records modified by multiple plugins, compares each plugin's changes against the master. Non-conflicting field changes from different plugins are combined into one record.
+- **Bug fixes** — optionally corrects known engine bugs: fog density values outside valid range, summon persistence flags, and cell name reverts.
 
-The merged patch is saved automatically. Output location depends on how you loaded plugins (same folder, MO2 overwrite, or OpenMW data dir).
+After auto-merge completes, the merged patch is saved automatically. The output location depends on how you loaded plugins: same folder for Open Folder, MO2 overwrite directory for Open MO2 Profile, or the OpenMW data directory for Open OpenMW Config.
 
-After auto-merge, you can manually refine by copying or removing individual sub-records via the context menu.
+You can refine the auto-merge result manually. Use the record view context menu to copy individual sub-records from any plugin column into the merged patch, or remove sub-records that shouldn't be there. Changes are saved immediately.
 
-## Settings (Ctrl+,)
+## Settings
 
-- **Appearance**: Light/dark theme
-- **Paths**: Merged patch output path for each load mode
-- **Merged Patch**: Record type toggles, exclusion regex, bug fix toggles
+Open Settings via Ctrl+, or the Edit menu. Three pages are available:
+
+- **Appearance** — choose between light and dark theme.
+- **Paths** — configure the merged patch output path for each loading mode (folder, MO2, OpenMW). Normally these are automatic and don't need changing.
+- **Merge** — toggle which record types participate in auto-merge. Set an exclusion regex to skip specific record IDs. Enable or disable individual bug fixes (fog density fix, summon persistence fix, cell name reversion fix).
