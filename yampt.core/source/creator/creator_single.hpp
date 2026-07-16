@@ -17,6 +17,7 @@ private:
 	void make_indx();
 	void make_info();
 	void make_sctx();
+	void make_script();
 	void make_bnam();
 	void make_dial();
 	void make_cell();

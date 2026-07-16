@@ -527,8 +527,6 @@ void main_window_t::on_translation_changed()
 	}
 	else if (row_data->type == rec_type_t::sctx || row_data->type == rec_type_t::bnam)
 	{
-		const auto translated_script = m_editor_view->reconstruct_script_line();
-		m_book_preview_view->set_script(row_data->old_text, translated_script);
 	}
 }
 
@@ -798,6 +796,7 @@ void main_window_t::restore_filter_state(const std::string & path)
 		m_type_filter_solo = it->second.type_filter_solo;
 		m_filter_tree_view->set_active_types(it->second.type_filter);
 		m_filter_tree_view->set_active_sub_types(it->second.sub_type_filter);
+		m_status_filter_view->set_filter_state(m_status_filter);
 	}
 	else
 	{
@@ -809,6 +808,7 @@ void main_window_t::restore_filter_state(const std::string & path)
 		m_type_filter_solo = false;
 		m_filter_tree_view->set_active_types(m_type_filter);
 		m_filter_tree_view->set_active_sub_types({});
+		m_status_filter_view->set_filter_state(m_status_filter);
 	}
 }
 

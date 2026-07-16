@@ -3,11 +3,13 @@
 ## [xxx]
 
 ### Added — yTranslator
+- Status filter moved to a dedicated Statuses tab (same interaction as Filters tab)
+- Full script preview: selecting a script entry shows the entire script source in Preview tab
+- Script source stored as reference data in dictionaries for context lookup
 - Translation engine: pre-substitution of glossary terms before sending to AI model
 - Translation engine: SCTX/BNAM tokenization — only translatable strings are sent to model
 - Translation engine: status `model` assigned to AI-translated entries
 - Translation engine: model-translated entries do not propagate automatically
-- Translation panel: DeepL and Google providers shown in combo (marked as not supported)
 - Book Preview: MWScript syntax highlighting for SCTX/BNAM entries (keywords, strings, comments)
 - Book Preview: live update while editing script entries
 - Inline table editing: double-click Translation column to edit single-line entries directly
@@ -32,6 +34,8 @@
 - Localization support: all UI strings wrapped with `tr()` for Qt translation system
 
 ### Changed — yTranslator
+- Book Preview tab renamed to Preview
+- Filters and Statuses are now fully independent (no cross-reset)
 - Translation button populates the translation editor with result
 - Translation button only works on untranslated entries
 - Translation button commits immediately and advances to the next row

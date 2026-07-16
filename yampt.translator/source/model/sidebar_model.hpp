@@ -15,6 +15,7 @@ struct sidebar_render_item_t
 	std::string display_text;
 	file_type_t type = file_type_t::user_dict;
 	bool is_workspace = false;
+	bool is_native_yaml = false;
 };
 
 struct sidebar_render_node_t

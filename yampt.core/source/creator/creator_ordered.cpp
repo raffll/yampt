@@ -339,6 +339,12 @@ void creator_ordered_t::process_sctx(size_t i)
 		return;
 	}
 
+	record_entry_t script_entry;
+	script_entry.key_text = script_name;
+	script_entry.old_text = m_ctx.esm_ref.get_value().text;
+	script_entry.status = status_t::translated;
+	m_ctx.dict.at(rec_type_t::script).insert(script_entry);
+
 	const auto foreign_messages = creator_helpers::make_script_messages(m_ctx.esm_ref.get_value().text);
 
 	if (native_messages.size() != foreign_messages.size())

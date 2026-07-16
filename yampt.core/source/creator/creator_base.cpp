@@ -33,6 +33,7 @@ void creator_base_t::run()
 	make_dial();
 	make_info();
 	make_sctx();
+	make_script();
 	make_bnam();
 	make_cell();
 }
@@ -513,6 +514,27 @@ void creator_base_t::make_sctx()
 		const auto & script_name = m_ctx.esm.get_key().text;
 		const auto native_messages = creator_helpers::make_script_messages(m_ctx.esm.get_value().text);
 		match_sctx_messages(script_name, native_messages, schd_index);
+	}
+}
+
+void creator_base_t::make_script()
+{
+	for (size_t i = 0; i < m_ctx.esm_ref.get_records().size(); ++i)
+	{
+		m_ctx.esm_ref.select_record(i);
+		if (m_ctx.esm_ref.get_record().id != "SCPT")
+			continue;
+
+		m_ctx.esm_ref.set_key("SCHD");
+		m_ctx.esm_ref.set_value("SCTX");
+		if (!m_ctx.esm_ref.get_key().exist || !m_ctx.esm_ref.get_value().exist)
+			continue;
+
+		record_entry_t entry;
+		entry.key_text = m_ctx.esm_ref.get_key().text;
+		entry.old_text = m_ctx.esm_ref.get_value().text;
+		entry.status = status_t::translated;
+		m_ctx.dict.at(rec_type_t::script).insert(entry);
 	}
 }
 

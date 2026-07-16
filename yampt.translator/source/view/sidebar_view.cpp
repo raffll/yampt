@@ -9,6 +9,7 @@
 static constexpr int role_path = Qt::UserRole;
 static constexpr int role_root_path = Qt::UserRole + 1;
 static constexpr int role_folder_path = Qt::UserRole + 2;
+static constexpr int role_is_native_yaml = Qt::UserRole + 3;
 
 sidebar_view_t::sidebar_view_t(QWidget * parent)
     : QWidget(parent)
@@ -53,6 +54,7 @@ static void populate_node(QTreeWidgetItem * parent, const sidebar_render_node_t 
 		child->setText(0, QString::fromStdString(file_item.display_text));
 		child->setToolTip(0, QString::fromStdString(file_item.path));
 		child->setData(0, role_path, QString::fromStdString(file_item.path));
+		child->setData(0, role_is_native_yaml, file_item.is_native_yaml);
 		child->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
 		child->setForeground(0, get_file_type_color(file_item.type));
 	}
@@ -165,7 +167,10 @@ void sidebar_view_t::on_context_menu(const QPoint & pos)
 	else if (ext == "json" || ext == "xml")
 		show_dict_context_menu(path_str, pos);
 	else if (ext == "yaml")
-		show_yaml_context_menu(path_str, pos);
+	{
+		const bool is_native = item->data(0, role_is_native_yaml).toBool();
+		show_yaml_context_menu(path_str, is_native, pos);
+	}
 }
 
 void sidebar_view_t::show_folder_context_menu(QTreeWidgetItem * item, const QPoint & pos)
@@ -231,12 +236,23 @@ void sidebar_view_t::show_dict_context_menu(const std::string & path, const QPoi
 		emit delete_requested(path);
 }
 
-void sidebar_view_t::show_yaml_context_menu(const std::string & path, const QPoint & pos)
+void sidebar_view_t::show_yaml_context_menu(const std::string & path, bool is_native, const QPoint & pos)
 {
 	QMenu menu(this);
-	auto * save_action = menu.addAction(tr("Save"));
-	auto * export_native_action = menu.addAction(tr("Export"));
-	export_native_action->setToolTip(tr("Create native language YAML from this source file"));
+
+	QAction * save_action = nullptr;
+	QAction * export_native_action = nullptr;
+
+	if (is_native)
+	{
+		save_action = menu.addAction(tr("Save"));
+	}
+	else
+	{
+		export_native_action = menu.addAction(tr("Make Translation"));
+		export_native_action->setToolTip(tr("Create native language YAML from this source file"));
+	}
+
 	menu.addSeparator();
 	auto * delete_action = menu.addAction(tr("Delete"));
 

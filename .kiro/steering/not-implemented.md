@@ -4,6 +4,9 @@ The following features are planned but not yet implemented:
 
 - Find/Replace (yTranslator)
 - EET file import (yTranslator)
+- Translation settings page (yTranslator) — DeepL/Google API key configuration
+- DeepL translation provider (yTranslator)
+- Google translation provider (yTranslator)
 - Plugin cleaning (yEditor)
 - Dialog INAM display (yEditor)
 - Merge dialogues (yEditor auto-merge)

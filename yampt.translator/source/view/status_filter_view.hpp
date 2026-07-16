@@ -3,12 +3,11 @@
 #include <utility/status_types.hpp>
 #include <map>
 #include <set>
-#include <string>
 #include <vector>
 #include <QWidget>
 
-class QHBoxLayout;
-class QPushButton;
+class QListWidget;
+class QListWidgetItem;
 
 class status_filter_view_t : public QWidget
 {
@@ -30,24 +29,23 @@ signals:
 	void filters_changed();
 
 private:
-	void on_status_clicked(status_t status);
-	void on_status_right_clicked(status_t status);
-	void add_status_group(const std::vector<status_t> & statuses);
-	void update_button_styles();
+	void on_item_clicked(QListWidgetItem * item);
+	void on_item_right_clicked(QListWidgetItem * item);
+	void build_rows();
+	void update_all_state();
+	void update_styles();
 
-	struct status_button_t
+	struct row_t
 	{
-		QPushButton * button = nullptr;
+		QListWidgetItem * item = nullptr;
 		status_t status = status_t::untranslated;
-		size_t count = 0;
+		bool is_all = false;
+		bool selected = true;
 	};
 
-	QHBoxLayout * m_layout = nullptr;
-	std::vector<status_button_t> m_status_buttons;
-	std::map<status_t, size_t> m_current_counts;
-	std::set<status_t> m_active_statuses;
-	std::set<status_t> m_saved_statuses;
-	bool m_solo = false;
-	status_t m_solo_status = status_t::untranslated;
+	QListWidget * m_list = nullptr;
+	std::vector<row_t> m_rows;
+	int m_all_row = -1;
+	bool m_enabled = true;
 	bool m_document_open = false;
 };

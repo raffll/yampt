@@ -33,7 +33,7 @@ void dict_reader_t::parse_record(yyjson_val * record, rec_type_t type, const std
 	if (entry.old_text.empty() && type != rec_type_t::gmst)
 		app_logger_t::add_log("[warning] empty \"old\" field in " + type_str + ": " + entry.key_text + "\r\n", true);
 
-	if (entry.new_text.empty() && type != rec_type_t::gmst)
+	if (entry.new_text.empty() && type != rec_type_t::gmst && type != rec_type_t::script)
 		app_logger_t::add_log("[warning] empty \"new\" field in " + type_str + ": " + entry.key_text + "\r\n", true);
 
 	if (type == rec_type_t::info)

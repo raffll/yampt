@@ -1,4 +1,5 @@
 #include "sidebar_model.hpp"
+#include "yaml_document.hpp"
 #include "../session/session.hpp"
 #include "../view/display_name.hpp"
 #include <utility/string_utils.hpp>
@@ -21,7 +22,9 @@ std::string derive_display_name(const file_entry_t & entry, bool is_loaded, bool
 	name.set_dirty(is_dirty);
 	name.set_file_type(entry.type);
 
-	if ((entry.type == file_type_t::base_dict || entry.type == file_type_t::user_dict) && !is_loaded)
+	if ((entry.type == file_type_t::base_dict || entry.type == file_type_t::user_dict ||
+	     entry.type == file_type_t::yaml_l10n) &&
+	    !is_loaded)
 		name.set_unloaded(true);
 
 	if (entry.type == file_type_t::base_dict)
@@ -163,6 +166,25 @@ static void populate_tree_from_entries(
 		item.display_text = derive_display_name(*entry, is_loaded, is_dirty);
 		item.type = entry->type;
 		item.is_workspace = true;
+
+		if (entry->type == file_type_t::yaml_l10n)
+		{
+			if (doc)
+			{
+				const auto * yaml_doc = dynamic_cast<const yaml_document_t *>(doc);
+				if (yaml_doc)
+					item.is_native_yaml = yaml_doc->is_native_file();
+			}
+			else
+			{
+				auto native_code = session.native_language();
+				if (native_code.empty())
+					native_code = "pl";
+
+				const auto stem = std::filesystem::path(entry->path).stem().string();
+				item.is_native_yaml = (stem == native_code);
+			}
+		}
 
 		auto & root_builder = roots_map[entry->root_path];
 

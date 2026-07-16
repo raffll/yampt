@@ -182,8 +182,7 @@ void main_window_t::setup_central_widget()
 	central_layout->addWidget(m_toolbar);
 
 	m_filter_tree_view = new filter_tree_view_t(this);
-	m_status_filter_view = new status_filter_view_t(central_widget);
-	central_layout->addWidget(m_status_filter_view);
+	m_status_filter_view = new status_filter_view_t(this);
 
 	m_central_splitter = new QSplitter(Qt::Horizontal, central_widget);
 	central_layout->addWidget(m_central_splitter, 1);
@@ -199,6 +198,7 @@ void main_window_t::setup_sidebar()
 	m_sidebar = new sidebar_view_t(m_left_tabs);
 	m_left_tabs->addTab(m_sidebar, tr("Files"));
 	m_left_tabs->addTab(m_filter_tree_view, tr("Filters"));
+	m_left_tabs->addTab(m_status_filter_view, tr("Statuses"));
 	m_left_splitter->addWidget(m_left_tabs);
 
 	m_info_tabs = new QTabWidget(m_left_splitter);
@@ -231,7 +231,7 @@ void main_window_t::setup_editor_panel()
 	m_book_preview_view = new book_preview_view_t(m_record_tabs);
 	m_log_view = new log_view_t(m_record_tabs);
 	m_record_tabs->addTab(m_table_view, tr("Records"));
-	m_record_tabs->addTab(m_book_preview_view, tr("Book Preview"));
+	m_record_tabs->addTab(m_book_preview_view, tr("Preview"));
 	m_record_tabs->addTab(m_log_view, tr("Log"));
 	right_top_layout->addWidget(m_record_tabs, 1);
 
@@ -856,15 +856,6 @@ void main_window_t::connect_search_signals()
 	connect(m_search_col_translation, &QToolButton::toggled, this, on_search_col_changed);
 
 	connect(m_filter_tree_view, &filter_tree_view_t::filters_changed, this, &main_window_t::on_filters_changed);
-	connect(
-	    m_filter_tree_view,
-	    &filter_tree_view_t::all_reset_requested,
-	    this,
-	    [this]()
-	{
-		m_status_filter.clear();
-		m_status_filter_view->set_filter_state(m_status_filter);
-	});
 	connect(
 	    m_status_filter_view, &status_filter_view_t::filters_changed, this, &main_window_t::on_status_filters_changed);
 }

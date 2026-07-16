@@ -19,6 +19,7 @@ void creator_single_t::run()
 	make_indx();
 	make_info();
 	make_sctx();
+	make_script();
 	make_bnam();
 	make_dial();
 	make_cell();
@@ -252,6 +253,27 @@ void creator_single_t::make_sctx()
 			else
 				creator_helpers::insert_entry_single(m_ctx, key_text, old_text, old_text, rec_type_t::sctx);
 		}
+	}
+}
+
+void creator_single_t::make_script()
+{
+	for (size_t i = 0; i < m_ctx.esm.get_records().size(); ++i)
+	{
+		m_ctx.esm.select_record(i);
+		if (m_ctx.esm.get_record().id != "SCPT")
+			continue;
+
+		m_ctx.esm.set_key("SCHD");
+		m_ctx.esm.set_value("SCTX");
+		if (!m_ctx.esm.get_key().exist || !m_ctx.esm.get_value().exist)
+			continue;
+
+		record_entry_t entry;
+		entry.key_text = m_ctx.esm.get_key().text;
+		entry.old_text = m_ctx.esm.get_value().text;
+		entry.status = status_t::translated;
+		m_ctx.dict.at(rec_type_t::script).insert(entry);
 	}
 }
 

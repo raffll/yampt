@@ -157,7 +157,8 @@ void sidebar_controller_t::scan_workspace()
 		if (!entry->is_workspace)
 			continue;
 
-		if (entry->type != file_type_t::base_dict && entry->type != file_type_t::user_dict)
+		if (entry->type != file_type_t::base_dict && entry->type != file_type_t::user_dict &&
+		    entry->type != file_type_t::yaml_l10n)
 			continue;
 
 		if (m_deps.session.find(entry->path))

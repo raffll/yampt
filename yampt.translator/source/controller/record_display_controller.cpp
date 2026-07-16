@@ -37,7 +37,30 @@ void record_display_controller_t::load_record(int row, document_t * active_doc)
 	if (row_data->type == rec_type_t::text)
 		m_deps.book_preview_view.set_html(row_data->old_text, row_data->new_text);
 	else if (row_data->type == rec_type_t::sctx || row_data->type == rec_type_t::bnam)
-		m_deps.book_preview_view.set_script(row_data->old_text, row_data->new_text);
+	{
+		std::string full_script;
+		auto * dict_doc = dynamic_cast<dict_document_t *>(active_doc);
+		if (dict_doc)
+		{
+			const auto & data = dict_doc->data();
+			auto script_it = data.find(rec_type_t::script);
+			if (script_it != data.end())
+			{
+				const auto caret_pos = row_data->key_text.find('^');
+				const auto script_name = (caret_pos != std::string::npos)
+				                              ? row_data->key_text.substr(0, caret_pos)
+				                              : row_data->key_text;
+				const auto * script_entry = script_it->second.find(script_name);
+				if (script_entry)
+					full_script = script_entry->old_text;
+			}
+		}
+
+		if (!full_script.empty())
+			m_deps.book_preview_view.set_script(full_script, {});
+		else
+			m_deps.book_preview_view.set_script(row_data->old_text, row_data->new_text);
+	}
 	else
 		m_deps.book_preview_view.clear();
 

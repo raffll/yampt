@@ -205,6 +205,9 @@ static void compute_progress(dict_counts_t & counts, const progress_input_t & in
 {
 	for (const auto & [type, chapter] : input.data)
 	{
+		if (type == rec_type_t::script)
+			continue;
+
 		const auto effective_type = (type == rec_type_t::bnam) ? rec_type_t::info : type;
 
 		if (!input.params.type_filter.empty() && input.params.type_filter.count(effective_type) == 0)
@@ -274,6 +277,9 @@ table_build_result_t build_filtered_rows(const dict_t & data, const table_filter
 
 	for (const auto & [type, chapter] : data)
 	{
+		if (type == rec_type_t::script)
+			continue;
+
 		for (size_t i = 0; i < chapter.records.size(); ++i)
 		{
 			const auto & entry = chapter.records[i];

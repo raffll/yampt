@@ -20,7 +20,7 @@ translation_engine_t::translation_engine_t()
 translation_engine_t::~translation_engine_t()
 {
 	if (m_impl)
-		m_impl->translator.release();
+		m_impl->translator.reset();
 }
 
 translation_engine_t::translation_engine_t(translation_engine_t &&) noexcept = default;
@@ -82,7 +82,7 @@ bool translation_engine_t::load(const std::string & model_pack_path)
 
 void translation_engine_t::unload()
 {
-	m_impl->translator.release();
+	m_impl->translator.reset();
 	m_impl->spm.reset();
 	m_impl->source_lang.clear();
 	m_impl->target_lang.clear();

@@ -62,7 +62,7 @@ dict_t domain_types::initialize_dict()
 	return {
 		{ rec_type_t::cell, {} }, { rec_type_t::dial, {} }, { rec_type_t::indx, {} }, { rec_type_t::rnam, {} },
 		{ rec_type_t::desc, {} }, { rec_type_t::gmst, {} }, { rec_type_t::fnam, {} }, { rec_type_t::info, {} },
-		{ rec_type_t::text, {} }, { rec_type_t::bnam, {} }, { rec_type_t::sctx, {} },
+		{ rec_type_t::text, {} }, { rec_type_t::bnam, {} }, { rec_type_t::sctx, {} }, { rec_type_t::script, {} },
 	};
 }
 
@@ -102,6 +102,8 @@ std::string domain_types::type_to_str(rec_type_t type)
 		return "BNAM";
 	case rec_type_t::sctx:
 		return "SCTX";
+	case rec_type_t::script:
+		return "SCRIPT";
 
 	case rec_type_t::pgrd:
 		return "PGRD";
@@ -133,6 +135,7 @@ rec_type_t domain_types::str_to_type(const std::string & str)
 		{ "RNAM", rec_type_t::rnam }, { "DESC", rec_type_t::desc }, { "GMST", rec_type_t::gmst },
 		{ "FNAM", rec_type_t::fnam }, { "INFO", rec_type_t::info }, { "TEXT", rec_type_t::text },
 		{ "BNAM", rec_type_t::bnam }, { "SCTX", rec_type_t::sctx },
+		{ "SCRIPT", rec_type_t::script },
 	};
 
 	auto search = str2type.find(str);

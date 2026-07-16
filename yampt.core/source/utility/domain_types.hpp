@@ -34,6 +34,8 @@ enum class rec_type_t
 	bnam,
 	sctx,
 
+	script,
+
 	yaml,
 
 	pgrd,

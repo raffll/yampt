@@ -36,7 +36,7 @@ private:
 	void show_folder_context_menu(QTreeWidgetItem * item, const QPoint & pos);
 	void show_plugin_context_menu(const std::string & path, const QPoint & pos);
 	void show_dict_context_menu(const std::string & path, const QPoint & pos);
-	void show_yaml_context_menu(const std::string & path, const QPoint & pos);
+	void show_yaml_context_menu(const std::string & path, bool is_native, const QPoint & pos);
 
 	QTreeWidget * m_tree = nullptr;
 };
