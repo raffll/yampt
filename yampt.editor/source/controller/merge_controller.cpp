@@ -17,6 +17,37 @@
 #include <QInputDialog>
 #include <QLineEdit>
 
+namespace {
+
+std::set<std::string> parse_sub_record_rules(const std::string & input)
+{
+	std::set<std::string> result;
+	size_t start = 0;
+
+	while (start < input.size())
+	{
+		const auto comma = input.find(',', start);
+		const auto end = (comma == std::string::npos) ? input.size() : comma;
+
+		auto token_start = start;
+		while (token_start < end && input[token_start] == ' ')
+			++token_start;
+
+		auto token_end = end;
+		while (token_end > token_start && input[token_end - 1] == ' ')
+			--token_end;
+
+		if (token_end > token_start)
+			result.insert(input.substr(token_start, token_end - token_start));
+
+		start = (comma == std::string::npos) ? input.size() : comma + 1;
+	}
+
+	return result;
+}
+
+} // namespace
+
 merge_controller_t::merge_controller_t(
     plugin_session_t & session,
     record_view_t & record_view,
@@ -423,6 +454,9 @@ int merge_controller_t::create_merge_records()
 	config.fog_fix_enabled = m_settings.merge_fog_fix_enabled();
 	config.summon_fix_enabled = m_settings.merge_summon_fix_enabled();
 	config.cell_name_fix_enabled = m_settings.merge_cell_name_fix_enabled();
+	config.ignore_conflict_subs = parse_sub_record_rules(m_settings.sub_record_ignore_conflict());
+	config.exclude_from_merge_subs = parse_sub_record_rules(m_settings.sub_record_exclude_from_merge());
+	config.skip_if_missing_subs = parse_sub_record_rules(m_settings.sub_record_skip_if_missing());
 
 	auto_merge_t merge(m_session.scan());
 	merge.set_config(config);

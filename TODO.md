@@ -3,16 +3,12 @@
 ## Release tasks
 
 - nexus api: auto upload, auto description
-- github: remove obsolete releases
 - ship model, at least polish
 
 ## Features
 
 ### EET Convert (yTranslator)
 Wire up EET file import/convert.
-
-### Batch Clean (yEditor) — WIP
-Code exists (`batch_cleaner_t`) but button is hidden — ITM detection produces inconsistent results when cleaned files are reloaded.
 
 ### Settings Panel (yTranslator)
 Panel with all exceptions configurable.

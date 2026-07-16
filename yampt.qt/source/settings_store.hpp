@@ -141,6 +141,15 @@ public:
 	bool merge_column_visible() const;
 	void set_merge_column_visible(bool value);
 
+	std::string sub_record_ignore_conflict() const;
+	void set_sub_record_ignore_conflict(const std::string & value);
+
+	std::string sub_record_exclude_from_merge() const;
+	void set_sub_record_exclude_from_merge(const std::string & value);
+
+	std::string sub_record_skip_if_missing() const;
+	void set_sub_record_skip_if_missing(const std::string & value);
+
 	int display_codepage() const;
 	void set_display_codepage(int value);
 

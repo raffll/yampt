@@ -21,6 +21,7 @@
     <ClCompile Include="source\dialog\settings\editor_settings_dialog.cpp" />
     <ClCompile Include="source\dialog\settings\appearance_settings_view.cpp" />
     <ClCompile Include="source\dialog\settings\merge_settings_view.cpp" />
+    <ClCompile Include="source\dialog\settings\sub_record_rules_view.cpp" />
     <ClCompile Include="source\model\nav_tree_filter.cpp" />
     <ClCompile Include="source\patcher\patch_builder.cpp" />
     <ClCompile Include="source\view\nav_tree_view.cpp" />

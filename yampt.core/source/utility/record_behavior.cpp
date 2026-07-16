@@ -1,5 +1,6 @@
 #include "record_behavior.hpp"
 #include <cstring>
+#include <set>
 
 using enum sub_rule_flag_t;
 
@@ -110,4 +111,34 @@ const sub_record_rule_t * find_sub_record_rule(
 	}
 
 	return behavior->wildcard_rule;
+}
+
+static bool matches_rule_set(
+    const std::string & record_type,
+    const std::string & sub_type,
+    const std::set<std::string> & rules)
+{
+	const auto specific_key = record_type + ":" + sub_type;
+	if (rules.count(specific_key))
+		return true;
+
+	const auto wildcard_key = record_type + ":*";
+	if (rules.count(wildcard_key))
+		return true;
+
+	return false;
+}
+
+sub_record_user_policy_t find_user_policy(
+    const std::string & record_type,
+    const std::string & sub_type,
+    const std::set<std::string> & ignore_conflict_subs,
+    const std::set<std::string> & exclude_from_merge_subs,
+    const std::set<std::string> & skip_if_missing_subs)
+{
+	sub_record_user_policy_t policy;
+	policy.ignore_conflict = matches_rule_set(record_type, sub_type, ignore_conflict_subs);
+	policy.exclude_from_merge = matches_rule_set(record_type, sub_type, exclude_from_merge_subs);
+	policy.skip_if_missing = matches_rule_set(record_type, sub_type, skip_if_missing_subs);
+	return policy;
 }

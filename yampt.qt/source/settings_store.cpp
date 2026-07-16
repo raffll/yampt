@@ -494,6 +494,36 @@ void settings_store_t::set_merge_column_visible(bool value)
 	m_settings.setValue("merge/show_column", value);
 }
 
+std::string settings_store_t::sub_record_ignore_conflict() const
+{
+	return m_settings.value("SubRecordRules/IgnoreConflict", "CELL:NAM0").toString().toStdString();
+}
+
+void settings_store_t::set_sub_record_ignore_conflict(const std::string & value)
+{
+	m_settings.setValue("SubRecordRules/IgnoreConflict", QString::fromStdString(value));
+}
+
+std::string settings_store_t::sub_record_exclude_from_merge() const
+{
+	return m_settings.value("SubRecordRules/ExcludeFromMerge", "CELL:NAM0, CELL:NAM9").toString().toStdString();
+}
+
+void settings_store_t::set_sub_record_exclude_from_merge(const std::string & value)
+{
+	m_settings.setValue("SubRecordRules/ExcludeFromMerge", QString::fromStdString(value));
+}
+
+std::string settings_store_t::sub_record_skip_if_missing() const
+{
+	return m_settings.value("SubRecordRules/SkipIfMissing", "CELL:*").toString().toStdString();
+}
+
+void settings_store_t::set_sub_record_skip_if_missing(const std::string & value)
+{
+	m_settings.setValue("SubRecordRules/SkipIfMissing", QString::fromStdString(value));
+}
+
 int settings_store_t::display_codepage() const
 {
 	return m_settings.value("Editor/DisplayCodepage", 1252).toInt();

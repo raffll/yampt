@@ -13,6 +13,9 @@ struct merge_config_t
 	std::set<std::string> patch_plugins;
 	std::string exclusion_pattern;
 	std::set<std::string> disabled_types;
+	std::set<std::string> ignore_conflict_subs;
+	std::set<std::string> exclude_from_merge_subs;
+	std::set<std::string> skip_if_missing_subs;
 	bool fog_fix_enabled = true;
 	bool summon_fix_enabled = true;
 	bool cell_name_fix_enabled = true;
