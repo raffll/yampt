@@ -108,7 +108,7 @@ void plugin_operations_controller_t::on_plugin_operation(const std::string & plu
 		auto entries = build_dict_entries(plugin_dir);
 
 		dict_selection_dialog_t dialog(entries, m_deps.settings.last_merge_order(), m_deps.parent_widget);
-		dialog.setWindowTitle(QCoreApplication::translate("yTranslator", "Select Dictionaries for Convert"));
+		dialog.setWindowTitle(QCoreApplication::translate("yTranslator", "Select Dictionaries for Convert Plugin"));
 		if (dialog.exec() != QDialog::Accepted)
 			return;
 
@@ -129,7 +129,7 @@ void plugin_operations_controller_t::on_plugin_operation(const std::string & plu
 		auto entries = build_dict_entries(plugin_dir);
 
 		dict_selection_dialog_t dialog(entries, m_deps.settings.last_merge_order(), m_deps.parent_widget);
-		dialog.setWindowTitle(QCoreApplication::translate("yTranslator", "Select Dictionaries for Create"));
+		dialog.setWindowTitle(QCoreApplication::translate("yTranslator", "Select Dictionaries for Create Patch"));
 		if (dialog.exec() != QDialog::Accepted)
 			return;
 
@@ -170,13 +170,13 @@ void plugin_operations_controller_t::log_operation_result(
 		operation_name = "make dict: " + plugin_name;
 		break;
 	case plugin_op_t::make_base:
-		operation_name = "make base: " + plugin_name;
+		operation_name = "make base dict: " + plugin_name;
 		break;
 	case plugin_op_t::convert:
-		operation_name = "convert: " + plugin_name;
+		operation_name = "convert plugin: " + plugin_name;
 		break;
 	case plugin_op_t::create_plugin:
-		operation_name = "create: " + plugin_name;
+		operation_name = "create patch: " + plugin_name;
 		break;
 	}
 

@@ -4,7 +4,7 @@ Translation workbench for Morrowind ESM/ESP plugins.
 
 ## Getting Started
 
-Open File → Add Folder and point it to a directory containing your plugins and dictionaries. The sidebar populates with all discovered files. Click a dictionary to open it for editing. Right-click a plugin to run operations like Make Dictionary or Convert.
+Open File → Add Folder and point it to a directory containing your plugins and dictionaries. The sidebar populates with all discovered files. Click a dictionary to open it for editing. Right-click a plugin to run operations like Make Dictionary or Convert Plugin.
 
 ## Main Layout
 
@@ -18,7 +18,7 @@ Open File → Add Folder and point it to a directory containing your plugins and
 
 Files are color-coded by type: green for plugins, gold for base dictionaries, blue for user dictionaries, purple for YAML localization files. An asterisk prefix indicates unsaved changes.
 
-Right-click a file or folder to access its context menu. Plugins offer Make Dictionary, Make Base, Convert, Create, and Delete. Dictionaries offer Save and Delete. YAML foreign files offer Make Translation (creates a native scaffold) and Delete. YAML native files offer Save and Delete. Folders offer Remove Folder (unload from sidebar) and Delete Folder (remove from disk).
+Right-click a file or folder to access its context menu. Plugins offer Make Dictionary, Make Base Dictionary, Convert Plugin, Create Patch Plugin, and Delete. Dictionaries offer Save and Delete. YAML foreign files offer Make Translation (creates a native scaffold) and Delete. YAML native files offer Save and Delete. Folders offer Remove Folder (unload from sidebar) and Delete Folder (remove from disk).
 
 ## Operations
 
@@ -32,22 +32,22 @@ Right-click a plugin and select Make Dictionary. This reads all translatable rec
 
 If you select "with Base" variant, the operation also applies translations from loaded base dictionaries to entries that match by key or by original text.
 
-### Make Base
+### Make Base Dictionary
 
-Right-click a foreign-language plugin (e.g. English Morrowind.esm) and select Make Base. A dialog asks you to pick the native-language version (e.g. Polish Morrowind.esm). The application compares both files record by record to produce matched translation pairs.
+Right-click a foreign-language plugin (e.g. English Morrowind.esm) and select Make Base Dictionary. A dialog asks you to pick the native-language version (e.g. Polish Morrowind.esm). The application compares both files record by record to produce matched translation pairs.
 
 Two modes are available:
 
 - **Full** — all matched entries receive status Translated. When the original and native text are identical, the entry is treated as a proper noun (same word in both languages).
 - **Partial** — identical entries are checked against an English dictionary. If English words are detected, the entry is marked Untranslated (likely not yet translated). If no English words are found, it is marked To Verify (probably a proper noun, but confirm manually).
 
-### Convert
+### Convert Plugin
 
-Right-click a plugin and select Convert. This applies all Translated entries from loaded dictionaries to the plugin and writes a new output file. Entries with any other status are ignored — the original plugin text stays unchanged for those records.
+Right-click a plugin and select Convert Plugin. This applies all Translated entries from loaded dictionaries to the plugin and writes a new output file. Entries with any other status are ignored — the original plugin text stays unchanged for those records.
 
-### Create
+### Create Patch Plugin
 
-Works like Convert but the output file contains only the records that were actually modified. Use this to produce a lightweight translation patch.
+Works like Convert Plugin but the output file contains only the records that were actually modified. Use this to produce a lightweight translation patch.
 
 ### Merge Dictionaries
 
@@ -113,22 +113,22 @@ Additional providers can be added by placing a configuration file in the `provid
 
 ## Entry Statuses
 
-Each dictionary entry has a status. Only **Translated** entries are applied during Convert/Create — all others are skipped. You can manually set **Translated**, **In Progress**, or **Untranslated** via right-click context menu.
+Each dictionary entry has a status. Only **Translated** entries are applied during Convert Plugin/Create Patch Plugin — all others are skipped. You can manually set **Translated**, **In Progress**, or **Untranslated** via right-click context menu.
 
-- **Translated** — the translation is approved. This is the only status that produces output when running Convert or Create.
+- **Translated** — the translation is approved. This is the only status that produces output when running Convert Plugin or Create Patch Plugin.
 - **Untranslated** — no translation exists. The original and translation fields contain the same text.
 - **In Progress** — assigned automatically when you edit a translation. Indicates work has started but the entry is not yet approved.
 - **Generated** — assigned when the Auto Translate button fills in a translation. Review the result, then set to Translated if correct.
-- **To Verify** — assigned during Make Base (partial mode) when the original and native text are identical but no English words were detected. May be a proper noun that needs no translation, or may be an untranslated entry in a language that shares words with English. Check manually.
+- **To Verify** — assigned during Make Base Dictionary (partial mode) when the original and native text are identical but no English words were detected. May be a proper noun that needs no translation, or may be an untranslated entry in a language that shares words with English. Check manually.
 - **Changed** — the original text in the source plugin differs from what was originally translated. The existing translation may no longer be accurate. Compare the current original with the old original shown in the Details panel.
 - **Adapted** — no entry with a matching key was found in the base dictionary, but another entry with identical original text provided a translation. The translation may not fit this context. The Details panel shows which entry it was adapted from.
 - **Outdated** — like Changed, but the entry had not been approved as Translated before the source text changed.
 - **Ambiguous** — multiple entries in the base dictionary offer different translations for the same original text. The Details panel lists all candidates. Pick the correct one and set to Translated.
 - **Reused** — the base dictionary contained a matching original text under a different key. The translation was copied from that entry.
 - **Propagated** — after you committed a translation, all other entries sharing the same original text were updated to match.
-- **Missing** — during Make Base, this record existed in the foreign file but no corresponding record was found in the native file. Requires manual translation.
+- **Missing** — during Make Base Dictionary, this record existed in the foreign file but no corresponding record was found in the native file. Requires manual translation.
 - **Duplicate** — the same key appeared more than once in the source plugin. Only the first occurrence is stored.
-- **Mismatch** — during Make Base, a record existed in the native file with no corresponding record in the foreign file. Informational; no action needed.
+- **Mismatch** — during Make Base Dictionary, a record existed in the native file with no corresponding record in the foreign file. Informational; no action needed.
 - **Error** — the translation exceeds the maximum byte length allowed for this sub-record type and cannot be written to the plugin. Shorten the translation.
 
 ## Settings
@@ -137,5 +137,5 @@ Open Settings via Ctrl+, or the Edit menu. Four pages are available:
 
 - **Appearance** — choose between light and dark theme.
 - **Shortcuts** — customize keyboard shortcuts for all actions. Conflicts are highlighted in red.
-- **Language** — set the foreign language (source) and native language (target). Choose a spell check dictionary for the Translation panel. Configure the English dictionary used for partial mode in Make Base.
+- **Language** — set the foreign language (source) and native language (target). Choose a spell check dictionary for the Translation panel. Configure the English dictionary used for partial mode in Make Base Dictionary.
 - **Translation** — shows a table of all discovered web translation providers. Enter your API key for each service you want to use. The Status column shows whether a key is configured.

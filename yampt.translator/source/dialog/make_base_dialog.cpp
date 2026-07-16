@@ -23,7 +23,7 @@ make_base_dialog_t::make_base_dialog_t(
     , m_file_list(file_list)
     , m_settings(settings)
 {
-	setWindowTitle(tr("Make Base"));
+	setWindowTitle(tr("Make Base Dictionary"));
 	setModal(true);
 	resize(450, 400);
 

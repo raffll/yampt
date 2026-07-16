@@ -202,10 +202,10 @@ void sidebar_view_t::show_plugin_context_menu(const std::string & path, const QP
 {
 	QMenu menu(this);
 	auto * make_dict_action = menu.addAction(tr("Make Dictionary"));
-	auto * make_base_action = menu.addAction(tr("Make Base"));
+	auto * make_base_action = menu.addAction(tr("Make Base Dictionary"));
 	menu.addSeparator();
-	auto * convert_action = menu.addAction(tr("Convert"));
-	auto * create_action = menu.addAction(tr("Create"));
+	auto * convert_action = menu.addAction(tr("Convert Plugin"));
+	auto * create_action = menu.addAction(tr("Create Patch Plugin"));
 	menu.addSeparator();
 	auto * delete_action = menu.addAction(tr("Delete"));
 

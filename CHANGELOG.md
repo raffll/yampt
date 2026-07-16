@@ -42,6 +42,9 @@
 - [CHANGE] Language settings: spell check auto-set to None when dictionary not found
 - [CHANGE] All operation dialogs use consistent 450×400 initial size
 - [CHANGE] Convert/Create: preserves original file timestamp
+- [CHANGE] "Make Base" renamed to "Make Base Dictionary"
+- [CHANGE] "Convert" renamed to "Convert Plugin"
+- [CHANGE] "Create" renamed to "Create Patch Plugin"
 - [FIX] Annotation highlight misalignment
 - [FIX] Dictionary marked dirty on row click without editing
 - [FIX] SCTX/BNAM validation: quotes no longer flagged as forbidden characters
