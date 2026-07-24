@@ -177,6 +177,8 @@
     <ClCompile Include="source\creator\creator_single.cpp" />
     <ClCompile Include="source\creator\creator_base.cpp" />
     <ClCompile Include="source\creator\creator_ordered.cpp" />
+    <ClCompile Include="source\creator\inflection.cpp" />
+    <ClCompile Include="source\creator\loc_generator.cpp" />
     <ClCompile Include="source\creator\text_match_index.cpp" />
     <ClCompile Include="source\creator\word_match_utils.cpp" />
     <ClCompile Include="source\decoder\conflict_slots.cpp" />
@@ -193,6 +195,8 @@
     <ClCompile Include="source\io\binary_file_io.cpp" />
     <ClCompile Include="source\io\file_list.cpp" />
     <ClCompile Include="source\io\profile_reader.cpp" />
+    <ClCompile Include="source\io\loc_file_reader.cpp" />
+    <ClCompile Include="source\io\loc_file_writer.cpp" />
     <ClCompile Include="source\io\yaml_l10n_reader.cpp" />
     <ClCompile Include="source\io\yaml_l10n_writer.cpp" />
     <ClCompile Include="source\merger\dict_merger.cpp" />
@@ -227,6 +231,8 @@
     <ClInclude Include="source\creator\creator_single.hpp" />
     <ClInclude Include="source\creator\creator_base.hpp" />
     <ClInclude Include="source\creator\creator_ordered.hpp" />
+    <ClInclude Include="source\creator\inflection.hpp" />
+    <ClInclude Include="source\creator\loc_generator.hpp" />
     <ClInclude Include="source\creator\text_match_index.hpp" />
     <ClInclude Include="source\creator\word_match_utils.hpp" />
     <ClInclude Include="source\decoder\conflict_slots.hpp" />
@@ -244,6 +250,9 @@
     <ClInclude Include="source\io\binary_file_io.hpp" />
     <ClInclude Include="source\io\file_list.hpp" />
     <ClInclude Include="source\io\json_reader.hpp" />
+    <ClInclude Include="source\io\loc_file_reader.hpp" />
+    <ClInclude Include="source\io\loc_file_writer.hpp" />
+    <ClInclude Include="source\io\loc_types.hpp" />
     <ClInclude Include="source\io\profile_reader.hpp" />
     <ClInclude Include="source\merger\dict_merger.hpp" />
     <ClInclude Include="source\scanner\cell_name_fixer.hpp" />

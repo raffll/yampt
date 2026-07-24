@@ -1,12 +1,16 @@
 #include "sidebar_controller.hpp"
 #include "../model/dict_document.hpp"
+#include "../model/loc_document.hpp"
 #include "../model/sidebar_model.hpp"
 #include "../model/yaml_document.hpp"
 #include "../view/display_name.hpp"
 #include "../view/log_view.hpp"
 #include "../view/sidebar_view.hpp"
+#include <creator/loc_generator.hpp>
+#include <io/loc_file_reader.hpp>
 #include <utility/string_utils.hpp>
 #include <algorithm>
+#include <map>
 #include <QCoreApplication>
 #include <QDir>
 #include <QFile>
@@ -298,4 +302,103 @@ void sidebar_controller_t::on_delete_folder_requested(const std::string & folder
 	m_deps.last_annotation_version = m_deps.session.dict_version();
 	QDir(QString::fromStdString(folder_path)).removeRecursively();
 	scan_workspace();
+}
+
+std::string sidebar_controller_t::resolve_hunspell_locale(const std::string & language_code) const
+{
+	static const std::map<std::string, std::string> locale_map = {
+		{ "PL", "pl_PL" }, { "DE", "de_DE" }, { "FR", "fr_FR" },
+		{ "RU", "ru_RU" }, { "IT", "it_IT" }, { "HU", "hu_HU" },
+	};
+
+	const auto it_locale = locale_map.find(language_code);
+	if (it_locale == locale_map.end())
+		return {};
+
+	return it_locale->second;
+}
+
+void sidebar_controller_t::on_generate_loc_requested(const std::string & path)
+{
+	auto * doc = m_deps.session.find(path);
+	if (!doc)
+		return;
+
+	auto * dict_doc = dynamic_cast<dict_document_t *>(doc);
+	if (!dict_doc)
+		return;
+
+	const auto & dict = dict_doc->data();
+	const auto esm_name = loc_generator::derive_esm_name(path);
+	const auto sep = path.find_last_of("/\\");
+	const auto output_dir = sep != std::string::npos ? path.substr(0, sep) : ".";
+	const auto codepage = m_deps.session.codepage();
+
+	std::string hunspell_aff;
+	std::string hunspell_dic;
+	const auto & language = m_deps.session.native_language();
+	const auto locale = resolve_hunspell_locale(language);
+	if (!locale.empty())
+	{
+		const auto dict_dir = QCoreApplication::applicationDirPath().toStdString() + "/dictionaries/";
+		hunspell_aff = dict_dir + locale + ".aff";
+		hunspell_dic = dict_dir + locale + ".dic";
+	}
+
+	const loc_generator::generation_input_t input{
+		dict, output_dir, esm_name, codepage, hunspell_aff, hunspell_dic
+	};
+	const auto result = loc_generator::generate(input);
+
+	const auto summary = "cel=" + std::to_string(result.cel_entries)
+	    + " mrk=" + std::to_string(result.mrk_entries)
+	    + " top=" + std::to_string(result.top_entries)
+	    + " skipped=" + std::to_string(result.skipped_entries)
+	    + " collisions=" + std::to_string(result.collision_warnings) + "\r\n";
+	m_deps.log_view.append_log("generate loc", summary);
+
+	scan_workspace();
+	reload_open_loc_documents(result);
+	load_loc_annotations(result, codepage);
+}
+
+void sidebar_controller_t::reload_open_loc_documents(const loc_generator::generation_result_t & result)
+{
+	bool active_reloaded = false;
+	const std::vector<std::string> output_paths = { result.cel_path, result.mrk_path, result.top_path };
+
+	for (auto * open_doc : m_deps.session.all())
+	{
+		auto * loc_doc = dynamic_cast<loc_document_t *>(open_doc);
+		if (!loc_doc)
+			continue;
+
+		const auto & loc_path = loc_doc->path();
+		for (const auto & out_path : output_paths)
+		{
+			if (string_utils::normalize_path(loc_path) == string_utils::normalize_path(out_path))
+			{
+				loc_doc->reload();
+				if (m_deps.active_doc == loc_doc)
+					active_reloaded = true;
+			}
+		}
+	}
+
+	if (active_reloaded)
+		m_deps.callbacks.switch_document(m_deps.active_doc);
+}
+
+void sidebar_controller_t::load_loc_annotations(const loc_generator::generation_result_t & result, codepage_t codepage)
+{
+	auto cel_file = loc_file_reader::read(result.cel_path, codepage);
+	auto top_file = loc_file_reader::read(result.top_path, codepage);
+	auto mrk_file = loc_file_reader::read(result.mrk_path, codepage);
+
+	loc_entries_t loc_entries;
+	loc_entries.cel = std::move(cel_file.entries);
+	loc_entries.top = std::move(top_file.entries);
+	loc_entries.mrk = std::move(mrk_file.entries);
+	m_deps.callbacks.set_loc_entries(loc_entries);
+	m_deps.callbacks.rebuild_annotations();
 }

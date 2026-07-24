@@ -85,6 +85,9 @@ file_type_t file_list_t::classify(const std::string & path)
 	if (ext == ".yaml")
 		return file_type_t::yaml_l10n;
 
+	if (ext == ".cel" || ext == ".top" || ext == ".mrk")
+		return file_type_t::loc_file;
+
 	if (ext == ".json" || ext == ".xml")
 	{
 		const auto filename = string_utils::to_lower(string_utils::extract_filename(path));
@@ -126,6 +129,9 @@ file_type_t classify(const std::string & path)
 
 	if (ext == ".yaml")
 		return file_type_t::yaml_l10n;
+
+	if (ext == ".cel" || ext == ".top" || ext == ".mrk")
+		return file_type_t::loc_file;
 
 	if (ext == ".json" || ext == ".xml")
 	{
@@ -232,7 +238,7 @@ void file_list_t::scan_single_root(const std::string & root_path)
 
 		const auto ext = string_utils::to_lower(entry.path().extension().string());
 		if (ext != ".esm" && ext != ".esp" && ext != ".json" && ext != ".xml" && ext != ".yaml" && ext != ".omwaddon" &&
-		    ext != ".omwgame")
+		    ext != ".omwgame" && ext != ".cel" && ext != ".top" && ext != ".mrk")
 			continue;
 
 		if (ext == ".yaml")

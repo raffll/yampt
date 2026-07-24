@@ -2,6 +2,8 @@
 
 #include "session.hpp"
 #include "workspace_watcher.hpp"
+#include "../editor/glossary.hpp"
+#include <creator/loc_generator.hpp>
 #include <io/file_list.hpp>
 #include <functional>
 #include <string>
@@ -17,6 +19,7 @@ struct sidebar_controller_callbacks_t
 {
 	std::function<void(document_t *)> switch_document;
 	std::function<void()> rebuild_annotations;
+	std::function<void(const loc_entries_t &)> set_loc_entries;
 	std::function<void()> save_config;
 	std::function<void(bool)> set_unsaved_changes;
 };
@@ -45,6 +48,7 @@ public:
 	void on_unload_requested(const std::string & path);
 	void on_delete_requested(const std::string & path);
 	void on_export_native_requested(const std::string & path);
+	void on_generate_loc_requested(const std::string & path);
 	void scan_workspace();
 	void update_watcher_roots();
 	void rebuild_sidebar();
@@ -53,5 +57,8 @@ public:
 	void on_delete_folder_requested(const std::string & folder_path);
 
 private:
+	std::string resolve_hunspell_locale(const std::string & language_code) const;
+	void reload_open_loc_documents(const loc_generator::generation_result_t & result);
+	void load_loc_annotations(const loc_generator::generation_result_t & result, codepage_t codepage);
 	sidebar_controller_deps_t m_deps;
 };

@@ -256,6 +256,9 @@
     <ClCompile Include="source\tests.pending_status.cpp" />
     <ClCompile Include="source\tests.script_tokenizer_extended.cpp" />
     <ClCompile Include="source\tests.web_translator_config.cpp" />
+    <ClCompile Include="source\tests.loc_file_writer.cpp" />
+    <ClCompile Include="source\tests.loc_file_reader.cpp" />
+    <ClCompile Include="source\tests.inflection.cpp" />
     <ClCompile Include="..\yampt.translator\source\model\table_builder.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\row_filter.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\glossary.cpp" />
@@ -265,6 +268,7 @@
     <ClCompile Include="..\yampt.translator\source\model\sidebar_model.cpp" />
     <ClCompile Include="..\yampt.translator\source\view\display_name.cpp" />
     <ClCompile Include="..\yampt.translator\source\session\session.cpp" />
+    <ClCompile Include="..\yampt.translator\source\model\loc_document.cpp" />
     <ClCompile Include="..\yampt.translator\source\highlighter\script_tokenizer.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\edit_history.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\byte_limit_validator.cpp" />

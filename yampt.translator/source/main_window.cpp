@@ -105,6 +105,7 @@ main_window_t::main_window_t(QWidget * parent)
 	                                this,
 	                                { [this](document_t * doc) { switch_document(doc); },
 	                                  [this]() { rebuild_annotations(); },
+	                                  [this](const loc_entries_t & entries) { m_glossary.set_loc_entries(entries); },
 	                                  [this]() { save_config(); },
 	                                  [this](bool dirty) { set_unsaved_changes(dirty); } } });
 

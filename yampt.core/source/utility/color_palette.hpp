@@ -55,6 +55,7 @@ inline constexpr auto light_palette = []()
 
 	palette[static_cast<size_t>(color_name_t::annotation_dial_topic)] = { 70, 130, 200, 60 };
 	palette[static_cast<size_t>(color_name_t::annotation_glossary_term)] = { 70, 180, 70, 60 };
+	palette[static_cast<size_t>(color_name_t::annotation_loc_coverage)] = { 80, 180, 180, 60 };
 
 	palette[static_cast<size_t>(color_name_t::conflict_all_no_conflict_raw)] = { 0, 255, 0 };
 	palette[static_cast<size_t>(color_name_t::conflict_all_override_benign_raw)] = { 255, 255, 0 };
@@ -112,6 +113,7 @@ inline constexpr auto dark_palette = []()
 
 	palette[static_cast<size_t>(color_name_t::annotation_dial_topic)] = { 40, 55, 75 };
 	palette[static_cast<size_t>(color_name_t::annotation_glossary_term)] = { 35, 60, 40 };
+	palette[static_cast<size_t>(color_name_t::annotation_loc_coverage)] = { 40, 80, 80 };
 
 	palette[static_cast<size_t>(color_name_t::conflict_all_no_conflict_raw)] = { 0, 180, 0 };
 	palette[static_cast<size_t>(color_name_t::conflict_all_override_benign_raw)] = { 180, 180, 0 };

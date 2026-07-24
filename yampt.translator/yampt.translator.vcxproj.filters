@@ -10,6 +10,7 @@
     <ClCompile Include="source\model\dict_document.cpp" />
     <ClCompile Include="source\model\yaml_document.cpp" />
     <ClCompile Include="source\model\table_builder.cpp" />
+    <ClCompile Include="source\model\loc_document.cpp" />
     <ClCompile Include="source\view\record_table_view.cpp" />
     <ClCompile Include="source\view\table_view.cpp" />
     <ClCompile Include="source\view\sidebar_view.cpp" />
@@ -89,5 +90,6 @@
     <ClInclude Include="source\dialog\settings\appearance_settings_view.hpp" />
     <ClInclude Include="source\highlighter\highlight_coordinator.hpp" />
     <ClInclude Include="source\highlighter\highlight_applier.hpp" />
+    <ClInclude Include="source\model\loc_document.hpp" />
   </ItemGroup>
 </Project>

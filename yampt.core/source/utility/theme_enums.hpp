@@ -47,6 +47,7 @@ enum class color_name_t
 
 	annotation_dial_topic,
 	annotation_glossary_term,
+	annotation_loc_coverage,
 
 	conflict_all_no_conflict_raw,
 	conflict_all_override_benign_raw,

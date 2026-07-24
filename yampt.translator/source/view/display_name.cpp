@@ -52,6 +52,9 @@ std::string display_name_t::to_string() const
 	if (m_kind == dict_kind_t::base)
 		result += "[BASE] ";
 
+	if (m_file_type == file_type_t::loc_file)
+		result += "[LOC] ";
+
 	if (m_wip)
 		result += "[WIP] ";
 

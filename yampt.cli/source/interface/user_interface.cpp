@@ -1,7 +1,9 @@
 #include "user_interface.hpp"
 #include <converter/esm_converter.hpp>
 #include <creator/dict_creator.hpp>
+#include <creator/loc_generator.hpp>
 #include <io/binary_file_io.hpp>
+#include <io/codepage.hpp>
 #include <io/dict_reader.hpp>
 #include <io/dict_writer.hpp>
 #include <merger/dict_merger.hpp>
@@ -31,6 +33,12 @@ void user_interface_t::collect_argument_value(const std::string & command, const
 
 	else if (command == "--translate")
 		translate_model_path = value;
+
+	else if (command == "--esm-name")
+		esm_name_override = value;
+
+	else if (command == "--language")
+		language_code = value;
 }
 
 void user_interface_t::parse_command_line()
@@ -49,7 +57,8 @@ void user_interface_t::parse_command_line()
 		else if (token == "--partial")
 			partial_mode = true;
 
-		else if (token == "-f" || token == "-d" || token == "-o" || token == "-s" || token == "--translate")
+		else if (token == "-f" || token == "-d" || token == "-o" || token == "-s" || token == "--translate" ||
+		         token == "--esm-name" || token == "--language")
 			command = token;
 
 		else
@@ -80,6 +89,10 @@ void user_interface_t::run_command()
 		else if (args[1] == "--create" && file_paths.size() > 0 && dict_paths.size() > 0)
 		{
 			create_esm();
+		}
+		else if (args[1] == "--make-loc" && dict_paths.size() > 0)
+		{
+			make_loc();
 		}
 		else
 		{
@@ -232,5 +245,72 @@ void user_interface_t::create_esm()
 			app_logger_t::add_log("[warning] skipping \"" + file_path + "\" (failed to load)\r\n");
 		}
 	}
+	app_logger_t::add_log("[info] done!\r\n");
+}
+
+static codepage_t resolve_codepage(const std::string & language)
+{
+	if (language == "PL" || language == "HU")
+		return codepage_t::windows_1250;
+
+	if (language == "RU")
+		return codepage_t::windows_1251;
+
+	return codepage_t::windows_1252;
+}
+
+static std::string resolve_locale(const std::string & language)
+{
+	if (language == "PL") return "pl_PL";
+	if (language == "DE") return "de_DE";
+	if (language == "FR") return "fr_FR";
+	if (language == "RU") return "ru_RU";
+	if (language == "IT") return "it_IT";
+	if (language == "HU") return "hu_HU";
+	return "pl_PL";
+}
+
+void user_interface_t::make_loc()
+{
+	app_logger_t::add_log("[info] generating localization files...\r\n");
+
+	dict_reader_t reader(dict_paths[0]);
+	if (!reader.is_loaded())
+	{
+		app_logger_t::add_log("[error] cannot load dictionary: " + dict_paths[0] + "\r\n");
+		return;
+	}
+
+	const auto & dict = reader.get_dict();
+	const auto & dict_path = std::filesystem::path(dict_paths[0]);
+	const auto output_directory = dict_path.parent_path().string();
+
+	const auto esm_name = esm_name_override.empty()
+	    ? loc_generator::derive_esm_name(dict_paths[0])
+	    : esm_name_override;
+
+	const auto codepage = resolve_codepage(language_code);
+	const auto locale = resolve_locale(language_code);
+	const auto hunspell_aff = "dictionaries/" + locale + ".aff";
+	const auto hunspell_dic = "dictionaries/" + locale + ".dic";
+
+	loc_generator::generation_input_t input{
+	    dict, output_directory, esm_name, codepage, hunspell_aff, hunspell_dic};
+
+	const auto result = loc_generator::generate(input);
+
+	app_logger_t::add_log("[info] cel: " + std::to_string(result.cel_entries) +
+	    " entries -> " + result.cel_path + "\r\n");
+	app_logger_t::add_log("[info] mrk: " + std::to_string(result.mrk_entries) +
+	    " entries -> " + result.mrk_path + "\r\n");
+	app_logger_t::add_log("[info] top: " + std::to_string(result.top_entries) +
+	    " entries -> " + result.top_path + "\r\n");
+
+	if (result.skipped_entries > 0)
+		app_logger_t::add_log("[warning] skipped: " + std::to_string(result.skipped_entries) + "\r\n");
+
+	if (result.collision_warnings > 0)
+		app_logger_t::add_log("[warning] collisions: " + std::to_string(result.collision_warnings) + "\r\n");
+
 	app_logger_t::add_log("[info] done!\r\n");
 }

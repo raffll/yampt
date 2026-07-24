@@ -10,7 +10,8 @@ enum class document_kind_t
 {
 	dict,
 	yaml,
-	plugin
+	plugin,
+	loc
 };
 
 struct commit_result_t

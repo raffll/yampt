@@ -62,6 +62,9 @@ std::vector<menu_action_t> derive_context_menu(const file_entry_t & entry, bool 
 		return { menu_action_t::delete_file };
 	}
 
+	if (entry.type == file_type_t::loc_file)
+		return { menu_action_t::delete_file };
+
 	return {};
 }
 

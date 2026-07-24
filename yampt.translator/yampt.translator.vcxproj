@@ -184,6 +184,7 @@
     <ClCompile Include="source\model\dict_document.cpp" />
     <ClCompile Include="source\model\yaml_document.cpp" />
     <ClCompile Include="source\model\table_builder.cpp" />
+    <ClCompile Include="source\model\loc_document.cpp" />
     <ClCompile Include="source\view\record_table_view.cpp" />
     <ClCompile Include="source\view\table_view.cpp" />
     <ClCompile Include="source\view\sidebar_view.cpp" />
@@ -244,7 +245,9 @@
     <ClInclude Include="source\model\dict_document.hpp" />
     <ClInclude Include="source\model\menu_action.hpp" />
     <ClInclude Include="source\model\plugin_document.hpp" />
-    <ClInclude Include="source\model\yaml_document.hpp" />    <ClInclude Include="source\model\sidebar_model.hpp" />
+    <ClInclude Include="source\model\yaml_document.hpp" />
+    <ClInclude Include="source\model\loc_document.hpp" />
+    <ClInclude Include="source\model\sidebar_model.hpp" />
     <ClInclude Include="source\model\table_row.hpp" />
     <ClInclude Include="source\model\row_source.hpp" />
     <ClInclude Include="source\model\table_builder.hpp" />    <ClInclude Include="source\view\table_view.hpp" />    <ClInclude Include="source\controller\editor_controller.hpp" />

@@ -41,6 +41,8 @@ static QColor get_file_type_color(file_type_t type)
 		return QColor(100, 160, 220);
 	case file_type_t::yaml_l10n:
 		return QColor(180, 120, 180);
+	case file_type_t::loc_file:
+		return QColor(80, 180, 180);
 	}
 
 	return QColor(80, 80, 80);
@@ -171,6 +173,8 @@ void sidebar_view_t::on_context_menu(const QPoint & pos)
 		const bool is_native = item->data(0, role_is_native_yaml).toBool();
 		show_yaml_context_menu(path_str, is_native, pos);
 	}
+	else if (ext == "cel" || ext == "top" || ext == "mrk")
+		show_loc_context_menu(path_str, pos);
 }
 
 void sidebar_view_t::show_folder_context_menu(QTreeWidgetItem * item, const QPoint & pos)
@@ -226,12 +230,16 @@ void sidebar_view_t::show_dict_context_menu(const std::string & path, const QPoi
 {
 	QMenu menu(this);
 	auto * save_action = menu.addAction(tr("Save"));
+	auto * generate_loc_action = menu.addAction(tr("Generate localization files"));
+	generate_loc_action->setToolTip(tr("Generate .cel/.top/.mrk for OpenMW"));
 	menu.addSeparator();
 	auto * delete_action = menu.addAction(tr("Delete"));
 
 	auto * selected = menu.exec(m_tree->viewport()->mapToGlobal(pos));
 	if (selected == save_action)
 		emit save_requested(path);
+	else if (selected == generate_loc_action)
+		emit generate_loc_requested(path);
 	else if (selected == delete_action)
 		emit delete_requested(path);
 }
@@ -262,6 +270,17 @@ void sidebar_view_t::show_yaml_context_menu(const std::string & path, bool is_na
 	else if (selected == export_native_action)
 		emit export_native_requested(path);
 	else if (selected == delete_action)
+		emit delete_requested(path);
+}
+
+void sidebar_view_t::show_loc_context_menu(const std::string & path, const QPoint & pos)
+{
+	QMenu menu(this);
+	auto * delete_action = menu.addAction(tr("Delete"));
+	delete_action->setToolTip(tr("Delete this localization file"));
+
+	auto * selected = menu.exec(m_tree->viewport()->mapToGlobal(pos));
+	if (selected == delete_action)
 		emit delete_requested(path);
 }
 

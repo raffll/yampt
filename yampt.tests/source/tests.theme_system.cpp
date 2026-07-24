@@ -367,6 +367,7 @@ TEST_CASE("theme_system_t::get_color, dark backward compat", "[u]")
 	check(color_name_t::diff_changed_background, 180, 130, 60, 100);
 	check(color_name_t::annotation_dial_topic, 40, 55, 75);
 	check(color_name_t::annotation_glossary_term, 35, 60, 40);
+	check(color_name_t::annotation_loc_coverage, 40, 80, 80);
 	check(color_name_t::conflict_all_no_conflict_raw, 0, 180, 0);
 	check(color_name_t::conflict_all_override_benign_raw, 180, 180, 0);
 	check(color_name_t::conflict_all_conflict_raw, 180, 0, 0);
@@ -460,6 +461,7 @@ TEST_CASE("theme_system_t::get_color, light backward compat", "[u]")
 	check(color_name_t::diff_changed_background, 255, 200, 130);
 	check(color_name_t::annotation_dial_topic, 70, 130, 200, 60);
 	check(color_name_t::annotation_glossary_term, 70, 180, 70, 60);
+	check(color_name_t::annotation_loc_coverage, 80, 180, 180, 60);
 	check(color_name_t::conflict_all_no_conflict_raw, 0, 255, 0);
 	check(color_name_t::conflict_all_override_benign_raw, 255, 255, 0);
 	check(color_name_t::conflict_all_conflict_raw, 255, 0, 0);

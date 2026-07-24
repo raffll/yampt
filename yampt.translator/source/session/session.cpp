@@ -1,5 +1,6 @@
 #include "session.hpp"
 #include "../model/dict_document.hpp"
+#include "../model/loc_document.hpp"
 #include "../model/plugin_document.hpp"
 #include "../model/yaml_document.hpp"
 #include <utility/string_utils.hpp>
@@ -36,6 +37,9 @@ document_t * session_t::open(const std::string & path)
 
 	if (extension == ".yaml" || extension == ".yml")
 		return handle_open_yaml(normalized);
+
+	if (extension == ".cel" || extension == ".top" || extension == ".mrk")
+		return handle_open_loc(normalized);
 
 	return nullptr;
 }
@@ -76,6 +80,14 @@ document_t * session_t::handle_open_yaml(const std::string & normalized)
 	    native_code.begin(), native_code.end(), native_code.begin(), [](unsigned char c) { return std::tolower(c); });
 
 	auto document = std::make_unique<yaml_document_t>(normalized, native_code);
+	auto * raw_ptr = document.get();
+	m_docs.push_back(std::move(document));
+	return raw_ptr;
+}
+
+document_t * session_t::handle_open_loc(const std::string & normalized)
+{
+	auto document = std::make_unique<loc_document_t>(normalized, m_codepage);
 	auto * raw_ptr = document.get();
 	m_docs.push_back(std::move(document));
 	return raw_ptr;
