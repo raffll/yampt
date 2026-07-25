@@ -158,7 +158,7 @@ find_replace_t::replace_result_t find_replace_t::replace_current(
 		return {};
 
 	entry.new_text = *result;
-	entry.status = status_t::in_progress;
+	entry.status = status_t::replaced;
 	dict_doc->set_dirty(true);
 	dict_doc->modified_records_insert(row_data->type, row_data->record_index);
 
@@ -182,6 +182,7 @@ find_replace_t::replace_all_result_t find_replace_t::replace_all(
 	if (!params)
 		return {};
 
+	m_undo_batch.clear();
 	int replaced_count = 0;
 
 	for (auto & [type, chapter] : dict_doc->data_mut())
@@ -193,8 +194,9 @@ find_replace_t::replace_all_result_t find_replace_t::replace_all(
 			if (!result)
 				continue;
 
+			m_undo_batch.push_back({ type, index, entry.new_text, entry.status });
 			entry.new_text = *result;
-			entry.status = status_t::in_progress;
+			entry.status = status_t::replaced;
 			dict_doc->modified_records_insert(type, index);
 			++replaced_count;
 		}
@@ -204,4 +206,45 @@ find_replace_t::replace_all_result_t find_replace_t::replace_all(
 		dict_doc->set_dirty(true);
 
 	return { replaced_count };
+}
+
+bool find_replace_t::has_undo() const
+{
+	return !m_undo_batch.empty();
+}
+
+find_replace_t::undo_result_t find_replace_t::undo_last_replace_all()
+{
+	if (m_undo_batch.empty())
+		return {};
+
+	auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
+	if (!dict_doc)
+		return {};
+
+	int restored_count = 0;
+
+	for (const auto & undo_entry : m_undo_batch)
+	{
+		auto & data = dict_doc->data_mut();
+		auto it_chapter = data.find(undo_entry.type);
+		if (it_chapter == data.end())
+			continue;
+
+		if (undo_entry.record_index >= it_chapter->second.records.size())
+			continue;
+
+		auto & record = it_chapter->second.records[undo_entry.record_index];
+		record.new_text = undo_entry.old_text;
+		record.status = undo_entry.old_status;
+		dict_doc->modified_records_insert(undo_entry.type, undo_entry.record_index);
+		++restored_count;
+	}
+
+	m_undo_batch.clear();
+
+	if (restored_count > 0)
+		dict_doc->set_dirty(true);
+
+	return { restored_count };
 }

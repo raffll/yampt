@@ -34,19 +34,20 @@ void find_replace_dialog_t::setup_layout(QGridLayout * layout)
 
 	m_find_next_btn = new QPushButton(tr("Find Next"), this);
 	m_find_next_btn->setToolTip(tr("Find next matching entry"));
-	layout->addWidget(m_find_next_btn, 3, 1);
+	layout->addWidget(m_find_next_btn, 3, 0);
 
 	m_replace_btn = new QPushButton(tr("Replace"), this);
 	m_replace_btn->setToolTip(tr("Replace current match and find next"));
-	layout->addWidget(m_replace_btn, 3, 2);
+	layout->addWidget(m_replace_btn, 3, 1);
 
 	m_replace_all_btn = new QPushButton(tr("Replace All"), this);
 	m_replace_all_btn->setToolTip(tr("Replace in all entries regardless of filters"));
-	layout->addWidget(m_replace_all_btn, 3, 3);
+	layout->addWidget(m_replace_all_btn, 3, 2);
 
-	m_note_label = new QLabel(tr("Replace All affects all entries regardless of filters."), this);
-	m_note_label->setStyleSheet("color: #888; font-style: italic;");
-	layout->addWidget(m_note_label, 4, 0, 1, 4);
+	m_undo_btn = new QPushButton(tr("Undo"), this);
+	m_undo_btn->setToolTip(tr("Undo the last Replace All operation"));
+	m_undo_btn->setEnabled(false);
+	layout->addWidget(m_undo_btn, 3, 3);
 }
 
 void find_replace_dialog_t::connect_signals()
@@ -77,4 +78,11 @@ void find_replace_dialog_t::connect_signals()
 		emit replace_all_requested(
 		    m_find_field->text(), m_replace_field->text(), m_case_check->isChecked(), m_regex_check->isChecked());
 	});
+
+	connect(m_undo_btn, &QPushButton::clicked, this, [this]() { emit undo_requested(); });
+}
+
+void find_replace_dialog_t::set_undo_enabled(bool enabled)
+{
+	m_undo_btn->setEnabled(enabled);
 }

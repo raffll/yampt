@@ -20,11 +20,12 @@ enum class status_t
 	in_progress,
 	model,
 	propagated,
+	replaced,
 	error
 };
 
 // clang-format off
-inline constexpr std::array<std::pair<status_t, std::string_view>, 16> status_entries
+inline constexpr std::array<std::pair<status_t, std::string_view>, 17> status_entries
 {{
     { status_t::translated,   "translated" },
     { status_t::untranslated, "untranslated" },
@@ -41,6 +42,7 @@ inline constexpr std::array<std::pair<status_t, std::string_view>, 16> status_en
     { status_t::in_progress,  "in_progress" },
     { status_t::model,        "model" },
     { status_t::propagated,   "propagated" },
+    { status_t::replaced,     "replaced" },
     { status_t::error,        "error" },
 }};
 // clang-format on

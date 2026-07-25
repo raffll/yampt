@@ -9,7 +9,7 @@ Approved status:
 
 Skipped statuses:
 - `to_verify`, `untranslated`, `adapted`, `reused`, `changed`, `outdated`, `ambiguous`
-- `in_progress`, `model`, `propagated`
+- `in_progress`, `model`, `propagated`, `replaced`
 - `missing`, `duplicate`, `mismatch`, `heuristic`, `error`
 
 The `details` field has no effect on conversion — only `status` determines whether an entry is applied.
@@ -66,6 +66,7 @@ Assigned by user actions in yTranslator.
 | `in_progress` | User started editing but hasn't finalized |
 | `model` | Translated by the CTranslate2 translation model |
 | `propagated` | Translation auto-filled from another record with same old_text |
+| `replaced` | Translation modified by Find/Replace |
 | `error` | Entry has a validation error |
 
 ## Translate Button Behavior

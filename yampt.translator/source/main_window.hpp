@@ -83,7 +83,6 @@ private slots:
 	void on_merge();
 	void on_plugin_operation(const std::string & plugin_path, plugin_op_t op);
 	void on_plugin_unload(const std::string & path);
-	void on_find();
 	void on_escape();
 	void on_search_changed(const QString & text);
 	void on_case_sensitive_changed(int state);
@@ -153,7 +152,6 @@ private:
 	QAction * m_save_action = nullptr;
 	QAction * m_save_all_action = nullptr;
 	QAction * m_quit_action = nullptr;
-	QAction * m_find_action = nullptr;
 	QAction * m_escape_action = nullptr;
 	QAction * m_settings_action = nullptr;
 

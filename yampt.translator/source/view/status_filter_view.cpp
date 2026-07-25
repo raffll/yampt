@@ -29,6 +29,7 @@ static const std::vector<status_t> status_order = {
 	status_t::mismatch,
 	status_t::in_progress,
 	status_t::propagated,
+	status_t::replaced,
 	status_t::model,
 	status_t::error,
 };
@@ -143,6 +144,8 @@ static const char * get_status_tooltip(status_t status)
 		return "Translation edited but not finalized";
 	case status_t::propagated:
 		return "Translation propagated from another record";
+	case status_t::replaced:
+		return "Translation modified by Find/Replace";
 	case status_t::model:
 		return "Translated by the AI translation engine";
 	case status_t::error:

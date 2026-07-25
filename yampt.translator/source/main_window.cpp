@@ -290,12 +290,6 @@ void main_window_t::on_merge()
 	m_dict_ops_controller->on_merge();
 }
 
-void main_window_t::on_find()
-{
-	m_search_field->setFocus();
-	m_search_field->selectAll();
-}
-
 void main_window_t::on_escape()
 {
 	if (!m_search_field->text().isEmpty())
@@ -740,9 +734,6 @@ void main_window_t::register_shortcuts()
 
 	if (m_save_action)
 		m_save_action->setShortcut(resolve("save", "Ctrl+S"));
-
-	if (m_find_action)
-		m_find_action->setShortcut(resolve("find", "Ctrl+F"));
 
 	if (m_settings_action)
 		m_settings_action->setShortcut(resolve("settings", "Ctrl+,"));

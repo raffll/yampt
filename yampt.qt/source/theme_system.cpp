@@ -74,6 +74,8 @@ QColor theme_system_t::get_status_color(status_t status, theme_t theme) const
 		return get_color(color_name_t::status_model, theme);
 	case status_t::propagated:
 		return get_color(color_name_t::status_propagated, theme);
+	case status_t::replaced:
+		return get_color(color_name_t::status_replaced, theme);
 	case status_t::heuristic:
 		return get_color(color_name_t::status_heuristic, theme);
 	case status_t::to_verify:

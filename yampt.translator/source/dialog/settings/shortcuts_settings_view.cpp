@@ -15,7 +15,6 @@ shortcuts_settings_view_t::shortcuts_settings_view_t(QWidget * parent)
 		{ "set_in_progress", "Set In Progress", "F9", true },
 		{ "set_translated", "Set Translated", "F10", true },
 		{ "save", "Save", "Ctrl+S", true },
-		{ "find", "Find / Replace", "Ctrl+F", true },
 		{ "settings", "Open Settings", "Ctrl+,", true },
 		{ "escape", "Escape", "Escape", true },
 	};

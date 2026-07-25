@@ -116,6 +116,11 @@ void main_window_t::setup_menu_bar()
 		if (m_dict_ops_controller)
 			m_dict_ops_controller->on_merge();
 	});
+
+	auto * find_replace_action = tools_menu->addAction(tr("&Find/Replace..."));
+	find_replace_action->setToolTip(tr("Find and replace text in translations"));
+	connect(find_replace_action, &QAction::triggered, this, [this]() { m_find_replace_dialog->show(); });
+
 	tools_menu->addSeparator();
 	m_settings_action = tools_menu->addAction(tr("&Preferences..."));
 	m_settings_action->setShortcut(QKeySequence("Ctrl+,"));
@@ -171,10 +176,6 @@ void main_window_t::setup_toolbar()
 	m_search_col_original->setToolTip(tr("Search in original column"));
 	m_search_col_translation->setToolTip(tr("Search in translation column"));
 
-	m_find_action = new QAction(this);
-	m_find_action->setShortcut(QKeySequence("Ctrl+F"));
-	addAction(m_find_action);
-
 	m_escape_action = new QAction(this);
 	m_escape_action->setShortcut(QKeySequence("Escape"));
 	addAction(m_escape_action);
@@ -217,6 +218,8 @@ void main_window_t::setup_sidebar()
 	m_translation_tab->set_providers_dir((QCoreApplication::applicationDirPath() + "/providers").toStdString());
 	m_translation_tab->set_glossary_fn([this](const std::string & text) { return m_glossary.apply_glossary(text); });
 	m_find_replace_dialog = new find_replace_dialog_t(this);
+	m_find_replace_dialog->setWindowTitle(tr("Find/Replace"));
+	m_find_replace_dialog->setWindowFlags(Qt::Dialog);
 	m_find_replace_dialog->setVisible(false);
 	m_info_tabs->addTab(m_annotations_view, tr("Annotations"));
 	m_info_tabs->addTab(m_history_view, tr("History"));
@@ -301,7 +304,6 @@ void main_window_t::connect_menu_signals()
 	connect(m_save_all_action, &QAction::triggered, this, &main_window_t::on_save_all);
 
 	connect(m_quit_action, &QAction::triggered, this, &QWidget::close);
-	connect(m_find_action, &QAction::triggered, this, &main_window_t::on_find);
 	connect(m_escape_action, &QAction::triggered, this, &main_window_t::on_escape);
 
 	connect(m_sidebar_toggle, &QAction::toggled, m_left_splitter, &QWidget::setVisible);
@@ -482,6 +484,27 @@ void main_window_t::connect_menu_signals()
 		}
 
 		statusBar()->showMessage(tr("Replaced in %1 entries").arg(result.count), 5000);
+		m_find_replace_dialog->set_undo_enabled(m_find_replace->has_undo());
+	});
+
+	connect(
+	    m_find_replace_dialog,
+	    &find_replace_dialog_t::undo_requested,
+	    this,
+	    [this]()
+	{
+		auto result = m_find_replace->undo_last_replace_all();
+
+		if (result.count > 0)
+		{
+			set_unsaved_changes(true);
+			rebuild_table();
+			if (m_editor_controller.current_row() >= 0)
+				load_record(m_editor_controller.current_row());
+		}
+
+		statusBar()->showMessage(tr("Undid %1 replacements").arg(result.count), 5000);
+		m_find_replace_dialog->set_undo_enabled(m_find_replace->has_undo());
 	});
 }
 

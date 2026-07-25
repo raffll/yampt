@@ -29,6 +29,7 @@ enum class color_name_t
 	status_in_progress,
 	status_model,
 	status_propagated,
+	status_replaced,
 	status_heuristic,
 	status_to_verify,
 	status_ambiguous,

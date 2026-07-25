@@ -37,6 +37,8 @@ inline QString status_display_name(status_t status)
 		return QStringLiteral("Generated");
 	case status_t::propagated:
 		return QStringLiteral("Propagated");
+	case status_t::replaced:
+		return QStringLiteral("Replaced");
 	case status_t::error:
 		return QStringLiteral("Error");
 	}
