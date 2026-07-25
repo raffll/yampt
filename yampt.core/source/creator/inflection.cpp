@@ -40,15 +40,23 @@ static std::vector<std::string> generate_forms_for_word(
     Hunspell & hunspell,
     const std::string & word)
 {
-    const auto descriptions = hunspell.analyze(word);
-    if (descriptions.empty())
-        return {};
+    const auto stems = hunspell.stem(word);
 
     std::set<std::string> unique_forms;
-    for (const auto & description : descriptions)
+    for (const auto & stem : stems)
     {
-        const auto generated = hunspell.generate(word, description);
-        for (const auto & form : generated)
+        const auto expanded = hunspell.suffix_suggest(stem);
+        for (const auto & form : expanded)
+        {
+            if (form != word)
+                unique_forms.insert(form);
+        }
+    }
+
+    if (unique_forms.empty())
+    {
+        const auto expanded = hunspell.suffix_suggest(word);
+        for (const auto & form : expanded)
         {
             if (form != word)
                 unique_forms.insert(form);
@@ -90,19 +98,6 @@ static std::string join_words(const std::vector<std::string> & words)
     return result;
 }
 
-static bool all_words_recognized(
-    Hunspell & hunspell,
-    const std::vector<std::string> & words)
-{
-    for (const auto & word : words)
-    {
-        if (!hunspell.spell(word))
-            return false;
-    }
-
-    return true;
-}
-
 static std::vector<std::string> build_candidates_for_position(
     Hunspell & hunspell,
     const std::vector<std::string> & words,
@@ -115,12 +110,11 @@ static std::vector<std::string> build_candidates_for_position(
 
     for (const auto & form : forms)
     {
-        auto modified_words = words;
-        modified_words[position] = form;
-
-        if (!all_words_recognized(hunspell, modified_words))
+        if (!hunspell.spell(form))
             continue;
 
+        auto modified_words = words;
+        modified_words[position] = form;
         candidates.push_back(join_words(modified_words));
     }
 

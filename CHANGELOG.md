@@ -3,6 +3,7 @@
 ## [xxx]
 
 ### yTranslator
+- [NEW] Generate localization files (.cel, .mrk, .top) from dictionary with Hunspell inflection
 - [NEW] Full script preview: selecting a script entry shows the entire script source in Preview tab
 - [NEW] Script source stored as reference data in dictionaries for context lookup
 - [NEW] Sync Scrolling: View menu toggle to bind scrolling between original and translation panes
