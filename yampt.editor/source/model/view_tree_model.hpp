@@ -30,6 +30,11 @@ public:
 		m_display_codepage = codepage;
 	}
 
+	void set_user_ignore_conflict(const std::set<std::string> & rules)
+	{
+		m_user_ignore_conflict = rules;
+	}
+
 	codepage_t display_codepage() const
 	{
 		return m_display_codepage;
@@ -88,6 +93,7 @@ public:
 		std::vector<conflict_this_t> cell_conflict_this;
 		conflict_all_t row_conflict_all = conflict_all_t::only_one;
 		bool all_identical = true;
+		bool is_ignored = false;
 		bool is_deleted = false;
 		std::vector<view_node_t> children;
 	};
@@ -202,6 +208,7 @@ private:
 	std::vector<conflict_this_t> m_plugin_conflict_this;
 	bool m_hide_no_conflict = false;
 	bool m_has_merge_column = false;
+	std::set<std::string> m_user_ignore_conflict;
 	int m_merge_col_index = -1;
 	bool m_is_merge_pinned = false;
 	std::string m_record_type;

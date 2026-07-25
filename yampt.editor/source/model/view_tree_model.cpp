@@ -561,6 +561,12 @@ static QVariant sub_record_display(const view_tree_model_t::view_node_t & row, i
 
 static QVariant sub_record_background(const view_tree_model_t::view_node_t & row, int column)
 {
+	if (row.is_ignored)
+	{
+		const auto & theme = theme_system_t::instance();
+		return (theme.active_theme() == theme_t::dark) ? QBrush(QColor(55, 55, 60)) : QBrush(QColor(215, 215, 220));
+	}
+
 	if (row.row_conflict_all < conflict_all_t::no_conflict)
 		return {};
 

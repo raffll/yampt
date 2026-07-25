@@ -88,7 +88,7 @@ Open Settings via Ctrl+, or the Edit menu. Five pages are available:
 - **Paths** — configure the merged patch output path for each loading mode (folder, MO2, OpenMW). Normally these are automatic and don't need changing.
 - **Merged Patch** — toggle which record types participate in auto-merge. Set an exclusion regex to skip specific record IDs. Enable or disable individual bug fixes (fog density fix, summon persistence fix, cell name reversion fix).
 - **Cleaning** — toggle which cleaning operations the Clean All button performs. Evil GMSTs are Construction Set artifacts from Tribunal/Bloodmoon that can cause issues in mods that don't require those expansions. Junk cells are empty exterior cell records that only contain position data and serve no purpose.
-- **Sub-Record Rules** — configure which sub-records are ignored during conflict detection, excluded from the merged patch output, or skipped when not present in a plugin. Each field takes a comma-separated list of entries in `RECORD:SUB` format (e.g. `CELL:NAM0, CELL:NAM9`). Use `*` as a wildcard for the sub-record name to match all sub-records of a record type.
+- **Sub-Record Rules** — configure which sub-records are ignored during conflict detection, excluded from the merged patch output, or skipped when not present in a plugin. Each field takes a comma-separated list of entries in `RECORD:SUB` format (e.g. `CELL:NAM0, CELL:NAM9`). Use `*` as a wildcard for the sub-record name to match all sub-records of a record type. Changes apply immediately after closing the settings dialog — the conflict tree and record view are rebuilt to reflect the new rules.
 
 ## Cleaning Plugins
 

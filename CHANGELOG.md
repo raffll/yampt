@@ -64,6 +64,7 @@
 - [NEW] Sub-Record Rules settings page for configuring conflict and merge behavior
 - [NEW] Guard Patch: plugins before guard are excluded from merge for records the guard contains
 - [NEW] Status bar shows load mode and path
+- [CHANGE] Sub-record conflict rules applied at runtime (changes take effect immediately after settings)
 - [CHANGE] Right panel columns redistribute on resize to fill available width
 - [CHANGE] Nav tree decodes codepage characters correctly
 - [CHANGE] Filter dialog: record type list unchecked by default (all unchecked = show all)

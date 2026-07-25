@@ -116,10 +116,16 @@ view_tree_model_t::view_node_t view_tree_model_t::build_slot_row(
 	}
 	row.all_identical = all_same;
 
-	if (policy.ignore_conflict)
+	const auto specific_key = m_record_type + ":" + slot.type;
+	const auto wildcard_key = m_record_type + ":*";
+	const bool user_ignore =
+	    m_user_ignore_conflict.count(specific_key) > 0 || m_user_ignore_conflict.count(wildcard_key) > 0;
+
+	if (user_ignore)
 	{
+		row.is_ignored = true;
 		row.row_conflict_all = conflict_all_t::no_conflict;
-		row.cell_conflict_this.assign(col_count, conflict_this_t::identical_to_master);
+		row.cell_conflict_this.assign(col_count, conflict_this_t::ignored);
 	}
 	else if (policy.skip_non_existent)
 	{

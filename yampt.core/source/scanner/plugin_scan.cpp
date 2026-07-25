@@ -100,6 +100,11 @@ void plugin_scan_t::set_user_ignore_conflict(const std::set<std::string> & rules
 	m_user_ignore_conflict = rules;
 }
 
+const std::set<std::string> & plugin_scan_t::user_ignore_conflict() const
+{
+	return m_user_ignore_conflict;
+}
+
 void plugin_scan_t::rebuild_conflicts()
 {
 	m_entries.clear();

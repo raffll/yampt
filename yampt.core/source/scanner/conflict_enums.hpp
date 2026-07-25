@@ -12,6 +12,7 @@ enum class conflict_all_t
 enum class conflict_this_t
 {
 	unknown,
+	ignored,
 	master,
 	identical_to_master,
 	override_wins,

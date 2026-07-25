@@ -83,6 +83,7 @@ public:
 	std::vector<const conflict_entry_t *> itm_entries(int plugin_idx) const;
 
 	void set_user_ignore_conflict(const std::set<std::string> & rules);
+	const std::set<std::string> & user_ignore_conflict() const;
 
 private:
 	struct version_descriptor_t
