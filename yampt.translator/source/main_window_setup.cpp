@@ -539,6 +539,12 @@ void main_window_t::connect_sidebar_signals()
 
 	connect(
 	    m_sidebar,
+	    &sidebar_view_t::export_eet_requested,
+	    this,
+	    [this](const std::string & path) { m_sidebar_controller->on_export_eet_requested(path); });
+
+	connect(
+	    m_sidebar,
 	    &sidebar_view_t::remove_folder_requested,
 	    this,
 	    [this](const std::string & root_path) { m_sidebar_controller->on_remove_folder_requested(root_path); });

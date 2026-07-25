@@ -185,6 +185,7 @@
     <ClCompile Include="source\model\yaml_document.cpp" />
     <ClCompile Include="source\model\table_builder.cpp" />
     <ClCompile Include="source\model\loc_document.cpp" />
+    <ClCompile Include="source\model\eet_document.cpp" />
     <ClCompile Include="source\view\record_table_view.cpp" />
     <ClCompile Include="source\view\table_view.cpp" />
     <ClCompile Include="source\view\sidebar_view.cpp" />
@@ -247,6 +248,7 @@
     <ClInclude Include="source\model\plugin_document.hpp" />
     <ClInclude Include="source\model\yaml_document.hpp" />
     <ClInclude Include="source\model\loc_document.hpp" />
+    <ClInclude Include="source\model\eet_document.hpp" />
     <ClInclude Include="source\model\sidebar_model.hpp" />
     <ClInclude Include="source\model\table_row.hpp" />
     <ClInclude Include="source\model\row_source.hpp" />

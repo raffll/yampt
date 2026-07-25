@@ -1,5 +1,6 @@
 #include "session.hpp"
 #include "../model/dict_document.hpp"
+#include "../model/eet_document.hpp"
 #include "../model/loc_document.hpp"
 #include "../model/plugin_document.hpp"
 #include "../model/yaml_document.hpp"
@@ -40,6 +41,9 @@ document_t * session_t::open(const std::string & path)
 
 	if (extension == ".cel" || extension == ".top" || extension == ".mrk")
 		return handle_open_loc(normalized);
+
+	if (extension == ".eet")
+		return handle_open_eet(normalized);
 
 	return nullptr;
 }
@@ -88,6 +92,14 @@ document_t * session_t::handle_open_yaml(const std::string & normalized)
 document_t * session_t::handle_open_loc(const std::string & normalized)
 {
 	auto document = std::make_unique<loc_document_t>(normalized, m_codepage);
+	auto * raw_ptr = document.get();
+	m_docs.push_back(std::move(document));
+	return raw_ptr;
+}
+
+document_t * session_t::handle_open_eet(const std::string & normalized)
+{
+	auto document = std::make_unique<eet_document_t>(normalized);
 	auto * raw_ptr = document.get();
 	m_docs.push_back(std::move(document));
 	return raw_ptr;

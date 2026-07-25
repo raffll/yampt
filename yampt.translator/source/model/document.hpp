@@ -11,7 +11,8 @@ enum class document_kind_t
 	dict,
 	yaml,
 	plugin,
-	loc
+	loc,
+	eet
 };
 
 struct commit_result_t

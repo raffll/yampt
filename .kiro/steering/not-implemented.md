@@ -2,7 +2,6 @@
 
 The following features are planned but not yet implemented:
 
-- EET file import (yTranslator)
 - Plugin cleaning (yEditor)
 - Dialog INAM display (yEditor)
 - Merge dialogues (yEditor auto-merge)

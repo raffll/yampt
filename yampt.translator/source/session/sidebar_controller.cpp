@@ -1,5 +1,6 @@
 #include "sidebar_controller.hpp"
 #include "../model/dict_document.hpp"
+#include "../model/eet_document.hpp"
 #include "../model/loc_document.hpp"
 #include "../model/sidebar_model.hpp"
 #include "../model/yaml_document.hpp"
@@ -316,6 +317,33 @@ std::string sidebar_controller_t::resolve_hunspell_locale(const std::string & la
 		return {};
 
 	return it_locale->second;
+}
+
+void sidebar_controller_t::on_export_eet_requested(const std::string & path)
+{
+	auto * doc = m_deps.session.find(path);
+	if (!doc)
+		return;
+
+	auto * eet_doc = dynamic_cast<eet_document_t *>(doc);
+	if (!eet_doc)
+		return;
+
+	const auto sep = path.find_last_of("/\\");
+	const auto stem = path.substr(0, path.rfind('.'));
+	const auto output_path = stem + ".json";
+
+	if (!eet_doc->export_as_dict(output_path))
+	{
+		m_deps.log_view.append_log("export eet", "[error] export failed (empty dict)\r\n");
+		return;
+	}
+
+	const auto summary = "exported " + std::to_string(eet_doc->converted_count()) + " entries, skipped " +
+	    std::to_string(eet_doc->skipped_count()) + " -> \"" + output_path + "\"\r\n";
+	m_deps.log_view.append_log("export eet", summary);
+
+	scan_workspace();
 }
 
 void sidebar_controller_t::on_generate_loc_requested(const std::string & path)

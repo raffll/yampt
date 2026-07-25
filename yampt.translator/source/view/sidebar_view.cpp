@@ -43,6 +43,8 @@ static QColor get_file_type_color(file_type_t type)
 		return QColor(180, 120, 180);
 	case file_type_t::loc_file:
 		return QColor(80, 180, 180);
+	case file_type_t::eet_file:
+		return QColor(200, 140, 100);
 	}
 
 	return QColor(80, 80, 80);
@@ -175,6 +177,8 @@ void sidebar_view_t::on_context_menu(const QPoint & pos)
 	}
 	else if (ext == "cel" || ext == "top" || ext == "mrk")
 		show_loc_context_menu(path_str, pos);
+	else if (ext == "eet")
+		show_eet_context_menu(path_str, pos);
 }
 
 void sidebar_view_t::show_folder_context_menu(QTreeWidgetItem * item, const QPoint & pos)
@@ -281,6 +285,21 @@ void sidebar_view_t::show_loc_context_menu(const std::string & path, const QPoin
 
 	auto * selected = menu.exec(m_tree->viewport()->mapToGlobal(pos));
 	if (selected == delete_action)
+		emit delete_requested(path);
+}
+
+void sidebar_view_t::show_eet_context_menu(const std::string & path, const QPoint & pos)
+{
+	QMenu menu(this);
+	auto * export_action = menu.addAction(tr("Export as Dictionary"));
+	export_action->setToolTip(tr("Convert EET file to JSON dictionary"));
+	menu.addSeparator();
+	auto * delete_action = menu.addAction(tr("Delete"));
+
+	auto * selected = menu.exec(m_tree->viewport()->mapToGlobal(pos));
+	if (selected == export_action)
+		emit export_eet_requested(path);
+	else if (selected == delete_action)
 		emit delete_requested(path);
 }
 

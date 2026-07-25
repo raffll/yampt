@@ -3,6 +3,9 @@
 ## [xxx]
 
 ### yTranslator
+- [NEW] Find/Replace dialog (Tools menu) with regex, case sensitivity, and batch undo
+- [NEW] "Replaced" status assigned to entries modified by Find/Replace
+- [NEW] EET file import: export ESP-ESM Translator dictionaries to JSON (partial support)
 - [NEW] Generate localization files (.cel, .mrk, .top) from dictionary with Hunspell inflection
 - [NEW] Full script preview: selecting a script entry shows the entire script source in Preview tab
 - [NEW] Script source stored as reference data in dictionaries for context lookup

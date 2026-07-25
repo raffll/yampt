@@ -55,6 +55,9 @@ std::string display_name_t::to_string() const
 	if (m_file_type == file_type_t::loc_file)
 		result += "[LOC] ";
 
+	if (m_file_type == file_type_t::eet_file)
+		result += "[EET] ";
+
 	if (m_wip)
 		result += "[WIP] ";
 

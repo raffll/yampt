@@ -25,6 +25,7 @@ signals:
 	void save_requested(const std::string & path);
 	void export_native_requested(const std::string & path);
 	void generate_loc_requested(const std::string & path);
+	void export_eet_requested(const std::string & path);
 	void merge_requested();
 	void unload_requested(const std::string & path);
 	void delete_requested(const std::string & path);
@@ -39,6 +40,7 @@ private:
 	void show_dict_context_menu(const std::string & path, const QPoint & pos);
 	void show_yaml_context_menu(const std::string & path, bool is_native, const QPoint & pos);
 	void show_loc_context_menu(const std::string & path, const QPoint & pos);
+	void show_eet_context_menu(const std::string & path, const QPoint & pos);
 
 	QTreeWidget * m_tree = nullptr;
 };

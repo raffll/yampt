@@ -269,6 +269,7 @@
     <ClCompile Include="..\yampt.translator\source\view\display_name.cpp" />
     <ClCompile Include="..\yampt.translator\source\session\session.cpp" />
     <ClCompile Include="..\yampt.translator\source\model\loc_document.cpp" />
+    <ClCompile Include="..\yampt.translator\source\model\eet_document.cpp" />
     <ClCompile Include="..\yampt.translator\source\highlighter\script_tokenizer.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\edit_history.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\byte_limit_validator.cpp" />

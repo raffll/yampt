@@ -49,6 +49,7 @@ public:
 	void on_delete_requested(const std::string & path);
 	void on_export_native_requested(const std::string & path);
 	void on_generate_loc_requested(const std::string & path);
+	void on_export_eet_requested(const std::string & path);
 	void scan_workspace();
 	void update_watcher_roots();
 	void rebuild_sidebar();

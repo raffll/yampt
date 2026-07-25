@@ -42,6 +42,7 @@ private:
 	document_t * handle_open_dict(const std::string & normalized);
 	document_t * handle_open_yaml(const std::string & normalized);
 	document_t * handle_open_loc(const std::string & normalized);
+	document_t * handle_open_eet(const std::string & normalized);
 
 	std::vector<std::unique_ptr<document_t>> m_docs;
 	codepage_t m_codepage;

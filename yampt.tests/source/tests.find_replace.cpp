@@ -291,7 +291,7 @@ TEST_CASE("find_replace_t::replace_all, replaces all matching", "[i][qt]")
 	cleanup_service_dict(path);
 }
 
-TEST_CASE("find_replace_t::replace_all, sets status in_progress", "[i][qt]")
+TEST_CASE("find_replace_t::replace_all, sets status replaced", "[i][qt]")
 {
 	mock_row_source_t source;
 
@@ -322,7 +322,66 @@ TEST_CASE("find_replace_t::replace_all, sets status in_progress", "[i][qt]")
 	service.replace_all("replaceable", "replaced", false, false);
 
 	const auto & records = doc.data().at(rec_type_t::cell).records;
-	REQUIRE(records[0].status == status_t::in_progress);
+	REQUIRE(records[0].status == status_t::replaced);
+
+	cleanup_service_dict(path);
+}
+
+TEST_CASE("find_replace_t::undo_last_replace_all, restores text and status", "[i][qt]")
+{
+	mock_row_source_t source;
+
+	table_row_t row_first;
+	row_first.type = rec_type_t::cell;
+	row_first.key_text = "key_a";
+	row_first.old_text = "alpha";
+	row_first.new_text = "original text";
+	row_first.status = status_t::translated;
+	row_first.record_index = 0;
+
+	source.rows = { row_first };
+
+	dict_t data;
+	auto & chapter = data[rec_type_t::cell];
+	record_entry_t entry_a;
+	entry_a.key_text = "key_a";
+	entry_a.old_text = "alpha";
+	entry_a.new_text = "original text";
+	entry_a.status = status_t::translated;
+	chapter.records.push_back(std::move(entry_a));
+
+	const auto path = create_service_dict(data);
+	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
+	document_t * active_doc = &doc;
+
+	find_replace_t service(source, active_doc);
+	service.replace_all("original", "modified", false, false);
+
+	REQUIRE(service.has_undo());
+
+	const auto undo_result = service.undo_last_replace_all();
+	REQUIRE(undo_result.count == 1);
+
+	const auto & records = doc.data().at(rec_type_t::cell).records;
+	REQUIRE(records[0].new_text == "original text");
+	REQUIRE(records[0].status == status_t::translated);
+	REQUIRE_FALSE(service.has_undo());
+
+	cleanup_service_dict(path);
+}
+
+TEST_CASE("find_replace_t::has_undo, false before any replace", "[i][qt]")
+{
+	mock_row_source_t source;
+	source.rows = {};
+
+	dict_t data;
+	const auto path = create_service_dict(data);
+	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
+	document_t * active_doc = &doc;
+
+	find_replace_t service(source, active_doc);
+	REQUIRE_FALSE(service.has_undo());
 
 	cleanup_service_dict(path);
 }

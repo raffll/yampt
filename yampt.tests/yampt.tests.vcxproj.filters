@@ -115,6 +115,7 @@
     <ClCompile Include="..\yampt.translator\source\highlighter\script_tokenizer.cpp" />
     <ClCompile Include="..\yampt.translator\source\session\session.cpp" />
     <ClCompile Include="..\yampt.translator\source\model\loc_document.cpp" />
+    <ClCompile Include="..\yampt.translator\source\model\eet_document.cpp" />
     <ClCompile Include="..\yampt.editor\source\session\profile_reader.cpp" />
     <ClCompile Include="..\yampt.editor\source\model\nav_tree_filter.cpp" />
     <ClCompile Include="..\yampt.editor\source\session\plugin_session.cpp" />

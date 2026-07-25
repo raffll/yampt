@@ -352,6 +352,7 @@ TEST_CASE("theme_system_t::get_color, dark backward compat", "[u]")
 	check(color_name_t::status_in_progress, 80, 130, 200);
 	check(color_name_t::status_model, 80, 155, 190);
 	check(color_name_t::status_propagated, 140, 190, 190);
+	check(color_name_t::status_replaced, 160, 120, 220);
 	check(color_name_t::status_heuristic, 80, 150, 130);
 	check(color_name_t::status_to_verify, 140, 165, 140);
 	check(color_name_t::status_ambiguous, 190, 150, 50);
@@ -448,6 +449,7 @@ TEST_CASE("theme_system_t::get_color, light backward compat", "[u]")
 	check(color_name_t::status_in_progress, 102, 153, 242);
 	check(color_name_t::status_model, 100, 180, 220);
 	check(color_name_t::status_propagated, 180, 230, 230);
+	check(color_name_t::status_replaced, 200, 160, 255);
 	check(color_name_t::status_heuristic, 100, 180, 160);
 	check(color_name_t::status_to_verify, 180, 200, 180);
 	check(color_name_t::status_ambiguous, 230, 180, 60);

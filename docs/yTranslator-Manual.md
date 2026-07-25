@@ -63,6 +63,24 @@ Right-click a dictionary in the sidebar and select Generate Localization Files. 
 
 Only entries with status Translated and where the original differs from the translation are included. The output files use the codepage set in Language settings.
 
+### Find/Replace
+
+Open via Tools → Find/Replace. This dialog searches and replaces text in the translation field across all entries in the active dictionary, regardless of the current table filter.
+
+Type a search term in the Find field and a replacement in the Replace field. Use the checkboxes to enable case-sensitive matching or regular expression mode. Three actions are available:
+
+- **Find Next** — selects the next entry whose translation contains the search term.
+- **Replace** — replaces the match in the current entry and advances to the next match.
+- **Replace All** — replaces all occurrences in every entry of the dictionary at once.
+
+Entries modified by Replace or Replace All receive the status Replaced. This makes it easy to filter and review all changes after a batch operation.
+
+The Undo button reverts the last Replace All operation, restoring the original text and status for every entry that was modified. Undo is available until the next Replace All is performed or the dictionary is closed.
+
+### EET Import
+
+Place an EET file (produced by ESP-ESM Translator) in the workspace folder. It appears in the sidebar with an orange [EET] tag. Right-click the file and select Export as Dictionary to convert it to a JSON dictionary. The exported file is saved alongside the original EET file and becomes available in the sidebar immediately. This is a one-way import — the EET file itself is not editable within yTranslator.
+
 ## Editing
 
 Click a row in the Records table to load it into the editor. The Original panel shows the source text. The Translation panel is where you type your translation. Press Tab to commit your edit and advance to the next row. Press Ctrl+S to save the dictionary to disk.
@@ -136,6 +154,7 @@ Each dictionary entry has a status. Only **Translated** entries are applied duri
 - **Ambiguous** — multiple entries in the base dictionary offer different translations for the same original text. The Details panel lists all candidates. Pick the correct one and set to Translated.
 - **Reused** — the base dictionary contained a matching original text under a different key. The translation was copied from that entry.
 - **Propagated** — after you committed a translation, all other entries sharing the same original text were updated to match.
+- **Replaced** — the translation was modified by a Find/Replace operation. Review the result and set to Translated when satisfied.
 - **Missing** — during Make Base Dictionary, this record existed in the foreign file but no corresponding record was found in the native file. Requires manual translation.
 - **Duplicate** — the same key appeared more than once in the source plugin. Only the first occurrence is stored.
 - **Mismatch** — during Make Base Dictionary, a record existed in the native file with no corresponding record in the foreign file. Informational; no action needed.
