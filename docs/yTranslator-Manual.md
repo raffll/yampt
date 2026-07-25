@@ -18,7 +18,7 @@ Open File → Add Folder and point it to a directory containing your plugins and
 
 Files are color-coded by type: green for plugins, gold for base dictionaries, blue for user dictionaries, purple for YAML localization files. An asterisk prefix indicates unsaved changes.
 
-Right-click a file or folder to access its context menu. Plugins offer Make Dictionary, Make Base Dictionary, Convert Plugin, Create Patch Plugin, and Delete. Dictionaries offer Save and Delete. YAML foreign files offer Make Translation (creates a native scaffold) and Delete. YAML native files offer Save and Delete. Folders offer Remove Folder (unload from sidebar) and Delete Folder (remove from disk).
+Right-click a file or folder to access its context menu. Plugins offer Make Dictionary, Make Base Dictionary, Convert Plugin, Create Patch Plugin, and Delete. Dictionaries offer Save, Generate Localization Files, and Delete. YAML foreign files offer Make Translation (creates a native scaffold) and Delete. YAML native files offer Save and Delete. Folders offer Remove Folder (unload from sidebar) and Delete Folder (remove from disk).
 
 ## Operations
 
@@ -52,6 +52,16 @@ Works like Convert Plugin but the output file contains only the records that wer
 ### Merge Dictionaries
 
 Tools → Merge Dictionaries opens a dialog where you select multiple dictionaries and an output path. Dictionaries are merged in priority order — the last one in the list wins when entries conflict.
+
+### Generate Localization Files
+
+Right-click a dictionary in the sidebar and select Generate Localization Files. This produces three files in the same directory as the dictionary, named after the source ESM:
+
+- **.cel** — maps English cell names to their native translations. Used by OpenMW to display translated cell names in the local map and cell change messages.
+- **.mrk** — maps native dialog topic names back to their English equivalents. Used by OpenMW to resolve hyperlinked topic text in dialog windows.
+- **.top** — maps all grammatical forms of native topic names to their canonical (nominative) form. When a topic appears in an inflected form inside dialog text, OpenMW uses this file to match it back to the correct topic. Forms are generated using the Hunspell dictionary configured in Language settings.
+
+Only entries with status Translated and where the original differs from the translation are included. The output files use the codepage set in Language settings.
 
 ## Editing
 
