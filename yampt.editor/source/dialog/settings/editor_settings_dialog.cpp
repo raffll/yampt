@@ -1,7 +1,9 @@
 #include "editor_settings_dialog.hpp"
 #include "appearance_settings_view.hpp"
+#include "cleaning_settings_view.hpp"
 #include "editor_paths_view.hpp"
 #include "merge_settings_view.hpp"
+#include "sub_record_rules_view.hpp"
 #include <settings_store.hpp>
 #include <QDialogButtonBox>
 #include <QHBoxLayout>
@@ -25,14 +27,20 @@ editor_settings_dialog_t::editor_settings_dialog_t(settings_store_t & settings, 
 	m_paths_view = new editor_paths_view_t(this);
 	m_appearance_view = new appearance_settings_view_t(this);
 	m_merge_view = new merge_settings_view_t(this);
+	m_cleaning_view = new cleaning_settings_view_t(this);
+	m_sub_record_rules_view = new sub_record_rules_view_t(this);
 
 	m_category_list->addItem("Appearance");
 	m_category_list->addItem("Paths");
 	m_category_list->addItem("Merged Patch");
+	m_category_list->addItem("Cleaning");
+	m_category_list->addItem("Sub-Record Rules");
 
 	m_content_stack->addWidget(m_appearance_view);
 	m_content_stack->addWidget(m_paths_view);
 	m_content_stack->addWidget(m_merge_view);
+	m_content_stack->addWidget(m_cleaning_view);
+	m_content_stack->addWidget(m_sub_record_rules_view);
 
 	connect(m_category_list, &QListWidget::currentRowChanged, m_content_stack, &QStackedWidget::setCurrentIndex);
 
@@ -74,6 +82,8 @@ editor_settings_dialog_t::editor_settings_dialog_t(settings_store_t & settings, 
 	m_paths_view->load(m_settings);
 	m_appearance_view->load(m_settings);
 	m_merge_view->load(m_settings);
+	m_cleaning_view->load(m_settings);
+	m_sub_record_rules_view->load(m_settings);
 	m_category_list->setCurrentRow(0);
 }
 
@@ -82,5 +92,7 @@ void editor_settings_dialog_t::apply_all()
 	m_paths_view->apply(m_settings);
 	m_appearance_view->save(m_settings);
 	m_merge_view->save(m_settings);
+	m_cleaning_view->save(m_settings);
+	m_sub_record_rules_view->save(m_settings);
 	m_settings.sync();
 }

@@ -159,6 +159,12 @@ public:
 	int display_codepage() const;
 	void set_display_codepage(int value);
 
+	bool clean_evil_gmst_enabled() const;
+	void set_clean_evil_gmst_enabled(bool value);
+
+	bool clean_junk_cell_enabled() const;
+	void set_clean_junk_cell_enabled(bool value);
+
 	void sync();
 
 private:

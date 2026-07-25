@@ -105,6 +105,11 @@ batch_cleaner_t::batch_cleaner_t(plugin_scan_t & scan, log_fn_t log_fn)
     , m_log(std::move(log_fn))
 {}
 
+void batch_cleaner_t::set_options(const clean_options_t & options)
+{
+	m_options = options;
+}
+
 bool batch_cleaner_t::is_evil_gmst(const std::string & record_id, const std::string & record_content)
 {
 	if (record_content.size() < 16)
@@ -225,7 +230,6 @@ clean_result_t batch_cleaner_t::clean_plugin(int plugin_idx, const std::string &
 
 	const auto & esm = m_scan.plugin(plugin_idx);
 	const auto & records = esm.get_records();
-	const auto itm_record_indices = collect_itm_indices(m_scan, plugin_idx);
 
 	std::vector<const record_t *> kept_records;
 	kept_records.reserve(records.size());
@@ -243,24 +247,17 @@ clean_result_t batch_cleaner_t::clean_plugin(int plugin_idx, const std::string &
 
 		const auto record_name = extract_record_name(record);
 
-		if (record.id == "GMST" && is_evil_gmst(record_name, record.content))
+		if (m_options.evil_gmst && record.id == "GMST" && is_evil_gmst(record_name, record.content))
 		{
 			removed_log.push_back("  evil GMST: " + record_name);
 			++result.evil_gmst_removed;
 			continue;
 		}
 
-		if (record.id == "CELL" && is_junk_cell(record.content))
+		if (m_options.junk_cell && record.id == "CELL" && is_junk_cell(record.content))
 		{
 			removed_log.push_back("  junk cell: " + record_name);
 			++result.junk_cell_removed;
-			continue;
-		}
-
-		if (itm_record_indices.contains(record_idx))
-		{
-			removed_log.push_back("  ITM: " + record.id + " " + record_name);
-			++result.itm_removed;
 			continue;
 		}
 
@@ -291,5 +288,6 @@ clean_result_t batch_cleaner_t::clean_plugin(int plugin_idx, const std::string &
 
 	file.close();
 	result.written = true;
+	m_log("[info] saved \"" + output_path + "\"");
 	return result;
 }

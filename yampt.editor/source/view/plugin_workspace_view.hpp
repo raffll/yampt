@@ -62,6 +62,7 @@ public slots:
 	void on_create_merged_patch();
 	void on_clean_all();
 	void on_advanced_filter();
+	void on_settings_changed();
 	void set_hide_duplicates(bool hide);
 
 private slots:
@@ -76,6 +77,7 @@ private:
 	void setup_views();
 	void setup_connections();
 	void rebuild_after_load();
+	void apply_user_conflict_rules();
 	void update_status();
 	void log_message(const std::string & msg);
 	void rebuild_nav_preserving_state();

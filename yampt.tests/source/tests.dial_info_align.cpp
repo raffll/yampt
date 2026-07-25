@@ -45,9 +45,10 @@ static std::string make_dial_record(const std::string & topic_name, uint8_t dial
 	    make_sub("NAME", make_string(topic_name)) + make_sub("DATA", std::string(1, static_cast<char>(dial_type))));
 }
 
-static std::string make_info_record(const std::string & inam, const std::string & onam)
+static std::string make_info_record(const std::string & inam, const std::string & onam, const std::string & pnam = "")
 {
 	auto subs = make_sub("INAM", make_string(inam));
+	subs += make_sub("PNAM", make_string(pnam));
 	if (!onam.empty())
 		subs += make_sub("ONAM", make_string(onam));
 
@@ -69,9 +70,10 @@ TEST_CASE("dial_info_align_t::build, collects INFOs for a DIAL", "[i]")
 {
 	namespace fs = std::filesystem;
 
-	auto plugin_content = make_tes3_record() + make_dial_record("Khajiit", 0) + make_info_record("info1", "NPC_A") +
-	                      make_info_record("info2", "NPC_B") + make_dial_record("Other", 0) +
-	                      make_info_record("info3", "NPC_C");
+	auto plugin_content = make_tes3_record() + make_dial_record("Khajiit", 0) +
+	                      make_info_record("info1", "NPC_A", "") +
+	                      make_info_record("info2", "NPC_B", "info1") + make_dial_record("Other", 0) +
+	                      make_info_record("info3", "NPC_C", "");
 
 	auto path = get_temp_path("yampt_test_dial_align.esm");
 	write_binary_file(path, plugin_content);
@@ -97,7 +99,7 @@ TEST_CASE("dial_info_align_t::build, empty for unknown DIAL", "[i]")
 {
 	namespace fs = std::filesystem;
 
-	auto plugin_content = make_tes3_record() + make_dial_record("Khajiit", 0) + make_info_record("info1", "");
+	auto plugin_content = make_tes3_record() + make_dial_record("Khajiit", 0) + make_info_record("info1", "", "");
 
 	auto path = get_temp_path("yampt_test_dial_align2.esm");
 	write_binary_file(path, plugin_content);
@@ -111,4 +113,101 @@ TEST_CASE("dial_info_align_t::build, empty for unknown DIAL", "[i]")
 	REQUIRE(result.entries.empty());
 
 	fs::remove(path);
+}
+
+TEST_CASE("dial_info_align_t::build, plugin inserts INFO between existing", "[i]")
+{
+	namespace fs = std::filesystem;
+
+	auto master_content = make_tes3_record() + make_dial_record("topic", 0) +
+	                      make_info_record("A", "NPC1", "") + make_info_record("B", "NPC2", "A");
+
+	auto plugin_content = make_tes3_record() + make_dial_record("topic", 0) +
+	                      make_info_record("C", "NPC3", "A");
+
+	auto master_path = get_temp_path("yampt_test_dial_order_master.esm");
+	auto plugin_path = get_temp_path("yampt_test_dial_order_plugin.esp");
+	write_binary_file(master_path, master_content);
+	write_binary_file(plugin_path, plugin_content);
+
+	plugin_scan_t scan;
+	scan.load_plugin(master_path);
+	scan.load_plugin(plugin_path);
+	scan.rebuild_conflicts();
+
+	auto result = dial_info_align_t::build(scan, "topic");
+
+	REQUIRE(result.entries.size() == 3);
+	REQUIRE(result.entries[0].inam == "A");
+	REQUIRE(result.entries[1].inam == "C");
+	REQUIRE(result.entries[2].inam == "B");
+
+	REQUIRE(result.entries[0].source_plugin_idx == 0);
+	REQUIRE(result.entries[1].source_plugin_idx == 1);
+	REQUIRE(result.entries[2].source_plugin_idx == 0);
+
+	fs::remove(master_path);
+	fs::remove(plugin_path);
+}
+
+TEST_CASE("dial_info_align_t::build, plugin repositions existing INFO", "[i]")
+{
+	namespace fs = std::filesystem;
+
+	auto master_content = make_tes3_record() + make_dial_record("topic", 0) +
+	                      make_info_record("A", "", "") + make_info_record("B", "", "A") +
+	                      make_info_record("C", "", "B");
+
+	auto plugin_content = make_tes3_record() + make_dial_record("topic", 0) +
+	                      make_info_record("B", "", "");
+
+	auto master_path = get_temp_path("yampt_test_dial_reorder_master.esm");
+	auto plugin_path = get_temp_path("yampt_test_dial_reorder_plugin.esp");
+	write_binary_file(master_path, master_content);
+	write_binary_file(plugin_path, plugin_content);
+
+	plugin_scan_t scan;
+	scan.load_plugin(master_path);
+	scan.load_plugin(plugin_path);
+	scan.rebuild_conflicts();
+
+	auto result = dial_info_align_t::build(scan, "topic");
+
+	REQUIRE(result.entries.size() == 3);
+	REQUIRE(result.entries[0].inam == "B");
+	REQUIRE(result.entries[1].inam == "A");
+	REQUIRE(result.entries[2].inam == "C");
+
+	fs::remove(master_path);
+	fs::remove(plugin_path);
+}
+
+TEST_CASE("dial_info_align_t::build, unknown PNAM inserts at end", "[i]")
+{
+	namespace fs = std::filesystem;
+
+	auto master_content = make_tes3_record() + make_dial_record("topic", 0) +
+	                      make_info_record("A", "", "");
+
+	auto plugin_content = make_tes3_record() + make_dial_record("topic", 0) +
+	                      make_info_record("D", "", "nonexistent");
+
+	auto master_path = get_temp_path("yampt_test_dial_unknown_pnam_master.esm");
+	auto plugin_path = get_temp_path("yampt_test_dial_unknown_pnam_plugin.esp");
+	write_binary_file(master_path, master_content);
+	write_binary_file(plugin_path, plugin_content);
+
+	plugin_scan_t scan;
+	scan.load_plugin(master_path);
+	scan.load_plugin(plugin_path);
+	scan.rebuild_conflicts();
+
+	auto result = dial_info_align_t::build(scan, "topic");
+
+	REQUIRE(result.entries.size() == 2);
+	REQUIRE(result.entries[0].inam == "A");
+	REQUIRE(result.entries[1].inam == "D");
+
+	fs::remove(master_path);
+	fs::remove(plugin_path);
 }

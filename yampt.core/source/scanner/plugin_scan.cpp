@@ -95,6 +95,11 @@ void plugin_scan_t::insert_or_update_version(version_descriptor_t desc)
 		entry.display_name = std::move(desc.display_name);
 }
 
+void plugin_scan_t::set_user_ignore_conflict(const std::set<std::string> & rules)
+{
+	m_user_ignore_conflict = rules;
+}
+
 void plugin_scan_t::rebuild_conflicts()
 {
 	m_entries.clear();
@@ -313,7 +318,13 @@ void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 	for (const auto & slot : sr.aligned)
 	{
 		const auto policy = record_conflict::find_conflict_policy(entry.rec_type, slot.key.type);
-		if (policy.ignore_conflict)
+
+		const auto specific_key = entry.rec_type + ":" + slot.key.type;
+		const auto wildcard_key = entry.rec_type + ":*";
+		const bool user_ignore =
+		    m_user_ignore_conflict.count(specific_key) > 0 || m_user_ignore_conflict.count(wildcard_key) > 0;
+
+		if (user_ignore)
 			continue;
 
 		std::vector<std::string> slot_values(ver_count);

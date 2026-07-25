@@ -6,6 +6,12 @@
 
 class plugin_scan_t;
 
+struct clean_options_t
+{
+	bool evil_gmst = true;
+	bool junk_cell = true;
+};
+
 struct clean_result_t
 {
 	std::string plugin_filename;
@@ -23,6 +29,7 @@ public:
 
 	batch_cleaner_t(plugin_scan_t & scan, log_fn_t log_fn);
 
+	void set_options(const clean_options_t & options);
 	std::vector<clean_result_t> clean_all(const std::string & output_directory);
 
 	static bool is_evil_gmst(const std::string & record_id, const std::string & record_content);
@@ -34,4 +41,5 @@ private:
 
 	plugin_scan_t & m_scan;
 	log_fn_t m_log;
+	clean_options_t m_options;
 };

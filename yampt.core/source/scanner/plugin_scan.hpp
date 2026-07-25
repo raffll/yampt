@@ -5,6 +5,7 @@
 #include "merge_patch_store.hpp"
 #include "plugin_index.hpp"
 #include <memory>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -81,6 +82,8 @@ public:
 	size_t itm_count(int plugin_idx) const;
 	std::vector<const conflict_entry_t *> itm_entries(int plugin_idx) const;
 
+	void set_user_ignore_conflict(const std::set<std::string> & rules);
+
 private:
 	struct version_descriptor_t
 	{
@@ -122,4 +125,5 @@ private:
 
 	std::vector<conflict_entry_t> m_entries;
 	std::unordered_map<std::string, size_t> m_entry_lookup;
+	std::set<std::string> m_user_ignore_conflict;
 };

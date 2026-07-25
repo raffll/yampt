@@ -46,6 +46,14 @@ Each column represents one plugin's version. Column headers show the plugin file
 
 Empty cells mean that plugin does not include the sub-record. This happens when a plugin only modifies some fields of a record.
 
+## Dialogue INFO Chain
+
+When you select a DIAL (dialogue topic) record, the record view shows an additional section below the sub-records: the INFO chain. This displays all INFO records belonging to the topic in their final merged order, resolved using the same algorithm as OpenMW.
+
+Each INFO is positioned according to its PNAM (Previous Info) sub-record. When a plugin adds a new INFO with PNAM pointing to an existing INFO, the new one is inserted immediately after it. When a plugin redefines an existing INFO with a different PNAM, the INFO is moved to its new position in the chain.
+
+Each row in the INFO chain shows the INFO's display name (typically the speaker NPC ID) and a checkmark in each plugin column that contains that INFO. This lets you see which plugin contributes each dialogue response and in what order the player will encounter them in-game.
+
 ## Context Menus
 
 Right-click in the record view to access merge operations:
@@ -74,8 +82,19 @@ You can refine the auto-merge result manually. Use the record view context menu 
 
 ## Settings
 
-Open Settings via Ctrl+, or the Edit menu. Three pages are available:
+Open Settings via Ctrl+, or the Edit menu. Five pages are available:
 
 - **Appearance** — choose between light and dark theme.
 - **Paths** — configure the merged patch output path for each loading mode (folder, MO2, OpenMW). Normally these are automatic and don't need changing.
-- **Merge** — toggle which record types participate in auto-merge. Set an exclusion regex to skip specific record IDs. Enable or disable individual bug fixes (fog density fix, summon persistence fix, cell name reversion fix).
+- **Merged Patch** — toggle which record types participate in auto-merge. Set an exclusion regex to skip specific record IDs. Enable or disable individual bug fixes (fog density fix, summon persistence fix, cell name reversion fix).
+- **Cleaning** — toggle which cleaning operations the Clean All button performs. Evil GMSTs are Construction Set artifacts from Tribunal/Bloodmoon that can cause issues in mods that don't require those expansions. Junk cells are empty exterior cell records that only contain position data and serve no purpose.
+- **Sub-Record Rules** — configure which sub-records are ignored during conflict detection, excluded from the merged patch output, or skipped when not present in a plugin. Each field takes a comma-separated list of entries in `RECORD:SUB` format (e.g. `CELL:NAM0, CELL:NAM9`). Use `*` as a wildcard for the sub-record name to match all sub-records of a record type.
+
+## Cleaning Plugins
+
+Click **Clean All** in the toolbar to remove known problematic records from all loaded plugins (except masters). Cleaned plugins are written to the output directory alongside the merged patch. The original plugin files are never modified.
+
+Two types of records are removed:
+
+- **Evil GMSTs** — game settings injected by the Construction Set when editing plugins with Tribunal or Bloodmoon loaded. These settings override expansion-specific values and can cause problems for players without the expansions.
+- **Junk cells** — exterior cell records that contain only a NAME and DATA sub-record with no references, no region assignment, and no meaningful content. These are Construction Set artifacts from brief edits near cell borders.

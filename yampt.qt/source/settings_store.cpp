@@ -556,6 +556,26 @@ void settings_store_t::set_display_codepage(int value)
 	m_settings.setValue("Editor/DisplayCodepage", value);
 }
 
+bool settings_store_t::clean_evil_gmst_enabled() const
+{
+	return m_settings.value("Cleaning/EvilGmst", true).toBool();
+}
+
+void settings_store_t::set_clean_evil_gmst_enabled(bool value)
+{
+	m_settings.setValue("Cleaning/EvilGmst", value);
+}
+
+bool settings_store_t::clean_junk_cell_enabled() const
+{
+	return m_settings.value("Cleaning/JunkCell", true).toBool();
+}
+
+void settings_store_t::set_clean_junk_cell_enabled(bool value)
+{
+	m_settings.setValue("Cleaning/JunkCell", value);
+}
+
 void settings_store_t::sync()
 {
 	m_settings.sync();

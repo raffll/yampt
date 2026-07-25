@@ -72,6 +72,7 @@ static constexpr record_behavior_t behavior_table[] = {
 	{ "WEAP", decode_mode_t::generic, copy_strategy_t::whole_record, weap_sub_rules, 1, nullptr, nullptr, 0 },
 	{ "ARMO", decode_mode_t::armor, copy_strategy_t::whole_record, armo_sub_rules, 1, nullptr, nullptr, 0 },
 	{ "CLOT", decode_mode_t::armor, copy_strategy_t::whole_record, nullptr, 0, nullptr, nullptr, 0 },
+	{ "DIAL", decode_mode_t::dial, copy_strategy_t::whole_record, nullptr, 0, nullptr, nullptr, 0 },
 	{ "INFO", decode_mode_t::info, copy_strategy_t::whole_record, nullptr, 0, nullptr, nullptr, 0 },
 };
 

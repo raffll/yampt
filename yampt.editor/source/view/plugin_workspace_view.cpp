@@ -29,6 +29,7 @@ plugin_workspace_view_t::plugin_workspace_view_t(settings_store_t & settings, QW
 	m_lbl_count = new QLabel(this);
 
 	m_session = new plugin_session_t(this);
+	apply_user_conflict_rules();
 
 	setup_views();
 
@@ -230,6 +231,11 @@ void plugin_workspace_view_t::on_clean_all()
 	batch_cleaner_t cleaner(
 	    m_session->scan(), [this](const std::string & message) { log_message(message); });
 
+	clean_options_t options;
+	options.evil_gmst = m_settings.clean_evil_gmst_enabled();
+	options.junk_cell = m_settings.clean_junk_cell_enabled();
+	cleaner.set_options(options);
+
 	cleaner.clean_all(output_path);
 }
 
@@ -238,6 +244,52 @@ void plugin_workspace_view_t::rebuild_after_load()
 	rebuild_nav_preserving_state();
 	on_filter_changed();
 	update_status();
+}
+
+void plugin_workspace_view_t::apply_user_conflict_rules()
+{
+	const auto rules_str = m_settings.sub_record_ignore_conflict();
+	std::set<std::string> rules;
+	size_t start = 0;
+
+	while (start < rules_str.size())
+	{
+		const auto comma = rules_str.find(',', start);
+		const auto end = (comma == std::string::npos) ? rules_str.size() : comma;
+
+		auto token_start = start;
+		while (token_start < end && rules_str[token_start] == ' ')
+			++token_start;
+
+		auto token_end = end;
+		while (token_end > token_start && rules_str[token_end - 1] == ' ')
+			--token_end;
+
+		if (token_end > token_start)
+			rules.insert(rules_str.substr(token_start, token_end - token_start));
+
+		start = (comma == std::string::npos) ? rules_str.size() : comma + 1;
+	}
+
+	m_session->scan().set_user_ignore_conflict(rules);
+}
+
+void plugin_workspace_view_t::on_settings_changed()
+{
+	apply_user_conflict_rules();
+
+	if (m_session->scan().plugin_count() > 0)
+	{
+		m_session->scan().rebuild_conflicts();
+		rebuild_nav_preserving_state();
+
+		const auto selection = m_nav_view->current_selection();
+		if (!selection.rec_type.empty())
+			on_nav_selection_changed(selection);
+	}
+
+	m_record_view->model()->set_display_codepage(static_cast<codepage_t>(m_settings.display_codepage()));
+	m_nav_view->set_display_codepage(static_cast<codepage_t>(m_settings.display_codepage()));
 }
 
 void plugin_workspace_view_t::rebuild_nav_preserving_state()

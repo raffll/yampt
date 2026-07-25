@@ -58,6 +58,10 @@
 - [FIX] Propagation: entries with leading/trailing whitespace differences now match correctly
 
 ### yEditor
+- [NEW] Dialogue INFO chain resolved using OpenMW ordering algorithm (PNAM-based insertion)
+- [NEW] Plugin cleaning: removes evil GMSTs and junk cells from all loaded plugins
+- [NEW] Cleaning settings page with toggleable removal options
+- [NEW] Sub-Record Rules settings page for configuring conflict and merge behavior
 - [NEW] Guard Patch: plugins before guard are excluded from merge for records the guard contains
 - [NEW] Status bar shows load mode and path
 - [CHANGE] Right panel columns redistribute on resize to fill available width

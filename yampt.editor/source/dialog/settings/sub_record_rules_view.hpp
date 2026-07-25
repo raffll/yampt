@@ -2,8 +2,7 @@
 
 #include <QWidget>
 
-class QTableWidget;
-class QPushButton;
+class QLineEdit;
 class settings_store_t;
 
 class sub_record_rules_view_t : public QWidget
@@ -17,10 +16,7 @@ public:
 	void save(settings_store_t & settings) const;
 
 private:
-	void add_row(const QString & record, const QString & sub_record, bool ignore, bool exclude, bool skip);
-	void remove_selected_row();
-
-	QTableWidget * m_table = nullptr;
-	QPushButton * m_add_button = nullptr;
-	QPushButton * m_remove_button = nullptr;
+	QLineEdit * m_ignore_conflict_edit = nullptr;
+	QLineEdit * m_exclude_from_merge_edit = nullptr;
+	QLineEdit * m_skip_if_missing_edit = nullptr;
 };
