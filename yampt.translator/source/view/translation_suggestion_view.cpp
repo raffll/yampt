@@ -71,7 +71,7 @@ void translation_suggestion_view_t::setup_controls()
 	    m_ct2_provider,
 	    &ctranslate2_translator_t::translation_finished,
 	    this,
-	    [this](translation_suggestion_t result) { display_translation_result(result); });
+	    [this](translation_suggestion_t result) { on_provider_result(result); });
 
 	rebuild_language_list();
 	update_provider_status();
@@ -111,7 +111,7 @@ void translation_suggestion_view_t::rebuild_web_providers()
 		    this,
 		    [this](translation_suggestion_t result)
 		{
-			display_translation_result(result);
+			on_provider_result(result);
 			update_provider_status();
 		});
 	}
@@ -132,6 +132,8 @@ void translation_suggestion_view_t::apply_provider_settings(const settings_store
 {
 	const int language_index = settings.translation_language_index();
 	const auto source_language = settings.foreign_language();
+
+	m_target_language = settings.native_language();
 
 	for (auto * web_provider : m_web_providers)
 	{
@@ -314,4 +316,99 @@ void translation_suggestion_view_t::display_translation_result(const translation
 	}
 
 	m_result_text->setPlainText(QString::fromStdString(result.text));
+}
+
+void translation_suggestion_view_t::set_target_language(const std::string & language)
+{
+	m_target_language = language;
+}
+
+bool translation_suggestion_view_t::is_translating() const
+{
+	return m_translating;
+}
+
+void translation_suggestion_view_t::request_translation(const std::string & text)
+{
+	auto * provider = active_provider();
+	if (!provider || !provider->is_available())
+	{
+		emit translation_failed("translation provider not available");
+		return;
+	}
+
+	m_translating = true;
+	m_line_queue.clear();
+	m_line_results.clear();
+	m_translate_all_btn->setEnabled(false);
+	provider->translate(text, m_target_language);
+}
+
+void translation_suggestion_view_t::request_translation_lines(const std::vector<std::string> & lines)
+{
+	auto * provider = active_provider();
+	if (!provider || !provider->is_available())
+	{
+		emit translation_failed("translation provider not available");
+		return;
+	}
+
+	m_translating = true;
+	m_line_queue = lines;
+	m_line_results.clear();
+	m_translate_all_btn->setEnabled(false);
+	advance_line_queue();
+}
+
+void translation_suggestion_view_t::advance_line_queue()
+{
+	while (!m_line_queue.empty() && m_line_queue.front().empty())
+	{
+		m_line_results.push_back(std::string());
+		m_line_queue.erase(m_line_queue.begin());
+	}
+
+	if (m_line_queue.empty())
+	{
+		m_translating = false;
+		m_translate_all_btn->setEnabled(true);
+		emit translation_lines_committed(m_line_results);
+		return;
+	}
+
+	auto * provider = active_provider();
+	provider->translate(m_line_queue.front(), m_target_language);
+}
+
+void translation_suggestion_view_t::on_provider_result(const translation_suggestion_t & result)
+{
+	if (!m_translating)
+	{
+		display_translation_result(result);
+		return;
+	}
+
+	if (!result.success)
+	{
+		m_translating = false;
+		m_line_queue.clear();
+		m_line_results.clear();
+		m_translate_all_btn->setEnabled(true);
+		display_translation_result(result);
+		emit translation_failed(result.error);
+		return;
+	}
+
+	if (!m_line_queue.empty())
+	{
+		m_line_results.push_back(result.text);
+		m_line_queue.erase(m_line_queue.begin());
+		advance_line_queue();
+		return;
+	}
+
+	m_translating = false;
+	m_translate_all_btn->setEnabled(true);
+	display_translation_result(result);
+	emit translation_committed(result.text);
 }

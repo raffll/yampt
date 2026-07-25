@@ -510,6 +510,12 @@ void main_window_t::connect_sidebar_signals()
 
 	connect(
 	    m_sidebar,
+	    &sidebar_view_t::generate_loc_requested,
+	    this,
+	    [this](const std::string & path) { m_sidebar_controller->on_generate_loc_requested(path); });
+
+	connect(
+	    m_sidebar,
 	    &sidebar_view_t::remove_folder_requested,
 	    this,
 	    [this](const std::string & root_path) { m_sidebar_controller->on_remove_folder_requested(root_path); });
@@ -781,10 +787,10 @@ void main_window_t::connect_editor_signals()
 			return;
 		}
 
-		auto * provider = m_translation_tab->ct2_provider();
+		auto * provider = m_translation_tab->active_provider();
 		if (!provider || !provider->is_available())
 		{
-			m_translation_tab->append_log("[error] CTranslate2 model not loaded\n");
+			m_translation_tab->append_log("[error] translation provider not available\n");
 			return;
 		}
 
@@ -806,53 +812,42 @@ void main_window_t::connect_editor_signals()
 		}
 
 		m_translation_tab->set_source_text(row_data->old_text);
+		m_translation_tab->set_target_language(m_settings.native_language());
 
 		if (m_editor_view->has_script_template())
 		{
 			const auto lines = m_editor_view->original_view()->toPlainText().split('\n');
-			QStringList translated_lines;
+			std::vector<std::string> prepared_lines;
 
 			for (const auto & line : lines)
 			{
 				const auto source = line.toStdString();
 				if (source.empty())
-				{
-					translated_lines.append(QString());
-					continue;
-				}
-
-				const auto prepared = m_glossary.apply_glossary(source);
-				auto line_result = provider->translate_sync(prepared);
-				if (!line_result.success)
-				{
-					m_translation_tab->append_log("[error] " + line_result.error + "\n");
-					return;
-				}
-
-				translated_lines.append(QString::fromStdString(line_result.text));
+					prepared_lines.push_back(std::string());
+				else
+					prepared_lines.push_back(m_glossary.apply_glossary(source));
 			}
 
-			m_editor_view->translation_editor()->setPlainText(translated_lines.join('\n'));
+			m_translation_tab->request_translation_lines(prepared_lines);
 		}
 		else
 		{
 			const auto prepared = m_glossary.apply_glossary(row_data->old_text);
-			auto result = provider->translate_sync(prepared);
-
-			if (!result.success)
-			{
-				m_translation_tab->append_log("[error] " + result.error + "\n");
-				return;
-			}
-
-			m_editor_view->translation_editor()->setPlainText(QString::fromStdString(result.text));
-			m_translation_tab->display_translation_result({ result.text, true, "" });
+			m_translation_tab->request_translation(prepared);
 		}
+	});
 
+	connect(
+	    m_translation_tab,
+	    &translation_suggestion_view_t::translation_committed,
+	    this,
+	    [this](const std::string & result_text)
+	{
+		m_editor_view->translation_editor()->setPlainText(QString::fromStdString(result_text));
 		m_editor_controller.set_pending_status(status_t::model);
 		commit_current_edit();
 
-		int next_row = current_row + 1;
+		int next_row = m_editor_controller.current_row() + 1;
 		if (next_row < m_table_model->rowCount())
 		{
 			auto idx = m_table_model->index(next_row, 0);
@@ -860,6 +855,39 @@ void main_window_t::connect_editor_signals()
 			    idx, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
 			on_row_selected(next_row);
 		}
+	});
+
+	connect(
+	    m_translation_tab,
+	    &translation_suggestion_view_t::translation_lines_committed,
+	    this,
+	    [this](const std::vector<std::string> & result_lines)
+	{
+		QStringList joined;
+		for (const auto & line : result_lines)
+			joined.append(QString::fromStdString(line));
+
+		m_editor_view->translation_editor()->setPlainText(joined.join('\n'));
+		m_editor_controller.set_pending_status(status_t::model);
+		commit_current_edit();
+
+		int next_row = m_editor_controller.current_row() + 1;
+		if (next_row < m_table_model->rowCount())
+		{
+			auto idx = m_table_model->index(next_row, 0);
+			m_table_view->selectionModel()->setCurrentIndex(
+			    idx, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+			on_row_selected(next_row);
+		}
+	});
+
+	connect(
+	    m_translation_tab,
+	    &translation_suggestion_view_t::translation_failed,
+	    this,
+	    [this](const std::string & error_message)
+	{
+		m_translation_tab->append_log("[error] " + error_message + "\n");
 	});
 }
 
