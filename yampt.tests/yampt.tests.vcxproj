@@ -102,7 +102,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>$(ProjectDir)source;$(SolutionDir)yampt.core\source;$(SolutionDir)yampt.qt\source;$(SolutionDir)yampt.translator\source;$(SolutionDir)yampt.editor\source;$(SolutionDir)external;$(SolutionDir)external\binary\CTranslate2\include;$(SolutionDir)external\binary\CTranslate2\build;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtTest;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)source;$(SolutionDir)yampt.core\source;$(SolutionDir)yampt.qt\source;$(SolutionDir)yampt.translator\source;$(SolutionDir)yampt.editor\source;$(SolutionDir)external;$(SolutionDir)external\binary\CTranslate2\include;$(SolutionDir)external\binary\CTranslate2\build;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtTest;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -118,7 +118,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;_SILENCE_CXX23_ALIGNED_STORAGE_DEPRECATION_WARNING;_SILENCE_CXX23_DENORM_DEPRECATION_WARNING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)source;$(SolutionDir)yampt.core\source;$(SolutionDir)yampt.qt\source;$(SolutionDir)yampt.translator\source;$(SolutionDir)yampt.editor\source;$(SolutionDir)external;$(SolutionDir)external\binary\CTranslate2\include;$(SolutionDir)external\binary\CTranslate2\build;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtTest;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)source;$(SolutionDir)yampt.core\source;$(SolutionDir)yampt.qt\source;$(SolutionDir)yampt.translator\source;$(SolutionDir)yampt.editor\source;$(SolutionDir)external;$(SolutionDir)external\binary\CTranslate2\include;$(SolutionDir)external\binary\CTranslate2\build;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtTest;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -136,7 +136,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;_SILENCE_CXX23_ALIGNED_STORAGE_DEPRECATION_WARNING;_SILENCE_CXX23_DENORM_DEPRECATION_WARNING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)source;$(SolutionDir)yampt.core\source;$(SolutionDir)yampt.qt\source;$(SolutionDir)yampt.translator\source;$(SolutionDir)yampt.editor\source;$(SolutionDir)external;$(SolutionDir)external\binary\CTranslate2\include;$(SolutionDir)external\binary\CTranslate2\build;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtTest;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)source;$(SolutionDir)yampt.core\source;$(SolutionDir)yampt.qt\source;$(SolutionDir)yampt.translator\source;$(SolutionDir)yampt.editor\source;$(SolutionDir)external;$(SolutionDir)external\binary\CTranslate2\include;$(SolutionDir)external\binary\CTranslate2\build;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtTest;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -157,7 +157,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>$(ProjectDir)source;$(SolutionDir)yampt.core\source;$(SolutionDir)yampt.qt\source;$(SolutionDir)yampt.translator\source;$(SolutionDir)yampt.editor\source;$(SolutionDir)external;$(SolutionDir)external\binary\CTranslate2\include;$(SolutionDir)external\binary\CTranslate2\build;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtTest;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)source;$(SolutionDir)yampt.core\source;$(SolutionDir)yampt.qt\source;$(SolutionDir)yampt.translator\source;$(SolutionDir)yampt.editor\source;$(SolutionDir)external;$(SolutionDir)external\binary\CTranslate2\include;$(SolutionDir)external\binary\CTranslate2\build;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtTest;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -283,10 +283,24 @@
     <ClCompile Include="..\yampt.editor\source\model\nav_tree_filter.cpp" />
     <ClCompile Include="..\yampt.editor\source\session\plugin_session.cpp" />
     <ClCompile Include="..\yampt.editor\source\patcher\patch_builder.cpp" />
+    <ClCompile Include="..\yampt.editor\source\model\lua_nav_model.cpp" />
+    <ClCompile Include="..\yampt.editor\source\view\lua_filter_view.cpp" />
     <ClCompile Include="..\yampt.translator\source\translator\web_translator_config.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\yampt.editor\source\session\plugin_session.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include" -I"$(SolutionDir)yampt.core\source" -I"$(SolutionDir)yampt.editor\source"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\yampt.editor\source\model\lua_nav_model.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include" -I"$(SolutionDir)yampt.core\source" -I"$(SolutionDir)yampt.editor\source"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\yampt.editor\source\view\lua_filter_view.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include" -I"$(SolutionDir)yampt.core\source" -I"$(SolutionDir)yampt.editor\source"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
@@ -314,6 +328,12 @@
     </ClCompile>
     <ClCompile Include="$(IntDir)moc_workspace_watcher.cpp">
       <ObjectFileName>$(IntDir)moc_workspace_watcher.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="$(IntDir)moc_lua_nav_model.cpp">
+      <ObjectFileName>$(IntDir)moc_lua_nav_model.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="$(IntDir)moc_lua_filter_view.cpp">
+      <ObjectFileName>$(IntDir)moc_lua_filter_view.obj</ObjectFileName>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

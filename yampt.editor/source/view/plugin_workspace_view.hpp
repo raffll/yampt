@@ -9,11 +9,14 @@
 #include "preview_view.hpp"
 #include "record_view.hpp"
 #include <scanner/plugin_scan.hpp>
+#include <scanner/lua_scanner.hpp>
 #include <QLabel>
 #include <QSplitter>
 #include <QTabWidget>
 #include <QWidget>
 
+class lua_conflicts_view_t;
+class lua_scan_worker_t;
 class settings_store_t;
 
 class plugin_workspace_view_t : public QWidget
@@ -83,6 +86,8 @@ private:
 	void load_plugins_from_paths(const std::vector<std::string> & paths, const std::string & base_path);
 	void display_record_in_view(const conflict_entry_t & entry);
 	QString build_mode_prefix() const;
+	void start_lua_scan();
+	void on_lua_scan_complete(const lua_scan_result_t & result);
 
 	settings_store_t & m_settings;
 	plugin_session_t * m_session = nullptr;
@@ -94,11 +99,15 @@ private:
 
 	QSplitter * m_main_splitter = nullptr;
 	QSplitter * m_content_splitter = nullptr;
+	QTabWidget * m_top_tabs = nullptr;
 	nav_tree_view_t * m_nav_view = nullptr;
 	record_view_t * m_record_view = nullptr;
 	messages_view_t * m_messages = nullptr;
 	preview_view_t * m_preview = nullptr;
 	QTabWidget * m_bottom_tabs = nullptr;
+
+	lua_conflicts_view_t * m_lua_conflicts_view = nullptr;
+	lua_scan_worker_t * m_lua_scan_worker = nullptr;
 
 	QLabel * m_status_label = nullptr;
 

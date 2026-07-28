@@ -1,5 +1,6 @@
 #include "plugin_session.hpp"
 #include "../patcher/patch_builder.hpp"
+#include <algorithm>
 #include <QCoreApplication>
 #include <QDir>
 #include <QFile>
@@ -18,6 +19,8 @@ void plugin_session_t::load_from_folder(const std::vector<std::string> & paths, 
 {
 	m_load_base_path = base_path;
 	m_load_source = load_source_t::folder;
+	m_lua_data_paths = { base_path };
+	m_lua_mod_names = {};
 	load_plugins_internal(paths);
 }
 
@@ -29,6 +32,7 @@ void plugin_session_t::load_from_mo2_profile(const QString & profile_dir)
 
 	m_load_base_path = profile_dir.toStdString();
 	m_load_source = load_source_t::mo2_profile;
+	build_lua_paths_for_mo2(profile_dir);
 	load_plugins_internal(paths);
 }
 
@@ -41,6 +45,7 @@ void plugin_session_t::load_from_openmw_cfg(const QString & cfg_path)
 	const auto cfg_dir = QFileInfo(cfg_path).absolutePath();
 	m_load_base_path = cfg_dir.toStdString();
 	m_load_source = load_source_t::openmw_cfg;
+	build_lua_paths_for_openmw(cfg_path);
 	load_plugins_internal(paths);
 }
 
@@ -50,6 +55,8 @@ void plugin_session_t::unload_all()
 	m_patch_builder->clear();
 	m_load_source = load_source_t::none;
 	m_load_base_path.clear();
+	m_lua_data_paths.clear();
+	m_lua_mod_names.clear();
 	emit plugins_unloaded();
 }
 
@@ -96,6 +103,16 @@ plugin_session_t::load_source_t plugin_session_t::load_source() const
 const std::string & plugin_session_t::load_base_path() const
 {
 	return m_load_base_path;
+}
+
+const std::vector<std::string> & plugin_session_t::lua_data_paths() const
+{
+	return m_lua_data_paths;
+}
+
+const std::vector<std::string> & plugin_session_t::lua_mod_names() const
+{
+	return m_lua_mod_names;
 }
 
 void plugin_session_t::save_session_state(const QString & ini_path)
@@ -160,7 +177,11 @@ void plugin_session_t::restore_session_state(const QString & ini_path)
 		paths.insert(paths.end(), esps.begin(), esps.end());
 
 		if (!paths.empty())
+		{
+			m_lua_data_paths = { m_load_base_path };
+			m_lua_mod_names = {};
 			load_plugins_internal(paths);
+		}
 
 		break;
 	}
@@ -168,7 +189,10 @@ void plugin_session_t::restore_session_state(const QString & ini_path)
 	{
 		auto paths = parse_mo2_profile(QString::fromStdString(m_load_base_path));
 		if (!paths.empty())
+		{
+			build_lua_paths_for_mo2(QString::fromStdString(m_load_base_path));
 			load_plugins_internal(paths);
+		}
 
 		break;
 	}
@@ -177,13 +201,93 @@ void plugin_session_t::restore_session_state(const QString & ini_path)
 		const auto cfg_path = QString::fromStdString(m_load_base_path) + "/openmw.cfg";
 		auto paths = parse_openmw_cfg(cfg_path);
 		if (!paths.empty())
+		{
+			build_lua_paths_for_openmw(cfg_path);
 			load_plugins_internal(paths);
+		}
 
 		break;
 	}
 	case load_source_t::none:
 		break;
 	}
+}
+
+void plugin_session_t::build_lua_paths_for_mo2(const QString & profile_dir)
+{
+	m_lua_data_paths.clear();
+	m_lua_mod_names.clear();
+
+	QDir profile(profile_dir);
+	QDir mo2_root = profile;
+	mo2_root.cdUp();
+	mo2_root.cdUp();
+
+	const auto mods_path = mo2_root.absolutePath() + "/mods";
+
+	QString modlist_path = profile_dir + "/modlist.txt";
+	QFile modlist_file(modlist_path);
+	if (!modlist_file.open(QIODevice::ReadOnly | QIODevice::Text))
+		return;
+
+	std::vector<std::string> enabled_mods;
+	QTextStream stream(&modlist_file);
+	while (!stream.atEnd())
+	{
+		auto line = stream.readLine().trimmed();
+		if (line.startsWith('+'))
+			enabled_mods.push_back(line.mid(1).toStdString());
+	}
+	modlist_file.close();
+	std::reverse(enabled_mods.begin(), enabled_mods.end());
+
+	for (const auto & mod_name : enabled_mods)
+	{
+		const auto mod_dir = mods_path + "/" + QString::fromStdString(mod_name);
+		if (QDir(mod_dir).exists())
+		{
+			m_lua_data_paths.push_back(mod_dir.toStdString());
+			m_lua_mod_names.push_back(mod_name);
+		}
+	}
+
+	const auto overwrite_path = mo2_root.absolutePath() + "/overwrite";
+	if (QDir(overwrite_path).exists())
+	{
+		m_lua_data_paths.push_back(overwrite_path.toStdString());
+		m_lua_mod_names.push_back("Overwrite");
+	}
+}
+
+void plugin_session_t::build_lua_paths_for_openmw(const QString & cfg_path)
+{
+	m_lua_data_paths.clear();
+	m_lua_mod_names.clear();
+
+	QFile cfg_file(cfg_path);
+	if (!cfg_file.open(QIODevice::ReadOnly | QIODevice::Text))
+		return;
+
+	QTextStream stream(&cfg_file);
+	while (!stream.atEnd())
+	{
+		auto line = stream.readLine().trimmed();
+		if (!line.startsWith("data=") && !line.startsWith("data ="))
+			continue;
+
+		auto value = line.mid(line.indexOf('=') + 1).trimmed();
+		if (value.startsWith('"') && value.endsWith('"'))
+			value = value.mid(1, value.size() - 2);
+
+		if (!QDir(value).exists())
+			continue;
+
+		m_lua_data_paths.push_back(value.toStdString());
+
+		const auto dir_name = QDir(value).dirName().toStdString();
+		m_lua_mod_names.push_back(dir_name);
+	}
+	cfg_file.close();
 }
 
 void plugin_session_t::load_plugins_internal(const std::vector<std::string> & paths)

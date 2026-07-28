@@ -213,6 +213,10 @@
     <ClCompile Include="source\scanner\merge_patch_store.cpp" />
     <ClCompile Include="source\scanner\sub_record_merge.cpp" />
     <ClCompile Include="source\scanner\summon_fixer.cpp" />
+    <ClCompile Include="source\scanner\omwscripts_parser.cpp" />
+    <ClCompile Include="source\scanner\handler_parser.cpp" />
+    <ClCompile Include="source\scanner\conflict_detector.cpp" />
+    <ClCompile Include="source\scanner\lua_scanner.cpp" />
     <ClCompile Include="source\translator\translation_engine.cpp" />
     <ClCompile Include="source\utility\char_diff.cpp" />
     <ClCompile Include="source\utility\keyword_trie.cpp" />
@@ -271,6 +275,10 @@
     <ClInclude Include="source\scanner\record_conflicts.hpp" />
     <ClInclude Include="source\scanner\sub_record_merge.hpp" />
     <ClInclude Include="source\scanner\summon_fixer.hpp" />
+    <ClInclude Include="source\scanner\omwscripts_parser.hpp" />
+    <ClInclude Include="source\scanner\handler_parser.hpp" />
+    <ClInclude Include="source\scanner\conflict_detector.hpp" />
+    <ClInclude Include="source\scanner\lua_scanner.hpp" />
     <ClInclude Include="source\translator\translation_engine.hpp" />
     <ClInclude Include="source\utility\char_diff.hpp" />
     <ClInclude Include="source\utility\color_palette.hpp" />

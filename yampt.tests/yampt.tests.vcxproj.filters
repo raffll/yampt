@@ -121,6 +121,8 @@
     <ClCompile Include="..\yampt.editor\source\model\nav_tree_filter.cpp" />
     <ClCompile Include="..\yampt.editor\source\session\plugin_session.cpp" />
     <ClCompile Include="..\yampt.editor\source\patcher\patch_builder.cpp" />
+    <ClCompile Include="..\yampt.editor\source\model\lua_nav_model.cpp" />
+    <ClCompile Include="..\yampt.editor\source\view\lua_filter_view.cpp" />
     <ClCompile Include="..\yampt.translator\source\translator\web_translator_config.cpp" />
   </ItemGroup>
   <ItemGroup>

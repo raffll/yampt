@@ -45,6 +45,9 @@ public:
 	load_source_t load_source() const;
 	const std::string & load_base_path() const;
 
+	const std::vector<std::string> & lua_data_paths() const;
+	const std::vector<std::string> & lua_mod_names() const;
+
 signals:
 	void plugins_loaded();
 	void plugins_unloaded();
@@ -70,6 +73,8 @@ private:
 	    const std::vector<std::string> & data_dirs);
 	std::string resolve_single_content(const std::string & content_name, const std::vector<std::string> & data_dirs);
 	void load_plugins_internal(const std::vector<std::string> & paths);
+	void build_lua_paths_for_mo2(const QString & profile_dir);
+	void build_lua_paths_for_openmw(const QString & cfg_path);
 
 	plugin_scan_t m_scan;
 	std::unique_ptr<patch_builder_t> m_patch_builder;
@@ -77,4 +82,6 @@ private:
 	std::set<std::string> m_patch_plugins;
 	load_source_t m_load_source = load_source_t::none;
 	std::string m_load_base_path;
+	std::vector<std::string> m_lua_data_paths;
+	std::vector<std::string> m_lua_mod_names;
 };

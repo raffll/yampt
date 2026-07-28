@@ -1,7 +1,9 @@
 #include "plugin_workspace_view.hpp"
 #include "../dialog/filter_dialog.hpp"
 #include "../dialog/plugin_select_dialog.hpp"
+#include "../session/lua_scan_worker.hpp"
 #include "editor_delegates.hpp"
+#include "lua_conflicts_view.hpp"
 #include <scanner/batch_cleaner.hpp>
 #include <scanner/record_conflict.hpp>
 #include <set>
@@ -61,7 +63,13 @@ plugin_workspace_view_t::plugin_workspace_view_t(settings_store_t & settings, QW
 void plugin_workspace_view_t::setup_views()
 {
 	m_main_splitter = new QSplitter(Qt::Vertical, this);
-	m_content_splitter = new QSplitter(Qt::Horizontal, m_main_splitter);
+	m_content_splitter = new QSplitter(Qt::Horizontal);
+
+	m_lua_conflicts_view = new lua_conflicts_view_t();
+	m_lua_scan_worker = new lua_scan_worker_t(this);
+
+	m_top_tabs = new QTabWidget(m_main_splitter);
+	m_top_tabs->addTab(m_content_splitter, tr("Plugin Conflicts"));
 
 	m_bottom_tabs = new QTabWidget(m_main_splitter);
 	m_messages = new messages_view_t(m_bottom_tabs);
@@ -69,7 +77,7 @@ void plugin_workspace_view_t::setup_views()
 	m_bottom_tabs->addTab(m_messages, tr("Log"));
 	m_bottom_tabs->addTab(m_preview, tr("Preview"));
 
-	m_main_splitter->addWidget(m_content_splitter);
+	m_main_splitter->addWidget(m_top_tabs);
 	m_main_splitter->addWidget(m_bottom_tabs);
 	m_main_splitter->setSizes({ 600, 150 });
 	m_main_splitter->setChildrenCollapsible(true);
@@ -94,9 +102,16 @@ void plugin_workspace_view_t::setup_connections()
 	{
 		m_record_view->clear();
 		m_nav_view->rebuild();
+		m_lua_conflicts_view->set_scan_result({});
 		update_status();
 	});
 	connect(m_session, &plugin_session_t::log_message, this, &plugin_workspace_view_t::log_message);
+
+	connect(
+	    m_lua_scan_worker,
+	    &lua_scan_worker_t::scan_complete,
+	    this,
+	    &plugin_workspace_view_t::on_lua_scan_complete);
 
 	auto * copy_shortcut = new QShortcut(QKeySequence::Copy, m_record_view->tree());
 	connect(copy_shortcut, &QShortcut::activated, this, &plugin_workspace_view_t::on_view_copy);
@@ -246,6 +261,7 @@ void plugin_workspace_view_t::rebuild_after_load()
 	rebuild_nav_preserving_state();
 	on_filter_changed();
 	update_status();
+	start_lua_scan();
 }
 
 void plugin_workspace_view_t::apply_user_conflict_rules()
@@ -680,4 +696,37 @@ void plugin_workspace_view_t::refresh_views()
 {
 	m_nav_view->tree_widget()->viewport()->update();
 	m_record_view->tree()->viewport()->update();
+}
+
+void plugin_workspace_view_t::start_lua_scan()
+{
+	if (m_lua_scan_worker->isRunning())
+	{
+		m_lua_scan_worker->cancel_scan();
+		m_lua_scan_worker->wait();
+	}
+
+	const auto & data_paths = m_session->lua_data_paths();
+	const auto & mod_names = m_session->lua_mod_names();
+
+	if (data_paths.empty())
+		return;
+
+	log_message("[info] starting Lua handler scan...");
+	m_lua_scan_worker->start_scan(data_paths, mod_names);
+}
+
+void plugin_workspace_view_t::on_lua_scan_complete(const lua_scan_result_t & result)
+{
+	m_lua_conflicts_view->set_scan_result(result);
+
+	const auto conflict_count = result.conflicts.size();
+	const auto reg_count = result.registrations.size();
+
+	log_message(
+	    "[info] Lua scan complete: " + std::to_string(reg_count) + " registrations, " +
+	    std::to_string(conflict_count) + " conflicts");
+
+	for (const auto & warning : result.warnings)
+		log_message("[warning] " + warning);
 }
