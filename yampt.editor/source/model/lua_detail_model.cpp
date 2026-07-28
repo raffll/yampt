@@ -1,5 +1,4 @@
 #include "lua_detail_model.hpp"
-
 #include <QBrush>
 #include <QColor>
 #include <QString>
@@ -165,8 +164,7 @@ QVariant lua_detail_model_t::headerData(int section, Qt::Orientation orientation
 	return QString::fromStdString(m_column_names[col_idx]);
 }
 
-QString lua_detail_model_t::value_for_field(
-    const handler_registration_t & registration, field_id_t field) const
+QString lua_detail_model_t::value_for_field(const handler_registration_t & registration, field_id_t field) const
 {
 	switch (field)
 	{

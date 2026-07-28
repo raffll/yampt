@@ -1,8 +1,8 @@
 #pragma once
 
+#include "../editor/glossary.hpp"
 #include "session.hpp"
 #include "workspace_watcher.hpp"
-#include "../editor/glossary.hpp"
 #include <creator/loc_generator.hpp>
 #include <io/file_list.hpp>
 #include <functional>

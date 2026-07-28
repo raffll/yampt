@@ -345,7 +345,8 @@ TEST_CASE("dict_writer_t::write, script type round-trip", "[i]")
 	const auto path = temp_path("yampt_test_script.json");
 
 	dict_t dict = domain_types::initialize_dict();
-	dict.at(rec_type_t::script).insert({ "TestScript", "Begin TestScript\r\n\tmessagebox \"Hello\"\r\nEnd", "", status_t::translated });
+	dict.at(rec_type_t::script)
+	    .insert({ "TestScript", "Begin TestScript\r\n\tmessagebox \"Hello\"\r\nEnd", "", status_t::translated });
 
 	dict_writer_t::write(dict, path);
 

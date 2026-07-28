@@ -1,11 +1,10 @@
 #include "model/loc_document.hpp"
 
 loc_document_t::loc_document_t(const std::string & path, codepage_t codepage)
-	: m_path(path)
-	, m_codepage(codepage)
-	, m_file(loc_file_reader::read(path, codepage))
-{
-}
+    : m_path(path)
+    , m_codepage(codepage)
+    , m_file(loc_file_reader::read(path, codepage))
+{}
 
 document_kind_t loc_document_t::kind() const
 {
@@ -55,8 +54,7 @@ std::vector<table_row_t> loc_document_t::build_rows() const
 }
 
 void loc_document_t::commit_edit(rec_type_t, size_t, const std::string &)
-{
-}
+{}
 
 commit_result_t loc_document_t::commit(const table_row_t &, const std::string &, status_t)
 {
@@ -74,8 +72,7 @@ commit_result_t loc_document_t::reset_to_original(const table_row_t &)
 }
 
 void loc_document_t::save()
-{
-}
+{}
 
 int loc_document_t::translated_count() const
 {
@@ -98,8 +95,7 @@ std::set<status_t> loc_document_t::supported_statuses() const
 }
 
 void loc_document_t::set_dirty(bool)
-{
-}
+{}
 
 loc_types::loc_file_kind_t loc_document_t::file_kind() const
 {

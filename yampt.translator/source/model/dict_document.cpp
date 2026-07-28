@@ -262,11 +262,10 @@ std::set<rec_type_t> dict_document_t::supported_types() const
 std::set<status_t> dict_document_t::supported_statuses() const
 {
 	return {
-		status_t::translated,  status_t::to_verify,    status_t::untranslated, status_t::reused,
-		status_t::adapted,     status_t::ambiguous,    status_t::changed,      status_t::outdated,
-		status_t::duplicate,   status_t::heuristic,    status_t::missing,      status_t::mismatch,
-		status_t::in_progress, status_t::propagated,   status_t::replaced,     status_t::model,
-		status_t::error,
+		status_t::translated, status_t::to_verify, status_t::untranslated, status_t::reused,     status_t::adapted,
+		status_t::ambiguous,  status_t::changed,   status_t::outdated,     status_t::duplicate,  status_t::heuristic,
+		status_t::missing,    status_t::mismatch,  status_t::in_progress,  status_t::propagated, status_t::replaced,
+		status_t::model,      status_t::error,
 	};
 }
 

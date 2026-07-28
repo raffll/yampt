@@ -291,7 +291,8 @@ clean_result_t batch_cleaner_t::clean_plugin(int plugin_idx, const std::string &
 			if (record_name.empty())
 			{
 				auto coords = extract_cell_coords(record.content);
-				removed_log.push_back("  junk cell: (" + std::to_string(coords.first) + ", " + std::to_string(coords.second) + ")");
+				removed_log.push_back(
+				    "  junk cell: (" + std::to_string(coords.first) + ", " + std::to_string(coords.second) + ")");
 			}
 			else
 			{

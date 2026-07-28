@@ -1,6 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
 #include <io/loc_file_writer.hpp>
-
 #include <filesystem>
 #include <fstream>
 
@@ -39,10 +38,9 @@ TEST_CASE("loc_file_writer::write, produces correct tab-separated output", "[i]"
 
 	const auto content = read_bytes(path);
 
-	const std::string expected =
-		"Balmora\tBalmora_PL\r\n"
-		"Vivec\tVivec_PL\r\n"
-		"Ald-ruhn\tStary Ruhn\r\n";
+	const std::string expected = "Balmora\tBalmora_PL\r\n"
+	                             "Vivec\tVivec_PL\r\n"
+	                             "Ald-ruhn\tStary Ruhn\r\n";
 
 	REQUIRE(content == expected);
 

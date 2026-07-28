@@ -289,9 +289,8 @@ TEST_CASE("commit_orchestrator::execute, empty text commits successfully", "[i][
 	glossary_t glossary;
 
 	const auto row = make_row("Hello", status_t::untranslated);
-	const auto output = commit_orchestrator::execute(
-	    { row, "Hello", "", status_t::in_progress },
-	    doc, history, validator, glossary);
+	const auto output =
+	    commit_orchestrator::execute({ row, "Hello", "", status_t::in_progress }, doc, history, validator, glossary);
 
 	REQUIRE(output.result.success);
 	REQUIRE(output.result.new_text.empty());
@@ -310,9 +309,8 @@ TEST_CASE("commit_orchestrator::execute, same text as old still commits", "[i][q
 	glossary_t glossary;
 
 	const auto row = make_row("Same", status_t::untranslated);
-	const auto output = commit_orchestrator::execute(
-	    { row, "Same", "Same", status_t::in_progress },
-	    doc, history, validator, glossary);
+	const auto output =
+	    commit_orchestrator::execute({ row, "Same", "Same", status_t::in_progress }, doc, history, validator, glossary);
 
 	REQUIRE(output.result.success);
 	REQUIRE(output.result.propagated_count == 0);
@@ -331,9 +329,7 @@ TEST_CASE("commit_orchestrator::execute, history records old text not new", "[i]
 	glossary_t glossary;
 
 	const auto row = make_row("Original", status_t::untranslated);
-	commit_orchestrator::execute(
-	    { row, "Previous", "New", status_t::in_progress },
-	    doc, history, validator, glossary);
+	commit_orchestrator::execute({ row, "Previous", "New", status_t::in_progress }, doc, history, validator, glossary);
 
 	const auto entries = history.get_history(rec_type_t::cell, "test_key");
 	REQUIRE(entries.size() == 1);
@@ -355,9 +351,7 @@ TEST_CASE("commit_orchestrator::execute, multiple commits build history", "[i][q
 
 	const auto row = make_row("Start", status_t::untranslated);
 
-	commit_orchestrator::execute(
-	    { row, "Start", "Middle", status_t::in_progress },
-	    doc, history, validator, glossary);
+	commit_orchestrator::execute({ row, "Start", "Middle", status_t::in_progress }, doc, history, validator, glossary);
 
 	table_row_t row2;
 	row2.type = rec_type_t::cell;
@@ -366,9 +360,7 @@ TEST_CASE("commit_orchestrator::execute, multiple commits build history", "[i][q
 	row2.status = status_t::in_progress;
 	row2.record_index = 0;
 
-	commit_orchestrator::execute(
-	    { row2, "Middle", "Final", status_t::model },
-	    doc, history, validator, glossary);
+	commit_orchestrator::execute({ row2, "Middle", "Final", status_t::model }, doc, history, validator, glossary);
 
 	const auto entries = history.get_history(rec_type_t::cell, "test_key");
 	REQUIRE(entries.size() == 2);

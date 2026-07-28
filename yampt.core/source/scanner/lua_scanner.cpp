@@ -1,6 +1,5 @@
 #include "lua_scanner.hpp"
 #include "../utility/string_utils.hpp"
-
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
@@ -61,8 +60,7 @@ static std::vector<std::string> discover_omwscripts(const std::string & data_pat
 			continue;
 
 		const auto normalized_real = string_utils::normalize_path(real_path.string());
-		const auto already_found = std::find(
-		    omwscripts_files.begin(), omwscripts_files.end(), normalized_real);
+		const auto already_found = std::find(omwscripts_files.begin(), omwscripts_files.end(), normalized_real);
 
 		if (already_found == omwscripts_files.end())
 			omwscripts_files.push_back(normalized_real);
@@ -71,16 +69,14 @@ static std::vector<std::string> discover_omwscripts(const std::string & data_pat
 	return omwscripts_files;
 }
 
-static std::string resolve_script_path(const std::string & data_path,
-                                       const std::string & relative_path)
+static std::string resolve_script_path(const std::string & data_path, const std::string & relative_path)
 {
 	const auto normalized_base = string_utils::normalize_path(data_path);
 	const auto normalized_rel = string_utils::normalize_path(relative_path);
 	return normalized_base + "/" + normalized_rel;
 }
 
-static void parse_single_entry(const omwscripts_entry_t & entry,
-                               scan_context_t & context)
+static void parse_single_entry(const omwscripts_entry_t & entry, scan_context_t & context)
 {
 	const auto full_path = resolve_script_path(context.data_path, entry.script_path);
 	const auto content = read_file_content(full_path);
@@ -98,8 +94,7 @@ static void parse_single_entry(const omwscripts_entry_t & entry,
 		context.result.registrations.push_back(registration);
 }
 
-static void parse_omwscripts_entries(const omwscripts_result_t & parse_result,
-                                     scan_context_t & context)
+static void parse_omwscripts_entries(const omwscripts_result_t & parse_result, scan_context_t & context)
 {
 	for (const auto & entry : parse_result.entries)
 	{
@@ -113,8 +108,7 @@ static void parse_omwscripts_entries(const omwscripts_result_t & parse_result,
 	}
 }
 
-static void process_omwscripts_file(const std::string & omwscripts_file,
-                                    scan_context_t & context)
+static void process_omwscripts_file(const std::string & omwscripts_file, scan_context_t & context)
 {
 	omwscripts_parser_t omwscripts_parser;
 	const auto parse_result = omwscripts_parser.parse(omwscripts_file, context.mod_name);
@@ -138,8 +132,9 @@ static void scan_single_data_path(scan_context_t & context)
 	}
 }
 
-lua_scan_result_t lua_scanner_t::scan(const std::vector<std::string> & data_paths,
-                                      const std::vector<std::string> & mod_names)
+lua_scan_result_t lua_scanner_t::scan(
+    const std::vector<std::string> & data_paths,
+    const std::vector<std::string> & mod_names)
 {
 	m_cancelled.store(false);
 	scan_context_t context { {}, {}, {}, {}, m_cancelled };

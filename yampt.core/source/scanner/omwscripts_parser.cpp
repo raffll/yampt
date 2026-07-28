@@ -64,15 +64,15 @@ static bool try_split_line(const std::string & line, line_parts_t & parts)
 static void add_malformed_warning(int line_number, parse_context_t & context)
 {
 	context.result.warnings.push_back(
-	    "[warning] malformed line " + std::to_string(line_number)
-	    + " in \"" + context.result.source_file + "\": missing colon separator");
+	    "[warning] malformed line " + std::to_string(line_number) + " in \"" + context.result.source_file +
+	    "\": missing colon separator");
 }
 
 static void add_extension_warning(int line_number, parse_context_t & context)
 {
 	context.result.warnings.push_back(
-	    "[warning] malformed line " + std::to_string(line_number)
-	    + " in \"" + context.result.source_file + "\": path does not end in .lua");
+	    "[warning] malformed line " + std::to_string(line_number) + " in \"" + context.result.source_file +
+	    "\": path does not end in .lua");
 }
 
 static void check_script_exists(const line_parts_t & parts, parse_context_t & context)
@@ -82,8 +82,8 @@ static void check_script_exists(const line_parts_t & parts, parse_context_t & co
 		return;
 
 	context.result.warnings.push_back(
-	    "[warning] script path \"" + parts.script_path
-	    + "\" referenced in \"" + context.result.source_file + "\" does not exist");
+	    "[warning] script path \"" + parts.script_path + "\" referenced in \"" + context.result.source_file +
+	    "\" does not exist");
 }
 
 static void append_entry(const line_parts_t & parts, int line_number, parse_context_t & context)
@@ -127,8 +127,7 @@ static std::string extract_base_directory(const std::string & file_path)
 	return normalized.substr(0, slash_pos);
 }
 
-omwscripts_result_t omwscripts_parser_t::parse(const std::string & file_path,
-                                               const std::string & mod_name)
+omwscripts_result_t omwscripts_parser_t::parse(const std::string & file_path, const std::string & mod_name)
 {
 	omwscripts_result_t result;
 	result.source_file = file_path;

@@ -45,9 +45,8 @@ void record_display_controller_t::load_record(int row, document_t * active_doc)
 		{
 			const auto & data = dict_doc->data();
 			const auto caret_pos = row_data->key_text.find('^');
-			const auto script_name = (caret_pos != std::string::npos)
-			                              ? row_data->key_text.substr(0, caret_pos)
-			                              : row_data->key_text;
+			const auto script_name =
+			    (caret_pos != std::string::npos) ? row_data->key_text.substr(0, caret_pos) : row_data->key_text;
 
 			auto script_it = data.find(rec_type_t::script);
 			if (script_it != data.end())

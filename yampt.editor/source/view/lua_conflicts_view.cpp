@@ -1,8 +1,8 @@
 #include "view/lua_conflicts_view.hpp"
-#include "view/lua_detail_view.hpp"
-#include "view/lua_filter_view.hpp"
 #include "model/lua_nav_model.hpp"
 #include "model/lua_registrations_model.hpp"
+#include "view/lua_detail_view.hpp"
+#include "view/lua_filter_view.hpp"
 #include <QItemSelectionModel>
 #include <QLabel>
 #include <QSplitter>
@@ -14,8 +14,7 @@ lua_conflicts_view_t::lua_conflicts_view_t(QWidget * parent)
 {
 	setup_layout();
 
-	connect(m_filter_view, &lua_filter_view_t::filters_changed,
-	        this, &lua_conflicts_view_t::apply_filter);
+	connect(m_filter_view, &lua_filter_view_t::filters_changed, this, &lua_conflicts_view_t::apply_filter);
 }
 
 void lua_conflicts_view_t::set_scan_result(const lua_scan_result_t & result)
@@ -51,8 +50,11 @@ void lua_conflicts_view_t::show_conflicts_mode(const lua_scan_result_t & result)
 	m_filter_view->set_conflicts(result.conflicts);
 
 	disconnect(m_tree_view->selectionModel(), nullptr, this, nullptr);
-	connect(m_tree_view->selectionModel(), &QItemSelectionModel::currentChanged,
-	        this, [this] { on_conflict_selection_changed(); });
+	connect(
+	    m_tree_view->selectionModel(),
+	    &QItemSelectionModel::currentChanged,
+	    this,
+	    [this] { on_conflict_selection_changed(); });
 }
 
 void lua_conflicts_view_t::show_registrations_mode(const lua_scan_result_t & result)
@@ -64,8 +66,11 @@ void lua_conflicts_view_t::show_registrations_mode(const lua_scan_result_t & res
 	m_tree_view->expandAll();
 
 	disconnect(m_tree_view->selectionModel(), nullptr, this, nullptr);
-	connect(m_tree_view->selectionModel(), &QItemSelectionModel::currentChanged,
-	        this, [this] { on_registration_selection_changed(); });
+	connect(
+	    m_tree_view->selectionModel(),
+	    &QItemSelectionModel::currentChanged,
+	    this,
+	    [this] { on_registration_selection_changed(); });
 }
 
 void lua_conflicts_view_t::setup_layout()

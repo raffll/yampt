@@ -1,10 +1,10 @@
 #pragma once
 
+#include <scanner/conflict_detector.hpp>
 #include <set>
 #include <string>
 #include <vector>
 #include <QWidget>
-#include <scanner/conflict_detector.hpp>
 
 class QLabel;
 class QListWidget;

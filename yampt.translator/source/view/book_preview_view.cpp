@@ -56,16 +56,33 @@ book_preview_view_t::book_preview_view_t(QWidget * parent)
 		auto * source_v = source_browser->verticalScrollBar();
 		auto * target_v = target_browser->verticalScrollBar();
 		if (source_v->maximum() > 0)
-			target_v->setValue(static_cast<int>(static_cast<double>(source_v->value()) / source_v->maximum() * target_v->maximum()));
+			target_v->setValue(
+			    static_cast<int>(static_cast<double>(source_v->value()) / source_v->maximum() * target_v->maximum()));
 
 		target_browser->horizontalScrollBar()->setValue(source_browser->horizontalScrollBar()->value());
 		m_syncing = false;
 	};
 
-	connect(m_original_browser->verticalScrollBar(), &QScrollBar::valueChanged, this, [this, sync_from_browser]() { sync_from_browser(m_original_browser, m_translation_browser); });
-	connect(m_original_browser->horizontalScrollBar(), &QScrollBar::valueChanged, this, [this, sync_from_browser]() { sync_from_browser(m_original_browser, m_translation_browser); });
-	connect(m_translation_browser->verticalScrollBar(), &QScrollBar::valueChanged, this, [this, sync_from_browser]() { sync_from_browser(m_translation_browser, m_original_browser); });
-	connect(m_translation_browser->horizontalScrollBar(), &QScrollBar::valueChanged, this, [this, sync_from_browser]() { sync_from_browser(m_translation_browser, m_original_browser); });
+	connect(
+	    m_original_browser->verticalScrollBar(),
+	    &QScrollBar::valueChanged,
+	    this,
+	    [this, sync_from_browser]() { sync_from_browser(m_original_browser, m_translation_browser); });
+	connect(
+	    m_original_browser->horizontalScrollBar(),
+	    &QScrollBar::valueChanged,
+	    this,
+	    [this, sync_from_browser]() { sync_from_browser(m_original_browser, m_translation_browser); });
+	connect(
+	    m_translation_browser->verticalScrollBar(),
+	    &QScrollBar::valueChanged,
+	    this,
+	    [this, sync_from_browser]() { sync_from_browser(m_translation_browser, m_original_browser); });
+	connect(
+	    m_translation_browser->horizontalScrollBar(),
+	    &QScrollBar::valueChanged,
+	    this,
+	    [this, sync_from_browser]() { sync_from_browser(m_translation_browser, m_original_browser); });
 }
 
 void book_preview_view_t::set_scroll_sync(bool enabled)

@@ -31,10 +31,9 @@ struct web_translator_config_t
 	int quota_limit = 0;
 };
 
-namespace web_translator_config
-{
+namespace web_translator_config {
 
 std::vector<web_translator_config_t> load_all(const std::string & providers_dir);
 web_translator_config_t load_single(const std::string & json_path);
 
-}
+} // namespace web_translator_config

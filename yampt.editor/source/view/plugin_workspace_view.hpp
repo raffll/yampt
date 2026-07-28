@@ -8,8 +8,8 @@
 #include "nav_tree_view.hpp"
 #include "preview_view.hpp"
 #include "record_view.hpp"
-#include <scanner/plugin_scan.hpp>
 #include <scanner/lua_scanner.hpp>
+#include <scanner/plugin_scan.hpp>
 #include <QLabel>
 #include <QSplitter>
 #include <QTabWidget>

@@ -145,9 +145,8 @@ dial_info_align_result_t dial_info_align_t::build(plugin_scan_t & scan, const st
 				continue;
 
 			auto separator_pos = plugin_entry.record_id.find('|');
-			const auto inam = (separator_pos != std::string::npos)
-			    ? plugin_entry.record_id.substr(separator_pos + 1)
-			    : plugin_entry.record_id;
+			const auto inam = (separator_pos != std::string::npos) ? plugin_entry.record_id.substr(separator_pos + 1)
+			                                                       : plugin_entry.record_id;
 
 			const auto prev_inam = extract_pnam(scan, static_cast<int>(plugin_idx), plugin_entry.record_index);
 

@@ -104,11 +104,7 @@ void plugin_workspace_view_t::setup_connections()
 	});
 	connect(m_session, &plugin_session_t::log_message, this, &plugin_workspace_view_t::log_message);
 
-	connect(
-	    m_lua_scan_worker,
-	    &lua_scan_worker_t::scan_complete,
-	    this,
-	    &plugin_workspace_view_t::on_lua_scan_complete);
+	connect(m_lua_scan_worker, &lua_scan_worker_t::scan_complete, this, &plugin_workspace_view_t::on_lua_scan_complete);
 
 	auto * copy_shortcut = new QShortcut(QKeySequence::Copy, m_record_view->tree());
 	connect(copy_shortcut, &QShortcut::activated, this, &plugin_workspace_view_t::on_view_copy);
@@ -238,8 +234,7 @@ void plugin_workspace_view_t::on_clean_all()
 
 	log_message("[info] clean: output=" + output_path);
 
-	batch_cleaner_t cleaner(
-	    m_session->scan(), [this](const std::string & message) { log_message(message); });
+	batch_cleaner_t cleaner(m_session->scan(), [this](const std::string & message) { log_message(message); });
 
 	clean_options_t options;
 	options.evil_gmst = m_settings.clean_evil_gmst_enabled();
@@ -574,7 +569,8 @@ void plugin_workspace_view_t::update_status()
 		else if (!info.rec_type.empty())
 			m_status_label->setText(mode_prefix + QString::fromStdString(info.rec_type));
 		else
-			m_status_label->setText(mode_prefix + QString::fromStdString(m_session->scan().plugin_filename(info.plugin_idx)));
+			m_status_label->setText(
+			    mode_prefix + QString::fromStdString(m_session->scan().plugin_filename(info.plugin_idx)));
 	}
 	else
 	{
@@ -720,8 +716,8 @@ void plugin_workspace_view_t::on_lua_scan_complete(const lua_scan_result_t & res
 	const auto reg_count = result.registrations.size();
 
 	log_message(
-	    "[info] Lua scan complete: " + std::to_string(reg_count) + " registrations, " +
-	    std::to_string(conflict_count) + " conflicts");
+	    "[info] Lua scan complete: " + std::to_string(reg_count) + " registrations, " + std::to_string(conflict_count) +
+	    " conflicts");
 
 	for (const auto & warning : result.warnings)
 		log_message("[warning] " + warning);

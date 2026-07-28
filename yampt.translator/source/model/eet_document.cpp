@@ -47,8 +47,7 @@ std::vector<table_row_t> eet_document_t::build_rows() const
 }
 
 void eet_document_t::commit_edit(rec_type_t, size_t, const std::string &)
-{
-}
+{}
 
 commit_result_t eet_document_t::commit(const table_row_t &, const std::string &, status_t)
 {
@@ -66,8 +65,7 @@ commit_result_t eet_document_t::reset_to_original(const table_row_t &)
 }
 
 void eet_document_t::save()
-{
-}
+{}
 
 int eet_document_t::translated_count() const
 {
@@ -90,8 +88,7 @@ std::set<status_t> eet_document_t::supported_statuses() const
 }
 
 void eet_document_t::set_dirty(bool)
-{
-}
+{}
 
 bool eet_document_t::export_as_dict(const std::string & output_path) const
 {

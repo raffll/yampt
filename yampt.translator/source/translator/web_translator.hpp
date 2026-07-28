@@ -41,7 +41,8 @@ private:
 	void send_simple_request(const std::string & text, const std::string & target_lang);
 	void send_chat_request(const std::string & text, const std::string & target_lang);
 	void on_reply_finished(QNetworkReply * reply);
-	std::string expand_template(const std::string & tmpl, const std::string & text, const std::string & target_lang) const;
+	std::string expand_template(const std::string & tmpl, const std::string & text, const std::string & target_lang)
+	    const;
 	std::string extract_response(const QByteArray & data) const;
 
 	web_translator_config_t m_config;

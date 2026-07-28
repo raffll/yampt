@@ -12,8 +12,10 @@ translation_settings_view_t::translation_settings_view_t(const std::string & pro
 {
 	auto * layout = new QVBoxLayout(this);
 
-	auto * description = new QLabel(tr("API keys for web translation providers. "
-	                                    "Add provider configs as JSON files in the providers/ folder."), this);
+	auto * description = new QLabel(
+	    tr("API keys for web translation providers. "
+	       "Add provider configs as JSON files in the providers/ folder."),
+	    this);
 	description->setWordWrap(true);
 	layout->addWidget(description);
 

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "handler_parser.hpp"
-
 #include <string>
 #include <vector>
 
@@ -24,6 +23,5 @@ struct handler_conflict_t
 class conflict_detector_t
 {
 public:
-	std::vector<handler_conflict_t> detect(
-		const std::vector<handler_registration_t> & all_registrations);
+	std::vector<handler_conflict_t> detect(const std::vector<handler_registration_t> & all_registrations);
 };

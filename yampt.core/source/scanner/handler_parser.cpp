@@ -140,10 +140,8 @@ static bool is_block_comment_start(const std::string & content, size_t position)
 	if (position + 3 >= content.size())
 		return false;
 
-	return content[position] == '-'
-	    && content[position + 1] == '-'
-	    && content[position + 2] == '['
-	    && content[position + 3] == '[';
+	return content[position] == '-' && content[position + 1] == '-' && content[position + 2] == '[' &&
+	       content[position + 3] == '[';
 }
 
 static bool is_line_comment_start(const std::string & content, size_t position)
@@ -233,8 +231,7 @@ static std::string strip_comments_and_strings(const std::string & source)
 	return content;
 }
 
-static std::string extract_parenthesized_content(const std::string & source_line,
-                                                 size_t open_paren_pos)
+static std::string extract_parenthesized_content(const std::string & source_line, size_t open_paren_pos)
 {
 	int depth = 0;
 	std::string content;
@@ -264,8 +261,7 @@ static std::string extract_parenthesized_content(const std::string & source_line
 	return content;
 }
 
-static bool extract_type_and_callback(const std::string & arguments,
-                                      registration_match_t & match)
+static bool extract_type_and_callback(const std::string & arguments, registration_match_t & match)
 {
 	const auto comma_pos = arguments.find(',');
 	if (comma_pos == std::string::npos)
@@ -275,10 +271,8 @@ static bool extract_type_and_callback(const std::string & arguments,
 		return true;
 	}
 
-	match.type_argument = std::string(string_utils::trim(
-	    std::string_view(arguments).substr(0, comma_pos)));
-	match.callback_expression = std::string(string_utils::trim(
-	    std::string_view(arguments).substr(comma_pos + 1)));
+	match.type_argument = std::string(string_utils::trim(std::string_view(arguments).substr(0, comma_pos)));
+	match.callback_expression = std::string(string_utils::trim(std::string_view(arguments).substr(comma_pos + 1)));
 	return true;
 }
 
@@ -288,8 +282,7 @@ struct line_context_t
 	int line_number;
 };
 
-static bool try_match_direct_pattern(const line_context_t & context,
-                                     registration_match_t & match)
+static bool try_match_direct_pattern(const line_context_t & context, registration_match_t & match)
 {
 	for (const auto & iface : known_interfaces())
 	{
@@ -354,8 +347,7 @@ static std::string find_rhs_alias_source(const std::string & line_text)
 	if (equals_pos == std::string::npos)
 		return "";
 
-	const auto right_side = std::string(string_utils::trim(
-	    std::string_view(line_text).substr(equals_pos + 1)));
+	const auto right_side = std::string(string_utils::trim(std::string_view(line_text).substr(equals_pos + 1)));
 
 	return right_side;
 }
@@ -383,8 +375,7 @@ static std::string extract_dot_access_prefix(const std::string & right_side)
 	return std::string(std::string_view(right_side).substr(0, dot_pos));
 }
 
-static void try_add_require_alias(const std::string & line_text,
-                                  alias_map_t & aliases)
+static void try_add_require_alias(const std::string & line_text, alias_map_t & aliases)
 {
 	if (!is_interfaces_require(line_text))
 		return;
@@ -399,8 +390,7 @@ static void try_add_require_alias(const std::string & line_text,
 	aliases[variable_name] = alias_entry;
 }
 
-static void try_add_derived_alias(const std::string & line_text,
-                                  alias_map_t & aliases)
+static void try_add_derived_alias(const std::string & line_text, alias_map_t & aliases)
 {
 	const auto variable_name = extract_local_variable_name(line_text);
 	if (variable_name.empty())
@@ -457,8 +447,7 @@ struct alias_match_input_t
 	const known_interface_t & iface;
 };
 
-static bool try_match_alias_method(const alias_match_input_t & input,
-                                   registration_match_t & match)
+static bool try_match_alias_method(const alias_match_input_t & input, registration_match_t & match)
 {
 	for (const auto & method : input.iface.method_names)
 	{
@@ -497,8 +486,7 @@ struct alias_scan_input_t
 	const alias_map_t & aliases;
 };
 
-static bool try_match_alias_pattern(const alias_scan_input_t & scan_input,
-                                    registration_match_t & match)
+static bool try_match_alias_pattern(const alias_scan_input_t & scan_input, registration_match_t & match)
 {
 	for (const auto & [alias_name, alias_entry] : scan_input.aliases)
 	{
@@ -734,7 +722,8 @@ static bool contains_options_mutation(const std::string & body)
 		}
 
 		auto after_dot = position + 8;
-		while (after_dot < body.size() && (std::isalnum(static_cast<unsigned char>(body[after_dot])) || body[after_dot] == '_'))
+		while (after_dot < body.size() &&
+		       (std::isalnum(static_cast<unsigned char>(body[after_dot])) || body[after_dot] == '_'))
 			++after_dot;
 
 		if (after_dot == position + 8)
@@ -746,7 +735,8 @@ static bool contains_options_mutation(const std::string & body)
 		while (after_dot < body.size() && (body[after_dot] == ' ' || body[after_dot] == '\t'))
 			++after_dot;
 
-		if (after_dot < body.size() && body[after_dot] == '=' && (after_dot + 1 >= body.size() || body[after_dot + 1] != '='))
+		if (after_dot < body.size() && body[after_dot] == '=' &&
+		    (after_dot + 1 >= body.size() || body[after_dot + 1] != '='))
 			return true;
 
 		position = after_dot;
@@ -868,8 +858,7 @@ struct build_context_t
 	const std::string & original_content;
 };
 
-static handler_registration_t build_registration(const registration_match_t & match,
-                                                 const build_context_t & context)
+static handler_registration_t build_registration(const registration_match_t & match, const build_context_t & context)
 {
 	handler_registration_t registration;
 	registration.interface_name = match.interface_name;
@@ -884,8 +873,8 @@ static handler_registration_t build_registration(const registration_match_t & ma
 	registration.handler_body = extract_handler_body(context.original_content, line_start);
 	registration.classification = classify_handler_body(registration.handler_body);
 	registration.blocking_condition = (registration.classification == handler_class_t::blocking)
-	    ? extract_blocking_condition(registration.handler_body)
-	    : "";
+	                                      ? extract_blocking_condition(registration.handler_body)
+	                                      : "";
 	return registration;
 }
 

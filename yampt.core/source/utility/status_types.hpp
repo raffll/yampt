@@ -24,28 +24,25 @@ enum class status_t
 	error
 };
 
-// clang-format off
-inline constexpr std::array<std::pair<status_t, std::string_view>, 17> status_entries
-{{
-    { status_t::translated,   "translated" },
-    { status_t::untranslated, "untranslated" },
-    { status_t::missing,      "missing" },
-    { status_t::duplicate,    "duplicate" },
-    { status_t::mismatch,     "mismatch" },
-    { status_t::heuristic,    "heuristic" },
-    { status_t::to_verify,    "to_verify" },
-    { status_t::adapted,      "adapted" },
-    { status_t::changed,      "changed" },
-    { status_t::outdated,     "outdated" },
-    { status_t::reused,       "reused" },
-    { status_t::ambiguous,    "ambiguous" },
-    { status_t::in_progress,  "in_progress" },
-    { status_t::model,        "model" },
-    { status_t::propagated,   "propagated" },
-    { status_t::replaced,     "replaced" },
-    { status_t::error,        "error" },
-}};
-// clang-format on
+inline constexpr std::array<std::pair<status_t, std::string_view>, 17> status_entries { {
+	{ status_t::translated, "translated" },
+	{ status_t::untranslated, "untranslated" },
+	{ status_t::missing, "missing" },
+	{ status_t::duplicate, "duplicate" },
+	{ status_t::mismatch, "mismatch" },
+	{ status_t::heuristic, "heuristic" },
+	{ status_t::to_verify, "to_verify" },
+	{ status_t::adapted, "adapted" },
+	{ status_t::changed, "changed" },
+	{ status_t::outdated, "outdated" },
+	{ status_t::reused, "reused" },
+	{ status_t::ambiguous, "ambiguous" },
+	{ status_t::in_progress, "in_progress" },
+	{ status_t::model, "model" },
+	{ status_t::propagated, "propagated" },
+	{ status_t::replaced, "replaced" },
+	{ status_t::error, "error" },
+} };
 
 constexpr std::string_view status_to_string(status_t status)
 {

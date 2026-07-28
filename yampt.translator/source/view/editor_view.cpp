@@ -146,12 +146,36 @@ void editor_view_t::setup_connections()
 		m_scroll_syncing = false;
 	};
 
-	connect(m_original_view->verticalScrollBar(), &QScrollBar::valueChanged, this, [this, sync_from]() { sync_from(m_original_view); });
-	connect(m_original_view->horizontalScrollBar(), &QScrollBar::valueChanged, this, [this, sync_from]() { sync_from(m_original_view); });
-	connect(m_translation_editor->verticalScrollBar(), &QScrollBar::valueChanged, this, [this, sync_from]() { sync_from(m_translation_editor); });
-	connect(m_translation_editor->horizontalScrollBar(), &QScrollBar::valueChanged, this, [this, sync_from]() { sync_from(m_translation_editor); });
-	connect(m_adapted_from_view->verticalScrollBar(), &QScrollBar::valueChanged, this, [this, sync_from]() { sync_from(m_adapted_from_view); });
-	connect(m_adapted_from_view->horizontalScrollBar(), &QScrollBar::valueChanged, this, [this, sync_from]() { sync_from(m_adapted_from_view); });
+	connect(
+	    m_original_view->verticalScrollBar(),
+	    &QScrollBar::valueChanged,
+	    this,
+	    [this, sync_from]() { sync_from(m_original_view); });
+	connect(
+	    m_original_view->horizontalScrollBar(),
+	    &QScrollBar::valueChanged,
+	    this,
+	    [this, sync_from]() { sync_from(m_original_view); });
+	connect(
+	    m_translation_editor->verticalScrollBar(),
+	    &QScrollBar::valueChanged,
+	    this,
+	    [this, sync_from]() { sync_from(m_translation_editor); });
+	connect(
+	    m_translation_editor->horizontalScrollBar(),
+	    &QScrollBar::valueChanged,
+	    this,
+	    [this, sync_from]() { sync_from(m_translation_editor); });
+	connect(
+	    m_adapted_from_view->verticalScrollBar(),
+	    &QScrollBar::valueChanged,
+	    this,
+	    [this, sync_from]() { sync_from(m_adapted_from_view); });
+	connect(
+	    m_adapted_from_view->horizontalScrollBar(),
+	    &QScrollBar::valueChanged,
+	    this,
+	    [this, sync_from]() { sync_from(m_adapted_from_view); });
 }
 
 translation_edit_view_t * editor_view_t::original_view() const

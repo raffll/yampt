@@ -1,7 +1,6 @@
 #pragma once
 
 #include <scanner/conflict_detector.hpp>
-
 #include <set>
 #include <string>
 #include <vector>

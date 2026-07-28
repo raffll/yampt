@@ -6,8 +6,9 @@ lua_scan_worker_t::lua_scan_worker_t(QObject * parent)
 	qRegisterMetaType<lua_scan_result_t>();
 }
 
-void lua_scan_worker_t::start_scan(const std::vector<std::string> & data_paths,
-                                   const std::vector<std::string> & mod_names)
+void lua_scan_worker_t::start_scan(
+    const std::vector<std::string> & data_paths,
+    const std::vector<std::string> & mod_names)
 {
 	m_data_paths = data_paths;
 	m_mod_names = mod_names;

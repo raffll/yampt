@@ -377,7 +377,8 @@ void main_window_t::connect_menu_signals()
 	    this,
 	    [this]()
 	{
-		const auto archive_path = QFileDialog::getOpenFileName(this, tr("Import Archive"), "", tr("Archives (*.zip *.rar)"));
+		const auto archive_path =
+		    QFileDialog::getOpenFileName(this, tr("Import Archive"), "", tr("Archives (*.zip *.rar)"));
 
 		if (archive_path.isEmpty())
 			return;
@@ -915,9 +916,7 @@ void main_window_t::connect_editor_signals()
 	    &translation_suggestion_view_t::translation_failed,
 	    this,
 	    [this](const std::string & error_message)
-	{
-		m_translation_tab->append_log("[error] " + error_message + "\n");
-	});
+	{ m_translation_tab->append_log("[error] " + error_message + "\n"); });
 }
 
 void main_window_t::connect_search_signals()

@@ -108,10 +108,8 @@ private:
 
 	void find_at_prefix_hyperlinks(const std::string & text, std::vector<annotation_t> & results) const;
 
-	void find_loc_annotations(
-	    const std::string & text_lower,
-	    rec_type_t type,
-	    std::vector<annotation_t> & results) const;
+	void find_loc_annotations(const std::string & text_lower, rec_type_t type, std::vector<annotation_t> & results)
+	    const;
 
 	void find_matches_trie(const std::string & text_original, std::vector<annotation_t> & results) const;
 

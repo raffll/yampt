@@ -1,7 +1,7 @@
 #include "sidebar_model.hpp"
-#include "yaml_document.hpp"
 #include "../session/session.hpp"
 #include "../view/display_name.hpp"
+#include "yaml_document.hpp"
 #include <utility/string_utils.hpp>
 #include <algorithm>
 #include <filesystem>

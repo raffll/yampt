@@ -21,6 +21,5 @@ struct omwscripts_result_t
 class omwscripts_parser_t
 {
 public:
-	omwscripts_result_t parse(const std::string & file_path,
-	                          const std::string & mod_name);
+	omwscripts_result_t parse(const std::string & file_path, const std::string & mod_name);
 };

@@ -1,5 +1,4 @@
 #include "conflict_detector.hpp"
-
 #include <map>
 #include <set>
 #include <tuple>
@@ -12,8 +11,8 @@ struct grouping_key_t
 
 	bool operator<(const grouping_key_t & other) const
 	{
-		return std::tie(interface_name, method_name, type_argument)
-			 < std::tie(other.interface_name, other.method_name, other.type_argument);
+		return std::tie(interface_name, method_name, type_argument) <
+		       std::tie(other.interface_name, other.method_name, other.type_argument);
 	}
 };
 
@@ -26,8 +25,7 @@ static bool has_multiple_mods(const std::vector<handler_registration_t> & regist
 	return distinct_mods.size() >= 2;
 }
 
-static conflict_severity_t determine_severity(
-	const std::vector<handler_registration_t> & registrations)
+static conflict_severity_t determine_severity(const std::vector<handler_registration_t> & registrations)
 {
 	for (const auto & registration : registrations)
 	{
@@ -45,7 +43,7 @@ static conflict_severity_t determine_severity(
 }
 
 std::vector<handler_conflict_t> conflict_detector_t::detect(
-	const std::vector<handler_registration_t> & all_registrations)
+    const std::vector<handler_registration_t> & all_registrations)
 {
 	std::map<grouping_key_t, std::vector<handler_registration_t>> groups;
 

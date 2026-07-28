@@ -177,7 +177,11 @@ void editor_window_t::closeEvent(QCloseEvent * event)
 void editor_window_t::on_open_settings()
 {
 	editor_settings_dialog_t dialog(m_settings, this);
-	connect(&dialog, &editor_settings_dialog_t::settings_applied, m_plugin_workspace_view, &plugin_workspace_view_t::on_settings_changed);
+	connect(
+	    &dialog,
+	    &editor_settings_dialog_t::settings_applied,
+	    m_plugin_workspace_view,
+	    &plugin_workspace_view_t::on_settings_changed);
 
 	if (dialog.exec() == QDialog::Accepted)
 		m_plugin_workspace_view->on_settings_changed();

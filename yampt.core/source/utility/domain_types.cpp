@@ -134,8 +134,7 @@ rec_type_t domain_types::str_to_type(const std::string & str)
 		{ "CELL", rec_type_t::cell }, { "DIAL", rec_type_t::dial }, { "INDX", rec_type_t::indx },
 		{ "RNAM", rec_type_t::rnam }, { "DESC", rec_type_t::desc }, { "GMST", rec_type_t::gmst },
 		{ "FNAM", rec_type_t::fnam }, { "INFO", rec_type_t::info }, { "TEXT", rec_type_t::text },
-		{ "BNAM", rec_type_t::bnam }, { "SCTX", rec_type_t::sctx },
-		{ "SCRIPT", rec_type_t::script },
+		{ "BNAM", rec_type_t::bnam }, { "SCTX", rec_type_t::sctx }, { "SCRIPT", rec_type_t::script },
 	};
 
 	auto search = str2type.find(str);

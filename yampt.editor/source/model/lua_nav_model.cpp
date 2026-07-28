@@ -1,5 +1,4 @@
 #include "lua_nav_model.hpp"
-
 #include <algorithm>
 #include <map>
 #include <QString>
@@ -174,18 +173,19 @@ void lua_nav_model_t::rebuild_groups()
 
 	for (auto & [name, indices] : grouped)
 	{
-		std::sort(indices.begin(), indices.end(), [this](size_t lhs, size_t rhs)
-		{
-			return severity_order(m_all_conflicts[lhs].severity) < severity_order(m_all_conflicts[rhs].severity);
-		});
+		std::sort(
+		    indices.begin(),
+		    indices.end(),
+		    [this](size_t lhs, size_t rhs)
+		{ return severity_order(m_all_conflicts[lhs].severity) < severity_order(m_all_conflicts[rhs].severity); });
 
 		m_interface_groups.push_back({ name, std::move(indices) });
 	}
 
-	std::sort(m_interface_groups.begin(), m_interface_groups.end(), [](const auto & lhs, const auto & rhs)
-	{
-		return lhs.interface_name < rhs.interface_name;
-	});
+	std::sort(
+	    m_interface_groups.begin(),
+	    m_interface_groups.end(),
+	    [](const auto & lhs, const auto & rhs) { return lhs.interface_name < rhs.interface_name; });
 }
 
 bool lua_nav_model_t::passes_severity(conflict_severity_t severity) const

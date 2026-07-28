@@ -7,95 +7,92 @@ static constexpr int max_phrase_forms = 50;
 
 struct inflection_t::impl_t
 {
-    std::unique_ptr<Hunspell> m_hunspell;
+	std::unique_ptr<Hunspell> m_hunspell;
 };
 
 inflection_t::inflection_t()
     : m_impl(std::make_unique<impl_t>())
-{
-}
+{}
 
 inflection_t::~inflection_t() = default;
 
 bool inflection_t::load(const std::string & aff_path, const std::string & dic_path)
 {
-    try
-    {
-        m_impl->m_hunspell = std::make_unique<Hunspell>(aff_path.c_str(), dic_path.c_str());
-        return m_impl->m_hunspell != nullptr;
-    }
-    catch (...)
-    {
-        m_impl->m_hunspell.reset();
-        return false;
-    }
+	try
+	{
+		m_impl->m_hunspell = std::make_unique<Hunspell>(aff_path.c_str(), dic_path.c_str());
+		return m_impl->m_hunspell != nullptr;
+	}
+	catch (...)
+	{
+		m_impl->m_hunspell.reset();
+		return false;
+	}
 }
 
 bool inflection_t::is_loaded() const
 {
-    return m_impl->m_hunspell != nullptr;
+	return m_impl->m_hunspell != nullptr;
 }
 
-static std::vector<std::string> generate_forms_for_word(
-    Hunspell & hunspell,
-    const std::string & word)
+static std::vector<std::string> generate_forms_for_word(Hunspell & hunspell, const std::string & word)
 {
-    const auto stems = hunspell.stem(word);
+	const auto stems = hunspell.stem(word);
 
-    std::set<std::string> unique_forms;
-    for (const auto & stem : stems)
-    {
-        const auto expanded = hunspell.suffix_suggest(stem);
-        for (const auto & form : expanded)
-        {
-            if (form != word)
-                unique_forms.insert(form);
-        }
-    }
+	std::set<std::string> unique_forms;
+	for (const auto & stem : stems)
+	{
+		const auto expanded = hunspell.suffix_suggest(stem);
+		for (const auto & form : expanded)
+		{
+			if (form != word)
+				unique_forms.insert(form);
+		}
+	}
 
-    if (unique_forms.empty())
-    {
-        const auto expanded = hunspell.suffix_suggest(word);
-        for (const auto & form : expanded)
-        {
-            if (form != word)
-                unique_forms.insert(form);
-        }
-    }
+	if (unique_forms.empty())
+	{
+		const auto expanded = hunspell.suffix_suggest(word);
+		for (const auto & form : expanded)
+		{
+			if (form != word)
+				unique_forms.insert(form);
+		}
+	}
 
-    return {unique_forms.begin(), unique_forms.end()};
+	return { unique_forms.begin(), unique_forms.end() };
 }
 
 std::vector<std::string> inflection_t::word_forms(const std::string & word) const
 {
-    if (!is_loaded())
-        return {};
+	if (!is_loaded())
+		return {};
 
-    return generate_forms_for_word(*m_impl->m_hunspell, word);
+	return generate_forms_for_word(*m_impl->m_hunspell, word);
 }
 
 static std::vector<std::string> split_by_space(const std::string & phrase)
 {
-    std::vector<std::string> words;
-    std::istringstream stream(phrase);
-    std::string token;
-    while (stream >> token)
-        words.push_back(token);
+	std::vector<std::string> words;
+	std::istringstream stream(phrase);
+	std::string token;
+	while (stream >> token)
+		words.push_back(token);
 
-    return words;
+	return words;
 }
 
 static std::string join_words(const std::vector<std::string> & words)
 {
-    std::string result;
-    for (size_t index = 0; index < words.size(); ++index)
-    {
-        if (index > 0)
-            result += ' ';
+	std::string result;
+	for (size_t index = 0; index < words.size(); ++index)
+	{
+		if (index > 0)
+			result += ' ';
 
-        result += words[index];
-    }
-    return result;
+		result += words[index];
+	}
+	return result;
 }
 
 static std::vector<std::string> build_candidates_for_position(
@@ -103,52 +100,51 @@ static std::vector<std::string> build_candidates_for_position(
     const std::vector<std::string> & words,
     size_t position)
 {
-    const auto forms = generate_forms_for_word(hunspell, words[position]);
+	const auto forms = generate_forms_for_word(hunspell, words[position]);
 
-    std::vector<std::string> candidates;
-    candidates.reserve(forms.size());
+	std::vector<std::string> candidates;
+	candidates.reserve(forms.size());
 
-    for (const auto & form : forms)
-    {
-        if (!hunspell.spell(form))
-            continue;
+	for (const auto & form : forms)
+	{
+		if (!hunspell.spell(form))
+			continue;
 
-        auto modified_words = words;
-        modified_words[position] = form;
-        candidates.push_back(join_words(modified_words));
-    }
+		auto modified_words = words;
+		modified_words[position] = form;
+		candidates.push_back(join_words(modified_words));
+	}
 
-    return candidates;
+	return candidates;
 }
 
 std::vector<std::string> inflection_t::phrase_forms(const std::string & phrase) const
 {
-    if (!is_loaded())
-        return {};
+	if (!is_loaded())
+		return {};
 
-    const auto words = split_by_space(phrase);
-    if (words.empty())
-        return {};
+	const auto words = split_by_space(phrase);
+	if (words.empty())
+		return {};
 
-    if (words.size() == 1)
-        return word_forms(phrase);
+	if (words.size() == 1)
+		return word_forms(phrase);
 
-    std::set<std::string> unique_results;
-    for (size_t position = 0; position < words.size(); ++position)
-    {
-        const auto candidates = build_candidates_for_position(
-            *m_impl->m_hunspell, words, position);
+	std::set<std::string> unique_results;
+	for (size_t position = 0; position < words.size(); ++position)
+	{
+		const auto candidates = build_candidates_for_position(*m_impl->m_hunspell, words, position);
 
-        for (const auto & candidate : candidates)
-        {
-            if (candidate == phrase)
-                continue;
+		for (const auto & candidate : candidates)
+		{
+			if (candidate == phrase)
+				continue;
 
-            unique_results.insert(candidate);
-            if (static_cast<int>(unique_results.size()) >= max_phrase_forms)
-                return {unique_results.begin(), unique_results.end()};
-        }
-    }
+			unique_results.insert(candidate);
+			if (static_cast<int>(unique_results.size()) >= max_phrase_forms)
+				return { unique_results.begin(), unique_results.end() };
+		}
+	}
 
-    return {unique_results.begin(), unique_results.end()};
+	return { unique_results.begin(), unique_results.end() };
 }

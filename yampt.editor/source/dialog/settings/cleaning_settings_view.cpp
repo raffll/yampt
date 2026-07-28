@@ -27,7 +27,8 @@ cleaning_settings_view_t::cleaning_settings_view_t(QWidget * parent)
 	auto * header_layout = new QVBoxLayout(header_group);
 
 	m_update_master_sizes_check = new QCheckBox(tr("Update master file sizes"), header_group);
-	m_update_master_sizes_check->setToolTip(tr("Set master file sizes in the header to match actual file sizes on disk"));
+	m_update_master_sizes_check->setToolTip(
+	    tr("Set master file sizes in the header to match actual file sizes on disk"));
 	header_layout->addWidget(m_update_master_sizes_check);
 
 	m_update_version_check = new QCheckBox(tr("Update plugin version to 1.3"), header_group);

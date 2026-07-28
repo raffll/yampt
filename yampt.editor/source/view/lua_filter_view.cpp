@@ -6,7 +6,7 @@
 #include <QVBoxLayout>
 
 lua_filter_view_t::lua_filter_view_t(QWidget * parent)
-	: QWidget(parent)
+    : QWidget(parent)
 {
 	auto * layout = new QVBoxLayout(this);
 	layout->setContentsMargins(0, 0, 0, 0);
@@ -127,17 +127,22 @@ void lua_filter_view_t::update_counts(const std::vector<handler_conflict_t> & co
 	{
 		switch (conflict.severity)
 		{
-		case conflict_severity_t::blocking: ++blocking_count; break;
-		case conflict_severity_t::mutating: ++mutating_count; break;
-		case conflict_severity_t::overlapping: ++overlapping_count; break;
+		case conflict_severity_t::blocking:
+			++blocking_count;
+			break;
+		case conflict_severity_t::mutating:
+			++mutating_count;
+			break;
+		case conflict_severity_t::overlapping:
+			++overlapping_count;
+			break;
 		}
 	}
 
 	const int total = static_cast<int>(conflicts.size());
 	m_total_label->setText(tr("Total: %1").arg(total));
-	m_severity_label->setText(
-		tr("Blocking: %1 | Mutating: %2 | Overlapping: %3")
-			.arg(blocking_count)
-			.arg(mutating_count)
-			.arg(overlapping_count));
+	m_severity_label->setText(tr("Blocking: %1 | Mutating: %2 | Overlapping: %3")
+	                              .arg(blocking_count)
+	                              .arg(mutating_count)
+	                              .arg(overlapping_count));
 }

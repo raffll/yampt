@@ -125,9 +125,7 @@ void web_translator_t::send_simple_request(const std::string & text, const std::
 	for (const auto & [header_name, header_value] : m_config.headers)
 	{
 		auto expanded = expand_template(header_value, text, target_lang);
-		request.setRawHeader(
-		    QByteArray::fromStdString(header_name),
-		    QByteArray::fromStdString(expanded));
+		request.setRawHeader(QByteArray::fromStdString(header_name), QByteArray::fromStdString(expanded));
 	}
 
 	QByteArray body_data;
@@ -138,9 +136,7 @@ void web_translator_t::send_simple_request(const std::string & text, const std::
 		for (const auto & [field_name, field_template] : m_config.body_fields)
 		{
 			auto value = expand_template(field_template, text, target_lang);
-			params.addQueryItem(
-			    QString::fromStdString(field_name),
-			    QString::fromStdString(value));
+			params.addQueryItem(QString::fromStdString(field_name), QString::fromStdString(value));
 		}
 		body_data = params.query(QUrl::FullyEncoded).toUtf8();
 	}
@@ -177,9 +173,7 @@ void web_translator_t::send_chat_request(const std::string & text, const std::st
 	for (const auto & [header_name, header_value] : m_config.headers)
 	{
 		auto expanded = expand_template(header_value, text, target_lang);
-		request.setRawHeader(
-		    QByteArray::fromStdString(header_name),
-		    QByteArray::fromStdString(expanded));
+		request.setRawHeader(QByteArray::fromStdString(header_name), QByteArray::fromStdString(expanded));
 	}
 
 	auto system_prompt = expand_template(m_config.system_prompt, text, target_lang);

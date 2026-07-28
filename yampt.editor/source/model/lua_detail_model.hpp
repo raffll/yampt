@@ -1,7 +1,6 @@
 #pragma once
 
 #include <scanner/conflict_detector.hpp>
-
 #include <string>
 #include <vector>
 #include <QAbstractItemModel>

@@ -4,8 +4,8 @@
 #include <QPainter>
 #include <QResizeEvent>
 #include <QStyledItemDelegate>
-#include <QTimer>
 #include <QStyleOptionHeader>
+#include <QTimer>
 #include <QTreeView>
 #include <QVBoxLayout>
 

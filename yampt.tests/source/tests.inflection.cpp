@@ -1,5 +1,4 @@
 #include <catch2/catch_test_macros.hpp>
-
 #include <creator/inflection.hpp>
 
 TEST_CASE("inflection_t::word_forms, returns empty when not loaded", "[u]")

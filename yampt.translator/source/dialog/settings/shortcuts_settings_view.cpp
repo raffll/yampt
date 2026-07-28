@@ -11,12 +11,9 @@ shortcuts_settings_view_t::shortcuts_settings_view_t(QWidget * parent)
     : QWidget(parent)
 {
 	m_editable_entries = {
-		{ "copy_original", "Copy Original", "F8", true },
-		{ "set_in_progress", "Set In Progress", "F9", true },
-		{ "set_translated", "Set Translated", "F10", true },
-		{ "save", "Save", "Ctrl+S", true },
-		{ "settings", "Open Settings", "Ctrl+,", true },
-		{ "escape", "Escape", "Escape", true },
+		{ "copy_original", "Copy Original", "F8", true },    { "set_in_progress", "Set In Progress", "F9", true },
+		{ "set_translated", "Set Translated", "F10", true }, { "save", "Save", "Ctrl+S", true },
+		{ "settings", "Open Settings", "Ctrl+,", true },     { "escape", "Escape", "Escape", true },
 	};
 
 	m_readonly_entries = {

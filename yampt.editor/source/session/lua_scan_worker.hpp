@@ -1,7 +1,6 @@
 #pragma once
 
 #include <scanner/lua_scanner.hpp>
-
 #include <string>
 #include <vector>
 #include <QThread>
@@ -15,8 +14,7 @@ class lua_scan_worker_t : public QThread
 public:
 	explicit lua_scan_worker_t(QObject * parent = nullptr);
 
-	void start_scan(const std::vector<std::string> & data_paths,
-	                const std::vector<std::string> & mod_names);
+	void start_scan(const std::vector<std::string> & data_paths, const std::vector<std::string> & mod_names);
 	void cancel_scan();
 
 signals:

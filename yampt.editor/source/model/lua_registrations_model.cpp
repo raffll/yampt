@@ -1,5 +1,4 @@
 #include "lua_registrations_model.hpp"
-
 #include <map>
 #include <QString>
 
@@ -7,8 +6,7 @@ lua_registrations_model_t::lua_registrations_model_t(QObject * parent)
     : QAbstractItemModel(parent)
 {}
 
-void lua_registrations_model_t::set_registrations(
-    const std::vector<handler_registration_t> & registrations)
+void lua_registrations_model_t::set_registrations(const std::vector<handler_registration_t> & registrations)
 {
 	beginResetModel();
 	m_all_registrations = registrations;
@@ -16,8 +14,7 @@ void lua_registrations_model_t::set_registrations(
 	endResetModel();
 }
 
-const handler_registration_t * lua_registrations_model_t::registration_at(
-    const QModelIndex & index) const
+const handler_registration_t * lua_registrations_model_t::registration_at(const QModelIndex & index) const
 {
 	if (!index.isValid())
 		return nullptr;
@@ -46,8 +43,7 @@ const handler_registration_t * lua_registrations_model_t::registration_at(
 	return &m_all_registrations[script_group.registration_indices[reg_idx]];
 }
 
-QModelIndex lua_registrations_model_t::index(int row, int column,
-                                             const QModelIndex & parent) const
+QModelIndex lua_registrations_model_t::index(int row, int column, const QModelIndex & parent) const
 {
 	if (column != 0 || row < 0)
 		return {};

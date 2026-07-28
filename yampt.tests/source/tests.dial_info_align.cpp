@@ -70,8 +70,7 @@ TEST_CASE("dial_info_align_t::build, collects INFOs for a DIAL", "[i]")
 {
 	namespace fs = std::filesystem;
 
-	auto plugin_content = make_tes3_record() + make_dial_record("Khajiit", 0) +
-	                      make_info_record("info1", "NPC_A", "") +
+	auto plugin_content = make_tes3_record() + make_dial_record("Khajiit", 0) + make_info_record("info1", "NPC_A", "") +
 	                      make_info_record("info2", "NPC_B", "info1") + make_dial_record("Other", 0) +
 	                      make_info_record("info3", "NPC_C", "");
 
@@ -119,11 +118,10 @@ TEST_CASE("dial_info_align_t::build, plugin inserts INFO between existing", "[i]
 {
 	namespace fs = std::filesystem;
 
-	auto master_content = make_tes3_record() + make_dial_record("topic", 0) +
-	                      make_info_record("A", "NPC1", "") + make_info_record("B", "NPC2", "A");
+	auto master_content = make_tes3_record() + make_dial_record("topic", 0) + make_info_record("A", "NPC1", "") +
+	                      make_info_record("B", "NPC2", "A");
 
-	auto plugin_content = make_tes3_record() + make_dial_record("topic", 0) +
-	                      make_info_record("C", "NPC3", "A");
+	auto plugin_content = make_tes3_record() + make_dial_record("topic", 0) + make_info_record("C", "NPC3", "A");
 
 	auto master_path = get_temp_path("yampt_test_dial_order_master.esm");
 	auto plugin_path = get_temp_path("yampt_test_dial_order_plugin.esp");
@@ -154,12 +152,10 @@ TEST_CASE("dial_info_align_t::build, plugin repositions existing INFO", "[i]")
 {
 	namespace fs = std::filesystem;
 
-	auto master_content = make_tes3_record() + make_dial_record("topic", 0) +
-	                      make_info_record("A", "", "") + make_info_record("B", "", "A") +
-	                      make_info_record("C", "", "B");
+	auto master_content = make_tes3_record() + make_dial_record("topic", 0) + make_info_record("A", "", "") +
+	                      make_info_record("B", "", "A") + make_info_record("C", "", "B");
 
-	auto plugin_content = make_tes3_record() + make_dial_record("topic", 0) +
-	                      make_info_record("B", "", "");
+	auto plugin_content = make_tes3_record() + make_dial_record("topic", 0) + make_info_record("B", "", "");
 
 	auto master_path = get_temp_path("yampt_test_dial_reorder_master.esm");
 	auto plugin_path = get_temp_path("yampt_test_dial_reorder_plugin.esp");
@@ -186,11 +182,9 @@ TEST_CASE("dial_info_align_t::build, unknown PNAM inserts at end", "[i]")
 {
 	namespace fs = std::filesystem;
 
-	auto master_content = make_tes3_record() + make_dial_record("topic", 0) +
-	                      make_info_record("A", "", "");
+	auto master_content = make_tes3_record() + make_dial_record("topic", 0) + make_info_record("A", "", "");
 
-	auto plugin_content = make_tes3_record() + make_dial_record("topic", 0) +
-	                      make_info_record("D", "", "nonexistent");
+	auto plugin_content = make_tes3_record() + make_dial_record("topic", 0) + make_info_record("D", "", "nonexistent");
 
 	auto master_path = get_temp_path("yampt_test_dial_unknown_pnam_master.esm");
 	auto plugin_path = get_temp_path("yampt_test_dial_unknown_pnam_plugin.esp");

@@ -41,14 +41,7 @@ static constexpr sub_record_rule_t generic_sub_rules[] = {
 };
 
 static constexpr record_behavior_t behavior_table[] = {
-	{ "CELL",
-	  decode_mode_t::cell,
-	  copy_strategy_t::header_and_selected_group,
-	  nullptr,
-	  0,
-	  &cell_wildcard,
-	  nullptr,
-	  0 },
+	{ "CELL", decode_mode_t::cell, copy_strategy_t::header_and_selected_group, nullptr, 0, &cell_wildcard, nullptr, 0 },
 	{ "LEVI", decode_mode_t::leveled, copy_strategy_t::whole_record, nullptr, 0, nullptr, nullptr, 0 },
 	{ "LEVC", decode_mode_t::leveled, copy_strategy_t::whole_record, nullptr, 0, nullptr, nullptr, 0 },
 	{ "FACT", decode_mode_t::faction, copy_strategy_t::whole_record, nullptr, 0, nullptr, nullptr, 0 },

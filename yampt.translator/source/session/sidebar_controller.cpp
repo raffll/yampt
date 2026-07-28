@@ -124,7 +124,8 @@ void sidebar_controller_t::on_delete_requested(const std::string & path)
 		QMessageBox::warning(
 		    m_deps.parent_widget,
 		    QCoreApplication::translate("yTranslator", "Error"),
-		    QCoreApplication::translate("yTranslator", "Failed to delete \"%1\".").arg(QString::fromStdString(filename)));
+		    QCoreApplication::translate("yTranslator", "Failed to delete \"%1\".")
+		        .arg(QString::fromStdString(filename)));
 		return;
 	}
 
@@ -271,7 +272,8 @@ void sidebar_controller_t::on_delete_folder_requested(const std::string & folder
 	auto answer = QMessageBox::question(
 	    m_deps.parent_widget,
 	    QCoreApplication::translate("yTranslator", "Delete Folder"),
-	    QCoreApplication::translate("yTranslator", "Delete \"%1\" and all its contents from disk?").arg(QString::fromStdString(folder_name)),
+	    QCoreApplication::translate("yTranslator", "Delete \"%1\" and all its contents from disk?")
+	        .arg(QString::fromStdString(folder_name)),
 	    QMessageBox::Yes | QMessageBox::No);
 
 	if (answer != QMessageBox::Yes)
@@ -340,7 +342,7 @@ void sidebar_controller_t::on_export_eet_requested(const std::string & path)
 	}
 
 	const auto summary = "exported " + std::to_string(eet_doc->converted_count()) + " entries, skipped " +
-	    std::to_string(eet_doc->skipped_count()) + " -> \"" + output_path + "\"\r\n";
+	                     std::to_string(eet_doc->skipped_count()) + " -> \"" + output_path + "\"\r\n";
 	m_deps.log_view.append_log("export eet", summary);
 
 	scan_workspace();
@@ -373,16 +375,13 @@ void sidebar_controller_t::on_generate_loc_requested(const std::string & path)
 		hunspell_dic = dict_dir + locale + ".dic";
 	}
 
-	const loc_generator::generation_input_t input{
-		dict, output_dir, esm_name, codepage, hunspell_aff, hunspell_dic
-	};
+	const loc_generator::generation_input_t input { dict, output_dir, esm_name, codepage, hunspell_aff, hunspell_dic };
 	const auto result = loc_generator::generate(input);
 
-	const auto summary = "cel=" + std::to_string(result.cel_entries)
-	    + " mrk=" + std::to_string(result.mrk_entries)
-	    + " top=" + std::to_string(result.top_entries)
-	    + " skipped=" + std::to_string(result.skipped_entries)
-	    + " collisions=" + std::to_string(result.collision_warnings) + "\r\n";
+	const auto summary = "cel=" + std::to_string(result.cel_entries) + " mrk=" + std::to_string(result.mrk_entries) +
+	                     " top=" + std::to_string(result.top_entries) +
+	                     " skipped=" + std::to_string(result.skipped_entries) +
+	                     " collisions=" + std::to_string(result.collision_warnings) + "\r\n";
 	m_deps.log_view.append_log("generate loc", summary);
 
 	scan_workspace();

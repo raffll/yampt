@@ -1,6 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
 #include <io/loc_file_reader.hpp>
-
 #include <filesystem>
 #include <fstream>
 
@@ -28,11 +27,10 @@ TEST_CASE("loc_file_reader::read, parses tab-separated entries", "[i]")
 {
 	const auto path = temp_path("yampt_test_loc_reader.cel");
 
-	const std::string raw_content =
-		"Balmora\tBalmora_PL\r\n"
-		"Vivec\tVivec_PL\r\n"
-		"\r\n"
-		"Ald-ruhn\tStary Ruhn\r\n";
+	const std::string raw_content = "Balmora\tBalmora_PL\r\n"
+	                                "Vivec\tVivec_PL\r\n"
+	                                "\r\n"
+	                                "Ald-ruhn\tStary Ruhn\r\n";
 
 	write_bytes(path, raw_content);
 	REQUIRE(fs::exists(path));

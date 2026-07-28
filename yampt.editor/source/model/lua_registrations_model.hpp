@@ -1,7 +1,6 @@
 #pragma once
 
 #include <scanner/handler_parser.hpp>
-
 #include <string>
 #include <vector>
 #include <QAbstractItemModel>

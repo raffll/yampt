@@ -39,8 +39,7 @@ static std::vector<sub_record_location_t> find_all_sub_records(
 	while (scan_pos + sub_record_header_size <= content.size())
 	{
 		const auto sub_type = content.substr(scan_pos, 4);
-		const auto sub_size = domain_types::convert_string_byte_array_to_uint(
-		    content.substr(scan_pos + 4, 4));
+		const auto sub_size = domain_types::convert_string_byte_array_to_uint(content.substr(scan_pos + 4, 4));
 
 		if (sub_size == 0)
 			break;
@@ -64,9 +63,7 @@ static std::vector<sub_record_location_t> find_all_sub_records(
 	return locations;
 }
 
-static sub_record_location_t find_first_sub_record(
-    const std::string & content,
-    const std::string & target_type)
+static sub_record_location_t find_first_sub_record(const std::string & content, const std::string & target_type)
 {
 	auto all = find_all_sub_records(content, target_type);
 	if (all.empty())
@@ -90,8 +87,7 @@ static std::vector<mast_data_pair_t> find_mast_data_pairs(const std::string & co
 	while (scan_pos + sub_record_header_size <= content.size())
 	{
 		const auto sub_type = content.substr(scan_pos, 4);
-		const auto sub_size = domain_types::convert_string_byte_array_to_uint(
-		    content.substr(scan_pos + 4, 4));
+		const auto sub_size = domain_types::convert_string_byte_array_to_uint(content.substr(scan_pos + 4, 4));
 
 		if (sub_size == 0)
 			break;
@@ -114,8 +110,7 @@ static std::vector<mast_data_pair_t> find_mast_data_pairs(const std::string & co
 			if (next_pos + sub_record_header_size <= content.size())
 			{
 				const auto next_type = content.substr(next_pos, 4);
-				const auto next_size = domain_types::convert_string_byte_array_to_uint(
-				    content.substr(next_pos + 4, 4));
+				const auto next_size = domain_types::convert_string_byte_array_to_uint(content.substr(next_pos + 4, 4));
 
 				if (next_type == "DATA" && next_size == master_data_size)
 				{
