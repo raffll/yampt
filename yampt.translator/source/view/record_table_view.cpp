@@ -35,15 +35,14 @@ void record_table_view_t::setModel(QAbstractItemModel * model)
 		header->setSectionResizeMode(col_id, QHeaderView::Interactive);
 		header->setSectionResizeMode(col_key, QHeaderView::Interactive);
 		header->setSectionResizeMode(col_original, QHeaderView::Interactive);
-		header->setSectionResizeMode(col_translation, QHeaderView::Interactive);
+		header->setSectionResizeMode(col_translation, QHeaderView::Stretch);
 		header->setSectionResizeMode(col_status, QHeaderView::Interactive);
-		header->setStretchLastSection(true);
+		header->setStretchLastSection(false);
 
 		header->resizeSection(col_id, 50);
 		header->resizeSection(col_key, 200);
-		header->resizeSection(col_original, 300);
-		header->resizeSection(col_translation, 300);
-		header->resizeSection(col_status, 80);
+		header->resizeSection(col_original, 250);
+		header->resizeSection(col_status, 90);
 	}
 
 	connect(

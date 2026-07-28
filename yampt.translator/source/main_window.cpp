@@ -155,6 +155,14 @@ main_window_t::main_window_t(QWidget * parent)
 	                                                                          m_extra_sel_translation,
 	                                                                          *m_grammar_check });
 
+	m_shortcuts_controller = std::make_unique<shortcuts_controller_t>(
+	    shortcuts_deps_t { m_editor_controller,
+	                       *m_table_model,
+	                       [this]() -> document_t * { return m_active_doc; },
+	                       [this](bool dirty) { set_unsaved_changes(dirty); },
+	                       [this]() { update_status_counts(); },
+	                       [this](int row) { load_record(row); } });
+
 	connect_menu_signals();
 	connect_sidebar_signals();
 	connect_editor_signals();
