@@ -17,7 +17,7 @@ void shortcuts_controller_t::copy_original()
 	if (!row_data)
 		return;
 
-	const auto result = active_doc->reset_to_original(*row_data);
+	const auto result = active_doc->commit(*row_data, row_data->old_text, status_t::in_progress);
 	if (!result.success)
 		return;
 

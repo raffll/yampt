@@ -24,6 +24,6 @@ Audit the yampt codebase. Find issues from any of these categories:
 - Do NOT implement the fix. Wait for my approval.
 - Do NOT report issues already listed in the steering `analysis-findings.md` files.
 - Do NOT report issues in test files unless they violate the "don't delete tests" rule.
-- Prioritize: bugs > architecture violations > steering drift > dead code > docs > better solutions > contradictions.
+- Prioritize: GUI behavior > bugs > architecture violations > steering drift > dead code > docs > better solutions > contradictions.
 - If you found nothing after a thorough scan, say "No issues found" — do not invent problems.
 - At the end, add a summary table listing all issues sorted by priority (bugs first, then architecture, steering drift, etc.) with one-line descriptions.

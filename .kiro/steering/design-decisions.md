@@ -166,3 +166,11 @@ Do NOT "fix" this by replacing `break` with `continue` or `scan_pos += sub_recor
 ## spell_checker_t::is_excluded — Linear Scan Is Acceptable
 
 `is_excluded` does a linear scan over `m_excluded_words` for each word during spell checking. The exclusion list is small (50–200 entries) and Hunspell's `spell()` call dominates the cost. The linear scan is noise. Accepted as-is — no hash set needed.
+
+
+## Copy Original vs Reset to Original — Two Distinct Operations
+
+- **Copy Original (F8)** — copies `old_text` into `new_text` and sets status `in_progress`. The user intends to start editing from the original as a base. Uses `document_t::commit()` with `in_progress` intent.
+- **Delete/Clear (Del key)** — copies `old_text` into `new_text` and sets status `untranslated`. The user intends to discard the translation entirely. Uses `document_t::reset_to_original()`.
+
+Both produce the same `new_text` but different statuses. The distinction matters because only `untranslated` entries are eligible for the Translate button, while `in_progress` entries are not.
