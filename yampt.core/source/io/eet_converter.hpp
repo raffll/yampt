@@ -1,12 +1,13 @@
 #pragma once
 
 #include "../utility/domain_types.hpp"
+#include "codepage.hpp"
 #include "eet_reader.hpp"
 
 class eet_converter_t
 {
 public:
-	explicit eet_converter_t(const std::vector<eet_reader_t::eet_entry_t> & entries);
+	eet_converter_t(const std::vector<eet_reader_t::eet_entry_t> & entries, codepage_t codepage);
 
 	const dict_t & get_dict() const
 	{

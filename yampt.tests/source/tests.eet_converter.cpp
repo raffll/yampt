@@ -81,7 +81,7 @@ TEST_CASE("eet_converter_t::import, round-trip property", "[u]")
 		entry.status_byte = 0x63;
 
 		std::vector<eet_reader_t::eet_entry_t> entries = { entry };
-		eet_converter_t converter(entries);
+		eet_converter_t converter(entries, codepage_t::windows_1252);
 
 		const auto & dict = converter.get_dict();
 
@@ -149,7 +149,7 @@ TEST_CASE("eet_converter_t::map_type, exhaustive type mapping", "[u]")
 		entry.status_byte = 0x63;
 
 		std::vector<eet_reader_t::eet_entry_t> entries = { entry };
-		eet_converter_t converter(entries);
+		eet_converter_t converter(entries, codepage_t::windows_1252);
 
 		REQUIRE(converter.converted_count() == 1);
 		REQUIRE(converter.skipped_count() == 0);
@@ -204,7 +204,7 @@ TEST_CASE("eet_converter_t::map_type, unknown combinations", "[u]")
 		entry.status_byte = 0x63;
 
 		std::vector<eet_reader_t::eet_entry_t> entries = { entry };
-		eet_converter_t converter(entries);
+		eet_converter_t converter(entries, codepage_t::windows_1252);
 
 		INFO("rec_type=" << combo.rec_type << " sub_type=" << combo.sub_type);
 		REQUIRE(converter.converted_count() == 0);

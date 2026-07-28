@@ -1,7 +1,8 @@
 #include "eet_converter.hpp"
 #include "../utility/app_logger.hpp"
+#include "codepage.hpp"
 
-eet_converter_t::eet_converter_t(const std::vector<eet_reader_t::eet_entry_t> & entries)
+eet_converter_t::eet_converter_t(const std::vector<eet_reader_t::eet_entry_t> & entries, codepage_t codepage)
 {
 	m_dict = domain_types::initialize_dict();
 
@@ -18,9 +19,9 @@ eet_converter_t::eet_converter_t(const std::vector<eet_reader_t::eet_entry_t> & 
 		const auto & key_text = build_key_text(entry, yampt_type);
 
 		record_entry_t record;
-		record.key_text = key_text;
-		record.old_text = entry.orig;
-		record.new_text = entry.trans;
+		record.key_text = encode_from_utf8(key_text, codepage);
+		record.old_text = encode_from_utf8(entry.orig, codepage);
+		record.new_text = encode_from_utf8(entry.trans, codepage);
 		record.status = status;
 
 		m_dict.at(yampt_type).insert(record);

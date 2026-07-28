@@ -3,14 +3,14 @@
 #include <io/eet_converter.hpp>
 #include <io/eet_reader.hpp>
 
-eet_document_t::eet_document_t(const std::string & path)
+eet_document_t::eet_document_t(const std::string & path, codepage_t codepage)
     : m_path(path)
 {
 	eet_reader_t reader;
 	if (!reader.load(path))
 		return;
 
-	eet_converter_t converter(reader.entries());
+	eet_converter_t converter(reader.entries(), codepage);
 	m_dict = converter.get_dict();
 	m_converted_count = converter.converted_count();
 	m_skipped_count = converter.skipped_count();

@@ -99,7 +99,7 @@ document_t * session_t::handle_open_loc(const std::string & normalized)
 
 document_t * session_t::handle_open_eet(const std::string & normalized)
 {
-	auto document = std::make_unique<eet_document_t>(normalized);
+	auto document = std::make_unique<eet_document_t>(normalized, m_codepage);
 	auto * raw_ptr = document.get();
 	m_docs.push_back(std::move(document));
 	return raw_ptr;

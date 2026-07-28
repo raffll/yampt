@@ -1,6 +1,7 @@
 #pragma once
 
 #include "document.hpp"
+#include <io/codepage.hpp>
 #include <utility/domain_types.hpp>
 #include <set>
 #include <string>
@@ -8,7 +9,7 @@
 class eet_document_t : public document_t
 {
 public:
-	eet_document_t(const std::string & path);
+	eet_document_t(const std::string & path, codepage_t codepage);
 
 	document_kind_t kind() const override;
 	std::string path() const override;
