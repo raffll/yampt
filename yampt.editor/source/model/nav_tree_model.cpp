@@ -457,10 +457,17 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 			if (m_scan.is_merge_plugin(file_node.plugin_idx))
 				return QString::fromUtf8("\xE2\x9A\x99 ") + QString::fromUtf8(buf);
 
+			const auto & full_path = m_scan.plugin_path(file_node.plugin_idx);
+			const bool is_overridden = full_path.find("/overwrite/") != std::string::npos ||
+			    full_path.find("\\overwrite\\") != std::string::npos;
+
 			const bool is_master = filename.size() > 4 && (filename.compare(filename.size() - 4, 4, ".esm") == 0 ||
 			                                               filename.compare(filename.size() - 4, 4, ".ESM") == 0);
 			if (is_master)
 				return QString::fromUtf8("\xF0\x9F\x93\x9C ") + QString::fromUtf8(buf);
+
+			if (is_overridden)
+				return QString::fromUtf8("\xF0\x9F\x93\x91 ") + QString::fromUtf8(buf);
 
 			return QString::fromUtf8("\xF0\x9F\x93\x84 ") + QString::fromUtf8(buf);
 		}

@@ -229,6 +229,8 @@ void plugin_workspace_view_t::on_clean_all()
 		return;
 	}
 
+	log_message("[info] clean: output=" + output_path);
+
 	batch_cleaner_t cleaner(
 	    m_session->scan(), [this](const std::string & message) { log_message(message); });
 
@@ -237,7 +239,9 @@ void plugin_workspace_view_t::on_clean_all()
 	options.junk_cell = m_settings.clean_junk_cell_enabled();
 	cleaner.set_options(options);
 
-	cleaner.clean_all(output_path);
+	const auto results = cleaner.clean_all(output_path);
+	if (results.empty())
+		log_message("[info] no records to clean");
 }
 
 void plugin_workspace_view_t::rebuild_after_load()

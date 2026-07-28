@@ -2,6 +2,7 @@
 #include "../decoder/sub_record_iter.hpp"
 #include "../utility/string_utils.hpp"
 #include "plugin_scan.hpp"
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <set>
@@ -203,6 +204,26 @@ static std::string extract_record_name(const record_t & record)
 	return {};
 }
 
+static std::pair<int32_t, int32_t> extract_cell_coords(const std::string & record_content)
+{
+	sub_record_iter_t iter(record_content);
+	sub_record_view_t view;
+
+	while (iter.next(view))
+	{
+		if (view.type == "DATA" && view.size >= 12)
+		{
+			int32_t grid_x = 0;
+			int32_t grid_y = 0;
+			std::memcpy(&grid_x, view.data + 4, 4);
+			std::memcpy(&grid_y, view.data + 8, 4);
+			return { grid_x, grid_y };
+		}
+	}
+
+	return { 0, 0 };
+}
+
 static std::set<size_t> collect_itm_indices(plugin_scan_t & scan, int plugin_idx)
 {
 	std::set<size_t> indices;
@@ -256,7 +277,16 @@ clean_result_t batch_cleaner_t::clean_plugin(int plugin_idx, const std::string &
 
 		if (m_options.junk_cell && record.id == "CELL" && is_junk_cell(record.content))
 		{
-			removed_log.push_back("  junk cell: " + record_name);
+			if (record_name.empty())
+			{
+				auto coords = extract_cell_coords(record.content);
+				removed_log.push_back("  junk cell: (" + std::to_string(coords.first) + ", " + std::to_string(coords.second) + ")");
+			}
+			else
+			{
+				removed_log.push_back("  junk cell: " + record_name);
+			}
+
 			++result.junk_cell_removed;
 			continue;
 		}

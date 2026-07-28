@@ -38,6 +38,15 @@ Text colors indicate how each specific plugin version relates to others:
 
 Records with no conflict (only one plugin defines them) show with no background color and black text.
 
+Each plugin in the tree is prefixed with an icon indicating its role:
+
+- 📜 — a master file that other plugins depend on.
+- 📄 — a regular plugin loaded from a mod folder or game data directory.
+- 📑 — an overridden plugin loaded from MO2's overwrite folder, meaning a cleaned or patched copy is being used instead of the original mod version.
+- ⚙ — the merged patch produced by the auto-merge operation.
+- 🛡 — a guard patch that acts as a priority barrier during auto-merge.
+- 🔒 — a plugin excluded from the merged patch. Its records are ignored during merge.
+
 ## Record View
 
 Clicking a record in the nav tree displays its full content in the record view. Sub-records are decoded into readable fields where the format is known (names, positions, flags, stats). Unknown or binary sub-records display as raw byte counts.
@@ -98,3 +107,5 @@ Two types of records are removed:
 
 - **Evil GMSTs** — game settings injected by the Construction Set when editing plugins with Tribunal or Bloodmoon loaded. These settings override expansion-specific values and can cause problems for players without the expansions.
 - **Junk cells** — exterior cell records that contain only a NAME and DATA sub-record with no references, no region assignment, and no meaningful content. These are Construction Set artifacts from brief edits near cell borders.
+
+When loading via Open MO2 Profile, cleaned plugins are written to the MO2 overwrite folder. The overwrite folder has the highest priority in MO2's virtual filesystem, so reloading the same profile after cleaning will automatically use the cleaned copies instead of the originals. Plugins loaded from overwrite are marked with the 📑 icon in the navigation tree. Running Clean All again on an already-cleaned profile will report "no records to clean" because the loaded files are already the cleaned versions.
