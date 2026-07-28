@@ -12,7 +12,7 @@
     <ClCompile Include="source\controller\view_context_menu.cpp" />
     <ClCompile Include="source\controller\merge_controller.cpp" />
     <ClCompile Include="source\patcher\plugin_cleaner.cpp" />
-    <ClCompile Include="source\session\profile_reader.cpp" />
+    <ClCompile Include="source\session\profile_file_reader.cpp" />
     <ClCompile Include="source\session\plugin_session.cpp" />
     <ClCompile Include="source\view\messages_view.cpp" />
     <ClCompile Include="source\dialog\plugin_select_dialog.cpp" />

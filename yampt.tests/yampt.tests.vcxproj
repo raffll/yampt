@@ -181,7 +181,7 @@
     <ClInclude Include="..\yampt.translator\source\editor\byte_limit_validator.hpp" />
     <ClInclude Include="..\yampt.translator\source\editor\find_replace.hpp" />
     <ClInclude Include="..\yampt.translator\source\model\row_source.hpp" />
-    <ClInclude Include="..\yampt.editor\source\io\profile_reader.hpp" />
+    <ClInclude Include="..\yampt.editor\source\session\profile_file_reader.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\tests.dict_merger.cpp" />
@@ -279,7 +279,7 @@
     <ClCompile Include="..\yampt.translator\source\session\workspace_watcher.cpp" />
     <ClCompile Include="..\yampt.translator\source\controller\editor_controller.cpp" />
     <ClCompile Include="..\yampt.translator\source\model\record_table_model.cpp" />
-    <ClCompile Include="..\yampt.editor\source\session\profile_reader.cpp" />
+    <ClCompile Include="..\yampt.editor\source\session\profile_file_reader.cpp" />
     <ClCompile Include="..\yampt.editor\source\model\nav_tree_filter.cpp" />
     <ClCompile Include="..\yampt.editor\source\session\plugin_session.cpp" />
     <ClCompile Include="..\yampt.editor\source\patcher\patch_builder.cpp" />
