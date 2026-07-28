@@ -5,3 +5,5 @@
 - Replace [BASE] / [USER] text tags with icons — the sidebar currently shows plain text labels like [BASE] to distinguish dictionary kinds; replace these with small colored icons for quicker visual scanning
 
 - Change yEditor icon for overridden records — the current override indicator is too similar to the normal record icon; use a visually distinct shape or color so overridden records stand out immediately in the nav tree
+
+enchantment field in annotation for fnam - is it enchanted item?

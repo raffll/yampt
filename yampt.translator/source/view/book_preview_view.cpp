@@ -22,7 +22,6 @@ book_preview_view_t::book_preview_view_t(QWidget * parent)
 	m_original_browser = new QTextBrowser(left_widget);
 	m_original_browser->setReadOnly(true);
 	m_original_browser->setOpenLinks(false);
-	m_original_browser->setHtml("<p style='color: gray;'>Select a book record</p>");
 	left_layout->addWidget(m_original_browser);
 
 	auto * right_widget = new QWidget(m_splitter);
@@ -32,7 +31,6 @@ book_preview_view_t::book_preview_view_t(QWidget * parent)
 	m_translation_browser = new QTextBrowser(right_widget);
 	m_translation_browser->setReadOnly(true);
 	m_translation_browser->setOpenLinks(false);
-	m_translation_browser->setHtml("<p style='color: gray;'>Select a book record</p>");
 	right_layout->addWidget(m_translation_browser);
 
 	QFont font("Segoe UI", 10);
@@ -83,6 +81,8 @@ book_preview_view_t::book_preview_view_t(QWidget * parent)
 	    &QScrollBar::valueChanged,
 	    this,
 	    [this, sync_from_browser]() { sync_from_browser(m_translation_browser, m_original_browser); });
+
+	clear();
 }
 
 void book_preview_view_t::set_scroll_sync(bool enabled)
@@ -104,8 +104,9 @@ void book_preview_view_t::set_script(const std::string & original_script, const 
 
 void book_preview_view_t::clear()
 {
-	m_original_browser->setHtml("<p style='color: gray;'>Select a book record</p>");
-	m_translation_browser->setHtml("<p style='color: gray;'>Select a book record</p>");
+	auto placeholder = QString("<p style='color: gray;'>") + tr("Select a book record") + QString("</p>");
+	m_original_browser->setHtml(placeholder);
+	m_translation_browser->setHtml(placeholder);
 }
 
 QString book_preview_view_t::prepare_html(const std::string & html) const

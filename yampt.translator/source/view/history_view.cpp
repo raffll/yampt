@@ -56,6 +56,7 @@ void history_view_t::update_history(const std::vector<history_entry_t> & entries
 			button_layout->setContentsMargins(0, 0, 0, 0);
 
 			auto * revert_btn = new QPushButton(tr("Revert"), row);
+			revert_btn->setToolTip(tr("Restore this earlier translation"));
 			connect(
 			    revert_btn,
 			    &QPushButton::clicked,

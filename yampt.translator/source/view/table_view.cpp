@@ -3,6 +3,7 @@
 #include "filter_tree_view.hpp"
 #include "status_filter_view.hpp"
 #include <QAbstractButton>
+#include <QCoreApplication>
 #include <QLabel>
 #include <QLineEdit>
 #include <QString>
@@ -62,7 +63,7 @@ void table_view_t::apply(table_build_result_t result, const std::string & file_p
 	{
 		int pct = static_cast<int>(result.counts.progress_translated * 100 / result.counts.progress_total);
 		int shown = m_model.rowCount();
-		m_progress.setText(QString("%1 / %2 (%3%) | %4 shown")
+		m_progress.setText(QCoreApplication::translate("yTranslator", "%1 / %2 (%3%) | %4 shown")
 		                       .arg(result.counts.progress_translated)
 		                       .arg(result.counts.progress_total)
 		                       .arg(pct)
@@ -99,7 +100,7 @@ void table_view_t::apply_yaml(
 	{
 		int pct = translated * 100 / total;
 		int shown = m_model.rowCount();
-		m_progress.setText(QString("%1 / %2 (%3%) | %4 shown").arg(translated).arg(total).arg(pct).arg(shown));
+		m_progress.setText(QCoreApplication::translate("yTranslator", "%1 / %2 (%3%) | %4 shown").arg(translated).arg(total).arg(pct).arg(shown));
 	}
 	else
 	{

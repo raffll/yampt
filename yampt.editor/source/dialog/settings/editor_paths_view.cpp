@@ -18,6 +18,7 @@ editor_paths_view_t::editor_paths_view_t(QWidget * parent)
 	layout->addWidget(folder_label);
 	m_edt_folder_path = new QLineEdit(this);
 	m_edt_folder_path->setPlaceholderText(tr("(same as base directory)"));
+	m_edt_folder_path->setToolTip(tr("Output directory for Folder mode"));
 	layout->addWidget(m_edt_folder_path);
 
 	layout->addSpacing(8);
@@ -26,6 +27,7 @@ editor_paths_view_t::editor_paths_view_t(QWidget * parent)
 	layout->addWidget(mo2_label);
 	m_edt_mo2_path = new QLineEdit(this);
 	m_edt_mo2_path->setPlaceholderText(tr("../../overwrite"));
+	m_edt_mo2_path->setToolTip(tr("Output directory for MO2 profile mode"));
 	layout->addWidget(m_edt_mo2_path);
 
 	layout->addSpacing(8);
@@ -34,6 +36,7 @@ editor_paths_view_t::editor_paths_view_t(QWidget * parent)
 	layout->addWidget(openmw_label);
 	m_edt_openmw_path = new QLineEdit(this);
 	m_edt_openmw_path->setPlaceholderText(tr("data"));
+	m_edt_openmw_path->setToolTip(tr("Output directory for OpenMW config mode"));
 	layout->addWidget(m_edt_openmw_path);
 
 	layout->addStretch();

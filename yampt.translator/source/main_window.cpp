@@ -242,7 +242,7 @@ void main_window_t::set_unsaved_changes(bool dirty)
 		return;
 
 	m_has_unsaved_changes = dirty;
-	setWindowTitle(m_has_unsaved_changes ? "yTranslator *" : "yTranslator");
+	setWindowTitle(m_has_unsaved_changes ? tr("yTranslator *") : tr("yTranslator"));
 }
 
 void main_window_t::on_save()
@@ -338,6 +338,7 @@ void main_window_t::clear_editor_panels()
 {
 	m_editor_view->original_view()->clear();
 	m_editor_view->translation_editor()->clear();
+	m_editor_view->translation_editor()->setReadOnly(true);
 	m_editor_view->clear_details();
 	m_validation_view->clear();
 	m_annotations_view->clear();

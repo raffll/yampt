@@ -89,8 +89,8 @@ QWidget * editor_view_t::setup_right_panel(QSplitter * parent_splitter)
 
 	m_translation_editor = new translation_edit_view_t(right_widget);
 
-	m_apply_button = new QPushButton(tr("Next (Shift+Enter)"), right_widget);
-	m_apply_button->setToolTip(tr("Apply changes and move to next entry"));
+	m_apply_button = new QPushButton(tr("Next"), right_widget);
+	m_apply_button->setToolTip(tr("Apply changes and move to next entry (Shift+Enter)"));
 
 	auto * translation_container = new QWidget(right_widget);
 	auto * translation_hlayout = new QHBoxLayout(translation_container);

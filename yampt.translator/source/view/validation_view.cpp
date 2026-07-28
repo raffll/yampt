@@ -15,9 +15,9 @@ validation_view_t::validation_view_t(QWidget * parent)
 void validation_view_t::update_validation(const validation_result_t & result)
 {
 	if (result.limit == 0)
-		m_label->setText(QString("| chars: %1").arg(result.byte_count));
+		m_label->setText(tr("| chars: %1").arg(result.byte_count));
 	else
-		m_label->setText(QString("| chars: %1 / %2").arg(result.byte_count).arg(result.limit));
+		m_label->setText(tr("| chars: %1 / %2").arg(result.byte_count).arg(result.limit));
 
 	switch (result.level)
 	{
