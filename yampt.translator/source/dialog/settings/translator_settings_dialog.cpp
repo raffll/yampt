@@ -35,10 +35,10 @@ translator_settings_dialog_t::translator_settings_dialog_t(
 	m_translation_view = new translation_settings_view_t(providers_dir, this);
 	m_shortcuts_view = new shortcuts_settings_view_t(this);
 
-	m_category_list->addItem("Appearance");
-	m_category_list->addItem("Shortcuts");
-	m_category_list->addItem("Language");
-	m_category_list->addItem("Translation");
+	m_category_list->addItem(tr("Appearance"));
+	m_category_list->addItem(tr("Shortcuts"));
+	m_category_list->addItem(tr("Language"));
+	m_category_list->addItem(tr("Translation"));
 
 	m_content_stack->addWidget(m_appearance_view);
 	m_content_stack->addWidget(m_shortcuts_view);

@@ -162,6 +162,8 @@ void dict_selection_dialog_t::setup_buttons(QVBoxLayout * layout)
 	auto * order_buttons = new QHBoxLayout;
 	m_up_button = new QPushButton(tr("Up"), this);
 	m_down_button = new QPushButton(tr("Down"), this);
+	m_up_button->setToolTip(tr("Move selected dictionary up in merge order"));
+	m_down_button->setToolTip(tr("Move selected dictionary down in merge order"));
 	order_buttons->addWidget(m_up_button);
 	order_buttons->addWidget(m_down_button);
 	order_buttons->addStretch();

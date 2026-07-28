@@ -55,8 +55,8 @@ language_settings_view_t::language_settings_view_t(const std::string & dictionar
 		m_native_language_combo->addItem(languages[i].display_name, QString(languages[i].code));
 	}
 
-	language_form->addRow("Foreign Language:", m_foreign_language_combo);
-	language_form->addRow("Native Language:", m_native_language_combo);
+	language_form->addRow(tr("Foreign Language:"), m_foreign_language_combo);
+	language_form->addRow(tr("Native Language:"), m_native_language_combo);
 	layout->addLayout(language_form);
 
 	auto * separator = new QFrame(this);
@@ -68,15 +68,15 @@ language_settings_view_t::language_settings_view_t(const std::string & dictionar
 
 	m_foreign_spell_combo = new QComboBox(this);
 	m_native_spell_combo = new QComboBox(this);
-	detail_form->addRow("Foreign Spell Check:", m_foreign_spell_combo);
-	detail_form->addRow("Native Spell Check:", m_native_spell_combo);
+	detail_form->addRow(tr("Foreign Spell Check:"), m_foreign_spell_combo);
+	detail_form->addRow(tr("Native Spell Check:"), m_native_spell_combo);
 
 	m_foreign_tag_edit = new QLineEdit(this);
 	m_foreign_tag_edit->setMaxLength(5);
 	m_native_tag_edit = new QLineEdit(this);
 	m_native_tag_edit->setMaxLength(5);
-	detail_form->addRow("Foreign Tag:", m_foreign_tag_edit);
-	detail_form->addRow("Native Tag:", m_native_tag_edit);
+	detail_form->addRow(tr("Foreign Tag:"), m_foreign_tag_edit);
+	detail_form->addRow(tr("Native Tag:"), m_native_tag_edit);
 
 	layout->addLayout(detail_form);
 	layout->addStretch();
@@ -215,8 +215,8 @@ void language_settings_view_t::scan_dictionaries(const std::string & directory)
 	m_foreign_spell_combo->clear();
 	m_native_spell_combo->clear();
 
-	m_foreign_spell_combo->addItem("None", QString(""));
-	m_native_spell_combo->addItem("None", QString(""));
+	m_foreign_spell_combo->addItem(tr("None"), QString(""));
+	m_native_spell_combo->addItem(tr("None"), QString(""));
 
 	if (directory.empty())
 		return;

@@ -53,7 +53,7 @@ void translation_suggestion_view_t::setup_controls()
 {
 	m_ct2_provider = new ctranslate2_translator_t(this);
 	m_providers.push_back(m_ct2_provider);
-	m_provider_combo->addItem("CTranslate2");
+	m_provider_combo->addItem(tr("CTranslate2"));
 
 	connect(m_translate_all_btn, &QPushButton::clicked, this, [this]() { emit translate_all_requested(); });
 

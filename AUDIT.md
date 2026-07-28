@@ -1,4 +1,4 @@
-Audit the yampt codebase. Pick ONE issue — the most impactful you can find — from any of these categories:
+Audit the yampt codebase. Find exactly 5 issues from any of these categories:
 
 1. **Code bugs** — logic errors, off-by-one, null dereference, race conditions, undefined behavior
 2. **Steering drift** — code that violates a steering rule (naming, nesting, line limits, file placement, comment presence, missing tooltips, missing tr() wrapping, etc.)
@@ -11,8 +11,8 @@ Audit the yampt codebase. Pick ONE issue — the most impactful you can find —
 ## Instructions
 
 - Read the relevant source files before claiming anything.
-- Report exactly ONE issue per response.
-- Format:
+- Report exactly 5 issues per response.
+- Format (repeat for each issue):
 
 **Category:** (from list above)
 **Location:** file path + line range
