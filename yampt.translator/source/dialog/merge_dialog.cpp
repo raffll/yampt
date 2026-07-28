@@ -17,8 +17,8 @@ merge_dialog_t::merge_dialog_t(const std::vector<dict_entry_t> & loaded_dicts, Q
 	auto * layout = new QVBoxLayout(this);
 
 	layout->addWidget(new QLabel(
-	    "Drag or use buttons to set priority order.\n"
-	    "Last item has highest priority (last-listed wins).",
+	    tr("Drag or use buttons to set priority order.\n"
+	       "Last item has highest priority (last-listed wins)."),
 	    this));
 
 	m_list = new QListWidget(this);

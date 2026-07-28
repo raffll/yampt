@@ -1,4 +1,4 @@
-Audit the yampt codebase. Find exactly 5 issues from any of these categories:
+Audit the yampt codebase. Find issues from any of these categories:
 
 1. **Code bugs** — logic errors, off-by-one, null dereference, race conditions, undefined behavior
 2. **GUI behavior** — visible UI glitches, wrong widget state, missing feedback, broken interactions, features running when disabled
@@ -12,7 +12,7 @@ Audit the yampt codebase. Find exactly 5 issues from any of these categories:
 ## Instructions
 
 - Read the relevant source files before claiming anything.
-- Report exactly 5 issues per response.
+- Report exactly 10 issues per response.
 - Format (repeat for each issue):
 
 **Category:** (from list above)
@@ -26,3 +26,4 @@ Audit the yampt codebase. Find exactly 5 issues from any of these categories:
 - Do NOT report issues in test files unless they violate the "don't delete tests" rule.
 - Prioritize: bugs > architecture violations > steering drift > dead code > docs > better solutions > contradictions.
 - If you found nothing after a thorough scan, say "No issues found" — do not invent problems.
+- At the end, add a summary table listing all issues sorted by priority (bugs first, then architecture, steering drift, etc.) with one-line descriptions.

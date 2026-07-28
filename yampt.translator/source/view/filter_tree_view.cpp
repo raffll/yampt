@@ -75,7 +75,7 @@ void filter_tree_view_t::build_rows()
 {
 	auto add_row = [this](item_kind_t kind, rec_type_t type, const std::string & sub_type, const char * label) -> int
 	{
-		auto * item = new QListWidgetItem(label, m_list);
+		auto * item = new QListWidgetItem(tr(label), m_list);
 		item->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 		int idx = static_cast<int>(m_rows.size());
 		m_rows.push_back({ item, kind, type, sub_type, true });

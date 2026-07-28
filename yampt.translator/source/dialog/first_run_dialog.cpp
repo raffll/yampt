@@ -17,25 +17,25 @@ first_run_dialog_t::first_run_dialog_t(QWidget * parent)
 
 	combo_layout->addWidget(new QLabel(tr("From:")));
 	m_from_combo = new QComboBox(this);
-	m_from_combo->addItem("English", QString("EN"));
-	m_from_combo->addItem("Polish", QString("PL"));
-	m_from_combo->addItem("German", QString("DE"));
-	m_from_combo->addItem("French", QString("FR"));
-	m_from_combo->addItem("Russian", QString("RU"));
-	m_from_combo->addItem("Italian", QString("IT"));
-	m_from_combo->addItem("Hungarian", QString("HU"));
+	m_from_combo->addItem(tr("English"), QString("EN"));
+	m_from_combo->addItem(tr("Polish"), QString("PL"));
+	m_from_combo->addItem(tr("German"), QString("DE"));
+	m_from_combo->addItem(tr("French"), QString("FR"));
+	m_from_combo->addItem(tr("Russian"), QString("RU"));
+	m_from_combo->addItem(tr("Italian"), QString("IT"));
+	m_from_combo->addItem(tr("Hungarian"), QString("HU"));
 	m_from_combo->setCurrentIndex(0);
 	combo_layout->addWidget(m_from_combo);
 
 	combo_layout->addWidget(new QLabel(tr("To:")));
 	m_to_combo = new QComboBox(this);
-	m_to_combo->addItem("English", QString("EN"));
-	m_to_combo->addItem("Polish", QString("PL"));
-	m_to_combo->addItem("German", QString("DE"));
-	m_to_combo->addItem("French", QString("FR"));
-	m_to_combo->addItem("Russian", QString("RU"));
-	m_to_combo->addItem("Italian", QString("IT"));
-	m_to_combo->addItem("Hungarian", QString("HU"));
+	m_to_combo->addItem(tr("English"), QString("EN"));
+	m_to_combo->addItem(tr("Polish"), QString("PL"));
+	m_to_combo->addItem(tr("German"), QString("DE"));
+	m_to_combo->addItem(tr("French"), QString("FR"));
+	m_to_combo->addItem(tr("Russian"), QString("RU"));
+	m_to_combo->addItem(tr("Italian"), QString("IT"));
+	m_to_combo->addItem(tr("Hungarian"), QString("HU"));
 	m_to_combo->setCurrentIndex(1);
 	combo_layout->addWidget(m_to_combo);
 

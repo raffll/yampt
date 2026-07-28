@@ -26,10 +26,10 @@ void find_replace_dialog_t::setup_layout(QGridLayout * layout)
 	m_replace_field = new QLineEdit(this);
 	layout->addWidget(m_replace_field, 1, 1, 1, 3);
 
-	m_case_check = new QCheckBox("Case sensitive", this);
+	m_case_check = new QCheckBox(tr("Case sensitive"), this);
 	layout->addWidget(m_case_check, 2, 0, 1, 2);
 
-	m_regex_check = new QCheckBox("Regex", this);
+	m_regex_check = new QCheckBox(tr("Regex"), this);
 	layout->addWidget(m_regex_check, 2, 2, 1, 2);
 
 	m_find_next_btn = new QPushButton(tr("Find Next"), this);

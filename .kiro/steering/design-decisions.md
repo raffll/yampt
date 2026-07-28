@@ -146,3 +146,14 @@ Never restrict the user to copying only entire groups. Individual sub-record cop
 SCVR is a structured binary field (5-byte prefix + variable/cell name), not a simple null-terminated string sub-record like NAME or DNAM. OpenMW's reader uses `strnlen(ptr, size)` which handles both null-terminated and non-null-terminated data. OpenMW's writer (`writeHString`) also writes SCVR without a null terminator.
 
 Do NOT "fix" this by adding `new_text += '\0'` to `convert_scvr`.
+
+
+## esm_reader_t::scan_sub_records — Break on Zero-Size Is Correct
+
+`scan_sub_records` breaks the scan loop when `found_size == 0`. This is a defensive guard against corrupt data, not a bug.
+
+In TES3 format, no legitimate sub-record has zero size — `DELE` is 4 bytes, all others have positive sizes. A zero in the size field means the record data is malformed. Breaking prevents parsing garbage as valid sub-records.
+
+If we used `continue` (advancing by `sub_record_header_size + 0 = 8`), we'd still advance but would be reading into corrupted territory. Breaking is the safer choice — the record is already broken, so nothing useful follows.
+
+Do NOT "fix" this by replacing `break` with `continue` or `scan_pos += sub_record_header_size`.
