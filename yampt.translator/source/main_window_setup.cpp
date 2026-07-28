@@ -47,24 +47,29 @@ void main_window_t::setup_menu_bar()
 	m_translator_file_menu = file_menu;
 
 	m_add_folder_action = new QAction(tr("Add &Folder..."), this);
+	m_add_folder_action->setToolTip(tr("Add a workspace folder"));
 	file_menu->addAction(m_add_folder_action);
 
 	m_import_archive_action = new QAction(tr("&Import Archive..."), this);
+	m_import_archive_action->setToolTip(tr("Extract and import an archive into workspace"));
 	file_menu->addAction(m_import_archive_action);
 
 	file_menu->addSeparator();
 
 	m_save_action = new QAction(tr("&Save"), this);
 	m_save_action->setShortcut(QKeySequence("Ctrl+S"));
+	m_save_action->setToolTip(tr("Save the active dictionary"));
 	file_menu->addAction(m_save_action);
 
 	m_save_all_action = new QAction(tr("Save A&ll"), this);
+	m_save_all_action->setToolTip(tr("Save all modified dictionaries"));
 	file_menu->addAction(m_save_all_action);
 
 	file_menu->addSeparator();
 
 	m_quit_action = new QAction(tr("&Quit"), this);
 	m_quit_action->setShortcut(QKeySequence("Alt+F4"));
+	m_quit_action->setToolTip(tr("Exit the application"));
 	file_menu->addAction(m_quit_action);
 
 	auto * view_menu = menuBar()->addMenu(tr("&View"));
@@ -73,11 +78,13 @@ void main_window_t::setup_menu_bar()
 	m_sidebar_toggle = new QAction(tr("Toggle &Sidebar"), this);
 	m_sidebar_toggle->setCheckable(true);
 	m_sidebar_toggle->setChecked(true);
+	m_sidebar_toggle->setToolTip(tr("Show or hide the sidebar panel"));
 	view_menu->addAction(m_sidebar_toggle);
 
 	m_bottom_panel_toggle = new QAction(tr("Toggle &Bottom Panel"), this);
 	m_bottom_panel_toggle->setCheckable(true);
 	m_bottom_panel_toggle->setChecked(true);
+	m_bottom_panel_toggle->setToolTip(tr("Show or hide the editor panel"));
 	view_menu->addAction(m_bottom_panel_toggle);
 
 	view_menu->addSeparator();
@@ -85,15 +92,18 @@ void main_window_t::setup_menu_bar()
 	m_spell_check = new QAction(tr("&Spell Check"), this);
 	m_spell_check->setCheckable(true);
 	m_spell_check->setChecked(true);
+	m_spell_check->setToolTip(tr("Toggle spell check underlines in translation"));
 	view_menu->addAction(m_spell_check);
 
 	m_grammar_check = new QAction(tr("&Grammar Check"), this);
 	m_grammar_check->setCheckable(true);
 	m_grammar_check->setChecked(true);
+	m_grammar_check->setToolTip(tr("Toggle grammar check highlights in translation"));
 	view_menu->addAction(m_grammar_check);
 
 	m_whitespace_check = new QAction(tr("&Whitespace Markers"), this);
 	m_whitespace_check->setCheckable(true);
+	m_whitespace_check->setToolTip(tr("Show tabs and line endings in editor"));
 	view_menu->addAction(m_whitespace_check);
 
 	view_menu->addSeparator();

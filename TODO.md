@@ -6,4 +6,4 @@
 
 - Change yEditor icon for overridden records — the current override indicator is too similar to the normal record icon; use a visually distinct shape or color so overridden records stand out immediately in the nav tree
 
-enchantment field in annotation for fnam - is it enchanted item?
+- Show enchantment name in annotations for FNAM entries — when an FNAM entry belongs to an enchanted item, display the enchantment ID in the annotations panel so the translator knows the item is enchanted

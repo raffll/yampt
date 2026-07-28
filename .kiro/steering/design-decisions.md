@@ -174,3 +174,8 @@ Do NOT "fix" this by replacing `break` with `continue` or `scan_pos += sub_recor
 - **Delete/Clear (Del key)** — copies `old_text` into `new_text` and sets status `untranslated`. The user intends to discard the translation entirely. Uses `document_t::reset_to_original()`.
 
 Both produce the same `new_text` but different statuses. The distinction matters because only `untranslated` entries are eligible for the Translate button, while `in_progress` entries are not.
+
+
+## Translate Button Error Feedback — append_log Is Sufficient
+
+When the Translate button is clicked with invalid state (no document, no row, non-untranslated entry), error messages are written via `m_translation_tab->append_log(...)`. This is not a visibility problem because the Translate button itself lives on the Auto Translate tab — if the user can click it, they can see the feedback. No status bar message needed.

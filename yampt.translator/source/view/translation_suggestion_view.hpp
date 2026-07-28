@@ -39,7 +39,6 @@ public:
 
 	void append_log(const std::string & msg);
 	void display_translation_result(const translation_suggestion_t & result);
-	void set_translate_all_enabled(bool enabled);
 
 	void request_translation(const std::string & text);
 	void request_translation_lines(const std::vector<std::string> & lines);

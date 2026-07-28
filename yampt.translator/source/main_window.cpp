@@ -3,19 +3,12 @@
 #include "dialog/find_replace_dialog.hpp"
 #include "dialog/first_run_dialog.hpp"
 #include "dialog/make_base_dialog.hpp"
-#include "dialog/merge_dialog.hpp"
 #include "dialog/settings/translator_settings_dialog.hpp"
-#include "dialog/spell_context_menu.hpp"
 #include "editor/commit_orchestrator.hpp"
 #include "highlighter/editor_highlighter.hpp"
-#include "highlighter/glossary_highlighter.hpp"
 #include "highlighter/grammar_checker.hpp"
-#include "highlighter/topic_highlighter.hpp"
 #include "model/dict_document.hpp"
-#include "model/plugin_document.hpp"
-#include "model/table_builder.hpp"
 #include "model/yaml_document.hpp"
-#include "translator/ctranslate2_translator.hpp"
 #include "view/annotations_view.hpp"
 #include "view/book_preview_view.hpp"
 #include "view/display_name.hpp"
@@ -28,47 +21,29 @@
 #include "view/status_filter_view.hpp"
 #include "view/translation_suggestion_view.hpp"
 #include "view/validation_view.hpp"
-#include <io/dict_writer.hpp>
-#include <merger/dict_merger.hpp>
-#include <utility/app_logger.hpp>
 #include <utility/string_utils.hpp>
 #include <algorithm>
 #include <filesystem>
 #include <map>
-#include <set>
 #include <theme_system.hpp>
-#include <unordered_map>
 #include <QAction>
 #include <QCloseEvent>
-#include <QComboBox>
 #include <QCoreApplication>
-#include <QDateTime>
-#include <QDialogButtonBox>
 #include <QDir>
 #include <QFileDialog>
-#include <QGroupBox>
-#include <QHBoxLayout>
-#include <QHeaderView>
 #include <QLabel>
 #include <QLineEdit>
-#include <QListWidget>
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
-#include <QPlainTextEdit>
-#include <QProcess>
 #include <QPushButton>
-#include <QRadioButton>
-#include <QRegularExpression>
 #include <QSplitter>
 #include <QStatusBar>
 #include <QTabWidget>
 #include <QTextDocument>
 #include <QTextOption>
-#include <QTimer>
 #include <QToolBar>
 #include <QToolButton>
-#include <QTreeWidget>
 #include <QVBoxLayout>
 
 main_window_t::main_window_t(QWidget * parent)
@@ -860,9 +835,6 @@ void main_window_t::update_validation()
 {
 	m_record_display_controller->update_validation();
 }
-
-void main_window_t::scan_spell_dictionaries()
-{}
 
 void main_window_t::on_spell_lang_changed(int)
 {

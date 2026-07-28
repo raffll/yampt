@@ -260,11 +260,6 @@ void translation_suggestion_view_t::append_log(const std::string & msg)
 	m_result_text->verticalScrollBar()->setValue(m_result_text->verticalScrollBar()->maximum());
 }
 
-void translation_suggestion_view_t::set_translate_all_enabled(bool enabled)
-{
-	m_translate_all_btn->setEnabled(enabled);
-}
-
 void translation_suggestion_view_t::select_provider(int index)
 {
 	if (index < 0 || index >= static_cast<int>(m_providers.size()))

@@ -130,7 +130,6 @@ private:
 	void update_annotations();
 	void update_validation();
 	void update_status_counts();
-	void scan_spell_dictionaries();
 	void on_spell_lang_changed(int index);
 	void scan_workspace();
 	void update_watcher_roots();
@@ -138,7 +137,6 @@ private:
 	void shortcut_copy_original();
 	void shortcut_commit_status(status_t new_status);
 
-	// rebuild_table helpers
 	void rebuild_table_yaml(document_t * target_doc);
 	void rebuild_table_dict(dict_document_t * dict_doc);
 
