@@ -157,3 +157,12 @@ In TES3 format, no legitimate sub-record has zero size — `DELE` is 4 bytes, al
 If we used `continue` (advancing by `sub_record_header_size + 0 = 8`), we'd still advance but would be reading into corrupted territory. Breaking is the safer choice — the record is already broken, so nothing useful follows.
 
 Do NOT "fix" this by replacing `break` with `continue` or `scan_pos += sub_record_header_size`.
+
+
+## check_all_identical Duplication in view_tree_decode Files
+
+`view_tree_decode.cpp` and `view_tree_decode_cell.cpp` both define a file-local `static bool check_all_identical(...)`. This is a consequence of the allowed class-split exception for `view_tree_model_t` — `static` functions cannot be shared across translation units. Both copies are used. Accepted as-is.
+
+## spell_checker_t::is_excluded — Linear Scan Is Acceptable
+
+`is_excluded` does a linear scan over `m_excluded_words` for each word during spell checking. The exclusion list is small (50–200 entries) and Hunspell's `spell()` call dominates the cost. The linear scan is noise. Accepted as-is — no hash set needed.
