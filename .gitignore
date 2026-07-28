@@ -12,3 +12,8 @@ external/
 /.kiro/specs
 /tests
 /enc_temp_folder
+
+# CMake build artifacts
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
