@@ -126,7 +126,8 @@ void esm_converter_t::print_log_line(const rec_type_t type)
 {
 	std::string line = domain_types::type_to_str(type) + ": converted=" + std::to_string(counter_converted) +
 	                   ", identical=" + std::to_string(counter_identical) +
-	                   ", unchanged=" + std::to_string(counter_unchanged) + ", total=" + std::to_string(counter_all) +
+	                   ", unchanged=" + std::to_string(counter_unchanged) +
+	                   ", hyperlinks=" + std::to_string(counter_added) + ", total=" + std::to_string(counter_all) +
 	                   "\r\n";
 
 	app_logger_t::add_log(line);

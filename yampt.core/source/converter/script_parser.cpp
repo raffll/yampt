@@ -510,7 +510,7 @@ void script_parser_t::find_new_message()
 	app_logger_t::add_log("<<< " + line + "\r\n", true);
 
 	auto * search = merger->get_dict().at(type).find(record_key + "^" + line);
-	if (search)
+	if (search && is_approved_status(search->status))
 	{
 		if (line != search->new_text)
 		{
@@ -577,8 +577,6 @@ std::vector<std::string> script_parser_t::split_line(const std::string & cur_lin
 		next++;
 	}
 
-	/* special case if say keyword */
-	/* first parameter is sound file name, so we don't need it */
 	if (keyword == "say" && splitted_line.size() > 0)
 	{
 		splitted_line.erase(splitted_line.begin());

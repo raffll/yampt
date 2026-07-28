@@ -33,7 +33,7 @@ shortcuts_settings_view_t::shortcuts_settings_view_t(QWidget * parent)
 	layout->addWidget(editable_label);
 
 	m_table = new QTableWidget(m_total_row_count, 2, this);
-	m_table->setHorizontalHeaderLabels({ "Action", "Shortcut" });
+	m_table->setHorizontalHeaderLabels({ tr("Action"), tr("Shortcut") });
 	m_table->horizontalHeader()->setStretchLastSection(true);
 	m_table->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
 	m_table->verticalHeader()->setVisible(false);

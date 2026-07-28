@@ -162,8 +162,10 @@ void web_translator_t::send_simple_request(const std::string & text, const std::
 	    this,
 	    [this, reply, text_len = static_cast<int>(text.size())]()
 	{
+		const bool success = (reply->error() == QNetworkReply::NoError);
 		on_reply_finished(reply);
-		m_chars_used += text_len;
+		if (success)
+			m_chars_used += text_len;
 	});
 }
 
@@ -214,8 +216,10 @@ void web_translator_t::send_chat_request(const std::string & text, const std::st
 	    this,
 	    [this, reply, text_len = static_cast<int>(text.size())]()
 	{
+		const bool success = (reply->error() == QNetworkReply::NoError);
 		on_reply_finished(reply);
-		m_chars_used += text_len;
+		if (success)
+			m_chars_used += text_len;
 	});
 }
 
