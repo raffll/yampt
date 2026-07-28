@@ -4,11 +4,6 @@
 #include "../utility/string_utils.hpp"
 #include "script_parser.hpp"
 
-static bool is_approved_status(status_t status)
-{
-	return status == status_t::translated;
-}
-
 esm_converter_t::esm_converter_t(
     const std::string & path,
     const dict_merger_t & merger,

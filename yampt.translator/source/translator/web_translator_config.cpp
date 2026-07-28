@@ -37,17 +37,18 @@ web_translator_config_t web_translator_config::load_single(const std::string & j
 {
 	namespace fs = std::filesystem;
 
+	const auto stem = fs::path(json_path).stem().string();
+
 	std::ifstream file(json_path);
 	if (!file.is_open())
-		return {};
+		return { .identifier = stem };
 
 	std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 
 	auto document = QJsonDocument::fromJson(QByteArray::fromStdString(content));
 	if (!document.isObject())
-		return {};
+		return { .identifier = stem };
 
-	const auto stem = fs::path(json_path).stem().string();
 	return parse_config(document.object(), stem);
 }
 

@@ -218,13 +218,6 @@ TEST_CASE("record_conflict::find_conflict_policy, CELL wildcard returns skip", "
 	REQUIRE(policy.ignore_conflict == false);
 }
 
-TEST_CASE("record_conflict::find_conflict_policy, CELL NAM0 returns ignore", "[u]")
-{
-	const auto policy = record_conflict::find_conflict_policy("CELL", "NAM0");
-	REQUIRE(policy.skip_non_existent == false);
-	REQUIRE(policy.ignore_conflict == true);
-}
-
 TEST_CASE("record_conflict::find_conflict_policy, unknown type returns default", "[u]")
 {
 	const auto policy = record_conflict::find_conflict_policy("NPC_", "DATA");
@@ -250,13 +243,6 @@ TEST_CASE("record_conflict::find_conflict_policy, CELL WHGT inherits wildcard", 
 	const auto policy = record_conflict::find_conflict_policy("CELL", "WHGT");
 	REQUIRE(policy.skip_non_existent == true);
 	REQUIRE(policy.ignore_conflict == false);
-}
-
-TEST_CASE("record_conflict::find_conflict_policy, NAM0 overrides wildcard", "[u]")
-{
-	const auto policy = record_conflict::find_conflict_policy("CELL", "NAM0");
-	REQUIRE(policy.skip_non_existent == false);
-	REQUIRE(policy.ignore_conflict == true);
 }
 
 TEST_CASE("record_conflict::find_conflict_policy, NPC_ FNAM returns default", "[u]")

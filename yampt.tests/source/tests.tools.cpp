@@ -270,8 +270,9 @@ TEST_CASE("domain_types::initialize_dict, has all expected keys", "[u]")
 	REQUIRE(dict.count(rec_type_t::text) == 1);
 	REQUIRE(dict.count(rec_type_t::bnam) == 1);
 	REQUIRE(dict.count(rec_type_t::sctx) == 1);
+	REQUIRE(dict.count(rec_type_t::script) == 1);
 
-	REQUIRE(dict.size() == 11);
+	REQUIRE(dict.size() == 12);
 }
 
 TEST_CASE("domain_types::initialize_dict, all chapters empty", "[u]")

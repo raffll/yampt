@@ -386,7 +386,7 @@ void script_parser_t::find_new_text(const rec_type_t text_type)
 
 	const auto * search = merger->get_dict().at(text_type).find(old_text);
 
-	if (search)
+	if (search && is_approved_status(search->status))
 	{
 		new_text = search->new_text;
 	}
@@ -394,6 +394,9 @@ void script_parser_t::find_new_text(const rec_type_t text_type)
 	{
 		for (const auto & elem : merger->get_dict().at(text_type).records)
 		{
+			if (!is_approved_status(elem.status))
+				continue;
+
 			if (string_utils::case_insensitive_equal(old_text, elem.key_text))
 			{
 				new_text = elem.new_text;
@@ -405,6 +408,9 @@ void script_parser_t::find_new_text(const rec_type_t text_type)
 	{
 		for (const auto & elem : merger->get_dict().at(text_type).records)
 		{
+			if (!is_approved_status(elem.status))
+				continue;
+
 			if (string_utils::case_insensitive_equal(old_text, elem.old_text))
 			{
 				new_text = elem.new_text;

@@ -137,3 +137,12 @@ Whenever codepages are listed in a combo box or UI element, they must be in asce
 ## Copy to Merged Patch — Individual Sub-Records Always Allowed
 
 Never restrict the user to copying only entire groups. Individual sub-record copy must always be available, even for sub-records that belong to a group. The merge operation must handle placing the sub-record at the correct position based on its content identity, not by occurrence order. If a sub-record belongs to a group that doesn't exist in the merge yet, the merge must create the appropriate structure to receive it — not silently misplace it or force the user to copy the whole group first.
+
+
+## SCVR Sub-Record: No Null Terminator Needed
+
+`convert_scvr` does NOT append `'\0'` to the replacement text. This is correct — not a bug.
+
+SCVR is a structured binary field (5-byte prefix + variable/cell name), not a simple null-terminated string sub-record like NAME or DNAM. OpenMW's reader uses `strnlen(ptr, size)` which handles both null-terminated and non-null-terminated data. OpenMW's writer (`writeHString`) also writes SCVR without a null terminator.
+
+Do NOT "fix" this by adding `new_text += '\0'` to `convert_scvr`.

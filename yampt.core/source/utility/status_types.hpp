@@ -69,6 +69,11 @@ constexpr status_t string_to_status(std::string_view text)
 	return status_t::error;
 }
 
+constexpr bool is_approved_status(status_t status)
+{
+	return status == status_t::translated;
+}
+
 #include <ostream>
 
 inline std::ostream & operator<<(std::ostream & stream, status_t status)

@@ -26,6 +26,7 @@ void dict_merger_t::add_record(const rec_type_t type, const std::string & key_te
 	entry.key_text = key_text;
 	entry.old_text = key_text;
 	entry.new_text = new_text;
+	entry.status = status_t::translated;
 	dict.at(type).insert(entry);
 }
 
