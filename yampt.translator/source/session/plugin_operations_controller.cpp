@@ -36,7 +36,8 @@ void plugin_operations_controller_t::on_plugin_operation(const std::string & plu
 
 	const auto workspace_dir = QCoreApplication::applicationDirPath().toStdString() + "/workspace/";
 
-	if (operation == plugin_op_t::convert || operation == plugin_op_t::create_plugin)
+	if (operation == plugin_op_t::convert || operation == plugin_op_t::convert_hyperlinks ||
+	    operation == plugin_op_t::create_plugin)
 		m_deps.executor.set_output_dir(plugin_dir);
 	else
 		m_deps.executor.set_output_dir(workspace_dir);
@@ -124,6 +125,28 @@ void plugin_operations_controller_t::on_plugin_operation(const std::string & plu
 		result = m_deps.executor.convert(plugin_path, selected);
 		break;
 	}
+	case plugin_op_t::convert_hyperlinks:
+	{
+		auto entries = build_dict_entries(plugin_dir);
+
+		dict_selection_dialog_t dialog(entries, m_deps.settings.last_merge_order(), m_deps.parent_widget);
+		dialog.setWindowTitle(
+		    QCoreApplication::translate("yTranslator", "Select Dictionaries for Convert with Hyperlinks"));
+		if (dialog.exec() != QDialog::Accepted)
+			return;
+
+		const auto selected = dialog.get_selected_paths();
+		if (selected.empty())
+			return;
+
+		m_deps.settings.set_last_merge_order(selected);
+
+		for (const auto & sel_path : selected)
+			m_deps.session.open(sel_path);
+
+		result = m_deps.executor.convert_hyperlinks(plugin_path, selected);
+		break;
+	}
 	case plugin_op_t::create_plugin:
 	{
 		auto entries = build_dict_entries(plugin_dir);
@@ -174,6 +197,9 @@ void plugin_operations_controller_t::log_operation_result(
 		break;
 	case plugin_op_t::convert:
 		operation_name = "convert plugin: " + plugin_name;
+		break;
+	case plugin_op_t::convert_hyperlinks:
+		operation_name = "convert plugin (hyperlinks): " + plugin_name;
 		break;
 	case plugin_op_t::create_plugin:
 		operation_name = "create patch: " + plugin_name;

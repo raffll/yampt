@@ -15,7 +15,6 @@ public:
 	void set_file_type(file_type_t type);
 	void set_language(const std::string & lang);
 	void set_dirty(bool dirty);
-	void set_wip(bool wip);
 	void set_unloaded(bool unloaded);
 
 	std::string to_string() const;
@@ -27,6 +26,5 @@ private:
 	file_type_t m_file_type = file_type_t::user_dict;
 	std::string m_language;
 	bool m_dirty = false;
-	bool m_wip = false;
 	bool m_unloaded = false;
 };

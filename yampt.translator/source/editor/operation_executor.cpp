@@ -145,6 +145,29 @@ operation_executor_t::result_t operation_executor_t::convert(
 	return { true, app_logger_t::get_log(), output_path };
 }
 
+operation_executor_t::result_t operation_executor_t::convert_hyperlinks(
+    const std::string & plugin_path,
+    const std::vector<std::string> & dict_paths)
+{
+	app_logger_t::reset_log();
+
+	dict_merger_t merger(dict_paths);
+
+	esm_converter_t converter(plugin_path, merger, true, "", false);
+
+	if (!converter.is_loaded())
+		return { false, app_logger_t::get_log(), "" };
+
+	const auto info = QFileInfo(QString::fromStdString(plugin_path));
+	const auto ext = info.suffix().toStdString();
+	const auto output_path = make_output_path(plugin_path, ext);
+
+	binary_file_io::write_file(converter.get_records(), output_path);
+	std::filesystem::last_write_time(output_path, converter.get_time());
+
+	return { true, app_logger_t::get_log(), output_path };
+}
+
 operation_executor_t::result_t operation_executor_t::create_plugin(
     const std::string & plugin_path,
     const std::vector<std::string> & dict_paths)

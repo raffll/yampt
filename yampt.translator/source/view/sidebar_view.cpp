@@ -213,6 +213,7 @@ void sidebar_view_t::show_plugin_context_menu(const std::string & path, const QP
 	auto * make_base_action = menu.addAction(tr("Make Base Dictionary"));
 	menu.addSeparator();
 	auto * convert_action = menu.addAction(tr("Convert Plugin"));
+	auto * convert_hl_action = menu.addAction(tr("Convert Plugin with Hyperlinks"));
 	auto * create_action = menu.addAction(tr("Create Patch Plugin"));
 	menu.addSeparator();
 	auto * delete_action = menu.addAction(tr("Delete"));
@@ -224,6 +225,8 @@ void sidebar_view_t::show_plugin_context_menu(const std::string & path, const QP
 		emit operation_requested(path, plugin_op_t::make_base);
 	else if (selected == convert_action)
 		emit operation_requested(path, plugin_op_t::convert);
+	else if (selected == convert_hl_action)
+		emit operation_requested(path, plugin_op_t::convert_hyperlinks);
 	else if (selected == create_action)
 		emit operation_requested(path, plugin_op_t::create_plugin);
 	else if (selected == delete_action)

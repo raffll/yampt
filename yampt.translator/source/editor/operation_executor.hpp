@@ -34,6 +34,7 @@ public:
 	    base_mode_t mode = base_mode_t::full,
 	    const std::string & dictionary_aff_path = {});
 	result_t convert(const std::string & plugin_path, const std::vector<std::string> & dict_paths);
+	result_t convert_hyperlinks(const std::string & plugin_path, const std::vector<std::string> & dict_paths);
 	result_t create_plugin(const std::string & plugin_path, const std::vector<std::string> & dict_paths);
 
 private:

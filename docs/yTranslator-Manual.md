@@ -45,6 +45,10 @@ Two modes are available:
 
 Right-click a plugin and select Convert Plugin. This applies all Translated entries from loaded dictionaries to the plugin and writes a new output file. Entries with any other status are ignored — the original plugin text stays unchanged for those records.
 
+### Convert Plugin with Hyperlinks
+
+Works like Convert Plugin, but additionally inserts hyperlink markers around dialog topic names in INFO response text. These markers allow the game engine to render clickable topic links in dialog windows. Use this when preparing a plugin for in-game use with topic navigation.
+
 ### Create Patch Plugin
 
 Works like Convert Plugin but the output file contains only the records that were actually modified. Use this to produce a lightweight translation patch.

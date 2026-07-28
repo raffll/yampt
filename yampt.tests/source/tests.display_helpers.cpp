@@ -14,11 +14,11 @@ TEST_CASE("display_name_t::to_string, dirty prefix", "[u]")
 	REQUIRE(display.to_string() == "* test.json");
 }
 
-TEST_CASE("display_name_t::to_string, base tag", "[u]")
+TEST_CASE("display_name_t::to_string, base tag removed from text", "[u]")
 {
 	display_name_t display("base.json");
 	display.set_kind(dict_kind_t::base);
-	REQUIRE(display.to_string() == "[BASE] base.json");
+	REQUIRE(display.to_string() == "base.json");
 }
 
 TEST_CASE("display_name_t::to_string, language tag", "[u]")
@@ -41,17 +41,16 @@ TEST_CASE("display_name_t::to_string, all flags combined", "[u]")
 	display.set_dirty(true);
 	display.set_unloaded(true);
 	display.set_kind(dict_kind_t::base);
-	display.set_wip(true);
 	display.set_language("DE");
 
-	REQUIRE(display.to_string() == "* [UNLOADED] [BASE] [WIP] [DE] file.json");
+	REQUIRE(display.to_string() == "* [UNLOADED] [DE] file.json");
 }
 
-TEST_CASE("display_name_t::to_string, wip without base", "[u]")
+TEST_CASE("display_name_t::to_string, kind has no text effect", "[u]")
 {
 	display_name_t display("wip.json");
-	display.set_wip(true);
-	REQUIRE(display.to_string() == "[WIP] wip.json");
+	display.set_kind(dict_kind_t::user);
+	REQUIRE(display.to_string() == "wip.json");
 }
 
 TEST_CASE("display_name_t::filename, returns stored filename", "[u]")

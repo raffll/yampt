@@ -29,11 +29,6 @@ void display_name_t::set_dirty(bool dirty)
 	m_dirty = dirty;
 }
 
-void display_name_t::set_wip(bool wip)
-{
-	m_wip = wip;
-}
-
 void display_name_t::set_unloaded(bool unloaded)
 {
 	m_unloaded = unloaded;
@@ -48,18 +43,6 @@ std::string display_name_t::to_string() const
 
 	if (m_unloaded)
 		result += "[UNLOADED] ";
-
-	if (m_kind == dict_kind_t::base)
-		result += "[BASE] ";
-
-	if (m_file_type == file_type_t::loc_file)
-		result += "[LOC] ";
-
-	if (m_file_type == file_type_t::eet_file)
-		result += "[EET] ";
-
-	if (m_wip)
-		result += "[WIP] ";
 
 	if (!m_language.empty())
 		result += "[" + m_language + "] ";
