@@ -21,7 +21,9 @@ plugin_select_dialog_t::plugin_select_dialog_t(const std::vector<std::string> & 
 	}
 
 	auto * btn_select_all = new QPushButton(tr("Select All"), this);
+	btn_select_all->setToolTip(tr("Check all plugins in the list"));
 	auto * btn_select_none = new QPushButton(tr("Select None"), this);
+	btn_select_none->setToolTip(tr("Uncheck all plugins in the list"));
 
 	auto * select_layout = new QHBoxLayout;
 	select_layout->addWidget(btn_select_all);

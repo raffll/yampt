@@ -918,6 +918,18 @@ void main_window_t::load_config()
 	if (split_ratio > 0.0f)
 		m_editor_view->set_split_ratio(split_ratio);
 
+	const int sidebar_width = m_settings.sidebar_width();
+	const int total_width = width();
+	m_central_splitter->setSizes({ sidebar_width, total_width - sidebar_width });
+
+	const int info_height = m_settings.info_height();
+	const int left_total = m_left_splitter->height();
+	m_left_splitter->setSizes({ left_total - info_height, info_height });
+
+	const int bottom_height = m_settings.bottom_height();
+	const int right_total = m_right_splitter->height();
+	m_right_splitter->setSizes({ right_total - bottom_height, bottom_height });
+
 	std::vector<int> col_widths;
 	for (int i = 0; i < 4; ++i)
 		col_widths.push_back(m_settings.column_width(i));
@@ -963,6 +975,18 @@ void main_window_t::save_config()
 	m_settings.set_bottom_visible(m_bottom_panel_toggle->isChecked());
 
 	m_settings.set_split_ratio(static_cast<float>(m_editor_view->get_split_ratio()));
+
+	const auto left_sizes = m_left_splitter->sizes();
+	if (left_sizes.size() >= 2)
+		m_settings.set_info_height(left_sizes[1]);
+
+	const auto right_sizes = m_right_splitter->sizes();
+	if (right_sizes.size() >= 2)
+		m_settings.set_bottom_height(right_sizes[1]);
+
+	const auto central_sizes = m_central_splitter->sizes();
+	if (central_sizes.size() >= 2)
+		m_settings.set_sidebar_width(central_sizes[0]);
 
 	const auto col_widths = m_table_view->get_column_widths();
 	for (int i = 0; i < static_cast<int>(col_widths.size()) && i < 4; ++i)

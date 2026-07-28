@@ -516,15 +516,6 @@ void main_window_t::connect_sidebar_signals()
 	connect(m_sidebar, &sidebar_view_t::save_requested, this, &main_window_t::on_save_requested);
 	connect(m_sidebar, &sidebar_view_t::unload_requested, this, &main_window_t::on_unload_requested);
 	connect(m_sidebar, &sidebar_view_t::delete_requested, this, &main_window_t::on_delete_requested);
-	connect(
-	    m_sidebar,
-	    &sidebar_view_t::merge_requested,
-	    this,
-	    [this]()
-	{
-		if (m_dict_ops_controller)
-			m_dict_ops_controller->on_merge();
-	});
 
 	connect(
 	    m_sidebar,
