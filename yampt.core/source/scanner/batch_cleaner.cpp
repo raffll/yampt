@@ -1,6 +1,7 @@
 #include "batch_cleaner.hpp"
 #include "../decoder/sub_record_iter.hpp"
 #include "../utility/string_utils.hpp"
+#include "header_repair.hpp"
 #include "plugin_scan.hpp"
 #include <cstring>
 #include <filesystem>
@@ -169,6 +170,16 @@ bool batch_cleaner_t::is_master_plugin(int plugin_idx) const
 	return extension == ".esm";
 }
 
+std::string batch_cleaner_t::resolve_plugin_directory(int plugin_idx) const
+{
+	const auto & full_path = m_scan.plugin_path(plugin_idx);
+	const auto slash_pos = full_path.find_last_of("\\/");
+	if (slash_pos == std::string::npos)
+		return ".";
+
+	return full_path.substr(0, slash_pos);
+}
+
 std::vector<clean_result_t> batch_cleaner_t::clean_all(const std::string & output_directory)
 {
 	std::vector<clean_result_t> results;
@@ -296,12 +307,43 @@ clean_result_t batch_cleaner_t::clean_plugin(int plugin_idx, const std::string &
 
 	result.total_removed = result.itm_removed + result.evil_gmst_removed + result.junk_cell_removed;
 
-	if (result.total_removed == 0)
+	std::string patched_header;
+	const bool needs_header_repair = m_options.update_master_sizes || m_options.update_version;
+
+	if (needs_header_repair && !kept_records.empty() && kept_records[0]->content.substr(0, 4) == "TES3")
+	{
+		patched_header = kept_records[0]->content;
+		const auto plugin_directory = resolve_plugin_directory(plugin_idx);
+
+		if (m_options.update_master_sizes)
+		{
+			const auto before = patched_header;
+			patched_header = header_repair_t::update_master_sizes(patched_header, plugin_directory);
+			if (patched_header != before)
+				result.master_sizes_updated++;
+		}
+
+		if (m_options.update_version)
+		{
+			const auto before = patched_header;
+			patched_header = header_repair_t::update_version_to_1_3(patched_header);
+			if (patched_header != before)
+				result.version_updated = true;
+		}
+	}
+
+	const bool has_header_changes = !patched_header.empty() && patched_header != kept_records[0]->content;
+	if (result.total_removed == 0 && !has_header_changes)
 		return result;
 
 	m_log("[info] " + result.plugin_filename + ": removed " + std::to_string(result.total_removed) + " records");
 	for (const auto & line : removed_log)
 		m_log(line);
+
+	if (result.master_sizes_updated > 0)
+		m_log("  updated master file sizes");
+	if (result.version_updated)
+		m_log("  updated version to 1.3");
 
 	const auto output_path = output_directory + "/" + result.plugin_filename;
 	std::filesystem::create_directories(output_directory);
@@ -313,8 +355,13 @@ clean_result_t batch_cleaner_t::clean_plugin(int plugin_idx, const std::string &
 		return result;
 	}
 
-	for (const auto * record : kept_records)
-		file << record->content;
+	for (size_t i = 0; i < kept_records.size(); ++i)
+	{
+		if (i == 0 && has_header_changes)
+			file << patched_header;
+		else
+			file << kept_records[i]->content;
+	}
 
 	file.close();
 	result.written = true;

@@ -10,6 +10,8 @@ struct clean_options_t
 {
 	bool evil_gmst = true;
 	bool junk_cell = true;
+	bool update_master_sizes = false;
+	bool update_version = false;
 };
 
 struct clean_result_t
@@ -19,6 +21,8 @@ struct clean_result_t
 	int evil_gmst_removed = 0;
 	int junk_cell_removed = 0;
 	int total_removed = 0;
+	int master_sizes_updated = 0;
+	bool version_updated = false;
 	bool written = false;
 };
 
@@ -38,6 +42,7 @@ public:
 private:
 	clean_result_t clean_plugin(int plugin_idx, const std::string & output_directory);
 	bool is_master_plugin(int plugin_idx) const;
+	std::string resolve_plugin_directory(int plugin_idx) const;
 
 	plugin_scan_t & m_scan;
 	log_fn_t m_log;

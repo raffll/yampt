@@ -165,6 +165,12 @@ public:
 	bool clean_junk_cell_enabled() const;
 	void set_clean_junk_cell_enabled(bool value);
 
+	bool clean_update_master_sizes() const;
+	void set_clean_update_master_sizes(bool value);
+
+	bool clean_update_version() const;
+	void set_clean_update_version(bool value);
+
 	void sync();
 
 private:

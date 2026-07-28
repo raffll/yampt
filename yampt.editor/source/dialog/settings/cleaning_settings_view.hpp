@@ -19,4 +19,6 @@ private:
 	QCheckBox * m_evil_gmst_check = nullptr;
 	QCheckBox * m_junk_cell_check = nullptr;
 	QCheckBox * m_itm_check = nullptr;
+	QCheckBox * m_update_master_sizes_check = nullptr;
+	QCheckBox * m_update_version_check = nullptr;
 };

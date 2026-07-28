@@ -206,6 +206,7 @@
     <ClCompile Include="source\scanner\fog_fixer.cpp" />
     <ClCompile Include="source\scanner\auto_merge.cpp" />
     <ClCompile Include="source\scanner\batch_cleaner.cpp" />
+    <ClCompile Include="source\scanner\header_repair.cpp" />
     <ClCompile Include="source\scanner\merge_patch_ops.cpp" />
     <ClCompile Include="source\scanner\plugin_index.cpp" />
     <ClCompile Include="source\scanner\plugin_scan.cpp" />
@@ -262,6 +263,7 @@
     <ClInclude Include="source\scanner\fog_fixer.hpp" />
     <ClInclude Include="source\scanner\auto_merge.hpp" />
     <ClInclude Include="source\scanner\batch_cleaner.hpp" />
+    <ClInclude Include="source\scanner\header_repair.hpp" />
     <ClInclude Include="source\scanner\merge_patch_ops.hpp" />
     <ClInclude Include="source\scanner\plugin_index.hpp" />
     <ClInclude Include="source\scanner\plugin_scan.hpp" />

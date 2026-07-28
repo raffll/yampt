@@ -576,6 +576,26 @@ void settings_store_t::set_clean_junk_cell_enabled(bool value)
 	m_settings.setValue("Cleaning/JunkCell", value);
 }
 
+bool settings_store_t::clean_update_master_sizes() const
+{
+	return m_settings.value("Cleaning/UpdateMasterSizes", false).toBool();
+}
+
+void settings_store_t::set_clean_update_master_sizes(bool value)
+{
+	m_settings.setValue("Cleaning/UpdateMasterSizes", value);
+}
+
+bool settings_store_t::clean_update_version() const
+{
+	return m_settings.value("Cleaning/UpdateVersion", false).toBool();
+}
+
+void settings_store_t::set_clean_update_version(bool value)
+{
+	m_settings.setValue("Cleaning/UpdateVersion", value);
+}
+
 void settings_store_t::sync()
 {
 	m_settings.sync();

@@ -60,6 +60,8 @@
 ### yEditor
 - [NEW] Dialogue INFO chain resolved using OpenMW ordering algorithm (PNAM-based insertion)
 - [NEW] Plugin cleaning: removes evil GMSTs and junk cells from all loaded plugins
+- [NEW] Header repair: update master file sizes in plugin headers to match actual files on disk
+- [NEW] Header repair: update plugin version to 1.3
 - [NEW] Cleaning settings page with toggleable removal options
 - [NEW] Sub-Record Rules settings page for configuring conflict and merge behavior
 - [NEW] Guard Patch: plugins before guard are excluded from merge for records the guard contains

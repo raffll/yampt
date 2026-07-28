@@ -237,6 +237,8 @@ void plugin_workspace_view_t::on_clean_all()
 	clean_options_t options;
 	options.evil_gmst = m_settings.clean_evil_gmst_enabled();
 	options.junk_cell = m_settings.clean_junk_cell_enabled();
+	options.update_master_sizes = m_settings.clean_update_master_sizes();
+	options.update_version = m_settings.clean_update_version();
 	cleaner.set_options(options);
 
 	const auto results = cleaner.clean_all(output_path);

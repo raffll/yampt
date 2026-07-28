@@ -14,6 +14,8 @@ Qt6 GUI for viewing, comparing, and patching plugins. Similar to TES5Edit/xEdit.
 - Automatic fixes: fog density, summon persistence, cell name reversion
 - Copy or remove records, groups, or individual fields to/from merged patch
 - Configurable merge: exclude plugins or records by pattern, toggle record types and fixes
+- Plugin cleaning: batch-remove evil GMSTs and junk cells
+- Header repair: update master file sizes to match actual files on disk, update plugin version to 1.3
 
 ## yTranslator.exe — Translation Workbench
 
