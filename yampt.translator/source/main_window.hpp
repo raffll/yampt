@@ -145,7 +145,6 @@ private:
 	void apply_translation_highlights(const table_row_t * row_data);
 
 	std::optional<make_base_params_t> show_make_base_dialog(const std::string & plugin_path);
-	void start_batch_translation(dict_document_t * dict_doc);
 
 	QAction * m_add_folder_action = nullptr;
 	QAction * m_import_archive_action = nullptr;

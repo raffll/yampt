@@ -249,11 +249,6 @@ void translation_suggestion_view_t::load_model_for_language(int index)
 	update_provider_status();
 }
 
-ctranslate2_translator_t * translation_suggestion_view_t::ct2_provider() const
-{
-	return m_ct2_provider;
-}
-
 void translation_suggestion_view_t::append_log(const std::string & msg)
 {
 	auto * document = m_result_text->document();
@@ -268,13 +263,6 @@ void translation_suggestion_view_t::append_log(const std::string & msg)
 void translation_suggestion_view_t::set_translate_all_enabled(bool enabled)
 {
 	m_translate_all_btn->setEnabled(enabled);
-}
-
-void translation_suggestion_view_t::set_batch_in_progress(bool in_progress)
-{
-	m_batch_in_progress = in_progress;
-	m_provider_combo->setEnabled(!in_progress);
-	m_translate_all_btn->setEnabled(!in_progress);
 }
 
 void translation_suggestion_view_t::select_provider(int index)

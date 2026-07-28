@@ -22,7 +22,6 @@ struct plugin_operations_callbacks_t
 {
 	std::function<void()> scan_workspace;
 	std::function<std::optional<make_base_params_t>(const std::string &)> show_make_base_dialog;
-	std::function<void(dict_document_t *)> start_batch_translation;
 };
 
 struct plugin_operations_deps_t

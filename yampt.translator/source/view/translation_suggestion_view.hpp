@@ -37,11 +37,9 @@ public:
 	void select_provider(int index);
 	translator_t * active_provider() const;
 
-	ctranslate2_translator_t * ct2_provider() const;
 	void append_log(const std::string & msg);
 	void display_translation_result(const translation_suggestion_t & result);
 	void set_translate_all_enabled(bool enabled);
-	void set_batch_in_progress(bool in_progress);
 
 	void request_translation(const std::string & text);
 	void request_translation_lines(const std::vector<std::string> & lines);
@@ -76,7 +74,6 @@ private:
 	std::vector<web_translator_t *> m_web_providers;
 	std::vector<translator_t *> m_providers;
 	int m_active_provider_index = 0;
-	bool m_batch_in_progress = false;
 	bool m_translating = false;
 
 	std::vector<std::string> m_line_queue;
