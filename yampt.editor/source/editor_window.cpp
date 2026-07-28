@@ -128,6 +128,8 @@ void editor_window_t::setup_toolbar()
 	auto * toolbar = addToolBar("Main");
 	toolbar->setMovable(false);
 
+	setContextMenuPolicy(Qt::PreventContextMenu);
+
 	auto * merge_action = new QAction(tr("Create Merged Patch"), this);
 	merge_action->setToolTip(tr("Create a merged patch from loaded plugins"));
 	toolbar->addAction(merge_action);

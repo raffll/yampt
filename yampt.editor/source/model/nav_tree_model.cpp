@@ -467,7 +467,7 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 				return QString::fromUtf8("\xF0\x9F\x93\x9C ") + QString::fromUtf8(buf);
 
 			if (is_overridden)
-				return QString::fromUtf8("\xF0\x9F\x93\x91 ") + QString::fromUtf8(buf);
+				return QString::fromUtf8("\xE2\x9A\xA1 ") + QString::fromUtf8(buf);
 
 			return QString::fromUtf8("\xF0\x9F\x93\x84 ") + QString::fromUtf8(buf);
 		}
