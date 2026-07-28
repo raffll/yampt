@@ -12,10 +12,8 @@
 #include <settings_store.hpp>
 #include <QCoreApplication>
 #include <QDir>
-#include <QFileDialog>
 #include <QFileInfo>
-#include <QInputDialog>
-#include <QLineEdit>
+#include <QMessageBox>
 
 namespace {
 
@@ -69,6 +67,20 @@ void merge_controller_t::create_merged_patch()
 		return;
 	}
 
+	if (m_session.scan().has_merge() && m_session.scan().merge_record_count() > 0)
+	{
+		const auto answer = QMessageBox::question(
+		    nullptr,
+		    QCoreApplication::translate("yEditor", "Regenerate Merged Patch"),
+		    QCoreApplication::translate(
+		        "yEditor", "This will regenerate the merged patch and discard manual changes. Continue?"),
+		    QMessageBox::Yes | QMessageBox::No,
+		    QMessageBox::No);
+
+		if (answer != QMessageBox::Yes)
+			return;
+	}
+
 	if (!m_session.scan().has_merge())
 		m_session.scan().set_merge_plugin("Merged Patch.esp");
 
@@ -78,54 +90,6 @@ void merge_controller_t::create_merged_patch()
 
 	m_log("[info] merge record count: " + std::to_string(m_session.scan().merge_record_count()));
 	save_merged_patch();
-}
-
-void merge_controller_t::save_plugin()
-{
-	if (!m_session.scan().has_merge())
-	{
-		m_log("[error] no merged patch exists");
-		return;
-	}
-
-	if (m_session.scan().merge_record_count() == 0)
-	{
-		m_log("[error] merged patch is empty");
-		return;
-	}
-
-	auto output_path = resolve_merge_output_path();
-	if (output_path.empty())
-	{
-		const auto initial_dir = QString::fromStdString(m_settings.last_directory());
-		const auto selected = QFileDialog::getSaveFileName(
-		    nullptr, QCoreApplication::translate("yEditor", "Save Merged Patch"), initial_dir, "ESP files (*.esp)");
-		if (selected.isEmpty())
-			return;
-
-		output_path = selected.toStdString();
-	}
-
-	bool ok_author = false;
-	auto author = QInputDialog::getText(nullptr, "Plugin Author", "Author:", QLineEdit::Normal, QString(), &ok_author);
-	if (!ok_author)
-		return;
-
-	bool ok_desc = false;
-	auto description =
-	    QInputDialog::getText(nullptr, "Plugin Description", "Description:", QLineEdit::Normal, QString(), &ok_desc);
-	if (!ok_desc)
-		return;
-
-	auto output_dir = QDir(QFileInfo(QString::fromStdString(output_path)).absolutePath());
-	output_dir.mkpath(".");
-
-	const bool result = save_merge_to_file(output_path, author.toStdString(), description.toStdString());
-	if (result)
-		m_log(
-		    "[info] saved " + output_path + " (" + std::to_string(m_session.scan().merge_record_count()) + " records)");
-	else
-		m_log("[error] cannot write to " + output_path);
 }
 
 void merge_controller_t::load_existing_merged_patch()
@@ -472,6 +436,15 @@ int merge_controller_t::create_merge_records()
 
 std::string merge_controller_t::resolve_merge_output_path() const
 {
+	const auto output_dir = resolve_output_directory();
+	if (output_dir.empty())
+		return {};
+
+	return QDir::cleanPath(QString::fromStdString(output_dir) + "/Merged Patch.esp").toStdString();
+}
+
+std::string merge_controller_t::resolve_output_directory() const
+{
 	if (m_session.load_base_path().empty())
 		return {};
 
@@ -479,27 +452,27 @@ std::string merge_controller_t::resolve_merge_output_path() const
 
 	if (m_session.load_source() == plugin_session_t::load_source_t::mo2_profile)
 	{
-		const auto relative = QString::fromStdString(m_settings.merge_path_mo2());
+		const auto relative = QString::fromStdString(m_settings.output_dir_mo2());
+		if (relative.isEmpty())
+			return QDir::cleanPath(base).toStdString();
+
 		return QDir::cleanPath(base + "/" + relative).toStdString();
 	}
 
 	if (m_session.load_source() == plugin_session_t::load_source_t::openmw_cfg)
 	{
-		const auto relative = QString::fromStdString(m_settings.merge_path_openmw());
+		const auto relative = QString::fromStdString(m_settings.output_dir_openmw());
+		if (relative.isEmpty())
+			return QDir::cleanPath(base).toStdString();
+
 		return QDir::cleanPath(base + "/" + relative).toStdString();
 	}
 
-	const auto relative = QString::fromStdString(m_settings.merge_path_folder());
+	const auto relative = QString::fromStdString(m_settings.output_dir_folder());
+	if (relative.isEmpty())
+		return QDir::cleanPath(base).toStdString();
+
 	return QDir::cleanPath(base + "/" + relative).toStdString();
-}
-
-std::string merge_controller_t::resolve_output_directory() const
-{
-	const auto merge_path = resolve_merge_output_path();
-	if (merge_path.empty())
-		return {};
-
-	return std::filesystem::path(merge_path).parent_path().string();
 }
 
 void merge_controller_t::save_merged_patch()

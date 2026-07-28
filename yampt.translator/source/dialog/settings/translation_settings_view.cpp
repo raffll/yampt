@@ -25,6 +25,7 @@ translation_settings_view_t::translation_settings_view_t(const std::string & pro
 	m_provider_table->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
 	m_provider_table->horizontalHeader()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
 	m_provider_table->verticalHeader()->setVisible(false);
+	m_provider_table->verticalHeader()->setDefaultSectionSize(24);
 	m_provider_table->setSelectionMode(QAbstractItemView::NoSelection);
 	m_provider_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
 	layout->addWidget(m_provider_table, 1);

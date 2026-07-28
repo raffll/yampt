@@ -78,9 +78,11 @@ All user-visible strings in yampt.translator and yampt.editor must be wrapped fo
 - QWidget subclasses: `tr("text")`
 - Non-QObject classes: `QCoreApplication::translate("yTranslator", "text")` or `"yEditor"`
 - Never leave raw string literals in UI code (menus, tooltips, labels, messages, dialog titles, button text)
+- This includes: combo box items (`addItem`), checkbox labels, form row labels (`addRow`), context menu actions (`addAction`), `QInputDialog` titles and prompts, list widget category items, and toolbar/statusbar text
 - Log messages (`app_logger_t`, `append_log`) stay English — they are developer-facing
 - Shortcut key sequences (`"Ctrl+S"`, `"F10"`) are not translated
 - Settings keys and internal identifiers are not translated
+- Internal toolbar object names (`addToolBar("Main")`) are not translated
 
 ## Classes vs Namespaces
 

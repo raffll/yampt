@@ -37,6 +37,7 @@ shortcuts_settings_view_t::shortcuts_settings_view_t(QWidget * parent)
 	m_table->horizontalHeader()->setStretchLastSection(true);
 	m_table->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
 	m_table->verticalHeader()->setVisible(false);
+	m_table->verticalHeader()->setDefaultSectionSize(24);
 	m_table->setSelectionBehavior(QAbstractItemView::SelectRows);
 	m_table->setSelectionMode(QAbstractItemView::SingleSelection);
 	m_table->setEditTriggers(QAbstractItemView::NoEditTriggers);

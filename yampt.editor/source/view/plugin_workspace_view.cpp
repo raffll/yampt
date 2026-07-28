@@ -182,11 +182,6 @@ void plugin_workspace_view_t::on_load_openmw_cfg()
 	m_settings.set_last_directory(cfg_dir.toStdString());
 }
 
-void plugin_workspace_view_t::on_save_plugin()
-{
-	m_merge_controller->save_plugin();
-}
-
 void plugin_workspace_view_t::on_unload_all()
 {
 	m_session->unload_all();

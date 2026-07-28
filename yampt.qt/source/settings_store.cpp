@@ -275,34 +275,34 @@ void settings_store_t::set_mo2_profile_dir(const std::string & value)
 	m_settings.setValue("Paths/Mo2ProfileDir", QString::fromStdString(value));
 }
 
-std::string settings_store_t::merge_path_folder() const
+std::string settings_store_t::output_dir_folder() const
 {
-	return m_settings.value("Paths/MergePathFolder", "Merged Patch.esp").toString().toStdString();
+	return m_settings.value("Paths/OutputDirFolder", "").toString().toStdString();
 }
 
-void settings_store_t::set_merge_path_folder(const std::string & value)
+void settings_store_t::set_output_dir_folder(const std::string & value)
 {
-	m_settings.setValue("Paths/MergePathFolder", QString::fromStdString(value));
+	m_settings.setValue("Paths/OutputDirFolder", QString::fromStdString(value));
 }
 
-std::string settings_store_t::merge_path_mo2() const
+std::string settings_store_t::output_dir_mo2() const
 {
-	return m_settings.value("Paths/MergePathMo2", "../../overwrite/Merged Patch.esp").toString().toStdString();
+	return m_settings.value("Paths/OutputDirMo2", "../../overwrite").toString().toStdString();
 }
 
-void settings_store_t::set_merge_path_mo2(const std::string & value)
+void settings_store_t::set_output_dir_mo2(const std::string & value)
 {
-	m_settings.setValue("Paths/MergePathMo2", QString::fromStdString(value));
+	m_settings.setValue("Paths/OutputDirMo2", QString::fromStdString(value));
 }
 
-std::string settings_store_t::merge_path_openmw() const
+std::string settings_store_t::output_dir_openmw() const
 {
-	return m_settings.value("Paths/MergePathOpenmw", "data/Merged Patch.esp").toString().toStdString();
+	return m_settings.value("Paths/OutputDirOpenmw", "data").toString().toStdString();
 }
 
-void settings_store_t::set_merge_path_openmw(const std::string & value)
+void settings_store_t::set_output_dir_openmw(const std::string & value)
 {
-	m_settings.setValue("Paths/MergePathOpenmw", QString::fromStdString(value));
+	m_settings.setValue("Paths/OutputDirOpenmw", QString::fromStdString(value));
 }
 
 float settings_store_t::split_ratio() const
@@ -528,7 +528,7 @@ void settings_store_t::set_sub_record_ignore_conflict(const std::string & value)
 
 std::string settings_store_t::sub_record_exclude_from_merge() const
 {
-	return m_settings.value("SubRecordRules/ExcludeFromMerge", "CELL:NAM0, CELL:NAM9").toString().toStdString();
+	return m_settings.value("SubRecordRules/ExcludeFromMerge", "CELL:NAM0").toString().toStdString();
 }
 
 void settings_store_t::set_sub_record_exclude_from_merge(const std::string & value)

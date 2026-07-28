@@ -21,12 +21,6 @@ cleaning_settings_view_t::cleaning_settings_view_t(QWidget * parent)
 	m_junk_cell_check->setToolTip(tr("Remove exterior cells that contain only NAME and DATA sub-records"));
 	group_layout->addWidget(m_junk_cell_check);
 
-	m_itm_check = new QCheckBox(tr("Remove ITM records"), group);
-	m_itm_check->setToolTip(tr("Not yet available — ITM detection needs further testing"));
-	m_itm_check->setEnabled(false);
-	m_itm_check->setChecked(false);
-	group_layout->addWidget(m_itm_check);
-
 	layout->addWidget(group);
 
 	auto * header_group = new QGroupBox(tr("Header Repair"), this);

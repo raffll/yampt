@@ -41,7 +41,7 @@ void merge_settings_view_t::setup_record_types_group()
 		const auto * type_name = record_types[i];
 		auto * checkbox = new QCheckBox(type_name, group);
 		checkbox->setChecked(true);
-		checkbox->setToolTip(QString("Include %1 records in merged patch").arg(type_name));
+		checkbox->setToolTip(tr("Include %1 records in merged patch").arg(type_name));
 		grid->addWidget(checkbox, i / columns, i % columns);
 		m_type_checkboxes[type_name] = checkbox;
 	}
@@ -67,17 +67,17 @@ void merge_settings_view_t::setup_fixes_group()
 	auto * group = new QGroupBox(tr("Bug Fixes"), this);
 	auto * fixes_layout = new QVBoxLayout(group);
 
-	m_fog_fix_check = new QCheckBox("Fix fog density", group);
+	m_fog_fix_check = new QCheckBox(tr("Fix fog density"), group);
 	m_fog_fix_check->setChecked(true);
 	m_fog_fix_check->setToolTip(tr("Fix zero fog density in interior cells"));
 	fixes_layout->addWidget(m_fog_fix_check);
 
-	m_summon_fix_check = new QCheckBox("Fix summon persistence", group);
+	m_summon_fix_check = new QCheckBox(tr("Fix summon persistence"), group);
 	m_summon_fix_check->setChecked(true);
 	m_summon_fix_check->setToolTip(tr("Add persistent flag to summoned creatures"));
 	fixes_layout->addWidget(m_summon_fix_check);
 
-	m_cell_name_fix_check = new QCheckBox("Fix cell name reversion", group);
+	m_cell_name_fix_check = new QCheckBox(tr("Fix cell name reversion"), group);
 	m_cell_name_fix_check->setChecked(true);
 	m_cell_name_fix_check->setToolTip(tr("Prevent cell name reversions by later plugins"));
 	fixes_layout->addWidget(m_cell_name_fix_check);

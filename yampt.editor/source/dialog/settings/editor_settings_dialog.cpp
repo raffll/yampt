@@ -30,11 +30,11 @@ editor_settings_dialog_t::editor_settings_dialog_t(settings_store_t & settings, 
 	m_cleaning_view = new cleaning_settings_view_t(this);
 	m_sub_record_rules_view = new sub_record_rules_view_t(this);
 
-	m_category_list->addItem("Appearance");
-	m_category_list->addItem("Paths");
-	m_category_list->addItem("Merged Patch");
-	m_category_list->addItem("Cleaning");
-	m_category_list->addItem("Sub-Record Rules");
+	m_category_list->addItem(tr("Appearance"));
+	m_category_list->addItem(tr("Paths"));
+	m_category_list->addItem(tr("Merged Patch"));
+	m_category_list->addItem(tr("Cleaning"));
+	m_category_list->addItem(tr("Sub-Record Rules"));
 
 	m_content_stack->addWidget(m_appearance_view);
 	m_content_stack->addWidget(m_paths_view);

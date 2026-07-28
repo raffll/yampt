@@ -81,10 +81,12 @@ yampt.qt (StaticLibrary → yampt.qt.lib)
 - Never compile `.cpp` from yampt.qt in other projects (they link the lib)
 - Never add yampt.core.lib or yampt.qt.lib as AdditionalDependencies without also adding the ProjectReference (build order)
 
-## Merge Output Paths (Hardcoded)
+## Output Directory (Configurable)
 
-- **Folder mode**: `{selected_folder}/Merged Patch.esp`
-- **MO2 mode**: `{MO2_root}/overwrite/Merged Patch.esp`
-- **OpenMW mode**: `{openmw.cfg_dir}/data/Merged Patch.esp`
+The output directory is configurable per mode in Settings → Paths. All files created by yEditor (merged patch, cleaned plugins) go into this directory.
 
-No settings for these paths — they are automatic and deterministic.
+- **Folder mode**: `{selected_folder}/{output_dir}/` — default: same as base directory (empty)
+- **MO2 mode**: `{MO2_profile_dir}/{output_dir}/` — default: `../../overwrite`
+- **OpenMW mode**: `{openmw.cfg_dir}/{output_dir}/` — default: `data`
+
+The merged patch filename is always `Merged Patch.esp` — only the output directory is configurable.

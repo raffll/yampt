@@ -83,14 +83,14 @@ public:
 	std::string mo2_profile_dir() const;
 	void set_mo2_profile_dir(const std::string & value);
 
-	std::string merge_path_folder() const;
-	void set_merge_path_folder(const std::string & value);
+	std::string output_dir_folder() const;
+	void set_output_dir_folder(const std::string & value);
 
-	std::string merge_path_mo2() const;
-	void set_merge_path_mo2(const std::string & value);
+	std::string output_dir_mo2() const;
+	void set_output_dir_mo2(const std::string & value);
 
-	std::string merge_path_openmw() const;
-	void set_merge_path_openmw(const std::string & value);
+	std::string output_dir_openmw() const;
+	void set_output_dir_openmw(const std::string & value);
 
 	float split_ratio() const;
 	void set_split_ratio(float value);

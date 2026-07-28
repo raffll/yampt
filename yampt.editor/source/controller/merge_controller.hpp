@@ -23,7 +23,6 @@ public:
 	    log_fn_t log_fn);
 
 	void create_merged_patch();
-	void save_plugin();
 	void load_existing_merged_patch();
 	std::string resolve_output_directory() const;
 

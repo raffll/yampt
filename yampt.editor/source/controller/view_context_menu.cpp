@@ -63,7 +63,8 @@ void view_context_menu_t::show_nav_menu(const QPoint & global_pos, const nav_tre
 		const bool is_patch = m_session.patch_plugins().count(filename) > 0;
 
 		menu.addAction(
-		    excluded ? "Include in Merged Patch" : "Exclude from Merged Patch",
+		    excluded ? QCoreApplication::translate("yEditor", "Include in Merged Patch")
+		             : QCoreApplication::translate("yEditor", "Exclude from Merged Patch"),
 		    [this, filename, excluded]()
 		{
 			auto excluded_copy = m_session.excluded_plugins();
@@ -78,7 +79,8 @@ void view_context_menu_t::show_nav_menu(const QPoint & global_pos, const nav_tre
 		});
 
 		menu.addAction(
-		    is_patch ? "Unmark as Guard Patch" : "Mark as Guard Patch",
+		    is_patch ? QCoreApplication::translate("yEditor", "Unmark as Guard Patch")
+		             : QCoreApplication::translate("yEditor", "Mark as Guard Patch"),
 		    [this, filename, is_patch]()
 		{
 			auto patch_copy = m_session.patch_plugins();
@@ -210,14 +212,14 @@ void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModel
 		if (behavior->copy_strategy == copy_strategy_t::header_and_selected_group)
 		{
 			menu.addAction(
-			    "Copy Record to Merged Patch",
+			    QCoreApplication::translate("yEditor", "Copy Record to Merged Patch"),
 			    [this, plugin_idx, rec_type, record_id, index, col]()
 			{ m_merge.copy_cell_record(plugin_idx, rec_type, record_id, index, col); });
 		}
 		else
 		{
 			menu.addAction(
-			    "Copy Record to Merged Patch",
+			    QCoreApplication::translate("yEditor", "Copy Record to Merged Patch"),
 			    [this, plugin_idx, rec_type, record_id]()
 			{ m_merge.copy_whole_record(plugin_idx, rec_type, record_id); });
 		}
@@ -234,7 +236,7 @@ void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModel
 		{
 			const auto sub_type = row.type;
 			menu.addAction(
-			    "Copy Sub-Record to Merged Patch",
+			    QCoreApplication::translate("yEditor", "Copy Sub-Record to Merged Patch"),
 			    [this, plugin_idx, rec_type, record_id, sub_type, bin_idx]()
 			{ m_merge.copy_sub_record(plugin_idx, rec_type, record_id, sub_type, bin_idx); });
 			break;
@@ -243,7 +245,7 @@ void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModel
 		case row_kind_t::group:
 		{
 			menu.addAction(
-			    "Copy Group to Merged Patch",
+			    QCoreApplication::translate("yEditor", "Copy Group to Merged Patch"),
 			    [this, plugin_idx, rec_type, record_id, parent_row_idx]()
 			{ m_merge.copy_group(plugin_idx, rec_type, record_id, parent_row_idx); });
 			break;
@@ -271,7 +273,7 @@ void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModel
 			const int field_bin = binary_start(*sub_record_node);
 			const int child_field_idx = row.schema_field_index;
 			menu.addAction(
-			    "Copy Field to Merged Patch",
+			    QCoreApplication::translate("yEditor", "Copy Field to Merged Patch"),
 			    [this, plugin_idx, rec_type, record_id, sub_type, sub_size, field_bin, child_field_idx]()
 			{ m_merge.copy_field(plugin_idx, rec_type, record_id, sub_type, sub_size, field_bin, child_field_idx); });
 			break;
@@ -280,7 +282,7 @@ void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModel
 		case row_kind_t::field_of_group:
 		{
 			menu.addAction(
-			    "Copy Group to Merged Patch",
+			    QCoreApplication::translate("yEditor", "Copy Group to Merged Patch"),
 			    [this, plugin_idx, rec_type, record_id, parent_row_idx]()
 			{ m_merge.copy_group(plugin_idx, rec_type, record_id, parent_row_idx); });
 			break;
@@ -304,7 +306,7 @@ void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModel
 			{
 				const auto removed_type = row.type;
 				menu.addAction(
-				    "Remove Sub-Record",
+				    QCoreApplication::translate("yEditor", "Remove Sub-Record"),
 				    [this, rec_type, record_id, bin_idx, removed_type]()
 				{ m_merge.remove_sub_record(rec_type, record_id, bin_idx, removed_type); });
 			}
@@ -321,7 +323,7 @@ void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModel
 			if (merge_range.start >= 0)
 			{
 				menu.addAction(
-				    "Remove Group",
+				    QCoreApplication::translate("yEditor", "Remove Group"),
 				    [this, rec_type, record_id, merge_range]()
 				{ m_merge.remove_group(rec_type, record_id, merge_range); });
 			}
@@ -347,7 +349,7 @@ void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModel
 				{
 					const auto removed_type = sub_record_node->type;
 					menu.addAction(
-					    "Remove Sub-Record",
+					    QCoreApplication::translate("yEditor", "Remove Sub-Record"),
 					    [this, rec_type, record_id, merge_bin, removed_type]()
 					{ m_merge.remove_sub_record(rec_type, record_id, merge_bin, removed_type); });
 				}

@@ -57,7 +57,6 @@ public slots:
 	void on_load_data_files();
 	void on_load_mo2_profile();
 	void on_load_openmw_cfg();
-	void on_save_plugin();
 	void on_unload_all();
 	void on_create_merged_patch();
 	void on_clean_all();

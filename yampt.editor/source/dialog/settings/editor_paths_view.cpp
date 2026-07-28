@@ -9,7 +9,7 @@ editor_paths_view_t::editor_paths_view_t(QWidget * parent)
 {
 	auto * layout = new QVBoxLayout(this);
 
-	auto * header = new QLabel(tr("Merged patch output path (relative to base directory):"), this);
+	auto * header = new QLabel(tr("Output directory (relative to base directory):"), this);
 	layout->addWidget(header);
 
 	layout->addSpacing(8);
@@ -17,7 +17,7 @@ editor_paths_view_t::editor_paths_view_t(QWidget * parent)
 	auto * folder_label = new QLabel(tr("Folder mode:"), this);
 	layout->addWidget(folder_label);
 	m_edt_folder_path = new QLineEdit(this);
-	m_edt_folder_path->setPlaceholderText(tr("Merged Patch.esp"));
+	m_edt_folder_path->setPlaceholderText(tr("(same as base directory)"));
 	layout->addWidget(m_edt_folder_path);
 
 	layout->addSpacing(8);
@@ -25,7 +25,7 @@ editor_paths_view_t::editor_paths_view_t(QWidget * parent)
 	auto * mo2_label = new QLabel(tr("MO2 mode:"), this);
 	layout->addWidget(mo2_label);
 	m_edt_mo2_path = new QLineEdit(this);
-	m_edt_mo2_path->setPlaceholderText(tr("../../overwrite/Merged Patch.esp"));
+	m_edt_mo2_path->setPlaceholderText(tr("../../overwrite"));
 	layout->addWidget(m_edt_mo2_path);
 
 	layout->addSpacing(8);
@@ -33,7 +33,7 @@ editor_paths_view_t::editor_paths_view_t(QWidget * parent)
 	auto * openmw_label = new QLabel(tr("OpenMW mode:"), this);
 	layout->addWidget(openmw_label);
 	m_edt_openmw_path = new QLineEdit(this);
-	m_edt_openmw_path->setPlaceholderText(tr("data/Merged Patch.esp"));
+	m_edt_openmw_path->setPlaceholderText(tr("data"));
 	layout->addWidget(m_edt_openmw_path);
 
 	layout->addStretch();
@@ -41,14 +41,14 @@ editor_paths_view_t::editor_paths_view_t(QWidget * parent)
 
 void editor_paths_view_t::load(const settings_store_t & settings)
 {
-	m_edt_folder_path->setText(QString::fromStdString(settings.merge_path_folder()));
-	m_edt_mo2_path->setText(QString::fromStdString(settings.merge_path_mo2()));
-	m_edt_openmw_path->setText(QString::fromStdString(settings.merge_path_openmw()));
+	m_edt_folder_path->setText(QString::fromStdString(settings.output_dir_folder()));
+	m_edt_mo2_path->setText(QString::fromStdString(settings.output_dir_mo2()));
+	m_edt_openmw_path->setText(QString::fromStdString(settings.output_dir_openmw()));
 }
 
 void editor_paths_view_t::apply(settings_store_t & settings) const
 {
-	settings.set_merge_path_folder(m_edt_folder_path->text().toStdString());
-	settings.set_merge_path_mo2(m_edt_mo2_path->text().toStdString());
-	settings.set_merge_path_openmw(m_edt_openmw_path->text().toStdString());
+	settings.set_output_dir_folder(m_edt_folder_path->text().toStdString());
+	settings.set_output_dir_mo2(m_edt_mo2_path->text().toStdString());
+	settings.set_output_dir_openmw(m_edt_openmw_path->text().toStdString());
 }

@@ -6,11 +6,6 @@ using enum sub_rule_flag_t;
 
 static constexpr sub_record_rule_t cell_wildcard = { "*", 0, skip_non_existent };
 
-static constexpr sub_record_rule_t cell_sub_rules[] = {
-	{ "NAM0", 0, ignore_conflict | exclude_from_merge },
-	{ "NAM9", 0, skip_non_existent | exclude_from_merge },
-};
-
 static constexpr field_pair_rule_t crea_npdt_attack_pairs[] = {
 	{ 68, 70, 2 },
 	{ 72, 74, 2 },
@@ -49,8 +44,8 @@ static constexpr record_behavior_t behavior_table[] = {
 	{ "CELL",
 	  decode_mode_t::cell,
 	  copy_strategy_t::header_and_selected_group,
-	  cell_sub_rules,
-	  2,
+	  nullptr,
+	  0,
 	  &cell_wildcard,
 	  nullptr,
 	  0 },
