@@ -1,12 +1,13 @@
 Audit the yampt codebase. Find exactly 5 issues from any of these categories:
 
 1. **Code bugs** — logic errors, off-by-one, null dereference, race conditions, undefined behavior
-2. **Steering drift** — code that violates a steering rule (naming, nesting, line limits, file placement, comment presence, missing tooltips, missing tr() wrapping, etc.)
-3. **Dead code** — unused functions, unreachable branches, stale includes, orphaned files
-4. **Architecture violations** — wrong project dependency direction, Qt in yampt.core, missing vcxproj.filters sync, split classes, wrong folder placement
-5. **Documentation drift** — README/CHANGELOG/manual text that contradicts current code behavior, or missing entries for shipped features
-6. **Steering contradictions** — two steering rules that conflict, or a steering rule that no longer matches reality
-7. **Better solutions** — a place where the current implementation is a workaround, shortcut, or overly complex compared to what the architecture supports
+2. **GUI behavior** — visible UI glitches, wrong widget state, missing feedback, broken interactions, features running when disabled
+3. **Steering drift** — code that violates a steering rule (naming, nesting, line limits, file placement, comment presence, missing tooltips, missing tr() wrapping, etc.)
+4. **Dead code** — unused functions, unreachable branches, stale includes, orphaned files
+5. **Architecture violations** — wrong project dependency direction, Qt in yampt.core, missing vcxproj.filters sync, split classes, wrong folder placement
+6. **Documentation drift** — README/CHANGELOG/manual text that contradicts current code behavior, or missing entries for shipped features
+7. **Steering contradictions** — two steering rules that conflict, or a steering rule that no longer matches reality
+8. **Better solutions** — a place where the current implementation is a workaround, shortcut, or overly complex compared to what the architecture supports
 
 ## Instructions
 

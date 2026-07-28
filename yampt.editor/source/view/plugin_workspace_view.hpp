@@ -99,7 +99,6 @@ private:
 
 	QSplitter * m_main_splitter = nullptr;
 	QSplitter * m_content_splitter = nullptr;
-	QTabWidget * m_top_tabs = nullptr;
 	nav_tree_view_t * m_nav_view = nullptr;
 	record_view_t * m_record_view = nullptr;
 	messages_view_t * m_messages = nullptr;

@@ -68,16 +68,13 @@ void plugin_workspace_view_t::setup_views()
 	m_lua_conflicts_view = new lua_conflicts_view_t();
 	m_lua_scan_worker = new lua_scan_worker_t(this);
 
-	m_top_tabs = new QTabWidget(m_main_splitter);
-	m_top_tabs->addTab(m_content_splitter, tr("Plugin Conflicts"));
-
 	m_bottom_tabs = new QTabWidget(m_main_splitter);
 	m_messages = new messages_view_t(m_bottom_tabs);
 	m_preview = new preview_view_t(m_bottom_tabs);
 	m_bottom_tabs->addTab(m_messages, tr("Log"));
 	m_bottom_tabs->addTab(m_preview, tr("Preview"));
 
-	m_main_splitter->addWidget(m_top_tabs);
+	m_main_splitter->addWidget(m_content_splitter);
 	m_main_splitter->addWidget(m_bottom_tabs);
 	m_main_splitter->setSizes({ 600, 150 });
 	m_main_splitter->setChildrenCollapsible(true);
@@ -261,7 +258,6 @@ void plugin_workspace_view_t::rebuild_after_load()
 	rebuild_nav_preserving_state();
 	on_filter_changed();
 	update_status();
-	start_lua_scan();
 }
 
 void plugin_workspace_view_t::apply_user_conflict_rules()
