@@ -377,7 +377,7 @@ void main_window_t::connect_menu_signals()
 	    this,
 	    [this]()
 	{
-		const auto archive_path = QFileDialog::getOpenFileName(this, "Import Archive", "", "Archives (*.zip *.rar)");
+		const auto archive_path = QFileDialog::getOpenFileName(this, tr("Import Archive"), "", tr("Archives (*.zip *.rar)"));
 
 		if (archive_path.isEmpty())
 			return;
@@ -386,7 +386,7 @@ void main_window_t::connect_menu_signals()
 		const QString sevenzip = app_dir + "/7za.exe";
 		if (!QFile::exists(sevenzip))
 		{
-			QMessageBox::critical(this, "Error", "7za.exe not found next to the application");
+			QMessageBox::critical(this, tr("Error"), tr("7za.exe not found next to the application"));
 			return;
 		}
 
@@ -401,7 +401,7 @@ void main_window_t::connect_menu_signals()
 		if (proc.exitCode() != 0)
 		{
 			QMessageBox::critical(
-			    this, "Extraction Error", "Failed to extract archive:\n" + proc.readAllStandardError());
+			    this, tr("Extraction Error"), tr("Failed to extract archive:\n") + proc.readAllStandardError());
 			return;
 		}
 

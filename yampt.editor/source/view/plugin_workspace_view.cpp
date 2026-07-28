@@ -43,7 +43,6 @@ plugin_workspace_view_t::plugin_workspace_view_t(settings_store_t & settings, QW
 	m_nav_view->set_excluded_plugins(&m_session->excluded_plugins());
 	m_nav_view->set_patch_plugins(&m_session->patch_plugins());
 	m_content_splitter->insertWidget(0, m_nav_view);
-	m_content_splitter->setSizes({ 300, 700 });
 	m_record_view = new record_view_t(this);
 	m_record_view->model()->set_excluded_plugins(&m_session->excluded_plugins());
 	m_record_view->model()->set_patch_plugins(&m_session->patch_plugins());
@@ -51,6 +50,7 @@ plugin_workspace_view_t::plugin_workspace_view_t(settings_store_t & settings, QW
 	m_record_view->model()->set_user_ignore_conflict(m_session->scan().user_ignore_conflict());
 	m_nav_view->set_display_codepage(static_cast<codepage_t>(m_settings.display_codepage()));
 	m_content_splitter->insertWidget(1, m_record_view);
+	m_content_splitter->setSizes({ 200, 800 });
 
 	m_merge_controller = new merge_controller_t(
 	    *m_session, *m_record_view, *m_nav_view, m_settings, [this](const std::string & msg) { log_message(msg); });

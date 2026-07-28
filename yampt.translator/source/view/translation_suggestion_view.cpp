@@ -179,16 +179,16 @@ void translation_suggestion_view_t::update_provider_status()
 		{
 			m_status_label->setText(
 			    QString::fromStdString(provider->name()) +
-			    QString(": %L1 chars remaining").arg(provider->remaining_quota()));
+			    tr(": %L1 chars remaining").arg(provider->remaining_quota()));
 		}
 		else
 		{
-			m_status_label->setText(QString::fromStdString(provider->name()) + ": ready");
+			m_status_label->setText(QString::fromStdString(provider->name()) + tr(": ready"));
 		}
 	}
 	else
 	{
-		m_status_label->setText(QString::fromStdString(provider->name()) + ": no API key");
+		m_status_label->setText(QString::fromStdString(provider->name()) + tr(": no API key"));
 	}
 }
 
@@ -215,9 +215,8 @@ void translation_suggestion_view_t::rebuild_language_list()
 		if (!nllb_models.empty())
 		{
 			static const std::vector<std::pair<std::string, std::string>> nllb_targets = {
-				{ "pol_Latn", "PL" }, { "deu_Latn", "DE" }, { "fra_Latn", "FR" }, { "rus_Cyrl", "RU" },
-				{ "spa_Latn", "ES" }, { "ita_Latn", "IT" }, { "ces_Latn", "CS" }, { "nld_Latn", "NL" },
-				{ "por_Latn", "PT" }, { "ukr_Cyrl", "UK" },
+				{ "pol_Latn", "PL" }, { "deu_Latn", "DE" }, { "fra_Latn", "FR" },
+				{ "rus_Cyrl", "RU" }, { "ita_Latn", "IT" }, { "hun_Latn", "HU" },
 			};
 
 			const auto & model_path = nllb_models[0];

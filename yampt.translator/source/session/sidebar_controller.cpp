@@ -81,8 +81,8 @@ void sidebar_controller_t::on_unload_requested(const std::string & path)
 	{
 		auto answer = QMessageBox::question(
 		    m_deps.parent_widget,
-		    "Unsaved Changes",
-		    "This dictionary has unsaved changes. Save before unloading?",
+		    QCoreApplication::translate("yTranslator", "Unsaved Changes"),
+		    QCoreApplication::translate("yTranslator", "This dictionary has unsaved changes. Save before unloading?"),
 		    QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
 
 		if (answer == QMessageBox::Cancel)
@@ -112,8 +112,8 @@ void sidebar_controller_t::on_delete_requested(const std::string & path)
 
 	auto answer = QMessageBox::question(
 	    m_deps.parent_widget,
-	    "Delete File",
-	    QString("Delete \"%1\" from disk?").arg(QString::fromStdString(filename)),
+	    QCoreApplication::translate("yTranslator", "Delete File"),
+	    QCoreApplication::translate("yTranslator", "Delete \"%1\" from disk?").arg(QString::fromStdString(filename)),
 	    QMessageBox::Yes | QMessageBox::No);
 
 	if (answer != QMessageBox::Yes)
@@ -124,7 +124,7 @@ void sidebar_controller_t::on_delete_requested(const std::string & path)
 		QMessageBox::warning(
 		    m_deps.parent_widget,
 		    QCoreApplication::translate("yTranslator", "Error"),
-		    QString("Failed to delete \"%1\".").arg(QString::fromStdString(filename)));
+		    QCoreApplication::translate("yTranslator", "Failed to delete \"%1\".").arg(QString::fromStdString(filename)));
 		return;
 	}
 
@@ -270,8 +270,8 @@ void sidebar_controller_t::on_delete_folder_requested(const std::string & folder
 
 	auto answer = QMessageBox::question(
 	    m_deps.parent_widget,
-	    "Delete Folder",
-	    QString("Delete \"%1\" and all its contents from disk?").arg(QString::fromStdString(folder_name)),
+	    QCoreApplication::translate("yTranslator", "Delete Folder"),
+	    QCoreApplication::translate("yTranslator", "Delete \"%1\" and all its contents from disk?").arg(QString::fromStdString(folder_name)),
 	    QMessageBox::Yes | QMessageBox::No);
 
 	if (answer != QMessageBox::Yes)

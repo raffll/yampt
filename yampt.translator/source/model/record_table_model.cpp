@@ -142,15 +142,15 @@ QVariant record_table_model_t::headerData(int section, Qt::Orientation orientati
 	switch (section)
 	{
 	case col_id:
-		return QStringLiteral("ID");
+		return tr("ID");
 	case col_key:
-		return QStringLiteral("Key");
+		return tr("Key");
 	case col_original:
-		return QStringLiteral("Original");
+		return tr("Original");
 	case col_translation:
-		return QStringLiteral("Translation");
+		return tr("Translation");
 	case col_status:
-		return QStringLiteral("Status");
+		return tr("Status");
 	default:
 		return {};
 	}
