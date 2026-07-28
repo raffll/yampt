@@ -62,7 +62,6 @@ private:
 	void convert_info();
 	void convert_bnam();
 	void convert_scpt();
-	void convert_gmdt();
 
 	void build_hyperlink_trie();
 	std::string insert_hyperlink_markers(const std::string & text) const;

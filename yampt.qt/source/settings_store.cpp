@@ -115,36 +115,6 @@ void settings_store_t::set_foreign_tag(const std::string & value)
 	m_settings.setValue("Language/ForeignTag", QString::fromStdString(value));
 }
 
-std::string settings_store_t::deepl_api_key() const
-{
-	return m_settings.value("Translation/DeepLApiKey", "").toString().toStdString();
-}
-
-void settings_store_t::set_deepl_api_key(const std::string & value)
-{
-	m_settings.setValue("Translation/DeepLApiKey", QString::fromStdString(value));
-}
-
-std::string settings_store_t::google_api_key() const
-{
-	return m_settings.value("Translation/GoogleApiKey", "").toString().toStdString();
-}
-
-void settings_store_t::set_google_api_key(const std::string & value)
-{
-	m_settings.setValue("Translation/GoogleApiKey", QString::fromStdString(value));
-}
-
-std::string settings_store_t::claude_api_key() const
-{
-	return m_settings.value("Translation/ClaudeApiKey", "").toString().toStdString();
-}
-
-void settings_store_t::set_claude_api_key(const std::string & value)
-{
-	m_settings.setValue("Translation/ClaudeApiKey", QString::fromStdString(value));
-}
-
 std::string settings_store_t::web_api_key(const std::string & provider_id) const
 {
 	const auto key = QString("WebTranslators/") + QString::fromStdString(provider_id);

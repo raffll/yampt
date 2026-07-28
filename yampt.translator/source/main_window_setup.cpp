@@ -702,87 +702,13 @@ void main_window_t::connect_editor_signals()
 	    m_editor_view,
 	    &editor_view_t::apply_clicked,
 	    this,
-	    [this]()
-	{
-		if (m_editor_controller.current_row() < 0)
-			return;
-
-		commit_current_edit();
-
-		int row_count = m_table_model->rowCount();
-		int next_row = -1;
-		for (int i = m_editor_controller.current_row() + 1; i < row_count; ++i)
-		{
-			const auto * r = m_table_model->row_at(i);
-			if (r && r->status != status_t::propagated)
-			{
-				next_row = i;
-				break;
-			}
-		}
-
-		if (next_row < 0)
-		{
-			next_row = m_editor_controller.current_row() + 1;
-			if (next_row >= row_count)
-				next_row = row_count - 1;
-		}
-
-		if (next_row >= 0 && next_row != m_editor_controller.current_row())
-		{
-			auto idx = m_table_model->index(next_row, 0);
-			m_table_view->selectionModel()->setCurrentIndex(
-			    idx, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
-			on_row_selected(next_row);
-			auto cursor = m_editor_view->translation_editor()->textCursor();
-			cursor.movePosition(QTextCursor::End);
-			m_editor_view->translation_editor()->setTextCursor(cursor);
-			m_editor_view->translation_editor()->setFocus();
-		}
-	});
+	    [this]() { advance_to_next_row(); });
 
 	connect(
 	    m_editor_view->translation_editor(),
 	    &translation_edit_view_t::navigate_next,
 	    this,
-	    [this]()
-	{
-		if (m_editor_controller.current_row() < 0)
-			return;
-
-		commit_current_edit();
-
-		int row_count = m_table_model->rowCount();
-		int next_row = -1;
-		for (int i = m_editor_controller.current_row() + 1; i < row_count; ++i)
-		{
-			const auto * r = m_table_model->row_at(i);
-			if (r && r->status != status_t::propagated)
-			{
-				next_row = i;
-				break;
-			}
-		}
-
-		if (next_row < 0)
-		{
-			next_row = m_editor_controller.current_row() + 1;
-			if (next_row >= row_count)
-				next_row = row_count - 1;
-		}
-
-		if (next_row >= 0 && next_row != m_editor_controller.current_row())
-		{
-			auto idx = m_table_model->index(next_row, 0);
-			m_table_view->selectionModel()->setCurrentIndex(
-			    idx, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
-			on_row_selected(next_row);
-			auto cursor = m_editor_view->translation_editor()->textCursor();
-			cursor.movePosition(QTextCursor::End);
-			m_editor_view->translation_editor()->setTextCursor(cursor);
-			m_editor_view->translation_editor()->setFocus();
-		}
-	});
+	    [this]() { advance_to_next_row(); });
 
 	connect(
 	    m_editor_view->translation_editor(),

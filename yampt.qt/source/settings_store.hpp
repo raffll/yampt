@@ -44,15 +44,6 @@ public:
 	std::string foreign_tag() const;
 	void set_foreign_tag(const std::string & value);
 
-	std::string deepl_api_key() const;
-	void set_deepl_api_key(const std::string & value);
-
-	std::string google_api_key() const;
-	void set_google_api_key(const std::string & value);
-
-	std::string claude_api_key() const;
-	void set_claude_api_key(const std::string & value);
-
 	std::string web_api_key(const std::string & provider_id) const;
 	void set_web_api_key(const std::string & provider_id, const std::string & value);
 

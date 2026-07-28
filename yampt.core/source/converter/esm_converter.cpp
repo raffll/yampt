@@ -48,7 +48,6 @@ void esm_converter_t::convert_esm()
 	convert_dnam();
 	convert_cndt();
 	convert_dial();
-	// convert_gmdt();
 
 	if (create_header)
 		make_header();
@@ -228,36 +227,6 @@ void esm_converter_t::make_header()
 	esm.replace_record(rec_content);
 
 	app_logger_t::add_log("[info] creating new header\r\n");
-}
-
-void esm_converter_t::convert_gmdt()
-{
-	reset_counters();
-	const auto & type = rec_type_t::cell;
-	for (size_t i = 0; i < esm.get_records().size(); ++i)
-	{
-		esm.select_record(i);
-		const auto & record_id = esm.get_record().id;
-		if (record_id != "TES3" && record_id != "GAME")
-			continue;
-
-		esm.set_value("GMDT");
-		if (!esm.get_value().exist)
-			continue;
-
-		const size_t name_offset = (record_id == "TES3") ? 24 : 0;
-		const auto & prefix = esm.get_value().content.substr(0, name_offset);
-		const auto & suffix = esm.get_value().content.substr(name_offset + 64);
-		auto old_text = esm.get_value().content.substr(name_offset, 64);
-		old_text = string_utils::erase_null_chars(old_text);
-		std::string new_text;
-		if (!make_new_text({ old_text, old_text, type }, new_text))
-			continue;
-
-		new_text.resize(64);
-		convert_record_content(prefix + new_text + suffix);
-	}
-	print_log_line(rec_type_t::gmdt);
 }
 
 void esm_converter_t::convert_cell()

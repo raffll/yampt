@@ -32,5 +32,4 @@ private:
 	int counter_merged = 0;
 	int counter_rejected = 0;
 	int counter_identical = 0;
-	int counter_all = 0;
 };

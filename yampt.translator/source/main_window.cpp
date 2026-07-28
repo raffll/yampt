@@ -733,6 +733,47 @@ void main_window_t::shortcut_commit_status(status_t new_status)
 	m_shortcuts_controller->commit_status(new_status);
 }
 
+void main_window_t::advance_to_next_row()
+{
+	if (m_editor_controller.current_row() < 0)
+		return;
+
+	commit_current_edit();
+
+	const int row_count = m_table_model->rowCount();
+	int next_row = -1;
+
+	for (int i = m_editor_controller.current_row() + 1; i < row_count; ++i)
+	{
+		const auto * row_data = m_table_model->row_at(i);
+		if (row_data && row_data->status != status_t::propagated)
+		{
+			next_row = i;
+			break;
+		}
+	}
+
+	if (next_row < 0)
+	{
+		next_row = m_editor_controller.current_row() + 1;
+		if (next_row >= row_count)
+			next_row = row_count - 1;
+	}
+
+	if (next_row < 0 || next_row == m_editor_controller.current_row())
+		return;
+
+	auto idx = m_table_model->index(next_row, 0);
+	m_table_view->selectionModel()->setCurrentIndex(
+	    idx, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+	on_row_selected(next_row);
+
+	auto cursor = m_editor_view->translation_editor()->textCursor();
+	cursor.movePosition(QTextCursor::End);
+	m_editor_view->translation_editor()->setTextCursor(cursor);
+	m_editor_view->translation_editor()->setFocus();
+}
+
 void main_window_t::rebuild_annotations()
 {
 	std::vector<dict_source_t> sources;

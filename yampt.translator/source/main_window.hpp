@@ -136,6 +136,7 @@ private:
 	void register_shortcuts();
 	void shortcut_copy_original();
 	void shortcut_commit_status(status_t new_status);
+	void advance_to_next_row();
 
 	void rebuild_table_yaml(document_t * target_doc);
 	void rebuild_table_dict(dict_document_t * dict_doc);

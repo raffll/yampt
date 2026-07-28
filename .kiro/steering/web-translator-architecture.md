@@ -41,8 +41,6 @@ API keys are stored per provider identifier under `[WebTranslators]` in the INI 
 
 The identifier is the JSON filename stem (e.g. `deepl.json` → identifier `deepl`).
 
-Legacy per-provider methods (`deepl_api_key()`, `google_api_key()`, `claude_api_key()`) still exist for backward compatibility but new code uses `web_api_key(id)`.
-
 ## Translation Settings Page
 
 The Translation page in Settings shows a table auto-populated from discovered provider configs:
