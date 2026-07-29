@@ -160,7 +160,7 @@ void view_tree_model_t::set_record_dial(
 	for (const auto & info_entry : info_result.entries)
 	{
 		view_node_t info_row;
-		info_row.label = info_entry.display_name.empty() ? info_entry.inam : info_entry.display_name;
+		info_row.label = info_entry.inam;
 		info_row.values.resize(col_count);
 		info_row.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
 

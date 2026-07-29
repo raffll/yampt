@@ -1,7 +1,9 @@
 #include "language_settings_view.hpp"
 #include <filesystem>
+#include <utility/language_config.hpp>
 #include <settings_store.hpp>
 #include <QComboBox>
+#include <QCoreApplication>
 #include <QFormLayout>
 #include <QFrame>
 #include <QLineEdit>
@@ -9,32 +11,11 @@
 
 namespace {
 
-struct language_entry_t
+const std::vector<language_entry_t> & get_languages()
 {
-	const char * display_name;
-	const char * code;
-	const char * nllb_target;
-	const char * spell_prefix;
-	int encoding_index;
-};
-
-constexpr language_entry_t languages[] = {
-	{ "English", "EN", "eng_Latn", "en_US", 2 },   { "Polish", "PL", "pol_Latn", "pl_PL", 0 },
-	{ "German", "DE", "deu_Latn", "de_DE", 2 },    { "French", "FR", "fra_Latn", "fr_FR", 2 },
-	{ "Russian", "RU", "rus_Cyrl", "ru_RU", 1 },   { "Italian", "IT", "ita_Latn", "it_IT", 2 },
-	{ "Hungarian", "HU", "hun_Latn", "hu_HU", 0 },
-};
-
-constexpr int language_count = sizeof(languages) / sizeof(languages[0]);
-
-const language_entry_t * find_language(const QString & code)
-{
-	for (int i = 0; i < language_count; ++i)
-	{
-		if (code == languages[i].code)
-			return &languages[i];
-	}
-	return nullptr;
+	static const auto languages = language_config::load(
+	    (QCoreApplication::applicationDirPath() + "/languages.json").toStdString());
+	return languages;
 }
 
 } // namespace
@@ -49,10 +30,13 @@ language_settings_view_t::language_settings_view_t(const std::string & dictionar
 	m_foreign_language_combo = new QComboBox(this);
 	m_native_language_combo = new QComboBox(this);
 
-	for (int i = 0; i < language_count; ++i)
+	const auto & languages = get_languages();
+	for (const auto & lang : languages)
 	{
-		m_foreign_language_combo->addItem(languages[i].display_name, QString(languages[i].code));
-		m_native_language_combo->addItem(languages[i].display_name, QString(languages[i].code));
+		const auto display = QString::fromStdString(lang.display_name);
+		const auto code = QString::fromStdString(lang.code);
+		m_foreign_language_combo->addItem(display, code);
+		m_native_language_combo->addItem(display, code);
 	}
 
 	language_form->addRow(tr("Foreign Language:"), m_foreign_language_combo);
@@ -129,11 +113,11 @@ void language_settings_view_t::apply(settings_store_t & settings) const
 	settings.set_foreign_language(foreign_code.toStdString());
 	settings.set_native_language(native_code.toStdString());
 
-	const auto * native_lang = find_language(native_code);
+	const auto * native_lang = language_config::find_by_code(get_languages(), native_code.toStdString());
 	if (native_lang)
 	{
-		settings.set_encoding_index(native_lang->encoding_index);
-		settings.set_translation_target(native_lang->nllb_target);
+		settings.set_encoding_index(codepage_to_index(native_lang->codepage));
+		settings.set_translation_target(native_lang->nllb_code);
 	}
 
 	const auto native_spell_aff = m_native_spell_combo->currentData().toString().toStdString();
@@ -175,28 +159,28 @@ void language_settings_view_t::apply(settings_store_t & settings) const
 void language_settings_view_t::on_foreign_language_changed(int index)
 {
 	const auto code = m_foreign_language_combo->itemData(index).toString();
-	const auto * lang = find_language(code);
+	const auto * lang = language_config::find_by_code(get_languages(), code.toStdString());
 	if (!lang)
 		return;
 
-	update_spell_combo(m_foreign_spell_combo, lang->spell_prefix);
+	update_spell_combo(m_foreign_spell_combo, lang->dictionary_prefix);
 	m_foreign_tag_edit->setText(code);
 }
 
 void language_settings_view_t::on_native_language_changed(int index)
 {
 	const auto code = m_native_language_combo->itemData(index).toString();
-	const auto * lang = find_language(code);
+	const auto * lang = language_config::find_by_code(get_languages(), code.toStdString());
 	if (!lang)
 		return;
 
-	update_spell_combo(m_native_spell_combo, lang->spell_prefix);
+	update_spell_combo(m_native_spell_combo, lang->dictionary_prefix);
 	m_native_tag_edit->setText(code);
 }
 
-void language_settings_view_t::update_spell_combo(QComboBox * combo, const char * prefix)
+void language_settings_view_t::update_spell_combo(QComboBox * combo, const std::string & prefix)
 {
-	const auto target = QString(prefix);
+	const auto target = QString::fromStdString(prefix);
 
 	for (int i = 0; i < combo->count(); ++i)
 	{

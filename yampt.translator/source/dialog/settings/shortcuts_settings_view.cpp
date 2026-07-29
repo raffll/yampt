@@ -1,5 +1,6 @@
 #include "shortcuts_settings_view.hpp"
 #include <settings_store.hpp>
+#include <QCoreApplication>
 #include <QHeaderView>
 #include <QKeySequenceEdit>
 #include <QLabel>
@@ -11,15 +12,18 @@ shortcuts_settings_view_t::shortcuts_settings_view_t(QWidget * parent)
     : QWidget(parent)
 {
 	m_editable_entries = {
-		{ "copy_original", "Copy Original", "F8", true },    { "set_in_progress", "Set In Progress", "F9", true },
-		{ "set_translated", "Set Translated", "F10", true }, { "save", "Save", "Ctrl+S", true },
-		{ "settings", "Open Settings", "Ctrl+,", true },     { "escape", "Escape", "Escape", true },
+		{ "copy_original", QT_TR_NOOP("Copy Original"), "F8", true },
+		{ "set_in_progress", QT_TR_NOOP("Set In Progress"), "F9", true },
+		{ "set_translated", QT_TR_NOOP("Set Translated"), "F10", true },
+		{ "save", QT_TR_NOOP("Save"), "Ctrl+S", true },
+		{ "settings", QT_TR_NOOP("Open Settings"), "Ctrl+,", true },
+		{ "escape", QT_TR_NOOP("Escape"), "Escape", true },
 	};
 
 	m_readonly_entries = {
-		{ "set_untranslated", "Set Untranslated (Table)", "Del", false },
-		{ "navigate_next", "Next Entry", "Shift+Return", false },
-		{ "navigate_prev", "Previous Entry", "Ctrl+Up", false },
+		{ "set_untranslated", QT_TR_NOOP("Set Untranslated (Table)"), "Del", false },
+		{ "navigate_next", QT_TR_NOOP("Next Entry"), "Shift+Return", false },
+		{ "navigate_prev", QT_TR_NOOP("Previous Entry"), "Ctrl+Up", false },
 	};
 
 	m_total_row_count = static_cast<int>(m_editable_entries.size() + m_readonly_entries.size());
@@ -43,7 +47,7 @@ shortcuts_settings_view_t::shortcuts_settings_view_t(QWidget * parent)
 
 	for (const auto & entry : m_editable_entries)
 	{
-		auto * action_item = new QTableWidgetItem(QString::fromStdString(entry.display_name));
+		auto * action_item = new QTableWidgetItem(tr(entry.display_name.c_str()));
 		action_item->setFlags(action_item->flags() & ~Qt::ItemIsEditable);
 		m_table->setItem(row, 0, action_item);
 
@@ -56,7 +60,7 @@ shortcuts_settings_view_t::shortcuts_settings_view_t(QWidget * parent)
 
 	for (const auto & entry : m_readonly_entries)
 	{
-		auto * action_item = new QTableWidgetItem(QString::fromStdString(entry.display_name));
+		auto * action_item = new QTableWidgetItem(tr(entry.display_name.c_str()));
 		action_item->setFlags(action_item->flags() & ~Qt::ItemIsEditable);
 		action_item->setForeground(QColor(128, 128, 128));
 		m_table->setItem(row, 0, action_item);
@@ -173,9 +177,9 @@ void shortcuts_settings_view_t::check_conflicts()
 
 			const auto & conflicting_name = m_editable_entries[static_cast<size_t>(second)].display_name;
 			conflict_message =
-			    QString("Conflict: \"%1\" and \"%2\" share the same shortcut")
-			        .arg(QString::fromStdString(m_editable_entries[static_cast<size_t>(first)].display_name))
-			        .arg(QString::fromStdString(conflicting_name));
+			    tr("Conflict: \"%1\" and \"%2\" share the same shortcut")
+			        .arg(tr(m_editable_entries[static_cast<size_t>(first)].display_name.c_str()))
+			        .arg(tr(conflicting_name.c_str()));
 		}
 	}
 

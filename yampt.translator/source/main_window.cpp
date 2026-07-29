@@ -22,6 +22,7 @@
 #include "view/translation_suggestion_view.hpp"
 #include "view/validation_view.hpp"
 #include <utility/string_utils.hpp>
+#include <utility/language_config.hpp>
 #include <algorithm>
 #include <filesystem>
 #include <map>
@@ -165,29 +166,23 @@ main_window_t::main_window_t(QWidget * parent)
 			m_settings.set_native_tag(native);
 			m_settings.set_foreign_tag(foreign);
 
-			int encoding_index = 2;
-			if (native == "PL" || native == "HU")
-				encoding_index = 0;
-			else if (native == "RU")
-				encoding_index = 1;
+			const auto languages = language_config::load(
+			    (QCoreApplication::applicationDirPath() + "/languages.json").toStdString());
 
+			const auto * native_lang = language_config::find_by_code(languages, native);
+			const int encoding_index = native_lang ? codepage_to_index(native_lang->codepage) : 2;
 			m_settings.set_encoding_index(encoding_index);
 			on_encoding_changed(encoding_index);
 
 			const auto dict_dir = QCoreApplication::applicationDirPath().toStdString() + "/dictionaries/";
 			auto set_spell_paths = [&](const std::string & lang_code, bool is_native)
 			{
-				static const std::map<std::string, std::string> prefix_map = {
-					{ "EN", "en_US" }, { "PL", "pl_PL" }, { "DE", "de_DE" }, { "FR", "fr_FR" },
-					{ "RU", "ru_RU" }, { "IT", "it_IT" }, { "HU", "hu_HU" },
-				};
-
-				auto it_prefix = prefix_map.find(lang_code);
-				if (it_prefix == prefix_map.end())
+				const auto prefix = language_config::resolve_dictionary_prefix(languages, lang_code);
+				if (prefix.empty())
 					return;
 
-				const auto aff_path = dict_dir + it_prefix->second + ".aff";
-				const auto dic_path = dict_dir + it_prefix->second + ".dic";
+				const auto aff_path = dict_dir + prefix + ".aff";
+				const auto dic_path = dict_dir + prefix + ".dic";
 
 				if (!std::filesystem::exists(aff_path) || !std::filesystem::exists(dic_path))
 					return;
@@ -605,16 +600,10 @@ void main_window_t::on_whitespace_toggled(bool checked)
 
 void main_window_t::on_encoding_changed(int index)
 {
-	constexpr codepage_t codepages[] = {
-		codepage_t::windows_1250,
-		codepage_t::windows_1251,
-		codepage_t::windows_1252,
-	};
-
-	if (index < 0 || index >= static_cast<int>(std::size(codepages)))
+	if (index < 0 || index >= static_cast<int>(std::size(supported_codepages)))
 		return;
 
-	const auto new_codepage = codepages[index];
+	const auto new_codepage = index_to_codepage(index);
 	if (new_codepage == m_current_codepage)
 		return;
 
@@ -904,13 +893,8 @@ void main_window_t::load_config()
 		showMaximized();
 
 	const int encoding_index = m_settings.encoding_index();
-	constexpr codepage_t codepages_table[] = {
-		codepage_t::windows_1250,
-		codepage_t::windows_1251,
-		codepage_t::windows_1252,
-	};
-	if (encoding_index >= 0 && encoding_index < 3)
-		m_current_codepage = codepages_table[encoding_index];
+	if (encoding_index >= 0 && encoding_index < static_cast<int>(std::size(supported_codepages)))
+		m_current_codepage = index_to_codepage(encoding_index);
 
 	m_session.set_codepage(m_current_codepage);
 	m_session.set_native_language(m_settings.native_language());

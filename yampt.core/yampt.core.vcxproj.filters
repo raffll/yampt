@@ -56,6 +56,7 @@
     <ClCompile Include="source\scanner\handler_parser.cpp" />
     <ClCompile Include="source\scanner\conflict_detector.cpp" />
     <ClCompile Include="source\scanner\lua_scanner.cpp" />
+    <ClCompile Include="source\utility\language_config.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\utility\domain_types.hpp" />
@@ -124,5 +125,6 @@
     <ClInclude Include="source\scanner\handler_parser.hpp" />
     <ClInclude Include="source\scanner\conflict_detector.hpp" />
     <ClInclude Include="source\scanner\lua_scanner.hpp" />
+    <ClInclude Include="source\utility\language_config.hpp" />
   </ItemGroup>
 </Project>

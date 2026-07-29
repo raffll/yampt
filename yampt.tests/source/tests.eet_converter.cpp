@@ -41,7 +41,6 @@ rc::Gen<valid_type_combo_t> gen_valid_type_combo()
 	    valid_type_combo_t { "NPC_", "DNAM" },
 	    valid_type_combo_t { "NPC_", "CNDT" },
 	    valid_type_combo_t { "BOOK", "TEXT" },
-	    valid_type_combo_t { "SCPT", "SCTX" },
 	    valid_type_combo_t { "SCPT", "MSGB" },
 	    valid_type_combo_t { "SCPT", "CELL" },
 	    valid_type_combo_t { "SCPT", "SAY_" },
@@ -128,14 +127,14 @@ TEST_CASE("eet_converter_t::map_type, exhaustive type mapping", "[u]")
 		{ "CELL", "FNAM", rec_type_t::cell }, { "REGN", "FNAM", rec_type_t::cell },
 		{ "CELL", "DNAM", rec_type_t::cell }, { "NPC_", "DNAM", rec_type_t::fnam },
 		{ "NPC_", "CNDT", rec_type_t::fnam }, { "BOOK", "TEXT", rec_type_t::text },
-		{ "SCPT", "SCTX", rec_type_t::sctx }, { "SCPT", "MSGB", rec_type_t::bnam },
+		{ "SCPT", "MSGB", rec_type_t::bnam },
 		{ "SCPT", "CELL", rec_type_t::bnam }, { "SCPT", "SAY_", rec_type_t::bnam },
 		{ "SCPT", "DIAL", rec_type_t::bnam }, { "MGEF", "DESC", rec_type_t::desc },
 		{ "CLAS", "DESC", rec_type_t::desc }, { "FACT", "RNAM", rec_type_t::rnam },
 		{ "GMST", "STRV", rec_type_t::gmst }, { "DIAL", "NAME", rec_type_t::dial },
 	};
 
-	REQUIRE(known_mappings.size() == 36);
+	REQUIRE(known_mappings.size() == 35);
 
 	for (const auto & mapping : known_mappings)
 	{
@@ -188,8 +187,8 @@ TEST_CASE("eet_converter_t::map_type, unknown combinations", "[u]")
 	};
 
 	const std::vector<unknown_combo_t> unknown_combos = {
-		{ "WEAP", "FNAM" }, { "NPC_", "NAME" }, { "SCPT", "FNAM" }, { "BOOK", "DESC" },
-		{ "INFO", "NAME" }, { "LEVI", "FNAM" }, { "GLOB", "FNAM" },
+		{ "WEAP", "FNAM" }, { "NPC_", "NAME" }, { "SCPT", "FNAM" }, { "SCPT", "SCTX" },
+		{ "BOOK", "DESC" }, { "INFO", "NAME" }, { "LEVI", "FNAM" }, { "GLOB", "FNAM" },
 	};
 
 	for (const auto & combo : unknown_combos)

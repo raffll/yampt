@@ -55,6 +55,8 @@ private:
 	void load_record_clear();
 	void load_record_script(const table_row_t * row_data);
 	void load_record_plain(const table_row_t * row_data);
+	void load_book_preview(const table_row_t * row_data, document_t * active_doc);
+	void apply_initial_highlights(const table_row_t * row_data, const editor_load_result_t & load_result);
 
 	record_display_deps_t m_deps;
 };

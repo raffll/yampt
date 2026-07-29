@@ -21,7 +21,7 @@ private:
 	void on_native_language_changed(int index);
 	void on_foreign_language_changed(int index);
 	void scan_dictionaries(const std::string & directory);
-	void update_spell_combo(QComboBox * combo, const char * prefix);
+	void update_spell_combo(QComboBox * combo, const std::string & prefix);
 
 	QComboBox * m_foreign_language_combo = nullptr;
 	QComboBox * m_native_language_combo = nullptr;

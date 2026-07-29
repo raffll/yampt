@@ -30,7 +30,7 @@ Qt6 GUI for interactive plugin translation.
 - Annotation system: hyperlinks, gender info, glossary matches from loaded base dicts
 - Book content preview with live update
 - Offline machine translation via CTranslate2 (NLLB-600M)
-- Supports Polish, German, French, Russian, Italian, Hungarian
+- Supported languages defined in `languages.json` — add new languages without recompiling
 - All CLI operations accessible from the GUI
 
 ## yampt.exe — Command Line

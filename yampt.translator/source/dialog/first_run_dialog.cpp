@@ -1,5 +1,7 @@
 #include "first_run_dialog.hpp"
+#include <utility/language_config.hpp>
 #include <QComboBox>
+#include <QCoreApplication>
 #include <QDialogButtonBox>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -15,27 +17,20 @@ first_run_dialog_t::first_run_dialog_t(QWidget * parent)
 
 	auto * combo_layout = new QHBoxLayout;
 
+	const auto languages = language_config::load(
+	    (QCoreApplication::applicationDirPath() + "/languages.json").toStdString());
+
 	combo_layout->addWidget(new QLabel(tr("From:")));
 	m_from_combo = new QComboBox(this);
-	m_from_combo->addItem(tr("English"), QString("EN"));
-	m_from_combo->addItem(tr("Polish"), QString("PL"));
-	m_from_combo->addItem(tr("German"), QString("DE"));
-	m_from_combo->addItem(tr("French"), QString("FR"));
-	m_from_combo->addItem(tr("Russian"), QString("RU"));
-	m_from_combo->addItem(tr("Italian"), QString("IT"));
-	m_from_combo->addItem(tr("Hungarian"), QString("HU"));
+	for (const auto & lang : languages)
+		m_from_combo->addItem(QString::fromStdString(lang.display_name), QString::fromStdString(lang.code));
 	m_from_combo->setCurrentIndex(0);
 	combo_layout->addWidget(m_from_combo);
 
 	combo_layout->addWidget(new QLabel(tr("To:")));
 	m_to_combo = new QComboBox(this);
-	m_to_combo->addItem(tr("English"), QString("EN"));
-	m_to_combo->addItem(tr("Polish"), QString("PL"));
-	m_to_combo->addItem(tr("German"), QString("DE"));
-	m_to_combo->addItem(tr("French"), QString("FR"));
-	m_to_combo->addItem(tr("Russian"), QString("RU"));
-	m_to_combo->addItem(tr("Italian"), QString("IT"));
-	m_to_combo->addItem(tr("Hungarian"), QString("HU"));
+	for (const auto & lang : languages)
+		m_to_combo->addItem(QString::fromStdString(lang.display_name), QString::fromStdString(lang.code));
 	m_to_combo->setCurrentIndex(1);
 	combo_layout->addWidget(m_to_combo);
 

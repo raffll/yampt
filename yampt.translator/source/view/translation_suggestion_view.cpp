@@ -2,10 +2,12 @@
 #include "../translator/ctranslate2_translator.hpp"
 #include "../translator/web_translator.hpp"
 #include <utility/app_logger.hpp>
+#include <utility/language_config.hpp>
 #include <filesystem>
 #include <fstream>
 #include <settings_store.hpp>
 #include <QComboBox>
+#include <QCoreApplication>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPlainTextEdit>
@@ -214,16 +216,17 @@ void translation_suggestion_view_t::rebuild_language_list()
 
 		if (!nllb_models.empty())
 		{
-			static const std::vector<std::pair<std::string, std::string>> nllb_targets = {
-				{ "pol_Latn", "PL" }, { "deu_Latn", "DE" }, { "fra_Latn", "FR" },
-				{ "rus_Cyrl", "RU" }, { "ita_Latn", "IT" }, { "hun_Latn", "HU" },
-			};
+			const auto languages = language_config::load(
+			    (QCoreApplication::applicationDirPath() + "/languages.json").toStdString());
 
 			const auto & model_path = nllb_models[0];
-			for (const auto & [code, label] : nllb_targets)
+			for (const auto & lang : languages)
 			{
-				auto display = "EN -> " + label;
-				m_languages.push_back({ code, display, model_path });
+				if (lang.code == "EN")
+					continue;
+
+				auto display = "EN -> " + lang.code;
+				m_languages.push_back({ lang.nllb_code, display, model_path });
 			}
 		}
 	}

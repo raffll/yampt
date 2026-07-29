@@ -9,6 +9,7 @@
 #include <merger/dict_merger.hpp>
 #include <translator/translation_engine.hpp>
 #include <utility/app_logger.hpp>
+#include <utility/language_config.hpp>
 
 user_interface_t::user_interface_t(std::vector<std::string> & arg)
     : args(arg)
@@ -251,30 +252,14 @@ void user_interface_t::create_esm()
 
 static codepage_t resolve_codepage(const std::string & language)
 {
-	if (language == "PL" || language == "HU")
-		return codepage_t::windows_1250;
-
-	if (language == "RU")
-		return codepage_t::windows_1251;
-
-	return codepage_t::windows_1252;
+	static const auto languages = language_config::load("languages.json");
+	return language_config::resolve_codepage(languages, language);
 }
 
 static std::string resolve_locale(const std::string & language)
 {
-	if (language == "PL")
-		return "pl_PL";
-	if (language == "DE")
-		return "de_DE";
-	if (language == "FR")
-		return "fr_FR";
-	if (language == "RU")
-		return "ru_RU";
-	if (language == "IT")
-		return "it_IT";
-	if (language == "HU")
-		return "hu_HU";
-	return "pl_PL";
+	static const auto languages = language_config::load("languages.json");
+	return language_config::resolve_dictionary_prefix(languages, language);
 }
 
 void user_interface_t::make_loc()

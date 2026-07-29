@@ -76,9 +76,6 @@ rec_type_t eet_converter_t::map_type(const std::string & rec_type, const std::st
 	if (sub_type == "TEXT" && rec_type == "BOOK")
 		return rec_type_t::text;
 
-	if (sub_type == "SCTX" && rec_type == "SCPT")
-		return rec_type_t::sctx;
-
 	if (rec_type == "SCPT")
 	{
 		if (sub_type == "MSGB" || sub_type == "CELL" || sub_type == "SAY_" || sub_type == "DIAL")

@@ -1,6 +1,8 @@
 # Supported Languages
 
-yampt must support all languages that were available in the legacy yampt-0.21 release (`c:\OMEN\Morrowind\Tools\yampt-0.21\`):
+yampt's supported languages are defined in `languages.json` (deployed next to the executable). Adding a new language requires only editing this file — no recompilation needed.
+
+Current languages:
 
 | Code | Language | Spellcheck dict | Translation model |
 |------|----------|-----------------|-------------------|

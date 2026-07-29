@@ -802,16 +802,7 @@ void main_window_t::connect_editor_signals()
 	{
 		m_editor_view->translation_editor()->setPlainText(QString::fromStdString(result_text));
 		m_editor_controller.set_pending_status(status_t::model);
-		commit_current_edit();
-
-		int next_row = m_editor_controller.current_row() + 1;
-		if (next_row < m_table_model->rowCount())
-		{
-			auto idx = m_table_model->index(next_row, 0);
-			m_table_view->selectionModel()->setCurrentIndex(
-			    idx, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
-			on_row_selected(next_row);
-		}
+		advance_to_next_row();
 	});
 
 	connect(
@@ -826,16 +817,7 @@ void main_window_t::connect_editor_signals()
 
 		m_editor_view->translation_editor()->setPlainText(joined.join('\n'));
 		m_editor_controller.set_pending_status(status_t::model);
-		commit_current_edit();
-
-		int next_row = m_editor_controller.current_row() + 1;
-		if (next_row < m_table_model->rowCount())
-		{
-			auto idx = m_table_model->index(next_row, 0);
-			m_table_view->selectionModel()->setCurrentIndex(
-			    idx, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
-			on_row_selected(next_row);
-		}
+		advance_to_next_row();
 	});
 
 	connect(

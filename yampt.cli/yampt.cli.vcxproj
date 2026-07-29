@@ -181,4 +181,7 @@
     <Copy SourceFiles="@(ModelRootFiles)" DestinationFolder="$(OutDir)models\nllb-600M" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(ModelBinFiles)" DestinationFolder="$(OutDir)models\nllb-600M\model" SkipUnchangedFiles="true" />
   </Target>
+  <Target Name="CopyLanguages" AfterTargets="Build" Condition="Exists('$(SolutionDir)languages.json')">
+    <Copy SourceFiles="$(SolutionDir)languages.json" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
 </Project>

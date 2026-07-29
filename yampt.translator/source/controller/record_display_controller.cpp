@@ -34,62 +34,7 @@ void record_display_controller_t::load_record(int row, document_t * active_doc)
 
 	m_deps.editor_view.translation_editor()->setReadOnly(load_result.is_read_only);
 
-	if (row_data->type == rec_type_t::text)
-		m_deps.book_preview_view.set_html(row_data->old_text, row_data->new_text);
-	else if (row_data->type == rec_type_t::sctx || row_data->type == rec_type_t::bnam)
-	{
-		std::string full_script;
-		std::string translated_script;
-		auto * dict_doc = dynamic_cast<dict_document_t *>(active_doc);
-		if (dict_doc)
-		{
-			const auto & data = dict_doc->data();
-			const auto caret_pos = row_data->key_text.find('^');
-			const auto script_name =
-			    (caret_pos != std::string::npos) ? row_data->key_text.substr(0, caret_pos) : row_data->key_text;
-
-			auto script_it = data.find(rec_type_t::script);
-			if (script_it != data.end())
-			{
-				const auto * script_entry = script_it->second.find(script_name);
-				if (script_entry)
-					full_script = script_entry->old_text;
-			}
-
-			if (!full_script.empty())
-			{
-				translated_script = full_script;
-				auto sctx_it = data.find(rec_type_t::sctx);
-				if (sctx_it != data.end())
-				{
-					for (const auto & entry : sctx_it->second.records)
-					{
-						const auto entry_caret = entry.key_text.find('^');
-						if (entry_caret == std::string::npos)
-							continue;
-
-						const auto entry_script = entry.key_text.substr(0, entry_caret);
-						if (entry_script != script_name)
-							continue;
-
-						if (entry.new_text.empty() || entry.old_text == entry.new_text)
-							continue;
-
-						auto found = translated_script.find(entry.old_text);
-						if (found != std::string::npos)
-							translated_script.replace(found, entry.old_text.size(), entry.new_text);
-					}
-				}
-			}
-		}
-
-		if (!full_script.empty())
-			m_deps.book_preview_view.set_script(full_script, translated_script);
-		else
-			m_deps.book_preview_view.set_script(row_data->old_text, row_data->new_text);
-	}
-	else
-		m_deps.book_preview_view.clear();
+	load_book_preview(row_data, active_doc);
 
 	m_deps.annotations_view.update_annotations(
 	    load_result.annotations, load_result.speaker_name, load_result.gender, load_result.enchantment);
@@ -101,6 +46,95 @@ void record_display_controller_t::load_record(int row, document_t * active_doc)
 	else
 		m_deps.editor_view.clear_details();
 
+	apply_initial_highlights(row_data, load_result);
+
+	const auto history = m_deps.edit_history.get_history(row_data->type, row_data->key_text);
+	m_deps.history_view.update_history(history, !load_result.is_read_only);
+
+	m_deps.editor_controller.set_loaded_text(m_deps.editor_view.translation_editor()->toPlainText());
+	m_deps.editor_controller.set_current_row(row);
+
+	update_validation();
+
+	auto cursor = m_deps.editor_view.translation_editor()->textCursor();
+	cursor.movePosition(QTextCursor::End);
+	m_deps.editor_view.translation_editor()->setTextCursor(cursor);
+
+	m_deps.editor_controller.set_loading(false);
+}
+
+void record_display_controller_t::load_book_preview(const table_row_t * row_data, document_t * active_doc)
+{
+	if (row_data->type == rec_type_t::text)
+	{
+		m_deps.book_preview_view.set_html(row_data->old_text, row_data->new_text);
+		return;
+	}
+
+	if (row_data->type != rec_type_t::sctx && row_data->type != rec_type_t::bnam)
+	{
+		m_deps.book_preview_view.clear();
+		return;
+	}
+
+	auto * dict_doc = dynamic_cast<dict_document_t *>(active_doc);
+	if (!dict_doc)
+	{
+		m_deps.book_preview_view.set_script(row_data->old_text, row_data->new_text);
+		return;
+	}
+
+	const auto & data = dict_doc->data();
+	const auto caret_pos = row_data->key_text.find('^');
+	const auto script_name =
+	    (caret_pos != std::string::npos) ? row_data->key_text.substr(0, caret_pos) : row_data->key_text;
+
+	auto script_it = data.find(rec_type_t::script);
+	if (script_it == data.end())
+	{
+		m_deps.book_preview_view.set_script(row_data->old_text, row_data->new_text);
+		return;
+	}
+
+	const auto * script_entry = script_it->second.find(script_name);
+	if (!script_entry)
+	{
+		m_deps.book_preview_view.set_script(row_data->old_text, row_data->new_text);
+		return;
+	}
+
+	const auto & full_script = script_entry->old_text;
+	auto translated_script = full_script;
+
+	auto sctx_it = data.find(rec_type_t::sctx);
+	if (sctx_it != data.end())
+	{
+		for (const auto & entry : sctx_it->second.records)
+		{
+			const auto entry_caret = entry.key_text.find('^');
+			if (entry_caret == std::string::npos)
+				continue;
+
+			const auto entry_script = entry.key_text.substr(0, entry_caret);
+			if (entry_script != script_name)
+				continue;
+
+			if (entry.new_text.empty() || entry.old_text == entry.new_text)
+				continue;
+
+			auto found = translated_script.find(entry.old_text);
+			if (found != std::string::npos)
+				translated_script.replace(found, entry.old_text.size(), entry.new_text);
+		}
+	}
+
+	m_deps.book_preview_view.set_script(full_script, translated_script);
+}
+
+void record_display_controller_t::apply_initial_highlights(
+    const table_row_t * row_data,
+    const editor_load_result_t & load_result)
+{
 	const auto & annotations = load_result.annotations;
 	const auto original_lower = m_deps.editor_view.original_view()->toPlainText().toLower().toStdString();
 	const auto translation_lower = m_deps.editor_view.translation_editor()->toPlainText().toLower().toStdString();
@@ -142,20 +176,6 @@ void record_display_controller_t::load_record(int row, document_t * active_doc)
 	}
 
 	highlight_applier_t::apply(m_deps.editor_view.details_view(), m_deps.extra_sel_adapted);
-
-	const auto history = m_deps.edit_history.get_history(row_data->type, row_data->key_text);
-	m_deps.history_view.update_history(history, !load_result.is_read_only);
-
-	m_deps.editor_controller.set_loaded_text(m_deps.editor_view.translation_editor()->toPlainText());
-	m_deps.editor_controller.set_current_row(row);
-
-	update_validation();
-
-	auto cursor = m_deps.editor_view.translation_editor()->textCursor();
-	cursor.movePosition(QTextCursor::End);
-	m_deps.editor_view.translation_editor()->setTextCursor(cursor);
-
-	m_deps.editor_controller.set_loading(false);
 }
 
 void record_display_controller_t::load_record_clear()

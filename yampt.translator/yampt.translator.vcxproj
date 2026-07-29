@@ -548,4 +548,7 @@
     </ItemGroup>
     <Copy SourceFiles="@(ProviderFiles)" DestinationFolder="$(OutDir)providers" SkipUnchangedFiles="true" />
   </Target>
+  <Target Name="CopyLanguages" AfterTargets="Build" Condition="Exists('$(SolutionDir)languages.json')">
+    <Copy SourceFiles="$(SolutionDir)languages.json" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
 </Project>

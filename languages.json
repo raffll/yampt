@@ -1,0 +1,9 @@
+[
+	{ "code": "EN", "name": "English",   "nllb": "eng_Latn", "dictionary": "en_US", "codepage": 1252 },
+	{ "code": "PL", "name": "Polish",    "nllb": "pol_Latn", "dictionary": "pl_PL", "codepage": 1250 },
+	{ "code": "DE", "name": "German",    "nllb": "deu_Latn", "dictionary": "de_DE", "codepage": 1252 },
+	{ "code": "FR", "name": "French",    "nllb": "fra_Latn", "dictionary": "fr_FR", "codepage": 1252 },
+	{ "code": "RU", "name": "Russian",   "nllb": "rus_Cyrl", "dictionary": "ru_RU", "codepage": 1251 },
+	{ "code": "IT", "name": "Italian",   "nllb": "ita_Latn", "dictionary": "it_IT", "codepage": 1252 },
+	{ "code": "HU", "name": "Hungarian", "nllb": "hun_Latn", "dictionary": "hu_HU", "codepage": 1250 }
+]

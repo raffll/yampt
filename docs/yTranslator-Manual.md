@@ -128,8 +128,9 @@ The Filters tab shows record types present in the current dictionary (CELL, DIAL
 - `F8` — copy the original text into the translation field (useful as a starting point).
 - `F9` — commit the current edit and set status to In Progress.
 - `F10` — commit the current edit and set status to Translated.
-- `Tab` — commit the current edit (status becomes In Progress) and select the next row.
-- `Shift+Tab` — select the previous row without committing.
+- `Shift+Enter` — commit the current edit (status becomes In Progress) and select the next row.
+- `Ctrl+Down` — same as Shift+Enter.
+- `Ctrl+Up` — select the previous row.
 - `Escape` — clear the search field.
 
 ## Auto Translate

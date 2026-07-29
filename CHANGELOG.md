@@ -6,6 +6,7 @@
 - [NEW] Find/Replace dialog (Tools menu) with regex, case sensitivity, and batch undo
 - [NEW] "Replaced" status assigned to entries modified by Find/Replace
 - [NEW] EET file import: export ESP-ESM Translator dictionaries to JSON (partial support)
+- [FIX] EET import: raw SCTX script bodies no longer imported — only extracted translatable strings (MSGB, CELL, SAY, DIAL) are converted
 - [NEW] Generate localization files (.cel, .mrk, .top) from dictionary with Hunspell inflection
 - [NEW] Full script preview: selecting a script entry shows the entire script source in Preview tab
 - [NEW] Script source stored as reference data in dictionaries for context lookup
@@ -24,6 +25,7 @@
 - [NEW] View menu: Spell Check toggle
 - [NEW] Spell check dictionaries: added de_DE, fr_FR, ru_RU, it_IT, hu_HU
 - [NEW] First run dialog: added Italian and Hungarian languages
+- [NEW] Language list externalized to `languages.json` — add new languages without recompiling
 - [CHANGE] Status filter moved to a dedicated Statuses tab (same interaction as Filters tab)
 - [CHANGE] Language settings: simplified panel (foreign/native language, spell check, tags)
 - [CHANGE] Script editor: `say` keyword sound file path hidden from display and translation
