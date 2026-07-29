@@ -50,13 +50,8 @@ dict_t make_dict_with_entries()
 
 } // namespace
 
-TEST_CASE("editor_controller_t::commit, pending model status applied", "[i][qt]")
+TEST_CASE("dict_document_t::commit, model status applied", "[i]")
 {
-	edit_history_t history;
-	byte_limit_validator_t validation;
-	glossary_t annotations;
-	editor_controller_t controller(history, validation, annotations);
-
 	const auto data = make_dict_with_entries();
 	const auto path = create_test_dict(data);
 	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
@@ -69,9 +64,7 @@ TEST_CASE("editor_controller_t::commit, pending model status applied", "[i][qt]"
 	row.status = status_t::untranslated;
 	row.record_index = 0;
 
-	controller.set_loaded_text(QString("Hello traveler"));
-	controller.set_pending_status(status_t::model);
-	const auto result = controller.commit(doc, row, "Witaj podrozniku");
+	const auto result = doc.commit(row, "Witaj podrozniku", status_t::model);
 
 	REQUIRE(result.success);
 	REQUIRE(result.status == status_t::model);
@@ -79,13 +72,8 @@ TEST_CASE("editor_controller_t::commit, pending model status applied", "[i][qt]"
 	cleanup_test_dict(path);
 }
 
-TEST_CASE("editor_controller_t::commit, pending status consumed after use", "[i][qt]")
+TEST_CASE("dict_document_t::commit, second commit without explicit intent defaults to in_progress", "[i]")
 {
-	edit_history_t history;
-	byte_limit_validator_t validation;
-	glossary_t annotations;
-	editor_controller_t controller(history, validation, annotations);
-
 	const auto data = make_dict_with_entries();
 	const auto path = create_test_dict(data);
 	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
@@ -106,12 +94,8 @@ TEST_CASE("editor_controller_t::commit, pending status consumed after use", "[i]
 	row_b.status = status_t::untranslated;
 	row_b.record_index = 1;
 
-	controller.set_loaded_text(QString("Hello traveler"));
-	controller.set_pending_status(status_t::model);
-	controller.commit(doc, row_a, "Witaj podrozniku");
-
-	controller.set_loaded_text(QString("Hello traveler"));
-	const auto result = controller.commit(doc, row_b, "Manually typed");
+	doc.commit(row_a, "Witaj podrozniku", status_t::model);
+	const auto result = doc.commit(row_b, "Manually typed", status_t::in_progress);
 
 	REQUIRE(result.success);
 	REQUIRE(result.status == status_t::propagated);
@@ -119,13 +103,8 @@ TEST_CASE("editor_controller_t::commit, pending status consumed after use", "[i]
 	cleanup_test_dict(path);
 }
 
-TEST_CASE("editor_controller_t::commit, model status skips propagation", "[i][qt]")
+TEST_CASE("dict_document_t::commit, model status skips propagation", "[i]")
 {
-	edit_history_t history;
-	byte_limit_validator_t validation;
-	glossary_t annotations;
-	editor_controller_t controller(history, validation, annotations);
-
 	const auto data = make_dict_with_entries();
 	const auto path = create_test_dict(data);
 	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
@@ -138,9 +117,7 @@ TEST_CASE("editor_controller_t::commit, model status skips propagation", "[i][qt
 	row.status = status_t::untranslated;
 	row.record_index = 0;
 
-	controller.set_loaded_text(QString("Hello traveler"));
-	controller.set_pending_status(status_t::model);
-	const auto result = controller.commit(doc, row, "Witaj podrozniku");
+	const auto result = doc.commit(row, "Witaj podrozniku", status_t::model);
 
 	REQUIRE(result.propagated_count == 0);
 
@@ -153,10 +130,8 @@ TEST_CASE("editor_controller_t::commit, model status skips propagation", "[i][qt
 
 TEST_CASE("editor_controller_t::take_pending_status, returns nullopt when not set", "[u]")
 {
-	edit_history_t history;
-	byte_limit_validator_t validation;
 	glossary_t annotations;
-	editor_controller_t controller(history, validation, annotations);
+	editor_controller_t controller(annotations);
 
 	const auto result = controller.take_pending_status();
 	REQUIRE_FALSE(result.has_value());

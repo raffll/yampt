@@ -265,7 +265,7 @@ TEST_CASE("glossary_t::annotate_translated, finds translated topic in text", "[u
 	glossary_t manager;
 	manager.rebuild({ { &dict, "base.json" } });
 
-	const auto results = manager.annotate_translated("widzialem zwiadowca kwama", rec_type_t::info);
+	const auto results = manager.annotate_translated("widzialem zwiadowca kwama");
 
 	REQUIRE(results.size() == 1);
 	REQUIRE(results[0].start == 10);
@@ -288,15 +288,6 @@ TEST_CASE("glossary_t::rebuild, longer terms match first", "[u]")
 			found_long = true;
 	}
 	REQUIRE(found_long);
-}
-
-TEST_CASE("glossary_t::get_speaker_gender, returns empty for unknown npc", "[u]")
-{
-	glossary_t manager;
-
-	const auto & gender = manager.get_speaker_gender("unknown_npc_id");
-
-	REQUIRE(gender.empty());
 }
 
 TEST_CASE("glossary_t::has_enchantment, returns false when empty", "[u]")

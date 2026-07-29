@@ -293,9 +293,8 @@ std::vector<annotation_t> glossary_t::annotate(const std::string & text, rec_typ
 	return results;
 }
 
-std::vector<annotation_t> glossary_t::annotate_translated(const std::string & text, rec_type_t type) const
+std::vector<annotation_t> glossary_t::annotate_translated(const std::string & text) const
 {
-	(void)type;
 	std::vector<annotation_t> results;
 
 	if (text.empty())
@@ -424,18 +423,6 @@ void glossary_t::find_matches_legacy(
 			search_pos += term.key_lower.size();
 		}
 	}
-}
-
-void glossary_t::load_npc_flags(const std::string &)
-{}
-
-const std::string & glossary_t::get_speaker_gender(const std::string & npc_id) const
-{
-	static const std::string empty;
-	auto it_flag = m_npc_flags.find(npc_id);
-	if (it_flag == m_npc_flags.end())
-		return empty;
-	return it_flag->second;
 }
 
 void glossary_t::load_enchantments(const std::string & path)

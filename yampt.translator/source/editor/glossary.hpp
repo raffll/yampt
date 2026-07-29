@@ -46,12 +46,10 @@ public:
 	void set_loc_entries(const loc_entries_t & entries);
 	void update_term(rec_type_t type, const std::string & old_text, const std::string & new_text);
 	std::vector<annotation_t> annotate(const std::string & text, rec_type_t type) const;
-	std::vector<annotation_t> annotate_translated(const std::string & text, rec_type_t type) const;
+	std::vector<annotation_t> annotate_translated(const std::string & text) const;
 
-	void load_npc_flags(const std::string & path);
 	void load_enchantments(const std::string & path);
 
-	const std::string & get_speaker_gender(const std::string & npc_id) const;
 	const std::string & get_enchantment(const std::string & key) const;
 	bool has_enchantment(const std::string & key) const;
 
@@ -89,7 +87,6 @@ private:
 
 	std::vector<topic_entry_t> m_dial_topics;
 	std::vector<topic_entry_t> m_glossary_terms;
-	std::unordered_map<std::string, std::string> m_npc_flags;
 	std::unordered_map<std::string, std::string> m_enchantments;
 	std::vector<loc_types::loc_entry_t> m_loc_cel;
 	std::vector<loc_types::loc_entry_t> m_loc_top;

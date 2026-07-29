@@ -50,7 +50,7 @@
 main_window_t::main_window_t(QWidget * parent)
     : QMainWindow(parent)
     , m_session(m_current_codepage)
-    , m_editor_controller(m_edit_history, m_byte_limit_validator, m_glossary)
+    , m_editor_controller(m_glossary)
 {
 	setWindowTitle(tr("yTranslator"));
 	resize(1280, 720);

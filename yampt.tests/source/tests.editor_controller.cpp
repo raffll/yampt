@@ -58,13 +58,8 @@ dict_t make_simple_dict()
 
 } // anonymous namespace
 
-TEST_CASE("editor_controller_t::commit, matching row returns success", "[i][qt]")
+TEST_CASE("dict_document_t::commit, matching row returns success", "[i]")
 {
-	edit_history_t history;
-	byte_limit_validator_t validation;
-	glossary_t annotations;
-	editor_controller_t controller(history, validation, annotations);
-
 	const auto data = make_simple_dict();
 	const auto path = create_test_dict(data);
 	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
@@ -77,8 +72,7 @@ TEST_CASE("editor_controller_t::commit, matching row returns success", "[i][qt]"
 	row.status = status_t::untranslated;
 	row.record_index = 2;
 
-	controller.set_loaded_text(QString("Different"));
-	const auto result = controller.commit(doc, row, "New Translation");
+	const auto result = doc.commit(row, "New Translation", status_t::in_progress);
 
 	REQUIRE(result.success);
 	REQUIRE(result.status == status_t::in_progress);
@@ -86,13 +80,8 @@ TEST_CASE("editor_controller_t::commit, matching row returns success", "[i][qt]"
 	cleanup_test_dict(path);
 }
 
-TEST_CASE("editor_controller_t::commit, invalid record_index returns not success", "[i][qt]")
+TEST_CASE("dict_document_t::commit, invalid record_index returns not success", "[i]")
 {
-	edit_history_t history;
-	byte_limit_validator_t validation;
-	glossary_t annotations;
-	editor_controller_t controller(history, validation, annotations);
-
 	const auto data = make_simple_dict();
 	const auto path = create_test_dict(data);
 	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
@@ -105,25 +94,20 @@ TEST_CASE("editor_controller_t::commit, invalid record_index returns not success
 	row.status = status_t::untranslated;
 	row.record_index = 999;
 
-	const auto result = controller.commit(doc, row, "Anything");
+	const auto result = doc.commit(row, "Anything", status_t::in_progress);
 
 	REQUIRE_FALSE(result.success);
 
 	cleanup_test_dict(path);
 }
 
-TEST_CASE("editor_controller_t::propagate, matches trimmed old_text", "[i][qt]")
+TEST_CASE("dict_document_t::propagate, matches trimmed old_text", "[i]")
 {
-	edit_history_t history;
-	byte_limit_validator_t validation;
-	glossary_t annotations;
-	editor_controller_t controller(history, validation, annotations);
-
 	const auto data = make_simple_dict();
 	const auto path = create_test_dict(data);
 	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
 
-	const auto count = controller.propagate(doc, "Old Cell", "Propagated Value");
+	const auto count = doc.propagate("Old Cell", "Propagated Value");
 
 	REQUIRE(count == 2);
 
@@ -134,18 +118,13 @@ TEST_CASE("editor_controller_t::propagate, matches trimmed old_text", "[i][qt]")
 	cleanup_test_dict(path);
 }
 
-TEST_CASE("editor_controller_t::propagate, does not match different old_text", "[i][qt]")
+TEST_CASE("dict_document_t::propagate, does not match different old_text", "[i]")
 {
-	edit_history_t history;
-	byte_limit_validator_t validation;
-	glossary_t annotations;
-	editor_controller_t controller(history, validation, annotations);
-
 	const auto data = make_simple_dict();
 	const auto path = create_test_dict(data);
 	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
 
-	const auto count = controller.propagate(doc, "Old Cell", "Propagated Value");
+	doc.propagate("Old Cell", "Propagated Value");
 
 	const auto & chapter = doc.data().at(rec_type_t::cell);
 	REQUIRE(chapter.records[2].new_text == "Different");
@@ -153,18 +132,13 @@ TEST_CASE("editor_controller_t::propagate, does not match different old_text", "
 	cleanup_test_dict(path);
 }
 
-TEST_CASE("editor_controller_t::propagate, sets status to propagated", "[i][qt]")
+TEST_CASE("dict_document_t::propagate, sets status to propagated", "[i]")
 {
-	edit_history_t history;
-	byte_limit_validator_t validation;
-	glossary_t annotations;
-	editor_controller_t controller(history, validation, annotations);
-
 	const auto data = make_simple_dict();
 	const auto path = create_test_dict(data);
 	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
 
-	controller.propagate(doc, "Old Cell", "New Value");
+	doc.propagate("Old Cell", "New Value");
 
 	const auto & chapter = doc.data().at(rec_type_t::cell);
 	REQUIRE(chapter.records[0].status == status_t::propagated);
@@ -173,18 +147,13 @@ TEST_CASE("editor_controller_t::propagate, sets status to propagated", "[i][qt]"
 	cleanup_test_dict(path);
 }
 
-TEST_CASE("editor_controller_t::propagate, returns propagated count", "[i][qt]")
+TEST_CASE("dict_document_t::propagate, returns propagated count", "[i]")
 {
-	edit_history_t history;
-	byte_limit_validator_t validation;
-	glossary_t annotations;
-	editor_controller_t controller(history, validation, annotations);
-
 	const auto data = make_simple_dict();
 	const auto path = create_test_dict(data);
 	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
 
-	const auto count = controller.propagate(doc, "Different", "Changed");
+	const auto count = doc.propagate("Different", "Changed");
 
 	REQUIRE(count == 1);
 
@@ -193,10 +162,8 @@ TEST_CASE("editor_controller_t::propagate, returns propagated count", "[i][qt]")
 
 TEST_CASE("editor_controller_t::load, returns correct old and new text", "[i][qt]")
 {
-	edit_history_t history;
-	byte_limit_validator_t validation;
 	glossary_t annotations;
-	editor_controller_t controller(history, validation, annotations);
+	editor_controller_t controller(annotations);
 
 	const auto data = make_simple_dict();
 	const auto path = create_test_dict(data);

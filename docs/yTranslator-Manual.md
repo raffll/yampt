@@ -167,7 +167,7 @@ Each dictionary entry has a status. Only **Translated** entries are applied duri
 
 ## Settings
 
-Open Settings via Ctrl+, or the Edit menu. Four pages are available:
+Open Settings via Ctrl+, or the Tools menu. Four pages are available:
 
 - **Appearance** — choose between light and dark theme.
 - **Shortcuts** — customize keyboard shortcuts for all actions. Conflicts are highlighted in red.

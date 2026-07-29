@@ -39,9 +39,9 @@ public:
 	dict_t & data_mut();
 	const std::set<std::pair<rec_type_t, size_t>> & modified_records() const;
 	void modified_records_insert(rec_type_t type, size_t record_index);
+	int propagate(const std::string & old_text, const std::string & new_text);
 
 private:
-	int propagate(rec_type_t source_type, const std::string & old_text, const std::string & new_text);
 
 	std::string m_path;
 	codepage_t m_codepage;
