@@ -10,7 +10,7 @@ Open File → Add Folder and point it to a directory containing your plugins and
 
 - **Left top** — Files tab (sidebar with loaded files), Filters tab (record type list), and Statuses tab (status filter with counters).
 - **Left bottom** — Annotations tab (glossary matches for the current entry), History tab (edit history), and Auto Translate tab (translation providers).
-- **Right top** — Records table showing all entries in the active dictionary. Preview tab renders book HTML. Log tab shows operation output.
+- **Right top** — Records table showing all entries in the active dictionary. Preview tab renders book HTML for TEXT records and full script source for SCTX/BNAM records. Log tab shows operation output.
 - **Right bottom** — Editor with three panels: Original (read-only source text), Details (adaptation info when available), and Translation (editable).
 - **Toolbar** — Search field with toggle buttons: Aa for case-sensitive, .* for regex, and column selectors (Key, Original, Translation) to control which fields are searched.
 
@@ -161,7 +161,7 @@ Each dictionary entry has a status. Only **Translated** entries are applied duri
 - **Outdated** — like Changed, but the entry had not been approved as Translated before the source text changed.
 - **Ambiguous** — multiple entries in the base dictionary offer different translations for the same original text. The Details panel lists all candidates. Pick the correct one and set to Translated.
 - **Reused** — the base dictionary contained a matching original text under a different key. The translation was copied from that entry.
-- **Propagated** — after you committed a translation, all other entries sharing the same original text were updated to match.
+- **Propagated** — after you committed a translation, all entries sharing the same original text (including the committed entry itself) were updated to match. Both the source and all targets receive this status.
 - **Replaced** — the translation was modified by a Find/Replace operation. Review the result and set to Translated when satisfied.
 - **Missing** — during Make Base Dictionary, this record existed in the foreign file but no corresponding record was found in the native file. Requires manual translation.
 - **Duplicate** — the same key appeared more than once in the source plugin. Only the first occurrence is stored.
