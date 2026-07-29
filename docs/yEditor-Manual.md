@@ -42,7 +42,7 @@ Each plugin in the tree is prefixed with an icon indicating its role:
 
 - 📜 — a master file that other plugins depend on.
 - 📄 — a regular plugin loaded from a mod folder or game data directory.
-- 📑 — an overridden plugin loaded from MO2's overwrite folder, meaning a cleaned or patched copy is being used instead of the original mod version.
+- ⚡ — an overridden plugin loaded from MO2's overwrite folder, meaning a cleaned or patched copy is being used instead of the original mod version.
 - ⚙ — the merged patch produced by the auto-merge operation.
 - 🛡 — a guard patch that acts as a priority barrier during auto-merge.
 - 🔒 — a plugin excluded from the merged patch. Its records are ignored during merge.
@@ -69,13 +69,25 @@ Right-click in the record view to access merge operations:
 
 - **Copy Record to Merged Patch** — copies the entire record from the selected plugin column into the merged patch.
 - **Copy Sub-Record to Merged Patch** — copies a single sub-record (one row) from a plugin column.
+- **Copy Field to Merged Patch** — copies a single decoded field within a sub-record from a plugin column.
 - **Copy Group to Merged Patch** — copies a group of related sub-records (e.g. all fields of a referenced object in a cell).
 - **Remove Sub-Record** / **Remove Group** — removes content from the merged patch column.
+
+Right-click a record node belonging to the merged patch in the navigation tree to see the **Remove** option, which deletes that record from the merged patch entirely.
 
 Right-click a plugin node in the navigation tree for plugin-level options:
 
 - **Exclude from Merged Patch** / **Include in Merged Patch** — excluded plugins are completely ignored during auto-merge. Their records will not appear in the merged patch regardless of conflicts.
 - **Mark as Guard Patch** — the guard patch acts as a priority barrier during auto-merge. Plugins loaded before the guard that modify the same records are ignored. Only the guard's version and later plugins are considered. If the final plugin's version matches master (reverting a change), the guard's version is used instead of letting the revert through.
+
+## View Menu
+
+The View menu provides filtering and display options:
+
+- **Conflicts Only** — when enabled, the navigation tree hides records with no conflicts. Only records touched by multiple plugins remain visible.
+- **Hide Duplicate Columns** — hides duplicate columns in the record view when the same plugin contributes identical data through multiple paths.
+- **Show Deleted Strikeout** — renders deleted records and cell references with strikethrough text, making them visually distinct from active content.
+- **Filter** — opens an advanced filter dialog where you can narrow the navigation tree by conflict level, override status, record type, record ID pattern, display name, and whether to include deleted records.
 
 ## Creating a Merged Patch
 
@@ -91,13 +103,13 @@ You can refine the auto-merge result manually. Use the record view context menu 
 
 ## Settings
 
-Open Settings via Ctrl+, or the Edit menu. Five pages are available:
+Open Settings via Ctrl+, or the Tools menu. Five pages are available:
 
 - **Appearance** — choose between light and dark theme.
 - **Paths** — configure the merged patch output path for each loading mode (folder, MO2, OpenMW). Normally these are automatic and don't need changing.
 - **Merged Patch** — toggle which record types participate in auto-merge. Set an exclusion regex to skip specific record IDs. Enable or disable individual bug fixes (fog density fix, summon persistence fix, cell name reversion fix).
-- **Cleaning** — toggle which cleaning operations the Clean All button performs. Evil GMSTs are Construction Set artifacts from Tribunal/Bloodmoon that can cause issues in mods that don't require those expansions. Junk cells are empty exterior cell records that only contain position data and serve no purpose.
-- **Sub-Record Rules** — configure which sub-records are ignored during conflict detection, excluded from the merged patch output, or skipped when not present in a plugin. Each field takes a comma-separated list of entries in `RECORD:SUB` format (e.g. `CELL:NAM0, CELL:NAM9`). Use `*` as a wildcard for the sub-record name to match all sub-records of a record type. Changes apply immediately after closing the settings dialog — the conflict tree and record view are rebuilt to reflect the new rules.
+- **Cleaning** — toggle which cleaning operations the Clean All button performs. Evil GMSTs are Construction Set artifacts from Tribunal/Bloodmoon that can cause issues in mods that don't require those expansions. Junk cells are empty exterior cell records that only contain position data and serve no purpose. The Header Repair group provides additional fixes applied during cleaning: updating master file sizes in the plugin header to match the actual file sizes on disk, and updating the plugin version field to 1.3 (required by some engines).
+- **Sub-Record Rules** — configure how specific sub-records are handled during conflict detection and merging. Each field takes a comma-separated list of entries in `RECORD:SUB` format (e.g. `CELL:NAM0, CELL:NAM9`). Use `*` as a wildcard for the sub-record name to match all sub-records of a record type. Three rules are available: Ignore Conflict prevents the listed sub-records from being flagged as conflicts, Exclude from Merge omits them from the merged patch output, and Skip if Missing treats them as non-significant when a plugin does not include them (so their absence alone does not create a conflict). Changes apply immediately after closing the settings dialog — the conflict tree and record view are rebuilt to reflect the new rules.
 
 ## Cleaning Plugins
 
@@ -108,4 +120,4 @@ Two types of records are removed:
 - **Evil GMSTs** — game settings injected by the Construction Set when editing plugins with Tribunal or Bloodmoon loaded. These settings override expansion-specific values and can cause problems for players without the expansions.
 - **Junk cells** — exterior cell records that contain only a NAME and DATA sub-record with no references, no region assignment, and no meaningful content. These are Construction Set artifacts from brief edits near cell borders.
 
-When loading via Open MO2 Profile, cleaned plugins are written to the MO2 overwrite folder. The overwrite folder has the highest priority in MO2's virtual filesystem, so reloading the same profile after cleaning will automatically use the cleaned copies instead of the originals. Plugins loaded from overwrite are marked with the 📑 icon in the navigation tree. Running Clean All again on an already-cleaned profile will report "no records to clean" because the loaded files are already the cleaned versions.
+When loading via Open MO2 Profile, cleaned plugins are written to the MO2 overwrite folder. The overwrite folder has the highest priority in MO2's virtual filesystem, so reloading the same profile after cleaning will automatically use the cleaned copies instead of the originals. Plugins loaded from overwrite are marked with the ⚡ icon in the navigation tree. Running Clean All again on an already-cleaned profile will report "no records to clean" because the loaded files are already the cleaned versions.

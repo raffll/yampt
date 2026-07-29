@@ -18,7 +18,7 @@ Open File → Add Folder and point it to a directory containing your plugins and
 
 Files are color-coded by type: green for plugins, gold for base dictionaries, blue for user dictionaries, purple for YAML localization files. An asterisk prefix indicates unsaved changes.
 
-Right-click a file or folder to access its context menu. Plugins offer Make Dictionary, Make Base Dictionary, Convert Plugin, Create Patch Plugin, and Delete. Dictionaries offer Save, Generate Localization Files, and Delete. YAML foreign files offer Make Translation (creates a native scaffold) and Delete. YAML native files offer Save and Delete. Folders offer Remove Folder (unload from sidebar) and Delete Folder (remove from disk).
+Right-click a file or folder to access its context menu. Plugins offer Make Dictionary, Make Base Dictionary, Convert Plugin, Convert Plugin with Hyperlinks, Create Patch Plugin, and Delete. Dictionaries offer Save, Generate Localization Files, and Delete. YAML foreign files offer Make Translation (creates a native scaffold) and Delete. YAML native files offer Save and Delete. Localization files (.cel, .mrk, .top) offer Delete. Folders offer Remove Folder (unload from sidebar) and Delete Folder (remove from disk).
 
 ## Operations
 
@@ -87,11 +87,13 @@ Place an EET file (produced by ESP-ESM Translator) in the workspace folder. It a
 
 ## Editing
 
-Click a row in the Records table to load it into the editor. The Original panel shows the source text. The Translation panel is where you type your translation. Press Tab to commit your edit and advance to the next row. Press Ctrl+S to save the dictionary to disk.
+Click a row in the Records table to load it into the editor. The Original panel shows the source text. The Translation panel is where you type your translation. Press Shift+Enter to commit your edit and advance to the next row. Press Ctrl+S to save the active dictionary to disk. Use File → Save All to save all modified dictionaries at once.
 
 When you commit an edit, the entry status changes to In Progress automatically. To mark it as final, press F10 (sets status to Translated). Press F9 to explicitly set In Progress without committing.
 
 For script records (SCTX/BNAM), the editor shows only the translatable quoted strings extracted from the script. The surrounding code structure is preserved — you cannot accidentally break the script by editing.
+
+For single-line entries, you can also double-click the Translation column directly in the Records table to edit in place. After committing, the next row is selected automatically.
 
 The Details panel appears when an entry has adaptation or conflict information. For Adapted entries it shows the source translation that was modified. For Changed entries it shows the old original text so you can see what changed. For Ambiguous entries it lists all conflicting translations.
 
@@ -125,9 +127,10 @@ The Filters tab shows record types present in the current dictionary (CELL, DIAL
 ## Keyboard Shortcuts
 
 - `Ctrl+S` — save the current dictionary to disk.
-- `F8` — copy the original text into the translation field (useful as a starting point).
+- `F8` — copy the original text into the translation field (sets status to In Progress).
 - `F9` — commit the current edit and set status to In Progress.
 - `F10` — commit the current edit and set status to Translated.
+- `Del` — reset the selected entry to its original text and set status to Untranslated.
 - `Shift+Enter` — commit the current edit (status becomes In Progress) and select the next row.
 - `Ctrl+Down` — same as Shift+Enter.
 - `Ctrl+Up` — select the previous row.
@@ -146,7 +149,7 @@ Additional providers can be added by placing a configuration file in the `provid
 
 ## Entry Statuses
 
-Each dictionary entry has a status. Only **Translated** entries are applied during Convert Plugin/Create Patch Plugin — all others are skipped. You can manually set **Translated**, **In Progress**, or **Untranslated** via right-click context menu.
+Each dictionary entry has a status. Only **Translated** entries are applied during Convert Plugin/Create Patch Plugin — all others are skipped. You can manually set **Translated**, **In Progress**, **Untranslated**, or **Error** via right-click context menu on selected rows in the Records table.
 
 - **Translated** — the translation is approved. This is the only status that produces output when running Convert Plugin or Create Patch Plugin.
 - **Untranslated** — no translation exists. The original and translation fields contain the same text.

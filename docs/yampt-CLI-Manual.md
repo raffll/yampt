@@ -72,7 +72,18 @@ Works like --convert but the output contains only the records that were actually
 yampt.exe --create -f "Plugin.esp" -d "base.json" -s "_patch"
 ```
 
-The output is named `Plugin.CREATED.esp` (or with the suffix if `-s` is provided).
+The output is named `Plugin.CREATED.esp` (based on the input filename).
+
+### --make-loc
+
+Generates localization files (.cel, .mrk, .top) from a dictionary. These files are used by OpenMW to display translated cell names, resolve hyperlinked topic text, and match inflected topic forms.
+
+```
+yampt.exe --make-loc -d "base.json" --language PL
+yampt.exe --make-loc -d "base.json" --language DE --esm-name "Morrowind"
+```
+
+The `--language` option specifies the target language code (determines codepage and which Hunspell dictionary to use for inflection). The `--esm-name` option overrides the ESM name used in the output filenames — by default it is derived from the dictionary filename.
 
 ## Options
 
@@ -82,6 +93,8 @@ The output is named `Plugin.CREATED.esp` (or with the suffix if `-s` is provided
 - `-s <suffix>` — filename suffix appended to the output (used with --convert).
 - `--translate <model_dir>` — load a translation model for heuristic cell matching during --make-base.
 - `--partial` — use partial mode for --make-base (check identical entries against English dictionary).
+- `--language <code>` — target language code (used with --make-loc to determine codepage and Hunspell dictionary).
+- `--esm-name <name>` — override the ESM name used in output filenames (used with --make-loc).
 - `--debug` — enable verbose logging (shows script parser traces and internal diagnostics).
 
 ## Examples
@@ -126,4 +139,10 @@ Extract with base dictionary applied:
 
 ```
 yampt.exe --make -f "MyMod.esp" -d "merged.json"
+```
+
+Generate localization files for Polish:
+
+```
+yampt.exe --make-loc -d "Morrowind_en_pl.json" --language PL
 ```
