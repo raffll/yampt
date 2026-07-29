@@ -9,11 +9,6 @@ void display_name_t::set_filename(const std::string & filename)
 	m_filename = filename;
 }
 
-void display_name_t::set_kind(dict_kind_t kind)
-{
-	m_kind = kind;
-}
-
 void display_name_t::set_file_type(file_type_t type)
 {
 	m_file_type = type;

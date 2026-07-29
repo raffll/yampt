@@ -27,9 +27,6 @@ std::string derive_display_name(const file_entry_t & entry, bool is_loaded, bool
 	    !is_loaded)
 		name.set_unloaded(true);
 
-	if (entry.type == file_type_t::base_dict)
-		name.set_kind(dict_kind_t::base);
-
 	if (entry.type == file_type_t::plugin && !entry.language_tag.empty())
 		name.set_language(entry.language_tag);
 

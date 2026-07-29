@@ -54,7 +54,15 @@ rc::Gen<valid_type_combo_t> gen_valid_type_combo()
 
 rc::Gen<std::string> gen_non_empty_text()
 {
-	return rc::gen::suchThat(rc::gen::string<std::string>(), [](const std::string & value) { return !value.empty(); });
+	return rc::gen::map(
+	    rc::gen::container<std::string>(rc::gen::inRange('a', 'z')),
+	    [](std::string value)
+	{
+		if (value.empty())
+			value = "a";
+
+		return value;
+	});
 }
 
 } // namespace

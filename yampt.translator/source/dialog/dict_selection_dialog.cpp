@@ -105,7 +105,6 @@ void dict_selection_dialog_t::add_dict_tree_items(
 	{
 		auto * item = new QTreeWidgetItem(parent_item);
 		display_name_t dname(entry->name);
-		dname.set_kind(entry->kind);
 		item->setText(0, QString::fromStdString(dname.to_string()));
 		item->setData(0, Qt::UserRole, QString::fromStdString(entry->path));
 		item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
@@ -133,7 +132,6 @@ void dict_selection_dialog_t::populate_order_list(
 					continue;
 
 				display_name_t dname(entry.name);
-				dname.set_kind(entry.kind);
 				auto * order_item = new QListWidgetItem(QString::fromStdString(dname.to_string()));
 				order_item->setData(Qt::UserRole, QString::fromStdString(entry.path));
 				m_order_list->addItem(order_item);
@@ -150,7 +148,6 @@ void dict_selection_dialog_t::populate_order_list(
 			continue;
 
 		display_name_t dname(entry.name);
-		dname.set_kind(entry.kind);
 		auto * order_item = new QListWidgetItem(QString::fromStdString(dname.to_string()));
 		order_item->setData(Qt::UserRole, QString::fromStdString(entry.path));
 		m_order_list->addItem(order_item);

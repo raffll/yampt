@@ -24,7 +24,7 @@ TEST_CASE("sidebar_model::derive_display_name, base dict unloaded", "[u]")
 	entry.type = file_type_t::base_dict;
 
 	const auto & result = derive_display_name(entry, false, false);
-	REQUIRE(result == "[UNLOADED] [BASE] Morrowind_BASE_EN-PL.json");
+	REQUIRE(result == "[UNLOADED] Morrowind_BASE_EN-PL.json");
 }
 
 TEST_CASE("sidebar_model::derive_display_name, user dict dirty and loaded", "[u]")
@@ -46,7 +46,7 @@ TEST_CASE("sidebar_model::derive_display_name, base dict loaded and dirty", "[u]
 	entry.type = file_type_t::base_dict;
 
 	const auto & result = derive_display_name(entry, true, true);
-	REQUIRE(result == "* [BASE] Morrowind_BASE_EN-DE.json");
+	REQUIRE(result == "* Morrowind_BASE_EN-DE.json");
 }
 
 TEST_CASE("sidebar_model::derive_context_menu, plugin entry has full menu", "[u]")

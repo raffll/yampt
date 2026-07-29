@@ -38,7 +38,6 @@ void merge_dialog_t::populate_list(const std::vector<dict_entry_t> & loaded_dict
 	for (const auto & entry : loaded_dicts)
 	{
 		display_name_t dname(entry.name);
-		dname.set_kind(entry.kind);
 
 		auto * item = new QListWidgetItem(QString::fromStdString(dname.to_string()));
 		item->setData(Qt::UserRole, QString::fromStdString(entry.path));
