@@ -16,7 +16,7 @@ bool glossary_t::is_trusted_status(status_t status)
 
 void glossary_t::collect_dial_entries(const dict_source_t & source)
 {
-	auto dial_it = source.dict->find(tools_t::rec_type_t::dial);
+	auto dial_it = source.dict->find(rec_type_t::dial);
 	if (dial_it == source.dict->end())
 		return;
 
@@ -29,7 +29,7 @@ void glossary_t::collect_dial_entries(const dict_source_t & source)
 	}
 }
 
-void glossary_t::collect_glossary_entries(const dict_source_t & source, tools_t::rec_type_t record_type)
+void glossary_t::collect_glossary_entries(const dict_source_t & source, rec_type_t record_type)
 {
 	auto chapter_it = source.dict->find(record_type);
 	if (chapter_it == source.dict->end())
@@ -70,10 +70,10 @@ void glossary_t::rebuild(const std::vector<dict_source_t> & sources)
 			continue;
 
 		collect_dial_entries(source);
-		collect_glossary_entries(source, tools_t::rec_type_t::fnam);
-		collect_glossary_entries(source, tools_t::rec_type_t::cell);
-		collect_glossary_entries(source, tools_t::rec_type_t::rnam);
-		collect_glossary_entries(source, tools_t::rec_type_t::indx);
+		collect_glossary_entries(source, rec_type_t::fnam);
+		collect_glossary_entries(source, rec_type_t::cell);
+		collect_glossary_entries(source, rec_type_t::rnam);
+		collect_glossary_entries(source, rec_type_t::indx);
 	}
 
 	sort_by_length_descending(m_dial_topics);
@@ -81,14 +81,21 @@ void glossary_t::rebuild(const std::vector<dict_source_t> & sources)
 	rebuild_dial_trie();
 }
 
-void glossary_t::update_term(tools_t::rec_type_t type, const std::string & old_text, const std::string & new_text)
+void glossary_t::set_loc_entries(const loc_entries_t & entries)
 {
-	if (type == tools_t::rec_type_t::dial)
+	m_loc_cel = entries.cel;
+	m_loc_top = entries.top;
+	m_loc_mrk = entries.mrk;
+}
+
+void glossary_t::update_term(rec_type_t type, const std::string & old_text, const std::string & new_text)
+{
+	if (type == rec_type_t::dial)
 	{
 		update_vector(m_dial_topics, old_text, new_text);
 		rebuild_dial_trie();
 	}
-	else if (type == tools_t::rec_type_t::fnam || type == tools_t::rec_type_t::cell)
+	else if (type == rec_type_t::fnam || type == rec_type_t::cell)
 	{
 		if (old_text == new_text || new_text.empty())
 			remove_from_vector(m_glossary_terms, old_text);
@@ -234,9 +241,8 @@ static bool overlaps_any(const annotation_t & candidate, const std::vector<annot
 	return false;
 }
 
-std::vector<annotation_t> glossary_t::annotate(const std::string & text, tools_t::rec_type_t type) const
+std::vector<annotation_t> glossary_t::annotate(const std::string & text, rec_type_t type) const
 {
-	(void)type;
 	std::vector<annotation_t> results;
 
 	if (text.empty())
@@ -257,7 +263,11 @@ std::vector<annotation_t> glossary_t::annotate(const std::string & text, tools_t
 
 	find_matches_legacy(text_lower, text, m_glossary_terms, annotation_t::glossary_term, glossary);
 
-	results.reserve(at_hyperlinks.size() + hyperlinks.size() + glossary.size());
+	std::vector<annotation_t> loc_annotations;
+	if (type == rec_type_t::cell || type == rec_type_t::dial)
+		find_loc_annotations(text_lower, type, loc_annotations);
+
+	results.reserve(at_hyperlinks.size() + hyperlinks.size() + glossary.size() + loc_annotations.size());
 	for (auto & annotation : at_hyperlinks)
 		results.push_back(std::move(annotation));
 
@@ -274,12 +284,17 @@ std::vector<annotation_t> glossary_t::annotate(const std::string & text, tools_t
 			results.push_back(std::move(annotation));
 	}
 
+	for (auto & annotation : loc_annotations)
+	{
+		if (!overlaps_any(annotation, results, results.size()))
+			results.push_back(std::move(annotation));
+	}
+
 	return results;
 }
 
-std::vector<annotation_t> glossary_t::annotate_translated(const std::string & text, tools_t::rec_type_t type) const
+std::vector<annotation_t> glossary_t::annotate_translated(const std::string & text) const
 {
-	(void)type;
 	std::vector<annotation_t> results;
 
 	if (text.empty())
@@ -323,6 +338,58 @@ std::vector<annotation_t> glossary_t::annotate_translated(const std::string & te
 	return results;
 }
 
+void glossary_t::find_loc_annotations(
+    const std::string & text_lower,
+    rec_type_t type,
+    std::vector<annotation_t> & results) const
+{
+	const auto & entries = (type == rec_type_t::cell) ? m_loc_cel : m_loc_top;
+	const auto & mrk_entries = m_loc_mrk;
+
+	for (const auto & entry : entries)
+	{
+		if (entry.key.empty())
+			continue;
+
+		const auto & key_lower = string_utils::to_lower(entry.key);
+		auto search_pos = text_lower.find(key_lower);
+		if (search_pos == std::string::npos)
+			continue;
+
+		annotation_t annotation;
+		annotation.start = search_pos;
+		annotation.end = search_pos + key_lower.size();
+		annotation.kind = annotation_t::loc_coverage;
+		annotation.old_text = entry.key;
+		annotation.new_text = entry.value;
+		annotation.source = {};
+		results.push_back(std::move(annotation));
+	}
+
+	if (type == rec_type_t::dial)
+	{
+		for (const auto & entry : mrk_entries)
+		{
+			if (entry.key.empty())
+				continue;
+
+			const auto & key_lower = string_utils::to_lower(entry.key);
+			auto search_pos = text_lower.find(key_lower);
+			if (search_pos == std::string::npos)
+				continue;
+
+			annotation_t annotation;
+			annotation.start = search_pos;
+			annotation.end = search_pos + key_lower.size();
+			annotation.kind = annotation_t::loc_coverage;
+			annotation.old_text = entry.key;
+			annotation.new_text = "MRK: " + entry.key + " \xe2\x86\x92 " + entry.value;
+			annotation.source = {};
+			results.push_back(std::move(annotation));
+		}
+	}
+}
+
 void glossary_t::find_matches_legacy(
     const std::string & text_lower,
     const std::string & text_original,
@@ -358,18 +425,6 @@ void glossary_t::find_matches_legacy(
 	}
 }
 
-void glossary_t::load_npc_flags(const std::string &)
-{}
-
-const std::string & glossary_t::get_speaker_gender(const std::string & npc_id) const
-{
-	static const std::string empty;
-	auto it_flag = m_npc_flags.find(npc_id);
-	if (it_flag == m_npc_flags.end())
-		return empty;
-	return it_flag->second;
-}
-
 void glossary_t::load_enchantments(const std::string & path)
 {
 	m_enchantments.clear();
@@ -379,7 +434,7 @@ void glossary_t::load_enchantments(const std::string & path)
 		return;
 
 	const auto & loaded_dict = reader.get_dict();
-	auto chapter_it = loaded_dict.find(tools_t::rec_type_t::fnam);
+	auto chapter_it = loaded_dict.find(rec_type_t::fnam);
 	if (chapter_it == loaded_dict.end())
 		return;
 

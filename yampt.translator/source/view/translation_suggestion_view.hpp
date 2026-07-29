@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../translator/translator.hpp"
+#include "../translator/web_translator_config.hpp"
 #include <functional>
 #include <memory>
 #include <string>
@@ -15,8 +16,7 @@ class QVBoxLayout;
 
 class settings_store_t;
 class ctranslate2_translator_t;
-class deepl_translator_t;
-class google_translator_t;
+class web_translator_t;
 
 class translation_suggestion_view_t : public QWidget
 {
@@ -27,6 +27,8 @@ public:
 
 	void set_source_text(const std::string & text);
 	void set_models_dir(const std::string & dir);
+	void set_providers_dir(const std::string & dir);
+	void set_target_language(const std::string & language);
 	void set_glossary_fn(std::function<std::string(const std::string &)> fn);
 
 	void apply_provider_settings(const settings_store_t & settings);
@@ -35,19 +37,26 @@ public:
 	void select_provider(int index);
 	translator_t * active_provider() const;
 
-	ctranslate2_translator_t * ct2_provider() const;
 	void append_log(const std::string & msg);
-	void set_translate_all_enabled(bool enabled);
-	void set_batch_in_progress(bool in_progress);
+	void display_translation_result(const translation_suggestion_t & result);
+
+	void request_translation(const std::string & text);
+	void request_translation_lines(const std::vector<std::string> & lines);
+	bool is_translating() const;
 
 signals:
 	void translate_all_requested();
+	void translation_committed(const std::string & result_text);
+	void translation_lines_committed(const std::vector<std::string> & result_lines);
+	void translation_failed(const std::string & error_message);
 
 private:
 	void setup_controls();
 	void load_model_for_language(int index);
 	void rebuild_language_list();
-	void display_translation_result(const translation_suggestion_t & result);
+	void rebuild_web_providers();
+	void on_provider_result(const translation_suggestion_t & result);
+	void advance_line_queue();
 
 	QComboBox * m_provider_combo = nullptr;
 	QPushButton * m_translate_all_btn = nullptr;
@@ -56,14 +65,18 @@ private:
 
 	std::string m_source_text;
 	std::string m_models_dir;
+	std::string m_providers_dir;
+	std::string m_target_language;
 	std::function<std::string(const std::string &)> m_glossary_fn;
 
 	ctranslate2_translator_t * m_ct2_provider = nullptr;
-	deepl_translator_t * m_deepl_translator = nullptr;
-	google_translator_t * m_google_translator = nullptr;
+	std::vector<web_translator_t *> m_web_providers;
 	std::vector<translator_t *> m_providers;
 	int m_active_provider_index = 0;
-	bool m_batch_in_progress = false;
+	bool m_translating = false;
+
+	std::vector<std::string> m_line_queue;
+	std::vector<std::string> m_line_results;
 
 	struct lang_entry_t
 	{

@@ -16,9 +16,7 @@ struct match_result_t
 
 std::vector<std::string> split_words(const std::string & text);
 
-int count_shared_words(
-    const std::vector<std::string> & source,
-    const std::vector<std::string> & target);
+int count_shared_words(const std::vector<std::string> & source, const std::vector<std::string> & target);
 
 std::vector<std::string> build_compare_words(
     const std::vector<std::string> & translated_words,

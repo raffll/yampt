@@ -1,11 +1,12 @@
 #pragma once
 #include <cstddef>
+#include <set>
 #include <string>
 
 enum class sub_rule_flag_t : unsigned
 {
-	none              = 0,
-	ignore_conflict   = 1 << 0,
+	none = 0,
+	ignore_conflict = 1 << 0,
 	skip_non_existent = 1 << 1,
 	exclude_from_merge = 1 << 2,
 	skip_if_size_differs = 1 << 3,
@@ -75,4 +76,21 @@ struct record_behavior_t
 };
 
 const record_behavior_t * find_record_behavior(const std::string & record_type);
-const sub_record_rule_t * find_sub_record_rule(const record_behavior_t * behavior, const std::string & sub_type, size_t data_size);
+const sub_record_rule_t * find_sub_record_rule(
+    const record_behavior_t * behavior,
+    const std::string & sub_type,
+    size_t data_size);
+
+struct sub_record_user_policy_t
+{
+	bool ignore_conflict = false;
+	bool exclude_from_merge = false;
+	bool skip_if_missing = false;
+};
+
+sub_record_user_policy_t find_user_policy(
+    const std::string & record_type,
+    const std::string & sub_type,
+    const std::set<std::string> & ignore_conflict_subs,
+    const std::set<std::string> & exclude_from_merge_subs,
+    const std::set<std::string> & skip_if_missing_subs);

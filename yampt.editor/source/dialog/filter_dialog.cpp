@@ -6,7 +6,7 @@
 filter_dialog_t::filter_dialog_t(const std::vector<std::string> & available_types, QWidget * parent)
     : QDialog(parent)
 {
-	setWindowTitle("Advanced Filter");
+	setWindowTitle(tr("Advanced Filter"));
 	setModal(true);
 	resize(560, 500);
 
@@ -15,25 +15,25 @@ filter_dialog_t::filter_dialog_t(const std::vector<std::string> & available_type
 
 	auto * left_column = new QVBoxLayout();
 
-	m_grp_conflict_all = new QGroupBox("Conflict All", this);
+	m_grp_conflict_all = new QGroupBox(tr("Conflict All"), this);
 	auto * ca_layout = new QVBoxLayout(m_grp_conflict_all);
-	m_chk_ca_only_one = new QCheckBox("Only One", m_grp_conflict_all);
-	m_chk_ca_no_conflict = new QCheckBox("No Conflict", m_grp_conflict_all);
-	m_chk_ca_override = new QCheckBox("Override", m_grp_conflict_all);
-	m_chk_ca_conflict = new QCheckBox("Conflict", m_grp_conflict_all);
+	m_chk_ca_only_one = new QCheckBox(tr("Only One"), m_grp_conflict_all);
+	m_chk_ca_no_conflict = new QCheckBox(tr("No Conflict"), m_grp_conflict_all);
+	m_chk_ca_override = new QCheckBox(tr("Override"), m_grp_conflict_all);
+	m_chk_ca_conflict = new QCheckBox(tr("Conflict"), m_grp_conflict_all);
 	ca_layout->addWidget(m_chk_ca_only_one);
 	ca_layout->addWidget(m_chk_ca_no_conflict);
 	ca_layout->addWidget(m_chk_ca_override);
 	ca_layout->addWidget(m_chk_ca_conflict);
 	left_column->addWidget(m_grp_conflict_all);
 
-	m_grp_conflict_this = new QGroupBox("Conflict This", this);
+	m_grp_conflict_this = new QGroupBox(tr("Conflict This"), this);
 	auto * ct_layout = new QVBoxLayout(m_grp_conflict_this);
-	m_chk_ct_master = new QCheckBox("Master", m_grp_conflict_this);
-	m_chk_ct_identical = new QCheckBox("Identical to Master", m_grp_conflict_this);
-	m_chk_ct_override = new QCheckBox("Override Wins", m_grp_conflict_this);
-	m_chk_ct_wins = new QCheckBox("Conflict Wins", m_grp_conflict_this);
-	m_chk_ct_loses = new QCheckBox("Conflict Loses", m_grp_conflict_this);
+	m_chk_ct_master = new QCheckBox(tr("Master"), m_grp_conflict_this);
+	m_chk_ct_identical = new QCheckBox(tr("Identical to Master"), m_grp_conflict_this);
+	m_chk_ct_override = new QCheckBox(tr("Override Wins"), m_grp_conflict_this);
+	m_chk_ct_wins = new QCheckBox(tr("Conflict Wins"), m_grp_conflict_this);
+	m_chk_ct_loses = new QCheckBox(tr("Conflict Loses"), m_grp_conflict_this);
 	ct_layout->addWidget(m_chk_ct_master);
 	ct_layout->addWidget(m_chk_ct_identical);
 	ct_layout->addWidget(m_chk_ct_override);
@@ -41,19 +41,19 @@ filter_dialog_t::filter_dialog_t(const std::vector<std::string> & available_type
 	ct_layout->addWidget(m_chk_ct_loses);
 	left_column->addWidget(m_grp_conflict_this);
 
-	auto * grp_id_name = new QGroupBox("ID / Name", this);
+	auto * grp_id_name = new QGroupBox(tr("ID / Name"), this);
 	auto * id_name_layout = new QFormLayout(grp_id_name);
 	m_edt_id = new QLineEdit(grp_id_name);
-	m_edt_id->setPlaceholderText("Substring, case-insensitive");
+	m_edt_id->setPlaceholderText(tr("Substring, case-insensitive"));
 	m_edt_name = new QLineEdit(grp_id_name);
-	m_edt_name->setPlaceholderText("Substring, case-insensitive");
-	id_name_layout->addRow("ID:", m_edt_id);
-	id_name_layout->addRow("Name:", m_edt_name);
+	m_edt_name->setPlaceholderText(tr("Substring, case-insensitive"));
+	id_name_layout->addRow(tr("ID:"), m_edt_id);
+	id_name_layout->addRow(tr("Name:"), m_edt_name);
 	left_column->addWidget(grp_id_name);
 
-	auto * grp_special = new QGroupBox("Special", this);
+	auto * grp_special = new QGroupBox(tr("Special"), this);
 	auto * special_layout = new QVBoxLayout(grp_special);
-	m_chk_deleted = new QCheckBox("Deleted only", grp_special);
+	m_chk_deleted = new QCheckBox(tr("Deleted only"), grp_special);
 	special_layout->addWidget(m_chk_deleted);
 	left_column->addWidget(grp_special);
 
@@ -61,14 +61,14 @@ filter_dialog_t::filter_dialog_t(const std::vector<std::string> & available_type
 
 	auto * right_column = new QVBoxLayout();
 
-	auto * grp_type = new QGroupBox("Record Type", this);
+	auto * grp_type = new QGroupBox(tr("Record Type"), this);
 	auto * type_layout = new QVBoxLayout(grp_type);
 	m_lst_types = new QListWidget(grp_type);
 	for (const auto & t : available_types)
 	{
 		auto * item = new QListWidgetItem(QString::fromStdString(t));
 		item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
-		item->setCheckState(Qt::Checked);
+		item->setCheckState(Qt::Unchecked);
 		m_lst_types->addItem(item);
 	}
 	type_layout->addWidget(m_lst_types);

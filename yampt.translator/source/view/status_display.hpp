@@ -1,6 +1,7 @@
 #pragma once
 
 #include <utility/status_types.hpp>
+#include <QCoreApplication>
 #include <QString>
 
 inline QString status_display_name(status_t status)
@@ -8,38 +9,40 @@ inline QString status_display_name(status_t status)
 	switch (status)
 	{
 	case status_t::translated:
-		return QStringLiteral("Translated");
+		return QCoreApplication::translate("yTranslator", "Translated");
 	case status_t::untranslated:
-		return QStringLiteral("Untranslated");
+		return QCoreApplication::translate("yTranslator", "Untranslated");
 	case status_t::missing:
-		return QStringLiteral("Missing");
+		return QCoreApplication::translate("yTranslator", "Missing");
 	case status_t::duplicate:
-		return QStringLiteral("Duplicate");
+		return QCoreApplication::translate("yTranslator", "Duplicate");
 	case status_t::mismatch:
-		return QStringLiteral("Mismatch");
+		return QCoreApplication::translate("yTranslator", "Mismatch");
 	case status_t::heuristic:
-		return QStringLiteral("Heuristic");
+		return QCoreApplication::translate("yTranslator", "Heuristic");
 	case status_t::to_verify:
-		return QStringLiteral("To Verify");
+		return QCoreApplication::translate("yTranslator", "To Verify");
 	case status_t::adapted:
-		return QStringLiteral("Adapted");
+		return QCoreApplication::translate("yTranslator", "Adapted");
 	case status_t::changed:
-		return QStringLiteral("Changed");
+		return QCoreApplication::translate("yTranslator", "Changed");
 	case status_t::outdated:
-		return QStringLiteral("Outdated");
+		return QCoreApplication::translate("yTranslator", "Outdated");
 	case status_t::reused:
-		return QStringLiteral("Reused");
+		return QCoreApplication::translate("yTranslator", "Reused");
 	case status_t::ambiguous:
-		return QStringLiteral("Ambiguous");
+		return QCoreApplication::translate("yTranslator", "Ambiguous");
 	case status_t::in_progress:
-		return QStringLiteral("In Progress");
+		return QCoreApplication::translate("yTranslator", "In Progress");
 	case status_t::model:
-		return QStringLiteral("Model");
+		return QCoreApplication::translate("yTranslator", "Generated");
 	case status_t::propagated:
-		return QStringLiteral("Propagated");
+		return QCoreApplication::translate("yTranslator", "Propagated");
+	case status_t::replaced:
+		return QCoreApplication::translate("yTranslator", "Replaced");
 	case status_t::error:
-		return QStringLiteral("Error");
+		return QCoreApplication::translate("yTranslator", "Error");
 	}
 
-	return QStringLiteral("Error");
+	return QCoreApplication::translate("yTranslator", "Error");
 }

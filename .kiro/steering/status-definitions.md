@@ -9,7 +9,7 @@ Approved status:
 
 Skipped statuses:
 - `to_verify`, `untranslated`, `adapted`, `reused`, `changed`, `outdated`, `ambiguous`
-- `in_progress`, `model`, `propagated`
+- `in_progress`, `model`, `propagated`, `replaced`
 - `missing`, `duplicate`, `mismatch`, `heuristic`, `error`
 
 The `details` field has no effect on conversion — only `status` determines whether an entry is applied.
@@ -65,8 +65,13 @@ Assigned by user actions in yTranslator.
 |--------|---------|
 | `in_progress` | User started editing but hasn't finalized |
 | `model` | Translated by the CTranslate2 translation model |
-| `propagated` | Translation auto-filled from another record with same old_text |
+| `propagated` | Translation propagated: set on both the source entry and all target entries that share the same old_text |
+| `replaced` | Translation modified by Find/Replace |
 | `error` | Entry has a validation error |
+
+## Translate Button Behavior
+
+The Translate button always sets the entry status to `model` after a successful translation. This applies regardless of document type (dict or YAML). The status is set via `set_pending_status(status_t::model)` before the translation call, and `commit_current_edit()` applies it immediately after the result is placed in the editor.
 
 ## Details Field
 

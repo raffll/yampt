@@ -13,6 +13,7 @@ record_table_view_t::record_table_view_t(QWidget * parent)
 	setSelectionMode(QAbstractItemView::ExtendedSelection);
 	setSortingEnabled(true);
 	setAlternatingRowColors(false);
+	setEditTriggers(QAbstractItemView::DoubleClicked);
 	verticalHeader()->setVisible(false);
 	verticalHeader()->setDefaultSectionSize(20);
 	verticalHeader()->setMinimumSectionSize(20);
@@ -33,13 +34,15 @@ void record_table_view_t::setModel(QAbstractItemModel * model)
 	{
 		header->setSectionResizeMode(col_id, QHeaderView::Interactive);
 		header->setSectionResizeMode(col_key, QHeaderView::Interactive);
-		header->setSectionResizeMode(col_original, QHeaderView::Stretch);
+		header->setSectionResizeMode(col_original, QHeaderView::Interactive);
 		header->setSectionResizeMode(col_translation, QHeaderView::Stretch);
 		header->setSectionResizeMode(col_status, QHeaderView::Interactive);
+		header->setStretchLastSection(false);
 
 		header->resizeSection(col_id, 50);
 		header->resizeSection(col_key, 200);
-		header->resizeSection(col_status, 80);
+		header->resizeSection(col_original, 250);
+		header->resizeSection(col_status, 90);
 	}
 
 	connect(
@@ -56,18 +59,26 @@ void record_table_view_t::setModel(QAbstractItemModel * model)
 	});
 }
 
+void record_table_view_t::set_context_menu_enabled(bool enabled)
+{
+	m_context_menu_enabled = enabled;
+}
+
 void record_table_view_t::contextMenuEvent(QContextMenuEvent * event)
 {
+	if (!m_context_menu_enabled)
+		return;
+
 	const auto selected = selectionModel()->selectedRows();
 	if (selected.isEmpty())
 		return;
 
 	auto * menu = new QMenu(this);
 
-	auto * act_translated = menu->addAction("Set Translated");
-	auto * act_in_progress = menu->addAction("Set In Progress");
-	auto * act_untranslated = menu->addAction("Set Untranslated");
-	auto * act_error = menu->addAction("Set Error");
+	auto * act_translated = menu->addAction(tr("Set Translated"));
+	auto * act_in_progress = menu->addAction(tr("Set In Progress"));
+	auto * act_untranslated = menu->addAction(tr("Set Untranslated"));
+	auto * act_error = menu->addAction(tr("Set Error"));
 
 	auto * chosen = menu->exec(event->globalPos());
 	std::optional<status_t> new_status;

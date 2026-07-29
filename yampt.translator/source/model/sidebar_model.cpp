@@ -1,6 +1,7 @@
 #include "sidebar_model.hpp"
-#include "../session.hpp"
-#include "../utility/display_name.hpp"
+#include "../session/session.hpp"
+#include "../view/display_name.hpp"
+#include "yaml_document.hpp"
 #include <utility/string_utils.hpp>
 #include <algorithm>
 #include <filesystem>
@@ -21,21 +22,13 @@ std::string derive_display_name(const file_entry_t & entry, bool is_loaded, bool
 	name.set_dirty(is_dirty);
 	name.set_file_type(entry.type);
 
-	if ((entry.type == file_type_t::base_dict || entry.type == file_type_t::user_dict) && !is_loaded)
+	if ((entry.type == file_type_t::base_dict || entry.type == file_type_t::user_dict ||
+	     entry.type == file_type_t::yaml_l10n) &&
+	    !is_loaded)
 		name.set_unloaded(true);
-
-	if (entry.type == file_type_t::base_dict)
-		name.set_kind(dict_kind_t::base);
 
 	if (entry.type == file_type_t::plugin && !entry.language_tag.empty())
 		name.set_language(entry.language_tag);
-
-	if (entry.type == file_type_t::yaml_l10n)
-	{
-		std::error_code ec;
-		if (std::filesystem::exists(entry.path + ".tmp", ec))
-			name.set_wip(true);
-	}
 
 	return name.to_string();
 }
@@ -58,6 +51,9 @@ std::vector<menu_action_t> derive_context_menu(const file_entry_t & entry, bool 
 
 		return { menu_action_t::delete_file };
 	}
+
+	if (entry.type == file_type_t::loc_file)
+		return { menu_action_t::delete_file };
 
 	return {};
 }
@@ -163,6 +159,25 @@ static void populate_tree_from_entries(
 		item.display_text = derive_display_name(*entry, is_loaded, is_dirty);
 		item.type = entry->type;
 		item.is_workspace = true;
+
+		if (entry->type == file_type_t::yaml_l10n)
+		{
+			if (doc)
+			{
+				const auto * yaml_doc = dynamic_cast<const yaml_document_t *>(doc);
+				if (yaml_doc)
+					item.is_native_yaml = yaml_doc->is_native_file();
+			}
+			else
+			{
+				auto native_code = session.native_language();
+				if (native_code.empty())
+					native_code = "pl";
+
+				const auto stem = std::filesystem::path(entry->path).stem().string();
+				item.is_native_yaml = (stem == native_code);
+			}
+		}
 
 		auto & root_builder = roots_map[entry->root_path];
 

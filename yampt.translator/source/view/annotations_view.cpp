@@ -69,7 +69,7 @@ static QString format_annotation_display(const annotation_entry_t & entry)
 static void add_annotation_section(
     QListWidget * list,
     const std::vector<annotation_entry_t> & entries,
-    const char * header_text,
+    const QString & header_text,
     const QColor & header_color)
 {
 	if (entries.empty())
@@ -98,21 +98,22 @@ void annotations_view_t::update_annotations(
 
 	if (!enchantment.empty())
 	{
-		auto * item = new QListWidgetItem(QString::fromStdString("Enchantment: " + enchantment));
+		auto * item = new QListWidgetItem(tr("Enchantment: %1").arg(QString::fromStdString(enchantment)));
 		m_list->addItem(item);
 	}
 
 	if (!speaker_name.empty())
 	{
-		auto * item = new QListWidgetItem(QString::fromStdString("Speaker: " + speaker_name + " (" + gender + ")"));
+		auto * item = new QListWidgetItem(
+		    tr("Speaker: %1 (%2)").arg(QString::fromStdString(speaker_name), QString::fromStdString(gender)));
 		m_list->addItem(item);
 	}
 
 	const auto hyperlinks = deduplicate_and_sort(annotations, annotation_t::dial_topic);
-	add_annotation_section(m_list, hyperlinks, "--- Hyperlinks ---", QColor(70, 130, 200));
+	add_annotation_section(m_list, hyperlinks, tr("--- Hyperlinks ---"), QColor(70, 130, 200));
 
 	const auto glossary = deduplicate_and_sort(annotations, annotation_t::glossary_term);
-	add_annotation_section(m_list, glossary, "--- Glossary ---", QColor(50, 150, 50));
+	add_annotation_section(m_list, glossary, tr("--- Glossary ---"), QColor(50, 150, 50));
 }
 
 void annotations_view_t::on_item_clicked(QListWidgetItem * item)

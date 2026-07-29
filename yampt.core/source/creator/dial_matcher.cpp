@@ -1,20 +1,20 @@
 #include "dial_matcher.hpp"
-#include "word_match_utils.hpp"
 #include "../translator/translation_engine.hpp"
+#include "../utility/app_logger.hpp"
+#include "word_match_utils.hpp"
 
 dial_matcher_t::dial_matcher_t(
     esm_reader_t & esm_native,
     esm_reader_t & esm_foreign,
     translation_engine_t * translation_engine,
-    tools_t::dict_t & output_dict,
+    dict_t & output_dict,
     determine_status_fn determine_status)
     : m_esm_native(esm_native)
     , m_esm_foreign(esm_foreign)
     , m_translation_engine(translation_engine)
     , m_output_dict(output_dict)
     , m_determine_status(std::move(determine_status))
-{
-}
+{}
 
 const std::unordered_map<std::string, std::string> & dial_matcher_t::get_native_to_foreign() const
 {
@@ -32,17 +32,17 @@ void dial_matcher_t::insert_entry(
     const std::string & new_text,
     status_t status)
 {
-	auto * existing = m_output_dict[tools_t::rec_type_t::dial].find(key_text);
+	auto * existing = m_output_dict[rec_type_t::dial].find(key_text);
 	if (existing && existing->old_text == old_text && existing->new_text == new_text)
 		return;
 
-	tools_t::record_entry_t entry;
+	record_entry_t entry;
 	entry.key_text = key_text;
 	entry.old_text = old_text;
 	entry.new_text = new_text;
 	entry.status = status;
 
-	if (m_output_dict[tools_t::rec_type_t::dial].insert(entry))
+	if (m_output_dict[rec_type_t::dial].insert(entry))
 	{
 		m_counters.created++;
 		return;
@@ -65,7 +65,7 @@ dial_matcher_t::fingerprint_index_t dial_matcher_t::build_inam_index(esm_reader_
 		if (!esm_source.get_key().exist)
 			continue;
 
-		if (tools_t::get_dialog_type(esm_source.get_key().content) != "T")
+		if (domain_types::get_dialog_type(esm_source.get_key().content) != "T")
 			continue;
 
 		if (i + 1 >= esm_source.get_records().size())
@@ -122,7 +122,7 @@ void dial_matcher_t::match_by_inam(
 		if (!m_esm_foreign.get_key().exist)
 			continue;
 
-		if (tools_t::get_dialog_type(m_esm_foreign.get_key().content) != "T")
+		if (domain_types::get_dialog_type(m_esm_foreign.get_key().content) != "T")
 			continue;
 
 		m_esm_foreign.set_value("NAME");
@@ -197,7 +197,7 @@ void dial_matcher_t::match_by_translation(
 		if (!m_esm_native.get_key().exist)
 			continue;
 
-		if (tools_t::get_dialog_type(m_esm_native.get_key().content) != "T")
+		if (domain_types::get_dialog_type(m_esm_native.get_key().content) != "T")
 			continue;
 
 		m_esm_native.set_value("NAME");
@@ -207,10 +207,10 @@ void dial_matcher_t::match_by_translation(
 		native_candidates.push_back({ i, m_esm_native.get_value().text });
 	}
 
-	tools_t::add_log("=== DIAL HEURISTIC START ===\r\n", true);
-	tools_t::add_log("Foreign unmatched: " + std::to_string(unmatched_foreign.size()) + "\r\n", true);
-	tools_t::add_log("Native unmatched: " + std::to_string(native_candidates.size()) + "\r\n", true);
-	tools_t::add_log("[info] translation engine: active (DIAL heuristic)\r\n");
+	app_logger_t::add_log("=== DIAL HEURISTIC START ===\r\n", true);
+	app_logger_t::add_log("Foreign unmatched: " + std::to_string(unmatched_foreign.size()) + "\r\n", true);
+	app_logger_t::add_log("Native unmatched: " + std::to_string(native_candidates.size()) + "\r\n", true);
+	app_logger_t::add_log("[info] translation engine: active (DIAL heuristic)\r\n");
 
 	std::set<size_t> matched_foreign_idx;
 	std::set<size_t> matched_native_idx;
@@ -229,7 +229,7 @@ void dial_matcher_t::match_by_translation(
 			matched_foreign_idx.insert(fi);
 			matched_native_idx.insert(ni);
 
-			tools_t::add_log("[EXACT] \"" + foreign_name + "\"\r\n", true);
+			app_logger_t::add_log("[EXACT] \"" + foreign_name + "\"\r\n", true);
 
 			m_native_to_foreign[foreign_name] = foreign_name;
 			insert_entry(foreign_name, foreign_name, foreign_name, status_t::translated);
@@ -272,13 +272,10 @@ void dial_matcher_t::match_by_translation(
 
 				if (resolved)
 				{
-					tools_t::add_log(
-					    "[TIE-SAME iter=" + std::to_string(iteration) +
-					    " orig=" + std::to_string(match.score_orig) +
-					    " model=" + std::to_string(match.score_model) +
-					    " count=" + std::to_string(match.count) +
-					    "] \"" + foreign_name + "\" => \"" + translated_text +
-					    "\" -> \"" + match.name + "\"\r\n");
+					app_logger_t::add_log(
+					    "[TIE-SAME iter=" + std::to_string(iteration) + " orig=" + std::to_string(match.score_orig) +
+					    " model=" + std::to_string(match.score_model) + " count=" + std::to_string(match.count) +
+					    "] \"" + foreign_name + "\" => \"" + translated_text + "\" -> \"" + match.name + "\"\r\n");
 				}
 			}
 
@@ -289,12 +286,10 @@ void dial_matcher_t::match_by_translation(
 
 				if (!resolved)
 				{
-					tools_t::add_log(
-					    "[TRANSLATE iter=" + std::to_string(iteration) +
-					    " orig=" + std::to_string(match.score_orig) +
-					    " model=" + std::to_string(match.score_model) +
-					    "] \"" + foreign_name + "\" => \"" + translated_text +
-					    "\" -> \"" + match.name + "\"\r\n");
+					app_logger_t::add_log(
+					    "[TRANSLATE iter=" + std::to_string(iteration) + " orig=" + std::to_string(match.score_orig) +
+					    " model=" + std::to_string(match.score_model) + "] \"" + foreign_name + "\" => \"" +
+					    translated_text + "\" -> \"" + match.name + "\"\r\n");
 				}
 
 				m_native_to_foreign[match.name] = foreign_name;
@@ -303,17 +298,15 @@ void dial_matcher_t::match_by_translation(
 			}
 			else if (!resolved)
 			{
-				tools_t::add_log(
-				    "[TIE iter=" + std::to_string(iteration) +
-				    " orig=" + std::to_string(match.score_orig) +
-				    " model=" + std::to_string(match.score_model) +
-				    " count=" + std::to_string(match.count) +
-				    "] \"" + foreign_name + "\"\r\n");
+				app_logger_t::add_log(
+				    "[TIE iter=" + std::to_string(iteration) + " orig=" + std::to_string(match.score_orig) +
+				    " model=" + std::to_string(match.score_model) + " count=" + std::to_string(match.count) + "] \"" +
+				    foreign_name + "\"\r\n");
 			}
 		}
 	}
 
-	tools_t::add_log("--- UNMATCHED FOREIGN DIAL ---\r\n", true);
+	app_logger_t::add_log("--- UNMATCHED FOREIGN DIAL ---\r\n", true);
 
 	std::vector<std::string> unmatched_native_names;
 	for (size_t ni = 0; ni < native_candidates.size(); ++ni)
@@ -337,24 +330,24 @@ void dial_matcher_t::match_by_translation(
 			continue;
 
 		const auto & name = unmatched_foreign[fi].second;
-		tools_t::add_log("  " + name + "\r\n", true);
+		app_logger_t::add_log("  " + name + "\r\n", true);
 
 		insert_entry(name, name, name, status_t::missing);
 		m_counters.missing++;
 
 		if (!candidates_str.empty())
 		{
-			auto * entry = m_output_dict[tools_t::rec_type_t::dial].find(name);
+			auto * entry = m_output_dict[rec_type_t::dial].find(name);
 			if (entry)
 				entry->details = candidates_str;
 		}
 	}
 
-	tools_t::add_log("--- UNMATCHED NATIVE DIAL ---\r\n", true);
+	app_logger_t::add_log("--- UNMATCHED NATIVE DIAL ---\r\n", true);
 	for (size_t ni = 0; ni < native_candidates.size(); ++ni)
 	{
 		if (!matched_native_idx.count(ni))
-			tools_t::add_log("  " + native_candidates[ni].second + "\r\n", true);
+			app_logger_t::add_log("  " + native_candidates[ni].second + "\r\n", true);
 	}
 
 	for (size_t fi = 0; fi < unmatched_foreign.size(); ++fi)
@@ -362,16 +355,15 @@ void dial_matcher_t::match_by_translation(
 		if (matched_foreign_idx.count(fi))
 			continue;
 
-		tools_t::add_log("[warning] missing DIAL: " + unmatched_foreign[fi].second + "\r\n");
+		app_logger_t::add_log("[warning] missing DIAL: " + unmatched_foreign[fi].second + "\r\n");
 	}
 
 	if (!unmatched_native_names.empty())
 	{
-		tools_t::add_log(
-		    "[info] unmatched native DIAL candidates (" +
-		    std::to_string(unmatched_native_names.size()) + "):\r\n");
+		app_logger_t::add_log(
+		    "[info] unmatched native DIAL candidates (" + std::to_string(unmatched_native_names.size()) + "):\r\n");
 		for (const auto & name : unmatched_native_names)
-			tools_t::add_log("  " + name + "\r\n");
+			app_logger_t::add_log("  " + name + "\r\n");
 	}
 }
 
@@ -379,7 +371,7 @@ void dial_matcher_t::report_unmatched(
     const std::vector<std::pair<size_t, std::string>> & unmatched_foreign,
     const std::set<size_t> & matched_native_records)
 {
-	tools_t::add_log("[info] translation engine: inactive (DIAL heuristic skipped)\r\n");
+	app_logger_t::add_log("[info] translation engine: inactive (DIAL heuristic skipped)\r\n");
 
 	std::vector<std::string> native_names;
 	for (size_t i = 0; i < m_esm_native.get_records().size(); ++i)
@@ -395,7 +387,7 @@ void dial_matcher_t::report_unmatched(
 		if (!m_esm_native.get_key().exist)
 			continue;
 
-		if (tools_t::get_dialog_type(m_esm_native.get_key().content) != "T")
+		if (domain_types::get_dialog_type(m_esm_native.get_key().content) != "T")
 			continue;
 
 		m_esm_native.set_value("NAME");
@@ -421,21 +413,20 @@ void dial_matcher_t::report_unmatched(
 
 		if (!candidates_str.empty())
 		{
-			auto * entry = m_output_dict[tools_t::rec_type_t::dial].find(name);
+			auto * entry = m_output_dict[rec_type_t::dial].find(name);
 			if (entry)
 				entry->details = candidates_str;
 		}
 	}
 
 	for (const auto & [pos, name] : unmatched_foreign)
-		tools_t::add_log("[warning] missing DIAL: " + name + "\r\n");
+		app_logger_t::add_log("[warning] missing DIAL: " + name + "\r\n");
 
 	if (!native_names.empty())
 	{
-		tools_t::add_log(
-		    "[info] unmatched native DIAL candidates (" +
-		    std::to_string(native_names.size()) + "):\r\n");
+		app_logger_t::add_log(
+		    "[info] unmatched native DIAL candidates (" + std::to_string(native_names.size()) + "):\r\n");
 		for (const auto & name : native_names)
-			tools_t::add_log("  " + name + "\r\n");
+			app_logger_t::add_log("  " + name + "\r\n");
 	}
 }

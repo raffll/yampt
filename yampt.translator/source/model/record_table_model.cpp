@@ -1,5 +1,6 @@
 #include "record_table_model.hpp"
 #include "../view/status_display.hpp"
+#include "edit_permissions.hpp"
 #include <algorithm>
 #include <theme_system.hpp>
 #include <QString>
@@ -38,9 +39,9 @@ static QString strip_leading_whitespace(QString text)
 	return text.mid(index);
 }
 
-static bool is_script_type(tools_t::rec_type_t type)
+static bool is_script_type(rec_type_t type)
 {
-	return type == tools_t::rec_type_t::sctx || type == tools_t::rec_type_t::bnam;
+	return type == rec_type_t::sctx || type == rec_type_t::bnam;
 }
 
 static QString format_key_display(const table_row_t & row)
@@ -84,17 +85,25 @@ QVariant record_table_model_t::data(const QModelIndex & index, int role) const
 
 	const auto & row = m_rows[index.row()];
 
-	if (role == Qt::DisplayRole)
+	if (role == Qt::DisplayRole || role == Qt::EditRole)
 	{
 		switch (index.column())
 		{
 		case col_id:
-			return QString::fromStdString(tools_t::type_to_str(row.type));
+			return QString::fromStdString(domain_types::type_to_str(row.type));
 		case col_key:
 			return format_key_display(row);
 		case col_original:
 			return format_text_column(row, row.old_text);
 		case col_translation:
+			if (role == Qt::EditRole)
+			{
+				if (row.status == status_t::untranslated)
+					return QString();
+
+				return QString::fromStdString(row.new_text);
+			}
+
 			if (row.status == status_t::untranslated)
 				return {};
 
@@ -133,15 +142,15 @@ QVariant record_table_model_t::headerData(int section, Qt::Orientation orientati
 	switch (section)
 	{
 	case col_id:
-		return QStringLiteral("ID");
+		return tr("ID");
 	case col_key:
-		return QStringLiteral("Key");
+		return tr("Key");
 	case col_original:
-		return QStringLiteral("Original");
+		return tr("Original");
 	case col_translation:
-		return QStringLiteral("Translation");
+		return tr("Translation");
 	case col_status:
-		return QStringLiteral("Status");
+		return tr("Status");
 	default:
 		return {};
 	}
@@ -239,4 +248,55 @@ void record_table_model_t::update_row(int row, const std::string & new_text, sta
 	m_rows[row].new_text = new_text;
 	m_rows[row].status = status;
 	emit dataChanged(index(row, col_id), index(row, col_status));
+}
+
+Qt::ItemFlags record_table_model_t::flags(const QModelIndex & index) const
+{
+	auto base_flags = QAbstractTableModel::flags(index);
+
+	if (!index.isValid())
+		return base_flags;
+
+	if (!m_editable)
+		return base_flags;
+
+	if (index.column() != col_translation)
+		return base_flags;
+
+	const auto row_idx = index.row();
+	if (row_idx < 0 || row_idx >= static_cast<int>(m_rows.size()))
+		return base_flags;
+
+	const auto & row = m_rows[row_idx];
+	const auto permissions = edit_permissions::get_record(row.type);
+
+	if (!permissions.editable_inline)
+		return base_flags;
+
+	return base_flags | Qt::ItemIsEditable;
+}
+
+void record_table_model_t::set_editable(bool editable)
+{
+	m_editable = editable;
+}
+
+bool record_table_model_t::setData(const QModelIndex & index, const QVariant & value, int role)
+{
+	if (!index.isValid() || role != Qt::EditRole)
+		return false;
+
+	if (index.column() != col_translation)
+		return false;
+
+	const auto row_idx = index.row();
+	if (row_idx < 0 || row_idx >= static_cast<int>(m_rows.size()))
+		return false;
+
+	const auto new_text = value.toString().toStdString();
+	if (new_text == m_rows[row_idx].new_text)
+		return false;
+
+	emit inline_edit_committed(row_idx, new_text);
+	return true;
 }

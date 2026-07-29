@@ -9,6 +9,20 @@
 - Utility classes and functions separated from model classes
 - Extract all types, enums, and lists of names into separate miscellaneous classes
 - Extract all names and messages into YAML
+- When splitting a large file, always extract into a new class with its own .hpp/.cpp pair — never split a single class across multiple .cpp files
+
+Exceptions to the one-class-one-file rule:
+- **Qt main windows** — a `_setup.cpp` companion file is acceptable for UI construction boilerplate (setup_*, connect_* methods). The class has one responsibility but Qt widget creation is verbose.
+- **Qt tree models with complex decode** — a single model class may exceed 1000 lines if the decode logic is inseparable from the model's presentation role and has no external consumers.
+
+## Main Window Anti-Gravity Rule
+
+Never add new logic directly to `main_window_t` or `editor_window_t`. These classes are signal routers — they connect UI events to controllers. New features go on the appropriate controller or a new controller. The main window only:
+- Constructs views and controllers
+- Connects signals to controller methods
+- Reads controller results to update views
+
+If a new feature needs orchestration (showing dialogs, running operations, updating multiple views), create or extend a controller for it. The main window calls one method on the controller — it does not contain the logic itself.
 
 ## Function Design
 
@@ -54,8 +68,42 @@
 - No comments unless the code cannot be explained by function or variable names alone. If a comment is unavoidable, keep it to one short line.
 - No decorative comment banners (dashed lines, boxes, ASCII art).
 - Always remove items from TODO.md that are done or cancelled — never leave stale entries.
-- No file-local `static` functions. All logic belongs as static methods on the owning class. A .cpp file implements one class — every function in it is a member of that class. No mixing of free functions, file-local statics, and class methods in the same file.
+- One class = one `.hpp` + one `.cpp`. Never split a class across multiple `.cpp` files. If a class exceeds 1000 lines, it has more than one responsibility — extract a new class, don't add a second `.cpp`.
+- When hiding a UI feature (settings page, combo box, panel), fully remove it from the layout — do not just call `setVisible(false)`. Hidden widgets still occupy space, intercept events, and cause visual glitches. Remove the `addWidget`/`addTab` call entirely; keep the object alive only if its API is still used internally.
 
+## Localization
+
+All user-visible strings in yampt.translator and yampt.editor must be wrapped for Qt translation:
+
+- QWidget subclasses: `tr("text")`
+- Non-QObject classes: `QCoreApplication::translate("yTranslator", "text")` or `"yEditor"`
+- Never leave raw string literals in UI code (menus, tooltips, labels, messages, dialog titles, button text)
+- This includes: combo box items (`addItem`), checkbox labels, form row labels (`addRow`), context menu actions (`addAction`), `QInputDialog` titles and prompts, list widget category items, and toolbar/statusbar text
+- Log messages (`app_logger_t`, `append_log`) stay English — they are developer-facing
+- Shortcut key sequences (`"Ctrl+S"`, `"F10"`) are not translated
+- Settings keys and internal identifiers are not translated
+- Internal toolbar object names (`addToolBar("Main")`) are not translated
+
+## Classes vs Namespaces
+
+- **Class (`_t` suffix)** — has mutable state (member variables, including static mutable). Gets instantiated or manages a resource.
+- **Namespace (`snake_case`)** — groups related functions with no shared mutable state. Constants (including `extern const`) are fine.
+- **Struct (`_t` suffix)** — POD/data carriers with no behavior beyond trivial accessors.
+
+Decision:
+1. Does it hold mutable state? → class
+2. Does it get instantiated? → class
+3. Is it just functions + constants? → namespace
+
+Never use a class with only static methods — use a namespace instead.
+
+## Function Placement
+
+- File-local `static` functions in `.cpp` — implementation-only helpers that serve one file. Internal types used by these helpers also live in the `.cpp`.
+- Namespace functions in `.hpp` — shared logic callable from multiple files. Declared in a namespace in the header, defined in the `.cpp`.
+- Class methods — behavior that operates on the class's own state.
+
+Keep headers minimal. Only declare what external callers or tests need.
 
 ## Coding Standards Enforcement
 
@@ -63,7 +111,8 @@ Every code change must comply with ALL rules in the steering files. Before writi
 - Max 50 lines per function
 - Max 3 nesting levels
 - Max 2 function arguments (use struct if more needed)
-- No file-local `static` functions — all logic as static methods on the owning class
+- File-local `static` for internal helpers, namespace functions for shared logic
+- One class = one `.hpp` + one `.cpp` — never split across multiple `.cpp` files
 - No comments, no magic numbers, no abbreviations under 5 characters
 - `const auto &` by default
 - Early returns to flatten logic
@@ -75,3 +124,13 @@ Never produce code that violates these rules even partially. If a change would e
 ## Always Ask Before Implementing
 
 Never start implementing a solution without asking the user first. Propose the approach, explain it briefly, and wait for explicit approval before writing any code. This applies to every change — no exceptions.
+
+
+## Changelog and README Rules
+
+- Never include unit tests, test files, or test-related changes in the CHANGELOG or README.
+- Never include scripts (PowerShell, Python, automation) in the CHANGELOG or README.
+- Never include build system changes (vcxproj, paths, MSBuild targets) in the CHANGELOG or README.
+- Only user-visible features, fixes, and behavioral changes belong in the CHANGELOG.
+- Never include fixes for regressions introduced in the same release. If a refactor broke something and we fixed it before shipping, neither the break nor the fix appears in the CHANGELOG.
+- The README describes what the application does for end users — not internal tooling.

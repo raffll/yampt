@@ -1,11 +1,11 @@
 #include <catch2/catch_all.hpp>
 #include <converter/script_parser.hpp>
 #include <merger/dict_merger.hpp>
-#include <utility/tools.hpp>
+#include <utility/app_logger.hpp>
 
 using namespace std;
 
-TEST_CASE("script_parser_t, dial keywords", "[u]")
+TEST_CASE("script_parser_t::convert_script, dial keywords", "[u]")
 {
 	vector<std::pair<std::string, std::string>> lines {
 		{ "AddTopic \"Test\"", "AddTopic \"Result\"" },
@@ -21,52 +21,52 @@ TEST_CASE("script_parser_t, dial keywords", "[u]")
 	};
 
 	dict_merger_t merger;
-	merger.add_record(tools_t::rec_type_t::dial, "Test", "Result");
-	merger.add_record(tools_t::rec_type_t::dial, "Test Test", "Result Result");
+	merger.add_record(rec_type_t::dial, "Test", "Result");
+	merger.add_record(rec_type_t::dial, "Test Test", "Result Result");
 
 	for (const auto & line : lines)
 	{
-		script_parser_t parser(tools_t::rec_type_t::bnam, merger, "", "", line.first, "");
+		script_parser_t parser(rec_type_t::bnam, merger, "", "", line.first, "");
 
 		REQUIRE(parser.get_new_script() == line.second);
 	}
 }
 
-TEST_CASE("script_parser_t, AddTopic no-match", "[u]")
+TEST_CASE("script_parser_t::convert_script, AddTopic no-match", "[u]")
 {
 	dict_merger_t merger;
-	merger.add_record(tools_t::rec_type_t::dial, "SomeTopic", "SomeResult");
+	merger.add_record(rec_type_t::dial, "SomeTopic", "SomeResult");
 
 	SECTION("quoted argument not in dict is unchanged")
 	{
 		string input = "AddTopic \"OtherTopic\"";
-		script_parser_t parser(tools_t::rec_type_t::bnam, merger, "", "", input, "");
+		script_parser_t parser(rec_type_t::bnam, merger, "", "", input, "");
 		REQUIRE(parser.get_new_script() == input);
 	}
 
 	SECTION("unquoted argument not in dict is unchanged")
 	{
 		string input = "AddTopic OtherTopic";
-		script_parser_t parser(tools_t::rec_type_t::bnam, merger, "", "", input, "");
+		script_parser_t parser(rec_type_t::bnam, merger, "", "", input, "");
 		REQUIRE(parser.get_new_script() == input);
 	}
 
 	SECTION("comment line with AddTopic is unchanged")
 	{
 		string input = "; AddTopic \"SomeTopic\"";
-		script_parser_t parser(tools_t::rec_type_t::bnam, merger, "", "", input, "");
+		script_parser_t parser(rec_type_t::bnam, merger, "", "", input, "");
 		REQUIRE(parser.get_new_script() == input);
 	}
 
 	SECTION("identifier containing AddTopic is unchanged")
 	{
 		string input = "Begin AddTopicScript";
-		script_parser_t parser(tools_t::rec_type_t::bnam, merger, "", "", input, "");
+		script_parser_t parser(rec_type_t::bnam, merger, "", "", input, "");
 		REQUIRE(parser.get_new_script() == input);
 	}
 }
 
-TEST_CASE("script_parser_t, cell keywords", "[u]")
+TEST_CASE("script_parser_t::convert_script, cell keywords", "[u]")
 {
 	vector<std::pair<std::string, std::string>> lines {
 		{ "if ( GetPCCell \"Test Test\" == 1 )", "if ( GetPCCell \"Result Result\" == 1 )" },
@@ -77,18 +77,18 @@ TEST_CASE("script_parser_t, cell keywords", "[u]")
 	};
 
 	dict_merger_t merger;
-	merger.add_record(tools_t::rec_type_t::cell, "Test", "Result");
-	merger.add_record(tools_t::rec_type_t::cell, "Test Test", "Result Result");
+	merger.add_record(rec_type_t::cell, "Test", "Result");
+	merger.add_record(rec_type_t::cell, "Test Test", "Result Result");
 
 	for (const auto & line : lines)
 	{
-		script_parser_t parser(tools_t::rec_type_t::bnam, merger, "", "", line.first, "");
+		script_parser_t parser(rec_type_t::bnam, merger, "", "", line.first, "");
 
 		REQUIRE(parser.get_new_script() == line.second);
 	}
 }
 
-TEST_CASE("script_parser_t, messages", "[u]")
+TEST_CASE("script_parser_t::convert_script, messages", "[u]")
 {
 	vector<std::pair<std::string, std::string>> lines {
 		{ "NPC->Say \"Test.wav\" \"Test\"", "NPC->Say \"Test.wav\" \"Result\"" },
@@ -101,18 +101,18 @@ TEST_CASE("script_parser_t, messages", "[u]")
 	{
 		const std::string key = "^" + line.first;
 		const std::string val = line.second;
-		merger.add_record(tools_t::rec_type_t::bnam, key, val);
+		merger.add_record(rec_type_t::bnam, key, val);
 	}
 
 	for (const auto & line : lines)
 	{
-		script_parser_t parser(tools_t::rec_type_t::bnam, merger, "", "", line.first, "");
+		script_parser_t parser(rec_type_t::bnam, merger, "", "", line.first, "");
 
 		REQUIRE(parser.get_new_script() == line.second);
 	}
 }
 
-TEST_CASE("script_parser_t, MessageBox replacement", "[u]")
+TEST_CASE("script_parser_t::convert_script, MessageBox replacement", "[u]")
 {
 	const std::string script_name = "TestScript";
 	const std::string input_line = "MessageBox \"Hello World\"";
@@ -122,17 +122,17 @@ TEST_CASE("script_parser_t, MessageBox replacement", "[u]")
 	const std::string value = expected_line;
 
 	dict_merger_t merger;
-	merger.add_record(tools_t::rec_type_t::bnam, key, value);
+	merger.add_record(rec_type_t::bnam, key, value);
 
-	script_parser_t parser(tools_t::rec_type_t::bnam, merger, script_name, "", input_line, "");
+	script_parser_t parser(rec_type_t::bnam, merger, script_name, "", input_line, "");
 
 	REQUIRE(parser.get_new_script() == expected_line);
 }
 
-TEST_CASE("script_parser_t, end keyword stops processing", "[u]")
+TEST_CASE("script_parser_t::convert_script, end keyword stops processing", "[u]")
 {
 	dict_merger_t merger;
-	merger.add_record(tools_t::rec_type_t::dial, "Test", "Result");
+	merger.add_record(rec_type_t::dial, "Test", "Result");
 
 	const std::string input = "AddTopic \"Test\"\r\n"
 	                          "end\r\n"
@@ -142,15 +142,15 @@ TEST_CASE("script_parser_t, end keyword stops processing", "[u]")
 	                             "end\r\n"
 	                             "AddTopic \"Test\"";
 
-	script_parser_t parser(tools_t::rec_type_t::bnam, merger, "", "", input, "");
+	script_parser_t parser(rec_type_t::bnam, merger, "", "", input, "");
 	REQUIRE(parser.get_new_script() == expected);
 }
 
-TEST_CASE("script_parser_t, multi-line script", "[u]")
+TEST_CASE("script_parser_t::convert_script, multi-line script", "[u]")
 {
 	dict_merger_t merger;
-	merger.add_record(tools_t::rec_type_t::dial, "Test", "Result");
-	merger.add_record(tools_t::rec_type_t::dial, "Test Test", "Result Result");
+	merger.add_record(rec_type_t::dial, "Test", "Result");
+	merger.add_record(rec_type_t::dial, "Test Test", "Result Result");
 
 	const std::string input = "AddTopic \"Test\"\r\n"
 	                          "AddTopic \"Test Test\"";
@@ -158,19 +158,19 @@ TEST_CASE("script_parser_t, multi-line script", "[u]")
 	const std::string expected = "AddTopic \"Result\"\r\n"
 	                             "AddTopic \"Result Result\"";
 
-	script_parser_t parser(tools_t::rec_type_t::bnam, merger, "", "", input, "");
+	script_parser_t parser(rec_type_t::bnam, merger, "", "", input, "");
 	REQUIRE(parser.get_new_script() == expected);
 }
 
-TEST_CASE("script_parser_t, trailing CRLF not appended", "[u]")
+TEST_CASE("script_parser_t::convert_script, trailing CRLF not appended", "[u]")
 {
 	dict_merger_t merger;
-	merger.add_record(tools_t::rec_type_t::dial, "Test", "Result");
+	merger.add_record(rec_type_t::dial, "Test", "Result");
 
 	SECTION("input ending with CRLF preserves exactly one trailing CRLF")
 	{
 		const std::string input = "AddTopic \"Test\"\r\n";
-		script_parser_t parser(tools_t::rec_type_t::bnam, merger, "", "", input, "");
+		script_parser_t parser(rec_type_t::bnam, merger, "", "", input, "");
 		const std::string output = parser.get_new_script();
 		REQUIRE(output.size() >= 2);
 		REQUIRE(output.substr(output.size() - 2) == "\r\n");
@@ -183,7 +183,7 @@ TEST_CASE("script_parser_t, trailing CRLF not appended", "[u]")
 	SECTION("input not ending with CRLF produces output not ending with CRLF")
 	{
 		const std::string input = "AddTopic \"Test\"";
-		script_parser_t parser(tools_t::rec_type_t::bnam, merger, "", "", input, "");
+		script_parser_t parser(rec_type_t::bnam, merger, "", "", input, "");
 		const std::string output = parser.get_new_script();
 		REQUIRE(output.size() >= 2);
 		REQUIRE(output.substr(output.size() - 2) != "\r\n");
@@ -199,9 +199,9 @@ TEST_CASE("script_parser_t::find_new_message, short new_text", "[u]")
 	const std::string key = script_name + "^" + input_line;
 
 	dict_merger_t merger;
-	merger.add_record(tools_t::rec_type_t::bnam, key, translated_line);
+	merger.add_record(rec_type_t::bnam, key, translated_line);
 
-	script_parser_t parser(tools_t::rec_type_t::bnam, merger, script_name, "", input_line, "");
+	script_parser_t parser(rec_type_t::bnam, merger, script_name, "", input_line, "");
 
 	REQUIRE(parser.get_new_script() == translated_line);
 }
@@ -215,9 +215,9 @@ TEST_CASE("script_parser_t::find_new_message, applies translation", "[u]")
 	const std::string key = script_name + "^" + input_line;
 
 	dict_merger_t merger;
-	merger.add_record(tools_t::rec_type_t::bnam, key, translated_line);
+	merger.add_record(rec_type_t::bnam, key, translated_line);
 
-	script_parser_t parser(tools_t::rec_type_t::bnam, merger, script_name, "", input_line, "");
+	script_parser_t parser(rec_type_t::bnam, merger, script_name, "", input_line, "");
 
 	REQUIRE(parser.get_new_script() == translated_line);
 }
@@ -231,9 +231,9 @@ TEST_CASE("script_parser_t::find_new_message, long name short text", "[u]")
 	const std::string key = script_name + "^" + input_line;
 
 	dict_merger_t merger;
-	merger.add_record(tools_t::rec_type_t::bnam, key, translated_line);
+	merger.add_record(rec_type_t::bnam, key, translated_line);
 
-	script_parser_t parser(tools_t::rec_type_t::bnam, merger, script_name, "", input_line, "");
+	script_parser_t parser(rec_type_t::bnam, merger, script_name, "", input_line, "");
 
 	REQUIRE(parser.get_new_script() == translated_line);
 }
@@ -245,7 +245,7 @@ TEST_CASE("script_parser_t::find_new_message, no match unchanged", "[u]")
 
 	dict_merger_t merger;
 
-	script_parser_t parser(tools_t::rec_type_t::bnam, merger, script_name, "", input_line, "");
+	script_parser_t parser(rec_type_t::bnam, merger, script_name, "", input_line, "");
 
 	REQUIRE(parser.get_new_script() == input_line);
 }
@@ -258,9 +258,9 @@ TEST_CASE("script_parser_t::find_new_message, identical skipped", "[u]")
 	const std::string key = script_name + "^" + input_line;
 
 	dict_merger_t merger;
-	merger.add_record(tools_t::rec_type_t::bnam, key, input_line);
+	merger.add_record(rec_type_t::bnam, key, input_line);
 
-	script_parser_t parser(tools_t::rec_type_t::bnam, merger, script_name, "", input_line, "");
+	script_parser_t parser(rec_type_t::bnam, merger, script_name, "", input_line, "");
 
 	REQUIRE(parser.get_new_script() == input_line);
 }
@@ -274,9 +274,9 @@ TEST_CASE("script_parser_t::find_new_message, multi-quoted", "[u]")
 	const std::string key = script_name + "^" + input_line;
 
 	dict_merger_t merger;
-	merger.add_record(tools_t::rec_type_t::bnam, key, translated_line);
+	merger.add_record(rec_type_t::bnam, key, translated_line);
 
-	script_parser_t parser(tools_t::rec_type_t::bnam, merger, script_name, "", input_line, "");
+	script_parser_t parser(rec_type_t::bnam, merger, script_name, "", input_line, "");
 
 	REQUIRE(parser.get_new_script() == translated_line);
 }
@@ -290,9 +290,9 @@ TEST_CASE("script_parser_t::find_new_message, choice with number", "[u]")
 	const std::string key = script_name + "^" + input_line;
 
 	dict_merger_t merger;
-	merger.add_record(tools_t::rec_type_t::bnam, key, translated_line);
+	merger.add_record(rec_type_t::bnam, key, translated_line);
 
-	script_parser_t parser(tools_t::rec_type_t::bnam, merger, script_name, "", input_line, "");
+	script_parser_t parser(rec_type_t::bnam, merger, script_name, "", input_line, "");
 
 	REQUIRE(parser.get_new_script() == translated_line);
 }
@@ -306,14 +306,14 @@ TEST_CASE("script_parser_t::find_new_message, longer translation", "[u]")
 	const std::string key = script_name + "^" + input_line;
 
 	dict_merger_t merger;
-	merger.add_record(tools_t::rec_type_t::bnam, key, translated_line);
+	merger.add_record(rec_type_t::bnam, key, translated_line);
 
-	script_parser_t parser(tools_t::rec_type_t::bnam, merger, script_name, "", input_line, "");
+	script_parser_t parser(rec_type_t::bnam, merger, script_name, "", input_line, "");
 
 	REQUIRE(parser.get_new_script() == translated_line);
 }
 
-TEST_CASE("script_parser_t, bnam choice with composite key", "[u]")
+TEST_CASE("script_parser_t::convert_script, bnam choice with composite key", "[u]")
 {
 	const std::string dial_type = "T";
 	const std::string dial_name = "some topic";
@@ -326,14 +326,14 @@ TEST_CASE("script_parser_t, bnam choice with composite key", "[u]")
 	const std::string key = script_name + "^" + input_line;
 
 	dict_merger_t merger;
-	merger.add_record(tools_t::rec_type_t::bnam, key, translated_line);
+	merger.add_record(rec_type_t::bnam, key, translated_line);
 
-	script_parser_t parser(tools_t::rec_type_t::bnam, merger, script_name, "", input_line, "");
+	script_parser_t parser(rec_type_t::bnam, merger, script_name, "", input_line, "");
 
 	REQUIRE(parser.get_new_script() == translated_line);
 }
 
-TEST_CASE("script_parser_t, bnam choice not found with wrong key", "[u]")
+TEST_CASE("script_parser_t::convert_script, bnam choice not found with wrong key", "[u]")
 {
 	const std::string inam = "2483419585499221";
 	const std::string full_key_prefix = "T^some topic^" + inam;
@@ -345,9 +345,9 @@ TEST_CASE("script_parser_t, bnam choice not found with wrong key", "[u]")
 	const std::string key = full_key_prefix + "^" + input_line;
 
 	dict_merger_t merger;
-	merger.add_record(tools_t::rec_type_t::bnam, key, translated_line);
+	merger.add_record(rec_type_t::bnam, key, translated_line);
 
-	script_parser_t parser(tools_t::rec_type_t::bnam, merger, wrong_prefix, "", input_line, "");
+	script_parser_t parser(rec_type_t::bnam, merger, wrong_prefix, "", input_line, "");
 
 	REQUIRE(parser.get_new_script() == input_line);
 }

@@ -74,6 +74,8 @@ QColor theme_system_t::get_status_color(status_t status, theme_t theme) const
 		return get_color(color_name_t::status_model, theme);
 	case status_t::propagated:
 		return get_color(color_name_t::status_propagated, theme);
+	case status_t::replaced:
+		return get_color(color_name_t::status_replaced, theme);
 	case status_t::heuristic:
 		return get_color(color_name_t::status_heuristic, theme);
 	case status_t::to_verify:
@@ -159,6 +161,7 @@ void theme_system_t::apply_palette() const
 		palette.setColor(QPalette::ButtonText, Qt::black);
 		palette.setColor(QPalette::Mid, QColor(160, 160, 160));
 		palette.setColor(QPalette::Dark, QColor(130, 130, 130));
+		palette.setColor(QPalette::Shadow, QColor(80, 80, 80));
 		palette.setColor(QPalette::Highlight, QColor(70, 130, 200));
 		palette.setColor(QPalette::HighlightedText, Qt::white);
 	}

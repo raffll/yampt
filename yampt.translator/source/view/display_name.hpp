@@ -1,0 +1,27 @@
+#pragma once
+
+#include <io/file_list.hpp>
+#include <string>
+
+class display_name_t
+{
+public:
+	display_name_t() = default;
+	explicit display_name_t(const std::string & filename);
+
+	void set_filename(const std::string & filename);
+	void set_file_type(file_type_t type);
+	void set_language(const std::string & lang);
+	void set_dirty(bool dirty);
+	void set_unloaded(bool unloaded);
+
+	std::string to_string() const;
+	const std::string & filename() const;
+
+private:
+	std::string m_filename;
+	file_type_t m_file_type = file_type_t::user_dict;
+	std::string m_language;
+	bool m_dirty = false;
+	bool m_unloaded = false;
+};

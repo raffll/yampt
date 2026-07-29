@@ -13,6 +13,11 @@ public:
 		std::replace(m_path.begin(), m_path.end(), '\\', '/');
 	}
 
+	document_kind_t kind() const override
+	{
+		return document_kind_t::plugin;
+	}
+
 	std::string path() const override
 	{
 		return m_path;
@@ -28,13 +33,33 @@ public:
 		return true;
 	}
 
+	document_permissions_t permissions() const override
+	{
+		return { false, false, false, false, false };
+	}
+
 	std::vector<table_row_t> build_rows() const override
 	{
 		return {};
 	}
 
-	void commit_edit(tools_t::rec_type_t, size_t, const std::string &) override
+	void commit_edit(rec_type_t, size_t, const std::string &) override
 	{}
+
+	commit_result_t commit(const table_row_t &, const std::string &, status_t) override
+	{
+		return {};
+	}
+
+	commit_result_t commit_status(const table_row_t &, status_t) override
+	{
+		return {};
+	}
+
+	commit_result_t reset_to_original(const table_row_t &) override
+	{
+		return {};
+	}
 
 	void save() override
 	{}
@@ -47,6 +72,16 @@ public:
 	int total_count() const override
 	{
 		return 0;
+	}
+
+	std::set<rec_type_t> supported_types() const override
+	{
+		return {};
+	}
+
+	std::set<status_t> supported_statuses() const override
+	{
+		return {};
 	}
 
 	void set_dirty(bool) override

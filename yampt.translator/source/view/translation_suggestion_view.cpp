@@ -1,12 +1,13 @@
 #include "translation_suggestion_view.hpp"
 #include "../translator/ctranslate2_translator.hpp"
-#include "../translator/deepl_translator.hpp"
-#include "../translator/google_translator.hpp"
-#include <utility/tools.hpp>
-#include <settings_store.hpp>
+#include "../translator/web_translator.hpp"
+#include <utility/app_logger.hpp>
+#include <utility/language_config.hpp>
 #include <filesystem>
 #include <fstream>
+#include <settings_store.hpp>
 #include <QComboBox>
+#include <QCoreApplication>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPlainTextEdit>
@@ -26,14 +27,12 @@ translation_suggestion_view_t::translation_suggestion_view_t(QWidget * parent)
 	top_row->setSpacing(4);
 
 	m_provider_combo = new QComboBox(this);
-	m_provider_combo->addItem("CTranslate2");
-	m_provider_combo->setToolTip("Select translation provider");
-	m_provider_combo->setFixedWidth(120);
-	m_provider_combo->setVisible(false);
+	m_provider_combo->setToolTip(tr("Select translation provider"));
+	m_provider_combo->setFixedWidth(180);
 	top_row->addWidget(m_provider_combo);
 
-	m_translate_all_btn = new QPushButton("Translate", this);
-	m_translate_all_btn->setToolTip("Translate the selected entry");
+	m_translate_all_btn = new QPushButton(tr("Translate"), this);
+	m_translate_all_btn->setToolTip(tr("Translate the selected entry"));
 	m_translate_all_btn->setFixedWidth(100);
 	top_row->addWidget(m_translate_all_btn);
 
@@ -42,7 +41,7 @@ translation_suggestion_view_t::translation_suggestion_view_t(QWidget * parent)
 
 	m_result_text = new QPlainTextEdit(this);
 	m_result_text->setReadOnly(true);
-	m_result_text->setPlaceholderText("Translation suggestion will appear here");
+	m_result_text->setPlaceholderText(tr("Translation suggestion will appear here"));
 	layout->addWidget(m_result_text);
 
 	m_status_label = new QLabel(this);
@@ -55,41 +54,69 @@ translation_suggestion_view_t::translation_suggestion_view_t(QWidget * parent)
 void translation_suggestion_view_t::setup_controls()
 {
 	m_ct2_provider = new ctranslate2_translator_t(this);
-	m_deepl_translator = new deepl_translator_t(this);
-	m_google_translator = new google_translator_t(this);
-
 	m_providers.push_back(m_ct2_provider);
-	m_providers.push_back(m_deepl_translator);
-	m_providers.push_back(m_google_translator);
+	m_provider_combo->addItem(tr("CTranslate2"));
 
 	connect(m_translate_all_btn, &QPushButton::clicked, this, [this]() { emit translate_all_requested(); });
 
-	connect(m_provider_combo, &QComboBox::currentIndexChanged, this, [this](int index) { select_provider(index); });
+	connect(
+	    m_provider_combo,
+	    &QComboBox::currentIndexChanged,
+	    this,
+	    [this](int index)
+	{
+		select_provider(index);
+		update_provider_status();
+	});
 
 	connect(
 	    m_ct2_provider,
 	    &ctranslate2_translator_t::translation_finished,
 	    this,
-	    [this](translation_suggestion_t result) { display_translation_result(result); });
-
-	connect(
-	    m_deepl_translator,
-	    &deepl_translator_t::translation_finished,
-	    this,
-	    [this](translation_suggestion_t result)
-	{
-		display_translation_result(result);
-		update_provider_status();
-	});
-
-	connect(
-	    m_google_translator,
-	    &google_translator_t::translation_finished,
-	    this,
-	    [this](translation_suggestion_t result) { display_translation_result(result); });
+	    [this](translation_suggestion_t result) { on_provider_result(result); });
 
 	rebuild_language_list();
 	update_provider_status();
+}
+
+void translation_suggestion_view_t::set_providers_dir(const std::string & dir)
+{
+	m_providers_dir = dir;
+	rebuild_web_providers();
+}
+
+void translation_suggestion_view_t::rebuild_web_providers()
+{
+	for (auto * web_provider : m_web_providers)
+		web_provider->deleteLater();
+
+	m_web_providers.clear();
+
+	while (m_provider_combo->count() > 1)
+		m_provider_combo->removeItem(m_provider_combo->count() - 1);
+
+	m_providers.resize(1);
+
+	auto configs = web_translator_config::load_all(m_providers_dir);
+
+	for (auto & config : configs)
+	{
+		auto * provider = new web_translator_t(config, this);
+		provider->set_glossary_fn(m_glossary_fn);
+		m_web_providers.push_back(provider);
+		m_providers.push_back(provider);
+		m_provider_combo->addItem(QString::fromStdString(config.display_name));
+
+		connect(
+		    provider,
+		    &web_translator_t::translation_finished,
+		    this,
+		    [this](translation_suggestion_t result)
+		{
+			on_provider_result(result);
+			update_provider_status();
+		});
+	}
 }
 
 void translation_suggestion_view_t::set_source_text(const std::string & text)
@@ -106,9 +133,17 @@ void translation_suggestion_view_t::set_models_dir(const std::string & dir)
 void translation_suggestion_view_t::apply_provider_settings(const settings_store_t & settings)
 {
 	const int language_index = settings.translation_language_index();
+	const auto source_language = settings.foreign_language();
 
-	m_deepl_translator->set_api_key(settings.deepl_api_key());
-	m_google_translator->set_api_key(settings.google_api_key());
+	m_target_language = settings.native_language();
+
+	for (auto * web_provider : m_web_providers)
+	{
+		const auto & config = web_provider->config();
+		const auto stored_key = settings.web_api_key(config.identifier);
+		web_provider->set_api_key(stored_key);
+		web_provider->set_source_language(source_language);
+	}
 
 	if (m_languages.empty())
 		rebuild_language_list();
@@ -133,28 +168,29 @@ void translation_suggestion_view_t::update_provider_status()
 	if (provider == m_ct2_provider)
 	{
 		if (m_ct2_provider->is_available())
-			m_status_label->setText("CTranslate2: model loaded");
+			m_status_label->setText(tr("CTranslate2: model loaded"));
 		else
-			m_status_label->setText("CTranslate2: no model");
+			m_status_label->setText(tr("CTranslate2: no model"));
+
+		return;
 	}
-	else if (provider == m_deepl_translator)
+
+	if (provider->is_available())
 	{
-		if (m_deepl_translator->is_available())
+		if (provider->has_quota())
 		{
-			const int remaining = m_deepl_translator->remaining_quota();
-			m_status_label->setText(QString("DeepL: %L1 chars remaining").arg(remaining));
+			m_status_label->setText(
+			    QString::fromStdString(provider->name()) +
+			    tr(": %L1 chars remaining").arg(provider->remaining_quota()));
 		}
 		else
 		{
-			m_status_label->setText("DeepL: no API key");
+			m_status_label->setText(QString::fromStdString(provider->name()) + tr(": ready"));
 		}
 	}
-	else if (provider == m_google_translator)
+	else
 	{
-		if (m_google_translator->is_available())
-			m_status_label->setText("Google: active");
-		else
-			m_status_label->setText("Google: no API key");
+		m_status_label->setText(QString::fromStdString(provider->name()) + tr(": no API key"));
 	}
 }
 
@@ -180,17 +216,17 @@ void translation_suggestion_view_t::rebuild_language_list()
 
 		if (!nllb_models.empty())
 		{
-			static const std::vector<std::pair<std::string, std::string>> nllb_targets = {
-				{ "pol_Latn", "PL" }, { "deu_Latn", "DE" }, { "fra_Latn", "FR" }, { "rus_Cyrl", "RU" },
-				{ "spa_Latn", "ES" }, { "ita_Latn", "IT" }, { "ces_Latn", "CS" }, { "nld_Latn", "NL" },
-				{ "por_Latn", "PT" }, { "ukr_Cyrl", "UK" },
-			};
+			const auto languages = language_config::load(
+			    (QCoreApplication::applicationDirPath() + "/languages.json").toStdString());
 
 			const auto & model_path = nllb_models[0];
-			for (const auto & [code, label] : nllb_targets)
+			for (const auto & lang : languages)
 			{
-				auto display = "EN -> " + label;
-				m_languages.push_back({ code, display, model_path });
+				if (lang.code == "EN")
+					continue;
+
+				auto display = "EN -> " + lang.code;
+				m_languages.push_back({ lang.nllb_code, display, model_path });
 			}
 		}
 	}
@@ -208,36 +244,23 @@ void translation_suggestion_view_t::load_model_for_language(int index)
 	namespace fs = std::filesystem;
 	auto lang_file = fs::path(lang.model_path) / "languages.txt";
 	{
-		std::ofstream f(lang_file);
-		f << "eng_Latn\n" << lang.code << "\n";
+		std::ofstream file_stream(lang_file);
+		file_stream << "eng_Latn\n" << lang.code << "\n";
 	}
 
 	m_ct2_provider->load_model(lang.model_path);
 	update_provider_status();
 }
 
-ctranslate2_translator_t * translation_suggestion_view_t::ct2_provider() const
-{
-	return m_ct2_provider;
-}
-
 void translation_suggestion_view_t::append_log(const std::string & msg)
 {
+	auto * document = m_result_text->document();
+	if (document->characterCount() > 1 && !document->toPlainText().endsWith('\n'))
+		m_result_text->appendPlainText(QString());
+
 	m_result_text->moveCursor(QTextCursor::End);
 	m_result_text->insertPlainText(QString::fromStdString(msg));
 	m_result_text->verticalScrollBar()->setValue(m_result_text->verticalScrollBar()->maximum());
-}
-
-void translation_suggestion_view_t::set_translate_all_enabled(bool enabled)
-{
-	m_translate_all_btn->setEnabled(enabled);
-}
-
-void translation_suggestion_view_t::set_batch_in_progress(bool in_progress)
-{
-	m_batch_in_progress = in_progress;
-	m_provider_combo->setEnabled(!in_progress);
-	m_translate_all_btn->setEnabled(!in_progress);
 }
 
 void translation_suggestion_view_t::select_provider(int index)
@@ -264,6 +287,9 @@ translator_t * translation_suggestion_view_t::active_provider() const
 void translation_suggestion_view_t::set_glossary_fn(std::function<std::string(const std::string &)> fn)
 {
 	m_glossary_fn = std::move(fn);
+
+	for (auto * web_provider : m_web_providers)
+		web_provider->set_glossary_fn(m_glossary_fn);
 }
 
 void translation_suggestion_view_t::display_translation_result(const translation_suggestion_t & result)
@@ -274,14 +300,100 @@ void translation_suggestion_view_t::display_translation_result(const translation
 		return;
 	}
 
-	auto display_text = result.text;
+	m_result_text->setPlainText(QString::fromStdString(result.text));
+}
 
-	if (m_glossary_fn)
+void translation_suggestion_view_t::set_target_language(const std::string & language)
+{
+	m_target_language = language;
+}
+
+bool translation_suggestion_view_t::is_translating() const
+{
+	return m_translating;
+}
+
+void translation_suggestion_view_t::request_translation(const std::string & text)
+{
+	auto * provider = active_provider();
+	if (!provider || !provider->is_available())
 	{
-		auto glossary_result = m_glossary_fn(result.text);
-		if (!glossary_result.empty() && glossary_result != result.text)
-			display_text += "\n\n[glossary]\n" + glossary_result;
+		emit translation_failed("translation provider not available");
+		return;
 	}
 
-	m_result_text->setPlainText(QString::fromStdString(display_text));
+	m_translating = true;
+	m_line_queue.clear();
+	m_line_results.clear();
+	m_translate_all_btn->setEnabled(false);
+	provider->translate(text, m_target_language);
+}
+
+void translation_suggestion_view_t::request_translation_lines(const std::vector<std::string> & lines)
+{
+	auto * provider = active_provider();
+	if (!provider || !provider->is_available())
+	{
+		emit translation_failed("translation provider not available");
+		return;
+	}
+
+	m_translating = true;
+	m_line_queue = lines;
+	m_line_results.clear();
+	m_translate_all_btn->setEnabled(false);
+	advance_line_queue();
+}
+
+void translation_suggestion_view_t::advance_line_queue()
+{
+	while (!m_line_queue.empty() && m_line_queue.front().empty())
+	{
+		m_line_results.push_back(std::string());
+		m_line_queue.erase(m_line_queue.begin());
+	}
+
+	if (m_line_queue.empty())
+	{
+		m_translating = false;
+		m_translate_all_btn->setEnabled(true);
+		emit translation_lines_committed(m_line_results);
+		return;
+	}
+
+	auto * provider = active_provider();
+	provider->translate(m_line_queue.front(), m_target_language);
+}
+
+void translation_suggestion_view_t::on_provider_result(const translation_suggestion_t & result)
+{
+	if (!m_translating)
+	{
+		display_translation_result(result);
+		return;
+	}
+
+	if (!result.success)
+	{
+		m_translating = false;
+		m_line_queue.clear();
+		m_line_results.clear();
+		m_translate_all_btn->setEnabled(true);
+		display_translation_result(result);
+		emit translation_failed(result.error);
+		return;
+	}
+
+	if (!m_line_queue.empty())
+	{
+		m_line_results.push_back(result.text);
+		m_line_queue.erase(m_line_queue.begin());
+		advance_line_queue();
+		return;
+	}
+
+	m_translating = false;
+	m_translate_all_btn->setEnabled(true);
+	display_translation_result(result);
+	emit translation_committed(result.text);
 }

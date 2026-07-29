@@ -102,9 +102,9 @@ Folder placement determines the role:
 - `io/` — File I/O, config persistence, external process invocation.
 - `utility/` — Pure helpers without domain or UI coupling.
 
-## No Duplicate File Names Across Projects
+## No Duplicate File Names Within the Same Project
 
-Every source file name must be unique across the entire solution (yampt, yampt.translator, yampt.editor, yampt.tests). Even if files live in different folders, identical names cause confusion in search results, tabs, and build logs.
+Source file names must be unique within a single project. Files with the same name in different projects (e.g. `appearance_settings_view` in yampt.translator and yampt.editor) are acceptable — they serve analogous roles in their respective applications.
 
 ## No Generic Class Names
 

@@ -43,6 +43,7 @@ public:
 
 	void set_split_ratio(double ratio);
 	double get_split_ratio() const;
+	void set_scroll_sync(bool enabled);
 
 signals:
 	void text_changed();
@@ -67,4 +68,6 @@ private:
 	QPushButton * m_apply_button = nullptr;
 
 	std::optional<script_template_t> m_script_template;
+	bool m_scroll_syncing = false;
+	bool m_scroll_sync_enabled = true;
 };

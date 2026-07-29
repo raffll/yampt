@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../editor/glossary.hpp"
-#include <utility/tools.hpp>
+#include <utility/domain_types.hpp>
 #include <vector>
 #include <QWidget>
 

@@ -9,6 +9,7 @@
 static constexpr int role_path = Qt::UserRole;
 static constexpr int role_root_path = Qt::UserRole + 1;
 static constexpr int role_folder_path = Qt::UserRole + 2;
+static constexpr int role_is_native_yaml = Qt::UserRole + 3;
 
 sidebar_view_t::sidebar_view_t(QWidget * parent)
     : QWidget(parent)
@@ -40,6 +41,10 @@ static QColor get_file_type_color(file_type_t type)
 		return QColor(100, 160, 220);
 	case file_type_t::yaml_l10n:
 		return QColor(180, 120, 180);
+	case file_type_t::loc_file:
+		return QColor(80, 180, 180);
+	case file_type_t::eet_file:
+		return QColor(200, 140, 100);
 	}
 
 	return QColor(80, 80, 80);
@@ -53,6 +58,7 @@ static void populate_node(QTreeWidgetItem * parent, const sidebar_render_node_t 
 		child->setText(0, QString::fromStdString(file_item.display_text));
 		child->setToolTip(0, QString::fromStdString(file_item.path));
 		child->setData(0, role_path, QString::fromStdString(file_item.path));
+		child->setData(0, role_is_native_yaml, file_item.is_native_yaml);
 		child->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
 		child->setForeground(0, get_file_type_color(file_item.type));
 	}
@@ -165,7 +171,14 @@ void sidebar_view_t::on_context_menu(const QPoint & pos)
 	else if (ext == "json" || ext == "xml")
 		show_dict_context_menu(path_str, pos);
 	else if (ext == "yaml")
-		show_yaml_context_menu(path_str, pos);
+	{
+		const bool is_native = item->data(0, role_is_native_yaml).toBool();
+		show_yaml_context_menu(path_str, is_native, pos);
+	}
+	else if (ext == "cel" || ext == "top" || ext == "mrk")
+		show_loc_context_menu(path_str, pos);
+	else if (ext == "eet")
+		show_eet_context_menu(path_str, pos);
 }
 
 void sidebar_view_t::show_folder_context_menu(QTreeWidgetItem * item, const QPoint & pos)
@@ -174,7 +187,7 @@ void sidebar_view_t::show_folder_context_menu(QTreeWidgetItem * item, const QPoi
 	if (!root_path.isEmpty())
 	{
 		QMenu menu(this);
-		auto * remove_action = menu.addAction("Remove Folder");
+		auto * remove_action = menu.addAction(tr("Remove Folder"));
 		auto * selected = menu.exec(m_tree->viewport()->mapToGlobal(pos));
 		if (selected == remove_action)
 			emit remove_folder_requested(root_path.toStdString());
@@ -186,7 +199,7 @@ void sidebar_view_t::show_folder_context_menu(QTreeWidgetItem * item, const QPoi
 	if (!folder_path.isEmpty())
 	{
 		QMenu menu(this);
-		auto * delete_action = menu.addAction("Delete Folder");
+		auto * delete_action = menu.addAction(tr("Delete Folder"));
 		auto * selected = menu.exec(m_tree->viewport()->mapToGlobal(pos));
 		if (selected == delete_action)
 			emit delete_folder_requested(folder_path.toStdString());
@@ -196,24 +209,24 @@ void sidebar_view_t::show_folder_context_menu(QTreeWidgetItem * item, const QPoi
 void sidebar_view_t::show_plugin_context_menu(const std::string & path, const QPoint & pos)
 {
 	QMenu menu(this);
-	auto * make_dict_action = menu.addAction("Make Dict");
-	auto * make_dict_base_action = menu.addAction("Make Dict with Base");
-	auto * make_base_action = menu.addAction("Make Base");
+	auto * make_dict_action = menu.addAction(tr("Make Dictionary"));
+	auto * make_base_action = menu.addAction(tr("Make Base Dictionary"));
 	menu.addSeparator();
-	auto * convert_action = menu.addAction("Convert");
-	auto * create_action = menu.addAction("Create");
+	auto * convert_action = menu.addAction(tr("Convert Plugin"));
+	auto * convert_hl_action = menu.addAction(tr("Convert Plugin with Hyperlinks"));
+	auto * create_action = menu.addAction(tr("Create Patch Plugin"));
 	menu.addSeparator();
-	auto * delete_action = menu.addAction("Delete");
+	auto * delete_action = menu.addAction(tr("Delete"));
 
 	auto * selected = menu.exec(m_tree->viewport()->mapToGlobal(pos));
 	if (selected == make_dict_action)
 		emit operation_requested(path, plugin_op_t::make_dict);
-	else if (selected == make_dict_base_action)
-		emit operation_requested(path, plugin_op_t::make_dict_with_base);
 	else if (selected == make_base_action)
 		emit operation_requested(path, plugin_op_t::make_base);
 	else if (selected == convert_action)
 		emit operation_requested(path, plugin_op_t::convert);
+	else if (selected == convert_hl_action)
+		emit operation_requested(path, plugin_op_t::convert_hyperlinks);
 	else if (selected == create_action)
 		emit operation_requested(path, plugin_op_t::create_plugin);
 	else if (selected == delete_action)
@@ -223,30 +236,72 @@ void sidebar_view_t::show_plugin_context_menu(const std::string & path, const QP
 void sidebar_view_t::show_dict_context_menu(const std::string & path, const QPoint & pos)
 {
 	QMenu menu(this);
-	auto * save_action = menu.addAction("Save");
+	auto * save_action = menu.addAction(tr("Save"));
+	auto * generate_loc_action = menu.addAction(tr("Generate Localization Files"));
+	generate_loc_action->setToolTip(tr("Generate .cel/.top/.mrk for OpenMW"));
 	menu.addSeparator();
-	auto * delete_action = menu.addAction("Delete");
+	auto * delete_action = menu.addAction(tr("Delete"));
 
 	auto * selected = menu.exec(m_tree->viewport()->mapToGlobal(pos));
 	if (selected == save_action)
 		emit save_requested(path);
+	else if (selected == generate_loc_action)
+		emit generate_loc_requested(path);
 	else if (selected == delete_action)
 		emit delete_requested(path);
 }
 
-void sidebar_view_t::show_yaml_context_menu(const std::string & path, const QPoint & pos)
+void sidebar_view_t::show_yaml_context_menu(const std::string & path, bool is_native, const QPoint & pos)
 {
 	QMenu menu(this);
-	auto * save_action = menu.addAction("Save");
-	auto * export_action = menu.addAction("Export...");
+
+	QAction * save_action = nullptr;
+	QAction * export_native_action = nullptr;
+
+	if (is_native)
+	{
+		save_action = menu.addAction(tr("Save"));
+	}
+	else
+	{
+		export_native_action = menu.addAction(tr("Make Translation"));
+		export_native_action->setToolTip(tr("Create native language YAML from this source file"));
+	}
+
 	menu.addSeparator();
-	auto * delete_action = menu.addAction("Delete");
+	auto * delete_action = menu.addAction(tr("Delete"));
 
 	auto * selected = menu.exec(m_tree->viewport()->mapToGlobal(pos));
 	if (selected == save_action)
 		emit save_requested(path);
-	else if (selected == export_action)
-		emit save_as_requested(path);
+	else if (selected == export_native_action)
+		emit export_native_requested(path);
+	else if (selected == delete_action)
+		emit delete_requested(path);
+}
+
+void sidebar_view_t::show_loc_context_menu(const std::string & path, const QPoint & pos)
+{
+	QMenu menu(this);
+	auto * delete_action = menu.addAction(tr("Delete"));
+	delete_action->setToolTip(tr("Delete this localization file"));
+
+	auto * selected = menu.exec(m_tree->viewport()->mapToGlobal(pos));
+	if (selected == delete_action)
+		emit delete_requested(path);
+}
+
+void sidebar_view_t::show_eet_context_menu(const std::string & path, const QPoint & pos)
+{
+	QMenu menu(this);
+	auto * export_action = menu.addAction(tr("Export as Dictionary"));
+	export_action->setToolTip(tr("Convert EET file to JSON dictionary"));
+	menu.addSeparator();
+	auto * delete_action = menu.addAction(tr("Delete"));
+
+	auto * selected = menu.exec(m_tree->viewport()->mapToGlobal(pos));
+	if (selected == export_action)
+		emit export_eet_requested(path);
 	else if (selected == delete_action)
 		emit delete_requested(path);
 }

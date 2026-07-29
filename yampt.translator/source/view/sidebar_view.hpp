@@ -23,8 +23,9 @@ signals:
 	void item_clicked(const std::string & path);
 	void operation_requested(const std::string & path, plugin_op_t op);
 	void save_requested(const std::string & path);
-	void save_as_requested(const std::string & path);
-	void merge_requested();
+	void export_native_requested(const std::string & path);
+	void generate_loc_requested(const std::string & path);
+	void export_eet_requested(const std::string & path);
 	void unload_requested(const std::string & path);
 	void delete_requested(const std::string & path);
 	void delete_folder_requested(const std::string & folder_path);
@@ -36,7 +37,9 @@ private:
 	void show_folder_context_menu(QTreeWidgetItem * item, const QPoint & pos);
 	void show_plugin_context_menu(const std::string & path, const QPoint & pos);
 	void show_dict_context_menu(const std::string & path, const QPoint & pos);
-	void show_yaml_context_menu(const std::string & path, const QPoint & pos);
+	void show_yaml_context_menu(const std::string & path, bool is_native, const QPoint & pos);
+	void show_loc_context_menu(const std::string & path, const QPoint & pos);
+	void show_eet_context_menu(const std::string & path, const QPoint & pos);
 
 	QTreeWidget * m_tree = nullptr;
 };

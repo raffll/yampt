@@ -4,7 +4,7 @@
 TEST_CASE("script_tokenizer_t::tokenize, sctx comment line", "[u]")
 {
 	script_tokenizer_t highlighter;
-	const auto tokens = highlighter.tokenize("; this is a comment", tools_t::rec_type_t::sctx);
+	const auto tokens = highlighter.tokenize("; this is a comment", rec_type_t::sctx);
 
 	REQUIRE(tokens.size() == 1);
 	REQUIRE(tokens[0].type == token_type_t::mwscript_comment);
@@ -15,7 +15,7 @@ TEST_CASE("script_tokenizer_t::tokenize, sctx comment line", "[u]")
 TEST_CASE("script_tokenizer_t::tokenize, sctx keyword messagebox", "[u]")
 {
 	script_tokenizer_t highlighter;
-	const auto tokens = highlighter.tokenize("MessageBox \"hello\"", tools_t::rec_type_t::sctx);
+	const auto tokens = highlighter.tokenize("MessageBox \"hello\"", rec_type_t::sctx);
 
 	bool has_function = false;
 	for (const auto & token : tokens)
@@ -33,7 +33,7 @@ TEST_CASE("script_tokenizer_t::tokenize, sctx keyword messagebox", "[u]")
 TEST_CASE("script_tokenizer_t::tokenize, sctx quoted string", "[u]")
 {
 	script_tokenizer_t highlighter;
-	const auto tokens = highlighter.tokenize("set x to \"hello world\"", tools_t::rec_type_t::sctx);
+	const auto tokens = highlighter.tokenize("set x to \"hello world\"", rec_type_t::sctx);
 
 	bool has_string = false;
 	for (const auto & token : tokens)
@@ -51,7 +51,7 @@ TEST_CASE("script_tokenizer_t::tokenize, sctx quoted string", "[u]")
 TEST_CASE("script_tokenizer_t::tokenize, sctx keyword inside string", "[u]")
 {
 	script_tokenizer_t highlighter;
-	const auto tokens = highlighter.tokenize("set x to \"messagebox\"", tools_t::rec_type_t::sctx);
+	const auto tokens = highlighter.tokenize("set x to \"messagebox\"", rec_type_t::sctx);
 
 	for (const auto & token : tokens)
 		REQUIRE(token.type != token_type_t::mwscript_function);
@@ -60,7 +60,7 @@ TEST_CASE("script_tokenizer_t::tokenize, sctx keyword inside string", "[u]")
 TEST_CASE("script_tokenizer_t::tokenize, text html tag", "[u]")
 {
 	script_tokenizer_t highlighter;
-	const auto tokens = highlighter.tokenize("<font color=\"red\">hello</font>", tools_t::rec_type_t::text);
+	const auto tokens = highlighter.tokenize("<font color=\"red\">hello</font>", rec_type_t::text);
 
 	int html_count = 0;
 	for (const auto & token : tokens)
@@ -74,7 +74,7 @@ TEST_CASE("script_tokenizer_t::tokenize, text html tag", "[u]")
 TEST_CASE("script_tokenizer_t::tokenize, text non-html angle bracket", "[u]")
 {
 	script_tokenizer_t highlighter;
-	const auto tokens = highlighter.tokenize("5 < 10 and 20 > 15", tools_t::rec_type_t::text);
+	const auto tokens = highlighter.tokenize("5 < 10 and 20 > 15", rec_type_t::text);
 
 	for (const auto & token : tokens)
 		REQUIRE(token.type != token_type_t::html_tag);
@@ -83,7 +83,7 @@ TEST_CASE("script_tokenizer_t::tokenize, text non-html angle bracket", "[u]")
 TEST_CASE("script_tokenizer_t::tokenize, unknown type single normal", "[u]")
 {
 	script_tokenizer_t highlighter;
-	const auto tokens = highlighter.tokenize("anything here", tools_t::rec_type_t::unknown);
+	const auto tokens = highlighter.tokenize("anything here", rec_type_t::unknown);
 
 	REQUIRE(tokens.size() == 1);
 	REQUIRE(tokens[0].type == token_type_t::normal);

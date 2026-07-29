@@ -15,6 +15,8 @@ class find_replace_dialog_t : public QWidget
 public:
 	explicit find_replace_dialog_t(QWidget * parent = nullptr);
 
+	void set_undo_enabled(bool enabled);
+
 signals:
 	void find_next_requested(const QString & query, bool case_sensitive, bool regex_mode);
 	void replace_requested(const QString & query, const QString & replacement, bool case_sensitive, bool regex_mode);
@@ -23,6 +25,7 @@ signals:
 	    const QString & replacement,
 	    bool case_sensitive,
 	    bool regex_mode);
+	void undo_requested();
 
 private:
 	void setup_layout(QGridLayout * layout);
@@ -35,5 +38,5 @@ private:
 	QPushButton * m_find_next_btn = nullptr;
 	QPushButton * m_replace_btn = nullptr;
 	QPushButton * m_replace_all_btn = nullptr;
-	QLabel * m_note_label = nullptr;
+	QPushButton * m_undo_btn = nullptr;
 };

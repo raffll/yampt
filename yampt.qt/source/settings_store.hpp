@@ -44,11 +44,8 @@ public:
 	std::string foreign_tag() const;
 	void set_foreign_tag(const std::string & value);
 
-	std::string deepl_api_key() const;
-	void set_deepl_api_key(const std::string & value);
-
-	std::string google_api_key() const;
-	void set_google_api_key(const std::string & value);
+	std::string web_api_key(const std::string & provider_id) const;
+	void set_web_api_key(const std::string & provider_id, const std::string & value);
 
 	int translation_source_index() const;
 	void set_translation_source_index(int index);
@@ -77,14 +74,14 @@ public:
 	std::string mo2_profile_dir() const;
 	void set_mo2_profile_dir(const std::string & value);
 
-	std::string merge_path_folder() const;
-	void set_merge_path_folder(const std::string & value);
+	std::string output_dir_folder() const;
+	void set_output_dir_folder(const std::string & value);
 
-	std::string merge_path_mo2() const;
-	void set_merge_path_mo2(const std::string & value);
+	std::string output_dir_mo2() const;
+	void set_output_dir_mo2(const std::string & value);
 
-	std::string merge_path_openmw() const;
-	void set_merge_path_openmw(const std::string & value);
+	std::string output_dir_openmw() const;
+	void set_output_dir_openmw(const std::string & value);
 
 	float split_ratio() const;
 	void set_split_ratio(float value);
@@ -141,8 +138,29 @@ public:
 	bool merge_column_visible() const;
 	void set_merge_column_visible(bool value);
 
+	std::string sub_record_ignore_conflict() const;
+	void set_sub_record_ignore_conflict(const std::string & value);
+
+	std::string sub_record_exclude_from_merge() const;
+	void set_sub_record_exclude_from_merge(const std::string & value);
+
+	std::string sub_record_skip_if_missing() const;
+	void set_sub_record_skip_if_missing(const std::string & value);
+
 	int display_codepage() const;
 	void set_display_codepage(int value);
+
+	bool clean_evil_gmst_enabled() const;
+	void set_clean_evil_gmst_enabled(bool value);
+
+	bool clean_junk_cell_enabled() const;
+	void set_clean_junk_cell_enabled(bool value);
+
+	bool clean_update_master_sizes() const;
+	void set_clean_update_master_sizes(bool value);
+
+	bool clean_update_version() const;
+	void set_clean_update_version(bool value);
 
 	void sync();
 

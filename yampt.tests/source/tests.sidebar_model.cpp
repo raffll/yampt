@@ -1,10 +1,10 @@
 #include <catch2/catch_all.hpp>
 #include <model/sidebar_model.hpp>
+#include <session/session.hpp>
 #include <filesystem>
 #include <fstream>
-#include <session.hpp>
 
-TEST_CASE("derive_display_name, plugin with language tag", "[u]")
+TEST_CASE("sidebar_model::derive_display_name, plugin with language tag", "[u]")
 {
 	file_entry_t entry;
 	entry.filename = "Morrowind.esm";
@@ -16,7 +16,7 @@ TEST_CASE("derive_display_name, plugin with language tag", "[u]")
 	REQUIRE(result == "[EN] Morrowind.esm");
 }
 
-TEST_CASE("derive_display_name, base dict unloaded", "[u]")
+TEST_CASE("sidebar_model::derive_display_name, base dict unloaded", "[u]")
 {
 	file_entry_t entry;
 	entry.filename = "Morrowind_BASE_EN-PL.json";
@@ -24,10 +24,10 @@ TEST_CASE("derive_display_name, base dict unloaded", "[u]")
 	entry.type = file_type_t::base_dict;
 
 	const auto & result = derive_display_name(entry, false, false);
-	REQUIRE(result == "[UNLOADED] [BASE] Morrowind_BASE_EN-PL.json");
+	REQUIRE(result == "[UNLOADED] Morrowind_BASE_EN-PL.json");
 }
 
-TEST_CASE("derive_display_name, user dict dirty and loaded", "[u]")
+TEST_CASE("sidebar_model::derive_display_name, user dict dirty and loaded", "[u]")
 {
 	file_entry_t entry;
 	entry.filename = "my_dict.json";
@@ -38,7 +38,7 @@ TEST_CASE("derive_display_name, user dict dirty and loaded", "[u]")
 	REQUIRE(result == "* my_dict.json");
 }
 
-TEST_CASE("derive_display_name, base dict loaded and dirty", "[u]")
+TEST_CASE("sidebar_model::derive_display_name, base dict loaded and dirty", "[u]")
 {
 	file_entry_t entry;
 	entry.filename = "Morrowind_BASE_EN-DE.json";
@@ -46,10 +46,10 @@ TEST_CASE("derive_display_name, base dict loaded and dirty", "[u]")
 	entry.type = file_type_t::base_dict;
 
 	const auto & result = derive_display_name(entry, true, true);
-	REQUIRE(result == "* [BASE] Morrowind_BASE_EN-DE.json");
+	REQUIRE(result == "* Morrowind_BASE_EN-DE.json");
 }
 
-TEST_CASE("derive_context_menu, plugin entry has full menu", "[u]")
+TEST_CASE("sidebar_model::derive_context_menu, plugin entry has full menu", "[u]")
 {
 	file_entry_t entry;
 	entry.filename = "Morrowind.esm";
@@ -66,7 +66,7 @@ TEST_CASE("derive_context_menu, plugin entry has full menu", "[u]")
 	REQUIRE(actions[5] == menu_action_t::delete_file);
 }
 
-TEST_CASE("derive_context_menu, yaml entry has only delete", "[u]")
+TEST_CASE("sidebar_model::derive_context_menu, yaml entry has only delete", "[u]")
 {
 	file_entry_t entry;
 	entry.filename = "en.yaml";
@@ -78,7 +78,7 @@ TEST_CASE("derive_context_menu, yaml entry has only delete", "[u]")
 	REQUIRE(actions[0] == menu_action_t::delete_file);
 }
 
-TEST_CASE("derive_context_menu, loaded dirty dict has save and delete", "[u]")
+TEST_CASE("sidebar_model::derive_context_menu, loaded dirty dict has save and delete", "[u]")
 {
 	file_entry_t entry;
 	entry.filename = "user.json";
@@ -91,7 +91,7 @@ TEST_CASE("derive_context_menu, loaded dirty dict has save and delete", "[u]")
 	REQUIRE(actions[1] == menu_action_t::delete_file);
 }
 
-TEST_CASE("derive_context_menu, unloaded dict has only delete", "[u]")
+TEST_CASE("sidebar_model::derive_context_menu, unloaded dict has only delete", "[u]")
 {
 	file_entry_t entry;
 	entry.filename = "base.json";
@@ -103,7 +103,7 @@ TEST_CASE("derive_context_menu, unloaded dict has only delete", "[u]")
 	REQUIRE(actions[0] == menu_action_t::delete_file);
 }
 
-TEST_CASE("build_render_model, empty file_list produces empty roots", "[u]")
+TEST_CASE("sidebar_model::build_render_model, empty file_list produces empty roots", "[u]")
 {
 	file_list_t empty_list;
 	session_t session(codepage_t::windows_1252);
@@ -113,7 +113,7 @@ TEST_CASE("build_render_model, empty file_list produces empty roots", "[u]")
 	REQUIRE(model.active_path.empty());
 }
 
-TEST_CASE("build_render_model, groups files by root correctly", "[i]")
+TEST_CASE("sidebar_model::build_render_model, groups files by root correctly", "[i]")
 {
 	namespace fs = std::filesystem;
 

@@ -1,25 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="source\utility\tools.cpp" />
+    <ClCompile Include="source\utility\domain_types.cpp" />
+    <ClCompile Include="source\utility\app_logger.cpp" />
     <ClCompile Include="source\io\codepage.cpp" />
     <ClCompile Include="source\io\dict_reader.cpp" />
     <ClCompile Include="source\io\dict_writer.cpp" />
     <ClCompile Include="source\io\esm_reader.cpp" />
+    <ClCompile Include="source\io\binary_file_io.cpp" />
     <ClCompile Include="source\io\eet_reader.cpp" />
     <ClCompile Include="source\io\eet_converter.cpp" />
     <ClCompile Include="source\io\file_list.cpp" />
+    <ClCompile Include="source\io\yaml_l10n_reader.cpp" />
+    <ClCompile Include="source\io\yaml_l10n_writer.cpp" />
+    <ClCompile Include="source\io\loc_file_reader.cpp" />
+    <ClCompile Include="source\io\loc_file_writer.cpp" />
     <ClCompile Include="source\creator\cell_matcher.cpp" />
     <ClCompile Include="source\creator\dial_matcher.cpp" />
     <ClCompile Include="source\creator\dict_creator.cpp" />
-    <ClCompile Include="source\creator\dict_creator_single.cpp" />
-    <ClCompile Include="source\creator\dict_creator_base.cpp" />
-    <ClCompile Include="source\creator\dict_creator_base_ordered.cpp" />
+    <ClCompile Include="source\creator\creator_helpers.cpp" />
+    <ClCompile Include="source\creator\creator_single.cpp" />
+    <ClCompile Include="source\creator\creator_base.cpp" />
+    <ClCompile Include="source\creator\creator_ordered.cpp" />
+    <ClCompile Include="source\creator\inflection.cpp" />
+    <ClCompile Include="source\creator\loc_generator.cpp" />
     <ClCompile Include="source\creator\text_match_index.cpp" />
     <ClCompile Include="source\creator\word_match_utils.cpp" />
     <ClCompile Include="source\merger\dict_merger.cpp" />
     <ClCompile Include="source\converter\esm_converter.cpp" />
-    <ClCompile Include="source\converter\esm_converter_records.cpp" />
     <ClCompile Include="source\converter\script_parser.cpp" />
     <ClCompile Include="source\converter\scdt_patcher.cpp" />
     <ClCompile Include="source\translator\translation_engine.cpp" />
@@ -34,17 +42,25 @@
     <ClCompile Include="source\scanner\cell_name_fixer.cpp" />
     <ClCompile Include="source\scanner\record_conflict.cpp" />
     <ClCompile Include="source\scanner\auto_merge.cpp" />
+    <ClCompile Include="source\scanner\batch_cleaner.cpp" />
+    <ClCompile Include="source\scanner\header_repair.cpp" />
     <ClCompile Include="source\decoder\sub_record_schema.cpp" />
     <ClCompile Include="source\decoder\view_group_def.cpp" />
     <ClCompile Include="source\decoder\content_alignment.cpp" />
     <ClCompile Include="source\decoder\view_tree_format.cpp" />
     <ClCompile Include="source\decoder\conflict_slots.cpp" />
-    <ClCompile Include="source\decoder\conflict_slots_cell.cpp" />
     <ClCompile Include="source\scanner\plugin_index.cpp" />
     <ClCompile Include="source\scanner\plugin_scan.cpp" />
+    <ClCompile Include="source\scanner\merge_patch_store.cpp" />
+    <ClCompile Include="source\scanner\omwscripts_parser.cpp" />
+    <ClCompile Include="source\scanner\handler_parser.cpp" />
+    <ClCompile Include="source\scanner\conflict_detector.cpp" />
+    <ClCompile Include="source\scanner\lua_scanner.cpp" />
+    <ClCompile Include="source\utility\language_config.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="source\utility\tools.hpp" />
+    <ClInclude Include="source\utility\domain_types.hpp" />
+    <ClInclude Include="source\utility\app_logger.hpp" />
     <ClInclude Include="source\utility\includes.hpp" />
     <ClInclude Include="source\utility\string_utils.hpp" />
     <ClInclude Include="source\utility\record_types.hpp" />
@@ -56,14 +72,25 @@
     <ClInclude Include="source\io\dict_reader.hpp" />
     <ClInclude Include="source\io\dict_writer.hpp" />
     <ClInclude Include="source\io\esm_reader.hpp" />
+    <ClInclude Include="source\io\binary_file_io.hpp" />
     <ClInclude Include="source\io\eet_reader.hpp" />
     <ClInclude Include="source\io\eet_converter.hpp" />
     <ClInclude Include="source\io\json_reader.hpp" />
+    <ClInclude Include="source\io\loc_types.hpp" />
+    <ClInclude Include="source\io\loc_file_reader.hpp" />
+    <ClInclude Include="source\io\loc_file_writer.hpp" />
     <ClInclude Include="source\io\file_list.hpp" />
     <ClInclude Include="source\utility\dict_kind.hpp" />
     <ClInclude Include="source\creator\cell_matcher.hpp" />
     <ClInclude Include="source\creator\dial_matcher.hpp" />
     <ClInclude Include="source\creator\dict_creator.hpp" />
+    <ClInclude Include="source\creator\creator_context.hpp" />
+    <ClInclude Include="source\creator\creator_helpers.hpp" />
+    <ClInclude Include="source\creator\creator_single.hpp" />
+    <ClInclude Include="source\creator\creator_base.hpp" />
+    <ClInclude Include="source\creator\creator_ordered.hpp" />
+    <ClInclude Include="source\creator\inflection.hpp" />
+    <ClInclude Include="source\creator\loc_generator.hpp" />
     <ClInclude Include="source\creator\text_match_index.hpp" />
     <ClInclude Include="source\creator\word_match_utils.hpp" />
     <ClInclude Include="source\merger\dict_merger.hpp" />
@@ -77,9 +104,9 @@
     <ClInclude Include="source\scanner\sub_record_merge.hpp" />
     <ClInclude Include="source\scanner\merge_patch_ops.hpp" />
     <ClInclude Include="source\decoder\conflict_slots.hpp" />
-    <ClInclude Include="source\decoder\conflict_slots_cell.hpp" />
     <ClInclude Include="source\scanner\plugin_index.hpp" />
     <ClInclude Include="source\scanner\plugin_scan.hpp" />
+    <ClInclude Include="source\scanner\merge_patch_store.hpp" />
     <ClInclude Include="source\decoder\sub_record_iter.hpp" />
     <ClInclude Include="source\decoder\sub_record_schema.hpp" />
     <ClInclude Include="source\decoder\view_group_def.hpp" />
@@ -92,5 +119,12 @@
     <ClInclude Include="source\scanner\summon_fixer.hpp" />
     <ClInclude Include="source\scanner\cell_name_fixer.hpp" />
     <ClInclude Include="source\scanner\auto_merge.hpp" />
+    <ClInclude Include="source\scanner\batch_cleaner.hpp" />
+    <ClInclude Include="source\scanner\header_repair.hpp" />
+    <ClInclude Include="source\scanner\omwscripts_parser.hpp" />
+    <ClInclude Include="source\scanner\handler_parser.hpp" />
+    <ClInclude Include="source\scanner\conflict_detector.hpp" />
+    <ClInclude Include="source\scanner\lua_scanner.hpp" />
+    <ClInclude Include="source\utility\language_config.hpp" />
   </ItemGroup>
 </Project>

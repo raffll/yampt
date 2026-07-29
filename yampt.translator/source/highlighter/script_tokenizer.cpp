@@ -50,12 +50,12 @@ static bool overlaps_any(const std::vector<token_t> & tokens, size_t start, size
 	return false;
 }
 
-std::vector<token_t> script_tokenizer_t::tokenize(const std::string & text, tools_t::rec_type_t type) const
+std::vector<token_t> script_tokenizer_t::tokenize(const std::string & text, rec_type_t type) const
 {
-	if (type == tools_t::rec_type_t::sctx)
+	if (type == rec_type_t::sctx)
 		return tokenize_sctx(text);
 
-	if (type == tools_t::rec_type_t::text)
+	if (type == rec_type_t::text)
 		return tokenize_text(text);
 
 	return { { 0, text.size(), token_type_t::normal } };

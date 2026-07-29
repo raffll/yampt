@@ -44,4 +44,65 @@ inline std::string_view trim(std::string_view input)
 	return input.substr(start, end - start + 1);
 }
 
+inline int utf8_byte_to_char_offset(const std::string & utf8_text, int byte_offset)
+{
+	int char_count = 0;
+	int byte_count = 0;
+	const auto * bytes = reinterpret_cast<const unsigned char *>(utf8_text.data());
+	const auto total = static_cast<int>(utf8_text.size());
+
+	while (byte_count < byte_offset && byte_count < total)
+	{
+		const unsigned char lead = bytes[byte_count];
+		if (lead < 0x80)
+			byte_count += 1;
+		else if ((lead & 0xE0) == 0xC0)
+			byte_count += 2;
+		else if ((lead & 0xF0) == 0xE0)
+			byte_count += 3;
+		else
+			byte_count += 4;
+
+		++char_count;
+	}
+
+	return char_count;
+}
+
+inline bool case_insensitive_equal(std::string_view lhs, std::string_view rhs)
+{
+	return to_lower(lhs) == to_lower(rhs);
+}
+
+inline std::string erase_null_chars(std::string str)
+{
+	const auto pos = str.find('\0');
+	if (pos != std::string::npos)
+		str.erase(pos);
+
+	return str;
+}
+
+inline std::string trim_cr(std::string str)
+{
+	if (!str.empty() && str.back() == '\r')
+		str.pop_back();
+
+	return str;
+}
+
+inline std::string replace_non_printable_with_dot(const std::string & str)
+{
+	std::string result;
+	result.reserve(str.size());
+	for (const auto ch : str)
+	{
+		if (std::isprint(static_cast<unsigned char>(ch)))
+			result += ch;
+		else
+			result += '.';
+	}
+	return result;
+}
+
 } // namespace string_utils

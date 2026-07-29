@@ -71,6 +71,9 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
@@ -85,6 +88,7 @@
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg">
     <VcpkgEnableManifest>true</VcpkgEnableManifest>
+    <VcpkgAutoBootstrap>false</VcpkgAutoBootstrap>
     <VcpkgTriplet Condition="'$(Platform)'=='x64'">x64-windows</VcpkgTriplet>
   </PropertyGroup>
   <PropertyGroup Label="QtToolsPath">
@@ -98,14 +102,14 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>$(ProjectDir)source;$(SolutionDir)yampt.core\source;$(SolutionDir)yampt.qt\source;$(SolutionDir)yampt.editor\source;$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtNetwork;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)source;$(SolutionDir)yampt.core\source;$(SolutionDir)yampt.qt\source;$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtNetwork;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include;$(SolutionDir)external\binary\CTranslate2\include;$(SolutionDir)external\binary\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>yampt.core.lib;ctranslate2.lib;comdlg32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)x64\$(Configuration);$(SolutionDir)external\CTranslate2\build\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)x64\$(Configuration);$(SolutionDir)external\binary\CTranslate2\build\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -116,14 +120,14 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>$(ProjectDir)source;$(SolutionDir)yampt.core\source;$(SolutionDir)yampt.qt\source;$(SolutionDir)yampt.editor\source;$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtNetwork;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)source;$(SolutionDir)yampt.core\source;$(SolutionDir)yampt.qt\source;$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtNetwork;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include;$(SolutionDir)external\binary\CTranslate2\include;$(SolutionDir)external\binary\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>yampt.core.lib;ctranslate2.lib;comdlg32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)x64\$(Configuration);$(SolutionDir)external\CTranslate2\build\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)x64\$(Configuration);$(SolutionDir)external\binary\CTranslate2\build\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -136,7 +140,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>$(ProjectDir)source;$(SolutionDir)yampt.core\source;$(SolutionDir)yampt.qt\source;$(SolutionDir)yampt.editor\source;$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtNetwork;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)source;$(SolutionDir)yampt.core\source;$(SolutionDir)yampt.qt\source;$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtNetwork;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include;$(SolutionDir)external\binary\CTranslate2\include;$(SolutionDir)external\binary\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -145,7 +149,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>yampt.core.lib;ctranslate2.lib;comdlg32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)x64\$(Configuration);$(SolutionDir)external\CTranslate2\build\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)x64\$(Configuration);$(SolutionDir)external\binary\CTranslate2\build\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -158,7 +162,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>$(ProjectDir)source;$(SolutionDir)yampt.core\source;$(SolutionDir)yampt.qt\source;$(SolutionDir)yampt.editor\source;$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtNetwork;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include;$(SolutionDir)external\CTranslate2\include;$(SolutionDir)external\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)source;$(SolutionDir)yampt.core\source;$(SolutionDir)yampt.qt\source;$(SolutionDir)external;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtCore;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtGui;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtWidgets;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include\Qt6\QtNetwork;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include;$(SolutionDir)external\binary\CTranslate2\include;$(SolutionDir)external\binary\CTranslate2\build;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -167,19 +171,21 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>yampt.core.lib;ctranslate2.lib;comdlg32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)x64\$(Configuration);$(SolutionDir)external\CTranslate2\build\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)x64\$(Configuration);$(SolutionDir)external\binary\CTranslate2\build\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="source\main.cpp" />
     <ClCompile Include="source\main_window.cpp" />
     <ClCompile Include="source\main_window_setup.cpp" />
-    <ClCompile Include="source\session.cpp" />
+    <ClCompile Include="source\session\session.cpp" />
     <ClCompile Include="source\model\record_table_model.cpp" />
     <ClCompile Include="source\model\sidebar_model.cpp" />
     <ClCompile Include="source\model\dict_document.cpp" />
     <ClCompile Include="source\model\yaml_document.cpp" />
     <ClCompile Include="source\model\table_builder.cpp" />
+    <ClCompile Include="source\model\loc_document.cpp" />
+    <ClCompile Include="source\model\eet_document.cpp" />
     <ClCompile Include="source\view\record_table_view.cpp" />
     <ClCompile Include="source\view\table_view.cpp" />
     <ClCompile Include="source\view\sidebar_view.cpp" />
@@ -194,9 +200,11 @@
     <ClCompile Include="source\view\filter_tree_view.cpp" />
     <ClCompile Include="source\view\status_filter_view.cpp" />
     <ClCompile Include="source\view\translation_suggestion_view.cpp" />
-    <ClCompile Include="source\editor\editor_controller.cpp" />
+    <ClCompile Include="source\controller\editor_controller.cpp" />
+    <ClCompile Include="source\controller\record_display_controller.cpp" />
     <ClCompile Include="source\editor\row_filter.cpp" />
     <ClCompile Include="source\editor\byte_limit_validator.cpp" />
+    <ClCompile Include="source\editor\commit_orchestrator.cpp" />
     <ClCompile Include="source\editor\glossary.cpp" />
     <ClCompile Include="source\editor\edit_history.cpp" />
     <ClCompile Include="source\editor\find_replace.cpp" />
@@ -204,12 +212,13 @@
     <ClCompile Include="source\dialog\find_replace_dialog.cpp" />
     <ClCompile Include="source\dialog\dict_selection_dialog.cpp" />
     <ClCompile Include="source\dialog\merge_dialog.cpp" />
+    <ClCompile Include="source\dialog\make_base_dialog.cpp" />
     <ClCompile Include="source\dialog\first_run_dialog.cpp" />
-    <ClCompile Include="source\dialog\translator_settings_dialog.cpp" />
-    <ClCompile Include="source\dialog\language_settings_view.cpp" />
-    <ClCompile Include="source\dialog\translation_settings_view.cpp" />
-    <ClCompile Include="source\dialog\shortcuts_settings_view.cpp" />
-    <ClCompile Include="source\dialog\appearance_settings_view.cpp" />
+    <ClCompile Include="source\dialog\settings\translator_settings_dialog.cpp" />
+    <ClCompile Include="source\dialog\settings\language_settings_view.cpp" />
+    <ClCompile Include="source\dialog\settings\translation_settings_view.cpp" />
+    <ClCompile Include="source\dialog\settings\shortcuts_settings_view.cpp" />
+    <ClCompile Include="source\dialog\settings\appearance_settings_view.cpp" />
 
     <ClCompile Include="source\dialog\spell_context_menu.cpp" />
 
@@ -218,42 +227,49 @@
     <ClCompile Include="source\highlighter\glossary_highlighter.cpp" />
     <ClCompile Include="source\highlighter\topic_highlighter.cpp" />
     <ClCompile Include="source\translator\ctranslate2_translator.cpp" />
-    <ClCompile Include="source\translator\deepl_translator.cpp" />
-    <ClCompile Include="source\translator\google_translator.cpp" />
-    <ClCompile Include="source\utility\spell_checker.cpp" />
-    <ClCompile Include="source\editor\grammar_checker.cpp" />
-    <ClCompile Include="source\utility\display_name.cpp" />
-    <ClCompile Include="source\io\yaml_l10n_reader.cpp" />
-    <ClCompile Include="source\io\yaml_l10n_writer.cpp" />
-    <ClCompile Include="source\editor\highlight_coordinator.cpp" />
-    <ClCompile Include="source\editor\workspace_watcher.cpp" />
-    <ClCompile Include="source\view\highlight_applier.cpp" />
+    <ClCompile Include="source\translator\web_translator.cpp" />
+    <ClCompile Include="source\translator\web_translator_config.cpp" />
+    <ClCompile Include="source\editor\spell_checker.cpp" />
+    <ClCompile Include="source\highlighter\grammar_checker.cpp" />
+    <ClCompile Include="source\view\display_name.cpp" />
+    <ClCompile Include="source\highlighter\highlight_coordinator.cpp" />
+    <ClCompile Include="source\session\workspace_watcher.cpp" />
+    <ClCompile Include="source\session\sidebar_controller.cpp" />
+    <ClCompile Include="source\session\plugin_operations_controller.cpp" />
+    <ClCompile Include="source\session\dict_operations_controller.cpp" />
+    <ClCompile Include="source\session\shortcuts_controller.cpp" />
+    <ClCompile Include="source\highlighter\highlight_applier.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="source\session.hpp" />
+    <ClInclude Include="source\session\session.hpp" />
     <ClInclude Include="source\model\document.hpp" />
     <ClInclude Include="source\model\dict_document.hpp" />
     <ClInclude Include="source\model\menu_action.hpp" />
     <ClInclude Include="source\model\plugin_document.hpp" />
-    <ClInclude Include="source\model\yaml_document.hpp" />    <ClInclude Include="source\model\sidebar_model.hpp" />
+    <ClInclude Include="source\model\yaml_document.hpp" />
+    <ClInclude Include="source\model\loc_document.hpp" />
+    <ClInclude Include="source\model\eet_document.hpp" />
+    <ClInclude Include="source\model\sidebar_model.hpp" />
     <ClInclude Include="source\model\table_row.hpp" />
     <ClInclude Include="source\model\row_source.hpp" />
-    <ClInclude Include="source\model\table_builder.hpp" />    <ClInclude Include="source\view\table_view.hpp" />    <ClInclude Include="source\editor\editor_controller.hpp" />
+    <ClInclude Include="source\model\table_builder.hpp" />    <ClInclude Include="source\view\table_view.hpp" />    <ClInclude Include="source\controller\editor_controller.hpp" />
     <ClInclude Include="source\editor\row_filter.hpp" />
     <ClInclude Include="source\editor\byte_limit_validator.hpp" />
+    <ClInclude Include="source\editor\commit_orchestrator.hpp" />
     <ClInclude Include="source\editor\glossary.hpp" />
     <ClInclude Include="source\editor\edit_history.hpp" />
     <ClInclude Include="source\editor\find_replace.hpp" />
     <ClInclude Include="source\editor\operation_executor.hpp" />    <ClInclude Include="source\highlighter\script_tokenizer.hpp" />    <ClInclude Include="source\translator\translator.hpp" />
+    <ClInclude Include="source\translator\web_translator_config.hpp" />
     <ClInclude Include="source\view\status_display.hpp" />
-    <ClInclude Include="source\utility\display_name.hpp" />
+    <ClInclude Include="source\view\display_name.hpp" />
     <ClInclude Include="source\model\plugin_op.hpp" />
-    <ClInclude Include="source\utility\spell_checker.hpp" />
-    <ClInclude Include="source\editor\grammar_checker.hpp" />
-    <ClInclude Include="source\io\yaml_l10n_reader.hpp" />
-    <ClInclude Include="source\io\yaml_l10n_writer.hpp" />
-    <ClInclude Include="source\editor\highlight_coordinator.hpp" />
-    <ClInclude Include="source\view\highlight_applier.hpp" />
+    <ClInclude Include="source\editor\spell_checker.hpp" />
+    <ClInclude Include="source\highlighter\grammar_checker.hpp" />
+    <ClInclude Include="source\highlighter\highlight_coordinator.hpp" />
+    <ClInclude Include="source\highlighter\highlight_applier.hpp" />
+    <ClInclude Include="source\session\dict_operations_controller.hpp" />
+    <ClInclude Include="source\session\shortcuts_controller.hpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="source\main_window.hpp">
@@ -364,6 +380,12 @@
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
+    <CustomBuild Include="source\dialog\make_base_dialog.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
     <CustomBuild Include="source\view\line_number_gutter.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
@@ -383,31 +405,31 @@
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
-    <CustomBuild Include="source\dialog\translator_settings_dialog.hpp">
+    <CustomBuild Include="source\dialog\settings\translator_settings_dialog.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
-    <CustomBuild Include="source\dialog\language_settings_view.hpp">
+    <CustomBuild Include="source\dialog\settings\language_settings_view.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
-    <CustomBuild Include="source\dialog\translation_settings_view.hpp">
+    <CustomBuild Include="source\dialog\settings\translation_settings_view.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
-    <CustomBuild Include="source\dialog\shortcuts_settings_view.hpp">
+    <CustomBuild Include="source\dialog\settings\shortcuts_settings_view.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
-    <CustomBuild Include="source\dialog\appearance_settings_view.hpp">
+    <CustomBuild Include="source\dialog\settings\appearance_settings_view.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
@@ -425,19 +447,13 @@
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
-    <CustomBuild Include="source\translator\deepl_translator.hpp">
+    <CustomBuild Include="source\translator\web_translator.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
-    <CustomBuild Include="source\translator\google_translator.hpp">
-      <FileType>Document</FileType>
-      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
-      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
-      <Message>MOC %(Filename).hpp</Message>
-    </CustomBuild>
-    <CustomBuild Include="source\editor\workspace_watcher.hpp">
+    <CustomBuild Include="source\session\workspace_watcher.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
@@ -463,6 +479,7 @@
     <ClCompile Include="$(IntDir)moc_log_view.cpp" />
     <ClCompile Include="$(IntDir)moc_dict_selection_dialog.cpp" />
     <ClCompile Include="$(IntDir)moc_merge_dialog.cpp" />
+    <ClCompile Include="$(IntDir)moc_make_base_dialog.cpp" />
     <ClCompile Include="$(IntDir)moc_line_number_gutter.cpp" />
     <ClCompile Include="$(IntDir)moc_first_run_dialog.cpp" />
     <ClCompile Include="$(IntDir)moc_find_replace_dialog.cpp" />
@@ -473,8 +490,7 @@
     <ClCompile Include="$(IntDir)moc_appearance_settings_view.cpp" />
     <ClCompile Include="$(IntDir)moc_translation_suggestion_view.cpp" />
     <ClCompile Include="$(IntDir)moc_ctranslate2_translator.cpp" />
-    <ClCompile Include="$(IntDir)moc_deepl_translator.cpp" />
-    <ClCompile Include="$(IntDir)moc_google_translator.cpp" />
+    <ClCompile Include="$(IntDir)moc_web_translator.cpp" />
     <ClCompile Include="$(IntDir)moc_workspace_watcher.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -488,19 +504,28 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
-  <Target Name="CopyCTranslate2Dll" AfterTargets="Build" Condition="Exists('$(SolutionDir)external\CTranslate2\build\Release\ctranslate2.dll')">
-    <Copy SourceFiles="$(SolutionDir)external\CTranslate2\build\Release\ctranslate2.dll" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  <Target Name="CopyCTranslate2Dll" AfterTargets="Build" Condition="Exists('$(SolutionDir)external\binary\CTranslate2\build\Release\ctranslate2.dll')">
+    <Copy SourceFiles="$(SolutionDir)external\binary\CTranslate2\build\Release\ctranslate2.dll" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
     <ItemGroup>
       <VcpkgDlls Include="$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\bin\*.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(VcpkgDlls)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
   </Target>
-  <Target Name="CopyDictionaries" AfterTargets="Build" Condition="Exists('$(SolutionDir)dictionaries')">
+  <Target Name="CopyDictionaries" AfterTargets="Build" Condition="Exists('$(SolutionDir)external\dictionaries')">
     <MakeDir Directories="$(OutDir)dictionaries" />
     <ItemGroup>
-      <DictFiles Include="$(SolutionDir)dictionaries\*.*" />
+      <DictFiles Include="$(SolutionDir)external\dictionaries\*.*" />
     </ItemGroup>
     <Copy SourceFiles="@(DictFiles)" DestinationFolder="$(OutDir)dictionaries" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="CopyModels" AfterTargets="Build" Condition="Exists('$(SolutionDir)external\models\nllb-600M')" Inputs="$(SolutionDir)external\models\nllb-600M\**\*" Outputs="$(OutDir)models\nllb-600M\sentencepiece.bpe.model">
+    <MakeDir Directories="$(OutDir)models\nllb-600M\model" />
+    <ItemGroup>
+      <ModelRootFiles Include="$(SolutionDir)external\models\nllb-600M\*" Exclude="$(SolutionDir)external\models\nllb-600M\.cache\**" />
+      <ModelBinFiles Include="$(SolutionDir)external\models\nllb-600M\model\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(ModelRootFiles)" DestinationFolder="$(OutDir)models\nllb-600M" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(ModelBinFiles)" DestinationFolder="$(OutDir)models\nllb-600M\model" SkipUnchangedFiles="true" />
   </Target>
   <Target Name="CopyQtPlugins" AfterTargets="Build" Condition="Exists('$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\Qt6\plugins\platforms')">
     <MakeDir Directories="$(OutDir)platforms" />
@@ -515,5 +540,15 @@
       <QtTlsPlugins Include="$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\Qt6\plugins\tls\*.*" />
     </ItemGroup>
     <Copy SourceFiles="@(QtTlsPlugins)" DestinationFolder="$(OutDir)tls" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="CopyProviders" AfterTargets="Build" Condition="Exists('$(SolutionDir)providers')">
+    <MakeDir Directories="$(OutDir)providers" />
+    <ItemGroup>
+      <ProviderFiles Include="$(SolutionDir)providers\*.json" />
+    </ItemGroup>
+    <Copy SourceFiles="@(ProviderFiles)" DestinationFolder="$(OutDir)providers" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="CopyLanguages" AfterTargets="Build" Condition="Exists('$(SolutionDir)languages.json')">
+    <Copy SourceFiles="$(SolutionDir)languages.json" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
   </Target>
 </Project>

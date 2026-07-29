@@ -1,15 +1,15 @@
 #include <catch2/catch_all.hpp>
-#include <rapidcheck/catch.h>
-#include <rapidcheck.h>
 #include <creator/word_match_utils.hpp>
+#include <rapidcheck/catch.h>
 #include <algorithm>
+#include <rapidcheck.h>
 #include <set>
 
 TEST_CASE("word_match_utils::split_words, alphanumeric tokens", "[u][pbt]")
 {
 	rc::prop(
-		"all tokens non-empty lowercase alphanumeric",
-		[]()
+	    "all tokens non-empty lowercase alphanumeric",
+	    []()
 	{
 		const auto text = *rc::gen::arbitrary<std::string>();
 		const auto words = split_words(text);
@@ -25,8 +25,8 @@ TEST_CASE("word_match_utils::split_words, alphanumeric tokens", "[u][pbt]")
 TEST_CASE("word_match_utils::split_words, no content lost", "[u][pbt]")
 {
 	rc::prop(
-		"concatenation equals lowercase alphanumeric content",
-		[]()
+	    "concatenation equals lowercase alphanumeric content",
+	    []()
 	{
 		const auto text = *rc::gen::arbitrary<std::string>();
 		const auto words = split_words(text);
@@ -49,8 +49,8 @@ TEST_CASE("word_match_utils::split_words, no content lost", "[u][pbt]")
 TEST_CASE("word_match_utils::count_shared_words, bounded", "[u][pbt]")
 {
 	rc::prop(
-		"result between 0 and source size",
-		[]()
+	    "result between 0 and source size",
+	    []()
 	{
 		const auto source = *rc::gen::arbitrary<std::vector<std::string>>();
 		const auto target = *rc::gen::arbitrary<std::vector<std::string>>();
@@ -63,8 +63,8 @@ TEST_CASE("word_match_utils::count_shared_words, bounded", "[u][pbt]")
 TEST_CASE("word_match_utils::count_shared_words, self identity", "[u][pbt]")
 {
 	rc::prop(
-		"unique vector against itself equals its size",
-		[]()
+	    "unique vector against itself equals its size",
+	    []()
 	{
 		auto words = *rc::gen::arbitrary<std::vector<std::string>>();
 		std::set<std::string> seen;
@@ -84,8 +84,8 @@ TEST_CASE("word_match_utils::count_shared_words, self identity", "[u][pbt]")
 TEST_CASE("word_match_utils::build_compare_words, superset", "[u][pbt]")
 {
 	rc::prop(
-		"result contains all translated and original words",
-		[]()
+	    "result contains all translated and original words",
+	    []()
 	{
 		const auto translated = *rc::gen::arbitrary<std::vector<std::string>>();
 		const auto original = *rc::gen::arbitrary<std::vector<std::string>>();
@@ -102,8 +102,8 @@ TEST_CASE("word_match_utils::build_compare_words, superset", "[u][pbt]")
 TEST_CASE("word_match_utils::build_compare_words, no duplicates", "[u][pbt]")
 {
 	rc::prop(
-		"result has no duplicate entries given unique inputs",
-		[]()
+	    "result has no duplicate entries given unique inputs",
+	    []()
 	{
 		auto translated_raw = *rc::gen::arbitrary<std::vector<std::string>>();
 		auto original_raw = *rc::gen::arbitrary<std::vector<std::string>>();
@@ -135,8 +135,8 @@ TEST_CASE("word_match_utils::build_compare_words, no duplicates", "[u][pbt]")
 TEST_CASE("word_match_utils::compute_best_match, highest score", "[u][pbt]")
 {
 	rc::prop(
-		"returned score >= all other unmatched candidates",
-		[]()
+	    "returned score >= all other unmatched candidates",
+	    []()
 	{
 		auto compare_words = *rc::gen::arbitrary<std::vector<std::string>>();
 		RC_PRE(!compare_words.empty());
@@ -151,8 +151,7 @@ TEST_CASE("word_match_utils::compute_best_match, highest score", "[u][pbt]")
 		for (size_t i = 0; i < candidate_names.size(); ++i)
 			candidates.emplace_back(i, candidate_names[i]);
 
-		const auto matched_count = *rc::gen::inRange(
-			size_t{0}, candidates.size());
+		const auto matched_count = *rc::gen::inRange(size_t { 0 }, candidates.size());
 
 		std::set<size_t> matched_set;
 		for (size_t i = 0; i < matched_count; ++i)
@@ -170,9 +169,8 @@ TEST_CASE("word_match_utils::compute_best_match, highest score", "[u][pbt]")
 
 		RC_PRE(has_unmatched);
 
-		const auto result = compute_best_match(
-			compare_words, original_words, translated_words,
-			candidates, matched_set);
+		const auto result =
+		    compute_best_match(compare_words, original_words, translated_words, candidates, matched_set);
 
 		if (result.score > 0)
 		{
@@ -195,8 +193,8 @@ TEST_CASE("word_match_utils::compute_best_match, highest score", "[u][pbt]")
 TEST_CASE("word_match_utils::check_all_same_name, correctness", "[u][pbt]")
 {
 	rc::prop(
-		"true iff all tied candidates share the winner name",
-		[]()
+	    "true iff all tied candidates share the winner name",
+	    []()
 	{
 		auto base_name = *rc::gen::arbitrary<std::string>();
 		RC_PRE(!base_name.empty());
@@ -228,8 +226,7 @@ TEST_CASE("word_match_utils::check_all_same_name, correctness", "[u][pbt]")
 
 		RC_PRE(result.score > 0);
 
-		const auto all_same = check_all_same_name(
-			compare_words, candidates, matched_set, result);
+		const auto all_same = check_all_same_name(compare_words, candidates, matched_set, result);
 
 		bool expected_all_same = true;
 		for (size_t ni = 0; ni < candidates.size(); ++ni)

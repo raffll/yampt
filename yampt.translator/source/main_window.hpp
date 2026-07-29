@@ -1,25 +1,32 @@
 #pragma once
 
-#include "settings_store.hpp"
+#include "controller/editor_controller.hpp"
+#include "controller/record_display_controller.hpp"
 #include "dialog/dict_selection_dialog.hpp"
 #include "editor/byte_limit_validator.hpp"
 #include "editor/edit_history.hpp"
-#include "editor/editor_controller.hpp"
 #include "editor/find_replace.hpp"
-#include "editor/workspace_watcher.hpp"
 #include "editor/glossary.hpp"
-#include "editor/grammar_checker.hpp"
-#include "editor/highlight_coordinator.hpp"
 #include "editor/operation_executor.hpp"
 #include "editor/row_filter.hpp"
+#include "editor/spell_checker.hpp"
+#include "highlighter/grammar_checker.hpp"
+#include "highlighter/highlight_applier.hpp"
+#include "highlighter/highlight_coordinator.hpp"
 #include "model/dict_document.hpp"
 #include "model/document.hpp"
+#include "model/filter_state.hpp"
+#include "model/make_base_params.hpp"
 #include "model/plugin_op.hpp"
 #include "model/record_table_model.hpp"
 #include "model/sidebar_model.hpp"
-#include "session.hpp"
-#include "utility/spell_checker.hpp"
-#include "view/highlight_applier.hpp"
+#include "session/dict_operations_controller.hpp"
+#include "session/plugin_operations_controller.hpp"
+#include "session/session.hpp"
+#include "session/shortcuts_controller.hpp"
+#include "session/sidebar_controller.hpp"
+#include "session/workspace_watcher.hpp"
+#include "settings_store.hpp"
 #include "view/sidebar_view.hpp"
 #include "view/table_view.hpp"
 #include "view/translation_suggestion_view.hpp"
@@ -58,23 +65,6 @@ class QSplitter;
 class QTabWidget;
 class QToolBar;
 
-struct filter_state_t
-{
-	std::set<tools_t::rec_type_t> type_filter;
-	std::set<std::string> sub_type_filter;
-	std::set<status_t> status_filter;
-	bool type_filter_solo = false;
-};
-
-struct make_base_params_t
-{
-	std::string native_path;
-	std::string foreign_lang;
-	std::string native_lang;
-	base_mode_t base_mode;
-	std::string dictionary_aff_path;
-};
-
 class main_window_t : public QMainWindow
 {
 	Q_OBJECT
@@ -93,7 +83,6 @@ private slots:
 	void on_merge();
 	void on_plugin_operation(const std::string & plugin_path, plugin_op_t op);
 	void on_plugin_unload(const std::string & path);
-	void on_find();
 	void on_escape();
 	void on_search_changed(const QString & text);
 	void on_case_sensitive_changed(int state);
@@ -141,43 +130,26 @@ private:
 	void update_annotations();
 	void update_validation();
 	void update_status_counts();
-	void scan_spell_dictionaries();
 	void on_spell_lang_changed(int index);
 	void scan_workspace();
 	void update_watcher_roots();
 	void register_shortcuts();
 	void shortcut_copy_original();
 	void shortcut_commit_status(status_t new_status);
-	std::vector<dict_selection_dialog_t::dict_entry_t> build_dict_entries(const std::string & source_dir = {}) const;
+	void advance_to_next_row();
 
-	// rebuild_table helpers
 	void rebuild_table_yaml(document_t * target_doc);
 	void rebuild_table_dict(dict_document_t * dict_doc);
 
-	// load_record helpers
-	void load_record_clear(int row);
-	void load_record_script(const table_row_t * row_data);
-	void load_record_plain(const table_row_t * row_data);
-
-	// on_translation_changed helpers
 	void apply_translation_highlights(const table_row_t * row_data);
 
-
-
-	// on_plugin_operation helpers
 	std::optional<make_base_params_t> show_make_base_dialog(const std::string & plugin_path);
-	void start_batch_translation(dict_document_t * dict_doc);
-	void log_operation_result(
-	    const std::string & plugin_path,
-	    plugin_op_t op_type,
-	    const operation_executor_t::result_t & result);
 
 	QAction * m_add_folder_action = nullptr;
 	QAction * m_import_archive_action = nullptr;
 	QAction * m_save_action = nullptr;
 	QAction * m_save_all_action = nullptr;
 	QAction * m_quit_action = nullptr;
-	QAction * m_find_action = nullptr;
 	QAction * m_escape_action = nullptr;
 	QAction * m_settings_action = nullptr;
 
@@ -205,14 +177,16 @@ private:
 	QToolButton * m_search_col_key = nullptr;
 	QToolButton * m_search_col_original = nullptr;
 	QToolButton * m_search_col_translation = nullptr;
+	QAction * m_spell_check = nullptr;
 	QAction * m_grammar_check = nullptr;
 	QAction * m_whitespace_check = nullptr;
+	QAction * m_sync_scroll_check = nullptr;
 
 	QString m_search_query;
 
 	bool m_has_unsaved_changes = false;
 
-	std::set<tools_t::rec_type_t> m_type_filter;
+	std::set<rec_type_t> m_type_filter;
 	std::set<status_t> m_status_filter;
 	bool m_type_filter_solo = false;
 
@@ -269,4 +243,10 @@ private:
 	QMenu * m_translator_view_menu = nullptr;
 
 	document_t * m_active_doc = nullptr;
+
+	std::unique_ptr<sidebar_controller_t> m_sidebar_controller;
+	std::unique_ptr<plugin_operations_controller_t> m_plugin_ops_controller;
+	std::unique_ptr<record_display_controller_t> m_record_display_controller;
+	std::unique_ptr<dict_operations_controller_t> m_dict_ops_controller;
+	std::unique_ptr<shortcuts_controller_t> m_shortcuts_controller;
 };

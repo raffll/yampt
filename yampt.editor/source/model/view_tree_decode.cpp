@@ -1,4 +1,4 @@
-﻿#include "view_tree_model.hpp"
+#include "view_tree_model.hpp"
 #include <decoder/view_tree_format.hpp>
 #include <scanner/record_conflict.hpp>
 #include <cstdio>
@@ -59,7 +59,7 @@ view_tree_model_t::view_node_t view_tree_model_t::build_slot_row(
 	const char * first_data = nullptr;
 	size_t first_size = 0;
 
-	const auto policy = find_conflict_policy(m_record_type, slot.type);
+	const auto policy = record_conflict::find_conflict_policy(m_record_type, slot.type);
 
 	for (size_t col = 0; col < col_count; ++col)
 	{
@@ -99,9 +99,7 @@ view_tree_model_t::view_node_t view_tree_model_t::build_slot_row(
 			row.size = sv.size;
 		}
 
-		row.values[col] = (slot.type == "DELE")
-		    ? "DELETED"
-		    : format_value_full(sv.data, sv.size, m_display_codepage);
+		row.values[col] = (slot.type == "DELE") ? "DELETED" : format_value_full(sv.data, sv.size, m_display_codepage);
 	}
 
 	row.type = slot.type;
@@ -118,20 +116,26 @@ view_tree_model_t::view_node_t view_tree_model_t::build_slot_row(
 	}
 	row.all_identical = all_same;
 
-	if (policy.ignore_conflict)
+	const auto specific_key = m_record_type + ":" + slot.type;
+	const auto wildcard_key = m_record_type + ":*";
+	const bool user_ignore =
+	    m_user_ignore_conflict.count(specific_key) > 0 || m_user_ignore_conflict.count(wildcard_key) > 0;
+
+	if (user_ignore)
 	{
+		row.is_ignored = true;
 		row.row_conflict_all = conflict_all_t::no_conflict;
-		row.cell_conflict_this.assign(col_count, conflict_this_t::identical_to_master);
+		row.cell_conflict_this.assign(col_count, conflict_this_t::ignored);
 	}
 	else if (policy.skip_non_existent)
 	{
-		row.row_conflict_all = compute_conflict_all_skip_empty(row.values);
-		row.cell_conflict_this = compute_conflict_this_skip_empty(row.values);
+		row.row_conflict_all = record_conflict::compute_conflict_all_skip_empty(row.values);
+		row.cell_conflict_this = record_conflict::compute_conflict_this_skip_empty(row.values);
 	}
 	else
 	{
-		row.row_conflict_all = compute_conflict_all(row.values);
-		row.cell_conflict_this = compute_conflict_this(row.values);
+		row.row_conflict_all = record_conflict::compute_conflict_all(row.values);
+		row.cell_conflict_this = record_conflict::compute_conflict_this(row.values);
 	}
 
 	const auto * schema = find_schema(m_record_type, slot.type, first_size);
@@ -177,7 +181,7 @@ void view_tree_model_t::decode_schema_children(
     const std::vector<std::unordered_map<std::string, std::vector<size_t>>> & col_indices,
     const sub_slot_t & slot)
 {
-	const auto policy = find_conflict_policy(m_record_type, slot.type);
+	const auto policy = record_conflict::find_conflict_policy(m_record_type, slot.type);
 	view_node_t * current_group = nullptr;
 
 	for (size_t field_idx = 0; field_idx < schema->field_count; ++field_idx)
@@ -208,7 +212,7 @@ void view_tree_model_t::decode_schema_children(
 
 				for (size_t col = 0; col < col_count; ++col)
 				{
-					const auto & subs = col < all_subs.size() ? all_subs[col] : std::vector<sub_record_view_t>{};
+					const auto & subs = col < all_subs.size() ? all_subs[col] : std::vector<sub_record_view_t> {};
 					auto it_type = col_indices[col].find(slot.type);
 
 					if (col >= all_subs.size() || it_type == col_indices[col].end() ||
@@ -224,11 +228,11 @@ void view_tree_model_t::decode_schema_children(
 
 				frow.all_identical = check_all_identical(frow.values);
 				frow.row_conflict_all = policy.skip_non_existent
-				    ? compute_conflict_all_skip_empty(frow.values)
-				    : compute_conflict_all(frow.values);
+				                            ? record_conflict::compute_conflict_all_skip_empty(frow.values)
+				                            : record_conflict::compute_conflict_all(frow.values);
 				frow.cell_conflict_this = policy.skip_non_existent
-				    ? compute_conflict_this_skip_empty(frow.values)
-				    : compute_conflict_this(frow.values);
+				                              ? record_conflict::compute_conflict_this_skip_empty(frow.values)
+				                              : record_conflict::compute_conflict_this(frow.values);
 
 				if (frow.row_conflict_all > flags_group.row_conflict_all)
 					flags_group.row_conflict_all = frow.row_conflict_all;
@@ -279,12 +283,11 @@ void view_tree_model_t::decode_schema_children(
 		}
 
 		frow.all_identical = check_all_identical(frow.values);
-		frow.row_conflict_all = policy.skip_non_existent
-		    ? compute_conflict_all_skip_empty(frow.values)
-		    : compute_conflict_all(frow.values);
+		frow.row_conflict_all = policy.skip_non_existent ? record_conflict::compute_conflict_all_skip_empty(frow.values)
+		                                                 : record_conflict::compute_conflict_all(frow.values);
 		frow.cell_conflict_this = policy.skip_non_existent
-		    ? compute_conflict_this_skip_empty(frow.values)
-		    : compute_conflict_this(frow.values);
+		                              ? record_conflict::compute_conflict_this_skip_empty(frow.values)
+		                              : record_conflict::compute_conflict_this(frow.values);
 
 		if (!fdef.group)
 		{
@@ -326,7 +329,7 @@ void view_tree_model_t::decode_hex_children(
     const sub_slot_t & slot)
 {
 	static constexpr size_t hex_line_bytes = 16;
-	const auto policy = find_conflict_policy(m_record_type, slot.type);
+	const auto policy = record_conflict::find_conflict_policy(m_record_type, slot.type);
 
 	for (size_t offset = 0; offset < first_size; offset += hex_line_bytes)
 	{
@@ -363,12 +366,11 @@ void view_tree_model_t::decode_hex_children(
 		}
 
 		frow.all_identical = check_all_identical(frow.values);
-		frow.row_conflict_all = policy.skip_non_existent
-		    ? compute_conflict_all_skip_empty(frow.values)
-		    : compute_conflict_all(frow.values);
+		frow.row_conflict_all = policy.skip_non_existent ? record_conflict::compute_conflict_all_skip_empty(frow.values)
+		                                                 : record_conflict::compute_conflict_all(frow.values);
 		frow.cell_conflict_this = policy.skip_non_existent
-		    ? compute_conflict_this_skip_empty(frow.values)
-		    : compute_conflict_this(frow.values);
+		                              ? record_conflict::compute_conflict_this_skip_empty(frow.values)
+		                              : record_conflict::compute_conflict_this(frow.values);
 		parent_row.children.push_back(std::move(frow));
 	}
 }

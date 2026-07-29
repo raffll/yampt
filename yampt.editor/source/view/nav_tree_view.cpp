@@ -104,6 +104,11 @@ void nav_tree_view_t::set_patch_plugins(const std::set<std::string> * patch)
 	m_model->set_patch_plugins(patch);
 }
 
+void nav_tree_view_t::set_display_codepage(codepage_t codepage)
+{
+	m_model->set_display_codepage(codepage);
+}
+
 nav_tree_model_t::node_info_t nav_tree_view_t::current_selection() const
 {
 	const auto & current = m_tree->currentIndex();

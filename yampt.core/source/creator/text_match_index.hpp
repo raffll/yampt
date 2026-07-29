@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../utility/tools.hpp"
+#include "../utility/domain_types.hpp"
 #include <string>
 #include <unordered_map>
 
@@ -21,11 +21,11 @@ public:
 		std::string conflicts;
 	};
 
-	void build(const tools_t::dict_t & base_dict);
+	void build(const dict_t & base_dict);
 	find_outcome_t find(const std::string & old_text) const;
 
 private:
-	std::unordered_map<std::string, const tools_t::record_entry_t *> m_index;
+	std::unordered_map<std::string, const record_entry_t *> m_index;
 	std::unordered_map<std::string, std::string> m_conflicts;
 	std::unordered_map<std::string, std::string> m_first_translation;
 };

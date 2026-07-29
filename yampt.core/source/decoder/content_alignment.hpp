@@ -13,7 +13,12 @@ struct alignment_rule_t
 	size_t anchor_size = 0;
 	std::vector<std::string> trailing_types;
 
-	enum class key_from_t { anchor, next, offset };
+	enum class key_from_t
+	{
+		anchor,
+		next,
+		offset
+	};
 	key_from_t key_source = key_from_t::anchor;
 	std::string key_neighbor_type;
 	size_t key_offset = 0;

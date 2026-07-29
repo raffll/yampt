@@ -1,6 +1,8 @@
 #include "sub_record_merge.hpp"
 #include "../decoder/sub_record_iter.hpp"
-#include "../utility/tools.hpp"
+#include "../utility/app_logger.hpp"
+#include "../utility/record_behavior.hpp"
+#include "../utility/string_utils.hpp"
 #include <algorithm>
 #include <cstring>
 #include <map>
@@ -22,7 +24,7 @@ sub_record_sequence_t sub_record_merge_t::parse_sub_records(const std::string & 
 
 std::string sub_record_merge_t::serialize_sub_record(const sub_record_entry_t & entry)
 {
-	const auto size_bytes = tools_t::convert_uint_to_string_byte_array(entry.data.size());
+	const auto size_bytes = domain_types::convert_uint_to_string_byte_array(entry.data.size());
 	return entry.type + size_bytes + entry.data;
 }
 
@@ -35,7 +37,7 @@ std::string sub_record_merge_t::reconstruct_record(
 		body += serialize_sub_record(entry);
 
 	std::string result = winner_content.substr(0, 16);
-	const auto body_size = tools_t::convert_uint_to_string_byte_array(body.size());
+	const auto body_size = domain_types::convert_uint_to_string_byte_array(body.size());
 	result.replace(4, 4, body_size);
 	result += body;
 	return result;
@@ -81,19 +83,13 @@ bool sub_record_merge_t::needs_element_wise(
     const std::string & sub_type,
     size_t data_size)
 {
-	if (rec_type == "NPC_" && sub_type == "NPDT" && (data_size == 52 || data_size == 12))
-		return true;
+	const auto * behavior = find_record_behavior(rec_type);
+	const auto * rule = find_sub_record_rule(behavior, sub_type, data_size);
 
-	if (rec_type == "CREA" && sub_type == "NPDT" && data_size == 96)
-		return true;
+	if (!rule)
+		return false;
 
-	if (rec_type == "CREA" && sub_type == "AI_W" && data_size == 14)
-		return true;
-
-	if (sub_type == "AIDT" && data_size == 12)
-		return true;
-
-	return false;
+	return has_flag(rule->flags, sub_rule_flag_t::element_wise_merge);
 }
 
 std::string sub_record_merge_t::merge_bytes_three_way(
@@ -126,23 +122,6 @@ std::vector<std::string> sub_record_merge_t::collect_enam_data(const sub_record_
 	return slots;
 }
 
-static constexpr size_t enam_mag_min_offset = 12;
-static constexpr size_t enam_mag_max_offset = 16;
-static constexpr size_t enam_field_size = 4;
-
-struct field_pair_t
-{
-	size_t min_offset;
-	size_t max_offset;
-	size_t length;
-};
-
-static constexpr field_pair_t crea_npdt_attack_pairs[] = {
-	{ 68, 70, 2 },
-	{ 72, 74, 2 },
-	{ 76, 78, 2 },
-};
-
 static bool field_changed(const std::string & source, const std::string & base, size_t offset, size_t length)
 {
 	return source.compare(offset, length, base, offset, length) != 0;
@@ -153,33 +132,33 @@ static void fix_paired_fields(
     const std::string & first,
     const std::string & inter,
     const std::string & winner,
-    const field_pair_t * pairs,
+    const field_pair_rule_t * pairs,
     size_t pair_count)
 {
 	for (size_t p = 0; p < pair_count; ++p)
 	{
 		const auto & pair = pairs[p];
-		const bool inter_changed_min = field_changed(inter, first, pair.min_offset, pair.length);
-		const bool inter_changed_max = field_changed(inter, first, pair.max_offset, pair.length);
-		const bool winner_changed_min = field_changed(winner, first, pair.min_offset, pair.length);
-		const bool winner_changed_max = field_changed(winner, first, pair.max_offset, pair.length);
+		const bool inter_changed_min = field_changed(inter, first, pair.min_offset, pair.field_size);
+		const bool inter_changed_max = field_changed(inter, first, pair.max_offset, pair.field_size);
+		const bool winner_changed_min = field_changed(winner, first, pair.min_offset, pair.field_size);
+		const bool winner_changed_max = field_changed(winner, first, pair.max_offset, pair.field_size);
 
 		if (winner_changed_min || winner_changed_max)
 		{
-			merged.replace(pair.min_offset, pair.length, winner, pair.min_offset, pair.length);
-			merged.replace(pair.max_offset, pair.length, winner, pair.max_offset, pair.length);
+			merged.replace(pair.min_offset, pair.field_size, winner, pair.min_offset, pair.field_size);
+			merged.replace(pair.max_offset, pair.field_size, winner, pair.max_offset, pair.field_size);
 			continue;
 		}
 
 		if (inter_changed_min || inter_changed_max)
 		{
-			merged.replace(pair.min_offset, pair.length, inter, pair.min_offset, pair.length);
-			merged.replace(pair.max_offset, pair.length, inter, pair.max_offset, pair.length);
+			merged.replace(pair.min_offset, pair.field_size, inter, pair.min_offset, pair.field_size);
+			merged.replace(pair.max_offset, pair.field_size, inter, pair.max_offset, pair.field_size);
 		}
 	}
 }
 
-static constexpr field_pair_t enam_magnitude_pair = { 12, 16, 4 };
+static constexpr field_pair_rule_t enam_magnitude_pair = { 12, 16, 4 };
 
 static void fix_magnitude_pair(
     std::string & result,
@@ -307,15 +286,26 @@ void sub_record_merge_t::apply_intermediate(
 			    winner[winner_idx].data.data(),
 			    first[first_idx].data.size());
 
-			if (rec_type == "CREA" && intermediate[i].type == "NPDT" && first[first_idx].data.size() == 96)
+			const auto * behavior = find_record_behavior(rec_type);
+			if (behavior && behavior->paired_rules)
 			{
-				fix_paired_fields(
-				    output[output_idx].data,
-				    first[first_idx].data,
-				    intermediate[i].data,
-				    winner[winner_idx].data,
-				    crea_npdt_attack_pairs,
-				    3);
+				for (size_t r = 0; r < behavior->paired_rule_count; ++r)
+				{
+					const auto & paired = behavior->paired_rules[r];
+					if (intermediate[i].type != paired.sub_type)
+						continue;
+
+					if (first[first_idx].data.size() != paired.expected_size)
+						continue;
+
+					fix_paired_fields(
+					    output[output_idx].data,
+					    first[first_idx].data,
+					    intermediate[i].data,
+					    winner[winner_idx].data,
+					    paired.pairs,
+					    paired.pair_count);
+				}
 			}
 
 			continue;
@@ -348,7 +338,7 @@ merge_result_t sub_record_merge_t::merge(const merge_input_t & input)
 
 uint32_t sub_record_merge_t::read_frmr_index(const sub_record_entry_t & frmr_entry)
 {
-	return static_cast<uint32_t>(tools_t::convert_string_byte_array_to_uint(frmr_entry.data.substr(0, 4)));
+	return static_cast<uint32_t>(domain_types::convert_string_byte_array_to_uint(frmr_entry.data.substr(0, 4)));
 }
 
 cell_partition_t sub_record_merge_t::partition_cell(const std::string & content)
@@ -452,7 +442,7 @@ std::string sub_record_merge_t::reconstruct_cell(
 	}
 
 	std::string result = winner_content.substr(0, 16);
-	const auto body_size = tools_t::convert_uint_to_string_byte_array(body.size());
+	const auto body_size = domain_types::convert_uint_to_string_byte_array(body.size());
 	result.replace(4, 4, body_size);
 	result += body;
 	return result;
@@ -811,7 +801,7 @@ static std::vector<list_item_t> extract_list_items(const std::string & content)
 		if (sub.type == "INAM" || sub.type == "CNAM")
 		{
 			current_id = std::string(sub.data, sub.size);
-			current_id = tools_t::erase_null_chars(current_id);
+			current_id = string_utils::erase_null_chars(current_id);
 			continue;
 		}
 
@@ -844,7 +834,7 @@ static std::string extract_list_header(const std::string & content)
 			continue;
 
 		header_part += sub.type;
-		header_part += tools_t::convert_uint_to_string_byte_array(sub.size);
+		header_part += domain_types::convert_uint_to_string_byte_array(sub.size);
 		header_part += std::string(sub.data, sub.size);
 	}
 
@@ -858,7 +848,7 @@ static std::string build_merged_list_record(
 {
 	std::string indx_sub = "INDX";
 	uint32_t item_count = static_cast<uint32_t>(merged_items.size());
-	indx_sub += tools_t::convert_uint_to_string_byte_array(4);
+	indx_sub += domain_types::convert_uint_to_string_byte_array(4);
 	indx_sub += std::string(reinterpret_cast<const char *>(&item_count), 4);
 
 	const std::string & item_sub_type = (rec_type == "LEVI") ? "INAM" : "CNAM";
@@ -869,11 +859,11 @@ static std::string build_merged_list_record(
 		id_data.push_back('\0');
 
 		items_part += item_sub_type;
-		items_part += tools_t::convert_uint_to_string_byte_array(id_data.size());
+		items_part += domain_types::convert_uint_to_string_byte_array(id_data.size());
 		items_part += id_data;
 
 		items_part += "INTV";
-		items_part += tools_t::convert_uint_to_string_byte_array(2);
+		items_part += domain_types::convert_uint_to_string_byte_array(2);
 		items_part += std::string(reinterpret_cast<const char *>(&item.level), 2);
 	}
 
@@ -881,7 +871,7 @@ static std::string build_merged_list_record(
 
 	std::string record;
 	record += rec_type;
-	record += tools_t::convert_uint_to_string_byte_array(body.size());
+	record += domain_types::convert_uint_to_string_byte_array(body.size());
 	record += std::string(8, '\0');
 	record += body;
 

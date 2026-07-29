@@ -1,7 +1,7 @@
 #include <catch2/catch_all.hpp>
 #include <io/eet_converter.hpp>
 #include <rapidcheck/catch.h>
-#include <utility/tools.hpp>
+#include <utility/app_logger.hpp>
 #include <rapidcheck.h>
 
 namespace {
@@ -41,7 +41,6 @@ rc::Gen<valid_type_combo_t> gen_valid_type_combo()
 	    valid_type_combo_t { "NPC_", "DNAM" },
 	    valid_type_combo_t { "NPC_", "CNDT" },
 	    valid_type_combo_t { "BOOK", "TEXT" },
-	    valid_type_combo_t { "SCPT", "SCTX" },
 	    valid_type_combo_t { "SCPT", "MSGB" },
 	    valid_type_combo_t { "SCPT", "CELL" },
 	    valid_type_combo_t { "SCPT", "SAY_" },
@@ -55,12 +54,20 @@ rc::Gen<valid_type_combo_t> gen_valid_type_combo()
 
 rc::Gen<std::string> gen_non_empty_text()
 {
-	return rc::gen::suchThat(rc::gen::string<std::string>(), [](const std::string & value) { return !value.empty(); });
+	return rc::gen::map(
+	    rc::gen::container<std::string>(rc::gen::inRange('a', 'z')),
+	    [](std::string value)
+	{
+		if (value.empty())
+			value = "a";
+
+		return value;
+	});
 }
 
 } // namespace
 
-TEST_CASE("eet_converter_t, import round-trip property", "[u]")
+TEST_CASE("eet_converter_t::import, round-trip property", "[u]")
 {
 	rc::prop(
 	    "old_text == orig and new_text == trans for all valid entries",
@@ -81,7 +88,7 @@ TEST_CASE("eet_converter_t, import round-trip property", "[u]")
 		entry.status_byte = 0x63;
 
 		std::vector<eet_reader_t::eet_entry_t> entries = { entry };
-		eet_converter_t converter(entries);
+		eet_converter_t converter(entries, codepage_t::windows_1252);
 
 		const auto & dict = converter.get_dict();
 
@@ -111,31 +118,31 @@ TEST_CASE("eet_converter_t::map_type, exhaustive type mapping", "[u]")
 	{
 		std::string rec_type;
 		std::string sub_type;
-		tools_t::rec_type_t expected;
+		rec_type_t expected;
 	};
 
 	const std::vector<mapping_t> known_mappings = {
-		{ "NPC_", "FNAM", tools_t::rec_type_t::fnam }, { "SPEL", "FNAM", tools_t::rec_type_t::fnam },
-		{ "ARMO", "FNAM", tools_t::rec_type_t::fnam }, { "BOOK", "FNAM", tools_t::rec_type_t::fnam },
-		{ "CONT", "FNAM", tools_t::rec_type_t::fnam }, { "MISC", "FNAM", tools_t::rec_type_t::fnam },
-		{ "CLOT", "FNAM", tools_t::rec_type_t::fnam }, { "CREA", "FNAM", tools_t::rec_type_t::fnam },
-		{ "ALCH", "FNAM", tools_t::rec_type_t::fnam }, { "DOOR", "FNAM", tools_t::rec_type_t::fnam },
-		{ "ACTI", "FNAM", tools_t::rec_type_t::fnam }, { "LIGH", "FNAM", tools_t::rec_type_t::fnam },
-		{ "INGR", "FNAM", tools_t::rec_type_t::fnam }, { "CLAS", "FNAM", tools_t::rec_type_t::fnam },
-		{ "FACT", "FNAM", tools_t::rec_type_t::fnam }, { "APPA", "FNAM", tools_t::rec_type_t::fnam },
-		{ "REPA", "FNAM", tools_t::rec_type_t::fnam }, { "CELL", "NAME", tools_t::rec_type_t::cell },
-		{ "REGN", "NAME", tools_t::rec_type_t::cell }, { "PGRD", "NAME", tools_t::rec_type_t::cell },
-		{ "CELL", "FNAM", tools_t::rec_type_t::cell }, { "REGN", "FNAM", tools_t::rec_type_t::cell },
-		{ "CELL", "DNAM", tools_t::rec_type_t::cell }, { "NPC_", "DNAM", tools_t::rec_type_t::fnam },
-		{ "NPC_", "CNDT", tools_t::rec_type_t::fnam }, { "BOOK", "TEXT", tools_t::rec_type_t::text },
-		{ "SCPT", "SCTX", tools_t::rec_type_t::sctx }, { "SCPT", "MSGB", tools_t::rec_type_t::bnam },
-		{ "SCPT", "CELL", tools_t::rec_type_t::bnam }, { "SCPT", "SAY_", tools_t::rec_type_t::bnam },
-		{ "SCPT", "DIAL", tools_t::rec_type_t::bnam }, { "MGEF", "DESC", tools_t::rec_type_t::desc },
-		{ "CLAS", "DESC", tools_t::rec_type_t::desc }, { "FACT", "RNAM", tools_t::rec_type_t::rnam },
-		{ "GMST", "STRV", tools_t::rec_type_t::gmst }, { "DIAL", "NAME", tools_t::rec_type_t::dial },
+		{ "NPC_", "FNAM", rec_type_t::fnam }, { "SPEL", "FNAM", rec_type_t::fnam },
+		{ "ARMO", "FNAM", rec_type_t::fnam }, { "BOOK", "FNAM", rec_type_t::fnam },
+		{ "CONT", "FNAM", rec_type_t::fnam }, { "MISC", "FNAM", rec_type_t::fnam },
+		{ "CLOT", "FNAM", rec_type_t::fnam }, { "CREA", "FNAM", rec_type_t::fnam },
+		{ "ALCH", "FNAM", rec_type_t::fnam }, { "DOOR", "FNAM", rec_type_t::fnam },
+		{ "ACTI", "FNAM", rec_type_t::fnam }, { "LIGH", "FNAM", rec_type_t::fnam },
+		{ "INGR", "FNAM", rec_type_t::fnam }, { "CLAS", "FNAM", rec_type_t::fnam },
+		{ "FACT", "FNAM", rec_type_t::fnam }, { "APPA", "FNAM", rec_type_t::fnam },
+		{ "REPA", "FNAM", rec_type_t::fnam }, { "CELL", "NAME", rec_type_t::cell },
+		{ "REGN", "NAME", rec_type_t::cell }, { "PGRD", "NAME", rec_type_t::cell },
+		{ "CELL", "FNAM", rec_type_t::cell }, { "REGN", "FNAM", rec_type_t::cell },
+		{ "CELL", "DNAM", rec_type_t::cell }, { "NPC_", "DNAM", rec_type_t::fnam },
+		{ "NPC_", "CNDT", rec_type_t::fnam }, { "BOOK", "TEXT", rec_type_t::text },
+		{ "SCPT", "MSGB", rec_type_t::bnam },
+		{ "SCPT", "CELL", rec_type_t::bnam }, { "SCPT", "SAY_", rec_type_t::bnam },
+		{ "SCPT", "DIAL", rec_type_t::bnam }, { "MGEF", "DESC", rec_type_t::desc },
+		{ "CLAS", "DESC", rec_type_t::desc }, { "FACT", "RNAM", rec_type_t::rnam },
+		{ "GMST", "STRV", rec_type_t::gmst }, { "DIAL", "NAME", rec_type_t::dial },
 	};
 
-	REQUIRE(known_mappings.size() == 36);
+	REQUIRE(known_mappings.size() == 35);
 
 	for (const auto & mapping : known_mappings)
 	{
@@ -149,7 +156,7 @@ TEST_CASE("eet_converter_t::map_type, exhaustive type mapping", "[u]")
 		entry.status_byte = 0x63;
 
 		std::vector<eet_reader_t::eet_entry_t> entries = { entry };
-		eet_converter_t converter(entries);
+		eet_converter_t converter(entries, codepage_t::windows_1252);
 
 		REQUIRE(converter.converted_count() == 1);
 		REQUIRE(converter.skipped_count() == 0);
@@ -188,8 +195,8 @@ TEST_CASE("eet_converter_t::map_type, unknown combinations", "[u]")
 	};
 
 	const std::vector<unknown_combo_t> unknown_combos = {
-		{ "WEAP", "FNAM" }, { "NPC_", "NAME" }, { "SCPT", "FNAM" }, { "BOOK", "DESC" },
-		{ "INFO", "NAME" }, { "LEVI", "FNAM" }, { "GLOB", "FNAM" },
+		{ "WEAP", "FNAM" }, { "NPC_", "NAME" }, { "SCPT", "FNAM" }, { "SCPT", "SCTX" },
+		{ "BOOK", "DESC" }, { "INFO", "NAME" }, { "LEVI", "FNAM" }, { "GLOB", "FNAM" },
 	};
 
 	for (const auto & combo : unknown_combos)
@@ -204,7 +211,7 @@ TEST_CASE("eet_converter_t::map_type, unknown combinations", "[u]")
 		entry.status_byte = 0x63;
 
 		std::vector<eet_reader_t::eet_entry_t> entries = { entry };
-		eet_converter_t converter(entries);
+		eet_converter_t converter(entries, codepage_t::windows_1252);
 
 		INFO("rec_type=" << combo.rec_type << " sub_type=" << combo.sub_type);
 		REQUIRE(converter.converted_count() == 0);

@@ -6,11 +6,10 @@
 #include "highlighter/glossary_highlighter.hpp"
 #include "main_window.hpp"
 #include "model/dict_document.hpp"
-#include "model/yaml_document.hpp"
 #include "translator/ctranslate2_translator.hpp"
-#include "utility/display_name.hpp"
 #include "view/annotations_view.hpp"
 #include "view/book_preview_view.hpp"
+#include "view/display_name.hpp"
 #include "view/editor_view.hpp"
 #include "view/filter_tree_view.hpp"
 #include "view/history_view.hpp"
@@ -44,58 +43,98 @@
 
 void main_window_t::setup_menu_bar()
 {
-	auto * file_menu = menuBar()->addMenu("&File");
+	auto * file_menu = menuBar()->addMenu(tr("&File"));
 	m_translator_file_menu = file_menu;
 
-	m_add_folder_action = new QAction("Add &Folder...", this);
+	m_add_folder_action = new QAction(tr("Add &Folder..."), this);
+	m_add_folder_action->setToolTip(tr("Add a workspace folder"));
 	file_menu->addAction(m_add_folder_action);
 
-	m_import_archive_action = new QAction("&Import Archive...", this);
+	m_import_archive_action = new QAction(tr("&Import Archive..."), this);
+	m_import_archive_action->setToolTip(tr("Extract and import an archive into workspace"));
 	file_menu->addAction(m_import_archive_action);
 
 	file_menu->addSeparator();
 
-	m_save_action = new QAction("&Save", this);
+	m_save_action = new QAction(tr("&Save"), this);
 	m_save_action->setShortcut(QKeySequence("Ctrl+S"));
+	m_save_action->setToolTip(tr("Save the active dictionary"));
 	file_menu->addAction(m_save_action);
 
-	m_save_all_action = new QAction("Save A&ll", this);
+	m_save_all_action = new QAction(tr("Save A&ll"), this);
+	m_save_all_action->setToolTip(tr("Save all modified dictionaries"));
 	file_menu->addAction(m_save_all_action);
 
 	file_menu->addSeparator();
 
-	m_quit_action = new QAction("&Quit", this);
+	m_quit_action = new QAction(tr("&Quit"), this);
 	m_quit_action->setShortcut(QKeySequence("Alt+F4"));
+	m_quit_action->setToolTip(tr("Exit the application"));
 	file_menu->addAction(m_quit_action);
 
-	auto * view_menu = menuBar()->addMenu("&View");
+	auto * view_menu = menuBar()->addMenu(tr("&View"));
 	m_translator_view_menu = view_menu;
 
-	m_sidebar_toggle = new QAction("Toggle &Sidebar", this);
+	m_sidebar_toggle = new QAction(tr("Toggle &Sidebar"), this);
 	m_sidebar_toggle->setCheckable(true);
 	m_sidebar_toggle->setChecked(true);
+	m_sidebar_toggle->setToolTip(tr("Show or hide the sidebar panel"));
 	view_menu->addAction(m_sidebar_toggle);
 
-	m_bottom_panel_toggle = new QAction("Toggle &Bottom Panel", this);
+	m_bottom_panel_toggle = new QAction(tr("Toggle &Bottom Panel"), this);
 	m_bottom_panel_toggle->setCheckable(true);
 	m_bottom_panel_toggle->setChecked(true);
+	m_bottom_panel_toggle->setToolTip(tr("Show or hide the editor panel"));
 	view_menu->addAction(m_bottom_panel_toggle);
 
 	view_menu->addSeparator();
 
-	m_grammar_check = new QAction("&Grammar Check", this);
+	m_spell_check = new QAction(tr("&Spell Check"), this);
+	m_spell_check->setCheckable(true);
+	m_spell_check->setChecked(true);
+	m_spell_check->setToolTip(tr("Toggle spell check underlines in translation"));
+	view_menu->addAction(m_spell_check);
+
+	m_grammar_check = new QAction(tr("&Grammar Check"), this);
 	m_grammar_check->setCheckable(true);
 	m_grammar_check->setChecked(true);
+	m_grammar_check->setToolTip(tr("Toggle grammar check highlights in translation"));
 	view_menu->addAction(m_grammar_check);
 
-	m_whitespace_check = new QAction("&Whitespace Markers", this);
+	m_whitespace_check = new QAction(tr("&Whitespace Markers"), this);
 	m_whitespace_check->setCheckable(true);
+	m_whitespace_check->setToolTip(tr("Show tabs and line endings in editor"));
 	view_menu->addAction(m_whitespace_check);
 
-	auto * tools_menu = menuBar()->addMenu("&Tools");
-	m_settings_action = tools_menu->addAction("&Preferences...");
+	view_menu->addSeparator();
+
+	m_sync_scroll_check = new QAction(tr("S&ync Scrolling"), this);
+	m_sync_scroll_check->setCheckable(true);
+	m_sync_scroll_check->setChecked(true);
+	m_sync_scroll_check->setToolTip(tr("Sync scrolling between original and translation panes"));
+	view_menu->addAction(m_sync_scroll_check);
+
+	auto * tools_menu = menuBar()->addMenu(tr("&Tools"));
+	auto * merge_action = tools_menu->addAction(tr("&Merge Dictionaries..."));
+	merge_action->setToolTip(tr("Merge loaded dictionaries into one"));
+	connect(
+	    merge_action,
+	    &QAction::triggered,
+	    this,
+	    [this]()
+	{
+		if (m_dict_ops_controller)
+			m_dict_ops_controller->on_merge();
+	});
+
+	auto * find_replace_action = tools_menu->addAction(tr("&Find/Replace..."));
+	find_replace_action->setToolTip(tr("Find and replace text in translations"));
+	connect(find_replace_action, &QAction::triggered, this, [this]() { m_find_replace_dialog->show(); });
+
+	tools_menu->addSeparator();
+	m_settings_action = tools_menu->addAction(tr("&Preferences..."));
 	m_settings_action->setShortcut(QKeySequence("Ctrl+,"));
-	m_settings_action->setToolTip("Open application settings");
+	m_settings_action->setToolTip(tr("Open application settings"));
 	connect(m_settings_action, &QAction::triggered, this, &main_window_t::on_open_settings);
 }
 
@@ -104,52 +143,48 @@ void main_window_t::setup_toolbar()
 	m_toolbar = new QToolBar(this);
 	m_toolbar->setMovable(false);
 
-	m_search_label = new QLabel("Filter by: ", this);
+	m_search_label = new QLabel(tr("Filter by: "), this);
 	m_search_label->setStyleSheet("QLabel:disabled { color: rgb(180,180,180); }");
 	m_toolbar->addWidget(m_search_label);
 
 	m_search_field = new QLineEdit(this);
-	m_search_field->setPlaceholderText("Search...");
+	m_search_field->setPlaceholderText(tr("Search..."));
 	m_toolbar->addWidget(m_search_field);
 
 	m_case_sensitive_check = new QToolButton(this);
-	m_case_sensitive_check->setText("Aa");
+	m_case_sensitive_check->setText(tr("Aa"));
 	m_case_sensitive_check->setCheckable(true);
 	m_toolbar->addWidget(m_case_sensitive_check);
 
 	m_regex_check = new QToolButton(this);
-	m_regex_check->setText(".*");
+	m_regex_check->setText(tr(".*"));
 	m_regex_check->setCheckable(true);
 	m_toolbar->addWidget(m_regex_check);
 
 	m_search_col_key = new QToolButton(this);
-	m_search_col_key->setText("Key");
+	m_search_col_key->setText(tr("Key"));
 	m_search_col_key->setCheckable(true);
 	m_search_col_key->setChecked(true);
 	m_toolbar->addWidget(m_search_col_key);
 
 	m_search_col_original = new QToolButton(this);
-	m_search_col_original->setText("Original");
+	m_search_col_original->setText(tr("Original"));
 	m_search_col_original->setCheckable(true);
 	m_search_col_original->setChecked(true);
 	m_toolbar->addWidget(m_search_col_original);
 
 	m_search_col_translation = new QToolButton(this);
-	m_search_col_translation->setText("Translation");
+	m_search_col_translation->setText(tr("Translation"));
 	m_search_col_translation->setCheckable(true);
 	m_search_col_translation->setChecked(true);
 	m_toolbar->addWidget(m_search_col_translation);
 
-	m_search_field->setToolTip("Search across entries");
-	m_case_sensitive_check->setToolTip("Case-sensitive search");
-	m_regex_check->setToolTip("Regular expression search");
-	m_search_col_key->setToolTip("Search in key column");
-	m_search_col_original->setToolTip("Search in original column");
-	m_search_col_translation->setToolTip("Search in translation column");
-
-	m_find_action = new QAction(this);
-	m_find_action->setShortcut(QKeySequence("Ctrl+F"));
-	addAction(m_find_action);
+	m_search_field->setToolTip(tr("Search across entries"));
+	m_case_sensitive_check->setToolTip(tr("Case-sensitive search"));
+	m_regex_check->setToolTip(tr("Regular expression search"));
+	m_search_col_key->setToolTip(tr("Search in key column"));
+	m_search_col_original->setToolTip(tr("Search in original column"));
+	m_search_col_translation->setToolTip(tr("Search in translation column"));
 
 	m_escape_action = new QAction(this);
 	m_escape_action->setShortcut(QKeySequence("Escape"));
@@ -166,8 +201,7 @@ void main_window_t::setup_central_widget()
 	central_layout->addWidget(m_toolbar);
 
 	m_filter_tree_view = new filter_tree_view_t(this);
-	m_status_filter_view = new status_filter_view_t(central_widget);
-	central_layout->addWidget(m_status_filter_view);
+	m_status_filter_view = new status_filter_view_t(this);
 
 	m_central_splitter = new QSplitter(Qt::Horizontal, central_widget);
 	central_layout->addWidget(m_central_splitter, 1);
@@ -181,8 +215,9 @@ void main_window_t::setup_sidebar()
 
 	m_left_tabs = new QTabWidget(m_left_splitter);
 	m_sidebar = new sidebar_view_t(m_left_tabs);
-	m_left_tabs->addTab(m_sidebar, "Files");
-	m_left_tabs->addTab(m_filter_tree_view, "Filters");
+	m_left_tabs->addTab(m_sidebar, tr("Files"));
+	m_left_tabs->addTab(m_filter_tree_view, tr("Filters"));
+	m_left_tabs->addTab(m_status_filter_view, tr("Statuses"));
 	m_left_splitter->addWidget(m_left_tabs);
 
 	m_info_tabs = new QTabWidget(m_left_splitter);
@@ -190,12 +225,15 @@ void main_window_t::setup_sidebar()
 	m_history_view = new history_view_t(m_info_tabs);
 	m_translation_tab = new translation_suggestion_view_t(m_info_tabs);
 	m_translation_tab->set_models_dir((QCoreApplication::applicationDirPath() + "/models").toStdString());
+	m_translation_tab->set_providers_dir((QCoreApplication::applicationDirPath() + "/providers").toStdString());
 	m_translation_tab->set_glossary_fn([this](const std::string & text) { return m_glossary.apply_glossary(text); });
 	m_find_replace_dialog = new find_replace_dialog_t(this);
+	m_find_replace_dialog->setWindowTitle(tr("Find/Replace"));
+	m_find_replace_dialog->setWindowFlags(Qt::Dialog);
 	m_find_replace_dialog->setVisible(false);
-	m_info_tabs->addTab(m_annotations_view, "Annotations");
-	m_info_tabs->addTab(m_history_view, "History");
-	m_info_tabs->addTab(m_translation_tab, "Translate");
+	m_info_tabs->addTab(m_annotations_view, tr("Annotations"));
+	m_info_tabs->addTab(m_history_view, tr("History"));
+	m_info_tabs->addTab(m_translation_tab, tr("Auto Translate"));
 	m_left_splitter->addWidget(m_info_tabs);
 }
 
@@ -214,9 +252,9 @@ void main_window_t::setup_editor_panel()
 	m_table_view->setModel(m_table_model);
 	m_book_preview_view = new book_preview_view_t(m_record_tabs);
 	m_log_view = new log_view_t(m_record_tabs);
-	m_record_tabs->addTab(m_table_view, "Records");
-	m_record_tabs->addTab(m_book_preview_view, "Book Preview");
-	m_record_tabs->addTab(m_log_view, "Log");
+	m_record_tabs->addTab(m_table_view, tr("Records"));
+	m_record_tabs->addTab(m_book_preview_view, tr("Preview"));
+	m_record_tabs->addTab(m_log_view, tr("Log"));
 	right_top_layout->addWidget(m_record_tabs, 1);
 
 	m_right_splitter->addWidget(right_top_widget);
@@ -274,13 +312,35 @@ void main_window_t::connect_menu_signals()
 {
 	connect(m_save_action, &QAction::triggered, this, &main_window_t::on_save);
 	connect(m_save_all_action, &QAction::triggered, this, &main_window_t::on_save_all);
+
 	connect(m_quit_action, &QAction::triggered, this, &QWidget::close);
-	connect(m_find_action, &QAction::triggered, this, &main_window_t::on_find);
 	connect(m_escape_action, &QAction::triggered, this, &main_window_t::on_escape);
 
 	connect(m_sidebar_toggle, &QAction::toggled, m_left_splitter, &QWidget::setVisible);
 	connect(m_bottom_panel_toggle, &QAction::toggled, m_editor_view, &QWidget::setVisible);
 	connect(m_whitespace_check, &QAction::toggled, this, &main_window_t::on_whitespace_toggled);
+
+	connect(
+	    m_sync_scroll_check,
+	    &QAction::toggled,
+	    this,
+	    [this](bool checked)
+	{
+		m_editor_view->set_scroll_sync(checked);
+		m_book_preview_view->set_scroll_sync(checked);
+	});
+
+	connect(
+	    m_spell_check,
+	    &QAction::toggled,
+	    this,
+	    [this](bool checked)
+	{
+		if (checked)
+			m_hl_translation->set_spell_checker(&m_spell_checker);
+		else
+			m_hl_translation->set_spell_checker(nullptr);
+	});
 
 	connect(
 	    m_grammar_check,
@@ -292,7 +352,7 @@ void main_window_t::connect_menu_signals()
 			return;
 
 		const auto * row_data = m_table_model->row_at(m_editor_controller.current_row());
-		auto type = row_data ? row_data->type : tools_t::rec_type_t::info;
+		auto type = row_data ? row_data->type : rec_type_t::info;
 		m_extra_sel_translation.grammar = m_grammar_check->isChecked()
 		                                      ? m_grammar_checker.check(m_editor_view->translation_editor(), type)
 		                                      : QList<QTextEdit::ExtraSelection> {};
@@ -305,7 +365,7 @@ void main_window_t::connect_menu_signals()
 	    this,
 	    [this]()
 	{
-		const auto folder = QFileDialog::getExistingDirectory(this, "Add Folder");
+		const auto folder = QFileDialog::getExistingDirectory(this, tr("Add Folder"));
 		if (folder.isEmpty())
 			return;
 
@@ -327,7 +387,8 @@ void main_window_t::connect_menu_signals()
 	    this,
 	    [this]()
 	{
-		const auto archive_path = QFileDialog::getOpenFileName(this, "Import Archive", "", "Archives (*.zip *.rar)");
+		const auto archive_path =
+		    QFileDialog::getOpenFileName(this, tr("Import Archive"), "", tr("Archives (*.zip *.rar)"));
 
 		if (archive_path.isEmpty())
 			return;
@@ -336,7 +397,7 @@ void main_window_t::connect_menu_signals()
 		const QString sevenzip = app_dir + "/7za.exe";
 		if (!QFile::exists(sevenzip))
 		{
-			QMessageBox::critical(this, "Error", "7za.exe not found next to the application");
+			QMessageBox::critical(this, tr("Error"), tr("7za.exe not found next to the application"));
 			return;
 		}
 
@@ -351,7 +412,7 @@ void main_window_t::connect_menu_signals()
 		if (proc.exitCode() != 0)
 		{
 			QMessageBox::critical(
-			    this, "Extraction Error", "Failed to extract archive:\n" + proc.readAllStandardError());
+			    this, tr("Extraction Error"), tr("Failed to extract archive:\n") + proc.readAllStandardError());
 			return;
 		}
 
@@ -390,7 +451,7 @@ void main_window_t::connect_menu_signals()
 		if (result.found)
 			on_row_selected(result.row);
 		else
-			statusBar()->showMessage("No match found", 3000);
+			statusBar()->showMessage(tr("No match found"), 3000);
 	});
 
 	connect(
@@ -433,7 +494,28 @@ void main_window_t::connect_menu_signals()
 				load_record(m_editor_controller.current_row());
 		}
 
-		statusBar()->showMessage(QString("Replaced in %1 entries").arg(result.count), 5000);
+		statusBar()->showMessage(tr("Replaced in %1 entries").arg(result.count), 5000);
+		m_find_replace_dialog->set_undo_enabled(m_find_replace->has_undo());
+	});
+
+	connect(
+	    m_find_replace_dialog,
+	    &find_replace_dialog_t::undo_requested,
+	    this,
+	    [this]()
+	{
+		auto result = m_find_replace->undo_last_replace_all();
+
+		if (result.count > 0)
+		{
+			set_unsaved_changes(true);
+			rebuild_table();
+			if (m_editor_controller.current_row() >= 0)
+				load_record(m_editor_controller.current_row());
+		}
+
+		statusBar()->showMessage(tr("Undid %1 replacements").arg(result.count), 5000);
+		m_find_replace_dialog->set_undo_enabled(m_find_replace->has_undo());
 	});
 }
 
@@ -447,112 +529,33 @@ void main_window_t::connect_sidebar_signals()
 
 	connect(
 	    m_sidebar,
-	    &sidebar_view_t::save_as_requested,
+	    &sidebar_view_t::export_native_requested,
 	    this,
-	    [this](const std::string & path)
-	{
-		commit_current_edit();
+	    [this](const std::string & path) { m_sidebar_controller->on_export_native_requested(path); });
 
-		auto * yaml_doc = dynamic_cast<yaml_document_t *>(m_active_doc);
-		if (!yaml_doc)
-			return;
+	connect(
+	    m_sidebar,
+	    &sidebar_view_t::generate_loc_requested,
+	    this,
+	    [this](const std::string & path) { m_sidebar_controller->on_generate_loc_requested(path); });
 
-		auto sep = path.find_last_of("/\\");
-		auto default_dir = sep != std::string::npos ? path.substr(0, sep) : std::string {};
-
-		auto save_path = QFileDialog::getSaveFileName(
-		    this, "Save Translated YAML", QString::fromStdString(default_dir), "YAML files (*.yaml)");
-
-		if (save_path.isEmpty())
-			return;
-
-		yaml_doc->export_to(save_path.toStdString());
-		m_log_view->append_log("save as", "saved \"" + save_path.toStdString() + "\"\r\n");
-
-		update_sidebar_item(yaml_doc->path());
-
-		switch_document(nullptr);
-		set_unsaved_changes(false);
-	});
+	connect(
+	    m_sidebar,
+	    &sidebar_view_t::export_eet_requested,
+	    this,
+	    [this](const std::string & path) { m_sidebar_controller->on_export_eet_requested(path); });
 
 	connect(
 	    m_sidebar,
 	    &sidebar_view_t::remove_folder_requested,
 	    this,
-	    [this](const std::string & root_path)
-	{
-		auto roots = m_file_list.get_roots();
-		roots.erase(std::remove(roots.begin(), roots.end(), root_path), roots.end());
-		m_file_list.scan_roots(roots);
-
-		if (m_active_doc)
-		{
-			const auto * fe = m_file_list.get(m_active_doc->path());
-			if (!fe)
-				switch_document(nullptr);
-		}
-
-		m_session.close_if([this, &root_path](const document_t & doc)
-		{
-			if (doc.path().find(root_path) == 0)
-			{
-				m_filter_states.erase(doc.path());
-				return true;
-			}
-			return false;
-		});
-
-		rebuild_annotations();
-		m_last_annotation_version = m_session.dict_version();
-		scan_workspace();
-		save_config();
-		update_watcher_roots();
-	});
+	    [this](const std::string & root_path) { m_sidebar_controller->on_remove_folder_requested(root_path); });
 
 	connect(
 	    m_sidebar,
 	    &sidebar_view_t::delete_folder_requested,
 	    this,
-	    [this](const std::string & folder_path)
-	{
-		auto sep = folder_path.find_last_of("/\\");
-		auto folder_name = sep != std::string::npos ? folder_path.substr(sep + 1) : folder_path;
-
-		auto answer = QMessageBox::question(
-		    this,
-		    "Delete Folder",
-		    QString("Delete \"%1\" and all its contents from disk?").arg(QString::fromStdString(folder_name)),
-		    QMessageBox::Yes | QMessageBox::No);
-
-		if (answer != QMessageBox::Yes)
-			return;
-
-		if (m_active_doc)
-		{
-			auto folder_norm = string_utils::normalize_path(folder_path);
-			const auto & doc_path = m_active_doc->path();
-			if (doc_path.find(folder_norm + "/") == 0 || doc_path == folder_norm)
-				switch_document(nullptr);
-		}
-
-		auto folder_norm = string_utils::normalize_path(folder_path);
-
-		m_session.close_if([this, &folder_norm](const document_t & doc)
-		{
-			const auto & p = doc.path();
-			if (p.find(folder_norm + "/") == 0 || p == folder_norm)
-			{
-				m_filter_states.erase(p);
-				return true;
-			}
-			return false;
-		});
-
-		rebuild_annotations();
-		m_last_annotation_version = m_session.dict_version();
-		QDir(QString::fromStdString(folder_path)).removeRecursively();
-		scan_workspace();
-	});
+	    [this](const std::string & folder_path) { m_sidebar_controller->on_delete_folder_requested(folder_path); });
 
 	connect(
 	    m_history_view,
@@ -609,6 +612,41 @@ void main_window_t::connect_editor_signals()
 	connect(m_table_view, &record_table_view_t::row_selected, this, &main_window_t::on_row_selected);
 
 	connect(
+	    m_table_model,
+	    &record_table_model_t::inline_edit_committed,
+	    this,
+	    [this](int row, const std::string & new_text)
+	{
+		if (!m_active_doc)
+			return;
+
+		const auto * row_data = m_table_model->row_at(row);
+		if (!row_data)
+			return;
+
+		m_edit_history.record_change(
+		    row_data->type, row_data->key_text, row_data->new_text, new_text, row_data->status);
+
+		const auto result = m_active_doc->commit(*row_data, new_text, status_t::in_progress);
+		if (!result.success)
+			return;
+
+		m_table_model->update_row(row, result.new_text, result.status);
+		set_unsaved_changes(m_active_doc->is_dirty());
+		update_sidebar_item(m_active_doc->path());
+		update_status_counts();
+
+		int next_row = row + 1;
+		if (next_row < m_table_model->rowCount())
+		{
+			auto idx = m_table_model->index(next_row, 0);
+			m_table_view->selectionModel()->setCurrentIndex(
+			    idx, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+			on_row_selected(next_row);
+		}
+	});
+
+	connect(
 	    m_table_view,
 	    &record_table_view_t::delete_entry_requested,
 	    this,
@@ -617,16 +655,18 @@ void main_window_t::connect_editor_signals()
 		if (m_editor_controller.current_row() < 0)
 			return;
 
-		auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
-		if (!dict_doc)
+		if (!m_active_doc)
 			return;
 
 		const auto * row_data = m_table_model->row_at(m_editor_controller.current_row());
 		if (!row_data)
 			return;
 
-		m_editor_controller.clear_and_untranslate(*dict_doc, *row_data);
-		m_table_model->update_row(m_editor_controller.current_row(), row_data->old_text, status_t::untranslated);
+		const auto result = m_active_doc->reset_to_original(*row_data);
+		if (!result.success)
+			return;
+
+		m_table_model->update_row(m_editor_controller.current_row(), result.new_text, result.status);
 		set_unsaved_changes(true);
 		update_status_counts();
 		load_record(m_editor_controller.current_row());
@@ -638,31 +678,21 @@ void main_window_t::connect_editor_signals()
 	    this,
 	    [this](const QList<int> & rows, status_t new_status)
 	{
-		auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
-		if (!dict_doc)
+		if (!m_active_doc)
 			return;
-
-		auto & data = dict_doc->data_mut();
 
 		for (int row : rows)
 		{
-			auto * row_data = m_table_model->row_at(row);
+			const auto * row_data = m_table_model->row_at(row);
 			if (!row_data)
 				continue;
 
-			auto it = data.find(row_data->type);
-			if (it == data.end())
-				continue;
-
-			if (row_data->record_index >= it->second.records.size())
-				continue;
-
-			it->second.records[row_data->record_index].status = new_status;
-			m_table_model->update_row(row, row_data->new_text, new_status);
+			const auto result = m_active_doc->commit_status(*row_data, new_status);
+			if (result.success)
+				m_table_model->update_row(row, result.new_text, result.status);
 		}
 
-		dict_doc->set_dirty(true);
-		set_unsaved_changes(true);
+		set_unsaved_changes(m_active_doc->is_dirty());
 		update_status_counts();
 	});
 
@@ -672,87 +702,13 @@ void main_window_t::connect_editor_signals()
 	    m_editor_view,
 	    &editor_view_t::apply_clicked,
 	    this,
-	    [this]()
-	{
-		if (m_editor_controller.current_row() < 0)
-			return;
-
-		commit_current_edit();
-
-		int row_count = m_table_model->rowCount();
-		int next_row = -1;
-		for (int i = m_editor_controller.current_row() + 1; i < row_count; ++i)
-		{
-			const auto * r = m_table_model->row_at(i);
-			if (r && r->status != status_t::propagated)
-			{
-				next_row = i;
-				break;
-			}
-		}
-
-		if (next_row < 0)
-		{
-			next_row = m_editor_controller.current_row() + 1;
-			if (next_row >= row_count)
-				next_row = row_count - 1;
-		}
-
-		if (next_row >= 0 && next_row != m_editor_controller.current_row())
-		{
-			auto idx = m_table_model->index(next_row, 0);
-			m_table_view->selectionModel()->setCurrentIndex(
-			    idx, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
-			on_row_selected(next_row);
-			auto cursor = m_editor_view->translation_editor()->textCursor();
-			cursor.movePosition(QTextCursor::End);
-			m_editor_view->translation_editor()->setTextCursor(cursor);
-			m_editor_view->translation_editor()->setFocus();
-		}
-	});
+	    [this]() { advance_to_next_row(); });
 
 	connect(
 	    m_editor_view->translation_editor(),
 	    &translation_edit_view_t::navigate_next,
 	    this,
-	    [this]()
-	{
-		if (m_editor_controller.current_row() < 0)
-			return;
-
-		commit_current_edit();
-
-		int row_count = m_table_model->rowCount();
-		int next_row = -1;
-		for (int i = m_editor_controller.current_row() + 1; i < row_count; ++i)
-		{
-			const auto * r = m_table_model->row_at(i);
-			if (r && r->status != status_t::propagated)
-			{
-				next_row = i;
-				break;
-			}
-		}
-
-		if (next_row < 0)
-		{
-			next_row = m_editor_controller.current_row() + 1;
-			if (next_row >= row_count)
-				next_row = row_count - 1;
-		}
-
-		if (next_row >= 0 && next_row != m_editor_controller.current_row())
-		{
-			auto idx = m_table_model->index(next_row, 0);
-			m_table_view->selectionModel()->setCurrentIndex(
-			    idx, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
-			on_row_selected(next_row);
-			auto cursor = m_editor_view->translation_editor()->textCursor();
-			cursor.movePosition(QTextCursor::End);
-			m_editor_view->translation_editor()->setTextCursor(cursor);
-			m_editor_view->translation_editor()->setFocus();
-		}
-	});
+	    [this]() { advance_to_next_row(); });
 
 	connect(
 	    m_editor_view->translation_editor(),
@@ -782,17 +738,16 @@ void main_window_t::connect_editor_signals()
 	    this,
 	    [this]()
 	{
-		auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
-		if (!dict_doc)
+		if (!m_active_doc)
 		{
-			m_translation_tab->append_log("[error] no dictionary loaded\n");
+			m_translation_tab->append_log("[error] no document loaded\n");
 			return;
 		}
 
-		auto * provider = m_translation_tab->ct2_provider();
+		auto * provider = m_translation_tab->active_provider();
 		if (!provider || !provider->is_available())
 		{
-			m_translation_tab->append_log("[error] CTranslate2 model not loaded\n");
+			m_translation_tab->append_log("[error] translation provider not available\n");
 			return;
 		}
 
@@ -809,12 +764,68 @@ void main_window_t::connect_editor_signals()
 
 		if (row_data->status != status_t::untranslated)
 		{
-			m_translation_tab->append_log("[error] selected entry is not untranslated\n");
+			m_translation_tab->append_log("[info] only untranslated entries can be translated\n");
 			return;
 		}
 
 		m_translation_tab->set_source_text(row_data->old_text);
+		m_translation_tab->set_target_language(m_settings.native_language());
+
+		if (m_editor_view->has_script_template())
+		{
+			const auto lines = m_editor_view->original_view()->toPlainText().split('\n');
+			std::vector<std::string> prepared_lines;
+
+			for (const auto & line : lines)
+			{
+				const auto source = line.toStdString();
+				if (source.empty())
+					prepared_lines.push_back(std::string());
+				else
+					prepared_lines.push_back(m_glossary.apply_glossary(source));
+			}
+
+			m_translation_tab->request_translation_lines(prepared_lines);
+		}
+		else
+		{
+			const auto prepared = m_glossary.apply_glossary(row_data->old_text);
+			m_translation_tab->request_translation(prepared);
+		}
 	});
+
+	connect(
+	    m_translation_tab,
+	    &translation_suggestion_view_t::translation_committed,
+	    this,
+	    [this](const std::string & result_text)
+	{
+		m_editor_view->translation_editor()->setPlainText(QString::fromStdString(result_text));
+		m_editor_controller.set_pending_status(status_t::model);
+		advance_to_next_row();
+	});
+
+	connect(
+	    m_translation_tab,
+	    &translation_suggestion_view_t::translation_lines_committed,
+	    this,
+	    [this](const std::vector<std::string> & result_lines)
+	{
+		QStringList joined;
+		for (const auto & line : result_lines)
+			joined.append(QString::fromStdString(line));
+
+		m_editor_view->translation_editor()->setPlainText(joined.join('\n'));
+		m_editor_controller.set_pending_status(status_t::model);
+		advance_to_next_row();
+	});
+
+	connect(
+	    m_translation_tab,
+	    &translation_suggestion_view_t::translation_failed,
+	    this,
+	    [this](const std::string & error_message)
+	{ m_translation_tab->append_log("[error] " + error_message + "\n"); });
 }
 
 void main_window_t::connect_search_signals()
@@ -829,15 +840,6 @@ void main_window_t::connect_search_signals()
 	connect(m_search_col_translation, &QToolButton::toggled, this, on_search_col_changed);
 
 	connect(m_filter_tree_view, &filter_tree_view_t::filters_changed, this, &main_window_t::on_filters_changed);
-	connect(
-	    m_filter_tree_view,
-	    &filter_tree_view_t::all_reset_requested,
-	    this,
-	    [this]()
-	{
-		m_status_filter.clear();
-		m_status_filter_view->set_filter_state(m_status_filter);
-	});
 	connect(
 	    m_status_filter_view, &status_filter_view_t::filters_changed, this, &main_window_t::on_status_filters_changed);
 }

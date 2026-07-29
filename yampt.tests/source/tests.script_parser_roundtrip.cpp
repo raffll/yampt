@@ -1,14 +1,14 @@
 #include <catch2/catch_all.hpp>
 #include <converter/script_parser.hpp>
 #include <merger/dict_merger.hpp>
-#include <utility/tools.hpp>
+#include <utility/app_logger.hpp>
 #include <random>
 
 namespace {
 
 static std::string size_byte(size_t value)
 {
-	return tools_t::convert_uint_to_string_byte_array(value).substr(0, 1);
+	return domain_types::convert_uint_to_string_byte_array(value).substr(0, 1);
 }
 
 struct generated_script_t
@@ -109,7 +109,7 @@ generated_script_t generate_script(std::mt19937 & rng)
 
 } // namespace
 
-TEST_CASE("script_parser_t, round-trip identity for untranslated cells", "[u]")
+TEST_CASE("script_parser_t::convert_script, round-trip identity for untranslated cells", "[u]")
 {
 	const auto seed = GENERATE(range(0, 100));
 	std::mt19937 rng(static_cast<unsigned>(seed));
@@ -119,11 +119,10 @@ TEST_CASE("script_parser_t, round-trip identity for untranslated cells", "[u]")
 	dict_merger_t merger;
 	for (const auto & cell_name : script_data.cell_names)
 	{
-		merger.add_record(tools_t::rec_type_t::cell, cell_name, cell_name);
+		merger.add_record(rec_type_t::cell, cell_name, cell_name);
 	}
 
-	script_parser_t parser(
-	    tools_t::rec_type_t::sctx, merger, "TestScript", "test.esm", script_data.source, script_data.scdt);
+	script_parser_t parser(rec_type_t::sctx, merger, "TestScript", "test.esm", script_data.source, script_data.scdt);
 
 	REQUIRE(parser.get_new_script() == script_data.source);
 	REQUIRE(parser.get_new_scdt() == script_data.scdt);

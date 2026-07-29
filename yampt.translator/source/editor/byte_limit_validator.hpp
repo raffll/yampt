@@ -1,7 +1,7 @@
 #pragma once
 
 #include <io/codepage.hpp>
-#include <utility/tools.hpp>
+#include <utility/domain_types.hpp>
 #include <string>
 
 enum class validation_level_t
@@ -21,8 +21,9 @@ struct validation_result_t
 class byte_limit_validator_t
 {
 public:
-	validation_result_t validate(tools_t::rec_type_t type, const std::string & utf8_value) const;
+	validation_result_t validate(rec_type_t type, const std::string & utf8_value) const;
 	void set_codepage(codepage_t cp);
+	codepage_t codepage() const;
 
 private:
 	codepage_t m_codepage = codepage_t::windows_1252;

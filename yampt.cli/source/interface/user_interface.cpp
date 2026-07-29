@@ -1,10 +1,15 @@
 #include "user_interface.hpp"
 #include <converter/esm_converter.hpp>
 #include <creator/dict_creator.hpp>
+#include <creator/loc_generator.hpp>
+#include <io/binary_file_io.hpp>
+#include <io/codepage.hpp>
 #include <io/dict_reader.hpp>
 #include <io/dict_writer.hpp>
 #include <merger/dict_merger.hpp>
 #include <translator/translation_engine.hpp>
+#include <utility/app_logger.hpp>
+#include <utility/language_config.hpp>
 
 user_interface_t::user_interface_t(std::vector<std::string> & arg)
     : args(arg)
@@ -29,6 +34,12 @@ void user_interface_t::collect_argument_value(const std::string & command, const
 
 	else if (command == "--translate")
 		translate_model_path = value;
+
+	else if (command == "--esm-name")
+		esm_name_override = value;
+
+	else if (command == "--language")
+		language_code = value;
 }
 
 void user_interface_t::parse_command_line()
@@ -41,16 +52,15 @@ void user_interface_t::parse_command_line()
 	{
 		const auto & token = args[i];
 
-		if (token == "--windows-1250")
-			encoding = codepage_t::windows_1250;
-
-		else if (token == "--debug")
-			tools_t::set_debug(true);
+		if (token == "--debug")
+			app_logger_t::set_debug(true);
 
 		else if (token == "--partial")
 			partial_mode = true;
 
-		else if (token == "-f" || token == "-d" || token == "-o" || token == "-s" || token == "--translate")
+		else if (
+		    token == "-f" || token == "-d" || token == "-o" || token == "-s" || token == "--translate" ||
+		    token == "--esm-name" || token == "--language")
 			command = token;
 
 		else
@@ -82,23 +92,27 @@ void user_interface_t::run_command()
 		{
 			create_esm();
 		}
+		else if (args[1] == "--make-loc" && dict_paths.size() > 0)
+		{
+			make_loc();
+		}
 		else
 		{
-			tools_t::add_log("[error] syntax error!\r\n");
+			app_logger_t::add_log("[error] syntax error!\r\n");
 		}
 	}
 	else
 	{
-		tools_t::add_log("yampt v0.25\r\n");
+		app_logger_t::add_log("yampt v0.25\r\n");
 	}
 }
 
 void user_interface_t::make_dict_()
 {
-	tools_t::add_log("[info] making dictionaries...\r\n");
+	app_logger_t::add_log("[info] making dictionaries...\r\n");
 
-	const tools_t::dict_t * base_dict = nullptr;
-	tools_t::dict_t base_dict_storage;
+	const dict_t * base_dict = nullptr;
+	dict_t base_dict_storage;
 	if (dict_paths.size() > 0)
 	{
 		dict_reader_t reader(dict_paths[0]);
@@ -109,7 +123,7 @@ void user_interface_t::make_dict_()
 		}
 		else
 		{
-			tools_t::add_log(
+			app_logger_t::add_log(
 			    "[warning] base dictionary could not be loaded, proceeding "
 			    "without it\r\n");
 		}
@@ -132,12 +146,12 @@ void user_interface_t::make_dict_()
 		dict_writer_t::write(creator.get_dict(), out_path);
 	}
 
-	tools_t::add_log("[info] done!\r\n");
+	app_logger_t::add_log("[info] done!\r\n");
 }
 
 void user_interface_t::make_dict_base()
 {
-	tools_t::add_log("[info] making base dictionary...\r\n");
+	app_logger_t::add_log("[info] making base dictionary...\r\n");
 
 	translation_engine_t engine;
 	translation_engine_t * engine_ptr = nullptr;
@@ -146,28 +160,29 @@ void user_interface_t::make_dict_base()
 	{
 		if (engine.load(translate_model_path))
 		{
-			tools_t::add_log(
+			app_logger_t::add_log(
 			    "[info] translation engine loaded: " + engine.source_language() + " -> " + engine.target_language() +
 			    "\r\n");
 			engine_ptr = &engine;
 		}
 		else
 		{
-			tools_t::add_log("[warning] failed to load translation model from \"" + translate_model_path + "\"\r\n");
+			app_logger_t::add_log(
+			    "[warning] failed to load translation model from \"" + translate_model_path + "\"\r\n");
 		}
 	}
 
 	auto mode = partial_mode ? base_mode_t::partial : base_mode_t::full;
 	dict_creator_t creator(file_paths[0], file_paths[1], engine_ptr, mode);
 	dict_writer_t::write(creator.get_dict(), creator.get_name().name + ".BASE.json");
-	tools_t::add_log("[info] done!\r\n");
+	app_logger_t::add_log("[info] done!\r\n");
 }
 
 void user_interface_t::merge_dict()
 {
 	if (output.empty())
 	{
-		tools_t::add_log("[error] --merge requires -o <output_path>\r\n");
+		app_logger_t::add_log("[error] --merge requires -o <output_path>\r\n");
 		return;
 	}
 
@@ -181,56 +196,110 @@ void user_interface_t::merge_dict()
 				c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
 			if (ext == ".xml")
 			{
-				tools_t::add_log("[error] .xml dictionary files are no longer supported: " + path + "\r\n");
+				app_logger_t::add_log("[error] .xml dictionary files are no longer supported: " + path + "\r\n");
 				return;
 			}
 		}
 	}
 
-	tools_t::add_log("[info] merging dictionaries...\r\n");
+	app_logger_t::add_log("[info] merging dictionaries...\r\n");
 	dict_merger_t merger(dict_paths);
 	dict_writer_t::write(merger.get_dict(), output);
-	tools_t::add_log("[info] done!\r\n");
+	app_logger_t::add_log("[info] done!\r\n");
 }
 
 void user_interface_t::convert_esm()
 {
-	tools_t::add_log("[info] converting plugins...\r\n");
+	app_logger_t::add_log("[info] converting plugins...\r\n");
 	dict_merger_t merger(dict_paths);
 	for (const auto & file_path : file_paths)
 	{
-		esm_converter_t converter(file_path, merger, false, suffix, encoding, false);
+		esm_converter_t converter(file_path, merger, false, suffix, false);
 		if (converter.is_loaded())
 		{
 			const auto & name = converter.get_name().name + suffix + converter.get_name().ext;
-			tools_t::write_file(converter.get_records(), name);
+			binary_file_io::write_file(converter.get_records(), name);
 			std::filesystem::last_write_time(name, converter.get_time());
 		}
 		else
 		{
-			tools_t::add_log("[warning] skipping \"" + file_path + "\" (failed to load)\r\n");
+			app_logger_t::add_log("[warning] skipping \"" + file_path + "\" (failed to load)\r\n");
 		}
 	}
-	tools_t::add_log("[info] done!\r\n");
+	app_logger_t::add_log("[info] done!\r\n");
 }
 
 void user_interface_t::create_esm()
 {
-	tools_t::add_log("[info] creating plugins...\r\n");
+	app_logger_t::add_log("[info] creating plugins...\r\n");
 	dict_merger_t merger(dict_paths);
 	for (const auto & file_path : file_paths)
 	{
-		esm_converter_t converter(file_path, merger, false, suffix, encoding, true);
+		esm_converter_t converter(file_path, merger, false, suffix, true);
 		if (converter.is_loaded())
 		{
 			const auto & name = converter.get_name().name + ".CREATED" + converter.get_name().ext;
-			tools_t::create_file(converter.get_records(), name);
+			binary_file_io::create_file(converter.get_records(), name);
 			std::filesystem::last_write_time(name, converter.get_time() + std::chrono::seconds(1));
 		}
 		else
 		{
-			tools_t::add_log("[warning] skipping \"" + file_path + "\" (failed to load)\r\n");
+			app_logger_t::add_log("[warning] skipping \"" + file_path + "\" (failed to load)\r\n");
 		}
 	}
-	tools_t::add_log("[info] done!\r\n");
+	app_logger_t::add_log("[info] done!\r\n");
+}
+
+static codepage_t resolve_codepage(const std::string & language)
+{
+	static const auto languages = language_config::load("languages.json");
+	return language_config::resolve_codepage(languages, language);
+}
+
+static std::string resolve_locale(const std::string & language)
+{
+	static const auto languages = language_config::load("languages.json");
+	return language_config::resolve_dictionary_prefix(languages, language);
+}
+
+void user_interface_t::make_loc()
+{
+	app_logger_t::add_log("[info] generating localization files...\r\n");
+
+	dict_reader_t reader(dict_paths[0]);
+	if (!reader.is_loaded())
+	{
+		app_logger_t::add_log("[error] cannot load dictionary: " + dict_paths[0] + "\r\n");
+		return;
+	}
+
+	const auto & dict = reader.get_dict();
+	const auto & dict_path = std::filesystem::path(dict_paths[0]);
+	const auto output_directory = dict_path.parent_path().string();
+
+	const auto esm_name = esm_name_override.empty() ? loc_generator::derive_esm_name(dict_paths[0]) : esm_name_override;
+
+	const auto codepage = resolve_codepage(language_code);
+	const auto locale = resolve_locale(language_code);
+	const auto hunspell_aff = "dictionaries/" + locale + ".aff";
+	const auto hunspell_dic = "dictionaries/" + locale + ".dic";
+
+	loc_generator::generation_input_t input { dict, output_directory, esm_name, codepage, hunspell_aff, hunspell_dic };
+
+	const auto result = loc_generator::generate(input);
+
+	app_logger_t::add_log(
+	    "[info] cel: " + std::to_string(result.cel_entries) + " entries -> " + result.cel_path + "\r\n");
+	app_logger_t::add_log(
+	    "[info] mrk: " + std::to_string(result.mrk_entries) + " entries -> " + result.mrk_path + "\r\n");
+	app_logger_t::add_log(
+	    "[info] top: " + std::to_string(result.top_entries) + " entries -> " + result.top_path + "\r\n");
+
+	if (result.skipped_entries > 0)
+		app_logger_t::add_log("[warning] skipped: " + std::to_string(result.skipped_entries) + "\r\n");
+
+	if (result.collision_warnings > 0)
+		app_logger_t::add_log("[warning] collisions: " + std::to_string(result.collision_warnings) + "\r\n");
+
+	app_logger_t::add_log("[info] done!\r\n");
 }

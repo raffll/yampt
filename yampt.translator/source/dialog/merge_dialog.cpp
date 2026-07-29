@@ -1,5 +1,5 @@
 #include "merge_dialog.hpp"
-#include "../utility/display_name.hpp"
+#include "../view/display_name.hpp"
 #include <QDialogButtonBox>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -10,15 +10,15 @@
 merge_dialog_t::merge_dialog_t(const std::vector<dict_entry_t> & loaded_dicts, QWidget * parent)
     : QDialog(parent)
 {
-	setWindowTitle("Merge Dictionaries");
+	setWindowTitle(tr("Merge Dictionaries"));
 	setModal(true);
 	resize(450, 400);
 
 	auto * layout = new QVBoxLayout(this);
 
 	layout->addWidget(new QLabel(
-	    "Drag or use buttons to set priority order.\n"
-	    "Last item has highest priority (last-listed wins).",
+	    tr("Drag or use buttons to set priority order.\n"
+	       "Last item has highest priority (last-listed wins)."),
 	    this));
 
 	m_list = new QListWidget(this);
@@ -38,7 +38,6 @@ void merge_dialog_t::populate_list(const std::vector<dict_entry_t> & loaded_dict
 	for (const auto & entry : loaded_dicts)
 	{
 		display_name_t dname(entry.name);
-		dname.set_kind(entry.kind);
 
 		auto * item = new QListWidgetItem(QString::fromStdString(dname.to_string()));
 		item->setData(Qt::UserRole, QString::fromStdString(entry.path));
@@ -59,14 +58,14 @@ void merge_dialog_t::setup_buttons()
 
 	auto * order_buttons = new QHBoxLayout;
 
-	m_up_button = new QPushButton("Up", this);
-	m_up_button->setToolTip("Move selected item up (lower priority)");
+	m_up_button = new QPushButton(tr("Up"), this);
+	m_up_button->setToolTip(tr("Move selected item up (lower priority)"));
 
-	m_down_button = new QPushButton("Down", this);
-	m_down_button->setToolTip("Move selected item down (higher priority)");
+	m_down_button = new QPushButton(tr("Down"), this);
+	m_down_button->setToolTip(tr("Move selected item down (higher priority)"));
 
-	m_remove_button = new QPushButton("Remove", this);
-	m_remove_button->setToolTip("Remove selected items from merge");
+	m_remove_button = new QPushButton(tr("Remove"), this);
+	m_remove_button->setToolTip(tr("Remove selected items from merge"));
 
 	order_buttons->addWidget(m_up_button);
 	order_buttons->addWidget(m_down_button);
@@ -75,8 +74,8 @@ void merge_dialog_t::setup_buttons()
 	layout->addLayout(order_buttons);
 
 	m_button_box = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
-	m_button_box->button(QDialogButtonBox::Ok)->setText("Merge");
-	m_button_box->button(QDialogButtonBox::Ok)->setToolTip("Execute merge with listed order");
+	m_button_box->button(QDialogButtonBox::Ok)->setText(tr("Merge"));
+	m_button_box->button(QDialogButtonBox::Ok)->setToolTip(tr("Execute merge with listed order"));
 	layout->addWidget(m_button_box);
 }
 

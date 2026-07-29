@@ -1,7 +1,7 @@
 #include "patch_builder.hpp"
-
+#include <io/binary_file_io.hpp>
 #include <scanner/sub_record_merge.hpp>
-#include <utility/tools.hpp>
+#include <utility/app_logger.hpp>
 #include <algorithm>
 #include <cstring>
 #include <filesystem>
@@ -117,9 +117,7 @@ bool patch_builder_t::is_pinned(const std::string & rec_type, const std::string 
 	return false;
 }
 
-const std::string * patch_builder_t::find_content(
-    const std::string & rec_type,
-    const std::string & record_id) const
+const std::string * patch_builder_t::find_content(const std::string & rec_type, const std::string & record_id) const
 {
 	for (const auto & record : m_records)
 	{
@@ -198,14 +196,14 @@ bool patch_builder_t::save(
 
 	const auto header_content = build_tes3_header(author, description, m_records.size(), masters);
 
-	std::vector<tools_t::record_t> records;
+	std::vector<record_t> records;
 	records.push_back({ "TES3", header_content, header_content.size(), false });
 
 	for (const auto & record : m_records)
 		records.push_back({ record.rec_type, record.content, record.content.size(), false });
 
 	const auto temp_path = output_path + ".tmp";
-	tools_t::write_file(records, temp_path);
+	binary_file_io::write_file(records, temp_path);
 
 	if (!std::filesystem::exists(temp_path))
 		return false;
@@ -216,11 +214,7 @@ bool patch_builder_t::save(
 	if (!error_code)
 		return true;
 
-	std::filesystem::copy_file(
-	    temp_path,
-	    output_path,
-	    std::filesystem::copy_options::overwrite_existing,
-	    error_code);
+	std::filesystem::copy_file(temp_path, output_path, std::filesystem::copy_options::overwrite_existing, error_code);
 
 	std::filesystem::remove(temp_path, error_code);
 	return std::filesystem::exists(output_path);
@@ -251,7 +245,7 @@ std::string patch_builder_t::build_tes3_header(
 
 	std::string body;
 	body += "HEDR";
-	body += tools_t::convert_uint_to_string_byte_array(tes3_hedr_size);
+	body += domain_types::convert_uint_to_string_byte_array(tes3_hedr_size);
 	body += hedr_data;
 
 	for (const auto & master : masters)
@@ -260,20 +254,20 @@ std::string patch_builder_t::build_tes3_header(
 		filename.push_back('\0');
 
 		body += "MAST";
-		body += tools_t::convert_uint_to_string_byte_array(filename.size());
+		body += domain_types::convert_uint_to_string_byte_array(filename.size());
 		body += filename;
 
 		std::string size_data(data_sub_record_size, '\0');
 		std::memcpy(&size_data[0], &master.file_size, data_sub_record_size);
 
 		body += "DATA";
-		body += tools_t::convert_uint_to_string_byte_array(data_sub_record_size);
+		body += domain_types::convert_uint_to_string_byte_array(data_sub_record_size);
 		body += size_data;
 	}
 
 	std::string header;
 	header += "TES3";
-	header += tools_t::convert_uint_to_string_byte_array(body.size());
+	header += domain_types::convert_uint_to_string_byte_array(body.size());
 
 	std::string unknown(4, '\0');
 	header += unknown;

@@ -1,8 +1,7 @@
 #pragma once
 
-#include <io/codepage.hpp>
+#include <utility/domain_types.hpp>
 #include <utility/includes.hpp>
-#include <utility/tools.hpp>
 
 class user_interface_t
 {
@@ -19,6 +18,7 @@ private:
 	void merge_dict();
 	void convert_esm();
 	void create_esm();
+	void make_loc();
 
 	std::vector<std::string> args;
 	std::vector<std::string> file_paths;
@@ -26,7 +26,8 @@ private:
 	std::string output;
 	std::string suffix;
 	std::string translate_model_path;
+	std::string esm_name_override;
+	std::string language_code;
 
-	codepage_t encoding = codepage_t::windows_1252;
 	bool partial_mode = false;
 };

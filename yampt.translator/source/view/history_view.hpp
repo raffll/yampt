@@ -1,6 +1,6 @@
 #pragma once
 
-#include <utility/tools.hpp>
+#include <utility/domain_types.hpp>
 #include <vector>
 #include <QWidget>
 

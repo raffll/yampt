@@ -29,6 +29,7 @@ enum class color_name_t
 	status_in_progress,
 	status_model,
 	status_propagated,
+	status_replaced,
 	status_heuristic,
 	status_to_verify,
 	status_ambiguous,
@@ -47,6 +48,7 @@ enum class color_name_t
 
 	annotation_dial_topic,
 	annotation_glossary_term,
+	annotation_loc_coverage,
 
 	conflict_all_no_conflict_raw,
 	conflict_all_override_benign_raw,

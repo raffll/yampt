@@ -1,11 +1,12 @@
 #include <catch2/catch_all.hpp>
 #include <utility/color_palette.hpp>
 #include <utility/theme_enums.hpp>
-#include <settings_store.hpp>
 #include <cmath>
 #include <cstdlib>
+#include <settings_store.hpp>
 #include <theme_system.hpp>
 #include <QCoreApplication>
+#include <QFile>
 
 TEST_CASE("theme_system_t::get_color, all named colors are valid", "[u]")
 {
@@ -114,7 +115,7 @@ TEST_CASE("theme_system_t::conflict_all_background, visible", "[u]")
 	}
 }
 
-TEST_CASE("theme_system_t, light conflict foreground/background contrast", "[u]")
+TEST_CASE("theme_system_t::conflict_this_foreground, light contrast", "[u]")
 {
 	theme_system_t::instance().set_theme(theme_t::light);
 
@@ -136,7 +137,7 @@ TEST_CASE("theme_system_t, light conflict foreground/background contrast", "[u]"
 	}
 }
 
-TEST_CASE("theme_system_t, dark conflict foreground/background contrast", "[u]")
+TEST_CASE("theme_system_t::conflict_this_foreground, dark contrast", "[u]")
 {
 	theme_system_t::instance().set_theme(theme_t::dark);
 
@@ -158,7 +159,7 @@ TEST_CASE("theme_system_t, dark conflict foreground/background contrast", "[u]")
 	}
 }
 
-TEST_CASE("theme_system_t, dark conflict backgrounds are darker", "[u]")
+TEST_CASE("theme_system_t::conflict_all_background, dark is darker", "[u]")
 {
 	theme_system_t::instance().set_theme(theme_t::dark);
 
@@ -351,6 +352,7 @@ TEST_CASE("theme_system_t::get_color, dark backward compat", "[u]")
 	check(color_name_t::status_in_progress, 80, 130, 200);
 	check(color_name_t::status_model, 80, 155, 190);
 	check(color_name_t::status_propagated, 140, 190, 190);
+	check(color_name_t::status_replaced, 160, 120, 220);
 	check(color_name_t::status_heuristic, 80, 150, 130);
 	check(color_name_t::status_to_verify, 140, 165, 140);
 	check(color_name_t::status_ambiguous, 190, 150, 50);
@@ -366,6 +368,7 @@ TEST_CASE("theme_system_t::get_color, dark backward compat", "[u]")
 	check(color_name_t::diff_changed_background, 180, 130, 60, 100);
 	check(color_name_t::annotation_dial_topic, 40, 55, 75);
 	check(color_name_t::annotation_glossary_term, 35, 60, 40);
+	check(color_name_t::annotation_loc_coverage, 40, 80, 80);
 	check(color_name_t::conflict_all_no_conflict_raw, 0, 180, 0);
 	check(color_name_t::conflict_all_override_benign_raw, 180, 180, 0);
 	check(color_name_t::conflict_all_conflict_raw, 180, 0, 0);
@@ -391,30 +394,35 @@ TEST_CASE("theme_system_t::get_status_color, dark saturation lower than light", 
 	}
 }
 
-TEST_CASE("settings_store_t::theme, round-trip", "[u]")
+TEST_CASE("settings_store_t::theme, round-trip", "[i]")
 {
 	settings_store_t settings("test_theme_settings.ini");
 	settings.set_theme(theme_t::dark);
 	REQUIRE(settings.theme() == theme_t::dark);
 	settings.set_theme(theme_t::light);
 	REQUIRE(settings.theme() == theme_t::light);
+	QFile::remove(QCoreApplication::applicationDirPath() + "/test_theme_settings.ini");
 }
 
-TEST_CASE("settings_store_t::theme, default is light", "[u]")
+TEST_CASE("settings_store_t::theme, default is light", "[i]")
 {
+	const auto path = QCoreApplication::applicationDirPath() + "/test_theme_empty.ini";
+	QFile::remove(path);
 	settings_store_t settings("test_theme_empty.ini");
 	REQUIRE(settings.theme() == theme_t::light);
+	QFile::remove(path);
 }
 
-TEST_CASE("settings_store_t::theme, invalid defaults to light", "[u]")
+TEST_CASE("settings_store_t::theme, invalid defaults to light", "[i]")
 {
-	settings_store_t settings("test_theme_invalid.ini");
-	QSettings raw(QCoreApplication::applicationDirPath() + "/test_theme_invalid.ini", QSettings::IniFormat);
+	const auto path = QCoreApplication::applicationDirPath() + "/test_theme_invalid.ini";
+	QSettings raw(path, QSettings::IniFormat);
 	raw.setValue("Appearance/Theme", "garbage");
 	raw.sync();
 
 	settings_store_t settings2("test_theme_invalid.ini");
 	REQUIRE(settings2.theme() == theme_t::light);
+	QFile::remove(path);
 }
 
 TEST_CASE("theme_system_t::get_color, light backward compat", "[u]")
@@ -441,6 +449,7 @@ TEST_CASE("theme_system_t::get_color, light backward compat", "[u]")
 	check(color_name_t::status_in_progress, 102, 153, 242);
 	check(color_name_t::status_model, 100, 180, 220);
 	check(color_name_t::status_propagated, 180, 230, 230);
+	check(color_name_t::status_replaced, 200, 160, 255);
 	check(color_name_t::status_heuristic, 100, 180, 160);
 	check(color_name_t::status_to_verify, 180, 200, 180);
 	check(color_name_t::status_ambiguous, 230, 180, 60);
@@ -454,6 +463,7 @@ TEST_CASE("theme_system_t::get_color, light backward compat", "[u]")
 	check(color_name_t::diff_changed_background, 255, 200, 130);
 	check(color_name_t::annotation_dial_topic, 70, 130, 200, 60);
 	check(color_name_t::annotation_glossary_term, 70, 180, 70, 60);
+	check(color_name_t::annotation_loc_coverage, 80, 180, 180, 60);
 	check(color_name_t::conflict_all_no_conflict_raw, 0, 255, 0);
 	check(color_name_t::conflict_all_override_benign_raw, 255, 255, 0);
 	check(color_name_t::conflict_all_conflict_raw, 255, 0, 0);

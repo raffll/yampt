@@ -1,11 +1,11 @@
 #include <catch2/catch_all.hpp>
-#include <editor/workspace_watcher.hpp>
+#include <session/workspace_watcher.hpp>
+#include <filesystem>
 #include <QCoreApplication>
 #include <QDir>
 #include <QFile>
 #include <QSignalSpy>
 #include <QTest>
-#include <filesystem>
 
 namespace {
 
@@ -23,7 +23,7 @@ void cleanup_temp_dir(const std::string & path)
 	std::filesystem::remove_all(path, error_code);
 }
 
-}
+} // namespace
 
 TEST_CASE("workspace_watcher_t::set_watch_roots, does not crash on empty list", "[u][qt]")
 {
@@ -51,7 +51,7 @@ TEST_CASE("workspace_watcher_t::clear, safe to call multiple times", "[u][qt]")
 	watcher.clear();
 }
 
-TEST_CASE("workspace_watcher_t, emits workspace_changed on file creation", "[i][qt]")
+TEST_CASE("workspace_watcher_t::set_watch_roots, emits on file creation", "[i][qt]")
 {
 	const auto dir = make_temp_dir("watcher_signal");
 
@@ -75,7 +75,7 @@ TEST_CASE("workspace_watcher_t, emits workspace_changed on file creation", "[i][
 	cleanup_temp_dir(dir);
 }
 
-TEST_CASE("workspace_watcher_t, does not emit after clear", "[i][qt]")
+TEST_CASE("workspace_watcher_t::clear, does not emit after clear", "[i][qt]")
 {
 	const auto dir = make_temp_dir("watcher_no_emit");
 

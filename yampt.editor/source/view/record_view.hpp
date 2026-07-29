@@ -28,6 +28,7 @@ private:
 	void setup_tree();
 	void expand_non_numeric_groups();
 	void apply_column_sizing();
+	void resizeEvent(QResizeEvent * event) override;
 
 	QTreeView * m_tree = nullptr;
 	view_tree_model_t * m_model = nullptr;

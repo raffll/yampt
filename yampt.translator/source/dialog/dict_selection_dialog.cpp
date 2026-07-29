@@ -1,6 +1,6 @@
 #include "dict_selection_dialog.hpp"
 #include "../model/sidebar_model.hpp"
-#include "../utility/display_name.hpp"
+#include "../view/display_name.hpp"
 #include <utility/string_utils.hpp>
 #include <map>
 #include <QDialogButtonBox>
@@ -22,12 +22,12 @@ dict_selection_dialog_t::dict_selection_dialog_t(
     QWidget * parent)
     : QDialog(parent)
 {
-	setWindowTitle("Select Dictionaries");
+	setWindowTitle(tr("Select Dictionaries"));
 	setModal(true);
-	resize(450, 500);
+	resize(450, 400);
 
 	auto * layout = new QVBoxLayout(this);
-	layout->addWidget(new QLabel("Available dictionaries:", this));
+	layout->addWidget(new QLabel(tr("Available dictionaries:"), this));
 
 	m_tree = new QTreeWidget(this);
 	m_tree->setHeaderHidden(true);
@@ -40,7 +40,7 @@ dict_selection_dialog_t::dict_selection_dialog_t(
 	populate_tree(entries);
 	populate_order_list(entries, saved_order);
 
-	layout->addWidget(new QLabel("Merge order (last wins):", this));
+	layout->addWidget(new QLabel(tr("Merge order (last wins):"), this));
 	layout->addWidget(m_order_list);
 
 	setup_buttons(layout);
@@ -105,7 +105,6 @@ void dict_selection_dialog_t::add_dict_tree_items(
 	{
 		auto * item = new QTreeWidgetItem(parent_item);
 		display_name_t dname(entry->name);
-		dname.set_kind(entry->kind);
 		item->setText(0, QString::fromStdString(dname.to_string()));
 		item->setData(0, Qt::UserRole, QString::fromStdString(entry->path));
 		item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
@@ -133,7 +132,6 @@ void dict_selection_dialog_t::populate_order_list(
 					continue;
 
 				display_name_t dname(entry.name);
-				dname.set_kind(entry.kind);
 				auto * order_item = new QListWidgetItem(QString::fromStdString(dname.to_string()));
 				order_item->setData(Qt::UserRole, QString::fromStdString(entry.path));
 				m_order_list->addItem(order_item);
@@ -150,7 +148,6 @@ void dict_selection_dialog_t::populate_order_list(
 			continue;
 
 		display_name_t dname(entry.name);
-		dname.set_kind(entry.kind);
 		auto * order_item = new QListWidgetItem(QString::fromStdString(dname.to_string()));
 		order_item->setData(Qt::UserRole, QString::fromStdString(entry.path));
 		m_order_list->addItem(order_item);
@@ -160,8 +157,10 @@ void dict_selection_dialog_t::populate_order_list(
 void dict_selection_dialog_t::setup_buttons(QVBoxLayout * layout)
 {
 	auto * order_buttons = new QHBoxLayout;
-	m_up_button = new QPushButton("Up", this);
-	m_down_button = new QPushButton("Down", this);
+	m_up_button = new QPushButton(tr("Up"), this);
+	m_down_button = new QPushButton(tr("Down"), this);
+	m_up_button->setToolTip(tr("Move selected dictionary up in merge order"));
+	m_down_button->setToolTip(tr("Move selected dictionary down in merge order"));
 	order_buttons->addWidget(m_up_button);
 	order_buttons->addWidget(m_down_button);
 	order_buttons->addStretch();

@@ -6,39 +6,42 @@
 yampt/
 ├── yampt.core/             # Core library (C++ static lib) → yampt.lib
 │   ├── source/
-│   │   ├── creator/       # dict_creator_t + splits (base, single, ordered)
+│   │   ├── creator/       # dict_creator_t facade + strategy classes (single, base, ordered)
 │   │   ├── merger/        # dict_merger_t
 │   │   ├── converter/     # esm_converter_t, script_parser_t, scdt_patcher_t
 │   │   ├── translator/    # translation_engine_t
-│   │   ├── scanner/       # plugin_scan_t, plugin_index_t, record_conflict, conflict_enums, conflict_types
-│   │   ├── decoder/       # conflict_slots, sub_record_iter, sub_record_schema, view_tree_format
-│   │   ├── io/            # File format readers/writers (ESM, JSON, codepage, file_list)
-│   │   └── utility/       # Pure helpers (tools, string_utils, record_types, status_types, dict_kind)
+│   │   ├── scanner/       # plugin_scan_t, plugin_index_t, record_conflict, merge_patch_store, merge_patch_ops, auto_merge, sub_record_merge, batch_cleaner, fixers
+│   │   ├── decoder/       # conflict_slots, sub_record_iter, sub_record_schema, view_tree_format, content_alignment, view_group_def
+│   │   ├── io/            # File format readers/writers (ESM, JSON, codepage, file_list, yaml_l10n, binary_file_io)
+│   │   └── utility/       # Pure helpers (domain_types, app_logger, string_utils, record_types, status_types, dict_kind)
 │   └── yampt.core.vcxproj
 ├── yampt.cli/              # CLI entry point → yampt.exe (links yampt.lib)
 │   ├── source/
 │   │   ├── interface/     # CLI boundary (user_interface_t)
-│   │   ├── io/            # app_settings_t (shared GUI settings)
 │   │   └── main.cpp
 │   └── yampt.cli.vcxproj
 ├── yampt.translator/       # GUI translation workbench (Qt6) → yTranslator.exe
 │   ├── source/
-│   │   ├── model/         # Data models & documents
-│   │   ├── view/          # Qt widgets (all use _view_t suffix)
-│   │   ├── editor/        # Logic & orchestration (editor_controller, edit_history, find_replace, glossary, etc.)
+│   │   ├── controller/    # Orchestration (editor_controller, record_display_controller)
+│   │   ├── model/         # Data models & documents (dict_document, yaml_document, table, sidebar, filter_state)
+│   │   ├── view/          # Qt widgets (all use _view_t suffix) + display_name
+│   │   ├── editor/        # Editing services (edit_history, find_replace, glossary, spell_checker, row_filter, byte_limit_validator, operation_executor)
+│   │   ├── session/       # Session lifecycle (session, workspace_watcher, sidebar_controller, plugin_operations_controller)
 │   │   ├── dialog/        # Modal dialogs
-│   │   ├── highlighter/   # Text coloring (syntax, hyperlinks, annotations)
+│   │   │   └── settings/  # Settings dialog pages
+│   │   ├── highlighter/   # Text coloring (syntax, hyperlinks, annotations, grammar, highlight_applier, highlight_coordinator)
 │   │   ├── translator/    # Translation backends (CTranslate2, DeepL, Google)
-│   │   ├── utility/       # Helpers (display_name, spell_checker)
-│   │   ├── io/            # Config and YAML l10n readers/writers
 │   │   └── main.cpp
 │   └── yampt.translator.vcxproj
 ├── yampt.editor/           # Standalone editor app (Qt6) → yEditor.exe
 │   ├── source/
-│   │   ├── model/
-│   │   ├── view/
-│   │   ├── dialog/
-│   │   ├── io/
+│   │   ├── controller/    # Orchestration (merge_controller, view_context_menu)
+│   │   ├── model/         # Data models (nav_tree_model, view_tree_model, decode logic)
+│   │   ├── view/          # Qt widgets + editor_delegates
+│   │   ├── patcher/       # Patch building (patch_builder, plugin_cleaner)
+│   │   ├── session/       # Session lifecycle (plugin_session, profile_reader)
+│   │   ├── dialog/        # Modal dialogs
+│   │   │   └── settings/  # Settings dialog pages
 │   │   └── main.cpp
 │   └── yampt.editor.vcxproj
 ├── yampt.tests/            # Catch2 unit tests
@@ -151,22 +154,27 @@ tests/
 
 ## Unit Test Naming Convention
 
-Format: `"class_t::method, description"` or `"class_t::nested_t::method, description"`
+Format: `"class_t::method, description"` or `"namespace::function, description"`
 
 Examples:
-- `"tools_t::chapter_t::insert, new and duplicate keys"`
-- `"tools_t::is_fnam, true IDs"`
+- `"chapter_t::insert, new and duplicate keys"`
+- `"domain_types::is_fnam, true IDs"`
 - `"dict_merger_t::add_record, inserts entry"`
-- `"script_parser_t, dial keywords"`
+- `"script_parser_t::convert_script, dial keywords"`
 - `"file_list_t::classify, edge cases"`
-- `"dict_document_t, path round-trip"`
+- `"string_utils::trim_cr, no CR present"`
+- `"record_conflict::compute_conflict_all, override detected"`
+- `"merge_patch_store_t::add, inserts record"`
+- `"app_logger_t::add_log, sets error flag"`
 
 Rules:
-- First part is the fully-qualified type path using `::` separators (with `_t` suffix)
-- If the test is about a specific method, include the method name after `::` before the comma
-- If the test is about general class behavior (not one method), use just the class name before the comma
+- Every test name must contain `::` — format is always `owner::member, description`
+- First part is the fully-qualified owner using `::` separators — class (`_t` suffix) or namespace
+- After `::` comes the method or function name being tested
+- Never use just the class name before the comma without `::` — pick the primary method the test exercises
+- Never use a bare function name without a class or namespace prefix
 - Description after the comma is a short lowercase phrase
-- Total test name must be under 80 characters — the VS Catch2 test adapter truncates longer names and loses the tag, causing them to appear under "No Traits"
+- Total test name has no hard length limit — the `.runsettings` uses `--reporter xml` for discovery which handles any length. Keep names concise for readability but don't truncate for tooling.
 
 ## Cell Heuristic Matching — Log Format
 
@@ -299,6 +307,9 @@ What is included:
 - All DLLs from the output dir (including `ctranslate2.dll`)
 - `dictionaries/` folder (spell check dictionaries)
 - `platforms/` folder (Qt platform plugins)
+- `providers/` folder (web translation provider configs)
+- `languages.json` (language definitions)
+- `docs/` folder (README.md, CHANGELOG.md, manuals)
 
 What is NOT included:
 - `models/` — translation engine models are too large for distribution; users download them separately via `download_models.py`

@@ -265,7 +265,7 @@ TEST_CASE("profile_reader_t::resolve_merge_output_path, empty base returns empty
 #include <QFile>
 #include <QString>
 
-TEST_CASE("profile_reader_t, mo2 merge output path resolves via QDir", "[u]")
+TEST_CASE("profile_reader_t::resolve_merge_output_path, mo2 via QDir", "[u]")
 {
 	auto result = QDir::cleanPath("C:/MO2/profiles/Default/../../overwrite/Merged Patch.esp").toStdString();
 
@@ -274,14 +274,14 @@ TEST_CASE("profile_reader_t, mo2 merge output path resolves via QDir", "[u]")
 	REQUIRE(result.find("profiles") == std::string::npos);
 }
 
-TEST_CASE("profile_reader_t, openmw merge output path resolves via QDir", "[u]")
+TEST_CASE("profile_reader_t::resolve_merge_output_path, openmw via QDir", "[u]")
 {
 	auto result = QDir::cleanPath("/home/user/.config/openmw/data/Merged Patch.esp").toStdString();
 
 	REQUIRE(result == "/home/user/.config/openmw/data/Merged Patch.esp");
 }
 
-TEST_CASE("profile_reader_t, folder merge output path resolves via QDir", "[u]")
+TEST_CASE("profile_reader_t::resolve_merge_output_path, folder via QDir", "[u]")
 {
 	auto base = QDir("C:/Games/Morrowind/Data Files");
 	auto result = base.filePath("Merged Patch.esp").toStdString();
@@ -289,7 +289,7 @@ TEST_CASE("profile_reader_t, folder merge output path resolves via QDir", "[u]")
 	REQUIRE(result == "C:/Games/Morrowind/Data Files/Merged Patch.esp");
 }
 
-TEST_CASE("profile_reader_t, mo2 overwrite resolves merged patch in load order", "[u]")
+TEST_CASE("profile_reader_t::resolve_mo2_plugin, overwrite merged patch", "[u]")
 {
 	std::set<std::string> existing = {
 		"/MO2/overwrite/Merged Patch.esp",
@@ -305,7 +305,7 @@ TEST_CASE("profile_reader_t, mo2 overwrite resolves merged patch in load order",
 	REQUIRE(resolved == "/MO2/overwrite/Merged Patch.esp");
 }
 
-TEST_CASE("profile_reader_t, mo2 merged patch not in overwrite returns empty", "[u]")
+TEST_CASE("profile_reader_t::resolve_mo2_plugin, no merge returns empty", "[u]")
 {
 	std::set<std::string> existing = {
 		"/MO2/mods/ModA/Morrowind.esm",
@@ -319,7 +319,7 @@ TEST_CASE("profile_reader_t, mo2 merged patch not in overwrite returns empty", "
 	REQUIRE(resolved.empty());
 }
 
-TEST_CASE("profile_reader_t, session restore creates and finds merge patch", "[i]")
+TEST_CASE("profile_reader_t::resolve_merge_output_path, session restore", "[i]")
 {
 	namespace fs = std::filesystem;
 	const auto temp_root = fs::temp_directory_path() / "yampt_test_session";
@@ -339,7 +339,7 @@ TEST_CASE("profile_reader_t, session restore creates and finds merge patch", "[i
 	fs::remove_all(temp_root);
 }
 
-TEST_CASE("profile_reader_t, mo2 session restore finds merge in overwrite", "[i]")
+TEST_CASE("profile_reader_t::resolve_mo2_plugin, session restore overwrite", "[i]")
 {
 	namespace fs = std::filesystem;
 	const auto temp_root = fs::temp_directory_path() / "yampt_test_mo2_session";
@@ -360,7 +360,7 @@ TEST_CASE("profile_reader_t, mo2 session restore finds merge in overwrite", "[i]
 	fs::remove_all(temp_root);
 }
 
-TEST_CASE("profile_reader_t, openmw session restore finds merge in data", "[i]")
+TEST_CASE("profile_reader_t::resolve_merge_output_path, openmw session", "[i]")
 {
 	namespace fs = std::filesystem;
 	const auto temp_root = fs::temp_directory_path() / "yampt_test_openmw_session";

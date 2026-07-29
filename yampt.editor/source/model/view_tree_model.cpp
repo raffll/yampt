@@ -1,4 +1,4 @@
-﻿#include "view_tree_model.hpp"
+#include "view_tree_model.hpp"
 #include <decoder/view_tree_format.hpp>
 #include <scanner/record_conflict.hpp>
 #include <utility/record_behavior.hpp>
@@ -57,14 +57,30 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 
 	switch (behavior->decode_mode)
 	{
-	case decode_mode_t::cell:      set_record_cell(context); break;
-	case decode_mode_t::leveled:   set_record_leveled(context, entry); break;
-	case decode_mode_t::faction:   set_record_faction(context, entry); break;
-	case decode_mode_t::container: set_record_container(context, entry); break;
-	case decode_mode_t::armor:     set_record_armor(context, entry); break;
-	case decode_mode_t::dial:      set_record_dial(scan, context, entry); break;
-	case decode_mode_t::info:      set_record_info(context, entry); break;
-	case decode_mode_t::generic:   set_record_generic(context, entry); break;
+	case decode_mode_t::cell:
+		set_record_cell(context);
+		break;
+	case decode_mode_t::leveled:
+		set_record_leveled(context, entry);
+		break;
+	case decode_mode_t::faction:
+		set_record_faction(context, entry);
+		break;
+	case decode_mode_t::container:
+		set_record_container(context, entry);
+		break;
+	case decode_mode_t::armor:
+		set_record_armor(context, entry);
+		break;
+	case decode_mode_t::dial:
+		set_record_dial(scan, context, entry);
+		break;
+	case decode_mode_t::info:
+		set_record_info(context, entry);
+		break;
+	case decode_mode_t::generic:
+		set_record_generic(context, entry);
+		break;
 	}
 
 	finalize_header_conflict();
@@ -209,9 +225,9 @@ void view_tree_model_t::build_header_row(plugin_scan_t & scan, const conflict_en
 	view_node_t sig_row;
 	sig_row.label = "Signature";
 	sig_row.values.resize(col_count, entry.rec_type);
-	sig_row.row_conflict_all = compute_conflict_all(sig_row.values);
+	sig_row.row_conflict_all = record_conflict::compute_conflict_all(sig_row.values);
 	sig_row.all_identical = true;
-	sig_row.cell_conflict_this = compute_conflict_this(sig_row.values);
+	sig_row.cell_conflict_this = record_conflict::compute_conflict_this(sig_row.values);
 	header_row.children.push_back(std::move(sig_row));
 
 	view_node_t flags_row;
@@ -222,8 +238,8 @@ void view_tree_model_t::build_header_row(plugin_scan_t & scan, const conflict_en
 		flags_row.values[col] = read_record_flags(scan, entry.versions[col]);
 
 	flags_row.all_identical = check_all_identical(flags_row.values);
-	flags_row.row_conflict_all = compute_conflict_all(flags_row.values);
-	flags_row.cell_conflict_this = compute_conflict_this(flags_row.values);
+	flags_row.row_conflict_all = record_conflict::compute_conflict_all(flags_row.values);
+	flags_row.cell_conflict_this = record_conflict::compute_conflict_this(flags_row.values);
 	header_row.children.push_back(std::move(flags_row));
 
 	m_rows.push_back(std::move(header_row));
@@ -545,6 +561,12 @@ static QVariant sub_record_display(const view_tree_model_t::view_node_t & row, i
 
 static QVariant sub_record_background(const view_tree_model_t::view_node_t & row, int column)
 {
+	if (row.is_ignored)
+	{
+		const auto & theme = theme_system_t::instance();
+		return (theme.active_theme() == theme_t::dark) ? QBrush(QColor(45, 45, 48)) : QBrush(QColor(235, 235, 238));
+	}
+
 	if (row.row_conflict_all < conflict_all_t::no_conflict)
 		return {};
 

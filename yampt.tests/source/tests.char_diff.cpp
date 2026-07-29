@@ -4,7 +4,7 @@
 #include <rapidcheck.h>
 #include <string>
 
-TEST_CASE("compute_char_diff, reconstruction property", "[u]")
+TEST_CASE("char_diff::compute_char_diff, reconstruction property", "[u]")
 {
 	rc::prop(
 	    "concatenating unchanged+inserted reproduces new_text and unchanged+deleted reproduces old_text",
@@ -32,7 +32,7 @@ TEST_CASE("compute_char_diff, reconstruction property", "[u]")
 	});
 }
 
-TEST_CASE("compute_char_diff, empty strings", "[u]")
+TEST_CASE("char_diff::compute_char_diff, empty strings", "[u]")
 {
 	SECTION("both empty")
 	{
@@ -59,7 +59,7 @@ TEST_CASE("compute_char_diff, empty strings", "[u]")
 	}
 }
 
-TEST_CASE("compute_char_diff, identical strings", "[u]")
+TEST_CASE("char_diff::compute_char_diff, identical strings", "[u]")
 {
 	const auto segments = compute_char_diff("Balmora", "Balmora");
 	REQUIRE(segments.size() == 1);
@@ -67,7 +67,7 @@ TEST_CASE("compute_char_diff, identical strings", "[u]")
 	REQUIRE(segments[0].text == "Balmora");
 }
 
-TEST_CASE("compute_char_diff, completely different strings", "[u]")
+TEST_CASE("char_diff::compute_char_diff, completely different strings", "[u]")
 {
 	const auto segments = compute_char_diff("abc", "xyz");
 
@@ -128,13 +128,13 @@ std::vector<highlight_range_t> compute_changed_highlights(
 
 } // namespace
 
-TEST_CASE("compute_changed_highlights, identical texts produce no highlights", "[u]")
+TEST_CASE("char_diff::compute_changed_highlights, identical texts produce no highlights", "[u]")
 {
 	const auto ranges = compute_changed_highlights("Balmora", "Balmora");
 	REQUIRE(ranges.empty());
 }
 
-TEST_CASE("compute_changed_highlights, single character change", "[u]")
+TEST_CASE("char_diff::compute_changed_highlights, single character change", "[u]")
 {
 	const auto ranges = compute_changed_highlights("cat", "car");
 	REQUIRE(!ranges.empty());
@@ -147,7 +147,7 @@ TEST_CASE("compute_changed_highlights, single character change", "[u]")
 	REQUIRE(highlights_position_2);
 }
 
-TEST_CASE("compute_changed_highlights, details text is shorter", "[u]")
+TEST_CASE("char_diff::compute_changed_highlights, details text is shorter", "[u]")
 {
 	const auto ranges = compute_changed_highlights("hello", "heo");
 	REQUIRE(!ranges.empty());
@@ -158,7 +158,7 @@ TEST_CASE("compute_changed_highlights, details text is shorter", "[u]")
 	}
 }
 
-TEST_CASE("compute_changed_highlights, details text is longer", "[u]")
+TEST_CASE("char_diff::compute_changed_highlights, details text is longer", "[u]")
 {
 	const auto ranges = compute_changed_highlights("heo", "hello");
 	REQUIRE(!ranges.empty());
@@ -173,7 +173,7 @@ TEST_CASE("compute_changed_highlights, details text is longer", "[u]")
 	REQUIRE(found_insertion);
 }
 
-TEST_CASE("compute_changed_highlights, deletion at end highlights last char", "[u]")
+TEST_CASE("char_diff::compute_changed_highlights, deletion at end highlights last char", "[u]")
 {
 	const auto ranges = compute_changed_highlights("abcde", "abc");
 	bool has_highlight_near_end = false;
@@ -185,7 +185,7 @@ TEST_CASE("compute_changed_highlights, deletion at end highlights last char", "[
 	REQUIRE(has_highlight_near_end);
 }
 
-TEST_CASE("compute_changed_highlights, deletion at start highlights first char", "[u]")
+TEST_CASE("char_diff::compute_changed_highlights, deletion at start highlights first char", "[u]")
 {
 	const auto ranges = compute_changed_highlights("XXabc", "abc");
 	bool has_highlight_at_start = false;
@@ -197,7 +197,7 @@ TEST_CASE("compute_changed_highlights, deletion at start highlights first char",
 	REQUIRE(has_highlight_at_start);
 }
 
-TEST_CASE("compute_changed_highlights, completely different texts", "[u]")
+TEST_CASE("char_diff::compute_changed_highlights, completely different texts", "[u]")
 {
 	const auto ranges = compute_changed_highlights("abc", "xyz");
 	REQUIRE(!ranges.empty());
@@ -207,7 +207,7 @@ TEST_CASE("compute_changed_highlights, completely different texts", "[u]")
 	REQUIRE(total_highlighted >= 3);
 }
 
-TEST_CASE("compute_changed_highlights, prefix differs", "[u]")
+TEST_CASE("char_diff::compute_changed_highlights, prefix differs", "[u]")
 {
 	const auto ranges = compute_changed_highlights("Hello world", "Goodbye world");
 	REQUIRE(!ranges.empty());
@@ -220,7 +220,7 @@ TEST_CASE("compute_changed_highlights, prefix differs", "[u]")
 	REQUIRE(highlights_start);
 }
 
-TEST_CASE("compute_changed_highlights, suffix differs", "[u]")
+TEST_CASE("char_diff::compute_changed_highlights, suffix differs", "[u]")
 {
 	const auto ranges = compute_changed_highlights("Hello world", "Hello earth");
 	REQUIRE(!ranges.empty());
@@ -233,7 +233,7 @@ TEST_CASE("compute_changed_highlights, suffix differs", "[u]")
 	REQUIRE(highlights_end_region);
 }
 
-TEST_CASE("compute_changed_highlights, middle insertion", "[u]")
+TEST_CASE("char_diff::compute_changed_highlights, middle insertion", "[u]")
 {
 	const auto ranges = compute_changed_highlights("ac", "abc");
 	REQUIRE(!ranges.empty());
@@ -246,7 +246,7 @@ TEST_CASE("compute_changed_highlights, middle insertion", "[u]")
 	REQUIRE(highlights_middle);
 }
 
-TEST_CASE("compute_changed_highlights, middle deletion", "[u]")
+TEST_CASE("char_diff::compute_changed_highlights, middle deletion", "[u]")
 {
 	const auto ranges = compute_changed_highlights("abc", "ac");
 	REQUIRE(!ranges.empty());
@@ -259,7 +259,7 @@ TEST_CASE("compute_changed_highlights, middle deletion", "[u]")
 	REQUIRE(highlights_deletion_point);
 }
 
-TEST_CASE("compute_changed_highlights, empty current text", "[u]")
+TEST_CASE("char_diff::compute_changed_highlights, empty current text", "[u]")
 {
 	const auto ranges = compute_changed_highlights("", "hello");
 	REQUIRE(!ranges.empty());
@@ -269,13 +269,13 @@ TEST_CASE("compute_changed_highlights, empty current text", "[u]")
 	REQUIRE(total == 5);
 }
 
-TEST_CASE("compute_changed_highlights, empty details text", "[u]")
+TEST_CASE("char_diff::compute_changed_highlights, empty details text", "[u]")
 {
 	const auto ranges = compute_changed_highlights("hello", "");
 	REQUIRE(ranges.empty());
 }
 
-TEST_CASE("compute_changed_highlights, ranges within bounds", "[u]")
+TEST_CASE("char_diff::compute_changed_highlights, ranges within bounds", "[u]")
 {
 	const auto ranges = compute_changed_highlights("The quick brown fox", "A slow red dog");
 	for (const auto & r : ranges)
@@ -286,7 +286,7 @@ TEST_CASE("compute_changed_highlights, ranges within bounds", "[u]")
 	}
 }
 
-TEST_CASE("compute_changed_highlights, single char details with deletion", "[u]")
+TEST_CASE("char_diff::compute_changed_highlights, single char details with deletion", "[u]")
 {
 	const auto ranges = compute_changed_highlights("abcdef", "x");
 	REQUIRE(!ranges.empty());
@@ -297,7 +297,7 @@ TEST_CASE("compute_changed_highlights, single char details with deletion", "[u]"
 	}
 }
 
-TEST_CASE("compute_changed_highlights, ranges never exceed details length", "[u]")
+TEST_CASE("char_diff::compute_changed_highlights, ranges never exceed details length", "[u]")
 {
 	rc::prop(
 	    "all highlight ranges are within [0, details.size()]",
@@ -318,7 +318,7 @@ TEST_CASE("compute_changed_highlights, ranges never exceed details length", "[u]
 	});
 }
 
-TEST_CASE("compute_changed_highlights, no highlights when texts identical", "[u]")
+TEST_CASE("char_diff::compute_changed_highlights, no highlights when texts identical", "[u]")
 {
 	rc::prop(
 	    "identical texts never produce highlights",

@@ -4,8 +4,8 @@
 #include <decoder/sub_record_iter.hpp>
 #include <decoder/sub_record_schema.hpp>
 #include <io/codepage.hpp>
-#include <scanner/record_conflict.hpp>
 #include <scanner/plugin_scan.hpp>
+#include <scanner/record_conflict.hpp>
 #include <conflict_types.hpp>
 #include <set>
 #include <string>
@@ -24,10 +24,29 @@ public:
 	void set_record(plugin_scan_t & scan, const conflict_entry_t & entry);
 	void clear();
 	void set_hide_no_conflict(bool hide);
-	void set_display_codepage(codepage_t codepage) { m_display_codepage = codepage; }
-	codepage_t display_codepage() const { return m_display_codepage; }
+
+	void set_display_codepage(codepage_t codepage)
+	{
+		m_display_codepage = codepage;
+	}
+
+	void set_user_ignore_conflict(const std::set<std::string> & rules)
+	{
+		m_user_ignore_conflict = rules;
+	}
+
+	codepage_t display_codepage() const
+	{
+		return m_display_codepage;
+	}
+
 	void set_show_deleted_strikeout(bool value);
-	bool show_deleted_strikeout() const { return m_show_deleted_strikeout; }
+
+	bool show_deleted_strikeout() const
+	{
+		return m_show_deleted_strikeout;
+	}
+
 	void set_excluded_plugins(const std::set<std::string> * excluded);
 	void set_patch_plugins(const std::set<std::string> * patch);
 	bool is_merge_column(int section) const;
@@ -74,6 +93,7 @@ public:
 		std::vector<conflict_this_t> cell_conflict_this;
 		conflict_all_t row_conflict_all = conflict_all_t::only_one;
 		bool all_identical = true;
+		bool is_ignored = false;
 		bool is_deleted = false;
 		std::vector<view_node_t> children;
 	};
@@ -188,6 +208,7 @@ private:
 	std::vector<conflict_this_t> m_plugin_conflict_this;
 	bool m_hide_no_conflict = false;
 	bool m_has_merge_column = false;
+	std::set<std::string> m_user_ignore_conflict;
 	int m_merge_col_index = -1;
 	bool m_is_merge_pinned = false;
 	std::string m_record_type;

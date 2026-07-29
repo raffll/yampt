@@ -2,7 +2,7 @@
 <RunSettings>
   <Catch2Adapter>
     <FilenameFilter>yampt\.tests</FilenameFilter>
-    <DiscoverCommandLine>--list-tests *</DiscoverCommandLine>
+    <DiscoverCommandLine>--list-tests --reporter xml *</DiscoverCommandLine>
     <WorkingDirectory>$(SolutionDir)</WorkingDirectory>
   </Catch2Adapter>
 </RunSettings>

@@ -21,12 +21,12 @@ static std::string make_record_content(const std::vector<std::pair<std::string, 
 	return header;
 }
 
-TEST_CASE("build_generic_slots, two versions identical sub-records", "[u]")
+TEST_CASE("conflict_slots::build, two versions identical sub-records", "[u]")
 {
 	std::string v1 = make_record_content({ { "NAME", "abc" }, { "DATA", "1234" } });
 	std::string v2 = make_record_content({ { "NAME", "abc" }, { "DATA", "1234" } });
 
-	auto result = build_conflict_slots("ARMO", { v1, v2 }, { false, false });
+	auto result = conflict_slots::build("ARMO", { v1, v2 }, { false, false });
 
 	REQUIRE(result.aligned.size() == 2);
 	REQUIRE(result.aligned[0].key.type == "NAME");
@@ -39,12 +39,12 @@ TEST_CASE("build_generic_slots, two versions identical sub-records", "[u]")
 	REQUIRE(result.aligned[1].indices[1] != SIZE_MAX);
 }
 
-TEST_CASE("build_generic_slots, version 2 lacks a sub-record type", "[u]")
+TEST_CASE("conflict_slots::build, version 2 lacks a sub-record type", "[u]")
 {
 	std::string v1 = make_record_content({ { "NAME", "abc" }, { "DATA", "1234" }, { "FNAM", "xyz" } });
 	std::string v2 = make_record_content({ { "NAME", "abc" }, { "DATA", "1234" } });
 
-	auto result = build_conflict_slots("ARMO", { v1, v2 }, { false, false });
+	auto result = conflict_slots::build("ARMO", { v1, v2 }, { false, false });
 
 	REQUIRE(result.aligned.size() == 3);
 	REQUIRE(result.aligned[2].key.type == "FNAM");
@@ -53,12 +53,12 @@ TEST_CASE("build_generic_slots, version 2 lacks a sub-record type", "[u]")
 	REQUIRE(result.aligned[2].indices[1] == SIZE_MAX);
 }
 
-TEST_CASE("build_generic_slots, multiple occurrences aligned by occurrence order", "[u]")
+TEST_CASE("conflict_slots::build, multiple occurrences aligned by occurrence order", "[u]")
 {
 	std::string v1 = make_record_content({ { "NAME", "a" }, { "NAME", "b" }, { "NAME", "c" } });
 	std::string v2 = make_record_content({ { "NAME", "x" }, { "NAME", "y" } });
 
-	auto result = build_conflict_slots("ARMO", { v1, v2 }, { false, false });
+	auto result = conflict_slots::build("ARMO", { v1, v2 }, { false, false });
 
 	REQUIRE(result.aligned.size() == 3);
 	REQUIRE(result.aligned[0].key.type == "NAME");
@@ -77,12 +77,12 @@ TEST_CASE("build_generic_slots, multiple occurrences aligned by occurrence order
 	REQUIRE(result.aligned[2].indices[1] == SIZE_MAX);
 }
 
-TEST_CASE("build_generic_slots, empty content yields empty parsed and all SIZE_MAX", "[u]")
+TEST_CASE("conflict_slots::build, empty content yields empty parsed and all SIZE_MAX", "[u]")
 {
 	std::string v1(10, '\0');
 	std::string v2 = make_record_content({ { "NAME", "abc" } });
 
-	auto result = build_conflict_slots("ARMO", { v1, v2 }, { false, false });
+	auto result = conflict_slots::build("ARMO", { v1, v2 }, { false, false });
 
 	REQUIRE(result.parsed[0].empty());
 	REQUIRE(result.aligned.size() == 1);
@@ -90,7 +90,7 @@ TEST_CASE("build_generic_slots, empty content yields empty parsed and all SIZE_M
 	REQUIRE(result.aligned[0].indices[1] == 0);
 }
 
-TEST_CASE("build_leveled_list_slots, LEVI with 3 items version 2 lacks middle", "[u]")
+TEST_CASE("conflict_slots::build, LEVI with 3 items version 2 lacks middle", "[u]")
 {
 	auto intv2 = [](uint16_t level)
 	{
@@ -119,7 +119,7 @@ TEST_CASE("build_leveled_list_slots, LEVI with 3 items version 2 lacks middle", 
 	      { "INTV", intv2(3) },
 	      { "INAM", "item_c" } });
 
-	auto result = build_conflict_slots("LEVI", { v1, v2 }, { false, false });
+	auto result = conflict_slots::build("LEVI", { v1, v2 }, { false, false });
 
 	bool found_b_intv = false;
 	for (const auto & slot : result.aligned)
@@ -143,7 +143,7 @@ TEST_CASE("build_leveled_list_slots, LEVI with 3 items version 2 lacks middle", 
 	REQUIRE(found_b_intv);
 }
 
-TEST_CASE("build_leveled_list_slots, header INTV size != 2 stays in headers", "[u]")
+TEST_CASE("conflict_slots::build, header INTV size != 2 stays in headers", "[u]")
 {
 	std::string data_4bytes(4, '\0');
 	data_4bytes[0] = '\x01';
@@ -159,7 +159,7 @@ TEST_CASE("build_leveled_list_slots, header INTV size != 2 stays in headers", "[
 	      { "INTV", std::string(2, '\x01') },
 	      { "INAM", "item_a" } });
 
-	auto result = build_conflict_slots("LEVI", { v1 }, { false });
+	auto result = conflict_slots::build("LEVI", { v1 }, { false });
 
 	bool found_header_intv = false;
 	for (const auto & slot : result.aligned)
@@ -174,7 +174,7 @@ TEST_CASE("build_leveled_list_slots, header INTV size != 2 stays in headers", "[
 	REQUIRE(found_header_intv);
 }
 
-TEST_CASE("build_container_slots, NPCO item ID extracted from bytes 4..36", "[u]")
+TEST_CASE("conflict_slots::build, NPCO item ID extracted from bytes 4..36", "[u]")
 {
 	std::string npco_data(36, '\0');
 	uint32_t count = 5;
@@ -184,7 +184,7 @@ TEST_CASE("build_container_slots, NPCO item ID extracted from bytes 4..36", "[u]
 	std::string v1 = make_record_content({ { "NAME", "npc_id" }, { "NPCO", npco_data } });
 	std::string v2 = make_record_content({ { "NAME", "npc_id" } });
 
-	auto result = build_conflict_slots("NPC_", { v1, v2 }, { false, false });
+	auto result = conflict_slots::build("NPC_", { v1, v2 }, { false, false });
 
 	bool found_npco = false;
 	for (const auto & slot : result.aligned)
@@ -199,7 +199,7 @@ TEST_CASE("build_container_slots, NPCO item ID extracted from bytes 4..36", "[u]
 	REQUIRE(found_npco);
 }
 
-TEST_CASE("build_cell_slots, header ends before first FRMR", "[u]")
+TEST_CASE("conflict_slots::build, header ends before first FRMR", "[u]")
 {
 	uint32_t obj1 = 100;
 	std::string frmr_data(4, '\0');
@@ -212,7 +212,7 @@ TEST_CASE("build_cell_slots, header ends before first FRMR", "[u]")
 	      { "NAME", "object_id" },
 	      { "DATA", std::string(24, '\0') } });
 
-	auto result = build_conflict_slots("CELL", { v1 }, { false });
+	auto result = conflict_slots::build("CELL", { v1 }, { false });
 
 	REQUIRE(result.aligned.size() >= 2);
 	REQUIRE(result.aligned[0].key.type == "NAME");
@@ -230,12 +230,12 @@ TEST_CASE("build_cell_slots, header ends before first FRMR", "[u]")
 	REQUIRE(found_frmr);
 }
 
-TEST_CASE("build_conflict_slots, pointer stability after construction", "[u]")
+TEST_CASE("conflict_slots::build, pointer stability after construction", "[u]")
 {
 	std::string v1 = make_record_content({ { "NAME", "test_data_123456789" } });
 	std::string v2 = make_record_content({ { "NAME", "other_value_abcdefgh" } });
 
-	auto result = build_conflict_slots("ARMO", { v1, v2 }, { false, false });
+	auto result = conflict_slots::build("ARMO", { v1, v2 }, { false, false });
 
 	REQUIRE(result.parsed[0].size() == 1);
 	REQUIRE(result.parsed[1].size() == 1);
@@ -252,19 +252,19 @@ TEST_CASE("build_conflict_slots, pointer stability after construction", "[u]")
 	REQUIRE(std::string(ptr1, result.parsed[1][0].size) == "other_value_abcdefgh");
 }
 
-TEST_CASE("build_conflict_slots, is_deleted flags stored correctly", "[u]")
+TEST_CASE("conflict_slots::build, is_deleted flags stored correctly", "[u]")
 {
 	std::string v1 = make_record_content({ { "NAME", "abc" } });
 	std::string v2 = make_record_content({ { "NAME", "abc" } });
 
-	auto result = build_conflict_slots("ARMO", { v1, v2 }, { false, true });
+	auto result = conflict_slots::build("ARMO", { v1, v2 }, { false, true });
 
 	REQUIRE(result.is_deleted.size() == 2);
 	REQUIRE(result.is_deleted[0] == false);
 	REQUIRE(result.is_deleted[1] == true);
 }
 
-TEST_CASE("build_fact_slots, faction paired by ANAM content", "[u]")
+TEST_CASE("conflict_slots::build, faction paired by ANAM content", "[u]")
 {
 	auto intv4 = [](uint32_t val)
 	{
@@ -289,7 +289,7 @@ TEST_CASE("build_fact_slots, faction paired by ANAM content", "[u]")
 	      { "INTV", intv4(2) },
 	      { "ANAM", "Guild_C" } });
 
-	auto result = build_conflict_slots("FACT", { v1, v2 }, { false, false });
+	auto result = conflict_slots::build("FACT", { v1, v2 }, { false, false });
 
 	int anam_slots = 0;
 	bool found_guild_b = false;

@@ -10,7 +10,9 @@ enum class file_type_t
 	plugin,
 	base_dict,
 	user_dict,
-	yaml_l10n
+	yaml_l10n,
+	loc_file,
+	eet_file
 };
 
 struct file_entry_t

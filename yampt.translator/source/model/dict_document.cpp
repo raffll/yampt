@@ -35,6 +35,11 @@ std::string dict_document_t::path() const
 	return m_path;
 }
 
+document_kind_t dict_document_t::kind() const
+{
+	return document_kind_t::dict;
+}
+
 bool dict_document_t::is_dirty() const
 {
 	return m_dirty;
@@ -43,6 +48,11 @@ bool dict_document_t::is_dirty() const
 bool dict_document_t::is_read_only() const
 {
 	return false;
+}
+
+document_permissions_t dict_document_t::permissions() const
+{
+	return { true, true, false, true, true };
 }
 
 std::vector<table_row_t> dict_document_t::build_rows() const
@@ -68,7 +78,7 @@ std::vector<table_row_t> dict_document_t::build_rows() const
 	return rows;
 }
 
-void dict_document_t::commit_edit(tools_t::rec_type_t type, size_t record_index, const std::string & new_text)
+void dict_document_t::commit_edit(rec_type_t type, size_t record_index, const std::string & new_text)
 {
 	auto it = m_data.find(type);
 	if (it == m_data.end())
@@ -81,15 +91,122 @@ void dict_document_t::commit_edit(tools_t::rec_type_t type, size_t record_index,
 	m_dirty = true;
 }
 
+commit_result_t dict_document_t::commit(const table_row_t & row, const std::string & new_text, status_t intent)
+{
+	commit_result_t result;
+
+	auto it = m_data.find(row.type);
+	if (it == m_data.end() || row.record_index >= it->second.records.size())
+		return result;
+
+	auto & entry = it->second.records[row.record_index];
+
+	entry.new_text = new_text;
+	entry.status = intent;
+	m_dirty = true;
+	m_modified_records.insert({ row.type, row.record_index });
+
+	if (intent != status_t::model && new_text != entry.old_text)
+	{
+		result.propagated_count = propagate(entry.old_text, new_text);
+		if (result.propagated_count > 0)
+			entry.status = status_t::propagated;
+	}
+
+	result.new_text = new_text;
+	result.status = entry.status;
+	result.success = true;
+	return result;
+}
+
+int dict_document_t::propagate(const std::string & old_text, const std::string & new_text)
+{
+	int count = 0;
+
+	auto trimmed_source = old_text;
+	while (!trimmed_source.empty() && (trimmed_source.front() == ' ' || trimmed_source.front() == '\t'))
+		trimmed_source.erase(trimmed_source.begin());
+
+	while (!trimmed_source.empty() && (trimmed_source.back() == ' ' || trimmed_source.back() == '\t'))
+		trimmed_source.pop_back();
+
+	for (auto & [type, chapter] : m_data)
+	{
+		for (size_t i = 0; i < chapter.records.size(); ++i)
+		{
+			auto & record = chapter.records[i];
+
+			if (record.new_text == new_text)
+				continue;
+
+			auto trimmed = record.old_text;
+			while (!trimmed.empty() && (trimmed.front() == ' ' || trimmed.front() == '\t'))
+				trimmed.erase(trimmed.begin());
+
+			while (!trimmed.empty() && (trimmed.back() == ' ' || trimmed.back() == '\t'))
+				trimmed.pop_back();
+
+			if (trimmed != trimmed_source)
+				continue;
+
+			record.new_text = new_text;
+			record.status = status_t::propagated;
+			m_modified_records.insert({ type, i });
+			++count;
+		}
+	}
+
+	return count;
+}
+
+commit_result_t dict_document_t::commit_status(const table_row_t & row, status_t new_status)
+{
+	commit_result_t result;
+
+	auto it = m_data.find(row.type);
+	if (it == m_data.end() || row.record_index >= it->second.records.size())
+		return result;
+
+	auto & entry = it->second.records[row.record_index];
+	entry.status = new_status;
+	m_dirty = true;
+	m_modified_records.insert({ row.type, row.record_index });
+
+	result.new_text = entry.new_text;
+	result.status = new_status;
+	result.success = true;
+	return result;
+}
+
+commit_result_t dict_document_t::reset_to_original(const table_row_t & row)
+{
+	commit_result_t result;
+
+	auto it = m_data.find(row.type);
+	if (it == m_data.end() || row.record_index >= it->second.records.size())
+		return result;
+
+	auto & entry = it->second.records[row.record_index];
+	entry.new_text = entry.old_text;
+	entry.status = status_t::untranslated;
+	m_dirty = true;
+	m_modified_records.insert({ row.type, row.record_index });
+
+	result.new_text = entry.old_text;
+	result.status = status_t::untranslated;
+	result.success = true;
+	return result;
+}
+
 void dict_document_t::save()
 {
-	tools_t::dict_t encoded;
+	dict_t encoded;
 
 	for (const auto & [type, chapter] : m_data)
 	{
 		for (const auto & rec : chapter.records)
 		{
-			tools_t::record_entry_t entry;
+			record_entry_t entry;
 			entry.key_text = encode_from_utf8(rec.key_text, m_codepage);
 			entry.old_text = encode_from_utf8(rec.old_text, m_codepage);
 			entry.new_text = encode_from_utf8(rec.new_text, m_codepage);
@@ -134,32 +251,50 @@ int dict_document_t::total_count() const
 	return count;
 }
 
+std::set<rec_type_t> dict_document_t::supported_types() const
+{
+	return {
+		rec_type_t::cell, rec_type_t::dial, rec_type_t::info, rec_type_t::fnam, rec_type_t::text,
+		rec_type_t::gmst, rec_type_t::desc, rec_type_t::rnam, rec_type_t::indx, rec_type_t::sctx,
+	};
+}
+
+std::set<status_t> dict_document_t::supported_statuses() const
+{
+	return {
+		status_t::translated, status_t::to_verify, status_t::untranslated, status_t::reused,     status_t::adapted,
+		status_t::ambiguous,  status_t::changed,   status_t::outdated,     status_t::duplicate,  status_t::heuristic,
+		status_t::missing,    status_t::mismatch,  status_t::in_progress,  status_t::propagated, status_t::replaced,
+		status_t::model,      status_t::error,
+	};
+}
+
 void dict_document_t::set_dirty(bool dirty)
 {
 	m_dirty = dirty;
 }
 
-dict_kind_t dict_document_t::kind() const
+dict_kind_t dict_document_t::dict_kind() const
 {
 	return m_kind;
 }
 
-const tools_t::dict_t & dict_document_t::data() const
+const dict_t & dict_document_t::data() const
 {
 	return m_data;
 }
 
-tools_t::dict_t & dict_document_t::data_mut()
+dict_t & dict_document_t::data_mut()
 {
 	return m_data;
 }
 
-const std::set<std::pair<tools_t::rec_type_t, size_t>> & dict_document_t::modified_records() const
+const std::set<std::pair<rec_type_t, size_t>> & dict_document_t::modified_records() const
 {
 	return m_modified_records;
 }
 
-void dict_document_t::modified_records_insert(tools_t::rec_type_t type, size_t record_index)
+void dict_document_t::modified_records_insert(rec_type_t type, size_t record_index)
 {
 	m_modified_records.insert({ type, record_index });
 }

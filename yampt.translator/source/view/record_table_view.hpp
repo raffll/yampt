@@ -16,6 +16,7 @@ public:
 	void setModel(QAbstractItemModel * model) override;
 	void set_column_widths(const std::vector<int> & widths);
 	std::vector<int> get_column_widths() const;
+	void set_context_menu_enabled(bool enabled);
 
 signals:
 	void row_selected(int row);
@@ -25,4 +26,7 @@ signals:
 protected:
 	void contextMenuEvent(QContextMenuEvent * event) override;
 	void keyPressEvent(QKeyEvent * event) override;
+
+private:
+	bool m_context_menu_enabled = true;
 };

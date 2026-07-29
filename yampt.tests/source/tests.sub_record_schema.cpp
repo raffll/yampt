@@ -267,187 +267,187 @@ TEST_CASE("sub_record_schema_t::find_schema, CLAS CLDT playable is bool_bit", "[
 
 #include <decoder/view_tree_format.hpp>
 
-TEST_CASE("make_sub_label, DOOR SNAM context override", "[u]")
+TEST_CASE("view_tree_format::make_sub_label, DOOR SNAM context override", "[u]")
 {
 	auto label = make_sub_label("SNAM", "DOOR", 4);
 	REQUIRE(label == "SNAM - Open Sound");
 }
 
-TEST_CASE("make_sub_label, DOOR ANAM context override", "[u]")
+TEST_CASE("view_tree_format::make_sub_label, DOOR ANAM context override", "[u]")
 {
 	auto label = make_sub_label("ANAM", "DOOR", 4);
 	REQUIRE(label == "ANAM - Close Sound");
 }
 
-TEST_CASE("make_sub_label, LEVC CNAM context override", "[u]")
+TEST_CASE("view_tree_format::make_sub_label, LEVC CNAM context override", "[u]")
 {
 	auto label = make_sub_label("CNAM", "LEVC", 4);
 	REQUIRE(label == "CNAM - Creature");
 }
 
-TEST_CASE("make_sub_label, LEVC INTV context override", "[u]")
+TEST_CASE("view_tree_format::make_sub_label, LEVC INTV context override", "[u]")
 {
 	auto label = make_sub_label("INTV", "LEVC", 2);
 	REQUIRE(label == "INTV - PC Level");
 }
 
-TEST_CASE("make_sub_label, LEVI INAM context override", "[u]")
+TEST_CASE("view_tree_format::make_sub_label, LEVI INAM context override", "[u]")
 {
 	auto label = make_sub_label("INAM", "LEVI", 4);
 	REQUIRE(label == "INAM - Item");
 }
 
-TEST_CASE("make_sub_label, LEVI NNAM context override", "[u]")
+TEST_CASE("view_tree_format::make_sub_label, LEVI NNAM context override", "[u]")
 {
 	auto label = make_sub_label("NNAM", "LEVI", 1);
 	REQUIRE(label == "NNAM - Chance None");
 }
 
-TEST_CASE("make_sub_label, INFO BNAM context override", "[u]")
+TEST_CASE("view_tree_format::make_sub_label, INFO BNAM context override", "[u]")
 {
 	auto label = make_sub_label("BNAM", "INFO", 20);
 	REQUIRE(label == "BNAM - Result Script");
 }
 
-TEST_CASE("make_sub_label, INFO FNAM context override", "[u]")
+TEST_CASE("view_tree_format::make_sub_label, INFO FNAM context override", "[u]")
 {
 	auto label = make_sub_label("FNAM", "INFO", 10);
 	REQUIRE(label == "FNAM - Faction");
 }
 
-TEST_CASE("make_sub_label, INFO NAME context override", "[u]")
+TEST_CASE("view_tree_format::make_sub_label, INFO NAME context override", "[u]")
 {
 	auto label = make_sub_label("NAME", "INFO", 50);
 	REQUIRE(label == "NAME - Response");
 }
 
-TEST_CASE("make_sub_label, FACT ANAM context override", "[u]")
+TEST_CASE("view_tree_format::make_sub_label, FACT ANAM context override", "[u]")
 {
 	auto label = make_sub_label("ANAM", "FACT", 10);
 	REQUIRE(label == "ANAM - Reaction Faction");
 }
 
-TEST_CASE("make_sub_label, REGN BNAM context override", "[u]")
+TEST_CASE("view_tree_format::make_sub_label, REGN BNAM context override", "[u]")
 {
 	auto label = make_sub_label("BNAM", "REGN", 10);
 	REQUIRE(label == "BNAM - Sleep Creature");
 }
 
-TEST_CASE("make_sub_label, REGN CNAM context override", "[u]")
+TEST_CASE("view_tree_format::make_sub_label, REGN CNAM context override", "[u]")
 {
 	auto label = make_sub_label("CNAM", "REGN", 4);
 	REQUIRE(label == "CNAM - Map Color");
 }
 
-TEST_CASE("make_sub_label, SOUN FNAM context override", "[u]")
+TEST_CASE("view_tree_format::make_sub_label, SOUN FNAM context override", "[u]")
 {
 	auto label = make_sub_label("FNAM", "SOUN", 10);
 	REQUIRE(label == "FNAM - Sound File");
 }
 
-TEST_CASE("make_sub_label, GLOB FNAM context override", "[u]")
+TEST_CASE("view_tree_format::make_sub_label, GLOB FNAM context override", "[u]")
 {
 	auto label = make_sub_label("FNAM", "GLOB", 1);
 	REQUIRE(label == "FNAM - Type");
 }
 
-TEST_CASE("make_sub_label, MGEF PTEX context override", "[u]")
+TEST_CASE("view_tree_format::make_sub_label, MGEF PTEX context override", "[u]")
 {
 	auto label = make_sub_label("PTEX", "MGEF", 10);
 	REQUIRE(label == "PTEX - Particle Texture");
 }
 
-TEST_CASE("make_sub_label, MGEF CSND context override", "[u]")
+TEST_CASE("view_tree_format::make_sub_label, MGEF CSND context override", "[u]")
 {
 	auto label = make_sub_label("CSND", "MGEF", 10);
 	REQUIRE(label == "CSND - Cast Sound");
 }
 
-TEST_CASE("make_sub_label, BSGN TNAM context override", "[u]")
+TEST_CASE("view_tree_format::make_sub_label, BSGN TNAM context override", "[u]")
 {
 	auto label = make_sub_label("TNAM", "BSGN", 10);
 	REQUIRE(label == "TNAM - Texture");
 }
 
-TEST_CASE("make_sub_label, NPC_ DNAM context override", "[u]")
+TEST_CASE("view_tree_format::make_sub_label, NPC_ DNAM context override", "[u]")
 {
 	auto label = make_sub_label("DNAM", "NPC_", 10);
 	REQUIRE(label == "DNAM - Hair Model");
 }
 
-TEST_CASE("make_sub_label, CREA CNAM context override", "[u]")
+TEST_CASE("view_tree_format::make_sub_label, CREA CNAM context override", "[u]")
 {
 	auto label = make_sub_label("CNAM", "CREA", 10);
 	REQUIRE(label == "CNAM - Sound Gen Creature");
 }
 
-TEST_CASE("make_sub_label, ARMO ENAM context override", "[u]")
+TEST_CASE("view_tree_format::make_sub_label, ARMO ENAM context override", "[u]")
 {
 	auto label = make_sub_label("ENAM", "ARMO", 10);
 	REQUIRE(label == "ENAM - Enchantment");
 }
 
-TEST_CASE("make_sub_label, SPEL ENAM schema label", "[u]")
+TEST_CASE("view_tree_format::make_sub_label, SPEL ENAM schema label", "[u]")
 {
 	auto label = make_sub_label("ENAM", "SPEL", 24);
 	REQUIRE(label == "ENAM - Spell Effect");
 }
 
-TEST_CASE("make_sub_label, ENCH ENAM schema label", "[u]")
+TEST_CASE("view_tree_format::make_sub_label, ENCH ENAM schema label", "[u]")
 {
 	auto label = make_sub_label("ENAM", "ENCH", 24);
 	REQUIRE(label == "ENAM - Enchantment Effect");
 }
 
-TEST_CASE("make_sub_label, GMST STRV context override", "[u]")
+TEST_CASE("view_tree_format::make_sub_label, GMST STRV context override", "[u]")
 {
 	auto label = make_sub_label("STRV", "GMST", 10);
 	REQUIRE(label == "STRV - Value");
 }
 
-TEST_CASE("make_sub_label, GMST INTV context override", "[u]")
+TEST_CASE("view_tree_format::make_sub_label, GMST INTV context override", "[u]")
 {
 	auto label = make_sub_label("INTV", "GMST", 4);
 	REQUIRE(label == "INTV - Value");
 }
 
-TEST_CASE("make_sub_label, GMST FLTV context override", "[u]")
+TEST_CASE("view_tree_format::make_sub_label, GMST FLTV context override", "[u]")
 {
 	auto label = make_sub_label("FLTV", "GMST", 4);
 	REQUIRE(label == "FLTV - Value");
 }
 
-TEST_CASE("make_sub_label, INFO INTV context override", "[u]")
+TEST_CASE("view_tree_format::make_sub_label, INFO INTV context override", "[u]")
 {
 	auto label = make_sub_label("INTV", "INFO", 4);
 	REQUIRE(label == "INTV - Comparison Value");
 }
 
-TEST_CASE("make_sub_label, CELL FLTV context override", "[u]")
+TEST_CASE("view_tree_format::make_sub_label, CELL FLTV context override", "[u]")
 {
 	auto label = make_sub_label("FLTV", "CELL", 4);
 	REQUIRE(label == "FLTV - Lock Level");
 }
 
-TEST_CASE("make_sub_label, CELL INTV context override", "[u]")
+TEST_CASE("view_tree_format::make_sub_label, CELL INTV context override", "[u]")
 {
 	auto label = make_sub_label("INTV", "CELL", 4);
 	REQUIRE(label == "INTV - Charge/Count");
 }
 
-TEST_CASE("make_sub_label, SCPT SCVR context override", "[u]")
+TEST_CASE("view_tree_format::make_sub_label, SCPT SCVR context override", "[u]")
 {
 	auto label = make_sub_label("SCVR", "SCPT", 20);
 	REQUIRE(label == "SCVR - Variables");
 }
 
-TEST_CASE("make_sub_label, SCPT SCDT context override", "[u]")
+TEST_CASE("view_tree_format::make_sub_label, SCPT SCDT context override", "[u]")
 {
 	auto label = make_sub_label("SCDT", "SCPT", 100);
 	REQUIRE(label == "SCDT - Bytecode");
 }
 
-TEST_CASE("make_sub_label, ALCH TEXT context override", "[u]")
+TEST_CASE("view_tree_format::make_sub_label, ALCH TEXT context override", "[u]")
 {
 	auto label = make_sub_label("TEXT", "ALCH", 20);
 	REQUIRE(label == "TEXT - Icon");

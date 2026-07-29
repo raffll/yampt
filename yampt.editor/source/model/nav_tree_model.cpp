@@ -1,4 +1,5 @@
 ﻿#include "nav_tree_model.hpp"
+#include <io/codepage.hpp>
 #include <algorithm>
 #include <cctype>
 #include <cstdio>
@@ -183,9 +184,7 @@ void nav_tree_model_t::rebuild()
 void nav_tree_model_t::refresh_colors()
 {
 	emit dataChanged(
-	    index(0, 0, {}),
-	    index(rowCount({}) - 1, columnCount({}) - 1, {}),
-	    { Qt::BackgroundRole, Qt::ForegroundRole });
+	    index(0, 0, {}), index(rowCount({}) - 1, columnCount({}) - 1, {}), { Qt::BackgroundRole, Qt::ForegroundRole });
 }
 
 void nav_tree_model_t::set_filter(const filter_state_t & state)
@@ -210,6 +209,12 @@ void nav_tree_model_t::set_show_deleted_strikeout(bool value)
 {
 	m_show_deleted_strikeout = value;
 	emit dataChanged(index(0, 0, {}), index(rowCount({}) - 1, columnCount({}) - 1, {}), { Qt::FontRole });
+}
+
+void nav_tree_model_t::set_display_codepage(codepage_t codepage)
+{
+	m_display_codepage = codepage;
+	rebuild();
 }
 
 void nav_tree_model_t::set_excluded_plugins(const std::set<std::string> * excluded)
@@ -452,10 +457,17 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 			if (m_scan.is_merge_plugin(file_node.plugin_idx))
 				return QString::fromUtf8("\xE2\x9A\x99 ") + QString::fromUtf8(buf);
 
+			const auto & full_path = m_scan.plugin_path(file_node.plugin_idx);
+			const bool is_overridden = full_path.find("/overwrite/") != std::string::npos ||
+			                           full_path.find("\\overwrite\\") != std::string::npos;
+
 			const bool is_master = filename.size() > 4 && (filename.compare(filename.size() - 4, 4, ".esm") == 0 ||
 			                                               filename.compare(filename.size() - 4, 4, ".ESM") == 0);
 			if (is_master)
 				return QString::fromUtf8("\xF0\x9F\x93\x9C ") + QString::fromUtf8(buf);
+
+			if (is_overridden)
+				return QString::fromUtf8("\xE2\x9A\xA1 ") + QString::fromUtf8(buf);
 
 			return QString::fromUtf8("\xF0\x9F\x93\x84 ") + QString::fromUtf8(buf);
 		}
@@ -609,7 +621,7 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 			{
 				if (col == 0)
 				{
-					auto display_id = QString::fromStdString(entry.record_id);
+					auto display_id = QString::fromUtf8(decode_to_utf8(entry.record_id, m_display_codepage));
 					display_id.replace('|', " #");
 					return display_id;
 				}
@@ -617,12 +629,12 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 				if (col == 1)
 				{
 					if (!entry.display_name.empty())
-						return QString::fromStdString(entry.display_name);
+						return QString::fromUtf8(decode_to_utf8(entry.display_name, m_display_codepage));
 
 					if (entry.rec_type == "INFO")
 						return {};
 
-					return QString::fromStdString(entry.dial_name);
+					return QString::fromUtf8(decode_to_utf8(entry.dial_name, m_display_codepage));
 				}
 			}
 

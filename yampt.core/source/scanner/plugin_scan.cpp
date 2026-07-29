@@ -2,6 +2,9 @@
 #include "../decoder/sub_record_iter.hpp"
 #include "../decoder/sub_record_schema.hpp"
 #include "../decoder/view_tree_format.hpp"
+#include "../utility/app_logger.hpp"
+#include "../utility/includes.hpp"
+#include "../utility/string_utils.hpp"
 #include "record_conflict.hpp"
 #include <algorithm>
 #include <cstring>
@@ -29,7 +32,7 @@ void plugin_scan_t::loaded_plugin_t::parse_master_list()
 			continue;
 
 		std::string master_name(sub.data, sub.size);
-		master_name = tools_t::erase_null_chars(master_name);
+		master_name = string_utils::erase_null_chars(master_name);
 		master_files.push_back(std::move(master_name));
 	}
 }
@@ -92,6 +95,16 @@ void plugin_scan_t::insert_or_update_version(version_descriptor_t desc)
 		entry.display_name = std::move(desc.display_name);
 }
 
+void plugin_scan_t::set_user_ignore_conflict(const std::set<std::string> & rules)
+{
+	m_user_ignore_conflict = rules;
+}
+
+const std::set<std::string> & plugin_scan_t::user_ignore_conflict() const
+{
+	return m_user_ignore_conflict;
+}
+
 void plugin_scan_t::rebuild_conflicts()
 {
 	m_entries.clear();
@@ -127,13 +140,14 @@ void plugin_scan_t::rebuild_conflicts()
 
 	if (m_merge_plugin_idx >= 0)
 	{
-		for (size_t mi = 0; mi < m_merge_records.size(); ++mi)
+		const auto & store_records = m_merge_store.records();
+		for (size_t mi = 0; mi < store_records.size(); ++mi)
 		{
-			const auto & mr = m_merge_records[mi];
+			const auto & merge_rec = store_records[mi];
 			record_version_t ver;
 			ver.plugin_idx = m_merge_plugin_idx;
 			ver.record_index = mi;
-			insert_or_update_version({ mr.rec_type, mr.record_id, "", "", ver });
+			insert_or_update_version({ merge_rec.rec_type, merge_rec.record_id, "", "", ver });
 		}
 	}
 
@@ -151,15 +165,15 @@ struct conflict_accumulator_t
 
 	void accumulate(const std::vector<std::string> & values, bool skip_non_existent = false)
 	{
-		const auto level = skip_non_existent
-		    ? compute_conflict_all_skip_empty(values)
-		    : compute_conflict_all(values);
+		const auto level = skip_non_existent ? record_conflict::compute_conflict_all_skip_empty(values)
+		                                     : record_conflict::compute_conflict_all(values);
 
 		if (level > worst_all)
 			worst_all = level;
 
 		per_slot_this.push_back(
-		    skip_non_existent ? compute_conflict_this_skip_empty(values) : compute_conflict_this(values));
+		    skip_non_existent ? record_conflict::compute_conflict_this_skip_empty(values)
+		                      : record_conflict::compute_conflict_this(values));
 	}
 };
 
@@ -288,7 +302,7 @@ void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 		const auto & ver = entry.versions[i];
 
 		if (ver.plugin_idx == m_merge_plugin_idx)
-			contents[i] = m_merge_records[ver.record_index].content;
+			contents[i] = m_merge_store.record_content(ver.record_index);
 		else
 		{
 			m_plugins[ver.plugin_idx]->esm.select_record(ver.record_index);
@@ -301,15 +315,21 @@ void plugin_scan_t::compute_conflict(conflict_entry_t & entry)
 	}
 
 	entry.slot_result =
-	    std::make_unique<slot_result_t>(build_conflict_slots(entry.rec_type, std::move(contents), is_deleted));
+	    std::make_unique<slot_result_t>(conflict_slots::build(entry.rec_type, std::move(contents), is_deleted));
 
 	conflict_accumulator_t accum;
 	const auto & sr = *entry.slot_result;
 
 	for (const auto & slot : sr.aligned)
 	{
-		const auto policy = find_conflict_policy(entry.rec_type, slot.key.type);
-		if (policy.ignore_conflict)
+		const auto policy = record_conflict::find_conflict_policy(entry.rec_type, slot.key.type);
+
+		const auto specific_key = entry.rec_type + ":" + slot.key.type;
+		const auto wildcard_key = entry.rec_type + ":*";
+		const bool user_ignore =
+		    m_user_ignore_conflict.count(specific_key) > 0 || m_user_ignore_conflict.count(wildcard_key) > 0;
+
+		if (user_ignore)
 			continue;
 
 		std::vector<std::string> slot_values(ver_count);
@@ -403,4 +423,231 @@ std::vector<std::string> plugin_scan_t::all_types() const
 		unique.insert(entry.rec_type);
 
 	return std::vector<std::string>(unique.begin(), unique.end());
+}
+
+void plugin_scan_t::set_merge_plugin(const std::string & filename)
+{
+	m_merge_plugin_idx = static_cast<int>(m_plugins.size());
+
+	auto plugin = std::make_unique<loaded_plugin_t>();
+	plugin->path = filename;
+	m_plugins.push_back(std::move(plugin));
+
+	m_merge_store.clear();
+}
+
+void plugin_scan_t::set_merge_plugin_from_loaded(int plugin_idx)
+{
+	if (plugin_idx < 0 || plugin_idx >= static_cast<int>(m_plugins.size()))
+		return;
+
+	m_merge_plugin_idx = plugin_idx;
+	m_merge_store.clear();
+
+	auto & plugin = *m_plugins[plugin_idx];
+	const auto & entries = plugin.index.entries();
+
+	for (size_t i = 0; i < entries.size(); ++i)
+	{
+		plugin.esm.select_record(entries[i].record_index);
+		const auto & rec = plugin.esm.get_record();
+		m_merge_store.add(entries[i].rec_type, entries[i].record_id, rec.content);
+	}
+}
+
+void plugin_scan_t::clear_merge_records()
+{
+	m_merge_store.clear();
+}
+
+std::vector<merge_record_t> plugin_scan_t::collect_pinned_records() const
+{
+	return m_merge_store.collect_pinned();
+}
+
+void plugin_scan_t::restore_pinned_records(const std::vector<merge_record_t> & pinned)
+{
+	m_merge_store.restore_pinned(pinned);
+}
+
+void plugin_scan_t::copy_record_to_merge(int source_plugin, size_t record_index)
+{
+	if (m_merge_plugin_idx < 0)
+		return;
+
+	m_plugins[source_plugin]->esm.select_record(record_index);
+	const auto & rec = m_plugins[source_plugin]->esm.get_record();
+
+	const auto & plugin_entries = m_plugins[source_plugin]->index.entries();
+	if (record_index >= plugin_entries.size())
+		return;
+
+	const auto & indexed = plugin_entries[record_index];
+	copy_record_to_merge_raw(indexed.rec_type, indexed.record_id, rec.content);
+}
+
+void plugin_scan_t::copy_record_to_merge_raw(
+    const std::string & rec_type,
+    const std::string & record_id,
+    const std::string & content)
+{
+	if (m_merge_plugin_idx < 0)
+		return;
+
+	m_merge_store.update_or_add(rec_type, record_id, content);
+}
+
+void plugin_scan_t::pin_record_to_merge(
+    const std::string & rec_type,
+    const std::string & record_id,
+    const std::string & content)
+{
+	if (m_merge_plugin_idx < 0)
+		return;
+
+	m_merge_store.update_or_add_pinned(rec_type, record_id, content);
+}
+
+bool plugin_scan_t::is_merge_pinned(const std::string & rec_type, const std::string & record_id) const
+{
+	return m_merge_store.is_pinned(rec_type, record_id);
+}
+
+const std::string * plugin_scan_t::find_merge_content(const std::string & rec_type, const std::string & record_id) const
+{
+	return m_merge_store.find_content(rec_type, record_id);
+}
+
+void plugin_scan_t::remove_from_merge(const std::string & type, const std::string & id)
+{
+	m_merge_store.remove(type, id);
+}
+
+void plugin_scan_t::recompute_single_conflict(const std::string & rec_type, const std::string & record_id)
+{
+	const std::string lookup_key = rec_type + std::string(1, '\0') + record_id;
+	auto it_entry = m_entry_lookup.find(lookup_key);
+	if (it_entry == m_entry_lookup.end())
+	{
+		const auto & store_records = m_merge_store.records();
+		for (size_t mi = 0; mi < store_records.size(); ++mi)
+		{
+			const auto & merge_rec = store_records[mi];
+			if (merge_rec.rec_type != rec_type || merge_rec.record_id != record_id)
+				continue;
+
+			record_version_t ver;
+			ver.plugin_idx = m_merge_plugin_idx;
+			ver.record_index = mi;
+			insert_or_update_version({ rec_type, record_id, "", "", ver });
+			break;
+		}
+
+		return;
+	}
+
+	auto & entry = m_entries[it_entry->second];
+
+	entry.versions.erase(
+	    std::remove_if(
+	        entry.versions.begin(),
+	        entry.versions.end(),
+	        [this](const record_version_t & ver) { return ver.plugin_idx == m_merge_plugin_idx; }),
+	    entry.versions.end());
+
+	const auto & store_records = m_merge_store.records();
+	for (size_t mi = 0; mi < store_records.size(); ++mi)
+	{
+		const auto & merge_rec = store_records[mi];
+		if (merge_rec.rec_type != rec_type || merge_rec.record_id != record_id)
+			continue;
+
+		record_version_t ver;
+		ver.plugin_idx = m_merge_plugin_idx;
+		ver.record_index = mi;
+		entry.versions.push_back(ver);
+		break;
+	}
+
+	entry.conflict_all = conflict_all_t::only_one;
+	entry.slot_result.reset();
+
+	if (entry.versions.size() >= 2)
+		compute_conflict(entry);
+}
+
+std::string plugin_scan_t::read_record_content(int plugin_idx, size_t record_index)
+{
+	if (plugin_idx == m_merge_plugin_idx)
+	{
+		if (record_index < m_merge_store.count())
+			return m_merge_store.record_content(record_index);
+
+		return {};
+	}
+
+	if (plugin_idx < 0 || plugin_idx >= static_cast<int>(m_plugins.size()))
+		return {};
+
+	m_plugins[plugin_idx]->esm.select_record(record_index);
+	return m_plugins[plugin_idx]->esm.get_record().content;
+}
+
+bool plugin_scan_t::has_merge() const
+{
+	return m_merge_plugin_idx >= 0;
+}
+
+size_t plugin_scan_t::merge_record_count() const
+{
+	return m_merge_store.count();
+}
+
+const std::string & plugin_scan_t::merge_record_content(size_t index) const
+{
+	return m_merge_store.record_content(index);
+}
+
+const std::string & plugin_scan_t::merge_record_type(size_t index) const
+{
+	return m_merge_store.record_type(index);
+}
+
+const std::string & plugin_scan_t::merge_record_id(size_t index) const
+{
+	return m_merge_store.record_id(index);
+}
+
+size_t plugin_scan_t::itm_count(int plugin_idx) const
+{
+	size_t count = 0;
+	for (const auto & entry : m_entries)
+	{
+		for (const auto & ver : entry.versions)
+		{
+			if (ver.plugin_idx == plugin_idx && ver.status == conflict_this_t::identical_to_master)
+			{
+				++count;
+				break;
+			}
+		}
+	}
+	return count;
+}
+
+std::vector<const conflict_entry_t *> plugin_scan_t::itm_entries(int plugin_idx) const
+{
+	std::vector<const conflict_entry_t *> result;
+	for (const auto & entry : m_entries)
+	{
+		for (const auto & ver : entry.versions)
+		{
+			if (ver.plugin_idx == plugin_idx && ver.status == conflict_this_t::identical_to_master)
+			{
+				result.push_back(&entry);
+				break;
+			}
+		}
+	}
+	return result;
 }

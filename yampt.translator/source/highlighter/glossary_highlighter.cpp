@@ -22,7 +22,7 @@ void glossary_highlighter_t::set_annotation_manager(glossary_t * manager)
 	m_manager = manager;
 }
 
-void glossary_highlighter_t::set_record_type(tools_t::rec_type_t type)
+void glossary_highlighter_t::set_record_type(rec_type_t type)
 {
 	m_record_type = type;
 }
@@ -59,6 +59,9 @@ static QTextCharFormat format_for_annotation(const annotation_t & annotation)
 		break;
 	case annotation_t::glossary_term:
 		format.setBackground(theme_system_t::instance().get_color(color_name_t::annotation_glossary_term));
+		break;
+	case annotation_t::loc_coverage:
+		format.setBackground(theme_system_t::instance().get_color(color_name_t::annotation_loc_coverage));
 		break;
 	default:
 		return {};

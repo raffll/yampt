@@ -75,7 +75,7 @@ TEST_CASE("glossary_t::annotate, at-prefix detection property", "[u]")
 		glossary_t glossary;
 		glossary.rebuild({});
 
-		const auto results = glossary.annotate(text, tools_t::rec_type_t::info);
+		const auto results = glossary.annotate(text, rec_type_t::info);
 
 		int detected_count = 0;
 		for (const auto & annotation : results)

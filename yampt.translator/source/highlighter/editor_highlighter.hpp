@@ -1,7 +1,7 @@
 #pragma once
 
 #include "script_tokenizer.hpp"
-#include <utility/tools.hpp>
+#include <utility/domain_types.hpp>
 #include <theme_system.hpp>
 #include <QSyntaxHighlighter>
 #include <QTextCharFormat>
@@ -15,7 +15,7 @@ class editor_highlighter_t : public QSyntaxHighlighter
 public:
 	explicit editor_highlighter_t(QTextDocument * parent = nullptr);
 
-	void set_record_type(tools_t::rec_type_t type);
+	void set_record_type(rec_type_t type);
 	void set_translation_mode(bool enabled);
 	void set_spell_checker(spell_checker_t * checker);
 
@@ -31,7 +31,7 @@ private:
 	void apply_hyperlink_prefix(const QString & text);
 	void apply_spell_check(const QString & text);
 
-	tools_t::rec_type_t m_record_type = tools_t::rec_type_t::unknown;
+	rec_type_t m_record_type = rec_type_t::unknown;
 	bool m_is_translation = false;
 	spell_checker_t * m_spell_checker = nullptr;
 	script_tokenizer_t m_tokenizer;

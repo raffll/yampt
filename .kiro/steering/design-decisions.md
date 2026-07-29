@@ -92,14 +92,16 @@ The `chapter_t::old_text_index` is populated on `insert()` and only stores the f
 
 ## dict_creator Source File Split
 
-The `dict_creator_t` class is split across multiple `.cpp` files in `yampt/creator/`:
+The `dict_creator_t` is a thin facade in `yampt.core/source/creator/`. The actual logic is split into strategy classes:
 
-- `dict_creator.cpp` — shared helpers used by multiple modes (constructors, `reset_counters`, `insert_duplicate`, `print_log_line`, `make_script_messages`, `differs_only_in_numbers_or_punct`, `adapt_translation`)
-- `dict_creator_single.cpp` — single-file mode logic (`make_dict_single`, `insert_entry_single`, `insert_entry_single_with_base`, `insert_as_untranslated`, `insert_with_status`, `insert_via_text_match`)
-- `dict_creator_base.cpp` — base mode logic (`make_dict_base`, `insert_entry_base`, cell matching, DIAL matching)
-- `dict_creator_base_ordered.cpp` — ordered base mode logic (`make_dict_base_ordered`)
+- `dict_creator.hpp/.cpp` — Thin facade, picks strategy based on mode detection
+- `creator_context.hpp` — Shared state struct (ESM readers, indexes, counters, dict)
+- `creator_helpers.hpp/.cpp` — All shared logic (insert methods, index builders, script parsing, adapt_translation, determine_status)
+- `creator_single.hpp/.cpp` — Single-file mode strategy
+- `creator_base.hpp/.cpp` — Unordered base mode strategy
+- `creator_ordered.hpp/.cpp` — Ordered base mode strategy
 
-Rule: if a member function is called from more than one `.cpp` file, it belongs in `dict_creator.cpp`. Mode-specific functions stay in their respective files.
+Each mode is its own class with its own `.hpp/.cpp` pair.
 
 
 ## Identical-Text Entries Are Now Approved
@@ -135,3 +137,45 @@ Whenever codepages are listed in a combo box or UI element, they must be in asce
 ## Copy to Merged Patch — Individual Sub-Records Always Allowed
 
 Never restrict the user to copying only entire groups. Individual sub-record copy must always be available, even for sub-records that belong to a group. The merge operation must handle placing the sub-record at the correct position based on its content identity, not by occurrence order. If a sub-record belongs to a group that doesn't exist in the merge yet, the merge must create the appropriate structure to receive it — not silently misplace it or force the user to copy the whole group first.
+
+
+## SCVR Sub-Record: No Null Terminator Needed
+
+`convert_scvr` does NOT append `'\0'` to the replacement text. This is correct — not a bug.
+
+SCVR is a structured binary field (5-byte prefix + variable/cell name), not a simple null-terminated string sub-record like NAME or DNAM. OpenMW's reader uses `strnlen(ptr, size)` which handles both null-terminated and non-null-terminated data. OpenMW's writer (`writeHString`) also writes SCVR without a null terminator.
+
+Do NOT "fix" this by adding `new_text += '\0'` to `convert_scvr`.
+
+
+## esm_reader_t::scan_sub_records — Break on Zero-Size Is Correct
+
+`scan_sub_records` breaks the scan loop when `found_size == 0`. This is a defensive guard against corrupt data, not a bug.
+
+In TES3 format, no legitimate sub-record has zero size — `DELE` is 4 bytes, all others have positive sizes. A zero in the size field means the record data is malformed. Breaking prevents parsing garbage as valid sub-records.
+
+If we used `continue` (advancing by `sub_record_header_size + 0 = 8`), we'd still advance but would be reading into corrupted territory. Breaking is the safer choice — the record is already broken, so nothing useful follows.
+
+Do NOT "fix" this by replacing `break` with `continue` or `scan_pos += sub_record_header_size`.
+
+
+## check_all_identical Duplication in view_tree_decode Files
+
+`view_tree_decode.cpp` and `view_tree_decode_cell.cpp` both define a file-local `static bool check_all_identical(...)`. This is a consequence of the allowed class-split exception for `view_tree_model_t` — `static` functions cannot be shared across translation units. Both copies are used. Accepted as-is.
+
+## spell_checker_t::is_excluded — Linear Scan Is Acceptable
+
+`is_excluded` does a linear scan over `m_excluded_words` for each word during spell checking. The exclusion list is small (50–200 entries) and Hunspell's `spell()` call dominates the cost. The linear scan is noise. Accepted as-is — no hash set needed.
+
+
+## Copy Original vs Reset to Original — Two Distinct Operations
+
+- **Copy Original (F8)** — copies `old_text` into `new_text` and sets status `in_progress`. The user intends to start editing from the original as a base. Uses `document_t::commit()` with `in_progress` intent.
+- **Delete/Clear (Del key)** — copies `old_text` into `new_text` and sets status `untranslated`. The user intends to discard the translation entirely. Uses `document_t::reset_to_original()`.
+
+Both produce the same `new_text` but different statuses. The distinction matters because only `untranslated` entries are eligible for the Translate button, while `in_progress` entries are not.
+
+
+## Translate Button Error Feedback — append_log Is Sufficient
+
+When the Translate button is clicked with invalid state (no document, no row, non-untranslated entry), error messages are written via `m_translation_tab->append_log(...)`. This is not a visibility problem because the Translate button itself lives on the Auto Translate tab — if the user can click it, they can see the feedback. No status bar message needed.
