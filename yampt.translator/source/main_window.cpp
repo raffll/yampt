@@ -914,11 +914,17 @@ void main_window_t::load_config()
 
 	const int info_height = m_settings.info_height();
 	const int left_total = m_left_splitter->height();
-	m_left_splitter->setSizes({ left_total - info_height, info_height });
+	if (info_height > 0)
+		m_left_splitter->setSizes({ left_total - info_height, info_height });
+	else
+		m_left_splitter->setSizes({ left_total / 2, left_total / 2 });
 
 	const int bottom_height = m_settings.bottom_height();
 	const int right_total = m_right_splitter->height();
-	m_right_splitter->setSizes({ right_total - bottom_height, bottom_height });
+	if (bottom_height > 0)
+		m_right_splitter->setSizes({ right_total - bottom_height, bottom_height });
+	else
+		m_right_splitter->setSizes({ right_total / 2, right_total / 2 });
 
 	std::vector<int> col_widths;
 	for (int i = 0; i < 4; ++i)

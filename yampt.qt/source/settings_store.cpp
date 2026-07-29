@@ -297,7 +297,7 @@ void settings_store_t::set_sidebar_width(int value)
 
 int settings_store_t::bottom_height() const
 {
-	return m_settings.value("Editor/BottomHeight", 200).toInt();
+	return m_settings.value("Editor/BottomHeight", 0).toInt();
 }
 
 void settings_store_t::set_bottom_height(int value)
@@ -307,7 +307,7 @@ void settings_store_t::set_bottom_height(int value)
 
 int settings_store_t::info_height() const
 {
-	return m_settings.value("Editor/InfoHeight", 150).toInt();
+	return m_settings.value("Editor/InfoHeight", 0).toInt();
 }
 
 void settings_store_t::set_info_height(int value)

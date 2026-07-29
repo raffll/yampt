@@ -1,6 +1,6 @@
-﻿# Changelog
+# Changelog
 
-## [0.939]
+## [0.940] - 2026-07-29
 
 ### yTranslator
 - [NEW] Find/Replace dialog (Tools menu) with regex, case sensitivity, and batch undo
