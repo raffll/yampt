@@ -58,6 +58,7 @@
     <ClCompile Include="source\scanner\handler_parser.cpp" />
     <ClCompile Include="source\scanner\conflict_detector.cpp" />
     <ClCompile Include="source\scanner\lua_scanner.cpp" />
+    <ClCompile Include="source\scanner\dial_info_align.cpp" />
     <ClCompile Include="source\utility\language_config.cpp" />
   </ItemGroup>
   <ItemGroup>

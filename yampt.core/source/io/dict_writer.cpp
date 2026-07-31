@@ -126,6 +126,12 @@ void dict_writer_t::write(const dict_t & dict, const std::string & path)
 	file << "\n}\n";
 	file.close();
 
+	if (file.fail())
+	{
+		app_logger_t::add_log("[error] write failed for \"" + path + "\"\r\n");
+		return;
+	}
+
 	app_logger_t::add_log(
 	    "[info] done writing \"" + path + "\" (" + std::to_string(domain_types::get_number_of_elements_in_dict(dict)) +
 	    " entries)\r\n");

@@ -126,6 +126,8 @@ find_replace_t::replace_result_t find_replace_t::replace_current(
     bool regex_mode,
     int current_row)
 {
+	m_undo_batch.clear();
+
 	if (query.empty())
 		return {};
 
