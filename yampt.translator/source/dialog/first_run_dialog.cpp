@@ -17,8 +17,8 @@ first_run_dialog_t::first_run_dialog_t(QWidget * parent)
 
 	auto * combo_layout = new QHBoxLayout;
 
-	const auto languages = language_config::load(
-	    (QCoreApplication::applicationDirPath() + "/languages.json").toStdString());
+	const auto languages =
+	    language_config::load((QCoreApplication::applicationDirPath() + "/languages.json").toStdString());
 
 	combo_layout->addWidget(new QLabel(tr("From:")));
 	m_from_combo = new QComboBox(this);

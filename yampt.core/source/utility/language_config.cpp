@@ -28,7 +28,10 @@ std::vector<language_entry_t> language_config::load(const std::string & json_pat
 		return result;
 	}
 
-	json_reader_t::foreach_arr(root, [&](size_t, yyjson_val * entry) {
+	json_reader_t::foreach_arr(
+	    root,
+	    [&](size_t, yyjson_val * entry)
+	{
 		if (!yyjson_is_obj(entry))
 			return;
 
@@ -61,9 +64,7 @@ const language_entry_t * language_config::find_by_code(
 	return nullptr;
 }
 
-codepage_t language_config::resolve_codepage(
-    const std::vector<language_entry_t> & languages,
-    const std::string & code)
+codepage_t language_config::resolve_codepage(const std::vector<language_entry_t> & languages, const std::string & code)
 {
 	const auto * entry = find_by_code(languages, code);
 	if (entry)

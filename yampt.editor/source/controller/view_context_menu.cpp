@@ -93,8 +93,7 @@ void view_context_menu_t::build_source_file_menu(QMenu & menu, const nav_tree_mo
 	{
 		m_editable_columns.toggle_plugin_editable(info.plugin_idx, !plugin_editable);
 		m_editable_columns.rebuild_for_record(
-		    m_record_view.model()->column_plugin_indices(),
-		    m_record_view.model()->merge_column());
+		    m_record_view.model()->column_plugin_indices(), m_record_view.model()->merge_column());
 		m_nav_view.rebuild_preserving_state();
 	});
 }
@@ -127,9 +126,8 @@ void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModel
 	if (parent_row_idx < 0 || parent_row_idx >= static_cast<int>(visible.size()))
 		return;
 
-	const int bin_idx = (col >= 0 && col < static_cast<int>(row.binary_ranges.size()))
-	    ? row.binary_ranges[col].start
-	    : -1;
+	const int bin_idx =
+	    (col >= 0 && col < static_cast<int>(row.binary_ranges.size())) ? row.binary_ranges[col].start : -1;
 
 	const auto kind = [&]() -> row_kind_t
 	{
@@ -185,14 +183,16 @@ void view_context_menu_t::build_copy_to_merge_menu(QMenu & menu, const view_menu
 		menu.addAction(
 		    QCoreApplication::translate("yEditor", "Copy Record to Merged Patch"),
 		    [this, &context]()
-		{ m_merge.copy_cell_record(context.plugin_idx, context.rec_type, context.record_id, context.index, context.col); });
+		{
+			m_merge.copy_cell_record(
+			    context.plugin_idx, context.rec_type, context.record_id, context.index, context.col);
+		});
 	}
 	else
 	{
 		menu.addAction(
 		    QCoreApplication::translate("yEditor", "Copy Record to Merged Patch"),
-		    [this, &context]()
-		{ m_merge.copy_whole_record(context.plugin_idx, context.rec_type, context.record_id); });
+		    [this, &context]() { m_merge.copy_whole_record(context.plugin_idx, context.rec_type, context.record_id); });
 	}
 }
 
@@ -240,15 +240,25 @@ void view_context_menu_t::build_source_copy_menu(QMenu & menu, const view_menu_c
 
 		const auto sub_type = sub_record_node->type;
 		const auto sub_size = sub_record_node->size;
-		const int field_bin = (context.col >= 0 && context.col < static_cast<int>(sub_record_node->binary_ranges.size()))
-		    ? sub_record_node->binary_ranges[context.col].start
-		    : -1;
+		const int field_bin =
+		    (context.col >= 0 && context.col < static_cast<int>(sub_record_node->binary_ranges.size()))
+		        ? sub_record_node->binary_ranges[context.col].start
+		        : -1;
 		const int child_field_idx = context.row.schema_field_index;
 
 		menu.addAction(
 		    QCoreApplication::translate("yEditor", "Copy Field to Merged Patch"),
 		    [this, &context, sub_type, sub_size, field_bin, child_field_idx]()
-		{ m_merge.copy_field(context.plugin_idx, context.rec_type, context.record_id, sub_type, sub_size, field_bin, child_field_idx); });
+		{
+			m_merge.copy_field(
+			    context.plugin_idx,
+			    context.rec_type,
+			    context.record_id,
+			    sub_type,
+			    sub_size,
+			    field_bin,
+			    child_field_idx);
+		});
 		break;
 	}
 
@@ -292,8 +302,8 @@ void view_context_menu_t::build_merge_remove_menu(QMenu & menu, const view_menu_
 	case row_kind_t::field_of_group:
 	{
 		auto merge_range = (context.kind == row_kind_t::field_of_group)
-		    ? visible[context.parent_row_idx].binary_ranges[context.col]
-		    : context.row.binary_ranges[context.col];
+		                       ? visible[context.parent_row_idx].binary_ranges[context.col]
+		                       : context.row.binary_ranges[context.col];
 
 		if (merge_range.start >= 0)
 		{
@@ -320,9 +330,10 @@ void view_context_menu_t::build_merge_remove_menu(QMenu & menu, const view_menu_
 		if (!sub_record_node || sub_record_node->type.empty())
 			break;
 
-		const int merge_bin = (context.col >= 0 && context.col < static_cast<int>(sub_record_node->binary_ranges.size()))
-		    ? sub_record_node->binary_ranges[context.col].start
-		    : -1;
+		const int merge_bin =
+		    (context.col >= 0 && context.col < static_cast<int>(sub_record_node->binary_ranges.size()))
+		        ? sub_record_node->binary_ranges[context.col].start
+		        : -1;
 
 		if (merge_bin >= 0)
 		{

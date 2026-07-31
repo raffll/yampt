@@ -1,6 +1,6 @@
 #include <catch2/catch_all.hpp>
-#include <view/count_label_format.hpp>
 #include <rapidcheck/catch.h>
+#include <view/count_label_format.hpp>
 #include <rapidcheck.h>
 
 TEST_CASE(

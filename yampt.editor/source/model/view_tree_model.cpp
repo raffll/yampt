@@ -457,9 +457,9 @@ void view_tree_model_t::set_lua_conflict(const handler_conflict_t & conflict)
 	m_rows.push_back(build_row("Method", [](const handler_registration_t & r) { return r.method_name; }));
 	m_rows.push_back(build_row("Type Argument", [](const handler_registration_t & r) { return r.type_argument; }));
 
-	m_rows.push_back(build_row("Classification", [](const handler_registration_t & r) {
-		return lua_classification_text(r.classification).toStdString();
-	}));
+	m_rows.push_back(build_row(
+	    "Classification",
+	    [](const handler_registration_t & r) { return lua_classification_text(r.classification).toStdString(); }));
 
 	m_rows.push_back(build_row("Script Path", [](const handler_registration_t & r) { return r.script_path; }));
 	m_rows.push_back(build_row("Callback", [](const handler_registration_t & r) { return r.callback_expression; }));
@@ -936,9 +936,8 @@ QVariant view_tree_model_t::headerData(int section, Qt::Orientation orientation,
 				const auto & full_path = m_scan_for_header->plugin_path(pi);
 				const bool is_overridden = full_path.find("/overwrite/") != std::string::npos ||
 				                           full_path.find("\\overwrite\\") != std::string::npos;
-				const bool is_master =
-				    name.size() > 4 &&
-				    (name.compare(name.size() - 4, 4, ".esm") == 0 || name.compare(name.size() - 4, 4, ".ESM") == 0);
+				const bool is_master = name.size() > 4 && (name.compare(name.size() - 4, 4, ".esm") == 0 ||
+				                                           name.compare(name.size() - 4, 4, ".ESM") == 0);
 
 				if (is_master)
 					prefix = QString::fromUtf8("\xF0\x9F\x93\x9C ");

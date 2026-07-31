@@ -800,9 +800,7 @@ QVariant nav_tree_model_t::data_for_lua_group(int row, int column, int role) con
 		return {};
 
 	const auto & lua_group = m_lua_section.groups[static_cast<size_t>(row)];
-	return QString("%1 [%2]")
-	    .arg(QString::fromStdString(lua_group.group_name))
-	    .arg(lua_group.leaf_indices.size());
+	return QString("%1 [%2]").arg(QString::fromStdString(lua_group.group_name)).arg(lua_group.leaf_indices.size());
 }
 
 conflict_severity_t nav_tree_model_t::find_conflict_severity_for_registration(
@@ -934,8 +932,8 @@ QVariant nav_tree_model_t::file_node_display_text(const file_node_t & file_node)
 		return QString::fromUtf8("\xE2\x9C\x8D ") + QString::fromUtf8(display_buffer);
 
 	const auto & full_path = m_scan.plugin_path(file_node.plugin_idx);
-	const bool is_overridden = full_path.find("/overwrite/") != std::string::npos ||
-	                           full_path.find("\\overwrite\\") != std::string::npos;
+	const bool is_overridden =
+	    full_path.find("/overwrite/") != std::string::npos || full_path.find("\\overwrite\\") != std::string::npos;
 
 	const bool is_master = filename.size() > 4 && (filename.compare(filename.size() - 4, 4, ".esm") == 0 ||
 	                                               filename.compare(filename.size() - 4, 4, ".ESM") == 0);

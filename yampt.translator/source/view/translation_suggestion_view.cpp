@@ -216,8 +216,8 @@ void translation_suggestion_view_t::rebuild_language_list()
 
 		if (!nllb_models.empty())
 		{
-			const auto languages = language_config::load(
-			    (QCoreApplication::applicationDirPath() + "/languages.json").toStdString());
+			const auto languages =
+			    language_config::load((QCoreApplication::applicationDirPath() + "/languages.json").toStdString());
 
 			const auto & model_path = nllb_models[0];
 			for (const auto & lang : languages)

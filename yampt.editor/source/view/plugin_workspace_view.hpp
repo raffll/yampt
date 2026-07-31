@@ -2,9 +2,9 @@
 
 #include "../controller/merge_controller.hpp"
 #include "../controller/view_context_menu.hpp"
+#include "../model/editable_column_set.hpp"
 #include "../model/nav_tree_model.hpp"
 #include "../session/plugin_session.hpp"
-#include "../model/editable_column_set.hpp"
 #include "messages_view.hpp"
 #include "nav_tree_view.hpp"
 #include "preview_view.hpp"

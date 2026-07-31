@@ -1,8 +1,8 @@
 #pragma once
 
+#include "controller/field_edit_controller.hpp"
 #include <string>
 #include <QWidget>
-#include "controller/field_edit_controller.hpp"
 
 class QComboBox;
 class QTextEdit;

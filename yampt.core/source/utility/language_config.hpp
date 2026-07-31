@@ -17,16 +17,10 @@ namespace language_config {
 
 std::vector<language_entry_t> load(const std::string & json_path);
 
-const language_entry_t * find_by_code(
-    const std::vector<language_entry_t> & languages,
-    const std::string & code);
+const language_entry_t * find_by_code(const std::vector<language_entry_t> & languages, const std::string & code);
 
-codepage_t resolve_codepage(
-    const std::vector<language_entry_t> & languages,
-    const std::string & code);
+codepage_t resolve_codepage(const std::vector<language_entry_t> & languages, const std::string & code);
 
-std::string resolve_dictionary_prefix(
-    const std::vector<language_entry_t> & languages,
-    const std::string & code);
+std::string resolve_dictionary_prefix(const std::vector<language_entry_t> & languages, const std::string & code);
 
 } // namespace language_config

@@ -25,9 +25,12 @@ constexpr int codepage_to_index(codepage_t codepage)
 {
 	switch (codepage)
 	{
-	case codepage_t::windows_1250: return 0;
-	case codepage_t::windows_1251: return 1;
-	case codepage_t::windows_1252: return 2;
+	case codepage_t::windows_1250:
+		return 0;
+	case codepage_t::windows_1251:
+		return 1;
+	case codepage_t::windows_1252:
+		return 2;
 	}
 	return 2;
 }
@@ -36,9 +39,12 @@ constexpr codepage_t index_to_codepage(int index)
 {
 	switch (index)
 	{
-	case 0: return codepage_t::windows_1250;
-	case 1: return codepage_t::windows_1251;
-	case 2: return codepage_t::windows_1252;
+	case 0:
+		return codepage_t::windows_1250;
+	case 1:
+		return codepage_t::windows_1251;
+	case 2:
+		return codepage_t::windows_1252;
 	}
 	return codepage_t::windows_1252;
 }

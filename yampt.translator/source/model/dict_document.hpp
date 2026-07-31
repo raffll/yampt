@@ -42,7 +42,6 @@ public:
 	int propagate(const std::string & old_text, const std::string & new_text);
 
 private:
-
 	std::string m_path;
 	codepage_t m_codepage;
 	dict_kind_t m_kind;

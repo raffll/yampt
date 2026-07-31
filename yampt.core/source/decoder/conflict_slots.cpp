@@ -10,29 +10,21 @@ struct sub_slot_t
 	int occurrence;
 };
 
-static bool has_slot(
-    const std::vector<sub_slot_t> & slots,
-    const std::string & slot_type,
-    int slot_occurrence)
+static bool has_slot(const std::vector<sub_slot_t> & slots, const std::string & slot_type, int slot_occurrence)
 {
 	return std::any_of(
 	    slots.begin(),
 	    slots.end(),
-	    [&](const sub_slot_t & slot)
-	    { return slot.type == slot_type && slot.occurrence == slot_occurrence; });
+	    [&](const sub_slot_t & slot) { return slot.type == slot_type && slot.occurrence == slot_occurrence; });
 }
 
-template <typename slot_container_t>
-static bool has_slot_in(
-    const slot_container_t & slots,
-    const std::string & slot_type,
-    int slot_occurrence)
+template<typename slot_container_t>
+static bool has_slot_in(const slot_container_t & slots, const std::string & slot_type, int slot_occurrence)
 {
 	return std::any_of(
 	    slots.begin(),
 	    slots.end(),
-	    [&](const auto & slot)
-	    { return slot.type == slot_type && slot.occurrence == slot_occurrence; });
+	    [&](const auto & slot) { return slot.type == slot_type && slot.occurrence == slot_occurrence; });
 }
 
 static void collect_unified_slots(
@@ -141,10 +133,8 @@ static void collect_unique_ids(
 	{
 		for (const auto & entry : entries)
 		{
-			const bool exists = std::any_of(
-			    all_ids.begin(),
-			    all_ids.end(),
-			    [&](const std::string & id) { return id == entry.ident; });
+			const bool exists =
+			    std::any_of(all_ids.begin(), all_ids.end(), [&](const std::string & id) { return id == entry.ident; });
 
 			if (!exists)
 				all_ids.push_back(entry.ident);
@@ -343,9 +333,7 @@ static void extract_npco_entries(
 			ver_items[i].push_back({ item_id, j, j });
 
 			const bool exists = std::any_of(
-			    all_item_ids.begin(),
-			    all_item_ids.end(),
-			    [&](const std::string & id) { return id == item_id; });
+			    all_item_ids.begin(), all_item_ids.end(), [&](const std::string & id) { return id == item_id; });
 
 			if (!exists)
 				all_item_ids.push_back(item_id);
@@ -376,9 +364,7 @@ static void extract_npcs_entries(
 			ver_spells[i].push_back({ spell_id, j, j });
 
 			const bool exists = std::any_of(
-			    all_spell_ids.begin(),
-			    all_spell_ids.end(),
-			    [&](const std::string & id) { return id == spell_id; });
+			    all_spell_ids.begin(), all_spell_ids.end(), [&](const std::string & id) { return id == spell_id; });
 
 			if (!exists)
 				all_spell_ids.push_back(spell_id);
@@ -523,9 +509,7 @@ static void extract_armor_groups(
 			ver_groups[i].push_back({ indx_key, j, bnam_idx, cnam_idx });
 
 			const bool exists = std::any_of(
-			    all_indx_keys.begin(),
-			    all_indx_keys.end(),
-			    [&](const std::string & key) { return key == indx_key; });
+			    all_indx_keys.begin(), all_indx_keys.end(), [&](const std::string & key) { return key == indx_key; });
 
 			if (!exists)
 				all_indx_keys.push_back(indx_key);
@@ -711,9 +695,7 @@ static void extract_cell_refs(
 			ver_refs[i].push_back({ obj_idx, j, end_pos });
 
 			const bool exists = std::any_of(
-			    all_object_indices.begin(),
-			    all_object_indices.end(),
-			    [&](uint32_t index) { return index == obj_idx; });
+			    all_object_indices.begin(), all_object_indices.end(), [&](uint32_t index) { return index == obj_idx; });
 
 			if (!exists)
 				all_object_indices.push_back(obj_idx);

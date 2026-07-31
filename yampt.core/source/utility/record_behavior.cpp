@@ -101,4 +101,3 @@ const sub_record_rule_t * find_sub_record_rule(
 
 	return behavior->wildcard_rule;
 }
-

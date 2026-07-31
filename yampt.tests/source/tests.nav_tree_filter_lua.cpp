@@ -1,7 +1,7 @@
 #include <catch2/catch_all.hpp>
 #include <model/nav_tree_filter.hpp>
-#include <scanner/conflict_detector.hpp>
 #include <rapidcheck/catch.h>
+#include <scanner/conflict_detector.hpp>
 #include <rapidcheck.h>
 
 namespace {
@@ -9,9 +9,7 @@ namespace {
 rc::Gen<conflict_severity_t> gen_severity()
 {
 	return rc::gen::element(
-	    conflict_severity_t::blocking,
-	    conflict_severity_t::mutating,
-	    conflict_severity_t::overlapping);
+	    conflict_severity_t::blocking, conflict_severity_t::mutating, conflict_severity_t::overlapping);
 }
 
 rc::Gen<std::string> gen_interface_name()

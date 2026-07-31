@@ -63,11 +63,12 @@ void table_view_t::apply(table_build_result_t result, const std::string & file_p
 	{
 		int pct = static_cast<int>(result.counts.progress_translated * 100 / result.counts.progress_total);
 		int shown = m_model.rowCount();
-		m_progress.setText(QCoreApplication::translate("yTranslator", "%1 / %2 (%3%) | %4 shown")
-		                       .arg(result.counts.progress_translated)
-		                       .arg(result.counts.progress_total)
-		                       .arg(pct)
-		                       .arg(shown));
+		m_progress.setText(
+		    QCoreApplication::translate("yTranslator", "%1 / %2 (%3%) | %4 shown")
+		        .arg(result.counts.progress_translated)
+		        .arg(result.counts.progress_total)
+		        .arg(pct)
+		        .arg(shown));
 	}
 	else
 	{
@@ -100,7 +101,12 @@ void table_view_t::apply_yaml(
 	{
 		int pct = translated * 100 / total;
 		int shown = m_model.rowCount();
-		m_progress.setText(QCoreApplication::translate("yTranslator", "%1 / %2 (%3%) | %4 shown").arg(translated).arg(total).arg(pct).arg(shown));
+		m_progress.setText(
+		    QCoreApplication::translate("yTranslator", "%1 / %2 (%3%) | %4 shown")
+		        .arg(translated)
+		        .arg(total)
+		        .arg(pct)
+		        .arg(shown));
 	}
 	else
 	{

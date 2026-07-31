@@ -1,5 +1,4 @@
 #include "decoder/field_validator.hpp"
-
 #include <cerrno>
 #include <climits>
 #include <cmath>
@@ -7,8 +6,7 @@
 #include <cstring>
 #include <string>
 
-namespace field_validator
-{
+namespace field_validator {
 
 constexpr unsigned long max_u8 = 255;
 constexpr unsigned long max_u16 = 65535;
@@ -112,10 +110,7 @@ static validate_result_t validate_float(std::string_view input)
 	return make_valid();
 }
 
-static validate_result_t validate_string_fixed(
-    std::string_view input,
-    codepage_t codepage,
-    size_t max_bytes)
+static validate_result_t validate_string_fixed(std::string_view input, codepage_t codepage, size_t max_bytes)
 {
 	const std::string encoded = encode_from_utf8(std::string(input), codepage);
 
@@ -226,8 +221,7 @@ static validate_result_t validate_bool_bit(std::string_view input)
 
 static bool is_valid_hex_char(char character)
 {
-	return (character >= '0' && character <= '9') ||
-	       (character >= 'A' && character <= 'F') ||
+	return (character >= '0' && character <= '9') || (character >= 'A' && character <= 'F') ||
 	       (character >= 'a' && character <= 'f');
 }
 

@@ -462,15 +462,12 @@ bool auto_merge_t::is_type_enabled(const std::string & rec_type) const
 	return m_config.disabled_types.count(rec_type) == 0;
 }
 
-
 void auto_merge_t::add_log(const std::string & message)
 {
 	m_log.push_back({ message });
 }
 
-std::string auto_merge_t::filter_ignored_sub_records(
-    const std::string & rec_type,
-    const std::string & content) const
+std::string auto_merge_t::filter_ignored_sub_records(const std::string & rec_type, const std::string & content) const
 {
 	if (m_config.ignored_sub_records.empty())
 		return content;

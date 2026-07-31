@@ -80,4 +80,3 @@ const sub_record_rule_t * find_sub_record_rule(
     const record_behavior_t * behavior,
     const std::string & sub_type,
     size_t data_size);
-

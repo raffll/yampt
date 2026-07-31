@@ -1,13 +1,11 @@
 #include "decoder/field_encoder.hpp"
-
 #include <algorithm>
 #include <charconv>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
 
-namespace field_encoder
-{
+namespace field_encoder {
 
 static std::string encode_integer(std::string_view input, size_t width)
 {

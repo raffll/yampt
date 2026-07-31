@@ -1,7 +1,7 @@
 #include <catch2/catch_all.hpp>
 #include <model/view_tree_model.hpp>
-#include <scanner/conflict_detector.hpp>
 #include <rapidcheck/catch.h>
+#include <scanner/conflict_detector.hpp>
 #include <rapidcheck.h>
 
 namespace rc {
@@ -11,10 +11,7 @@ struct Arbitrary<handler_class_t>
 {
 	static Gen<handler_class_t> arbitrary()
 	{
-		return gen::element(
-		    handler_class_t::blocking,
-		    handler_class_t::mutating,
-		    handler_class_t::passive);
+		return gen::element(handler_class_t::blocking, handler_class_t::mutating, handler_class_t::passive);
 	}
 };
 
@@ -67,9 +64,7 @@ rc::Gen<handler_conflict_t> gen_conflict()
 		conflict.method_name = *rc::gen::nonEmpty<std::string>();
 		conflict.type_argument = *rc::gen::arbitrary<std::string>();
 		conflict.severity = *rc::gen::element(
-		    conflict_severity_t::blocking,
-		    conflict_severity_t::mutating,
-		    conflict_severity_t::overlapping);
+		    conflict_severity_t::blocking, conflict_severity_t::mutating, conflict_severity_t::overlapping);
 
 		const auto count = *rc::gen::inRange(2, 6);
 		for (int index = 0; index < count; ++index)

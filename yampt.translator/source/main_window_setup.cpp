@@ -698,11 +698,7 @@ void main_window_t::connect_editor_signals()
 
 	connect(m_editor_view, &editor_view_t::text_changed, this, &main_window_t::on_translation_changed);
 
-	connect(
-	    m_editor_view,
-	    &editor_view_t::apply_clicked,
-	    this,
-	    [this]() { advance_to_next_row(); });
+	connect(m_editor_view, &editor_view_t::apply_clicked, this, [this]() { advance_to_next_row(); });
 
 	connect(
 	    m_editor_view->translation_editor(),

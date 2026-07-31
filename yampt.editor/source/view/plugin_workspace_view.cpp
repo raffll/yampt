@@ -1,10 +1,9 @@
 #include "plugin_workspace_view.hpp"
-#include "count_label_format.hpp"
 #include "../dialog/filter_dialog.hpp"
 #include "../dialog/plugin_select_dialog.hpp"
 #include "../session/lua_scan_worker.hpp"
+#include "count_label_format.hpp"
 #include "editor_delegates.hpp"
-
 #include <scanner/batch_cleaner.hpp>
 #include <scanner/record_conflict.hpp>
 #include <set>
@@ -62,7 +61,8 @@ plugin_workspace_view_t::plugin_workspace_view_t(settings_store_t & settings, QW
 	m_merge_controller = new merge_controller_t(
 	    *m_session, *m_record_view, *m_nav_view, m_settings, [this](const std::string & msg) { log_message(msg); });
 
-	m_context_menu = new view_context_menu_t(*m_session, *m_record_view, *m_nav_view, *m_merge_controller, m_editable_columns);
+	m_context_menu =
+	    new view_context_menu_t(*m_session, *m_record_view, *m_nav_view, *m_merge_controller, m_editable_columns);
 
 	setup_connections();
 }
@@ -118,7 +118,12 @@ void plugin_workspace_view_t::setup_connections()
 	auto * copy_shortcut = new QShortcut(QKeySequence::Copy, m_record_view->tree());
 	connect(copy_shortcut, &QShortcut::activated, this, &plugin_workspace_view_t::on_view_copy);
 
-	connect(m_edit_controller, &field_edit_controller_t::record_modified, this, [this](bool is_merge_edit, const std::string & saved_path) {
+	connect(
+	    m_edit_controller,
+	    &field_edit_controller_t::record_modified,
+	    this,
+	    [this](bool is_merge_edit, const std::string & saved_path)
+	{
 		rebuild_nav_preserving_state();
 		if (is_merge_edit)
 			m_merge_controller->save_merged_patch();
@@ -126,7 +131,12 @@ void plugin_workspace_view_t::setup_connections()
 			log_message("[info] saved " + saved_path);
 	});
 
-	connect(m_preview, &preview_view_t::edit_committed, this, [this]() {
+	connect(
+	    m_preview,
+	    &preview_view_t::edit_committed,
+	    this,
+	    [this]()
+	{
 		const auto * model = m_record_view->model();
 		const auto & rec_type = model->record_type();
 		const auto & record_id = model->record_id();

@@ -1,6 +1,6 @@
 #include "language_settings_view.hpp"
-#include <filesystem>
 #include <utility/language_config.hpp>
+#include <filesystem>
 #include <settings_store.hpp>
 #include <QComboBox>
 #include <QCoreApplication>
@@ -13,8 +13,8 @@ namespace {
 
 const std::vector<language_entry_t> & get_languages()
 {
-	static const auto languages = language_config::load(
-	    (QCoreApplication::applicationDirPath() + "/languages.json").toStdString());
+	static const auto languages =
+	    language_config::load((QCoreApplication::applicationDirPath() + "/languages.json").toStdString());
 	return languages;
 }
 

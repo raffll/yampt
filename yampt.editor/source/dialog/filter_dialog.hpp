@@ -1,7 +1,7 @@
 #pragma once
 
-#include <conflict_types.hpp>
 #include <scanner/conflict_detector.hpp>
+#include <conflict_types.hpp>
 #include <set>
 #include <string>
 #include <vector>

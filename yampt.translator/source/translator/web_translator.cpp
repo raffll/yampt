@@ -77,7 +77,8 @@ void web_translator_t::translate(const std::string & text, const std::string & t
 {
 	if (m_api_key.empty())
 	{
-		emit translation_finished({ "", false, QCoreApplication::translate("yTranslator", "No API key configured").toStdString() });
+		emit translation_finished(
+		    { "", false, QCoreApplication::translate("yTranslator", "No API key configured").toStdString() });
 		return;
 	}
 
@@ -241,7 +242,8 @@ void web_translator_t::on_reply_finished(QNetworkReply * reply)
 
 	if (result_text.empty())
 	{
-		emit translation_finished({ "", false, QCoreApplication::translate("yTranslator", "Empty or unparseable response").toStdString() });
+		emit translation_finished(
+		    { "", false, QCoreApplication::translate("yTranslator", "Empty or unparseable response").toStdString() });
 		return;
 	}
 

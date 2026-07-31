@@ -1,6 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
 #include <decoder/field_encoder.hpp>
-
 #include <cstdint>
 #include <cstring>
 #include <string>

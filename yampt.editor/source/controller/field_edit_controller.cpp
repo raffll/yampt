@@ -12,9 +12,7 @@ struct sub_offset_result_t
 	size_t byte_offset = 0;
 };
 
-static sub_offset_result_t find_frmr_sub_offset(
-    const std::string & content,
-    const field_edit_request_t & request)
+static sub_offset_result_t find_frmr_sub_offset(const std::string & content, const field_edit_request_t & request)
 {
 	sub_record_iter_t iterator(content);
 	sub_record_view_t sub_view;
@@ -46,9 +44,7 @@ static sub_offset_result_t find_frmr_sub_offset(
 	return {};
 }
 
-static sub_offset_result_t find_sub_record_offset(
-    const std::string & content,
-    const field_edit_request_t & request)
+static sub_offset_result_t find_sub_record_offset(const std::string & content, const field_edit_request_t & request)
 {
 	if (request.object_ref_index >= 0)
 		return find_frmr_sub_offset(content, request);
@@ -115,18 +111,14 @@ edit_result_t field_edit_controller_t::commit_field_edit(const field_edit_reques
 	const auto existing_sub_size = read_sub_size(content, sub_result.byte_offset);
 	const auto * existing_sub_data = content.data() + sub_result.byte_offset + 8;
 
-	const auto validation = field_validator::validate_field(
-	    request.field, request.input_text, request.codepage, existing_sub_size);
+	const auto validation =
+	    field_validator::validate_field(request.field, request.input_text, request.codepage, existing_sub_size);
 
 	if (!validation.valid)
 		return { false, validation.error_message };
 
 	const field_encoder::encode_context_t encode_ctx {
-		request.field,
-		request.input_text,
-		request.codepage,
-		existing_sub_data,
-		existing_sub_size
+		request.field, request.input_text, request.codepage, existing_sub_data, existing_sub_size
 	};
 
 	const auto encoded = field_encoder::encode_field(encode_ctx);

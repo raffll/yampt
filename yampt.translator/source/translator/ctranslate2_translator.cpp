@@ -34,7 +34,8 @@ void ctranslate2_translator_t::translate(const std::string & text, const std::st
 {
 	if (!m_engine.is_loaded())
 	{
-		emit translation_finished({ "", false, QCoreApplication::translate("yTranslator", "Model not loaded").toStdString() });
+		emit translation_finished(
+		    { "", false, QCoreApplication::translate("yTranslator", "Model not loaded").toStdString() });
 		return;
 	}
 

@@ -21,8 +21,8 @@
 #include "view/status_filter_view.hpp"
 #include "view/translation_suggestion_view.hpp"
 #include "view/validation_view.hpp"
-#include <utility/string_utils.hpp>
 #include <utility/language_config.hpp>
+#include <utility/string_utils.hpp>
 #include <algorithm>
 #include <filesystem>
 #include <map>
@@ -124,13 +124,13 @@ main_window_t::main_window_t(QWidget * parent)
 	                                                                          m_extra_sel_translation,
 	                                                                          *m_grammar_check });
 
-	m_shortcuts_controller = std::make_unique<shortcuts_controller_t>(
-	    shortcuts_deps_t { m_editor_controller,
-	                       *m_table_model,
-	                       [this]() -> document_t * { return m_active_doc; },
-	                       [this](bool dirty) { set_unsaved_changes(dirty); },
-	                       [this]() { update_status_counts(); },
-	                       [this](int row) { load_record(row); } });
+	m_shortcuts_controller =
+	    std::make_unique<shortcuts_controller_t>(shortcuts_deps_t { m_editor_controller,
+	                                                                *m_table_model,
+	                                                                [this]() -> document_t * { return m_active_doc; },
+	                                                                [this](bool dirty) { set_unsaved_changes(dirty); },
+	                                                                [this]() { update_status_counts(); },
+	                                                                [this](int row) { load_record(row); } });
 
 	connect_menu_signals();
 	connect_sidebar_signals();
@@ -166,8 +166,8 @@ main_window_t::main_window_t(QWidget * parent)
 			m_settings.set_native_tag(native);
 			m_settings.set_foreign_tag(foreign);
 
-			const auto languages = language_config::load(
-			    (QCoreApplication::applicationDirPath() + "/languages.json").toStdString());
+			const auto languages =
+			    language_config::load((QCoreApplication::applicationDirPath() + "/languages.json").toStdString());
 
 			const auto * native_lang = language_config::find_by_code(languages, native);
 			const int encoding_index = native_lang ? codepage_to_index(native_lang->codepage) : 2;

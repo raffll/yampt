@@ -1,7 +1,7 @@
 #include <catch2/catch_all.hpp>
 #include <model/nav_tree_model.hpp>
-#include <scanner/conflict_detector.hpp>
 #include <rapidcheck/catch.h>
+#include <scanner/conflict_detector.hpp>
 #include <rapidcheck.h>
 
 namespace rc {
@@ -11,10 +11,7 @@ struct Arbitrary<handler_class_t>
 {
 	static Gen<handler_class_t> arbitrary()
 	{
-		return gen::element(
-		    handler_class_t::blocking,
-		    handler_class_t::mutating,
-		    handler_class_t::passive);
+		return gen::element(handler_class_t::blocking, handler_class_t::mutating, handler_class_t::passive);
 	}
 };
 
@@ -24,9 +21,7 @@ struct Arbitrary<conflict_severity_t>
 	static Gen<conflict_severity_t> arbitrary()
 	{
 		return gen::element(
-		    conflict_severity_t::blocking,
-		    conflict_severity_t::mutating,
-		    conflict_severity_t::overlapping);
+		    conflict_severity_t::blocking, conflict_severity_t::mutating, conflict_severity_t::overlapping);
 	}
 };
 
@@ -171,4 +166,3 @@ TEST_CASE(
 		}
 	});
 }
-

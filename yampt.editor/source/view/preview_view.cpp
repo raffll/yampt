@@ -160,7 +160,10 @@ void preview_view_t::set_editable_columns(const editable_column_set_t * columns)
 	m_editable_columns = columns;
 }
 
-void preview_view_t::update_selection(const QModelIndex & index, const view_tree_model_t * model, const std::string & cell_value)
+void preview_view_t::update_selection(
+    const QModelIndex & index,
+    const view_tree_model_t * model,
+    const std::string & cell_value)
 {
 	if (!index.isValid() || !m_editable_columns)
 	{
@@ -187,9 +190,8 @@ void preview_view_t::update_selection(const QModelIndex & index, const view_tree
 		return;
 	}
 
-	const int plugin_idx = model->is_merge_column(column)
-	    ? -1
-	    : model->column_plugin_indices()[static_cast<size_t>(column) - 1];
+	const int plugin_idx =
+	    model->is_merge_column(column) ? -1 : model->column_plugin_indices()[static_cast<size_t>(column) - 1];
 
 	m_pending_request.record_type = model->record_type();
 	m_pending_request.record_id = model->record_id();
@@ -250,7 +252,7 @@ void preview_view_t::on_text_changed()
 	if (m_pending_request.field.name != nullptr)
 	{
 		const auto result = field_validator::validate_field(
-			m_pending_request.field, current_text, m_pending_request.codepage, m_existing_sub_size);
+		    m_pending_request.field, current_text, m_pending_request.codepage, m_existing_sub_size);
 
 		is_valid = result.valid;
 	}
@@ -285,9 +287,9 @@ void preview_view_t::on_value_selector_changed()
 		return;
 
 	const auto & field = m_pending_request.field;
-	const bool is_flags = (field.type == field_type_t::flags_u8 ||
-	                        field.type == field_type_t::flags_u16 ||
-	                        field.type == field_type_t::flags_u32);
+	const bool is_flags =
+	    (field.type == field_type_t::flags_u8 || field.type == field_type_t::flags_u16 ||
+	     field.type == field_type_t::flags_u32);
 
 	QString new_text;
 

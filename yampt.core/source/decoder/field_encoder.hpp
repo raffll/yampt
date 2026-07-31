@@ -5,8 +5,7 @@
 #include <string>
 #include <string_view>
 
-namespace field_encoder
-{
+namespace field_encoder {
 
 struct encode_context_t
 {
@@ -27,4 +26,4 @@ std::string patch_sub_record(
 
 std::string patch_record_size(const std::string & record_content);
 
-}
+} // namespace field_encoder

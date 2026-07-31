@@ -162,8 +162,8 @@ filter_dialog_t::filter_state_t filter_dialog_t::state() const
 	s.filter_lua_severity = !s.lua_severity_set.empty() && s.lua_severity_set.size() < 3;
 
 	s.lua_interface_set = read_lua_interface_state();
-	s.filter_lua_interface = !s.lua_interface_set.empty()
-	    && static_cast<int>(s.lua_interface_set.size()) < m_lst_lua_interfaces->count();
+	s.filter_lua_interface =
+	    !s.lua_interface_set.empty() && static_cast<int>(s.lua_interface_set.size()) < m_lst_lua_interfaces->count();
 
 	return s;
 }
