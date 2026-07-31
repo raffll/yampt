@@ -14,6 +14,9 @@ Qt6 GUI for viewing, comparing, and patching plugins. Similar to TES5Edit/xEdit.
 - Side-by-side text comparison panel
 - Advanced filter: conflict level, override status, record type, ID, name, deleted records
 
+**Editing**
+- **Direct field editing of source plugins — right-click plugin → Enable Edit, change values in the Preview panel**
+
 **Merging**
 - Automatic merged patch: leveled lists, dialogues, three-way field-level merge for packed sub-records
 - Automatic fixes: fog density, summon persistence, cell name reversion

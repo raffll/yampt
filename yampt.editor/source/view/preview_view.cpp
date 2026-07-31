@@ -3,10 +3,12 @@
 #include "model/view_tree_model.hpp"
 #include <decoder/field_validator.hpp>
 #include <utility/char_diff.hpp>
+#include <QAbstractItemView>
 #include <QComboBox>
 #include <QEvent>
 #include <QHBoxLayout>
 #include <QModelIndex>
+#include <QMouseEvent>
 #include <QPushButton>
 #include <QTextEdit>
 #include <QToolTip>
@@ -37,6 +39,7 @@ preview_view_t::preview_view_t(QWidget * parent)
 	m_value_selector = new QComboBox(this);
 	m_value_selector->setVisible(false);
 	m_value_selector->setToolTip(tr("Select a value from the list"));
+	m_value_selector->view()->installEventFilter(this);
 	right_column->addWidget(m_value_selector);
 
 	m_apply_button = new QPushButton(tr("Apply"), this);
@@ -55,6 +58,21 @@ bool preview_view_t::eventFilter(QObject * watched, QEvent * event)
 {
 	if (watched == m_right_edit && event->type() == QEvent::KeyPress)
 		m_user_has_typed = true;
+
+	if (watched == m_value_selector->view() && event->type() == QEvent::MouseButtonRelease)
+	{
+		auto * mouse_event = static_cast<QMouseEvent *>(event);
+		const auto view_index = m_value_selector->view()->indexAt(mouse_event->pos());
+		if (view_index.isValid())
+		{
+			auto * item_model = m_value_selector->model();
+			const auto current_state = item_model->data(view_index, Qt::CheckStateRole).toInt();
+			const auto new_state = (current_state == Qt::Checked) ? Qt::Unchecked : Qt::Checked;
+			item_model->setData(view_index, new_state, Qt::CheckStateRole);
+			on_value_selector_changed();
+			return true;
+		}
+	}
 
 	return QWidget::eventFilter(watched, event);
 }
@@ -151,6 +169,12 @@ void preview_view_t::update_selection(const QModelIndex & index, const view_tree
 	}
 
 	const int column = index.column();
+	if (column < 1)
+	{
+		set_editing_enabled(false);
+		return;
+	}
+
 	if (!m_editable_columns->is_editable(column))
 	{
 		set_editing_enabled(false);
@@ -323,7 +347,7 @@ void preview_view_t::populate_value_selector()
 		if (!field.enum_names)
 			return;
 
-		m_value_selector->addItem(QString::fromUtf8("None"));
+		m_value_selector->addItem(tr("None"));
 		for (const char * const * current = field.enum_names; *current != nullptr; ++current)
 			m_value_selector->addItem(QString::fromUtf8(*current));
 
@@ -333,8 +357,8 @@ void preview_view_t::populate_value_selector()
 
 	case field_type_t::bool_bit:
 	{
-		m_value_selector->addItem(QString::fromUtf8("Yes"));
-		m_value_selector->addItem(QString::fromUtf8("No"));
+		m_value_selector->addItem(tr("Yes"));
+		m_value_selector->addItem(tr("No"));
 		m_value_selector->setVisible(true);
 		break;
 	}
@@ -343,26 +367,37 @@ void preview_view_t::populate_value_selector()
 	case field_type_t::flags_u16:
 	case field_type_t::flags_u32:
 	{
-		if (!field.flag_names)
-			return;
-
-		for (int bit_pos = 0; bit_pos < field.flag_count; ++bit_pos)
-		{
-			if (field.flag_names[bit_pos][0] == '_')
-				continue;
-
-			auto * item_model = m_value_selector->model();
-			m_value_selector->addItem(QString::fromUtf8(field.flag_names[bit_pos]));
-			const int row = m_value_selector->count() - 1;
-			auto item_index = item_model->index(row, 0);
-			item_model->setData(item_index, Qt::Checked, Qt::CheckStateRole);
-		}
-
-		m_value_selector->setVisible(true);
+		populate_flags_selector(field);
 		break;
 	}
 
 	default:
 		break;
 	}
+}
+
+void preview_view_t::populate_flags_selector(const field_def_t & field)
+{
+	if (!field.flag_names)
+		return;
+
+	const auto current_flags = QString::fromStdString(m_original_value);
+
+	for (int bit_pos = 0; bit_pos < field.flag_count; ++bit_pos)
+	{
+		if (field.flag_names[bit_pos][0] == '_')
+			continue;
+
+		const auto flag_name = QString::fromUtf8(field.flag_names[bit_pos]);
+		m_value_selector->addItem(flag_name);
+
+		auto * item_model = m_value_selector->model();
+		const int row = m_value_selector->count() - 1;
+		auto item_index = item_model->index(row, 0);
+
+		const bool is_set = current_flags.contains(flag_name);
+		item_model->setData(item_index, is_set ? Qt::Checked : Qt::Unchecked, Qt::CheckStateRole);
+	}
+
+	m_value_selector->setVisible(true);
 }

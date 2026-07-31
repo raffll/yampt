@@ -2,6 +2,9 @@
 
 ## [XXX]
 
+### yEditor
+- [NEW] Enable Edit: edit decoded fields of source plugins directly (right-click plugin → Enable Edit)
+
 ## [0.940] - 2026-07-29
 
 ### yTranslator

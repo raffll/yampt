@@ -519,7 +519,32 @@ bool merge_controller_t::save_merge_to_file(
 		builder.add_record_raw(scan.merge_record_type(i), scan.merge_record_id(i), scan.merge_record_content(i));
 	}
 
-	std::set<int> contributing_plugins;
+	const auto contributing = collect_contributing_plugins();
+	const auto masters = build_master_list(contributing);
+	const auto merge_filename = std::filesystem::path(output_path).filename().string();
+	const bool tes3_is_new = (scan.find_merge_content("TES3", merge_filename) == nullptr);
+
+	const auto header_content =
+	    patch_builder_t::build_tes3_header(author, description, builder.record_count(), masters);
+
+	scan.copy_record_to_merge_raw("TES3", merge_filename, header_content);
+
+	const bool saved = builder.save(output_path, author, description, masters);
+
+	if (saved && tes3_is_new)
+	{
+		scan.recompute_single_conflict("TES3", merge_filename);
+		m_nav_view.rebuild_preserving_state();
+	}
+
+	return saved;
+}
+
+std::set<int> merge_controller_t::collect_contributing_plugins() const
+{
+	auto & scan = m_session.scan();
+	std::set<int> contributing;
+
 	for (const auto & entry : scan.entries())
 	{
 		bool in_merge = false;
@@ -538,17 +563,25 @@ bool merge_controller_t::save_merge_to_file(
 		for (const auto & ver : entry.versions)
 		{
 			if (!scan.is_merge_plugin(ver.plugin_idx))
-				contributing_plugins.insert(ver.plugin_idx);
+				contributing.insert(ver.plugin_idx);
 		}
 	}
 
+	return contributing;
+}
+
+std::vector<patch_builder_t::master_entry_t> merge_controller_t::build_master_list(
+    const std::set<int> & contributing) const
+{
+	auto & scan = m_session.scan();
 	std::vector<patch_builder_t::master_entry_t> masters;
+
 	for (int i = 0; i < static_cast<int>(scan.plugin_count()); ++i)
 	{
 		if (scan.is_merge_plugin(i))
 			continue;
 
-		if (contributing_plugins.find(i) == contributing_plugins.end())
+		if (contributing.find(i) == contributing.end())
 			continue;
 
 		patch_builder_t::master_entry_t master;
@@ -566,23 +599,7 @@ bool merge_controller_t::save_merge_to_file(
 		masters.push_back(std::move(master));
 	}
 
-	const auto merge_filename = std::filesystem::path(output_path).filename().string();
-	const bool tes3_is_new = (scan.find_merge_content("TES3", merge_filename) == nullptr);
-
-	const auto header_content =
-	    patch_builder_t::build_tes3_header(author, description, builder.record_count(), masters);
-
-	scan.copy_record_to_merge_raw("TES3", merge_filename, header_content);
-
-	const bool saved = builder.save(output_path, author, description, masters);
-
-	if (saved && tes3_is_new)
-	{
-		scan.recompute_single_conflict("TES3", merge_filename);
-		m_nav_view.rebuild_preserving_state();
-	}
-
-	return saved;
+	return masters;
 }
 
 void merge_controller_t::refresh_after_merge(const std::string & rec_type, const std::string & record_id)

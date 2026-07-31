@@ -235,26 +235,6 @@ static std::pair<int32_t, int32_t> extract_cell_coords(const std::string & recor
 	return { 0, 0 };
 }
 
-static std::set<size_t> collect_itm_indices(plugin_scan_t & scan, int plugin_idx)
-{
-	std::set<size_t> indices;
-	const auto entries = scan.itm_entries(plugin_idx);
-
-	for (const auto * entry : entries)
-	{
-		for (const auto & version : entry->versions)
-		{
-			if (version.plugin_idx != plugin_idx)
-				continue;
-
-			indices.insert(version.record_index);
-			break;
-		}
-	}
-
-	return indices;
-}
-
 clean_result_t batch_cleaner_t::clean_plugin(int plugin_idx, const std::string & output_directory)
 {
 	clean_result_t result;
@@ -306,7 +286,7 @@ clean_result_t batch_cleaner_t::clean_plugin(int plugin_idx, const std::string &
 		kept_records.push_back(&record);
 	}
 
-	result.total_removed = result.itm_removed + result.evil_gmst_removed + result.junk_cell_removed;
+	result.total_removed = result.evil_gmst_removed + result.junk_cell_removed;
 
 	std::string patched_header;
 	const bool needs_header_repair = m_options.update_master_sizes || m_options.update_version;

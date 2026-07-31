@@ -197,65 +197,66 @@ void script_parser_t::convert_script()
 		error = false;
 
 		if (line_lc == "end" || (line_lc.size() > 3 && line_lc.substr(0, 4) == "end "))
-		{
 			is_end = true;
-		}
 
 		if (!is_end)
-		{
-			try
-			{
-				if (!is_done)
-					convert_line("addtopic", 0, rec_type_t::dial);
-
-				if (!is_done)
-					convert_line_unquoted("showmap", rec_type_t::cell);
-				if (!is_done)
-					convert_line("showmap", 0, rec_type_t::cell);
-
-				if (!is_done)
-					convert_line_unquoted("centeroncell", rec_type_t::cell);
-				if (!is_done)
-					convert_line("centeroncell", 0, rec_type_t::cell);
-
-				if (!is_done)
-					convert_line("getpccell", 0, rec_type_t::cell);
-
-				if (!is_done)
-					convert_line_unquoted("aifollowcell", rec_type_t::cell);
-				if (!is_done)
-					convert_line("aifollowcell", 1, rec_type_t::cell);
-
-				if (!is_done)
-					convert_line_unquoted("aiescortcell", rec_type_t::cell);
-				if (!is_done)
-					convert_line("aiescortcell", 1, rec_type_t::cell);
-
-				if (!is_done)
-					convert_line_unquoted("placeitemcell", rec_type_t::cell);
-				if (!is_done)
-					convert_line("placeitemcell", 1, rec_type_t::cell);
-
-				if (!is_done)
-					convert_line_unquoted("positioncell", rec_type_t::cell);
-				if (!is_done)
-					convert_line("positioncell", 4, rec_type_t::cell);
-
-				if (!is_done)
-					convert_line();
-			}
-			catch (...)
-			{
-				app_logger_t::add_log("[error] unknown error in script parser\r\n");
-				app_logger_t::add_log("line: " + line + "\r\n");
-				error = true;
-			}
-		}
+			convert_current_line();
 
 		if (error)
 			dump_error();
 
 		new_script += new_line + "\r\n";
+	}
+}
+
+void script_parser_t::convert_current_line()
+{
+	try
+	{
+		if (!is_done)
+			convert_line("addtopic", 0, rec_type_t::dial);
+
+		if (!is_done)
+			convert_line_unquoted("showmap", rec_type_t::cell);
+		if (!is_done)
+			convert_line("showmap", 0, rec_type_t::cell);
+
+		if (!is_done)
+			convert_line_unquoted("centeroncell", rec_type_t::cell);
+		if (!is_done)
+			convert_line("centeroncell", 0, rec_type_t::cell);
+
+		if (!is_done)
+			convert_line("getpccell", 0, rec_type_t::cell);
+
+		if (!is_done)
+			convert_line_unquoted("aifollowcell", rec_type_t::cell);
+		if (!is_done)
+			convert_line("aifollowcell", 1, rec_type_t::cell);
+
+		if (!is_done)
+			convert_line_unquoted("aiescortcell", rec_type_t::cell);
+		if (!is_done)
+			convert_line("aiescortcell", 1, rec_type_t::cell);
+
+		if (!is_done)
+			convert_line_unquoted("placeitemcell", rec_type_t::cell);
+		if (!is_done)
+			convert_line("placeitemcell", 1, rec_type_t::cell);
+
+		if (!is_done)
+			convert_line_unquoted("positioncell", rec_type_t::cell);
+		if (!is_done)
+			convert_line("positioncell", 4, rec_type_t::cell);
+
+		if (!is_done)
+			convert_line();
+	}
+	catch (...)
+	{
+		app_logger_t::add_log("[error] unknown error in script parser\r\n");
+		app_logger_t::add_log("line: " + line + "\r\n");
+		error = true;
 	}
 }
 

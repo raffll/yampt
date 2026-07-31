@@ -39,6 +39,7 @@ private slots:
 private:
 	void set_editing_enabled(bool enabled);
 	void populate_value_selector();
+	void populate_flags_selector(const field_def_t & field);
 
 	QTextEdit * m_left_edit = nullptr;
 	QTextEdit * m_right_edit = nullptr;

@@ -52,3 +52,7 @@ When asked to "update documents" or "update docs", update all of the following:
 - `docs/yampt-CLI-Manual.md` — CLI user manual
 
 Only update files relevant to the change. A yEditor-only feature does not touch the yTranslator manual.
+
+## BBCode Sync Rule
+
+`docs/README.bbcode` must always mirror `README.md` in structure, content, and emphasis. When updating the README, rewrite the BBCode file to match — same sections, same groupings, same bold items. Never update one without the other.

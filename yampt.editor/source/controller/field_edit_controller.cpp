@@ -167,7 +167,9 @@ edit_result_t field_edit_controller_t::commit_to_source(
 	plugin.replace_record(patched_content);
 
 	const auto & plugin_path = m_session.scan().plugin_path(request.plugin_idx);
-	binary_file_io::write_file(plugin.get_records(), plugin_path);
+	const bool written = binary_file_io::write_file(plugin.get_records(), plugin_path);
+	if (!written)
+		return { false, "failed to write plugin file" };
 
 	m_session.scan().recompute_single_conflict(request.record_type, request.record_id);
 	emit record_modified();

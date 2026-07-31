@@ -46,19 +46,20 @@ void binary_file_io::write_text(const std::string & text, const std::string & pa
 	app_logger_t::add_log("[info] writing \"" + path + "\"\r\n");
 }
 
-void binary_file_io::write_file(const std::vector<record_t> & records, const std::string & path)
+bool binary_file_io::write_file(const std::vector<record_t> & records, const std::string & path)
 {
 	std::ofstream file(path, std::ios::binary);
 	if (!file.is_open())
 	{
 		app_logger_t::add_log("[error] cannot open \"" + path + "\" for writing\r\n");
-		return;
+		return false;
 	}
+
 	for (const auto & record : records)
-	{
 		file << record.content;
-	}
+
 	app_logger_t::add_log("[info] writing \"" + path + "\"\r\n");
+	return file.good();
 }
 
 void binary_file_io::create_file(const std::vector<record_t> & records, const std::string & path)

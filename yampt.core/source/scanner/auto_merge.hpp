@@ -1,6 +1,7 @@
 #pragma once
 
 #include "sub_record_merge.hpp"
+#include <regex>
 #include <set>
 #include <string>
 #include <vector>
@@ -60,6 +61,8 @@ private:
 
 	void build_record_groups();
 	void process_groups(merge_counters_t & counters);
+	bool should_skip_group(const record_group_t & group, const std::regex & exclusion_regex, bool has_exclusion) const;
+	void dispatch_group(const record_group_t & group, merge_counters_t & counters);
 	void process_leveled_list(const record_group_t & group, merge_counters_t & counters);
 	void process_dialogue(const record_group_t & group, merge_counters_t & counters);
 	void process_three_way(const record_group_t & group, merge_counters_t & counters);
@@ -76,7 +79,6 @@ private:
 
 	bool is_plugin_included(int plugin_idx) const;
 	bool is_type_enabled(const std::string & rec_type) const;
-	bool matches_exclusion(const std::string & record_id) const;
 
 	void add_log(const std::string & message);
 
