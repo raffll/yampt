@@ -154,7 +154,7 @@ edit_result_t field_edit_controller_t::commit_to_merge(
 		m_session.scan().copy_record_to_merge_raw(rec_type, record_id, patched_content);
 
 	m_session.scan().recompute_single_conflict(rec_type, record_id);
-	emit record_modified();
+	emit record_modified(true, {});
 	return { true, {} };
 }
 
@@ -172,6 +172,6 @@ edit_result_t field_edit_controller_t::commit_to_source(
 		return { false, "failed to write plugin file" };
 
 	m_session.scan().recompute_single_conflict(request.record_type, request.record_id);
-	emit record_modified();
+	emit record_modified(false, plugin_path);
 	return { true, {} };
 }

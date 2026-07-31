@@ -851,6 +851,25 @@ QVariant nav_tree_model_t::data_for_lua_leaf(void * ptr, int row, int column, in
 	if (role == Qt::DecorationRole && column == 0)
 		return lua_leaf_severity_icon(leaf_idx);
 
+	if (role == Qt::ForegroundRole && m_lua_section.in_conflicts_mode)
+	{
+		if (leaf_idx < m_lua_scan_result.conflicts.size())
+		{
+			const auto & conflict = m_lua_scan_result.conflicts[leaf_idx];
+			switch (conflict.severity)
+			{
+			case conflict_severity_t::blocking:
+				return QBrush(QColor(200, 50, 50));
+
+			case conflict_severity_t::mutating:
+				return QBrush(QColor(180, 120, 0));
+
+			case conflict_severity_t::overlapping:
+				return QBrush(QColor(100, 140, 0));
+			}
+		}
+	}
+
 	return {};
 }
 

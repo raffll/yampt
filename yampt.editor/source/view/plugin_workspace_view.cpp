@@ -118,9 +118,12 @@ void plugin_workspace_view_t::setup_connections()
 	auto * copy_shortcut = new QShortcut(QKeySequence::Copy, m_record_view->tree());
 	connect(copy_shortcut, &QShortcut::activated, this, &plugin_workspace_view_t::on_view_copy);
 
-	connect(m_edit_controller, &field_edit_controller_t::record_modified, this, [this]() {
+	connect(m_edit_controller, &field_edit_controller_t::record_modified, this, [this](bool is_merge_edit, const std::string & saved_path) {
 		rebuild_nav_preserving_state();
-		m_merge_controller->save_merged_patch();
+		if (is_merge_edit)
+			m_merge_controller->save_merged_patch();
+		else
+			log_message("[info] saved " + saved_path);
 	});
 
 	connect(m_preview, &preview_view_t::edit_committed, this, [this]() {
@@ -369,6 +372,8 @@ void plugin_workspace_view_t::dispatch_lua_selection(const nav_tree_model_t::nod
 		const auto idx = static_cast<size_t>(info.lua_conflict_idx);
 		if (idx < m_lua_scan_result.conflicts.size())
 			m_record_view->model()->set_lua_conflict(m_lua_scan_result.conflicts[idx]);
+
+		m_record_view->resize_columns();
 		return;
 	}
 
@@ -377,6 +382,8 @@ void plugin_workspace_view_t::dispatch_lua_selection(const nav_tree_model_t::nod
 		const auto idx = static_cast<size_t>(info.lua_registration_idx);
 		if (idx < m_lua_scan_result.registrations.size())
 			m_record_view->model()->set_lua_registration(m_lua_scan_result.registrations[idx]);
+
+		m_record_view->resize_columns();
 		return;
 	}
 

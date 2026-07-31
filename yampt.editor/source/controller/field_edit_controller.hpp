@@ -38,7 +38,7 @@ public:
 	edit_result_t commit_field_edit(const field_edit_request_t & request);
 
 signals:
-	void record_modified();
+	void record_modified(bool is_merge_edit, const std::string & saved_path);
 
 private:
 	edit_result_t commit_to_merge(const field_edit_request_t & request, const std::string & patched_content);
