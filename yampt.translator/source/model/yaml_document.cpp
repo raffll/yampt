@@ -188,7 +188,11 @@ commit_result_t yaml_document_t::commit(const table_row_t & row, const std::stri
 
 commit_result_t yaml_document_t::commit_status(const table_row_t & row, status_t new_status)
 {
-	return commit(row, row.new_text.empty() ? m_native_values[row.record_index] : row.new_text, new_status);
+	if (row.record_index >= m_keys.size())
+		return {};
+
+	const auto & value = row.new_text.empty() ? m_native_values[row.record_index] : row.new_text;
+	return commit(row, value, new_status);
 }
 
 commit_result_t yaml_document_t::reset_to_original(const table_row_t & row)

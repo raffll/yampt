@@ -234,7 +234,7 @@ int dict_document_t::translated_count() const
 	{
 		for (const auto & rec : chapter.records)
 		{
-			if (!rec.new_text.empty())
+			if (rec.status != status_t::untranslated)
 				++count;
 		}
 	}

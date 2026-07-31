@@ -40,7 +40,7 @@ validation_result_t byte_limit_validator_t::validate(rec_type_t type, const std:
 	if (has_forbidden)
 		return { validation_level_t::error, byte_count, 0 };
 
-	if (type == rec_type_t::cell)
+	if (type == rec_type_t::cell || type == rec_type_t::dial)
 	{
 		if (byte_count > 63)
 			return { validation_level_t::error, byte_count, 63 };

@@ -594,6 +594,7 @@ void esm_converter_t::convert_info()
 {
 	std::string key_prefix;
 	size_t dial_index = 0;
+	bool dial_found = false;
 
 	reset_counters();
 	const auto & type = rec_type_t::info;
@@ -608,11 +609,15 @@ void esm_converter_t::convert_info()
 			{
 				key_prefix = domain_types::get_dialog_type(esm.get_key().content) + "^" + esm.get_value().text;
 				dial_index = i;
+				dial_found = true;
 			}
 			continue;
 		}
 
 		if (esm.get_record().id != "INFO")
+			continue;
+
+		if (!dial_found)
 			continue;
 
 		esm.set_key("INAM");

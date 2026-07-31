@@ -1,4 +1,5 @@
 #include "web_translator.hpp"
+#include <QCoreApplication>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -76,7 +77,7 @@ void web_translator_t::translate(const std::string & text, const std::string & t
 {
 	if (m_api_key.empty())
 	{
-		emit translation_finished({ "", false, "No API key configured" });
+		emit translation_finished({ "", false, QCoreApplication::translate("yTranslator", "No API key configured").toStdString() });
 		return;
 	}
 
@@ -146,7 +147,15 @@ void web_translator_t::send_simple_request(const std::string & text, const std::
 		for (const auto & [field_name, field_template] : m_config.body_fields)
 		{
 			auto value = expand_template(field_template, text, target_lang);
-			body_obj[QString::fromStdString(field_name)] = QString::fromStdString(value);
+			auto field_key = QString::fromStdString(field_name);
+
+			bool is_integer = false;
+			const auto integer_value = QString::fromStdString(value).toLongLong(&is_integer);
+
+			if (is_integer)
+				body_obj[field_key] = integer_value;
+			else
+				body_obj[field_key] = QString::fromStdString(value);
 		}
 		body_data = QJsonDocument(body_obj).toJson(QJsonDocument::Compact);
 	}
@@ -232,7 +241,7 @@ void web_translator_t::on_reply_finished(QNetworkReply * reply)
 
 	if (result_text.empty())
 	{
-		emit translation_finished({ "", false, "Empty or unparseable response" });
+		emit translation_finished({ "", false, QCoreApplication::translate("yTranslator", "Empty or unparseable response").toStdString() });
 		return;
 	}
 

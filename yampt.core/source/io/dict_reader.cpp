@@ -95,36 +95,23 @@ void dict_reader_t::parse_json(const std::string & content, const std::string & 
 
 void dict_reader_t::validate_entry(record_entry_t & entry, rec_type_t type)
 {
-	if (type == rec_type_t::cell && entry.new_text.size() > 63)
-	{
-		app_logger_t::add_log(
-		    "[warning] " + domain_types::type_to_str(type) + ": invalid, more than 63 bytes in " + entry.key_text +
-		    "\r\n");
-		return;
-	}
+	const auto byte_count = entry.new_text.size();
+	bool exceeds_limit = false;
 
-	if (type == rec_type_t::rnam && entry.new_text.size() > 32)
-	{
-		app_logger_t::add_log(
-		    "[warning] " + domain_types::type_to_str(type) + ": invalid, more than 32 bytes in " + entry.key_text +
-		    "\r\n");
-		return;
-	}
+	if (type == rec_type_t::cell && byte_count > 63)
+		exceeds_limit = true;
+	else if (type == rec_type_t::rnam && byte_count > 32)
+		exceeds_limit = true;
+	else if (type == rec_type_t::fnam && byte_count > 31)
+		exceeds_limit = true;
+	else if (type == rec_type_t::info && byte_count > 1024)
+		exceeds_limit = true;
 
-	if (type == rec_type_t::fnam && entry.new_text.size() > 31)
+	if (exceeds_limit)
 	{
 		app_logger_t::add_log(
-		    "[warning] " + domain_types::type_to_str(type) + ": invalid, more than 31 bytes in " + entry.key_text +
-		    "\r\n");
-		return;
-	}
-
-	if (type == rec_type_t::info && entry.new_text.size() > 1024)
-	{
-		app_logger_t::add_log(
-		    "[warning] " + domain_types::type_to_str(type) + ": invalid, more than 1024 bytes in " + entry.key_text +
-		    "\r\n");
-		return;
+		    "[warning] " + domain_types::type_to_str(type) + ": exceeds byte limit in " + entry.key_text + "\r\n");
+		entry.status = status_t::error;
 	}
 
 	if (!dict.at(type).insert(entry))

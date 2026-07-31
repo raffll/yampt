@@ -1,4 +1,4 @@
-#include "creator_helpers.hpp"
+﻿#include "creator_helpers.hpp"
 #include "../utility/app_logger.hpp"
 #include "../utility/string_utils.hpp"
 #include <hunspell/hunspell.hxx>
@@ -6,7 +6,7 @@
 
 creator_context_t::~creator_context_t() = default;
 
-static bool is_number_or_punct(char c)
+static bool is_digit(char c)
 {
 	return (c >= '0' && c <= '9');
 }
@@ -625,7 +625,7 @@ bool creator_helpers::differs_only_in_numbers_or_punct(const std::string & a, co
 		if (a[i] == b[i])
 			continue;
 
-		if (!is_number_or_punct(a[i]) || !is_number_or_punct(b[i]))
+		if (!is_digit(a[i]) || !is_digit(b[i]))
 			return false;
 
 		has_difference = true;
@@ -655,7 +655,7 @@ std::string creator_helpers::adapt_translation(
 
 		while (pos != std::string::npos)
 		{
-			if (is_number_or_punct(result[pos]))
+			if (is_digit(result[pos]))
 			{
 				result[pos] = source[i];
 				replaced = true;

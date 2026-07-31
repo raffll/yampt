@@ -51,7 +51,19 @@ bool yaml_l10n_writer_t::write(
 		     value[0] == '>' || value[0] == '!' || value[0] == '%' || value[0] == '@' || value[0] == '#' ||
 		     value[0] == '\'' || value[0] == '"'))
 		{
-			file << key << ": \"" << value << "\"\n";
+			std::string escaped;
+			escaped.reserve(value.size());
+			for (char ch : value)
+			{
+				if (ch == '"')
+					escaped += "\\\"";
+				else if (ch == '\\')
+					escaped += "\\\\";
+				else
+					escaped += ch;
+			}
+
+			file << key << ": \"" << escaped << "\"\n";
 			continue;
 		}
 

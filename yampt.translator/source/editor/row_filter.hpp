@@ -32,5 +32,6 @@ public:
 
 private:
 	config_t m_config;
+	std::string m_query_lower;
 	std::optional<std::regex> m_compiled_regex;
 };

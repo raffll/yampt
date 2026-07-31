@@ -11,11 +11,6 @@
 #include <QTreeWidget>
 #include <QVBoxLayout>
 
-static std::string normalize_and_lower(std::string_view input)
-{
-	return string_utils::to_lower(string_utils::normalize_path(input));
-}
-
 dict_selection_dialog_t::dict_selection_dialog_t(
     const std::vector<dict_entry_t> & entries,
     const std::vector<std::string> & saved_order,

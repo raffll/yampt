@@ -35,11 +35,29 @@ const std::vector<std::string> & yaml_l10n_reader_t::key_order() const
 
 std::string yaml_l10n_reader_t::parse_quoted_value(const std::string & raw_value) const
 {
-	auto close_pos = raw_value.find('"', 1);
-	if (close_pos != std::string::npos)
-		return raw_value.substr(1, close_pos - 1);
+	std::string result;
+	result.reserve(raw_value.size());
 
-	return raw_value.substr(1);
+	for (size_t index = 1; index < raw_value.size(); ++index)
+	{
+		if (raw_value[index] == '\\' && index + 1 < raw_value.size())
+		{
+			char next_char = raw_value[index + 1];
+			if (next_char == '"' || next_char == '\\')
+			{
+				result += next_char;
+				++index;
+				continue;
+			}
+		}
+
+		if (raw_value[index] == '"')
+			break;
+
+		result += raw_value[index];
+	}
+
+	return result;
 }
 
 std::string yaml_l10n_reader_t::read_block_scalar(

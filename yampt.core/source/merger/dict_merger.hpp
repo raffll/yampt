@@ -7,9 +7,9 @@
 class dict_merger_t
 {
 public:
-	const auto & get_name(size_t i)
+	const auto & get_name(size_t i) const
 	{
-		return readers[i].get_name();
+		return readers.at(i).get_name();
 	}
 
 	const auto & get_dict() const

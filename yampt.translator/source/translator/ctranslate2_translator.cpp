@@ -1,4 +1,5 @@
 #include "ctranslate2_translator.hpp"
+#include <QCoreApplication>
 
 ctranslate2_translator_t::ctranslate2_translator_t(QObject * parent)
     : QObject(parent)
@@ -6,7 +7,7 @@ ctranslate2_translator_t::ctranslate2_translator_t(QObject * parent)
 
 std::string ctranslate2_translator_t::name() const
 {
-	return "CTranslate2 (local)";
+	return QCoreApplication::translate("yTranslator", "CTranslate2 (local)").toStdString();
 }
 
 bool ctranslate2_translator_t::is_available() const
@@ -33,7 +34,7 @@ void ctranslate2_translator_t::translate(const std::string & text, const std::st
 {
 	if (!m_engine.is_loaded())
 	{
-		emit translation_finished({ "", false, "Model not loaded" });
+		emit translation_finished({ "", false, QCoreApplication::translate("yTranslator", "Model not loaded").toStdString() });
 		return;
 	}
 
