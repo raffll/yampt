@@ -533,45 +533,33 @@ void plugin_workspace_view_t::on_view_selection_changed(const QModelIndex & curr
 		return;
 	}
 
-	int col = current.column() - 1;
-	if (col < 0)
-		col = 0;
-
-	if (col >= static_cast<int>(m_record_view->model()->column_plugin_indices().size()))
+	const auto * model = m_record_view->model();
+	const int clicked_col = current.column();
+	if (clicked_col < 1)
 	{
 		m_preview->clear();
 		return;
 	}
 
-	const auto * node = m_record_view->model()->node_from_index(current);
-	if (!node)
+	m_preview->set_editing_enabled(false);
+
+	const auto right_variant = model->data(current, Qt::DisplayRole);
+	const auto right_text = right_variant.isValid() ? right_variant.toString().toStdString() : std::string {};
+
+	const auto left_index = model->index(current.row(), clicked_col - 1, current.parent());
+	std::string left_text;
+	if (left_index.isValid() && left_index.column() >= 1)
 	{
-		m_preview->clear();
-		return;
+		const auto left_variant = model->data(left_index, Qt::DisplayRole);
+		left_text = left_variant.isValid() ? left_variant.toString().toStdString() : std::string {};
 	}
-
-	auto read_node_value = [&](int target_col) -> std::string
-	{
-		if (target_col < 0 || target_col >= static_cast<int>(node->values.size()))
-			return {};
-
-		const auto & value = node->values[target_col];
-		if (value == non_existent_value)
-			return {};
-
-		return value;
-	};
-
-	const auto right_text = read_node_value(col);
-	const auto left_text = (col > 0) ? read_node_value(col - 1) : std::string {};
 
 	if (right_text.empty() && left_text.empty())
 		m_preview->clear();
 	else
 		m_preview->show_comparison(left_text, right_text);
 
-	const auto adjusted_index = m_record_view->model()->index(current.row(), col + 1, current.parent());
-	m_preview->update_selection(adjusted_index, m_record_view->model(), right_text);
+	m_preview->update_selection(current, model, right_text);
 }
 
 void plugin_workspace_view_t::display_record_in_view(const conflict_entry_t & entry)

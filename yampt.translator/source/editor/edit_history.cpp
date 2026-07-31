@@ -67,7 +67,15 @@ void edit_history_t::load_from_file(const std::string & path)
 		return;
 
 	nlohmann::json j;
-	file >> j;
+
+	try
+	{
+		file >> j;
+	}
+	catch (...)
+	{
+		return;
+	}
 
 	m_entries.clear();
 	for (auto & [key, arr] : j.items())
@@ -81,6 +89,7 @@ void edit_history_t::load_from_file(const std::string & path)
 			entry.status = string_to_status(item.value("status", "untranslated"));
 			vec.push_back(entry);
 		}
+
 		m_entries[key] = std::move(vec);
 	}
 }

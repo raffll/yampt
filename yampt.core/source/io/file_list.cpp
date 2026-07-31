@@ -50,7 +50,10 @@ std::vector<const file_entry_t *> file_list_t::workspace_files() const
 {
 	std::vector<const file_entry_t *> result;
 	for (const auto & [key, entry] : m_entries)
-		result.push_back(&entry);
+	{
+		if (entry.is_workspace)
+			result.push_back(&entry);
+	}
 
 	return result;
 }

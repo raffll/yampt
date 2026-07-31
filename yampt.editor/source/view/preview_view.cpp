@@ -233,6 +233,7 @@ void preview_view_t::update_selection(const QModelIndex & index, const view_tree
 	m_original_value = cell_value;
 	populate_value_selector();
 	set_editing_enabled(true);
+	m_right_edit->setPlainText(QString::fromStdString(cell_value));
 }
 
 void preview_view_t::on_text_changed()

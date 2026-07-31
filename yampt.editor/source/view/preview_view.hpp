@@ -23,6 +23,7 @@ public:
 
 	void set_edit_controller(field_edit_controller_t * controller);
 	void set_editable_columns(const editable_column_set_t * columns);
+	void set_editing_enabled(bool enabled);
 	void update_selection(const QModelIndex & index, const view_tree_model_t * model, const std::string & cell_value);
 
 protected:
@@ -37,7 +38,6 @@ private slots:
 	void on_value_selector_changed();
 
 private:
-	void set_editing_enabled(bool enabled);
 	void populate_value_selector();
 	void populate_flags_selector(const field_def_t & field);
 
