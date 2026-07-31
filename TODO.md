@@ -34,3 +34,7 @@ core:
 - translation_engine.cpp: split `translate` (73 lines) — extract batching and option setup
 - translation_engine.cpp: rename `t`→`token`
 - file_list.cpp: rename `fe`→`file_entry`
+- auto_merge.cpp: rename `pi`→`plugin_idx`, `v`→`version_idx`, `ei`→`entry_idx`, `mi`→`merge_idx`
+- plugin_scan.cpp: split `compute_conflict` (75 lines, depth 4) — extract slot iteration
+- plugin_scan.cpp: rename `pi`→`plugin_idx`, `mi`→`merge_idx`, `sr`→`slot_result`, `vi`→`version_idx`, `fi`→`field_idx`
+- domain_types.cpp: rename `str`→`byte_array` in conversion functions
