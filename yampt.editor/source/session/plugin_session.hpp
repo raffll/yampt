@@ -63,6 +63,9 @@ private:
 	};
 
 	std::vector<std::string> parse_mo2_profile(const QString & profile_dir);
+	std::vector<std::string> read_load_order(const QString & profile_dir);
+	QString resolve_game_data_path(const QString & mo2_root_path);
+	void append_merge_patch(std::vector<std::string> & paths, const QString & overwrite_path);
 	std::vector<std::string> parse_openmw_cfg(const QString & cfg_path);
 	std::vector<std::string> resolve_mo2_plugins(
 	    const std::vector<std::string> & plugin_names,
@@ -73,6 +76,7 @@ private:
 	    const std::vector<std::string> & data_dirs);
 	std::string resolve_single_content(const std::string & content_name, const std::vector<std::string> & data_dirs);
 	void load_plugins_internal(const std::vector<std::string> & paths);
+	void restore_folder_session();
 	void build_lua_paths_for_mo2(const QString & profile_dir);
 	void build_lua_paths_for_openmw(const QString & cfg_path);
 

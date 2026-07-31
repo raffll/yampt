@@ -158,33 +158,9 @@ void plugin_session_t::restore_session_state(const QString & ini_path)
 	switch (m_load_source)
 	{
 	case load_source_t::folder:
-	{
-		QDir data_dir(QString::fromStdString(m_load_base_path));
-		auto file_list = data_dir.entryInfoList({ "*.esm", "*.esp" }, QDir::Files, QDir::Time | QDir::Reversed);
-
-		std::vector<std::string> esms;
-		std::vector<std::string> esps;
-		for (const auto & file_info : file_list)
-		{
-			if (file_info.suffix().toLower() == "esm")
-				esms.push_back(file_info.absoluteFilePath().toStdString());
-			else
-				esps.push_back(file_info.absoluteFilePath().toStdString());
-		}
-
-		std::vector<std::string> paths;
-		paths.insert(paths.end(), esms.begin(), esms.end());
-		paths.insert(paths.end(), esps.begin(), esps.end());
-
-		if (!paths.empty())
-		{
-			m_lua_data_paths = { m_load_base_path };
-			m_lua_mod_names = {};
-			load_plugins_internal(paths);
-		}
-
+		restore_folder_session();
 		break;
-	}
+
 	case load_source_t::mo2_profile:
 	{
 		auto paths = parse_mo2_profile(QString::fromStdString(m_load_base_path));
@@ -211,6 +187,33 @@ void plugin_session_t::restore_session_state(const QString & ini_path)
 	case load_source_t::none:
 		break;
 	}
+}
+
+void plugin_session_t::restore_folder_session()
+{
+	QDir data_dir(QString::fromStdString(m_load_base_path));
+	auto file_list = data_dir.entryInfoList({ "*.esm", "*.esp" }, QDir::Files, QDir::Time | QDir::Reversed);
+
+	std::vector<std::string> esms;
+	std::vector<std::string> esps;
+	for (const auto & file_info : file_list)
+	{
+		if (file_info.suffix().toLower() == "esm")
+			esms.push_back(file_info.absoluteFilePath().toStdString());
+		else
+			esps.push_back(file_info.absoluteFilePath().toStdString());
+	}
+
+	std::vector<std::string> paths;
+	paths.insert(paths.end(), esms.begin(), esms.end());
+	paths.insert(paths.end(), esps.begin(), esps.end());
+
+	if (paths.empty())
+		return;
+
+	m_lua_data_paths = { m_load_base_path };
+	m_lua_mod_names = {};
+	load_plugins_internal(paths);
 }
 
 void plugin_session_t::build_lua_paths_for_mo2(const QString & profile_dir)
@@ -341,28 +344,9 @@ void plugin_session_t::load_plugins_internal(const std::vector<std::string> & pa
 
 std::vector<std::string> plugin_session_t::parse_mo2_profile(const QString & profile_dir)
 {
-	QString loadorder_path = profile_dir + "/loadorder.txt";
-	QFile loadorder_file(loadorder_path);
-	if (!loadorder_file.open(QIODevice::ReadOnly | QIODevice::Text))
-	{
-		emit log_message("Cannot open loadorder.txt in " + profile_dir.toStdString());
+	auto plugin_names = read_load_order(profile_dir);
+	if (plugin_names.empty())
 		return {};
-	}
-
-	std::vector<std::string> plugin_names;
-	QTextStream stream(&loadorder_file);
-	while (!stream.atEnd())
-	{
-		auto line = stream.readLine().trimmed();
-		if (line.isEmpty() || line.startsWith('#'))
-			continue;
-
-		if (line.startsWith('*'))
-			line = line.mid(1);
-
-		plugin_names.push_back(line.toStdString());
-	}
-	loadorder_file.close();
 
 	QDir profile(profile_dir);
 	QDir mo2_root = profile;
@@ -370,41 +354,7 @@ std::vector<std::string> plugin_session_t::parse_mo2_profile(const QString & pro
 	mo2_root.cdUp();
 
 	const auto mods_path = mo2_root.absolutePath() + "/mods";
-
-	QString game_data_path;
-	QSettings mo2_ini(mo2_root.absolutePath() + "/ModOrganizer.ini", QSettings::IniFormat);
-	game_data_path = mo2_ini.value("General/gamePath").toString();
-	if (game_data_path.isEmpty())
-		game_data_path = mo2_ini.value("Settings/game_path").toString();
-
-	if (game_data_path.isEmpty())
-	{
-		QFile ini_file(mo2_root.absolutePath() + "/ModOrganizer.ini");
-		if (ini_file.open(QIODevice::ReadOnly | QIODevice::Text))
-		{
-			QTextStream ini_stream(&ini_file);
-			while (!ini_stream.atEnd())
-			{
-				auto ini_line = ini_stream.readLine().trimmed();
-				if (ini_line.startsWith("gamePath=") || ini_line.startsWith("gamePath ="))
-				{
-					game_data_path = ini_line.mid(ini_line.indexOf('=') + 1).trimmed();
-					if (game_data_path.startsWith("@ByteArray(") && game_data_path.endsWith(")"))
-						game_data_path = game_data_path.mid(11, game_data_path.size() - 12);
-
-					break;
-				}
-			}
-			ini_file.close();
-		}
-	}
-
-	if (!game_data_path.isEmpty())
-	{
-		game_data_path.replace('\\', '/');
-		if (!game_data_path.endsWith("/Data Files"))
-			game_data_path += "/Data Files";
-	}
+	const auto game_data_path = resolve_game_data_path(mo2_root.absolutePath());
 
 	mo2_resolve_context_t context;
 
@@ -436,8 +386,8 @@ std::vector<std::string> plugin_session_t::parse_mo2_profile(const QString & pro
 		bool found = false;
 		for (const auto & resolved : paths)
 		{
-			auto pos = resolved.find_last_of("/\\");
-			auto filename = (pos != std::string::npos) ? resolved.substr(pos + 1) : resolved;
+			auto separator_pos = resolved.find_last_of("/\\");
+			auto filename = (separator_pos != std::string::npos) ? resolved.substr(separator_pos + 1) : resolved;
 			if (QString::fromStdString(filename).compare(QString::fromStdString(master), Qt::CaseInsensitive) == 0)
 			{
 				found = true;
@@ -451,25 +401,90 @@ std::vector<std::string> plugin_session_t::parse_mo2_profile(const QString & pro
 			    context.game_data_path.toStdString() + ")");
 	}
 
-	const auto merge_full_path = context.overwrite_path + "/Merged Patch.esp";
-	if (QFile::exists(merge_full_path))
-	{
-		const auto merge_std = merge_full_path.toStdString();
-		bool already_included = false;
-		for (const auto & resolved : paths)
-		{
-			if (resolved == merge_std)
-			{
-				already_included = true;
-				break;
-			}
-		}
+	append_merge_patch(paths, context.overwrite_path);
+	return paths;
+}
 
-		if (!already_included)
-			paths.push_back(merge_std);
+std::vector<std::string> plugin_session_t::read_load_order(const QString & profile_dir)
+{
+	QString loadorder_path = profile_dir + "/loadorder.txt";
+	QFile loadorder_file(loadorder_path);
+	if (!loadorder_file.open(QIODevice::ReadOnly | QIODevice::Text))
+	{
+		emit log_message("Cannot open loadorder.txt in " + profile_dir.toStdString());
+		return {};
 	}
 
-	return paths;
+	std::vector<std::string> plugin_names;
+	QTextStream stream(&loadorder_file);
+	while (!stream.atEnd())
+	{
+		auto line = stream.readLine().trimmed();
+		if (line.isEmpty() || line.startsWith('#'))
+			continue;
+
+		if (line.startsWith('*'))
+			line = line.mid(1);
+
+		plugin_names.push_back(line.toStdString());
+	}
+	loadorder_file.close();
+	return plugin_names;
+}
+
+QString plugin_session_t::resolve_game_data_path(const QString & mo2_root_path)
+{
+	QSettings mo2_ini(mo2_root_path + "/ModOrganizer.ini", QSettings::IniFormat);
+	auto result = mo2_ini.value("General/gamePath").toString();
+	if (result.isEmpty())
+		result = mo2_ini.value("Settings/game_path").toString();
+
+	if (result.isEmpty())
+	{
+		QFile ini_file(mo2_root_path + "/ModOrganizer.ini");
+		if (ini_file.open(QIODevice::ReadOnly | QIODevice::Text))
+		{
+			QTextStream ini_stream(&ini_file);
+			while (!ini_stream.atEnd())
+			{
+				auto ini_line = ini_stream.readLine().trimmed();
+				if (!ini_line.startsWith("gamePath=") && !ini_line.startsWith("gamePath ="))
+					continue;
+
+				result = ini_line.mid(ini_line.indexOf('=') + 1).trimmed();
+				if (result.startsWith("@ByteArray(") && result.endsWith(")"))
+					result = result.mid(11, result.size() - 12);
+
+				break;
+			}
+			ini_file.close();
+		}
+	}
+
+	if (result.isEmpty())
+		return {};
+
+	result.replace('\\', '/');
+	if (!result.endsWith("/Data Files"))
+		result += "/Data Files";
+
+	return result;
+}
+
+void plugin_session_t::append_merge_patch(std::vector<std::string> & paths, const QString & overwrite_path)
+{
+	const auto merge_full_path = overwrite_path + "/Merged Patch.esp";
+	if (!QFile::exists(merge_full_path))
+		return;
+
+	const auto merge_std = merge_full_path.toStdString();
+	for (const auto & resolved : paths)
+	{
+		if (resolved == merge_std)
+			return;
+	}
+
+	paths.push_back(merge_std);
 }
 
 std::vector<std::string> plugin_session_t::resolve_mo2_plugins(

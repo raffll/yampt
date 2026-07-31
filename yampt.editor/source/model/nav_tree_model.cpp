@@ -1,4 +1,4 @@
-﻿#include "nav_tree_model.hpp"
+#include "nav_tree_model.hpp"
 #include "editable_column_set.hpp"
 #include <io/codepage.hpp>
 #include <algorithm>
@@ -11,9 +11,9 @@
 #include <QBrush>
 #include <QFont>
 
-static int conflict_this_priority(conflict_this_t ct)
+static int conflict_this_priority(conflict_this_t conflict)
 {
-	switch (ct)
+	switch (conflict)
 	{
 	case conflict_this_t::unknown:
 		return 0;
@@ -37,8 +37,8 @@ static int conflict_this_priority(conflict_this_t ct)
 static size_t unique_plugin_count(const conflict_entry_t & entry)
 {
 	std::set<int> plugins;
-	for (const auto & v : entry.versions)
-		plugins.insert(v.plugin_idx);
+	for (const auto & version : entry.versions)
+		plugins.insert(version.plugin_idx);
 	return plugins.size();
 }
 
@@ -50,12 +50,12 @@ conflict_this_t nav_tree_model_t::record_foreground_for_plugin(const conflict_en
 	if (m_filter.hide_duplicates() && unique_plugin_count(entry) <= 1)
 		return conflict_this_t::unknown;
 
-	for (const auto & v : entry.versions)
+	for (const auto & version : entry.versions)
 	{
-		if (v.plugin_idx != plugin_idx)
+		if (version.plugin_idx != plugin_idx)
 			continue;
 
-		return v.status;
+		return version.status;
 	}
 
 	return conflict_this_t::unknown;
@@ -275,15 +275,10 @@ void nav_tree_model_t::build_tree()
 		{
 			const auto & entry = entries[ei];
 
-			bool has_version = false;
-			for (const auto & v : entry.versions)
-			{
-				if (v.plugin_idx == p)
-				{
-					has_version = true;
-					break;
-				}
-			}
+			const bool has_version = std::any_of(
+			    entry.versions.begin(),
+			    entry.versions.end(),
+			    [p](const auto & version) { return version.plugin_idx == p; });
 
 			if (!has_version)
 				continue;
@@ -310,11 +305,11 @@ void nav_tree_model_t::build_tree()
 		    file_node.groups.end(),
 		    [](const type_group_t & a, const type_group_t & b)
 		{
-			const char * na = type_to_display_name(a.type);
-			const char * nb = type_to_display_name(b.type);
-			const char * sa = na ? na : a.type.c_str();
-			const char * sb = nb ? nb : b.type.c_str();
-			return std::strcmp(sa, sb) < 0;
+			const char * name_a = type_to_display_name(a.type);
+			const char * name_b = type_to_display_name(b.type);
+			const char * sort_a = name_a ? name_a : a.type.c_str();
+			const char * sort_b = name_b ? name_b : b.type.c_str();
+			return std::strcmp(sort_a, sort_b) < 0;
 		});
 
 		m_tree.push_back(std::move(file_node));
@@ -364,15 +359,15 @@ QModelIndex nav_tree_model_t::parent(const QModelIndex & child) const
 		return createIndex(group_row, 0, const_cast<lua_section_t *>(&m_lua_section));
 	}
 
-	for (size_t fi = 0; fi < m_tree.size(); ++fi)
+	for (size_t file_idx = 0; file_idx < m_tree.size(); ++file_idx)
 	{
-		if (ptr == &m_tree[fi])
-			return createIndex(static_cast<int>(fi), 0, nullptr);
+		if (ptr == &m_tree[file_idx])
+			return createIndex(static_cast<int>(file_idx), 0, nullptr);
 
-		for (size_t gi = 0; gi < m_tree[fi].groups.size(); ++gi)
+		for (size_t group_idx = 0; group_idx < m_tree[file_idx].groups.size(); ++group_idx)
 		{
-			if (ptr == &m_tree[fi].groups[gi])
-				return createIndex(static_cast<int>(gi), 0, const_cast<file_node_t *>(&m_tree[fi]));
+			if (ptr == &m_tree[file_idx].groups[group_idx])
+				return createIndex(static_cast<int>(group_idx), 0, const_cast<file_node_t *>(&m_tree[file_idx]));
 		}
 	}
 
@@ -420,16 +415,16 @@ int nav_tree_model_t::rowCount(const QModelIndex & parent) const
 	if (is_lua_group_pointer(ptr))
 		return 0;
 
-	for (size_t fi = 0; fi < m_tree.size(); ++fi)
+	for (size_t file_idx = 0; file_idx < m_tree.size(); ++file_idx)
 	{
-		if (ptr != &m_tree[fi])
+		if (ptr != &m_tree[file_idx])
 			continue;
 
 		int group_idx = parent.row();
-		if (group_idx < 0 || group_idx >= static_cast<int>(m_tree[fi].groups.size()))
+		if (group_idx < 0 || group_idx >= static_cast<int>(m_tree[file_idx].groups.size()))
 			return 0;
 
-		return static_cast<int>(m_tree[fi].groups[static_cast<size_t>(group_idx)].records.size());
+		return static_cast<int>(m_tree[file_idx].groups[static_cast<size_t>(group_idx)].records.size());
 	}
 
 	return 0;
@@ -462,18 +457,18 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 		return {};
 
 	void * ptr = index.internalPointer();
-	int col = index.column();
+	int column = index.column();
 
 	if (ptr == nullptr)
-		return data_for_root_level(index.row(), col, role);
+		return data_for_root_level(index.row(), column, role);
 
 	if (ptr == &m_lua_section)
-		return data_for_lua_group(index.row(), col, role);
+		return data_for_lua_group(index.row(), column, role);
 
 	if (is_lua_group_pointer(ptr))
-		return data_for_lua_leaf(ptr, index.row(), col, role);
+		return data_for_lua_leaf(ptr, index.row(), column, role);
 
-	return data_for_esm_nodes(ptr, index.row(), col, role);
+	return data_for_esm_nodes(ptr, index.row(), column, role);
 }
 
 Qt::ItemFlags nav_tree_model_t::flags(const QModelIndex & index) const
@@ -481,20 +476,20 @@ Qt::ItemFlags nav_tree_model_t::flags(const QModelIndex & index) const
 	if (!index.isValid())
 		return Qt::NoItemFlags;
 
-	Qt::ItemFlags f = Qt::ItemIsEnabled | Qt::ItemIsSelectable;
+	Qt::ItemFlags base_flags = Qt::ItemIsEnabled | Qt::ItemIsSelectable;
 
 	void * ptr = index.internalPointer();
 
-	for (size_t fi = 0; fi < m_tree.size(); ++fi)
+	for (size_t file_idx = 0; file_idx < m_tree.size(); ++file_idx)
 	{
-		for (size_t gi = 0; gi < m_tree[fi].groups.size(); ++gi)
+		for (size_t group_idx = 0; group_idx < m_tree[file_idx].groups.size(); ++group_idx)
 		{
-			if (ptr == &m_tree[fi].groups[gi])
-				return f | Qt::ItemIsDragEnabled;
+			if (ptr == &m_tree[file_idx].groups[group_idx])
+				return base_flags | Qt::ItemIsDragEnabled;
 		}
 	}
 
-	return f;
+	return base_flags;
 }
 
 Qt::DropActions nav_tree_model_t::supportedDragActions() const
@@ -529,21 +524,21 @@ QModelIndex nav_tree_model_t::find_index(const std::string & rec_type, const std
 
 	const auto & entries = m_scan.entries();
 
-	for (size_t fi = 0; fi < m_tree.size(); ++fi)
+	for (size_t file_idx = 0; file_idx < m_tree.size(); ++file_idx)
 	{
-		for (size_t gi = 0; gi < m_tree[fi].groups.size(); ++gi)
+		for (size_t group_idx = 0; group_idx < m_tree[file_idx].groups.size(); ++group_idx)
 		{
-			const auto & group = m_tree[fi].groups[gi];
+			const auto & group = m_tree[file_idx].groups[group_idx];
 			if (group.type != rec_type)
 				continue;
 
-			for (size_t ri = 0; ri < group.records.size(); ++ri)
+			for (size_t record_idx = 0; record_idx < group.records.size(); ++record_idx)
 			{
-				const auto & entry = entries[group.records[ri].entry_idx];
+				const auto & entry = entries[group.records[record_idx].entry_idx];
 				if (entry.record_id != record_id)
 					continue;
 
-				return createIndex(static_cast<int>(ri), 0, const_cast<type_group_t *>(&group));
+				return createIndex(static_cast<int>(record_idx), 0, const_cast<type_group_t *>(&group));
 			}
 		}
 	}
@@ -577,29 +572,29 @@ nav_tree_model_t::node_info_t nav_tree_model_t::node_at(const QModelIndex & inde
 	if (is_lua_group_pointer(ptr))
 		return node_at_lua_leaf(ptr, index.row());
 
-	for (size_t fi = 0; fi < m_tree.size(); ++fi)
+	for (size_t file_idx = 0; file_idx < m_tree.size(); ++file_idx)
 	{
-		if (ptr == &m_tree[fi])
+		if (ptr == &m_tree[file_idx])
 		{
 			int group_idx = index.row();
-			if (group_idx < 0 || group_idx >= static_cast<int>(m_tree[fi].groups.size()))
-				return { m_tree[fi].plugin_idx, {}, {} };
+			if (group_idx < 0 || group_idx >= static_cast<int>(m_tree[file_idx].groups.size()))
+				return { m_tree[file_idx].plugin_idx, {}, {} };
 
-			return { m_tree[fi].plugin_idx, m_tree[fi].groups[static_cast<size_t>(group_idx)].type, {} };
+			return { m_tree[file_idx].plugin_idx, m_tree[file_idx].groups[static_cast<size_t>(group_idx)].type, {} };
 		}
 
-		for (size_t gi = 0; gi < m_tree[fi].groups.size(); ++gi)
+		for (size_t group_idx = 0; group_idx < m_tree[file_idx].groups.size(); ++group_idx)
 		{
-			if (ptr != &m_tree[fi].groups[gi])
+			if (ptr != &m_tree[file_idx].groups[group_idx])
 				continue;
 
 			int rec_idx = index.row();
-			if (rec_idx < 0 || rec_idx >= static_cast<int>(m_tree[fi].groups[gi].records.size()))
-				return { m_tree[fi].plugin_idx, m_tree[fi].groups[gi].type, {} };
+			if (rec_idx < 0 || rec_idx >= static_cast<int>(m_tree[file_idx].groups[group_idx].records.size()))
+				return { m_tree[file_idx].plugin_idx, m_tree[file_idx].groups[group_idx].type, {} };
 
-			const auto & vis = m_tree[fi].groups[gi].records[static_cast<size_t>(rec_idx)];
+			const auto & vis = m_tree[file_idx].groups[group_idx].records[static_cast<size_t>(rec_idx)];
 			const auto & entry = entries[vis.entry_idx];
-			return { m_tree[fi].plugin_idx, entry.rec_type, entry.record_id };
+			return { m_tree[file_idx].plugin_idx, entry.rec_type, entry.record_id };
 		}
 	}
 
@@ -622,7 +617,7 @@ void nav_tree_model_t::sort(int column, Qt::SortOrder order)
 void nav_tree_model_t::sort_records()
 {
 	const auto & entries = m_scan.entries();
-	const int col = m_sort_column;
+	const int column = m_sort_column;
 	const bool ascending = (m_sort_order == Qt::AscendingOrder);
 
 	for (auto & file_node : m_tree)
@@ -634,13 +629,13 @@ void nav_tree_model_t::sort_records()
 			    group.records.end(),
 			    [&](const visible_record_t & a, const visible_record_t & b)
 			{
-				const auto & ea = entries[a.entry_idx];
-				const auto & eb = entries[b.entry_idx];
+				const auto & entry_a = entries[a.entry_idx];
+				const auto & entry_b = entries[b.entry_idx];
 
-				const std::string & sa = (col == 0) ? ea.record_id : ea.display_name;
-				const std::string & sb = (col == 0) ? eb.record_id : eb.display_name;
+				const std::string & name_a = (column == 0) ? entry_a.record_id : entry_a.display_name;
+				const std::string & name_b = (column == 0) ? entry_b.record_id : entry_b.display_name;
 
-				const int cmp = natural_compare(sa, sb);
+				const int cmp = natural_compare(name_a, name_b);
 				return ascending ? (cmp < 0) : (cmp > 0);
 			});
 		}
@@ -687,9 +682,9 @@ void nav_tree_model_t::build_lua_registration_groups()
 
 bool nav_tree_model_t::is_lua_group_pointer(void * ptr) const
 {
-	for (size_t gi = 0; gi < m_lua_section.groups.size(); ++gi)
+	for (size_t group_idx = 0; group_idx < m_lua_section.groups.size(); ++group_idx)
 	{
-		if (ptr == &m_lua_section.groups[gi])
+		if (ptr == &m_lua_section.groups[group_idx])
 			return true;
 	}
 
@@ -698,10 +693,10 @@ bool nav_tree_model_t::is_lua_group_pointer(void * ptr) const
 
 int nav_tree_model_t::lua_group_row_from_pointer(void * ptr) const
 {
-	for (size_t gi = 0; gi < m_lua_section.groups.size(); ++gi)
+	for (size_t group_idx = 0; group_idx < m_lua_section.groups.size(); ++group_idx)
 	{
-		if (ptr == &m_lua_section.groups[gi])
-			return static_cast<int>(gi);
+		if (ptr == &m_lua_section.groups[group_idx])
+			return static_cast<int>(group_idx);
 	}
 
 	return -1;
@@ -759,9 +754,9 @@ QModelIndex nav_tree_model_t::index_for_lua_group(int parent_row, int row, int c
 QModelIndex nav_tree_model_t::index_for_esm_group(void * ptr, int parent_row, int row, int column) const
 {
 	const auto * file_ptr = static_cast<const file_node_t *>(ptr);
-	for (size_t fi = 0; fi < m_tree.size(); ++fi)
+	for (size_t file_idx = 0; file_idx < m_tree.size(); ++file_idx)
 	{
-		if (&m_tree[fi] != file_ptr)
+		if (&m_tree[file_idx] != file_ptr)
 			continue;
 
 		if (parent_row < 0 || parent_row >= static_cast<int>(file_ptr->groups.size()))
@@ -916,10 +911,10 @@ QVariant nav_tree_model_t::data_for_file_node(int row, int column, int role) con
 
 QVariant nav_tree_model_t::file_node_display_text(const file_node_t & file_node) const
 {
-	char buf[64];
+	char display_buffer[64];
 	std::snprintf(
-	    buf,
-	    sizeof(buf),
+	    display_buffer,
+	    sizeof(display_buffer),
 	    "[%03d] %s",
 	    file_node.plugin_idx,
 	    m_scan.plugin_filename(file_node.plugin_idx).c_str());
@@ -927,16 +922,16 @@ QVariant nav_tree_model_t::file_node_display_text(const file_node_t & file_node)
 	const auto & filename = m_scan.plugin_filename(file_node.plugin_idx);
 
 	if (m_filter.excluded_plugins() && m_filter.excluded_plugins()->count(filename))
-		return QString::fromUtf8("\xF0\x9F\x94\x92 ") + QString::fromUtf8(buf);
+		return QString::fromUtf8("\xF0\x9F\x94\x92 ") + QString::fromUtf8(display_buffer);
 
 	if (m_filter.patch_plugins() && m_filter.patch_plugins()->count(filename))
-		return QString::fromUtf8("\xF0\x9F\x9B\xA1 ") + QString::fromUtf8(buf);
+		return QString::fromUtf8("\xF0\x9F\x9B\xA1 ") + QString::fromUtf8(display_buffer);
 
 	if (m_scan.is_merge_plugin(file_node.plugin_idx))
-		return QString::fromUtf8("\xE2\x9A\x99 ") + QString::fromUtf8(buf);
+		return QString::fromUtf8("\xE2\x9A\x99 ") + QString::fromUtf8(display_buffer);
 
 	if (m_editable_columns && m_editable_columns->is_plugin_editable(file_node.plugin_idx))
-		return QString::fromUtf8("\xE2\x9C\x8D ") + QString::fromUtf8(buf);
+		return QString::fromUtf8("\xE2\x9C\x8D ") + QString::fromUtf8(display_buffer);
 
 	const auto & full_path = m_scan.plugin_path(file_node.plugin_idx);
 	const bool is_overridden = full_path.find("/overwrite/") != std::string::npos ||
@@ -945,12 +940,12 @@ QVariant nav_tree_model_t::file_node_display_text(const file_node_t & file_node)
 	const bool is_master = filename.size() > 4 && (filename.compare(filename.size() - 4, 4, ".esm") == 0 ||
 	                                               filename.compare(filename.size() - 4, 4, ".ESM") == 0);
 	if (is_master)
-		return QString::fromUtf8("\xF0\x9F\x93\x9C ") + QString::fromUtf8(buf);
+		return QString::fromUtf8("\xF0\x9F\x93\x9C ") + QString::fromUtf8(display_buffer);
 
 	if (is_overridden)
-		return QString::fromUtf8("\xE2\x9A\xA1 ") + QString::fromUtf8(buf);
+		return QString::fromUtf8("\xE2\x9A\xA1 ") + QString::fromUtf8(display_buffer);
 
-	return QString::fromUtf8("\xF0\x9F\x93\x84 ") + QString::fromUtf8(buf);
+	return QString::fromUtf8("\xF0\x9F\x93\x84 ") + QString::fromUtf8(display_buffer);
 }
 
 QVariant nav_tree_model_t::file_node_appearance(const file_node_t & file_node, int role) const
@@ -1013,17 +1008,17 @@ QVariant nav_tree_model_t::data_for_esm_nodes(void * ptr, int row, int column, i
 {
 	const auto & entries = m_scan.entries();
 
-	for (size_t fi = 0; fi < m_tree.size(); ++fi)
+	for (size_t file_idx = 0; file_idx < m_tree.size(); ++file_idx)
 	{
-		if (ptr == &m_tree[fi])
-			return data_for_type_group(fi, row, column, role);
+		if (ptr == &m_tree[file_idx])
+			return data_for_type_group(file_idx, row, column, role);
 
-		for (size_t gi = 0; gi < m_tree[fi].groups.size(); ++gi)
+		for (size_t group_idx = 0; group_idx < m_tree[file_idx].groups.size(); ++group_idx)
 		{
-			if (ptr != &m_tree[fi].groups[gi])
+			if (ptr != &m_tree[file_idx].groups[group_idx])
 				continue;
 
-			return data_for_record(fi, gi, row, column, role);
+			return data_for_record(file_idx, group_idx, row, column, role);
 		}
 	}
 

@@ -140,12 +140,12 @@ void merge_controller_t::copy_whole_record(int plugin_idx, const std::string & r
 	if (!entry)
 		return;
 
-	for (const auto & ver : entry->versions)
+	for (const auto & version : entry->versions)
 	{
-		if (ver.plugin_idx != plugin_idx)
+		if (version.plugin_idx != plugin_idx)
 			continue;
 
-		m_session.scan().copy_record_to_merge(plugin_idx, ver.record_index);
+		m_session.scan().copy_record_to_merge(plugin_idx, version.record_index);
 		break;
 	}
 
@@ -253,20 +253,20 @@ void merge_controller_t::copy_group(
 	if (merge_content.empty())
 		return;
 
-	const int col = find_plugin_column(plugin_idx);
+	const int column = find_plugin_column(plugin_idx);
 	const auto & visible = m_record_view.model()->rows();
 	if (group_row_idx < 0 || group_row_idx >= static_cast<int>(visible.size()))
 		return;
 
 	const auto & group_row = visible[group_row_idx];
 
-	if (col < 0 || col >= static_cast<int>(group_row.binary_ranges.size()))
+	if (column < 0 || column >= static_cast<int>(group_row.binary_ranges.size()))
 		return;
 
-	const auto & source_range = group_row.binary_ranges[col];
+	const auto & source_range = group_row.binary_ranges[column];
 	if (source_range.start < 0)
 	{
-		m_log("[error] copy_group: no binary range for column " + std::to_string(col));
+		m_log("[error] copy_group: no binary range for column " + std::to_string(column));
 		return;
 	}
 
@@ -336,12 +336,12 @@ void merge_controller_t::remove_sub_record(
 		return;
 
 	std::string merge_content;
-	for (const auto & ver : entry->versions)
+	for (const auto & version : entry->versions)
 	{
-		if (!m_session.scan().is_merge_plugin(ver.plugin_idx))
+		if (!m_session.scan().is_merge_plugin(version.plugin_idx))
 			continue;
 
-		merge_content = m_session.scan().read_record_content(ver.plugin_idx, ver.record_index);
+		merge_content = m_session.scan().read_record_content(version.plugin_idx, version.record_index);
 		break;
 	}
 
@@ -372,12 +372,12 @@ void merge_controller_t::remove_group(
 		return;
 
 	std::string merge_content;
-	for (const auto & ver : entry->versions)
+	for (const auto & version : entry->versions)
 	{
-		if (!m_session.scan().is_merge_plugin(ver.plugin_idx))
+		if (!m_session.scan().is_merge_plugin(version.plugin_idx))
 			continue;
 
-		merge_content = m_session.scan().read_record_content(ver.plugin_idx, ver.record_index);
+		merge_content = m_session.scan().read_record_content(version.plugin_idx, version.record_index);
 		break;
 	}
 
@@ -546,9 +546,9 @@ std::set<int> merge_controller_t::collect_contributing_plugins() const
 	for (const auto & entry : scan.entries())
 	{
 		bool in_merge = false;
-		for (const auto & ver : entry.versions)
+		for (const auto & version : entry.versions)
 		{
-			if (scan.is_merge_plugin(ver.plugin_idx))
+			if (scan.is_merge_plugin(version.plugin_idx))
 			{
 				in_merge = true;
 				break;
@@ -558,10 +558,10 @@ std::set<int> merge_controller_t::collect_contributing_plugins() const
 		if (!in_merge)
 			continue;
 
-		for (const auto & ver : entry.versions)
+		for (const auto & version : entry.versions)
 		{
-			if (!scan.is_merge_plugin(ver.plugin_idx))
-				contributing.insert(ver.plugin_idx);
+			if (!scan.is_merge_plugin(version.plugin_idx))
+				contributing.insert(version.plugin_idx);
 		}
 	}
 
@@ -621,10 +621,10 @@ std::string merge_controller_t::read_source_content(
 	if (!entry)
 		return {};
 
-	for (const auto & ver : entry->versions)
+	for (const auto & version : entry->versions)
 	{
-		if (ver.plugin_idx == plugin_idx)
-			return m_session.scan().read_record_content(plugin_idx, ver.record_index);
+		if (version.plugin_idx == plugin_idx)
+			return m_session.scan().read_record_content(plugin_idx, version.record_index);
 	}
 
 	return {};
@@ -648,10 +648,10 @@ std::string merge_controller_t::ensure_merge_record(
 int merge_controller_t::find_plugin_column(int plugin_idx) const
 {
 	const auto & indices = m_record_view.model()->column_plugin_indices();
-	for (int col = 0; col < static_cast<int>(indices.size()); ++col)
+	for (int column = 0; column < static_cast<int>(indices.size()); ++column)
 	{
-		if (indices[col] == plugin_idx)
-			return col;
+		if (indices[column] == plugin_idx)
+			return column;
 	}
 
 	return -1;

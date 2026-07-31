@@ -67,6 +67,13 @@ public:
 	    const sub_record_sequence_t & winner,
 	    const std::string & rec_type);
 
+	static void apply_paired_rules(
+	    std::string & merged_data,
+	    const std::string & first_data,
+	    const sub_record_entry_t & intermediate_entry,
+	    const std::string & winner_data,
+	    const std::string & rec_type);
+
 	static bool needs_element_wise(const std::string & rec_type, const std::string & sub_type, size_t data_size);
 	static std::string merge_bytes_three_way(const char * first, const char * inter, const char * winner, size_t size);
 
@@ -88,6 +95,18 @@ public:
 
 private:
 	static merge_result_t merge_generic(const merge_input_t & input);
+
+	static sub_record_sequence_t merge_enam_phase(
+	    const std::vector<std::string> & versions,
+	    const sub_record_sequence_t & first_subs,
+	    const sub_record_sequence_t & winner_subs,
+	    const sub_record_sequence_t & output);
+
+	static sub_record_sequence_t merge_npco_phase(
+	    const merge_input_t & input,
+	    const sub_record_sequence_t & first_subs,
+	    const sub_record_sequence_t & winner_subs,
+	    const sub_record_sequence_t & output);
 
 	static void apply_intermediate_to_group(
 	    sub_record_sequence_t & output,
