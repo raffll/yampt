@@ -11,6 +11,8 @@
 #include <QFont>
 #include <QMimeData>
 
+Q_DECLARE_METATYPE(const field_def_t *)
+
 view_tree_model_t::view_tree_model_t(QObject * parent)
     : QAbstractItemModel(parent)
 {}
@@ -28,6 +30,7 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 
 	m_scan_for_header = &scan;
 	m_rows.clear();
+	m_synthetic_fields.clear();
 	m_column_names.clear();
 	m_plugin_conflict_this.clear();
 	m_record_type = entry.rec_type;
@@ -39,6 +42,7 @@ void view_tree_model_t::set_record(plugin_scan_t & scan, const conflict_entry_t 
 	m_is_merge_pinned = scan.is_merge_pinned(entry.rec_type, entry.record_id);
 
 	size_t col_count = setup_columns(scan, entry);
+	m_record_versions = entry.versions;
 	if (col_count == 0)
 	{
 		endResetModel();
@@ -347,15 +351,26 @@ void view_tree_model_t::clear()
 {
 	beginResetModel();
 	m_rows.clear();
+	m_synthetic_fields.clear();
 	m_column_names.clear();
 	m_plugin_conflict_this.clear();
 	m_column_plugin_indices.clear();
+	m_record_versions.clear();
 	m_record_type.clear();
 	m_record_id.clear();
 	m_has_merge_column = false;
 	m_merge_col_index = -1;
 	m_filter_dirty = true;
 	endResetModel();
+}
+
+size_t view_tree_model_t::record_index_for_column(int visual_column) const
+{
+	const int col = visual_column - 1;
+	if (col < 0 || col >= static_cast<int>(m_record_versions.size()))
+		return 0;
+
+	return m_record_versions[col].record_index;
 }
 
 bool view_tree_model_t::is_merge_column(int section) const
@@ -662,6 +677,84 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 		}
 
 		return {};
+	}
+
+	case field_def_role:
+	{
+		const view_node_t * target = node;
+
+		if (node->children.size() == 1 && node->children[0].children.empty())
+			target = &node->children[0];
+
+		std::string lookup_type = target->type;
+		size_t lookup_size = target->size;
+
+		if (lookup_type.empty())
+		{
+			auto * parent_ptr = static_cast<view_node_t *>(index.internalPointer());
+			if (!parent_ptr)
+				return {};
+
+			lookup_type = parent_ptr->type;
+			lookup_size = parent_ptr->size;
+		}
+
+		if (lookup_type.empty() || lookup_size == 0)
+			return {};
+
+		if (target->schema_field_index >= 0)
+		{
+			const auto * schema = find_schema(m_record_type, lookup_type, lookup_size);
+			if (schema && target->schema_field_index < static_cast<int>(schema->field_count))
+				return QVariant::fromValue(&schema->fields[target->schema_field_index]);
+		}
+
+		auto & synthetic = m_synthetic_fields[lookup_type];
+		synthetic.name = m_synthetic_fields.find(lookup_type)->first.c_str();
+		synthetic.type = field_type_t::raw;
+		synthetic.offset = 0;
+		synthetic.size = lookup_size;
+		synthetic.enum_names = nullptr;
+		synthetic.flag_names = nullptr;
+		synthetic.flag_count = 0;
+		synthetic.group = nullptr;
+		return QVariant::fromValue(static_cast<const field_def_t *>(&synthetic));
+	}
+
+	case sub_record_occurrence_role:
+	{
+		auto * parent_ptr = static_cast<view_node_t *>(index.internalPointer());
+
+		const view_node_t * sub_record_node = node;
+		if (node->schema_field_index >= 0 && parent_ptr)
+			sub_record_node = parent_ptr;
+
+		if (sub_record_node->type.empty())
+			return {};
+
+		int ref_index = -1;
+		auto parent_idx = parent(index);
+
+		while (parent_idx.isValid())
+		{
+			const auto * ancestor = node_from_index(parent_idx);
+			if (!ancestor)
+				break;
+
+			if (ancestor->type == "FRMR" && !ancestor->label.empty() && ancestor->label[0] == '#')
+			{
+				ref_index = std::stoi(ancestor->label.substr(1));
+				break;
+			}
+
+			parent_idx = parent(parent_idx);
+		}
+
+		sub_record_occurrence_t result;
+		result.sub_type = sub_record_node->type;
+		result.occurrence = sub_record_node->occurrence;
+		result.object_ref_index = ref_index;
+		return QVariant::fromValue(result);
 	}
 
 	default:

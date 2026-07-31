@@ -1,4 +1,5 @@
 #include "view_context_menu.hpp"
+#include "../model/editable_column_set.hpp"
 #include "../session/plugin_session.hpp"
 #include "../view/nav_tree_view.hpp"
 #include "../view/record_view.hpp"
@@ -12,11 +13,13 @@ view_context_menu_t::view_context_menu_t(
     plugin_session_t & session,
     record_view_t & record_view,
     nav_tree_view_t & nav_view,
-    merge_controller_t & merge_controller)
+    merge_controller_t & merge_controller,
+    editable_column_set_t & editable_columns)
     : m_session(session)
     , m_record_view(record_view)
     , m_nav_view(nav_view)
     , m_merge(merge_controller)
+    , m_editable_columns(editable_columns)
 {}
 
 void view_context_menu_t::show_nav_menu(const QPoint & global_pos, const nav_tree_model_t::node_info_t & info)
@@ -92,6 +95,18 @@ void view_context_menu_t::show_nav_menu(const QPoint & global_pos, const nav_tre
 			m_session.set_patch_plugins(patch_copy);
 			m_session.save_session_state(QCoreApplication::applicationDirPath() + "/yEditor.ini");
 			m_nav_view.rebuild_preserving_state();
+		});
+
+		const bool plugin_editable = m_editable_columns.is_plugin_editable(info.plugin_idx);
+		menu.addAction(
+		    plugin_editable ? QCoreApplication::translate("yEditor", "Disable Edit")
+		                    : QCoreApplication::translate("yEditor", "Enable Edit"),
+		    [this, info, plugin_editable]()
+		{
+			m_editable_columns.toggle_plugin_editable(info.plugin_idx, !plugin_editable);
+			m_editable_columns.rebuild_for_record(
+			    m_record_view.model()->column_plugin_indices(),
+			    m_record_view.model()->merge_column());
 		});
 		break;
 	}

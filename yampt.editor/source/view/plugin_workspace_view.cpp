@@ -35,6 +35,10 @@ plugin_workspace_view_t::plugin_workspace_view_t(settings_store_t & settings, QW
 
 	setup_views();
 
+	m_edit_controller = new field_edit_controller_t(*m_session, this);
+	m_preview->set_edit_controller(m_edit_controller);
+	m_preview->set_editable_columns(&m_editable_columns);
+
 	main_layout->addWidget(m_main_splitter, 1);
 
 	m_status_label = new QLabel(this);
@@ -42,6 +46,7 @@ plugin_workspace_view_t::plugin_workspace_view_t(settings_store_t & settings, QW
 	m_nav_view = new nav_tree_view_t(m_session->scan(), this);
 	m_nav_view->set_excluded_plugins(&m_session->excluded_plugins());
 	m_nav_view->set_patch_plugins(&m_session->patch_plugins());
+	m_nav_view->set_editable_columns(&m_editable_columns);
 	m_content_splitter->insertWidget(0, m_nav_view);
 	m_record_view = new record_view_t(this);
 	m_record_view->model()->set_excluded_plugins(&m_session->excluded_plugins());
@@ -55,7 +60,7 @@ plugin_workspace_view_t::plugin_workspace_view_t(settings_store_t & settings, QW
 	m_merge_controller = new merge_controller_t(
 	    *m_session, *m_record_view, *m_nav_view, m_settings, [this](const std::string & msg) { log_message(msg); });
 
-	m_context_menu = new view_context_menu_t(*m_session, *m_record_view, *m_nav_view, *m_merge_controller);
+	m_context_menu = new view_context_menu_t(*m_session, *m_record_view, *m_nav_view, *m_merge_controller, m_editable_columns);
 
 	setup_connections();
 }
@@ -108,6 +113,23 @@ void plugin_workspace_view_t::setup_connections()
 
 	auto * copy_shortcut = new QShortcut(QKeySequence::Copy, m_record_view->tree());
 	connect(copy_shortcut, &QShortcut::activated, this, &plugin_workspace_view_t::on_view_copy);
+
+	connect(m_edit_controller, &field_edit_controller_t::record_modified, this, [this]() {
+		rebuild_nav_preserving_state();
+		m_merge_controller->save_merged_patch();
+	});
+
+	connect(m_preview, &preview_view_t::edit_committed, this, [this]() {
+		const auto * model = m_record_view->model();
+		const auto & rec_type = model->record_type();
+		const auto & record_id = model->record_id();
+
+		const auto * entry = m_session->scan().find(rec_type, record_id);
+		if (!entry)
+			return;
+
+		display_record_in_view(*entry);
+	});
 }
 
 void plugin_workspace_view_t::load_plugins_from_paths(
@@ -512,6 +534,8 @@ void plugin_workspace_view_t::on_view_selection_changed(const QModelIndex & curr
 		m_preview->clear();
 	else
 		m_preview->show_comparison(left_text, right_text);
+
+	m_preview->update_selection(current, m_record_view->model());
 }
 
 void plugin_workspace_view_t::display_record_in_view(const conflict_entry_t & entry)
@@ -541,6 +565,9 @@ void plugin_workspace_view_t::display_record_in_view(const conflict_entry_t & en
 	{
 		m_record_view->display_record(m_session->scan(), entry);
 	}
+
+	const auto * view_model = m_record_view->model();
+	m_editable_columns.rebuild_for_record(view_model->column_plugin_indices(), view_model->merge_column());
 }
 
 void plugin_workspace_view_t::update_status()

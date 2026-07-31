@@ -10,6 +10,8 @@
 #include <QAbstractItemModel>
 #include <QMimeData>
 
+class editable_column_set_t;
+
 class nav_tree_model_t : public QAbstractItemModel
 {
 	Q_OBJECT
@@ -21,6 +23,7 @@ public:
 	void refresh_colors();
 	void set_excluded_plugins(const std::set<std::string> * excluded);
 	void set_patch_plugins(const std::set<std::string> * patch);
+	void set_editable_columns(const editable_column_set_t * editable);
 
 	using filter_state_t = nav_tree_filter_t::filter_state_t;
 
@@ -79,6 +82,7 @@ private:
 	Qt::SortOrder m_sort_order = Qt::AscendingOrder;
 	bool m_show_deleted_strikeout = true;
 	codepage_t m_display_codepage = codepage_t::windows_1252;
+	const editable_column_set_t * m_editable_columns = nullptr;
 
 	conflict_this_t record_foreground_for_plugin(const conflict_entry_t & entry, int plugin_idx) const;
 

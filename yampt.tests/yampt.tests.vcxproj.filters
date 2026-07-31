@@ -72,6 +72,9 @@
     <ClCompile Include="source\tests.loc_file_writer.cpp" />
     <ClCompile Include="source\tests.loc_file_reader.cpp" />
     <ClCompile Include="source\tests.inflection.cpp" />
+    <ClCompile Include="source\tests.field_validator.cpp" />
+    <ClCompile Include="source\tests.field_encoder.cpp" />
+    <ClCompile Include="source\tests.patch_sub_record.cpp" />
     <ClCompile Include="..\yampt.core\source\io\eet_converter.cpp" />
     <ClCompile Include="..\yampt.core\source\io\eet_reader.cpp" />
     <ClCompile Include="..\yampt.core\source\utility\char_diff.cpp" />

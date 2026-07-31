@@ -180,10 +180,12 @@
     <ClCompile Include="source\view\plugin_workspace_view.cpp" />
     <ClCompile Include="source\controller\view_context_menu.cpp" />
     <ClCompile Include="source\controller\merge_controller.cpp" />
+    <ClCompile Include="source\controller\field_edit_controller.cpp" />
     <ClCompile Include="source\patcher\plugin_cleaner.cpp" />
     <ClCompile Include="source\session\profile_file_reader.cpp" />
     <ClCompile Include="source\session\plugin_session.cpp" />
     <ClCompile Include="source\model\nav_tree_model.cpp" />
+    <ClCompile Include="source\model\editable_column_set.cpp" />
     <ClCompile Include="source\model\view_tree_model.cpp" />
     <ClCompile Include="source\model\view_tree_decode.cpp" />
     <ClCompile Include="source\model\view_tree_decode_cell.cpp" />
@@ -212,6 +214,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\model\nav_tree_filter.hpp" />
+    <ClInclude Include="source\model\editable_column_set.hpp" />
     <ClInclude Include="source\patcher\patch_builder.hpp" />
   </ItemGroup>
   <ItemGroup>
@@ -359,6 +362,12 @@
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
+    <CustomBuild Include="source\controller\field_edit_controller.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(IntDir)moc_editor_window.cpp" />
@@ -385,6 +394,7 @@
     <ClCompile Include="$(IntDir)moc_lua_registrations_model.cpp" />
     <ClCompile Include="$(IntDir)moc_lua_detail_model.cpp" />
     <ClCompile Include="$(IntDir)moc_lua_scan_worker.cpp" />
+    <ClCompile Include="$(IntDir)moc_field_edit_controller.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\yampt.core\yampt.core.vcxproj">

@@ -1,25 +1,53 @@
 #include "view/preview_view.hpp"
+#include "model/editable_column_set.hpp"
+#include "model/view_tree_model.hpp"
+#include <decoder/field_validator.hpp>
 #include <utility/char_diff.hpp>
+#include <QComboBox>
 #include <QHBoxLayout>
+#include <QModelIndex>
+#include <QPushButton>
+#include <QSignalBlocker>
 #include <QTextEdit>
+#include <QToolTip>
+#include <QVBoxLayout>
 
 preview_view_t::preview_view_t(QWidget * parent)
     : QWidget(parent)
 {
-	auto * layout = new QHBoxLayout(this);
-	layout->setContentsMargins(0, 0, 0, 0);
-	layout->setSpacing(4);
+	auto * outer_layout = new QHBoxLayout(this);
+	outer_layout->setContentsMargins(0, 0, 0, 0);
+	outer_layout->setSpacing(4);
 
 	m_left_edit = new QTextEdit(this);
 	m_left_edit->setReadOnly(true);
 	m_left_edit->setPlaceholderText(tr("Previous plugin"));
+	outer_layout->addWidget(m_left_edit);
+
+	auto * right_column = new QVBoxLayout();
+	right_column->setContentsMargins(0, 0, 0, 0);
+	right_column->setSpacing(4);
 
 	m_right_edit = new QTextEdit(this);
 	m_right_edit->setReadOnly(true);
 	m_right_edit->setPlaceholderText(tr("Selected plugin"));
+	right_column->addWidget(m_right_edit);
 
-	layout->addWidget(m_left_edit);
-	layout->addWidget(m_right_edit);
+	m_value_selector = new QComboBox(this);
+	m_value_selector->setVisible(false);
+	m_value_selector->setToolTip(tr("Select a value from the list"));
+	right_column->addWidget(m_value_selector);
+
+	m_apply_button = new QPushButton(tr("Apply"), this);
+	m_apply_button->setToolTip(tr("Commit field edit to disk"));
+	m_apply_button->setVisible(false);
+	right_column->addWidget(m_apply_button);
+
+	outer_layout->addLayout(right_column);
+
+	connect(m_right_edit, &QTextEdit::textChanged, this, &preview_view_t::on_text_changed);
+	connect(m_apply_button, &QPushButton::clicked, this, &preview_view_t::on_apply_clicked);
+	connect(m_value_selector, &QComboBox::currentTextChanged, this, &preview_view_t::on_value_selector_changed);
 }
 
 void preview_view_t::show_comparison(const std::string & left_text, const std::string & right_text)
@@ -77,4 +105,251 @@ void preview_view_t::clear()
 {
 	m_left_edit->clear();
 	m_right_edit->clear();
+}
+
+void preview_view_t::set_editing_enabled(bool enabled)
+{
+	m_right_edit->setReadOnly(!enabled);
+	m_apply_button->setVisible(enabled);
+	m_editing_active = enabled;
+
+	if (!enabled)
+		m_right_edit->setStyleSheet("");
+}
+
+void preview_view_t::set_edit_controller(field_edit_controller_t * controller)
+{
+	m_edit_controller = controller;
+}
+
+void preview_view_t::set_editable_columns(const editable_column_set_t * columns)
+{
+	m_editable_columns = columns;
+}
+
+void preview_view_t::update_selection(const QModelIndex & index, const view_tree_model_t * model)
+{
+	if (!index.isValid() || !m_editable_columns)
+	{
+		set_editing_enabled(false);
+		return;
+	}
+
+	const int column = index.column();
+	if (!m_editable_columns->is_editable(column))
+	{
+		set_editing_enabled(false);
+		return;
+	}
+
+	const auto right_text = m_right_edit->toPlainText().toStdString();
+	if (right_text.empty())
+	{
+		set_editing_enabled(false);
+		return;
+	}
+
+	const int plugin_idx = model->is_merge_column(column)
+	    ? -1
+	    : model->column_plugin_indices()[static_cast<size_t>(column) - 1];
+
+	m_pending_request.record_type = model->record_type();
+	m_pending_request.record_id = model->record_id();
+	m_pending_request.codepage = model->display_codepage();
+	m_pending_request.plugin_idx = plugin_idx;
+	m_pending_request.record_index = model->record_index_for_column(column);
+	m_pending_request.field = {};
+
+	const auto field_variant = model->data(index, view_tree_model_t::field_def_role);
+	if (field_variant.isValid() && !field_variant.isNull())
+	{
+		const auto * field_ptr = field_variant.value<const field_def_t *>();
+		if (field_ptr)
+			m_pending_request.field = *field_ptr;
+	}
+
+	if (m_pending_request.field.name != nullptr)
+	{
+		m_existing_sub_size = m_pending_request.field.size;
+		if (m_existing_sub_size == 0 && m_pending_request.field.type == field_type_t::raw)
+		{
+			auto * parent_ptr = static_cast<const view_tree_model_t::view_node_t *>(index.internalPointer());
+			if (parent_ptr)
+				m_existing_sub_size = parent_ptr->size;
+		}
+	}
+	else
+	{
+		m_existing_sub_size = 0;
+	}
+
+	const auto occurrence_variant = model->data(index, view_tree_model_t::sub_record_occurrence_role);
+	if (occurrence_variant.isValid())
+	{
+		const auto occurrence = occurrence_variant.value<view_tree_model_t::sub_record_occurrence_t>();
+		m_pending_request.sub_type = occurrence.sub_type;
+		m_pending_request.occurrence = occurrence.occurrence;
+		m_pending_request.object_ref_index = occurrence.object_ref_index;
+	}
+
+	m_original_value = right_text;
+	populate_value_selector();
+	set_editing_enabled(true);
+}
+
+void preview_view_t::on_text_changed()
+{
+	if (!m_editing_active)
+		return;
+
+	const auto current_text = m_right_edit->toPlainText().toStdString();
+
+	bool is_valid = true;
+	if (m_pending_request.field.name != nullptr)
+	{
+		const auto result = field_validator::validate_field(
+			m_pending_request.field, current_text, m_pending_request.codepage, m_existing_sub_size);
+
+		is_valid = result.valid;
+	}
+
+	if (!is_valid)
+		m_right_edit->setStyleSheet("background-color: #ffcccc;");
+	else
+		m_right_edit->setStyleSheet("");
+
+	const bool value_changed = (current_text != m_original_value);
+	m_apply_button->setEnabled(is_valid && value_changed);
+}
+
+void preview_view_t::on_apply_clicked()
+{
+	m_pending_request.input_text = m_right_edit->toPlainText().toStdString();
+
+	const auto result = m_edit_controller->commit_field_edit(m_pending_request);
+
+	if (result.success)
+	{
+		emit edit_committed();
+		return;
+	}
+
+	QToolTip::showText(m_apply_button->mapToGlobal(QPoint(0, 0)), QString::fromStdString(result.error_message));
+}
+
+void preview_view_t::on_value_selector_changed()
+{
+	if (!m_editing_active)
+		return;
+
+	const auto & field = m_pending_request.field;
+	const bool is_flags = (field.type == field_type_t::flags_u8 ||
+	                        field.type == field_type_t::flags_u16 ||
+	                        field.type == field_type_t::flags_u32);
+
+	QString new_text;
+
+	if (is_flags)
+	{
+		QStringList checked_names;
+		auto * item_model = m_value_selector->model();
+
+		for (int row = 0; row < m_value_selector->count(); ++row)
+		{
+			auto item_index = item_model->index(row, 0);
+			const auto check_state = item_model->data(item_index, Qt::CheckStateRole).toInt();
+
+			if (check_state == Qt::Checked)
+				checked_names.append(m_value_selector->itemText(row));
+		}
+
+		new_text = checked_names.join(" | ");
+	}
+	else
+	{
+		new_text = m_value_selector->currentText();
+	}
+
+	{
+		QSignalBlocker blocker(m_right_edit);
+		m_right_edit->setPlainText(new_text);
+	}
+
+	on_text_changed();
+}
+
+void preview_view_t::populate_value_selector()
+{
+	m_value_selector->clear();
+	m_value_selector->setVisible(false);
+
+	if (m_pending_request.field.name == nullptr)
+		return;
+
+	const auto & field = m_pending_request.field;
+
+	switch (field.type)
+	{
+	case field_type_t::enum_u8:
+	case field_type_t::enum_u16:
+	case field_type_t::enum_u32:
+	{
+		if (!field.enum_names)
+			return;
+
+		for (const char * const * current = field.enum_names; *current != nullptr; ++current)
+			m_value_selector->addItem(QString::fromUtf8(*current));
+
+		m_value_selector->setVisible(true);
+		break;
+	}
+
+	case field_type_t::i8:
+	case field_type_t::i32:
+	{
+		if (!field.enum_names)
+			return;
+
+		m_value_selector->addItem(QString::fromUtf8("None"));
+		for (const char * const * current = field.enum_names; *current != nullptr; ++current)
+			m_value_selector->addItem(QString::fromUtf8(*current));
+
+		m_value_selector->setVisible(true);
+		break;
+	}
+
+	case field_type_t::bool_bit:
+	{
+		m_value_selector->addItem(QString::fromUtf8("Yes"));
+		m_value_selector->addItem(QString::fromUtf8("No"));
+		m_value_selector->setVisible(true);
+		break;
+	}
+
+	case field_type_t::flags_u8:
+	case field_type_t::flags_u16:
+	case field_type_t::flags_u32:
+	{
+		if (!field.flag_names)
+			return;
+
+		for (int bit_pos = 0; bit_pos < field.flag_count; ++bit_pos)
+		{
+			if (field.flag_names[bit_pos][0] == '_')
+				continue;
+
+			auto * item_model = m_value_selector->model();
+			m_value_selector->addItem(QString::fromUtf8(field.flag_names[bit_pos]));
+			const int row = m_value_selector->count() - 1;
+			auto item_index = item_model->index(row, 0);
+			item_model->setData(item_index, Qt::Checked, Qt::CheckStateRole);
+		}
+
+		m_value_selector->setVisible(true);
+		break;
+	}
+
+	default:
+		break;
+	}
 }

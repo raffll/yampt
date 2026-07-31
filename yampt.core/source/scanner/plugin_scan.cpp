@@ -391,6 +391,11 @@ const esm_reader_t & plugin_scan_t::plugin(int idx) const
 	return m_plugins[idx]->esm;
 }
 
+esm_reader_t & plugin_scan_t::mutable_plugin(int idx)
+{
+	return m_plugins[idx]->esm;
+}
+
 const plugin_index_t & plugin_scan_t::index(int idx) const
 {
 	return m_plugins[idx]->index;

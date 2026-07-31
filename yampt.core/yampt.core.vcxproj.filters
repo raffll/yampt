@@ -44,6 +44,8 @@
     <ClCompile Include="source\scanner\auto_merge.cpp" />
     <ClCompile Include="source\scanner\batch_cleaner.cpp" />
     <ClCompile Include="source\scanner\header_repair.cpp" />
+    <ClCompile Include="source\decoder\field_validator.cpp" />
+    <ClCompile Include="source\decoder\field_encoder.cpp" />
     <ClCompile Include="source\decoder\sub_record_schema.cpp" />
     <ClCompile Include="source\decoder\view_group_def.cpp" />
     <ClCompile Include="source\decoder\content_alignment.cpp" />
@@ -108,6 +110,8 @@
     <ClInclude Include="source\scanner\plugin_scan.hpp" />
     <ClInclude Include="source\scanner\merge_patch_store.hpp" />
     <ClInclude Include="source\decoder\sub_record_iter.hpp" />
+    <ClInclude Include="source\decoder\field_validator.hpp" />
+    <ClInclude Include="source\decoder\field_encoder.hpp" />
     <ClInclude Include="source\decoder\sub_record_schema.hpp" />
     <ClInclude Include="source\decoder\view_group_def.hpp" />
     <ClInclude Include="source\decoder\content_alignment.hpp" />

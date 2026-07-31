@@ -61,10 +61,11 @@ public:
 
 	void remove_record_from_merge(const std::string & rec_type, const std::string & record_id);
 
+	void save_merged_patch();
+
 private:
 	int create_merge_records();
 	std::string resolve_merge_output_path() const;
-	void save_merged_patch();
 	bool save_merge_to_file(
 	    const std::string & output_path,
 	    const std::string & author,

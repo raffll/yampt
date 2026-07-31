@@ -4,6 +4,7 @@
 #include "../controller/view_context_menu.hpp"
 #include "../model/nav_tree_model.hpp"
 #include "../session/plugin_session.hpp"
+#include "../model/editable_column_set.hpp"
 #include "messages_view.hpp"
 #include "nav_tree_view.hpp"
 #include "preview_view.hpp"
@@ -93,6 +94,8 @@ private:
 	plugin_session_t * m_session = nullptr;
 	merge_controller_t * m_merge_controller = nullptr;
 	view_context_menu_t * m_context_menu = nullptr;
+	field_edit_controller_t * m_edit_controller = nullptr;
+	editable_column_set_t m_editable_columns;
 
 	bool m_conflicts_only = false;
 	QLabel * m_lbl_count = nullptr;

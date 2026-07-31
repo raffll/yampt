@@ -1,4 +1,5 @@
 ﻿#include "nav_tree_model.hpp"
+#include "editable_column_set.hpp"
 #include <io/codepage.hpp>
 #include <algorithm>
 #include <cctype>
@@ -225,6 +226,11 @@ void nav_tree_model_t::set_excluded_plugins(const std::set<std::string> * exclud
 void nav_tree_model_t::set_patch_plugins(const std::set<std::string> * patch)
 {
 	m_filter.set_patch_plugins(patch);
+}
+
+void nav_tree_model_t::set_editable_columns(const editable_column_set_t * editable)
+{
+	m_editable_columns = editable;
 }
 
 void nav_tree_model_t::build_tree()
@@ -456,6 +462,9 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 
 			if (m_scan.is_merge_plugin(file_node.plugin_idx))
 				return QString::fromUtf8("\xE2\x9A\x99 ") + QString::fromUtf8(buf);
+
+			if (m_editable_columns && m_editable_columns->is_plugin_editable(file_node.plugin_idx))
+				return QString::fromUtf8("\xE2\x9C\x8F ") + QString::fromUtf8(buf);
 
 			const auto & full_path = m_scan.plugin_path(file_node.plugin_idx);
 			const bool is_overridden = full_path.find("/overwrite/") != std::string::npos ||

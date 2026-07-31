@@ -4,6 +4,7 @@
 #include <QModelIndex>
 #include <QPoint>
 
+class editable_column_set_t;
 class merge_controller_t;
 class plugin_session_t;
 class record_view_t;
@@ -17,7 +18,8 @@ public:
 	    plugin_session_t & session,
 	    record_view_t & record_view,
 	    nav_tree_view_t & nav_view,
-	    merge_controller_t & merge_controller);
+	    merge_controller_t & merge_controller,
+	    editable_column_set_t & editable_columns);
 
 	void show_view_menu(const QPoint & global_pos, const QModelIndex & index);
 	void show_nav_menu(const QPoint & global_pos, const nav_tree_model_t::node_info_t & info);
@@ -27,4 +29,5 @@ private:
 	record_view_t & m_record_view;
 	nav_tree_view_t & m_nav_view;
 	merge_controller_t & m_merge;
+	editable_column_set_t & m_editable_columns;
 };

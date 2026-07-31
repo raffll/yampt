@@ -104,6 +104,11 @@ void nav_tree_view_t::set_patch_plugins(const std::set<std::string> * patch)
 	m_model->set_patch_plugins(patch);
 }
 
+void nav_tree_view_t::set_editable_columns(const editable_column_set_t * editable)
+{
+	m_model->set_editable_columns(editable);
+}
+
 void nav_tree_view_t::set_display_codepage(codepage_t codepage)
 {
 	m_model->set_display_codepage(codepage);

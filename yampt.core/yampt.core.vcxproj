@@ -182,6 +182,8 @@
     <ClCompile Include="source\creator\text_match_index.cpp" />
     <ClCompile Include="source\creator\word_match_utils.cpp" />
     <ClCompile Include="source\decoder\conflict_slots.cpp" />
+    <ClCompile Include="source\decoder\field_validator.cpp" />
+    <ClCompile Include="source\decoder\field_encoder.cpp" />
     <ClCompile Include="source\decoder\sub_record_schema.cpp" />
     <ClCompile Include="source\decoder\view_group_def.cpp" />
     <ClCompile Include="source\decoder\content_alignment.cpp" />
@@ -243,6 +245,8 @@
     <ClInclude Include="source\creator\word_match_utils.hpp" />
     <ClInclude Include="source\decoder\conflict_slots.hpp" />
     <ClInclude Include="source\decoder\sub_record_iter.hpp" />
+    <ClInclude Include="source\decoder\field_validator.hpp" />
+    <ClInclude Include="source\decoder\field_encoder.hpp" />
     <ClInclude Include="source\decoder\sub_record_schema.hpp" />
     <ClInclude Include="source\decoder\view_group_def.hpp" />
     <ClInclude Include="source\decoder\content_alignment.hpp" />

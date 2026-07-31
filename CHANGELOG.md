@@ -1,12 +1,13 @@
 # Changelog
 
+## [XXX]
+
 ## [0.940] - 2026-07-29
 
 ### yTranslator
 - [NEW] Find/Replace dialog (Tools menu) with regex, case sensitivity, and batch undo
 - [NEW] "Replaced" status assigned to entries modified by Find/Replace
 - [NEW] EET file import: export ESP-ESM Translator dictionaries to JSON (partial support)
-- [FIX] EET import: raw SCTX script bodies no longer imported — only extracted translatable strings (MSGB, CELL, SAY, DIAL) are converted
 - [NEW] Generate localization files (.cel, .mrk, .top) from dictionary with Hunspell inflection
 - [NEW] Full script preview: selecting a script entry shows the entire script source in Preview tab
 - [NEW] Script source stored as reference data in dictionaries for context lookup
@@ -40,8 +41,7 @@
 - [CHANGE] Translation button commits immediately and advances to the next row
 - [CHANGE] Translation button works for YAML documents (not just dict)
 - [CHANGE] Inline table editing advances to the next row after commit
-- [CHANGE] Polymorphic document commit: unified commit flow for all document types
-- [CHANGE] Document permissions control context menu and shortcut availability
+- [CHANGE] Read-only documents disable editing actions in menus and shortcuts
 - [CHANGE] Make Dict and Make Dict with Base merged into single "Make Dictionary" menu item
 - [CHANGE] Make Base dialog: removed dictionary combo box (uses language settings)
 - [CHANGE] Language settings: encoding and translation target auto-derived from language selection
@@ -52,6 +52,7 @@
 - [CHANGE] "Convert" renamed to "Convert Plugin"
 - [CHANGE] "Create" renamed to "Create Patch Plugin"
 - [FIX] Annotation highlight misalignment
+- [FIX] EET import: raw SCTX script bodies no longer imported — only extracted translatable strings (MSGB, CELL, SAY, DIAL) are converted
 - [FIX] Dictionary marked dirty on row click without editing
 - [FIX] SCTX/BNAM validation: quotes no longer flagged as forbidden characters
 - [FIX] Whitespace markers: newline indicator now visible at line breaks
@@ -78,6 +79,13 @@
 
 ## [0.842] - 2026-07-05
 
+### yTranslator
+- [NEW] Settings dialog (appearance, shortcuts, language, translation engine)
+- [NEW] Workspace folder watches for file changes and refreshes automatically
+- [NEW] Multi-layer highlighting (MWScript, hyperlinks, glossary, forbidden characters)
+- [NEW] Merge dialog for combining dictionaries
+- [CHANGE] Consistent syntax coloring across all editor panels
+
 ### yEditor
 - [NEW] Automatic merged patch creation (leveled lists, dialogues, three-way object merge)
 - [NEW] Fog fix, summon fix, and cell name fix applied automatically to merged patches
@@ -92,13 +100,6 @@
 - [CHANGE] Conflict coloring now works at the individual field level (not just whole records)
 - [CHANGE] Navigation tree inherits worst-case conflict color from children up to file level
 - [CHANGE] Entries from different plugins aligned by content identity (item ID, object index, rank) instead of file order
-
-### yTranslator
-- [NEW] Settings dialog (appearance, shortcuts, language, translation engine)
-- [NEW] Workspace folder watches for file changes and refreshes automatically
-- [NEW] Multi-layer highlighting (MWScript, hyperlinks, glossary, forbidden characters)
-- [NEW] Merge dialog for combining dictionaries
-- [CHANGE] Consistent syntax coloring across all editor panels
 
 ### Both Apps
 - [NEW] Dark mode

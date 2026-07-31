@@ -43,6 +43,7 @@ public:
 	const std::string & plugin_path(int idx) const;
 	std::string plugin_filename(int idx) const;
 	const esm_reader_t & plugin(int idx) const;
+	esm_reader_t & mutable_plugin(int idx);
 	const plugin_index_t & index(int idx) const;
 	bool is_merge_plugin(int idx) const;
 	const std::vector<std::string> & master_list(int idx) const;

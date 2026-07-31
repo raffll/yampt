@@ -7,6 +7,7 @@
 #include <scanner/plugin_scan.hpp>
 #include <scanner/record_conflict.hpp>
 #include <conflict_types.hpp>
+#include <map>
 #include <set>
 #include <string>
 #include <unordered_map>
@@ -19,6 +20,19 @@ class view_tree_model_t : public QAbstractItemModel
 	Q_OBJECT
 
 public:
+	enum custom_role_t
+	{
+		field_def_role = Qt::UserRole + 1,
+		sub_record_occurrence_role = Qt::UserRole + 2,
+	};
+
+	struct sub_record_occurrence_t
+	{
+		std::string sub_type;
+		int occurrence = 0;
+		int object_ref_index = -1;
+	};
+
 	explicit view_tree_model_t(QObject * parent = nullptr);
 
 	void set_record(plugin_scan_t & scan, const conflict_entry_t & entry);
@@ -95,6 +109,8 @@ public:
 		bool all_identical = true;
 		bool is_ignored = false;
 		bool is_deleted = false;
+		int occurrence = 0;
+		int bit_index = -1;
 		std::vector<view_node_t> children;
 	};
 
@@ -104,6 +120,8 @@ public:
 	{
 		return m_column_plugin_indices;
 	}
+
+	size_t record_index_for_column(int visual_column) const;
 
 	const std::vector<std::unordered_map<std::string, std::vector<size_t>>> & col_type_indices() const
 	{
@@ -214,6 +232,7 @@ private:
 	std::string m_record_type;
 	std::string m_record_id;
 	std::vector<int> m_column_plugin_indices;
+	std::vector<record_version_t> m_record_versions;
 	std::vector<std::unordered_map<std::string, std::vector<size_t>>> m_col_type_indices;
 
 	const std::vector<view_node_t> & visible_rows() const;
@@ -224,7 +243,10 @@ private:
 	plugin_scan_t * m_scan_for_header = nullptr;
 	codepage_t m_display_codepage = codepage_t::windows_1252;
 	bool m_show_deleted_strikeout = true;
+	mutable std::map<std::string, field_def_t> m_synthetic_fields;
 };
+
+Q_DECLARE_METATYPE(view_tree_model_t::sub_record_occurrence_t)
 
 struct cell_ref_view_t
 {
