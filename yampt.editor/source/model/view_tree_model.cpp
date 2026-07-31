@@ -388,40 +388,6 @@ static QString lua_classification_text(handler_class_t classification)
 	return {};
 }
 
-static conflict_all_t severity_to_conflict_all(conflict_severity_t severity)
-{
-	switch (severity)
-	{
-	case conflict_severity_t::blocking:
-		return conflict_all_t::conflict;
-
-	case conflict_severity_t::mutating:
-		return conflict_all_t::override_benign;
-
-	case conflict_severity_t::overlapping:
-		return conflict_all_t::no_conflict;
-	}
-
-	return conflict_all_t::no_conflict;
-}
-
-static conflict_this_t severity_to_conflict_this(conflict_severity_t severity)
-{
-	switch (severity)
-	{
-	case conflict_severity_t::blocking:
-		return conflict_this_t::conflict_wins;
-
-	case conflict_severity_t::mutating:
-		return conflict_this_t::override_wins;
-
-	case conflict_severity_t::overlapping:
-		return conflict_this_t::identical_to_master;
-	}
-
-	return conflict_this_t::identical_to_master;
-}
-
 void view_tree_model_t::reset_lua_state()
 {
 	m_scan_for_header = nullptr;
@@ -453,7 +419,21 @@ void view_tree_model_t::set_lua_conflict(const handler_conflict_t & conflict)
 	for (const auto & reg : conflict.registrations)
 	{
 		m_column_names.push_back(reg.mod_name);
-		m_plugin_conflict_this.push_back(severity_to_conflict_this(conflict.severity));
+
+		switch (reg.classification)
+		{
+		case handler_class_t::blocking:
+			m_plugin_conflict_this.push_back(conflict_this_t::conflict_wins);
+			break;
+
+		case handler_class_t::mutating:
+			m_plugin_conflict_this.push_back(conflict_this_t::override_wins);
+			break;
+
+		case handler_class_t::passive:
+			m_plugin_conflict_this.push_back(conflict_this_t::master);
+			break;
+		}
 	}
 
 	const auto col_count = conflict.registrations.size();
@@ -468,7 +448,8 @@ void view_tree_model_t::set_lua_conflict(const handler_conflict_t & conflict)
 			row.values[col] = field_getter(conflict.registrations[col]);
 
 		row.all_identical = check_all_identical(row.values);
-		row.row_conflict_all = severity_to_conflict_all(conflict.severity);
+		row.row_conflict_all = record_conflict::compute_conflict_all(row.values);
+		row.cell_conflict_this = record_conflict::compute_conflict_this(row.values);
 		return row;
 	};
 

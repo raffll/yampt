@@ -367,22 +367,31 @@ void plugin_workspace_view_t::on_nav_selection_changed(const nav_tree_model_t::n
 
 void plugin_workspace_view_t::dispatch_lua_selection(const nav_tree_model_t::node_info_t & info)
 {
-	if (info.lua_conflict_idx >= 0)
-	{
-		const auto idx = static_cast<size_t>(info.lua_conflict_idx);
-		if (idx < m_lua_scan_result.conflicts.size())
-			m_record_view->model()->set_lua_conflict(m_lua_scan_result.conflicts[idx]);
-
-		m_record_view->resize_columns();
-		return;
-	}
-
 	if (info.lua_registration_idx >= 0)
 	{
 		const auto idx = static_cast<size_t>(info.lua_registration_idx);
-		if (idx < m_lua_scan_result.registrations.size())
-			m_record_view->model()->set_lua_registration(m_lua_scan_result.registrations[idx]);
+		if (idx >= m_lua_scan_result.registrations.size())
+		{
+			m_record_view->clear();
+			return;
+		}
 
+		const auto & registration = m_lua_scan_result.registrations[idx];
+
+		for (const auto & conflict : m_lua_scan_result.conflicts)
+		{
+			for (const auto & reg : conflict.registrations)
+			{
+				if (reg.script_path == registration.script_path && reg.line_number == registration.line_number)
+				{
+					m_record_view->model()->set_lua_conflict(conflict);
+					m_record_view->resize_columns();
+					return;
+				}
+			}
+		}
+
+		m_record_view->model()->set_lua_registration(registration);
 		m_record_view->resize_columns();
 		return;
 	}

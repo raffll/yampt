@@ -10,8 +10,6 @@
 #include <theme_system.hpp>
 #include <QBrush>
 #include <QFont>
-#include <QPainter>
-#include <QPixmap>
 
 static int conflict_this_priority(conflict_this_t ct)
 {
@@ -182,16 +180,8 @@ void nav_tree_model_t::rebuild()
 	build_tree();
 
 	m_lua_section.groups.clear();
-	if (!m_lua_scan_result.conflicts.empty())
-	{
-		m_lua_section.in_conflicts_mode = true;
-		build_lua_conflict_groups();
-	}
-	else if (!m_lua_scan_result.registrations.empty())
-	{
-		m_lua_section.in_conflicts_mode = false;
-		build_lua_registration_groups();
-	}
+	m_lua_section.in_conflicts_mode = !m_lua_scan_result.conflicts.empty();
+	build_lua_registration_groups();
 
 	endResetModel();
 }
@@ -201,18 +191,9 @@ void nav_tree_model_t::set_lua_scan_result(const lua_scan_result_t & result)
 	beginResetModel();
 	m_lua_scan_result = result;
 	m_lua_section.groups.clear();
+	m_lua_section.in_conflicts_mode = !result.conflicts.empty();
 
-	if (!result.conflicts.empty())
-	{
-		m_lua_section.in_conflicts_mode = true;
-		build_lua_conflict_groups();
-	}
-	else if (!result.registrations.empty())
-	{
-		m_lua_section.in_conflicts_mode = false;
-		build_lua_registration_groups();
-	}
-
+	build_lua_registration_groups();
 	endResetModel();
 }
 
@@ -666,35 +647,31 @@ void nav_tree_model_t::sort_records()
 	}
 }
 
-void nav_tree_model_t::build_lua_conflict_groups()
-{
-	std::map<std::string, std::vector<size_t>> groups_by_interface;
-
-	for (size_t idx = 0; idx < m_lua_scan_result.conflicts.size(); ++idx)
-	{
-		const auto & conflict = m_lua_scan_result.conflicts[idx];
-
-		if (!m_filter.passes_lua_conflict(conflict))
-			continue;
-
-		groups_by_interface[conflict.interface_name].push_back(idx);
-	}
-
-	for (auto & [interface_name, indices] : groups_by_interface)
-	{
-		lua_group_t group;
-		group.group_name = interface_name;
-		group.leaf_indices = std::move(indices);
-		m_lua_section.groups.push_back(std::move(group));
-	}
-}
-
 void nav_tree_model_t::build_lua_registration_groups()
 {
+	std::set<size_t> conflicting_indices;
+	for (const auto & conflict : m_lua_scan_result.conflicts)
+	{
+		for (const auto & reg : conflict.registrations)
+		{
+			for (size_t idx = 0; idx < m_lua_scan_result.registrations.size(); ++idx)
+			{
+				const auto & candidate = m_lua_scan_result.registrations[idx];
+				if (candidate.script_path == reg.script_path && candidate.line_number == reg.line_number)
+					conflicting_indices.insert(idx);
+			}
+		}
+	}
+
+	const bool filter_to_conflicts = m_filter.has_active_filter() && m_lua_section.in_conflicts_mode;
+
 	std::map<std::string, std::vector<size_t>> groups_by_mod;
 
 	for (size_t idx = 0; idx < m_lua_scan_result.registrations.size(); ++idx)
 	{
+		if (filter_to_conflicts && conflicting_indices.find(idx) == conflicting_indices.end())
+			continue;
+
 		const auto & registration = m_lua_scan_result.registrations[idx];
 		groups_by_mod[registration.mod_name].push_back(idx);
 	}
@@ -833,6 +810,35 @@ QVariant nav_tree_model_t::data_for_lua_group(int row, int column, int role) con
 	    .arg(lua_group.leaf_indices.size());
 }
 
+conflict_severity_t nav_tree_model_t::find_conflict_severity_for_registration(
+    const handler_registration_t & registration) const
+{
+	for (const auto & conflict : m_lua_scan_result.conflicts)
+	{
+		for (const auto & reg : conflict.registrations)
+		{
+			if (reg.script_path == registration.script_path && reg.line_number == registration.line_number)
+				return conflict.severity;
+		}
+	}
+
+	return conflict_severity_t::overlapping;
+}
+
+bool nav_tree_model_t::is_registration_in_conflict(const handler_registration_t & registration) const
+{
+	for (const auto & conflict : m_lua_scan_result.conflicts)
+	{
+		for (const auto & reg : conflict.registrations)
+		{
+			if (reg.script_path == registration.script_path && reg.line_number == registration.line_number)
+				return true;
+		}
+	}
+
+	return false;
+}
+
 QVariant nav_tree_model_t::data_for_lua_leaf(void * ptr, int row, int column, int role) const
 {
 	int group_row = lua_group_row_from_pointer(ptr);
@@ -848,24 +854,26 @@ QVariant nav_tree_model_t::data_for_lua_leaf(void * ptr, int row, int column, in
 	if (role == Qt::DisplayRole && column == 0)
 		return lua_leaf_display_text(leaf_idx);
 
-	if (role == Qt::DecorationRole && column == 0)
-		return lua_leaf_severity_icon(leaf_idx);
-
 	if (role == Qt::ForegroundRole && m_lua_section.in_conflicts_mode)
 	{
-		if (leaf_idx < m_lua_scan_result.conflicts.size())
+		if (leaf_idx < m_lua_scan_result.registrations.size())
 		{
-			const auto & conflict = m_lua_scan_result.conflicts[leaf_idx];
-			switch (conflict.severity)
+			const auto & registration = m_lua_scan_result.registrations[leaf_idx];
+			if (is_registration_in_conflict(registration))
 			{
-			case conflict_severity_t::blocking:
-				return QBrush(QColor(200, 50, 50));
+				const auto severity = find_conflict_severity_for_registration(registration);
 
-			case conflict_severity_t::mutating:
-				return QBrush(QColor(180, 120, 0));
+				switch (severity)
+				{
+				case conflict_severity_t::blocking:
+					return QBrush(QColor(200, 50, 50));
 
-			case conflict_severity_t::overlapping:
-				return QBrush(QColor(100, 140, 0));
+				case conflict_severity_t::mutating:
+					return QBrush(QColor(180, 120, 0));
+
+				case conflict_severity_t::overlapping:
+					return QBrush(QColor(100, 140, 0));
+				}
 			}
 		}
 	}
@@ -875,66 +883,22 @@ QVariant nav_tree_model_t::data_for_lua_leaf(void * ptr, int row, int column, in
 
 QVariant nav_tree_model_t::lua_leaf_display_text(size_t leaf_idx) const
 {
-	if (m_lua_section.in_conflicts_mode)
-	{
-		if (leaf_idx >= m_lua_scan_result.conflicts.size())
-			return {};
-
-		const auto & conflict = m_lua_scan_result.conflicts[leaf_idx];
-		if (conflict.type_argument.empty())
-			return QString::fromStdString(conflict.method_name);
-
-		return QString("%1 [%2]")
-		    .arg(QString::fromStdString(conflict.method_name))
-		    .arg(QString::fromStdString(conflict.type_argument));
-	}
-
 	if (leaf_idx >= m_lua_scan_result.registrations.size())
 		return {};
 
 	const auto & registration = m_lua_scan_result.registrations[leaf_idx];
-	return QString("%1.%2")
-	    .arg(QString::fromStdString(registration.interface_name))
-	    .arg(QString::fromStdString(registration.method_name));
-}
 
-static QPixmap create_severity_pixmap(int red_value, int green_value, int blue_value)
-{
-	constexpr int icon_size = 12;
-	QPixmap pixmap(icon_size, icon_size);
-	pixmap.fill(Qt::transparent);
-
-	QPainter painter(&pixmap);
-	painter.setRenderHint(QPainter::Antialiasing);
-	painter.setBrush(QColor(red_value, green_value, blue_value));
-	painter.setPen(Qt::NoPen);
-
-	constexpr int inset = 1;
-	painter.drawEllipse(inset, inset, icon_size - inset * 2, icon_size - inset * 2);
-	return pixmap;
-}
-
-QVariant nav_tree_model_t::lua_leaf_severity_icon(size_t leaf_idx) const
-{
-	if (!m_lua_section.in_conflicts_mode)
-		return {};
-
-	if (leaf_idx >= m_lua_scan_result.conflicts.size())
-		return {};
-
-	const auto & conflict = m_lua_scan_result.conflicts[leaf_idx];
-
-	switch (conflict.severity)
+	if (registration.type_argument.empty())
 	{
-	case conflict_severity_t::blocking:
-		return create_severity_pixmap(220, 50, 50);
-	case conflict_severity_t::mutating:
-		return create_severity_pixmap(230, 150, 30);
-	case conflict_severity_t::overlapping:
-		return create_severity_pixmap(210, 200, 40);
+		return QString("%1.%2")
+		    .arg(QString::fromStdString(registration.interface_name))
+		    .arg(QString::fromStdString(registration.method_name));
 	}
 
-	return {};
+	return QString("%1.%2 [%3]")
+	    .arg(QString::fromStdString(registration.interface_name))
+	    .arg(QString::fromStdString(registration.method_name))
+	    .arg(QString::fromStdString(registration.type_argument));
 }
 
 QVariant nav_tree_model_t::data_for_file_node(int row, int column, int role) const
@@ -1206,9 +1170,5 @@ nav_tree_model_t::node_info_t nav_tree_model_t::node_at_lua_leaf(void * ptr, int
 		return { -1, {}, {}, true };
 
 	size_t leaf_idx = lua_group.leaf_indices[static_cast<size_t>(row)];
-
-	if (m_lua_section.in_conflicts_mode)
-		return { -1, {}, {}, true, static_cast<int>(leaf_idx), -1 };
-
-	return { -1, {}, {}, true, -1, static_cast<int>(leaf_idx) };
+	return { -1, {}, {}, true, static_cast<int>(leaf_idx) };
 }

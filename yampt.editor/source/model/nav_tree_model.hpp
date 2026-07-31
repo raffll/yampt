@@ -53,7 +53,6 @@ public:
 		std::string rec_type;
 		std::string record_id;
 		bool is_lua_node = false;
-		int lua_conflict_idx = -1;
 		int lua_registration_idx = -1;
 	};
 
@@ -119,7 +118,6 @@ private:
 
 	void build_tree();
 	void sort_records();
-	void build_lua_conflict_groups();
 	void build_lua_registration_groups();
 
 	bool is_lua_group_pointer(void * ptr) const;
@@ -136,7 +134,8 @@ private:
 	QVariant data_for_lua_group(int row, int column, int role) const;
 	QVariant data_for_lua_leaf(void * ptr, int row, int column, int role) const;
 	QVariant lua_leaf_display_text(size_t leaf_idx) const;
-	QVariant lua_leaf_severity_icon(size_t leaf_idx) const;
+	conflict_severity_t find_conflict_severity_for_registration(const handler_registration_t & registration) const;
+	bool is_registration_in_conflict(const handler_registration_t & registration) const;
 	QVariant data_for_file_node(int row, int column, int role) const;
 	QVariant file_node_display_text(const file_node_t & file_node) const;
 	QVariant file_node_appearance(const file_node_t & file_node, int role) const;
