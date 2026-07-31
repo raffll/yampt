@@ -278,6 +278,7 @@ void plugin_workspace_view_t::rebuild_after_load()
 	rebuild_nav_preserving_state();
 	on_filter_changed();
 	update_status();
+	start_lua_scan();
 }
 
 void plugin_workspace_view_t::apply_user_conflict_rules()
