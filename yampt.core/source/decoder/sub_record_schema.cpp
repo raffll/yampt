@@ -912,6 +912,22 @@ static const field_def_t text_fields[] = {
 	{ "Text", field_type_t::string_var, 0, 0, nullptr, nullptr },
 };
 
+static const field_def_t name_string_fields[] = {
+	{ "ID", field_type_t::string_var, 0, 0, nullptr, nullptr },
+};
+
+static const field_def_t fnam_string_fields[] = {
+	{ "Name", field_type_t::string_var, 0, 0, nullptr, nullptr },
+};
+
+static const field_def_t modl_string_fields[] = {
+	{ "Model", field_type_t::string_var, 0, 0, nullptr, nullptr },
+};
+
+static const field_def_t itex_string_fields[] = {
+	{ "Icon", field_type_t::string_var, 0, 0, nullptr, nullptr },
+};
+
 static const char * const quest_marker_names[] = { "No", "Yes", nullptr };
 
 static const field_def_t quest_marker_fields[] = {
@@ -1002,6 +1018,10 @@ static const std::vector<sub_record_schema_t> & build_schemas()
 		{ "*", "INDX", 4, indx_fields, ARRAY_COUNT(indx_fields) },
 		{ "*", "INDX", 1, armo_indx_fields, ARRAY_COUNT(armo_indx_fields) },
 		{ "BOOK", "TEXT", 0, text_fields, ARRAY_COUNT(text_fields) },
+		{ "*", "NAME", 0, name_string_fields, ARRAY_COUNT(name_string_fields) },
+		{ "*", "FNAM", 0, fnam_string_fields, ARRAY_COUNT(fnam_string_fields) },
+		{ "*", "MODL", 0, modl_string_fields, ARRAY_COUNT(modl_string_fields) },
+		{ "*", "ITEX", 0, itex_string_fields, ARRAY_COUNT(itex_string_fields) },
 		{ "*", "QSTN", 1, quest_marker_fields, ARRAY_COUNT(quest_marker_fields) },
 		{ "*", "QSTF", 1, quest_marker_fields, ARRAY_COUNT(quest_marker_fields) },
 		{ "*", "QSTR", 1, quest_marker_fields, ARRAY_COUNT(quest_marker_fields) },

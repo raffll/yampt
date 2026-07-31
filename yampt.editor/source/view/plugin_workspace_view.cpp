@@ -1,9 +1,10 @@
 #include "plugin_workspace_view.hpp"
+#include "count_label_format.hpp"
 #include "../dialog/filter_dialog.hpp"
 #include "../dialog/plugin_select_dialog.hpp"
 #include "../session/lua_scan_worker.hpp"
 #include "editor_delegates.hpp"
-#include "lua_conflicts_view.hpp"
+
 #include <scanner/batch_cleaner.hpp>
 #include <scanner/record_conflict.hpp>
 #include <set>
@@ -70,7 +71,6 @@ void plugin_workspace_view_t::setup_views()
 	m_main_splitter = new QSplitter(Qt::Vertical, this);
 	m_content_splitter = new QSplitter(Qt::Horizontal);
 
-	m_lua_conflicts_view = new lua_conflicts_view_t();
 	m_lua_scan_worker = new lua_scan_worker_t(this);
 
 	m_bottom_tabs = new QTabWidget(m_main_splitter);
@@ -102,9 +102,12 @@ void plugin_workspace_view_t::setup_connections()
 	    this,
 	    [this]()
 	{
+		if (m_lua_scan_worker->isRunning())
+			m_lua_scan_worker->cancel_scan();
+
+		m_nav_view->clear_lua_section();
 		m_record_view->clear();
 		m_nav_view->rebuild();
-		m_lua_conflicts_view->set_scan_result({});
 		update_status();
 	});
 	connect(m_session, &plugin_session_t::log_message, this, &plugin_workspace_view_t::log_message);
@@ -331,6 +334,13 @@ void plugin_workspace_view_t::rebuild_nav_preserving_state()
 
 void plugin_workspace_view_t::on_nav_selection_changed(const nav_tree_model_t::node_info_t & info)
 {
+	if (info.is_lua_node)
+	{
+		dispatch_lua_selection(info);
+		update_status();
+		return;
+	}
+
 	if (info.rec_type.empty())
 	{
 		m_record_view->clear();
@@ -348,6 +358,27 @@ void plugin_workspace_view_t::on_nav_selection_changed(const nav_tree_model_t::n
 
 	display_record_in_view(*entry);
 	update_status();
+}
+
+void plugin_workspace_view_t::dispatch_lua_selection(const nav_tree_model_t::node_info_t & info)
+{
+	if (info.lua_conflict_idx >= 0)
+	{
+		const auto idx = static_cast<size_t>(info.lua_conflict_idx);
+		if (idx < m_lua_scan_result.conflicts.size())
+			m_record_view->model()->set_lua_conflict(m_lua_scan_result.conflicts[idx]);
+		return;
+	}
+
+	if (info.lua_registration_idx >= 0)
+	{
+		const auto idx = static_cast<size_t>(info.lua_registration_idx);
+		if (idx < m_lua_scan_result.registrations.size())
+			m_record_view->model()->set_lua_registration(m_lua_scan_result.registrations[idx]);
+		return;
+	}
+
+	m_record_view->clear();
 }
 
 void plugin_workspace_view_t::set_conflicts_only(bool value)
@@ -501,8 +532,11 @@ void plugin_workspace_view_t::on_view_selection_changed(const QModelIndex & curr
 		return;
 	}
 
-	const int col = current.column() - 1;
-	if (col < 0 || col >= static_cast<int>(m_record_view->model()->column_plugin_indices().size()))
+	int col = current.column() - 1;
+	if (col < 0)
+		col = 0;
+
+	if (col >= static_cast<int>(m_record_view->model()->column_plugin_indices().size()))
 	{
 		m_preview->clear();
 		return;
@@ -535,7 +569,8 @@ void plugin_workspace_view_t::on_view_selection_changed(const QModelIndex & curr
 	else
 		m_preview->show_comparison(left_text, right_text);
 
-	m_preview->update_selection(current, m_record_view->model());
+	const auto adjusted_index = m_record_view->model()->index(current.row(), col + 1, current.parent());
+	m_preview->update_selection(adjusted_index, m_record_view->model(), right_text);
 }
 
 void plugin_workspace_view_t::display_record_in_view(const conflict_entry_t & entry)
@@ -582,8 +617,8 @@ void plugin_workspace_view_t::update_status()
 			++conflict_count;
 	}
 
-	m_lbl_count->setText(
-	    QString("%1 plugins, %2 records, %3 conflicts").arg(plugin_count).arg(record_count).arg(conflict_count));
+	const auto lua_conflict_count = m_lua_scan_result.conflicts.size();
+	m_lbl_count->setText(count_label_format::format(plugin_count, record_count, conflict_count, lua_conflict_count));
 
 	const auto info = m_nav_view->current_selection();
 
@@ -732,12 +767,13 @@ void plugin_workspace_view_t::start_lua_scan()
 		return;
 
 	log_message("[info] starting Lua handler scan...");
+	m_status_label->setText(tr("Scanning Lua handlers..."));
 	m_lua_scan_worker->start_scan(data_paths, mod_names);
 }
 
 void plugin_workspace_view_t::on_lua_scan_complete(const lua_scan_result_t & result)
 {
-	m_lua_conflicts_view->set_scan_result(result);
+	m_lua_scan_result = result;
 
 	const auto conflict_count = result.conflicts.size();
 	const auto reg_count = result.registrations.size();
@@ -748,4 +784,7 @@ void plugin_workspace_view_t::on_lua_scan_complete(const lua_scan_result_t & res
 
 	for (const auto & warning : result.warnings)
 		log_message("[warning] " + warning);
+
+	m_nav_view->set_lua_scan_result(result);
+	update_status();
 }

@@ -4,6 +4,8 @@
 #include <decoder/sub_record_iter.hpp>
 #include <decoder/sub_record_schema.hpp>
 #include <io/codepage.hpp>
+#include <scanner/conflict_detector.hpp>
+#include <scanner/handler_parser.hpp>
 #include <scanner/plugin_scan.hpp>
 #include <scanner/record_conflict.hpp>
 #include <conflict_types.hpp>
@@ -36,6 +38,8 @@ public:
 	explicit view_tree_model_t(QObject * parent = nullptr);
 
 	void set_record(plugin_scan_t & scan, const conflict_entry_t & entry);
+	void set_lua_conflict(const handler_conflict_t & conflict);
+	void set_lua_registration(const handler_registration_t & registration);
 	void clear();
 	void set_hide_no_conflict(bool hide);
 
@@ -133,6 +137,7 @@ public:
 private:
 	static void compute_group_ranges(view_node_t & group_node, size_t col_count);
 	static void mark_deleted_recursive(view_node_t & node);
+	void reset_lua_state();
 
 	struct record_context_t
 	{

@@ -8,6 +8,7 @@
 #include <map>
 #include <theme_system.hpp>
 #include <QBrush>
+#include <QCoreApplication>
 #include <QFont>
 #include <QMimeData>
 
@@ -364,6 +365,117 @@ void view_tree_model_t::clear()
 	endResetModel();
 }
 
+static QString lua_classification_text(handler_class_t classification)
+{
+	switch (classification)
+	{
+	case handler_class_t::blocking:
+		return QCoreApplication::translate("yEditor", "Blocking");
+
+	case handler_class_t::mutating:
+		return QCoreApplication::translate("yEditor", "Mutating");
+
+	case handler_class_t::passive:
+		return QCoreApplication::translate("yEditor", "Passive");
+	}
+
+	return {};
+}
+
+void view_tree_model_t::reset_lua_state()
+{
+	m_scan_for_header = nullptr;
+	m_rows.clear();
+	m_synthetic_fields.clear();
+	m_column_names.clear();
+	m_plugin_conflict_this.clear();
+	m_column_plugin_indices.clear();
+	m_record_versions.clear();
+	m_record_type.clear();
+	m_record_id.clear();
+	m_col_type_indices.clear();
+	m_has_merge_column = false;
+	m_merge_col_index = -1;
+	m_filter_dirty = true;
+}
+
+void view_tree_model_t::set_lua_conflict(const handler_conflict_t & conflict)
+{
+	beginResetModel();
+	reset_lua_state();
+
+	if (conflict.registrations.empty())
+	{
+		endResetModel();
+		return;
+	}
+
+	for (const auto & reg : conflict.registrations)
+		m_column_names.push_back(reg.mod_name);
+
+	const auto col_count = conflict.registrations.size();
+
+	auto build_row = [&](const std::string & label, auto field_getter) -> view_node_t
+	{
+		view_node_t row;
+		row.label = label;
+		row.values.resize(col_count);
+
+		for (size_t col = 0; col < col_count; ++col)
+			row.values[col] = field_getter(conflict.registrations[col]);
+
+		row.all_identical = check_all_identical(row.values);
+		row.row_conflict_all = conflict_all_t::only_one;
+		return row;
+	};
+
+	m_rows.push_back(build_row("Interface", [](const handler_registration_t & r) { return r.interface_name; }));
+	m_rows.push_back(build_row("Method", [](const handler_registration_t & r) { return r.method_name; }));
+	m_rows.push_back(build_row("Type Argument", [](const handler_registration_t & r) { return r.type_argument; }));
+
+	m_rows.push_back(build_row("Classification", [](const handler_registration_t & r) {
+		return lua_classification_text(r.classification).toStdString();
+	}));
+
+	m_rows.push_back(build_row("Script Path", [](const handler_registration_t & r) { return r.script_path; }));
+	m_rows.push_back(build_row("Callback", [](const handler_registration_t & r) { return r.callback_expression; }));
+	m_rows.push_back(build_row("Handler Body", [](const handler_registration_t & r) { return r.handler_body; }));
+
+	endResetModel();
+}
+
+void view_tree_model_t::set_lua_registration(const handler_registration_t & registration)
+{
+	beginResetModel();
+	reset_lua_state();
+
+	m_column_names.push_back(registration.mod_name);
+
+	auto make_row = [](const std::string & label, const std::string & value) -> view_node_t
+	{
+		view_node_t row;
+		row.label = label;
+		row.values = { value };
+		row.row_conflict_all = conflict_all_t::only_one;
+		row.all_identical = false;
+		return row;
+	};
+
+	m_rows.push_back(make_row("Interface", registration.interface_name));
+	m_rows.push_back(make_row("Method", registration.method_name));
+	m_rows.push_back(make_row("Type Argument", registration.type_argument));
+	m_rows.push_back(make_row("Script Path", registration.script_path));
+	m_rows.push_back(make_row("Line", std::to_string(registration.line_number)));
+
+	const auto class_text = lua_classification_text(registration.classification);
+	m_rows.push_back(make_row("Classification", class_text.toStdString()));
+
+	m_rows.push_back(make_row("Callback", registration.callback_expression));
+	m_rows.push_back(make_row("Handler Body", registration.handler_body));
+
+	endResetModel();
+}
+
 size_t view_tree_model_t::record_index_for_column(int visual_column) const
 {
 	const int col = visual_column - 1;
@@ -682,14 +794,18 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 	case field_def_role:
 	{
 		const view_node_t * target = node;
+		std::string lookup_type = node->type;
+		size_t lookup_size = node->size;
 
 		if (node->children.size() == 1 && node->children[0].children.empty())
 			target = &node->children[0];
 
-		std::string lookup_type = target->type;
-		size_t lookup_size = target->size;
-
-		if (lookup_type.empty())
+		if (target->schema_field_index >= 0 && !target->type.empty())
+		{
+			lookup_type = target->type;
+			lookup_size = target->size;
+		}
+		else if (lookup_type.empty())
 		{
 			auto * parent_ptr = static_cast<view_node_t *>(index.internalPointer());
 			if (!parent_ptr)

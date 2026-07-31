@@ -263,6 +263,10 @@
     <ClCompile Include="source\tests.field_validator.cpp" />
     <ClCompile Include="source\tests.field_encoder.cpp" />
     <ClCompile Include="source\tests.patch_sub_record.cpp" />
+    <ClCompile Include="source\tests.view_tree_model_lua.cpp" />
+    <ClCompile Include="source\tests.nav_tree_filter_lua.cpp" />
+    <ClCompile Include="source\tests.nav_tree_model_lua.cpp" />
+    <ClCompile Include="source\tests.count_label_format.cpp" />
     <ClCompile Include="..\yampt.translator\source\model\table_builder.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\row_filter.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\glossary.cpp" />
@@ -286,8 +290,13 @@
     <ClCompile Include="..\yampt.editor\source\model\nav_tree_filter.cpp" />
     <ClCompile Include="..\yampt.editor\source\session\plugin_session.cpp" />
     <ClCompile Include="..\yampt.editor\source\patcher\patch_builder.cpp" />
-    <ClCompile Include="..\yampt.editor\source\model\lua_nav_model.cpp" />
-    <ClCompile Include="..\yampt.editor\source\view\lua_filter_view.cpp" />
+
+    <ClCompile Include="..\yampt.editor\source\model\nav_tree_model.cpp" />
+    <ClCompile Include="..\yampt.editor\source\model\editable_column_set.cpp" />
+    <ClCompile Include="..\yampt.editor\source\model\view_tree_model.cpp" />
+    <ClCompile Include="..\yampt.editor\source\model\view_tree_decode.cpp" />
+    <ClCompile Include="..\yampt.editor\source\model\view_tree_decode_cell.cpp" />
+    <ClCompile Include="..\yampt.editor\source\model\view_tree_decode_lists.cpp" />
     <ClCompile Include="..\yampt.translator\source\translator\web_translator_config.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -297,13 +306,14 @@
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
-    <CustomBuild Include="..\yampt.editor\source\model\lua_nav_model.hpp">
+
+    <CustomBuild Include="..\yampt.editor\source\model\view_tree_model.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include" -I"$(SolutionDir)yampt.core\source" -I"$(SolutionDir)yampt.editor\source"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
-    <CustomBuild Include="..\yampt.editor\source\view\lua_filter_view.hpp">
+    <CustomBuild Include="..\yampt.editor\source\model\nav_tree_model.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include" -I"$(SolutionDir)yampt.core\source" -I"$(SolutionDir)yampt.editor\source"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
@@ -332,11 +342,12 @@
     <ClCompile Include="$(IntDir)moc_workspace_watcher.cpp">
       <ObjectFileName>$(IntDir)moc_workspace_watcher.obj</ObjectFileName>
     </ClCompile>
-    <ClCompile Include="$(IntDir)moc_lua_nav_model.cpp">
-      <ObjectFileName>$(IntDir)moc_lua_nav_model.obj</ObjectFileName>
+
+    <ClCompile Include="$(IntDir)moc_view_tree_model.cpp">
+      <ObjectFileName>$(IntDir)moc_view_tree_model.obj</ObjectFileName>
     </ClCompile>
-    <ClCompile Include="$(IntDir)moc_lua_filter_view.cpp">
-      <ObjectFileName>$(IntDir)moc_lua_filter_view.obj</ObjectFileName>
+    <ClCompile Include="$(IntDir)moc_nav_tree_model.cpp">
+      <ObjectFileName>$(IntDir)moc_nav_tree_model.obj</ObjectFileName>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -23,7 +23,10 @@ public:
 
 	void set_edit_controller(field_edit_controller_t * controller);
 	void set_editable_columns(const editable_column_set_t * columns);
-	void update_selection(const QModelIndex & index, const view_tree_model_t * model);
+	void update_selection(const QModelIndex & index, const view_tree_model_t * model, const std::string & cell_value);
+
+protected:
+	bool eventFilter(QObject * watched, QEvent * event) override;
 
 signals:
 	void edit_committed();
@@ -47,6 +50,7 @@ private:
 
 	field_edit_request_t m_pending_request;
 	bool m_editing_active = false;
+	bool m_user_has_typed = false;
 	std::string m_original_value;
 	size_t m_existing_sub_size = 0;
 };

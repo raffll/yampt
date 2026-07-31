@@ -29,12 +29,6 @@
     <ClCompile Include="source\patcher\patch_builder.cpp" />
     <ClCompile Include="source\view\nav_tree_view.cpp" />
     <ClCompile Include="source\view\record_view.cpp" />
-    <ClCompile Include="source\view\lua_detail_view.cpp" />
-    <ClCompile Include="source\view\lua_filter_view.cpp" />
-    <ClCompile Include="source\view\lua_conflicts_view.cpp" />
-    <ClCompile Include="source\model\lua_nav_model.cpp" />
-    <ClCompile Include="source\model\lua_registrations_model.cpp" />
-    <ClCompile Include="source\model\lua_detail_model.cpp" />
     <ClCompile Include="source\session\lua_scan_worker.cpp" />
     <ClCompile Include="..\yampt.core\source\io\esm_reader.cpp" />
     <ClCompile Include="..\yampt.core\source\io\codepage.cpp" />
@@ -55,5 +49,6 @@
     <ClInclude Include="source\model\nav_tree_filter.hpp" />
     <ClInclude Include="source\model\editable_column_set.hpp" />
     <ClInclude Include="source\patcher\patch_builder.hpp" />
+    <ClInclude Include="source\view\count_label_format.hpp" />
   </ItemGroup>
 </Project>

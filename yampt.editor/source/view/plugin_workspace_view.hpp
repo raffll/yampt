@@ -16,7 +16,6 @@
 #include <QTabWidget>
 #include <QWidget>
 
-class lua_conflicts_view_t;
 class lua_scan_worker_t;
 class settings_store_t;
 
@@ -86,6 +85,7 @@ private:
 	void rebuild_nav_preserving_state();
 	void load_plugins_from_paths(const std::vector<std::string> & paths, const std::string & base_path);
 	void display_record_in_view(const conflict_entry_t & entry);
+	void dispatch_lua_selection(const nav_tree_model_t::node_info_t & info);
 	QString build_mode_prefix() const;
 	void start_lua_scan();
 	void on_lua_scan_complete(const lua_scan_result_t & result);
@@ -108,8 +108,8 @@ private:
 	preview_view_t * m_preview = nullptr;
 	QTabWidget * m_bottom_tabs = nullptr;
 
-	lua_conflicts_view_t * m_lua_conflicts_view = nullptr;
 	lua_scan_worker_t * m_lua_scan_worker = nullptr;
+	lua_scan_result_t m_lua_scan_result;
 
 	QLabel * m_status_label = nullptr;
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <scanner/conflict_detector.hpp>
 #include <scanner/plugin_scan.hpp>
 #include <set>
 #include <string>
@@ -20,6 +21,10 @@ public:
 		bool filter_by_name = false;
 		std::string name_text;
 		bool filter_deleted = false;
+		bool filter_lua_severity = false;
+		std::set<conflict_severity_t> lua_severity_set;
+		bool filter_lua_interface = false;
+		std::set<std::string> lua_interface_set;
 
 		bool operator==(const filter_state_t &) const = default;
 	};
@@ -31,6 +36,7 @@ public:
 	void set_patch_plugins(const std::set<std::string> * patch);
 
 	bool passes(const conflict_entry_t & entry, int plugin_idx) const;
+	bool passes_lua_conflict(const handler_conflict_t & conflict) const;
 	bool has_active_filter() const;
 	bool hide_duplicates() const;
 	const std::set<std::string> * excluded_plugins() const;

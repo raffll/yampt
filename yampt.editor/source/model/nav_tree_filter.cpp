@@ -74,6 +74,23 @@ bool nav_tree_filter_t::has_version_status(const conflict_entry_t & entry, int p
 	return false;
 }
 
+bool nav_tree_filter_t::passes_lua_conflict(const handler_conflict_t & conflict) const
+{
+	if (m_filter.filter_lua_severity && !m_filter.lua_severity_set.empty())
+	{
+		if (m_filter.lua_severity_set.find(conflict.severity) == m_filter.lua_severity_set.end())
+			return false;
+	}
+
+	if (m_filter.filter_lua_interface && !m_filter.lua_interface_set.empty())
+	{
+		if (m_filter.lua_interface_set.find(conflict.interface_name) == m_filter.lua_interface_set.end())
+			return false;
+	}
+
+	return true;
+}
+
 bool nav_tree_filter_t::passes(const conflict_entry_t & entry, int plugin_idx) const
 {
 	if (!m_has_filter)

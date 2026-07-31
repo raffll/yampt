@@ -204,18 +204,14 @@
     <ClCompile Include="source\patcher\patch_builder.cpp" />
     <ClCompile Include="source\view\nav_tree_view.cpp" />
     <ClCompile Include="source\view\record_view.cpp" />
-    <ClCompile Include="source\view\lua_detail_view.cpp" />
-    <ClCompile Include="source\view\lua_filter_view.cpp" />
-    <ClCompile Include="source\view\lua_conflicts_view.cpp" />
-    <ClCompile Include="source\model\lua_nav_model.cpp" />
-    <ClCompile Include="source\model\lua_registrations_model.cpp" />
-    <ClCompile Include="source\model\lua_detail_model.cpp" />
+
     <ClCompile Include="source\session\lua_scan_worker.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\model\nav_tree_filter.hpp" />
     <ClInclude Include="source\model\editable_column_set.hpp" />
     <ClInclude Include="source\patcher\patch_builder.hpp" />
+    <ClInclude Include="source\view\count_label_format.hpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="source\editor_window.hpp">
@@ -320,42 +316,7 @@
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
-    <CustomBuild Include="source\view\lua_detail_view.hpp">
-      <FileType>Document</FileType>
-      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
-      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
-      <Message>MOC %(Filename).hpp</Message>
-    </CustomBuild>
-    <CustomBuild Include="source\view\lua_filter_view.hpp">
-      <FileType>Document</FileType>
-      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
-      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
-      <Message>MOC %(Filename).hpp</Message>
-    </CustomBuild>
-    <CustomBuild Include="source\view\lua_conflicts_view.hpp">
-      <FileType>Document</FileType>
-      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
-      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
-      <Message>MOC %(Filename).hpp</Message>
-    </CustomBuild>
-    <CustomBuild Include="source\model\lua_nav_model.hpp">
-      <FileType>Document</FileType>
-      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
-      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
-      <Message>MOC %(Filename).hpp</Message>
-    </CustomBuild>
-    <CustomBuild Include="source\model\lua_registrations_model.hpp">
-      <FileType>Document</FileType>
-      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
-      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
-      <Message>MOC %(Filename).hpp</Message>
-    </CustomBuild>
-    <CustomBuild Include="source\model\lua_detail_model.hpp">
-      <FileType>Document</FileType>
-      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
-      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
-      <Message>MOC %(Filename).hpp</Message>
-    </CustomBuild>
+
     <CustomBuild Include="source\session\lua_scan_worker.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
@@ -387,12 +348,7 @@
     <ClCompile Include="$(IntDir)moc_nav_tree_view.cpp" />
     <ClCompile Include="$(IntDir)moc_plugin_session.cpp" />
     <ClCompile Include="$(IntDir)moc_record_view.cpp" />
-    <ClCompile Include="$(IntDir)moc_lua_detail_view.cpp" />
-    <ClCompile Include="$(IntDir)moc_lua_filter_view.cpp" />
-    <ClCompile Include="$(IntDir)moc_lua_conflicts_view.cpp" />
-    <ClCompile Include="$(IntDir)moc_lua_nav_model.cpp" />
-    <ClCompile Include="$(IntDir)moc_lua_registrations_model.cpp" />
-    <ClCompile Include="$(IntDir)moc_lua_detail_model.cpp" />
+
     <ClCompile Include="$(IntDir)moc_lua_scan_worker.cpp" />
     <ClCompile Include="$(IntDir)moc_field_edit_controller.cpp" />
   </ItemGroup>

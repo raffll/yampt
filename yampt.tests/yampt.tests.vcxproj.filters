@@ -75,6 +75,10 @@
     <ClCompile Include="source\tests.field_validator.cpp" />
     <ClCompile Include="source\tests.field_encoder.cpp" />
     <ClCompile Include="source\tests.patch_sub_record.cpp" />
+    <ClCompile Include="source\tests.view_tree_model_lua.cpp" />
+    <ClCompile Include="source\tests.nav_tree_filter_lua.cpp" />
+    <ClCompile Include="source\tests.nav_tree_model_lua.cpp" />
+    <ClCompile Include="source\tests.count_label_format.cpp" />
     <ClCompile Include="..\yampt.core\source\io\eet_converter.cpp" />
     <ClCompile Include="..\yampt.core\source\io\eet_reader.cpp" />
     <ClCompile Include="..\yampt.core\source\utility\char_diff.cpp" />
@@ -124,8 +128,13 @@
     <ClCompile Include="..\yampt.editor\source\model\nav_tree_filter.cpp" />
     <ClCompile Include="..\yampt.editor\source\session\plugin_session.cpp" />
     <ClCompile Include="..\yampt.editor\source\patcher\patch_builder.cpp" />
-    <ClCompile Include="..\yampt.editor\source\model\lua_nav_model.cpp" />
-    <ClCompile Include="..\yampt.editor\source\view\lua_filter_view.cpp" />
+
+    <ClCompile Include="..\yampt.editor\source\model\nav_tree_model.cpp" />
+    <ClCompile Include="..\yampt.editor\source\model\editable_column_set.cpp" />
+    <ClCompile Include="..\yampt.editor\source\model\view_tree_model.cpp" />
+    <ClCompile Include="..\yampt.editor\source\model\view_tree_decode.cpp" />
+    <ClCompile Include="..\yampt.editor\source\model\view_tree_decode_cell.cpp" />
+    <ClCompile Include="..\yampt.editor\source\model\view_tree_decode_lists.cpp" />
     <ClCompile Include="..\yampt.translator\source\translator\web_translator_config.cpp" />
   </ItemGroup>
   <ItemGroup>

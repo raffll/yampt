@@ -4,10 +4,10 @@
 #include <decoder/field_validator.hpp>
 #include <utility/char_diff.hpp>
 #include <QComboBox>
+#include <QEvent>
 #include <QHBoxLayout>
 #include <QModelIndex>
 #include <QPushButton>
-#include <QSignalBlocker>
 #include <QTextEdit>
 #include <QToolTip>
 #include <QVBoxLayout>
@@ -31,6 +31,7 @@ preview_view_t::preview_view_t(QWidget * parent)
 	m_right_edit = new QTextEdit(this);
 	m_right_edit->setReadOnly(true);
 	m_right_edit->setPlaceholderText(tr("Selected plugin"));
+	m_right_edit->installEventFilter(this);
 	right_column->addWidget(m_right_edit);
 
 	m_value_selector = new QComboBox(this);
@@ -48,6 +49,14 @@ preview_view_t::preview_view_t(QWidget * parent)
 	connect(m_right_edit, &QTextEdit::textChanged, this, &preview_view_t::on_text_changed);
 	connect(m_apply_button, &QPushButton::clicked, this, &preview_view_t::on_apply_clicked);
 	connect(m_value_selector, &QComboBox::currentTextChanged, this, &preview_view_t::on_value_selector_changed);
+}
+
+bool preview_view_t::eventFilter(QObject * watched, QEvent * event)
+{
+	if (watched == m_right_edit && event->type() == QEvent::KeyPress)
+		m_user_has_typed = true;
+
+	return QWidget::eventFilter(watched, event);
 }
 
 void preview_view_t::show_comparison(const std::string & left_text, const std::string & right_text)
@@ -105,6 +114,8 @@ void preview_view_t::clear()
 {
 	m_left_edit->clear();
 	m_right_edit->clear();
+	set_editing_enabled(false);
+	m_value_selector->setVisible(false);
 }
 
 void preview_view_t::set_editing_enabled(bool enabled)
@@ -112,9 +123,13 @@ void preview_view_t::set_editing_enabled(bool enabled)
 	m_right_edit->setReadOnly(!enabled);
 	m_apply_button->setVisible(enabled);
 	m_editing_active = enabled;
+	m_user_has_typed = false;
 
 	if (!enabled)
+	{
 		m_right_edit->setStyleSheet("");
+		m_apply_button->setEnabled(false);
+	}
 }
 
 void preview_view_t::set_edit_controller(field_edit_controller_t * controller)
@@ -127,7 +142,7 @@ void preview_view_t::set_editable_columns(const editable_column_set_t * columns)
 	m_editable_columns = columns;
 }
 
-void preview_view_t::update_selection(const QModelIndex & index, const view_tree_model_t * model)
+void preview_view_t::update_selection(const QModelIndex & index, const view_tree_model_t * model, const std::string & cell_value)
 {
 	if (!index.isValid() || !m_editable_columns)
 	{
@@ -142,8 +157,7 @@ void preview_view_t::update_selection(const QModelIndex & index, const view_tree
 		return;
 	}
 
-	const auto right_text = m_right_edit->toPlainText().toStdString();
-	if (right_text.empty())
+	if (cell_value.empty())
 	{
 		set_editing_enabled(false);
 		return;
@@ -192,13 +206,16 @@ void preview_view_t::update_selection(const QModelIndex & index, const view_tree
 		m_pending_request.object_ref_index = occurrence.object_ref_index;
 	}
 
-	m_original_value = right_text;
+	m_original_value = cell_value;
 	populate_value_selector();
 	set_editing_enabled(true);
 }
 
 void preview_view_t::on_text_changed()
 {
+	if (!m_user_has_typed)
+		return;
+
 	if (!m_editing_active)
 		return;
 
@@ -270,12 +287,8 @@ void preview_view_t::on_value_selector_changed()
 		new_text = m_value_selector->currentText();
 	}
 
-	{
-		QSignalBlocker blocker(m_right_edit);
-		m_right_edit->setPlainText(new_text);
-	}
-
-	on_text_changed();
+	m_user_has_typed = true;
+	m_right_edit->setPlainText(new_text);
 }
 
 void preview_view_t::populate_value_selector()
