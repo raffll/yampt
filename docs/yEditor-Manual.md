@@ -131,3 +131,15 @@ Two types of records are removed:
 - **Junk cells** — exterior cell records that contain only a NAME and DATA sub-record with no references, no region assignment, and no meaningful content. These are Construction Set artifacts from brief edits near cell borders.
 
 When loading via Open MO2 Profile, cleaned plugins are written to the MO2 overwrite folder. The overwrite folder has the highest priority in MO2's virtual filesystem, so reloading the same profile after cleaning will automatically use the cleaned copies instead of the originals. Plugins loaded from overwrite are marked with the ⚡ icon in the navigation tree. Running Clean All again on an already-cleaned profile will report "no records to clean" because the loaded files are already the cleaned versions.
+
+## Lua Handler Conflicts
+
+After plugins are loaded, the application scans all `.omwscripts` files in the data paths for OpenMW Lua handler registrations. It identifies cases where multiple mods register handlers on the same interface method (e.g. two mods both adding an `ItemUsage.addHandlerForType` for the same item type).
+
+The Lua Handlers section appears at the bottom of the navigation tree, grouped by mod name. Each registration shows the interface, method, and type argument. Registrations involved in a conflict are colored by severity:
+
+- **Red** — blocking conflict. One handler returns false (cancels the action) and another mod expects the action to proceed.
+- **Orange** — mutating conflict. Multiple handlers modify the same data in potentially incompatible ways.
+- **Green** — overlapping registration. Multiple mods register on the same hook but their behaviors are compatible.
+
+Clicking a conflicting registration displays all participating mods side by side in the record view, with cell-level highlighting on fields that differ between mods (same coloring style as ESP record conflicts).
