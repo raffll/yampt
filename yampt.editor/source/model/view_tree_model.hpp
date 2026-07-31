@@ -17,6 +17,8 @@
 #include <QAbstractItemModel>
 #include <QMimeData>
 
+class editable_column_set_t;
+
 class view_tree_model_t : public QAbstractItemModel
 {
 	Q_OBJECT
@@ -67,6 +69,7 @@ public:
 
 	void set_excluded_plugins(const std::set<std::string> * excluded);
 	void set_patch_plugins(const std::set<std::string> * patch);
+	void set_editable_columns(const editable_column_set_t * editable);
 	bool is_merge_column(int section) const;
 	int merge_column() const;
 
@@ -245,6 +248,7 @@ private:
 	mutable bool m_filter_dirty = true;
 	const std::set<std::string> * m_excluded_plugins = nullptr;
 	const std::set<std::string> * m_patch_plugins = nullptr;
+	const editable_column_set_t * m_editable_columns = nullptr;
 	plugin_scan_t * m_scan_for_header = nullptr;
 	codepage_t m_display_codepage = codepage_t::windows_1252;
 	bool m_show_deleted_strikeout = true;

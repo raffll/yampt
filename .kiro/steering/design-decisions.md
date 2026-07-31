@@ -179,3 +179,17 @@ Both produce the same `new_text` but different statuses. The distinction matters
 ## Translate Button Error Feedback — append_log Is Sufficient
 
 When the Translate button is clicked with invalid state (no document, no row, non-untranslated entry), error messages are written via `m_translation_tab->append_log(...)`. This is not a visibility problem because the Translate button itself lives on the Auto Translate tab — if the user can click it, they can see the feedback. No status bar message needed.
+
+
+## Plugin Icons Must Be Consistent Across Panels
+
+The navigation tree (left panel) and the record view column headers (right panel) must show the same icon for each plugin. The icon logic lives in two places — `nav_tree_model.cpp::display_text_for_file` and `view_tree_model.cpp::headerData` — and must produce identical results for the same plugin index. When adding or changing an icon, update both locations.
+
+Icon priority (first match wins):
+1. 🔒 — excluded from merged patch
+2. 🛡 — guard patch
+3. ⚙ — merged patch
+4. ✍ — editing enabled
+5. 📜 — master file (.esm)
+6. ⚡ — loaded from MO2 overwrite folder
+7. 📄 — regular plugin (default)

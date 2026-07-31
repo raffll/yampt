@@ -418,9 +418,7 @@ int merge_controller_t::create_merge_records()
 	config.fog_fix_enabled = m_settings.merge_fog_fix_enabled();
 	config.summon_fix_enabled = m_settings.merge_summon_fix_enabled();
 	config.cell_name_fix_enabled = m_settings.merge_cell_name_fix_enabled();
-	config.ignore_conflict_subs = parse_sub_record_rules(m_settings.sub_record_ignore_conflict());
-	config.exclude_from_merge_subs = parse_sub_record_rules(m_settings.sub_record_exclude_from_merge());
-	config.skip_if_missing_subs = parse_sub_record_rules(m_settings.sub_record_skip_if_missing());
+	config.ignored_sub_records = parse_sub_record_rules(m_settings.sub_record_ignore_conflict());
 
 	auto_merge_t merge(m_session.scan());
 	merge.set_config(config);

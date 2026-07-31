@@ -46,7 +46,7 @@ Each plugin in the tree is prefixed with an icon indicating its role:
 - ⚙ — the merged patch produced by the auto-merge operation.
 - 🛡 — a guard patch that acts as a priority barrier during auto-merge.
 - 🔒 — a plugin excluded from the merged patch. Its records are ignored during merge.
-- ✏ — a plugin with editing enabled. Individual fields in this plugin's column can be modified directly via the Preview panel.
+- ✍ — a plugin with editing enabled. Individual fields in this plugin's column can be modified directly via the Preview panel.
 
 ## Record View
 
@@ -119,7 +119,7 @@ Open Settings via Ctrl+, or the Tools menu. Five pages are available:
 - **Paths** — configure the merged patch output path for each loading mode (folder, MO2, OpenMW). Normally these are automatic and don't need changing.
 - **Merged Patch** — toggle which record types participate in auto-merge. Set an exclusion regex to skip specific record IDs. Enable or disable individual bug fixes (fog density fix, summon persistence fix, cell name reversion fix).
 - **Cleaning** — toggle which cleaning operations the Clean All button performs. Evil GMSTs are Construction Set artifacts from Tribunal/Bloodmoon that can cause issues in mods that don't require those expansions. Junk cells are empty exterior cell records that only contain position data and serve no purpose. The Header Repair group provides additional fixes applied during cleaning: updating master file sizes in the plugin header to match the actual file sizes on disk, and updating the plugin version field to 1.3 (required by some engines).
-- **Sub-Record Rules** — configure how specific sub-records are handled during conflict detection and merging. Each field takes a comma-separated list of entries in `RECORD:SUB` format (e.g. `CELL:NAM0, CELL:NAM9`). Use `*` as a wildcard for the sub-record name to match all sub-records of a record type. Three rules are available: Ignore Conflict prevents the listed sub-records from being flagged as conflicts, Exclude from Merge omits them from the merged patch output, and Skip if Missing treats them as non-significant when a plugin does not include them (so their absence alone does not create a conflict). Changes apply immediately after closing the settings dialog — the conflict tree and record view are rebuilt to reflect the new rules.
+- **Sub-Record Rules** — configure which sub-records are ignored during conflict detection and excluded from the merged patch. The field takes a comma-separated list of entries in `RECORD:SUB` format (e.g. `CELL:NAM0, NPC_:AI_W`). Use `*` as a wildcard for the sub-record name to match all sub-records of a record type (e.g. `CELL:*`). Ignored sub-records are not flagged as conflicts in the navigation tree, are greyed out in the record view, and are omitted from the merged patch output. Changes apply immediately after closing the settings dialog.
 
 ## Cleaning Plugins
 

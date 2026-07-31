@@ -14,9 +14,7 @@ struct merge_config_t
 	std::set<std::string> patch_plugins;
 	std::string exclusion_pattern;
 	std::set<std::string> disabled_types;
-	std::set<std::string> ignore_conflict_subs;
-	std::set<std::string> exclude_from_merge_subs;
-	std::set<std::string> skip_if_missing_subs;
+	std::set<std::string> ignored_sub_records;
 	bool fog_fix_enabled = true;
 	bool summon_fix_enabled = true;
 	bool cell_name_fix_enabled = true;
@@ -79,6 +77,7 @@ private:
 
 	bool is_plugin_included(int plugin_idx) const;
 	bool is_type_enabled(const std::string & rec_type) const;
+	std::string filter_ignored_sub_records(const std::string & rec_type, const std::string & content) const;
 
 	void add_log(const std::string & message);
 

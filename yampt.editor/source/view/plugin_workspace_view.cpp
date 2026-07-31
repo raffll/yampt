@@ -52,6 +52,7 @@ plugin_workspace_view_t::plugin_workspace_view_t(settings_store_t & settings, QW
 	m_record_view = new record_view_t(this);
 	m_record_view->model()->set_excluded_plugins(&m_session->excluded_plugins());
 	m_record_view->model()->set_patch_plugins(&m_session->patch_plugins());
+	m_record_view->model()->set_editable_columns(&m_editable_columns);
 	m_record_view->model()->set_display_codepage(static_cast<codepage_t>(m_settings.display_codepage()));
 	m_record_view->model()->set_user_ignore_conflict(m_session->scan().user_ignore_conflict());
 	m_nav_view->set_display_codepage(static_cast<codepage_t>(m_settings.display_codepage()));

@@ -16,7 +16,5 @@ public:
 	void save(settings_store_t & settings) const;
 
 private:
-	QLineEdit * m_ignore_conflict_edit = nullptr;
-	QLineEdit * m_exclude_from_merge_edit = nullptr;
-	QLineEdit * m_skip_if_missing_edit = nullptr;
+	QLineEdit * m_ignore_edit = nullptr;
 };

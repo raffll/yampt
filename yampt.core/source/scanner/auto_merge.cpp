@@ -294,7 +294,8 @@ void auto_merge_t::process_three_way(const record_group_t & group, merge_counter
 	if (!result.changed)
 		return;
 
-	m_scan.copy_record_to_merge_raw(group.rec_type, group.record_id, result.content);
+	const auto filtered = filter_ignored_sub_records(group.rec_type, result.content);
+	m_scan.copy_record_to_merge_raw(group.rec_type, group.record_id, filtered);
 	++counters.three_way;
 
 	std::string plugins;
@@ -465,4 +466,34 @@ bool auto_merge_t::is_type_enabled(const std::string & rec_type) const
 void auto_merge_t::add_log(const std::string & message)
 {
 	m_log.push_back({ message });
+}
+
+std::string auto_merge_t::filter_ignored_sub_records(
+    const std::string & rec_type,
+    const std::string & content) const
+{
+	if (m_config.ignored_sub_records.empty())
+		return content;
+
+	const auto subs = sub_record_merge_t::parse_sub_records(content);
+	sub_record_sequence_t filtered;
+
+	for (const auto & entry : subs)
+	{
+		const auto specific_key = rec_type + ":" + entry.type;
+		const auto wildcard_key = rec_type + ":*";
+
+		if (m_config.ignored_sub_records.count(specific_key) > 0)
+			continue;
+
+		if (m_config.ignored_sub_records.count(wildcard_key) > 0)
+			continue;
+
+		filtered.push_back(entry);
+	}
+
+	if (filtered.size() == subs.size())
+		return content;
+
+	return sub_record_merge_t::reconstruct_record(content, filtered);
 }

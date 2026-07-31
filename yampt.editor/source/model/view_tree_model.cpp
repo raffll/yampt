@@ -1,4 +1,5 @@
 #include "view_tree_model.hpp"
+#include "editable_column_set.hpp"
 #include <decoder/view_tree_format.hpp>
 #include <scanner/record_conflict.hpp>
 #include <utility/record_behavior.hpp>
@@ -346,6 +347,11 @@ const std::vector<view_tree_model_t::view_node_t> & view_tree_model_t::rows() co
 void view_tree_model_t::set_patch_plugins(const std::set<std::string> * patch)
 {
 	m_patch_plugins = patch;
+}
+
+void view_tree_model_t::set_editable_columns(const editable_column_set_t * editable)
+{
+	m_editable_columns = editable;
 }
 
 void view_tree_model_t::clear()
@@ -905,10 +911,34 @@ QVariant view_tree_model_t::headerData(int section, Qt::Orientation orientation,
 				prefix = QString::fromUtf8("\xF0\x9F\x9B\xA1 ");
 			else if (m_scan_for_header && m_scan_for_header->is_merge_plugin(pi))
 				prefix = QString::fromUtf8("\xE2\x9A\x99 ");
+			else if (m_editable_columns && m_editable_columns->is_plugin_editable(pi))
+				prefix = QString::fromUtf8("\xE2\x9C\x8D ");
+			else if (m_scan_for_header)
+			{
+				const auto & full_path = m_scan_for_header->plugin_path(pi);
+				const bool is_overridden = full_path.find("/overwrite/") != std::string::npos ||
+				                           full_path.find("\\overwrite\\") != std::string::npos;
+				const bool is_master =
+				    name.size() > 4 &&
+				    (name.compare(name.size() - 4, 4, ".esm") == 0 || name.compare(name.size() - 4, 4, ".ESM") == 0);
+
+				if (is_master)
+					prefix = QString::fromUtf8("\xF0\x9F\x93\x9C ");
+				else if (is_overridden)
+					prefix = QString::fromUtf8("\xE2\x9A\xA1 ");
+				else
+					prefix = QString::fromUtf8("\xF0\x9F\x93\x84 ");
+			}
 			else if (
 			    name.size() > 4 &&
 			    (name.compare(name.size() - 4, 4, ".esm") == 0 || name.compare(name.size() - 4, 4, ".ESM") == 0))
+			{
 				prefix = QString::fromUtf8("\xF0\x9F\x93\x9C ");
+			}
+			else
+			{
+				prefix = QString::fromUtf8("\xF0\x9F\x93\x84 ");
+			}
 		}
 
 		return prefix + QString::fromStdString(name);
