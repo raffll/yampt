@@ -1,5 +1,37 @@
 # TODO
 
+readme, add sentence about reporting bugs and feature requests
+
+$(SolutionDir) still created in release folder
+
+unit test create test_theme_settings.ini in release folder and dont clean up
+
+both applications should start maximazed
+translator dont save horizontal separators position in config file (on some conditions)
+
+find/replace window is weirdly created not in the center but anchored to center by top/left corner
+
+find replace should be incorporated into filter by panel, then filter by will show all records that will be affected by replace. Keep only replace all and undo all.
+
+when button is incative text should be greyed out
+
+ENAM - enchantment: bad validation on chnagig text <- NPCS
+
+record flags should have combobox
+record signature should be non editable
+
+CELL data flag should be combobox <- ANY flags in other record tpes also
+
+ENDT - Enchantmrnt data FLAGS is uknown
+
+comboboxes should show by default same value as edit box
+
+merged patch header dont show plugin name in left panel
+
+right click menu item on subrecord to exclude it from comparison/merged patch
+
+show hexes insetad of <bytes>
+
 editor:
 - split nav tree into two tabs: Plugins (current ESP tree) and Lua (handler registrations grouped by mod). Add QTabBar + QStackedWidget to nav_tree_view_t. Remove "Lua Handlers" section from the plugins tree model.
 - plugin_workspace_view.cpp: rename `fi`→`file_info`, `dir`→`directory`, `dlg`→`filter_dialog`, `msg`→`message`
