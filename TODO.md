@@ -70,3 +70,20 @@ core:
 - plugin_scan.cpp: split `compute_conflict` (75 lines, depth 4) — extract slot iteration
 - plugin_scan.cpp: rename `pi`→`plugin_idx`, `mi`→`merge_idx`, `sr`→`slot_result`, `vi`→`version_idx`, `fi`→`field_idx`
 - domain_types.cpp: rename `str`→`byte_array` in conversion functions
+
+excluded subrecords white background, grey font
+add option to exclude subrecord from menu on row
+excludion pattern from merged patch, what it is doinmg now? replace by excluded subrecords
+add option to exclude name pattern from merged patch
+
+Paths -> Output Paths
+
+Cleaning -> add option to fix master order, based on current loaded
+
+DELETED icons instead of strikeout
+
+editor panels size 1/2
+left panel columns 3/1
+
+enable editing global option, not per plugin
+preview tab first, chnage name to edit if esit enabled
