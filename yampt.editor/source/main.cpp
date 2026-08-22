@@ -4,6 +4,7 @@
 #include <theme_system.hpp>
 #include <QApplication>
 #include <QLocale>
+#include <QPalette>
 #include <QStyleFactory>
 #include <QTranslator>
 
@@ -11,7 +12,6 @@ int main(int argc, char * argv[])
 {
 	QApplication app(argc, argv);
 	app.setStyle(QStyleFactory::create("Fusion"));
-
 	QTranslator translator;
 	const auto ui_languages = QLocale::system().uiLanguages();
 	for (const auto & locale : ui_languages)

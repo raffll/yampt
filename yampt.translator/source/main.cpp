@@ -5,6 +5,7 @@
 #include <theme_system.hpp>
 #include <QApplication>
 #include <QLocale>
+#include <QPalette>
 #include <QStyleFactory>
 #include <QTranslator>
 

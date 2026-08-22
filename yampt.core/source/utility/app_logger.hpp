@@ -34,12 +34,6 @@ public:
 		m_quiet_flag = enabled;
 	}
 
-	{
-	}
-
-	{
-	}
-
 private:
 	static std::string m_log;
 	static bool m_error_flag;
