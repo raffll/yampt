@@ -1,19 +1,10 @@
 # TODO
 
-readme, add sentence about reporting bugs and feature requests
-
 $(SolutionDir) still created in release folder
 
-unit test create test_theme_settings.ini in release folder and dont clean up
-
-both applications should start maximazed
-translator dont save horizontal separators position in config file (on some conditions)
-
-find/replace window is weirdly created not in the center but anchored to center by top/left corner
+find/replace window is weirdly created not in the center but anchored to center by top/left corner (but only windows)
 
 find replace should be incorporated into filter by panel, then filter by will show all records that will be affected by replace. Keep only replace all and undo all.
-
-when button is incative text should be greyed out
 
 ENAM - enchantment: bad validation on chnagig text <- NPCS
 
