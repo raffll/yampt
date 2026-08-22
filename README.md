@@ -30,10 +30,6 @@ Qt6 GUI for viewing, comparing, and patching plugins. Similar to TES5Edit/xEdit.
 - Plugin cleaning: batch-remove evil GMSTs and junk cells
 - Header repair: update master file sizes to match actual files on disk, update plugin version to 1.3
 
-**General**
-- Session persistence: remembers loaded plugins and window state between runs
-- Dark mode
-
 ## yTranslator.exe — Translation Workbench
 
 Qt6 GUI for interactive plugin translation.
@@ -62,11 +58,6 @@ Qt6 GUI for interactive plugin translation.
 - **EET file import: convert ESP-ESM Translator dictionaries to JSON**
 - **Generate localization files (.cel, .mrk, .top) from dictionary**
 
-**General**
-- Supported languages defined in `languages.json` — add new languages without recompiling
-- Dark mode
-- All CLI operations accessible from the GUI
-
 ## yampt.exe — Command Line
 
 Batch tool for automated dictionary and conversion workflows.
@@ -82,6 +73,12 @@ Batch tool for automated dictionary and conversion workflows.
 - **Hyperlink insertion during conversion**
 - Create patch plugins containing only modified records
 - **Converts compiled script data without recompiling in TES CS**
+
+## General
+
+- Cross-platform: Windows and Linux
+- Dark mode
+- Session persistence: remembers window state between runs
 
 ## Bug Reports
 

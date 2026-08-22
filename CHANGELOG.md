@@ -2,6 +2,11 @@
 
 ## [XXX]
 
+### Both Apps
+- [NEW] Linux support: builds with CMake and system libraries, AUR package available
+- [NEW] Cross-platform resource paths: shared data in `/usr/share/yampt/`, user data in `~/.yampt/`
+- [FIX] Disabled widgets now show greyed-out text on all platforms
+
 ### yEditor
 - [NEW] Enable Edit: edit decoded fields of source plugins directly (right-click plugin → Enable Edit)
 - [NEW] Lua handler conflict detection: scans OpenMW Lua scripts for handler registrations and highlights conflicts between mods
