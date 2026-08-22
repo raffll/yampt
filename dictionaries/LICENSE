@@ -1,0 +1,57 @@
+Hunspell Spell-Check Dictionaries
+Source: https://github.com/wooorm/dictionaries (UTF-8 normalized versions)
+
+Each dictionary retains its original license from the upstream project.
+
+==============================================================================
+en_US — English (United States)
+==============================================================================
+Source: SCOWL (Spell Checker Oriented Word Lists)
+URL: http://wordlist.sourceforge.net
+Copyright: 2000-2018 Kevin Atkinson
+License: BSD-like (permissive)
+
+==============================================================================
+pl_PL — Polish
+==============================================================================
+Source: SJP (Slownik Jezyka Polskiego) — https://sjp.pl
+URL: https://github.com/wooorm/dictionaries/tree/main/dictionaries/pl
+License: GPL-3.0 / LGPL-3.0 / MPL-2.0 (tri-license, pick one)
+
+==============================================================================
+de_DE — German
+==============================================================================
+Source: igerman98 by Bjorn Jacke
+URL: https://www.j3e.de/ispell/igerman98/
+Copyright: 1999-2016 Bjorn Jacke
+License: GPL-2.0 or GPL-3.0
+
+==============================================================================
+fr_FR — French
+==============================================================================
+Source: Dicollecte — French dictionaries for spell checking
+URL: https://www.dicollecte.org
+License: MPL-2.0
+
+==============================================================================
+ru_RU — Russian
+==============================================================================
+Source: Russian Hunspell Dictionary by Alexander I. Lebedev
+Copyright: 1997-2008 Alexander I. Lebedev
+License: LGPL-3.0
+
+==============================================================================
+it_IT — Italian
+==============================================================================
+Source: Italian Writing Aids by Andrea Pescetti
+URL: https://sourceforge.net/projects/aoo-extensions/
+Copyright: 2001-2016 Andrea Pescetti and others
+License: GPL-3.0
+
+==============================================================================
+hu_HU — Hungarian
+==============================================================================
+Source: magyarispell (Szabad magyar szotar)
+URL: https://github.com/laszlonemeth/magyarispell
+Copyright: 2002-2024 Laszlo Nemeth & Ferenc Godo
+License: GPL / LGPL / MPL (tri-license, pick one)
