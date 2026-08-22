@@ -44,9 +44,3 @@ TEST_CASE("app_logger_t::add_log, silent messages visible when debug on", "[u]")
 	app_logger_t::set_debug(false);
 }
 
-TEST_CASE("app_logger_t::set_exe_dir, round-trip", "[u]")
-{
-	app_logger_t::set_exe_dir("/some/path");
-	REQUIRE(app_logger_t::get_exe_dir() == "/some/path");
-	app_logger_t::set_exe_dir("");
-}

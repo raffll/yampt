@@ -145,8 +145,7 @@ void sidebar_controller_t::on_delete_requested(const std::string & path)
 
 void sidebar_controller_t::scan_workspace()
 {
-	const auto workspace = (QCoreApplication::applicationDirPath() + "/workspace").toStdString();
-	QDir().mkpath(QString::fromStdString(workspace));
+	const auto workspace = resource_paths::workspace_dir();
 
 	std::vector<std::string> roots;
 	roots.push_back(workspace);
@@ -188,7 +187,7 @@ void sidebar_controller_t::update_watcher_roots()
 {
 	QStringList roots;
 
-	const auto workspace = QCoreApplication::applicationDirPath() + "/workspace";
+	const auto workspace = QString::fromStdString(resource_paths::workspace_dir());
 	roots.append(workspace);
 
 	for (const auto & root : m_deps.file_list.get_roots())

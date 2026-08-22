@@ -1,3 +1,4 @@
+#include <resource_paths.hpp>
 #include "plugin_operations_controller.hpp"
 #include "../model/dict_document.hpp"
 #include "../view/display_name.hpp"
@@ -34,7 +35,7 @@ void plugin_operations_controller_t::on_plugin_operation(const std::string & plu
 	auto plugin_dir = path_sep != std::string::npos ? plugin_path.substr(0, path_sep) : std::string {};
 	plugin_dir = string_utils::normalize_path(plugin_dir);
 
-	const auto workspace_dir = QCoreApplication::applicationDirPath().toStdString() + "/workspace/";
+	const auto workspace_dir = resource_paths::workspace_dir();
 
 	if (operation == plugin_op_t::convert || operation == plugin_op_t::convert_hyperlinks ||
 	    operation == plugin_op_t::create_plugin)

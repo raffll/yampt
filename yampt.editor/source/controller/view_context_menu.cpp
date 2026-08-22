@@ -1,3 +1,4 @@
+#include <settings_store.hpp>
 #include "view_context_menu.hpp"
 #include "../model/editable_column_set.hpp"
 #include "../session/plugin_session.hpp"
@@ -65,7 +66,7 @@ void view_context_menu_t::build_source_file_menu(QMenu & menu, const nav_tree_mo
 			excluded_copy.insert(filename);
 
 		m_session.set_excluded_plugins(excluded_copy);
-		m_session.save_session_state(QCoreApplication::applicationDirPath() + "/yEditor.ini");
+		m_session.save_session_state(settings_store_t::settings_dir() + "yEditor.ini");
 		m_nav_view.rebuild_preserving_state();
 	});
 
@@ -81,7 +82,7 @@ void view_context_menu_t::build_source_file_menu(QMenu & menu, const nav_tree_mo
 			patch_copy.insert(filename);
 
 		m_session.set_patch_plugins(patch_copy);
-		m_session.save_session_state(QCoreApplication::applicationDirPath() + "/yEditor.ini");
+		m_session.save_session_state(settings_store_t::settings_dir() + "yEditor.ini");
 		m_nav_view.rebuild_preserving_state();
 	});
 

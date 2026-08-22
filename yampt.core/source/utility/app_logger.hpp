@@ -34,14 +34,10 @@ public:
 		m_quiet_flag = enabled;
 	}
 
-	static void set_exe_dir(const std::string & dir)
 	{
-		m_exe_dir = dir;
 	}
 
-	static const std::string & get_exe_dir()
 	{
-		return m_exe_dir;
 	}
 
 private:
@@ -49,5 +45,4 @@ private:
 	static bool m_error_flag;
 	static bool m_debug_flag;
 	static bool m_quiet_flag;
-	static std::string m_exe_dir;
 };

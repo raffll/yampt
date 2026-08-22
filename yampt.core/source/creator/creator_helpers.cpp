@@ -1,5 +1,4 @@
 ﻿#include "creator_helpers.hpp"
-#include "../utility/app_logger.hpp"
 #include "../utility/string_utils.hpp"
 #include <hunspell/hunspell.hxx>
 #include <sstream>
@@ -557,15 +556,6 @@ void creator_helpers::load_english_dict(creator_context_t & ctx)
 		auto dot_pos = dic.rfind(".aff");
 		if (dot_pos != std::string::npos)
 			dic.replace(dot_pos, 4, ".dic");
-	}
-	else
-	{
-		auto dir = app_logger_t::get_exe_dir();
-		if (!dir.empty() && dir.back() != '/' && dir.back() != '\\')
-			dir += '/';
-
-		aff = dir + "dictionaries/en_US.aff";
-		dic = dir + "dictionaries/en_US.dic";
 	}
 
 	ctx.english_dict = std::make_unique<Hunspell>(aff.c_str(), dic.c_str());

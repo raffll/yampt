@@ -915,24 +915,24 @@ void main_window_t::load_config()
 
 	const int info_height = m_settings.info_height();
 	const int left_total = m_left_splitter->height();
-	if (info_height > 0)
+	if (info_height > 0 && left_total > 0)
 		m_left_splitter->setSizes({ left_total - info_height, info_height });
 	else
-		m_left_splitter->setSizes({ left_total / 2, left_total / 2 });
+		m_left_splitter->setStretchFactor(0, 2);
 
 	const int bottom_height = m_settings.bottom_height();
 	const int right_total = m_right_splitter->height();
-	if (bottom_height > 0)
+	if (bottom_height > 0 && right_total > 0)
 		m_right_splitter->setSizes({ right_total - bottom_height, bottom_height });
 	else
-		m_right_splitter->setSizes({ right_total / 2, right_total / 2 });
+		m_right_splitter->setStretchFactor(0, 2);
 
 	std::vector<int> col_widths;
 	for (int i = 0; i < 4; ++i)
 		col_widths.push_back(m_settings.column_width(i));
 	m_table_view->set_column_widths(col_widths);
 
-	const auto workspace = (QCoreApplication::applicationDirPath() + "/workspace").toStdString();
+	const auto workspace = resource_paths::workspace_dir();
 	std::vector<std::string> roots = { workspace };
 	for (const auto & r : m_settings.workspace_roots())
 	{

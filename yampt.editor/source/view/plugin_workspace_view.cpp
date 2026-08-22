@@ -687,7 +687,7 @@ void plugin_workspace_view_t::log_message(const std::string & msg)
 
 void plugin_workspace_view_t::save_session_state()
 {
-	const auto ini_path = QCoreApplication::applicationDirPath() + "/yEditor.ini";
+	const auto ini_path = settings_store_t::settings_dir() + "yEditor.ini";
 
 	m_session->save_session_state(ini_path);
 
@@ -715,7 +715,7 @@ void plugin_workspace_view_t::save_session_state()
 
 void plugin_workspace_view_t::restore_session_state()
 {
-	QSettings settings(QCoreApplication::applicationDirPath() + "/yEditor.ini", QSettings::IniFormat);
+	QSettings settings(settings_store_t::settings_dir() + "yEditor.ini", QSettings::IniFormat);
 
 	m_conflicts_only = settings.value("view/conflicts_only", false).toBool();
 	m_hide_duplicates = settings.value("view/hide_duplicates", false).toBool();
@@ -736,7 +736,7 @@ void plugin_workspace_view_t::restore_session_state()
 	if (!content_state.isEmpty())
 		m_content_splitter->restoreState(content_state);
 
-	m_session->restore_session_state(QCoreApplication::applicationDirPath() + "/yEditor.ini");
+	m_session->restore_session_state(settings_store_t::settings_dir() + "yEditor.ini");
 
 	auto rec_type = settings.value("session/nav_rec_type").toString().toStdString();
 	auto record_id = settings.value("session/nav_record_id").toString().toStdString();

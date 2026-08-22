@@ -4,7 +4,6 @@ std::string app_logger_t::m_log;
 bool app_logger_t::m_error_flag = false;
 bool app_logger_t::m_debug_flag = false;
 bool app_logger_t::m_quiet_flag = false;
-std::string app_logger_t::m_exe_dir;
 
 void app_logger_t::add_log(const std::string & entry, bool silent)
 {

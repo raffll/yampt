@@ -82,3 +82,7 @@ Batch tool for automated dictionary and conversion workflows.
 - **Hyperlink insertion during conversion**
 - Create patch plugins containing only modified records
 - **Converts compiled script data without recompiling in TES CS**
+
+## Bug Reports
+
+Report bugs and feature requests on [GitHub](https://github.com/raffll/yampt/issues) or in the Nexus Mods comments section.

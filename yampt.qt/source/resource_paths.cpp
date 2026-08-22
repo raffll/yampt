@@ -2,68 +2,102 @@
 #include <QCoreApplication>
 #include <QDir>
 #include <QFileInfo>
-#include <QStandardPaths>
 
-static QString user_data_dir()
+static QString exe_dir()
 {
-	return QDir::homePath() + "/.yampt";
+	return QCoreApplication::applicationDirPath();
 }
 
-static QString system_data_dir()
+static QString user_dir()
+{
+#ifdef _WIN32
+	return exe_dir();
+#else
+	return QDir::homePath() + "/.yampt";
+#endif
+}
+
+static QString system_dir()
 {
 #ifdef YAMPT_DATA_DIR
 	return QStringLiteral(YAMPT_DATA_DIR);
 #else
-	return QCoreApplication::applicationDirPath();
+	return exe_dir();
 #endif
 }
 
-static std::string resolve_file(const QString & relative_path)
+static std::string resolve_shared_file(const QString & relative_path)
 {
-	const auto user_path = user_data_dir() + "/" + relative_path;
-	if (QFileInfo::exists(user_path))
-		return user_path.toStdString();
+	const auto from_user = user_dir() + "/" + relative_path;
+	if (QFileInfo::exists(from_user))
+		return from_user.toStdString();
 
-	const auto system_path = system_data_dir() + "/" + relative_path;
-	if (QFileInfo::exists(system_path))
-		return system_path.toStdString();
+	const auto from_system = system_dir() + "/" + relative_path;
+	if (QFileInfo::exists(from_system))
+		return from_system.toStdString();
 
-	return system_path.toStdString();
+	const auto from_exe = exe_dir() + "/" + relative_path;
+	if (QFileInfo::exists(from_exe))
+		return from_exe.toStdString();
+
+	return from_system.toStdString();
 }
 
-static std::string resolve_directory(const QString & relative_path)
+static std::string resolve_shared_directory(const QString & relative_path)
 {
-	const auto user_path = user_data_dir() + "/" + relative_path;
-	if (QFileInfo(user_path).isDir())
-		return user_path.toStdString() + "/";
+	const auto from_user = user_dir() + "/" + relative_path;
+	if (QFileInfo(from_user).isDir())
+		return from_user.toStdString() + "/";
 
-	const auto system_path = system_data_dir() + "/" + relative_path;
-	return system_path.toStdString() + "/";
+	const auto from_system = system_dir() + "/" + relative_path;
+	if (QFileInfo(from_system).isDir())
+		return from_system.toStdString() + "/";
+
+	const auto from_exe = exe_dir() + "/" + relative_path;
+	if (QFileInfo(from_exe).isDir())
+		return from_exe.toStdString() + "/";
+
+	return from_system.toStdString() + "/";
 }
 
-std::string resource_paths::data_dir()
+static std::string resolve_user_directory(const QString & relative_path)
 {
-	static const std::string cached = system_data_dir().toStdString();
-	return cached;
-}
-
-std::string resource_paths::user_dir()
-{
-	static const std::string cached = user_data_dir().toStdString();
-	return cached;
+	const auto path = user_dir() + "/" + relative_path;
+	QDir().mkpath(path);
+	return path.toStdString() + "/";
 }
 
 std::string resource_paths::languages_file()
 {
-	return resolve_file("languages.json");
+	return resolve_shared_file("languages.json");
 }
 
 std::string resource_paths::providers_dir()
 {
-	return resolve_directory("providers");
+	return resolve_shared_directory("providers");
 }
 
 std::string resource_paths::dictionaries_dir()
 {
-	return resolve_directory("dictionaries");
+	return resolve_shared_directory("dictionaries");
+}
+
+std::string resource_paths::translations_dir()
+{
+	return resolve_shared_directory("translations");
+}
+
+std::string resource_paths::config_dir()
+{
+	return resolve_user_directory("");
+}
+
+std::string resource_paths::workspace_dir()
+{
+	return resolve_user_directory("workspace");
+}
+
+std::string resource_paths::models_dir()
+{
+	return resolve_user_directory("models");
 }

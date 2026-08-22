@@ -1,13 +1,15 @@
 #include "settings_store.hpp"
+#include "resource_paths.hpp"
 #include <QCoreApplication>
 #include <QDir>
 
+QString settings_store_t::settings_dir()
+{
+	return QString::fromStdString(resource_paths::config_dir());
+}
+
 settings_store_t::settings_store_t(const QString & filename)
-#ifdef _WIN32
-    : m_settings(QCoreApplication::applicationDirPath() + "/" + filename, QSettings::IniFormat)
-#else
-    : m_settings(QDir::homePath() + "/.yampt/" + filename, QSettings::IniFormat)
-#endif
+    : m_settings(settings_dir() + filename, QSettings::IniFormat)
 {}
 
 int settings_store_t::encoding_index() const

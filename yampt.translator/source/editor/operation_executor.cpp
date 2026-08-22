@@ -1,3 +1,4 @@
+#include <resource_paths.hpp>
 #include "operation_executor.hpp"
 #include <converter/esm_converter.hpp>
 #include <creator/dict_creator.hpp>
@@ -41,7 +42,7 @@ std::string operation_executor_t::get_output_dir() const
 	if (!m_output_dir.empty())
 		dir_path = QString::fromStdString(m_output_dir);
 	else
-		dir_path = QCoreApplication::applicationDirPath() + "/workspace/";
+		dir_path = QString::fromStdString(resource_paths::workspace_dir());
 
 	QDir dir(dir_path);
 	if (!dir.exists())

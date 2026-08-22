@@ -11,6 +11,8 @@ class settings_store_t
 public:
 	explicit settings_store_t(const QString & filename);
 
+	static QString settings_dir();
+
 	int encoding_index() const;
 	void set_encoding_index(int index);
 
