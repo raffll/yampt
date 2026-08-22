@@ -1,8 +1,13 @@
 #include "settings_store.hpp"
 #include <QCoreApplication>
+#include <QDir>
 
 settings_store_t::settings_store_t(const QString & filename)
+#ifdef _WIN32
     : m_settings(QCoreApplication::applicationDirPath() + "/" + filename, QSettings::IniFormat)
+#else
+    : m_settings(QDir::homePath() + "/.yampt/" + filename, QSettings::IniFormat)
+#endif
 {}
 
 int settings_store_t::encoding_index() const
