@@ -636,6 +636,7 @@ std::string merge_controller_t::ensure_merge_record(
     const std::string & record_id,
     const std::string & source_content)
 {
+	(void)plugin_idx;
 	const auto * merge_content_ptr = m_session.scan().find_merge_content(rec_type, record_id);
 	if (merge_content_ptr)
 		return *merge_content_ptr;

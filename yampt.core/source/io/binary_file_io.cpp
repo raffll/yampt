@@ -22,7 +22,7 @@ std::string binary_file_io::read_file(const std::string & path)
 		content.reserve(static_cast<size_t>(file_size));
 		file.seekg(0, std::ios::beg);
 		std::streamsize chars_read;
-		while (file.read(buffer, sizeof(buffer)), chars_read = file.gcount())
+		while (file.read(buffer, sizeof(buffer)), (chars_read = file.gcount()))
 		{
 			content.append(buffer, chars_read);
 		}

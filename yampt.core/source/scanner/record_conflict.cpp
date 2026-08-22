@@ -1,5 +1,6 @@
 #include "record_conflict.hpp"
 #include "../utility/record_behavior.hpp"
+#include <cstdint>
 
 conflict_all_t record_conflict::compute_conflict_all(const std::vector<std::string> & values)
 {

@@ -8,69 +8,69 @@ static const char * const cell_flags[] = {
 };
 
 static const field_def_t cell_data_fields[] = {
-	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, cell_flags, ARRAY_COUNT(cell_flags) },
-	{ "Grid X", field_type_t::i32, 4, 4, nullptr, nullptr },
-	{ "Grid Y", field_type_t::i32, 8, 4, nullptr, nullptr },
+	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, cell_flags, ARRAY_COUNT(cell_flags), nullptr },
+	{ "Grid X", field_type_t::i32, 4, 4, nullptr, nullptr, 0, nullptr },
+	{ "Grid Y", field_type_t::i32, 8, 4, nullptr, nullptr, 0, nullptr },
 };
 
 static const char * const npc_flags[] = { "Female", "Essential", "Respawn", "Base", "Autocalc" };
 
 static const field_def_t npc_flag_fields[] = {
-	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, npc_flags, ARRAY_COUNT(npc_flags) },
+	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, npc_flags, ARRAY_COUNT(npc_flags), nullptr },
 };
 
 static const field_def_t npc_npdt_12_fields[] = {
-	{ "Level", field_type_t::u16, 0, 2, nullptr, nullptr },
-	{ "Disposition", field_type_t::u8, 2, 1, nullptr, nullptr },
-	{ "Reputation", field_type_t::u8, 3, 1, nullptr, nullptr },
-	{ "Rank", field_type_t::u8, 4, 1, nullptr, nullptr },
-	{ "Gold", field_type_t::u32, 8, 4, nullptr, nullptr },
+	{ "Level", field_type_t::u16, 0, 2, nullptr, nullptr, 0, nullptr },
+	{ "Disposition", field_type_t::u8, 2, 1, nullptr, nullptr, 0, nullptr },
+	{ "Reputation", field_type_t::u8, 3, 1, nullptr, nullptr, 0, nullptr },
+	{ "Rank", field_type_t::u8, 4, 1, nullptr, nullptr, 0, nullptr },
+	{ "Gold", field_type_t::u32, 8, 4, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t npc_npdt_52_fields[] = {
-	{ "Level", field_type_t::u16, 0, 2, nullptr, nullptr },
-	{ "Strength", field_type_t::u8, 2, 1, nullptr, nullptr },
-	{ "Intelligence", field_type_t::u8, 3, 1, nullptr, nullptr },
-	{ "Willpower", field_type_t::u8, 4, 1, nullptr, nullptr },
-	{ "Agility", field_type_t::u8, 5, 1, nullptr, nullptr },
-	{ "Speed", field_type_t::u8, 6, 1, nullptr, nullptr },
-	{ "Endurance", field_type_t::u8, 7, 1, nullptr, nullptr },
-	{ "Personality", field_type_t::u8, 8, 1, nullptr, nullptr },
-	{ "Luck", field_type_t::u8, 9, 1, nullptr, nullptr },
-	{ "Block", field_type_t::u8, 10, 1, nullptr, nullptr },
-	{ "Armorer", field_type_t::u8, 11, 1, nullptr, nullptr },
-	{ "Medium Armor", field_type_t::u8, 12, 1, nullptr, nullptr },
-	{ "Heavy Armor", field_type_t::u8, 13, 1, nullptr, nullptr },
-	{ "Blunt Weapon", field_type_t::u8, 14, 1, nullptr, nullptr },
-	{ "Long Blade", field_type_t::u8, 15, 1, nullptr, nullptr },
-	{ "Axe", field_type_t::u8, 16, 1, nullptr, nullptr },
-	{ "Spear", field_type_t::u8, 17, 1, nullptr, nullptr },
-	{ "Athletics", field_type_t::u8, 18, 1, nullptr, nullptr },
-	{ "Enchant", field_type_t::u8, 19, 1, nullptr, nullptr },
-	{ "Destruction", field_type_t::u8, 20, 1, nullptr, nullptr },
-	{ "Alteration", field_type_t::u8, 21, 1, nullptr, nullptr },
-	{ "Illusion", field_type_t::u8, 22, 1, nullptr, nullptr },
-	{ "Conjuration", field_type_t::u8, 23, 1, nullptr, nullptr },
-	{ "Mysticism", field_type_t::u8, 24, 1, nullptr, nullptr },
-	{ "Restoration", field_type_t::u8, 25, 1, nullptr, nullptr },
-	{ "Alchemy", field_type_t::u8, 26, 1, nullptr, nullptr },
-	{ "Unarmored", field_type_t::u8, 27, 1, nullptr, nullptr },
-	{ "Security", field_type_t::u8, 28, 1, nullptr, nullptr },
-	{ "Sneak", field_type_t::u8, 29, 1, nullptr, nullptr },
-	{ "Acrobatics", field_type_t::u8, 30, 1, nullptr, nullptr },
-	{ "Light Armor", field_type_t::u8, 31, 1, nullptr, nullptr },
-	{ "Short Blade", field_type_t::u8, 32, 1, nullptr, nullptr },
-	{ "Marksman", field_type_t::u8, 33, 1, nullptr, nullptr },
-	{ "Mercantile", field_type_t::u8, 34, 1, nullptr, nullptr },
-	{ "Speechcraft", field_type_t::u8, 35, 1, nullptr, nullptr },
-	{ "Hand-to-hand", field_type_t::u8, 36, 1, nullptr, nullptr },
-	{ "Health", field_type_t::u16, 38, 2, nullptr, nullptr },
-	{ "Magicka", field_type_t::u16, 40, 2, nullptr, nullptr },
-	{ "Fatigue", field_type_t::u16, 42, 2, nullptr, nullptr },
-	{ "Disposition", field_type_t::u8, 44, 1, nullptr, nullptr },
-	{ "Reputation", field_type_t::u8, 45, 1, nullptr, nullptr },
-	{ "Rank", field_type_t::u8, 46, 1, nullptr, nullptr },
-	{ "Gold", field_type_t::u32, 48, 4, nullptr, nullptr },
+	{ "Level", field_type_t::u16, 0, 2, nullptr, nullptr, 0, nullptr },
+	{ "Strength", field_type_t::u8, 2, 1, nullptr, nullptr, 0, nullptr },
+	{ "Intelligence", field_type_t::u8, 3, 1, nullptr, nullptr, 0, nullptr },
+	{ "Willpower", field_type_t::u8, 4, 1, nullptr, nullptr, 0, nullptr },
+	{ "Agility", field_type_t::u8, 5, 1, nullptr, nullptr, 0, nullptr },
+	{ "Speed", field_type_t::u8, 6, 1, nullptr, nullptr, 0, nullptr },
+	{ "Endurance", field_type_t::u8, 7, 1, nullptr, nullptr, 0, nullptr },
+	{ "Personality", field_type_t::u8, 8, 1, nullptr, nullptr, 0, nullptr },
+	{ "Luck", field_type_t::u8, 9, 1, nullptr, nullptr, 0, nullptr },
+	{ "Block", field_type_t::u8, 10, 1, nullptr, nullptr, 0, nullptr },
+	{ "Armorer", field_type_t::u8, 11, 1, nullptr, nullptr, 0, nullptr },
+	{ "Medium Armor", field_type_t::u8, 12, 1, nullptr, nullptr, 0, nullptr },
+	{ "Heavy Armor", field_type_t::u8, 13, 1, nullptr, nullptr, 0, nullptr },
+	{ "Blunt Weapon", field_type_t::u8, 14, 1, nullptr, nullptr, 0, nullptr },
+	{ "Long Blade", field_type_t::u8, 15, 1, nullptr, nullptr, 0, nullptr },
+	{ "Axe", field_type_t::u8, 16, 1, nullptr, nullptr, 0, nullptr },
+	{ "Spear", field_type_t::u8, 17, 1, nullptr, nullptr, 0, nullptr },
+	{ "Athletics", field_type_t::u8, 18, 1, nullptr, nullptr, 0, nullptr },
+	{ "Enchant", field_type_t::u8, 19, 1, nullptr, nullptr, 0, nullptr },
+	{ "Destruction", field_type_t::u8, 20, 1, nullptr, nullptr, 0, nullptr },
+	{ "Alteration", field_type_t::u8, 21, 1, nullptr, nullptr, 0, nullptr },
+	{ "Illusion", field_type_t::u8, 22, 1, nullptr, nullptr, 0, nullptr },
+	{ "Conjuration", field_type_t::u8, 23, 1, nullptr, nullptr, 0, nullptr },
+	{ "Mysticism", field_type_t::u8, 24, 1, nullptr, nullptr, 0, nullptr },
+	{ "Restoration", field_type_t::u8, 25, 1, nullptr, nullptr, 0, nullptr },
+	{ "Alchemy", field_type_t::u8, 26, 1, nullptr, nullptr, 0, nullptr },
+	{ "Unarmored", field_type_t::u8, 27, 1, nullptr, nullptr, 0, nullptr },
+	{ "Security", field_type_t::u8, 28, 1, nullptr, nullptr, 0, nullptr },
+	{ "Sneak", field_type_t::u8, 29, 1, nullptr, nullptr, 0, nullptr },
+	{ "Acrobatics", field_type_t::u8, 30, 1, nullptr, nullptr, 0, nullptr },
+	{ "Light Armor", field_type_t::u8, 31, 1, nullptr, nullptr, 0, nullptr },
+	{ "Short Blade", field_type_t::u8, 32, 1, nullptr, nullptr, 0, nullptr },
+	{ "Marksman", field_type_t::u8, 33, 1, nullptr, nullptr, 0, nullptr },
+	{ "Mercantile", field_type_t::u8, 34, 1, nullptr, nullptr, 0, nullptr },
+	{ "Speechcraft", field_type_t::u8, 35, 1, nullptr, nullptr, 0, nullptr },
+	{ "Hand-to-hand", field_type_t::u8, 36, 1, nullptr, nullptr, 0, nullptr },
+	{ "Health", field_type_t::u16, 38, 2, nullptr, nullptr, 0, nullptr },
+	{ "Magicka", field_type_t::u16, 40, 2, nullptr, nullptr, 0, nullptr },
+	{ "Fatigue", field_type_t::u16, 42, 2, nullptr, nullptr, 0, nullptr },
+	{ "Disposition", field_type_t::u8, 44, 1, nullptr, nullptr, 0, nullptr },
+	{ "Reputation", field_type_t::u8, 45, 1, nullptr, nullptr, 0, nullptr },
+	{ "Rank", field_type_t::u8, 46, 1, nullptr, nullptr, 0, nullptr },
+	{ "Gold", field_type_t::u32, 48, 4, nullptr, nullptr, 0, nullptr },
 };
 
 static const char * const aidt_flags[] = { "Weapon",        "Armor",     "Clothing",    "Books",     "Ingredients",
@@ -95,20 +95,20 @@ static const char * const weapon_types[] = {
 static const char * const weapon_flags[] = { "Magical", "Silver" };
 
 static const field_def_t weap_wpdt_fields[] = {
-	{ "Weight", field_type_t::f32, 0, 4, nullptr, nullptr },
-	{ "Value", field_type_t::u32, 4, 4, nullptr, nullptr },
-	{ "Type", field_type_t::enum_u16, 8, 2, weapon_types, nullptr },
-	{ "Health", field_type_t::u16, 10, 2, nullptr, nullptr },
-	{ "Speed", field_type_t::f32, 12, 4, nullptr, nullptr },
-	{ "Reach", field_type_t::f32, 16, 4, nullptr, nullptr },
-	{ "Enchant Points", field_type_t::u16, 20, 2, nullptr, nullptr },
-	{ "Chop Min", field_type_t::u8, 22, 1, nullptr, nullptr },
-	{ "Chop Max", field_type_t::u8, 23, 1, nullptr, nullptr },
-	{ "Slash Min", field_type_t::u8, 24, 1, nullptr, nullptr },
-	{ "Slash Max", field_type_t::u8, 25, 1, nullptr, nullptr },
-	{ "Thrust Min", field_type_t::u8, 26, 1, nullptr, nullptr },
-	{ "Thrust Max", field_type_t::u8, 27, 1, nullptr, nullptr },
-	{ "Flags", field_type_t::flags_u32, 28, 4, nullptr, weapon_flags, ARRAY_COUNT(weapon_flags) },
+	{ "Weight", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr },
+	{ "Value", field_type_t::u32, 4, 4, nullptr, nullptr, 0, nullptr },
+	{ "Type", field_type_t::enum_u16, 8, 2, weapon_types, nullptr, 0, nullptr },
+	{ "Health", field_type_t::u16, 10, 2, nullptr, nullptr, 0, nullptr },
+	{ "Speed", field_type_t::f32, 12, 4, nullptr, nullptr, 0, nullptr },
+	{ "Reach", field_type_t::f32, 16, 4, nullptr, nullptr, 0, nullptr },
+	{ "Enchant Points", field_type_t::u16, 20, 2, nullptr, nullptr, 0, nullptr },
+	{ "Chop Min", field_type_t::u8, 22, 1, nullptr, nullptr, 0, nullptr },
+	{ "Chop Max", field_type_t::u8, 23, 1, nullptr, nullptr, 0, nullptr },
+	{ "Slash Min", field_type_t::u8, 24, 1, nullptr, nullptr, 0, nullptr },
+	{ "Slash Max", field_type_t::u8, 25, 1, nullptr, nullptr, 0, nullptr },
+	{ "Thrust Min", field_type_t::u8, 26, 1, nullptr, nullptr, 0, nullptr },
+	{ "Thrust Max", field_type_t::u8, 27, 1, nullptr, nullptr, 0, nullptr },
+	{ "Flags", field_type_t::flags_u32, 28, 4, nullptr, weapon_flags, ARRAY_COUNT(weapon_flags), nullptr },
 };
 
 static const char * const armor_types[] = { "Helmet",  "Cuirass",     "Left Pauldron", "Right Pauldron",
@@ -116,20 +116,20 @@ static const char * const armor_types[] = { "Helmet",  "Cuirass",     "Left Paul
 	                                        "Shield",  "Left Bracer", "Right Bracer",  nullptr };
 
 static const field_def_t armo_aodt_fields[] = {
-	{ "Type", field_type_t::enum_u32, 0, 4, armor_types, nullptr },
-	{ "Weight", field_type_t::f32, 4, 4, nullptr, nullptr },
-	{ "Value", field_type_t::u32, 8, 4, nullptr, nullptr },
-	{ "Health", field_type_t::u32, 12, 4, nullptr, nullptr },
-	{ "Enchant Points", field_type_t::u32, 16, 4, nullptr, nullptr },
-	{ "Armor Rating", field_type_t::u32, 20, 4, nullptr, nullptr },
+	{ "Type", field_type_t::enum_u32, 0, 4, armor_types, nullptr, 0, nullptr },
+	{ "Weight", field_type_t::f32, 4, 4, nullptr, nullptr, 0, nullptr },
+	{ "Value", field_type_t::u32, 8, 4, nullptr, nullptr, 0, nullptr },
+	{ "Health", field_type_t::u32, 12, 4, nullptr, nullptr, 0, nullptr },
+	{ "Enchant Points", field_type_t::u32, 16, 4, nullptr, nullptr, 0, nullptr },
+	{ "Armor Rating", field_type_t::u32, 20, 4, nullptr, nullptr, 0, nullptr },
 };
 
 static const char * const alch_flags[] = { "Autocalc" };
 
 static const field_def_t alch_aldt_fields[] = {
-	{ "Weight", field_type_t::f32, 0, 4, nullptr, nullptr },
-	{ "Value", field_type_t::u32, 4, 4, nullptr, nullptr },
-	{ "Flags", field_type_t::flags_u32, 8, 4, nullptr, alch_flags, ARRAY_COUNT(alch_flags) },
+	{ "Weight", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr },
+	{ "Value", field_type_t::u32, 4, 4, nullptr, nullptr, 0, nullptr },
+	{ "Flags", field_type_t::flags_u32, 8, 4, nullptr, alch_flags, ARRAY_COUNT(alch_flags), nullptr },
 };
 
 static const char * const ench_types[] = { "Cast Once",
@@ -141,10 +141,10 @@ static const char * const ench_types[] = { "Cast Once",
 static const char * const ench_flags[] = { "Autocalc" };
 
 static const field_def_t ench_endt_fields[] = {
-	{ "Type", field_type_t::enum_u32, 0, 4, ench_types, nullptr },
-	{ "Cost", field_type_t::u32, 4, 4, nullptr, nullptr },
-	{ "Charge", field_type_t::u32, 8, 4, nullptr, nullptr },
-	{ "Flags", field_type_t::flags_u32, 12, 4, nullptr, ench_flags, ARRAY_COUNT(ench_flags) },
+	{ "Type", field_type_t::enum_u32, 0, 4, ench_types, nullptr, 0, nullptr },
+	{ "Cost", field_type_t::u32, 4, 4, nullptr, nullptr, 0, nullptr },
+	{ "Charge", field_type_t::u32, 8, 4, nullptr, nullptr, 0, nullptr },
+	{ "Flags", field_type_t::flags_u32, 12, 4, nullptr, ench_flags, ARRAY_COUNT(ench_flags), nullptr },
 };
 
 static const char * const spell_effect_range[] = { "Self", "Touch", "Target", nullptr };
@@ -305,24 +305,24 @@ static const char * const effect_names[] = { "Water Breathing",
 	                                         nullptr };
 
 static const field_def_t enam_fields[] = {
-	{ "Effect ID", field_type_t::enum_u16, 0, 2, effect_names, nullptr },
-	{ "Skill ID", field_type_t::i8, 2, 1, skill_names, nullptr },
-	{ "Attribute ID", field_type_t::i8, 3, 1, attribute_names, nullptr },
-	{ "Range", field_type_t::enum_u32, 4, 4, spell_effect_range, nullptr },
-	{ "Area", field_type_t::u32, 8, 4, nullptr, nullptr },
-	{ "Duration", field_type_t::u32, 12, 4, nullptr, nullptr },
-	{ "Mag Min", field_type_t::u32, 16, 4, nullptr, nullptr },
-	{ "Mag Max", field_type_t::u32, 20, 4, nullptr, nullptr },
+	{ "Effect ID", field_type_t::enum_u16, 0, 2, effect_names, nullptr, 0, nullptr },
+	{ "Skill ID", field_type_t::i8, 2, 1, skill_names, nullptr, 0, nullptr },
+	{ "Attribute ID", field_type_t::i8, 3, 1, attribute_names, nullptr, 0, nullptr },
+	{ "Range", field_type_t::enum_u32, 4, 4, spell_effect_range, nullptr, 0, nullptr },
+	{ "Area", field_type_t::u32, 8, 4, nullptr, nullptr, 0, nullptr },
+	{ "Duration", field_type_t::u32, 12, 4, nullptr, nullptr, 0, nullptr },
+	{ "Mag Min", field_type_t::u32, 16, 4, nullptr, nullptr, 0, nullptr },
+	{ "Mag Max", field_type_t::u32, 20, 4, nullptr, nullptr, 0, nullptr },
 };
 
 static const char * const book_scroll[] = { "No", "Yes", nullptr };
 
 static const field_def_t book_bkdt_fields[] = {
-	{ "Weight", field_type_t::f32, 0, 4, nullptr, nullptr },
-	{ "Value", field_type_t::u32, 4, 4, nullptr, nullptr },
-	{ "Scroll", field_type_t::enum_u32, 8, 4, book_scroll, nullptr },
-	{ "Skill", field_type_t::i8, 12, 1, skill_names, nullptr },
-	{ "Enchant Points", field_type_t::u32, 16, 4, nullptr, nullptr },
+	{ "Weight", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr },
+	{ "Value", field_type_t::u32, 4, 4, nullptr, nullptr, 0, nullptr },
+	{ "Scroll", field_type_t::enum_u32, 8, 4, book_scroll, nullptr, 0, nullptr },
+	{ "Skill", field_type_t::i8, 12, 1, skill_names, nullptr, 0, nullptr },
+	{ "Enchant Points", field_type_t::u32, 16, 4, nullptr, nullptr, 0, nullptr },
 };
 
 static const char * const creature_types[] = { "Creature", "Daedra", "Undead", "Humanoid", nullptr };
@@ -355,74 +355,74 @@ static const field_def_t crea_npdt_fields[] = {
 };
 
 static const field_def_t cont_cndt_fields[] = {
-	{ "Weight", field_type_t::f32, 0, 4, nullptr, nullptr },
+	{ "Weight", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t fact_fadt_fields[] = {
-	{ "Attribute 1", field_type_t::enum_u32, 0, 4, attribute_names, nullptr },
-	{ "Attribute 2", field_type_t::enum_u32, 4, 4, attribute_names, nullptr },
-	{ "Rank 1 Attr1", field_type_t::u32, 8, 4, nullptr, nullptr },
-	{ "Rank 1 Attr2", field_type_t::u32, 12, 4, nullptr, nullptr },
-	{ "Rank 1 Primary", field_type_t::u32, 16, 4, nullptr, nullptr },
-	{ "Rank 1 Favoured", field_type_t::u32, 20, 4, nullptr, nullptr },
-	{ "Rank 1 Reputation", field_type_t::u32, 24, 4, nullptr, nullptr },
-	{ "Rank 2 Attr1", field_type_t::u32, 28, 4, nullptr, nullptr },
-	{ "Rank 2 Attr2", field_type_t::u32, 32, 4, nullptr, nullptr },
-	{ "Rank 2 Primary", field_type_t::u32, 36, 4, nullptr, nullptr },
-	{ "Rank 2 Favoured", field_type_t::u32, 40, 4, nullptr, nullptr },
-	{ "Rank 2 Reputation", field_type_t::u32, 44, 4, nullptr, nullptr },
-	{ "Rank 3 Attr1", field_type_t::u32, 48, 4, nullptr, nullptr },
-	{ "Rank 3 Attr2", field_type_t::u32, 52, 4, nullptr, nullptr },
-	{ "Rank 3 Primary", field_type_t::u32, 56, 4, nullptr, nullptr },
-	{ "Rank 3 Favoured", field_type_t::u32, 60, 4, nullptr, nullptr },
-	{ "Rank 3 Reputation", field_type_t::u32, 64, 4, nullptr, nullptr },
-	{ "Rank 4 Attr1", field_type_t::u32, 68, 4, nullptr, nullptr },
-	{ "Rank 4 Attr2", field_type_t::u32, 72, 4, nullptr, nullptr },
-	{ "Rank 4 Primary", field_type_t::u32, 76, 4, nullptr, nullptr },
-	{ "Rank 4 Favoured", field_type_t::u32, 80, 4, nullptr, nullptr },
-	{ "Rank 4 Reputation", field_type_t::u32, 84, 4, nullptr, nullptr },
-	{ "Rank 5 Attr1", field_type_t::u32, 88, 4, nullptr, nullptr },
-	{ "Rank 5 Attr2", field_type_t::u32, 92, 4, nullptr, nullptr },
-	{ "Rank 5 Primary", field_type_t::u32, 96, 4, nullptr, nullptr },
-	{ "Rank 5 Favoured", field_type_t::u32, 100, 4, nullptr, nullptr },
-	{ "Rank 5 Reputation", field_type_t::u32, 104, 4, nullptr, nullptr },
-	{ "Rank 6 Attr1", field_type_t::u32, 108, 4, nullptr, nullptr },
-	{ "Rank 6 Attr2", field_type_t::u32, 112, 4, nullptr, nullptr },
-	{ "Rank 6 Primary", field_type_t::u32, 116, 4, nullptr, nullptr },
-	{ "Rank 6 Favoured", field_type_t::u32, 120, 4, nullptr, nullptr },
-	{ "Rank 6 Reputation", field_type_t::u32, 124, 4, nullptr, nullptr },
-	{ "Rank 7 Attr1", field_type_t::u32, 128, 4, nullptr, nullptr },
-	{ "Rank 7 Attr2", field_type_t::u32, 132, 4, nullptr, nullptr },
-	{ "Rank 7 Primary", field_type_t::u32, 136, 4, nullptr, nullptr },
-	{ "Rank 7 Favoured", field_type_t::u32, 140, 4, nullptr, nullptr },
-	{ "Rank 7 Reputation", field_type_t::u32, 144, 4, nullptr, nullptr },
-	{ "Rank 8 Attr1", field_type_t::u32, 148, 4, nullptr, nullptr },
-	{ "Rank 8 Attr2", field_type_t::u32, 152, 4, nullptr, nullptr },
-	{ "Rank 8 Primary", field_type_t::u32, 156, 4, nullptr, nullptr },
-	{ "Rank 8 Favoured", field_type_t::u32, 160, 4, nullptr, nullptr },
-	{ "Rank 8 Reputation", field_type_t::u32, 164, 4, nullptr, nullptr },
-	{ "Rank 9 Attr1", field_type_t::u32, 168, 4, nullptr, nullptr },
-	{ "Rank 9 Attr2", field_type_t::u32, 172, 4, nullptr, nullptr },
-	{ "Rank 9 Primary", field_type_t::u32, 176, 4, nullptr, nullptr },
-	{ "Rank 9 Favoured", field_type_t::u32, 180, 4, nullptr, nullptr },
-	{ "Rank 9 Reputation", field_type_t::u32, 184, 4, nullptr, nullptr },
-	{ "Rank 10 Attr1", field_type_t::u32, 188, 4, nullptr, nullptr },
-	{ "Rank 10 Attr2", field_type_t::u32, 192, 4, nullptr, nullptr },
-	{ "Rank 10 Primary", field_type_t::u32, 196, 4, nullptr, nullptr },
-	{ "Rank 10 Favoured", field_type_t::u32, 200, 4, nullptr, nullptr },
-	{ "Rank 10 Reputation", field_type_t::u32, 204, 4, nullptr, nullptr },
-	{ "Skill 1", field_type_t::i32, 208, 4, skill_names, nullptr },
-	{ "Skill 2", field_type_t::i32, 212, 4, skill_names, nullptr },
-	{ "Skill 3", field_type_t::i32, 216, 4, skill_names, nullptr },
-	{ "Skill 4", field_type_t::i32, 220, 4, skill_names, nullptr },
-	{ "Skill 5", field_type_t::i32, 224, 4, skill_names, nullptr },
-	{ "Skill 6", field_type_t::i32, 228, 4, skill_names, nullptr },
-	{ "Skill 7", field_type_t::i32, 232, 4, skill_names, nullptr },
-	{ "Hidden", field_type_t::bool_bit, 236, 0, nullptr, nullptr },
+	{ "Attribute 1", field_type_t::enum_u32, 0, 4, attribute_names, nullptr, 0, nullptr },
+	{ "Attribute 2", field_type_t::enum_u32, 4, 4, attribute_names, nullptr, 0, nullptr },
+	{ "Rank 1 Attr1", field_type_t::u32, 8, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 1 Attr2", field_type_t::u32, 12, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 1 Primary", field_type_t::u32, 16, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 1 Favoured", field_type_t::u32, 20, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 1 Reputation", field_type_t::u32, 24, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 2 Attr1", field_type_t::u32, 28, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 2 Attr2", field_type_t::u32, 32, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 2 Primary", field_type_t::u32, 36, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 2 Favoured", field_type_t::u32, 40, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 2 Reputation", field_type_t::u32, 44, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 3 Attr1", field_type_t::u32, 48, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 3 Attr2", field_type_t::u32, 52, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 3 Primary", field_type_t::u32, 56, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 3 Favoured", field_type_t::u32, 60, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 3 Reputation", field_type_t::u32, 64, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 4 Attr1", field_type_t::u32, 68, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 4 Attr2", field_type_t::u32, 72, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 4 Primary", field_type_t::u32, 76, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 4 Favoured", field_type_t::u32, 80, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 4 Reputation", field_type_t::u32, 84, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 5 Attr1", field_type_t::u32, 88, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 5 Attr2", field_type_t::u32, 92, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 5 Primary", field_type_t::u32, 96, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 5 Favoured", field_type_t::u32, 100, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 5 Reputation", field_type_t::u32, 104, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 6 Attr1", field_type_t::u32, 108, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 6 Attr2", field_type_t::u32, 112, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 6 Primary", field_type_t::u32, 116, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 6 Favoured", field_type_t::u32, 120, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 6 Reputation", field_type_t::u32, 124, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 7 Attr1", field_type_t::u32, 128, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 7 Attr2", field_type_t::u32, 132, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 7 Primary", field_type_t::u32, 136, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 7 Favoured", field_type_t::u32, 140, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 7 Reputation", field_type_t::u32, 144, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 8 Attr1", field_type_t::u32, 148, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 8 Attr2", field_type_t::u32, 152, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 8 Primary", field_type_t::u32, 156, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 8 Favoured", field_type_t::u32, 160, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 8 Reputation", field_type_t::u32, 164, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 9 Attr1", field_type_t::u32, 168, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 9 Attr2", field_type_t::u32, 172, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 9 Primary", field_type_t::u32, 176, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 9 Favoured", field_type_t::u32, 180, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 9 Reputation", field_type_t::u32, 184, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 10 Attr1", field_type_t::u32, 188, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 10 Attr2", field_type_t::u32, 192, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 10 Primary", field_type_t::u32, 196, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 10 Favoured", field_type_t::u32, 200, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank 10 Reputation", field_type_t::u32, 204, 4, nullptr, nullptr, 0, nullptr },
+	{ "Skill 1", field_type_t::i32, 208, 4, skill_names, nullptr, 0, nullptr },
+	{ "Skill 2", field_type_t::i32, 212, 4, skill_names, nullptr, 0, nullptr },
+	{ "Skill 3", field_type_t::i32, 216, 4, skill_names, nullptr, 0, nullptr },
+	{ "Skill 4", field_type_t::i32, 220, 4, skill_names, nullptr, 0, nullptr },
+	{ "Skill 5", field_type_t::i32, 224, 4, skill_names, nullptr, 0, nullptr },
+	{ "Skill 6", field_type_t::i32, 228, 4, skill_names, nullptr, 0, nullptr },
+	{ "Skill 7", field_type_t::i32, 232, 4, skill_names, nullptr, 0, nullptr },
+	{ "Hidden", field_type_t::bool_bit, 236, 0, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t fact_rnam_fields[] = {
-	{ "Rank Name", field_type_t::string_fixed, 0, 32, nullptr, nullptr },
+	{ "Rank Name", field_type_t::string_fixed, 0, 32, nullptr, nullptr, 0, nullptr },
 };
 
 static const char * const class_specializations[] = { "Combat", "Magic", "Stealth", nullptr };
@@ -448,56 +448,56 @@ static const field_def_t clas_cldt_fields[] = {
 static const char * const race_flags[] = { "Playable", "Beast" };
 
 static const field_def_t race_radt_fields[] = {
-	{ "Bonus Skill 1", field_type_t::enum_u32, 0, 4, skill_names, nullptr },
-	{ "Bonus 1", field_type_t::i32, 4, 4, nullptr, nullptr },
-	{ "Bonus Skill 2", field_type_t::enum_u32, 8, 4, skill_names, nullptr },
-	{ "Bonus 2", field_type_t::i32, 12, 4, nullptr, nullptr },
-	{ "Bonus Skill 3", field_type_t::enum_u32, 16, 4, skill_names, nullptr },
-	{ "Bonus 3", field_type_t::i32, 20, 4, nullptr, nullptr },
-	{ "Bonus Skill 4", field_type_t::enum_u32, 24, 4, skill_names, nullptr },
-	{ "Bonus 4", field_type_t::i32, 28, 4, nullptr, nullptr },
-	{ "Bonus Skill 5", field_type_t::enum_u32, 32, 4, skill_names, nullptr },
-	{ "Bonus 5", field_type_t::i32, 36, 4, nullptr, nullptr },
-	{ "Bonus Skill 6", field_type_t::enum_u32, 40, 4, skill_names, nullptr },
-	{ "Bonus 6", field_type_t::i32, 44, 4, nullptr, nullptr },
-	{ "Bonus Skill 7", field_type_t::enum_u32, 48, 4, skill_names, nullptr },
-	{ "Bonus 7", field_type_t::i32, 52, 4, nullptr, nullptr },
-	{ "Strength M", field_type_t::u32, 56, 4, nullptr, nullptr },
-	{ "Strength F", field_type_t::u32, 60, 4, nullptr, nullptr },
-	{ "Intelligence M", field_type_t::u32, 64, 4, nullptr, nullptr },
-	{ "Intelligence F", field_type_t::u32, 68, 4, nullptr, nullptr },
-	{ "Willpower M", field_type_t::u32, 72, 4, nullptr, nullptr },
-	{ "Willpower F", field_type_t::u32, 76, 4, nullptr, nullptr },
-	{ "Agility M", field_type_t::u32, 80, 4, nullptr, nullptr },
-	{ "Agility F", field_type_t::u32, 84, 4, nullptr, nullptr },
-	{ "Speed M", field_type_t::u32, 88, 4, nullptr, nullptr },
-	{ "Speed F", field_type_t::u32, 92, 4, nullptr, nullptr },
-	{ "Endurance M", field_type_t::u32, 96, 4, nullptr, nullptr },
-	{ "Endurance F", field_type_t::u32, 100, 4, nullptr, nullptr },
-	{ "Personality M", field_type_t::u32, 104, 4, nullptr, nullptr },
-	{ "Personality F", field_type_t::u32, 108, 4, nullptr, nullptr },
-	{ "Luck M", field_type_t::u32, 112, 4, nullptr, nullptr },
-	{ "Luck F", field_type_t::u32, 116, 4, nullptr, nullptr },
-	{ "Height M", field_type_t::f32, 120, 4, nullptr, nullptr },
-	{ "Height F", field_type_t::f32, 124, 4, nullptr, nullptr },
-	{ "Weight M", field_type_t::f32, 128, 4, nullptr, nullptr },
-	{ "Weight F", field_type_t::f32, 132, 4, nullptr, nullptr },
-	{ "Flags", field_type_t::flags_u32, 136, 4, nullptr, race_flags, ARRAY_COUNT(race_flags) },
+	{ "Bonus Skill 1", field_type_t::enum_u32, 0, 4, skill_names, nullptr, 0, nullptr },
+	{ "Bonus 1", field_type_t::i32, 4, 4, nullptr, nullptr, 0, nullptr },
+	{ "Bonus Skill 2", field_type_t::enum_u32, 8, 4, skill_names, nullptr, 0, nullptr },
+	{ "Bonus 2", field_type_t::i32, 12, 4, nullptr, nullptr, 0, nullptr },
+	{ "Bonus Skill 3", field_type_t::enum_u32, 16, 4, skill_names, nullptr, 0, nullptr },
+	{ "Bonus 3", field_type_t::i32, 20, 4, nullptr, nullptr, 0, nullptr },
+	{ "Bonus Skill 4", field_type_t::enum_u32, 24, 4, skill_names, nullptr, 0, nullptr },
+	{ "Bonus 4", field_type_t::i32, 28, 4, nullptr, nullptr, 0, nullptr },
+	{ "Bonus Skill 5", field_type_t::enum_u32, 32, 4, skill_names, nullptr, 0, nullptr },
+	{ "Bonus 5", field_type_t::i32, 36, 4, nullptr, nullptr, 0, nullptr },
+	{ "Bonus Skill 6", field_type_t::enum_u32, 40, 4, skill_names, nullptr, 0, nullptr },
+	{ "Bonus 6", field_type_t::i32, 44, 4, nullptr, nullptr, 0, nullptr },
+	{ "Bonus Skill 7", field_type_t::enum_u32, 48, 4, skill_names, nullptr, 0, nullptr },
+	{ "Bonus 7", field_type_t::i32, 52, 4, nullptr, nullptr, 0, nullptr },
+	{ "Strength M", field_type_t::u32, 56, 4, nullptr, nullptr, 0, nullptr },
+	{ "Strength F", field_type_t::u32, 60, 4, nullptr, nullptr, 0, nullptr },
+	{ "Intelligence M", field_type_t::u32, 64, 4, nullptr, nullptr, 0, nullptr },
+	{ "Intelligence F", field_type_t::u32, 68, 4, nullptr, nullptr, 0, nullptr },
+	{ "Willpower M", field_type_t::u32, 72, 4, nullptr, nullptr, 0, nullptr },
+	{ "Willpower F", field_type_t::u32, 76, 4, nullptr, nullptr, 0, nullptr },
+	{ "Agility M", field_type_t::u32, 80, 4, nullptr, nullptr, 0, nullptr },
+	{ "Agility F", field_type_t::u32, 84, 4, nullptr, nullptr, 0, nullptr },
+	{ "Speed M", field_type_t::u32, 88, 4, nullptr, nullptr, 0, nullptr },
+	{ "Speed F", field_type_t::u32, 92, 4, nullptr, nullptr, 0, nullptr },
+	{ "Endurance M", field_type_t::u32, 96, 4, nullptr, nullptr, 0, nullptr },
+	{ "Endurance F", field_type_t::u32, 100, 4, nullptr, nullptr, 0, nullptr },
+	{ "Personality M", field_type_t::u32, 104, 4, nullptr, nullptr, 0, nullptr },
+	{ "Personality F", field_type_t::u32, 108, 4, nullptr, nullptr, 0, nullptr },
+	{ "Luck M", field_type_t::u32, 112, 4, nullptr, nullptr, 0, nullptr },
+	{ "Luck F", field_type_t::u32, 116, 4, nullptr, nullptr, 0, nullptr },
+	{ "Height M", field_type_t::f32, 120, 4, nullptr, nullptr, 0, nullptr },
+	{ "Height F", field_type_t::f32, 124, 4, nullptr, nullptr, 0, nullptr },
+	{ "Weight M", field_type_t::f32, 128, 4, nullptr, nullptr, 0, nullptr },
+	{ "Weight F", field_type_t::f32, 132, 4, nullptr, nullptr, 0, nullptr },
+	{ "Flags", field_type_t::flags_u32, 136, 4, nullptr, race_flags, ARRAY_COUNT(race_flags), nullptr },
 };
 
 static const char * const levi_flags[] = { "Calc for Each Item", "Calc from All Levels" };
 static const char * const levc_flags[] = { "Calc from All Levels" };
 
 static const field_def_t levi_data_fields[] = {
-	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, levi_flags, ARRAY_COUNT(levi_flags) },
+	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, levi_flags, ARRAY_COUNT(levi_flags), nullptr },
 };
 
 static const field_def_t levc_data_fields[] = {
-	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, levc_flags, ARRAY_COUNT(levc_flags) },
+	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, levc_flags, ARRAY_COUNT(levc_flags), nullptr },
 };
 
 static const field_def_t gmst_strv_fields[] = {
-	{ "Value", field_type_t::string_var, 0, 0, nullptr, nullptr },
+	{ "Value", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t tes3_hedr_fields[] = {
@@ -513,41 +513,41 @@ static const field_def_t tes3_data_fields[] = {
 };
 
 static const field_def_t gmst_intv_fields[] = {
-	{ "Value", field_type_t::i32, 0, 4, nullptr, nullptr },
+	{ "Value", field_type_t::i32, 0, 4, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t gmst_fltv_fields[] = {
-	{ "Value", field_type_t::f32, 0, 4, nullptr, nullptr },
+	{ "Value", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t glob_fnam_fields[] = {
-	{ "Type", field_type_t::string_fixed, 0, 1, nullptr, nullptr },
+	{ "Type", field_type_t::string_fixed, 0, 1, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t glob_fltv_fields[] = {
-	{ "Value", field_type_t::f32, 0, 4, nullptr, nullptr },
+	{ "Value", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr },
 };
 
 static const char * const sndg_types[] = { "Left Foot", "Right Foot", "Swim Left", "Swim Right", "Moan",
 	                                       "Roar",      "Scream",     "Land",      nullptr };
 
 static const field_def_t sndg_data_fields[] = {
-	{ "Type", field_type_t::enum_u32, 0, 4, sndg_types, nullptr },
+	{ "Type", field_type_t::enum_u32, 0, 4, sndg_types, nullptr, 0, nullptr },
 };
 
 static const char * const land_flags[] = { "Heights & Normals", "Vertex Colors", "Textures" };
 
 static const field_def_t land_data_fields[] = {
-	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, land_flags, ARRAY_COUNT(land_flags) },
+	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, land_flags, ARRAY_COUNT(land_flags), nullptr },
 };
 
 static const field_def_t land_intv_fields[] = {
-	{ "Grid X", field_type_t::i32, 0, 4, nullptr, nullptr },
-	{ "Grid Y", field_type_t::i32, 4, 4, nullptr, nullptr },
+	{ "Grid X", field_type_t::i32, 0, 4, nullptr, nullptr, 0, nullptr },
+	{ "Grid Y", field_type_t::i32, 4, 4, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t land_binary_fields[] = {
-	{ "Data", field_type_t::binary, 0, 0, nullptr, nullptr },
+	{ "Data", field_type_t::binary, 0, 0, nullptr, nullptr, 0, nullptr },
 };
 
 static const char * const info_gender[] = { "Male", "Female", nullptr };
@@ -557,26 +557,26 @@ static const char * const info_rank_names[] = { nullptr };
 static const char * const info_types[] = { "Topic", "Voice", "Greeting", "Persuasion", "Journal", nullptr };
 
 static const field_def_t info_data_fields[] = {
-	{ "Type", field_type_t::enum_u32, 0, 4, info_types, nullptr },
-	{ "Disposition", field_type_t::u32, 4, 4, nullptr, nullptr },
-	{ "Rank", field_type_t::i8, 8, 1, info_rank_names, nullptr },
-	{ "Gender", field_type_t::i8, 9, 1, info_gender, nullptr },
-	{ "PC Rank", field_type_t::i8, 10, 1, info_rank_names, nullptr },
+	{ "Type", field_type_t::enum_u32, 0, 4, info_types, nullptr, 0, nullptr },
+	{ "Disposition", field_type_t::u32, 4, 4, nullptr, nullptr, 0, nullptr },
+	{ "Rank", field_type_t::i8, 8, 1, info_rank_names, nullptr, 0, nullptr },
+	{ "Gender", field_type_t::i8, 9, 1, info_gender, nullptr, 0, nullptr },
+	{ "PC Rank", field_type_t::i8, 10, 1, info_rank_names, nullptr, 0, nullptr },
 };
 
 static const field_def_t regn_weat_fields[] = {
-	{ "Clear", field_type_t::u8, 0, 1, nullptr, nullptr }, { "Cloudy", field_type_t::u8, 1, 1, nullptr, nullptr },
-	{ "Foggy", field_type_t::u8, 2, 1, nullptr, nullptr }, { "Overcast", field_type_t::u8, 3, 1, nullptr, nullptr },
-	{ "Rain", field_type_t::u8, 4, 1, nullptr, nullptr },  { "Thunder", field_type_t::u8, 5, 1, nullptr, nullptr },
-	{ "Ash", field_type_t::u8, 6, 1, nullptr, nullptr },   { "Blight", field_type_t::u8, 7, 1, nullptr, nullptr },
+	{ "Clear", field_type_t::u8, 0, 1, nullptr, nullptr, 0, nullptr }, { "Cloudy", field_type_t::u8, 1, 1, nullptr, nullptr, 0, nullptr },
+	{ "Foggy", field_type_t::u8, 2, 1, nullptr, nullptr, 0, nullptr }, { "Overcast", field_type_t::u8, 3, 1, nullptr, nullptr, 0, nullptr },
+	{ "Rain", field_type_t::u8, 4, 1, nullptr, nullptr, 0, nullptr },  { "Thunder", field_type_t::u8, 5, 1, nullptr, nullptr, 0, nullptr },
+	{ "Ash", field_type_t::u8, 6, 1, nullptr, nullptr, 0, nullptr },   { "Blight", field_type_t::u8, 7, 1, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t regn_weat_10_fields[] = {
-	{ "Clear", field_type_t::u8, 0, 1, nullptr, nullptr }, { "Cloudy", field_type_t::u8, 1, 1, nullptr, nullptr },
-	{ "Foggy", field_type_t::u8, 2, 1, nullptr, nullptr }, { "Overcast", field_type_t::u8, 3, 1, nullptr, nullptr },
-	{ "Rain", field_type_t::u8, 4, 1, nullptr, nullptr },  { "Thunder", field_type_t::u8, 5, 1, nullptr, nullptr },
-	{ "Ash", field_type_t::u8, 6, 1, nullptr, nullptr },   { "Blight", field_type_t::u8, 7, 1, nullptr, nullptr },
-	{ "Snow", field_type_t::u8, 8, 1, nullptr, nullptr },  { "Blizzard", field_type_t::u8, 9, 1, nullptr, nullptr },
+	{ "Clear", field_type_t::u8, 0, 1, nullptr, nullptr, 0, nullptr }, { "Cloudy", field_type_t::u8, 1, 1, nullptr, nullptr, 0, nullptr },
+	{ "Foggy", field_type_t::u8, 2, 1, nullptr, nullptr, 0, nullptr }, { "Overcast", field_type_t::u8, 3, 1, nullptr, nullptr, 0, nullptr },
+	{ "Rain", field_type_t::u8, 4, 1, nullptr, nullptr, 0, nullptr },  { "Thunder", field_type_t::u8, 5, 1, nullptr, nullptr, 0, nullptr },
+	{ "Ash", field_type_t::u8, 6, 1, nullptr, nullptr, 0, nullptr },   { "Blight", field_type_t::u8, 7, 1, nullptr, nullptr, 0, nullptr },
+	{ "Snow", field_type_t::u8, 8, 1, nullptr, nullptr, 0, nullptr },  { "Blizzard", field_type_t::u8, 9, 1, nullptr, nullptr, 0, nullptr },
 };
 
 static const char * const spell_types[] = { "Spell", "Ability", "Blight", "Disease", "Curse", "Power", nullptr };
@@ -584,14 +584,14 @@ static const char * const spell_types[] = { "Spell", "Ability", "Blight", "Disea
 static const char * const spell_flags[] = { "Auto Calc Cost", "PC Start Spell", "Always Succeeds" };
 
 static const field_def_t spel_spdt_fields[] = {
-	{ "Type", field_type_t::enum_u32, 0, 4, spell_types, nullptr },
-	{ "Cost", field_type_t::u32, 4, 4, nullptr, nullptr },
-	{ "Flags", field_type_t::flags_u32, 8, 4, nullptr, spell_flags, ARRAY_COUNT(spell_flags) },
+	{ "Type", field_type_t::enum_u32, 0, 4, spell_types, nullptr, 0, nullptr },
+	{ "Cost", field_type_t::u32, 4, 4, nullptr, nullptr, 0, nullptr },
+	{ "Flags", field_type_t::flags_u32, 8, 4, nullptr, spell_flags, ARRAY_COUNT(spell_flags), nullptr },
 };
 
 static const field_def_t npco_fields[] = {
-	{ "Count", field_type_t::i32, 0, 4, nullptr, nullptr },
-	{ "Item ID", field_type_t::string_fixed, 4, 32, nullptr, nullptr },
+	{ "Count", field_type_t::i32, 0, 4, nullptr, nullptr, 0, nullptr },
+	{ "Item ID", field_type_t::string_fixed, 4, 32, nullptr, nullptr, 0, nullptr },
 };
 
 static const char * const mgef_schools[] = { "Alteration", "Conjuration", "Destruction", "Illusion",
@@ -604,63 +604,63 @@ static const char * const mgef_flags[] = {
 };
 
 static const field_def_t mgef_medt_fields[] = {
-	{ "School", field_type_t::enum_u32, 0, 4, mgef_schools, nullptr },
-	{ "Base Cost", field_type_t::f32, 4, 4, nullptr, nullptr },
-	{ "Flags", field_type_t::flags_u32, 8, 4, nullptr, mgef_flags, ARRAY_COUNT(mgef_flags) },
-	{ "Red", field_type_t::u32, 12, 4, nullptr, nullptr },
-	{ "Green", field_type_t::u32, 16, 4, nullptr, nullptr },
-	{ "Blue", field_type_t::u32, 20, 4, nullptr, nullptr },
-	{ "Size X", field_type_t::f32, 24, 4, nullptr, nullptr },
-	{ "Speed", field_type_t::f32, 28, 4, nullptr, nullptr },
-	{ "Size Cap", field_type_t::f32, 32, 4, nullptr, nullptr },
+	{ "School", field_type_t::enum_u32, 0, 4, mgef_schools, nullptr, 0, nullptr },
+	{ "Base Cost", field_type_t::f32, 4, 4, nullptr, nullptr, 0, nullptr },
+	{ "Flags", field_type_t::flags_u32, 8, 4, nullptr, mgef_flags, ARRAY_COUNT(mgef_flags), nullptr },
+	{ "Red", field_type_t::u32, 12, 4, nullptr, nullptr, 0, nullptr },
+	{ "Green", field_type_t::u32, 16, 4, nullptr, nullptr, 0, nullptr },
+	{ "Blue", field_type_t::u32, 20, 4, nullptr, nullptr, 0, nullptr },
+	{ "Size X", field_type_t::f32, 24, 4, nullptr, nullptr, 0, nullptr },
+	{ "Speed", field_type_t::f32, 28, 4, nullptr, nullptr, 0, nullptr },
+	{ "Size Cap", field_type_t::f32, 32, 4, nullptr, nullptr, 0, nullptr },
 };
 
 static const char * const skill_specializations[] = { "Combat", "Magic", "Stealth", nullptr };
 
 static const field_def_t skil_skdt_fields[] = {
-	{ "Attribute", field_type_t::enum_u32, 0, 4, attribute_names, nullptr },
-	{ "Specialization", field_type_t::enum_u32, 4, 4, skill_specializations, nullptr },
-	{ "Use Value 1", field_type_t::f32, 8, 4, nullptr, nullptr },
-	{ "Use Value 2", field_type_t::f32, 12, 4, nullptr, nullptr },
-	{ "Use Value 3", field_type_t::f32, 16, 4, nullptr, nullptr },
-	{ "Use Value 4", field_type_t::f32, 20, 4, nullptr, nullptr },
+	{ "Attribute", field_type_t::enum_u32, 0, 4, attribute_names, nullptr, 0, nullptr },
+	{ "Specialization", field_type_t::enum_u32, 4, 4, skill_specializations, nullptr, 0, nullptr },
+	{ "Use Value 1", field_type_t::f32, 8, 4, nullptr, nullptr, 0, nullptr },
+	{ "Use Value 2", field_type_t::f32, 12, 4, nullptr, nullptr, 0, nullptr },
+	{ "Use Value 3", field_type_t::f32, 16, 4, nullptr, nullptr, 0, nullptr },
+	{ "Use Value 4", field_type_t::f32, 20, 4, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t cell_ambi_fields[] = {
-	{ "Ambient Color", field_type_t::u32, 0, 4, nullptr, nullptr },
-	{ "Sunlight Color", field_type_t::u32, 4, 4, nullptr, nullptr },
-	{ "Fog Color", field_type_t::u32, 8, 4, nullptr, nullptr },
-	{ "Fog Density", field_type_t::f32, 12, 4, nullptr, nullptr },
+	{ "Ambient Color", field_type_t::u32, 0, 4, nullptr, nullptr, 0, nullptr },
+	{ "Sunlight Color", field_type_t::u32, 4, 4, nullptr, nullptr, 0, nullptr },
+	{ "Fog Color", field_type_t::u32, 8, 4, nullptr, nullptr, 0, nullptr },
+	{ "Fog Density", field_type_t::f32, 12, 4, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t cell_nam5_fields[] = {
-	{ "Red", field_type_t::u8, 0, 1, nullptr, nullptr },
-	{ "Green", field_type_t::u8, 1, 1, nullptr, nullptr },
-	{ "Blue", field_type_t::u8, 2, 1, nullptr, nullptr },
-	{ "Alpha", field_type_t::u8, 3, 1, nullptr, nullptr },
+	{ "Red", field_type_t::u8, 0, 1, nullptr, nullptr, 0, nullptr },
+	{ "Green", field_type_t::u8, 1, 1, nullptr, nullptr, 0, nullptr },
+	{ "Blue", field_type_t::u8, 2, 1, nullptr, nullptr, 0, nullptr },
+	{ "Alpha", field_type_t::u8, 3, 1, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t cell_fltv_fields[] = {
-	{ "Lock Level", field_type_t::i32, 0, 4, nullptr, nullptr },
+	{ "Lock Level", field_type_t::i32, 0, 4, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t cell_nam9_fields[] = {
-	{ "Stack Count", field_type_t::i32, 0, 4, nullptr, nullptr },
+	{ "Stack Count", field_type_t::i32, 0, 4, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t cell_dodt_fields[] = {
-	{ "X Position", field_type_t::f32, 0, 4, nullptr, nullptr },
-	{ "Y Position", field_type_t::f32, 4, 4, nullptr, nullptr },
-	{ "Z Position", field_type_t::f32, 8, 4, nullptr, nullptr },
-	{ "X Rotation", field_type_t::f32, 12, 4, nullptr, nullptr },
-	{ "Y Rotation", field_type_t::f32, 16, 4, nullptr, nullptr },
-	{ "Z Rotation", field_type_t::f32, 20, 4, nullptr, nullptr },
+	{ "X Position", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr },
+	{ "Y Position", field_type_t::f32, 4, 4, nullptr, nullptr, 0, nullptr },
+	{ "Z Position", field_type_t::f32, 8, 4, nullptr, nullptr, 0, nullptr },
+	{ "X Rotation", field_type_t::f32, 12, 4, nullptr, nullptr, 0, nullptr },
+	{ "Y Rotation", field_type_t::f32, 16, 4, nullptr, nullptr, 0, nullptr },
+	{ "Z Rotation", field_type_t::f32, 20, 4, nullptr, nullptr, 0, nullptr },
 };
 
 static const char * const cont_flags[] = { "Organic", "Respawns", "_", "Unknown" };
 
 static const field_def_t cont_flag_fields[] = {
-	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, cont_flags, ARRAY_COUNT(cont_flags) },
+	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, cont_flags, ARRAY_COUNT(cont_flags), nullptr },
 };
 
 static const char * const crea_flags[] = {
@@ -669,100 +669,100 @@ static const char * const crea_flags[] = {
 };
 
 static const field_def_t crea_flag_fields[] = {
-	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, crea_flags, ARRAY_COUNT(crea_flags) },
+	{ "Flags", field_type_t::flags_u32, 0, 4, nullptr, crea_flags, ARRAY_COUNT(crea_flags), nullptr },
 };
 
 static const field_def_t levi_intv_fields[] = {
-	{ "PC Level", field_type_t::u16, 0, 2, nullptr, nullptr },
+	{ "PC Level", field_type_t::u16, 0, 2, nullptr, nullptr, 0, nullptr },
 };
 
 static const char * const clothing_types[] = { "Pants",      "Shoes", "Shirt", "Belt",   "Robe", "Right Glove",
 	                                           "Left Glove", "Skirt", "Ring",  "Amulet", nullptr };
 
 static const field_def_t clot_ctdt_fields[] = {
-	{ "Type", field_type_t::enum_u32, 0, 4, clothing_types, nullptr },
-	{ "Weight", field_type_t::f32, 4, 4, nullptr, nullptr },
-	{ "Value", field_type_t::u16, 8, 2, nullptr, nullptr },
-	{ "Enchant Points", field_type_t::u16, 10, 2, nullptr, nullptr },
+	{ "Type", field_type_t::enum_u32, 0, 4, clothing_types, nullptr, 0, nullptr },
+	{ "Weight", field_type_t::f32, 4, 4, nullptr, nullptr, 0, nullptr },
+	{ "Value", field_type_t::u16, 8, 2, nullptr, nullptr, 0, nullptr },
+	{ "Enchant Points", field_type_t::u16, 10, 2, nullptr, nullptr, 0, nullptr },
 };
 
 static const char * const light_flags[] = { "Dynamic",     "Can Carry",    "Negative", "Flicker",   "Fire",
 	                                        "Off Default", "Flicker Slow", "Pulse",    "Pulse Slow" };
 
 static const field_def_t ligh_lhdt_fields[] = {
-	{ "Weight", field_type_t::f32, 0, 4, nullptr, nullptr },
-	{ "Value", field_type_t::u32, 4, 4, nullptr, nullptr },
-	{ "Time", field_type_t::u32, 8, 4, nullptr, nullptr },
-	{ "Radius", field_type_t::u32, 12, 4, nullptr, nullptr },
-	{ "Red", field_type_t::u8, 16, 1, nullptr, nullptr },
-	{ "Green", field_type_t::u8, 17, 1, nullptr, nullptr },
-	{ "Blue", field_type_t::u8, 18, 1, nullptr, nullptr },
-	{ "Alpha", field_type_t::u8, 19, 1, nullptr, nullptr },
-	{ "Flags", field_type_t::flags_u32, 20, 4, nullptr, light_flags, ARRAY_COUNT(light_flags) },
+	{ "Weight", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr },
+	{ "Value", field_type_t::u32, 4, 4, nullptr, nullptr, 0, nullptr },
+	{ "Time", field_type_t::u32, 8, 4, nullptr, nullptr, 0, nullptr },
+	{ "Radius", field_type_t::u32, 12, 4, nullptr, nullptr, 0, nullptr },
+	{ "Red", field_type_t::u8, 16, 1, nullptr, nullptr, 0, nullptr },
+	{ "Green", field_type_t::u8, 17, 1, nullptr, nullptr, 0, nullptr },
+	{ "Blue", field_type_t::u8, 18, 1, nullptr, nullptr, 0, nullptr },
+	{ "Alpha", field_type_t::u8, 19, 1, nullptr, nullptr, 0, nullptr },
+	{ "Flags", field_type_t::flags_u32, 20, 4, nullptr, light_flags, ARRAY_COUNT(light_flags), nullptr },
 };
 
 static const field_def_t ingr_irdt_fields[] = {
-	{ "Weight", field_type_t::f32, 0, 4, nullptr, nullptr },
-	{ "Value", field_type_t::u32, 4, 4, nullptr, nullptr },
-	{ "Effect 1", field_type_t::i32, 8, 4, effect_names, nullptr },
-	{ "Effect 2", field_type_t::i32, 12, 4, effect_names, nullptr },
-	{ "Effect 3", field_type_t::i32, 16, 4, effect_names, nullptr },
-	{ "Effect 4", field_type_t::i32, 20, 4, effect_names, nullptr },
-	{ "Skill 1", field_type_t::i32, 24, 4, skill_names, nullptr },
-	{ "Skill 2", field_type_t::i32, 28, 4, skill_names, nullptr },
-	{ "Skill 3", field_type_t::i32, 32, 4, skill_names, nullptr },
-	{ "Skill 4", field_type_t::i32, 36, 4, skill_names, nullptr },
-	{ "Attribute 1", field_type_t::i32, 40, 4, attribute_names, nullptr },
-	{ "Attribute 2", field_type_t::i32, 44, 4, attribute_names, nullptr },
-	{ "Attribute 3", field_type_t::i32, 48, 4, attribute_names, nullptr },
-	{ "Attribute 4", field_type_t::i32, 52, 4, attribute_names, nullptr },
+	{ "Weight", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr },
+	{ "Value", field_type_t::u32, 4, 4, nullptr, nullptr, 0, nullptr },
+	{ "Effect 1", field_type_t::i32, 8, 4, effect_names, nullptr, 0, nullptr },
+	{ "Effect 2", field_type_t::i32, 12, 4, effect_names, nullptr, 0, nullptr },
+	{ "Effect 3", field_type_t::i32, 16, 4, effect_names, nullptr, 0, nullptr },
+	{ "Effect 4", field_type_t::i32, 20, 4, effect_names, nullptr, 0, nullptr },
+	{ "Skill 1", field_type_t::i32, 24, 4, skill_names, nullptr, 0, nullptr },
+	{ "Skill 2", field_type_t::i32, 28, 4, skill_names, nullptr, 0, nullptr },
+	{ "Skill 3", field_type_t::i32, 32, 4, skill_names, nullptr, 0, nullptr },
+	{ "Skill 4", field_type_t::i32, 36, 4, skill_names, nullptr, 0, nullptr },
+	{ "Attribute 1", field_type_t::i32, 40, 4, attribute_names, nullptr, 0, nullptr },
+	{ "Attribute 2", field_type_t::i32, 44, 4, attribute_names, nullptr, 0, nullptr },
+	{ "Attribute 3", field_type_t::i32, 48, 4, attribute_names, nullptr, 0, nullptr },
+	{ "Attribute 4", field_type_t::i32, 52, 4, attribute_names, nullptr, 0, nullptr },
 };
 
 static const field_def_t scpt_schd_fields[] = {
-	{ "Name", field_type_t::string_fixed, 0, 32, nullptr, nullptr },
-	{ "Num Shorts", field_type_t::u32, 32, 4, nullptr, nullptr },
-	{ "Num Longs", field_type_t::u32, 36, 4, nullptr, nullptr },
-	{ "Num Floats", field_type_t::u32, 40, 4, nullptr, nullptr },
-	{ "Script Data Size", field_type_t::u32, 44, 4, nullptr, nullptr },
-	{ "Local Var Size", field_type_t::u32, 48, 4, nullptr, nullptr },
+	{ "Name", field_type_t::string_fixed, 0, 32, nullptr, nullptr, 0, nullptr },
+	{ "Num Shorts", field_type_t::u32, 32, 4, nullptr, nullptr, 0, nullptr },
+	{ "Num Longs", field_type_t::u32, 36, 4, nullptr, nullptr, 0, nullptr },
+	{ "Num Floats", field_type_t::u32, 40, 4, nullptr, nullptr, 0, nullptr },
+	{ "Script Data Size", field_type_t::u32, 44, 4, nullptr, nullptr, 0, nullptr },
+	{ "Local Var Size", field_type_t::u32, 48, 4, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t misc_mcdt_fields[] = {
-	{ "Weight", field_type_t::f32, 0, 4, nullptr, nullptr },
-	{ "Value", field_type_t::u32, 4, 4, nullptr, nullptr },
-	{ "Key", field_type_t::bool_bit, 8, 0, nullptr, nullptr },
+	{ "Weight", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr },
+	{ "Value", field_type_t::u32, 4, 4, nullptr, nullptr, 0, nullptr },
+	{ "Key", field_type_t::bool_bit, 8, 0, nullptr, nullptr, 0, nullptr },
 };
 
 static const char * const appa_types[] = { "Mortar and Pestle", "Alembic", "Calcinator", "Retort", nullptr };
 
 static const field_def_t appa_aadt_fields[] = {
-	{ "Type", field_type_t::enum_u32, 0, 4, appa_types, nullptr },
-	{ "Quality", field_type_t::f32, 4, 4, nullptr, nullptr },
-	{ "Weight", field_type_t::f32, 8, 4, nullptr, nullptr },
-	{ "Value", field_type_t::u32, 12, 4, nullptr, nullptr },
+	{ "Type", field_type_t::enum_u32, 0, 4, appa_types, nullptr, 0, nullptr },
+	{ "Quality", field_type_t::f32, 4, 4, nullptr, nullptr, 0, nullptr },
+	{ "Weight", field_type_t::f32, 8, 4, nullptr, nullptr, 0, nullptr },
+	{ "Value", field_type_t::u32, 12, 4, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t repa_ridt_fields[] = {
-	{ "Weight", field_type_t::f32, 0, 4, nullptr, nullptr },
-	{ "Value", field_type_t::u32, 4, 4, nullptr, nullptr },
-	{ "Uses", field_type_t::u32, 8, 4, nullptr, nullptr },
-	{ "Quality", field_type_t::f32, 12, 4, nullptr, nullptr },
+	{ "Weight", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr },
+	{ "Value", field_type_t::u32, 4, 4, nullptr, nullptr, 0, nullptr },
+	{ "Uses", field_type_t::u32, 8, 4, nullptr, nullptr, 0, nullptr },
+	{ "Quality", field_type_t::f32, 12, 4, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t lock_lkdt_fields[] = {
-	{ "Weight", field_type_t::f32, 0, 4, nullptr, nullptr },
-	{ "Value", field_type_t::u32, 4, 4, nullptr, nullptr },
-	{ "Quality", field_type_t::f32, 8, 4, nullptr, nullptr },
-	{ "Uses", field_type_t::u32, 12, 4, nullptr, nullptr },
+	{ "Weight", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr },
+	{ "Value", field_type_t::u32, 4, 4, nullptr, nullptr, 0, nullptr },
+	{ "Quality", field_type_t::f32, 8, 4, nullptr, nullptr, 0, nullptr },
+	{ "Uses", field_type_t::u32, 12, 4, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t cell_ref_data_fields[] = {
-	{ "X Position", field_type_t::f32, 0, 4, nullptr, nullptr },
-	{ "Y Position", field_type_t::f32, 4, 4, nullptr, nullptr },
-	{ "Z Position", field_type_t::f32, 8, 4, nullptr, nullptr },
-	{ "X Rotation", field_type_t::f32, 12, 4, nullptr, nullptr },
-	{ "Y Rotation", field_type_t::f32, 16, 4, nullptr, nullptr },
-	{ "Z Rotation", field_type_t::f32, 20, 4, nullptr, nullptr },
+	{ "X Position", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr },
+	{ "Y Position", field_type_t::f32, 4, 4, nullptr, nullptr, 0, nullptr },
+	{ "Z Position", field_type_t::f32, 8, 4, nullptr, nullptr, 0, nullptr },
+	{ "X Rotation", field_type_t::f32, 12, 4, nullptr, nullptr, 0, nullptr },
+	{ "Y Rotation", field_type_t::f32, 16, 4, nullptr, nullptr, 0, nullptr },
+	{ "Z Rotation", field_type_t::f32, 20, 4, nullptr, nullptr, 0, nullptr },
 };
 
 static const char * const body_parts[] = { "Head",     "Hair",     "Neck",     "Chest", "Groin", "Hand",
@@ -774,11 +774,11 @@ static const char * const body_vampire[] = { "No", "Yes", nullptr };
 static const char * const body_part_types[] = { "Skin", "Clothing", "Armor", nullptr };
 
 static const field_def_t body_bydt_fields[] = {
-	{ "Part", field_type_t::enum_u8, 0, 1, body_parts, nullptr },
-	{ "Vampire", field_type_t::enum_u8, 1, 1, body_vampire, nullptr },
-	{ "Female", field_type_t::bool_bit, 2, 0, nullptr, nullptr },
-	{ "Playable", field_type_t::bool_bit, 2, 1, nullptr, nullptr },
-	{ "Part Type", field_type_t::enum_u8, 3, 1, body_part_types, nullptr },
+	{ "Part", field_type_t::enum_u8, 0, 1, body_parts, nullptr, 0, nullptr },
+	{ "Vampire", field_type_t::enum_u8, 1, 1, body_vampire, nullptr, 0, nullptr },
+	{ "Female", field_type_t::bool_bit, 2, 0, nullptr, nullptr, 0, nullptr },
+	{ "Playable", field_type_t::bool_bit, 2, 1, nullptr, nullptr, 0, nullptr },
+	{ "Part Type", field_type_t::enum_u8, 3, 1, body_part_types, nullptr, 0, nullptr },
 };
 
 static const field_def_t ai_w_fields[] = {
@@ -797,96 +797,96 @@ static const field_def_t ai_w_fields[] = {
 };
 
 static const field_def_t ai_t_fields[] = {
-	{ "X", field_type_t::f32, 0, 4, nullptr, nullptr },
-	{ "Y", field_type_t::f32, 4, 4, nullptr, nullptr },
-	{ "Z", field_type_t::f32, 8, 4, nullptr, nullptr },
-	{ "Should Repeat", field_type_t::u8, 12, 1, nullptr, nullptr },
+	{ "X", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr },
+	{ "Y", field_type_t::f32, 4, 4, nullptr, nullptr, 0, nullptr },
+	{ "Z", field_type_t::f32, 8, 4, nullptr, nullptr, 0, nullptr },
+	{ "Should Repeat", field_type_t::u8, 12, 1, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t ai_f_fields[] = {
-	{ "X", field_type_t::f32, 0, 4, nullptr, nullptr },
-	{ "Y", field_type_t::f32, 4, 4, nullptr, nullptr },
-	{ "Z", field_type_t::f32, 8, 4, nullptr, nullptr },
-	{ "Duration", field_type_t::u16, 12, 2, nullptr, nullptr },
-	{ "ID", field_type_t::string_fixed, 14, 32, nullptr, nullptr },
-	{ "Should Repeat", field_type_t::u8, 46, 1, nullptr, nullptr },
+	{ "X", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr },
+	{ "Y", field_type_t::f32, 4, 4, nullptr, nullptr, 0, nullptr },
+	{ "Z", field_type_t::f32, 8, 4, nullptr, nullptr, 0, nullptr },
+	{ "Duration", field_type_t::u16, 12, 2, nullptr, nullptr, 0, nullptr },
+	{ "ID", field_type_t::string_fixed, 14, 32, nullptr, nullptr, 0, nullptr },
+	{ "Should Repeat", field_type_t::u8, 46, 1, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t ai_a_fields[] = {
-	{ "ID", field_type_t::string_fixed, 0, 32, nullptr, nullptr },
-	{ "Should Repeat", field_type_t::u8, 32, 1, nullptr, nullptr },
+	{ "ID", field_type_t::string_fixed, 0, 32, nullptr, nullptr, 0, nullptr },
+	{ "Should Repeat", field_type_t::u8, 32, 1, nullptr, nullptr, 0, nullptr },
 };
 
 static const char * const dial_types[] = { "Topic", "Voice", "Greeting", "Persuasion", "Journal", nullptr };
 
 static const field_def_t dial_data_fields[] = {
-	{ "Type", field_type_t::enum_u8, 0, 1, dial_types, nullptr },
+	{ "Type", field_type_t::enum_u8, 0, 1, dial_types, nullptr, 0, nullptr },
 };
 
 static const field_def_t xscl_fields[] = {
-	{ "Scale", field_type_t::f32, 0, 4, nullptr, nullptr },
+	{ "Scale", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t frmr_fields[] = {
-	{ "Object Index", field_type_t::u32, 0, 4, nullptr, nullptr },
+	{ "Object Index", field_type_t::u32, 0, 4, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t mvrf_fields[] = {
-	{ "Moved Reference", field_type_t::u32, 0, 4, nullptr, nullptr },
+	{ "Moved Reference", field_type_t::u32, 0, 4, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t cell_cndt_fields[] = {
-	{ "Destination Cell", field_type_t::string_var, 0, 0, nullptr, nullptr },
+	{ "Destination Cell", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t cell_cndt_grid_fields[] = {
-	{ "Grid X", field_type_t::i32, 0, 4, nullptr, nullptr },
-	{ "Grid Y", field_type_t::i32, 4, 4, nullptr, nullptr },
+	{ "Grid X", field_type_t::i32, 0, 4, nullptr, nullptr, 0, nullptr },
+	{ "Grid Y", field_type_t::i32, 4, 4, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t dele_fields[] = {
-	{ "Deleted", field_type_t::u32, 0, 4, nullptr, nullptr },
+	{ "Deleted", field_type_t::u32, 0, 4, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t whgt_fields[] = {
-	{ "Water Height", field_type_t::f32, 0, 4, nullptr, nullptr },
+	{ "Water Height", field_type_t::f32, 0, 4, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t nam0_fields[] = {
-	{ "Object Count", field_type_t::u32, 0, 4, nullptr, nullptr },
+	{ "Object Count", field_type_t::u32, 0, 4, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t intv_4_fields[] = {
-	{ "Value", field_type_t::i32, 0, 4, nullptr, nullptr },
+	{ "Value", field_type_t::i32, 0, 4, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t soun_data_fields[] = {
-	{ "Volume", field_type_t::u8, 0, 1, nullptr, nullptr },
-	{ "Min Range", field_type_t::u8, 1, 1, nullptr, nullptr },
-	{ "Max Range", field_type_t::u8, 2, 1, nullptr, nullptr },
+	{ "Volume", field_type_t::u8, 0, 1, nullptr, nullptr, 0, nullptr },
+	{ "Min Range", field_type_t::u8, 1, 1, nullptr, nullptr, 0, nullptr },
+	{ "Max Range", field_type_t::u8, 2, 1, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t pgrd_data_fields[] = {
-	{ "Grid X", field_type_t::i32, 0, 4, nullptr, nullptr },
-	{ "Grid Y", field_type_t::i32, 4, 4, nullptr, nullptr },
-	{ "Granularity", field_type_t::u16, 8, 2, nullptr, nullptr },
-	{ "Points", field_type_t::u16, 10, 2, nullptr, nullptr },
+	{ "Grid X", field_type_t::i32, 0, 4, nullptr, nullptr, 0, nullptr },
+	{ "Grid Y", field_type_t::i32, 4, 4, nullptr, nullptr, 0, nullptr },
+	{ "Granularity", field_type_t::u16, 8, 2, nullptr, nullptr, 0, nullptr },
+	{ "Points", field_type_t::u16, 10, 2, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t regn_snam_fields[] = {
-	{ "Sound", field_type_t::string_fixed, 0, 32, nullptr, nullptr },
-	{ "Chance", field_type_t::u8, 32, 1, nullptr, nullptr },
+	{ "Sound", field_type_t::string_fixed, 0, 32, nullptr, nullptr, 0, nullptr },
+	{ "Chance", field_type_t::u8, 32, 1, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t regn_cnam_fields[] = {
-	{ "Red", field_type_t::u8, 0, 1, nullptr, nullptr },
-	{ "Green", field_type_t::u8, 1, 1, nullptr, nullptr },
-	{ "Blue", field_type_t::u8, 2, 1, nullptr, nullptr },
-	{ "Alpha", field_type_t::u8, 3, 1, nullptr, nullptr },
+	{ "Red", field_type_t::u8, 0, 1, nullptr, nullptr, 0, nullptr },
+	{ "Green", field_type_t::u8, 1, 1, nullptr, nullptr, 0, nullptr },
+	{ "Blue", field_type_t::u8, 2, 1, nullptr, nullptr, 0, nullptr },
+	{ "Alpha", field_type_t::u8, 3, 1, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t indx_fields[] = {
-	{ "Index", field_type_t::u32, 0, 4, nullptr, nullptr },
+	{ "Index", field_type_t::u32, 0, 4, nullptr, nullptr, 0, nullptr },
 };
 
 static const char * const armo_part_names[] = { "Head",           "Hair",
@@ -905,37 +905,37 @@ static const char * const armo_part_names[] = { "Head",           "Hair",
 	                                            "Tail",           nullptr };
 
 static const field_def_t armo_indx_fields[] = {
-	{ "Part", field_type_t::enum_u8, 0, 1, armo_part_names, nullptr },
+	{ "Part", field_type_t::enum_u8, 0, 1, armo_part_names, nullptr, 0, nullptr },
 };
 
 static const field_def_t text_fields[] = {
-	{ "Text", field_type_t::string_var, 0, 0, nullptr, nullptr },
+	{ "Text", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t name_string_fields[] = {
-	{ "ID", field_type_t::string_var, 0, 0, nullptr, nullptr },
+	{ "ID", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t fnam_string_fields[] = {
-	{ "Name", field_type_t::string_var, 0, 0, nullptr, nullptr },
+	{ "Name", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t modl_string_fields[] = {
-	{ "Model", field_type_t::string_var, 0, 0, nullptr, nullptr },
+	{ "Model", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
 };
 
 static const field_def_t itex_string_fields[] = {
-	{ "Icon", field_type_t::string_var, 0, 0, nullptr, nullptr },
+	{ "Icon", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
 };
 
 static const char * const quest_marker_names[] = { "No", "Yes", nullptr };
 
 static const field_def_t quest_marker_fields[] = {
-	{ "Value", field_type_t::enum_u8, 0, 1, quest_marker_names, nullptr },
+	{ "Value", field_type_t::enum_u8, 0, 1, quest_marker_names, nullptr, 0, nullptr },
 };
 
 static const field_def_t nnam_chance_fields[] = {
-	{ "Value", field_type_t::u8, 0, 1, nullptr, nullptr },
+	{ "Value", field_type_t::u8, 0, 1, nullptr, nullptr, 0, nullptr },
 };
 
 static const std::vector<sub_record_schema_t> & build_schemas()

@@ -28,7 +28,7 @@ static std::string make_record(const std::string & rec_id, const std::string & s
 	return header + sub_records;
 }
 
-static std::string make_esm_file(const std::vector<std::string> & records)
+[[maybe_unused]] static std::string make_esm_file(const std::vector<std::string> & records)
 {
 	std::string content;
 	for (const auto & record : records)

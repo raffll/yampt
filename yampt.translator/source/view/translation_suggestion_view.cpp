@@ -1,3 +1,4 @@
+#include <resource_paths.hpp>
 #include "translation_suggestion_view.hpp"
 #include "../translator/ctranslate2_translator.hpp"
 #include "../translator/web_translator.hpp"
@@ -217,7 +218,7 @@ void translation_suggestion_view_t::rebuild_language_list()
 		if (!nllb_models.empty())
 		{
 			const auto languages =
-			    language_config::load((QCoreApplication::applicationDirPath() + "/languages.json").toStdString());
+			    language_config::load(resource_paths::languages_file());
 
 			const auto & model_path = nllb_models[0];
 			for (const auto & lang : languages)

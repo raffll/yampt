@@ -1,6 +1,7 @@
 #include "view_tree_format.hpp"
 #include <io/codepage.hpp>
 #include <algorithm>
+#include <cstdint>
 #include <cstdio>
 #include <cstring>
 #include <map>

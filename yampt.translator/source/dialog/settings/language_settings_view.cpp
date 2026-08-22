@@ -1,3 +1,4 @@
+#include <resource_paths.hpp>
 #include "language_settings_view.hpp"
 #include <utility/language_config.hpp>
 #include <filesystem>
@@ -14,7 +15,7 @@ namespace {
 const std::vector<language_entry_t> & get_languages()
 {
 	static const auto languages =
-	    language_config::load((QCoreApplication::applicationDirPath() + "/languages.json").toStdString());
+	    language_config::load(resource_paths::languages_file());
 	return languages;
 }
 

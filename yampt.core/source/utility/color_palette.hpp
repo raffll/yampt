@@ -2,6 +2,7 @@
 
 #include "theme_enums.hpp"
 #include <array>
+#include <cstddef>
 #include <cstdint>
 
 struct color_rgb_t

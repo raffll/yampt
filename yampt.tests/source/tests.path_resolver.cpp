@@ -28,7 +28,7 @@ TEST_CASE("path_resolver_t::resolve_workspace_path, finds file in first root", "
 	const auto root = make_temp_dir("ws_first");
 	QDir(QString::fromStdString(root)).mkpath("sub");
 	QFile file(QString::fromStdString(root + "/sub/test.txt"));
-	file.open(QIODevice::WriteOnly);
+	(void)file.open(QIODevice::WriteOnly);
 	file.close();
 
 	path_resolver_t::search_config_t config;
@@ -62,12 +62,12 @@ TEST_CASE("path_resolver_t::resolve_workspace_path, searches multiple roots in o
 	const auto root_second = make_temp_dir("ws_order_b");
 
 	QFile file_b(QString::fromStdString(root_second + "/shared.txt"));
-	file_b.open(QIODevice::WriteOnly);
+	(void)file_b.open(QIODevice::WriteOnly);
 	file_b.write("second");
 	file_b.close();
 
 	QFile file_a(QString::fromStdString(root_first + "/shared.txt"));
-	file_a.open(QIODevice::WriteOnly);
+	(void)file_a.open(QIODevice::WriteOnly);
 	file_a.write("first");
 	file_a.close();
 

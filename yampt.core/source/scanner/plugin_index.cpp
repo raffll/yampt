@@ -274,6 +274,7 @@ std::string plugin_index_t::derive_id(esm_reader_t & esm, size_t i)
 
 std::string plugin_index_t::derive_display_name(esm_reader_t & esm, size_t i)
 {
+	(void)i;
 	const auto & content = esm.get_record().content;
 	const auto & rec_type = esm.get_record().id;
 

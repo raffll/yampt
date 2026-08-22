@@ -216,11 +216,11 @@ private:
 	edit_history_t m_edit_history;
 	spell_checker_t m_spell_checker;
 	byte_limit_validator_t m_byte_limit_validator;
-	editor_controller_t m_editor_controller;
 
 	file_list_t m_file_list;
 	codepage_t m_current_codepage = codepage_t::windows_1252;
 	session_t m_session;
+	editor_controller_t m_editor_controller;
 	settings_store_t m_settings { "yTranslator.ini" };
 	std::unordered_map<std::string, filter_state_t> m_filter_states;
 	size_t m_last_annotation_version = 0;

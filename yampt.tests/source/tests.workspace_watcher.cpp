@@ -62,7 +62,7 @@ TEST_CASE("workspace_watcher_t::set_watch_roots, emits on file creation", "[i][q
 	REQUIRE(spy.isValid());
 
 	QFile file(QString::fromStdString(dir + "/new_file.txt"));
-	file.open(QIODevice::WriteOnly);
+	(void)file.open(QIODevice::WriteOnly);
 	file.write("test");
 	file.close();
 
@@ -86,7 +86,7 @@ TEST_CASE("workspace_watcher_t::clear, does not emit after clear", "[i][qt]")
 	QSignalSpy spy(&watcher, &workspace_watcher_t::workspace_changed);
 
 	QFile file(QString::fromStdString(dir + "/ignored.txt"));
-	file.open(QIODevice::WriteOnly);
+	(void)file.open(QIODevice::WriteOnly);
 	file.write("ignored");
 	file.close();
 

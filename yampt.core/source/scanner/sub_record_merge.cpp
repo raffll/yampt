@@ -601,6 +601,7 @@ static std::vector<sub_record_entry_t> merge_npco_items(
     const std::vector<sub_record_entry_t> & winner_items,
     bool is_patch_intermediate)
 {
+	(void)is_patch_intermediate;
 	std::set<std::string> winner_ids;
 	for (const auto & item : winner_items)
 		winner_ids.insert(extract_npco_item_id(item));

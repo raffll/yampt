@@ -8,6 +8,7 @@
 
 void view_tree_model_t::set_record_leveled(record_context_t & context, const conflict_entry_t & entry)
 {
+	(void)entry;
 	const auto col_count = context.col_count;
 
 	std::vector<sub_slot_t> unified_slots;
@@ -20,6 +21,7 @@ void view_tree_model_t::set_record_leveled(record_context_t & context, const con
 
 void view_tree_model_t::set_record_faction(record_context_t & context, const conflict_entry_t & entry)
 {
+	(void)entry;
 	const auto col_count = context.col_count;
 
 	std::vector<sub_slot_t> unified_slots;
@@ -32,6 +34,7 @@ void view_tree_model_t::set_record_faction(record_context_t & context, const con
 
 void view_tree_model_t::set_record_container(record_context_t & context, const conflict_entry_t & entry)
 {
+	(void)entry;
 	const auto col_count = context.col_count;
 
 	std::vector<sub_slot_t> unified_slots;
@@ -44,6 +47,7 @@ void view_tree_model_t::set_record_container(record_context_t & context, const c
 
 void view_tree_model_t::set_record_armor(record_context_t & context, const conflict_entry_t & entry)
 {
+	(void)entry;
 	const auto col_count = context.col_count;
 	auto & all_subs = context.all_sub_records;
 
@@ -216,6 +220,7 @@ void view_tree_model_t::set_record_generic(record_context_t & context, const con
 
 void view_tree_model_t::set_record_info(record_context_t & context, const conflict_entry_t & entry)
 {
+	(void)entry;
 	const auto col_count = context.col_count;
 	auto & all_subs = context.all_sub_records;
 

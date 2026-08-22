@@ -92,6 +92,7 @@ void creator_helpers::insert_duplicate(
     rec_type_t type,
     status_t status)
 {
+	(void)status;
 	auto * dup = ctx.dict.at(type).find(key_text);
 	if (!dup)
 		return;

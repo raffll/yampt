@@ -1,3 +1,4 @@
+#include <resource_paths.hpp>
 #include "sidebar_controller.hpp"
 #include "../model/dict_document.hpp"
 #include "../model/eet_document.hpp"
@@ -330,8 +331,6 @@ void sidebar_controller_t::on_export_eet_requested(const std::string & path)
 	auto * eet_doc = dynamic_cast<eet_document_t *>(doc);
 	if (!eet_doc)
 		return;
-
-	const auto sep = path.find_last_of("/\\");
 	const auto stem = path.substr(0, path.rfind('.'));
 	const auto output_path = stem + ".json";
 
@@ -370,7 +369,7 @@ void sidebar_controller_t::on_generate_loc_requested(const std::string & path)
 	const auto locale = resolve_hunspell_locale(language);
 	if (!locale.empty())
 	{
-		const auto dict_dir = QCoreApplication::applicationDirPath().toStdString() + "/dictionaries/";
+		const auto dict_dir = resource_paths::dictionaries_dir();
 		hunspell_aff = dict_dir + locale + ".aff";
 		hunspell_dic = dict_dir + locale + ".dic";
 	}

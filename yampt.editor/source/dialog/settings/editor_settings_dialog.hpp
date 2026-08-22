@@ -8,7 +8,7 @@ class QListWidget;
 class QPushButton;
 class QStackedWidget;
 class settings_store_t;
-class appearance_settings_view_t;
+class editor_appearance_settings_view_t;
 class cleaning_settings_view_t;
 class editor_paths_view_t;
 class merge_settings_view_t;
@@ -34,7 +34,7 @@ private:
 	QDialogButtonBox * m_button_box = nullptr;
 	QPushButton * m_apply_button = nullptr;
 
-	appearance_settings_view_t * m_appearance_view = nullptr;
+	editor_appearance_settings_view_t * m_appearance_view = nullptr;
 	cleaning_settings_view_t * m_cleaning_view = nullptr;
 	editor_paths_view_t * m_paths_view = nullptr;
 	merge_settings_view_t * m_merge_view = nullptr;

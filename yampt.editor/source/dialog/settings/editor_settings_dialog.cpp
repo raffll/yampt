@@ -25,7 +25,7 @@ editor_settings_dialog_t::editor_settings_dialog_t(settings_store_t & settings, 
 	m_content_stack = new QStackedWidget(this);
 
 	m_paths_view = new editor_paths_view_t(this);
-	m_appearance_view = new appearance_settings_view_t(this);
+	m_appearance_view = new editor_appearance_settings_view_t(this);
 	m_merge_view = new merge_settings_view_t(this);
 	m_cleaning_view = new cleaning_settings_view_t(this);
 	m_sub_record_rules_view = new sub_record_rules_view_t(this);

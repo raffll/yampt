@@ -1,3 +1,4 @@
+#include <resource_paths.hpp>
 #include "main_window.hpp"
 #include "dialog/dict_selection_dialog.hpp"
 #include "dialog/find_replace_dialog.hpp"
@@ -167,14 +168,14 @@ main_window_t::main_window_t(QWidget * parent)
 			m_settings.set_foreign_tag(foreign);
 
 			const auto languages =
-			    language_config::load((QCoreApplication::applicationDirPath() + "/languages.json").toStdString());
+			    language_config::load(resource_paths::languages_file());
 
 			const auto * native_lang = language_config::find_by_code(languages, native);
 			const int encoding_index = native_lang ? codepage_to_index(native_lang->codepage) : 2;
 			m_settings.set_encoding_index(encoding_index);
 			on_encoding_changed(encoding_index);
 
-			const auto dict_dir = QCoreApplication::applicationDirPath().toStdString() + "/dictionaries/";
+			const auto dict_dir = resource_paths::dictionaries_dir();
 			auto set_spell_paths = [&](const std::string & lang_code, bool is_native)
 			{
 				const auto prefix = language_config::resolve_dictionary_prefix(languages, lang_code);
@@ -619,7 +620,7 @@ void main_window_t::on_encoding_changed(int index)
 
 void main_window_t::on_open_settings()
 {
-	const auto dict_dir = QCoreApplication::applicationDirPath().toStdString() + "/dictionaries";
+	const auto dict_dir = resource_paths::dictionaries_dir();
 	translator_settings_dialog_t dialog(m_settings, dict_dir, this);
 
 	connect(

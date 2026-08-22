@@ -169,7 +169,7 @@ translation_result_t translation_engine_t::translate(const std::string & text) c
 		for (const auto & sentence : sentences)
 		{
 			std::vector<std::string> tokens;
-			m_impl->spm->Encode(sentence, &tokens);
+			(void)m_impl->spm->Encode(sentence, &tokens);
 			tokens.insert(tokens.begin(), m_impl->source_lang);
 			tokens.push_back("</s>");
 			token_batch.push_back(std::move(tokens));

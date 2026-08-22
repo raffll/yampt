@@ -1,4 +1,6 @@
 #include "codepage.hpp"
+
+#ifdef _WIN32
 #define NOMINMAX
 #include <Windows.h>
 
@@ -49,6 +51,60 @@ std::string encode_from_utf8(const std::string & utf8_text, codepage_t codepage)
 
 	return result;
 }
+
+#else
+#include <iconv.h>
+#include <cerrno>
+
+static const char * codepage_iconv_name(codepage_t codepage)
+{
+	switch (codepage)
+	{
+	case codepage_t::windows_1250: return "CP1250";
+	case codepage_t::windows_1251: return "CP1251";
+	case codepage_t::windows_1252: return "CP1252";
+	}
+	return "CP1252";
+}
+
+static std::string iconv_convert(const std::string & input, const char * from_encoding, const char * to_encoding)
+{
+	if (input.empty())
+		return {};
+
+	iconv_t converter = iconv_open(to_encoding, from_encoding);
+	if (converter == reinterpret_cast<iconv_t>(-1))
+		return input;
+
+	std::string output;
+	output.resize(input.size() * 4);
+
+	char * in_ptr = const_cast<char *>(input.data());
+	size_t in_left = input.size();
+	char * out_ptr = output.data();
+	size_t out_left = output.size();
+
+	size_t result = iconv(converter, &in_ptr, &in_left, &out_ptr, &out_left);
+	iconv_close(converter);
+
+	if (result == static_cast<size_t>(-1))
+		return input;
+
+	output.resize(output.size() - out_left);
+	return output;
+}
+
+std::string decode_to_utf8(const std::string & raw_bytes, codepage_t codepage)
+{
+	return iconv_convert(raw_bytes, codepage_iconv_name(codepage), "UTF-8");
+}
+
+std::string encode_from_utf8(const std::string & utf8_text, codepage_t codepage)
+{
+	return iconv_convert(utf8_text, "UTF-8", codepage_iconv_name(codepage));
+}
+
+#endif
 
 const char * codepage_name(codepage_t cp)
 {

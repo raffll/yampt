@@ -58,17 +58,17 @@ void loc_document_t::commit_edit(rec_type_t, size_t, const std::string &)
 
 commit_result_t loc_document_t::commit(const table_row_t &, const std::string &, status_t)
 {
-	return { .success = false };
+	return { {}, status_t::untranslated, 0, false };
 }
 
 commit_result_t loc_document_t::commit_status(const table_row_t &, status_t)
 {
-	return { .success = false };
+	return { {}, status_t::untranslated, 0, false };
 }
 
 commit_result_t loc_document_t::reset_to_original(const table_row_t &)
 {
-	return { .success = false };
+	return { {}, status_t::untranslated, 0, false };
 }
 
 void loc_document_t::save()

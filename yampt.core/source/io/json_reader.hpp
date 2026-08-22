@@ -3,9 +3,13 @@
 #include <functional>
 #include <string>
 
+#ifdef _MSC_VER
 #pragma warning(push, 0)
+#endif
 #include <yyjson.h>
+#ifdef _MSC_VER
 #pragma warning(pop)
+#endif
 
 class json_reader_t
 {

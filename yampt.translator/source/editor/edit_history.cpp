@@ -15,7 +15,11 @@ static std::string make_timestamp()
 	auto now = std::chrono::system_clock::now();
 	auto time = std::chrono::system_clock::to_time_t(now);
 	struct tm tm_buf;
+#ifdef _WIN32
 	localtime_s(&tm_buf, &time);
+#else
+	localtime_r(&time, &tm_buf);
+#endif
 	char buf[20];
 	std::strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S", &tm_buf);
 	return std::string(buf);
@@ -28,6 +32,7 @@ void edit_history_t::record_change(
     const std::string & new_value,
     status_t old_status)
 {
+	(void)new_value;
 	auto compound_key = make_key(type, key);
 	history_entry_t entry;
 	entry.value = old_value;

@@ -2,6 +2,7 @@
 
 #include "../utility/domain_types.hpp"
 #include <cstddef>
+#include <cstdint>
 #include <cstring>
 #include <string>
 

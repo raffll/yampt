@@ -273,6 +273,7 @@ static void apply_worst_this(
     const conflict_accumulator_t & accum,
     const std::vector<bool> & is_deleted)
 {
+	(void)is_deleted;
 	const size_t ver_count = entry.versions.size();
 	std::vector<conflict_this_t> worst_this(ver_count, conflict_this_t::unknown);
 	worst_this[0] = conflict_this_t::master;

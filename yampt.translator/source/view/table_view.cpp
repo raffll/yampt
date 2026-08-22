@@ -37,6 +37,7 @@ table_view_t::table_view_t(
 
 void table_view_t::apply(table_build_result_t result, const std::string & file_path, dict_kind_t kind)
 {
+	(void)kind;
 	m_file_label.setText(QString::fromStdString(file_path));
 	m_filter_tree.setEnabled(true);
 	m_filter_tree.set_display_mode(filter_tree_view_t::display_mode_t::full);

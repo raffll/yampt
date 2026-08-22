@@ -1004,7 +1004,7 @@ QVariant nav_tree_model_t::file_node_appearance(const file_node_t & file_node, i
 
 QVariant nav_tree_model_t::data_for_esm_nodes(void * ptr, int row, int column, int role) const
 {
-	const auto & entries = m_scan.entries();
+	(void)m_scan.entries();
 
 	for (size_t file_idx = 0; file_idx < m_tree.size(); ++file_idx)
 	{

@@ -1,3 +1,4 @@
+#include <resource_paths.hpp>
 #include "translator_settings_dialog.hpp"
 #include "appearance_settings_view.hpp"
 #include "language_settings_view.hpp"
@@ -28,10 +29,10 @@ translator_settings_dialog_t::translator_settings_dialog_t(
 
 	m_content_stack = new QStackedWidget(this);
 
-	m_appearance_view = new appearance_settings_view_t(this);
+	m_appearance_view = new translator_appearance_settings_view_t(this);
 	m_language_view = new language_settings_view_t(dictionaries_dir, this);
 
-	auto providers_dir = QCoreApplication::applicationDirPath().toStdString() + "/providers";
+	auto providers_dir = resource_paths::providers_dir();
 	m_translation_view = new translation_settings_view_t(providers_dir, this);
 	m_shortcuts_view = new shortcuts_settings_view_t(this);
 

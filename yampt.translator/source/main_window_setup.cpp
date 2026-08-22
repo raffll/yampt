@@ -1,3 +1,4 @@
+#include <resource_paths.hpp>
 #include "dialog/dict_selection_dialog.hpp"
 #include "dialog/find_replace_dialog.hpp"
 #include "dialog/first_run_dialog.hpp"
@@ -225,7 +226,7 @@ void main_window_t::setup_sidebar()
 	m_history_view = new history_view_t(m_info_tabs);
 	m_translation_tab = new translation_suggestion_view_t(m_info_tabs);
 	m_translation_tab->set_models_dir((QCoreApplication::applicationDirPath() + "/models").toStdString());
-	m_translation_tab->set_providers_dir((QCoreApplication::applicationDirPath() + "/providers").toStdString());
+	m_translation_tab->set_providers_dir(resource_paths::providers_dir());
 	m_translation_tab->set_glossary_fn([this](const std::string & text) { return m_glossary.apply_glossary(text); });
 	m_find_replace_dialog = new find_replace_dialog_t(this);
 	m_find_replace_dialog->setWindowTitle(tr("Find/Replace"));
