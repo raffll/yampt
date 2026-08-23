@@ -66,7 +66,7 @@ plugin_workspace_view_t::plugin_workspace_view_t(settings_store_t & settings, QW
 	m_record_view->model()->set_user_ignore_conflict(m_session->scan().user_ignore_conflict());
 	m_nav_view->set_display_codepage(static_cast<codepage_t>(m_settings.display_codepage()));
 	m_content_splitter->insertWidget(1, m_record_view);
-	m_content_splitter->setSizes({ 200, 800 });
+	m_content_splitter->setSizes({ 300, 600 });
 
 	m_merge_controller = new merge_controller_t(
 	    *m_session, *m_record_view, *m_nav_view, m_settings, [this](const std::string & msg) { log_message(msg); });
@@ -93,8 +93,8 @@ void plugin_workspace_view_t::setup_views()
 	m_bottom_tabs = new QTabWidget(m_main_splitter);
 	m_messages = new messages_view_t(m_bottom_tabs);
 	m_preview = new preview_view_t(m_bottom_tabs);
+	m_bottom_tabs->addTab(m_preview, tr("Edit"));
 	m_bottom_tabs->addTab(m_messages, tr("Log"));
-	m_bottom_tabs->addTab(m_preview, tr("Preview"));
 
 	m_main_splitter->addWidget(m_content_splitter);
 	m_main_splitter->addWidget(m_bottom_tabs);

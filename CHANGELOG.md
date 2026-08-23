@@ -11,10 +11,14 @@
 - [NEW] Enable Edit: edit decoded fields of source plugins directly (right-click plugin → Enable Edit)
 - [NEW] Lua handler conflict detection: scans OpenMW Lua scripts for handler registrations and highlights conflicts between mods
 - [NEW] Ignore Sub-Record from context menu: right-click any sub-record row to add it to the ignore rules
-- [NEW] Combobox editing for flag and enum fields in the Preview panel (Yes/No for flags, named values for enums)
-- [CHANGE] Sub-Record Rules settings simplified to a single "Ignore Sub-Records" field (combines previous Ignore Conflict, Exclude from Merge, and Skip if Missing into one rule that both hides conflicts and excludes from merged patch)
+- [NEW] Combobox editing for flag and enum fields in the Edit panel (Yes/No for flags, named values for enums)
+- [CHANGE] Navigation panel split into two tabs: Plugins (ESP/ESM record tree) and Lua (handler registrations by mod)
+- [CHANGE] Deleted records now shown in italic instead of strikethrough
+- [CHANGE] Preview tab renamed to Edit and moved to first position in the bottom panel
+- [CHANGE] Sub-Record Rules merged into the Merged Patch settings page (ignore sub-records field now on the same page as merge type toggles and fixes)
+- [CHANGE] Paths settings page renamed to Output Paths
 - [CHANGE] Plugin icons now consistent between navigation tree and record view column headers
-- [FIX] Combobox in Preview panel now pre-selects the current field value
+- [FIX] Combobox in Edit panel now pre-selects the current field value
 - [FIX] Signature and Record Flags rows are no longer editable
 
 ## [0.940] - 2026-07-29

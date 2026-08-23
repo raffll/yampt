@@ -59,7 +59,9 @@ nav_tree_view_t::nav_tree_view_t(plugin_scan_t & scan, QWidget * parent)
 void nav_tree_view_t::rebuild()
 {
 	m_model->rebuild();
-	m_tree->setColumnWidth(0, 280);
+
+	const int total_width = m_tree->viewport()->width();
+	m_tree->setColumnWidth(0, total_width * 3 / 4);
 }
 
 void nav_tree_view_t::rebuild_preserving_state()

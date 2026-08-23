@@ -14,9 +14,9 @@ Use **Unload All** to close everything and start fresh.
 
 ## Main Layout
 
-- **Left** — Navigation tree. Plugins are listed at the top level. Under each plugin, records are grouped by type (ACTI, ARMO, CELL, NPC_, etc.). Under each type, individual records are listed by ID.
+- **Left** — Navigation panel with two tabs. The Plugins tab shows the ESP/ESM record tree: plugins at the top level, records grouped by type under each plugin. The Lua tab shows OpenMW Lua handler registrations grouped by mod name.
 - **Right** — Record view. When you click a record in the nav tree, this area shows all sub-records in a multi-column tree. Each column represents one plugin's version of that record. The leftmost column is the master definition, subsequent columns are overrides in load order.
-- **Bottom** — Log tab (operation output) and Preview tab.
+- **Bottom** — Edit tab (field comparison and editing) and Log tab (operation output).
 
 ## Navigation Tree
 
@@ -81,7 +81,7 @@ Right-click a plugin node in the navigation tree for plugin-level options:
 
 - **Exclude from Merged Patch** / **Include in Merged Patch** — excluded plugins are completely ignored during auto-merge. Their records will not appear in the merged patch regardless of conflicts.
 - **Mark as Guard Patch** — the guard patch acts as a priority barrier during auto-merge. Plugins loaded before the guard that modify the same records are ignored. Only the guard's version and later plugins are considered. If the final plugin's version matches master (reverting a change), the guard's version is used instead of letting the revert through.
-- **Enable Edit** / **Disable Edit** — marks a source plugin as editable. When enabled, selecting a decoded field in that plugin's column activates the Preview panel as an editor. You can change the field value and click Apply to write the change directly to the plugin file on disk. Enum and flag fields show a dropdown selector for convenience. Field values are validated before commit — the Apply button remains disabled until the input is both valid and different from the original. Use this for quick corrections to source plugins without opening a separate editor.
+- **Enable Edit** / **Disable Edit** — marks a source plugin as editable. When enabled, selecting a decoded field in that plugin's column activates the Edit panel as an editor. You can change the field value and click Apply to write the change directly to the plugin file on disk. Enum and flag fields show a dropdown selector for convenience. Field values are validated before commit — the Apply button remains disabled until the input is both valid and different from the original. Use this for quick corrections to source plugins without opening a separate editor.
 
 ## View Menu
 
@@ -89,16 +89,16 @@ The View menu provides filtering and display options:
 
 - **Conflicts Only** — when enabled, the navigation tree hides records with no conflicts. Only records touched by multiple plugins remain visible.
 - **Hide Duplicate Columns** — hides duplicate columns in the record view when the same plugin contributes identical data through multiple paths.
-- **Show Deleted Strikeout** — renders deleted records and cell references with strikethrough text, making them visually distinct from active content.
+- **Show Deleted Strikeout** — renders deleted records and cell references with italic text, making them visually distinct from active content.
 - **Filter** — opens an advanced filter dialog where you can narrow the navigation tree by overall conflict severity, per-plugin conflict status, record type, record ID substring, display name substring, or restrict to deleted records only.
 
-## Preview Panel
+## Edit Panel
 
-The Preview panel at the bottom of the window serves two purposes: text comparison and field editing.
+The Edit panel at the bottom of the window serves two purposes: text comparison and field editing.
 
-When you click a cell in the record view that has a conflict with a previous column, the Preview panel shows both values side by side with character-level diff highlighting. Deleted text appears with a red background on the left, inserted text with a green background on the right.
+When you click a cell in the record view that has a conflict with a previous column, the Edit panel shows both values side by side with character-level diff highlighting. Deleted text appears with a red background on the left, inserted text with a green background on the right.
 
-When a plugin has editing enabled (via Enable Edit in the plugin context menu), clicking a decoded field in that plugin's column activates the Preview panel as an editor. The right pane becomes editable and an Apply button appears. For enum fields (race, class, type), a dropdown selector shows all valid values. For flag fields (NPC flags, cell flags), the dropdown presents checkboxes for each flag bit. Free-text fields such as names and IDs accept direct text input. The panel validates the input against the field's constraints — numeric range, string length, and codepage encoding limits. The Apply button stays disabled until the value is both valid and different from the original. Clicking Apply writes the change directly to the source plugin file on disk and refreshes the record view to reflect the new state.
+When a plugin has editing enabled (via Enable Edit in the plugin context menu), clicking a decoded field in that plugin's column activates the Edit panel as an editor. The right pane becomes editable and an Apply button appears. For enum fields (race, class, type), a dropdown selector shows all valid values. For flag fields (NPC flags, cell flags), the dropdown presents checkboxes for each flag bit. Free-text fields such as names and IDs accept direct text input. The panel validates the input against the field's constraints — numeric range, string length, and codepage encoding limits. The Apply button stays disabled until the value is both valid and different from the original. Clicking Apply writes the change directly to the source plugin file on disk and refreshes the record view to reflect the new state.
 
 ## Creating a Merged Patch
 
@@ -114,13 +114,12 @@ You can refine the auto-merge result manually. Use the record view context menu 
 
 ## Settings
 
-Open Settings via Ctrl+, or the Tools menu. Five pages are available:
+Open Settings via Ctrl+, or the Tools menu. Four pages are available:
 
 - **Appearance** — choose between light and dark theme.
-- **Paths** — configure the merged patch output path for each loading mode (folder, MO2, OpenMW). Normally these are automatic and don't need changing.
-- **Merged Patch** — toggle which record types participate in auto-merge. Set an exclusion regex to skip specific record IDs. Enable or disable individual bug fixes (fog density fix, summon persistence fix, cell name reversion fix).
+- **Output Paths** — configure the merged patch output path for each loading mode (folder, MO2, OpenMW). Normally these are automatic and don't need changing.
+- **Merged Patch** — toggle which record types participate in auto-merge. Set an exclusion regex to skip specific record IDs. Enable or disable individual bug fixes (fog density fix, summon persistence fix, cell name reversion fix). Configure which sub-records are ignored during conflict detection and excluded from the merged patch. The ignore field takes a comma-separated list of entries in `RECORD:SUB` format (e.g. `CELL:NAM0, NPC_:AI_W`). Use `*` as a wildcard for the sub-record name to match all sub-records of a record type (e.g. `CELL:*`). Ignored sub-records are not flagged as conflicts in the navigation tree, are greyed out in the record view, and are omitted from the merged patch output. Changes apply immediately after closing the settings dialog.
 - **Cleaning** — toggle which cleaning operations the Clean All button performs. Evil GMSTs are Construction Set artifacts from Tribunal/Bloodmoon that can cause issues in mods that don't require those expansions. Junk cells are empty exterior cell records that only contain position data and serve no purpose. The Header Repair group provides additional fixes applied during cleaning: updating master file sizes in the plugin header to match the actual file sizes on disk, and updating the plugin version field to 1.3 (required by some engines).
-- **Sub-Record Rules** — configure which sub-records are ignored during conflict detection and excluded from the merged patch. The field takes a comma-separated list of entries in `RECORD:SUB` format (e.g. `CELL:NAM0, NPC_:AI_W`). Use `*` as a wildcard for the sub-record name to match all sub-records of a record type (e.g. `CELL:*`). Ignored sub-records are not flagged as conflicts in the navigation tree, are greyed out in the record view, and are omitted from the merged patch output. Changes apply immediately after closing the settings dialog.
 
 ## Cleaning Plugins
 
@@ -137,7 +136,7 @@ When loading via Open MO2 Profile, cleaned plugins are written to the MO2 overwr
 
 After plugins are loaded, the application scans all `.omwscripts` files in the data paths for OpenMW Lua handler registrations. It identifies cases where multiple mods register handlers on the same interface method (e.g. two mods both adding an `ItemUsage.addHandlerForType` for the same item type).
 
-The Lua Handlers section appears at the bottom of the navigation tree, grouped by mod name. Each registration shows the interface, method, and type argument. Registrations involved in a conflict are colored by severity:
+The navigation panel has two tabs: **Plugins** (the ESP/ESM record tree) and **Lua** (handler registrations). After a scan completes, the Lua tab shows registrations grouped by mod name. Each registration shows the interface, method, and type argument. Registrations involved in a conflict are colored by severity:
 
 - **Red** — blocking conflict. One handler returns false (cancels the action) and another mod expects the action to proceed.
 - **Orange** — mutating conflict. Multiple handlers modify the same data in potentially incompatible ways.

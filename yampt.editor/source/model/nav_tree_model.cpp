@@ -279,6 +279,12 @@ void nav_tree_model_t::build_tree()
 		    file_node.groups.end(),
 		    [](const type_group_t & a, const type_group_t & b)
 		{
+			if (a.type == "TES3")
+				return true;
+
+			if (b.type == "TES3")
+				return false;
+
 			const char * name_a = type_to_display_name(a.type);
 			const char * name_b = type_to_display_name(b.type);
 			const char * sort_a = name_a ? name_a : a.type.c_str();
@@ -371,7 +377,11 @@ int nav_tree_model_t::rowCount(const QModelIndex & parent) const
 		if (group_idx < 0 || group_idx >= static_cast<int>(m_tree[file_idx].groups.size()))
 			return 0;
 
-		return static_cast<int>(m_tree[file_idx].groups[static_cast<size_t>(group_idx)].records.size());
+		const auto & group = m_tree[file_idx].groups[static_cast<size_t>(group_idx)];
+		if (group.type == "TES3")
+			return 0;
+
+		return static_cast<int>(group.records.size());
 	}
 
 	return 0;
@@ -512,7 +522,15 @@ nav_tree_model_t::node_info_t nav_tree_model_t::node_at(const QModelIndex & inde
 			if (group_idx < 0 || group_idx >= static_cast<int>(m_tree[file_idx].groups.size()))
 				return { m_tree[file_idx].plugin_idx, {}, {} };
 
-			return { m_tree[file_idx].plugin_idx, m_tree[file_idx].groups[static_cast<size_t>(group_idx)].type, {} };
+			const auto & group = m_tree[file_idx].groups[static_cast<size_t>(group_idx)];
+
+			if (group.type == "TES3" && !group.records.empty())
+			{
+				const auto & entry = entries[group.records[0].entry_idx];
+				return { m_tree[file_idx].plugin_idx, entry.rec_type, entry.record_id };
+			}
+
+			return { m_tree[file_idx].plugin_idx, group.type, {} };
 		}
 
 		for (size_t group_idx = 0; group_idx < m_tree[file_idx].groups.size(); ++group_idx)
@@ -709,7 +727,7 @@ QVariant nav_tree_model_t::file_node_appearance(const file_node_t & file_node, i
 				if (entries[rec.entry_idx].has_dele)
 				{
 					QFont font;
-					font.setStrikeOut(true);
+					font.setItalic(true);
 					return font;
 				}
 			}
@@ -750,6 +768,9 @@ QVariant nav_tree_model_t::data_for_type_group(size_t file_idx, int row, int col
 
 	if (role == Qt::DisplayRole && column == 0)
 	{
+		if (group.type == "TES3")
+			return tr("File Header");
+
 		const char * display_name = type_to_display_name(group.type);
 		if (display_name)
 			return QString("%1 [%2]").arg(display_name).arg(group.records.size());
@@ -798,7 +819,7 @@ QVariant nav_tree_model_t::data_for_type_group(size_t file_idx, int row, int col
 			if (entries[rec.entry_idx].has_dele)
 			{
 				QFont font;
-				font.setStrikeOut(true);
+				font.setItalic(true);
 				return font;
 			}
 		}
@@ -862,7 +883,7 @@ QVariant nav_tree_model_t::data_for_record(size_t file_idx, size_t group_idx, in
 	if (role == Qt::FontRole && m_show_deleted_strikeout && entry.has_dele)
 	{
 		QFont font;
-		font.setStrikeOut(true);
+		font.setItalic(true);
 		return font;
 	}
 

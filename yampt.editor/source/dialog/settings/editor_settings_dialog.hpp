@@ -12,7 +12,6 @@ class editor_appearance_settings_view_t;
 class cleaning_settings_view_t;
 class editor_paths_view_t;
 class merge_settings_view_t;
-class sub_record_rules_view_t;
 
 class editor_settings_dialog_t : public QDialog
 {
@@ -38,5 +37,4 @@ private:
 	cleaning_settings_view_t * m_cleaning_view = nullptr;
 	editor_paths_view_t * m_paths_view = nullptr;
 	merge_settings_view_t * m_merge_view = nullptr;
-	sub_record_rules_view_t * m_sub_record_rules_view = nullptr;
 };
