@@ -6,6 +6,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QListWidget>
+#include <QPalette>
 #include <QPushButton>
 #include <QTabWidget>
 #include <QVBoxLayout>
@@ -34,6 +35,9 @@ void merge_settings_view_t::setup_ignore_fields_tab()
 	       "Use TYPE:* to ignore an entire record type (e.g. CELL:* skips all cell records)."),
 	    page);
 	desc->setWordWrap(true);
+	auto ignore_palette = desc->palette();
+	ignore_palette.setColor(QPalette::WindowText, ignore_palette.color(QPalette::Disabled, QPalette::WindowText));
+	desc->setPalette(ignore_palette);
 	page_layout->addWidget(desc);
 
 	m_ignore_list = new QListWidget(page);
@@ -60,7 +64,7 @@ void merge_settings_view_t::setup_ignore_fields_tab()
 	connect(m_ignore_remove_button, &QPushButton::clicked, this, &merge_settings_view_t::on_ignore_remove);
 	connect(m_ignore_input, &QLineEdit::returnPressed, this, &merge_settings_view_t::on_ignore_add);
 
-	m_tabs->addTab(page, tr("Ignore Fields"));
+	m_tabs->addTab(page, tr("Exclude Sub-Records"));
 }
 
 void merge_settings_view_t::setup_exclude_by_id_tab()
@@ -73,6 +77,9 @@ void merge_settings_view_t::setup_exclude_by_id_tab()
 	       "Use this to exclude specific named records regardless of their type."),
 	    page);
 	desc->setWordWrap(true);
+	auto exclude_palette = desc->palette();
+	exclude_palette.setColor(QPalette::WindowText, exclude_palette.color(QPalette::Disabled, QPalette::WindowText));
+	desc->setPalette(exclude_palette);
 	page_layout->addWidget(desc);
 
 	m_exclude_list = new QListWidget(page);

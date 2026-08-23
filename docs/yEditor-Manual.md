@@ -88,8 +88,8 @@ Right-click a plugin node in the navigation tree for plugin-level options:
 The View menu provides filtering and display options:
 
 - **Conflicts Only** — when enabled, the navigation tree hides records with no conflicts. Only records touched by multiple plugins remain visible.
-- **Hide Duplicate Columns** — hides duplicate columns in the record view when the same plugin contributes identical data through multiple paths.
-- **Show Deleted Strikeout** — renders deleted records with strikethrough text, making them visually distinct from active content.
+- **Hide Duplicates** — hides duplicate columns in the record view when the same plugin contributes identical data through multiple paths.
+- **Mark Deleted** — renders deleted records with strikethrough text, making them visually distinct from active content.
 - **Filter** — opens an advanced filter dialog where you can narrow the navigation tree by overall conflict severity, per-plugin conflict status, record type, record ID substring, display name substring, or restrict to deleted records only.
 
 ## Edit Panel

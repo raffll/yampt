@@ -90,14 +90,14 @@ void editor_window_t::setup_menu_bar()
 	view_menu->addAction(conflicts_action);
 	connect(conflicts_action, &QAction::toggled, m_plugin_workspace_view, &plugin_workspace_view_t::set_conflicts_only);
 
-	auto * hide_dup_action = new QAction(tr("&Hide Duplicate Columns"), this);
+	auto * hide_dup_action = new QAction(tr("&Hide Duplicates"), this);
 	hide_dup_action->setCheckable(true);
 	hide_dup_action->setChecked(m_plugin_workspace_view->is_hide_duplicates());
 	hide_dup_action->setToolTip(tr("Hide duplicate columns from the same plugin"));
 	view_menu->addAction(hide_dup_action);
 	connect(hide_dup_action, &QAction::toggled, m_plugin_workspace_view, &plugin_workspace_view_t::set_hide_duplicates);
 
-	auto * show_deleted_action = new QAction(tr("Show &Deleted Strikeout"), this);
+	auto * show_deleted_action = new QAction(tr("&Mark Deleted"), this);
 	show_deleted_action->setCheckable(true);
 	show_deleted_action->setChecked(m_plugin_workspace_view->is_show_deleted_strikeout());
 	show_deleted_action->setToolTip(tr("Strikeout deleted records and cell references"));
