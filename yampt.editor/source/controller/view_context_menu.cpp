@@ -183,7 +183,7 @@ void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModel
 			menu.addSeparator();
 
 		menu.addAction(
-		    QCoreApplication::translate("yEditor", "Ignore Sub-Record \"%1\"").arg(QString::fromStdString(rule)),
+		    QCoreApplication::translate("yEditor", "Exclude Sub-Record \"%1\"").arg(QString::fromStdString(rule)),
 		    [this, rule]()
 		{
 			auto current = m_settings.sub_record_ignore_conflict();

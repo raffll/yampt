@@ -46,7 +46,7 @@ Each plugin in the tree is prefixed with an icon indicating its role:
 - ⚙ — the merged patch produced by the auto-merge operation.
 - 🛡 — a guard patch that acts as a priority barrier during auto-merge.
 - 🔒 — a plugin excluded from the merged patch. Its records are ignored during merge.
-- ✍ — a plugin with editing enabled. Individual fields in this plugin's column can be modified directly via the Preview panel.
+- ✍ — a plugin with editing enabled. Individual fields in this plugin's column can be modified directly via the Edit panel.
 
 ## Record View
 
@@ -73,7 +73,7 @@ Right-click in the record view to access merge operations:
 - **Copy Field to Merged Patch** — copies a single decoded field within a sub-record from a plugin column.
 - **Copy Group to Merged Patch** — copies a group of related sub-records (e.g. all fields of a referenced object in a cell).
 - **Remove Sub-Record** / **Remove Group** — removes content from the merged patch column.
-- **Ignore Sub-Record** — adds the sub-record type to the ignore rules in settings. The sub-record will be hidden from conflict detection and excluded from the merged patch. The rule is stored as `RECORD:SUB` (e.g. `CELL:NAM0`) and can be reviewed in Settings.
+- **Exclude Sub-Record** — adds the sub-record type to the exclusion list in settings. The sub-record will be hidden from conflict detection and excluded from the merged patch. The rule is stored as `RECORD:SUB` (e.g. `CELL:NAM0`) and can be reviewed in Settings.
 
 Right-click a record node belonging to the merged patch in the navigation tree to see the **Remove** option, which deletes that record from the merged patch entirely.
 
@@ -119,7 +119,7 @@ Open Settings via Ctrl+, or the Tools menu. Four pages are available:
 - **Appearance** — choose between light and dark theme.
 - **Output Paths** — configure the merged patch output path for each loading mode (folder, MO2, OpenMW). Normally these are automatic and don't need changing.
 - **Merged Patch** — three sub-tabs control how auto-merge behaves:
-  - **Ignore Fields** — a list of sub-records excluded from conflict detection and the merged patch. Each entry uses `RECORD:SUB` format (e.g. `CELL:NAM0`). Use `TYPE:*` to ignore an entire record type. Add entries via the input field or right-click a sub-record row in the record view and choose "Ignore Sub-Record."
+  - **Exclude Sub-Records** — a list of sub-records excluded from conflict detection and the merged patch. Each entry uses `RECORD:SUB` format (e.g. `CELL:NAM0`). Use `TYPE:*` to exclude an entire record type. Add entries via the input field or right-click a sub-record row in the record view and choose "Exclude Sub-Record."
   - **Exclude by ID** — a list of regular expression patterns matched against record IDs. Records matching any pattern are skipped entirely during auto-merge.
   - **Fixes** — toggle individual bug fixes applied during merge: fog density correction, summon persistence flag, and cell name reversion prevention.
 - **Cleaning** — toggle which cleaning operations the Clean All button performs. Evil GMSTs are Construction Set artifacts from Tribunal/Bloodmoon that can cause issues in mods that don't require those expansions. Junk cells are empty exterior cell records that only contain position data and serve no purpose. The Header Repair group provides additional fixes applied during cleaning: updating master file sizes in the plugin header to match the actual file sizes on disk, and updating the plugin version field to 1.3 (required by some engines).

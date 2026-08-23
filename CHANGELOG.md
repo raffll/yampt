@@ -8,23 +8,15 @@
 - [FIX] Disabled widgets now show greyed-out text on all platforms
 
 ### yEditor
-- [NEW] Enable Edit: edit decoded fields of source plugins directly (right-click plugin → Enable Edit)
-- [NEW] Lua handler conflict detection: scans OpenMW Lua scripts for handler registrations and highlights conflicts between mods
-- [NEW] Ignore Sub-Record from context menu: right-click any sub-record row to add it to the ignore rules
-- [NEW] Combobox editing for flag and enum fields in the Edit panel (Yes/No for flags, named values for enums)
+- [NEW] Enable Edit: edit decoded fields directly in the Edit panel (right-click plugin → Enable Edit, combobox for flags and enums)
+- [NEW] Lua handler conflict detection in a separate Lua tab: scans OpenMW Lua scripts and highlights conflicting handler registrations between mods
+- [NEW] Exclude Sub-Record from context menu: right-click any sub-record row to add it to the exclusion list
 - [CHANGE] Navigation panel split into two tabs: Plugins (ESP/ESM record tree) and Lua (handler registrations by mod)
-- [CHANGE] Deleted record strikethrough no longer propagates to the plugin node level
-- [CHANGE] Preview tab renamed to Edit and moved to first position in the bottom panel
-- [CHANGE] Sub-Record Rules merged into the Merged Patch settings page with list-based UI (Add/Remove buttons, duplicate prevention)
-- [CHANGE] Paths settings page renamed to Output Paths
-- [CHANGE] Record type checkboxes removed from merge settings (use TYPE:* in Ignore Fields instead)
-- [CHANGE] Plugin icons now consistent between navigation tree and record view column headers
-- [CHANGE] TES3 record shown as flat "File Header" entry at the top of each plugin (no nesting)
-- [CHANGE] Unknown/binary sub-records now display hex bytes instead of "&lt;N bytes&gt;" placeholder
-- [CHANGE] Show Deleted Strikeout option disabled by default
+- [CHANGE] Settings reorganized: Sub-Record Rules merged into Merged Patch page, Paths renamed to Output Paths, record type checkboxes replaced by TYPE:* syntax
+- [CHANGE] File Header shown as flat entry at the top of each plugin (no nesting)
+- [CHANGE] Unknown/binary sub-records now display hex bytes instead of placeholder
+- [CHANGE] View menu: "Hide Duplicate Columns" renamed to "Hide Duplicates", "Show Deleted Strikeout" renamed to "Mark Deleted" (disabled by default)
 - [FIX] Record view context menu now works when right-clicking the label column
-- [FIX] Combobox in Edit panel now pre-selects the current field value
-- [FIX] Signature and Record Flags rows are no longer editable
 
 ## [0.940] - 2026-07-29
 
