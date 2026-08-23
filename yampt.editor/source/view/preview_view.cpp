@@ -184,6 +184,14 @@ void preview_view_t::update_selection(
 		return;
 	}
 
+	const auto label_index = index.siblingAtColumn(0);
+	const auto label = model->data(label_index, Qt::DisplayRole).toString();
+	if (label == "Signature" || label == "Record Flags")
+	{
+		set_editing_enabled(false);
+		return;
+	}
+
 	if (cell_value.empty())
 	{
 		set_editing_enabled(false);
@@ -340,6 +348,7 @@ void preview_view_t::populate_value_selector()
 		for (const char * const * current = field.enum_names; *current != nullptr; ++current)
 			m_value_selector->addItem(QString::fromUtf8(*current));
 
+		m_value_selector->setCurrentText(QString::fromStdString(m_original_value));
 		m_value_selector->setVisible(true);
 		break;
 	}
@@ -354,6 +363,7 @@ void preview_view_t::populate_value_selector()
 		for (const char * const * current = field.enum_names; *current != nullptr; ++current)
 			m_value_selector->addItem(QString::fromUtf8(*current));
 
+		m_value_selector->setCurrentText(QString::fromStdString(m_original_value));
 		m_value_selector->setVisible(true);
 		break;
 	}
@@ -362,6 +372,7 @@ void preview_view_t::populate_value_selector()
 	{
 		m_value_selector->addItem(tr("Yes"));
 		m_value_selector->addItem(tr("No"));
+		m_value_selector->setCurrentText(QString::fromStdString(m_original_value));
 		m_value_selector->setVisible(true);
 		break;
 	}

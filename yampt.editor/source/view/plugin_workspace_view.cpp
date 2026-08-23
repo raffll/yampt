@@ -43,11 +43,21 @@ plugin_workspace_view_t::plugin_workspace_view_t(settings_store_t & settings, QW
 
 	m_status_label = new QLabel(this);
 
-	m_nav_view = new nav_tree_view_t(m_session->scan(), this);
+	m_nav_tabs = new QTabWidget(this);
+	m_nav_tabs->setTabPosition(QTabWidget::North);
+
+	m_nav_view = new nav_tree_view_t(m_session->scan(), m_nav_tabs);
 	m_nav_view->set_excluded_plugins(&m_session->excluded_plugins());
 	m_nav_view->set_patch_plugins(&m_session->patch_plugins());
 	m_nav_view->set_editable_columns(&m_editable_columns);
-	m_content_splitter->insertWidget(0, m_nav_view);
+
+	m_lua_view = new lua_tree_view_t(m_nav_tabs);
+
+	m_nav_tabs->addTab(m_nav_view, tr("Plugins"));
+	m_nav_tabs->addTab(m_lua_view, tr("Lua"));
+
+	m_content_splitter->insertWidget(0, m_nav_tabs);
+
 	m_record_view = new record_view_t(this);
 	m_record_view->model()->set_excluded_plugins(&m_session->excluded_plugins());
 	m_record_view->model()->set_patch_plugins(&m_session->patch_plugins());
@@ -61,8 +71,14 @@ plugin_workspace_view_t::plugin_workspace_view_t(settings_store_t & settings, QW
 	m_merge_controller = new merge_controller_t(
 	    *m_session, *m_record_view, *m_nav_view, m_settings, [this](const std::string & msg) { log_message(msg); });
 
-	m_context_menu =
-	    new view_context_menu_t(*m_session, *m_record_view, *m_nav_view, *m_merge_controller, m_editable_columns);
+	m_context_menu = new view_context_menu_t(
+	    *m_session,
+	    *m_record_view,
+	    *m_nav_view,
+	    *m_merge_controller,
+	    m_editable_columns,
+	    m_settings,
+	    [this]() { on_settings_changed(); });
 
 	setup_connections();
 }
@@ -91,6 +107,8 @@ void plugin_workspace_view_t::setup_connections()
 	connect(m_nav_view, &nav_tree_view_t::selection_changed, this, &plugin_workspace_view_t::on_nav_selection_changed);
 	connect(m_nav_view, &nav_tree_view_t::context_menu_requested, this, &plugin_workspace_view_t::on_nav_context_menu);
 
+	connect(m_lua_view, &lua_tree_view_t::selection_changed, this, &plugin_workspace_view_t::on_lua_selection_changed);
+
 	connect(
 	    m_record_view, &record_view_t::context_menu_requested, this, &plugin_workspace_view_t::on_view_context_menu);
 	connect(
@@ -106,7 +124,7 @@ void plugin_workspace_view_t::setup_connections()
 		if (m_lua_scan_worker->isRunning())
 			m_lua_scan_worker->cancel_scan();
 
-		m_nav_view->clear_lua_section();
+		m_lua_view->clear();
 		m_record_view->clear();
 		m_nav_view->rebuild();
 		update_status();
@@ -349,13 +367,6 @@ void plugin_workspace_view_t::rebuild_nav_preserving_state()
 
 void plugin_workspace_view_t::on_nav_selection_changed(const nav_tree_model_t::node_info_t & info)
 {
-	if (info.is_lua_node)
-	{
-		dispatch_lua_selection(info);
-		update_status();
-		return;
-	}
-
 	if (info.rec_type.empty())
 	{
 		m_record_view->clear();
@@ -375,38 +386,38 @@ void plugin_workspace_view_t::on_nav_selection_changed(const nav_tree_model_t::n
 	update_status();
 }
 
-void plugin_workspace_view_t::dispatch_lua_selection(const nav_tree_model_t::node_info_t & info)
+void plugin_workspace_view_t::on_lua_selection_changed(const lua_tree_model_t::node_info_t & info)
 {
-	if (info.lua_registration_idx >= 0)
+	if (info.registration_idx < 0)
 	{
-		const auto idx = static_cast<size_t>(info.lua_registration_idx);
-		if (idx >= m_lua_scan_result.registrations.size())
-		{
-			m_record_view->clear();
-			return;
-		}
-
-		const auto & registration = m_lua_scan_result.registrations[idx];
-
-		for (const auto & conflict : m_lua_scan_result.conflicts)
-		{
-			for (const auto & reg : conflict.registrations)
-			{
-				if (reg.script_path == registration.script_path && reg.line_number == registration.line_number)
-				{
-					m_record_view->model()->set_lua_conflict(conflict);
-					m_record_view->resize_columns();
-					return;
-				}
-			}
-		}
-
-		m_record_view->model()->set_lua_registration(registration);
-		m_record_view->resize_columns();
+		m_record_view->clear();
 		return;
 	}
 
-	m_record_view->clear();
+	const auto idx = static_cast<size_t>(info.registration_idx);
+	if (idx >= m_lua_scan_result.registrations.size())
+	{
+		m_record_view->clear();
+		return;
+	}
+
+	const auto & registration = m_lua_scan_result.registrations[idx];
+
+	for (const auto & conflict : m_lua_scan_result.conflicts)
+	{
+		for (const auto & reg : conflict.registrations)
+		{
+			if (reg.script_path == registration.script_path && reg.line_number == registration.line_number)
+			{
+				m_record_view->model()->set_lua_conflict(conflict);
+				m_record_view->resize_columns();
+				return;
+			}
+		}
+	}
+
+	m_record_view->model()->set_lua_registration(registration);
+	m_record_view->resize_columns();
 }
 
 void plugin_workspace_view_t::set_conflicts_only(bool value)
@@ -801,6 +812,6 @@ void plugin_workspace_view_t::on_lua_scan_complete(const lua_scan_result_t & res
 	for (const auto & warning : result.warnings)
 		log_message("[warning] " + warning);
 
-	m_nav_view->set_lua_scan_result(result);
+	m_lua_view->set_scan_result(result);
 	update_status();
 }

@@ -130,6 +130,7 @@
     <ClCompile Include="..\yampt.editor\source\patcher\patch_builder.cpp" />
 
     <ClCompile Include="..\yampt.editor\source\model\nav_tree_model.cpp" />
+    <ClCompile Include="..\yampt.editor\source\model\lua_tree_model.cpp" />
     <ClCompile Include="..\yampt.editor\source\model\editable_column_set.cpp" />
     <ClCompile Include="..\yampt.editor\source\model\view_tree_model.cpp" />
     <ClCompile Include="..\yampt.editor\source\model\view_tree_decode.cpp" />

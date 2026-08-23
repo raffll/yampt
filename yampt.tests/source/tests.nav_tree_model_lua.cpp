@@ -1,5 +1,5 @@
 #include <catch2/catch_all.hpp>
-#include <model/nav_tree_model.hpp>
+#include <model/lua_tree_model.hpp>
 #include <rapidcheck/catch.h>
 #include <scanner/conflict_detector.hpp>
 #include <rapidcheck.h>
@@ -81,15 +81,14 @@ rc::Gen<handler_conflict_t> gen_conflict()
 } // namespace
 
 TEST_CASE(
-    "nav_tree_model_t::set_lua_scan_result, lua section presence matches scan content",
+    "lua_tree_model_t::set_scan_result, groups match scan content",
     "[Feature: lua-view-integration][Property 1: Lua section presence]")
 {
 	rc::prop(
 	    "Validates: Requirements 1.1, 1.3, 1.4",
 	    []()
 	{
-		plugin_scan_t scan;
-		nav_tree_model_t model(scan);
+		lua_tree_model_t model;
 
 		const auto scenario = *rc::gen::inRange(0, 3);
 
@@ -108,54 +107,41 @@ TEST_CASE(
 				result.registrations.push_back(*rc::gen::arbitrary<handler_registration_t>());
 		}
 
-		model.set_lua_scan_result(result);
+		model.set_scan_result(result);
 
 		const auto root_count = model.rowCount(QModelIndex());
 
 		if (!result.conflicts.empty())
 		{
-			RC_ASSERT(root_count == 1);
+			RC_ASSERT(root_count > 0);
 
-			const auto lua_root = model.index(0, 0, QModelIndex());
-			const auto lua_text = model.data(lua_root, Qt::DisplayRole).toString().toStdString();
-			RC_ASSERT(lua_text == "Lua Handlers");
-
-			const auto group_count = model.rowCount(lua_root);
-			RC_ASSERT(group_count > 0);
-
-			std::set<std::string> interface_names;
+			std::set<std::string> mod_names;
 			for (const auto & conflict : result.conflicts)
-				interface_names.insert(conflict.interface_name);
-
-			RC_ASSERT(group_count == static_cast<int>(interface_names.size()));
-
-			for (int group_row = 0; group_row < group_count; ++group_row)
 			{
-				const auto group_index = model.index(group_row, 0, lua_root);
+				for (const auto & reg : conflict.registrations)
+					mod_names.insert(reg.mod_name);
+			}
+
+			RC_ASSERT(root_count == static_cast<int>(mod_names.size()));
+
+			for (int group_row = 0; group_row < root_count; ++group_row)
+			{
+				const auto group_index = model.index(group_row, 0, QModelIndex());
 				const auto group_text = model.data(group_index, Qt::DisplayRole).toString().toStdString();
 				RC_ASSERT(!group_text.empty());
 			}
 		}
 		else if (!result.registrations.empty())
 		{
-			RC_ASSERT(root_count == 1);
-
-			const auto lua_root = model.index(0, 0, QModelIndex());
-			const auto lua_text = model.data(lua_root, Qt::DisplayRole).toString().toStdString();
-			RC_ASSERT(lua_text == "Lua Handlers");
-
-			const auto group_count = model.rowCount(lua_root);
-			RC_ASSERT(group_count > 0);
-
 			std::set<std::string> mod_names;
 			for (const auto & registration : result.registrations)
 				mod_names.insert(registration.mod_name);
 
-			RC_ASSERT(group_count == static_cast<int>(mod_names.size()));
+			RC_ASSERT(root_count == static_cast<int>(mod_names.size()));
 
-			for (int group_row = 0; group_row < group_count; ++group_row)
+			for (int group_row = 0; group_row < root_count; ++group_row)
 			{
-				const auto group_index = model.index(group_row, 0, lua_root);
+				const auto group_index = model.index(group_row, 0, QModelIndex());
 				const auto group_text = model.data(group_index, Qt::DisplayRole).toString().toStdString();
 				RC_ASSERT(!group_text.empty());
 			}

@@ -27,8 +27,6 @@ public:
 	void set_patch_plugins(const std::set<std::string> * patch);
 	void set_editable_columns(const editable_column_set_t * editable);
 	void set_display_codepage(codepage_t codepage);
-	void set_lua_scan_result(const lua_scan_result_t & result);
-	void clear_lua_section();
 
 	nav_tree_model_t::node_info_t current_selection() const;
 	nav_tree_model_t::node_info_t node_at(const QModelIndex & index) const;

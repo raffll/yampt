@@ -206,6 +206,8 @@
     <ClCompile Include="source\view\record_view.cpp" />
 
     <ClCompile Include="source\session\lua_scan_worker.cpp" />
+    <ClCompile Include="source\model\lua_tree_model.cpp" />
+    <ClCompile Include="source\view\lua_tree_view.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\model\nav_tree_filter.hpp" />
@@ -323,6 +325,18 @@
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
+    <CustomBuild Include="source\model\lua_tree_model.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+    <CustomBuild Include="source\view\lua_tree_view.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
     <CustomBuild Include="source\controller\field_edit_controller.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
@@ -350,6 +364,8 @@
     <ClCompile Include="$(IntDir)moc_record_view.cpp" />
 
     <ClCompile Include="$(IntDir)moc_lua_scan_worker.cpp" />
+    <ClCompile Include="$(IntDir)moc_lua_tree_model.cpp" />
+    <ClCompile Include="$(IntDir)moc_lua_tree_view.cpp" />
     <ClCompile Include="$(IntDir)moc_field_edit_controller.cpp" />
   </ItemGroup>
   <ItemGroup>

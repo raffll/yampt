@@ -10,8 +10,12 @@
 ### yEditor
 - [NEW] Enable Edit: edit decoded fields of source plugins directly (right-click plugin → Enable Edit)
 - [NEW] Lua handler conflict detection: scans OpenMW Lua scripts for handler registrations and highlights conflicts between mods
+- [NEW] Ignore Sub-Record from context menu: right-click any sub-record row to add it to the ignore rules
+- [NEW] Combobox editing for flag and enum fields in the Preview panel (Yes/No for flags, named values for enums)
 - [CHANGE] Sub-Record Rules settings simplified to a single "Ignore Sub-Records" field (combines previous Ignore Conflict, Exclude from Merge, and Skip if Missing into one rule that both hides conflicts and excludes from merged patch)
 - [CHANGE] Plugin icons now consistent between navigation tree and record view column headers
+- [FIX] Combobox in Preview panel now pre-selects the current field value
+- [FIX] Signature and Record Flags rows are no longer editable
 
 ## [0.940] - 2026-07-29
 

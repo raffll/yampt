@@ -292,6 +292,7 @@
     <ClCompile Include="..\yampt.editor\source\patcher\patch_builder.cpp" />
 
     <ClCompile Include="..\yampt.editor\source\model\nav_tree_model.cpp" />
+    <ClCompile Include="..\yampt.editor\source\model\lua_tree_model.cpp" />
     <ClCompile Include="..\yampt.editor\source\model\editable_column_set.cpp" />
     <ClCompile Include="..\yampt.editor\source\model\view_tree_model.cpp" />
     <ClCompile Include="..\yampt.editor\source\model\view_tree_decode.cpp" />
@@ -314,6 +315,12 @@
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
     <CustomBuild Include="..\yampt.editor\source\model\nav_tree_model.hpp">
+      <FileType>Document</FileType>
+      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include" -I"$(SolutionDir)yampt.core\source" -I"$(SolutionDir)yampt.editor\source"</Command>
+      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
+      <Message>MOC %(Filename).hpp</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\yampt.editor\source\model\lua_tree_model.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include" -I"$(SolutionDir)yampt.core\source" -I"$(SolutionDir)yampt.editor\source"</Command>
       <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
@@ -348,6 +355,9 @@
     </ClCompile>
     <ClCompile Include="$(IntDir)moc_nav_tree_model.cpp">
       <ObjectFileName>$(IntDir)moc_nav_tree_model.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="$(IntDir)moc_lua_tree_model.cpp">
+      <ObjectFileName>$(IntDir)moc_lua_tree_model.obj</ObjectFileName>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

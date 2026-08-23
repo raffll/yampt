@@ -3,8 +3,10 @@
 #include "../controller/merge_controller.hpp"
 #include "../controller/view_context_menu.hpp"
 #include "../model/editable_column_set.hpp"
+#include "../model/lua_tree_model.hpp"
 #include "../model/nav_tree_model.hpp"
 #include "../session/plugin_session.hpp"
+#include "lua_tree_view.hpp"
 #include "messages_view.hpp"
 #include "nav_tree_view.hpp"
 #include "preview_view.hpp"
@@ -69,6 +71,7 @@ public slots:
 
 private slots:
 	void on_nav_selection_changed(const nav_tree_model_t::node_info_t & info);
+	void on_lua_selection_changed(const lua_tree_model_t::node_info_t & info);
 	void on_nav_context_menu(const QPoint & global_pos, const nav_tree_model_t::node_info_t & info);
 	void on_filter_changed();
 	void on_view_context_menu(const QPoint & global_pos, const QModelIndex & index);
@@ -85,7 +88,6 @@ private:
 	void rebuild_nav_preserving_state();
 	void load_plugins_from_paths(const std::vector<std::string> & paths, const std::string & base_path);
 	void display_record_in_view(const conflict_entry_t & entry);
-	void dispatch_lua_selection(const nav_tree_model_t::node_info_t & info);
 	QString build_mode_prefix() const;
 	void start_lua_scan();
 	void on_lua_scan_complete(const lua_scan_result_t & result);
@@ -102,7 +104,9 @@ private:
 
 	QSplitter * m_main_splitter = nullptr;
 	QSplitter * m_content_splitter = nullptr;
+	QTabWidget * m_nav_tabs = nullptr;
 	nav_tree_view_t * m_nav_view = nullptr;
+	lua_tree_view_t * m_lua_view = nullptr;
 	record_view_t * m_record_view = nullptr;
 	messages_view_t * m_messages = nullptr;
 	preview_view_t * m_preview = nullptr;

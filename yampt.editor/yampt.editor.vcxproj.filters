@@ -30,6 +30,8 @@
     <ClCompile Include="source\view\nav_tree_view.cpp" />
     <ClCompile Include="source\view\record_view.cpp" />
     <ClCompile Include="source\session\lua_scan_worker.cpp" />
+    <ClCompile Include="source\model\lua_tree_model.cpp" />
+    <ClCompile Include="source\view\lua_tree_view.cpp" />
     <ClCompile Include="..\yampt.core\source\io\esm_reader.cpp" />
     <ClCompile Include="..\yampt.core\source\io\codepage.cpp" />
     <ClCompile Include="..\yampt.core\source\io\file_list.cpp" />

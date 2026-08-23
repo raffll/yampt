@@ -178,32 +178,6 @@ void nav_tree_model_t::rebuild()
 {
 	beginResetModel();
 	build_tree();
-
-	m_lua_section.groups.clear();
-	m_lua_section.in_conflicts_mode = !m_lua_scan_result.conflicts.empty();
-	build_lua_registration_groups();
-
-	endResetModel();
-}
-
-void nav_tree_model_t::set_lua_scan_result(const lua_scan_result_t & result)
-{
-	beginResetModel();
-	m_lua_scan_result = result;
-	m_lua_section.groups.clear();
-	m_lua_section.in_conflicts_mode = !result.conflicts.empty();
-
-	build_lua_registration_groups();
-	endResetModel();
-}
-
-void nav_tree_model_t::clear_lua_section()
-{
-	beginResetModel();
-	m_lua_scan_result.conflicts.clear();
-	m_lua_scan_result.registrations.clear();
-	m_lua_scan_result.warnings.clear();
-	m_lua_section.groups.clear();
 	endResetModel();
 }
 
@@ -329,13 +303,17 @@ QModelIndex nav_tree_model_t::index(int row, int column, const QModelIndex & par
 	void * ptr = parent.internalPointer();
 
 	if (ptr == nullptr)
-		return index_for_file_or_lua_section(parent.row(), row, column);
+	{
+		int parent_row = parent.row();
+		if (parent_row < 0 || parent_row >= static_cast<int>(m_tree.size()))
+			return {};
 
-	if (ptr == &m_lua_section)
-		return index_for_lua_group(parent.row(), row, column);
+		const auto & file_node = m_tree[static_cast<size_t>(parent_row)];
+		if (row < 0 || row >= static_cast<int>(file_node.groups.size()))
+			return {};
 
-	if (is_lua_group_pointer(ptr))
-		return {};
+		return createIndex(row, column, const_cast<file_node_t *>(&file_node));
+	}
 
 	return index_for_esm_group(ptr, parent.row(), row, column);
 }
@@ -349,15 +327,6 @@ QModelIndex nav_tree_model_t::parent(const QModelIndex & child) const
 
 	if (ptr == nullptr)
 		return {};
-
-	if (ptr == &m_lua_section)
-		return createIndex(static_cast<int>(m_tree.size()), 0, nullptr);
-
-	if (is_lua_group_pointer(ptr))
-	{
-		int group_row = lua_group_row_from_pointer(ptr);
-		return createIndex(group_row, 0, const_cast<lua_section_t *>(&m_lua_section));
-	}
 
 	for (size_t file_idx = 0; file_idx < m_tree.size(); ++file_idx)
 	{
@@ -380,40 +349,18 @@ int nav_tree_model_t::rowCount(const QModelIndex & parent) const
 		return 0;
 
 	if (!parent.isValid())
-	{
-		int count = static_cast<int>(m_tree.size());
-		if (has_lua_section())
-			++count;
-
-		return count;
-	}
+		return static_cast<int>(m_tree.size());
 
 	void * ptr = parent.internalPointer();
 
 	if (ptr == nullptr)
 	{
 		int file_idx = parent.row();
-
-		if (has_lua_section() && file_idx == static_cast<int>(m_tree.size()))
-			return static_cast<int>(m_lua_section.groups.size());
-
 		if (file_idx < 0 || file_idx >= static_cast<int>(m_tree.size()))
 			return 0;
 
 		return static_cast<int>(m_tree[static_cast<size_t>(file_idx)].groups.size());
 	}
-
-	if (ptr == &m_lua_section)
-	{
-		int group_idx = parent.row();
-		if (group_idx < 0 || group_idx >= static_cast<int>(m_lua_section.groups.size()))
-			return 0;
-
-		return static_cast<int>(m_lua_section.groups[static_cast<size_t>(group_idx)].leaf_indices.size());
-	}
-
-	if (is_lua_group_pointer(ptr))
-		return 0;
 
 	for (size_t file_idx = 0; file_idx < m_tree.size(); ++file_idx)
 	{
@@ -461,12 +408,6 @@ QVariant nav_tree_model_t::data(const QModelIndex & index, int role) const
 
 	if (ptr == nullptr)
 		return data_for_root_level(index.row(), column, role);
-
-	if (ptr == &m_lua_section)
-		return data_for_lua_group(index.row(), column, role);
-
-	if (is_lua_group_pointer(ptr))
-		return data_for_lua_leaf(ptr, index.row(), column, role);
 
 	return data_for_esm_nodes(ptr, index.row(), column, role);
 }
@@ -557,20 +498,11 @@ nav_tree_model_t::node_info_t nav_tree_model_t::node_at(const QModelIndex & inde
 	if (ptr == nullptr)
 	{
 		int file_idx = index.row();
-		if (has_lua_section() && file_idx == static_cast<int>(m_tree.size()))
-			return { -1, {}, {}, true };
-
 		if (file_idx < 0 || file_idx >= static_cast<int>(m_tree.size()))
 			return { -1, {}, {} };
 
 		return { m_tree[static_cast<size_t>(file_idx)].plugin_idx, {}, {} };
 	}
-
-	if (ptr == &m_lua_section)
-		return { -1, {}, {}, true };
-
-	if (is_lua_group_pointer(ptr))
-		return node_at_lua_leaf(ptr, index.row());
 
 	for (size_t file_idx = 0; file_idx < m_tree.size(); ++file_idx)
 	{
@@ -642,113 +574,12 @@ void nav_tree_model_t::sort_records()
 	}
 }
 
-void nav_tree_model_t::build_lua_registration_groups()
-{
-	std::set<size_t> conflicting_indices;
-	for (const auto & conflict : m_lua_scan_result.conflicts)
-	{
-		for (const auto & reg : conflict.registrations)
-		{
-			for (size_t idx = 0; idx < m_lua_scan_result.registrations.size(); ++idx)
-			{
-				const auto & candidate = m_lua_scan_result.registrations[idx];
-				if (candidate.script_path == reg.script_path && candidate.line_number == reg.line_number)
-					conflicting_indices.insert(idx);
-			}
-		}
-	}
-
-	const bool filter_to_conflicts = m_filter.has_active_filter() && m_lua_section.in_conflicts_mode;
-
-	std::map<std::string, std::vector<size_t>> groups_by_mod;
-
-	for (size_t idx = 0; idx < m_lua_scan_result.registrations.size(); ++idx)
-	{
-		if (filter_to_conflicts && conflicting_indices.find(idx) == conflicting_indices.end())
-			continue;
-
-		const auto & registration = m_lua_scan_result.registrations[idx];
-		groups_by_mod[registration.mod_name].push_back(idx);
-	}
-
-	for (auto & [mod_name, indices] : groups_by_mod)
-	{
-		lua_group_t group;
-		group.group_name = mod_name;
-		group.leaf_indices = std::move(indices);
-		m_lua_section.groups.push_back(std::move(group));
-	}
-}
-
-bool nav_tree_model_t::is_lua_group_pointer(void * ptr) const
-{
-	for (size_t group_idx = 0; group_idx < m_lua_section.groups.size(); ++group_idx)
-	{
-		if (ptr == &m_lua_section.groups[group_idx])
-			return true;
-	}
-
-	return false;
-}
-
-int nav_tree_model_t::lua_group_row_from_pointer(void * ptr) const
-{
-	for (size_t group_idx = 0; group_idx < m_lua_section.groups.size(); ++group_idx)
-	{
-		if (ptr == &m_lua_section.groups[group_idx])
-			return static_cast<int>(group_idx);
-	}
-
-	return -1;
-}
-
-bool nav_tree_model_t::has_lua_section() const
-{
-	return !m_lua_section.groups.empty();
-}
-
 QModelIndex nav_tree_model_t::index_for_root_level(int row, int column) const
 {
-	int total_roots = static_cast<int>(m_tree.size());
-	if (has_lua_section())
-		++total_roots;
-
-	if (row < 0 || row >= total_roots)
+	if (row < 0 || row >= static_cast<int>(m_tree.size()))
 		return {};
 
 	return createIndex(row, column, nullptr);
-}
-
-QModelIndex nav_tree_model_t::index_for_file_or_lua_section(int parent_row, int row, int column) const
-{
-	if (has_lua_section() && parent_row == static_cast<int>(m_tree.size()))
-	{
-		if (row < 0 || row >= static_cast<int>(m_lua_section.groups.size()))
-			return {};
-
-		return createIndex(row, column, const_cast<lua_section_t *>(&m_lua_section));
-	}
-
-	if (parent_row < 0 || parent_row >= static_cast<int>(m_tree.size()))
-		return {};
-
-	const auto & file_node = m_tree[static_cast<size_t>(parent_row)];
-	if (row < 0 || row >= static_cast<int>(file_node.groups.size()))
-		return {};
-
-	return createIndex(row, column, const_cast<file_node_t *>(&file_node));
-}
-
-QModelIndex nav_tree_model_t::index_for_lua_group(int parent_row, int row, int column) const
-{
-	if (parent_row < 0 || parent_row >= static_cast<int>(m_lua_section.groups.size()))
-		return {};
-
-	const auto & lua_group = m_lua_section.groups[static_cast<size_t>(parent_row)];
-	if (row < 0 || row >= static_cast<int>(lua_group.leaf_indices.size()))
-		return {};
-
-	return createIndex(row, column, const_cast<lua_group_t *>(&lua_group));
 }
 
 QModelIndex nav_tree_model_t::index_for_esm_group(void * ptr, int parent_row, int row, int column) const
@@ -774,124 +605,10 @@ QModelIndex nav_tree_model_t::index_for_esm_group(void * ptr, int parent_row, in
 
 QVariant nav_tree_model_t::data_for_root_level(int row, int column, int role) const
 {
-	if (has_lua_section() && row == static_cast<int>(m_tree.size()))
-		return data_for_lua_section(column, role);
-
 	if (row < 0 || row >= static_cast<int>(m_tree.size()))
 		return {};
 
 	return data_for_file_node(row, column, role);
-}
-
-QVariant nav_tree_model_t::data_for_lua_section(int column, int role) const
-{
-	if (role == Qt::DisplayRole && column == 0)
-		return tr("Lua Handlers");
-
-	return {};
-}
-
-QVariant nav_tree_model_t::data_for_lua_group(int row, int column, int role) const
-{
-	if (row < 0 || row >= static_cast<int>(m_lua_section.groups.size()))
-		return {};
-
-	if (role != Qt::DisplayRole || column != 0)
-		return {};
-
-	const auto & lua_group = m_lua_section.groups[static_cast<size_t>(row)];
-	return QString("%1 [%2]").arg(QString::fromStdString(lua_group.group_name)).arg(lua_group.leaf_indices.size());
-}
-
-conflict_severity_t nav_tree_model_t::find_conflict_severity_for_registration(
-    const handler_registration_t & registration) const
-{
-	for (const auto & conflict : m_lua_scan_result.conflicts)
-	{
-		for (const auto & reg : conflict.registrations)
-		{
-			if (reg.script_path == registration.script_path && reg.line_number == registration.line_number)
-				return conflict.severity;
-		}
-	}
-
-	return conflict_severity_t::overlapping;
-}
-
-bool nav_tree_model_t::is_registration_in_conflict(const handler_registration_t & registration) const
-{
-	for (const auto & conflict : m_lua_scan_result.conflicts)
-	{
-		for (const auto & reg : conflict.registrations)
-		{
-			if (reg.script_path == registration.script_path && reg.line_number == registration.line_number)
-				return true;
-		}
-	}
-
-	return false;
-}
-
-QVariant nav_tree_model_t::data_for_lua_leaf(void * ptr, int row, int column, int role) const
-{
-	int group_row = lua_group_row_from_pointer(ptr);
-	if (group_row < 0)
-		return {};
-
-	const auto & lua_group = m_lua_section.groups[static_cast<size_t>(group_row)];
-	if (row < 0 || row >= static_cast<int>(lua_group.leaf_indices.size()))
-		return {};
-
-	size_t leaf_idx = lua_group.leaf_indices[static_cast<size_t>(row)];
-
-	if (role == Qt::DisplayRole && column == 0)
-		return lua_leaf_display_text(leaf_idx);
-
-	if (role == Qt::ForegroundRole && m_lua_section.in_conflicts_mode)
-	{
-		if (leaf_idx < m_lua_scan_result.registrations.size())
-		{
-			const auto & registration = m_lua_scan_result.registrations[leaf_idx];
-			if (is_registration_in_conflict(registration))
-			{
-				const auto severity = find_conflict_severity_for_registration(registration);
-
-				switch (severity)
-				{
-				case conflict_severity_t::blocking:
-					return QBrush(QColor(200, 50, 50));
-
-				case conflict_severity_t::mutating:
-					return QBrush(QColor(180, 120, 0));
-
-				case conflict_severity_t::overlapping:
-					return QBrush(QColor(100, 140, 0));
-				}
-			}
-		}
-	}
-
-	return {};
-}
-
-QVariant nav_tree_model_t::lua_leaf_display_text(size_t leaf_idx) const
-{
-	if (leaf_idx >= m_lua_scan_result.registrations.size())
-		return {};
-
-	const auto & registration = m_lua_scan_result.registrations[leaf_idx];
-
-	if (registration.type_argument.empty())
-	{
-		return QString("%1.%2")
-		    .arg(QString::fromStdString(registration.interface_name))
-		    .arg(QString::fromStdString(registration.method_name));
-	}
-
-	return QString("%1.%2 [%3]")
-	    .arg(QString::fromStdString(registration.interface_name))
-	    .arg(QString::fromStdString(registration.method_name))
-	    .arg(QString::fromStdString(registration.type_argument));
 }
 
 QVariant nav_tree_model_t::data_for_file_node(int row, int column, int role) const
@@ -1150,18 +867,4 @@ QVariant nav_tree_model_t::data_for_record(size_t file_idx, size_t group_idx, in
 	}
 
 	return {};
-}
-
-nav_tree_model_t::node_info_t nav_tree_model_t::node_at_lua_leaf(void * ptr, int row) const
-{
-	int group_row = lua_group_row_from_pointer(ptr);
-	if (group_row < 0)
-		return { -1, {}, {}, true };
-
-	const auto & lua_group = m_lua_section.groups[static_cast<size_t>(group_row)];
-	if (row < 0 || row >= static_cast<int>(lua_group.leaf_indices.size()))
-		return { -1, {}, {}, true };
-
-	size_t leaf_idx = lua_group.leaf_indices[static_cast<size_t>(row)];
-	return { -1, {}, {}, true, static_cast<int>(leaf_idx) };
 }

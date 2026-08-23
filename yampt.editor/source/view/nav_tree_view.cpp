@@ -114,16 +114,6 @@ void nav_tree_view_t::set_display_codepage(codepage_t codepage)
 	m_model->set_display_codepage(codepage);
 }
 
-void nav_tree_view_t::set_lua_scan_result(const lua_scan_result_t & result)
-{
-	m_model->set_lua_scan_result(result);
-}
-
-void nav_tree_view_t::clear_lua_section()
-{
-	m_model->clear_lua_section();
-}
-
 nav_tree_model_t::node_info_t nav_tree_view_t::current_selection() const
 {
 	const auto & current = m_tree->currentIndex();

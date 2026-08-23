@@ -15,12 +15,16 @@ view_context_menu_t::view_context_menu_t(
     record_view_t & record_view,
     nav_tree_view_t & nav_view,
     merge_controller_t & merge_controller,
-    editable_column_set_t & editable_columns)
+    editable_column_set_t & editable_columns,
+    settings_store_t & settings,
+    settings_changed_fn on_settings_changed)
     : m_session(session)
     , m_record_view(record_view)
     , m_nav_view(nav_view)
     , m_merge(merge_controller)
     , m_editable_columns(editable_columns)
+    , m_settings(settings)
+    , m_on_settings_changed(std::move(on_settings_changed))
 {}
 
 void view_context_menu_t::show_nav_menu(const QPoint & global_pos, const nav_tree_model_t::node_info_t & info)
@@ -101,9 +105,6 @@ void view_context_menu_t::build_source_file_menu(QMenu & menu, const nav_tree_mo
 
 void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModelIndex & index)
 {
-	if (!m_session.scan().has_merge())
-		return;
-
 	if (!index.isValid())
 		return;
 
@@ -156,18 +157,45 @@ void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModel
 		return row_kind_t::other;
 	}();
 
-	const bool is_on_merge = m_session.scan().is_merge_plugin(plugin_idx);
-	const bool record_in_merge = m_session.scan().find_merge_content(rec_type, record_id) != nullptr;
-
 	view_menu_context_t context { index, row, rec_type, record_id, plugin_idx, col, bin_idx, parent_row_idx, kind };
 	QMenu menu;
 
-	if (is_on_merge)
-		build_merge_remove_menu(menu, context);
-	else if (!record_in_merge)
-		build_copy_to_merge_menu(menu, context);
-	else
-		build_source_copy_menu(menu, context);
+	if (m_session.scan().has_merge())
+	{
+		const bool is_on_merge = m_session.scan().is_merge_plugin(plugin_idx);
+		const bool record_in_merge = m_session.scan().find_merge_content(rec_type, record_id) != nullptr;
+
+		if (is_on_merge)
+			build_merge_remove_menu(menu, context);
+		else if (!record_in_merge)
+			build_copy_to_merge_menu(menu, context);
+		else
+			build_source_copy_menu(menu, context);
+	}
+
+	if (kind == row_kind_t::sub_record || kind == row_kind_t::schema_record)
+	{
+		const auto sub_type = row.type;
+		const auto rule = rec_type + ":" + sub_type;
+
+		if (!menu.actions().isEmpty())
+			menu.addSeparator();
+
+		menu.addAction(
+		    QCoreApplication::translate("yEditor", "Ignore Sub-Record \"%1\"").arg(QString::fromStdString(rule)),
+		    [this, rule]()
+		{
+			auto current = m_settings.sub_record_ignore_conflict();
+			if (!current.empty())
+				current += ", ";
+
+			current += rule;
+			m_settings.set_sub_record_ignore_conflict(current);
+
+			if (m_on_settings_changed)
+				m_on_settings_changed();
+		});
+	}
 
 	if (menu.actions().isEmpty())
 		return;

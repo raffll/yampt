@@ -73,6 +73,7 @@ Right-click in the record view to access merge operations:
 - **Copy Field to Merged Patch** — copies a single decoded field within a sub-record from a plugin column.
 - **Copy Group to Merged Patch** — copies a group of related sub-records (e.g. all fields of a referenced object in a cell).
 - **Remove Sub-Record** / **Remove Group** — removes content from the merged patch column.
+- **Ignore Sub-Record** — adds the sub-record type to the ignore rules in settings. The sub-record will be hidden from conflict detection and excluded from the merged patch. The rule is stored as `RECORD:SUB` (e.g. `CELL:NAM0`) and can be reviewed in Settings.
 
 Right-click a record node belonging to the merged patch in the navigation tree to see the **Remove** option, which deletes that record from the merged patch entirely.
 
