@@ -13,7 +13,7 @@
 - [NEW] Ignore Sub-Record from context menu: right-click any sub-record row to add it to the ignore rules
 - [NEW] Combobox editing for flag and enum fields in the Edit panel (Yes/No for flags, named values for enums)
 - [CHANGE] Navigation panel split into two tabs: Plugins (ESP/ESM record tree) and Lua (handler registrations by mod)
-- [CHANGE] Deleted records now shown in italic instead of strikethrough
+- [CHANGE] Deleted record strikethrough no longer propagates to the plugin node level
 - [CHANGE] Preview tab renamed to Edit and moved to first position in the bottom panel
 - [CHANGE] Sub-Record Rules merged into the Merged Patch settings page (ignore sub-records field now on the same page as merge type toggles and fixes)
 - [CHANGE] Paths settings page renamed to Output Paths

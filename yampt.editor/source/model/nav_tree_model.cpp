@@ -718,22 +718,6 @@ QVariant nav_tree_model_t::file_node_appearance(const file_node_t & file_node, i
 		return QBrush(theme_system_t::instance().conflict_this_foreground(worst_this));
 	}
 
-	if (role == Qt::FontRole && m_show_deleted_strikeout)
-	{
-		for (const auto & group : file_node.groups)
-		{
-			for (const auto & rec : group.records)
-			{
-				if (entries[rec.entry_idx].has_dele)
-				{
-					QFont font;
-					font.setItalic(true);
-					return font;
-				}
-			}
-		}
-	}
-
 	return {};
 }
 
@@ -819,7 +803,7 @@ QVariant nav_tree_model_t::data_for_type_group(size_t file_idx, int row, int col
 			if (entries[rec.entry_idx].has_dele)
 			{
 				QFont font;
-				font.setItalic(true);
+				font.setStrikeOut(true);
 				return font;
 			}
 		}
@@ -883,7 +867,7 @@ QVariant nav_tree_model_t::data_for_record(size_t file_idx, size_t group_idx, in
 	if (role == Qt::FontRole && m_show_deleted_strikeout && entry.has_dele)
 	{
 		QFont font;
-		font.setItalic(true);
+		font.setStrikeOut(true);
 		return font;
 	}
 

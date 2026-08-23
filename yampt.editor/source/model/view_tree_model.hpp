@@ -251,7 +251,7 @@ private:
 	const editable_column_set_t * m_editable_columns = nullptr;
 	plugin_scan_t * m_scan_for_header = nullptr;
 	codepage_t m_display_codepage = codepage_t::windows_1252;
-	bool m_show_deleted_strikeout = true;
+	bool m_show_deleted_strikeout = false;
 	mutable std::map<std::string, field_def_t> m_synthetic_fields;
 	mutable field_def_t m_bool_bit_field {};
 };

@@ -54,7 +54,7 @@ filter_dialog_t::filter_dialog_t(const std::vector<std::string> & available_type
 
 	auto * grp_special = new QGroupBox(tr("Special"), this);
 	auto * special_layout = new QVBoxLayout(grp_special);
-	m_chk_deleted = new QCheckBox(tr("Deleted only"), grp_special);
+	m_chk_deleted = new QCheckBox(tr("Deleted Only"), grp_special);
 	special_layout->addWidget(m_chk_deleted);
 	left_column->addWidget(grp_special);
 

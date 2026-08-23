@@ -731,7 +731,7 @@ void plugin_workspace_view_t::restore_session_state()
 	m_conflicts_only = settings.value("view/conflicts_only", false).toBool();
 	m_hide_duplicates = settings.value("view/hide_duplicates", false).toBool();
 
-	m_record_view->model()->set_show_deleted_strikeout(settings.value("view/show_deleted_strikeout", true).toBool());
+	m_record_view->model()->set_show_deleted_strikeout(settings.value("view/show_deleted_strikeout", false).toBool());
 	m_nav_view->set_show_deleted_strikeout(m_record_view->model()->show_deleted_strikeout());
 	m_nav_view->set_hide_duplicates(m_hide_duplicates);
 

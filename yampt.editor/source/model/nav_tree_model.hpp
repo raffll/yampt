@@ -80,7 +80,7 @@ private:
 	nav_tree_filter_t m_filter;
 	int m_sort_column = 1;
 	Qt::SortOrder m_sort_order = Qt::AscendingOrder;
-	bool m_show_deleted_strikeout = true;
+	bool m_show_deleted_strikeout = false;
 	codepage_t m_display_codepage = codepage_t::windows_1252;
 	const editable_column_set_t * m_editable_columns = nullptr;
 

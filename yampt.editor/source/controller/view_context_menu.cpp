@@ -108,19 +108,13 @@ void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModel
 	if (!index.isValid())
 		return;
 
-	const int col = index.column() - 1;
-	if (col < 0 || col >= static_cast<int>(m_record_view.model()->column_plugin_indices().size()))
-		return;
-
-	const int plugin_idx = m_record_view.model()->column_plugin_indices()[col];
-	const auto & rec_type = m_record_view.model()->record_type();
-	const auto & record_id = m_record_view.model()->record_id();
-
 	const auto * node = m_record_view.model()->node_from_index(index);
 	if (!node)
 		return;
 
 	const auto & row = *node;
+	const auto & rec_type = m_record_view.model()->record_type();
+	const auto & record_id = m_record_view.model()->record_id();
 	const bool is_field_row = index.parent().isValid();
 	const int parent_row_idx = is_field_row ? index.parent().row() : index.row();
 
@@ -128,8 +122,15 @@ void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModel
 	if (parent_row_idx < 0 || parent_row_idx >= static_cast<int>(visible.size()))
 		return;
 
-	const int bin_idx =
-	    (col >= 0 && col < static_cast<int>(row.binary_ranges.size())) ? row.binary_ranges[col].start : -1;
+	const int col = index.column() - 1;
+	const bool has_valid_column =
+	    col >= 0 && col < static_cast<int>(m_record_view.model()->column_plugin_indices().size());
+
+	const int plugin_idx = has_valid_column ? m_record_view.model()->column_plugin_indices()[col] : -1;
+
+	const int bin_idx = (has_valid_column && col < static_cast<int>(row.binary_ranges.size()))
+	                        ? row.binary_ranges[col].start
+	                        : -1;
 
 	const auto kind = [&]() -> row_kind_t
 	{
@@ -160,7 +161,7 @@ void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModel
 	view_menu_context_t context { index, row, rec_type, record_id, plugin_idx, col, bin_idx, parent_row_idx, kind };
 	QMenu menu;
 
-	if (m_session.scan().has_merge())
+	if (has_valid_column && m_session.scan().has_merge())
 	{
 		const bool is_on_merge = m_session.scan().is_merge_plugin(plugin_idx);
 		const bool record_in_merge = m_session.scan().find_merge_content(rec_type, record_id) != nullptr;
@@ -173,7 +174,7 @@ void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModel
 			build_source_copy_menu(menu, context);
 	}
 
-	if (kind == row_kind_t::sub_record || kind == row_kind_t::schema_record)
+	if (!row.type.empty() && !is_field_row)
 	{
 		const auto sub_type = row.type;
 		const auto rule = rec_type + ":" + sub_type;

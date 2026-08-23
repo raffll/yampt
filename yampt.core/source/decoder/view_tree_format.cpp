@@ -143,9 +143,23 @@ std::string format_value(const char * data, size_t size, codepage_t codepage)
 		return result;
 	}
 
-	char buf[64];
-	std::snprintf(buf, sizeof(buf), "<%zu bytes>", size);
-	return std::string(buf);
+	std::string hex_output;
+	static constexpr size_t max_hex_bytes = 32;
+	const size_t limit = std::min(size, max_hex_bytes);
+	for (size_t i = 0; i < limit; ++i)
+	{
+		char hbuf[4];
+		std::snprintf(hbuf, sizeof(hbuf), "%02X", static_cast<unsigned char>(data[i]));
+		if (!hex_output.empty())
+			hex_output += ' ';
+
+		hex_output += hbuf;
+	}
+
+	if (size > max_hex_bytes)
+		hex_output += " ...";
+
+	return hex_output;
 }
 
 std::string format_value_full(const char * data, size_t size, codepage_t codepage)
@@ -189,11 +203,24 @@ std::string format_value_full(const char * data, size_t size, codepage_t codepag
 		return decode_to_utf8(raw, codepage);
 	}
 
-	char buf[64];
-	std::snprintf(buf, sizeof(buf), "<%zu bytes>", size);
-	return std::string(buf);
-}
+	std::string hex_output;
+	static constexpr size_t max_hex_bytes = 32;
+	const size_t limit = std::min(size, max_hex_bytes);
+	for (size_t i = 0; i < limit; ++i)
+	{
+		char hbuf[4];
+		std::snprintf(hbuf, sizeof(hbuf), "%02X", static_cast<unsigned char>(data[i]));
+		if (!hex_output.empty())
+			hex_output += ' ';
 
+		hex_output += hbuf;
+	}
+
+	if (size > max_hex_bytes)
+		hex_output += " ...";
+
+	return hex_output;
+}
 static std::string format_flags(uint32_t value, const field_def_t & field, int max_bits)
 {
 	if (field.flag_names && field.flag_count > 0)
@@ -405,9 +432,24 @@ std::string decode_field(const field_def_t & field, const char * data, size_t da
 	}
 	case field_type_t::binary:
 	{
-		char buf[64];
-		std::snprintf(buf, sizeof(buf), "<%zu bytes>", data_size - field.offset);
-		return buf;
+		std::string hex_output;
+		constexpr size_t max_hex_bytes = 64;
+		const size_t available = data_size - field.offset;
+		const size_t limit = std::min(available, max_hex_bytes);
+		for (size_t i = 0; i < limit; ++i)
+		{
+			char hbuf[4];
+			std::snprintf(hbuf, sizeof(hbuf), "%02X", static_cast<unsigned char>(ptr[i]));
+			if (!hex_output.empty())
+				hex_output += ' ';
+
+			hex_output += hbuf;
+		}
+
+		if (available > max_hex_bytes)
+			hex_output += " ...";
+
+		return hex_output;
 	}
 	case field_type_t::raw:
 	{

@@ -419,30 +419,6 @@ void settings_store_t::set_theme(theme_t value)
 	m_settings.setValue("Appearance/Theme", text);
 }
 
-bool settings_store_t::merge_type_enabled(const std::string & rec_type) const
-{
-	const auto disabled = m_settings.value("merge/disabled_types", "").toString();
-	if (disabled.isEmpty())
-		return true;
-
-	const auto types = disabled.split(',', Qt::SkipEmptyParts);
-	return !types.contains(QString::fromStdString(rec_type), Qt::CaseInsensitive);
-}
-
-void settings_store_t::set_merge_type_enabled(const std::string & rec_type, bool enabled)
-{
-	const auto disabled = m_settings.value("merge/disabled_types", "").toString();
-	auto types = disabled.split(',', Qt::SkipEmptyParts);
-	const auto qtype = QString::fromStdString(rec_type);
-
-	if (enabled)
-		types.removeAll(qtype);
-	else if (!types.contains(qtype, Qt::CaseInsensitive))
-		types.append(qtype);
-
-	m_settings.setValue("merge/disabled_types", types.join(','));
-}
-
 std::string settings_store_t::merge_exclusion_pattern() const
 {
 	return m_settings.value("merge/exclusion_pattern", "").toString().toStdString();
@@ -481,16 +457,6 @@ bool settings_store_t::merge_cell_name_fix_enabled() const
 void settings_store_t::set_merge_cell_name_fix_enabled(bool value)
 {
 	m_settings.setValue("merge/cell_name_fix", value);
-}
-
-bool settings_store_t::merge_column_visible() const
-{
-	return m_settings.value("merge/show_column", true).toBool();
-}
-
-void settings_store_t::set_merge_column_visible(bool value)
-{
-	m_settings.setValue("merge/show_column", value);
 }
 
 std::string settings_store_t::sub_record_ignore_conflict() const

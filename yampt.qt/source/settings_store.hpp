@@ -124,9 +124,6 @@ public:
 	theme_t theme() const;
 	void set_theme(theme_t value);
 
-	bool merge_type_enabled(const std::string & rec_type) const;
-	void set_merge_type_enabled(const std::string & rec_type, bool enabled);
-
 	std::string merge_exclusion_pattern() const;
 	void set_merge_exclusion_pattern(const std::string & pattern);
 
@@ -136,9 +133,6 @@ public:
 	void set_merge_summon_fix_enabled(bool value);
 	bool merge_cell_name_fix_enabled() const;
 	void set_merge_cell_name_fix_enabled(bool value);
-
-	bool merge_column_visible() const;
-	void set_merge_column_visible(bool value);
 
 	std::string sub_record_ignore_conflict() const;
 	void set_sub_record_ignore_conflict(const std::string & value);
