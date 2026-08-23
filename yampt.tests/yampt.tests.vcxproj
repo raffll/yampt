@@ -266,6 +266,7 @@
     <ClCompile Include="source\tests.view_tree_model_lua.cpp" />
     <ClCompile Include="source\tests.nav_tree_filter_lua.cpp" />
     <ClCompile Include="source\tests.nav_tree_model_lua.cpp" />
+    <ClCompile Include="source\tests.lua_tree_model.cpp" />
     <ClCompile Include="source\tests.count_label_format.cpp" />
     <ClCompile Include="..\yampt.translator\source\model\table_builder.cpp" />
     <ClCompile Include="..\yampt.translator\source\editor\row_filter.cpp" />

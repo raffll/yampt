@@ -15,9 +15,14 @@
 - [CHANGE] Navigation panel split into two tabs: Plugins (ESP/ESM record tree) and Lua (handler registrations by mod)
 - [CHANGE] Deleted record strikethrough no longer propagates to the plugin node level
 - [CHANGE] Preview tab renamed to Edit and moved to first position in the bottom panel
-- [CHANGE] Sub-Record Rules merged into the Merged Patch settings page (ignore sub-records field now on the same page as merge type toggles and fixes)
+- [CHANGE] Sub-Record Rules merged into the Merged Patch settings page with list-based UI (Add/Remove buttons, duplicate prevention)
 - [CHANGE] Paths settings page renamed to Output Paths
+- [CHANGE] Record type checkboxes removed from merge settings (use TYPE:* in Ignore Fields instead)
 - [CHANGE] Plugin icons now consistent between navigation tree and record view column headers
+- [CHANGE] TES3 record shown as flat "File Header" entry at the top of each plugin (no nesting)
+- [CHANGE] Unknown/binary sub-records now display hex bytes instead of "&lt;N bytes&gt;" placeholder
+- [CHANGE] Show Deleted Strikeout option disabled by default
+- [FIX] Record view context menu now works when right-clicking the label column
 - [FIX] Combobox in Edit panel now pre-selects the current field value
 - [FIX] Signature and Record Flags rows are no longer editable
 

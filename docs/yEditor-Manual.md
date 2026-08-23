@@ -118,7 +118,10 @@ Open Settings via Ctrl+, or the Tools menu. Four pages are available:
 
 - **Appearance** — choose between light and dark theme.
 - **Output Paths** — configure the merged patch output path for each loading mode (folder, MO2, OpenMW). Normally these are automatic and don't need changing.
-- **Merged Patch** — toggle which record types participate in auto-merge. Set an exclusion regex to skip specific record IDs. Enable or disable individual bug fixes (fog density fix, summon persistence fix, cell name reversion fix). Configure which sub-records are ignored during conflict detection and excluded from the merged patch. The ignore field takes a comma-separated list of entries in `RECORD:SUB` format (e.g. `CELL:NAM0, NPC_:AI_W`). Use `*` as a wildcard for the sub-record name to match all sub-records of a record type (e.g. `CELL:*`). Ignored sub-records are not flagged as conflicts in the navigation tree, are greyed out in the record view, and are omitted from the merged patch output. Changes apply immediately after closing the settings dialog.
+- **Merged Patch** — three sub-tabs control how auto-merge behaves:
+  - **Ignore Fields** — a list of sub-records excluded from conflict detection and the merged patch. Each entry uses `RECORD:SUB` format (e.g. `CELL:NAM0`). Use `TYPE:*` to ignore an entire record type. Add entries via the input field or right-click a sub-record row in the record view and choose "Ignore Sub-Record."
+  - **Exclude by ID** — a list of regular expression patterns matched against record IDs. Records matching any pattern are skipped entirely during auto-merge.
+  - **Fixes** — toggle individual bug fixes applied during merge: fog density correction, summon persistence flag, and cell name reversion prevention.
 - **Cleaning** — toggle which cleaning operations the Clean All button performs. Evil GMSTs are Construction Set artifacts from Tribunal/Bloodmoon that can cause issues in mods that don't require those expansions. Junk cells are empty exterior cell records that only contain position data and serve no purpose. The Header Repair group provides additional fixes applied during cleaning: updating master file sizes in the plugin header to match the actual file sizes on disk, and updating the plugin version field to 1.3 (required by some engines).
 
 ## Cleaning Plugins
