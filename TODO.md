@@ -8,10 +8,7 @@ find replace should be incorporated into filter by panel, then filter by will sh
 
 ENAM - enchantment: bad validation on chnagig text <- NPCS
 
-record flags should have combobox
 record signature should be non editable
-
-CELL data flag should be combobox <- ANY flags in other record tpes also
 
 ENDT - Enchantmrnt data FLAGS is uknown
 

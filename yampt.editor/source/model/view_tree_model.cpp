@@ -846,7 +846,24 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 		{
 			const auto * schema = find_schema(m_record_type, lookup_type, lookup_size);
 			if (schema && target->schema_field_index < static_cast<int>(schema->field_count))
+			{
+				if (target->bit_index >= 0)
+				{
+					auto & bit_field = m_bool_bit_field;
+					const auto & parent_field = schema->fields[target->schema_field_index];
+					bit_field.name = parent_field.name;
+					bit_field.type = field_type_t::bool_bit;
+					bit_field.offset = parent_field.offset;
+					bit_field.size = target->bit_index;
+					bit_field.enum_names = nullptr;
+					bit_field.flag_names = nullptr;
+					bit_field.flag_count = 0;
+					bit_field.group = nullptr;
+					return QVariant::fromValue(static_cast<const field_def_t *>(&bit_field));
+				}
+
 				return QVariant::fromValue(&schema->fields[target->schema_field_index]);
+			}
 		}
 
 		auto & synthetic = m_synthetic_fields[lookup_type];

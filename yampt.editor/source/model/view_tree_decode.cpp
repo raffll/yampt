@@ -197,6 +197,8 @@ void view_tree_model_t::decode_schema_children(
 
 			view_node_t flags_group;
 			flags_group.label = fdef.name;
+			flags_group.type = slot.type;
+			flags_group.size = schema->expected_size;
 			flags_group.values.resize(col_count);
 			flags_group.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
 			flags_group.row_conflict_all = conflict_all_t::only_one;
@@ -208,6 +210,8 @@ void view_tree_model_t::decode_schema_children(
 
 				view_node_t frow;
 				frow.label = fdef.flag_names[bit];
+				frow.schema_field_index = static_cast<int>(field_idx);
+				frow.bit_index = bit;
 				frow.values.resize(col_count);
 
 				for (size_t col = 0; col < col_count; ++col)

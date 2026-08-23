@@ -253,6 +253,7 @@ private:
 	codepage_t m_display_codepage = codepage_t::windows_1252;
 	bool m_show_deleted_strikeout = true;
 	mutable std::map<std::string, field_def_t> m_synthetic_fields;
+	mutable field_def_t m_bool_bit_field {};
 };
 
 Q_DECLARE_METATYPE(view_tree_model_t::sub_record_occurrence_t)
