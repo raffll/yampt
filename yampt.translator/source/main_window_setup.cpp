@@ -137,40 +137,49 @@ void main_window_t::setup_menu_bar()
 
 void main_window_t::setup_toolbar()
 {
-	m_toolbar = new QToolBar(this);
-	m_toolbar->setMovable(false);
+	m_toolbar = new QWidget(this);
+
+	auto * toolbar_layout = new QHBoxLayout(m_toolbar);
+	toolbar_layout->setContentsMargins(4, 2, 4, 2);
+	toolbar_layout->setSpacing(4);
 
 	m_search_field = new QLineEdit(this);
 	m_search_field->setPlaceholderText(tr("Filter by..."));
-	m_toolbar->addWidget(m_search_field);
+	toolbar_layout->addWidget(m_search_field, 1);
 
 	m_case_sensitive_check = new QToolButton(this);
 	m_case_sensitive_check->setText(tr("Aa"));
 	m_case_sensitive_check->setCheckable(true);
-	m_toolbar->addWidget(m_case_sensitive_check);
+	toolbar_layout->addWidget(m_case_sensitive_check);
 
 	m_regex_check = new QToolButton(this);
 	m_regex_check->setText(tr(".*"));
 	m_regex_check->setCheckable(true);
-	m_toolbar->addWidget(m_regex_check);
+	toolbar_layout->addWidget(m_regex_check);
 
 	m_search_col_key = new QToolButton(this);
 	m_search_col_key->setText(tr("Key"));
 	m_search_col_key->setCheckable(true);
 	m_search_col_key->setChecked(true);
-	m_toolbar->addWidget(m_search_col_key);
+	toolbar_layout->addWidget(m_search_col_key);
 
 	m_search_col_original = new QToolButton(this);
 	m_search_col_original->setText(tr("Original"));
 	m_search_col_original->setCheckable(true);
 	m_search_col_original->setChecked(true);
-	m_toolbar->addWidget(m_search_col_original);
+	toolbar_layout->addWidget(m_search_col_original);
 
 	m_search_col_translation = new QToolButton(this);
 	m_search_col_translation->setText(tr("Translation"));
 	m_search_col_translation->setCheckable(true);
 	m_search_col_translation->setChecked(true);
-	m_toolbar->addWidget(m_search_col_translation);
+	toolbar_layout->addWidget(m_search_col_translation);
+
+	m_find_replace_toggle = new QToolButton(this);
+	m_find_replace_toggle->setText(tr("Find/Replace"));
+	m_find_replace_toggle->setCheckable(true);
+	m_find_replace_toggle->setToolTip(tr("Show or hide the Find/Replace bar"));
+	toolbar_layout->addWidget(m_find_replace_toggle);
 
 	m_search_field->setToolTip(tr("Search across entries"));
 	m_case_sensitive_check->setToolTip(tr("Case-sensitive search"));
@@ -178,14 +187,6 @@ void main_window_t::setup_toolbar()
 	m_search_col_key->setToolTip(tr("Search in key column"));
 	m_search_col_original->setToolTip(tr("Search in original column"));
 	m_search_col_translation->setToolTip(tr("Search in translation column"));
-
-	m_toolbar->addSeparator();
-
-	m_find_replace_toggle = new QToolButton(this);
-	m_find_replace_toggle->setText(tr("Find/Replace"));
-	m_find_replace_toggle->setCheckable(true);
-	m_find_replace_toggle->setToolTip(tr("Show or hide the Find/Replace bar"));
-	m_toolbar->addWidget(m_find_replace_toggle);
 
 	m_escape_action = new QAction(this);
 	m_escape_action->setShortcut(QKeySequence("Escape"));
@@ -451,7 +452,8 @@ void main_window_t::connect_menu_signals()
 #endif
 
 		const auto archive_name = QFileInfo(archive_path).completeBaseName();
-		const auto target_dir = app_dir + "/workspace/" + archive_name;
+		const auto target_dir =
+		    QString::fromStdString(resource_paths::workspace_dir()) + archive_name;
 		QDir().mkpath(target_dir);
 
 		QProcess proc;

@@ -157,7 +157,7 @@ private:
 	QAction * m_set_in_progress_action = nullptr;
 	QAction * m_set_translated_action = nullptr;
 
-	QToolBar * m_toolbar = nullptr;
+	QWidget * m_toolbar = nullptr;
 
 	QAction * m_sidebar_toggle = nullptr;
 	QAction * m_bottom_panel_toggle = nullptr;
