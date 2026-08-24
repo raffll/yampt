@@ -384,4 +384,9 @@
     </ItemGroup>
     <Copy SourceFiles="@(VcpkgDlls)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
   </Target>
+  <ItemGroup>
+    <ResourceCompile Include="$(SolutionDir)resources\yampt-editor.rc">
+      <AdditionalIncludeDirectories>$(SolutionDir)resources</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemGroup>
 </Project>

@@ -4,6 +4,7 @@
 #include <settings_store.hpp>
 #include <theme_system.hpp>
 #include <QApplication>
+#include <QIcon>
 #include <QLocale>
 #include <QPalette>
 #include <QStyleFactory>
@@ -13,6 +14,7 @@ int main(int argc, char * argv[])
 {
 	QApplication app(argc, argv);
 	app.setStyle(QStyleFactory::create("Fusion"));
+	app.setWindowIcon(QIcon(":/icons/yampt-translator.svg"));
 
 	QTranslator translator;
 	const auto ui_languages = QLocale::system().uiLanguages();

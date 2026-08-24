@@ -71,15 +71,15 @@ target_link_libraries(yampt_qt PUBLIC yampt_core Qt6::Core Qt6::Widgets Qt6::Gui
 
 # --- yampt_translator (Executable) ---
 file(GLOB_RECURSE YAMPT_TRANSLATOR_SOURCES "yampt.translator/source/*.cpp")
-add_executable(yampt_translator ${YAMPT_TRANSLATOR_SOURCES})
-set_target_properties(yampt_translator PROPERTIES OUTPUT_NAME yampt-translator AUTOMOC ON)
+add_executable(yampt_translator ${YAMPT_TRANSLATOR_SOURCES} resources/icons.qrc)
+set_target_properties(yampt_translator PROPERTIES OUTPUT_NAME yampt-translator AUTOMOC ON AUTORCC ON)
 target_include_directories(yampt_translator PRIVATE yampt.translator/source/)
 target_link_libraries(yampt_translator PRIVATE yampt_core yampt_qt Qt6::Core Qt6::Widgets Qt6::Network Hunspell::Hunspell)
 
 # --- yampt_editor (Executable) ---
 file(GLOB_RECURSE YAMPT_EDITOR_SOURCES "yampt.editor/source/*.cpp")
-add_executable(yampt_editor ${YAMPT_EDITOR_SOURCES})
-set_target_properties(yampt_editor PROPERTIES OUTPUT_NAME yampt-editor AUTOMOC ON)
+add_executable(yampt_editor ${YAMPT_EDITOR_SOURCES} resources/icons.qrc)
+set_target_properties(yampt_editor PROPERTIES OUTPUT_NAME yampt-editor AUTOMOC ON AUTORCC ON)
 target_include_directories(yampt_editor PRIVATE yampt.editor/source/)
 target_link_libraries(yampt_editor PRIVATE yampt_core yampt_qt Qt6::Core Qt6::Widgets Qt6::Network Hunspell::Hunspell)
 
@@ -167,4 +167,17 @@ install(FILES
     "${PROJECT_SOURCE_DIR}/README.md"
     "${PROJECT_SOURCE_DIR}/CHANGELOG.md"
     DESTINATION ${CMAKE_INSTALL_DOCDIR})
+
+# --- Icons and desktop files ---
+install(FILES "${PROJECT_SOURCE_DIR}/resources/yampt-translator.svg"
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps)
+
+install(FILES "${PROJECT_SOURCE_DIR}/resources/yampt-editor.svg"
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps)
+
+install(FILES "${PROJECT_SOURCE_DIR}/resources/yampt-translator.desktop"
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/applications)
+
+install(FILES "${PROJECT_SOURCE_DIR}/resources/yampt-editor.desktop"
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/applications)
 

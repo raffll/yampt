@@ -543,4 +543,9 @@
   <Target Name="CopyLanguages" AfterTargets="Build" Condition="Exists('$(SolutionDir)languages.json')">
     <Copy SourceFiles="$(SolutionDir)languages.json" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
   </Target>
+  <ItemGroup>
+    <ResourceCompile Include="$(SolutionDir)resources\yampt-translator.rc">
+      <AdditionalIncludeDirectories>$(SolutionDir)resources</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemGroup>
 </Project>
