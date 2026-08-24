@@ -46,7 +46,6 @@ class editor_highlighter_t;
 class editor_view_t;
 class translation_edit_view_t;
 class filter_tree_view_t;
-class find_replace_dialog_t;
 class history_view_t;
 class log_view_t;
 class record_table_view_t;
@@ -177,6 +176,9 @@ private:
 	QToolButton * m_search_col_key = nullptr;
 	QToolButton * m_search_col_original = nullptr;
 	QToolButton * m_search_col_translation = nullptr;
+	QLineEdit * m_replace_field = nullptr;
+	QPushButton * m_replace_all_btn = nullptr;
+	QPushButton * m_undo_replace_btn = nullptr;
 	QAction * m_spell_check = nullptr;
 	QAction * m_grammar_check = nullptr;
 	QAction * m_whitespace_check = nullptr;
@@ -234,7 +236,6 @@ private:
 	extra_selections_state_t m_extra_sel_adapted;
 	extra_selections_state_t m_extra_sel_translation;
 
-	find_replace_dialog_t * m_find_replace_dialog = nullptr;
 	find_replace_t * m_find_replace = nullptr;
 
 	workspace_watcher_t * m_workspace_watcher = nullptr;

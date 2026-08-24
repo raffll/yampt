@@ -1,6 +1,5 @@
 #include <resource_paths.hpp>
 #include "dialog/dict_selection_dialog.hpp"
-#include "dialog/find_replace_dialog.hpp"
 #include "dialog/first_run_dialog.hpp"
 #include "dialog/spell_context_menu.hpp"
 #include "highlighter/editor_highlighter.hpp"
@@ -36,6 +35,7 @@
 #include <QProcess>
 #include <QPushButton>
 #include <QSplitter>
+#include <QStandardPaths>
 #include <QStatusBar>
 #include <QTabWidget>
 #include <QToolBar>
@@ -128,10 +128,6 @@ void main_window_t::setup_menu_bar()
 			m_dict_ops_controller->on_merge();
 	});
 
-	auto * find_replace_action = tools_menu->addAction(tr("&Find/Replace..."));
-	find_replace_action->setToolTip(tr("Find and replace text in translations"));
-	connect(find_replace_action, &QAction::triggered, this, [this]() { m_find_replace_dialog->show(); });
-
 	tools_menu->addSeparator();
 	m_settings_action = tools_menu->addAction(tr("&Preferences..."));
 	m_settings_action->setShortcut(QKeySequence("Ctrl+,"));
@@ -187,6 +183,24 @@ void main_window_t::setup_toolbar()
 	m_search_col_original->setToolTip(tr("Search in original column"));
 	m_search_col_translation->setToolTip(tr("Search in translation column"));
 
+	m_toolbar->addSeparator();
+
+	m_replace_field = new QLineEdit(this);
+	m_replace_field->setPlaceholderText(tr("Replace with..."));
+	m_replace_field->setToolTip(tr("Replacement text for filtered entries"));
+	m_replace_field->setEnabled(false);
+	m_toolbar->addWidget(m_replace_field);
+
+	m_replace_all_btn = new QPushButton(tr("Replace All"), this);
+	m_replace_all_btn->setToolTip(tr("Replace in all currently visible entries"));
+	m_replace_all_btn->setEnabled(false);
+	m_toolbar->addWidget(m_replace_all_btn);
+
+	m_undo_replace_btn = new QPushButton(tr("Undo"), this);
+	m_undo_replace_btn->setToolTip(tr("Undo the last Replace All operation"));
+	m_undo_replace_btn->setEnabled(false);
+	m_toolbar->addWidget(m_undo_replace_btn);
+
 	m_escape_action = new QAction(this);
 	m_escape_action->setShortcut(QKeySequence("Escape"));
 	addAction(m_escape_action);
@@ -228,10 +242,6 @@ void main_window_t::setup_sidebar()
 	m_translation_tab->set_models_dir(resource_paths::models_dir());
 	m_translation_tab->set_providers_dir(resource_paths::providers_dir());
 	m_translation_tab->set_glossary_fn([this](const std::string & text) { return m_glossary.apply_glossary(text); });
-	m_find_replace_dialog = new find_replace_dialog_t(this);
-	m_find_replace_dialog->setWindowTitle(tr("Find/Replace"));
-	m_find_replace_dialog->setWindowFlags(Qt::Dialog);
-	m_find_replace_dialog->setVisible(false);
 	m_info_tabs->addTab(m_annotations_view, tr("Annotations"));
 	m_info_tabs->addTab(m_history_view, tr("History"));
 	m_info_tabs->addTab(m_translation_tab, tr("Auto Translate"));
@@ -395,12 +405,21 @@ void main_window_t::connect_menu_signals()
 			return;
 
 		const auto app_dir = QCoreApplication::applicationDirPath();
+#ifdef Q_OS_WIN
 		const QString sevenzip = app_dir + "/7za.exe";
 		if (!QFile::exists(sevenzip))
 		{
 			QMessageBox::critical(this, tr("Error"), tr("7za.exe not found next to the application"));
 			return;
 		}
+#else
+		const QString sevenzip = QStandardPaths::findExecutable("7z");
+		if (sevenzip.isEmpty())
+		{
+			QMessageBox::critical(this, tr("Error"), tr("7z not found in PATH"));
+			return;
+		}
+#endif
 
 		const auto archive_name = QFileInfo(archive_path).completeBaseName();
 		const auto target_dir = app_dir + "/workspace/" + archive_name;
@@ -441,51 +460,20 @@ void main_window_t::connect_menu_signals()
 	});
 
 	connect(
-	    m_find_replace_dialog,
-	    &find_replace_dialog_t::find_next_requested,
+	    m_replace_all_btn,
+	    &QPushButton::clicked,
 	    this,
-	    [this](const QString & query, bool case_sensitive, bool regex_mode)
+	    [this]()
 	{
-		auto result = m_find_replace->find_next(
-		    query.toStdString(), case_sensitive, regex_mode, m_editor_controller.current_row());
-
-		if (result.found)
-			on_row_selected(result.row);
-		else
-			statusBar()->showMessage(tr("No match found"), 3000);
-	});
-
-	connect(
-	    m_find_replace_dialog,
-	    &find_replace_dialog_t::replace_requested,
-	    this,
-	    [this](const QString & query, const QString & replacement, bool case_sensitive, bool regex_mode)
-	{
-		auto result = m_find_replace->replace_current(
-		    query.toStdString(),
-		    replacement.toStdString(),
-		    case_sensitive,
-		    regex_mode,
-		    m_editor_controller.current_row());
-
-		if (!result.replaced)
+		if (!m_find_replace)
 			return;
 
-		set_unsaved_changes(true);
-		m_table_model->update_row(m_editor_controller.current_row(), result.new_text, result.status);
-		load_record(m_editor_controller.current_row());
+		const auto & query = m_search_field->text().toStdString();
+		const auto & replacement = m_replace_field->text().toStdString();
+		const bool case_sensitive = m_case_sensitive_check->isChecked();
+		const bool regex_mode = m_regex_check->isChecked();
 
-		emit m_find_replace_dialog->find_next_requested(query, case_sensitive, regex_mode);
-	});
-
-	connect(
-	    m_find_replace_dialog,
-	    &find_replace_dialog_t::replace_all_requested,
-	    this,
-	    [this](const QString & query, const QString & replacement, bool case_sensitive, bool regex_mode)
-	{
-		auto result =
-		    m_find_replace->replace_all(query.toStdString(), replacement.toStdString(), case_sensitive, regex_mode);
+		auto result = m_find_replace->replace_all(query, replacement, case_sensitive, regex_mode);
 
 		if (result.count > 0)
 		{
@@ -496,15 +484,18 @@ void main_window_t::connect_menu_signals()
 		}
 
 		statusBar()->showMessage(tr("Replaced in %1 entries").arg(result.count), 5000);
-		m_find_replace_dialog->set_undo_enabled(m_find_replace->has_undo());
+		m_undo_replace_btn->setEnabled(m_find_replace->has_undo());
 	});
 
 	connect(
-	    m_find_replace_dialog,
-	    &find_replace_dialog_t::undo_requested,
+	    m_undo_replace_btn,
+	    &QPushButton::clicked,
 	    this,
 	    [this]()
 	{
+		if (!m_find_replace)
+			return;
+
 		auto result = m_find_replace->undo_last_replace_all();
 
 		if (result.count > 0)
@@ -516,7 +507,7 @@ void main_window_t::connect_menu_signals()
 		}
 
 		statusBar()->showMessage(tr("Undid %1 replacements").arg(result.count), 5000);
-		m_find_replace_dialog->set_undo_enabled(m_find_replace->has_undo());
+		m_undo_replace_btn->setEnabled(m_find_replace->has_undo());
 	});
 }
 

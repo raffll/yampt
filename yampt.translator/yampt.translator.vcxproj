@@ -209,7 +209,6 @@
     <ClCompile Include="source\editor\edit_history.cpp" />
     <ClCompile Include="source\editor\find_replace.cpp" />
     <ClCompile Include="source\editor\operation_executor.cpp" />
-    <ClCompile Include="source\dialog\find_replace_dialog.cpp" />
     <ClCompile Include="source\dialog\dict_selection_dialog.cpp" />
     <ClCompile Include="source\dialog\merge_dialog.cpp" />
     <ClCompile Include="source\dialog\make_base_dialog.cpp" />
@@ -399,12 +398,6 @@
       <Message>MOC %(Filename).hpp</Message>
     </CustomBuild>
 
-    <CustomBuild Include="source\dialog\find_replace_dialog.hpp">
-      <FileType>Document</FileType>
-      <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
-      <Outputs>$(IntDir)moc_%(Filename).cpp</Outputs>
-      <Message>MOC %(Filename).hpp</Message>
-    </CustomBuild>
     <CustomBuild Include="source\dialog\settings\translator_settings_dialog.hpp">
       <FileType>Document</FileType>
       <Command>if exist "$(QtToolsPath)\moc.exe" "$(QtToolsPath)\moc.exe" "%(FullPath)" -o "$(IntDir)moc_%(Filename).cpp" -I"$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\include"</Command>
@@ -482,7 +475,6 @@
     <ClCompile Include="$(IntDir)moc_make_base_dialog.cpp" />
     <ClCompile Include="$(IntDir)moc_line_number_gutter.cpp" />
     <ClCompile Include="$(IntDir)moc_first_run_dialog.cpp" />
-    <ClCompile Include="$(IntDir)moc_find_replace_dialog.cpp" />
     <ClCompile Include="$(IntDir)moc_translator_settings_dialog.cpp" />
     <ClCompile Include="$(IntDir)moc_language_settings_view.cpp" />
     <ClCompile Include="$(IntDir)moc_translation_settings_view.cpp" />

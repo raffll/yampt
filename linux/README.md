@@ -24,6 +24,10 @@ sudo apt install build-essential cmake git pkg-config \
 
 sentencepiece, ctranslate2, yyjson, catch2, and rapidcheck may need to be built from source on Debian-based systems.
 
+## Optional Dependencies
+
+- `p7zip` — required for the Import Archive feature (extracting `.zip` and `.rar` files from within the application). The `7z` command must be in PATH.
+
 ## Build
 
 ```bash

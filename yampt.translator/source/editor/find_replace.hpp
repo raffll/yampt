@@ -11,19 +11,6 @@
 class find_replace_t
 {
 public:
-	struct find_result_t
-	{
-		int row = -1;
-		bool found = false;
-	};
-
-	struct replace_result_t
-	{
-		bool replaced = false;
-		std::string new_text;
-		status_t status = status_t::untranslated;
-	};
-
 	struct replace_all_result_t
 	{
 		int count = 0;
@@ -36,13 +23,6 @@ public:
 
 	find_replace_t(row_source_t & source, document_t *& active_doc);
 
-	find_result_t find_next(const std::string & query, bool case_sensitive, bool regex_mode, int current_row);
-	replace_result_t replace_current(
-	    const std::string & query,
-	    const std::string & replacement,
-	    bool case_sensitive,
-	    bool regex_mode,
-	    int current_row);
 	replace_all_result_t replace_all(
 	    const std::string & query,
 	    const std::string & replacement,
@@ -74,7 +54,6 @@ private:
 	    const std::string & replacement,
 	    bool case_sensitive,
 	    bool regex_mode);
-	bool matches_query(const std::string & text_value, const search_params_t & params);
 	std::optional<std::string> apply_replacement(const std::string & source_text, const search_params_t & params);
 
 	row_source_t & m_source;

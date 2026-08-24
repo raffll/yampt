@@ -2,6 +2,8 @@
 
 $(SolutionDir) still created in release folder
 
-find/replace window is weirdly created not in the center but anchored to center by top/left corner (but only windows)
+make dictionary dont need base dict, create/convert need
 
-find replace should be incorporated into filter by panel, then filter by will show all records that will be affected by replace. Keep only replace all and undo all.
+Linux: workspace folder is missing
+
+filter by and replace buttons shoul duse same style, maybe same as editor

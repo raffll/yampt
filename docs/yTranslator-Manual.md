@@ -24,7 +24,7 @@ Right-click a file or folder to access its context menu. Plugins offer Make Dict
 
 ### Import Archive
 
-File → Import Archive opens a file dialog for zip or rar archives. The contents are extracted into the workspace folder. Requires 7za.exe in the same directory as the application. After extraction the workspace auto-scans and shows new files in the sidebar.
+File → Import Archive opens a file dialog for zip or rar archives. The contents are extracted into the workspace folder. On Windows, 7za.exe must be in the same directory as the application. On Linux, the 7z command must be available in PATH (install p7zip from your distribution's package manager). After extraction the workspace auto-scans and shows new files in the sidebar.
 
 ### Make Dictionary
 
@@ -69,15 +69,13 @@ Only entries with status Translated and where the original differs from the tran
 
 ### Find/Replace
 
-Open via Tools → Find/Replace. This dialog searches and replaces text in the translation field across all entries in the active dictionary, regardless of the current table filter.
+The filter toolbar includes a Replace function integrated directly into the search workflow. Type a search term in the Filter field to narrow the table to matching entries. This gives you a live preview of which entries will be affected by a replacement.
 
-Type a search term in the Find field and a replacement in the Replace field. Use the checkboxes to enable case-sensitive matching or regular expression mode. Three actions are available:
+Enter the replacement text in the Replace field next to the filter controls. Use the Aa button for case-sensitive matching or the .* button for regular expression mode. The column buttons (Key, Original, Translation) control which columns are searched for filtering, but replacement always operates on the translation field.
 
-- **Find Next** — selects the next entry whose translation contains the search term.
-- **Replace** — replaces the match in the current entry and advances to the next match.
-- **Replace All** — replaces all occurrences in every entry of the dictionary at once.
+Replace All replaces the search term in all currently visible entries. Only entries shown in the table after filtering are affected — entries hidden by type, status, or text filters are left untouched.
 
-Entries modified by Replace or Replace All receive the status Replaced. This makes it easy to filter and review all changes after a batch operation.
+Entries modified by Replace All receive the status Replaced. This makes it easy to filter and review all changes after a batch operation.
 
 The Undo button reverts the last Replace All operation, restoring the original text and status for every entry that was modified. Undo is available until the next Replace All is performed or the dictionary is closed.
 
@@ -162,7 +160,7 @@ Each dictionary entry has a status. Only **Translated** entries are applied duri
 - **Ambiguous** — multiple entries in the base dictionary offer different translations for the same original text. The Details panel lists all candidates. Pick the correct one and set to Translated.
 - **Reused** — the base dictionary contained a matching original text under a different key. The translation was copied from that entry.
 - **Propagated** — after you committed a translation, all entries sharing the same original text (including the committed entry itself) were updated to match. Both the source and all targets receive this status.
-- **Replaced** — the translation was modified by a Find/Replace operation. Review the result and set to Translated when satisfied.
+- **Replaced** — the translation was modified by a Replace All operation. Review the result and set to Translated when satisfied.
 - **Missing** — during Make Base Dictionary, this record existed in the foreign file but no corresponding record was found in the native file. Requires manual translation.
 - **Duplicate** — the same key appeared more than once in the source plugin. Only the first occurrence is stored.
 - **Mismatch** — during Make Base Dictionary, a record existed in the native file with no corresponding record in the foreign file. Informational; no action needed.
