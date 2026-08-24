@@ -284,11 +284,6 @@ void main_window_t::on_search_changed(const QString & text)
 		cfg.columns.insert(search_column_t::translation);
 	m_row_filter.set_config(cfg);
 
-	const bool has_filter = !text.isEmpty() && m_search_field->isEnabled();
-	m_replace_field->setEnabled(has_filter);
-	m_replace_all_btn->setEnabled(has_filter);
-	m_undo_replace_btn->setEnabled(has_filter && m_find_replace && m_find_replace->has_undo());
-
 	rebuild_table();
 }
 
@@ -377,9 +372,6 @@ void main_window_t::rebuild_table()
 	if (!m_active_doc)
 	{
 		m_table_display->clear();
-		m_replace_field->setEnabled(false);
-		m_replace_all_btn->setEnabled(false);
-		m_undo_replace_btn->setEnabled(false);
 		m_editor_controller.set_current_row(-1);
 		clear_editor_panels();
 		return;
@@ -388,9 +380,6 @@ void main_window_t::rebuild_table()
 	if (m_active_doc->kind() == document_kind_t::plugin)
 	{
 		m_table_display->clear();
-		m_replace_field->setEnabled(false);
-		m_replace_all_btn->setEnabled(false);
-		m_undo_replace_btn->setEnabled(false);
 		m_editor_controller.set_current_row(-1);
 		clear_editor_panels();
 		return;

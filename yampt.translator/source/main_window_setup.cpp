@@ -140,12 +140,8 @@ void main_window_t::setup_toolbar()
 	m_toolbar = new QToolBar(this);
 	m_toolbar->setMovable(false);
 
-	m_search_label = new QLabel(tr("Filter by: "), this);
-	m_search_label->setStyleSheet("QLabel:disabled { color: rgb(180,180,180); }");
-	m_toolbar->addWidget(m_search_label);
-
 	m_search_field = new QLineEdit(this);
-	m_search_field->setPlaceholderText(tr("Search..."));
+	m_search_field->setPlaceholderText(tr("Filter by..."));
 	m_toolbar->addWidget(m_search_field);
 
 	m_case_sensitive_check = new QToolButton(this);
@@ -185,25 +181,56 @@ void main_window_t::setup_toolbar()
 
 	m_toolbar->addSeparator();
 
-	m_replace_field = new QLineEdit(this);
-	m_replace_field->setPlaceholderText(tr("Replace with..."));
-	m_replace_field->setToolTip(tr("Replacement text for filtered entries"));
-	m_replace_field->setEnabled(false);
-	m_toolbar->addWidget(m_replace_field);
-
-	m_replace_all_btn = new QPushButton(tr("Replace All"), this);
-	m_replace_all_btn->setToolTip(tr("Replace in all currently visible entries"));
-	m_replace_all_btn->setEnabled(false);
-	m_toolbar->addWidget(m_replace_all_btn);
-
-	m_undo_replace_btn = new QPushButton(tr("Undo"), this);
-	m_undo_replace_btn->setToolTip(tr("Undo the last Replace All operation"));
-	m_undo_replace_btn->setEnabled(false);
-	m_toolbar->addWidget(m_undo_replace_btn);
+	m_find_replace_toggle = new QToolButton(this);
+	m_find_replace_toggle->setText(tr("Find/Replace"));
+	m_find_replace_toggle->setCheckable(true);
+	m_find_replace_toggle->setToolTip(tr("Show or hide the Find/Replace bar"));
+	m_toolbar->addWidget(m_find_replace_toggle);
 
 	m_escape_action = new QAction(this);
 	m_escape_action->setShortcut(QKeySequence("Escape"));
 	addAction(m_escape_action);
+}
+
+void main_window_t::setup_replace_toolbar()
+{
+	m_replace_toolbar = new QWidget(this);
+	m_replace_toolbar->setVisible(false);
+
+	auto * layout = new QHBoxLayout(m_replace_toolbar);
+	layout->setContentsMargins(4, 2, 4, 2);
+	layout->setSpacing(4);
+
+	m_find_field = new QLineEdit(this);
+	m_find_field->setPlaceholderText(tr("Search in translations..."));
+	m_find_field->setToolTip(tr("Text to find in the translation column"));
+	layout->addWidget(m_find_field, 1);
+
+	m_replace_field = new QLineEdit(this);
+	m_replace_field->setPlaceholderText(tr("Replace with..."));
+	m_replace_field->setToolTip(tr("Replacement text"));
+	layout->addWidget(m_replace_field, 1);
+
+	m_replace_case_check = new QToolButton(this);
+	m_replace_case_check->setText(tr("Aa"));
+	m_replace_case_check->setCheckable(true);
+	m_replace_case_check->setToolTip(tr("Case-sensitive find/replace"));
+	layout->addWidget(m_replace_case_check);
+
+	m_replace_regex_check = new QToolButton(this);
+	m_replace_regex_check->setText(tr(".*"));
+	m_replace_regex_check->setCheckable(true);
+	m_replace_regex_check->setToolTip(tr("Regular expression find/replace"));
+	layout->addWidget(m_replace_regex_check);
+
+	m_replace_all_btn = new QPushButton(tr("Replace All"), this);
+	m_replace_all_btn->setToolTip(tr("Replace in all currently visible entries"));
+	layout->addWidget(m_replace_all_btn);
+
+	m_undo_replace_btn = new QPushButton(tr("Undo"), this);
+	m_undo_replace_btn->setToolTip(tr("Undo the last Replace All operation"));
+	m_undo_replace_btn->setEnabled(false);
+	layout->addWidget(m_undo_replace_btn);
 }
 
 void main_window_t::setup_central_widget()
@@ -214,6 +241,9 @@ void main_window_t::setup_central_widget()
 	central_layout->setSpacing(4);
 
 	central_layout->addWidget(m_toolbar);
+
+	setup_replace_toolbar();
+	central_layout->addWidget(m_replace_toolbar);
 
 	m_filter_tree_view = new filter_tree_view_t(this);
 	m_status_filter_view = new status_filter_view_t(this);
@@ -307,7 +337,6 @@ void main_window_t::setup_table_display()
 	    *m_table_model,
 	    *m_progress_label,
 	    *m_active_file_label,
-	    *m_search_label,
 	    *m_search_field,
 	    *m_case_sensitive_check,
 	    *m_regex_check,
@@ -468,10 +497,10 @@ void main_window_t::connect_menu_signals()
 		if (!m_find_replace)
 			return;
 
-		const auto & query = m_search_field->text().toStdString();
+		const auto & query = m_find_field->text().toStdString();
 		const auto & replacement = m_replace_field->text().toStdString();
-		const bool case_sensitive = m_case_sensitive_check->isChecked();
-		const bool regex_mode = m_regex_check->isChecked();
+		const bool case_sensitive = m_replace_case_check->isChecked();
+		const bool regex_mode = m_replace_regex_check->isChecked();
 
 		auto result = m_find_replace->replace_all(query, replacement, case_sensitive, regex_mode);
 
@@ -508,6 +537,13 @@ void main_window_t::connect_menu_signals()
 
 		statusBar()->showMessage(tr("Undid %1 replacements").arg(result.count), 5000);
 		m_undo_replace_btn->setEnabled(m_find_replace->has_undo());
+	});
+
+	connect(m_find_replace_toggle, &QToolButton::toggled, this, [this](bool checked)
+	{
+		m_replace_toolbar->setVisible(checked);
+		if (checked)
+			m_find_field->setFocus();
 	});
 }
 

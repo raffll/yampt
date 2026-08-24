@@ -22,7 +22,6 @@ public:
 	    record_table_model_t & model,
 	    QLabel & progress,
 	    QLabel & file_label,
-	    QLabel & search_label,
 	    QLineEdit & search_field,
 	    QAbstractButton & case_check,
 	    QAbstractButton & regex_check,
@@ -47,7 +46,6 @@ private:
 	record_table_model_t & m_model;
 	QLabel & m_progress;
 	QLabel & m_file_label;
-	QLabel & m_search_label;
 	QLineEdit & m_search_field;
 	QAbstractButton & m_case_check;
 	QAbstractButton & m_regex_check;

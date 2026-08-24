@@ -104,6 +104,7 @@ private:
 	void setup_central_widget();
 	void setup_menu_bar();
 	void setup_toolbar();
+	void setup_replace_toolbar();
 	void setup_sidebar();
 	void setup_editor_panel();
 	void setup_status_bar();
@@ -169,14 +170,18 @@ private:
 	QTabWidget * m_info_tabs = nullptr;
 	QTabWidget * m_record_tabs = nullptr;
 
-	QLabel * m_search_label = nullptr;
 	QLineEdit * m_search_field = nullptr;
 	QToolButton * m_case_sensitive_check = nullptr;
 	QToolButton * m_regex_check = nullptr;
 	QToolButton * m_search_col_key = nullptr;
 	QToolButton * m_search_col_original = nullptr;
 	QToolButton * m_search_col_translation = nullptr;
+	QToolButton * m_find_replace_toggle = nullptr;
+	QWidget * m_replace_toolbar = nullptr;
+	QLineEdit * m_find_field = nullptr;
 	QLineEdit * m_replace_field = nullptr;
+	QToolButton * m_replace_case_check = nullptr;
+	QToolButton * m_replace_regex_check = nullptr;
 	QPushButton * m_replace_all_btn = nullptr;
 	QPushButton * m_undo_replace_btn = nullptr;
 	QAction * m_spell_check = nullptr;
