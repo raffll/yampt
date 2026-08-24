@@ -5,10 +5,6 @@
       <stop offset="0%" style="stop-color:#1a2a3a"/>
       <stop offset="100%" style="stop-color:#2a3d5c"/>
     </linearGradient>
-    <linearGradient id="shield" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#c9b896"/>
-      <stop offset="100%" style="stop-color:#8b7355"/>
-    </linearGradient>
   </defs>
   <rect x="4" y="4" width="56" height="56" rx="10" ry="10" fill="url(#bg)" stroke="#0a1a2a" stroke-width="1.5"/>
   <!-- Plugin file (left) -->
@@ -24,8 +20,6 @@
   <line x1="37" y1="30" x2="49" y2="30" stroke="#8b7b6a" stroke-width="1" stroke-linecap="round"/>
   <line x1="37" y1="34" x2="45" y2="34" stroke="#8b7b6a" stroke-width="1" stroke-linecap="round"/>
   <!-- Merge arrow pointing down -->
-  <path d="M 21 42 L 32 50 L 43 42" stroke="#d4a44a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <line x1="32" y1="50" x2="32" y2="56" stroke="#d4a44a" stroke-width="2.5" stroke-linecap="round"/>
-  <!-- Shield/patch symbol at bottom -->
-  <path d="M 26 54 L 32 58 L 38 54 L 38 50 L 32 52 L 26 50 Z" fill="url(#shield)" stroke="#5a4a3a" stroke-width="0.8"/>
+  <path d="M 21 42 L 32 50 L 43 42" stroke="#a0b8d0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <line x1="32" y1="50" x2="32" y2="56" stroke="#a0b8d0" stroke-width="2.5" stroke-linecap="round"/>
 </svg>
