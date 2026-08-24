@@ -19,5 +19,5 @@
   <line x1="37" y1="30" x2="49" y2="30" stroke="#8b7b6a" stroke-width="1" stroke-linecap="round"/>
   <line x1="37" y1="34" x2="45" y2="34" stroke="#8b7b6a" stroke-width="1" stroke-linecap="round"/>
   <!-- Merge arrow pointing down -->
-  <path d="M 21 42 L 32 50 L 43 42" stroke="#a0b8d0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M 21 44 L 32 52 L 43 44" stroke="#a0b8d0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 </svg>
