@@ -183,6 +183,12 @@ std::vector<std::string> dict_selection_dialog_t::get_selected_paths() const
 	return result;
 }
 
+void dict_selection_dialog_t::set_allow_empty_selection(bool allowed)
+{
+	m_allow_empty_selection = allowed;
+	update_ok_button();
+}
+
 void dict_selection_dialog_t::on_tree_item_changed(QTreeWidgetItem * item, int)
 {
 	const auto & path_data = item->data(0, Qt::UserRole).toString();
@@ -240,5 +246,5 @@ void dict_selection_dialog_t::on_move_down()
 
 void dict_selection_dialog_t::update_ok_button()
 {
-	m_button_box->button(QDialogButtonBox::Ok)->setEnabled(m_order_list->count() > 0);
+	m_button_box->button(QDialogButtonBox::Ok)->setEnabled(m_allow_empty_selection || m_order_list->count() > 0);
 }

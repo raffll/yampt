@@ -34,6 +34,7 @@ public:
 	    QWidget * parent = nullptr);
 
 	std::vector<std::string> get_selected_paths() const;
+	void set_allow_empty_selection(bool allowed);
 
 private:
 	struct root_content_t
@@ -59,4 +60,5 @@ private:
 	QPushButton * m_up_button = nullptr;
 	QPushButton * m_down_button = nullptr;
 	QDialogButtonBox * m_button_box = nullptr;
+	bool m_allow_empty_selection = false;
 };

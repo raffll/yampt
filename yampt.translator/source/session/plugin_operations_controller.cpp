@@ -69,6 +69,7 @@ void plugin_operations_controller_t::on_plugin_operation(const std::string & plu
 
 		dict_selection_dialog_t dialog(entries, m_deps.settings.last_merge_order(), m_deps.parent_widget);
 		dialog.setWindowTitle(QCoreApplication::translate("yTranslator", "Select Dictionaries"));
+		dialog.set_allow_empty_selection(true);
 		if (dialog.exec() != QDialog::Accepted)
 			return;
 
