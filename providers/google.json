@@ -15,5 +15,5 @@
         "format": "text"
     },
     "response_path": "data.translations[0].translatedText",
-    "quota_limit": 0
+    "quota_limit": 500000
 }

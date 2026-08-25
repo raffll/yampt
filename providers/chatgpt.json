@@ -1,0 +1,17 @@
+{
+    "name": "ChatGPT",
+    "kind": "chat_completion",
+    "endpoint": "https://api.openai.com/v1/chat/completions",
+    "body_format": "json",
+    "headers": {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer {{api_key}}"
+    },
+    "body": {
+        "model": "gpt-4o-mini",
+        "max_tokens": "4096"
+    },
+    "response_path": "choices[0].message.content",
+    "system_prompt": "You are a translator for the video game Morrowind. Translate the given text from {{source_lang_upper}} to {{target_lang}}. Output only the translated text, nothing else. Preserve all HTML tags, line breaks, and formatting exactly as they appear.",
+    "quota_limit": 0
+}

@@ -121,8 +121,8 @@ std::string web_translator_t::expand_template(
 
 void web_translator_t::send_simple_request(const std::string & text, const std::string & target_lang)
 {
-	QUrl url(QString::fromStdString(m_config.endpoint));
-	QNetworkRequest request(url);
+	QUrl url(QString::fromStdString(expand_template(m_config.endpoint, text, target_lang)));
+	QNetworkRequest request;
 
 	for (const auto & [header_name, header_value] : m_config.headers)
 	{
@@ -130,9 +130,9 @@ void web_translator_t::send_simple_request(const std::string & text, const std::
 		request.setRawHeader(QByteArray::fromStdString(header_name), QByteArray::fromStdString(expanded));
 	}
 
-	QByteArray body_data;
+	QNetworkReply * reply = nullptr;
 
-	if (m_config.body_format == body_format_t::form)
+	if (m_config.body_format == body_format_t::query)
 	{
 		QUrlQuery params;
 		for (const auto & [field_name, field_template] : m_config.body_fields)
@@ -140,10 +140,24 @@ void web_translator_t::send_simple_request(const std::string & text, const std::
 			auto value = expand_template(field_template, text, target_lang);
 			params.addQueryItem(QString::fromStdString(field_name), QString::fromStdString(value));
 		}
-		body_data = params.query(QUrl::FullyEncoded).toUtf8();
+		url.setQuery(params);
+		request.setUrl(url);
+		reply = m_network->get(request);
+	}
+	else if (m_config.body_format == body_format_t::form)
+	{
+		request.setUrl(url);
+		QUrlQuery params;
+		for (const auto & [field_name, field_template] : m_config.body_fields)
+		{
+			auto value = expand_template(field_template, text, target_lang);
+			params.addQueryItem(QString::fromStdString(field_name), QString::fromStdString(value));
+		}
+		reply = m_network->post(request, params.query(QUrl::FullyEncoded).toUtf8());
 	}
 	else
 	{
+		request.setUrl(url);
 		QJsonObject body_obj;
 		for (const auto & [field_name, field_template] : m_config.body_fields)
 		{
@@ -158,10 +172,9 @@ void web_translator_t::send_simple_request(const std::string & text, const std::
 			else
 				body_obj[field_key] = QString::fromStdString(value);
 		}
-		body_data = QJsonDocument(body_obj).toJson(QJsonDocument::Compact);
+		reply = m_network->post(request, QJsonDocument(body_obj).toJson(QJsonDocument::Compact));
 	}
 
-	auto * reply = m_network->post(request, body_data);
 	connect(
 	    reply,
 	    &QNetworkReply::finished,
@@ -205,6 +218,11 @@ void web_translator_t::send_chat_request(const std::string & text, const std::st
 	body_obj["system"] = QString::fromStdString(system_prompt);
 
 	QJsonArray messages;
+	QJsonObject system_message;
+	system_message["role"] = "system";
+	system_message["content"] = QString::fromStdString(system_prompt);
+	messages.append(system_message);
+
 	QJsonObject user_message;
 	user_message["role"] = "user";
 	user_message["content"] = QString::fromStdString(text);

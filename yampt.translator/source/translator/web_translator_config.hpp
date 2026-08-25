@@ -7,7 +7,8 @@
 enum class body_format_t
 {
 	json,
-	form
+	form,
+	query
 };
 
 enum class provider_kind_t

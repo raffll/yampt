@@ -16,7 +16,12 @@ static web_translator_config_t parse_config(const QJsonObject & root, const std:
 	config.system_prompt = root.value("system_prompt").toString().toStdString();
 
 	const auto format_str = root.value("body_format").toString("json").toStdString();
-	config.body_format = (format_str == "form") ? body_format_t::form : body_format_t::json;
+	if (format_str == "form")
+		config.body_format = body_format_t::form;
+	else if (format_str == "query")
+		config.body_format = body_format_t::query;
+	else
+		config.body_format = body_format_t::json;
 
 	const auto kind_str = root.value("kind").toString("simple").toStdString();
 	config.kind = (kind_str == "chat_completion") ? provider_kind_t::chat_completion : provider_kind_t::simple;
