@@ -39,7 +39,7 @@ public:
 
 private:
 	std::string make_output_path(const std::string & source_path, const std::string & ext) const;
-	std::string make_output_path(const std::string & base_name, const std::string & ext, bool) const;
+	std::string make_output_path_from_name(const std::string & base_name, const std::string & ext) const;
 	std::string get_output_dir() const;
 
 	std::string m_output_dir;

@@ -21,7 +21,6 @@ struct web_translator_config_t
 	std::string identifier;
 	std::string display_name;
 	std::string endpoint;
-	std::string method;
 	body_format_t body_format = body_format_t::json;
 	provider_kind_t kind = provider_kind_t::simple;
 	std::unordered_map<std::string, std::string> headers;

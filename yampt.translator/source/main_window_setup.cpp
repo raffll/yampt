@@ -224,14 +224,13 @@ void main_window_t::setup_replace_toolbar()
 	m_replace_regex_check->setToolTip(tr("Regular expression find/replace"));
 	layout->addWidget(m_replace_regex_check);
 
+	m_replace_one_btn = new QPushButton(tr("Replace"), this);
+	m_replace_one_btn->setToolTip(tr("Replace in the selected entry and advance to next"));
+	layout->addWidget(m_replace_one_btn);
+
 	m_replace_all_btn = new QPushButton(tr("Replace All"), this);
 	m_replace_all_btn->setToolTip(tr("Replace in all currently visible entries"));
 	layout->addWidget(m_replace_all_btn);
-
-	m_undo_replace_btn = new QPushButton(tr("Undo"), this);
-	m_undo_replace_btn->setToolTip(tr("Undo the last Replace All operation"));
-	m_undo_replace_btn->setEnabled(false);
-	layout->addWidget(m_undo_replace_btn);
 }
 
 void main_window_t::setup_central_widget()
@@ -346,7 +345,7 @@ void main_window_t::setup_table_display()
 	    *m_search_col_translation);
 
 	if (!m_find_replace)
-		m_find_replace = new find_replace_t(*m_table_model, m_active_doc);
+		m_find_replace = new find_replace_t(*m_table_model, m_active_doc, m_edit_history);
 }
 
 void main_window_t::connect_menu_signals()
@@ -515,11 +514,10 @@ void main_window_t::connect_menu_signals()
 		}
 
 		statusBar()->showMessage(tr("Replaced in %1 entries").arg(result.count), 5000);
-		m_undo_replace_btn->setEnabled(m_find_replace->has_undo());
 	});
 
 	connect(
-	    m_undo_replace_btn,
+	    m_replace_one_btn,
 	    &QPushButton::clicked,
 	    this,
 	    [this]()
@@ -527,18 +525,21 @@ void main_window_t::connect_menu_signals()
 		if (!m_find_replace)
 			return;
 
-		auto result = m_find_replace->undo_last_replace_all();
+		const int current_row = m_editor_controller.current_row();
+		if (current_row < 0)
+			return;
 
-		if (result.count > 0)
-		{
-			set_unsaved_changes(true);
-			rebuild_table();
-			if (m_editor_controller.current_row() >= 0)
-				load_record(m_editor_controller.current_row());
-		}
+		const auto & query = m_find_field->text().toStdString();
+		const auto & replacement = m_replace_field->text().toStdString();
+		const bool case_sensitive = m_replace_case_check->isChecked();
+		const bool regex_mode = m_replace_regex_check->isChecked();
 
-		statusBar()->showMessage(tr("Undid %1 replacements").arg(result.count), 5000);
-		m_undo_replace_btn->setEnabled(m_find_replace->has_undo());
+		if (!m_find_replace->replace_one(current_row, query, replacement, case_sensitive, regex_mode))
+			return;
+
+		set_unsaved_changes(true);
+		rebuild_table();
+		advance_to_next_row();
 	});
 
 	connect(m_find_replace_toggle, &QToolButton::toggled, this, [this](bool checked)
@@ -724,6 +725,51 @@ void main_window_t::connect_editor_signals()
 
 		set_unsaved_changes(m_active_doc->is_dirty());
 		update_status_counts();
+	});
+
+	connect(
+	    m_table_view,
+	    &record_table_view_t::batch_revert_requested,
+	    this,
+	    [this](const QList<int> & rows)
+	{
+		if (!m_active_doc)
+			return;
+
+		int reverted_count = 0;
+
+		for (int row : rows)
+		{
+			const auto * row_data = m_table_model->row_at(row);
+			if (!row_data)
+				continue;
+
+			const auto history = m_edit_history.get_history(row_data->type, row_data->key_text);
+			if (history.empty())
+				continue;
+
+			const auto revert = m_edit_history.revert(row_data->type, row_data->key_text, history.size() - 1);
+			if (!revert.success)
+				continue;
+
+			const auto result = m_active_doc->commit(*row_data, revert.reverted_text, revert.reverted_status);
+			if (result.success)
+			{
+				m_table_model->update_row(row, result.new_text, result.status);
+				++reverted_count;
+			}
+		}
+
+		if (reverted_count > 0)
+		{
+			set_unsaved_changes(m_active_doc->is_dirty());
+			update_status_counts();
+
+			if (m_editor_controller.current_row() >= 0)
+				load_record(m_editor_controller.current_row());
+		}
+
+		statusBar()->showMessage(tr("Reverted %1 entries").arg(reverted_count), 5000);
 	});
 
 	connect(m_editor_view, &editor_view_t::text_changed, this, &main_window_t::on_translation_changed);

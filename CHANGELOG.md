@@ -2,6 +2,10 @@
 
 ## [XXX]
 
+### yTranslator
+- [NEW] Revert from record table context menu: right-click selected entries → Revert restores previous text and status from history
+- [CHANGE] Find/Replace no longer has a batch Undo button — each replacement is recorded in edit history and revertable per-entry
+
 ### Both Apps
 - [NEW] Linux support: builds with CMake and system libraries, AUR package available
 - [NEW] Cross-platform resource paths: shared data in `/usr/share/yampt/`, user data in `~/.yampt/`

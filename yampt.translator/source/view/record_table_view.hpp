@@ -21,6 +21,7 @@ public:
 signals:
 	void row_selected(int row);
 	void batch_status_change_requested(const QList<int> & rows, status_t new_status);
+	void batch_revert_requested(const QList<int> & rows);
 	void delete_entry_requested();
 
 protected:

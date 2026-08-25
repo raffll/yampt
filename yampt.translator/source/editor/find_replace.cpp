@@ -1,9 +1,11 @@
 #include "find_replace.hpp"
+#include "edit_history.hpp"
 #include <QString>
 
-find_replace_t::find_replace_t(row_source_t & source, document_t *& active_doc)
+find_replace_t::find_replace_t(row_source_t & source, document_t *& active_doc, edit_history_t & history)
     : m_source(source)
     , m_active_doc(active_doc)
+    , m_history(history)
 {}
 
 std::optional<find_replace_t::search_params_t> find_replace_t::build_search_params(
@@ -93,7 +95,6 @@ find_replace_t::replace_all_result_t find_replace_t::replace_all(
 	if (!params)
 		return {};
 
-	m_undo_batch.clear();
 	int replaced_count = 0;
 	const int visible_count = m_source.row_count();
 
@@ -116,7 +117,8 @@ find_replace_t::replace_all_result_t find_replace_t::replace_all(
 		if (!result)
 			continue;
 
-		m_undo_batch.push_back({ row_data->type, row_data->record_index, entry.new_text, entry.status });
+		m_history.record_change(row_data->type, row_data->key_text, entry.new_text, *result, entry.status);
+
 		entry.new_text = *result;
 		entry.status = status_t::replaced;
 		dict_doc->modified_records_insert(row_data->type, row_data->record_index);
@@ -129,43 +131,47 @@ find_replace_t::replace_all_result_t find_replace_t::replace_all(
 	return { replaced_count };
 }
 
-bool find_replace_t::has_undo() const
+bool find_replace_t::replace_one(
+    int row,
+    const std::string & query,
+    const std::string & replacement,
+    bool case_sensitive,
+    bool regex_mode)
 {
-	return !m_undo_batch.empty();
-}
-
-find_replace_t::undo_result_t find_replace_t::undo_last_replace_all()
-{
-	if (m_undo_batch.empty())
-		return {};
+	if (query.empty())
+		return false;
 
 	auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
 	if (!dict_doc)
-		return {};
+		return false;
 
-	int restored_count = 0;
+	const auto & params = build_search_params(query, replacement, case_sensitive, regex_mode);
+	if (!params)
+		return false;
 
-	for (const auto & undo_entry : m_undo_batch)
-	{
-		auto & data = dict_doc->data_mut();
-		auto it_chapter = data.find(undo_entry.type);
-		if (it_chapter == data.end())
-			continue;
+	const auto * row_data = m_source.row_at(row);
+	if (!row_data)
+		return false;
 
-		if (undo_entry.record_index >= it_chapter->second.records.size())
-			continue;
+	auto & chapter_data = dict_doc->data_mut();
+	auto it_chapter = chapter_data.find(row_data->type);
+	if (it_chapter == chapter_data.end())
+		return false;
 
-		auto & record = it_chapter->second.records[undo_entry.record_index];
-		record.new_text = undo_entry.old_text;
-		record.status = undo_entry.old_status;
-		dict_doc->modified_records_insert(undo_entry.type, undo_entry.record_index);
-		++restored_count;
-	}
+	if (row_data->record_index >= it_chapter->second.records.size())
+		return false;
 
-	m_undo_batch.clear();
+	auto & entry = it_chapter->second.records[row_data->record_index];
+	const auto & result = apply_replacement(entry.new_text, *params);
+	if (!result)
+		return false;
 
-	if (restored_count > 0)
-		dict_doc->set_dirty(true);
+	m_history.record_change(row_data->type, row_data->key_text, entry.new_text, *result, entry.status);
 
-	return { restored_count };
+	entry.new_text = *result;
+	entry.status = status_t::replaced;
+	dict_doc->modified_records_insert(row_data->type, row_data->record_index);
+	dict_doc->set_dirty(true);
+
+	return true;
 }

@@ -80,6 +80,10 @@ void record_table_view_t::contextMenuEvent(QContextMenuEvent * event)
 	auto * act_untranslated = menu->addAction(tr("Set Untranslated"));
 	auto * act_error = menu->addAction(tr("Set Error"));
 
+	menu->addSeparator();
+	auto * act_revert = menu->addAction(tr("Revert"));
+	act_revert->setToolTip(tr("Revert selected entries to previous state from history"));
+
 	auto * chosen = menu->exec(event->globalPos());
 	std::optional<status_t> new_status;
 	if (chosen == act_translated)
@@ -98,6 +102,14 @@ void record_table_view_t::contextMenuEvent(QContextMenuEvent * event)
 			rows.append(idx.row());
 
 		emit batch_status_change_requested(rows, new_status.value());
+	}
+	else if (chosen == act_revert)
+	{
+		QList<int> rows;
+		for (const auto & idx : selected)
+			rows.append(idx.row());
+
+		emit batch_revert_requested(rows);
 	}
 
 	delete menu;

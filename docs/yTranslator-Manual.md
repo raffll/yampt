@@ -77,7 +77,7 @@ Replace All replaces the search term in all currently visible entries. Only entr
 
 Entries modified by Replace All receive the status Replaced. This makes it easy to filter and review all changes after a batch operation.
 
-The Undo button reverts the last Replace All operation, restoring the original text and status for every entry that was modified. Undo is available until the next Replace All is performed or the dictionary is closed.
+Each replacement is recorded individually in the edit history. To undo a replacement, select the affected entries in the Records table, right-click, and choose Revert. This restores the text and status each entry had before the replacement. You can also view and revert individual entries from the History panel.
 
 ### EET Import
 
@@ -147,7 +147,7 @@ Additional providers can be added by placing a configuration file in the `provid
 
 ## Entry Statuses
 
-Each dictionary entry has a status. Only **Translated** entries are applied during Convert Plugin/Create Patch Plugin — all others are skipped. You can manually set **Translated**, **In Progress**, **Untranslated**, or **Error** via right-click context menu on selected rows in the Records table.
+Each dictionary entry has a status. Only **Translated** entries are applied during Convert Plugin/Create Patch Plugin — all others are skipped. You can manually set **Translated**, **In Progress**, **Untranslated**, or **Error** via right-click context menu on selected rows in the Records table. The same menu offers **Revert**, which restores each selected entry to its previous text and status from the edit history.
 
 - **Translated** — the translation is approved. This is the only status that produces output when running Convert Plugin or Create Patch Plugin.
 - **Untranslated** — no translation exists. The original and translation fields contain the same text.

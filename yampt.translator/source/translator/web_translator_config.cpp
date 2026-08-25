@@ -11,7 +11,6 @@ static web_translator_config_t parse_config(const QJsonObject & root, const std:
 	config.identifier = file_stem;
 	config.display_name = root.value("name").toString().toStdString();
 	config.endpoint = root.value("endpoint").toString().toStdString();
-	config.method = root.value("method").toString("POST").toStdString();
 	config.response_path = root.value("response_path").toString().toStdString();
 	config.quota_limit = root.value("quota_limit").toInt(0);
 	config.system_prompt = root.value("system_prompt").toString().toStdString();

@@ -8,6 +8,8 @@
 #include <vector>
 #include <QString>
 
+class edit_history_t;
+
 class find_replace_t
 {
 public:
@@ -16,20 +18,20 @@ public:
 		int count = 0;
 	};
 
-	struct undo_result_t
-	{
-		int count = 0;
-	};
-
-	find_replace_t(row_source_t & source, document_t *& active_doc);
+	find_replace_t(row_source_t & source, document_t *& active_doc, edit_history_t & history);
 
 	replace_all_result_t replace_all(
 	    const std::string & query,
 	    const std::string & replacement,
 	    bool case_sensitive,
 	    bool regex_mode);
-	undo_result_t undo_last_replace_all();
-	bool has_undo() const;
+
+	bool replace_one(
+	    int row,
+	    const std::string & query,
+	    const std::string & replacement,
+	    bool case_sensitive,
+	    bool regex_mode);
 
 private:
 	struct search_params_t
@@ -41,14 +43,6 @@ private:
 		QString lower_query;
 	};
 
-	struct undo_entry_t
-	{
-		rec_type_t type;
-		size_t record_index;
-		std::string old_text;
-		status_t old_status;
-	};
-
 	std::optional<search_params_t> build_search_params(
 	    const std::string & query,
 	    const std::string & replacement,
@@ -58,5 +52,5 @@ private:
 
 	row_source_t & m_source;
 	document_t *& m_active_doc;
-	std::vector<undo_entry_t> m_undo_batch;
+	edit_history_t & m_history;
 };

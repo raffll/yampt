@@ -183,7 +183,7 @@ private:
 	QToolButton * m_replace_case_check = nullptr;
 	QToolButton * m_replace_regex_check = nullptr;
 	QPushButton * m_replace_all_btn = nullptr;
-	QPushButton * m_undo_replace_btn = nullptr;
+	QPushButton * m_replace_one_btn = nullptr;
 	QAction * m_spell_check = nullptr;
 	QAction * m_grammar_check = nullptr;
 	QAction * m_whitespace_check = nullptr;

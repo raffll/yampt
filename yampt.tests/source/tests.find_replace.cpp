@@ -1,5 +1,6 @@
 #include <catch2/catch_all.hpp>
 #include <editor/find_replace.hpp>
+#include <editor/edit_history.hpp>
 #include <io/dict_writer.hpp>
 #include <model/dict_document.hpp>
 #include <utility/app_logger.hpp>
@@ -104,8 +105,9 @@ TEST_CASE("find_replace_t::replace_all, replaces all matching", "[i][qt]")
 	const auto path = create_service_dict(data);
 	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
 	document_t * active_doc = &doc;
+	edit_history_t history;
 
-	find_replace_t service(source, active_doc);
+	find_replace_t service(source, active_doc, history);
 	const auto result = service.replace_all("old value", "new value", false, false);
 
 	REQUIRE(result.count == 2);
@@ -144,8 +146,9 @@ TEST_CASE("find_replace_t::replace_all, sets status replaced", "[i][qt]")
 	const auto path = create_service_dict(data);
 	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
 	document_t * active_doc = &doc;
+	edit_history_t history;
 
-	find_replace_t service(source, active_doc);
+	find_replace_t service(source, active_doc, history);
 	service.replace_all("replaceable", "replaced", false, false);
 
 	const auto & records = doc.data().at(rec_type_t::cell).records;
@@ -154,7 +157,7 @@ TEST_CASE("find_replace_t::replace_all, sets status replaced", "[i][qt]")
 	cleanup_service_dict(path);
 }
 
-TEST_CASE("find_replace_t::undo_last_replace_all, restores text and status", "[i][qt]")
+TEST_CASE("find_replace_t::replace_all, records changes in edit history", "[i][qt]")
 {
 	mock_row_source_t source;
 
@@ -180,35 +183,15 @@ TEST_CASE("find_replace_t::undo_last_replace_all, restores text and status", "[i
 	const auto path = create_service_dict(data);
 	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
 	document_t * active_doc = &doc;
+	edit_history_t history;
 
-	find_replace_t service(source, active_doc);
+	find_replace_t service(source, active_doc, history);
 	service.replace_all("original", "modified", false, false);
 
-	REQUIRE(service.has_undo());
-
-	const auto undo_result = service.undo_last_replace_all();
-	REQUIRE(undo_result.count == 1);
-
-	const auto & records = doc.data().at(rec_type_t::cell).records;
-	REQUIRE(records[0].new_text == "original text");
-	REQUIRE(records[0].status == status_t::translated);
-	REQUIRE_FALSE(service.has_undo());
-
-	cleanup_service_dict(path);
-}
-
-TEST_CASE("find_replace_t::has_undo, false before any replace", "[i][qt]")
-{
-	mock_row_source_t source;
-	source.rows = {};
-
-	dict_t data;
-	const auto path = create_service_dict(data);
-	dict_document_t doc(path, codepage_t::windows_1252, dict_kind_t::user);
-	document_t * active_doc = &doc;
-
-	find_replace_t service(source, active_doc);
-	REQUIRE_FALSE(service.has_undo());
+	const auto entries = history.get_history(rec_type_t::cell, "key_a");
+	REQUIRE(entries.size() == 1);
+	REQUIRE(entries[0].value == "original text");
+	REQUIRE(entries[0].status == status_t::translated);
 
 	cleanup_service_dict(path);
 }
