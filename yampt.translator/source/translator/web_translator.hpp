@@ -4,6 +4,7 @@
 #include "web_translator_config.hpp"
 #include <functional>
 #include <string>
+#include <unordered_map>
 #include <QObject>
 
 class QNetworkAccessManager;
@@ -27,6 +28,8 @@ public:
 	void set_api_key(const std::string & key);
 	std::string api_key() const;
 
+	void set_provider_settings(const std::unordered_map<std::string, std::string> & settings);
+
 	void set_source_language(const std::string & language);
 	std::string source_language() const;
 
@@ -47,7 +50,7 @@ private:
 
 	web_translator_config_t m_config;
 	QNetworkAccessManager * m_network = nullptr;
-	std::string m_api_key;
+	std::unordered_map<std::string, std::string> m_settings;
 	std::string m_source_language = "en";
 	int m_chars_used = 0;
 	std::function<std::string(const std::string &)> m_glossary_fn;

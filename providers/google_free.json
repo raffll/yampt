@@ -12,5 +12,6 @@
         "q": "{{text}}"
     },
     "response_path": "[0].[0].[0]",
-    "quota_limit": 0
+    "quota_limit": 0,
+    "settings": []
 }

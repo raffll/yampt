@@ -49,6 +49,9 @@ public:
 	std::string web_api_key(const std::string & provider_id) const;
 	void set_web_api_key(const std::string & provider_id, const std::string & value);
 
+	std::string web_provider_setting(const std::string & provider_id, const std::string & key) const;
+	void set_web_provider_setting(const std::string & provider_id, const std::string & key, const std::string & value);
+
 	int translation_source_index() const;
 	void set_translation_source_index(int index);
 

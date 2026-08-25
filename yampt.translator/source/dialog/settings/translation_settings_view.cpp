@@ -1,9 +1,11 @@
 #include "translation_settings_view.hpp"
 #include <settings_store.hpp>
-#include <QHeaderView>
+#include <QComboBox>
+#include <QFormLayout>
+#include <QFrame>
+#include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
-#include <QTableWidget>
 #include <QVBoxLayout>
 
 translation_settings_view_t::translation_settings_view_t(const std::string & providers_dir, QWidget * parent)
@@ -11,94 +13,184 @@ translation_settings_view_t::translation_settings_view_t(const std::string & pro
     , m_providers_dir(providers_dir)
 {
 	auto * layout = new QVBoxLayout(this);
-
-	auto * description = new QLabel(
-	    tr("API keys for web translation providers. "
-	       "Add provider configs as JSON files in the providers/ folder."),
-	    this);
-	description->setWordWrap(true);
-	layout->addWidget(description);
-
-	m_provider_table = new QTableWidget(this);
-	m_provider_table->setColumnCount(3);
-	m_provider_table->setHorizontalHeaderLabels({ tr("Provider"), tr("API Key"), tr("Status") });
-	m_provider_table->horizontalHeader()->setStretchLastSection(true);
-	m_provider_table->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
-	m_provider_table->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
-	m_provider_table->horizontalHeader()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
-	m_provider_table->verticalHeader()->setVisible(false);
-	m_provider_table->verticalHeader()->setDefaultSectionSize(24);
-	m_provider_table->setSelectionMode(QAbstractItemView::NoSelection);
-	m_provider_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
-	layout->addWidget(m_provider_table, 1);
+	layout->setSpacing(12);
 
 	m_configs = web_translator_config::load_all(m_providers_dir);
-	rebuild_table();
+
+	for (const auto & config : m_configs)
+		build_provider_card(layout, config);
+
+	layout->addStretch();
 }
 
-void translation_settings_view_t::rebuild_table()
+void translation_settings_view_t::build_provider_card(QVBoxLayout * parent, const web_translator_config_t & config)
 {
-	m_provider_table->setRowCount(static_cast<int>(m_configs.size()));
+	auto * card = new QFrame(this);
+	card->setFrameShape(QFrame::StyledPanel);
+	auto * card_layout = new QVBoxLayout(card);
+	card_layout->setContentsMargins(8, 6, 8, 6);
+	card_layout->setSpacing(6);
 
-	for (int row = 0; row < static_cast<int>(m_configs.size()); ++row)
+	auto * header_row = new QHBoxLayout;
+	auto * title_label = new QLabel(QString::fromStdString(config.display_name), card);
+	auto title_font = title_label->font();
+	title_font.setBold(true);
+	title_label->setFont(title_font);
+	header_row->addWidget(title_label);
+
+	header_row->addStretch();
+
+	auto * status_label = new QLabel(card);
+	status_label->setStyleSheet("color: rgb(120, 120, 120); font-size: 11px;");
+	header_row->addWidget(status_label);
+	card_layout->addLayout(header_row);
+
+	provider_card_t card_entry;
+	card_entry.identifier = config.identifier;
+	card_entry.status_label = status_label;
+	m_provider_cards.push_back(card_entry);
+
+	if (config.settings.empty())
 	{
-		const auto & config = m_configs[row];
-
-		auto * name_item = new QTableWidgetItem(QString::fromStdString(config.display_name));
-		name_item->setFlags(name_item->flags() & ~Qt::ItemIsEditable);
-		m_provider_table->setItem(row, 0, name_item);
-
-		auto * key_edit = new QLineEdit(m_provider_table);
-		key_edit->setEchoMode(QLineEdit::Password);
-		key_edit->setPlaceholderText(tr("Enter API key..."));
-		m_provider_table->setCellWidget(row, 1, key_edit);
-
-		auto * status_item = new QTableWidgetItem(tr("Not configured"));
-		status_item->setFlags(status_item->flags() & ~Qt::ItemIsEditable);
-		status_item->setForeground(QColor(180, 80, 80));
-		m_provider_table->setItem(row, 2, status_item);
+		auto * no_config_label = new QLabel(tr("No configuration needed"), card);
+		no_config_label->setStyleSheet("color: rgb(120, 120, 120); font-style: italic;");
+		card_layout->addWidget(no_config_label);
 	}
+	else
+	{
+		auto * form = new QFormLayout;
+		form->setSpacing(4);
+
+		for (const auto & setting : config.settings)
+		{
+			setting_widget_t entry;
+			entry.provider_id = config.identifier;
+			entry.setting_key = setting.key;
+			entry.type = setting.type;
+
+			if (setting.type == setting_type_t::choice)
+			{
+				auto * combo = new QComboBox(card);
+				for (const auto & choice : setting.choices)
+					combo->addItem(QString::fromStdString(choice));
+
+				if (!setting.default_value.empty())
+					combo->setCurrentText(QString::fromStdString(setting.default_value));
+
+				entry.widget = combo;
+				form->addRow(QString::fromStdString(setting.label) + ":", combo);
+			}
+			else
+			{
+				auto * line_edit = new QLineEdit(card);
+				if (setting.type == setting_type_t::password)
+				{
+					line_edit->setEchoMode(QLineEdit::Password);
+					line_edit->setPlaceholderText(tr("Enter key..."));
+				}
+
+				entry.widget = line_edit;
+				form->addRow(QString::fromStdString(setting.label) + ":", line_edit);
+			}
+
+			m_setting_widgets.push_back(entry);
+		}
+
+		card_layout->addLayout(form);
+	}
+
+	parent->addWidget(card);
 }
 
 void translation_settings_view_t::load(const settings_store_t & settings)
 {
-	for (int row = 0; row < static_cast<int>(m_configs.size()); ++row)
+	for (auto & entry : m_setting_widgets)
 	{
-		const auto & config = m_configs[row];
-		const auto stored_key = settings.web_api_key(config.identifier);
+		const auto stored = settings.web_provider_setting(entry.provider_id, entry.setting_key);
 
-		auto * key_edit = qobject_cast<QLineEdit *>(m_provider_table->cellWidget(row, 1));
-		if (key_edit)
-			key_edit->setText(QString::fromStdString(stored_key));
-
-		auto * status_item = m_provider_table->item(row, 2);
-		if (status_item)
+		if (entry.type == setting_type_t::choice)
 		{
-			if (stored_key.empty())
-			{
-				status_item->setText(tr("Not configured"));
-				status_item->setForeground(QColor(180, 80, 80));
-			}
-			else
-			{
-				status_item->setText(tr("Configured"));
-				status_item->setForeground(QColor(80, 160, 80));
-			}
+			auto * combo = qobject_cast<QComboBox *>(entry.widget);
+			if (combo && !stored.empty())
+				combo->setCurrentText(QString::fromStdString(stored));
+		}
+		else
+		{
+			auto * line_edit = qobject_cast<QLineEdit *>(entry.widget);
+			if (line_edit)
+				line_edit->setText(QString::fromStdString(stored));
 		}
 	}
+
+	for (const auto & card : m_provider_cards)
+		update_status(card);
 }
 
 void translation_settings_view_t::apply(settings_store_t & settings) const
 {
-	for (int row = 0; row < static_cast<int>(m_configs.size()); ++row)
+	for (const auto & entry : m_setting_widgets)
 	{
-		const auto & config = m_configs[row];
+		const auto value = read_widget_value(entry);
+		settings.set_web_provider_setting(entry.provider_id, entry.setting_key, value);
+	}
+}
 
-		auto * key_edit = qobject_cast<QLineEdit *>(m_provider_table->cellWidget(row, 1));
-		if (!key_edit)
+void translation_settings_view_t::update_status(const provider_card_t & card)
+{
+	const web_translator_config_t * config = nullptr;
+	for (const auto & cfg : m_configs)
+	{
+		if (cfg.identifier == card.identifier)
+		{
+			config = &cfg;
+			break;
+		}
+	}
+
+	if (!config || !card.status_label)
+		return;
+
+	if (config->settings.empty())
+	{
+		card.status_label->setText(tr("Ready"));
+		card.status_label->setStyleSheet("color: rgb(80, 160, 80); font-size: 11px;");
+		return;
+	}
+
+	bool all_filled = true;
+	for (const auto & entry : m_setting_widgets)
+	{
+		if (entry.provider_id != card.identifier)
 			continue;
 
-		const auto key_value = key_edit->text().toStdString();
-		settings.set_web_api_key(config.identifier, key_value);
+		const auto value = read_widget_value(entry);
+		if (value.empty())
+		{
+			all_filled = false;
+			break;
+		}
 	}
+
+	if (all_filled)
+	{
+		card.status_label->setText(tr("Configured"));
+		card.status_label->setStyleSheet("color: rgb(80, 160, 80); font-size: 11px;");
+	}
+	else
+	{
+		card.status_label->setText(tr("Not configured"));
+		card.status_label->setStyleSheet("color: rgb(180, 80, 80); font-size: 11px;");
+	}
+}
+
+std::string translation_settings_view_t::read_widget_value(const setting_widget_t & entry) const
+{
+	if (entry.type == setting_type_t::choice)
+	{
+		auto * combo = qobject_cast<QComboBox *>(entry.widget);
+		return combo ? combo->currentText().toStdString() : std::string {};
+	}
+
+	auto * line_edit = qobject_cast<QLineEdit *>(entry.widget);
+	return line_edit ? line_edit->text().toStdString() : std::string {};
 }

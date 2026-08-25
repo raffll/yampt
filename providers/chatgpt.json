@@ -8,10 +8,24 @@
         "Authorization": "Bearer {{api_key}}"
     },
     "body": {
-        "model": "gpt-4o-mini",
+        "model": "{{model}}",
         "max_tokens": "4096"
     },
     "response_path": "choices[0].message.content",
     "system_prompt": "You are a translator for the video game Morrowind. Translate the given text from {{source_lang_upper}} to {{target_lang}}. Output only the translated text, nothing else. Preserve all HTML tags, line breaks, and formatting exactly as they appear.",
-    "quota_limit": 0
+    "quota_limit": 0,
+    "settings": [
+        {
+            "key": "api_key",
+            "label": "API Key",
+            "type": "password"
+        },
+        {
+            "key": "model",
+            "label": "Model",
+            "type": "choice",
+            "choices": ["gpt-4o-mini", "gpt-4o", "gpt-4-turbo", "gpt-3.5-turbo"],
+            "default": "gpt-4o-mini"
+        }
+    ]
 }

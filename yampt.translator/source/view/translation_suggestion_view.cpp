@@ -141,8 +141,18 @@ void translation_suggestion_view_t::apply_provider_settings(const settings_store
 	for (auto * web_provider : m_web_providers)
 	{
 		const auto & config = web_provider->config();
-		const auto stored_key = settings.web_api_key(config.identifier);
-		web_provider->set_api_key(stored_key);
+
+		std::unordered_map<std::string, std::string> provider_settings;
+		for (const auto & setting : config.settings)
+		{
+			auto value = settings.web_provider_setting(config.identifier, setting.key);
+			if (value.empty() && !setting.default_value.empty())
+				value = setting.default_value;
+
+			provider_settings[setting.key] = value;
+		}
+
+		web_provider->set_provider_settings(provider_settings);
 		web_provider->set_source_language(source_language);
 	}
 

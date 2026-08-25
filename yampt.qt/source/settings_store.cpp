@@ -134,6 +134,31 @@ void settings_store_t::set_web_api_key(const std::string & provider_id, const st
 	m_settings.setValue(key, QString::fromStdString(value));
 }
 
+std::string settings_store_t::web_provider_setting(const std::string & provider_id, const std::string & key) const
+{
+	const auto ini_key =
+	    QString("WebTranslators/") + QString::fromStdString(provider_id) + "/" + QString::fromStdString(key);
+	auto result = m_settings.value(ini_key, "").toString().toStdString();
+
+	if (result.empty() && key == "api_key")
+		result = web_api_key(provider_id);
+
+	return result;
+}
+
+void settings_store_t::set_web_provider_setting(
+    const std::string & provider_id,
+    const std::string & key,
+    const std::string & value)
+{
+	const auto ini_key =
+	    QString("WebTranslators/") + QString::fromStdString(provider_id) + "/" + QString::fromStdString(key);
+	m_settings.setValue(ini_key, QString::fromStdString(value));
+
+	if (key == "api_key")
+		set_web_api_key(provider_id, value);
+}
+
 int settings_store_t::translation_source_index() const
 {
 	return m_settings.value("Translation/SourceIndex", 0).toInt();

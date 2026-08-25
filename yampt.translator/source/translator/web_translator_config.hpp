@@ -17,6 +17,23 @@ enum class provider_kind_t
 	chat_completion
 };
 
+enum class setting_type_t
+{
+	password,
+	text,
+	choice
+};
+
+struct provider_setting_t
+{
+	std::string key;
+	std::string label;
+	setting_type_t type = setting_type_t::text;
+	std::vector<std::string> choices;
+	std::string default_value;
+	bool required = true;
+};
+
 struct web_translator_config_t
 {
 	std::string identifier;
@@ -29,6 +46,7 @@ struct web_translator_config_t
 	std::string response_path;
 	std::string system_prompt;
 	int quota_limit = 0;
+	std::vector<provider_setting_t> settings;
 };
 
 namespace web_translator_config {

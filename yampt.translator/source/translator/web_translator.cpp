@@ -22,7 +22,20 @@ std::string web_translator_t::name() const
 
 bool web_translator_t::is_available() const
 {
-	return !m_api_key.empty();
+	if (m_config.settings.empty())
+		return true;
+
+	for (const auto & setting : m_config.settings)
+	{
+		if (!setting.required)
+			continue;
+
+		auto it = m_settings.find(setting.key);
+		if (it == m_settings.end() || it->second.empty())
+			return false;
+	}
+
+	return true;
 }
 
 bool web_translator_t::is_async() const
@@ -45,12 +58,18 @@ int web_translator_t::remaining_quota() const
 
 void web_translator_t::set_api_key(const std::string & key)
 {
-	m_api_key = key;
+	m_settings["api_key"] = key;
 }
 
 std::string web_translator_t::api_key() const
 {
-	return m_api_key;
+	auto it = m_settings.find("api_key");
+	return (it != m_settings.end()) ? it->second : std::string {};
+}
+
+void web_translator_t::set_provider_settings(const std::unordered_map<std::string, std::string> & settings)
+{
+	m_settings = settings;
 }
 
 void web_translator_t::set_source_language(const std::string & language)
@@ -75,10 +94,10 @@ void web_translator_t::set_glossary_fn(std::function<std::string(const std::stri
 
 void web_translator_t::translate(const std::string & text, const std::string & target_lang)
 {
-	if (m_api_key.empty())
+	if (!is_available())
 	{
 		emit translation_finished(
-		    { "", false, QCoreApplication::translate("yTranslator", "No API key configured").toStdString() });
+		    { "", false, QCoreApplication::translate("yTranslator", "Provider not configured").toStdString() });
 		return;
 	}
 
@@ -105,7 +124,6 @@ std::string web_translator_t::expand_template(
 		}
 	};
 
-	replace_all("{{api_key}}", m_api_key);
 	replace_all("{{text}}", text);
 	replace_all("{{target_lang}}", target_lang);
 	replace_all("{{source_lang}}", m_source_language);
@@ -115,6 +133,9 @@ std::string web_translator_t::expand_template(
 
 	auto upper_source = QString::fromStdString(m_source_language).toUpper().toStdString();
 	replace_all("{{source_lang_upper}}", upper_source);
+
+	for (const auto & [setting_key, setting_value] : m_settings)
+		replace_all("{{" + setting_key + "}}", setting_value);
 
 	return result;
 }

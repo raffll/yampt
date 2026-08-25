@@ -34,6 +34,31 @@ static web_translator_config_t parse_config(const QJsonObject & root, const std:
 	for (auto it = body_obj.begin(); it != body_obj.end(); ++it)
 		config.body_fields[it.key().toStdString()] = it.value().toString().toStdString();
 
+	const auto settings_arr = root.value("settings").toArray();
+	for (const auto & item : settings_arr)
+	{
+		const auto obj = item.toObject();
+		provider_setting_t setting;
+		setting.key = obj.value("key").toString().toStdString();
+		setting.label = obj.value("label").toString().toStdString();
+		setting.default_value = obj.value("default").toString().toStdString();
+		setting.required = obj.value("required").toBool(true);
+
+		const auto type_str = obj.value("type").toString("text").toStdString();
+		if (type_str == "password")
+			setting.type = setting_type_t::password;
+		else if (type_str == "choice")
+			setting.type = setting_type_t::choice;
+		else
+			setting.type = setting_type_t::text;
+
+		const auto choices_arr = obj.value("choices").toArray();
+		for (const auto & choice : choices_arr)
+			setting.choices.push_back(choice.toString().toStdString());
+
+		config.settings.push_back(std::move(setting));
+	}
+
 	return config;
 }
 
