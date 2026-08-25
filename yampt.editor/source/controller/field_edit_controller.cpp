@@ -108,6 +108,9 @@ edit_result_t field_edit_controller_t::commit_field_edit(const field_edit_reques
 	if (!sub_result.found)
 		return { false, "sub-record not found at expected occurrence" };
 
+	if (request.field.name == nullptr)
+		return { false, "no schema defined for this sub-record" };
+
 	const auto existing_sub_size = read_sub_size(content, sub_result.byte_offset);
 	const auto * existing_sub_data = content.data() + sub_result.byte_offset + 8;
 

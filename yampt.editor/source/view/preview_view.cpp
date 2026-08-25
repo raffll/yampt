@@ -228,7 +228,8 @@ void preview_view_t::update_selection(
 	}
 	else
 	{
-		m_existing_sub_size = 0;
+		set_editing_enabled(false);
+		return;
 	}
 
 	const auto occurrence_variant = model->data(index, view_tree_model_t::sub_record_occurrence_role);

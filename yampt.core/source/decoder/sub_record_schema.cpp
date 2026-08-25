@@ -928,6 +928,66 @@ static const field_def_t itex_string_fields[] = {
 	{ "Icon", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
 };
 
+static const field_def_t desc_string_fields[] = {
+	{ "Description", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t scri_string_fields[] = {
+	{ "Script", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t dnam_string_fields[] = {
+	{ "Destination", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t anam_string_fields[] = {
+	{ "Owner", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t bnam_string_fields[] = {
+	{ "Script Text", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t onam_string_fields[] = {
+	{ "Actor", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t cnam_string_fields[] = {
+	{ "Class", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t knam_string_fields[] = {
+	{ "Key", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t tnam_string_fields[] = {
+	{ "Trap", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t inam_string_fields[] = {
+	{ "Info ID", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t pnam_string_fields[] = {
+	{ "Previous", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t sctx_string_fields[] = {
+	{ "Source", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t rnam_string_fields[] = {
+	{ "Race", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t snam_string_fields[] = {
+	{ "Sound", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
+static const field_def_t npcs_string_fields[] = {
+	{ "Spell", field_type_t::string_var, 0, 0, nullptr, nullptr, 0, nullptr },
+};
+
 static const char * const quest_marker_names[] = { "No", "Yes", nullptr };
 
 static const field_def_t quest_marker_fields[] = {
@@ -1022,6 +1082,21 @@ static const std::vector<sub_record_schema_t> & build_schemas()
 		{ "*", "FNAM", 0, fnam_string_fields, ARRAY_COUNT(fnam_string_fields) },
 		{ "*", "MODL", 0, modl_string_fields, ARRAY_COUNT(modl_string_fields) },
 		{ "*", "ITEX", 0, itex_string_fields, ARRAY_COUNT(itex_string_fields) },
+		{ "*", "DESC", 0, desc_string_fields, ARRAY_COUNT(desc_string_fields) },
+		{ "*", "SCRI", 0, scri_string_fields, ARRAY_COUNT(scri_string_fields) },
+		{ "*", "DNAM", 0, dnam_string_fields, ARRAY_COUNT(dnam_string_fields) },
+		{ "*", "ANAM", 0, anam_string_fields, ARRAY_COUNT(anam_string_fields) },
+		{ "*", "BNAM", 0, bnam_string_fields, ARRAY_COUNT(bnam_string_fields) },
+		{ "*", "ONAM", 0, onam_string_fields, ARRAY_COUNT(onam_string_fields) },
+		{ "*", "CNAM", 0, cnam_string_fields, ARRAY_COUNT(cnam_string_fields) },
+		{ "*", "KNAM", 0, knam_string_fields, ARRAY_COUNT(knam_string_fields) },
+		{ "*", "TNAM", 0, tnam_string_fields, ARRAY_COUNT(tnam_string_fields) },
+		{ "*", "INAM", 0, inam_string_fields, ARRAY_COUNT(inam_string_fields) },
+		{ "*", "PNAM", 0, pnam_string_fields, ARRAY_COUNT(pnam_string_fields) },
+		{ "*", "SCTX", 0, sctx_string_fields, ARRAY_COUNT(sctx_string_fields) },
+		{ "*", "RNAM", 0, rnam_string_fields, ARRAY_COUNT(rnam_string_fields) },
+		{ "*", "SNAM", 0, snam_string_fields, ARRAY_COUNT(snam_string_fields) },
+		{ "*", "NPCS", 0, npcs_string_fields, ARRAY_COUNT(npcs_string_fields) },
 		{ "*", "QSTN", 1, quest_marker_fields, ARRAY_COUNT(quest_marker_fields) },
 		{ "*", "QSTF", 1, quest_marker_fields, ARRAY_COUNT(quest_marker_fields) },
 		{ "*", "QSTR", 1, quest_marker_fields, ARRAY_COUNT(quest_marker_fields) },
