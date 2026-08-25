@@ -33,3 +33,25 @@ Translator settings: propose better name: and also populate dynamically with pro
 - creator_helpers namespace: nearly every function has 4-6 arguments (max 2 allowed). Create insert_params_t struct.
 - view_context_menu.cpp show_view_menu() is 92 lines. Extract determine_row_kind() and exclude-sub-record helper.
 - creator_base_t::make_info() is 72 lines with 4 nesting levels. Extract enrich_speaker_info and DIAL key tracking.
+- translation_suggestion_view.cpp advance_line_queue(): active_provider() called without null check — crash if provider becomes unavailable mid-queue.
+- view_tree_format.cpp decode_field() is 194 lines (4x limit). Split into per-type-family helpers (integers, floats, strings, flags, enums).
+- batch_cleaner_t::clean_plugin() is 87 lines with 4-level nesting. Extract record filtering logic and output writing.
+- plugin_scan_t::compute_conflict() is ~80 lines with 4-level nesting. Extract slot evaluation loop into its own method.
+- sub_record_merge_t::apply_intermediate() is ~68 lines. Extract three-way merge loop logic.
+- content_alignment.cpp: most methods take 5-8 arguments (fill_key_indices=8, fit_merge_column=7, emit_key_slots=7). Create alignment context struct.
+- merge_patch_ops_t::patch_field() takes 7 arguments. Create a patch_field_params_t struct.
+- translation_engine_t::load() swallows all exceptions with catch(...) — logs nothing about the failure cause. Log exception message.
+- translation_engine_t::translate() is 62 lines. Extract tokenization and result assembly into helpers.
+- yaml_l10n_writer.cpp write() is 59 lines. Extract block scalar writing and quoted value writing into helpers.
+- scdt_patcher_t::patch_later_message_segment uses 1-byte size field — silently truncates for message texts >255 chars, corrupting bytecode. Add overflow check or switch to 2-byte encoding.
+- settings_store_t: set_translation_language_index() never called — translation_language_index always reads 0. CTranslate2 always loads the first language's model dir on startup regardless of user's configured native language. Wire up persistence when user changes provider combo.
+- settings_store_t: translation_source_index / set_translation_source_index are completely unused. Remove.
+- settings_store_t: set_spell_lang_index() never called — spell_lang_index persists default 0 always. Remove or wire up.
+- yTranslator-Manual.md: `heuristic` status missing from Entry Statuses section. It's assigned by cell_matcher/dial_matcher and users encounter it in make-base results.
+- Batch revert triggers unintended propagation: batch_revert_requested handler calls commit() which propagates reverted text to all entries sharing the same old_text, corrupting unrelated translations. Single-entry revert (history panel) correctly avoids this by setting fields directly.
+- encode_from_utf8 (Windows) silently applies best-fit character mapping for unencodable characters — no error reported. byte_limit_validator approves text that will be corrupted on save. Add WC_NO_BEST_FIT_CHARS flag and warn user on encoding loss.
+- Duplicate file opening: session normalize_path only replaces backslashes, doesn't canonicalize case or resolve ../ — two paths to the same file on Windows can open separate documents, causing data loss on save.
+- README.md "Conversion" section under CLI heading lists "Hyperlink insertion during conversion" — but CLI always passes add_hyperlinks=false. Hyperlinks are GUI-only. Move to yTranslator section or implement CLI --add-hyperlinks flag.
+- text_match_index ambiguity detection uses substring find on pipe-separated list — false positives if a translation is a substring of another (e.g. "cat" found inside "concatenate"). Use split-by-pipe then exact comparison.
+- word_match_utils::count_shared_words inflates score when source contains duplicate words — each occurrence counts separately. Can cause wrong cell heuristic matches. Deduplicate source words before counting.
+- yaml_l10n_writer doesn't quote YAML-reserved bare words (true, false, null, yes, no) or numeric strings — produces technically ambiguous YAML for external tools.
