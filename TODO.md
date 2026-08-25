@@ -48,7 +48,6 @@ Translator settings: propose better name: and also populate dynamically with pro
 - settings_store_t: translation_source_index / set_translation_source_index are completely unused. Remove.
 - settings_store_t: set_spell_lang_index() never called — spell_lang_index persists default 0 always. Remove or wire up.
 - yTranslator-Manual.md: `heuristic` status missing from Entry Statuses section. It's assigned by cell_matcher/dial_matcher and users encounter it in make-base results.
-- Batch revert triggers unintended propagation: batch_revert_requested handler calls commit() which propagates reverted text to all entries sharing the same old_text, corrupting unrelated translations. Single-entry revert (history panel) correctly avoids this by setting fields directly.
 - encode_from_utf8 (Windows) silently applies best-fit character mapping for unencodable characters — no error reported. byte_limit_validator approves text that will be corrupted on save. Add WC_NO_BEST_FIT_CHARS flag and warn user on encoding loss.
 - Duplicate file opening: session normalize_path only replaces backslashes, doesn't canonicalize case or resolve ../ — two paths to the same file on Windows can open separate documents, causing data loss on save.
 - README.md "Conversion" section under CLI heading lists "Hyperlink insertion during conversion" — but CLI always passes add_hyperlinks=false. Hyperlinks are GUI-only. Move to yTranslator section or implement CLI --add-hyperlinks flag.

@@ -736,6 +736,10 @@ void main_window_t::connect_editor_signals()
 		if (!m_active_doc)
 			return;
 
+		auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
+		if (!dict_doc)
+			return;
+
 		int reverted_count = 0;
 
 		for (int row : rows)
@@ -752,17 +756,24 @@ void main_window_t::connect_editor_signals()
 			if (!revert.success)
 				continue;
 
-			const auto result = m_active_doc->commit(*row_data, revert.reverted_text, revert.reverted_status);
-			if (result.success)
-			{
-				m_table_model->update_row(row, result.new_text, result.status);
-				++reverted_count;
-			}
+			auto & data = dict_doc->data_mut();
+			auto type_it = data.find(row_data->type);
+			if (type_it == data.end() || row_data->record_index >= type_it->second.records.size())
+				continue;
+
+			auto & entry = type_it->second.records[row_data->record_index];
+			entry.new_text = revert.reverted_text;
+			entry.status = revert.reverted_status;
+			dict_doc->modified_records_insert(row_data->type, row_data->record_index);
+
+			m_table_model->update_row(row, revert.reverted_text, revert.reverted_status);
+			++reverted_count;
 		}
 
 		if (reverted_count > 0)
 		{
-			set_unsaved_changes(m_active_doc->is_dirty());
+			dict_doc->set_dirty(true);
+			set_unsaved_changes(true);
 			update_status_counts();
 
 			if (m_editor_controller.current_row() >= 0)
