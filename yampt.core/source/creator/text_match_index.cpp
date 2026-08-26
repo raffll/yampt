@@ -31,7 +31,24 @@ void text_match_index_t::build(const dict_t & base_dict)
 				auto it_conflict = m_conflicts.find(entry.old_text);
 				if (it_conflict != m_conflicts.end())
 				{
-					if (it_conflict->second.find(entry.new_text) == std::string::npos)
+					bool already_listed = false;
+					size_t search_pos = 0;
+					while (search_pos < it_conflict->second.size())
+					{
+						const auto pipe_pos = it_conflict->second.find('|', search_pos);
+						const auto token = it_conflict->second.substr(
+						    search_pos, pipe_pos == std::string::npos ? std::string::npos : pipe_pos - search_pos);
+
+						if (token == entry.new_text)
+						{
+							already_listed = true;
+							break;
+						}
+
+						search_pos = (pipe_pos == std::string::npos) ? it_conflict->second.size() : pipe_pos + 1;
+					}
+
+					if (!already_listed)
 						it_conflict->second += "|" + entry.new_text;
 				}
 				continue;

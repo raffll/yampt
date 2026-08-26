@@ -493,10 +493,18 @@ void script_parser_t::convert_line()
 void script_parser_t::find_keyword()
 {
 	std::map<size_t, std::string> keyword_pos_coll;
-	for (const auto & keyword : domain_types::script_keywords)
+	for (const auto & kw : domain_types::script_keywords)
 	{
-		keyword_pos = line_lc.find(keyword);
-		keyword_pos_coll.insert({ keyword_pos, keyword });
+		keyword_pos = find_whole_word(line_lc, kw);
+		if (keyword_pos != std::string::npos)
+			keyword_pos_coll.insert({ keyword_pos, kw });
+	}
+
+	if (keyword_pos_coll.empty())
+	{
+		keyword_pos = std::string::npos;
+		keyword.clear();
+		return;
 	}
 
 	keyword_pos = keyword_pos_coll.begin()->first;

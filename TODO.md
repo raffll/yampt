@@ -13,7 +13,6 @@ Wire up glossary_t::find_glossary_matches in send_chat_request — provide AI pr
 ## Audit Findings
 
 - web_translator_t::send_chat_request glossary_fn returns substituted text instead of term pairs for AI system prompt. Should use find_glossary_matches and format as reference list.
-- script_parser_t::find_keyword lacks word boundary checks (unlike creator_helpers). Use find_whole_word and skip npos entries.
 - script_parser_t member variables missing m_prefix (18 members: type, merger, record_key, source_path, old_script, old_scdt, new_script, is_done, line, line_lc, old_text, new_line, new_text, pos, keyword_pos, keyword, error).
 - includes.hpp is a monolithic catch-all header pulling 17 std headers into 15 TUs. Eliminate and replace with per-file includes.
 - README.md: Lua handler feature misplaced under "Viewing" section — should describe it as a navigation tab.
@@ -40,6 +39,4 @@ Wire up glossary_t::find_glossary_matches in send_chat_request — provide AI pr
 - scdt_patcher_t::patch_later_message_segment uses 1-byte size field — silently truncates for message texts >255 chars, corrupting bytecode. Add overflow check or switch to 2-byte encoding.
 - encode_from_utf8 (Windows) silently applies best-fit character mapping for unencodable characters — no error reported. byte_limit_validator approves text that will be corrupted on save. Add WC_NO_BEST_FIT_CHARS flag and warn user on encoding loss.
 - Duplicate file opening: session normalize_path only replaces backslashes, doesn't canonicalize case or resolve ../ — two paths to the same file on Windows can open separate documents, causing data loss on save.
-- text_match_index ambiguity detection uses substring find on pipe-separated list — false positives if a translation is a substring of another (e.g. "cat" found inside "concatenate"). Use split-by-pipe then exact comparison.
-- word_match_utils::count_shared_words inflates score when source contains duplicate words — each occurrence counts separately. Can cause wrong cell heuristic matches. Deduplicate source words before counting.
 - yaml_l10n_writer doesn't quote YAML-reserved bare words (true, false, null, yes, no) or numeric strings — produces technically ambiguous YAML for external tools.

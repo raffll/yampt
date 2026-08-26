@@ -351,3 +351,37 @@ TEST_CASE("script_parser_t::convert_script, bnam choice not found with wrong key
 
 	REQUIRE(parser.get_new_script() == input_line);
 }
+
+TEST_CASE("script_parser_t::convert_script, find_keyword no false positive on variable names", "[u]")
+{
+	dict_merger_t merger;
+	merger.add_record(rec_type_t::sctx, "TestScript^messagebox \"hello\"", "messagebox \"hallo\"");
+
+	SECTION("variable containing choice is not matched")
+	{
+		std::string input = "set mychoice to \"hello\"";
+		script_parser_t parser(rec_type_t::bnam, merger, "TestScript", "", input, "");
+		REQUIRE(parser.get_new_script() == input);
+	}
+
+	SECTION("variable containing say is not matched")
+	{
+		std::string input = "set countSays to \"hello\"";
+		script_parser_t parser(rec_type_t::bnam, merger, "TestScript", "", input, "");
+		REQUIRE(parser.get_new_script() == input);
+	}
+
+	SECTION("variable containing messagebox is not matched")
+	{
+		std::string input = "set nomessagebox to \"hello\"";
+		script_parser_t parser(rec_type_t::bnam, merger, "TestScript", "", input, "");
+		REQUIRE(parser.get_new_script() == input);
+	}
+
+	SECTION("actual messagebox keyword is still matched")
+	{
+		std::string input = "messagebox \"hello\"";
+		script_parser_t parser(rec_type_t::bnam, merger, "TestScript", "", input, "");
+		REQUIRE(parser.get_new_script() == "messagebox \"hallo\"");
+	}
+}

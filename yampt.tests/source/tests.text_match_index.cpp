@@ -150,3 +150,38 @@ TEST_CASE("text_match_index_t::find, skips untranslated entries", "[u][pbt]")
 		RC_ASSERT(outcome.result == text_match_index_t::find_result_t::not_found);
 	});
 }
+
+TEST_CASE("text_match_index_t::build, ambiguity substring false positive", "[u]")
+{
+	dict_t dict;
+	auto & chapter = dict[rec_type_t::fnam];
+
+	record_entry_t entry_one;
+	entry_one.key_text = "key_1";
+	entry_one.old_text = "sword";
+	entry_one.new_text = "cat";
+	entry_one.status = status_t::translated;
+	chapter.records.push_back(entry_one);
+
+	record_entry_t entry_two;
+	entry_two.key_text = "key_2";
+	entry_two.old_text = "sword";
+	entry_two.new_text = "concatenate";
+	entry_two.status = status_t::translated;
+	chapter.records.push_back(entry_two);
+
+	record_entry_t entry_three;
+	entry_three.key_text = "key_3";
+	entry_three.old_text = "sword";
+	entry_three.new_text = "cat";
+	entry_three.status = status_t::translated;
+	chapter.records.push_back(entry_three);
+
+	text_match_index_t index;
+	index.build(dict);
+
+	const auto outcome = index.find("sword");
+	REQUIRE(outcome.result == text_match_index_t::find_result_t::ambiguous);
+	REQUIRE(outcome.conflicts.find("cat|concatenate") != std::string::npos);
+	REQUIRE(outcome.conflicts.find("cat|concatenate|cat") == std::string::npos);
+}

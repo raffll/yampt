@@ -246,3 +246,23 @@ TEST_CASE("word_match_utils::check_all_same_name, correctness", "[u][pbt]")
 		RC_ASSERT(all_same == expected_all_same);
 	});
 }
+
+TEST_CASE("word_match_utils::count_shared_words, duplicate words in source inflate score", "[u]")
+{
+	const std::vector<std::string> source = { "halle", "der", "halle" };
+	const std::vector<std::string> target = { "halle", "der", "zentrifuge" };
+
+	const auto score = count_shared_words(source, target);
+
+	REQUIRE(score == 2);
+}
+
+TEST_CASE("word_match_utils::count_shared_words, no duplicates normal case", "[u]")
+{
+	const std::vector<std::string> source = { "mine", "abaelun" };
+	const std::vector<std::string> target = { "mine", "abaelun", "grotte" };
+
+	const auto score = count_shared_words(source, target);
+
+	REQUIRE(score == 2);
+}
