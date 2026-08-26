@@ -2,6 +2,7 @@
 #include "../utility/app_logger.hpp"
 #include "../utility/string_utils.hpp"
 #include <regex>
+#include <sstream>
 
 namespace {
 

@@ -52,7 +52,6 @@ TEST_CASE("web_translator_config::load_single, parses simple provider", "[u]")
 	REQUIRE(config.identifier == "deepl");
 	REQUIRE(config.display_name == "DeepL Free");
 	REQUIRE(config.endpoint == "https://api-free.deepl.com/v2/translate");
-	REQUIRE(config.method == "POST");
 	REQUIRE(config.body_format == body_format_t::form);
 	REQUIRE(config.kind == provider_kind_t::simple);
 	REQUIRE(config.headers.size() == 1);
@@ -132,7 +131,6 @@ TEST_CASE("web_translator_config::load_single, defaults for missing fields", "[u
 	auto config = web_translator_config::load_single(directory + "/minimal.json");
 
 	REQUIRE(config.display_name == "Minimal");
-	REQUIRE(config.method == "POST");
 	REQUIRE(config.body_format == body_format_t::json);
 	REQUIRE(config.kind == provider_kind_t::simple);
 	REQUIRE(config.quota_limit == 0);

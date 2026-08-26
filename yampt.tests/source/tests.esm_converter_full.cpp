@@ -3,6 +3,7 @@
 #include <io/dict_writer.hpp>
 #include <utility/app_logger.hpp>
 #include <filesystem>
+#include <fstream>
 #include <random>
 
 static std::string get_temp_path(const std::string & filename)
