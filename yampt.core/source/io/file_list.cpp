@@ -79,54 +79,6 @@ void file_list_t::remove(const std::string & path)
 	m_entries.erase(string_utils::normalize_path(path));
 }
 
-file_type_t file_list_t::classify(const std::string & path)
-{
-	const auto ext = extract_extension(path);
-	if (ext == ".esm" || ext == ".esp" || ext == ".omwgame" || ext == ".omwaddon")
-		return file_type_t::plugin;
-
-	if (ext == ".yaml")
-		return file_type_t::yaml_l10n;
-
-	if (ext == ".cel" || ext == ".top" || ext == ".mrk")
-		return file_type_t::loc_file;
-
-	if (ext == ".eet")
-		return file_type_t::eet_file;
-
-	if (ext == ".json" || ext == ".xml")
-	{
-		const auto filename = string_utils::to_lower(string_utils::extract_filename(path));
-		if (filename.find("_base_") != std::string::npos)
-			return file_type_t::base_dict;
-
-		return file_type_t::user_dict;
-	}
-
-	return file_type_t::user_dict;
-}
-
-std::string file_list_t::detect_language(const std::string & filename, std::uintmax_t file_size)
-{
-	const auto lower = string_utils::to_lower(filename);
-
-	if (lower != "morrowind.esm" && lower != "tribunal.esm" && lower != "bloodmoon.esm")
-		return "";
-
-	if (file_size == 79837557 || file_size == 9631798 || file_size == 4565686)
-		return "EN";
-	if (file_size == 80640776 || file_size == 9797295 || file_size == 6069165)
-		return "DE";
-	if (file_size == 80105097 || file_size == 9658076 || file_size == 4626565)
-		return "PL";
-	if (file_size == 80681814 || file_size == 10015689 || file_size == 4697358)
-		return "FR";
-	if (file_size == 79857000 || file_size == 9702000 || file_size == 4625000)
-		return "RU";
-
-	return "";
-}
-
 file_type_t classify(const std::string & path)
 {
 	const auto ext = extract_extension(path);

@@ -8,13 +8,23 @@ Config schema:
 - `name` — display name in the UI
 - `kind` — `"simple"` (direct translation API) or `"chat_completion"` (LLM with system prompt + messages)
 - `endpoint` — API URL
-- `method` — HTTP method (default: POST)
-- `body_format` — `"json"` or `"form"` (URL-encoded)
+- `body_format` — `"json"`, `"form"` (URL-encoded), or `"query"` (URL query parameters, uses GET)
 - `headers` — key/value map, supports template variables
 - `body` — key/value map of request body fields, supports template variables
 - `response_path` — dot-separated JSON path with array indexing (e.g. `translations[0].text`, `content[0].text`)
 - `system_prompt` — only used for `chat_completion` kind
 - `quota_limit` — optional character limit (0 = unlimited)
+- `settings` — array of provider-specific settings (see below)
+
+### Settings Array
+
+Each provider can define user-configurable settings via the `settings` array. Each entry:
+- `key` — internal identifier, used as INI key and template variable name `{{key}}`
+- `label` — display name shown in the settings UI
+- `type` — `"text"`, `"password"`, or `"choice"`
+- `choices` — array of strings (only for `type: "choice"`)
+- `default` — default value if user hasn't configured one
+- `required` — boolean, whether the provider needs this to function (default: true)
 
 ## Template Variables
 
@@ -28,6 +38,7 @@ Available in `headers`, `body`, and `system_prompt` fields:
 | `{{target_lang_upper}}` | Target language code uppercased |
 | `{{source_lang}}` | Source language from settings (foreign_language) |
 | `{{source_lang_upper}}` | Source language uppercased |
+| `{{<setting_key>}}` | Value of any provider setting by its `key` (e.g. `{{model}}`) |
 
 ## Source Language
 
@@ -35,9 +46,9 @@ The source language is read from `settings.foreign_language()` and set on each `
 
 ## Settings Storage
 
-API keys are stored per provider identifier under `[WebTranslators]` in the INI file:
-- `settings.web_api_key("deepl")` reads `[WebTranslators]/deepl`
-- `settings.set_web_api_key("claude", "sk-ant-...")` writes `[WebTranslators]/claude`
+Provider settings are stored per provider identifier and setting key under `[WebProviders]` in the INI file:
+- `settings.web_provider_setting("claude", "api_key")` reads `[WebProviders]/claude/api_key`
+- `settings.set_web_provider_setting("claude", "model", "claude-sonnet-4-20250514")` writes `[WebProviders]/claude/model`
 
 The identifier is the JSON filename stem (e.g. `deepl.json` → identifier `deepl`).
 

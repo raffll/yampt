@@ -13,7 +13,7 @@ public:
 
 	std::string get_new_script()
 	{
-		return new_script;
+		return m_new_script;
 	}
 
 	std::string get_new_scdt()
@@ -51,24 +51,24 @@ private:
 	void dump_error();
 	void replace_vertical_lines_by_new_line(std::string & message);
 
-	const rec_type_t type;
-	const dict_merger_t * merger;
-	const std::string record_key;
-	const std::string source_path;
-	const std::string old_script;
-	const std::string old_scdt;
+	const rec_type_t m_type;
+	const dict_merger_t * m_merger;
+	const std::string m_record_key;
+	const std::string m_source_path;
+	const std::string m_old_script;
+	const std::string m_old_scdt;
 
-	std::string new_script;
+	std::string m_new_script;
 	std::unique_ptr<scdt_patcher_t> m_patcher;
 
-	bool is_done = false;
-	std::string line;
-	std::string line_lc;
-	std::string old_text;
-	std::string new_line;
-	std::string new_text;
-	size_t pos = 0;
-	size_t keyword_pos = 0;
-	std::string keyword;
-	bool error = false;
+	bool m_is_done = false;
+	std::string m_line;
+	std::string m_line_lc;
+	std::string m_old_text;
+	std::string m_new_line;
+	std::string m_new_text;
+	size_t m_pos = 0;
+	size_t m_keyword_pos = 0;
+	std::string m_keyword;
+	bool m_error = false;
 };
