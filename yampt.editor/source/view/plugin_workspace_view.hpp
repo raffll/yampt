@@ -68,6 +68,12 @@ public slots:
 	void on_advanced_filter();
 	void on_settings_changed();
 	void set_hide_duplicates(bool hide);
+	void apply_search(
+	    const std::string & query,
+	    bool search_in_id,
+	    bool search_in_name,
+	    bool case_sensitive,
+	    bool regex_mode);
 
 private slots:
 	void on_nav_selection_changed(const nav_tree_model_t::node_info_t & info);

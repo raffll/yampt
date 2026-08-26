@@ -90,7 +90,19 @@ The View menu provides filtering and display options:
 - **Conflicts Only** — when enabled, the navigation tree hides records with no conflicts. Only records touched by multiple plugins remain visible.
 - **Hide Duplicates** — hides duplicate columns in the record view when the same plugin contributes identical data through multiple paths.
 - **Mark Deleted** — renders deleted records with strikethrough text, making them visually distinct from active content.
-- **Filter** — opens an advanced filter dialog where you can narrow the navigation tree by overall conflict severity, per-plugin conflict status, record type, record ID substring, display name substring, or restrict to deleted records only.
+
+## Toolbar Search
+
+The toolbar includes a search field for filtering the navigation tree by record ID or display name. Type a query, select which fields to search with the toggle buttons, and click Search to apply.
+
+- **Aa** — case-sensitive matching. When off, the search ignores letter case.
+- **.\*** — interpret the query as a regular expression.
+- **ID** — search in the record's internal ID (e.g. "iron_dagger", "balmora_guild").
+- **Name** — search in the record's display name (e.g. "Iron Dagger", "Balmora Mages Guild").
+- **Search** — applies the current query. Also triggered by pressing Enter in the search field.
+- **Filter...** — opens the advanced filter dialog for filtering by conflict severity, per-plugin conflict status, record type, deleted status, and Lua handler criteria.
+
+Press Escape to clear the search field and remove the text filter.
 
 ## Edit Panel
 

@@ -535,6 +535,27 @@ void plugin_workspace_view_t::on_advanced_filter()
 	update_status();
 }
 
+void plugin_workspace_view_t::apply_search(
+    const std::string & query,
+    bool search_in_id,
+    bool search_in_name,
+    bool case_sensitive,
+    bool regex_mode)
+{
+	m_last_filter_state.filter_by_id = search_in_id && !query.empty();
+	m_last_filter_state.id_text = search_in_id ? query : std::string {};
+	m_last_filter_state.filter_by_name = search_in_name && !query.empty();
+	m_last_filter_state.name_text = search_in_name ? query : std::string {};
+	m_last_filter_state.search_case_sensitive = case_sensitive;
+	m_last_filter_state.search_regex = regex_mode;
+
+	m_filter_active = true;
+	m_has_filter_active = true;
+
+	m_nav_view->set_filter(m_last_filter_state);
+	update_status();
+}
+
 void plugin_workspace_view_t::on_nav_context_menu(const QPoint & global_pos, const nav_tree_model_t::node_info_t & info)
 {
 	m_context_menu->show_nav_menu(global_pos, info);

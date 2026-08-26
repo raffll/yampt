@@ -20,6 +20,8 @@ public:
 		std::string id_text;
 		bool filter_by_name = false;
 		std::string name_text;
+		bool search_case_sensitive = false;
+		bool search_regex = false;
 		bool filter_deleted = false;
 		bool filter_lua_severity = false;
 		std::set<conflict_severity_t> lua_severity_set;
@@ -51,4 +53,5 @@ private:
 
 	static bool contains_case_insensitive(const std::string & haystack, const std::string & needle);
 	static bool has_version_status(const conflict_entry_t & entry, int plugin_idx, conflict_this_t status);
+	bool matches_text(const std::string & haystack, const std::string & needle) const;
 };

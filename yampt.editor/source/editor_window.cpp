@@ -6,10 +6,15 @@
 #include <QAction>
 #include <QCheckBox>
 #include <QCloseEvent>
+#include <QHBoxLayout>
+#include <QLineEdit>
 #include <QMenuBar>
+#include <QPushButton>
 #include <QSettings>
+#include <QShortcut>
 #include <QStatusBar>
 #include <QToolBar>
+#include <QToolButton>
 #include <QVBoxLayout>
 
 static const QString config_path = "yEditor.ini";
@@ -110,11 +115,6 @@ void editor_window_t::setup_menu_bar()
 
 	view_menu->addSeparator();
 
-	auto * filter_action = new QAction(tr("&Filter..."), this);
-	filter_action->setToolTip(tr("Open the advanced filter dialog"));
-	view_menu->addAction(filter_action);
-	connect(filter_action, &QAction::triggered, m_plugin_workspace_view, &plugin_workspace_view_t::on_advanced_filter);
-
 	auto * tools_menu = menuBar()->addMenu(tr("&Tools"));
 	auto * settings_action = new QAction(tr("&Preferences..."), this);
 	settings_action->setShortcut(QKeySequence("Ctrl+,"));
@@ -143,6 +143,55 @@ void editor_window_t::setup_toolbar()
 
 	toolbar->addSeparator();
 
+	m_search_field = new QLineEdit(this);
+	m_search_field->setPlaceholderText(tr("Filter by..."));
+	m_search_field->setToolTip(tr("Search by record ID or display name"));
+	m_search_field->setMaximumWidth(250);
+	toolbar->addWidget(m_search_field);
+
+	m_case_sensitive_btn = new QToolButton(this);
+	m_case_sensitive_btn->setText(tr("Aa"));
+	m_case_sensitive_btn->setCheckable(true);
+	m_case_sensitive_btn->setToolTip(tr("Case-sensitive search"));
+	toolbar->addWidget(m_case_sensitive_btn);
+
+	m_regex_btn = new QToolButton(this);
+	m_regex_btn->setText(tr(".*"));
+	m_regex_btn->setCheckable(true);
+	m_regex_btn->setToolTip(tr("Regular expression search"));
+	toolbar->addWidget(m_regex_btn);
+
+	m_search_id_btn = new QToolButton(this);
+	m_search_id_btn->setText(tr("ID"));
+	m_search_id_btn->setCheckable(true);
+	m_search_id_btn->setChecked(true);
+	m_search_id_btn->setToolTip(tr("Search in record ID"));
+	toolbar->addWidget(m_search_id_btn);
+
+	m_search_name_btn = new QToolButton(this);
+	m_search_name_btn->setText(tr("Name"));
+	m_search_name_btn->setCheckable(true);
+	m_search_name_btn->setChecked(true);
+	m_search_name_btn->setToolTip(tr("Search in display name"));
+	toolbar->addWidget(m_search_name_btn);
+
+	auto * search_btn = new QPushButton(tr("Search"), this);
+	search_btn->setToolTip(tr("Apply the search filter"));
+	toolbar->addWidget(search_btn);
+
+	toolbar->addSeparator();
+
+	auto * filter_btn = new QPushButton(tr("Filter..."), this);
+	filter_btn->setToolTip(tr("Open the advanced filter dialog"));
+	toolbar->addWidget(filter_btn);
+
+	connect(search_btn, &QPushButton::clicked, this, &editor_window_t::on_search_apply);
+	connect(m_search_field, &QLineEdit::returnPressed, this, &editor_window_t::on_search_apply);
+	connect(filter_btn, &QPushButton::clicked, m_plugin_workspace_view, &plugin_workspace_view_t::on_advanced_filter);
+
+	auto * escape_shortcut = new QShortcut(QKeySequence("Escape"), this);
+	connect(escape_shortcut, &QShortcut::activated, this, &editor_window_t::on_search_clear);
+
 	statusBar()->addWidget(m_plugin_workspace_view->status_label());
 	statusBar()->addPermanentWidget(m_plugin_workspace_view->count_label());
 }
@@ -168,6 +217,26 @@ void editor_window_t::save_config()
 	settings.setValue("window/state", saveState());
 
 	m_plugin_workspace_view->save_session_state();
+}
+
+void editor_window_t::on_search_apply()
+{
+	const auto query = m_search_field->text().toStdString();
+	const bool search_in_id = m_search_id_btn->isChecked();
+	const bool search_in_name = m_search_name_btn->isChecked();
+	const bool case_sensitive = m_case_sensitive_btn->isChecked();
+	const bool regex_mode = m_regex_btn->isChecked();
+
+	m_plugin_workspace_view->apply_search(query, search_in_id, search_in_name, case_sensitive, regex_mode);
+}
+
+void editor_window_t::on_search_clear()
+{
+	if (m_search_field->text().isEmpty())
+		return;
+
+	m_search_field->clear();
+	on_search_apply();
 }
 
 void editor_window_t::closeEvent(QCloseEvent * event)

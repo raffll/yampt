@@ -1,6 +1,7 @@
 #include "nav_tree_filter.hpp"
 #include <algorithm>
 #include <cctype>
+#include <regex>
 
 bool nav_tree_filter_t::contains_case_insensitive(const std::string & haystack, const std::string & needle)
 {
@@ -15,6 +16,31 @@ bool nav_tree_filter_t::contains_case_insensitive(const std::string & haystack, 
 	           [](char a, char b)
 	{ return std::tolower(static_cast<unsigned char>(a)) == std::tolower(static_cast<unsigned char>(b)); }) !=
 	       haystack.end();
+}
+
+bool nav_tree_filter_t::matches_text(const std::string & haystack, const std::string & needle) const
+{
+	if (m_filter.search_regex)
+	{
+		try
+		{
+			auto flags = std::regex_constants::ECMAScript;
+			if (!m_filter.search_case_sensitive)
+				flags |= std::regex_constants::icase;
+
+			std::regex pattern(needle, flags);
+			return std::regex_search(haystack, pattern);
+		}
+		catch (const std::regex_error &)
+		{
+			return false;
+		}
+	}
+
+	if (m_filter.search_case_sensitive)
+		return haystack.find(needle) != std::string::npos;
+
+	return contains_case_insensitive(haystack, needle);
 }
 
 void nav_tree_filter_t::set_filter(const filter_state_t & state)
@@ -127,13 +153,13 @@ bool nav_tree_filter_t::passes(const conflict_entry_t & entry, int plugin_idx) c
 
 	if (m_filter.filter_by_id && !m_filter.id_text.empty())
 	{
-		if (!contains_case_insensitive(entry.record_id, m_filter.id_text))
+		if (!matches_text(entry.record_id, m_filter.id_text))
 			return false;
 	}
 
 	if (m_filter.filter_by_name && !m_filter.name_text.empty())
 	{
-		if (!contains_case_insensitive(entry.display_name, m_filter.name_text))
+		if (!matches_text(entry.display_name, m_filter.name_text))
 			return false;
 	}
 

@@ -16,6 +16,8 @@
 - [NEW] Enable Edit: edit decoded fields directly in the Edit panel (right-click plugin → Enable Edit, combobox for flags and enums)
 - [NEW] Lua handler conflict detection in a separate Lua tab: scans OpenMW Lua scripts and highlights conflicting handler registrations between mods
 - [NEW] Exclude Sub-Record from context menu: right-click any sub-record row to add it to the exclusion list
+- [NEW] Toolbar search: filter the navigation tree by record ID or display name with case-sensitive and regex support
+- [CHANGE] Filter dialog moved from View menu to toolbar button
 - [CHANGE] Navigation panel split into two tabs: Plugins (ESP/ESM record tree) and Lua (handler registrations by mod)
 - [CHANGE] Settings reorganized: Sub-Record Rules merged into Merged Patch page, Paths renamed to Output Paths, record type checkboxes replaced by TYPE:* syntax
 - [CHANGE] File Header shown as flat entry at the top of each plugin (no nesting)
