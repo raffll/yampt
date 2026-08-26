@@ -1,7 +1,8 @@
 #pragma once
 
 #include "../utility/domain_types.hpp"
-#include "../utility/includes.hpp"
+#include <filesystem>
+#include <vector>
 
 class esm_reader_t
 {

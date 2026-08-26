@@ -3,11 +3,12 @@
 #include "../decoder/sub_record_schema.hpp"
 #include "../decoder/view_tree_format.hpp"
 #include "../utility/app_logger.hpp"
-#include "../utility/includes.hpp"
 #include "../utility/string_utils.hpp"
 #include "record_conflict.hpp"
 #include <algorithm>
 #include <cstring>
+#include <filesystem>
+#include <memory>
 #include <set>
 
 void plugin_scan_t::load_plugin(const std::string & path)

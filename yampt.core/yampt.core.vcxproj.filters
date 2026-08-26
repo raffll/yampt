@@ -64,7 +64,6 @@
   <ItemGroup>
     <ClInclude Include="source\utility\domain_types.hpp" />
     <ClInclude Include="source\utility\app_logger.hpp" />
-    <ClInclude Include="source\utility\includes.hpp" />
     <ClInclude Include="source\utility\string_utils.hpp" />
     <ClInclude Include="source\utility\record_types.hpp" />
     <ClInclude Include="source\utility\status_types.hpp" />

@@ -288,7 +288,6 @@
     <ClInclude Include="source\utility\char_diff.hpp" />
     <ClInclude Include="source\utility\color_palette.hpp" />
     <ClInclude Include="source\utility\dict_kind.hpp" />
-    <ClInclude Include="source\utility\includes.hpp" />
     <ClInclude Include="source\utility\keyword_trie.hpp" />
     <ClInclude Include="source\utility\record_behavior.hpp" />
     <ClInclude Include="source\utility\record_types.hpp" />

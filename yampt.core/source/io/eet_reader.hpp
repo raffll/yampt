@@ -1,7 +1,8 @@
 #pragma once
 
-#include "../utility/includes.hpp"
 #include <cstdint>
+#include <string>
+#include <vector>
 
 class eet_reader_t
 {
