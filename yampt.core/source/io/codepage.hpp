@@ -13,6 +13,14 @@ std::string decode_to_utf8(const std::string & raw_bytes, codepage_t codepage);
 
 std::string encode_from_utf8(const std::string & utf8_text, codepage_t codepage);
 
+struct encode_result_t
+{
+	std::string encoded;
+	bool has_unmappable_chars = false;
+};
+
+encode_result_t encode_from_utf8_checked(const std::string & utf8_text, codepage_t codepage);
+
 const char * codepage_name(codepage_t cp);
 
 constexpr codepage_t supported_codepages[] = {

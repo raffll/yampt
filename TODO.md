@@ -12,7 +12,7 @@ Wire up glossary_t::find_glossary_matches in send_chat_request — provide AI pr
 
 ## Audit Findings
 
-- web_translator_t::send_chat_request glossary_fn returns substituted text instead of term pairs for AI system prompt. Should use find_glossary_matches and format as reference list.
+- web_translator_t::send_chat_request glossary_fn returns substituted text instead of term pairs for AI system prompt. Replace with structured reference data: glossary term→translation pairs (from find_glossary_matches), DIAL topic names to preserve, and optionally 2-3 example translations from the same document for style reference.
 - Translation settings page: add Local Models tab alongside Web Providers tab. JSON configs in models/ describing available CTranslate2 models (name, path, supported languages). Similar discovery pattern to web providers — data-driven, no hardcoding.
 - edit_history_t dead code: load_from_file, save_to_file, is_modified_this_session — implemented but never called. Remove or wire up persistence.
 - plugin_operations_controller_t::on_plugin_operation is 150 lines (3x limit). Extract per-operation methods.
@@ -28,6 +28,5 @@ Wire up glossary_t::find_glossary_matches in send_chat_request — provide AI pr
 - merge_patch_ops_t::patch_field() takes 7 arguments. Create a patch_field_params_t struct.
 - translation_engine_t::translate() is 62 lines. Extract tokenization and result assembly into helpers.
 - yaml_l10n_writer.cpp write() is 59 lines. Extract block scalar writing and quoted value writing into helpers.
-- encode_from_utf8 (Windows) silently applies best-fit character mapping for unencodable characters — no error reported. byte_limit_validator approves text that will be corrupted on save. Add WC_NO_BEST_FIT_CHARS flag and warn user on encoding loss.
 - Duplicate file opening: session normalize_path only replaces backslashes, doesn't canonicalize case or resolve ../ — two paths to the same file on Windows can open separate documents, causing data loss on save.
 - yaml_l10n_writer doesn't quote YAML-reserved bare words (true, false, null, yes, no) or numeric strings — produces technically ambiguous YAML for external tools.

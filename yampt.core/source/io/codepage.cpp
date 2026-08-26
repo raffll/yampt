@@ -52,6 +52,34 @@ std::string encode_from_utf8(const std::string & utf8_text, codepage_t codepage)
 	return result;
 }
 
+encode_result_t encode_from_utf8_checked(const std::string & utf8_text, codepage_t codepage)
+{
+	if (utf8_text.empty())
+		return { {}, false };
+
+	int cp = static_cast<int>(codepage);
+
+	int wide_len = MultiByteToWideChar(CP_UTF8, 0, utf8_text.data(), static_cast<int>(utf8_text.size()), nullptr, 0);
+	if (wide_len <= 0)
+		return { utf8_text, true };
+
+	std::wstring wide(wide_len, L'\0');
+	MultiByteToWideChar(CP_UTF8, 0, utf8_text.data(), static_cast<int>(utf8_text.size()), wide.data(), wide_len);
+
+	BOOL used_default = FALSE;
+	int mb_len = WideCharToMultiByte(
+	    cp, WC_NO_BEST_FIT_CHARS, wide.data(), wide_len, nullptr, 0, nullptr, &used_default);
+
+	if (mb_len <= 0)
+		return { utf8_text, true };
+
+	std::string result(mb_len, '\0');
+	used_default = FALSE;
+	WideCharToMultiByte(cp, WC_NO_BEST_FIT_CHARS, wide.data(), wide_len, result.data(), mb_len, nullptr, &used_default);
+
+	return { result, used_default != FALSE };
+}
+
 #else
 #include <iconv.h>
 #include <cerrno>
@@ -102,6 +130,33 @@ std::string decode_to_utf8(const std::string & raw_bytes, codepage_t codepage)
 std::string encode_from_utf8(const std::string & utf8_text, codepage_t codepage)
 {
 	return iconv_convert(utf8_text, "UTF-8", codepage_iconv_name(codepage));
+}
+
+encode_result_t encode_from_utf8_checked(const std::string & utf8_text, codepage_t codepage)
+{
+	if (utf8_text.empty())
+		return { {}, false };
+
+	iconv_t converter = iconv_open(codepage_iconv_name(codepage), "UTF-8");
+	if (converter == reinterpret_cast<iconv_t>(-1))
+		return { utf8_text, true };
+
+	std::string output;
+	output.resize(utf8_text.size() * 4);
+
+	char * in_ptr = const_cast<char *>(utf8_text.data());
+	size_t in_left = utf8_text.size();
+	char * out_ptr = output.data();
+	size_t out_left = output.size();
+
+	size_t result = iconv(converter, &in_ptr, &in_left, &out_ptr, &out_left);
+	iconv_close(converter);
+
+	if (result == static_cast<size_t>(-1))
+		return { utf8_text, true };
+
+	output.resize(output.size() - out_left);
+	return { output, false };
 }
 
 #endif

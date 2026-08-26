@@ -12,8 +12,11 @@ codepage_t byte_limit_validator_t::codepage() const
 
 validation_result_t byte_limit_validator_t::validate(rec_type_t type, const std::string & utf8_value) const
 {
-	const auto encoded = encode_from_utf8(utf8_value, m_codepage);
-	const size_t byte_count = encoded.size();
+	const auto encode_result = encode_from_utf8_checked(utf8_value, m_codepage);
+	const size_t byte_count = encode_result.encoded.size();
+
+	if (encode_result.has_unmappable_chars)
+		return { validation_level_t::error, byte_count, 0, "contains characters not representable in " + std::string(codepage_name(m_codepage)) };
 
 	for (size_t i = 0; i < utf8_value.size(); ++i)
 	{
