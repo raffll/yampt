@@ -2,10 +2,6 @@
 
 $(SolutionDir) still created in release folder
 
-make dictionary dont need base dict, create/convert need
-
-Translator settings: propose better name: and also populate dynamically with providers file
-
 Wire up edit_history_t::load_from_file / save_to_file — persist undo history across sessions so users can revert after restart.
 
 Wire up glossary_t::find_glossary_matches in send_chat_request — provide AI providers with term→translation pairs instead of substituted text.

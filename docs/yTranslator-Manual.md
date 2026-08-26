@@ -182,4 +182,4 @@ Open Settings via Ctrl+, or the Tools menu. Four pages are available:
 - **Appearance** — choose between light and dark theme.
 - **Shortcuts** — customize keyboard shortcuts for all actions. Conflicts are highlighted in red.
 - **Language** — set the foreign language (source) and native language (target). Choose a spell check dictionary for the Translation panel. Configure the English dictionary used for partial mode in Make Base Dictionary.
-- **Translation** — shows a table of all discovered web translation providers. Enter your API key for each service you want to use. The Status column shows whether a key is configured.
+- **Providers** — shows a table of all discovered web translation providers. Enter your API key for each service you want to use. The Status column shows whether a key is configured.

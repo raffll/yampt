@@ -39,7 +39,7 @@ translator_settings_dialog_t::translator_settings_dialog_t(
 	m_category_list->addItem(tr("Appearance"));
 	m_category_list->addItem(tr("Shortcuts"));
 	m_category_list->addItem(tr("Language"));
-	m_category_list->addItem(tr("Translation"));
+	m_category_list->addItem(tr("Providers"));
 
 	m_content_stack->addWidget(m_appearance_view);
 	m_content_stack->addWidget(m_shortcuts_view);
