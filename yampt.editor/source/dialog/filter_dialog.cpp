@@ -1,5 +1,4 @@
 #include "filter_dialog.hpp"
-#include <QFormLayout>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QVBoxLayout>
@@ -41,16 +40,6 @@ filter_dialog_t::filter_dialog_t(const std::vector<std::string> & available_type
 	ct_layout->addWidget(m_chk_ct_wins);
 	ct_layout->addWidget(m_chk_ct_loses);
 	left_column->addWidget(m_grp_conflict_this);
-
-	auto * grp_id_name = new QGroupBox(tr("ID / Name"), this);
-	auto * id_name_layout = new QFormLayout(grp_id_name);
-	m_edt_id = new QLineEdit(grp_id_name);
-	m_edt_id->setPlaceholderText(tr("Substring, case-insensitive"));
-	m_edt_name = new QLineEdit(grp_id_name);
-	m_edt_name->setPlaceholderText(tr("Substring, case-insensitive"));
-	id_name_layout->addRow(tr("ID:"), m_edt_id);
-	id_name_layout->addRow(tr("Name:"), m_edt_name);
-	left_column->addWidget(grp_id_name);
 
 	auto * grp_special = new QGroupBox(tr("Special"), this);
 	auto * special_layout = new QVBoxLayout(grp_special);
@@ -150,12 +139,6 @@ filter_dialog_t::filter_state_t filter_dialog_t::state() const
 	}
 	s.filter_by_type = !s.type_set.empty() && static_cast<int>(s.type_set.size()) < m_lst_types->count();
 
-	s.id_text = m_edt_id->text().toStdString();
-	s.filter_by_id = !s.id_text.empty();
-
-	s.name_text = m_edt_name->text().toStdString();
-	s.filter_by_name = !s.name_text.empty();
-
 	s.filter_deleted = m_chk_deleted->isChecked();
 
 	s.lua_severity_set = read_lua_severity_state();
@@ -187,9 +170,6 @@ void filter_dialog_t::set_state(const filter_state_t & state)
 		const auto type_str = item->text().toStdString();
 		item->setCheckState(state.type_set.count(type_str) > 0 ? Qt::Checked : Qt::Unchecked);
 	}
-
-	m_edt_id->setText(QString::fromStdString(state.id_text));
-	m_edt_name->setText(QString::fromStdString(state.name_text));
 
 	m_chk_deleted->setChecked(state.filter_deleted);
 

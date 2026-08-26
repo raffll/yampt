@@ -500,10 +500,6 @@ void plugin_workspace_view_t::on_advanced_filter()
 		dlg_state.conflict_this_set = m_last_filter_state.conflict_this_set;
 		dlg_state.filter_by_type = m_last_filter_state.filter_by_type;
 		dlg_state.type_set = m_last_filter_state.type_set;
-		dlg_state.filter_by_id = m_last_filter_state.filter_by_id;
-		dlg_state.id_text = m_last_filter_state.id_text;
-		dlg_state.filter_by_name = m_last_filter_state.filter_by_name;
-		dlg_state.name_text = m_last_filter_state.name_text;
 		dlg_state.filter_deleted = m_last_filter_state.filter_deleted;
 		dlg.set_state(dlg_state);
 	}
@@ -520,10 +516,10 @@ void plugin_workspace_view_t::on_advanced_filter()
 	nav_state.conflict_this_set = state.conflict_this_set;
 	nav_state.filter_by_type = state.filter_by_type;
 	nav_state.type_set = state.type_set;
-	nav_state.filter_by_id = state.filter_by_id;
-	nav_state.id_text = state.id_text;
-	nav_state.filter_by_name = state.filter_by_name;
-	nav_state.name_text = state.name_text;
+	nav_state.filter_by_id = m_last_filter_state.filter_by_id;
+	nav_state.id_text = m_last_filter_state.id_text;
+	nav_state.filter_by_name = m_last_filter_state.filter_by_name;
+	nav_state.name_text = m_last_filter_state.name_text;
 	nav_state.filter_deleted = state.filter_deleted;
 
 	m_last_filter_state = nav_state;

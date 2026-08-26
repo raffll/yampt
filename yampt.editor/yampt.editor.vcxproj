@@ -384,6 +384,9 @@
     </ItemGroup>
     <Copy SourceFiles="@(VcpkgDlls)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
   </Target>
+  <Target Name="GenerateIcon" BeforeTargets="ResourceCompile" Inputs="$(SolutionDir)resources\yampt-editor.svg" Outputs="$(SolutionDir)resources\yampt-editor.ico">
+    <Exec Command="python &quot;$(SolutionDir)scripts\generate_icons.py&quot;" />
+  </Target>
   <ItemGroup>
     <ResourceCompile Include="$(SolutionDir)resources\yampt-editor.rc">
       <AdditionalIncludeDirectories>$(SolutionDir)resources</AdditionalIncludeDirectories>

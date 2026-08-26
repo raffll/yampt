@@ -543,6 +543,9 @@
   <Target Name="CopyLanguages" AfterTargets="Build" Condition="Exists('$(SolutionDir)languages.json')">
     <Copy SourceFiles="$(SolutionDir)languages.json" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
   </Target>
+  <Target Name="GenerateIcon" BeforeTargets="ResourceCompile" Inputs="$(SolutionDir)resources\yampt-translator.svg" Outputs="$(SolutionDir)resources\yampt-translator.ico">
+    <Exec Command="python &quot;$(SolutionDir)scripts\generate_icons.py&quot;" />
+  </Target>
   <ItemGroup>
     <ResourceCompile Include="$(SolutionDir)resources\yampt-translator.rc">
       <AdditionalIncludeDirectories>$(SolutionDir)resources</AdditionalIncludeDirectories>

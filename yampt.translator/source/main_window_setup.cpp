@@ -33,7 +33,6 @@
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QProcess>
-#include <QPushButton>
 #include <QSplitter>
 #include <QStandardPaths>
 #include <QStatusBar>
@@ -224,11 +223,13 @@ void main_window_t::setup_replace_toolbar()
 	m_replace_regex_check->setToolTip(tr("Regular expression find/replace"));
 	layout->addWidget(m_replace_regex_check);
 
-	m_replace_one_btn = new QPushButton(tr("Replace"), this);
+	m_replace_one_btn = new QToolButton(this);
+	m_replace_one_btn->setText(tr("Replace"));
 	m_replace_one_btn->setToolTip(tr("Replace in the selected entry and advance to next"));
 	layout->addWidget(m_replace_one_btn);
 
-	m_replace_all_btn = new QPushButton(tr("Replace All"), this);
+	m_replace_all_btn = new QToolButton(this);
+	m_replace_all_btn->setText(tr("Replace All"));
 	m_replace_all_btn->setToolTip(tr("Replace in all currently visible entries"));
 	layout->addWidget(m_replace_all_btn);
 }
@@ -491,7 +492,7 @@ void main_window_t::connect_menu_signals()
 
 	connect(
 	    m_replace_all_btn,
-	    &QPushButton::clicked,
+	    &QToolButton::clicked,
 	    this,
 	    [this]()
 	{
@@ -518,7 +519,7 @@ void main_window_t::connect_menu_signals()
 
 	connect(
 	    m_replace_one_btn,
-	    &QPushButton::clicked,
+	    &QToolButton::clicked,
 	    this,
 	    [this]()
 	{

@@ -58,7 +58,6 @@ class QCloseEvent;
 class QLabel;
 class QLineEdit;
 class QMenu;
-class QPushButton;
 class QToolButton;
 class QSplitter;
 class QTabWidget;
@@ -182,8 +181,8 @@ private:
 	QLineEdit * m_replace_field = nullptr;
 	QToolButton * m_replace_case_check = nullptr;
 	QToolButton * m_replace_regex_check = nullptr;
-	QPushButton * m_replace_all_btn = nullptr;
-	QPushButton * m_replace_one_btn = nullptr;
+	QToolButton * m_replace_all_btn = nullptr;
+	QToolButton * m_replace_one_btn = nullptr;
 	QAction * m_spell_check = nullptr;
 	QAction * m_grammar_check = nullptr;
 	QAction * m_whitespace_check = nullptr;

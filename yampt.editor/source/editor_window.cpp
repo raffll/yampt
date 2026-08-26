@@ -9,7 +9,6 @@
 #include <QHBoxLayout>
 #include <QLineEdit>
 #include <QMenuBar>
-#include <QPushButton>
 #include <QSettings>
 #include <QShortcut>
 #include <QStatusBar>
@@ -130,23 +129,23 @@ void editor_window_t::setup_toolbar()
 
 	setContextMenuPolicy(Qt::PreventContextMenu);
 
-	auto * merge_action = new QAction(tr("Create Merged Patch"), this);
-	merge_action->setToolTip(tr("Create a merged patch from loaded plugins"));
-	toolbar->addAction(merge_action);
-	connect(
-	    merge_action, &QAction::triggered, m_plugin_workspace_view, &plugin_workspace_view_t::on_create_merged_patch);
+	auto * merge_btn = new QToolButton(this);
+	merge_btn->setText(tr("Create Merged Patch"));
+	merge_btn->setToolTip(tr("Create a merged patch from loaded plugins"));
+	toolbar->addWidget(merge_btn);
+	connect(merge_btn, &QToolButton::clicked, m_plugin_workspace_view, &plugin_workspace_view_t::on_create_merged_patch);
 
-	auto * clean_action = new QAction(tr("Clean All"), this);
-	clean_action->setToolTip(tr("Remove evil GMSTs and junk cells from all plugins"));
-	toolbar->addAction(clean_action);
-	connect(clean_action, &QAction::triggered, m_plugin_workspace_view, &plugin_workspace_view_t::on_clean_all);
+	auto * clean_btn = new QToolButton(this);
+	clean_btn->setText(tr("Clean All"));
+	clean_btn->setToolTip(tr("Remove evil GMSTs and junk cells from all plugins"));
+	toolbar->addWidget(clean_btn);
+	connect(clean_btn, &QToolButton::clicked, m_plugin_workspace_view, &plugin_workspace_view_t::on_clean_all);
 
 	toolbar->addSeparator();
 
 	m_search_field = new QLineEdit(this);
 	m_search_field->setPlaceholderText(tr("Filter by..."));
 	m_search_field->setToolTip(tr("Search by record ID or display name"));
-	m_search_field->setMaximumWidth(250);
 	toolbar->addWidget(m_search_field);
 
 	m_case_sensitive_btn = new QToolButton(this);
@@ -175,19 +174,21 @@ void editor_window_t::setup_toolbar()
 	m_search_name_btn->setToolTip(tr("Search in display name"));
 	toolbar->addWidget(m_search_name_btn);
 
-	auto * search_btn = new QPushButton(tr("Search"), this);
+	auto * search_btn = new QToolButton(this);
+	search_btn->setText(tr("Search"));
 	search_btn->setToolTip(tr("Apply the search filter"));
 	toolbar->addWidget(search_btn);
 
 	toolbar->addSeparator();
 
-	auto * filter_btn = new QPushButton(tr("Filter..."), this);
+	auto * filter_btn = new QToolButton(this);
+	filter_btn->setText(tr("Filter..."));
 	filter_btn->setToolTip(tr("Open the advanced filter dialog"));
 	toolbar->addWidget(filter_btn);
 
-	connect(search_btn, &QPushButton::clicked, this, &editor_window_t::on_search_apply);
+	connect(search_btn, &QToolButton::clicked, this, &editor_window_t::on_search_apply);
 	connect(m_search_field, &QLineEdit::returnPressed, this, &editor_window_t::on_search_apply);
-	connect(filter_btn, &QPushButton::clicked, m_plugin_workspace_view, &plugin_workspace_view_t::on_advanced_filter);
+	connect(filter_btn, &QToolButton::clicked, m_plugin_workspace_view, &plugin_workspace_view_t::on_advanced_filter);
 
 	auto * escape_shortcut = new QShortcut(QKeySequence("Escape"), this);
 	connect(escape_shortcut, &QShortcut::activated, this, &editor_window_t::on_search_clear);

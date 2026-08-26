@@ -9,7 +9,6 @@
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QGroupBox>
-#include <QLineEdit>
 #include <QListWidget>
 #include <QVBoxLayout>
 
@@ -30,12 +29,6 @@ public:
 
 		bool filter_by_type = false;
 		std::set<std::string> type_set;
-
-		bool filter_by_id = false;
-		std::string id_text;
-
-		bool filter_by_name = false;
-		std::string name_text;
 
 		bool filter_deleted = false;
 
@@ -65,9 +58,6 @@ private:
 	QCheckBox * m_chk_ct_loses = nullptr;
 
 	QListWidget * m_lst_types = nullptr;
-
-	QLineEdit * m_edt_id = nullptr;
-	QLineEdit * m_edt_name = nullptr;
 
 	QCheckBox * m_chk_deleted = nullptr;
 
