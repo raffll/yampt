@@ -17,7 +17,10 @@ class translation_settings_view_t : public QWidget
 	Q_OBJECT
 
 public:
-	explicit translation_settings_view_t(const std::string & providers_dir, QWidget * parent = nullptr);
+	explicit translation_settings_view_t(
+	    const std::string & providers_dir,
+	    const std::string & models_dir,
+	    QWidget * parent = nullptr);
 
 	void load(const settings_store_t & settings);
 	void apply(settings_store_t & settings) const;
@@ -37,6 +40,7 @@ private:
 		QLabel * status_label = nullptr;
 	};
 
+	void build_local_models_section(QVBoxLayout * parent, const std::string & models_dir);
 	void build_provider_card(QVBoxLayout * parent, const web_translator_config_t & config);
 	void update_status(const provider_card_t & card);
 	std::string read_widget_value(const setting_widget_t & entry) const;
