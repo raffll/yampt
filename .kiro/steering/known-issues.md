@@ -33,3 +33,11 @@ The following functions exceed 50 lines but are stable, rarely modified, and rea
 - `translation_engine_t::translate()` — 62 lines
 - `yaml_l10n_writer_t::write()` — 59 lines
 - `merge_patch_ops_t::patch_field()` — 7 arguments (only one caller)
+
+
+## Borderline function size violations in dialog/menu code
+
+These exceed 50 lines but are stable, self-contained dialog/menu builders. Refactor when touching the file for other reasons:
+
+- `make_base_dialog_t::populate_plugin_tree()` — 114 lines
+- `view_context_menu_t::show_view_menu()` — 92 lines

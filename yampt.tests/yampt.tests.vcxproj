@@ -107,7 +107,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>yampt.core.lib;ctranslate2.lib;Qt6Cored.lib;Qt6Testd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>yampt.core.lib;Qt6Cored.lib;Qt6Testd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)x64\$(Configuration);$(SolutionDir)external\CTranslate2\build\Release;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\debug\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -123,7 +123,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>yampt.core.lib;ctranslate2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>yampt.core.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)x64\$(Configuration);$(SolutionDir)external\CTranslate2\build\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -143,7 +143,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>yampt.core.lib;ctranslate2.lib;Qt6Core.lib;Qt6Test.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>yampt.core.lib;Qt6Core.lib;Qt6Test.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)x64\$(Configuration);$(SolutionDir)external\CTranslate2\build\Release;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -164,7 +164,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>yampt.core.lib;ctranslate2.lib;Qt6Core.lib;Qt6Test.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>yampt.core.lib;Qt6Core.lib;Qt6Test.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)x64\$(Configuration);$(SolutionDir)external\CTranslate2\build\Release;$(SolutionDir)vcpkg_installed\x64-windows\x64-windows\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>

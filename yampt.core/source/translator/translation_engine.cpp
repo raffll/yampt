@@ -7,6 +7,9 @@
 #define HAS_CTRANSLATE2 1
 #include <ctranslate2/translator.h>
 #include <sentencepiece_processor.h>
+#ifdef _WIN32
+#pragma comment(lib, "ctranslate2.lib")
+#endif
 #else
 #define HAS_CTRANSLATE2 0
 #endif
