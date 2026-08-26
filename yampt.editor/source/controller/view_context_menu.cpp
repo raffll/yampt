@@ -331,9 +331,13 @@ void view_context_menu_t::build_merge_remove_menu(QMenu & menu, const view_menu_
 	case row_kind_t::group:
 	case row_kind_t::field_of_group:
 	{
-		auto merge_range = (context.kind == row_kind_t::field_of_group)
-		                       ? visible[context.parent_row_idx].binary_ranges[context.col]
-		                       : context.row.binary_ranges[context.col];
+		const auto & target_row =
+		    (context.kind == row_kind_t::field_of_group) ? visible[context.parent_row_idx] : context.row;
+
+		if (context.col < 0 || context.col >= static_cast<int>(target_row.binary_ranges.size()))
+			break;
+
+		auto merge_range = target_row.binary_ranges[context.col];
 
 		if (merge_range.start >= 0)
 		{

@@ -373,6 +373,14 @@ void translation_suggestion_view_t::advance_line_queue()
 	}
 
 	auto * provider = active_provider();
+	if (!provider)
+	{
+		m_translating = false;
+		m_translate_all_btn->setEnabled(true);
+		emit translation_failed("translation provider became unavailable");
+		return;
+	}
+
 	provider->translate(m_line_queue.front(), m_target_language);
 }
 

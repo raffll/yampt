@@ -14,9 +14,13 @@ std::string binary_file_io::read_file(const std::string & path)
 		char buffer[read_buffer_size];
 		file.seekg(0, std::ios::end);
 		auto file_size = file.tellg();
-		if (file_size == 0)
+		if (file_size <= 0)
 		{
-			app_logger_t::add_log("[warning] file is empty: \"" + path + "\"\r\n");
+			if (file_size == 0)
+				app_logger_t::add_log("[warning] file is empty: \"" + path + "\"\r\n");
+			else
+				app_logger_t::add_log("[error] cannot determine file size: \"" + path + "\"\r\n");
+
 			return content;
 		}
 		content.reserve(static_cast<size_t>(file_size));

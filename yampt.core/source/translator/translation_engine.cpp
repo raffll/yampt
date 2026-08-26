@@ -58,8 +58,15 @@ bool translation_engine_t::load(const std::string & model_pack_path)
 		m_impl->translator = std::make_unique<ctranslate2::Translator>(
 		    model_dir.string(), ctranslate2::Device::CPU, ctranslate2::ComputeType::DEFAULT);
 	}
+	catch (const std::exception & error)
+	{
+		app_logger_t::add_log("[error] translation model load failed: " + std::string(error.what()) + "\r\n");
+		unload();
+		return false;
+	}
 	catch (...)
 	{
+		app_logger_t::add_log("[error] translation model load failed: unknown exception\r\n");
 		unload();
 		return false;
 	}

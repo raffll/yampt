@@ -179,8 +179,15 @@ void merge_controller_t::copy_cell_record(
 			if (clicked_col >= 0 && clicked_col < static_cast<int>(walk_node->values.size()) &&
 			    !walk_node->values[clicked_col].empty())
 			{
-				selected_frmr = static_cast<uint32_t>(std::stoul(walk_node->values[clicked_col]));
-				found_frmr = true;
+				try
+				{
+					selected_frmr = static_cast<uint32_t>(std::stoul(walk_node->values[clicked_col]));
+					found_frmr = true;
+				}
+				catch (const std::exception & error)
+				{
+					m_log("[error] invalid FRMR index: " + std::string(error.what()));
+				}
 			}
 
 			break;
