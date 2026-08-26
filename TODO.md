@@ -19,4 +19,10 @@ Wire up glossary_t::find_glossary_matches in send_chat_request — provide AI pr
 
 editor: Search -> Apply
 
+trabslator: filter/replace buttons not flat
+
+backup for saved plugins
+
+adavnced filters should be splite 50-50
+
 

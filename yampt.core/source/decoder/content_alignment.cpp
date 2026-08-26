@@ -276,23 +276,20 @@ void content_alignment_t::fill_key_indices(
 }
 
 void content_alignment_t::align(
-    const std::vector<std::vector<sub_record_view_t>> & all_subs,
-    size_t col_count,
-    const std::vector<alignment_rule_t> & rules,
-    std::vector<sub_slot_t> & unified_slots,
-    std::vector<std::unordered_map<std::string, std::vector<size_t>>> & col_type_indices)
+    alignment_context_t & context,
+    const std::vector<alignment_rule_t> & rules)
 {
-	collect_non_excluded(all_subs, col_count, rules, unified_slots, col_type_indices);
+	collect_non_excluded(context.all_subs, context.col_count, rules, context.unified_slots, context.col_type_indices);
 
 	for (const auto & rule : rules)
 	{
-		std::vector<std::vector<aligned_group_t>> col_groups(col_count);
+		std::vector<std::vector<aligned_group_t>> col_groups(context.col_count);
 		std::vector<std::string> all_keys;
 
-		scan_groups(all_subs, col_count, rule, col_groups, all_keys, -1);
+		scan_groups(context.all_subs, context.col_count, rule, col_groups, all_keys, -1);
 
 		for (const auto & key : all_keys)
-			emit_key_slots(key, col_groups, col_count, rule, unified_slots, col_type_indices, -1);
+			emit_key_slots(key, col_groups, context.col_count, rule, context.unified_slots, context.col_type_indices, -1);
 	}
 }
 
@@ -375,40 +372,34 @@ void content_alignment_t::fit_merge_column(
 
 void content_alignment_t::build_from_slot_result(
     const slot_result_t & slot_result,
-    size_t col_count,
-    std::vector<sub_slot_t> & unified_slots,
-    std::vector<std::unordered_map<std::string, std::vector<size_t>>> & col_type_indices)
+    alignment_context_t & context)
 {
 	for (const auto & aligned_slot : slot_result.aligned)
-		unified_slots.push_back({ aligned_slot.key.type, aligned_slot.key.occurrence });
+		context.unified_slots.push_back({ aligned_slot.key.type, aligned_slot.key.occurrence });
 
 	for (const auto & aligned_slot : slot_result.aligned)
 	{
 		const auto ver_size = aligned_slot.indices.size();
-		for (size_t col = 0; col < col_count; ++col)
+		for (size_t col = 0; col < context.col_count; ++col)
 		{
 			if (col < ver_size)
-				col_type_indices[col][aligned_slot.key.type].push_back(aligned_slot.indices[col]);
+				context.col_type_indices[col][aligned_slot.key.type].push_back(aligned_slot.indices[col]);
 			else
-				col_type_indices[col][aligned_slot.key.type].push_back(SIZE_MAX);
+				context.col_type_indices[col][aligned_slot.key.type].push_back(SIZE_MAX);
 		}
 	}
 }
 
-void content_alignment_t::build_occurrence_based(
-    const std::vector<std::vector<sub_record_view_t>> & all_subs,
-    size_t col_count,
-    std::vector<sub_slot_t> & unified_slots,
-    std::vector<std::unordered_map<std::string, std::vector<size_t>>> & col_type_indices)
+void content_alignment_t::build_occurrence_based(alignment_context_t & context)
 {
-	for (const auto & subs : all_subs)
+	for (const auto & subs : context.all_subs)
 	{
 		std::unordered_map<std::string, int> type_count;
 		for (const auto & sv_rec : subs)
 		{
 			int occur = type_count[sv_rec.type]++;
 			bool found = false;
-			for (const auto & slot : unified_slots)
+			for (const auto & slot : context.unified_slots)
 			{
 				if (slot.type == sv_rec.type && slot.occurrence == occur)
 				{
@@ -418,17 +409,17 @@ void content_alignment_t::build_occurrence_based(
 			}
 
 			if (!found)
-				unified_slots.push_back({ sv_rec.type, occur });
+				context.unified_slots.push_back({ sv_rec.type, occur });
 		}
 	}
 
-	for (size_t col = 0; col < col_count; ++col)
+	for (size_t col = 0; col < context.col_count; ++col)
 	{
-		if (col >= all_subs.size())
+		if (col >= context.all_subs.size())
 			continue;
 
-		for (size_t i = 0; i < all_subs[col].size(); ++i)
-			col_type_indices[col][all_subs[col][i].type].push_back(i);
+		for (size_t i = 0; i < context.all_subs[col].size(); ++i)
+			context.col_type_indices[col][context.all_subs[col][i].type].push_back(i);
 	}
 }
 

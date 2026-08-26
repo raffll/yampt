@@ -60,7 +60,8 @@ void view_tree_model_t::set_record_armor(record_context_t & context, const confl
 	rule.trailing_types = { "BNAM", "CNAM" };
 	rule.key_source = alignment_rule_t::key_from_t::anchor;
 
-	content_alignment_t::align(all_subs, col_count, { rule }, unified_slots, col_type_indices);
+	alignment_context_t align_ctx { all_subs, col_count, unified_slots, col_type_indices };
+	content_alignment_t::align(align_ctx, { rule });
 
 	auto is_body_part_type = [](const std::string & slot_type)
 	{ return slot_type == "INDX" || slot_type == "BNAM" || slot_type == "CNAM"; };
@@ -210,9 +211,15 @@ void view_tree_model_t::set_record_generic(record_context_t & context, const con
 	std::vector<std::unordered_map<std::string, std::vector<size_t>>> col_type_indices(col_count);
 
 	if (entry.slot_result)
-		content_alignment_t::build_from_slot_result(*entry.slot_result, col_count, unified_slots, col_type_indices);
+	{
+		alignment_context_t align_ctx { all_subs, col_count, unified_slots, col_type_indices };
+		content_alignment_t::build_from_slot_result(*entry.slot_result, align_ctx);
+	}
 	else
-		content_alignment_t::build_occurrence_based(all_subs, col_count, unified_slots, col_type_indices);
+	{
+		alignment_context_t align_ctx { all_subs, col_count, unified_slots, col_type_indices };
+		content_alignment_t::build_occurrence_based(align_ctx);
+	}
 
 	for (const auto & slot : unified_slots)
 		m_rows.push_back(build_slot_row(col_count, all_subs, col_type_indices, slot));
@@ -233,7 +240,8 @@ void view_tree_model_t::set_record_info(record_context_t & context, const confli
 	rule.trailing_types = { "INTV", "FLTV" };
 	rule.key_source = alignment_rule_t::key_from_t::anchor;
 
-	content_alignment_t::align(all_subs, col_count, { rule }, unified_slots, col_type_indices);
+	alignment_context_t align_ctx { all_subs, col_count, unified_slots, col_type_indices };
+	content_alignment_t::align(align_ctx, { rule });
 
 	auto is_condition_type = [](const std::string & slot_type)
 	{ return slot_type == "SCVR" || slot_type == "INTV" || slot_type == "FLTV"; };
@@ -325,8 +333,8 @@ void view_tree_model_t::collect_leveled_entries(record_context_t & context, slot
 	rule.trailing_types = { "INTV" };
 	rule.key_source = alignment_rule_t::key_from_t::anchor;
 
-	content_alignment_t::align(
-	    context.all_sub_records, context.col_count, { rule }, build_ctx.unified_slots, build_ctx.col_type_indices);
+	alignment_context_t align_ctx { context.all_sub_records, context.col_count, build_ctx.unified_slots, build_ctx.col_type_indices };
+	content_alignment_t::align(align_ctx, { rule });
 }
 
 void view_tree_model_t::collect_faction_entries(record_context_t & context, slot_build_context_t & build_ctx)
@@ -338,8 +346,8 @@ void view_tree_model_t::collect_faction_entries(record_context_t & context, slot
 	rule.key_source = alignment_rule_t::key_from_t::next;
 	rule.key_neighbor_type = "ANAM";
 
-	content_alignment_t::align(
-	    context.all_sub_records, context.col_count, { rule }, build_ctx.unified_slots, build_ctx.col_type_indices);
+	alignment_context_t align_ctx { context.all_sub_records, context.col_count, build_ctx.unified_slots, build_ctx.col_type_indices };
+	content_alignment_t::align(align_ctx, { rule });
 }
 
 void view_tree_model_t::collect_container_entries(record_context_t & context, slot_build_context_t & build_ctx)
@@ -356,12 +364,8 @@ void view_tree_model_t::collect_container_entries(record_context_t & context, sl
 	npcs_rule.anchor_size = 32;
 	npcs_rule.key_source = alignment_rule_t::key_from_t::anchor;
 
-	content_alignment_t::align(
-	    context.all_sub_records,
-	    context.col_count,
-	    { npco_rule, npcs_rule },
-	    build_ctx.unified_slots,
-	    build_ctx.col_type_indices);
+	alignment_context_t align_ctx { context.all_sub_records, context.col_count, build_ctx.unified_slots, build_ctx.col_type_indices };
+	content_alignment_t::align(align_ctx, { npco_rule, npcs_rule });
 }
 
 void view_tree_model_t::emit_slot_rows(record_context_t & context, slot_build_context_t & build_ctx)
