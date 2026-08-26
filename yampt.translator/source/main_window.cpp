@@ -636,7 +636,7 @@ void main_window_t::on_settings_applied(const std::string & category)
 	if (category == "all" || category == "language")
 	{
 		on_encoding_changed(m_settings.encoding_index());
-		on_spell_lang_changed(m_settings.spell_lang_index());
+		on_spell_lang_changed();
 		m_translation_tab->apply_provider_settings(m_settings);
 	}
 
@@ -866,7 +866,7 @@ void main_window_t::update_validation()
 	m_record_display_controller->update_validation();
 }
 
-void main_window_t::on_spell_lang_changed(int)
+void main_window_t::on_spell_lang_changed()
 {
 	const auto aff_path = m_settings.spell_aff_path();
 	const auto dic_path = m_settings.spell_dic_path();
@@ -952,8 +952,7 @@ void main_window_t::load_config()
 	rebuild_sidebar();
 	rebuild_table();
 
-	const int spell_index = m_settings.spell_lang_index();
-	on_spell_lang_changed(spell_index);
+	on_spell_lang_changed();
 
 	update_watcher_roots();
 	register_shortcuts();

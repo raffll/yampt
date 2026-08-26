@@ -35,7 +35,4 @@ public:
 	static std::vector<highlight_position_t> find_grammar_highlights(
 	    const std::string & text,
 	    const std::vector<std::pair<int, int>> & misspelled_ranges);
-
-private:
-	static std::string to_lower_ascii(const std::string & input);
 };

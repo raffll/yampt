@@ -1,5 +1,6 @@
 #include "highlight_coordinator.hpp"
 #include "../editor/glossary.hpp"
+#include <utility/string_utils.hpp>
 #include <algorithm>
 
 struct highlight_candidate_t
@@ -8,17 +9,6 @@ struct highlight_candidate_t
 	int length;
 	bool is_hyperlink;
 };
-
-std::string highlight_coordinator_t::to_lower_ascii(const std::string & input)
-{
-	std::string result = input;
-	for (auto & ch : result)
-	{
-		if (ch >= 'A' && ch <= 'Z')
-			ch = ch + ('a' - 'A');
-	}
-	return result;
-}
 
 std::vector<highlight_position_t> highlight_coordinator_t::find_annotation_highlights(
     const std::string & text_lower,
@@ -33,7 +23,7 @@ std::vector<highlight_position_t> highlight_coordinator_t::find_annotation_highl
 			continue;
 
 		const bool is_hyperlink = (annotation.kind == annotation_t::dial_topic);
-		const auto term = to_lower_ascii(raw);
+		const auto term = string_utils::to_lower(raw);
 		const auto term_length = static_cast<int>(term.length());
 
 		size_t pos = 0;

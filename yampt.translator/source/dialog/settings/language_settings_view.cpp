@@ -119,6 +119,22 @@ void language_settings_view_t::apply(settings_store_t & settings) const
 	{
 		settings.set_encoding_index(codepage_to_index(native_lang->codepage));
 		settings.set_translation_target(native_lang->nllb_code);
+
+		int language_index = 0;
+		const auto foreign = foreign_code.toStdString();
+		for (const auto & lang : get_languages())
+		{
+			if (lang.code == foreign)
+				continue;
+
+			if (lang.code == native_code.toStdString())
+			{
+				settings.set_translation_language_index(language_index);
+				break;
+			}
+
+			++language_index;
+		}
 	}
 
 	const auto native_spell_aff = m_native_spell_combo->currentData().toString().toStdString();

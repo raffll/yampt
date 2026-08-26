@@ -130,7 +130,7 @@ private:
 	void update_annotations();
 	void update_validation();
 	void update_status_counts();
-	void on_spell_lang_changed(int index);
+	void on_spell_lang_changed();
 	void scan_workspace();
 	void update_watcher_roots();
 	void register_shortcuts();

@@ -6,9 +6,12 @@ make dictionary dont need base dict, create/convert need
 
 Translator settings: propose better name: and also populate dynamically with providers file
 
+Wire up edit_history_t::load_from_file / save_to_file — persist undo history across sessions so users can revert after restart.
+
+Wire up glossary_t::find_glossary_matches in send_chat_request — provide AI providers with term→translation pairs instead of substituted text.
+
 ## Audit Findings
 
-- highlight_coordinator_t::to_lower_ascii only handles ASCII (A-Z), breaks annotation matching for non-English characters (Ö, Ą, É). Replace with string_utils::to_lower.
 - web_translator_t::send_chat_request glossary_fn returns substituted text instead of term pairs for AI system prompt. Should use find_glossary_matches and format as reference list.
 - script_parser_t::find_keyword lacks word boundary checks (unlike creator_helpers). Use find_whole_word and skip npos entries.
 - script_parser_t member variables missing m_prefix (18 members: type, merger, record_key, source_path, old_script, old_scdt, new_script, is_done, line, line_lc, old_text, new_line, new_text, pos, keyword_pos, keyword, error).
@@ -44,9 +47,7 @@ Translator settings: propose better name: and also populate dynamically with pro
 - translation_engine_t::translate() is 62 lines. Extract tokenization and result assembly into helpers.
 - yaml_l10n_writer.cpp write() is 59 lines. Extract block scalar writing and quoted value writing into helpers.
 - scdt_patcher_t::patch_later_message_segment uses 1-byte size field — silently truncates for message texts >255 chars, corrupting bytecode. Add overflow check or switch to 2-byte encoding.
-- settings_store_t: set_translation_language_index() never called — translation_language_index always reads 0. CTranslate2 always loads the first language's model dir on startup regardless of user's configured native language. Wire up persistence when user changes provider combo.
 - settings_store_t: translation_source_index / set_translation_source_index are completely unused. Remove.
-- settings_store_t: set_spell_lang_index() never called — spell_lang_index persists default 0 always. Remove or wire up.
 - yTranslator-Manual.md: `heuristic` status missing from Entry Statuses section. It's assigned by cell_matcher/dial_matcher and users encounter it in make-base results.
 - encode_from_utf8 (Windows) silently applies best-fit character mapping for unencodable characters — no error reported. byte_limit_validator approves text that will be corrupted on save. Add WC_NO_BEST_FIT_CHARS flag and warn user on encoding loss.
 - Duplicate file opening: session normalize_path only replaces backslashes, doesn't canonicalize case or resolve ../ — two paths to the same file on Windows can open separate documents, causing data loss on save.
