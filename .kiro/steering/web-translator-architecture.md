@@ -7,6 +7,7 @@ Translation providers are defined as JSON files in `providers/` next to the exec
 Config schema:
 - `name` — display name in the UI
 - `kind` — `"simple"` (direct translation API) or `"chat_completion"` (LLM with system prompt + messages)
+- `message_style` — only for `chat_completion` kind: `"openai"` (default, system role in messages array) or `"anthropic"` (top-level system field, user-only messages)
 - `endpoint` — API URL
 - `body_format` — `"json"`, `"form"` (URL-encoded), or `"query"` (URL query parameters, uses GET)
 - `headers` — key/value map, supports template variables

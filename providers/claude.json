@@ -1,6 +1,7 @@
 {
     "name": "Claude",
     "kind": "chat_completion",
+    "message_style": "anthropic",
     "endpoint": "https://api.anthropic.com/v1/messages",
     "body_format": "json",
     "headers": {

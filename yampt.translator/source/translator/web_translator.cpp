@@ -236,19 +236,31 @@ void web_translator_t::send_chat_request(const std::string & text, const std::st
 		body_obj[QString::fromStdString(field_name)] = QString::fromStdString(value);
 	}
 
-	body_obj["system"] = QString::fromStdString(system_prompt);
+	if (m_config.message_style == message_style_t::anthropic)
+	{
+		body_obj["system"] = QString::fromStdString(system_prompt);
 
-	QJsonArray messages;
-	QJsonObject system_message;
-	system_message["role"] = "system";
-	system_message["content"] = QString::fromStdString(system_prompt);
-	messages.append(system_message);
+		QJsonArray messages;
+		QJsonObject user_message;
+		user_message["role"] = "user";
+		user_message["content"] = QString::fromStdString(text);
+		messages.append(user_message);
+		body_obj["messages"] = messages;
+	}
+	else
+	{
+		QJsonArray messages;
+		QJsonObject system_message;
+		system_message["role"] = "system";
+		system_message["content"] = QString::fromStdString(system_prompt);
+		messages.append(system_message);
 
-	QJsonObject user_message;
-	user_message["role"] = "user";
-	user_message["content"] = QString::fromStdString(text);
-	messages.append(user_message);
-	body_obj["messages"] = messages;
+		QJsonObject user_message;
+		user_message["role"] = "user";
+		user_message["content"] = QString::fromStdString(text);
+		messages.append(user_message);
+		body_obj["messages"] = messages;
+	}
 
 	auto body_data = QJsonDocument(body_obj).toJson(QJsonDocument::Compact);
 

@@ -26,6 +26,9 @@ static web_translator_config_t parse_config(const QJsonObject & root, const std:
 	const auto kind_str = root.value("kind").toString("simple").toStdString();
 	config.kind = (kind_str == "chat_completion") ? provider_kind_t::chat_completion : provider_kind_t::simple;
 
+	const auto style_str = root.value("message_style").toString("openai").toStdString();
+	config.message_style = (style_str == "anthropic") ? message_style_t::anthropic : message_style_t::openai;
+
 	const auto headers_obj = root.value("headers").toObject();
 	for (auto it = headers_obj.begin(); it != headers_obj.end(); ++it)
 		config.headers[it.key().toStdString()] = it.value().toString().toStdString();

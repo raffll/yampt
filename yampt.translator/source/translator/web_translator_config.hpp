@@ -17,6 +17,12 @@ enum class provider_kind_t
 	chat_completion
 };
 
+enum class message_style_t
+{
+	openai,
+	anthropic
+};
+
 enum class setting_type_t
 {
 	password,
@@ -41,6 +47,7 @@ struct web_translator_config_t
 	std::string endpoint;
 	body_format_t body_format = body_format_t::json;
 	provider_kind_t kind = provider_kind_t::simple;
+	message_style_t message_style = message_style_t::openai;
 	std::unordered_map<std::string, std::string> headers;
 	std::unordered_map<std::string, std::string> body_fields;
 	std::string response_path;
