@@ -9,6 +9,7 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
+#include <QTabWidget>
 #include <QVBoxLayout>
 
 translation_settings_view_t::translation_settings_view_t(
@@ -19,16 +20,27 @@ translation_settings_view_t::translation_settings_view_t(
     , m_providers_dir(providers_dir)
 {
 	auto * layout = new QVBoxLayout(this);
-	layout->setSpacing(12);
+	layout->setContentsMargins(0, 0, 0, 0);
 
-	build_local_models_section(layout, models_dir);
+	auto * tabs = new QTabWidget(this);
 
+	auto * models_tab = new QWidget;
+	auto * models_layout = new QVBoxLayout(models_tab);
+	models_layout->setSpacing(12);
+	build_local_models_section(models_layout, models_dir);
+	models_layout->addStretch();
+
+	auto * providers_tab = new QWidget;
+	auto * providers_layout = new QVBoxLayout(providers_tab);
+	providers_layout->setSpacing(12);
 	m_configs = web_translator_config::load_all(m_providers_dir);
-
 	for (const auto & config : m_configs)
-		build_provider_card(layout, config);
+		build_provider_card(providers_layout, config);
+	providers_layout->addStretch();
 
-	layout->addStretch();
+	tabs->addTab(models_tab, tr("Local Models"));
+	tabs->addTab(providers_tab, tr("Web Providers"));
+	layout->addWidget(tabs);
 }
 
 void translation_settings_view_t::build_local_models_section(QVBoxLayout * parent, const std::string & models_dir)

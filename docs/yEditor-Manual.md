@@ -99,7 +99,7 @@ The toolbar includes a search field for filtering the navigation tree by record 
 - **.\*** — interpret the query as a regular expression.
 - **ID** — search in the record's internal ID (e.g. "iron_dagger", "balmora_guild").
 - **Name** — search in the record's display name (e.g. "Iron Dagger", "Balmora Mages Guild").
-- **Search** — applies the current query. Also triggered by pressing Enter in the search field.
+- **Apply** — applies the current query. Also triggered by pressing Enter in the search field.
 - **Filter...** — opens the advanced filter dialog for filtering by conflict severity, per-plugin conflict status, record type, deleted status, and Lua handler criteria.
 
 Press Escape to clear the search field and remove the text filter.
