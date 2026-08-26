@@ -1,7 +1,59 @@
 #include "yaml_l10n_writer.hpp"
 #include "yaml_l10n_reader.hpp"
+#include <algorithm>
 #include <fstream>
 #include <unordered_map>
+#include <unordered_set>
+
+static bool needs_quoting(const std::string & value)
+{
+	if (value.empty())
+		return true;
+
+	static const std::unordered_set<std::string> reserved_words = {
+		"true", "false", "yes", "no", "on", "off", "null", "~",
+		"True", "False", "Yes", "No", "On", "Off", "Null",
+		"TRUE", "FALSE", "YES", "NO", "ON", "OFF", "NULL"
+	};
+
+	if (reserved_words.count(value))
+		return true;
+
+	if (value[0] == ' ' || value.back() == ' ')
+		return true;
+
+	if (value.find(':') != std::string::npos || value[0] == '{' || value[0] == '[' || value[0] == '&' ||
+	    value[0] == '*' || value[0] == '?' || value[0] == '|' || value[0] == '-' || value[0] == '<' ||
+	    value[0] == '>' || value[0] == '!' || value[0] == '%' || value[0] == '@' || value[0] == '#' ||
+	    value[0] == '\'' || value[0] == '"')
+		return true;
+
+	bool looks_numeric = true;
+	bool has_dot = false;
+	for (size_t index = 0; index < value.size(); ++index)
+	{
+		char character = value[index];
+		if (index == 0 && (character == '+' || character == '-'))
+			continue;
+
+		if (character == '.' && !has_dot)
+		{
+			has_dot = true;
+			continue;
+		}
+
+		if (character < '0' || character > '9')
+		{
+			looks_numeric = false;
+			break;
+		}
+	}
+
+	if (looks_numeric && !value.empty() && value != "-" && value != "+")
+		return true;
+
+	return false;
+}
 
 bool yaml_l10n_writer_t::write(
     const std::string & output_path,
@@ -45,11 +97,7 @@ bool yaml_l10n_writer_t::write(
 			continue;
 		}
 
-		if (!value.empty() &&
-		    (value.find(':') != std::string::npos || value[0] == '{' || value[0] == '[' || value[0] == '&' ||
-		     value[0] == '*' || value[0] == '?' || value[0] == '|' || value[0] == '-' || value[0] == '<' ||
-		     value[0] == '>' || value[0] == '!' || value[0] == '%' || value[0] == '@' || value[0] == '#' ||
-		     value[0] == '\'' || value[0] == '"'))
+		if (needs_quoting(value))
 		{
 			std::string escaped;
 			escaped.reserve(value.size());

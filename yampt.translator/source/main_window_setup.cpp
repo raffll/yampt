@@ -149,34 +149,40 @@ void main_window_t::setup_toolbar()
 	m_case_sensitive_check = new QToolButton(this);
 	m_case_sensitive_check->setText(tr("Aa"));
 	m_case_sensitive_check->setCheckable(true);
+	m_case_sensitive_check->setAutoRaise(true);
 	toolbar_layout->addWidget(m_case_sensitive_check);
 
 	m_regex_check = new QToolButton(this);
 	m_regex_check->setText(tr(".*"));
 	m_regex_check->setCheckable(true);
+	m_regex_check->setAutoRaise(true);
 	toolbar_layout->addWidget(m_regex_check);
 
 	m_search_col_key = new QToolButton(this);
 	m_search_col_key->setText(tr("Key"));
 	m_search_col_key->setCheckable(true);
 	m_search_col_key->setChecked(true);
+	m_search_col_key->setAutoRaise(true);
 	toolbar_layout->addWidget(m_search_col_key);
 
 	m_search_col_original = new QToolButton(this);
 	m_search_col_original->setText(tr("Original"));
 	m_search_col_original->setCheckable(true);
 	m_search_col_original->setChecked(true);
+	m_search_col_original->setAutoRaise(true);
 	toolbar_layout->addWidget(m_search_col_original);
 
 	m_search_col_translation = new QToolButton(this);
 	m_search_col_translation->setText(tr("Translation"));
 	m_search_col_translation->setCheckable(true);
 	m_search_col_translation->setChecked(true);
+	m_search_col_translation->setAutoRaise(true);
 	toolbar_layout->addWidget(m_search_col_translation);
 
 	m_find_replace_toggle = new QToolButton(this);
 	m_find_replace_toggle->setText(tr("Find/Replace"));
 	m_find_replace_toggle->setCheckable(true);
+	m_find_replace_toggle->setAutoRaise(true);
 	m_find_replace_toggle->setToolTip(tr("Show or hide the Find/Replace bar"));
 	toolbar_layout->addWidget(m_find_replace_toggle);
 
@@ -214,22 +220,26 @@ void main_window_t::setup_replace_toolbar()
 	m_replace_case_check = new QToolButton(this);
 	m_replace_case_check->setText(tr("Aa"));
 	m_replace_case_check->setCheckable(true);
+	m_replace_case_check->setAutoRaise(true);
 	m_replace_case_check->setToolTip(tr("Case-sensitive find/replace"));
 	layout->addWidget(m_replace_case_check);
 
 	m_replace_regex_check = new QToolButton(this);
 	m_replace_regex_check->setText(tr(".*"));
 	m_replace_regex_check->setCheckable(true);
+	m_replace_regex_check->setAutoRaise(true);
 	m_replace_regex_check->setToolTip(tr("Regular expression find/replace"));
 	layout->addWidget(m_replace_regex_check);
 
 	m_replace_one_btn = new QToolButton(this);
 	m_replace_one_btn->setText(tr("Replace"));
+	m_replace_one_btn->setAutoRaise(true);
 	m_replace_one_btn->setToolTip(tr("Replace in the selected entry and advance to next"));
 	layout->addWidget(m_replace_one_btn);
 
 	m_replace_all_btn = new QToolButton(this);
 	m_replace_all_btn->setText(tr("Replace All"));
+	m_replace_all_btn->setAutoRaise(true);
 	m_replace_all_btn->setToolTip(tr("Replace in all currently visible entries"));
 	layout->addWidget(m_replace_all_btn);
 }

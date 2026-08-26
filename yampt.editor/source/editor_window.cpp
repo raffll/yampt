@@ -175,7 +175,7 @@ void editor_window_t::setup_toolbar()
 	toolbar->addWidget(m_search_name_btn);
 
 	auto * search_btn = new QToolButton(this);
-	search_btn->setText(tr("Search"));
+	search_btn->setText(tr("Apply"));
 	search_btn->setToolTip(tr("Apply the search filter"));
 	toolbar->addWidget(search_btn);
 

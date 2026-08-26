@@ -66,8 +66,8 @@ filter_dialog_t::filter_dialog_t(const std::vector<std::string> & available_type
 
 	setup_lua_group(right_column);
 
-	columns_layout->addLayout(left_column);
-	columns_layout->addLayout(right_column);
+	columns_layout->addLayout(left_column, 1);
+	columns_layout->addLayout(right_column, 1);
 
 	outer_layout->addLayout(columns_layout);
 
