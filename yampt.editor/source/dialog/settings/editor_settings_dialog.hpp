@@ -6,6 +6,7 @@
 class QDialogButtonBox;
 class QListWidget;
 class QPushButton;
+class QScrollArea;
 class QStackedWidget;
 class settings_store_t;
 class editor_appearance_settings_view_t;
@@ -25,6 +26,7 @@ signals:
 
 private:
 	void apply_all();
+	QScrollArea * wrap_in_scroll_area(QWidget * content);
 
 	settings_store_t & m_settings;
 

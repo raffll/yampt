@@ -35,22 +35,19 @@ void translation_settings_view_t::build_local_models_section(QVBoxLayout * paren
 {
 	namespace fs = std::filesystem;
 
-	if (models_dir.empty() || !fs::is_directory(models_dir))
-		return;
-
 	std::vector<std::string> model_names;
-	for (const auto & entry : fs::directory_iterator(models_dir))
+	if (!models_dir.empty() && fs::is_directory(models_dir))
 	{
-		if (!entry.is_directory())
-			continue;
+		for (const auto & entry : fs::directory_iterator(models_dir))
+		{
+			if (!entry.is_directory())
+				continue;
 
-		auto dir_path = entry.path();
-		if (fs::exists(dir_path / "sentencepiece.bpe.model") && fs::is_directory(dir_path / "model"))
-			model_names.push_back(dir_path.filename().string());
+			auto dir_path = entry.path();
+			if (fs::exists(dir_path / "sentencepiece.bpe.model") && fs::is_directory(dir_path / "model"))
+				model_names.push_back(dir_path.filename().string());
+		}
 	}
-
-	if (model_names.empty())
-		return;
 
 	auto * card = new QFrame(this);
 	card->setFrameShape(QFrame::StyledPanel);
@@ -64,30 +61,39 @@ void translation_settings_view_t::build_local_models_section(QVBoxLayout * paren
 	title_label->setFont(title_font);
 	card_layout->addWidget(title_label);
 
-	const auto languages = language_config::load(resource_paths::languages_file());
-	std::string language_list;
-	for (const auto & lang : languages)
+	if (model_names.empty())
 	{
-		if (lang.code == "EN")
-			continue;
-
-		if (!language_list.empty())
-			language_list += ", ";
-
-		language_list += lang.code;
+		auto * empty_label = new QLabel(tr("No models found"), card);
+		empty_label->setStyleSheet("color: rgb(120, 120, 120); font-style: italic;");
+		card_layout->addWidget(empty_label);
 	}
-
-	for (const auto & model_name : model_names)
+	else
 	{
-		auto * row = new QHBoxLayout;
-		row->addWidget(new QLabel(QString::fromStdString(model_name), card));
-		row->addStretch();
+		const auto languages = language_config::load(resource_paths::languages_file());
+		std::string language_list;
+		for (const auto & lang : languages)
+		{
+			if (lang.code == "EN")
+				continue;
 
-		auto * lang_label = new QLabel(QString::fromStdString(language_list), card);
-		lang_label->setStyleSheet("color: rgb(120, 120, 120); font-size: 11px;");
-		row->addWidget(lang_label);
+			if (!language_list.empty())
+				language_list += ", ";
 
-		card_layout->addLayout(row);
+			language_list += lang.code;
+		}
+
+		for (const auto & model_name : model_names)
+		{
+			auto * row = new QHBoxLayout;
+			row->addWidget(new QLabel(QString::fromStdString(model_name), card));
+			row->addStretch();
+
+			auto * lang_label = new QLabel(QString::fromStdString(language_list), card);
+			lang_label->setStyleSheet("color: rgb(120, 120, 120); font-size: 11px;");
+			row->addWidget(lang_label);
+
+			card_layout->addLayout(row);
+		}
 	}
 
 	parent->addWidget(card);

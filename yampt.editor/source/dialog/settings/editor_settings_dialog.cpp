@@ -8,6 +8,7 @@
 #include <QHBoxLayout>
 #include <QListWidget>
 #include <QPushButton>
+#include <QScrollArea>
 #include <QStackedWidget>
 #include <QVBoxLayout>
 
@@ -33,10 +34,10 @@ editor_settings_dialog_t::editor_settings_dialog_t(settings_store_t & settings, 
 	m_category_list->addItem(tr("Merged Patch"));
 	m_category_list->addItem(tr("Cleaning"));
 
-	m_content_stack->addWidget(m_appearance_view);
-	m_content_stack->addWidget(m_paths_view);
-	m_content_stack->addWidget(m_merge_view);
-	m_content_stack->addWidget(m_cleaning_view);
+	m_content_stack->addWidget(wrap_in_scroll_area(m_appearance_view));
+	m_content_stack->addWidget(wrap_in_scroll_area(m_paths_view));
+	m_content_stack->addWidget(wrap_in_scroll_area(m_merge_view));
+	m_content_stack->addWidget(wrap_in_scroll_area(m_cleaning_view));
 
 	connect(m_category_list, &QListWidget::currentRowChanged, m_content_stack, &QStackedWidget::setCurrentIndex);
 
@@ -89,4 +90,13 @@ void editor_settings_dialog_t::apply_all()
 	m_merge_view->save(m_settings);
 	m_cleaning_view->save(m_settings);
 	m_settings.sync();
+}
+
+QScrollArea * editor_settings_dialog_t::wrap_in_scroll_area(QWidget * content)
+{
+	auto * scroll = new QScrollArea(this);
+	scroll->setWidget(content);
+	scroll->setWidgetResizable(true);
+	scroll->setFrameShape(QFrame::NoFrame);
+	return scroll;
 }

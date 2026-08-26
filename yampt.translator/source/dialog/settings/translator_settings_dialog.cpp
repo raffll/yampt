@@ -10,6 +10,7 @@
 #include <QHBoxLayout>
 #include <QListWidget>
 #include <QPushButton>
+#include <QScrollArea>
 #include <QStackedWidget>
 #include <QVBoxLayout>
 
@@ -40,12 +41,12 @@ translator_settings_dialog_t::translator_settings_dialog_t(
 	m_category_list->addItem(tr("Appearance"));
 	m_category_list->addItem(tr("Shortcuts"));
 	m_category_list->addItem(tr("Language"));
-	m_category_list->addItem(tr("Providers"));
+	m_category_list->addItem(tr("Auto Translation"));
 
-	m_content_stack->addWidget(m_appearance_view);
-	m_content_stack->addWidget(m_shortcuts_view);
-	m_content_stack->addWidget(m_language_view);
-	m_content_stack->addWidget(m_translation_view);
+	m_content_stack->addWidget(wrap_in_scroll_area(m_appearance_view));
+	m_content_stack->addWidget(wrap_in_scroll_area(m_shortcuts_view));
+	m_content_stack->addWidget(wrap_in_scroll_area(m_language_view));
+	m_content_stack->addWidget(wrap_in_scroll_area(m_translation_view));
 
 	connect(m_category_list, &QListWidget::currentRowChanged, m_content_stack, &QStackedWidget::setCurrentIndex);
 
@@ -111,4 +112,13 @@ void translator_settings_dialog_t::update_ok_button_state()
 	const bool has_conflicts = m_shortcuts_view->has_conflicts();
 	m_button_box->button(QDialogButtonBox::Ok)->setEnabled(!has_conflicts);
 	m_apply_button->setEnabled(!has_conflicts);
+}
+
+QScrollArea * translator_settings_dialog_t::wrap_in_scroll_area(QWidget * content)
+{
+	auto * scroll = new QScrollArea(this);
+	scroll->setWidget(content);
+	scroll->setWidgetResizable(true);
+	scroll->setFrameShape(QFrame::NoFrame);
+	return scroll;
 }
