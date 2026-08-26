@@ -43,7 +43,6 @@ enum class rec_type_t
 	scvr,
 	dnam,
 	cndt,
-	gmdt,
 
 	wild,
 	regn,

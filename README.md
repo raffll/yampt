@@ -51,12 +51,13 @@ Qt6 GUI for interactive plugin translation.
 
 **Translation**
 - **Built-in offline translation engine — no API key required**
-- Web translation providers: DeepL, Google Translate, Claude — add more via config files
+- Web translation providers: DeepL, Google Translate, ChatGPT, Claude — add more via config files
 
 **Workflows**
 - **Lua l10n workflow: edit YAML localization files with auto-pairing and scaffold generation**
 - **EET file import: convert ESP-ESM Translator dictionaries to JSON**
 - **Generate localization files (.cel, .mrk, .top) from dictionary**
+- **Hyperlink insertion during plugin conversion**
 
 ## yampt.exe — Command Line
 
@@ -70,7 +71,6 @@ Batch tool for automated dictionary and conversion workflows.
 
 **Conversion**
 - Convert plugins by applying translations from dictionaries
-- **Hyperlink insertion during conversion**
 - Create patch plugins containing only modified records
 - **Converts compiled script data without recompiling in TES CS**
 

@@ -115,8 +115,6 @@ std::string domain_types::type_to_str(rec_type_t type)
 		return "DNAM";
 	case rec_type_t::cndt:
 		return "CNDT";
-	case rec_type_t::gmdt:
-		return "GMDT";
 
 	case rec_type_t::wild:
 		return "CELL";

@@ -52,9 +52,6 @@ public:
 	std::string web_provider_setting(const std::string & provider_id, const std::string & key) const;
 	void set_web_provider_setting(const std::string & provider_id, const std::string & key, const std::string & value);
 
-	int translation_source_index() const;
-	void set_translation_source_index(int index);
-
 	int translation_language_index() const;
 	void set_translation_language_index(int index);
 

@@ -159,16 +159,6 @@ void settings_store_t::set_web_provider_setting(
 		set_web_api_key(provider_id, value);
 }
 
-int settings_store_t::translation_source_index() const
-{
-	return m_settings.value("Translation/SourceIndex", 0).toInt();
-}
-
-void settings_store_t::set_translation_source_index(int index)
-{
-	m_settings.setValue("Translation/SourceIndex", index);
-}
-
 int settings_store_t::translation_language_index() const
 {
 	return m_settings.value("Translation/LanguageIndex", 0).toInt();
