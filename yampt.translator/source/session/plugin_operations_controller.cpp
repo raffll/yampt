@@ -64,113 +64,28 @@ void plugin_operations_controller_t::on_plugin_operation(const std::string & plu
 	switch (operation)
 	{
 	case plugin_op_t::make_dict:
-	{
-		auto entries = build_dict_entries(plugin_dir);
-
-		dict_selection_dialog_t dialog(entries, m_deps.settings.last_merge_order(), m_deps.parent_widget);
-		dialog.setWindowTitle(QCoreApplication::translate("yTranslator", "Select Dictionaries"));
-		dialog.set_allow_empty_selection(true);
-		if (dialog.exec() != QDialog::Accepted)
-			return;
-
-		const auto selected = dialog.get_selected_paths();
-		if (selected.empty())
-		{
-			result = m_deps.executor.make_dict(plugin_path);
-		}
-		else
-		{
-			m_deps.settings.set_last_merge_order(selected);
-
-			for (const auto & sel_path : selected)
-				m_deps.session.open(sel_path);
-
-			dict_merger_t merger(selected);
-			result = m_deps.executor.make_dict_with_base(plugin_path, merger.get_dict());
-		}
+		result = execute_make_dict(plugin_path, plugin_dir);
 		break;
-	}
+
 	case plugin_op_t::make_base:
-	{
-		auto params = m_deps.callbacks.show_make_base_dialog(plugin_path);
-		if (!params.has_value())
-			return;
-
-		result = m_deps.executor.make_base(
-		    plugin_path,
-		    params->native_path,
-		    params->foreign_lang,
-		    params->native_lang,
-		    nullptr,
-		    params->base_mode,
-		    params->dictionary_aff_path);
+		result = execute_make_base(plugin_path);
 		break;
-	}
+
 	case plugin_op_t::convert:
-	{
-		auto entries = build_dict_entries(plugin_dir);
-
-		dict_selection_dialog_t dialog(entries, m_deps.settings.last_merge_order(), m_deps.parent_widget);
-		dialog.setWindowTitle(QCoreApplication::translate("yTranslator", "Select Dictionaries for Convert Plugin"));
-		if (dialog.exec() != QDialog::Accepted)
-			return;
-
-		const auto selected = dialog.get_selected_paths();
-		if (selected.empty())
-			return;
-
-		m_deps.settings.set_last_merge_order(selected);
-
-		for (const auto & sel_path : selected)
-			m_deps.session.open(sel_path);
-
-		result = m_deps.executor.convert(plugin_path, selected);
+		result = execute_convert(plugin_path, plugin_dir);
 		break;
-	}
+
 	case plugin_op_t::convert_hyperlinks:
-	{
-		auto entries = build_dict_entries(plugin_dir);
-
-		dict_selection_dialog_t dialog(entries, m_deps.settings.last_merge_order(), m_deps.parent_widget);
-		dialog.setWindowTitle(
-		    QCoreApplication::translate("yTranslator", "Select Dictionaries for Convert with Hyperlinks"));
-		if (dialog.exec() != QDialog::Accepted)
-			return;
-
-		const auto selected = dialog.get_selected_paths();
-		if (selected.empty())
-			return;
-
-		m_deps.settings.set_last_merge_order(selected);
-
-		for (const auto & sel_path : selected)
-			m_deps.session.open(sel_path);
-
-		result = m_deps.executor.convert_hyperlinks(plugin_path, selected);
+		result = execute_convert_hyperlinks(plugin_path, plugin_dir);
 		break;
-	}
+
 	case plugin_op_t::create_plugin:
-	{
-		auto entries = build_dict_entries(plugin_dir);
-
-		dict_selection_dialog_t dialog(entries, m_deps.settings.last_merge_order(), m_deps.parent_widget);
-		dialog.setWindowTitle(QCoreApplication::translate("yTranslator", "Select Dictionaries for Create Patch"));
-		if (dialog.exec() != QDialog::Accepted)
-			return;
-
-		const auto selected = dialog.get_selected_paths();
-		if (selected.empty())
-			return;
-
-		m_deps.settings.set_last_merge_order(selected);
-
-		for (const auto & sel_path : selected)
-			m_deps.session.open(sel_path);
-
-		result = m_deps.executor.create_plugin(plugin_path, selected);
+		result = execute_create_plugin(plugin_path, plugin_dir);
 		break;
 	}
-	}
+
+	if (result.log_text.empty())
+		return;
 
 	log_operation_result(plugin_path, operation, result);
 
@@ -178,6 +93,109 @@ void plugin_operations_controller_t::on_plugin_operation(const std::string & plu
 		m_deps.session.close(result.output_path);
 
 	m_deps.callbacks.scan_workspace();
+}
+
+std::optional<std::vector<std::string>> plugin_operations_controller_t::show_dict_selection(
+    const std::string & plugin_dir,
+    const QString & title)
+{
+	auto entries = build_dict_entries(plugin_dir);
+
+	dict_selection_dialog_t dialog(entries, m_deps.settings.last_merge_order(), m_deps.parent_widget);
+	dialog.setWindowTitle(title);
+	if (dialog.exec() != QDialog::Accepted)
+		return std::nullopt;
+
+	const auto selected = dialog.get_selected_paths();
+	if (selected.empty())
+		return std::nullopt;
+
+	m_deps.settings.set_last_merge_order(selected);
+
+	for (const auto & sel_path : selected)
+		m_deps.session.open(sel_path);
+
+	return selected;
+}
+
+operation_executor_t::result_t plugin_operations_controller_t::execute_make_dict(
+    const std::string & plugin_path,
+    const std::string & plugin_dir)
+{
+	auto entries = build_dict_entries(plugin_dir);
+
+	dict_selection_dialog_t dialog(entries, m_deps.settings.last_merge_order(), m_deps.parent_widget);
+	dialog.setWindowTitle(QCoreApplication::translate("yTranslator", "Select Dictionaries"));
+	dialog.set_allow_empty_selection(true);
+	if (dialog.exec() != QDialog::Accepted)
+		return {};
+
+	const auto selected = dialog.get_selected_paths();
+	if (selected.empty())
+		return m_deps.executor.make_dict(plugin_path);
+
+	m_deps.settings.set_last_merge_order(selected);
+
+	for (const auto & sel_path : selected)
+		m_deps.session.open(sel_path);
+
+	dict_merger_t merger(selected);
+	return m_deps.executor.make_dict_with_base(plugin_path, merger.get_dict());
+}
+
+operation_executor_t::result_t plugin_operations_controller_t::execute_make_base(const std::string & plugin_path)
+{
+	auto params = m_deps.callbacks.show_make_base_dialog(plugin_path);
+	if (!params.has_value())
+		return {};
+
+	return m_deps.executor.make_base(
+	    plugin_path,
+	    params->native_path,
+	    params->foreign_lang,
+	    params->native_lang,
+	    nullptr,
+	    params->base_mode,
+	    params->dictionary_aff_path);
+}
+
+operation_executor_t::result_t plugin_operations_controller_t::execute_convert(
+    const std::string & plugin_path,
+    const std::string & plugin_dir)
+{
+	auto selected = show_dict_selection(
+	    plugin_dir, QCoreApplication::translate("yTranslator", "Select Dictionaries for Convert Plugin"));
+
+	if (!selected)
+		return {};
+
+	return m_deps.executor.convert(plugin_path, *selected);
+}
+
+operation_executor_t::result_t plugin_operations_controller_t::execute_convert_hyperlinks(
+    const std::string & plugin_path,
+    const std::string & plugin_dir)
+{
+	auto selected = show_dict_selection(
+	    plugin_dir, QCoreApplication::translate("yTranslator", "Select Dictionaries for Convert with Hyperlinks"));
+
+	if (!selected)
+		return {};
+
+	return m_deps.executor.convert_hyperlinks(plugin_path, *selected);
+}
+
+operation_executor_t::result_t plugin_operations_controller_t::execute_create_plugin(
+    const std::string & plugin_path,
+    const std::string & plugin_dir)
+{
+	auto selected = show_dict_selection(
+	    plugin_dir, QCoreApplication::translate("yTranslator", "Select Dictionaries for Create Patch"));
+
+	if (!selected)
+		return {};
+
+	return m_deps.executor.create_plugin(plugin_path, *selected);
 }
 
 void plugin_operations_controller_t::log_operation_result(

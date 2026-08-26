@@ -12,7 +12,7 @@ size_t find_whole_word(const std::string & text_line, const std::string & keywor
 	size_t search_from = 0;
 	while (true)
 	{
-		const auto found_pos = text_line.find(m_keyword, search_from);
+		const auto found_pos = text_line.find(keyword, search_from);
 		if (found_pos == std::string::npos)
 			return std::string::npos;
 

@@ -6,6 +6,19 @@
 #include "../model/yaml_document.hpp"
 #include <utility/string_utils.hpp>
 #include <algorithm>
+#include <filesystem>
+
+static std::string canonicalize_path(const std::string & path)
+{
+	auto normalized = string_utils::normalize_path(path);
+
+	std::error_code error_code;
+	auto canonical = std::filesystem::weakly_canonical(normalized, error_code);
+	if (error_code)
+		return normalized;
+
+	return string_utils::normalize_path(canonical.string());
+}
 
 session_t::session_t(codepage_t codepage)
     : m_codepage(codepage)
@@ -13,7 +26,7 @@ session_t::session_t(codepage_t codepage)
 
 document_t * session_t::open(const std::string & path)
 {
-	const auto normalized = string_utils::normalize_path(path);
+	const auto normalized = canonicalize_path(path);
 
 	auto * existing = find(normalized);
 	if (existing)
@@ -107,7 +120,7 @@ document_t * session_t::handle_open_eet(const std::string & normalized)
 
 document_t * session_t::find(const std::string & path)
 {
-	const auto normalized = string_utils::normalize_path(path);
+	const auto normalized = canonicalize_path(path);
 
 	for (const auto & doc : m_docs)
 	{
@@ -120,7 +133,7 @@ document_t * session_t::find(const std::string & path)
 
 const document_t * session_t::find(const std::string & path) const
 {
-	const auto normalized = string_utils::normalize_path(path);
+	const auto normalized = canonicalize_path(path);
 
 	for (const auto & doc : m_docs)
 	{
@@ -133,7 +146,7 @@ const document_t * session_t::find(const std::string & path) const
 
 void session_t::close(const std::string & path)
 {
-	const auto normalized = string_utils::normalize_path(path);
+	const auto normalized = canonicalize_path(path);
 
 	for (auto it = m_docs.begin(); it != m_docs.end(); ++it)
 	{

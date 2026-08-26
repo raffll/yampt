@@ -16,6 +16,7 @@ class dict_document_t;
 class log_view_t;
 class translation_suggestion_view_t;
 class QTabWidget;
+class QString;
 class QWidget;
 
 struct plugin_operations_callbacks_t
@@ -50,5 +51,12 @@ public:
 	std::vector<dict_selection_dialog_t::dict_entry_t> build_dict_entries(const std::string & source_dir = {}) const;
 
 private:
+	operation_executor_t::result_t execute_make_dict(const std::string & plugin_path, const std::string & plugin_dir);
+	operation_executor_t::result_t execute_make_base(const std::string & plugin_path);
+	operation_executor_t::result_t execute_convert(const std::string & plugin_path, const std::string & plugin_dir);
+	operation_executor_t::result_t execute_convert_hyperlinks(const std::string & plugin_path, const std::string & plugin_dir);
+	operation_executor_t::result_t execute_create_plugin(const std::string & plugin_path, const std::string & plugin_dir);
+	std::optional<std::vector<std::string>> show_dict_selection(const std::string & plugin_dir, const QString & title);
+
 	plugin_operations_deps_t m_deps;
 };

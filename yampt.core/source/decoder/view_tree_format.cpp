@@ -279,21 +279,9 @@ static std::string read_fixed_string(const char * ptr, size_t field_size, size_t
 	return std::string(ptr, len);
 }
 
-std::string decode_field(const field_def_t & field, const char * data, size_t data_size)
+static std::string decode_integer(const field_def_t & field, const char * ptr)
 {
-	if (field.type == field_type_t::bool_bit)
-	{
-		if (field.offset >= data_size)
-			return "";
-	}
-	else if (field.type != field_type_t::string_var)
-	{
-		if (field.offset + field.size > data_size)
-			return "";
-	}
-
-	const char * ptr = data + field.offset;
-	char buf[128];
+	char buf[32];
 
 	switch (field.type)
 	{
@@ -324,18 +312,10 @@ std::string decode_field(const field_def_t & field, const char * data, size_t da
 		std::memcpy(&val, ptr, 1);
 
 		if (field.enum_names && val >= 0)
-		{
-			size_t count = 0;
-			while (field.enum_names[count])
-				++count;
+			return format_enum_lookup(static_cast<uint32_t>(val), field.enum_names);
 
-			if (static_cast<size_t>(val) < count)
-				return std::string(field.enum_names[val]);
-		}
-		else if (field.enum_names && val == -1)
-		{
+		if (field.enum_names && val == -1)
 			return "None";
-		}
 
 		std::snprintf(buf, sizeof(buf), "%d", val);
 		return buf;
@@ -353,29 +333,73 @@ std::string decode_field(const field_def_t & field, const char * data, size_t da
 		std::memcpy(&val, ptr, 4);
 
 		if (field.enum_names && val >= 0)
-		{
-			size_t count = 0;
-			while (field.enum_names[count])
-				++count;
+			return format_enum_lookup(static_cast<uint32_t>(val), field.enum_names);
 
-			if (static_cast<size_t>(val) < count)
-				return std::string(field.enum_names[val]);
-		}
-		else if (field.enum_names && val == -1)
-		{
+		if (field.enum_names && val == -1)
 			return "None";
-		}
 
 		std::snprintf(buf, sizeof(buf), "%d", val);
 		return buf;
 	}
+	default:
+		return "";
+	}
+}
+
+static std::string decode_hex_bytes(const char * ptr, size_t available, size_t max_bytes)
+{
+	std::string hex_output;
+	const size_t limit = std::min(available, max_bytes);
+	for (size_t i = 0; i < limit; ++i)
+	{
+		char hbuf[4];
+		std::snprintf(hbuf, sizeof(hbuf), "%02X", static_cast<unsigned char>(ptr[i]));
+		if (!hex_output.empty())
+			hex_output += ' ';
+
+		hex_output += hbuf;
+	}
+
+	if (available > max_bytes)
+		hex_output += " ...";
+
+	return hex_output;
+}
+
+std::string decode_field(const field_def_t & field, const char * data, size_t data_size)
+{
+	if (field.type == field_type_t::bool_bit)
+	{
+		if (field.offset >= data_size)
+			return "";
+	}
+	else if (field.type != field_type_t::string_var)
+	{
+		if (field.offset + field.size > data_size)
+			return "";
+	}
+
+	const char * ptr = data + field.offset;
+
+	switch (field.type)
+	{
+	case field_type_t::u8:
+	case field_type_t::u16:
+	case field_type_t::u32:
+	case field_type_t::i8:
+	case field_type_t::i16:
+	case field_type_t::i32:
+		return decode_integer(field, ptr);
+
 	case field_type_t::f32:
 	{
 		float val = 0;
 		std::memcpy(&val, ptr, 4);
+		char buf[32];
 		std::snprintf(buf, sizeof(buf), "%.4f", val);
 		return buf;
 	}
+
 	case field_type_t::string_fixed:
 		return read_fixed_string(ptr, field.size, data_size, field.offset);
 
@@ -384,9 +408,9 @@ std::string decode_field(const field_def_t & field, const char * data, size_t da
 		if (field.offset >= data_size)
 			return "";
 
-		const size_t remaining = data_size - field.offset;
-		return read_fixed_string(ptr, remaining, data_size, field.offset);
+		return read_fixed_string(ptr, data_size - field.offset, data_size, field.offset);
 	}
+
 	case field_type_t::flags_u8:
 	{
 		uint8_t val = 0;
@@ -405,6 +429,7 @@ std::string decode_field(const field_def_t & field, const char * data, size_t da
 		std::memcpy(&val, ptr, 4);
 		return format_flags(val, field, 32);
 	}
+
 	case field_type_t::enum_u8:
 	{
 		uint8_t val = 0;
@@ -423,6 +448,7 @@ std::string decode_field(const field_def_t & field, const char * data, size_t da
 		std::memcpy(&val, ptr, 4);
 		return format_enum_lookup(val, field.enum_names);
 	}
+
 	case field_type_t::bool_bit:
 	{
 		uint8_t val = 0;
@@ -430,47 +456,12 @@ std::string decode_field(const field_def_t & field, const char * data, size_t da
 		int bit_index = static_cast<int>(field.size);
 		return (val & (1u << bit_index)) ? "Yes" : "No";
 	}
+
 	case field_type_t::binary:
-	{
-		std::string hex_output;
-		constexpr size_t max_hex_bytes = 64;
-		const size_t available = data_size - field.offset;
-		const size_t limit = std::min(available, max_hex_bytes);
-		for (size_t i = 0; i < limit; ++i)
-		{
-			char hbuf[4];
-			std::snprintf(hbuf, sizeof(hbuf), "%02X", static_cast<unsigned char>(ptr[i]));
-			if (!hex_output.empty())
-				hex_output += ' ';
+		return decode_hex_bytes(ptr, data_size - field.offset, 64);
 
-			hex_output += hbuf;
-		}
-
-		if (available > max_hex_bytes)
-			hex_output += " ...";
-
-		return hex_output;
-	}
 	case field_type_t::raw:
-	{
-		std::string hex_output;
-		constexpr size_t max_hex_bytes = 64;
-		const size_t limit = std::min(field.size, max_hex_bytes);
-		for (size_t i = 0; i < limit && field.offset + i < data_size; ++i)
-		{
-			char hbuf[4];
-			std::snprintf(hbuf, sizeof(hbuf), "%02X", static_cast<unsigned char>(ptr[i]));
-			if (!hex_output.empty())
-				hex_output += ' ';
-
-			hex_output += hbuf;
-		}
-
-		if (field.size > max_hex_bytes)
-			hex_output += " ...";
-
-		return hex_output;
-	}
+		return decode_hex_bytes(ptr, std::min(field.size, data_size - field.offset), 64);
 	}
 
 	return "";
