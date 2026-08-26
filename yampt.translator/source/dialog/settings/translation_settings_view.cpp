@@ -1,5 +1,8 @@
 #include "translation_settings_view.hpp"
+#include <resource_paths.hpp>
 #include <settings_store.hpp>
+#include <utility/language_config.hpp>
+#include <filesystem>
 #include <QComboBox>
 #include <QFormLayout>
 #include <QFrame>
@@ -8,12 +11,17 @@
 #include <QLineEdit>
 #include <QVBoxLayout>
 
-translation_settings_view_t::translation_settings_view_t(const std::string & providers_dir, QWidget * parent)
+translation_settings_view_t::translation_settings_view_t(
+    const std::string & providers_dir,
+    const std::string & models_dir,
+    QWidget * parent)
     : QWidget(parent)
     , m_providers_dir(providers_dir)
 {
 	auto * layout = new QVBoxLayout(this);
 	layout->setSpacing(12);
+
+	build_local_models_section(layout, models_dir);
 
 	m_configs = web_translator_config::load_all(m_providers_dir);
 
@@ -21,6 +29,68 @@ translation_settings_view_t::translation_settings_view_t(const std::string & pro
 		build_provider_card(layout, config);
 
 	layout->addStretch();
+}
+
+void translation_settings_view_t::build_local_models_section(QVBoxLayout * parent, const std::string & models_dir)
+{
+	namespace fs = std::filesystem;
+
+	if (models_dir.empty() || !fs::is_directory(models_dir))
+		return;
+
+	std::vector<std::string> model_names;
+	for (const auto & entry : fs::directory_iterator(models_dir))
+	{
+		if (!entry.is_directory())
+			continue;
+
+		auto dir_path = entry.path();
+		if (fs::exists(dir_path / "sentencepiece.bpe.model") && fs::is_directory(dir_path / "model"))
+			model_names.push_back(dir_path.filename().string());
+	}
+
+	if (model_names.empty())
+		return;
+
+	auto * card = new QFrame(this);
+	card->setFrameShape(QFrame::StyledPanel);
+	auto * card_layout = new QVBoxLayout(card);
+	card_layout->setContentsMargins(8, 6, 8, 6);
+	card_layout->setSpacing(4);
+
+	auto * title_label = new QLabel(tr("Local Models"), card);
+	auto title_font = title_label->font();
+	title_font.setBold(true);
+	title_label->setFont(title_font);
+	card_layout->addWidget(title_label);
+
+	const auto languages = language_config::load(resource_paths::languages_file());
+	std::string language_list;
+	for (const auto & lang : languages)
+	{
+		if (lang.code == "EN")
+			continue;
+
+		if (!language_list.empty())
+			language_list += ", ";
+
+		language_list += lang.code;
+	}
+
+	for (const auto & model_name : model_names)
+	{
+		auto * row = new QHBoxLayout;
+		row->addWidget(new QLabel(QString::fromStdString(model_name), card));
+		row->addStretch();
+
+		auto * lang_label = new QLabel(QString::fromStdString(language_list), card);
+		lang_label->setStyleSheet("color: rgb(120, 120, 120); font-size: 11px;");
+		row->addWidget(lang_label);
+
+		card_layout->addLayout(row);
+	}
+
+	parent->addWidget(card);
 }
 
 void translation_settings_view_t::build_provider_card(QVBoxLayout * parent, const web_translator_config_t & config)

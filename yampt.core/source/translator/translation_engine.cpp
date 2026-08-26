@@ -1,9 +1,17 @@
 #include "translation_engine.hpp"
 #include "../utility/app_logger.hpp"
-#include <ctranslate2/translator.h>
 #include <filesystem>
 #include <fstream>
+
+#if __has_include(<ctranslate2/translator.h>)
+#define HAS_CTRANSLATE2 1
+#include <ctranslate2/translator.h>
 #include <sentencepiece_processor.h>
+#else
+#define HAS_CTRANSLATE2 0
+#endif
+
+#if HAS_CTRANSLATE2
 
 struct translation_engine_t::impl_t
 {
@@ -13,14 +21,26 @@ struct translation_engine_t::impl_t
 	std::string target_lang;
 };
 
+#else
+
+struct translation_engine_t::impl_t
+{
+	std::string source_lang;
+	std::string target_lang;
+};
+
+#endif
+
 translation_engine_t::translation_engine_t()
     : m_impl(std::make_unique<impl_t>())
 {}
 
 translation_engine_t::~translation_engine_t()
 {
+#if HAS_CTRANSLATE2
 	if (m_impl)
 		m_impl->translator.reset();
+#endif
 }
 
 translation_engine_t::translation_engine_t(translation_engine_t &&) noexcept = default;
@@ -28,8 +48,11 @@ translation_engine_t & translation_engine_t::operator=(translation_engine_t &&) 
 
 bool translation_engine_t::load(const std::string & model_pack_path)
 {
-	unload();
-
+#if !HAS_CTRANSLATE2
+	(void)model_pack_path;
+	app_logger_t::add_log("[warning] translation engine not available (CTranslate2 not installed)\r\n");
+	return false;
+#else
 	namespace fs = std::filesystem;
 
 	app_logger_t::add_log("[info] loading translation model \"" + model_pack_path + "\"\r\n");
@@ -92,19 +115,26 @@ bool translation_engine_t::load(const std::string & model_pack_path)
 	app_logger_t::add_log(
 	    "[info] translation model loaded: " + m_impl->source_lang + " -> " + m_impl->target_lang + "\r\n");
 	return true;
+#endif
 }
 
 void translation_engine_t::unload()
 {
+#if HAS_CTRANSLATE2
 	m_impl->translator.reset();
 	m_impl->spm.reset();
+#endif
 	m_impl->source_lang.clear();
 	m_impl->target_lang.clear();
 }
 
 bool translation_engine_t::is_loaded() const
 {
+#if HAS_CTRANSLATE2
 	return m_impl->translator != nullptr;
+#else
+	return false;
+#endif
 }
 
 std::string translation_engine_t::source_language() const
@@ -159,6 +189,10 @@ static std::vector<std::string> split_sentences(const std::string & text)
 
 translation_result_t translation_engine_t::translate(const std::string & text) const
 {
+#if !HAS_CTRANSLATE2
+	(void)text;
+	return { "", false, "translation engine not available" };
+#else
 	if (!m_impl->translator)
 		return { "", false, "model not loaded" };
 
@@ -229,4 +263,5 @@ translation_result_t translation_engine_t::translate(const std::string & text) c
 	{
 		return { "", false, "unknown translation error" };
 	}
+#endif
 }
