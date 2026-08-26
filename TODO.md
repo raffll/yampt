@@ -13,7 +13,6 @@ Wire up glossary_t::find_glossary_matches in send_chat_request — provide AI pr
 ## Audit Findings
 
 - web_translator_t::send_chat_request glossary_fn returns substituted text instead of term pairs for AI system prompt. Should use find_glossary_matches and format as reference list.
-- Stale error status on BNAM entries: error status persists in saved dict after the offending content is fixed. Re-validate on load or on display and auto-clear error when text passes validation.
 - Translation settings page: add Local Models tab alongside Web Providers tab. JSON configs in models/ describing available CTranslate2 models (name, path, supported languages). Similar discovery pattern to web providers — data-driven, no hardcoding.
 - web_translator_t::send_chat_request sends wrong JSON body for both Claude and ChatGPT — hardcodes both top-level "system" field (Claude) and system role in messages array (OpenAI) regardless of provider. Branch on provider format or let config define message structure.
 - glossary_t dead code: load_enchantments, get_enchantment, has_enchantment, set_use_trie_matching, get_use_trie_matching — never called in production. Remove or wire up.
