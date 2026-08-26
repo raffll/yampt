@@ -705,3 +705,21 @@ void creator_helpers::enrich_info_speaker(creator_context_t & ctx, const std::st
 	entry->speaker_name = speaker_name;
 	entry->gender = gender;
 }
+
+void creator_helpers::enrich_fnam_enchantment(
+    creator_context_t & ctx,
+    const std::string & key_text,
+    esm_reader_t & esm_source)
+{
+	const auto & record_id = esm_source.get_record().id;
+	if (record_id != "ARMO" && record_id != "CLOT" && record_id != "WEAP" && record_id != "BOOK")
+		return;
+
+	esm_source.set_value("ENAM");
+	if (!esm_source.get_value().exist || esm_source.get_value().text.empty())
+		return;
+
+	auto * entry = ctx.dict.at(rec_type_t::fnam).find(key_text);
+	if (entry)
+		entry->enchantment = esm_source.get_value().text;
+}

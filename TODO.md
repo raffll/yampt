@@ -15,7 +15,6 @@ Wire up glossary_t::find_glossary_matches in send_chat_request — provide AI pr
 - web_translator_t::send_chat_request glossary_fn returns substituted text instead of term pairs for AI system prompt. Should use find_glossary_matches and format as reference list.
 - Translation settings page: add Local Models tab alongside Web Providers tab. JSON configs in models/ describing available CTranslate2 models (name, path, supported languages). Similar discovery pattern to web providers — data-driven, no hardcoding.
 - web_translator_t::send_chat_request sends wrong JSON body for both Claude and ChatGPT — hardcodes both top-level "system" field (Claude) and system role in messages array (OpenAI) regardless of provider. Branch on provider format or let config define message structure.
-- glossary_t dead code: load_enchantments, get_enchantment, has_enchantment, set_use_trie_matching, get_use_trie_matching — never called in production. Remove or wire up.
 - edit_history_t dead code: load_from_file, save_to_file, is_modified_this_session — implemented but never called. Remove or wire up persistence.
 - plugin_operations_controller_t::on_plugin_operation is 150 lines (3x limit). Extract per-operation methods.
 - make_base_dialog_t::populate_plugin_tree() is 114 lines. Extract collect_plugins, group_by_root, populate_tree_items, select_best_match.

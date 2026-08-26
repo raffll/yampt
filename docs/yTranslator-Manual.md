@@ -134,6 +134,14 @@ The Filters tab shows record types present in the current dictionary (CELL, DIAL
 - `Ctrl+Up` — select the previous row.
 - `Escape` — clear the search field.
 
+## Annotations
+
+The Annotations tab shows contextual information about the currently selected entry. It updates automatically when you select a row in the Records table.
+
+For INFO entries, the panel shows the speaker's NPC name and gender when available. For FNAM entries belonging to weapons, armor, clothing, or books, it shows the enchantment ID if the item is enchanted. These metadata fields help translators choose correct grammatical forms in languages where gender or item properties affect the translation.
+
+The Original and Translation panels also highlight recognized terms inline: dialog topic names appear in blue (matching known DIAL entries), and glossary terms from loaded base dictionaries appear in green.
+
 ## Auto Translate
 
 The Auto Translate tab at the bottom-left provides machine translation. Select a provider from the combo box, then click Translate to fill the translation field with a suggestion.

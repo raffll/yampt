@@ -130,6 +130,8 @@ void creator_base_t::make_fnam()
 		{
 			insert_entry_base(key_text, "", new_text, rec_type_t::fnam, status_t::mismatch);
 		}
+
+		creator_helpers::enrich_fnam_enchantment(m_ctx, key_text, m_ctx.esm);
 	}
 
 	for (const auto & [key, rec_idx] : m_ctx.fnam_index)

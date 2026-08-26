@@ -289,10 +289,3 @@ TEST_CASE("glossary_t::rebuild, longer terms match first", "[u]")
 	}
 	REQUIRE(found_long);
 }
-
-TEST_CASE("glossary_t::has_enchantment, returns false when empty", "[u]")
-{
-	glossary_t manager;
-
-	REQUIRE_FALSE(manager.has_enchantment("some_enchantment"));
-}

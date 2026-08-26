@@ -100,5 +100,6 @@ std::string adapt_translation(
     const std::string & matched_translation);
 
 void enrich_info_speaker(creator_context_t & ctx, const std::string & key_text, size_t record_index);
+void enrich_fnam_enchantment(creator_context_t & ctx, const std::string & key_text, esm_reader_t & esm_source);
 
 } // namespace creator_helpers

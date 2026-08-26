@@ -256,10 +256,7 @@ std::vector<annotation_t> glossary_t::annotate(const std::string & text, rec_typ
 	std::vector<annotation_t> hyperlinks;
 	std::vector<annotation_t> glossary;
 
-	if (m_use_trie_matching)
-		find_matches_trie(text, hyperlinks);
-	else
-		find_matches_legacy(text_lower, text, m_dial_topics, annotation_t::dial_topic, hyperlinks);
+	find_matches_trie(text, hyperlinks);
 
 	find_matches_legacy(text_lower, text, m_glossary_terms, annotation_t::glossary_term, glossary);
 
@@ -423,43 +420,6 @@ void glossary_t::find_matches_legacy(
 			search_pos += term.key_lower.size();
 		}
 	}
-}
-
-void glossary_t::load_enchantments(const std::string & path)
-{
-	m_enchantments.clear();
-
-	dict_reader_t reader(path);
-	if (!reader.is_loaded())
-		return;
-
-	const auto & loaded_dict = reader.get_dict();
-	auto chapter_it = loaded_dict.find(rec_type_t::fnam);
-	if (chapter_it == loaded_dict.end())
-		return;
-
-	const auto & chapter = chapter_it->second;
-	for (const auto & entry : chapter.records)
-	{
-		if (entry.key_text.empty())
-			continue;
-
-		m_enchantments[entry.key_text] = entry.new_text;
-	}
-}
-
-const std::string & glossary_t::get_enchantment(const std::string & key_text) const
-{
-	static const std::string empty;
-	auto it_ench = m_enchantments.find(key_text);
-	if (it_ench == m_enchantments.end())
-		return empty;
-	return it_ench->second;
-}
-
-bool glossary_t::has_enchantment(const std::string & key_text) const
-{
-	return m_enchantments.count(key_text) > 0;
 }
 
 std::vector<glossary_t::glossary_match_t> glossary_t::find_glossary_matches(const std::string & source_text) const

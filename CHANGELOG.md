@@ -3,6 +3,7 @@
 ## [XXX]
 
 ### yTranslator
+- [NEW] Enchantment annotation: FNAM entries for weapons, armor, clothing, and books now show the enchantment ID in the Annotations panel when the item is enchanted
 - [NEW] Revert from record table context menu: right-click selected entries → Revert restores previous text and status from history
 - [CHANGE] Find/Replace no longer has a batch Undo button — each replacement is recorded in edit history and revertable per-entry
 

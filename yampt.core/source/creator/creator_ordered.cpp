@@ -128,6 +128,8 @@ void creator_ordered_t::process_fnam(size_t i)
 
 	const auto & old_text = m_ctx.esm_ref.get_value().text;
 	insert_entry_base(key_text, old_text, new_text, rec_type_t::fnam, status_t::translated);
+
+	creator_helpers::enrich_fnam_enchantment(m_ctx, key_text, m_ctx.esm);
 }
 
 void creator_ordered_t::process_desc(size_t i)
