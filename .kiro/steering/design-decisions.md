@@ -193,3 +193,16 @@ Icon priority (first match wins):
 5. 📜 — master file (.esm)
 6. ⚡ — loaded from MO2 overwrite folder
 7. 📄 — regular plugin (default)
+
+
+## Record View Header: Use CE_HeaderSection, Draw Text Manually
+
+`record_colored_header_t::paintSection` (yampt.editor/source/view/record_view.cpp) draws each plugin column header (icon + filename, in a per-plugin conflict color). It MUST paint the background with `QStyle::CE_HeaderSection` (background/border only) and then draw the text itself with `painter->drawText` into the section `rect`.
+
+Do NOT use `QStyle::CE_Header` here. `CE_Header` draws both the section background AND the label; on the Windows style this results in the header text rendering blank for the plugin columns (confirmed: `headerData` returned the correct text, e.g. `"📜 TR_Mainland.esm"` len=18, but nothing appeared on screen). `CE_Header` combined with `SE_HeaderLabel` for the text rect produced invisible text.
+
+Do NOT compute the text rectangle via `style()->subElementRect(QStyle::SE_HeaderLabel, ...)`. Draw into the passed-in `rect` (with a small left inset, e.g. `rect.adjust(4, 0, -4, 0)`). Drawing directly into `rect` is the coordinate space that reliably renders (verified by a fill-rect probe that showed all sections paint correctly).
+
+The header text/color come from `view_tree_model_t::headerData` (DisplayRole for the icon+name string, ForegroundRole for the conflict color); fall back to `palette().color(QPalette::ButtonText)` when ForegroundRole is invalid (e.g. section 0). The model side was never the problem — the bug was purely in how the section was painted.
+
+This only manifested with more than one plugin column, because a single plugin column is the stretched last section and happened to render, masking the issue.
