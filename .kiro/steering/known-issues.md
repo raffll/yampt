@@ -41,3 +41,8 @@ These exceed 50 lines but are stable, self-contained dialog/menu builders. Refac
 
 - `make_base_dialog_t::populate_plugin_tree()` — 114 lines
 - `view_context_menu_t::show_view_menu()` — 92 lines
+
+
+## creator_helpers insert functions exceed 2-argument limit
+
+The `insert_entry_*` family in `creator_helpers` (namespace functions plus the `creator_ordered_t::insert_entry_base` wrapper) takes 4-6 arguments each, exceeding the max-2-argument rule. The intended fix is to pass data via structs (`insert_params_t` for key/old/new/type/status, `insert_from_base_params_t` for the three functions that take a `record_entry_t & base_entry`) and update the ~40 call sites across `creator_single.cpp`, `creator_ordered.cpp`, and the internal calls in `creator_helpers.cpp`. Deferred: large blast radius across a core dictionary-generation path, low priority.
