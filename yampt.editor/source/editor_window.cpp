@@ -161,11 +161,6 @@ void editor_window_t::setup_toolbar()
 
 	toolbar->addSeparator();
 
-	auto * search_btn = new QToolButton(this);
-	search_btn->setText(tr("Apply Filter"));
-	search_btn->setToolTip(tr("Apply the search filter"));
-	toolbar->addWidget(search_btn);
-
 	m_search_field = new QLineEdit(this);
 	m_search_field->setPlaceholderText(tr("Filter by..."));
 	m_search_field->setToolTip(tr("Search by record ID or display name"));
@@ -204,7 +199,6 @@ void editor_window_t::setup_toolbar()
 	filter_btn->setToolTip(tr("Open the advanced filter dialog"));
 	toolbar->addWidget(filter_btn);
 
-	connect(search_btn, &QToolButton::clicked, this, &editor_window_t::on_search_apply);
 	connect(m_search_field, &QLineEdit::returnPressed, this, &editor_window_t::on_search_apply);
 	connect(filter_btn, &QToolButton::clicked, m_plugin_workspace_view, &plugin_workspace_view_t::on_advanced_filter);
 

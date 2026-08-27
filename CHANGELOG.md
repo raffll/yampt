@@ -8,9 +8,10 @@
 - [NEW] Encoding line in Language settings: shows which codepage the selected native language uses for plugin text
 - [NEW] Mark records as AI translation examples: right-click records to mark up to three as style examples sent to the AI provider
 - [NEW] Fetch available models from the provider: a Refresh control in the Auto Translate panel pulls the current model list from the provider
-- [CHANGE] Settings: "Providers" page renamed to "Auto Translation" with two tabs — Local Models and Web Providers
+- [CHANGE] Settings: "Providers" page renamed to "Auto Translation" with three tabs — Local Models, Web Providers, and Examples
 - [CHANGE] Model selection moved from Settings into the Auto Translate panel
 - [CHANGE] Find/Replace moved from the filter toolbar into its own tab in the left panel, after Statuses
+- [CHANGE] History tab moved to the end of the bottom-left tabs; each history entry now shows its status and timestamp
 - [CHANGE] Find/Replace no longer has a batch Undo button — each replacement is recorded in edit history and revertable per-entry
 
 ### Both Apps
@@ -19,7 +20,7 @@
 - [FIX] Disabled widgets now show greyed-out text on all platforms
 
 ### yEditor
-- [NEW] Enable Editing: a single toolbar checkbox makes decoded fields editable in the Edit panel for all plugins (combobox for flags and enums); the setting is remembered
+- [NEW] Enable Editing: a single toolbar toggle makes decoded fields editable in the Edit panel for all plugins (combobox for flags and enums); the setting is remembered
 - [NEW] Lua handler conflict detection in a separate Lua tab: scans OpenMW Lua scripts and highlights conflicting handler registrations between mods
 - [NEW] Exclude Sub-Record from context menu: right-click any sub-record row to add it to the exclusion list
 - [NEW] Toolbar search: filter the navigation tree by record ID or display name with case-sensitive and regex support
