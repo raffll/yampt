@@ -99,6 +99,7 @@ The toolbar also includes a search field for filtering the navigation tree by re
 - **ID** — search in the record's internal ID (e.g. "iron_dagger", "balmora_guild").
 - **Name** — search in the record's display name (e.g. "Iron Dagger", "Balmora Mages Guild").
 - **Advanced Filters...** — opens the advanced filter dialog for filtering by conflict severity, per-plugin conflict status, record type, deleted status, and Lua handler criteria.
+- **Reset** — turns off Conflicts Only, empties the search field, and clears the advanced filter, returning the navigation tree to showing every record.
 
 Press Escape to clear the search field and remove the text filter.
 
@@ -107,6 +108,8 @@ Press Escape to clear the search field and remove the text filter.
 The Edit panel at the bottom of the window serves two purposes: text comparison and field editing.
 
 When you click a cell in the record view that has a conflict with a previous column, the Edit panel shows both values side by side with character-level diff highlighting. Deleted text appears with a red background on the left, inserted text with a green background on the right.
+
+Editing is off whenever the application starts. Turn it on with the Enable Editing button on the toolbar; the choice is not remembered, so each new session begins with editing disabled to guard against accidental changes.
 
 When editing is enabled (via the Enable Editing button on the toolbar), clicking a decoded field in any plugin's column activates the Edit panel as an editor. The right pane becomes editable and an Apply button appears. For enum fields (race, class, type), a dropdown selector shows all valid values. For flag fields (NPC flags, cell flags), the dropdown presents checkboxes for each flag bit. Free-text fields such as names and IDs accept direct text input. The panel validates the input against the field's constraints — numeric range, string length, and codepage encoding limits. The Apply button stays disabled until the value is both valid and different from the original. Clicking Apply writes the change directly to the source plugin file on disk and refreshes the record view to reflect the new state.
 

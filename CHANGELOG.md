@@ -20,10 +20,11 @@
 - [FIX] Disabled widgets now show greyed-out text on all platforms
 
 ### yEditor
-- [NEW] Enable Editing: a single toolbar toggle makes decoded fields editable in the Edit panel for all plugins (combobox for flags and enums); the setting is remembered
+- [NEW] Enable Editing: a single toolbar toggle makes decoded fields editable in the Edit panel for all plugins (combobox for flags and enums); starts disabled each time the app opens
 - [NEW] Lua handler conflict detection in a separate Lua tab: scans OpenMW Lua scripts and highlights conflicting handler registrations between mods
 - [NEW] Exclude Sub-Record from context menu: right-click any sub-record row to add it to the exclusion list
 - [NEW] Toolbar search: filter the navigation tree by record ID or display name with case-sensitive and regex support
+- [NEW] Reset button on the toolbar: clears Conflicts Only, the search field, and the advanced filter in one click
 - [CHANGE] Filter dialog moved from View menu to toolbar button
 - [CHANGE] Navigation panel split into two tabs: Plugins (ESP/ESM record tree) and Lua (handler registrations by mod)
 - [CHANGE] Settings reorganized: Sub-Record Rules merged into Merged Patch page, Paths renamed to Output Paths, record type checkboxes replaced by TYPE:* syntax

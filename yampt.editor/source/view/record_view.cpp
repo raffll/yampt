@@ -47,15 +47,18 @@ protected:
 
 		painter->save();
 
+		const auto text = model()->headerData(section, Qt::Horizontal, Qt::DisplayRole).toString();
+
 		QStyleOptionHeader opt;
-		initStyleOption(&opt);
+		initStyleOptionForIndex(&opt, section);
 		opt.rect = rect;
-		opt.section = section;
+		opt.text = text;
+
+		const auto text_rect = style()->subElementRect(QStyle::SE_HeaderLabel, &opt, this);
+
 		opt.text = {};
 		style()->drawControl(QStyle::CE_Header, &opt, painter, this);
 
-		auto text = model()->headerData(section, Qt::Horizontal, Qt::DisplayRole).toString();
-		auto text_rect = style()->subElementRect(QStyle::SE_HeaderLabel, &opt, this);
 		painter->setPen(fg.value<QBrush>().color());
 		painter->drawText(text_rect, Qt::AlignVCenter | Qt::AlignLeft, text);
 
