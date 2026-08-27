@@ -6,12 +6,14 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <translation_example.hpp>
 #include <QWidget>
 
 class QComboBox;
 class QLabel;
 class QPlainTextEdit;
 class QPushButton;
+class QToolButton;
 class QVBoxLayout;
 
 class settings_store_t;
@@ -30,7 +32,9 @@ public:
 	void set_providers_dir(const std::string & dir);
 	void set_target_language(const std::string & language);
 	void set_glossary_fn(std::function<std::string(const std::string &)> fn);
+	void set_examples(const std::vector<translation_example_t> & examples);
 
+	void set_settings_store(settings_store_t & settings);
 	void apply_provider_settings(const settings_store_t & settings);
 	void update_provider_status();
 
@@ -57,17 +61,25 @@ private:
 	void rebuild_web_providers();
 	void on_provider_result(const translation_suggestion_t & result);
 	void advance_line_queue();
+	void update_model_controls();
+	web_translator_t * active_web_provider() const;
+	void populate_model_combo(const std::vector<std::string> & models, const std::string & selected);
 
 	QComboBox * m_provider_combo = nullptr;
+	QComboBox * m_model_combo = nullptr;
+	QToolButton * m_refresh_models = nullptr;
 	QPushButton * m_translate_all_btn = nullptr;
 	QPlainTextEdit * m_result_text = nullptr;
 	QLabel * m_status_label = nullptr;
+
+	settings_store_t * m_settings = nullptr;
 
 	std::string m_source_text;
 	std::string m_models_dir;
 	std::string m_providers_dir;
 	std::string m_target_language;
 	std::function<std::string(const std::string &)> m_glossary_fn;
+	std::vector<translation_example_t> m_examples;
 
 	ctranslate2_translator_t * m_ct2_provider = nullptr;
 	std::vector<web_translator_t *> m_web_providers;

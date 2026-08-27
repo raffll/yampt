@@ -7,8 +7,11 @@
 #include <QFormLayout>
 #include <QFrame>
 #include <QHBoxLayout>
+#include <QHeaderView>
 #include <QLabel>
 #include <QLineEdit>
+#include <QPushButton>
+#include <QTableWidget>
 #include <QTabWidget>
 #include <QVBoxLayout>
 
@@ -38,8 +41,14 @@ translation_settings_view_t::translation_settings_view_t(
 		build_provider_card(providers_layout, config);
 	providers_layout->addStretch();
 
+	auto * examples_tab = new QWidget;
+	auto * examples_layout = new QVBoxLayout(examples_tab);
+	examples_layout->setSpacing(12);
+	build_examples_tab(examples_layout);
+
 	tabs->addTab(models_tab, tr("Local Models"));
 	tabs->addTab(providers_tab, tr("Web Providers"));
+	tabs->addTab(examples_tab, tr("Examples"));
 	layout->addWidget(tabs);
 }
 
@@ -151,35 +160,23 @@ void translation_settings_view_t::build_provider_card(QVBoxLayout * parent, cons
 
 		for (const auto & setting : config.settings)
 		{
+			if (setting.type == setting_type_t::choice)
+				continue;
+
 			setting_widget_t entry;
 			entry.provider_id = config.identifier;
 			entry.setting_key = setting.key;
 			entry.type = setting.type;
 
-			if (setting.type == setting_type_t::choice)
+			auto * line_edit = new QLineEdit(card);
+			if (setting.type == setting_type_t::password)
 			{
-				auto * combo = new QComboBox(card);
-				for (const auto & choice : setting.choices)
-					combo->addItem(QString::fromStdString(choice));
-
-				if (!setting.default_value.empty())
-					combo->setCurrentText(QString::fromStdString(setting.default_value));
-
-				entry.widget = combo;
-				form->addRow(QString::fromStdString(setting.label) + ":", combo);
+				line_edit->setEchoMode(QLineEdit::Password);
+				line_edit->setPlaceholderText(tr("Enter key..."));
 			}
-			else
-			{
-				auto * line_edit = new QLineEdit(card);
-				if (setting.type == setting_type_t::password)
-				{
-					line_edit->setEchoMode(QLineEdit::Password);
-					line_edit->setPlaceholderText(tr("Enter key..."));
-				}
 
-				entry.widget = line_edit;
-				form->addRow(QString::fromStdString(setting.label) + ":", line_edit);
-			}
+			entry.widget = line_edit;
+			form->addRow(QString::fromStdString(setting.label) + ":", line_edit);
 
 			m_setting_widgets.push_back(entry);
 		}
@@ -188,6 +185,70 @@ void translation_settings_view_t::build_provider_card(QVBoxLayout * parent, cons
 	}
 
 	parent->addWidget(card);
+}
+
+void translation_settings_view_t::build_examples_tab(QVBoxLayout * parent)
+{
+	m_examples_empty_label = new QLabel(tr("No examples marked. Right-click a record and choose \"Mark as Example\"."), this);
+	m_examples_empty_label->setStyleSheet("color: rgb(120, 120, 120); font-style: italic;");
+	m_examples_empty_label->setWordWrap(true);
+	parent->addWidget(m_examples_empty_label);
+
+	m_examples_table = new QTableWidget(0, 3, this);
+	m_examples_table->setHorizontalHeaderLabels({ tr("Original"), tr("Translation"), QString() });
+	m_examples_table->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
+	m_examples_table->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
+	m_examples_table->horizontalHeader()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
+	m_examples_table->verticalHeader()->setVisible(false);
+	m_examples_table->verticalHeader()->setDefaultSectionSize(24);
+	m_examples_table->setSelectionBehavior(QAbstractItemView::SelectRows);
+	m_examples_table->setSelectionMode(QAbstractItemView::SingleSelection);
+	m_examples_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+	parent->addWidget(m_examples_table);
+
+	parent->addStretch();
+}
+
+void translation_settings_view_t::rebuild_examples_table()
+{
+	if (!m_examples_table || !m_examples_empty_label)
+		return;
+
+	const bool has_examples = !m_examples.empty();
+	m_examples_empty_label->setVisible(!has_examples);
+	m_examples_table->setVisible(has_examples);
+
+	m_examples_table->setRowCount(static_cast<int>(m_examples.size()));
+
+	for (int row = 0; row < static_cast<int>(m_examples.size()); ++row)
+	{
+		const auto & example = m_examples[static_cast<size_t>(row)];
+
+		auto * original_item = new QTableWidgetItem(QString::fromStdString(example.original));
+		original_item->setFlags(original_item->flags() & ~Qt::ItemIsEditable);
+		m_examples_table->setItem(row, 0, original_item);
+
+		auto * translation_item = new QTableWidgetItem(QString::fromStdString(example.translation));
+		translation_item->setFlags(translation_item->flags() & ~Qt::ItemIsEditable);
+		m_examples_table->setItem(row, 1, translation_item);
+
+		auto * remove_button = new QPushButton(tr("Remove"), m_examples_table);
+		remove_button->setToolTip(tr("Remove this example"));
+		m_examples_table->setCellWidget(row, 2, remove_button);
+
+		connect(
+		    remove_button,
+		    &QPushButton::clicked,
+		    this,
+		    [this, row]()
+		{
+			if (row >= static_cast<int>(m_examples.size()))
+				return;
+
+			m_examples.erase(m_examples.begin() + row);
+			rebuild_examples_table();
+		});
+	}
 }
 
 void translation_settings_view_t::load(const settings_store_t & settings)
@@ -212,6 +273,9 @@ void translation_settings_view_t::load(const settings_store_t & settings)
 
 	for (const auto & card : m_provider_cards)
 		update_status(card);
+
+	m_examples = settings.translation_examples();
+	rebuild_examples_table();
 }
 
 void translation_settings_view_t::apply(settings_store_t & settings) const
@@ -221,6 +285,8 @@ void translation_settings_view_t::apply(settings_store_t & settings) const
 		const auto value = read_widget_value(entry);
 		settings.set_web_provider_setting(entry.provider_id, entry.setting_key, value);
 	}
+
+	settings.set_translation_examples(m_examples);
 }
 
 void translation_settings_view_t::update_status(const provider_card_t & card)

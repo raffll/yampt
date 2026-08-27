@@ -1,6 +1,7 @@
 #pragma once
 
 #include <utility/status_types.hpp>
+#include <functional>
 #include <vector>
 #include <QTableView>
 
@@ -17,11 +18,13 @@ public:
 	void set_column_widths(const std::vector<int> & widths);
 	std::vector<int> get_column_widths() const;
 	void set_context_menu_enabled(bool enabled);
+	void set_example_state_fn(std::function<bool(int row)> fn);
 
 signals:
 	void row_selected(int row);
 	void batch_status_change_requested(const QList<int> & rows, status_t new_status);
 	void batch_revert_requested(const QList<int> & rows);
+	void toggle_example_requested(const QList<int> & rows);
 	void delete_entry_requested();
 
 protected:
@@ -30,4 +33,5 @@ protected:
 
 private:
 	bool m_context_menu_enabled = true;
+	std::function<bool(int row)> m_example_state_fn;
 };

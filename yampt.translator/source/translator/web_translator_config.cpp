@@ -14,6 +14,9 @@ static web_translator_config_t parse_config(const QJsonObject & root, const std:
 	config.response_path = root.value("response_path").toString().toStdString();
 	config.quota_limit = root.value("quota_limit").toInt(0);
 	config.system_prompt = root.value("system_prompt").toString().toStdString();
+	config.models_endpoint = root.value("models_endpoint").toString().toStdString();
+	config.models_path = root.value("models_path").toString().toStdString();
+	config.models_id_key = root.value("models_id_key").toString("id").toStdString();
 
 	const auto format_str = root.value("body_format").toString("json").toStdString();
 	if (format_str == "form")
@@ -65,6 +68,15 @@ static web_translator_config_t parse_config(const QJsonObject & root, const std:
 	return config;
 }
 
+web_translator_config_t web_translator_config::parse_string(const std::string & json_content, const std::string & identifier)
+{
+	auto document = QJsonDocument::fromJson(QByteArray::fromStdString(json_content));
+	if (!document.isObject())
+		return { .identifier = identifier };
+
+	return parse_config(document.object(), identifier);
+}
+
 web_translator_config_t web_translator_config::load_single(const std::string & json_path)
 {
 	namespace fs = std::filesystem;
@@ -77,11 +89,7 @@ web_translator_config_t web_translator_config::load_single(const std::string & j
 
 	std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 
-	auto document = QJsonDocument::fromJson(QByteArray::fromStdString(content));
-	if (!document.isObject())
-		return { .identifier = stem };
-
-	return parse_config(document.object(), stem);
+	return parse_string(content, stem);
 }
 
 std::vector<web_translator_config_t> web_translator_config::load_all(const std::string & providers_dir)

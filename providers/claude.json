@@ -3,6 +3,9 @@
     "kind": "chat_completion",
     "message_style": "anthropic",
     "endpoint": "https://api.anthropic.com/v1/messages",
+    "models_endpoint": "https://api.anthropic.com/v1/models",
+    "models_path": "data",
+    "models_id_key": "id",
     "body_format": "json",
     "headers": {
         "Content-Type": "application/json",

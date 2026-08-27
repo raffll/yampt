@@ -126,6 +126,8 @@ void editor_window_t::setup_toolbar()
 {
 	auto * toolbar = addToolBar("Main");
 	toolbar->setMovable(false);
+	toolbar->layout()->setContentsMargins(4, 2, 4, 2);
+	toolbar->layout()->setSpacing(4);
 
 	setContextMenuPolicy(Qt::PreventContextMenu);
 

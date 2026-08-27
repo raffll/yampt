@@ -92,6 +92,9 @@ Create a new JSON file in this folder. The schema:
 | `response_path` | Dot-separated path to the translated text in the JSON response |
 | `system_prompt` | System prompt for `chat_completion` kind (ignored for `simple`) |
 | `quota_limit` | Character limit for status display (0 = unlimited/not tracked) |
+| `models_endpoint` | Optional GET URL that returns the provider's available models. When set, a Refresh control appears in the Auto Translate panel to fetch the current model list. Supports the same template variables and `headers` as translation requests, so the API key header applies. Omit for static model lists only. |
+| `models_path` | Dot-separated path to the array of model entries in the `models_endpoint` response (e.g. `data` for `{"data": [ ... ]}`). Only used when `models_endpoint` is set. |
+| `models_id_key` | The field within each array element that holds the model ID string. Defaults to `"id"` when omitted. Only used when `models_endpoint` is set. |
 
 ### Template Variables
 
@@ -124,3 +127,19 @@ For LLM providers (Claude, GPT), set `kind` to `"chat_completion"`. The provider
 - Body fields from `body` merged into the request
 
 The response is extracted using `response_path` as usual.
+
+### Dynamic Model Discovery
+
+Providers that expose a models endpoint can offer an up-to-date model list instead of a static one. Add `models_endpoint`, `models_path`, and (optionally) `models_id_key`:
+
+```json
+{
+    "models_endpoint": "https://api.openai.com/v1/models",
+    "models_path": "data",
+    "models_id_key": "id"
+}
+```
+
+With these fields set, the Auto Translate panel shows a Refresh control. Clicking it sends a GET request to `models_endpoint` using the provider's `headers` (so the API key is applied), reads the array at `models_path`, and collects each element's `models_id_key` value as a selectable model ID. Both OpenAI and Anthropic return `{ "data": [ { "id": "..." } ] }`, so `models_path: data` with the default `models_id_key: id` works for both.
+
+When these fields are absent, the provider falls back to the static model list from its `model` setting's `choices` and no Refresh control is shown.

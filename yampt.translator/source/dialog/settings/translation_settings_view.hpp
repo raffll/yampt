@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../translator/web_translator_config.hpp"
+#include <translation_example.hpp>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -9,6 +10,7 @@
 class QComboBox;
 class QLabel;
 class QLineEdit;
+class QTableWidget;
 class QVBoxLayout;
 class settings_store_t;
 
@@ -42,6 +44,8 @@ private:
 
 	void build_local_models_section(QVBoxLayout * parent, const std::string & models_dir);
 	void build_provider_card(QVBoxLayout * parent, const web_translator_config_t & config);
+	void build_examples_tab(QVBoxLayout * parent);
+	void rebuild_examples_table();
 	void update_status(const provider_card_t & card);
 	std::string read_widget_value(const setting_widget_t & entry) const;
 
@@ -49,4 +53,8 @@ private:
 	std::vector<web_translator_config_t> m_configs;
 	std::vector<setting_widget_t> m_setting_widgets;
 	std::vector<provider_card_t> m_provider_cards;
+
+	std::vector<translation_example_t> m_examples;
+	QTableWidget * m_examples_table = nullptr;
+	QLabel * m_examples_empty_label = nullptr;
 };

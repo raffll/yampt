@@ -137,6 +137,9 @@ private:
 	void shortcut_commit_status(status_t new_status);
 	void advance_to_next_row();
 
+	void on_toggle_example_requested(const QList<int> & rows);
+	bool is_row_example(int row) const;
+
 	void rebuild_table_yaml(document_t * target_doc);
 	void rebuild_table_dict(dict_document_t * dict_doc);
 

@@ -52,6 +52,9 @@ struct web_translator_config_t
 	std::unordered_map<std::string, std::string> body_fields;
 	std::string response_path;
 	std::string system_prompt;
+	std::string models_endpoint;
+	std::string models_path;
+	std::string models_id_key;
 	int quota_limit = 0;
 	std::vector<provider_setting_t> settings;
 };
@@ -60,5 +63,6 @@ namespace web_translator_config {
 
 std::vector<web_translator_config_t> load_all(const std::string & providers_dir);
 web_translator_config_t load_single(const std::string & json_path);
+web_translator_config_t parse_string(const std::string & json_content, const std::string & identifier);
 
 } // namespace web_translator_config

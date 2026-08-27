@@ -1,5 +1,6 @@
 #include "settings_store.hpp"
 #include "resource_paths.hpp"
+#include <algorithm>
 #include <QCoreApplication>
 #include <QDir>
 
@@ -224,6 +225,37 @@ void settings_store_t::set_last_merge_order(const std::vector<std::string> & pat
 	{
 		const auto key = QString("MergeOrder/Path%1").arg(i);
 		m_settings.setValue(key, QString::fromStdString(paths[i]));
+	}
+}
+
+std::vector<translation_example_t> settings_store_t::translation_examples() const
+{
+	const int stored_count = m_settings.value("Examples/Count", 0).toInt();
+	const int count = std::min(stored_count, max_examples);
+	std::vector<translation_example_t> examples;
+	examples.reserve(count);
+	for (int i = 0; i < count; ++i)
+	{
+		const auto original_key = QString("Examples/Original%1").arg(i);
+		const auto translation_key = QString("Examples/Translation%1").arg(i);
+		translation_example_t example;
+		example.original = m_settings.value(original_key, "").toString().toStdString();
+		example.translation = m_settings.value(translation_key, "").toString().toStdString();
+		examples.push_back(example);
+	}
+	return examples;
+}
+
+void settings_store_t::set_translation_examples(const std::vector<translation_example_t> & examples)
+{
+	const int count = std::min(static_cast<int>(examples.size()), max_examples);
+	m_settings.setValue("Examples/Count", count);
+	for (int i = 0; i < count; ++i)
+	{
+		const auto original_key = QString("Examples/Original%1").arg(i);
+		const auto translation_key = QString("Examples/Translation%1").arg(i);
+		m_settings.setValue(original_key, QString::fromStdString(examples[i].original));
+		m_settings.setValue(translation_key, QString::fromStdString(examples[i].translation));
 	}
 }
 

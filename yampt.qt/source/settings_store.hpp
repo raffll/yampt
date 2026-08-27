@@ -1,5 +1,6 @@
 #pragma once
 
+#include "translation_example.hpp"
 #include <utility/theme_enums.hpp>
 #include <string>
 #include <vector>
@@ -63,6 +64,9 @@ public:
 
 	std::vector<std::string> last_merge_order() const;
 	void set_last_merge_order(const std::vector<std::string> & paths);
+
+	std::vector<translation_example_t> translation_examples() const;
+	void set_translation_examples(const std::vector<translation_example_t> & examples);
 
 	std::string active_dict_path() const;
 	void set_active_dict_path(const std::string & value);

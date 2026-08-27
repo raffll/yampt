@@ -11,4 +11,4 @@ Wire up glossary_t::find_glossary_matches in send_chat_request — provide AI pr
 
 backup for saved plugins
 
-find/replace button disable when filter by disabled
+find/replace in tab after statuses

@@ -215,3 +215,44 @@ TEST_CASE("web_translator_config::load_single, identifier is file stem", "[u]")
 
 	cleanup_dir(directory);
 }
+
+TEST_CASE("web_translator_config::parse_config, models fields parsed when present", "[u]")
+{
+	auto config = web_translator_config::parse_string(R"({
+		"name": "ChatGPT",
+		"kind": "chat_completion",
+		"endpoint": "https://api.openai.com/v1/chat/completions",
+		"models_endpoint": "https://api.openai.com/v1/models",
+		"models_path": "data",
+		"models_id_key": "model_id"
+	})", "chatgpt");
+
+	REQUIRE(config.models_endpoint == "https://api.openai.com/v1/models");
+	REQUIRE(config.models_path == "data");
+	REQUIRE(config.models_id_key == "model_id");
+}
+
+TEST_CASE("web_translator_config::parse_config, models endpoint and path empty when absent", "[u]")
+{
+	auto config = web_translator_config::parse_string(R"({
+		"name": "DeepL",
+		"kind": "simple",
+		"endpoint": "https://api-free.deepl.com/v2/translate"
+	})", "deepl");
+
+	REQUIRE(config.models_endpoint.empty());
+	REQUIRE(config.models_path.empty());
+}
+
+TEST_CASE("web_translator_config::parse_config, models_id_key defaults to id when absent", "[u]")
+{
+	auto config = web_translator_config::parse_string(R"({
+		"name": "Claude",
+		"kind": "chat_completion",
+		"endpoint": "https://api.anthropic.com/v1/messages",
+		"models_endpoint": "https://api.anthropic.com/v1/models",
+		"models_path": "data"
+	})", "claude");
+
+	REQUIRE(config.models_id_key == "id");
+}

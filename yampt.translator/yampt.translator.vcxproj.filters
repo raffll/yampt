@@ -53,6 +53,8 @@
     <ClCompile Include="source\translator\ctranslate2_translator.cpp" />
     <ClCompile Include="source\translator\web_translator.cpp" />
     <ClCompile Include="source\translator\web_translator_config.cpp" />
+    <ClCompile Include="source\translator\model_list_utils.cpp" />
+    <ClCompile Include="source\translator\translation_example_ops.cpp" />
     <ClCompile Include="source\editor\spell_checker.cpp" />
     <ClCompile Include="source\view\display_name.cpp" />
     <ClCompile Include="source\highlighter\highlight_coordinator.cpp" />
@@ -92,5 +94,7 @@
     <ClInclude Include="source\highlighter\highlight_applier.hpp" />
     <ClInclude Include="source\model\loc_document.hpp" />
     <ClInclude Include="source\model\eet_document.hpp" />
+    <ClInclude Include="source\translator\model_list_utils.hpp" />
+    <ClInclude Include="source\translator\translation_example_ops.hpp" />
   </ItemGroup>
 </Project>

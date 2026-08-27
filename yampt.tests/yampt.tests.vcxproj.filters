@@ -69,6 +69,8 @@
     <ClCompile Include="source\tests.path_resolver.cpp" />
     <ClCompile Include="source\tests.workspace_watcher.cpp" />
     <ClCompile Include="source\tests.web_translator_config.cpp" />
+    <ClCompile Include="source\tests.model_list_utils.cpp" />
+    <ClCompile Include="source\tests.translation_examples.cpp" />
     <ClCompile Include="source\tests.loc_file_writer.cpp" />
     <ClCompile Include="source\tests.loc_file_reader.cpp" />
     <ClCompile Include="source\tests.inflection.cpp" />
@@ -138,6 +140,8 @@
     <ClCompile Include="..\yampt.editor\source\model\view_tree_decode_cell.cpp" />
     <ClCompile Include="..\yampt.editor\source\model\view_tree_decode_lists.cpp" />
     <ClCompile Include="..\yampt.translator\source\translator\web_translator_config.cpp" />
+    <ClCompile Include="..\yampt.translator\source\translator\model_list_utils.cpp" />
+    <ClCompile Include="..\yampt.translator\source\translator\translation_example_ops.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="source\cpp.hint" />

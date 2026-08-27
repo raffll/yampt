@@ -21,6 +21,8 @@
 #include "view/status_filter_view.hpp"
 #include "view/translation_suggestion_view.hpp"
 #include "view/validation_view.hpp"
+#include <translation_example.hpp>
+#include <translator/translation_example_ops.hpp>
 #include <utility/language_config.hpp>
 #include <utility/string_utils.hpp>
 #include <algorithm>
@@ -1082,4 +1084,63 @@ void main_window_t::closeEvent(QCloseEvent * event)
 
 	save_config();
 	QMainWindow::closeEvent(event);
+}
+
+bool main_window_t::is_row_example(int row) const
+{
+	const auto * row_data = m_table_model->row_at(row);
+	if (!row_data)
+		return false;
+
+	const auto examples = m_settings.translation_examples();
+
+	return translation_example_ops::contains_original(examples, row_data->old_text);
+}
+
+void main_window_t::on_toggle_example_requested(const QList<int> & rows)
+{
+	if (rows.isEmpty())
+		return;
+
+	const auto * first_row = m_table_model->row_at(rows.first());
+	if (!first_row)
+		return;
+
+	auto examples = m_settings.translation_examples();
+	const bool unmark = translation_example_ops::contains_original(examples, first_row->old_text);
+
+	if (unmark)
+	{
+		for (const int row : rows)
+		{
+			const auto * row_data = m_table_model->row_at(row);
+			if (!row_data)
+				continue;
+
+			examples = translation_example_ops::remove_by_original(examples, row_data->old_text);
+		}
+	}
+	else
+	{
+		std::vector<translation_example_t> pairs;
+		for (const int row : rows)
+		{
+			const auto * row_data = m_table_model->row_at(row);
+			if (!row_data)
+				continue;
+
+			pairs.push_back({ row_data->old_text, row_data->new_text });
+		}
+
+		const auto before = examples.size();
+		examples = translation_example_ops::add_capped(examples, pairs);
+
+		if (examples.size() == before && !pairs.empty())
+			statusBar()->showMessage(tr("Example limit reached (maximum %1)").arg(max_examples), 5000);
+	}
+
+	m_settings.set_translation_examples(examples);
+	m_settings.sync();
+
+	m_translation_tab->set_examples(examples);
 }

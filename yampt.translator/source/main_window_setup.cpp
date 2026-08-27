@@ -283,6 +283,7 @@ void main_window_t::setup_sidebar()
 	m_translation_tab->set_models_dir(resource_paths::models_dir());
 	m_translation_tab->set_providers_dir(resource_paths::providers_dir());
 	m_translation_tab->set_glossary_fn([this](const std::string & text) { return m_glossary.apply_glossary(text); });
+	m_translation_tab->set_settings_store(m_settings);
 	m_info_tabs->addTab(m_annotations_view, tr("Annotations"));
 	m_info_tabs->addTab(m_history_view, tr("History"));
 	m_info_tabs->addTab(m_translation_tab, tr("Auto Translate"));
@@ -652,6 +653,14 @@ void main_window_t::connect_sidebar_signals()
 void main_window_t::connect_editor_signals()
 {
 	connect(m_table_view, &record_table_view_t::row_selected, this, &main_window_t::on_row_selected);
+
+	m_table_view->set_example_state_fn([this](int row) { return is_row_example(row); });
+
+	connect(
+	    m_table_view,
+	    &record_table_view_t::toggle_example_requested,
+	    this,
+	    &main_window_t::on_toggle_example_requested);
 
 	connect(
 	    m_table_model,

@@ -64,6 +64,11 @@ void record_table_view_t::set_context_menu_enabled(bool enabled)
 	m_context_menu_enabled = enabled;
 }
 
+void record_table_view_t::set_example_state_fn(std::function<bool(int row)> fn)
+{
+	m_example_state_fn = std::move(fn);
+}
+
 void record_table_view_t::contextMenuEvent(QContextMenuEvent * event)
 {
 	if (!m_context_menu_enabled)
@@ -83,6 +88,12 @@ void record_table_view_t::contextMenuEvent(QContextMenuEvent * event)
 	menu->addSeparator();
 	auto * act_revert = menu->addAction(tr("Revert"));
 	act_revert->setToolTip(tr("Revert selected entries to previous state from history"));
+
+	menu->addSeparator();
+	const auto first_row = selected.first().row();
+	const auto already_example = m_example_state_fn && m_example_state_fn(first_row);
+	auto * act_example = menu->addAction(already_example ? tr("Unmark Example") : tr("Mark as Example"));
+	act_example->setToolTip(tr("Use this entry as an AI translation style example"));
 
 	auto * chosen = menu->exec(event->globalPos());
 	std::optional<status_t> new_status;
@@ -110,6 +121,14 @@ void record_table_view_t::contextMenuEvent(QContextMenuEvent * event)
 			rows.append(idx.row());
 
 		emit batch_revert_requested(rows);
+	}
+	else if (chosen == act_example)
+	{
+		QList<int> rows;
+		for (const auto & idx : selected)
+			rows.append(idx.row());
+
+		emit toggle_example_requested(rows);
 	}
 
 	delete menu;

@@ -1,6 +1,7 @@
 #include <resource_paths.hpp>
 #include "translation_suggestion_view.hpp"
 #include "../translator/ctranslate2_translator.hpp"
+#include "../translator/model_list_utils.hpp"
 #include "../translator/web_translator.hpp"
 #include <utility/app_logger.hpp>
 #include <utility/language_config.hpp>
@@ -14,8 +15,25 @@
 #include <QPlainTextEdit>
 #include <QPushButton>
 #include <QScrollBar>
+#include <QSignalBlocker>
 #include <QTextCursor>
+#include <QToolButton>
 #include <QVBoxLayout>
+
+namespace {
+
+const provider_setting_t * find_model_setting(const web_translator_config_t & config)
+{
+	for (const auto & setting : config.settings)
+	{
+		if (setting.key == "model")
+			return &setting;
+	}
+
+	return nullptr;
+}
+
+} // namespace
 
 translation_suggestion_view_t::translation_suggestion_view_t(QWidget * parent)
     : QWidget(parent)
@@ -31,6 +49,18 @@ translation_suggestion_view_t::translation_suggestion_view_t(QWidget * parent)
 	m_provider_combo->setToolTip(tr("Select translation provider"));
 	m_provider_combo->setFixedWidth(180);
 	top_row->addWidget(m_provider_combo);
+
+	m_model_combo = new QComboBox(this);
+	m_model_combo->setEditable(true);
+	m_model_combo->setToolTip(tr("Select the AI model for this provider"));
+	m_model_combo->setFixedWidth(180);
+	top_row->addWidget(m_model_combo);
+
+	m_refresh_models = new QToolButton(this);
+	m_refresh_models->setAutoRaise(true);
+	m_refresh_models->setText(tr("Refresh"));
+	m_refresh_models->setToolTip(tr("Fetch the model list from the provider"));
+	top_row->addWidget(m_refresh_models);
 
 	m_translate_all_btn = new QPushButton(tr("Translate"), this);
 	m_translate_all_btn->setToolTip(tr("Translate the selected entry"));
@@ -71,6 +101,40 @@ void translation_suggestion_view_t::setup_controls()
 	});
 
 	connect(
+	    m_refresh_models,
+	    &QToolButton::clicked,
+	    this,
+	    [this]()
+	{
+		auto * web_provider = active_web_provider();
+		if (web_provider == nullptr)
+			return;
+
+		web_provider->fetch_models();
+	});
+
+	connect(
+	    m_model_combo,
+	    &QComboBox::currentTextChanged,
+	    this,
+	    [this](const QString & value)
+	{
+		auto * web_provider = active_web_provider();
+		if (web_provider == nullptr)
+			return;
+
+		const auto & identifier = web_provider->config().identifier;
+
+		if (m_settings != nullptr)
+		{
+			m_settings->set_web_provider_setting(identifier, "model", value.toStdString());
+			m_settings->sync();
+		}
+
+		web_provider->set_setting("model", value.toStdString());
+	});
+
+	connect(
 	    m_ct2_provider,
 	    &ctranslate2_translator_t::translation_finished,
 	    this,
@@ -104,6 +168,7 @@ void translation_suggestion_view_t::rebuild_web_providers()
 	{
 		auto * provider = new web_translator_t(config, this);
 		provider->set_glossary_fn(m_glossary_fn);
+		provider->set_examples(m_examples);
 		m_web_providers.push_back(provider);
 		m_providers.push_back(provider);
 		m_provider_combo->addItem(QString::fromStdString(config.display_name));
@@ -116,6 +181,36 @@ void translation_suggestion_view_t::rebuild_web_providers()
 		{
 			on_provider_result(result);
 			update_provider_status();
+		});
+
+		connect(
+		    provider,
+		    &web_translator_t::models_fetched,
+		    this,
+		    [this, provider](std::vector<std::string> models)
+		{
+			if (active_web_provider() != provider)
+				return;
+
+			const auto * model_setting = find_model_setting(provider->config());
+			const auto default_model = model_setting != nullptr ? model_setting->default_value : std::string();
+			const auto current_text = m_model_combo->currentText().toStdString();
+			const auto selected =
+			    model_list_utils::choose_selected_model(current_text, models, default_model);
+			populate_model_combo(models, selected);
+			append_log("[info] fetched " + std::to_string(models.size()) + " models\n");
+		});
+
+		connect(
+		    provider,
+		    &web_translator_t::models_fetch_failed,
+		    this,
+		    [this, provider](std::string error)
+		{
+			if (active_web_provider() != provider)
+				return;
+
+			append_log("[error] " + error + "\n");
 		});
 	}
 }
@@ -131,12 +226,19 @@ void translation_suggestion_view_t::set_models_dir(const std::string & dir)
 	rebuild_language_list();
 }
 
+void translation_suggestion_view_t::set_settings_store(settings_store_t & settings)
+{
+	m_settings = &settings;
+}
+
 void translation_suggestion_view_t::apply_provider_settings(const settings_store_t & settings)
 {
 	const int language_index = settings.translation_language_index();
 	const auto source_language = settings.foreign_language();
 
 	m_target_language = settings.native_language();
+
+	set_examples(settings.translation_examples());
 
 	for (auto * web_provider : m_web_providers)
 	{
@@ -164,6 +266,7 @@ void translation_suggestion_view_t::apply_provider_settings(const settings_store
 	else if (!m_languages.empty())
 		load_model_for_language(0);
 
+	update_model_controls();
 	update_provider_status();
 }
 
@@ -284,6 +387,7 @@ void translation_suggestion_view_t::select_provider(int index)
 	if (m_provider_combo->currentIndex() != index)
 		m_provider_combo->setCurrentIndex(index);
 
+	update_model_controls();
 	update_provider_status();
 }
 
@@ -295,12 +399,81 @@ translator_t * translation_suggestion_view_t::active_provider() const
 	return m_providers[m_active_provider_index];
 }
 
+web_translator_t * translation_suggestion_view_t::active_web_provider() const
+{
+	if (m_active_provider_index <= 0)
+		return nullptr;
+
+	const auto web_index = m_active_provider_index - 1;
+	if (web_index >= static_cast<int>(m_web_providers.size()))
+		return nullptr;
+
+	return m_web_providers[web_index];
+}
+
+void translation_suggestion_view_t::populate_model_combo(
+    const std::vector<std::string> & models,
+    const std::string & selected)
+{
+	const QSignalBlocker blocker(m_model_combo);
+	m_model_combo->clear();
+
+	for (const auto & model : models)
+		m_model_combo->addItem(QString::fromStdString(model));
+
+	m_model_combo->setCurrentText(QString::fromStdString(selected));
+}
+
+void translation_suggestion_view_t::update_model_controls()
+{
+	auto * web_provider = active_web_provider();
+	if (web_provider == nullptr)
+	{
+		m_model_combo->hide();
+		m_refresh_models->hide();
+		return;
+	}
+
+	const auto & config = web_provider->config();
+	const auto * model_setting = find_model_setting(config);
+	if (model_setting == nullptr)
+	{
+		m_model_combo->hide();
+		m_refresh_models->hide();
+		return;
+	}
+
+	auto selected = model_setting->default_value;
+	if (m_settings != nullptr)
+	{
+		const auto stored = m_settings->web_provider_setting(config.identifier, "model");
+		if (!stored.empty())
+			selected = stored;
+	}
+
+	m_model_combo->show();
+	populate_model_combo(model_setting->choices, selected);
+
+	if (config.models_endpoint.empty())
+		m_refresh_models->hide();
+	else
+		m_refresh_models->show();
+}
+
 void translation_suggestion_view_t::set_glossary_fn(std::function<std::string(const std::string &)> fn)
 {
 	m_glossary_fn = std::move(fn);
 
 	for (auto * web_provider : m_web_providers)
 		web_provider->set_glossary_fn(m_glossary_fn);
+}
+
+void translation_suggestion_view_t::set_examples(const std::vector<translation_example_t> & examples)
+{
+	m_examples = examples;
+
+	for (auto * web_provider : m_web_providers)
+		web_provider->set_examples(m_examples);
 }
 
 void translation_suggestion_view_t::display_translation_result(const translation_suggestion_t & result)

@@ -147,7 +147,11 @@ The Original and Translation panels also highlight recognized terms inline: dial
 The Auto Translate tab at the bottom-left provides machine translation. Select a provider from the combo box, then click Translate to fill the translation field with a suggestion.
 
 - **CTranslate2** — an offline translation model that runs locally. Supports Polish, German, French, Russian, Italian, and Hungarian. Does not require an internet connection. The model must be present in the `models/` folder next to the application.
-- **Web providers** — online services like DeepL, Google Translate, and Claude. Each requires an API key configured in Settings → Translation. The source language is read from your Language settings automatically.
+- **Web providers** — online services like DeepL, Google Translate, and Claude. Each requires an API key configured in Settings → Auto Translation. The source language is read from your Language settings automatically.
+
+When the selected provider is an AI service that offers a choice of models, a second combo box appears next to the provider selector. It lets you pick which model performs the translation, and it is editable so you can type the identifier of a model that is not in the list. The chosen model is remembered separately for each provider and restored the next time you select that provider. Providers without a model choice (CTranslate2 and simple translation services) do not show this control.
+
+Next to the model combo is a Refresh control. When the provider can report its own model list, clicking Refresh contacts the service and replaces the choices with the models currently available on your account. Your previously selected model stays selected if it is still offered; otherwise the provider's default is chosen. If the refresh cannot complete — for example when no API key is set or the service is unreachable — the existing list is kept and the reason is reported in the panel's output area.
 
 After a successful translation, the entry status is set to Generated. Review the result and set to Translated when satisfied.
 
@@ -156,6 +160,8 @@ Additional providers can be added by placing a configuration file in the `provid
 ## Entry Statuses
 
 Each dictionary entry has a status. Only **Translated** entries are applied during Convert Plugin/Create Patch Plugin — all others are skipped. You can manually set **Translated**, **In Progress**, **Untranslated**, or **Error** via right-click context menu on selected rows in the Records table. The same menu offers **Revert**, which restores each selected entry to its previous text and status from the edit history.
+
+The context menu also lets you teach an AI provider your preferred style. Right-click one or more records and choose **Mark as Example** to store their original and current translation as reference pairs. When a selected record is already stored, the same entry reads **Unmark Example** and removes it. You can keep up to three examples at once; if you try to mark more, the extra selection is skipped and a message explains that the limit was reached. Examples apply to any record regardless of its status, and every stored example is sent to AI providers alongside your translation. They are managed in Settings → Auto Translation → Examples.
 
 - **Translated** — the translation is approved. This is the only status that produces output when running Convert Plugin or Create Patch Plugin.
 - **Untranslated** — no translation exists. The original and translation fields contain the same text.
@@ -182,4 +188,4 @@ Open Settings via Ctrl+, or the Tools menu. Four pages are available:
 - **Appearance** — choose between light and dark theme.
 - **Shortcuts** — customize keyboard shortcuts for all actions. Conflicts are highlighted in red.
 - **Language** — set the foreign language (source) and native language (target). Choose a spell check dictionary for the Translation panel. Configure the English dictionary used for partial mode in Make Base Dictionary. The Encoding line shows which byte encoding the selected native language uses for reading and writing plugin text (Polish and Hungarian use Windows-1250, Russian uses Windows-1251, the others use Windows-1252). This is determined by the language and is shown for reference.
-- **Auto Translation** — two tabs. Local Models shows installed offline translation models and their supported languages. Web Providers shows all discovered online services with fields for API keys and model selection. The status indicator shows whether each provider is configured and ready to use.
+- **Auto Translation** — three tabs. Local Models shows installed offline translation models and their supported languages. Web Providers shows all discovered online services with a field for each API key and an indicator of whether the provider is configured and ready to use; model selection lives in the Auto Translate panel, not here. Examples lists the translation pairs you have marked as AI style references, each with its original and translation and a Remove control to delete it. When you have not marked any examples the tab shows a message saying so, and the list holds at most three examples.

@@ -52,6 +52,8 @@ Qt6 GUI for interactive plugin translation.
 **Translation**
 - **Built-in offline translation engine — no API key required**
 - Web translation providers: DeepL, Google Translate, ChatGPT, Claude — add more via config files
+- Pick the AI model right in the Auto Translate panel, or refresh the list from the provider
+- **Curated AI examples: mark up to three records to guide the AI's translation style**
 
 **Workflows**
 - **Lua l10n workflow: edit YAML localization files with auto-pairing and scaffold generation**

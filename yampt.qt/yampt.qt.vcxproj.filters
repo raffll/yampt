@@ -12,5 +12,6 @@
     <ClInclude Include="source\path_resolver.hpp" />
     <ClInclude Include="source\resource_paths.hpp" />
     <ClInclude Include="source\settings_store.hpp" />
+    <ClInclude Include="source\translation_example.hpp" />
   </ItemGroup>
 </Project>

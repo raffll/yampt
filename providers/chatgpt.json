@@ -2,6 +2,9 @@
     "name": "ChatGPT",
     "kind": "chat_completion",
     "endpoint": "https://api.openai.com/v1/chat/completions",
+    "models_endpoint": "https://api.openai.com/v1/models",
+    "models_path": "data",
+    "models_id_key": "id",
     "body_format": "json",
     "headers": {
         "Content-Type": "application/json",

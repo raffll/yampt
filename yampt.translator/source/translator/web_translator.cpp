@@ -1,4 +1,6 @@
 #include "web_translator.hpp"
+#include "model_list_utils.hpp"
+#include "translation_example_ops.hpp"
 #include <QCoreApplication>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -72,6 +74,11 @@ void web_translator_t::set_provider_settings(const std::unordered_map<std::strin
 	m_settings = settings;
 }
 
+void web_translator_t::set_setting(const std::string & key, const std::string & value)
+{
+	m_settings[key] = value;
+}
+
 void web_translator_t::set_source_language(const std::string & language)
 {
 	m_source_language = language;
@@ -92,6 +99,11 @@ void web_translator_t::set_glossary_fn(std::function<std::string(const std::stri
 	m_glossary_fn = std::move(glossary_fn);
 }
 
+void web_translator_t::set_examples(const std::vector<translation_example_t> & examples)
+{
+	m_examples = examples;
+}
+
 void web_translator_t::translate(const std::string & text, const std::string & target_lang)
 {
 	if (!is_available())
@@ -105,6 +117,57 @@ void web_translator_t::translate(const std::string & text, const std::string & t
 		send_chat_request(text, target_lang);
 	else
 		send_simple_request(text, target_lang);
+}
+
+void web_translator_t::fetch_models()
+{
+	if (m_config.models_endpoint.empty())
+	{
+		emit models_fetch_failed(
+		    QCoreApplication::translate("yTranslator", "Provider has no models endpoint").toStdString());
+		return;
+	}
+
+	if (!is_available())
+	{
+		emit models_fetch_failed(
+		    QCoreApplication::translate("yTranslator", "Provider not configured").toStdString());
+		return;
+	}
+
+	QNetworkRequest request(QUrl(QString::fromStdString(m_config.models_endpoint)));
+
+	for (const auto & [header_name, header_value] : m_config.headers)
+	{
+		const auto expanded = expand_template(header_value, "", "");
+		request.setRawHeader(QByteArray::fromStdString(header_name), QByteArray::fromStdString(expanded));
+	}
+
+	auto * reply = m_network->get(request);
+	connect(
+	    reply,
+	    &QNetworkReply::finished,
+	    this,
+	    [this, reply]()
+	{
+		reply->deleteLater();
+
+		if (reply->error() != QNetworkReply::NoError)
+		{
+			emit models_fetch_failed(reply->errorString().toStdString());
+			return;
+		}
+
+		const auto models = extract_model_list(reply->readAll());
+		if (models.empty())
+		{
+			emit models_fetch_failed(
+			    QCoreApplication::translate("yTranslator", "Empty or unparseable models response").toStdString());
+			return;
+		}
+
+		emit models_fetched(models);
+	});
 }
 
 std::string web_translator_t::expand_template(
@@ -228,6 +291,9 @@ void web_translator_t::send_chat_request(const std::string & text, const std::st
 		if (!glossary_text.empty())
 			system_prompt += "\n\nUse these established translations as reference:\n" + glossary_text;
 	}
+
+	if (!m_examples.empty())
+		system_prompt += translation_example_ops::format_examples_prompt(m_examples);
 
 	QJsonObject body_obj;
 	for (const auto & [field_name, field_template] : m_config.body_fields)
@@ -354,4 +420,11 @@ std::string web_translator_t::extract_response(const QByteArray & data) const
 		return current.toString().toStdString();
 
 	return {};
+}
+
+std::vector<std::string> web_translator_t::extract_model_list(const QByteArray & data) const
+{
+	const auto document = QJsonDocument::fromJson(data);
+	return model_list_utils::extract_model_list(
+	    document, model_list_utils::model_list_path_t { m_config.models_path, m_config.models_id_key });
 }
