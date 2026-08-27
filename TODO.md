@@ -10,9 +10,6 @@ Wire up glossary_t::find_glossary_matches in send_chat_request — provide AI pr
 - edit_history_t dead code: load_from_file, save_to_file, is_modified_this_session — implemented but never called. Remove or wire up persistence.
 - creator_helpers namespace: nearly every function has 4-6 arguments (max 2 allowed). Create insert_params_t struct.
 
-[02:22] Need at least 2 plugins loaded to create a merged patch
-[02:26] [error] need at least 2 plugins loaded to clean
-
 backup for saved plugins
 
 

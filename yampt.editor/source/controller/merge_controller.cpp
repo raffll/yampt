@@ -63,7 +63,7 @@ void merge_controller_t::create_merged_patch()
 {
 	if (m_session.scan().plugin_count() < 2)
 	{
-		m_log("Need at least 2 plugins loaded to create a merged patch");
+		m_log("[error] need at least 2 plugins loaded to create a merged patch");
 		return;
 	}
 
