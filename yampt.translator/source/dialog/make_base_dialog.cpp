@@ -172,13 +172,7 @@ void make_base_dialog_t::populate_plugin_tree(const std::string & source_plugin_
 
 	for (auto & [root_path, builder] : roots)
 	{
-		auto root_label = root_path;
-		auto sep = root_label.find_last_of("/\\");
-		if (sep != std::string::npos)
-			root_label = root_label.substr(sep + 1);
-
-		if (root_label == "workspace")
-			root_label = workspace_label;
+		const auto root_label = derive_root_label(root_path);
 
 		auto * root_node = new QTreeWidgetItem(tree);
 		root_node->setText(0, QString::fromStdString(root_label));

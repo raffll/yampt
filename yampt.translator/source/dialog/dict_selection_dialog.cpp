@@ -64,10 +64,7 @@ void dict_selection_dialog_t::populate_tree(const std::vector<dict_entry_t> & en
 
 void dict_selection_dialog_t::add_tree_root_node(const std::string & root_path, const root_content_t & content)
 {
-	auto root_label = std::string(string_utils::extract_filename(root_path));
-
-	if (root_label == "workspace")
-		root_label = workspace_label;
+	const auto root_label = derive_root_label(root_path);
 
 	auto * root_node = new QTreeWidgetItem(m_tree);
 	root_node->setText(0, QString::fromStdString(root_label));

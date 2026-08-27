@@ -149,18 +149,13 @@ void editor_window_t::setup_toolbar()
 	m_editing_btn->setText(tr("Enable Editing"));
 	m_editing_btn->setToolTip(tr("Allow editing decoded fields directly in all plugins"));
 	m_editing_btn->setCheckable(true);
-	m_editing_btn->setChecked(m_settings.editing_enabled());
+	m_editing_btn->setChecked(false);
 	toolbar->addWidget(m_editing_btn);
 	connect(
 	    m_editing_btn,
 	    &QToolButton::toggled,
 	    this,
-	    [this](bool checked)
-	{
-		m_settings.set_editing_enabled(checked);
-		m_settings.sync();
-		m_plugin_workspace_view->set_editing_enabled(checked);
-	});
+	    [this](bool checked) { m_plugin_workspace_view->set_editing_enabled(checked); });
 
 	toolbar->addSeparator();
 
@@ -208,8 +203,16 @@ void editor_window_t::setup_toolbar()
 	filter_btn->setToolTip(tr("Open the advanced filter dialog"));
 	toolbar->addWidget(filter_btn);
 
+	toolbar->addSeparator();
+
+	auto * reset_btn = new QToolButton(this);
+	reset_btn->setText(tr("Reset"));
+	reset_btn->setToolTip(tr("Reset all filters and search"));
+	toolbar->addWidget(reset_btn);
+
 	connect(m_search_field, &QLineEdit::returnPressed, this, &editor_window_t::on_search_apply);
 	connect(filter_btn, &QToolButton::clicked, m_plugin_workspace_view, &plugin_workspace_view_t::on_advanced_filter);
+	connect(reset_btn, &QToolButton::clicked, this, &editor_window_t::on_reset_filters);
 
 	auto * escape_shortcut = new QShortcut(QKeySequence("Escape"), this);
 	connect(escape_shortcut, &QShortcut::activated, this, &editor_window_t::on_search_clear);
@@ -259,6 +262,18 @@ void editor_window_t::on_search_clear()
 
 	m_search_field->clear();
 	on_search_apply();
+}
+
+void editor_window_t::on_reset_filters()
+{
+	m_conflicts_action->setChecked(false);
+	m_search_field->clear();
+	m_case_sensitive_btn->setChecked(false);
+	m_regex_btn->setChecked(false);
+	m_search_id_btn->setChecked(true);
+	m_search_name_btn->setChecked(true);
+
+	m_plugin_workspace_view->reset_all_filters();
 }
 
 void editor_window_t::closeEvent(QCloseEvent * event)

@@ -109,7 +109,7 @@ void web_translator_t::translate(const std::string & text, const std::string & t
 	if (!is_available())
 	{
 		emit translation_finished(
-		    { "", false, QCoreApplication::translate("yTranslator", "Provider not configured").toStdString() });
+		    { "", false, QCoreApplication::translate("yTranslator", "provider not configured").toStdString() });
 		return;
 	}
 
@@ -131,7 +131,7 @@ void web_translator_t::fetch_models()
 	if (!is_available())
 	{
 		emit models_fetch_failed(
-		    QCoreApplication::translate("yTranslator", "Provider not configured").toStdString());
+		    QCoreApplication::translate("yTranslator", "provider not configured").toStdString());
 		return;
 	}
 

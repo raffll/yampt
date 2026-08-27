@@ -8,4 +8,4 @@ struct translation_example_t
 	std::string translation;
 };
 
-constexpr int max_examples = 3;
+constexpr int max_examples = 20;

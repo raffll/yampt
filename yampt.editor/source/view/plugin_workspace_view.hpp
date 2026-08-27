@@ -58,6 +58,7 @@ public:
 	}
 
 	void refresh_views();
+	void reset_all_filters();
 
 public slots:
 	void on_load_data_files();

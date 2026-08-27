@@ -6,7 +6,7 @@
 - [NEW] Enchantment annotation: FNAM entries for weapons, armor, clothing, and books now show the enchantment ID in the Annotations panel when the item is enchanted
 - [NEW] Revert from record table context menu: right-click selected entries → Revert restores previous text and status from history
 - [NEW] Encoding line in Language settings: shows which codepage the selected native language uses for plugin text
-- [NEW] Mark records as AI translation examples: right-click records to mark up to three as style examples sent to the AI provider
+- [NEW] Mark records as AI translation examples: right-click records to mark up to twenty as style examples sent to the AI provider
 - [NEW] Fetch available models from the provider: a Refresh control in the Auto Translate panel pulls the current model list from the provider
 - [CHANGE] Settings: "Providers" page renamed to "Auto Translation" with three tabs — Local Models, Web Providers, and Examples
 - [CHANGE] Model selection moved from Settings into the Auto Translate panel

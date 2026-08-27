@@ -7,6 +7,8 @@
 
 inline constexpr const char * workspace_label = "Workspace";
 
+std::string derive_root_label(const std::string & root_path);
+
 class session_t;
 
 struct sidebar_render_item_t

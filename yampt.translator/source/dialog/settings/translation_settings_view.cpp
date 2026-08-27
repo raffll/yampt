@@ -203,7 +203,9 @@ void translation_settings_view_t::build_examples_tab(QVBoxLayout * parent)
 	m_examples_table->setSelectionBehavior(QAbstractItemView::SelectRows);
 	m_examples_table->setSelectionMode(QAbstractItemView::SingleSelection);
 	m_examples_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
-	parent->addWidget(m_examples_table);
+	m_examples_table->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+	m_examples_table->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+	parent->addWidget(m_examples_table, 1);
 
 	auto * button_row = new QHBoxLayout;
 	button_row->addStretch();
@@ -226,8 +228,6 @@ void translation_settings_view_t::build_examples_tab(QVBoxLayout * parent)
 		m_examples.erase(m_examples.begin() + row);
 		rebuild_examples_table();
 	});
-
-	parent->addStretch();
 }
 
 void translation_settings_view_t::rebuild_examples_table()

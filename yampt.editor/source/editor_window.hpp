@@ -26,6 +26,7 @@ private:
 	void on_open_settings();
 	void on_search_apply();
 	void on_search_clear();
+	void on_reset_filters();
 
 	plugin_workspace_view_t * m_plugin_workspace_view = nullptr;
 	settings_store_t m_settings { "yEditor.ini" };

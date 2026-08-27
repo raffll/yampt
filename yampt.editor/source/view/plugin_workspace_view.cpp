@@ -539,6 +539,18 @@ void plugin_workspace_view_t::on_advanced_filter()
 	update_status();
 }
 
+void plugin_workspace_view_t::reset_all_filters()
+{
+	m_conflicts_only = false;
+	m_last_filter_state = nav_tree_model_t::filter_state_t {};
+	m_last_quick_filter = {};
+	m_filter_active = false;
+	m_has_filter_active = false;
+
+	m_nav_view->clear_filter();
+	update_status();
+}
+
 void plugin_workspace_view_t::apply_search(
     const std::string & query,
     bool search_in_id,
