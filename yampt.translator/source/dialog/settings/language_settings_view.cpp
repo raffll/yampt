@@ -1,5 +1,6 @@
 #include <resource_paths.hpp>
 #include "language_settings_view.hpp"
+#include <io/codepage.hpp>
 #include <utility/language_config.hpp>
 #include <filesystem>
 #include <settings_store.hpp>
@@ -7,6 +8,7 @@
 #include <QCoreApplication>
 #include <QFormLayout>
 #include <QFrame>
+#include <QLabel>
 #include <QLineEdit>
 #include <QVBoxLayout>
 
@@ -64,6 +66,18 @@ language_settings_view_t::language_settings_view_t(const std::string & dictionar
 	detail_form->addRow(tr("Native Tag:"), m_native_tag_edit);
 
 	layout->addLayout(detail_form);
+
+	auto * encoding_separator = new QFrame(this);
+	encoding_separator->setFrameShape(QFrame::HLine);
+	encoding_separator->setFrameShadow(QFrame::Sunken);
+	layout->addWidget(encoding_separator);
+
+	auto * encoding_form = new QFormLayout;
+	m_encoding_note = new QLabel(this);
+	m_encoding_note->setStyleSheet("color: rgb(120, 120, 120); font-size: 11px;");
+	encoding_form->addRow(tr("Encoding:"), m_encoding_note);
+	layout->addLayout(encoding_form);
+
 	layout->addStretch();
 
 	scan_dictionaries(m_dictionaries_dir);
@@ -193,6 +207,9 @@ void language_settings_view_t::on_native_language_changed(int index)
 
 	update_spell_combo(m_native_spell_combo, lang->dictionary_prefix);
 	m_native_tag_edit->setText(code);
+
+	if (m_encoding_note)
+		m_encoding_note->setText(QString::fromStdString(codepage_name(lang->codepage)));
 }
 
 void language_settings_view_t::update_spell_combo(QComboBox * combo, const std::string & prefix)

@@ -181,5 +181,5 @@ Open Settings via Ctrl+, or the Tools menu. Four pages are available:
 
 - **Appearance** — choose between light and dark theme.
 - **Shortcuts** — customize keyboard shortcuts for all actions. Conflicts are highlighted in red.
-- **Language** — set the foreign language (source) and native language (target). Choose a spell check dictionary for the Translation panel. Configure the English dictionary used for partial mode in Make Base Dictionary.
+- **Language** — set the foreign language (source) and native language (target). Choose a spell check dictionary for the Translation panel. Configure the English dictionary used for partial mode in Make Base Dictionary. The Encoding line shows which byte encoding the selected native language uses for reading and writing plugin text (Polish and Hungarian use Windows-1250, Russian uses Windows-1251, the others use Windows-1252). This is determined by the language and is shown for reference.
 - **Auto Translation** — two tabs. Local Models shows installed offline translation models and their supported languages. Web Providers shows all discovered online services with fields for API keys and model selection. The status indicator shows whether each provider is configured and ready to use.

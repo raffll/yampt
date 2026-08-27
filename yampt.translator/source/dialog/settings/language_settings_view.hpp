@@ -4,6 +4,7 @@
 #include <QWidget>
 
 class QComboBox;
+class QLabel;
 class QLineEdit;
 class settings_store_t;
 
@@ -27,6 +28,7 @@ private:
 	QComboBox * m_native_language_combo = nullptr;
 	QComboBox * m_foreign_spell_combo = nullptr;
 	QComboBox * m_native_spell_combo = nullptr;
+	QLabel * m_encoding_note = nullptr;
 	QLineEdit * m_foreign_tag_edit = nullptr;
 	QLineEdit * m_native_tag_edit = nullptr;
 	std::string m_dictionaries_dir;
