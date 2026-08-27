@@ -195,8 +195,12 @@ void view_tree_model_t::set_record_dial(
 		}
 
 		info_row.all_identical = all_same;
-		info_row.row_conflict_all =
-		    (any_present && !all_same) ? conflict_all_t::override_benign : conflict_all_t::no_conflict;
+
+		if (col_count <= 1)
+			info_row.row_conflict_all = conflict_all_t::only_one;
+		else
+			info_row.row_conflict_all =
+			    (any_present && !all_same) ? conflict_all_t::override_benign : conflict_all_t::no_conflict;
 
 		m_rows.push_back(std::move(info_row));
 	}

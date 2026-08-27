@@ -23,6 +23,9 @@ nav_tree_view_t::nav_tree_view_t(plugin_scan_t & scan, QWidget * parent)
 	m_model = new nav_tree_model_t(scan, this);
 	m_tree->setModel(m_model);
 
+	const int id_column_width = m_tree->fontMetrics().horizontalAdvance(QString(30, '0')) + m_tree->indentation();
+	m_tree->setColumnWidth(0, id_column_width);
+
 	connect(
 	    m_tree->selectionModel(),
 	    &QItemSelectionModel::currentChanged,
@@ -59,9 +62,6 @@ nav_tree_view_t::nav_tree_view_t(plugin_scan_t & scan, QWidget * parent)
 void nav_tree_view_t::rebuild()
 {
 	m_model->rebuild();
-
-	const int total_width = m_tree->viewport()->width();
-	m_tree->setColumnWidth(0, total_width * 3 / 4);
 }
 
 void nav_tree_view_t::rebuild_preserving_state()
