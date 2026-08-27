@@ -86,12 +86,15 @@ void editor_window_t::setup_menu_bar()
 
 	auto * view_menu = menuBar()->addMenu(tr("&View"));
 
-	auto * conflicts_action = new QAction(tr("&Conflicts Only"), this);
-	conflicts_action->setCheckable(true);
-	conflicts_action->setChecked(m_plugin_workspace_view->is_conflicts_only());
-	conflicts_action->setToolTip(tr("Show only conflicting records"));
-	view_menu->addAction(conflicts_action);
-	connect(conflicts_action, &QAction::toggled, m_plugin_workspace_view, &plugin_workspace_view_t::set_conflicts_only);
+	m_conflicts_action = new QAction(tr("Conflicts Only"), this);
+	m_conflicts_action->setCheckable(true);
+	m_conflicts_action->setChecked(m_plugin_workspace_view->is_conflicts_only());
+	m_conflicts_action->setToolTip(tr("Show only conflicting records"));
+	connect(
+	    m_conflicts_action,
+	    &QAction::toggled,
+	    m_plugin_workspace_view,
+	    &plugin_workspace_view_t::set_conflicts_only);
 
 	auto * hide_dup_action = new QAction(tr("&Hide Duplicates"), this);
 	hide_dup_action->setCheckable(true);
@@ -158,6 +161,12 @@ void editor_window_t::setup_toolbar()
 		m_settings.sync();
 		m_plugin_workspace_view->set_editing_enabled(checked);
 	});
+
+	toolbar->addSeparator();
+
+	auto * conflicts_btn = new QToolButton(this);
+	conflicts_btn->setDefaultAction(m_conflicts_action);
+	toolbar->addWidget(conflicts_btn);
 
 	toolbar->addSeparator();
 

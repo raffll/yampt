@@ -654,6 +654,9 @@ void plugin_workspace_view_t::display_record_in_view(const conflict_entry_t & en
 	}
 
 	m_editable_columns.set_merge_column(m_record_view->model()->merge_column());
+
+	if (m_preview)
+		m_preview->clear();
 }
 
 void plugin_workspace_view_t::update_status()

@@ -83,15 +83,16 @@ Right-click a plugin node in the navigation tree for plugin-level options:
 
 ## View Menu
 
-The View menu provides filtering and display options:
+The View menu provides display options:
 
-- **Conflicts Only** — when enabled, the navigation tree hides records with no conflicts. Only records touched by multiple plugins remain visible.
 - **Hide Duplicates** — hides duplicate columns in the record view when the same plugin contributes identical data through multiple paths.
 - **Mark Deleted** — renders deleted records with strikethrough text, making them visually distinct from active content.
 
 ## Toolbar Search
 
-The toolbar includes a search field for filtering the navigation tree by record ID or display name. Type a query, select which fields to search with the toggle buttons, and press Enter to apply.
+The toolbar includes a **Conflicts Only** toggle that, when enabled, hides records with no conflicts from the navigation tree so only records touched by multiple plugins remain visible.
+
+The toolbar also includes a search field for filtering the navigation tree by record ID or display name. Type a query, select which fields to search with the toggle buttons, and press Enter to apply.
 
 - **Aa** — case-sensitive matching. When off, the search ignores letter case.
 - **.\*** — interpret the query as a regular expression.

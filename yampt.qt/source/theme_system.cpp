@@ -196,7 +196,7 @@ void theme_system_t::apply_stylesheet() const
 {
 	if (m_active_theme == theme_t::light)
 	{
-		qApp->setStyleSheet("QLineEdit { placeholder-text-color: rgb(130, 130, 130); }");
+		qApp->setStyleSheet("");
 		return;
 	}
 

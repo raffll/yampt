@@ -6,7 +6,7 @@
 filter_dialog_t::filter_dialog_t(const std::vector<std::string> & available_types, QWidget * parent)
     : QDialog(parent)
 {
-	setWindowTitle(tr("Advanced Filter"));
+	setWindowTitle(tr("Advanced Filters"));
 	setModal(true);
 	resize(560, 500);
 

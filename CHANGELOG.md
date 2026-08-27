@@ -31,6 +31,7 @@
 - [CHANGE] Unknown/binary sub-records now display hex bytes instead of placeholder
 - [CHANGE] View menu: "Hide Duplicate Columns" renamed to "Hide Duplicates", "Show Deleted Strikeout" renamed to "Mark Deleted" (disabled by default)
 - [FIX] Record view context menu now works when right-clicking the label column
+- [FIX] A plugin can no longer be both a guard patch and excluded from the merged patch — setting one clears the other
 
 ## [0.940] - 2026-07-29
 

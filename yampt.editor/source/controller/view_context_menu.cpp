@@ -62,9 +62,17 @@ void view_context_menu_t::build_source_file_menu(QMenu & menu, const nav_tree_mo
 	{
 		auto excluded_copy = m_session.excluded_plugins();
 		if (excluded)
+		{
 			excluded_copy.erase(filename);
+		}
 		else
+		{
 			excluded_copy.insert(filename);
+
+			auto patch_copy = m_session.patch_plugins();
+			if (patch_copy.erase(filename) > 0)
+				m_session.set_patch_plugins(patch_copy);
+		}
 
 		m_session.set_excluded_plugins(excluded_copy);
 		m_session.save_session_state(settings_store_t::settings_dir() + "yEditor.ini");
@@ -78,9 +86,17 @@ void view_context_menu_t::build_source_file_menu(QMenu & menu, const nav_tree_mo
 	{
 		auto patch_copy = m_session.patch_plugins();
 		if (is_patch)
+		{
 			patch_copy.erase(filename);
+		}
 		else
+		{
 			patch_copy.insert(filename);
+
+			auto excluded_copy = m_session.excluded_plugins();
+			if (excluded_copy.erase(filename) > 0)
+				m_session.set_excluded_plugins(excluded_copy);
+		}
 
 		m_session.set_patch_plugins(patch_copy);
 		m_session.save_session_state(settings_store_t::settings_dir() + "yEditor.ini");
