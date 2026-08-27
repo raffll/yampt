@@ -252,6 +252,7 @@
     <ClCompile Include="source\tests.path_resolver.cpp" />
     <ClCompile Include="source\tests.workspace_watcher.cpp" />
     <ClCompile Include="source\tests.string_utils.cpp" />
+    <ClCompile Include="source\tests.loc_generator.cpp" />
     <ClCompile Include="source\tests.byte_limit_validator.cpp" />
     <ClCompile Include="source\tests.row_filter.cpp" />
     <ClCompile Include="source\tests.pending_status.cpp" />
