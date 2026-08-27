@@ -747,6 +747,13 @@ void creator_base_t::insert_entry_base(
 	if (m_ctx.dict.at(type).insert(entry))
 	{
 		m_ctx.counter_created++;
+
+		const bool sub_message_type = (type == rec_type_t::sctx || type == rec_type_t::bnam);
+		if (status == status_t::mismatch && !sub_message_type)
+			app_logger_t::add_log(
+			    "[warning] mismatch " + domain_types::type_to_str(type) + " \"" + key_text +
+			    "\": native record has no counterpart in the foreign plugin\r\n");
+
 		return;
 	}
 
