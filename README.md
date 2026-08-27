@@ -40,7 +40,7 @@ Qt6 GUI for interactive plugin translation.
 - Three-panel editor: original text, adapted text, editable translation
 - Inline table editing: double-click to edit single-line entries directly
 - Entry validation, status tracking, history with undo/revert
-- Find/Replace integrated into the filter toolbar
+- Find/Replace in a dedicated left-panel tab
 
 **Analysis**
 - Multi-layer syntax highlighting: MWScript keywords, hyperlinks, glossary terms, forbidden characters

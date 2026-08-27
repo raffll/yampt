@@ -194,17 +194,38 @@ void translation_settings_view_t::build_examples_tab(QVBoxLayout * parent)
 	m_examples_empty_label->setWordWrap(true);
 	parent->addWidget(m_examples_empty_label);
 
-	m_examples_table = new QTableWidget(0, 3, this);
-	m_examples_table->setHorizontalHeaderLabels({ tr("Original"), tr("Translation"), QString() });
+	m_examples_table = new QTableWidget(0, 2, this);
+	m_examples_table->setHorizontalHeaderLabels({ tr("Original"), tr("Translation") });
 	m_examples_table->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
 	m_examples_table->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
-	m_examples_table->horizontalHeader()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
 	m_examples_table->verticalHeader()->setVisible(false);
 	m_examples_table->verticalHeader()->setDefaultSectionSize(24);
 	m_examples_table->setSelectionBehavior(QAbstractItemView::SelectRows);
 	m_examples_table->setSelectionMode(QAbstractItemView::SingleSelection);
 	m_examples_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
 	parent->addWidget(m_examples_table);
+
+	auto * button_row = new QHBoxLayout;
+	button_row->addStretch();
+
+	m_examples_remove_button = new QPushButton(tr("Remove"), this);
+	m_examples_remove_button->setToolTip(tr("Remove the selected example"));
+	button_row->addWidget(m_examples_remove_button);
+	parent->addLayout(button_row);
+
+	connect(
+	    m_examples_remove_button,
+	    &QPushButton::clicked,
+	    this,
+	    [this]()
+	{
+		const int row = m_examples_table->currentRow();
+		if (row < 0 || row >= static_cast<int>(m_examples.size()))
+			return;
+
+		m_examples.erase(m_examples.begin() + row);
+		rebuild_examples_table();
+	});
 
 	parent->addStretch();
 }
@@ -217,6 +238,9 @@ void translation_settings_view_t::rebuild_examples_table()
 	const bool has_examples = !m_examples.empty();
 	m_examples_empty_label->setVisible(!has_examples);
 	m_examples_table->setVisible(has_examples);
+
+	if (m_examples_remove_button)
+		m_examples_remove_button->setEnabled(has_examples);
 
 	m_examples_table->setRowCount(static_cast<int>(m_examples.size()));
 
@@ -231,23 +255,6 @@ void translation_settings_view_t::rebuild_examples_table()
 		auto * translation_item = new QTableWidgetItem(QString::fromStdString(example.translation));
 		translation_item->setFlags(translation_item->flags() & ~Qt::ItemIsEditable);
 		m_examples_table->setItem(row, 1, translation_item);
-
-		auto * remove_button = new QPushButton(tr("Remove"), m_examples_table);
-		remove_button->setToolTip(tr("Remove this example"));
-		m_examples_table->setCellWidget(row, 2, remove_button);
-
-		connect(
-		    remove_button,
-		    &QPushButton::clicked,
-		    this,
-		    [this, row]()
-		{
-			if (row >= static_cast<int>(m_examples.size()))
-				return;
-
-			m_examples.erase(m_examples.begin() + row);
-			rebuild_examples_table();
-		});
 	}
 }
 

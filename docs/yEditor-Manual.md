@@ -93,14 +93,14 @@ The View menu provides filtering and display options:
 
 ## Toolbar Search
 
-The toolbar includes a search field for filtering the navigation tree by record ID or display name. Type a query, select which fields to search with the toggle buttons, and click Search to apply.
+The toolbar includes a search field for filtering the navigation tree by record ID or display name. Type a query, select which fields to search with the toggle buttons, and click Apply Filter to apply.
 
 - **Aa** — case-sensitive matching. When off, the search ignores letter case.
 - **.\*** — interpret the query as a regular expression.
 - **ID** — search in the record's internal ID (e.g. "iron_dagger", "balmora_guild").
 - **Name** — search in the record's display name (e.g. "Iron Dagger", "Balmora Mages Guild").
-- **Apply** — applies the current query. Also triggered by pressing Enter in the search field.
-- **Filter...** — opens the advanced filter dialog for filtering by conflict severity, per-plugin conflict status, record type, deleted status, and Lua handler criteria.
+- **Apply Filter** — applies the current query. Also triggered by pressing Enter in the search field.
+- **Advanced Filters...** — opens the advanced filter dialog for filtering by conflict severity, per-plugin conflict status, record type, deleted status, and Lua handler criteria.
 
 Press Escape to clear the search field and remove the text filter.
 

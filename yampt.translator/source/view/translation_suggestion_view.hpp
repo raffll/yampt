@@ -13,7 +13,6 @@ class QComboBox;
 class QLabel;
 class QPlainTextEdit;
 class QPushButton;
-class QToolButton;
 class QVBoxLayout;
 
 class settings_store_t;
@@ -67,7 +66,7 @@ private:
 
 	QComboBox * m_provider_combo = nullptr;
 	QComboBox * m_model_combo = nullptr;
-	QToolButton * m_refresh_models = nullptr;
+	QPushButton * m_refresh_models = nullptr;
 	QPushButton * m_translate_all_btn = nullptr;
 	QPlainTextEdit * m_result_text = nullptr;
 	QLabel * m_status_label = nullptr;

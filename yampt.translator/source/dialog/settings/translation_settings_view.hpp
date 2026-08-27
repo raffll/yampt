@@ -10,6 +10,7 @@
 class QComboBox;
 class QLabel;
 class QLineEdit;
+class QPushButton;
 class QTableWidget;
 class QVBoxLayout;
 class settings_store_t;
@@ -57,4 +58,5 @@ private:
 	std::vector<translation_example_t> m_examples;
 	QTableWidget * m_examples_table = nullptr;
 	QLabel * m_examples_empty_label = nullptr;
+	QPushButton * m_examples_remove_button = nullptr;
 };

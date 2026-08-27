@@ -33,6 +33,7 @@
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QProcess>
+#include <QPushButton>
 #include <QSplitter>
 #include <QStandardPaths>
 #include <QStatusBar>
@@ -136,55 +137,43 @@ void main_window_t::setup_menu_bar()
 
 void main_window_t::setup_toolbar()
 {
-	m_toolbar = new QWidget(this);
+	m_toolbar = addToolBar("Main");
+	m_toolbar->setMovable(false);
 
-	auto * toolbar_layout = new QHBoxLayout(m_toolbar);
-	toolbar_layout->setContentsMargins(4, 2, 4, 2);
-	toolbar_layout->setSpacing(4);
+	setContextMenuPolicy(Qt::PreventContextMenu);
 
 	m_search_field = new QLineEdit(this);
 	m_search_field->setPlaceholderText(tr("Filter by..."));
-	toolbar_layout->addWidget(m_search_field, 1);
+	m_search_field->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+	m_toolbar->addWidget(m_search_field);
 
 	m_case_sensitive_check = new QToolButton(this);
 	m_case_sensitive_check->setText(tr("Aa"));
 	m_case_sensitive_check->setCheckable(true);
-	m_case_sensitive_check->setAutoRaise(true);
-	toolbar_layout->addWidget(m_case_sensitive_check);
+	m_toolbar->addWidget(m_case_sensitive_check);
 
 	m_regex_check = new QToolButton(this);
 	m_regex_check->setText(tr(".*"));
 	m_regex_check->setCheckable(true);
-	m_regex_check->setAutoRaise(true);
-	toolbar_layout->addWidget(m_regex_check);
+	m_toolbar->addWidget(m_regex_check);
 
 	m_search_col_key = new QToolButton(this);
 	m_search_col_key->setText(tr("Key"));
 	m_search_col_key->setCheckable(true);
 	m_search_col_key->setChecked(true);
-	m_search_col_key->setAutoRaise(true);
-	toolbar_layout->addWidget(m_search_col_key);
+	m_toolbar->addWidget(m_search_col_key);
 
 	m_search_col_original = new QToolButton(this);
 	m_search_col_original->setText(tr("Original"));
 	m_search_col_original->setCheckable(true);
 	m_search_col_original->setChecked(true);
-	m_search_col_original->setAutoRaise(true);
-	toolbar_layout->addWidget(m_search_col_original);
+	m_toolbar->addWidget(m_search_col_original);
 
 	m_search_col_translation = new QToolButton(this);
 	m_search_col_translation->setText(tr("Translation"));
 	m_search_col_translation->setCheckable(true);
 	m_search_col_translation->setChecked(true);
-	m_search_col_translation->setAutoRaise(true);
-	toolbar_layout->addWidget(m_search_col_translation);
-
-	m_find_replace_toggle = new QToolButton(this);
-	m_find_replace_toggle->setText(tr("Find/Replace"));
-	m_find_replace_toggle->setCheckable(true);
-	m_find_replace_toggle->setAutoRaise(true);
-	m_find_replace_toggle->setToolTip(tr("Show or hide the Find/Replace bar"));
-	toolbar_layout->addWidget(m_find_replace_toggle);
+	m_toolbar->addWidget(m_search_col_translation);
 
 	m_search_field->setToolTip(tr("Search across entries"));
 	m_case_sensitive_check->setToolTip(tr("Case-sensitive search"));
@@ -201,47 +190,52 @@ void main_window_t::setup_toolbar()
 void main_window_t::setup_replace_toolbar()
 {
 	m_replace_toolbar = new QWidget(this);
-	m_replace_toolbar->setVisible(false);
 
-	auto * layout = new QHBoxLayout(m_replace_toolbar);
-	layout->setContentsMargins(4, 2, 4, 2);
+	auto * layout = new QVBoxLayout(m_replace_toolbar);
+	layout->setContentsMargins(4, 4, 4, 4);
 	layout->setSpacing(4);
 
 	m_find_field = new QLineEdit(this);
 	m_find_field->setPlaceholderText(tr("Search in translations..."));
 	m_find_field->setToolTip(tr("Text to find in the translation column"));
-	layout->addWidget(m_find_field, 1);
+	layout->addWidget(m_find_field);
 
 	m_replace_field = new QLineEdit(this);
 	m_replace_field->setPlaceholderText(tr("Replace with..."));
 	m_replace_field->setToolTip(tr("Replacement text"));
-	layout->addWidget(m_replace_field, 1);
+	layout->addWidget(m_replace_field);
 
-	m_replace_case_check = new QToolButton(this);
-	m_replace_case_check->setText(tr("Aa"));
+	auto * options_row = new QHBoxLayout;
+	options_row->setSpacing(4);
+
+	m_replace_case_check = new QPushButton(tr("Aa"), this);
 	m_replace_case_check->setCheckable(true);
-	m_replace_case_check->setAutoRaise(true);
 	m_replace_case_check->setToolTip(tr("Case-sensitive find/replace"));
-	layout->addWidget(m_replace_case_check);
+	options_row->addWidget(m_replace_case_check);
 
-	m_replace_regex_check = new QToolButton(this);
-	m_replace_regex_check->setText(tr(".*"));
+	m_replace_regex_check = new QPushButton(tr(".*"), this);
 	m_replace_regex_check->setCheckable(true);
-	m_replace_regex_check->setAutoRaise(true);
 	m_replace_regex_check->setToolTip(tr("Regular expression find/replace"));
-	layout->addWidget(m_replace_regex_check);
+	options_row->addWidget(m_replace_regex_check);
 
-	m_replace_one_btn = new QToolButton(this);
-	m_replace_one_btn->setText(tr("Replace"));
-	m_replace_one_btn->setAutoRaise(true);
+	options_row->addStretch();
+	layout->addLayout(options_row);
+
+	auto * buttons_row = new QHBoxLayout;
+	buttons_row->setSpacing(4);
+
+	m_replace_one_btn = new QPushButton(tr("Replace"), this);
 	m_replace_one_btn->setToolTip(tr("Replace in the selected entry and advance to next"));
-	layout->addWidget(m_replace_one_btn);
+	buttons_row->addWidget(m_replace_one_btn);
 
-	m_replace_all_btn = new QToolButton(this);
-	m_replace_all_btn->setText(tr("Replace All"));
-	m_replace_all_btn->setAutoRaise(true);
+	m_replace_all_btn = new QPushButton(tr("Replace All"), this);
 	m_replace_all_btn->setToolTip(tr("Replace in all currently visible entries"));
-	layout->addWidget(m_replace_all_btn);
+	buttons_row->addWidget(m_replace_all_btn);
+
+	buttons_row->addStretch();
+	layout->addLayout(buttons_row);
+
+	layout->addStretch();
 }
 
 void main_window_t::setup_central_widget()
@@ -251,10 +245,7 @@ void main_window_t::setup_central_widget()
 	central_layout->setContentsMargins(0, 0, 0, 0);
 	central_layout->setSpacing(4);
 
-	central_layout->addWidget(m_toolbar);
-
 	setup_replace_toolbar();
-	central_layout->addWidget(m_replace_toolbar);
 
 	m_filter_tree_view = new filter_tree_view_t(this);
 	m_status_filter_view = new status_filter_view_t(this);
@@ -274,6 +265,7 @@ void main_window_t::setup_sidebar()
 	m_left_tabs->addTab(m_sidebar, tr("Files"));
 	m_left_tabs->addTab(m_filter_tree_view, tr("Filters"));
 	m_left_tabs->addTab(m_status_filter_view, tr("Statuses"));
+	m_left_tabs->addTab(m_replace_toolbar, tr("Find/Replace"));
 	m_left_splitter->addWidget(m_left_tabs);
 
 	m_info_tabs = new QTabWidget(m_left_splitter);
@@ -285,8 +277,8 @@ void main_window_t::setup_sidebar()
 	m_translation_tab->set_glossary_fn([this](const std::string & text) { return m_glossary.apply_glossary(text); });
 	m_translation_tab->set_settings_store(m_settings);
 	m_info_tabs->addTab(m_annotations_view, tr("Annotations"));
-	m_info_tabs->addTab(m_history_view, tr("History"));
 	m_info_tabs->addTab(m_translation_tab, tr("Auto Translate"));
+	m_info_tabs->addTab(m_history_view, tr("History"));
 	m_left_splitter->addWidget(m_info_tabs);
 }
 
@@ -503,7 +495,7 @@ void main_window_t::connect_menu_signals()
 
 	connect(
 	    m_replace_all_btn,
-	    &QToolButton::clicked,
+	    &QPushButton::clicked,
 	    this,
 	    [this]()
 	{
@@ -530,7 +522,7 @@ void main_window_t::connect_menu_signals()
 
 	connect(
 	    m_replace_one_btn,
-	    &QToolButton::clicked,
+	    &QPushButton::clicked,
 	    this,
 	    [this]()
 	{
@@ -554,12 +546,6 @@ void main_window_t::connect_menu_signals()
 		advance_to_next_row();
 	});
 
-	connect(m_find_replace_toggle, &QToolButton::toggled, this, [this](bool checked)
-	{
-		m_replace_toolbar->setVisible(checked);
-		if (checked)
-			m_find_field->setFocus();
-	});
 }
 
 void main_window_t::connect_sidebar_signals()

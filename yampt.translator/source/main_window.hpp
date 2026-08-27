@@ -58,6 +58,7 @@ class QCloseEvent;
 class QLabel;
 class QLineEdit;
 class QMenu;
+class QPushButton;
 class QToolButton;
 class QSplitter;
 class QTabWidget;
@@ -159,7 +160,7 @@ private:
 	QAction * m_set_in_progress_action = nullptr;
 	QAction * m_set_translated_action = nullptr;
 
-	QWidget * m_toolbar = nullptr;
+	QToolBar * m_toolbar = nullptr;
 
 	QAction * m_sidebar_toggle = nullptr;
 	QAction * m_bottom_panel_toggle = nullptr;
@@ -178,14 +179,13 @@ private:
 	QToolButton * m_search_col_key = nullptr;
 	QToolButton * m_search_col_original = nullptr;
 	QToolButton * m_search_col_translation = nullptr;
-	QToolButton * m_find_replace_toggle = nullptr;
 	QWidget * m_replace_toolbar = nullptr;
 	QLineEdit * m_find_field = nullptr;
 	QLineEdit * m_replace_field = nullptr;
-	QToolButton * m_replace_case_check = nullptr;
-	QToolButton * m_replace_regex_check = nullptr;
-	QToolButton * m_replace_all_btn = nullptr;
-	QToolButton * m_replace_one_btn = nullptr;
+	QPushButton * m_replace_case_check = nullptr;
+	QPushButton * m_replace_regex_check = nullptr;
+	QPushButton * m_replace_all_btn = nullptr;
+	QPushButton * m_replace_one_btn = nullptr;
 	QAction * m_spell_check = nullptr;
 	QAction * m_grammar_check = nullptr;
 	QAction * m_whitespace_check = nullptr;

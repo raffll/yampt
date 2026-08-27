@@ -21,7 +21,7 @@ static std::string make_timestamp()
 	localtime_r(&time, &tm_buf);
 #endif
 	char buf[20];
-	std::strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S", &tm_buf);
+	std::strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &tm_buf);
 	return std::string(buf);
 }
 

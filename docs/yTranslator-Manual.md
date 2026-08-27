@@ -8,8 +8,8 @@ Open File → Add Folder and point it to a directory containing your plugins and
 
 ## Main Layout
 
-- **Left top** — Files tab (sidebar with loaded files), Filters tab (record type list), and Statuses tab (status filter with counters).
-- **Left bottom** — Annotations tab (glossary matches for the current entry), History tab (edit history), and Auto Translate tab (translation providers).
+- **Left top** — Files tab (sidebar with loaded files), Filters tab (record type list), Statuses tab (status filter with counters), and Find/Replace tab (batch find and replace in translations).
+- **Left bottom** — Annotations tab (glossary matches for the current entry), Auto Translate tab (translation providers), and History tab (edit history).
 - **Right top** — Records table showing all entries in the active dictionary. Preview tab renders book HTML for TEXT records and full script source for SCTX/BNAM records. Log tab shows operation output.
 - **Right bottom** — Editor with three panels: Original (read-only source text), Details (adaptation info when available), and Translation (editable).
 - **Toolbar** — Search field with toggle buttons: Aa for case-sensitive, .* for regex, and column selectors (Key, Original, Translation) to control which fields are searched.
@@ -69,9 +69,7 @@ Only entries with status Translated and where the original differs from the tran
 
 ### Find/Replace
 
-The filter toolbar includes a Replace function integrated directly into the search workflow. Type a search term in the Filter field to narrow the table to matching entries. This gives you a live preview of which entries will be affected by a replacement.
-
-Enter the replacement text in the Replace field next to the filter controls. Use the Aa button for case-sensitive matching or the .* button for regular expression mode. The column buttons (Key, Original, Translation) control which columns are searched for filtering, but replacement always operates on the translation field.
+Find/Replace is a dedicated tab in the left panel, alongside Files, Filters, and Statuses. Type the text to find in the Search field and the replacement in the Replace field below it. Use the Aa button for case-sensitive matching or the .* button for regular expression mode. Replacement always operates on the translation field.
 
 Replace All replaces the search term in all currently visible entries. Only entries shown in the table after filtering are affected — entries hidden by type, status, or text filters are left untouched.
 
@@ -149,7 +147,7 @@ The Auto Translate tab at the bottom-left provides machine translation. Select a
 - **CTranslate2** — an offline translation model that runs locally. Supports Polish, German, French, Russian, Italian, and Hungarian. Does not require an internet connection. The model must be present in the `models/` folder next to the application.
 - **Web providers** — online services like DeepL, Google Translate, and Claude. Each requires an API key configured in Settings → Auto Translation. The source language is read from your Language settings automatically.
 
-When the selected provider is an AI service that offers a choice of models, a second combo box appears next to the provider selector. It lets you pick which model performs the translation, and it is editable so you can type the identifier of a model that is not in the list. The chosen model is remembered separately for each provider and restored the next time you select that provider. Providers without a model choice (CTranslate2 and simple translation services) do not show this control.
+When the selected provider is an AI service that offers a choice of models, a model combo box appears on the row below the provider selector. It lets you pick which model performs the translation from the list the provider offers. The chosen model is remembered separately for each provider and restored the next time you select that provider. Providers without a model choice (CTranslate2 and simple translation services) do not show this control.
 
 Next to the model combo is a Refresh control. When the provider can report its own model list, clicking Refresh contacts the service and replaces the choices with the models currently available on your account. Your previously selected model stays selected if it is still offered; otherwise the provider's default is chosen. If the refresh cannot complete — for example when no API key is set or the service is unreachable — the existing list is kept and the reason is reported in the panel's output area.
 

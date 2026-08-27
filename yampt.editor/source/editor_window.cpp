@@ -126,8 +126,6 @@ void editor_window_t::setup_toolbar()
 {
 	auto * toolbar = addToolBar("Main");
 	toolbar->setMovable(false);
-	toolbar->layout()->setContentsMargins(4, 2, 4, 2);
-	toolbar->layout()->setSpacing(4);
 
 	setContextMenuPolicy(Qt::PreventContextMenu);
 
@@ -177,14 +175,14 @@ void editor_window_t::setup_toolbar()
 	toolbar->addWidget(m_search_name_btn);
 
 	auto * search_btn = new QToolButton(this);
-	search_btn->setText(tr("Apply"));
+	search_btn->setText(tr("Apply Filter"));
 	search_btn->setToolTip(tr("Apply the search filter"));
 	toolbar->addWidget(search_btn);
 
 	toolbar->addSeparator();
 
 	auto * filter_btn = new QToolButton(this);
-	filter_btn->setText(tr("Filter..."));
+	filter_btn->setText(tr("Advanced Filters..."));
 	filter_btn->setToolTip(tr("Open the advanced filter dialog"));
 	toolbar->addWidget(filter_btn);
 

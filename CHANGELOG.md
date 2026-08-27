@@ -10,6 +10,7 @@
 - [NEW] Fetch available models from the provider: a Refresh control in the Auto Translate panel pulls the current model list from the provider
 - [CHANGE] Settings: "Providers" page renamed to "Auto Translation" with two tabs — Local Models and Web Providers
 - [CHANGE] Model selection moved from Settings into the Auto Translate panel
+- [CHANGE] Find/Replace moved from the filter toolbar into its own tab in the left panel, after Statuses
 - [CHANGE] Find/Replace no longer has a batch Undo button — each replacement is recorded in edit history and revertable per-entry
 
 ### Both Apps

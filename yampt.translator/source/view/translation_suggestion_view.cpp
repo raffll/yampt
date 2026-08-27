@@ -17,7 +17,6 @@
 #include <QScrollBar>
 #include <QSignalBlocker>
 #include <QTextCursor>
-#include <QToolButton>
 #include <QVBoxLayout>
 
 namespace {
@@ -50,18 +49,6 @@ translation_suggestion_view_t::translation_suggestion_view_t(QWidget * parent)
 	m_provider_combo->setFixedWidth(180);
 	top_row->addWidget(m_provider_combo);
 
-	m_model_combo = new QComboBox(this);
-	m_model_combo->setEditable(true);
-	m_model_combo->setToolTip(tr("Select the AI model for this provider"));
-	m_model_combo->setFixedWidth(180);
-	top_row->addWidget(m_model_combo);
-
-	m_refresh_models = new QToolButton(this);
-	m_refresh_models->setAutoRaise(true);
-	m_refresh_models->setText(tr("Refresh"));
-	m_refresh_models->setToolTip(tr("Fetch the model list from the provider"));
-	top_row->addWidget(m_refresh_models);
-
 	m_translate_all_btn = new QPushButton(tr("Translate"), this);
 	m_translate_all_btn->setToolTip(tr("Translate the selected entry"));
 	m_translate_all_btn->setFixedWidth(100);
@@ -69,6 +56,22 @@ translation_suggestion_view_t::translation_suggestion_view_t(QWidget * parent)
 
 	top_row->addStretch();
 	layout->addLayout(top_row);
+
+	auto * model_row = new QHBoxLayout;
+	model_row->setSpacing(4);
+
+	m_model_combo = new QComboBox(this);
+	m_model_combo->setToolTip(tr("Select the AI model for this provider"));
+	m_model_combo->setFixedWidth(180);
+	model_row->addWidget(m_model_combo);
+
+	m_refresh_models = new QPushButton(tr("Refresh"), this);
+	m_refresh_models->setToolTip(tr("Fetch the model list from the provider"));
+	m_refresh_models->setFixedWidth(100);
+	model_row->addWidget(m_refresh_models);
+
+	model_row->addStretch();
+	layout->addLayout(model_row);
 
 	m_result_text = new QPlainTextEdit(this);
 	m_result_text->setReadOnly(true);
@@ -102,7 +105,7 @@ void translation_suggestion_view_t::setup_controls()
 
 	connect(
 	    m_refresh_models,
-	    &QToolButton::clicked,
+	    &QPushButton::clicked,
 	    this,
 	    [this]()
 	{
@@ -421,7 +424,8 @@ void translation_suggestion_view_t::populate_model_combo(
 	for (const auto & model : models)
 		m_model_combo->addItem(QString::fromStdString(model));
 
-	m_model_combo->setCurrentText(QString::fromStdString(selected));
+	const int selected_index = m_model_combo->findText(QString::fromStdString(selected));
+	m_model_combo->setCurrentIndex(selected_index >= 0 ? selected_index : 0);
 }
 
 void translation_suggestion_view_t::update_model_controls()
