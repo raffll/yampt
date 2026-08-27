@@ -566,6 +566,16 @@ void settings_store_t::set_clean_update_version(bool value)
 	m_settings.setValue("Cleaning/UpdateVersion", value);
 }
 
+bool settings_store_t::editing_enabled() const
+{
+	return m_settings.value("Editor/EditingEnabled", false).toBool();
+}
+
+void settings_store_t::set_editing_enabled(bool value)
+{
+	m_settings.setValue("Editor/EditingEnabled", value);
+}
+
 void settings_store_t::sync()
 {
 	m_settings.sync();

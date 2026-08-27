@@ -46,7 +46,6 @@ Each plugin in the tree is prefixed with an icon indicating its role:
 - ⚙ — the merged patch produced by the auto-merge operation.
 - 🛡 — a guard patch that acts as a priority barrier during auto-merge.
 - 🔒 — a plugin excluded from the merged patch. Its records are ignored during merge.
-- ✍ — a plugin with editing enabled. Individual fields in this plugin's column can be modified directly via the Edit panel.
 
 ## Record View
 
@@ -81,7 +80,6 @@ Right-click a plugin node in the navigation tree for plugin-level options:
 
 - **Exclude from Merged Patch** / **Include in Merged Patch** — excluded plugins are completely ignored during auto-merge. Their records will not appear in the merged patch regardless of conflicts.
 - **Mark as Guard Patch** — the guard patch acts as a priority barrier during auto-merge. Plugins loaded before the guard that modify the same records are ignored. Only the guard's version and later plugins are considered. If the final plugin's version matches master (reverting a change), the guard's version is used instead of letting the revert through.
-- **Enable Edit** / **Disable Edit** — marks a source plugin as editable. When enabled, selecting a decoded field in that plugin's column activates the Edit panel as an editor. You can change the field value and click Apply to write the change directly to the plugin file on disk. Enum and flag fields show a dropdown selector for convenience. Field values are validated before commit — the Apply button remains disabled until the input is both valid and different from the original. Use this for quick corrections to source plugins without opening a separate editor.
 
 ## View Menu
 
@@ -110,7 +108,7 @@ The Edit panel at the bottom of the window serves two purposes: text comparison 
 
 When you click a cell in the record view that has a conflict with a previous column, the Edit panel shows both values side by side with character-level diff highlighting. Deleted text appears with a red background on the left, inserted text with a green background on the right.
 
-When a plugin has editing enabled (via Enable Edit in the plugin context menu), clicking a decoded field in that plugin's column activates the Edit panel as an editor. The right pane becomes editable and an Apply button appears. For enum fields (race, class, type), a dropdown selector shows all valid values. For flag fields (NPC flags, cell flags), the dropdown presents checkboxes for each flag bit. Free-text fields such as names and IDs accept direct text input. The panel validates the input against the field's constraints — numeric range, string length, and codepage encoding limits. The Apply button stays disabled until the value is both valid and different from the original. Clicking Apply writes the change directly to the source plugin file on disk and refreshes the record view to reflect the new state.
+When editing is enabled (via the Enable Editing button on the toolbar), clicking a decoded field in any plugin's column activates the Edit panel as an editor. The right pane becomes editable and an Apply button appears. For enum fields (race, class, type), a dropdown selector shows all valid values. For flag fields (NPC flags, cell flags), the dropdown presents checkboxes for each flag bit. Free-text fields such as names and IDs accept direct text input. The panel validates the input against the field's constraints — numeric range, string length, and codepage encoding limits. The Apply button stays disabled until the value is both valid and different from the original. Clicking Apply writes the change directly to the source plugin file on disk and refreshes the record view to reflect the new state.
 
 ## Creating a Merged Patch
 

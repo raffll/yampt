@@ -76,7 +76,6 @@ plugin_workspace_view_t::plugin_workspace_view_t(settings_store_t & settings, QW
 	    *m_record_view,
 	    *m_nav_view,
 	    *m_merge_controller,
-	    m_editable_columns,
 	    m_settings,
 	    [this]() { on_settings_changed(); });
 
@@ -432,6 +431,15 @@ void plugin_workspace_view_t::set_show_deleted_strikeout(bool value)
 	m_nav_view->set_show_deleted_strikeout(value);
 }
 
+void plugin_workspace_view_t::set_editing_enabled(bool value)
+{
+	m_editable_columns.set_editing_enabled(value);
+
+	const auto current = m_record_view->tree()->currentIndex();
+	if (current.isValid())
+		on_view_selection_changed(current);
+}
+
 bool plugin_workspace_view_t::is_show_deleted_strikeout() const
 {
 	return m_record_view->model()->show_deleted_strikeout();
@@ -645,8 +653,7 @@ void plugin_workspace_view_t::display_record_in_view(const conflict_entry_t & en
 		m_record_view->display_record(m_session->scan(), entry);
 	}
 
-	const auto * view_model = m_record_view->model();
-	m_editable_columns.rebuild_for_record(view_model->column_plugin_indices(), view_model->merge_column());
+	m_editable_columns.set_merge_column(m_record_view->model()->merge_column());
 }
 
 void plugin_workspace_view_t::update_status()

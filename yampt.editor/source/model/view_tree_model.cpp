@@ -946,8 +946,6 @@ QVariant view_tree_model_t::headerData(int section, Qt::Orientation orientation,
 				prefix = QString::fromUtf8("\xF0\x9F\x9B\xA1 ");
 			else if (m_scan_for_header && m_scan_for_header->is_merge_plugin(pi))
 				prefix = QString::fromUtf8("\xE2\x9A\x99 ");
-			else if (m_editable_columns && m_editable_columns->is_plugin_editable(pi))
-				prefix = QString::fromUtf8("\xE2\x9C\x8D ");
 			else if (m_scan_for_header)
 			{
 				const auto & full_path = m_scan_for_header->plugin_path(pi);

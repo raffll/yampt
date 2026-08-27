@@ -663,9 +663,6 @@ QVariant nav_tree_model_t::file_node_display_text(const file_node_t & file_node)
 	if (m_scan.is_merge_plugin(file_node.plugin_idx))
 		return QString::fromUtf8("\xE2\x9A\x99 ") + QString::fromUtf8(display_buffer);
 
-	if (m_editable_columns && m_editable_columns->is_plugin_editable(file_node.plugin_idx))
-		return QString::fromUtf8("\xE2\x9C\x8D ") + QString::fromUtf8(display_buffer);
-
 	const auto & full_path = m_scan.plugin_path(file_node.plugin_idx);
 	const bool is_overridden =
 	    full_path.find("/overwrite/") != std::string::npos || full_path.find("\\overwrite\\") != std::string::npos;

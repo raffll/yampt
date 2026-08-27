@@ -6,7 +6,6 @@
 #include <QModelIndex>
 #include <QPoint>
 
-class editable_column_set_t;
 class merge_controller_t;
 class plugin_session_t;
 class record_view_t;
@@ -24,7 +23,6 @@ public:
 	    record_view_t & record_view,
 	    nav_tree_view_t & nav_view,
 	    merge_controller_t & merge_controller,
-	    editable_column_set_t & editable_columns,
 	    settings_store_t & settings,
 	    settings_changed_fn on_settings_changed);
 
@@ -64,7 +62,6 @@ private:
 	record_view_t & m_record_view;
 	nav_tree_view_t & m_nav_view;
 	merge_controller_t & m_merge;
-	editable_column_set_t & m_editable_columns;
 	settings_store_t & m_settings;
 	settings_changed_fn m_on_settings_changed;
 };

@@ -156,6 +156,9 @@ public:
 	bool clean_update_version() const;
 	void set_clean_update_version(bool value);
 
+	bool editing_enabled() const;
+	void set_editing_enabled(bool value);
+
 	void sync();
 
 private:

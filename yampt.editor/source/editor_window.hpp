@@ -30,6 +30,7 @@ private:
 	plugin_workspace_view_t * m_plugin_workspace_view = nullptr;
 	settings_store_t m_settings { "yEditor.ini" };
 
+	QToolButton * m_editing_btn = nullptr;
 	QLineEdit * m_search_field = nullptr;
 	QToolButton * m_case_sensitive_btn = nullptr;
 	QToolButton * m_regex_btn = nullptr;

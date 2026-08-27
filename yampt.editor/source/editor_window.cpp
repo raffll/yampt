@@ -4,7 +4,6 @@
 #include <settings_store.hpp>
 #include <theme_system.hpp>
 #include <QAction>
-#include <QCheckBox>
 #include <QCloseEvent>
 #include <QHBoxLayout>
 #include <QLineEdit>
@@ -143,6 +142,30 @@ void editor_window_t::setup_toolbar()
 
 	toolbar->addSeparator();
 
+	m_editing_btn = new QToolButton(this);
+	m_editing_btn->setText(tr("Enable Editing"));
+	m_editing_btn->setToolTip(tr("Allow editing decoded fields directly in all plugins"));
+	m_editing_btn->setCheckable(true);
+	m_editing_btn->setChecked(m_settings.editing_enabled());
+	toolbar->addWidget(m_editing_btn);
+	connect(
+	    m_editing_btn,
+	    &QToolButton::toggled,
+	    this,
+	    [this](bool checked)
+	{
+		m_settings.set_editing_enabled(checked);
+		m_settings.sync();
+		m_plugin_workspace_view->set_editing_enabled(checked);
+	});
+
+	toolbar->addSeparator();
+
+	auto * search_btn = new QToolButton(this);
+	search_btn->setText(tr("Apply Filter"));
+	search_btn->setToolTip(tr("Apply the search filter"));
+	toolbar->addWidget(search_btn);
+
 	m_search_field = new QLineEdit(this);
 	m_search_field->setPlaceholderText(tr("Filter by..."));
 	m_search_field->setToolTip(tr("Search by record ID or display name"));
@@ -173,11 +196,6 @@ void editor_window_t::setup_toolbar()
 	m_search_name_btn->setChecked(true);
 	m_search_name_btn->setToolTip(tr("Search in display name"));
 	toolbar->addWidget(m_search_name_btn);
-
-	auto * search_btn = new QToolButton(this);
-	search_btn->setText(tr("Apply Filter"));
-	search_btn->setToolTip(tr("Apply the search filter"));
-	toolbar->addWidget(search_btn);
 
 	toolbar->addSeparator();
 

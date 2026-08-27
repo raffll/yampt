@@ -19,7 +19,7 @@
 - [FIX] Disabled widgets now show greyed-out text on all platforms
 
 ### yEditor
-- [NEW] Enable Edit: edit decoded fields directly in the Edit panel (right-click plugin → Enable Edit, combobox for flags and enums)
+- [NEW] Enable Editing: a single toolbar checkbox makes decoded fields editable in the Edit panel for all plugins (combobox for flags and enums); the setting is remembered
 - [NEW] Lua handler conflict detection in a separate Lua tab: scans OpenMW Lua scripts and highlights conflicting handler registrations between mods
 - [NEW] Exclude Sub-Record from context menu: right-click any sub-record row to add it to the exclusion list
 - [NEW] Toolbar search: filter the navigation tree by record ID or display name with case-sensitive and regex support
