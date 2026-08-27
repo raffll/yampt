@@ -184,4 +184,11 @@
   <Target Name="CopyLanguages" AfterTargets="Build" Condition="Exists('$(SolutionDir)languages.json')">
     <Copy SourceFiles="$(SolutionDir)languages.json" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
   </Target>
+  <Target Name="CopyDictionaries" AfterTargets="Build" Condition="Exists('$(SolutionDir)dictionaries')">
+    <MakeDir Directories="$(OutDir)dictionaries" />
+    <ItemGroup>
+      <DictFiles Include="$(SolutionDir)dictionaries\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(DictFiles)" DestinationFolder="$(OutDir)dictionaries" SkipUnchangedFiles="true" />
+  </Target>
 </Project>

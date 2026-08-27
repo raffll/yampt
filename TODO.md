@@ -6,10 +6,9 @@ Wire up glossary_t::find_glossary_matches in send_chat_request — provide AI pr
 
 ## Audit Findings
 
-- web_translator_t::send_chat_request glossary_fn returns substituted text instead of term pairs for AI system prompt. Replace with structured reference data: glossary term→translation pairs (from find_glossary_matches), DIAL topic names to preserve, and optionally 2-3 example translations from the same document for style reference.
 - edit_history_t dead code: load_from_file, save_to_file, is_modified_this_session — implemented but never called. Remove or wire up persistence.
 - creator_helpers namespace: nearly every function has 4-6 arguments (max 2 allowed). Create insert_params_t struct.
 
 backup for saved plugins
 
-
+find/replace button disable when filter by disabled
