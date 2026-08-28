@@ -17,6 +17,19 @@ TEST_CASE("string_utils::normalize_path, backslash to forward slash", "[u]")
 	REQUIRE(string_utils::normalize_path("\\\\server\\share") == "//server/share");
 }
 
+TEST_CASE("string_utils::normalize_path, trailing slash stripping", "[u]")
+{
+	REQUIRE(string_utils::normalize_path("C:/Users/workspace/") == "C:/Users/workspace");
+	REQUIRE(string_utils::normalize_path("C:\\Users\\workspace\\") == "C:/Users/workspace");
+	REQUIRE(string_utils::normalize_path("/home/user/") == "/home/user");
+	REQUIRE(string_utils::normalize_path("/home/user///") == "/home/user");
+	REQUIRE(string_utils::normalize_path("//server/share/") == "//server/share");
+	REQUIRE(string_utils::normalize_path("//server/share/folder/") == "//server/share/folder");
+	REQUIRE(string_utils::normalize_path("/") == "/");
+	REQUIRE(string_utils::normalize_path("C:/") == "C:/");
+	REQUIRE(string_utils::normalize_path("D:\\") == "D:/");
+}
+
 TEST_CASE("string_utils::extract_filename, various paths", "[u]")
 {
 	REQUIRE(string_utils::extract_filename("C:/Users/test/file.txt") == "file.txt");

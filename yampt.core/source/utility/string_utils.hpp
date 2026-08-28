@@ -22,6 +22,15 @@ inline std::string normalize_path(std::string_view input)
 {
 	std::string result(input);
 	std::replace(result.begin(), result.end(), '\\', '/');
+
+	while (result.size() > 1 && result.back() == '/')
+	{
+		if (result.size() == 3 && result[1] == ':')
+			break;
+
+		result.pop_back();
+	}
+
 	return result;
 }
 
