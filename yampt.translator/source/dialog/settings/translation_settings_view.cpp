@@ -15,6 +15,17 @@
 #include <QTabWidget>
 #include <QVBoxLayout>
 
+static bool is_setting_required(const web_translator_config_t & config, const std::string & setting_key)
+{
+	for (const auto & setting : config.settings)
+	{
+		if (setting.key == setting_key)
+			return setting.required;
+	}
+
+	return true;
+}
+
 translation_settings_view_t::translation_settings_view_t(
     const std::string & providers_dir,
     const std::string & models_dir,
@@ -322,6 +333,9 @@ void translation_settings_view_t::update_status(const provider_card_t & card)
 	for (const auto & entry : m_setting_widgets)
 	{
 		if (entry.provider_id != card.identifier)
+			continue;
+
+		if (!is_setting_required(*config, entry.setting_key))
 			continue;
 
 		const auto value = read_widget_value(entry);
