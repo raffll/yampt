@@ -83,6 +83,7 @@
     <ClCompile Include="source\tests.nav_tree_model_lua.cpp" />
     <ClCompile Include="source\tests.lua_tree_model.cpp" />
     <ClCompile Include="source\tests.count_label_format.cpp" />
+    <ClCompile Include="source\tests.filter_composer.cpp" />
     <ClCompile Include="..\yampt.core\source\io\eet_converter.cpp" />
     <ClCompile Include="..\yampt.core\source\io\eet_reader.cpp" />
     <ClCompile Include="..\yampt.core\source\utility\char_diff.cpp" />
@@ -140,6 +141,7 @@
     <ClCompile Include="..\yampt.editor\source\model\view_tree_decode.cpp" />
     <ClCompile Include="..\yampt.editor\source\model\view_tree_decode_cell.cpp" />
     <ClCompile Include="..\yampt.editor\source\model\view_tree_decode_lists.cpp" />
+    <ClCompile Include="..\yampt.editor\source\model\filter_composer.cpp" />
     <ClCompile Include="..\yampt.translator\source\translator\web_translator_config.cpp" />
     <ClCompile Include="..\yampt.translator\source\translator\model_list_utils.cpp" />
     <ClCompile Include="..\yampt.translator\source\translator\translation_example_ops.cpp" />

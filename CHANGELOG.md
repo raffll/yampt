@@ -34,6 +34,7 @@
 - [CHANGE] File Header shown as flat entry at the top of each plugin (no nesting)
 - [CHANGE] Unknown/binary sub-records now display hex bytes instead of placeholder
 - [CHANGE] View menu: "Hide Duplicate Columns" renamed to "Hide Duplicates", "Show Deleted Strikeout" renamed to "Mark Deleted" (disabled by default)
+- [CHANGE] Conflicts Only, Advanced Filters, and search now compose: all active filters combine as a logical AND instead of overwriting each other
 - [FIX] Record view context menu now works when right-clicking the label column
 - [FIX] A plugin can no longer be both a guard patch and excluded from the merged patch — setting one clears the other
 - [FIX] Edit panel now shows the full multi-line content of text sub-records (book TEXT, script SCTX/BNAM) instead of only the first line

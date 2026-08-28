@@ -36,6 +36,7 @@ private:
 	QAction * m_sidebar_toggle = nullptr;
 	QAction * m_bottom_toggle = nullptr;
 	QToolButton * m_editing_btn = nullptr;
+	QToolButton * m_no_filters_btn = nullptr;
 	QLineEdit * m_search_field = nullptr;
 	QToolButton * m_case_sensitive_btn = nullptr;
 	QToolButton * m_regex_btn = nullptr;

@@ -26,6 +26,7 @@
     <ClCompile Include="source\dialog\settings\merge_settings_view.cpp" />
     <ClCompile Include="source\dialog\settings\cleaning_settings_view.cpp" />
     <ClCompile Include="source\model\nav_tree_filter.cpp" />
+    <ClCompile Include="source\model\filter_composer.cpp" />
     <ClCompile Include="source\patcher\patch_builder.cpp" />
     <ClCompile Include="source\view\nav_tree_view.cpp" />
     <ClCompile Include="source\view\record_view.cpp" />
@@ -35,6 +36,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\model\nav_tree_filter.hpp" />
+    <ClInclude Include="source\model\filter_composer.hpp" />
     <ClInclude Include="source\model\editable_column_set.hpp" />
     <ClInclude Include="source\patcher\patch_builder.hpp" />
     <ClInclude Include="source\view\count_label_format.hpp" />

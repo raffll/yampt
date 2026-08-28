@@ -1,6 +1,7 @@
 #include "plugin_workspace_view.hpp"
 #include "../dialog/filter_dialog.hpp"
 #include "../dialog/plugin_select_dialog.hpp"
+#include "../model/filter_composer.hpp"
 #include "../session/lua_scan_worker.hpp"
 #include "count_label_format.hpp"
 #include "editor_delegates.hpp"
@@ -448,37 +449,7 @@ bool plugin_workspace_view_t::is_show_deleted_strikeout() const
 
 void plugin_workspace_view_t::on_filter_changed()
 {
-	nav_tree_model_t::filter_state_t state;
-
-	if (m_conflicts_only)
-	{
-		state.filter_conflict_all = true;
-		state.conflict_all_set.insert(conflict_all_t::conflict);
-		state.conflict_all_set.insert(conflict_all_t::override_benign);
-	}
-
-	bool has_any = state.filter_conflict_all;
-
-	if (has_any)
-	{
-		if (m_has_filter_active && state == m_last_quick_filter)
-			return;
-
-		m_has_filter_active = true;
-		m_last_quick_filter = state;
-		m_nav_view->set_filter(state);
-	}
-	else
-	{
-		if (!m_has_filter_active)
-			return;
-
-		m_has_filter_active = false;
-		m_last_quick_filter = {};
-		m_nav_view->clear_filter();
-	}
-
-	update_status();
+	apply_effective_filter();
 }
 
 void plugin_workspace_view_t::set_hide_duplicates(bool hide)
@@ -500,56 +471,46 @@ void plugin_workspace_view_t::on_advanced_filter()
 	auto types = m_session->scan().all_types();
 	filter_dialog_t dlg(types, this);
 
-	if (m_filter_active)
-	{
-		filter_dialog_t::filter_state_t dlg_state;
-		dlg_state.filter_conflict_all = m_last_filter_state.filter_conflict_all;
-		dlg_state.conflict_all_set = m_last_filter_state.conflict_all_set;
-		dlg_state.filter_conflict_this = m_last_filter_state.filter_conflict_this;
-		dlg_state.conflict_this_set = m_last_filter_state.conflict_this_set;
-		dlg_state.filter_by_type = m_last_filter_state.filter_by_type;
-		dlg_state.type_set = m_last_filter_state.type_set;
-		dlg_state.filter_deleted = m_last_filter_state.filter_deleted;
-		dlg.set_state(dlg_state);
-	}
+	filter_dialog_t::filter_state_t dlg_state;
+	dlg_state.filter_conflict_all = m_advanced_filter.filter_conflict_all;
+	dlg_state.conflict_all_set = m_advanced_filter.conflict_all_set;
+	dlg_state.filter_conflict_this = m_advanced_filter.filter_conflict_this;
+	dlg_state.conflict_this_set = m_advanced_filter.conflict_this_set;
+	dlg_state.filter_by_type = m_advanced_filter.filter_by_type;
+	dlg_state.type_set = m_advanced_filter.type_set;
+	dlg_state.filter_deleted = m_advanced_filter.filter_deleted;
+	dlg_state.filter_lua_severity = m_advanced_filter.filter_lua_severity;
+	dlg_state.lua_severity_set = m_advanced_filter.lua_severity_set;
+	dlg_state.filter_lua_interface = m_advanced_filter.filter_lua_interface;
+	dlg_state.lua_interface_set = m_advanced_filter.lua_interface_set;
+	dlg.set_state(dlg_state);
 
 	if (dlg.exec() != QDialog::Accepted)
 		return;
 
-	auto state = dlg.state();
+	const auto result = dlg.state();
 
-	nav_tree_model_t::filter_state_t nav_state;
-	nav_state.filter_conflict_all = state.filter_conflict_all;
-	nav_state.conflict_all_set = state.conflict_all_set;
-	nav_state.filter_conflict_this = state.filter_conflict_this;
-	nav_state.conflict_this_set = state.conflict_this_set;
-	nav_state.filter_by_type = state.filter_by_type;
-	nav_state.type_set = state.type_set;
-	nav_state.filter_by_id = m_last_filter_state.filter_by_id;
-	nav_state.id_text = m_last_filter_state.id_text;
-	nav_state.filter_by_name = m_last_filter_state.filter_by_name;
-	nav_state.name_text = m_last_filter_state.name_text;
-	nav_state.filter_deleted = state.filter_deleted;
+	m_advanced_filter.filter_conflict_all = result.filter_conflict_all;
+	m_advanced_filter.conflict_all_set = result.conflict_all_set;
+	m_advanced_filter.filter_conflict_this = result.filter_conflict_this;
+	m_advanced_filter.conflict_this_set = result.conflict_this_set;
+	m_advanced_filter.filter_by_type = result.filter_by_type;
+	m_advanced_filter.type_set = result.type_set;
+	m_advanced_filter.filter_deleted = result.filter_deleted;
+	m_advanced_filter.filter_lua_severity = result.filter_lua_severity;
+	m_advanced_filter.lua_severity_set = result.lua_severity_set;
+	m_advanced_filter.filter_lua_interface = result.filter_lua_interface;
+	m_advanced_filter.lua_interface_set = result.lua_interface_set;
 
-	m_last_filter_state = nav_state;
-	m_filter_active = true;
-	m_has_filter_active = true;
-	m_last_quick_filter = nav_state;
-
-	m_nav_view->set_filter(nav_state);
-	update_status();
+	apply_effective_filter();
 }
 
 void plugin_workspace_view_t::reset_all_filters()
 {
 	m_conflicts_only = false;
-	m_last_filter_state = nav_tree_model_t::filter_state_t {};
-	m_last_quick_filter = {};
-	m_filter_active = false;
-	m_has_filter_active = false;
-
-	m_nav_view->clear_filter();
-	update_status();
+	m_advanced_filter = {};
+	m_search_filter = {};
+	apply_effective_filter();
 }
 
 void plugin_workspace_view_t::apply_search(
@@ -559,18 +520,14 @@ void plugin_workspace_view_t::apply_search(
     bool case_sensitive,
     bool regex_mode)
 {
-	m_last_filter_state.filter_by_id = search_in_id && !query.empty();
-	m_last_filter_state.id_text = search_in_id ? query : std::string {};
-	m_last_filter_state.filter_by_name = search_in_name && !query.empty();
-	m_last_filter_state.name_text = search_in_name ? query : std::string {};
-	m_last_filter_state.search_case_sensitive = case_sensitive;
-	m_last_filter_state.search_regex = regex_mode;
+	m_search_filter.filter_by_id = search_in_id && !query.empty();
+	m_search_filter.id_text = search_in_id ? query : std::string {};
+	m_search_filter.filter_by_name = search_in_name && !query.empty();
+	m_search_filter.name_text = search_in_name ? query : std::string {};
+	m_search_filter.search_case_sensitive = case_sensitive;
+	m_search_filter.search_regex = regex_mode;
 
-	m_filter_active = true;
-	m_has_filter_active = true;
-
-	m_nav_view->set_filter(m_last_filter_state);
-	update_status();
+	apply_effective_filter();
 }
 
 void plugin_workspace_view_t::on_nav_context_menu(const QPoint & global_pos, const nav_tree_model_t::node_info_t & info)
@@ -850,4 +807,22 @@ void plugin_workspace_view_t::on_lua_scan_complete(const lua_scan_result_t & res
 
 	m_lua_view->set_scan_result(result);
 	update_status();
+}
+
+nav_tree_model_t::filter_state_t plugin_workspace_view_t::build_effective_filter() const
+{
+	return filter_composer::compose_filter(m_conflicts_only, m_advanced_filter, m_search_filter);
+}
+
+void plugin_workspace_view_t::apply_effective_filter()
+{
+	const auto state = build_effective_filter();
+
+	if (state == nav_tree_model_t::filter_state_t {})
+		m_nav_view->clear_filter();
+	else
+		m_nav_view->set_filter(state);
+
+	update_status();
+	emit filters_active_changed(state != nav_tree_model_t::filter_state_t {});
 }

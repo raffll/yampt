@@ -89,6 +89,9 @@ private slots:
 	void on_view_copy();
 	void on_view_selection_changed(const QModelIndex & current);
 
+signals:
+	void filters_active_changed(bool active);
+
 private:
 	void setup_views();
 	void setup_connections();
@@ -102,6 +105,8 @@ private:
 	QString build_mode_prefix() const;
 	void start_lua_scan();
 	void on_lua_scan_complete(const lua_scan_result_t & result);
+	nav_tree_model_t::filter_state_t build_effective_filter() const;
+	void apply_effective_filter();
 
 	settings_store_t & m_settings;
 	plugin_session_t * m_session = nullptr;
@@ -128,10 +133,7 @@ private:
 
 	QLabel * m_status_label = nullptr;
 
-	bool m_filter_active = false;
-	nav_tree_model_t::filter_state_t m_last_filter_state;
-
-	bool m_has_filter_active = false;
-	nav_tree_model_t::filter_state_t m_last_quick_filter;
+	nav_tree_model_t::filter_state_t m_advanced_filter;
+	nav_tree_model_t::filter_state_t m_search_filter;
 	bool m_hide_duplicates = false;
 };

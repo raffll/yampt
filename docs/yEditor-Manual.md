@@ -90,16 +90,18 @@ The View menu provides display options:
 
 ## Toolbar Search
 
-The toolbar includes a **Conflicts Only** toggle that, when enabled, hides records with no conflicts from the navigation tree so only records touched by multiple plugins remain visible.
+The toolbar provides three filter controls that compose together: a record is shown only if it satisfies every active control at once. Enabling Conflicts Only while an advanced filter and a search are both active narrows the tree further rather than replacing either of them.
 
-The toolbar also includes a search field for filtering the navigation tree by record ID or display name. Type a query, select which fields to search with the toggle buttons, and press Enter to apply.
+**Conflicts Only** is a quick preset that restricts the navigation tree to records touched by multiple plugins — those with a conflict or a benign override. It controls only the conflict dimension and combines with any active advanced filter or search.
+
+The toolbar search field filters the navigation tree by record ID or display name. Type a query, select which fields to search with the toggle buttons, and press Enter to apply. The search combines with Conflicts Only and any advanced filter criteria already in effect.
 
 - **Aa** — case-sensitive matching. When off, the search ignores letter case.
 - **.\*** — interpret the query as a regular expression.
 - **ID** — search in the record's internal ID (e.g. "iron_dagger", "balmora_guild").
 - **Name** — search in the record's display name (e.g. "Iron Dagger", "Balmora Mages Guild").
-- **Advanced Filters...** — opens the advanced filter dialog for filtering by conflict severity, per-plugin conflict status, record type, deleted status, and Lua handler criteria.
-- **Reset** — turns off Conflicts Only, empties the search field, and clears the advanced filter, returning the navigation tree to showing every record.
+- **Advanced Filters...** — opens the advanced filter dialog for filtering by conflict severity, per-plugin conflict status, record type, deleted status, and Lua handler criteria. The dialog opens pre-populated with the advanced criteria currently in effect, so adjustments build on the existing selection rather than starting from scratch.
+- **No Filters** — a checkable toggle that shows whether any filters are active. When unchecked (filters are active), clicking it clears Conflicts Only, the search field, and the advanced filter in one action, returning the navigation tree to showing every record. When already checked, clicking it does nothing.
 
 Press Escape to clear the search field and remove the text filter.
 

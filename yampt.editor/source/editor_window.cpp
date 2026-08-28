@@ -176,10 +176,12 @@ void editor_window_t::setup_toolbar()
 
 	toolbar->addSeparator();
 
-	auto * reset_btn = new QToolButton(this);
-	reset_btn->setText(tr("No Filters"));
-	reset_btn->setToolTip(tr("Clear all filters and search"));
-	toolbar->addWidget(reset_btn);
+	m_no_filters_btn = new QToolButton(this);
+	m_no_filters_btn->setText(tr("No Filters"));
+	m_no_filters_btn->setToolTip(tr("Clear all filters and search"));
+	m_no_filters_btn->setCheckable(true);
+	m_no_filters_btn->setChecked(true);
+	toolbar->addWidget(m_no_filters_btn);
 
 	auto * conflicts_btn = new QToolButton(this);
 	conflicts_btn->setDefaultAction(m_conflicts_action);
@@ -227,7 +229,17 @@ void editor_window_t::setup_toolbar()
 
 	connect(m_search_field, &QLineEdit::returnPressed, this, &editor_window_t::on_search_apply);
 	connect(filter_btn, &QToolButton::clicked, m_plugin_workspace_view, &plugin_workspace_view_t::on_advanced_filter);
-	connect(reset_btn, &QToolButton::clicked, this, &editor_window_t::on_reset_filters);
+	connect(m_no_filters_btn, &QToolButton::clicked, this, [this](bool checked) {
+		if (checked)
+			on_reset_filters();
+		else
+			m_no_filters_btn->setChecked(true);
+	});
+	connect(
+	    m_plugin_workspace_view,
+	    &plugin_workspace_view_t::filters_active_changed,
+	    this,
+	    [this](bool active) { m_no_filters_btn->setChecked(!active); });
 
 	auto * escape_shortcut = new QShortcut(QKeySequence("Escape"), this);
 	connect(escape_shortcut, &QShortcut::activated, this, &editor_window_t::on_search_clear);
