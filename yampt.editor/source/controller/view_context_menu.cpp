@@ -188,6 +188,26 @@ void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModel
 		    [this, rule]()
 		{
 			auto current = m_settings.sub_record_ignore_conflict();
+
+			std::set<std::string> existing;
+			size_t start = 0;
+			while (start < current.size())
+			{
+				auto comma = current.find(',', start);
+				if (comma == std::string::npos)
+					comma = current.size();
+
+				auto token = current.substr(start, comma - start);
+				auto trim_start = token.find_first_not_of(" ");
+				if (trim_start != std::string::npos)
+					existing.insert(token.substr(trim_start));
+
+				start = comma + 1;
+			}
+
+			if (existing.count(rule))
+				return;
+
 			if (!current.empty())
 				current += ", ";
 

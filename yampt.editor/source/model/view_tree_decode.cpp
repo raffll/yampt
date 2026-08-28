@@ -4,6 +4,15 @@
 #include <cstdio>
 #include <cstring>
 
+static void mark_children_ignored(view_tree_model_t::view_node_t & parent)
+{
+	for (auto & child : parent.children)
+	{
+		child.is_ignored = true;
+		mark_children_ignored(child);
+	}
+}
+
 static bool check_all_identical(const std::vector<std::string> & values)
 {
 	for (size_t col = 1; col < values.size(); ++col)
@@ -146,6 +155,9 @@ view_tree_model_t::view_node_t view_tree_model_t::build_slot_row(
 		decode_hex_children(row, first_size, col_count, all_subs, col_indices, slot);
 		row.start_collapsed = true;
 	}
+
+	if (!row.children.empty() && row.is_ignored)
+		mark_children_ignored(row);
 
 	if (!row.children.empty() && !policy.ignore_conflict)
 	{

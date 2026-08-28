@@ -2,6 +2,7 @@
 #include "model/editable_column_set.hpp"
 #include "model/view_tree_model.hpp"
 #include <decoder/field_validator.hpp>
+#include <scanner/record_conflict.hpp>
 #include <utility/char_diff.hpp>
 #include <QAbstractItemView>
 #include <QComboBox>
@@ -192,7 +193,7 @@ void preview_view_t::update_selection(
 		return;
 	}
 
-	if (cell_value.empty())
+	if (cell_value == non_existent_value)
 	{
 		set_editing_enabled(false);
 		return;

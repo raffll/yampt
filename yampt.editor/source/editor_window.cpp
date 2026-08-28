@@ -35,6 +35,7 @@ editor_window_t::editor_window_t(QWidget * parent)
 	load_config();
 	setup_menu_bar();
 	setup_toolbar();
+	restore_panel_state();
 
 	connect(
 	    &theme_system_t::instance(),
@@ -116,6 +117,22 @@ void editor_window_t::setup_menu_bar()
 
 	view_menu->addSeparator();
 
+	m_sidebar_toggle = new QAction(tr("Toggle &Sidebar"), this);
+	m_sidebar_toggle->setCheckable(true);
+	m_sidebar_toggle->setChecked(true);
+	m_sidebar_toggle->setToolTip(tr("Show or hide the navigation panel"));
+	view_menu->addAction(m_sidebar_toggle);
+	connect(m_sidebar_toggle, &QAction::toggled, m_plugin_workspace_view->sidebar_widget(), &QWidget::setVisible);
+
+	m_bottom_toggle = new QAction(tr("Toggle &Bottom Panel"), this);
+	m_bottom_toggle->setCheckable(true);
+	m_bottom_toggle->setChecked(true);
+	m_bottom_toggle->setToolTip(tr("Show or hide the edit and log panel"));
+	view_menu->addAction(m_bottom_toggle);
+	connect(m_bottom_toggle, &QAction::toggled, m_plugin_workspace_view->bottom_panel_widget(), &QWidget::setVisible);
+
+	view_menu->addSeparator();
+
 	auto * tools_menu = menuBar()->addMenu(tr("&Tools"));
 	auto * settings_action = new QAction(tr("&Preferences..."), this);
 	settings_action->setShortcut(QKeySequence("Ctrl+,"));
@@ -158,6 +175,11 @@ void editor_window_t::setup_toolbar()
 	    [this](bool checked) { m_plugin_workspace_view->set_editing_enabled(checked); });
 
 	toolbar->addSeparator();
+
+	auto * reset_btn = new QToolButton(this);
+	reset_btn->setText(tr("No Filters"));
+	reset_btn->setToolTip(tr("Clear all filters and search"));
+	toolbar->addWidget(reset_btn);
 
 	auto * conflicts_btn = new QToolButton(this);
 	conflicts_btn->setDefaultAction(m_conflicts_action);
@@ -203,13 +225,6 @@ void editor_window_t::setup_toolbar()
 	filter_btn->setToolTip(tr("Open the advanced filter dialog"));
 	toolbar->addWidget(filter_btn);
 
-	toolbar->addSeparator();
-
-	auto * reset_btn = new QToolButton(this);
-	reset_btn->setText(tr("Reset"));
-	reset_btn->setToolTip(tr("Reset all filters and search"));
-	toolbar->addWidget(reset_btn);
-
 	connect(m_search_field, &QLineEdit::returnPressed, this, &editor_window_t::on_search_apply);
 	connect(filter_btn, &QToolButton::clicked, m_plugin_workspace_view, &plugin_workspace_view_t::on_advanced_filter);
 	connect(reset_btn, &QToolButton::clicked, this, &editor_window_t::on_reset_filters);
@@ -241,7 +256,16 @@ void editor_window_t::save_config()
 	settings.setValue("window/geometry", saveGeometry());
 	settings.setValue("window/state", saveState());
 
+	m_settings.set_sidebar_visible(m_sidebar_toggle->isChecked());
+	m_settings.set_bottom_visible(m_bottom_toggle->isChecked());
+
 	m_plugin_workspace_view->save_session_state();
+}
+
+void editor_window_t::restore_panel_state()
+{
+	m_sidebar_toggle->setChecked(m_settings.sidebar_visible());
+	m_bottom_toggle->setChecked(m_settings.bottom_visible());
 }
 
 void editor_window_t::on_search_apply()

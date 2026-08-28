@@ -18,14 +18,17 @@
 - [NEW] Linux support: builds with CMake and system libraries, AUR package available
 - [NEW] Cross-platform resource paths: shared data in `/usr/share/yampt/`, user data in `~/.yampt/`
 - [FIX] Disabled widgets now show greyed-out text on all platforms
+- [FIX] Workspace sidebar no longer shows a duplicate "Workspace" node when paths differ only by trailing slash
 
 ### yEditor
 - [NEW] Enable Editing: a single toolbar toggle makes decoded fields editable in the Edit panel for all plugins (combobox for flags and enums); starts disabled each time the app opens
+- [NEW] View menu: Toggle Sidebar and Toggle Bottom Panel hide or show the navigation and edit/log panels; state persists across sessions
 - [NEW] Lua handler conflict detection in a separate Lua tab: scans OpenMW Lua scripts and highlights conflicting handler registrations between mods
 - [NEW] Exclude Sub-Record from context menu: right-click any sub-record row to add it to the exclusion list
 - [NEW] Toolbar search: filter the navigation tree by record ID or display name with case-sensitive and regex support
 - [NEW] Reset button on the toolbar: clears Conflicts Only, the search field, and the advanced filter in one click
 - [CHANGE] Filter dialog moved from View menu to toolbar button
+- [CHANGE] Reset button renamed to "No Filters" and moved before the Conflicts Only toggle
 - [CHANGE] Navigation panel split into two tabs: Plugins (ESP/ESM record tree) and Lua (handler registrations by mod)
 - [CHANGE] Settings reorganized: Sub-Record Rules merged into Merged Patch page, Paths renamed to Output Paths, record type checkboxes replaced by TYPE:* syntax
 - [CHANGE] File Header shown as flat entry at the top of each plugin (no nesting)
@@ -33,6 +36,12 @@
 - [CHANGE] View menu: "Hide Duplicate Columns" renamed to "Hide Duplicates", "Show Deleted Strikeout" renamed to "Mark Deleted" (disabled by default)
 - [FIX] Record view context menu now works when right-clicking the label column
 - [FIX] A plugin can no longer be both a guard patch and excluded from the merged patch — setting one clears the other
+- [FIX] Edit panel now shows the full multi-line content of text sub-records (book TEXT, script SCTX/BNAM) instead of only the first line
+- [FIX] Decoded fields inside CELL reference groups (X/Y/Z Position, rotations, door destinations) can now be edited when Enable Editing is active
+- [FIX] Empty sub-records (e.g. FNAM with no display name) can now be edited — previously the empty value blocked the edit panel
+- [FIX] Exclude Sub-Record context menu no longer adds duplicates if the rule already exists
+- [FIX] Excluding a sub-record from context menu now immediately greys out the row in the record view
+- [FIX] Excluded sub-records now grey out their decoded children (fields, flags) as well
 
 ## [0.940] - 2026-07-29
 

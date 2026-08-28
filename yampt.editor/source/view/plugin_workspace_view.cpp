@@ -347,10 +347,11 @@ void plugin_workspace_view_t::on_settings_changed()
 
 	if (m_session->scan().plugin_count() > 0)
 	{
+		const auto selection = m_nav_view->current_selection();
+
 		m_session->scan().rebuild_conflicts();
 		rebuild_nav_preserving_state();
 
-		const auto selection = m_nav_view->current_selection();
 		if (!selection.rec_type.empty())
 			on_nav_selection_changed(selection);
 	}
@@ -618,18 +619,14 @@ void plugin_workspace_view_t::on_view_selection_changed(const QModelIndex & curr
 
 	m_preview->set_editing_enabled(false);
 
-	const auto right_variant = model->data(current, Qt::DisplayRole);
-	const auto right_text = right_variant.isValid() ? right_variant.toString().toStdString() : std::string {};
+	const auto right_text = model->full_value_at(current);
 
 	const auto left_index = model->index(current.row(), clicked_col - 1, current.parent());
 	std::string left_text;
 	if (left_index.isValid() && left_index.column() >= 1)
-	{
-		const auto left_variant = model->data(left_index, Qt::DisplayRole);
-		left_text = left_variant.isValid() ? left_variant.toString().toStdString() : std::string {};
-	}
+		left_text = model->full_value_at(left_index);
 
-	if (right_text.empty() && left_text.empty())
+	if (right_text == non_existent_value && (left_text.empty() || left_text == non_existent_value))
 		m_preview->clear();
 	else
 		m_preview->show_comparison(left_text, right_text);

@@ -27,11 +27,14 @@ private:
 	void on_search_apply();
 	void on_search_clear();
 	void on_reset_filters();
+	void restore_panel_state();
 
 	plugin_workspace_view_t * m_plugin_workspace_view = nullptr;
 	settings_store_t m_settings { "yEditor.ini" };
 
 	QAction * m_conflicts_action = nullptr;
+	QAction * m_sidebar_toggle = nullptr;
+	QAction * m_bottom_toggle = nullptr;
 	QToolButton * m_editing_btn = nullptr;
 	QLineEdit * m_search_field = nullptr;
 	QToolButton * m_case_sensitive_btn = nullptr;

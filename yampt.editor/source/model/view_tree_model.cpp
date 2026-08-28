@@ -579,6 +579,38 @@ const view_tree_model_t::view_node_t * view_tree_model_t::node_from_index(const 
 	return &parent_ptr->children[index.row()];
 }
 
+std::string view_tree_model_t::full_value_at(const QModelIndex & index) const
+{
+	const auto * node = node_from_index(index);
+	if (!node)
+		return {};
+
+	const int column = index.column();
+	if (column < 1)
+		return {};
+
+	const bool is_group = !node->type.empty() && node->size == 0 && !node->children.empty();
+	const bool single_leaf_child = node->children.size() == 1 && node->children[0].children.empty();
+
+	if (single_leaf_child && !is_group)
+	{
+		const int col = column - 1;
+		if (col < 0 || col >= static_cast<int>(node->children[0].values.size()))
+			return {};
+
+		return node->children[0].values[col];
+	}
+
+	if (!node->children.empty())
+		return {};
+
+	const int col = column - 1;
+	if (col < 0 || col >= static_cast<int>(node->values.size()))
+		return {};
+
+	return node->values[col];
+}
+
 QModelIndex view_tree_model_t::index(int row, int column, const QModelIndex & parent) const
 {
 	if (!hasIndex(row, column, parent))
@@ -840,7 +872,48 @@ QVariant view_tree_model_t::data(const QModelIndex & index, int role) const
 		}
 
 		if (lookup_type.empty() || lookup_size == 0)
+		{
+			if (lookup_type.empty())
+				return {};
+
+			if (target->schema_field_index < 0)
+				return {};
+
+			const auto & schemas = all_schemas();
+			for (const auto & s : schemas)
+			{
+				if (s.sub_type != lookup_type)
+					continue;
+
+				if (std::strcmp(s.parent_type, "*") != 0 && s.parent_type != m_record_type)
+					continue;
+
+				if (target->schema_field_index >= static_cast<int>(s.field_count))
+					continue;
+
+				const auto & candidate = s.fields[target->schema_field_index];
+				if (target->label != candidate.name)
+					continue;
+
+				if (target->bit_index >= 0)
+				{
+					auto & bit_field = m_bool_bit_field;
+					bit_field.name = candidate.name;
+					bit_field.type = field_type_t::bool_bit;
+					bit_field.offset = candidate.offset;
+					bit_field.size = target->bit_index;
+					bit_field.enum_names = nullptr;
+					bit_field.flag_names = nullptr;
+					bit_field.flag_count = 0;
+					bit_field.group = nullptr;
+					return QVariant::fromValue(static_cast<const field_def_t *>(&bit_field));
+				}
+
+				return QVariant::fromValue(&s.fields[target->schema_field_index]);
+			}
+
 			return {};
+		}
 
 		if (target->schema_field_index >= 0)
 		{

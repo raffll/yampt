@@ -60,6 +60,9 @@ public:
 	void refresh_views();
 	void reset_all_filters();
 
+	QWidget * sidebar_widget() const { return m_nav_tabs; }
+	QWidget * bottom_panel_widget() const { return m_bottom_tabs; }
+
 public slots:
 	void on_load_data_files();
 	void on_load_mo2_profile();
