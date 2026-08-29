@@ -237,6 +237,7 @@ void sidebar_view_t::show_dict_context_menu(const std::string & path, const QPoi
 {
 	QMenu menu(this);
 	auto * save_action = menu.addAction(tr("Save"));
+	menu.addSeparator();
 	auto * generate_loc_action = menu.addAction(tr("Generate Localization Files"));
 	generate_loc_action->setToolTip(tr("Generate .cel/.top/.mrk for OpenMW"));
 	menu.addSeparator();
