@@ -290,6 +290,9 @@ std::string encode_field(const encode_context_t & context)
 		const char operator_char = scvr_operator_char(std::string(context.input));
 		return std::string(1, operator_char != '\0' ? operator_char : '0');
 	}
+
+	case field_type_t::scvr_subject:
+		return encode_string_fixed(context);
 	}
 
 	return {};

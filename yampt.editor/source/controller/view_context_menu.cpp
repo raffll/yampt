@@ -190,7 +190,7 @@ void view_context_menu_t::show_view_menu(const QPoint & global_pos, const QModel
 			build_source_copy_menu(menu, context);
 	}
 
-	if (!row.type.empty() && !is_field_row)
+	if (kind == row_kind_t::sub_record || kind == row_kind_t::schema_record)
 	{
 		const auto sub_type = row.type;
 		const auto rule = rec_type + ":" + sub_type;

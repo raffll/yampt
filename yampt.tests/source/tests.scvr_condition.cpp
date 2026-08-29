@@ -86,19 +86,32 @@ TEST_CASE("scvr_condition::format_scvr_condition, journal with value", "[u]")
 	REQUIRE(result == "Journal \"IL_TalosTreason\" >= 100");
 }
 
-TEST_CASE("scvr_condition::format_scvr_condition, function with value", "[u]")
-{
-	const char buffer[5] = { '0', '1', '5', '0', '0' };
-	auto condition = parse_scvr_condition(buffer, 5);
-	auto result = format_scvr_condition(condition, "5");
-	REQUIRE(result == "Function Choice == 5");
-}
-
 TEST_CASE("scvr_condition::format_scvr_condition, invalid condition is empty", "[u]")
 {
 	scvr_condition_t condition;
 	auto result = format_scvr_condition(condition, "1");
 	REQUIRE(result.empty());
+}
+
+TEST_CASE("scvr_condition::scvr_subject_display, function resolves name", "[u]")
+{
+	const char buffer[5] = { '0', '1', '5', '0', '0' };
+	REQUIRE(scvr_subject_display(buffer, 5) == "Choice");
+	REQUIRE(scvr_subject_label(buffer, 5) == "Function");
+}
+
+TEST_CASE("scvr_condition::scvr_subject_display, local shows storage type", "[u]")
+{
+	const char data[] = "03sX0myvar";
+	REQUIRE(scvr_subject_display(data, sizeof(data) - 1) == "Short");
+	REQUIRE(scvr_subject_label(data, sizeof(data) - 1) == "Variable Type");
+}
+
+TEST_CASE("scvr_condition::scvr_subject_display, journal shows marker", "[u]")
+{
+	const char data[] = "04JX3B8_MeetVivec";
+	REQUIRE(scvr_subject_display(data, sizeof(data) - 1) == "JX");
+	REQUIRE(scvr_subject_label(data, sizeof(data) - 1) == "Marker");
 }
 
 TEST_CASE("scvr_condition::scvr_type_name, known and unknown chars", "[u]")
@@ -130,4 +143,28 @@ TEST_CASE("scvr_condition::scvr_type_names, matches symbol count", "[u]")
 {
 	REQUIRE(scvr_type_names().size() == 12);
 	REQUIRE(scvr_operator_symbols().size() == 6);
+}
+
+TEST_CASE("scvr_condition::scvr_variable_storage_name, known chars", "[u]")
+{
+	REQUIRE(std::strcmp(scvr_variable_storage_name('f'), "Float") == 0);
+	REQUIRE(std::strcmp(scvr_variable_storage_name('l'), "Long") == 0);
+	REQUIRE(std::strcmp(scvr_variable_storage_name('s'), "Short") == 0);
+	REQUIRE(scvr_variable_storage_name('X')[0] == '\0');
+}
+
+TEST_CASE("scvr_condition::scvr_type_uses_function, only function", "[u]")
+{
+	REQUIRE(scvr_type_uses_function("Function"));
+	REQUIRE_FALSE(scvr_type_uses_function("Journal"));
+	REQUIRE_FALSE(scvr_type_uses_function("Local"));
+}
+
+TEST_CASE("scvr_condition::scvr_type_uses_variable_storage, global local not local", "[u]")
+{
+	REQUIRE(scvr_type_uses_variable_storage("Global"));
+	REQUIRE(scvr_type_uses_variable_storage("Local"));
+	REQUIRE(scvr_type_uses_variable_storage("Not Local"));
+	REQUIRE_FALSE(scvr_type_uses_variable_storage("Journal"));
+	REQUIRE_FALSE(scvr_type_uses_variable_storage("Function"));
 }

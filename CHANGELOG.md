@@ -55,7 +55,7 @@
 - [FIX] Exclude Sub-Record context menu no longer adds duplicates if the rule already exists
 - [FIX] Excluding a sub-record from context menu now immediately greys out the row in the record view
 - [FIX] Excluded sub-records now grey out their decoded children (fields, flags) as well
-- [FIX] Dialogue conditions (INFO records) now read as a single line such as `Journal "IL_TalosTreason" >= 10`, grouped under a numbered Condition entry; the variable's type and comparison operator show as words (Journal, Dead, Local, `==`, `>=`) and its comparison value as sub-records, instead of raw hex bytes
+- [FIX] Dialogue conditions (INFO records) now read as a single line such as `Journal "IL_TalosTreason" >= 10`, grouped under a numbered Condition entry; the condition type and comparison operator show as words (Journal, Dead, Local, `==`, `>=`), function conditions show the function name, variable conditions show the variable storage type, and the comparison value appears as a sub-record, instead of raw hex bytes
 
 ## [0.940] - 2026-07-29
 

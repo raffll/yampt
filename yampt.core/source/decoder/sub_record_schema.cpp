@@ -567,7 +567,7 @@ static const field_def_t info_data_fields[] = {
 static const field_def_t info_scvr_fields[] = {
 	{ "Index", field_type_t::string_fixed, 0, 1, nullptr, nullptr, 0, nullptr },
 	{ "Type", field_type_t::scvr_type, 1, 1, nullptr, nullptr, 0, nullptr },
-	{ "Function", field_type_t::string_fixed, 2, 2, nullptr, nullptr, 0, nullptr },
+	{ "Function", field_type_t::scvr_subject, 2, 2, nullptr, nullptr, 0, nullptr },
 	{ "Operator", field_type_t::scvr_operator, 4, 1, nullptr, nullptr, 0, nullptr },
 	{ "Name", field_type_t::string_var, 5, 0, nullptr, nullptr, 0, nullptr },
 };

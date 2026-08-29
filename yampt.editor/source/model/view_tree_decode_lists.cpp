@@ -9,7 +9,7 @@
 
 namespace
 {
-	const sub_record_view_t * find_scvr_view(
+	const sub_record_view_t * find_slot_view(
 	    const std::vector<std::vector<sub_record_view_t>> & all_subs,
 	    const std::unordered_map<std::string, std::vector<size_t>> & type_index,
 	    const sub_slot_t & slot,
@@ -28,12 +28,6 @@ namespace
 			return nullptr;
 
 		return &all_subs[column][idx];
-	}
-
-	std::string condition_sentence(const sub_record_view_t & scvr_view, const std::string & value_text)
-	{
-		const auto condition = parse_scvr_condition(scvr_view.data, scvr_view.size);
-		return format_scvr_condition(condition, value_text);
 	}
 }
 
@@ -280,15 +274,6 @@ void view_tree_model_t::set_record_info(record_context_t & context, const confli
 	alignment_context_t align_ctx { all_subs, col_count, unified_slots, col_type_indices };
 	content_alignment_t::align(align_ctx, { rule });
 
-	auto is_condition_type = [](const std::string & slot_type)
-	{ return slot_type == "SCVR" || slot_type == "INTV" || slot_type == "FLTV"; };
-
-	std::stable_sort(
-	    unified_slots.begin(),
-	    unified_slots.end(),
-	    [&](const sub_slot_t & left, const sub_slot_t & right)
-	{ return !is_condition_type(left.type) && is_condition_type(right.type); });
-
 	int condition_index = 0;
 	for (size_t i = 0; i < unified_slots.size(); ++i)
 	{
@@ -319,24 +304,21 @@ void view_tree_model_t::set_record_info(record_context_t & context, const confli
 		{
 			auto value_row = build_slot_row(col_count, all_subs, col_type_indices, unified_slots[next]);
 
-			const auto & decoded_values =
-			    value_row.children.empty() ? value_row.values : value_row.children[0].values;
-
 			view_node_t value_field;
 			value_field.label =
 			    (unified_slots[next].type == "INTV") ? "INTV - Comparison Value" : "FLTV - Comparison Value";
 			value_field.type = value_row.type;
 			value_field.size = value_row.size;
 			value_field.binary_ranges = value_row.binary_ranges;
-			value_field.values = decoded_values;
+			value_field.values = value_row.children.empty() ? value_row.values : value_row.children[0].values;
 			value_field.all_identical = value_row.all_identical;
 			value_field.row_conflict_all = value_row.row_conflict_all;
 			value_field.cell_conflict_this = value_row.cell_conflict_this;
 
 			if (!has_value)
 			{
-				for (size_t col = 0; col < col_count && col < decoded_values.size(); ++col)
-					value_text[col] = decoded_values[col];
+				for (size_t col = 0; col < col_count && col < value_field.values.size(); ++col)
+					value_text[col] = value_field.values[col];
 
 				has_value = true;
 			}
@@ -347,8 +329,10 @@ void view_tree_model_t::set_record_info(record_context_t & context, const confli
 
 		for (size_t col = 0; col < col_count; ++col)
 		{
-			const auto * scvr_view = find_scvr_view(all_subs, col_type_indices[col], unified_slots[i], col);
-			const auto sentence = scvr_view ? condition_sentence(*scvr_view, value_text[col]) : std::string();
+			const auto * scvr_view = find_slot_view(all_subs, col_type_indices[col], unified_slots[i], col);
+			const auto condition =
+			    scvr_view ? parse_scvr_condition(scvr_view->data, scvr_view->size) : scvr_condition_t {};
+			const auto sentence = format_scvr_condition(condition, value_text[col]);
 
 			if (!sentence.empty())
 				group_row.values[col] = sentence;

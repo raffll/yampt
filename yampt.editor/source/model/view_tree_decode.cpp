@@ -1,4 +1,5 @@
 #include "view_tree_model.hpp"
+#include <decoder/scvr_condition.hpp>
 #include <decoder/view_tree_format.hpp>
 #include <scanner/record_conflict.hpp>
 #include <cstdio>
@@ -296,6 +297,9 @@ void view_tree_model_t::decode_schema_children(
 
 			const auto & sv = all_subs[col][idx];
 			frow.values[col] = decode_field(fdef, sv.data, sv.size);
+
+			if (fdef.type == field_type_t::scvr_subject && frow.label == fdef.name)
+				frow.label = scvr_subject_label(sv.data, sv.size);
 		}
 
 		frow.all_identical = check_all_identical(frow.values);

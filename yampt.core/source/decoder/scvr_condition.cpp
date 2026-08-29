@@ -182,6 +182,67 @@ const std::vector<std::string> & scvr_operator_symbols()
 	return symbols;
 }
 
+const char * scvr_variable_storage_name(char storage_char)
+{
+	switch (storage_char)
+	{
+	case 'f':
+		return "Float";
+	case 'l':
+		return "Long";
+	case 's':
+		return "Short";
+	default:
+		return "";
+	}
+}
+
+bool scvr_type_uses_function(const std::string & type_name)
+{
+	return type_name == "Function";
+}
+
+bool scvr_type_uses_variable_storage(const std::string & type_name)
+{
+	return type_name == "Global" || type_name == "Local" || type_name == "Not Local";
+}
+
+std::string scvr_subject_display(const char * data, size_t size)
+{
+	if (data == nullptr || size < 4)
+		return {};
+
+	const std::string type_name = scvr_type_name(data[1]);
+
+	if (scvr_type_uses_function(type_name))
+	{
+		const char digits[3] = { data[2], data[3], '\0' };
+		const char * name = scvr_function_name(std::atoi(digits));
+		return name != nullptr ? name : std::string(digits);
+	}
+
+	if (scvr_type_uses_variable_storage(type_name))
+		return scvr_variable_storage_name(data[2]);
+
+	return std::string(data + 2, 2);
+}
+
+std::string scvr_subject_label(const char * data, size_t size)
+{
+	if (data == nullptr || size < 2)
+		return "Function";
+
+	const std::string type_name = scvr_type_name(data[1]);
+
+	if (scvr_type_uses_function(type_name))
+		return "Function";
+
+	if (scvr_type_uses_variable_storage(type_name))
+		return "Variable Type";
+
+	return "Marker";
+}
+
 const char * scvr_operator_symbol(char comparison_char)
 {
 	for (const auto & entry : operator_entries)
@@ -199,6 +260,26 @@ const char * scvr_function_name(int function_index)
 		return nullptr;
 
 	return function_names[static_cast<size_t>(function_index)];
+}
+
+std::string format_scvr_condition(const scvr_condition_t & condition, const std::string & value_text)
+{
+	if (!condition.valid)
+		return {};
+
+	std::string subject = condition.type_name;
+
+	if (!condition.function_name.empty())
+		subject += " " + condition.function_name;
+	else if (!condition.variable_name.empty())
+		subject += " \"" + condition.variable_name + "\"";
+
+	std::string result = subject + " " + condition.operator_symbol;
+
+	if (!value_text.empty())
+		result += " " + value_text;
+
+	return result;
 }
 
 scvr_condition_t parse_scvr_condition(const char * data, size_t size)
@@ -238,22 +319,4 @@ scvr_condition_t parse_scvr_condition(const char * data, size_t size)
 	return condition;
 }
 
-std::string format_scvr_condition(const scvr_condition_t & condition, const std::string & value_text)
-{
-	if (!condition.valid)
-		return {};
 
-	std::string subject = condition.type_name;
-
-	if (!condition.function_name.empty())
-		subject += " " + condition.function_name;
-	else if (!condition.variable_name.empty())
-		subject += " \"" + condition.variable_name + "\"";
-
-	std::string result = subject + " " + condition.operator_symbol;
-
-	if (!value_text.empty())
-		result += " " + value_text;
-
-	return result;
-}

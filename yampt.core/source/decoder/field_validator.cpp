@@ -339,6 +339,9 @@ validate_result_t validate_field(
 	case field_type_t::scvr_operator:
 		return scvr_operator_char(std::string(input)) != '\0' ? make_valid()
 		                                                       : make_invalid("unknown operator");
+
+	case field_type_t::scvr_subject:
+		return validate_string_fixed(input, codepage, field.size);
 	}
 
 	return make_invalid("unknown field type");

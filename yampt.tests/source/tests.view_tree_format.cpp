@@ -299,3 +299,30 @@ TEST_CASE("view_tree_format::decode_field, scvr_operator shows symbol", "[u]")
 	auto result = decode_field(field, data, sizeof(data) - 1);
 	REQUIRE(result == ">=");
 }
+
+TEST_CASE("view_tree_format::decode_field, scvr_subject function name", "[u]")
+{
+	field_def_t field { "Function", field_type_t::scvr_subject, 2, 2, nullptr, nullptr, 0 };
+
+	const char data[5] = { '0', '1', '5', '0', '0' };
+	auto result = decode_field(field, data, 5);
+	REQUIRE(result == "Choice");
+}
+
+TEST_CASE("view_tree_format::decode_field, scvr_subject variable storage", "[u]")
+{
+	field_def_t field { "Function", field_type_t::scvr_subject, 2, 2, nullptr, nullptr, 0 };
+
+	const char data[] = "03sX0myvar";
+	auto result = decode_field(field, data, sizeof(data) - 1);
+	REQUIRE(result == "Short");
+}
+
+TEST_CASE("view_tree_format::decode_field, scvr_subject keyed marker", "[u]")
+{
+	field_def_t field { "Function", field_type_t::scvr_subject, 2, 2, nullptr, nullptr, 0 };
+
+	const char data[] = "04JX3B8_MeetVivec";
+	auto result = decode_field(field, data, sizeof(data) - 1);
+	REQUIRE(result == "JX");
+}

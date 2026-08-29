@@ -469,6 +469,9 @@ std::string decode_field(const field_def_t & field, const char * data, size_t da
 
 	case field_type_t::scvr_operator:
 		return scvr_operator_symbol(ptr[0]);
+
+	case field_type_t::scvr_subject:
+		return scvr_subject_display(data, data_size);
 	}
 
 	return "";

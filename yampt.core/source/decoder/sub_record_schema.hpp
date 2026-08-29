@@ -24,7 +24,8 @@ enum class field_type_t
 	binary,
 	raw,
 	scvr_type,
-	scvr_operator
+	scvr_operator,
+	scvr_subject
 };
 
 struct field_def_t
