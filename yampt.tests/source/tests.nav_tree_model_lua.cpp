@@ -98,7 +98,13 @@ TEST_CASE(
 		{
 			const auto conflict_count = *rc::gen::inRange(1, 6);
 			for (int index = 0; index < conflict_count; ++index)
-				result.conflicts.push_back(*gen_conflict());
+			{
+				const auto conflict = *gen_conflict();
+				for (const auto & registration : conflict.registrations)
+					result.registrations.push_back(registration);
+
+				result.conflicts.push_back(conflict);
+			}
 		}
 		else if (scenario == 1)
 		{
