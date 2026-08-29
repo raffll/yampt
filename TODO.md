@@ -2,8 +2,6 @@
 
 ## Documentation
 
-yaml_l10n_reader missing \n \t escape handling in quoted values
-yaml_l10n_reader missing |+ block scalar support
 check all [error] [info] log messages for correct lowercase tags
 
 

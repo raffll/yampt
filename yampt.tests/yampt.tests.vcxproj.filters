@@ -28,6 +28,7 @@
     <ClCompile Include="source\tests.sidebar_model.cpp" />
     <ClCompile Include="source\tests.table_columns.cpp" />
     <ClCompile Include="source\tests.yaml_l10n_reader.cpp" />
+    <ClCompile Include="source\tests.yaml_scalar.cpp" />
     <ClCompile Include="source\tests.script_tokenizer.cpp" />
     <ClCompile Include="source\tests.editor_controller.cpp" />
     <ClCompile Include="source\tests.commit_orchestrator.cpp" />

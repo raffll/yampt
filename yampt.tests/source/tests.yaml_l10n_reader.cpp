@@ -87,6 +87,28 @@ TEST_CASE("yaml_l10n_reader_t::load, pipe-minus block scalar", "[i]")
 	cleanup_file(path);
 }
 
+TEST_CASE("yaml_l10n_reader_t::load, pipe-plus block scalar keeps trailing newline", "[i]")
+{
+	const auto path = create_temp_yaml(
+	    "yaml_reader_keep.yaml",
+	    "message: |+\n"
+	    "  Hello world\n"
+	    "  End of message\n"
+	    "next_key: after\n");
+
+	yaml_l10n_reader_t reader;
+	const auto loaded = reader.load(path);
+
+	REQUIRE(loaded == true);
+	REQUIRE(reader.source_entries().size() == 2);
+	REQUIRE(reader.source_entries()[0].key == "message");
+	REQUIRE(reader.source_entries()[0].value == "Hello world\nEnd of message\n");
+	REQUIRE(reader.source_entries()[1].key == "next_key");
+	REQUIRE(reader.source_entries()[1].value == "after");
+
+	cleanup_file(path);
+}
+
 TEST_CASE("yaml_l10n_reader_t::load, quoted strings", "[i]")
 {
 	const auto path = create_temp_yaml(
@@ -103,6 +125,42 @@ TEST_CASE("yaml_l10n_reader_t::load, quoted strings", "[i]")
 	REQUIRE(reader.source_entries()[0].value == "A quoted value");
 	REQUIRE(reader.source_entries()[1].key == "plain");
 	REQUIRE(reader.source_entries()[1].value == "unquoted value");
+
+	cleanup_file(path);
+}
+
+TEST_CASE("yaml_l10n_reader_t::load, quoted value decodes newline and tab escapes", "[i]")
+{
+	const auto path = create_temp_yaml(
+	    "yaml_reader_escapes.yaml",
+	    "line: \"first\\nsecond\"\n"
+	    "tabbed: \"a\\tb\"\n");
+
+	yaml_l10n_reader_t reader;
+	const auto loaded = reader.load(path);
+
+	REQUIRE(loaded == true);
+	REQUIRE(reader.source_entries().size() == 2);
+	REQUIRE(reader.source_entries()[0].value == "first\nsecond");
+	REQUIRE(reader.source_entries()[1].value == "a\tb");
+
+	cleanup_file(path);
+}
+
+TEST_CASE("yaml_l10n_reader_t::load, quoted value keeps quote and backslash escapes", "[i]")
+{
+	const auto path = create_temp_yaml(
+	    "yaml_reader_escapes_quote.yaml",
+	    "quote: \"say \\\"hi\\\"\"\n"
+	    "backslash: \"a\\\\b\"\n");
+
+	yaml_l10n_reader_t reader;
+	const auto loaded = reader.load(path);
+
+	REQUIRE(loaded == true);
+	REQUIRE(reader.source_entries().size() == 2);
+	REQUIRE(reader.source_entries()[0].value == "say \"hi\"");
+	REQUIRE(reader.source_entries()[1].value == "a\\b");
 
 	cleanup_file(path);
 }

@@ -16,6 +16,8 @@
 - [CHANGE] Localization documents (.top, .mrk, .yaml) no longer show the ID and Key columns, since those entries have no record type or key — only Original, Translation, and Status are shown
 - [FIX] Web translation providers that send form-encoded requests now work — the request was previously rejected for a missing content type
 - [FIX] Numeric web provider settings (such as a temperature value) are now sent as numbers, so providers that require a numeric field no longer reject the request
+- [FIX] Quoted values in localization YAML files now decode \n and \t escapes into real line breaks and tabs instead of showing them as literal characters
+- [FIX] Localization YAML block scalars written with the keep indicator (|+) are now read correctly instead of being treated as broken entries
 
 ### Both Apps
 - [NEW] Linux support: builds with CMake and system libraries, AUR package available

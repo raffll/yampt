@@ -12,6 +12,7 @@
     <ClCompile Include="source\io\eet_converter.cpp" />
     <ClCompile Include="source\io\file_list.cpp" />
     <ClCompile Include="source\io\yaml_l10n_reader.cpp" />
+    <ClCompile Include="source\io\yaml_scalar.cpp" />
     <ClCompile Include="source\io\yaml_l10n_writer.cpp" />
     <ClCompile Include="source\io\loc_file_reader.cpp" />
     <ClCompile Include="source\io\loc_file_writer.cpp" />

@@ -25,13 +25,7 @@ public:
 private:
 	std::vector<l10n_entry_t> parse_yaml(const std::string & path);
 
-	std::string parse_quoted_value(const std::string & raw_value) const;
-
-	std::string read_block_scalar(
-	    std::ifstream & file,
-	    bool strip_trailing,
-	    std::string & lookahead_line,
-	    bool & has_lookahead) const;
+	std::string read_block_scalar(std::ifstream & file, std::string & lookahead_line, bool & has_lookahead) const;
 
 	std::vector<l10n_entry_t> m_source_entries;
 	std::vector<l10n_entry_t> m_target_entries;
