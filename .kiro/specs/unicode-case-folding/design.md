@@ -60,13 +60,30 @@ Representation: a sorted array of `{uint32_t upper, uint32_t lower}` pairs with 
 
 ## Migration Map
 
-Switch these language-text call sites from `to_lower` to `to_lower_utf8` (and `case_insensitive_equal` → `case_insensitive_equal_utf8` where used on language text):
+Switch these language-text call sites to `to_lower_utf8` (and `case_insensitive_equal_utf8` where used on language text). Note: many use inline `std::tolower`/`std::transform` or Qt `toLower`, not `string_utils::to_lower`, so a plain swap of the core helper is NOT enough — each must be changed to call the core fold.
 
-- `yampt.translator/source/highlighter/highlight_coordinator.cpp` — term fold.
-- `yampt.translator/source/controller/record_display_controller.cpp` — the `original_lower` / `translation_lower` / `current_text` passed into `find_annotation_highlights`.
-- `yampt.translator/source/editor/glossary.cpp` — all term/topic/text folds and `apply_glossary`.
-- `yampt.translator/source/editor/row_filter.cpp` — query and haystack folds.
-- `yampt.core/source/utility/keyword_trie.cpp` — `to_lower_char` becomes code-point aware, or the trie switches to folding whole tokens; decide during implementation (the trie is per-char, so it needs a code-point-aware variant or a pre-fold of inputs).
+**yTranslator — `string_utils::to_lower` sites:**
+- `highlighter/highlight_coordinator.cpp` — term fold.
+- `editor/glossary.cpp` — all term/topic/text folds and `apply_glossary`.
+- `editor/row_filter.cpp` — query and haystack folds.
+
+**yTranslator — inline `std::tolower` / `std::transform` sites (were missed by a swap):**
+- `highlighter/topic_highlighter.cpp` — text and per-term folds (currently inline `std::tolower`).
+- `editor/spell_checker.cpp` — excluded-word and keyword case-insensitive compares on language words (currently inline `std::tolower`; also consolidate the duplicated compare noted in known-issues).
+
+**yTranslator — Qt `toLower` sites on the match text path (reconcile, see below):**
+- `controller/record_display_controller.cpp` — `original_lower` / `translation_lower` / `current_text` (currently Qt `toLower`).
+- `highlighter/highlight_applier.cpp` — editor text fold (currently Qt `toLower`).
+
+**yEditor — previously omitted, now in scope:**
+- `model/nav_tree_filter.cpp` — `contains_case_insensitive` (inline `std::tolower`), used for nav-tree search.
+- `model/nav_tree_model.cpp` — the case-insensitive compare loop (`ca`/`cb`, inline `std::tolower`).
+
+Do NOT change (ASCII technical): `session.cpp` extension check, `plugin_operations_controller.cpp` path normalize, `make_base_dialog.cpp` filename compare, `sidebar_view.cpp` `suffix().toLower()`, `nav_tree_model` path-compare used for file identity (verify each is ASCII-token, not language text, during implementation).
+
+### Qt `toLower` reconciliation (root of the failing test)
+
+The failing `highlight_coordinator` test folds the **term** with ASCII `string_utils::to_lower` while the **text** side is produced by Qt `QString::toLower` in `record_display_controller`. When the term has a multi-byte letter, the two folds disagree and the match length is off by the multibyte delta (the observed 8-vs-9). Fix: fold BOTH sides with the same core `to_lower_utf8` over the identical UTF-8 byte string. Concretely, `record_display_controller` and `highlight_applier` stop using `QString::toLower().toStdString()` for the match text and instead take the UTF-8 std::string and fold it with `to_lower_utf8`, matching the term side. This preserves the byte-length invariant end-to-end so offsets/lengths are correct.
 
 Leave UNCHANGED (ASCII technical, R4):
 - `yampt.core/source/io/file_list.cpp` (extensions, filename classification)
@@ -78,7 +95,9 @@ Leave UNCHANGED (ASCII technical, R4):
 
 ### keyword_trie consideration
 
-`keyword_trie_t` folds one `char` at a time (`to_lower_char`). Script keywords are ASCII, but the trie also walks arbitrary text. Since keywords themselves are ASCII, ASCII folding of the trie keys is sufficient for keyword detection; the non-ASCII concern there is only about word boundaries (a separate TODO item about `\x80-\xFF`). Decision: keyword_trie stays ASCII for keyword matching; it is out of scope for this spec except to confirm it is not a language-text matcher. Remove it from R3.1 scope if implementation confirms keywords are strictly ASCII.
+`keyword_trie_t` folds one `char` at a time (`to_lower_char`) and is used for BOTH ASCII script keywords AND dialogue-topic matching. Topic names can be accented/Cyrillic (Polish, Russian), so ASCII-only folding means accented topics whose case differs from the source text will not match through the trie.
+
+Decision (resolved): the trie's `to_lower_char` is replaced by a code-point-aware fold path so the trie folds by code point using the same fold table as `to_lower_utf8`. Because the fold is byte-length-preserving, the trie's byte-offset match results stay valid. This brings accented topic matching in line with the rest of the language-text matching (closing the "all cases" gap). If, during implementation, topic matching is confirmed to never reach the trie with non-ASCII text (it does, via dial topics), this could be reduced — but the default is: make the trie code-point aware. The word-boundary handling (`\x80-\xFF`) is a separate concern and out of scope.
 
 ## Testing Strategy
 
@@ -92,6 +111,8 @@ New `yampt.tests/source/tests.string_utils_utf8.cpp` (`[u]` tag), plus the exist
 - Malformed UTF-8 (lone continuation byte, truncated sequence) does not crash and passes bytes through.
 - `case_insensitive_equal_utf8` true/false cases across scripts.
 - Regression: the `Ödsee`/`ödsee` highlight test passes with offset 4, length 6.
+- keyword_trie: an accented dial-topic keyword matches accented text of differing case, with correct byte offset/length.
+- yEditor `nav_tree_filter_t::contains_case_insensitive`: an accented needle matches accented haystack case-insensitively (and a negative case).
 
 ## Build / Project Wiring
 

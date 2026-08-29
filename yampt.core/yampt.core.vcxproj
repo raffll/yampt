@@ -226,6 +226,7 @@
     <ClCompile Include="source\utility\record_behavior.cpp" />
     <ClCompile Include="source\utility\domain_types.cpp" />
     <ClCompile Include="source\utility\app_logger.cpp" />
+    <ClCompile Include="source\utility\string_utils.cpp" />
     <ClCompile Include="source\utility\language_config.cpp" />
   </ItemGroup>
   <ItemGroup>

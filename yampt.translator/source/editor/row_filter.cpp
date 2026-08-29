@@ -6,7 +6,7 @@ void row_filter_t::set_config(const config_t & cfg)
 {
 	m_config = cfg;
 	m_compiled_regex = std::nullopt;
-	m_query_lower = cfg.case_sensitive ? cfg.query : string_utils::to_lower(cfg.query);
+	m_query_lower = cfg.case_sensitive ? cfg.query : string_utils::to_lower_utf8(cfg.query);
 
 	if (!m_config.regex_mode || m_config.query.empty())
 		return;
@@ -77,7 +77,7 @@ bool row_filter_t::matches(const table_row_t & row) const
 		if (!text)
 			continue;
 
-		const auto haystack = m_config.case_sensitive ? *text : string_utils::to_lower(*text);
+		const auto haystack = m_config.case_sensitive ? *text : string_utils::to_lower_utf8(*text);
 		if (haystack.find(query) != std::string::npos)
 			return true;
 	}

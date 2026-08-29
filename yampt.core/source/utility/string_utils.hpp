@@ -83,6 +83,10 @@ inline bool case_insensitive_equal(std::string_view lhs, std::string_view rhs)
 	return to_lower(lhs) == to_lower(rhs);
 }
 
+std::string to_lower_utf8(std::string_view input);
+
+bool case_insensitive_equal_utf8(std::string_view lhs, std::string_view rhs);
+
 inline bool paths_equivalent(std::string_view lhs, std::string_view rhs)
 {
 	return case_insensitive_equal(normalize_path(lhs), normalize_path(rhs));

@@ -23,7 +23,7 @@ std::vector<highlight_position_t> highlight_coordinator_t::find_annotation_highl
 			continue;
 
 		const bool is_hyperlink = (annotation.kind == annotation_t::dial_topic);
-		const auto term = string_utils::to_lower(raw);
+		const auto term = string_utils::to_lower_utf8(raw);
 		const auto term_length = static_cast<int>(term.length());
 
 		size_t pos = 0;

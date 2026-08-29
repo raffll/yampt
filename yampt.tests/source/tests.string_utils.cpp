@@ -57,6 +57,21 @@ TEST_CASE("string_utils::case_insensitive_equal, various inputs", "[u]")
 	REQUIRE(string_utils::case_insensitive_equal("short", "longer") == false);
 }
 
+TEST_CASE("string_utils::to_lower, ascii behavior preserved as regression guard", "[u]")
+{
+	REQUIRE(string_utils::to_lower("BALMORA") == "balmora");
+	REQUIRE(string_utils::to_lower("Vivec City") == "vivec city");
+	REQUIRE(string_utils::to_lower("Mix3d C4se!") == "mix3d c4se!");
+	REQUIRE(string_utils::to_lower("digits 123 stay") == "digits 123 stay");
+}
+
+TEST_CASE("string_utils::to_lower, preserves byte length on accented input", "[u]")
+{
+	const std::string upper = "B\xc4\x84lmora";
+	const auto lowered = string_utils::to_lower(upper);
+	REQUIRE(lowered.size() == upper.size());
+}
+
 TEST_CASE("string_utils::paths_equivalent, same directory different spelling", "[u]")
 {
 	REQUIRE(string_utils::paths_equivalent("C:\\OMEN\\workspace", "C:/OMEN/workspace") == true);

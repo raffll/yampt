@@ -2,6 +2,7 @@
 #include <hunspell/hunspell.hxx>
 #include <utility/app_logger.hpp>
 #include <utility/domain_types.hpp>
+#include <utility/string_utils.hpp>
 #include <algorithm>
 #include <cctype>
 
@@ -129,21 +130,7 @@ bool spell_checker_t::is_excluded(const std::string & word) const
 {
 	for (const auto & excluded : m_excluded_words)
 	{
-		if (excluded.size() != word.size())
-			continue;
-
-		bool match = true;
-		for (size_t i = 0; i < word.size(); ++i)
-		{
-			if (std::tolower(static_cast<unsigned char>(excluded[i])) !=
-			    std::tolower(static_cast<unsigned char>(word[i])))
-			{
-				match = false;
-				break;
-			}
-		}
-
-		if (match)
+		if (string_utils::case_insensitive_equal_utf8(excluded, word))
 			return true;
 	}
 

@@ -106,7 +106,7 @@ TEST_CASE("highlight_coordinator_t::find_annotation_highlights, uppercase annota
 	entry.start = 0;
 	entry.end = 0;
 	entry.kind = annotation_t::dial_topic;
-	entry.old_text = "B\xc4\x85lmora";
+	entry.old_text = "B\xc4\x84lmora";
 	entry.new_text = "b\xc4\x85lmora";
 	entry.source = "test.json";
 	annotations.push_back(entry);
@@ -122,6 +122,6 @@ TEST_CASE("highlight_coordinator_t::find_annotation_highlights, uppercase annota
 
 	REQUIRE(results.size() == 1);
 	REQUIRE(results[0].start == 8);
-	REQUIRE(results[0].length == 9);
+	REQUIRE(results[0].length == 8);
 	REQUIRE(results[0].is_hyperlink == true);
 }

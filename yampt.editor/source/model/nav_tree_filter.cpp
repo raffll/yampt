@@ -1,4 +1,5 @@
 #include "nav_tree_filter.hpp"
+#include <utility/string_utils.hpp>
 #include <algorithm>
 #include <cctype>
 #include <regex>
@@ -8,14 +9,10 @@ bool nav_tree_filter_t::contains_case_insensitive(const std::string & haystack, 
 	if (needle.size() > haystack.size())
 		return false;
 
-	return std::search(
-	           haystack.begin(),
-	           haystack.end(),
-	           needle.begin(),
-	           needle.end(),
-	           [](char a, char b)
-	{ return std::tolower(static_cast<unsigned char>(a)) == std::tolower(static_cast<unsigned char>(b)); }) !=
-	       haystack.end();
+	const auto haystack_lower = string_utils::to_lower_utf8(haystack);
+	const auto needle_lower = string_utils::to_lower_utf8(needle);
+
+	return haystack_lower.find(needle_lower) != std::string::npos;
 }
 
 bool nav_tree_filter_t::matches_text(const std::string & haystack, const std::string & needle) const

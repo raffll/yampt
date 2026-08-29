@@ -87,6 +87,7 @@
     <ClCompile Include="source\tests.lua_tree_model.cpp" />
     <ClCompile Include="source\tests.count_label_format.cpp" />
     <ClCompile Include="source\tests.filter_composer.cpp" />
+    <ClCompile Include="source\tests.string_utils_utf8.cpp" />
     <ClCompile Include="..\yampt.core\source\io\eet_converter.cpp" />
     <ClCompile Include="..\yampt.core\source\io\eet_reader.cpp" />
     <ClCompile Include="..\yampt.core\source\utility\char_diff.cpp" />

@@ -69,7 +69,7 @@ Accessor methods in `esm_converter.hpp` and `esm_reader.hpp` that do not mutate 
 
 ## spell_checker duplicated case-insensitive search
 
-`spell_checker` reimplements case-insensitive search logic that already exists, violating DRY. It should use the shared helper in `string_utils`.
+`spell_checker_t::is_excluded` now uses the shared `string_utils::case_insensitive_equal_utf8`. `is_mwscript_keyword` still has an inline per-byte compare, kept ASCII on purpose because MWScript keywords are ASCII technical tokens; it could still be consolidated onto a shared ASCII helper.
 
 ## script_parser trim_last_new_line_chars has an unreachable condition
 

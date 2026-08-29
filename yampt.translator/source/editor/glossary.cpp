@@ -25,7 +25,7 @@ void glossary_t::collect_dial_entries(const dict_source_t & source)
 		if (entry.old_text.empty())
 			continue;
 
-		m_dial_topics.push_back({ string_utils::to_lower(entry.old_text), entry.new_text, source.name });
+		m_dial_topics.push_back({ string_utils::to_lower_utf8(entry.old_text), entry.new_text, source.name });
 	}
 }
 
@@ -46,7 +46,7 @@ void glossary_t::collect_glossary_entries(const dict_source_t & source, rec_type
 		if (!is_trusted_status(entry.status))
 			continue;
 
-		m_glossary_terms.push_back({ string_utils::to_lower(entry.old_text), entry.new_text, source.name });
+		m_glossary_terms.push_back({ string_utils::to_lower_utf8(entry.old_text), entry.new_text, source.name });
 	}
 }
 
@@ -109,7 +109,7 @@ void glossary_t::update_vector(
     const std::string & old_text,
     const std::string & new_text)
 {
-	const auto & key_lower = string_utils::to_lower(old_text);
+	const auto & key_lower = string_utils::to_lower_utf8(old_text);
 
 	for (auto & entry : vec)
 	{
@@ -135,7 +135,7 @@ void glossary_t::update_vector(
 
 void glossary_t::remove_from_vector(std::vector<topic_entry_t> & vec, const std::string & old_text)
 {
-	const auto & key_lower = string_utils::to_lower(old_text);
+	const auto & key_lower = string_utils::to_lower_utf8(old_text);
 	vec.erase(
 	    std::remove_if(
 	        vec.begin(), vec.end(), [&key_lower](const topic_entry_t & entry) { return entry.key_lower == key_lower; }),
@@ -167,11 +167,12 @@ void glossary_t::rebuild_dial_trie()
 
 void glossary_t::find_matches_trie(const std::string & text_original, std::vector<annotation_t> & results) const
 {
-	const auto & matches = m_dial_trie.find_matches(text_original);
+	const auto text_folded = string_utils::to_lower_utf8(text_original);
+	const auto & matches = m_dial_trie.find_matches(text_folded);
 
 	for (const auto & match : matches)
 	{
-		const auto & key_lower = string_utils::to_lower(text_original.substr(match.start, match.length));
+		const auto & key_lower = string_utils::to_lower_utf8(text_original.substr(match.start, match.length));
 		std::string source;
 		std::string new_text = match.topic_id;
 
@@ -251,7 +252,7 @@ std::vector<annotation_t> glossary_t::annotate(const std::string & text, rec_typ
 	std::vector<annotation_t> at_hyperlinks;
 	find_at_prefix_hyperlinks(text, at_hyperlinks);
 
-	const auto & text_lower = string_utils::to_lower(text);
+	const auto & text_lower = string_utils::to_lower_utf8(text);
 
 	std::vector<annotation_t> hyperlinks;
 	std::vector<annotation_t> glossary;
@@ -297,7 +298,7 @@ std::vector<annotation_t> glossary_t::annotate_translated(const std::string & te
 	if (text.empty())
 		return results;
 
-	const auto & text_lower = string_utils::to_lower(text);
+	const auto & text_lower = string_utils::to_lower_utf8(text);
 
 	std::set<std::string> seen_topics;
 
@@ -306,7 +307,7 @@ std::vector<annotation_t> glossary_t::annotate_translated(const std::string & te
 		if (topic.new_text.empty())
 			continue;
 
-		const auto & topic_lower = string_utils::to_lower(topic.new_text);
+		const auto & topic_lower = string_utils::to_lower_utf8(topic.new_text);
 		if (!seen_topics.insert(topic_lower).second)
 			continue;
 
@@ -348,7 +349,7 @@ void glossary_t::find_loc_annotations(
 		if (entry.key.empty())
 			continue;
 
-		const auto & key_lower = string_utils::to_lower(entry.key);
+		const auto & key_lower = string_utils::to_lower_utf8(entry.key);
 		auto search_pos = text_lower.find(key_lower);
 		if (search_pos == std::string::npos)
 			continue;
@@ -370,7 +371,7 @@ void glossary_t::find_loc_annotations(
 			if (entry.key.empty())
 				continue;
 
-			const auto & key_lower = string_utils::to_lower(entry.key);
+			const auto & key_lower = string_utils::to_lower_utf8(entry.key);
 			auto search_pos = text_lower.find(key_lower);
 			if (search_pos == std::string::npos)
 				continue;
@@ -425,7 +426,7 @@ void glossary_t::find_matches_legacy(
 std::vector<glossary_t::glossary_match_t> glossary_t::find_glossary_matches(const std::string & source_text) const
 {
 	std::vector<glossary_match_t> matches;
-	const auto & text_lower = string_utils::to_lower(source_text);
+	const auto & text_lower = string_utils::to_lower_utf8(source_text);
 	std::vector<bool> covered(source_text.size(), false);
 
 	for (const auto & term : m_glossary_terms)
@@ -478,7 +479,7 @@ std::vector<glossary_t::glossary_match_t> glossary_t::find_glossary_matches(cons
 
 std::string glossary_t::apply_glossary(const std::string & translated_text) const
 {
-	auto text_lower = string_utils::to_lower(translated_text);
+	auto text_lower = string_utils::to_lower_utf8(translated_text);
 	std::string result = translated_text;
 
 	for (const auto & term : m_glossary_terms)
@@ -503,7 +504,7 @@ std::string glossary_t::apply_glossary(const std::string & translated_text) cons
 			}
 
 			result.replace(search_pos, term.key_lower.size(), term.new_text);
-			text_lower = string_utils::to_lower(result);
+			text_lower = string_utils::to_lower_utf8(result);
 			search_pos += term.new_text.size();
 		}
 	}

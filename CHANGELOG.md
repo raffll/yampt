@@ -27,6 +27,7 @@
 - [FIX] Converting a plugin whose master reference or file name has no extension no longer crashes
 - [FIX] Converting a malformed plugin where a dialogue response appears before its topic no longer produces corrupted output
 - [FIX] Cell names with accented or Cyrillic letters referenced in scripts are now translated correctly instead of being cut off at the first non-ASCII character
+- [FIX] Case-insensitive search, glossary matching, and text highlighting now work for accented and Cyrillic letters, so a word matches regardless of the case of its non-ASCII letters
 
 ### yEditor
 - [NEW] Enable Editing: a single toolbar toggle makes decoded fields editable in the Edit panel for all plugins (combobox for flags and enums); starts disabled each time the app opens

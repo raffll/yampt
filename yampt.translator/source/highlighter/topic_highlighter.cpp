@@ -1,4 +1,5 @@
 #include "topic_highlighter.hpp"
+#include <utility/string_utils.hpp>
 #include <algorithm>
 
 topic_highlighter_t::topic_highlighter_t(QTextDocument * parent)
@@ -20,22 +21,11 @@ void topic_highlighter_t::highlightBlock(const QString & text)
 	if (m_terms.empty())
 		return;
 
-	auto text_str = text.toStdString();
-	auto text_lower = text_str;
-	std::transform(
-	    text_lower.begin(),
-	    text_lower.end(),
-	    text_lower.begin(),
-	    [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+	const auto text_lower = string_utils::to_lower_utf8(text.toStdString());
 
 	for (const auto & term : m_terms)
 	{
-		std::string term_lower = term;
-		std::transform(
-		    term_lower.begin(),
-		    term_lower.end(),
-		    term_lower.begin(),
-		    [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+		const auto term_lower = string_utils::to_lower_utf8(term);
 
 		if (term_lower.empty())
 			continue;
