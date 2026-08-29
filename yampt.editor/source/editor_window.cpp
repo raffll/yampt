@@ -87,26 +87,6 @@ void editor_window_t::setup_menu_bar()
 
 	auto * view_menu = menuBar()->addMenu(tr("&View"));
 
-	auto * hide_dup_action = new QAction(tr("&Hide Duplicates"), this);
-	hide_dup_action->setCheckable(true);
-	hide_dup_action->setChecked(m_plugin_workspace_view->is_hide_duplicates());
-	hide_dup_action->setToolTip(tr("Hide duplicate columns from the same plugin"));
-	view_menu->addAction(hide_dup_action);
-	connect(hide_dup_action, &QAction::toggled, m_plugin_workspace_view, &plugin_workspace_view_t::set_hide_duplicates);
-
-	auto * show_deleted_action = new QAction(tr("&Mark Deleted"), this);
-	show_deleted_action->setCheckable(true);
-	show_deleted_action->setChecked(m_plugin_workspace_view->is_show_deleted_strikeout());
-	show_deleted_action->setToolTip(tr("Strikeout deleted records and cell references"));
-	view_menu->addAction(show_deleted_action);
-	connect(
-	    show_deleted_action,
-	    &QAction::toggled,
-	    m_plugin_workspace_view,
-	    &plugin_workspace_view_t::set_show_deleted_strikeout);
-
-	view_menu->addSeparator();
-
 	m_sidebar_toggle = new QAction(tr("Toggle &Sidebar"), this);
 	m_sidebar_toggle->setCheckable(true);
 	m_sidebar_toggle->setChecked(true);
@@ -120,6 +100,26 @@ void editor_window_t::setup_menu_bar()
 	m_bottom_toggle->setToolTip(tr("Show or hide the edit and log panel"));
 	view_menu->addAction(m_bottom_toggle);
 	connect(m_bottom_toggle, &QAction::toggled, m_plugin_workspace_view->bottom_panel_widget(), &QWidget::setVisible);
+
+	view_menu->addSeparator();
+
+	auto * hide_dup_action = new QAction(tr("Show &Only One Column Per Plugin"), this);
+	hide_dup_action->setCheckable(true);
+	hide_dup_action->setChecked(m_plugin_workspace_view->is_hide_duplicates());
+	hide_dup_action->setToolTip(tr("Keep only each plugin's last version of a record"));
+	view_menu->addAction(hide_dup_action);
+	connect(hide_dup_action, &QAction::toggled, m_plugin_workspace_view, &plugin_workspace_view_t::set_hide_duplicates);
+
+	auto * show_deleted_action = new QAction(tr("Strike Out &Deleted Records"), this);
+	show_deleted_action->setCheckable(true);
+	show_deleted_action->setChecked(m_plugin_workspace_view->is_show_deleted_strikeout());
+	show_deleted_action->setToolTip(tr("Strike out deleted records and cell references"));
+	view_menu->addAction(show_deleted_action);
+	connect(
+	    show_deleted_action,
+	    &QAction::toggled,
+	    m_plugin_workspace_view,
+	    &plugin_workspace_view_t::set_show_deleted_strikeout);
 
 	auto * tools_menu = menuBar()->addMenu(tr("&Tools"));
 	auto * settings_action = new QAction(tr("&Preferences..."), this);
@@ -302,10 +302,6 @@ void editor_window_t::on_reset_filters()
 {
 	m_conflicts_action->setChecked(false);
 	m_search_field->clear();
-	m_case_sensitive_btn->setChecked(false);
-	m_regex_btn->setChecked(false);
-	m_search_id_btn->setChecked(true);
-	m_search_name_btn->setChecked(true);
 
 	m_plugin_workspace_view->reset_all_filters();
 }

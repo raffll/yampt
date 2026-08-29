@@ -46,3 +46,31 @@ These exceed 50 lines but are stable, self-contained dialog/menu builders. Refac
 ## creator_helpers insert functions exceed 2-argument limit
 
 The `insert_entry_*` family in `creator_helpers` (namespace functions plus the `creator_ordered_t::insert_entry_base` wrapper) takes 4-6 arguments each, exceeding the max-2-argument rule. The intended fix is to pass data via structs (`insert_params_t` for key/old/new/type/status, `insert_from_base_params_t` for the three functions that take a `record_entry_t & base_entry`) and update the ~40 call sites across `creator_single.cpp`, `creator_ordered.cpp`, and the internal calls in `creator_helpers.cpp`. Deferred: large blast radius across a core dictionary-generation path, low priority.
+
+## field_def_role case in view_tree_model.cpp exceeds 100 lines
+
+The `field_def_role` case handling in `view_tree_model.cpp` is 103 lines, exceeding the 50-line function limit. The decode logic is inseparable from the model's presentation role (allowed class-split exception for `view_tree_model_t`), but the case block itself should be extracted into a helper.
+
+## exclude sub-record lambda nesting exceeds 3 levels
+
+The exclude sub-record lambda in `view_context_menu.cpp` nests more than 3 levels deep, violating the no-deep-nesting rule. The lambda logic should be flattened with early returns or moved into a named method.
+
+## highlight_coordinator_t is a static-only class
+
+`highlight_coordinator_t` has only static methods and no mutable state. Per the classes-vs-namespaces rule it should be a namespace, not a class.
+
+## insert_duplicate has an unused status parameter
+
+`insert_duplicate` takes a `status` parameter that is never used — dead code. The parameter should be removed and call sites updated.
+
+## esm_converter.hpp and esm_reader.hpp accessors missing const qualifier
+
+Accessor methods in `esm_converter.hpp` and `esm_reader.hpp` that do not mutate state are missing the `const` qualifier.
+
+## spell_checker duplicated case-insensitive search
+
+`spell_checker` reimplements case-insensitive search logic that already exists, violating DRY. It should use the shared helper in `string_utils`.
+
+## script_parser trim_last_new_line_chars has an unreachable condition
+
+`script_parser::trim_last_new_line_chars` contains an `|| npos` condition that is unreachable given the preceding checks. The redundant branch should be removed.

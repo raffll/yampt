@@ -574,6 +574,13 @@ void plugin_workspace_view_t::on_view_selection_changed(const QModelIndex & curr
 		return;
 	}
 
+	const auto * node = model->node_from_index(current);
+	if (node != nullptr && node->is_info_chain)
+	{
+		m_preview->clear();
+		return;
+	}
+
 	m_preview->set_editing_enabled(false);
 
 	const auto right_text = model->full_value_at(current);

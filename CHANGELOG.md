@@ -13,6 +13,7 @@
 - [CHANGE] Find/Replace moved from the filter toolbar into its own tab in the left panel, after Statuses
 - [CHANGE] History tab moved to the end of the bottom-left tabs; each history entry now shows its status and timestamp
 - [CHANGE] Find/Replace no longer has a batch Undo button — each replacement is recorded in edit history and revertable per-entry
+- [CHANGE] Localization documents (.top, .mrk, .yaml) no longer show the ID and Key columns, since those entries have no record type or key — only Original, Translation, and Status are shown
 
 ### Both Apps
 - [NEW] Linux support: builds with CMake and system libraries, AUR package available
@@ -33,7 +34,7 @@
 - [CHANGE] Settings reorganized: Sub-Record Rules merged into Merged Patch page, Paths renamed to Output Paths, record type checkboxes replaced by TYPE:* syntax
 - [CHANGE] File Header shown as flat entry at the top of each plugin (no nesting)
 - [CHANGE] Unknown/binary sub-records now display hex bytes instead of placeholder
-- [CHANGE] View menu: "Hide Duplicate Columns" renamed to "Hide Duplicates", "Show Deleted Strikeout" renamed to "Mark Deleted" (disabled by default)
+- [CHANGE] View menu: "Hide Duplicate Columns" renamed to "Show Only One Column Per Plugin", "Show Deleted Strikeout" renamed to "Strike Out Deleted Records" (disabled by default)
 - [CHANGE] Conflicts Only, Advanced Filters, and search now compose: all active filters combine as a logical AND instead of overwriting each other
 - [FIX] Record view context menu now works when right-clicking the label column
 - [FIX] A plugin can no longer be both a guard patch and excluded from the merged patch — setting one clears the other

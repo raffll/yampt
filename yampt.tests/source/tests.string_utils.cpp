@@ -57,6 +57,22 @@ TEST_CASE("string_utils::case_insensitive_equal, various inputs", "[u]")
 	REQUIRE(string_utils::case_insensitive_equal("short", "longer") == false);
 }
 
+TEST_CASE("string_utils::paths_equivalent, same directory different spelling", "[u]")
+{
+	REQUIRE(string_utils::paths_equivalent("C:\\OMEN\\workspace", "C:/OMEN/workspace") == true);
+	REQUIRE(string_utils::paths_equivalent("C:/OMEN/workspace", "c:/omen/workspace") == true);
+	REQUIRE(string_utils::paths_equivalent("C:\\OMEN\\workspace\\", "C:/OMEN/workspace") == true);
+	REQUIRE(string_utils::paths_equivalent("C:\\OMEN\\Workspace\\", "c:/omen/workspace") == true);
+	REQUIRE(string_utils::paths_equivalent("", "") == true);
+}
+
+TEST_CASE("string_utils::paths_equivalent, different directories", "[u]")
+{
+	REQUIRE(string_utils::paths_equivalent("C:/OMEN/workspace", "C:/OMEN/other") == false);
+	REQUIRE(string_utils::paths_equivalent("C:/OMEN/workspace", "C:/OMEN/workspace/sub") == false);
+	REQUIRE(string_utils::paths_equivalent("D:/workspace", "C:/workspace") == false);
+}
+
 TEST_CASE("string_utils::erase_null_chars, removes from first null", "[u]")
 {
 	REQUIRE(string_utils::erase_null_chars("hello") == "hello");

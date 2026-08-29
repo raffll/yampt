@@ -6,6 +6,7 @@
     <ClCompile Include="source\main_window_setup.cpp" />
     <ClCompile Include="source\session\session.cpp" />
     <ClCompile Include="source\model\record_table_model.cpp" />
+    <ClCompile Include="source\model\table_columns.cpp" />
     <ClCompile Include="source\model\sidebar_model.cpp" />
     <ClCompile Include="source\model\dict_document.cpp" />
     <ClCompile Include="source\model\yaml_document.cpp" />
@@ -94,6 +95,7 @@
     <ClInclude Include="source\highlighter\highlight_applier.hpp" />
     <ClInclude Include="source\model\loc_document.hpp" />
     <ClInclude Include="source\model\eet_document.hpp" />
+    <ClInclude Include="source\model\table_columns.hpp" />
     <ClInclude Include="source\translator\model_list_utils.hpp" />
     <ClInclude Include="source\translator\translation_example_ops.hpp" />
   </ItemGroup>

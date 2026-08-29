@@ -47,9 +47,9 @@ The source language is read from `settings.foreign_language()` and set on each `
 
 ## Settings Storage
 
-Provider settings are stored per provider identifier and setting key under `[WebProviders]` in the INI file:
-- `settings.web_provider_setting("claude", "api_key")` reads `[WebProviders]/claude/api_key`
-- `settings.set_web_provider_setting("claude", "model", "claude-sonnet-4-20250514")` writes `[WebProviders]/claude/model`
+Provider settings are stored per provider identifier and setting key under `[WebTranslators]` in the INI file:
+- `settings.web_provider_setting("claude", "api_key")` reads `[WebTranslators]/claude/api_key`
+- `settings.set_web_provider_setting("claude", "model", "claude-sonnet-4-20250514")` writes `[WebTranslators]/claude/model`
 
 The identifier is the JSON filename stem (e.g. `deepl.json` → identifier `deepl`).
 

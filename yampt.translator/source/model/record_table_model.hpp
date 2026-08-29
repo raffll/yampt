@@ -1,6 +1,8 @@
 #pragma once
 
+#include "document.hpp"
 #include "row_source.hpp"
+#include "table_columns.hpp"
 #include "table_row.hpp"
 #include <vector>
 #include <QAbstractTableModel>
@@ -18,6 +20,9 @@ public:
 	QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
 	void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
 
+	void set_columns(document_kind_t kind);
+	const table_columns_t & columns() const;
+
 	void rebuild(std::vector<table_row_t> rows);
 	const table_row_t * row_at(int row) const override;
 	int row_count() const override;
@@ -32,5 +37,6 @@ signals:
 
 private:
 	std::vector<table_row_t> m_rows;
+	table_columns_t m_columns;
 	bool m_editable = true;
 };

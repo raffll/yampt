@@ -29,21 +29,7 @@ void record_table_view_t::setModel(QAbstractItemModel * model)
 	if (!model)
 		return;
 
-	auto * header = horizontalHeader();
-	if (header->count() >= col_count)
-	{
-		header->setSectionResizeMode(col_id, QHeaderView::Interactive);
-		header->setSectionResizeMode(col_key, QHeaderView::Interactive);
-		header->setSectionResizeMode(col_original, QHeaderView::Interactive);
-		header->setSectionResizeMode(col_translation, QHeaderView::Stretch);
-		header->setSectionResizeMode(col_status, QHeaderView::Interactive);
-		header->setStretchLastSection(false);
-
-		header->resizeSection(col_id, 50);
-		header->resizeSection(col_key, 200);
-		header->resizeSection(col_original, 250);
-		header->resizeSection(col_status, 90);
-	}
+	apply_column_layout();
 
 	connect(
 	    selectionModel(),
@@ -57,6 +43,52 @@ void record_table_view_t::setModel(QAbstractItemModel * model)
 
 		emit row_selected(selected.first().row());
 	});
+}
+
+void record_table_view_t::apply_column_layout()
+{
+	const auto * record_model = qobject_cast<record_table_model_t *>(model());
+	if (!record_model)
+		return;
+
+	const auto & columns = record_model->columns();
+	auto * header = horizontalHeader();
+	header->setStretchLastSection(false);
+
+	for (int position = 0; position < columns.count(); ++position)
+	{
+		const auto logical = columns.at(position);
+		if (logical == col_translation)
+		{
+			header->setSectionResizeMode(position, QHeaderView::Stretch);
+			continue;
+		}
+
+		header->setSectionResizeMode(position, QHeaderView::Interactive);
+		header->resizeSection(position, default_column_width(logical));
+	}
+}
+
+int record_table_view_t::default_column_width(table_col_t logical_column)
+{
+	switch (logical_column)
+	{
+	case col_id:
+		return 50;
+	case col_key:
+		return 200;
+	case col_original:
+		return 250;
+	case col_status:
+		return 90;
+	default:
+		return 100;
+	}
+}
+
+void record_table_view_t::refresh_column_layout()
+{
+	apply_column_layout();
 }
 
 void record_table_view_t::set_context_menu_enabled(bool enabled)

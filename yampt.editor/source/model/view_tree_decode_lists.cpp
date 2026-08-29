@@ -158,6 +158,7 @@ void view_tree_model_t::set_record_dial(
 
 	view_node_t separator_row;
 	separator_row.label = "--- INFO Chain ---";
+	separator_row.is_info_chain = true;
 	separator_row.values.resize(col_count);
 	separator_row.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
 	m_rows.push_back(std::move(separator_row));
@@ -166,6 +167,7 @@ void view_tree_model_t::set_record_dial(
 	{
 		view_node_t info_row;
 		info_row.label = info_entry.inam;
+		info_row.is_info_chain = true;
 		info_row.values.resize(col_count);
 		info_row.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
 

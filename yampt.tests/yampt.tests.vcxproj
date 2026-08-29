@@ -209,6 +209,7 @@
     <ClCompile Include="source\tests.session.cpp" />
     <ClCompile Include="source\tests.find_replace.cpp" />
     <ClCompile Include="source\tests.sidebar_model.cpp" />
+    <ClCompile Include="source\tests.table_columns.cpp" />
     <ClCompile Include="source\tests.yaml_l10n_reader.cpp" />
     <ClCompile Include="source\tests.script_tokenizer.cpp" />
     <ClCompile Include="source\tests.editor_controller.cpp" />
@@ -291,6 +292,7 @@
     <ClCompile Include="..\yampt.translator\source\session\workspace_watcher.cpp" />
     <ClCompile Include="..\yampt.translator\source\controller\editor_controller.cpp" />
     <ClCompile Include="..\yampt.translator\source\model\record_table_model.cpp" />
+    <ClCompile Include="..\yampt.translator\source\model\table_columns.cpp" />
     <ClCompile Include="..\yampt.editor\source\session\profile_file_reader.cpp" />
     <ClCompile Include="..\yampt.editor\source\model\nav_tree_filter.cpp" />
     <ClCompile Include="..\yampt.editor\source\session\plugin_session.cpp" />

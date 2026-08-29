@@ -85,8 +85,10 @@ Right-click a plugin node in the navigation tree for plugin-level options:
 
 The View menu provides display options:
 
-- **Hide Duplicates** — hides duplicate columns in the record view when the same plugin contributes identical data through multiple paths.
-- **Mark Deleted** — renders deleted records with strikethrough text, making them visually distinct from active content.
+- **Toggle Sidebar** — shows or hides the left navigation panel, giving the record view the full width of the window.
+- **Toggle Bottom Panel** — shows or hides the bottom edit and log panel, giving the record view more vertical space. Both toggles remember their state between sessions.
+- **Show Only One Column Per Plugin** — when a plugin defines the same record more than once, collapses those versions into a single column showing only that plugin's last (winning) version, instead of one column per occurrence.
+- **Strike Out Deleted Records** — renders deleted records and cell references with strikethrough text, making them visually distinct from active content.
 
 ## Toolbar Search
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../model/table_row.hpp"
 #include <utility/status_types.hpp>
 #include <functional>
 #include <vector>
@@ -15,6 +16,7 @@ public:
 	explicit record_table_view_t(QWidget * parent = nullptr);
 
 	void setModel(QAbstractItemModel * model) override;
+	void refresh_column_layout();
 	void set_column_widths(const std::vector<int> & widths);
 	std::vector<int> get_column_widths() const;
 	void set_context_menu_enabled(bool enabled);
@@ -32,6 +34,9 @@ protected:
 	void keyPressEvent(QKeyEvent * event) override;
 
 private:
+	void apply_column_layout();
+	static int default_column_width(table_col_t logical_column);
+
 	bool m_context_menu_enabled = true;
 	std::function<bool(int row)> m_example_state_fn;
 };

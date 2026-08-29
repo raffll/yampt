@@ -278,7 +278,8 @@ void main_window_t::on_search_changed(const QString & text)
 	cfg.case_sensitive = m_case_sensitive_check && m_case_sensitive_check->isChecked();
 	cfg.regex_mode = m_regex_check && m_regex_check->isChecked();
 	cfg.columns.clear();
-	if (m_search_col_key->isChecked())
+	const bool key_column_present = !m_table_model || m_table_model->columns().contains(col_key);
+	if (m_search_col_key->isChecked() && key_column_present)
 		cfg.columns.insert(search_column_t::key);
 	if (m_search_col_original->isChecked())
 		cfg.columns.insert(search_column_t::original);
@@ -386,6 +387,10 @@ void main_window_t::rebuild_table()
 		clear_editor_panels();
 		return;
 	}
+
+	m_table_model->set_columns(m_active_doc->kind());
+	if (m_table_view)
+		m_table_view->refresh_column_layout();
 
 	auto * dict_doc = dynamic_cast<dict_document_t *>(m_active_doc);
 	if (dict_doc)

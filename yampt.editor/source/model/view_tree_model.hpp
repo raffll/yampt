@@ -116,6 +116,7 @@ public:
 		bool all_identical = true;
 		bool is_ignored = false;
 		bool is_deleted = false;
+		bool is_info_chain = false;
 		int occurrence = 0;
 		int bit_index = -1;
 		std::vector<view_node_t> children;

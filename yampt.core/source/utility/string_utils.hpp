@@ -83,6 +83,11 @@ inline bool case_insensitive_equal(std::string_view lhs, std::string_view rhs)
 	return to_lower(lhs) == to_lower(rhs);
 }
 
+inline bool paths_equivalent(std::string_view lhs, std::string_view rhs)
+{
+	return case_insensitive_equal(normalize_path(lhs), normalize_path(rhs));
+}
+
 inline std::string erase_null_chars(std::string str)
 {
 	const auto pos = str.find('\0');

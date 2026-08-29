@@ -180,6 +180,7 @@
     <ClCompile Include="source\main_window_setup.cpp" />
     <ClCompile Include="source\session\session.cpp" />
     <ClCompile Include="source\model\record_table_model.cpp" />
+    <ClCompile Include="source\model\table_columns.cpp" />
     <ClCompile Include="source\model\sidebar_model.cpp" />
     <ClCompile Include="source\model\dict_document.cpp" />
     <ClCompile Include="source\model\yaml_document.cpp" />
@@ -252,6 +253,7 @@
     <ClInclude Include="source\model\eet_document.hpp" />
     <ClInclude Include="source\model\sidebar_model.hpp" />
     <ClInclude Include="source\model\table_row.hpp" />
+    <ClInclude Include="source\model\table_columns.hpp" />
     <ClInclude Include="source\model\row_source.hpp" />
     <ClInclude Include="source\model\table_builder.hpp" />    <ClInclude Include="source\view\table_view.hpp" />    <ClInclude Include="source\controller\editor_controller.hpp" />
     <ClInclude Include="source\editor\row_filter.hpp" />

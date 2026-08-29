@@ -151,7 +151,7 @@ void sidebar_controller_t::scan_workspace()
 	roots.push_back(workspace);
 	for (const auto & root : m_deps.file_list.get_roots())
 	{
-		if (root != workspace)
+		if (!string_utils::paths_equivalent(root, workspace))
 			roots.push_back(root);
 	}
 
@@ -187,11 +187,16 @@ void sidebar_controller_t::update_watcher_roots()
 {
 	QStringList roots;
 
-	const auto workspace = QString::fromStdString(resource_paths::workspace_dir());
-	roots.append(workspace);
+	const auto workspace = resource_paths::workspace_dir();
+	roots.append(QString::fromStdString(workspace));
 
 	for (const auto & root : m_deps.file_list.get_roots())
+	{
+		if (string_utils::paths_equivalent(root, workspace))
+			continue;
+
 		roots.append(QString::fromStdString(root));
+	}
 
 	m_deps.workspace_watcher.set_watch_roots(roots);
 }
