@@ -1,5 +1,4 @@
 #include "string_utils.hpp"
-#include "string_utils.hpp"
 #include <cstdint>
 
 namespace string_utils {
