@@ -1,4 +1,5 @@
 #include "decoder/field_validator.hpp"
+#include "decoder/scvr_condition.hpp"
 #include <cerrno>
 #include <climits>
 #include <cmath>
@@ -330,6 +331,14 @@ validate_result_t validate_field(
 
 	case field_type_t::raw:
 		return validate_hex_bytes(input, existing_sub_size);
+
+	case field_type_t::scvr_type:
+		return scvr_type_char(std::string(input)) != '\0' ? make_valid()
+		                                                   : make_invalid("unknown condition type");
+
+	case field_type_t::scvr_operator:
+		return scvr_operator_char(std::string(input)) != '\0' ? make_valid()
+		                                                       : make_invalid("unknown operator");
 	}
 
 	return make_invalid("unknown field type");

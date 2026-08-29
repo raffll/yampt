@@ -210,12 +210,12 @@ void main_window_t::setup_replace_toolbar()
 
 	m_replace_case_check = new QPushButton(tr("Aa"), this);
 	m_replace_case_check->setCheckable(true);
-	m_replace_case_check->setToolTip(tr("Case-sensitive find/replace"));
+	m_replace_case_check->setToolTip(tr("Case-sensitive find and replace"));
 	options_row->addWidget(m_replace_case_check);
 
 	m_replace_regex_check = new QPushButton(tr(".*"), this);
 	m_replace_regex_check->setCheckable(true);
-	m_replace_regex_check->setToolTip(tr("Regular expression find/replace"));
+	m_replace_regex_check->setToolTip(tr("Regular expression find and replace"));
 	options_row->addWidget(m_replace_regex_check);
 
 	options_row->addStretch();
@@ -265,7 +265,7 @@ void main_window_t::setup_sidebar()
 	m_left_tabs->addTab(m_sidebar, tr("Files"));
 	m_left_tabs->addTab(m_filter_tree_view, tr("Filters"));
 	m_left_tabs->addTab(m_status_filter_view, tr("Statuses"));
-	m_left_tabs->addTab(m_replace_toolbar, tr("Find/Replace"));
+	m_left_tabs->addTab(m_replace_toolbar, tr("Find & Replace"));
 	m_left_splitter->addWidget(m_left_tabs);
 
 	m_info_tabs = new QTabWidget(m_left_splitter);

@@ -316,6 +316,8 @@ void view_tree_model_t::decode_schema_children(
 		{
 			view_node_t group_node;
 			group_node.label = fdef.group;
+			group_node.type = slot.type;
+			group_node.size = schema->expected_size;
 			group_node.values.resize(col_count);
 			group_node.cell_conflict_this.resize(col_count, conflict_this_t::unknown);
 			group_node.row_conflict_all = conflict_all_t::only_one;

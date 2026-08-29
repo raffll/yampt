@@ -109,6 +109,7 @@ public:
 		size_t size = 0;
 		int schema_field_index = -1;
 		bool start_collapsed = false;
+		bool show_group_value = false;
 		std::vector<std::string> values;
 		std::vector<binary_range_t> binary_ranges;
 		std::vector<conflict_this_t> cell_conflict_this;

@@ -22,7 +22,9 @@ enum class field_type_t
 	enum_u32,
 	bool_bit,
 	binary,
-	raw
+	raw,
+	scvr_type,
+	scvr_operator
 };
 
 struct field_def_t

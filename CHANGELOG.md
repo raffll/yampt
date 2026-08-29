@@ -10,9 +10,9 @@
 - [NEW] Fetch available models from the provider: a Refresh control in the Auto Translate panel pulls the current model list from the provider
 - [CHANGE] Settings: "Providers" page renamed to "Auto Translation" with three tabs — Local Models, Web Providers, and Examples
 - [CHANGE] Model selection moved from Settings into the Auto Translate panel
-- [CHANGE] Find/Replace moved from the filter toolbar into its own tab in the left panel, after Statuses
+- [CHANGE] Find & Replace moved from the filter toolbar into its own tab in the left panel, after Statuses
 - [CHANGE] History tab moved to the end of the bottom-left tabs; each history entry now shows its status and timestamp
-- [CHANGE] Find/Replace no longer has a batch Undo button — each replacement is recorded in edit history and revertable per-entry
+- [CHANGE] Find & Replace no longer has a batch Undo button — each replacement is recorded in edit history and revertable per-entry
 - [CHANGE] Localization documents (.top, .mrk, .yaml) no longer show the ID and Key columns, since those entries have no record type or key — only Original, Translation, and Status are shown
 - [FIX] Web translation providers that send form-encoded requests now work — the request was previously rejected for a missing content type
 - [FIX] Numeric web provider settings (such as a temperature value) are now sent as numbers, so providers that require a numeric field no longer reject the request
@@ -50,10 +50,12 @@
 - [FIX] A plugin can no longer be both a guard patch and excluded from the merged patch — setting one clears the other
 - [FIX] Edit panel now shows the full multi-line content of text sub-records (book TEXT, script SCTX/BNAM) instead of only the first line
 - [FIX] Decoded fields inside CELL reference groups (X/Y/Z Position, rotations, door destinations) can now be edited when Enable Editing is active
+- [FIX] Decoded fields grouped under a heading (creature stats attributes, stats, skills and attacks, and similar grouped fields) can now be edited when Enable Editing is active
 - [FIX] Empty sub-records (e.g. FNAM with no display name) can now be edited — previously the empty value blocked the edit panel
 - [FIX] Exclude Sub-Record context menu no longer adds duplicates if the rule already exists
 - [FIX] Excluding a sub-record from context menu now immediately greys out the row in the record view
 - [FIX] Excluded sub-records now grey out their decoded children (fields, flags) as well
+- [FIX] Dialogue conditions (INFO records) now read as a single line such as `Journal "IL_TalosTreason" >= 10`, grouped under a numbered Condition entry; the variable's type and comparison operator show as words (Journal, Dead, Local, `==`, `>=`) and its comparison value as sub-records, instead of raw hex bytes
 
 ## [0.940] - 2026-07-29
 

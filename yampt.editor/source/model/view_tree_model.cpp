@@ -732,7 +732,7 @@ static QVariant sub_record_display(const view_tree_model_t::view_node_t & row, i
 		return truncate_for_display(row.children[0].values[col]);
 	}
 
-	if (!row.children.empty())
+	if (!row.children.empty() && !row.show_group_value)
 		return {};
 
 	const int col = column - 1;

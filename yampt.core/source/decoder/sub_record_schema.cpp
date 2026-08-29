@@ -564,6 +564,14 @@ static const field_def_t info_data_fields[] = {
 	{ "PC Rank", field_type_t::i8, 10, 1, info_rank_names, nullptr, 0, nullptr },
 };
 
+static const field_def_t info_scvr_fields[] = {
+	{ "Index", field_type_t::string_fixed, 0, 1, nullptr, nullptr, 0, nullptr },
+	{ "Type", field_type_t::scvr_type, 1, 1, nullptr, nullptr, 0, nullptr },
+	{ "Function", field_type_t::string_fixed, 2, 2, nullptr, nullptr, 0, nullptr },
+	{ "Operator", field_type_t::scvr_operator, 4, 1, nullptr, nullptr, 0, nullptr },
+	{ "Name", field_type_t::string_var, 5, 0, nullptr, nullptr, 0, nullptr },
+};
+
 static const field_def_t regn_weat_fields[] = {
 	{ "Clear", field_type_t::u8, 0, 1, nullptr, nullptr, 0, nullptr }, { "Cloudy", field_type_t::u8, 1, 1, nullptr, nullptr, 0, nullptr },
 	{ "Foggy", field_type_t::u8, 2, 1, nullptr, nullptr, 0, nullptr }, { "Overcast", field_type_t::u8, 3, 1, nullptr, nullptr, 0, nullptr },
@@ -1037,6 +1045,7 @@ static const std::vector<sub_record_schema_t> & build_schemas()
 		{ "GMST", "INTV", 4, gmst_intv_fields, ARRAY_COUNT(gmst_intv_fields) },
 		{ "GMST", "FLTV", 4, gmst_fltv_fields, ARRAY_COUNT(gmst_fltv_fields) },
 		{ "INFO", "DATA", 12, info_data_fields, ARRAY_COUNT(info_data_fields) },
+		{ "INFO", "SCVR", 0, info_scvr_fields, ARRAY_COUNT(info_scvr_fields) },
 		{ "REGN", "WEAT", 8, regn_weat_fields, ARRAY_COUNT(regn_weat_fields) },
 		{ "REGN", "WEAT", 10, regn_weat_10_fields, ARRAY_COUNT(regn_weat_10_fields) },
 		{ "SPEL", "SPDT", 12, spel_spdt_fields, ARRAY_COUNT(spel_spdt_fields) },

@@ -2,6 +2,7 @@
 #include "model/editable_column_set.hpp"
 #include "model/view_tree_model.hpp"
 #include <decoder/field_validator.hpp>
+#include <decoder/scvr_condition.hpp>
 #include <scanner/record_conflict.hpp>
 #include <utility/char_diff.hpp>
 #include <QAbstractItemView>
@@ -387,6 +388,26 @@ void preview_view_t::populate_value_selector()
 	case field_type_t::flags_u32:
 	{
 		populate_flags_selector(field);
+		break;
+	}
+
+	case field_type_t::scvr_type:
+	{
+		for (const auto & type_name : scvr_type_names())
+			m_value_selector->addItem(QString::fromStdString(type_name));
+
+		m_value_selector->setCurrentText(QString::fromStdString(m_original_value));
+		m_value_selector->setVisible(true);
+		break;
+	}
+
+	case field_type_t::scvr_operator:
+	{
+		for (const auto & operator_symbol : scvr_operator_symbols())
+			m_value_selector->addItem(QString::fromStdString(operator_symbol));
+
+		m_value_selector->setCurrentText(QString::fromStdString(m_original_value));
+		m_value_selector->setVisible(true);
 		break;
 	}
 

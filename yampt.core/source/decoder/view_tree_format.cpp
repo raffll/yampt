@@ -1,4 +1,5 @@
 #include "view_tree_format.hpp"
+#include "scvr_condition.hpp"
 #include <io/codepage.hpp>
 #include <algorithm>
 #include <cstdint>
@@ -462,6 +463,12 @@ std::string decode_field(const field_def_t & field, const char * data, size_t da
 
 	case field_type_t::raw:
 		return decode_hex_bytes(ptr, std::min(field.size, data_size - field.offset), 64);
+
+	case field_type_t::scvr_type:
+		return scvr_type_name(ptr[0]);
+
+	case field_type_t::scvr_operator:
+		return scvr_operator_symbol(ptr[0]);
 	}
 
 	return "";

@@ -1,4 +1,5 @@
 #include "decoder/field_encoder.hpp"
+#include "decoder/scvr_condition.hpp"
 #include <algorithm>
 #include <charconv>
 #include <cstdint>
@@ -277,6 +278,18 @@ std::string encode_field(const encode_context_t & context)
 	case field_type_t::binary:
 	case field_type_t::raw:
 		return encode_hex_bytes(context.input);
+
+	case field_type_t::scvr_type:
+	{
+		const char type_char = scvr_type_char(std::string(context.input));
+		return std::string(1, type_char != '\0' ? type_char : '0');
+	}
+
+	case field_type_t::scvr_operator:
+	{
+		const char operator_char = scvr_operator_char(std::string(context.input));
+		return std::string(1, operator_char != '\0' ? operator_char : '0');
+	}
 	}
 
 	return {};

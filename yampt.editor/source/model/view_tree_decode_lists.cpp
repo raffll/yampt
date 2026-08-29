@@ -1,10 +1,41 @@
 ﻿#include "view_tree_model.hpp"
 #include <decoder/conflict_slots.hpp>
 #include <decoder/content_alignment.hpp>
+#include <decoder/scvr_condition.hpp>
 #include <decoder/view_tree_format.hpp>
 #include <scanner/dial_info_align.hpp>
 #include <scanner/record_conflict.hpp>
 #include <algorithm>
+
+namespace
+{
+	const sub_record_view_t * find_scvr_view(
+	    const std::vector<std::vector<sub_record_view_t>> & all_subs,
+	    const std::unordered_map<std::string, std::vector<size_t>> & type_index,
+	    const sub_slot_t & slot,
+	    size_t column)
+	{
+		if (column >= all_subs.size())
+			return nullptr;
+
+		auto it_type = type_index.find(slot.type);
+		if (it_type == type_index.end() || slot.occurrence < 0 ||
+		    slot.occurrence >= static_cast<int>(it_type->second.size()))
+			return nullptr;
+
+		const size_t idx = it_type->second[slot.occurrence];
+		if (idx == SIZE_MAX || idx >= all_subs[column].size())
+			return nullptr;
+
+		return &all_subs[column][idx];
+	}
+
+	std::string condition_sentence(const sub_record_view_t & scvr_view, const std::string & value_text)
+	{
+		const auto condition = parse_scvr_condition(scvr_view.data, scvr_view.size);
+		return format_scvr_condition(condition, value_text);
+	}
+}
 
 void view_tree_model_t::set_record_leveled(record_context_t & context, const conflict_entry_t & entry)
 {
@@ -267,31 +298,29 @@ void view_tree_model_t::set_record_info(record_context_t & context, const confli
 			continue;
 		}
 
-		auto scvr_row = build_slot_row(col_count, all_subs, col_type_indices, unified_slots[i]);
+		auto scvr_field = build_slot_row(col_count, all_subs, col_type_indices, unified_slots[i]);
+		scvr_field.label = "SCVR - Script Variable";
 
 		view_node_t group_row;
 		group_row.type = "SCVR";
 		group_row.size = 0;
 		group_row.label = "Condition #" + std::to_string(condition_index);
-		group_row.values = scvr_row.values;
-		group_row.all_identical = scvr_row.all_identical;
+		group_row.values.resize(col_count);
+		group_row.show_group_value = true;
+		group_row.all_identical = scvr_field.all_identical;
 
-		view_node_t scvr_field;
-		scvr_field.label = "SCVR - Script Variable";
-		scvr_field.type = scvr_row.type;
-		scvr_field.size = scvr_row.size;
-		scvr_field.binary_ranges = scvr_row.binary_ranges;
-		scvr_field.values = scvr_row.children.empty() ? scvr_row.values : scvr_row.children[0].values;
-		scvr_field.all_identical = scvr_row.all_identical;
-		scvr_field.row_conflict_all = scvr_row.row_conflict_all;
-		scvr_field.cell_conflict_this = scvr_row.cell_conflict_this;
-		group_row.children.push_back(std::move(scvr_field));
+		std::vector<std::string> value_text(col_count);
+		std::vector<view_node_t> value_fields;
 
 		size_t next = i + 1;
+		bool has_value = false;
 		while (next < unified_slots.size() &&
 		       (unified_slots[next].type == "INTV" || unified_slots[next].type == "FLTV"))
 		{
 			auto value_row = build_slot_row(col_count, all_subs, col_type_indices, unified_slots[next]);
+
+			const auto & decoded_values =
+			    value_row.children.empty() ? value_row.values : value_row.children[0].values;
 
 			view_node_t value_field;
 			value_field.label =
@@ -299,13 +328,37 @@ void view_tree_model_t::set_record_info(record_context_t & context, const confli
 			value_field.type = value_row.type;
 			value_field.size = value_row.size;
 			value_field.binary_ranges = value_row.binary_ranges;
-			value_field.values = value_row.values;
+			value_field.values = decoded_values;
 			value_field.all_identical = value_row.all_identical;
 			value_field.row_conflict_all = value_row.row_conflict_all;
 			value_field.cell_conflict_this = value_row.cell_conflict_this;
-			group_row.children.push_back(std::move(value_field));
+
+			if (!has_value)
+			{
+				for (size_t col = 0; col < col_count && col < decoded_values.size(); ++col)
+					value_text[col] = decoded_values[col];
+
+				has_value = true;
+			}
+
+			value_fields.push_back(std::move(value_field));
 			++next;
 		}
+
+		for (size_t col = 0; col < col_count; ++col)
+		{
+			const auto * scvr_view = find_scvr_view(all_subs, col_type_indices[col], unified_slots[i], col);
+			const auto sentence = scvr_view ? condition_sentence(*scvr_view, value_text[col]) : std::string();
+
+			if (!sentence.empty())
+				group_row.values[col] = sentence;
+			else
+				group_row.values[col] = scvr_field.values.size() > col ? scvr_field.values[col] : non_existent_value;
+		}
+
+		group_row.children.push_back(std::move(scvr_field));
+		for (auto & value_field : value_fields)
+			group_row.children.push_back(std::move(value_field));
 
 		group_row.row_conflict_all = conflict_all_t::only_one;
 		group_row.cell_conflict_this.resize(col_count, conflict_this_t::unknown);

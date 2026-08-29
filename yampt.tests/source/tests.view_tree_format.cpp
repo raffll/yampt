@@ -236,3 +236,66 @@ TEST_CASE("view_tree_format::decode_field, i8 gender None for 0xFF", "[u]")
 	auto result = decode_field(field, data, 1);
 	REQUIRE(result == "None");
 }
+
+TEST_CASE("view_tree_format::decode_field, info scvr index char", "[u]")
+{
+	field_def_t field { "Index", field_type_t::string_fixed, 0, 1, nullptr, nullptr, 0 };
+
+	const char data[] = "04JX3B8_MeetVivec";
+	auto result = decode_field(field, data, sizeof(data) - 1);
+	REQUIRE(result == "0");
+}
+
+TEST_CASE("view_tree_format::decode_field, info scvr type char", "[u]")
+{
+	field_def_t field { "Type", field_type_t::string_fixed, 1, 1, nullptr, nullptr, 0 };
+
+	const char data[] = "04JX3B8_MeetVivec";
+	auto result = decode_field(field, data, sizeof(data) - 1);
+	REQUIRE(result == "4");
+}
+
+TEST_CASE("view_tree_format::decode_field, info scvr function chars", "[u]")
+{
+	field_def_t field { "Function", field_type_t::string_fixed, 2, 2, nullptr, nullptr, 0 };
+
+	const char data[] = "04JX3B8_MeetVivec";
+	auto result = decode_field(field, data, sizeof(data) - 1);
+	REQUIRE(result == "JX");
+}
+
+TEST_CASE("view_tree_format::decode_field, info scvr operator char", "[u]")
+{
+	field_def_t field { "Operator", field_type_t::string_fixed, 4, 1, nullptr, nullptr, 0 };
+
+	const char data[] = "04JX3B8_MeetVivec";
+	auto result = decode_field(field, data, sizeof(data) - 1);
+	REQUIRE(result == "3");
+}
+
+TEST_CASE("view_tree_format::decode_field, info scvr name string", "[u]")
+{
+	field_def_t field { "Name", field_type_t::string_var, 5, 0, nullptr, nullptr, 0 };
+
+	const char data[] = "04JX3B8_MeetVivec";
+	auto result = decode_field(field, data, sizeof(data) - 1);
+	REQUIRE(result == "B8_MeetVivec");
+}
+
+TEST_CASE("view_tree_format::decode_field, scvr_type shows name", "[u]")
+{
+	field_def_t field { "Type", field_type_t::scvr_type, 1, 1, nullptr, nullptr, 0 };
+
+	const char data[] = "04JX3B8_MeetVivec";
+	auto result = decode_field(field, data, sizeof(data) - 1);
+	REQUIRE(result == "Journal");
+}
+
+TEST_CASE("view_tree_format::decode_field, scvr_operator shows symbol", "[u]")
+{
+	field_def_t field { "Operator", field_type_t::scvr_operator, 4, 1, nullptr, nullptr, 0 };
+
+	const char data[] = "04JX3B8_MeetVivec";
+	auto result = decode_field(field, data, sizeof(data) - 1);
+	REQUIRE(result == ">=");
+}

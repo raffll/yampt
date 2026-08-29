@@ -188,6 +188,7 @@
     <ClCompile Include="source\decoder\view_group_def.cpp" />
     <ClCompile Include="source\decoder\content_alignment.cpp" />
     <ClCompile Include="source\decoder\view_tree_format.cpp" />
+    <ClCompile Include="source\decoder\scvr_condition.cpp" />
     <ClCompile Include="source\io\codepage.cpp" />
     <ClCompile Include="source\io\dict_reader.cpp" />
     <ClCompile Include="source\io\dict_writer.cpp" />
@@ -253,6 +254,7 @@
     <ClInclude Include="source\decoder\view_group_def.hpp" />
     <ClInclude Include="source\decoder\content_alignment.hpp" />
     <ClInclude Include="source\decoder\view_tree_format.hpp" />
+    <ClInclude Include="source\decoder\scvr_condition.hpp" />
     <ClInclude Include="source\io\codepage.hpp" />
     <ClInclude Include="source\io\dict_reader.hpp" />
     <ClInclude Include="source\io\dict_writer.hpp" />
