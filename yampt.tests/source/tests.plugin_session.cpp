@@ -106,3 +106,24 @@ TEST_CASE("plugin_session_t::patch_builder, accessible and empty", "[u][qt]")
 	REQUIRE_FALSE(session.patch_builder().has_records());
 	REQUIRE(session.patch_builder().record_count() == 0);
 }
+
+TEST_CASE("plugin_session_t::has_any_unsaved, false on fresh session", "[u][qt]")
+{
+	plugin_session_t session;
+	REQUIRE_FALSE(session.has_any_unsaved());
+}
+
+TEST_CASE("plugin_session_t::dirty_plugins, empty on fresh session", "[u][qt]")
+{
+	plugin_session_t session;
+	REQUIRE(session.dirty_plugins().empty());
+}
+
+TEST_CASE("plugin_session_t::unload_all, clears dirty state", "[u][qt]")
+{
+	plugin_session_t session;
+	session.unload_all();
+
+	REQUIRE(session.dirty_plugins().empty());
+	REQUIRE_FALSE(session.has_any_unsaved());
+}

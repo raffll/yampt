@@ -52,6 +52,7 @@ void plugin_session_t::load_from_openmw_cfg(const QString & cfg_path)
 void plugin_session_t::unload_all()
 {
 	m_scan = plugin_scan_t();
+	m_dirty_plugins.clear();
 	m_patch_builder->clear();
 	m_load_source = load_source_t::none;
 	m_load_base_path.clear();
@@ -93,6 +94,31 @@ const std::set<std::string> & plugin_session_t::patch_plugins() const
 void plugin_session_t::set_patch_plugins(const std::set<std::string> & patch)
 {
 	m_patch_plugins = patch;
+}
+
+void plugin_session_t::mark_plugin_dirty(int plugin_idx)
+{
+	m_dirty_plugins.insert(m_scan.plugin_filename(plugin_idx));
+}
+
+void plugin_session_t::clear_plugin_dirty(int plugin_idx)
+{
+	m_dirty_plugins.erase(m_scan.plugin_filename(plugin_idx));
+}
+
+bool plugin_session_t::is_plugin_dirty(int plugin_idx) const
+{
+	return m_dirty_plugins.count(m_scan.plugin_filename(plugin_idx)) != 0;
+}
+
+const std::set<std::string> & plugin_session_t::dirty_plugins() const
+{
+	return m_dirty_plugins;
+}
+
+bool plugin_session_t::has_any_unsaved() const
+{
+	return !m_dirty_plugins.empty();
 }
 
 plugin_session_t::load_source_t plugin_session_t::load_source() const
@@ -296,6 +322,7 @@ void plugin_session_t::build_lua_paths_for_openmw(const QString & cfg_path)
 void plugin_session_t::load_plugins_internal(const std::vector<std::string> & paths)
 {
 	m_scan = plugin_scan_t();
+	m_dirty_plugins.clear();
 	m_patch_builder->clear();
 
 	for (const auto & path : paths)

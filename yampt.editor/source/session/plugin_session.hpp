@@ -42,6 +42,12 @@ public:
 	const std::set<std::string> & patch_plugins() const;
 	void set_patch_plugins(const std::set<std::string> & patch);
 
+	void mark_plugin_dirty(int plugin_idx);
+	void clear_plugin_dirty(int plugin_idx);
+	bool is_plugin_dirty(int plugin_idx) const;
+	const std::set<std::string> & dirty_plugins() const;
+	bool has_any_unsaved() const;
+
 	load_source_t load_source() const;
 	const std::string & load_base_path() const;
 
@@ -84,6 +90,7 @@ private:
 	std::unique_ptr<patch_builder_t> m_patch_builder;
 	std::set<std::string> m_excluded_plugins;
 	std::set<std::string> m_patch_plugins;
+	std::set<std::string> m_dirty_plugins;
 	load_source_t m_load_source = load_source_t::none;
 	std::string m_load_base_path;
 	std::vector<std::string> m_lua_data_paths;

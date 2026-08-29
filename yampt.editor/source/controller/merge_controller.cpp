@@ -3,6 +3,7 @@
 #include "../session/plugin_session.hpp"
 #include "../view/nav_tree_view.hpp"
 #include "../view/record_view.hpp"
+#include <io/binary_file_io.hpp>
 #include <scanner/auto_merge.hpp>
 #include <scanner/merge_patch_ops.hpp>
 #include <scanner/sub_record_merge.hpp>
@@ -59,12 +60,27 @@ merge_controller_t::merge_controller_t(
     , m_log(std::move(log_fn))
 {}
 
-void merge_controller_t::create_merged_patch()
+bool merge_controller_t::create_merged_patch()
 {
+	if (m_session.has_any_unsaved())
+	{
+		const auto answer = QMessageBox::question(
+		    nullptr,
+		    QCoreApplication::translate("yEditor", "Unsaved Changes"),
+		    QCoreApplication::translate("yEditor", "Save unsaved plugins before creating the merged patch?"),
+		    QMessageBox::Save | QMessageBox::Cancel,
+		    QMessageBox::Save);
+
+		if (answer == QMessageBox::Cancel)
+			return false;
+
+		save_all_dirty();
+	}
+
 	if (m_session.scan().plugin_count() < 2)
 	{
 		m_log("[error] need at least 2 plugins loaded to create a merged patch");
-		return;
+		return false;
 	}
 
 	if (m_session.scan().has_merge() && m_session.scan().merge_record_count() > 0)
@@ -78,7 +94,7 @@ void merge_controller_t::create_merged_patch()
 		    QMessageBox::No);
 
 		if (answer != QMessageBox::Yes)
-			return;
+			return false;
 	}
 
 	if (!m_session.scan().has_merge())
@@ -90,6 +106,7 @@ void merge_controller_t::create_merged_patch()
 
 	m_log("[info] merge record count: " + std::to_string(m_session.scan().merge_record_count()));
 	save_merged_patch();
+	return true;
 }
 
 void merge_controller_t::load_existing_merged_patch()
@@ -499,6 +516,35 @@ void merge_controller_t::save_merged_patch()
 		    "[info] saved " + output_path + " (" + std::to_string(m_session.scan().merge_record_count()) + " records)");
 	else
 		m_log("[error] failed to save " + output_path);
+}
+
+bool merge_controller_t::save_plugin(int plugin_idx)
+{
+	auto & plugin = m_session.scan().mutable_plugin(plugin_idx);
+	const auto & path = m_session.scan().plugin_path(plugin_idx);
+	const bool written = binary_file_io::write_file(plugin.get_records(), path);
+	if (!written)
+	{
+		m_log("[error] failed to save " + path);
+		return false;
+	}
+
+	m_session.clear_plugin_dirty(plugin_idx);
+	m_log("[info] saved " + path);
+	return true;
+}
+
+void merge_controller_t::save_all_dirty()
+{
+	const auto dirty_copy = m_session.dirty_plugins();
+
+	for (int plugin_idx = 0; plugin_idx < static_cast<int>(m_session.scan().plugin_count()); ++plugin_idx)
+	{
+		if (dirty_copy.count(m_session.scan().plugin_filename(plugin_idx)) == 0)
+			continue;
+
+		save_plugin(plugin_idx);
+	}
 }
 
 bool merge_controller_t::save_merge_to_file(

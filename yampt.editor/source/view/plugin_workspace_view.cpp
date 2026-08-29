@@ -17,6 +17,7 @@
 #include <QFileInfo>
 #include <QHBoxLayout>
 #include <QHeaderView>
+#include <QMessageBox>
 #include <QSettings>
 #include <QShortcut>
 #include <QTreeView>
@@ -51,6 +52,7 @@ plugin_workspace_view_t::plugin_workspace_view_t(settings_store_t & settings, QW
 	m_nav_view = new nav_tree_view_t(m_session->scan(), m_nav_tabs);
 	m_nav_view->set_excluded_plugins(&m_session->excluded_plugins());
 	m_nav_view->set_patch_plugins(&m_session->patch_plugins());
+	m_nav_view->set_dirty_plugins(&m_session->dirty_plugins());
 	m_nav_view->set_editable_columns(&m_editable_columns);
 
 	m_lua_view = new lua_tree_view_t(m_nav_tabs);
@@ -79,7 +81,8 @@ plugin_workspace_view_t::plugin_workspace_view_t(settings_store_t & settings, QW
 	    *m_nav_view,
 	    *m_merge_controller,
 	    m_settings,
-	    [this]() { on_settings_changed(); });
+	    [this]() { on_settings_changed(); },
+	    [this](bool dirty) { emit unsaved_changes_changed(dirty); });
 
 	setup_connections();
 }
@@ -141,13 +144,13 @@ void plugin_workspace_view_t::setup_connections()
 	    m_edit_controller,
 	    &field_edit_controller_t::record_modified,
 	    this,
-	    [this](bool is_merge_edit, const std::string & saved_path)
+	    [this](bool is_merge_edit)
 	{
 		rebuild_nav_preserving_state();
 		if (is_merge_edit)
 			m_merge_controller->save_merged_patch();
 		else
-			log_message("[info] saved " + saved_path);
+			emit unsaved_changes_changed(true);
 	});
 
 	connect(
@@ -185,6 +188,9 @@ void plugin_workspace_view_t::load_plugins_from_paths(
 
 void plugin_workspace_view_t::on_load_data_files()
 {
+	if (!confirm_discard_or_save_unsaved())
+		return;
+
 	const auto initial_dir = QString::fromStdString(m_settings.last_directory());
 	QString dir = QFileDialog::getExistingDirectory(this, tr("Select Data Files Folder"), initial_dir);
 
@@ -223,6 +229,9 @@ void plugin_workspace_view_t::on_load_data_files()
 
 void plugin_workspace_view_t::on_load_mo2_profile()
 {
+	if (!confirm_discard_or_save_unsaved())
+		return;
+
 	const auto initial_dir = QString::fromStdString(m_settings.last_directory());
 	QString profile_dir = QFileDialog::getExistingDirectory(this, tr("Select MO2 Profile Folder"), initial_dir);
 
@@ -235,6 +244,9 @@ void plugin_workspace_view_t::on_load_mo2_profile()
 
 void plugin_workspace_view_t::on_load_openmw_cfg()
 {
+	if (!confirm_discard_or_save_unsaved())
+		return;
+
 	const auto initial_dir = QString::fromStdString(m_settings.last_directory());
 
 	QString cfg_path =
@@ -248,14 +260,74 @@ void plugin_workspace_view_t::on_load_openmw_cfg()
 	m_settings.set_last_directory(cfg_dir.toStdString());
 }
 
+QMessageBox::StandardButton plugin_workspace_view_t::prompt_unsaved(bool allow_discard)
+{
+	const auto title = QCoreApplication::translate("yEditor", "Unsaved Changes");
+	const auto text = QCoreApplication::translate(
+	    "yEditor", "Some plugins have unsaved changes. Save them before continuing?");
+
+	auto buttons = QMessageBox::Save | QMessageBox::Cancel;
+	if (allow_discard)
+		buttons |= QMessageBox::Discard;
+
+	return QMessageBox::question(this, title, text, buttons, QMessageBox::Save);
+}
+
 void plugin_workspace_view_t::on_unload_all()
 {
+	if (m_session->has_any_unsaved())
+	{
+		const auto answer = prompt_unsaved(true);
+		if (answer == QMessageBox::Cancel)
+			return;
+
+		if (answer == QMessageBox::Save)
+			m_merge_controller->save_all_dirty();
+	}
+
 	m_session->unload_all();
+}
+
+bool plugin_workspace_view_t::confirm_discard_or_save_unsaved()
+{
+	if (!m_session->has_any_unsaved())
+		return true;
+
+	const auto answer = prompt_unsaved(true);
+	if (answer == QMessageBox::Cancel)
+		return false;
+
+	if (answer == QMessageBox::Save)
+		m_merge_controller->save_all_dirty();
+
+	return true;
+}
+
+void plugin_workspace_view_t::on_save()
+{
+	const auto info = m_nav_view->current_selection();
+	if (info.plugin_idx < 0)
+		return;
+
+	if (!m_session->is_plugin_dirty(info.plugin_idx))
+		return;
+
+	m_merge_controller->save_plugin(info.plugin_idx);
+	rebuild_nav_preserving_state();
+	emit unsaved_changes_changed(m_session->has_any_unsaved());
+}
+
+void plugin_workspace_view_t::on_save_all()
+{
+	m_merge_controller->save_all_dirty();
+	rebuild_nav_preserving_state();
+	emit unsaved_changes_changed(m_session->has_any_unsaved());
 }
 
 void plugin_workspace_view_t::on_create_merged_patch()
 {
-	m_merge_controller->create_merged_patch();
+	if (!m_merge_controller->create_merged_patch())
+		return;
 
 	const auto info = m_nav_view->current_selection();
 	if (info.record_id.empty())
@@ -277,6 +349,16 @@ void plugin_workspace_view_t::on_create_merged_patch()
 
 void plugin_workspace_view_t::on_clean_all()
 {
+	if (m_session->has_any_unsaved())
+	{
+		const auto answer = prompt_unsaved(true);
+		if (answer == QMessageBox::Cancel)
+			return;
+
+		if (answer == QMessageBox::Save)
+			m_merge_controller->save_all_dirty();
+	}
+
 	if (m_session->scan().plugin_count() < 2)
 	{
 		log_message("[error] need at least 2 plugins loaded to clean");

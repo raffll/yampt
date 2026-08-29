@@ -79,6 +79,18 @@ void editor_window_t::setup_menu_bar()
 
 	file_menu->addSeparator();
 
+	auto * save_action = new QAction(tr("&Save"), this);
+	save_action->setToolTip(tr("Save the selected plugin to disk"));
+	file_menu->addAction(save_action);
+	connect(save_action, &QAction::triggered, m_plugin_workspace_view, &plugin_workspace_view_t::on_save);
+
+	auto * save_all_action = new QAction(tr("Save &All"), this);
+	save_all_action->setToolTip(tr("Save all modified plugins to disk"));
+	file_menu->addAction(save_all_action);
+	connect(save_all_action, &QAction::triggered, m_plugin_workspace_view, &plugin_workspace_view_t::on_save_all);
+
+	file_menu->addSeparator();
+
 	auto * quit_action = new QAction(tr("&Quit"), this);
 	quit_action->setShortcut(QKeySequence("Alt+F4"));
 	quit_action->setToolTip(tr("Exit the application"));
@@ -238,6 +250,11 @@ void editor_window_t::setup_toolbar()
 	    &plugin_workspace_view_t::filters_active_changed,
 	    this,
 	    [this](bool active) { m_no_filters_btn->setChecked(!active); });
+	connect(
+	    m_plugin_workspace_view,
+	    &plugin_workspace_view_t::unsaved_changes_changed,
+	    this,
+	    &editor_window_t::set_unsaved_changes);
 
 	auto * escape_shortcut = new QShortcut(QKeySequence("Escape"), this);
 	connect(escape_shortcut, &QShortcut::activated, this, &editor_window_t::on_search_clear);
@@ -306,8 +323,23 @@ void editor_window_t::on_reset_filters()
 	m_plugin_workspace_view->reset_all_filters();
 }
 
+void editor_window_t::set_unsaved_changes(bool dirty)
+{
+	if (m_has_unsaved_changes == dirty)
+		return;
+
+	m_has_unsaved_changes = dirty;
+	setWindowTitle(m_has_unsaved_changes ? tr("yEditor *") : tr("yEditor"));
+}
+
 void editor_window_t::closeEvent(QCloseEvent * event)
 {
+	if (!m_plugin_workspace_view->confirm_discard_or_save_unsaved())
+	{
+		event->ignore();
+		return;
+	}
+
 	save_config();
 	event->accept();
 }

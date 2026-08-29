@@ -36,6 +36,8 @@
 - [NEW] Exclude Sub-Record from context menu: right-click any sub-record row to add it to the exclusion list
 - [NEW] Toolbar search: filter the navigation tree by record ID or display name with case-sensitive and regex support
 - [NEW] Reset button on the toolbar: clears Conflicts Only, the search field, and the advanced filter in one click
+- [NEW] Save edited plugins on demand: right-click a plugin to save it, or use Save / Save All in the File menu; plugins with unsaved changes are marked with an asterisk in the plugin list and the window title
+- [CHANGE] Applying a field edit now updates the plugin in memory instead of writing the file immediately, so you decide when to save; yEditor prompts you to save or discard unsaved changes before unloading, closing, cleaning, loading a new set, or creating a merged patch
 - [CHANGE] Filter dialog moved from View menu to toolbar button
 - [CHANGE] Reset button renamed to "No Filters" and moved before the Conflicts Only toggle
 - [CHANGE] Navigation panel split into two tabs: Plugins (ESP/ESM record tree) and Lua (handler registrations by mod)

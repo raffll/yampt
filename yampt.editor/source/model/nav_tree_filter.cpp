@@ -67,6 +67,11 @@ void nav_tree_filter_t::set_patch_plugins(const std::set<std::string> * patch)
 	m_patch_plugins = patch;
 }
 
+void nav_tree_filter_t::set_dirty_plugins(const std::set<std::string> * dirty)
+{
+	m_dirty_plugins = dirty;
+}
+
 bool nav_tree_filter_t::has_active_filter() const
 {
 	return m_has_filter;
@@ -85,6 +90,11 @@ const std::set<std::string> * nav_tree_filter_t::excluded_plugins() const
 const std::set<std::string> * nav_tree_filter_t::patch_plugins() const
 {
 	return m_patch_plugins;
+}
+
+const std::set<std::string> * nav_tree_filter_t::dirty_plugins() const
+{
+	return m_dirty_plugins;
 }
 
 bool nav_tree_filter_t::has_version_status(const conflict_entry_t & entry, int plugin_idx, conflict_this_t status)

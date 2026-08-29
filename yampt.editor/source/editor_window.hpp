@@ -15,6 +15,8 @@ class editor_window_t : public QMainWindow
 public:
 	explicit editor_window_t(QWidget * parent = nullptr);
 
+	void set_unsaved_changes(bool dirty);
+
 protected:
 	void closeEvent(QCloseEvent * event) override;
 
@@ -31,6 +33,8 @@ private:
 
 	plugin_workspace_view_t * m_plugin_workspace_view = nullptr;
 	settings_store_t m_settings { "yEditor.ini" };
+
+	bool m_has_unsaved_changes = false;
 
 	QAction * m_conflicts_action = nullptr;
 	QAction * m_sidebar_toggle = nullptr;

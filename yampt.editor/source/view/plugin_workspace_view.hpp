@@ -14,6 +14,7 @@
 #include <scanner/lua_scanner.hpp>
 #include <scanner/plugin_scan.hpp>
 #include <QLabel>
+#include <QMessageBox>
 #include <QSplitter>
 #include <QTabWidget>
 #include <QWidget>
@@ -60,6 +61,8 @@ public:
 	void refresh_views();
 	void reset_all_filters();
 
+	bool confirm_discard_or_save_unsaved();
+
 	QWidget * sidebar_widget() const { return m_nav_tabs; }
 	QWidget * bottom_panel_widget() const { return m_bottom_tabs; }
 
@@ -68,6 +71,8 @@ public slots:
 	void on_load_mo2_profile();
 	void on_load_openmw_cfg();
 	void on_unload_all();
+	void on_save();
+	void on_save_all();
 	void on_create_merged_patch();
 	void on_clean_all();
 	void on_advanced_filter();
@@ -91,6 +96,7 @@ private slots:
 
 signals:
 	void filters_active_changed(bool active);
+	void unsaved_changes_changed(bool dirty);
 
 private:
 	void setup_views();
@@ -107,6 +113,7 @@ private:
 	void on_lua_scan_complete(const lua_scan_result_t & result);
 	nav_tree_model_t::filter_state_t build_effective_filter() const;
 	void apply_effective_filter();
+	QMessageBox::StandardButton prompt_unsaved(bool allow_discard);
 
 	settings_store_t & m_settings;
 	plugin_session_t * m_session = nullptr;

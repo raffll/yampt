@@ -23,6 +23,7 @@ public:
 	void refresh_colors();
 	void set_excluded_plugins(const std::set<std::string> * excluded);
 	void set_patch_plugins(const std::set<std::string> * patch);
+	void set_dirty_plugins(const std::set<std::string> * dirty);
 	void set_editable_columns(const editable_column_set_t * editable);
 
 	using filter_state_t = nav_tree_filter_t::filter_state_t;

@@ -12,6 +12,8 @@ Open File menu and choose one of three loading methods:
 
 Use **Unload All** to close everything and start fresh.
 
+If any loaded plugin has unsaved field edits, you are prompted before those edits would be lost. Loading a new set of plugins, unloading everything, cleaning, and closing the application each offer to save the pending changes, discard them, or cancel the action and keep everything as it is.
+
 ## Main Layout
 
 - **Left** — Navigation panel with two tabs. The Plugins tab shows the ESP/ESM record tree: plugins at the top level, records grouped by type under each plugin. The Lua tab shows OpenMW Lua handler registrations grouped by mod name.
@@ -47,6 +49,8 @@ Each plugin in the tree is prefixed with an icon indicating its role:
 - 🛡 — a guard patch that acts as a priority barrier during auto-merge.
 - 🔒 — a plugin excluded from the merged patch. Its records are ignored during merge.
 
+When a plugin has field edits that have not yet been written to disk, an asterisk appears next to its name, after the icon and before the filename. The asterisk disappears once the plugin is saved.
+
 ## Record View
 
 Clicking a record in the nav tree displays its full content in the record view. Sub-records are decoded into readable fields where the format is known (names, positions, flags, stats). Unknown or binary sub-records display as raw byte counts.
@@ -78,6 +82,7 @@ Right-click a record node belonging to the merged patch in the navigation tree t
 
 Right-click a plugin node in the navigation tree for plugin-level options:
 
+- **Save** — writes the plugin's pending field edits to disk and removes its asterisk. This option is enabled only while the plugin has unsaved changes; when the plugin is already saved it appears greyed out.
 - **Exclude from Merged Patch** / **Include in Merged Patch** — excluded plugins are completely ignored during auto-merge. Their records will not appear in the merged patch regardless of conflicts.
 - **Mark as Guard Patch** — the guard patch acts as a priority barrier during auto-merge. Plugins loaded before the guard that modify the same records are ignored. Only the guard's version and later plugins are considered. If the final plugin's version matches master (reverting a change), the guard's version is used instead of letting the revert through.
 
@@ -115,11 +120,17 @@ When you click a cell in the record view that has a conflict with a previous col
 
 Editing is off whenever the application starts. Turn it on with the Enable Editing button on the toolbar; the choice is not remembered, so each new session begins with editing disabled to guard against accidental changes.
 
-When editing is enabled (via the Enable Editing button on the toolbar), clicking a decoded field in any plugin's column activates the Edit panel as an editor. The right pane becomes editable and an Apply button appears. For enum fields (race, class, type), a dropdown selector shows all valid values. For flag fields (NPC flags, cell flags), the dropdown presents checkboxes for each flag bit. Free-text fields such as names and IDs accept direct text input. The panel validates the input against the field's constraints — numeric range, string length, and codepage encoding limits. The Apply button stays disabled until the value is both valid and different from the original. Clicking Apply writes the change directly to the source plugin file on disk and refreshes the record view to reflect the new state.
+When editing is enabled (via the Enable Editing button on the toolbar), clicking a decoded field in any plugin's column activates the Edit panel as an editor. The right pane becomes editable and an Apply button appears. For enum fields (race, class, type), a dropdown selector shows all valid values. For flag fields (NPC flags, cell flags), the dropdown presents checkboxes for each flag bit. Free-text fields such as names and IDs accept direct text input. The panel validates the input against the field's constraints — numeric range, string length, and codepage encoding limits. The Apply button stays disabled until the value is both valid and different from the original. Clicking Apply updates the loaded plugin held in memory and refreshes the record view to reflect the new state. It does not write the plugin file at this point; the change is kept until you choose to save it.
+
+A plugin with changes that have not yet been written to disk is marked with an asterisk next to its name in the navigation panel, and the window title also shows an asterisk while any loaded plugin has unsaved changes. This gives you a clear view of which plugins have pending edits, so you can make several changes and decide when to commit them.
+
+To write a plugin's pending changes to disk, right-click that plugin in the navigation panel and choose **Save**. This option is available only while the plugin has unsaved changes. Saving writes the plugin file and removes its asterisk. The File menu offers **Save** to write the currently selected plugin and **Save All** to write every plugin with unsaved changes at once. Text you have typed into a field but not yet applied is not saved; only changes you confirmed with Apply are written.
 
 ## Creating a Merged Patch
 
-Click **Create Merged Patch** in the toolbar to run the automatic merge. The auto-merge performs several operations:
+Click **Create Merged Patch** in the toolbar to run the automatic merge. If any loaded plugin has unsaved field edits, you are first offered to save those plugins or cancel the merge. The merge uses the current on-screen state of each plugin, so saving first keeps the files on disk consistent with what goes into the merged patch. Cancelling stops the merge and changes nothing.
+
+The auto-merge performs several operations:
 
 - **Leveled list merge** — combines entries from all plugins that modify leveled item or creature lists. No entries are lost; duplicates are removed.
 - **Three-way record merge** — for object records modified by multiple plugins, compares each plugin's changes against the master. Non-conflicting field changes from different plugins are combined into one record.

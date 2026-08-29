@@ -44,7 +44,7 @@ preview_view_t::preview_view_t(QWidget * parent)
 	right_column->addWidget(m_value_selector);
 
 	m_apply_button = new QPushButton(tr("Apply"), this);
-	m_apply_button->setToolTip(tr("Commit field edit to disk"));
+	m_apply_button->setToolTip(tr("Apply field edit to the loaded plugin"));
 	m_apply_button->setVisible(false);
 	right_column->addWidget(m_apply_button);
 

@@ -24,7 +24,7 @@ public:
 	    settings_store_t & settings,
 	    log_fn_t log_fn);
 
-	void create_merged_patch();
+	bool create_merged_patch();
 	void load_existing_merged_patch();
 	std::string resolve_output_directory() const;
 
@@ -64,6 +64,9 @@ public:
 	void remove_record_from_merge(const std::string & rec_type, const std::string & record_id);
 
 	void save_merged_patch();
+
+	bool save_plugin(int plugin_idx);
+	void save_all_dirty();
 
 private:
 	int create_merge_records();

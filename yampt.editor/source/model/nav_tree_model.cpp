@@ -227,6 +227,11 @@ void nav_tree_model_t::set_patch_plugins(const std::set<std::string> * patch)
 	m_filter.set_patch_plugins(patch);
 }
 
+void nav_tree_model_t::set_dirty_plugins(const std::set<std::string> * dirty)
+{
+	m_filter.set_dirty_plugins(dirty);
+}
+
 void nav_tree_model_t::set_editable_columns(const editable_column_set_t * editable)
 {
 	m_editable_columns = editable;
@@ -654,14 +659,18 @@ QVariant nav_tree_model_t::file_node_display_text(const file_node_t & file_node)
 
 	const auto & filename = m_scan.plugin_filename(file_node.plugin_idx);
 
+	std::string label = display_buffer;
+	if (m_filter.dirty_plugins() && m_filter.dirty_plugins()->count(filename))
+		label = "* " + label;
+
 	if (m_filter.excluded_plugins() && m_filter.excluded_plugins()->count(filename))
-		return QString::fromUtf8("\xF0\x9F\x94\x92 ") + QString::fromUtf8(display_buffer);
+		return QString::fromUtf8("\xF0\x9F\x94\x92 ") + QString::fromUtf8(label.c_str());
 
 	if (m_filter.patch_plugins() && m_filter.patch_plugins()->count(filename))
-		return QString::fromUtf8("\xF0\x9F\x9B\xA1 ") + QString::fromUtf8(display_buffer);
+		return QString::fromUtf8("\xF0\x9F\x9B\xA1 ") + QString::fromUtf8(label.c_str());
 
 	if (m_scan.is_merge_plugin(file_node.plugin_idx))
-		return QString::fromUtf8("\xE2\x9A\x99 ") + QString::fromUtf8(display_buffer);
+		return QString::fromUtf8("\xE2\x9A\x99 ") + QString::fromUtf8(label.c_str());
 
 	const auto & full_path = m_scan.plugin_path(file_node.plugin_idx);
 	const bool is_overridden =
@@ -670,12 +679,12 @@ QVariant nav_tree_model_t::file_node_display_text(const file_node_t & file_node)
 	const bool is_master = filename.size() > 4 && (filename.compare(filename.size() - 4, 4, ".esm") == 0 ||
 	                                               filename.compare(filename.size() - 4, 4, ".ESM") == 0);
 	if (is_master)
-		return QString::fromUtf8("\xF0\x9F\x93\x9C ") + QString::fromUtf8(display_buffer);
+		return QString::fromUtf8("\xF0\x9F\x93\x9C ") + QString::fromUtf8(label.c_str());
 
 	if (is_overridden)
-		return QString::fromUtf8("\xE2\x9A\xA1 ") + QString::fromUtf8(display_buffer);
+		return QString::fromUtf8("\xE2\x9A\xA1 ") + QString::fromUtf8(label.c_str());
 
-	return QString::fromUtf8("\xF0\x9F\x93\x84 ") + QString::fromUtf8(display_buffer);
+	return QString::fromUtf8("\xF0\x9F\x93\x84 ") + QString::fromUtf8(label.c_str());
 }
 
 QVariant nav_tree_model_t::file_node_appearance(const file_node_t & file_node, int role) const
