@@ -793,7 +793,7 @@ void plugin_workspace_view_t::start_lua_scan()
 	if (data_paths.empty())
 		return;
 
-	log_message("[info] starting Lua handler scan...");
+	log_message("[info] starting lua handler scan...");
 	m_status_label->setText(tr("Scanning Lua handlers..."));
 	m_lua_scan_worker->start_scan(data_paths, mod_names);
 }
@@ -806,7 +806,7 @@ void plugin_workspace_view_t::on_lua_scan_complete(const lua_scan_result_t & res
 	const auto reg_count = result.registrations.size();
 
 	log_message(
-	    "[info] Lua scan complete: " + std::to_string(reg_count) + " registrations, " + std::to_string(conflict_count) +
+	    "[info] lua scan complete: " + std::to_string(reg_count) + " registrations, " + std::to_string(conflict_count) +
 	    " conflicts");
 
 	for (const auto & warning : result.warnings)

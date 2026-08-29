@@ -642,6 +642,8 @@ void main_window_t::connect_editor_signals()
 
 	m_table_view->set_example_state_fn([this](int row) { return is_row_example(row); });
 
+	m_table_view->set_example_count_fn([this]() { return static_cast<int>(m_settings.translation_examples().size()); });
+
 	connect(
 	    m_table_view,
 	    &record_table_view_t::toggle_example_requested,

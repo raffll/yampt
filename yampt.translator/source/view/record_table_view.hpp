@@ -21,6 +21,7 @@ public:
 	std::vector<int> get_column_widths() const;
 	void set_context_menu_enabled(bool enabled);
 	void set_example_state_fn(std::function<bool(int row)> fn);
+	void set_example_count_fn(std::function<int()> fn);
 
 signals:
 	void row_selected(int row);
@@ -39,4 +40,5 @@ private:
 
 	bool m_context_menu_enabled = true;
 	std::function<bool(int row)> m_example_state_fn;
+	std::function<int()> m_example_count_fn;
 };

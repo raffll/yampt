@@ -1,5 +1,6 @@
 #include "record_table_view.hpp"
 #include "../model/record_table_model.hpp"
+#include <translation_example.hpp>
 #include <optional>
 #include <QContextMenuEvent>
 #include <QHeaderView>
@@ -101,6 +102,11 @@ void record_table_view_t::set_example_state_fn(std::function<bool(int row)> fn)
 	m_example_state_fn = std::move(fn);
 }
 
+void record_table_view_t::set_example_count_fn(std::function<int()> fn)
+{
+	m_example_count_fn = std::move(fn);
+}
+
 void record_table_view_t::contextMenuEvent(QContextMenuEvent * event)
 {
 	if (!m_context_menu_enabled)
@@ -126,6 +132,9 @@ void record_table_view_t::contextMenuEvent(QContextMenuEvent * event)
 	const auto already_example = m_example_state_fn && m_example_state_fn(first_row);
 	auto * act_example = menu->addAction(already_example ? tr("Unmark Example") : tr("Mark as Example"));
 	act_example->setToolTip(tr("Use this entry as an AI translation style example"));
+
+	if (!already_example && m_example_count_fn && m_example_count_fn() >= max_examples)
+		act_example->setEnabled(false);
 
 	auto * chosen = menu->exec(event->globalPos());
 	std::optional<status_t> new_status;

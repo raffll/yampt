@@ -2,10 +2,7 @@
 
 ## Documentation
 
-check all [error] [info] log messages for correct lowercase tags
-
-
 top/mrk etc require also tags in translated new text
 top/mrk do only variant of one word in sentence, and cerate lots of not valid sentences
 
-if already 20 examples in a list, then right menu entry should be greyed
+revert should be greyed if nothing to revert
