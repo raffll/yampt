@@ -1102,6 +1102,15 @@ bool main_window_t::is_row_example(int row) const
 	return translation_example_ops::contains_original(examples, row_data->old_text);
 }
 
+bool main_window_t::can_revert_row(int row) const
+{
+	const auto * row_data = m_table_model->row_at(row);
+	if (!row_data)
+		return false;
+
+	return !m_edit_history.get_history(row_data->type, row_data->key_text).empty();
+}
+
 void main_window_t::on_toggle_example_requested(const QList<int> & rows)
 {
 	if (rows.isEmpty())

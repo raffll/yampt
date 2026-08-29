@@ -644,6 +644,8 @@ void main_window_t::connect_editor_signals()
 
 	m_table_view->set_example_count_fn([this]() { return static_cast<int>(m_settings.translation_examples().size()); });
 
+	m_table_view->set_can_revert_fn([this](int row) { return can_revert_row(row); });
+
 	connect(
 	    m_table_view,
 	    &record_table_view_t::toggle_example_requested,

@@ -107,6 +107,11 @@ void record_table_view_t::set_example_count_fn(std::function<int()> fn)
 	m_example_count_fn = std::move(fn);
 }
 
+void record_table_view_t::set_can_revert_fn(std::function<bool(int row)> fn)
+{
+	m_can_revert_fn = std::move(fn);
+}
+
 void record_table_view_t::contextMenuEvent(QContextMenuEvent * event)
 {
 	if (!m_context_menu_enabled)
@@ -126,6 +131,21 @@ void record_table_view_t::contextMenuEvent(QContextMenuEvent * event)
 	menu->addSeparator();
 	auto * act_revert = menu->addAction(tr("Revert"));
 	act_revert->setToolTip(tr("Revert selected entries to previous state from history"));
+
+	if (m_can_revert_fn)
+	{
+		bool any_can_revert = false;
+		for (const auto & idx : selected)
+		{
+			if (!m_can_revert_fn(idx.row()))
+				continue;
+
+			any_can_revert = true;
+			break;
+		}
+
+		act_revert->setEnabled(any_can_revert);
+	}
 
 	menu->addSeparator();
 	const auto first_row = selected.first().row();

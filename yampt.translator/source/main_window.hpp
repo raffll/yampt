@@ -140,6 +140,7 @@ private:
 
 	void on_toggle_example_requested(const QList<int> & rows);
 	bool is_row_example(int row) const;
+	bool can_revert_row(int row) const;
 
 	void rebuild_table_yaml(document_t * target_doc);
 	void rebuild_table_dict(dict_document_t * dict_doc);
