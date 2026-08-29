@@ -14,12 +14,17 @@
 - [CHANGE] History tab moved to the end of the bottom-left tabs; each history entry now shows its status and timestamp
 - [CHANGE] Find/Replace no longer has a batch Undo button — each replacement is recorded in edit history and revertable per-entry
 - [CHANGE] Localization documents (.top, .mrk, .yaml) no longer show the ID and Key columns, since those entries have no record type or key — only Original, Translation, and Status are shown
+- [FIX] Web translation providers that send form-encoded requests now work — the request was previously rejected for a missing content type
+- [FIX] Numeric web provider settings (such as a temperature value) are now sent as numbers, so providers that require a numeric field no longer reject the request
 
 ### Both Apps
 - [NEW] Linux support: builds with CMake and system libraries, AUR package available
 - [NEW] Cross-platform resource paths: shared data in `/usr/share/yampt/`, user data in `~/.yampt/`
 - [FIX] Disabled widgets now show greyed-out text on all platforms
 - [FIX] Workspace sidebar no longer shows a duplicate "Workspace" node when paths differ only by trailing slash
+- [FIX] Converting a plugin whose master reference or file name has no extension no longer crashes
+- [FIX] Converting a malformed plugin where a dialogue response appears before its topic no longer produces corrupted output
+- [FIX] Cell names with accented or Cyrillic letters referenced in scripts are now translated correctly instead of being cut off at the first non-ASCII character
 
 ### yEditor
 - [NEW] Enable Editing: a single toolbar toggle makes decoded fields editable in the Edit panel for all plugins (combobox for flags and enums); starts disabled each time the app opens

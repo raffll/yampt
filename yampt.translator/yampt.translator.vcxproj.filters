@@ -55,6 +55,7 @@
     <ClCompile Include="source\translator\web_translator.cpp" />
     <ClCompile Include="source\translator\web_translator_config.cpp" />
     <ClCompile Include="source\translator\model_list_utils.cpp" />
+    <ClCompile Include="source\translator\web_response_utils.cpp" />
     <ClCompile Include="source\translator\translation_example_ops.cpp" />
     <ClCompile Include="source\editor\spell_checker.cpp" />
     <ClCompile Include="source\view\display_name.cpp" />
@@ -97,6 +98,7 @@
     <ClInclude Include="source\model\eet_document.hpp" />
     <ClInclude Include="source\model\table_columns.hpp" />
     <ClInclude Include="source\translator\model_list_utils.hpp" />
+    <ClInclude Include="source\translator\web_response_utils.hpp" />
     <ClInclude Include="source\translator\translation_example_ops.hpp" />
   </ItemGroup>
 </Project>

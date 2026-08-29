@@ -34,35 +34,6 @@ size_t find_whole_word(const std::string & text_line, const std::string & keywor
 	}
 }
 
-struct token_result_t
-{
-	std::string value;
-	size_t offset = 0;
-	bool found = false;
-};
-
-token_result_t extract_token_at(const std::string & text_input, const int position)
-{
-	static const std::regex token_regex("([\\w\\.\\-\\xD1]+|\".*?\")", std::regex::optimize);
-
-	std::sregex_iterator it_current(text_input.begin(), text_input.end(), token_regex);
-	std::sregex_iterator it_end;
-	std::smatch match_result;
-
-	int counter = -1;
-	while (it_current != it_end && counter != position)
-	{
-		match_result = *it_current;
-		++it_current;
-		++counter;
-	}
-
-	if (counter != position || match_result.empty())
-		return {};
-
-	return { match_result[1].str(), static_cast<size_t>(match_result.position(1)), true };
-}
-
 std::string strip_quotes(const std::string & text_input)
 {
 	static const std::regex quote_regex("\"(.*?)\"", std::regex::optimize);
@@ -158,6 +129,32 @@ std::string extract_cell_name_after_numerics(const std::string & text_after_keyw
 }
 
 } // namespace
+
+namespace script_token {
+
+token_result_t extract_token_at(const std::string & text_input, const int position)
+{
+	static const std::regex token_regex("([\\w\\.\\-\\x80-\\xFF]+|\".*?\")", std::regex::optimize);
+
+	std::sregex_iterator it_current(text_input.begin(), text_input.end(), token_regex);
+	std::sregex_iterator it_end;
+	std::smatch match_result;
+
+	int counter = -1;
+	while (it_current != it_end && counter != position)
+	{
+		match_result = *it_current;
+		++it_current;
+		++counter;
+	}
+
+	if (counter != position || match_result.empty())
+		return {};
+
+	return { match_result[1].str(), static_cast<size_t>(match_result.position(1)), true };
+}
+
+} // namespace script_token
 
 script_parser_t::script_parser_t(
     const rec_type_t type,
@@ -353,7 +350,7 @@ void script_parser_t::trim_line()
 
 void script_parser_t::extract_text(const int pos_in_expression)
 {
-	const auto result = extract_token_at(m_old_text, pos_in_expression);
+	const auto result = script_token::extract_token_at(m_old_text, pos_in_expression);
 	if (!result.found)
 	{
 		app_logger_t::add_log(

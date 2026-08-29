@@ -5,6 +5,112 @@
 
 using namespace std;
 
+TEST_CASE("script_token::extract_token_at, ascii token whole", "[u]")
+{
+	const auto result = script_token::extract_token_at("Balmora", 0);
+	REQUIRE(result.found);
+	REQUIRE(result.value == "Balmora");
+}
+
+TEST_CASE("script_token::extract_token_at, non-ASCII latin token not truncated", "[u]")
+{
+	const std::string input = "B\xF6rderland";
+	const auto result = script_token::extract_token_at(input, 0);
+	REQUIRE(result.found);
+	REQUIRE(result.value == input);
+}
+
+TEST_CASE("script_token::extract_token_at, cyrillic token not truncated", "[u]")
+{
+	const std::string input = "\xC0\xE1\xE0\xE5\xEB\xF3\xED";
+	const auto result = script_token::extract_token_at(input, 0);
+	REQUIRE(result.found);
+	REQUIRE(result.value == input);
+}
+
+TEST_CASE("script_token::extract_token_at, non-ASCII token by position", "[u]")
+{
+	const std::string first = "Ald";
+	const std::string second = "R\xF6vigen";
+	const auto result = script_token::extract_token_at(first + " " + second, 1);
+	REQUIRE(result.found);
+	REQUIRE(result.value == second);
+}
+
+TEST_CASE("script_token::extract_token_at, quoted string still whole", "[u]")
+{
+	const auto result = script_token::extract_token_at("\"Ald Ruhn\"", 0);
+	REQUIRE(result.found);
+	REQUIRE(result.value == "\"Ald Ruhn\"");
+}
+
+TEST_CASE("script_token::extract_token_at, word chars digits and underscore", "[u]")
+{
+	const auto result = script_token::extract_token_at("cell_name_42", 0);
+	REQUIRE(result.found);
+	REQUIRE(result.value == "cell_name_42");
+}
+
+TEST_CASE("script_token::extract_token_at, dot and hyphen kept in token", "[u]")
+{
+	const auto dot_result = script_token::extract_token_at("a.b.c", 0);
+	REQUIRE(dot_result.found);
+	REQUIRE(dot_result.value == "a.b.c");
+
+	const auto hyphen_result = script_token::extract_token_at("Ald-ruhn", 0);
+	REQUIRE(hyphen_result.found);
+	REQUIRE(hyphen_result.value == "Ald-ruhn");
+}
+
+TEST_CASE("script_token::extract_token_at, first token stops at space", "[u]")
+{
+	const auto result = script_token::extract_token_at("Balmora Guild", 0);
+	REQUIRE(result.found);
+	REQUIRE(result.value == "Balmora");
+}
+
+TEST_CASE("script_token::extract_token_at, second token by position", "[u]")
+{
+	const auto result = script_token::extract_token_at("Balmora Guild Hall", 1);
+	REQUIRE(result.found);
+	REQUIRE(result.value == "Guild");
+}
+
+TEST_CASE("script_token::extract_token_at, token stops at non-class character", "[u]")
+{
+	const auto result = script_token::extract_token_at("name,rest", 0);
+	REQUIRE(result.found);
+	REQUIRE(result.value == "name");
+}
+
+TEST_CASE("script_token::extract_token_at, tab separates tokens", "[u]")
+{
+	const auto result = script_token::extract_token_at("Ald\tRuhn", 1);
+	REQUIRE(result.found);
+	REQUIRE(result.value == "Ruhn");
+}
+
+TEST_CASE("script_token::extract_token_at, position out of range not found", "[u]")
+{
+	const auto result = script_token::extract_token_at("only", 3);
+	REQUIRE_FALSE(result.found);
+}
+
+TEST_CASE("script_token::extract_token_at, legacy xD1 byte still matched", "[u]")
+{
+	const std::string input = "Pel\xD1""agiad";
+	const auto result = script_token::extract_token_at(input, 0);
+	REQUIRE(result.found);
+	REQUIRE(result.value == input);
+}
+
+TEST_CASE("script_token::extract_token_at, quoted token by position after word", "[u]")
+{
+	const auto result = script_token::extract_token_at("goto \"Ald Ruhn\"", 1);
+	REQUIRE(result.found);
+	REQUIRE(result.value == "\"Ald Ruhn\"");
+}
+
 TEST_CASE("script_parser_t::convert_script, dial keywords", "[u]")
 {
 	vector<std::pair<std::string, std::string>> lines {

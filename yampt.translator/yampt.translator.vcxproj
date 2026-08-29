@@ -230,6 +230,7 @@
     <ClCompile Include="source\translator\web_translator.cpp" />
     <ClCompile Include="source\translator\web_translator_config.cpp" />
     <ClCompile Include="source\translator\model_list_utils.cpp" />
+    <ClCompile Include="source\translator\web_response_utils.cpp" />
     <ClCompile Include="source\translator\translation_example_ops.cpp" />
     <ClCompile Include="source\editor\spell_checker.cpp" />
     <ClCompile Include="source\highlighter\grammar_checker.cpp" />
@@ -265,6 +266,7 @@
     <ClInclude Include="source\editor\operation_executor.hpp" />    <ClInclude Include="source\highlighter\script_tokenizer.hpp" />    <ClInclude Include="source\translator\translator.hpp" />
     <ClInclude Include="source\translator\web_translator_config.hpp" />
     <ClInclude Include="source\translator\model_list_utils.hpp" />
+    <ClInclude Include="source\translator\web_response_utils.hpp" />
     <ClInclude Include="source\translator\translation_example_ops.hpp" />
     <ClInclude Include="source\view\status_display.hpp" />
     <ClInclude Include="source\view\display_name.hpp" />

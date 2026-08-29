@@ -1,6 +1,7 @@
 #include "web_translator.hpp"
 #include "model_list_utils.hpp"
 #include "translation_example_ops.hpp"
+#include "web_response_utils.hpp"
 #include <QCoreApplication>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -231,6 +232,9 @@ void web_translator_t::send_simple_request(const std::string & text, const std::
 	else if (m_config.body_format == body_format_t::form)
 	{
 		request.setUrl(url);
+		if (!request.hasRawHeader("Content-Type"))
+			request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
+
 		QUrlQuery params;
 		for (const auto & [field_name, field_template] : m_config.body_fields)
 		{
@@ -246,15 +250,7 @@ void web_translator_t::send_simple_request(const std::string & text, const std::
 		for (const auto & [field_name, field_template] : m_config.body_fields)
 		{
 			auto value = expand_template(field_template, text, target_lang);
-			auto field_key = QString::fromStdString(field_name);
-
-			bool is_integer = false;
-			const auto integer_value = QString::fromStdString(value).toLongLong(&is_integer);
-
-			if (is_integer)
-				body_obj[field_key] = integer_value;
-			else
-				body_obj[field_key] = QString::fromStdString(value);
+			body_obj[QString::fromStdString(field_name)] = web_response_utils::json_value_from_string(value);
 		}
 		reply = m_network->post(request, QJsonDocument(body_obj).toJson(QJsonDocument::Compact));
 	}
@@ -369,57 +365,8 @@ void web_translator_t::on_reply_finished(QNetworkReply * reply)
 
 std::string web_translator_t::extract_response(const QByteArray & data) const
 {
-	auto document = QJsonDocument::fromJson(data);
-	if (!document.isObject() && !document.isArray())
-		return {};
-
-	auto path = QString::fromStdString(m_config.response_path);
-	auto segments = path.split('.');
-
-	QJsonValue current;
-	if (document.isObject())
-		current = QJsonValue(document.object());
-	else
-		current = QJsonValue(document.array());
-
-	for (const auto & segment : segments)
-	{
-		if (segment.isEmpty())
-			continue;
-
-		auto bracket_pos = segment.indexOf('[');
-		if (bracket_pos >= 0)
-		{
-			auto field_name = segment.left(bracket_pos);
-			auto index_str = segment.mid(bracket_pos + 1, segment.indexOf(']') - bracket_pos - 1);
-			auto index = index_str.toInt();
-
-			if (!field_name.isEmpty())
-			{
-				if (!current.isObject())
-					return {};
-
-				current = current.toObject().value(field_name);
-			}
-
-			if (!current.isArray())
-				return {};
-
-			current = current.toArray().at(index);
-		}
-		else
-		{
-			if (!current.isObject())
-				return {};
-
-			current = current.toObject().value(segment);
-		}
-	}
-
-	if (current.isString())
-		return current.toString().toStdString();
-
-	return {};
+	const auto document = QJsonDocument::fromJson(data);
+	return web_response_utils::extract_by_path(document, m_config.response_path);
 }
 
 std::vector<std::string> web_translator_t::extract_model_list(const QByteArray & data) const

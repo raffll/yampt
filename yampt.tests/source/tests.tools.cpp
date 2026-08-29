@@ -463,3 +463,21 @@ TEST_CASE("file_path_parts_t::set_name, filename only no path", "[u]")
 	REQUIRE(n.name == "Bloodmoon");
 	REQUIRE(n.ext == ".json");
 }
+
+TEST_CASE("file_path_parts_t::set_name, extensionless filename", "[u]")
+{
+	file_path_parts_t n;
+	n.set_name("C:/path/to/Morrowind");
+	REQUIRE(n.full == "Morrowind");
+	REQUIRE(n.name == "Morrowind");
+	REQUIRE(n.ext.empty());
+}
+
+TEST_CASE("file_path_parts_t::set_name, extensionless filename no path", "[u]")
+{
+	file_path_parts_t n;
+	n.set_name("README");
+	REQUIRE(n.full == "README");
+	REQUIRE(n.name == "README");
+	REQUIRE(n.ext.empty());
+}

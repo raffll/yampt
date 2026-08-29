@@ -206,3 +206,19 @@ Do NOT compute the text rectangle via `style()->subElementRect(QStyle::SE_Header
 The header text/color come from `view_tree_model_t::headerData` (DisplayRole for the icon+name string, ForegroundRole for the conflict color); fall back to `palette().color(QPalette::ButtonText)` when ForegroundRole is invalid (e.g. section 0). The model side was never the problem — the bug was purely in how the section was painted.
 
 This only manifested with more than one plugin column, because a single plugin column is the stretched last section and happened to render, masking the issue.
+
+
+## Propagation Marks the Source Entry as `propagated` Too — By Design
+
+`dict_document_t::commit(row, new_text, intent)` sets the edited entry's status to `intent`, then calls `propagate(old_text, new_text)`. When propagation touches one or more sibling records (same `old_text`), the code deliberately overwrites the source entry's status with `propagated` as well:
+
+```cpp
+if (result.propagated_count > 0)
+    entry.status = status_t::propagated;
+```
+
+This is intentional, NOT a bug. When a translation propagates, the user wants the entire set of identical records — source included — marked `propagated` so they read as one consistent propagated group. The source is not exempt.
+
+Do NOT "fix" this by preserving the source entry's `intent` status when propagation occurs. Do NOT report it as "propagation overwrites user intent on the source entry." The overwrite is the desired behavior.
+
+Note: when `propagated_count == 0` (no siblings shared the `old_text`), the source keeps `intent` — the overwrite only happens when propagation actually occurred.

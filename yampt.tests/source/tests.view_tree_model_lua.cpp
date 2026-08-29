@@ -6,6 +6,16 @@
 
 namespace rc {
 
+Gen<std::string> gen_printable_ascii_nonempty()
+{
+	return gen::nonEmpty(gen::container<std::string>(gen::inRange<char>(0x20, 0x7F)));
+}
+
+Gen<std::string> gen_printable_ascii()
+{
+	return gen::container<std::string>(gen::inRange<char>(0x20, 0x7F));
+}
+
 template<>
 struct Arbitrary<handler_class_t>
 {
@@ -21,16 +31,16 @@ struct Arbitrary<handler_registration_t>
 	static Gen<handler_registration_t> arbitrary()
 	{
 		return gen::build<handler_registration_t>(
-		    gen::set(&handler_registration_t::interface_name, gen::nonEmpty<std::string>()),
-		    gen::set(&handler_registration_t::method_name, gen::nonEmpty<std::string>()),
-		    gen::set(&handler_registration_t::type_argument, gen::arbitrary<std::string>()),
-		    gen::set(&handler_registration_t::callback_expression, gen::nonEmpty<std::string>()),
-		    gen::set(&handler_registration_t::handler_body, gen::nonEmpty<std::string>()),
-		    gen::set(&handler_registration_t::blocking_condition, gen::arbitrary<std::string>()),
+		    gen::set(&handler_registration_t::interface_name, gen_printable_ascii_nonempty()),
+		    gen::set(&handler_registration_t::method_name, gen_printable_ascii_nonempty()),
+		    gen::set(&handler_registration_t::type_argument, gen_printable_ascii()),
+		    gen::set(&handler_registration_t::callback_expression, gen_printable_ascii_nonempty()),
+		    gen::set(&handler_registration_t::handler_body, gen_printable_ascii_nonempty()),
+		    gen::set(&handler_registration_t::blocking_condition, gen_printable_ascii()),
 		    gen::set(&handler_registration_t::classification, gen::arbitrary<handler_class_t>()),
-		    gen::set(&handler_registration_t::script_path, gen::nonEmpty<std::string>()),
+		    gen::set(&handler_registration_t::script_path, gen_printable_ascii_nonempty()),
 		    gen::set(&handler_registration_t::line_number, gen::inRange(1, 10000)),
-		    gen::set(&handler_registration_t::mod_name, gen::nonEmpty<std::string>()));
+		    gen::set(&handler_registration_t::mod_name, gen_printable_ascii_nonempty()));
 	}
 };
 
@@ -60,9 +70,9 @@ rc::Gen<handler_conflict_t> gen_conflict()
 	return rc::gen::exec([]()
 	{
 		handler_conflict_t conflict;
-		conflict.interface_name = *rc::gen::nonEmpty<std::string>();
-		conflict.method_name = *rc::gen::nonEmpty<std::string>();
-		conflict.type_argument = *rc::gen::arbitrary<std::string>();
+		conflict.interface_name = *rc::gen_printable_ascii_nonempty();
+		conflict.method_name = *rc::gen_printable_ascii_nonempty();
+		conflict.type_argument = *rc::gen_printable_ascii();
 		conflict.severity = *rc::gen::element(
 		    conflict_severity_t::blocking, conflict_severity_t::mutating, conflict_severity_t::overlapping);
 

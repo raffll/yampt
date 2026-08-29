@@ -181,8 +181,19 @@ void esm_converter_t::convert_mast()
 	esm.set_value("MAST");
 	while (esm.get_value().exist)
 	{
-		const auto & prefix = esm.get_value().text.substr(0, esm.get_value().text.find_last_of("."));
-		const auto & suffix = esm.get_value().text.substr(esm.get_value().text.rfind("."));
+		const auto & mast_text = esm.get_value().text;
+		const auto dot_pos = mast_text.find_last_of(".");
+
+		if (dot_pos == std::string::npos)
+		{
+			const auto & new_text = mast_text + file_suffix + '\0';
+			convert_record_content(new_text);
+			esm.set_next_value("MAST");
+			continue;
+		}
+
+		const auto & prefix = mast_text.substr(0, dot_pos);
+		const auto & suffix = mast_text.substr(dot_pos);
 		const auto & new_text = prefix + file_suffix + suffix + '\0';
 		convert_record_content(new_text);
 		esm.set_next_value("MAST");
@@ -653,6 +664,7 @@ void esm_converter_t::convert_bnam()
 	size_t dial_index = 0;
 	std::string dial_type;
 	std::string dial_name;
+	bool dial_found = false;
 
 	reset_counters();
 	const auto & record_type = rec_type_t::bnam;
@@ -668,12 +680,16 @@ void esm_converter_t::convert_bnam()
 				dial_index = i;
 				dial_type = domain_types::get_dialog_type(esm.get_key().content);
 				dial_name = esm.get_value().text;
+				dial_found = true;
 			}
 
 			continue;
 		}
 
 		if (esm.get_record().id != "INFO")
+			continue;
+
+		if (!dial_found)
 			continue;
 
 		esm.set_key("INAM");

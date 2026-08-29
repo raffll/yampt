@@ -5,6 +5,20 @@
 #include "scdt_patcher.hpp"
 #include <map>
 #include <memory>
+#include <string>
+
+namespace script_token {
+
+struct token_result_t
+{
+	std::string value;
+	size_t offset = 0;
+	bool found = false;
+};
+
+token_result_t extract_token_at(const std::string & text_input, int position);
+
+} // namespace script_token
 
 class script_parser_t
 {

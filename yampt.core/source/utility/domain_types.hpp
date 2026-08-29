@@ -15,8 +15,17 @@ struct file_path_parts_t
 	void set_name(const std::string & path)
 	{
 		full = path.substr(path.find_last_of("\\/") + 1);
-		name = full.substr(0, full.find_last_of("."));
-		ext = full.substr(full.rfind("."));
+
+		const auto dot_pos = full.find_last_of(".");
+		if (dot_pos == std::string::npos)
+		{
+			name = full;
+			ext.clear();
+			return;
+		}
+
+		name = full.substr(0, dot_pos);
+		ext = full.substr(dot_pos);
 	}
 };
 

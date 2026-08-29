@@ -43,16 +43,16 @@ TEST_CASE("translation_example_ops::format_examples_prompt, three examples prese
 
 TEST_CASE("translation_example_ops::add_capped, adding to a full list is rejected", "[u]")
 {
-	const std::vector<translation_example_t> examples{
-	    {"one", "1"},
-	    {"two", "2"},
-	    {"three", "3"}};
-	const std::vector<translation_example_t> pairs{{"four", "4"}};
+	std::vector<translation_example_t> examples;
+	for (int index = 0; index < max_examples; ++index)
+		examples.push_back({ "original_" + std::to_string(index), std::to_string(index) });
+
+	const std::vector<translation_example_t> pairs{{"overflow", "x"}};
 
 	const auto result = translation_example_ops::add_capped(examples, pairs);
 
-	REQUIRE(result.size() == 3);
-	REQUIRE_FALSE(translation_example_ops::contains_original(result, "four"));
+	REQUIRE(result.size() == static_cast<size_t>(max_examples));
+	REQUIRE_FALSE(translation_example_ops::contains_original(result, "overflow"));
 }
 
 TEST_CASE("translation_example_ops::add_capped, duplicate original is rejected", "[u]")
@@ -68,21 +68,23 @@ TEST_CASE("translation_example_ops::add_capped, duplicate original is rejected",
 
 TEST_CASE("translation_example_ops::add_capped, multi-add stops at cap", "[u]")
 {
-	const std::vector<translation_example_t> examples{{"one", "1"}};
+	std::vector<translation_example_t> examples;
+	for (int index = 0; index < max_examples - 2; ++index)
+		examples.push_back({ "seed_" + std::to_string(index), std::to_string(index) });
+
 	const std::vector<translation_example_t> pairs{
-	    {"two", "2"},
-	    {"three", "3"},
-	    {"four", "4"},
-	    {"five", "5"}};
+	    {"fits_one", "a"},
+	    {"fits_two", "b"},
+	    {"overflow_one", "c"},
+	    {"overflow_two", "d"}};
 
 	const auto result = translation_example_ops::add_capped(examples, pairs);
 
-	REQUIRE(result.size() == 3);
-	REQUIRE(result[0].original == "one");
-	REQUIRE(result[1].original == "two");
-	REQUIRE(result[2].original == "three");
-	REQUIRE_FALSE(translation_example_ops::contains_original(result, "four"));
-	REQUIRE_FALSE(translation_example_ops::contains_original(result, "five"));
+	REQUIRE(result.size() == static_cast<size_t>(max_examples));
+	REQUIRE(translation_example_ops::contains_original(result, "fits_one"));
+	REQUIRE(translation_example_ops::contains_original(result, "fits_two"));
+	REQUIRE_FALSE(translation_example_ops::contains_original(result, "overflow_one"));
+	REQUIRE_FALSE(translation_example_ops::contains_original(result, "overflow_two"));
 }
 
 TEST_CASE("translation_example_ops::remove_by_original, removes existing original", "[u]")

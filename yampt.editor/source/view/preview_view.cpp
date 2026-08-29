@@ -278,6 +278,9 @@ void preview_view_t::on_text_changed()
 
 void preview_view_t::on_apply_clicked()
 {
+	if (!m_edit_controller)
+		return;
+
 	m_pending_request.input_text = m_right_edit->toPlainText().toStdString();
 
 	const auto result = m_edit_controller->commit_field_edit(m_pending_request);

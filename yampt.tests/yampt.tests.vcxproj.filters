@@ -71,6 +71,7 @@
     <ClCompile Include="source\tests.workspace_watcher.cpp" />
     <ClCompile Include="source\tests.web_translator_config.cpp" />
     <ClCompile Include="source\tests.model_list_utils.cpp" />
+    <ClCompile Include="source\tests.web_response_utils.cpp" />
     <ClCompile Include="source\tests.loc_generator.cpp" />
     <ClCompile Include="source\tests.translation_examples.cpp" />
     <ClCompile Include="source\tests.loc_file_writer.cpp" />
@@ -146,6 +147,7 @@
     <ClCompile Include="..\yampt.editor\source\model\filter_composer.cpp" />
     <ClCompile Include="..\yampt.translator\source\translator\web_translator_config.cpp" />
     <ClCompile Include="..\yampt.translator\source\translator\model_list_utils.cpp" />
+    <ClCompile Include="..\yampt.translator\source\translator\web_response_utils.cpp" />
     <ClCompile Include="..\yampt.translator\source\translator\translation_example_ops.cpp" />
   </ItemGroup>
   <ItemGroup>
