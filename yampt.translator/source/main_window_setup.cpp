@@ -242,7 +242,7 @@ void main_window_t::setup_central_widget()
 {
 	auto * central_widget = new QWidget(this);
 	auto * central_layout = new QVBoxLayout(central_widget);
-	central_layout->setContentsMargins(0, 0, 0, 0);
+	central_layout->setContentsMargins(4, 4, 4, 4);
 	central_layout->setSpacing(4);
 
 	setup_replace_toolbar();

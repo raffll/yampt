@@ -28,6 +28,7 @@ plugin_workspace_view_t::plugin_workspace_view_t(settings_store_t & settings, QW
 {
 	auto * main_layout = new QVBoxLayout(this);
 	main_layout->setContentsMargins(4, 4, 4, 4);
+	main_layout->setSpacing(4);
 
 	m_lbl_count = new QLabel(this);
 
