@@ -83,6 +83,10 @@ Batch tool for automated dictionary and conversion workflows.
 - Dark mode
 - Session persistence: remembers window state between runs
 
+## Changelog
+
+See the [full changelog](https://github.com/raffll/yampt/blob/master/CHANGELOG.md) for version history.
+
 ## Bug Reports
 
 Report bugs and feature requests on [GitHub](https://github.com/raffll/yampt/issues) or in the Nexus Mods comments section.
